@@ -1,0 +1,16 @@
+#!/usr/bin/perl
+# file: DELETE
+# job:  delete all files for a certain user in a certain directory on amd01--amd24
+# ---------------------
+$uname = "artb";
+$dir = "test";
+#
+for ($i=1; $i<=16; $i = $i+1) {
+
+	$n = "o$i";
+	$command = "ls /scratch/$n/$uname/$dir/";
+	print "$command\n";
+	system("$command");
+}
+
+# eof

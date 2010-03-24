@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -N PEXEC
+#PBS -q batch
+#PBS -l walltime=10:00:00,mem=2000mb,nodes=1
+#PBS -p 1023
+#PBS -m a
+#
+
+cd /cl/data01/hr/SULLIVAN
+./PROCESSOR_pfield > ./p_out
+
+exit

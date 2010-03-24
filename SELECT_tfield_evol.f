@@ -1,0 +1,146 @@
+      subroutine SELECT_tfield_evol
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+      integer tm,index,ic
+      integer :: i1e,i2e,i3e,i1a,i2a,i3a
+
+      character*5 label,node
+      character(6) fieldname
+      character (len=6), dimension (30) :: f_name     ! changed by ab
+
+      real(kind=4) :: x0,y0,z0,xr,yr,zr,rot,field
+      real(kind=4),allocatable,dimension(:,:,:) :: t_serie
+
+
+      f_name(1)='net'
+      f_name(2)='nit'
+      f_name(3)='nnt'
+      f_name(4)='jxit'
+      f_name(5)='jyit'
+      f_name(6)='jzit'
+      f_name(7)='ext'
+      f_name(8)='eyt'
+      f_name(9)='ezt'
+      f_name(10)='bxt'
+      f_name(11)='byt'
+      f_name(12)='bzt'
+      f_name(13)='hxt'              ! ab
+      f_name(14)='hyt'              ! ab
+      f_name(15)='hzt'              ! ab
+      f_name(16)='jxexit'
+      f_name(17)='jyeyit'
+      f_name(18)='jzezit'
+      f_name(19)='poyxt'
+      f_name(20)='poyyt'
+      f_name(21)='poyzt'
+      f_name(22)='ex2t'
+      f_name(23)='ey2t'
+      f_name(24)='ez2t'
+      f_name(25)='bx2t'
+      f_name(26)='by2t'
+      f_name(27)='bz2t'
+      f_name(28)='hx2t'             ! ab
+      f_name(29)='hy2t'             ! ab
+      f_name(30)='hz2t'             ! ab
+
+
+      write(6,*) 'SELECT FIELD NAME:'
+      read(5,*) fieldname
+      write(6,*) 'SELECT TIME:'
+      read(5,*) tm
+
+
+      allocate(t_serie(i1n:i1x,i2n:i2x,i3n:i3x))
+      t_serie=0.0
+
+
+      index=0
+      do ic=1,30                  ! changed by ab
+        if (fieldname.eq.f_name(ic)) then 
+          index=ic
+        endif
+      enddo
+      if (index.eq.0) then
+        write(6,*) '********************'
+        write(6,*) 'FIELD NOT AVAILABLE!'
+        write(6,*) '********************'
+        goto 999
+      endif
+
+
+      call SERV_labelgen(tm,label)
+      do pec=0,xnpe*ynpe*znpe-1
+
+         call SERV_labelgen(pec,node)
+         open(11,file='./'//node//'tfield'//label,
+     &        access='sequential',form='unformatted')
+
+         read(11) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx,shift_z
+         read(11) r1n,r1x,r2n,r2x,r3n,r3x,shift_z
+         read(11) x0,y0,z0,rot
+
+         do i3=i3mn,i3mx
+            do i2=i2mn,i2mx
+               do i1=i1mn,i1mx
+
+                  xr=i1*dx
+                  yr=cos(rot)*(i2*dy-y0)-sin(rot)*(i3*dz-z0)+y0
+                  zr=cos(rot)*(i3*dz-z0)+sin(rot)*(i2*dy-y0)+z0
+
+                  if (((r3n-1)*dz.le.zr.and.zr.le.(r3x+1)*dz).and.
+     &                ((r2n-1)*dy.le.yr.and.yr.le.(r2x+1)*dy).and.
+     &                ((r1n-1)*dx.le.xr.and.xr.le.(r1x+1)*dx)) then
+
+                     do ic=1,index
+                        read(11) field
+                     enddo
+                     t_serie(i1,i2,i3)=field
+                     do ic=index+1,30       ! changed by ab
+                        read(11) field
+                     enddo
+
+                  endif
+
+               enddo
+            enddo
+         enddo
+
+         close(11)
+
+      enddo
+
+
+      open(11,file='./'//trim(fieldname)//label//'.data',
+     &     access='sequential',form='formatted')
+
+      write(11,1000) i1n,i1x,i2n,i2x,i3n,i3x
+      write(11,1000) tm,np
+      write(11,1000) nmax,xnpe,ynpe
+      write(11,1000) nprf,dnprf
+      write(11,1001) dt,dx,dy,dz,shift_z
+      write(11,1001) i0,e0,b0,j0,rho0,n0
+      write(11,1001) wl,wp,ld
+      write(11,1001) alpha,beta,eta
+      write(11,1001) vos,vt,cc,qq,mm,tt,eps0
+
+      do i3=i3n,i3x
+         do i2=i2n,i2x
+            do i1=i1n,i1x
+               write(11,1001) t_serie(i1,i2,i3)
+            enddo
+         enddo
+      enddo
+      close(11)
+
+
+ 999  continue
+
+
+ 1000 FORMAT(1x, 1(1x, 1i6))
+ 1001 FORMAT(1x, 1(1x, 1e12.6))
+
+
+      end subroutine SELECT_tfield_evol

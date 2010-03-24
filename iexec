@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -N IEXEC
+#PBS -q batch
+#PBS -l walltime=10:00:00,mem=2000mb,nodes=1
+#PBS -p 1023
+#PBS -m a
+#
+
+cd /cl/home01/hr/SULLIVAN
+./PROCESSOR_ion > ./i_out
+
+exit

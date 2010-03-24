@@ -1,0 +1,113 @@
+#!/usr/bin/perl
+# file: DELETE
+# job:  delete all files for a certain user in a certain directory on amd01--amd24
+# ---------------------
+$uname = "artb";
+$dir = "test";
+#
+for ($i=1; $i<=16; $i = $i+1) {
+
+	$n = "o$i";
+	$command = "rm /scratch/$n/$uname/$dir/00000*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00001*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00002*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00003*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00004*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00005*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00006*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00007*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00008*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00009*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00010*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00011*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00012*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00013*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00014*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00015*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00016*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00017*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00018*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00019*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00020*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00021*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00022*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00023*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00024*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00025*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00026*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00027*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00028*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00029*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00030*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00031*";
+	print "$command\n";
+	system("$command");
+	$command = "rm /scratch/$n/$uname/$dir/00032*";
+	print "$command\n";
+	system("$command");
+
+}
+
+# eof
