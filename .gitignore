@@ -19,3 +19,9 @@ configure
 install-sh
 missing
 compile
+depcomp
+stamp-h1
+config.h
+config.h.in
+src/.deps
+

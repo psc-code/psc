@@ -5,6 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT([psc], [1.90])
 AM_INIT_AUTOMAKE([foreign])
 #AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_HEADERS([config.h])
 
 # Check for (MPI) compilers
 
@@ -19,6 +20,8 @@ AM_PROG_CC_C_O
 AX_CHECK_COMPILER_FLAGS([-Wall], [CFLAGS="$CFLAGS -Wall"])
 
 AC_PROG_F77([openmpif90 mpif90])
+
+AC_F77_WRAPPERS
 
 # Checks for header files.
 
