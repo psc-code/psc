@@ -6,7 +6,18 @@ AC_INIT([psc], [1.90])
 AM_INIT_AUTOMAKE([foreign])
 #AC_CONFIG_MACRO_DIR([m4])
 
+# Check for (MPI) compilers
+
 AC_PROG_CC([openmpicc mpicc])
+AC_PROG_CC_C99
+if test -z "$CC" || test "X$CC" = "Xno"; then
+  AC_MSG_ERROR([No suitable C99 compiler found])
+fi
+AM_PROG_CC_C_O
+
+# add -Wall if possible
+AX_CHECK_COMPILER_FLAGS([-Wall], [CFLAGS="$CFLAGS -Wall"])
+
 AC_PROG_F77([openmpif90 mpif90])
 
 # Checks for header files.
