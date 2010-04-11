@@ -16,7 +16,7 @@ AC_PROG_F77([openmpif90 mpif90])
 
 #
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_OUTPUT
 
