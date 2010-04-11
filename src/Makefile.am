@@ -20,6 +20,7 @@ VLI_SOURCES = VLA_variables.f PIC_variables.f VLI.f \
 	PIC_move_part.f PIC_move_part_xyz.f PIC_move_part_xy.f \
 	PIC_move_part_xz.f PIC_move_part_yz.f PIC_move_part_x.f \
 	PIC_move_part_y.f PIC_move_part_z.f PIC_bin_coll.f PIC_sort.f \
+	PIC_pml_msa.f PIC_pml_msb.f \
 	MCC_variables.f MCC_init.f MCC_impact.f
 
 VLA_SOURCES = VLA_variables.f PIC_variables.f VLA.f \
