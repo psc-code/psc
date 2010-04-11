@@ -1,0 +1,9 @@
+*~
+*.a
+*.o
+*.x
+*.mod
+00*
+BACKUP
+endfile
+okfile
