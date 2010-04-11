@@ -8,14 +8,14 @@
 # TIME FILE FILTER
 
 
-set u = ''
+set u = '017'
 
 
 foreach z ( `ls | sed -ne 's/00000electron'$u'//p'` )
 
    # FILE SELECTION
 
-   echo > EE; echo d1 >> EE; echo $u$z >> EE; echo q >> EE; cat EE | ./SELECT.x
+   echo > EE; echo d1 >> EE; echo $u$z >> EE; echo q >> EE; cat EE | ../src/SELECT
 
    set pe = 'E'$u$z'.data'
    if ( -e $pe ) then

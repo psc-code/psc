@@ -15,7 +15,7 @@ foreach z ( `ls | sed -ne 's/00000atom'$u'//p'` )
 
    # FILE SELECTION
 
-   echo > AA; echo f1 >> AA; echo $u$z >> AA; echo q >> AA; cat AA | ./SELECT.x
+   echo > AA; echo f1 >> AA; echo $u$z >> AA; echo q >> AA; cat AA | ../src/SELECT
 
    set pe = 'A'$u$z'.data'
    if ( -e $pe ) then

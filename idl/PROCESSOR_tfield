@@ -20,7 +20,7 @@ foreach z ( `ls | sed -ne 's/00000tfield'$u'//p'` )
    # FILE SELECTION
 
 
-   echo > TT; echo b1 >> TT; echo $fieldt >> TT; echo $u$z >> TT; echo q >> TT; cat TT | ./SELECT.x
+   echo > TT; echo b1 >> TT; echo $fieldt >> TT; echo $u$z >> TT; echo q >> TT; cat TT | ../src/SELECT
    set field = 'TAV-'$fieldt$u$z'.data'
 
    if ( -e $field ) then

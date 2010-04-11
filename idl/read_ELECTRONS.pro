@@ -1,6 +1,6 @@
 ; ELECTRONS
 
-   fi=FINDFILE('E*.data.gz')
+   fi=FINDFILE('E03*.data.gz')
 
    nfi=size(fi,/N_ELEMENTS)
    ;loadct,5

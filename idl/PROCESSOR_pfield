@@ -23,7 +23,7 @@ foreach z ( `ls | sed -ne 's/00000pfield'$u'//p'` )
    # FILE SELECTION
 
 
-   echo > PP; echo a1 >> PP; echo $fieldt >> PP; echo $u$z >> PP; echo q >> PP; cat PP | ./SELECT.x
+   echo > PP; echo a1 >> PP; echo $fieldt >> PP; echo $u$z >> PP; echo q >> PP; cat PP | ../src/SELECT
    set field = $fieldt$u$z'.data'
 
    if ( -e $field ) then

@@ -24,4 +24,10 @@ stamp-h1
 config.h
 config.h.in
 src/.deps
+idl/*.gz
+idl/*.eps
+idl/EE
+idl/EFILES
+idl/PFILES
+idl/PP
 

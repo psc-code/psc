@@ -1,6 +1,6 @@
 ; 1D FIELDS
 
-fi=FINDFILE('n*t*.data.gz')
+fi=FINDFILE('e*t*.data.gz')
 nfi=size(fi,/N_ELEMENTS)
 ;loadct,5
 
