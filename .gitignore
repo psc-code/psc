@@ -2,6 +2,14 @@
 *.o
 *.a
 BACKUP
-SELECT.x
-VLA.x
-VLI.x
+SELECT
+VLA
+VLI
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.log
+config.status
+configure
+install-sh
+missing
