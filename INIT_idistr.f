@@ -132,7 +132,7 @@ c will happen and the algorithm may loop.
       count_max=530           ! maximum number of iterations for memory and wall clock optimization
       dvel=2                  ! grid adaption velocity for memory optimization
       deval=1                 ! particle number evaluation interval
-      nicell=20               ! maximum number of particles per spezies and cell
+      nicell=200              ! maximum number of particles per spezies and cell
 
 
 c QUASI-PARTICLE MASS FACTOR
@@ -172,7 +172,7 @@ c an error message.
                niloc=0                           ! niloc muss hier stehen zur Berechnung der Gewichte
 
                dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)       ! ab
-               if (dens > 0.9) write(6,*) 'INIT_den',dens, i1, i2, i3
+c               if (dens > 0.9) write(6,*) 'INIT_den',dens, i1, i2, i3
 
                if (dens.gt.0.001) then
                ncel=nint(dens/cori)
@@ -1000,7 +1000,7 @@ c SETTING UP PARTICLE PHASE SPACE
                   wni=+dens
                   tnxi=0.0
                   tnyi=0.0
-                  tnzi=1.0
+                  tnzi=0.05
 
 c MAXWELLIAN DISTRIBUTION
 
@@ -1024,8 +1024,8 @@ c MAXWELLIAN DISTRIBUTION
                   p_niloc(11*niloc+1)=y
                   p_niloc(11*niloc+2)=z
                   p_niloc(11*niloc+3)=px
-                  p_niloc(11*niloc+4)=py+0.5
-                  p_niloc(11*niloc+5)=pz+0.5
+                  p_niloc(11*niloc+4)=py
+                  p_niloc(11*niloc+5)=pz
                   p_niloc(11*niloc+6)=qni
                   p_niloc(11*niloc+7)=mni
                   p_niloc(11*niloc+8)=cni
@@ -1064,9 +1064,9 @@ c MAXWELLIAN DISTRIBUTION
                   cni=+cell
                   lni=+part_label_offset(mpe)+niloc
                   wni=+dens
-                  tnxi=+10.0
-                  tnyi=+10.0
-                  tnzi=+10.0
+                  tnxi=+0.0
+                  tnyi=+0.0
+                  tnzi=+0.0
 
 c MAXWELLIAN DISTRIBUTION
 

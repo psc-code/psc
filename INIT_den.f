@@ -13,7 +13,7 @@ c BETWEEN DENSITY PROFILE AND SIMULATION BOX.
       use PIC_variables
 
       implicit none 
-      real(kind=8) x,y,z,xr,yr,zr,rot
+      real(kind=8) x,y,z,xr,yr,zr,rot,kk
       real(kind=8) x0,y0,z0,Lx,Ly,Lz
       real(kind=8) widthx,widthy,widthz
       real(kind=8) argx,argy,argz
@@ -32,15 +32,15 @@ c widthy: width of transverse density profile in m
 c widthz: width of longitudinal density profile in m
 
 
-      x0=0.05*1.0e-6
-      y0=0.05*1.0e-6
-      z0=0.05*1.0e-6
+      x0=0.5*1.0e-6
+      y0=0.5*1.0e-6
+      z0=10.0*1.0e-6
       Lx=0.1*1.0e-6
       Ly=0.1*1.0e-6
       Lz=0.1*1.0e-6
       widthx=1.0*1.0e-6
       widthy=1.0*1.0e-6
-      widthz=1.0*1.0e-6
+      widthz=8.0*1.0e-6
       rot=0.0*3.141592/180.0
 
 
@@ -69,7 +69,8 @@ c NORMALIZATION
       if(argy>200.0) argy=200.0
       if(argz>200.0) argz=200.0
 
-      INIT_den=1.0/(1.0+dexp(argx))
+      kk=1.0*pi*1.0e6
+      INIT_den=(0.99+0.01*dcos(ld*kk*z))/(1.0+dexp(argx))
      &         /(1.0+dexp(argy))/(1.0+dexp(argz))
 c      INIT_den=dexp(-argy*argy)*dexp(-argz*argz)
 

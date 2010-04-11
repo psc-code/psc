@@ -77,24 +77,24 @@ c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
 
 
-      lengthx=0.1*1.0e-6
-      lengthy=0.1*1.0e-6
-      lengthz=0.1*1.0e-6
+      lengthx=1.0*1.0e-6
+      lengthy=1.0*1.0e-6
+      lengthz=20.0*1.0e-6
 
       i1tot=10.0
       i2tot=10.0
-      i3tot=10.0
+      i3tot=400.0
 
       xnpe=1
       ynpe=1
       znpe=1
 
-      i1n=4
-      i1x=4
-      i2n=0
-      i2x=9
+      i1n=8
+      i1x=8
+      i2n=8
+      i2x=8
       i3n=0
-      i3x=9
+      i3x=399
 
       boundary_field_x=1
       boundary_field_y=1
@@ -103,11 +103,10 @@ c n0: peak atom density in m**3
       boundary_part_y=1
       boundary_part_z=1
 
-      nmax=10
       cpum=100000.0
-      lw=1.0*1.0e-6
-      i0=1.0e22          ! modified from 22
-      n0=1.0e34          ! modified from 28
+      lw=3.2*1.0e-6
+      i0=1.0e21          ! modified from 22
+      n0=1.0e26          ! modified from 28
 
 
 ! PML BOUNDARY CONDITIONS 
@@ -260,7 +259,7 @@ c np:  number of timesteps for time-averaging
       nnp=int(2.0*pi/dt)+1
       dt=2.0*pi/nnp
       np=2*nnp
-
+      nmax=30*nnp
 
 ! PML PARAMETERS - added by ab
 
@@ -305,7 +304,7 @@ c r3n: min output range along z
 c r3x: max output range along z
 
       nprf=0
-      dnprf=100                                      ! changed by ab
+      dnprf=10                                      ! changed by ab
       r1n=i1n
       r1x=i1x
       r2n=i2n
@@ -326,7 +325,7 @@ c plin: smallest particle number for output
 c plix: largest particle number for output
 
       nprparti=0
-      dnprparti=1
+      dnprparti=10
       nistep=1
       plin=0
       plix=30000000
@@ -350,136 +349,6 @@ c data_chk: path of checkpointing directory
 
       data_out='.'
       data_chk='.'
-
-c      if (mpe.eq.0) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.1) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.2) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.3) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.4) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.5) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.6) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.7) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.8) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.9) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.10) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.11) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.12) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.13) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.14) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.15) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.16) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.17) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.18) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.19) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.20) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.21) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.22) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.23) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.24) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.25) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.26) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.27) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.28) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.29) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.30) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-c      if (mpe.eq.31) then
-c         data_out='/scratch/local/artb/test'
-c         data_chk='/scratch/local/artb/test'
-c      endif
-
 
 c OTHER SETTINGS THAT SHOULD NOT BE CHANGED
 c UNDER NORMAL CONDITIONS
@@ -529,5 +398,5 @@ c cpus: WALL CLOCK time at end time
             enddo
          enddo
       enddo
-      write(6,*) 'PARAM',i1x,i2x,i3x
+
       end subroutine INIT_param

@@ -47,11 +47,11 @@ c         call MCC_impact      ! impact ionization
          call OUT_field       ! field output at t=n*dt
          call OUT_part        ! particle output at t=n*dt
          call OUT_poyc        ! energy conservation
-         call PIC_bin_coll    ! binary collisions
+c         call PIC_bin_coll    ! binary collisions
 
-c         call PIC_pml_msa     ! field propagation n*dt -> (n+0.5)*dt       !ab
+         call PIC_pml_msa     ! field propagation n*dt -> (n+0.5)*dt       !ab
          call PIC_move_part   ! particle propagation n*dt -> (n+1.0)*dt  
-c         call PIC_pml_msb     ! field propagation (n+0.5)*dt -> (n+1.0)*dt !ab
+         call PIC_pml_msb     ! field propagation (n+0.5)*dt -> (n+1.0)*dt !ab
 
 c         call PIC_msa         ! field propagation n*dt -> (n+0.5)*dt
 c         call PIC_move_part   ! particle propagation n*dt -> (n+1.0)*dt

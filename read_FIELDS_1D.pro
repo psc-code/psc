@@ -15,8 +15,8 @@ for ifi=0,nfi-1 do begin
    ndim=size(serie,/DIMENSIONS) 
    mini=min(serie)
    maxi=max(serie)
-   rmin=mini
-   rmax=maxi
+   rmin=-0.5
+   rmax=0.5
    if (rmin eq 0.0) then begin
       rmin=-0.01
    endif

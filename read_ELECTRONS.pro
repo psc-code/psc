@@ -38,19 +38,19 @@ for ifi=0,nfi-1 do begin
 
 
 ; MOMENTA OF IONS IN m_ic
-      pxmin=-1.0
-      pxmax=1.0
+      pxmin=-0.2
+      pxmax=0.2
       pxmid=(pxmax+pxmin)/2.0
-      pymin=-1.0
-      pymax=1.0
+      pymin=-0.2
+      pymax=0.2
       pymid=(pymax+pymin)/2.0
-      pzmin=-1.0
-      pzmax=1.0
+      pzmin=-0.2
+      pzmax=0.2
       pzmid=(pzmax+pzmin)/2.0
 
 ; SPECTRUM OF IONS IN eV
-      enmin=-10.0
-      enmax=10.0
+      enmin=-0.002
+      enmax=+0.002
       enmid=(enmax+enmin)/2.0
 
 ; STEP SIZE OF SLICES
@@ -79,7 +79,7 @@ for ifi=0,nfi-1 do begin
 ;      @parts_yz_ps
 ;      @parts_charge_yz_ps
 ;      @parts_mass_yz_ps
-      @parts_mass_charge_yz_ps
+;      @parts_mass_charge_yz_ps
 
 
       xdim=10000.0
@@ -91,13 +91,13 @@ for ifi=0,nfi-1 do begin
       xdim=10000.0
       ydim=6000.0
 ;      @parts_ypxpypz_ps
-      @parts_mass_charge_ypxpypz_ps
+;      @parts_mass_charge_ypxpypz_ps
 
 
       xdim=10000.0
       ydim=6000.0
 ;      @parts_zpxpypz_ps
-;      @parts_mass_charge_zpxpypz_ps
+      @parts_mass_charge_zpxpypz_ps
 
 
       xdim=10000.0
