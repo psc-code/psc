@@ -31,6 +31,16 @@ AC_F77_WRAPPERS
 
 AX_CHECK_HDF5
 
+# Checks for options
+
+AH_TEMPLATE([USE_PARTICLE_C], [use particle pusher written in C])
+AC_ARG_ENABLE(
+  [particle-c],
+  [AS_HELP_STRING([--enable-particle-c], [use particle pusher written in C])],
+  [AC_DEFINE([USE_PARTICLE_C])]
+)
+  	
+
 AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_OUTPUT

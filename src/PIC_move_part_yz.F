@@ -1,14 +1,33 @@
-c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
+#include <config.h>
 
-      subroutine PIC_move_part_yz
-
-      use PIC_variables
-      use VLA_variables
+      subroutine PIC_push_part_yz(niloc, p_niloc, cori, alpha, eta, 
+     &     p2A, p2B, dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8) :: cori, alpha, eta, dt, dx, dy, dz, p2A, p2B
+      integer      :: i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+
       integer :: j1,j2,j3,k2,k3,l1,l2,l3
       integer :: l2min,l2max,l3min,l3max
+      integer :: l
 
       real(kind=8) :: dxi,dyi,dzi
       real(kind=8) :: pxi,pyi,pzi
@@ -26,37 +45,17 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       real(kind=8) :: wx,wy,wz
       real(kind=8) :: exq,eyq,ezq
       real(kind=8) :: bxq,byq,bzq
-!      real(kind=8) :: hxq,hyq,hzq
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      real(kind=8),allocatable,dimension(:) :: s0y,s0z
-
-
-      real(kind=8),allocatable,dimension(:) :: s1y,s1z
-      real(kind=8),allocatable,dimension(:,:,:) :: jxh,jyh,jzh
-
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
-
-      allocate(s0y(-2:2))
-      allocate(s0z(-2:2))
-      allocate(s1y(-2:2))
-      allocate(s1z(-2:2))
-
-      allocate(jxh(-3:2,-2:2,-2:2))
-      allocate(jyh(-2:2,-3:2,-2:2))
-      allocate(jzh(-2:2,-2:2,-3:2))
+      real(kind=8),dimension(-2:2) :: s0y,s0z
+      real(kind=8),dimension(-2:2) :: s1y,s1z
+      real(kind=8),dimension(-3:2,-2:2,-2:2) :: jxh
+      real(kind=8),dimension(-2:2,-3:2,-2:2) :: jyh
+      real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
 
 
 c INITIALIZATION
-
 
       xl=0.5*dt
       yl=0.5*dt
@@ -84,7 +83,6 @@ c INITIALIZATION
 
 
 c PARTICLE LOOP
-
 
       if (niloc.gt.0) then
          do l=1,niloc
@@ -220,37 +218,6 @@ c     FIELD INTERPOLATION
      &              +h0y*bz(l1,l2,j3+1)
      &              +h1y*bz(l1,l2+1,j3+1))
 
-!            hxq=hmz*(hmy*hx(j1,l2-1,l3-1)
-!     &              +h0y*hx(j1,l2,l3-1)
-!     &              +h1y*hx(j1,l2+1,l3-1))
-!     &         +h0z*(hmy*hx(j1,l2-1,l3)
-!     &              +h0y*hx(j1,l2,l3)
-!     &              +h1y*hx(j1,l2+1,l3))
-!     &         +h1z*(hmy*hx(j1,l2-1,l3+1)
-!     &              +h0y*hx(j1,l2,l3+1)
-!     &              +h1y*hx(j1,l2+1,l3+1))
-
-!            hyq=hmz*(gmy*hy(l1,j2-1,l3-1)
-!     &              +g0y*hy(l1,j2,l3-1)
-!     &              +g1y*hy(l1,j2+1,l3-1))
-!     &         +h0z*(gmy*hy(l1,j2-1,l3)
-!     &              +g0y*hy(l1,j2,l3)
-!     &              +g1y*hy(l1,j2+1,l3))
-!     &         +h1z*(gmy*hy(l1,j2-1,l3+1)
-!     &              +g0y*hy(l1,j2,l3+1)
-!     &              +g1y*hy(l1,j2+1,l3+1))
-
-!            hzq=gmz*(hmy*hz(l1,l2-1,j3-1)
-!     &              +h0y*hz(l1,l2,j3-1)
-!     &              +h1y*hz(l1,l2+1,j3-1))
-!     &         +g0z*(hmy*hz(l1,l2-1,j3)
-!     &              +h0y*hz(l1,l2,j3)
-!     &              +h1y*hz(l1,l2+1,j3))
-!     &         +g1z*(hmy*hz(l1,l2-1,j3+1)
-!     &              +h0y*hz(l1,l2,j3+1)
-!     &              +h1y*hz(l1,l2+1,j3+1))
-
-
 c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
             dq=qni*dqs/mni
@@ -262,9 +229,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             taux=bxq*root
             tauy=byq*root
             tauz=bzq*root
-!            taux=hxq*root
-!            tauy=hyq*root
-!            tauz=hzq*root
 
             tau=1.0/(1.0+taux*taux+tauy*tauy+tauz*tauz)
             pxp=((1.0+taux*taux-tauy*tauy-tauz*tauz)*pxm
@@ -288,7 +252,7 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
 
             yi=yi+vyi*yl
             zi=zi+vzi*zl
-
+            
             p_niloc(11*l)=xi
             p_niloc(11*l+1)=yi
             p_niloc(11*l+2)=zi
@@ -429,7 +393,60 @@ c CURRENT DENSITY AT (n+1.0)*dt
          enddo
       endif
 
+      end subroutine
+
+
+c THIS SUBROUTINE IS THE PARTICLE MOVER.
+
+
+      subroutine PIC_move_part_yz
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      real(kind=8) :: s_cpub
+      real(kind=8) :: s_cpuh
+
+      s_cpub=0.0d0
+      s_cpuh=0.0d0
+
+
+c      call C_dump_particles(niloc, p_niloc)
+c      call C_dump_fields(ex)
+c      call C_dump_fields(ey)
+c      call C_dump_fields(ez)
+c      call C_dump_fields(bx)
+c      call C_dump_fields(by)
+c      call C_dump_fields(bz)
+      call SERV_systime(cpug)
+
+#ifdef USE_PARTICLE_C
+      call C_set_params(i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, 
+     &     rd1, rd2, rd3)
+
+      call C_push_part_yz(niloc, p_niloc, cori, alpha, eta, 
+     &     p2A, p2B, dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+#else
+      call PIC_push_part_yz(niloc, p_niloc, cori, alpha, eta, 
+     &     p2A, p2B, dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+#endif
+     
       call SERV_systime(cpua)
+
+c      call C_dump_particles(niloc, p_niloc)
+c      call C_dump_fields(ne)
+c      call C_dump_fields(ni)
+c      call C_dump_fields(nn)
+c      call C_dump_fields(jxi)
+c      call C_dump_fields(jyi)
+c      call C_dump_fields(jzi)
+
       call PIC_fay(jxi)
       call PIC_faz(jxi)
       call PIC_fay(jyi)
@@ -464,11 +481,6 @@ c CURRENT DENSITY AT (n+1.0)*dt
       s_cpub=s_cpub+cpub-cpua
 
 
-      deallocate(s0y,s0z)
-      deallocate(s1y,s1z)
-      deallocate(jxh,jyh,jzh)
-
-
       call SERV_systime(cpuh)
       s_cpuh=s_cpuh+cpuh-cpug
 
@@ -478,3 +490,5 @@ c CURRENT DENSITY AT (n+1.0)*dt
 
 
       end subroutine PIC_move_part_yz
+
+
