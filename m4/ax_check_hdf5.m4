@@ -11,7 +11,7 @@ AC_DEFUN([AX_CHECK_HDF5],
    AS_IF(
      [test "$with_hdf5" != "no"],
      [AS_IF(
-        [test "$with_hdf5" != "yes"],
+        [test "$with_hdf5" != "yes" -a -n "$with_hdf5" ],
         [CPPFLAGS="$CPPFLAGS -I${with_hdf5}/include"
          LDFLAGS="$LDFLAGS -L${with_hdf5}/lib"]
       )
