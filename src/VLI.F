@@ -19,7 +19,7 @@ c INITIALIZATION
 
       call INIT_param
       call SERV_systime(cpus)
-      include './SERV_consist.f'
+      include './SERV_consist.F'
 
 
       call INIT_idistr
@@ -61,8 +61,8 @@ c         call PIC_msb         ! field propagation (n+0.5)*dt -> (n+1.0)*dt
          call MPI_BARRIER(MPI_COMM_WORLD,info)
 
          call SERV_systime(cpuf)
-         include 'SERV_cput.f'
-         include 'OUT_cput.f'
+         include 'SERV_cput.F'
+         include 'OUT_cput.F'
 
 
          if (cpue.ge.cpum) then

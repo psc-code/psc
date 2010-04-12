@@ -1,53 +1,53 @@
 
 bin_PROGRAMS = VLI VLA SELECT
 
-VLI_SOURCES = VLA_variables.f PIC_variables.f VLI.f \
-	INIT_ppulse_x1.f INIT_spulse_x1.f \
-	INIT_ppulse_x2.f INIT_spulse_x2.f \
-	INIT_ppulse_y1.f INIT_spulse_y1.f \
-	INIT_ppulse_y2.f INIT_spulse_y2.f \
-	INIT_ppulse_z1.f INIT_spulse_z1.f \
-	INIT_ppulse_z2.f INIT_spulse_z2.f \
-	PIC_bpulse.f PIC_ionize.f \
-	INIT_field.f INIT_param.f INIT_den.f INIT_idistr.f \
-	PIC_msa.f PIC_msb.f \
-	PIC_fex.f PIC_fey.f PIC_fez.f \
-	PIC_fax.f PIC_fay.f PIC_faz.f \
-	SERV_labelgen.f SERV_systime.f \
-	SERV_write.f \
-	OUT_param.f OUT_field.f OUT_part.f OUT_poyc.f \
-	OUT_count.f OUT_energy.f PIC_pex.f PIC_pey.f PIC_pez.f \
-	PIC_move_part.f PIC_move_part_xyz.f PIC_move_part_xy.f \
-	PIC_move_part_xz.f PIC_move_part_yz.f PIC_move_part_x.f \
-	PIC_move_part_y.f PIC_move_part_z.f PIC_bin_coll.f PIC_sort.f \
-	PIC_pml_msa.f PIC_pml_msb.f \
-	MCC_variables.f MCC_init.f MCC_impact.f
+VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
+	INIT_ppulse_x1.F INIT_spulse_x1.F \
+	INIT_ppulse_x2.F INIT_spulse_x2.F \
+	INIT_ppulse_y1.F INIT_spulse_y1.F \
+	INIT_ppulse_y2.F INIT_spulse_y2.F \
+	INIT_ppulse_z1.F INIT_spulse_z1.F \
+	INIT_ppulse_z2.F INIT_spulse_z2.F \
+	PIC_bpulse.F PIC_ionize.F \
+	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
+	PIC_msa.F PIC_msb.F \
+	PIC_fex.F PIC_fey.F PIC_fez.F \
+	PIC_fax.F PIC_fay.F PIC_faz.F \
+	SERV_labelgen.F SERV_systime.F \
+	SERV_write.F \
+	OUT_param.F OUT_field.F OUT_part.F OUT_poyc.F \
+	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
+	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
+	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
+	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \
+	PIC_pml_msa.F PIC_pml_msb.F \
+	MCC_variables.F MCC_init.F MCC_impact.F
 
-VLA_SOURCES = VLA_variables.f PIC_variables.f VLA.f \
-	INIT_ppulse_x1.f INIT_spulse_x1.f \
-	INIT_ppulse_x2.f INIT_spulse_x2.f \
-	INIT_ppulse_y1.f INIT_spulse_y1.f \
-	INIT_ppulse_y2.f INIT_spulse_y2.f \
-	INIT_ppulse_z1.f INIT_spulse_z1.f \
-	INIT_ppulse_z2.f INIT_spulse_z2.f \
-	PIC_bpulse.f PIC_ionize.f \
-	INIT_field.f INIT_param.f INIT_den.f INIT_idistr.f \
-	PIC_msa.f PIC_msb.f \
-	PIC_fex.f PIC_fey.f PIC_fez.f \
-	PIC_fax.f PIC_fay.f PIC_faz.f \
-	SERV_labelgen.f SERV_systime.f \
-	SERV_write.f SERV_read.f \
-	OUT_param.f OUT_field.f OUT_part.f OUT_poyc.f \
-	OUT_count.f OUT_energy.f PIC_pex.f PIC_pey.f PIC_pez.f \
-	PIC_move_part.f PIC_move_part_xyz.f PIC_move_part_xy.f \
-	PIC_move_part_xz.f PIC_move_part_yz.f PIC_move_part_x.f \
-	PIC_move_part_y.f PIC_move_part_z.f PIC_bin_coll.f PIC_sort.f \
-	PIC_pml_msa.f PIC_pml_msb.f \
-	MCC_variables.f MCC_init.f MCC_impact.f
+VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
+	INIT_ppulse_x1.F INIT_spulse_x1.F \
+	INIT_ppulse_x2.F INIT_spulse_x2.F \
+	INIT_ppulse_y1.F INIT_spulse_y1.F \
+	INIT_ppulse_y2.F INIT_spulse_y2.F \
+	INIT_ppulse_z1.F INIT_spulse_z1.F \
+	INIT_ppulse_z2.F INIT_spulse_z2.F \
+	PIC_bpulse.F PIC_ionize.F \
+	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
+	PIC_msa.F PIC_msb.F \
+	PIC_fex.F PIC_fey.F PIC_fez.F \
+	PIC_fax.F PIC_fay.F PIC_faz.F \
+	SERV_labelgen.F SERV_systime.F \
+	SERV_write.F SERV_read.F \
+	OUT_param.F OUT_field.F OUT_part.F OUT_poyc.F \
+	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
+	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
+	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
+	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \
+	PIC_pml_msa.F PIC_pml_msb.F \
+	MCC_variables.F MCC_init.F MCC_impact.F
 
-SELECT_SOURCES = VLA_variables.f PIC_variables.f INIT_param.f \
-	SELECT.f SERV_labelgen.f \
-	SELECT_pfield_evol.f SELECT_tfield_evol.f \
-	SELECT_cl_evol.f SELECT_count_evol.f \
-	SELECT_electron_evol.f SELECT_ion_evol.f SELECT_atom_evol.f
+SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
+	SELECT.F SERV_labelgen.F \
+	SELECT_pfield_evol.F SELECT_tfield_evol.F \
+	SELECT_cl_evol.F SELECT_count_evol.F \
+	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
 
