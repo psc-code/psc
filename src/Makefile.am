@@ -22,7 +22,8 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \
 	PIC_push_part_yz.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
-	MCC_variables.F MCC_init.F MCC_impact.F
+	MCC_variables.F MCC_init.F MCC_impact.F \
+	psc_glue.c psc.c
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -45,7 +46,8 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \
 	PIC_push_part_yz.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
-	MCC_variables.F MCC_init.F MCC_impact.F
+	MCC_variables.F MCC_init.F MCC_impact.F \
+	psc_glue.c psc.c
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT.F SERV_labelgen.F \

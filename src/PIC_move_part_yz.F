@@ -29,9 +29,6 @@ c      call C_dump_fields(bz)
       call SERV_systime(cpug)
 
 #ifdef USE_PARTICLE_C
-      call C_set_params(i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, 
-     &     rd1, rd2, rd3)
-
       call C_push_part_yz(niloc, p_niloc, cori, alpha, eta, 
      &     p2A, p2B, dt, dx, dy, dz,
      &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
