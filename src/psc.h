@@ -12,6 +12,11 @@ enum {
   NR_FIELDS,
 };
 
+// C floating point type
+// used to switch between single and double precision
+
+typedef double real;
+
 // Fortran types
 
 typedef double f_real;
@@ -33,6 +38,7 @@ struct psc_param {
   double cori, eta, alpha;
 };
 
+// ----------------------------------------------------------------------
 // general info / parameters for the code
 
 struct psc {
@@ -67,8 +73,18 @@ void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
+void psc_save_particles_ref();
+void psc_check_particles_ref();
+
+void psc_push_part_yz_a();
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
+void PIC_push_part_yz_a();
+
+// ----------------------------------------------------------------------
+// other bits and hacks...
+
+#define sqr(a) ((a) * (a))
 
 #endif

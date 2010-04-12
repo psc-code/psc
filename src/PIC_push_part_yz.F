@@ -396,3 +396,123 @@ c CURRENT DENSITY AT (n+1.0)*dt
 
       end subroutine
 
+c     particle pusher yz, separated out to not depend on global
+c     variables from modules
+c     first half step only (x^n -> x^{n+1/2})
+
+      subroutine PIC_push_part_yz_a(niloc, p_niloc, cori, alpha, eta, 
+     &     p2A, p2B, dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+
+      implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8) :: cori, alpha, eta, dt, dx, dy, dz, p2A, p2B
+      integer      :: i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+
+      integer :: j1,j2,j3,k2,k3,l1,l2,l3
+      integer :: l2min,l2max,l3min,l3max
+      integer :: l
+
+      real(kind=8) :: dxi,dyi,dzi
+      real(kind=8) :: pxi,pyi,pzi
+      real(kind=8) :: pxm,pym,pzm,pxp,pyp,pzp
+      real(kind=8) :: qni,mni,cni,lni,wni
+      real(kind=8) :: xi,yi,zi,vxi,vyi,vzi,root
+      real(kind=8) :: xl,yl,zl
+      
+      real(kind=8) :: dqs,fnqs,fnqxs,fnqys,fnqzs
+      real(kind=8) :: dq,fnq,fnqx,fnqy,fnqz
+
+      real(kind=8) :: h1,h2,h3
+      real(kind=8) :: hmy,h0y,h1y,hmz,h0z,h1z
+      real(kind=8) :: gmy,g0y,g1y,gmz,g0z,g1z
+      real(kind=8) :: wx,wy,wz
+      real(kind=8) :: exq,eyq,ezq
+      real(kind=8) :: bxq,byq,bzq
+      real(kind=8) :: taux,tauy,tauz,tau
+      real(kind=8) :: u,v,w
+
+      real(kind=8),dimension(-2:2) :: s0y,s0z
+      real(kind=8),dimension(-2:2) :: s1y,s1z
+      real(kind=8),dimension(-3:2,-2:2,-2:2) :: jxh
+      real(kind=8),dimension(-2:2,-3:2,-2:2) :: jyh
+      real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
+
+
+c INITIALIZATION
+
+      xl=0.5*dt
+      yl=0.5*dt
+      zl=0.5*dt
+      dqs=0.5*eta*dt
+      fnqs=alpha*alpha*cori/eta
+      fnqxs=dx*fnqs/dt
+      fnqys=dy*fnqs/dt
+      fnqzs=dz*fnqs/dt
+      dxi=1.0/dx
+      dyi=1.0/dy
+      dzi=1.0/dz
+
+
+      ne=0.0d0
+      ni=0.0d0
+      nn=0.0d0
+      jxi=0.0d0
+      jyi=0.0d0
+      jzi=0.0d0
+
+
+      p2A=0.0d0
+      p2B=0.0d0
+
+
+c PARTICLE LOOP
+
+      if (niloc.gt.0) then
+         do l=1,niloc
+            xi=p_niloc(11*l)
+            yi=p_niloc(11*l+1)
+            zi=p_niloc(11*l+2)
+            pxi=p_niloc(11*l+3)
+            pyi=p_niloc(11*l+4)
+            pzi=p_niloc(11*l+5)
+            qni=p_niloc(11*l+6)
+            mni=p_niloc(11*l+7)
+            cni=p_niloc(11*l+8)
+            lni=p_niloc(11*l+9)
+            wni=p_niloc(11*l+10)
+
+c CHARGE DENSITY FORM FACTOR AT (n+0.5)*dt 
+c x^n, p^n -> x^(n+0.5), p^n
+
+            root=1.0/dsqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi)
+            vxi=pxi*root
+            vyi=pyi*root
+            vzi=pzi*root
+
+            yi=yi+vyi*yl
+            zi=zi+vzi*zl
+            
+            p_niloc(11*l)=xi
+            p_niloc(11*l+1)=yi
+            p_niloc(11*l+2)=zi
+         enddo
+      endif
+
+      end subroutine
+

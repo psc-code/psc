@@ -11,6 +11,7 @@ SELECT
 VLA
 VLI
 test1
+test2
 Makefile.in
 Makefile
 aclocal.m4
