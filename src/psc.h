@@ -15,7 +15,7 @@ enum {
 // C floating point type
 // used to switch between single and double precision
 
-typedef double real;
+typedef float real;
 
 // Fortran types
 
@@ -36,6 +36,17 @@ struct f_particle {
 
 struct psc_param {
   double cori, eta, alpha;
+};
+
+// ----------------------------------------------------------------------
+// C data structures
+
+struct c_particle {
+  real xi, yi, zi;
+  real pxi, pyi, pzi;
+  real qni;
+  real mni;
+  real wni;
 };
 
 // ----------------------------------------------------------------------
@@ -61,6 +72,9 @@ struct psc {
   int img[3];         // total # points per dir incl. ghost points
   int fld_size;       // total # points per field incl. ghost points
   f_real *f_fields[NR_FIELDS];
+
+  // C data structures
+  struct c_particle *c_part;
 };
 
 // we keep this info global for now.
@@ -75,8 +89,11 @@ void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
 void psc_check_particles_ref();
+void psc_particles_from_fortran();
+void psc_particles_to_fortran();
 
 void psc_push_part_yz_a();
+void psc_push_part_yz_a_c();
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
