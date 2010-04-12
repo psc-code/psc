@@ -5,10 +5,12 @@ okfile
 *.mod
 *.o
 *.a
+*.asc
 BACKUP
 SELECT
 VLA
 VLI
+test1
 Makefile.in
 Makefile
 aclocal.m4
