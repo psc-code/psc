@@ -55,8 +55,13 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
 
-test1_SOURCES = test1.c psc.c psc_glue.c PIC_push_part_yz.F
-test2_SOURCES = test2.c psc.c psc_glue.c PIC_push_part_yz.F \
+test1_SOURCES = test1.c psc.c psc_glue.c \
+		PIC_push_part_yz.F \
+		PIC_push_part_z.F
+
+test2_SOURCES = test2.c psc.c psc_glue.c \
+		PIC_push_part_yz.F \
+		PIC_push_part_z.F \
 		psc_push_part_yz_a.c \
 		psc_c_push_part_yz_a.c
 

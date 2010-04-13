@@ -36,6 +36,8 @@ struct f_particle {
 
 struct psc_param {
   double cori, eta, alpha;
+  double wl;
+  double wp;
 };
 
 // ----------------------------------------------------------------------
@@ -58,6 +60,7 @@ struct psc {
 
   // other parameters / constants
   double p2A, p2B;
+  int timestep;
   double dt;
   double dx[3];
 
