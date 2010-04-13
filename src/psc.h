@@ -58,7 +58,9 @@ struct psc_ops {
   const char *name;
   void (*particles_from_fortran)(void);
   void (*particles_to_fortran)(void);
-  void (*push_part_yz_a)(void);
+  void (*push_part_yz)(void);
+  void (*push_part_z)(void);
+  void (*push_part_yz_a)(void); // only does the simple first half step
 };
 
 struct psc {
@@ -95,6 +97,8 @@ extern struct psc psc;
 
 void psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_free();
+struct psc_ops *psc_find_ops(const char *ops_name);
+
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_particles_1();
@@ -102,8 +106,10 @@ void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
 void psc_check_particles_ref();
 
+void psc_push_part_yz();
+void psc_push_part_z();
 void psc_push_part_yz_a();
-void psc_push_part_yz_a_c();
+
 void genc_push_part_yz_a();
 
 // various implementations of the psc
@@ -114,6 +120,7 @@ extern struct psc_ops psc_ops_generic_c;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
+void PIC_push_part_z();
 void PIC_push_part_yz_a();
 
 // ----------------------------------------------------------------------

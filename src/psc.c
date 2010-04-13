@@ -34,7 +34,7 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
-static struct psc_ops *
+struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
   for (int i = 0; psc_ops_list[i]; i++) {
@@ -132,15 +132,41 @@ psc_dump_particles(const char *fname)
 }
 
 // ----------------------------------------------------------------------
+// psc_push_part_yz
+
+void
+psc_push_part_yz()
+{
+  assert(psc.ops->push_part_yz);
+  psc.ops->particles_from_fortran();
+  psc.ops->push_part_yz();
+  psc.ops->particles_to_fortran();
+}
+
+// ----------------------------------------------------------------------
+// psc_push_part_z
+
+void
+psc_push_part_z()
+{
+  assert(psc.ops->push_part_z);
+  psc.ops->particles_from_fortran();
+  psc.ops->push_part_z();
+  psc.ops->particles_to_fortran();
+}
+
+// ----------------------------------------------------------------------
 // psc_push_part_yz_a
 
 void
 psc_push_part_yz_a()
 {
+  assert(psc.ops->push_part_yz_a);
   psc.ops->particles_from_fortran();
   psc.ops->push_part_yz_a();
   psc.ops->particles_to_fortran();
 }
+
 
 static struct f_particle *particle_ref;
 
