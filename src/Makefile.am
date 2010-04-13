@@ -6,8 +6,11 @@ noinst_LIBRARIES = libpsc.a
 LDADD = libpsc.a
 
 libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
-	psc_generic_c.c psc_c_push_part_yz_a.c \
-	psc_fortran.c PIC_push_part_yz.F PIC_push_part_z.F
+	generic_c/psc_generic_c.c \
+	generic_c/psc_push_part_yz_a.c \
+	psc_fortran.c \
+	PIC_push_part_yz.F \
+	PIC_push_part_z.F
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
