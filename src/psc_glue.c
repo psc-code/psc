@@ -114,6 +114,9 @@ void C_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
 			f_real *ex, f_real *ey, f_real *ez,
 			f_real *bx, f_real *by, f_real *bz)
 {
+  // hardcoded: let's call back to fortran for now
+  psc_create("fortran");
+
   psc.prm.cori = *cori;
   psc.prm.alpha = *alpha;
   psc.prm.eta = *eta;
@@ -155,8 +158,6 @@ void C_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
   psc.f_fields[BY] = by;
   psc.f_fields[BZ] = bz;
 
-  // hardcoded: let's call back to fortran for now
-  psc_create("fortran");
   psc_push_part_yz();
   psc_destroy();
 
@@ -177,6 +178,9 @@ void C_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 		       f_real *ex, f_real *ey, f_real *ez,
 		       f_real *bx, f_real *by, f_real *bz)
 {
+  // hardcoded: let's call back to fortran for now
+  psc_create("fortran");
+
   psc.prm.cori = *cori;
   psc.prm.alpha = *alpha;
   psc.prm.eta = *eta;
@@ -221,8 +225,6 @@ void C_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
   psc.f_fields[BY] = by;
   psc.f_fields[BZ] = bz;
 
-  // hardcoded: let's call back to fortran for now
-  psc_create("fortran");
   psc_push_part_z();
   psc_destroy();
 
