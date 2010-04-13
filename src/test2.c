@@ -20,7 +20,7 @@ main()
 
   int n_part = 1;
 
-  psc_alloc(ilo, ihi, ibn, n_part);
+  psc_alloc("generic_c", ilo, ihi, ibn, n_part);
 
   setup();
   //  psc_dump_particles("part-0.asc");
@@ -31,11 +31,6 @@ main()
   setup();
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2.asc");
-  psc_check_particles_ref();
-  
-  setup();
-  psc_push_part_yz_a_c();
-  //  psc_dump_particles("part-3.asc");
   psc_check_particles_ref();
   
   psc_free();

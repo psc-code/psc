@@ -4,7 +4,7 @@
 #include <math.h>
 
 void
-psc_push_part_yz_a()
+genf_push_part_yz_a()
 {
   f_real dt = psc.dt;
   f_real yl = .5 * dt;

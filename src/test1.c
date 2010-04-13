@@ -12,7 +12,7 @@ main()
 
   int n_part = 1;
 
-  psc_alloc(ilo, ihi, ibn, n_part);
+  psc_alloc("generic_c", ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_zero();
   psc_setup_particles_1();

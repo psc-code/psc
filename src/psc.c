@@ -28,9 +28,29 @@ assert_equal(double x, double y)
 
 // ----------------------------------------------------------------------
 
-void
-psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
+static struct psc_ops *psc_ops_list[] = {
+  &psc_ops_generic_c,
+  NULL,
+};
+
+static struct psc_ops *
+psc_find_ops(const char *ops_name)
 {
+  for (int i = 0; psc_ops_list[i]; i++) {
+    if (strcmp(psc_ops_list[i]->name, ops_name) == 0)
+      return psc_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
+// ----------------------------------------------------------------------
+
+void
+psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part)
+{
+  psc.ops = psc_find_ops(ops_name);
+
   for (int d = 0; d < 3; d++) {
     psc.ilo[d] = ilo[d];
     psc.ilg[d] = ilo[d] - ibn[d];
@@ -110,45 +130,15 @@ psc_dump_particles(const char *fname)
   fclose(file);
 }
 
-void
-psc_particles_from_fortran()
-{
-  if (!psc.c_part) {
-    psc.c_part = calloc(psc.n_part, sizeof(*psc.c_part));
-  }
-  for (int n = 0; n < psc.n_part; n++) {
-    struct f_particle *f_part = &psc.f_part[n];
-    struct c_particle *part = &psc.c_part[n];
-
-    part[n].xi  = f_part[n].xi;
-    part[n].yi  = f_part[n].yi;
-    part[n].zi  = f_part[n].zi;
-    part[n].pxi = f_part[n].pxi;
-    part[n].pyi = f_part[n].pyi;
-    part[n].pzi = f_part[n].pzi;
-    part[n].qni = f_part[n].qni;
-    part[n].mni = f_part[n].mni;
-    part[n].wni = f_part[n].wni;
-  }
-}
+// ----------------------------------------------------------------------
+// psc_push_part_yz_a
 
 void
-psc_particles_to_fortran()
+psc_push_part_yz_a()
 {
-  for (int n = 0; n < psc.n_part; n++) {
-    struct f_particle *f_part = &psc.f_part[n];
-    struct c_particle *part = &psc.c_part[n];
-
-    f_part[n].xi  = part[n].xi;
-    f_part[n].yi  = part[n].yi;
-    f_part[n].zi  = part[n].zi;
-    f_part[n].pxi = part[n].pxi;
-    f_part[n].pyi = part[n].pyi;
-    f_part[n].pzi = part[n].pzi;
-    f_part[n].qni = part[n].qni;
-    f_part[n].mni = part[n].mni;
-    f_part[n].wni = part[n].wni;
-  }
+  psc.ops->particles_from_fortran();
+  psc.ops->push_part_yz_a();
+  psc.ops->particles_to_fortran();
 }
 
 static struct f_particle *particle_ref;

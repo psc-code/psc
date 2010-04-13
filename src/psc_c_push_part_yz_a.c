@@ -7,7 +7,7 @@
 // test w/ C data structure, single precision 
 
 void
-psc_c_push_part_yz_a()
+genc_push_part_yz_a()
 {
   real dt = psc.dt;
   real yl = .5 * dt;
@@ -23,12 +23,4 @@ psc_c_push_part_yz_a()
     part->yi += vyi * yl;
     part->zi += vzi * zl;
   }
-}
-
-void
-psc_push_part_yz_a_c()
-{
-  psc_particles_from_fortran();
-  psc_c_push_part_yz_a();
-  psc_particles_to_fortran();
 }

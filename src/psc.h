@@ -54,7 +54,15 @@ struct c_particle {
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
+struct psc_ops {
+  const char *name;
+  void (*particles_from_fortran)(void);
+  void (*particles_to_fortran)(void);
+  void (*push_part_yz_a)(void);
+};
+
 struct psc {
+  struct psc_ops *ops;
   // user-configurable parameters
   struct psc_param prm;
 
@@ -78,13 +86,14 @@ struct psc {
 
   // C data structures
   struct c_particle *c_part;
+  void *c_ctx;
 };
 
 // we keep this info global for now.
 
 extern struct psc psc;
 
-void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
+void psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_free();
 void psc_setup_parameters();
 void psc_setup_fields_zero();
@@ -92,11 +101,15 @@ void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
 void psc_check_particles_ref();
-void psc_particles_from_fortran();
-void psc_particles_to_fortran();
 
 void psc_push_part_yz_a();
 void psc_push_part_yz_a_c();
+void genc_push_part_yz_a();
+
+// various implementations of the psc
+// (something like Fortran, generic C, CUDA, ...)
+
+extern struct psc_ops psc_ops_generic_c;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
