@@ -110,8 +110,6 @@ void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
 
-void genc_push_part_yz_a();
-
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 

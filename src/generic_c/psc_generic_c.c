@@ -1,5 +1,5 @@
 
-#include "psc.h"
+#include "psc_generic_c.h"
 
 #include <stdlib.h>
 
