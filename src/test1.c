@@ -1,6 +1,4 @@
 
-#include <stdio.h>
-
 #include "psc.h"
 
 int

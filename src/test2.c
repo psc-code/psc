@@ -20,18 +20,18 @@ main()
 
   int n_part = 1;
 
-  psc_alloc("generic_c", ilo, ihi, ibn, n_part);
-
+  psc_alloc("fortran", ilo, ihi, ibn, n_part);
   setup();
   //  psc_dump_particles("part-0.asc");
   PIC_push_part_yz_a();
   //  psc_dump_particles("part-1.asc");
   psc_save_particles_ref();
+  psc_free();
 
+  psc_alloc("generic_c", ilo, ihi, ibn, n_part);
   setup();
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2.asc");
   psc_check_particles_ref();
-  
   psc_free();
 }

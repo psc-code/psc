@@ -109,6 +109,7 @@ void genc_push_part_yz_a();
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 
+extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
 
 // Wrappers for Fortran functions

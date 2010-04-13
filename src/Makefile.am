@@ -23,7 +23,8 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	psc_glue.c psc.c psc_generic_c.c psc_c_push_part_yz_a.c
+	psc_glue.c psc.c psc_generic_c.c psc_c_push_part_yz_a.c \
+	psc_fortran.c
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -47,7 +48,8 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	psc_glue.c psc.c psc_generic_c.c psc_c_push_part_yz_a.c
+	psc_glue.c psc.c psc_generic_c.c psc_c_push_part_yz_a.c \
+	psc_fortran.c
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT.F SERV_labelgen.F \
@@ -58,12 +60,14 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 test1_SOURCES = test1.c psc.c psc_glue.c psc_generic_c.c \
 		PIC_push_part_yz.F \
 		PIC_push_part_z.F \
-		psc_c_push_part_yz_a.c
+		psc_c_push_part_yz_a.c \
+		psc_fortran.c
 
 test2_SOURCES = test2.c psc.c psc_glue.c psc_generic_c.c \
 		PIC_push_part_yz.F \
 		PIC_push_part_z.F \
 		psc_push_part_yz_a.c \
-		psc_c_push_part_yz_a.c
+		psc_c_push_part_yz_a.c \
+		psc_fortran.c
 
 TESTS = test2
