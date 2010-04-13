@@ -204,3 +204,24 @@ psc_check_particles_ref()
     assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi);
   }
 }
+
+// ----------------------------------------------------------------------
+// psc_create_test_1
+//
+// set up test case 1
+
+void
+psc_create_test_1(const char *ops_name)
+{
+  int ilo[3] = { 0, 0, 0 };
+  int ihi[3] = { 8, 8, 8 };
+  int ibn[3] = { 2, 2, 2 }; // FIXME?
+
+  int n_part = 1;
+
+  psc_alloc(ops_name, ilo, ihi, ibn, n_part);
+  psc_setup_parameters();
+  psc_setup_fields_zero();
+  psc_setup_particles_1();
+}
+
