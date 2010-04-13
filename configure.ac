@@ -23,6 +23,8 @@ AC_PROG_F77([openmpif90 mpif90])
 
 AC_F77_WRAPPERS
 
+AC_PROG_RANLIB
+
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
