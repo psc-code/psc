@@ -6,12 +6,16 @@
 static void
 genc_particles_from_fortran()
 {
-  if (!psc.c_part) {
-    psc.c_part = calloc(psc.n_part, sizeof(*psc.c_part));
+  struct psc_genc *genc = psc.c_ctx;
+  if (!psc.c_ctx) {
+    psc.c_ctx = malloc(sizeof(*psc.c_ctx));
+    genc = psc.c_ctx;
+    genc->part = calloc(psc.n_part, sizeof(*genc->part));
+    // FIXME, this is all leaked..
   }
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
-    struct c_particle *part = &psc.c_part[n];
+    struct c_particle *part = &genc->part[n];
 
     part[n].xi  = f_part[n].xi;
     part[n].yi  = f_part[n].yi;
@@ -28,9 +32,11 @@ genc_particles_from_fortran()
 static void
 genc_particles_to_fortran()
 {
+  struct psc_genc *genc = psc.c_ctx;
+
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
-    struct c_particle *part = &psc.c_part[n];
+    struct c_particle *part = &genc->part[n];
 
     f_part[n].xi  = part[n].xi;
     f_part[n].yi  = part[n].yi;

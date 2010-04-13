@@ -41,17 +41,6 @@ struct psc_param {
 };
 
 // ----------------------------------------------------------------------
-// C data structures
-
-struct c_particle {
-  real xi, yi, zi;
-  real pxi, pyi, pzi;
-  real qni;
-  real mni;
-  real wni;
-};
-
-// ----------------------------------------------------------------------
 // general info / parameters for the code
 
 struct psc_ops {
@@ -87,7 +76,6 @@ struct psc {
   f_real *f_fields[NR_FIELDS];
 
   // C data structures
-  struct c_particle *c_part;
   void *c_ctx;
 };
 
