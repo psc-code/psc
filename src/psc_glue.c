@@ -156,8 +156,9 @@ void C_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
   psc.f_fields[BZ] = bz;
 
   // hardcoded: let's call back to fortran for now
-  psc.ops = psc_find_ops("fortran");
+  psc_create("fortran");
   psc_push_part_yz();
+  psc_destroy();
 
   *p2A = psc.p2A;
   *p2A = psc.p2B;
@@ -221,8 +222,9 @@ void C_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
   psc.f_fields[BZ] = bz;
 
   // hardcoded: let's call back to fortran for now
-  psc.ops = psc_find_ops("fortran");
+  psc_create("fortran");
   psc_push_part_z();
+  psc_destroy();
 
   *p2A = psc.p2A;
   *p2A = psc.p2B;

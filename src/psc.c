@@ -34,7 +34,7 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
-struct psc_ops *
+static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
   for (int i = 0; psc_ops_list[i]; i++) {
@@ -45,13 +45,21 @@ psc_find_ops(const char *ops_name)
   abort();
 }
 
+void
+psc_create(const char *ops_name)
+{
+  memset(&psc, 0, sizeof(psc));
+  psc.ops = psc_find_ops(ops_name);
+  if (psc.ops->create) {
+    psc.ops->create();
+  }
+}
+
 // ----------------------------------------------------------------------
 
 void
-psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part)
+psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
 {
-  psc.ops = psc_find_ops(ops_name);
-
   for (int d = 0; d < 3; d++) {
     psc.ilo[d] = ilo[d];
     psc.ilg[d] = ilo[d] - ibn[d];
@@ -66,16 +74,24 @@ psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part)
 
   psc.n_part = n_part;
   psc.f_part = calloc(n_part, sizeof(*psc.f_part));
+
+  psc.allocated = true;
 }
 
 void
-psc_free()
+psc_destroy()
 {
-  for (int m = 0; m < NR_FIELDS; m++) {
-    free(psc.f_fields[m]);
+  if (psc.ops->destroy) {
+    psc.ops->destroy();
   }
 
-  free(psc.f_part);
+  if (psc.allocated) {
+    for (int m = 0; m < NR_FIELDS; m++) {
+      free(psc.f_fields[m]);
+    }
+
+    free(psc.f_part);
+  }
 }
 
 void
@@ -219,7 +235,8 @@ psc_create_test_1(const char *ops_name)
 
   int n_part = 1;
 
-  psc_alloc(ops_name, ilo, ihi, ibn, n_part);
+  psc_create(ops_name);
+  psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_zero();
   psc_setup_particles_1();

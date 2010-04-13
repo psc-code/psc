@@ -4,6 +4,8 @@
 
 #include <config.h>
 
+#include <stdbool.h>
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -45,6 +47,8 @@ struct psc_param {
 
 struct psc_ops {
   const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
   void (*particles_from_fortran)(void);
   void (*particles_to_fortran)(void);
   void (*push_part_yz)(void);
@@ -77,15 +81,18 @@ struct psc {
 
   // C data structures
   void *c_ctx;
+
+  // did we allocate the fields / particles (otherwise, Fortran did)
+  bool allocated;
 };
 
 // we keep this info global for now.
 
 extern struct psc psc;
 
-void psc_alloc(const char *ops_name, int ilo[3], int ihi[3], int ibn[3], int n_part);
-void psc_free();
-struct psc_ops *psc_find_ops(const char *ops_name);
+void psc_create();
+void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
+void psc_destroy();
 
 void psc_setup_parameters();
 void psc_setup_fields_zero();

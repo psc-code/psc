@@ -10,5 +10,5 @@ main()
   PIC_push_part_yz();
   psc_dump_particles("part-1.asc");
 
-  psc_free();
+  psc_destroy();
 }
