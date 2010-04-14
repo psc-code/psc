@@ -24,6 +24,9 @@ void cuda_push_part_yz_a();
 // ======================================================================
 // CUDA emulation
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifndef __unused
 #define __unused __attribute__((unused))
 #endif
@@ -57,6 +60,38 @@ static struct {
 #define __device__
 #define __global__
 #define __constant__
+
+enum {
+  cudaSuccess,
+};
+
+enum {
+  cudaMemcpyHostToDevice,
+  cudaMemcpyDeviceToHost,
+};
+
+static inline int
+cudaMalloc(void **p, size_t len)
+{
+  *p = malloc(len);
+  return cudaSuccess;
+}
+
+static inline int
+cudaMemcpy(void *to, void *from, size_t len, int dir)
+{
+  memcpy(to, from, len);
+  return cudaSuccess;
+}
+
+static inline int
+cudaFree(void *p)
+{
+  free(p);
+  return cudaSuccess;
+}
+
+#define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
 

@@ -52,8 +52,13 @@ cuda_particles_from_fortran()
   cuda->xi4 = xi4;
   cuda->pxi4 = pxi4;
 
-  cuda->d_part.xi4 = xi4;
-  cuda->d_part.pxi4 = pxi4;
+  check(cudaMalloc((void **) &cuda->d_part.xi4, psc.n_part * sizeof(float4)));
+  check(cudaMalloc((void **) &cuda->d_part.pxi4, psc.n_part * sizeof(float4)));
+
+  check(cudaMemcpy(cuda->d_part.xi4, xi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(cuda->d_part.pxi4, pxi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
 }
 
 static void
@@ -62,6 +67,13 @@ cuda_particles_to_fortran()
   struct psc_cuda *cuda = psc.c_ctx;
   float4 *xi4  = cuda->xi4;
   float4 *pxi4 = cuda->pxi4;
+
+  check(cudaMemcpy(xi4, cuda->d_part.xi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyDeviceToHost));
+  check(cudaMemcpy(pxi4, cuda->d_part.pxi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyDeviceToHost));
+  check(cudaFree(cuda->d_part.xi4));
+  check(cudaFree(cuda->d_part.pxi4));
 
   for (int i = 0; i < psc.n_part; i++) {
     f_real qni_div_mni = xi4[i].w;
