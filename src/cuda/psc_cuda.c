@@ -33,7 +33,18 @@ struct {
     }									\
   } while (0)
 
+#define __device__
+#define __global__
+#define __constant__
+
 // ======================================================================
+
+__constant__ static float _dt;
+
+static void set_constants()
+{
+  _dt = psc.dt;
+}
 
 static void
 cuda_create()
@@ -80,6 +91,9 @@ cuda_particles_from_fortran()
 
   cuda->xi4 = xi4;
   cuda->pxi4 = pxi4;
+
+  cuda->d_part.xi4 = xi4;
+  cuda->d_part.pxi4 = pxi4;
 }
 
 static void
@@ -119,18 +133,11 @@ cuda_particles_to_fortran()
   free(pxi4);
 }
 
-static float _dt;
-
-static void set_constants()
+__device__ static void
+push_part_yz_a_one(int n, struct d_part d_part)
 {
-  _dt = psc.dt;
-}
-
-static void
-push_part_yz_a_one(int n, float4 *d_xi4, float4 *d_pxi4)
-{
-  float4 xi4  = d_xi4[n];
-  float4 pxi4 = d_pxi4[n];
+  float4 xi4  = d_part.xi4[n];
+  float4 pxi4 = d_part.pxi4[n];
   
   float root = 1. / sqrt(1. + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
   float vyi = pxi4.y * root;
@@ -139,16 +146,16 @@ push_part_yz_a_one(int n, float4 *d_xi4, float4 *d_pxi4)
   xi4.y += vyi * .5 * _dt;
   xi4.z += vzi * .5 * _dt;
 
-  d_xi4[n] = xi4;
+  d_part.xi4[n] = xi4;
 }
 
-static void
-push_part_yz_a(int n_part, float4 *d_xi4, float4 *d_pxi4, int stride)
+__global__ static void
+push_part_yz_a(int n_part, struct d_part d_part, int stride)
 {
   int n = threadIdx.x + blockDim.x * blockIdx.x;
 
   while (n < n_part) {
-    push_part_yz_a_one(n, d_xi4, d_pxi4);
+    push_part_yz_a_one(n, d_part);
     n += stride;
   }
 }
@@ -165,7 +172,7 @@ cuda_push_part_yz_a()
   int dimGrid[2]  = { gridSize, 1 };
   int dimBlock[2] = { threadsPerBlock, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.n_part, cuda->xi4, cuda->pxi4,
+	     push_part_yz_a, (psc.n_part, cuda->d_part,
 			      gridSize * threadsPerBlock));
 
   for (int n = 0; n < psc.n_part; n++) {
