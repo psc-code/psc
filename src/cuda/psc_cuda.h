@@ -76,6 +76,9 @@ cudaFree(void *p)
   return cudaSuccess;
 }
 
+#define cudaMemcpyToSymbol(to, from, len)		\
+  cudaMemcpy(&to, from, len, cudaMemcpyHostToDevice) 
+ 
 typedef struct {
   float x, y, z, w;
 } float4;

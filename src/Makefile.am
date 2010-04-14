@@ -73,7 +73,7 @@ test2_SOURCES = test2.c
 
 TESTS = test2
 
-
+if USE_CUDA
 
 NVCC = /usr/local/cuda/bin/nvcc
 NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
@@ -85,3 +85,5 @@ push_part_yz.o: cuda/push_part_yz.cu
 
 %.cu: %.c
 	ln -sf $(<F) $@
+
+endif

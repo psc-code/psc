@@ -42,6 +42,14 @@ AC_ARG_ENABLE(
   [AC_DEFINE([USE_PARTICLE_C])]
 )
   	
+AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
+AC_ARG_ENABLE(
+  [cuda],
+  [AS_HELP_STRING([--cuda], [use nvcc to create CUDA code])],
+  [AC_DEFINE([USE_CUDA])]
+)
+AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
+  	
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 
