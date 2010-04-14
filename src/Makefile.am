@@ -76,7 +76,9 @@ TESTS = test2
 
 
 NVCC = /usr/local/cuda/bin/nvcc
-NVCFLAGS = -m64 --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) -L/usr/local/cuda/lib -lcuda
+NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
+
+LDADD += -L/usr/local/cuda/lib64 -lcudart
 
 push_part_yz.o: cuda/push_part_yz.cu
 	$(NVCC) $(NVCFLAGS) -c $< -o $@

@@ -115,5 +115,7 @@ struct psc_cuda {
 };
 
 EXTERN_C void cuda_push_part_yz_a();
+EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
+EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
 
 #endif

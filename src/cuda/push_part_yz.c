@@ -53,3 +53,25 @@ cuda_push_part_yz_a()
 			      gridSize * threadsPerBlock));
 }
 
+EXTERN_C void
+__cuda_particles_from_fortran(struct psc_cuda *cuda)
+{
+  check(cudaMalloc((void **) &cuda->d_part.xi4,  psc.n_part * sizeof(float4)));
+  check(cudaMalloc((void **) &cuda->d_part.pxi4, psc.n_part * sizeof(float4)));
+
+  check(cudaMemcpy(cuda->d_part.xi4, cuda->xi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(cuda->d_part.pxi4, cuda->pxi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
+}
+
+EXTERN_C void
+__cuda_particles_to_fortran(struct psc_cuda *cuda)
+{
+  check(cudaMemcpy(cuda->xi4, cuda->d_part.xi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyDeviceToHost));
+  check(cudaMemcpy(cuda->pxi4, cuda->d_part.pxi4, psc.n_part * sizeof(float4),
+		   cudaMemcpyDeviceToHost));
+  check(cudaFree(cuda->d_part.xi4));
+  check(cudaFree(cuda->d_part.pxi4));
+}
