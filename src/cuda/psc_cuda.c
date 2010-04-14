@@ -5,6 +5,36 @@
 #include <math.h>
 #include <assert.h>
 
+// ======================================================================
+
+struct {
+  int x, y;
+} threadIdx;
+
+struct {
+  int x, y;
+} blockIdx;
+
+struct {
+  int x, y;
+} blockDim;
+
+#define RUN_KERNEL(dimBlock, dimGrid, func, params) do {		\
+    blockDim.x = dimBlock[0];						\
+    blockDim.y = dimBlock[1];						\
+    for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {	\
+      for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {	\
+	for (threadIdx.y = 0; threadIdx.y < dimBlock[1]; threadIdx.y++) { \
+	  for (threadIdx.x = 0; threadIdx.x < dimBlock[0]; threadIdx.x++) { \
+	    func params;						\
+	  }								\
+	}								\
+      }									\
+    }									\
+  } while (0)
+
+// ======================================================================
+
 static void
 cuda_create()
 {
@@ -97,24 +127,48 @@ static void set_constants()
 }
 
 static void
+push_part_yz_a_one(int n, float4 *d_xi4, float4 *d_pxi4)
+{
+  float4 xi4  = d_xi4[n];
+  float4 pxi4 = d_pxi4[n];
+  
+  float root = 1. / sqrt(1. + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
+  float vyi = pxi4.y * root;
+  float vzi = pxi4.z * root;
+  
+  xi4.y += vyi * .5 * _dt;
+  xi4.z += vzi * .5 * _dt;
+
+  d_xi4[n] = xi4;
+}
+
+static void
+push_part_yz_a(int n_part, float4 *d_xi4, float4 *d_pxi4, int stride)
+{
+  int n = threadIdx.x + blockDim.x * blockIdx.x;
+
+  while (n < n_part) {
+    push_part_yz_a_one(n, d_xi4, d_pxi4);
+    n += stride;
+  }
+}
+
+static void
 cuda_push_part_yz_a()
 {
   struct psc_cuda *cuda = psc.c_ctx;
 
   set_constants();
 
-  for (int n = 0; n < psc.n_part; n++) {
-    float4 xi4  = cuda->xi4[n];
-    float4 pxi4 = cuda->pxi4[n];
-    
-    float root = 1. / sqrt(1. + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
-    float vyi = pxi4.y * root;
-    float vzi = pxi4.z * root;
-    
-    xi4.y += vyi * .5 * _dt;
-    xi4.z += vzi * .5 * _dt;
+  const int threadsPerBlock = 128;
+  const int gridSize = 256;
+  int dimGrid[2]  = { gridSize, 1 };
+  int dimBlock[2] = { threadsPerBlock, 1 };
+  RUN_KERNEL(dimGrid, dimBlock,
+	     push_part_yz_a, (psc.n_part, cuda->xi4, cuda->pxi4,
+			      gridSize * threadsPerBlock));
 
-    cuda->xi4[n] = xi4;
+  for (int n = 0; n < psc.n_part; n++) {
   }
 }
 
