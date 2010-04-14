@@ -89,15 +89,20 @@ cuda_particles_to_fortran()
   free(pxi4);
 }
 
+static float _dt;
+
+static void set_constants()
+{
+  _dt = psc.dt;
+}
+
 static void
 cuda_push_part_yz_a()
 {
   struct psc_cuda *cuda = psc.c_ctx;
 
-  float dt = psc.dt;
-  float yl = .5 * dt;
-  float zl = .5 * dt;
-  
+  set_constants();
+
   for (int n = 0; n < psc.n_part; n++) {
     float4 xi4  = cuda->xi4[n];
     float4 pxi4 = cuda->pxi4[n];
@@ -106,8 +111,8 @@ cuda_push_part_yz_a()
     float vyi = pxi4.y * root;
     float vzi = pxi4.z * root;
     
-    xi4.y += vyi * yl;
-    xi4.z += vzi * zl;
+    xi4.y += vyi * .5 * _dt;
+    xi4.z += vzi * .5 * _dt;
 
     cuda->xi4[n] = xi4;
   }
