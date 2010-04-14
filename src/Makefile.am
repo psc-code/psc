@@ -72,3 +72,14 @@ test1_SOURCES = test1.c
 test2_SOURCES = test2.c
 
 TESTS = test2
+
+
+
+NVCC = /usr/local/cuda/bin/nvcc
+NVCFLAGS = -m64 --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) -L/usr/local/cuda/lib -lcuda
+
+push_part_yz.o: cuda/push_part_yz.cu
+	$(NVCC) $(NVCFLAGS) -c $< -o $@
+
+%.cu: %.c
+	ln -sf $(<F) $@

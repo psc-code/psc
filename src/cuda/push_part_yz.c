@@ -6,7 +6,8 @@ __constant__ static float _dt;
 
 static void set_constants()
 {
-  _dt = psc.dt;
+  float __dt = psc.dt;
+  check(cudaMemcpyToSymbol(_dt, &__dt, sizeof(_dt)));
 }
 
 __device__ static void
@@ -15,12 +16,12 @@ push_part_yz_a_one(int n, struct d_part d_part)
   float4 xi4  = d_part.xi4[n];
   float4 pxi4 = d_part.pxi4[n];
   
-  float root = 1. / sqrt(1. + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
+  float root = 1.f / sqrt(1.f + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
   float vyi = pxi4.y * root;
   float vzi = pxi4.z * root;
   
-  xi4.y += vyi * .5 * _dt;
-  xi4.z += vzi * .5 * _dt;
+  xi4.y += vyi * .5f * _dt;
+  xi4.z += vzi * .5f * _dt;
 
   d_part.xi4[n] = xi4;
 }
@@ -36,10 +37,10 @@ push_part_yz_a(int n_part, struct d_part d_part, int stride)
   }
 }
 
-void
+EXTERN_C void
 cuda_push_part_yz_a()
 {
-  struct psc_cuda *cuda = psc.c_ctx;
+  struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
 
   set_constants();
 
@@ -50,8 +51,5 @@ cuda_push_part_yz_a()
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_part_yz_a, (psc.n_part, cuda->d_part,
 			      gridSize * threadsPerBlock));
-
-  for (int n = 0; n < psc.n_part; n++) {
-  }
 }
 

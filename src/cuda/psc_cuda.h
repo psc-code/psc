@@ -2,24 +2,9 @@
 #ifndef PSC_CUDA_H
 #define PSC_CUDA_H
 
-#include "psc.h"
+#include <assert.h>
 
-typedef struct {
-  float x, y, z, w;
-} float4;
-
-struct d_part {
-  float4 *xi4;    // xi , yi , zi , qni_div_mni
-  float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
-};
-
-struct psc_cuda {
-  float4 *xi4;
-  float4 *pxi4;
-  struct d_part d_part; // on device
-};
-
-void cuda_push_part_yz_a();
+#ifndef __CUDACC__
 
 // ======================================================================
 // CUDA emulation
@@ -91,8 +76,44 @@ cudaFree(void *p)
   return cudaSuccess;
 }
 
+typedef struct {
+  float x, y, z, w;
+} float4;
+
+#define EXTERN_C
+
+#else
+
+#define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
+    dim3 dG(dimGrid[0], dimGrid[1]);				\
+    dim3 dB(dimBlock[0], dimBlock[1]);				\
+    func<<<dG, dB>>>params;					\
+    check(cudaThreadSynchronize()); /* FIXME */			\
+  } while (0)
+
+#define EXTERN_C extern "C"
+
+#endif
+
+// ======================================================================
+
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
+
+#include "psc.h"
+
+struct d_part {
+  float4 *xi4;    // xi , yi , zi , qni_div_mni
+  float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
+};
+
+struct psc_cuda {
+  float4 *xi4;
+  float4 *pxi4;
+  struct d_part d_part; // on device
+};
+
+EXTERN_C void cuda_push_part_yz_a();
 
 #endif
