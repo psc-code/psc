@@ -31,6 +31,7 @@ assert_equal(double x, double y)
 static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
+  &psc_ops_cuda,
   NULL,
 };
 
@@ -124,7 +125,7 @@ psc_setup_particles_1()
     psc.f_part[n].pxi = 0.;
     psc.f_part[n].pyi = .02;
     psc.f_part[n].pzi = .01;
-    psc.f_part[n].qni = 0.;
+    psc.f_part[n].qni = -1.;
     psc.f_part[n].mni = 1.;
     psc.f_part[n].lni = 0.;
     psc.f_part[n].wni = 1.;

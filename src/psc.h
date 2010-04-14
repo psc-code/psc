@@ -5,6 +5,7 @@
 #include <config.h>
 
 #include <stdbool.h>
+#include <stdio.h>
 
 enum {
   NE , NI , NN ,
@@ -111,6 +112,7 @@ void psc_push_part_yz_a();
 
 extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
+extern struct psc_ops psc_ops_cuda;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
@@ -121,5 +123,7 @@ void PIC_push_part_yz_a();
 // other bits and hacks...
 
 #define sqr(a) ((a) * (a))
+
+#define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)
 
 #endif
