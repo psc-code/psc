@@ -11,7 +11,7 @@ libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
-	cuda/psc_cuda.c
+	cuda/psc_cuda.c cuda/push_part_yz.c
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \

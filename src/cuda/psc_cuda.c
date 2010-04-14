@@ -2,49 +2,9 @@
 #include "psc_cuda.h"
 
 #include <stdlib.h>
-#include <math.h>
 #include <assert.h>
 
 // ======================================================================
-
-struct {
-  int x, y;
-} threadIdx;
-
-struct {
-  int x, y;
-} blockIdx;
-
-struct {
-  int x, y;
-} blockDim;
-
-#define RUN_KERNEL(dimBlock, dimGrid, func, params) do {		\
-    blockDim.x = dimBlock[0];						\
-    blockDim.y = dimBlock[1];						\
-    for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {	\
-      for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {	\
-	for (threadIdx.y = 0; threadIdx.y < dimBlock[1]; threadIdx.y++) { \
-	  for (threadIdx.x = 0; threadIdx.x < dimBlock[0]; threadIdx.x++) { \
-	    func params;						\
-	  }								\
-	}								\
-      }									\
-    }									\
-  } while (0)
-
-#define __device__
-#define __global__
-#define __constant__
-
-// ======================================================================
-
-__constant__ static float _dt;
-
-static void set_constants()
-{
-  _dt = psc.dt;
-}
 
 static void
 cuda_create()
@@ -131,52 +91,6 @@ cuda_particles_to_fortran()
 
   free(xi4);
   free(pxi4);
-}
-
-__device__ static void
-push_part_yz_a_one(int n, struct d_part d_part)
-{
-  float4 xi4  = d_part.xi4[n];
-  float4 pxi4 = d_part.pxi4[n];
-  
-  float root = 1. / sqrt(1. + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
-  float vyi = pxi4.y * root;
-  float vzi = pxi4.z * root;
-  
-  xi4.y += vyi * .5 * _dt;
-  xi4.z += vzi * .5 * _dt;
-
-  d_part.xi4[n] = xi4;
-}
-
-__global__ static void
-push_part_yz_a(int n_part, struct d_part d_part, int stride)
-{
-  int n = threadIdx.x + blockDim.x * blockIdx.x;
-
-  while (n < n_part) {
-    push_part_yz_a_one(n, d_part);
-    n += stride;
-  }
-}
-
-static void
-cuda_push_part_yz_a()
-{
-  struct psc_cuda *cuda = psc.c_ctx;
-
-  set_constants();
-
-  const int threadsPerBlock = 128;
-  const int gridSize = 256;
-  int dimGrid[2]  = { gridSize, 1 };
-  int dimBlock[2] = { threadsPerBlock, 1 };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.n_part, cuda->d_part,
-			      gridSize * threadsPerBlock));
-
-  for (int n = 0; n < psc.n_part; n++) {
-  }
 }
 
 struct psc_ops psc_ops_cuda = {

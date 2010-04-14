@@ -19,4 +19,45 @@ struct psc_cuda {
   struct d_part d_part; // on device
 };
 
+void cuda_push_part_yz_a();
+
+// ======================================================================
+// CUDA emulation
+
+#ifndef __unused
+#define __unused __attribute__((unused))
+#endif
+
+static struct {
+  int x, y;
+} threadIdx __unused;
+
+static struct {
+  int x, y;
+} blockIdx __unused;
+
+static struct {
+  int x, y;
+} blockDim __unused;
+
+#define RUN_KERNEL(dimBlock, dimGrid, func, params) do {		\
+    blockDim.x = dimBlock[0];						\
+    blockDim.y = dimBlock[1];						\
+    for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {	\
+      for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {	\
+	for (threadIdx.y = 0; threadIdx.y < dimBlock[1]; threadIdx.y++) { \
+	  for (threadIdx.x = 0; threadIdx.x < dimBlock[0]; threadIdx.x++) { \
+	    func params;						\
+	  }								\
+	}								\
+      }									\
+    }									\
+  } while (0)
+
+#define __device__
+#define __global__
+#define __constant__
+
+// ======================================================================
+
 #endif
