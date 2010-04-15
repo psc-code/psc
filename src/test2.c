@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "psc.h"
+#include "profile/profile.h"
 
 int
 main()
@@ -21,7 +22,9 @@ main()
 
   psc_create_test_1("cuda");
   psc_push_part_yz_a();
-  //  psc_dump_particles("part-2.asc");
+  //  psc_dump_particles("part-3.asc");
   psc_check_particles_ref();
   psc_destroy();
+
+  prof_print();
 }

@@ -121,7 +121,7 @@ psc_setup_particles_1()
   for (int n = 0; n < psc.n_part; n++) {
     psc.f_part[n].xi = .5;
     psc.f_part[n].yi = .5;
-    psc.f_part[n].zi = .5 + .001 * n;
+    psc.f_part[n].zi = .5 + n / (real) psc.n_part;
     psc.f_part[n].pxi = 0.;
     psc.f_part[n].pyi = .02;
     psc.f_part[n].pzi = .01;
@@ -234,7 +234,7 @@ psc_create_test_1(const char *ops_name)
   int ihi[3] = { 8, 8, 8 };
   int ibn[3] = { 2, 2, 2 }; // FIXME?
 
-  int n_part = 1000;
+  int n_part = 1e6;
 
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);

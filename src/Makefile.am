@@ -6,6 +6,7 @@ noinst_LIBRARIES = libpsc.a
 LDADD = libpsc.a
 
 libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
+	profile/profile.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
 	psc_fortran.c \
@@ -66,10 +67,6 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
-
-test1_SOURCES = test1.c
-
-test2_SOURCES = test2.c
 
 TESTS = test2
 
