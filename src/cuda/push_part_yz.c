@@ -1,6 +1,7 @@
 
 #include "psc_cuda.h"
 #include "math.h"
+#include "profile/profile.h"
 
 __constant__ static float _dt;
 
@@ -40,6 +41,12 @@ push_part_yz_a(int n_part, struct d_part d_part, int stride)
 EXTERN_C void
 cuda_push_part_yz_a()
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(double));
+  }
+  prof_start(pr);
+
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
 
   set_constants();
@@ -51,6 +58,8 @@ cuda_push_part_yz_a()
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_part_yz_a, (psc.n_part, cuda->d_part,
 			      gridSize * threadsPerBlock));
+
+  prof_stop(pr);
 }
 
 EXTERN_C void
