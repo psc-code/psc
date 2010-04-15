@@ -38,7 +38,7 @@ prof_init(void)
   if (prof_inited)
     return;
 
-  assert(ARRAYSIZE(events) == NR_EVENTS);
+  // assert(ARRAYSIZE(events) == NR_EVENTS);
 
   rc = PAPI_library_init(PAPI_VER_CURRENT);
   assert(rc == PAPI_VER_CURRENT);
