@@ -94,11 +94,43 @@ cuda_particles_to_fortran()
   free(pxi4);
 }
 
+static void
+cuda_fields_from_fortran()
+{
+  struct psc_cuda *cuda = psc.c_ctx;
+
+  cuda->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(float));
+  
+  for (int m = EX; m <= BZ; m++) {
+    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	  CF3(m, jx,jy,jz) = FF3(m, jx,jy,jz);
+	}
+      }
+    }
+  }
+
+  __cuda_fields_from_fortran(cuda);
+}
+
+static void
+cuda_fields_to_fortran()
+{
+  struct psc_cuda *cuda = psc.c_ctx;
+
+  __cuda_fields_to_fortran(cuda);
+
+  free(cuda->flds);
+}
+
 struct psc_ops psc_ops_cuda = {
   .name = "cuda",
   .create                 = cuda_create,
   .destroy                = cuda_destroy,
   .particles_from_fortran = cuda_particles_from_fortran,
   .particles_to_fortran   = cuda_particles_to_fortran,
+  .fields_from_fortran    = cuda_fields_from_fortran,
+  .fields_to_fortran      = cuda_fields_to_fortran,
   .push_part_yz_a         = cuda_push_part_yz_a,
 };

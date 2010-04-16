@@ -39,6 +39,30 @@ struct f_particle {
   f_real wni;
 };
 
+// ----------------------------------------------------------------------
+// macros to access Fortran fields
+
+#define FF3_OFF(jx,jy,jz)						\
+  (((((jz)-psc.ilg[2]))							\
+    *psc.img[1] + ((jy)-psc.ilg[1]))					\
+   *psc.img[0] + ((jx)-psc.ilg[0]))
+
+#if 1
+
+#define FF3(fldnr, jx,jy,jz)			\
+  (psc.f_fields[fldnr][FF3_OFF(jx,jy,jz)])
+
+#else
+
+#define FF3(fldnr, jx,jy,jz)						\
+  (*({int off = FF3_OFF(jx,jy,jz);					\
+      assert(off >= 0);							\
+      assert(off < psc.fld_size);					\
+      &(psc.f_fields[fldnr][off]);					\
+    }))
+
+#endif
+
 struct psc_param {
   double cori, eta, alpha;
   double wl;

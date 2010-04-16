@@ -123,12 +123,16 @@ struct d_part {
 struct psc_cuda {
   float4 *xi4;
   float4 *pxi4;
-  struct d_part d_part; // on device
+  float *flds;
+  struct d_part d_part; // all particles, on device
+  float *d_flds;        // all fields, on device
 };
 
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
 EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
+EXTERN_C void __cuda_fields_from_fortran(struct psc_cuda *cuda);
+EXTERN_C void __cuda_fields_to_fortran(struct psc_cuda *cuda);
 
 struct d_particle {
   real xi[3];
@@ -155,5 +159,42 @@ struct d_particle {
     d_p.xi4[n].w = (pp).qni_div_mni;					\
 } while (0)
 
+
+// ----------------------------------------------------------------------
+// macros to access fields from CUDA
+
+#define F3_OFF(fldnr, jx,jy,jz)						\
+  ((((fldnr)								\
+     *d_mx[2] + ((jz)-d_iglo[2]))					\
+    *d_mx[1] + ((jy)-d_iglo[1]))					\
+   *d_mx[0] + ((jx)-d_iglo[0]))
+
+#if 1
+
+#define F3(fldnr, jx,jy,jz) \
+  (d_flds)[F3_OFF(fldnr, jx,jy,jz)]
+
+#else
+
+#define F3(fldnr, jx,jy,jz)						\
+  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
+      assert(off >= 0);							\
+      assert(off < NR_FIELDS * d_mx[0] * d_mx[1] * d_mx[2]);		\
+      &(d_flds[off]);							\
+    }))
+
+#endif
+
+// ----------------------------------------------------------------------
+// macros to access C (host) versions of the fields
+
+#define CF3_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *psc.img[2] + ((jz)-psc.ilg[2]))					\
+    *psc.img[1] + ((jy)-psc.ilg[1]))					\
+   *psc.img[0] + ((jx)-psc.ilg[0]))
+
+#define CF3(fldnr, jx,jy,jz) \
+  (cuda->flds)[CF3_OFF(fldnr, jx,jy,jz)]
 
 #endif

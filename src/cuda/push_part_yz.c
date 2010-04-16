@@ -101,3 +101,19 @@ __cuda_particles_to_fortran(struct psc_cuda *cuda)
   check(cudaFree(cuda->d_part.xi4));
   check(cudaFree(cuda->d_part.pxi4));
 }
+
+EXTERN_C void
+__cuda_fields_from_fortran(struct psc_cuda *cuda)
+{
+  check(cudaMalloc((void **) &cuda->d_flds, NR_FIELDS * psc.fld_size * sizeof(float)));
+  check(cudaMemcpy(cuda->d_flds + EX * psc.fld_size,
+		   cuda->flds + EX * psc.fld_size,
+		   6 * psc.fld_size * sizeof(float),
+		   cudaMemcpyHostToDevice));
+}
+
+EXTERN_C void
+__cuda_fields_to_fortran(struct psc_cuda *cuda)
+{
+  check(cudaFree(cuda->d_flds));
+}
