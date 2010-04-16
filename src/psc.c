@@ -67,6 +67,7 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
     psc.ihi[d] = ihi[d];
     psc.ihg[d] = ihi[d] + ibn[d];
     psc.img[d] = ihi[d] - ilo[d] + 2 * ibn[d];
+    psc.ibn[d] = ibn[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   for (int m = 0; m < NR_FIELDS; m++) {
@@ -112,6 +113,24 @@ psc_setup_fields_zero()
 {
   for (int m = 0; m < NR_FIELDS; m++) {
     memset(psc.f_fields[m], 0, psc.fld_size * sizeof(f_real));
+  }
+}
+
+void
+psc_setup_fields_1()
+{
+  psc_setup_fields_zero();
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	FF3(EX, jx,jy,jz) = .1 * sin(.5 * jx) + .2 * sin(.4 * jy) + .3 * sin(.3 * jz);
+	FF3(EY, jx,jy,jz) = .2 * sin(.4 * jx) + .3 * sin(.3 * jy) + .4 * sin(.2 * jz);
+	FF3(EZ, jx,jy,jz) = .3 * sin(.3 * jx) + .4 * sin(.2 * jy) + .5 * sin(.1 * jz);
+	FF3(BX, jx,jy,jz) = .1 * cos(.5 * jx) + .2 * cos(.4 * jy) + .3 * cos(.3 * jz);
+	FF3(BY, jx,jy,jz) = .2 * cos(.4 * jx) + .3 * cos(.3 * jy) + .4 * cos(.2 * jz);
+	FF3(BZ, jx,jy,jz) = .3 * cos(.3 * jx) + .4 * cos(.2 * jy) + .5 * cos(.1 * jz);
+      }
+    }
   }
 }
 
@@ -253,7 +272,7 @@ psc_create_test_1(const char *ops_name)
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
-  psc_setup_fields_zero();
+  psc_setup_fields_1();
   psc_setup_particles_1();
 }
 
