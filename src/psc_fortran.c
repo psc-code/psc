@@ -44,6 +44,18 @@ fortran_push_part_yz_a()
   prof_stop(pr);
 }
 
+static void
+fortran_push_part_yz_b()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(double));
+  }
+  prof_start(pr);
+  PIC_push_part_yz_b();
+  prof_stop(pr);
+}
+
 struct psc_ops psc_ops_fortran = {
   .name = "fortran",
   .particles_from_fortran = fortran_particles_from_fortran,
@@ -51,4 +63,5 @@ struct psc_ops psc_ops_fortran = {
   .push_part_yz           = fortran_push_part_yz,
   .push_part_z            = fortran_push_part_z,
   .push_part_yz_a         = fortran_push_part_yz_a,
+  .push_part_yz_b         = fortran_push_part_yz_b,
 };

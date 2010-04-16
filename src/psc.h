@@ -57,6 +57,7 @@ struct psc_ops {
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
+  void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
 struct psc {
@@ -120,6 +121,7 @@ extern struct psc_ops psc_ops_cuda;
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
+void PIC_push_part_yz_b();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
