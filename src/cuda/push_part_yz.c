@@ -43,7 +43,7 @@ cuda_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("cuda_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(double));
+    pr = prof_register("cuda_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(float));
   }
   prof_start(pr);
 
