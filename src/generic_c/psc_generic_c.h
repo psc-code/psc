@@ -18,6 +18,7 @@ struct psc_genc {
 };
 
 void genc_push_part_yz_a();
+void genc_push_part_yz_b();
 
 #define F3_OFF(fldnr, jx,jy,jz)						\
   (((((fldnr								\

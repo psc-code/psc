@@ -135,6 +135,7 @@ void psc_create_test_1(const char *ops_name);
 void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
+void psc_push_part_yz_b();
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
