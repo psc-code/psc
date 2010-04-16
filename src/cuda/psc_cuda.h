@@ -3,6 +3,10 @@
 #define PSC_CUDA_H
 
 #include <assert.h>
+#include <math.h>
+#include <psc.h>
+
+#define rsqrtr rsqrtf
 
 #ifndef __CUDACC__
 
@@ -85,6 +89,12 @@ typedef struct {
 
 #define EXTERN_C
 
+static inline float
+rsqrtf(float x)
+{
+  return 1.f / sqrtf(x);
+}
+
 #else
 
 #define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
@@ -104,7 +114,6 @@ typedef struct {
 
 // ======================================================================
 
-#include "psc.h"
 
 struct d_part {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
@@ -120,5 +129,31 @@ struct psc_cuda {
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
 EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
+
+struct d_particle {
+  real xi[3];
+  real qni_div_mni;
+  real pxi[3];
+  real qni_wni;
+};
+
+#define LOAD_PARTICLE(pp, d_p, n) do {					\
+    (pp).xi[0]       = d_p.xi4[n].x;					\
+    (pp).xi[1]       = d_p.xi4[n].y;					\
+    (pp).xi[2]       = d_p.xi4[n].z;					\
+    (pp).qni_div_mni = d_p.xi4[n].w;					\
+    (pp).pxi[0]      = d_p.pxi4[n].x;					\
+    (pp).pxi[1]      = d_p.pxi4[n].y;					\
+    (pp).pxi[2]      = d_p.pxi4[n].z;					\
+    (pp).qni_wni     = d_p.pxi4[n].w;					\
+} while (0)
+
+#define STORE_PARTICLE_POS(pp, d_p, n) do {				\
+    d_p.xi4[n].x = (pp).xi[0];						\
+    d_p.xi4[n].y = (pp).xi[1];						\
+    d_p.xi4[n].z = (pp).xi[2];						\
+    d_p.xi4[n].w = (pp).qni_div_mni;					\
+} while (0)
+
 
 #endif

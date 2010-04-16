@@ -20,6 +20,8 @@ enum {
 
 typedef float real;
 
+#define real(x) x ## f
+
 // Fortran types
 
 typedef double f_real;

@@ -3,28 +3,45 @@
 #include "math.h"
 #include "profile/profile.h"
 
-__constant__ static float _dt;
+__constant__ static real _dt;
 
 static void set_constants()
 {
-  float __dt = psc.dt;
+  real __dt = psc.dt;
   check(cudaMemcpyToSymbol(_dt, &__dt, sizeof(_dt)));
 }
 
 __device__ static void
-push_part_yz_a_one(int n, struct d_part d_part)
+calc_vxi(real vxi[3], struct d_particle p)
 {
-  float4 xi4  = d_part.xi4[n];
-  float4 pxi4 = d_part.pxi4[n];
-  
-  float root = 1.f / sqrt(1.f + sqr(pxi4.x) + sqr(pxi4.y) + sqr(pxi4.z));
-  float vyi = pxi4.y * root;
-  float vzi = pxi4.z * root;
-  
-  xi4.y += vyi * .5f * _dt;
-  xi4.z += vzi * .5f * _dt;
+  real root = rsqrtr(real(1.) + sqr(p.pxi[0]) + sqr(p.pxi[1]) + sqr(p.pxi[2]));
 
-  d_part.xi4[n] = xi4;
+  for (int d = 1; d < 3; d++) {
+    vxi[d] = p.pxi[d] * root;
+  }
+}
+
+__device__ static void
+push_xi_halfdt(struct d_particle *p, const real vxi[3])
+{
+  for (int d = 1; d < 3; d++) {
+    p->xi[d] += real(.5) * _dt * vxi[d];
+  }
+}
+
+__device__ static void
+push_part_yz_a_one(int n, struct d_part d_particles)
+{
+  struct d_particle p;
+  LOAD_PARTICLE(p, d_particles, n);
+  real vxi[3];
+
+  // x^n, p^n -> x^(n+0.5), p^n
+  
+  calc_vxi(vxi, p);
+  push_xi_halfdt(&p, vxi);
+
+  STORE_PARTICLE_POS(p, d_particles, n);
 }
 
 __global__ static void
