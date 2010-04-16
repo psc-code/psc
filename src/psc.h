@@ -54,6 +54,8 @@ struct psc_ops {
   void (*destroy)(void);
   void (*particles_from_fortran)(void);
   void (*particles_to_fortran)(void);
+  void (*fields_from_fortran)(void);
+  void (*fields_to_fortran)(void);
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
