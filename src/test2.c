@@ -39,5 +39,11 @@ main()
   psc_check_particles_ref();
   psc_destroy();
 
+  psc_create_test_1("cuda");
+  psc_push_part_yz_b();
+  //  psc_dump_particles("part-3.asc");
+  psc_check_particles_ref();
+  psc_destroy();
+
   prof_print();
 }

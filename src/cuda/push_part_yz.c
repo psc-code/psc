@@ -3,12 +3,18 @@
 #include "math.h"
 #include "profile/profile.h"
 
-__constant__ static real _dt;
+__constant__ static real d_dt, d_dxi[3], d_dqs;
+__constant__ int d_mx[3], d_iglo[3];
 
 static void set_constants()
 {
-  real __dt = psc.dt;
-  check(cudaMemcpyToSymbol(_dt, &__dt, sizeof(_dt)));
+  real __dt = psc.dt, __dqs = .5f * psc.prm.eta * psc.dt;
+  check(cudaMemcpyToSymbol(d_dt, &__dt, sizeof(d_dt)));
+  check(cudaMemcpyToSymbol(d_dqs, &__dqs, sizeof(d_dqs)));
+  real __dxi[3] = { 1.f / psc.dx[0], 1.f / psc.dx[1], 1.f / psc.dx[2] };
+  check(cudaMemcpyToSymbol(d_dxi, __dxi, sizeof(d_dxi)));
+  check(cudaMemcpyToSymbol(d_mx, psc.img, sizeof(d_mx)));
+  check(cudaMemcpyToSymbol(d_iglo, psc.ilg, sizeof(d_iglo)));
 }
 
 __device__ static void
@@ -25,12 +31,80 @@ __device__ static void
 push_xi_halfdt(struct d_particle *p, const real vxi[3])
 {
   for (int d = 1; d < 3; d++) {
-    p->xi[d] += real(.5) * _dt * vxi[d];
+    p->xi[d] += real(.5) * d_dt * vxi[d];
   }
 }
 
 __device__ static void
-push_part_yz_a_one(int n, struct d_part d_particles)
+find_idx_off(const real xi[3], int j[3], real h[3], real shift)
+{
+  for (int d = 0; d < 3; d++) {
+    real pos = xi[d] * d_dxi[d] + shift;
+    j[d] = nint(pos);
+    h[d] = j[d] - pos;
+  }
+}
+
+__device__ static real
+ip_to_grid_m(real h)
+{
+  return real(.5) * sqr(real(.5) + h);
+}
+
+__device__ static real
+ip_to_grid_0(real h)
+{
+  return real(.75) - sqr(h);
+}
+
+__device__ static real
+ip_to_grid_p(real h)
+{
+  return real(.5) * sqr(real(.5) - h);
+}
+
+#define ARR_3_off(arr, d, o) (arr[(d-1)*3 + ((o)+1)])
+
+__device__ static void
+find_interp_to_grid_coeff(real *arr, const real h[3])
+{
+  for (int d = 1; d < 3; d++) {
+    ARR_3_off(arr, d, -1) = ip_to_grid_m(h[d]);
+    ARR_3_off(arr, d,  0) = ip_to_grid_0(h[d]);
+    ARR_3_off(arr, d, +1) = ip_to_grid_p(h[d]);
+  }
+}
+
+__device__ static void
+push_pxi_dt(struct d_particle *p,
+	    real exq, real eyq, real ezq, real bxq, real byq, real bzq)
+{
+  real dq = p->qni_div_mni * d_dqs;
+  real pxm = p->pxi[0] + dq*exq;
+  real pym = p->pxi[1] + dq*eyq;
+  real pzm = p->pxi[2] + dq*ezq;
+  
+  real root = dq * rsqrtr(real(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
+  real taux = bxq * root, tauy = byq * root, tauz = bzq * root;
+  
+  real tau = real(1.) / (real(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
+  real pxp = ( (real(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
+	       +(real(2.)*taux*tauy + real(2.)*tauz)*pym
+	       +(real(2.)*taux*tauz - real(2.)*tauy)*pzm)*tau;
+  real pyp = ( (real(2.)*taux*tauy - real(2.)*tauz)*pxm
+	       +(real(1.) - sqr(taux) + sqr(tauy) - sqr(tauz)) * pym
+	       +(real(2.)*tauy*tauz + real(2.)*taux)*pzm)*tau;
+  real pzp = ( (real(2.)*taux*tauz + real(2.)*tauy)*pxm
+	       +(real(2.)*tauy*tauz - real(2.)*taux)*pym
+	       +(real(1.) - sqr(taux) - sqr(tauy) + sqr(tauz))*pzm)*tau;
+  
+  p->pxi[0] = pxp + dq * exq;
+  p->pxi[1] = pyp + dq * eyq;
+  p->pxi[2] = pzp + dq * ezq;
+}
+
+__device__ static void
+push_part_yz_a_one(int n, struct d_part d_particles, real *d_flds)
 {
   struct d_particle p;
   LOAD_PARTICLE(p, d_particles, n);
@@ -44,13 +118,79 @@ push_part_yz_a_one(int n, struct d_part d_particles)
   STORE_PARTICLE_POS(p, d_particles, n);
 }
 
+__device__ static void
+push_part_yz_b_one(int n, struct d_part d_particles, real *d_flds)
+{
+  struct d_particle p;
+  LOAD_PARTICLE(p, d_particles, n);
+  real h[3], vxi[3];
+
+  // x^n, p^n -> x^(n+0.5), p^n
+  
+  calc_vxi(vxi, p);
+  push_xi_halfdt(&p, vxi);
+
+  real __hh[3*3];
+  int l[3];
+  find_idx_off(p.xi, l, h, real(-.5));
+  find_interp_to_grid_coeff(__hh, h);
+
+  int j[3];
+  real __gg[3*3];
+  find_idx_off(p.xi, j, h, real(0.));
+  find_interp_to_grid_coeff(__gg, h);
+
+  // field interpolation
+  
+#define INTERPOLATE_FIELD(exq, EX, gg1, gg2, j0, j1, j2)		\
+  real exq = 0;								\
+  for (int dz = -1; dz <= 1; dz++) {					\
+    for (int dy = -1; dy <= 1; dy++) {					\
+      exq += ARR_3_off(__##gg1, 1, dy) * ARR_3_off(__##gg2, 2, dz) *	\
+	F3(EX, j0[0], j1[1]+dy, j2[2]+dz);				\
+    }									\
+  } do {} while(0)
+
+  INTERPOLATE_FIELD(exq, EX, gg, gg, j, j, j);
+  INTERPOLATE_FIELD(eyq, EY, hh, gg, j, l, j);
+  INTERPOLATE_FIELD(ezq, EZ, gg, hh, j, j, l);
+  INTERPOLATE_FIELD(bxq, BX, hh, hh, j, l, l);
+  INTERPOLATE_FIELD(byq, BY, gg, hh, j, j, l);
+  INTERPOLATE_FIELD(bzq, BZ, hh, gg, j, l, j);
+
+#undef INTERPOLATE_FIELD
+
+  // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+  
+  push_pxi_dt(&p, exq, eyq, ezq, bxq, byq, bzq);
+
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+
+  calc_vxi(vxi, p);
+  push_xi_halfdt(&p, vxi);
+
+  STORE_PARTICLE_POS(p, d_particles, n);
+  STORE_PARTICLE_MOM(p, d_particles, n);
+}
+
 __global__ static void
-push_part_yz_a(int n_part, struct d_part d_part, int stride)
+push_part_yz_a(int n_part, struct d_part d_part, float *d_flds, int stride)
 {
   int n = threadIdx.x + blockDim.x * blockIdx.x;
 
   while (n < n_part) {
-    push_part_yz_a_one(n, d_part);
+    push_part_yz_a_one(n, d_part, d_flds);
+    n += stride;
+  }
+}
+
+__global__ static void
+push_part_yz_b(int n_part, struct d_part d_part, float *d_flds, int stride)
+{
+  int n = threadIdx.x + blockDim.x * blockIdx.x;
+
+  while (n < n_part) {
+    push_part_yz_b_one(n, d_part, d_flds);
     n += stride;
   }
 }
@@ -73,7 +213,31 @@ cuda_push_part_yz_a()
   int dimGrid[2]  = { gridSize, 1 };
   int dimBlock[2] = { threadsPerBlock, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.n_part, cuda->d_part,
+	     push_part_yz_a, (psc.n_part, cuda->d_part, cuda->d_flds,
+			      gridSize * threadsPerBlock));
+
+  prof_stop(pr);
+}
+
+EXTERN_C void
+cuda_push_part_yz_b()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_part_yz_b", 1., 0, psc.n_part * 16 * sizeof(float));
+  }
+  prof_start(pr);
+
+  struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+
+  set_constants();
+
+  const int threadsPerBlock = 128;
+  const int gridSize = 256;
+  int dimGrid[2]  = { gridSize, 1 };
+  int dimBlock[2] = { threadsPerBlock, 1 };
+  RUN_KERNEL(dimGrid, dimBlock,
+	     push_part_yz_b, (psc.n_part, cuda->d_part, cuda->d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);

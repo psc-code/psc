@@ -95,6 +95,13 @@ rsqrtf(float x)
   return 1.f / sqrtf(x);
 }
 
+static inline int
+nint(real x)
+{
+  // FIXME?
+  return (int)(x + real(10.5)) - 10;
+}
+
 #else
 
 #define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
@@ -105,6 +112,12 @@ rsqrtf(float x)
   } while (0)
 
 #define EXTERN_C extern "C"
+
+__device__ static inline int
+nint(real x)
+{
+  return __float2int_rn(x);
+}
 
 #endif
 
@@ -129,6 +142,7 @@ struct psc_cuda {
 };
 
 EXTERN_C void cuda_push_part_yz_a();
+EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
 EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
 EXTERN_C void __cuda_fields_from_fortran(struct psc_cuda *cuda);
@@ -159,6 +173,49 @@ struct d_particle {
     d_p.xi4[n].w = (pp).qni_div_mni;					\
 } while (0)
 
+#define STORE_PARTICLE_MOM(pp, d_p, n) do {				\
+    d_p.pxi4[n].x = (pp).pxi[0];					\
+    d_p.pxi4[n].y = (pp).pxi[1];					\
+    d_p.pxi4[n].z = (pp).pxi[2];					\
+    d_p.pxi4[n].w = (pp).qni_wni;					\
+} while (0)
+
+// ----------------------------------------------------------------------
+// macros to access fields from CUDA
+
+#define F3_OFF(fldnr, jx,jy,jz)						\
+  ((((fldnr)								\
+     *d_mx[2] + ((jz)-d_iglo[2]))					\
+    *d_mx[1] + ((jy)-d_iglo[1]))					\
+   *d_mx[0] + ((jx)-d_iglo[0]))
+
+#if 1
+
+#define F3(fldnr, jx,jy,jz) \
+  (d_flds)[F3_OFF(fldnr, jx,jy,jz)]
+
+#else
+
+#define F3(fldnr, jx,jy,jz)						\
+  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
+      assert(off >= 0);							\
+      assert(off < NR_FIELDS * d_mx[0] * d_mx[1] * d_mx[2]);		\
+      &(d_flds[off]);							\
+    }))
+
+#endif
+
+// ----------------------------------------------------------------------
+// macros to access C (host) versions of the fields
+
+#define CF3_OFF(fldnr, jx,jy,jz)					\
+  ((((fldnr)								\
+     *psc.img[2] + ((jz)-psc.ilg[2]))					\
+    *psc.img[1] + ((jy)-psc.ilg[1]))					\
+   *psc.img[0] + ((jx)-psc.ilg[0]))
+
+#define CF3(fldnr, jx,jy,jz) \
+  (cuda->flds)[CF3_OFF(fldnr, jx,jy,jz)]
 
 // ----------------------------------------------------------------------
 // macros to access fields from CUDA

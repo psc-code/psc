@@ -133,4 +133,5 @@ struct psc_ops psc_ops_cuda = {
   .fields_from_fortran    = cuda_fields_from_fortran,
   .fields_to_fortran      = cuda_fields_to_fortran,
   .push_part_yz_a         = cuda_push_part_yz_a,
+  .push_part_yz_b         = cuda_push_part_yz_b,
 };
