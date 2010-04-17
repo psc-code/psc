@@ -137,17 +137,24 @@ psc_setup_fields_1()
 void
 psc_setup_particles_1()
 {
-  for (int n = 0; n < psc.n_part; n++) {
-    psc.f_part[n].xi = .5;
-    psc.f_part[n].yi = .5;
-    psc.f_part[n].zi = .5 + n / (real) psc.n_part;
-    psc.f_part[n].pxi = 0.;
-    psc.f_part[n].pyi = .02;
-    psc.f_part[n].pzi = .01;
-    psc.f_part[n].qni = -1.;
-    psc.f_part[n].mni = 1.;
-    psc.f_part[n].lni = 0.;
-    psc.f_part[n].wni = 1.;
+  int n = 0;
+  int n_per_cell = psc.n_part / ((psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
+  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
+    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
+      for (int cnt = 0; cnt < n_per_cell; cnt++) {
+	psc.f_part[n].xi = .2;
+	psc.f_part[n].yi = iy;
+	psc.f_part[n].zi = iz;
+	psc.f_part[n].pxi = 0.;
+	psc.f_part[n].pyi = .02;
+	psc.f_part[n].pzi = .01;
+	psc.f_part[n].qni = -1.;
+	psc.f_part[n].mni = 1.;
+	psc.f_part[n].lni = 0.;
+	psc.f_part[n].wni = 1.;
+	n++;
+      }
+    }
   }
 }
 
@@ -263,11 +270,11 @@ psc_check_particles_ref()
 void
 psc_create_test_1(const char *ops_name)
 {
-  int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 8, 8, 8 };
-  int ibn[3] = { 2, 2, 2 }; // FIXME?
+  int ilo[3] = { 0,  0,  0 };
+  int ihi[3] = { 1, 16, 16 };
+  int ibn[3] = { 2,  2,  2 }; // FIXME?
 
-  int n_part = 1e6;
+  int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
 
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);
