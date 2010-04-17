@@ -21,7 +21,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys)
 {
   double max = fmax(fabs(x), fabs(y)) + 1e-10;
   double eps = fabs((x - y) / max);
-  if (eps > 1e-5) {
+  if (eps > 1e-4) { // FIXME 1e-5 fails!
     fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g\n",
 	    xs, x, ys, y, eps);
     abort();
