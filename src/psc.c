@@ -14,14 +14,16 @@ struct psc psc;
 //
 // make sure that the two values are almost equal.
 
+#define assert_equal(x, y) __assert_equal(x, y, #x, #y)
+
 void
-assert_equal(double x, double y)
+__assert_equal(double x, double y, const char *xs, const char *ys)
 {
   double max = fmax(fabs(x), fabs(y)) + 1e-10;
   double eps = fabs((x - y) / max);
   if (eps > 1e-5) {
-    fprintf(stderr, "assert_equal: fail x = %g y = %g rel err = %g\n",
-	    x, y, eps);
+    fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g\n",
+	    xs, x, ys, y, eps);
     abort();
   }
 }
@@ -253,6 +255,7 @@ psc_check_particles_ref()
 {
   assert(particle_ref);
   for (int i = 0; i < psc.n_part; i++) {
+    //    printf("i = %d\n", i);
     assert_equal(psc.f_part[i].xi , particle_ref[i].xi);
     assert_equal(psc.f_part[i].yi , particle_ref[i].yi);
     assert_equal(psc.f_part[i].zi , particle_ref[i].zi);

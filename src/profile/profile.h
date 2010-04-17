@@ -31,7 +31,7 @@ struct prof_info {
 
 #define MAX_PROF (100)
 
-struct {
+struct prof_globals {
   int event_set;
   struct prof_info info[MAX_PROF];
 } prof_globals;
@@ -110,9 +110,15 @@ prof_stop(int pr)
 
 #endif
 
-void prof_init(void);
-int  prof_register(const char *name, float simd, int flops, int bytes);
-void prof_print(void);
-void prof_print_file(FILE *f);
+#ifdef __cplusplus
+#define EXTERN_C extern "C"
+#else
+#define EXTERN_C
+#endif
+
+EXTERN_C void prof_init(void);
+EXTERN_C int  prof_register(const char *name, float simd, int flops, int bytes);
+EXTERN_C void prof_print(void);
+EXTERN_C void prof_print_file(FILE *f);
 
 #endif
