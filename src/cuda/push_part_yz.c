@@ -397,7 +397,7 @@ cuda_push_part_yz_a()
   const int gridSize = 256;
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
-  RUN_KERNEL(dimBlock, dimGrid,
+  RUN_KERNEL(dimGrid, dimBlock,
 	     push_part_yz_a, (psc.n_part, cuda->d_part, cuda->d_flds,
 			      gridSize * threadsPerBlock));
 
@@ -421,7 +421,7 @@ cuda_push_part_yz_b()
   const int gridSize = 256;
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
-  RUN_KERNEL(dimBlock, dimGrid,
+  RUN_KERNEL(dimGrid, dimBlock,
 	     push_part_yz_b, (psc.n_part, cuda->d_part, cuda->d_flds,
 			      gridSize * threadsPerBlock));
 
@@ -443,7 +443,7 @@ cuda_push_part_yz_b2()
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { cuda->nr_blocks, 1 };
-  RUN_KERNEL(dimBlock, dimGrid,
+  RUN_KERNEL(dimGrid, dimBlock,
 	     push_part_yz_b2, (psc.n_part, cuda->d_part, cuda->d_flds));
 
   prof_stop(pr);

@@ -32,7 +32,7 @@ static struct {
   int x, y;
 } blockDim __unused;
 
-#define RUN_KERNEL(dimBlock, dimGrid, func, params) do {		\
+#define RUN_KERNEL(dimGrid, dimBlock, func, params) do {		\
     blockDim.x = dimBlock[0];						\
     blockDim.y = dimBlock[1];						\
     for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {	\
