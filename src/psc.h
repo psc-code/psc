@@ -113,6 +113,7 @@ void psc_push_part_yz_a();
 extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
+extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
