@@ -12,7 +12,8 @@ libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
-	cuda/psc_cuda.c cuda/push_part_yz.c
+	sse2/psc_sse2.c sse2/push_part_yz_a.c
+#	cuda/psc_cuda.c cuda/push_part_yz.c 
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -70,17 +71,26 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 
 TESTS = test2
 
-if USE_CUDA
+# if USE_CUDA
 
-NVCC = /usr/local/cuda/bin/nvcc
-NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
+# NVCC = /usr/local/cuda/bin/nvcc
+# NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
 
-LDADD += -L/usr/local/cuda/lib64 -lcudart
+# LDADD += -L/usr/local/cuda/lib64 -lcudart
 
-push_part_yz.o: cuda/push_part_yz.cu
-	$(NVCC) $(NVCFLAGS) -c $< -o $@
+# push_part_yz.o: cuda/push_part_yz.cu
+# 	$(NVCC) $(NVCFLAGS) -c $< -o $@
 
-%.cu: %.c
-	ln -sf $(<F) $@
+# %.cu: %.c
+# 	ln -sf $(<F) $@
 
-endif
+# else 
+#if USE_SSE2
+#
+#push_part_yz_a.o: sse2/push_part_yz_a.cs
+#	$(CC) $(CFLAGS) -lxmm -lsse -c $< -o $@
+#%.cs: %.c
+#	ln -sf $(<F) $@
+#
+#endif
+#endif

@@ -19,8 +19,8 @@ main()
   //  psc_dump_particles("part-2.asc");
   psc_check_particles_ref();
   psc_destroy();
-
-  psc_create_test_1("cuda");
+  
+  psc_create_test_1("sse2");
   psc_push_part_yz_a();
   //  psc_dump_particles("part-3.asc");
   psc_check_particles_ref();

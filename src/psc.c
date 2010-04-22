@@ -31,7 +31,7 @@ assert_equal(double x, double y)
 static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
-  &psc_ops_cuda,
+  &psc_ops_sse2,
   NULL,
 };
 

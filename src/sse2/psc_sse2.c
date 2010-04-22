@@ -23,10 +23,10 @@ static void
 sse2_particles_from_fortran()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
-  sse2->part = calloc(psc.n_part, sizeof(*genc->part));
+  sse2->part = calloc(psc.n_part, sizeof(*sse2->part));
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
-    struct c_particle *part = &sse2->part[n];
+    struct sse2_particle *part = &sse2->part[n];
 
     part->xi  = f_part->xi;
     part->yi  = f_part->yi;
@@ -47,7 +47,7 @@ sse2_particles_to_fortran()
    
    for(int n = 0; n < psc.n_part; n++) {
      struct f_particle *f_part = &psc.f_part[n];
-     struct c_particle *part = &sse2->part[n];
+     struct sse2_particle *part = &sse2->part[n];
      
      f_part->xi  = part->xi;
      f_part->yi  = part->yi;

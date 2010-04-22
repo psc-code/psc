@@ -22,8 +22,12 @@ struct psc_sse2 {
   struct sse2_particle *part;
 };
 
+// to access the elements safely
+union packed_vector {
+  __m128 r;
+  float v[4] ; //FIXME : Might break for any non gcc
+} __attribute__ ((aligned (128)));
+
 void sse2_push_part_yz_a();
-void sse2_particles_from_fortran(struct psc_sse2 *sse2);
-void sse2_particles_to_fortran(struct psc_sse2 *sse2);
 
 #endif
