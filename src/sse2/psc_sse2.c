@@ -68,4 +68,5 @@ struct psc_ops psc_ops_sse2 = {
   .particles_from_fortran = sse2_particles_from_fortran,
   .particles_to_fortran   = sse2_particles_to_fortran,
   .push_part_yz_a         = sse2_push_part_yz_a,
+  .push_part_yz_b         = sse2_push_part_yz_b,
 }; 

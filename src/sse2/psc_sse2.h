@@ -29,5 +29,6 @@ union packed_vector {
 } __attribute__ ((aligned (128)));
 
 void sse2_push_part_yz_a();
+void sse2_push_part_yz_b();
 
 #endif

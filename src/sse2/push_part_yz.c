@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 void
-sse2_push_part_yz_a()
+sse2_push_part_yz()
 {
   static int pr;
   if (!pr) {
@@ -17,6 +17,7 @@ sse2_push_part_yz_a()
   struct psc_sse2 *sse2 = psc.c_ctx;
 
   // Values that won't change from iteration to iteration
+
   union packed_vector dt, yl, zl, ones, half; 
   float dtfl = (float) psc.dt; // FIXME: will dt ever be small enough
                                // that it needs double?
@@ -64,7 +65,7 @@ sse2_push_part_yz_a()
     pzi.v[3] = sse2->part[n+3].pzi;
       
       
-    // Actual calculation are here
+    
     tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
     tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
     tmpz.r = _mm_mul_ps(pzi.r, pzi.r);
@@ -72,11 +73,10 @@ sse2_push_part_yz_a()
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_rsqrt_ps(tmpx.r); // it's possible this could be faster on some processors
-                                   // It's not on my test machine  
+    root.r = _mm_sqrt_ps(tmpx.r);
     
-    vyi.r = _mm_mul_ps(pyi.r, root.r);
-    vzi.r = _mm_mul_ps(pzi.r, root.r);
+    vyi.r = _mm_div_ps(pyi.r, root.r);
+    vzi.r = _mm_div_ps(pzi.r, root.r);
 
     tmpy.r = _mm_mul_ps(vyi.r, yl.r);
     tmpz.r = _mm_mul_ps(vzi.r, zl.r);

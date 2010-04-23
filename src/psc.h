@@ -55,6 +55,7 @@ struct psc_ops {
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
+  void (*push_part_yz_b)(void); // does everything but the currents
 };
 
 struct psc {
@@ -106,6 +107,7 @@ void psc_create_test_1(const char *ops_name);
 void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
+void psc_push_part_yz_b();
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
@@ -119,6 +121,7 @@ extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
+void PIC_push_part_yz_b();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

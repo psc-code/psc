@@ -184,6 +184,18 @@ psc_push_part_yz_a()
   psc.ops->particles_to_fortran();
 }
 
+// ----------------------------------------------------------------------
+// psc_push_part_yz_b
+
+void
+psc_push_part_yz_b()
+{
+  assert(psc.ops->push_part_yz_b);
+  psc.ops->particles_from_fortran();
+  psc.ops->push_part_yz_b();
+  psc.ops->particles_to_fortran();
+}
+
 
 static struct f_particle *particle_ref;
 
@@ -218,7 +230,7 @@ psc_check_particles_ref()
     assert_equal(psc.f_part[i].zi , particle_ref[i].zi);
     assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi);
     assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi);
-    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi);
+    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi); 
   }
 }
 
