@@ -20,7 +20,7 @@ sse2_push_part_yz_a()
 
   union packed_vector dt, yl, zl, ones, half; 
   float dtfl = (float) psc.dt; // FIXME: will dt ever be small enough
-                               // that is needs double.
+                               // that it needs double?
   ones.r = _mm_set1_ps(1);
   half.r = _mm_set1_ps(.5);
   dt.r = _mm_set1_ps(dtfl);
@@ -28,20 +28,44 @@ sse2_push_part_yz_a()
   zl.r = _mm_mul_ps(half.r, dt.r);
 
 
-  //  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
+  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
   
   for(int n = 0; n < psc.n_part; n += 4) {
     // FIXME : This is the wrong way to read in and pack data
     union packed_vector pxi, pyi, pzi, root, vyi, vzi, tmpx, tmpy, tmpz, yi, zi;
     for(int m = 0; m<4; m++){
-      yi.v[m] = sse2->part[n+m].yi;
-      zi.v[m] = sse2->part[n+m].zi;
-
-      pxi.v[m] = sse2->part[n+m].pxi;
-      pyi.v[m] = sse2->part[n+m].pyi;
-      pzi.v[m] = sse2->part[n+m].pzi;
     }
+    // First particle
+    yi.v[0] = sse2->part[n].yi;
+    zi.v[0] = sse2->part[n].zi;
+    
+    pxi.v[0] = sse2->part[n].pxi;
+    pyi.v[0] = sse2->part[n].pyi;
+    pzi.v[0] = sse2->part[n].pzi;
+    //Second particle
+    yi.v[1] = sse2->part[n+1].yi;
+    zi.v[1] = sse2->part[n+1].zi;
+    
+    pxi.v[1] = sse2->part[n+1].pxi;
+    pyi.v[1] = sse2->part[n+1].pyi;
+    pzi.v[1] = sse2->part[n+1].pzi;
+    //Third Particle
+    yi.v[2] = sse2->part[n+2].yi;
+    zi.v[2] = sse2->part[n+2].zi;
 
+    pxi.v[2] = sse2->part[n+2].pxi;
+    pyi.v[2] = sse2->part[n+2].pyi;
+    pzi.v[2] = sse2->part[n+2].pzi;
+    //Fourth particle
+    yi.v[3] = sse2->part[n+3].yi;
+    zi.v[3] = sse2->part[n+3].zi;
+    
+    pxi.v[3] = sse2->part[n+3].pxi;
+    pyi.v[3] = sse2->part[n+3].pyi;
+    pzi.v[3] = sse2->part[n+3].pzi;
+      
+      
+    // Actual calculation are here
     tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
     tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
     tmpz.r = _mm_mul_ps(pzi.r, pzi.r);
@@ -49,10 +73,11 @@ sse2_push_part_yz_a()
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_sqrt_ps(tmpx.r);
+    root.r = _mm_rsqrt_ps(tmpx.r); // it's possible this could be faster on some processors
+                                   // It's not on my test machine  
     
-    vyi.r = _mm_div_ps(pyi.r, root.r);
-    vzi.r = _mm_div_ps(pzi.r, root.r);
+    vyi.r = _mm_mul_ps(pyi.r, root.r);
+    vzi.r = _mm_mul_ps(pzi.r, root.r);
 
     tmpy.r = _mm_mul_ps(vyi.r, yl.r);
     tmpz.r = _mm_mul_ps(vzi.r, zl.r);
@@ -60,11 +85,15 @@ sse2_push_part_yz_a()
     yi.r = _mm_add_ps(yi.r, tmpy.r);
     zi.r = _mm_add_ps(zi.r, tmpz.r);
     
-    // FIXME : Wrong way to unpack and return to memory
-    for(int m = 0; m<4; m++){
-      (sse2->part[n+m]).yi = yi.v[m];
-      (sse2->part[n+m]).zi = zi.v[m];
-    }
+    (sse2->part[n]).yi = yi.v[0];
+    (sse2->part[n]).zi = zi.v[0];
+    (sse2->part[n+1]).yi = yi.v[1];
+    (sse2->part[n+1]).zi = zi.v[1];
+    (sse2->part[n+2]).yi = yi.v[2];
+    (sse2->part[n+2]).zi = zi.v[2];
+    (sse2->part[n+3]).yi = yi.v[3];
+    (sse2->part[n+3]).zi = zi.v[3];
+      
   }
   prof_stop(pr);
 }
