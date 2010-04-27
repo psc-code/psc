@@ -156,6 +156,29 @@ params_parse_cmdline(void *p, struct param *params, const char *title,
 }
 
 void
+params_parse_cmdline_nodefault(void *p, struct param *params, const char *title,
+			       MPI_Comm comm)
+{
+  for (int i = 0; params[i].name; i++) {
+    union param_u *pv = p + (unsigned long) params[i].var;
+    switch (params[i].type) {
+    case PT_INT:
+      get_option_int(params[i].name, &pv->u_int);
+      break;
+    case PT_BOOL:
+      get_option_bool(params[i].name, &pv->u_bool);
+      break;
+    case PT_DOUBLE:
+      get_option_double(params[i].name, &pv->u_double);
+      break;
+    case PT_STRING:
+      get_option_string(params[i].name, &pv->u_string);
+      break;
+    }
+  }
+}
+
+void
 params_print(void *p, struct param *params, const char *title,
 	     MPI_Comm comm)
 {

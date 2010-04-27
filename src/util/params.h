@@ -39,8 +39,17 @@ struct param {
 
 void params_init(int argc, char **argv);
 void params_print_all(void);
+
+// parses the cmd line for the parameters described
+// if an option is not provided, use the default value given in
+// PARAM_DOUBLE(default_value)
 void params_parse_cmdline(void *p, struct param *params, const char *title,
 			  MPI_Comm comm);
+
+// parses the cmd line for the parameters described
+// if an option is not provided, preserve the value unchanged
+void params_parse_cmdline_nodefault(void *p, struct param *params, const char *title,
+				  MPI_Comm comm);
 void params_print(void *p, struct param *params, const char *title,
 		  MPI_Comm comm);
 
