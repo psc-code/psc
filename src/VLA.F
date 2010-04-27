@@ -32,6 +32,7 @@ c      call INIT_MCC
       call C_init_vars(dt, dx, dy, dz,
      &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
+     &     cori, alpha, eta, wl, wp,
      &     99)
 #endif
       call MPI_BARRIER(MPI_COMM_WORLD,info)

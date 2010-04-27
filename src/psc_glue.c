@@ -115,6 +115,7 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 		f_real *jxi, f_real *jyi, f_real *jzi,
 		f_real *ex, f_real *ey, f_real *ez,
 		f_real *bx, f_real *by, f_real *bz,
+		f_real *cori, f_real *alpha, f_real *eta,f_real *wl, f_real *wp,
 		f_int *dummy)
 {
   // make sure we got passed the right number of arguments
@@ -160,20 +161,23 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   psc.f_fields[BX] = bx;
   psc.f_fields[BY] = by;
   psc.f_fields[BZ] = bz;
+
+  // parameters
+  psc.prm.cori = *cori;
+  psc.prm.alpha = *alpha;
+  psc.prm.eta = *eta;
+  psc.prm.wl = *wl;
+  psc.prm.wp = *wp;
 }
 
 void
-C_push_part_yz_F77(f_real *cori, f_real *alpha, f_real *eta, 
-		   f_real *p2A, f_real *p2B,
+C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 		   f_int *niloc, struct f_particle *p_niloc,
 		   f_int *dummy)
 {
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
-  psc.prm.cori = *cori;
-  psc.prm.alpha = *alpha;
-  psc.prm.eta = *eta;
   psc.p2A = *p2A;
   psc.p2B = *p2B;
 
@@ -187,9 +191,7 @@ C_push_part_yz_F77(f_real *cori, f_real *alpha, f_real *eta,
 }
 
 void
-C_push_part_z_F77(f_real *cori, f_real *alpha, f_real *eta, 
-		  f_real *wl, f_real *wp,
-		  f_real *p2A, f_real *p2B,
+C_push_part_z_F77(f_real *p2A, f_real *p2B,
 		  f_int *n,
 		  f_int *niloc, struct f_particle *p_niloc,
 		  f_int *dummy)
@@ -197,11 +199,6 @@ C_push_part_z_F77(f_real *cori, f_real *alpha, f_real *eta,
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
-  psc.prm.cori = *cori;
-  psc.prm.alpha = *alpha;
-  psc.prm.eta = *eta;
-  psc.prm.wl = *wl;
-  psc.prm.wp = *wp;
   psc.p2A = *p2A;
   psc.p2B = *p2B;
   psc.timestep = *n;
