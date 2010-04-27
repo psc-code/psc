@@ -1,3 +1,6 @@
+
+#include <config.h>
+
 c VLI.f is the init program and VLA.f the main program!
 
       program VLI
@@ -26,8 +29,10 @@ c INITIALIZATION
       call INIT_field
 c      call INIT_MCC
       call OUT_param
+#ifdef USE_C_INTERFACE
+      call C_init_vars()
+#endif
       call MPI_BARRIER(MPI_COMM_WORLD,info)
-  
 
 c BEGINNING OF TIME LOOP
 
