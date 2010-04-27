@@ -3,11 +3,7 @@ SUBDIRS = util
 
 bin_PROGRAMS = VLI VLA SELECT
 
-noinst_PROGRAMS = test1 test2
-
 noinst_LIBRARIES = libpsc.a
-
-LDADD = libpsc.a util/libutil.a
 
 libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
@@ -39,7 +35,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	PSC_driver.F psc.c
+	PSC_driver.F
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -63,13 +59,22 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	PSC_driver.F psc.c
+	PSC_driver.F
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT.F SERV_labelgen.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
+
+if USE_C_INTERFACE
+
+VLI_SOURCES += vli_main.c
+VLA_SOURCES += vla_main.c
+
+noinst_PROGRAMS = test1 test2
+
+LDADD = libpsc.a util/libutil.a
 
 TESTS = test2
 
@@ -86,4 +91,6 @@ push_part_yz.o: cuda/push_part_yz.cu
 %.cu: %.c
 	ln -sf $(<F) $@
 
-endif
+endif USE_CUDA
+
+endif USE_C_INTERFACE

@@ -1,6 +1,7 @@
 
 c VLI.f is the init program and VLA.f the main program!
 
+#ifndef USE_C_INTERFACE
       program VLI
 
       use VLA_variables
@@ -14,7 +15,7 @@ c VLI.f is the init program and VLA.f the main program!
       call MPI_FINALIZE(info)
 
       end
-
+#endif
 
 
 c The real VLI main

@@ -61,6 +61,7 @@ AC_ARG_ENABLE(
   [AS_HELP_STRING([--enable-c-interface], [use interface to modules written in C])],
   [AC_DEFINE([USE_C_INTERFACE])]
 )
+AM_CONDITIONAL([USE_C_INTERFACE], [test "$enable_c_interface" = "yes"])
   	
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
 AC_ARG_ENABLE(
