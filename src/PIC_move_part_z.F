@@ -19,11 +19,8 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       call SERV_systime(cpug)
 
 #ifdef USE_C_INTERFACE
-      call C_push_part_z(niloc, p_niloc, cori, alpha, eta, 
-     &     wl, wp,
-     &     p2A, p2B, n, dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+      call C_push_part_z(cori, alpha, eta, wl, wp,
+     &     p2A, p2B, n, niloc, p_niloc, 99)
 #else
       call PIC_push_part_z(niloc, p_niloc, cori, alpha, eta, 
      &     wl, wp,

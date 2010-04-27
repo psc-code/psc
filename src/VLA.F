@@ -29,7 +29,10 @@ c INITIALIZATION
 c      call INIT_MCC
       call OUT_param
 #ifdef USE_C_INTERFACE
-      call C_init_vars()
+      call C_init_vars(dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
+     &     99)
 #endif
       call MPI_BARRIER(MPI_COMM_WORLD,info)
 
