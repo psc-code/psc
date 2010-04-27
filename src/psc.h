@@ -20,6 +20,8 @@ enum {
 
 typedef float real;
 
+#define real(x) x ## f
+
 // Fortran types
 
 typedef double f_real;
@@ -36,6 +38,30 @@ struct f_particle {
   f_real lni;
   f_real wni;
 };
+
+// ----------------------------------------------------------------------
+// macros to access Fortran fields
+
+#define FF3_OFF(jx,jy,jz)						\
+  (((((jz)-psc.ilg[2]))							\
+    *psc.img[1] + ((jy)-psc.ilg[1]))					\
+   *psc.img[0] + ((jx)-psc.ilg[0]))
+
+#if 1
+
+#define FF3(fldnr, jx,jy,jz)			\
+  (psc.f_fields[fldnr][FF3_OFF(jx,jy,jz)])
+
+#else
+
+#define FF3(fldnr, jx,jy,jz)						\
+  (*({int off = FF3_OFF(jx,jy,jz);					\
+      assert(off >= 0);							\
+      assert(off < psc.fld_size);					\
+      &(psc.f_fields[fldnr][off]);					\
+    }))
+
+#endif
 
 struct psc_param {
   double cori, eta, alpha;
@@ -59,9 +85,12 @@ struct psc_ops {
   void (*destroy)(void);
   void (*particles_from_fortran)(void);
   void (*particles_to_fortran)(void);
+  void (*fields_from_fortran)(void);
+  void (*fields_to_fortran)(void);
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
+  void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
 struct psc {
@@ -115,6 +144,7 @@ void psc_create_test_1(const char *ops_name);
 void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
+void psc_push_part_yz_b();
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
@@ -127,6 +157,7 @@ extern struct psc_ops psc_ops_cuda;
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
+void PIC_push_part_yz_b();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

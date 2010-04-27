@@ -10,6 +10,7 @@ libpsc_a_SOURCES = \
 	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
+	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
