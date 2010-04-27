@@ -1,7 +1,7 @@
 
 #include "psc_cuda.h"
 #include "math.h"
-#include "profile/profile.h"
+#include "util/profile.h"
 
 __constant__ static float _dt;
 

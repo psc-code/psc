@@ -1,12 +1,15 @@
 
-bin_PROGRAMS = VLI VLA SELECT test1 test2
+SUBDIRS = util
+
+bin_PROGRAMS = VLI VLA SELECT
+
+noinst_PROGRAMS = test1 test2
 
 noinst_LIBRARIES = libpsc.a
 
-LDADD = libpsc.a
+LDADD = libpsc.a util/libutil.a
 
 libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
-	profile/profile.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
 	psc_fortran.c \

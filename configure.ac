@@ -71,7 +71,7 @@ AC_ARG_ENABLE(
 AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
   	
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile])
 
 AC_OUTPUT
 

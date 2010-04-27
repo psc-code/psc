@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "psc.h"
-#include "profile/profile.h"
+#include "util/profile.h"
 
 int
 main()

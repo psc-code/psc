@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "profile/profile.h"
+#include "util/profile.h"
 
 static void
 fortran_particles_from_fortran()
