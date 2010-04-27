@@ -5,7 +5,9 @@ bin_PROGRAMS = VLI VLA SELECT
 
 noinst_LIBRARIES = libpsc.a
 
-libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
+libpsc_a_SOURCES = \
+	init_parameters.c \
+	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
 	psc_fortran.c \

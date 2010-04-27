@@ -43,6 +43,13 @@ struct psc_param {
   double wp;
 };
 
+struct psc_domain {
+  double length[3];
+  int itot[3], ilo[3], ihi[3];
+  int bnd_fld[3], bnd_part[3];
+  int nproc[3];
+};
+
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
@@ -61,6 +68,7 @@ struct psc {
   struct psc_ops *ops;
   // user-configurable parameters
   struct psc_param prm;
+  struct psc_domain domain;
 
   // other parameters / constants
   double p2A, p2B;
@@ -88,8 +96,9 @@ struct psc {
 };
 
 // we keep this info global for now.
+// FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
-extern struct psc psc;
+struct psc psc;
 
 void psc_create(const char *mod_particle);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
