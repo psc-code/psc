@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "util/params.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,18 +40,41 @@ static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
   for (int i = 0; psc_ops_list[i]; i++) {
-    if (strcmp(psc_ops_list[i]->name, ops_name) == 0)
+    if (strcasecmp(psc_ops_list[i]->name, ops_name) == 0)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
   abort();
 }
 
+struct psc_cmdline {
+  const char *mod_particle;
+};
+
+#define VAR(x) (void *)offsetof(struct psc_cmdline, x)
+
+static struct param psc_cmdline_descr[] = {
+  { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
+  {},
+};
+
+#undef VAR
+
+
 void
-psc_create(const char *ops_name)
+psc_create(const char *mod_particle)
 {
+  // set default to what we've got passed
+  struct psc_cmdline par = {
+    .mod_particle = mod_particle,
+  };
+
+  params_parse_cmdline_nodefault(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
+  params_print(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
+
   memset(&psc, 0, sizeof(psc));
-  psc.ops = psc_find_ops(ops_name);
+
+  psc.ops = psc_find_ops(par.mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
   }

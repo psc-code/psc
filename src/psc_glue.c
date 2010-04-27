@@ -121,10 +121,6 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
-  // hardcoded: let's call back to fortran for now when any of the
-  // C_* functions are called from fortran
-  psc_create("fortran");
-
   // time step, grid spacing
   psc.dt = *dt;
   psc.dx[0] = *dx;

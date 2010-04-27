@@ -91,7 +91,7 @@ struct psc {
 
 extern struct psc psc;
 
-void psc_create();
+void psc_create(const char *mod_particle);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
