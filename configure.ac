@@ -55,11 +55,11 @@ AS_IF([test "x$have_papi" != "xyes"],
 
 # Checks for options
 
-AH_TEMPLATE([USE_PARTICLE_C], [use particle pusher written in C])
+AH_TEMPLATE([USE_C_INTERFACE], [use interface to modules written in C])
 AC_ARG_ENABLE(
-  [particle-c],
-  [AS_HELP_STRING([--enable-particle-c], [use particle pusher written in C])],
-  [AC_DEFINE([USE_PARTICLE_C])]
+  [c-interface],
+  [AS_HELP_STRING([--enable-c-interface], [use interface to modules written in C])],
+  [AC_DEFINE([USE_C_INTERFACE])]
 )
   	
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
