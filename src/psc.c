@@ -192,6 +192,7 @@ psc_push_part_yz_b()
 {
   assert(psc.ops->push_part_yz_b);
   psc.ops->particles_from_fortran();
+  psc.ops->fields_from_fortran();
   psc.ops->push_part_yz_b();
   psc.ops->particles_to_fortran();
 }

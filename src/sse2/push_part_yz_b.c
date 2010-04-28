@@ -10,7 +10,7 @@ sse2_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(float));
+    pr = prof_register("sse2_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(float));
   }
   prof_start(pr);
 
@@ -49,7 +49,7 @@ sse2_push_part_yz_b()
   zl.r = _mm_mul_ps(half.r, dt.r);
 
 
-  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
+  //  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
   
   for(int n = 0; n < psc.n_part; n += 4) {
     union packed_vector pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;
@@ -142,35 +142,26 @@ sse2_push_part_yz_b()
 // CHECKPOINT: PIC_push_part_yz.F : line 119
 // Prepare for field interpolation
 
-                             // From what I can tell, it's bad mojo to use
-                             // float vectors and int vectors at the same time    
-    int j1[4], j2[4], j3[4], l1[4], l2[4], l3[4]; 
+    // Apparently this can be done in vectors. A victory!
+      union {
+      __m128i r;
+      int v[4];
+    } j1, j2, j3, l1, l2, l3;
+
+    union packed_vector j2fl, j3fl, l2fl, l3fl;
     
     //Go go gadget loop unwind! Replaces u,v,w in F90 code
-    j1[0] = roundf(tmpx.v[0]);
-    j1[1] = roundf(tmpx.v[1]);
-    j1[2] = roundf(tmpx.v[2]);
-    j1[3] = roundf(tmpx.v[3]);
+    j1.r = _mm_cvtps_epi32(tmpx.r);
+    j2.r = _mm_cvtps_epi32(tmpy.r);
+    j3.r = _mm_cvtps_epi32(tmpz.r);
 
-    j2[0] = roundf(tmpy.v[0]);
-    j2[1] = roundf(tmpy.v[1]);
-    j2[2] = roundf(tmpy.v[2]);
-    j2[3] = roundf(tmpy.v[3]);
+    // there must be a better way...
+    j2fl.r = _mm_cvtepi32_ps(j2.r);
+    j3fl.r = _mm_cvtepi32_ps(j3.r);
 
-    j3[0] = roundf(tmpz.v[0]);
-    j3[1] = roundf(tmpz.v[1]);
-    j3[2] = roundf(tmpz.v[2]);
-    j3[3] = roundf(tmpz.v[3]);
+    tmpy.r = _mm_sub_ps(j2fl.r, tmpy.r);
+    tmpz.r = _mm_sub_ps(j3fl.r, tmpy.r);
 
-    tmpy.v[0] = j2[0] - tmpy.v[0]; 
-    tmpy.v[1] = j2[1] - tmpy.v[1]; 
-    tmpy.v[2] = j2[2] - tmpy.v[2]; 
-    tmpy.v[3] = j2[3] - tmpy.v[3]; 
-
-    tmpz.v[0] = j3[0] - tmpz.v[0]; 
-    tmpz.v[1] = j3[1] - tmpz.v[1]; 
-    tmpz.v[2] = j3[2] - tmpz.v[2]; 
-    tmpz.v[3] = j3[3] - tmpz.v[3];
 
     union packed_vector gmy, gmz, g0y, g0z, g1y, g1z;
 
@@ -204,30 +195,15 @@ sse2_push_part_yz_b()
     tmpz.r = _mm_mul_ps(zi.r, dzi.r);
     tmpz.r = _mm_mul_ps(tmpz.r, half.r);
 
-    l1[0] = roundf(tmpx.v[0]);
-    l1[1] = roundf(tmpx.v[1]);
-    l1[2] = roundf(tmpx.v[2]);
-    l1[3] = roundf(tmpx.v[3]);
+    l1.r = _mm_cvtps_epi32(tmpx.r);
+    l2.r = _mm_cvtps_epi32(tmpy.r);
+    l3.r = _mm_cvtps_epi32(tmpz.r);
 
-    l2[0] = roundf(tmpy.v[0]);
-    l2[1] = roundf(tmpy.v[1]);
-    l2[2] = roundf(tmpy.v[2]);
-    l2[3] = roundf(tmpy.v[3]);
+    l2fl.r = _mm_cvtepi32_ps(l2.r);
+    l3fl.r = _mm_cvtepi32_ps(l3.r);
 
-    l3[0] = roundf(tmpz.v[0]);
-    l3[1] = roundf(tmpz.v[1]);
-    l3[2] = roundf(tmpz.v[2]);
-    l3[3] = roundf(tmpz.v[3]);
-
-    tmpy.v[0] = l2[0] - tmpy.v[0]; 
-    tmpy.v[1] = l2[1] - tmpy.v[1]; 
-    tmpy.v[2] = l2[2] - tmpy.v[2]; 
-    tmpy.v[3] = l2[3] - tmpy.v[3]; 
-
-    tmpz.v[0] = l3[0] - tmpz.v[0]; 
-    tmpz.v[1] = l3[1] - tmpz.v[1]; 
-    tmpz.v[2] = l3[2] - tmpz.v[2]; 
-    tmpz.v[3] = l3[3] - tmpz.v[3];
+    tmpy.r = _mm_sub_ps(l2fl.r, tmpy.r);
+    tmpz.r = _mm_sub_ps(l3fl.r, tmpy.r);
 
     union packed_vector hmy, hmz, h0y, h0z, h1y, h1z;
 
@@ -264,49 +240,49 @@ sse2_push_part_yz_b()
 // A messy macro to let me get the correct data and keep notation consistent
 // with the Fortran code
 
-#define FORT_FIELD(T,l,j,k) (float)psc.f_fields[(T)][((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]+psc.img[1])]
+#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]+psc.img[1])]
 
     union packed_vector field_in, exq, eyq, ezq, bxq, byq, bzq;
-    
+     
     //exq
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]-1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]-1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]-1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]-1,j3[3]-1);
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]-1);
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0],j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1],j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2],j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3],j3[3]-1);    
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]-1);    
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]+1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]+1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]+1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]+1,j3[3]-1);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]-1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     exq.r = _mm_mul_ps(gmz.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]-1,j3[0]);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]-1,j3[1]);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]-1,j3[2]);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]-1,j3[3]);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0],j3[0]);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1],j3[1]);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2],j3[2]);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3],j3[3]);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]+1,j3[0]);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]+1,j3[1]);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]+1,j3[2]);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]+1,j3[3]);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -314,22 +290,22 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
     exq.r = _mm_add_ps(exq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]-1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]-1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]-1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]-1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]+1);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0],j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1],j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2],j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3],j3[3]+1);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]+1);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EX, l1[0], j2[0]+1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EX, l1[1], j2[1]+1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EX, l1[2], j2[2]+1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EX, l1[3], j2[3]+1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]+1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -338,44 +314,44 @@ sse2_push_part_yz_b()
     exq.r = _mm_add_ps(exq.r, tmpx.r);
 
     //eyq
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]-1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]-1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]-1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]-1,j3[3]-1);
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]-1);
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0],j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1],j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2],j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3],j3[3]-1);    
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]-1);    
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]+1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]+1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]+1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]+1,j3[3]-1);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]-1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     eyq.r = _mm_mul_ps(gmz.r, tmpx.r);
  
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]-1,j3[0]);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]-1,j3[1]);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]-1,j3[2]);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]-1,j3[3]);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0],j3[0]);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1],j3[1]);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2],j3[2]);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3],j3[3]);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]+1,j3[0]);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]+1,j3[1]);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]+1,j3[2]);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]+1,j3[3]);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -383,22 +359,22 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
     eyq.r = _mm_add_ps(eyq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]-1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]-1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]-1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]-1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]+1);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0],j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1],j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2],j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3],j3[3]+1);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]+1);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EY, j1[0], l2[0]+1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(EY, j1[1], l2[1]+1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(EY, j1[2], l2[2]+1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(EY, j1[3], l2[3]+1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]+1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -407,44 +383,44 @@ sse2_push_part_yz_b()
     eyq.r = _mm_add_ps(eyq.r, tmpx.r);
 
     //ezq
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]-1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]-1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]-1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]-1,l3[3]-1);
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]-1);
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0],l3[0]-1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1],l3[1]-1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2],l3[2]-1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3],l3[3]-1);    
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]-1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]-1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]-1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]-1);    
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]+1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]+1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]+1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]+1,l3[3]-1);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]-1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     ezq.r = _mm_mul_ps(hmz.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]-1,l3[0]);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]-1,l3[1]);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]-1,l3[2]);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]-1,l3[3]);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0],l3[0]);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1],l3[1]);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2],l3[2]);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3],l3[3]);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]+1,l3[0]);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]+1,l3[1]);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]+1,l3[2]);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]+1,l3[3]);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -452,22 +428,22 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
     ezq.r = _mm_add_ps(ezq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]-1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]-1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]-1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]-1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]+1);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0],l3[0]+1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1],l3[1]+1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2],l3[2]+1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3],l3[3]+1);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]+1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]+1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]+1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]+1);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(EZ, j1[0], j2[0]+1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(EZ, j1[1], j2[1]+1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(EZ, j1[2], j2[2]+1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(EZ, j1[3], j2[3]+1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]+1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -476,44 +452,44 @@ sse2_push_part_yz_b()
     ezq.r = _mm_add_ps(ezq.r, tmpx.r);
 
     //bxq
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]-1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]-1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]-1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]-1,l3[3]-1);
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]-1);
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0],l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1],l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2],l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3],l3[3]-1);    
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]-1);    
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]+1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]+1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]+1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]+1,l3[3]-1);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]-1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     bxq.r = _mm_mul_ps(hmz.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]-1,l3[0]);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]-1,l3[1]);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]-1,l3[2]);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]-1,l3[3]);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0],l3[0]);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1],l3[1]);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2],l3[2]);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3],l3[3]);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]+1,l3[0]);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]+1,l3[1]);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]+1,l3[2]);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]+1,l3[3]);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -521,22 +497,22 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
     bxq.r = _mm_add_ps(bxq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]-1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]-1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]-1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]-1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]+1);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0],l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1],l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2],l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3],l3[3]+1);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]+1);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BX, j1[0], l2[0]+1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BX, j1[1], l2[1]+1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BX, j1[2], l2[2]+1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BX, j1[3], l2[3]+1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]+1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -545,44 +521,44 @@ sse2_push_part_yz_b()
     bxq.r = _mm_add_ps(bxq.r, tmpx.r);
 
     //byq
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]-1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]-1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]-1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]-1,l3[3]-1);
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]-1);
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0],l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1],l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2],l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3],l3[3]-1);    
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]-1);    
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]+1,l3[0]-1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]+1,l3[1]-1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]+1,l3[2]-1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]+1,l3[3]-1);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]-1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]-1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]-1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]-1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     byq.r = _mm_mul_ps(hmz.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]-1,l3[0]);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]-1,l3[1]);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]-1,l3[2]);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]-1,l3[3]);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0],l3[0]);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1],l3[1]);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2],l3[2]);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3],l3[3]);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]+1,l3[0]);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]+1,l3[1]);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]+1,l3[2]);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]+1,l3[3]);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -590,22 +566,22 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
     byq.r = _mm_add_ps(byq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]-1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]-1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]-1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]-1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]+1);        
     tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0],l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1],l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2],l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3],l3[3]+1);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]+1);        
     tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BY, l1[0], j2[0]+1,l3[0]+1);
-    field_in.v[1] = FORT_FIELD(BY, l1[1], j2[1]+1,l3[1]+1);
-    field_in.v[2] = FORT_FIELD(BY, l1[2], j2[2]+1,l3[2]+1);
-    field_in.v[3] = FORT_FIELD(BY, l1[3], j2[3]+1,l3[3]+1);        
+    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]+1);
+    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]+1);
+    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]+1);
+    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]+1);        
     tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -614,44 +590,44 @@ sse2_push_part_yz_b()
     byq.r = _mm_add_ps(byq.r, tmpx.r);
 
     //bzq
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]-1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]-1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]-1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]-1,j3[3]-1);
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]-1);
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0],j3[0]-1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1],j3[1]-1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2],j3[2]-1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3],j3[3]-1);    
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]-1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]-1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]-1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]-1);    
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]+1,j3[0]-1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]+1,j3[1]-1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]+1,j3[2]-1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]+1,j3[3]-1);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]-1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]-1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]-1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]-1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     bzq.r = _mm_mul_ps(gmz.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]-1,j3[0]);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]-1,j3[1]);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]-1,j3[2]);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]-1,j3[3]);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0],j3[0]);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1],j3[1]);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2],j3[2]);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3],j3[3]);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]+1,j3[0]);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]+1,j3[1]);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]+1,j3[2]);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]+1,j3[3]);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
@@ -659,28 +635,30 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
     bzq.r = _mm_add_ps(bzq.r, tmpx.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]-1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]-1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]-1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]-1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]+1);        
     tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0],j3[0]+1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1],j3[1]+1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2],j3[2]+1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3],j3[3]+1);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]+1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]+1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]+1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]+1);        
     tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
 
-    field_in.v[0] = FORT_FIELD(BZ, l1[0], l2[0]+1,j3[0]+1);
-    field_in.v[1] = FORT_FIELD(BZ, l1[1], l2[1]+1,j3[1]+1);
-    field_in.v[2] = FORT_FIELD(BZ, l1[2], l2[2]+1,j3[2]+1);
-    field_in.v[3] = FORT_FIELD(BZ, l1[3], l2[3]+1,j3[3]+1);        
+    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]+1);
+    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]+1);
+    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]+1);
+    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]+1);        
     tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
 
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_mul_ps(g1z.r, tmpx.r);
     bzq.r = _mm_add_ps(bzq.r, tmpx.r);
+
+#undef C_FIELD
 
     /* fprintf(stderr, "bxq: %g %g %g %g \n", bxq.v[0], bxq.v[1], bxq.v[2], bxq.v[3]); */
     /* fprintf(stderr, "byq: %g %g %g %g \n", byq.v[0], byq.v[1], byq.v[2], byq.v[3]); */

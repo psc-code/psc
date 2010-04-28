@@ -2,6 +2,8 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
+#define FORT_FIELD(T,l,j,k) (float)psc.f_fields[(T)][((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]+psc.img[1])]
+
 #include <assert.h>
 #include <xmmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
@@ -18,8 +20,17 @@ struct sse2_particle {
   real wni;
 };
 
+// This is the 'C' way to do things, and may be better in the future, but not used now
+/* struct sse2_fields { */
+/*   real *ne, *ni, *nn; */
+/*   real *jxi, *jyi, *jzi; */
+/*   real *ex, *ey, *ez; */
+/*   real *bx, *by, *bz; */
+/* } */
+
 struct psc_sse2 {
   struct sse2_particle *part;
+  real *fields;
 };
 
 // to access the elements safely
