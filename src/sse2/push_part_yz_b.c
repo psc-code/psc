@@ -150,12 +150,22 @@ sse2_push_part_yz_b()
     } j1, j2, j3, l1, l2, l3;
 
     union packed_vector j2fl, j3fl, l2fl, l3fl;
-    
+    /* if(_MM_GET_ROUNDING_MODE() != _MM_ROUND_NEAREST){ */
+    /*   fprintf(stderr,"oh no!\n"); */
+    /* } */
+    /* _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST); */
     //Go go gadget loop unwind! Replaces u,v,w in F90 code
     j1.r = _mm_cvtps_epi32(tmpx.r);
     j2.r = _mm_cvtps_epi32(tmpy.r);
     j3.r = _mm_cvtps_epi32(tmpz.r);
 
+    //    j1.v[0] = round(tmpx.v[0]);
+    
+    if(n == 0){
+      if(tmpx.v[0] == tmpy.v[0]) fprintf(stderr, "I should round up!!\n");
+      fprintf(stderr, "j1 %d j2 %d j3 %d\n", j1.v[0], j2.v[0], j3.v[0]);
+      fprintf(stderr, "j1 %f j2 %f j3 %f\n", tmpx.v[0], tmpx.v[0], tmpx.v[0]);
+    }
     // there must be a better way...
     j2fl.r = _mm_cvtepi32_ps(j2.r);
     j3fl.r = _mm_cvtepi32_ps(j3.r);
@@ -241,7 +251,12 @@ sse2_push_part_yz_b()
 // A messy macro to let me get the correct data and keep notation consistent
 // with the Fortran code
 
-#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)-psc.ilo[0]+psc.ibn[0]-1) + ((j)-psc.ilo[1]+psc.ibn[1]-1)*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2]-1)*(psc.img[0]+psc.img[1])]
+#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)) + ((j))*(psc.img[0]) + ((k))*(psc.img[0]*psc.img[1])]
+
+    if(n == 0){
+      fprintf(stderr, "j1 %d j2 %d j3 %d\n", j1.v[0], j2.v[0], j3.v[0]);
+      fprintf(stderr, "ex(0,0,0) %g\n", C_FIELD(EX, 0, 0, 0));
+    }
 
     union packed_vector field_in, exq, eyq, ezq, bxq, byq, bzq;
      

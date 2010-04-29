@@ -644,6 +644,11 @@ c x^n, p^n -> x^(n+0.5), p^n
             g1y=0.5*(0.5-h2)*(0.5-h2)
             g1z=0.5*(0.5-h3)*(0.5-h3)
 
+            if (l.eq.1) then 
+               print *,'j1',j1,'j2 ',j2,' j3 ',j3
+               print *,"ex(0,0,0)",ex(0,0,0)
+            endif
+            
             u=xi*dxi
             v=yi*dyi-0.5
             w=zi*dzi-0.5

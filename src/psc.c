@@ -116,6 +116,19 @@ psc_setup_fields_zero()
 }
 
 void
+psc_setup_fields_random()
+{
+  long int seed = 7007;
+  srand48(seed);
+  for(int m = 0; m < NR_FIELDS; m++){
+    for(int n = 0; n < psc.fld_size; n++){
+      //preserve Fortran ordering for now
+      psc.f_fields[m][n] = (double)n; //10. * drand48();
+    }
+  }
+}
+
+void
 psc_setup_particles_1()
 {
   for (int n = 0; n < psc.n_part; n++) {
@@ -226,13 +239,19 @@ psc_check_particles_ref()
 {
   assert(particle_ref);
   for (int i = 0; i < psc.n_part; i++) {
+    HERE;
     assert_equal(psc.f_part[i].xi , particle_ref[i].xi);
-    assert_equal(psc.f_part[i].yi , particle_ref[i].yi);
-    assert_equal(psc.f_part[i].zi , particle_ref[i].zi);
-    assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi);
+    HERE;    
     assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi);
+    HERE;    
     assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi); 
-  }
+    HERE;    
+    assert_equal(psc.f_part[i].yi , particle_ref[i].yi);
+    HERE;    
+    assert_equal(psc.f_part[i].zi , particle_ref[i].zi);
+    HERE;    
+    assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi);
+     }
 }
 
 // ----------------------------------------------------------------------
@@ -256,3 +275,23 @@ psc_create_test_1(const char *ops_name)
   psc_setup_particles_1();
 }
 
+// ----------------------------------------------------------------------
+// psc_create_test_2
+//
+// set up test case 2 with some random non-zero fields
+
+void
+psc_create_test_2(const char *ops_name)
+{
+  int ilo[3] = { 0, 0, 0 };
+  int ihi[3] = { 8, 8, 8 };
+  int ibn[3] = { 2, 2, 2 }; // FIXME?
+
+  int n_part = 1e6;
+
+  psc_create(ops_name);
+  psc_alloc(ilo, ihi, ibn, n_part);
+  psc_setup_parameters();
+  psc_setup_fields_random();
+  psc_setup_particles_1();
+}

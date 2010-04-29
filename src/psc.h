@@ -99,11 +99,13 @@ void psc_destroy();
 
 void psc_setup_parameters();
 void psc_setup_fields_zero();
+void psc_setup_fields_random();
 void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
 void psc_check_particles_ref();
 void psc_create_test_1(const char *ops_name);
+void psc_create_test_2(const char *ops_name);
 
 void psc_push_part_yz();
 void psc_push_part_z();
