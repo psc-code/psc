@@ -114,7 +114,8 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_rsqrt_ps(tmpx.r);
+    root.r = _mm_sqrt_ps(tmpx.r);
+    root.r = _mm_div_ps(ones.r, root.r);
 
     vxi.r = _mm_mul_ps(pxi.r, root.r);
     vyi.r = _mm_mul_ps(pyi.r, root.r);
@@ -240,7 +241,7 @@ sse2_push_part_yz_b()
 // A messy macro to let me get the correct data and keep notation consistent
 // with the Fortran code
 
-#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]+psc.img[1])]
+#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)-psc.ilo[0]+psc.ibn[0]-1) + ((j)-psc.ilo[1]+psc.ibn[1]-1)*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2]-1)*(psc.img[0]+psc.img[1])]
 
     union packed_vector field_in, exq, eyq, ezq, bxq, byq, bzq;
      
@@ -787,7 +788,8 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_rsqrt_ps(tmpx.r);
+    root.r = _mm_sqrt_ps(tmpx.r);
+    root.r = _mm_div_ps(ones.r, root.r);
 
     vxi.r = _mm_mul_ps(pxi.r, root.r);
     vyi.r = _mm_mul_ps(pyi.r, root.r);
