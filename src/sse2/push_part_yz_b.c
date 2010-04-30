@@ -4,6 +4,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <emmintrin.h>
 
 void
 sse2_push_part_yz_b()
@@ -150,28 +151,16 @@ sse2_push_part_yz_b()
     } j1, j2, j3, l1, l2, l3;
 
     union packed_vector j2fl, j3fl, l2fl, l3fl;
-    /* if(_MM_GET_ROUNDING_MODE() != _MM_ROUND_NEAREST){ */
-    /*   fprintf(stderr,"oh no!\n"); */
-    /* } */
-    /* _MM_SET_ROUNDING_MODE(_MM_ROUND_NEAREST); */
-    //Go go gadget loop unwind! Replaces u,v,w in F90 code
     j1.r = _mm_cvtps_epi32(tmpx.r);
     j2.r = _mm_cvtps_epi32(tmpy.r);
     j3.r = _mm_cvtps_epi32(tmpz.r);
-
-    //    j1.v[0] = round(tmpx.v[0]);
     
-    if(n == 0){
-      if(tmpx.v[0] == tmpy.v[0]) fprintf(stderr, "I should round up!!\n");
-      fprintf(stderr, "j1 %d j2 %d j3 %d\n", j1.v[0], j2.v[0], j3.v[0]);
-      fprintf(stderr, "j1 %f j2 %f j3 %f\n", tmpx.v[0], tmpx.v[0], tmpx.v[0]);
-    }
     // there must be a better way...
     j2fl.r = _mm_cvtepi32_ps(j2.r);
     j3fl.r = _mm_cvtepi32_ps(j3.r);
 
     tmpy.r = _mm_sub_ps(j2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(j3fl.r, tmpy.r);
+    tmpz.r = _mm_sub_ps(j3fl.r, tmpz.r);
 
 
     union packed_vector gmy, gmz, g0y, g0z, g1y, g1z;
@@ -204,7 +193,7 @@ sse2_push_part_yz_b()
     tmpy.r = _mm_mul_ps(yi.r, dyi.r);
     tmpy.r = _mm_sub_ps(tmpy.r, half.r);
     tmpz.r = _mm_mul_ps(zi.r, dzi.r);
-    tmpz.r = _mm_mul_ps(tmpz.r, half.r);
+    tmpz.r = _mm_sub_ps(tmpz.r, half.r);
 
     l1.r = _mm_cvtps_epi32(tmpx.r);
     l2.r = _mm_cvtps_epi32(tmpy.r);
@@ -214,7 +203,7 @@ sse2_push_part_yz_b()
     l3fl.r = _mm_cvtepi32_ps(l3.r);
 
     tmpy.r = _mm_sub_ps(l2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(l3fl.r, tmpy.r);
+    tmpz.r = _mm_sub_ps(l3fl.r, tmpz.r);
 
     union packed_vector hmy, hmz, h0y, h0z, h1y, h1z;
 
@@ -250,13 +239,6 @@ sse2_push_part_yz_b()
 
 // A messy macro to let me get the correct data and keep notation consistent
 // with the Fortran code
-
-#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)) + ((j))*(psc.img[0]) + ((k))*(psc.img[0]*psc.img[1])]
-
-    if(n == 0){
-      fprintf(stderr, "j1 %d j2 %d j3 %d\n", j1.v[0], j2.v[0], j3.v[0]);
-      fprintf(stderr, "ex(0,0,0) %g\n", C_FIELD(EX, 0, 0, 0));
-    }
 
     union packed_vector field_in, exq, eyq, ezq, bxq, byq, bzq;
      
@@ -673,16 +655,6 @@ sse2_push_part_yz_b()
     tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
     tmpx.r = _mm_mul_ps(g1z.r, tmpx.r);
     bzq.r = _mm_add_ps(bzq.r, tmpx.r);
-
-#undef C_FIELD
-
-    /* fprintf(stderr, "bxq: %g %g %g %g \n", bxq.v[0], bxq.v[1], bxq.v[2], bxq.v[3]); */
-    /* fprintf(stderr, "byq: %g %g %g %g \n", byq.v[0], byq.v[1], byq.v[2], byq.v[3]); */
-    /* fprintf(stderr, "bzq: %g %g %g %g \n", bzq.v[0], bzq.v[1], bzq.v[2], bzq.v[3]); */
-    /* fprintf(stderr, "exq: %g %g %g %g \n", exq.v[0], exq.v[1], exq.v[2], exq.v[3]); */
-    /* fprintf(stderr, "eyq: %g %g %g %g \n", eyq.v[0], eyq.v[1], eyq.v[2], eyq.v[3]); */
-    /* fprintf(stderr, "ezq: %g %g %g %g \n", ezq.v[0], ezq.v[1], ezq.v[2], ezq.v[3]); */
-
 
 // CHECKPOINT: PIC_push_part_yz.F : line 223
 // Half step momentum  with E-field
