@@ -280,7 +280,7 @@ c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
             gmz=0.5*(1.5-abs(h3-1.0))*(1.5-abs(h3-1.0))
             g0z=0.75-abs(h3)*abs(h3)
             g1z=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
-
+            
             if (qni.lt.0.0) then
                fnq=qni*wni*fnqs
                ne(l1,l2-1,l3-1)=ne(l1,l2-1,l3-1)+fnq*gmy*gmz
@@ -377,7 +377,8 @@ c CURRENT DENSITY AT (n+1.0)*dt
      &               +0.3333333333*s1y(l2)*s1z(l3)
                   wy=s1y(l2)*(s0z(l3)+0.5*s1z(l3))
                   wz=s1z(l3)*(s0y(l2)+0.5*s1y(l2))
-
+                  
+                  
                   jxh(0,l2,l3)=fnqx*wx
                   jyh(0,l2,l3)=jyh(0,l2-1,l3)-fnqy*wy
                   jzh(0,l2,l3)=jzh(0,l2,l3-1)-fnqz*wz

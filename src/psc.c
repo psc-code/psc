@@ -131,9 +131,10 @@ psc_setup_fields_seq()
 }
 
 void
-psc_setup_fields_2dseq()
+psc_setup_fields_seq_yz()
 {
-  for(int m = 0; m < NR_FIELDS; m++){
+  psc_setup_fields_zero();
+  for(int m = EX; m < NR_FIELDS; m++){
     for(int i = 0; i < psc.img[0]; i++){
       for(int j = 0; j < psc.img[1]; j++){
 	for(int k = 0; k < psc.img[2]; k++){
@@ -144,6 +145,23 @@ psc_setup_fields_2dseq()
   }
 }
 
+void
+psc_setup_fields_1()
+{
+  psc_setup_fields_zero();
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	FF3(EX, jx,jy,jz) = .1 * sin(.5 * jx) + .2 * sin(.4 * jy) + .3 * sin(.3 * jz);
+	FF3(EY, jx,jy,jz) = .2 * sin(.4 * jx) + .3 * sin(.3 * jy) + .4 * sin(.2 * jz);
+	FF3(EZ, jx,jy,jz) = .3 * sin(.3 * jx) + .4 * sin(.2 * jy) + .5 * sin(.1 * jz);
+	FF3(BX, jx,jy,jz) = .1 * cos(.5 * jx) + .2 * cos(.4 * jy) + .3 * cos(.3 * jz);
+	FF3(BY, jx,jy,jz) = .2 * cos(.4 * jx) + .3 * cos(.3 * jy) + .4 * cos(.2 * jz);
+	FF3(BZ, jx,jy,jz) = .3 * cos(.3 * jx) + .4 * cos(.2 * jy) + .5 * cos(.1 * jz);
+      }
+    }
+  }
+}
 
 
 void
@@ -187,8 +205,10 @@ psc_push_part_yz()
 {
   assert(psc.ops->push_part_yz);
   psc.ops->particles_from_fortran();
+  psc.ops->fields_from_fortran();
   psc.ops->push_part_yz();
   psc.ops->particles_to_fortran();
+  psc.ops->fields_to_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -226,11 +246,12 @@ psc_push_part_yz_b()
   psc.ops->fields_from_fortran();
   psc.ops->push_part_yz_b();
   psc.ops->particles_to_fortran();
+  psc.ops->fields_to_fortran();
 }
 
 
 static struct f_particle *particle_ref;
-
+static f_real *field_ref[NR_FIELDS];
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
 //
@@ -246,6 +267,28 @@ psc_save_particles_ref()
     particle_ref[i] = psc.f_part[i];
   }
 }
+
+// ----------------------------------------------------------------------
+// psc_save_fields_ref
+//
+// save current field data as reference solution
+
+void
+psc_save_fields_ref()
+{
+  if (!field_ref[EX]) { //FIXME this is bad mojo
+    for (int m = 0; m < NR_FIELDS; m++) {
+      field_ref[m] = calloc(psc.fld_size, sizeof(f_real));
+    }
+  }
+  for (int m = 0; m < NR_FIELDS; m++) {
+    for (int n = 0; n < psc.fld_size; n++){
+      field_ref[m][n] = psc.f_fields[m][n];
+    }
+  }
+} 
+
+
 
 // ----------------------------------------------------------------------
 // psc_check_particles_ref
@@ -264,7 +307,24 @@ psc_check_particles_ref()
     assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi);
     assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi); 
 
-     }
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_check_fields_ref
+//
+// check current particle data agains previously saved reference solution
+
+void
+psc_check_fields_ref()
+{
+  assert(field_ref[NE]); //FIXME: this is bad
+  for (int m = 0; m < NR_FIELDS; m++){
+    for (int n = 0; n < psc.fld_size; n++){
+      assert_equal(psc.f_fields[m][n], field_ref[m][n]);
+      //  fprintf(stderr, "%d\n", n);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -276,7 +336,7 @@ void
 psc_create_test_1(const char *ops_name)
 {
   int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 8, 8, 8 };
+  int ihi[3] = { 1, 8, 8 };
   int ibn[3] = { 2, 2, 2 }; // FIXME?
 
   int n_part = 1e6;
@@ -291,13 +351,13 @@ psc_create_test_1(const char *ops_name)
 // ----------------------------------------------------------------------
 // psc_create_test_2
 //
-// set up test case 2 with some random non-zero fields
+// set up test case 2 with some non-zero fields
 
 void
 psc_create_test_2(const char *ops_name)
 {
   int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 8, 8, 8 };
+  int ihi[3] = { 1, 8, 8 };
   int ibn[3] = { 2, 2, 2 }; // FIXME?
 
   int n_part = 1e6;
@@ -305,6 +365,6 @@ psc_create_test_2(const char *ops_name)
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
-  psc_setup_fields_2dseq();
+  psc_setup_fields_zero();
   psc_setup_particles_1();
 }

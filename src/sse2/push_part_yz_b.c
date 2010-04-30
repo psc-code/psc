@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <emmintrin.h>
+#include <string.h>
 
 void
 sse2_push_part_yz_b()
@@ -23,6 +24,10 @@ sse2_push_part_yz_b()
 
   psc.p2A = 0.;
   psc.p2B = 0.;
+
+  for (int m = 0; m <= JZI; m++) {
+    memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(real));
+  }  
 
 
   // Values that won't change from iteration to iteration

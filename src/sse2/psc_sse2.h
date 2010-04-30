@@ -43,5 +43,6 @@ union packed_vector {
 
 void sse2_push_part_yz_a();
 void sse2_push_part_yz_b();
+void sse2_push_part_yz();
 
 #endif

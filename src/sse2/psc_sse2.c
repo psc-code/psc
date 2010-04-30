@@ -75,6 +75,19 @@ sse2_fields_from_fortran(){
   }
 }
 
+static void
+sse2_fields_to_fortran(){
+  struct psc_sse2 *sse2 = psc.c_ctx;
+  assert(sse2->fields != NULL);
+  //It's a dirty job, but somebody's gotta do it
+  for(int m = 0; m < NR_FIELDS; m++){
+    for(int n = 0; n < psc.fld_size; n++){
+      //preserve Fortran ordering for now
+      psc.f_fields[m][n] = sse2->fields[m * psc.fld_size + n];
+    }
+  }
+}
+
 
 struct psc_ops psc_ops_sse2 = {
   .name = "sse2",
@@ -83,6 +96,8 @@ struct psc_ops psc_ops_sse2 = {
   .particles_from_fortran = sse2_particles_from_fortran,
   .particles_to_fortran   = sse2_particles_to_fortran,
   .fields_from_fortran    = sse2_fields_from_fortran,
+  .fields_to_fortran      = sse2_fields_to_fortran,
   .push_part_yz_a         = sse2_push_part_yz_a,
   .push_part_yz_b         = sse2_push_part_yz_b,
+  .push_part_yz           = sse2_push_part_yz,
 }; 

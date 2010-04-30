@@ -25,6 +25,27 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
+#define FF3_OFF(jx,jy,jz)						\
+  (((((jz)-psc.ilg[2]))							\
+    *psc.img[1] + ((jy)-psc.ilg[1]))					\
+   *psc.img[0] + ((jx)-psc.ilg[0]))
+
+#if 1
+
+#define FF3(fldnr, jx,jy,jz)			\
+  (psc.f_fields[fldnr][FF3_OFF(jx,jy,jz)])
+
+#else
+
+#define FF3(fldnr, jx,jy,jz)						\
+  (*({int off = FF3_OFF(jx,jy,jz);					\
+      assert(off >= 0);							\
+      assert(off < psc.fld_size);					\
+      &(psc.f_fields[fldnr][off]);					\
+    }))
+
+#endif
+
 // this matches the Fortran particle data structure
 
 struct f_particle {
@@ -53,6 +74,7 @@ struct psc_ops {
   void (*particles_from_fortran)(void);
   void (*particles_to_fortran)(void);
   void (*fields_from_fortran)(void);
+  void (*fields_to_fortran)(void);
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
@@ -100,10 +122,13 @@ void psc_destroy();
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_random();
+void psc_setup_fields_1();
 void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
+void psc_save_fields_ref();
 void psc_check_particles_ref();
+void psc_check_fields_ref();
 void psc_create_test_1(const char *ops_name);
 void psc_create_test_2(const char *ops_name);
 
