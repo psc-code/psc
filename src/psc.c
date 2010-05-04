@@ -313,7 +313,7 @@ psc_check_particles_ref()
 // ----------------------------------------------------------------------
 // psc_check_fields_ref
 //
-// check current particle data agains previously saved reference solution
+// check current field data agains previously saved reference solution
 
 void
 psc_check_fields_ref()
@@ -324,6 +324,24 @@ psc_check_fields_ref()
       assert_equal(psc.f_fields[m][n], field_ref[m][n]);
       //  fprintf(stderr, "%d\n", n);
     }
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_check_currents_ref
+//
+// check current current density data agains previously saved reference solution
+
+void
+psc_check_currents_ref()
+{
+  assert(field_ref[JXI]); //FIXME: this is bad
+  for (int m = JXI; m <= JZI; m++){
+    for (int n = 0; n < psc.fld_size; n++){
+      assert_equal(psc.f_fields[m][n], field_ref[m][n]);
+      //  fprintf(stderr, "%d\n", n);
+    }
+    HERE;
   }
 }
 
