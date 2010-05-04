@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <xmmintrin.h>
+#include <emmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
 
 #include "psc.h"
@@ -35,11 +36,20 @@ struct psc_sse2 {
   real *fields;
 };
 
-// to access the elements safely
-union packed_vector {
+// Packed vector datatypes, use typedefs to make things a bit prettier
+union packed_vector{
   __m128 r;
-  float v[4] ; //FIXME : Might break for any non gcc
-} __attribute__ ((aligned (128)));
+  float v[4] __attribute__ ((aligned (128))); //FIXME : Might break for any non gcc
+};
+
+typedef union packed_vector pvFloat;
+
+union packed_int{
+      __m128i r;
+      int v[4] __attribute__ ((aligned (16)));
+}; 
+typedef union packed_int pvInt;
+
 
 void sse2_push_part_yz_a();
 void sse2_push_part_yz_b();

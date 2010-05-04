@@ -31,7 +31,7 @@ sse2_push_part_yz()
 
   // Values that won't change from iteration to iteration
 
-  union packed_vector dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
+  pvFloat dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
   //FIXME: These are all stored as doubles in fortran!!
   float dtfl = psc.dt; 
   float etafl =  psc.prm.eta;
@@ -63,7 +63,7 @@ sse2_push_part_yz()
   //  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
   
   for(int n = 0; n < psc.n_part; n += 4) {
-    union packed_vector pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;
+    pvFloat pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;
 //---------------------------------------------
 // Bringing in particle specific parameters
 // FIXME : This is the wrong way to read in and pack data
@@ -112,7 +112,7 @@ sse2_push_part_yz()
     wni.v[3] = sse2->part[n+3].wni;
 
     // Locals for computation      
-    union packed_vector vxi, vyi, vzi, tmpx, tmpy, tmpz, root;
+    pvFloat vxi, vyi, vzi, tmpx, tmpy, tmpz, root;
 
 // CHECKPOINT: PIC_push_part_yz.F : line 104
 // Start the computation
@@ -151,18 +151,14 @@ sse2_push_part_yz()
     tmpy.r = _mm_mul_ps(yi.r, dyi.r);
     tmpz.r = _mm_mul_ps(zi.r, dzi.r);
 
-    union packed_vector s0y[5], s0z[5], s1y[5], s1z[5];
+    pvFloat s0y[5], s0z[5], s1y[5], s1z[5];
  
 // CHECKPOINT: PIC_push_part_yz.F : line 119
 // Prepare for field interpolation
 
     // Apparently this can be done in vectors. A victory!
-      union {
-      __m128i r;
-      int v[4];
-    } j1, j2, j3, l1, l2, l3;
-
-    union packed_vector j2fl, j3fl, l2fl, l3fl;
+    pvInt j1, j2, j3, l1, l2, l3;
+    pvFloat j2fl, j3fl, l2fl, l3fl;
     j1.r = _mm_cvtps_epi32(tmpx.r);
     j2.r = _mm_cvtps_epi32(tmpy.r);
     j3.r = _mm_cvtps_epi32(tmpz.r);
@@ -182,7 +178,7 @@ sse2_push_part_yz()
     tmpz.r = _mm_sub_ps(j3fl.r, tmpz.r);
 
 
-    union packed_vector gmy, gmz, g0y, g0z, g1y, g1z;
+    pvFloat gmy, gmz, g0y, g0z, g1y, g1z;
 
     gmy.r = _mm_add_ps(half.r, tmpy.r);
     gmy.r = _mm_mul_ps(gmy.r, gmy.r);
@@ -253,7 +249,7 @@ sse2_push_part_yz()
     tmpy.r = _mm_sub_ps(l2fl.r, tmpy.r);
     tmpz.r = _mm_sub_ps(l3fl.r, tmpz.r);
 
-    union packed_vector hmy, hmz, h0y, h0z, h1y, h1z;
+    pvFloat hmy, hmz, h0y, h0z, h1y, h1z;
 
     hmy.r = _mm_add_ps(half.r, tmpy.r);
     hmy.r = _mm_mul_ps(hmy.r, hmy.r);
@@ -288,7 +284,7 @@ sse2_push_part_yz()
 // A messy macro to let me get the correct data and keep notation consistent
 // with the Fortran code
 
-    union packed_vector field_in, exq, eyq, ezq, bxq, byq, bzq;
+    pvFloat field_in, exq, eyq, ezq, bxq, byq, bzq;
      
     //exq
     field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]-1);
@@ -707,7 +703,7 @@ sse2_push_part_yz()
 // CHECKPOINT: PIC_push_part_yz.F : line 223
 // Half step momentum  with E-field
 
-    union packed_vector dq;
+    pvFloat dq;
     dq.r = _mm_div_ps(dqs.r, mni.r);
     dq.r = _mm_mul_ps(qni.r, dq.r);
     
@@ -722,7 +718,7 @@ sse2_push_part_yz()
 
 // CHECKPOINT: PIC_push_part_yz.F : line 228
 // Rotate with B-field
-    union packed_vector txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
+    pvFloat txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
 
     tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
     tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
@@ -747,7 +743,7 @@ sse2_push_part_yz()
     t2xz.r = _mm_add_ps(t2xz.r, t2xz.r);
     t2yz.r = _mm_add_ps(t2yz.r, t2yz.r);
 
-    union packed_vector tau;
+    pvFloat tau;
 
     tau.r = _mm_add_ps(ones.r, txx.r);
     tmpx.r = _mm_add_ps(tyy.r, tzz.r);
@@ -978,12 +974,9 @@ sse2_push_part_yz()
     yi.r = _mm_add_ps(yi.r, tmpy.r);
     zi.r = _mm_add_ps(zi.r, tmpz.r);
 
-    union {
-      __m128i r;
-      int v[4];
-    } k2,k3;
+    pvInt k2,k3;
 
-    union packed_vector k2fl, k3fl;
+    pvFloat k2fl, k3fl;
 
     tmpy.r = _mm_mul_ps(yi.r, dyi.r);
     tmpz.r = _mm_mul_ps(zi.r, dzi.r);
@@ -1051,7 +1044,7 @@ sse2_push_part_yz()
       s1z[m].r = _mm_sub_ps(s1z[m].r, s0z[m].r);
     }
     
-    union packed_vector fnqx, fnqy, fnqz;
+    pvFloat fnqx, fnqy, fnqz;
     
     fnqx.r = _mm_mul_ps(wni.r, fnqs.r);
     fnqx.r = _mm_mul_ps(qni.r, fnqs.r);
