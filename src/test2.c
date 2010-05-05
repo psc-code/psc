@@ -5,8 +5,10 @@
 #include "util/profile.h"
 
 int
-main()
+main(int argc, char **argv)
 {
+  MPI_Init(&argc, &argv);
+
   psc_create_test_1("fortran");
   //  psc_dump_particles("part-0.asc");
   psc_push_part_yz_a();
@@ -46,4 +48,6 @@ main()
   psc_destroy();
 
   prof_print();
+
+  MPI_Finalize();
 }
