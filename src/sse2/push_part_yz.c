@@ -16,7 +16,8 @@ sse2_push_part_yz()
   }
   prof_start(pr);
 
-
+  //  FILE *dumpfile;
+  //dumpfile = fopen("c_dump.asc", "w");
 //-----------------------------------------------------
 // Initialization stuff (not sure what all of this is for)
   
@@ -152,7 +153,16 @@ sse2_push_part_yz()
     tmpz.r = _mm_mul_ps(zi.r, dzi.r);
 
     pvFloat s0y[5], s0z[5], s1y[5], s1z[5];
- 
+    // I'm a little scared to use memset here, though it would probably work...
+    s0y[0].r = _mm_set1_ps(0);
+    s0y[4].r = _mm_set1_ps(0);
+    s0z[0].r = _mm_set1_ps(0);
+    s0z[4].r = _mm_set1_ps(0);
+    for(int m = 0; m < 5; m++){
+      s1y[m].r = _mm_set1_ps(0);
+      s1z[m].r = _mm_set1_ps(0);
+    }
+
 // CHECKPOINT: PIC_push_part_yz.F : line 119
 // Prepare for field interpolation
 
@@ -164,9 +174,9 @@ sse2_push_part_yz()
     j3.r = _mm_cvtps_epi32(tmpz.r);
 
     for(int m = 0; m < 4; m++){
-      j1.v[m] = round(tmpx.v[m]);
-      j2.v[m] = round(tmpy.v[m]);
-      j3.v[m] = round(tmpz.v[m]);
+      j1.v[m] = roundf(tmpx.v[m]);
+      j2.v[m] = roundf(tmpy.v[m]);
+      j3.v[m] = roundf(tmpz.v[m]);
    
     }
     
@@ -831,8 +841,7 @@ sse2_push_part_yz()
     
     yi.r = _mm_add_ps(yi.r, tmpy.r);
     zi.r = _mm_add_ps(zi.r, tmpz.r);
-    
-    
+
     (sse2->part[n]).xi = xi.v[0];
     (sse2->part[n]).yi = yi.v[0];
     (sse2->part[n]).zi = zi.v[0];
@@ -877,22 +886,13 @@ sse2_push_part_yz()
     l1.r = _mm_cvtps_epi32(tmpx.r);
     l2.r = _mm_cvtps_epi32(tmpy.r);
     l3.r = _mm_cvtps_epi32(tmpz.r);
-
-    /* if(n == 0){ */
-    /*   fprintf(stderr, "%d %d %d\n", l1.v[0], l2.v[0], l3.v[0]); */
-    /* } */
-
     
     for(int m = 0; m < 4; m++){
-      l1.v[m] = round(tmpx.v[m]);
-      l2.v[m] = round(tmpy.v[m]);
-      l3.v[m] = round(tmpz.v[m]);
+      l1.v[m] = roundf(tmpx.v[m]);
+      l2.v[m] = roundf(tmpy.v[m]);
+      l3.v[m] = roundf(tmpz.v[m]);
    
     }
-
-    /* if(n == 0){ */
-    /*   fprintf(stderr, "%d %d %d\n", l1.v[0], l2.v[0], l3.v[0]); */
-    /* } */
 
     l2fl.r = _mm_cvtepi32_ps(l2.r);
     l3fl.r = _mm_cvtepi32_ps(l3.r);
@@ -985,18 +985,18 @@ sse2_push_part_yz()
     k3.r = _mm_cvtps_epi32(tmpz.r);
 
     for(int m = 0; m < 4; m++){
-      k2.v[m] = round(tmpy.v[m]);
-      k3.v[m] = round(tmpz.v[m]); 
+      k2.v[m] = roundf(tmpy.v[m]);
+      k3.v[m] = roundf(tmpz.v[m]); 
     }
 
 
-    k2fl.r = _mm_cvtepi32_ps(l2.r);
-    k3fl.r = _mm_cvtepi32_ps(l3.r);
+    k2fl.r = _mm_cvtepi32_ps(k2.r);
+    k3fl.r = _mm_cvtepi32_ps(k3.r);
 
     tmpy.r = _mm_sub_ps(k2fl.r, tmpy.r);
     tmpz.r = _mm_sub_ps(k3fl.r, tmpz.r);
     
-    // God help me, there's some things I just can't figure out how to parallelize
+    // God help me, there's some things I just can't fgure out how to parallelize
     // The g-- here are just temporary variables. I can't do the assignments in parallel, 
     // but I'll be damned if I can't do the FLOPS in parallel
     gmy.r = _mm_sub_ps(tmpy.r,ones.r);
@@ -1027,13 +1027,14 @@ sse2_push_part_yz()
 
     // All the indices below have +2 compared to the FORTRAN for C array access
     for(int p=0; p<4; p++){
-      int shift = k2.v[p] - j2.v[p];
-      s1y[shift + 1].v[p] = gmy.v[p];
-      s1y[shift + 2].v[p] = g0y.v[p];
-      s1y[shift + 3].v[p] = g1y.v[p];
-      s1z[shift + 1].v[p] = gmz.v[p];
-      s1z[shift + 2].v[p] = g0z.v[p];
-      s1z[shift + 3].v[p] = g1z.v[p];
+      int shifty = k2.v[p] - j2.v[p];
+      int shiftz = k3.v[p] - j3.v[p];
+      s1y[shifty + 1].v[p] = gmy.v[p];
+      s1y[shifty + 2].v[p] = g0y.v[p];
+      s1y[shifty + 3].v[p] = g1y.v[p];
+      s1z[shiftz + 1].v[p] = gmz.v[p];
+      s1z[shiftz + 2].v[p] = g0z.v[p];
+      s1z[shiftz + 3].v[p] = g1z.v[p];
     }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 341
@@ -1055,7 +1056,7 @@ sse2_push_part_yz()
     
     fnqz.r = _mm_mul_ps(wni.r, fnqzs.r);
     fnqz.r = _mm_mul_ps(qni.r, fnqz.r);
-    
+        
     // Again, this is extremely painful, but serial is the only way I can think of to do this
     // I have the inkling of thought on a parallel way, but it hasn't matured. If it works out, I'll implement it.
     for(int p=0; p<4; p++){
@@ -1081,32 +1082,29 @@ sse2_push_part_yz()
     	l3max = 2;
       }
 
-      float jxh[5][5] = {{0.0}};
-      float jyh[6][5] = {{0.0}};
-      float jzh[5][6] = {{0.0}}; // Slimming these down a bit...
+      float jzh[5] = {0.0};
    
       for(int l3i=l3min+2; l3i<=(l3max+2); l3i++){
-    	for(int l2i=l2min+2; l2i<=(l2max+2); l2i++){
+    	float jyh = 0.0;
+	for(int l2i=l2min+2; l2i<=(l2max+2); l2i++){
     	  float wx = (s0y[l2i].v[p] + 0.5*s1y[l2i].v[p])*s0z[l3i].v[p]
-    	    + (0.5*s0y[l2i].v[p] + (1./3.)*s1y[l2i].v[p])*s1z[l3i].v[p];
+    	    + (0.5*s0y[l2i].v[p] + 0.3333333333*s1y[l2i].v[p])*s1z[l3i].v[p];
     	  float wy = s1y[l2i].v[p]*(s0z[l3i].v[p] + 0.5*s1z[l3i].v[p]);
     	  float wz = s1z[l3i].v[p]*(s0y[l2i].v[p] + 0.5*s1y[l2i].v[p]);
+	  //      for(int s = 0; s < 4; s++){
+	  //  fprintf(dumpfile, "%2.7g %2.7g %2.7g\n", wx, wy, wz);
+	  //      }  
 	  
-    	  jxh[l2i][l3i] = fnqx.v[p]*wx;
-    	  jyh[l2i+1][l3i] = jyh[l2i][l3i] - fnqy.v[p]*wy; // [+1][] index adjustment
-    	  jzh[l2i][l3i+1] = jzh[l2i][l3i] - fnqz.v[p]*wz; //[][+1] index adjustment
-	  
-    	  /* if(n == 0){ */
-    	  /*   fprintf(stderr, "%g %g %g \n", C_FIELD(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2), C_FIELD(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2), C_FIELD(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2)); */
-    	  /* } */
-
-	  
-    	  C_FIELD(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jxh[l2i][l3i]; //undo index adjustment of l(2,3)i
-    	  C_FIELD(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh[l2i+1][l3i]; //undo index adjustment of l(2,3)i
-    	  C_FIELD(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i][l3i+1]; //undo index adjustment of l(2,3)i
+    	  jyh = jyh - fnqy.v[p]*wy;
+    	  jzh[l2i] = jzh[l2i] - fnqz.v[p]*wz;
+	  	  
+    	  C_FIELD(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += fnqx.v[p]*wx; //undo index adjustment of l(2,3)i
+    	  C_FIELD(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh; //undo index adjustment of l(2,3)i
+    	  C_FIELD(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i]; //undo index adjustment of l(2,3)i
     	}
       }
     }   
   }
+  // fclose(dumpfile);
   prof_stop(pr);
 }
