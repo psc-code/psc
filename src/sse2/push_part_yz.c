@@ -1,23 +1,87 @@
 #include "psc_sse2.h"
-
+#include "sse2_cgen.h"
 #include "profile/profile.h"
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <emmintrin.h>
 #include <string.h>
 
+#define CAREFULL_ROUND 0
+
 void
-sse2_push_part_yz()
+sse2_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(float));
+    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
   }
   prof_start(pr);
 
-  //  FILE *dumpfile;
-  //dumpfile = fopen("c_dump.asc", "w");
+//-----------------------------------------------------
+// Initialization stuff (not sure what all of this is for)
+  
+  struct psc_sse2 *sse2 = psc.c_ctx;
+
+
+  pvReal dt, yl, zl, ones, half;
+  //FIXME: These are all stored as doubles in fortran!!
+  sse2_real dtfl = psc.dt; 
+  ones.r = pv_real_SET1(1.0);
+  half.r = pv_real_SET1(.5);
+  dt.r = pv_real_SET1(dtfl);
+  yl.r = pv_real_MUL(half.r, dt.r);
+  zl.r = pv_real_MUL(half.r, dt.r);
+
+  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
+  
+  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+
+//---------------------------------------------
+// Bringing in particle specific parameters
+    pvReal pxi, pyi, pzi, xi, yi, zi, qni, mni, wni; 
+ 
+    LOAD_PART(sse2,n); 
+
+    // Locals for computation      
+    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
+
+// CHECKPOINT: PIC_push_part_yz.F : line 104
+// Start the computation
+// Half step positions with current momenta
+    
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
+
+    tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
+    tmpx.r = pv_real_ADD(ones.r, tmpx.r);
+    root.r = pv_real_SQRT(tmpx.r);
+    root.r = pv_real_DIV(ones.r, root.r);
+
+    vxi.r = pv_real_MUL(pxi.r, root.r);
+    vyi.r = pv_real_MUL(pyi.r, root.r);
+    vzi.r = pv_real_MUL(pzi.r, root.r);
+
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
+
+    STORE_PART_XP(sse2,n);
+  }
+  prof_stop(pr);
+}
+
+void
+sse2_push_part_yz_b()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+  }
+  prof_start(pr);
+
 //-----------------------------------------------------
 // Initialization stuff (not sure what all of this is for)
   
@@ -26,262 +90,179 @@ sse2_push_part_yz()
   psc.p2A = 0.;
   psc.p2B = 0.;
   
-  for (int m = 0; m <= JZI; m++) {
-    memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(real));
-  }  
-
   // Values that won't change from iteration to iteration
 
-  pvFloat dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
+  pvReal dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi; 
   //FIXME: These are all stored as doubles in fortran!!
-  float dtfl = psc.dt; 
-  float etafl =  psc.prm.eta;
-  float fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / etafl;
-  float dxifl = 1.0f / psc.dx[0];
-  float dyifl = 1.0f / psc.dx[1];
-  float dzifl = 1.0f / psc.dx[2];
-  float dqsfl = 0.5*etafl*dtfl;
-  float fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;
-  float fnqysfl = psc.dx[1] * fnqsfl * psc.dt;
-  float fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;
-  ones.r = _mm_set1_ps(1.0f);
-  half.r = _mm_set1_ps(.5f);
-  onepfive.r = _mm_set1_ps(1.5f);
-  threefourths.r = _mm_set1_ps(.75f);
-  dt.r = _mm_set1_ps(dtfl);
-  eta.r = _mm_set1_ps(etafl);
-  fnqs.r = _mm_set1_ps(fnqsfl);
-  dqs.r = _mm_set1_ps(dqsfl);
-  dxi.r = _mm_set1_ps(dxifl);
-  dyi.r = _mm_set1_ps(dyifl);
-  dzi.r = _mm_set1_ps(dzifl);
-  yl.r = _mm_mul_ps(half.r, dt.r);
-  zl.r = _mm_mul_ps(half.r, dt.r);
-  fnqxs.r = _mm_set1_ps(fnqxsfl);
-  fnqys.r = _mm_set1_ps(fnqysfl);
-  fnqzs.r = _mm_set1_ps(fnqzsfl);
+  sse2_real dtfl = psc.dt; 
+  sse2_real etafl =  psc.prm.eta;
+  sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / etafl;
+  sse2_real dxifl = 1.0 / psc.dx[0];
+  sse2_real dyifl = 1.0 / psc.dx[1];
+  sse2_real dzifl = 1.0 / psc.dx[2];
+  sse2_real dqsfl = 0.5*etafl*dtfl;
+  ones.r = pv_real_SET1(1.0);
+  half.r = pv_real_SET1(.5);
+  onepfive.r = pv_real_SET1(1.5);
+  threefourths.r = pv_real_SET1(.75);
+  dt.r = pv_real_SET1(dtfl);
+  eta.r = pv_real_SET1(etafl);
+  fnqs.r = pv_real_SET1(fnqsfl);
+  dqs.r = pv_real_SET1(dqsfl);
+  dxi.r = pv_real_SET1(dxifl);
+  dyi.r = pv_real_SET1(dyifl);
+  dzi.r = pv_real_SET1(dzifl);
+  yl.r = pv_real_MUL(half.r, dt.r);
+  zl.r = pv_real_MUL(half.r, dt.r);
 
-  //  assert(psc.n_part % 4 == 0); // Haven't implemented any padding yet
+  //  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
   
-  for(int n = 0; n < psc.n_part; n += 4) {
-    pvFloat pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;
+  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+
 //---------------------------------------------
 // Bringing in particle specific parameters
-// FIXME : This is the wrong way to read in and pack data
-    // First particle
-    xi.v[0] = sse2->part[n].xi;
-    yi.v[0] = sse2->part[n].yi;
-    zi.v[0] = sse2->part[n].zi;
-    pxi.v[0] = sse2->part[n].pxi;
-    pyi.v[0] = sse2->part[n].pyi;
-    pzi.v[0] = sse2->part[n].pzi;
-    qni.v[0] = sse2->part[n].qni;
-    mni.v[0] = sse2->part[n].mni;
-    wni.v[0] = sse2->part[n].wni;
-
-    //Second particle
-    xi.v[1] = sse2->part[n+1].xi;
-    yi.v[1] = sse2->part[n+1].yi;
-    zi.v[1] = sse2->part[n+1].zi;
-    pxi.v[1] = sse2->part[n+1].pxi;
-    pyi.v[1] = sse2->part[n+1].pyi;
-    pzi.v[1] = sse2->part[n+1].pzi;
-    qni.v[1] = sse2->part[n+1].qni;
-    mni.v[1] = sse2->part[n+1].mni;
-    wni.v[1] = sse2->part[n+1].wni;
-
-    //Third Particle
-    xi.v[2] = sse2->part[n+2].xi;
-    yi.v[2] = sse2->part[n+2].yi;
-    zi.v[2] = sse2->part[n+2].zi;
-    pxi.v[2] = sse2->part[n+2].pxi;
-    pyi.v[2] = sse2->part[n+2].pyi;
-    pzi.v[2] = sse2->part[n+2].pzi;
-    qni.v[2] = sse2->part[n+2].qni;
-    mni.v[2] = sse2->part[n+2].mni;
-    wni.v[2] = sse2->part[n+2].wni;
-
-    //Fourth particle
-    xi.v[3] = sse2->part[n+3].xi;
-    yi.v[3] = sse2->part[n+3].yi;
-    zi.v[3] = sse2->part[n+3].zi;    
-    pxi.v[3] = sse2->part[n+3].pxi;
-    pyi.v[3] = sse2->part[n+3].pyi;
-    pzi.v[3] = sse2->part[n+3].pzi;
-    qni.v[3] = sse2->part[n+3].qni;
-    mni.v[3] = sse2->part[n+3].mni;
-    wni.v[3] = sse2->part[n+3].wni;
+    pvReal pxi, pyi, pzi, xi, yi, zi, qni, mni, wni; 
+ 
+    LOAD_PART(sse2,n); 
 
     // Locals for computation      
-    pvFloat vxi, vyi, vzi, tmpx, tmpy, tmpz, root;
+    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
 
 // CHECKPOINT: PIC_push_part_yz.F : line 104
 // Start the computation
 // Half step positions with current momenta
     
-    tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
-    tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
-    tmpz.r = _mm_mul_ps(pzi.r, pzi.r);
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
 
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_sqrt_ps(tmpx.r);
-    root.r = _mm_div_ps(ones.r, root.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
+    tmpx.r = pv_real_ADD(ones.r, tmpx.r);
+    root.r = pv_real_SQRT(tmpx.r);
+    root.r = pv_real_DIV(ones.r, root.r);
 
-    vxi.r = _mm_mul_ps(pxi.r, root.r);
-    vyi.r = _mm_mul_ps(pyi.r, root.r);
-    vzi.r = _mm_mul_ps(pzi.r, root.r);
+    vxi.r = pv_real_MUL(pxi.r, root.r);
+    vyi.r = pv_real_MUL(pyi.r, root.r);
+    vzi.r = pv_real_MUL(pzi.r, root.r);
 
-    tmpy.r = _mm_mul_ps(vyi.r, yl.r);
-    tmpz.r = _mm_mul_ps(vzi.r, zl.r);
-    yi.r = _mm_add_ps(yi.r, tmpy.r);
-    zi.r = _mm_add_ps(zi.r, tmpz.r);
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
 
 
-    tmpx.r = _mm_div_ps(ones.r, root.r);
-    tmpx.r = _mm_sub_ps(tmpx.r, ones.r);
-    tmpx.r = _mm_div_ps(tmpx.r, eta.r);
-    tmpx.r = _mm_mul_ps(fnqs.r, tmpx.r);
-    tmpx.r = _mm_mul_ps(mni.r, tmpx.r);
-    psc.p2A += tmpx.v[0] + tmpx.v[1] + tmpx.v[2] + tmpx.v[3]; //What's this for?
+    tmpx.r = pv_real_DIV(ones.r, root.r);
+    tmpx.r = pv_real_SUB(tmpx.r, ones.r);
+    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
+    tmpx.r = pv_real_MUL(fnqs.r, tmpx.r);
+    tmpx.r = pv_real_MUL(mni.r, tmpx.r);
+    
+    for(int p = 0; p < VEC_SIZE; p++){
+      psc.p2A += tmpx.v[p]; //What's this for?
+    }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 110
     
-    tmpx.r = _mm_mul_ps(xi.r, dxi.r);
-    tmpy.r = _mm_mul_ps(yi.r, dyi.r);
-    tmpz.r = _mm_mul_ps(zi.r, dzi.r);
+    tmpx.r = pv_real_MUL(xi.r, dxi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
 
-    pvFloat s0y[5], s0z[5], s1y[5], s1z[5];
-    // I'm a little scared to use memset here, though it would probably work...
-    s0y[0].r = _mm_set1_ps(0);
-    s0y[4].r = _mm_set1_ps(0);
-    s0z[0].r = _mm_set1_ps(0);
-    s0z[4].r = _mm_set1_ps(0);
-    for(int m = 0; m < 5; m++){
-      s1y[m].r = _mm_set1_ps(0);
-      s1z[m].r = _mm_set1_ps(0);
-    }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 119
 // Prepare for field interpolation
 
     // Apparently this can be done in vectors. A victory!
     pvInt j1, j2, j3, l1, l2, l3;
-    pvFloat j2fl, j3fl, l2fl, l3fl;
-    j1.r = _mm_cvtps_epi32(tmpx.r);
-    j2.r = _mm_cvtps_epi32(tmpy.r);
-    j3.r = _mm_cvtps_epi32(tmpz.r);
+    pvReal j2fl, j3fl, l2fl, l3fl;
 
-    for(int m = 0; m < 4; m++){
-      j1.v[m] = roundf(tmpx.v[m]);
-      j2.v[m] = roundf(tmpy.v[m]);
-      j3.v[m] = roundf(tmpz.v[m]);
-   
+    //FIXME: Choose one!
+
+    for(int m = 0; m < VEC_SIZE; m++){
+      j1.v[m] = round(tmpx.v[m]);
     }
+
+    j2.r = pv_real_to_int_CVT(tmpy.r);
+    j3.r = pv_real_to_int_CVT(tmpz.r);
     
     // there must be a better way...
-    j2fl.r = _mm_cvtepi32_ps(j2.r);
-    j3fl.r = _mm_cvtepi32_ps(j3.r);
+    j2fl.r = pv_int_to_real_CVT(j2.r);
+    j3fl.r = pv_int_to_real_CVT(j3.r);
 
-    tmpy.r = _mm_sub_ps(j2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(j3fl.r, tmpz.r);
+    h2.r = pv_real_SUB(j2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(j3fl.r, tmpz.r);
 
 
-    pvFloat gmy, gmz, g0y, g0z, g1y, g1z;
+    pvReal gmy, gmz, g0y, g0z, g1y, g1z;
 
-    gmy.r = _mm_add_ps(half.r, tmpy.r);
-    gmy.r = _mm_mul_ps(gmy.r, gmy.r);
-    gmy.r = _mm_mul_ps(half.r, gmy.r);
+    gmy.r = pv_real_ADD(half.r, h2.r);
+    gmy.r = pv_real_MUL(gmy.r, gmy.r);
+    gmy.r = pv_real_MUL(half.r, gmy.r);
 
-    gmz.r = _mm_add_ps(half.r, tmpz.r);
-    gmz.r = _mm_mul_ps(gmz.r, gmz.r);
-    gmz.r = _mm_mul_ps(half.r, gmz.r);
+    gmz.r = pv_real_ADD(half.r, h3.r);
+    gmz.r = pv_real_MUL(gmz.r, gmz.r);
+    gmz.r = pv_real_MUL(half.r, gmz.r);
     
-    g0y.r = _mm_mul_ps(tmpy.r, tmpy.r);
-    g0y.r = _mm_sub_ps(threefourths.r, g0y.r);
+    g0y.r = pv_real_MUL(h2.r, h2.r);
+    g0y.r = pv_real_SUB(threefourths.r, g0y.r);
 
-    g0z.r = _mm_mul_ps(tmpz.r, tmpz.r);
-    g0z.r = _mm_sub_ps(threefourths.r, g0z.r);
+    g0z.r = pv_real_MUL(h3.r, h3.r);
+    g0z.r = pv_real_SUB(threefourths.r, g0z.r);
 
-    g1y.r = _mm_sub_ps(half.r, tmpy.r);
-    g1y.r = _mm_mul_ps(g1y.r, g1y.r);
-    g1y.r = _mm_mul_ps(half.r, g1y.r);
+    g1y.r = pv_real_SUB(half.r, h2.r);
+    g1y.r = pv_real_MUL(g1y.r, g1y.r);
+    g1y.r = pv_real_MUL(half.r, g1y.r);
 
-    g1z.r = _mm_sub_ps(half.r, tmpz.r);
-    g1z.r = _mm_mul_ps(g1z.r, g1z.r);
-    g1z.r = _mm_mul_ps(half.r, g1z.r);
-
-    // indexing here departs from FORTRAN a little bit
-    s0y[1].r = _mm_sub_ps(tmpy.r, ones.r);
-    s0y[1].r = _mm_add_ps(onepfive.r, s0y[1].r); // h2+1.0 always <0
-    s0y[1].r = _mm_mul_ps(s0y[1].r, s0y[1].r);
-    s0y[1].r = _mm_mul_ps(half.r, s0y[1].r);
-
-    s0y[2].r = _mm_mul_ps(tmpy.r, tmpy.r);
-    s0y[2].r = _mm_sub_ps(threefourths.r, s0y[2].r);
-
-    s0y[3].r = _mm_add_ps(tmpy.r, ones.r);
-    s0y[3].r = _mm_sub_ps(onepfive.r, s0y[3].r); // h2+1.0 always >0
-    s0y[3].r = _mm_mul_ps(s0y[3].r, s0y[3].r);
-    s0y[3].r = _mm_mul_ps(half.r, s0y[3].r);
-
-    s0z[1].r = _mm_sub_ps(tmpz.r, ones.r);
-    s0z[1].r = _mm_add_ps(onepfive.r, s0z[1].r); // h3+1.0 always <0
-    s0z[1].r = _mm_mul_ps(s0z[1].r, s0z[1].r);
-    s0z[1].r = _mm_mul_ps(half.r, s0z[1].r);
-
-    s0z[2].r = _mm_mul_ps(tmpz.r, tmpz.r);
-    s0z[2].r = _mm_sub_ps(threefourths.r, s0z[2].r);
-
-    s0z[3].r = _mm_add_ps(tmpz.r, ones.r);
-    s0z[3].r = _mm_sub_ps(onepfive.r, s0z[3].r); // h3+1.0 always >0
-    s0z[3].r = _mm_mul_ps(s0z[3].r, s0z[3].r);
-    s0z[3].r = _mm_mul_ps(half.r, s0z[3].r);
-
+    g1z.r = pv_real_SUB(half.r, h3.r);
+    g1z.r = pv_real_MUL(g1z.r, g1z.r);
+    g1z.r = pv_real_MUL(half.r, g1z.r);
 
 
 // CHECKPOINT: PIC_push_part_yz.F : line 143
 
-    tmpx.r = _mm_mul_ps(xi.r, dxi.r);
-    tmpy.r = _mm_mul_ps(yi.r, dyi.r);
-    tmpy.r = _mm_sub_ps(tmpy.r, half.r);
-    tmpz.r = _mm_mul_ps(zi.r, dzi.r);
-    tmpz.r = _mm_sub_ps(tmpz.r, half.r);
+    tmpx.r = pv_real_MUL(xi.r, dxi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpy.r = pv_real_SUB(tmpy.r, half.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
+    tmpz.r = pv_real_SUB(tmpz.r, half.r);
 
-    l1.r = _mm_cvtps_epi32(tmpx.r);
-    l2.r = _mm_cvtps_epi32(tmpy.r);
-    l3.r = _mm_cvtps_epi32(tmpz.r);
+    for(int m = 0; m < VEC_SIZE; m++){ // Cumbersome, but neccessary. Sometimes the intrinsic
+      l1.v[m] = round(tmpx.v[m]);     // rounds .5 the wrong way. It's okay for the other
+    }                                 // directions, but there's no weighting in x
 
-    l2fl.r = _mm_cvtepi32_ps(l2.r);
-    l3fl.r = _mm_cvtepi32_ps(l3.r);
 
-    tmpy.r = _mm_sub_ps(l2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(l3fl.r, tmpz.r);
+    l2.r = pv_real_to_int_CVT(tmpy.r);
+    l3.r = pv_real_to_int_CVT(tmpz.r);
 
-    pvFloat hmy, hmz, h0y, h0z, h1y, h1z;
+    l2fl.r = pv_int_to_real_CVT(l2.r);
+    l3fl.r = pv_int_to_real_CVT(l3.r);
 
-    hmy.r = _mm_add_ps(half.r, tmpy.r);
-    hmy.r = _mm_mul_ps(hmy.r, hmy.r);
-    hmy.r = _mm_mul_ps(half.r, hmy.r);
+    h2.r = pv_real_SUB(l2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(l3fl.r, tmpz.r);
 
-    hmz.r = _mm_add_ps(half.r, tmpz.r);
-    hmz.r = _mm_mul_ps(hmz.r, hmz.r);
-    hmz.r = _mm_mul_ps(half.r, hmz.r);
+    pvReal hmy, hmz, h0y, h0z, h1y, h1z;
+
+    hmy.r = pv_real_ADD(half.r, h2.r);
+    hmy.r = pv_real_MUL(hmy.r, hmy.r);
+    hmy.r = pv_real_MUL(half.r, hmy.r);
+
+    hmz.r = pv_real_ADD(half.r, h3.r);
+    hmz.r = pv_real_MUL(hmz.r, hmz.r);
+    hmz.r = pv_real_MUL(half.r, hmz.r);
     
-    h0y.r = _mm_mul_ps(tmpy.r, tmpy.r);
-    h0y.r = _mm_sub_ps(threefourths.r, h0y.r);
+    h0y.r = pv_real_MUL(h2.r, h2.r);
+    h0y.r = pv_real_SUB(threefourths.r, h0y.r);
 
-    h0z.r = _mm_mul_ps(tmpz.r, tmpz.r);
-    h0z.r = _mm_sub_ps(threefourths.r, h0z.r);
+    h0z.r = pv_real_MUL(h3.r, h3.r);
+    h0z.r = pv_real_SUB(threefourths.r, h0z.r);
 
-    h1y.r = _mm_sub_ps(half.r, tmpy.r);
-    h1y.r = _mm_mul_ps(h1y.r, h1y.r);
-    h1y.r = _mm_mul_ps(half.r, h1y.r);
+    h1y.r = pv_real_SUB(half.r, h2.r);
+    h1y.r = pv_real_MUL(h1y.r, h1y.r);
+    h1y.r = pv_real_MUL(half.r, h1y.r);
 
-    h1z.r = _mm_sub_ps(half.r, tmpz.r);
-    h1z.r = _mm_mul_ps(h1z.r, h1z.r);
-    h1z.r = _mm_mul_ps(half.r, h1z.r);
+    h1z.r = pv_real_SUB(half.r, h3.r);
+    h1z.r = pv_real_MUL(h1z.r, h1z.r);
+    h1z.r = pv_real_MUL(half.r, h1z.r);
 
 // CHECKPOINT: PIC_push_part_yz.F : line 59
 // Field Interpolation
@@ -291,641 +272,637 @@ sse2_push_part_yz()
 // exactly what fields are needed. As a consequence, I can't just load them into
 // registers and shuffle. I must fetch piece by painful piece.
 
-// A messy macro to let me get the correct data and keep notation consistent
-// with the Fortran code
+//Hopefully gcc is smart enough to unroll these for me. Otherwise, I need to figure out
+// a way to generate unrolled loops
+    
+    pvReal exq, eyq, ezq, bxq, byq, bzq;
 
-    pvFloat field_in, exq, eyq, ezq, bxq, byq, bzq;
-     
-    //exq
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]-1);
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
+    pvReal gy[3] = {gmy, g0y, g1y};
+    pvReal gz[3] = {gmz, g0z, g1z};
+    pvReal hy[3] = {hmy, h0y, h1y};
+    pvReal hz[3] = {hmz, h0z, h1z};
 
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
+    pvInt ione;
 
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
+    ione.r = pv_int_SET1(1);
 
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    exq.r = _mm_mul_ps(gmz.r, tmpx.r);
+    INTERP_FIELD_YZ(EX,l1,j2,j3,gz,gy,exq);
+    INTERP_FIELD_YZ(EY,j1,l2,j3,gz,hy,eyq);
+    INTERP_FIELD_YZ(EZ,j1,j2,l3,hz,gy,ezq);
+    INTERP_FIELD_YZ(BX,j1,l2,l3,hz,hy,bxq);
+    INTERP_FIELD_YZ(BY,l1,j2,l3,hz,gy,byq);
+    INTERP_FIELD_YZ(BZ,l1,l2,j3,gz,hy,bzq);
 
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
-    exq.r = _mm_add_ps(exq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]-1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]-1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]-1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]-1,j3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0],j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1],j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2],j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3],j3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EX, l1.v[0], j2.v[0]+1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EX, l1.v[1], j2.v[1]+1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EX, l1.v[2], j2.v[2]+1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EX, l1.v[3], j2.v[3]+1,j3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g1z.r, tmpx.r);
-    exq.r = _mm_add_ps(exq.r, tmpx.r);
-
-    //eyq
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]-1);
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    eyq.r = _mm_mul_ps(gmz.r, tmpx.r);
  
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
-    eyq.r = _mm_add_ps(eyq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]-1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]-1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]-1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]-1,j3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0],j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1],j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2],j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3],j3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EY, j1.v[0], l2.v[0]+1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(EY, j1.v[1], l2.v[1]+1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(EY, j1.v[2], l2.v[2]+1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(EY, j1.v[3], l2.v[3]+1,j3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g1z.r, tmpx.r);
-    eyq.r = _mm_add_ps(eyq.r, tmpx.r);
-
-    //ezq
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]-1);
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]-1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]-1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]-1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    ezq.r = _mm_mul_ps(hmz.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
-    ezq.r = _mm_add_ps(ezq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]-1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]-1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]-1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]-1,l3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0],l3.v[0]+1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1],l3.v[1]+1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2],l3.v[2]+1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3],l3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(EZ, j1.v[0], j2.v[0]+1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(EZ, j1.v[1], j2.v[1]+1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(EZ, j1.v[2], j2.v[2]+1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(EZ, j1.v[3], j2.v[3]+1,l3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h1z.r, tmpx.r);
-    ezq.r = _mm_add_ps(ezq.r, tmpx.r);
-
-    //bxq
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]-1);
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    bxq.r = _mm_mul_ps(hmz.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
-    bxq.r = _mm_add_ps(bxq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]-1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]-1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]-1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]-1,l3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0],l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1],l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2],l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3],l3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BX, j1.v[0], l2.v[0]+1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BX, j1.v[1], l2.v[1]+1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BX, j1.v[2], l2.v[2]+1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BX, j1.v[3], l2.v[3]+1,l3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h1z.r, tmpx.r);
-    bxq.r = _mm_add_ps(bxq.r, tmpx.r);
-
-    //byq
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]-1);
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]-1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]-1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]-1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    byq.r = _mm_mul_ps(hmz.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h0z.r, tmpx.r);
-    byq.r = _mm_add_ps(byq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]-1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]-1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]-1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]-1,l3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(gmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0],l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1],l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2],l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3],l3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(g0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BY, l1.v[0], j2.v[0]+1,l3.v[0]+1);
-    field_in.v[1] = C_FIELD(BY, l1.v[1], j2.v[1]+1,l3.v[1]+1);
-    field_in.v[2] = C_FIELD(BY, l1.v[2], j2.v[2]+1,l3.v[2]+1);
-    field_in.v[3] = C_FIELD(BY, l1.v[3], j2.v[3]+1,l3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(g1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(h1z.r, tmpx.r);
-    byq.r = _mm_add_ps(byq.r, tmpx.r);
-
-    //bzq
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]-1);
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]-1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]-1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]-1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]-1);    
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]-1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]-1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]-1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]-1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    bzq.r = _mm_mul_ps(gmz.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g0z.r, tmpx.r);
-    bzq.r = _mm_add_ps(bzq.r, tmpx.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]-1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]-1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]-1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]-1,j3.v[3]+1);        
-    tmpx.r = _mm_mul_ps(hmy.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0],j3.v[0]+1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1],j3.v[1]+1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2],j3.v[2]+1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3],j3.v[3]+1);        
-    tmpy.r = _mm_mul_ps(h0y.r, field_in.r);
-
-    field_in.v[0] = C_FIELD(BZ, l1.v[0], l2.v[0]+1,j3.v[0]+1);
-    field_in.v[1] = C_FIELD(BZ, l1.v[1], l2.v[1]+1,j3.v[1]+1);
-    field_in.v[2] = C_FIELD(BZ, l1.v[2], l2.v[2]+1,j3.v[2]+1);
-    field_in.v[3] = C_FIELD(BZ, l1.v[3], l2.v[3]+1,j3.v[3]+1);        
-    tmpz.r = _mm_mul_ps(h1y.r, field_in.r);
-
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_mul_ps(g1z.r, tmpx.r);
-    bzq.r = _mm_add_ps(bzq.r, tmpx.r);
-
 // CHECKPOINT: PIC_push_part_yz.F : line 223
 // Half step momentum  with E-field
 
-    pvFloat dq;
-    dq.r = _mm_div_ps(dqs.r, mni.r);
-    dq.r = _mm_mul_ps(qni.r, dq.r);
+    pvReal dq, dqex, dqey, dqez;
+    dq.r = pv_real_DIV(dqs.r, mni.r);
+    dq.r = pv_real_MUL(qni.r, dq.r);
     
-    exq.r = _mm_mul_ps(dq.r, exq.r);
-    eyq.r = _mm_mul_ps(dq.r, eyq.r);
-    ezq.r = _mm_mul_ps(dq.r, ezq.r);
+    dqex.r = pv_real_MUL(dq.r, exq.r);
+    dqey.r = pv_real_MUL(dq.r, eyq.r);
+    dqez.r = pv_real_MUL(dq.r, ezq.r);
     
-    pxi.r = _mm_add_ps(pxi.r, exq.r);
-    pyi.r = _mm_add_ps(pyi.r, eyq.r);
-    pzi.r = _mm_add_ps(pzi.r, ezq.r);
+    pxi.r = pv_real_ADD(pxi.r, dqex.r);
+    pyi.r = pv_real_ADD(pyi.r, dqey.r);
+    pzi.r = pv_real_ADD(pzi.r, dqez.r);
 
 
 // CHECKPOINT: PIC_push_part_yz.F : line 228
 // Rotate with B-field
-    pvFloat txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
+    pvReal taux, tauy, tauz, txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
 
-    tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
-    tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
-    tmpz.r = _mm_mul_ps(pzi.r, pzi.r);
-    root.r = _mm_add_ps(ones.r, tmpx.r);
-    tmpy.r = _mm_add_ps(tmpy.r, tmpz.r);
-    root.r = _mm_add_ps(root.r, tmpy.r);
-    root.r = _mm_sqrt_ps(root.r);
-    root.r = _mm_div_ps(dq.r, root.r);
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
+    root.r = pv_real_ADD(ones.r, tmpx.r);
+    tmpy.r = pv_real_ADD(tmpy.r, tmpz.r);
+    root.r = pv_real_ADD(root.r, tmpy.r);
+    root.r = pv_real_SQRT(root.r);
+    root.r = pv_real_DIV(dq.r, root.r);
 
-    bxq.r = _mm_mul_ps(bxq.r, root.r);
-    byq.r = _mm_mul_ps(byq.r, root.r);
-    bzq.r = _mm_mul_ps(bzq.r, root.r);
+    taux.r = pv_real_MUL(bxq.r, root.r);
+    tauy.r = pv_real_MUL(byq.r, root.r);
+    tauz.r = pv_real_MUL(bzq.r, root.r);
 
-    txx.r = _mm_mul_ps(bxq.r, bxq.r);
-    tyy.r = _mm_mul_ps(byq.r, byq.r);
-    tzz.r = _mm_mul_ps(bzq.r, bzq.r);
-    t2xy.r = _mm_mul_ps(bxq.r, byq.r);
-    t2xz.r = _mm_mul_ps(bxq.r, bzq.r);
-    t2yz.r = _mm_mul_ps(byq.r, bzq.r);
-    t2xy.r = _mm_add_ps(t2xy.r, t2xy.r);
-    t2xz.r = _mm_add_ps(t2xz.r, t2xz.r);
-    t2yz.r = _mm_add_ps(t2yz.r, t2yz.r);
+    txx.r = pv_real_MUL(taux.r, taux.r);
+    tyy.r = pv_real_MUL(tauy.r, tauy.r);
+    tzz.r = pv_real_MUL(tauz.r, tauz.r);
+    t2xy.r = pv_real_MUL(taux.r, tauy.r);
+    t2xz.r = pv_real_MUL(taux.r, tauz.r);
+    t2yz.r = pv_real_MUL(tauy.r, tauz.r);
+    t2xy.r = pv_real_ADD(t2xy.r, t2xy.r);
+    t2xz.r = pv_real_ADD(t2xz.r, t2xz.r);
+    t2yz.r = pv_real_ADD(t2yz.r, t2yz.r);
 
-    pvFloat tau;
+    pvReal tau;
 
-    tau.r = _mm_add_ps(ones.r, txx.r);
-    tmpx.r = _mm_add_ps(tyy.r, tzz.r);
-    tau.r = _mm_add_ps(tau.r, tmpx.r);
-    tau.r = _mm_div_ps(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
+    tau.r = pv_real_ADD(ones.r, txx.r);
+    tmpx.r = pv_real_ADD(tyy.r, tzz.r);
+    tau.r = pv_real_ADD(tau.r, tmpx.r);
+    tau.r = pv_real_DIV(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
     
-    bxq.r = _mm_add_ps(bxq.r, bxq.r);
-    byq.r = _mm_add_ps(byq.r, byq.r);
-    bzq.r = _mm_add_ps(bzq.r, bzq.r);
+    //Never use tau_ without a two in front
+    taux.r = pv_real_ADD(taux.r, taux.r);
+    tauy.r = pv_real_ADD(tauy.r, tauy.r);
+    tauz.r = pv_real_ADD(tauz.r, tauz.r);
     
     //pxp
-    tmpx.r = _mm_add_ps(ones.r, txx.r);
-    tmpx.r = _mm_sub_ps(tmpx.r, tyy.r);
-    tmpx.r = _mm_sub_ps(tmpx.r, tzz.r);
-    tmpx.r = _mm_mul_ps(tmpx.r, pxi.r);
+    tmpx.r = pv_real_ADD(ones.r, txx.r);
+    tmpx.r = pv_real_SUB(tmpx.r, tyy.r);
+    tmpx.r = pv_real_SUB(tmpx.r, tzz.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
     
-    tmpy.r = _mm_add_ps(t2xy.r, bzq.r);
-    tmpy.r = _mm_mul_ps(tmpy.r, pyi.r);
+    tmpy.r = pv_real_ADD(t2xy.r, tauz.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
 
-    tmpz.r = _mm_sub_ps(t2xz.r, byq.r);
-    tmpz.r = _mm_mul_ps(tmpz.r, pzi.r);
+    tmpz.r = pv_real_SUB(t2xz.r, tauy.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
 
-    pxp.r = _mm_add_ps(tmpx.r, tmpy.r);
-    pxp.r = _mm_add_ps(pxp.r, tmpz.r);
-    pxp.r = _mm_mul_ps(pxp.r, tau.r);
+    pxp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pxp.r = pv_real_ADD(pxp.r, tmpz.r);
+    pxp.r = pv_real_MUL(pxp.r, tau.r);
     
     //pyp
-    tmpx.r = _mm_sub_ps(t2xy.r, bzq.r);
-    tmpx.r = _mm_mul_ps(tmpx.r, pxi.r);
+    tmpx.r = pv_real_SUB(t2xy.r, tauz.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
 
-    tmpy.r = _mm_sub_ps(ones.r, txx.r);
-    tmpy.r = _mm_add_ps(tmpy.r, tyy.r);
-    tmpy.r = _mm_sub_ps(tmpy.r, tzz.r);
-    tmpy.r = _mm_mul_ps(tmpy.r, pyi.r);
+    tmpy.r = pv_real_SUB(ones.r, txx.r);
+    tmpy.r = pv_real_ADD(tmpy.r, tyy.r);
+    tmpy.r = pv_real_SUB(tmpy.r, tzz.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
     
-    tmpz.r = _mm_add_ps(t2yz.r, bxq.r);
-    tmpz.r = _mm_mul_ps(tmpz.r, pzi.r);
+    tmpz.r = pv_real_ADD(t2yz.r, taux.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
 
-    pyp.r = _mm_add_ps(tmpx.r, tmpy.r);
-    pyp.r = _mm_add_ps(pyp.r, tmpz.r);
-    pyp.r = _mm_mul_ps(pyp.r, tau.r);
+    pyp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pyp.r = pv_real_ADD(pyp.r, tmpz.r);
+    pyp.r = pv_real_MUL(pyp.r, tau.r);
    
     //pzp
-    tmpx.r = _mm_add_ps(t2xz.r, byq.r);
-    tmpx.r = _mm_mul_ps(tmpx.r, pxi.r);
+    tmpx.r = pv_real_ADD(t2xz.r, tauy.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
 
-    tmpy.r = _mm_sub_ps(t2yz.r, bxq.r);
-    tmpy.r = _mm_mul_ps(tmpy.r, pyi.r);
+    tmpy.r = pv_real_SUB(t2yz.r, taux.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
 
-    tmpz.r = _mm_sub_ps(ones.r, txx.r);
-    tmpz.r = _mm_sub_ps(tmpz.r, tyy.r);
-    tmpz.r = _mm_add_ps(tmpz.r, tzz.r);
-    tmpz.r = _mm_mul_ps(tmpz.r, pzi.r);
+    tmpz.r = pv_real_SUB(ones.r, txx.r);
+    tmpz.r = pv_real_SUB(tmpz.r, tyy.r);
+    tmpz.r = pv_real_ADD(tmpz.r, tzz.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
 
-    pzp.r = _mm_add_ps(tmpx.r, tmpy.r);
-    pzp.r = _mm_add_ps(pzp.r, tmpz.r);
-    pzp.r = _mm_mul_ps(pzp.r, tau.r);
+    pzp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pzp.r = pv_real_ADD(pzp.r, tmpz.r);
+    pzp.r = pv_real_MUL(pzp.r, tau.r);
 
 // CHECKPOINT: PIC_push_part_yz.F : line 244
 // Half step momentum  with E-field
 
-    pxi.r = _mm_add_ps(pxp.r, exq.r);
-    pyi.r = _mm_add_ps(pyp.r, eyq.r);
-    pzi.r = _mm_add_ps(pzp.r, ezq.r);
+    pxi.r = pv_real_ADD(pxp.r, dqex.r);
+    pyi.r = pv_real_ADD(pyp.r, dqey.r);
+    pzi.r = pv_real_ADD(pzp.r, dqez.r);
 
 // CHECKPOINT: PIC_push_part_yz.F : line 248
 // Half step particles with new momenta
     
-    tmpx.r = _mm_mul_ps(pxi.r, pxi.r);
-    tmpy.r = _mm_mul_ps(pyi.r, pyi.r);
-    tmpz.r = _mm_mul_ps(pzi.r, pzi.r);
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
 
-    tmpx.r = _mm_add_ps(tmpx.r, tmpy.r);
-    tmpx.r = _mm_add_ps(tmpx.r, tmpz.r);
-    tmpx.r = _mm_add_ps(ones.r, tmpx.r);
-    root.r = _mm_sqrt_ps(tmpx.r);
-    root.r = _mm_div_ps(ones.r, root.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
+    tmpx.r = pv_real_ADD(ones.r, tmpx.r);
+    root.r = pv_real_SQRT(tmpx.r);
+    root.r = pv_real_DIV(ones.r, root.r);
 
-    vxi.r = _mm_mul_ps(pxi.r, root.r);
-    vyi.r = _mm_mul_ps(pyi.r, root.r);
-    vzi.r = _mm_mul_ps(pzi.r, root.r);
+    vxi.r = pv_real_MUL(pxi.r, root.r);
+    vyi.r = pv_real_MUL(pyi.r, root.r);
+    vzi.r = pv_real_MUL(pzi.r, root.r);
     
-    tmpy.r = _mm_mul_ps(vyi.r, yl.r);
-    tmpz.r = _mm_mul_ps(vzi.r, zl.r);
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
     
-    yi.r = _mm_add_ps(yi.r, tmpy.r);
-    zi.r = _mm_add_ps(zi.r, tmpz.r);
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
 
-    (sse2->part[n]).xi = xi.v[0];
-    (sse2->part[n]).yi = yi.v[0];
-    (sse2->part[n]).zi = zi.v[0];
-    (sse2->part[n]).pxi = pxi.v[0];
-    (sse2->part[n]).pyi = pyi.v[0];
-    (sse2->part[n]).pzi = pzi.v[0];    
+    STORE_PART_XP(sse2,n);
 
-    (sse2->part[n+1]).xi = xi.v[1];
-    (sse2->part[n+1]).yi = yi.v[1];
-    (sse2->part[n+1]).zi = zi.v[1];
-    (sse2->part[n+1]).pxi = pxi.v[1];
-    (sse2->part[n+1]).pyi = pyi.v[1];
-    (sse2->part[n+1]).pzi = pzi.v[1];    
+    tmpx.r = pv_real_DIV(ones.r, root.r);
+    tmpx.r = pv_real_SUB(tmpx.r, ones.r);
+    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
+    tmpx.r = pv_real_MUL(fnqs.r, tmpx.r);
+    tmpx.r = pv_real_MUL(mni.r, tmpx.r);
 
-    (sse2->part[n+2]).xi = xi.v[2];
-    (sse2->part[n+2]).yi = yi.v[2];
-    (sse2->part[n+2]).zi = zi.v[2];
-    (sse2->part[n+2]).pxi = pxi.v[2];
-    (sse2->part[n+2]).pyi = pyi.v[2];
-    (sse2->part[n+2]).pzi = pzi.v[2];    
+    for(int p = 0; p < VEC_SIZE; p++){
+      psc.p2B += tmpx.v[p]; //What's this for?
+    }
 
-    (sse2->part[n+3]).xi = xi.v[3];
-    (sse2->part[n+3]).yi = yi.v[3];
-    (sse2->part[n+3]).zi = zi.v[3];
-    (sse2->part[n+3]).pxi = pxi.v[3];
-    (sse2->part[n+3]).pyi = pyi.v[3];
-    (sse2->part[n+3]).pzi = pzi.v[3];    
+  }
+  prof_stop(pr);
+}
 
-    tmpx.r = _mm_div_ps(ones.r, root.r);
-    tmpx.r = _mm_sub_ps(tmpx.r, ones.r);
-    tmpx.r = _mm_div_ps(tmpx.r, eta.r);
-    tmpx.r = _mm_mul_ps(fnqs.r, tmpx.r);
-    tmpx.r = _mm_mul_ps(mni.r, tmpx.r);
-    psc.p2B += tmpx.v[0] + tmpx.v[1] + tmpx.v[2] + tmpx.v[3]; //What's this for?
+void
+sse2_push_part_yz()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+  }
+  prof_start(pr);
+
+//-----------------------------------------------------
+// Initialization stuff (not sure what all of this is for)
+  
+  struct psc_sse2 *sse2 = psc.c_ctx;
+
+  psc.p2A = 0.;
+  psc.p2B = 0.;
+  
+  for (int m = NE; m <= JZI; m++) {
+    memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
+  }  
+
+  // Values that won't change from iteration to iteration
+
+  pvReal dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
+  //FIXME: These are all stored as doubles in fortran!!
+  sse2_real dtfl = psc.dt; 
+  sse2_real etafl =  psc.prm.eta;
+  sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / etafl;
+  sse2_real dxifl = 1.0 / psc.dx[0];
+  sse2_real dyifl = 1.0 / psc.dx[1];
+  sse2_real dzifl = 1.0 / psc.dx[2];
+  sse2_real dqsfl = 0.5*etafl*dtfl;
+  sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;
+  sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;
+  sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;
+  ones.r = pv_real_SET1(1.0);
+  half.r = pv_real_SET1(.5);
+  onepfive.r = pv_real_SET1(1.5);
+  threefourths.r = pv_real_SET1(.75);
+  dt.r = pv_real_SET1(dtfl);
+  eta.r = pv_real_SET1(etafl);
+  fnqs.r = pv_real_SET1(fnqsfl);
+  dqs.r = pv_real_SET1(dqsfl);
+  dxi.r = pv_real_SET1(dxifl);
+  dyi.r = pv_real_SET1(dyifl);
+  dzi.r = pv_real_SET1(dzifl);
+  yl.r = pv_real_MUL(half.r, dt.r);
+  zl.r = pv_real_MUL(half.r, dt.r);
+  fnqxs.r = pv_real_SET1(fnqxsfl);
+  fnqys.r = pv_real_SET1(fnqysfl);
+  fnqzs.r = pv_real_SET1(fnqzsfl);
+
+  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
+  
+  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+
+//---------------------------------------------
+// Bringing in particle specific parameters
+
+    pvReal pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;  
+    LOAD_PART(sse2,n); 
+
+    // Locals for computation      
+    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
+
+// CHECKPOINT: PIC_push_part_yz.F : line 104
+// Start the computation
+// Half step positions with current momenta
+    
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
+
+    tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
+    tmpx.r = pv_real_ADD(ones.r, tmpx.r);
+    root.r = pv_real_SQRT(tmpx.r);
+    root.r = pv_real_DIV(ones.r, root.r);
+
+    vxi.r = pv_real_MUL(pxi.r, root.r);
+    vyi.r = pv_real_MUL(pyi.r, root.r);
+    vzi.r = pv_real_MUL(pzi.r, root.r);
+
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
+
+
+    tmpx.r = pv_real_DIV(ones.r, root.r);
+    tmpx.r = pv_real_SUB(tmpx.r, ones.r);
+    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
+    tmpx.r = pv_real_MUL(fnqs.r, tmpx.r);
+    tmpx.r = pv_real_MUL(mni.r, tmpx.r);
+    
+    for(int p = 0; p < VEC_SIZE; p++){
+      psc.p2A += tmpx.v[p]; //What's this for?
+    }
+
+// CHECKPOINT: PIC_push_part_yz.F : line 110
+    
+    tmpx.r = pv_real_MUL(xi.r, dxi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
+
+    pvReal s0y[5], s0z[5], s1y[5], s1z[5];
+    // I'm a little scared to use memset here, though it would probably work...
+    s0y[0].r = pv_real_SET1(0.0);
+    s0y[4].r = pv_real_SET1(0.0);
+    s0z[0].r = pv_real_SET1(0.0);
+    s0z[4].r = pv_real_SET1(0.0);
+    for(int m = 0; m < 5; m++){
+      s1y[m].r = pv_real_SET1(0.0);
+      s1z[m].r = pv_real_SET1(0.0);
+    }
+
+// CHECKPOINT: PIC_push_part_yz.F : line 119
+// Prepare for field interpolation
+
+    // Apparently this can be done in vectors. A victory!
+    pvInt j1, j2, j3, l1, l2, l3;
+    pvReal j2fl, j3fl, l2fl, l3fl;
+
+    //FIXME: Choose one!
+    for(int m = 0; m < VEC_SIZE; m++){
+      j1.v[m] = round(tmpx.v[m]);
+    }
+
+    j2.r = pv_real_to_int_CVT(tmpy.r);
+    j3.r = pv_real_to_int_CVT(tmpz.r);
+
+    // there must be a better way...
+    j2fl.r = pv_int_to_real_CVT(j2.r);
+    j3fl.r = pv_int_to_real_CVT(j3.r);
+
+    h2.r = pv_real_SUB(j2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(j3fl.r, tmpz.r);
+
+
+    pvReal gmy, gmz, g0y, g0z, g1y, g1z;
+
+    gmy.r = pv_real_ADD(half.r, h2.r);
+    gmy.r = pv_real_MUL(gmy.r, gmy.r);
+    gmy.r = pv_real_MUL(half.r, gmy.r);
+
+    gmz.r = pv_real_ADD(half.r, h3.r);
+    gmz.r = pv_real_MUL(gmz.r, gmz.r);
+    gmz.r = pv_real_MUL(half.r, gmz.r);
+    
+    g0y.r = pv_real_MUL(h2.r, h2.r);
+    g0y.r = pv_real_SUB(threefourths.r, g0y.r);
+
+    g0z.r = pv_real_MUL(h3.r, h3.r);
+    g0z.r = pv_real_SUB(threefourths.r, g0z.r);
+
+    g1y.r = pv_real_SUB(half.r, h2.r);
+    g1y.r = pv_real_MUL(g1y.r, g1y.r);
+    g1y.r = pv_real_MUL(half.r, g1y.r);
+
+    g1z.r = pv_real_SUB(half.r, h3.r);
+    g1z.r = pv_real_MUL(g1z.r, g1z.r);
+    g1z.r = pv_real_MUL(half.r, g1z.r);
+
+
+    // indexing here departs from FORTRAN a little bit
+    s0y[1].r = pv_real_SUB(h2.r, ones.r);
+    s0y[1].r = pv_real_ADD(onepfive.r, s0y[1].r); // h2+1.0 always <0
+    s0y[1].r = pv_real_MUL(s0y[1].r, s0y[1].r);
+    s0y[1].r = pv_real_MUL(half.r, s0y[1].r);
+
+    s0y[2].r = pv_real_MUL(h2.r, h2.r);
+    s0y[2].r = pv_real_SUB(threefourths.r, s0y[2].r);
+
+    s0y[3].r = pv_real_ADD(h2.r, ones.r);
+    s0y[3].r = pv_real_SUB(onepfive.r, s0y[3].r); // h2+1.0 always >0
+    s0y[3].r = pv_real_MUL(s0y[3].r, s0y[3].r);
+    s0y[3].r = pv_real_MUL(half.r, s0y[3].r);
+
+    s0z[1].r = pv_real_SUB(h3.r, ones.r);
+    s0z[1].r = pv_real_ADD(onepfive.r, s0z[1].r); // h3+1.0 always <0
+    s0z[1].r = pv_real_MUL(s0z[1].r, s0z[1].r);
+    s0z[1].r = pv_real_MUL(half.r, s0z[1].r);
+
+    s0z[2].r = pv_real_MUL(h3.r, h3.r);
+    s0z[2].r = pv_real_SUB(threefourths.r, s0z[2].r);
+
+    s0z[3].r = pv_real_ADD(h3.r, ones.r);
+    s0z[3].r = pv_real_SUB(onepfive.r, s0z[3].r); // h3+1.0 always >0
+    s0z[3].r = pv_real_MUL(s0z[3].r, s0z[3].r);
+    s0z[3].r = pv_real_MUL(half.r, s0z[3].r);
+
+
+
+// CHECKPOINT: PIC_push_part_yz.F : line 143
+
+    tmpx.r = pv_real_MUL(xi.r, dxi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpy.r = pv_real_SUB(tmpy.r, half.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
+    tmpz.r = pv_real_SUB(tmpz.r, half.r);
+
+    for(int m = 0; m < VEC_SIZE; m++){
+      l1.v[m] = round(tmpx.v[m]);
+    }
+
+
+    l2.r = pv_real_to_int_CVT(tmpy.r);
+    l3.r = pv_real_to_int_CVT(tmpz.r);
+
+    l2fl.r = pv_int_to_real_CVT(l2.r);
+    l3fl.r = pv_int_to_real_CVT(l3.r);
+
+    h2.r = pv_real_SUB(l2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(l3fl.r, tmpz.r);
+
+    pvReal hmy, hmz, h0y, h0z, h1y, h1z;
+
+    hmy.r = pv_real_ADD(half.r, h2.r);
+    hmy.r = pv_real_MUL(hmy.r, hmy.r);
+    hmy.r = pv_real_MUL(half.r, hmy.r);
+
+    hmz.r = pv_real_ADD(half.r, h3.r);
+    hmz.r = pv_real_MUL(hmz.r, hmz.r);
+    hmz.r = pv_real_MUL(half.r, hmz.r);
+    
+    h0y.r = pv_real_MUL(h2.r, h2.r);
+    h0y.r = pv_real_SUB(threefourths.r, h0y.r);
+
+    h0z.r = pv_real_MUL(h3.r, h3.r);
+    h0z.r = pv_real_SUB(threefourths.r, h0z.r);
+
+    h1y.r = pv_real_SUB(half.r, h2.r);
+    h1y.r = pv_real_MUL(h1y.r, h1y.r);
+    h1y.r = pv_real_MUL(half.r, h1y.r);
+
+    h1z.r = pv_real_SUB(half.r, h3.r);
+    h1z.r = pv_real_MUL(h1z.r, h1z.r);
+    h1z.r = pv_real_MUL(half.r, h1z.r);
+
+// CHECKPOINT: PIC_push_part_yz.F : line 59
+// Field Interpolation
+
+// BOTTLENECK HERE: For a given particle, none of the needed fields are stored
+// next to each other in memory. Also, there's no way to tell before runtime
+// exactly what fields are needed. As a consequence, I can't just load them into
+// registers and shuffle. I must fetch piece by painful piece.
+
+//Hopefully gcc is smart enough to unroll these for me. Otherwise, I need to figure out
+// a way to generate unrolled loops
+    
+    pvReal exq, eyq, ezq, bxq, byq, bzq;
+
+    pvReal gy[3] = {gmy, g0y, g1y};
+    pvReal gz[3] = {gmz, g0z, g1z};
+    pvReal hy[3] = {hmy, h0y, h1y};
+    pvReal hz[3] = {hmz, h0z, h1z};
+
+    pvInt ione;
+
+    ione.r = pv_int_SET1(1);
+
+    INTERP_FIELD_YZ(EX,l1,j2,j3,gz,gy,exq);
+    INTERP_FIELD_YZ(EY,j1,l2,j3,gz,hy,eyq);
+    INTERP_FIELD_YZ(EZ,j1,j2,l3,hz,gy,ezq);
+    INTERP_FIELD_YZ(BX,j1,l2,l3,hz,hy,bxq);
+    INTERP_FIELD_YZ(BY,l1,j2,l3,hz,gy,byq);
+    INTERP_FIELD_YZ(BZ,l1,l2,j3,gz,hy,bzq);
+
+ 
+// CHECKPOINT: PIC_push_part_yz.F : line 223
+// Half step momentum  with E-field
+
+    pvReal dq;
+    dq.r = pv_real_DIV(dqs.r, mni.r);
+    dq.r = pv_real_MUL(qni.r, dq.r);
+    
+    exq.r = pv_real_MUL(dq.r, exq.r);
+    eyq.r = pv_real_MUL(dq.r, eyq.r);
+    ezq.r = pv_real_MUL(dq.r, ezq.r);
+    
+    pxi.r = pv_real_ADD(pxi.r, exq.r);
+    pyi.r = pv_real_ADD(pyi.r, eyq.r);
+    pzi.r = pv_real_ADD(pzi.r, ezq.r);
+
+
+// CHECKPOINT: PIC_push_part_yz.F : line 228
+// Rotate with B-field
+    pvReal txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
+
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
+    root.r = pv_real_ADD(ones.r, tmpx.r);
+    tmpy.r = pv_real_ADD(tmpy.r, tmpz.r);
+    root.r = pv_real_ADD(root.r, tmpy.r);
+    root.r = pv_real_SQRT(root.r);
+    root.r = pv_real_DIV(dq.r, root.r);
+
+    bxq.r = pv_real_MUL(bxq.r, root.r);
+    byq.r = pv_real_MUL(byq.r, root.r);
+    bzq.r = pv_real_MUL(bzq.r, root.r);
+
+    txx.r = pv_real_MUL(bxq.r, bxq.r);
+    tyy.r = pv_real_MUL(byq.r, byq.r);
+    tzz.r = pv_real_MUL(bzq.r, bzq.r);
+    t2xy.r = pv_real_MUL(bxq.r, byq.r);
+    t2xz.r = pv_real_MUL(bxq.r, bzq.r);
+    t2yz.r = pv_real_MUL(byq.r, bzq.r);
+    t2xy.r = pv_real_ADD(t2xy.r, t2xy.r);
+    t2xz.r = pv_real_ADD(t2xz.r, t2xz.r);
+    t2yz.r = pv_real_ADD(t2yz.r, t2yz.r);
+
+    pvReal tau;
+
+    tau.r = pv_real_ADD(ones.r, txx.r);
+    tmpx.r = pv_real_ADD(tyy.r, tzz.r);
+    tau.r = pv_real_ADD(tau.r, tmpx.r);
+    tau.r = pv_real_DIV(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
+    
+    bxq.r = pv_real_ADD(bxq.r, bxq.r);
+    byq.r = pv_real_ADD(byq.r, byq.r);
+    bzq.r = pv_real_ADD(bzq.r, bzq.r);
+    
+    //pxp
+    tmpx.r = pv_real_ADD(ones.r, txx.r);
+    tmpx.r = pv_real_SUB(tmpx.r, tyy.r);
+    tmpx.r = pv_real_SUB(tmpx.r, tzz.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
+    
+    tmpy.r = pv_real_ADD(t2xy.r, bzq.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
+
+    tmpz.r = pv_real_SUB(t2xz.r, byq.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
+
+    pxp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pxp.r = pv_real_ADD(pxp.r, tmpz.r);
+    pxp.r = pv_real_MUL(pxp.r, tau.r);
+    
+    //pyp
+    tmpx.r = pv_real_SUB(t2xy.r, bzq.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
+
+    tmpy.r = pv_real_SUB(ones.r, txx.r);
+    tmpy.r = pv_real_ADD(tmpy.r, tyy.r);
+    tmpy.r = pv_real_SUB(tmpy.r, tzz.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
+    
+    tmpz.r = pv_real_ADD(t2yz.r, bxq.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
+
+    pyp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pyp.r = pv_real_ADD(pyp.r, tmpz.r);
+    pyp.r = pv_real_MUL(pyp.r, tau.r);
+   
+    //pzp
+    tmpx.r = pv_real_ADD(t2xz.r, byq.r);
+    tmpx.r = pv_real_MUL(tmpx.r, pxi.r);
+
+    tmpy.r = pv_real_SUB(t2yz.r, bxq.r);
+    tmpy.r = pv_real_MUL(tmpy.r, pyi.r);
+
+    tmpz.r = pv_real_SUB(ones.r, txx.r);
+    tmpz.r = pv_real_SUB(tmpz.r, tyy.r);
+    tmpz.r = pv_real_ADD(tmpz.r, tzz.r);
+    tmpz.r = pv_real_MUL(tmpz.r, pzi.r);
+
+    pzp.r = pv_real_ADD(tmpx.r, tmpy.r);
+    pzp.r = pv_real_ADD(pzp.r, tmpz.r);
+    pzp.r = pv_real_MUL(pzp.r, tau.r);
+
+// CHECKPOINT: PIC_push_part_yz.F : line 244
+// Half step momentum  with E-field
+
+    pxi.r = pv_real_ADD(pxp.r, exq.r);
+    pyi.r = pv_real_ADD(pyp.r, eyq.r);
+    pzi.r = pv_real_ADD(pzp.r, ezq.r);
+
+// CHECKPOINT: PIC_push_part_yz.F : line 248
+// Half step particles with new momenta
+    
+    tmpx.r = pv_real_MUL(pxi.r, pxi.r);
+    tmpy.r = pv_real_MUL(pyi.r, pyi.r);
+    tmpz.r = pv_real_MUL(pzi.r, pzi.r);
+
+    tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+    tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
+    tmpx.r = pv_real_ADD(ones.r, tmpx.r);
+    root.r = pv_real_SQRT(tmpx.r);
+    root.r = pv_real_DIV(ones.r, root.r);
+
+    vxi.r = pv_real_MUL(pxi.r, root.r);
+    vyi.r = pv_real_MUL(pyi.r, root.r);
+    vzi.r = pv_real_MUL(pzi.r, root.r);
+
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
+    
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
+
+    STORE_PART_XP(sse2,n);
+
+    tmpx.r = pv_real_DIV(ones.r, root.r);
+    tmpx.r = pv_real_SUB(tmpx.r, ones.r);
+    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
+    tmpx.r = pv_real_MUL(fnqs.r, tmpx.r);
+    tmpx.r = pv_real_MUL(mni.r, tmpx.r);
+
+    for(int p = 0; p < VEC_SIZE; p++){
+      psc.p2B += tmpx.v[p]; //What's this for?
+    }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 266
 // update number densities.
-    tmpx.r = _mm_mul_ps(xi.r, dxi.r);
-    tmpy.r = _mm_mul_ps(yi.r, dyi.r);
-    tmpz.r = _mm_mul_ps(zi.r, dzi.r);
+    tmpx.r = pv_real_MUL(xi.r, dxi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
 
-    l1.r = _mm_cvtps_epi32(tmpx.r);
-    l2.r = _mm_cvtps_epi32(tmpy.r);
-    l3.r = _mm_cvtps_epi32(tmpz.r);
-    
-    for(int m = 0; m < 4; m++){
-      l1.v[m] = roundf(tmpx.v[m]);
-      l2.v[m] = roundf(tmpy.v[m]);
-      l3.v[m] = roundf(tmpz.v[m]);
-   
+    //FIXME: Pick one!
+   for(int m = 0; m < VEC_SIZE; m++){
+      l1.v[m] = round(tmpx.v[m]);
     }
+ 
+    l2.r = pv_real_to_int_CVT(tmpy.r);
+    l3.r = pv_real_to_int_CVT(tmpz.r);
 
-    l2fl.r = _mm_cvtepi32_ps(l2.r);
-    l3fl.r = _mm_cvtepi32_ps(l3.r);
+    l2fl.r = pv_int_to_real_CVT(l2.r);
+    l3fl.r = pv_int_to_real_CVT(l3.r);
 
-    tmpy.r = _mm_sub_ps(l2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(l3fl.r, tmpz.r);
+    h2.r = pv_real_SUB(l2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(l3fl.r, tmpz.r);
 
-    gmy.r = _mm_sub_ps(tmpy.r,ones.r);
+
+    gmy.r = pv_real_SUB(h2.r,ones.r);
     //I'm pretty sure |h2,h3| < 0.5. If I'm wrong, I'll change this part
-    gmy.r = _mm_add_ps(onepfive.r, gmy.r); // h2-1 always <0
-    gmy.r = _mm_mul_ps(gmy.r, gmy.r);
-    gmy.r = _mm_mul_ps(half.r, gmy.r);
+    gmy.r = pv_real_ADD(onepfive.r, gmy.r); // h2-1 always <0
+    gmy.r = pv_real_MUL(gmy.r, gmy.r);
+    gmy.r = pv_real_MUL(half.r, gmy.r);
 
-    g0y.r = _mm_mul_ps(tmpy.r, tmpy.r);
-    g0y.r = _mm_sub_ps(threefourths.r, g0y.r);
+    g0y.r = pv_real_MUL(h2.r, h2.r);
+    g0y.r = pv_real_SUB(threefourths.r, g0y.r);
 
-    g1y.r = _mm_add_ps(ones.r, tmpy.r); 
-    g1y.r = _mm_sub_ps(onepfive.r, g1y.r);//h2+1 always >0
-    g1y.r = _mm_mul_ps(g1y.r, g1y.r);
-    g1y.r = _mm_mul_ps(half.r, g1y.r);
+    g1y.r = pv_real_ADD(ones.r, h2.r); 
+    g1y.r = pv_real_SUB(onepfive.r, g1y.r);//h2+1 always >0
+    g1y.r = pv_real_MUL(g1y.r, g1y.r);
+    g1y.r = pv_real_MUL(half.r, g1y.r);
 
-    gmz.r = _mm_sub_ps(tmpz.r,ones.r);
-    gmz.r = _mm_add_ps(onepfive.r, gmz.r); //h3-1 always <0
-    gmz.r = _mm_mul_ps(gmz.r, gmz.r);
-    gmz.r = _mm_mul_ps(half.r, gmz.r);
+    gmz.r = pv_real_SUB(h3.r,ones.r);
+    gmz.r = pv_real_ADD(onepfive.r, gmz.r); //h3-1 always <0
+    gmz.r = pv_real_MUL(gmz.r, gmz.r);
+    gmz.r = pv_real_MUL(half.r, gmz.r);
 
-    g0z.r = _mm_mul_ps(tmpz.r, tmpz.r);
-    g0z.r = _mm_sub_ps(threefourths.r, g0z.r);
+    g0z.r = pv_real_MUL(h3.r, h3.r);
+    g0z.r = pv_real_SUB(threefourths.r, g0z.r);
 
-    g1z.r = _mm_add_ps(ones.r, tmpz.r);
-    g1z.r = _mm_sub_ps(onepfive.r, g1z.r); //h3+1 always >0
-    g1z.r = _mm_mul_ps(g1z.r, g1z.r);
-    g1z.r = _mm_mul_ps(half.r, g1z.r);
+    g1z.r = pv_real_ADD(ones.r, h3.r);
+    g1z.r = pv_real_SUB(onepfive.r, g1z.r); //h3+1 always >0
+    g1z.r = pv_real_MUL(g1z.r, g1z.r);
+    g1z.r = pv_real_MUL(half.r, g1z.r);
 
 // CHECKPOINT: PIC_push_part_yz.F : line 283
     //FIXME: this is, for now, a straight serial translation. I think
@@ -933,10 +910,10 @@ sse2_push_part_yz()
     //    some changes to the the local field structure and I'll worry 
     //    about it then.
 
-    for(int m=0; m<4; m++){ 
-      float fnq;
+    for(int m=0; m < VEC_SIZE ; m++){ 
+      sse2_real fnq;
       // This may or may not work, and may or may not help
-      float *densp; 
+      sse2_real *densp; 
       if (qni.v[m] < 0.0){
 	densp = &(sse2->fields[NE*psc.fld_size + l1.v[m] - psc.ilo[0] + psc.ibn[0]]);
 	fnq = qni.v[m] * wni.v[m] * fnqs.v[m];
@@ -958,108 +935,105 @@ sse2_push_part_yz()
 	DEN_FIELD(l2.v[m]+1,l3.v[m]) += fnq*g1y.v[m]*g0z.v[m];
 	DEN_FIELD(l2.v[m]-1, l3.v[m]+1) += fnq*gmy.v[m]*g1z.v[m];
 	DEN_FIELD(l2.v[m], l3.v[m]+1) += fnq*g0y.v[m]*g1z.v[m];
-	DEN_FIELD(l2.v[m]+1,l3.v[m]+1) += fnq*g1y.v[m]*g1z.v[m];
-
-      /* if(n == 0){ */
-      /* 	fprintf(stderr, "%g %g\n", DEN_FIELD(l2.v[m]-1, l3.v[m]-1), C_FIELD(NE,l1.v[m],l2.v[m]-1, l3.v[m]-1)); */
-      /* } */
-      
+	DEN_FIELD(l2.v[m]+1,l3.v[m]+1) += fnq*g1y.v[m]*g1z.v[m];      
     }
     
     // CHECKPOINT: PIC_push_part_yz.F : line 320
     // Charge density form factor at (n+1.5)*dt
-    tmpy.r = _mm_mul_ps(vyi.r, yl.r);
-    tmpz.r = _mm_mul_ps(vzi.r, zl.r);
+    tmpy.r = pv_real_MUL(vyi.r, yl.r);
+    tmpz.r = pv_real_MUL(vzi.r, zl.r);
     
-    yi.r = _mm_add_ps(yi.r, tmpy.r);
-    zi.r = _mm_add_ps(zi.r, tmpz.r);
+    yi.r = pv_real_ADD(yi.r, tmpy.r);
+    zi.r = pv_real_ADD(zi.r, tmpz.r);
 
     pvInt k2,k3;
 
-    pvFloat k2fl, k3fl;
+    pvReal k2fl, k3fl;
 
-    tmpy.r = _mm_mul_ps(yi.r, dyi.r);
-    tmpz.r = _mm_mul_ps(zi.r, dzi.r);
+    tmpy.r = pv_real_MUL(yi.r, dyi.r);
+    tmpz.r = pv_real_MUL(zi.r, dzi.r);
 
-    k2.r = _mm_cvtps_epi32(tmpy.r);
-    k3.r = _mm_cvtps_epi32(tmpz.r);
+    k2.r = pv_real_to_int_CVT(tmpy.r);
+    k3.r = pv_real_to_int_CVT(tmpz.r);
 
-    for(int m = 0; m < 4; m++){
-      k2.v[m] = roundf(tmpy.v[m]);
-      k3.v[m] = roundf(tmpz.v[m]); 
-    }
+    k2fl.r = pv_int_to_real_CVT(k2.r);
+    k3fl.r = pv_int_to_real_CVT(k3.r);
+
+    h2.r = pv_real_SUB(k2fl.r, tmpy.r);
+    h3.r = pv_real_SUB(k3fl.r, tmpz.r);
 
 
-    k2fl.r = _mm_cvtepi32_ps(k2.r);
-    k3fl.r = _mm_cvtepi32_ps(k3.r);
-
-    tmpy.r = _mm_sub_ps(k2fl.r, tmpy.r);
-    tmpz.r = _mm_sub_ps(k3fl.r, tmpz.r);
-    
     // God help me, there's some things I just can't fgure out how to parallelize
     // The g-- here are just temporary variables. I can't do the assignments in parallel, 
     // but I'll be damned if I can't do the FLOPS in parallel
-    gmy.r = _mm_sub_ps(tmpy.r,ones.r);
-    gmy.r = _mm_add_ps(onepfive.r, gmy.r); // h2-1 always <0
-    gmy.r = _mm_mul_ps(gmy.r, gmy.r);
-    gmy.r = _mm_mul_ps(half.r, gmy.r);
 
-    g0y.r = _mm_mul_ps(tmpy.r, tmpy.r);
-    g0y.r = _mm_sub_ps(threefourths.r, g0y.r);
+    gmy.r = pv_real_SUB(h2.r,ones.r);
+    gmy.r = pv_real_ADD(onepfive.r, gmy.r); // h2-1 always <0
+    gmy.r = pv_real_MUL(gmy.r, gmy.r);
+    gmy.r = pv_real_MUL(half.r, gmy.r);
 
-    g1y.r = _mm_add_ps(ones.r, tmpy.r); 
-    g1y.r = _mm_sub_ps(onepfive.r, g1y.r);//h2+1 always >0
-    g1y.r = _mm_mul_ps(g1y.r, g1y.r);
-    g1y.r = _mm_mul_ps(half.r, g1y.r);
+    g0y.r = pv_real_MUL(h2.r, h2.r);
+    g0y.r = pv_real_SUB(threefourths.r, g0y.r);
 
-    gmz.r = _mm_sub_ps(tmpz.r,ones.r);
-    gmz.r = _mm_add_ps(onepfive.r, gmz.r); //h3-1 always <0
-    gmz.r = _mm_mul_ps(gmz.r, gmz.r);
-    gmz.r = _mm_mul_ps(half.r, gmz.r);
+    g1y.r = pv_real_ADD(ones.r, h2.r); 
+    g1y.r = pv_real_SUB(onepfive.r, g1y.r);//h2+1 always >0
+    g1y.r = pv_real_MUL(g1y.r, g1y.r);
+    g1y.r = pv_real_MUL(half.r, g1y.r);
 
-    g0z.r = _mm_mul_ps(tmpz.r, tmpz.r);
-    g0z.r = _mm_sub_ps(threefourths.r, g0z.r);
+    gmz.r = pv_real_SUB(h3.r,ones.r);
+    gmz.r = pv_real_ADD(onepfive.r, gmz.r); //h3-1 always <0
+    gmz.r = pv_real_MUL(gmz.r, gmz.r);
+    gmz.r = pv_real_MUL(half.r, gmz.r);
 
-    g1z.r = _mm_add_ps(ones.r, tmpz.r);
-    g1z.r = _mm_sub_ps(onepfive.r, g1z.r); //h3+1 always >0
-    g1z.r = _mm_mul_ps(g1z.r, g1z.r);
-    g1z.r = _mm_mul_ps(half.r, g1z.r);
+    g0z.r = pv_real_MUL(h3.r, h3.r);
+    g0z.r = pv_real_SUB(threefourths.r, g0z.r);
+    
+    g1z.r = pv_real_ADD(ones.r, h3.r);
+    g1z.r = pv_real_SUB(onepfive.r, g1z.r); //h3+1 always >0
+    g1z.r = pv_real_MUL(g1z.r, g1z.r);
+    g1z.r = pv_real_MUL(half.r, g1z.r);
 
+   
+    
     // All the indices below have +2 compared to the FORTRAN for C array access
-    for(int p=0; p<4; p++){
-      int shifty = k2.v[p] - j2.v[p];
-      int shiftz = k3.v[p] - j3.v[p];
-      s1y[shifty + 1].v[p] = gmy.v[p];
-      s1y[shifty + 2].v[p] = g0y.v[p];
-      s1y[shifty + 3].v[p] = g1y.v[p];
-      s1z[shiftz + 1].v[p] = gmz.v[p];
-      s1z[shiftz + 2].v[p] = g0z.v[p];
-      s1z[shiftz + 3].v[p] = g1z.v[p];
+    pvInt shifty, shiftz;
+    shifty.r = pv_int_SUB(k2.r,j2.r);
+    shiftz.r = pv_int_SUB(k3.r,j3.r);
+    for(int p=0; p < VEC_SIZE; p++){
+      s1y[shifty.v[p] + 1].v[p] = gmy.v[p];
+      s1y[shifty.v[p] + 2].v[p] = g0y.v[p];
+      s1y[shifty.v[p] + 3].v[p] = g1y.v[p];
+      s1z[shiftz.v[p] + 1].v[p] = gmz.v[p];
+      s1z[shiftz.v[p] + 2].v[p] = g0z.v[p];
+      s1z[shiftz.v[p] + 3].v[p] = g1z.v[p];
     }
+
 
 // CHECKPOINT: PIC_push_part_yz.F : line 341
 // Charge density form factor at (n+1.5)*dt
 
+
+
     for(int m=0; m<5; m++){
-      s1y[m].r = _mm_sub_ps(s1y[m].r, s0y[m].r);
-      s1z[m].r = _mm_sub_ps(s1z[m].r, s0z[m].r);
+      s1y[m].r = pv_real_SUB(s1y[m].r, s0y[m].r);
+      s1z[m].r = pv_real_SUB(s1z[m].r, s0z[m].r);
     }
     
-    pvFloat fnqx, fnqy, fnqz;
+    pvReal fnqx, fnqy, fnqz;
     
-    fnqx.r = _mm_mul_ps(wni.r, fnqs.r);
-    fnqx.r = _mm_mul_ps(qni.r, fnqs.r);
-    fnqx.r = _mm_mul_ps(vxi.r, fnqs.r);
+    fnqx.r = pv_real_MUL(wni.r, fnqs.r);
+    fnqx.r = pv_real_MUL(qni.r, fnqx.r);
+    fnqx.r = pv_real_MUL(vxi.r, fnqx.r);
 
-    fnqy.r = _mm_mul_ps(wni.r, fnqys.r);
-    fnqy.r = _mm_mul_ps(qni.r, fnqy.r);
+    fnqy.r = pv_real_MUL(wni.r, fnqys.r);
+    fnqy.r = pv_real_MUL(qni.r, fnqy.r);
     
-    fnqz.r = _mm_mul_ps(wni.r, fnqzs.r);
-    fnqz.r = _mm_mul_ps(qni.r, fnqz.r);
+    fnqz.r = pv_real_MUL(wni.r, fnqzs.r);
+    fnqz.r = pv_real_MUL(qni.r, fnqz.r);
         
     // Again, this is extremely painful, but serial is the only way I can think of to do this
     // I have the inkling of thought on a parallel way, but it hasn't matured. If it works out, I'll implement it.
-    for(int p=0; p<4; p++){
+    for(int p=0; p < VEC_SIZE; p++){
       int l2min, l2max, l3min, l3max;
       if (k2.v[p] == j2.v[p]){
     	l2min = -1;
@@ -1082,22 +1056,19 @@ sse2_push_part_yz()
     	l3max = 2;
       }
 
-      float jzh[5] = {0.0};
+      sse2_real jzh[5] = {0.0};
    
       for(int l3i=l3min+2; l3i<=(l3max+2); l3i++){
-    	float jyh = 0.0;
+    	sse2_real jyh = 0.0;
 	for(int l2i=l2min+2; l2i<=(l2max+2); l2i++){
-    	  float wx = (s0y[l2i].v[p] + 0.5*s1y[l2i].v[p])*s0z[l3i].v[p]
+    	  sse2_real wx = (s0y[l2i].v[p] + 0.5*s1y[l2i].v[p])*s0z[l3i].v[p]
     	    + (0.5*s0y[l2i].v[p] + 0.3333333333*s1y[l2i].v[p])*s1z[l3i].v[p];
-    	  float wy = s1y[l2i].v[p]*(s0z[l3i].v[p] + 0.5*s1z[l3i].v[p]);
-    	  float wz = s1z[l3i].v[p]*(s0y[l2i].v[p] + 0.5*s1y[l2i].v[p]);
-	  //      for(int s = 0; s < 4; s++){
-	  //  fprintf(dumpfile, "%2.7g %2.7g %2.7g\n", wx, wy, wz);
-	  //      }  
+    	  sse2_real wy = s1y[l2i].v[p]*(s0z[l3i].v[p] + 0.5*s1z[l3i].v[p]);
+    	  sse2_real wz = s1z[l3i].v[p]*(s0y[l2i].v[p] + 0.5*s1y[l2i].v[p]);
 	  
     	  jyh = jyh - fnqy.v[p]*wy;
     	  jzh[l2i] = jzh[l2i] - fnqz.v[p]*wz;
-	  	  
+
     	  C_FIELD(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += fnqx.v[p]*wx; //undo index adjustment of l(2,3)i
     	  C_FIELD(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh; //undo index adjustment of l(2,3)i
     	  C_FIELD(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i]; //undo index adjustment of l(2,3)i
@@ -1105,6 +1076,6 @@ sse2_push_part_yz()
       }
     }   
   }
-  // fclose(dumpfile);
+
   prof_stop(pr);
 }

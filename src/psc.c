@@ -17,7 +17,7 @@ struct psc psc;
 void
 assert_equal(double x, double y)
 {
-  double max = fmax(fabs(x), fabs(y)) + 1e-10;
+  double max = fmax(fabs(x), fabs(y)) + 1e-7;
   double eps = fabs((x - y) / max);
   if (eps > 1e-5) {
     fprintf(stderr, "assert_equal: fail x = %g y = %g rel err = %g\n",
@@ -117,28 +117,15 @@ psc_setup_fields_zero()
 
 // Fills the fields with sequentially increasing numbers
 // I use it to check macros and indexing
-void
-psc_setup_fields_seq()
-{
-  long int seed = 7007;
-  srand48(seed);
-  for(int m = 0; m < NR_FIELDS; m++){
-    for(int n = 0; n < psc.fld_size; n++){
-      //preserve Fortran ordering for now
-      psc.f_fields[m][n] = 0.001 * (double)n; //10. * drand48();
-    }
-  }
-}
 
 void
 psc_setup_fields_seq_yz()
 {
-  psc_setup_fields_zero();
   for(int m = EX; m < NR_FIELDS; m++){
     for(int i = 0; i < psc.img[0]; i++){
       for(int j = 0; j < psc.img[1]; j++){
 	for(int k = 0; k < psc.img[2]; k++){
-	  psc.f_fields[m][i + j*(psc.img[0]) + k*(psc.img[0]*psc.img[1])] = (double)j*k;
+	  psc.f_fields[m][i + j*(psc.img[0]) + k*(psc.img[0]*psc.img[1])] = j*k;
 	}
       }
     }
@@ -383,6 +370,6 @@ psc_create_test_2(const char *ops_name)
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
-  psc_setup_fields_zero();
+  psc_setup_fields_1();
   psc_setup_particles_1();
 }
