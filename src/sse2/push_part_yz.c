@@ -487,7 +487,7 @@ sse2_push_part_yz()
 
   // Values that won't change from iteration to iteration
 
-  pvReal dt, yl, zl, ones, half,threefourths, onepfive,  eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
+  pvReal dt, yl, zl, ones, half,threefourths, onepfive, third, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
   //FIXME: These are all stored as doubles in fortran!!
   sse2_real dtfl = psc.dt; 
   sse2_real etafl =  psc.prm.eta;
@@ -503,6 +503,7 @@ sse2_push_part_yz()
   half.r = pv_real_SET1(.5);
   onepfive.r = pv_real_SET1(1.5);
   threefourths.r = pv_real_SET1(.75);
+  third.r = pv_real_SET1(1./3.);
   dt.r = pv_real_SET1(dtfl);
   eta.r = pv_real_SET1(etafl);
   fnqs.r = pv_real_SET1(fnqsfl);
@@ -575,12 +576,10 @@ sse2_push_part_yz()
 
     pvReal s0y[5], s0z[5], s1y[5], s1z[5];
     // I'm a little scared to use memset here, though it would probably work...
-    s0y[0].r = pv_real_SET1(0.0);
-    s0y[4].r = pv_real_SET1(0.0);
-    s0z[0].r = pv_real_SET1(0.0);
-    s0z[4].r = pv_real_SET1(0.0);
     for(int m = 0; m < 5; m++){
+      s0y[m].r = pv_real_SET1(0.0);
       s1y[m].r = pv_real_SET1(0.0);
+      s0z[m].r = pv_real_SET1(0.0);
       s1z[m].r = pv_real_SET1(0.0);
     }
 
@@ -1051,17 +1050,54 @@ sse2_push_part_yz()
       s1z[shiftz.v[p] + 3].v[p] = glz.v[p];
     }
 
-
-// CHECKPOINT: PIC_push_part_yz.F : line 341
-// Charge density form factor at (n+1.5)*dt
-
-
-
     for(int m=0; m<5; m++){
       s1y[m].r = pv_real_SUB(s1y[m].r, s0y[m].r);
       s1z[m].r = pv_real_SUB(s1z[m].r, s0z[m].r);
     }
+
+// CHECKPOINT: PIC_push_part_yz.F : line 341
+// Charge density form factor at (n+1.5)*dt
+
+    int l2min = 1;
+    int l2max = 4;
+    int l3min = 1;
+    int l3max = 4;
     
+    for(int p = 0; p < VEC_SIZE; p++){
+      if(k2.v[p]==j2.v[p]){
+	s1y[0].v[p] = 0.0;
+	s1y[4].v[p] = 0.0;
+	s0y[0].v[p] = 0.0;
+	s0y[4].v[p] = 0.0;
+      }
+      else if (k2.v[p]==j2.v[p]-1){
+	s1y[4].v[p] = 0.0;
+	s0y[4].v[p] = 0.0;
+	l2min = 0;
+      }
+      else if (k2.v[p]==j2.v[p]+1){
+	s1y[0].v[p] = 0.0;
+	s0y[0].v[p] = 0.0;
+	l2max = 5;
+      }
+      if (k3.v[p]==j3.v[p]){
+	s1z[0].v[p] = 0.0;
+	s1z[4].v[p] = 0.0;
+	s0z[0].v[p] = 0.0;
+	s0z[4].v[p] = 0.0;
+      }
+      else if(k3.v[p]==j3.v[p]-1){
+	s1z[4].v[p] = 0.0;
+	s0z[4].v[p] = 0.0;
+	l3min = 0;
+      }
+      else if(k3.v[p]==j3.v[p]+1){
+	s1z[0].v[p] = 0.0;
+	s0z[0].v[p] = 0.0;
+	l3max = 5;
+      }
+    }
+
     pvReal fnqx, fnqy, fnqz;
     
     fnqx.r = pv_real_MUL(wni.r, fnqs.r);
@@ -1076,49 +1112,46 @@ sse2_push_part_yz()
         
     // Again, this is extremely painful, but serial is the only way I can think of to do this
     // I have the inkling of thought on a parallel way, but it hasn't matured. If it works out, I'll implement it.
-    for(int p=0; p < VEC_SIZE; p++){
-      int l2min, l2max, l3min, l3max;
-      if (k2.v[p] == j2.v[p]){
-    	l2min = -1;
-    	l2max = 1;
-      } else if(k2.v[p] == j2.v[p]-1){
-    	l2min = -2;
-    	l2max = 1;
-      }else if(k2.v[p] == j2.v[p]+1){
-    	l2min = -1;
-    	l2max = 2;
-      }
-      if (k3.v[p] == j3.v[p]){
-    	l3min = -1;
-    	l3max = 1;
-      } else if(k3.v[p] == j3.v[p]-1){
-    	l3min = -2;
-    	l3max = 1;
-      } else if(k3.v[p] == j3.v[p]+1){
-    	l3min = -1;
-    	l3max = 2;
-      }
-
-      sse2_real jzh[5] = {0.0};
-   
-      for(int l3i=l3min+2; l3i<=(l3max+2); l3i++){
-    	sse2_real jyh = 0.0;
-	for(int l2i=l2min+2; l2i<=(l2max+2); l2i++){
-    	  sse2_real wx = (s0y[l2i].v[p] + 0.5*s1y[l2i].v[p])*s0z[l3i].v[p]
-    	    + (0.5*s0y[l2i].v[p] + 0.3333333333*s1y[l2i].v[p])*s1z[l3i].v[p];
-    	  sse2_real wy = s1y[l2i].v[p]*(s0z[l3i].v[p] + 0.5*s1z[l3i].v[p]);
-    	  sse2_real wz = s1z[l3i].v[p]*(s0y[l2i].v[p] + 0.5*s1y[l2i].v[p]);
-	  
-    	  jyh = jyh - fnqy.v[p]*wy;
-    	  jzh[l2i] = jzh[l2i] - fnqz.v[p]*wz;
-
-    	  CF3(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += fnqx.v[p]*wx; //undo index adjustment of l(2,3)i
-    	  CF3(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh; //undo index adjustment of l(2,3)i
-    	  CF3(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i]; //undo index adjustment of l(2,3)i
+    
+    pvReal jzh[5];
+    memset(&jzh, 0, 5 * sizeof(pvReal));
+    
+    for(int l3i=l3min; l3i<l3max; l3i++){
+      pvReal jyh;
+      jyh.r = pv_real_SET1(0.0);
+      for(int l2i=l2min; l2i<l2max; l2i++){
+	pvReal wx, wy, wz;
+	wx.r = pv_real_MUL(half.r,s1y[l2i].r);
+	wx.r = pv_real_ADD(s0y[l2i].r, wx.r);
+	wx.r = pv_real_MUL(s0z[l3i].r, wx.r);
+	tmpx.r = pv_real_MUL(half.r, s0y[l2i].r);
+	tmpy.r = pv_real_MUL(third.r, s1y[l2i].r);
+	tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
+	tmpx.r = pv_real_MUL(tmpx.r, s1z[l3i].r);
+	wx.r = pv_real_ADD(wx.r, tmpx.r);
+	
+	wy.r = pv_real_MUL(half.r, s1z[l3i].r);
+	wy.r = pv_real_ADD(s0z[l3i].r, wy.r);
+	wy.r = pv_real_MUL(s1y[l2i].r, wy.r);
+	
+	wz.r = pv_real_MUL(half.r, s1y[l2i].r);
+	wz.r = pv_real_ADD(s0y[l2i].r, wz.r);
+	wz.r = pv_real_MUL(s1z[l3i].r, wz.r);
+	
+	wx.r = pv_real_MUL(fnqx.r, wx.r);
+	wy.r = pv_real_MUL(fnqy.r, wy.r);
+	jyh.r = pv_real_SUB(jyh.r, wy.r);
+	wz.r = pv_real_MUL(fnqz.r, wz.r);
+	jzh[l2i].r = pv_real_SUB(jzh[l2i].r, wz.r);
+	
+	for(int p = 0; p < VEC_SIZE; p++){
+	  CF3(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += wx.v[p]; //undo index adjustment of l(2,3)i
+	  CF3(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh.v[p]; //undo index adjustment of l(2,3)i
+    	  CF3(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i].v[p]; //undo index adjustment of l(2,3)i
     	}
       }
     }   
   }
-
+  
   prof_stop(pr);
 }

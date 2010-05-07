@@ -2,7 +2,7 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-#define SSE2_DOUBLE 1 // toggle to switch precision 
+#define SSE2_DOUBLE 0 // toggle to switch precision 
 #include "psc.h"
 
 // Kai's macros are much prettier (and a little faster) use them instead
