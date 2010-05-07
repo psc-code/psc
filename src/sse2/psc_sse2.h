@@ -2,18 +2,32 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-#define SSE2_FLOAT  // (or SSE2_DOUBLE) change this to switch between float and double sse2 
+#define SSE2_DOUBLE 1 // toggle to switch precision 
+#include "psc.h"
 
-#define FORT_FIELD(T,l,j,k) (float)psc.f_fields[(T)][((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]*psc.img[1])]
+// Kai's macros are much prettier (and a little faster) use them instead
 
-#define C_FIELD(T,l,j,k) sse2->fields[(T)*psc.fld_size + ((l)-psc.ilo[0]+psc.ibn[0]) + ((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]*psc.img[1])]
+#if 1
+
+#define CF3(fldnr, jx,jy,jz)			\
+  (sse2->fields[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
+
+#else
+//out of range debugging
+#define CF3(fldnr, jx,jy,jz)						\
+  (*({int off = FF3_OFF(jx,jy,jz);					\
+      assert(off >= 0);							\
+      assert(off < psc.fld_size);					\
+      &(sse2->fields[(fldnr)*psc.fld_size + off]);					\
+    }))
+
+#endif
+
 
 #include <assert.h>
 #include <xmmintrin.h>
 #include <emmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
-
-#include "psc.h"
 
 #include "sse2_cgen.h"
 
