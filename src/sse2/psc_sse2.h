@@ -50,6 +50,11 @@ typedef union packed_vector pvReal;
 
 typedef union packed_int pvInt;
 
+struct particle_vec{
+  union packed_vector xi, yi, zi;
+  union packed_vector pxi, pyi, pzi;
+  union packed_vector qni, mni, wni;
+};
 
 void sse2_push_part_yz_a();
 void sse2_push_part_yz_b();

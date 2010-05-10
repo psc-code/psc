@@ -45,42 +45,42 @@ union packed_int{
 
 #define LOAD_PART( source, loop_iter ) {		\
   							\
-    xi.v[0] = source->part[loop_iter].xi;		\
-    yi.v[0] = source->part[loop_iter].yi;		\
-    zi.v[0] = source->part[loop_iter].zi;		\
-    pxi.v[0] = source->part[loop_iter].pxi;		\
-    pyi.v[0] = source->part[loop_iter].pyi;		\
-    pzi.v[0] = source->part[loop_iter].pzi;		\
-    qni.v[0] = source->part[loop_iter].qni;		\
-    mni.v[0] = source->part[loop_iter].mni;		\
-    wni.v[0] = source->part[loop_iter].wni;		\
+    p.xi.v[0] = source->part[loop_iter].xi;		\
+    p.yi.v[0] = source->part[loop_iter].yi;		\
+    p.zi.v[0] = source->part[loop_iter].zi;		\
+    p.pxi.v[0] = source->part[loop_iter].pxi;		\
+    p.pyi.v[0] = source->part[loop_iter].pyi;		\
+    p.pzi.v[0] = source->part[loop_iter].pzi;		\
+    p.qni.v[0] = source->part[loop_iter].qni;		\
+    p.mni.v[0] = source->part[loop_iter].mni;		\
+    p.wni.v[0] = source->part[loop_iter].wni;		\
 							\
-    xi.v[1] = source->part[loop_iter + 1].xi;		\
-    yi.v[1] = source->part[loop_iter + 1].yi;		\
-    zi.v[1] = source->part[loop_iter + 1].zi;		\
-    pxi.v[1] = source->part[loop_iter + 1].pxi;		\
-    pyi.v[1] = source->part[loop_iter + 1].pyi;		\
-    pzi.v[1] = source->part[loop_iter + 1].pzi;		\
-    qni.v[1] = source->part[loop_iter + 1].qni;		\
-    mni.v[1] = source->part[loop_iter + 1].mni;		\
-    wni.v[1] = source->part[loop_iter + 1].wni;		\
+    p.xi.v[1] = source->part[loop_iter + 1].xi;		\
+    p.yi.v[1] = source->part[loop_iter + 1].yi;		\
+    p.zi.v[1] = source->part[loop_iter + 1].zi;		\
+    p.pxi.v[1] = source->part[loop_iter + 1].pxi;		\
+    p.pyi.v[1] = source->part[loop_iter + 1].pyi;		\
+    p.pzi.v[1] = source->part[loop_iter + 1].pzi;		\
+    p.qni.v[1] = source->part[loop_iter + 1].qni;		\
+    p.mni.v[1] = source->part[loop_iter + 1].mni;		\
+    p.wni.v[1] = source->part[loop_iter + 1].wni;		\
   }
 
 
 #define STORE_PART_XP(out, loop_iter) {		\
-  (out->part[loop_iter]).xi = xi.v[0];		\
-  (out->part[loop_iter]).yi = yi.v[0];		\
-  (out->part[loop_iter]).zi = zi.v[0];		\
-  (out->part[loop_iter]).pxi = pxi.v[0];	\
-  (out->part[loop_iter]).pyi = pyi.v[0];	\
-  (out->part[loop_iter]).pzi = pzi.v[0];	\
+  (out->part[loop_iter]).xi = p.xi.v[0];		\
+  (out->part[loop_iter]).yi = p.yi.v[0];		\
+  (out->part[loop_iter]).zi = p.zi.v[0];		\
+  (out->part[loop_iter]).pxi = p.pxi.v[0];	\
+  (out->part[loop_iter]).pyi = p.pyi.v[0];	\
+  (out->part[loop_iter]).pzi = p.pzi.v[0];	\
 						\
-  (out->part[loop_iter+1]).xi = xi.v[1];	\
-  (out->part[loop_iter+1]).yi = yi.v[1];	\
-  (out->part[loop_iter+1]).zi = zi.v[1];	\
-  (out->part[loop_iter+1]).pxi = pxi.v[1];	\
-  (out->part[loop_iter+1]).pyi = pyi.v[1];	\
-  (out->part[loop_iter+1]).pzi = pzi.v[1];	\
+  (out->part[loop_iter+1]).xi = p.xi.v[1];	\
+  (out->part[loop_iter+1]).yi = p.yi.v[1];	\
+  (out->part[loop_iter+1]).zi = p.zi.v[1];	\
+  (out->part[loop_iter+1]).pxi = p.pxi.v[1];	\
+  (out->part[loop_iter+1]).pyi = p.pyi.v[1];	\
+  (out->part[loop_iter+1]).pzi = p.pzi.v[1];	\
 						\
   }
 
@@ -181,75 +181,75 @@ union packed_int{
 
 #define LOAD_PART( source, loop_iter ) {		\
 							\
-    xi.v[0] = source->part[loop_iter].xi;		\
-    yi.v[0] = source->part[loop_iter].yi;		\
-    zi.v[0] = source->part[loop_iter].zi;		\
-    pxi.v[0] = source->part[loop_iter].pxi;		\
-    pyi.v[0] = source->part[loop_iter].pyi;		\
-    pzi.v[0] = source->part[loop_iter].pzi;		\
-    qni.v[0] = source->part[loop_iter].qni;		\
-    mni.v[0] = source->part[loop_iter].mni;		\
-    wni.v[0] = source->part[loop_iter].wni;		\
+    p.xi.v[0] = source->part[loop_iter].xi;		\
+    p.yi.v[0] = source->part[loop_iter].yi;		\
+    p.zi.v[0] = source->part[loop_iter].zi;		\
+    p.pxi.v[0] = source->part[loop_iter].pxi;		\
+    p.pyi.v[0] = source->part[loop_iter].pyi;		\
+    p.pzi.v[0] = source->part[loop_iter].pzi;		\
+    p.qni.v[0] = source->part[loop_iter].qni;		\
+    p.mni.v[0] = source->part[loop_iter].mni;		\
+    p.wni.v[0] = source->part[loop_iter].wni;		\
 							\
-    xi.v[1] = source->part[loop_iter + 1].xi;		\
-    yi.v[1] = source->part[loop_iter + 1].yi;		\
-    zi.v[1] = source->part[loop_iter + 1].zi;		\
-    pxi.v[1] = source->part[loop_iter + 1].pxi;		\
-    pyi.v[1] = source->part[loop_iter + 1].pyi;		\
-    pzi.v[1] = source->part[loop_iter + 1].pzi;		\
-    qni.v[1] = source->part[loop_iter + 1].qni;		\
-    mni.v[1] = source->part[loop_iter + 1].mni;		\
-    wni.v[1] = source->part[loop_iter + 1].wni;		\
+    p.xi.v[1] = source->part[loop_iter + 1].xi;		\
+    p.yi.v[1] = source->part[loop_iter + 1].yi;		\
+    p.zi.v[1] = source->part[loop_iter + 1].zi;		\
+    p.pxi.v[1] = source->part[loop_iter + 1].pxi;		\
+    p.pyi.v[1] = source->part[loop_iter + 1].pyi;		\
+    p.pzi.v[1] = source->part[loop_iter + 1].pzi;		\
+    p.qni.v[1] = source->part[loop_iter + 1].qni;		\
+    p.mni.v[1] = source->part[loop_iter + 1].mni;		\
+    p.wni.v[1] = source->part[loop_iter + 1].wni;		\
 							\
-    xi.v[2] = source->part[loop_iter + 2].xi;		\
-    yi.v[2] = source->part[loop_iter + 2].yi;		\
-    zi.v[2] = source->part[loop_iter + 2].zi;		\
-    pxi.v[2] = source->part[loop_iter + 2].pxi;		\
-    pyi.v[2] = source->part[loop_iter + 2].pyi;		\
-    pzi.v[2] = source->part[loop_iter + 2].pzi;		\
-    qni.v[2] = source->part[loop_iter + 2].qni;		\
-    mni.v[2] = source->part[loop_iter + 2].mni;		\
-    wni.v[2] = source->part[loop_iter + 2].wni;		\
+    p.xi.v[2] = source->part[loop_iter + 2].xi;		\
+    p.yi.v[2] = source->part[loop_iter + 2].yi;		\
+    p.zi.v[2] = source->part[loop_iter + 2].zi;		\
+    p.pxi.v[2] = source->part[loop_iter + 2].pxi;		\
+    p.pyi.v[2] = source->part[loop_iter + 2].pyi;		\
+    p.pzi.v[2] = source->part[loop_iter + 2].pzi;		\
+    p.qni.v[2] = source->part[loop_iter + 2].qni;		\
+    p.mni.v[2] = source->part[loop_iter + 2].mni;		\
+    p.wni.v[2] = source->part[loop_iter + 2].wni;		\
 							\
-    xi.v[3] = source->part[loop_iter + 3].xi;		\
-    yi.v[3] = source->part[loop_iter + 3].yi;		\
-    zi.v[3] = source->part[loop_iter + 3].zi;		\
-    pxi.v[3] = source->part[loop_iter + 3].pxi;		\
-    pyi.v[3] = source->part[loop_iter + 3].pyi;		\
-    pzi.v[3] = source->part[loop_iter + 3].pzi;		\
-    qni.v[3] = source->part[loop_iter + 3].qni;		\
-    mni.v[3] = source->part[loop_iter + 3].mni;		\
-    wni.v[3] = source->part[loop_iter + 3].wni;		\
+    p.xi.v[3] = source->part[loop_iter + 3].xi;		\
+    p.yi.v[3] = source->part[loop_iter + 3].yi;		\
+    p.zi.v[3] = source->part[loop_iter + 3].zi;		\
+    p.pxi.v[3] = source->part[loop_iter + 3].pxi;		\
+    p.pyi.v[3] = source->part[loop_iter + 3].pyi;		\
+    p.pzi.v[3] = source->part[loop_iter + 3].pzi;		\
+    p.qni.v[3] = source->part[loop_iter + 3].qni;		\
+    p.mni.v[3] = source->part[loop_iter + 3].mni;		\
+    p.wni.v[3] = source->part[loop_iter + 3].wni;		\
   }
 
 #define STORE_PART_XP(out, loop_iter) {		\
-  (out->part[loop_iter]).xi = xi.v[0];		\
-  (out->part[loop_iter]).yi = yi.v[0];		\
-  (out->part[loop_iter]).zi = zi.v[0];		\
-  (out->part[loop_iter]).pxi = pxi.v[0];	\
-  (out->part[loop_iter]).pyi = pyi.v[0];	\
-  (out->part[loop_iter]).pzi = pzi.v[0];	\
+  (out->part[loop_iter]).xi = p.xi.v[0];		\
+  (out->part[loop_iter]).yi = p.yi.v[0];		\
+  (out->part[loop_iter]).zi = p.zi.v[0];		\
+  (out->part[loop_iter]).pxi = p.pxi.v[0];	\
+  (out->part[loop_iter]).pyi = p.pyi.v[0];	\
+  (out->part[loop_iter]).pzi = p.pzi.v[0];	\
 						\
-  (out->part[loop_iter+1]).xi = xi.v[1];	\
-  (out->part[loop_iter+1]).yi = yi.v[1];	\
-  (out->part[loop_iter+1]).zi = zi.v[1];	\
-  (out->part[loop_iter+1]).pxi = pxi.v[1];	\
-  (out->part[loop_iter+1]).pyi = pyi.v[1];	\
-  (out->part[loop_iter+1]).pzi = pzi.v[1];	\
+  (out->part[loop_iter+1]).xi = p.xi.v[1];	\
+  (out->part[loop_iter+1]).yi = p.yi.v[1];	\
+  (out->part[loop_iter+1]).zi = p.zi.v[1];	\
+  (out->part[loop_iter+1]).pxi = p.pxi.v[1];	\
+  (out->part[loop_iter+1]).pyi = p.pyi.v[1];	\
+  (out->part[loop_iter+1]).pzi = p.pzi.v[1];	\
 						\
-  (out->part[loop_iter+2]).xi = xi.v[2];	\
-  (out->part[loop_iter+2]).yi = yi.v[2];	\
-  (out->part[loop_iter+2]).zi = zi.v[2];	\
-  (out->part[loop_iter+2]).pxi = pxi.v[2];	\
-  (out->part[loop_iter+2]).pyi = pyi.v[2];	\
-  (out->part[loop_iter+2]).pzi = pzi.v[2];	\
+  (out->part[loop_iter+2]).xi = p.xi.v[2];	\
+  (out->part[loop_iter+2]).yi = p.yi.v[2];	\
+  (out->part[loop_iter+2]).zi = p.zi.v[2];	\
+  (out->part[loop_iter+2]).pxi = p.pxi.v[2];	\
+  (out->part[loop_iter+2]).pyi = p.pyi.v[2];	\
+  (out->part[loop_iter+2]).pzi = p.pzi.v[2];	\
 						\
-  (out->part[loop_iter+3]).xi = xi.v[3];	\
-  (out->part[loop_iter+3]).yi = yi.v[3];	\
-  (out->part[loop_iter+3]).zi = zi.v[3];	\
-  (out->part[loop_iter+3]).pxi = pxi.v[3];	\
-  (out->part[loop_iter+3]).pyi = pyi.v[3];	\
-  (out->part[loop_iter+3]).pzi = pzi.v[3];	\
+  (out->part[loop_iter+3]).xi = p.xi.v[3];	\
+  (out->part[loop_iter+3]).yi = p.yi.v[3];	\
+  (out->part[loop_iter+3]).zi = p.zi.v[3];	\
+  (out->part[loop_iter+3]).pxi = p.pxi.v[3];	\
+  (out->part[loop_iter+3]).pyi = p.pyi.v[3];	\
+  (out->part[loop_iter+3]).pzi = p.pzi.v[3];	\
   }
 
 // The below is here because I'd like to try and generalize it to any 2D plane
