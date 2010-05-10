@@ -21,6 +21,10 @@ init_vec_numbers() {
   ione.r = pv_int_SET1(1);			
 }
 
+#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+
 static inline void // Root used to update p2X, so need to have it
 calc_vi(struct particle_vec *p, pvReal *vxi, pvReal *vyi, pvReal *vzi, pvReal *root){
   pvReal tmpx, tmpy, tmpz, roottmp;
@@ -500,6 +504,14 @@ sse2_push_part_yz()
     memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
   }  
 
+  // I don't like allocating these, but I think they could potentially be
+  // too big to declare statically. If I'm wrong, having them be static will give
+  // a nice performance boost
+  sse2_real *s_jxi, *s_jyi, *s_jzi;
+  s_jxi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+  s_jyi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+  s_jzi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+  
   //Set vector forms of numbers 1, 0.5, etc
   init_vec_numbers();
 
@@ -538,7 +550,7 @@ sse2_push_part_yz()
 // Bringing in particle specific parameters
     
     struct particle_vec p;
-    //    pvReal pxi, pyi, pzi, xi, yi, zi, qni, mni, wni;  
+
     LOAD_PART(sse2,n); 
 
     // Locals for computation      
@@ -855,14 +867,25 @@ sse2_push_part_yz()
 	wz.r = pv_real_MUL(fnqz.r, wz.r);
 	jzh[l2i].r = pv_real_SUB(jzh[l2i].r, wz.r);
 	
-	for(int p = 0; p < VEC_SIZE; p++){
-	  CF3(JXI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += wx.v[p]; //undo index adjustment of l(2,3)i
-	  CF3(JYI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jyh.v[p]; //undo index adjustment of l(2,3)i
-    	  CF3(JZI,j1.v[p],j2.v[p] + l2i - 2, j3.v[p] + l3i -2) += jzh[l2i].v[p]; //undo index adjustment of l(2,3)i
+	for(int m = 0; m < VEC_SIZE; m++){
+	  JSX(j2.v[m] + l2i - 2, j3.v[m] + l3i - 2) += wx.v[m]; //undo index adjustment of l(2,3)i
+	  JSY(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jyh.v[m]; //undo index adjustment of l(2,3)i
+    	  JSZ(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jzh[l2i].v[m]; //undo index adjustment of l(2
     	}
       }
     }   
   }
   
+  for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
+    for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
+      CF3(JXI,psc.ilo[0]+1,iy,iz) = JSX(iy, iz);
+      CF3(JYI,psc.ilo[0]+1,iy,iz) = JSY(iy, iz);
+      CF3(JZI,psc.ilo[0]+1,iy,iz) = JSZ(iy, iz);
+    }
+  }
+  free(s_jxi);
+  free(s_jyi);
+  free(s_jzi);
+
   prof_stop(pr);
 }
