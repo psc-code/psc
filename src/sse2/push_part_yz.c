@@ -20,6 +20,7 @@ init_vec_numbers() {
   third.r = pv_real_SET1(1./3.);		
   ione.r = pv_int_SET1(1);			
 }
+  
 
 #define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
 #define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
@@ -270,17 +271,31 @@ sse2_push_part_yz_a()
   yl.r = pv_real_MUL(half.r, dt.r);
   zl.r = pv_real_MUL(half.r, dt.r);
 
+  int elements = VEC_SIZE;
 
-  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
-  
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+    int part_left = psc.n_part - n;
+    if((part_left < VEC_SIZE) && (part_left != 0)){
+      elements = part_left;
+    }
 
 //---------------------------------------------
 // Bringing in particle specific parameters
     
     struct particle_vec p;
- 
-    LOAD_PART(sse2,n); 
+
+    for(int m=0; m < elements; m++){
+      p.xi.v[m] = sse2->part[n+m].xi;
+      p.yi.v[m] = sse2->part[n+m].yi;
+      p.zi.v[m] = sse2->part[n+m].zi;
+      p.pxi.v[m] = sse2->part[n+m].pxi;
+      p.pyi.v[m] = sse2->part[n+m].pyi;
+      p.pzi.v[m] = sse2->part[n+m].pzi;
+      p.qni.v[m] = sse2->part[n+m].qni;
+      p.mni.v[m] = sse2->part[n+m].mni;
+      p.wni.v[m] = sse2->part[n+m].wni;
+    }
+
 
     // Locals for computation      
     pvReal vxi, vyi, vzi, root;
@@ -293,7 +308,15 @@ sse2_push_part_yz_a()
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
     
-    STORE_PART_XP(sse2,n);
+    for(int m=0; m<elements; m++){
+      (sse2->part[n+m]).xi = p.xi.v[m];		
+      (sse2->part[n+m]).yi = p.yi.v[m];		
+      (sse2->part[n+m]).zi = p.zi.v[m];		
+      (sse2->part[n+m]).pxi = p.pxi.v[m];	
+      (sse2->part[n+m]).pyi = p.pyi.v[m];     
+      (sse2->part[n+m]).pzi = p.pzi.v[m];	
+    }
+
   }
   prof_stop(pr);
 }
@@ -339,18 +362,34 @@ sse2_push_part_yz_b()
   yl.r = pv_real_MUL(half.r, dt.r);
   zl.r = pv_real_MUL(half.r, dt.r);
 
-
-  //  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
+  int elements = VEC_SIZE;
   
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+    
+    // This little ditty basically allows padding of the vector when it runs out of particles
+    int part_left = psc.n_part - n;
+    if((part_left < VEC_SIZE) && (part_left != 0)){
+      elements = part_left;
+    }
+
+
 
 //---------------------------------------------
 // Bringing in particle specific parameters
 
     struct particle_vec p;
-    //    pvReal pxi, pyi, pzi, xi, yi, zi, qni, mni, wni; 
  
-    LOAD_PART(sse2,n); 
+    for(int m=0; m < elements; m++){
+      p.xi.v[m] = sse2->part[n+m].xi;
+      p.yi.v[m] = sse2->part[n+m].yi;
+      p.zi.v[m] = sse2->part[n+m].zi;
+      p.pxi.v[m] = sse2->part[n+m].pxi;
+      p.pyi.v[m] = sse2->part[n+m].pyi;
+      p.pzi.v[m] = sse2->part[n+m].pzi;
+      p.qni.v[m] = sse2->part[n+m].qni;
+      p.mni.v[m] = sse2->part[n+m].mni;
+      p.wni.v[m] = sse2->part[n+m].wni;
+    }
 
     // Locals for computation      
     pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
@@ -368,7 +407,7 @@ sse2_push_part_yz_b()
     tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
     tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
     
-    for(int m = 0; m < VEC_SIZE; m++){
+    for(int m = 0; m < elements; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
     }
 
@@ -468,14 +507,23 @@ sse2_push_part_yz_b()
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
-    STORE_PART_XP(sse2,n);
+
+    for(int m=0; m<elements; m++){
+      (sse2->part[n+m]).xi = p.xi.v[m];		
+      (sse2->part[n+m]).yi = p.yi.v[m];		
+      (sse2->part[n+m]).zi = p.zi.v[m];		
+      (sse2->part[n+m]).pxi = p.pxi.v[m];	
+      (sse2->part[n+m]).pyi = p.pyi.v[m];     
+      (sse2->part[n+m]).pzi = p.pzi.v[m];	
+    }
+
 
     tmpx.r = pv_real_SUB(root.r, ones.r);
     tmpx.r = pv_real_DIV(tmpx.r, eta.r);
     tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
     tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
 
-    for(int m = 0; m < VEC_SIZE; m++){
+    for(int m = 0; m < elements; m++){
       psc.p2B += tmpx.v[m]; //What's this for?
     }
 
@@ -542,16 +590,34 @@ sse2_push_part_yz()
   fnqys.r = pv_real_SET1(fnqysfl);
   fnqzs.r = pv_real_SET1(fnqzsfl);
 
-  assert(psc.n_part % VEC_SIZE == 0); // Haven't implemented any padding yet
-  
+  int elements = VEC_SIZE;
+
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+
+    // Check if we're padding
+    int part_left = psc.n_part - n;
+    if((part_left < VEC_SIZE) && (part_left != 0)){
+      elements = part_left;
+    }
+
 
 //---------------------------------------------
 // Bringing in particle specific parameters
     
     struct particle_vec p;
+ 
+    for(int m=0; m < elements; m++){
+      p.xi.v[m] = sse2->part[n+m].xi;
+      p.yi.v[m] = sse2->part[n+m].yi;
+      p.zi.v[m] = sse2->part[n+m].zi;
+      p.pxi.v[m] = sse2->part[n+m].pxi;
+      p.pyi.v[m] = sse2->part[n+m].pyi;
+      p.pzi.v[m] = sse2->part[n+m].pzi;
+      p.qni.v[m] = sse2->part[n+m].qni;
+      p.mni.v[m] = sse2->part[n+m].mni;
+      p.wni.v[m] = sse2->part[n+m].wni;
+    }
 
-    LOAD_PART(sse2,n); 
 
     // Locals for computation      
     pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
@@ -569,7 +635,7 @@ sse2_push_part_yz()
     tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
     tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
     
-    for(int m = 0; m < VEC_SIZE; m++){
+    for(int m = 0; m < elements; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
     }
 
@@ -688,7 +754,15 @@ sse2_push_part_yz()
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
-    STORE_PART_XP(sse2,n);
+    for(int m=0; m < elements; m++){
+      (sse2->part[n+m]).xi = p.xi.v[m];		
+      (sse2->part[n+m]).yi = p.yi.v[m];		
+      (sse2->part[n+m]).zi = p.zi.v[m];		
+      (sse2->part[n+m]).pxi = p.pxi.v[m];	
+      (sse2->part[n+m]).pyi = p.pyi.v[m];     
+      (sse2->part[n+m]).pzi = p.pzi.v[m];	
+    }
+
 
 // CHECKPOINT: PIC_push_part_yz.F : line 266
 // update number densities.
@@ -712,7 +786,7 @@ sse2_push_part_yz()
     //    some changes to the the local field structure and I'll worry 
     //    about it then.
 
-    for(int m=0; m < VEC_SIZE ; m++){ 
+    for(int m=0; m < elements ; m++){ 
       sse2_real fnq;
       // This may or may not work, and may or may not help
       sse2_real *densp; 
@@ -767,7 +841,7 @@ sse2_push_part_yz()
     pvInt shifty, shiftz;
     shifty.r = pv_int_SUB(k2.r,j2.r);
     shiftz.r = pv_int_SUB(k3.r,j3.r);
-    for(int p=0; p < VEC_SIZE; p++){
+    for(int p=0; p < elements; p++){
       s1y[shifty.v[p] + 1].v[p] = gmy.v[p];
       s1y[shifty.v[p] + 2].v[p] = gOy.v[p];
       s1y[shifty.v[p] + 3].v[p] = gly.v[p];
@@ -789,7 +863,7 @@ sse2_push_part_yz()
     int l3min = 1;
     int l3max = 4;
     
-    for(int p = 0; p < VEC_SIZE; p++){
+    for(int p = 0; p < elements; p++){
       if(k2.v[p]==j2.v[p]){
 	s1y[0].v[p] = 0.0;
 	s1y[4].v[p] = 0.0;
@@ -867,7 +941,7 @@ sse2_push_part_yz()
 	wz.r = pv_real_MUL(fnqz.r, wz.r);
 	jzh[l2i].r = pv_real_SUB(jzh[l2i].r, wz.r);
 	
-	for(int m = 0; m < VEC_SIZE; m++){
+	for(int m = 0; m < elements; m++){
 	  JSX(j2.v[m] + l2i - 2, j3.v[m] + l3i - 2) += wx.v[m]; //undo index adjustment of l(2,3)i
 	  JSY(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jyh.v[m]; //undo index adjustment of l(2,3)i
     	  JSZ(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jzh[l2i].v[m]; //undo index adjustment of l(2

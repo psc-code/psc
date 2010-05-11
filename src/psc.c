@@ -169,6 +169,25 @@ psc_setup_particles_1()
 }
 
 void
+psc_setup_particles_random_yz()
+{
+  srand48(42.0);
+  for (int n = 0; n < psc.n_part; n++) {
+    psc.f_part[n].xi = .5;
+    psc.f_part[n].yi = psc.ilo[1] + (psc.ihi[1] - psc.ilo[1])*drand48();
+    psc.f_part[n].zi = psc.ilo[2] + (psc.ihi[2] - psc.ilo[2])*drand48();;
+    psc.f_part[n].pxi = 0.;
+    psc.f_part[n].pyi = .02;
+    psc.f_part[n].pzi = .01;
+    psc.f_part[n].qni = -1.;
+    psc.f_part[n].mni = 1.;
+    psc.f_part[n].lni = 0.;
+    psc.f_part[n].wni = 1.;
+  }
+}
+
+
+void
 psc_dump_particles(const char *fname)
 {
   printf("psc_dump_particles %s\n", fname);
@@ -341,7 +360,7 @@ void
 psc_create_test_1(const char *ops_name)
 {
   int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 1, 8, 8 };
+  int ihi[3] = { 1, 20, 20 };
   int ibn[3] = { 2, 2, 2 }; // FIXME?
 
   int n_part = 1e6;
@@ -372,4 +391,25 @@ psc_create_test_2(const char *ops_name)
   psc_setup_parameters();
   psc_setup_fields_1();
   psc_setup_particles_1();
+}
+
+// ----------------------------------------------------------------------
+// psc_create_test_3
+//
+// A test case with a slightly more realistic setup
+
+void
+psc_create_test_3(const char *ops_name)
+{
+  int ilo[3] = { 0, 0, 0 };
+  int ihi[3] = { 1, 200, 200 };
+  int ibn[3] = { 2, 2, 2 }; // FIXME?
+
+  int n_part = 4e6;
+
+  psc_create(ops_name);
+  psc_alloc(ilo, ihi, ibn, n_part);
+  psc_setup_parameters();
+  psc_setup_fields_1();
+  psc_setup_particles_random_yz();
 }
