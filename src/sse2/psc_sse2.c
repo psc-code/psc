@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 static void
 sse2_create()
@@ -37,6 +38,7 @@ sse2_particles_from_fortran()
     part->qni = f_part->qni;
     part->mni = f_part->mni;
     part->wni = f_part->wni;
+    assert(round(part->xi) == 1);
   }
 }
 

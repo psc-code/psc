@@ -29,7 +29,7 @@
 #include <emmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
 
-#include "sse2_cgen.h"
+#include "simd_wrap.h"
 
 struct sse2_particle {
   sse2_real xi, yi, zi;

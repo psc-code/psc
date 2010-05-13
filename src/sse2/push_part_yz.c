@@ -1,5 +1,5 @@
 #include "psc_sse2.h"
-#include "sse2_cgen.h"
+#include "simd_wrap.h"
 #include "profile/profile.h"
 #include <math.h>
 #include <assert.h>
@@ -7,243 +7,241 @@
 #include <string.h>
 
 
-
 pvReal ones, half, threefourths, onepfive, third;
 pvInt ione;
 
 static void 
 init_vec_numbers() {		
-  ones.r = pv_real_SET1(1.0);			
-  half.r = pv_real_SET1(.5);			
-  onepfive.r = pv_real_SET1(1.5);		
-  threefourths.r = pv_real_SET1(.75);		
-  third.r = pv_real_SET1(1./3.);		
-  ione.r = pv_int_SET1(1);			
+  ones.r = pv_set1_real(1.0);			
+  half.r = pv_set1_real(.5);			
+  onepfive.r = pv_set1_real(1.5);		
+  threefourths.r = pv_set1_real(.75);		
+  third.r = pv_set1_real(1./3.);		
+  ione.r = pv_set1_int(1);			
 }
-  
 
 #define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
 #define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
 #define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
 
 static inline void // Root used to update p2X, so need to have it
-calc_vi(struct particle_vec *p, pvReal *vxi, pvReal *vyi, pvReal *vzi, pvReal *root){
+calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
+	pvReal * restrict vzi, pvReal * restrict root){
   pvReal tmpx, tmpy, tmpz, roottmp;
   
-  tmpx.r = pv_real_MUL(p->pxi.r, p->pxi.r);
-  tmpy.r = pv_real_MUL(p->pyi.r, p->pyi.r);
-  tmpz.r = pv_real_MUL(p->pzi.r, p->pzi.r);
+  tmpx.r = pv_mul_real(p->pxi.r, p->pxi.r);
+  tmpy.r = pv_mul_real(p->pyi.r, p->pyi.r);
+  tmpz.r = pv_mul_real(p->pzi.r, p->pzi.r);
   
-  tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
-  tmpz.r = pv_real_ADD(ones.r, tmpz.r);
-  tmpx.r = pv_real_ADD(tmpx.r, tmpz.r);
-  root->r = pv_real_SQRT(tmpx.r);
-  roottmp.r = pv_real_DIV(ones.r, root->r);  //this avoids unneccessary DIVs, which 
-                                             // have a very high latency
-
-  vxi->r = pv_real_MUL(p->pxi.r, roottmp.r);
-  vyi->r = pv_real_MUL(p->pyi.r, roottmp.r);
-  vzi->r = pv_real_MUL(p->pzi.r, roottmp.r);
+  tmpx.r = pv_add_real(tmpx.r, tmpy.r);
+  tmpz.r = pv_add_real(ones.r, tmpz.r);
+  tmpx.r = pv_add_real(tmpx.r, tmpz.r);
+  root->r = pv_sqrt_real(tmpx.r);
+  roottmp.r = pv_div_real(ones.r, root->r);
+                                             
+  vxi->r = pv_mul_real(p->pxi.r, roottmp.r);
+  vyi->r = pv_mul_real(p->pyi.r, roottmp.r);
+  vzi->r = pv_mul_real(p->pzi.r, roottmp.r);
 }
 
 static inline void
 push_xi_halfdt(struct particle_vec *p, pvReal *vyi, pvReal *vzi, pvReal *yl, pvReal *zl){
   pvReal tmpy, tmpz;
-  tmpy.r = pv_real_MUL(vyi->r, yl->r);
-  tmpz.r = pv_real_MUL(vzi->r, zl->r);
-  p->yi.r = pv_real_ADD(p->yi.r, tmpy.r);
-  p->zi.r = pv_real_ADD(p->zi.r, tmpz.r);
+  tmpy.r = pv_mul_real(vyi->r, yl->r);
+  tmpz.r = pv_mul_real(vzi->r, zl->r);
+  p->yi.r = pv_add_real(p->yi.r, tmpy.r);
+  p->zi.r = pv_add_real(p->zi.r, tmpz.r);
 }
 
 // Finds index using C99 round
 static inline void
-find_index_Cround(pvReal *xi, pvReal *dxi, pvInt *j, pvReal *h){
+find_index_Cround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
   pvReal tmp;
-  tmp.r = pv_real_MUL(xi->r, dxi->r);
+  tmp.r = pv_mul_real(xi->r, dxi->r);
   for(int m = 0; m < VEC_SIZE; m++){
       j->v[m] = round(tmp.v[m]);
   }
-  h->r = pv_int_to_real_CVT(j->r);
-  h->r = pv_real_SUB(h->r, tmp.r);
+  h->r = pv_cvt_int_to_real(j->r);
+  h->r = pv_sub_real(h->r, tmp.r);
 }
 
 // Finds index using intrinsic round
 static inline void
-find_index_Iround(pvReal *xi, pvReal *dxi, pvInt *j, pvReal *h){
+find_index_Iround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
   pvReal tmp;
-  tmp.r = pv_real_MUL(xi->r, dxi->r);
-  j->r = pv_real_to_int_CVT(tmp.r);
-  h->r = pv_int_to_real_CVT(j->r);
-  h->r = pv_real_SUB(h->r, tmp.r);
+  tmp.r = pv_mul_real(xi->r, dxi->r);
+  j->r = pv_cvt_real_to_int(tmp.r);
+  h->r = pv_cvt_int_to_real(j->r);
+  h->r = pv_sub_real(h->r, tmp.r);
 }
 
 static inline void
-find_index_minus_shift(pvReal *xi, pvReal *dxi, pvInt *j, pvReal *h, pvReal *shift){
+find_index_minus_shift(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h, pvReal *shift){
   pvReal tmp;
-  tmp.r = pv_real_MUL(xi->r, dxi->r);
-  tmp.r = pv_real_SUB(tmp.r, shift->r);
-  j->r = pv_real_to_int_CVT(tmp.r);
-  h->r = pv_int_to_real_CVT(j->r);
-  h->r = pv_real_SUB(h->r, tmp.r);
+  tmp.r = pv_mul_real(xi->r, dxi->r);
+  tmp.r = pv_sub_real(tmp.r, shift->r);
+  j->r = pv_cvt_real_to_int(tmp.r);
+  h->r = pv_cvt_int_to_real(j->r);
+  h->r = pv_sub_real(h->r, tmp.r);
 }
 
 static inline void
-ip_to_grid_m(pvReal *h, pvReal *xmx){
-  xmx->r = pv_real_ADD(half.r, h->r);
-  xmx->r = pv_real_MUL(xmx->r, xmx->r);
-  xmx->r = pv_real_MUL(half.r, xmx->r);
+ip_to_grid_m(pvReal *h, pvReal * restrict xmx){
+  xmx->r = pv_add_real(half.r, h->r);
+  xmx->r = pv_mul_real(xmx->r, xmx->r);
+  xmx->r = pv_mul_real(half.r, xmx->r);
 }
 
 static inline void
-ip_to_grid_O(pvReal *h, pvReal *xOx){
-  xOx->r = pv_real_MUL(h->r, h->r);
-  xOx->r = pv_real_SUB(threefourths.r, xOx->r);
+ip_to_grid_O(pvReal *h, pvReal * restrict xOx){
+  xOx->r = pv_mul_real(h->r, h->r);
+  xOx->r = pv_sub_real(threefourths.r, xOx->r);
 }
 
 static inline void
-ip_to_grid_l(pvReal *h, pvReal *xlx){
-  xlx->r = pv_real_SUB(half.r, h->r);
-  xlx->r = pv_real_MUL(xlx->r, xlx->r);
-  xlx->r = pv_real_MUL(half.r, xlx->r);
+ip_to_grid_l(pvReal *h, pvReal * restrict xlx){
+  xlx->r = pv_sub_real(half.r, h->r);
+  xlx->r = pv_mul_real(xlx->r, xlx->r);
+  xlx->r = pv_mul_real(half.r, xlx->r);
 }
 
 static inline void
-form_factor_m(pvReal *h, pvReal *xmx){
-  xmx->r = pv_real_SUB(h->r,ones.r);
-  xmx->r = pv_real_ADD(onepfive.r, xmx->r); // h-1 always <0
-  xmx->r = pv_real_MUL(xmx->r, xmx->r);
-  xmx->r = pv_real_MUL(half.r, xmx->r);
+form_factor_m(pvReal *h, pvReal * restrict xmx){
+  xmx->r = pv_sub_real(h->r,ones.r);
+  xmx->r = pv_add_real(onepfive.r, xmx->r); // h-1 always <0
+  xmx->r = pv_mul_real(xmx->r, xmx->r);
+  xmx->r = pv_mul_real(half.r, xmx->r);
 }
 
 static inline void
-form_factor_O(pvReal *h, pvReal *xOx){
-  xOx->r = pv_real_MUL(h->r, h->r);
-  xOx->r = pv_real_SUB(threefourths.r, xOx->r);
+form_factor_O(pvReal *h, pvReal * restrict xOx){
+  xOx->r = pv_mul_real(h->r, h->r);
+  xOx->r = pv_sub_real(threefourths.r, xOx->r);
 }
 
 static inline void
-form_factor_l(pvReal *h, pvReal *xlx){
-  xlx->r = pv_real_ADD(ones.r, h->r); 
-  xlx->r = pv_real_SUB(onepfive.r, xlx->r);//h+1 always >0
-  xlx->r = pv_real_MUL(xlx->r, xlx->r);
-  xlx->r = pv_real_MUL(half.r, xlx->r);
+form_factor_l(pvReal *h, pvReal * restrict xlx){
+  xlx->r = pv_add_real(ones.r, h->r); 
+  xlx->r = pv_sub_real(onepfive.r, xlx->r);//h+1 always >0
+  xlx->r = pv_mul_real(xlx->r, xlx->r);
+  xlx->r = pv_mul_real(half.r, xlx->r);
 }
 
 static void
-push_pi_dt(struct particle_vec *p,
-	   pvReal *exq, pvReal *eyq, pvReal *ezq,
-	   pvReal *bxq, pvReal *byq, pvReal *bzq,
-	   pvReal *dqs){
+push_pi_dt(struct particle_vec * p,
+	   pvReal * exq, pvReal * eyq,  pvReal * ezq,
+	   pvReal * bxq, pvReal * byq,  pvReal * bzq,
+	   pvReal * dqs){
 
   pvReal tmpx, tmpy, tmpz, root;
   // Half step momentum  with E-field
 
   pvReal dq, dqex, dqey, dqez;
-  dq.r = pv_real_DIV(dqs->r, p->mni.r);
-  dq.r = pv_real_MUL(p->qni.r, dq.r);
+  dq.r = pv_div_real(dqs->r, p->mni.r);
+  dq.r = pv_mul_real(p->qni.r, dq.r);
   
-  dqex.r = pv_real_MUL(dq.r, exq->r);
-  dqey.r = pv_real_MUL(dq.r, eyq->r);
-  dqez.r = pv_real_MUL(dq.r, ezq->r);
+  dqex.r = pv_mul_real(dq.r, exq->r);
+  dqey.r = pv_mul_real(dq.r, eyq->r);
+  dqez.r = pv_mul_real(dq.r, ezq->r);
   
-  p->pxi.r = pv_real_ADD(p->pxi.r, dqex.r);
-  p->pyi.r = pv_real_ADD(p->pyi.r, dqey.r);
-  p->pzi.r = pv_real_ADD(p->pzi.r, dqez.r);
+  p->pxi.r = pv_add_real(p->pxi.r, dqex.r);
+  p->pyi.r = pv_add_real(p->pyi.r, dqey.r);
+  p->pzi.r = pv_add_real(p->pzi.r, dqez.r);
 
 
 // CHECKPOINT: PIC_push_part_yz.F : line 228
 // Rotate with B-field
   pvReal taux, tauy, tauz, txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
   
-  tmpx.r = pv_real_MUL(p->pxi.r, p->pxi.r);
-  tmpy.r = pv_real_MUL(p->pyi.r, p->pyi.r);
-  tmpz.r = pv_real_MUL(p->pzi.r, p->pzi.r);
-  root.r = pv_real_ADD(ones.r, tmpx.r);
-  tmpy.r = pv_real_ADD(tmpy.r, tmpz.r);
-  root.r = pv_real_ADD(root.r, tmpy.r);
-  root.r = pv_real_SQRT(root.r);
-  root.r = pv_real_DIV(dq.r, root.r);
+  tmpx.r = pv_mul_real(p->pxi.r, p->pxi.r);
+  tmpy.r = pv_mul_real(p->pyi.r, p->pyi.r);
+  tmpz.r = pv_mul_real(p->pzi.r, p->pzi.r);
+  root.r = pv_add_real(ones.r, tmpx.r);
+  tmpy.r = pv_add_real(tmpy.r, tmpz.r);
+  root.r = pv_add_real(root.r, tmpy.r);
+  root.r = pv_sqrt_real(root.r);
+  root.r = pv_div_real(dq.r, root.r);
 
-  taux.r = pv_real_MUL(bxq->r, root.r);
-  tauy.r = pv_real_MUL(byq->r, root.r);
-  tauz.r = pv_real_MUL(bzq->r, root.r);
+  taux.r = pv_mul_real(bxq->r, root.r);
+  tauy.r = pv_mul_real(byq->r, root.r);
+  tauz.r = pv_mul_real(bzq->r, root.r);
 
-  txx.r = pv_real_MUL(taux.r, taux.r);
-  tyy.r = pv_real_MUL(tauy.r, tauy.r);
-  tzz.r = pv_real_MUL(tauz.r, tauz.r);
-  t2xy.r = pv_real_MUL(taux.r, tauy.r);
-  t2xz.r = pv_real_MUL(taux.r, tauz.r);
-  t2yz.r = pv_real_MUL(tauy.r, tauz.r);
-  t2xy.r = pv_real_ADD(t2xy.r, t2xy.r);
-  t2xz.r = pv_real_ADD(t2xz.r, t2xz.r);
-  t2yz.r = pv_real_ADD(t2yz.r, t2yz.r);
+  txx.r = pv_mul_real(taux.r, taux.r);
+  tyy.r = pv_mul_real(tauy.r, tauy.r);
+  tzz.r = pv_mul_real(tauz.r, tauz.r);
+  t2xy.r = pv_mul_real(taux.r, tauy.r);
+  t2xz.r = pv_mul_real(taux.r, tauz.r);
+  t2yz.r = pv_mul_real(tauy.r, tauz.r);
+  t2xy.r = pv_add_real(t2xy.r, t2xy.r);
+  t2xz.r = pv_add_real(t2xz.r, t2xz.r);
+  t2yz.r = pv_add_real(t2yz.r, t2yz.r);
 
   pvReal tau;
 
-  tau.r = pv_real_ADD(ones.r, txx.r);
-  tmpx.r = pv_real_ADD(tyy.r, tzz.r);
-  tau.r = pv_real_ADD(tau.r, tmpx.r);
-  tau.r = pv_real_DIV(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
+  tau.r = pv_add_real(ones.r, txx.r);
+  tmpx.r = pv_add_real(tyy.r, tzz.r);
+  tau.r = pv_add_real(tau.r, tmpx.r);
+  tau.r = pv_div_real(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
     
   //Never use tau_ without a two in front
-  taux.r = pv_real_ADD(taux.r, taux.r);
-  tauy.r = pv_real_ADD(tauy.r, tauy.r);
-  tauz.r = pv_real_ADD(tauz.r, tauz.r);
+  taux.r = pv_add_real(taux.r, taux.r);
+  tauy.r = pv_add_real(tauy.r, tauy.r);
+  tauz.r = pv_add_real(tauz.r, tauz.r);
     
   //pxp
-  tmpx.r = pv_real_ADD(ones.r, txx.r);
-  tmpx.r = pv_real_SUB(tmpx.r, tyy.r);
-  tmpx.r = pv_real_SUB(tmpx.r, tzz.r);
-  tmpx.r = pv_real_MUL(tmpx.r, p->pxi.r);
+  tmpx.r = pv_add_real(ones.r, txx.r);
+  tmpx.r = pv_sub_real(tmpx.r, tyy.r);
+  tmpx.r = pv_sub_real(tmpx.r, tzz.r);
+  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
     
-  tmpy.r = pv_real_ADD(t2xy.r, tauz.r);
-  tmpy.r = pv_real_MUL(tmpy.r, p->pyi.r);
+  tmpy.r = pv_add_real(t2xy.r, tauz.r);
+  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
 
-  tmpz.r = pv_real_SUB(t2xz.r, tauy.r);
-  tmpz.r = pv_real_MUL(tmpz.r, p->pzi.r);
+  tmpz.r = pv_sub_real(t2xz.r, tauy.r);
+  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
 
-  pxp.r = pv_real_ADD(tmpx.r, tmpy.r);
-  pxp.r = pv_real_ADD(pxp.r, tmpz.r);
-  pxp.r = pv_real_MUL(pxp.r, tau.r);
+  pxp.r = pv_add_real(tmpx.r, tmpy.r);
+  pxp.r = pv_add_real(pxp.r, tmpz.r);
+  pxp.r = pv_mul_real(pxp.r, tau.r);
     
   //pyp
-  tmpx.r = pv_real_SUB(t2xy.r, tauz.r);
-  tmpx.r = pv_real_MUL(tmpx.r, p->pxi.r);
+  tmpx.r = pv_sub_real(t2xy.r, tauz.r);
+  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
 
-  tmpy.r = pv_real_SUB(ones.r, txx.r);
-  tmpy.r = pv_real_ADD(tmpy.r, tyy.r);
-  tmpy.r = pv_real_SUB(tmpy.r, tzz.r);
-  tmpy.r = pv_real_MUL(tmpy.r, p->pyi.r);
+  tmpy.r = pv_sub_real(ones.r, txx.r);
+  tmpy.r = pv_add_real(tmpy.r, tyy.r);
+  tmpy.r = pv_sub_real(tmpy.r, tzz.r);
+  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
   
-  tmpz.r = pv_real_ADD(t2yz.r, taux.r);
-  tmpz.r = pv_real_MUL(tmpz.r, p->pzi.r);
+  tmpz.r = pv_add_real(t2yz.r, taux.r);
+  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
 
-  pyp.r = pv_real_ADD(tmpx.r, tmpy.r);
-  pyp.r = pv_real_ADD(pyp.r, tmpz.r);
-  pyp.r = pv_real_MUL(pyp.r, tau.r);
+  pyp.r = pv_add_real(tmpx.r, tmpy.r);
+  pyp.r = pv_add_real(pyp.r, tmpz.r);
+  pyp.r = pv_mul_real(pyp.r, tau.r);
    
   //pzp
-  tmpx.r = pv_real_ADD(t2xz.r, tauy.r);
-  tmpx.r = pv_real_MUL(tmpx.r, p->pxi.r);
+  tmpx.r = pv_add_real(t2xz.r, tauy.r);
+  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
 
-  tmpy.r = pv_real_SUB(t2yz.r, taux.r);
-  tmpy.r = pv_real_MUL(tmpy.r, p->pyi.r);
+  tmpy.r = pv_sub_real(t2yz.r, taux.r);
+  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
 
-  tmpz.r = pv_real_SUB(ones.r, txx.r);
-  tmpz.r = pv_real_SUB(tmpz.r, tyy.r);
-  tmpz.r = pv_real_ADD(tmpz.r, tzz.r);
-  tmpz.r = pv_real_MUL(tmpz.r, p->pzi.r);
+  tmpz.r = pv_sub_real(ones.r, txx.r);
+  tmpz.r = pv_sub_real(tmpz.r, tyy.r);
+  tmpz.r = pv_add_real(tmpz.r, tzz.r);
+  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
 
-  pzp.r = pv_real_ADD(tmpx.r, tmpy.r);
-  pzp.r = pv_real_ADD(pzp.r, tmpz.r);
-  pzp.r = pv_real_MUL(pzp.r, tau.r);
+  pzp.r = pv_add_real(tmpx.r, tmpy.r);
+  pzp.r = pv_add_real(pzp.r, tmpz.r);
+  pzp.r = pv_mul_real(pzp.r, tau.r);
 
 // CHECKPOINT: PIC_push_part_yz.F : line 244
 // Half step momentum  with E-field
 
-  p->pxi.r = pv_real_ADD(pxp.r, dqex.r);
-  p->pyi.r = pv_real_ADD(pyp.r, dqey.r);
-  p->pzi.r = pv_real_ADD(pzp.r, dqez.r);
+  p->pxi.r = pv_add_real(pxp.r, dqex.r);
+  p->pyi.r = pv_add_real(pyp.r, dqey.r);
+  p->pzi.r = pv_add_real(pzp.r, dqez.r);
 }
 
 
@@ -267,9 +265,9 @@ sse2_push_part_yz_a()
   pvReal dt, yl, zl;
   //FIXME: These are all stored as doubles in fortran!!
   sse2_real dtfl = psc.dt; 
-  dt.r = pv_real_SET1(dtfl);
-  yl.r = pv_real_MUL(half.r, dt.r);
-  zl.r = pv_real_MUL(half.r, dt.r);
+  dt.r = pv_set1_real(dtfl);
+  yl.r = pv_mul_real(half.r, dt.r);
+  zl.r = pv_mul_real(half.r, dt.r);
 
   int elements = VEC_SIZE;
 
@@ -342,25 +340,46 @@ sse2_push_part_yz_b()
   // Set vector forms of 1, 0.5, etc
   init_vec_numbers();
 
-  // Values that won't change from iteration to iteration
-  pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi; 
-  //FIXME: These are all stored as doubles in fortran!!
-  sse2_real dtfl = psc.dt; 
-  sse2_real etafl =  psc.prm.eta;
-  sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / etafl;
-  sse2_real dxifl = 1.0 / psc.dx[0];
-  sse2_real dyifl = 1.0 / psc.dx[1];
-  sse2_real dzifl = 1.0 / psc.dx[2];
-  sse2_real dqsfl = 0.5*etafl*dtfl;
-  dt.r = pv_real_SET1(dtfl);
-  eta.r = pv_real_SET1(etafl);
-  fnqs.r = pv_real_SET1(fnqsfl);
-  dqs.r = pv_real_SET1(dqsfl);
-  dxi.r = pv_real_SET1(dxifl);
-  dyi.r = pv_real_SET1(dyifl);
-  dzi.r = pv_real_SET1(dzifl);
-  yl.r = pv_real_MUL(half.r, dt.r);
-  zl.r = pv_real_MUL(half.r, dt.r);
+  //Vector versions of floating point parameters
+    pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs;
+    sse2_real dxifl = 1.0 / psc.dx[0];					
+    sse2_real dyifl = 1.0 / psc.dx[1];					
+    sse2_real dzifl = 1.0 / psc.dx[2];					
+    sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / psc.prm.eta;
+    sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;			
+    sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;			
+    sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;			
+    dt.r = pv_set1_real(psc.dt);					     
+    eta.r = pv_set1_real(psc.prm.eta);					
+    fnqs.r = pv_set1_real(fnqsfl);
+    dqs.r = pv_set1_real(0.5*psc.prm.eta*psc.dt);			    
+    dxi.r = pv_set1_real(dxifl);					
+    dyi.r = pv_set1_real(dyifl);					
+    dzi.r = pv_set1_real(dzifl);					
+    yl.r = pv_mul_real(half.r, dt.r);					
+    zl.r = pv_mul_real(half.r, dt.r);					
+    fnqxs.r = pv_set1_real(fnqxsfl);				       
+    fnqys.r = pv_set1_real(fnqysfl);					
+    fnqzs.r = pv_set1_real(fnqzsfl);			
+    
+    //Vector versions of integer parameters
+    pvInt ilg[3], img[3], fld_size;					
+    ilg[0].r = pv_set1_int(psc.ilg[0]);					
+    ilg[1].r = pv_set1_int(psc.ilg[1]);					
+    ilg[2].r = pv_set1_int(psc.ilg[2]);					
+    img[0].r = pv_set1_int(psc.img[0]);					
+    img[1].r = pv_set1_int(psc.img[1]);					
+    img[2].r = pv_set1_int(psc.img[2]);					
+    fld_size.r = pv_set1_int(psc.fld_size);				
+    					
+    // Assign pointers to fields assuming x is uniform
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; //FIXME: this assumes xi always rounds up to 1
+    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 1 - psc.ilg[0]];
+
 
   int elements = VEC_SIZE;
   
@@ -372,7 +391,7 @@ sse2_push_part_yz_b()
       elements = part_left;
     }
 
-
+    pvInt itemp1, itemp2;
 
 //---------------------------------------------
 // Bringing in particle specific parameters
@@ -402,10 +421,10 @@ sse2_push_part_yz_b()
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
-    tmpx.r = pv_real_SUB(root.r, ones.r);
-    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
-    tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
-    tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
+    tmpx.r = pv_sub_real(root.r, ones.r);
+    tmpx.r = pv_div_real(tmpx.r, eta.r);
+    tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
+    tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
     
     for(int m = 0; m < elements; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
@@ -418,17 +437,16 @@ sse2_push_part_yz_b()
 // Prepare for field interpolation
 
     // Apparently this can be done in vectors. A victory!
-    pvInt j1, j2, j3, l1, l2, l3;
+    pvInt j2, j3, l2, l3;
 
-    find_index_Cround(&(p.xi), &dxi, &j1, &h1);
     find_index_Iround(&(p.yi), &dyi, &j2, &h2);
     find_index_Iround(&(p.zi), &dzi, &j3, &h3);
 
     pvInt j2pls1, j2mns1, j3pls1, j3mns1;
-    j2pls1.r = pv_int_ADD(j2.r, ione.r);
-    j2mns1.r = pv_int_SUB(j2.r, ione.r);
-    j3pls1.r = pv_int_ADD(j3.r, ione.r);
-    j3mns1.r = pv_int_SUB(j3.r, ione.r);
+    j2pls1.r = pv_add_int(j2.r, ione.r);
+    j2mns1.r = pv_sub_int(j2.r, ione.r);
+    j3pls1.r = pv_add_int(j3.r, ione.r);
+    j3mns1.r = pv_sub_int(j3.r, ione.r);
 
 
     pvReal gmy, gmz, gOy, gOz, gly, glz;// NB: this is gO as in octogon instead of g0, 
@@ -449,16 +467,14 @@ sse2_push_part_yz_b()
 
 // CHECKPOINT: PIC_push_part_yz.F : line 143
 
-   
-    find_index_Cround(&(p.xi), &dxi, &l1, &h1);
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
 
     pvInt l2pls1, l2mns1, l3pls1, l3mns1;
-    l2pls1.r = pv_int_ADD(l2.r, ione.r);
-    l2mns1.r = pv_int_SUB(l2.r, ione.r);
-    l3pls1.r = pv_int_ADD(l3.r, ione.r);
-    l3mns1.r = pv_int_SUB(l3.r, ione.r);
+    l2pls1.r = pv_add_int(l2.r, ione.r);
+    l2mns1.r = pv_sub_int(l2.r, ione.r);
+    l3pls1.r = pv_add_int(l3.r, ione.r);
+    l3mns1.r = pv_sub_int(l3.r, ione.r);
 
     pvReal hmy, hmz, hOy, hOz, hly, hlz; // NB: this is hO as in octogon instead of h0, 
                                          // and hl as in library instead of h1.
@@ -487,14 +503,12 @@ sse2_push_part_yz_b()
     
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
-
-    INTERP_FIELD_YZ(EX,l1,j2,j3,g,g,exq);
-    INTERP_FIELD_YZ(EY,j1,l2,j3,g,h,eyq);
-    INTERP_FIELD_YZ(EZ,j1,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(BX,j1,l2,l3,h,h,bxq);
-    INTERP_FIELD_YZ(BY,l1,j2,l3,h,g,byq);
-    INTERP_FIELD_YZ(BZ,l1,l2,j3,g,h,bzq);
-
+    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
+    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_YZ(BX,l2,l3,h,h,bxq);
+    INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
+    INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
  
 // CHECKPOINT: PIC_push_part_yz.F : line 223
 
@@ -518,10 +532,10 @@ sse2_push_part_yz_b()
     }
 
 
-    tmpx.r = pv_real_SUB(root.r, ones.r);
-    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
-    tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
-    tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
+    tmpx.r = pv_sub_real(root.r, ones.r);
+    tmpx.r = pv_div_real(tmpx.r, eta.r);
+    tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
+    tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
 
     for(int m = 0; m < elements; m++){
       psc.p2B += tmpx.v[m]; //What's this for?
@@ -563,34 +577,53 @@ sse2_push_part_yz()
   //Set vector forms of numbers 1, 0.5, etc
   init_vec_numbers();
 
-  // Values that won't change from iteration to iteration
 
-  pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs; 
-  //FIXME: These are all stored as doubles in fortran!!
-  sse2_real dtfl = psc.dt; 
-  sse2_real etafl =  psc.prm.eta;
-  sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / etafl;
-  sse2_real dxifl = 1.0 / psc.dx[0];
-  sse2_real dyifl = 1.0 / psc.dx[1];
-  sse2_real dzifl = 1.0 / psc.dx[2];
-  sse2_real dqsfl = 0.5*etafl*dtfl;
-  sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;
-  sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;
-  sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;
-  dt.r = pv_real_SET1(dtfl);
-  eta.r = pv_real_SET1(etafl);
-  fnqs.r = pv_real_SET1(fnqsfl);
-  dqs.r = pv_real_SET1(dqsfl);
-  dxi.r = pv_real_SET1(dxifl);
-  dyi.r = pv_real_SET1(dyifl);
-  dzi.r = pv_real_SET1(dzifl);
-  yl.r = pv_real_MUL(half.r, dt.r);
-  zl.r = pv_real_MUL(half.r, dt.r);
-  fnqxs.r = pv_real_SET1(fnqxsfl);
-  fnqys.r = pv_real_SET1(fnqysfl);
-  fnqzs.r = pv_real_SET1(fnqzsfl);
+  //Vector versions of floating point parameters
+    pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs;
+    sse2_real dxifl = 1.0 / psc.dx[0];					
+    sse2_real dyifl = 1.0 / psc.dx[1];					
+    sse2_real dzifl = 1.0 / psc.dx[2];					
+    sse2_real fnqsfl = sqr(psc.prm.alpha) * psc.prm.cori / psc.prm.eta;
+    sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;			
+    sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;			
+    sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;			
+    dt.r = pv_set1_real(psc.dt);					     
+    eta.r = pv_set1_real(psc.prm.eta);					
+    fnqs.r = pv_set1_real(fnqsfl);
+    dqs.r = pv_set1_real(0.5*psc.prm.eta*psc.dt);			    
+    dxi.r = pv_set1_real(dxifl);					
+    dyi.r = pv_set1_real(dyifl);					
+    dzi.r = pv_set1_real(dzifl);					
+    yl.r = pv_mul_real(half.r, dt.r);					
+    zl.r = pv_mul_real(half.r, dt.r);					
+    fnqxs.r = pv_set1_real(fnqxsfl);				       
+    fnqys.r = pv_set1_real(fnqysfl);					
+    fnqzs.r = pv_set1_real(fnqzsfl);			
+    
+    //Vector versions of integer parameters
+    pvInt ilg[3], img[3], fld_size;					
+    ilg[0].r = pv_set1_int(psc.ilg[0]);					
+    ilg[1].r = pv_set1_int(psc.ilg[1]);					
+    ilg[2].r = pv_set1_int(psc.ilg[2]);					
+    img[0].r = pv_set1_int(psc.img[0]);					
+    img[1].r = pv_set1_int(psc.img[1]);					
+    img[2].r = pv_set1_int(psc.img[2]);					
+    fld_size.r = pv_set1_int(psc.fld_size);				
+    					
+    //Set up some pointers for fields assuming x is uniform
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; //FIXME: this assumes xi always rounds up to 1
+    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 1 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 1 - psc.ilg[0]];
 
-  int elements = VEC_SIZE;
+
+    //    sse2_real * restrict fpoint = sse2->fields; // This keyword is awesome. 
+                                                // One restrict and my laptop gets 
+                                                // a 5% performance boost
+    
+    int elements = VEC_SIZE;
 
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
 
@@ -620,8 +653,8 @@ sse2_push_part_yz()
 
 
     // Locals for computation      
-    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
-
+    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h2, h3;
+    pvInt itemp1, itemp2;
 // CHECKPOINT: PIC_push_part_yz.F : line 104
 // Start the computation
 // Half step positions with current momenta
@@ -630,10 +663,10 @@ sse2_push_part_yz()
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
-    tmpx.r = pv_real_SUB(root.r, ones.r);
-    tmpx.r = pv_real_DIV(tmpx.r, eta.r);
-    tmpy.r = pv_real_MUL(p.mni.r, fnqs.r);
-    tmpx.r = pv_real_MUL(tmpy.r, tmpx.r);
+    tmpx.r = pv_sub_real(root.r, ones.r);
+    tmpx.r = pv_div_real(tmpx.r, eta.r);
+    tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
+    tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
     
     for(int m = 0; m < elements; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
@@ -643,27 +676,26 @@ sse2_push_part_yz()
     pvReal s0y[5], s0z[5], s1y[5], s1z[5];
     // I'm a little scared to use memset here, though it would probably work...
     for(int m = 0; m < 5; m++){
-      s0y[m].r = pv_real_SET1(0.0);
-      s1y[m].r = pv_real_SET1(0.0);
-      s0z[m].r = pv_real_SET1(0.0);
-      s1z[m].r = pv_real_SET1(0.0);
+      s0y[m].r = pv_set1_real(0.0);
+      s1y[m].r = pv_set1_real(0.0);
+      s0z[m].r = pv_set1_real(0.0);
+      s1z[m].r = pv_set1_real(0.0);
     }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 119
 // Prepare for field interpolation
 
-    pvReal  H1, H2, H3;
-    pvInt j1, j2, j3, l1, l2, l3;
+    pvReal  H2, H3;
+    pvInt j2, j3, l2, l3;
 
-    find_index_Cround(&(p.xi), &dxi, &j1, &H1);
     find_index_Iround(&(p.yi), &dyi, &j2, &H2);
     find_index_Iround(&(p.zi), &dzi, &j3, &H3);
 
     pvInt j2pls1, j2mns1, j3pls1, j3mns1;
-    j2pls1.r = pv_int_ADD(j2.r, ione.r);
-    j2mns1.r = pv_int_SUB(j2.r, ione.r);
-    j3pls1.r = pv_int_ADD(j3.r, ione.r);
-    j3mns1.r = pv_int_SUB(j3.r, ione.r);
+    j2pls1.r = pv_add_int(j2.r, ione.r);
+    j2mns1.r = pv_sub_int(j2.r, ione.r);
+    j3pls1.r = pv_add_int(j3.r, ione.r);
+    j3mns1.r = pv_sub_int(j3.r, ione.r);
 
 
     pvReal gmy, gmz, gOy, gOz, gly, glz;// NB: this is gO as in octogon instead of g0, 
@@ -685,15 +717,14 @@ sse2_push_part_yz()
 
 // CHECKPOINT: PIC_push_part_yz.F : line 143
 
-    find_index_Cround(&(p.xi), &dxi, &l1, &h1);
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
     
     pvInt l2pls1, l2mns1, l3pls1, l3mns1;
-    l2pls1.r = pv_int_ADD(l2.r, ione.r);
-    l2mns1.r = pv_int_SUB(l2.r, ione.r);
-    l3pls1.r = pv_int_ADD(l3.r, ione.r);
-    l3mns1.r = pv_int_SUB(l3.r, ione.r);
+    l2pls1.r = pv_add_int(l2.r, ione.r);
+    l2mns1.r = pv_sub_int(l2.r, ione.r);
+    l3pls1.r = pv_add_int(l3.r, ione.r);
+    l3mns1.r = pv_sub_int(l3.r, ione.r);
     
     pvReal hmy, hmz, hOy, hOz, hly, hlz; // NB: this is hO as in octogon instead of h0, 
                                          // and hl as in library instead of h1.
@@ -722,12 +753,12 @@ sse2_push_part_yz()
     
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
-    INTERP_FIELD_YZ(EX,l1,j2,j3,g,g,exq);
-    INTERP_FIELD_YZ(EY,j1,l2,j3,g,h,eyq);
-    INTERP_FIELD_YZ(EZ,j1,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(BX,j1,l2,l3,h,h,bxq);
-    INTERP_FIELD_YZ(BY,l1,j2,l3,h,g,byq);
-    INTERP_FIELD_YZ(BZ,l1,l2,j3,g,h,bzq);
+    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
+    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_YZ(BX,l2,l3,h,h,bxq);
+    INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
+    INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
 
 
     // indexing here departs from FORTRAN a little bit
@@ -768,7 +799,6 @@ sse2_push_part_yz()
 // update number densities.
 
 #if 1
-    find_index_Cround(&(p.xi), &dxi, &l1, &h1);
     find_index_Iround(&(p.yi), &dyi, &l2, &h2);
     find_index_Iround(&(p.zi), &dzi, &l3, &h3);
 
@@ -791,15 +821,15 @@ sse2_push_part_yz()
       // This may or may not work, and may or may not help
       sse2_real *densp; 
       if (p.qni.v[m] < 0.0){
-	densp = &(sse2->fields[NE*psc.fld_size + l1.v[m] - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NE*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
       }
       else if (p.qni.v[m] > 0.0){
-	densp = &(sse2->fields[NI*psc.fld_size + l1.v[m] - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NI*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
       }
       else if (p.qni.v[m] == 0.0){
-	densp = &(sse2->fields[NN*psc.fld_size + l1.v[m] - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NN*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.wni.v[m] * fnqs.v[m];
       }
 #define DEN_FIELD(j,k) *(densp+((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]*psc.img[1]))
@@ -839,8 +869,8 @@ sse2_push_part_yz()
        
     // All the indices below have +2 compared to the FORTRAN for C array access
     pvInt shifty, shiftz;
-    shifty.r = pv_int_SUB(k2.r,j2.r);
-    shiftz.r = pv_int_SUB(k3.r,j3.r);
+    shifty.r = pv_sub_int(k2.r,j2.r);
+    shiftz.r = pv_sub_int(k3.r,j3.r);
     for(int p=0; p < elements; p++){
       s1y[shifty.v[p] + 1].v[p] = gmy.v[p];
       s1y[shifty.v[p] + 2].v[p] = gOy.v[p];
@@ -851,8 +881,8 @@ sse2_push_part_yz()
     }
 
     for(int m=0; m<5; m++){
-      s1y[m].r = pv_real_SUB(s1y[m].r, s0y[m].r);
-      s1z[m].r = pv_real_SUB(s1z[m].r, s0z[m].r);
+      s1y[m].r = pv_sub_real(s1y[m].r, s0y[m].r);
+      s1z[m].r = pv_sub_real(s1z[m].r, s0z[m].r);
     }
 
 // CHECKPOINT: PIC_push_part_yz.F : line 341
@@ -900,46 +930,46 @@ sse2_push_part_yz()
 
     pvReal fnqx, fnqy, fnqz;
     
-    fnqx.r = pv_real_MUL(p.wni.r, fnqs.r);
-    fnqx.r = pv_real_MUL(p.qni.r, fnqx.r);
-    fnqx.r = pv_real_MUL(vxi.r, fnqx.r);
+    fnqx.r = pv_mul_real(p.wni.r, fnqs.r);
+    fnqx.r = pv_mul_real(p.qni.r, fnqx.r);
+    fnqx.r = pv_mul_real(vxi.r, fnqx.r);
 
-    fnqy.r = pv_real_MUL(p.wni.r, fnqys.r);
-    fnqy.r = pv_real_MUL(p.qni.r, fnqy.r);
+    fnqy.r = pv_mul_real(p.wni.r, fnqys.r);
+    fnqy.r = pv_mul_real(p.qni.r, fnqy.r);
     
-    fnqz.r = pv_real_MUL(p.wni.r, fnqzs.r);
-    fnqz.r = pv_real_MUL(p.qni.r, fnqz.r);
+    fnqz.r = pv_mul_real(p.wni.r, fnqzs.r);
+    fnqz.r = pv_mul_real(p.qni.r, fnqz.r);
         
     pvReal jzh[5];
     memset(&jzh, 0, 5 * sizeof(pvReal));
     
     for(int l3i=l3min; l3i<l3max; l3i++){
       pvReal jyh;
-      jyh.r = pv_real_SET1(0.0);
+      jyh.r = pv_set1_real(0.0);
       for(int l2i=l2min; l2i<l2max; l2i++){
 	pvReal wx, wy, wz;
-	wx.r = pv_real_MUL(half.r,s1y[l2i].r);
-	wx.r = pv_real_ADD(s0y[l2i].r, wx.r);
-	wx.r = pv_real_MUL(s0z[l3i].r, wx.r);
-	tmpx.r = pv_real_MUL(half.r, s0y[l2i].r);
-	tmpy.r = pv_real_MUL(third.r, s1y[l2i].r);
-	tmpx.r = pv_real_ADD(tmpx.r, tmpy.r);
-	tmpx.r = pv_real_MUL(tmpx.r, s1z[l3i].r);
-	wx.r = pv_real_ADD(wx.r, tmpx.r);
+	wx.r = pv_mul_real(half.r,s1y[l2i].r);
+	wx.r = pv_add_real(s0y[l2i].r, wx.r);
+	wx.r = pv_mul_real(s0z[l3i].r, wx.r);
+	tmpx.r = pv_mul_real(half.r, s0y[l2i].r);
+	tmpy.r = pv_mul_real(third.r, s1y[l2i].r);
+	tmpx.r = pv_add_real(tmpx.r, tmpy.r);
+	tmpx.r = pv_mul_real(tmpx.r, s1z[l3i].r);
+	wx.r = pv_add_real(wx.r, tmpx.r);
 	
-	wy.r = pv_real_MUL(half.r, s1z[l3i].r);
-	wy.r = pv_real_ADD(s0z[l3i].r, wy.r);
-	wy.r = pv_real_MUL(s1y[l2i].r, wy.r);
+	wy.r = pv_mul_real(half.r, s1z[l3i].r);
+	wy.r = pv_add_real(s0z[l3i].r, wy.r);
+	wy.r = pv_mul_real(s1y[l2i].r, wy.r);
 	
-	wz.r = pv_real_MUL(half.r, s1y[l2i].r);
-	wz.r = pv_real_ADD(s0y[l2i].r, wz.r);
-	wz.r = pv_real_MUL(s1z[l3i].r, wz.r);
+	wz.r = pv_mul_real(half.r, s1y[l2i].r);
+	wz.r = pv_add_real(s0y[l2i].r, wz.r);
+	wz.r = pv_mul_real(s1z[l3i].r, wz.r);
 	
-	wx.r = pv_real_MUL(fnqx.r, wx.r);
-	wy.r = pv_real_MUL(fnqy.r, wy.r);
-	jyh.r = pv_real_SUB(jyh.r, wy.r);
-	wz.r = pv_real_MUL(fnqz.r, wz.r);
-	jzh[l2i].r = pv_real_SUB(jzh[l2i].r, wz.r);
+	wx.r = pv_mul_real(fnqx.r, wx.r);
+	wy.r = pv_mul_real(fnqy.r, wy.r);
+	jyh.r = pv_sub_real(jyh.r, wy.r);
+	wz.r = pv_mul_real(fnqz.r, wz.r);
+	jzh[l2i].r = pv_sub_real(jzh[l2i].r, wz.r);
 	
 	for(int m = 0; m < elements; m++){
 	  JSX(j2.v[m] + l2i - 2, j3.v[m] + l3i - 2) += wx.v[m]; //undo index adjustment of l(2,3)i

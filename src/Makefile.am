@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = VLI VLA SELECT test1 test2 test3 test4 test5
+bin_PROGRAMS = VLI VLA SELECT test1 test2 test3 test4
 
 noinst_LIBRARIES = libpsc.a
 
@@ -70,6 +70,6 @@ if USE_SSE2
 
 LDADD = libpsc.a 
 
-TESTS = test2 test3 test4 test5
+TESTS = test2 test3 test4
 
 endif USE_SSE2
