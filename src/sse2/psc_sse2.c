@@ -19,7 +19,7 @@ sse2_destroy()
   free(sse2);
 }
 
-// For now this is all identical to kai's generic_c. 
+// For now this is all more or less identical to kai's generic_c. 
 static void
 sse2_particles_from_fortran()
 {
@@ -38,7 +38,7 @@ sse2_particles_from_fortran()
     part->qni = f_part->qni;
     part->mni = f_part->mni;
     part->wni = f_part->wni;
-    assert(round(part->xi) == 1);
+    assert(round(part->xi) == 1); //FIXME: ensures we have true 2-D with x=.5 for all parts
   }
 }
 
@@ -68,7 +68,7 @@ sse2_fields_from_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
   sse2->fields = calloc(NR_FIELDS*psc.fld_size, sizeof(sse2_real));
   assert(sse2->fields != NULL);
-  //It's a dirty job, but somebody's gotta do it
+
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
@@ -81,10 +81,8 @@ static void
 sse2_fields_to_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
   assert(sse2->fields != NULL);
-  //It's a dirty job, but somebody's gotta do it
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
-      //preserve Fortran ordering for now
       psc.f_fields[m][n] = sse2->fields[m * psc.fld_size + n];
     }
   }

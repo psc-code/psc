@@ -1,9 +1,13 @@
 
-#ifndef SSE2_CGEN_H
-#define SSE2_CGEN_H
+#ifndef SIMD_WRAP_H
+#define SIMD_WRAP_H
 
 #include <xmmintrin.h>
 #include <emmintrin.h>
+
+//---------------------------------------------
+// Calculates the offset for accessing pointers to 
+// flattened (2-D only) fields using vector operations
 
 #define VEC_OFF(foff,jy, jz) {				\
     foff.r = pv_sub_int(jz.r,ilg[2].r);					\
@@ -27,8 +31,8 @@ union packed_vector{
 
 union packed_int{
   __m128i r;
-  int v[2] __attribute__ ((aligned (16))); // this is a little strange, but only the lower
-                                           // two values will ever be used.
+  int v[2] __attribute__ ((aligned (16))); 
+                                           
 } ; 
 
 // real functions
@@ -49,6 +53,9 @@ union packed_int{
 #define pv_cvt_real_to_int(real_vec) _mm_cvtpd_epi32( real_vec )
 #define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_pd( int_vec )
 
+//---------------------------------------------
+// FIXME: This is currently **much** slower than doing straight serial
+// no idea why, but I will find out.
 
 #define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
     pvReal field##_in, field##tmp1, field##tmp2, field##tmp3;		\
@@ -115,7 +122,7 @@ union packed_int{
   }
 
 
-#else
+#else // Single Precision
 #define VEC_SIZE 4
 
 typedef float sse2_real;
@@ -129,10 +136,6 @@ union packed_int{
       __m128i r;
       int v[4] __attribute__ ((aligned (16)));
 }; 
-
-//THESE ARE ATOMICS!! Single variables only!!!!!
-// ( Five exclamation marks, the sure sign of an insane mind. --Terry Pratchett)
-// ( But I really mean it. --Steve)
 
 // real functions
 #define pv_add_real(var1_r, var2_r) _mm_add_ps( var1_r, var2_r )
@@ -152,6 +155,10 @@ union packed_int{
 //conversion functions (round or pad)
 #define pv_cvt_real_to_int(real_vec) _mm_cvtps_epi32( real_vec )
 #define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_ps( int_vec )
+
+//---------------------------------------------
+// FIXME: This is currently **much** slower than doing straight serial
+// no idea why, but I will find out.
 
 
 #define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \

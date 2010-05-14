@@ -6,9 +6,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-
+// SSE2 needs to have these numbers packed into 
+// vectors to utilize them effectively. 
 pvReal ones, half, threefourths, onepfive, third;
 pvInt ione;
+
+//---------------------------------------------
+// init_vec_numbers -- Fills the global numerical vectors
+// listed above. **must** be called before they are used
 
 static void 
 init_vec_numbers() {		
@@ -20,11 +25,12 @@ init_vec_numbers() {
   ione.r = pv_set1_int(1);			
 }
 
-#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+//---------------------------------------------
+// calc_vi - Calculates the velocities from momenta.
+// root is used to update p2X, so need to have it
+// stored to a variable in the push_part_yx_ function
 
-static inline void // Root used to update p2X, so need to have it
+static inline void 
 calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
 	pvReal * restrict vzi, pvReal * restrict root){
   pvReal tmpx, tmpy, tmpz, roottmp;
@@ -44,6 +50,10 @@ calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
   vzi->r = pv_mul_real(p->pzi.r, roottmp.r);
 }
 
+//---------------------------------------------
+// push_xi_halfdt - advances the posistions .5dt
+// using the given velocities
+
 static inline void
 push_xi_halfdt(struct particle_vec *p, pvReal *vyi, pvReal *vzi, pvReal *yl, pvReal *zl){
   pvReal tmpy, tmpz;
@@ -53,7 +63,14 @@ push_xi_halfdt(struct particle_vec *p, pvReal *vyi, pvReal *vzi, pvReal *yl, pvR
   p->zi.r = pv_add_real(p->zi.r, tmpz.r);
 }
 
-// Finds index using C99 round
+
+//---------------------------------------------
+// find_index_Cround - finds the index corresponding
+// to position xi using the C99 built in round.
+// This is slower, and should really only be used
+// when there is no weighting to suppress strange behavior
+// in the intrinsic round
+
 static inline void
 find_index_Cround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
   pvReal tmp;
@@ -65,7 +82,13 @@ find_index_Cround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict
   h->r = pv_sub_real(h->r, tmp.r);
 }
 
-// Finds index using intrinsic round
+//---------------------------------------------
+// find_index_Iround - Finds index using intrinsic round
+// Sometimes .5 is treated as .5-epsilon (not sure why)
+// and is rounded the wrong direction. This isn't a problem
+// most of the time due to the weighting coeffecients, but
+// can be a problem for any unweighted dimension (here, x)
+
 static inline void
 find_index_Iround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
   pvReal tmp;
@@ -74,6 +97,11 @@ find_index_Iround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict
   h->r = pv_cvt_int_to_real(j->r);
   h->r = pv_sub_real(h->r, tmp.r);
 }
+
+//---------------------------------------------
+// find_index_minus_shift - Same as find_index_Iround
+// except it subtracts the vector 'shift' before 
+// rounding.
 
 static inline void
 find_index_minus_shift(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h, pvReal *shift){
@@ -85,6 +113,10 @@ find_index_minus_shift(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * res
   h->r = pv_sub_real(h->r, tmp.r);
 }
 
+//---------------------------------------------
+// ip_to_grid_m - finds the first (m) weight factor
+// for field interpolation on the grid
+
 static inline void
 ip_to_grid_m(pvReal *h, pvReal * restrict xmx){
   xmx->r = pv_add_real(half.r, h->r);
@@ -92,11 +124,19 @@ ip_to_grid_m(pvReal *h, pvReal * restrict xmx){
   xmx->r = pv_mul_real(half.r, xmx->r);
 }
 
+//---------------------------------------------
+// ip_to_grid_O - finds the second (O here, 0 in F90) weight factor
+// for field interpolation on the grid
+
 static inline void
 ip_to_grid_O(pvReal *h, pvReal * restrict xOx){
   xOx->r = pv_mul_real(h->r, h->r);
   xOx->r = pv_sub_real(threefourths.r, xOx->r);
 }
+
+//---------------------------------------------
+// ip_to_grid_l - finds the third (l here, 1 in F90) weight factor
+// for field interpolation on the grid
 
 static inline void
 ip_to_grid_l(pvReal *h, pvReal * restrict xlx){
@@ -104,6 +144,12 @@ ip_to_grid_l(pvReal *h, pvReal * restrict xlx){
   xlx->r = pv_mul_real(xlx->r, xlx->r);
   xlx->r = pv_mul_real(half.r, xlx->r);
 }
+
+//---------------------------------------------
+// form_factor_... - I'm not sure my understanding 
+// of this is correct. I believe these calculate 
+// the extent of the quasi-particle on the grid
+// before updating the charge and current densities
 
 static inline void
 form_factor_m(pvReal *h, pvReal * restrict xmx){
@@ -127,6 +173,12 @@ form_factor_l(pvReal *h, pvReal * restrict xlx){
   xlx->r = pv_mul_real(half.r, xlx->r);
 }
 
+//---------------------------------------------
+// push_pi_dt - advances the momentum a full time
+// step using the interpolated fields
+// This looks long, nasty, and intricate, but from 
+// what I can tell it's bug free and runs pretty quick
+
 static void
 push_pi_dt(struct particle_vec * p,
 	   pvReal * exq, pvReal * eyq,  pvReal * ezq,
@@ -149,7 +201,6 @@ push_pi_dt(struct particle_vec * p,
   p->pzi.r = pv_add_real(p->pzi.r, dqez.r);
 
 
-// CHECKPOINT: PIC_push_part_yz.F : line 228
 // Rotate with B-field
   pvReal taux, tauy, tauz, txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
   
@@ -236,7 +287,6 @@ push_pi_dt(struct particle_vec * p,
   pzp.r = pv_add_real(pzp.r, tmpz.r);
   pzp.r = pv_mul_real(pzp.r, tau.r);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 244
 // Half step momentum  with E-field
 
   p->pxi.r = pv_add_real(pxp.r, dqex.r);
@@ -244,6 +294,10 @@ push_pi_dt(struct particle_vec * p,
   p->pzi.r = pv_add_real(pzp.r, dqez.r);
 }
 
+//---------------------------------------------
+// sse2_push_part_yz_a - reads in the particles
+// and half steps their positions using their 
+// current momentum
 
 void
 sse2_push_part_yz_a()
@@ -254,8 +308,8 @@ sse2_push_part_yz_a()
   }
   prof_start(pr);
 
-//-----------------------------------------------------
-// Initialization stuff (not sure what all of this is for)
+  //-----------------------------------------------------
+  // Initialization stuff 
   
   struct psc_sse2 *sse2 = psc.c_ctx;
 
@@ -263,7 +317,6 @@ sse2_push_part_yz_a()
   init_vec_numbers();
 
   pvReal dt, yl, zl;
-  //FIXME: These are all stored as doubles in fortran!!
   sse2_real dtfl = psc.dt; 
   dt.r = pv_set1_real(dtfl);
   yl.r = pv_mul_real(half.r, dt.r);
@@ -272,13 +325,19 @@ sse2_push_part_yz_a()
   int elements = VEC_SIZE;
 
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
-    int part_left = psc.n_part - n;
+
+    // Doing this may harm the compiler's ability to
+    // optimize the code, but something similar is 
+    // neccesary for sse2 to be able to handle particle
+    // numbers not divisible by VEC_SIZE
+    // FIXME : padding instead?
+    int part_left = psc.n_part - n;   
     if((part_left < VEC_SIZE) && (part_left != 0)){
       elements = part_left;
-    }
+    }                             
 
-//---------------------------------------------
-// Bringing in particle specific parameters
+    //---------------------------------------------
+    // Bringing in particle specific parameters
     
     struct particle_vec p;
 
@@ -298,14 +357,16 @@ sse2_push_part_yz_a()
     // Locals for computation      
     pvReal vxi, vyi, vzi, root;
 
-// CHECKPOINT: PIC_push_part_yz.F : line 104
-// Start the computation
-// Half step positions with current momenta
+    //---------------------------------------------
+    // Half step positions with current momenta
     
     calc_vi(&p, &vxi, &vyi, &vzi, &root);
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
     
+    //---------------------------------------------
+    // Store Particles
+
     for(int m=0; m<elements; m++){
       (sse2->part[n+m]).xi = p.xi.v[m];		
       (sse2->part[n+m]).yi = p.yi.v[m];		
@@ -319,6 +380,11 @@ sse2_push_part_yz_a()
   prof_stop(pr);
 }
 
+//---------------------------------------------
+// sse2_push_part_yz_b - Advances the particles 
+// one full time step, including momenta, but 
+// does not update current and charge densities
+
 void
 sse2_push_part_yz_b()
 {
@@ -328,19 +394,20 @@ sse2_push_part_yz_b()
   }
   prof_start(pr);
 
-//-----------------------------------------------------
-// Initialization stuff (not sure what all of this is for)
+  //-----------------------------------------------------
+  // Initialization stuff
   
   struct psc_sse2 *sse2 = psc.c_ctx;
 
   psc.p2A = 0.;
   psc.p2B = 0.;
   
-
+  //---------------------------------------------
   // Set vector forms of 1, 0.5, etc
   init_vec_numbers();
 
-  //Vector versions of floating point parameters
+  //---------------------------------------------
+  // Vector versions of floating point parameters
     pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs;
     sse2_real dxifl = 1.0 / psc.dx[0];					
     sse2_real dyifl = 1.0 / psc.dx[1];					
@@ -362,6 +429,7 @@ sse2_push_part_yz_b()
     fnqys.r = pv_set1_real(fnqysfl);					
     fnqzs.r = pv_set1_real(fnqzsfl);			
     
+    //---------------------------------------------
     //Vector versions of integer parameters
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(psc.ilg[0]);					
@@ -371,9 +439,11 @@ sse2_push_part_yz_b()
     img[1].r = pv_set1_int(psc.img[1]);					
     img[2].r = pv_set1_int(psc.img[2]);					
     fld_size.r = pv_set1_int(psc.fld_size);				
-    					
+    		
+    //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; //FIXME: this assumes xi always rounds up to 1
+    // FIXME : this assumes xi always rounds up to 1!
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
@@ -385,16 +455,21 @@ sse2_push_part_yz_b()
   
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
     
-    // This little ditty basically allows padding of the vector when it runs out of particles
+    // Doing this may harm the compiler's ability to
+    // optimize the code, but something similar is 
+    // neccesary for sse2 to be able to handle particle
+    // numbers not divisible by VEC_SIZE
+    // FIXME : padding instead?
+    
     int part_left = psc.n_part - n;
     if((part_left < VEC_SIZE) && (part_left != 0)){
       elements = part_left;
     }
 
-    pvInt itemp1, itemp2;
 
-//---------------------------------------------
-// Bringing in particle specific parameters
+
+    //---------------------------------------------
+    // Load Particles
 
     struct particle_vec p;
  
@@ -410,12 +485,14 @@ sse2_push_part_yz_b()
       p.wni.v[m] = sse2->part[n+m].wni;
     }
 
-    // Locals for computation      
+    //---------------------------------------------
+    // Declare locals for computation      
     pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
+    pvInt itemp1, itemp2;
 
-// CHECKPOINT: PIC_push_part_yz.F : line 104
-// Start the computation
-// Half step positions with current momenta
+
+    //---------------------------------------------
+    // Half step positions with current momenta
 
     calc_vi(&p, &vxi, &vyi, &vzi, &root);
 
@@ -430,13 +507,11 @@ sse2_push_part_yz_b()
       psc.p2A += tmpx.v[m]; //What's this for?
     }
 
-// CHECKPOINT: PIC_push_part_yz.F : line 110
-    
+    //---------------------------------------------
+    // Prepare for field interpolation
 
-// CHECKPOINT: PIC_push_part_yz.F : line 119
-// Prepare for field interpolation
+    // FIXME : assuming true 2D and not touching x direction
 
-    // Apparently this can be done in vectors. A victory!
     pvInt j2, j3, l2, l3;
 
     find_index_Iround(&(p.yi), &dyi, &j2, &h2);
@@ -465,7 +540,6 @@ sse2_push_part_yz_b()
     ip_to_grid_l(&h2, &gly);
     ip_to_grid_l(&h3, &glz);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 143
 
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
@@ -493,13 +567,16 @@ sse2_push_part_yz_b()
     ip_to_grid_l(&h3, &hlz);
 
 
-// CHECKPOINT: PIC_push_part_yz.F : line 59
-// Field Interpolation
-
-// BOTTLENECK HERE: For a given particle, none of the needed fields are stored
-// next to each other in memory. Also, there's no way to tell before runtime
-// exactly what fields are needed. As a consequence, I can't just load them into
-// registers and shuffle. I must fetch piece by painful piece.
+    //---------------------------------------------
+    // Field Interpolation
+    
+    //FIXME : HUGE bottleneck here. For some reason, the macros
+    // used here (defined in simd_wrap.h ) are significantly slower
+    // than doing a straight serial translation of this section
+    // (see the sse2-dev branch where the straight serial translation 
+    // exists, and can be compared with these macros)
+    // I am determined to get this running at least as fast 
+    // as the straight serial version
     
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
@@ -510,17 +587,21 @@ sse2_push_part_yz_b()
     INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
     INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
  
-// CHECKPOINT: PIC_push_part_yz.F : line 223
+    //---------------------------------------------
+    // Advance momenta one full dt
 
     push_pi_dt(&p, &exq, &eyq, &ezq, &bxq, &byq, &bzq, &dqs);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 248
-// Half step particles with new momenta
+    //---------------------------------------------
+    // Half step particles with new momenta
     
     calc_vi(&p, &vxi, &vyi, &vzi, &root);
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
+
+    //---------------------------------------------
+    // Store particles 
 
     for(int m=0; m<elements; m++){
       (sse2->part[n+m]).xi = p.xi.v[m];		
@@ -545,6 +626,10 @@ sse2_push_part_yz_b()
   prof_stop(pr);
 }
 
+//---------------------------------------------
+// sse2_push_part_yz - a full translation of the 
+// yz particle pusher
+
 void
 sse2_push_part_yz()
 {
@@ -566,18 +651,25 @@ sse2_push_part_yz()
     memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
   }  
 
-  // I don't like allocating these, but I think they could potentially be
-  // too big to declare statically. If I'm wrong, having them be static will give
-  // a nice performance boost
-  sse2_real *s_jxi, *s_jyi, *s_jzi;
+  //---------------------------------------------
+  // An implementation of Will's 'squished' currents
+  // that excludes the x direction all together
+  sse2_real * restrict s_jxi, * restrict s_jyi, * restrict s_jzi;
   s_jxi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
   s_jyi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
   s_jzi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+
+  // -------------------------------
+  // Macros for accessing the 'squished' currents allocated above
+#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
   
+  //-----------------------------------------------------
   //Set vector forms of numbers 1, 0.5, etc
   init_vec_numbers();
 
-
+  //-----------------------------------------------------
   //Vector versions of floating point parameters
     pvReal dt, yl, zl, eta, dqs,fnqs, dxi, dyi, dzi, fnqxs, fnqys, fnqzs;
     sse2_real dxifl = 1.0 / psc.dx[0];					
@@ -600,6 +692,7 @@ sse2_push_part_yz()
     fnqys.r = pv_set1_real(fnqysfl);					
     fnqzs.r = pv_set1_real(fnqzsfl);			
     
+    //-----------------------------------------------------
     //Vector versions of integer parameters
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(psc.ilg[0]);					
@@ -609,33 +702,36 @@ sse2_push_part_yz()
     img[1].r = pv_set1_int(psc.img[1]);					
     img[2].r = pv_set1_int(psc.img[2]);					
     fld_size.r = pv_set1_int(psc.fld_size);				
-    					
+    
+    //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; //FIXME: this assumes xi always rounds up to 1
+    //FIXME: this assumes xi always rounds up to 1
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; 
     sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 1 - psc.ilg[0]];
     sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 1 - psc.ilg[0]];
 
-
-    //    sse2_real * restrict fpoint = sse2->fields; // This keyword is awesome. 
-                                                // One restrict and my laptop gets 
-                                                // a 5% performance boost
     
     int elements = VEC_SIZE;
 
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
 
-    // Check if we're padding
+    // Doing this may harm the compiler's ability to
+    // optimize the code, but something similar is 
+    // neccesary for sse2 to be able to handle particle
+    // numbers not divisible by VEC_SIZE
+    // FIXME : padding instead?
+    
     int part_left = psc.n_part - n;
     if((part_left < VEC_SIZE) && (part_left != 0)){
       elements = part_left;
     }
 
 
-//---------------------------------------------
-// Bringing in particle specific parameters
+    //---------------------------------------------
+    // Load Particles
     
     struct particle_vec p;
  
@@ -652,12 +748,15 @@ sse2_push_part_yz()
     }
 
 
-    // Locals for computation      
+
+    //---------------------------------------------
+    // Declare locals for computation      
+
     pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h2, h3;
     pvInt itemp1, itemp2;
-// CHECKPOINT: PIC_push_part_yz.F : line 104
-// Start the computation
-// Half step positions with current momenta
+
+    //---------------------------------------------
+    // Half step positions with current momenta
 
     calc_vi(&p, &vxi, &vyi, &vzi, &root);
 
@@ -673,6 +772,10 @@ sse2_push_part_yz()
     }
 
 
+    //---------------------------------------------
+    // Declare and zero out what will become the 
+    // current density form factors
+    
     pvReal s0y[5], s0z[5], s1y[5], s1z[5];
     // I'm a little scared to use memset here, though it would probably work...
     for(int m = 0; m < 5; m++){
@@ -682,8 +785,10 @@ sse2_push_part_yz()
       s1z[m].r = pv_set1_real(0.0);
     }
 
-// CHECKPOINT: PIC_push_part_yz.F : line 119
-// Prepare for field interpolation
+    //---------------------------------------------
+    // Prepare for field interpolation
+
+    // FIXME : assuming true 2D and not touching x direction
 
     pvReal  H2, H3;
     pvInt j2, j3, l2, l3;
@@ -715,7 +820,6 @@ sse2_push_part_yz()
     ip_to_grid_l(&H3, &glz);
 
 
-// CHECKPOINT: PIC_push_part_yz.F : line 143
 
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
@@ -742,14 +846,11 @@ sse2_push_part_yz()
     ip_to_grid_l(&h2, &hly);
     ip_to_grid_l(&h3, &hlz);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 59
-// Field Interpolation
 
-// BOTTLENECK HERE: For a given particle, none of the needed fields are stored
-// next to each other in memory. Also, there's no way to tell before runtime
-// exactly what fields are needed. As a consequence, I can't just load them into
-// registers and shuffle. I must fetch piece by painful piece.
-
+    //---------------------------------------------
+    // Field Interpolation
+    
+    //FIXME : HUGE bottleneck here. 
     
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
@@ -760,7 +861,8 @@ sse2_push_part_yz()
     INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
     INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
 
-
+    //---------------------------------------------
+    // Calculate current density form factors
     // indexing here departs from FORTRAN a little bit
     // Simply moving this down here seems to improve performance
     // Possibly giving the processor something to do while it's waiting 
@@ -774,16 +876,20 @@ sse2_push_part_yz()
     form_factor_O(&H3, &s0z[2]);
     form_factor_l(&H3, &s0z[3]);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 223
+    //---------------------------------------------
+    // Advance momenta one full dt
 
     push_pi_dt(&p, &exq, &eyq, &ezq, &bxq, &byq, &bzq, &dqs);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 248
-// Half step particles with new momenta
+    //---------------------------------------------
+    // Half step particles with new momenta
     
     calc_vi(&p, &vxi, &vyi, &vzi, &root);
 
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
+
+    //---------------------------------------------
+    // Store particles 
 
     for(int m=0; m < elements; m++){
       (sse2->part[n+m]).xi = p.xi.v[m];		
@@ -794,9 +900,20 @@ sse2_push_part_yz()
       (sse2->part[n+m]).pzi = p.pzi.v[m];	
     }
 
+    tmpx.r = pv_sub_real(root.r, ones.r);
+    tmpx.r = pv_div_real(tmpx.r, eta.r);
+    tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
+    tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 266
-// update number densities.
+    for(int m = 0; m < elements; m++){
+      psc.p2B += tmpx.v[m]; //What's this for?
+    }
+    
+
+    //---------------------------------------------
+    // update charge densities.
+    // Right now this can be turned on or off
+    // with the macro flag below
 
 #if 1
     find_index_Iround(&(p.yi), &dyi, &l2, &h2);
@@ -810,11 +927,10 @@ sse2_push_part_yz()
     form_factor_O(&h3, &gOz);
     form_factor_l(&h3, &glz);
 
-// CHECKPOINT: PIC_push_part_yz.F : line 283
     //FIXME: this is, for now, a straight serial translation. I think
-    //    there is a more efficient way to do this, but I might be making
-    //    some changes to the the local field structure and I'll worry 
-    //    about it then.
+    // there is a more efficient way to do this, but ever since I 
+    // discovered this isn't done every step, I haven't spared
+    // two thoughts for this section. I'll make it better soon.
 
     for(int m=0; m < elements ; m++){ 
       sse2_real fnq;
@@ -845,9 +961,10 @@ sse2_push_part_yz()
     }
 
 #endif 
-    // CHECKPOINT: PIC_push_part_yz.F : line 320
+    
+    //---------------------------------------------
     // Charge density form factor at (n+1.5)*dt
-
+    
     push_xi_halfdt(&p, &vyi, &vzi, &yl, &zl);
 
     pvInt k2,k3;
@@ -868,7 +985,7 @@ sse2_push_part_yz()
     form_factor_l(&h3, &glz);
        
     // All the indices below have +2 compared to the FORTRAN for C array access
-    pvInt shifty, shiftz;
+    pvInt shifty, shiftz; //FIXME : need to check if this really helps
     shifty.r = pv_sub_int(k2.r,j2.r);
     shiftz.r = pv_sub_int(k3.r,j3.r);
     for(int p=0; p < elements; p++){
@@ -885,14 +1002,18 @@ sse2_push_part_yz()
       s1z[m].r = pv_sub_real(s1z[m].r, s0z[m].r);
     }
 
-// CHECKPOINT: PIC_push_part_yz.F : line 341
-// Charge density form factor at (n+1.5)*dt
-
     int l2min = 1;
     int l2max = 4;
     int l3min = 1;
     int l3max = 4;
     
+    //---------------------------------------------
+    // Finding bounds for updating current densities
+    // I don't like keeping these branches in, but 
+    // I don't think it can be helped. The construct
+    // below allows the calculations to be done in vectors
+    // even if the particles have different l{2,3}{min,max}
+ 
     for(int p = 0; p < elements; p++){
       if(k2.v[p]==j2.v[p]){
 	s1y[0].v[p] = 0.0;
@@ -940,7 +1061,9 @@ sse2_push_part_yz()
     fnqz.r = pv_mul_real(p.wni.r, fnqzs.r);
     fnqz.r = pv_mul_real(p.qni.r, fnqz.r);
         
-    pvReal jzh[5];
+    pvReal jzh[5]; // As per Will's suggestion, using the minimal 
+                   // variable here, and for jyh below, gives a nice
+                   // performance boost
     memset(&jzh, 0, 5 * sizeof(pvReal));
     
     for(int l3i=l3min; l3i<l3max; l3i++){
@@ -971,6 +1094,9 @@ sse2_push_part_yz()
 	wz.r = pv_mul_real(fnqz.r, wz.r);
 	jzh[l2i].r = pv_sub_real(jzh[l2i].r, wz.r);
 	
+	
+	//---------------------------------------------
+	// Store into the 'squished' currents
 	for(int m = 0; m < elements; m++){
 	  JSX(j2.v[m] + l2i - 2, j3.v[m] + l3i - 2) += wx.v[m]; //undo index adjustment of l(2,3)i
 	  JSY(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jyh.v[m]; //undo index adjustment of l(2,3)i
@@ -980,6 +1106,9 @@ sse2_push_part_yz()
     }   
   }
   
+  //---------------------------------------------
+  // Store the squished currents into the global currents
+  
   for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
     for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
       CF3(JXI,psc.ilo[0]+1,iy,iz) = JSX(iy, iz);
@@ -987,9 +1116,14 @@ sse2_push_part_yz()
       CF3(JZI,psc.ilo[0]+1,iy,iz) = JSZ(iy, iz);
     }
   }
+  // Always pick up your trash
   free(s_jxi);
   free(s_jyi);
   free(s_jzi);
 
   prof_stop(pr);
 }
+
+#undef JSX
+#undef JSY
+#undef JSZ
