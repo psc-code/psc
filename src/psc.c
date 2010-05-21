@@ -39,6 +39,11 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
+static struct psc_sort_ops *psc_sort_ops_list[] = {
+  &psc_sort_ops_fortran,
+  NULL,
+};
+
 static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
@@ -50,14 +55,27 @@ psc_find_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_sort_ops *
+psc_find_sort_ops(const char *ops_name)
+{
+  for (int i = 0; psc_sort_ops_list[i]; i++) {
+    if (strcasecmp(psc_sort_ops_list[i]->name, ops_name) == 0)
+      return psc_sort_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_sort_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 struct psc_cmdline {
   const char *mod_particle;
+  const char *mod_sort;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_cmdline, x)
 
 static struct param psc_cmdline_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
+  { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
   {},
 };
 
@@ -65,11 +83,12 @@ static struct param psc_cmdline_descr[] = {
 
 
 void
-psc_create(const char *mod_particle)
+psc_create(const char *mod_particle, const char *mod_sort)
 {
   // set default to what we've got passed
   struct psc_cmdline par = {
     .mod_particle = mod_particle,
+    .mod_sort     = mod_sort,
   };
 
   params_parse_cmdline_nodefault(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
@@ -80,6 +99,10 @@ psc_create(const char *mod_particle)
   psc.ops = psc_find_ops(par.mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
+  }
+  psc.sort_ops = psc_find_sort_ops(par.mod_sort);
+  if (psc.sort_ops->create) {
+    psc.sort_ops->create();
   }
 }
 
@@ -253,6 +276,16 @@ psc_push_part_yz_b()
   psc.ops->particles_to_fortran();
 }
 
+// ----------------------------------------------------------------------
+// psc_sort
+
+void
+psc_sort()
+{
+  assert(psc.sort_ops->sort);
+  psc.sort_ops->sort();
+}
+
 
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];
@@ -345,7 +378,7 @@ psc_create_test_1(const char *ops_name)
 
   int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
 
-  psc_create(ops_name);
+  psc_create(ops_name, "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_1();

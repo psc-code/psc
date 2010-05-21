@@ -77,3 +77,20 @@ struct psc_ops psc_ops_fortran = {
   .push_part_yz_a         = fortran_push_part_yz_a,
   .push_part_yz_b         = fortran_push_part_yz_b,
 };
+
+static void
+fortran_sort()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_sort", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_sort_1();
+  prof_stop(pr);
+}
+
+struct psc_sort_ops psc_sort_ops_fortran = {
+  .name = "fortran",
+  .sort                   = fortran_sort,
+};

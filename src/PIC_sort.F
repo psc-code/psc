@@ -148,7 +148,11 @@ c     THIS SUBROUTINE SORTS THE PARTICLES TO CELLS
 
       call PIC_randomize
       call PIC_find_cell_indices
+#ifdef USE_C_INTERFACE
+      call C_sort(niloc, p_niloc, 99)
+#else
       call PIC_sort_1(niloc, p_niloc)
+#endif
 
       call SERV_systime(cpuh)
       s_cpuh=s_cpuh+cpuh-cpug

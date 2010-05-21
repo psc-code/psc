@@ -93,8 +93,16 @@ struct psc_ops {
   void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
+struct psc_sort_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*sort)(void);
+};
+
 struct psc {
   struct psc_ops *ops;
+  struct psc_sort_ops *sort_ops;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_domain domain;
@@ -129,7 +137,7 @@ struct psc {
 
 struct psc psc;
 
-void psc_create(const char *mod_particle);
+void psc_create(const char *mod_particle, const char *mod_sort);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
@@ -148,6 +156,7 @@ void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
 void psc_push_part_yz_b();
+void psc_sort();
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
@@ -157,11 +166,14 @@ extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 
+extern struct psc_sort_ops psc_sort_ops_fortran;
+
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
 void PIC_push_part_yz_b();
+void PIC_sort_1();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

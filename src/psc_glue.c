@@ -7,10 +7,12 @@
 #define PIC_push_part_yz_a_F77 F77_FUNC(pic_push_part_yz_a,PIC_PUSH_PART_YZ_A)
 #define PIC_push_part_yz_b_F77 F77_FUNC(pic_push_part_yz_b,PIC_PUSH_PART_YZ_B)
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
+#define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
 
 #define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
 #define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
+#define C_sort_F77 F77_FUNC(c_sort,C_SORT)
 
 void PIC_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
 			  f_real *cori, f_real *alpha, f_real *eta, 
@@ -60,6 +62,8 @@ void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 			 f_real *jxi, f_real *jyi, f_real *jzi,
 			 f_real *ex, f_real *ey, f_real *ez,
 			 f_real *bx, f_real *by, f_real *bz);
+
+void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -132,6 +136,12 @@ PIC_push_part_z()
 		      psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
 		      psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
 		      psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+}
+
+void
+PIC_sort_1()
+{
+  PIC_sort_1_F77(&psc.n_part, &psc.f_part[-1]);
 }
 
 // ----------------------------------------------------------------------
@@ -237,4 +247,17 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
 
   *p2A = psc.p2A;
   *p2A = psc.p2B;
+}
+
+void
+C_sort_F77(f_int *niloc, struct f_particle *p_niloc,
+	   f_int *dummy)
+{
+  // make sure we got passed the right number of arguments
+  assert(*dummy == 99);
+
+  psc.n_part = *niloc;
+  psc.f_part = &p_niloc[1];
+
+  psc_sort();
 }
