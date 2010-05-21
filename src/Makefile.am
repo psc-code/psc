@@ -14,6 +14,7 @@ libpsc_a_SOURCES = \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
+	PIC_sort_1.F \
 	cuda/psc_cuda.c cuda/push_part_yz.c \
 	sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
 
