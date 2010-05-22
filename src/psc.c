@@ -42,6 +42,7 @@ static struct psc_ops *psc_ops_list[] = {
 
 static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_fortran,
+  &psc_sort_ops_qsort,
   NULL,
 };
 
