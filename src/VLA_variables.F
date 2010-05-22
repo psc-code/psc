@@ -280,7 +280,9 @@ c boundary_part_z: particle boundary conditions in z
 c     ======================================================================
       subroutine PIC_set_variables(i1mn_, i2mn_, i3mn_,
      *     i1mx_, i2mx_, i3mx_,
-     *     rd1_, rd2_, rd3_)
+     *     rd1_, rd2_, rd3_,
+     *     cori_, alpha_, eta_,
+     *     dt_, dx_, dy_, dz_)
 c     ======================================================================
 
       use PIC_variables
@@ -290,6 +292,8 @@ c     ======================================================================
 
       integer :: i1mn_, i2mn_, i3mn_, i1mx_, i2mx_, i3mx_
       integer :: rd1_, rd2_, rd3_
+      real(kind=8) :: cori_, alpha_, eta_
+      real(kind=8) :: dt_, dx_, dy_, dz_
 
       i1mn = i1mn_
       i2mn = i2mn_
@@ -300,5 +304,13 @@ c     ======================================================================
       rd1 = rd1_
       rd2 = rd2_
       rd3 = rd3_
+      
+      cori = cori_
+      alpha = alpha_
+      eta = eta_
+      dt = dt_
+      dx = dx_
+      dy = dy_
+      dz = dz_
 
       end subroutine PIC_set_variables

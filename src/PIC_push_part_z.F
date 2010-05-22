@@ -2,19 +2,18 @@
 c     particle pusher z, separated out to not depend on global
 c     variables from modules
 
-      subroutine PIC_push_part_z(niloc, p_niloc, cori, alpha, eta,
-     &     wl, wp,
-     &     p2A, p2B, n, dt, dx, dy, dz,
+      subroutine PIC_push_part_z(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,rd1,rd2,rd3
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz,wl,wp,n
+      use PIC_variables, only: cori
 
       implicit none
 
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
-      real(kind=8) :: cori, alpha, eta, wl, wp, dt, dx, dy, dz, p2A, p2B
-      integer      :: n
+      real(kind=8) :: p2A, p2B
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
