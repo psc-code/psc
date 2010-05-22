@@ -150,6 +150,7 @@ void psc_save_particles_ref();
 void psc_save_fields_ref();
 void psc_check_currents_ref();
 void psc_check_particles_ref();
+void psc_check_particles_sorted();
 void psc_create_test_1(const char *ops_name);
 
 void psc_push_part_yz();

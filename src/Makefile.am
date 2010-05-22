@@ -79,7 +79,7 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test1 test2
+noinst_PROGRAMS = test1 test2 test_sort
 
 LDADD = libpsc.a util/libutil.a
 

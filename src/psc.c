@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
 #include <assert.h>
 
 struct psc psc;
@@ -361,6 +362,22 @@ psc_check_currents_ref()
     for (int n = 0; n < psc.fld_size; n++){
       assert_equal(psc.f_fields[m][n], field_ref[m][n]);
     }
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_check_particles_sorted
+//
+// checks particles are sorted by cell index
+
+void
+psc_check_particles_sorted()
+{
+  int last = INT_MIN;
+
+  for (int i = 0; i < psc.n_part; i++) {
+    assert(psc.f_part[i].cni >= last);
+    last = psc.f_part[i].cni;
   }
 }
 
