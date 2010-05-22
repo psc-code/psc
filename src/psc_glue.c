@@ -8,6 +8,7 @@
 #define PIC_push_part_yz_b_F77 F77_FUNC(pic_push_part_yz_b,PIC_PUSH_PART_YZ_B)
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
 #define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
+#define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 
 #define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
@@ -64,6 +65,7 @@ void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 			 f_real *bx, f_real *by, f_real *bz);
 
 void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
+void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -142,6 +144,12 @@ void
 PIC_sort_1()
 {
   PIC_sort_1_F77(&psc.n_part, &psc.f_part[-1]);
+}
+
+void
+PIC_randomize()
+{
+  PIC_randomize_F77(&psc.n_part, &psc.f_part[-1]);
 }
 
 // ----------------------------------------------------------------------

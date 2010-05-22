@@ -175,6 +175,7 @@ void PIC_push_part_z();
 void PIC_push_part_yz_a();
 void PIC_push_part_yz_b();
 void PIC_sort_1();
+void PIC_randomize();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
