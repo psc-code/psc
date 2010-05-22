@@ -19,6 +19,8 @@
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_int *i1mx, f_int *i2mx, f_int *i3mx,
 			   f_int *rd1, f_int *rd2, f_int *rd3,
+			   f_int *i1n, f_int *i2n, f_int *i3n,
+			   f_int *i1x, f_int *i2x, f_int *i3x,
 			   f_real *cori, f_real *alpha, f_real *eta, 
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
@@ -61,10 +63,13 @@ static void
 PIC_set_variables()
 {
   int i0mx = psc.ihi[0] - 1, i1mx = psc.ihi[1] - 1, i2mx = psc.ihi[2] - 1;
+  int i0x = psc.ghi[0] - 1, i1x = psc.ghi[1] - 1, i2x = psc.ghi[2] - 1;
 
   PIC_set_variables_F77(&psc.ilo[0], &psc.ilo[1], &psc.ilo[2],
 			&i0mx, &i1mx, &i2mx,
 			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
+			&psc.glo[0], &psc.glo[1], &psc.glo[2],
+			&i0x, &i1x, &i2x,
 			&psc.prm.cori, &psc.prm.alpha, &psc.prm.eta,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],
 			&psc.prm.wl, &psc.prm.wp, &psc.timestep);
@@ -134,6 +139,8 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 		f_int *i1mn, f_int *i2mn, f_int *i3mn,
 		f_int *i1mx, f_int *i2mx, f_int *i3mx,
 		f_int *rd1, f_int *rd2, f_int *rd3,
+		f_int *i1n, f_int *i2n, f_int *i3n,
+		f_int *i1x, f_int *i2x, f_int *i3x,
 		f_real *ne, f_real *ni, f_real *nn,
 		f_real *jxi, f_real *jyi, f_real *jzi,
 		f_real *ex, f_real *ey, f_real *ez,
@@ -166,6 +173,14 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
+
+  // global domain size
+  psc.glo[0] = *i1n; 
+  psc.glo[1] = *i2n; 
+  psc.glo[2] = *i3n; 
+  psc.ghi[0] = *i1x + 1; 
+  psc.ghi[1] = *i2x + 1; 
+  psc.ghi[2] = *i3x + 1; 
 
   // Fortran fields
   psc.f_fields[NE] = ne;
