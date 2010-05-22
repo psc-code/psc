@@ -178,6 +178,7 @@ void PIC_push_part_yz_a();
 void PIC_push_part_yz_b();
 void PIC_sort_1();
 void PIC_randomize();
+void PIC_find_cell_indices();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

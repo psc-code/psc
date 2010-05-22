@@ -10,9 +10,8 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   psc_create_test_1("fortran");
 
-  for (int i = 0; i < psc.n_part; i++) {
-    psc.f_part[i].cni = random();
-  }
+  PIC_find_cell_indices();
+  PIC_randomize();
   psc_sort();
   psc_check_particles_sorted();
 
