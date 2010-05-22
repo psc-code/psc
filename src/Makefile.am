@@ -15,6 +15,7 @@ libpsc_a_SOURCES = \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
 	PIC_sort_1.F \
+	PIC_variables.F VLA_variables.F \
 	cuda/psc_cuda.c cuda/push_part_yz.c \
 	sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
 
@@ -83,7 +84,7 @@ noinst_PROGRAMS = test1 test2 test_sort
 
 LDADD = libpsc.a util/libutil.a
 
-TESTS = test2
+TESTS = test2 test_sort
 
 if USE_CUDA
 
