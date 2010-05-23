@@ -172,6 +172,7 @@ extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 extern struct psc_sort_ops psc_sort_ops_fortran;
 extern struct psc_sort_ops psc_sort_ops_qsort;
 extern struct psc_sort_ops psc_sort_ops_countsort;
+extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
