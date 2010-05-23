@@ -136,8 +136,13 @@ countsort2_sort()
   struct f_particle *f_part2 = malloc(psc.n_part * sizeof(*f_part2));
   for (int i = 0; i < psc.n_part; i++) {
     unsigned int cni = cnis[i];
-    memcpy(&f_part2[cnts[cni]], &psc.f_part[i], sizeof(*f_part2));
-    cnts[cni]++;
+    int n = 1;
+    while (i+n < psc.n_part && cnis[i+n] == cni) {
+      n++;
+    }
+    memcpy(&f_part2[cnts[cni]], &psc.f_part[i], n * sizeof(*f_part2));
+    cnts[cni] += n;
+    i += n - 1;
   }
 
   // back to in-place
