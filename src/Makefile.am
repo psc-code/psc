@@ -15,7 +15,7 @@ libpsc_a_SOURCES = \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
 	cuda/psc_cuda.c cuda/push_part_yz.c \
-	sse2/psc_sse2.c sse2/push_part_yz.c 
+	sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -98,7 +98,6 @@ push_part_yz.o: cuda/push_part_yz.cu
 endif USE_CUDA
 
 if USE_SSE2
-#should probably add -msse2 CFLAG here.
+# We should probably add the -msse2 cflag here...
 endif USE_SSE2
-
 endif USE_C_INTERFACE

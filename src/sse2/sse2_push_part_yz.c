@@ -1,6 +1,6 @@
 #include "psc_sse2.h"
 #include "simd_wrap.h"
-#include "profile/profile.h"
+#include "util/profile.h"
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -304,7 +304,7 @@ sse2_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -390,7 +390,7 @@ sse2_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -442,13 +442,13 @@ sse2_push_part_yz_b()
     		
     //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
-    // FIXME : this assumes xi always rounds up to 1!
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 1 - psc.ilg[0]];
+    // FIXME : this assumes xi always rounds down to 0!
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
 
   int elements = VEC_SIZE;
@@ -705,13 +705,13 @@ sse2_push_part_yz()
     
     //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
-    //FIXME: this assumes xi always rounds up to 1
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 1 - psc.ilg[0]]; 
-    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 1 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 1 - psc.ilg[0]];
+    //FIXME: this assumes xi always rounds down to 0
+    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 0 - psc.ilg[0]]; 
+    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
     
     int elements = VEC_SIZE;
@@ -937,15 +937,15 @@ sse2_push_part_yz()
       // This may or may not work, and may or may not help
       sse2_real *densp; 
       if (p.qni.v[m] < 0.0){
-	densp = &(sse2->fields[NE*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NE*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
       }
       else if (p.qni.v[m] > 0.0){
-	densp = &(sse2->fields[NI*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NI*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
       }
       else if (p.qni.v[m] == 0.0){
-	densp = &(sse2->fields[NN*psc.fld_size + 1 - psc.ilo[0] + psc.ibn[0]]);
+	densp = &(sse2->fields[NN*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
 	fnq = p.wni.v[m] * fnqs.v[m];
       }
 #define DEN_FIELD(j,k) *(densp+((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]*psc.img[1]))
@@ -1108,12 +1108,12 @@ sse2_push_part_yz()
   
   //---------------------------------------------
   // Store the squished currents into the global currents
-  
+  // FIXME: Assumes x-dir always rounds down to 0!
   for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
     for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
-      CF3(JXI,psc.ilo[0]+1,iy,iz) = JSX(iy, iz);
-      CF3(JYI,psc.ilo[0]+1,iy,iz) = JSY(iy, iz);
-      CF3(JZI,psc.ilo[0]+1,iy,iz) = JSZ(iy, iz);
+      CF3(JXI,psc.ilo[0]+0,iy,iz) = JSX(iy, iz);
+      CF3(JYI,psc.ilo[0]+0,iy,iz) = JSY(iy, iz);
+      CF3(JZI,psc.ilo[0]+0,iy,iz) = JSZ(iy, iz);
     }
   }
   // Always pick up your trash

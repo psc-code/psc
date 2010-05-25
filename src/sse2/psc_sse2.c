@@ -38,7 +38,7 @@ sse2_particles_from_fortran()
     part->qni = f_part->qni;
     part->mni = f_part->mni;
     part->wni = f_part->wni;
-    assert(round(part->xi) == 1); //FIXME: ensures we have true 2-D with x=.5 for all parts
+    assert(round(part->xi) == 0); //FIXME: ensures we have true 2-D with x<.5 for all parts
   }
 }
 
