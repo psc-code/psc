@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "profile/profile.h"
+#include "util/profile.h"
 
 static void
 fortran_particles_from_fortran()
@@ -59,7 +59,7 @@ fortran_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 14 * sizeof(double));
+    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz_b();

@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "util/params.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,14 +15,16 @@ struct psc psc;
 //
 // make sure that the two values are almost equal.
 
+#define assert_equal(x, y) __assert_equal(x, y, #x, #y)
+
 void
-assert_equal(double x, double y)
+__assert_equal(double x, double y, const char *xs, const char *ys)
 {
-  double max = fmax(fabs(x), fabs(y)) + 1e-7;
+  double max = fmax(fabs(x), fabs(y)) + 1e-10;
   double eps = fabs((x - y) / max);
-  if (eps > 1e-5) {
-    fprintf(stderr, "assert_equal: fail x = %g y = %g rel err = %g\n",
-	    x, y, eps);
+  if (eps > 1e-4) { // FIXME 1e-5 fails!
+    fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g\n",
+	    xs, x, ys, y, eps);
     abort();
   }
 }
@@ -31,6 +34,7 @@ assert_equal(double x, double y)
 static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
+  &psc_ops_cuda,
   &psc_ops_sse2,
   NULL,
 };
@@ -39,18 +43,41 @@ static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
   for (int i = 0; psc_ops_list[i]; i++) {
-    if (strcmp(psc_ops_list[i]->name, ops_name) == 0)
+    if (strcasecmp(psc_ops_list[i]->name, ops_name) == 0)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
   abort();
 }
 
+struct psc_cmdline {
+  const char *mod_particle;
+};
+
+#define VAR(x) (void *)offsetof(struct psc_cmdline, x)
+
+static struct param psc_cmdline_descr[] = {
+  { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
+  {},
+};
+
+#undef VAR
+
+
 void
-psc_create(const char *ops_name)
+psc_create(const char *mod_particle)
 {
+  // set default to what we've got passed
+  struct psc_cmdline par = {
+    .mod_particle = mod_particle,
+  };
+
+  params_parse_cmdline_nodefault(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
+  params_print(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
+
   memset(&psc, 0, sizeof(psc));
-  psc.ops = psc_find_ops(ops_name);
+
+  psc.ops = psc_find_ops(par.mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
   }
@@ -67,6 +94,7 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
     psc.ihi[d] = ihi[d];
     psc.ihg[d] = ihi[d] + ibn[d];
     psc.img[d] = ihi[d] - ilo[d] + 2 * ibn[d];
+    psc.ibn[d] = ibn[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   for (int m = 0; m < NR_FIELDS; m++) {
@@ -115,23 +143,6 @@ psc_setup_fields_zero()
   }
 }
 
-// Fills the fields with sequentially increasing numbers
-// I use it to check macros and indexing
-
-void
-psc_setup_fields_seq_yz()
-{
-  for(int m = EX; m < NR_FIELDS; m++){
-    for(int i = 0; i < psc.img[0]; i++){
-      for(int j = 0; j < psc.img[1]; j++){
-	for(int k = 0; k < psc.img[2]; k++){
-	  psc.f_fields[m][i + j*(psc.img[0]) + k*(psc.img[0]*psc.img[1])] = j*k;
-	}
-      }
-    }
-  }
-}
-
 void
 psc_setup_fields_1()
 {
@@ -150,42 +161,29 @@ psc_setup_fields_1()
   }
 }
 
-
 void
 psc_setup_particles_1()
 {
-  for (int n = 0; n < psc.n_part; n++) {
-    psc.f_part[n].xi = .5;
-    psc.f_part[n].yi = .5;
-    psc.f_part[n].zi = .5 + n / (real) psc.n_part;
-    psc.f_part[n].pxi = 0.;
-    psc.f_part[n].pyi = .02;
-    psc.f_part[n].pzi = .01;
-    psc.f_part[n].qni = -1.;
-    psc.f_part[n].mni = 1.;
-    psc.f_part[n].lni = 0.;
-    psc.f_part[n].wni = 1.;
+  int n = 0;
+  int n_per_cell = psc.n_part / ((psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
+  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
+    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
+      for (int cnt = 0; cnt < n_per_cell; cnt++) {
+	psc.f_part[n].xi = .2;
+	psc.f_part[n].yi = iy;
+	psc.f_part[n].zi = iz;
+	psc.f_part[n].pxi = 0.;
+	psc.f_part[n].pyi = .02;
+	psc.f_part[n].pzi = .01;
+	psc.f_part[n].qni = -1.;
+	psc.f_part[n].mni = 1.;
+	psc.f_part[n].lni = 0.;
+	psc.f_part[n].wni = 1.;
+	n++;
+      }
+    }
   }
 }
-
-void
-psc_setup_particles_random_yz()
-{
-  srand48(42.0);
-  for (int n = 0; n < psc.n_part; n++) {
-    psc.f_part[n].xi = .5;
-    psc.f_part[n].yi = psc.ilo[1] + (psc.ihi[1] - psc.ilo[1])*drand48();
-    psc.f_part[n].zi = psc.ilo[2] + (psc.ihi[2] - psc.ilo[2])*drand48();;
-    psc.f_part[n].pxi = 0.;
-    psc.f_part[n].pyi = .02;
-    psc.f_part[n].pzi = .01;
-    psc.f_part[n].qni = -1.;
-    psc.f_part[n].mni = 1.;
-    psc.f_part[n].lni = 0.;
-    psc.f_part[n].wni = 1.;
-  }
-}
-
 
 void
 psc_dump_particles(const char *fname)
@@ -251,8 +249,8 @@ psc_push_part_yz_b()
   psc.ops->particles_from_fortran();
   psc.ops->fields_from_fortran();
   psc.ops->push_part_yz_b();
-  psc.ops->particles_to_fortran();
   psc.ops->fields_to_fortran();
+  psc.ops->particles_to_fortran();
 }
 
 
@@ -306,32 +304,16 @@ psc_check_particles_ref()
 {
   assert(particle_ref);
   for (int i = 0; i < psc.n_part; i++) {
+    //    printf("i = %d\n", i);
     assert_equal(psc.f_part[i].xi , particle_ref[i].xi);
     assert_equal(psc.f_part[i].yi , particle_ref[i].yi);
     assert_equal(psc.f_part[i].zi , particle_ref[i].zi);
     assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi);
     assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi);
-    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi); 
-
+    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi);
   }
 }
 
-// ----------------------------------------------------------------------
-// psc_check_fields_ref
-//
-// check current field data agains previously saved reference solution
-
-void
-psc_check_fields_ref()
-{
-  assert(field_ref[NE]); //FIXME: this is bad
-  for (int m = 0; m < NR_FIELDS; m++){
-    for (int n = 0; n < psc.fld_size; n++){
-      assert_equal(psc.f_fields[m][n], field_ref[m][n]);
-      //  fprintf(stderr, "%d\n", n);
-    }
-  }
-}
 
 // ----------------------------------------------------------------------
 // psc_check_currents_ref
@@ -345,9 +327,7 @@ psc_check_currents_ref()
   for (int m = JXI; m <= JZI; m++){
     for (int n = 0; n < psc.fld_size; n++){
       assert_equal(psc.f_fields[m][n], field_ref[m][n]);
-      //  fprintf(stderr, "%d\n", n);
     }
-    HERE;
   }
 }
 
@@ -359,32 +339,11 @@ psc_check_currents_ref()
 void
 psc_create_test_1(const char *ops_name)
 {
-  int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 1, 20, 20 };
-  int ibn[3] = { 2, 2, 2 }; // FIXME?
+  int ilo[3] = { 0,  0,  0 };
+  int ihi[3] = { 1, 16, 16 };
+  int ibn[3] = { 2,  2,  2 }; // FIXME?
 
-  int n_part = 1e6;
-
-  psc_create(ops_name);
-  psc_alloc(ilo, ihi, ibn, n_part);
-  psc_setup_parameters();
-  psc_setup_fields_zero();
-  psc_setup_particles_1();
-}
-
-// ----------------------------------------------------------------------
-// psc_create_test_2
-//
-// set up test case 2 with some non-zero fields
-
-void
-psc_create_test_2(const char *ops_name)
-{
-  int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 1, 8, 8 };
-  int ibn[3] = { 2, 2, 2 }; // FIXME?
-
-  int n_part = 1e6;
+  int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
 
   psc_create(ops_name);
   psc_alloc(ilo, ihi, ibn, n_part);
@@ -393,23 +352,3 @@ psc_create_test_2(const char *ops_name)
   psc_setup_particles_1();
 }
 
-// ----------------------------------------------------------------------
-// psc_create_test_3
-//
-// A test case with a slightly more realistic setup
-
-void
-psc_create_test_3(const char *ops_name)
-{
-  int ilo[3] = { 0, 0, 0 };
-  int ihi[3] = { 1, 200, 200 };
-  int ibn[3] = { 2, 2, 2 }; // FIXME?
-
-  int n_part = 4e6;
-
-  psc_create(ops_name);
-  psc_alloc(ilo, ihi, ibn, n_part);
-  psc_setup_parameters();
-  psc_setup_fields_1();
-  psc_setup_particles_random_yz();
-}

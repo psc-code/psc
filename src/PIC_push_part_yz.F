@@ -280,7 +280,7 @@ c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
             gmz=0.5*(1.5-abs(h3-1.0))*(1.5-abs(h3-1.0))
             g0z=0.75-abs(h3)*abs(h3)
             g1z=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
-            
+
             if (qni.lt.0.0) then
                fnq=qni*wni*fnqs
                ne(l1,l2-1,l3-1)=ne(l1,l2-1,l3-1)+fnq*gmy*gmz
@@ -377,8 +377,7 @@ c CURRENT DENSITY AT (n+1.0)*dt
      &               +0.3333333333*s1y(l2)*s1z(l3)
                   wy=s1y(l2)*(s0z(l3)+0.5*s1z(l3))
                   wz=s1z(l3)*(s0y(l2)+0.5*s1y(l2))
-                  
-                  
+
                   jxh(0,l2,l3)=fnqx*wx
                   jyh(0,l2,l3)=jyh(0,l2-1,l3)-fnqy*wy
                   jzh(0,l2,l3)=jzh(0,l2,l3-1)-fnqz*wz
@@ -517,9 +516,10 @@ c x^n, p^n -> x^(n+0.5), p^n
 
       end subroutine
 
+c     ----------------------------------------------------------------------
 c     particle pusher yz, separated out to not depend on global
 c     variables from modules
-c     everything but the currents
+c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2})
 
       subroutine PIC_push_part_yz_b(niloc, p_niloc, cori, alpha, eta, 
      &     p2A, p2B, dt, dx, dy, dz,
@@ -575,7 +575,8 @@ c     everything but the currents
       real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
 
 
-c INITIALIZATION   
+c INITIALIZATION
+
       xl=0.5*dt
       yl=0.5*dt
       zl=0.5*dt
@@ -627,6 +628,11 @@ c x^n, p^n -> x^(n+0.5), p^n
 
             yi=yi+vyi*yl
             zi=zi+vzi*zl
+            
+            s0y=0.0
+            s0z=0.0
+            s1y=0.0
+            s1z=0.0
 
             u=xi*dxi
             v=yi*dyi
@@ -643,7 +649,14 @@ c x^n, p^n -> x^(n+0.5), p^n
             g0z=0.75-h3*h3
             g1y=0.5*(0.5-h2)*(0.5-h2)
             g1z=0.5*(0.5-h3)*(0.5-h3)
-  
+
+            s0y(-1)=0.5*(1.5-abs(h2-1.0))*(1.5-abs(h2-1.0))
+            s0y(+0)=0.75-abs(h2)*abs(h2)
+            s0y(+1)=0.5*(1.5-abs(h2+1.0))*(1.5-abs(h2+1.0))
+            s0z(-1)=0.5*(1.5-abs(h3-1.0))*(1.5-abs(h3-1.0))
+            s0z(+0)=0.75-abs(h3)*abs(h3)
+            s0z(+1)=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
+
             u=xi*dxi
             v=yi*dyi-0.5
             w=zi*dzi-0.5
@@ -763,11 +776,8 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             p_niloc(11*l+3)=pxi
             p_niloc(11*l+4)=pyi
             p_niloc(11*l+5)=pzi
-
-
-            p2B=p2B+mni*fnqs*(1.0d0/root-1.0d0)/eta
-            
          enddo
       endif
 
       end subroutine
+

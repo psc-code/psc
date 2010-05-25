@@ -1,15 +1,20 @@
 
-bin_PROGRAMS = VLI VLA SELECT test1 test2 test3 test4
+SUBDIRS = util
+
+bin_PROGRAMS = VLI VLA SELECT
 
 noinst_LIBRARIES = libpsc.a
 
-libpsc_a_SOURCES = psc.h psc_glue.c psc.c \
-	profile/profile.c \
+libpsc_a_SOURCES = \
+	init_parameters.c \
+	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
+	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
+	cuda/psc_cuda.c cuda/push_part_yz.c \
 	sse2/psc_sse2.c sse2/push_part_yz.c 
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
@@ -34,7 +39,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	psc.c
+	PSC_driver.F
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -58,7 +63,7 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
-	psc.c
+	PSC_driver.F
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT.F SERV_labelgen.F \
@@ -66,10 +71,34 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
 
+if USE_C_INTERFACE
+
+VLI_SOURCES += vli_main.c
+VLA_SOURCES += vla_main.c
+
+noinst_PROGRAMS = test1 test2
+
+LDADD = libpsc.a util/libutil.a
+
+TESTS = test2
+
+if USE_CUDA
+
+NVCC = /usr/local/cuda/bin/nvcc
+NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
+
+LDADD += -L/usr/local/cuda/lib64 -lcudart
+
+push_part_yz.o: cuda/push_part_yz.cu
+	$(NVCC) $(NVCFLAGS) -c $< -o $@
+
+%.cu: %.c
+	ln -sf $(<F) $@
+
+endif USE_CUDA
+
 if USE_SSE2
-
-LDADD = libpsc.a 
-
-TESTS = test2 test3 test4
-
+#should probably add -msse2 CFLAG here.
 endif USE_SSE2
+
+endif USE_C_INTERFACE

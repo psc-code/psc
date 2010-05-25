@@ -20,10 +20,27 @@ enum {
 
 typedef float real;
 
+#define real(x) x ## f
+
 // Fortran types
 
 typedef double f_real;
 typedef int f_int;
+
+// this matches the Fortran particle data structure
+
+struct f_particle {
+  f_real xi, yi, zi;
+  f_real pxi, pyi, pzi;
+  f_real qni;
+  f_real mni;
+  f_real cni;
+  f_real lni;
+  f_real wni;
+};
+
+// ----------------------------------------------------------------------
+// macros to access Fortran fields
 
 #define FF3_OFF(jx,jy,jz)						\
   (((((jz)-psc.ilg[2]))							\
@@ -46,22 +63,17 @@ typedef int f_int;
 
 #endif
 
-// this matches the Fortran particle data structure
-
-struct f_particle {
-  f_real xi, yi, zi;
-  f_real pxi, pyi, pzi;
-  f_real qni;
-  f_real mni;
-  f_real cni;
-  f_real lni;
-  f_real wni;
-};
-
 struct psc_param {
   double cori, eta, alpha;
   double wl;
   double wp;
+};
+
+struct psc_domain {
+  double length[3];
+  int itot[3], ilo[3], ihi[3];
+  int bnd_fld[3], bnd_part[3];
+  int nproc[3];
 };
 
 // ----------------------------------------------------------------------
@@ -78,13 +90,14 @@ struct psc_ops {
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
-  void (*push_part_yz_b)(void); // does everything but the currents
+  void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
 struct psc {
   struct psc_ops *ops;
   // user-configurable parameters
   struct psc_param prm;
+  struct psc_domain domain;
 
   // other parameters / constants
   double p2A, p2B;
@@ -112,10 +125,11 @@ struct psc {
 };
 
 // we keep this info global for now.
+// FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
-extern struct psc psc;
+struct psc psc;
 
-void psc_create();
+void psc_create(const char *mod_particle);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
@@ -123,16 +137,12 @@ void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_1();
 void psc_setup_particles_1();
-void psc_setup_particles_random_yz();
 void psc_dump_particles(const char *fname);
 void psc_save_particles_ref();
 void psc_save_fields_ref();
 void psc_check_currents_ref();
 void psc_check_particles_ref();
-void psc_check_fields_ref();
 void psc_create_test_1(const char *ops_name);
-void psc_create_test_2(const char *ops_name);
-void psc_create_test_3(const char *ops_name);
 
 void psc_push_part_yz();
 void psc_push_part_z();
@@ -144,6 +154,7 @@ void psc_push_part_yz_b();
 
 extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
+extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 
 // Wrappers for Fortran functions

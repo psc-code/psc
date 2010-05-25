@@ -28,7 +28,7 @@ depcomp
 stamp-h1
 config.h
 config.h.in
-src/.deps
+.deps
 idl/*.gz
 idl/*.eps
 idl/EE
@@ -36,3 +36,4 @@ idl/EFILES
 idl/PFILES
 idl/PP
 src/cuda/push_part_yz.cu
+src/util/test_params

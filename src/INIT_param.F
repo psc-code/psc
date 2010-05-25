@@ -1,3 +1,6 @@
+
+#include "config.h"
+
 c PARAMETER INITIALIZATION 
 
       subroutine INIT_param
@@ -36,73 +39,17 @@ c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
 c PARAMETERS!
 
-c lengthx: x extension of simulation box in m
-c lengthy: y extension of simulation box in m
-c lengthz: z extension of simulation box in m
-
-c i1tot: global size of the grid in x
-c i2tot: global size of the grid in y
-c i3tot: global size of the grid in z
-
-c xnpe: number of PEs in x-direction
-c ynpe: number of PEs in y-direction
-c znpe: number of PEs in z-direction
-
-c i1n: smallest grid index of the grid in x
-c i1x: largest grid index of the grid in x
-c i2n: smallest grid index of the grid in y
-c i2x: largest grid index of the grid in y
-c i3n: smallest grid index of the grid in z
-c i3x: largest grid index of the grid in z
-
-c i1n=i1x: 2D run in the yz-plane
-c i2n=i2x: 2D run in the xz-plane
-c i3n=i3x: 2D run in the xy-plane
-
-c i1n=i1x and i2n=i2x: 1D run along z-axis
-c i1n=i1x and i3n=i3x: 1D run along y-axis
-c i2n=i2x and i3n=i3x: 1D run along x-axis
-
-c boundary_field_x: 0=radiating, 1=periodic in x
-c boundary_field_y: 0=radiating, 1=periodic in y
-c boundary_field_z: 0=radiating, 1=periodic in z
-c boundary_part_x: 0=reflecting, 1=periodic in x
-c boundary_part_y: 0=reflecting, 1=periodic in y
-c boundary_part_z: 0=reflecting, 1=periodic in z
-
 c nmax: maximum number of time steps
 c cpum: CPU time limit
 c lw: laser wavelength in m
 c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
 
-
-      lengthx=1.0*1.0e-6
-      lengthy=1.0*1.0e-6
-      lengthz=20.0*1.0e-6
-
-      i1tot=10.0
-      i2tot=10.0
-      i3tot=400.0
-
-      xnpe=1
-      ynpe=1
-      znpe=1
-
-      i1n=8
-      i1x=8
-      i2n=8
-      i2x=8
-      i3n=0
-      i3x=399
-
-      boundary_field_x=1
-      boundary_field_y=1
-      boundary_field_z=1
-      boundary_part_x=1
-      boundary_part_y=1
-      boundary_part_z=1
-
+#ifdef USE_C_INTERFACE
+      call C_init_param_domain
+#else
+      call INIT_param_domain
+#endif
       cpum=100000.0
       lw=3.2*1.0e-6
       i0=1.0e21          ! modified from 22
@@ -400,3 +347,119 @@ c cpus: WALL CLOCK time at end time
       enddo
 
       end subroutine INIT_param
+
+
+
+c lengthx: x extension of simulation box in m
+c lengthy: y extension of simulation box in m
+c lengthz: z extension of simulation box in m
+
+c i1tot: global size of the grid in x
+c i2tot: global size of the grid in y
+c i3tot: global size of the grid in z
+
+c xnpe: number of PEs in x-direction
+c ynpe: number of PEs in y-direction
+c znpe: number of PEs in z-direction
+
+c i1n: smallest grid index of the grid in x
+c i1x: largest grid index of the grid in x
+c i2n: smallest grid index of the grid in y
+c i2x: largest grid index of the grid in y
+c i3n: smallest grid index of the grid in z
+c i3x: largest grid index of the grid in z
+
+c i1n=i1x: 2D run in the yz-plane
+c i2n=i2x: 2D run in the xz-plane
+c i3n=i3x: 2D run in the xy-plane
+
+c i1n=i1x and i2n=i2x: 1D run along z-axis
+c i1n=i1x and i3n=i3x: 1D run along y-axis
+c i2n=i2x and i3n=i3x: 1D run along x-axis
+
+c boundary_field_x: 0=radiating, 1=periodic in x
+c boundary_field_y: 0=radiating, 1=periodic in y
+c boundary_field_z: 0=radiating, 1=periodic in z
+c boundary_part_x: 0=reflecting, 1=periodic in x
+c boundary_part_y: 0=reflecting, 1=periodic in y
+c boundary_part_z: 0=reflecting, 1=periodic in z
+
+      subroutine INIT_param_domain
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      lengthx=1.0*1.0e-6
+      lengthy=1.0*1.0e-6
+      lengthz=20.0*1.0e-6
+
+      i1tot=10.0
+      i2tot=10.0
+      i3tot=400.0
+
+      xnpe=1
+      ynpe=1
+      znpe=1
+
+      i1n=8
+      i1x=8
+      i2n=8
+      i2x=8
+      i3n=0
+      i3x=399
+
+      boundary_field_x=1
+      boundary_field_y=1
+      boundary_field_z=1
+      boundary_part_x=1
+      boundary_part_y=1
+      boundary_part_z=1
+
+      end subroutine INIT_param_domain
+
+c     wrapper for C to be able to set these parameters
+
+      subroutine SAVE_param_domain(length, itot, in, ix,
+     &     bnd_fld, bnd_part, nproc)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      real(kind=8) :: length(3)
+      integer :: itot(3), in(3), ix(3)
+      integer :: bnd_fld(3), bnd_part(3)
+      integer :: nproc(3)
+
+      lengthx=length(1)
+      lengthy=length(2)
+      lengthz=length(3)
+
+      i1tot=itot(1)
+      i2tot=itot(2)
+      i3tot=itot(3)
+
+      i1n=in(1)
+      i2n=in(2)
+      i3n=in(3)
+
+      i1x=ix(1)
+      i2x=ix(2)
+      i3x=ix(3)
+
+      xnpe=nproc(1)
+      ynpe=nproc(2)
+      znpe=nproc(3)
+
+      boundary_field_x=bnd_fld(1)
+      boundary_field_y=bnd_fld(2)
+      boundary_field_z=bnd_fld(3)
+
+      boundary_part_x=bnd_part(1)
+      boundary_part_y=bnd_part(2)
+      boundary_part_z=bnd_part(3)
+
+      end subroutine SAVE_param_domain

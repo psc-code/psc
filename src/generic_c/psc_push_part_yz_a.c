@@ -1,7 +1,7 @@
 
 #include "psc_generic_c.h"
 
-#include "profile/profile.h"
+#include "util/profile.h"
 #include <math.h>
 #include <stdlib.h>
 
