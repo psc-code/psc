@@ -23,8 +23,11 @@ sse2_destroy()
 static void
 sse2_particles_from_fortran()
 {
+  void *m;
   struct psc_sse2 *sse2 = psc.c_ctx;
-  sse2->part = calloc(psc.n_part, sizeof(*sse2->part));
+  int ierr = posix_memalign(&m, 16, psc.n_part * sizeof(*sse2->part));
+  sse2->part = m;
+  assert(ierr == 0);
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
     struct sse2_particle *part = &sse2->part[n];
@@ -66,8 +69,10 @@ sse2_particles_to_fortran()
 static void
 sse2_fields_from_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
-  sse2->fields = calloc(NR_FIELDS*psc.fld_size, sizeof(sse2_real));
-  assert(sse2->fields != NULL);
+  void *m;
+  int ierr = posix_memalign(&m, 16, NR_FIELDS*psc.fld_size*sizeof(sse2_real));
+  sse2->fields = m;
+  assert(ierr == 0);
 
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){

@@ -35,15 +35,29 @@ union packed_int{
                                            
 } ; 
 
+//-----------------------------
 // real functions
+
+//Arithmetic
 #define pv_add_real(var1_r, var2_r) _mm_add_pd( var1_r, var2_r )
 #define pv_sub_real(var1_r, var2_r) _mm_sub_pd( var1_r, var2_r )
 #define pv_mul_real(var1_r, var2_r) _mm_mul_pd( var1_r, var2_r )
 #define pv_div_real(var1_r, var2_r) _mm_div_pd( var1_r, var2_r )
 #define pv_sqrt_real(var1_r) _mm_sqrt_pd( var1_r)
+
+//Loads and sets
 #define pv_set1_real(number) _mm_set1_pd( number )
-#define pv_load1_real(pointer) _mm_load_sd( pointer )
+#define pv_loads_real(pointer) _mm_load_sd( pointer )
+#define pv_load_real(mem_loc) _mm_load_pd( mem_loc )
+#define pv_loadu_real(mem_loc) _mm_loadu_pd( mem_loc )
+
+//Stores
+#define pv_store_real(mem_loc, var_r) _mm_store_pd( (mem_loc), var_r)
+#define pv_storeu_real(mem_loc, var_r) _mm_storeu_pd( (mem_loc), var_r)
+
+// Unpacks and shuffles
 #define pv_unpacklo_real(var1_r, var2_r) _mm_unpacklo_pd( var1_r, var2_r )
+#define pv_unpackhi_real(var1_r, var2_r) _mm_unpackhi_pd( var1_r, var2_r )
 
 // int functions
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
@@ -54,6 +68,72 @@ union packed_int{
 //conversion functions (round or pad)
 #define pv_cvt_real_to_int(real_vec) _mm_cvtpd_epi32( real_vec )
 #define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_pd( int_vec )
+
+//----------------------------------
+// Load particles from memory. This doesn't seem to hurt, and
+// on a more modern processor (fishercat) it seems to give a factor of 
+// two speed increase over serial loading
+ 
+#define LOAD_PARTS(p_struct) {						\
+    pvReal __A, __B, __C, __D, __E, __F, __G, __H;			\
+    __A.r = pv_loadu_real(&sse2->part[n].xi);				\
+    __E.r = pv_loadu_real(&sse2->part[n+1].xi);				\
+									\
+    __B.r = pv_loadu_real(&sse2->part[n].zi);				\
+    __F.r = pv_loadu_real(&sse2->part[n+1].zi);				\
+									\
+    p_struct.xi.r = pv_unpacklo_real(__A.r, __E.r);			\
+    p_struct.yi.r = pv_unpackhi_real(__A.r, __E.r);			\
+									\
+    p_struct.zi.r = pv_unpacklo_real(__B.r, __F.r);			\
+    p_struct.pxi.r = pv_unpackhi_real(__B.r, __F.r);			\
+									\
+    __C.r = pv_loadu_real(&sse2->part[n].pyi);				\
+    __G.r = pv_loadu_real(&sse2->part[n+1].pyi);			\
+									\
+    __D.r = pv_loadu_real(&sse2->part[n].qni);				\
+    __H.r = pv_loadu_real(&sse2->part[n+1].qni);			\
+									\
+    p_struct.pyi.r = pv_unpacklo_real(__C.r, __G.r);			\
+    p_struct.pzi.r = pv_unpackhi_real(__C.r, __G.r);			\
+									\
+    p_struct.qni.r = pv_unpacklo_real(__D.r, __H.r);			\
+    p_struct.mni.r = pv_unpackhi_real(__D.r, __H.r);			\
+									\
+    __A.r = pv_loads_real(&sse2->part[n].wni);				\
+    __E.r = pv_loads_real(&sse2->part[n+1].wni);			\
+									\
+    p_struct.wni.r = pv_unpacklo_real(__A.r, __E.r);			\
+  }
+
+//----------------------------------
+// Store particles to memory. This either has no effect,
+// or produces a performance boost. I really can't tell,
+// the timing jitters too much at the moment.
+
+#define STORE_PARTS(p_struct) {				\
+    pvReal __A, __B, __C, __E, __F, __G;	\
+    __A.r = pv_unpacklo_real(p_struct.xi.r, p_struct.yi.r);	\
+						\
+    pv_storeu_real(&sse2->part[n].xi, __A.r);	\
+						\
+    __B.r = pv_unpacklo_real(p_struct.zi.r, p_struct.pxi.r);	\
+    __C.r = pv_unpacklo_real(p_struct.pyi.r, p_struct.pzi.r);	\
+						\
+    pv_storeu_real(&sse2->part[n].zi, __B.r);	\
+						\
+    __E.r = pv_unpackhi_real(p_struct.xi.r, p_struct.yi.r);		\
+    __F.r = pv_unpackhi_real(p_struct.zi.r, p_struct.pxi.r);		\
+						\
+    pv_storeu_real(&sse2->part[n].pyi, __C.r);	\
+						\
+    __G.r = pv_unpackhi_real(p_struct.pyi.r, p_struct.pzi.r);	\
+						\
+    pv_storeu_real(&sse2->part[n+1].xi, __E.r);	\
+    pv_storeu_real(&sse2->part[n+1].zi, __F.r);		\
+    pv_storeu_real(&sse2->part[n+1].pyi, __G.r);		\
+  }
+
 
 //---------------------------------------------
 // Field interpolation for true 2D yz pusher.
@@ -69,18 +149,18 @@ union packed_int{
     VEC_OFF(field##off2,indx2,indx3##mns1);				\
     VEC_OFF(field##off3,indx2##pls1,indx3##mns1);			\
 									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);	\
 									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
 									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
     field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
     									\
@@ -92,18 +172,18 @@ union packed_int{
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
     field.r = pv_mul_real(outer_coeff##mz.r, field##tmp1.r);		\
     									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
 									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);		\
 									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
     field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
 									\
@@ -115,18 +195,18 @@ union packed_int{
     field##tmp1.r = pv_mul_real(outer_coeff##Oz.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
     									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
     									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
     									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
     field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);		\
     									\
@@ -152,33 +232,123 @@ union packed_int{
       int v[4] __attribute__ ((aligned (16)));
 }; 
 
+//---------------------------------------
 // real functions
+
+//Arithmetic
 #define pv_add_real(var1_r, var2_r) _mm_add_ps( var1_r, var2_r )
 #define pv_sub_real(var1_r, var2_r) _mm_sub_ps( var1_r, var2_r )
 #define pv_mul_real(var1_r, var2_r) _mm_mul_ps( var1_r, var2_r )
 #define pv_div_real(var1_r, var2_r) _mm_div_ps( var1_r, var2_r )
 #define pv_sqrt_real(var1_r) _mm_sqrt_ps( var1_r)
-#define pv_set1_real(number) _mm_set1_ps( number )
-#define pv_load_real(float_ad) _mm_load_ps( float_ad )
-#define pv_load1_real(float_point) _mm_load_ss( float_point )
-#define pv_unpacklo_real( var1_r, var2_r ) _mm_unpacklo_ps( var1_r, var2_r)
 
+// Sets and Loads
+#define pv_set1_real(number) _mm_set1_ps( number )  //Sets all members to the given const. float
+#define pv_load_real(mem_loc) _mm_load_ps( mem_loc ) // loads an aligned vector from mem_loc
+#define pv_loadu_real(mem_loc) _mm_loadu_ps( mem_loc ) // loads an unaligned vector from mem_loc
+#define pv_loads_real(mem_loc) _mm_load_ss( mem_loc ) // loads a single word from mem_loc into the lowest
+                                                      // element and zeros the rest of the vector
+
+//Stores
+#define pv_store_real(mem_loc, var_r) _mm_store_ps(mem_loc, var_r) //stores a vector to aligned memory at mem_loc
+#define pv_storeu_real(mem_loc, var_r) _mm_storeu_ps(mem_loc, var_r) // stores a vector to unaligned memory at mem_loc
+
+//Unpacks and shuffles
+#define pv_unpacklo_real( var1_r, var2_r ) _mm_unpacklo_ps( var1_r, var2_r)
+#define pv_unpackhi_real( var1_r, var2_r ) _mm_unpackhi_ps( var1_r, var2_r)
+
+
+//---------------------------------------
 // int functions
+
+//Arithmetic
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
 #define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r )
 #define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r )
+
+// Sets and loads
 #define pv_set1_int(number) _mm_set1_epi32( number )
 
+//------------------------------------
 //conversion functions (round or pad)
+
 #define pv_cvt_real_to_int(real_vec) _mm_cvtps_epi32( real_vec )
 #define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_ps( int_vec )
+
+//----------------------------------
+// Load particles from memory. This doesn't seem to hurt, and
+// on a more modern processor (fishercat) it seems to give a factor of 
+// two speed increase over serial loading
+ 
+#define LOAD_PARTS(p_struct) {					\
+    pvReal __A, __B, __C, __D, __E, __F, __G, __H, __alpha, __beta, __gamma, __delta;	\
+    __A.r = pv_loadu_real(&sse2->part[n].xi);			\
+    __C.r = pv_loadu_real(&sse2->part[n+2].xi);			\
+    __B.r = pv_loadu_real(&sse2->part[n+1].xi);			\
+    __D.r = pv_loadu_real(&sse2->part[n+3].xi);			\
+								\
+    __alpha.r = pv_unpacklo_real(__A.r, __C.r);			\
+    __gamma.r = pv_unpackhi_real(__A.r, __C.r);			\
+    __beta.r = pv_unpacklo_real(__B.r, __D.r);			\
+    __delta.r = pv_unpackhi_real(__B.r, __D.r);			\
+								\
+    __E.r = pv_loadu_real(&sse2->part[n].pyi);			\
+    __G.r = pv_loadu_real(&sse2->part[n+2].pyi);			\
+								\
+    p_struct.xi.r = pv_unpacklo_real(__alpha.r, __beta.r);			\
+    p_struct.yi.r = pv_unpackhi_real(__alpha.r, __beta.r);			\
+    p_struct.zi.r = pv_unpacklo_real(__gamma.r, __delta.r);		\
+    p_struct.pxi.r = pv_unpackhi_real(__gamma.r, __delta.r);		\
+								\
+    __F.r = pv_loadu_real(&sse2->part[n+1].pyi);			\
+    __H.r = pv_loadu_real(&sse2->part[n+3].pyi);			\
+								\
+    __gamma.r = pv_unpackhi_real(__E.r, __G.r);			\
+    __alpha.r = pv_unpacklo_real(__E.r, __G.r);			\
+    __beta.r = pv_unpacklo_real(__F.r, __H.r);			\
+    __delta.r = pv_unpackhi_real(__F.r, __H.r);			\
+								\
+    p_struct.pyi.r = pv_unpacklo_real(__alpha.r, __beta.r);		\
+    p_struct.pzi.r = pv_unpackhi_real(__alpha.r, __beta.r);		\
+    p_struct.qni.r = pv_unpacklo_real(__gamma.r, __delta.r);		\
+    p_struct.mni.r = pv_unpackhi_real(__gamma.r, __delta.r);		\
+								\
+    __A.r = pv_loads_real(&sse2->part[n].wni);			\
+    __C.r = pv_loads_real(&sse2->part[n+2].wni);			\
+    __B.r = pv_loads_real(&sse2->part[n+1].wni);			\
+    __D.r = pv_loads_real(&sse2->part[n+3].wni);			\
+								\
+    __alpha.r = pv_unpacklo_real(__A.r, __C.r);			\
+    __beta.r = pv_unpacklo_real(__B.r, __D.r);			\
+    p_struct.wni.r = pv_unpacklo_real(__alpha.r, __beta.r);		\
+  }
+
+//----------------------------------
+// Store particles to memory. 
+// For single precision it doesn't appear to be worthwhile
+// to shuffle and do a vector store. Some tests have even
+// indicated it could hurt performance by occupying fp
+// units and decreasing pipelining efficiency, but by and large
+// the tests are inconclusive
+
+#define STORE_PARTS(p_struct) {				\
+  for(int m=0; m < VEC_SIZE; m++){		\
+  (sse2->part[n+m]).xi = p_struct.xi.v[m];		\
+  (sse2->part[n+m]).yi = p_struct.yi.v[m];		\
+  (sse2->part[n+m]).zi = p_struct.zi.v[m];		\
+  (sse2->part[n+m]).pxi = p_struct.pxi.v[m];		\
+  (sse2->part[n+m]).pyi = p_struct.pyi.v[m];		\
+  (sse2->part[n+m]).pzi = p_struct.pzi.v[m];		\
+  }						\
+}
 
 //---------------------------------------------
 // Field interpolation for true 2D yz pusher.
 // This may be ugly, but it smokes the serial version.
 
 #define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
-    pvReal field##tmp1, field##tmp2, field##tmp3;		\
+									\
+    pvReal field##tmp1, field##tmp2, field##tmp3;			\
     pvReal field##shuffAC_1, field##shuffBD_1, field##shuffAC_2, field##shuffBD_2, field##shuffAC_3, field##shuffBD_3; \
     pvReal field##_in_A1, field##_in_B1, field##_in_C1, field##_in_D1;	\
     pvReal field##_in_A2, field##_in_B2, field##_in_C2, field##_in_D2;	\
@@ -188,28 +358,28 @@ union packed_int{
     VEC_OFF(field##off2,indx2,indx3##mns1);				\
     VEC_OFF(field##off3,indx2##pls1,indx3##mns1);			\
 									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
-    field##_in_C1.r = pv_load1_real(F_ENUM##point+field##off1.v[2]);		\
-    field##_in_D1.r = pv_load1_real(F_ENUM##point+field##off1.v[3]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_C1.r = pv_loads_real(F_ENUM##point+field##off1.v[2]);		\
+    field##_in_D1.r = pv_loads_real(F_ENUM##point+field##off1.v[3]);		\
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);	\
 									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
-    field##_in_C2.r = pv_load1_real(F_ENUM##point+field##off2.v[2]);		\
-    field##_in_D2.r = pv_load1_real(F_ENUM##point+field##off2.v[3]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_C2.r = pv_loads_real(F_ENUM##point+field##off2.v[2]);		\
+    field##_in_D2.r = pv_loads_real(F_ENUM##point+field##off2.v[3]);		\
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
 									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
-    field##_in_C3.r = pv_load1_real(F_ENUM##point+field##off3.v[2]);		\
-    field##_in_D3.r = pv_load1_real(F_ENUM##point+field##off3.v[3]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_C3.r = pv_loads_real(F_ENUM##point+field##off3.v[2]);		\
+    field##_in_D3.r = pv_loads_real(F_ENUM##point+field##off3.v[3]);		\
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \
@@ -223,28 +393,28 @@ union packed_int{
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
     field.r = pv_mul_real(outer_coeff##mz.r, field##tmp1.r);		\
     									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
-    field##_in_C1.r = pv_load1_real(F_ENUM##point+field##off1.v[2]);		\
-    field##_in_D1.r = pv_load1_real(F_ENUM##point+field##off1.v[3]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_C1.r = pv_loads_real(F_ENUM##point+field##off1.v[2]);		\
+    field##_in_D1.r = pv_loads_real(F_ENUM##point+field##off1.v[3]);		\
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
 									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
-    field##_in_C2.r = pv_load1_real(F_ENUM##point+field##off2.v[2]);		\
-    field##_in_D2.r = pv_load1_real(F_ENUM##point+field##off2.v[3]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_C2.r = pv_loads_real(F_ENUM##point+field##off2.v[2]);		\
+    field##_in_D2.r = pv_loads_real(F_ENUM##point+field##off2.v[3]);		\
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);		\
 									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
-    field##_in_C3.r = pv_load1_real(F_ENUM##point+field##off3.v[2]);		\
-    field##_in_D3.r = pv_load1_real(F_ENUM##point+field##off3.v[3]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_C3.r = pv_loads_real(F_ENUM##point+field##off3.v[2]);		\
+    field##_in_D3.r = pv_loads_real(F_ENUM##point+field##off3.v[3]);		\
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \
@@ -258,28 +428,28 @@ union packed_int{
     field##tmp1.r = pv_mul_real(outer_coeff##Oz.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
     									\
-    field##_in_A1.r = pv_load1_real(F_ENUM##point+field##off1.v[0]);		\
-    field##_in_B1.r = pv_load1_real(F_ENUM##point+field##off1.v[1]);		\
-    field##_in_C1.r = pv_load1_real(F_ENUM##point+field##off1.v[2]);		\
-    field##_in_D1.r = pv_load1_real(F_ENUM##point+field##off1.v[3]);		\
+    field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
+    field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
+    field##_in_C1.r = pv_loads_real(F_ENUM##point+field##off1.v[2]);		\
+    field##_in_D1.r = pv_loads_real(F_ENUM##point+field##off1.v[3]);		\
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
     field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
     									\
-    field##_in_A2.r = pv_load1_real(F_ENUM##point+field##off2.v[0]);		\
-    field##_in_B2.r = pv_load1_real(F_ENUM##point+field##off2.v[1]);		\
-    field##_in_C2.r = pv_load1_real(F_ENUM##point+field##off2.v[2]);		\
-    field##_in_D2.r = pv_load1_real(F_ENUM##point+field##off2.v[3]);		\
+    field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
+    field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
+    field##_in_C2.r = pv_loads_real(F_ENUM##point+field##off2.v[2]);		\
+    field##_in_D2.r = pv_loads_real(F_ENUM##point+field##off2.v[3]);		\
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
     field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
     									\
-    field##_in_A3.r = pv_load1_real(F_ENUM##point+field##off3.v[0]);		\
-    field##_in_B3.r = pv_load1_real(F_ENUM##point+field##off3.v[1]);		\
-    field##_in_C3.r = pv_load1_real(F_ENUM##point+field##off3.v[2]);		\
-    field##_in_D3.r = pv_load1_real(F_ENUM##point+field##off3.v[3]);		\
+    field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
+    field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
+    field##_in_C3.r = pv_loads_real(F_ENUM##point+field##off3.v[2]);		\
+    field##_in_D3.r = pv_loads_real(F_ENUM##point+field##off3.v[3]);		\
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \

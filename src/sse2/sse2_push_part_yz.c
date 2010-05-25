@@ -341,18 +341,7 @@ sse2_push_part_yz_a()
     
     struct particle_vec p;
 
-    for(int m=0; m < elements; m++){
-      p.xi.v[m] = sse2->part[n+m].xi;
-      p.yi.v[m] = sse2->part[n+m].yi;
-      p.zi.v[m] = sse2->part[n+m].zi;
-      p.pxi.v[m] = sse2->part[n+m].pxi;
-      p.pyi.v[m] = sse2->part[n+m].pyi;
-      p.pzi.v[m] = sse2->part[n+m].pzi;
-      p.qni.v[m] = sse2->part[n+m].qni;
-      p.mni.v[m] = sse2->part[n+m].mni;
-      p.wni.v[m] = sse2->part[n+m].wni;
-    }
-
+    LOAD_PARTS(p);
 
     // Locals for computation      
     pvReal vxi, vyi, vzi, root;
@@ -367,15 +356,9 @@ sse2_push_part_yz_a()
     //---------------------------------------------
     // Store Particles
 
-    for(int m=0; m<elements; m++){
-      (sse2->part[n+m]).xi = p.xi.v[m];		
-      (sse2->part[n+m]).yi = p.yi.v[m];		
-      (sse2->part[n+m]).zi = p.zi.v[m];		
-      (sse2->part[n+m]).pxi = p.pxi.v[m];	
-      (sse2->part[n+m]).pyi = p.pyi.v[m];     
-      (sse2->part[n+m]).pzi = p.pzi.v[m];	
-    }
 
+    STORE_PARTS(p);
+  
   }
   prof_stop(pr);
 }
@@ -472,18 +455,8 @@ sse2_push_part_yz_b()
     // Load Particles
 
     struct particle_vec p;
- 
-    for(int m=0; m < elements; m++){
-      p.xi.v[m] = sse2->part[n+m].xi;
-      p.yi.v[m] = sse2->part[n+m].yi;
-      p.zi.v[m] = sse2->part[n+m].zi;
-      p.pxi.v[m] = sse2->part[n+m].pxi;
-      p.pyi.v[m] = sse2->part[n+m].pyi;
-      p.pzi.v[m] = sse2->part[n+m].pzi;
-      p.qni.v[m] = sse2->part[n+m].qni;
-      p.mni.v[m] = sse2->part[n+m].mni;
-      p.wni.v[m] = sse2->part[n+m].wni;
-    }
+
+    LOAD_PARTS(p);
 
     //---------------------------------------------
     // Declare locals for computation      
@@ -570,14 +543,6 @@ sse2_push_part_yz_b()
     //---------------------------------------------
     // Field Interpolation
     
-    //FIXME : HUGE bottleneck here. For some reason, the macros
-    // used here (defined in simd_wrap.h ) are significantly slower
-    // than doing a straight serial translation of this section
-    // (see the sse2-dev branch where the straight serial translation 
-    // exists, and can be compared with these macros)
-    // I am determined to get this running at least as fast 
-    // as the straight serial version
-    
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
     INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
@@ -603,15 +568,8 @@ sse2_push_part_yz_b()
     //---------------------------------------------
     // Store particles 
 
-    for(int m=0; m<elements; m++){
-      (sse2->part[n+m]).xi = p.xi.v[m];		
-      (sse2->part[n+m]).yi = p.yi.v[m];		
-      (sse2->part[n+m]).zi = p.zi.v[m];		
-      (sse2->part[n+m]).pxi = p.pxi.v[m];	
-      (sse2->part[n+m]).pyi = p.pyi.v[m];     
-      (sse2->part[n+m]).pzi = p.pzi.v[m];	
-    }
-
+    STORE_PARTS(p);
+  
 
     tmpx.r = pv_sub_real(root.r, ones.r);
     tmpx.r = pv_div_real(tmpx.r, eta.r);
@@ -734,21 +692,9 @@ sse2_push_part_yz()
     // Load Particles
     
     struct particle_vec p;
+
+    LOAD_PARTS(p);
  
-    for(int m=0; m < elements; m++){
-      p.xi.v[m] = sse2->part[n+m].xi;
-      p.yi.v[m] = sse2->part[n+m].yi;
-      p.zi.v[m] = sse2->part[n+m].zi;
-      p.pxi.v[m] = sse2->part[n+m].pxi;
-      p.pyi.v[m] = sse2->part[n+m].pyi;
-      p.pzi.v[m] = sse2->part[n+m].pzi;
-      p.qni.v[m] = sse2->part[n+m].qni;
-      p.mni.v[m] = sse2->part[n+m].mni;
-      p.wni.v[m] = sse2->part[n+m].wni;
-    }
-
-
-
     //---------------------------------------------
     // Declare locals for computation      
 
@@ -850,8 +796,6 @@ sse2_push_part_yz()
     //---------------------------------------------
     // Field Interpolation
     
-    //FIXME : HUGE bottleneck here. 
-    
     pvReal exq, eyq, ezq, bxq, byq, bzq;
 
     INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
@@ -891,14 +835,7 @@ sse2_push_part_yz()
     //---------------------------------------------
     // Store particles 
 
-    for(int m=0; m < elements; m++){
-      (sse2->part[n+m]).xi = p.xi.v[m];		
-      (sse2->part[n+m]).yi = p.yi.v[m];		
-      (sse2->part[n+m]).zi = p.zi.v[m];		
-      (sse2->part[n+m]).pxi = p.pxi.v[m];	
-      (sse2->part[n+m]).pyi = p.pyi.v[m];     
-      (sse2->part[n+m]).pzi = p.pzi.v[m];	
-    }
+    STORE_PARTS(p);
 
     tmpx.r = pv_sub_real(root.r, ones.r);
     tmpx.r = pv_div_real(tmpx.r, eta.r);
