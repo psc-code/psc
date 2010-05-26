@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
+#include "psc_sse2.h"
+#include "simd_wrap.h"
 
 static void
 sse2_create()
@@ -23,11 +25,12 @@ sse2_destroy()
 static void
 sse2_particles_from_fortran()
 {
-  void *m;
   struct psc_sse2 *sse2 = psc.c_ctx;
-  int ierr = posix_memalign(&m, 16, psc.n_part * sizeof(*sse2->part));
-  sse2->part = m;
-  assert(ierr == 0);
+  int pad = 0;
+  if((psc.n_part % VEC_SIZE) != 0){
+    pad = VEC_SIZE - (psc.n_part % VEC_SIZE);
+  }
+  sse2->part = calloc((psc.n_part + pad), sizeof(*sse2->part));
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
     struct sse2_particle *part = &sse2->part[n];
@@ -42,6 +45,11 @@ sse2_particles_from_fortran()
     part->mni = f_part->mni;
     part->wni = f_part->wni;
     assert(round(part->xi) == 0); //FIXME: ensures we have true 2-D with x<.5 for all parts
+  }
+  // We need to give the padding a non-zero mass to avoid NaNs
+  for(int n = psc.n_part; n < (psc.n_part + pad); n++){
+    struct sse2_particle *part = &sse2->part[n];
+    part->mni = 1.0;
   }
 }
 

@@ -322,19 +322,8 @@ sse2_push_part_yz_a()
   yl.r = pv_mul_real(half.r, dt.r);
   zl.r = pv_mul_real(half.r, dt.r);
 
-  int elements = VEC_SIZE;
 
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
-
-    // Doing this may harm the compiler's ability to
-    // optimize the code, but something similar is 
-    // neccesary for sse2 to be able to handle particle
-    // numbers not divisible by VEC_SIZE
-    // FIXME : padding instead?
-    int part_left = psc.n_part - n;   
-    if((part_left < VEC_SIZE) && (part_left != 0)){
-      elements = part_left;
-    }                             
 
     //---------------------------------------------
     // Bringing in particle specific parameters
@@ -432,24 +421,8 @@ sse2_push_part_yz_b()
     sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
-
-
-  int elements = VEC_SIZE;
   
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
-    
-    // Doing this may harm the compiler's ability to
-    // optimize the code, but something similar is 
-    // neccesary for sse2 to be able to handle particle
-    // numbers not divisible by VEC_SIZE
-    // FIXME : padding instead?
-    
-    int part_left = psc.n_part - n;
-    if((part_left < VEC_SIZE) && (part_left != 0)){
-      elements = part_left;
-    }
-
-
 
     //---------------------------------------------
     // Load Particles
@@ -460,8 +433,8 @@ sse2_push_part_yz_b()
 
     //---------------------------------------------
     // Declare locals for computation      
-    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h1, h2, h3;
-    pvInt itemp1, itemp2;
+    pvReal vxi, vyi, vzi, tmpx, tmpy, root, h2, h3;
+    pvInt itemp1;
 
 
     //---------------------------------------------
@@ -476,7 +449,7 @@ sse2_push_part_yz_b()
     tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
     tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
     
-    for(int m = 0; m < elements; m++){
+    for(int m = 0; m < VEC_SIZE; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
     }
 
@@ -576,7 +549,7 @@ sse2_push_part_yz_b()
     tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
     tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
 
-    for(int m = 0; m < elements; m++){
+    for(int m = 0; m < VEC_SIZE; m++){
       psc.p2B += tmpx.v[m]; //What's this for?
     }
 
@@ -671,22 +644,7 @@ sse2_push_part_yz()
     sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
-    
-    int elements = VEC_SIZE;
-
   for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
-
-    // Doing this may harm the compiler's ability to
-    // optimize the code, but something similar is 
-    // neccesary for sse2 to be able to handle particle
-    // numbers not divisible by VEC_SIZE
-    // FIXME : padding instead?
-    
-    int part_left = psc.n_part - n;
-    if((part_left < VEC_SIZE) && (part_left != 0)){
-      elements = part_left;
-    }
-
 
     //---------------------------------------------
     // Load Particles
@@ -698,8 +656,8 @@ sse2_push_part_yz()
     //---------------------------------------------
     // Declare locals for computation      
 
-    pvReal vxi, vyi, vzi, tmpx, tmpy, tmpz, root, h2, h3;
-    pvInt itemp1, itemp2;
+    pvReal vxi, vyi, vzi, tmpx, tmpy, root, h2, h3;
+    pvInt itemp1;
 
     //---------------------------------------------
     // Half step positions with current momenta
@@ -713,7 +671,7 @@ sse2_push_part_yz()
     tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
     tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
     
-    for(int m = 0; m < elements; m++){
+    for(int m = 0; m < VEC_SIZE; m++){
       psc.p2A += tmpx.v[m]; //What's this for?
     }
 
@@ -842,7 +800,7 @@ sse2_push_part_yz()
     tmpy.r = pv_mul_real(p.mni.r, fnqs.r);
     tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
 
-    for(int m = 0; m < elements; m++){
+    for(int m = 0; m < VEC_SIZE; m++){
       psc.p2B += tmpx.v[m]; //What's this for?
     }
     
@@ -869,7 +827,7 @@ sse2_push_part_yz()
     // discovered this isn't done every step, I haven't spared
     // two thoughts for this section. I'll make it better soon.
 
-    for(int m=0; m < elements ; m++){ 
+    for(int m=0; m < VEC_SIZE ; m++){ 
       sse2_real fnq;
       // This may or may not work, and may or may not help
       sse2_real *densp; 
@@ -925,7 +883,7 @@ sse2_push_part_yz()
     pvInt shifty, shiftz; //FIXME : need to check if this really helps
     shifty.r = pv_sub_int(k2.r,j2.r);
     shiftz.r = pv_sub_int(k3.r,j3.r);
-    for(int p=0; p < elements; p++){
+    for(int p=0; p < VEC_SIZE; p++){
       s1y[shifty.v[p] + 1].v[p] = gmy.v[p];
       s1y[shifty.v[p] + 2].v[p] = gOy.v[p];
       s1y[shifty.v[p] + 3].v[p] = gly.v[p];
@@ -951,7 +909,7 @@ sse2_push_part_yz()
     // below allows the calculations to be done in vectors
     // even if the particles have different l{2,3}{min,max}
  
-    for(int p = 0; p < elements; p++){
+    for(int p = 0; p < VEC_SIZE; p++){
       if(k2.v[p]==j2.v[p]){
 	s1y[0].v[p] = 0.0;
 	s1y[4].v[p] = 0.0;
@@ -1034,7 +992,7 @@ sse2_push_part_yz()
 	
 	//---------------------------------------------
 	// Store into the 'squished' currents
-	for(int m = 0; m < elements; m++){
+	for(int m = 0; m < VEC_SIZE; m++){
 	  JSX(j2.v[m] + l2i - 2, j3.v[m] + l3i - 2) += wx.v[m]; //undo index adjustment of l(2,3)i
 	  JSY(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jyh.v[m]; //undo index adjustment of l(2,3)i
     	  JSZ(j2.v[m] + l2i - 2, j3.v[m] + l3i -2) += jzh[l2i].v[m]; //undo index adjustment of l(2
