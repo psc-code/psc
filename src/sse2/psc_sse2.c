@@ -48,7 +48,11 @@ sse2_particles_from_fortran()
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = psc.n_part; n < (psc.n_part + pad); n++){
+    struct f_particle *f_part = &psc.f_part[psc.n_part-1];
     struct sse2_particle *part = &sse2->part[n];
+    part->xi  = f_part->xi; //We need to be sure the padding loads fields inside the local domain
+    part->yi  = f_part->yi;
+    part->zi  = f_part->zi;
     part->mni = 1.0;
   }
 }
