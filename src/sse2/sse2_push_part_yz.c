@@ -304,7 +304,7 @@ sse2_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_a", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_a", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -362,7 +362,7 @@ sse2_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_b", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -566,7 +566,7 @@ sse2_push_part_yz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 12 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 

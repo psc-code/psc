@@ -66,7 +66,7 @@ AM_CONDITIONAL([USE_C_INTERFACE], [test "$enable_c_interface" = "yes"])
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
 AC_ARG_ENABLE(
   [cuda],
-  [AS_HELP_STRING([--cuda], [use nvcc to create CUDA code])],
+  [AS_HELP_STRING([--enable-cuda], [use nvcc to create CUDA code])],
   [AC_DEFINE([USE_CUDA])]
 )
 AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
@@ -74,7 +74,7 @@ AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
 AH_TEMPLATE([USE_SSE2], [use streaming SIMD extension 2])
 AC_ARG_ENABLE(
   [sse2],
-  [AS_HELP_STRING([--sse2], [use code optimized for processors using Intel's SSE2])],
+  [AS_HELP_STRING([--enable-sse2], [use code optimized for processors using Intel's SSE2])],
   [AC_DEFINE([USE_SSE2])]
 )
 AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])

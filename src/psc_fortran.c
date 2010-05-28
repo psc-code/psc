@@ -27,7 +27,7 @@ fortran_push_part_yz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz", 1., 0, psc.n_part * 17 * sizeof(double));
+    pr = prof_register("fort_part_yz", 1., 0, psc.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
  
@@ -47,7 +47,7 @@ fortran_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_a", 1., 0, psc.n_part * 14 * sizeof(double));
+    pr = prof_register("fort_part_yz_a", 1., 0, psc.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz_a();
@@ -59,7 +59,7 @@ fortran_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(double));
+    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz_b();

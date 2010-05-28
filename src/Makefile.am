@@ -76,6 +76,8 @@ if USE_C_INTERFACE
 VLI_SOURCES += vli_main.c
 VLA_SOURCES += vla_main.c
 
+endif
+
 noinst_PROGRAMS = test1 test2
 
 LDADD = libpsc.a util/libutil.a
@@ -100,4 +102,3 @@ endif USE_CUDA
 if USE_SSE2
 # We should probably add the -msse2 cflag here...
 endif USE_SSE2
-endif USE_C_INTERFACE
