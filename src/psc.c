@@ -48,6 +48,11 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
   NULL,
 };
 
+static struct psc_output_ops *psc_output_ops_list[] = {
+  &psc_output_ops_fortran,
+  NULL,
+};
+
 static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
@@ -70,9 +75,21 @@ psc_find_sort_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_output_ops *
+psc_find_output_ops(const char *ops_name)
+{
+  for (int i = 0; psc_output_ops_list[i]; i++) {
+    if (strcasecmp(psc_output_ops_list[i]->name, ops_name) == 0)
+      return psc_output_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_output_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 struct psc_cmdline {
   const char *mod_particle;
   const char *mod_sort;
+  const char *mod_output;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_cmdline, x)
@@ -80,6 +97,7 @@ struct psc_cmdline {
 static struct param psc_cmdline_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
+  { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
   {},
 };
 
@@ -87,12 +105,13 @@ static struct param psc_cmdline_descr[] = {
 
 
 void
-psc_create(const char *mod_particle, const char *mod_sort)
+psc_create(const char *mod_particle, const char *mod_sort, const char *mod_output)
 {
   // set default to what we've got passed
   struct psc_cmdline par = {
     .mod_particle = mod_particle,
     .mod_sort     = mod_sort,
+    .mod_output   = mod_output,
   };
 
   params_parse_cmdline_nodefault(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
@@ -107,6 +126,10 @@ psc_create(const char *mod_particle, const char *mod_sort)
   psc.sort_ops = psc_find_sort_ops(par.mod_sort);
   if (psc.sort_ops->create) {
     psc.sort_ops->create();
+  }
+  psc.output_ops = psc_find_output_ops(par.mod_output);
+  if (psc.output_ops->create) {
+    psc.output_ops->create();
   }
 }
 
@@ -293,6 +316,16 @@ psc_sort()
   psc.sort_ops->sort();
 }
 
+// ----------------------------------------------------------------------
+// psc_out_field
+
+void
+psc_out_field()
+{
+  assert(psc.output_ops->out_field);
+  psc.output_ops->out_field();
+}
+
 
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];
@@ -401,7 +434,7 @@ psc_create_test_1(const char *ops_name)
 
   int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
 
-  psc_create(ops_name, "fortran");
+  psc_create(ops_name, "fortran", "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_1();

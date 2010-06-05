@@ -11,11 +11,13 @@
 #define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
+#define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 
 #define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
 #define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
 #define C_sort_F77 F77_FUNC(c_sort,C_SORT)
+#define C_out_field_F77 F77_FUNC(c_out_field,C_OUT_FIELD)
 
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_int *i1mx, f_int *i2mx, f_int *i3mx,
@@ -57,6 +59,7 @@ void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
+void OUT_field_1_F77(void);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -138,6 +141,12 @@ PIC_find_cell_indices()
 {
   PIC_set_variables();
   PIC_find_cell_indices_F77(&psc.n_part, &psc.f_part[-1]);
+}
+
+void
+OUT_field_1()
+{
+  OUT_field_1_F77();
 }
 
 // ----------------------------------------------------------------------
@@ -266,4 +275,13 @@ C_sort_F77(f_int *niloc, struct f_particle *p_niloc,
   psc.f_part = &p_niloc[1];
 
   psc_sort();
+}
+
+void
+C_out_field_F77(f_int *dummy)
+{
+  // make sure we got passed the right number of arguments
+  assert(*dummy == 99);
+
+  psc_out_field();
 }
