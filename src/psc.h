@@ -66,6 +66,11 @@ struct f_particle {
 #endif
 
 struct psc_param {
+  double qq;
+  double mm;
+  double tt;
+  double cc;
+  double eps0;
   double cori, eta, alpha;
   double wl;
   double wp;

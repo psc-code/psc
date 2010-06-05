@@ -45,17 +45,43 @@ init_param_domain()
   params_print(&psc.domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 }
 
+#define VAR(x) (void *)offsetof(struct psc_param, x)
+
+static struct param psc_param_descr[] = {
+  { "qq"            , VAR(qq)              , PARAM_DOUBLE(1.6021e-19)   },
+  { "mm"            , VAR(mm)              , PARAM_DOUBLE(9.1091e-31)   },
+  { "tt"            , VAR(tt)              , PARAM_DOUBLE(1.6021e-16)   },
+  { "cc"            , VAR(cc)              , PARAM_DOUBLE(3.0e8)        },
+  { "eps0"          , VAR(eps0)            , PARAM_DOUBLE(8.8542e-12)   },
+  {},
+};
+
+#undef VAR
+
+void
+init_param_psc()
+{
+  params_parse_cmdline_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
+				 MPI_COMM_WORLD);
+  params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
+}
+
 // ======================================================================
 // Fortran glue
 
 #define C_init_param_domain_F77 F77_FUNC_(c_init_param_domain, C_INIT_PARAM_DOMAIN)
 #define GET_param_domain_F77    F77_FUNC_(get_param_domain, GET_PARAM_DOMAIN)
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
+#define C_init_param_psc_F77    F77_FUNC_(c_init_param_psc, C_INIT_PARAM_PSC)
+#define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
+#define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
 
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
+void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
+void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
 
 void
 C_init_param_domain_F77()
@@ -77,3 +103,16 @@ C_init_param_domain_F77()
   SET_param_domain_F77(p->length, p->itot, p->ilo, imax,
 		       p->bnd_fld, p->bnd_part, p->nproc);
 }
+
+void
+C_init_param_psc_F77()
+{
+  struct psc_param *p = &psc.prm;
+
+  GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
+
+  init_param_psc();
+  
+  SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
+}
+

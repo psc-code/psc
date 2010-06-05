@@ -27,11 +27,6 @@ c pi: pi
       rd1=3
       rd2=3
       rd3=3
-      qq=1.6021e-19
-      mm=9.1091e-31
-      tt=1.6021e-16
-      cc=3.0e8
-      eps0=8.8542e-12
       pi=3.1415927
 
 
@@ -46,8 +41,10 @@ c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
 
       call INIT_param_domain
+      call INIT_param_psc
 #ifdef USE_C_INTERFACE
       call C_init_param_domain
+      call C_init_param_psc
 #endif
 
       cpum=100000.0
@@ -420,6 +417,23 @@ c boundary_part_z: 0=reflecting, 1=periodic in z
 
       end subroutine INIT_param_domain
 
+c     initialize some parameters
+
+      subroutine INIT_param_psc
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      qq=1.6021e-19
+      mm=9.1091e-31
+      tt=1.6021e-16
+      cc=3.0e8
+      eps0=8.8542e-12
+
+      end subroutine INIT_param_psc
+
 c     wrapper for C to be access these parameters
 
       subroutine GET_param_domain(length, itot, in, ix,
@@ -509,3 +523,41 @@ c     wrapper for C to be able to set these parameters
       boundary_part_z=bnd_part(3)
 
       end subroutine SET_param_domain
+
+c     wrapper for C to be able to access these parameters
+
+      subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
+
+      qq_ = qq
+      mm_ = mm
+      tt_ = tt
+      cc_ = cc
+      eps0_ = eps0
+
+      end subroutine GET_param_psc
+
+c     wrapper for C to be able to set these parameters
+
+      subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
+
+      qq = qq_
+      mm = mm_
+      tt = tt_
+      cc = cc_
+      eps0 = eps0_
+
+      end subroutine SET_param_psc
