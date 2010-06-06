@@ -11,15 +11,15 @@ def load_array(ds):
     a[:] = ds[:]
     return a
 
-def plot_z(ax, filename, fld):
-    f = h5py.File(filename, "r")
-    x = load_array(f['/psc/fields/%s' % fld])
-    # X = -load_array(f['mhd/crd/x'])
-    # Y = load_array(f['mhd/crd/y'])
-    # Z = load_array(f['mhd/crd/z'])
+def plot_z(ax, file, fld):
+    x = load_array(file['/psc/fields/%s' % fld])
 
-    print x.shape
-    plot(x[:,0,-0])
+    ax.plot(x[:,0,0])
+
+def plot_xz(ax, file, fld):
+    x = load_array(file['/psc/fields/%s' % fld])
+
+    ax.pcolormesh(x[:,0,:])
 
 def main():
     import optparse
@@ -31,12 +31,22 @@ def main():
     if len(args) != 1:
         parser.error("specify exactly one filename")
     filename = args[0]
+    file = h5py.File(filename, "r")
+    lo = file["psc"].attrs["lo"]
+    hi = file["psc"].attrs["hi"]
+    dims = hi - lo
 
     flds = options.fields.split(",")
     n = len(flds)
+    
     for i, fld in enumerate(flds):
         ax = subplot(n, 1, i+1)
-        plot_z(ax, filename, fld)
+        if dims[0] == 1 and dims[1] == 1:
+            plot_z(ax, file, fld)
+        elif dims[1] == 1:
+            plot_xz(ax, file, fld)
+        else:
+            raise Exception("dims %s not supported" % dims)
 
     show()
 

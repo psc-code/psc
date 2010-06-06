@@ -78,6 +78,11 @@ hdf5_out_field()
     file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5LTset_attribute_int(group, ".", "timestep", &psc.timestep, 1);
+    H5LTset_attribute_double(group, ".", "dt", &psc.dt, 1);
+    H5LTset_attribute_double(group, ".", "dx", psc.dx, 3);
+    H5LTset_attribute_int(group, ".", "lo", psc.glo, 3);
+    H5LTset_attribute_int(group, ".", "hi", psc.ghi, 3);
+
     group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
     fld = calloc(dims[0] * dims[1] * dims[2], sizeof(float));
