@@ -38,3 +38,4 @@ idl/PFILES
 idl/PP
 src/cuda/push_part_yz.cu
 src/util/test_params
+*.h5

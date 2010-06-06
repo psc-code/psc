@@ -50,6 +50,7 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
 
 static struct psc_output_ops *psc_output_ops_list[] = {
   &psc_output_ops_fortran,
+  &psc_output_ops_hdf5,
   NULL,
 };
 
@@ -441,3 +442,19 @@ psc_create_test_1(const char *ops_name)
   psc_setup_particles_1();
 }
 
+// ======================================================================
+
+const char *fldname[NR_FIELDS] = {
+  [NE]  = "ne",
+  [NI]  = "ni",
+  [NN]  = "nn",
+  [JXI] = "jx",
+  [JYI] = "jy",
+  [JZI] = "jz",
+  [EX]  = "ex",
+  [EY]  = "ey",
+  [EZ]  = "ez",
+  [BX]  = "bx",
+  [BY]  = "by",
+  [BZ]  = "bz",
+};
