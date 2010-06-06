@@ -164,6 +164,7 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 		f_real *ex, f_real *ey, f_real *ez,
 		f_real *bx, f_real *by, f_real *bz,
 		f_real *cori, f_real *alpha, f_real *eta,f_real *wl, f_real *wp,
+		f_int *n,
 		f_int *dummy)
 {
   // make sure we got passed the right number of arguments
@@ -220,6 +221,9 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   psc.prm.eta = *eta;
   psc.prm.wl = *wl;
   psc.prm.wp = *wp;
+
+  // current timestep, I/O control
+  psc.timestep = *n;
 }
 
 void
@@ -244,7 +248,6 @@ C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 
 void
 C_push_part_z_F77(f_real *p2A, f_real *p2B,
-		  f_int *n,
 		  f_int *niloc, struct f_particle *p_niloc,
 		  f_int *dummy)
 {
@@ -253,7 +256,6 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
 
   psc.p2A = *p2A;
   psc.p2B = *p2B;
-  psc.timestep = *n;
 
   psc.n_part = *niloc;
   psc.f_part = &p_niloc[1];
