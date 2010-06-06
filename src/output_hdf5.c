@@ -1,11 +1,35 @@
 
 #include "psc.h"
 #include "util/profile.h"
+#include "util/params.h"
 
 #include <mpi.h>
 #include <string.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
+
+struct psc_hdf5 {
+  int field_next_out;
+  int field_step;
+};
+
+#define VAR(x) (void *)offsetof(struct psc_hdf5, x)
+
+static struct param psc_hdf5_descr[] = {
+  { "field_first_out"    , VAR(field_next_out)       , PARAM_INT(0)        },
+  { "field_step_out"     , VAR(field_step)           , PARAM_INT(10)        },
+  {},
+};
+
+#undef VAR
+
+static struct psc_hdf5 psc_hdf5;
+
+static void hdf5_out_create(void)
+{ 
+  params_parse_cmdline(&psc_hdf5, psc_hdf5_descr, "PSC HDF5", MPI_COMM_WORLD);
+  params_print(&psc_hdf5, psc_hdf5_descr, "PSC HDF5", MPI_COMM_WORLD);
+};
 
 static void
 copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
@@ -26,6 +50,11 @@ copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
 static void
 hdf5_out_field()
 {
+  if (psc.timestep < psc_hdf5.field_next_out) {
+    return;
+  }
+  psc_hdf5.field_next_out += psc_hdf5.field_step;
+
   static int pr;
   if (!pr) {
     pr = prof_register("hdf5_out_field", 1., 0, 0);
@@ -110,5 +139,6 @@ hdf5_out_field()
 
 struct psc_output_ops psc_output_ops_hdf5 = {
   .name      = "hdf5",
+  .create    = hdf5_out_create,
   .out_field = hdf5_out_field,
 };
