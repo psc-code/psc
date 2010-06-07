@@ -34,18 +34,19 @@ c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
 c PARAMETERS!
 
+      call INIT_param_domain
+      call INIT_param_psc
+#ifdef USE_C_INTERFACE
+      call C_init_case
+      call C_init_param_domain
+      call C_init_param_psc
+#endif
+
 c nmax: maximum number of time steps
 c cpum: CPU time limit
 c lw: laser wavelength in m
 c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
-
-      call INIT_param_domain
-      call INIT_param_psc
-#ifdef USE_C_INTERFACE
-      call C_init_param_domain
-      call C_init_param_psc
-#endif
 
       cpum=100000.0
       lw=3.2*1.0e-6

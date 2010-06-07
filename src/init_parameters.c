@@ -2,6 +2,9 @@
 #include "psc.h"
 #include "util/params.h"
 
+#include <string.h>
+#include <stdlib.h>
+
 struct psc_cmdline {
   const char *mod_particle;
 };
@@ -66,6 +69,54 @@ init_param_psc()
   params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
 }
 
+// ----------------------------------------------------------------------
+// set up cases
+
+static struct psc_case_ops *psc_case_ops_list[] = {
+  &psc_case_ops_harris,
+  NULL,
+};
+
+static struct psc_case_ops *
+psc_find_case(const char *name)
+{
+  for (int i = 0; psc_case_ops_list[i]; i++) {
+    if (strcasecmp(psc_case_ops_list[i]->name, name) == 0)
+      return psc_case_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_case '%s' not available.\n", name);
+  abort();
+}
+
+struct par_case {
+  char *case_name;
+};
+
+#define VAR(x) (void *)offsetof(struct par_case, x)
+
+static struct param par_case_descr[] = {
+  { "case"          , VAR(case_name)        , PARAM_STRING(NULL)   },
+  {},
+};
+
+#undef VAR
+
+void
+init_case()
+{
+  struct par_case par;
+  params_parse_cmdline(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
+  params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
+
+  if (par.case_name) {
+    psc.case_ops = psc_find_case(par.case_name);
+    if (psc.case_ops->create) {
+      psc.case_ops->create();
+    }
+    psc.case_ops->init_param();
+  }
+}
+
 // ======================================================================
 // Fortran glue
 
@@ -75,6 +126,7 @@ init_param_psc()
 #define C_init_param_psc_F77    F77_FUNC_(c_init_param_psc, C_INIT_PARAM_PSC)
 #define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
+#define C_init_case_F77         F77_FUNC_(c_init_case, C_INIT_CASE)
 
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
@@ -83,8 +135,8 @@ void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
 
-void
-C_init_param_domain_F77()
+static void
+get_param_domain()
 {
   struct psc_domain *p = &psc.domain;
   int imax[3];
@@ -94,9 +146,14 @@ C_init_param_domain_F77()
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
   }
+}
 
-  init_param_domain();
-  
+static void
+set_param_domain()
+{
+  struct psc_domain *p = &psc.domain;
+  int imax[3];
+
   for (int d = 0; d < 3; d++) {
     imax[d] = p->ihi[d] - 1;
   }
@@ -104,15 +161,47 @@ C_init_param_domain_F77()
 		       p->bnd_fld, p->bnd_part, p->nproc);
 }
 
-void
-C_init_param_psc_F77()
+static void
+get_param_psc()
 {
   struct psc_param *p = &psc.prm;
 
   GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
+}
 
-  init_param_psc();
-  
+static void
+set_param_psc()
+{
+  struct psc_param *p = &psc.prm;
   SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
 }
+
+void
+C_init_param_domain_F77()
+{
+  get_param_domain();
+  init_param_domain();
+  set_param_domain();
+}
+
+void
+C_init_param_psc_F77()
+{
+  get_param_psc();
+  init_param_psc();
+  set_param_psc();
+}
+
+void
+C_init_case_F77()
+{
+  get_param_psc();
+  get_param_domain();
+
+  init_case();
+  
+  set_param_psc();
+  set_param_domain();
+}
+
 

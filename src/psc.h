@@ -84,6 +84,16 @@ struct psc_domain {
 };
 
 // ----------------------------------------------------------------------
+// cases (initial conditions and other parameters...)
+
+struct psc_case_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*init_param)(void);
+};
+
+// ----------------------------------------------------------------------
 // general info / parameters for the code
 
 struct psc_ops {
@@ -118,6 +128,8 @@ struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
+  struct psc_case_ops *case_ops;
+  void *case_data;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_domain domain;
@@ -193,6 +205,8 @@ extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_hdf5;
+
+extern struct psc_case_ops psc_case_ops_harris;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
