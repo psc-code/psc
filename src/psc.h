@@ -98,6 +98,7 @@ struct psc_case_ops {
   void (*create)(void);
   void (*destroy)(void);
   void (*init_param)(void);
+  void (*init_field)(void);
 };
 
 // ----------------------------------------------------------------------

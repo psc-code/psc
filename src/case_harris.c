@@ -106,9 +106,45 @@ harris_init_param()
   psc.domain.bnd_part[2] = 1;
 }
 
+static void
+harris_init_field(void)
+{
+  struct psc_harris *harris = psc.case_data;
+
+  double BB = harris->BB, MMi = harris->MMi;
+  double LLx = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
+  double LLL = harris->lambda * sqrt(MMi);
+  double AA = harris->pert * BB * sqrt(MMi);
+
+  // FIXME, do we need the ghost points?
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	double dx = psc.dx[0], dz = psc.dx[2];
+	double xx = jx * dx, zz = jz * dz;
+
+	FF3(BX, jx,jy,jz) = 
+	  BB * (-1. 
+		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
+		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
+	  + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
+
+	FF3(BZ, jx,jy,jz) =
+	  - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
+
+	FF3(JYI, jx,jy,jz) = BB/LLL *
+	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
+	     * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
+      }
+    }
+  }
+}
+
 struct psc_case_ops psc_case_ops_harris = {
   .name       = "harris",
   .create     = harris_create,
   .destroy    = harris_destroy,
   .init_param = harris_init_param,
+  .init_field = harris_init_field,
 };

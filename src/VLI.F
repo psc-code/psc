@@ -1,4 +1,6 @@
 
+#include "config.h"
+
 c VLI.f is the init program and VLA.f the main program!
 
 #ifndef USE_C_INTERFACE
@@ -38,7 +40,11 @@ c The real VLI main
 
       call INIT_idistr
       call ALLOC_field
+#ifdef USE_C_INTERFACE
+      call C_INIT_field
+#else
       call INIT_field
+#endif
       call SETUP_field
 c      call INIT_MCC
 
