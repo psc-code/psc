@@ -16,11 +16,6 @@ c PARAMETERS THAT SHOULD NOT BE CHANGED UNDER NORMAL CONDITIONS
 c rd1=3: excess data points on local node
 c rd2=3: excess data points on local node
 c rd3=3: excess data points on local node
-c qq: reference charge in As
-c mm: reference mass in kg
-c tt: reference temperature in J
-c c: light velocity in m/s
-c eps0: eps0 in As/Vm
 c pi: pi
 
 
@@ -28,7 +23,6 @@ c pi: pi
       rd2=3
       rd3=3
       pi=3.1415927
-
 
 c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
@@ -41,18 +35,6 @@ c PARAMETERS!
       call C_init_param_domain
       call C_init_param_psc
 #endif
-
-c nmax: maximum number of time steps
-c cpum: CPU time limit
-c lw: laser wavelength in m
-c i0: irradiance in W um**2/m**2
-c n0: peak atom density in m**3
-
-      cpum=100000.0
-      lw=3.2*1.0e-6
-      i0=1.0e21          ! modified from 22
-      n0=1.0e26          ! modified from 28
-
 
 ! PML BOUNDARY CONDITIONS 
 
@@ -175,7 +157,9 @@ c wp: plasma frequency
 
       wl=2.0*pi*cc/lw
       ld=cc/wl
-      e0=dsqrt(2.0*i0/eps0/cc)/lw/1.0e6
+      if (e0 == 0.) then
+         e0=dsqrt(2.0*i0/eps0/cc)/lw/1.0e6
+      endif
       b0=e0/cc
       j0=eps0*wl*e0
       rho0=eps0*wl*b0
@@ -205,7 +189,9 @@ c np:  number of timesteps for time-averaging
       nnp=int(2.0*pi/dt)+1
       dt=2.0*pi/nnp
       np=2*nnp
-      nmax=30*nnp
+      if (nmax == 0) then
+         nmax=30*nnp
+      endif
 
 ! PML PARAMETERS - added by ab
 
@@ -427,11 +413,30 @@ c     initialize some parameters
 
       implicit none
 
+c qq: reference charge in As
+c mm: reference mass in kg
+c tt: reference temperature in J
+c c: light velocity in m/s
+c eps0: eps0 in As/Vm
+
+c nmax: maximum number of time steps
+c cpum: CPU time limit
+c lw: laser wavelength in m
+c i0: irradiance in W um**2/m**2
+c n0: peak atom density in m**3
+
       qq=1.6021e-19
       mm=9.1091e-31
       tt=1.6021e-16
       cc=3.0e8
       eps0=8.8542e-12
+
+      nmax=0 ! calculate later
+      cpum=100000.0
+      lw=3.2*1.0e-6
+      i0=1.0e21          ! modified from 22
+      n0=1.0e26          ! modified from 28
+      e0=0 ! calculate later
 
       end subroutine INIT_param_psc
 
@@ -527,7 +532,8 @@ c     wrapper for C to be able to set these parameters
 
 c     wrapper for C to be able to access these parameters
 
-      subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_)
+      subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_)
 
       use VLA_variables
       use PIC_variables
@@ -535,6 +541,8 @@ c     wrapper for C to be able to access these parameters
       implicit none
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
+      real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
+      integer :: nmax_
 
       qq_ = qq
       mm_ = mm
@@ -542,11 +550,19 @@ c     wrapper for C to be able to access these parameters
       cc_ = cc
       eps0_ = eps0
 
+      nmax_ = nmax
+      cpum_ = cpum
+      lw_ = lw
+      i0_ = i0
+      n0_ = n0
+      e0_ = e0
+
       end subroutine GET_param_psc
 
 c     wrapper for C to be able to set these parameters
 
-      subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_)
+      subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_)
 
       use VLA_variables
       use PIC_variables
@@ -554,11 +570,20 @@ c     wrapper for C to be able to set these parameters
       implicit none
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
+      real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
+      integer :: nmax_
 
       qq = qq_
       mm = mm_
       tt = tt_
       cc = cc_
       eps0 = eps0_
+
+      nmax = nmax_
+      cpum = cpum_
+      lw = lw_
+      i0 = i0_
+      n0 = n0_
+      e0 = e0_
 
       end subroutine SET_param_psc

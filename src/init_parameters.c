@@ -56,6 +56,12 @@ static struct param psc_param_descr[] = {
   { "tt"            , VAR(tt)              , PARAM_DOUBLE(1.6021e-16)   },
   { "cc"            , VAR(cc)              , PARAM_DOUBLE(3.0e8)        },
   { "eps0"          , VAR(eps0)            , PARAM_DOUBLE(8.8542e-12)   },
+  { "nmax"          , VAR(nmax)            , PARAM_INT(0)               },
+  { "cpum"          , VAR(cpum)            , PARAM_DOUBLE(100000.)      },
+  { "lw"            , VAR(lw)              , PARAM_DOUBLE(3.2e-6)       },
+  { "i0"            , VAR(i0)              , PARAM_DOUBLE(1e21)         },
+  { "n0"            , VAR(n0)              , PARAM_DOUBLE(1e26)         },
+  { "e0"            , VAR(e0)              , PARAM_DOUBLE(0.)           },
   {},
 };
 
@@ -132,8 +138,12 @@ void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
-void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
-void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0);
+void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
+		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
+		       f_real *e0);
+void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
+		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
+		       f_real *e0);
 
 static void
 get_param_domain()
@@ -165,15 +175,16 @@ static void
 get_param_psc()
 {
   struct psc_param *p = &psc.prm;
-
-  GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
+  GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
+		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0);
 }
 
 static void
 set_param_psc()
 {
   struct psc_param *p = &psc.prm;
-  SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0);
+  SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
+		     &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0);
 }
 
 void

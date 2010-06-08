@@ -74,6 +74,12 @@ struct psc_param {
   double cori, eta, alpha;
   double wl;
   double wp;
+  int nmax;
+  double cpum;
+  double lw;
+  double i0;
+  double n0;
+  double e0;
 };
 
 struct psc_domain {
