@@ -198,9 +198,10 @@ c dt: time step, Courant criterion
 c nnp: number of timesteps for a full laser cycle
 c np:  number of timesteps for time-averaging
 
-      dx=lengthx/(i1tot-1)/ld
-      dy=lengthy/(i2tot-1)/ld
-      dz=lengthz/(i3tot-1)/ld
+      ! KG FIXME, is i[123]tot(not -1) right in all cases?
+      dx=lengthx/(i1tot)/ld
+      dy=lengthy/(i2tot)/ld
+      dz=lengthz/(i3tot)/ld
 
       dt=0.75*sqrt(1.0/(1.0/dx**2+1.0/dy**2+1.0/dz**2))
       nnp=int(2.0*pi/dt)+1
