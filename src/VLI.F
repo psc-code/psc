@@ -37,7 +37,9 @@ c The real VLI main
 
 
       call INIT_idistr
+      call ALLOC_field
       call INIT_field
+      call SETUP_field
 c      call INIT_MCC
 
       call PSC_driver

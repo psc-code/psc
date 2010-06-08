@@ -1,39 +1,14 @@
-c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
 
+#include "config.h"
 
-      subroutine INIT_field
+c THIS SUBROUTINE ALLOCATES THE ELECTROMAGNETIC FIELDS.
+
+      subroutine ALLOC_field
 
       use PIC_variables
       use VLA_variables
 
       implicit none
-      integer :: l1,l2,l3
-      integer :: nodei,nodej,nodek
-
-      real(kind=8) :: dxi,dyi,dzi
-      real(kind=8) :: pxi,pyi,pzi
-      real(kind=8) :: qni,mni,cni,lni,wni
-      real(kind=8) :: xi,yi,zi
-      real(kind=8) :: x0,y0,z0,xr,yr,zr,rot
-      real(kind=8) :: u,v,w
-      real(kind=8) :: h1,h2,h3
-      real(kind=8) :: gmx,g0x,g1x,gmy,g0y,g1y,gmz,g0z,g1z
-      real(kind=8) :: fni,fnis
-      real(kind=8) :: p_pulse_z2
-
-
-      nodei=seg_i1(mpe)
-      nodej=seg_i2(mpe) 
-      nodek=seg_i3(mpe) 
-
-      x0=5.0*1.0e-6/ld
-      y0=5.0*1.0e-6/ld
-      z0=5.0*1.0e-6/ld
-      rot=45.0*3.141592/180.0
-
-
-c array allocation
-
 
 c kay: potentials      
       allocate(vphi0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
@@ -160,9 +135,131 @@ c kay: potentials
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
 
+! array allocation
+! size of pml should be equal to size of em field arrays
+
+! x
+
+      allocate(kappax(i1mn-rd1:i1mx+rd1))
+      allocate(sigmax(i1mn-rd1:i1mx+rd1))
+      
+      allocate(cxp(i1mn-rd1:i1mx+rd1))
+      allocate(cxm(i1mn-rd1:i1mx+rd1))
+     
+      allocate(fbx(i1mn-rd1:i1mx+rd1))
+      allocate(fcx(i1mn-rd1:i1mx+rd1))
+      allocate(fdx(i1mn-rd1:i1mx+rd1))
+      allocate(fex(i1mn-rd1:i1mx+rd1))
+
+      allocate(bxp(i1mn-rd1:i1mx+rd1))
+      allocate(bxm(i1mn-rd1:i1mx+rd1))
+      
+      allocate(gbx(i1mn-rd1:i1mx+rd1))
+      allocate(gcx(i1mn-rd1:i1mx+rd1))
+      allocate(gdx(i1mn-rd1:i1mx+rd1))
+      allocate(gex(i1mn-rd1:i1mx+rd1))
+
+! y
+      
+      allocate(kappay(i2mn-rd2:i2mx+rd2))
+      allocate(sigmay(i2mn-rd2:i2mx+rd2))
+      
+      allocate(cyp(i2mn-rd2:i2mx+rd2))
+      allocate(cym(i2mn-rd2:i2mx+rd2))
+      
+      allocate(fby(i2mn-rd2:i2mx+rd2))
+      allocate(fcy(i2mn-rd2:i2mx+rd2))
+      allocate(fdy(i2mn-rd2:i2mx+rd2))
+      allocate(fey(i2mn-rd2:i2mx+rd2))
+
+      allocate(byp(i2mn-rd2:i2mx+rd2))
+      allocate(bym(i2mn-rd2:i2mx+rd2))
+      
+      allocate(gby(i2mn-rd2:i2mx+rd2))
+      allocate(gcy(i2mn-rd2:i2mx+rd2))
+      allocate(gdy(i2mn-rd2:i2mx+rd2))
+      allocate(gey(i2mn-rd2:i2mx+rd2))
+
+! z
+      
+      allocate(kappaz(i3mn-rd3:i3mx+rd3))
+      allocate(sigmaz(i3mn-rd3:i3mx+rd3))
+      
+      allocate(czp(i3mn-rd3:i3mx+rd3))
+      allocate(czm(i3mn-rd3:i3mx+rd3))
+      
+      allocate(fbz(i3mn-rd3:i3mx+rd3))
+      allocate(fcz(i3mn-rd3:i3mx+rd3))
+      allocate(fdz(i3mn-rd3:i3mx+rd3))
+      allocate(fez(i3mn-rd3:i3mx+rd3))
+
+      allocate(bzp(i3mn-rd3:i3mx+rd3))
+      allocate(bzm(i3mn-rd3:i3mx+rd3))
+      
+      allocate(gbz(i3mn-rd3:i3mx+rd3))
+      allocate(gcz(i3mn-rd3:i3mx+rd3))
+      allocate(gdz(i3mn-rd3:i3mx+rd3))
+      allocate(gez(i3mn-rd3:i3mx+rd3))
+
+      ex=0.0d0
+      ey=0.0d0
+      ez=0.0d0
+      bx=0.0d0
+      by=0.0d0
+      bz=0.0d0
+      ne=0.0d0
+      ni=0.0d0
+      nn=0.0d0
+      jxi=0.0d0
+      jyi=0.0d0
+      jzi=0.0d0
+      vphi0=0.0d0
+      vphi1=0.0d0
+      vax0=0.0d0
+      vay0=0.0d0
+      vaz0=0.0d0
+      vax1=0.0d0
+      vay1=0.0d0
+      vaz1=0.0d0
+      dvx=0.0d0
+      dvy=0.0d0
+      dvz=0.0d0
+      hx=0.0d0
+      hy=0.0d0
+      hz=0.0d0
+      eps = 1.0
+      mu = 1.0
+      rhoi=0.0d0
+
+#ifdef USE_C_INTERFACE
+c     need to let C code know about the newly allocated fields
+      call C_init_vars(dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     i1n, i2n, i3n, i1x, i2x, i3x,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
+     &     cori, alpha, beta, eta, wl, wp,
+     &     n,
+     &     99)
+#endif
+
+      end subroutine ALLOC_field
+
+
+c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
+
+
+      subroutine INIT_field
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+      integer :: l1,l2,l3
+
+      real(kind=8) :: h1,h2,h3
+      real(kind=8) :: p_pulse_z2
 
 c setting up the fields
-
 
       do i3=i3mn-rd3,i3mx+rd3
          h3=i3*dz
@@ -235,9 +332,35 @@ c setting up the fields
          enddo
       enddo
 
+      end subroutine INIT_field
+
+C     set up various things after the main fields have been initialized
+
+      subroutine SETUP_field
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+      integer :: l1,l2,l3
+
+      real(kind=8) :: dxi,dyi,dzi
+      real(kind=8) :: pxi,pyi,pzi
+      real(kind=8) :: qni,mni,cni,lni,wni
+      real(kind=8) :: xi,yi,zi
+      real(kind=8) :: x0,y0,z0,xr,yr,zr,rot
+      real(kind=8) :: u,v,w
+      real(kind=8) :: h1,h2,h3
+      real(kind=8) :: gmx,g0x,g1x,gmy,g0y,g1y,gmz,g0z,g1z
+      real(kind=8) :: fni,fnis
+      real(kind=8) :: p_pulse_z2
+
+      x0=5.0*1.0e-6/ld
+      y0=5.0*1.0e-6/ld
+      z0=5.0*1.0e-6/ld
+      rot=45.0*3.141592/180.0
 
 c setting up charge and current densities
-
 
       if (niloc.gt.0) then
          dxi=1.0/dx
@@ -480,72 +603,6 @@ c setting up time-averaged fields
       sum_ped=0.0d0
 
 
-! array allocation
-! size of pml should be equal to size of em field arrays
-
-! x
-
-      allocate(kappax(i1mn-rd1:i1mx+rd1))
-      allocate(sigmax(i1mn-rd1:i1mx+rd1))
-      
-      allocate(cxp(i1mn-rd1:i1mx+rd1))
-      allocate(cxm(i1mn-rd1:i1mx+rd1))
-     
-      allocate(fbx(i1mn-rd1:i1mx+rd1))
-      allocate(fcx(i1mn-rd1:i1mx+rd1))
-      allocate(fdx(i1mn-rd1:i1mx+rd1))
-      allocate(fex(i1mn-rd1:i1mx+rd1))
-
-      allocate(bxp(i1mn-rd1:i1mx+rd1))
-      allocate(bxm(i1mn-rd1:i1mx+rd1))
-      
-      allocate(gbx(i1mn-rd1:i1mx+rd1))
-      allocate(gcx(i1mn-rd1:i1mx+rd1))
-      allocate(gdx(i1mn-rd1:i1mx+rd1))
-      allocate(gex(i1mn-rd1:i1mx+rd1))
-
-! y
-      
-      allocate(kappay(i2mn-rd2:i2mx+rd2))
-      allocate(sigmay(i2mn-rd2:i2mx+rd2))
-      
-      allocate(cyp(i2mn-rd2:i2mx+rd2))
-      allocate(cym(i2mn-rd2:i2mx+rd2))
-      
-      allocate(fby(i2mn-rd2:i2mx+rd2))
-      allocate(fcy(i2mn-rd2:i2mx+rd2))
-      allocate(fdy(i2mn-rd2:i2mx+rd2))
-      allocate(fey(i2mn-rd2:i2mx+rd2))
-
-      allocate(byp(i2mn-rd2:i2mx+rd2))
-      allocate(bym(i2mn-rd2:i2mx+rd2))
-      
-      allocate(gby(i2mn-rd2:i2mx+rd2))
-      allocate(gcy(i2mn-rd2:i2mx+rd2))
-      allocate(gdy(i2mn-rd2:i2mx+rd2))
-      allocate(gey(i2mn-rd2:i2mx+rd2))
-
-! z
-      
-      allocate(kappaz(i3mn-rd3:i3mx+rd3))
-      allocate(sigmaz(i3mn-rd3:i3mx+rd3))
-      
-      allocate(czp(i3mn-rd3:i3mx+rd3))
-      allocate(czm(i3mn-rd3:i3mx+rd3))
-      
-      allocate(fbz(i3mn-rd3:i3mx+rd3))
-      allocate(fcz(i3mn-rd3:i3mx+rd3))
-      allocate(fdz(i3mn-rd3:i3mx+rd3))
-      allocate(fez(i3mn-rd3:i3mx+rd3))
-
-      allocate(bzp(i3mn-rd3:i3mx+rd3))
-      allocate(bzm(i3mn-rd3:i3mx+rd3))
-      
-      allocate(gbz(i3mn-rd3:i3mx+rd3))
-      allocate(gcz(i3mn-rd3:i3mx+rd3))
-      allocate(gdz(i3mn-rd3:i3mx+rd3))
-      allocate(gez(i3mn-rd3:i3mx+rd3))
-
 ! deriving pml attenuation coefficients
 
 ! not moved by half step
@@ -631,4 +688,4 @@ c setting up time-averaged fields
          gez(i3) = 1.0/bzp(i3)
       end do
 
-      end subroutine INIT_field
+      end subroutine SETUP_field
