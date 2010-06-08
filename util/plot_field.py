@@ -19,8 +19,11 @@ def plot_z(ax, file, fld):
 def plot_xz(ax, file, fld):
     x = load_array(file['/psc/fields/%s' % fld])
 
-    ax.pcolormesh(x[:,0,:])
-
+    pcolormesh(x[:,0,:])
+    colorbar()
+    xlim(0,x.shape[0])
+    ylim(0,x.shape[2])
+    
 def main():
     import optparse
 
