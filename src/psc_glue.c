@@ -14,6 +14,7 @@
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 
 #define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
+#define C_set_particle_info_F77 F77_FUNC(c_set_particle_info,C_SET_PARTICLE_INFO)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
 #define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
 #define C_sort_F77 F77_FUNC(c_sort,C_SORT)
@@ -226,6 +227,13 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 
   // current timestep, I/O control
   psc.timestep = *n;
+}
+
+void
+C_set_particle_info_F77(f_int *niloc, struct f_particle *p_niloc)
+{
+  psc.n_part = *niloc;
+  psc.f_part = &p_niloc[1];
 }
 
 void

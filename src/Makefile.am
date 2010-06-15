@@ -18,6 +18,7 @@ libpsc_a_SOURCES = \
 	PIC_variables.F VLA_variables.F \
 	OUT_field.F \
 	SERV_labelgen.F SERV_systime.F \
+	ALLOC_particles.F \
 	sort.c \
 	output_hdf5.c \
 	case_harris.c

@@ -1,3 +1,6 @@
+
+#include "config.h"
+
 c THIS SUBROUTINE INITIALIZES THE PARTICLE DISTRIBUTION
 c AND LOAD BALANCE.
 
@@ -956,12 +959,9 @@ c WRITING OUT PARAMETER LIST
 
 c SETTING UP PARTICLE PHASE SPACE
 
-
-      nialloc=nint(1.2*niloc+10)
-      allocate(p_niloc(0:11*nialloc+10))
-      p_niloc=0.0d0
+      call ALLOC_particles(niloc)
  
-
+      p_niloc=0.0d0
       niloc=0
       do i3=i3mn+rd3n(nodek),i3mx+rd3x(nodek)
          z=i3*dz
