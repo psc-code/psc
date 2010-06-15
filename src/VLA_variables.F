@@ -286,6 +286,11 @@ c boundary_part_z: particle boundary conditions in z
       real(kind=8),allocatable,dimension(:) :: bzp, bzm
       real(kind=8),allocatable,dimension(:) :: gbz, gcz, gdz, gez
 
+! pmlcheck hacky globals...
+
+      integer :: pml_xmin,pml_xmax     ! ab
+      integer :: pml_ymin,pml_ymax     ! ab
+      integer :: pml_zmin,pml_zmax     ! ab
 
       end module VLA_variables
 

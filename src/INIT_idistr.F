@@ -22,33 +22,16 @@ c***************************************************************
       integer :: cell,ncel
       integer :: rds1,rds2,rds3
 
-      integer :: xmin,xmax     ! ab
-      integer :: ymin,ymax     ! ab
-      integer :: zmin,zmax     ! ab
-
       real(kind=8) :: x,y,z
       real(kind=8) :: px,py,pz
       real(kind=8) :: ran1,ran2,ran3,ran4,ran5,ran6
       real(kind=8) :: qni,mni,cni,lni,wni,tnxi,tnyi,tnzi
       real(kind=8) :: dens,INIT_den
+      real(kind=8) :: pmlcheck
 
       real(kind=8),allocatable,dimension(:) :: rndmv
 
       allocate(rndmv(1:6*npe))
-
-      xmin=i1n       ! ab
-      xmax=i1x       ! ab
-      ymin=i2n       ! ab
-      ymax=i2x       ! ab
-      zmin=i3n       ! ab
-      zmax=i3x       ! ab
-
-      if (boundary_pml_x1.ne.'false') xmin=i1n+size+1       ! ab
-      if (boundary_pml_x2.ne.'false') xmax=i1x-size-1       ! ab
-      if (boundary_pml_y1.ne.'false') ymin=i2n+size+1       ! ab
-      if (boundary_pml_y2.ne.'false') ymax=i2x-size-1       ! ab
-      if (boundary_pml_z1.ne.'false') zmin=i3n+size+1       ! ab
-      if (boundary_pml_z2.ne.'false') zmax=i3x-size-1       ! ab
 
 c SETTING UP PARTICLE PHASE SPACE
 
@@ -204,18 +187,5 @@ c CHECK FOR ZERO PARTICLE WEIGHTS
 
       deallocate(rndmv)
 
-      contains                         ! ab
-      function pmlcheck(x,y,z)
-      implicit none
-      integer :: x,y,z
-      real(kind=8) :: pmlcheck
-      
-      pmlcheck = 1.0
-      if (x.lt.xmin.or.x.gt.xmax
-     &     .or.y.lt.ymin.or.y.gt.ymax
-     &     .or.z.lt.zmin.or.z.gt.zmax) then
-         pmlcheck = 0.0
-      end if
-      end function
-
       end subroutine INIT_idistr
+

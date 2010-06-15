@@ -24,16 +24,13 @@ c     based upon density from INIT_den()
       integer :: nodei,nodej,nodek
       integer :: rds1,rds2,rds3
 
-      integer :: xmin,xmax     ! ab
-      integer :: ymin,ymax     ! ab
-      integer :: zmin,zmax     ! ab
-
       real(kind=8) :: x,y,z
       real(kind=8) :: norm_x,norm_y,norm_z
       real(kind=8) :: sh_x,sh_y,sh_z,sh,sh_o
       real(kind=8) :: M_lim,M_max,M_tot
       real(kind=8) :: W_lim,W_max,W_tot
       real(kind=8) :: dens,INIT_den
+      real(kind=8) :: pmlcheck
 
 c Massenzahl der Neutralteiclchen bzw. der Ionen
 
@@ -82,20 +79,19 @@ c an estimate of the particle number. So does the load distributer. For
 c this reason multiple particle counts are required to determine the 
 c appropriate parameters.
 
-      xmin=i1n       ! ab
-      xmax=i1x       ! ab
-      ymin=i2n       ! ab
-      ymax=i2x       ! ab
-      zmin=i3n       ! ab
-      zmax=i3x       ! ab
+      pml_xmin=i1n       ! ab
+      pml_xmax=i1x       ! ab
+      pml_ymin=i2n       ! ab
+      pml_ymax=i2x       ! ab
+      pml_zmin=i3n       ! ab
+      pml_zmax=i3x       ! ab
 
-      if (boundary_pml_x1.ne.'false') xmin=i1n+size+1       ! ab
-      if (boundary_pml_x2.ne.'false') xmax=i1x-size-1       ! ab
-      if (boundary_pml_y1.ne.'false') ymin=i2n+size+1       ! ab
-      if (boundary_pml_y2.ne.'false') ymax=i2x-size-1       ! ab
-      if (boundary_pml_z1.ne.'false') zmin=i3n+size+1       ! ab
-      if (boundary_pml_z2.ne.'false') zmax=i3x-size-1       ! ab
- 
+      if (boundary_pml_x1.ne.'false') pml_xmin=i1n+size+1       ! ab
+      if (boundary_pml_x2.ne.'false') pml_xmax=i1x-size-1       ! ab
+      if (boundary_pml_y1.ne.'false') pml_ymin=i2n+size+1       ! ab
+      if (boundary_pml_y2.ne.'false') pml_ymax=i2x-size-1       ! ab
+      if (boundary_pml_z1.ne.'false') pml_zmin=i3n+size+1       ! ab
+      if (boundary_pml_z2.ne.'false') pml_zmax=i3x-size-1       ! ab
 
       rds1=rd1
       rds2=rd2
@@ -974,19 +970,23 @@ c     missing parts are i[123][nx], rd[123] which have been set already
       deallocate(M_loc)
       deallocate(W_loc)
 
-      contains                         ! ab
+      end subroutine INIT_partition
+
+c     ----------------------------------------------------------------------
       function pmlcheck(x,y,z)
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+
       implicit none
       integer :: x,y,z
       real(kind=8) :: pmlcheck
       
       pmlcheck = 1.0
-      if (x.lt.xmin.or.x.gt.xmax
-     &     .or.y.lt.ymin.or.y.gt.ymax
-     &     .or.z.lt.zmin.or.z.gt.zmax) then
+      if (x.lt.pml_xmin.or.x.gt.pml_xmax
+     &     .or.y.lt.pml_ymin.or.y.gt.pml_ymax
+     &     .or.z.lt.pml_zmin.or.z.gt.pml_zmax) then
          pmlcheck = 0.0
       end if
       end function
-
-      end subroutine INIT_partition
 
