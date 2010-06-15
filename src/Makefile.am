@@ -40,6 +40,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
+	INIT_partition.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \

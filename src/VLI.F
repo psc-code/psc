@@ -30,6 +30,9 @@ c The real VLI main
       implicit none
       include 'mpif.h'
 
+      integer :: part_label_off,niloc_new
+      integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
+
       call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
       call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
@@ -38,7 +41,13 @@ c The real VLI main
       include './SERV_consist.F'
 
 
-      call INIT_idistr
+      ! I don't understand why the partition may calculate different
+      ! boundary sizes (rd..) to be filled with particles, but let's
+      ! keep it as-is for now.
+      call INIT_partition(part_label_off,rd1n,rd1x,rd2n,rd2x,rd3n,rd3x,
+     *     niloc_new)
+      call ALLOC_particles(niloc_new)
+      call INIT_idistr(part_label_off,rd1n,rd1x,rd2n,rd2x,rd3n,rd3x)
       call ALLOC_field
 #ifdef USE_C_INTERFACE
       call C_INIT_field
