@@ -705,13 +705,11 @@ c RE-ARRANGE PARTITIONS TOO REDUCE LOCAL MEMORY ALLOCATION
       endif
 
 
- 1116 i1mn=i1ln(nodei)
-      i1mx=i1lx(nodei)
-      i2mn=i2ln(nodej)
-      i2mx=i2lx(nodej)
-      i3mn=i3ln(nodek)
-      i3mx=i3lx(nodek)
+ 1116 continue
 
+      call SET_subdomain(i1ln(nodei), i1lx(nodei), 
+     *     i2ln(nodej), i2lx(nodej),
+     *     i3ln(nodek), i3lx(nodek))
 
 c EXACT LOCAL NUMBER OF QUASI-PARTICLES (fourth density setup)
 
@@ -945,3 +943,22 @@ c     ----------------------------------------------------------------------
 
       end function get_ncel
 
+
+c     ----------------------------------------------------------------------
+      subroutine SET_subdomain(i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_)
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+
+      implicit none
+
+      integer :: i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_
+
+      i1mn = i1mn_
+      i2mn = i2mn_
+      i3mn = i3mn_
+      i1mx = i1mx_
+      i2mx = i2mx_
+      i3mx = i3mx_
+
+      end subroutine SET_subdomain
