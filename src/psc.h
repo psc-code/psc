@@ -71,7 +71,7 @@ struct psc_param {
   double tt;
   double cc;
   double eps0;
-  double cori, eta, alpha;
+  double cori, eta, alpha, beta;
   double wl;
   double wp;
   int nmax;

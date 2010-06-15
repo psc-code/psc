@@ -163,7 +163,8 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 		f_real *jxi, f_real *jyi, f_real *jzi,
 		f_real *ex, f_real *ey, f_real *ez,
 		f_real *bx, f_real *by, f_real *bz,
-		f_real *cori, f_real *alpha, f_real *eta,f_real *wl, f_real *wp,
+		f_real *cori, f_real *alpha, f_real *beta,
+		f_real *eta, f_real *wl, f_real *wp,
 		f_int *n,
 		f_int *dummy)
 {
@@ -218,6 +219,7 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   // parameters
   psc.prm.cori = *cori;
   psc.prm.alpha = *alpha;
+  psc.prm.beta = *beta;
   psc.prm.eta = *eta;
   psc.prm.wl = *wl;
   psc.prm.wp = *wp;

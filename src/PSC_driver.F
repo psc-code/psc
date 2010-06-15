@@ -25,7 +25,7 @@ c     this contains the main driver for the code, shared between VLI and VLA
      &        i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
      &        i1n, i2n, i3n, i1x, i2x, i3x,
      &        ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
-     &        cori, alpha, eta, wl, wp,
+     &        cori, alpha, beta, eta, wl, wp,
      &        n,
      &        99)
 #endif
