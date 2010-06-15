@@ -132,17 +132,6 @@ c will happen and the algorithm may loop.
       count_max=530           ! maximum number of iterations for memory and wall clock optimization
       dvel=2                  ! grid adaption velocity for memory optimization
       deval=1                 ! particle number evaluation interval
-      nicell=200              ! maximum number of particles per spezies and cell
-
-
-c QUASI-PARTICLE MASS FACTOR
-
-
-      if (nicell.gt.0) then
-         cori=1.0/nicell
-      else
-         cori=1.0e20
-      endif
 
 
 c PREDICTION OF REQUIRED LOAD DISTRIBUTION (first density setup)

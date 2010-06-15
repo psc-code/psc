@@ -80,6 +80,7 @@ struct psc_param {
   double i0;
   double n0;
   double e0;
+  int nicell;
 };
 
 struct psc_domain {

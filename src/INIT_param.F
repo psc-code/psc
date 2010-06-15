@@ -142,6 +142,15 @@ c Please do not change
       endif
 
 
+c QUASI-PARTICLE MASS FACTOR
+
+      if (nicell.gt.0) then
+         cori=1.0/nicell
+      else
+         cori=1.0e20
+      endif
+
+
 c wl: laser frequency
 c phi0: electric potential normalization
 c a0: vector potential normalization
@@ -438,6 +447,8 @@ c n0: peak atom density in m**3
       n0=1.0e26          ! modified from 28
       e0=0 ! calculate later
 
+      nicell=200         ! maximum number of particles per spezies and cell
+
       end subroutine INIT_param_psc
 
 c     wrapper for C to be access these parameters
@@ -533,7 +544,7 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to access these parameters
 
       subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_)
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_, nicell_)
 
       use VLA_variables
       use PIC_variables
@@ -542,7 +553,7 @@ c     wrapper for C to be able to access these parameters
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
       real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
-      integer :: nmax_
+      integer :: nmax_, nicell_
 
       qq_ = qq
       mm_ = mm
@@ -556,13 +567,14 @@ c     wrapper for C to be able to access these parameters
       i0_ = i0
       n0_ = n0
       e0_ = e0
+      nicell_ = nicell
 
       end subroutine GET_param_psc
 
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_)
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_, nicell_)
 
       use VLA_variables
       use PIC_variables
@@ -571,7 +583,7 @@ c     wrapper for C to be able to set these parameters
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
       real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
-      integer :: nmax_
+      integer :: nmax_, nicell_
 
       qq = qq_
       mm = mm_
@@ -585,5 +597,6 @@ c     wrapper for C to be able to set these parameters
       i0 = i0_
       n0 = n0_
       e0 = e0_
+      nicell = nicell_
 
       end subroutine SET_param_psc

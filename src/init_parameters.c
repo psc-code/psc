@@ -62,6 +62,7 @@ static struct param psc_param_descr[] = {
   { "i0"            , VAR(i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(e0)              , PARAM_DOUBLE(0.)           },
+  { "nicell"        , VAR(nicell)          , PARAM_INT(200)             },
   {},
 };
 
@@ -140,10 +141,10 @@ void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
-		       f_real *e0);
+		       f_real *e0, f_int *nicell);
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
-		       f_real *e0);
+		       f_real *e0, f_int *nicell);
 
 static void
 get_param_domain()
@@ -176,7 +177,8 @@ get_param_psc()
 {
   struct psc_param *p = &psc.prm;
   GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0);
+		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0,
+		    &p->nicell);
 }
 
 static void
@@ -184,7 +186,8 @@ set_param_psc()
 {
   struct psc_param *p = &psc.prm;
   SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		     &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0);
+		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0,
+		    &p->nicell);
 }
 
 void
