@@ -24,13 +24,12 @@ c     based upon density from INIT_den()
       integer :: nodei,nodej,nodek
       integer :: rds1,rds2,rds3
 
-      real(kind=8) :: x,y,z
+c      real(kind=8) :: x,y,z
       real(kind=8) :: norm_x,norm_y,norm_z
       real(kind=8) :: sh_x,sh_y,sh_z,sh,sh_o
       real(kind=8) :: M_lim,M_max,M_tot
       real(kind=8) :: W_lim,W_max,W_tot
-      real(kind=8) :: dens,INIT_den
-      real(kind=8) :: pmlcheck
+      integer      :: get_ncel
 
 c Massenzahl der Neutralteiclchen bzw. der Ionen
 
@@ -145,53 +144,25 @@ c an error message.
 
 
       do i3=i3n,i3x                           
-         z=i3*dz
          do i2=i2n,i2x
-            y=i2*dy
             do i1=i1n,i1x
-               x=i1*dx
+               ncel=get_ncel(i1,i2,i3) ! e-
 
-               niloc=0                           ! niloc muss hier stehen zur Berechnung der Gewichte
-
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)       ! ab
-c               if (dens > 0.9) write(6,*) 'INIT_den',dens, i1, i2, i3
-
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
-               do l=1,ncel
-                  niloc=niloc+1     ! e-
-               enddo
-               endif
-
-               dens_x(i1)=dens_x(i1)+niloc    ! a quasi-particle has weight 1
-               dens_y(i2)=dens_y(i2)+niloc    ! a quasi-particle has weight 1
-               dens_z(i3)=dens_z(i3)+niloc    ! a quasi-particle has weight 1
-
+               dens_x(i1)=dens_x(i1)+ncel    ! a quasi-particle has weight 1
+               dens_y(i2)=dens_y(i2)+ncel    ! a quasi-particle has weight 1
+               dens_z(i3)=dens_z(i3)+ncel    ! a quasi-particle has weight 1
             enddo
          enddo
       enddo
 
       do i3=i3n,i3x                      
-         z=i3*dz
          do i2=i2n,i2x
-            y=i2*dy
             do i1=i1n,i1x
-               x=i1*dx
+               ncel = get_ncel(i1,i2,i3) ! e+
 
-               niloc=0                           ! niloc muss hier stehen zur Berechnung der Gewichte
-
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)       ! ab
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
-               do l=1,ncel
-                  niloc=niloc+1     ! p+
-               enddo
-               endif
-
-               dens_x(i1)=dens_x(i1)+niloc    ! a quasi-particle has weight
-               dens_y(i2)=dens_y(i2)+niloc    ! a quasi-particle has weight
-               dens_z(i3)=dens_z(i3)+niloc    ! a quasi-particle has weight
-
+               dens_x(i1)=dens_x(i1)+ncel    ! a quasi-particle has weight
+               dens_y(i2)=dens_y(i2)+ncel    ! a quasi-particle has weight
+               dens_z(i3)=dens_z(i3)+ncel    ! a quasi-particle has weight
             enddo
          enddo
       enddo
@@ -465,38 +436,18 @@ c ESTIMATE WALL CLOCK TIME AND MEMORY (second and third density setup)
 
                   niloc=0
                   do i3=i3ln(c),i3lx(c)
-                     z=i3*dz
                      do i2=i2ln(b),i2lx(b)
-                        y=i2*dy
                         do i1=i1ln(a),i1lx(a)
-                           x=i1*dx
-
-                           dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-                           if (dens.gt.0.001) then
-                           ncel=nint(dens/cori)
-                           do l=1,ncel
-                              niloc=niloc+1     ! e-
-                           enddo
-                           endif
-
+                           ncel = get_ncel(i1,i2,i3)
+                           niloc = niloc+ncel ! e-
                         enddo
                      enddo
                   enddo
                   do i3=i3ln(c),i3lx(c)
-                     z=i3*dz
                      do i2=i2ln(b),i2lx(b)
-                        y=i2*dy
                         do i1=i1ln(a),i1lx(a)
-                           x=i1*dx
-
-                           dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-                           if (dens.gt.0.001) then
-                           ncel=nint(dens/cori)
-                           do l=1,ncel
-                              niloc=niloc+1     ! p+
-                           enddo
-                           endif
-
+                           ncel = get_ncel(i1,i2,i3)
+                           niloc = niloc+ncel ! p+
                         enddo
                      enddo
                   enddo
@@ -620,38 +571,18 @@ c RE-ARRANGE PARTITIONS TOO REDUCE LOCAL WALL CLOCK TIME
 
                   niloc=0
                   do i3=i3ln(c),i3lx(c)
-                     z=i3*dz
                      do i2=i2ln(b),i2lx(b)
-                        y=i2*dy
                         do i1=i1ln(a),i1lx(a)
-                           x=i1*dx
-
-                           dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-                           if (dens.gt.0.001) then
-                           ncel=nint(dens/cori)
-                           do l=1,ncel
-                              niloc=niloc+1     ! e-
-                           enddo
-                           endif
-
+                           ncel = get_ncel(i1,i2,i3)
+                           niloc = niloc+ncel ! e-
                         enddo
                      enddo
                   enddo
                   do i3=i3ln(c),i3lx(c)
-                     z=i3*dz
                      do i2=i2ln(b),i2lx(b)
-                        y=i2*dy
                         do i1=i1ln(a),i1lx(a)
-                           x=i1*dx
-
-                           dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-                           if (dens.gt.0.001) then
-                           ncel=nint(dens/cori)
-                           do l=1,ncel
-                              niloc=niloc+1     ! p+
-                           enddo
-                           endif
-
+                           ncel = get_ncel(i1,i2,i3)
+                           niloc = niloc+ncel ! p+
                         enddo
                      enddo
                   enddo
@@ -831,38 +762,18 @@ c EXACT LOCAL NUMBER OF QUASI-PARTICLES (fourth density setup)
 
       niloc=0
       do i3=i3mn+rd3n(nodek),i3mx+rd3x(nodek)
-         z=i3*dz
          do i2=i2mn+rd2n(nodej),i2mx+rd2x(nodej)
-            y=i2*dy
             do i1=i1mn+rd1n(nodei),i1mx+rd1x(nodei)
-               x=i1*dx
-
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
-               do l=1,ncel
-                  niloc=niloc+1     ! e-
-               enddo
-               endif
-
+               ncel = get_ncel(i1,i2,i3)
+               niloc = niloc+ncel ! e-
             enddo
          enddo
       enddo
       do i3=i3mn+rd3n(nodek),i3mx+rd3x(nodek)
-         z=i3*dz
          do i2=i2mn+rd2n(nodej),i2mx+rd2x(nodej)
-            y=i2*dy
             do i1=i1mn+rd1n(nodei),i1mx+rd1x(nodei)
-               x=i1*dx
-
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)  ! ab
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
-               do l=1,ncel
-                  niloc=niloc+1     ! p+
-               enddo
-               endif
-
+               ncel = get_ncel(i1,i2,i3)
+               niloc = niloc+ncel ! p+
             enddo
          enddo
       enddo
@@ -989,4 +900,48 @@ c     ----------------------------------------------------------------------
          pmlcheck = 0.0
       end if
       end function
+
+      function get_density(ix,iy,iz)
+
+      use VLA_variables
+
+      implicit none
+      
+      integer      :: ix,iy,iz
+      real(kind=8) :: get_density
+
+      real(kind=8) :: x,y,z
+      real(kind=8) :: INIT_den,pmlcheck
+
+      x=i1*dx
+      y=i2*dy
+      z=i3*dz
+      get_density = INIT_den(x,y,z)*pmlcheck(ix,iy,iz) ! ab
+
+      end function get_density
+
+
+c     ----------------------------------------------------------------------
+      function get_ncel(ix,iy,iz)
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+      
+      integer      :: ix,iy,iz
+      integer      :: get_ncel
+
+      real(kind=8) :: dens
+      real(kind=8) :: get_density
+
+      dens = get_density(ix,iy,iz) ! ab
+      if (dens.gt.0.001) then
+         get_ncel=nint(dens/cori)
+      else
+         get_ncel=0
+      endif
+
+      end function get_ncel
 

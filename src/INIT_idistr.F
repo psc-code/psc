@@ -28,6 +28,8 @@ c***************************************************************
       real(kind=8) :: qni,mni,cni,lni,wni,tnxi,tnyi,tnzi
       real(kind=8) :: dens,INIT_den
       real(kind=8) :: pmlcheck
+      real(kind=8) :: get_density
+      integer      :: get_ncel
 
       real(kind=8),allocatable,dimension(:) :: rndmv
 
@@ -51,9 +53,8 @@ c SETTING UP PARTICLE PHASE SPACE
      &              *(i2mx-i2mn+2*rds2+1)
      &              *(i3-i3mn+rds3)
 
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)    ! ab
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
+               dens=get_density(i1,i2,i3)
+               ncel=get_ncel(i1,i2,i3)
                do l=1,ncel
 
                   qni=-1.0               ! e-
@@ -96,7 +97,6 @@ c MAXWELLIAN DISTRIBUTION
                   p_niloc(11*niloc+10)=wni
 
                enddo
-               endif
 
             enddo
          enddo
@@ -117,9 +117,8 @@ c MAXWELLIAN DISTRIBUTION
      &              *(i2mx-i2mn+2*rds2+1)
      &              *(i3-i3mn+rds3)
 
-               dens=INIT_den(x,y,z)*pmlcheck(i1,i2,i3)    ! ab
-               if (dens.gt.0.001) then
-               ncel=nint(dens/cori)
+               dens=get_density(i1,i2,i3)
+               ncel=get_ncel(i1,i2,i3)
                do l=1,ncel
 
                   qni=+1.0               ! p+
@@ -162,7 +161,6 @@ c MAXWELLIAN DISTRIBUTION
                   p_niloc(11*niloc+10)=wni
 
                enddo
-               endif
 
             enddo
          enddo
