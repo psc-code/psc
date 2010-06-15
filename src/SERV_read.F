@@ -51,7 +51,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 
 
 
-      allocate(p_niloc(0:11*nialloc+10))
+      call ALLOC_particles(niloc)
 
       allocate(ex(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))

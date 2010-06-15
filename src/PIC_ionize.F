@@ -325,33 +325,7 @@ c IONIZATION OF HYDROGEN
  
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -407,33 +381,7 @@ c IONIZATION OF HELIUM
  
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -493,33 +441,7 @@ c IONIZATION OF CARBON
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -582,33 +504,7 @@ c IONIZATION OF OXYGEN
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -672,33 +568,7 @@ c IONIZATION OF NEON
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -761,33 +631,7 @@ c IONIZATION OF ARGON
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -849,33 +693,7 @@ c IONIZATION OF NITROGEN
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m
@@ -958,33 +776,7 @@ c IONIZATION OF COPPER
 
                      if (wad.ge.ran) then
                         lph_n=lph+1
-                        if (lph_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*lph_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(lph_n)
                         lph=lph_n
 
                         p_niloc(11*l+6)=+1.0*m

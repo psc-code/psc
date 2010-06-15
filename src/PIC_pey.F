@@ -24,11 +24,9 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       real(kind=8) :: qni,mni,cni,lni,wni
 
       real(kind=8) :: s_cpub  
-      real(kind=8) :: s_cpud
 
 
       s_cpub=0.0d0
-      s_cpud=0.0d0
 
 
 c---------------------------------------------------------------------
@@ -495,32 +493,7 @@ c LOCAL PARTICLE ARRAY UPDATE
 
 
       niloc_n=lpi+re2i+re4i
-      if (niloc_n.gt.nialloc) then
-         call SERV_labelgen(mpe,node)
-         call SERV_systime(cpuc)
-         open(11,file=trim(data_out)//'/'//node//'ENLARGE',
-     &        access='sequential',form='unformatted')
-         do l=0,11*niloc+10,100
-            le=min(l+99,11*niloc+10)
-            write(11) (p_niloc(la),la=l,le)
-         enddo
-         close(11)
-
-         nialloc=int(1.2*niloc_n+10)
-         deallocate(p_niloc)
-         allocate(p_niloc(0:11*nialloc+10))
-
-         open(11,file=trim(data_out)//'/'//node//'ENLARGE',
-     &        access='sequential',form='unformatted')
-         do l=0,11*niloc+10,100
-            le=min(l+99,11*niloc+10)
-            read(11) (p_niloc(la),la=l,le)
-         enddo
-         close(11)
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-      endif
-
+      call REALLOC_particles(niloc_n)
 
       niloc=lpi
       if (re2i>0) then
@@ -563,7 +536,6 @@ c LOCAL PARTICLE ARRAY UPDATE
 
 
       cpumess=cpumess+s_cpub
-      cpuinou=cpuinou+s_cpud
 
 
       end subroutine PIC_pey

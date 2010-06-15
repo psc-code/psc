@@ -335,36 +335,7 @@ c GO THROUGH LIST OF ALL ELECTRONS THAT CAN TAKE PART IN IMPACT IONIZATION
                         lph=niloc                              ! create a new electron:
                         lph_n=lph+1
                         
-                        if (lph_n.gt.nialloc) then
-                           write(*,*) 'ENLARGE ARRAY====='
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           write(6,*) node                 
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE', 
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              write(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           
-                           nialloc=int(1.2*lph_n+12)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-                           
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do k=0,11*lph+10,100
-                              le=min(k+99,11*lph+10)
-                              read(11) (p_niloc(la),la=k,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                           
-                        endif
+                        call REALLOC_particles(lph_n)
 
                         lph=lph_n
                         niloc=lph

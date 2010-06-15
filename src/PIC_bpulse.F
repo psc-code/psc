@@ -350,33 +350,7 @@ c with high probability.
 
                      if (ran4<proi) then
                         niloc_n=niloc+1
-                        if (niloc_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do l=0,11*niloc+10,100
-                              le=min(l+99,11*niloc+10)
-                              write(11) (p_niloc(la),la=l,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*niloc_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do l=0,11*niloc+10,100
-                              le=min(l+99,11*niloc+10)
-                              read(11) (p_niloc(la),la=l,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(niloc_n)
                         niloc=niloc_n
 
 
@@ -563,33 +537,7 @@ c with high probability.
 
                      if (ran4<proe) then
                         niloc_n=niloc+1
-                        if (niloc_n.gt.nialloc) then
-                           call SERV_systime(cpuc)
-                           call SERV_labelgen(mpe,node)
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do l=0,11*niloc+10,100
-                              le=min(l+99,11*niloc+10)
-                              write(11) (p_niloc(la),la=l,le)
-                           enddo
-                           close(11)
-
-                           nialloc=int(1.2*niloc_n+10)
-                           deallocate(p_niloc)
-                           allocate(p_niloc(0:11*nialloc+10))
-
-                           open(11,file=trim(data_out)//'/'
-     &                          //node//'ENLARGE',
-     &                          access='sequential',form='unformatted')
-                           do l=0,11*niloc+10,100
-                              le=min(l+99,11*niloc+10)
-                              read(11) (p_niloc(la),la=l,le)
-                           enddo
-                           close(11)
-                           call SERV_systime(cpud)
-                           s_cpud=s_cpud+cpud-cpuc
-                        endif
+                        call REALLOC_particles(niloc_n)
                         niloc=niloc_n
 
 
