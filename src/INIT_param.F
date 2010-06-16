@@ -23,9 +23,6 @@ c PARAMETERS!
 
 #ifdef USE_C_INTERFACE
       call C_INIT_param
-      call C_init_case
-      call C_init_param_domain
-      call C_init_param_psc
 #else
       call INIT_param_domain
       call INIT_param_psc

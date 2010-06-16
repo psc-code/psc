@@ -188,15 +188,12 @@ init_param_psc_default()
 // ======================================================================
 // Fortran glue
 
-#define C_init_param_domain_F77 F77_FUNC_(c_init_param_domain, C_INIT_PARAM_DOMAIN)
 #define INIT_param_domain_F77   F77_FUNC_(init_param_domain, INIT_PARAM_DOMAIN)
 #define INIT_param_psc_F77      F77_FUNC_(init_param_psc, INIT_PARAM_PSC)
 #define GET_param_domain_F77    F77_FUNC_(get_param_domain, GET_PARAM_DOMAIN)
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
-#define C_init_param_psc_F77    F77_FUNC_(c_init_param_psc, C_INIT_PARAM_PSC)
 #define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
-#define C_init_case_F77         F77_FUNC_(c_init_case, C_INIT_CASE)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
 void INIT_param_domain_F77(void);
@@ -214,7 +211,7 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_int *nicell);
 
-static void
+void
 get_param_domain()
 {
   struct psc_domain *p = &psc.domain;
@@ -227,7 +224,7 @@ get_param_domain()
   }
 }
 
-static void
+void
 set_param_domain()
 {
   struct psc_domain *p = &psc.domain;
@@ -240,7 +237,7 @@ set_param_domain()
 		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
 }
 
-static void
+void
 get_param_psc()
 {
   struct psc_param *p = &psc.prm;
@@ -249,7 +246,7 @@ get_param_psc()
 		    &p->nicell);
 }
 
-static void
+void
 set_param_psc()
 {
   struct psc_param *p = &psc.prm;
@@ -273,38 +270,14 @@ INIT_param_psc()
 }
 
 void
-C_init_param_domain_F77()
-{
-  get_param_domain();
-  init_param_domain();
-  set_param_domain();
-}
-
-void
-C_init_param_psc_F77()
-{
-  get_param_psc();
-  init_param_psc();
-  set_param_psc();
-}
-
-void
-C_init_case_F77()
-{
-  get_param_psc();
-  get_param_domain();
-
-  init_case();
-  
-  set_param_psc();
-  set_param_domain();
-}
-
-void
 C_init_param_F77()
 {
   init_param_domain_default();
   init_param_psc_default();
+  init_case();
+  init_param_domain();
+  init_param_psc();
+
   set_param_domain();
   set_param_psc();
 }
