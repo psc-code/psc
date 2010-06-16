@@ -51,7 +51,7 @@ init_partition(int *n_part)
 void
 init_particles()
 {
-  double beta = psc.prm.beta;
+  double beta = psc.coeff.beta;
   int i = 0;
 
   for (int kind = 0; kind < 2; kind++) {

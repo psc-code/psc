@@ -25,7 +25,7 @@ genc_push_part_yz_b()
   real dt = psc.dt;
   real yl = .5f * dt;
   real zl = .5f * dt;
-  real dqs = .5f * psc.prm.eta * dt;
+  real dqs = .5f * psc.coeff.eta * dt;
   real dxi = 1.f / psc.dx[0];
   real dyi = 1.f / psc.dx[1];
   real dzi = 1.f / psc.dx[2];

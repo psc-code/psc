@@ -9,7 +9,7 @@ __constant__ int d_b_mx[3];
 
 static void set_constants(struct psc_cuda *cuda)
 {
-  real __dt = psc.dt, __dqs = .5f * psc.prm.eta * psc.dt;
+  real __dt = psc.dt, __dqs = .5f * psc.coeff.eta * psc.dt;
   check(cudaMemcpyToSymbol(d_dt, &__dt, sizeof(d_dt)));
   check(cudaMemcpyToSymbol(d_dqs, &__dqs, sizeof(d_dqs)));
   real __dxi[3] = { 1.f / psc.dx[0], 1.f / psc.dx[1], 1.f / psc.dx[2] };

@@ -76,7 +76,7 @@ PIC_set_variables()
 			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
 			&psc.glo[0], &psc.glo[1], &psc.glo[2],
 			&i0x, &i1x, &i2x,
-			&psc.prm.cori, &psc.prm.alpha, &psc.prm.eta,
+			&psc.coeff.cori, &psc.coeff.alpha, &psc.coeff.eta,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],
 			&psc.prm.wl, &psc.prm.wp, &psc.timestep);
 }
@@ -217,11 +217,11 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   psc.f_fields[BY] = by;
   psc.f_fields[BZ] = bz;
 
-  // parameters
-  psc.prm.cori = *cori;
-  psc.prm.alpha = *alpha;
-  psc.prm.beta = *beta;
-  psc.prm.eta = *eta;
+  // parameters etc
+  psc.coeff.cori = *cori;
+  psc.coeff.alpha = *alpha;
+  psc.coeff.beta = *beta;
+  psc.coeff.eta = *eta;
   psc.prm.wl = *wl;
   psc.prm.wp = *wp;
 

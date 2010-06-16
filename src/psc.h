@@ -65,13 +65,13 @@ struct f_particle {
 
 #endif
 
+// user settable parameters
 struct psc_param {
   double qq;
   double mm;
   double tt;
   double cc;
   double eps0;
-  double cori, eta, alpha, beta;
   double wl;
   double wp;
   int nmax;
@@ -81,6 +81,15 @@ struct psc_param {
   double n0;
   double e0;
   int nicell;
+};
+
+// coefficients needed for computations
+// -- derived, not provided by user
+struct psc_coeff {
+  double cori;
+  double alpha;
+  double beta;
+  double eta;
 };
 
 struct psc_domain {
@@ -142,6 +151,7 @@ struct psc {
   void *case_data;
   // user-configurable parameters
   struct psc_param prm;
+  struct psc_coeff coeff;
   struct psc_domain domain;
 
   // other parameters / constants

@@ -184,9 +184,9 @@ psc_destroy()
 void
 psc_setup_parameters()
 {
-  psc.prm.cori = 2.;
-  psc.prm.eta = 3.;
-  psc.prm.alpha = 5.;
+  psc.coeff.cori = 2.;
+  psc.coeff.eta = 3.;
+  psc.coeff.alpha = 5.;
   psc.dt = 1.;
   psc.dx[0] = 1.;
   psc.dx[1] = 1.;
