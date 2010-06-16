@@ -6,7 +6,7 @@
 void INIT_field(void);
 
 void
-init_field()
+psc_init_field()
 {
   if (psc.Case) {
     psc_case_init_field(psc.Case);
@@ -32,5 +32,5 @@ INIT_field()
 void
 C_INIT_field_F77()
 {
-  init_field();
+  psc_init_field();
 }

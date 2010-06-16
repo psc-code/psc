@@ -38,6 +38,7 @@ main(int argc, char **argv)
   for (int n = 0; n < NR_FIELDS; n++) {
     psc.f_fields[n] = fields[n];
   }
+  psc_init_field();
 
   VLI_main_F77();
 

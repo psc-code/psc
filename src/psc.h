@@ -222,6 +222,7 @@ void psc_destroy();
 void psc_init_param();
 void psc_init_partition(int *n_part);
 void psc_init_particles();
+void psc_init_field();
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_1();
