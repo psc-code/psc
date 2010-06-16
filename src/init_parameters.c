@@ -40,7 +40,8 @@ static struct param psc_domain_descr[] = {
 void
 init_param_domain()
 {
-  params_parse_cmdline(&psc.domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
+  params_parse_cmdline_nodefault(&psc.domain, psc_domain_descr, "PSC domain",
+				 MPI_COMM_WORLD);
   params_print(&psc.domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 }
 
@@ -48,21 +49,31 @@ init_param_domain()
 // Fortran glue
 
 #define C_init_param_domain_F77 F77_FUNC_(c_init_param_domain, C_INIT_PARAM_DOMAIN)
-#define SAVE_param_domain_F77   F77_FUNC_(save_param_domain, SAVE_PARAM_DOMAIN)
+#define GET_param_domain_F77    F77_FUNC_(get_param_domain, GET_PARAM_DOMAIN)
+#define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
 
-void SAVE_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			   f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
+void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
+			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
+void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
+			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
 
 void
 C_init_param_domain_F77()
 {
-  init_param_domain();
-  
   struct psc_domain *p = &psc.domain;
   int imax[3];
+
+  GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
+			p->bnd_fld, p->bnd_part, p->nproc);
+  for (int d = 0; d < 3; d++) {
+    p->ihi[d] = imax[d] + 1;
+  }
+
+  init_param_domain();
+  
   for (int d = 0; d < 3; d++) {
     imax[d] = p->ihi[d] - 1;
   }
-  SAVE_param_domain_F77(p->length, p->itot, p->ilo, imax,
-			p->bnd_fld, p->bnd_part, p->nproc);
+  SET_param_domain_F77(p->length, p->itot, p->ilo, imax,
+		       p->bnd_fld, p->bnd_part, p->nproc);
 }

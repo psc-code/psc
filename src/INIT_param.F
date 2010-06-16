@@ -45,11 +45,11 @@ c lw: laser wavelength in m
 c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
 
+      call INIT_param_domain
 #ifdef USE_C_INTERFACE
       call C_init_param_domain
-#else
-      call INIT_param_domain
 #endif
+
       cpum=100000.0
       lw=3.2*1.0e-6
       i0=1.0e21          ! modified from 22
@@ -420,9 +420,54 @@ c boundary_part_z: 0=reflecting, 1=periodic in z
 
       end subroutine INIT_param_domain
 
+c     wrapper for C to be access these parameters
+
+      subroutine GET_param_domain(length, itot, in, ix,
+     &     bnd_fld, bnd_part, nproc)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      real(kind=8) :: length(3)
+      integer :: itot(3), in(3), ix(3)
+      integer :: bnd_fld(3), bnd_part(3)
+      integer :: nproc(3)
+
+      length(1)=lengthx
+      length(2)=lengthy
+      length(3)=lengthz
+
+      itot(1)=i1tot
+      itot(2)=i2tot
+      itot(3)=i3tot
+
+      in(1)=i1n
+      in(2)=i2n
+      in(3)=i3n
+
+      ix(1)=i1x
+      ix(2)=i2x
+      ix(3)=i3x
+
+      nproc(1)=xnpe
+      nproc(2)=ynpe
+      nproc(3)=znpe
+
+      bnd_fld(1)=boundary_field_x
+      bnd_fld(2)=boundary_field_y
+      bnd_fld(3)=boundary_field_z
+
+      bnd_part(1)=boundary_part_x
+      bnd_part(2)=boundary_part_y
+      bnd_part(3)=boundary_part_z
+
+      end subroutine GET_param_domain
+
 c     wrapper for C to be able to set these parameters
 
-      subroutine SAVE_param_domain(length, itot, in, ix,
+      subroutine SET_param_domain(length, itot, in, ix,
      &     bnd_fld, bnd_part, nproc)
 
       use VLA_variables
@@ -463,4 +508,4 @@ c     wrapper for C to be able to set these parameters
       boundary_part_y=bnd_part(2)
       boundary_part_z=bnd_part(3)
 
-      end subroutine SAVE_param_domain
+      end subroutine SET_param_domain
