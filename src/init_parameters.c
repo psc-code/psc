@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 struct psc_cmdline {
   const char *mod_particle;
@@ -43,9 +44,26 @@ static struct param psc_domain_descr[] = {
 void
 init_param_domain()
 {
-  params_parse_cmdline_nodefault(&psc.domain, psc_domain_descr, "PSC domain",
+  struct psc_domain *domain = &psc.domain;
+
+  params_parse_cmdline_nodefault(domain, psc_domain_descr, "PSC domain",
 				 MPI_COMM_WORLD);
-  params_print(&psc.domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
+  params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
+
+#ifdef USE_PML
+  fprintf(stderr, "PML not handled in C version!\n");
+  MPI_Abort();
+#endif
+
+  for (int d = 0; d < 3; d++) {
+    if (domain->ihi[d] - domain->ilo[d] == 1) {
+      // if invariant in this direction, don't domain decompose
+      assert(domain->nproc[d] == 1);
+    } else {
+      // on every proc, need domain at least nghost wide
+      assert((domain->ihi[d] - domain->ilo[d]) >= domain->nproc[d] * domain->nghost[d]);
+    }
+  }
 }
 
 #define VAR(x) (void *)offsetof(struct psc_param, x)
