@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "util/params.h"
 
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -208,6 +209,22 @@ init_param_coeff()
 {
   assert(psc.prm.nicell > 0);
   psc.coeff.cori = 1. / psc.prm.nicell;
+  psc.coeff.wl = 2. * M_PI * psc.prm.cc / psc.prm.lw;
+  psc.coeff.ld = psc.prm.cc / psc.coeff.wl;
+  if (psc.prm.e0 == 0.) {
+    psc.prm.e0 = sqrt(2.0 * psc.prm.i0 / psc.prm.eps0 / psc.prm.cc) /
+      psc.prm.lw / 1.0e6;
+  }
+  psc.prm.b0 = psc.prm.e0 / psc.prm.cc;
+  psc.prm.rho0 = psc.prm.eps0 * psc.coeff.wl * psc.prm.b0;
+  psc.prm.phi0 = psc.coeff.ld * psc.prm.e0;
+  psc.prm.a0 = psc.prm.e0 / psc.coeff.wl;
+  psc.coeff.vos = psc.prm.qq * psc.prm.e0 / (psc.prm.mm * psc.coeff.wl);
+  psc.coeff.vt = sqrt(psc.prm.tt / psc.prm.mm);
+  psc.coeff.wp = sqrt(sqr(psc.prm.qq) * psc.prm.n0 / psc.prm.eps0 / psc.prm.mm);
+  psc.coeff.alpha = psc.coeff.wp / psc.coeff.wl;
+  psc.coeff.beta = psc.coeff.vt / psc.prm.cc;
+  psc.coeff.eta = psc.coeff.vos / psc.prm.cc;
 }
 
 // ======================================================================
@@ -232,11 +249,14 @@ void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *nghost);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
-		       f_real *e0, f_int *nicell);
+		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
+		       f_real *a0, f_int *nicell);
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
-		       f_real *e0, f_int *nicell);
-void SET_param_coeff_F77(f_real *cori);
+		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
+		       f_real *a0, f_int *nicell);
+void SET_param_coeff_F77(f_real *cori, f_real *alpha, f_real *beta, f_real *eta,
+			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp);
 
 void
 get_param_domain()
@@ -269,7 +289,8 @@ get_param_psc()
 {
   struct psc_param *p = &psc.prm;
   GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0,
+		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
+		    &p->j0, &p->rho0, &p->phi0, &p->a0,
 		    &p->nicell);
 }
 
@@ -278,7 +299,8 @@ set_param_psc()
 {
   struct psc_param *p = &psc.prm;
   SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0,
+		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
+		    &p->j0, &p->rho0, &p->phi0, &p->a0,
 		    &p->nicell);
 }
 
@@ -286,7 +308,8 @@ void
 set_param_coeff()
 {
   struct psc_coeff *p = &psc.coeff;
-  SET_param_coeff_F77(&p->cori);
+  SET_param_coeff_F77(&p->cori, &p->alpha, &p->beta, &p->eta,
+		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp);
 }
 
 void

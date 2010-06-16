@@ -72,14 +72,17 @@ struct psc_param {
   double tt;
   double cc;
   double eps0;
-  double wl;
-  double wp;
   int nmax;
   double cpum;
   double lw;
   double i0;
   double n0;
   double e0;
+  double b0;
+  double j0;
+  double rho0;
+  double phi0;
+  double a0;
   int nicell;
 };
 
@@ -90,6 +93,13 @@ struct psc_coeff {
   double alpha;
   double beta;
   double eta;
+
+  // FIXME are these needed in general?
+  double wl;
+  double ld;
+  double vos;
+  double vt;
+  double wp;
 };
 
 struct psc_domain {

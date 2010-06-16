@@ -78,7 +78,7 @@ PIC_set_variables()
 			&i0x, &i1x, &i2x,
 			&psc.coeff.cori, &psc.coeff.alpha, &psc.coeff.eta,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],
-			&psc.prm.wl, &psc.prm.wp, &psc.timestep);
+			&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
 }
 
 void
@@ -222,8 +222,8 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
   psc.coeff.alpha = *alpha;
   psc.coeff.beta = *beta;
   psc.coeff.eta = *eta;
-  psc.prm.wl = *wl;
-  psc.prm.wp = *wp;
+  psc.coeff.wl = *wl;
+  psc.coeff.wp = *wp;
 
   // current timestep, I/O control
   psc.timestep = *n;

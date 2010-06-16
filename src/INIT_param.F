@@ -136,12 +136,12 @@ c Please do not change
 
 c QUASI-PARTICLE MASS FACTOR
 
+#ifndef USE_C_INTERFACE
       if (nicell.gt.0) then
          cori=1.0/nicell
       else
          cori=1.0e20
       endif
-
 
 c wl: laser frequency
 c phi0: electric potential normalization
@@ -172,6 +172,7 @@ c wp: plasma frequency
       alpha=wp/wl
       beta=vt/cc
       eta=vos/cc
+#endif
 
 
 c dx: spatial resolution in x
@@ -552,7 +553,8 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to access these parameters
 
       subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_, nicell_)
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
+     *     a0_, nicell_)
 
       use VLA_variables
       use PIC_variables
@@ -560,7 +562,8 @@ c     wrapper for C to be able to access these parameters
       implicit none
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
-      real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
+      real(kind=8) :: cpum_, lw_
+      real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
       integer :: nmax_, nicell_
 
       qq_ = qq
@@ -575,6 +578,11 @@ c     wrapper for C to be able to access these parameters
       i0_ = i0
       n0_ = n0
       e0_ = e0
+      b0_ = b0
+      j0_ = j0
+      rho0_ = rho0
+      phi0_ = phi0
+      a0_ = a0
       nicell_ = nicell
 
       end subroutine GET_param_psc
@@ -582,7 +590,8 @@ c     wrapper for C to be able to access these parameters
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_, nicell_)
+     *     nmax_, cpum_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
+     *     a0_, nicell_)
 
       use VLA_variables
       use PIC_variables
@@ -590,7 +599,8 @@ c     wrapper for C to be able to set these parameters
       implicit none
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
-      real(kind=8) :: cpum_, lw_, i0_, n0_, e0_
+      real(kind=8) :: cpum_, lw_
+      real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
       integer :: nmax_, nicell_
 
       qq = qq_
@@ -605,21 +615,36 @@ c     wrapper for C to be able to set these parameters
       i0 = i0_
       n0 = n0_
       e0 = e0_
+      b0 = b0_
+      j0 = j0_
+      rho0 = rho0_
+      phi0 = phi0_
+      a0 = a0_
       nicell = nicell_
 
       end subroutine SET_param_psc
 
 c     wrapper for C to be able to set these coefficients
 
-      subroutine SET_param_coeff(cori_)
+      subroutine SET_param_coeff(cori_, alpha_, beta_, eta_,
+     *     wl_, ld_, vos_, vt_, wp_)
 
       use VLA_variables
       use PIC_variables
 
       implicit none
 
-      real(kind=8) :: cori_
+      real(kind=8) :: cori_, alpha_, beta_, eta_
+      real(kind=8) :: wl_, ld_, vos_, vt_, wp_
 
       cori = cori_
+      alpha = alpha_
+      beta = beta_
+      eta = eta_
+      wl = wl_
+      ld = ld_
+      vos = vos_
+      vt = vt_
+      wp = wp_
 
       end subroutine SET_param_coeff
