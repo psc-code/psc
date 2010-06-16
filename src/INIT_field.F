@@ -3,30 +3,14 @@
 
 c THIS SUBROUTINE ALLOCATES THE ELECTROMAGNETIC FIELDS.
 
+c     ----------------------------------------------------------------------
       subroutine ALLOC_field
+c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
 
       implicit none
-
-c kay: potentials      
-      allocate(vphi0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vphi1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
 
       allocate(ex(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
@@ -34,48 +18,18 @@ c kay: potentials
      &            i3mn-rd3:i3mx+rd3))
       allocate(ez(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-
-      ! additional d field  - added by ab
-
-      allocate(dvx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(dvy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(dvz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-
       allocate(bx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
       allocate(by(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
       allocate(bz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-
-      ! additional h field - added by ab
-
-      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-
-      ! electric and magnetic permittivity tensors - added by ab
-
-      allocate(eps(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-
-      allocate(rhoi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
       allocate(jxi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
       allocate(jyi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
       allocate(jzi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
-
       allocate(ne(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
       allocate(ni(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
@@ -83,54 +37,18 @@ c kay: potentials
       allocate(nn(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      allocate(vphit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vaxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vayt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vazt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(ext(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(eyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(ezt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(bxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(byt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(bzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(dxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(dyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(dzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(ex2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ey2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ez2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(by2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(hy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(hz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(dx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(dy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(dz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(net(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(nit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(nnt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(rhoit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jxit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jxexit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jyeyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jzezit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-
-      allocate(exsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(eysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(ezsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jxsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jzsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
       
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
@@ -213,23 +131,11 @@ c kay: potentials
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
-      vphi0=0.0d0
-      vphi1=0.0d0
-      vax0=0.0d0
-      vay0=0.0d0
-      vaz0=0.0d0
-      vax1=0.0d0
-      vay1=0.0d0
-      vaz1=0.0d0
-      dvx=0.0d0
-      dvy=0.0d0
-      dvz=0.0d0
-      hx=0.0d0
-      hy=0.0d0
-      hz=0.0d0
-      eps = 1.0
-      mu = 1.0
-      rhoi=0.0d0
+
+
+#ifdef USE_PML
+      call PML_alloc_fields
+#endif
 
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
@@ -267,23 +173,6 @@ c setting up the fields
             h2=i2*dy
             do i1=i1mn-rd1,i1mx+rd1
                h1=i1*dx
-
-               vphi0(i1,i2,i3)=0.0d0
-               vphi1(i1,i2,i3)=0.0d0
-               vax0(i1,i2,i3)=0.0d0
-               vay0(i1,i2,i3)=0.0d0
-               vaz0(i1,i2,i3)=0.0d0
-               vax1(i1,i2,i3)=0.0d0
-               vay1(i1,i2,i3)=0.0d0
-               vaz1(i1,i2,i3)=0.0d0
-               
-               ex(i1,i2,i3)=0.0d0
-               ey(i1,i2,i3)=0.0d0
-               ez(i1,i2,i3)=0.0d0
-               bx(i1,i2,i3)=0.0d0
-               by(i1,i2,i3)=0.0d0
-               bz(i1,i2,i3)=0.0d0
-
                ex(i1,i2,i3)=0.0d0
                ey(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3,-0.5*dt)
                ey(i1,i2,i3)=0.0d0
@@ -293,13 +182,6 @@ c setting up the fields
                by(i1,i2,i3)=0.0d0
                bz(i1,i2,i3)=0.0d0
 
-               ! initialisation of permittivity tensors
-               ! due to scaling these are dimensionless
-
-               eps(i1,i2,i3) = 1.0
-               mu(i1,i2,i3) = 1.0
-
-               rhoi(i1,i2,i3)=0.0d0
                jxi(i1,i2,i3)=0.0d0
                jyi(i1,i2,i3)=0.0d0
                jzi(i1,i2,i3)=0.0d0
@@ -307,8 +189,6 @@ c setting up the fields
                ne(i1,i2,i3)=0.0d0
                ni(i1,i2,i3)=0.0d0
                nn(i1,i2,i3)=0.0d0
-
-
             enddo
          enddo
       enddo
@@ -501,62 +381,213 @@ c setting up charge and current densities
 c setting up time-averaged fields
 
 
-      do i3=i3mn,i3mx
-         do i2=i2mn,i2mx
-            do i1=i1mn,i1mx
-               vphit(i1,i2,i3)=0.0d0
-               vaxt(i1,i2,i3)=0.0d0
-               vayt(i1,i2,i3)=0.0d0
-               vazt(i1,i2,i3)=0.0d0
-               ext(i1,i2,i3)=0.0d0
-               eyt(i1,i2,i3)=0.0d0
-               ezt(i1,i2,i3)=0.0d0
-               bxt(i1,i2,i3)=0.0d0
-               byt(i1,i2,i3)=0.0d0
-               bzt(i1,i2,i3)=0.0d0
-               hxt(i1,i2,i3)=0.0d0     ! ab
-               hyt(i1,i2,i3)=0.0d0     ! ab
-               hzt(i1,i2,i3)=0.0d0     ! ab
-               dxt(i1,i2,i3)=0.0d0     ! ab
-               dyt(i1,i2,i3)=0.0d0     ! ab
-               dzt(i1,i2,i3)=0.0d0     ! ab
-               ex2t(i1,i2,i3)=0.0d0
-               ey2t(i1,i2,i3)=0.0d0
-               ez2t(i1,i2,i3)=0.0d0
-               bx2t(i1,i2,i3)=0.0d0
-               by2t(i1,i2,i3)=0.0d0
-               bz2t(i1,i2,i3)=0.0d0
-               hx2t(i1,i2,i3)=0.0d0    ! ab
-               hy2t(i1,i2,i3)=0.0d0    ! ab
-               hz2t(i1,i2,i3)=0.0d0    ! ab
-               dx2t(i1,i2,i3)=0.0d0    ! ab
-               dy2t(i1,i2,i3)=0.0d0    ! ab
-               dz2t(i1,i2,i3)=0.0d0    ! ab
-               rhoit(i1,i2,i3)=0.0d0
-               jxit(i1,i2,i3)=0.0d0
-               jyit(i1,i2,i3)=0.0d0
-               jzit(i1,i2,i3)=0.0d0
-               jxexit(i1,i2,i3)=0.0d0
-               jyeyit(i1,i2,i3)=0.0d0
-               jzezit(i1,i2,i3)=0.0d0
-               poyxt(i1,i2,i3)=0.0d0
-               poyyt(i1,i2,i3)=0.0d0
-               poyzt(i1,i2,i3)=0.0d0
-               net(i1,i2,i3)=0.0d0
-               nit(i1,i2,i3)=0.0d0
-               nnt(i1,i2,i3)=0.0d0
-               exsp(i1,i2,i3)=0.0d0   ! test ab
-               eysp(i1,i2,i3)=0.0d0   ! test ab
-               ezsp(i1,i2,i3)=0.0d0   ! test ab
-               jxsp(i1,i2,i3)=0.0d0   ! test ab
-               jysp(i1,i2,i3)=0.0d0   ! test ab
-               jzsp(i1,i2,i3)=0.0d0   ! test ab
-            enddo
-         enddo
-      enddo
+      ext=0.0d0
+      eyt=0.0d0
+      ezt=0.0d0
+      bxt=0.0d0
+      byt=0.0d0
+      bzt=0.0d0
+      jxit=0.0d0
+      jyit=0.0d0
+      jzit=0.0d0
+      net=0.0d0
+      nit=0.0d0
+      nnt=0.0d0
+
+#ifdef USE_PML
+      call PML_setup_fields
+#endif
 
       cpu=0.0d0
       cpu_ary=0.0d0
+
+      end subroutine SETUP_field
+
+#ifdef USE_PML
+c     ----------------------------------------------------------------------
+      subroutine PML_alloc_field
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+c kay: potentials      
+      allocate(vphi0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vphi1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vax0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vay0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vaz0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vax1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vay1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(vaz1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+
+      ! additional d field  - added by ab
+
+      allocate(dvx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(dvy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(dvz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+
+
+      ! additional h field - added by ab
+
+      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+
+      ! electric and magnetic permittivity tensors - added by ab
+
+      allocate(eps(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+
+      allocate(rhoi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &             i3mn-rd3:i3mx+rd3))
+
+      allocate(vphit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(vaxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(vayt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(vazt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(dxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(dyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(dzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(ex2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(ey2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(ez2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(bx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(by2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(bz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(hx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(hy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(hz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(dx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(dy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(dz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(rhoit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jxexit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jyeyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jzezit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(poyxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(poyyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(poyzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+
+      allocate(exsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+      allocate(eysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+      allocate(ezsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+      allocate(jxsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+      allocate(jysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+      allocate(jzsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
+
+      vphi0=0.0d0
+      vphi1=0.0d0
+      vax0=0.0d0
+      vay0=0.0d0
+      vaz0=0.0d0
+      vax1=0.0d0
+      vay1=0.0d0
+      vaz1=0.0d0
+      dvx=0.0d0
+      dvy=0.0d0
+      dvz=0.0d0
+      hx=0.0d0
+      hy=0.0d0
+      hz=0.0d0
+      eps = 1.0
+      mu = 1.0
+      rhoi=0.0d0
+
+      end subroutine PML_alloc_field
+
+c     ----------------------------------------------------------------------
+      subroutine PML_setup_field
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      vphi0=0.0d0
+      vphi1=0.0d0
+      vax0=0.0d0
+      vay0=0.0d0
+      vaz0=0.0d0
+      vax1=0.0d0
+      vay1=0.0d0
+      vaz1=0.0d0
+      
+      ! initialisation of additional fields - added by ab
+      ! because of normalization these are equal to e and b fields
+
+      dvx=ex
+      dvy=ey
+      dvz=ez
+      hx=bx
+      hy=by
+      hz=bz
+      
+      ! initialisation of permittivity tensors
+      ! due to scaling these are dimensionless
+      
+      eps = 1.0
+      mu = 1.0
+      
+      rhoi=0.0d0
+
+      vphit=0.0d0
+      vaxt=0.0d0
+      vayt=0.0d0
+      vazt=0.0d0
+      hxt=0.0d0       ! ab
+      hyt=0.0d0       ! ab
+      hzt=0.0d0       ! ab
+      dxt=0.0d0       ! ab
+      dyt=0.0d0       ! ab
+      dzt=0.0d0       ! ab
+      ex2t=0.0d0
+      ey2t=0.0d0
+      ez2t=0.0d0
+      bx2t=0.0d0
+      by2t=0.0d0
+      bz2t=0.0d0
+      hx2t=0.0d0      ! ab
+      hy2t=0.0d0      ! ab
+      hz2t=0.0d0      ! ab
+      dx2t=0.0d0      ! ab
+      dy2t=0.0d0      ! ab
+      dz2t=0.0d0      ! ab
+      rhoit=0.0d0
+      jxexit=0.0d0
+      jyeyit=0.0d0
+      jzezit=0.0d0
+      poyxt=0.0d0
+      poyyt=0.0d0
+      poyzt=0.0d0
+      exsp=0.0d0      ! test ab
+      eysp=0.0d0      ! test ab
+      ezsp=0.0d0      ! test ab
+      jxsp=0.0d0      ! test ab
+      jysp=0.0d0      ! test ab
+      jzsp=0.0d0      ! test ab
 
       fluxit=0.0d0
       fluxot=0.0d0
@@ -582,16 +613,6 @@ c setting up time-averaged fields
 
       sum_fed=0.0d0
       sum_ped=0.0d0
-
-      ! initialisation of additional fields - added by ab
-      ! because of normalization these are equal to e and b fields
-
-      hx=bx
-      hy=by
-      hz=bz
-      dvx=ex
-      dvy=ey
-      dvz=ez
 
 ! deriving pml attenuation coefficients
 
@@ -678,4 +699,6 @@ c setting up time-averaged fields
          gez(i3) = 1.0/bzp(i3)
       end do
 
-      end subroutine SETUP_field
+      end subroutine PML_setup_field
+#endif
+

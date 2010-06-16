@@ -28,17 +28,19 @@ c legacy output routine
 
       character*(5) node,label
 
-      real(kind=8) :: vphis,vaxs,vays,vazs
       real(kind=8) :: exs,eys,ezs
       real(kind=8) :: bxs,bys,bzs
+      real(kind=8) :: nes,nis,nns
+      real(kind=8) :: jxis,jyis,jzis
+#ifdef USE_PML
+      real(kind=8) :: vphis,vaxs,vays,vazs
       real(kind=8) :: hxs,hys,hzs
       real(kind=8) :: ex2s,ey2s,ez2s
       real(kind=8) :: bx2s,by2s,bz2s
       real(kind=8) :: hx2s,hy2s,hz2s
-      real(kind=8) :: nes,nis,nns
-      real(kind=8) :: jxis,jyis,jzis
       real(kind=8) :: jxexis,jyeyis,jzezis
       real(kind=8) :: poyxs,poyys,poyzs
+#endif
       real(kind=8) :: x0,y0,z0
       real(kind=8) :: xr,yr,zr,rot
 
@@ -76,6 +78,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
          bxt=0.0
          byt=0.0
          bzt=0.0
+#ifdef USE_PML
          hxt=0.0
          hyt=0.0
          hzt=0.0
@@ -96,7 +99,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
          hx2t=0.0
          hy2t=0.0
          hz2t=0.0
-
+#endif
          do i3=i3mn,i3mx
             do i2=i2mn,i2mx
                do i1=i1mn,i1mx
@@ -116,6 +119,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
      &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
                   bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
      &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
+#ifdef USE_PML
                   hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
      &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
                   hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
@@ -140,7 +144,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2s=hxs*hxs
                   hy2s=hys*hys
                   hz2s=hzs*hzs
-
+#endif
                   net(i1,i2,i3)=net(i1,i2,i3)+0.5*nes/np
                   nit(i1,i2,i3)=nit(i1,i2,i3)+0.5*nis/np
                   nnt(i1,i2,i3)=nnt(i1,i2,i3)+0.5*nns/np
@@ -153,6 +157,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   bxt(i1,i2,i3)=bxt(i1,i2,i3)+0.5*bxs/np
                   byt(i1,i2,i3)=byt(i1,i2,i3)+0.5*bys/np
                   bzt(i1,i2,i3)=bzt(i1,i2,i3)+0.5*bzs/np
+#ifdef USE_PML
                   hxt(i1,i2,i3)=hxt(i1,i2,i3)+0.5*hxs/np
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
@@ -171,7 +176,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+0.5*hx2s/np
                   hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+0.5*hy2s/np
                   hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+0.5*hz2s/np
-
+#endif
                enddo
             enddo
          enddo
@@ -200,6 +205,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
      &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
                   bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
      &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
+#ifdef USE_PML
                   hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
      &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
                   hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
@@ -224,7 +230,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2s=hxs*hxs
                   hy2s=hys*hys
                   hz2s=hzs*hzs
-
+#endif
                   net(i1,i2,i3)=net(i1,i2,i3)+nes/np
                   nit(i1,i2,i3)=nit(i1,i2,i3)+nis/np
                   nnt(i1,i2,i3)=nnt(i1,i2,i3)+nns/np
@@ -237,6 +243,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   bxt(i1,i2,i3)=bxt(i1,i2,i3)+bxs/np
                   byt(i1,i2,i3)=byt(i1,i2,i3)+bys/np
                   bzt(i1,i2,i3)=bzt(i1,i2,i3)+bzs/np
+#ifdef USE_PML
                   hxt(i1,i2,i3)=hxt(i1,i2,i3)+hxs/np
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+hzs/np
@@ -255,7 +262,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+hx2s/np
                   hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+hy2s/np
                   hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+hz2s/np
-
+#endif
                enddo
             enddo
          enddo
@@ -286,6 +293,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
      &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
                   bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
      &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
+#ifdef USE_PML
                   hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
      &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
                   hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
@@ -310,7 +318,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2s=hxs*hxs
                   hy2s=hys*hys
                   hz2s=hzs*hzs
-
+#endif
                   net(i1,i2,i3)=net(i1,i2,i3)+0.5*nes/np
                   nit(i1,i2,i3)=nit(i1,i2,i3)+0.5*nis/np
                   nnt(i1,i2,i3)=nnt(i1,i2,i3)+0.5*nns/np
@@ -323,6 +331,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   bxt(i1,i2,i3)=bxt(i1,i2,i3)+0.5*bxs/np
                   byt(i1,i2,i3)=byt(i1,i2,i3)+0.5*bys/np
                   bzt(i1,i2,i3)=bzt(i1,i2,i3)+0.5*bzs/np
+#ifdef USE_PML
                   hxt(i1,i2,i3)=hxt(i1,i2,i3)+0.5*hxs/np
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
@@ -341,7 +350,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+0.5*hx2s/np
                   hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+0.5*hy2s/np
                   hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+0.5*hz2s/np
-
+#endif
                enddo
             enddo
          enddo
@@ -382,6 +391,19 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      bxs=bxt(i1,i2,i3)
                      bys=byt(i1,i2,i3)
                      bzs=bzt(i1,i2,i3)
+                     write(11) sngl(nes)
+                     write(11) sngl(nis)
+                     write(11) sngl(nns)
+                     write(11) sngl(jxis)
+                     write(11) sngl(jyis)
+                     write(11) sngl(jzis)
+                     write(11) sngl(exs)
+                     write(11) sngl(eys)
+                     write(11) sngl(ezs)
+                     write(11) sngl(bxs)
+                     write(11) sngl(bys)
+                     write(11) sngl(bzs)
+#ifdef USE_PML
                      hxs=hxt(i1,i2,i3)
                      hys=hyt(i1,i2,i3)
                      hzs=hzt(i1,i2,i3)
@@ -400,19 +422,6 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      hx2s=hx2t(i1,i2,i3)
                      hy2s=hy2t(i1,i2,i3)
                      hz2s=hz2t(i1,i2,i3)
-
-                     write(11) sngl(nes)
-                     write(11) sngl(nis)
-                     write(11) sngl(nns)
-                     write(11) sngl(jxis)
-                     write(11) sngl(jyis)
-                     write(11) sngl(jzis)
-                     write(11) sngl(exs)
-                     write(11) sngl(eys)
-                     write(11) sngl(ezs)
-                     write(11) sngl(bxs)
-                     write(11) sngl(bys)
-                     write(11) sngl(bzs)
                      write(11) sngl(hxs)
                      write(11) sngl(hys)
                      write(11) sngl(hzs)
@@ -431,6 +440,7 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      write(11) sngl(hx2s)
                      write(11) sngl(hy2s)
                      write(11) sngl(hz2s)
+#endif
 
                   endif
 
@@ -482,12 +492,6 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      jxis=0.5*(jxi(i1,i2,i3)+jxi(i1-1,i2,i3))
                      jyis=0.5*(jyi(i1,i2,i3)+jyi(i1,i2-1,i3))
                      jzis=0.5*(jzi(i1,i2,i3)+jzi(i1,i2,i3-1))
-
-                     vphis=vphi1(i1,i2,i3)
-                     vaxs=vax1(i1,i2,i3)
-                     vays=vay1(i1,i2,i3)
-                     vazs=vaz1(i1,i2,i3)
-                     
                      exs=0.5*(ex(i1,i2,i3)+ex(i1-1,i2,i3))
                      eys=0.5*(ey(i1,i2,i3)+ey(i1,i2-1,i3))
                      ezs=0.5*(ez(i1,i2,i3)+ez(i1,i2,i3-1))
@@ -497,6 +501,24 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
      &                         +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
                      bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
      &                         +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
+                     write(11) sngl(nes)
+                     write(11) sngl(nis)
+                     write(11) sngl(nns)
+                     write(11) sngl(jxis)
+                     write(11) sngl(jyis)
+                     write(11) sngl(jzis)
+                     write(11) sngl(exs)
+                     write(11) sngl(eys)
+                     write(11) sngl(ezs)
+                     write(11) sngl(bxs)
+                     write(11) sngl(bys)
+                     write(11) sngl(bzs)
+
+#ifdef USE_PML
+                     vphis=vphi1(i1,i2,i3)
+                     vaxs=vax1(i1,i2,i3)
+                     vays=vay1(i1,i2,i3)
+                     vazs=vaz1(i1,i2,i3)
                      hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
      &                         +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
                      hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
@@ -521,23 +543,10 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      hx2s=hxs*hxs
                      hy2s=hys*hys
                      hz2s=hzs*hzs
-
-                     write(11) sngl(nes)
-                     write(11) sngl(nis)
-                     write(11) sngl(nns)
-                     write(11) sngl(jxis)
-                     write(11) sngl(jyis)
-                     write(11) sngl(jzis)
                      write(11) sngl(vphis)
                      write(11) sngl(vaxs)
                      write(11) sngl(vays)
                      write(11) sngl(vazs)
-                     write(11) sngl(exs)
-                     write(11) sngl(eys)
-                     write(11) sngl(ezs)
-                     write(11) sngl(bxs)
-                     write(11) sngl(bys)
-                     write(11) sngl(bzs)
                      write(11) sngl(hxs)
                      write(11) sngl(hys)
                      write(11) sngl(hzs)
@@ -556,6 +565,7 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      write(11) sngl(hx2s)
                      write(11) sngl(hy2s)
                      write(11) sngl(hz2s)
+#endif
 
                   endif
                enddo

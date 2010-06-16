@@ -29,7 +29,9 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       write(10) ent,poxt,poyt,pozt,jet
       write(10) enEXt,enEYt,enEZt
       write(10) enBXt,enBYt,enBZt
+#ifdef USE_PML
       write(10) enHXt,enHYt,enHZt
+#endif
       write(10) sum_fed,sum_ped
 
 
@@ -94,6 +96,19 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
      &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+#ifdef USE_PML
                write(10) (((hxt(i1a,i2a,i3a),i1a=i1,i1e),
      &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((hyt(i1a,i2a,i3a),i1a=i1,i1e),
@@ -118,18 +133,6 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((hz2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((jxexit(i1a,i2a,i3a),i1a=i1,i1e),
      &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((jyeyit(i1a,i2a,i3a),i1a=i1,i1e),
@@ -142,6 +145,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      &                      i2a=i2,i2e),i3a=i3,i3e)
                write(10) (((poyzt(i1a,i2a,i3a),i1a=i1,i1e),
      &                      i2a=i2,i2e),i3a=i3,i3e)
+#endif
             enddo
          enddo
       enddo

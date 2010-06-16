@@ -1,3 +1,5 @@
+#include "config.h"
+
       subroutine SELECT_cl_evol
 
       use PIC_variables
@@ -196,16 +198,20 @@ c PREPARATION
             read(12) enBXt
             read(12) enBYt
             read(12) enBZt
+#ifdef USE_PML
             read(12) enHXt       ! ab
             read(12) enHYt       ! ab
             read(12) enHZt       ! ab
+#endif
             read(12) ent
             read(12) poxt
             read(12) poyt
             read(12) pozt
             read(12) jet
+#ifdef USE_PML
             read(12) poynit      ! ab
             read(12) poynot      ! ab
+#endif
             close(12)
 
             if (nodek==1) then
@@ -219,9 +225,11 @@ c PREPARATION
             glo_enBXt=glo_enBXt+enBXt
             glo_enBYt=glo_enBYt+enBYt
             glo_enBZt=glo_enBZt+enBZt
+#ifdef USE_PML
             glo_enHXt=glo_enHXt+enHXt
             glo_enHYt=glo_enHYt+enHYt
             glo_enHZt=glo_enHZt+enHZt
+#endif
 
             glo_ent=glo_ent+ent
             glo_poxt=glo_poxt+poxt
@@ -229,9 +237,10 @@ c PREPARATION
             glo_pozt=glo_pozt+pozt
             glo_jet=glo_jet+jet
 
+#ifdef USE_PML
             glo_poynit=glo_poynit+poynit    ! ab
             glo_poynot=glo_poynot+poynot    ! ab
-
+#endif
          enddo
 
          glo_sum_enEXt=glo_sum_enEXt+glo_enEXt
@@ -368,16 +377,20 @@ c PREPARATION
             read(12) enBXt
             read(12) enBYt
             read(12) enBZt
+#ifdef USE_PML
             read(12) enHXt   ! ab
             read(12) enHYt   ! ab
             read(12) enHZt   ! ab
+#endif
             read(12) ent
             read(12) poxt
             read(12) poyt
             read(12) pozt
             read(12) jet
+#ifdef USE_PML
             read(12) poynit      ! ab
             read(12) poynot      ! ab
+#endif
             close(12)
 
             total=ent+poxt+poyt+pozt+jet   ! - changed
@@ -388,9 +401,11 @@ c PREPARATION
             sum_enBXt=sum_enBXt+enBXt
             sum_enBYt=sum_enBYt+enBYt
             sum_enBZt=sum_enBZt+enBZt
+#ifdef USE_PML
             sum_enHXt=sum_enHXt+enHXt    ! ab
             sum_enHYt=sum_enHYt+enHYt    ! ab 
             sum_enHZt=sum_enHZt+enHZt    ! ab
+#endif
 
             sum_ent=sum_ent+ent
             sum_poxt=sum_poxt+poxt
@@ -398,8 +413,10 @@ c PREPARATION
             sum_pozt=sum_pozt+pozt
             sum_jet=sum_jet+jet
 
+#ifdef USE_PML
             sum_poynit = sum_poynit+poynit     ! ab
             sum_poynot = sum_poynot+poynot     ! ab
+#endif
 
             write(11,*) ' '
             write(11,*) 'LOCAL POYNTING LAW'
@@ -419,9 +436,11 @@ c PREPARATION
             write(11,*) 'ENBX:',enBXt*unit,'mJ'
             write(11,*) 'ENBY:',enBYt*unit,'mJ'
             write(11,*) 'ENBZ:',enBZt*unit,'mJ'
+#ifdef USE_PML
             write(11,*) 'ENHX:',enHXt*unit,'mJ'   ! ab
             write(11,*) 'ENHY:',enHYt*unit,'mJ'   ! ab
             write(11,*) 'ENHZ:',enHZt*unit,'mJ'   ! ab
+#endif
             write(11,*) '------------------------------------------'
             write(11,*) 'TOTAL ENERGY DISTRIBUTION (LIGHT)'
             write(11,*) 'TOT ENEX:',sum_enEXt*unit,'mJ'

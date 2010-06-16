@@ -1,10 +1,32 @@
+
+#include "config.h"
+
       module VLA_variables
       implicit none
 
-c vphi0-vaz1: em potentials
 c ex-bz: em field arrays 
-c rhoi-jzi: charge and current densities
 c ne-nn: charge densities
+c jxi-jzi: current densities
+
+      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
+      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz
+      real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
+      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
+
+c ext-bzt: time averaged field
+c net: time averaged electron density
+c nit: time averaged ion density
+c nnt: time averaged neutral density
+c jxit-jzit: time averaged current density
+
+      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
+      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
+      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
+      real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
+
+#ifdef USE_PML
+c vphi0-vaz1: em potentials
+c rhoi-jzi: charge and current densities
 
 ! for the pml the declaration of d and h field is required
 ! dvx-hz: additional em field arrays
@@ -13,13 +35,9 @@ c ne-nn: charge densities
       real(kind=8),allocatable,dimension(:,:,:) :: vphi0,vax0,vay0,vaz0
       real(kind=8),allocatable,dimension(:,:,:) :: vphi1,vax1,vay1,vaz1
 
-      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
-      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
       real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: rhoi,jxi,jyi,jzi
-
-      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
+      real(kind=8),allocatable,dimension(:,:,:) :: rhoi
 
       real(kind=8),allocatable,dimension(:,:,:) :: exsp,eysp,ezsp  ! test ab
       real(kind=8),allocatable,dimension(:,:,:) :: jxsp,jysp,jzsp  ! test ab
@@ -29,28 +47,34 @@ c ne-nn: charge densities
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
 
 c vphi0t-vaz1t: time averaged potentials
-c ext-bzt: time averaged field
 c ex2t-bz2t: time averaged field
-c net: time averaged electron density
-c nit: time averaged ion density
-c nnt: time averaged neutral density
 c rhoit-jzit: time averaged charge and current densities
 c jxexit-jzezit: time averaged energy depositions
 c poyxt-poyzt: time averaged poynting vector
 
       real(kind=4),allocatable,dimension(:,:,:) :: vphit,vaxt,vayt,vazt
-      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
-      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
       real(kind=4),allocatable,dimension(:,:,:) :: hxt,hyt,hzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dxt,dyt,dzt      ! ab
-      real(kind=4),allocatable,dimension(:,:,:) :: ex2t,ey2t,ez2t
-      real(kind=4),allocatable,dimension(:,:,:) :: bx2t,by2t,bz2t
       real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dx2t,dy2t,dz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
-      real(kind=4),allocatable,dimension(:,:,:) :: rhoit,jxit,jyit,jzit
+      real(kind=4),allocatable,dimension(:,:,:) :: rhoit
       real(kind=4),allocatable,dimension(:,:,:) :: jxexit,jyeyit,jzezit
       real(kind=4),allocatable,dimension(:,:,:) :: poyxt,poyyt,poyzt
+
+      real(kind=8) dx2A,dy2A,dz2A,hx2A,hy2A,hz2A  ! ab  
+      real(kind=8) dx2B,dy2B,dz2B,hx2B,hy2B,hz2B  ! ab
+      real(kind=8) poyx1i,poyx1o,poyx2i,poyx2o                 ! ab
+      real(kind=8) poyy1i,poyy1o,poyy2i,poyy2o                 ! ab
+      real(kind=8) poyz1i,poyz1o,poyz2i,poyz2o                 ! ab
+      real(kind=8) poyni, poyno                 ! ab
+      real(kind=8) enHXt,enHYt,enHZt            ! ab
+      real(kind=8) enDXt,enDYt,enDZt            ! ab
+      real(kind=8) poyx1it,poyx1ot,poyx2it,poyx2ot             ! ab
+      real(kind=8) poyy1it,poyy1ot,poyy2it,poyy2ot             ! ab
+      real(kind=8) poyz1it,poyz1ot,poyz2it,poyz2ot             ! ab
+      real(kind=8) poynit, poynot               ! ab
+#endif
 
 c seg_i1: x-label of distributed data segment
 c seg_i2: y-label of distributed data segment
@@ -101,27 +125,15 @@ c np:  number of timesteps for time-averaging
 
       real(kind=8) fluxi,fluxo
       real(kind=8) ex2A,ey2A,ez2A,bx2A,by2A,bz2A
-      real(kind=8) dx2A,dy2A,dz2A,hx2A,hy2A,hz2A  ! ab  
       real(kind=8) ex2B,ey2B,ez2B,bx2B,by2B,bz2B
-      real(kind=8) dx2B,dy2B,dz2B,hx2B,hy2B,hz2B  ! ab
       real(kind=8) pox,poy,poz,je
       real(kind=8) p2A,p2B
       real(kind=8) sum_fed,sum_ped
-      real(kind=8) poyx1i,poyx1o,poyx2i,poyx2o                 ! ab
-      real(kind=8) poyy1i,poyy1o,poyy2i,poyy2o                 ! ab
-      real(kind=8) poyz1i,poyz1o,poyz2i,poyz2o                 ! ab
-      real(kind=8) poyni, poyno                 ! ab
 
       real(kind=8) fluxit,fluxot
       real(kind=8) enEXt,enEYt,enEZt
       real(kind=8) enBXt,enBYt,enBZt
-      real(kind=8) enHXt,enHYt,enHZt            ! ab
-      real(kind=8) enDXt,enDYt,enDZt            ! ab
       real(kind=8) ent,poxt,poyt,pozt,jet
-      real(kind=8) poyx1it,poyx1ot,poyx2it,poyx2ot             ! ab
-      real(kind=8) poyy1it,poyy1ot,poyy2it,poyy2ot             ! ab
-      real(kind=8) poyz1it,poyz1ot,poyz2it,poyz2ot             ! ab
-      real(kind=8) poynit, poynot               ! ab
 
 c i0: irradiance in Wum**2/m**2
 c n0: peak atom density in m**3

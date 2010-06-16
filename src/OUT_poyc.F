@@ -1,3 +1,5 @@
+#include "config.h"
+
 c THIS SUBROUTINE CHECKS THE POYNTING LAW IN 3D.
 
 
@@ -33,21 +35,28 @@ c Time-averaging
          enBXt=enBXt+bx2B-bx2A
          enBYt=enBYt+by2B-by2A
          enBZt=enBZt+bz2B-bz2A
+#ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
          enHZt=enHZt+hz2B-hz2A
+#endif
 
-!         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-!     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
+#else
+         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
+     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
          pozt=pozt+dt*poz
 
+#ifdef USE_PML
          poynit = poynit+dt*poyni          ! added by ab
          poynot = poynot+dt*poyno          ! added by ab
+#endif
 
          jet=jet+dx*dy*dz*(p2B)
 c         jet=jet+dt*je
@@ -65,21 +74,28 @@ c         jet=jet+dt*je
          enBXt=enBXt+bx2B-bx2A
          enBYt=enBYt+by2B-by2A
          enBZt=enBZt+bz2B-bz2A
+#ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
          enHZt=enHZt+hz2B-hz2A
+#endif
 
-!         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-!     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
+#else
+         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
+     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
          pozt=pozt+dt*poz
 
+#ifdef USE_PML
          poynit = poynit+dt*poyni          ! added by ab
          poynot = poynot+dt*poyno          ! added by ab
+#endif
 
          jet=jet+dx*dy*dz*(p2B)
 c         jet=jet+dt*je
@@ -100,21 +116,28 @@ c         jet=jet+dt*je
          enBXt=enBXt+bx2B-bx2A
          enBYt=enBYt+by2B-by2A
          enBZt=enBZt+bz2B-bz2A
+#ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
          enHZt=enHZt+hz2B-hz2A
+#endif
 
-!         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-!     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
+#else
+         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
+     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
          pozt=pozt+dt*poz
 
+#ifdef USE_PML
          poynit = poynit+dt*poyni          ! added by ab
          poynot = poynot+dt*poyno          ! added by ab
+#endif
 
          jet=jet+dx*dy*dz*(p2B)
 c         jet=jet+dt*je
@@ -142,16 +165,20 @@ c         jet=jet+dt*je
          write(11) enBXt
          write(11) enBYt
          write(11) enBZt
+#ifdef USE_PML
          write(11) enHXt
          write(11) enHYt
          write(11) enHZt
+#endif
          write(11) ent
          write(11) poxt
          write(11) poyt
          write(11) pozt
          write(11) jet
+#ifdef USE_PML
          write(11) poynit               ! ab
          write(11) poynot               ! ab
+#endif
 
          close(11)
 
@@ -167,9 +194,11 @@ c         jet=jet+dt*je
          enBXt=0.0
          enBYt=0.0
          enBZt=0.0
+#ifdef USE_PML
          enHXt=0.0
          enHYt=0.0
          enHZt=0.0
+#endif
 
          ent=0.0
          poxt=0.0
@@ -177,8 +206,10 @@ c         jet=jet+dt*je
          pozt=0.0
          jet=0.0
 
+#ifdef USE_PML
          poynit=0.0          ! ab
          poynot=0.0          ! ab
+#endif
 
       endif
 

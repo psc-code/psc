@@ -1,3 +1,11 @@
+#include "config.h"
+
+#ifndef USE_PML
+#define hx bx
+#define hy by
+#define hz bz
+#endif
+
 c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 

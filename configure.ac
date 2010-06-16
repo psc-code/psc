@@ -55,6 +55,14 @@ AS_IF([test "x$have_papi" != "xyes"],
 
 # Checks for options
 
+AH_TEMPLATE([USE_PML], [enable perfectly matched layer code])
+AC_ARG_ENABLE(
+  [pml],
+  [AS_HELP_STRING([--enable-pml], [enable perfectly matched layer code])],
+  [AC_DEFINE([USE_PML])]
+)
+AM_CONDITIONAL([USE_PML], [test "$enable_pml" = "yes"])
+  	
 AH_TEMPLATE([USE_C_INTERFACE], [use interface to modules written in C])
 AC_ARG_ENABLE(
   [c-interface],
