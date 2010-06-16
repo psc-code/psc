@@ -6,10 +6,12 @@
 
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 #define INIT_param_fortran_F77 F77_FUNC_(init_param_fortran, INIT_PARAM_FORTRAN)
+#define ALLOC_field_fortran_F77 F77_FUNC_(alloc_field_fortran, ALLOC_FIELD_FORTRAN)
 #define VLI_main_F77 F77_FUNC_(vli_main, VLI_MAIN)
 
 void INIT_basic_F77(void);
 void INIT_param_fortran_F77(void);
+void ALLOC_field_fortran_F77(void);
 void VLI_main_F77(void);
 
 int
@@ -39,6 +41,7 @@ main(int argc, char **argv)
     psc.f_fields[n] = fields[n];
   }
   psc_init_field();
+  ALLOC_field_fortran_F77();
 
   VLI_main_F77();
 
