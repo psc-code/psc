@@ -96,6 +96,7 @@ struct psc_domain {
   double length[3];
   int itot[3], ilo[3], ihi[3];
   int bnd_fld[3], bnd_part[3];
+  int nghost[3];
   int nproc[3];
 };
 

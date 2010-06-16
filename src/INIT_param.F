@@ -13,15 +13,8 @@ c PARAMETER INITIALIZATION
 
 c PARAMETERS THAT SHOULD NOT BE CHANGED UNDER NORMAL CONDITIONS
 
-c rd1=3: excess data points on local node
-c rd2=3: excess data points on local node
-c rd3=3: excess data points on local node
 c pi: pi
 
-
-      rd1=3
-      rd2=3
-      rd3=3
       pi=3.1415927
 
 c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
@@ -344,6 +337,10 @@ c cpus: WALL CLOCK time at end time
 
 
 
+c rd1=3: excess data points on local node
+c rd2=3: excess data points on local node
+c rd3=3: excess data points on local node
+
 c lengthx: x extension of simulation box in m
 c lengthy: y extension of simulation box in m
 c lengthz: z extension of simulation box in m
@@ -384,6 +381,10 @@ c boundary_part_z: 0=reflecting, 1=periodic in z
       use PIC_variables
 
       implicit none
+
+      rd1=3
+      rd2=3
+      rd3=3
 
       lengthx=1.0*1.0e-6
       lengthy=1.0*1.0e-6
@@ -454,7 +455,7 @@ c n0: peak atom density in m**3
 c     wrapper for C to be access these parameters
 
       subroutine GET_param_domain(length, itot, in, ix,
-     &     bnd_fld, bnd_part, nproc)
+     &     bnd_fld, bnd_part, nproc, rd)
 
       use VLA_variables
       use PIC_variables
@@ -464,7 +465,7 @@ c     wrapper for C to be access these parameters
       real(kind=8) :: length(3)
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld(3), bnd_part(3)
-      integer :: nproc(3)
+      integer :: nproc(3), rd(3)
 
       length(1)=lengthx
       length(2)=lengthy
@@ -494,12 +495,16 @@ c     wrapper for C to be access these parameters
       bnd_part(2)=boundary_part_y
       bnd_part(3)=boundary_part_z
 
+      rd(1)=rd1
+      rd(2)=rd2
+      rd(3)=rd3
+
       end subroutine GET_param_domain
 
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_domain(length, itot, in, ix,
-     &     bnd_fld, bnd_part, nproc)
+     &     bnd_fld, bnd_part, nproc, rd)
 
       use VLA_variables
       use PIC_variables
@@ -509,7 +514,7 @@ c     wrapper for C to be able to set these parameters
       real(kind=8) :: length(3)
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld(3), bnd_part(3)
-      integer :: nproc(3)
+      integer :: nproc(3), rd(3)
 
       lengthx=length(1)
       lengthy=length(2)
@@ -538,6 +543,10 @@ c     wrapper for C to be able to set these parameters
       boundary_part_x=bnd_part(1)
       boundary_part_y=bnd_part(2)
       boundary_part_z=bnd_part(3)
+
+      rd1=rd(1)
+      rd2=rd(2)
+      rd3=rd(3)
 
       end subroutine SET_param_domain
 

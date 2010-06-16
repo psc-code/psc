@@ -136,9 +136,11 @@ init_case()
 #define C_init_case_F77         F77_FUNC_(c_init_case, C_INIT_CASE)
 
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
+			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
+			  f_int *nghost);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc);
+			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
+			  f_int *nghost);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_int *nicell);
@@ -153,7 +155,7 @@ get_param_domain()
   int imax[3];
 
   GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-			p->bnd_fld, p->bnd_part, p->nproc);
+		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
   }
@@ -169,7 +171,7 @@ set_param_domain()
     imax[d] = p->ihi[d] - 1;
   }
   SET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld, p->bnd_part, p->nproc);
+		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
 }
 
 static void
