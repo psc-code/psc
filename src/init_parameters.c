@@ -225,6 +225,11 @@ init_param_coeff()
   psc.coeff.alpha = psc.coeff.wp / psc.coeff.wl;
   psc.coeff.beta = psc.coeff.vt / psc.prm.cc;
   psc.coeff.eta = psc.coeff.vos / psc.prm.cc;
+
+  for (int d = 0; d < 3; d++) {
+    psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.itot[d];
+  }
+  psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
 }
 
 // ======================================================================
@@ -256,7 +261,8 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
 		       f_real *a0, f_int *nicell);
 void SET_param_coeff_F77(f_real *cori, f_real *alpha, f_real *beta, f_real *eta,
-			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp);
+			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
+			 f_real *dx, f_real *dt);
 
 void
 get_param_domain()
@@ -309,7 +315,8 @@ set_param_coeff()
 {
   struct psc_coeff *p = &psc.coeff;
   SET_param_coeff_F77(&p->cori, &p->alpha, &p->beta, &p->eta,
-		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp);
+		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
+		      psc.dx, &psc.dt);
 }
 
 void

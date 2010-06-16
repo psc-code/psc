@@ -172,7 +172,6 @@ c wp: plasma frequency
       alpha=wp/wl
       beta=vt/cc
       eta=vos/cc
-#endif
 
 
 c dx: spatial resolution in x
@@ -188,6 +187,8 @@ c np:  number of timesteps for time-averaging
       dz=lengthz/(i3tot)/ld
 
       dt=0.75*sqrt(1.0/(1.0/dx**2+1.0/dy**2+1.0/dz**2))
+#endif
+c     adjust to match laser cycles
       nnp=int(2.0*pi/dt)+1
       dt=2.0*pi/nnp
       np=2*nnp
@@ -627,7 +628,7 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to set these coefficients
 
       subroutine SET_param_coeff(cori_, alpha_, beta_, eta_,
-     *     wl_, ld_, vos_, vt_, wp_)
+     *     wl_, ld_, vos_, vt_, wp_, dx_, dt_)
 
       use VLA_variables
       use PIC_variables
@@ -635,7 +636,8 @@ c     wrapper for C to be able to set these coefficients
       implicit none
 
       real(kind=8) :: cori_, alpha_, beta_, eta_
-      real(kind=8) :: wl_, ld_, vos_, vt_, wp_
+      real(kind=8) :: wl_, ld_, vos_, vt_, wp_, dt_
+      real(kind=8) :: dx_(3)
 
       cori = cori_
       alpha = alpha_
@@ -646,5 +648,10 @@ c     wrapper for C to be able to set these coefficients
       vos = vos_
       vt = vt_
       wp = wp_
+
+      dx = dx_(1)
+      dy = dx_(2)
+      dz = dx_(3)
+      dt = dt_
 
       end subroutine SET_param_coeff
