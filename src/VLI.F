@@ -34,6 +34,10 @@ c The real VLI main
 
 #ifdef USE_C_INTERFACE
       call SERV_systime(cpus)
+      call ALLOC_field
+      call C_INIT_field
+
+      call ALLOC_field_fortran
 #else
       call INIT_basic
       call INIT_param
@@ -49,14 +53,11 @@ c The real VLI main
      *     niloc_new)
       call ALLOC_particles(niloc_new)
       call INIT_idistr(part_label_off,rd1n,rd1x,rd2n,rd2x,rd3n,rd3x)
-#endif
-
       call ALLOC_field
-#ifdef USE_C_INTERFACE
-      call C_INIT_field
-#else
+      call ALLOC_field_fortran
       call INIT_field
 #endif
+
       call SETUP_field
 c      call INIT_MCC
 
