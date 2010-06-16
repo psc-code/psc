@@ -14,15 +14,16 @@
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
+#define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
 #define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
-#define C_set_particle_info_F77 F77_FUNC(c_set_particle_info,C_SET_PARTICLE_INFO)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
 #define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
 #define C_sort_F77 F77_FUNC(c_sort,C_SORT)
 #define C_out_field_F77 F77_FUNC(c_out_field,C_OUT_FIELD)
+#define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
@@ -68,6 +69,7 @@ void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
 void OUT_field_1_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
+void ALLOC_particles_F77(f_int *n_part);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
@@ -258,13 +260,6 @@ C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 }
 
 void
-C_set_particle_info_F77(f_int *niloc, struct f_particle *p_niloc)
-{
-  psc.n_part = *niloc;
-  psc.f_part = &p_niloc[1];
-}
-
-void
 C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 		   f_int *niloc, struct f_particle *p_niloc,
 		   f_int *dummy)
@@ -331,3 +326,25 @@ C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
   return psc_p_pulse_z1(*xx, *yy, *zz, *tt);
 }
+
+// ----------------------------------------------------------------------
+// slightly hacky way to do the equivalent of "malloc" using
+// Fortran's allocate()
+
+static struct f_particle *__f_part;
+
+struct f_particle *
+ALLOC_particles(int n_part)
+{
+  ALLOC_particles_F77(&n_part);
+  // the callback function below will have magically been called,
+  // setting __f_part
+  return __f_part;
+}
+
+void
+C_alloc_particles_cb_F77(struct f_particle *p_niloc)
+{
+  __f_part = &p_niloc[1];
+}
+

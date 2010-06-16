@@ -20,7 +20,7 @@ c     ======================================================================
       allocate(p_niloc(0:11*nialloc+10))
 
 #ifdef USE_C_INTERFACE
-      call C_set_particle_info(niloc, p_niloc)
+      call C_ALLOC_particles_cb(p_niloc)
 #endif
 
       end subroutine ALLOC_particles

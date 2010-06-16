@@ -282,6 +282,7 @@ void GET_param_domain();
 void INIT_param_domain();
 void INIT_param_psc();
 void INIT_grid_map();
+struct f_particle *ALLOC_particles(int n_part);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------
