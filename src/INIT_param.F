@@ -1,21 +1,34 @@
 
 #include "config.h"
 
-c PARAMETER INITIALIZATION 
-
-      subroutine INIT_param
+c     ----------------------------------------------------------------------
+      subroutine INIT_basic
+c     ----------------------------------------------------------------------
 
       use VLA_variables
       use PIC_variables
 
       implicit none
 
-
 c PARAMETERS THAT SHOULD NOT BE CHANGED UNDER NORMAL CONDITIONS
 
 c pi: pi
 
       pi=3.1415927
+
+      end subroutine INIT_basic
+
+c PARAMETER INITIALIZATION 
+
+c     ----------------------------------------------------------------------
+      subroutine INIT_param
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
 
 c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
@@ -196,6 +209,18 @@ c     adjust to match laser cycles
          nmax=30*nnp
       endif
 
+      end subroutine INIT_param
+
+c     ----------------------------------------------------------------------
+      subroutine INIT_param_fortran
+c     ----------------------------------------------------------------------
+c     setup processor map
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
 ! PML PARAMETERS - added by ab
 
 ! deltax: thickness of pml in x direction
@@ -316,7 +341,6 @@ c cpus: WALL CLOCK time at end time
       r3n=max(i3n,r3n)
       r3x=min(i3x,r3x)
 
-
       allocate(seg_i1(0:xnpe*ynpe*znpe-1))
       allocate(seg_i2(0:xnpe*ynpe*znpe-1))
       allocate(seg_i3(0:xnpe*ynpe*znpe-1))
@@ -334,7 +358,7 @@ c cpus: WALL CLOCK time at end time
          enddo
       enddo
 
-      end subroutine INIT_param
+      end subroutine INIT_param_fortran
 
 
 

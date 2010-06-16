@@ -36,7 +36,9 @@ c The real VLI main
       call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
       call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
+      call INIT_basic
       call INIT_param
+      call INIT_param_fortran
       call SERV_systime(cpus)
       include './SERV_consist.F'
 
