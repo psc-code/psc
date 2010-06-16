@@ -4,7 +4,9 @@
 c VLI.F is the init program and VLA.F the main program!
 
 #ifndef USE_C_INTERFACE
+c     ----------------------------------------------------------------------
       program VLI
+c     ----------------------------------------------------------------------
 
       use VLA_variables
       use PIC_variables
@@ -12,25 +14,10 @@ c VLI.F is the init program and VLA.F the main program!
       implicit none
       include 'mpif.h'
 
-      call MPI_INIT(info)
-      call VLI_main
-      call MPI_FINALIZE(info)
-
-      end
-#endif
-
-
-c The real VLI main
-
-      subroutine VLI_main
-
-      use VLA_variables
-      use PIC_variables
-
-      implicit none
-
       integer :: part_label_off,niloc_new
       integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
+
+      call MPI_INIT(info)
 
       call INIT_basic
       call INIT_param
@@ -53,5 +40,7 @@ c      call INIT_MCC
 
       call PSC_driver
 
-      return
+      call MPI_FINALIZE(info)
+
       end
+#endif
