@@ -293,25 +293,6 @@ c setting up the fields
                by(i1,i2,i3)=0.0d0
                bz(i1,i2,i3)=0.0d0
 
-               ! initialisation of additional fields - added by ab
-               ! because of normalization these are equal to e and b fields
-
-               dvx(i1,i2,i3)=0.0d0
-               dvy(i1,i2,i3)=0.0d0
-               dvz(i1,i2,i3)=0.0d0
-               hx(i1,i2,i3)=0.0d0
-               hy(i1,i2,i3)=0.0d0
-               hz(i1,i2,i3)=0.0d0
-
-               dvx(i1,i2,i3)=0.0d0
-               dvy(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3,-0.5*dt)
-               dvy(i1,i2,i3)=0.0d0
-               dvz(i1,i2,i3)=0.0d0
-               hx(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3+0.5*dz,0.0*dt)
-               hx(i1,i2,i3)=0.0d0
-               hy(i1,i2,i3)=0.0d0
-               hz(i1,i2,i3)=0.0d0
-
                ! initialisation of permittivity tensors
                ! due to scaling these are dimensionless
 
@@ -602,6 +583,15 @@ c setting up time-averaged fields
       sum_fed=0.0d0
       sum_ped=0.0d0
 
+      ! initialisation of additional fields - added by ab
+      ! because of normalization these are equal to e and b fields
+
+      hx=bx
+      hy=by
+      hz=bz
+      dvx=ex
+      dvy=ey
+      dvz=ez
 
 ! deriving pml attenuation coefficients
 
