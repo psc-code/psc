@@ -28,10 +28,6 @@ c The real VLA main
       use PIC_variables
 
       implicit none
-      include 'mpif.h'
-
-      call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
-      call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
       call INIT_basic
       call INIT_param

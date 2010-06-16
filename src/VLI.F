@@ -28,13 +28,9 @@ c The real VLI main
       use PIC_variables
 
       implicit none
-      include 'mpif.h'
 
       integer :: part_label_off,niloc_new
       integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
-
-      call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
-      call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
 #ifndef USE_C_INTERFACE
       call INIT_basic

@@ -9,12 +9,16 @@ c     ----------------------------------------------------------------------
       use PIC_variables
 
       implicit none
+      include 'mpif.h'
 
 c PARAMETERS THAT SHOULD NOT BE CHANGED UNDER NORMAL CONDITIONS
 
 c pi: pi
 
       pi=3.1415927
+
+      call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
+      call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
       end subroutine INIT_basic
 
