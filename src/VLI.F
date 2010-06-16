@@ -32,8 +32,6 @@ c The real VLI main
       integer :: part_label_off,niloc_new
       integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
 
-#ifdef USE_C_INTERFACE
-#else
       call INIT_basic
       call INIT_param
       call INIT_param_fortran
@@ -50,7 +48,6 @@ c The real VLI main
       call ALLOC_field_fortran
       call INIT_field
       call SETUP_field
-#endif
 
 c      call INIT_MCC
 
