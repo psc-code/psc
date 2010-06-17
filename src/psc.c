@@ -151,8 +151,8 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
     psc.img[d] = ihi[d] - ilo[d] + 2 * ibn[d];
     psc.ibn[d] = ibn[d];
     // for now, local == global (tests running on 1 proc)
-    psc.glo[d] = ilo[d];
-    psc.ghi[d] = ihi[d];
+    psc.domain.ilo[d] = ilo[d];
+    psc.domain.ihi[d] = ihi[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   for (int m = 0; m < NR_FIELDS; m++) {

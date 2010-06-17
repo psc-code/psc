@@ -29,8 +29,8 @@ hdf5_open(struct psc_fields_list *list, const char *filename, void **pctx)
   H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dt", &psc.dt, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dx", psc.dx, 3);
-  H5LTset_attribute_int(hdf5->group, ".", "lo", psc.glo, 3);
-  H5LTset_attribute_int(hdf5->group, ".", "hi", psc.ghi, 3);
+  H5LTset_attribute_int(hdf5->group, ".", "lo", psc.domain.ilo, 3);
+  H5LTset_attribute_int(hdf5->group, ".", "hi", psc.domain.ihi, 3);
 
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
 			      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);

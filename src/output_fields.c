@@ -267,13 +267,14 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
 static void
 copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
 {
-  int my = psc.ghi[1] - psc.glo[1];
-  int mx = psc.ghi[0] - psc.glo[0];
+  int *glo = psc.domain.ilo, *ghi = psc.domain.ihi;
+  int my = ghi[1] - glo[1];
+  int mx = ghi[0] - glo[0];
 
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	fld[((iz - psc.glo[2]) * my + iy - psc.glo[1]) * mx + ix - psc.glo[0]] =
+	fld[((iz - glo[2]) * my + iy - glo[1]) * mx + ix - glo[0]] =
 	  buf[((iz - ilg[2]) * img[1] + iy - ilg[1]) * img[0] + ix - ilg[0]];
       }
     }
@@ -299,9 +300,9 @@ write_fields_combine(struct psc_output_c *out,
     for (int m = 0; m < list->nr_flds; m++) {
       list_combined.flds[m].size = 1;
       for (int d = 0; d < 3; d++) {
-	list_combined.flds[m].ilo[d] = psc.glo[d];
-	list_combined.flds[m].ihi[d] = psc.ghi[d];
-	list_combined.flds[m].size *= (psc.ghi[d] - psc.glo[d]);
+	list_combined.flds[m].ilo[d] = psc.domain.ilo[d];
+	list_combined.flds[m].ihi[d] = psc.domain.ihi[d];
+	list_combined.flds[m].size *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
       }
       list_combined.flds[m].name = list->flds[m].name;
     }
@@ -337,9 +338,9 @@ write_fields_combine(struct psc_output_c *out,
       fld.name = list->flds[m].name;
       fld.size = 1;
       for (int d = 0; d < 3; d++) {
-	fld.ilo[d] = psc.glo[d];
-	fld.ihi[d] = psc.ghi[d];
-	fld.size *= (psc.ghi[d] - psc.glo[d]);
+	fld.ilo[d] = psc.domain.ilo[d];
+	fld.ihi[d] = psc.domain.ihi[d];
+	fld.size *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
       }
       fld.data = calloc(fld.size, sizeof(*fld.data));
 
