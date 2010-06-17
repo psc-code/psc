@@ -75,3 +75,21 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
   .write_field  = hdf5_write_field,
 };
 
+// ======================================================================
+
+void
+psc_dump_field(int m, const char *filename)
+{
+  hsize_t dims[3] = { psc.ihg[2] - psc.ilg[2],
+		      psc.ihg[1] - psc.ilg[1],
+		      psc.ihg[0] - psc.ilg[0] };
+
+  hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTmake_dataset_double(group_fld, fldname[m], 3, dims, psc.f_fields[m]);
+  H5Gclose(group_fld);
+  H5Gclose(group);
+  H5Fclose(file);
+}
+

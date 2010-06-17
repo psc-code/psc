@@ -251,6 +251,7 @@ void psc_setup_fields_zero();
 void psc_setup_fields_1();
 void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
+void psc_dump_field(int m, const char *fname);
 void psc_save_particles_ref();
 void psc_save_fields_ref();
 void psc_check_currents_ref(double thres);
