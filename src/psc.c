@@ -247,21 +247,24 @@ void
 psc_setup_particles_1()
 {
   int n = 0;
-  int n_per_cell = psc.n_part / ((psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
+  int n_per_cell = psc.n_part / 
+    ((psc.ihi[0]-psc.ilo[0])*(psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
   for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
     for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int cnt = 0; cnt < n_per_cell; cnt++) {
-	psc.f_part[n].xi = .2;
-	psc.f_part[n].yi = iy;
-	psc.f_part[n].zi = iz;
-	psc.f_part[n].pxi = 0.;
-	psc.f_part[n].pyi = .02;
-	psc.f_part[n].pzi = .01;
-	psc.f_part[n].qni = -1.;
-	psc.f_part[n].mni = 1.;
-	psc.f_part[n].lni = 0.;
-	psc.f_part[n].wni = 1.;
-	n++;
+      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
+	for (int cnt = 0; cnt < n_per_cell; cnt++) {
+	  psc.f_part[n].xi = ix;
+	  psc.f_part[n].yi = iy;
+	  psc.f_part[n].zi = iz;
+	  psc.f_part[n].pxi = .03;
+	  psc.f_part[n].pyi = .02;
+	  psc.f_part[n].pzi = .01;
+	  psc.f_part[n].qni = -1.;
+	  psc.f_part[n].mni = 1.;
+	  psc.f_part[n].lni = 0.;
+	  psc.f_part[n].wni = 1.;
+	  n++;
+	}
       }
     }
   }
@@ -604,6 +607,25 @@ psc_create_test_1(const char *ops_name)
   int ibn[3] = { 2,  2,  2 }; // FIXME?
 
   int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
+
+  psc_create(ops_name, "fortran", "fortran", "fortran");
+  psc_alloc(ilo, ihi, ibn, n_part);
+  psc_setup_parameters();
+  psc_setup_fields_1();
+  psc_setup_particles_1();
+}
+
+// ----------------------------------------------------------------------
+// psc_create_test_xz
+
+void
+psc_create_test_xz(const char *ops_name)
+{
+  int ilo[3] = {  0,  0,  0 };
+  int ihi[3] = { 16,  1, 16 };
+  int ibn[3] = {  2,  2,  2 }; // FIXME?
+
+  int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]) * (ihi[0] - ilo[0]);
 
   psc_create(ops_name, "fortran", "fortran", "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);

@@ -14,6 +14,7 @@ src/test1
 src/test2
 src/test3
 src/test4
+src/test_part_xz
 src/test_sort
 Makefile.in
 Makefile
