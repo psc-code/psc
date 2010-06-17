@@ -81,6 +81,7 @@ struct psc_ops psc_ops_generic_c = {
   .particles_to_fortran   = genc_particles_to_fortran,
   .fields_from_fortran    = genc_fields_from_fortran,
   .fields_to_fortran      = genc_fields_to_fortran,
+  .push_part_xz           = genc_push_part_xz,
   .push_part_yz_a         = genc_push_part_yz_a,
   .push_part_yz_b         = genc_push_part_yz_b,
 };
