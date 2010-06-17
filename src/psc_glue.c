@@ -60,7 +60,6 @@ void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 
 void PIC_push_part_xz_F77(f_int *niloc, struct f_particle *p_niloc,
 			  f_real *p2A, f_real *p2B,
-			  f_real *ne, f_real *ni, f_real *nn,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
 			  f_real *bx, f_real *by, f_real *bz);
@@ -170,7 +169,6 @@ PIC_push_part_xz()
 {
   PIC_set_variables();
   PIC_push_part_xz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		       psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
 		       psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
 		       psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
 		       psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);

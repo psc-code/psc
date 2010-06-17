@@ -4,7 +4,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 
       subroutine PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 
       use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
      *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
@@ -15,9 +15,6 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
       real(kind=8) :: p2A, p2B
-      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
-     &                       i2mn-rd2:i2mx+rd2,
-     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
@@ -83,9 +80,6 @@ c INITIALIZATION
       dzi=1.0/dz
 
 
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
@@ -276,59 +270,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
 
             p2B=p2B+mni*fnqs*(1.0d0/root-1.0d0)/eta
 
-c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
-
-            u=xi*dxi
-            v=yi*dyi
-            w=zi*dzi
-            l1=nint(u)
-            l2=nint(v)
-            l3=nint(w)
-            h1=l1-u
-            h3=l3-w
-
-            gmx=0.5*(1.5-abs(h1-1.0))*(1.5-abs(h1-1.0))
-            g0x=0.75-abs(h1)*abs(h1)
-            g1x=0.5*(1.5-abs(h1+1.0))*(1.5-abs(h1+1.0))
-            gmz=0.5*(1.5-abs(h3-1.0))*(1.5-abs(h3-1.0))
-            g0z=0.75-abs(h3)*abs(h3)
-            g1z=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
-
-            if (qni.lt.0.0) then
-               fnq=qni*wni*fnqs
-               ne(l1-1,l2,l3-1)=ne(l1-1,l2,l3-1)+fnq*gmx*gmz
-               ne(l1,l2,l3-1)=ne(l1,l2,l3-1)+fnq*g0x*gmz
-               ne(l1+1,l2,l3-1)=ne(l1+1,l2,l3-1)+fnq*g1x*gmz
-               ne(l1-1,l2,l3)=ne(l1-1,l2,l3)+fnq*gmx*g0z
-               ne(l1,l2,l3)=ne(l1,l2,l3)+fnq*g0x*g0z
-               ne(l1+1,l2,l3)=ne(l1+1,l2,l3)+fnq*g1x*g0z
-               ne(l1-1,l2,l3+1)=ne(l1-1,l2,l3+1)+fnq*gmx*g1z
-               ne(l1,l2,l3+1)=ne(l1,l2,l3+1)+fnq*g0x*g1z
-               ne(l1+1,l2,l3+1)=ne(l1+1,l2,l3+1)+fnq*g1x*g1z
-            else if (qni.gt.0.0) then
-               fnq=qni*wni*fnqs
-               ni(l1-1,l2,l3-1)=ni(l1-1,l2,l3-1)+fnq*gmx*gmz
-               ni(l1,l2,l3-1)=ni(l1,l2,l3-1)+fnq*g0x*gmz
-               ni(l1+1,l2,l3-1)=ni(l1+1,l2,l3-1)+fnq*g1x*gmz
-               ni(l1-1,l2,l3)=ni(l1-1,l2,l3)+fnq*gmx*g0z
-               ni(l1,l2,l3)=ni(l1,l2,l3)+fnq*g0x*g0z
-               ni(l1+1,l2,l3)=ni(l1+1,l2,l3)+fnq*g1x*g0z
-               ni(l1-1,l2,l3+1)=ni(l1-1,l2,l3+1)+fnq*gmx*g1z
-               ni(l1,l2,l3+1)=ni(l1,l2,l3+1)+fnq*g0x*g1z
-               ni(l1+1,l2,l3+1)=ni(l1+1,l2,l3+1)+fnq*g1x*g1z
-            else if (qni.eq.0.0) then
-               fnq=wni*fnqs
-               nn(l1-1,l2,l3-1)=nn(l1-1,l2,l3-1)+fnq*gmx*gmz
-               nn(l1,l2,l3-1)=nn(l1,l2,l3-1)+fnq*g0x*gmz
-               nn(l1+1,l2,l3-1)=nn(l1+1,l2,l3-1)+fnq*g1x*gmz
-               nn(l1-1,l2,l3)=nn(l1-1,l2,l3)+fnq*gmx*g0z
-               nn(l1,l2,l3)=nn(l1,l2,l3)+fnq*g0x*g0z
-               nn(l1+1,l2,l3)=nn(l1+1,l2,l3)+fnq*g1x*g0z
-               nn(l1-1,l2,l3+1)=nn(l1-1,l2,l3+1)+fnq*gmx*g1z
-               nn(l1,l2,l3+1)=nn(l1,l2,l3+1)+fnq*g0x*g1z
-               nn(l1+1,l2,l3+1)=nn(l1+1,l2,l3+1)+fnq*g1x*g1z
-            endif
-
 c CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
 c x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
 
@@ -434,10 +375,10 @@ c     ----------------------------------------------------------------------
 
 #ifdef USE_PML
       call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 #else
       call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 #endif
 
       call SERV_systime(cpua)
@@ -454,20 +395,6 @@ c     ----------------------------------------------------------------------
       call PIC_fez(jyi)
       call PIC_fex(jzi)
       call PIC_fez(jzi)
-
-      call PIC_fax(ne)
-      call PIC_faz(ne)
-      call PIC_fax(ni)
-      call PIC_faz(ni)
-      call PIC_fax(nn)
-      call PIC_faz(nn)
-
-      call PIC_fex(ne)
-      call PIC_fez(ne)
-      call PIC_fex(ni)
-      call PIC_fez(ni)
-      call PIC_fex(nn)
-      call PIC_fez(nn)
 
       call PIC_pex
       call PIC_pez

@@ -340,7 +340,7 @@ psc_push_particles()
     assert(0);
   } else if (im[0] > 1 && im[2] > 1) { // xz
     psc_push_part_xz();
-    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
+    int flds[] = { JXI, JYI, JZI, -1 };
     for (int i = 0; flds[i] >= 0; i++) {
       int m = flds[i];
       psc_fax(m);
