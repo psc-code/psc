@@ -1,11 +1,5 @@
 #include "config.h"
 
-#ifndef USE_PML
-#define hx bx
-#define hy by
-#define hz bz
-#endif
-
 c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 
@@ -53,8 +47,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       real(kind=8) :: gmx,g0x,g1x,gmz,g0z,g1z
       real(kind=8) :: wx,wy,wz
       real(kind=8) :: exq,eyq,ezq
-!      real(kind=8) :: bxq,byq,bzq
-      real(kind=8) :: hxq,hyq,hzq
+      real(kind=8) :: bxq,byq,bzq
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
@@ -63,7 +56,6 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
       real(kind=8),allocatable,dimension(:) :: s1x,s1z
       real(kind=8),allocatable,dimension(:,:,:) :: jxh,jyh,jzh
-
 
       allocate(s0x(-2:2))
       allocate(s0z(-2:2))
@@ -210,65 +202,35 @@ c     FIELD INTERPOLATION
      &              +g0x*ez(j1,j2,l3+1)
      &              +g1x*ez(j1+1,j2,l3+1))
 
-!            bxq=hmz*(gmx*bx(j1-1,l2,l3-1)
-!     &              +g0x*bx(j1,l2,l3-1)
-!     &              +g1x*bx(j1+1,l2,l3-1))
-!     &         +h0z*(gmx*bx(j1-1,l2,l3)
-!     &              +g0x*bx(j1,l2,l3)
-!     &              +g1x*bx(j1+1,l2,l3))
-!     &         +h1z*(gmx*bx(j1-1,l2,l3+1)
-!     &              +g0x*bx(j1,l2,l3+1)
-!     &              +g1x*bx(j1+1,l2,l3+1))
+            bxq=hmz*(gmx*bx(j1-1,l2,l3-1)
+     &              +g0x*bx(j1,l2,l3-1)
+     &              +g1x*bx(j1+1,l2,l3-1))
+     &         +h0z*(gmx*bx(j1-1,l2,l3)
+     &              +g0x*bx(j1,l2,l3)
+     &              +g1x*bx(j1+1,l2,l3))
+     &         +h1z*(gmx*bx(j1-1,l2,l3+1)
+     &              +g0x*bx(j1,l2,l3+1)
+     &              +g1x*bx(j1+1,l2,l3+1))
 
-!            byq=hmz*(hmx*by(l1-1,j2,l3-1)
-!     &              +h0x*by(l1,j2,l3-1)
-!     &              +h1x*by(l1+1,j2,l3-1))
-!     &         +h0z*(hmx*by(l1-1,j2,l3)
-!     &              +h0x*by(l1,j2,l3)
-!     &              +h1x*by(l1+1,j2,l3))
-!     &         +h1z*(hmx*by(l1-1,j2,l3+1)
-!     &              +h0x*by(l1,j2,l3+1)
-!     &              +h1x*by(l1+1,j2,l3+1))
+            byq=hmz*(hmx*by(l1-1,j2,l3-1)
+     &              +h0x*by(l1,j2,l3-1)
+     &              +h1x*by(l1+1,j2,l3-1))
+     &         +h0z*(hmx*by(l1-1,j2,l3)
+     &              +h0x*by(l1,j2,l3)
+     &              +h1x*by(l1+1,j2,l3))
+     &         +h1z*(hmx*by(l1-1,j2,l3+1)
+     &              +h0x*by(l1,j2,l3+1)
+     &              +h1x*by(l1+1,j2,l3+1))
 
-!            bzq=gmz*(hmx*bz(l1-1,l2,j3-1)
-!     &              +h0x*bz(l1,l2,j3-1)
-!     &              +h1x*bz(l1+1,l2,j3-1))
-!     &         +g0z*(hmx*bz(l1-1,l2,j3)
-!     &              +h0x*bz(l1,l2,j3)
-!     &              +h1x*bz(l1+1,l2,j3))
-!     &         +g1z*(hmx*bz(l1-1,l2,j3+1)
-!     &              +h0x*bz(l1,l2,j3+1)
-!     &              +h1x*bz(l1+1,l2,j3+1))
-
-            hxq=hmz*(gmx*hx(j1-1,l2,l3-1)
-     &              +g0x*hx(j1,l2,l3-1)
-     &              +g1x*hx(j1+1,l2,l3-1))
-     &         +h0z*(gmx*hx(j1-1,l2,l3)
-     &              +g0x*hx(j1,l2,l3)
-     &              +g1x*hx(j1+1,l2,l3))
-     &         +h1z*(gmx*hx(j1-1,l2,l3+1)
-     &              +g0x*hx(j1,l2,l3+1)
-     &              +g1x*hx(j1+1,l2,l3+1))
-
-            hyq=hmz*(hmx*hy(l1-1,j2,l3-1)
-     &              +h0x*hy(l1,j2,l3-1)
-     &              +h1x*hy(l1+1,j2,l3-1))
-     &         +h0z*(hmx*hy(l1-1,j2,l3)
-     &              +h0x*hy(l1,j2,l3)
-     &              +h1x*hy(l1+1,j2,l3))
-     &         +h1z*(hmx*hy(l1-1,j2,l3+1)
-     &              +h0x*hy(l1,j2,l3+1)
-     &              +h1x*hy(l1+1,j2,l3+1))
-
-            hzq=gmz*(hmx*hz(l1-1,l2,j3-1)
-     &              +h0x*hz(l1,l2,j3-1)
-     &              +h1x*hz(l1+1,l2,j3-1))
-     &         +g0z*(hmx*hz(l1-1,l2,j3)
-     &              +h0x*hz(l1,l2,j3)
-     &              +h1x*hz(l1+1,l2,j3))
-     &         +g1z*(hmx*hz(l1-1,l2,j3+1)
-     &              +h0x*hz(l1,l2,j3+1)
-     &              +h1x*hz(l1+1,l2,j3+1))
+            bzq=gmz*(hmx*bz(l1-1,l2,j3-1)
+     &              +h0x*bz(l1,l2,j3-1)
+     &              +h1x*bz(l1+1,l2,j3-1))
+     &         +g0z*(hmx*bz(l1-1,l2,j3)
+     &              +h0x*bz(l1,l2,j3)
+     &              +h1x*bz(l1+1,l2,j3))
+     &         +g1z*(hmx*bz(l1-1,l2,j3+1)
+     &              +h0x*bz(l1,l2,j3+1)
+     &              +h1x*bz(l1+1,l2,j3+1))
 
 c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -278,12 +240,9 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             pzm=pzi+dq*ezq
 
             root=dq/dsqrt(1.0+pxm*pxm+pym*pym+pzm*pzm)
-!            taux=bxq*root
-!            tauy=byq*root
-!            tauz=bzq*root
-            taux=hxq*root
-            tauy=hyq*root
-            tauz=hzq*root
+            taux=bxq*root
+            tauy=byq*root
+            tauz=bzq*root
 
             tau=1.0/(1.0+taux*taux+tauy*tauy+tauz*tauz)
             pxp=((1.0+taux*taux-tauy*tauy-tauz*tauz)*pxm
@@ -473,8 +432,13 @@ c     ----------------------------------------------------------------------
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
+#ifdef USE_PML
+      call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+#else
       call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+#endif
 
       call SERV_systime(cpua)
       call PIC_fax(jxi)
