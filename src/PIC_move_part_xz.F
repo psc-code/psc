@@ -9,7 +9,7 @@
 c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 
-      subroutine PIC_move_part_xz
+      subroutine PIC_push_part_xz
 
       use PIC_variables
       use VLA_variables
@@ -483,5 +483,18 @@ c CURRENT DENSITY AT (n+1.0)*dt
       cpumess=cpumess+s_cpub
       cpucomp=cpucomp+s_cpuh-s_cpub
 
+
+      end subroutine PIC_push_part_xz
+
+c     ----------------------------------------------------------------------
+      subroutine PIC_move_part_xz
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      call PIC_push_part_xz
 
       end subroutine PIC_move_part_xz
