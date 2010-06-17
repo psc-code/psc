@@ -9,14 +9,34 @@
 c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 
-      subroutine PIC_push_part_xz
+      subroutine PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 
-      use PIC_variables
-      use VLA_variables
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
+      use PIC_variables, only: cori
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8) :: p2A, p2B
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+
       integer :: j1,j2,j3,k1,k3,l1,l2,l3
       integer :: l1min,l1max,l3min,l3max
+      integer :: l
 
       real(kind=8) :: dxi,dyi,dzi
       real(kind=8) :: pxi,pyi,pzi
@@ -453,7 +473,8 @@ c     ----------------------------------------------------------------------
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
-      call PIC_push_part_xz
+      call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 
       call SERV_systime(cpua)
       call PIC_fax(jxi)
