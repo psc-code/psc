@@ -110,6 +110,39 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 };
 
 // ======================================================================
+// fortran push field
+
+static void
+fortran_push_field_a()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_push_field_a", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_msa();
+  prof_stop(pr);
+}
+
+static void
+fortran_push_field_b()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_push_field_b", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_msb();
+  prof_stop(pr);
+}
+
+struct psc_push_field_ops psc_push_field_ops_fortran = {
+  .name         = "fortran",
+  .push_field_a = fortran_push_field_a,
+  .push_field_b = fortran_push_field_b,
+};
+
+// ======================================================================
 // fortran output
 
 static void

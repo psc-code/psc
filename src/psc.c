@@ -44,6 +44,11 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
+static struct psc_push_field_ops *psc_push_field_ops_list[] = {
+  &psc_push_field_ops_fortran,
+  NULL,
+};
+
 static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_fortran,
   &psc_sort_ops_qsort,
@@ -66,6 +71,17 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
+static struct psc_push_field_ops *
+psc_find_push_field_ops(const char *ops_name)
+{
+  for (int i = 0; psc_push_field_ops_list[i]; i++) {
+    if (strcasecmp(psc_push_field_ops_list[i]->name, ops_name) == 0)
+      return psc_push_field_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_push_field_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -93,6 +109,7 @@ psc_find_output_ops(const char *ops_name)
 
 struct psc_cmdline {
   const char *mod_particle;
+  const char *mod_field;
   const char *mod_sort;
   const char *mod_output;
 };
@@ -101,6 +118,7 @@ struct psc_cmdline {
 
 static struct param psc_cmdline_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
+  { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
   { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
   {},
@@ -110,11 +128,13 @@ static struct param psc_cmdline_descr[] = {
 
 
 void
-psc_create(const char *mod_particle, const char *mod_sort, const char *mod_output)
+psc_create(const char *mod_particle, const char *mod_field,
+	   const char *mod_sort, const char *mod_output)
 {
   // set default to what we've got passed
   struct psc_cmdline par = {
     .mod_particle = mod_particle,
+    .mod_field    = mod_field,
     .mod_sort     = mod_sort,
     .mod_output   = mod_output,
   };
@@ -127,6 +147,10 @@ psc_create(const char *mod_particle, const char *mod_sort, const char *mod_outpu
   psc.ops = psc_find_ops(par.mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
+  }
+  psc.push_field_ops = psc_find_push_field_ops(par.mod_field);
+  if (psc.push_field_ops->create) {
+    psc.push_field_ops->create();
   }
   psc.sort_ops = psc_find_sort_ops(par.mod_sort);
   if (psc.sort_ops->create) {
@@ -377,6 +401,26 @@ psc_push_particles()
 }
 
 // ----------------------------------------------------------------------
+// psc_push_field_a
+
+void
+psc_push_field_a()
+{
+  assert(psc.push_field_ops->push_field_a);
+  psc.push_field_ops->push_field_a();
+}
+
+// ----------------------------------------------------------------------
+// psc_push_field_b
+
+void
+psc_push_field_b()
+{
+  assert(psc.push_field_ops->push_field_b);
+  psc.push_field_ops->push_field_b();
+}
+
+// ----------------------------------------------------------------------
 // psc_fa[xyz]
 
 void
@@ -588,7 +632,7 @@ psc_create_test_1(const char *ops_name)
 
   int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
 
-  psc_create(ops_name, "fortran", "fortran");
+  psc_create(ops_name, "fortran", "fortran", "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_1();

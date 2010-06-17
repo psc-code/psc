@@ -92,7 +92,7 @@ psc_integrate()
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    PIC_msa();
+    psc_push_field_a();
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
@@ -102,7 +102,7 @@ psc_integrate()
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    PIC_msb(); 
+    psc_push_field_b();
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = psc.n_part;

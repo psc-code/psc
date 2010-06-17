@@ -16,7 +16,7 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   params_init(argc, argv);
 
-  psc_create("fortran", "fortran", "fortran");
+  psc_create("fortran", "fortran", "fortran", "fortran");
 
   psc_init_param();
 

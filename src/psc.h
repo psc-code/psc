@@ -157,6 +157,14 @@ struct psc_ops {
   void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
+struct psc_push_field_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*push_field_a)(void); // 1st half step
+  void (*push_field_b)(void); // 2nd half step
+};
+
 struct psc_sort_ops {
   const char *name;
   void (*create)(void);
@@ -173,6 +181,7 @@ struct psc_output_ops {
 
 struct psc {
   struct psc_ops *ops;
+  struct psc_push_field_ops *push_field_ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
   struct psc_pulse *pulse_p_z1;
@@ -214,8 +223,8 @@ struct psc {
 
 struct psc psc;
 
-void psc_create(const char *mod_particle, const char *mod_sort,
-		const char *mod_output);
+void psc_create(const char *mod_particle, const char *mod_field,
+		const char *mod_sort, const char *mod_output);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
@@ -225,6 +234,8 @@ void psc_init_particles();
 void psc_init_field();
 void psc_integrate();
 void psc_push_particles();
+void psc_push_field_a();
+void psc_push_field_b();
 void psc_fax(int m);
 void psc_fay(int m);
 void psc_faz(int m);
@@ -263,6 +274,8 @@ extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
+
+extern struct psc_push_field_ops psc_push_field_ops_fortran;
 
 extern struct psc_sort_ops psc_sort_ops_fortran;
 extern struct psc_sort_ops psc_sort_ops_qsort;
@@ -319,6 +332,8 @@ void PIC_fez(int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);
+void PIC_msa(void);
+void PIC_msb(void);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
