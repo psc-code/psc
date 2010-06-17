@@ -16,6 +16,7 @@ libpsc_a_SOURCES = \
 	init_parameters.c init_fields.c init_particles.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c \
+	integrate.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
 	generic_c/push_part_yz_b.c \
