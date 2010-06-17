@@ -52,10 +52,11 @@ struct f_particle {
     *psc.img[1] + ((jy)-psc.ilg[1]))					\
    *psc.img[0] + ((jx)-psc.ilg[0]))
 
+#define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
+
 #if 1
 
-#define FF3(fldnr, jx,jy,jz)			\
-  (psc.f_fields[fldnr][FF3_OFF(jx,jy,jz)])
+#define FF3(fldnr, jx,jy,jz) _FF3(psc.f_fields[fldnr], jx,jy,jz)
 
 #else
 

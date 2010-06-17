@@ -572,8 +572,13 @@ psc_check_currents_ref()
 {
   assert(field_ref[JXI]); //FIXME: this is bad
   for (int m = JXI; m <= JZI; m++){
-    for (int n = 0; n < psc.fld_size; n++){
-      assert_equal(psc.f_fields[m][n], field_ref[m][n]);
+    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
+      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
+	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
+	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz));
+	}
+      }
     }
   }
 }
