@@ -333,6 +333,19 @@ c cpus: WALL CLOCK time at end time
       r3n=max(i3n,r3n)
       r3x=min(i3x,r3x)
 
+      call INIT_grid_map
+
+      end subroutine INIT_param_fortran
+
+c     ----------------------------------------------------------------------
+      subroutine INIT_grid_map
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
       allocate(seg_i1(0:xnpe*ynpe*znpe-1))
       allocate(seg_i2(0:xnpe*ynpe*znpe-1))
       allocate(seg_i3(0:xnpe*ynpe*znpe-1))
@@ -350,7 +363,7 @@ c cpus: WALL CLOCK time at end time
          enddo
       enddo
 
-      end subroutine INIT_param_fortran
+      end subroutine INIT_grid_map
 
 
 

@@ -24,6 +24,7 @@ libpsc_a_SOURCES = \
 	PIC_push_part_z.F \
 	PIC_sort_1.F \
 	OUT_field.F \
+	INIT_param.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \

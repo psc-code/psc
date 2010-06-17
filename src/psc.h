@@ -278,6 +278,7 @@ void SET_param_psc();
 void SET_param_coeff();
 void INIT_param_domain();
 void INIT_param_psc();
+void INIT_grid_map();
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------
