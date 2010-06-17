@@ -55,7 +55,7 @@ genc_fields_from_fortran()
 {
   struct psc_genc *genc = psc.c_ctx;
 
-  genc->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(float));
+  genc->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*genc->flds));
 
   for (int m = EX; m <= BZ; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {

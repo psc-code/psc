@@ -10,7 +10,7 @@ genc_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(float));
+    pr = prof_register("genc_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(real));
   }
   prof_start(pr);
  

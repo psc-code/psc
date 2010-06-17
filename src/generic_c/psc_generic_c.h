@@ -14,7 +14,7 @@ struct c_particle {
 
 struct psc_genc {
   struct c_particle *part;
-  float *flds;
+  real *flds;
 };
 
 void genc_push_part_xz();
