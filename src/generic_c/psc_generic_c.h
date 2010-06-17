@@ -1,20 +1,38 @@
 
 #include "psc.h"
 
+// switch between double and float in generic_c
+// constants need to always be given like 1.5f
+// they will propagated to double precision as necessary
+// when actually doing double computations
+
+#if 1
+
+typedef double creal;
+#define creal_abs(x) fabs(x)
+#define creal_sqrt(x) sqrt(x)
+
+#else
+
+typedef float creal;
+#define creal_abs(x) fabsf(x)
+#define creal_sqrt(x) sqrtf(x)
+#endif
+
 // ----------------------------------------------------------------------
 // generic C data structures
 
 struct c_particle {
-  real xi, yi, zi;
-  real pxi, pyi, pzi;
-  real qni;
-  real mni;
-  real wni;
+  creal xi, yi, zi;
+  creal pxi, pyi, pzi;
+  creal qni;
+  creal mni;
+  creal wni;
 };
 
 struct psc_genc {
   struct c_particle *part;
-  real *flds;
+  creal *flds;
 };
 
 void genc_push_part_xz();
@@ -44,8 +62,8 @@ void genc_push_part_yz_b();
 #endif
 
 static inline int
-nint(real x)
+nint(creal x)
 {
-  return (int)(x + real(10.5)) - 10;
+  return (int)(x + 10.5f) - 10;
 }
 
