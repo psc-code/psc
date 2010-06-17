@@ -17,13 +17,11 @@ main(int argc, char **argv)
   psc_save_particles_ref();
   psc_destroy();
 
-#ifdef USE_C_INTERFACE
   psc_create_test_1("generic_c");
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2.asc");
   psc_check_particles_ref();
   psc_destroy();
-#endif
 
 #ifdef USE_CUDA
   psc_create_test_1("cuda");
@@ -47,13 +45,11 @@ main(int argc, char **argv)
   psc_save_particles_ref();
   psc_destroy();
 
-#ifdef USE_C_INTERFACE
   psc_create_test_1("generic_c");
   psc_push_part_yz_b();
   //  psc_dump_particles("part-2.asc");
   psc_check_particles_ref();
   psc_destroy();
-#endif 
 
 #ifdef USE_CUDA
   psc_create_test_1("cuda");
