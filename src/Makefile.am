@@ -30,6 +30,7 @@ libpsc_a_SOURCES = \
 	PIC_sort_1.F \
 	OUT_field.F OUT_part.F \
 	INIT_param.F \
+	CALC_moments.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F ALLOC_field.F \
 	INIT_param.F \
