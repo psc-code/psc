@@ -611,7 +611,7 @@ psc_create_test_1(const char *ops_name)
   int ihi[3] = { 1, 16, 16 };
   int ibn[3] = { 2,  2,  2 }; // FIXME?
 
-  int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]);
+  int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]);
 
   psc_create(ops_name, "fortran", "fortran", "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);
@@ -627,10 +627,10 @@ void
 psc_create_test_xz(const char *ops_name)
 {
   int ilo[3] = {  0,  0,  0 };
-  int ihi[3] = { 16,  1, 16 };
+  int ihi[3] = {  16,  1,  16 };
   int ibn[3] = {  2,  2,  2 }; // FIXME?
 
-  int n_part = 1e4 * (ihi[2]-ilo[2]) * (ihi[1] - ilo[1]) * (ihi[0] - ilo[0]);
+  int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]) * (ihi[0] - ilo[0]);
 
   psc_create(ops_name, "fortran", "fortran", "fortran");
   psc_alloc(ilo, ihi, ibn, n_part);
