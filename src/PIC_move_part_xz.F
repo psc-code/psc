@@ -38,19 +38,11 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
       real(kind=8),allocatable,dimension(:) :: s0x,s0z
 
 
       real(kind=8),allocatable,dimension(:) :: s1x,s1z
       real(kind=8),allocatable,dimension(:,:,:) :: jxh,jyh,jzh
-
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
 
       allocate(s0x(-2:2))
@@ -436,6 +428,33 @@ c CURRENT DENSITY AT (n+1.0)*dt
          enddo
       endif
 
+
+
+      deallocate(s0x,s0z)
+      deallocate(s1x,s1z)
+      deallocate(jxh,jyh,jzh)
+
+
+      end subroutine PIC_push_part_xz
+
+c     ----------------------------------------------------------------------
+      subroutine PIC_move_part_xz
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      real(kind=8) :: s_cpub
+      real(kind=8) :: s_cpuh
+
+      s_cpub=0.0d0
+      s_cpuh=0.0d0
+      call SERV_systime(cpug)
+
+      call PIC_push_part_xz
+
       call SERV_systime(cpua)
       call PIC_fax(jxi)
       call PIC_faz(jxi)
@@ -470,31 +489,10 @@ c CURRENT DENSITY AT (n+1.0)*dt
       call SERV_systime(cpub)
       s_cpub=s_cpub+cpub-cpua
 
-
-      deallocate(s0x,s0z)
-      deallocate(s1x,s1z)
-      deallocate(jxh,jyh,jzh)
-
-
       call SERV_systime(cpuh)
       s_cpuh=s_cpuh+cpuh-cpug
 
-
       cpumess=cpumess+s_cpub
       cpucomp=cpucomp+s_cpuh-s_cpub
-
-
-      end subroutine PIC_push_part_xz
-
-c     ----------------------------------------------------------------------
-      subroutine PIC_move_part_xz
-c     ----------------------------------------------------------------------
-
-      use PIC_variables
-      use VLA_variables
-
-      implicit none
-
-      call PIC_push_part_xz
 
       end subroutine PIC_move_part_xz
