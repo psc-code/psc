@@ -16,16 +16,16 @@ struct psc psc;
 //
 // make sure that the two values are almost equal.
 
-#define assert_equal(x, y) __assert_equal(x, y, #x, #y)
+#define assert_equal(x, y, thres) __assert_equal(x, y, #x, #y, thres)
 
 void
-__assert_equal(double x, double y, const char *xs, const char *ys)
+__assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 {
   double max = fmax(fabs(x), fabs(y)) + 1e-10;
   double eps = fabs((x - y) / max);
-  if (eps > 2e-4) { // FIXME 1e-5 fails!
-    fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g\n",
-	    xs, x, ys, y, eps);
+  if (eps > thres) {
+    fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g thres = %g\n",
+	    xs, x, ys, y, eps, thres);
     abort();
   }
 }
@@ -547,17 +547,17 @@ psc_save_fields_ref()
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref()
+psc_check_particles_ref(double thres)
 {
   assert(particle_ref);
   for (int i = 0; i < psc.n_part; i++) {
     //    printf("i = %d\n", i);
-    assert_equal(psc.f_part[i].xi , particle_ref[i].xi);
-    assert_equal(psc.f_part[i].yi , particle_ref[i].yi);
-    assert_equal(psc.f_part[i].zi , particle_ref[i].zi);
-    assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi);
-    assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi);
-    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi);
+    assert_equal(psc.f_part[i].xi , particle_ref[i].xi, thres);
+    assert_equal(psc.f_part[i].yi , particle_ref[i].yi, thres);
+    assert_equal(psc.f_part[i].zi , particle_ref[i].zi, thres);
+    assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi, thres);
+    assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi, thres);
+    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi, thres);
   }
 }
 
@@ -568,7 +568,7 @@ psc_check_particles_ref()
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref()
+psc_check_currents_ref(double thres)
 {
   assert(field_ref[JXI]); //FIXME: this is bad
   for (int m = JXI; m <= JZI; m++){
@@ -576,7 +576,7 @@ psc_check_currents_ref()
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz));
+	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
       }
     }

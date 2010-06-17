@@ -20,7 +20,7 @@ main(int argc, char **argv)
   psc_create_test_xz("generic_c");
   psc_push_particles();
   //  psc_dump_particles("part-2.asc");
-  psc_check_particles_ref();
+  psc_check_particles_ref(1e-7);
   psc_destroy();
 
   prof_print();
