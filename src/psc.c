@@ -627,7 +627,7 @@ void
 psc_create_test_xz(const char *ops_name)
 {
   int ilo[3] = {  0,  0,  0 };
-  int ihi[3] = {  16,  1,  16 };
+  int ihi[3] = { 64,  1, 64 };
   int ibn[3] = {  2,  2,  2 }; // FIXME?
 
   int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]) * (ihi[0] - ilo[0]);
