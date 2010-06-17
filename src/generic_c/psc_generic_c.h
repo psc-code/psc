@@ -42,3 +42,9 @@ void genc_push_part_yz_b();
 
 #endif
 
+static inline int
+nint(real x)
+{
+  return (int)(x + real(10.5)) - 10;
+}
+

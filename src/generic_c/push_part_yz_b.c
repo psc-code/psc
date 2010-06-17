@@ -5,12 +5,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-static inline int
-nint(real x)
-{
-  return (int)(x + real(10.5)) - 10;
-}
-
 void
 genc_push_part_yz_b()
 {
