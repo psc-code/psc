@@ -53,6 +53,7 @@ genc_particles_to_fortran()
 static void
 genc_fields_from_fortran()
 {
+#ifndef USE_FF3
   struct psc_genc *genc = psc.c_ctx;
 
   genc->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*genc->flds));
@@ -66,11 +67,13 @@ genc_fields_from_fortran()
       }
     }
   }
+#endif
 }
 
 static void
 genc_fields_to_fortran()
 {
+#ifndef USE_FF3
   struct psc_genc *genc = psc.c_ctx;
 
   for (int m = JXI; m <= JZI; m++) {
@@ -84,6 +87,7 @@ genc_fields_to_fortran()
   }
 
   free(genc->flds);
+#endif
 }
 
 struct psc_ops psc_ops_generic_c = {
