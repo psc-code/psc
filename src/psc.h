@@ -180,11 +180,19 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
+struct psc_bnd_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*fax)(int m);
+};
+
 struct psc {
   struct psc_ops *ops;
   struct psc_push_field_ops *push_field_ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
+  struct psc_bnd_ops *bnd_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_case *Case;
   // user-configurable parameters
@@ -227,6 +235,7 @@ struct psc_mod_config {
   const char *mod_field;
   const char *mod_sort;
   const char *mod_output;
+  const char *mod_bnd;
 };
 
 // we keep this info global for now.
@@ -297,6 +306,8 @@ extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;
+
+extern struct psc_bnd_ops psc_bnd_ops_fortran;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;

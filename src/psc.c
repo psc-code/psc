@@ -63,6 +63,11 @@ static struct psc_output_ops *psc_output_ops_list[] = {
   NULL,
 };
 
+static struct psc_bnd_ops *psc_bnd_ops_list[] = {
+  &psc_bnd_ops_fortran,
+  NULL,
+};
+
 static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
@@ -107,6 +112,17 @@ psc_find_output_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_bnd_ops *
+psc_find_bnd_ops(const char *ops_name)
+{
+  for (int i = 0; psc_bnd_ops_list[i]; i++) {
+    if (strcasecmp(psc_bnd_ops_list[i]->name, ops_name) == 0)
+      return psc_bnd_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_bnd_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 #define VAR(x) (void *)offsetof(struct psc_mod_config, x)
 
 static struct param psc_mod_config_descr[] = {
@@ -114,6 +130,7 @@ static struct param psc_mod_config_descr[] = {
   { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
   { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
+  { "mod_bnd"         , VAR(mod_bnd)            , PARAM_STRING(NULL)  },
   {},
 };
 
@@ -131,6 +148,8 @@ psc_create(struct psc_mod_config *conf)
     conf->mod_sort = "fortran";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
+  if (!conf->mod_bnd)
+    conf->mod_bnd = "fortran";
 
   params_parse_cmdline_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
   params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
@@ -152,6 +171,10 @@ psc_create(struct psc_mod_config *conf)
   psc.output_ops = psc_find_output_ops(conf->mod_output);
   if (psc.output_ops->create) {
     psc.output_ops->create();
+  }
+  psc.bnd_ops = psc_find_bnd_ops(conf->mod_bnd);
+  if (psc.bnd_ops->create) {
+    psc.bnd_ops->create();
   }
 }
 
@@ -403,7 +426,8 @@ psc_push_field_b()
 void
 psc_fax(int m)
 {
-  PIC_fax(m);
+  assert(psc.bnd_ops->fax);
+  psc.bnd_ops->fax(m);
 }
 
 void
