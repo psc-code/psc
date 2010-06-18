@@ -31,6 +31,8 @@ psc_init_partition(int *n_part)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
+  assert(psc.domain.nproc[0] * psc.domain.nproc[1] * psc.domain.nproc[2] == size);
+
   int p[3];
   int r = rank;
   p[0] = r % psc.domain.nproc[0]; r /= psc.domain.nproc[0];
