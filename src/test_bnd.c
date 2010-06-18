@@ -41,7 +41,7 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_jx();
   dump_jx("jx0");
-  psc_fax(JXI);
+  psc_add_ghosts(JXI);
   dump_jx("jx1");
   psc_save_fields_ref();
   psc_destroy();
@@ -51,7 +51,7 @@ main(int argc, char **argv)
   };
   psc_create_test_xz(&conf_c);
   setup_jx();
-  psc_fax(JXI);
+  psc_add_ghosts(JXI);
   dump_jx("jx2");
   psc_check_currents_ref_noghost(1e-10);
   psc_destroy();

@@ -36,7 +36,7 @@ add_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
 // ======================================================================
   
 static void
-c_fax(int m)
+c_add_ghosts(int m)
 {
   if (!psc.bnd_data) {
     struct ddc_params prm = {
@@ -59,7 +59,7 @@ c_fax(int m)
 
   static int pr;
   if (!pr) {
-    pr = prof_register("c_fax", 1., 0, 0);
+    pr = prof_register("c_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -70,6 +70,6 @@ c_fax(int m)
 }
 
 struct psc_bnd_ops psc_bnd_ops_c = {
-  .name      = "c",
-  .fax       = c_fax,
+  .name       = "c",
+  .add_ghosts = c_add_ghosts,
 };

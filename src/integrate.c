@@ -101,7 +101,7 @@ psc_integrate()
     int flds[] = { JXI, JYI, JZI, -1 };
     for (int i = 0; flds[i] >= 0; i++) {
       int m = flds[i];
-      psc_fax(m);
+      psc_add_ghosts(m);
       psc_fay(m);
       psc_faz(m);
       psc_fex(m);

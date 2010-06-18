@@ -422,13 +422,13 @@ psc_push_field_b()
 }
 
 // ----------------------------------------------------------------------
-// psc_fa[xyz]
+// psc_add_ghosts
 
 void
-psc_fax(int m)
+psc_add_ghosts(int m)
 {
-  assert(psc.bnd_ops->fax);
-  psc.bnd_ops->fax(m);
+  assert(psc.bnd_ops->add_ghosts);
+  psc.bnd_ops->add_ghosts(m);
 }
 
 void

@@ -166,11 +166,11 @@ struct psc_output_ops psc_output_ops_fortran = {
 // fortran bnd
 
 static void
-fortran_fax(int m)
+fortran_add_ghosts(int m)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_fax", 1., 0, 0);
+    pr = prof_register("fort_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
   PIC_fax(m);
@@ -178,6 +178,6 @@ fortran_fax(int m)
 }
 
 struct psc_bnd_ops psc_bnd_ops_fortran = {
-  .name      = "fortran",
-  .fax       = fortran_fax,
+  .name       = "fortran",
+  .add_ghosts = fortran_add_ghosts,
 };
