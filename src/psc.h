@@ -193,6 +193,7 @@ struct psc {
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
   struct psc_bnd_ops *bnd_ops;
+  void *bnd_data;
   struct psc_pulse *pulse_p_z1;
   struct psc_case *Case;
   // user-configurable parameters
@@ -274,6 +275,7 @@ void psc_dump_field(int m, const char *fname);
 void psc_save_particles_ref();
 void psc_save_fields_ref();
 void psc_check_currents_ref(double thres);
+void psc_check_currents_ref_noghost(double thres);
 void psc_check_particles_ref(double thres);
 void psc_check_particles_sorted();
 void psc_create_test_1(const char *ops_name);
@@ -308,6 +310,7 @@ extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_bnd_ops psc_bnd_ops_fortran;
+extern struct psc_bnd_ops psc_bnd_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;

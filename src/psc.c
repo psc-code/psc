@@ -65,6 +65,7 @@ static struct psc_output_ops *psc_output_ops_list[] = {
 
 static struct psc_bnd_ops *psc_bnd_ops_list[] = {
   &psc_bnd_ops_fortran,
+  &psc_bnd_ops_c,
   NULL,
 };
 
@@ -626,11 +627,27 @@ psc_check_particles_ref(double thres)
 void
 psc_check_currents_ref(double thres)
 {
-  assert(field_ref[JXI]); //FIXME: this is bad
+  assert(field_ref[JXI]);
   for (int m = JXI; m <= JZI; m++){
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
+	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	}
+      }
+    }
+  }
+}
+
+void
+psc_check_currents_ref_noghost(double thres)
+{
+  assert(field_ref[JXI]);
+  for (int m = JXI; m <= JZI; m++){
+    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
+      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
+	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
