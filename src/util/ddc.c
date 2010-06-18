@@ -40,31 +40,6 @@ get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
   return get_rank(ddc, proc_nei);
 }
 
-static void
-send_box(struct ddc_subdomain *ddc, int fld_nr, struct ddc_send *s)
-{
-  ddc->prm.copy_to_buf(fld_nr, s->ilo, s->ihi, s->buf);
-#if 0
-  printf("[%d] send to %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
-	 s->rank_nei, s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
-	 s->len);
-#endif
-  MPI_Send(s->buf, s->len, MPI_DOUBLE, s->rank_nei, 0x1000, ddc->prm.comm);
-}
-
-static void
-recv_box(struct ddc_subdomain *ddc, int fld_nr, struct ddc_recv *r)
-{
-#if 0
-  printf("[%d] recv from %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
-	 r->rank_nei, r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
-	 r->len);
-#endif
-  MPI_Recv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000, ddc->prm.comm,
-	   MPI_STATUS_IGNORE);
-  ddc->prm.add_from_buf(fld_nr, r->ilo, r->ihi, r->buf);
-}
-
 // ----------------------------------------------------------------------
 // ddc_send_init
 
@@ -137,25 +112,70 @@ ddc_recv_init(struct ddc_subdomain *ddc, int dir[3])
 void
 ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
 {
-  struct ddc_send *s;
-  struct ddc_recv *r;
-
   int dir[3];
+
+  // post all receives
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	s = &ddc->send[dir2idx(dir)];
-	if (s->len > 0) {
-	  send_box(ddc, m, s);
-	}
-
-	r = &ddc->recv[dir2idx(dir)];
+	int dir1 = dir2idx(dir);
+	struct ddc_recv *r = &ddc->recv[dir1];
 	if (r->len > 0) {
-	  recv_box(ddc, m, r);
+#if 0
+	  printf("[%d] recv from %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
+		 r->rank_nei,
+		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
+		 r->len);
+#endif
+	  MPI_Irecv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000, ddc->prm.comm,
+		   &ddc->recv_reqs[dir1]);
+	  ddc->prm.add_from_buf(m, r->ilo, r->ihi, r->buf);
+	} else {
+	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
       }
     }
   }
+
+  // post all sends
+  for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+    for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+      for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	int dir1 = dir2idx(dir);
+	struct ddc_send *s = &ddc->send[dir1];
+	if (s->len > 0) {
+	  ddc->prm.copy_to_buf(m, s->ilo, s->ihi, s->buf);
+#if 0
+	  printf("[%d] send to %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
+		 s->rank_nei,
+		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
+		 s->len);
+#endif
+	  MPI_Isend(s->buf, s->len, MPI_DOUBLE, s->rank_nei, 0x1000, ddc->prm.comm,
+		    &ddc->send_reqs[dir1]);
+	} else {
+	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
+	}
+      }
+    }
+  }
+
+  // finish receives
+  MPI_Waitall(27, ddc->recv_reqs, MPI_STATUSES_IGNORE);
+  for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+    for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+      for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	int dir1 = dir2idx(dir);
+	struct ddc_recv *r = &ddc->recv[dir1];
+	if (r->len > 0) {
+	  ddc->prm.add_from_buf(m, r->ilo, r->ihi, r->buf);
+	}
+      }
+    }
+  }
+
+  // finish sends
+  MPI_Waitall(27, ddc->send_reqs, MPI_STATUSES_IGNORE);
 }
 
 // ----------------------------------------------------------------------

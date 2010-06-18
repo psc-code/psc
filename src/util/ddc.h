@@ -41,6 +41,8 @@ struct ddc_subdomain {
   int proc[3]; // this proc's position in the 3D proc grid
   struct ddc_send send[27];
   struct ddc_recv recv[27];
+  MPI_Request send_reqs[27];
+  MPI_Request recv_reqs[27];
 };
 
 struct ddc_subdomain *ddc_create(struct ddc_params *prm);
