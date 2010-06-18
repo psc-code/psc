@@ -119,6 +119,7 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = dir2idx(dir);
+	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	struct ddc_recv *r = &ddc->recv[dir1];
 	if (r->len > 0) {
 #if 0
@@ -127,8 +128,8 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
 		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
 		 r->len);
 #endif
-	  MPI_Irecv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000, ddc->prm.comm,
-		   &ddc->recv_reqs[dir1]);
+	  MPI_Irecv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000 + dir1neg,
+		    ddc->prm.comm, &ddc->recv_reqs[dir1]);
 	  ddc->prm.add_from_buf(m, r->ilo, r->ihi, r->buf);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -151,8 +152,8 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
 		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
 		 s->len);
 #endif
-	  MPI_Isend(s->buf, s->len, MPI_DOUBLE, s->rank_nei, 0x1000, ddc->prm.comm,
-		    &ddc->send_reqs[dir1]);
+	  MPI_Isend(s->buf, s->len, MPI_DOUBLE, s->rank_nei, 0x1000 + dir1,
+		    ddc->prm.comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -198,17 +199,19 @@ ddc_create(struct ddc_params *prm)
   ddc->proc[1] = rr % ddc->prm.n_proc[1]; rr /= ddc->prm.n_proc[1];
   ddc->proc[2] = rr;
 
-  // send to right
-  ddc_send_init(ddc, (int[3]) { 1, 0, 0 });
+  int dir[3];
 
-  // recv from left
-  ddc_recv_init(ddc, (int[3]) { -1, 0, 0 });
+  for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+    for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+      for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
+	  continue;
 
-  // send to right
-  ddc_send_init(ddc, (int[3]) { -1, 0, 0 });
-
-  // recv from right
-  ddc_recv_init(ddc, (int[3]) { 1, 0, 0 });
+	ddc_send_init(ddc, dir);
+	ddc_recv_init(ddc, dir);
+      }
+    }
+  }
 
   return ddc;
 }

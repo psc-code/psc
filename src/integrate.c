@@ -102,8 +102,6 @@ psc_integrate()
     for (int i = 0; flds[i] >= 0; i++) {
       int m = flds[i];
       psc_add_ghosts(m);
-      psc_fay(m);
-      psc_faz(m);
       psc_fex(m);
       psc_fey(m);
       psc_fez(m);

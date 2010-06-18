@@ -431,18 +431,6 @@ psc_add_ghosts(int m)
   psc.bnd_ops->add_ghosts(m);
 }
 
-void
-psc_fay(int m)
-{
-  PIC_fay(m);
-}
-
-void
-psc_faz(int m)
-{
-  PIC_faz(m);
-}
-
 // ----------------------------------------------------------------------
 // psc_fe[xyz]
 

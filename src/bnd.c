@@ -49,7 +49,8 @@ c_add_ghosts(int m)
       .add_from_buf  = add_from_buf,
     };
     for (int d = 0; d < 3; d++) {
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
+	  psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
 	assert(psc.domain.bnd_fld_hi[d] == BND_FLD_PERIODIC);
 	prm.bc[d] = DDC_BC_PERIODIC;
       }

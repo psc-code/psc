@@ -173,7 +173,15 @@ fortran_add_ghosts(int m)
     pr = prof_register("fort_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_fax(m);
+  if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+    PIC_fax(m);
+  }
+  if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+    PIC_fay(m);
+  }
+  if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+    PIC_faz(m);
+  }
   prof_stop(pr);
 }
 
