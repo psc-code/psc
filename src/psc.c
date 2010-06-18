@@ -202,6 +202,13 @@ psc_destroy()
     }
 
     free(psc.f_part);
+  } else {
+    if (psc.f_fields[0]) {
+      FREE_field();
+    }
+    if (psc.f_part) {
+      FREE_particles();
+    }
   }
 }
 

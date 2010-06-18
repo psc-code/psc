@@ -29,6 +29,8 @@
 #define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
+#define FREE_particles_F77 F77_FUNC_(free_particles, FREE_PARTICLES)
+#define FREE_field_F77 F77_FUNC_(free_field, FREE_FIELD)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
 #define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
 #define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
@@ -119,6 +121,9 @@ void PIC_msa_F77(void);
 void PIC_msb_F77(void);
 void PIC_pml_msa_F77(void);
 void PIC_pml_msb_F77(void);
+void FREE_particles_F77(void);
+void FREE_field_F77(void);
+
 void PIC_fax_F77(f_real *f);
 void PIC_fay_F77(f_real *f);
 void PIC_faz_F77(f_real *f);
@@ -537,4 +542,15 @@ C_alloc_field_cb_F77(f_real *ne, f_real *ni, f_real *nn,
   __f_flds[BZ] = bz;
 }
 
+void
+FREE_particles(void)
+{
+  FREE_particles_F77();
+}
+
+void
+FREE_field(void)
+{
+  FREE_field_F77();
+}
 

@@ -59,3 +59,27 @@ c     need to let C code know about the newly allocated fields
 
       end subroutine ALLOC_field
 
+c     ----------------------------------------------------------------------
+      subroutine FREE_field
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      deallocate(ex)
+      deallocate(ey)
+      deallocate(ez)
+      deallocate(bx)
+      deallocate(by)
+      deallocate(bz)
+      deallocate(jxi)
+      deallocate(jyi)
+      deallocate(jzi)
+      deallocate(ne)
+      deallocate(ni)
+      deallocate(nn)
+
+      end subroutine FREE_field
+
