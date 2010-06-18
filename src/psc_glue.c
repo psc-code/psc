@@ -250,12 +250,6 @@ SET_param_pml()
   SET_param_pml_F77(&psc.pml.thick, &psc.pml.cushion, &psc.pml.size, &psc.pml.order);
 }
 
-void
-INIT_grid_map(void)
-{
-  INIT_grid_map_F77();
-}
-
 real
 PSC_p_pulse_z1(real xx, real yy, real zz, real tt)
 {
@@ -342,8 +336,17 @@ INIT_basic()
 }
 
 void
+INIT_grid_map()
+{
+  INIT_basic();
+  SET_param_domain();
+  INIT_grid_map_F77();
+}
+
+void
 PIC_fax(int m)
 {
+  INIT_grid_map();
   PIC_fax_F77(psc.f_fields[m]);
 }
 
