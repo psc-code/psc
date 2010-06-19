@@ -437,19 +437,8 @@ psc_add_ghosts(int m)
 void
 psc_fill_ghosts(int m)
 {
-  PIC_fex(m);
-}
-
-void
-psc_fey(int m)
-{
-  PIC_fey(m);
-}
-
-void
-psc_fez(int m)
-{
-  PIC_fez(m);
+  assert(psc.bnd_ops->fill_ghosts);
+  psc.bnd_ops->fill_ghosts(m);
 }
 
 // ----------------------------------------------------------------------

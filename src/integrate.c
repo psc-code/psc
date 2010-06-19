@@ -103,8 +103,6 @@ psc_integrate()
       int m = flds[i];
       psc_add_ghosts(m);
       psc_fill_ghosts(m);
-      psc_fey(m);
-      psc_fez(m);
     }
     psc_pex();
     psc_pey();

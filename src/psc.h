@@ -185,6 +185,7 @@ struct psc_bnd_ops {
   void (*create)(void);
   void (*destroy)(void);
   void (*add_ghosts)(int m);
+  void (*fill_ghosts)(int m);
 };
 
 struct psc {
