@@ -588,6 +588,28 @@ psc_check_particles_ref(double thres)
 
 
 // ----------------------------------------------------------------------
+// psc_check_fields_ref
+//
+// check field data against previously saved reference solution
+
+void
+psc_check_fields_ref(int *flds, double thres)
+{
+  assert(field_ref[EX]);
+  for (int i = 0; flds[i] >= 0; i++) {
+    int m = flds[i];
+    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
+      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
+	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
+	  //printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	}
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_check_currents_ref
 //
 // check current current density data agains previously saved reference solution
