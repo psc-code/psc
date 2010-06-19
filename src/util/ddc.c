@@ -130,7 +130,6 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
 #endif
 	  MPI_Irecv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000 + dir1neg,
 		    ddc->prm.comm, &ddc->recv_reqs[dir1]);
-	  ddc->prm.add_from_buf(m, r->ilo, r->ihi, r->buf);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
