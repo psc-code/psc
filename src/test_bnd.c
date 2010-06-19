@@ -86,6 +86,13 @@ main(int argc, char **argv)
   psc_save_fields_ref();
   psc_destroy();
 
+  psc_create_test_xz(&conf_c);
+  setup_jx_noghost();
+  psc_fill_ghosts(JXI);
+  dump_jx("jx2");
+  psc_check_currents_ref(1e-10);
+  psc_destroy();
+
   prof_print();
 
   MPI_Finalize();

@@ -41,76 +41,74 @@ get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
 }
 
 // ----------------------------------------------------------------------
-// ddc_send_init
+// ddc_init_outside
 
 static void
-ddc_send_init(struct ddc_subdomain *ddc, int dir[3])
+ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 {
-  struct ddc_send *s = &ddc->send[dir2idx(dir)];
-
-  s->rank_nei = get_rank_nei(ddc, dir);
-  if (s->rank_nei < 0)
+  sr->rank_nei = get_rank_nei(ddc, dir);
+  if (sr->rank_nei < 0)
     return;
 
-  s->len = 1;
+  sr->len = 1;
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      s->ilo[d] = ddc->prm.ilo[d] - ddc->prm.ibn[d];
-      s->ihi[d] = ddc->prm.ilo[d];
+      sr->ilo[d] = ddc->prm.ilo[d] - ddc->prm.ibn[d];
+      sr->ihi[d] = ddc->prm.ilo[d];
       break;
     case 0:
-      s->ilo[d] = ddc->prm.ilo[d];
-      s->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = ddc->prm.ilo[d];
+      sr->ihi[d] = ddc->prm.ihi[d];
       break;
     case 1:
-      s->ilo[d] = ddc->prm.ihi[d];
-      s->ihi[d] = ddc->prm.ihi[d] + ddc->prm.ibn[d];
+      sr->ilo[d] = ddc->prm.ihi[d];
+      sr->ihi[d] = ddc->prm.ihi[d] + ddc->prm.ibn[d];
       break;
     }
-    s->len *= (s->ihi[d] - s->ilo[d]);
+    sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  s->buf = calloc(s->len, sizeof(*s->buf));
+  sr->buf = calloc(sr->len, sizeof(*sr->buf));
 }
 
 // ----------------------------------------------------------------------
-// ddc_recv_init
+// ddc_init_inside
 
 static void
-ddc_recv_init(struct ddc_subdomain *ddc, int dir[3])
+ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 {
-  struct ddc_recv *r = &ddc->recv[dir2idx(dir)];
-
-  r->rank_nei = get_rank_nei(ddc, dir);
-  if (r->rank_nei < 0)
+  sr->rank_nei = get_rank_nei(ddc, dir);
+  if (sr->rank_nei < 0)
     return;
 
-  r->len = 1;
+  sr->len = 1;
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      r->ilo[d] = ddc->prm.ilo[d];
-      r->ihi[d] = ddc->prm.ilo[d] + ddc->prm.ibn[d];
+      sr->ilo[d] = ddc->prm.ilo[d];
+      sr->ihi[d] = ddc->prm.ilo[d] + ddc->prm.ibn[d];
       break;
     case 0:
-      r->ilo[d] = ddc->prm.ilo[d];
-      r->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = ddc->prm.ilo[d];
+      sr->ihi[d] = ddc->prm.ihi[d];
       break;
     case 1:
-      r->ilo[d] = ddc->prm.ihi[d] - ddc->prm.ibn[d];
-      r->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = ddc->prm.ihi[d] - ddc->prm.ibn[d];
+      sr->ihi[d] = ddc->prm.ihi[d];
       break;
     }
-    r->len *= (r->ihi[d] - r->ilo[d]);
+    sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  r->buf = calloc(r->len, sizeof(*r->buf));
+  sr->buf = calloc(sr->len, sizeof(*sr->buf));
 }
 
 // ----------------------------------------------------------------------
-// ddc_add_ghosts
+// ddc_run
 
-void
-ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
+static void
+ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int m,
+	void (*to_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf),
+	void (*from_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf))
 {
   int dir[3];
 
@@ -120,7 +118,7 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = dir2idx(dir);
 	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	struct ddc_recv *r = &ddc->recv[dir1];
+	struct ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
 #if 0
 	  printf("[%d] recv from %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
@@ -142,9 +140,9 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = dir2idx(dir);
-	struct ddc_send *s = &ddc->send[dir1];
+	struct ddc_sendrecv *s = &patt->send[dir1];
 	if (s->len > 0) {
-	  ddc->prm.copy_to_buf(m, s->ilo, s->ihi, s->buf);
+	  to_buf(m, s->ilo, s->ihi, s->buf);
 #if 0
 	  printf("[%d] send to %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
 		 s->rank_nei,
@@ -166,9 +164,9 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = dir2idx(dir);
-	struct ddc_recv *r = &ddc->recv[dir1];
+	struct ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
-	  ddc->prm.add_from_buf(m, r->ilo, r->ihi, r->buf);
+	  from_buf(m, r->ilo, r->ihi, r->buf);
 	}
       }
     }
@@ -176,6 +174,24 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
 
   // finish sends
   MPI_Waitall(27, ddc->send_reqs, MPI_STATUSES_IGNORE);
+}
+
+// ----------------------------------------------------------------------
+// ddc_add_ghosts
+
+void
+ddc_add_ghosts(struct ddc_subdomain *ddc, int m)
+{
+  ddc_run(ddc, &ddc->add_ghosts, m, ddc->prm.copy_to_buf, ddc->prm.add_from_buf);
+}
+
+// ----------------------------------------------------------------------
+// ddc_fill_ghosts
+
+void
+ddc_fill_ghosts(struct ddc_subdomain *ddc, int m)
+{
+  ddc_run(ddc, &ddc->fill_ghosts, m, ddc->prm.copy_to_buf, ddc->prm.copy_from_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -206,8 +222,11 @@ ddc_create(struct ddc_params *prm)
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
 	  continue;
 
-	ddc_send_init(ddc, dir);
-	ddc_recv_init(ddc, dir);
+	ddc_init_outside(ddc, &ddc->add_ghosts.send[dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &ddc->add_ghosts.recv[dir2idx(dir)], dir);
+
+	ddc_init_inside(ddc, &ddc->fill_ghosts.send[dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &ddc->fill_ghosts.recv[dir2idx(dir)], dir);
       }
     }
   }
