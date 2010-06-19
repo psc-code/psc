@@ -104,9 +104,7 @@ psc_integrate()
       psc_add_ghosts(m);
       psc_fill_ghosts(m);
     }
-    psc_pex();
-    psc_pey();
-    psc_pez();
+    psc_exchange_particles();
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt

@@ -432,7 +432,7 @@ psc_add_ghosts(int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_fill_ghosts(int m)
+// psc_fill_ghosts
 
 void
 psc_fill_ghosts(int m)
@@ -442,23 +442,13 @@ psc_fill_ghosts(int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_pe[xyz]
+// psc_exchange_particles
 
 void
-psc_pex()
+psc_exchange_particles()
 {
   PIC_pex();
-}
-
-void
-psc_pey()
-{
   PIC_pey();
-}
-
-void
-psc_pez()
-{
   PIC_pez();
 }
 

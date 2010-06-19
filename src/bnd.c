@@ -101,6 +101,9 @@ c_fill_ghosts(int m)
   }
   prof_start(pr);
 
+  // FIXME
+  // I don't think we need as many points, and only stencil star
+  // rather then box
   struct ddc_subdomain *ddc = psc.bnd_data;
   ddc_fill_ghosts(ddc, m);
 
