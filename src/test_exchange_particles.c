@@ -25,7 +25,7 @@ setup_particles(void)
   if (rank == 0) {
     int i = 0;
     for (int iz = psc.ilo[2]-1; iz < psc.ihi[2]+1; iz++) {
-      for (int iy = psc.ilo[1]-1; iy < psc.ihi[1]+1; iy++) {
+      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) { // xz only !!!
 	for (int ix = psc.ilo[0]-1; ix < psc.ihi[0]+1; ix++) {
 	  struct f_particle *p;
 	  p = &psc.f_part[i++];
@@ -80,6 +80,33 @@ check_particles_old_xz(void)
 }
 
 static void
+check_particles(void)
+{
+  f_real xb[3], xe[3];
+
+  // New-style boundary requirements.
+  // These will need revisiting when it comes to non-periodic domains.
+  
+  for (int d = 0; d < 3; d++) {
+    xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
+    xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
+  }
+
+  int fail_cnt = 0;
+  for (int i = 0; i < psc.n_part; i++) {
+    struct f_particle *p = &psc.f_part[i];
+    if (p->xi < xb[0] || p->xi > xe[0] ||
+	p->zi < xb[2] || p->zi > xe[2]) {
+      if (fail_cnt++ < 10) {
+	printf("FAIL: xi %g [%g:%g]\n", p->xi, xb[0], xe[0]);
+	printf("      zi %g [%g:%g]\n", p->zi, xb[2], xe[2]);
+      }
+    }
+  }
+  assert(fail_cnt == 0);
+}
+
+static void
 dump_particles(const char *s)
 {
   int rank;
@@ -100,13 +127,31 @@ main(int argc, char **argv)
   struct psc_mod_config conf_fortran = {
     .mod_bnd = "fortran",
   };
+  struct psc_mod_config conf_c = {
+    .mod_bnd = "c",
+  };
 
   psc_create_test_xz(&conf_fortran);
   setup_particles();
+  //  dump_particles("part-0");
+  psc_exchange_particles();
+  //  dump_particles("part-1");
+  check_particles_old_xz();
+  psc_destroy();
+
+  psc_create_test_xz(&conf_c);
+  setup_particles();
   dump_particles("part-0");
+  int total_n_particles_before;
+  MPI_Allreduce(&psc.n_part, &total_n_particles_before, 1, MPI_INT, MPI_SUM,
+		MPI_COMM_WORLD);
   psc_exchange_particles();
   dump_particles("part-1");
-  check_particles_old_xz();
+  int total_n_particles_after;
+  MPI_Allreduce(&psc.n_part, &total_n_particles_after, 1, MPI_INT, MPI_SUM,
+		MPI_COMM_WORLD);
+  check_particles();
+  assert(total_n_particles_before == total_n_particles_after);
   psc_destroy();
 
   prof_print();
