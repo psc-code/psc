@@ -28,6 +28,8 @@ def main():
                       help="specify which fields to plot")
     parser.add_option("-d", "--diff",
                       help="diff to specified file")
+    parser.add_option("--jy",
+                      help="cut at jy")
     options, args = parser.parse_args()
     if len(args) != 1:
         parser.error("specify exactly one filename")
@@ -38,7 +40,7 @@ def main():
 
     flds = options.fields.split(",")
     n = len(flds)
-    
+
     for i, fld in enumerate(flds):
         ax = subplot(n, 1, i+1)
         x = load_array(file['/psc/fields/%s' % fld])
@@ -52,7 +54,12 @@ def main():
         elif dims[1] == 1:
             plot_xz(ax, file, x, fld)
         else:
-            plot_xz(ax, file, x, fld, jy=x.shape[1]/2)
+            if options.jy:
+                jy = options.jy
+            else:
+                jy = x.shape[1]/2
+
+            plot_xz(ax, file, x, fld, jy=jy)
             #raise Exception("dims %s not supported" % (dims,))
 
     show()
