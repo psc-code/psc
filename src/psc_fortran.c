@@ -205,8 +205,29 @@ fortran_fill_ghosts(int m)
   prof_stop(pr);
 }
 
+static void
+fortran_exchange_particles(void)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_xchg_part", 1., 0, 0);
+  }
+  prof_start(pr);
+  if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+    PIC_pex();
+  }
+  if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+    PIC_pey();
+  }
+  if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+    PIC_pez();
+  }
+  prof_stop(pr);
+}
+
 struct psc_bnd_ops psc_bnd_ops_fortran = {
-  .name        = "fortran",
-  .add_ghosts  = fortran_add_ghosts,
-  .fill_ghosts = fortran_fill_ghosts,
+  .name               = "fortran",
+  .add_ghosts         = fortran_add_ghosts,
+  .fill_ghosts        = fortran_fill_ghosts,
+  .exchange_particles = fortran_exchange_particles,
 };

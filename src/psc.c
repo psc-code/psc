@@ -446,11 +446,10 @@ psc_fill_ghosts(int m)
 // psc_exchange_particles
 
 void
-psc_exchange_particles()
+psc_exchange_particles(void)
 {
-  PIC_pex();
-  PIC_pey();
-  PIC_pez();
+  assert(psc.bnd_ops->exchange_particles);
+  psc.bnd_ops->exchange_particles();
 }
 
 // ----------------------------------------------------------------------
