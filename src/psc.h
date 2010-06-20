@@ -285,6 +285,7 @@ void psc_push_part_yz_b();
 void psc_sort();
 void psc_out_field();
 void psc_out_particles();
+void psc_set_n_particles(int n_part);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 

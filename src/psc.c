@@ -525,6 +525,20 @@ psc_init(const char *case_name)
   psc_init_field();
 }
 
+// ----------------------------------------------------------------------
+// psc_set_n_particles
+
+void
+psc_set_n_particles(int n_part)
+{
+  psc.n_part = n_part;
+  SET_niloc(n_part);
+}
+
+// ======================================================================
+// testing related stuff
+
+
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];
 
