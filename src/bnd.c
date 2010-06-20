@@ -9,6 +9,11 @@
 // ======================================================================
 // C bnd
 
+struct c_bnd_ctx {
+  struct ddc_subdomain *ddc;
+  struct ddc_particles *ddcp;
+};
+
 static void
 copy_to_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
 {
@@ -50,6 +55,9 @@ copy_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
 static void
 create_bnd(void)
 {
+  struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
+  memset(c_bnd, 0, sizeof(*c_bnd));
+
   struct ddc_params prm = {
     .comm   = MPI_COMM_WORLD,
     .n_proc = { psc.domain.nproc[0], psc.domain.nproc[1], psc.domain.nproc[2] },
@@ -66,7 +74,9 @@ create_bnd(void)
       prm.bc[d] = DDC_BC_PERIODIC;
     }
   }
-  psc.bnd_data = ddc_create(&prm);
+  c_bnd->ddc = ddc_create(&prm);
+
+  psc.bnd_data = c_bnd;
 }
   
 static void
@@ -82,8 +92,8 @@ c_add_ghosts(int m)
   }
   prof_start(pr);
 
-  struct ddc_subdomain *ddc = psc.bnd_data;
-  ddc_add_ghosts(ddc, m);
+  struct c_bnd_ctx *c_bnd = psc.bnd_data;
+  ddc_add_ghosts(c_bnd->ddc, m);
 
   prof_stop(pr);
 }
@@ -104,8 +114,8 @@ c_fill_ghosts(int m)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  struct ddc_subdomain *ddc = psc.bnd_data;
-  ddc_fill_ghosts(ddc, m);
+  struct c_bnd_ctx *c_bnd = psc.bnd_data;
+  ddc_fill_ghosts(c_bnd->ddc, m);
 
   prof_stop(pr);
 }
