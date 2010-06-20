@@ -48,10 +48,18 @@ struct ddc_subdomain *ddc_create(struct ddc_params *prm);
 void ddc_add_ghosts(struct ddc_subdomain *ddc, int m);
 void ddc_fill_ghosts(struct ddc_subdomain *ddc, int m);
 
+int ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3]);
+
 #define DDC_BUF(buf, ix,iy,iz)			\
   (buf[((iz - ilo[2]) * (ihi[1] - ilo[1]) +	\
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
        ix - ilo[0]])
 
 #endif
+
+static inline int
+dir2idx(int dir[3])
+{
+  return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
+}
 

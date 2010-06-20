@@ -5,12 +5,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static inline int
-dir2idx(int dir[3])
-{
-  return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
-}
-
 static int
 get_rank(struct ddc_subdomain *ddc, const int proc[3])
 {
@@ -20,8 +14,8 @@ get_rank(struct ddc_subdomain *ddc, const int proc[3])
   return (proc[2] * ddc->prm.n_proc[1] + proc[1]) * ddc->prm.n_proc[0] + proc[0];
 }
 
-static int
-get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
+int
+ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
 {
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
@@ -46,7 +40,7 @@ get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
 static void
 ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = get_rank_nei(ddc, dir);
+  sr->rank_nei = ddc_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
@@ -77,7 +71,7 @@ ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 static void
 ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = get_rank_nei(ddc, dir);
+  sr->rank_nei = ddc_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
