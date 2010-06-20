@@ -115,4 +115,8 @@ c     reallocating if necessary
          cpuinou=cpuinou+cpud-cpuc
       endif
 
+#ifdef USE_C_INTERFACE
+      call C_ALLOC_particles_cb(p_niloc)
+#endif
+
       end subroutine REALLOC_particles

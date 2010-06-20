@@ -347,6 +347,7 @@ void INIT_grid_map();
 void INIT_partition(int *n_part);
 void INIT_idistr();
 struct f_particle *ALLOC_particles(int n_part);
+struct f_particle * REALLOC_particles(int n_part_n);
 f_real **ALLOC_field();
 void FREE_particles(void);
 void FREE_field(void);

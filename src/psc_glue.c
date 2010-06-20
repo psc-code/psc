@@ -24,6 +24,7 @@
 #define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
+#define REALLOC_particles_F77 F77_FUNC_(realloc_particles, REALLOC_PARTICLES)
 #define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
 #define FREE_particles_F77 F77_FUNC_(free_particles, FREE_PARTICLES)
 #define FREE_field_F77 F77_FUNC_(free_field, FREE_FIELD)
@@ -117,6 +118,7 @@ void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 void SET_niloc_F77(f_int *niloc);
 void GET_niloc_F77(f_int *niloc);
 void ALLOC_particles_F77(f_int *n_part);
+void REALLOC_particles_F77(f_int *n_part_n);
 void ALLOC_field_F77(void);
 void FREE_particles_F77(void);
 void FREE_field_F77(void);
@@ -501,6 +503,15 @@ struct f_particle *
 ALLOC_particles(int n_part)
 {
   ALLOC_particles_F77(&n_part);
+  // the callback function below will have magically been called,
+  // setting __f_part
+  return __f_part;
+}
+
+struct f_particle *
+REALLOC_particles(int n_part_n)
+{
+  REALLOC_particles_F77(&n_part_n);
   // the callback function below will have magically been called,
   // setting __f_part
   return __f_part;
