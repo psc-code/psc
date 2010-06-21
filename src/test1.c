@@ -10,9 +10,9 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   psc_create_test_1("fortran");
   
-  // psc_dump_particles("part-0.asc");
+  // psc_dump_particles("part-0");
   psc_push_part_yz();
-  // psc_dump_particles("part-1.asc");
+  // psc_dump_particles("part-1");
 
   psc_destroy();
 

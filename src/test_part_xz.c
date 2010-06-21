@@ -20,16 +20,16 @@ main(int argc, char **argv)
   };
 
   psc_create_test_xz(&conf_fortran);
-  //  psc_dump_particles("part-0.asc");
+  //  psc_dump_particles("part-0");
   psc_push_particles();
-  //  psc_dump_particles("part-1.asc");
+  //  psc_dump_particles("part-1");
   psc_save_particles_ref();
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_generic_c);
   psc_push_particles();
-  //  psc_dump_particles("part-2.asc");
+  //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-7);
   psc_check_currents_ref(1e-7);
   psc_destroy();

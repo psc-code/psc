@@ -106,16 +106,6 @@ check_particles(void)
   assert(fail_cnt == 0);
 }
 
-static void
-dump_particles(const char *s)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  char fname[200];
-  sprintf(fname, "%s-p%d.asc", s, rank);
-  psc_dump_particles(fname);
-}
-
 static int
 get_total_num_particles(void)
 {
@@ -144,10 +134,10 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   setup_particles();
-  //  dump_particles("part-0");
+  //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles();
   psc_exchange_particles();
-  //  dump_particles("part-1");
+  //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles();
   check_particles_old_xz();
   assert(total_num_particles_before == total_num_particles_after);
@@ -155,10 +145,10 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_c);
   setup_particles();
-  //  dump_particles("part-0");
+  //  psc_dump_particles("part-0");
   total_num_particles_before = get_total_num_particles();
   psc_exchange_particles();
-  //  dump_particles("part-1");
+  //  psc_dump_particles("part-1");
   total_num_particles_after = get_total_num_particles();
   check_particles();
   assert(total_num_particles_before == total_num_particles_after);
