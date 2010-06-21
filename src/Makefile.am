@@ -19,7 +19,7 @@ libpsc_a_SOURCES = \
 	integrate.c \
 	generic_c/psc_generic_c.c \
 	generic_c/push_part_xz.c \
-	generic_c/psc_push_part_yz_a.c \
+	generic_c/push_part_yz_a.c \
 	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
 	PIC_move_part_xz.F PIC_push_part_yz.F \
