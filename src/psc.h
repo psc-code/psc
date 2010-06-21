@@ -179,6 +179,7 @@ struct psc_output_ops {
   void (*destroy)(void);
   void (*out_field)(void);
   void (*dump_field)(int m, const char *fname);
+  void (*dump_particles)(const char *fname);
 };
 
 struct psc_bnd_ops {
