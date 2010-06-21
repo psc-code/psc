@@ -178,6 +178,7 @@ struct psc_output_ops {
   void (*create)(void);
   void (*destroy)(void);
   void (*out_field)(void);
+  void (*dump_field)(int m, const char *fname);
 };
 
 struct psc_bnd_ops {

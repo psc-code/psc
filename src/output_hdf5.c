@@ -77,20 +77,19 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
 
 // ======================================================================
 // psc_dump_field
+// hdf5_dump_field
 //
 // dumps the local fields to a file
 
-// FIXME, this should be configurable to potentially do something other than hdf5
-
-void
-psc_dump_field(int m, const char *fname)
+static void
+hdf5_dump_field(int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   char *filename = malloc(strlen(fname) + 10);
   sprintf(filename, "%s-p%d.h5", fname, rank);
-  mpi_printf(MPI_COMM_WORLD, "psc_dump_field: '%s'\n", filename);
+  mpi_printf(MPI_COMM_WORLD, "hdf5_dump_field: '%s'\n", filename);
   
   hsize_t dims[3] = { psc.ihg[2] - psc.ilg[2],
 		      psc.ihg[1] - psc.ilg[1],

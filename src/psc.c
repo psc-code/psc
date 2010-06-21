@@ -269,6 +269,39 @@ psc_setup_fields_1()
   }
 }
 
+static void
+ascii_dump_field(int m, const char *fname)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  char *filename = malloc(strlen(fname) + 10);
+  sprintf(filename, "%s-p%d.asc", fname, rank);
+  mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
+
+  FILE *file = fopen(filename, "w");
+  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
+    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
+      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
+	fprintf(file, "%d %d %d %g\n", ix, iy, iz, FF3(m, ix,iy,iz));
+      }
+      fprintf(file, "\n");
+    }
+    fprintf(file, "\n");
+  }
+  fclose(file);
+}
+
+void
+psc_dump_field(int m, const char *fname)
+{
+  if (psc.output_ops->dump_field) {
+    psc.output_ops->dump_field(m, fname);
+  } else {
+    ascii_dump_field(m, fname);
+  }
+}
+
 void
 psc_setup_particles_1()
 {
