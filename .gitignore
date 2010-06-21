@@ -1,5 +1,6 @@
 *~
 00*
+64x64*
 endfile
 okfile
 *.mod
@@ -17,6 +18,7 @@ src/test4
 src/test_part_xz
 src/test_bnd
 src/test_sort
+src/test_field
 Makefile.in
 Makefile
 aclocal.m4

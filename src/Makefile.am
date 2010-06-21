@@ -37,6 +37,7 @@ libpsc_a_SOURCES = \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
+	field.c \
 	sort.c \
 	bnd.c \
 	output_fields.c output_binary.c output_vtk.c \
@@ -99,11 +100,11 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test1 test2 test_part_xz test_bnd test_sort
+noinst_PROGRAMS = test1 test2 test_part_xz test_field test_bnd test_sort
 
 LDADD = libpsc.a util/libutil.a
 
-TESTS = test2 test_part_xz test_bnd test_sort.sh
+TESTS = test2 test_part_xz test_field test_bnd test_sort.sh
 
 if USE_CUDA
 

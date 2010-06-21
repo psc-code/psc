@@ -407,6 +407,8 @@ PIC_pez()
 void
 PIC_msa()
 {
+  INIT_grid_map();
+  SET_param_coeff();
 #ifdef USE_PML
   PIC_pml_msa_F77();
 #else
