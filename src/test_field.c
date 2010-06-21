@@ -23,17 +23,6 @@ setup_fields()
   }
 }
 
-static void
-dump_fld(int m, const char *pfx)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  char fname[100];
-  sprintf(fname, "%s-p%d.h5", pfx, rank);
-  psc_dump_field(m, fname);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -51,21 +40,21 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   setup_fields();
-  // dump_fld(EX, "ex0");
+  // psc_dump_field(EX, "ex0");
   psc_push_field_a();
-  // dump_fld(EX, "ex1");
+  // psc_dump_field(EX, "ex1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_fields();
   psc_push_field_a();
-  // dump_fld(EX, "ex2");
-  // dump_fld(EY, "ey2");
-  // dump_fld(EZ, "ez2");
-  // dump_fld(BX, "bx2");
-  // dump_fld(BY, "by2");
-  // dump_fld(BZ, "bz2");
+  // psc_dump_field(EX, "ex2");
+  // psc_dump_field(EY, "ey2");
+  // psc_dump_field(EZ, "ez2");
+  // psc_dump_field(BX, "bx2");
+  // psc_dump_field(BY, "by2");
+  // psc_dump_field(BZ, "bz2");
   psc_check_fields_ref((int []) { EX, EY, EZ, BX, BY, BZ, -1 }, 1e-7);
   psc_destroy();
 
@@ -73,21 +62,21 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   setup_fields();
-  dump_fld(EX, "ex0");
+  psc_dump_field(EX, "ex0");
   psc_push_field_b();
-  dump_fld(EX, "ex1");
+  psc_dump_field(EX, "ex1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_fields();
   psc_push_field_b();
-  dump_fld(EX, "ex2");
-  dump_fld(EY, "ey2");
-  dump_fld(EZ, "ez2");
-  dump_fld(BX, "bx2");
-  dump_fld(BY, "by2");
-  dump_fld(BZ, "bz2");
+  psc_dump_field(EX, "ex2");
+  psc_dump_field(EY, "ey2");
+  psc_dump_field(EZ, "ez2");
+  psc_dump_field(BX, "bx2");
+  psc_dump_field(BY, "by2");
+  psc_dump_field(BZ, "bz2");
   psc_check_fields_ref((int []) { EX, EY, EZ, BX, BY, BZ, -1 }, 1e-7);
   psc_destroy();
 

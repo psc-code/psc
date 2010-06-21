@@ -35,17 +35,6 @@ setup_jx_noghost()
   }
 }
 
-static void
-dump_jx(const char *pfx)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  char fname[100];
-  sprintf(fname, "%s-p%d.h5", pfx, rank);
-  psc_dump_field(JXI, fname);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -63,16 +52,16 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   setup_jx();
-  //  dump_jx("jx0");
+  //  psc_dump_field(JXI, "jx0");
   psc_add_ghosts(JXI);
-  //  dump_jx("jx1");
+  //  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx();
   psc_add_ghosts(JXI);
-  //  dump_jx("jx2");
+  //  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref_noghost(1e-10);
   psc_destroy();
 
@@ -80,16 +69,16 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   setup_jx_noghost();
-  dump_jx("jx0");
+  psc_dump_field(JXI, "jx0");
   psc_fill_ghosts(JXI);
-  dump_jx("jx1");
+  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx_noghost();
   psc_fill_ghosts(JXI);
-  dump_jx("jx2");
+  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref(1e-10);
   psc_destroy();
 
