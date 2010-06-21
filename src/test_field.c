@@ -18,12 +18,6 @@ setup_fields()
 	FF3(JXI, ix,iy,iz) = cos(xx) * sin(zz);
 	FF3(JYI, ix,iy,iz) = sin(xx) * sin(zz);
 	FF3(JZI, ix,iy,iz) = cos(xx) * cos(zz);
-	FF3(EX, ix,iy,iz) = 0.;
-	FF3(EY, ix,iy,iz) = 0.;
-	FF3(EZ, ix,iy,iz) = 0.;
-	FF3(BX, ix,iy,iz) = 0.;
-	FF3(BY, ix,iy,iz) = 0.;
-	FF3(BZ, ix,iy,iz) = 0.;
       }
     }
   }
@@ -53,17 +47,41 @@ main(int argc, char **argv)
     .mod_field = "c",
   };
 
+  // test push_field_a
+
   psc_create_test_xz(&conf_fortran);
   setup_fields();
-  dump_fld(EX, "ex0");
+  // dump_fld(EX, "ex0");
   psc_push_field_a();
-  dump_fld(EX, "ex1");
+  // dump_fld(EX, "ex1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_fields();
   psc_push_field_a();
+  // dump_fld(EX, "ex2");
+  // dump_fld(EY, "ey2");
+  // dump_fld(EZ, "ez2");
+  // dump_fld(BX, "bx2");
+  // dump_fld(BY, "by2");
+  // dump_fld(BZ, "bz2");
+  psc_check_fields_ref((int []) { EX, EY, EZ, BX, BY, BZ, -1 }, 1e-7);
+  psc_destroy();
+
+  // test push_field_a
+
+  psc_create_test_xz(&conf_fortran);
+  setup_fields();
+  dump_fld(EX, "ex0");
+  psc_push_field_b();
+  dump_fld(EX, "ex1");
+  psc_save_fields_ref();
+  psc_destroy();
+
+  psc_create_test_xz(&conf_c);
+  setup_fields();
+  psc_push_field_b();
   dump_fld(EX, "ex2");
   dump_fld(EY, "ey2");
   dump_fld(EZ, "ez2");
