@@ -40,6 +40,7 @@ struct c_particle {
 
 struct psc_genc {
   struct c_particle *part;
+  int part_allocated;
   creal *flds;
 };
 

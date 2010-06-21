@@ -2,17 +2,32 @@
 #include "psc_generic_c.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+struct psc_genc *
+genc_create(void)
+{
+  struct psc_genc *genc = malloc(sizeof(*genc));
+  memset(genc, 0, sizeof(*genc));
+
+  psc.c_ctx = genc;
+  return genc;
+  // FIXME, this need a destroy, too.
+}
 
 static void
 genc_particles_from_fortran()
 {
   struct psc_genc *genc = psc.c_ctx;
-  if (!psc.c_ctx) {
-    psc.c_ctx = malloc(sizeof(*psc.c_ctx));
-    genc = psc.c_ctx;
-    genc->part = calloc(psc.n_part, sizeof(*genc->part));
-    // FIXME, this is all leaked..
+  if (!genc) {
+    genc = genc_create();
   }
+  if (psc.n_part > genc->part_allocated) {
+    free(genc->part);
+    genc->part_allocated = psc.n_part * 1.2;
+    genc->part = calloc(genc->part_allocated, sizeof(*genc->part));
+  }
+
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
     struct c_particle *part = &genc->part[n];
