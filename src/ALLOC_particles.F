@@ -15,8 +15,7 @@ c     ======================================================================
 
       niloc_overfac = 1.2
 
-      niloc = niloc_
-      nialloc=nint(niloc_overfac*niloc+10)
+      nialloc=nint(niloc_overfac*niloc_+10)
       allocate(p_niloc(0:11*nialloc+10))
 
 #ifdef USE_C_INTERFACE
@@ -25,6 +24,52 @@ c     ======================================================================
 
       end subroutine ALLOC_particles
  
+c     ======================================================================
+      subroutine SET_niloc(niloc_)
+c     ======================================================================
+c     C/Fortran glue
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      integer :: niloc_
+
+      niloc = niloc_
+
+      end subroutine SET_niloc
+
+c     ======================================================================
+      subroutine GET_niloc(niloc_)
+c     ======================================================================
+c     C/Fortran glue
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      integer :: niloc_
+
+      niloc_ = niloc
+
+      end subroutine GET_niloc
+
+c     ======================================================================
+      subroutine FREE_particles
+c     ======================================================================
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      deallocate(p_niloc)
+      nialloc = 0
+
+      end subroutine FREE_particles
+
 c     ======================================================================
       subroutine REALLOC_particles(niloc_new)
 c     ======================================================================

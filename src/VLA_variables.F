@@ -336,18 +336,3 @@ c     ======================================================================
 
       end subroutine PIC_set_variables
 
-c     ======================================================================
-      subroutine GET_niloc(niloc_)
-c     ======================================================================
-
-      use VLA_variables
-      use PIC_variables
-
-      implicit none
-
-      integer :: niloc_
-
-      niloc_ = niloc
-
-      end subroutine GET_niloc
-

@@ -16,10 +16,11 @@
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 #define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
-#define GET_niloc_F77 F77_FUNC(get_niloc,GET_NILOC)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
 #define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
+#define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
+#define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 #define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
 #define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
@@ -85,7 +86,6 @@ void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 void OUT_field_1_F77(void);
 void OUT_part_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
-void GET_niloc_F77(f_int *n_part);
 void INIT_grid_map_F77(void);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
@@ -93,6 +93,8 @@ void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
 		       f_int *i3bn);
+void SET_niloc_F77(f_int *niloc);
+void GET_niloc_F77(f_int *niloc);
 void ALLOC_particles_F77(f_int *n_part);
 void ALLOC_field_F77(void);
 void PIC_msa_F77(void);
@@ -205,12 +207,6 @@ SET_param_pml()
 }
 
 void
-GET_niloc(int *n_part)
-{
-  GET_niloc_F77(n_part);
-}
-
-void
 INIT_grid_map(void)
 {
   INIT_grid_map_F77();
@@ -295,6 +291,18 @@ PIC_msb()
 #else
   PIC_msb_F77(); 
 #endif
+}
+
+void
+SET_niloc(int niloc)
+{
+  SET_niloc_F77(&niloc);
+}
+
+void
+GET_niloc(int *p_niloc)
+{
+  GET_niloc_F77(p_niloc);
 }
 
 // ----------------------------------------------------------------------

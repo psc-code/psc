@@ -284,6 +284,7 @@ void SET_param_domain();
 void SET_param_pml();
 void SET_param_psc();
 void SET_param_coeff();
+void SET_niloc(int niloc);
 void SET_subdomain();
 void GET_param_domain();
 void GET_niloc(int *niloc);

@@ -165,4 +165,5 @@ psc_init_particles()
     }
   }
   psc.n_part = i;
+  SET_niloc(psc.n_part);
 }
