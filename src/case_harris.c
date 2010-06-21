@@ -206,3 +206,116 @@ struct psc_case_ops psc_case_ops_test_xz = {
   .init_field = harris_init_field,
   .init_npt   = harris_init_npt,
 };
+
+// ----------------------------------------------------------------------
+// case test_yz:
+//
+// basically the same as harris, but with different coordinates
+
+static void
+test_yz_init_param(struct psc_case *Case)
+{
+  harris_init_param(Case);
+  
+  struct harris *harris = Case->ctx;
+
+  psc.prm.nicell = 100;
+
+  psc.domain.length[0] = 10000000;
+  psc.domain.length[1] = harris->lx * sqrt(harris->MMi);
+  psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
+
+  psc.domain.itot[0] = 1;
+  psc.domain.itot[1] = 64;
+  psc.domain.itot[2] = 64;
+  psc.domain.ilo[0] = 0;
+  psc.domain.ilo[1] = 0;
+  psc.domain.ilo[2] = 0;
+  psc.domain.ihi[0] = 1;
+  psc.domain.ihi[1] = 64;
+  psc.domain.ihi[2] = 64;
+  
+}
+
+static void
+test_yz_init_field(struct psc_case *Case)
+{
+  struct harris *harris = Case->ctx;
+
+  double BB = harris->BB, MMi = harris->MMi;
+  double LLy = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
+  double LLL = harris->lambda * sqrt(MMi);
+  double AA = harris->pert * BB * sqrt(MMi);
+
+  // FIXME, do we need the ghost points?
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	double dy = psc.dx[1], dz = psc.dx[2];
+	double yy = jy * dy, zz = jz * dz;
+
+	FF3(BY, jx,jy,jz) = 
+	  BB * (-1. 
+		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
+		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
+	  + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
+
+	FF3(BZ, jx,jy,jz) =
+	  - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
+
+	FF3(JXI, jx,jy,jz) = - BB/LLL *
+	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
+	     * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
+      }
+    }
+  }
+}
+
+static void
+test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
+		 struct psc_particle_npt *npt)
+{
+  struct harris *harris = Case->ctx;
+
+  double BB = harris->BB, MMi = harris->MMi;
+  double LLz = harris->lz * sqrt(MMi);
+  double LLL = harris->lambda * sqrt(MMi);
+  double nnb = harris->nnb;
+  double TTi = harris->Ti * sqr(BB);
+  double TTe = harris->Te * sqr(BB);
+
+  double jx0 = -1./sqr(cosh((x[2]-0.5*LLz)/LLL)) - 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+
+  switch (kind) {
+  case 0: // electrons
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    npt->p[0] = - 2. * TTe / BB / LLL * jx0 / npt->n;
+    npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
+    break;
+  case 1: // ions
+    npt->q = 1.;
+    npt->m = harris->MMi;
+    npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    npt->p[0] = 2. * TTi / BB / LLL * jx0 / npt->n;
+    npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
+    break;
+  default:
+    assert(0);
+  }
+}
+
+struct psc_case_ops psc_case_ops_test_yz = {
+  .name       = "test_yz",
+  .ctx_size   = sizeof(struct harris),
+  .ctx_descr  = harris_descr,
+  .init_param = test_yz_init_param,
+  .init_field = test_yz_init_field,
+  .init_npt   = test_yz_init_npt,
+};

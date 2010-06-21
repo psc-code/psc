@@ -279,6 +279,7 @@ void psc_check_particles_ref(double thres);
 void psc_check_particles_sorted();
 void psc_create_test_1(const char *ops_name);
 void psc_create_test_xz(struct psc_mod_config *conf);
+void psc_create_test_yz(struct psc_mod_config *conf);
 
 void psc_push_part_yz();
 void psc_push_part_z();
@@ -319,6 +320,7 @@ extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
 extern struct psc_case_ops psc_case_ops_test_xz;
+extern struct psc_case_ops psc_case_ops_test_yz;
 
 // Wrappers for Fortran functions
 void PIC_push_part_xz();

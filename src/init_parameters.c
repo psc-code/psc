@@ -153,6 +153,7 @@ static struct psc_case_ops *psc_case_ops_list[] = {
   &psc_case_ops_singlepart,
   &psc_case_ops_harris,
   &psc_case_ops_test_xz,
+  &psc_case_ops_test_yz,
   NULL,
 };
 
