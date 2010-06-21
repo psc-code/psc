@@ -116,6 +116,17 @@ dump_particles(const char *s)
   psc_dump_particles(fname);
 }
 
+static int
+get_total_num_particles(void)
+{
+  int total_num_part;
+
+  MPI_Allreduce(&psc.n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
+		MPI_COMM_WORLD);
+
+  return total_num_part;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -134,24 +145,23 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_particles();
   //  dump_particles("part-0");
+  int total_num_particles_before = get_total_num_particles();
   psc_exchange_particles();
   //  dump_particles("part-1");
+  int total_num_particles_after = get_total_num_particles();
   check_particles_old_xz();
+  assert(total_num_particles_before == total_num_particles_after);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_particles();
-  dump_particles("part-0");
-  int total_n_particles_before;
-  MPI_Allreduce(&psc.n_part, &total_n_particles_before, 1, MPI_INT, MPI_SUM,
-		MPI_COMM_WORLD);
+  //  dump_particles("part-0");
+  total_num_particles_before = get_total_num_particles();
   psc_exchange_particles();
-  dump_particles("part-1");
-  int total_n_particles_after;
-  MPI_Allreduce(&psc.n_part, &total_n_particles_after, 1, MPI_INT, MPI_SUM,
-		MPI_COMM_WORLD);
+  //  dump_particles("part-1");
+  total_num_particles_after = get_total_num_particles();
   check_particles();
-  assert(total_n_particles_before == total_n_particles_after);
+  assert(total_num_particles_before == total_num_particles_after);
   psc_destroy();
 
   prof_print();
