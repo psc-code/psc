@@ -81,8 +81,7 @@ sse2_particles_to_fortran()
 static void
 sse2_fields_from_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
-  void *m = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
-  sse2->fields = m;
+  sse2->fields = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
 
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
@@ -101,6 +100,7 @@ sse2_fields_to_fortran(){
       psc.f_fields[m][n] = sse2->fields[m * psc.fld_size + n];
     }
   }
+  _mm_free(sse2->fields);
 }
 
 
