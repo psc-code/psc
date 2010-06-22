@@ -34,7 +34,9 @@ __assert_equal(double x, double y, const char *xs, const char *ys)
 static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
+#ifdef USE_CUDA
   &psc_ops_cuda,
+#endif
 #ifdef USE_SSE2
   &psc_ops_sse2,
 #endif
