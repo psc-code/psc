@@ -14,8 +14,11 @@ libpsc_a_SOURCES = \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
-	cuda/psc_cuda.c cuda/push_part_yz.c \
-	sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
+	cuda/psc_cuda.c cuda/push_part_yz.c
+
+if USE_SSE2
+libpsc_a_SOURCES += sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
+endif USE_SSE2
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -99,6 +102,3 @@ push_part_yz.o: cuda/push_part_yz.cu
 
 endif USE_CUDA
 
-if USE_SSE2
-# We should probably add the -msse2 cflag here...
-endif USE_SSE2

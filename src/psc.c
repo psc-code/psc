@@ -35,7 +35,9 @@ static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
   &psc_ops_cuda,
+#ifdef USE_SSE2
   &psc_ops_sse2,
+#endif
   NULL,
 };
 
