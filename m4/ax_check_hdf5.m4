@@ -18,14 +18,14 @@ AC_DEFUN([AX_CHECK_HDF5],
       
       AC_CHECK_HEADERS([hdf5.h],
         [],
-        [AC_MSG_FAILURE([hdf5.h not found])]
+        [with_hdf5=no]
       )
 
       AC_CHECK_LIB(
         [hdf5],
         [H5Gcreate2],
         [],
-	[AC_MSG_FAILURE([cannot link with HDF5])]
+	[with_hdf5=no]
       )
     ])
   ])
