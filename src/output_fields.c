@@ -429,7 +429,7 @@ output_c_field()
   }
   prof_start(pr);
 
-  CALC_densities();
+  psc_calc_densities();
   calculate_pfields(&out->pfd);
 
   if (out->dowrite_pfield) {

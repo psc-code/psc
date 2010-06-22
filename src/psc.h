@@ -264,6 +264,13 @@ struct psc_bnd_ops {
   void (*exchange_particles)(void);
 };
 
+struct psc_moment_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*calc_densities)(void);
+};
+
 struct psc {
   struct psc_ops *ops;
   struct psc_push_field_ops *push_field_ops;
@@ -273,6 +280,7 @@ struct psc {
   struct psc_output_ops *output_ops;
   struct psc_bnd_ops *bnd_ops;
   void *bnd_data;
+  struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_case *Case;
   // user-configurable parameters
@@ -315,6 +323,7 @@ struct psc_mod_config {
   const char *mod_collision;
   const char *mod_output;
   const char *mod_bnd;
+  const char *mod_moment;
 };
 
 // we keep this info global for now.
@@ -338,6 +347,8 @@ void psc_push_field_b();
 void psc_add_ghosts(int mb, int me);
 void psc_fill_ghosts(int mb, int me);
 void psc_exchange_particles(void);
+void psc_calc_densities(void);
+
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_1();
@@ -396,6 +407,8 @@ extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_bnd_ops psc_bnd_ops_fortran;
 extern struct psc_bnd_ops psc_bnd_ops_c;
+
+extern struct psc_moment_ops psc_moment_ops_fortran;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;

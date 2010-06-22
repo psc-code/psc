@@ -83,6 +83,11 @@ static struct psc_bnd_ops *psc_bnd_ops_list[] = {
   NULL,
 };
 
+static struct psc_moment_ops *psc_moment_ops_list[] = {
+  &psc_moment_ops_fortran,
+  NULL,
+};
+
 static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
@@ -160,6 +165,17 @@ psc_find_bnd_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_moment_ops *
+psc_find_moment_ops(const char *ops_name)
+{
+  for (int i = 0; psc_moment_ops_list[i]; i++) {
+    if (strcasecmp(psc_moment_ops_list[i]->name, ops_name) == 0)
+      return psc_moment_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_moment_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 #define VAR(x) (void *)offsetof(struct psc_mod_config, x)
 
 static struct param psc_mod_config_descr[] = {
@@ -170,6 +186,7 @@ static struct param psc_mod_config_descr[] = {
   { "mod_collision"   , VAR(mod_collision)      , PARAM_STRING(NULL)  },
   { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
   { "mod_bnd"         , VAR(mod_bnd)            , PARAM_STRING(NULL)  },
+  { "mod_moment"      , VAR(mod_moment)         , PARAM_STRING(NULL)  },
   {},
 };
 
@@ -193,6 +210,8 @@ psc_create(struct psc_mod_config *conf)
     conf->mod_output = "fortran";
   if (!conf->mod_bnd)
     conf->mod_bnd = "fortran";
+  if (!conf->mod_moment)
+    conf->mod_moment = "fortran";
 
   params_parse_cmdline_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
   params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
@@ -226,6 +245,10 @@ psc_create(struct psc_mod_config *conf)
   psc.bnd_ops = psc_find_bnd_ops(conf->mod_bnd);
   if (psc.bnd_ops->create) {
     psc.bnd_ops->create();
+  }
+  psc.moment_ops = psc_find_moment_ops(conf->mod_moment);
+  if (psc.moment_ops->create) {
+    psc.moment_ops->create();
   }
 }
 
@@ -634,6 +657,17 @@ psc_p_pulse_z1(real x, real y, real z, real t)
   return psc_pulse_field(psc.pulse_p_z1, x, y, z, t);
 }
 
+// ----------------------------------------------------------------------
+// psc_calc_densities
+
+void
+psc_calc_densities()
+{
+  assert(psc.moment_ops->calc_densities);
+  psc.moment_ops->calc_densities();
+}
+
+// ----------------------------------------------------------------------
 // psc_init
 
 #define INIT_param_fortran_F77 F77_FUNC_(init_param_fortran, INIT_PARAM_FORTRAN)

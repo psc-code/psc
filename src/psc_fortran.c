@@ -316,3 +316,26 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
   .fill_ghosts        = fortran_fill_ghosts,
   .exchange_particles = fortran_exchange_particles,
 };
+
+// ======================================================================
+// fortran moment
+
+static void
+fortran_calc_densities(void)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_densities", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  CALC_densities();
+
+  prof_stop(pr);
+}
+
+struct psc_moment_ops psc_moment_ops_fortran = {
+  .name               = "fortran",
+  .calc_densities     = fortran_calc_densities,
+};
+
