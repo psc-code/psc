@@ -289,11 +289,14 @@ c_exchange_particles(void)
   if (!psc.bnd_data) {
     create_bnd();
   }
-  static int pr;
+  static int pr, pr_A, pr_B;
   if (!pr) {
     pr = prof_register("c_xchg_part", 1., 0, 0);
+    pr_A = prof_register("c_xchg_part_A", 1., 0, 0);
+    pr_B = prof_register("c_xchg_part_B", 1., 0, 0);
   }
   prof_start(pr);
+  prof_start(pr_A);
 
   struct c_bnd_ctx *c_bnd = psc.bnd_data;
   struct ddc_particles *ddcp = c_bnd->ddcp;
@@ -352,8 +355,12 @@ c_exchange_particles(void)
     }
   }
 
+  prof_stop(pr_A);
+
+  prof_start(pr_B);
   ddc_particles_comm(ddcp);
   psc_set_n_particles(ddcp->head);
+  prof_stop(pr_B);
 
   prof_stop(pr);
 }
