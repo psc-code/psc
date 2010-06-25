@@ -492,9 +492,11 @@ psc_push_particles()
     assert(0);
   } else if (im[0] > 1 && im[2] > 1) { // xz
     psc_push_part_xz();
+  } else if (im[0] > 1 && im[1] > 1) { // xy
+    assert(0);
   } else if (im[1] > 1 && im[2] > 1) { // yz
     psc_push_part_yz();
-  } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // z
+  } else if (im[2] > 1) { // z
     psc_push_part_z();
   } else {
     assert(0);
