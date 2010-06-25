@@ -27,6 +27,12 @@ AC_DEFUN([AX_CHECK_HDF5],
         [],
 	[with_hdf5=no]
       )
+      AC_CHECK_LIB(
+        [hdf5_hl],
+        [H5LTmake_dataset_float],
+        [],
+	[AC_MSG_FAILURE([cannot link with HDF5 HL])]
+      )
     ])
   ])
 

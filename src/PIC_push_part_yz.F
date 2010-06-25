@@ -2,17 +2,18 @@
 c     particle pusher yz, separated out to not depend on global
 c     variables from modules
 
-      subroutine PIC_push_part_yz(niloc, p_niloc, cori, alpha, eta, 
-     &     p2A, p2B, dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+      subroutine PIC_push_part_yz(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
+      use PIC_variables, only: cori
 
       implicit none
 
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
-      real(kind=8) :: cori, alpha, eta, dt, dx, dy, dz, p2A, p2B
-      integer      :: i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3
+      real(kind=8) :: p2A, p2B
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
@@ -400,17 +401,18 @@ c     particle pusher yz, separated out to not depend on global
 c     variables from modules
 c     first half step only (x^n -> x^{n+1/2})
 
-      subroutine PIC_push_part_yz_a(niloc, p_niloc, cori, alpha, eta, 
-     &     p2A, p2B, dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+      subroutine PIC_push_part_yz_a(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
+      use PIC_variables, only: cori
 
       implicit none
 
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
-      real(kind=8) :: cori, alpha, eta, dt, dx, dy, dz, p2A, p2B
-      integer      :: i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3
+      real(kind=8) :: p2A, p2B
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
@@ -521,17 +523,18 @@ c     particle pusher yz, separated out to not depend on global
 c     variables from modules
 c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2})
 
-      subroutine PIC_push_part_yz_b(niloc, p_niloc, cori, alpha, eta, 
-     &     p2A, p2B, dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+      subroutine PIC_push_part_yz_b(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
+      use PIC_variables, only: cori
 
       implicit none
 
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
-      real(kind=8) :: cori, alpha, eta, dt, dx, dy, dz, p2A, p2B
-      integer      :: i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3
+      real(kind=8) :: p2A, p2B
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn

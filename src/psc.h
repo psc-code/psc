@@ -15,6 +15,8 @@ enum {
   NR_FIELDS,
 };
 
+const char *fldname[NR_FIELDS];
+
 // C floating point type
 // used to switch between single and double precision
 
@@ -93,8 +95,24 @@ struct psc_ops {
   void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
 };
 
+struct psc_sort_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*sort)(void);
+};
+
+struct psc_output_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*out_field)(void);
+};
+
 struct psc {
   struct psc_ops *ops;
+  struct psc_sort_ops *sort_ops;
+  struct psc_output_ops *output_ops;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_domain domain;
@@ -115,6 +133,8 @@ struct psc {
   int ilg[3], ihg[3]; // local domain incl ghost points: ilg, ilg+1, ..., ihg-1
   int img[3];         // total # points per dir incl. ghost points
   int fld_size;       // total # points per field incl. ghost points
+  int glo[3], ghi[3]; // global domain
+
   f_real *f_fields[NR_FIELDS];
 
   // C data structures
@@ -129,7 +149,8 @@ struct psc {
 
 struct psc psc;
 
-void psc_create(const char *mod_particle);
+void psc_create(const char *mod_particle, const char *mod_sort,
+		const char *mod_output);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
@@ -142,12 +163,15 @@ void psc_save_particles_ref();
 void psc_save_fields_ref();
 void psc_check_currents_ref();
 void psc_check_particles_ref();
+void psc_check_particles_sorted();
 void psc_create_test_1(const char *ops_name);
 
 void psc_push_part_yz();
 void psc_push_part_z();
 void psc_push_part_yz_a();
 void psc_push_part_yz_b();
+void psc_sort();
+void psc_out_field();
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
@@ -157,11 +181,23 @@ extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 
+extern struct psc_sort_ops psc_sort_ops_fortran;
+extern struct psc_sort_ops psc_sort_ops_qsort;
+extern struct psc_sort_ops psc_sort_ops_countsort;
+extern struct psc_sort_ops psc_sort_ops_countsort2;
+
+extern struct psc_output_ops psc_output_ops_fortran;
+extern struct psc_output_ops psc_output_ops_hdf5;
+
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
 void PIC_push_part_yz_b();
+void PIC_sort_1();
+void PIC_randomize();
+void PIC_find_cell_indices();
+void OUT_field_1();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

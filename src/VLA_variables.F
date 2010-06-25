@@ -276,3 +276,51 @@ c boundary_part_z: particle boundary conditions in z
 
 
       end module VLA_variables
+
+c     ======================================================================
+      subroutine PIC_set_variables(
+     *     i1mn_, i2mn_, i3mn_,
+     *     i1mx_, i2mx_, i3mx_,
+     *     rd1_, rd2_, rd3_,
+     *     i1n_, i2n_, i3n_,
+     *     i1x_, i2x_, i3x_,
+     *     cori_, alpha_, eta_,
+     *     dt_, dx_, dy_, dz_)
+c     ======================================================================
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      integer :: i1mn_, i2mn_, i3mn_, i1mx_, i2mx_, i3mx_
+      integer :: rd1_, rd2_, rd3_
+      integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
+      real(kind=8) :: cori_, alpha_, eta_
+      real(kind=8) :: dt_, dx_, dy_, dz_
+
+      i1mn = i1mn_
+      i2mn = i2mn_
+      i3mn = i3mn_
+      i1mx = i1mx_
+      i2mx = i2mx_
+      i3mx = i3mx_
+      rd1 = rd1_
+      rd2 = rd2_
+      rd3 = rd3_
+      i1n = i1n_
+      i2n = i2n_
+      i3n = i3n_
+      i1x = i1x_
+      i2x = i2x_
+      i3x = i3x_
+      
+      cori = cori_
+      alpha = alpha_
+      eta = eta_
+      dt = dt_
+      dx = dx_
+      dy = dy_
+      dz = dz_
+
+      end subroutine PIC_set_variables
