@@ -27,6 +27,8 @@ libpsc_a_SOURCES = \
 	INIT_param.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F ALLOC_field.F \
+	INIT_idistr.F INIT_partition.F INIT_den.F \
+	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	sort.c \
 	output_fields.c output_binary.c output_vtk.c \
@@ -50,8 +52,7 @@ endif USE_CUDA
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F INIT_den.F INIT_idistr.F \
-	INIT_partition.F \
+	INIT_field.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
@@ -67,8 +68,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F INIT_den.F INIT_idistr.F \
-	INIT_partition.F \
+	INIT_field.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \

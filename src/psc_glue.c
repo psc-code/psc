@@ -11,10 +11,14 @@
 #define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
+#define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
+#define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define GET_niloc_F77 F77_FUNC(get_niloc,GET_NILOC)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
+#define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
+#define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
@@ -67,10 +71,19 @@ void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
+void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
+			f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x,
+			f_int *niloc_new);
+void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
+		     f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x);
 void OUT_field_1_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void GET_niloc_F77(f_int *n_part);
 void INIT_grid_map_F77(void);
+void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
+		       f_int *i3mn, f_int *i3mx);
+void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
+		       f_int *i3mn, f_int *i3mx);
 void ALLOC_particles_F77(f_int *n_part);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
@@ -186,6 +199,48 @@ PSC_p_pulse_z1(real xx, real yy, real zz, real tt)
 {
   f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
   return p_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
+}
+
+static int rd1n, rd1x, rd2n, rd2x, rd3n, rd3x;
+static int part_label_offset;
+
+void
+INIT_partition(int *n_part)
+{
+  INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
+		     n_part);
+  GET_subdomain();
+}
+
+void
+INIT_idistr(void)
+{
+  INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
+}
+
+void
+SET_subdomain()
+{
+  f_int i1mn = psc.ilo[0];
+  f_int i2mn = psc.ilo[1];
+  f_int i3mn = psc.ilo[2];
+  f_int i1mx = psc.ihi[0] - 1;
+  f_int i2mx = psc.ihi[1] - 1;
+  f_int i3mx = psc.ihi[2] - 1;
+  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+}
+
+void
+GET_subdomain()
+{
+  f_int i1mn, i2mn, i3mn, i1mx, i2mx, i3mx;
+  GET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+  psc.ilo[0] = i1mn;
+  psc.ilo[1] = i2mn;
+  psc.ilo[2] = i3mn;
+  psc.ihi[0] = i1mx + 1;
+  psc.ihi[1] = i2mx + 1;
+  psc.ihi[2] = i3mx + 1;
 }
 
 // ----------------------------------------------------------------------

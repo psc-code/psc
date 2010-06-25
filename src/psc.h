@@ -281,9 +281,12 @@ void SET_param_coeff();
 void SET_subdomain();
 void GET_param_domain();
 void GET_niloc(int *niloc);
+void GET_subdomain();
 void INIT_param_domain();
 void INIT_param_psc();
 void INIT_grid_map();
+void INIT_partition(int *n_part);
+void INIT_idistr();
 struct f_particle *ALLOC_particles(int n_part);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
