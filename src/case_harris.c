@@ -5,6 +5,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 // WFox: Plasma simulation parameters
 //       needed because they determine length scales for initial conditions
@@ -141,10 +142,54 @@ harris_init_field(void)
   }
 }
 
+static void
+harris_init_nvt(int kind, double x[3], double *q, double *m, double *n,
+		double v[3], double T[3])
+{
+  struct psc_harris *harris = psc.case_data;
+
+  double BB = harris->BB, MMi = harris->MMi;
+  double LLz = harris->lz * sqrt(MMi);
+  double LLL = harris->lambda * sqrt(MMi);
+  double nnb = harris->nnb;
+  double TTi = harris->Ti * sqr(BB);
+  double TTe = harris->Te * sqr(BB);
+
+  double jy0 = 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) - 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+
+  switch (kind) {
+  case 0: // electrons
+    *q = -1.;
+    *m = 1.;
+    *n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    v[0] = 0.;
+    v[1] = - 2. * TTe / BB / LLL * jy0 / *n;
+    v[2] = 0.;
+    T[0] = TTe;
+    T[1] = TTe;
+    T[2] = TTe;
+    break;
+  case 1: // ions
+    *q = 1.;
+    *m = harris->MMi;
+    *n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    v[0] = 0.;
+    v[1] = 2. * TTi / BB / LLL * jy0 / *n;
+    v[2] = 0.;
+    T[0] = TTi;
+    T[1] = TTi;
+    T[2] = TTi;
+    break;
+  default:
+    assert(0);
+  }
+}
+
 struct psc_case_ops psc_case_ops_harris = {
   .name       = "harris",
   .create     = harris_create,
   .destroy    = harris_destroy,
   .init_param = harris_init_param,
   .init_field = harris_init_field,
+  .init_nvt   = harris_init_nvt,
 };

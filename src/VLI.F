@@ -41,6 +41,18 @@ c The real VLI main
       include './SERV_consist.F'
 
 
+#ifdef USE_C_INTERFACE
+      call C_init_partition(part_label_off, niloc_new)
+      call ALLOC_particles(niloc_new)
+      call C_init_vars(dt, dx, dy, dz,
+     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
+     &     i1n, i2n, i3n, i1x, i2x, i3x,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
+     &     cori, alpha, beta, eta, wl, wp,
+     &     n,
+     &     99)
+      call C_init_particles
+#else
       ! I don't understand why the partition may calculate different
       ! boundary sizes (rd..) to be filled with particles, but let's
       ! keep it as-is for now.
@@ -48,6 +60,8 @@ c The real VLI main
      *     niloc_new)
       call ALLOC_particles(niloc_new)
       call INIT_idistr(part_label_off,rd1n,rd1x,rd2n,rd2x,rd3n,rd3x)
+#endif
+
       call ALLOC_field
 #ifdef USE_C_INTERFACE
       call C_INIT_field

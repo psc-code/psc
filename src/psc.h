@@ -99,6 +99,8 @@ struct psc_case_ops {
   void (*destroy)(void);
   void (*init_param)(void);
   void (*init_field)(void);
+  void (*init_nvt)(int kind, double x[3], double *q, double *m, double *n,
+		   double v[3], double T[3]);
 };
 
 // ----------------------------------------------------------------------
