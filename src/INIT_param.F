@@ -608,3 +608,18 @@ c     wrapper for C to be able to set these parameters
       nicell = nicell_
 
       end subroutine SET_param_psc
+
+c     wrapper for C to be able to set these coefficients
+
+      subroutine SET_param_coeff(cori_)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      real(kind=8) :: cori_
+
+      cori = cori_
+
+      end subroutine SET_param_coeff

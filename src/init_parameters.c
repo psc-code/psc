@@ -203,6 +203,13 @@ init_param_psc_default()
 #endif
 }
 
+static void
+init_param_coeff()
+{
+  assert(psc.prm.nicell > 0);
+  psc.coeff.cori = 1. / psc.prm.nicell;
+}
+
 // ======================================================================
 // Fortran glue
 
@@ -212,6 +219,7 @@ init_param_psc_default()
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
 #define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
+#define SET_param_coeff_F77     F77_FUNC_(set_param_coeff, SET_PARAM_COEFF)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
 void INIT_param_domain_F77(void);
@@ -228,6 +236,7 @@ void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_int *nicell);
+void SET_param_coeff_F77(f_real *cori);
 
 void
 get_param_domain()
@@ -274,6 +283,13 @@ set_param_psc()
 }
 
 void
+set_param_coeff()
+{
+  struct psc_coeff *p = &psc.coeff;
+  SET_param_coeff_F77(&p->cori);
+}
+
+void
 INIT_param_domain()
 {
   INIT_param_domain_F77();
@@ -295,8 +311,10 @@ C_init_param_F77()
   init_case();
   init_param_domain();
   init_param_psc();
+  init_param_coeff();
 
   set_param_domain();
   set_param_psc();
+  set_param_coeff();
 }
 
