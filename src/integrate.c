@@ -63,18 +63,10 @@ psc_log_step(double stats[NR_STATS])
 
 #define ALLOC_field_fortran_F77 F77_FUNC_(alloc_field_fortran, ALLOC_FIELD_FORTRAN)
 #define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
-#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
-#define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
-#define PIC_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
-#define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 #define PIC_move_part_F77 F77_FUNC_(pic_move_part, PIC_MOVE_PART)
 
 void ALLOC_field_fortran_F77(void);
 void SETUP_field_F77(void);
-void PIC_msa_F77(void);
-void PIC_pml_msa_F77(void);
-void PIC_msb_F77(void);
-void PIC_pml_msb_F77(void);
 void PIC_move_part_F77(void);
 
 /////////////////////////////////////////////////////////////////////////
@@ -102,11 +94,7 @@ psc_integrate()
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-#ifdef USE_PML
-    PIC_pml_msa_F77();
-#else
-    PIC_msa_F77();
-#endif
+    PIC_msa();
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
@@ -116,11 +104,7 @@ psc_integrate()
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-#ifdef USE_PML
-    PIC_pml_msb_F77(); 
-#else
-    PIC_msb_F77(); 
-#endif
+    PIC_msb(); 
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = psc.n_part;

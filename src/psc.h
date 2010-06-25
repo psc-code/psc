@@ -276,6 +276,8 @@ void PIC_push_part_yz_b();
 void PIC_sort_1();
 void PIC_randomize();
 void PIC_find_cell_indices();
+void PIC_msa();
+void PIC_msb();
 void OUT_field_1();
 void OUT_part();
 void SET_param_domain();

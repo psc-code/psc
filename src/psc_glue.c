@@ -22,6 +22,10 @@
 #define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 #define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
+#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
+#define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
+#define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
+#define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
@@ -91,6 +95,10 @@ void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3bn);
 void ALLOC_particles_F77(f_int *n_part);
 void ALLOC_field_F77(void);
+void PIC_msa_F77(void);
+void PIC_msb_F77(void);
+void PIC_pml_msa_F77(void);
+void PIC_pml_msb_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
@@ -267,6 +275,26 @@ GET_subdomain()
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
+}
+
+void
+PIC_msa()
+{
+#ifdef USE_PML
+  PIC_pml_msa_F77();
+#else
+  PIC_msa_F77();
+#endif
+}
+
+void
+PIC_msb()
+{
+#ifdef USE_PML
+  PIC_pml_msb_F77(); 
+#else
+  PIC_msb_F77(); 
+#endif
 }
 
 // ----------------------------------------------------------------------

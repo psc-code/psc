@@ -23,6 +23,9 @@ libpsc_a_SOURCES = \
 	psc_fortran.c \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
+	PIC_fex.F PIC_fey.F PIC_fez.F \
+	PIC_fax.F PIC_fay.F PIC_faz.F \
+	PIC_msa.F PIC_msb.F \
 	PIC_sort_1.F \
 	OUT_field.F OUT_part.F \
 	INIT_param.F \
@@ -52,12 +55,13 @@ if USE_CUDA
 libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
+if USE_PML
+libpsc_a_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
+endif
+
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F \
-	PIC_msa.F PIC_msb.F \
-	PIC_fex.F PIC_fey.F PIC_fez.F \
-	PIC_fax.F PIC_fay.F PIC_faz.F \
 	SERV_write.F \
 	OUT_param.F OUT_poyc.F \
 	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
@@ -71,9 +75,6 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F \
-	PIC_msa.F PIC_msb.F \
-	PIC_fex.F PIC_fey.F PIC_fez.F \
-	PIC_fax.F PIC_fay.F PIC_faz.F \
 	SERV_write.F SERV_read.F \
 	OUT_param.F OUT_poyc.F \
 	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
@@ -83,11 +84,6 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_push_part_yz.F PIC_push_part_z.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
 	PSC_driver.F
-
-if USE_PML
-VLI_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
-VLA_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
-endif
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F \
 	SELECT.F SERV_labelgen.F \
