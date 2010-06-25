@@ -294,6 +294,7 @@ extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
+extern struct psc_case_ops psc_case_ops_test_xz;
 
 // Wrappers for Fortran functions
 void PIC_push_part_xz();

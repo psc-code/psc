@@ -164,6 +164,7 @@ psc_create(const char *mod_particle, const char *mod_field,
 
 // ----------------------------------------------------------------------
 
+// FIXME, obsolete
 void
 psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
 {
@@ -666,17 +667,11 @@ psc_create_test_1(const char *ops_name)
 void
 psc_create_test_xz(const char *ops_name)
 {
-  int ilo[3] = {  0,  0,  0 };
-  int ihi[3] = { 64,  1, 64 };
-  int ibn[3] = {  2,  2,  2 }; // FIXME?
-
-  int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]) * (ihi[0] - ilo[0]);
+  // make sure if we call it again, we really get the same i.c.
+  srandom(0);
 
   psc_create(ops_name, "fortran", "fortran", "fortran");
-  psc_alloc(ilo, ihi, ibn, n_part);
-  psc_setup_parameters();
-  psc_setup_fields_1();
-  psc_setup_particles_1();
+  psc_init("test_xz");
 }
 
 // ======================================================================

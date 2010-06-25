@@ -173,3 +173,36 @@ struct psc_case_ops psc_case_ops_harris = {
   .init_field = harris_init_field,
   .init_npt   = harris_init_npt,
 };
+
+// ----------------------------------------------------------------------
+// case test_xz:
+//
+// basically the same as harris
+
+static void
+test_xz_init_param(struct psc_case *Case)
+{
+  harris_init_param(Case);
+  
+  psc.prm.nicell = 100;
+
+  psc.domain.itot[0] = 64;
+  psc.domain.itot[1] = 1;
+  psc.domain.itot[2] = 64;
+  psc.domain.ilo[0] = 0;
+  psc.domain.ilo[1] = 0;
+  psc.domain.ilo[2] = 0;
+  psc.domain.ihi[0] = 64;
+  psc.domain.ihi[1] = 1;
+  psc.domain.ihi[2] = 64;
+  
+}
+
+struct psc_case_ops psc_case_ops_test_xz = {
+  .name       = "test_xz",
+  .ctx_size   = sizeof(struct harris),
+  .ctx_descr  = harris_descr,
+  .init_param = test_xz_init_param,
+  .init_field = harris_init_field,
+  .init_npt   = harris_init_npt,
+};
