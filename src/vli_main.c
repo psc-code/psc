@@ -18,6 +18,11 @@ main(int argc, char **argv)
 
   psc_create("fortran", "fortran", "fortran");
 
+  psc_init_param();
+
+  SET_param_domain();
+  SET_param_psc();
+  SET_param_coeff();
   INIT_basic_F77();
   VLI_main_F77();
 

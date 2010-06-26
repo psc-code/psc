@@ -34,8 +34,8 @@ c The real VLI main
 
 #ifndef USE_C_INTERFACE
       call INIT_basic
-#endif
       call INIT_param
+#endif
       call INIT_param_fortran
       call SERV_systime(cpus)
       include './SERV_consist.F'
