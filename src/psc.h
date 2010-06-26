@@ -248,6 +248,9 @@ void PIC_sort_1();
 void PIC_randomize();
 void PIC_find_cell_indices();
 void OUT_field_1();
+void SET_param_domain();
+void SET_param_psc();
+void SET_param_coeff();
 void INIT_param_domain();
 void INIT_param_psc();
 

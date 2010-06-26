@@ -265,7 +265,7 @@ void SET_param_coeff_F77(f_real *cori, f_real *alpha, f_real *beta, f_real *eta,
 			 f_real *dx, f_real *dt);
 
 void
-get_param_domain()
+GET_param_domain()
 {
   struct psc_domain *p = &psc.domain;
   int imax[3];
@@ -278,7 +278,7 @@ get_param_domain()
 }
 
 void
-set_param_domain()
+SET_param_domain()
 {
   struct psc_domain *p = &psc.domain;
   int imax[3];
@@ -291,7 +291,7 @@ set_param_domain()
 }
 
 void
-get_param_psc()
+GET_param_psc()
 {
   struct psc_param *p = &psc.prm;
   GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
@@ -301,7 +301,7 @@ get_param_psc()
 }
 
 void
-set_param_psc()
+SET_param_psc()
 {
   struct psc_param *p = &psc.prm;
   SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
@@ -311,7 +311,7 @@ set_param_psc()
 }
 
 void
-set_param_coeff()
+SET_param_coeff()
 {
   struct psc_coeff *p = &psc.coeff;
   SET_param_coeff_F77(&p->cori, &p->alpha, &p->beta, &p->eta,
@@ -323,14 +323,14 @@ void
 INIT_param_domain()
 {
   INIT_param_domain_F77();
-  get_param_domain();
+  GET_param_domain();
 }
 
 void
 INIT_param_psc()
 {
   INIT_param_psc_F77();
-  get_param_psc();
+  GET_param_psc();
 }
 
 void
@@ -343,8 +343,7 @@ C_init_param_F77()
   init_param_psc();
   init_param_coeff();
 
-  set_param_domain();
-  set_param_psc();
-  set_param_coeff();
+  SET_param_domain();
+  SET_param_psc();
+  SET_param_coeff();
 }
-
