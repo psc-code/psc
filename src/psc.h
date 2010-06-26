@@ -238,6 +238,8 @@ void PIC_sort_1();
 void PIC_randomize();
 void PIC_find_cell_indices();
 void OUT_field_1();
+void INIT_param_domain();
+void INIT_param_psc();
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

@@ -124,17 +124,83 @@ init_case()
   }
 }
 
+static void
+init_param_domain_default()
+{
+  INIT_param_domain();
+
+#if 0 // if we ever want to throw out Fortran entirely...
+  psc.domain.nghost[0] = 3;
+  psc.domain.nghost[1] = 3;
+  psc.domain.nghost[2] = 3;
+
+  psc.domain.length[0] = 1.  * 1e-6;
+  psc.domain.length[1] = 1.  * 1e-6;
+  psc.domain.length[2] = 20. * 1e-6;
+
+  psc.domain.itot[0] = 10;
+  psc.domain.itot[1] = 10;
+  psc.domain.itot[2] = 400;
+
+  psc.domain.nproc[0] = 1;
+  psc.domain.nproc[1] = 1;
+  psc.domain.nproc[2] = 1;
+
+  psc.domain.ilo[0] = 8;
+  psc.domain.ihi[0] = 9;
+  psc.domain.ilo[1] = 8;
+  psc.domain.ihi[1] = 9;
+  psc.domain.ilo[2] = 0;
+  psc.domain.ihi[2] = 400;
+
+  psc.domain.bnd_fld[0] = 1;
+  psc.domain.bnd_fld[1] = 1;
+  psc.domain.bnd_fld[2] = 1;
+  psc.domain.bnd_part[0] = 1;
+  psc.domain.bnd_part[1] = 1;
+  psc.domain.bnd_part[2] = 1;
+#endif
+}
+
+static void
+init_param_psc_default()
+{
+  INIT_param_psc();
+
+#if 0
+  psc.prm.qq = 1.6021e-19;
+  psc.prm.mm = 9.1091e-31;
+  psc.prm.tt = 1.6021e-16;
+  psc.prm.cc = 3.0e8;
+  psc.prm.eps0 = 8.8542e-12;
+
+  psc.prm.nmax = 0;
+  psc.prm.cpum = 100000.0;
+  psc.prm.lw = 3.2*1.0e-6;
+  psc.prm.i0 = 1.0e21;
+  psc.prm.n0 = 1.0e26;
+  psc.prm.e0 = 0;
+
+  psc.prm.nicell = 200;
+#endif
+}
+
 // ======================================================================
 // Fortran glue
 
 #define C_init_param_domain_F77 F77_FUNC_(c_init_param_domain, C_INIT_PARAM_DOMAIN)
+#define INIT_param_domain_F77   F77_FUNC_(init_param_domain, INIT_PARAM_DOMAIN)
+#define INIT_param_psc_F77      F77_FUNC_(init_param_psc, INIT_PARAM_PSC)
 #define GET_param_domain_F77    F77_FUNC_(get_param_domain, GET_PARAM_DOMAIN)
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
 #define C_init_param_psc_F77    F77_FUNC_(c_init_param_psc, C_INIT_PARAM_PSC)
 #define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
 #define C_init_case_F77         F77_FUNC_(c_init_case, C_INIT_CASE)
+#define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
+void INIT_param_domain_F77(void);
+void INIT_param_psc_F77(void);
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
 			  f_int *nghost);
@@ -193,6 +259,20 @@ set_param_psc()
 }
 
 void
+INIT_param_domain()
+{
+  INIT_param_domain_F77();
+  get_param_domain();
+}
+
+void
+INIT_param_psc()
+{
+  INIT_param_psc_F77();
+  get_param_psc();
+}
+
+void
 C_init_param_domain_F77()
 {
   get_param_domain();
@@ -220,4 +300,12 @@ C_init_case_F77()
   set_param_domain();
 }
 
+void
+C_init_param_F77()
+{
+  init_param_domain_default();
+  init_param_psc_default();
+  set_param_domain();
+  set_param_psc();
+}
 

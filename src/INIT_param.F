@@ -21,12 +21,14 @@ c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
 c PARAMETERS!
 
-      call INIT_param_domain
-      call INIT_param_psc
 #ifdef USE_C_INTERFACE
+      call C_INIT_param
       call C_init_case
       call C_init_param_domain
       call C_init_param_psc
+#else
+      call INIT_param_domain
+      call INIT_param_psc
 #endif
 
 ! PML BOUNDARY CONDITIONS 
