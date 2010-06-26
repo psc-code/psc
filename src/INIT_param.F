@@ -45,30 +45,6 @@ c PARAMETERS!
       call INIT_param_psc
 #endif
 
-! PML BOUNDARY CONDITIONS 
-
-! condition = 'true' : derive pml coefficients 
-! condition = 'false' : do nothing
-! condition = 'time' : derive pml after estimated time
-
-      boundary_pml_x1 = 'false'
-      boundary_pml_x2 = 'false'
-      boundary_pml_y1 = 'false'
-      boundary_pml_y2 = 'false'
-      boundary_pml_z1 = 'false'
-      boundary_pml_z2 = 'false'
-
-! thick: thickness of pml in grid points
-! cushion: thickness of buffer region in gridpoints
-! size: thickness of pml and buffer region in gridpoints
-! pml: polynomial order of pml
-
-      thick = 10
-      cushion = int(thick/3)
-      size = thick+cushion
-      pml = 3
-       
-
 c REQUIRED SETTINGS
 c Please do not change
 
@@ -441,6 +417,29 @@ c boundary_part_z: 0=reflecting, 1=periodic in z
       boundary_part_y=1
       boundary_part_z=1
 
+! PML BOUNDARY CONDITIONS 
+
+! condition = 'true' : derive pml coefficients 
+! condition = 'false' : do nothing
+! condition = 'time' : derive pml after estimated time
+
+      boundary_pml_x1 = 'false'
+      boundary_pml_x2 = 'false'
+      boundary_pml_y1 = 'false'
+      boundary_pml_y2 = 'false'
+      boundary_pml_z1 = 'false'
+      boundary_pml_z2 = 'false'
+
+! thick: thickness of pml in grid points
+! cushion: thickness of buffer region in gridpoints
+! size: thickness of pml and buffer region in gridpoints
+! pml: polynomial order of pml
+
+      thick = 10
+      cushion = int(thick/3)
+      size = thick+cushion
+      pml = 3
+       
       end subroutine INIT_param_domain
 
 c     initialize some parameters
