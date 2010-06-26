@@ -33,13 +33,10 @@ c The real VLI main
       integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
 
 #ifdef USE_C_INTERFACE
-      call SERV_systime(cpus)
 #else
       call INIT_basic
       call INIT_param
       call INIT_param_fortran
-
-      call SERV_systime(cpus)
       include './SERV_consist.F'
 
       ! I don't understand why the partition may calculate different

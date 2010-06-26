@@ -32,7 +32,6 @@ c The real VLA main
       call INIT_basic
       call INIT_param
       call INIT_param_fortran
-      call SERV_systime(cpus)
       include './SERV_consist.F'
 
       call SERV_read

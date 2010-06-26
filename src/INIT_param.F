@@ -20,6 +20,10 @@ c pi: pi
       call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
       call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
+c cpus: WALL CLOCK time at start time
+
+      call SERV_systime(cpus)
+
       end subroutine INIT_basic
 
 c PARAMETER INITIALIZATION 
@@ -311,7 +315,6 @@ c shift_z: shifts the density function in the code
 c cpumess: WALL CLOCK time required for message passing
 c cpuinou: WALL CLOCK time required for I/O
 c cpucomp: WALL CLOCK time required for computation
-c cpus: WALL CLOCK time at start time
 c cpus: WALL CLOCK time at end time
 
 
@@ -322,7 +325,6 @@ c cpus: WALL CLOCK time at end time
       cpumess=0.0
       cpucomp=0.0
       cpuinou=0.0
-      cpus=0.0
       cpuf=0.0
 
 
