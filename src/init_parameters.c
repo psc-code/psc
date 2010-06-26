@@ -232,6 +232,17 @@ init_param_coeff()
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
 }
 
+void
+psc_init_param()
+{
+  init_param_domain_default();
+  init_param_psc_default();
+  init_case();
+  init_param_domain();
+  init_param_psc();
+  init_param_coeff();
+}
+
 // ======================================================================
 // Fortran glue
 
@@ -336,12 +347,7 @@ INIT_param_psc()
 void
 C_init_param_F77()
 {
-  init_param_domain_default();
-  init_param_psc_default();
-  init_case();
-  init_param_domain();
-  init_param_psc();
-  init_param_coeff();
+  psc_init_param();
 
   SET_param_domain();
   SET_param_psc();
