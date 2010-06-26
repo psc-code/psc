@@ -82,6 +82,8 @@ static struct param psc_param_descr[] = {
   { "n0"            , VAR(n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(e0)              , PARAM_DOUBLE(0.)           },
   { "nicell"        , VAR(nicell)          , PARAM_INT(200)             },
+  { "const_num_particles_per_cell"
+                    , VAR(const_num_particles_per_cell), PARAM_BOOL(0)  },
   {},
 };
 

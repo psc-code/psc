@@ -84,6 +84,7 @@ struct psc_param {
   double phi0;
   double a0;
   int nicell;
+  bool const_num_particles_per_cell;
 };
 
 // coefficients needed for computations

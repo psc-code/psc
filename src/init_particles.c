@@ -9,6 +9,15 @@
 
 // simple division into equal sized chunks / direction
 
+static int
+get_n_in_cell(real n)
+{
+  if (psc.prm.const_num_particles_per_cell) {
+    return psc.prm.nicell;
+  }
+  return n / psc.coeff.cori + .5;
+}
+
 void
 init_partition(int *n_part)
 {
@@ -23,14 +32,13 @@ init_partition(int *n_part)
   p[1] = r % psc.domain.nproc[1]; r /= psc.domain.nproc[1];
   p[2] = r;
 
-  int m[3], n[3], n_cells = 1;
+  int m[3], n[3];
   for (int d = 0; d < 3; d++) {
     m[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
     assert(m[d] % psc.domain.nproc[d] == 0);
     n[d] = m[d] / psc.domain.nproc[d];
     psc.ilo[d] = psc.domain.ilo[d] + p[d] * n[d];
     psc.ihi[d] = psc.domain.ilo[d] + (p[d] + 1) * n[d];
-    n_cells *= (psc.ihi[d] - psc.ilo[d]);
   }
 
   MPI_Barrier(comm);
@@ -44,8 +52,24 @@ init_partition(int *n_part)
     MPI_Barrier(comm);
   }
 
-  int part_per_cell = 50;
-  *n_part = 2 * part_per_cell * n_cells;
+  int np = 0;
+  for (int kind = 0; kind < 2; kind++) {
+    for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
+      for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
+	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
+	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
+	  double xx[3] = { jx * dx, jy * dy, jz * dz };
+	  double q, m, n, v[3], T[3];
+
+	  psc.case_ops->init_nvt(kind, xx, &q, &m, &n, v, T);
+	  int n_in_cell = get_n_in_cell(n);
+	  np += n_in_cell;
+	}
+      }
+    }
+  }
+
+  *n_part = np;
 }
 
 void
@@ -61,9 +85,10 @@ init_particles()
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
 	  double q, m, n, v[3], T[3];
-
 	  psc.case_ops->init_nvt(kind, xx, &q, &m, &n, v, T);
-	  for (int cnt = 0; cnt < psc.prm.nicell; cnt++) {
+
+	  int n_in_cell = get_n_in_cell(n);
+	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	    struct f_particle *p = &psc.f_part[i++];
 
 	    // FIXME? this gives same random numbers on all procs
@@ -81,7 +106,7 @@ init_particles()
 	      sqrtf(-2.f*T[1]/m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
 	      + v[1];
 	    float pz =
-	      sqrtf(-2.f*T[2]/m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
+  	      sqrtf(-2.f*T[2]/m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
 	      + v[2];
 	    
 	    p->xi = xx[0];
@@ -93,7 +118,7 @@ init_particles()
 	    p->qni = q;
 	    p->mni = m;
 	    p->lni = -1; // FIXME?
-	    p->wni = n;
+	    p->wni = n / (n_in_cell * psc.coeff.cori);
 	  }
 	}
       }
@@ -150,7 +175,6 @@ C_init_particles_F77()
   if (!psc.case_ops) {
     INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
     GET_niloc_F77(&psc.n_part);
-    printf("psc.n_part %d\n", psc.n_part);
     return;
   }
 
