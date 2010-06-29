@@ -141,7 +141,9 @@ init_case()
     if (psc.case_ops->create) {
       psc.case_ops->create();
     }
-    psc.case_ops->init_param();
+    if (psc.case_ops->init_param) {
+      psc.case_ops->init_param();
+    }
   }
 }
 

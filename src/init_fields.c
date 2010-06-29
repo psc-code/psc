@@ -9,7 +9,9 @@ void
 init_field()
 {
   if (psc.case_ops) {
-    psc.case_ops->init_field();
+    if (psc.case_ops->init_field) {
+      psc.case_ops->init_field();
+    }
   } else {
     INIT_field();
   }
@@ -18,7 +20,7 @@ init_field()
 // ======================================================================
 // Fortran glue
 
-#define C_init_field_F77 F77_FUNC_(c_init_field, C_INIT_FIELD)
+#define C_INIT_field_F77 F77_FUNC_(c_init_field, C_INIT_FIELD)
 #define INIT_field_F77 F77_FUNC_(init_field, INIT_FIELD)
 
 void INIT_field_F77(void);
@@ -30,7 +32,7 @@ INIT_field()
 }
 
 void
-C_init_field_F77()
+C_INIT_field_F77()
 {
   init_field();
 }
