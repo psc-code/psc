@@ -21,6 +21,7 @@ libpsc_a_SOURCES = \
 	ALLOC_particles.F \
 	sort.c \
 	output_hdf5.c \
+	case_langmuir.c \
 	case_harris.c
 
 if USE_SSE2
