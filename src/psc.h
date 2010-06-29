@@ -85,6 +85,7 @@ struct psc_param {
   double a0;
   int nicell;
   bool const_num_particles_per_cell;
+  bool fortran_particle_weight_hack;
 };
 
 // coefficients needed for computations

@@ -82,8 +82,19 @@ static struct param psc_param_descr[] = {
   { "n0"            , VAR(n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(e0)              , PARAM_DOUBLE(0.)           },
   { "nicell"        , VAR(nicell)          , PARAM_INT(200)             },
+  // by default, we put the # of particles per cell according to the
+  // density, using the weights (~ 1) only to fine-tune to the
+  // right density.
+  // if this parameter is set, we always use nicell particles / cell,
+  // and adjust to the right density via the weights.
   { "const_num_particles_per_cell"
                     , VAR(const_num_particles_per_cell), PARAM_BOOL(0)  },
+  // a hack which allows to set the particle weight equal the density,
+  // even though the # of particles was already set according to it.
+  // this is for compatibility testing between Fortran and C initial
+  // conditions, but I believe it's incorrect and should go away, eventually.
+  { "fortran_particle_weight_hack"
+                    , VAR(fortran_particle_weight_hack), PARAM_BOOL(0)  },
   {},
 };
 

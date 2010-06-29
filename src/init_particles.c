@@ -118,7 +118,11 @@ init_particles()
 	    p->qni = q;
 	    p->mni = m;
 	    p->lni = -1; // FIXME?
-	    p->wni = n / (n_in_cell * psc.coeff.cori);
+	    if (psc.prm.fortran_particle_weight_hack) {
+	      p->wni = n;
+	    } else {
+	      p->wni = n / (n_in_cell * psc.coeff.cori);
+	    }
 	  }
 	}
       }
