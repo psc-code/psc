@@ -1,5 +1,11 @@
 
-SUBDIRS = util
+SUBDIRS = util 
+
+if USE_CBE
+# spu build system is still all wonky
+# But what's there will build
+SUBDIRS += cell_be/spu
+endif
 
 bin_PROGRAMS = VLI VLA SELECT
 
@@ -83,6 +89,11 @@ libpsc_a_SOURCES += \
 	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
+if USE_CBE
+libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_yz.c \
+	psc_particles_cbe.c psc_fields_cbe.c
+endif
+
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
 	OUT_param.F OUT_part.F \
@@ -141,3 +152,6 @@ NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCL
 
 endif USE_CUDA
 
+if USE_CBE
+LDADD += -lalf
+endif 

@@ -1,4 +1,4 @@
-
+\
 #include "psc_testing.h"
 
 #include <math.h>
@@ -56,7 +56,7 @@ psc_save_fields_ref()
       field_ref[m] = calloc(psc.fld_size, sizeof(f_real));
     }
   }
-  int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
+  int me = psc.domain.use_pml ? NR_FIELDS : JZI + 1;
   for (int m = 0; m < me; m++) {
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
@@ -149,7 +149,7 @@ psc_check_currents_ref(double thres)
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	  printf("m %d %d,%d,%d\n", m, ix,iy,iz); fflush(stdout);
 	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	  max_delta = fmax(max_delta, 
 			   fabs(F3_BASE(m, ix,iy,iz) - _FF3(field_ref[m], ix,iy,iz)));
@@ -220,7 +220,8 @@ psc_create_test_yz(struct psc_mod_config *conf)
 
   psc_create(conf);
   psc_init("test_yz");
-  psc.pp.n_part = 1;
+
+  //psc.pp.n_part = 1;
   psc_sort();
 }
 

@@ -219,21 +219,22 @@ test_yz_init_param(struct psc_case *Case)
   
   struct harris *harris = Case->ctx;
 
-  psc.prm.nicell = 100;
+  psc.prm.nicell = 1000;
 
   psc.domain.length[0] = 10000000;
   psc.domain.length[1] = harris->lx * sqrt(harris->MMi);
   psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
 
+#define DOM 64
   psc.domain.itot[0] = 1;
-  psc.domain.itot[1] = 64;
-  psc.domain.itot[2] = 64;
+  psc.domain.itot[1] = DOM;
+  psc.domain.itot[2] = DOM;
   psc.domain.ilo[0] = 0;
   psc.domain.ilo[1] = 0;
   psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 1;
-  psc.domain.ihi[1] = 64;
-  psc.domain.ihi[2] = 64;
+  psc.domain.ihi[1] = DOM;
+  psc.domain.ihi[2] = DOM;
   
 }
 

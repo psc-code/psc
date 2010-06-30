@@ -16,10 +16,12 @@
 #define FIELDS_FORTRAN 1
 #define FIELDS_C       2
 #define FIELDS_SSE2    3
+#define FIELDS_CBE     4
 
 #define PARTICLES_FORTRAN 1
 #define PARTICLES_C       2
 #define PARTICLES_SSE2    3
+#define PARTICLES_CBE     4
 
 // FIELDS_BASE and PARTICLES_BASE macros are defined by configure
 // #define FIELDS_BASE FIELDS_FORTRAN
@@ -440,6 +442,7 @@ extern struct psc_ops psc_ops_fortran;
 extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
+extern struct psc_ops psc_ops_cbe; ///< Cell BE optimized code
 extern struct psc_ops psc_ops_none;
 
 extern struct psc_push_field_ops psc_push_field_ops_fortran;
@@ -448,6 +451,9 @@ extern struct psc_push_field_ops psc_push_field_ops_none;
 
 extern struct psc_randomize_ops psc_randomize_ops_fortran;
 extern struct psc_randomize_ops psc_randomize_ops_none;
+
+
+
 
 extern struct psc_sort_ops psc_sort_ops_fortran;
 extern struct psc_sort_ops psc_sort_ops_qsort;
@@ -541,6 +547,7 @@ void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 #define sqr(a) ((a) * (a))
 
 #define HERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
+
 
 // ----------------------------------------------------------------------
 // compiler bits

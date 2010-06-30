@@ -218,7 +218,11 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
 
     //---------------------------------------------
     // Field Interpolation
-    
+#define print_vec( vec ) printf("%.15e %.15e\n", vec.v[0], vec.v[1]);		
+
+
+
+
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
     INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
@@ -227,7 +231,8 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
     INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
     INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
- 
+
+#undef print_vec 
     //---------------------------------------------
     // Advance momenta one full dt
 

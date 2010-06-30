@@ -23,6 +23,9 @@ static struct psc_ops *psc_ops_list[] = {
 #ifdef USE_SSE2
   &psc_ops_sse2,
 #endif
+#ifdef USE_CBE
+  &psc_ops_cbe,
+#endif
   NULL,
 };
 
@@ -695,7 +698,6 @@ psc_write_checkpoint(void)
   fields_fortran_get(&pf, JXI, HZ + 1);
 
   SERV_write(&pp, &pf);
-
   particles_fortran_put(&pp);
   fields_fortran_put(&pf, 0, 0);
 }
