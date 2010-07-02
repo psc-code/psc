@@ -6,24 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// SSE2 needs to have these numbers packed into 
-// vectors to utilize them effectively. 
-pvReal ones, half, threefourths, onepfive, third;
-pvInt ione;
-
-//---------------------------------------------
-// init_vec_numbers -- Fills the global numerical vectors
-// listed above. **must** be called before they are used
-
-static void 
-init_vec_numbers() {		
-  ones.r = pv_set1_real(1.0);			
-  half.r = pv_set1_real(.5);			
-  onepfive.r = pv_set1_real(1.5);		
-  threefourths.r = pv_set1_real(.75);		
-  third.r = pv_set1_real(1./3.);		
-  ione.r = pv_set1_int(1);			
-}
 
 //---------------------------------------------
 // calc_vi - Calculates the velocities from momenta.
@@ -33,7 +15,7 @@ init_vec_numbers() {
 static inline void 
 calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
 	pvReal * restrict vzi, pvReal * restrict root){
-  pvReal tmpx, tmpy, tmpz, roottmp;
+  pvReal tmpx, tmpy, tmpz;
   
   tmpx.r = pv_mul_real(p->pxi.r, p->pxi.r);
   tmpy.r = pv_mul_real(p->pyi.r, p->pyi.r);
@@ -43,11 +25,10 @@ calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
   tmpz.r = pv_add_real(ones.r, tmpz.r);
   tmpx.r = pv_add_real(tmpx.r, tmpz.r);
   root->r = pv_sqrt_real(tmpx.r);
-  roottmp.r = pv_div_real(ones.r, root->r);
                                              
-  vxi->r = pv_mul_real(p->pxi.r, roottmp.r);
-  vyi->r = pv_mul_real(p->pyi.r, roottmp.r);
-  vzi->r = pv_mul_real(p->pzi.r, roottmp.r);
+  vxi->r = pv_div_real(p->pxi.r, root->r);
+  vyi->r = pv_div_real(p->pyi.r, root->r);
+  vzi->r = pv_div_real(p->pzi.r, root->r);
 }
 
 //---------------------------------------------
@@ -385,9 +366,9 @@ sse2_push_part_yz_b()
     sse2_real dyifl = 1.0 / psc.dx[1];					
     sse2_real dzifl = 1.0 / psc.dx[2];					
     sse2_real fnqsfl = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-    sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;			
-    sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;			
-    sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;			
+    sse2_real fnqxsfl = psc.dx[0] * fnqsfl / psc.dt;			
+    sse2_real fnqysfl = psc.dx[1] * fnqsfl / psc.dt;			
+    sse2_real fnqzsfl = psc.dx[2] * fnqsfl / psc.dt;			
     dt.r = pv_set1_real(psc.dt);					     
     eta.r = pv_set1_real(psc.coeff.eta);					
     fnqs.r = pv_set1_real(fnqsfl);
@@ -607,9 +588,9 @@ sse2_push_part_yz()
     sse2_real dyifl = 1.0 / psc.dx[1];					
     sse2_real dzifl = 1.0 / psc.dx[2];					
     sse2_real fnqsfl = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-    sse2_real fnqxsfl = psc.dx[0] * fnqsfl * psc.dt;			
-    sse2_real fnqysfl = psc.dx[1] * fnqsfl * psc.dt;			
-    sse2_real fnqzsfl = psc.dx[2] * fnqsfl * psc.dt;			
+    sse2_real fnqxsfl = psc.dx[0] * fnqsfl / psc.dt;			
+    sse2_real fnqysfl = psc.dx[1] * fnqsfl / psc.dt;			
+    sse2_real fnqzsfl = psc.dx[2] * fnqsfl / psc.dt;			
     dt.r = pv_set1_real(psc.dt);					     
     eta.r = pv_set1_real(psc.coeff.eta);					
     fnqs.r = pv_set1_real(fnqsfl);
@@ -801,61 +782,12 @@ sse2_push_part_yz()
     tmpx.r = pv_mul_real(tmpy.r, tmpx.r);
 
     for(int m = 0; m < VEC_SIZE; m++){
-      psc.p2B += tmpx.v[m]; //What's this for?
+      psc.p2B += tmpx.v[m]; 
     }
     
 
     //---------------------------------------------
-    // update charge densities.
-    // Right now this can be turned on or off
-    // with the macro flag below
-
-#if 1
-    find_index_Iround(&(p.yi), &dyi, &l2, &h2);
-    find_index_Iround(&(p.zi), &dzi, &l3, &h3);
-
-    form_factor_m(&h2, &gmy);
-    form_factor_O(&h2, &gOy);
-    form_factor_l(&h2, &gly);
-
-    form_factor_m(&h3, &gmz);
-    form_factor_O(&h3, &gOz);
-    form_factor_l(&h3, &glz);
-
-    //FIXME: this is, for now, a straight serial translation. I think
-    // there is a more efficient way to do this, but ever since I 
-    // discovered this isn't done every step, I haven't spared
-    // two thoughts for this section. I'll make it better soon.
-
-    for(int m=0; m < VEC_SIZE ; m++){ 
-      sse2_real fnq;
-      // This may or may not work, and may or may not help
-      sse2_real *densp; 
-      if (p.qni.v[m] < 0.0){
-	densp = &(sse2->fields[NE*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
-	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
-      }
-      else if (p.qni.v[m] > 0.0){
-	densp = &(sse2->fields[NI*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
-	fnq = p.qni.v[m] * p.wni.v[m] * fnqs.v[m];
-      }
-      else if (p.qni.v[m] == 0.0){
-	densp = &(sse2->fields[NN*psc.fld_size + 0 - psc.ilo[0] + psc.ibn[0]]);
-	fnq = p.wni.v[m] * fnqs.v[m];
-      }
-#define DEN_FIELD(j,k) *(densp+((j)-psc.ilo[1]+psc.ibn[1])*(psc.img[0]) + ((k) - psc.ilo[2]+psc.ibn[2])*(psc.img[0]*psc.img[1]))
-      	DEN_FIELD(l2.v[m]-1, l3.v[m]-1) += fnq*gmy.v[m]*gmz.v[m];
-	DEN_FIELD(l2.v[m], l3.v[m]-1) += fnq*gOy.v[m]*gmz.v[m];
-	DEN_FIELD(l2.v[m]+1,l3.v[m]-1) += fnq*gly.v[m]*gmz.v[m];
-	DEN_FIELD(l2.v[m]-1, l3.v[m]) += fnq*gmy.v[m]*gOz.v[m];
-	DEN_FIELD(l2.v[m], l3.v[m]) += fnq*gly.v[m]*gOz.v[m];
-	DEN_FIELD(l2.v[m]+1,l3.v[m]) += fnq*gly.v[m]*gOz.v[m];
-	DEN_FIELD(l2.v[m]-1, l3.v[m]+1) += fnq*gmy.v[m]*glz.v[m];
-	DEN_FIELD(l2.v[m], l3.v[m]+1) += fnq*gOy.v[m]*glz.v[m];
-	DEN_FIELD(l2.v[m]+1,l3.v[m]+1) += fnq*gly.v[m]*glz.v[m];      
-    }
-
-#endif 
+    // update charge densities removed. Now done only on outstep.
     
     //---------------------------------------------
     // Charge density form factor at (n+1.5)*dt

@@ -62,7 +62,7 @@ union packed_int{
 // int functions
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
 #define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r )
-#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r )
+#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r ) // FIXME: mullo_epi16 is not the right way to do this
 #define pv_set1_int(number) _mm_set1_epi32( number )
 
 //conversion functions (round or pad)
@@ -264,7 +264,7 @@ union packed_int{
 //Arithmetic
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
 #define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r )
-#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r )
+#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r ) // FIXME: mullo_epi16 is not the right way to do this
 
 // Sets and loads
 #define pv_set1_int(number) _mm_set1_epi32( number )

@@ -85,7 +85,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-3.asc");
   psc_check_particles_ref();
-  // psc_check_currents_ref(); ##Will fail for single precision
+  psc_check_currents_ref(); 
   psc_destroy();
 #endif
 

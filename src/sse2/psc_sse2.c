@@ -3,19 +3,35 @@
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <math.h>
 #include "psc_sse2.h"
 #include "simd_wrap.h"
 
+//---------------------------------------------
+/// Fills the global constant numerical vectors used by sse2. 
+
+/// **Must** be called before they are used
+void 
+init_vec_numbers(void) {		
+  ones.r = pv_set1_real(1.0);			
+  half.r = pv_set1_real(.5);			
+  onepfive.r = pv_set1_real(1.5);		
+  threefourths.r = pv_set1_real(.75);		
+  third.r = pv_set1_real(1./3.);		
+  ione.r = pv_set1_int(1);			
+}
+
 static void
-sse2_create()
+sse2_create(void)
 {
   struct psc_sse2 *sse2 = malloc(sizeof(*sse2));
+  memset(sse2, 0, sizeof(*sse2));
   psc.c_ctx = sse2;
 }
 
 static void
-sse2_destroy()
+sse2_destroy(void)
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
   free(sse2);
@@ -23,14 +39,23 @@ sse2_destroy()
 
 // For now this is all more or less identical to kai's generic_c. 
 static void
-sse2_particles_from_fortran()
+sse2_particles_from_fortran(void)
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
   int pad = 0;
   if((psc.n_part % VEC_SIZE) != 0){
     pad = VEC_SIZE - (psc.n_part % VEC_SIZE);
   }
-  sse2->part = calloc((psc.n_part + pad), sizeof(*sse2->part));
+  
+  if(psc.n_part > sse2->part_allocated) {
+    free(sse2->part); // Is this safe? ie, does free(NULL) do nothing as part of the standard?
+    sse2->part_allocated = psc.n_part * 1.2;
+    if(psc.n_part*0.2 < pad){
+      sse2->part_allocated += pad;
+    }
+    sse2->part = calloc(sse2->part_allocated, sizeof(*sse2->part));
+  }
+
   for (int n = 0; n < psc.n_part; n++) {
     struct f_particle *f_part = &psc.f_part[n];
     struct sse2_particle *part = &sse2->part[n];

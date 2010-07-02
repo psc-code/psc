@@ -2,7 +2,7 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-#define SSE2_DOUBLE 0 // toggle to switch precision 
+#define SSE2_DOUBLE 1 // toggle to switch precision 
 #include "psc.h"
 
 // Kai's macros are much prettier (and a little faster) use them instead
@@ -41,6 +41,7 @@ struct sse2_particle {
 
 struct psc_sse2 {
   struct sse2_particle *part;
+  int part_allocated;
   sse2_real *fields;
 };
 
@@ -56,8 +57,15 @@ struct particle_vec{
   union packed_vector qni, mni, wni;
 };
 
-void sse2_push_part_yz_a();
-void sse2_push_part_yz_b();
-void sse2_push_part_yz();
+void sse2_push_part_yz_a(void);
+void sse2_push_part_yz_b(void);
+void sse2_push_part_yz(void);
+void init_vec_numbers(void);
+
+// SSE2 needs to have these numbers packed into 
+// vectors to utilize them effectively. 
+pvReal ones, half, threefourths, onepfive, third;
+pvInt ione;
+
 
 #endif
