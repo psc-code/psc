@@ -108,6 +108,7 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], struct f_particle *p
 
   if (nei->n_send == nei->send_buf_size) {
     // reallocate a larger buffer, doubling buffer size each time
+    assert(nei->send_buf_size > 0);
     nei->send_buf_size *= 2;
     nei->send_buf = realloc(nei->send_buf, 
 			    nei->send_buf_size * sizeof(*nei->send_buf));
