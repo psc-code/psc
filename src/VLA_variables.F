@@ -302,7 +302,8 @@ c     ======================================================================
      *     i1n_, i2n_, i3n_,
      *     i1x_, i2x_, i3x_,
      *     cori_, alpha_, eta_,
-     *     dt_, dx_, dy_, dz_)
+     *     dt_, dx_, dy_, dz_,
+     *     wl_, wp_, n_)
 c     ======================================================================
 
       use PIC_variables
@@ -313,8 +314,10 @@ c     ======================================================================
       integer :: i1mn_, i2mn_, i3mn_, i1mx_, i2mx_, i3mx_
       integer :: rd1_, rd2_, rd3_
       integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
+      integer :: n_
       real(kind=8) :: cori_, alpha_, eta_
       real(kind=8) :: dt_, dx_, dy_, dz_
+      real(kind=8) :: wl_, wp_
 
       i1mn = i1mn_
       i2mn = i2mn_
@@ -339,6 +342,10 @@ c     ======================================================================
       dx = dx_
       dy = dy_
       dz = dz_
+
+      wl = wl_
+      wp = wp_
+      n = n_
 
       end subroutine PIC_set_variables
 
