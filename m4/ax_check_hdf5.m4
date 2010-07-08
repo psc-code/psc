@@ -19,20 +19,27 @@ AC_DEFUN([AX_CHECK_HDF5],
       AC_CHECK_HEADERS([hdf5.h],
         [],
         [with_hdf5=no]
-      )
+      )]
+   )
 
-      AC_CHECK_LIB(
+   AS_IF(
+     [test "$with_hdf5" != "no"],
+     [AC_CHECK_LIB(
         [hdf5],
         [H5Gcreate2],
         [],
 	[with_hdf5=no]
-      )
-      AC_CHECK_LIB(
+      )]
+   )
+
+   AS_IF(
+     [test "$with_hdf5" != "no"],
+     [AC_CHECK_LIB(
         [hdf5_hl],
         [H5LTmake_dataset_float],
         [],
-	[AC_MSG_FAILURE([cannot link with HDF5 HL])]
-      )
-    ])
-  ])
+	[with_hdf5=no]
+      )]
+   )
+])
 
