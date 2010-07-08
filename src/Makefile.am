@@ -20,9 +20,12 @@ libpsc_a_SOURCES = \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
 	sort.c \
-	output_hdf5.c \
 	case_langmuir.c \
 	case_harris.c
+
+if HAVE_HDF5
+libpsc_a_SOURCES += output_hdf5.c
+endif
 
 if USE_SSE2
 libpsc_a_SOURCES += sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
