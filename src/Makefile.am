@@ -6,6 +6,7 @@ bin_PROGRAMS = VLI VLA SELECT
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
+	PIC_variables.F VLA_variables.F \
 	init_parameters.c init_fields.c init_particles.c \
 	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
@@ -15,7 +16,6 @@ libpsc_a_SOURCES = \
 	PIC_push_part_yz.F \
 	PIC_push_part_z.F \
 	PIC_sort_1.F \
-	PIC_variables.F VLA_variables.F \
 	OUT_field.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
