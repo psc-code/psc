@@ -219,13 +219,22 @@ struct psc {
   bool allocated;
 };
 
+// ----------------------------------------------------------------------
+// psc_config
+
+struct psc_mod_config {
+  const char *mod_particle;
+  const char *mod_field;
+  const char *mod_sort;
+  const char *mod_output;
+};
+
 // we keep this info global for now.
 // FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
 struct psc psc;
 
-void psc_create(const char *mod_particle, const char *mod_field,
-		const char *mod_sort, const char *mod_output);
+void psc_create(struct psc_mod_config *conf);
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
@@ -259,7 +268,7 @@ void psc_check_currents_ref(double thres);
 void psc_check_particles_ref(double thres);
 void psc_check_particles_sorted();
 void psc_create_test_1(const char *ops_name);
-void psc_create_test_xz(const char *ops_name);
+void psc_create_test_xz(struct psc_mod_config *conf);
 
 void psc_push_part_yz();
 void psc_push_part_z();

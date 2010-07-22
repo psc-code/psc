@@ -26,7 +26,9 @@ main(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   params_init(argc, argv);
 
-  psc_create_test_xz("fortran");
+  struct psc_mod_config conf_fortran = {
+  };
+  psc_create_test_xz(&conf_fortran);
   setup_jx();
 
   char fname[100];

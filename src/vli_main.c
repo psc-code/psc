@@ -10,8 +10,9 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   params_init(argc, argv);
 
-  psc_create("fortran", "fortran", "fortran", "fortran");
-
+  struct psc_mod_config conf = {
+  };
+  psc_create(&conf);
   psc_init(NULL);
   psc_integrate();
 

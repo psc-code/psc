@@ -107,16 +107,9 @@ psc_find_output_ops(const char *ops_name)
   abort();
 }
 
-struct psc_cmdline {
-  const char *mod_particle;
-  const char *mod_field;
-  const char *mod_sort;
-  const char *mod_output;
-};
+#define VAR(x) (void *)offsetof(struct psc_mod_config, x)
 
-#define VAR(x) (void *)offsetof(struct psc_cmdline, x)
-
-static struct param psc_cmdline_descr[] = {
+static struct param psc_mod_config_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
   { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
@@ -126,37 +119,37 @@ static struct param psc_cmdline_descr[] = {
 
 #undef VAR
 
-
 void
-psc_create(const char *mod_particle, const char *mod_field,
-	   const char *mod_sort, const char *mod_output)
+psc_create(struct psc_mod_config *conf)
 {
-  // set default to what we've got passed
-  struct psc_cmdline par = {
-    .mod_particle = mod_particle,
-    .mod_field    = mod_field,
-    .mod_sort     = mod_sort,
-    .mod_output   = mod_output,
-  };
+  // defaults
+  if (!conf->mod_particle)
+    conf->mod_particle = "fortran";
+  if (!conf->mod_field)
+    conf->mod_field = "fortran";
+  if (!conf->mod_sort)
+    conf->mod_sort = "fortran";
+  if (!conf->mod_output)
+    conf->mod_output = "fortran";
 
-  params_parse_cmdline_nodefault(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
-  params_print(&par, psc_cmdline_descr, "PSC", MPI_COMM_WORLD);
+  params_parse_cmdline_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
   memset(&psc, 0, sizeof(psc));
 
-  psc.ops = psc_find_ops(par.mod_particle);
+  psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
   }
-  psc.push_field_ops = psc_find_push_field_ops(par.mod_field);
+  psc.push_field_ops = psc_find_push_field_ops(conf->mod_field);
   if (psc.push_field_ops->create) {
     psc.push_field_ops->create();
   }
-  psc.sort_ops = psc_find_sort_ops(par.mod_sort);
+  psc.sort_ops = psc_find_sort_ops(conf->mod_sort);
   if (psc.sort_ops->create) {
     psc.sort_ops->create();
   }
-  psc.output_ops = psc_find_output_ops(par.mod_output);
+  psc.output_ops = psc_find_output_ops(conf->mod_output);
   if (psc.output_ops->create) {
     psc.output_ops->create();
   }
@@ -652,7 +645,10 @@ psc_create_test_1(const char *ops_name)
 
   int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]);
 
-  psc_create(ops_name, "fortran", "fortran", "fortran");
+  struct psc_mod_config conf = {
+    .mod_particle = ops_name,
+  };
+  psc_create(&conf);
   psc_alloc(ilo, ihi, ibn, n_part);
   psc_setup_parameters();
   psc_setup_fields_1();
@@ -663,12 +659,12 @@ psc_create_test_1(const char *ops_name)
 // psc_create_test_xz
 
 void
-psc_create_test_xz(const char *ops_name)
+psc_create_test_xz(struct psc_mod_config *conf)
 {
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  psc_create(ops_name, "fortran", "fortran", "fortran");
+  psc_create(conf);
   psc_init("test_xz");
 }
 
