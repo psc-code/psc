@@ -508,6 +508,39 @@ psc_p_pulse_z1(real x, real y, real z, real t)
   return psc_pulse_field(psc.pulse_p_z1, x, y, z, t);
 }
 
+// psc_init
+
+#define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
+#define INIT_param_fortran_F77 F77_FUNC_(init_param_fortran, INIT_PARAM_FORTRAN)
+
+void INIT_basic_F77(void);
+void INIT_param_fortran_F77(void);
+
+void
+psc_init(const char *case_name)
+{
+  psc_init_param(case_name);
+
+  SET_param_domain();
+  SET_param_psc();
+  SET_param_coeff();
+  INIT_basic_F77();
+  INIT_param_fortran_F77();
+
+  int n_part;
+  psc_init_partition(&n_part);
+  SET_subdomain();
+
+  psc.f_part = ALLOC_particles(n_part);
+  psc_init_particles();
+
+  f_real **fields = ALLOC_field();
+  for (int n = 0; n < NR_FIELDS; n++) {
+    psc.f_fields[n] = fields[n];
+  }
+  psc_init_field();
+}
+
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];
 // ----------------------------------------------------------------------

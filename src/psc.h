@@ -229,6 +229,7 @@ void psc_create(const char *mod_particle, const char *mod_field,
 void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
+void psc_init(const char *case_name);
 void psc_init_param(const char *case_name);
 void psc_init_partition(int *n_part);
 void psc_init_particles();

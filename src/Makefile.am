@@ -30,11 +30,10 @@ libpsc_a_SOURCES = \
 	PIC_msa.F PIC_msb.F \
 	PIC_sort_1.F \
 	OUT_field.F OUT_part.F \
-	INIT_param.F \
 	CALC_moments.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F ALLOC_field.F \
-	INIT_param.F \
+	INIT_param.F INIT_field.F \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
@@ -64,7 +63,6 @@ endif
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F \
 	SERV_write.F \
 	OUT_param.F OUT_part.F OUT_poyc.F \
 	OUT_count.F OUT_energy.F \
@@ -77,7 +75,6 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F \
 	SERV_write.F SERV_read.F \
 	OUT_param.F OUT_poyc.F \
 	OUT_count.F OUT_energy.F \
