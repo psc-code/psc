@@ -328,6 +328,7 @@ struct f_particle *ALLOC_particles(int n_part);
 f_real **ALLOC_field();
 void FREE_particles(void);
 void FREE_field(void);
+void INIT_basic(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 void PIC_fax(int m);

@@ -511,10 +511,8 @@ psc_p_pulse_z1(real x, real y, real z, real t)
 
 // psc_init
 
-#define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 #define INIT_param_fortran_F77 F77_FUNC_(init_param_fortran, INIT_PARAM_FORTRAN)
 
-void INIT_basic_F77(void);
 void INIT_param_fortran_F77(void);
 
 void
@@ -525,7 +523,7 @@ psc_init(const char *case_name)
   SET_param_domain();
   SET_param_psc();
   SET_param_coeff();
-  INIT_basic_F77();
+  INIT_basic();
   INIT_param_fortran_F77();
 
   int n_part;

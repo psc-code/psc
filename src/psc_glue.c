@@ -25,10 +25,6 @@
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 #define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
-#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
-#define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
-#define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
-#define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 #define FREE_particles_F77 F77_FUNC_(free_particles, FREE_PARTICLES)
 #define FREE_field_F77 F77_FUNC_(free_field, FREE_FIELD)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
@@ -40,6 +36,11 @@
 #define PIC_pex_F77 F77_FUNC(pic_pex, PIC_PEX)
 #define PIC_pey_F77 F77_FUNC(pic_pey, PIC_PEY)
 #define PIC_pez_F77 F77_FUNC(pic_pez, PIC_PEZ)
+#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
+#define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
+#define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
+#define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
+#define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
@@ -117,10 +118,6 @@ void SET_niloc_F77(f_int *niloc);
 void GET_niloc_F77(f_int *niloc);
 void ALLOC_particles_F77(f_int *n_part);
 void ALLOC_field_F77(void);
-void PIC_msa_F77(void);
-void PIC_msb_F77(void);
-void PIC_pml_msa_F77(void);
-void PIC_pml_msb_F77(void);
 void FREE_particles_F77(void);
 void FREE_field_F77(void);
 
@@ -133,7 +130,11 @@ void PIC_fez_F77(f_real *f);
 void PIC_pex_F77(void);
 void PIC_pey_F77(void);
 void PIC_pez_F77(void);
-
+void PIC_msa_F77(void);
+void PIC_msb_F77(void);
+void PIC_pml_msa_F77(void);
+void PIC_pml_msb_F77(void);
+void INIT_basic_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
@@ -323,26 +324,6 @@ GET_subdomain()
 }
 
 void
-PIC_msa()
-{
-#ifdef USE_PML
-  PIC_pml_msa_F77();
-#else
-  PIC_msa_F77();
-#endif
-}
-
-void
-PIC_msb()
-{
-#ifdef USE_PML
-  PIC_pml_msb_F77(); 
-#else
-  PIC_msb_F77(); 
-#endif
-}
-
-void
 SET_niloc(int niloc)
 {
   SET_niloc_F77(&niloc);
@@ -352,6 +333,12 @@ void
 GET_niloc(int *p_niloc)
 {
   GET_niloc_F77(p_niloc);
+}
+
+void
+INIT_basic()
+{
+  INIT_basic_F77();
 }
 
 void
@@ -412,6 +399,26 @@ PIC_pez()
   SET_niloc(psc.n_part);
   PIC_pez_F77();
   GET_niloc(&psc.n_part);
+}
+
+void
+PIC_msa()
+{
+#ifdef USE_PML
+  PIC_pml_msa_F77();
+#else
+  PIC_msa_F77();
+#endif
+}
+
+void
+PIC_msb()
+{
+#ifdef USE_PML
+  PIC_pml_msb_F77(); 
+#else
+  PIC_msb_F77(); 
+#endif
 }
 
 // ----------------------------------------------------------------------
