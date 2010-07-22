@@ -18,7 +18,7 @@ main(int argc, char **argv)
 
   psc_create("fortran", "fortran", "fortran", "fortran");
 
-  psc_init_param();
+  psc_init_param(NULL);
 
   SET_param_domain();
   SET_param_psc();

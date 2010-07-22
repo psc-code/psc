@@ -205,7 +205,7 @@ psc_case_destroy(struct psc_case *Case)
 }
 
 struct par_case {
-  char *case_name;
+  const char *case_name;
 };
 
 #define VAR(x) (void *)offsetof(struct par_case, x)
@@ -218,10 +218,11 @@ static struct param par_case_descr[] = {
 #undef VAR
 
 void
-init_case()
+init_case(const char *case_name)
 {
   struct par_case par;
-  params_parse_cmdline(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
+  par.case_name = case_name;
+  params_parse_cmdline_nodefault(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
   params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
 
   if (par.case_name) {
@@ -339,11 +340,11 @@ init_param_coeff()
 }
 
 void
-psc_init_param()
+psc_init_param(const char *case_name)
 {
   init_param_domain_default();
   init_param_psc_default();
-  init_case();
+  init_case(case_name);
   init_param_domain();
   init_param_psc();
   init_param_coeff();
@@ -453,7 +454,7 @@ INIT_param_psc()
 void
 C_init_param_F77()
 {
-  psc_init_param();
+  psc_init_param(NULL);
 
   SET_param_domain();
   SET_param_psc();
