@@ -94,9 +94,17 @@ psc_init_partition(int *n_part)
   *n_part = np;
 }
 
+void INIT_idistr();
+
 void
-init_particles()
+psc_init_particles()
 {
+  if (!psc.Case) {
+    INIT_idistr();
+    GET_niloc(&psc.n_part);
+    return;
+  }
+
   double beta = psc.coeff.beta;
   int i = 0;
 
@@ -159,7 +167,6 @@ init_particles()
 // ======================================================================
 // Fortran glue
 
-#define C_init_particles_F77 F77_FUNC_(c_init_particles, C_INIT_PARTICLES)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
 #define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
@@ -214,13 +221,13 @@ INIT_partition(int *n_part)
 }
 
 void
+INIT_idistr(void)
+{
+  INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
+}
+
+void
 C_init_particles_F77()
 {
-  if (!psc.Case) {
-    INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
-    GET_niloc_F77(&psc.n_part);
-    return;
-  }
-
-  init_particles();
+  psc_init_particles();
 }

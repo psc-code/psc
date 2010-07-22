@@ -32,6 +32,7 @@ main(int argc, char **argv)
   psc_init_partition(&n_part);
   SET_subdomain();
   psc.f_part = ALLOC_particles(n_part);
+  psc_init_particles();
 
   VLI_main_F77();
 

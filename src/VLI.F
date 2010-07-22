@@ -34,15 +34,6 @@ c The real VLI main
 
 #ifdef USE_C_INTERFACE
       call SERV_systime(cpus)
-
-      call C_init_vars(dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
-     &     i1n, i2n, i3n, i1x, i2x, i3x,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
-     &     cori, alpha, beta, eta, wl, wp,
-     &     n,
-     &     99)
-      call C_init_particles
 #else
       call INIT_basic
       call INIT_param

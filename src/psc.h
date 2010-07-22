@@ -221,6 +221,7 @@ void psc_destroy();
 
 void psc_init_param();
 void psc_init_partition(int *n_part);
+void psc_init_particles();
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_1();
@@ -279,6 +280,7 @@ void SET_param_psc();
 void SET_param_coeff();
 void SET_subdomain();
 void GET_param_domain();
+void GET_niloc(int *niloc);
 void INIT_param_domain();
 void INIT_param_psc();
 void INIT_grid_map();

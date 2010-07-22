@@ -13,6 +13,7 @@
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
+#define GET_niloc_F77 F77_FUNC(get_niloc,GET_NILOC)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 
@@ -68,6 +69,7 @@ void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
 void OUT_field_1_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
+void GET_niloc_F77(f_int *n_part);
 void INIT_grid_map_F77(void);
 void ALLOC_particles_F77(f_int *n_part);
 
@@ -165,6 +167,12 @@ void
 SET_param_pml()
 {
   SET_param_pml_F77(&psc.pml.thick, &psc.pml.cushion, &psc.pml.size, &psc.pml.order);
+}
+
+void
+GET_niloc(int *n_part)
+{
+  GET_niloc_F77(n_part);
 }
 
 void
