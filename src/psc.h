@@ -86,6 +86,7 @@ struct psc_param {
   int nicell;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
+  bool adjust_dt_to_cycles;
 };
 
 // coefficients needed for computations
@@ -102,6 +103,8 @@ struct psc_coeff {
   double vos;
   double vt;
   double wp;
+  int np; // # steps for time-averaging fields
+  int nnp; // # steps per laser cycle
 };
 
 struct psc_domain {

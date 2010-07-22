@@ -180,7 +180,7 @@ c np:  number of timesteps for time-averaging
       dz=lengthz/(i3tot)/ld
 
       dt=0.75*sqrt(1.0/(1.0/dx**2+1.0/dy**2+1.0/dz**2))
-#endif
+
 c     adjust to match laser cycles
       nnp=int(2.0*pi/dt)+1
       dt=2.0*pi/nnp
@@ -188,6 +188,7 @@ c     adjust to match laser cycles
       if (nmax == 0) then
          nmax=30*nnp
       endif
+#endif
 
       end subroutine INIT_param
 
@@ -655,7 +656,7 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to set these coefficients
 
       subroutine SET_param_coeff(cori_, alpha_, beta_, eta_,
-     *     wl_, ld_, vos_, vt_, wp_, dx_, dt_)
+     *     wl_, ld_, vos_, vt_, wp_, dx_, dt_, np_, nnp_)
 
       use VLA_variables
       use PIC_variables
@@ -665,6 +666,7 @@ c     wrapper for C to be able to set these coefficients
       real(kind=8) :: cori_, alpha_, beta_, eta_
       real(kind=8) :: wl_, ld_, vos_, vt_, wp_, dt_
       real(kind=8) :: dx_(3)
+      integer :: np_, nnp_
 
       cori = cori_
       alpha = alpha_
@@ -680,5 +682,8 @@ c     wrapper for C to be able to set these coefficients
       dy = dx_(2)
       dz = dx_(3)
       dt = dt_
+
+      np = np_
+      nnp = nnp_
 
       end subroutine SET_param_coeff

@@ -95,6 +95,11 @@ static struct param psc_param_descr[] = {
   // conditions, but I believe it's incorrect and should go away, eventually.
   { "fortran_particle_weight_hack"
                     , VAR(fortran_particle_weight_hack), PARAM_BOOL(0)  },
+  // yet another hackish thing for compatibility
+  // adjust dt so that the laser period is an integer multiple of dt
+  // only useful when actually doing lasers.
+  { "adjust_dt_to_cycles"
+                    , VAR(adjust_dt_to_cycles), PARAM_BOOL(0)  },
   {},
 };
 
@@ -246,6 +251,18 @@ init_param_coeff()
     psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.itot[d];
   }
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
+
+  // adjust to match laser cycles FIXME, this isn't a good place,
+  // and hardcoded params (2, 30.)
+  psc.coeff.nnp = ceil(2.*M_PI / psc.dt);
+  if (psc.prm.adjust_dt_to_cycles) {
+    psc.dt = 2.*M_PI / psc.coeff.nnp;
+  }
+  psc.coeff.np = 2 * psc.coeff.nnp;
+  if (psc.prm.nmax == 0) {
+    psc.prm.nmax = 30. * psc.coeff.nnp;
+  }
+
 }
 
 void
@@ -289,7 +306,7 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_real *a0, f_int *nicell);
 void SET_param_coeff_F77(f_real *cori, f_real *alpha, f_real *beta, f_real *eta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
-			 f_real *dx, f_real *dt);
+			 f_real *dx, f_real *dt, f_int *np, f_int *nnp);
 
 void
 GET_param_domain()
@@ -343,7 +360,7 @@ SET_param_coeff()
   struct psc_coeff *p = &psc.coeff;
   SET_param_coeff_F77(&p->cori, &p->alpha, &p->beta, &p->eta,
 		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
-		      psc.dx, &psc.dt);
+		      psc.dx, &psc.dt, &p->np, &p->nnp);
 }
 
 void
