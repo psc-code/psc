@@ -25,7 +25,7 @@ find_output_format_ops(const char *ops_name)
   abort();
 }
 
-struct psc_output_binary {
+struct psc_output_c {
   char *data_dir;
   char *output_format;
   bool dowrite_pfield, dowrite_tfield;
@@ -39,7 +39,7 @@ struct psc_output_binary {
   struct psc_output_format_ops *format_ops;
 };
 
-#define VAR(x) (void *)offsetof(struct psc_output_binary, x)
+#define VAR(x) (void *)offsetof(struct psc_output_c, x)
 
 static struct param psc_binary_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
@@ -76,11 +76,11 @@ static struct param psc_binary_descr[] = {
 
 #undef VAR
 
-static struct psc_output_binary psc_output_binary;
+static struct psc_output_c psc_output_c;
 
-static void output_binary_create(void)
+static void output_c_create(void)
 { 
-  struct psc_output_binary *out = &psc_output_binary;
+  struct psc_output_c *out = &psc_output_c;
   params_parse_cmdline(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
   params_print(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
 
@@ -136,13 +136,13 @@ binary_field_output_aux(struct psc_extra_fields *f, const char *fnamehead)
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
  
-  fwrite(psc_output_binary.dowrite_fd, sizeof(bool), 
+  fwrite(psc_output_c.dowrite_fd, sizeof(bool), 
            NR_EXTRA_FIELDS, file);
 
   fwrite(datastr, sizeof(char), 4, file);
   
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    if ( psc_output_binary.dowrite_fd[m] ) {
+    if ( psc_output_c.dowrite_fd[m] ) {
       fwrite(f->all[m], sizeof(float), f->size, file);
     }
   }
@@ -156,10 +156,10 @@ struct psc_output_format_ops psc_output_format_ops_binary = {
 };
 
 static void
-output_binary_field()
+output_c_field()
 {
-  struct psc_extra_fields *pfd = &psc_output_binary.pfd;
-  struct psc_extra_fields *tfd = &psc_output_binary.tfd;
+  struct psc_extra_fields *pfd = &psc_output_c.pfd;
+  struct psc_extra_fields *tfd = &psc_output_c.tfd;
   if (!pfd->all[0]) {
     init_output_fields(pfd);
     init_output_fields(tfd);
@@ -173,19 +173,19 @@ output_binary_field()
 
   calculate_pfields(pfd);
 
-  if (psc_output_binary.dowrite_pfield) {
-    if (psc.timestep >= psc_output_binary.pfield_next) {
-       psc_output_binary.pfield_next += psc_output_binary.pfield_step;
-       psc_output_binary.format_ops->write_fields(pfd, "pfd");
+  if (psc_output_c.dowrite_pfield) {
+    if (psc.timestep >= psc_output_c.pfield_next) {
+       psc_output_c.pfield_next += psc_output_c.pfield_step;
+       psc_output_c.format_ops->write_fields(pfd, "pfd");
     }
   }
 
-  if (psc_output_binary.dowrite_tfield) {
+  if (psc_output_c.dowrite_tfield) {
     accumulate_tfields(pfd, tfd);
-    if (psc.timestep >= psc_output_binary.tfield_next) {
-       psc_output_binary.tfield_next += psc_output_binary.tfield_step;
+    if (psc.timestep >= psc_output_c.tfield_next) {
+       psc_output_c.tfield_next += psc_output_c.tfield_step;
        mean_tfields(tfd);
-       psc_output_binary.format_ops->write_fields(tfd, "tfd");
+       psc_output_c.format_ops->write_fields(tfd, "tfd");
        reset_fields(tfd);
     }
   }
@@ -193,9 +193,9 @@ output_binary_field()
   prof_stop(pr);
 }
 
-struct psc_output_ops psc_output_ops_binary = {
-  .name           = "binary",
-  .create         = output_binary_create,
-  .out_field      = output_binary_field,
+struct psc_output_ops psc_output_ops_c = {
+  .name           = "c",
+  .create         = output_c_create,
+  .out_field      = output_c_field,
 };
 
