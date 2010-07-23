@@ -151,7 +151,7 @@ struct psc_output_ops psc_output_ops_hdf5 = {
 #include "output_fields.h"
 
 static void
-hdf5_write_fields(struct psc_extra_fields *f, bool *dowrite_fd,
+hdf5_write_fields(struct psc_fields_list *list, bool *dowrite_fd,
 		  const char *prefix)
 {
   int rank;
@@ -176,13 +176,13 @@ hdf5_write_fields(struct psc_extra_fields *f, bool *dowrite_fd,
 		      psc.ihi[1] - psc.ilo[1],
 		      psc.ihi[0] - psc.ilo[0] };
 
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+  for (int m = 0; m < list->nr_flds; m++) {
     if (!dowrite_fd[m])
       continue;
 
     char name[10];
     sprintf(name, "fld%d", m);
-    H5LTmake_dataset_float(group_fld, name, 3, dims, f->all[m]);
+    H5LTmake_dataset_float(group_fld, name, 3, dims, list->flds[m]);
   }
 
   H5Gclose(group_fld);

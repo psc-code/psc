@@ -21,11 +21,19 @@ struct psc_extra_fields {
   float *all[NR_EXTRA_FIELDS];
 };
 
+#define MAX_FIELDS_LIST NR_EXTRA_FIELDS
+
+struct psc_fields_list {
+  int nr_flds;
+  float *flds[MAX_FIELDS_LIST];
+  int size;
+};
+
 struct psc_output_format_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_extra_fields *flds, bool *dowrite_fd,
+  void (*write_fields)(struct psc_fields_list *flds, bool *dowrite_fd,
 		       const char *prefix);
 };
 

@@ -212,6 +212,19 @@ static void output_c_create(void)
 };
 
 // ----------------------------------------------------------------------
+// make_fields_list
+
+static void
+make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f)
+{
+  list->nr_flds = 0;
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    list->flds[list->nr_flds++] = f->all[m];
+  }
+  list->size = f->size;
+}
+
+// ----------------------------------------------------------------------
 // output_c_field
 
 static void
@@ -235,7 +248,9 @@ output_c_field()
   if (out->dowrite_pfield) {
     if (psc.timestep >= out->pfield_next) {
        out->pfield_next += out->pfield_step;
-       out->format_ops->write_fields(&out->pfd, out->dowrite_fd, "pfd");
+       struct psc_fields_list flds_list;
+       make_fields_list(&flds_list, &out->pfd);
+       out->format_ops->write_fields(&flds_list, out->dowrite_fd, "pfd");
     }
   }
 
@@ -244,7 +259,9 @@ output_c_field()
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
       mean_tfields(&out->tfd);
-      out->format_ops->write_fields(&out->tfd, out->dowrite_fd, "tfd");
+      struct psc_fields_list flds_list;
+      make_fields_list(&flds_list, &out->tfd);
+      out->format_ops->write_fields(&flds_list, out->dowrite_fd, "tfd");
       reset_fields(&out->tfd);
     }
   }
