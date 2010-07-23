@@ -7,7 +7,19 @@
 #include <string.h>
 #include <assert.h>
 
-void
+static void
+reset_fields(struct psc_extra_fields *f)
+{
+  f->naccum = 0;
+
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    for (int j = 0; j < f->size; j++)  {
+      f->all[m][j] = 0.0;
+    }
+  }
+}
+
+static void
 init_output_fields(struct psc_extra_fields *f)
 {
   f->size = ((psc.ihi[0]-psc.ilo[0]) *
@@ -21,14 +33,16 @@ init_output_fields(struct psc_extra_fields *f)
   reset_fields(f);
 }
 
-void
+#if 0 // unused
+static void
 free_output_fields(struct psc_extra_fields *f)
 {
   for (int m = 0; m < NR_EXTRA_FIELDS ; m++)
     free(f->all[m]);
 }
+#endif
 
-void
+static void
 calculate_pfields(struct psc_extra_fields *p)
 {
    int j = 0;
@@ -83,7 +97,7 @@ calculate_pfields(struct psc_extra_fields *p)
     }
 }
 
-void
+static void
 accumulate_tfields(struct psc_extra_fields *p, struct psc_extra_fields *t)
 {
   t->naccum = t->naccum + 1;
@@ -97,21 +111,9 @@ accumulate_tfields(struct psc_extra_fields *p, struct psc_extra_fields *t)
 }
 
 
-void
-reset_fields(struct psc_extra_fields *f)
-{
-  f->naccum = 0;
-
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < f->size; j++)  {
-      f->all[m][j] = 0.0;
-    }
-  }
-}
-
 // convert accumulated values to correct temporal mean
 // (divide by naccum)
-void
+static void
 mean_tfields(struct psc_extra_fields *f)
 {
   assert(f->naccum > 0);
