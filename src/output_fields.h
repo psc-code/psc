@@ -36,7 +36,10 @@ struct psc_output_format_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_extra_fields *flds, const char *prefix);
+  void (*write_fields)(struct psc_extra_fields *flds, bool *dowrite_fd,
+		       const char *prefix);
 };
+
+extern struct psc_output_format_ops psc_output_format_ops_binary;
 
 #endif

@@ -1,7 +1,10 @@
 #include "psc.h"
 #include "output_fields.h"
+#include "util/params.h"
+#include "util/profile.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 void
@@ -118,3 +121,137 @@ mean_tfields(struct psc_extra_fields *f)
     }
   }
 }
+
+static struct psc_output_format_ops *psc_output_format_ops_list[] = {
+  &psc_output_format_ops_binary,
+  NULL,
+};
+
+static struct psc_output_format_ops *
+find_output_format_ops(const char *ops_name)
+{
+  for (int i = 0; psc_output_format_ops_list[i]; i++) {
+    if (strcasecmp(psc_output_format_ops_list[i]->name, ops_name) == 0)
+      return psc_output_format_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_output_format_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
+struct psc_output_c {
+  char *data_dir;
+  char *output_format;
+  bool dowrite_pfield, dowrite_tfield;
+  int pfield_next, tfield_next;
+  int pfield_step, tfield_step;
+  bool dowrite_fd[NR_EXTRA_FIELDS];
+
+  // storage for output
+  struct psc_extra_fields pfd, tfd;
+
+  struct psc_output_format_ops *format_ops;
+};
+
+#define VAR(x) (void *)offsetof(struct psc_output_c, x)
+
+static struct param psc_binary_descr[] = {
+  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
+  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
+  { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
+  { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
+  { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
+  { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
+  { "tfield_first"       , VAR(tfield_next)          , PARAM_INT(0)         },
+  { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
+  { "output_write_ex"    , VAR(dowrite_fd[X_EX])     , PARAM_BOOL(1)        },
+  { "output_write_ey"    , VAR(dowrite_fd[X_EY])     , PARAM_BOOL(1)        },
+  { "output_write_ez"    , VAR(dowrite_fd[X_EZ])     , PARAM_BOOL(1)        },
+  { "output_write_bx"    , VAR(dowrite_fd[X_BX])     , PARAM_BOOL(1)        },
+  { "output_write_by"    , VAR(dowrite_fd[X_BY])     , PARAM_BOOL(1)        },
+  { "output_write_bz"    , VAR(dowrite_fd[X_BZ])     , PARAM_BOOL(1)        },
+  { "output_write_jx"    , VAR(dowrite_fd[X_JXI])    , PARAM_BOOL(1)        },
+  { "output_write_jy"    , VAR(dowrite_fd[X_JYI])    , PARAM_BOOL(1)        },
+  { "output_write_jz"    , VAR(dowrite_fd[X_JZI])    , PARAM_BOOL(1)        },
+  { "output_write_jxex"  , VAR(dowrite_fd[X_JXEX])   , PARAM_BOOL(1)        },
+  { "output_write_jyey"  , VAR(dowrite_fd[X_JYEY])   , PARAM_BOOL(1)        },
+  { "output_write_jzez"  , VAR(dowrite_fd[X_JZEZ])   , PARAM_BOOL(1)        },
+  { "output_write_poyx"  , VAR(dowrite_fd[X_POYX])   , PARAM_BOOL(1)        },
+  { "output_write_poyy"  , VAR(dowrite_fd[X_POYY])   , PARAM_BOOL(1)        },
+  { "output_write_poyz"  , VAR(dowrite_fd[X_POYZ])   , PARAM_BOOL(1)        },
+  { "output_write_e2x"   , VAR(dowrite_fd[X_E2X])    , PARAM_BOOL(1)        },
+  { "output_write_e2y"   , VAR(dowrite_fd[X_E2Y])    , PARAM_BOOL(1)        },
+  { "output_write_e2z"   , VAR(dowrite_fd[X_E2Z])    , PARAM_BOOL(1)        },
+  { "output_write_b2x"   , VAR(dowrite_fd[X_B2X])    , PARAM_BOOL(1)        },
+  { "output_write_b2y"   , VAR(dowrite_fd[X_B2Y])    , PARAM_BOOL(1)        },
+  { "output_write_b2z"   , VAR(dowrite_fd[X_B2Z])    , PARAM_BOOL(1)        },
+  {},
+};
+
+#undef VAR
+
+static struct psc_output_c psc_output_c;
+
+// ----------------------------------------------------------------------
+// output_c_create
+
+static void output_c_create(void)
+{ 
+  struct psc_output_c *out = &psc_output_c;
+  params_parse_cmdline(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+  params_print(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+
+  out->format_ops = find_output_format_ops(out->output_format);
+  if (out->format_ops->create) {
+    out->format_ops->create();
+  }
+};
+
+// ----------------------------------------------------------------------
+// output_c_field
+
+static void
+output_c_field()
+{
+  struct psc_extra_fields *pfd = &psc_output_c.pfd;
+  struct psc_extra_fields *tfd = &psc_output_c.tfd;
+  if (!pfd->all[0]) {
+    init_output_fields(pfd);
+    init_output_fields(tfd);
+  }
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("binary_out_field", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  calculate_pfields(pfd);
+
+  if (psc_output_c.dowrite_pfield) {
+    if (psc.timestep >= psc_output_c.pfield_next) {
+       psc_output_c.pfield_next += psc_output_c.pfield_step;
+       psc_output_c.format_ops->write_fields(pfd, psc_output_c.dowrite_fd, "pfd");
+    }
+  }
+
+  if (psc_output_c.dowrite_tfield) {
+    accumulate_tfields(pfd, tfd);
+    if (psc.timestep >= psc_output_c.tfield_next) {
+       psc_output_c.tfield_next += psc_output_c.tfield_step;
+       mean_tfields(tfd);
+       psc_output_c.format_ops->write_fields(tfd, psc_output_c.dowrite_fd, "tfd");
+       reset_fields(tfd);
+    }
+  }
+  
+  prof_stop(pr);
+}
+
+// ======================================================================
+// psc_output_ops_c
+
+struct psc_output_ops psc_output_ops_c = {
+  .name           = "c",
+  .create         = output_c_create,
+  .out_field      = output_c_field,
+};
