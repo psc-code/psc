@@ -147,3 +147,51 @@ struct psc_output_ops psc_output_ops_hdf5 = {
   .create    = hdf5_out_create,
   .out_field = hdf5_out_field,
 };
+
+#include "output_fields.h"
+
+static void
+hdf5_write_fields(struct psc_extra_fields *f, bool *dowrite_fd,
+		  const char *prefix)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  char filename[200]; // FIXME
+  sprintf(filename, "data/%s_%06d_%07d.h5", prefix, rank, psc.timestep);
+
+  hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5LTset_attribute_int(group, ".", "timestep", &psc.timestep, 1);
+  H5LTset_attribute_double(group, ".", "dt", &psc.dt, 1);
+  H5LTset_attribute_double(group, ".", "dx", psc.dx, 3);
+  H5LTset_attribute_int(group, ".", "lo", psc.glo, 3);
+  H5LTset_attribute_int(group, ".", "hi", psc.ghi, 3);
+  H5LTset_attribute_int(group, ".", "ilo", psc.ilo, 3);
+  H5LTset_attribute_int(group, ".", "ihi", psc.ihi, 3);
+  
+  hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  hsize_t dims[3] = { psc.ihi[2] - psc.ilo[2],
+		      psc.ihi[1] - psc.ilo[1],
+		      psc.ihi[0] - psc.ilo[0] };
+
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    if (!dowrite_fd[m])
+      continue;
+
+    char name[10];
+    sprintf(name, "fld%d", m);
+    H5LTmake_dataset_float(group_fld, name, 3, dims, f->all[m]);
+  }
+
+  H5Gclose(group_fld);
+  H5Gclose(group);
+  H5Fclose(file);
+}
+
+struct psc_output_format_ops psc_output_format_ops_hdf5 = {
+  .name         = "hdf5",
+  .write_fields = hdf5_write_fields,
+};
+

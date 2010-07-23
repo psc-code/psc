@@ -126,6 +126,9 @@ mean_tfields(struct psc_extra_fields *f)
 
 static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_binary,
+#ifdef HAVE_LIBHDF5
+  &psc_output_format_ops_hdf5,
+#endif
   NULL,
 };
 
