@@ -12,8 +12,7 @@ struct psc_output_binary {
   bool dowrite_pfield, dowrite_tfield;
   int pfield_next, tfield_next;
   int pfield_step, tfield_step;
-  bool dowrite_fd[21];
-  int nfields;
+  bool dowrite_fd[NR_EXTRA_FIELDS];
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_binary, x)
@@ -58,7 +57,6 @@ static void output_binary_create(void)
 { 
   params_parse_cmdline(&psc_output_binary, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
   params_print(&psc_output_binary, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
-  psc_output_binary.nfields = NR_EXTRA_FIELDS; 
 };
 
 

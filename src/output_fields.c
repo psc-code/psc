@@ -10,7 +10,6 @@ init_output_fields(struct psc_extra_fields *f)
   f->size =  (psc.ihi[0]-psc.ilo[0])
                       * (psc.ihi[1]-psc.ilo[1])
                       * (psc.ihi[2]-psc.ilo[2]);
-  f->nfields = 21; 
 
   f->ex = f->all[0] = malloc(f->size * sizeof(float));
   f->ey = f->all[1] = malloc(f->size * sizeof(float));
@@ -40,7 +39,7 @@ init_output_fields(struct psc_extra_fields *f)
 void
 free_output_fields(struct psc_extra_fields *f)
 {
-  for (int m = 0; m<f->nfields ; m++)
+  for (int m = 0; m < NR_EXTRA_FIELDS ; m++)
     free(f->all[m]);
 }
 
@@ -108,8 +107,8 @@ accumulate_tfields(struct psc_extra_fields *p, struct psc_extra_fields *t)
   t->naccum = t->naccum + 1;
 
   assert(p->size == t->size);
-  for (int m=0; m < p->nfields; m++) {
-    for (int j=0; j < p->size; j++)  {
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    for (int j = 0; j < p->size; j++)  {
       t->all[m][j] += p->all[m][j];
     }
   }
@@ -121,7 +120,7 @@ reset_fields(struct psc_extra_fields *f)
 {
   f->naccum = 0;
 
-  for (int m = 0; m < f->nfields; m++) {
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
     for (int j = 0; j < f->size; j++)  {
       f->all[m][j] = 0.0;
     }
@@ -134,7 +133,7 @@ void
 mean_tfields(struct psc_extra_fields *f)
 {
   assert(f->naccum > 0);
-  for (int m = 0; m < f->nfields; m++) {
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
     for (int j = 0; j < f->size; j++) {
       f->all[m][j] /= f->naccum;
     }

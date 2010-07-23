@@ -54,7 +54,6 @@ enum {
 
 struct psc_extra_fields {
   unsigned int size;
-  unsigned int nfields;
   unsigned int naccum;
   float *all[NR_EXTRA_FIELDS];
   float *ex, *ey, *ez;
