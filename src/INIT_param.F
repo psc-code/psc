@@ -42,12 +42,8 @@ c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
 c PARAMETERS!
 
-#ifdef USE_C_INTERFACE
-      call C_INIT_param
-#else
       call INIT_param_domain
       call INIT_param_psc
-#endif
 
 c REQUIRED SETTINGS
 c Please do not change
@@ -144,7 +140,6 @@ c Please do not change
 
 c QUASI-PARTICLE MASS FACTOR
 
-#ifndef USE_C_INTERFACE
       if (nicell.gt.0) then
          cori=1.0/nicell
       else
@@ -203,7 +198,6 @@ c     adjust to match laser cycles
       if (nmax == 0) then
          nmax=30*nnp
       endif
-#endif
 
       end subroutine INIT_param
 

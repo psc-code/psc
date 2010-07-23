@@ -452,13 +452,3 @@ INIT_param_psc()
   INIT_param_psc_F77();
   GET_param_psc();
 }
-
-void
-C_init_param_F77()
-{
-  psc_init_param(NULL);
-
-  SET_param_domain();
-  SET_param_psc();
-  SET_param_coeff();
-}
