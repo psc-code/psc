@@ -288,6 +288,7 @@ void INIT_grid_map();
 void INIT_partition(int *n_part);
 void INIT_idistr();
 struct f_particle *ALLOC_particles(int n_part);
+f_real **ALLOC_field();
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------

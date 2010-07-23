@@ -34,7 +34,6 @@ c The real VLI main
 
 #ifdef USE_C_INTERFACE
       call SERV_systime(cpus)
-      call ALLOC_field
       call C_INIT_field
 
       call ALLOC_field_fortran

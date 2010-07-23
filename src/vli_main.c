@@ -34,6 +34,11 @@ main(int argc, char **argv)
   psc.f_part = ALLOC_particles(n_part);
   psc_init_particles();
 
+  f_real **fields = ALLOC_field();
+  for (int n = 0; n < NR_FIELDS; n++) {
+    psc.f_fields[n] = fields[n];
+  }
+
   VLI_main_F77();
 
   MPI_Finalize();

@@ -27,6 +27,7 @@ libpsc_a_SOURCES = \
 	INIT_param.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F ALLOC_field.F \
+	INIT_param.F \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \

@@ -53,13 +53,8 @@ c     ----------------------------------------------------------------------
 
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
-      call C_init_vars(dt, dx, dy, dz,
-     &     i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
-     &     i1n, i2n, i3n, i1x, i2x, i3x,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
-     &     cori, alpha, beta, eta, wl, wp,
-     &     n,
-     &     99)
+      call C_ALLOC_field_cb(ne, ni, nn, jxi, jyi, jzi,
+     &     ex, ey, ez, bx, by, bz)
 #endif
 
       end subroutine ALLOC_field

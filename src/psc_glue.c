@@ -20,6 +20,7 @@
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
 #define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
+#define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
@@ -29,6 +30,7 @@
 #define C_sort_F77 F77_FUNC(c_sort,C_SORT)
 #define C_out_field_F77 F77_FUNC(c_out_field,C_OUT_FIELD)
 #define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
+#define C_alloc_field_cb_F77 F77_FUNC(c_alloc_field_cb,C_ALLOC_FIELD_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
@@ -81,10 +83,13 @@ void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void GET_niloc_F77(f_int *n_part);
 void INIT_grid_map_F77(void);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
-		       f_int *i3mn, f_int *i3mx);
+		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
+		       f_int *i3bn);
 void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
-		       f_int *i3mn, f_int *i3mx);
+		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
+		       f_int *i3bn);
 void ALLOC_particles_F77(f_int *n_part);
+void ALLOC_field_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
@@ -227,20 +232,32 @@ SET_subdomain()
   f_int i1mx = psc.ihi[0] - 1;
   f_int i2mx = psc.ihi[1] - 1;
   f_int i3mx = psc.ihi[2] - 1;
-  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+  f_int i1bn = psc.ibn[0];
+  f_int i2bn = psc.ibn[1];
+  f_int i3bn = psc.ibn[2];
+  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx, &i1bn, &i2bn, &i3bn);
 }
 
 void
 GET_subdomain()
 {
-  f_int i1mn, i2mn, i3mn, i1mx, i2mx, i3mx;
-  GET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+  f_int i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, i1bn, i2bn, i3bn;
+  GET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx, &i1bn, &i2bn, &i3bn);
   psc.ilo[0] = i1mn;
   psc.ilo[1] = i2mn;
   psc.ilo[2] = i3mn;
   psc.ihi[0] = i1mx + 1;
   psc.ihi[1] = i2mx + 1;
   psc.ihi[2] = i3mx + 1;
+  psc.ibn[0] = i1bn;
+  psc.ibn[1] = i2bn;
+  psc.ibn[2] = i3bn;
+  for (int d = 0; d < 3; d++) {
+    psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
+    psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
+    psc.img[d] = psc.ihg[d] - psc.ilg[d];
+  }
+  psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
 }
 
 // ----------------------------------------------------------------------
@@ -410,4 +427,41 @@ C_alloc_particles_cb_F77(struct f_particle *p_niloc)
 {
   __f_part = &p_niloc[1];
 }
+
+// ----------------------------------------------------------------------
+// same thing for allocating fields
+
+f_real *__f_flds[NR_FIELDS];
+
+f_real **
+ALLOC_field()
+{
+  SET_param_domain();
+  SET_subdomain();
+  ALLOC_field_F77();
+  // the callback function below will have magically been called,
+  // setting __f_flds
+  return __f_flds;
+}
+
+void
+C_alloc_field_cb_F77(f_real *ne, f_real *ni, f_real *nn,
+		     f_real *jxi, f_real *jyi, f_real *jzi,
+		     f_real *ex, f_real *ey, f_real *ez,
+		     f_real *bx, f_real *by, f_real *bz)
+{
+  __f_flds[NE] = ne;
+  __f_flds[NI] = ni;
+  __f_flds[NN] = nn;
+  __f_flds[JXI] = jxi;
+  __f_flds[JYI] = jyi;
+  __f_flds[JZI] = jzi;
+  __f_flds[EX] = ex;
+  __f_flds[EY] = ey;
+  __f_flds[EZ] = ez;
+  __f_flds[BX] = bx;
+  __f_flds[BY] = by;
+  __f_flds[BZ] = bz;
+}
+
 

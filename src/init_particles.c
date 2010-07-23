@@ -44,6 +44,10 @@ psc_init_partition(int *n_part)
     n[d] = m[d] / psc.domain.nproc[d];
     psc.ilo[d] = psc.domain.ilo[d] + p[d] * n[d];
     psc.ihi[d] = psc.domain.ilo[d] + (p[d] + 1) * n[d];
+    psc.ibn[d] = 3; // FIXME, can be made less?
+    psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
+    psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
+    psc.img[d] = psc.ihg[d] - psc.ilg[d];
     int min_size = 1;
     if (p[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
@@ -57,6 +61,7 @@ psc_init_partition(int *n_part)
     }
     assert(psc.ihi[d] - psc.ilo[d] >= min_size);
   }
+  psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
 
   MPI_Barrier(comm);
   for (int n = 0; n < size; n++) {

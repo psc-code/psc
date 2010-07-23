@@ -721,7 +721,7 @@ c RE-ARRANGE PARTITIONS TOO REDUCE LOCAL MEMORY ALLOCATION
 
       call SET_subdomain(i1ln(nodei), i1lx(nodei), 
      *     i2ln(nodej), i2lx(nodej),
-     *     i3ln(nodek), i3lx(nodek))
+     *     i3ln(nodek), i3lx(nodek), rd1, rd2, rd3)
 
 c EXACT LOCAL NUMBER OF QUASI-PARTICLES (fourth density setup)
 
