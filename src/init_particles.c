@@ -223,12 +223,13 @@ INIT_partition(int *n_part)
 }
 
 void
-C_init_partition_F77(f_int *part_label_off, f_int *n_part)
+C_init_partition_F77()
 {
-  psc_init_partition(n_part);
-  *part_label_off = -1; // not supported
+  int n_part;
+
+  psc_init_partition(&n_part);
   SET_subdomain();
-  ALLOC_particles(*n_part);
+  ALLOC_particles(n_part);
 }
 
 void
