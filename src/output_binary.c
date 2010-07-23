@@ -8,8 +8,8 @@
 #include <string.h>
 
 static void
-binary_field_output_aux(struct psc_extra_fields *f, bool *dowrite_fd,
-			const char *fnamehead)
+binary_write_fields(struct psc_extra_fields *f, bool *dowrite_fd,
+		    const char *fnamehead)
 { 
   char *headstr = "PSC ";
   char *datastr = "DATA";
@@ -69,7 +69,7 @@ binary_field_output_aux(struct psc_extra_fields *f, bool *dowrite_fd,
 
 struct psc_output_format_ops psc_output_format_ops_binary = {
   .name         = "binary",
-  .write_fields = binary_field_output_aux,
+  .write_fields = binary_write_fields,
 };
 
 

@@ -156,7 +156,7 @@ struct psc_output_c {
 
 #define VAR(x) (void *)offsetof(struct psc_output_c, x)
 
-static struct param psc_binary_descr[] = {
+static struct param psc_output_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
@@ -199,8 +199,8 @@ static struct psc_output_c psc_output_c;
 static void output_c_create(void)
 { 
   struct psc_output_c *out = &psc_output_c;
-  params_parse_cmdline(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
-  params_print(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+  params_parse_cmdline(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+  params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
 
   out->format_ops = find_output_format_ops(out->output_format);
   if (out->format_ops->create) {
@@ -223,7 +223,7 @@ output_c_field()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("binary_out_field", 1., 0, 0);
+    pr = prof_register("output_c_field", 1., 0, 0);
   }
   prof_start(pr);
 
