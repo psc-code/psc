@@ -44,7 +44,7 @@ psc_init_partition(int *n_part)
     n[d] = m[d] / psc.domain.nproc[d];
     psc.ilo[d] = psc.domain.ilo[d] + p[d] * n[d];
     psc.ihi[d] = psc.domain.ilo[d] + (p[d] + 1) * n[d];
-    psc.ibn[d] = 3; // FIXME, can be made less?
+    psc.ibn[d] = psc.domain.nghost[d];
     psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
     psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];

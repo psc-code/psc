@@ -20,16 +20,6 @@ c     this contains the main driver for the code, shared between VLI and VLA
          cpumess=0.0d0
          cpucomp=0.0d0
 
-#ifdef USE_C_INTERFACE
-         call C_init_vars(dt, dx, dy, dz,
-     &        i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, rd1, rd2, rd3,
-     &        i1n, i2n, i3n, i1x, i2x, i3x,
-     &        ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz,
-     &        cori, alpha, beta, eta, wl, wp,
-     &        n,
-     &        99)
-#endif
-
 c         call PIC_bpulse      ! particle injection
 c         call PIC_sort        ! particle randomization
 c         call PIC_ionize      ! field ionization

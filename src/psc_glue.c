@@ -24,7 +24,6 @@
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
-#define C_init_vars_F77 F77_FUNC(c_init_vars,C_INIT_VARS)
 #define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
 #define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
 #define C_sort_F77 F77_FUNC(c_sort,C_SORT)
@@ -264,82 +263,6 @@ GET_subdomain()
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from Fortran that continue to C
-
-void
-C_init_vars_F77(f_real *dt, f_real *dx, f_real *dy, f_real *dz,
-		f_int *i1mn, f_int *i2mn, f_int *i3mn,
-		f_int *i1mx, f_int *i2mx, f_int *i3mx,
-		f_int *rd1, f_int *rd2, f_int *rd3,
-		f_int *i1n, f_int *i2n, f_int *i3n,
-		f_int *i1x, f_int *i2x, f_int *i3x,
-		f_real *ne, f_real *ni, f_real *nn,
-		f_real *jxi, f_real *jyi, f_real *jzi,
-		f_real *ex, f_real *ey, f_real *ez,
-		f_real *bx, f_real *by, f_real *bz,
-		f_real *cori, f_real *alpha, f_real *beta,
-		f_real *eta, f_real *wl, f_real *wp,
-		f_int *n,
-		f_int *dummy)
-{
-  // make sure we got passed the right number of arguments
-  assert(*dummy == 99);
-
-  // time step, grid spacing
-  psc.dt = *dt;
-  psc.dx[0] = *dx;
-  psc.dx[1] = *dy;
-  psc.dx[2] = *dz;
-
-  // local domain size
-  psc.ilo[0] = *i1mn; 
-  psc.ilo[1] = *i2mn; 
-  psc.ilo[2] = *i3mn; 
-  psc.ihi[0] = *i1mx + 1; 
-  psc.ihi[1] = *i2mx + 1; 
-  psc.ihi[2] = *i3mx + 1; 
-  psc.ibn[0] = *rd1;
-  psc.ibn[1] = *rd2;
-  psc.ibn[2] = *rd3;
-  for (int d = 0; d < 3; d++) {
-    psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
-    psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
-    psc.img[d] = psc.ihg[d] - psc.ilg[d];
-  }
-  psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
-
-  // global domain size
-  psc.domain.ilo[0] = *i1n; 
-  psc.domain.ilo[1] = *i2n; 
-  psc.domain.ilo[2] = *i3n; 
-  psc.domain.ihi[0] = *i1x + 1; 
-  psc.domain.ihi[1] = *i2x + 1; 
-  psc.domain.ihi[2] = *i3x + 1; 
-
-  // Fortran fields
-  psc.f_fields[NE] = ne;
-  psc.f_fields[NI] = ni;
-  psc.f_fields[NN] = nn;
-  psc.f_fields[JXI] = jxi;
-  psc.f_fields[JYI] = jyi;
-  psc.f_fields[JZI] = jzi;
-  psc.f_fields[EX] = ex;
-  psc.f_fields[EY] = ey;
-  psc.f_fields[EZ] = ez;
-  psc.f_fields[BX] = bx;
-  psc.f_fields[BY] = by;
-  psc.f_fields[BZ] = bz;
-
-  // parameters etc
-  psc.coeff.cori = *cori;
-  psc.coeff.alpha = *alpha;
-  psc.coeff.beta = *beta;
-  psc.coeff.eta = *eta;
-  psc.coeff.wl = *wl;
-  psc.coeff.wp = *wp;
-
-  // current timestep, I/O control
-  psc.timestep = *n;
-}
 
 void
 C_push_part_yz_F77(f_real *p2A, f_real *p2B,
