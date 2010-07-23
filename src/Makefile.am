@@ -20,7 +20,7 @@ libpsc_a_SOURCES = \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
 	sort.c \
-	output_binary.c \
+	output_fields.c output_binary.c \
 	case_langmuir.c \
 	case_harris.c
 
