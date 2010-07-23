@@ -1,14 +1,11 @@
 
 #include "psc.h"
 #include "output_fields.h"
-
 #include "util/profile.h"
 #include "util/params.h"
 
 #include <mpi.h>
 #include <string.h>
-
-
 
 struct psc_output_binary {
   char *data_dir;
@@ -20,7 +17,6 @@ struct psc_output_binary {
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_binary, x)
-
 
 static struct param psc_binary_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
@@ -96,7 +92,6 @@ binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
   t_float = (float) psc.dx[2];  fwrite(&t_float, sizeof(float), 1, file);
   t_float = (float) psc.dt;     fwrite(&t_float, sizeof(float), 1, file);
 
-
   // Indices on local proc
   fwrite(&psc.ilo[0], sizeof(psc.ilo[0]), 1, file);
   fwrite(&psc.ihi[0], sizeof(psc.ihi[0]), 1, file);
@@ -105,7 +100,6 @@ binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
   fwrite(&psc.ilo[2], sizeof(psc.ilo[2]), 1, file);
   fwrite(&psc.ihi[2], sizeof(psc.ihi[2]), 1, file);
 
-
   // Globally saved indices (everything for now...)
   fwrite(&psc.domain.ilo[0], sizeof(psc.domain.ilo[0]), 1, file);
   fwrite(&psc.domain.ihi[0], sizeof(psc.domain.ihi[0]), 1, file);
@@ -113,8 +107,6 @@ binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
   fwrite(&psc.domain.ihi[1], sizeof(psc.domain.ihi[1]), 1, file);
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
-  
-  
  
   fwrite(psc_output_binary.dowrite_fd, sizeof(bool), 
            NR_EXTRA_FIELDS, file);
@@ -155,13 +147,9 @@ output_binary_field()
   }
 
   if (psc_output_binary.dowrite_tfield) {
-
     accumulate_tfields(&psc.pfd, &psc.tfd);
-
     if (psc.timestep >= psc_output_binary.tfield_next) {
-
        psc_output_binary.tfield_next += psc_output_binary.tfield_step;
-
        mean_tfields(&psc.tfd);
        binary_field_output_aux(&psc.tfd, "tfd");
        reset_fields(&psc.tfd);
@@ -170,7 +158,6 @@ output_binary_field()
   
   prof_stop(pr);
 }
-
 
 struct psc_output_ops psc_output_ops_binary = {
   .name           = "binary",

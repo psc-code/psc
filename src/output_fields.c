@@ -12,27 +12,27 @@ init_output_fields(struct psc_extra_fields *f)
                       * (psc.ihi[2]-psc.ilo[2]);
   f->nfields = 21; 
 
-  f->ex = f->all[0] = malloc(f->size * sizeof(float) );
-  f->ey = f->all[1] = malloc(f->size * sizeof(float) );
-  f->ez = f->all[2] = malloc(f->size * sizeof(float) );
-  f->bx = f->all[3] = malloc(f->size * sizeof(float) );
-  f->by = f->all[4] = malloc(f->size * sizeof(float) );
-  f->bz = f->all[5] = malloc(f->size * sizeof(float) );
-  f->jx = f->all[6] = malloc(f->size * sizeof(float) );
-  f->jy = f->all[7] = malloc(f->size * sizeof(float) );
-  f->jz = f->all[8] = malloc(f->size * sizeof(float) );
-  f->jxex = f->all[9]  = malloc(f->size * sizeof(float) );
-  f->jyey = f->all[10] = malloc(f->size * sizeof(float) );
-  f->jzez = f->all[11] = malloc(f->size * sizeof(float) );
-  f->poyx = f->all[12] = malloc(f->size * sizeof(float) );
-  f->poyy = f->all[13] = malloc(f->size * sizeof(float) );
-  f->poyz = f->all[14] = malloc(f->size * sizeof(float) );
-  f->e2x = f->all[15] = malloc(f->size * sizeof(float) );
-  f->e2y = f->all[16] = malloc(f->size * sizeof(float) );
-  f->e2z = f->all[17] = malloc(f->size * sizeof(float) );
-  f->b2x = f->all[18] = malloc(f->size * sizeof(float) );
-  f->b2y = f->all[19] = malloc(f->size * sizeof(float) );
-  f->b2z = f->all[20] = malloc(f->size * sizeof(float) );
+  f->ex = f->all[0] = malloc(f->size * sizeof(float));
+  f->ey = f->all[1] = malloc(f->size * sizeof(float));
+  f->ez = f->all[2] = malloc(f->size * sizeof(float));
+  f->bx = f->all[3] = malloc(f->size * sizeof(float));
+  f->by = f->all[4] = malloc(f->size * sizeof(float));
+  f->bz = f->all[5] = malloc(f->size * sizeof(float));
+  f->jx = f->all[6] = malloc(f->size * sizeof(float));
+  f->jy = f->all[7] = malloc(f->size * sizeof(float));
+  f->jz = f->all[8] = malloc(f->size * sizeof(float));
+  f->jxex = f->all[9]  = malloc(f->size * sizeof(float));
+  f->jyey = f->all[10] = malloc(f->size * sizeof(float));
+  f->jzez = f->all[11] = malloc(f->size * sizeof(float));
+  f->poyx = f->all[12] = malloc(f->size * sizeof(float));
+  f->poyy = f->all[13] = malloc(f->size * sizeof(float));
+  f->poyz = f->all[14] = malloc(f->size * sizeof(float));
+  f->e2x = f->all[15] = malloc(f->size * sizeof(float));
+  f->e2y = f->all[16] = malloc(f->size * sizeof(float));
+  f->e2z = f->all[17] = malloc(f->size * sizeof(float));
+  f->b2x = f->all[18] = malloc(f->size * sizeof(float));
+  f->b2y = f->all[19] = malloc(f->size * sizeof(float));
+  f->b2z = f->all[20] = malloc(f->size * sizeof(float));
 
   reset_fields(f);
 }
@@ -96,7 +96,7 @@ calculate_pfields(struct psc_extra_fields *p)
            p->b2y[j] = p->by[j]*p->by[j];
            p->b2z[j] = p->bz[j]*p->bz[j];
 
-           j=j+1;
+           j++;
          }
       }
     }
@@ -121,8 +121,8 @@ reset_fields(struct psc_extra_fields *f)
 {
   f->naccum = 0;
 
-  for (int m=0; m < f->nfields; m++) {
-    for (int j=0; j < f->size; j++)  {
+  for (int m = 0; m < f->nfields; m++) {
+    for (int j = 0; j < f->size; j++)  {
       f->all[m][j] = 0.0;
     }
   }
@@ -134,9 +134,9 @@ void
 mean_tfields(struct psc_extra_fields *f)
 {
   assert(f->naccum > 0);
-  for (int m=0; m < f->nfields; m++) {
-    for (int j=0; j  <f->size; j++) {
-      f->all[m][j] = f->all[m][j] / f->naccum;
+  for (int m = 0; m < f->nfields; m++) {
+    for (int j = 0; j < f->size; j++) {
+      f->all[m][j] /= f->naccum;
     }
   }
 }
