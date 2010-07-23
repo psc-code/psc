@@ -214,11 +214,11 @@ static void output_c_create(void)
 static void
 output_c_field()
 {
-  struct psc_extra_fields *pfd = &psc_output_c.pfd;
-  struct psc_extra_fields *tfd = &psc_output_c.tfd;
-  if (!pfd->all[0]) {
-    init_output_fields(pfd);
-    init_output_fields(tfd);
+  struct psc_output_c *out = &psc_output_c;
+
+  if (!out->pfd.all[0]) {
+    init_output_fields(&out->pfd);
+    init_output_fields(&out->tfd);
   }
 
   static int pr;
@@ -227,22 +227,22 @@ output_c_field()
   }
   prof_start(pr);
 
-  calculate_pfields(pfd);
+  calculate_pfields(&out->pfd);
 
-  if (psc_output_c.dowrite_pfield) {
-    if (psc.timestep >= psc_output_c.pfield_next) {
-       psc_output_c.pfield_next += psc_output_c.pfield_step;
-       psc_output_c.format_ops->write_fields(pfd, psc_output_c.dowrite_fd, "pfd");
+  if (out->dowrite_pfield) {
+    if (psc.timestep >= out->pfield_next) {
+       out->pfield_next += out->pfield_step;
+       out->format_ops->write_fields(&out->pfd, out->dowrite_fd, "pfd");
     }
   }
 
-  if (psc_output_c.dowrite_tfield) {
-    accumulate_tfields(pfd, tfd);
-    if (psc.timestep >= psc_output_c.tfield_next) {
-       psc_output_c.tfield_next += psc_output_c.tfield_step;
-       mean_tfields(tfd);
-       psc_output_c.format_ops->write_fields(tfd, psc_output_c.dowrite_fd, "tfd");
-       reset_fields(tfd);
+  if (out->dowrite_tfield) {
+    accumulate_tfields(&out->pfd, &out->tfd);
+    if (psc.timestep >= out->tfield_next) {
+      out->tfield_next += out->tfield_step;
+      mean_tfields(&out->tfd);
+      out->format_ops->write_fields(&out->tfd, out->dowrite_fd, "tfd");
+      reset_fields(&out->tfd);
     }
   }
   
