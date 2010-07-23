@@ -32,16 +32,10 @@ c The real VLI main
       integer :: part_label_off,niloc_new
       integer :: rd1n,rd1x,rd2n,rd2x,rd3n,rd3x
 
-#ifndef USE_C_INTERFACE
-      call INIT_basic
-      call INIT_param
-      call INIT_param_fortran
-#endif
+#ifdef USE_C_INTERFACE
       call SERV_systime(cpus)
       include './SERV_consist.F'
 
-
-#ifdef USE_C_INTERFACE
       call C_init_partition(part_label_off, niloc_new)
       call ALLOC_particles(niloc_new)
       call C_init_vars(dt, dx, dy, dz,
@@ -53,6 +47,13 @@ c The real VLI main
      &     99)
       call C_init_particles
 #else
+      call INIT_basic
+      call INIT_param
+      call INIT_param_fortran
+
+      call SERV_systime(cpus)
+      include './SERV_consist.F'
+
       ! I don't understand why the partition may calculate different
       ! boundary sizes (rd..) to be filled with particles, but let's
       ! keep it as-is for now.
