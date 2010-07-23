@@ -159,6 +159,7 @@ init_particles()
 // ======================================================================
 // Fortran glue
 
+#define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 #define C_init_partition_F77 F77_FUNC_(c_init_partition, C_INIT_PARTITION)
 #define C_init_particles_F77 F77_FUNC_(c_init_particles, C_INIT_PARTICLES)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
@@ -167,6 +168,7 @@ init_particles()
 #define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 
+void ALLOC_particles_F77(f_int *n_part);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx);
 void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
@@ -177,6 +179,12 @@ void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 		     f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x);
 void GET_niloc_F77(f_int *niloc);
+
+void
+ALLOC_particles(int n_part)
+{
+  ALLOC_particles_F77(&n_part);
+}
 
 void
 SET_subdomain()
@@ -220,6 +228,7 @@ C_init_partition_F77(f_int *part_label_off, f_int *n_part)
   psc_init_partition(n_part);
   *part_label_off = -1; // not supported
   SET_subdomain();
+  ALLOC_particles(*n_part);
 }
 
 void
