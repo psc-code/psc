@@ -172,11 +172,17 @@ static int rd1n, rd1x, rd2n, rd2x, rd3n, rd3x;
 static int part_label_offset;
 
 void
+INIT_partition(int *n_part)
+{
+  INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
+		     n_part);
+}
+
+void
 C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 {
   if (!psc.Case) {
-    INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
-		       n_part);
+    INIT_partition(n_part);
     return;
   }
 
