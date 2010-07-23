@@ -21,7 +21,7 @@ get_n_in_cell(real n)
 void INIT_partition(int *n_part);
 
 void
-init_partition(int *n_part)
+psc_init_partition(int *n_part)
 {
   if (!psc.Case) {
     INIT_partition(n_part);
@@ -217,7 +217,7 @@ INIT_partition(int *n_part)
 void
 C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 {
-  init_partition(n_part);
+  psc_init_partition(n_part);
   *part_label_off = -1; // not supported
   SET_subdomain();
 }
