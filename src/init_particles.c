@@ -225,9 +225,3 @@ INIT_idistr(void)
 {
   INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
 }
-
-void
-C_init_particles_F77()
-{
-  psc_init_particles();
-}
