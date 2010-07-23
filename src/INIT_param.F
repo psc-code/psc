@@ -346,6 +346,10 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
+      if (allocated(seg_i1)) then
+         return
+      endif
+
       allocate(seg_i1(0:xnpe*ynpe*znpe-1))
       allocate(seg_i2(0:xnpe*ynpe*znpe-1))
       allocate(seg_i3(0:xnpe*ynpe*znpe-1))
