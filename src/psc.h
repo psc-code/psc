@@ -188,9 +188,6 @@ struct psc {
   struct psc_coeff coeff;
   struct psc_domain domain;
 
-  // storage for output
-  struct psc_extra_fields pfd, tfd;
-
   // other parameters / constants
   double p2A, p2B;
   int timestep;

@@ -13,6 +13,9 @@ struct psc_output_binary {
   int pfield_next, tfield_next;
   int pfield_step, tfield_step;
   bool dowrite_fd[NR_EXTRA_FIELDS];
+
+  // storage for output
+  struct psc_extra_fields pfd, tfd;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_binary, x)
@@ -124,9 +127,11 @@ binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
 static void
 output_binary_field()
 {
-  if (!psc.pfd.all[0]) {
-    init_output_fields(&psc.pfd);
-    init_output_fields(&psc.tfd);
+  struct psc_extra_fields *pfd = &psc_output_binary.pfd;
+  struct psc_extra_fields *tfd = &psc_output_binary.tfd;
+  if (!pfd->all[0]) {
+    init_output_fields(pfd);
+    init_output_fields(tfd);
   }
 
   static int pr;
@@ -135,22 +140,22 @@ output_binary_field()
   }
   prof_start(pr);
 
-  calculate_pfields(&psc.pfd);
+  calculate_pfields(pfd);
 
   if (psc_output_binary.dowrite_pfield) {
     if (psc.timestep >= psc_output_binary.pfield_next) {
        psc_output_binary.pfield_next += psc_output_binary.pfield_step;
-       binary_field_output_aux(&psc.pfd, "pfd");
+       binary_field_output_aux(pfd, "pfd");
     }
   }
 
   if (psc_output_binary.dowrite_tfield) {
-    accumulate_tfields(&psc.pfd, &psc.tfd);
+    accumulate_tfields(pfd, tfd);
     if (psc.timestep >= psc_output_binary.tfield_next) {
        psc_output_binary.tfield_next += psc_output_binary.tfield_step;
-       mean_tfields(&psc.tfd);
-       binary_field_output_aux(&psc.tfd, "tfd");
-       reset_fields(&psc.tfd);
+       mean_tfields(tfd);
+       binary_field_output_aux(tfd, "tfd");
+       reset_fields(tfd);
     }
   }
   
