@@ -18,9 +18,16 @@ get_n_in_cell(real n)
   return n / psc.coeff.cori + .5;
 }
 
+void INIT_partition(int *n_part);
+
 void
 init_partition(int *n_part)
 {
+  if (!psc.Case) {
+    INIT_partition(n_part);
+    return;
+  }
+
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -210,11 +217,6 @@ INIT_partition(int *n_part)
 void
 C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 {
-  if (!psc.Case) {
-    INIT_partition(n_part);
-    return;
-  }
-
   init_partition(n_part);
   *part_label_off = -1; // not supported
   SET_subdomain();
