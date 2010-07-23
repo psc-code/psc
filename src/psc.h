@@ -276,6 +276,7 @@ void SET_param_domain();
 void SET_param_pml();
 void SET_param_psc();
 void SET_param_coeff();
+void SET_subdomain();
 void INIT_param_domain();
 void INIT_param_psc();
 void INIT_grid_map();

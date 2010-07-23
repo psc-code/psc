@@ -155,11 +155,14 @@ init_particles()
 #define C_init_partition_F77 F77_FUNC_(c_init_partition, C_INIT_PARTITION)
 #define C_init_particles_F77 F77_FUNC_(c_init_particles, C_INIT_PARTICLES)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
+#define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
 #define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
+		       f_int *i3mn, f_int *i3mx);
+void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx);
 void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 			f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x,
@@ -167,6 +170,31 @@ void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 		     f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x);
 void GET_niloc_F77(f_int *niloc);
+
+void
+SET_subdomain()
+{
+  f_int i1mn = psc.ilo[0];
+  f_int i2mn = psc.ilo[1];
+  f_int i3mn = psc.ilo[2];
+  f_int i1mx = psc.ihi[0] - 1;
+  f_int i2mx = psc.ihi[1] - 1;
+  f_int i3mx = psc.ihi[2] - 1;
+  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+}
+
+void
+GET_subdomain()
+{
+  f_int i1mn, i2mn, i3mn, i1mx, i2mx, i3mx;
+  GET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+  psc.ilo[0] = i1mn;
+  psc.ilo[1] = i2mn;
+  psc.ilo[2] = i3mn;
+  psc.ihi[0] = i1mx + 1;
+  psc.ihi[1] = i2mx + 1;
+  psc.ihi[2] = i3mx + 1;
+}
 
 static int rd1n, rd1x, rd2n, rd2x, rd3n, rd3x;
 static int part_label_offset;
@@ -176,6 +204,7 @@ INIT_partition(int *n_part)
 {
   INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
 		     n_part);
+  GET_subdomain();
 }
 
 void
@@ -188,13 +217,7 @@ C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 
   init_partition(n_part);
   *part_label_off = -1; // not supported
-  f_int i1mn = psc.ilo[0];
-  f_int i2mn = psc.ilo[1];
-  f_int i3mn = psc.ilo[2];
-  f_int i1mx = psc.ihi[0] - 1;
-  f_int i2mx = psc.ihi[1] - 1;
-  f_int i3mx = psc.ihi[2] - 1;
-  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx);
+  SET_subdomain();
 }
 
 void
