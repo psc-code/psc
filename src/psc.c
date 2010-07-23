@@ -54,6 +54,7 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
 
 static struct psc_output_ops *psc_output_ops_list[] = {
   &psc_output_ops_fortran,
+  &psc_output_ops_binary,
 #ifdef HAVE_LIBHDF5
   &psc_output_ops_hdf5,
 #endif

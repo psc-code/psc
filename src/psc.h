@@ -239,6 +239,7 @@ extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_hdf5;
+extern struct psc_output_ops psc_output_ops_binary;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_harris;
