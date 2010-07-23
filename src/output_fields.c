@@ -1,4 +1,5 @@
 #include "psc.h"
+#include "output_fields.h"
 
 #include <stdlib.h>
 #include <assert.h>
