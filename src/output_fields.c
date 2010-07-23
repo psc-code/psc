@@ -7,31 +7,13 @@
 void
 init_output_fields(struct psc_extra_fields *f)
 {
-  f->size =  (psc.ihi[0]-psc.ilo[0])
-                      * (psc.ihi[1]-psc.ilo[1])
-                      * (psc.ihi[2]-psc.ilo[2]);
+  f->size = ((psc.ihi[0]-psc.ilo[0]) *
+	     (psc.ihi[1]-psc.ilo[1]) *
+	     (psc.ihi[2]-psc.ilo[2]));
 
-  f->ex = f->all[0] = malloc(f->size * sizeof(float));
-  f->ey = f->all[1] = malloc(f->size * sizeof(float));
-  f->ez = f->all[2] = malloc(f->size * sizeof(float));
-  f->bx = f->all[3] = malloc(f->size * sizeof(float));
-  f->by = f->all[4] = malloc(f->size * sizeof(float));
-  f->bz = f->all[5] = malloc(f->size * sizeof(float));
-  f->jx = f->all[6] = malloc(f->size * sizeof(float));
-  f->jy = f->all[7] = malloc(f->size * sizeof(float));
-  f->jz = f->all[8] = malloc(f->size * sizeof(float));
-  f->jxex = f->all[9]  = malloc(f->size * sizeof(float));
-  f->jyey = f->all[10] = malloc(f->size * sizeof(float));
-  f->jzez = f->all[11] = malloc(f->size * sizeof(float));
-  f->poyx = f->all[12] = malloc(f->size * sizeof(float));
-  f->poyy = f->all[13] = malloc(f->size * sizeof(float));
-  f->poyz = f->all[14] = malloc(f->size * sizeof(float));
-  f->e2x = f->all[15] = malloc(f->size * sizeof(float));
-  f->e2y = f->all[16] = malloc(f->size * sizeof(float));
-  f->e2z = f->all[17] = malloc(f->size * sizeof(float));
-  f->b2x = f->all[18] = malloc(f->size * sizeof(float));
-  f->b2y = f->all[19] = malloc(f->size * sizeof(float));
-  f->b2z = f->all[20] = malloc(f->size * sizeof(float));
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    f->all[m] = malloc(f->size * sizeof(float));
+  }
 
   reset_fields(f);
 }
@@ -52,48 +34,45 @@ calculate_pfields(struct psc_extra_fields *p)
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
         for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 
-           p->ex[j] = (float) 0.5  * ( FF3(EX,ix,iy,iz)
-                                     +FF3(EX,ix-1,iy,iz) );
-           p->ey[j] = (float) 0.5  * ( FF3(EX,ix,iy,iz)
-                                     +FF3(EY,ix,iy-1,iz) );
-           p->ez[j] = (float) 0.5  * ( FF3(EZ,ix,iy,iz)
-                                     +FF3(EZ,ix,iy,iz-1) );
+           p->all[X_EX][j] = .5f * ( FF3(EX,ix,iy,iz)
+                                    +FF3(EX,ix-1,iy,iz));
+           p->all[X_EY][j] = .5f * ( FF3(EX,ix,iy,iz)
+                                    +FF3(EY,ix,iy-1,iz));
+           p->all[X_EZ][j] = .5f * ( FF3(EZ,ix,iy,iz)
+                                    +FF3(EZ,ix,iy,iz-1));
 
-           p->bx[j] = (float) 0.25 * ( FF3(BX,ix,iy,iz)
-                                     +FF3(BX,ix,iy-1,iz)
-                                     +FF3(BX,ix,iy,iz-1) 
-                                     +FF3(BX,ix,iy-1,iz-1) );
-           p->by[j] = (float) 0.25 * ( FF3(BY,ix,iy,iz)
-                                     +FF3(BY,ix-1,iy,iz)
-                                     +FF3(BY,ix,iy,iz-1) 
-                                     +FF3(BY,ix-1,iy,iz-1) );
-           p->bz[j] = (float) 0.25 * ( FF3(BZ,ix,iy,iz)
-                                     +FF3(BZ,ix-1,iy,iz)
-                                     +FF3(BZ,ix,iy-1,iz) 
-                                     +FF3(BZ,ix-1,iy-1,iz) );
+           p->all[X_BX][j] =  .25f * ( FF3(BX,ix,iy,iz)
+                                      +FF3(BX,ix,iy-1,iz)
+                                      +FF3(BX,ix,iy,iz-1) 
+  			              +FF3(BX,ix,iy-1,iz-1));
+           p->all[X_BY][j] =  .25f * ( FF3(BY,ix,iy,iz)
+                                      +FF3(BY,ix-1,iy,iz)
+                                      +FF3(BY,ix,iy,iz-1) 
+				      +FF3(BY,ix-1,iy,iz-1));
+           p->all[X_BZ][j] =  .25f * ( FF3(BZ,ix,iy,iz)
+                                      +FF3(BZ,ix-1,iy,iz)
+                                      +FF3(BZ,ix,iy-1,iz) 
+                                      +FF3(BZ,ix-1,iy-1,iz));
 
-           p->jx[j] = (float) 0.5  * ( FF3(JXI,ix,iy,iz)
-                                     +FF3(JXI,ix-1,iy,iz) );
-           p->jy[j] = (float) 0.5  * ( FF3(JYI,ix,iy,iz)
-                                     +FF3(JYI,ix,iy-1,iz) );
-           p->jz[j] = (float) 0.5  * ( FF3(JZI,ix,iy,iz)
-                                     +FF3(JZI,ix,iy,iz-1) );
+           p->all[X_JXI][j] = .5f * ( FF3(JXI,ix,iy,iz) + FF3(JXI,ix-1,iy,iz) );
+           p->all[X_JYI][j] = .5f * ( FF3(JYI,ix,iy,iz) + FF3(JYI,ix,iy-1,iz) );
+           p->all[X_JZI][j] = .5f * ( FF3(JZI,ix,iy,iz) + FF3(JZI,ix,iy,iz-1) );
 
-           p->jxex[j] = p->jx[j] * p->ex[j];
-           p->jyey[j] = p->jy[j] * p->ey[j];
-           p->jzez[j] = p->jz[j] * p->ez[j];
+           p->all[X_JXEX][j] = p->all[X_JXI][j] * p->all[X_EX][j];
+           p->all[X_JYEY][j] = p->all[X_JYI][j] * p->all[X_EY][j];
+           p->all[X_JZEZ][j] = p->all[X_JZI][j] * p->all[X_EZ][j];
 
-           p->poyx[j] = p->ey[j] * p->bz[j] - p->ez[j]*p->by[j];
-           p->poyy[j] = p->ez[j] * p->bx[j] - p->ex[j]*p->bz[j];
-           p->poyz[j] = p->ex[j] * p->by[j] - p->ey[j]*p->bx[j];
+           p->all[X_POYX][j] = p->all[X_EY][j] * p->all[X_BZ][j] - p->all[X_EZ][j] * p->all[X_BY][j];
+           p->all[X_POYY][j] = p->all[X_EZ][j] * p->all[X_BX][j] - p->all[X_EX][j] * p->all[X_BZ][j];
+           p->all[X_POYZ][j] = p->all[X_EX][j] * p->all[X_BY][j] - p->all[X_EY][j] * p->all[X_BX][j];
 
-           p->e2x[j] = p->ex[j]*p->ex[j];
-           p->e2y[j] = p->ey[j]*p->ey[j];
-           p->e2z[j] = p->ez[j]*p->ez[j];
+           p->all[X_E2X][j] = p->all[X_EX][j]*p->all[X_EX][j];
+           p->all[X_E2Y][j] = p->all[X_EY][j]*p->all[X_EY][j];
+           p->all[X_E2Z][j] = p->all[X_EZ][j]*p->all[X_EZ][j];
 
-           p->b2x[j] = p->bx[j]*p->bx[j];
-           p->b2y[j] = p->by[j]*p->by[j];
-           p->b2z[j] = p->bz[j]*p->bz[j];
+           p->all[X_B2X][j] = p->all[X_BX][j]*p->all[X_BX][j];
+           p->all[X_B2Y][j] = p->all[X_BY][j]*p->all[X_BY][j];
+           p->all[X_B2Z][j] = p->all[X_BZ][j]*p->all[X_BZ][j];
 
            j++;
          }

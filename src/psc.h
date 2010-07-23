@@ -56,13 +56,6 @@ struct psc_extra_fields {
   unsigned int size;
   unsigned int naccum;
   float *all[NR_EXTRA_FIELDS];
-  float *ex, *ey, *ez;
-  float *bx, *by, *bz;
-  float *jx, *jy, *jz;
-  float *jxex, *jyey, *jzez;
-  float *poyx, *poyy, *poyz;
-  float *e2x, *e2y, *e2z;
-  float *b2x, *b2y, *b2z;
 };
 
 
