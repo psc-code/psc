@@ -199,7 +199,7 @@ struct psc_output_ops psc_output_ops_hdf5 = {
 // ======================================================================
 
 static void
-hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
+hdf5_write_fields(struct psc_fields_list *list, const char *prefix, const char *ext)
 {
   struct hdf5_ctx *hdf5;
 
@@ -207,7 +207,7 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   char filename[200]; // FIXME
-  sprintf(filename, "data/%s_%06d_%07d.h5", prefix, rank, psc.timestep);
+  sprintf(filename, "data/%s_%06d_%07d%s", prefix, rank, psc.timestep, ext);
   hdf5_open(list, filename, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
@@ -219,6 +219,7 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
 
 struct psc_output_format_ops psc_output_format_ops_hdf5 = {
   .name         = "hdf5",
+  .ext          = ".h5",
   .write_fields = hdf5_write_fields,
 };
 

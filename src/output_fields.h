@@ -32,9 +32,11 @@ struct psc_fields_list {
 
 struct psc_output_format_ops {
   const char *name;
+  const char *ext;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_fields_list *flds, const char *prefix);
+  void (*write_fields)(struct psc_fields_list *flds, const char *prefix,
+		       const char *ext);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

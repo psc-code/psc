@@ -75,13 +75,13 @@ binary_write_field(struct binary_ctx *binary, struct psc_field *fld)
 }
 
 static void
-binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
+binary_write_fields(struct psc_fields_list *list, const char *prefix, const char *ext)
 { 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   char filename[200];
-  sprintf(filename, "data/%s_%03d_%07d.psc", fnamehead, rank, psc.timestep);
+  sprintf(filename, "data/%s_%03d_%07d%s", prefix, rank, psc.timestep, ext);
 
   struct binary_ctx *ctx;
   binary_open(list, filename, &ctx);
@@ -95,6 +95,7 @@ binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
 
 struct psc_output_format_ops psc_output_format_ops_binary = {
   .name         = "binary",
+  .ext          = ".psc",
   .write_fields = binary_write_fields,
 };
 
