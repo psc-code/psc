@@ -118,8 +118,8 @@ hdf5_out_field()
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
-  
-  hid_t file = -1, group = -1, group_fld = -1;
+
+  struct hdf5_ctx *ctx;
   float *fld = NULL;
   hsize_t dims[3] = { psc.ghi[2] - psc.glo[2],
 		      psc.ghi[1] - psc.glo[1],
@@ -129,15 +129,7 @@ hdf5_out_field()
     char filename[strlen(datadir) + 20];
     sprintf(filename, "%s/field_%09d.h5", datadir, psc.timestep);
     printf("[%d] hdf5_out_field: %s\n", rank, filename);
-    file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5LTset_attribute_int(group, ".", "timestep", &psc.timestep, 1);
-    H5LTset_attribute_double(group, ".", "dt", &psc.dt, 1);
-    H5LTset_attribute_double(group, ".", "dx", psc.dx, 3);
-    H5LTset_attribute_int(group, ".", "lo", psc.glo, 3);
-    H5LTset_attribute_int(group, ".", "hi", psc.ghi, 3);
-
-    group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hdf5_open(NULL, filename, &ctx);
 
     fld = calloc(dims[0] * dims[1] * dims[2], sizeof(float));
   }
@@ -182,15 +174,13 @@ hdf5_out_field()
 	  free(buf);
 	}
       }
-      H5LTmake_dataset_float(group_fld, fldname[m], 3, dims, fld);
+      H5LTmake_dataset_float(ctx->group_fld, fldname[m], 3, dims, fld);
     }
   }
 
   if (rank == 0) {
     free(fld);
-    H5Gclose(group_fld);
-    H5Gclose(group);
-    H5Fclose(file);
+    hdf5_close(ctx);
   }
 
   prof_stop(pr);
