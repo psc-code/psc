@@ -19,15 +19,9 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_fields_list *list, const char *prefix, struct hdf5_ctx **ctx)
+hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **ctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  char filename[200]; // FIXME
-  sprintf(filename, "data/%s_%06d_%07d.h5", prefix, rank, psc.timestep);
 
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
@@ -215,7 +209,12 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
 {
   struct hdf5_ctx *hdf5;
 
-  hdf5_open(list, prefix, &hdf5);
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  char filename[200]; // FIXME
+  sprintf(filename, "data/%s_%06d_%07d.h5", prefix, rank, psc.timestep);
+  hdf5_open(list, filename, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
     hdf5_write_field(hdf5, &list->flds[m]);
