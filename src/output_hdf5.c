@@ -106,7 +106,7 @@ copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
 }
 
 static void
-write_fields_1proc()
+write_fields_1proc(struct psc_output_format_ops *format_ops)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -117,9 +117,9 @@ write_fields_1proc()
   if (rank == 0) {
     char datadir[] = ".";
     char filename[strlen(datadir) + 20];
-    sprintf(filename, "%s/field_%09d.h5", datadir, psc.timestep);
-    printf("[%d] hdf5_out_field: %s\n", rank, filename);
-    hdf5_open(NULL, filename, &ctx);
+    sprintf(filename, "%s/field_%09d%s", datadir, psc.timestep, format_ops->ext);
+    printf("[%d] write_fields_1proc: %s\n", rank, filename);
+    format_ops->open(NULL, filename, &ctx);
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -172,13 +172,13 @@ write_fields_1proc()
 	  free(buf);
 	}
       }
-      hdf5_write_field(ctx, &fld);
+      format_ops->write_field(ctx, &fld);
       free(fld.data);
     }
   }
 
   if (rank == 0) {
-    hdf5_close(ctx);
+    format_ops->close(ctx);
   }
 }
 
@@ -195,7 +195,7 @@ hdf5_out_field()
     pr = prof_register("hdf5_out_field", 1., 0, 0);
   }
   prof_start(pr);
-  write_fields_1proc();
+  write_fields_1proc(&psc_output_format_ops_hdf5);
   prof_stop(pr);
 }
 
