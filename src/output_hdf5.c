@@ -121,9 +121,6 @@ hdf5_out_field()
 
   struct hdf5_ctx *ctx;
   float *fld = NULL;
-  hsize_t dims[3] = { psc.ghi[2] - psc.glo[2],
-		      psc.ghi[1] - psc.glo[1],
-		      psc.ghi[0] - psc.glo[0] };
   if (rank == 0) {
     char datadir[] = ".";
     char filename[strlen(datadir) + 20];
@@ -131,7 +128,9 @@ hdf5_out_field()
     printf("[%d] hdf5_out_field: %s\n", rank, filename);
     hdf5_open(NULL, filename, &ctx);
 
-    fld = calloc(dims[0] * dims[1] * dims[2], sizeof(float));
+    fld = calloc((psc.ghi[0] - psc.glo[0]) * 
+		 (psc.ghi[1] - psc.glo[1]) * 
+		 (psc.ghi[2] - psc.glo[2]), sizeof(float));
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -174,7 +173,16 @@ hdf5_out_field()
 	  free(buf);
 	}
       }
-      H5LTmake_dataset_float(ctx->group_fld, fldname[m], 3, dims, fld);
+      struct psc_field fld_info;
+      fld_info.data = fld;
+      fld_info.name = fldname[m];
+      fld_info.size = 1;
+      for (int d = 0; d < 3; d++) {
+	fld_info.ilo[d] = psc.glo[d];
+	fld_info.ihi[d] = psc.ghi[d];
+	fld_info.size *= (psc.ghi[d] - psc.glo[d]);
+      }
+      hdf5_write_field(ctx, &fld_info);
     }
   }
 
