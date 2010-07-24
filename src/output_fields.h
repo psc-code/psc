@@ -31,7 +31,7 @@ struct psc_field {
 struct psc_fields_list {
   int nr_flds;
   struct psc_field flds[MAX_FIELDS_LIST];
-  bool *dowrite_fd;
+  bool *dowrite_fd; // FIXME, obsolete -- don't use
 };
 
 struct psc_output_format_ops {
