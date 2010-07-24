@@ -32,4 +32,11 @@ void reset_fields(struct psc_extra_fields *f);
 // (divide by naccum)
 void mean_tfields(struct psc_extra_fields *f);
 
+struct psc_output_format_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  void (*write_fields)(struct psc_extra_fields *flds, const char *prefix);
+};
+
 #endif

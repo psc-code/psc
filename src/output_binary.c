@@ -7,8 +7,27 @@
 #include <mpi.h>
 #include <string.h>
 
+extern struct psc_output_format_ops psc_output_format_ops_binary;
+
+static struct psc_output_format_ops *psc_output_format_ops_list[] = {
+  &psc_output_format_ops_binary,
+  NULL,
+};
+
+static struct psc_output_format_ops *
+find_output_format_ops(const char *ops_name)
+{
+  for (int i = 0; psc_output_format_ops_list[i]; i++) {
+    if (strcasecmp(psc_output_format_ops_list[i]->name, ops_name) == 0)
+      return psc_output_format_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_output_format_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 struct psc_output_binary {
   char *data_dir;
+  char *output_format;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_next, tfield_next;
   int pfield_step, tfield_step;
@@ -16,12 +35,15 @@ struct psc_output_binary {
 
   // storage for output
   struct psc_extra_fields pfd, tfd;
+
+  struct psc_output_format_ops *format_ops;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_binary, x)
 
 static struct param psc_binary_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
+  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
   { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
@@ -58,13 +80,18 @@ static struct psc_output_binary psc_output_binary;
 
 static void output_binary_create(void)
 { 
-  params_parse_cmdline(&psc_output_binary, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
-  params_print(&psc_output_binary, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+  struct psc_output_binary *out = &psc_output_binary;
+  params_parse_cmdline(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+  params_print(out, psc_binary_descr, "PSC BINARY", MPI_COMM_WORLD);
+
+  out->format_ops = find_output_format_ops(out->output_format);
+  if (out->format_ops->create) {
+    out->format_ops->create();
+  }
 };
 
-
 static void
-binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
+binary_field_output_aux(struct psc_extra_fields *f, const char *fnamehead)
 { 
   char *headstr = "PSC ";
   char *datastr = "DATA";
@@ -123,6 +150,10 @@ binary_field_output_aux(struct psc_extra_fields *f, char *fnamehead)
   fclose(file);
 }
 
+struct psc_output_format_ops psc_output_format_ops_binary = {
+  .name         = "binary",
+  .write_fields = binary_field_output_aux,
+};
 
 static void
 output_binary_field()
@@ -145,7 +176,7 @@ output_binary_field()
   if (psc_output_binary.dowrite_pfield) {
     if (psc.timestep >= psc_output_binary.pfield_next) {
        psc_output_binary.pfield_next += psc_output_binary.pfield_step;
-       binary_field_output_aux(pfd, "pfd");
+       psc_output_binary.format_ops->write_fields(pfd, "pfd");
     }
   }
 
@@ -154,7 +185,7 @@ output_binary_field()
     if (psc.timestep >= psc_output_binary.tfield_next) {
        psc_output_binary.tfield_next += psc_output_binary.tfield_step;
        mean_tfields(tfd);
-       binary_field_output_aux(tfd, "tfd");
+       psc_output_binary.format_ops->write_fields(tfd, "tfd");
        reset_fields(tfd);
     }
   }
