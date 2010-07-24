@@ -14,9 +14,10 @@ struct psc_extra_fields {
 };
 
 static const char *x_fldname[NR_EXTRA_FIELDS] = {
+  [X_NE]   = "ne"  , [X_NI]   = "ni"  , [X_NN]   = "nn",
+  [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
   [X_EX]   = "ex"  , [X_EY]   = "ey"  , [X_EZ]   = "ez",
   [X_BX]   = "bx"  , [X_BY]   = "by"  , [X_BZ]   = "bz",
-  [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
   [X_JXEX] = "jxex", [X_JYEY] = "jyey", [X_JZEZ] = "jzez",
   [X_POYX] = "poyx", [X_POYY] = "poyy", [X_POYZ] = "poyz",
   [X_E2X ] = "e2x" , [X_E2Y]  = "e2y" , [X_E2Z]  = "e2z",
@@ -66,6 +67,9 @@ calculate_pfields(struct psc_extra_fields *p)
    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
         for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
+	  p->all[X_NE][j] = FF3(NE,ix,iy,iz);
+	  p->all[X_NI][j] = FF3(NI,ix,iy,iz);
+	  p->all[X_NN][j] = FF3(NN,ix,iy,iz);
 
            p->all[X_EX][j] = .5f * ( FF3(EX,ix,iy,iz)
                                     +FF3(EX,ix-1,iy,iz));
@@ -186,15 +190,18 @@ static struct param psc_output_c_descr[] = {
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
   { "tfield_first"       , VAR(tfield_next)          , PARAM_INT(0)         },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
+  { "output_write_ne"    , VAR(dowrite_fd[X_NE])     , PARAM_BOOL(1)        },
+  { "output_write_ni"    , VAR(dowrite_fd[X_NI])     , PARAM_BOOL(1)        },
+  { "output_write_nn"    , VAR(dowrite_fd[X_NN])     , PARAM_BOOL(1)        },
+  { "output_write_jx"    , VAR(dowrite_fd[X_JXI])    , PARAM_BOOL(1)        },
+  { "output_write_jy"    , VAR(dowrite_fd[X_JYI])    , PARAM_BOOL(1)        },
+  { "output_write_jz"    , VAR(dowrite_fd[X_JZI])    , PARAM_BOOL(1)        },
   { "output_write_ex"    , VAR(dowrite_fd[X_EX])     , PARAM_BOOL(1)        },
   { "output_write_ey"    , VAR(dowrite_fd[X_EY])     , PARAM_BOOL(1)        },
   { "output_write_ez"    , VAR(dowrite_fd[X_EZ])     , PARAM_BOOL(1)        },
   { "output_write_bx"    , VAR(dowrite_fd[X_BX])     , PARAM_BOOL(1)        },
   { "output_write_by"    , VAR(dowrite_fd[X_BY])     , PARAM_BOOL(1)        },
   { "output_write_bz"    , VAR(dowrite_fd[X_BZ])     , PARAM_BOOL(1)        },
-  { "output_write_jx"    , VAR(dowrite_fd[X_JXI])    , PARAM_BOOL(1)        },
-  { "output_write_jy"    , VAR(dowrite_fd[X_JYI])    , PARAM_BOOL(1)        },
-  { "output_write_jz"    , VAR(dowrite_fd[X_JZI])    , PARAM_BOOL(1)        },
   { "output_write_jxex"  , VAR(dowrite_fd[X_JXEX])   , PARAM_BOOL(1)        },
   { "output_write_jyey"  , VAR(dowrite_fd[X_JYEY])   , PARAM_BOOL(1)        },
   { "output_write_jzez"  , VAR(dowrite_fd[X_JZEZ])   , PARAM_BOOL(1)        },
