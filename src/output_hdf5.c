@@ -90,7 +90,7 @@ static void hdf5_out_create(void)
 };
 
 static void
-copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
+copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
 {
   int my = psc.ghi[1] - psc.glo[1];
   int mx = psc.ghi[0] - psc.glo[0];
@@ -127,13 +127,22 @@ write_fields_1proc(struct psc_output_format_ops *format_ops,
   /* 	     ghi[0], ghi[1], ghi[2]); */
 
   for (int m = 0; m < list->nr_flds; m++) {
+    int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
+    float *s_data = list->flds[m].data;
+
+    for (int d = 0; d < 3; d++) {
+      s_ilo[d] = list->flds[m].ilo[d];
+      s_ihi[d] = list->flds[m].ihi[d];
+      s_ilg[d] = s_ilo[d];
+      s_img[d] = s_ihi[d] - s_ilo[d];
+    }
+    
     if (rank != 0) {
-      MPI_Send(psc.ilo, 3, MPI_INT, 0, 100, MPI_COMM_WORLD);
-      MPI_Send(psc.ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
-      MPI_Send(psc.ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
-      MPI_Send(psc.img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-      int ntot = psc.img[0] * psc.img[1] * psc.img[2];
-      MPI_Send(psc.f_fields[m], ntot, MPI_DOUBLE, 0, 104, MPI_COMM_WORLD);
+      MPI_Send(s_ilo, 3, MPI_INT, 0, 100, MPI_COMM_WORLD);
+      MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
+      MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
+      MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
+      MPI_Send(s_data, list->flds[m].size, MPI_FLOAT, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       struct psc_field fld;
       fld.name = list->flds[m].name;
@@ -143,20 +152,20 @@ write_fields_1proc(struct psc_output_format_ops *format_ops,
 	fld.ihi[d] = psc.ghi[d];
 	fld.size *= (psc.ghi[d] - psc.glo[d]);
       }
-      fld.data = calloc(fld.size, sizeof(float));
+      fld.data = calloc(fld.size, sizeof(*fld.data));
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
-	f_real *buf;
+	float *buf;
 	
 	if (n == 0) {
 	  for (int d = 0; d < 3; d++) {
-	    ilo[d] = psc.ilo[d];
-	    ihi[d] = psc.ihi[d];
-	    ilg[d] = psc.ilg[d];
-	    img[d] = psc.img[d];
+	    ilo[d] = s_ilo[d];
+	    ihi[d] = s_ihi[d];
+	    ilg[d] = s_ilg[d];
+	    img[d] = s_img[d];
 	  }
-	  buf = psc.f_fields[m];
+	  buf = s_data;
 	} else {
 	  MPI_Recv(ilo, 3, MPI_INT, n, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	  MPI_Recv(ihi, 3, MPI_INT, n, 101, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -164,7 +173,7 @@ write_fields_1proc(struct psc_output_format_ops *format_ops,
 	  MPI_Recv(img, 3, MPI_INT, n, 103, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	  int ntot = img[0] * img[1] * img[2];
 	  buf = calloc(ntot, sizeof(*buf));
-	  MPI_Recv(buf, ntot, MPI_DOUBLE, n, 104, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	  MPI_Recv(buf, ntot, MPI_FLOAT, n, 104, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	/* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	/*        ihi[0], ihi[1], ihi[2]); */
@@ -202,8 +211,31 @@ hdf5_out_field()
   for (int m = 0; m < NR_FIELDS; m++) {
     struct psc_field *fld = &list.flds[m];
     fld->name = fldname[m];
+    fld->size = 1;
+    for (int d = 0; d < 3; d++) {
+      fld->ilo[d] = psc.ilo[d];
+      fld->ihi[d] = psc.ihi[d];
+      fld->size *= (psc.ihi[d] - psc.ilo[d]);
+    }
+    fld->data = calloc(fld->size, sizeof(*fld->data));
+    int my = psc.ihi[1] - psc.ilo[1];
+    int mx = psc.ihi[0] - psc.ilo[0];
+
+    // FIXME, this is an extra copy which I'd rather avoid...
+    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
+      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
+	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
+	  fld->data[((iz-psc.ilo[2]) * my + iy-psc.ilo[1]) * mx + ix-psc.ilo[0]] =
+	    FF3(m, ix, iy, iz);
+	}
+      }
+    }
   }
   write_fields_1proc(&psc_output_format_ops_hdf5, &list);
+
+  for (int m = 0; m < NR_FIELDS; m++) {
+    free(list.flds[m].data);
+  }
 
   prof_stop(pr);
 }
