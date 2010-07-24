@@ -12,8 +12,7 @@ struct binary_ctx {
 };
 
 static void
-binary_open(struct psc_fields_list *list, const char *filename,
-	    struct binary_ctx **pctx)
+binary_open(struct psc_fields_list *list, const char *filename, void **pctx)
 {
   const char headstr[] = "PSC ";
   const char datastr[] = "DATA";
@@ -63,14 +62,18 @@ binary_open(struct psc_fields_list *list, const char *filename,
 }
 
 static void
-binary_close(struct binary_ctx *binary)
+binary_close(void *ctx)
 {
+  struct binary_ctx *binary = ctx;
+
   fclose(binary->file);
 }
 
 static void
-binary_write_field(struct binary_ctx *binary, struct psc_field *fld)
+binary_write_field(void *ctx, struct psc_field *fld)
 {
+  struct binary_ctx *binary = ctx;
+
   fwrite(fld->data, sizeof(float), fld->size, binary->file);
 }
 
@@ -83,7 +86,7 @@ binary_write_fields(struct psc_fields_list *list, const char *prefix, const char
   char filename[200];
   sprintf(filename, "data/%s_%03d_%07d%s", prefix, rank, psc.timestep, ext);
 
-  struct binary_ctx *ctx;
+  void *ctx;
   binary_open(list, filename, &ctx);
 
   for (int m = 0; m < list->nr_flds; m++) {

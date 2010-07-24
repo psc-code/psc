@@ -19,7 +19,7 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **pctx)
+hdf5_open(struct psc_fields_list *list, const char *filename, void **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
@@ -39,16 +39,20 @@ hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **
 }
 
 static void
-hdf5_close(struct hdf5_ctx *hdf5)
+hdf5_close(void *ctx)
 {
+  struct hdf5_ctx *hdf5 = ctx;
+
   H5Gclose(hdf5->group_fld);
   H5Gclose(hdf5->group);
   H5Fclose(hdf5->file);
 }
 
 static void
-hdf5_write_field(struct hdf5_ctx *hdf5, struct psc_field *fld)
+hdf5_write_field(void *ctx, struct psc_field *fld)
 {
+  struct hdf5_ctx *hdf5 = ctx;
+
   hsize_t dims[3];
   for (int d = 0; d < 3; d++) {
     // reverse dimensions because of Fortran order
@@ -119,7 +123,7 @@ hdf5_out_field()
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  struct hdf5_ctx *ctx;
+  void *ctx;
   if (rank == 0) {
     char datadir[] = ".";
     char filename[strlen(datadir) + 20];
@@ -201,20 +205,20 @@ struct psc_output_ops psc_output_ops_hdf5 = {
 static void
 hdf5_write_fields(struct psc_fields_list *list, const char *prefix, const char *ext)
 {
-  struct hdf5_ctx *hdf5;
-
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   char filename[200]; // FIXME
   sprintf(filename, "data/%s_%06d_%07d%s", prefix, rank, psc.timestep, ext);
-  hdf5_open(list, filename, &hdf5);
+
+  void *ctx;
+  hdf5_open(list, filename, &ctx);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    hdf5_write_field(hdf5, &list->flds[m]);
+    hdf5_write_field(ctx, &list->flds[m]);
   }
   
-  hdf5_close(hdf5);
+  hdf5_close(ctx);
 }
 
 struct psc_output_format_ops psc_output_format_ops_hdf5 = {
