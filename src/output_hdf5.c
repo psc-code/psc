@@ -52,6 +52,20 @@ hdf5_close(struct hdf5_ctx *hdf5)
   H5Fclose(hdf5->file);
 }
 
+static void
+hdf5_write_field(struct hdf5_ctx *hdf5, struct psc_field *fld)
+{
+  hsize_t dims[3];
+  for (int d = 0; d < 3; d++) {
+    // reverse dimensions because of Fortran order
+    dims[d] = fld->ihi[2-d] - fld->ilo[2-d];
+  }
+  
+  H5LTmake_dataset_float(hdf5->group_fld, fld->name, 3, dims, fld->data);
+  H5LTset_attribute_int(hdf5->group_fld, fld->name, "lo", fld->ilo, 3);
+  H5LTset_attribute_int(hdf5->group_fld, fld->name, "hi", fld->ihi, 3);
+}
+
 // ======================================================================
 
 struct psc_hdf5 {
@@ -204,16 +218,7 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
   hdf5_open(list, prefix, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    struct psc_field *fld = &list->flds[m];
-    hsize_t dims[3];
-    for (int d = 0; d < 3; d++) {
-      // reverse dimensions because of Fortran order
-      dims[d] = fld->ihi[2-d] - fld->ilo[2-d];
-    }
- 
-    H5LTmake_dataset_float(hdf5->group_fld, fld->name, 3, dims, fld->data);
-    H5LTset_attribute_int(hdf5->group_fld, fld->name, "lo", fld->ilo, 3);
-    H5LTset_attribute_int(hdf5->group_fld, fld->name, "hi", fld->ihi, 3);
+    hdf5_write_field(hdf5, &list->flds[m]);
   }
   
   hdf5_close(hdf5);
