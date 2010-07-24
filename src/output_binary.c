@@ -7,11 +7,16 @@
 #include <mpi.h>
 #include <string.h>
 
+struct binary_ctx {
+  FILE *file;
+};
+
 static void
-binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
-{ 
-  char *headstr = "PSC ";
-  char *datastr = "DATA";
+binary_open(struct psc_fields_list *list, const char *filename,
+	    struct binary_ctx **pctx)
+{
+  const char headstr[] = "PSC ";
+  const char datastr[] = "DATA";
 
   // appears as "?BL?" if NO byte swapping required, ?LB? if required
   unsigned int magic_big_little = 1061962303;    
@@ -19,13 +24,10 @@ binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
   
   float t_float;
 
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  char filename[200];
-  sprintf(filename, "data/%s_%03d_%07d.psc", fnamehead, rank, psc.timestep);
-
-  FILE *file = fopen(filename, "wb");
+  struct binary_ctx *binary = malloc(sizeof(*binary));
+  
+  binary->file = fopen(filename, "wb");
+  FILE *file = binary->file;
 
   // Header  
   fwrite(headstr, sizeof(char), 4, file);
@@ -57,12 +59,38 @@ binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
 
   fwrite(datastr, sizeof(char), 4, file);
   
+  *pctx = binary;
+}
+
+static void
+binary_close(struct binary_ctx *binary)
+{
+  fclose(binary->file);
+}
+
+static void
+binary_write_field(struct binary_ctx *binary, struct psc_field *fld)
+{
+  fwrite(fld->data, sizeof(float), fld->size, binary->file);
+}
+
+static void
+binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
+{ 
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  char filename[200];
+  sprintf(filename, "data/%s_%03d_%07d.psc", fnamehead, rank, psc.timestep);
+
+  struct binary_ctx *ctx;
+  binary_open(list, filename, &ctx);
+
   for (int m = 0; m < list->nr_flds; m++) {
-    struct psc_field *fld = &list->flds[m];
-    fwrite(fld->data, sizeof(float), fld->size, file);
+    binary_write_field(ctx, &list->flds[m]);
   }
 
-  fclose(file);
+  binary_close(ctx);
 }
 
 struct psc_output_format_ops psc_output_format_ops_binary = {

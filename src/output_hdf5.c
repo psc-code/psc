@@ -19,7 +19,7 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **ctx)
+hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
@@ -35,7 +35,7 @@ hdf5_open(struct psc_fields_list *list, const char *filename, struct hdf5_ctx **
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
 			      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  *ctx = hdf5;
+  *pctx = hdf5;
 }
 
 static void
