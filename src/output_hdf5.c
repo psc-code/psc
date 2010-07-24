@@ -106,7 +106,8 @@ copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
 }
 
 static void
-write_fields_1proc(struct psc_output_format_ops *format_ops)
+write_fields_1proc(struct psc_output_format_ops *format_ops,
+		   struct psc_fields_list *list)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -125,7 +126,7 @@ write_fields_1proc(struct psc_output_format_ops *format_ops)
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
   /* 	     ghi[0], ghi[1], ghi[2]); */
 
-  for (int m = 0; m < NR_FIELDS; m++) {
+  for (int m = 0; m < list->nr_flds; m++) {
     if (rank != 0) {
       MPI_Send(psc.ilo, 3, MPI_INT, 0, 100, MPI_COMM_WORLD);
       MPI_Send(psc.ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
@@ -135,7 +136,7 @@ write_fields_1proc(struct psc_output_format_ops *format_ops)
       MPI_Send(psc.f_fields[m], ntot, MPI_DOUBLE, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       struct psc_field fld;
-      fld.name = fldname[m];
+      fld.name = list->flds[m].name;
       fld.size = 1;
       for (int d = 0; d < 3; d++) {
 	fld.ilo[d] = psc.glo[d];
@@ -195,7 +196,15 @@ hdf5_out_field()
     pr = prof_register("hdf5_out_field", 1., 0, 0);
   }
   prof_start(pr);
-  write_fields_1proc(&psc_output_format_ops_hdf5);
+
+  struct psc_fields_list list;
+  list.nr_flds = NR_FIELDS;
+  for (int m = 0; m < NR_FIELDS; m++) {
+    struct psc_field *fld = &list.flds[m];
+    fld->name = fldname[m];
+  }
+  write_fields_1proc(&psc_output_format_ops_hdf5, &list);
+
   prof_stop(pr);
 }
 
