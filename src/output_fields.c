@@ -162,6 +162,7 @@ find_output_format_ops(const char *ops_name)
 struct psc_output_c {
   char *data_dir;
   char *output_format;
+  bool output_1proc;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_next, tfield_next;
   int pfield_step, tfield_step;
@@ -178,6 +179,7 @@ struct psc_output_c {
 static struct param psc_output_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
+  { "output_1proc"       , VAR(output_1proc)         , PARAM_BOOL(0)        },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
   { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
@@ -367,6 +369,10 @@ static void
 write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 	     const char *prefix)
 {
+  if (out->output_1proc) {
+    return write_fields_1proc(out->format_ops, list, prefix);
+  }
+
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
