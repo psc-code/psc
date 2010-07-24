@@ -7,6 +7,22 @@
 #include <string.h>
 #include <assert.h>
 
+struct psc_extra_fields {
+  unsigned int size;
+  unsigned int naccum;
+  float *all[NR_EXTRA_FIELDS];
+};
+
+static const char *x_fldname[NR_EXTRA_FIELDS] = {
+  [X_EX]   = "ex"  , [X_EY]   = "ey"  , [X_EZ]   = "ez",
+  [X_BX]   = "bx"  , [X_BY]   = "by"  , [X_BZ]   = "bz",
+  [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
+  [X_JXEX] = "jxex", [X_JYEY] = "jyey", [X_JZEZ] = "jzez",
+  [X_POYX] = "poyx", [X_POYY] = "poyy", [X_POYZ] = "poyz",
+  [X_E2X ] = "e2x" , [X_E2Y]  = "e2y" , [X_E2Z]  = "e2z",
+  [X_B2X ] = "b2x" , [X_B2Y]  = "b2y" , [X_B2Z]  = "b2z",
+};
+
 static void
 reset_fields(struct psc_extra_fields *f)
 {
@@ -226,6 +242,7 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
     struct psc_field *fld = &list->flds[list->nr_flds++];
     fld->data = f->all[m];
     fld->size = f->size;
+    fld->name = x_fldname[m];
   }
   list->dowrite_fd = dowrite_fd;
 }
@@ -283,3 +300,4 @@ struct psc_output_ops psc_output_ops_c = {
   .create         = output_c_create,
   .out_field      = output_c_field,
 };
+

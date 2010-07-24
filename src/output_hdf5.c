@@ -176,9 +176,8 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
 		      psc.ihi[0] - psc.ilo[0] };
 
   for (int m = 0; m < list->nr_flds; m++) {
-    char name[10];
-    sprintf(name, "fld%d", m);
-    H5LTmake_dataset_float(group_fld, name, 3, dims, list->flds[m].data);
+    struct psc_field *fld = &list->flds[m];
+    H5LTmake_dataset_float(group_fld, fld->name, 3, dims, fld->data);
   }
 
   H5Gclose(group_fld);

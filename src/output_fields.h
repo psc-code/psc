@@ -15,17 +15,12 @@ enum {
   NR_EXTRA_FIELDS,
 };
 
-struct psc_extra_fields {
-  unsigned int size;
-  unsigned int naccum;
-  float *all[NR_EXTRA_FIELDS];
-};
-
 #define MAX_FIELDS_LIST NR_EXTRA_FIELDS
 
 struct psc_field {
   float *data;
   unsigned int size;
+  const char *name;
 };
 
 struct psc_fields_list {
