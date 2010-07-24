@@ -31,14 +31,14 @@ struct psc_field {
 struct psc_fields_list {
   int nr_flds;
   struct psc_field flds[MAX_FIELDS_LIST];
+  bool *dowrite_fd;
 };
 
 struct psc_output_format_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_fields_list *flds, bool *dowrite_fd,
-		       const char *prefix);
+  void (*write_fields)(struct psc_fields_list *flds, const char *prefix);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

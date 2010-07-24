@@ -8,8 +8,7 @@
 #include <string.h>
 
 static void
-binary_write_fields(struct psc_fields_list *list, bool *dowrite_fd,
-		    const char *fnamehead)
+binary_write_fields(struct psc_fields_list *list, const char *fnamehead)
 { 
   char *headstr = "PSC ";
   char *datastr = "DATA";
@@ -54,13 +53,13 @@ binary_write_fields(struct psc_fields_list *list, bool *dowrite_fd,
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
  
-  fwrite(dowrite_fd, sizeof(bool), NR_EXTRA_FIELDS, file);
+  fwrite(list->dowrite_fd, sizeof(bool), NR_EXTRA_FIELDS, file);
 
   fwrite(datastr, sizeof(char), 4, file);
   
   for (int m = 0; m < list->nr_flds; m++) {
     struct psc_field *fld = &list->flds[m];
-    if (dowrite_fd[m]) {
+    if (list->dowrite_fd[m]) {
       fwrite(fld->data, sizeof(float), fld->size, file);
     }
   }
