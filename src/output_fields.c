@@ -181,7 +181,7 @@ struct psc_output_c {
 #define VAR(x) (void *)offsetof(struct psc_output_c, x)
 
 static struct param psc_output_c_descr[] = {
-  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(NULL)   },
+  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")      },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
   { "output_1proc"       , VAR(output_1proc)         , PARAM_BOOL(0)        },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
@@ -293,9 +293,8 @@ write_fields_1proc(struct psc_output_c *out,
 
   void *ctx;
   if (rank == 0) {
-    char datadir[] = "data";
-    char filename[strlen(datadir) + 30];
-    sprintf(filename, "%s/%s_%07d%s", datadir, prefix, psc.timestep,
+    char filename[strlen(out->data_dir) + 30];
+    sprintf(filename, "%s/%s_%07d%s", out->data_dir, prefix, psc.timestep,
 	    out->format_ops->ext);
     printf("[%d] write_fields_1proc: %s\n", rank, filename);
     out->format_ops->open(list, filename, &ctx);
@@ -384,9 +383,8 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  char datadir[] = "data";
-  char filename[strlen(datadir) + 30];
-  sprintf(filename, "data/%s_%06d_%07d%s", prefix, rank, psc.timestep,
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%06d_%07d%s", out->data_dir, prefix, rank, psc.timestep,
 	  out->format_ops->ext);
 
   void *ctx;
