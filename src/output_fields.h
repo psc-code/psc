@@ -35,8 +35,9 @@ struct psc_output_format_ops {
   const char *ext;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_fields_list *flds, const char *prefix,
-		       const char *ext);
+  void (*open)(struct psc_fields_list *flds, const char *filename, void **pctx);
+  void (*close)(void *ctx);
+  void (*write_field)(void *ctx, struct psc_field *fld);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

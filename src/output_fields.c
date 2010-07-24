@@ -258,7 +258,21 @@ static void
 write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 	     const char *prefix)
 {
-  out->format_ops->write_fields(list, prefix, out->format_ops->ext);
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  char filename[200]; // FIXME
+  sprintf(filename, "data/%s_%06d_%07d%s", prefix, rank, psc.timestep,
+	  out->format_ops->ext);
+
+  void *ctx;
+  out->format_ops->open(list, prefix, &ctx);
+
+  for (int m = 0; m < list->nr_flds; m++) {
+    out->format_ops->write_field(ctx, &list->flds[m]);
+  }
+  
+  out->format_ops->close(ctx);
 }
 
 // ----------------------------------------------------------------------
