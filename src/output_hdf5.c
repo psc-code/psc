@@ -166,18 +166,20 @@ hdf5_write_fields(struct psc_fields_list *list, const char *prefix)
   H5LTset_attribute_double(group, ".", "dx", psc.dx, 3);
   H5LTset_attribute_int(group, ".", "lo", psc.glo, 3);
   H5LTset_attribute_int(group, ".", "hi", psc.ghi, 3);
-  H5LTset_attribute_int(group, ".", "ilo", psc.ilo, 3);
-  H5LTset_attribute_int(group, ".", "ihi", psc.ihi, 3);
   
   hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-  hsize_t dims[3] = { psc.ihi[2] - psc.ilo[2],
-		      psc.ihi[1] - psc.ilo[1],
-		      psc.ihi[0] - psc.ilo[0] };
-
   for (int m = 0; m < list->nr_flds; m++) {
     struct psc_field *fld = &list->flds[m];
+    hsize_t dims[3];
+    for (int d = 0; d < 3; d++) {
+      // reverse dimensions because of Fortran order
+      dims[d] = fld->ihi[2-d] - fld->ilo[2-d];
+    }
+ 
     H5LTmake_dataset_float(group_fld, fld->name, 3, dims, fld->data);
+    H5LTset_attribute_int(group_fld, fld->name, "lo", fld->ilo, 3);
+    H5LTset_attribute_int(group_fld, fld->name, "hi", fld->ihi, 3);
   }
 
   H5Gclose(group_fld);

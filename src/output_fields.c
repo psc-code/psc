@@ -243,6 +243,10 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
     fld->data = f->all[m];
     fld->size = f->size;
     fld->name = x_fldname[m];
+    for (int d = 0; d < 3; d++) {
+      fld->ilo[d] = psc.ilo[d];
+      fld->ihi[d] = psc.ihi[d];
+    }
   }
   list->dowrite_fd = dowrite_fd;
 }

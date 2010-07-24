@@ -19,6 +19,7 @@ enum {
 
 struct psc_field {
   float *data;
+  int ilo[3], ihi[3];
   unsigned int size;
   const char *name;
 };
