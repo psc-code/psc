@@ -106,18 +106,8 @@ copy_to_global(float *fld, f_real *buf, int *ilo, int *ihi, int *ilg, int *img)
 }
 
 static void
-hdf5_out_field()
+write_fields_1proc()
 {
-  if (psc.timestep < psc_hdf5.field_next_out) {
-    return;
-  }
-  psc_hdf5.field_next_out += psc_hdf5.field_step;
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("hdf5_out_field", 1., 0, 0);
-  }
-  prof_start(pr);
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
   MPI_Comm_rank(comm, &rank);
@@ -190,7 +180,22 @@ hdf5_out_field()
   if (rank == 0) {
     hdf5_close(ctx);
   }
+}
 
+static void
+hdf5_out_field()
+{
+  if (psc.timestep < psc_hdf5.field_next_out) {
+    return;
+  }
+  psc_hdf5.field_next_out += psc_hdf5.field_step;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("hdf5_out_field", 1., 0, 0);
+  }
+  prof_start(pr);
+  write_fields_1proc();
   prof_stop(pr);
 }
 
