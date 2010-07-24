@@ -103,7 +103,7 @@ hdf5_out_field()
   }
   prof_start(pr);
 
-  struct psc_fields_list list;
+  struct psc_fields_list list = {};
   list.nr_flds = NR_FIELDS;
   for (int m = 0; m < NR_FIELDS; m++) {
     struct psc_field *fld = &list.flds[m];
@@ -128,7 +128,7 @@ hdf5_out_field()
       }
     }
   }
-  write_fields_1proc(&psc_output_format_ops_hdf5, &list);
+  write_fields_1proc(&psc_output_format_ops_hdf5, &list, "field");
 
   for (int m = 0; m < NR_FIELDS; m++) {
     free(list.flds[m].data);

@@ -44,6 +44,6 @@ extern struct psc_output_format_ops psc_output_format_ops_binary;
 extern struct psc_output_format_ops psc_output_format_ops_hdf5;
 
 void write_fields_1proc(struct psc_output_format_ops *format_ops,
-			struct psc_fields_list *list);
+			struct psc_fields_list *list, const char *pfx);
 
 #endif

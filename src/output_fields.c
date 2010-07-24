@@ -275,7 +275,7 @@ copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
 
 void
 write_fields_1proc(struct psc_output_format_ops *format_ops,
-		   struct psc_fields_list *list)
+		   struct psc_fields_list *list, const char *prefix)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -284,11 +284,11 @@ write_fields_1proc(struct psc_output_format_ops *format_ops,
 
   void *ctx;
   if (rank == 0) {
-    char datadir[] = ".";
-    char filename[strlen(datadir) + 20];
-    sprintf(filename, "%s/field_%09d%s", datadir, psc.timestep, format_ops->ext);
+    char datadir[] = "data";
+    char filename[strlen(datadir) + 30];
+    sprintf(filename, "%s/%s_%07d%s", datadir, prefix, psc.timestep, format_ops->ext);
     printf("[%d] write_fields_1proc: %s\n", rank, filename);
-    format_ops->open(NULL, filename, &ctx);
+    format_ops->open(list, filename, &ctx);
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -370,7 +370,8 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  char filename[200]; // FIXME
+  char datadir[] = "data";
+  char filename[strlen(datadir) + 30];
   sprintf(filename, "data/%s_%06d_%07d%s", prefix, rank, psc.timestep,
 	  out->format_ops->ext);
 

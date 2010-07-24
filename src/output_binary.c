@@ -53,7 +53,8 @@ binary_open(struct psc_fields_list *list, const char *filename, void **pctx)
   fwrite(&psc.domain.ihi[1], sizeof(psc.domain.ihi[1]), 1, file);
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
- 
+  
+  assert(list->dowrite_fd);
   fwrite(list->dowrite_fd, sizeof(bool), NR_EXTRA_FIELDS, file);
 
   fwrite(datastr, sizeof(char), 4, file);
