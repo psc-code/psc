@@ -252,6 +252,16 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
 }
 
 // ----------------------------------------------------------------------
+// write_fields
+
+static void
+write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+	     const char *prefix)
+{
+  out->format_ops->write_fields(list, prefix, out->format_ops->ext);
+}
+
+// ----------------------------------------------------------------------
 // output_c_field
 
 static void
@@ -277,7 +287,7 @@ output_c_field()
        out->pfield_next += out->pfield_step;
        struct psc_fields_list flds_list;
        make_fields_list(&flds_list, &out->pfd, out->dowrite_fd);
-       out->format_ops->write_fields(&flds_list, "pfd", out->format_ops->ext);
+       write_fields(out, &flds_list, "pfd");
     }
   }
 
@@ -288,7 +298,7 @@ output_c_field()
       mean_tfields(&out->tfd);
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
-      out->format_ops->write_fields(&flds_list, "tfd", out->format_ops->ext);
+      write_fields(out, &flds_list, "tfd");
       reset_fields(&out->tfd);
     }
   }
