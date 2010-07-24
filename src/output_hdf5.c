@@ -120,17 +120,12 @@ hdf5_out_field()
   MPI_Comm_size(comm, &size);
 
   struct hdf5_ctx *ctx;
-  float *fld = NULL;
   if (rank == 0) {
     char datadir[] = ".";
     char filename[strlen(datadir) + 20];
     sprintf(filename, "%s/field_%09d.h5", datadir, psc.timestep);
     printf("[%d] hdf5_out_field: %s\n", rank, filename);
     hdf5_open(NULL, filename, &ctx);
-
-    fld = calloc((psc.ghi[0] - psc.glo[0]) * 
-		 (psc.ghi[1] - psc.glo[1]) * 
-		 (psc.ghi[2] - psc.glo[2]), sizeof(float));
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -145,6 +140,16 @@ hdf5_out_field()
       int ntot = psc.img[0] * psc.img[1] * psc.img[2];
       MPI_Send(psc.f_fields[m], ntot, MPI_DOUBLE, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
+      struct psc_field fld;
+      fld.name = fldname[m];
+      fld.size = 1;
+      for (int d = 0; d < 3; d++) {
+	fld.ilo[d] = psc.glo[d];
+	fld.ihi[d] = psc.ghi[d];
+	fld.size *= (psc.ghi[d] - psc.glo[d]);
+      }
+      fld.data = calloc(fld.size, sizeof(float));
+
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
 	f_real *buf;
@@ -168,26 +173,17 @@ hdf5_out_field()
 	}
 	/* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	/*        ihi[0], ihi[1], ihi[2]); */
-	copy_to_global(fld, buf, ilo, ihi, ilg, img);
+	copy_to_global(fld.data, buf, ilo, ihi, ilg, img);
 	if (n != 0) {
 	  free(buf);
 	}
       }
-      struct psc_field fld_info;
-      fld_info.data = fld;
-      fld_info.name = fldname[m];
-      fld_info.size = 1;
-      for (int d = 0; d < 3; d++) {
-	fld_info.ilo[d] = psc.glo[d];
-	fld_info.ihi[d] = psc.ghi[d];
-	fld_info.size *= (psc.ghi[d] - psc.glo[d]);
-      }
-      hdf5_write_field(ctx, &fld_info);
+      hdf5_write_field(ctx, &fld);
+      free(fld.data);
     }
   }
 
   if (rank == 0) {
-    free(fld);
     hdf5_close(ctx);
   }
 
