@@ -59,8 +59,9 @@ binary_write_fields(struct psc_fields_list *list, bool *dowrite_fd,
   fwrite(datastr, sizeof(char), 4, file);
   
   for (int m = 0; m < list->nr_flds; m++) {
+    struct psc_field *fld = &list->flds[m];
     if (dowrite_fd[m]) {
-      fwrite(list->flds[m], sizeof(float), list->size, file);
+      fwrite(fld->data, sizeof(float), fld->size, file);
     }
   }
 

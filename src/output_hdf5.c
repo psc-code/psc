@@ -182,7 +182,7 @@ hdf5_write_fields(struct psc_fields_list *list, bool *dowrite_fd,
 
     char name[10];
     sprintf(name, "fld%d", m);
-    H5LTmake_dataset_float(group_fld, name, 3, dims, list->flds[m]);
+    H5LTmake_dataset_float(group_fld, name, 3, dims, list->flds[m].data);
   }
 
   H5Gclose(group_fld);

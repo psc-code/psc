@@ -23,10 +23,14 @@ struct psc_extra_fields {
 
 #define MAX_FIELDS_LIST NR_EXTRA_FIELDS
 
+struct psc_field {
+  float *data;
+  unsigned int size;
+};
+
 struct psc_fields_list {
   int nr_flds;
-  float *flds[MAX_FIELDS_LIST];
-  int size;
+  struct psc_field flds[MAX_FIELDS_LIST];
 };
 
 struct psc_output_format_ops {

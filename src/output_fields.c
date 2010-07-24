@@ -219,9 +219,10 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f)
 {
   list->nr_flds = 0;
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    list->flds[list->nr_flds++] = f->all[m];
+    struct psc_field *fld = &list->flds[list->nr_flds++];
+    fld->data = f->all[m];
+    fld->size = f->size;
   }
-  list->size = f->size;
 }
 
 // ----------------------------------------------------------------------
