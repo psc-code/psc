@@ -156,13 +156,18 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
-  
-
+struct psc_pulse_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  double (*p_pulse_z1)(double x, double y, double z, double t);
+};  
 
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
+  struct psc_pulse_ops *pulse_ops;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -247,6 +252,8 @@ extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_harris;
+
+extern struct psc_pulse_ops psc_pulse_ops_p_z1_short;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
