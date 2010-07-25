@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 // #define OUTPUT_VTK_RECTILINEAR 1
 
@@ -84,8 +85,12 @@ vtk_write_field(void *ctx, struct psc_field *fld)
   for (int iz = fld->ilo[2]; iz < fld->ihi[2]; iz++) {
     for (int iy = fld->ilo[1]; iy < fld->ihi[1]; iy++) {
       for (int ix = fld->ilo[0]; ix < fld->ihi[0]; ix++) {
-	fprintf(vtk->file, "%g ",
-		fld->data[((iz-fld->ilo[2]) * mm[1] + iy-fld->ilo[1]) * mm[0] + ix-fld->ilo[0]]);
+	float val = fld->data[((iz-fld->ilo[2]) * mm[1] + iy-fld->ilo[1]) * mm[0] + ix-fld->ilo[0]];
+	if (fabsf(val) < 1e-37) {
+	  fprintf(vtk->file, "%g ", 0.);
+	} else {
+	  fprintf(vtk->file, "%g ", val);
+	}
       }
       fprintf(vtk->file, "\n");
     }
