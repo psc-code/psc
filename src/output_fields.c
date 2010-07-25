@@ -149,6 +149,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
 #ifdef HAVE_LIBHDF5
   &psc_output_format_ops_hdf5,
 #endif
+  &psc_output_format_ops_vtk,
   NULL,
 };
 
