@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+// #define OUTPUT_VTK_RECTILINEAR 1
+
 // ======================================================================
 // vtk_ctx
 
@@ -27,12 +29,17 @@ vtk_open(struct psc_fields_list *list, const char *filename, void **pctx)
   fprintf(vtk->file, "# vtk DataFile Version 3.0\n");
   fprintf(vtk->file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
   fprintf(vtk->file, "ASCII\n");
+#ifdef OUTPUT_VTK_RECTILINEAR
   fprintf(vtk->file, "DATASET RECTILINEAR_GRID\n");
+#else
+  fprintf(vtk->file, "DATASET STRUCTURED_POINTS\n");
+#endif
   fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
 	  ihi[0] - ilo[0],
 	  ihi[1] - ilo[1],
 	  ihi[2] - ilo[2]);
 
+#ifdef OUTPUT_VTK_RECTILINEAR
   for (int d = 0; d < 3; d++) {
     fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d, ihi[d] - ilo[d]);
     for (int i = ilo[d]; i < ihi[d]; i++) {
@@ -40,6 +47,14 @@ vtk_open(struct psc_fields_list *list, const char *filename, void **pctx)
     }
     fprintf(vtk->file, "\n");
   }
+#else
+  fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+  fprintf(vtk->file, "ORIGIN %g %g %g\n",
+	  psc.dx[0] * ilo[0],
+	  psc.dx[1] * ilo[1],
+	  psc.dx[2] * ilo[2]);
+#endif
+
   fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
 
   *pctx = vtk;
