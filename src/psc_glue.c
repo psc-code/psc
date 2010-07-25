@@ -313,5 +313,5 @@ C_out_field_F77(f_int *dummy)
 f_real
 C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return PSC_p_pulse_z1(*xx, *yy, *zz, *tt);
+  return psc_p_pulse_z1(*xx, *yy, *zz, *tt);
 }

@@ -227,6 +227,8 @@ void psc_push_part_yz_b();
 void psc_sort();
 void psc_out_field();
 
+real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
+
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 
@@ -260,6 +262,7 @@ void SET_param_psc();
 void SET_param_coeff();
 void INIT_param_domain();
 void INIT_param_psc();
+real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
