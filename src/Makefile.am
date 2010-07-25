@@ -7,6 +7,12 @@ noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
 	PIC_variables.F VLA_variables.F \
+	INIT_ppulse_x1.F INIT_spulse_x1.F \
+	INIT_ppulse_x2.F INIT_spulse_x2.F \
+	INIT_ppulse_y1.F INIT_spulse_y1.F \
+	INIT_ppulse_y2.F INIT_spulse_y2.F \
+	INIT_ppulse_z1.F INIT_spulse_z1.F \
+	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_fields.c init_particles.c \
 	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
@@ -19,6 +25,7 @@ libpsc_a_SOURCES = \
 	OUT_field.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
+	p_pulse_z1.c \
 	sort.c \
 	output_fields.c output_binary.c output_vtk.c \
 	case_langmuir.c \
@@ -37,12 +44,6 @@ libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
-	INIT_ppulse_x1.F INIT_spulse_x1.F \
-	INIT_ppulse_x2.F INIT_spulse_x2.F \
-	INIT_ppulse_y1.F INIT_spulse_y1.F \
-	INIT_ppulse_y2.F INIT_spulse_y2.F \
-	INIT_ppulse_z1.F INIT_spulse_z1.F \
-	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
 	INIT_partition.F \
@@ -60,12 +61,6 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PSC_driver.F
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
-	INIT_ppulse_x1.F INIT_spulse_x1.F \
-	INIT_ppulse_x2.F INIT_spulse_x2.F \
-	INIT_ppulse_y1.F INIT_spulse_y1.F \
-	INIT_ppulse_y2.F INIT_spulse_y2.F \
-	INIT_ppulse_z1.F INIT_spulse_z1.F \
-	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
 	INIT_partition.F \
