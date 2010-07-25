@@ -73,7 +73,7 @@ calculate_pfields(struct psc_extra_fields *p)
 
            p->all[X_EX][j] = .5f * ( FF3(EX,ix,iy,iz)
                                     +FF3(EX,ix-1,iy,iz));
-           p->all[X_EY][j] = .5f * ( FF3(EX,ix,iy,iz)
+           p->all[X_EY][j] = .5f * ( FF3(EY,ix,iy,iz)
                                     +FF3(EY,ix,iy-1,iz));
            p->all[X_EZ][j] = .5f * ( FF3(EZ,ix,iy,iz)
                                     +FF3(EZ,ix,iy,iz-1));
