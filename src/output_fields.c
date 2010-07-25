@@ -294,11 +294,22 @@ write_fields_1proc(struct psc_output_c *out,
 
   void *ctx;
   if (rank == 0) {
+    struct psc_fields_list list_combined;
+    list_combined.nr_flds = list->nr_flds;
+    for (int m = 0; m < list->nr_flds; m++) {
+      list_combined.flds[m].size = 1;
+      for (int d = 0; d < 3; d++) {
+	list_combined.flds[m].ilo[d] = psc.glo[d];
+	list_combined.flds[m].ihi[d] = psc.ghi[d];
+	list_combined.flds[m].size *= (psc.ghi[d] - psc.glo[d]);
+      }
+      list_combined.flds[m].name = list->flds[m].name;
+    }
     char filename[strlen(out->data_dir) + 30];
     sprintf(filename, "%s/%s_%07d%s", out->data_dir, prefix, psc.timestep,
 	    out->format_ops->ext);
     printf("[%d] write_fields_1proc: %s\n", rank, filename);
-    out->format_ops->open(list, filename, &ctx);
+    out->format_ops->open(&list_combined, filename, &ctx);
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
