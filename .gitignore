@@ -39,3 +39,5 @@ idl/PP
 src/cuda/push_part_yz.cu
 src/util/test_params
 *.h5
+doxygen/doxy_err.log
+doxygen/html
