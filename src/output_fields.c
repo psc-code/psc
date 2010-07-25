@@ -167,7 +167,7 @@ find_output_format_ops(const char *ops_name)
 struct psc_output_c {
   char *data_dir;
   char *output_format;
-  bool output_1proc;
+  bool output_combine;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_next, tfield_next;
   int pfield_step, tfield_step;
@@ -184,7 +184,7 @@ struct psc_output_c {
 static struct param psc_output_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")      },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
-  { "output_1proc"       , VAR(output_1proc)         , PARAM_BOOL(0)        },
+  { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)        },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
   { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
@@ -281,11 +281,11 @@ copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
 }
 
 // ----------------------------------------------------------------------
-// write_fields_1proc
+// write_fields_combine
 
 static void
-write_fields_1proc(struct psc_output_c *out,
-		   struct psc_fields_list *list, const char *prefix)
+write_fields_combine(struct psc_output_c *out,
+		     struct psc_fields_list *list, const char *prefix)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -308,7 +308,7 @@ write_fields_1proc(struct psc_output_c *out,
     char filename[strlen(out->data_dir) + 30];
     sprintf(filename, "%s/%s_%07d%s", out->data_dir, prefix, psc.timestep,
 	    out->format_ops->ext);
-    printf("[%d] write_fields_1proc: %s\n", rank, filename);
+    printf("[%d] write_fields_combine: %s\n", rank, filename);
     out->format_ops->open(&list_combined, filename, &ctx);
   }
 
@@ -388,8 +388,8 @@ static void
 write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 	     const char *prefix)
 {
-  if (out->output_1proc) {
-    return write_fields_1proc(out, list, prefix);
+  if (out->output_combine) {
+    return write_fields_combine(out, list, prefix);
   }
 
   int rank;
