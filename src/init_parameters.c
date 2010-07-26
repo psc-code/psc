@@ -54,11 +54,6 @@ init_param_domain()
 				 MPI_COMM_WORLD);
   params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 
-#ifdef USE_PML
-  fprintf(stderr, "PML not handled in C version!\n");
-  abort();
-#endif
-
   for (int d = 0; d < 3; d++) {
     if (domain->ihi[d] - domain->ilo[d] == 1) {
       // if invariant in this direction, don't domain decompose
