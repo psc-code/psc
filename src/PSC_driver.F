@@ -31,14 +31,14 @@ c     this contains the main driver for the code, shared between VLI and VLA
 #endif
 
 c         call PIC_bpulse      ! particle injection
-         call PIC_sort        ! particle randomization
+c         call PIC_sort        ! particle randomization
 c         call PIC_ionize      ! field ionization
 c         call MCC_impact      ! impact ionization
 c         call PIC_bin_coll    ! binary collisions
 
          call OUT_field       ! field output at t=n*dt
          call OUT_part        ! particle output at t=n*dt
-         call OUT_poyc        ! energy conservation
+c         call OUT_poyc        ! energy conservation
 
 #ifdef USE_PML
          call PIC_pml_msa     ! field propagation n*dt -> (n+0.5)*dt       !ab
