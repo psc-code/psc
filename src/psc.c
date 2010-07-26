@@ -341,7 +341,7 @@ psc_p_pulse_z1(real x, real y, real z, real t)
     return PSC_p_pulse_z1(x, y, z, t);
   }
   if (psc.pulse_ops->p_pulse_z1) {
-    return psc.pulse_ops->p_pulse_z1(x, y, z, t);
+    return psc.pulse_ops->p_pulse_z1(psc.pulse_p_z1, x, y, z, t);
   }
   return 0.;
 }

@@ -156,11 +156,13 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
+struct psc_p_pulse_z1;
+
 struct psc_pulse_ops {
   const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  double (*p_pulse_z1)(double x, double y, double z, double t);
+  void (*destroy)(struct psc_p_pulse_z1 *);
+  double (*p_pulse_z1)(struct psc_p_pulse_z1 *,
+		       double x, double y, double z, double t);
 };  
 
 struct psc {
@@ -168,6 +170,7 @@ struct psc {
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
   struct psc_pulse_ops *pulse_ops;
+  struct psc_p_pulse_z1 *pulse_p_z1;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -233,7 +236,7 @@ void psc_sort();
 void psc_out_field();
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
-void psc_pulse_p_z1_short_create(void);
+struct psc_p_pulse_z1 *psc_pulse_p_z1_short_create(void);
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
