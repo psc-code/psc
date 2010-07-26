@@ -204,6 +204,35 @@ get_option_bool(const char *name, bool *pval)
   }
 }
 
+static void
+get_option_select(const char *name, struct param_select *descr, int *pval)
+{
+  struct option *p = find_option(name);
+  if (!p) 
+    return;
+
+  if (!p->value) {
+    fprintf(stderr, "ERROR: need to specify value for '%s'\n",
+	    name);
+    abort();
+  }
+
+  for (int i = 0; descr[i].str; i++) {
+    if (strcasecmp(descr[i].str, p->value) == 0) {
+      *pval = i;
+      return;
+    }
+  }
+
+  fprintf(stderr, "ERROR: Select value '%s' not found. Valid options are:",
+	  p->value);
+  for (int i = 0; descr[i].str; i++) {
+    fprintf(stderr, " '%s'", descr[i].str);
+  }
+  fprintf(stderr, "\n");
+  abort();
+}
+
 void
 params_parse_cmdline(void *p, struct param *params, const char *title,
 		     MPI_Comm comm)
@@ -227,6 +256,10 @@ params_parse_cmdline(void *p, struct param *params, const char *title,
       pv->u_string = params[i].u.ini_string;
       get_option_string(params[i].name, &pv->u_string);
       break;
+    case PT_SELECT:
+      pv->u_select = params[i].u.ini_select;
+      get_option_select(params[i].name, params[i].descr, &pv->u_select);
+      break;
     }
   }
 }
@@ -249,6 +282,9 @@ params_parse_cmdline_nodefault(void *p, struct param *params, const char *title,
       break;
     case PT_STRING:
       get_option_string(params[i].name, &pv->u_string);
+      break;
+    case PT_SELECT:
+      get_option_select(params[i].name, params[i].descr, &pv->u_select);
       break;
     }
   }
@@ -274,6 +310,9 @@ params_print(void *p, struct param *params, const char *title,
       break;
     case PT_STRING:
       mpi_printf(comm, "%-20s| %s\n", params[i].name, pv->u_string);
+      break;
+    case PT_SELECT:
+      mpi_printf(comm, "%-20s| %s\n", params[i].name, params[i].descr[pv->u_select].str);
       break;
     }
   }
