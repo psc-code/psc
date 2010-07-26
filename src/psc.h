@@ -233,6 +233,7 @@ void psc_sort();
 void psc_out_field();
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
+void psc_pulse_p_z1_short_create(void);
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
