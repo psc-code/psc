@@ -18,7 +18,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       integer :: mtag,status(MPI_STATUS_SIZE)
 
       real(kind=8) :: resti,xs
-      real(kind=8) :: xbn,xbx
+      real(kind=8) :: xbn,xbx,xpn,xpx
       real(kind=8) :: xi,yi,zi
       real(kind=8) :: pxi,pyi,pzi
       real(kind=8) :: qni,mni,cni,lni,wni
@@ -95,16 +95,22 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
 ! modification of simbox size for particles in y - added by ab
 ! particles shall not enter pml region
 
+
       xbn=i1mn*dx
       xbx=i1mx*dx
+      xpn=i1n*dx
+      xpx=i1x*dx
+
 
       if (nodei.eq.1.and.(boundary_fld_x1.eq.2.or.
      &    boundary_fld_x1.eq.3)) then
          xbn=(i1mn+size+1)*dx
+         xpn=(i1n+size+1)*dx
       end if
       if (nodei.eq.xnpe.and.(boundary_fld_x2.eq.2.or.
      &    boundary_fld_x2.eq.3)) then
          xbx=(i1mx-size-1)*dx
+         xpx=(i1x+size+1)*dx
       end if
   
 
@@ -293,8 +299,9 @@ c PARTICLE EXCHANGE
       allocate(p_re3i(0:11*re3i+10))
 
 
-      xs=(i1x-i1n+1)*dx
+c      xs=(i1x-i1n+1)*dx
 c      xs=(i1x-i1n)*dx
+      xs=xpx-xpn+dx
 
 
       if (nodei.lt.xnpe.and.resti<0.25) then               ! UPDATING e1

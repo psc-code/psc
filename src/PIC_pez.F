@@ -18,7 +18,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       integer :: mtag,status(MPI_STATUS_SIZE)
 
       real(kind=8) :: restk,zs
-      real(kind=8) :: zbn,zbx
+      real(kind=8) :: zbn,zbx,zpn,zpx
       real(kind=8) :: xi,yi,zi
       real(kind=8) :: pxi,pyi,pzi
       real(kind=8) :: qni,mni,cni,lni,wni
@@ -97,16 +97,19 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
 
       zbn=i3mn*dz
       zbx=i3mx*dz
+      zpn=i3n*dz
+      zpx=i3x*dz
 
       if (nodek.eq.1.and.(boundary_fld_z1.eq.2.or.
      &    boundary_fld_z1.eq.3)) then
          zbn=(i3mn+size+1)*dz
+         zpn=(i3n+size+1)*dz
       end if
       if (nodek.eq.znpe.and.(boundary_fld_z2.eq.2.or.
      &    boundary_fld_z2.eq.3)) then
          zbx=(i3mx-size-1)*dz
+         zpx=(i3x-size-1)*dz
       end if
-
 
       e5i=0
       e6i=0
@@ -293,8 +296,9 @@ c PARTICLE EXCHANGE
       allocate(p_re6i(0:11*re6i+10))
 
 
-      zs=(i3x-i3n+1)*dz
+c      zs=(i3x-i3n+1)*dz
 c      zs=(i3x-i3n)*dz
+      zs=zpx-zpn+dz
 
 
       if (nodek.lt.znpe.and.restk<0.25) then               ! UPDATING e6
