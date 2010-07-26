@@ -86,12 +86,12 @@ wakefield_init_param()
   psc.domain.ihi[1] = 400;
   psc.domain.ihi[2] = 600;
 
-  psc.domain.bnd_fld[0] = 1;
-  psc.domain.bnd_fld[1] = 1;
-  psc.domain.bnd_fld[2] = 0;
-  psc.domain.bnd_part[0] = 1;
-  psc.domain.bnd_part[1] = 1;
-  psc.domain.bnd_part[2] = 0;
+  psc.domain.bnd_fld[0] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[1] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[2] = BND_FLD_OPEN;
+  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[2] = BND_PART_REFLECTING;
 }
 
 static void
