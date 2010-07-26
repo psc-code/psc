@@ -185,8 +185,8 @@ c UPDATING LOCAL BOUNDARY e1
 c UPDATING LOCAL BOUNDARY e1 (pml continuation in x) - ab
 
       if (nodei.eq.xnpe) then
-         if (boundary_pml_x2.eq.'true'.or.
-     &      (boundary_pml_x2.eq.'time'.and.
+         if (boundary_fld_x2.eq.2.or.
+     &      (boundary_fld_x2.eq.3.and.
      &       pos_x2.ne.0.0.and.pos_x2.lt.n*dt)) then
 c Oberer Knoten in x-Richtung
             do i1 = i1mx-thick, i1mx+rd1
@@ -214,7 +214,7 @@ c Oberer Knoten in x-Richtung
                gdx(i1) = 2*eps0*dt/bxp(i1)
                gex(i1) = 1.0/bxp(i1)
             end do
-            boundary_pml_x2 = 'done'
+            boundary_fld_x2 = -1
 c            write(6,*) 'OBEN'
          endif
       endif
@@ -319,8 +319,8 @@ c UPDATING LOCAL BOUNDARY e3
 c UPDATING LOCAL BOUNDARY e3 (pml continuation in x) - ab
 
       if(nodei.eq.1) then
-         if (boundary_pml_x1.eq.'true'.or.
-     &        (boundary_pml_x1.eq.'time'.and.
+         if (boundary_fld_x1.eq.2.or.
+     &        (boundary_fld_x1.eq.3.and.
      &        pos_x1.ne.0.0.and.pos_x1.lt.n*dt)) then
 c Unterer Knoten in z-Richtung
             do i1 = i1mn-rd1, thick
@@ -348,7 +348,7 @@ c Unterer Knoten in z-Richtung
                gdx(i1) = 2*eps0*dt/bxp(i1)
                gex(i1) = 1.0/bxp(i1)
             end do 
-            boundary_pml_x1 = 'done'
+            boundary_fld_x1 = -1
 c            write(6,*) 'UNTEN'
          endif
       endif

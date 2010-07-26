@@ -187,8 +187,8 @@ c UPDATING LOCAL BOUNDARY e4
 c UPDATING LOCAL BOUNDARY e4 (pml continuation in y) - ab
 
       if (nodej.eq.ynpe) then
-         if (boundary_pml_y2.eq.'true'.or.
-     &        (boundary_pml_y2.eq.'time'.and.
+         if (boundary_fld_y2.eq.2.or.
+     &        (boundary_fld_y2.eq.3.and.
      &        pos_y2.ne.0.0.and.pos_y2.lt.n*dt)) then         
 c Oberer Knoten in y-Richtung
             do i2 = i2mx-thick, i2mx+rd2
@@ -216,7 +216,7 @@ c Oberer Knoten in y-Richtung
                gdy(i2) = 2*eps0*dt/byp(i2)
                gey(i2) = 1.0/byp(i2)
             end do
-            boundary_pml_y2 = 'done'
+            boundary_fld_y2 = -1
 c            write(6,*) 'OBEN'
          endif
       endif
@@ -321,8 +321,8 @@ c UPDATING LOCAL BOUNDARY e2
 c UPDATING LOCAL BOUNDARY e2 (pml continuation in y) - ab
 
       if (nodej.eq.1) then
-         if (boundary_pml_y1.eq.'true'.or.
-     &        (boundary_pml_y1.eq.'time'.and.
+         if (boundary_fld_y1.eq.2.or.
+     &        (boundary_fld_y1.eq.3.and.
      &        pos_y1.ne.0.0.and.pos_y1.lt.n*dt)) then
 c Unterer Knoten in y-Richtung
             do i2 = i2mn-rd2, thick
@@ -350,7 +350,7 @@ c Unterer Knoten in y-Richtung
                gdy(i2) = 2*eps0*dt/byp(i2)
                gey(i2) = 1.0/byp(i2)
             end do
-            boundary_pml_y1 = 'done'
+            boundary_fld_y1 = -1
 c            write(6,*) 'UNTEN'
          endif
       endif

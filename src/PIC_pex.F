@@ -98,10 +98,12 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
       xbn=i1mn*dx
       xbx=i1mx*dx
 
-      if (nodei.eq.1.and.boundary_pml_x1.ne.'false') then
+      if (nodei.eq.1.and.(boundary_fld_x1.eq.2.or.
+     &    boundary_fld_x1.eq.3)) then
          xbn=(i1mn+size+1)*dx
       end if
-      if (nodei.eq.xnpe.and.boundary_pml_x2.ne.'false') then
+      if (nodei.eq.xnpe.and.(boundary_fld_x2.eq.2.or.
+     &    boundary_fld_x2.eq.3)) then
          xbx=(i1mx-size-1)*dx
       end if
   

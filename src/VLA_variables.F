@@ -222,18 +222,6 @@ c boundary_part_z: particle boundary conditions in z
       integer boundary_fld_y2
       integer boundary_fld_z1
       integer boundary_fld_z2
-! pml parameter                                    ! added by ab
-
-! boundary_pml_x1, boundary_pml_x2: boundary condition for pml in x-front,back
-! boundary_pml_y1, boundary_pml_y2: boundary condition for pml in y-left,right
-! boundary_pml_z1, boundary_pml_z2: boundary condition for pml in z-up,down
-
-      character*(5) boundary_pml_x1
-      character*(5) boundary_pml_x2
-      character*(5) boundary_pml_y1
-      character*(5) boundary_pml_y2
-      character*(5) boundary_pml_z1
-      character*(5) boundary_pml_z2
 
 ! checking condition for time dependent pml
 

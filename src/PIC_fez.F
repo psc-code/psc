@@ -187,8 +187,8 @@ c UPDATING LOCAL BOUNDARY e6
 c UPDATING LOCAL BOUNDARY e6 (pml continuation in z) - ab
 
       if (nodek.eq.znpe) then
-         if (boundary_pml_z2.eq.'true'.or.
-     &        (boundary_pml_z2.eq.'time'.and.
+         if (boundary_fld_z2.eq.2.or.
+     &        (boundary_fld_z2.eq.3.and.
      &        pos_z2.ne.0.0.and.pos_z2.lt.n*dt)) then
  
 c Oberer Knoten in z-Richtung
@@ -218,7 +218,7 @@ c Oberer Knoten in z-Richtung
                gez(i3) = 1.0/bzp(i3)
             end do
 
-            boundary_pml_z2 = 'done'
+            boundary_fld_z2 = -1
 c            write(6,*) 'OBEN'
          endif
       endif
@@ -324,8 +324,8 @@ c UPDATING LOCAL BOUNDARY e5 (pml continuation in z)
 
 
       if (nodek.eq.1) then
-         if (boundary_pml_z1.eq.'true'.or.
-     &        (boundary_pml_z1.eq.'time'.and.
+         if (boundary_fld_z1.eq.2.or.
+     &        (boundary_fld_z1.eq.3.and.
      &        pos_z1.ne.0.0.and.pos_z1.lt.n*dt)) then
 
             open (13, file="pml.txt",status="replace")
@@ -359,7 +359,7 @@ c     Unterer Knoten in z-Richtung
                gdz(i3) = 2*eps0*dt/bzp(i3)
                gez(i3) = 1.0/bzp(i3)
             end do
-            boundary_pml_z1 = 'done'
+            boundary_fld_z1 = -1
 
 c     write(6,*) 'UNTEN'
          endif

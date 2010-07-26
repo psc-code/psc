@@ -54,8 +54,6 @@ c Please do not change
          boundary_part_x = 1
          boundary_fld_x1 = 1
          boundary_fld_x2 = 1
-         boundary_pml_x1 = 'false'
-         boundary_pml_x2 = 'false'
       else
          if (i1x-i1n+1.le.(rd1+1)*xnpe) then
             i1x=i1n+(rd1+1)*xnpe-1
@@ -75,8 +73,6 @@ c Please do not change
          boundary_part_y = 1
          boundary_fld_y1 = 1
          boundary_fld_y2 = 1
-         boundary_pml_y1 = 'false'
-         boundary_pml_y2 = 'false' 
       else
          if (i2x-i2n+1.le.(rd2+1)*ynpe) then
             i2x=i2n+(rd2+1)*ynpe-1
@@ -96,8 +92,6 @@ c Please do not change
          boundary_part_z = 1
          boundary_fld_z1 = 1
          boundary_fld_z2 = 1
-         boundary_pml_z1 = 'false'
-         boundary_pml_z2 = 'false'
       else
          if (i3x-i3n+1.le.(rd3+1)*znpe) then
             i3x=i3n+(rd3+1)*znpe-1
@@ -397,9 +391,10 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
 
 ! PML BOUNDARY CONDITIONS 
 
-! condition = 'true' : derive pml coefficients 
-! condition = 'false' : do nothing
-! condition = 'time' : derive pml after estimated time
+! condition = 0 : radiating boundaries
+! condition = 1 : periodic boundaries
+! condition = 2 : upmls
+! condition = 3 : radiating boundaries with upmls at a given time
 
       boundary_fld_x1 = 1
       boundary_fld_x2 = 1
@@ -407,12 +402,6 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
       boundary_fld_y2 = 1
       boundary_fld_z1 = 1
       boundary_fld_z2 = 1
-      boundary_pml_x1 = 'false'
-      boundary_pml_x2 = 'false'
-      boundary_pml_y1 = 'false'
-      boundary_pml_y2 = 'false'
-      boundary_pml_z1 = 'false'
-      boundary_pml_z2 = 'false'
 
 ! thick: thickness of pml in grid points
 ! cushion: thickness of buffer region in gridpoints

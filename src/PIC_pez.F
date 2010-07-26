@@ -98,10 +98,12 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
       zbn=i3mn*dz
       zbx=i3mx*dz
 
-      if (nodek.eq.1.and.boundary_pml_z1.ne.'false') then
+      if (nodek.eq.1.and.(boundary_fld_z1.eq.2.or.
+     &    boundary_fld_z1.eq.3)) then
          zbn=(i3mn+size+1)*dz
       end if
-      if (nodek.eq.znpe.and.boundary_pml_z2.ne.'false') then
+      if (nodek.eq.znpe.and.(boundary_fld_z2.eq.2.or.
+     &    boundary_fld_z2.eq.3)) then
          zbx=(i3mx-size-1)*dz
       end if
 

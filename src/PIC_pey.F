@@ -98,10 +98,12 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
       ybn=i2mn*dy
       ybx=i2mx*dy
 
-      if (nodej.eq.1.and.boundary_pml_y1.ne.'false') then
+      if (nodej.eq.1.and.(boundary_fld_y1.eq.2.or.
+     &    boundary_fld_y1.eq.3)) then
          ybn=(i2mn+size+1)*dy
       end if
-      if (nodej.eq.ynpe.and.boundary_pml_y2.ne.'false') then
+      if (nodej.eq.ynpe.and.(boundary_fld_y2.eq.2.or.
+     &    boundary_fld_y2.eq.3)) then
          ybx=(i2mx-size-1)*dy
       end if
 
