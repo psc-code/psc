@@ -182,18 +182,17 @@ c UPDATING LOCAL BOUNDARY e1
       endif
 
 
-c UPDATING LOCAL BOUNDARY e1 (pml continuation in x) - ab
+! pml continuation at x1
 
-      if (nodei.eq.xnpe) then
-         if (boundary_fld_x2.eq.2.or.
-     &      (boundary_fld_x2.eq.3.and.
-     &       pos_x2.ne.0.0.and.pos_x2.lt.n*dt)) then
-c Oberer Knoten in x-Richtung
-            do i1 = i1mx-thick, i1mx+rd1
+      if (nodei.eq.1) then
+         if (boundary_fld_x1.eq.2.or.
+     &      (boundary_fld_x1.eq.3.and.
+     &       pos_x1.ne.0.0.and.pos_x1.lt.n*dt)) then
+            do i1 = i1mn-rd1,i1mn+thick
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *((i1-i1mx+thick)*dx/deltax)**pml
+     &              *((thick+1-i1)*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              ((i1-i1mx+thick)*dx/deltax)**pml
+     &              ((thick+1-i1)*dx/deltax)**pml
                cxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                cxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                fbx(i1) = 2*eps0*kappax(i1)
@@ -202,20 +201,19 @@ c Oberer Knoten in x-Richtung
                fex(i1) = 1.0/cxp(i1)
             end do
 
-            do i1 = i1mx-thick, i1mx+rd1
+            do i1 = i1mn-rd1,i1mn+thick
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *(((i1+0.5)-i1mx+thick)*dx/deltax)**pml
+     &              *((thick+1-(i1+0.5))*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              (((i1+0.5)-i1mx+thick)*dx/deltax)**pml
+     &              ((thick+1-(i1+0.5))*dx/deltax)**pml
                bxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                bxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                gbx(i1) = 2*eps0*kappax(i1)
                gcx(i1) = bxm(i1)/bxp(i1)
                gdx(i1) = 2*eps0*dt/bxp(i1)
                gex(i1) = 1.0/bxp(i1)
-            end do
-            boundary_fld_x2 = -1
-c            write(6,*) 'OBEN'
+            end do 
+c            boundary_pml_x1 = 'done'
          endif
       endif
 
@@ -316,18 +314,17 @@ c UPDATING LOCAL BOUNDARY e3
       endif
 
 
-c UPDATING LOCAL BOUNDARY e3 (pml continuation in x) - ab
+! pml continuation at x2
 
-      if(nodei.eq.1) then
-         if (boundary_fld_x1.eq.2.or.
-     &        (boundary_fld_x1.eq.3.and.
-     &        pos_x1.ne.0.0.and.pos_x1.lt.n*dt)) then
-c Unterer Knoten in z-Richtung
-            do i1 = i1mn-rd1, thick
+      if (nodei.eq.xnpe) then
+         if (boundary_fld_x2.eq.2.or.
+     &      (boundary_fld_x2.eq.3.and.
+     &       pos_x2.ne.0.0.and.pos_x2.lt.n*dt)) then
+            do i1 = i1mx-thick,i1mx+rd1
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *((thick+1-i1)*dx/deltax)**pml
+     &              *((i1-i1mx+thick)*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              ((thick+1-i1)*dx/deltax)**pml
+     &              ((i1-i1mx+thick)*dx/deltax)**pml
                cxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                cxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                fbx(i1) = 2*eps0*kappax(i1)
@@ -336,20 +333,19 @@ c Unterer Knoten in z-Richtung
                fex(i1) = 1.0/cxp(i1)
             end do
 
-            do i1 = i1mn-rd1, thick
+            do i1 = i1mx-thick,i1mx+rd1
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *((thick+1-(i1+0.5))*dx/deltax)**pml
+     &              *(((i1+0.5)-i1mx+thick)*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              ((thick+1-(i1+0.5))*dx/deltax)**pml
+     &              (((i1+0.5)-i1mx+thick)*dx/deltax)**pml
                bxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                bxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                gbx(i1) = 2*eps0*kappax(i1)
                gcx(i1) = bxm(i1)/bxp(i1)
                gdx(i1) = 2*eps0*dt/bxp(i1)
                gex(i1) = 1.0/bxp(i1)
-            end do 
-            boundary_fld_x1 = -1
-c            write(6,*) 'UNTEN'
+            end do
+c            boundary_pml_x2 = 'done'
          endif
       endif
 

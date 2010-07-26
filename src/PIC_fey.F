@@ -184,18 +184,17 @@ c UPDATING LOCAL BOUNDARY e4
       endif
 
 
-c UPDATING LOCAL BOUNDARY e4 (pml continuation in y) - ab
+! pml continuation at y1
 
-      if (nodej.eq.ynpe) then
-         if (boundary_fld_y2.eq.2.or.
-     &        (boundary_fld_y2.eq.3.and.
-     &        pos_y2.ne.0.0.and.pos_y2.lt.n*dt)) then         
-c Oberer Knoten in y-Richtung
-            do i2 = i2mx-thick, i2mx+rd2
+      if (nodej.eq.1) then
+         if (boundary_fld_y1.eq.2.or.
+     &      (boundary_fld_y1.eq.3.and.
+     &       pos_y1.ne.0.0.and.pos_y1.lt.n*dt)) then
+            do i2 = i2mn-rd2,i2mn+thick
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *((i2-i2mx+thick)*dy/deltay)**pml
+     &              *((thick+1-i2)*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              ((i2-i2mx+thick)*dy/deltay)**pml
+     &              ((thick+1-i2)*dy/deltay)**pml
                cyp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                cym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                fby(i2) = 2*eps0*kappay(i2)
@@ -204,11 +203,11 @@ c Oberer Knoten in y-Richtung
                fey(i2) = 1.0/cyp(i2)
             end do
 
-            do i2 = i2mx-thick, i2mx+rd2
+            do i2 = i2mn-rd2,i2mn+thick
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *(((i2+0.5)-i2mx+thick)*dy/deltay)**pml
+     &              *((thick+1-(i2+0.5))*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              (((i2+0.5)-i2mx+thick)*dy/deltay)**pml
+     &              ((thick+1-(i2+0.5))*dy/deltay)**pml
                byp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                bym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                gby(i2) = 2*eps0*kappay(i2)
@@ -216,8 +215,7 @@ c Oberer Knoten in y-Richtung
                gdy(i2) = 2*eps0*dt/byp(i2)
                gey(i2) = 1.0/byp(i2)
             end do
-            boundary_fld_y2 = -1
-c            write(6,*) 'OBEN'
+c            boundary_pml_y1 = 'done'
          endif
       endif
 
@@ -318,18 +316,18 @@ c UPDATING LOCAL BOUNDARY e2
       endif
       endif
 
-c UPDATING LOCAL BOUNDARY e2 (pml continuation in y) - ab
 
-      if (nodej.eq.1) then
-         if (boundary_fld_y1.eq.2.or.
-     &        (boundary_fld_y1.eq.3.and.
-     &        pos_y1.ne.0.0.and.pos_y1.lt.n*dt)) then
-c Unterer Knoten in y-Richtung
-            do i2 = i2mn-rd2, thick
+! pml continuation at y2
+
+      if (nodej.eq.ynpe) then
+         if (boundary_fld_y2.eq.2.or.
+     &      (boundary_fld_y2.eq.3.and.
+     &       pos_y2.ne.0.0.and.pos_y2.lt.n*dt)) then         
+            do i2 = i2mx-thick,i2mx+rd2
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *((thick+1-i2)*dy/deltay)**pml
+     &              *((i2-i2mx+thick)*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              ((thick+1-i2)*dy/deltay)**pml
+     &              ((i2-i2mx+thick)*dy/deltay)**pml
                cyp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                cym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                fby(i2) = 2*eps0*kappay(i2)
@@ -338,11 +336,11 @@ c Unterer Knoten in y-Richtung
                fey(i2) = 1.0/cyp(i2)
             end do
 
-            do i2 = i2mn-rd2, thick
+            do i2 = i2mx-thick,i2mx+rd2
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *((thick+1-(i2+0.5))*dy/deltay)**pml
+     &              *(((i2+0.5)-i2mx+thick)*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              ((thick+1-(i2+0.5))*dy/deltay)**pml
+     &              (((i2+0.5)-i2mx+thick)*dy/deltay)**pml
                byp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                bym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                gby(i2) = 2*eps0*kappay(i2)
@@ -350,8 +348,7 @@ c Unterer Knoten in y-Richtung
                gdy(i2) = 2*eps0*dt/byp(i2)
                gey(i2) = 1.0/byp(i2)
             end do
-            boundary_fld_y1 = -1
-c            write(6,*) 'UNTEN'
+c            boundary_pml_y2 = 'done'
          endif
       endif
 
