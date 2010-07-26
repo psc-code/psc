@@ -58,11 +58,21 @@ c Please do not change
          if (i1x-i1n+1.le.(rd1+1)*xnpe) then
             i1x=i1n+(rd1+1)*xnpe-1
          endif
-         if (i1x-i1n+1.le.2*(size+1)) then     ! min total size: 2*(size+1)
-            i1x=i1n+2*(size+1)-1
+         if (boundary_fld_x1==2.or.boundary_fld_x2==2) then
+            if (i1x-i1n+1.le.2*(size+1)) then 
+               i1x=i1n+2*(size+1)-1
+            endif
+            if (i1x-i1n+1.le.(size+1)*xnpe) then
+               i1x=i1n+(size+1)*xnpe-1
+            endif
          endif
-         if (i1x-i1n+1.le.(size+1)*xnpe) then  ! min size of one node
-            i1x=i1n+(size+1)*xnpe-1
+         if (boundary_fld_x1==3.or.boundary_fld_x2==3) then
+            if (i1x-i1n+1.le.2*(size+1)) then 
+               i1x=i1n+2*(size+1)-1
+            endif
+            if (i1x-i1n+1.le.(size+1)*xnpe) then
+               i1x=i1n+(size+1)*xnpe-1
+            endif
          endif
          if (i1x-i1n+1.gt.i1tot) then
             i1tot=i1x-i1n+1
@@ -77,11 +87,21 @@ c Please do not change
          if (i2x-i2n+1.le.(rd2+1)*ynpe) then
             i2x=i2n+(rd2+1)*ynpe-1
          endif
-         if (i2x-i2n+1.le.2*(size+1)) then  
-            i2x=i2n+2*(size+1)-1
+         if (boundary_fld_y1==2.or.boundary_fld_y2==2) then
+            if (i2x-i2n+1.le.2*(size+1)) then  
+               i2x=i2n+2*(size+1)-1
+            endif
+            if (i2x-i2n+1.le.(size+1)*ynpe) then
+               i2x=i2n+(size+1)*ynpe-1
+            endif
          endif
-         if (i2x-i2n+1.le.(size+1)*ynpe) then
-            i2x=i2n+(size+1)*ynpe-1
+         if (boundary_fld_y1==3.or.boundary_fld_y2==3) then
+            if (i2x-i2n+1.le.2*(size+1)) then  
+               i2x=i2n+2*(size+1)-1
+            endif
+            if (i2x-i2n+1.le.(size+1)*ynpe) then
+               i2x=i2n+(size+1)*ynpe-1
+            endif
          endif
          if (i2x-i2n+1.gt.i2tot) then
             i2tot=i2x-i2n+1
@@ -96,11 +116,21 @@ c Please do not change
          if (i3x-i3n+1.le.(rd3+1)*znpe) then
             i3x=i3n+(rd3+1)*znpe-1
          endif
-         if (i3x-i3n+1.le.2*(size+1)) then
-            i3x=i3n+2*(size+1)-1
+         if (boundary_fld_z1==2.or.boundary_fld_z2==2) then
+            if (i3x-i3n+1.le.2*(size+1)) then
+               i3x=i3n+2*(size+1)-1
+            endif
+            if (i3x-i3n+1.le.(size+1)*znpe) then
+               i3x=i3n+(size+1)*znpe-1
+            endif
          endif
-         if (i3x-i3n+1.le.(size+1)*znpe) then
-            i3x=i3n+(size+1)*znpe-1
+         if (boundary_fld_z1==3.or.boundary_fld_z2==3) then
+            if (i3x-i3n+1.le.2*(size+1)) then
+               i3x=i3n+2*(size+1)-1
+            endif
+            if (i3x-i3n+1.le.(size+1)*znpe) then
+               i3x=i3n+(size+1)*znpe-1
+            endif
          endif
          if (i3x-i3n+1.gt.i3tot) then
             i3tot=i3x-i3n+1
