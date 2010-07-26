@@ -34,12 +34,12 @@
 #define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_param, x)
 
 static struct param psc_p_pulse_z1_descr[] = {
-  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(20. * 1e-6)     },
-  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(20. * 1e-6)     },
-  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-2. * 1e-6)     },
-  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.  * 1e-6)     },
+  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
+  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   {},
 };
 
@@ -104,13 +104,20 @@ static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
 };
 
 struct psc_pulse *
-psc_pulse_p_z1_short_create(void)
+psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm)
 {
   struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1),
 					     &psc_pulse_ops_p_z1_short);
 
   struct psc_p_pulse_z1 *self = (struct psc_p_pulse_z1 *) pulse;
-  params_parse_cmdline(&self->prm, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  if (prm) { // custom defaults were passed
+    memcpy(&self->prm, prm, sizeof(self->prm));
+    params_parse_cmdline_nodefault(&self->prm, psc_p_pulse_z1_descr,
+				   "PSC P pulse z1", MPI_COMM_WORLD);
+  } else {
+    params_parse_cmdline(&self->prm, psc_p_pulse_z1_descr,
+			 "PSC P pulse z1", MPI_COMM_WORLD);
+  }
   params_print(&self->prm, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
 
   return pulse;

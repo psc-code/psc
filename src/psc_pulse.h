@@ -41,7 +41,7 @@ struct psc_p_pulse_z1_param {
   double dxm, dym, dzm; // width of pulse in m
 };
 
-struct psc_pulse *psc_pulse_p_z1_short_create(void);
+struct psc_pulse *psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm);
 
 
 #endif
