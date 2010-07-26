@@ -25,15 +25,11 @@ c jxit-jzit: time averaged current density
       real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
 
 #ifdef USE_PML
-c vphi0-vaz1: em potentials
 c rhoi-jzi: charge and current densities
 
 ! for the pml the declaration of d and h field is required
 ! dvx-hz: additional em field arrays
 ! dvx-dvz is chosen because of the existence of dx-dz for spatial range
-
-      real(kind=8),allocatable,dimension(:,:,:) :: vphi0,vax0,vay0,vaz0
-      real(kind=8),allocatable,dimension(:,:,:) :: vphi1,vax1,vay1,vaz1
 
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
       real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
@@ -46,13 +42,11 @@ c rhoi-jzi: charge and current densities
 
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
 
-c vphi0t-vaz1t: time averaged potentials
 c ex2t-bz2t: time averaged field
 c rhoit-jzit: time averaged charge and current densities
 c jxexit-jzezit: time averaged energy depositions
 c poyxt-poyzt: time averaged poynting vector
 
-      real(kind=4),allocatable,dimension(:,:,:) :: vphit,vaxt,vayt,vazt
       real(kind=4),allocatable,dimension(:,:,:) :: hxt,hyt,hzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dxt,dyt,dzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: ex2t,ey2t,ez2t   ! ab

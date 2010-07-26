@@ -413,24 +413,6 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-c kay: potentials      
-      allocate(vphi0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vphi1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-
       ! additional d field  - added by ab
 
       allocate(dvx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
@@ -460,10 +442,6 @@ c kay: potentials
       allocate(rhoi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
 
-      allocate(vphit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vaxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vayt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vazt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
@@ -497,14 +475,6 @@ c kay: potentials
       allocate(jysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
       allocate(jzsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
 
-      vphi0=0.0d0
-      vphi1=0.0d0
-      vax0=0.0d0
-      vay0=0.0d0
-      vaz0=0.0d0
-      vax1=0.0d0
-      vay1=0.0d0
-      vaz1=0.0d0
       dvx=0.0d0
       dvy=0.0d0
       dvz=0.0d0
@@ -526,15 +496,6 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      vphi0=0.0d0
-      vphi1=0.0d0
-      vax0=0.0d0
-      vay0=0.0d0
-      vaz0=0.0d0
-      vax1=0.0d0
-      vay1=0.0d0
-      vaz1=0.0d0
-      
       ! initialisation of additional fields - added by ab
       ! because of normalization these are equal to e and b fields
 
@@ -553,10 +514,6 @@ c     ----------------------------------------------------------------------
       
       rhoi=0.0d0
 
-      vphit=0.0d0
-      vaxt=0.0d0
-      vayt=0.0d0
-      vazt=0.0d0
       hxt=0.0d0       ! ab
       hyt=0.0d0       ! ab
       hzt=0.0d0       ! ab
