@@ -34,9 +34,6 @@ c jxi-jzi: charge and current densities
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
       real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
 
-      real(kind=8),allocatable,dimension(:,:,:) :: exsp,eysp,ezsp  ! test ab
-      real(kind=8),allocatable,dimension(:,:,:) :: jxsp,jysp,jzsp  ! test ab
-
 ! electric and magnetic permittivity tensors
 
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab

@@ -464,13 +464,6 @@ c     ----------------------------------------------------------------------
       allocate(poyyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(poyzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
 
-      allocate(exsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(eysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(ezsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jxsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jzsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-
       dvx=0.0d0
       dvy=0.0d0
       dvz=0.0d0
@@ -531,12 +524,6 @@ c     ----------------------------------------------------------------------
       poyxt=0.0d0
       poyyt=0.0d0
       poyzt=0.0d0
-      exsp=0.0d0      ! test ab
-      eysp=0.0d0      ! test ab
-      ezsp=0.0d0      ! test ab
-      jxsp=0.0d0      ! test ab
-      jysp=0.0d0      ! test ab
-      jzsp=0.0d0      ! test ab
 
       fluxit=0.0d0
       fluxot=0.0d0
