@@ -185,13 +185,18 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
-  
-
+struct psc_pulse_ops {
+  const char *name;
+  void (*create)(void);
+  void (*destroy)(void);
+  double (*p_pulse_z1)(double x, double y, double z, double t);
+};  
 
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
+  struct psc_pulse_ops *pulse_ops;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -256,6 +261,8 @@ void psc_push_part_yz_b();
 void psc_sort();
 void psc_out_field();
 
+real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
+
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 
@@ -273,7 +280,10 @@ extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
+extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_harris;
+
+extern struct psc_pulse_ops psc_pulse_ops_p_z1_short;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();
@@ -289,6 +299,7 @@ void SET_param_psc();
 void SET_param_coeff();
 void INIT_param_domain();
 void INIT_param_psc();
+real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

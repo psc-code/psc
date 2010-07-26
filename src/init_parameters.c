@@ -117,8 +117,9 @@ init_param_psc()
 // set up cases
 
 static struct psc_case_ops *psc_case_ops_list[] = {
-  &psc_case_ops_harris,
   &psc_case_ops_langmuir,
+  &psc_case_ops_wakefield,
+  &psc_case_ops_harris,
   NULL,
 };
 
