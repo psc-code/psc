@@ -165,7 +165,7 @@ c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
       real(kind=8) :: h1,h2,h3
       real(kind=8) :: p_pulse_z2
 
-c setting up the fields
+c initialization of the fields
 
       do i3=i3mn-rd3,i3mx+rd3
          h3=i3*dz
@@ -378,6 +378,7 @@ c setting up charge and current densities
       call PIC_faz(nn)
 
 
+
 c setting up time-averaged fields
 
 
@@ -397,6 +398,7 @@ c setting up time-averaged fields
 #ifdef USE_PML
       call PML_setup_field
 #endif
+
 
       cpu=0.0d0
       cpu_ary=0.0d0
@@ -494,7 +496,7 @@ c     ----------------------------------------------------------------------
       hy=by
       hz=bz
       
-      ! initialisation of permittivity tensors
+      ! initialisation of permittivity tensors, always set to 1.0
       ! due to scaling these are dimensionless
       
       eps = 1.0
