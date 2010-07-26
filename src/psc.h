@@ -173,7 +173,6 @@ struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
-  struct psc_pulse_ops *pulse_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_case_ops *case_ops;
   void *case_data;
@@ -261,8 +260,6 @@ extern struct psc_output_ops psc_output_ops_c;
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_harris;
-
-extern struct psc_pulse_ops psc_pulse_ops_p_z1_short;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();

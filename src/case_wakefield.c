@@ -51,7 +51,6 @@ wakefield_create()
 
   psc.case_data = wakefield;
 
-  psc.pulse_ops = &psc_pulse_ops_p_z1_short;
   psc.pulse_p_z1 = psc_pulse_p_z1_short_create();
 }
 

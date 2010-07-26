@@ -54,18 +54,6 @@ static struct param psc_p_pulse_z1_descr[] = {
 
 #undef VAR
 
-struct psc_pulse *
-psc_pulse_p_z1_short_create(void)
-{
-  struct psc_p_pulse_z1 *pulse = malloc(sizeof(*pulse));
-  memset(pulse, 0, sizeof(*pulse));
-
-  params_parse_cmdline(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
-  params_print(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
-
-  return (struct psc_pulse *) pulse;
-}
-
 static void
 psc_pulse_p_z1_short_destroy(struct psc_pulse *__pulse)
 {
@@ -111,8 +99,22 @@ psc_pulse_p_z1_short_p_pulse_z1(struct psc_pulse *__pulse,
     * exp(-sqr(zr/pulse->dzm));
 }
 
-struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
+static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
   .destroy    = psc_pulse_p_z1_short_destroy,
   .p_pulse_z1 = psc_pulse_p_z1_short_p_pulse_z1,
 };
+
+struct psc_pulse *
+psc_pulse_p_z1_short_create(void)
+{
+  struct psc_p_pulse_z1 *pulse = malloc(sizeof(*pulse));
+  memset(pulse, 0, sizeof(*pulse));
+  pulse->pulse.ops = &psc_pulse_ops_p_z1_short;
+
+  params_parse_cmdline(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  params_print(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+
+  return (struct psc_pulse *) pulse;
+}
+
