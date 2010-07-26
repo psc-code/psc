@@ -9,8 +9,8 @@ struct psc_pulse;
 struct psc_pulse_ops {
   const char *name;
   void (*destroy)(struct psc_pulse *);
-  double (*p_pulse_z1)(struct psc_pulse *,
-		       double x, double y, double z, double t);
+  double (*field)(struct psc_pulse *,
+		  double x, double y, double z, double t);
 };  
 
 struct psc_pulse {

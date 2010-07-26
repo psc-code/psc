@@ -76,8 +76,8 @@ psc_pulse_p_z1_setup(struct psc_p_pulse_z1 *pulse)
 }
 
 static double
-psc_pulse_p_z1_short_p_pulse_z1(struct psc_pulse *__pulse,
-				double xx, double yy, double zz, double tt)
+psc_pulse_p_z1_short_field(struct psc_pulse *__pulse,
+			   double xx, double yy, double zz, double tt)
 {
   struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
 
@@ -102,7 +102,7 @@ psc_pulse_p_z1_short_p_pulse_z1(struct psc_pulse *__pulse,
 static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
   .destroy    = psc_pulse_p_z1_short_destroy,
-  .p_pulse_z1 = psc_pulse_p_z1_short_p_pulse_z1,
+  .field      = psc_pulse_p_z1_short_field,
 };
 
 struct psc_pulse *
