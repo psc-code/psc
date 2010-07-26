@@ -108,13 +108,13 @@ static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
 struct psc_pulse *
 psc_pulse_p_z1_short_create(void)
 {
-  struct psc_p_pulse_z1 *pulse = malloc(sizeof(*pulse));
-  memset(pulse, 0, sizeof(*pulse));
-  pulse->pulse.ops = &psc_pulse_ops_p_z1_short;
+  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1),
+					     &psc_pulse_ops_p_z1_short);
 
-  params_parse_cmdline(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
-  params_print(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  struct psc_p_pulse_z1 *self = (struct psc_p_pulse_z1 *) pulse;
+  params_parse_cmdline(self, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  params_print(self, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
 
-  return (struct psc_pulse *) pulse;
+  return pulse;
 }
 
