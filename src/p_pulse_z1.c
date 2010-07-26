@@ -32,6 +32,8 @@
 //                              (i1n,i2n,i3n)=box origin    z 
 
 struct psc_p_pulse_z1 {
+  struct psc_pulse pulse;
+
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // width of pulse in m
 
@@ -52,7 +54,7 @@ static struct param psc_p_pulse_z1_descr[] = {
 
 #undef VAR
 
-struct psc_p_pulse_z1 *
+struct psc_pulse *
 psc_pulse_p_z1_short_create(void)
 {
   struct psc_p_pulse_z1 *pulse = malloc(sizeof(*pulse));
@@ -61,12 +63,13 @@ psc_pulse_p_z1_short_create(void)
   params_parse_cmdline(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
   params_print(pulse, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
 
-  return pulse;
+  return (struct psc_pulse *) pulse;
 }
 
 static void
-psc_pulse_p_z1_short_destroy(struct psc_p_pulse_z1 *pulse)
+psc_pulse_p_z1_short_destroy(struct psc_pulse *__pulse)
 {
+  struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
   free(pulse);
 }
 
@@ -85,9 +88,11 @@ psc_pulse_p_z1_setup(struct psc_p_pulse_z1 *pulse)
 }
 
 static double
-psc_pulse_p_z1_short_p_pulse_z1(struct psc_p_pulse_z1 *pulse,
+psc_pulse_p_z1_short_p_pulse_z1(struct psc_pulse *__pulse,
 				double xx, double yy, double zz, double tt)
 {
+  struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
+
   if (!pulse->is_setup) {
     psc_pulse_p_z1_setup(pulse);
   }
