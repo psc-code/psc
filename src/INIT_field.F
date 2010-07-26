@@ -134,7 +134,7 @@ c     ----------------------------------------------------------------------
 
 
 #ifdef USE_PML
-      call PML_alloc_fields
+      call PML_alloc_field
 #endif
 
 #ifdef USE_C_INTERFACE
@@ -395,7 +395,7 @@ c setting up time-averaged fields
       nnt=0.0d0
 
 #ifdef USE_PML
-      call PML_setup_fields
+      call PML_setup_field
 #endif
 
       cpu=0.0d0

@@ -53,7 +53,7 @@ init_param_domain()
 
 #ifdef USE_PML
   fprintf(stderr, "PML not handled in C version!\n");
-  MPI_Abort();
+  abort();
 #endif
 
   for (int d = 0; d < 3; d++) {

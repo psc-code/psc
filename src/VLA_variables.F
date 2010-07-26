@@ -55,9 +55,10 @@ c poyxt-poyzt: time averaged poynting vector
       real(kind=4),allocatable,dimension(:,:,:) :: vphit,vaxt,vayt,vazt
       real(kind=4),allocatable,dimension(:,:,:) :: hxt,hyt,hzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dxt,dyt,dzt      ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: ex2t,ey2t,ez2t   ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: bx2t,by2t,bz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dx2t,dy2t,dz2t   ! ab
-      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
       real(kind=4),allocatable,dimension(:,:,:) :: rhoit
       real(kind=4),allocatable,dimension(:,:,:) :: jxexit,jyeyit,jzezit
       real(kind=4),allocatable,dimension(:,:,:) :: poyxt,poyyt,poyzt
