@@ -185,6 +185,9 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
+  
+
+
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
@@ -267,7 +270,7 @@ extern struct psc_sort_ops psc_sort_ops_countsort;
 extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 extern struct psc_output_ops psc_output_ops_fortran;
-extern struct psc_output_ops psc_output_ops_hdf5;
+extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_harris;
