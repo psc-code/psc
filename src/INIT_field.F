@@ -439,9 +439,6 @@ c     ----------------------------------------------------------------------
       allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      allocate(rhoi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
-
       allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
@@ -460,7 +457,6 @@ c     ----------------------------------------------------------------------
       allocate(dx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(rhoit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jxexit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jyeyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jzezit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
@@ -483,7 +479,6 @@ c     ----------------------------------------------------------------------
       hz=0.0d0
       eps = 1.0
       mu = 1.0
-      rhoi=0.0d0
 
       end subroutine PML_alloc_field
 
@@ -512,8 +507,6 @@ c     ----------------------------------------------------------------------
       eps = 1.0
       mu = 1.0
       
-      rhoi=0.0d0
-
       hxt=0.0d0       ! ab
       hyt=0.0d0       ! ab
       hzt=0.0d0       ! ab
@@ -532,7 +525,6 @@ c     ----------------------------------------------------------------------
       dx2t=0.0d0      ! ab
       dy2t=0.0d0      ! ab
       dz2t=0.0d0      ! ab
-      rhoit=0.0d0
       jxexit=0.0d0
       jyeyit=0.0d0
       jzezit=0.0d0

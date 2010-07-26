@@ -25,7 +25,7 @@ c jxit-jzit: time averaged current density
       real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
 
 #ifdef USE_PML
-c rhoi-jzi: charge and current densities
+c jxi-jzi: charge and current densities
 
 ! for the pml the declaration of d and h field is required
 ! dvx-hz: additional em field arrays
@@ -33,7 +33,6 @@ c rhoi-jzi: charge and current densities
 
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
       real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: rhoi
 
       real(kind=8),allocatable,dimension(:,:,:) :: exsp,eysp,ezsp  ! test ab
       real(kind=8),allocatable,dimension(:,:,:) :: jxsp,jysp,jzsp  ! test ab
@@ -43,7 +42,7 @@ c rhoi-jzi: charge and current densities
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
 
 c ex2t-bz2t: time averaged field
-c rhoit-jzit: time averaged charge and current densities
+c jxit-jzit: time averaged charge and current densities
 c jxexit-jzezit: time averaged energy depositions
 c poyxt-poyzt: time averaged poynting vector
 
@@ -53,7 +52,6 @@ c poyxt-poyzt: time averaged poynting vector
       real(kind=4),allocatable,dimension(:,:,:) :: bx2t,by2t,bz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dx2t,dy2t,dz2t   ! ab
-      real(kind=4),allocatable,dimension(:,:,:) :: rhoit
       real(kind=4),allocatable,dimension(:,:,:) :: jxexit,jyeyit,jzezit
       real(kind=4),allocatable,dimension(:,:,:) :: poyxt,poyyt,poyzt
 
