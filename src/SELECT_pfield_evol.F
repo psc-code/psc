@@ -115,6 +115,25 @@
 
       open(11,file='./'//trim(fieldname)//label//'.data',
      &     access='sequential',form='formatted')
+      open(12,file='./'//trim(fieldname)//label//'.vtk',
+     &     access='sequential',form='formatted')
+
+
+      write(12,'(A26)') '# vtk DataFile Version 2.0'
+      write(12,'(A24)') 'GridSetup generated file'
+      write(12,'(A5)') 'ASCII'
+      write(12,'(A25)') 'DATASET STRUCTURED_POINTS'
+      write(12,'(A10,A1,I4,A1,I4,A1,I4)') 'DIMENSIONS',' ',
+     &i1x-i1n+1,' ',i2x-i2n+1,' ',i3x-i3n+1
+      write(12,'(A7,A1,E10.2,A1,E10.2,A1,E10.2)') 'SPACING',' ',
+     &dx,' ',dy,' ',dz
+      write(12,'(A6,A1,E10.2,A1,E10.2,A1,E10.2)') 'ORIGIN',' ',
+     &(i1n*dx),' ',(i2n*dy),' ',(i3n*dz)
+      write(12,'(A1)') ' '
+      write(12,'(A10,A1,I8)') 'POINT_DATA',' ',
+     &(i1x-i1n+1)*(i2x-i2n+1)*(i3x-i3n+1)
+      write(12,'(A23)') 'SCALARS FIELDS double 1'
+      write(12,'(A20)') 'LOOKUP_TABLE default'
 
       write(11,1000) i1n,i1x,i2n,i2x,i3n,i3x
       write(11,1000) tm,np
@@ -130,17 +149,19 @@
          do i2=i2n,i2x
             do i1=i1n,i1x
                write(11,1001) t_serie(i1,i2,i3)
+               write(12,1001) t_serie(i1,i2,i3)
             enddo
          enddo
       enddo
-      close(11)
 
+      close(11)
+      close(12)
 
  999  continue
 
 
  1000 FORMAT(1x, 1(1x, 1i6))
- 1001 FORMAT(1x, 1(1x, 1e12.6))
+ 1001 FORMAT(1x, 1(1x, 1e12.5))
 
 
       end subroutine SELECT_pfield_evol
