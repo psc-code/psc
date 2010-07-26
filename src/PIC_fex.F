@@ -140,10 +140,10 @@ c UPDATING LOCAL e1
       endif
 
 
-c UPDATING LOCAL BOUNDARY e1 (periodic continuation in x)
+c UPDATING LOCAL BOUNDARY e1
+! periodic continuation at x1 (data from x2)
 
-
-      if (boundary_field_x==1) then       
+      if (boundary_fld_x2==1) then       
       if (xnpe.gt.1) then
          if (nodei.eq.xnpe) then
             pec=seg_inv(1,nodej,nodek)
@@ -274,10 +274,10 @@ c UPDATING LOCAL e3
       endif
 
 
-c UPDATING LOCAL BOUNDARY e3 (periodic continuation in x)
+c UPDATING LOCAL BOUNDARY e3 
+! periodic continuation at x2 (data from x1)
 
-
-      if (boundary_field_x==1) then       
+      if (boundary_fld_x1==1) then       
       if (xnpe.gt.1) then
          if (1.eq.nodei) then
             pec=seg_inv(xnpe,nodej,nodek)

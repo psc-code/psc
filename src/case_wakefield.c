@@ -86,9 +86,12 @@ wakefield_init_param()
   psc.domain.ihi[1] = 400;
   psc.domain.ihi[2] = 600;
 
-  psc.domain.bnd_fld[0] = 1;
-  psc.domain.bnd_fld[1] = 1;
-  psc.domain.bnd_fld[2] = 0;
+  psc.domain.bnd_fld_lo[0] = 1;
+  psc.domain.bnd_fld_hi[0] = 1;
+  psc.domain.bnd_fld_lo[1] = 1;
+  psc.domain.bnd_fld_hi[1] = 1;
+  psc.domain.bnd_fld_lo[2] = 0;
+  psc.domain.bnd_fld_hi[2] = 0;
   psc.domain.bnd_part[0] = 1;
   psc.domain.bnd_part[1] = 1;
   psc.domain.bnd_part[2] = 0;

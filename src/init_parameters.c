@@ -27,9 +27,12 @@ static struct param psc_domain_descr[] = {
   { "ihi_y"         , VAR(ihi[1])          , PARAM_INT(9)         },
   { "ihi_z"         , VAR(ihi[2])          , PARAM_INT(400)       },
   // FIXME, we should use something other than magic numbers here
-  { "bnd_field_x"   , VAR(bnd_fld[0])      , PARAM_INT(1)         },
-  { "bnd_field_y"   , VAR(bnd_fld[1])      , PARAM_INT(1)         },
-  { "bnd_field_z"   , VAR(bnd_fld[2])      , PARAM_INT(1)         },
+  { "bnd_field_x_lo", VAR(bnd_fld_lo[0])   , PARAM_INT(1)         },
+  { "bnd_field_y_lo", VAR(bnd_fld_lo[1])   , PARAM_INT(1)         },
+  { "bnd_field_z_lo", VAR(bnd_fld_lo[2])   , PARAM_INT(1)         },
+  { "bnd_field_x_hi", VAR(bnd_fld_hi[0])   , PARAM_INT(1)         },
+  { "bnd_field_y_hi", VAR(bnd_fld_hi[1])   , PARAM_INT(1)         },
+  { "bnd_field_z_hi", VAR(bnd_fld_hi[2])   , PARAM_INT(1)         },
   { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_INT(1)         },
   { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_INT(1)         },
   { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_INT(1)         },
@@ -292,11 +295,11 @@ psc_init_param()
 void INIT_param_domain_F77(void);
 void INIT_param_psc_F77(void);
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
-			  f_int *nghost);
+			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
+			  f_int *nproc, f_int *nghost);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
-			  f_int *nghost);
+			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
+			  f_int *nproc, f_int *nghost);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
@@ -316,7 +319,7 @@ GET_param_domain()
   int imax[3];
 
   GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
+		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost);
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
   }
@@ -331,8 +334,8 @@ SET_param_domain()
   for (int d = 0; d < 3; d++) {
     imax[d] = p->ihi[d] - 1;
   }
-  SET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
+  SET_param_domain_F77(p->length, p->itot, p->ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
+		       p->bnd_part, p->nproc, p->nghost);
 }
 
 void

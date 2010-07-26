@@ -125,7 +125,7 @@ c -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 c open boundary at z1 plus incident laser pulse
 
 
-      if (boundary_field_z==0) then       
+      if (boundary_fld_z1==0) then       
 
       t=n*dt
       i3=i3mn-1
@@ -160,10 +160,13 @@ c open boundary at z1 plus incident laser pulse
      &                      -dt*jy)/(1.0+lz)
          enddo
       enddo
+      endif
 
 
 c open boundary at z2 plus incident laser pulse
 
+
+      if (boundary_fld_z2==0) then       
 
       t=n*dt
       i3=i3mx+1
@@ -204,7 +207,7 @@ c open boundary at z2 plus incident laser pulse
 c open boundary at y1 plus incident laser pulse
 
 
-      if (boundary_field_y==0) then       
+      if (boundary_fld_y1==0) then       
 
       t=n*dt
       i2=i2mn-1
@@ -239,10 +242,13 @@ c open boundary at y1 plus incident laser pulse
      &                      +dt*jz)/(1.0+ly)
          enddo
       enddo
+      endif
 
 
 c open boundary at y2 plus incident laser pulse
 
+
+      if (boundary_fld_y2==0) then       
 
       t=n*dt
       i2=i2mx+1
@@ -283,7 +289,7 @@ c open boundary at y2 plus incident laser pulse
 c open boundary at x1 plus incident laser pulse
 
 
-      if (boundary_field_x==0) then       
+      if (boundary_fld_x1==0) then       
 
       t=n*dt
       i1=i1mn-1
@@ -318,10 +324,13 @@ c open boundary at x1 plus incident laser pulse
      &                      +dt*jz)/(1.0+lx)
          enddo
       enddo
+      endif
 
 
 c open boundary at x2 plus incident laser pulse
 
+
+      if (boundary_fld_x2==0) then       
 
       t=n*dt
       i1=i1mx+1
