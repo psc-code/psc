@@ -31,16 +31,7 @@
 //          ------------------------------------------------->
 //                              (i1n,i2n,i3n)=box origin    z 
 
-struct psc_p_pulse_z1 {
-  struct psc_pulse pulse;
-
-  double xm, ym, zm; // location of pulse center at time 0 in m 
-  double dxm, dym, dzm; // width of pulse in m
-
-  bool is_setup;
-};
-
-#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1, x)
+#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_param, x)
 
 static struct param psc_p_pulse_z1_descr[] = {
   { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(20. * 1e-6)     },
@@ -54,6 +45,13 @@ static struct param psc_p_pulse_z1_descr[] = {
 
 #undef VAR
 
+struct psc_p_pulse_z1 {
+  struct psc_pulse pulse;
+  bool is_setup;
+
+  struct psc_p_pulse_z1_param prm;
+};
+
 static void
 psc_pulse_p_z1_short_destroy(struct psc_pulse *__pulse)
 {
@@ -65,12 +63,12 @@ static void
 psc_pulse_p_z1_setup(struct psc_p_pulse_z1 *pulse)
 {
   // normalization
-  pulse->xm /= psc.coeff.ld;
-  pulse->ym /= psc.coeff.ld;
-  pulse->zm /= psc.coeff.ld;
-  pulse->dxm /= psc.coeff.ld;
-  pulse->dym /= psc.coeff.ld;
-  pulse->dzm /= psc.coeff.ld;
+  pulse->prm.xm /= psc.coeff.ld;
+  pulse->prm.ym /= psc.coeff.ld;
+  pulse->prm.zm /= psc.coeff.ld;
+  pulse->prm.dxm /= psc.coeff.ld;
+  pulse->prm.dym /= psc.coeff.ld;
+  pulse->prm.dzm /= psc.coeff.ld;
 
   pulse->is_setup = true;
 }
@@ -89,14 +87,14 @@ psc_pulse_p_z1_short_field(struct psc_pulse *__pulse,
   double yl = yy;
   double zl = zz - tt;
 
-  //  double xr = xl - pulse->xm;
-  double yr = yl - pulse->ym;
-  double zr = zl - pulse->zm;
+  //  double xr = xl - pulse->prm.xm;
+  double yr = yl - pulse->prm.ym;
+  double zr = zl - pulse->prm.zm;
 
   return sin(zr)
-    // * exp(-sqr(xr/pulse->dxm))
-    * exp(-sqr(yr/pulse->dym))
-    * exp(-sqr(zr/pulse->dzm));
+    // * exp(-sqr(xr/pulse->prm.dxm))
+    * exp(-sqr(yr/pulse->prm.dym))
+    * exp(-sqr(zr/pulse->prm.dzm));
 }
 
 static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
@@ -112,8 +110,8 @@ psc_pulse_p_z1_short_create(void)
 					     &psc_pulse_ops_p_z1_short);
 
   struct psc_p_pulse_z1 *self = (struct psc_p_pulse_z1 *) pulse;
-  params_parse_cmdline(self, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
-  params_print(self, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  params_parse_cmdline(&self->prm, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
+  params_print(&self->prm, psc_p_pulse_z1_descr, "PSC P pulse z1", MPI_COMM_WORLD);
 
   return pulse;
 }
