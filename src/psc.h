@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "psc_pulse.h"
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -156,19 +158,6 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
-struct psc_pulse;
-
-struct psc_pulse_ops {
-  const char *name;
-  void (*destroy)(struct psc_pulse *);
-  double (*p_pulse_z1)(struct psc_pulse *,
-		       double x, double y, double z, double t);
-};  
-
-struct psc_pulse {
-  struct psc_pulse_ops *ops;
-};
-
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
@@ -239,7 +228,6 @@ void psc_sort();
 void psc_out_field();
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
-struct psc_pulse *psc_pulse_p_z1_short_create(void);
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
