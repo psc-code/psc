@@ -276,9 +276,9 @@ push_pi_dt(struct particle_vec * p,
 }
 
 //---------------------------------------------
-// sse2_push_part_yz_a - reads in the particles
-// and half steps their positions using their 
-// current momentum
+/// Reads in the particles
+/// and half steps their positions using their 
+/// current momentum
 
 void
 sse2_push_part_yz_a()
@@ -334,9 +334,9 @@ sse2_push_part_yz_a()
 }
 
 //---------------------------------------------
-// sse2_push_part_yz_b - Advances the particles 
-// one full time step, including momenta, but 
-// does not update current and charge densities
+/// Advances the particles 
+/// one full time step, including momenta, but 
+/// does not update current and charge densities
 
 void
 sse2_push_part_yz_b()
@@ -539,9 +539,8 @@ sse2_push_part_yz_b()
 }
 
 //---------------------------------------------
-// sse2_push_part_yz - a full translation of the 
-// yz particle pusher
-
+/// SSE2 implementation of the 
+/// yz particle pusher
 void
 sse2_push_part_yz()
 {
@@ -954,3 +953,7 @@ sse2_push_part_yz()
 #undef JSX
 #undef JSY
 #undef JSZ
+
+/// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.
+///
+/// Includes full pusher, and part {a,b} sections for unit testing.

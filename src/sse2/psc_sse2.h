@@ -2,7 +2,12 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-#define SSE2_DOUBLE 1 // toggle to switch precision 
+////////
+/// Toggle to switch precision 
+///
+/// 1 is double precision, 0 is single. 
+#define SSE2_DOUBLE 1 
+
 #include "psc.h"
 
 // Kai's macros are much prettier (and a little faster) use them instead
@@ -31,6 +36,7 @@
 
 #include "simd_wrap.h"
 
+/// Particle structure used by SSE2 implementation.
 struct sse2_particle {
   sse2_real xi, yi, zi;
   sse2_real pxi, pyi, pzi;
@@ -39,18 +45,22 @@ struct sse2_particle {
   sse2_real wni;
 };
 
+/// Field/Particle data used by SSE2 Implementation
 struct psc_sse2 {
-  struct sse2_particle *part;
-  int part_allocated;
-  sse2_real *fields;
+  struct sse2_particle *part; ///< Pointer to particle array
+  int part_allocated; ///< Number of particles currently allocated
+  sse2_real *fields; ///< Pointer to fields array
 };
 
 // Packed vector datatypes, use typedefs to make things a bit prettier
 
+/// Vector floating point type
 typedef union packed_vector pvReal;
 
+/// Vector integer type
 typedef union packed_int pvInt;
 
+/// VEC_SIZE particles packed into vectors
 struct particle_vec{
   union packed_vector xi, yi, zi;
   union packed_vector pxi, pyi, pzi;
@@ -64,8 +74,21 @@ void init_vec_numbers(void);
 
 // SSE2 needs to have these numbers packed into 
 // vectors to utilize them effectively. 
-pvReal ones, half, threefourths, onepfive, third;
-pvInt ione;
+pvReal ones, ///< Vector of "1.0"
+  half, ///< Vector of "0.5"
+  threefourths, ///< Vector of "0.75"
+  onepfive, ///< Vector of "1.5"
+  third; ///< Vector of "1./3."
+pvInt ione; ///< Vector of "1"
 
 
 #endif
+
+//////////////////////////////////////////////////
+/// \file psc_sse2.h SSE2 implementation datatypes and prototypes.
+///
+/// This file contains the macro SSE2_DOUBLE which sets the precision
+/// (1 for double, 2 for single) of the sse2 code. The macros in 
+/// simd_wrap.h choose the correct intrinsics based on this value. 
+/// \FIXME It would be nice if precision in the C code could be set 
+/// at compile time by some configure option. 

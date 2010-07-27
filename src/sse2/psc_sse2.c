@@ -22,6 +22,7 @@ init_vec_numbers(void) {
   ione.r = pv_set1_int(1);			
 }
 
+/// Allocate mememory for the SSE2 context.
 static void
 sse2_create(void)
 {
@@ -30,6 +31,7 @@ sse2_create(void)
   psc.c_ctx = sse2;
 }
 
+/// Cleanup the SSE2 context.
 static void
 sse2_destroy(void)
 {
@@ -38,6 +40,7 @@ sse2_destroy(void)
 }
 
 // For now this is all more or less identical to kai's generic_c. 
+/// Copy particles from Fortran data structures to an SSE2 friendly format.
 static void
 sse2_particles_from_fortran(void)
 {
@@ -69,7 +72,7 @@ sse2_particles_from_fortran(void)
     part->qni = f_part->qni;
     part->mni = f_part->mni;
     part->wni = f_part->wni;
-    assert(round(part->xi) == 0); //FIXME: ensures we have true 2-D with x<.5 for all parts
+    assert(round(part->xi) == 0); ///< \FIXME This assert only fits for the yz pusher. Idealy, no assert would be needed here, but until we can promise 'true 2D' some check is needed.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = psc.n_part; n < (psc.n_part + pad); n++){
@@ -82,6 +85,7 @@ sse2_particles_from_fortran(void)
   }
 }
 
+/// Copy particles from SSE2 data structures to fortran structures.
 static void
 sse2_particles_to_fortran()
 {
@@ -103,6 +107,7 @@ sse2_particles_to_fortran()
    }
 }
 
+/// Copy fields from Fortran data structures to an SSE2 friendly format.
 static void
 sse2_fields_from_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
@@ -116,6 +121,7 @@ sse2_fields_from_fortran(){
   }
 }
 
+/// Copy fields from SSE2 data structures into Fortran structures.
 static void
 sse2_fields_to_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
@@ -128,7 +134,7 @@ sse2_fields_to_fortran(){
   _mm_free(sse2->fields);
 }
 
-
+/// Pointers to functions optimized for SSE2
 struct psc_ops psc_ops_sse2 = {
   .name = "sse2",
   .create                 = sse2_create,
@@ -141,3 +147,5 @@ struct psc_ops psc_ops_sse2 = {
   .push_part_yz_b         = sse2_push_part_yz_b,
   .push_part_yz           = sse2_push_part_yz,
 }; 
+
+/// \file psc_sse2.c Backend functions for SSE2 implementation.
