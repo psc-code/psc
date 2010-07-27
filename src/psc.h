@@ -107,6 +107,18 @@ struct psc_coeff {
   int nnp; // # steps per laser cycle
 };
 
+// need to match fortran values
+
+enum {
+  BND_FLD_OPEN,
+  BND_FLD_PERIODIC,
+};
+
+enum {
+  BND_PART_REFLECTING,
+  BND_PART_PERIODIC,
+};
+
 struct psc_domain {
   double length[3];
   int itot[3], ilo[3], ihi[3];

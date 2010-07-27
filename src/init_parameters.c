@@ -13,6 +13,18 @@ struct psc_cmdline {
 
 #define VAR(x) (void *)offsetof(struct psc_domain, x)
 
+static struct param_select bnd_fld_descr[] = {
+  { .val = BND_FLD_OPEN        , .str = "open"        },
+  { .val = BND_FLD_PERIODIC    , .str = "periodic"    },
+  {},
+};
+
+static struct param_select bnd_part_descr[] = {
+  { .val = BND_PART_REFLECTING , .str = "reflecting"  },
+  { .val = BND_PART_PERIODIC   , .str = "periodic"    },
+  {},
+};
+
 static struct param psc_domain_descr[] = {
   { "length_x"      , VAR(length[0])       , PARAM_DOUBLE(1e-6)   },
   { "length_y"      , VAR(length[1])       , PARAM_DOUBLE(1e-6)   },
@@ -26,17 +38,26 @@ static struct param psc_domain_descr[] = {
   { "ihi_x"         , VAR(ihi[0])          , PARAM_INT(9)         },
   { "ihi_y"         , VAR(ihi[1])          , PARAM_INT(9)         },
   { "ihi_z"         , VAR(ihi[2])          , PARAM_INT(400)       },
-  // FIXME, we should use something other than magic numbers here
-  { "bnd_field_x_lo", VAR(bnd_fld_lo[0])   , PARAM_INT(1)         },
-  { "bnd_field_y_lo", VAR(bnd_fld_lo[1])   , PARAM_INT(1)         },
-  { "bnd_field_z_lo", VAR(bnd_fld_lo[2])   , PARAM_INT(1)         },
-  { "bnd_field_x_hi", VAR(bnd_fld_hi[0])   , PARAM_INT(1)         },
-  { "bnd_field_y_hi", VAR(bnd_fld_hi[1])   , PARAM_INT(1)         },
-  { "bnd_field_z_hi", VAR(bnd_fld_hi[2])   , PARAM_INT(1)         },
-  { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_INT(1)         },
-  { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_INT(1)         },
-  { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_INT(1)         },
 
+  { "bnd_field_lo_x", VAR(bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_lo_y", VAR(bnd_fld_lo[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_lo_z", VAR(bnd_fld_lo[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_x", VAR(bnd_fld_hi[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_y", VAR(bnd_fld_hi[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_z", VAR(bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+
+  { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
+  { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
+  { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
   { "nproc_x",        VAR(nproc[0])        , PARAM_INT(1)         },
   { "nproc_y",        VAR(nproc[1])        , PARAM_INT(1)         },
   { "nproc_z",        VAR(nproc[2])        , PARAM_INT(1)         },
@@ -193,12 +214,12 @@ init_param_domain_default()
   psc.domain.ilo[2] = 0;
   psc.domain.ihi[2] = 400;
 
-  psc.domain.bnd_fld[0] = 1;
-  psc.domain.bnd_fld[1] = 1;
-  psc.domain.bnd_fld[2] = 1;
-  psc.domain.bnd_part[0] = 1;
-  psc.domain.bnd_part[1] = 1;
-  psc.domain.bnd_part[2] = 1;
+  psc.domain.bnd_fld[0] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[1] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[2] = BND_FLD_PERIODIC;
+  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
 #endif
 }
 
