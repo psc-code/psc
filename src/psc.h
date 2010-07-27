@@ -112,6 +112,8 @@ struct psc_coeff {
 enum {
   BND_FLD_OPEN,
   BND_FLD_PERIODIC,
+  BND_FLD_UPML,
+  BND_FLD_TIME,
 };
 
 enum {

@@ -16,6 +16,8 @@ struct psc_cmdline {
 static struct param_select bnd_fld_descr[] = {
   { .val = BND_FLD_OPEN        , .str = "open"        },
   { .val = BND_FLD_PERIODIC    , .str = "periodic"    },
+  { .val = BND_FLD_UPML        , .str = "upml"        },
+  { .val = BND_FLD_TIME        , .str = "time"        },
   {},
 };
 
