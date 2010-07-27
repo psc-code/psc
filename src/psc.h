@@ -281,9 +281,11 @@ extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
+extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_harris;
 
-extern struct psc_pulse_ops psc_pulse_ops_p_z1_short;
+extern struct psc_pulse_ops psc_pulse_ops_p_z1_short; // FIXME, rename -> gauss
+extern struct psc_pulse_ops psc_pulse_ops_p_z1_flattop;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();

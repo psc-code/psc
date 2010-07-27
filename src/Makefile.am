@@ -30,6 +30,7 @@ libpsc_a_SOURCES = \
 	output_fields.c output_binary.c output_vtk.c \
 	case_langmuir.c \
 	case_wakefield.c \
+	case_thinfoil.c \
 	case_harris.c
 
 if HAVE_HDF5
