@@ -51,7 +51,15 @@ wakefield_create()
 
   psc.case_data = wakefield;
 
-  psc.pulse_ops = &psc_pulse_ops_p_z1_short;
+  struct psc_p_pulse_z1_param prm = {
+    .xm  = 20. * 1e-6,
+    .ym  = 20. * 1e-6,
+    .zm  = -2. * 1e-6,
+    .dxm = 5.  * 1e-6,
+    .dym = 5.  * 1e-6,
+    .dzm = 1.  * 1e-6,
+  };
+  psc.pulse_p_z1 = psc_pulse_p_z1_short_create(&prm);
 }
 
 static void

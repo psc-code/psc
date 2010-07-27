@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "psc_pulse.h"
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -199,18 +201,11 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
-struct psc_pulse_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  double (*p_pulse_z1)(double x, double y, double z, double t);
-};  
-
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
-  struct psc_pulse_ops *pulse_ops;
+  struct psc_pulse *pulse_p_z1;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -297,9 +292,6 @@ extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_harris;
-
-extern struct psc_pulse_ops psc_pulse_ops_p_z1_short; // FIXME, rename -> gauss
-extern struct psc_pulse_ops psc_pulse_ops_p_z1_flattop;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();

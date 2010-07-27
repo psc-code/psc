@@ -54,7 +54,16 @@ thinfoil_create()
 
   psc.case_data = thinfoil;
 
-  psc.pulse_ops = &psc_pulse_ops_p_z1_flattop;
+  struct psc_p_pulse_z1_flattop_param prm = {
+    .xm = .01   * 1e-6,
+    .ym = .01   * 1e-6,
+    .zm = -301. * 1e-6,
+    .dxm = 4.   * 1e-6,
+    .dym = 4.   * 1e-6,
+    .dzm = .1   * 1e-6,
+    .zb  = 300. * 1e-6,
+  };
+  psc.pulse_p_z1 = psc_pulse_p_z1_flattop_create(&prm);
 }
 
 static void

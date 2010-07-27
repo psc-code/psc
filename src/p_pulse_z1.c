@@ -1,7 +1,10 @@
 
 #include "psc.h"
+#include "util/params.h"
 
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 // ======================================================================
 // psc_p_pulse_z1
@@ -28,78 +31,193 @@
 //          ------------------------------------------------->
 //                              (i1n,i2n,i3n)=box origin    z 
 
-double
-p_pulse_z1(double xx, double yy, double zz, double tt)
-{
-  double dxm = 5.0*1.0e-6;
-  double dym = 5.0*1.0e-6;
-  double dzm = 1.0*1.0e-6;
-  double xm = 2.0*1.0e-5;
-  double ym = 2.0*1.0e-5;
-  double zm =-2.0*1.0e-6;
+#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_param, x)
 
+static struct param psc_p_pulse_z1_descr[] = {
+  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
+  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  {},
+};
+
+#undef VAR
+
+struct psc_p_pulse_z1 {
+  struct psc_pulse pulse;
+  bool is_setup;
+
+  struct psc_p_pulse_z1_param prm;
+};
+
+static void
+psc_pulse_p_z1_short_destroy(struct psc_pulse *__pulse)
+{
+  struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
+  free(pulse);
+}
+
+static void
+psc_pulse_p_z1_setup(struct psc_p_pulse_z1 *pulse)
+{
   // normalization
-  xm /= psc.coeff.ld;
-  ym /= psc.coeff.ld;
-  zm /= psc.coeff.ld;
-  dxm /= psc.coeff.ld;
-  dym /= psc.coeff.ld;
-  dzm /= psc.coeff.ld;
+  pulse->prm.xm /= psc.coeff.ld;
+  pulse->prm.ym /= psc.coeff.ld;
+  pulse->prm.zm /= psc.coeff.ld;
+  pulse->prm.dxm /= psc.coeff.ld;
+  pulse->prm.dym /= psc.coeff.ld;
+  pulse->prm.dzm /= psc.coeff.ld;
+
+  pulse->is_setup = true;
+}
+
+static double
+psc_pulse_p_z1_short_field(struct psc_pulse *__pulse,
+			   double xx, double yy, double zz, double tt)
+{
+  struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
+
+  if (!pulse->is_setup) {
+    psc_pulse_p_z1_setup(pulse);
+  }
 
   //  double xl = xx;
   double yl = yy;
   double zl = zz - tt;
 
-  //  double xr = xl - xm;
-  double yr = yl - ym;
-  double zr = zl - zm;
+  //  double xr = xl - pulse->prm.xm;
+  double yr = yl - pulse->prm.ym;
+  double zr = zl - pulse->prm.zm;
 
   return sin(zr)
-    // * exp(-sqr(xr/dxm))
-    * exp(-sqr(yr/dym))
-    * exp(-sqr(zr/dzm));
+    // * exp(-sqr(xr/pulse->prm.dxm))
+    * exp(-sqr(yr/pulse->prm.dym))
+    * exp(-sqr(zr/pulse->prm.dzm));
 }
 
-struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
+static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
-  .p_pulse_z1 = p_pulse_z1,
+  .destroy    = psc_pulse_p_z1_short_destroy,
+  .field      = psc_pulse_p_z1_short_field,
 };
 
-double
-p_pulse_flattop_z1(double xx, double yy, double zz, double tt)
+struct psc_pulse *
+psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm)
 {
-  double dxm = 4.0*1e-6;
-  double dym = 4.0*1e-6;
-  double dzm = .1 *1e-6;
-  double xm = .01 *1e-6;
-  double ym = .01 *1e-6;
-  double zm =-301.*1e-6;
-  double zb = 300.*1e-6;
+  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1),
+					     &psc_pulse_ops_p_z1_short);
 
+  struct psc_p_pulse_z1 *self = (struct psc_p_pulse_z1 *) pulse;
+  if (prm) { // custom defaults were passed
+    memcpy(&self->prm, prm, sizeof(self->prm));
+    params_parse_cmdline_nodefault(&self->prm, psc_p_pulse_z1_descr,
+				   "PSC P pulse z1", MPI_COMM_WORLD);
+  } else {
+    params_parse_cmdline(&self->prm, psc_p_pulse_z1_descr,
+			 "PSC P pulse z1", MPI_COMM_WORLD);
+  }
+  params_print(&self->prm, psc_p_pulse_z1_descr, "PSC P pulse z1",
+	       MPI_COMM_WORLD);
+
+  return pulse;
+}
+
+// ======================================================================
+
+#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_flattop_param, x)
+
+static struct param psc_p_pulse_z1_flattop_descr[] = {
+  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
+  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
+  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_zb"      , VAR(zb)              , PARAM_DOUBLE(1.5 * 1e-6)     },
+  {},
+};
+
+#undef VAR
+
+struct psc_p_pulse_z1_flattop {
+  struct psc_pulse pulse;
+  bool is_setup;
+
+  struct psc_p_pulse_z1_flattop_param prm;
+};
+
+static void
+psc_pulse_p_z1_flattop_destroy(struct psc_pulse *__pulse)
+{
+  struct psc_p_pulse_z1_flattop *pulse = (struct psc_p_pulse_z1_flattop *) __pulse;
+  free(pulse);
+}
+
+static void
+psc_pulse_p_z1_flattop_setup(struct psc_p_pulse_z1_flattop *pulse)
+{
   // normalization
-  xm /= psc.coeff.ld;
-  ym /= psc.coeff.ld;
-  zm /= psc.coeff.ld;
-  dxm /= psc.coeff.ld;
-  dym /= psc.coeff.ld;
-  dzm /= psc.coeff.ld;
-  zb  /= psc.coeff.ld;
+  pulse->prm.xm /= psc.coeff.ld;
+  pulse->prm.ym /= psc.coeff.ld;
+  pulse->prm.zm /= psc.coeff.ld;
+  pulse->prm.dxm /= psc.coeff.ld;
+  pulse->prm.dym /= psc.coeff.ld;
+  pulse->prm.dzm /= psc.coeff.ld;
+  pulse->prm.zb /= psc.coeff.ld;
+
+  pulse->is_setup = true;
+}
+
+double
+psc_pulse_p_z1_flattop(struct psc_pulse *__pulse, 
+		       double xx, double yy, double zz, double tt)
+{
+  struct psc_p_pulse_z1_flattop *pulse = (struct psc_p_pulse_z1_flattop *) __pulse;
+
+  if (!pulse->is_setup) {
+    psc_pulse_p_z1_flattop_setup(pulse);
+  }
 
   double xl = xx;
   double yl = yy;
   double zl = zz - tt;
 
-  double xr = xl - xm;
-  double yr = yl - ym;
-  double zr = zl - zm;
+  double xr = xl - pulse->prm.xm;
+  double yr = yl - pulse->prm.ym;
+  double zr = zl - pulse->prm.zm;
 
   return sin(zr)
-    * exp(-sqr(xr/dxm))
-    * exp(-sqr(yr/dym))
-    * 1. / (1.+exp((fabs(zr)-zb)/dzm));
+    * exp(-sqr(xr/pulse->prm.dxm))
+    * exp(-sqr(yr/pulse->prm.dym))
+    * 1. / (1.+exp((fabs(zr)-pulse->prm.zb)/pulse->prm.dzm));
 }
 
 struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
   .name       = "p_z1_flattop",
-  .p_pulse_z1 = p_pulse_flattop_z1,
+  .destroy    = psc_pulse_p_z1_flattop_destroy,
+  .field      = psc_pulse_p_z1_flattop,
 };
+
+struct psc_pulse *
+psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm)
+{
+  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1_flattop),
+					     &psc_pulse_ops_p_z1_flattop);
+
+  struct psc_p_pulse_z1_flattop *self = (struct psc_p_pulse_z1_flattop *) pulse;
+  if (prm) { // custom defaults were passed
+    memcpy(&self->prm, prm, sizeof(self->prm));
+    params_parse_cmdline_nodefault(&self->prm, psc_p_pulse_z1_flattop_descr,
+				   "PSC P pulse z1 flattop", MPI_COMM_WORLD);
+  } else {
+    params_parse_cmdline(&self->prm, psc_p_pulse_z1_flattop_descr,
+			 "PSC P pulse z1 flattop", MPI_COMM_WORLD);
+  }
+  params_print(&self->prm, psc_p_pulse_z1_flattop_descr, "PSC P pulse z1 flattop",
+	       MPI_COMM_WORLD);
+
+  return pulse;
+}
+
