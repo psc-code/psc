@@ -134,7 +134,7 @@ c     ----------------------------------------------------------------------
 
 
 #ifdef USE_PML
-      call PML_alloc_fields
+      call PML_alloc_field
 #endif
 
 #ifdef USE_C_INTERFACE
@@ -165,7 +165,7 @@ c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
       real(kind=8) :: h1,h2,h3
       real(kind=8) :: p_pulse_z2
 
-c setting up the fields
+c initialization of the fields
 
       do i3=i3mn-rd3,i3mx+rd3
          h3=i3*dz
@@ -378,6 +378,7 @@ c setting up charge and current densities
       call PIC_faz(nn)
 
 
+
 c setting up time-averaged fields
 
 
@@ -395,8 +396,9 @@ c setting up time-averaged fields
       nnt=0.0d0
 
 #ifdef USE_PML
-      call PML_setup_fields
+      call PML_setup_field
 #endif
+
 
       cpu=0.0d0
       cpu_ary=0.0d0
@@ -412,24 +414,6 @@ c     ----------------------------------------------------------------------
       use VLA_variables
 
       implicit none
-
-c kay: potentials      
-      allocate(vphi0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vphi1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz0(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vax1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vay1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(vaz1(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
 
       ! additional d field  - added by ab
 
@@ -457,13 +441,6 @@ c kay: potentials
       allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      allocate(rhoi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
-
-      allocate(vphit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vaxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vayt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(vazt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
@@ -482,7 +459,6 @@ c kay: potentials
       allocate(dx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(rhoit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jxexit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jyeyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jzezit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
@@ -490,21 +466,6 @@ c kay: potentials
       allocate(poyyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(poyzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
 
-      allocate(exsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(eysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(ezsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jxsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jysp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-      allocate(jzsp(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))  ! test ab
-
-      vphi0=0.0d0
-      vphi1=0.0d0
-      vax0=0.0d0
-      vay0=0.0d0
-      vaz0=0.0d0
-      vax1=0.0d0
-      vay1=0.0d0
-      vaz1=0.0d0
       dvx=0.0d0
       dvy=0.0d0
       dvz=0.0d0
@@ -513,7 +474,6 @@ c kay: potentials
       hz=0.0d0
       eps = 1.0
       mu = 1.0
-      rhoi=0.0d0
 
       end subroutine PML_alloc_field
 
@@ -526,15 +486,6 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      vphi0=0.0d0
-      vphi1=0.0d0
-      vax0=0.0d0
-      vay0=0.0d0
-      vaz0=0.0d0
-      vax1=0.0d0
-      vay1=0.0d0
-      vaz1=0.0d0
-      
       ! initialisation of additional fields - added by ab
       ! because of normalization these are equal to e and b fields
 
@@ -545,18 +496,12 @@ c     ----------------------------------------------------------------------
       hy=by
       hz=bz
       
-      ! initialisation of permittivity tensors
+      ! initialisation of permittivity tensors, always set to 1.0
       ! due to scaling these are dimensionless
       
       eps = 1.0
       mu = 1.0
       
-      rhoi=0.0d0
-
-      vphit=0.0d0
-      vaxt=0.0d0
-      vayt=0.0d0
-      vazt=0.0d0
       hxt=0.0d0       ! ab
       hyt=0.0d0       ! ab
       hzt=0.0d0       ! ab
@@ -575,19 +520,12 @@ c     ----------------------------------------------------------------------
       dx2t=0.0d0      ! ab
       dy2t=0.0d0      ! ab
       dz2t=0.0d0      ! ab
-      rhoit=0.0d0
       jxexit=0.0d0
       jyeyit=0.0d0
       jzezit=0.0d0
       poyxt=0.0d0
       poyyt=0.0d0
       poyzt=0.0d0
-      exsp=0.0d0      ! test ab
-      eysp=0.0d0      ! test ab
-      ezsp=0.0d0      ! test ab
-      jxsp=0.0d0      ! test ab
-      jysp=0.0d0      ! test ab
-      jzsp=0.0d0      ! test ab
 
       fluxit=0.0d0
       fluxot=0.0d0

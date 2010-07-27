@@ -49,11 +49,11 @@ c zm: z-location of pulse center in m
 
 
       dxm=1.0*1.0e-6                       !modify for pulse setup
-      dym=5.0*1.0e-6
-      dzm=5.0*1.0e-6
-      xm=-2.0*1.0e-6
-      ym=10.0*1.0e-6
-      zm=10.0*1.0e-6
+      dym=1.0*1.0e-6
+      dzm=1.0*1.0e-6
+      xm=0.05*1.0e-6
+      ym=0.05*1.0e-6
+      zm=5.0*1.0e-6
 
 
       xm=xm/ld                              !normalization

@@ -3,8 +3,6 @@
 #include "util/params.h"
 
 #include <math.h>
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
 
 struct psc_cmdline {
@@ -12,6 +10,20 @@ struct psc_cmdline {
 };
 
 #define VAR(x) (void *)offsetof(struct psc_domain, x)
+
+static struct param_select bnd_fld_descr[] = {
+  { .val = BND_FLD_OPEN        , .str = "open"        },
+  { .val = BND_FLD_PERIODIC    , .str = "periodic"    },
+  { .val = BND_FLD_UPML        , .str = "upml"        },
+  { .val = BND_FLD_TIME        , .str = "time"        },
+  {},
+};
+
+static struct param_select bnd_part_descr[] = {
+  { .val = BND_PART_REFLECTING , .str = "reflecting"  },
+  { .val = BND_PART_PERIODIC   , .str = "periodic"    },
+  {},
+};
 
 static struct param psc_domain_descr[] = {
   { "length_x"      , VAR(length[0])       , PARAM_DOUBLE(1e-6)   },
@@ -26,14 +38,26 @@ static struct param psc_domain_descr[] = {
   { "ihi_x"         , VAR(ihi[0])          , PARAM_INT(9)         },
   { "ihi_y"         , VAR(ihi[1])          , PARAM_INT(9)         },
   { "ihi_z"         , VAR(ihi[2])          , PARAM_INT(400)       },
-  // FIXME, we should use something other than magic numbers here
-  { "bnd_field_x"   , VAR(bnd_fld[0])      , PARAM_INT(1)         },
-  { "bnd_field_y"   , VAR(bnd_fld[1])      , PARAM_INT(1)         },
-  { "bnd_field_z"   , VAR(bnd_fld[2])      , PARAM_INT(1)         },
-  { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_INT(1)         },
-  { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_INT(1)         },
-  { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_INT(1)         },
 
+  { "bnd_field_lo_x", VAR(bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_lo_y", VAR(bnd_fld_lo[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_lo_z", VAR(bnd_fld_lo[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_x", VAR(bnd_fld_hi[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_y", VAR(bnd_fld_hi[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+  { "bnd_field_hi_z", VAR(bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+							  bnd_fld_descr) },
+
+  { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
+  { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
+  { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+							  bnd_part_descr) },
   { "nproc_x",        VAR(nproc[0])        , PARAM_INT(1)         },
   { "nproc_y",        VAR(nproc[1])        , PARAM_INT(1)         },
   { "nproc_z",        VAR(nproc[2])        , PARAM_INT(1)         },
@@ -50,11 +74,6 @@ init_param_domain()
   params_parse_cmdline_nodefault(domain, psc_domain_descr, "PSC domain",
 				 MPI_COMM_WORLD);
   params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
-
-#ifdef USE_PML
-  fprintf(stderr, "PML not handled in C version!\n");
-  MPI_Abort();
-#endif
 
   for (int d = 0; d < 3; d++) {
     if (domain->ihi[d] - domain->ilo[d] == 1) {
@@ -95,6 +114,11 @@ static struct param psc_param_descr[] = {
   // conditions, but I believe it's incorrect and should go away, eventually.
   { "fortran_particle_weight_hack"
                     , VAR(fortran_particle_weight_hack), PARAM_BOOL(0)  },
+  // yet another hackish thing for compatibility
+  // adjust dt so that the laser period is an integer multiple of dt
+  // only useful when actually doing lasers.
+  { "adjust_dt_to_cycles"
+                    , VAR(adjust_dt_to_cycles), PARAM_BOOL(0)  },
   {},
 };
 
@@ -112,8 +136,10 @@ init_param_psc()
 // set up cases
 
 static struct psc_case_ops *psc_case_ops_list[] = {
-  &psc_case_ops_harris,
   &psc_case_ops_langmuir,
+  &psc_case_ops_wakefield,
+  &psc_case_ops_thinfoil,
+  &psc_case_ops_harris,
   NULL,
 };
 
@@ -188,12 +214,12 @@ init_param_domain_default()
   psc.domain.ilo[2] = 0;
   psc.domain.ihi[2] = 400;
 
-  psc.domain.bnd_fld[0] = 1;
-  psc.domain.bnd_fld[1] = 1;
-  psc.domain.bnd_fld[2] = 1;
-  psc.domain.bnd_part[0] = 1;
-  psc.domain.bnd_part[1] = 1;
-  psc.domain.bnd_part[2] = 1;
+  psc.domain.bnd_fld[0] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[1] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld[2] = BND_FLD_PERIODIC;
+  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
 #endif
 }
 
@@ -246,6 +272,18 @@ init_param_coeff()
     psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.itot[d];
   }
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
+
+  // adjust to match laser cycles FIXME, this isn't a good place,
+  // and hardcoded params (2, 30.)
+  psc.coeff.nnp = ceil(2.*M_PI / psc.dt);
+  if (psc.prm.adjust_dt_to_cycles) {
+    psc.dt = 2.*M_PI / psc.coeff.nnp;
+  }
+  psc.coeff.np = 2 * psc.coeff.nnp;
+  if (psc.prm.nmax == 0) {
+    psc.prm.nmax = 30. * psc.coeff.nnp;
+  }
+
 }
 
 void
@@ -274,11 +312,11 @@ psc_init_param()
 void INIT_param_domain_F77(void);
 void INIT_param_psc_F77(void);
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
-			  f_int *nghost);
+			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
+			  f_int *nproc, f_int *nghost);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld, f_int *bnd_part, f_int *nproc,
-			  f_int *nghost);
+			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
+			  f_int *nproc, f_int *nghost);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
@@ -289,7 +327,7 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_real *a0, f_int *nicell);
 void SET_param_coeff_F77(f_real *cori, f_real *alpha, f_real *beta, f_real *eta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
-			 f_real *dx, f_real *dt);
+			 f_real *dx, f_real *dt, f_int *np, f_int *nnp);
 
 void
 GET_param_domain()
@@ -298,7 +336,7 @@ GET_param_domain()
   int imax[3];
 
   GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
+		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost);
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
   }
@@ -313,8 +351,8 @@ SET_param_domain()
   for (int d = 0; d < 3; d++) {
     imax[d] = p->ihi[d] - 1;
   }
-  SET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld, p->bnd_part, p->nproc, p->nghost);
+  SET_param_domain_F77(p->length, p->itot, p->ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
+		       p->bnd_part, p->nproc, p->nghost);
 }
 
 void
@@ -343,7 +381,7 @@ SET_param_coeff()
   struct psc_coeff *p = &psc.coeff;
   SET_param_coeff_F77(&p->cori, &p->alpha, &p->beta, &p->eta,
 		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
-		      psc.dx, &psc.dt);
+		      psc.dx, &psc.dt, &p->np, &p->nnp);
 }
 
 void

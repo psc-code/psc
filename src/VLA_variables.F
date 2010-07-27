@@ -25,40 +25,30 @@ c jxit-jzit: time averaged current density
       real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
 
 #ifdef USE_PML
-c vphi0-vaz1: em potentials
-c rhoi-jzi: charge and current densities
+c jxi-jzi: charge and current densities
 
 ! for the pml the declaration of d and h field is required
 ! dvx-hz: additional em field arrays
 ! dvx-dvz is chosen because of the existence of dx-dz for spatial range
 
-      real(kind=8),allocatable,dimension(:,:,:) :: vphi0,vax0,vay0,vaz0
-      real(kind=8),allocatable,dimension(:,:,:) :: vphi1,vax1,vay1,vaz1
-
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
       real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: rhoi
-
-      real(kind=8),allocatable,dimension(:,:,:) :: exsp,eysp,ezsp  ! test ab
-      real(kind=8),allocatable,dimension(:,:,:) :: jxsp,jysp,jzsp  ! test ab
 
 ! electric and magnetic permittivity tensors
 
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
 
-c vphi0t-vaz1t: time averaged potentials
 c ex2t-bz2t: time averaged field
-c rhoit-jzit: time averaged charge and current densities
+c jxit-jzit: time averaged charge and current densities
 c jxexit-jzezit: time averaged energy depositions
 c poyxt-poyzt: time averaged poynting vector
 
-      real(kind=4),allocatable,dimension(:,:,:) :: vphit,vaxt,vayt,vazt
       real(kind=4),allocatable,dimension(:,:,:) :: hxt,hyt,hzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dxt,dyt,dzt      ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: ex2t,ey2t,ez2t   ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: bx2t,by2t,bz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dx2t,dy2t,dz2t   ! ab
-      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
-      real(kind=4),allocatable,dimension(:,:,:) :: rhoit
       real(kind=4),allocatable,dimension(:,:,:) :: jxexit,jyeyit,jzezit
       real(kind=4),allocatable,dimension(:,:,:) :: poyxt,poyyt,poyzt
 
@@ -209,32 +199,29 @@ c data_chk: data checkpointing directory
       character*(20) char
       character*(5) pe
 
-c boundary_field_x: field boundary conditions in x
-c boundary_field_y: field boundary conditions in y
-c boundary_field_z: field boundary conditions in z
 c boundary_part_x: particle boundary conditions in x
 c boundary_part_y: particle boundary conditions in y
 c boundary_part_z: particle boundary conditions in z
 
-      integer boundary_field_x
-      integer boundary_field_y
-      integer boundary_field_z
       integer boundary_part_x
       integer boundary_part_y
       integer boundary_part_z
 
-! pml parameter                                    ! added by ab
+! boundary_fld_x1, boundary_fld_x2: boundary condition for bnd in x-front,back
+! boundary_fld_y1, boundary_fld_y2: boundary condition for bnd in y-left,right
+! boundary_fld_z1, boundary_fld_z2: boundary condition for bnd in z-up,down
+!
+! condition = 0 : radiating boundaries
+! condition = 1 : periodic boundaries
+! condition = 2 : upmls
+! condition = 3 : radiating boundaries with upmls at a given time
 
-! boundary_pml_x1, boundary_pml_x2: boundary condition for pml in x-front,back
-! boundary_pml_y1, boundary_pml_y2: boundary condition for pml in y-left,right
-! boundary_pml_z1, boundary_pml_z2: boundary condition for pml in z-up,down
-
-      character*(5) boundary_pml_x1
-      character*(5) boundary_pml_x2
-      character*(5) boundary_pml_y1
-      character*(5) boundary_pml_y2
-      character*(5) boundary_pml_z1
-      character*(5) boundary_pml_z2
+      integer boundary_fld_x1
+      integer boundary_fld_x2
+      integer boundary_fld_y1
+      integer boundary_fld_y2
+      integer boundary_fld_z1
+      integer boundary_fld_z2
 
 ! checking condition for time dependent pml
 
@@ -302,7 +289,8 @@ c     ======================================================================
      *     i1n_, i2n_, i3n_,
      *     i1x_, i2x_, i3x_,
      *     cori_, alpha_, eta_,
-     *     dt_, dx_, dy_, dz_)
+     *     dt_, dx_, dy_, dz_,
+     *     wl_, wp_, n_)
 c     ======================================================================
 
       use PIC_variables
@@ -313,8 +301,10 @@ c     ======================================================================
       integer :: i1mn_, i2mn_, i3mn_, i1mx_, i2mx_, i3mx_
       integer :: rd1_, rd2_, rd3_
       integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
+      integer :: n_
       real(kind=8) :: cori_, alpha_, eta_
       real(kind=8) :: dt_, dx_, dy_, dz_
+      real(kind=8) :: wl_, wp_
 
       i1mn = i1mn_
       i2mn = i2mn_
@@ -339,6 +329,10 @@ c     ======================================================================
       dx = dx_
       dy = dy_
       dz = dz_
+
+      wl = wl_
+      wp = wp_
+      n = n_
 
       end subroutine PIC_set_variables
 

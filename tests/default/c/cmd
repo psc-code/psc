@@ -1,0 +1,11 @@
+src/VLI \
+	--mod_output c --output_format hdf5 --output_combine \
+	--nmax 11 \
+	--adjust_dt_to_cycles
+
+util/compare_field.py -f ne,ni tests/default/c/field_000000010.h5 pfd_0000010.h5 
+
+#src/VLI --mod_output hdf5 --nmax 11 --adjust_dt_to_cycles
+#util/compare_field.py -f ne,ni tests/default/c/field_000000010.h5 field_000000010.h5
+
+#src/VLI --mod_output hdf5_fld_fortran --nmax 11 --adjust_dt_to_cycles

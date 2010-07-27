@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "psc_pulse.h"
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -86,6 +88,7 @@ struct psc_param {
   int nicell;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
+  bool adjust_dt_to_cycles;
 };
 
 // coefficients needed for computations
@@ -102,25 +105,67 @@ struct psc_coeff {
   double vos;
   double vt;
   double wp;
+  int np; // # steps for time-averaging fields
+  int nnp; // # steps per laser cycle
+};
+
+// need to match fortran values
+
+enum {
+  BND_FLD_OPEN,
+  BND_FLD_PERIODIC,
+  BND_FLD_UPML,
+  BND_FLD_TIME,
+};
+
+enum {
+  BND_PART_REFLECTING,
+  BND_PART_PERIODIC,
 };
 
 struct psc_domain {
   double length[3];
   int itot[3], ilo[3], ihi[3];
-  int bnd_fld[3], bnd_part[3];
+  int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
   int nghost[3];
   int nproc[3];
 };
 
-// ----------------------------------------------------------------------
-// cases (initial conditions and other parameters...)
+/////////////////////////////////////////////////////////////////////////
+/// Physics cases (initial conditions and other parameters).
+///
+/// A "case" defines what problem the code is supposed to run.
+/// Currently, we have the following cases predefined:
+/// - "harris": Double Harris sheet in 2D (xz)
+/// - "langmuir": A 1D Langmuir wave (z)
+///
+/// If you want to run a physics problem that is not included in the predefined
+/// cases, you will have to create a case for it yourself. This requires the
+/// following steps:
+/// - Create a "case_<casename>.c" file in the "src" directory. Instead of
+///   writing this from scratch, take one of the existing cases which seems close
+///   and copy it, then search and replace the old case's name with your new
+///   <casename>.
+///   In particular, you may have to modify:
+///   @param init_param Set up all kinds of parameters, in particular, you
+///     can override defaults (e.g. instead of the physical units used by default,
+///     you can set the electron charge to 1).
+///   @param init_field Set initial condition for the fields (E, B, j).
+///   @param init_nvt Set up particles. For the cell located at the passed
+///     arguments, set charge (q), density (n), mass (m), velocity (v) and
+///     temperature (T).
+/// - Add "case_<casename>.c" to "src/Makefile.am" next to the other cases.
+/// - Add the psc_case_ops_<casename> variable to psc.h following how it's done
+///   for the other cases.
+/// - Add your psc_case_ops_<casename> to the list of available cases in 
+///   "src/init_parameters.c".
 
 struct psc_case_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*init_param)(void);
-  void (*init_field)(void);
+  const char *name; ///< Name of case.
+  void (*create)(void); ///< Function to set up needed environment.
+  void (*destroy)(void); ///< Funtion to cleanup environment.
+  void (*init_param)(void); ///< Initialize simulation parameters based on case.
+  void (*init_field)(void); ///< Initialize fields relevant to case.
   void (*init_nvt)(int kind, double x[3], double *q, double *m, double *n,
 		   double v[3], double T[3]);
 };
@@ -160,6 +205,7 @@ struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
+  struct psc_pulse *pulse_p_z1;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -224,6 +270,8 @@ void psc_push_part_yz_b();
 void psc_sort();
 void psc_out_field();
 
+real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
+
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 
@@ -238,9 +286,11 @@ extern struct psc_sort_ops psc_sort_ops_countsort;
 extern struct psc_sort_ops psc_sort_ops_countsort2;
 
 extern struct psc_output_ops psc_output_ops_fortran;
-extern struct psc_output_ops psc_output_ops_hdf5;
+extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
+extern struct psc_case_ops psc_case_ops_wakefield;
+extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_harris;
 
 // Wrappers for Fortran functions
@@ -257,6 +307,7 @@ void SET_param_psc();
 void SET_param_coeff();
 void INIT_param_domain();
 void INIT_param_psc();
+real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

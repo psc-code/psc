@@ -34,6 +34,7 @@ AC_PROG_RANLIB
 # Checks for library functions.
 
 AX_CHECK_HDF5
+AM_CONDITIONAL([HAVE_HDF5], [test "$with_hdf5" != "no"])
 
 # check for PAPI
 AC_ARG_WITH([papi],AS_HELP_STRING([--without-papi], [Disable PAPI]))

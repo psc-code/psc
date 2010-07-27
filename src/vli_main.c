@@ -27,6 +27,7 @@ main(int argc, char **argv)
   SET_param_coeff();
   INIT_basic_F77();
   INIT_param_fortran_F77();
+
   VLI_main_F77();
 
   MPI_Finalize();

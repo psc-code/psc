@@ -16,9 +16,12 @@ c DATA PROTOCOL ROUTINE
          write(6,*) 'lengthz:',lengthz
          write(6,*) ' '
          write(6,*) 'BOUNDARY CONDITIONS'
-         write(6,*) 'boundary_field_x:',boundary_field_x
-         write(6,*) 'boundary_field_y:',boundary_field_y
-         write(6,*) 'boundary_field_z:',boundary_field_z
+         write(6,*) 'boundary_fld_x1:',boundary_fld_x1
+         write(6,*) 'boundary_fld_x2:',boundary_fld_x2
+         write(6,*) 'boundary_fld_y1:',boundary_fld_y1
+         write(6,*) 'boundary_fld_y2:',boundary_fld_y2
+         write(6,*) 'boundary_fld_z1:',boundary_fld_z1
+         write(6,*) 'boundary_fld_z2:',boundary_fld_z2
          write(6,*) 'boundary_part_x:',boundary_part_x
          write(6,*) 'boundary_part_y:',boundary_part_y
          write(6,*) 'boundary_part_z:',boundary_part_z

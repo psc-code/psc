@@ -7,7 +7,7 @@ c Laser pulse initialization (p-polarization).
 
       implicit none
       real(kind=8) :: t,x,y,z
-      real(kind=8) :: xm,ym,zm
+      real(kind=8) :: xm,ym,zm,xb
       real(kind=8) :: dxm,dym,dzm
       real(kind=8) :: xl,yl,zl
       real(kind=8) :: xr,yr,zr
@@ -48,9 +48,10 @@ c ym: y-location of pulse center in m
 c zm: z-location of pulse center in m
 
 
-      dxm=1.0*1.0e-6                       !modify for pulse setup
-      dym=2.0*1.0e-6
-      dzm=2.0*1.0e-6
+      dxm=0.5*1.0e-6                       !modify for pulse setup
+      dym=1.0*1.0e-6
+      dzm=1.0*1.0e-6
+      xb=1.0*1.0e-6
       xm=-2.0*1.0e-6
       ym=5.0*1.0e-6
       zm=5.0*1.0e-6
@@ -59,6 +60,7 @@ c zm: z-location of pulse center in m
       xm=xm/ld                              !normalization
       ym=ym/ld
       zm=zm/ld
+      xb=xb/ld
       dxm=dxm/ld
       dym=dym/ld
       dzm=dzm/ld
@@ -76,17 +78,17 @@ c zm: z-location of pulse center in m
 
       if (xl.gt.xm) then
          p_pulse_x1=dsin(xr)
-     &           *dexp(-(xr/dxm)**2)
+     &           *1.0/(1.0+dexp((abs(xr)-xb)/dxm))
      &           *dexp(-(yr/dym)**2)
      &           *dexp(-(zr/dzm)**2)
       else if (xm.ge.xl) then
           p_pulse_x1=dsin(xr)
-     &           *dexp(-(xr/dxm)**2)
+     &           *1.0/(1.0+dexp((abs(xr)-xb)/dxm))
      &           *dexp(-(yr/dym)**2)
      &           *dexp(-(zr/dzm)**2)
       endif
 
-      pos_x1 = thick*dx+3.0*dxm-xm         ! ab
+      pos_x1 = thick*dx+1.5*xb-xm        ! ab
 
 c Turn pulse off
 

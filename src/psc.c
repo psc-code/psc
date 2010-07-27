@@ -54,7 +54,7 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
 
 static struct psc_output_ops *psc_output_ops_list[] = {
   &psc_output_ops_fortran,
-  &psc_output_ops_hdf5,
+  &psc_output_ops_c,
   NULL,
 };
 
@@ -331,6 +331,17 @@ psc_out_field()
   psc.output_ops->out_field();
 }
 
+// ----------------------------------------------------------------------
+// psc_p_pulse_z1
+
+real
+psc_p_pulse_z1(real x, real y, real z, real t)
+{
+  if (!psc.pulse_p_z1) { // default to Fortran
+    return PSC_p_pulse_z1(x, y, z, t);
+  }
+  return psc.pulse_p_z1->ops->field(psc.pulse_p_z1, x, y, z, t);
+}
 
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];

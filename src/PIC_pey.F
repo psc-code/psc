@@ -18,7 +18,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       integer :: mtag,status(MPI_STATUS_SIZE)
 
       real(kind=8) :: restj,ys
-      real(kind=8) :: ybn,ybx
+      real(kind=8) :: ybn,ybx,ypn,ypx
       real(kind=8) :: xi,yi,zi
       real(kind=8) :: pxi,pyi,pzi
       real(kind=8) :: qni,mni,cni,lni,wni
@@ -97,12 +97,18 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
 
       ybn=i2mn*dy
       ybx=i2mx*dy
+      ypn=i2n*dy
+      ypx=i2x*dy
 
-      if (nodej.eq.1.and.boundary_pml_y1.ne.'false') then
+      if (nodej.eq.1.and.(boundary_fld_y1.eq.2.or.
+     &    boundary_fld_y1.eq.3)) then
          ybn=(i2mn+size+1)*dy
+         ypn=(i2n+size+1)*dy
       end if
-      if (nodej.eq.ynpe.and.boundary_pml_y2.ne.'false') then
+      if (nodej.eq.ynpe.and.(boundary_fld_y2.eq.2.or.
+     &    boundary_fld_y2.eq.3)) then
          ybx=(i2mx-size-1)*dy
+         ypx=(i2x-size-1)*dy
       end if
 
 
@@ -291,8 +297,9 @@ c PARTICLE EXCHANGE
       allocate(p_re4i(0:11*re4i+10))
 
 
-      ys=(i2x-i2n+1)*dy
+c      ys=(i2x-i2n+1)*dy
 c      ys=(i2x-i2n)*dy
+      ys=ypx-ypn+dy
 
 
       if (nodej.lt.ynpe.and.restj<0.25) then               ! UPDATING e4

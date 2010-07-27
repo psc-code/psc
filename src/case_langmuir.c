@@ -87,7 +87,7 @@ langmuir_init_nvt(int kind, double x[3], double *q, double *m, double *n,
   real mask = 1. / ((1. + exp(argx)) * (1. + exp(argy)) * (1. + exp(argz)));
 
   real kk = 1. * M_PI * 1e6;
-  real dens = (.99 + .01 * cos(ld * kk * x[2])) * mask;;
+  real dens = (.99 + .01 * cos(ld * kk * x[2])) * mask;
   switch (kind) {
   case 0: // electrons
     *q = -1.;

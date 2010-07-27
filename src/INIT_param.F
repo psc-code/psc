@@ -48,38 +48,31 @@ c PARAMETERS!
 c REQUIRED SETTINGS
 c Please do not change
 
-! checking condition for boundary setting of em fields
-! no pml for periodic condition
-
-      if (boundary_field_x==1) then
-         boundary_pml_x1 = 'false'
-         boundary_pml_x2 = 'false'
-      end if
-      if (boundary_field_y==1) then
-         boundary_pml_y1 = 'false'
-         boundary_pml_y2 = 'false'
-      end if
-      if (boundary_field_z==1) then
-         boundary_pml_z1 = 'false'
-         boundary_pml_z2 = 'false'
-      end if
-
 
       if (i1x==i1n) then
          xnpe=1
-         boundary_part_x=1
-         boundary_field_x=1
-         boundary_pml_x1 = 'false'
-         boundary_pml_x2 = 'false'
+         boundary_part_x = 1
+         boundary_fld_x1 = 1
+         boundary_fld_x2 = 1
       else
          if (i1x-i1n+1.le.(rd1+1)*xnpe) then
             i1x=i1n+(rd1+1)*xnpe-1
          endif
-         if (i1x-i1n+1.le.2*(size+1)) then     ! min total size: 2*(size+1)
-            i1x=i1n+2*(size+1)-1
+         if (boundary_fld_x1==2.or.boundary_fld_x2==2) then
+            if (i1x-i1n+1.le.2*(size+1)) then 
+               i1x=i1n+2*(size+1)-1
+            endif
+            if (i1x-i1n+1.le.(size+1)*xnpe) then
+               i1x=i1n+(size+1)*xnpe-1
+            endif
          endif
-         if (i1x-i1n+1.le.(size+1)*xnpe) then  ! min size of one node
-            i1x=i1n+(size+1)*xnpe-1
+         if (boundary_fld_x1==3.or.boundary_fld_x2==3) then
+            if (i1x-i1n+1.le.2*(size+1)) then 
+               i1x=i1n+2*(size+1)-1
+            endif
+            if (i1x-i1n+1.le.(size+1)*xnpe) then
+               i1x=i1n+(size+1)*xnpe-1
+            endif
          endif
          if (i1x-i1n+1.gt.i1tot) then
             i1tot=i1x-i1n+1
@@ -87,19 +80,28 @@ c Please do not change
       endif
       if (i2x==i2n) then
          ynpe=1
-         boundary_part_y=1
-         boundary_field_y=1
-         boundary_pml_y1 = 'false'
-         boundary_pml_y2 = 'false' 
+         boundary_part_y = 1
+         boundary_fld_y1 = 1
+         boundary_fld_y2 = 1
       else
          if (i2x-i2n+1.le.(rd2+1)*ynpe) then
             i2x=i2n+(rd2+1)*ynpe-1
          endif
-         if (i2x-i2n+1.le.2*(size+1)) then  
-            i2x=i2n+2*(size+1)-1
+         if (boundary_fld_y1==2.or.boundary_fld_y2==2) then
+            if (i2x-i2n+1.le.2*(size+1)) then  
+               i2x=i2n+2*(size+1)-1
+            endif
+            if (i2x-i2n+1.le.(size+1)*ynpe) then
+               i2x=i2n+(size+1)*ynpe-1
+            endif
          endif
-         if (i2x-i2n+1.le.(size+1)*ynpe) then
-            i2x=i2n+(size+1)*ynpe-1
+         if (boundary_fld_y1==3.or.boundary_fld_y2==3) then
+            if (i2x-i2n+1.le.2*(size+1)) then  
+               i2x=i2n+2*(size+1)-1
+            endif
+            if (i2x-i2n+1.le.(size+1)*ynpe) then
+               i2x=i2n+(size+1)*ynpe-1
+            endif
          endif
          if (i2x-i2n+1.gt.i2tot) then
             i2tot=i2x-i2n+1
@@ -107,19 +109,28 @@ c Please do not change
       endif
       if (i3x==i3n) then
          znpe=1
-         boundary_part_z=1
-         boundary_field_z=1
-         boundary_pml_z1 = 'false'
-         boundary_pml_z2 = 'false'
+         boundary_part_z = 1
+         boundary_fld_z1 = 1
+         boundary_fld_z2 = 1
       else
          if (i3x-i3n+1.le.(rd3+1)*znpe) then
             i3x=i3n+(rd3+1)*znpe-1
          endif
-         if (i3x-i3n+1.le.2*(size+1)) then
-            i3x=i3n+2*(size+1)-1
+         if (boundary_fld_z1==2.or.boundary_fld_z2==2) then
+            if (i3x-i3n+1.le.2*(size+1)) then
+               i3x=i3n+2*(size+1)-1
+            endif
+            if (i3x-i3n+1.le.(size+1)*znpe) then
+               i3x=i3n+(size+1)*znpe-1
+            endif
          endif
-         if (i3x-i3n+1.le.(size+1)*znpe) then
-            i3x=i3n+(size+1)*znpe-1
+         if (boundary_fld_z1==3.or.boundary_fld_z2==3) then
+            if (i3x-i3n+1.le.2*(size+1)) then
+               i3x=i3n+2*(size+1)-1
+            endif
+            if (i3x-i3n+1.le.(size+1)*znpe) then
+               i3x=i3n+(size+1)*znpe-1
+            endif
          endif
          if (i3x-i3n+1.gt.i3tot) then
             i3tot=i3x-i3n+1
@@ -180,7 +191,7 @@ c np:  number of timesteps for time-averaging
       dz=lengthz/(i3tot)/ld
 
       dt=0.75*sqrt(1.0/(1.0/dx**2+1.0/dy**2+1.0/dz**2))
-#endif
+
 c     adjust to match laser cycles
       nnp=int(2.0*pi/dt)+1
       dt=2.0*pi/nnp
@@ -188,6 +199,7 @@ c     adjust to match laser cycles
       if (nmax == 0) then
          nmax=30*nnp
       endif
+#endif
 
       end subroutine INIT_param
 
@@ -373,13 +385,6 @@ c i1n=i1x and i2n=i2x: 1D run along z-axis
 c i1n=i1x and i3n=i3x: 1D run along y-axis
 c i2n=i2x and i3n=i3x: 1D run along x-axis
 
-c boundary_field_x: 0=radiating, 1=periodic in x
-c boundary_field_y: 0=radiating, 1=periodic in y
-c boundary_field_z: 0=radiating, 1=periodic in z
-c boundary_part_x: 0=reflecting, 1=periodic in x
-c boundary_part_y: 0=reflecting, 1=periodic in y
-c boundary_part_z: 0=reflecting, 1=periodic in z
-
       subroutine INIT_param_domain
 
       use VLA_variables
@@ -410,25 +415,23 @@ c boundary_part_z: 0=reflecting, 1=periodic in z
       i3n=0
       i3x=399
 
-      boundary_field_x=1
-      boundary_field_y=1
-      boundary_field_z=1
       boundary_part_x=1
       boundary_part_y=1
       boundary_part_z=1
 
 ! PML BOUNDARY CONDITIONS 
 
-! condition = 'true' : derive pml coefficients 
-! condition = 'false' : do nothing
-! condition = 'time' : derive pml after estimated time
+! condition = 0 : radiating boundaries
+! condition = 1 : periodic boundaries
+! condition = 2 : upmls
+! condition = 3 : radiating boundaries with upmls at a given time
 
-      boundary_pml_x1 = 'false'
-      boundary_pml_x2 = 'false'
-      boundary_pml_y1 = 'false'
-      boundary_pml_y2 = 'false'
-      boundary_pml_z1 = 'false'
-      boundary_pml_z2 = 'false'
+      boundary_fld_x1 = 1
+      boundary_fld_x2 = 1
+      boundary_fld_y1 = 1
+      boundary_fld_y2 = 1
+      boundary_fld_z1 = 1
+      boundary_fld_z2 = 1
 
 ! thick: thickness of pml in grid points
 ! cushion: thickness of buffer region in gridpoints
@@ -483,7 +486,7 @@ c n0: peak atom density in m**3
 c     wrapper for C to be access these parameters
 
       subroutine GET_param_domain(length, itot, in, ix,
-     &     bnd_fld, bnd_part, nproc, rd)
+     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd)
 
       use VLA_variables
       use PIC_variables
@@ -492,7 +495,7 @@ c     wrapper for C to be access these parameters
 
       real(kind=8) :: length(3)
       integer :: itot(3), in(3), ix(3)
-      integer :: bnd_fld(3), bnd_part(3)
+      integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
 
       length(1)=lengthx
@@ -515,9 +518,12 @@ c     wrapper for C to be access these parameters
       nproc(2)=ynpe
       nproc(3)=znpe
 
-      bnd_fld(1)=boundary_field_x
-      bnd_fld(2)=boundary_field_y
-      bnd_fld(3)=boundary_field_z
+      bnd_fld_lo(1)=boundary_fld_x1
+      bnd_fld_lo(2)=boundary_fld_y1
+      bnd_fld_lo(3)=boundary_fld_z1
+      bnd_fld_hi(1)=boundary_fld_x2
+      bnd_fld_hi(2)=boundary_fld_y2
+      bnd_fld_hi(3)=boundary_fld_z2
 
       bnd_part(1)=boundary_part_x
       bnd_part(2)=boundary_part_y
@@ -532,7 +538,7 @@ c     wrapper for C to be access these parameters
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_domain(length, itot, in, ix,
-     &     bnd_fld, bnd_part, nproc, rd)
+     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd)
 
       use VLA_variables
       use PIC_variables
@@ -541,7 +547,7 @@ c     wrapper for C to be able to set these parameters
 
       real(kind=8) :: length(3)
       integer :: itot(3), in(3), ix(3)
-      integer :: bnd_fld(3), bnd_part(3)
+      integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
 
       lengthx=length(1)
@@ -564,9 +570,12 @@ c     wrapper for C to be able to set these parameters
       ynpe=nproc(2)
       znpe=nproc(3)
 
-      boundary_field_x=bnd_fld(1)
-      boundary_field_y=bnd_fld(2)
-      boundary_field_z=bnd_fld(3)
+      boundary_fld_x1=bnd_fld_lo(1)
+      boundary_fld_y1=bnd_fld_lo(2)
+      boundary_fld_z1=bnd_fld_lo(3)
+      boundary_fld_x2=bnd_fld_hi(1)
+      boundary_fld_y2=bnd_fld_hi(2)
+      boundary_fld_z2=bnd_fld_hi(3)
 
       boundary_part_x=bnd_part(1)
       boundary_part_y=bnd_part(2)
@@ -655,7 +664,7 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to set these coefficients
 
       subroutine SET_param_coeff(cori_, alpha_, beta_, eta_,
-     *     wl_, ld_, vos_, vt_, wp_, dx_, dt_)
+     *     wl_, ld_, vos_, vt_, wp_, dx_, dt_, np_, nnp_)
 
       use VLA_variables
       use PIC_variables
@@ -665,6 +674,7 @@ c     wrapper for C to be able to set these coefficients
       real(kind=8) :: cori_, alpha_, beta_, eta_
       real(kind=8) :: wl_, ld_, vos_, vt_, wp_, dt_
       real(kind=8) :: dx_(3)
+      integer :: np_, nnp_
 
       cori = cori_
       alpha = alpha_
@@ -680,5 +690,8 @@ c     wrapper for C to be able to set these coefficients
       dy = dx_(2)
       dz = dx_(3)
       dt = dt_
+
+      np = np_
+      nnp = nnp_
 
       end subroutine SET_param_coeff

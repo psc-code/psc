@@ -1,7 +1,7 @@
 
 #include "config.h"
 
-c VLI.f is the init program and VLA.f the main program!
+c VLI.F is the init program and VLA.F the main program!
 
 #ifndef USE_C_INTERFACE
       program VLI

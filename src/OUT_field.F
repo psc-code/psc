@@ -33,7 +33,6 @@ c legacy output routine
       real(kind=8) :: nes,nis,nns
       real(kind=8) :: jxis,jyis,jzis
 #ifdef USE_PML
-      real(kind=8) :: vphis,vaxs,vays,vazs
       real(kind=8) :: hxs,hys,hzs
       real(kind=8) :: ex2s,ey2s,ez2s
       real(kind=8) :: bx2s,by2s,bz2s
@@ -515,10 +514,6 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      write(11) sngl(bzs)
 
 #ifdef USE_PML
-                     vphis=vphi1(i1,i2,i3)
-                     vaxs=vax1(i1,i2,i3)
-                     vays=vay1(i1,i2,i3)
-                     vazs=vaz1(i1,i2,i3)
                      hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
      &                         +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
                      hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
@@ -543,10 +538,6 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      hx2s=hxs*hxs
                      hy2s=hys*hys
                      hz2s=hzs*hzs
-                     write(11) sngl(vphis)
-                     write(11) sngl(vaxs)
-                     write(11) sngl(vays)
-                     write(11) sngl(vazs)
                      write(11) sngl(hxs)
                      write(11) sngl(hys)
                      write(11) sngl(hzs)

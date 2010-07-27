@@ -1,17 +1,37 @@
-c Laser pulse initialization (p-polarization).
+
+#include "config.h"
 
       function p_pulse_z1(x,y,z,t)
+
+      implicit none
+      real(kind=8) :: t,x,y,z
+      real(kind=8) :: p_pulse_z1
+      real(kind=8) :: p_pulse_z1_
+      real(kind=8) :: C_p_pulse_z1
+
+#ifdef USE_C_INTERFACE
+      p_pulse_z1 = C_p_pulse_z1(x,y,z,t)
+#else
+      p_pulse_z1 = p_pulse_z1_(x,y,z,t)
+#endif
+
+      end function p_pulse_z1
+
+
+c Laser pulse initialization (p-polarization).
+
+      function p_pulse_z1_(x,y,z,t)
 
       use VLA_variables
       use PIC_variables
 
       implicit none
       real(kind=8) :: t,x,y,z
-      real(kind=8) :: xm,ym,zm
+      real(kind=8) :: xm,ym,zm,zb
       real(kind=8) :: dxm,dym,dzm
       real(kind=8) :: xl,yl,zl
       real(kind=8) :: xr,yr,zr
-      real(kind=8) :: p_pulse_z1
+      real(kind=8) :: p_pulse_z1_
 
 
 c NOTE: The pulse is placed behind of the
@@ -48,17 +68,19 @@ c ym: y-location of pulse center in m
 c zm: z-location of pulse center in m
 
 
-      dxm=1.5*1.0e-6                       !modify for pulse setup
-      dym=1.5*1.0e-6
-      dzm=1.5*1.0e-6
-      xm=5.0*1.0e-6
-      ym=5.0*1.0e-6
-      zm=-4.0*1.0e-6
+      dxm=4.0*1.0e-6                       !modify for pulse setup
+      dym=4.0*1.0e-6
+      dzm=0.1*1.0e-6
+      zb=300.0*1.0e-6
+      xm=0.01*1.0e-6
+      ym=0.01*1.0e-6
+      zm=-301.0*1.0e-6
 
 
       xm=xm/ld                              !normalization
       ym=ym/ld
       zm=zm/ld
+      zb=zb/ld
       dxm=dxm/ld
       dym=dym/ld
       dzm=dzm/ld
@@ -75,23 +97,23 @@ c zm: z-location of pulse center in m
 
 
       if (zl.gt.zm) then
-         p_pulse_z1=dsin(zr)
+         p_pulse_z1_=dsin(zr)
      &           *dexp(-(xr/dxm)**2)
      &           *dexp(-(yr/dym)**2)
-     &           *dexp(-(zr/dzm)**2)
+     &           *1.0/(1.0+dexp((abs(zr)-zb)/dzm))
       else if (zm.ge.zl) then
-         p_pulse_z1=dsin(zr)
+         p_pulse_z1_=dsin(zr)
      &           *dexp(-(xr/dxm)**2)
      &           *dexp(-(yr/dym)**2)
-     &           *dexp(-(zr/dzm)**2)
+     &           *1.0/(1.0+dexp((abs(zr)-zb)/dzm))
       endif
 
-      pos_z1 = thick*dz+3.0*dzm-zm        ! ab
+      pos_z1 = thick*dz+1.5*zb-zm        ! ab
 
 c Turn pulse off
 
 
-      p_pulse_z1=0.0d0
+      p_pulse_z1_=0.0d0
 
 
-      end function p_pulse_z1
+      end function p_pulse_z1_

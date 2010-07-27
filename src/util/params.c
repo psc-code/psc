@@ -13,6 +13,80 @@ struct option {
 
 static struct option *option_list;
 
+struct par_options_file {
+  const char *options_file;
+};
+
+#define VAR(x) (void *)offsetof(struct par_options_file, x)
+
+static struct param par_options_file_descr[] = {
+  { "options_file"    , VAR(options_file)       , PARAM_STRING(NULL)  },
+  {},
+};
+
+#undef VAR
+
+static void
+params_check_options_file(struct option **p_opt)
+{
+  struct par_options_file par;
+  params_parse_cmdline(&par, par_options_file_descr, "options file", MPI_COMM_WORLD);
+  params_print(&par, par_options_file_descr, "options file", MPI_COMM_WORLD);
+
+  if (!par.options_file) {
+    return;
+  }
+
+  FILE *file = fopen(par.options_file, "r");
+  if (!file) {
+    fprintf(stderr, "ERROR: cannot open options file '%s'!\n", par.options_file);
+    abort();
+  }
+  
+  while (!feof(file)) {
+    char line[256];
+    char *p = fgets(line, 256, file);
+    if (!p)
+      break;
+
+    int l = strlen(line);
+    if (l > 0 && line[l-1] == '\n')
+      line[l-1] = 0;
+
+    p = strchr(line, '#');
+    if (p)
+      *p = 0;
+
+    l = strlen(line);
+    if (!l)
+      continue;
+
+    char **ap, *argv[2], *s = line;
+    int argc = 0;
+
+    for (ap = argv; (*ap = strsep(&s, " \t")) != NULL;) {
+      argc++;
+      if (**ap != 0) {
+	if (++ap >= &argv[2])
+	  break;
+      }
+    }
+
+    struct option *opt = malloc(sizeof(*opt));
+    opt->name = strdup(argv[0] + 2);
+    opt->value = NULL;
+    opt->next = NULL;
+    *p_opt = opt;
+    p_opt = &opt->next;
+
+    if (argc > 1) {
+      opt->value = strdup(argv[1]);
+    }
+
+  }
+  fclose(file);
+}
+
 void
 params_init(int argc, char **argv)
 {
@@ -38,6 +112,8 @@ params_init(int argc, char **argv)
       i++;
     }
   }
+
+  params_check_options_file(p);
 }
 
 void
@@ -128,6 +204,35 @@ get_option_bool(const char *name, bool *pval)
   }
 }
 
+static void
+get_option_select(const char *name, struct param_select *descr, int *pval)
+{
+  struct option *p = find_option(name);
+  if (!p) 
+    return;
+
+  if (!p->value) {
+    fprintf(stderr, "ERROR: need to specify value for '%s'\n",
+	    name);
+    abort();
+  }
+
+  for (int i = 0; descr[i].str; i++) {
+    if (strcasecmp(descr[i].str, p->value) == 0) {
+      *pval = i;
+      return;
+    }
+  }
+
+  fprintf(stderr, "ERROR: Select value '%s' not found. Valid options are:",
+	  p->value);
+  for (int i = 0; descr[i].str; i++) {
+    fprintf(stderr, " '%s'", descr[i].str);
+  }
+  fprintf(stderr, "\n");
+  abort();
+}
+
 void
 params_parse_cmdline(void *p, struct param *params, const char *title,
 		     MPI_Comm comm)
@@ -151,6 +256,10 @@ params_parse_cmdline(void *p, struct param *params, const char *title,
       pv->u_string = params[i].u.ini_string;
       get_option_string(params[i].name, &pv->u_string);
       break;
+    case PT_SELECT:
+      pv->u_select = params[i].u.ini_select;
+      get_option_select(params[i].name, params[i].descr, &pv->u_select);
+      break;
     }
   }
 }
@@ -173,6 +282,9 @@ params_parse_cmdline_nodefault(void *p, struct param *params, const char *title,
       break;
     case PT_STRING:
       get_option_string(params[i].name, &pv->u_string);
+      break;
+    case PT_SELECT:
+      get_option_select(params[i].name, params[i].descr, &pv->u_select);
       break;
     }
   }
@@ -198,6 +310,9 @@ params_print(void *p, struct param *params, const char *title,
       break;
     case PT_STRING:
       mpi_printf(comm, "%-20s| %s\n", params[i].name, pv->u_string);
+      break;
+    case PT_SELECT:
+      mpi_printf(comm, "%-20s| %s\n", params[i].name, params[i].descr[pv->u_select].str);
       break;
     }
   }
