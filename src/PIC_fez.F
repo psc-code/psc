@@ -141,10 +141,11 @@ c UPDATING LOCAL e6
       endif
 
 
-c UPDATING LOCAL BOUNDARY e6 (periodic continuation in z)
+c UPDATING LOCAL BOUNDARY e6 
+! periodic continuation at z1 (data from z2)
 
 
-      if (boundary_field_z==1) then       
+      if (boundary_fld_z2==1) then       
       if (znpe.gt.1) then
          if (nodek.eq.znpe) then
             pec=seg_inv(nodei,nodej,1)
@@ -183,19 +184,17 @@ c UPDATING LOCAL BOUNDARY e6 (periodic continuation in z)
       endif
 
 
-c UPDATING LOCAL BOUNDARY e6 (pml continuation in z) - ab
+! pml continuation at z1
 
-      if (nodek.eq.znpe) then
-         if (boundary_pml_z2.eq.'true'.or.
-     &        (boundary_pml_z2.eq.'time'.and.
-     &        pos_z2.ne.0.0.and.pos_z2.lt.n*dt)) then
- 
-c Oberer Knoten in z-Richtung
-            do i3 = i3mx-thick, i3mx+rd3
+      if (nodek.eq.1) then
+         if (boundary_fld_z1.eq.2.or.
+     &      (boundary_fld_z1.eq.3.and.
+     &       pos_z1.ne.0.0.and.pos_z1.lt.n*dt)) then
+            do i3 = i3mn-rd3,i3mn+thick
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *((i3-i3mx+thick)*dz/deltaz)**pml
+     &              *((thick+1-i3)*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              ((i3-i3mx+thick)*dz/deltaz)**pml
+     &              ((thick+1-i3)*dz/deltaz)**pml
                czp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                czm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                fbz(i3) = 2*eps0*kappaz(i3)
@@ -203,12 +202,12 @@ c Oberer Knoten in z-Richtung
                fdz(i3) = 2*eps0*dt/czp(i3)
                fez(i3) = 1.0/czp(i3)
             end do
-
-            do i3 = i3mx-thick, i3mx+rd3
+            
+            do i3 = i3mn-rd3,i3mn+thick
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *(((i3+0.5)-i3mx+thick)*dz/deltaz)**pml
+     &              *((thick+1-(i3+0.5))*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              (((i3+0.5)-i3mx+thick)*dz/deltaz)**pml
+     &              ((thick+1-(i3+0.5))*dz/deltaz)**pml
                bzp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                bzm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                gbz(i3) = 2*eps0*kappaz(i3)
@@ -216,9 +215,7 @@ c Oberer Knoten in z-Richtung
                gdz(i3) = 2*eps0*dt/bzp(i3)
                gez(i3) = 1.0/bzp(i3)
             end do
-
-            boundary_pml_z2 = 'done'
-c            write(6,*) 'OBEN'
+c            boundary_pml_z1 = 'done'
          endif
       endif
 
@@ -277,10 +274,10 @@ c UPDATING LOCAL e5
       endif
 
 
-c UPDATING LOCAL BOUNDARY e5 (periodic continuation in z)
+c UPDATING LOCAL BOUNDARY e5 
+! periodic continuation at z2 (data from z1)
 
-
-      if (boundary_field_z==1) then       
+      if (boundary_fld_z1==1) then       
       if (znpe.gt.1) then
          if (1.eq.nodek) then
             pec=seg_inv(nodei,nodej,znpe)
@@ -319,25 +316,17 @@ c UPDATING LOCAL BOUNDARY e5 (periodic continuation in z)
       endif
 
 
-c UPDATING LOCAL BOUNDARY e5 (pml continuation in z)
+! pml continuation at z2
 
-
-      if (nodek.eq.1) then
-         if (boundary_pml_z1.eq.'true'.or.
-     &        (boundary_pml_z1.eq.'time'.and.
-     &        pos_z1.ne.0.0.and.pos_z1.lt.n*dt)) then
-
-            open (13, file="pml.txt",status="replace")
-            write(13,*) n
-            write(13,*) pos_z1
-            close(13)
-
-c     Unterer Knoten in z-Richtung
-            do i3 = i3mn-rd3, thick
+      if (nodek.eq.znpe) then
+         if (boundary_fld_z2.eq.2.or.
+     &      (boundary_fld_z2.eq.3.and.
+     &       pos_z2.ne.0.0.and.pos_z2.lt.n*dt)) then
+            do i3 = i3mx-thick,i3mx+rd3
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *((thick+1-i3)*dz/deltaz)**pml
+     &              *((i3-i3mx+thick)*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              ((thick+1-i3)*dz/deltaz)**pml
+     &              ((i3-i3mx+thick)*dz/deltaz)**pml
                czp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                czm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                fbz(i3) = 2*eps0*kappaz(i3)
@@ -345,12 +334,12 @@ c     Unterer Knoten in z-Richtung
                fdz(i3) = 2*eps0*dt/czp(i3)
                fez(i3) = 1.0/czp(i3)
             end do
-            
-            do i3 = i3mn-rd3, thick
+
+            do i3 = i3mx-thick,i3mx+rd3
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *((thick+1-(i3+0.5))*dz/deltaz)**pml
+     &              *(((i3+0.5)-i3mx+thick)*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              ((thick+1-(i3+0.5))*dz/deltaz)**pml
+     &              (((i3+0.5)-i3mx+thick)*dz/deltaz)**pml
                bzp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                bzm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                gbz(i3) = 2*eps0*kappaz(i3)
@@ -358,9 +347,7 @@ c     Unterer Knoten in z-Richtung
                gdz(i3) = 2*eps0*dt/bzp(i3)
                gez(i3) = 1.0/bzp(i3)
             end do
-            boundary_pml_z1 = 'done'
-
-c     write(6,*) 'UNTEN'
+c            boundary_pml_z2 = 'done'
          endif
       endif
 

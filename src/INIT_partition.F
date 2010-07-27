@@ -85,12 +85,24 @@ c appropriate parameters.
       pml_zmin=i3n       ! ab
       pml_zmax=i3x       ! ab
 
-      if (boundary_pml_x1.ne.'false') pml_xmin=i1n+size+1       ! ab
-      if (boundary_pml_x2.ne.'false') pml_xmax=i1x-size-1       ! ab
-      if (boundary_pml_y1.ne.'false') pml_ymin=i2n+size+1       ! ab
-      if (boundary_pml_y2.ne.'false') pml_ymax=i2x-size-1       ! ab
-      if (boundary_pml_z1.ne.'false') pml_zmin=i3n+size+1       ! ab
-      if (boundary_pml_z2.ne.'false') pml_zmax=i3x-size-1       ! ab
+      if (boundary_fld_x1==2.or.boundary_fld_x1==3) then
+         pml_xmin=i1n+size+1
+      endif
+      if (boundary_fld_x2==2.or.boundary_fld_x2==3) then
+         pml_xmax=i1x-size-1
+      endif
+      if (boundary_fld_y1==2.or.boundary_fld_y1==3) then
+         pml_ymin=i2n+size+1
+      endif
+      if (boundary_fld_y2==2.or.boundary_fld_y2==3) then
+         pml_ymax=i2x-size-1
+      endif
+      if (boundary_fld_z1==2.or.boundary_fld_z1==3) then
+         pml_zmin=i3n+size+1
+      endif
+      if (boundary_fld_z2==2.or.boundary_fld_z2==3) then
+         pml_zmax=i3x-size-1
+      endif
 
       rds1=rd1
       rds2=rd2

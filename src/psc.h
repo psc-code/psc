@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "psc_pulse.h"
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -107,10 +109,24 @@ struct psc_coeff {
   int nnp; // # steps per laser cycle
 };
 
+// need to match fortran values
+
+enum {
+  BND_FLD_OPEN,
+  BND_FLD_PERIODIC,
+  BND_FLD_UPML,
+  BND_FLD_TIME,
+};
+
+enum {
+  BND_PART_REFLECTING,
+  BND_PART_PERIODIC,
+};
+
 struct psc_domain {
   double length[3];
   int itot[3], ilo[3], ihi[3];
-  int bnd_fld[3], bnd_part[3];
+  int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
   int nghost[3];
   int nproc[3];
 };
@@ -185,18 +201,11 @@ struct psc_output_ops {
   void (*out_field)(void);
 };
 
-struct psc_pulse_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  double (*p_pulse_z1)(double x, double y, double z, double t);
-};  
-
 struct psc {
   struct psc_ops *ops;
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
-  struct psc_pulse_ops *pulse_ops;
+  struct psc_pulse *pulse_p_z1;
   struct psc_case_ops *case_ops;
   void *case_data;
   // user-configurable parameters
@@ -281,9 +290,8 @@ extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
+extern struct psc_case_ops psc_case_ops_thinfoil;
 extern struct psc_case_ops psc_case_ops_harris;
-
-extern struct psc_pulse_ops psc_pulse_ops_p_z1_short;
 
 // Wrappers for Fortran functions
 void PIC_push_part_yz();

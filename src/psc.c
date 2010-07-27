@@ -337,13 +337,10 @@ psc_out_field()
 real
 psc_p_pulse_z1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_ops) { // default to Fortran
+  if (!psc.pulse_p_z1) { // default to Fortran
     return PSC_p_pulse_z1(x, y, z, t);
   }
-  if (psc.pulse_ops->p_pulse_z1) {
-    return psc.pulse_ops->p_pulse_z1(x, y, z, t);
-  }
-  return 0.;
+  return psc.pulse_p_z1->ops->field(psc.pulse_p_z1, x, y, z, t);
 }
 
 static struct f_particle *particle_ref;

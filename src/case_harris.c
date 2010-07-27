@@ -99,12 +99,15 @@ harris_init_param()
   psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 640;
 
-  psc.domain.bnd_fld[0] = 1;
-  psc.domain.bnd_fld[1] = 1;
-  psc.domain.bnd_fld[2] = 1;
-  psc.domain.bnd_part[0] = 1;
-  psc.domain.bnd_part[1] = 1;
-  psc.domain.bnd_part[2] = 1;
+  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  psc.domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
+  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
 }
 
 static void
