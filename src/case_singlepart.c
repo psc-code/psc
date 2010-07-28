@@ -12,22 +12,17 @@
 struct psc_singlepart {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
-  double Lx, Ly, Lz; // gradient of density profile in m
-  double widthx, widthy, widthz; // width of transverse / longitudinal 
-                                 // density profile in m
-  double rot;        // rotation angle in degrees
   double mass_ratio; // M_i / M_e
 };
 
 #define VAR(x) (void *)offsetof(struct psc_singlepart, x)
 
 static struct param psc_singlepart_descr[] = {
-  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)    },
-  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)     },
-  { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)     },
-  { "y0"            , VAR(y0)              , PARAM_DOUBLE(20.0 * 1e-6)     },
-  { "z0"            , VAR(z0)              , PARAM_DOUBLE(10.0 * 1e-6)     },
-  { "rot"           , VAR(rot)             , PARAM_DOUBLE(0.)             },
+  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
+  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
+  { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
+  { "y0"            , VAR(y0)              , PARAM_DOUBLE(20.0 * 1e-6)    },
+  { "z0"            , VAR(z0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
   { "mass_ratio"    , VAR(mass_ratio)      , PARAM_DOUBLE(1836.)          },
   {},
 };
@@ -109,7 +104,7 @@ singlepart_init_field(void)
 
 static void
 singlepart_init_nvt(int kind, double x[3], double *q, double *m, double *n,
-		double v[3], double T[3])
+		    double v[3], double T[3])
 {
   struct psc_singlepart *singlepart = psc.case_data;
 
@@ -120,21 +115,13 @@ singlepart_init_nvt(int kind, double x[3], double *q, double *m, double *n,
   real x0 = singlepart->x0 / ld;
   real y0 = singlepart->y0 / ld;
   real z0 = singlepart->z0 / ld;
-  real rot = singlepart->rot * 2.*M_PI / 360.;
-
-  real xr = x[0];
-  real yr = cos(rot) * (x[1]-y0) - sin(rot) * (x[2]-z0) + y0;
-  real zr = cos(rot) * (x[2]-z0) + sin(rot) * (x[1]-y0) + z0;
 
   real dens = 0.0;
-  if ((int) (xr) == (int) (x0) && 
-      (int) (yr) == (int) (y0) && 
-      (int) (zr) == (int) (z0))
-    {
-      dens = 1.0;
-      printf("ld %g ld %g \n", zr, z0);
-
-    }
+  if ((int) (x[0] / psc.dx[0]) == (int) (x0 / psc.dx[0]) && 
+      (int) (x[1] / psc.dx[1]) == (int) (y0 / psc.dx[1]) && 
+      (int) (x[2] / psc.dx[2]) == (int) (z0 / psc.dx[2])) {
+    dens = 1.0;
+  }
 
   switch (kind) {
   case 0: // electrons
