@@ -112,14 +112,17 @@ singlepart_init_nvt(int kind, double x[3], double *q, double *m, double *n,
 
   real ld = psc.coeff.ld;
 
-  real x0 = singlepart->x0 / ld;
-  real y0 = singlepart->y0 / ld;
-  real z0 = singlepart->z0 / ld;
+  real x0[3] = { singlepart->x0 / ld,
+		 singlepart->y0 / ld,
+		 singlepart->z0 / ld };
 
   real dens = 0.0;
-  if ((int) (x[0] / psc.dx[0]) == (int) (x0 / psc.dx[0]) && 
-      (int) (x[1] / psc.dx[1]) == (int) (y0 / psc.dx[1]) && 
-      (int) (x[2] / psc.dx[2]) == (int) (z0 / psc.dx[2])) {
+  if ((psc.domain.ihi[0] - psc.domain.ilo[0] == 1 ||
+       (int) (x[0] / psc.dx[0] + .5) == (int) (x0[0] / psc.dx[0] + .5)) && 
+      (psc.domain.ihi[1] - psc.domain.ilo[1] == 1 ||
+       (int) (x[1] / psc.dx[1] + .5) == (int) (x0[1] / psc.dx[1] + .5)) && 
+      (psc.domain.ihi[2] - psc.domain.ilo[2] == 1 ||
+       (int) (x[2] / psc.dx[2] + .5) == (int) (x0[2] / psc.dx[2] + .5))) {
     dens = 1.0;
   }
 
