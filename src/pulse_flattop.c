@@ -31,8 +31,6 @@ psc_pulse_p_z1_flattop_setup(struct psc_pulse *pulse)
   prm->dym /= psc.coeff.ld;
   prm->dzm /= psc.coeff.ld;
   prm->zb /= psc.coeff.ld;
-
-  pulse->is_setup = true;
 }
 
 double
@@ -40,10 +38,6 @@ psc_pulse_p_z1_flattop(struct psc_pulse *pulse,
 		       double xx, double yy, double zz, double tt)
 {
   struct psc_p_pulse_z1_flattop_param *prm = pulse->ctx;
-
-  if (!pulse->is_setup) {
-    psc_pulse_p_z1_flattop_setup(pulse);
-  }
 
   double xl = xx;
   double yl = yy;
@@ -63,6 +57,7 @@ struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
   .name       = "p_z1_flattop",
   .ctx_size   = sizeof(struct psc_p_pulse_z1_flattop_param),
   .ctx_descr  = psc_p_pulse_z1_flattop_descr,
+  .setup      = psc_pulse_p_z1_flattop_setup,
   .field      = psc_pulse_p_z1_flattop,
 };
 

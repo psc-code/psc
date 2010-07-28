@@ -55,8 +55,6 @@ psc_pulse_p_z1_setup(struct psc_pulse *pulse)
   prm->dxm /= psc.coeff.ld;
   prm->dym /= psc.coeff.ld;
   prm->dzm /= psc.coeff.ld;
-
-  pulse->is_setup = true;
 }
 
 static double
@@ -64,10 +62,6 @@ psc_pulse_p_z1_short_field(struct psc_pulse *pulse,
 			   double xx, double yy, double zz, double tt)
 {
   struct psc_p_pulse_z1_param *prm = pulse->ctx;
-
-  if (!pulse->is_setup) {
-    psc_pulse_p_z1_setup(pulse);
-  }
 
   //  double xl = xx;
   double yl = yy;
@@ -87,6 +81,7 @@ static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
   .ctx_size   = sizeof(struct psc_p_pulse_z1_param),
   .ctx_descr  = psc_p_pulse_z1_descr,
+  .setup      = psc_pulse_p_z1_setup,
   .field      = psc_pulse_p_z1_short_field,
 };
 

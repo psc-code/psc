@@ -18,6 +18,7 @@ struct psc_pulse_ops {
   size_t ctx_size;
   struct param *ctx_descr;
   void (*destroy)(struct psc_pulse *);
+  void (*setup)(struct psc_pulse *);
   double (*field)(struct psc_pulse *,
 		  double x, double y, double z, double t);
 };  
@@ -30,6 +31,24 @@ struct psc_pulse {
 
 struct psc_pulse *psc_pulse_create(struct psc_pulse_ops *ops, void *prm);
 void psc_pulse_destroy(struct psc_pulse *pulse);
+
+static inline void
+psc_pulse_setup(struct psc_pulse *pulse)
+{
+  if (pulse->ops->setup) {
+    pulse->ops->setup(pulse);
+  }
+  pulse->is_setup = true;
+}
+
+static inline double
+psc_pulse_field(struct psc_pulse *pulse, double x, double y, double z, double t)
+{
+  if (!pulse->is_setup) {
+    psc_pulse_setup(pulse);
+  }
+  return pulse->ops->field(pulse, x, y, z, t);
+}
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_z1 // FIXME rename ->gauss

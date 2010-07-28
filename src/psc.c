@@ -337,10 +337,11 @@ psc_out_field()
 real
 psc_p_pulse_z1(real x, real y, real z, real t)
 {
+  // FIXME, create a fortran pulse instead of special casing
   if (!psc.pulse_p_z1) { // default to Fortran
     return PSC_p_pulse_z1(x, y, z, t);
   }
-  return psc.pulse_p_z1->ops->field(psc.pulse_p_z1, x, y, z, t);
+  return psc_pulse_field(psc.pulse_p_z1, x, y, z, t);
 }
 
 static struct f_particle *particle_ref;
