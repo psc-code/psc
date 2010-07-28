@@ -65,18 +65,20 @@ init_partition(int *n_part)
   }
 
   int np = 0;
-  for (int kind = 0; kind < 2; kind++) {
-    for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
-      for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
-	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
-	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  struct psc_particle_npt npt = { // init to all zero
-	  };
-	  psc_case_init_npt(psc.Case, kind, xx, &npt);
-
-	  int n_in_cell = get_n_in_cell(npt.n);
-	  np += n_in_cell;
+  if (psc.Case->ops->init_npt) {
+    for (int kind = 0; kind < 2; kind++) {
+      for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
+	for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
+	  for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
+	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
+	    double xx[3] = { jx * dx, jy * dy, jz * dz };
+	    struct psc_particle_npt npt = { // init to all zero
+	    };
+	    psc_case_init_npt(psc.Case, kind, xx, &npt);
+	    
+	    int n_in_cell = get_n_in_cell(npt.n);
+	    np += n_in_cell;
+	  }
 	}
       }
     }
@@ -91,51 +93,53 @@ init_particles()
   double beta = psc.coeff.beta;
   int i = 0;
 
-  for (int kind = 0; kind < 2; kind++) {
-    for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
-      for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
-	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
-	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  struct psc_particle_npt npt = { // init to all zero
-	  };
-	  psc_case_init_npt(psc.Case, kind, xx, &npt);
-
-	  int n_in_cell = get_n_in_cell(npt.n);
-	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	    struct f_particle *p = &psc.f_part[i++];
-
-	    // FIXME? this gives same random numbers on all procs
-	    float ran1 = random() / ((float) RAND_MAX + 1);
-	    float ran2 = random() / ((float) RAND_MAX + 1);
-	    float ran3 = random() / ((float) RAND_MAX + 1);
-	    float ran4 = random() / ((float) RAND_MAX + 1);
-	    float ran5 = random() / ((float) RAND_MAX + 1);
-	    float ran6 = random() / ((float) RAND_MAX + 1);
+  if (psc.Case->ops->init_npt) {
+    for (int kind = 0; kind < 2; kind++) {
+      for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
+	for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
+	  for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
+	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
+	    double xx[3] = { jx * dx, jy * dy, jz * dz };
+	    struct psc_particle_npt npt = { // init to all zero
+	    };
+	    psc_case_init_npt(psc.Case, kind, xx, &npt);
 	    
-	    float px =
-	      sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-	      + npt.p[0];
-	    float py =
-	      sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-	      + npt.p[1];
-	    float pz =
-  	      sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-	      + npt.p[2];
-	    
-	    p->xi = xx[0];
-	    p->yi = xx[1];
-	    p->zi = xx[2];
-	    p->pxi = px;
-	    p->pyi = py;
-	    p->pzi = pz;
-	    p->qni = npt.q;
-	    p->mni = npt.m;
-	    p->lni = -1; // FIXME?
-	    if (psc.prm.fortran_particle_weight_hack) {
-	      p->wni = npt.n;
-	    } else {
-	      p->wni = npt.n / (n_in_cell * psc.coeff.cori);
+	    int n_in_cell = get_n_in_cell(npt.n);
+	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+	      struct f_particle *p = &psc.f_part[i++];
+	      
+	      // FIXME? this gives same random numbers on all procs
+	      float ran1 = random() / ((float) RAND_MAX + 1);
+	      float ran2 = random() / ((float) RAND_MAX + 1);
+	      float ran3 = random() / ((float) RAND_MAX + 1);
+	      float ran4 = random() / ((float) RAND_MAX + 1);
+	      float ran5 = random() / ((float) RAND_MAX + 1);
+	      float ran6 = random() / ((float) RAND_MAX + 1);
+	      
+	      float px =
+		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
+		+ npt.p[0];
+	      float py =
+		sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
+		+ npt.p[1];
+	      float pz =
+		sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
+		+ npt.p[2];
+	      
+	      p->xi = xx[0];
+	      p->yi = xx[1];
+	      p->zi = xx[2];
+	      p->pxi = px;
+	      p->pyi = py;
+	      p->pzi = pz;
+	      p->qni = npt.q;
+	      p->mni = npt.m;
+	      p->lni = -1; // FIXME?
+	      if (psc.prm.fortran_particle_weight_hack) {
+		p->wni = npt.n;
+	      } else {
+		p->wni = npt.n / (n_in_cell * psc.coeff.cori);
+	      }
 	    }
 	  }
 	}
