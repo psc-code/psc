@@ -317,7 +317,11 @@ init_param_coeff()
   psc.coeff.eta = psc.coeff.vos / psc.prm.cc;
 
   for (int d = 0; d < 3; d++) {
-    psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.itot[d];
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
+      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.itot[d];
+    } else {
+      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / (psc.domain.itot[d]-1);
+    }
   }
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
 
