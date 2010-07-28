@@ -6,9 +6,8 @@
 #include <emmintrin.h>
 
 //---------------------------------------------
-// Calculates the offset for accessing pointers to 
-// flattened (2-D only) fields using vector operations
-
+/// Calculates the offset for accessing pointers to 
+/// flattened (2-D YZ only) fields using vector operations
 #define VEC_OFF(foff,jy, jz) {				\
     foff.r = pv_sub_int(jz.r,ilg[2].r);					\
     itemp1.r = pv_sub_int(jy.r,ilg[1].r);				\
@@ -218,67 +217,107 @@ union packed_int{
 
 
 #else // Single Precision
-#define VEC_SIZE 4
 
+/// Number of elements in a floating point vector (changes with precision)
+#define VEC_SIZE 4 
+
+/// SSE2 floating point type
 typedef float sse2_real;
 
+/// Union of real vector and array
 union packed_vector{
-  __m128 r;
-  sse2_real v[4] __attribute__ ((aligned (16))); //FIXME : Might break for any non gcc
+  __m128 r; ///< Vector
+  sse2_real v[4] __attribute__ ((aligned (16))); ///< Array
 } ;
 
+/// \FIXME The __attribute__ ((aligned())) statement may not function on certain non-gcc compilers. I think microsoft/intel compilers use delspec(). Unfortunately, the standard says nothing about these keywords. We may need to macro-ize alignment keywords.
+
+/// Union of integer vector and integer array.
 union packed_int{
-      __m128i r;
-      int v[4] __attribute__ ((aligned (16)));
+  __m128i r; ///< Vector
+  int v[4] __attribute__ ((aligned (16))); ///< Array
 }; 
 
 //---------------------------------------
 // real functions
 
 //Arithmetic
-#define pv_add_real(var1_r, var2_r) _mm_add_ps( var1_r, var2_r )
+/// Real addition
+#define pv_add_real(var1_r, var2_r) _mm_add_ps( var1_r, var2_r ) 
+/// Real subtraction
 #define pv_sub_real(var1_r, var2_r) _mm_sub_ps( var1_r, var2_r )
+/// Real multiplication
 #define pv_mul_real(var1_r, var2_r) _mm_mul_ps( var1_r, var2_r )
-#define pv_div_real(var1_r, var2_r) _mm_div_ps( var1_r, var2_r )
-#define pv_sqrt_real(var1_r) _mm_sqrt_ps( var1_r)
+/// Real division
+#define pv_div_real(var1_r, var2_r) _mm_div_ps( var1_r, var2_r ) 
+/// Real sqrt
+#define pv_sqrt_real(var1_r) _mm_sqrt_ps( var1_r) 
 
 // Sets and Loads
-#define pv_set1_real(number) _mm_set1_ps( number )  //Sets all members to the given const. float
-#define pv_load_real(mem_loc) _mm_load_ps( mem_loc ) // loads an aligned vector from mem_loc
-#define pv_loadu_real(mem_loc) _mm_loadu_ps( mem_loc ) // loads an unaligned vector from mem_loc
-#define pv_loads_real(mem_loc) _mm_load_ss( mem_loc ) // loads a single word from mem_loc into the lowest
-                                                      // element and zeros the rest of the vector
+/// Sets all members to the given const. float
+#define pv_set1_real(number) _mm_set1_ps( number )  
+/// loads an aligned vector from mem_loc
+#define pv_load_real(mem_loc) _mm_load_ps( mem_loc ) 
+/// loads an unaligned vector from mem_loc
+#define pv_loadu_real(mem_loc) _mm_loadu_ps( mem_loc )
+/// loads a single word from mem_loc into the lowest element and zeros the rest of the vector 
+#define pv_loads_real(mem_loc) _mm_load_ss( mem_loc ) 
 
 //Stores
-#define pv_store_real(mem_loc, var_r) _mm_store_ps(mem_loc, var_r) //stores a vector to aligned memory at mem_loc
-#define pv_storeu_real(mem_loc, var_r) _mm_storeu_ps(mem_loc, var_r) // stores a vector to unaligned memory at mem_loc
+/// stores a vector to aligned memory at mem_loc
+#define pv_store_real(mem_loc, var_r) _mm_store_ps(mem_loc, var_r) 
+/// stores a vector to unaligned memory at mem_loc
+#define pv_storeu_real(mem_loc, var_r) _mm_storeu_ps(mem_loc, var_r) 
 
 //Unpacks and shuffles
-#define pv_unpacklo_real( var1_r, var2_r ) _mm_unpacklo_ps( var1_r, var2_r)
-#define pv_unpackhi_real( var1_r, var2_r ) _mm_unpackhi_ps( var1_r, var2_r)
+/// Interleave lower elements of given vectors.
+#define pv_unpacklo_real( var1_r, var2_r ) _mm_unpacklo_ps( var1_r, var2_r) 
+/// Interleave upper elements of given vectors.
+#define pv_unpackhi_real( var1_r, var2_r ) _mm_unpackhi_ps( var1_r, var2_r) 
 
 
 //---------------------------------------
 // int functions
 
 //Arithmetic
-#define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
-#define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r )
-#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r )
+/// Integer addition
+#define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r ) 
+/// Integer subtraction.
+#define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r ) 
+/// Integer multiplication.
+#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r ) 
+/// \FIXME For sse2 using _mm_mullo_epi16 for integer multiplication is an oversimplification
+/// and could lead to trouble in the future.
 
 // Sets and loads
-#define pv_set1_int(number) _mm_set1_epi32( number )
+/// Set all elements of an integer vector to the same value
+#define pv_set1_int(number) _mm_set1_epi32( number ) 
 
 //------------------------------------
 //conversion functions (round or pad)
 
-#define pv_cvt_real_to_int(real_vec) _mm_cvtps_epi32( real_vec )
-#define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_ps( int_vec )
+/// Round real to integer
+#define pv_cvt_real_to_int(real_vec) _mm_cvtps_epi32( real_vec ) 
+/// Promote from integer to real
+#define pv_cvt_int_to_real(int_vec) _mm_cvtepi32_ps( int_vec ) 
 
-//----------------------------------
-// Load particles from memory. This doesn't seem to hurt, and
-// on a more modern processor (fishercat) it seems to give a factor of 
-// two speed increase over serial loading
+/////////////////////////
+/// Load particles from memory. 
+///
+/// On a modern processor packing data into vectors
+/// using this shuffle/unpack method is significantly faster than doing single element
+/// loads. The reason for this is somewhat complicated, but important to understand.
+/// Most processors can only load either the entire vector or the lowest, 'preferred', 
+/// element. That is to say, given a vector [a0, a1, a2, a3], there is an instruction to load
+/// all four elements a0-a3 from memory, and an instruction to load just a0, but no instructions
+/// exist to load a1-a3 individually. Therefore if one attempts to load a0-a3 from seperate memory
+/// locations the compiler has to translate the code in a sub-optimal way. Generally it will 
+/// copy each element from main memory onto the stack. Once the vector is assembled on the stack, 
+/// the processor will either perform a load into a vector register or simply use the value of the
+/// stack everytime it is requested. This method is slow. Shuffles/unpacks, while complicated to 
+/// write, are significantly faster, and should be used whenever possible. A similar method is used
+/// for field loading.
+
  
 #define LOAD_PARTS(p_struct) {					\
     pvReal __A, __B, __C, __D, __E, __F, __G, __H, __alpha, __beta, __gamma, __delta;	\
@@ -324,13 +363,13 @@ union packed_int{
   }
 
 //----------------------------------
-// Store particles to memory. 
-// For single precision it doesn't appear to be worthwhile
-// to shuffle and do a vector store. Some tests have even
-// indicated it could hurt performance by occupying fp
-// units and decreasing pipelining efficiency, but by and large
-// the tests are inconclusive
+/// Store particles to memory. 
 
+/// For single precision it doesn't appear to be worthwhile
+/// to shuffle and do a vector store. Some tests have even
+/// indicated it could hurt performance by occupying fp
+/// units and decreasing pipelining efficiency, but by and large
+/// the tests are inconclusive
 #define STORE_PARTS(p_struct) {				\
   for(int m=0; m < VEC_SIZE; m++){		\
   (sse2->part[n+m]).xi = p_struct.xi.v[m];		\
@@ -342,10 +381,22 @@ union packed_int{
   }						\
 }
 
-//---------------------------------------------
-// Field interpolation for true 2D yz pusher.
-// This may be ugly, but it smokes the serial version.
-
+////////////////////////
+/// Field interpolation for true 2D yz pusher.
+///
+/// On a modern processor packing data into vectors
+/// using this shuffle/unpack method is significantly faster than doing single element
+/// loads. The reason for this is somewhat complicated, but important to understand.
+/// Most processors can only load either the entire vector or the lowest, 'preferred', 
+/// element. That is to say, given a vector [a0, a1, a2, a3], there is an instruction to load
+/// all four elements a0-a3 from memory, and an instruction to load just a0, but no instructions
+/// exist to load a1-a3 individually. Therefore if one attempts to load a0-a3 from seperate memory
+/// locations the compiler has to translate the code in a sub-optimal way. Generally it will 
+/// copy each element from main memory onto the stack. Once the vector is assembled on the stack, 
+/// the processor will either perform a load into a vector register or simply use the value of the
+/// stack everytime it is requested. This method is slow. Shuffles/unpacks, while complicated to 
+/// write, are significantly faster, and should be used whenever possible. A similar method is used
+/// for particle loading.
 #define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
 									\
     pvReal field##tmp1, field##tmp2, field##tmp3;			\
@@ -464,3 +515,8 @@ union packed_int{
 #endif
 
 #endif
+
+// Automatically added by psc_doxyfy.sh to conform to doxygen standards
+// It would be a good idea to fill this in with a real description
+
+/// \file simd_wrap.h Wrappers for SSE2 functions to allow precision switching.
