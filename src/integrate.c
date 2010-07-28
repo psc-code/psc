@@ -98,6 +98,19 @@ psc_integrate()
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
     psc_push_particles();
+    int flds[] = { JXI, JYI, JZI, -1 };
+    for (int i = 0; flds[i] >= 0; i++) {
+      int m = flds[i];
+      psc_fax(m);
+      psc_fay(m);
+      psc_faz(m);
+      psc_fex(m);
+      psc_fey(m);
+      psc_fez(m);
+    }
+    psc_pex();
+    psc_pey();
+    psc_pez();
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt

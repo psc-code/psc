@@ -364,37 +364,10 @@ psc_push_particles()
     assert(0);
   } else if (im[0] > 1 && im[2] > 1) { // xz
     psc_push_part_xz();
-    int flds[] = { JXI, JYI, JZI, -1 };
-    for (int i = 0; flds[i] >= 0; i++) {
-      int m = flds[i];
-      psc_fax(m);
-      psc_faz(m);
-      psc_fex(m);
-      psc_fez(m);
-    }
-    psc_pex();
-    psc_pez();
   } else if (im[1] > 1 && im[2] > 1) { // yz
     psc_push_part_yz();
-    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
-    for (int i = 0; flds[i] >= 0; i++) {
-      int m = flds[i];
-      psc_fay(m);
-      psc_faz(m);
-      psc_fey(m);
-      psc_fez(m);
-    }
-    psc_pey();
-    psc_pez();
   } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // z
     psc_push_part_z();
-    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
-    for (int i = 0; flds[i] >= 0; i++) {
-      int m = flds[i];
-      psc_faz(m);
-      psc_fez(m);
-    }
-    psc_pez();
   } else {
     assert(0);
   }
