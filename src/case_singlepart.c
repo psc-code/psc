@@ -38,14 +38,14 @@ singlepart_create()
   params_parse_cmdline(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
   params_print(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
 
-  psc.case_data = singlepart;
+  psc.Case->ctx = singlepart;
 }
 
 static void
 singlepart_destroy()
 {
-  free(psc.case_data);
-  psc.case_data = NULL;
+  free(psc.Case->ctx);
+  psc.Case->ctx = NULL;
 }
 
 static void
@@ -106,7 +106,7 @@ static void
 singlepart_init_nvt(int kind, double x[3], double *q, double *m, double *n,
 		    double v[3], double T[3])
 {
-  struct psc_singlepart *singlepart = psc.case_data;
+  struct psc_singlepart *singlepart = psc.Case->ctx;
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 

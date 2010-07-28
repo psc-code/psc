@@ -44,21 +44,21 @@ langmuir_create()
   params_parse_cmdline(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
   params_print(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
 
-  psc.case_data = langmuir;
+  psc.Case->ctx = langmuir;
 }
 
 static void
 langmuir_destroy()
 {
-  free(psc.case_data);
-  psc.case_data = NULL;
+  free(psc.Case->ctx);
+  psc.Case->ctx = NULL;
 }
 
 static void
 langmuir_init_nvt(int kind, double x[3], double *q, double *m, double *n,
 		  double v[3], double T[3])
 {
-  struct psc_langmuir *langmuir = psc.case_data;
+  struct psc_langmuir *langmuir = psc.Case->ctx;
 
   real ld = psc.coeff.ld;
 

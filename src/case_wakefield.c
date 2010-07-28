@@ -49,7 +49,7 @@ wakefield_create()
   params_parse_cmdline(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
   params_print(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
 
-  psc.case_data = wakefield;
+  psc.Case->ctx = wakefield;
 
   struct psc_p_pulse_z1_param prm = {
     .xm  = 20. * 1e-6,
@@ -65,8 +65,8 @@ wakefield_create()
 static void
 wakefield_destroy()
 {
-  free(psc.case_data);
-  psc.case_data = NULL;
+  free(psc.Case->ctx);
+  psc.Case->ctx = NULL;
 }
 
 static void
@@ -129,7 +129,7 @@ static void
 wakefield_init_nvt(int kind, double x[3], double *q, double *m, double *n,
 		double v[3], double T[3])
 {
-  struct psc_wakefield *wakefield = psc.case_data;
+  struct psc_wakefield *wakefield = psc.Case->ctx;
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 

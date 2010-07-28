@@ -45,6 +45,7 @@ struct psc_case_ops {
 
 struct psc_case {
   struct psc_case_ops *ops;
+  void *ctx;
 };
 
 static inline void
