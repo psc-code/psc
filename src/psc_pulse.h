@@ -51,24 +51,24 @@ psc_pulse_field(struct psc_pulse *pulse, double x, double y, double z, double t)
 }
 
 // ----------------------------------------------------------------------
-// psc_p_pulse_z1 // FIXME rename ->gauss
+// psc_pulse_gauss
 
-struct psc_p_pulse_z1_param {
+struct psc_pulse_gauss {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // width of pulse in m
 };
 
-struct psc_pulse *psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm);  // FIXME, rename -> gauss
+struct psc_pulse *psc_pulse_gauss_create(struct psc_pulse_gauss *ctx);
 
 // ----------------------------------------------------------------------
-// psc_p_pulse_z1_flattop
+// psc_pulse_flattop
 
-struct psc_p_pulse_z1_flattop_param {
+struct psc_pulse_flattop {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // slope of pulse in m
   double zb; // width of pulse in m
 };
 
-struct psc_pulse *psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm);
+struct psc_pulse *psc_pulse_flattop_create(struct psc_pulse_flattop *prm);
 
 #endif

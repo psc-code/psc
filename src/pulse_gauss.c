@@ -29,9 +29,9 @@
 //          ------------------------------------------------->
 //                              (i1n,i2n,i3n)=box origin    z 
 
-#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_param, x)
+#define VAR(x) (void *)offsetof(struct psc_pulse_gauss, x)
 
-static struct param psc_p_pulse_z1_descr[] = {
+static struct param psc_pulse_gauss_descr[] = {
   { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
   { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
   { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
@@ -44,9 +44,9 @@ static struct param psc_p_pulse_z1_descr[] = {
 #undef VAR
 
 static void
-psc_pulse_p_z1_setup(struct psc_pulse *pulse)
+psc_pulse_gauss_setup(struct psc_pulse *pulse)
 {
-  struct psc_p_pulse_z1_param *prm = pulse->ctx;
+  struct psc_pulse_gauss *prm = pulse->ctx;
 
   // normalization
   prm->xm /= psc.coeff.ld;
@@ -58,10 +58,10 @@ psc_pulse_p_z1_setup(struct psc_pulse *pulse)
 }
 
 static double
-psc_pulse_p_z1_short_field(struct psc_pulse *pulse,
-			   double xx, double yy, double zz, double tt)
+psc_pulse_gauss_field(struct psc_pulse *pulse,
+		      double xx, double yy, double zz, double tt)
 {
-  struct psc_p_pulse_z1_param *prm = pulse->ctx;
+  struct psc_pulse_gauss *prm = pulse->ctx;
 
   //  double xl = xx;
   double yl = yy;
@@ -77,18 +77,18 @@ psc_pulse_p_z1_short_field(struct psc_pulse *pulse,
     * exp(-sqr(zr/prm->dzm));
 }
 
-static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
+static struct psc_pulse_ops psc_pulse_ops_gauss = {
   .name       = "p_z1_short",
-  .ctx_size   = sizeof(struct psc_p_pulse_z1_param),
-  .ctx_descr  = psc_p_pulse_z1_descr,
-  .setup      = psc_pulse_p_z1_setup,
-  .field      = psc_pulse_p_z1_short_field,
+  .ctx_size   = sizeof(struct psc_pulse_gauss),
+  .ctx_descr  = psc_pulse_gauss_descr,
+  .setup      = psc_pulse_gauss_setup,
+  .field      = psc_pulse_gauss_field,
 };
 
 
 struct psc_pulse *
-psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm)
+psc_pulse_gauss_create(struct psc_pulse_gauss *ctx)
 {
-  return psc_pulse_create(&psc_pulse_ops_p_z1_short, prm);
+  return psc_pulse_create(&psc_pulse_ops_gauss, ctx);
 }
 

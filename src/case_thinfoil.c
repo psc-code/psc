@@ -46,7 +46,7 @@ static struct param thinfoil_descr[] = {
 static void
 thinfoil_create(struct psc_case *Case)
 {
-  struct psc_p_pulse_z1_flattop_param prm = {
+  struct psc_pulse_flattop prm = {
     .xm = .01   * 1e-6,
     .ym = .01   * 1e-6,
     .zm = -301. * 1e-6,
@@ -55,7 +55,7 @@ thinfoil_create(struct psc_case *Case)
     .dzm = .1   * 1e-6,
     .zb  = 300. * 1e-6,
   };
-  psc.pulse_p_z1 = psc_pulse_p_z1_flattop_create(&prm);
+  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm);
 }
 
 static void

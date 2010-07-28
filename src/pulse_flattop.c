@@ -3,9 +3,9 @@
 
 #include <math.h>
 
-#define VAR(x) (void *)offsetof(struct psc_p_pulse_z1_flattop_param, x)
+#define VAR(x) (void *)offsetof(struct psc_pulse_flattop, x)
 
-static struct param psc_p_pulse_z1_flattop_descr[] = {
+static struct param psc_pulse_flattop_descr[] = {
   { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
   { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
   { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
@@ -19,9 +19,9 @@ static struct param psc_p_pulse_z1_flattop_descr[] = {
 #undef VAR
 
 static void
-psc_pulse_p_z1_flattop_setup(struct psc_pulse *pulse)
+psc_pulse_flattop_setup(struct psc_pulse *pulse)
 {
-  struct psc_p_pulse_z1_flattop_param *prm = pulse->ctx;
+  struct psc_pulse_flattop *prm = pulse->ctx;
 
   // normalization
   prm->xm /= psc.coeff.ld;
@@ -34,10 +34,10 @@ psc_pulse_p_z1_flattop_setup(struct psc_pulse *pulse)
 }
 
 double
-psc_pulse_p_z1_flattop(struct psc_pulse *pulse, 
-		       double xx, double yy, double zz, double tt)
+psc_pulse_flattop_field(struct psc_pulse *pulse, 
+			double xx, double yy, double zz, double tt)
 {
-  struct psc_p_pulse_z1_flattop_param *prm = pulse->ctx;
+  struct psc_pulse_flattop *prm = pulse->ctx;
 
   double xl = xx;
   double yl = yy;
@@ -53,17 +53,17 @@ psc_pulse_p_z1_flattop(struct psc_pulse *pulse,
     * 1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm));
 }
 
-struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
+struct psc_pulse_ops psc_pulse_ops_flattop = {
   .name       = "p_z1_flattop",
-  .ctx_size   = sizeof(struct psc_p_pulse_z1_flattop_param),
-  .ctx_descr  = psc_p_pulse_z1_flattop_descr,
-  .setup      = psc_pulse_p_z1_flattop_setup,
-  .field      = psc_pulse_p_z1_flattop,
+  .ctx_size   = sizeof(struct psc_pulse_flattop),
+  .ctx_descr  = psc_pulse_flattop_descr,
+  .setup      = psc_pulse_flattop_setup,
+  .field      = psc_pulse_flattop_field,
 };
 
 struct psc_pulse *
-psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm)
+psc_pulse_flattop_create(struct psc_pulse_flattop *prm)
 {
-  return psc_pulse_create(&psc_pulse_ops_p_z1_flattop, prm);
+  return psc_pulse_create(&psc_pulse_ops_flattop, prm);
 }
 
