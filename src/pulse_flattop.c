@@ -62,26 +62,13 @@ psc_pulse_p_z1_flattop(struct psc_pulse *pulse,
 struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
   .name       = "p_z1_flattop",
   .ctx_size   = sizeof(struct psc_p_pulse_z1_flattop_param),
+  .ctx_descr  = psc_p_pulse_z1_flattop_descr,
   .field      = psc_pulse_p_z1_flattop,
 };
 
 struct psc_pulse *
 psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm)
 {
-  struct psc_pulse *pulse = psc_pulse_create(&psc_pulse_ops_p_z1_flattop);
-
-  struct psc_p_pulse_z1_flattop_param *ctx = pulse->ctx;
-  if (prm) { // custom defaults were passed
-    memcpy(ctx, prm, sizeof(*ctx));
-    params_parse_cmdline_nodefault(ctx, psc_p_pulse_z1_flattop_descr,
-				   "PSC P pulse z1 flattop", MPI_COMM_WORLD);
-  } else {
-    params_parse_cmdline(ctx, psc_p_pulse_z1_flattop_descr,
-			 "PSC P pulse z1 flattop", MPI_COMM_WORLD);
-  }
-  params_print(ctx, psc_p_pulse_z1_flattop_descr, "PSC P pulse z1 flattop",
-	       MPI_COMM_WORLD);
-
-  return pulse;
+  return psc_pulse_create(&psc_pulse_ops_p_z1_flattop, prm);
 }
 
