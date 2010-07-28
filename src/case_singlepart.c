@@ -66,24 +66,6 @@ singlepart_init_param(struct psc_case *Case)
 }
 
 static void
-singlepart_init_field(struct psc_case *Case)
-{
-  // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-
-	// FIXME, why this time?
-	FF3(EY, jx,jy,jz) = 0.0;
-
-	// FIXME, this pulse needs a - to propagate in the right direction (+z)
-	FF3(BX, jx,jy,jz) = 0.0;
-      }
-    }
-  }
-}
-
-static void
 singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
 		    struct psc_particle_npt *npt)
 {
@@ -135,6 +117,5 @@ struct psc_case_ops psc_case_ops_singlepart = {
   .ctx_size   = sizeof(struct singlepart),
   .ctx_descr  = singlepart_descr,
   .init_param = singlepart_init_param,
-  .init_field = singlepart_init_field,
   .init_npt   = singlepart_init_npt,
 };
