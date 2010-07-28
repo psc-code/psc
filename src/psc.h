@@ -258,7 +258,7 @@ void psc_push_particles();
 void psc_push_field_a();
 void psc_push_field_b();
 void psc_add_ghosts(int m);
-void psc_fex(int m);
+void psc_fill_ghosts(int m);
 void psc_fey(int m);
 void psc_fez(int m);
 void psc_pex();

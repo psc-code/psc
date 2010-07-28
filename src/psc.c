@@ -432,10 +432,10 @@ psc_add_ghosts(int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_fe[xyz]
+// psc_fill_ghosts(int m)
 
 void
-psc_fex(int m)
+psc_fill_ghosts(int m)
 {
   PIC_fex(m);
 }
@@ -548,6 +548,7 @@ psc_init(const char *case_name)
 
 static struct f_particle *particle_ref;
 static f_real *field_ref[NR_FIELDS];
+
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
 //
