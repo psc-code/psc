@@ -299,6 +299,7 @@ extern struct psc_output_ops psc_output_ops_c;
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_thinfoil;
+extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
 
 // Wrappers for Fortran functions
