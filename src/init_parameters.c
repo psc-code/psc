@@ -166,6 +166,18 @@ psc_find_case(const char *name)
   abort();
 }
 
+struct psc_case *
+psc_case_create(const char *case_name)
+{
+  struct psc_case *Case = malloc(sizeof(*Case));
+  Case->ops = psc_find_case(case_name);
+  if (Case->ops->create) {
+    Case->ops->create();
+  }
+  
+  return Case;
+}
+
 struct par_case {
   char *case_name;
 };
@@ -187,12 +199,9 @@ init_case()
   params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
 
   if (par.case_name) {
-    psc.Case = malloc(sizeof(*psc.Case));
-    psc.Case->ops = psc_find_case(par.case_name);
-    if (psc.Case->ops->create) {
-      psc.Case->ops->create();
-    }
+    psc.Case = psc_case_create(par.case_name);
   }
+
   if (psc.Case) {
     psc_case_init_param(psc.Case);
   }
