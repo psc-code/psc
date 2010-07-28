@@ -61,14 +61,14 @@ psc_pulse_p_z1_flattop(struct psc_pulse *pulse,
 
 struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
   .name       = "p_z1_flattop",
+  .ctx_size   = sizeof(struct psc_p_pulse_z1_flattop_param),
   .field      = psc_pulse_p_z1_flattop,
 };
 
 struct psc_pulse *
 psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm)
 {
-  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1_flattop_param),
-					     &psc_pulse_ops_p_z1_flattop);
+  struct psc_pulse *pulse = psc_pulse_create(&psc_pulse_ops_p_z1_flattop);
 
   struct psc_p_pulse_z1_flattop_param *ctx = pulse->ctx;
   if (prm) { // custom defaults were passed

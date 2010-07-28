@@ -2,13 +2,16 @@
 #include "psc_pulse.h"
 
 struct psc_pulse *
-psc_pulse_create(size_t size, struct psc_pulse_ops *ops)
+psc_pulse_create(struct psc_pulse_ops *ops)
 {
   struct psc_pulse *pulse = malloc(sizeof(*pulse));
   memset(pulse, 0, sizeof(*pulse));
   pulse->ops = ops;
-  pulse->ctx = malloc(size);
-  memset(pulse->ctx, 0, size);
+  
+  if (ops->ctx_size) {
+    pulse->ctx = malloc(ops->ctx_size);
+    memset(pulse->ctx, 0, ops->ctx_size);
+  }
 
   return pulse;
 }

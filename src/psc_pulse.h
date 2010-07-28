@@ -15,6 +15,7 @@ struct psc_pulse;
 
 struct psc_pulse_ops {
   const char *name;
+  size_t ctx_size;
   void (*destroy)(struct psc_pulse *);
   double (*field)(struct psc_pulse *,
 		  double x, double y, double z, double t);
@@ -26,7 +27,7 @@ struct psc_pulse {
   void *ctx;
 };
 
-struct psc_pulse *psc_pulse_create(size_t size, struct psc_pulse_ops *ops);
+struct psc_pulse *psc_pulse_create(struct psc_pulse_ops *ops);
 void psc_pulse_destroy(struct psc_pulse *pulse);
 
 // ----------------------------------------------------------------------

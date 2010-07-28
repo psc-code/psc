@@ -85,6 +85,7 @@ psc_pulse_p_z1_short_field(struct psc_pulse *pulse,
 
 static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
+  .ctx_size   = sizeof(struct psc_p_pulse_z1_param),
   .field      = psc_pulse_p_z1_short_field,
 };
 
@@ -92,8 +93,7 @@ static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
 struct psc_pulse *
 psc_pulse_p_z1_short_create(struct psc_p_pulse_z1_param *prm)
 {
-  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1_param),
-					     &psc_pulse_ops_p_z1_short);
+  struct psc_pulse *pulse = psc_pulse_create(&psc_pulse_ops_p_z1_short);
 
   struct psc_p_pulse_z1_param *ctx = pulse->ctx;
   if (prm) { // custom defaults were passed
