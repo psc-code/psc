@@ -75,10 +75,21 @@ init_param_domain()
 				 MPI_COMM_WORLD);
   params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 
+  psc.pml.thick = 10;
+  psc.pml.cushion = psc.pml.thick / 3;
+  psc.pml.size = psc.pml.thick + psc.pml.cushion;
+  psc.pml.order = 3;
+
+  SET_param_pml();
+
   for (int d = 0; d < 3; d++) {
     if (domain->ihi[d] - domain->ilo[d] == 1) {
-      // if invariant in this direction, don't domain decompose
+      // if invariant in this direction:
+      // can't domain decompose in, set bnd to periodic
       assert(domain->nproc[d] == 1);
+      domain->bnd_fld_lo[d] = BND_FLD_PERIODIC;
+      domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
+      domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
       // on every proc, need domain at least nghost wide
       assert((domain->ihi[d] - domain->ilo[d]) >= domain->nproc[d] * domain->nghost[d]);

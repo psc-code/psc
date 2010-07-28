@@ -14,6 +14,7 @@ libpsc_a_SOURCES = \
 	INIT_ppulse_z1.F INIT_spulse_z1.F \
 	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_fields.c init_particles.c \
+	INIT_param.F \
 	psc.h psc_glue.c psc.c \
 	generic_c/psc_generic_c.c \
 	generic_c/psc_push_part_yz_a.c \
@@ -47,7 +48,7 @@ endif USE_CUDA
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
+	INIT_field.F INIT_den.F INIT_idistr.F \
 	INIT_partition.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
@@ -64,7 +65,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
-	INIT_field.F INIT_param.F INIT_den.F INIT_idistr.F \
+	INIT_field.F INIT_den.F INIT_idistr.F \
 	INIT_partition.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
@@ -84,7 +85,7 @@ VLI_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
 VLA_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
 endif
 
-SELECT_SOURCES = VLA_variables.F PIC_variables.F INIT_param.F \
+SELECT_SOURCES = VLA_variables.F PIC_variables.F \
 	SELECT.F SERV_labelgen.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \

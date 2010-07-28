@@ -109,6 +109,13 @@ struct psc_coeff {
   int nnp; // # steps per laser cycle
 };
 
+struct psc_pml {
+  int thick; // # grid points for PML
+  int cushion; // # grid points for buffer zone
+  int size; // # grid points PML + buffer
+  int order; // PML order
+};
+
 // need to match fortran values
 
 enum {
@@ -212,6 +219,7 @@ struct psc {
   struct psc_param prm;
   struct psc_coeff coeff;
   struct psc_domain domain;
+  struct psc_pml pml;
 
   // other parameters / constants
   double p2A, p2B;
@@ -303,6 +311,7 @@ void PIC_randomize();
 void PIC_find_cell_indices();
 void OUT_field_1();
 void SET_param_domain();
+void SET_param_pml();
 void SET_param_psc();
 void SET_param_coeff();
 void INIT_param_domain();

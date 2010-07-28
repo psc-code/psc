@@ -39,6 +39,18 @@ init_partition(int *n_part)
     n[d] = m[d] / psc.domain.nproc[d];
     psc.ilo[d] = psc.domain.ilo[d] + p[d] * n[d];
     psc.ihi[d] = psc.domain.ilo[d] + (p[d] + 1) * n[d];
+    int min_size = 1;
+    if (p[d] == 0 && // left-most proc in this dir
+	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
+	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
+      min_size += psc.pml.size;
+    }
+    if (p[d] == psc.domain.nproc[d] - 1 && // right-most proc in this dir
+	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
+	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
+      min_size += psc.pml.size;
+    }
+    assert(psc.ihi[d] - psc.ilo[d] >= min_size);
   }
 
   MPI_Barrier(comm);

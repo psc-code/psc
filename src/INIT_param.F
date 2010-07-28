@@ -695,3 +695,23 @@ c     wrapper for C to be able to set these coefficients
       nnp = nnp_
 
       end subroutine SET_param_coeff
+
+c     wrapper for C to be able to set pml parameters
+
+      subroutine SET_param_pml(thick_, cushion_, size_, pml_)
+
+      use VLA_variables
+      use PIC_variables
+
+      implicit none
+
+      integer :: thick_, cushion_, size_, pml_
+
+      thick = thick_
+      cushion = cushion_
+      size = size_
+      pml = pml_
+
+      end subroutine SET_param_pml
+
+
