@@ -146,9 +146,7 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->q = -1.;
     npt->m = 1.;
     npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
-    npt->p[0] = 0.;
     npt->p[1] = - 2. * TTe / BB / LLL * jy0 / npt->n;
-    npt->p[2] = 0.;
     npt->T[0] = TTe;
     npt->T[1] = TTe;
     npt->T[2] = TTe;
@@ -157,9 +155,7 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->q = 1.;
     npt->m = harris->MMi;
     npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
-    npt->p[0] = 0.;
     npt->p[1] = 2. * TTi / BB / LLL * jy0 / npt->n;
-    npt->p[2] = 0.;
     npt->T[0] = TTi;
     npt->T[1] = TTi;
     npt->T[2] = TTi;

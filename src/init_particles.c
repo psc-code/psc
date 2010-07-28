@@ -71,7 +71,8 @@ init_partition(int *n_part)
 	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  struct psc_particle_npt npt;
+	  struct psc_particle_npt npt = { // init to all zero
+	  };
 	  psc_case_init_npt(psc.Case, kind, xx, &npt);
 
 	  int n_in_cell = get_n_in_cell(npt.n);
@@ -96,7 +97,8 @@ init_particles()
 	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  struct psc_particle_npt npt;
+	  struct psc_particle_npt npt = { // init to all zero
+	  };
 	  psc_case_init_npt(psc.Case, kind, xx, &npt);
 
 	  int n_in_cell = get_n_in_cell(npt.n);

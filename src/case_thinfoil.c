@@ -151,9 +151,6 @@ thinfoil_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->q = -1.;
     npt->m = 1.;
     npt->n = dens;
-    npt->p[0] = 0.;
-    npt->p[1] = 0.;
-    npt->p[2] = 0.;
     npt->T[0] = Te;
     npt->T[1] = Te;
     npt->T[2] = Te;
@@ -162,9 +159,6 @@ thinfoil_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->q = 1.;
     npt->m = thinfoil->mass_ratio;
     npt->n = dens;
-    npt->p[0] = 0.;
-    npt->p[1] = 0.;
-    npt->p[2] = 0.;
     npt->T[0] = Ti;
     npt->T[1] = Ti;
     npt->T[2] = Ti;
