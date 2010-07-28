@@ -383,25 +383,19 @@ PIC_fez(int m)
 void
 PIC_pex()
 {
-  SET_niloc(psc.n_part);
   PIC_pex_F77();
-  GET_niloc(&psc.n_part);
 }
 
 void
 PIC_pey()
 {
-  SET_niloc(psc.n_part);
   PIC_pey_F77();
-  GET_niloc(&psc.n_part);
 }
 
 void
 PIC_pez()
 {
-  SET_niloc(psc.n_part);
   PIC_pez_F77();
-  GET_niloc(&psc.n_part);
 }
 
 void

@@ -19,6 +19,7 @@ src/test_part_xz
 src/test_bnd
 src/test_sort
 src/test_field
+src/test_exchange_particles
 Makefile.in
 Makefile
 aclocal.m4

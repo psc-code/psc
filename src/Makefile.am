@@ -100,11 +100,13 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test1 test2 test_part_xz test_field test_bnd test_sort
+noinst_PROGRAMS = test1 test2 test_part_xz test_field test_bnd \
+	test_exchange_particles test_sort
 
 LDADD = libpsc.a util/libutil.a
 
-TESTS = test2 test_part_xz test_field test_bnd test_sort.sh
+TESTS = test2 test_part_xz test_field test_bnd test_exchange_particles \
+	test_sort.sh
 
 if USE_CUDA
 

@@ -351,6 +351,7 @@ f_real **ALLOC_field();
 void FREE_particles(void);
 void FREE_field(void);
 void INIT_basic(void);
+void INIT_grid_map(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
 void PIC_fax(int m);
