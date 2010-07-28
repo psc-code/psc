@@ -43,7 +43,7 @@ static struct param wakefield_descr[] = {
 static void
 wakefield_create(struct psc_case *Case)
 {
-  struct psc_p_pulse_z1_param prm = {
+  struct psc_pulse_gauss prm = {
     .xm  = 20. * 1e-6,
     .ym  = 20. * 1e-6,
     .zm  = -2. * 1e-6,
@@ -51,7 +51,7 @@ wakefield_create(struct psc_case *Case)
     .dym = 5.  * 1e-6,
     .dzm = 1.  * 1e-6,
   };
-  psc.pulse_p_z1 = psc_pulse_p_z1_short_create(&prm);
+  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm);
 }
 
 static void

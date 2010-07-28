@@ -26,7 +26,7 @@ libpsc_a_SOURCES = \
 	OUT_field.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F \
-	p_pulse_z1.c \
+	pulse.c pulse_gauss.c pulse_flattop.c \
 	sort.c \
 	output_fields.c output_binary.c output_vtk.c \
 	case_langmuir.c \
