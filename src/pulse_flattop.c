@@ -18,33 +18,28 @@ static struct param psc_p_pulse_z1_flattop_descr[] = {
 
 #undef VAR
 
-struct psc_p_pulse_z1_flattop {
-  struct psc_pulse pulse;
-  bool is_setup;
-
-  struct psc_p_pulse_z1_flattop_param prm;
-};
-
 static void
-psc_pulse_p_z1_flattop_setup(struct psc_p_pulse_z1_flattop *pulse)
+psc_pulse_p_z1_flattop_setup(struct psc_pulse *pulse)
 {
+  struct psc_p_pulse_z1_flattop_param *prm = pulse->ctx;
+
   // normalization
-  pulse->prm.xm /= psc.coeff.ld;
-  pulse->prm.ym /= psc.coeff.ld;
-  pulse->prm.zm /= psc.coeff.ld;
-  pulse->prm.dxm /= psc.coeff.ld;
-  pulse->prm.dym /= psc.coeff.ld;
-  pulse->prm.dzm /= psc.coeff.ld;
-  pulse->prm.zb /= psc.coeff.ld;
+  prm->xm /= psc.coeff.ld;
+  prm->ym /= psc.coeff.ld;
+  prm->zm /= psc.coeff.ld;
+  prm->dxm /= psc.coeff.ld;
+  prm->dym /= psc.coeff.ld;
+  prm->dzm /= psc.coeff.ld;
+  prm->zb /= psc.coeff.ld;
 
   pulse->is_setup = true;
 }
 
 double
-psc_pulse_p_z1_flattop(struct psc_pulse *__pulse, 
+psc_pulse_p_z1_flattop(struct psc_pulse *pulse, 
 		       double xx, double yy, double zz, double tt)
 {
-  struct psc_p_pulse_z1_flattop *pulse = (struct psc_p_pulse_z1_flattop *) __pulse;
+  struct psc_p_pulse_z1_flattop_param *prm = pulse->ctx;
 
   if (!pulse->is_setup) {
     psc_pulse_p_z1_flattop_setup(pulse);
@@ -54,14 +49,14 @@ psc_pulse_p_z1_flattop(struct psc_pulse *__pulse,
   double yl = yy;
   double zl = zz - tt;
 
-  double xr = xl - pulse->prm.xm;
-  double yr = yl - pulse->prm.ym;
-  double zr = zl - pulse->prm.zm;
+  double xr = xl - prm->xm;
+  double yr = yl - prm->ym;
+  double zr = zl - prm->zm;
 
   return sin(zr)
-    * exp(-sqr(xr/pulse->prm.dxm))
-    * exp(-sqr(yr/pulse->prm.dym))
-    * 1. / (1.+exp((fabs(zr)-pulse->prm.zb)/pulse->prm.dzm));
+    * exp(-sqr(xr/prm->dxm))
+    * exp(-sqr(yr/prm->dym))
+    * 1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm));
 }
 
 struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
@@ -72,19 +67,19 @@ struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
 struct psc_pulse *
 psc_pulse_p_z1_flattop_create(struct psc_p_pulse_z1_flattop_param *prm)
 {
-  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1_flattop),
+  struct psc_pulse *pulse = psc_pulse_create(sizeof(struct psc_p_pulse_z1_flattop_param),
 					     &psc_pulse_ops_p_z1_flattop);
 
-  struct psc_p_pulse_z1_flattop *self = (struct psc_p_pulse_z1_flattop *) pulse;
+  struct psc_p_pulse_z1_flattop_param *ctx = pulse->ctx;
   if (prm) { // custom defaults were passed
-    memcpy(&self->prm, prm, sizeof(self->prm));
-    params_parse_cmdline_nodefault(&self->prm, psc_p_pulse_z1_flattop_descr,
+    memcpy(ctx, prm, sizeof(*ctx));
+    params_parse_cmdline_nodefault(ctx, psc_p_pulse_z1_flattop_descr,
 				   "PSC P pulse z1 flattop", MPI_COMM_WORLD);
   } else {
-    params_parse_cmdline(&self->prm, psc_p_pulse_z1_flattop_descr,
+    params_parse_cmdline(ctx, psc_p_pulse_z1_flattop_descr,
 			 "PSC P pulse z1 flattop", MPI_COMM_WORLD);
   }
-  params_print(&self->prm, psc_p_pulse_z1_flattop_descr, "PSC P pulse z1 flattop",
+  params_print(ctx, psc_p_pulse_z1_flattop_descr, "PSC P pulse z1 flattop",
 	       MPI_COMM_WORLD);
 
   return pulse;

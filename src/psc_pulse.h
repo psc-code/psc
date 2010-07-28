@@ -22,6 +22,8 @@ struct psc_pulse_ops {
 
 struct psc_pulse {
   struct psc_pulse_ops *ops;
+  bool is_setup;
+  void *ctx;
 };
 
 struct psc_pulse *psc_pulse_create(size_t size, struct psc_pulse_ops *ops);
