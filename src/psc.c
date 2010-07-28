@@ -260,6 +260,20 @@ psc_dump_particles(const char *fname)
 }
 
 // ----------------------------------------------------------------------
+// psc_push_part_xz
+
+void
+psc_push_part_xz()
+{
+  assert(psc.ops->push_part_xz);
+  psc.ops->particles_from_fortran();
+  psc.ops->fields_from_fortran();
+  psc.ops->push_part_xz();
+  psc.ops->particles_to_fortran();
+  psc.ops->fields_to_fortran();
+}
+
+// ----------------------------------------------------------------------
 // psc_push_part_yz
 
 void
@@ -309,6 +323,120 @@ psc_push_part_yz_b()
   psc.ops->push_part_yz_b();
   psc.ops->fields_to_fortran();
   psc.ops->particles_to_fortran();
+}
+
+// ----------------------------------------------------------------------
+// psc_push_particles
+
+void
+psc_push_particles()
+{
+  int im[3] = {
+    psc.domain.ihi[0] - psc.domain.ilo[0],
+    psc.domain.ihi[1] - psc.domain.ilo[1],
+    psc.domain.ihi[2] - psc.domain.ilo[2],
+  };
+  if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
+    assert(0);
+  } else if (im[0] > 1 && im[2] > 1) { // xz
+    psc_push_part_xz();
+    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
+    for (int i = 0; flds[i] >= 0; i++) {
+      int m = flds[i];
+      psc_fax(m);
+      psc_faz(m);
+      psc_fex(m);
+      psc_fez(m);
+    }
+    psc_pex();
+    psc_pez();
+  } else if (im[1] > 1 && im[2] > 1) { // yz
+    psc_push_part_yz();
+    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
+    for (int i = 0; flds[i] >= 0; i++) {
+      int m = flds[i];
+      psc_fay(m);
+      psc_faz(m);
+      psc_fey(m);
+      psc_fez(m);
+    }
+    psc_pey();
+    psc_pez();
+  } else if (im[0] == 1 && im[1] == 1 && im[2] > 1) { // z
+    psc_push_part_z();
+    int flds[] = { JXI, JYI, JZI, NE, NI, NN, -1 };
+    for (int i = 0; flds[i] >= 0; i++) {
+      int m = flds[i];
+      psc_faz(m);
+      psc_fez(m);
+    }
+    psc_pez();
+  } else {
+    assert(0);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_fa[xyz]
+
+void
+psc_fax(int m)
+{
+  PIC_fax(m);
+}
+
+void
+psc_fay(int m)
+{
+  PIC_fay(m);
+}
+
+void
+psc_faz(int m)
+{
+  PIC_faz(m);
+}
+
+// ----------------------------------------------------------------------
+// psc_fe[xyz]
+
+void
+psc_fex(int m)
+{
+  PIC_fex(m);
+}
+
+void
+psc_fey(int m)
+{
+  PIC_fey(m);
+}
+
+void
+psc_fez(int m)
+{
+  PIC_fez(m);
+}
+
+// ----------------------------------------------------------------------
+// psc_pe[xyz]
+
+void
+psc_pex()
+{
+  PIC_pex();
+}
+
+void
+psc_pey()
+{
+  PIC_pey();
+}
+
+void
+psc_pez()
+{
+  PIC_pez();
 }
 
 // ----------------------------------------------------------------------

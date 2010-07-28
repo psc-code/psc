@@ -150,6 +150,7 @@ struct psc_ops {
   void (*particles_to_fortran)(void);
   void (*fields_from_fortran)(void);
   void (*fields_to_fortran)(void);
+  void (*push_part_xz)(void);
   void (*push_part_yz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
@@ -223,7 +224,16 @@ void psc_init_partition(int *n_part);
 void psc_init_particles();
 void psc_init_field();
 void psc_integrate();
-
+void psc_push_particles();
+void psc_fax(int m);
+void psc_fay(int m);
+void psc_faz(int m);
+void psc_fex(int m);
+void psc_fey(int m);
+void psc_fez(int m);
+void psc_pex();
+void psc_pey();
+void psc_pez();
 void psc_setup_parameters();
 void psc_setup_fields_zero();
 void psc_setup_fields_1();
@@ -269,6 +279,7 @@ extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
 
 // Wrappers for Fortran functions
+void PIC_push_part_xz();
 void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
@@ -297,6 +308,16 @@ void INIT_idistr();
 struct f_particle *ALLOC_particles(int n_part);
 f_real **ALLOC_field();
 real PSC_p_pulse_z1(real x, real y, real z, real t);
+
+void PIC_fax(int m);
+void PIC_fay(int m);
+void PIC_faz(int m);
+void PIC_fex(int m);
+void PIC_fey(int m);
+void PIC_fez(int m);
+void PIC_pex(void);
+void PIC_pey(void);
+void PIC_pez(void);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

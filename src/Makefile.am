@@ -21,8 +21,9 @@ libpsc_a_SOURCES = \
 	generic_c/psc_push_part_yz_a.c \
 	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
-	PIC_push_part_yz.F \
+	PIC_move_part_xz.F PIC_push_part_yz.F \
 	PIC_push_part_z.F \
+	PIC_pex.F PIC_pey.F PIC_pez.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
 	PIC_msa.F PIC_msb.F \
@@ -63,8 +64,8 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
 	INIT_field.F \
 	SERV_write.F \
-	OUT_param.F OUT_poyc.F \
-	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
+	OUT_param.F OUT_part.F OUT_poyc.F \
+	OUT_count.F OUT_energy.F \
 	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
 	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \
@@ -77,7 +78,7 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	INIT_field.F \
 	SERV_write.F SERV_read.F \
 	OUT_param.F OUT_poyc.F \
-	OUT_count.F OUT_energy.F PIC_pex.F PIC_pey.F PIC_pez.F \
+	OUT_count.F OUT_energy.F \
 	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
 	PIC_move_part_y.F PIC_move_part_z.F PIC_bin_coll.F PIC_sort.F \

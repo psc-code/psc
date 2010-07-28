@@ -63,11 +63,9 @@ psc_log_step(double stats[NR_STATS])
 
 #define ALLOC_field_fortran_F77 F77_FUNC_(alloc_field_fortran, ALLOC_FIELD_FORTRAN)
 #define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
-#define PIC_move_part_F77 F77_FUNC_(pic_move_part, PIC_MOVE_PART)
 
 void ALLOC_field_fortran_F77(void);
 void SETUP_field_F77(void);
-void PIC_move_part_F77(void);
 
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.
@@ -99,7 +97,7 @@ psc_integrate()
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    PIC_move_part_F77();
+    psc_push_particles();
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt

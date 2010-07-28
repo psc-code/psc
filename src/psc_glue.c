@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
+#define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
 #define PIC_push_part_yz_F77 F77_FUNC(pic_push_part_yz,PIC_PUSH_PART_YZ)
 #define PIC_push_part_yz_a_F77 F77_FUNC(pic_push_part_yz_a,PIC_PUSH_PART_YZ_A)
 #define PIC_push_part_yz_b_F77 F77_FUNC(pic_push_part_yz_b,PIC_PUSH_PART_YZ_B)
@@ -27,6 +28,15 @@
 #define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
+#define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
+#define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
+#define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
+#define PIC_fex_F77 F77_FUNC(pic_fex, PIC_FEX)
+#define PIC_fey_F77 F77_FUNC(pic_fey, PIC_FEY)
+#define PIC_fez_F77 F77_FUNC(pic_fez, PIC_FEZ)
+#define PIC_pex_F77 F77_FUNC(pic_pex, PIC_PEX)
+#define PIC_pey_F77 F77_FUNC(pic_pey, PIC_PEY)
+#define PIC_pez_F77 F77_FUNC(pic_pez, PIC_PEZ)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
@@ -46,6 +56,13 @@ void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_real *cori, f_real *alpha, f_real *eta, 
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
+
+void PIC_push_part_xz_F77(f_int *niloc, struct f_particle *p_niloc,
+			  f_real *p2A, f_real *p2B,
+			  f_real *ne, f_real *ni, f_real *nn,
+			  f_real *jxi, f_real *jyi, f_real *jzi,
+			  f_real *ex, f_real *ey, f_real *ez,
+			  f_real *bx, f_real *by, f_real *bz);
 
 void PIC_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
 			  f_real *p2A, f_real *p2B,
@@ -101,6 +118,16 @@ void PIC_msa_F77(void);
 void PIC_msb_F77(void);
 void PIC_pml_msa_F77(void);
 void PIC_pml_msb_F77(void);
+void PIC_fax_F77(f_real *f);
+void PIC_fay_F77(f_real *f);
+void PIC_faz_F77(f_real *f);
+void PIC_fex_F77(f_real *f);
+void PIC_fey_F77(f_real *f);
+void PIC_fez_F77(f_real *f);
+void PIC_pex_F77(void);
+void PIC_pey_F77(void);
+void PIC_pez_F77(void);
+
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
@@ -130,6 +157,17 @@ PIC_push_part_yz()
 {
   PIC_set_variables();
   PIC_push_part_yz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+		       psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
+		       psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
+		       psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
+		       psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+}
+
+void
+PIC_push_part_xz()
+{
+  PIC_set_variables();
+  PIC_push_part_xz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
 		       psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
 		       psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
 		       psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
@@ -303,6 +341,66 @@ void
 GET_niloc(int *p_niloc)
 {
   GET_niloc_F77(p_niloc);
+}
+
+void
+PIC_fax(int m)
+{
+  PIC_fax_F77(psc.f_fields[m]);
+}
+
+void
+PIC_fay(int m)
+{
+  PIC_fay_F77(psc.f_fields[m]);
+}
+
+void
+PIC_faz(int m)
+{
+  PIC_faz_F77(psc.f_fields[m]);
+}
+
+void
+PIC_fex(int m)
+{
+  PIC_fex_F77(psc.f_fields[m]);
+}
+
+void
+PIC_fey(int m)
+{
+  PIC_fey_F77(psc.f_fields[m]);
+}
+
+void
+PIC_fez(int m)
+{
+  PIC_fez_F77(psc.f_fields[m]);
+}
+
+void
+PIC_pex()
+{
+  SET_niloc(psc.n_part);
+  PIC_pex_F77();
+  GET_niloc(&psc.n_part);
+}
+
+void
+PIC_pey()
+{
+  SET_niloc(psc.n_part);
+  PIC_pey_F77();
+  GET_niloc(&psc.n_part);
+}
+
+void
+PIC_pez()
+{
+  SET_niloc(psc.n_part);
+  PIC_pez_F77();
+  GET_niloc(&psc.n_part);
 }
 
 // ----------------------------------------------------------------------
