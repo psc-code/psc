@@ -175,7 +175,7 @@ struct psc {
   struct psc_sort_ops *sort_ops;
   struct psc_output_ops *output_ops;
   struct psc_pulse *pulse_p_z1;
-  struct psc_case_ops *case_ops;
+  struct psc_case *Case;
   void *case_data;
   // user-configurable parameters
   struct psc_param prm;

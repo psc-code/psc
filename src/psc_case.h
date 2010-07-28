@@ -43,5 +43,9 @@ struct psc_case_ops {
 		   double v[3], double T[3]);
 };
 
+struct psc_case {
+  struct psc_case_ops *ops;
+};
+
 #endif
 

@@ -8,9 +8,9 @@ void INIT_field(void);
 void
 init_field()
 {
-  if (psc.case_ops) {
-    if (psc.case_ops->init_field) {
-      psc.case_ops->init_field();
+  if (psc.Case) {
+    if (psc.Case->ops->init_field) {
+      psc.Case->ops->init_field();
     }
   } else {
     INIT_field();

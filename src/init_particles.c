@@ -73,7 +73,7 @@ init_partition(int *n_part)
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
 	  double q, m, n, v[3], T[3];
 
-	  psc.case_ops->init_nvt(kind, xx, &q, &m, &n, v, T);
+	  psc.Case->ops->init_nvt(kind, xx, &q, &m, &n, v, T);
 	  int n_in_cell = get_n_in_cell(n);
 	  np += n_in_cell;
 	}
@@ -97,7 +97,7 @@ init_particles()
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
 	  double q, m, n, v[3], T[3];
-	  psc.case_ops->init_nvt(kind, xx, &q, &m, &n, v, T);
+	  psc.Case->ops->init_nvt(kind, xx, &q, &m, &n, v, T);
 
 	  int n_in_cell = get_n_in_cell(n);
 	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
@@ -168,7 +168,7 @@ static int part_label_offset;
 void
 C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 {
-  if (!psc.case_ops) {
+  if (!psc.Case) {
     INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
 		       n_part);
     return;
@@ -188,7 +188,7 @@ C_init_partition_F77(f_int *part_label_off, f_int *n_part)
 void
 C_init_particles_F77()
 {
-  if (!psc.case_ops) {
+  if (!psc.Case) {
     INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
     GET_niloc_F77(&psc.n_part);
     return;

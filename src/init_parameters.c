@@ -187,12 +187,13 @@ init_case()
   params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
 
   if (par.case_name) {
-    psc.case_ops = psc_find_case(par.case_name);
-    if (psc.case_ops->create) {
-      psc.case_ops->create();
+    psc.Case = malloc(sizeof(*psc.Case));
+    psc.Case->ops = psc_find_case(par.case_name);
+    if (psc.Case->ops->create) {
+      psc.Case->ops->create();
     }
-    if (psc.case_ops->init_param) {
-      psc.case_ops->init_param();
+    if (psc.Case->ops->init_param) {
+      psc.Case->ops->init_param();
     }
   }
 }
