@@ -38,20 +38,10 @@ static struct param psc_langmuir_descr[] = {
 static void
 langmuir_create(struct psc_case *Case)
 {
-  struct psc_langmuir *langmuir = malloc(sizeof(*langmuir));
-  memset(langmuir, 0, sizeof(*langmuir));
+  struct psc_langmuir *langmuir = Case->ctx;
 
   params_parse_cmdline(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
   params_print(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
-
-  Case->ctx = langmuir;
-}
-
-static void
-langmuir_destroy(struct psc_case *Case)
-{
-  free(Case->ctx);
-  Case->ctx = NULL;
 }
 
 static void
@@ -114,7 +104,7 @@ langmuir_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_langmuir = {
   .name       = "langmuir",
+  .ctx_size   = sizeof(struct psc_langmuir),
   .create     = langmuir_create,
-  .destroy    = langmuir_destroy,
   .init_nvt   = langmuir_init_nvt,
 };

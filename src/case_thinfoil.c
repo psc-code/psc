@@ -46,13 +46,10 @@ static struct param psc_thinfoil_descr[] = {
 static void
 thinfoil_create(struct psc_case *Case)
 {
-  struct psc_thinfoil *thinfoil = malloc(sizeof(*thinfoil));
-  memset(thinfoil, 0, sizeof(*thinfoil));
+  struct psc_thinfoil *thinfoil = Case->ctx;
 
   params_parse_cmdline(thinfoil, psc_thinfoil_descr, "PSC Thinfoil", MPI_COMM_WORLD);
   params_print(thinfoil, psc_thinfoil_descr, "PSC Thinfoil", MPI_COMM_WORLD);
-
-  Case->ctx = thinfoil;
 
   struct psc_p_pulse_z1_flattop_param prm = {
     .xm = .01   * 1e-6,
@@ -64,13 +61,6 @@ thinfoil_create(struct psc_case *Case)
     .zb  = 300. * 1e-6,
   };
   psc.pulse_p_z1 = psc_pulse_p_z1_flattop_create(&prm);
-}
-
-static void
-thinfoil_destroy(struct psc_case *Case)
-{
-  free(Case->ctx);
-  Case->ctx = NULL;
 }
 
 static void
@@ -192,8 +182,8 @@ thinfoil_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_thinfoil = {
   .name       = "thinfoil",
+  .ctx_size   = sizeof(struct psc_thinfoil),
   .create     = thinfoil_create,
-  .destroy    = thinfoil_destroy,
   .init_param = thinfoil_init_param,
   .init_field = thinfoil_init_field,
   .init_nvt   = thinfoil_init_nvt,

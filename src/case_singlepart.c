@@ -32,20 +32,10 @@ static struct param psc_singlepart_descr[] = {
 static void
 singlepart_create(struct psc_case *Case)
 {
-  struct psc_singlepart *singlepart = malloc(sizeof(*singlepart));
-  memset(singlepart, 0, sizeof(*singlepart));
+  struct psc_singlepart *singlepart = Case->ctx;
 
   params_parse_cmdline(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
   params_print(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
-
-  Case->ctx = singlepart;
-}
-
-static void
-singlepart_destroy(struct psc_case *Case)
-{
-  free(Case->ctx);
-  Case->ctx = NULL;
 }
 
 static void
@@ -156,8 +146,8 @@ singlepart_init_nvt(struct psc_case *Case, int kind, double x[3],
 
 struct psc_case_ops psc_case_ops_singlepart = {
   .name       = "singlepart",
+  .ctx_size   = sizeof(struct psc_singlepart),
   .create     = singlepart_create,
-  .destroy    = singlepart_destroy,
   .init_param = singlepart_init_param,
   .init_field = singlepart_init_field,
   .init_nvt   = singlepart_init_nvt,

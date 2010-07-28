@@ -171,6 +171,13 @@ psc_case_create(const char *case_name)
 {
   struct psc_case *Case = malloc(sizeof(*Case));
   Case->ops = psc_find_case(case_name);
+
+  size_t ctx_size = Case->ops->ctx_size;
+  if (ctx_size) {
+    Case->ctx = malloc(ctx_size);
+    memset(Case->ctx, 0, ctx_size);
+  }
+
   if (Case->ops->create) {
     Case->ops->create(Case);
   }
@@ -185,6 +192,7 @@ psc_case_destroy(struct psc_case *Case)
     Case->ops->destroy(Case);
   }
 
+  free(Case->ctx);
   free(Case);
 }
 

@@ -49,20 +49,10 @@ static struct param psc_harris_descr[] = {
 static void
 harris_create(struct psc_case *Case)
 {
-  struct psc_harris *harris = malloc(sizeof(*harris));
-  memset(harris, 0, sizeof(*harris));
+  struct psc_harris *harris = Case->ctx;
 
   params_parse_cmdline(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
   params_print(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
-
-  Case->ctx = harris;
-}
-
-static void
-harris_destroy(struct psc_case *Case)
-{
-  free(Case->ctx);
-  Case->ctx = NULL;
 }
 
 static void
@@ -191,8 +181,8 @@ harris_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_harris = {
   .name       = "harris",
+  .ctx_size   = sizeof(struct psc_harris),
   .create     = harris_create,
-  .destroy    = harris_destroy,
   .init_param = harris_init_param,
   .init_field = harris_init_field,
   .init_nvt   = harris_init_nvt,
