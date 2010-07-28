@@ -9,6 +9,8 @@ c OUT-ROUTINES AND MERGES THEM INTO GLOBAL DATA FILES!
       use PIC_variables
 
       implicit none
+      call MPI_INIT(info)
+      call INIT_basic
       call INIT_param
 
 
