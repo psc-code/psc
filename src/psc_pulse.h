@@ -3,6 +3,7 @@
 #define PSC_PULSE_H
 
 #include "psc.h"
+#include "util/params.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -23,15 +24,7 @@ struct psc_pulse {
   struct psc_pulse_ops *ops;
 };
 
-static inline struct psc_pulse *
-psc_pulse_create(size_t size, struct psc_pulse_ops *ops)
-{
-  struct psc_pulse *pulse = malloc(size);
-  memset(pulse, 0, size);
-  pulse->ops = ops;
-
-  return pulse;
-}
+struct psc_pulse *psc_pulse_create(size_t size, struct psc_pulse_ops *ops);
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_z1 // FIXME rename ->gauss
