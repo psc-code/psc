@@ -9,15 +9,15 @@
 
 // FIXME description
 
-struct psc_singlepart {
+struct singlepart {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct psc_singlepart, x)
+#define VAR(x) (void *)offsetof(struct singlepart, x)
 
-static struct param psc_singlepart_descr[] = {
+static struct param singlepart_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
@@ -87,7 +87,7 @@ static void
 singlepart_init_nvt(struct psc_case *Case, int kind, double x[3],
 		    double *q, double *m, double *n, double v[3], double T[3])
 {
-  struct psc_singlepart *singlepart = Case->ctx;
+  struct singlepart *singlepart = Case->ctx;
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 
@@ -137,8 +137,8 @@ singlepart_init_nvt(struct psc_case *Case, int kind, double x[3],
 
 struct psc_case_ops psc_case_ops_singlepart = {
   .name       = "singlepart",
-  .ctx_size   = sizeof(struct psc_singlepart),
-  .ctx_descr  = psc_singlepart_descr,
+  .ctx_size   = sizeof(struct singlepart),
+  .ctx_descr  = singlepart_descr,
   .init_param = singlepart_init_param,
   .init_field = singlepart_init_field,
   .init_nvt   = singlepart_init_nvt,

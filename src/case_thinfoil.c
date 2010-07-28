@@ -12,7 +12,7 @@
 //
 // FIXME description
 
-struct psc_thinfoil {
+struct thinfoil {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -22,9 +22,9 @@ struct psc_thinfoil {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct psc_thinfoil, x)
+#define VAR(x) (void *)offsetof(struct thinfoil, x)
 
-static struct param psc_thinfoil_descr[] = {
+static struct param thinfoil_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)     },
@@ -117,7 +117,7 @@ thinfoil_init_nvt(struct psc_case *Case,
 		  int kind, double x[3], double *q, double *m, double *n,
 		  double v[3], double T[3])
 {
-  struct psc_thinfoil *thinfoil = Case->ctx;
+  struct thinfoil *thinfoil = Case->ctx;
 
   real Te = thinfoil->Te, Ti = thinfoil->Ti;
 
@@ -177,8 +177,8 @@ thinfoil_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_thinfoil = {
   .name       = "thinfoil",
-  .ctx_size   = sizeof(struct psc_thinfoil),
-  .ctx_descr  = psc_thinfoil_descr,
+  .ctx_size   = sizeof(struct thinfoil),
+  .ctx_descr  = thinfoil_descr,
   .create     = thinfoil_create,
   .init_param = thinfoil_init_param,
   .init_field = thinfoil_init_field,

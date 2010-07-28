@@ -19,7 +19,7 @@
 
 // FIXME (description), below parameters don't include scaling factors
 
-struct psc_harris {
+struct harris {
   double BB;
   double nnb;
   double Te, Ti;
@@ -29,9 +29,9 @@ struct psc_harris {
   double pert;
 };
 
-#define VAR(x) (void *)offsetof(struct psc_harris, x)
+#define VAR(x) (void *)offsetof(struct harris, x)
 
-static struct param psc_harris_descr[] = {
+static struct param harris_descr[] = {
   { "BB"            , VAR(BB)              , PARAM_DOUBLE(1.)     },
   { "MMi"           , VAR(MMi)             , PARAM_DOUBLE(25.)    },
   { "nnb"           , VAR(nnb)             , PARAM_DOUBLE(.2)     },
@@ -49,7 +49,7 @@ static struct param psc_harris_descr[] = {
 static void
 harris_init_param(struct psc_case *Case)
 {
-  struct psc_harris *harris = Case->ctx;
+  struct harris *harris = Case->ctx;
 
   psc.prm.qq = 1.;
   psc.prm.mm = 1.;
@@ -94,7 +94,7 @@ harris_init_param(struct psc_case *Case)
 static void
 harris_init_field(struct psc_case *Case)
 {
-  struct psc_harris *harris = Case->ctx;
+  struct harris *harris = Case->ctx;
 
   double BB = harris->BB, MMi = harris->MMi;
   double LLx = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
@@ -131,7 +131,7 @@ harris_init_nvt(struct psc_case *Case,
 		int kind, double x[3], double *q, double *m, double *n,
 		double v[3], double T[3])
 {
-  struct psc_harris *harris = Case->ctx;
+  struct harris *harris = Case->ctx;
 
   double BB = harris->BB, MMi = harris->MMi;
   double LLz = harris->lz * sqrt(MMi);
@@ -172,8 +172,8 @@ harris_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_harris = {
   .name       = "harris",
-  .ctx_size   = sizeof(struct psc_harris),
-  .ctx_descr  = psc_harris_descr,
+  .ctx_size   = sizeof(struct harris),
+  .ctx_descr  = harris_descr,
   .init_param = harris_init_param,
   .init_field = harris_init_field,
   .init_nvt   = harris_init_nvt,

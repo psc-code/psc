@@ -9,7 +9,7 @@
 
 // FIXME description
 
-struct psc_wakefield {
+struct wakefield {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -19,9 +19,9 @@ struct psc_wakefield {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct psc_wakefield, x)
+#define VAR(x) (void *)offsetof(struct wakefield, x)
 
-static struct param psc_wakefield_descr[] = {
+static struct param wakefield_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.2)    },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)     },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.  * 1e-5)     },
@@ -115,7 +115,7 @@ wakefield_init_nvt(struct psc_case *Case,
 		   int kind, double x[3], double *q, double *m, double *n,
 		   double v[3], double T[3])
 {
-  struct psc_wakefield *wakefield = Case->ctx;
+  struct wakefield *wakefield = Case->ctx;
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 
@@ -175,8 +175,8 @@ wakefield_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_wakefield = {
   .name       = "wakefield",
-  .ctx_size   = sizeof(struct psc_wakefield),
-  .ctx_descr  = psc_wakefield_descr,
+  .ctx_size   = sizeof(struct wakefield),
+  .ctx_descr  = wakefield_descr,
   .create     = wakefield_create,
   .init_param = wakefield_init_param,
   .init_field = wakefield_init_field,

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-struct psc_langmuir {
+struct langmuir {
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
   double widthx, widthy, widthz; // width of transverse / longitudinal 
@@ -16,9 +16,9 @@ struct psc_langmuir {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct psc_langmuir, x)
+#define VAR(x) (void *)offsetof(struct langmuir, x)
 
-static struct param psc_langmuir_descr[] = {
+static struct param langmuir_descr[] = {
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.5  * 1e-6)     },
   { "y0"            , VAR(y0)              , PARAM_DOUBLE(.5  * 1e-6)     },
   { "z0"            , VAR(z0)              , PARAM_DOUBLE(10. * 1e-6)     },
@@ -38,10 +38,10 @@ static struct param psc_langmuir_descr[] = {
 static void
 langmuir_create(struct psc_case *Case)
 {
-  struct psc_langmuir *langmuir = Case->ctx;
+  struct langmuir *langmuir = Case->ctx;
 
-  params_parse_cmdline(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
-  params_print(langmuir, psc_langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
+  params_parse_cmdline(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
+  params_print(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
 }
 
 static void
@@ -49,7 +49,7 @@ langmuir_init_nvt(struct psc_case *Case,
 		  int kind, double x[3], double *q, double *m, double *n,
 		  double v[3], double T[3])
 {
-  struct psc_langmuir *langmuir = Case->ctx;
+  struct langmuir *langmuir = Case->ctx;
 
   real ld = psc.coeff.ld;
 
@@ -104,8 +104,8 @@ langmuir_init_nvt(struct psc_case *Case,
 
 struct psc_case_ops psc_case_ops_langmuir = {
   .name       = "langmuir",
-  .ctx_size   = sizeof(struct psc_langmuir),
-  .ctx_descr  = psc_langmuir_descr,
+  .ctx_size   = sizeof(struct langmuir),
+  .ctx_descr  = langmuir_descr,
   .create     = langmuir_create,
   .init_nvt   = langmuir_init_nvt,
 };
