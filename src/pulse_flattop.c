@@ -26,13 +26,6 @@ struct psc_p_pulse_z1_flattop {
 };
 
 static void
-psc_pulse_p_z1_flattop_destroy(struct psc_pulse *__pulse)
-{
-  struct psc_p_pulse_z1_flattop *pulse = (struct psc_p_pulse_z1_flattop *) __pulse;
-  free(pulse);
-}
-
-static void
 psc_pulse_p_z1_flattop_setup(struct psc_p_pulse_z1_flattop *pulse)
 {
   // normalization
@@ -73,7 +66,6 @@ psc_pulse_p_z1_flattop(struct psc_pulse *__pulse,
 
 struct psc_pulse_ops psc_pulse_ops_p_z1_flattop = {
   .name       = "p_z1_flattop",
-  .destroy    = psc_pulse_p_z1_flattop_destroy,
   .field      = psc_pulse_p_z1_flattop,
 };
 

@@ -51,13 +51,6 @@ struct psc_p_pulse_z1 {
 };
 
 static void
-psc_pulse_p_z1_short_destroy(struct psc_pulse *__pulse)
-{
-  struct psc_p_pulse_z1 *pulse = (struct psc_p_pulse_z1 *) __pulse;
-  free(pulse);
-}
-
-static void
 psc_pulse_p_z1_setup(struct psc_p_pulse_z1 *pulse)
 {
   // normalization
@@ -97,7 +90,6 @@ psc_pulse_p_z1_short_field(struct psc_pulse *__pulse,
 
 static struct psc_pulse_ops psc_pulse_ops_p_z1_short = {
   .name       = "p_z1_short",
-  .destroy    = psc_pulse_p_z1_short_destroy,
   .field      = psc_pulse_p_z1_short_field,
 };
 

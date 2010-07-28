@@ -25,6 +25,7 @@ struct psc_pulse {
 };
 
 struct psc_pulse *psc_pulse_create(size_t size, struct psc_pulse_ops *ops);
+void psc_pulse_destroy(struct psc_pulse *pulse);
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_z1 // FIXME rename ->gauss

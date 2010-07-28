@@ -11,3 +11,12 @@ psc_pulse_create(size_t size, struct psc_pulse_ops *ops)
   return pulse;
 }
 
+void
+psc_pulse_destroy(struct psc_pulse *pulse)
+{
+  if (pulse->ops->destroy) {
+    pulse->ops->destroy(pulse);
+  }
+
+  free(pulse);
+}
