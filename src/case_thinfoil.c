@@ -113,9 +113,8 @@ thinfoil_init_field(struct psc_case *Case)
 }
 
 static void
-thinfoil_init_nvt(struct psc_case *Case,
-		  int kind, double x[3], double *q, double *m, double *n,
-		  double v[3], double T[3])
+thinfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
+		  struct psc_particle_npt *npt)
 {
   struct thinfoil *thinfoil = Case->ctx;
 
@@ -149,26 +148,26 @@ thinfoil_init_nvt(struct psc_case *Case,
 
   switch (kind) {
   case 0: // electrons
-    *q = -1.;
-    *m = 1.;
-    *n = dens;
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = 0.;
-    T[0] = Te;
-    T[1] = Te;
-    T[2] = Te;
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = dens;
+    npt->p[0] = 0.;
+    npt->p[1] = 0.;
+    npt->p[2] = 0.;
+    npt->T[0] = Te;
+    npt->T[1] = Te;
+    npt->T[2] = Te;
     break;
   case 1: // ions
-    *q = 1.;
-    *m = thinfoil->mass_ratio;
-    *n = dens;
-    v[0] = 0.;
-    v[1] = 0.;
-    v[2] = 0.;
-    T[0] = Ti;
-    T[1] = Ti;
-    T[2] = Ti;
+    npt->q = 1.;
+    npt->m = thinfoil->mass_ratio;
+    npt->n = dens;
+    npt->p[0] = 0.;
+    npt->p[1] = 0.;
+    npt->p[2] = 0.;
+    npt->T[0] = Ti;
+    npt->T[1] = Ti;
+    npt->T[2] = Ti;
     break;
   default:
     assert(0);
@@ -182,5 +181,5 @@ struct psc_case_ops psc_case_ops_thinfoil = {
   .create     = thinfoil_create,
   .init_param = thinfoil_init_param,
   .init_field = thinfoil_init_field,
-  .init_nvt   = thinfoil_init_nvt,
+  .init_npt   = thinfoil_init_npt,
 };

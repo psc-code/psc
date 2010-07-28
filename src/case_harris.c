@@ -127,9 +127,8 @@ harris_init_field(struct psc_case *Case)
 }
 
 static void
-harris_init_nvt(struct psc_case *Case,
-		int kind, double x[3], double *q, double *m, double *n,
-		double v[3], double T[3])
+harris_init_npt(struct psc_case *Case, int kind, double x[3],
+		struct psc_particle_npt *npt)
 {
   struct harris *harris = Case->ctx;
 
@@ -144,26 +143,26 @@ harris_init_nvt(struct psc_case *Case,
 
   switch (kind) {
   case 0: // electrons
-    *q = -1.;
-    *m = 1.;
-    *n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
-    v[0] = 0.;
-    v[1] = - 2. * TTe / BB / LLL * jy0 / *n;
-    v[2] = 0.;
-    T[0] = TTe;
-    T[1] = TTe;
-    T[2] = TTe;
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    npt->p[0] = 0.;
+    npt->p[1] = - 2. * TTe / BB / LLL * jy0 / npt->n;
+    npt->p[2] = 0.;
+    npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
     break;
   case 1: // ions
-    *q = 1.;
-    *m = harris->MMi;
-    *n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
-    v[0] = 0.;
-    v[1] = 2. * TTi / BB / LLL * jy0 / *n;
-    v[2] = 0.;
-    T[0] = TTi;
-    T[1] = TTi;
-    T[2] = TTi;
+    npt->q = 1.;
+    npt->m = harris->MMi;
+    npt->n = nnb + 1./sqr(cosh((x[2]-0.5*LLz)/LLL)) + 1./sqr(cosh((x[2]-1.5*LLz)/LLL));
+    npt->p[0] = 0.;
+    npt->p[1] = 2. * TTi / BB / LLL * jy0 / npt->n;
+    npt->p[2] = 0.;
+    npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
     break;
   default:
     assert(0);
@@ -176,5 +175,5 @@ struct psc_case_ops psc_case_ops_harris = {
   .ctx_descr  = harris_descr,
   .init_param = harris_init_param,
   .init_field = harris_init_field,
-  .init_nvt   = harris_init_nvt,
+  .init_npt   = harris_init_npt,
 };

@@ -4,6 +4,14 @@
 
 #include "psc.h"
 
+struct psc_particle_npt {
+  double q; ///< charge
+  double m; ///< mass
+  double n; ///< density
+  double p[3]; ///< momentum
+  double T[3]; ///< temperature
+};
+
 /////////////////////////////////////////////////////////////////////////
 /// Physics cases (initial conditions and other parameters).
 ///
@@ -43,9 +51,8 @@ struct psc_case_ops {
   void (*destroy)(struct psc_case *); ///< Funtion to cleanup environment.
   void (*init_param)(struct psc_case *); ///< Initialize simulation parameters based on case.
   void (*init_field)(struct psc_case *); ///< Initialize fields relevant to case.
-  void (*init_nvt)(struct psc_case *,
-		   int kind, double x[3], double *q, double *m, double *n,
-		   double v[3], double T[3]);
+  void (*init_npt)(struct psc_case *, int kind, double x[3],
+		   struct psc_particle_npt *npt);
 };
 
 struct psc_case {
@@ -73,10 +80,10 @@ psc_case_init_field(struct psc_case *Case)
 }
 
 static inline void
-psc_case_init_nvt(struct psc_case *Case, int kind, double xx[3],
-		  double *q, double *m, double *n, double v[3], double T[3])
+psc_case_init_npt(struct psc_case *Case, int kind, double xx[3],
+		  struct psc_particle_npt *npt)
 {
-  Case->ops->init_nvt(Case, kind, xx, q, m, n, v, T);
+  Case->ops->init_npt(Case, kind, xx, npt);
 }
 
 #endif

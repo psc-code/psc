@@ -71,10 +71,10 @@ init_partition(int *n_part)
 	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  double q, m, n, v[3], T[3];
+	  struct psc_particle_npt npt;
+	  psc_case_init_npt(psc.Case, kind, xx, &npt);
 
-	  psc_case_init_nvt(psc.Case, kind, xx, &q, &m, &n, v, T);
-	  int n_in_cell = get_n_in_cell(n);
+	  int n_in_cell = get_n_in_cell(npt.n);
 	  np += n_in_cell;
 	}
       }
@@ -96,10 +96,10 @@ init_particles()
 	for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
-	  double q, m, n, v[3], T[3];
-	  psc_case_init_nvt(psc.Case, kind, xx, &q, &m, &n, v, T);
+	  struct psc_particle_npt npt;
+	  psc_case_init_npt(psc.Case, kind, xx, &npt);
 
-	  int n_in_cell = get_n_in_cell(n);
+	  int n_in_cell = get_n_in_cell(npt.n);
 	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	    struct f_particle *p = &psc.f_part[i++];
 
@@ -112,14 +112,14 @@ init_particles()
 	    float ran6 = random() / ((float) RAND_MAX + 1);
 	    
 	    float px =
-	      sqrtf(-2.f*T[0]/m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-	      + v[0];
+	      sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
+	      + npt.p[0];
 	    float py =
-	      sqrtf(-2.f*T[1]/m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-	      + v[1];
+	      sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
+	      + npt.p[1];
 	    float pz =
-  	      sqrtf(-2.f*T[2]/m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-	      + v[2];
+  	      sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
+	      + npt.p[2];
 	    
 	    p->xi = xx[0];
 	    p->yi = xx[1];
@@ -127,13 +127,13 @@ init_particles()
 	    p->pxi = px;
 	    p->pyi = py;
 	    p->pzi = pz;
-	    p->qni = q;
-	    p->mni = m;
+	    p->qni = npt.q;
+	    p->mni = npt.m;
 	    p->lni = -1; // FIXME?
 	    if (psc.prm.fortran_particle_weight_hack) {
-	      p->wni = n;
+	      p->wni = npt.n;
 	    } else {
-	      p->wni = n / (n_in_cell * psc.coeff.cori);
+	      p->wni = npt.n / (n_in_cell * psc.coeff.cori);
 	    }
 	  }
 	}

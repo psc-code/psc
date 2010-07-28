@@ -45,9 +45,8 @@ langmuir_create(struct psc_case *Case)
 }
 
 static void
-langmuir_init_nvt(struct psc_case *Case, 
-		  int kind, double x[3], double *q, double *m, double *n,
-		  double v[3], double T[3])
+langmuir_init_npt(struct psc_case *Case, int kind, double x[3],
+		  struct psc_particle_npt *npt)
 {
   struct langmuir *langmuir = Case->ctx;
 
@@ -81,25 +80,25 @@ langmuir_init_nvt(struct psc_case *Case,
   real dens = (.99 + .01 * cos(ld * kk * x[2])) * mask;
   switch (kind) {
   case 0: // electrons
-    *q = -1.;
-    *m = 1.;
-    *n = dens;
-    T[2] = .05;
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = dens;
+    npt->T[2] = .05;
     break;
   case 1: // ions
-    *q = 1.;
-    *m = langmuir->mass_ratio;
-    *n = dens;
-    T[2] = 0.;
+    npt->q = 1.;
+    npt->m = langmuir->mass_ratio;
+    npt->n = dens;
+    npt->T[2] = 0.;
     break;
   default:
     assert(0);
   }
-  v[0] = 0.;
-  v[1] = 0.;
-  v[2] = 0.;
-  T[0] = 0.;
-  T[1] = 0.;
+  npt->p[0] = 0.;
+  npt->p[1] = 0.;
+  npt->p[2] = 0.;
+  npt->T[0] = 0.;
+  npt->T[1] = 0.;
 }
 
 struct psc_case_ops psc_case_ops_langmuir = {
@@ -107,5 +106,5 @@ struct psc_case_ops psc_case_ops_langmuir = {
   .ctx_size   = sizeof(struct langmuir),
   .ctx_descr  = langmuir_descr,
   .create     = langmuir_create,
-  .init_nvt   = langmuir_init_nvt,
+  .init_npt   = langmuir_init_npt,
 };
