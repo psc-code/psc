@@ -43,11 +43,6 @@ static struct param psc_wakefield_descr[] = {
 static void
 wakefield_create(struct psc_case *Case)
 {
-  struct psc_wakefield *wakefield = Case->ctx;
-
-  params_parse_cmdline(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
-  params_print(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
-
   struct psc_p_pulse_z1_param prm = {
     .xm  = 20. * 1e-6,
     .ym  = 20. * 1e-6,
@@ -181,6 +176,7 @@ wakefield_init_nvt(struct psc_case *Case,
 struct psc_case_ops psc_case_ops_wakefield = {
   .name       = "wakefield",
   .ctx_size   = sizeof(struct psc_wakefield),
+  .ctx_descr  = psc_wakefield_descr,
   .create     = wakefield_create,
   .init_param = wakefield_init_param,
   .init_field = wakefield_init_field,

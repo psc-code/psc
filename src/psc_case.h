@@ -38,6 +38,7 @@ struct psc_case;
 struct psc_case_ops {
   const char *name; ///< Name of case.
   size_t ctx_size; ///< Size of private context (e.g., for parameters)
+  struct param *ctx_descr; ///< Description of user-settable parameters
   void (*create)(struct psc_case *); ///< Function to set up needed environment.
   void (*destroy)(struct psc_case *); ///< Funtion to cleanup environment.
   void (*init_param)(struct psc_case *); ///< Initialize simulation parameters based on case.

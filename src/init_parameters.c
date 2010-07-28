@@ -178,6 +178,14 @@ psc_case_create(const char *case_name)
     memset(Case->ctx, 0, ctx_size);
   }
 
+  struct param *ctx_descr = Case->ops->ctx_descr;
+  if (ctx_descr) {
+    char cn[strlen(case_name) + 6];
+    sprintf(cn, "case %s", case_name);
+    params_parse_cmdline(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+    params_print(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+  }
+
   if (Case->ops->create) {
     Case->ops->create(Case);
   }

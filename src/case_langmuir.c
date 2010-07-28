@@ -105,6 +105,7 @@ langmuir_init_nvt(struct psc_case *Case,
 struct psc_case_ops psc_case_ops_langmuir = {
   .name       = "langmuir",
   .ctx_size   = sizeof(struct psc_langmuir),
+  .ctx_descr  = psc_langmuir_descr,
   .create     = langmuir_create,
   .init_nvt   = langmuir_init_nvt,
 };

@@ -47,15 +47,6 @@ static struct param psc_harris_descr[] = {
 #undef VAR
 
 static void
-harris_create(struct psc_case *Case)
-{
-  struct psc_harris *harris = Case->ctx;
-
-  params_parse_cmdline(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
-  params_print(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
-}
-
-static void
 harris_init_param(struct psc_case *Case)
 {
   struct psc_harris *harris = Case->ctx;
@@ -182,7 +173,7 @@ harris_init_nvt(struct psc_case *Case,
 struct psc_case_ops psc_case_ops_harris = {
   .name       = "harris",
   .ctx_size   = sizeof(struct psc_harris),
-  .create     = harris_create,
+  .ctx_descr  = psc_harris_descr,
   .init_param = harris_init_param,
   .init_field = harris_init_field,
   .init_nvt   = harris_init_nvt,

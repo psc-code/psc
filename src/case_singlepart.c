@@ -30,15 +30,6 @@ static struct param psc_singlepart_descr[] = {
 #undef VAR
 
 static void
-singlepart_create(struct psc_case *Case)
-{
-  struct psc_singlepart *singlepart = Case->ctx;
-
-  params_parse_cmdline(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
-  params_print(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
-}
-
-static void
 singlepart_init_param(struct psc_case *Case)
 {
   psc.prm.nmax = 1000;
@@ -147,7 +138,7 @@ singlepart_init_nvt(struct psc_case *Case, int kind, double x[3],
 struct psc_case_ops psc_case_ops_singlepart = {
   .name       = "singlepart",
   .ctx_size   = sizeof(struct psc_singlepart),
-  .create     = singlepart_create,
+  .ctx_descr  = psc_singlepart_descr,
   .init_param = singlepart_init_param,
   .init_field = singlepart_init_field,
   .init_nvt   = singlepart_init_nvt,
