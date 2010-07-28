@@ -192,9 +192,9 @@ init_case()
     if (psc.Case->ops->create) {
       psc.Case->ops->create();
     }
-    if (psc.Case->ops->init_param) {
-      psc.Case->ops->init_param();
-    }
+  }
+  if (psc.Case) {
+    psc_case_init_param(psc.Case);
   }
 }
 

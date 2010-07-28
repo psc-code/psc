@@ -73,7 +73,7 @@ init_partition(int *n_part)
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
 	  double q, m, n, v[3], T[3];
 
-	  psc.Case->ops->init_nvt(kind, xx, &q, &m, &n, v, T);
+	  psc_case_init_nvt(psc.Case, kind, xx, &q, &m, &n, v, T);
 	  int n_in_cell = get_n_in_cell(n);
 	  np += n_in_cell;
 	}
@@ -97,7 +97,7 @@ init_particles()
 	  double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	  double xx[3] = { jx * dx, jy * dy, jz * dz };
 	  double q, m, n, v[3], T[3];
-	  psc.Case->ops->init_nvt(kind, xx, &q, &m, &n, v, T);
+	  psc_case_init_nvt(psc.Case, kind, xx, &q, &m, &n, v, T);
 
 	  int n_in_cell = get_n_in_cell(n);
 	  for (int cnt = 0; cnt < n_in_cell; cnt++) {

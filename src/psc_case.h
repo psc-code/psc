@@ -47,5 +47,28 @@ struct psc_case {
   struct psc_case_ops *ops;
 };
 
+static inline void
+psc_case_init_param(struct psc_case *Case)
+{
+  if (Case->ops->init_param) {
+    Case->ops->init_param();
+  }
+}
+
+static inline void
+psc_case_init_field(struct psc_case *Case)
+{
+  if (Case->ops->init_field) {
+    Case->ops->init_field();
+  }
+}
+
+static inline void
+psc_case_init_nvt(struct psc_case *Case, int kind, double xx[3],
+		  double *q, double *m, double *n, double v[3], double T[3])
+{
+  Case->ops->init_nvt(kind, xx, q, m, n, v, T);
+}
+
 #endif
 
