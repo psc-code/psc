@@ -172,10 +172,20 @@ psc_case_create(const char *case_name)
   struct psc_case *Case = malloc(sizeof(*Case));
   Case->ops = psc_find_case(case_name);
   if (Case->ops->create) {
-    Case->ops->create();
+    Case->ops->create(Case);
   }
   
   return Case;
+}
+
+void
+psc_case_destroy(struct psc_case *Case)
+{
+  if (Case->ops->destroy) {
+    Case->ops->destroy(Case);
+  }
+
+  free(Case);
 }
 
 struct par_case {

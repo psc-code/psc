@@ -30,7 +30,7 @@ static struct param psc_singlepart_descr[] = {
 #undef VAR
 
 static void
-singlepart_create()
+singlepart_create(struct psc_case *Case)
 {
   struct psc_singlepart *singlepart = malloc(sizeof(*singlepart));
   memset(singlepart, 0, sizeof(*singlepart));
@@ -38,18 +38,18 @@ singlepart_create()
   params_parse_cmdline(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
   params_print(singlepart, psc_singlepart_descr, "PSC Singlepart", MPI_COMM_WORLD);
 
-  psc.Case->ctx = singlepart;
+  Case->ctx = singlepart;
 }
 
 static void
-singlepart_destroy()
+singlepart_destroy(struct psc_case *Case)
 {
-  free(psc.Case->ctx);
-  psc.Case->ctx = NULL;
+  free(Case->ctx);
+  Case->ctx = NULL;
 }
 
 static void
-singlepart_init_param()
+singlepart_init_param(struct psc_case *Case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -85,7 +85,7 @@ singlepart_init_param()
 }
 
 static void
-singlepart_init_field(void)
+singlepart_init_field(struct psc_case *Case)
 {
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -103,10 +103,10 @@ singlepart_init_field(void)
 }
 
 static void
-singlepart_init_nvt(int kind, double x[3], double *q, double *m, double *n,
-		    double v[3], double T[3])
+singlepart_init_nvt(struct psc_case *Case, int kind, double x[3],
+		    double *q, double *m, double *n, double v[3], double T[3])
 {
-  struct psc_singlepart *singlepart = psc.Case->ctx;
+  struct psc_singlepart *singlepart = Case->ctx;
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 

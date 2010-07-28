@@ -47,7 +47,7 @@ static struct param psc_harris_descr[] = {
 #undef VAR
 
 static void
-harris_create()
+harris_create(struct psc_case *Case)
 {
   struct psc_harris *harris = malloc(sizeof(*harris));
   memset(harris, 0, sizeof(*harris));
@@ -55,20 +55,20 @@ harris_create()
   params_parse_cmdline(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
   params_print(harris, psc_harris_descr, "PSC Harris", MPI_COMM_WORLD);
 
-  psc.Case->ctx = harris;
+  Case->ctx = harris;
 }
 
 static void
-harris_destroy()
+harris_destroy(struct psc_case *Case)
 {
-  free(psc.Case->ctx);
-  psc.Case->ctx = NULL;
+  free(Case->ctx);
+  Case->ctx = NULL;
 }
 
 static void
-harris_init_param()
+harris_init_param(struct psc_case *Case)
 {
-  struct psc_harris *harris = psc.Case->ctx;
+  struct psc_harris *harris = Case->ctx;
 
   psc.prm.qq = 1.;
   psc.prm.mm = 1.;
@@ -111,9 +111,9 @@ harris_init_param()
 }
 
 static void
-harris_init_field(void)
+harris_init_field(struct psc_case *Case)
 {
-  struct psc_harris *harris = psc.Case->ctx;
+  struct psc_harris *harris = Case->ctx;
 
   double BB = harris->BB, MMi = harris->MMi;
   double LLx = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
@@ -146,10 +146,11 @@ harris_init_field(void)
 }
 
 static void
-harris_init_nvt(int kind, double x[3], double *q, double *m, double *n,
+harris_init_nvt(struct psc_case *Case,
+		int kind, double x[3], double *q, double *m, double *n,
 		double v[3], double T[3])
 {
-  struct psc_harris *harris = psc.Case->ctx;
+  struct psc_harris *harris = Case->ctx;
 
   double BB = harris->BB, MMi = harris->MMi;
   double LLz = harris->lz * sqrt(MMi);

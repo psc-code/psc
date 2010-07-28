@@ -44,7 +44,7 @@ static struct param psc_thinfoil_descr[] = {
 #undef VAR
 
 static void
-thinfoil_create()
+thinfoil_create(struct psc_case *Case)
 {
   struct psc_thinfoil *thinfoil = malloc(sizeof(*thinfoil));
   memset(thinfoil, 0, sizeof(*thinfoil));
@@ -52,7 +52,7 @@ thinfoil_create()
   params_parse_cmdline(thinfoil, psc_thinfoil_descr, "PSC Thinfoil", MPI_COMM_WORLD);
   params_print(thinfoil, psc_thinfoil_descr, "PSC Thinfoil", MPI_COMM_WORLD);
 
-  psc.Case->ctx = thinfoil;
+  Case->ctx = thinfoil;
 
   struct psc_p_pulse_z1_flattop_param prm = {
     .xm = .01   * 1e-6,
@@ -67,14 +67,14 @@ thinfoil_create()
 }
 
 static void
-thinfoil_destroy()
+thinfoil_destroy(struct psc_case *Case)
 {
-  free(psc.Case->ctx);
-  psc.Case->ctx = NULL;
+  free(Case->ctx);
+  Case->ctx = NULL;
 }
 
 static void
-thinfoil_init_param()
+thinfoil_init_param(struct psc_case *Case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -110,7 +110,7 @@ thinfoil_init_param()
 }
 
 static void
-thinfoil_init_field(void)
+thinfoil_init_field(struct psc_case *Case)
 {
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -128,10 +128,11 @@ thinfoil_init_field(void)
 }
 
 static void
-thinfoil_init_nvt(int kind, double x[3], double *q, double *m, double *n,
-		double v[3], double T[3])
+thinfoil_init_nvt(struct psc_case *Case,
+		  int kind, double x[3], double *q, double *m, double *n,
+		  double v[3], double T[3])
 {
-  struct psc_thinfoil *thinfoil = psc.Case->ctx;
+  struct psc_thinfoil *thinfoil = Case->ctx;
 
   real Te = thinfoil->Te, Ti = thinfoil->Ti;
 

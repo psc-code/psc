@@ -41,7 +41,7 @@ static struct param psc_wakefield_descr[] = {
 #undef VAR
 
 static void
-wakefield_create()
+wakefield_create(struct psc_case *Case)
 {
   struct psc_wakefield *wakefield = malloc(sizeof(*wakefield));
   memset(wakefield, 0, sizeof(*wakefield));
@@ -49,7 +49,7 @@ wakefield_create()
   params_parse_cmdline(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
   params_print(wakefield, psc_wakefield_descr, "PSC Wakefield", MPI_COMM_WORLD);
 
-  psc.Case->ctx = wakefield;
+  Case->ctx = wakefield;
 
   struct psc_p_pulse_z1_param prm = {
     .xm  = 20. * 1e-6,
@@ -63,14 +63,14 @@ wakefield_create()
 }
 
 static void
-wakefield_destroy()
+wakefield_destroy(struct psc_case *Case)
 {
-  free(psc.Case->ctx);
-  psc.Case->ctx = NULL;
+  free(Case->ctx);
+  Case->ctx = NULL;
 }
 
 static void
-wakefield_init_param()
+wakefield_init_param(struct psc_case *Case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -106,7 +106,7 @@ wakefield_init_param()
 }
 
 static void
-wakefield_init_field(void)
+wakefield_init_field(struct psc_case *Case)
 {
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -126,10 +126,11 @@ wakefield_init_field(void)
 }
 
 static void
-wakefield_init_nvt(int kind, double x[3], double *q, double *m, double *n,
-		double v[3], double T[3])
+wakefield_init_nvt(struct psc_case *Case,
+		   int kind, double x[3], double *q, double *m, double *n,
+		   double v[3], double T[3])
 {
-  struct psc_wakefield *wakefield = psc.Case->ctx;
+  struct psc_wakefield *wakefield = Case->ctx;
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 
