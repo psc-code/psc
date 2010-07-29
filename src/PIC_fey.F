@@ -192,9 +192,9 @@ c UPDATING LOCAL BOUNDARY e4
      &       pos_y1.ne.0.0.and.pos_y1.lt.n*dt)) then
             do i2 = i2mn-rd2,i2mn+thick
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *((thick+1-i2)*dy/deltay)**pml
+     &              *((thick+1-(i2-i2mn))*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              ((thick+1-i2)*dy/deltay)**pml
+     &              ((thick+1-(i2-i2mn))*dy/deltay)**pml
                cyp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                cym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                fby(i2) = 2*eps0*kappay(i2)
@@ -205,9 +205,9 @@ c UPDATING LOCAL BOUNDARY e4
 
             do i2 = i2mn-rd2,i2mn+thick
                kappay(i2) = 1.0 + (kappay_max-1.0)
-     &              *((thick+1-(i2+0.5))*dy/deltay)**pml
+     &              *((thick+1-(i2-i2mn+0.5))*dy/deltay)**pml
                sigmay(i2) = sigmay_max*
-     &              ((thick+1-(i2+0.5))*dy/deltay)**pml
+     &              ((thick+1-(i2-i2mn+0.5))*dy/deltay)**pml
                byp(i2) = 2*eps0*kappay(i2)+sigmay(i2)*dt
                bym(i2) = 2*eps0*kappay(i2)-sigmay(i2)*dt
                gby(i2) = 2*eps0*kappay(i2)

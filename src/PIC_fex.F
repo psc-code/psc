@@ -190,9 +190,9 @@ c UPDATING LOCAL BOUNDARY e1
      &       pos_x1.ne.0.0.and.pos_x1.lt.n*dt)) then
             do i1 = i1mn-rd1,i1mn+thick
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *((thick+1-i1)*dx/deltax)**pml
+     &              *((thick+1-(i1-i1mn))*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              ((thick+1-i1)*dx/deltax)**pml
+     &              ((thick+1-(i1-i1mn))*dx/deltax)**pml
                cxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                cxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                fbx(i1) = 2*eps0*kappax(i1)
@@ -203,9 +203,9 @@ c UPDATING LOCAL BOUNDARY e1
 
             do i1 = i1mn-rd1,i1mn+thick
                kappax(i1) = 1.0 + (kappax_max-1.0)
-     &              *((thick+1-(i1+0.5))*dx/deltax)**pml
+     &              *((thick+1-(i1-i1mn+0.5))*dx/deltax)**pml
                sigmax(i1) = sigmax_max*
-     &              ((thick+1-(i1+0.5))*dx/deltax)**pml
+     &              ((thick+1-(i1-i1mn+0.5))*dx/deltax)**pml
                bxp(i1) = 2*eps0*kappax(i1)+sigmax(i1)*dt
                bxm(i1) = 2*eps0*kappax(i1)-sigmax(i1)*dt
                gbx(i1) = 2*eps0*kappax(i1)
