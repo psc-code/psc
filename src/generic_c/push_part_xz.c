@@ -15,12 +15,12 @@ genc_push_part_xz()
   }
   prof_start(pr);
 
-#define S0X(off) s0x[off+1]
-#define S0Z(off) s0z[off+1]
+#define S0X(off) s0x[off+2]
+#define S0Z(off) s0z[off+2]
 #define S1X(off) s1x[off+2]
 #define S1Z(off) s1z[off+2]
 
-  creal s0x[3], s0z[3], s1x[5], s1z[5];
+  creal s0x[5] = {}, s0z[5] = {}, s1x[5], s1z[5];
 
   struct psc_genc *genc = psc.c_ctx;
 
@@ -244,18 +244,20 @@ genc_push_part_xz()
       l3min = -1; l3max = +2;
     }
 
-    creal jxh[6][5][5] = {};
-    creal jyh[5][6][5] = {};
-    creal jzh[5][5][6] = {};
+    creal jxh;
+    creal jyh;
+    creal jzh[5];
 
-#define JXH(i,j,k) jxh[i+3][j+2][k+2]
-#define JYH(i,j,k) jyh[i+2][j+3][k+2]
-#define JZH(i,j,k) jzh[i+2][j+2][k+3]
+#define JZH(i) jzh[i+2]
 
     creal fnqx = part->qni * part->wni * fnqxs;
     creal fnqy = vyi * part->qni * part->wni * fnqs;
     creal fnqz = part->qni * part->wni * fnqzs;
+    for (int l1 = l1min; l1 <= l1max; l1++) {
+      JZH(l1) = 0.f;
+    }
     for (int l3 = l3min; l3 <= l3max; l3++) {
+      jxh = 0.f;
       for (int l1 = l1min; l1 <= l1max; l1++) {
 	creal wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
 	creal wy = S0X(l1) * S0Z(l3)
@@ -264,13 +266,13 @@ genc_push_part_xz()
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
 	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 
-	JXH(l1,0,l3) = JXH(l1-1,0,l3)-fnqx*wx;
-	JYH(l1,0,l3) = fnqy*wy;
-	JZH(l1,0,l3) = JZH(l1,0,l3-1)-fnqz*wz;
+	jxh -= fnqx*wx;
+	jyh = fnqy*wy;
+	JZH(l1) = JZH(l1)-fnqz*wz;
 
-	F3(JXI, j1+l1,j2,j3+l3) += JXH(l1,0,l3);
-	F3(JYI, j1+l1,j2,j3+l3) += JYH(l1,0,l3);
-	F3(JZI, j1+l1,j2,j3+l3) += JZH(l1,0,l3);
+	F3(JXI, j1+l1,j2,j3+l3) += jxh;
+	F3(JYI, j1+l1,j2,j3+l3) += jyh;
+	F3(JZI, j1+l1,j2,j3+l3) += JZH(l1);
       }
     }
   }
