@@ -46,6 +46,9 @@ out['decZ'] = array( [1.0*decZ] )
 # data to end up with.  1 or 0 indicates whether you want to keep it
 # Order reflects order of their output in OUT_fields.f, so is important
 field = [
+  {'name' : 'ne',   'keep' : 1},
+  {'name' : 'ni',   'keep' : 1},
+  {'name' : 'nn',   'keep' : 1},
   {'name' : 'ex',   'keep' : 1},
   {'name' : 'ey',   'keep' : 1},
   {'name' : 'ez',   'keep' : 1},
@@ -138,12 +141,12 @@ for k in range(len(ts)):
         r3_ind = arange(r3n, r3x, decZ)
 
         # which fields were written to the data file... PSC dowrite_* vars
-        for j in range(21):
+        for j in range(24):
            field[j]['wrote'] = unpack( LB + 'c', f.read(1) )[0]
 
         # Can now initialize out field matrices 
         if k == 0 and pe == 0:
-            for j in range(21):
+            for j in range(24):
                 if field[j]['wrote'] and field[j]['keep']:
                     out[field[j]['name']] = zeros( (len(ts), len(r1_ind), 
                                                    len(r2_ind), len(r3_ind)) )
@@ -152,7 +155,7 @@ for k in range(len(ts)):
         # Temporary field matrices (pre decimation)
         if pe == 0:
            tmp = {}
-           for j in range(21):
+           for j in range(24):
                if field[j]['wrote'] and field[j]['keep']:
                    tmp[field[j]['name']] = zeros( (r1x-r1n, 
                                                r2x-r2n, r3x-r3n) )
@@ -189,7 +192,7 @@ for k in range(len(ts)):
             t_i3a = i3a - r3n;
             t_i3e = i3e - r3n;      
 
-            for j in range(21):
+            for j in range(24):
                 if field[j]['wrote']:
 
                     datachunk = array(unpack( LB + '%df' % Ndata, f.read(4*Ndata)));
@@ -215,7 +218,7 @@ for k in range(len(ts)):
     # end for each proc
 
     # assemble out from tmp
-    for j in range(21):
+    for j in range(24):
        if field[j]['wrote'] and field[j]['keep']:
            if meanDec==1:
                out[field[j]['name']][k,:,:,:] =  \
