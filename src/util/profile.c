@@ -180,3 +180,39 @@ prof_print()
 {
   prof_print_file(stdout);
 }
+
+void
+prof_print_mpi(MPI_Comm comm)
+{
+  float times[nr_prof_data], times_avg[nr_prof_data];
+  float times_min[nr_prof_data], times_max[nr_prof_data];
+
+  for (int pr = 0; pr < nr_prof_data; pr++) {
+    struct prof_info *pinfo = &prof_globals.info[pr];
+    times[pr] = pinfo->time / 1e3;
+  }
+
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  MPI_Reduce(times, times_avg, nr_prof_data, MPI_FLOAT, MPI_SUM, 0, comm);
+  MPI_Reduce(times, times_min, nr_prof_data, MPI_FLOAT, MPI_MIN, 0, comm);
+  MPI_Reduce(times, times_max, nr_prof_data, MPI_FLOAT, MPI_MAX, 0, comm);
+
+  if (rank == 0) {
+    printf("%19s %10s %10s %10s\n", "", "avg", "min", "max");
+    for (int pr = 0; pr < nr_prof_data; pr++) {
+      times_avg[pr] /= size;
+      
+      printf("%-19s %10.2f %10.2f %10.2f\n", prof_data[pr].name, times_avg[pr],
+	     times_min[pr], times_max[pr]);
+    }
+  }
+
+  for (int pr = 0; pr < nr_prof_data; pr++) {
+    struct prof_info *pinfo = &prof_globals.info[pr];
+    pinfo->time = 0.;
+    pinfo->cnt = 0;
+  }
+}

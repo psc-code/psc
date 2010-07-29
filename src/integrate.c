@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "util/profile.h"
 
 // ======================================================================
 // simple statistics
@@ -80,12 +81,18 @@ void SETUP_field_F77(void);
 void
 psc_integrate()
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("psc_step", 1., 0, 0);
+  }
+
   ALLOC_field_fortran_F77();
   SETUP_field_F77();
 
   double stats[NR_STATS];
 
   for (; psc.timestep < psc.prm.nmax; psc.timestep++) {
+    prof_start(pr);
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_RANDOMIZE);
@@ -130,5 +137,7 @@ psc_integrate()
     time_stop(STAT_TIME_STEP);
     psc_log_step(stats);
     // FIXME, check whether cpu time expired?
+    prof_stop(pr);
+    prof_print_mpi(MPI_COMM_WORLD);
   }
 }

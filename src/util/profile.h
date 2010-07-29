@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <mpi.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -120,5 +121,6 @@ EXTERN_C void prof_init(void);
 EXTERN_C int  prof_register(const char *name, float simd, int flops, int bytes);
 EXTERN_C void prof_print(void);
 EXTERN_C void prof_print_file(FILE *f);
+EXTERN_C void prof_print_mpi(MPI_Comm comm);
 
 #endif
