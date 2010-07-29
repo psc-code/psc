@@ -142,7 +142,7 @@ for k in range(len(ts)):
 
         # which fields were written to the data file... PSC dowrite_* vars
         for j in range(24):
-           field[j]['wrote'] = unpack( LB + 'c', f.read(1) )[0]
+           field[j]['wrote'] = (unpack( LB + 'c', f.read(1) )[0] == '\x01')
 
         # Can now initialize out field matrices 
         if k == 0 and pe == 0:
