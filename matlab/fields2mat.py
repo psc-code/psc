@@ -78,11 +78,11 @@ field = [
 for k in range(len(ts)):
     print ts[k]
     for pe in range(npe):
-        filename = '%s/%cfd_%03d_%07d.psc' % ( datadir, PT, pe, ts[k] )
+        filename = '%s/%cfd_%06d_%07d.psc' % ( datadir, PT, pe, ts[k] )
 
         # no tfield at t = 0!
         if ts[k] == 0:
-           filename = '%s/pfd_%03d_%07d.psc' % ( datadir, pe, ts[k] )
+           filename = '%s/pfd_%06d_%07d.psc' % ( datadir, pe, ts[k] )
 
 #        print filename
         f = open(filename);
