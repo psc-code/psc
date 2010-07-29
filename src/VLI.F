@@ -52,9 +52,9 @@ c The real VLI main
       call ALLOC_field
       call ALLOC_field_fortran
       call INIT_field
+      call SETUP_field
 #endif
 
-      call SETUP_field
 c      call INIT_MCC
 
       call PSC_driver
