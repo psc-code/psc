@@ -59,18 +59,20 @@ AS_IF([test "x$have_papi" != "xyes"],
 AH_TEMPLATE([USE_PML], [enable perfectly matched layer code])
 AC_ARG_ENABLE(
   [pml],
-  [AS_HELP_STRING([--enable-pml], [enable perfectly matched layer code])],
+  [AS_HELP_STRING([--disable-pml], [enable perfectly matched layer code])],
+  [AS_IF([test "$enableval" != "no"], [AC_DEFINE([USE_PML])])],
   [AC_DEFINE([USE_PML])]
 )
-AM_CONDITIONAL([USE_PML], [test "$enable_pml" = "yes"])
+AM_CONDITIONAL([USE_PML], [test "$enable_pml" != "no"])
   	
 AH_TEMPLATE([USE_C_INTERFACE], [use interface to modules written in C])
 AC_ARG_ENABLE(
   [c-interface],
-  [AS_HELP_STRING([--enable-c-interface], [use interface to modules written in C])],
+  [AS_HELP_STRING([--disable-c-interface], [disable interface to modules written in C])],
+  [AS_IF([test "$enableval" != "no"], [AC_DEFINE([USE_C_INTERFACE])])],
   [AC_DEFINE([USE_C_INTERFACE])]
 )
-AM_CONDITIONAL([USE_C_INTERFACE], [test "$enable_c_interface" = "yes"])
+AM_CONDITIONAL([USE_C_INTERFACE], [test "$enable_c_interface" != "no"])
   	
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
 AC_ARG_ENABLE(
