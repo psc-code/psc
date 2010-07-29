@@ -2,9 +2,9 @@ openmpirun -n 2 src/VLI \
 	   --nproc_z 2 \
 	   --mod_output c --output_format hdf5 --output_combine --write_tfield no \
 	   --case singlepart \
-	   --itot_y 50 --itot_z 50 \
-	   --ilo_y 0 --ihi_y 50 \
-	   --ilo_z 0 --ihi_z 50 \
+	   --itot_y 70 --itot_z 70 \
+	   --ilo_y 10 --ihi_y 60 \
+	   --ilo_z 10 --ihi_z 60 \
 	   --length_y 10e-6 --length_z 10e-6 \
 	   --y0 5e-6 --z0 5e-6 \
 	   --nmax 100
