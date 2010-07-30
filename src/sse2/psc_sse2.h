@@ -50,10 +50,15 @@ typedef struct psc_fields_sse2 {
   sse2_real *flds;
 } psc_fields_sse2_t;
 
+typedef struct psc_particles_sse2 {
+  struct sse2_particle *particles; ///< Pointer to particle array
+  int n_part;
+} psc_particles_sse2_t;
+
 struct psc_sse2 {
-  struct sse2_particle *part; ///< Pointer to particle array
-  int part_allocated; ///< Number of particles currently allocated
+  psc_particles_sse2_t part;
   psc_fields_sse2_t flds;
+  int part_allocated; ///< Number of particles currently allocated
 };
 
 // Packed vector datatypes, use typedefs to make things a bit prettier
