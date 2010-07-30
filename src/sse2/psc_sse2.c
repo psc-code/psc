@@ -95,12 +95,12 @@ psc_particles_sse2_put(psc_particles_sse2_t *particles)
 
 /// Copy fields from Fortran data structures to an SSE2 friendly format.
 void
-psc_fields_sse2_get(psc_fields_sse2_t *pf)
+psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me)
 {
   pf->flds = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
   
   int *ilg = psc.ilg;
-  for(int m = 0; m < NR_FIELDS; m++){
+  for(int m = mb; m < me; m++){
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
       pf->flds[m * psc.fld_size + n] =
@@ -111,12 +111,12 @@ psc_fields_sse2_get(psc_fields_sse2_t *pf)
 
 /// Copy fields from SSE2 data structures into Fortran structures.
 void
-psc_fields_sse2_put(psc_fields_sse2_t *pf)
+psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me)
 {
   assert(pf->flds);
 
   int *ilg = psc.ilg;
-  for(int m = 0; m < NR_FIELDS; m++){
+  for(int m = mb; m < me; m++){
     for(int n = 0; n < psc.fld_size; n++){
       ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]) = 
 	pf->flds[m * psc.fld_size + n];

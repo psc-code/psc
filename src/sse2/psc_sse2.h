@@ -86,8 +86,8 @@ pvInt ione; ///< Vector of "1"
 
 void psc_particles_sse2_get(psc_particles_sse2_t *pp);
 void psc_particles_sse2_put(psc_particles_sse2_t *pp);
-void psc_fields_sse2_get(psc_fields_sse2_t *pf);
-void psc_fields_sse2_put(psc_fields_sse2_t *pf);
+void psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me);
+void psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me);
 
 #endif
 
