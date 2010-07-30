@@ -18,6 +18,7 @@
 #define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
+#define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
 #define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
@@ -104,6 +105,7 @@ void OUT_field_1_F77(void);
 void OUT_part_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
+void CALC_densities_F77(void);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
 		       f_int *i3bn);
@@ -272,6 +274,12 @@ void
 INIT_idistr(void)
 {
   INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
+}
+
+void
+CALC_densities()
+{
+  CALC_densities_F77();
 }
 
 void
