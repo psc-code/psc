@@ -371,14 +371,14 @@ union packed_int{
 /// units and decreasing pipelining efficiency, but by and large
 /// the tests are inconclusive
 #define STORE_PARTS(p_struct) {				\
-  for(int m=0; m < VEC_SIZE; m++){		\
-  (particles->particles[n+m]).xi = p_struct.xi.v[m];		\
-  (particles->particles[n+m]).yi = p_struct.yi.v[m];		\
-  (particles->particles[n+m]).zi = p_struct.zi.v[m];		\
-  (particles->particles[n+m]).pxi = p_struct.pxi.v[m];		\
-  (particles->particles[n+m]).pyi = p_struct.pyi.v[m];		\
-  (particles->particles[n+m]).pzi = p_struct.pzi.v[m];		\
-  }						\
+    for(int m=0; m < VEC_SIZE; m++){			\
+      (pp->particles[n+m]).xi = p_struct.xi.v[m];	\
+      (pp->particles[n+m]).yi = p_struct.yi.v[m];	\
+      (pp->particles[n+m]).zi = p_struct.zi.v[m];	\
+      (pp->particles[n+m]).pxi = p_struct.pxi.v[m];	\
+      (pp->particles[n+m]).pyi = p_struct.pyi.v[m];	\
+      (pp->particles[n+m]).pzi = p_struct.pzi.v[m];	\
+    }							\
 }
 
 ////////////////////////
