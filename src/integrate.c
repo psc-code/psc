@@ -11,6 +11,7 @@ enum {
   STAT_TIME_FIELD,
   STAT_TIME_RANDOMIZE,
   STAT_TIME_SORT,
+  STAT_TIME_COLLISION,
   STAT_TIME_OUT_FIELD,
   STAT_TIME_OUT_PARTICLE,
   NR_STATS,
@@ -23,6 +24,7 @@ static const char *stat_name[NR_STATS] = {
   [STAT_TIME_FIELD]        = "time field update",
   [STAT_TIME_RANDOMIZE]    = "time part. randomize",
   [STAT_TIME_SORT]         = "time particle sort",
+  [STAT_TIME_COLLISION]    = "time part. collision",
   [STAT_TIME_OUT_FIELD]    = "time field output",
   [STAT_TIME_OUT_PARTICLE] = "time particle output",
 };
@@ -93,6 +95,10 @@ psc_integrate()
     time_start(STAT_TIME_SORT);
     psc_sort();
     time_stop(STAT_TIME_SORT);
+
+    time_start(STAT_TIME_COLLISION);
+    psc_collision();
+    time_stop(STAT_TIME_COLLISION);
 
     time_start(STAT_TIME_OUT_FIELD);
     psc_out_field();

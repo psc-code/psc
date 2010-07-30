@@ -130,6 +130,26 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 };
 
 // ======================================================================
+// fortran collision
+
+static void
+fortran_collision()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_collision", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_bin_coll();
+  prof_stop(pr);
+}
+
+struct psc_collision_ops psc_collision_ops_fortran = {
+  .name      = "fortran",
+  .collision = fortran_collision,
+};
+
+// ======================================================================
 // fortran push field
 
 static void

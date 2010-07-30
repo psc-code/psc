@@ -11,6 +11,7 @@
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
 #define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
+#define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
 #define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
 #define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
@@ -98,6 +99,7 @@ void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
 
 void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
+void PIC_bin_coll_F77(f_int *niloc, struct f_particle *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
 void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 			f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x,
@@ -225,6 +227,12 @@ void
 PIC_randomize()
 {
   PIC_randomize_F77(&psc.n_part, &psc.f_part[-1]);
+}
+
+void
+PIC_bin_coll()
+{
+  PIC_bin_coll_F77(&psc.n_part, &psc.f_part[-1]);
 }
 
 void
