@@ -307,6 +307,7 @@ extern struct psc_sort_ops psc_sort_ops_fortran;
 extern struct psc_sort_ops psc_sort_ops_qsort;
 extern struct psc_sort_ops psc_sort_ops_countsort;
 extern struct psc_sort_ops psc_sort_ops_countsort2;
+extern struct psc_sort_ops psc_sort_ops_none;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;

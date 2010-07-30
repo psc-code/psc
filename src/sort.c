@@ -158,3 +158,18 @@ struct psc_sort_ops psc_sort_ops_countsort2 = {
   .name = "countsort2",
   .sort = countsort2_sort,
 };
+
+// ======================================================================
+// none sort
+//
+// This doesn't actually sort, it's used to turn sorting off.
+
+static void
+none_sort()
+{
+}
+
+struct psc_sort_ops psc_sort_ops_none = {
+  .name = "none",
+  .sort = none_sort,
+};

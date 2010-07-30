@@ -55,6 +55,7 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_qsort,
   &psc_sort_ops_countsort,
   &psc_sort_ops_countsort2,
+  &psc_sort_ops_none,
   NULL,
 };
 
@@ -147,7 +148,7 @@ psc_create(struct psc_mod_config *conf)
   if (!conf->mod_field)
     conf->mod_field = "fortran";
   if (!conf->mod_sort)
-    conf->mod_sort = "fortran";
+    conf->mod_sort = "none";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
   if (!conf->mod_bnd)
