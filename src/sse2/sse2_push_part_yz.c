@@ -941,9 +941,14 @@ sse2_push_part_yz_a()
   if (!pr) {
     pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
+
+  sse2_particles_from_fortran();
+  sse2_fields_from_fortran();
   prof_start(pr);
   do_push_part_yz_a();
   prof_stop(pr);
+  sse2_particles_to_fortran();
+  sse2_fields_to_fortran();
 }
 
 void
@@ -953,9 +958,13 @@ sse2_push_part_yz_b()
   if (!pr) {
     pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
+  sse2_particles_from_fortran();
+  sse2_fields_from_fortran();
   prof_start(pr);
   do_push_part_yz_b();
   prof_stop(pr);
+  sse2_particles_to_fortran();
+  sse2_fields_to_fortran();
 }
 
 void
@@ -965,9 +974,13 @@ sse2_push_part_yz()
   if (!pr) {
     pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
+  sse2_particles_from_fortran();
+  sse2_fields_from_fortran();
   prof_start(pr);
   do_push_part_yz();
   prof_stop(pr);
+  sse2_particles_to_fortran();
+  sse2_fields_to_fortran();
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

@@ -81,6 +81,10 @@ pvReal ones, ///< Vector of "1.0"
   third; ///< Vector of "1./3."
 pvInt ione; ///< Vector of "1"
 
+void sse2_particles_from_fortran(void);
+void sse2_particles_to_fortran(void);
+void sse2_fields_from_fortran(void);
+void sse2_fields_to_fortran(void);
 
 #endif
 
