@@ -2,39 +2,9 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-////////
-/// Toggle to switch precision 
-///
-/// 1 is double precision, 0 is single. 
-#define SSE2_DOUBLE 1 
-
-#include "psc.h"
-
-#define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
-  (((((fldnr								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
-
-#if 1
-
-#define F3_SSE2(pf, fldnr, jx,jy,jz)		\
-  (pf->flds[F3_OFF_SSE2(fldnr, jx,jy,jz)])
-
-#else
-//out of range debugging
-#define F3_SSE2(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_SSE2(fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < NR_FIELDS * psc.fld_size);				\
-      &(pf->flds[off]);							\
-    }))
-
-#endif
-
+#include "psc_fields_sse2.h"
 
 #include <assert.h>
-#include <xmmintrin.h>
 #include <emmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
 
@@ -48,11 +18,6 @@ struct sse2_particle {
   sse2_real mni;
   sse2_real wni;
 };
-
-/// Field/Particle data used by SSE2 Implementation
-typedef struct psc_fields_sse2 {
-  sse2_real *flds;
-} psc_fields_sse2_t;
 
 typedef struct psc_particles_sse2 {
   struct sse2_particle *particles; ///< Pointer to particle array
@@ -90,8 +55,6 @@ pvInt ione; ///< Vector of "1"
 
 void psc_particles_sse2_get(psc_particles_sse2_t *pp);
 void psc_particles_sse2_put(psc_particles_sse2_t *pp);
-void psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me);
-void psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me);
 
 #endif
 

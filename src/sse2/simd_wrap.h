@@ -20,9 +20,6 @@
 
 #if SSE2_DOUBLE
 
-#define VEC_SIZE 2
-typedef double sse2_real;
-
 union packed_vector{
   __m128d r;
   sse2_real v[2] __attribute__ ((aligned (32))); //FIXME : Might break for any non gcc
@@ -217,12 +214,6 @@ union packed_int{
 
 
 #else // Single Precision
-
-/// Number of elements in a floating point vector (changes with precision)
-#define VEC_SIZE 4 
-
-/// SSE2 floating point type
-typedef float sse2_real;
 
 /// Union of real vector and array
 union packed_vector{
