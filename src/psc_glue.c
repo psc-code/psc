@@ -14,6 +14,7 @@
 #define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
 #define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
 #define OUT_field_1_F77 F77_FUNC(out_field_1,OUT_FIELD_1)
+#define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define GET_niloc_F77 F77_FUNC(get_niloc,GET_NILOC)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
@@ -78,6 +79,7 @@ void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 		     f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x);
 void OUT_field_1_F77(void);
+void OUT_part_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void GET_niloc_F77(f_int *n_part);
 void INIT_grid_map_F77(void);
@@ -180,6 +182,12 @@ void
 OUT_field_1()
 {
   OUT_field_1_F77();
+}
+
+void
+OUT_part()
+{
+  OUT_part_F77();
 }
 
 void

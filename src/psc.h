@@ -242,6 +242,7 @@ void psc_push_part_yz_a();
 void psc_push_part_yz_b();
 void psc_sort();
 void psc_out_field();
+void psc_out_particles();
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 
@@ -276,6 +277,7 @@ void PIC_sort_1();
 void PIC_randomize();
 void PIC_find_cell_indices();
 void OUT_field_1();
+void OUT_part();
 void SET_param_domain();
 void SET_param_pml();
 void SET_param_psc();
