@@ -10,20 +10,24 @@
 
 #include "psc.h"
 
-// Kai's macros are much prettier (and a little faster) use them instead
+#define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
+  (((((fldnr								\
+       *psc.img[2] + ((jz)-psc.ilg[2]))					\
+      *psc.img[1] + ((jy)-psc.ilg[1]))					\
+     *psc.img[0] + ((jx)-psc.ilg[0]))))
 
 #if 1
 
-#define CF3(fldnr, jx,jy,jz)			\
-  (pf->flds[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
+#define F3_SSE2(pf, fldnr, jx,jy,jz)		\
+  (pf->flds[F3_OFF_SSE2(fldnr, jx,jy,jz)])
 
 #else
 //out of range debugging
-#define CF3(fldnr, jx,jy,jz)						\
-  (*({int off = FF3_OFF(jx,jy,jz);					\
+#define F3_SSE2(pf, fldnr, jx,jy,jz)					\
+  (*({int off = F3_OFF_SSE2(fldnr, jx,jy,jz);				\
       assert(off >= 0);							\
-      assert(off < psc.fld_size);					\
-      &(flds->flds[(fldnr)*psc.fld_size + off]);			\
+      assert(off < NR_FIELDS * psc.fld_size);				\
+      &(pf->flds[off]);							\
     }))
 
 #endif
