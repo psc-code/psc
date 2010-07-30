@@ -75,11 +75,11 @@ union packed_int{
  
 #define LOAD_PARTS(p_struct) {						\
     pvReal __A, __B, __C, __D, __E, __F, __G, __H;			\
-    __A.r = pv_loadu_real(&sse2->part.particles[n].xi);				\
-    __E.r = pv_loadu_real(&sse2->part.particles[n+1].xi);				\
+    __A.r = pv_loadu_real(&pp->particles[n].xi);			\
+    __E.r = pv_loadu_real(&pp->particles[n+1].xi);			\
 									\
-    __B.r = pv_loadu_real(&sse2->part.particles[n].zi);				\
-    __F.r = pv_loadu_real(&sse2->part.particles[n+1].zi);				\
+    __B.r = pv_loadu_real(&pp->particles[n].zi);			\
+    __F.r = pv_loadu_real(&pp->particles[n+1].zi);			\
 									\
     p_struct.xi.r = pv_unpacklo_real(__A.r, __E.r);			\
     p_struct.yi.r = pv_unpackhi_real(__A.r, __E.r);			\
@@ -87,11 +87,11 @@ union packed_int{
     p_struct.zi.r = pv_unpacklo_real(__B.r, __F.r);			\
     p_struct.pxi.r = pv_unpackhi_real(__B.r, __F.r);			\
 									\
-    __C.r = pv_loadu_real(&sse2->part.particles[n].pyi);				\
-    __G.r = pv_loadu_real(&sse2->part.particles[n+1].pyi);			\
+    __C.r = pv_loadu_real(&pp->particles[n].pyi);			\
+    __G.r = pv_loadu_real(&pp->particles[n+1].pyi);			\
 									\
-    __D.r = pv_loadu_real(&sse2->part.particles[n].qni);				\
-    __H.r = pv_loadu_real(&sse2->part.particles[n+1].qni);			\
+    __D.r = pv_loadu_real(&pp->particles[n].qni);			\
+    __H.r = pv_loadu_real(&pp->particles[n+1].qni);			\
 									\
     p_struct.pyi.r = pv_unpacklo_real(__C.r, __G.r);			\
     p_struct.pzi.r = pv_unpackhi_real(__C.r, __G.r);			\
@@ -99,8 +99,8 @@ union packed_int{
     p_struct.qni.r = pv_unpacklo_real(__D.r, __H.r);			\
     p_struct.mni.r = pv_unpackhi_real(__D.r, __H.r);			\
 									\
-    __A.r = pv_loads_real(&sse2->part.particles[n].wni);				\
-    __E.r = pv_loads_real(&sse2->part.particles[n+1].wni);			\
+    __A.r = pv_loads_real(&pp->particles[n].wni);			\
+    __E.r = pv_loads_real(&pp->particles[n+1].wni);			\
 									\
     p_struct.wni.r = pv_unpacklo_real(__A.r, __E.r);			\
   }
@@ -114,23 +114,23 @@ union packed_int{
     pvReal __A, __B, __C, __E, __F, __G;	\
     __A.r = pv_unpacklo_real(p_struct.xi.r, p_struct.yi.r);	\
 						\
-    pv_storeu_real(&sse2->part.particles[n].xi, __A.r);	\
+    pv_storeu_real(&pp->particles[n].xi, __A.r);	\
 						\
     __B.r = pv_unpacklo_real(p_struct.zi.r, p_struct.pxi.r);	\
     __C.r = pv_unpacklo_real(p_struct.pyi.r, p_struct.pzi.r);	\
 						\
-    pv_storeu_real(&sse2->part.particles[n].zi, __B.r);	\
+    pv_storeu_real(&pp->particles[n].zi, __B.r);	\
 						\
     __E.r = pv_unpackhi_real(p_struct.xi.r, p_struct.yi.r);		\
     __F.r = pv_unpackhi_real(p_struct.zi.r, p_struct.pxi.r);		\
 						\
-    pv_storeu_real(&sse2->part.particles[n].pyi, __C.r);	\
+    pv_storeu_real(&pp->particles[n].pyi, __C.r);	\
 						\
     __G.r = pv_unpackhi_real(p_struct.pyi.r, p_struct.pzi.r);	\
 						\
-    pv_storeu_real(&sse2->part.particles[n+1].xi, __E.r);	\
-    pv_storeu_real(&sse2->part.particles[n+1].zi, __F.r);		\
-    pv_storeu_real(&sse2->part.particles[n+1].pyi, __G.r);		\
+    pv_storeu_real(&pp->particles[n+1].xi, __E.r);	\
+    pv_storeu_real(&pp->particles[n+1].zi, __F.r);		\
+    pv_storeu_real(&pp->particles[n+1].pyi, __G.r);		\
   }
 
 
@@ -321,26 +321,26 @@ union packed_int{
  
 #define LOAD_PARTS(p_struct) {					\
     pvReal __A, __B, __C, __D, __E, __F, __G, __H, __alpha, __beta, __gamma, __delta;	\
-    __A.r = pv_loadu_real(&sse2->part.particles[n].xi);			\
-    __C.r = pv_loadu_real(&sse2->part.particles[n+2].xi);			\
-    __B.r = pv_loadu_real(&sse2->part.particles[n+1].xi);			\
-    __D.r = pv_loadu_real(&sse2->part.particles[n+3].xi);			\
+    __A.r = pv_loadu_real(&pp->particles[n].xi);			\
+    __C.r = pv_loadu_real(&pp->particles[n+2].xi);			\
+    __B.r = pv_loadu_real(&pp->particles[n+1].xi);			\
+    __D.r = pv_loadu_real(&pp->particles[n+3].xi);			\
 								\
     __alpha.r = pv_unpacklo_real(__A.r, __C.r);			\
     __gamma.r = pv_unpackhi_real(__A.r, __C.r);			\
     __beta.r = pv_unpacklo_real(__B.r, __D.r);			\
     __delta.r = pv_unpackhi_real(__B.r, __D.r);			\
 								\
-    __E.r = pv_loadu_real(&sse2->part.particles[n].pyi);			\
-    __G.r = pv_loadu_real(&sse2->part.particles[n+2].pyi);			\
+    __E.r = pv_loadu_real(&pp->particles[n].pyi);			\
+    __G.r = pv_loadu_real(&pp->particles[n+2].pyi);			\
 								\
     p_struct.xi.r = pv_unpacklo_real(__alpha.r, __beta.r);			\
     p_struct.yi.r = pv_unpackhi_real(__alpha.r, __beta.r);			\
     p_struct.zi.r = pv_unpacklo_real(__gamma.r, __delta.r);		\
     p_struct.pxi.r = pv_unpackhi_real(__gamma.r, __delta.r);		\
 								\
-    __F.r = pv_loadu_real(&sse2->part.particles[n+1].pyi);			\
-    __H.r = pv_loadu_real(&sse2->part.particles[n+3].pyi);			\
+    __F.r = pv_loadu_real(&pp->particles[n+1].pyi);			\
+    __H.r = pv_loadu_real(&pp->particles[n+3].pyi);			\
 								\
     __gamma.r = pv_unpackhi_real(__E.r, __G.r);			\
     __alpha.r = pv_unpacklo_real(__E.r, __G.r);			\
@@ -352,10 +352,10 @@ union packed_int{
     p_struct.qni.r = pv_unpacklo_real(__gamma.r, __delta.r);		\
     p_struct.mni.r = pv_unpackhi_real(__gamma.r, __delta.r);		\
 								\
-    __A.r = pv_loads_real(&sse2->part.particles[n].wni);			\
-    __C.r = pv_loads_real(&sse2->part.particles[n+2].wni);			\
-    __B.r = pv_loads_real(&sse2->part.particles[n+1].wni);			\
-    __D.r = pv_loads_real(&sse2->part.particles[n+3].wni);			\
+    __A.r = pv_loads_real(&pp->particles[n].wni);			\
+    __C.r = pv_loads_real(&pp->particles[n+2].wni);			\
+    __B.r = pv_loads_real(&pp->particles[n+1].wni);			\
+    __D.r = pv_loads_real(&pp->particles[n+3].wni);			\
 								\
     __alpha.r = pv_unpacklo_real(__A.r, __C.r);			\
     __beta.r = pv_unpacklo_real(__B.r, __D.r);			\
@@ -372,12 +372,12 @@ union packed_int{
 /// the tests are inconclusive
 #define STORE_PARTS(p_struct) {				\
   for(int m=0; m < VEC_SIZE; m++){		\
-  (sse2->part.particles[n+m]).xi = p_struct.xi.v[m];		\
-  (sse2->part.particles[n+m]).yi = p_struct.yi.v[m];		\
-  (sse2->part.particles[n+m]).zi = p_struct.zi.v[m];		\
-  (sse2->part.particles[n+m]).pxi = p_struct.pxi.v[m];		\
-  (sse2->part.particles[n+m]).pyi = p_struct.pyi.v[m];		\
-  (sse2->part.particles[n+m]).pzi = p_struct.pzi.v[m];		\
+  (particles->particles[n+m]).xi = p_struct.xi.v[m];		\
+  (particles->particles[n+m]).yi = p_struct.yi.v[m];		\
+  (particles->particles[n+m]).zi = p_struct.zi.v[m];		\
+  (particles->particles[n+m]).pxi = p_struct.pxi.v[m];		\
+  (particles->particles[n+m]).pyi = p_struct.pyi.v[m];		\
+  (particles->particles[n+m]).pzi = p_struct.pzi.v[m];		\
   }						\
 }
 

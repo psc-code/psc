@@ -281,7 +281,7 @@ push_pi_dt(struct particle_vec * p,
 /// current momentum
 
 static void
-do_push_part_yz_a(struct psc_sse2 *sse2)
+do_push_part_yz_a(psc_particles_sse2_t *pp)
 {
   //-----------------------------------------------------
   // Initialization stuff 
@@ -330,7 +330,7 @@ do_push_part_yz_a(struct psc_sse2 *sse2)
 /// does not update current and charge densities
 
 static void
-do_push_part_yz_b(struct psc_sse2 *sse2, psc_fields_sse2_t *pf)
+do_push_part_yz_b(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff
@@ -524,7 +524,7 @@ do_push_part_yz_b(struct psc_sse2 *sse2, psc_fields_sse2_t *pf)
 /// SSE2 implementation of the 
 /// yz particle pushers
 static void
-do_push_part_yz(struct psc_sse2 *sse2, psc_fields_sse2_t *pf)
+do_push_part_yz(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff (not sure what all of this is for)
@@ -932,55 +932,64 @@ void
 sse2_push_part_yz_a()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
+  psc_particles_sse2_t pp;
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
 
-  sse2_particles_from_fortran(sse2);
+  sse2_particles_from_fortran(sse2, &pp);
+
   prof_start(pr);
-  do_push_part_yz_a(sse2);
+  do_push_part_yz_a(&pp);
   prof_stop(pr);
-  sse2_particles_to_fortran(sse2);
+
+  sse2_particles_to_fortran(sse2, &pp);
 }
 
 void
 sse2_push_part_yz_b()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
-  psc_fields_sse2_t flds;
+  psc_particles_sse2_t pp;
+  psc_fields_sse2_t pf;
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
-  sse2_particles_from_fortran(sse2);
-  sse2_fields_from_fortran(&flds);
+  sse2_particles_from_fortran(sse2, &pp);
+  sse2_fields_from_fortran(&pf);
+
   prof_start(pr);
-  do_push_part_yz_b(sse2, &flds);
+  do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
-  sse2_particles_to_fortran(sse2);
-  sse2_fields_to_fortran(&flds);
+
+  sse2_particles_to_fortran(sse2, &pp);
+  sse2_fields_to_fortran(&pf);
 }
 
 void
 sse2_push_part_yz()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
-  psc_fields_sse2_t flds;
+  psc_fields_sse2_t pf;
+  psc_particles_sse2_t pp;
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
-  sse2_particles_from_fortran(sse2);
-  sse2_fields_from_fortran(&flds);
+  sse2_particles_from_fortran(sse2, &pp);
+  sse2_fields_from_fortran(&pf);
+
   prof_start(pr);
-  do_push_part_yz(sse2, &flds);
+  do_push_part_yz(&pp, &pf);
   prof_stop(pr);
-  sse2_particles_to_fortran(sse2);
-  sse2_fields_to_fortran(&flds);
+
+  sse2_particles_to_fortran(sse2, &pp);
+  sse2_fields_to_fortran(&pf);
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

@@ -42,7 +42,7 @@ sse2_destroy(void)
 // For now this is all more or less identical to kai's generic_c. 
 /// Copy particles from Fortran data structures to an SSE2 friendly format.
 void
-sse2_particles_from_fortran(struct psc_sse2 *sse2)
+sse2_particles_from_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particles)
 {
   int n_part = psc.pp.n_part;
   int pad = 0;
@@ -51,17 +51,19 @@ sse2_particles_from_fortran(struct psc_sse2 *sse2)
   }
   
   if(n_part > sse2->part_allocated) {
-    free(sse2->part.particles); // Is this safe? ie, does free(NULL) do nothing as part of the standard?
+    free(sse2->part_data);
     sse2->part_allocated = n_part * 1.2;
     if(n_part*0.2 < pad){
       sse2->part_allocated += pad;
     }
-    sse2->part.particles = calloc(sse2->part_allocated, sizeof(*sse2->part.particles));
+    sse2->part_data = calloc(sse2->part_allocated, sizeof(*sse2->part_data));
   }
+  particles->particles = sse2->part_data;
+  particles->n_part = psc.pp.n_part;
 
   for (int n = 0; n < n_part; n++) {
     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
-    struct sse2_particle *part = &sse2->part.particles[n];
+    struct sse2_particle *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
     part->yi  = base_part->yi;
@@ -77,7 +79,7 @@ sse2_particles_from_fortran(struct psc_sse2 *sse2)
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n_part - 1);
-    struct sse2_particle *part = &sse2->part.particles[n];
+    struct sse2_particle *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
     part->zi  = base_part->zi;
@@ -87,11 +89,11 @@ sse2_particles_from_fortran(struct psc_sse2 *sse2)
 
 /// Copy particles from SSE2 data structures to fortran structures.
 void
-sse2_particles_to_fortran(struct psc_sse2 *sse2)
+sse2_particles_to_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particles)
 {
    for(int n = 0; n < psc.pp.n_part; n++) {
      particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
-     struct sse2_particle *part = &sse2->part.particles[n];
+     struct sse2_particle *part = &particles->particles[n];
      
      base_part->xi  = part->xi;
      base_part->yi  = part->yi;
