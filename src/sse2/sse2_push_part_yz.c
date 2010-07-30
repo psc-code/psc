@@ -280,15 +280,9 @@ push_pi_dt(struct particle_vec * p,
 /// and half steps their positions using their 
 /// current momentum
 
-void
-sse2_push_part_yz_a()
+static void
+do_push_part_yz_a()
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
-  }
-  prof_start(pr);
-
   //-----------------------------------------------------
   // Initialization stuff 
   
@@ -330,7 +324,6 @@ sse2_push_part_yz_a()
     STORE_PARTS(p);
   
   }
-  prof_stop(pr);
 }
 
 //---------------------------------------------
@@ -338,15 +331,9 @@ sse2_push_part_yz_a()
 /// one full time step, including momenta, but 
 /// does not update current and charge densities
 
-void
-sse2_push_part_yz_b()
+static void
+do_push_part_yz_b()
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
-  }
-  prof_start(pr);
-
   //-----------------------------------------------------
   // Initialization stuff
   
@@ -535,21 +522,14 @@ sse2_push_part_yz_b()
     }
 
   }
-  prof_stop(pr);
 }
 
 //---------------------------------------------
 /// SSE2 implementation of the 
-/// yz particle pusher
-void
-sse2_push_part_yz()
+/// yz particle pushers
+static void
+do_push_part_yz()
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
-  }
-  prof_start(pr);
-
 //-----------------------------------------------------
 // Initialization stuff (not sure what all of this is for)
   
@@ -946,13 +926,49 @@ sse2_push_part_yz()
   free(s_jxi);
   free(s_jyi);
   free(s_jzi);
-
-  prof_stop(pr);
 }
 
 #undef JSX
 #undef JSY
 #undef JSZ
+
+// ======================================================================
+
+void
+sse2_push_part_yz_a()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+  }
+  prof_start(pr);
+  do_push_part_yz_a();
+  prof_stop(pr);
+}
+
+void
+sse2_push_part_yz_b()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+  }
+  prof_start(pr);
+  do_push_part_yz_b();
+  prof_stop(pr);
+}
+
+void
+sse2_push_part_yz()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+  }
+  prof_start(pr);
+  do_push_part_yz();
+  prof_stop(pr);
+}
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.
 ///
