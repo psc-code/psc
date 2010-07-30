@@ -55,11 +55,6 @@ typedef struct psc_particles_sse2 {
   int n_part;
 } psc_particles_sse2_t;
 
-struct psc_sse2 {
-  struct sse2_particle *part_data;
-  int part_allocated; ///< Number of particles currently allocated
-};
-
 // Packed vector datatypes, use typedefs to make things a bit prettier
 
 /// Vector floating point type
@@ -89,10 +84,10 @@ pvReal ones, ///< Vector of "1.0"
   third; ///< Vector of "1./3."
 pvInt ione; ///< Vector of "1"
 
-void sse2_particles_from_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *part);
-void sse2_particles_to_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *part);
-void sse2_fields_from_fortran(psc_fields_sse2_t *flds);
-void sse2_fields_to_fortran(psc_fields_sse2_t *flds);
+void sse2_particles_from_fortran(psc_particles_sse2_t *pp);
+void sse2_particles_to_fortran(psc_particles_sse2_t *pp);
+void sse2_fields_from_fortran(psc_fields_sse2_t *pf);
+void sse2_fields_to_fortran(psc_fields_sse2_t *pf);
 
 #endif
 

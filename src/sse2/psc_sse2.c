@@ -22,27 +22,13 @@ init_vec_numbers(void) {
   ione.r = pv_set1_int(1);			
 }
 
-/// Allocate mememory for the SSE2 context.
-static void
-sse2_create(void)
-{
-  struct psc_sse2 *sse2 = malloc(sizeof(*sse2));
-  memset(sse2, 0, sizeof(*sse2));
-  psc.c_ctx = sse2;
-}
-
-/// Cleanup the SSE2 context.
-static void
-sse2_destroy(void)
-{
-  struct psc_sse2 *sse2 = psc.c_ctx;
-  free(sse2);
-}
+static size_t __sse2_part_allocated;
+static struct sse2_particle *__sse2_part_data;
 
 // For now this is all more or less identical to kai's generic_c. 
 /// Copy particles from Fortran data structures to an SSE2 friendly format.
 void
-sse2_particles_from_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particles)
+sse2_particles_from_fortran(psc_particles_sse2_t *particles)
 {
   int n_part = psc.pp.n_part;
   int pad = 0;
@@ -50,15 +36,15 @@ sse2_particles_from_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particl
     pad = VEC_SIZE - (n_part % VEC_SIZE);
   }
   
-  if(n_part > sse2->part_allocated) {
-    free(sse2->part_data);
-    sse2->part_allocated = n_part * 1.2;
+  if(n_part > __sse2_part_allocated) {
+    free(__sse2_part_data);
+    __sse2_part_allocated = n_part * 1.2;
     if(n_part*0.2 < pad){
-      sse2->part_allocated += pad;
+      __sse2_part_allocated += pad;
     }
-    sse2->part_data = calloc(sse2->part_allocated, sizeof(*sse2->part_data));
+    __sse2_part_data = calloc(__sse2_part_allocated, sizeof(*__sse2_part_data));
   }
-  particles->particles = sse2->part_data;
+  particles->particles = __sse2_part_data;
   particles->n_part = psc.pp.n_part;
 
   for (int n = 0; n < n_part; n++) {
@@ -89,7 +75,7 @@ sse2_particles_from_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particl
 
 /// Copy particles from SSE2 data structures to fortran structures.
 void
-sse2_particles_to_fortran(struct psc_sse2 *sse2, psc_particles_sse2_t *particles)
+sse2_particles_to_fortran(psc_particles_sse2_t *particles)
 {
    for(int n = 0; n < psc.pp.n_part; n++) {
      particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
@@ -143,8 +129,6 @@ sse2_fields_to_fortran(psc_fields_sse2_t *pf)
 
 struct psc_ops psc_ops_sse2 = {
   .name                   = "sse2",
-  .create                 = sse2_create,
-  .destroy                = sse2_destroy,
   .push_part_yz_a         = sse2_push_part_yz_a,
   .push_part_yz_b         = sse2_push_part_yz_b,
   .push_part_yz           = sse2_push_part_yz,

@@ -931,64 +931,57 @@ do_push_part_yz(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
 void
 sse2_push_part_yz_a()
 {
-  struct psc_sse2 *sse2 = psc.c_ctx;
   psc_particles_sse2_t pp;
+  sse2_particles_from_fortran(&pp);
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
-
-  sse2_particles_from_fortran(sse2, &pp);
-
   prof_start(pr);
   do_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  sse2_particles_to_fortran(sse2, &pp);
+  sse2_particles_to_fortran(&pp);
 }
 
 void
 sse2_push_part_yz_b()
 {
-  struct psc_sse2 *sse2 = psc.c_ctx;
   psc_particles_sse2_t pp;
   psc_fields_sse2_t pf;
+  sse2_particles_from_fortran(&pp);
+  sse2_fields_from_fortran(&pf);
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
-  sse2_particles_from_fortran(sse2, &pp);
-  sse2_fields_from_fortran(&pf);
-
   prof_start(pr);
   do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
 
-  sse2_particles_to_fortran(sse2, &pp);
+  sse2_particles_to_fortran(&pp);
   sse2_fields_to_fortran(&pf);
 }
 
 void
 sse2_push_part_yz()
 {
-  struct psc_sse2 *sse2 = psc.c_ctx;
-  psc_fields_sse2_t pf;
   psc_particles_sse2_t pp;
+  psc_fields_sse2_t pf;
+  sse2_particles_from_fortran(&pp);
+  sse2_fields_from_fortran(&pf);
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
-  sse2_particles_from_fortran(sse2, &pp);
-  sse2_fields_from_fortran(&pf);
-
   prof_start(pr);
   do_push_part_yz(&pp, &pf);
   prof_stop(pr);
 
-  sse2_particles_to_fortran(sse2, &pp);
+  sse2_particles_to_fortran(&pp);
   sse2_fields_to_fortran(&pf);
 }
 
