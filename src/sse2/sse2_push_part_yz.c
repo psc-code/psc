@@ -330,7 +330,7 @@ do_push_part_yz_a(struct psc_sse2 *sse2)
 /// does not update current and charge densities
 
 static void
-do_push_part_yz_b(struct psc_sse2 *sse2)
+do_push_part_yz_b(struct psc_sse2 *sse2, psc_fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff
@@ -379,12 +379,12 @@ do_push_part_yz_b(struct psc_sse2 *sse2)
     //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
     // FIXME : this assumes xi always rounds down to 0!
-    sse2_real * restrict EXpoint = &sse2->flds.flds[EX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EYpoint = &sse2->flds.flds[EY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->flds.flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->flds.flds[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->flds.flds[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->flds.flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &pf->flds[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &pf->flds[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &pf->flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
   
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -524,7 +524,7 @@ do_push_part_yz_b(struct psc_sse2 *sse2)
 /// SSE2 implementation of the 
 /// yz particle pushers
 static void
-do_push_part_yz(struct psc_sse2 *sse2)
+do_push_part_yz(struct psc_sse2 *sse2, psc_fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff (not sure what all of this is for)
@@ -533,7 +533,7 @@ do_push_part_yz(struct psc_sse2 *sse2)
   psc.p2B = 0.;
   
   for (int m = NE; m <= JZI; m++) {
-    memset(&sse2->flds.flds[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
+    memset(&pf->flds[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
   }  
 
   //---------------------------------------------
@@ -591,12 +591,12 @@ do_push_part_yz(struct psc_sse2 *sse2)
     //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
     //FIXME: this assumes xi always rounds down to 0
-    sse2_real * restrict EXpoint = &sse2->flds.flds[EX*psc.fld_size + 0 - psc.ilg[0]]; 
-    sse2_real * restrict EYpoint = &sse2->flds.flds[EY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->flds.flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->flds.flds[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->flds.flds[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->flds.flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + 0 - psc.ilg[0]]; 
+    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &pf->flds[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &pf->flds[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &pf->flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -931,56 +931,56 @@ do_push_part_yz(struct psc_sse2 *sse2)
 void
 sse2_push_part_yz_a()
 {
+  struct psc_sse2 *sse2 = psc.c_ctx;
+
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
 
-  struct psc_sse2 *sse2 = psc.c_ctx;
-
   sse2_particles_from_fortran(sse2);
-  sse2_fields_from_fortran(sse2);
   prof_start(pr);
   do_push_part_yz_a(sse2);
   prof_stop(pr);
   sse2_particles_to_fortran(sse2);
-  sse2_fields_to_fortran(sse2);
 }
 
 void
 sse2_push_part_yz_b()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
+  psc_fields_sse2_t flds;
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
   sse2_particles_from_fortran(sse2);
-  sse2_fields_from_fortran(sse2);
+  sse2_fields_from_fortran(&flds);
   prof_start(pr);
-  do_push_part_yz_b(sse2);
+  do_push_part_yz_b(sse2, &flds);
   prof_stop(pr);
   sse2_particles_to_fortran(sse2);
-  sse2_fields_to_fortran(sse2);
+  sse2_fields_to_fortran(&flds);
 }
 
 void
 sse2_push_part_yz()
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
+  psc_fields_sse2_t flds;
 
   static int pr;
   if (!pr) {
     pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
   sse2_particles_from_fortran(sse2);
-  sse2_fields_from_fortran(sse2);
+  sse2_fields_from_fortran(&flds);
   prof_start(pr);
-  do_push_part_yz(sse2);
+  do_push_part_yz(sse2, &flds);
   prof_stop(pr);
   sse2_particles_to_fortran(sse2);
-  sse2_fields_to_fortran(sse2);
+  sse2_fields_to_fortran(&flds);
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

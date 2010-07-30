@@ -15,7 +15,7 @@
 #if 1
 
 #define CF3(fldnr, jx,jy,jz)			\
-  (sse2->flds.flds[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
+  (pf->flds[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
 
 #else
 //out of range debugging
@@ -23,7 +23,7 @@
   (*({int off = FF3_OFF(jx,jy,jz);					\
       assert(off >= 0);							\
       assert(off < psc.fld_size);					\
-      &(sse2->flds.flds[(fldnr)*psc.fld_size + off]);			\
+      &(flds->flds[(fldnr)*psc.fld_size + off]);			\
     }))
 
 #endif
@@ -57,7 +57,6 @@ typedef struct psc_particles_sse2 {
 
 struct psc_sse2 {
   psc_particles_sse2_t part;
-  psc_fields_sse2_t flds;
   int part_allocated; ///< Number of particles currently allocated
 };
 
@@ -92,8 +91,8 @@ pvInt ione; ///< Vector of "1"
 
 void sse2_particles_from_fortran(struct psc_sse2 *sse2);
 void sse2_particles_to_fortran(struct psc_sse2 *sse2);
-void sse2_fields_from_fortran(struct psc_sse2 *sse2);
-void sse2_fields_to_fortran(struct psc_sse2 *sse2);
+void sse2_fields_from_fortran(psc_fields_sse2_t *flds);
+void sse2_fields_to_fortran(psc_fields_sse2_t *flds);
 
 #endif
 
