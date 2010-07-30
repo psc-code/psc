@@ -96,6 +96,14 @@ main(int argc, char **argv)
   psc_save_fields_ref();
   psc_destroy();
 
+  psc_create_test_yz(&conf_generic_c);
+  //  psc_dump_particles("part-0");
+  psc_push_part_yz();
+  //  psc_dump_particles("part-1");
+  psc_check_particles_ref(1e-7);
+  psc_check_currents_ref(1e-7);
+  psc_destroy();
+
 #ifdef USE_SSE2
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz();
