@@ -192,9 +192,9 @@ c UPDATING LOCAL BOUNDARY e6
      &       pos_z1.ne.0.0.and.pos_z1.lt.n*dt)) then
             do i3 = i3mn-rd3,i3mn+thick
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *((thick+1-i3)*dz/deltaz)**pml
+     &              *((thick+1-(i3-i3mn))*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              ((thick+1-i3)*dz/deltaz)**pml
+     &              ((thick+1-(i3-i3mn))*dz/deltaz)**pml
                czp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                czm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                fbz(i3) = 2*eps0*kappaz(i3)
@@ -205,9 +205,9 @@ c UPDATING LOCAL BOUNDARY e6
             
             do i3 = i3mn-rd3,i3mn+thick
                kappaz(i3) = 1.0 + (kappaz_max-1.0)
-     &              *((thick+1-(i3+0.5))*dz/deltaz)**pml
+     &              *((thick+1-(i3-i3mn+0.5))*dz/deltaz)**pml
                sigmaz(i3) = sigmaz_max*
-     &              ((thick+1-(i3+0.5))*dz/deltaz)**pml
+     &              ((thick+1-(i3-i3mn+0.5))*dz/deltaz)**pml
                bzp(i3) = 2*eps0*kappaz(i3)+sigmaz(i3)*dt
                bzm(i3) = 2*eps0*kappaz(i3)-sigmaz(i3)*dt
                gbz(i3) = 2*eps0*kappaz(i3)
