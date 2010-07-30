@@ -49,7 +49,7 @@ genc_push_part_xz()
 
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vxi = part->pxi * root;
-    creal vyi = part->pxi * root;
+    creal vyi = part->pyi * root;
     creal vzi = part->pzi * root;
 
     part->xi += vxi * xl;
