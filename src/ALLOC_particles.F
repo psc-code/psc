@@ -44,7 +44,7 @@ c     reallocating if necessary
 
       niloc_overfac = 1.2
 
-      if (niloc_n.gt.nialloc) then
+      if (niloc_new.gt.nialloc) then
          call SERV_labelgen(mpe,node)
          call SERV_systime(cpuc)
          open(11,file=trim(data_out)//'/'//node//'ENLARGE',
