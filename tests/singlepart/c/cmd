@@ -7,7 +7,7 @@ openmpirun -n 2 src/VLI \
 	   --ilo_z 10 --ihi_z 60 \
 	   --length_y 10e-6 --length_z 10e-6 \
 	   --y0 5e-6 --z0 5e-6 \
-	   --nmax 100
+	   --nmax 101
 
-util/compare_field.py -f ne,ni tests/singlepart/c/pfd_0000000.h5 pfd_0000000.h5 
-util/compare_field.py -f ne,ni tests/singlepart/c/pfd_0000010.h5 pfd_0000010.h5 
+util/compare_field.py -f ne,ey tests/singlepart/c/pfd_0000000.h5 pfd_0000000.h5 
+util/compare_field.py -f ne,ey tests/singlepart/c/pfd_0000100.h5 pfd_0000100.h5 
