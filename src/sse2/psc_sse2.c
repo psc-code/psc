@@ -42,9 +42,8 @@ sse2_destroy(void)
 // For now this is all more or less identical to kai's generic_c. 
 /// Copy particles from Fortran data structures to an SSE2 friendly format.
 void
-sse2_particles_from_fortran(void)
+sse2_particles_from_fortran(struct psc_sse2 *sse2)
 {
-  struct psc_sse2 *sse2 = psc.c_ctx;
   int n_part = psc.pp.n_part;
   int pad = 0;
   if((n_part % VEC_SIZE) != 0){
@@ -88,10 +87,8 @@ sse2_particles_from_fortran(void)
 
 /// Copy particles from SSE2 data structures to fortran structures.
 void
-sse2_particles_to_fortran()
+sse2_particles_to_fortran(struct psc_sse2 *sse2)
 {
-   struct psc_sse2 *sse2 = psc.c_ctx;
-   
    for(int n = 0; n < psc.pp.n_part; n++) {
      particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
      struct sse2_particle *part = &sse2->part[n];
@@ -110,8 +107,8 @@ sse2_particles_to_fortran()
 
 /// Copy fields from Fortran data structures to an SSE2 friendly format.
 void
-sse2_fields_from_fortran(){
-  struct psc_sse2 *sse2 = psc.c_ctx;
+sse2_fields_from_fortran(struct psc_sse2 *sse2)
+{
   sse2->fields = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
 
   int *ilg = psc.ilg;
@@ -126,8 +123,8 @@ sse2_fields_from_fortran(){
 
 /// Copy fields from SSE2 data structures into Fortran structures.
 void
-sse2_fields_to_fortran(){
-  struct psc_sse2 *sse2 = psc.c_ctx;
+sse2_fields_to_fortran(struct psc_sse2 *sse2)
+{
   assert(sse2->fields != NULL);
 
   int *ilg = psc.ilg;
