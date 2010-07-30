@@ -15,7 +15,7 @@
 #if 1
 
 #define CF3(fldnr, jx,jy,jz)			\
-  (sse2->fields[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
+  (sse2->flds.flds[(fldnr)*psc.fld_size + FF3_OFF(jx,jy,jz)])
 
 #else
 //out of range debugging
@@ -23,7 +23,7 @@
   (*({int off = FF3_OFF(jx,jy,jz);					\
       assert(off >= 0);							\
       assert(off < psc.fld_size);					\
-      &(sse2->fields[(fldnr)*psc.fld_size + off]);					\
+      &(sse2->flds.flds[(fldnr)*psc.fld_size + off]);			\
     }))
 
 #endif
@@ -46,10 +46,14 @@ struct sse2_particle {
 };
 
 /// Field/Particle data used by SSE2 Implementation
+typedef struct psc_fields_sse2 {
+  sse2_real *flds;
+} psc_fields_sse2_t;
+
 struct psc_sse2 {
   struct sse2_particle *part; ///< Pointer to particle array
   int part_allocated; ///< Number of particles currently allocated
-  sse2_real *fields; ///< Pointer to fields array
+  psc_fields_sse2_t flds;
 };
 
 // Packed vector datatypes, use typedefs to make things a bit prettier

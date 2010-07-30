@@ -379,12 +379,12 @@ do_push_part_yz_b(struct psc_sse2 *sse2)
     //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
     // FIXME : this assumes xi always rounds down to 0!
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EXpoint = &sse2->flds.flds[EX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EYpoint = &sse2->flds.flds[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->flds.flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->flds.flds[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->flds.flds[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->flds.flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
   
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -533,7 +533,7 @@ do_push_part_yz(struct psc_sse2 *sse2)
   psc.p2B = 0.;
   
   for (int m = NE; m <= JZI; m++) {
-    memset(&sse2->fields[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
+    memset(&sse2->flds.flds[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
   }  
 
   //---------------------------------------------
@@ -591,12 +591,12 @@ do_push_part_yz(struct psc_sse2 *sse2)
     //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
     //FIXME: this assumes xi always rounds down to 0
-    sse2_real * restrict EXpoint = &sse2->fields[EX*psc.fld_size + 0 - psc.ilg[0]]; 
-    sse2_real * restrict EYpoint = &sse2->fields[EY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &sse2->fields[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &sse2->fields[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EXpoint = &sse2->flds.flds[EX*psc.fld_size + 0 - psc.ilg[0]]; 
+    sse2_real * restrict EYpoint = &sse2->flds.flds[EY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict EZpoint = &sse2->flds.flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BXpoint = &sse2->flds.flds[BX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BYpoint = &sse2->flds.flds[BY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict BZpoint = &sse2->flds.flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 

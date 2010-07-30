@@ -109,13 +109,13 @@ sse2_particles_to_fortran(struct psc_sse2 *sse2)
 void
 sse2_fields_from_fortran(struct psc_sse2 *sse2)
 {
-  sse2->fields = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
+  sse2->flds.flds = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
 
   int *ilg = psc.ilg;
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
-      sse2->fields[m * psc.fld_size + n] =
+      sse2->flds.flds[m * psc.fld_size + n] =
 	(sse2_real) ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]);
     }
   }
@@ -125,16 +125,16 @@ sse2_fields_from_fortran(struct psc_sse2 *sse2)
 void
 sse2_fields_to_fortran(struct psc_sse2 *sse2)
 {
-  assert(sse2->fields != NULL);
+  assert(sse2->flds.flds != NULL);
 
   int *ilg = psc.ilg;
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
       ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]) = 
-	sse2->fields[m * psc.fld_size + n];
+	sse2->flds.flds[m * psc.fld_size + n];
     }
   }
-  _mm_free(sse2->fields);
+  _mm_free(sse2->flds.flds);
 }
 
 /// Pointers to functions optimized for SSE2
