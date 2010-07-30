@@ -28,7 +28,7 @@ static struct sse2_particle *__sse2_part_data;
 // For now this is all more or less identical to kai's generic_c. 
 /// Copy particles from Fortran data structures to an SSE2 friendly format.
 void
-sse2_particles_from_fortran(psc_particles_sse2_t *particles)
+psc_particles_sse2_get(psc_particles_sse2_t *particles)
 {
   int n_part = psc.pp.n_part;
   int pad = 0;
@@ -75,7 +75,7 @@ sse2_particles_from_fortran(psc_particles_sse2_t *particles)
 
 /// Copy particles from SSE2 data structures to fortran structures.
 void
-sse2_particles_to_fortran(psc_particles_sse2_t *particles)
+psc_particles_sse2_put(psc_particles_sse2_t *particles)
 {
    for(int n = 0; n < psc.pp.n_part; n++) {
      particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
@@ -95,7 +95,7 @@ sse2_particles_to_fortran(psc_particles_sse2_t *particles)
 
 /// Copy fields from Fortran data structures to an SSE2 friendly format.
 void
-sse2_fields_from_fortran(psc_fields_sse2_t *pf)
+psc_fields_sse2_get(psc_fields_sse2_t *pf)
 {
   pf->flds = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
   
@@ -111,7 +111,7 @@ sse2_fields_from_fortran(psc_fields_sse2_t *pf)
 
 /// Copy fields from SSE2 data structures into Fortran structures.
 void
-sse2_fields_to_fortran(psc_fields_sse2_t *pf)
+psc_fields_sse2_put(psc_fields_sse2_t *pf)
 {
   assert(pf->flds);
 
