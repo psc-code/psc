@@ -38,6 +38,7 @@ libpsc_a_SOURCES = \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	field.c \
+	randomize.c \
 	sort.c \
 	bnd.c \
 	output_fields.c output_binary.c output_vtk.c \

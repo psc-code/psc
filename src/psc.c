@@ -50,6 +50,12 @@ static struct psc_push_field_ops *psc_push_field_ops_list[] = {
   NULL,
 };
 
+static struct psc_randomize_ops *psc_randomize_ops_list[] = {
+  &psc_randomize_ops_fortran,
+  &psc_randomize_ops_none,
+  NULL,
+};
+
 static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_fortran,
   &psc_sort_ops_qsort,
@@ -93,6 +99,17 @@ psc_find_push_field_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_randomize_ops *
+psc_find_randomize_ops(const char *ops_name)
+{
+  for (int i = 0; psc_randomize_ops_list[i]; i++) {
+    if (strcasecmp(psc_randomize_ops_list[i]->name, ops_name) == 0)
+      return psc_randomize_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_randomize_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 static struct psc_sort_ops *
 psc_find_sort_ops(const char *ops_name)
 {
@@ -131,6 +148,7 @@ psc_find_bnd_ops(const char *ops_name)
 static struct param psc_mod_config_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
   { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
+  { "mod_randomize"   , VAR(mod_randomize)      , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
   { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
   { "mod_bnd"         , VAR(mod_bnd)            , PARAM_STRING(NULL)  },
@@ -147,6 +165,8 @@ psc_create(struct psc_mod_config *conf)
     conf->mod_particle = "fortran";
   if (!conf->mod_field)
     conf->mod_field = "fortran";
+  if (!conf->mod_randomize)
+    conf->mod_randomize = "none";
   if (!conf->mod_sort)
     conf->mod_sort = "none";
   if (!conf->mod_output)
@@ -166,6 +186,10 @@ psc_create(struct psc_mod_config *conf)
   psc.push_field_ops = psc_find_push_field_ops(conf->mod_field);
   if (psc.push_field_ops->create) {
     psc.push_field_ops->create();
+  }
+  psc.randomize_ops = psc_find_randomize_ops(conf->mod_randomize);
+  if (psc.randomize_ops->create) {
+    psc.randomize_ops->create();
   }
   psc.sort_ops = psc_find_sort_ops(conf->mod_sort);
   if (psc.sort_ops->create) {
@@ -501,6 +525,16 @@ psc_exchange_particles(void)
 {
   assert(psc.bnd_ops->exchange_particles);
   psc.bnd_ops->exchange_particles();
+}
+
+// ----------------------------------------------------------------------
+// psc_randomize
+
+void
+psc_randomize()
+{
+  assert(psc.randomize_ops->randomize);
+  psc.randomize_ops->randomize();
 }
 
 // ----------------------------------------------------------------------

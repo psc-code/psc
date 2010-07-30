@@ -9,6 +9,7 @@ enum {
   STAT_TIME_STEP,
   STAT_TIME_PARTICLE,
   STAT_TIME_FIELD,
+  STAT_TIME_RANDOMIZE,
   STAT_TIME_SORT,
   STAT_TIME_OUT_FIELD,
   STAT_TIME_OUT_PARTICLE,
@@ -20,6 +21,7 @@ static const char *stat_name[NR_STATS] = {
   [STAT_TIME_STEP]         = "time entire step",
   [STAT_TIME_PARTICLE]     = "time particle update",
   [STAT_TIME_FIELD]        = "time field update",
+  [STAT_TIME_RANDOMIZE]    = "time part. randomize",
   [STAT_TIME_SORT]         = "time particle sort",
   [STAT_TIME_OUT_FIELD]    = "time field output",
   [STAT_TIME_OUT_PARTICLE] = "time particle output",
@@ -83,6 +85,10 @@ psc_integrate()
 
   for (; psc.timestep < psc.prm.nmax; psc.timestep++) {
     time_start(STAT_TIME_STEP);
+
+    time_start(STAT_TIME_RANDOMIZE);
+    psc_randomize();
+    time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
     psc_sort();
