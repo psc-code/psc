@@ -9,20 +9,18 @@ typedef sse2_real particle_sse2_real_t;
 
 #define MPI_PARTICLES_SSE2_REAL MPI_SSE2_REAL
 
-struct particle_sse2 {
+typedef struct {
   particle_sse2_real_t xi, yi, zi;
   particle_sse2_real_t pxi, pyi, pzi;
   particle_sse2_real_t qni;
   particle_sse2_real_t mni;
   particle_sse2_real_t wni;
-};
+} particle_sse2_t;
 
-struct psc_particles_sse2 {
-  struct particle_sse2 *particles;
+typedef struct {
+  particle_sse2_t *particles;
   int n_part;
-};
-
-typedef struct psc_particles_sse2 psc_particles_sse2_t;
+} psc_particles_sse2_t;
 
 //void psc_particles_sse2_alloc(struct psc_particles_c *pp, int n_part);
 //void psc_particles_sse2_realloc(struct psc_particles_c *pp, int new_n_part);
@@ -30,8 +28,8 @@ typedef struct psc_particles_sse2 psc_particles_sse2_t;
 void psc_particles_sse2_get(psc_particles_sse2_t *pp);
 void psc_particles_sse2_put(psc_particles_sse2_t *pp);
 
-static inline struct particle_sse2 *
-psc_particles_sse2_get_one(struct psc_particles_sse2 *pp, int n)
+static inline particle_sse2_t *
+psc_particles_sse2_get_one(psc_particles_sse2_t *pp, int n)
 {
   return &pp->particles[n];
 }

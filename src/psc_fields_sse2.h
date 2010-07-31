@@ -9,11 +9,9 @@ typedef sse2_real psc_fields_sse2_real_t;
 
 #define MPI_F3_SSE2_REAL MPI_SSE2_REAL
 
-struct psc_fields_sse2 {
+typedef struct {
   psc_fields_sse2_real_t *flds;
-};
-
-typedef struct psc_fields_sse2 psc_fields_sse2_t;
+} psc_fields_sse2_t;
 
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
   (((((fldnr								\
