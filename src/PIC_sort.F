@@ -18,8 +18,6 @@ c     THIS SUBROUTINE SORTS THE PARTICLES TO CELLS
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
-      call PIC_randomize(niloc, p_niloc)
-      call PIC_find_cell_indices(niloc, p_niloc)
       call PIC_sort_1(niloc, p_niloc)
 
       call SERV_systime(cpuh)

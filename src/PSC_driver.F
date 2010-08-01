@@ -21,7 +21,9 @@ c     this contains the main driver for the code, shared between VLI and VLA
          cpucomp=0.0d0
 
 c         call PIC_bpulse      ! particle injection
-c         call PIC_sort        ! particle randomization
+c         call PIC_randomize(niloc, p_niloc)
+c         call PIC_find_cell_indices(niloc, p_niloc)
+c         call PIC_sort_1      ! particle randomization
 c         call PIC_ionize      ! field ionization
 c         call MCC_impact      ! impact ionization
 c         call PIC_bin_coll    ! binary collisions
