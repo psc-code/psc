@@ -3,16 +3,6 @@ c FIELD OUTPUT!
 
       subroutine OUT_field
 
-      implicit none
-
-      call OUT_field_1
-
-      end subroutine OUT_field
-
-c legacy output routine
-
-      subroutine OUT_field_1
-
 
       use PIC_variables
       use VLA_variables
@@ -574,5 +564,5 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
       cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
 
 
-      end subroutine OUT_field_1
+      end subroutine OUT_field
 

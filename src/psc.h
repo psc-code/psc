@@ -461,7 +461,7 @@ void PIC_bin_coll();
 void PIC_find_cell_indices();
 void PIC_msa();
 void PIC_msb();
-void OUT_field_1();
+void OUT_field();
 void OUT_part();
 void CALC_densities(psc_fields_fortran_t *pf);
 void SET_param_domain();

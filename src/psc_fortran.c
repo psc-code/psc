@@ -209,7 +209,7 @@ fortran_out_field()
     pr = prof_register("fort_out_field", 1., 0, 0);
   }
   prof_start(pr);
-  OUT_field_1();
+  OUT_field();
   prof_stop(pr);
 }
 
