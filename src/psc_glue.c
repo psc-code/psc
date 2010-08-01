@@ -9,7 +9,7 @@
 #define PIC_push_part_yz_a_F77 F77_FUNC(pic_push_part_yz_a,PIC_PUSH_PART_YZ_A)
 #define PIC_push_part_yz_b_F77 F77_FUNC(pic_push_part_yz_b,PIC_PUSH_PART_YZ_B)
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
-#define PIC_sort_1_F77 F77_FUNC(pic_sort_1,PIC_SORT_1)
+#define PIC_sort_F77 F77_FUNC(pic_sort,PIC_SORT)
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
@@ -93,7 +93,7 @@ void PIC_push_part_z_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			 f_real *ex, f_real *ey, f_real *ez,
 			 f_real *bx, f_real *by, f_real *bz);
 
-void PIC_sort_1_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_sort_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
@@ -254,12 +254,12 @@ PIC_push_part_z()
 }
 
 void
-PIC_sort_1()
+PIC_sort()
 {
   psc_particles_fortran_t pp;
   psc_particles_fortran_get(&pp);
 
-  PIC_sort_1_F77(&pp.n_part, &pp.particles[-1]);
+  PIC_sort_F77(&pp.n_part, &pp.particles[-1]);
 
   psc_particles_fortran_put(&pp);
 }

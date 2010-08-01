@@ -121,7 +121,7 @@ fortran_sort()
     pr = prof_register("fort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_sort_1();
+  PIC_sort();
   prof_stop(pr);
 }
 

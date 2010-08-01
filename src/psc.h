@@ -455,7 +455,7 @@ void PIC_push_part_yz();
 void PIC_push_part_z();
 void PIC_push_part_yz_a();
 void PIC_push_part_yz_b();
-void PIC_sort_1();
+void PIC_sort();
 void PIC_randomize();
 void PIC_bin_coll();
 void PIC_find_cell_indices();
