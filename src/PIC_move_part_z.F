@@ -341,12 +341,8 @@ c     ----------------------------------------------------------------------
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
-#ifdef USE_C_INTERFACE
-      call C_push_part_z(p2A, p2B, niloc, p_niloc, 99)
-#else
       call PIC_push_part_z(niloc, p_niloc, p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
-#endif
 
       call SERV_systime(cpua)
       call PIC_faz(jxi)

@@ -46,10 +46,6 @@
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
-#define C_push_part_yz_F77 F77_FUNC(c_push_part_yz,C_PUSH_PART_YZ)
-#define C_push_part_z_F77 F77_FUNC(c_push_part_z,C_PUSH_PART_Z)
-#define C_sort_F77 F77_FUNC(c_sort,C_SORT)
-#define C_out_field_F77 F77_FUNC(c_out_field,C_OUT_FIELD)
 #define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
 #define C_alloc_field_cb_F77 F77_FUNC(c_alloc_field_cb,C_ALLOC_FIELD_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
@@ -493,80 +489,6 @@ PIC_msb()
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from Fortran that continue to C
-
-void
-C_push_part_yz_F77(f_real *p2A, f_real *p2B,
-		   f_int *niloc, particle_fortran_t *p_niloc,
-		   f_int *dummy)
-{
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-  // make sure we got passed the right number of arguments
-  assert(*dummy == 99);
-
-  psc.p2A = *p2A;
-  psc.p2B = *p2B;
-
-  psc.pp.n_part = *niloc;
-  psc.pp.particles = &p_niloc[1];
-
-  psc_push_part_yz();
-
-  *p2A = psc.p2A;
-  *p2A = psc.p2B;
-#else
-  assert(0);
-#endif
-}
-
-void
-C_push_part_z_F77(f_real *p2A, f_real *p2B,
-		  f_int *niloc, particle_fortran_t *p_niloc,
-		  f_int *dummy)
-{
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-  // make sure we got passed the right number of arguments
-  assert(*dummy == 99);
-
-  psc.p2A = *p2A;
-  psc.p2B = *p2B;
-
-  psc.pp.n_part = *niloc;
-  psc.pp.particles = &p_niloc[1];
-
-  psc_push_part_z();
-
-  *p2A = psc.p2A;
-  *p2A = psc.p2B;
-#else
-  assert(0);
-#endif
-}
-
-void
-C_sort_F77(f_int *niloc, particle_fortran_t *p_niloc,
-	   f_int *dummy)
-{
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-  // make sure we got passed the right number of arguments
-  assert(*dummy == 99);
-
-  psc.pp.n_part = *niloc;
-  psc.pp.particles = &p_niloc[1];
-
-  psc_sort();
-#else
-  assert(0);
-#endif
-}
-
-void
-C_out_field_F77(f_int *dummy)
-{
-  // make sure we got passed the right number of arguments
-  assert(*dummy == 99);
-
-  psc_out_field();
-}
 
 f_real
 C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)

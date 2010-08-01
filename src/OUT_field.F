@@ -1,17 +1,11 @@
 
-#include "config.h"
-
 c FIELD OUTPUT!
 
       subroutine OUT_field
 
       implicit none
 
-#ifdef USE_C_INTERFACE
-      call C_out_field(99)
-#else
       call OUT_field_1
-#endif
 
       end subroutine OUT_field
 

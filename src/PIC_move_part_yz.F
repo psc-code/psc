@@ -417,31 +417,12 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       s_cpuh=0.0d0
 
 
-c      call C_dump_particles(niloc, p_niloc)
-c      call C_dump_fields(ex)
-c      call C_dump_fields(ey)
-c      call C_dump_fields(ez)
-c      call C_dump_fields(bx)
-c      call C_dump_fields(by)
-c      call C_dump_fields(bz)
       call SERV_systime(cpug)
 
-#ifdef USE_C_INTERFACE
-      call C_push_part_yz(p2A, p2B, niloc, p_niloc, 99)
-#else
       call PIC_push_part_yz(niloc, p_niloc,p2A, p2B,
      &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
-#endif
      
       call SERV_systime(cpua)
-
-c      call C_dump_particles(niloc, p_niloc)
-c      call C_dump_fields(ne)
-c      call C_dump_fields(ni)
-c      call C_dump_fields(nn)
-c      call C_dump_fields(jxi)
-c      call C_dump_fields(jyi)
-c      call C_dump_fields(jzi)
 
       call PIC_fay(jxi)
       call PIC_faz(jxi)
