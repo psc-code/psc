@@ -1,10 +1,11 @@
+
 #include "config.h"
 
-c THIS SUBROUTINE IS THE PARTICLE MOVER.
-
-
+c     ----------------------------------------------------------------------
       subroutine PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+c     ----------------------------------------------------------------------
+c     particle pusher yz, w/o the following boundary exchange
 
       use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
      *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
