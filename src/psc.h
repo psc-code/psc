@@ -70,6 +70,7 @@ struct f_particle {
 #endif
 
 typedef f_real fields_base_real_t;
+#define MPI_FIELDS_BASE_REAL MPI_DOUBLE
 
 // user settable parameters
 struct psc_param {
