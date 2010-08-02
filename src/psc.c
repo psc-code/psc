@@ -631,12 +631,12 @@ psc_init(const char *case_name)
   INIT_basic();
   INIT_param_fortran_F77();
 
-  int n_part;
-  psc_init_partition(&n_part);
+  int n_part, particle_label_offset;
+  psc_init_partition(&n_part, &particle_label_offset);
   SET_subdomain();
 
   psc.f_part = ALLOC_particles(n_part);
-  psc_init_particles();
+  psc_init_particles(particle_label_offset);
 
   f_real **fields = ALLOC_field();
   for (int n = 0; n < NR_FIELDS; n++) {

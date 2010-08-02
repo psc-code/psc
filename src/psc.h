@@ -275,8 +275,8 @@ void psc_destroy();
 
 void psc_init(const char *case_name);
 void psc_init_param(const char *case_name);
-void psc_init_partition(int *n_part);
-void psc_init_particles();
+void psc_init_partition(int *n_part, int *particle_label_offset);
+void psc_init_particles(int particle_label_offset);
 void psc_init_field();
 void psc_integrate();
 void psc_push_particles();
