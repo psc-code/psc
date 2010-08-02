@@ -132,12 +132,16 @@ psc_init_particles(int particle_label_offset)
 	      struct f_particle *p = &psc.f_part[i++];
 	      
 	      // FIXME? this gives same random numbers on all procs
-	      float ran1 = random() / ((float) RAND_MAX + 1);
-	      float ran2 = random() / ((float) RAND_MAX + 1);
-	      float ran3 = random() / ((float) RAND_MAX + 1);
-	      float ran4 = random() / ((float) RAND_MAX + 1);
-	      float ran5 = random() / ((float) RAND_MAX + 1);
-	      float ran6 = random() / ((float) RAND_MAX + 1);
+	      float ran1, ran2, ran3, ran4, ran5, ran6;
+	      do {
+		ran1 = random() / ((float) RAND_MAX + 1);
+		ran2 = random() / ((float) RAND_MAX + 1);
+		ran3 = random() / ((float) RAND_MAX + 1);
+		ran4 = random() / ((float) RAND_MAX + 1);
+		ran5 = random() / ((float) RAND_MAX + 1);
+		ran6 = random() / ((float) RAND_MAX + 1);
+	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
 	      
 	      float px =
 		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
