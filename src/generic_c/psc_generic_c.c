@@ -22,15 +22,16 @@ genc_particles_from_fortran()
   if (!genc) {
     genc = genc_create();
   }
+  psc_particles_c_t *pp = &genc->pp;
   if (psc.pp.n_part > genc->part_allocated) {
-    free(genc->part);
+    free(pp->particles);
     genc->part_allocated = psc.pp.n_part * 1.2;
-    genc->part = calloc(genc->part_allocated, sizeof(*genc->part));
+    pp->particles = calloc(genc->part_allocated, sizeof(*pp->particles));
   }
 
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *f_part = &psc.pp.particles[n];
-    particle_c_t *part = &genc->part[n];
+    particle_c_t *part = psc_particles_c_get_one(pp, n);
 
     part->xi  = f_part->xi;
     part->yi  = f_part->yi;
@@ -48,10 +49,11 @@ static void
 genc_particles_to_fortran()
 {
   struct psc_genc *genc = psc.c_ctx;
+  psc_particles_c_t *pp = &genc->pp;
 
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *f_part = &psc.pp.particles[n];
-    particle_c_t *part = &genc->part[n];
+    particle_c_t *part = psc_particles_c_get_one(pp, n);
 
     f_part->xi  = part->xi;
     f_part->yi  = part->yi;

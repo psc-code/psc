@@ -33,8 +33,8 @@ typedef float creal;
 // generic C data structures
 
 struct psc_genc {
-  particle_c_t *part;
   int part_allocated;
+  psc_particles_c_t pp;
   psc_fields_c_t pf;
 };
 

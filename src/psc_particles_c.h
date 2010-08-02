@@ -16,4 +16,15 @@ typedef struct {
   particle_c_real_t wni;
 } particle_c_t;
 
+typedef struct {
+  particle_c_t *particles;
+  int n_part;
+} psc_particles_c_t;
+
+static inline particle_c_t *
+psc_particles_c_get_one(psc_particles_c_t *pp, int n)
+{
+  return &pp->particles[n];
+}
+
 #endif
