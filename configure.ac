@@ -89,10 +89,10 @@ AC_ARG_ENABLE(
                   [use code optimized for processors using Intel's SSE2])],
 )
 AS_IF(
- [test "$enable_sse2" != "no"],
+ [test "$enable_sse2" = "yes"],
  [AC_DEFINE([USE_SSE2])
   CFLAGS="$CFLAGS -msse2"])
-AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" != "no"])
+AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])
 
 AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile])
 
