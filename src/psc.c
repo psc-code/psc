@@ -349,7 +349,7 @@ ascii_dump_particles(const char *fname)
   FILE *file = fopen(filename, "w");
   fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
   for (int i = 0; i < psc.n_part; i++) {
-    struct f_particle *p = &psc.f_part[i];
+    particle_base_t *p = &psc.f_part[i];
     fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 	    i, p->xi, p->yi, p->zi,
 	    p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
@@ -653,7 +653,7 @@ psc_set_n_particles(int n_part)
 // testing related stuff
 
 
-static struct f_particle *particle_ref;
+static particle_base_t *particle_ref;
 static f_real *field_ref[NR_FIELDS];
 
 // ----------------------------------------------------------------------

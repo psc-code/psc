@@ -63,44 +63,44 @@ void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
 
-void PIC_push_part_xz_F77(f_int *niloc, struct f_particle *p_niloc,
+void PIC_push_part_xz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
 			  f_real *bx, f_real *by, f_real *bz);
 
-void PIC_push_part_yz_F77(f_int *niloc, struct f_particle *p_niloc,
+void PIC_push_part_yz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
 			  f_real *ne, f_real *ni, f_real *nn,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
 			  f_real *bx, f_real *by, f_real *bz);
 
-void PIC_push_part_yz_a_F77(f_int *niloc, struct f_particle *p_niloc,
+void PIC_push_part_yz_a_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
 			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
 			    f_real *bx, f_real *by, f_real *bz);
 
-void PIC_push_part_yz_b_F77(f_int *niloc, struct f_particle *p_niloc,
+void PIC_push_part_yz_b_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
 			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
 			    f_real *bx, f_real *by, f_real *bz);
 
-void PIC_push_part_z_F77(f_int *niloc, struct f_particle *p_niloc,
+void PIC_push_part_z_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			 f_real *p2A, f_real *p2B,
 			 f_real *ne, f_real *ni, f_real *nn,
 			 f_real *jxi, f_real *jyi, f_real *jzi,
 			 f_real *ex, f_real *ey, f_real *ez,
 			 f_real *bx, f_real *by, f_real *bz);
 
-void PIC_sort_1_F77(f_int *niloc, struct f_particle *p_niloc);
-void PIC_randomize_F77(f_int *niloc, struct f_particle *p_niloc);
-void PIC_bin_coll_F77(f_int *niloc, struct f_particle *p_niloc);
-void PIC_find_cell_indices_F77(f_int *niloc, struct f_particle *p_niloc);
+void PIC_sort_1_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
 			f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x,
 			f_int *niloc_new);
@@ -461,7 +461,7 @@ PIC_msb()
 
 void
 C_push_part_yz_F77(f_real *p2A, f_real *p2B,
-		   f_int *niloc, struct f_particle *p_niloc,
+		   f_int *niloc, particle_fortran_t *p_niloc,
 		   f_int *dummy)
 {
   // make sure we got passed the right number of arguments
@@ -481,7 +481,7 @@ C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 
 void
 C_push_part_z_F77(f_real *p2A, f_real *p2B,
-		  f_int *niloc, struct f_particle *p_niloc,
+		  f_int *niloc, particle_fortran_t *p_niloc,
 		  f_int *dummy)
 {
   // make sure we got passed the right number of arguments
@@ -500,7 +500,7 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
 }
 
 void
-C_sort_F77(f_int *niloc, struct f_particle *p_niloc,
+C_sort_F77(f_int *niloc, particle_fortran_t *p_niloc,
 	   f_int *dummy)
 {
   // make sure we got passed the right number of arguments
@@ -531,9 +531,9 @@ C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 // slightly hacky way to do the equivalent of "malloc" using
 // Fortran's allocate()
 
-static struct f_particle *__f_part;
+static particle_fortran_t *__f_part;
 
-struct f_particle *
+particle_fortran_t *
 ALLOC_particles(int n_part)
 {
   ALLOC_particles_F77(&n_part);
@@ -542,7 +542,7 @@ ALLOC_particles(int n_part)
   return __f_part;
 }
 
-struct f_particle *
+particle_fortran_t *
 REALLOC_particles(int n_part_n)
 {
   REALLOC_particles_F77(&n_part_n);
@@ -552,7 +552,7 @@ REALLOC_particles(int n_part_n)
 }
 
 void
-C_alloc_particles_cb_F77(struct f_particle *p_niloc)
+C_alloc_particles_cb_F77(particle_fortran_t *p_niloc)
 {
   __f_part = &p_niloc[1];
 }

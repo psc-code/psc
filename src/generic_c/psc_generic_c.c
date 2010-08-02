@@ -29,7 +29,7 @@ genc_particles_from_fortran()
   }
 
   for (int n = 0; n < psc.n_part; n++) {
-    struct f_particle *f_part = &psc.f_part[n];
+    particle_base_t *f_part = &psc.f_part[n];
     struct c_particle *part = &genc->part[n];
 
     part->xi  = f_part->xi;
@@ -50,7 +50,7 @@ genc_particles_to_fortran()
   struct psc_genc *genc = psc.c_ctx;
 
   for (int n = 0; n < psc.n_part; n++) {
-    struct f_particle *f_part = &psc.f_part[n];
+    particle_base_t *f_part = &psc.f_part[n];
     struct c_particle *part = &genc->part[n];
 
     f_part->xi  = part->xi;

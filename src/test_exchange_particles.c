@@ -27,7 +27,7 @@ setup_particles(void)
     for (int iz = psc.ilo[2]-1; iz < psc.ihi[2]+1; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) { // xz only !!!
 	for (int ix = psc.ilo[0]-1; ix < psc.ihi[0]+1; ix++) {
-	  struct f_particle *p;
+	  particle_base_t *p;
 	  p = &psc.f_part[i++];
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .01) * psc.dx[0];
@@ -67,7 +67,7 @@ check_particles_old_xz(void)
 
   int fail_cnt = 0;
   for (int i = 0; i < psc.n_part; i++) {
-    struct f_particle *p = &psc.f_part[i];
+    particle_base_t *p = &psc.f_part[i];
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -94,7 +94,7 @@ check_particles(void)
 
   int fail_cnt = 0;
   for (int i = 0; i < psc.n_part; i++) {
-    struct f_particle *p = &psc.f_part[i];
+    particle_base_t *p = &psc.f_part[i];
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {

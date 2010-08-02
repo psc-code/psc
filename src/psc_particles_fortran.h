@@ -6,16 +6,17 @@
 
 // this matches the Fortran particle data structure
 
-struct f_particle {
-  f_real xi, yi, zi;
-  f_real pxi, pyi, pzi;
-  f_real qni;
-  f_real mni;
-  f_real cni;
-  f_real lni;
-  f_real wni;
-};
+typedef f_real particle_fortran_real_t;
 
 
+typedef struct {
+  particle_fortran_real_t xi, yi, zi;
+  particle_fortran_real_t pxi, pyi, pzi;
+  particle_fortran_real_t qni;
+  particle_fortran_real_t mni;
+  particle_fortran_real_t cni;
+  particle_fortran_real_t lni;
+  particle_fortran_real_t wni;
+} particle_fortran_t;
 
 #endif

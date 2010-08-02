@@ -45,6 +45,10 @@ typedef int f_int;
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
 
+typedef particle_fortran_t particle_base_t;
+typedef particle_fortran_real_t particle_base_real_t;
+#define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
+
 typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
@@ -219,7 +223,7 @@ struct psc {
 
   // Fortran compatible particles
   int n_part;
-  struct f_particle *f_part;
+  particle_base_t *f_part;
   psc_fields_base_t pf;
 
   // Fortran compatible fields
@@ -366,8 +370,8 @@ void INIT_param_psc();
 void INIT_grid_map();
 void INIT_partition(int *n_part);
 void INIT_idistr();
-struct f_particle *ALLOC_particles(int n_part);
-struct f_particle * REALLOC_particles(int n_part_n);
+particle_fortran_t *ALLOC_particles(int n_part);
+particle_fortran_t *REALLOC_particles(int n_part_n);
 f_real **ALLOC_field();
 void FREE_particles(void);
 void FREE_field(void);

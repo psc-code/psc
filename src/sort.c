@@ -10,7 +10,7 @@
 static int
 compare(const void *_a, const void *_b)
 {
-  const struct f_particle *a = _a, *b = _b;
+  const particle_base_t *a = _a, *b = _b;
 
   if (a->cni < b->cni) {
     return -1;
@@ -71,7 +71,7 @@ countsort_sort()
   assert(cur == psc.n_part);
 
   // move into new position
-  struct f_particle *f_part2 = malloc(psc.n_part * sizeof(*f_part2));
+  particle_base_t *f_part2 = malloc(psc.n_part * sizeof(*f_part2));
   for (int i = 0; i < psc.n_part; i++) {
     unsigned int cni = psc.f_part[i].cni;
     memcpy(&f_part2[cnts[cni]], &psc.f_part[i], sizeof(*f_part2));
@@ -133,7 +133,7 @@ countsort2_sort()
   assert(cur == psc.n_part);
 
   // move into new position
-  struct f_particle *f_part2 = malloc(psc.n_part * sizeof(*f_part2));
+  particle_base_t *f_part2 = malloc(psc.n_part * sizeof(*f_part2));
   for (int i = 0; i < psc.n_part; i++) {
     unsigned int cni = cnis[i];
     int n = 1;

@@ -65,7 +65,7 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf)
 // ======================================================================
 
 struct ddcp_nei {
-  struct f_particle *send_buf;
+  particle_base_t *send_buf;
   int n_send;
   int n_recv;
   int rank;
@@ -114,7 +114,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
 }
 
 static void
-ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], struct f_particle *p)
+ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 {
   struct ddcp_nei *nei = &ddcp->nei[dir2idx(dir)];
 
@@ -131,7 +131,7 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], struct f_particle *p
 static void
 ddc_particles_comm(struct ddc_particles *ddcp)
 {
-  int sz = sizeof(struct f_particle) / sizeof(f_real);
+  int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
   int dir[3];
 
   // post receives for # particles we'll receive in the next step
@@ -163,7 +163,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
 
 	MPI_Isend(&nei->n_send, 1, MPI_INT, nei->rank, 2000 + dir1,
 		  MPI_COMM_WORLD, &ddcp->send_reqs[dir1]);
-	MPI_Isend(nei->send_buf, sz * nei->n_send, MPI_DOUBLE, nei->rank,
+	MPI_Isend(nei->send_buf, sz * nei->n_send, MPI_PARTICLES_BASE_REAL, nei->rank,
 		  2100 + dir1, MPI_COMM_WORLD, &ddcp->sendp_reqs[dir1]);
       }
     }
@@ -320,8 +320,8 @@ c_exchange_particles(void)
     ddcp->nei[dir1].n_send = 0;
   }
   for (int i = 0; i < psc.n_part; i++) {
-    struct f_particle *p = &psc.f_part[i];
-    f_real *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in
+    particle_base_t *p = &psc.f_part[i];
+    particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in
                          // the struct. FIXME
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
 	xi[1] >= xb[1] && xi[1] <= xe[1] &&
