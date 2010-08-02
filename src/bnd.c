@@ -15,40 +15,48 @@ struct c_bnd_ctx {
 };
 
 static void
-copy_to_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
+copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf)
 {
   fields_base_real_t *buf = _buf;
 
-  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	DDC_BUF(buf, ix,iy,iz) = F3_BASE(fld_nr, ix,iy,iz);
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  DDC_BUF(buf, m - mb, ix,iy,iz) = F3_BASE(m, ix,iy,iz);
+	}
       }
     }
   }
 }
 
 static void
-add_from_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
+add_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf)
 {
   fields_base_real_t *buf = _buf;
-  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	F3_BASE(fld_nr, ix,iy,iz) += DDC_BUF(buf, ix,iy,iz);
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  F3_BASE(m, ix,iy,iz) += DDC_BUF(buf, m - mb, ix,iy,iz);
+	}
       }
     }
   }
 }
 
 static void
-copy_from_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
+copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf)
 {
   fields_base_real_t *buf = _buf;
-  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	F3_BASE(fld_nr, ix,iy,iz) = DDC_BUF(buf, ix,iy,iz);
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  F3_BASE(m, ix,iy,iz) = DDC_BUF(buf, m - mb, ix,iy,iz);
+	}
       }
     }
   }
@@ -247,9 +255,7 @@ c_add_ghosts(int mb, int me)
   }
   prof_start(pr);
 
-  for (int m = mb; m < me; m++) {
-    ddc_add_ghosts(c_bnd->ddc, m);
-  }
+  ddc_add_ghosts(c_bnd->ddc, mb, me);
 
   prof_stop(pr);
 }
@@ -271,9 +277,7 @@ c_fill_ghosts(int mb, int me)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  for (int m = mb; m < me; m++) {
-    ddc_fill_ghosts(c_bnd->ddc, m);
-  }
+  ddc_fill_ghosts(c_bnd->ddc, mb, me);
 
   prof_stop(pr);
 }
