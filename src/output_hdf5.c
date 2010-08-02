@@ -1,8 +1,9 @@
 
 #include "psc.h"
+#include "output_fields.h"
+
 #include "util/profile.h"
 #include "util/params.h"
-#include "output_fields.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -76,10 +77,11 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
 };
 
 // ======================================================================
-// psc_dump_field
 // hdf5_dump_field
 //
 // dumps the local fields to a file
+
+// FIXME still assuming fortran layout for buf
 
 static void
 hdf5_dump_field(int m, const char *fname)
@@ -98,9 +100,10 @@ hdf5_dump_field(int m, const char *fname)
   hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   hid_t group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5LTmake_dataset_double(group_fld, fldname[m], 3, dims, psc.f_fields[m]);
+  assert(sizeof(fields_base_real_t) == sizeof(double));
+  H5LTmake_dataset_double(group_fld, fldname[m], 3, dims,
+			  &F3_BASE(m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
   H5Gclose(group_fld);
   H5Gclose(group);
   H5Fclose(file);
 }
-
