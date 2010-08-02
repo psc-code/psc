@@ -4,8 +4,6 @@
 
 #include <mpi.h>
 
-typedef double ddc_real; // FIXME
-
 enum {
   DDC_BC_NONE,
   DDC_BC_PERIODIC,
@@ -13,20 +11,22 @@ enum {
 
 struct ddc_params {
   MPI_Comm comm;
+  MPI_Datatype mpi_type;
+  int size_of_type;
   int n_proc[3]; // # procs in 3D grid
   int ilo[3], ihi[3]; // local domain (no ghosts)
   int ibn[3]; // # ghost points
   int bc[3]; // boundary condition
-  void (*copy_to_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf);
-  void (*copy_from_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf);
-  void (*add_from_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf);
+  void (*copy_to_buf)(int m, int ilo[3], int ihi[3], void *buf);
+  void (*copy_from_buf)(int m, int ilo[3], int ihi[3], void *buf);
+  void (*add_from_buf)(int m, int ilo[3], int ihi[3], void *buf);
 };
 
 struct ddc_sendrecv {
   int ilo[3], ihi[3];
   int rank_nei;
   int len;
-  ddc_real *buf;
+  void *buf;
 };
 
 struct ddc_pattern {

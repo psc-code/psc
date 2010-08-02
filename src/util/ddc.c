@@ -62,7 +62,7 @@ ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = calloc(sr->len, sizeof(*sr->buf));
+  sr->buf = malloc(sr->len * ddc->prm.size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -93,7 +93,7 @@ ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = calloc(sr->len, sizeof(*sr->buf));
+  sr->buf = malloc(sr->len * ddc->prm.size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -101,8 +101,8 @@ ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 
 static void
 ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int m,
-	void (*to_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf),
-	void (*from_buf)(int m, int ilo[3], int ihi[3], ddc_real *buf))
+	void (*to_buf)(int m, int ilo[3], int ihi[3], void *buf),
+	void (*from_buf)(int m, int ilo[3], int ihi[3], void *buf))
 {
   int dir[3];
 
@@ -120,7 +120,7 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int m,
 		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
 		 r->len);
 #endif
-	  MPI_Irecv(r->buf, r->len, MPI_DOUBLE, r->rank_nei, 0x1000 + dir1neg,
+	  MPI_Irecv(r->buf, r->len, ddc->prm.mpi_type, r->rank_nei, 0x1000 + dir1neg,
 		    ddc->prm.comm, &ddc->recv_reqs[dir1]);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -143,7 +143,7 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int m,
 		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
 		 s->len);
 #endif
-	  MPI_Isend(s->buf, s->len, MPI_DOUBLE, s->rank_nei, 0x1000 + dir1,
+	  MPI_Isend(s->buf, s->len, ddc->prm.mpi_type, s->rank_nei, 0x1000 + dir1,
 		    ddc->prm.comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;

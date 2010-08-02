@@ -15,8 +15,10 @@ struct c_bnd_ctx {
 };
 
 static void
-copy_to_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
+copy_to_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
 {
+  fields_base_real_t *buf = _buf;
+
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -27,8 +29,9 @@ copy_to_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
 }
 
 static void
-add_from_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
+add_from_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
 {
+  fields_base_real_t *buf = _buf;
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -39,8 +42,9 @@ add_from_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
 }
 
 static void
-copy_from_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
+copy_from_buf(int fld_nr, int ilo[3], int ihi[3], void *_buf)
 {
+  fields_base_real_t *buf = _buf;
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -205,11 +209,13 @@ create_bnd(void)
   memset(c_bnd, 0, sizeof(*c_bnd));
 
   struct ddc_params prm = {
-    .comm   = MPI_COMM_WORLD,
-    .n_proc = { psc.domain.nproc[0], psc.domain.nproc[1], psc.domain.nproc[2] },
-    .ilo    = { psc.ilo[0], psc.ilo[1], psc.ilo[2] },
-    .ihi    = { psc.ihi[0], psc.ihi[1], psc.ihi[2] },
-    .ibn    = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
+    .comm          = MPI_COMM_WORLD,
+    .mpi_type      = MPI_FIELDS_BASE_REAL,
+    .size_of_type  = sizeof(fields_base_real_t),
+    .n_proc        = { psc.domain.nproc[0], psc.domain.nproc[1], psc.domain.nproc[2] },
+    .ilo           = { psc.ilo[0], psc.ilo[1], psc.ilo[2] },
+    .ihi           = { psc.ihi[0], psc.ihi[1], psc.ihi[2] },
+    .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
     .copy_to_buf   = copy_to_buf,
     .copy_from_buf = copy_from_buf,
     .add_from_buf  = add_from_buf,
