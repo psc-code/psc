@@ -166,105 +166,140 @@ PIC_set_variables()
 void
 PIC_push_part_yz()
 {
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
   psc_fields_fortran_t pf;
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
 		       pf.flds[NE], pf.flds[NI], pf.flds[NN],
 		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
 
+  psc_particles_fortran_put(&pp);
   psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_xz()
 {
+  psc_particles_fortran_t pp;
   psc_fields_fortran_t pf;
+  psc_particles_fortran_get(&pp);
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_xz_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_xz_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
 		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
 
+  psc_particles_fortran_put(&pp);
   psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_yz_a()
 {
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
   psc_fields_fortran_t pf;
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_a_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_a_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
 			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
 			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
 
+  psc_particles_fortran_put(&pp);
   psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_yz_b()
 {
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
   psc_fields_fortran_t pf;
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_b_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_b_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
 			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
 			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
 
+  psc_particles_fortran_put(&pp);
   psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_z()
 {
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
   psc_fields_fortran_t pf;
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_z_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_z_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
 		      pf.flds[NE], pf.flds[NI], pf.flds[NN],
 		      pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		      pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 		      pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
 
+  psc_particles_fortran_put(&pp);
   psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_sort_1()
 {
-  PIC_sort_1_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
+
+  PIC_sort_1_F77(&pp.n_part, &pp.particles[-1]);
+
+  psc_particles_fortran_put(&pp);
 }
 
 void
 PIC_randomize()
 {
-  PIC_randomize_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
+
+  PIC_randomize_F77(&pp.n_part, &pp.particles[-1]);
+
+  psc_particles_fortran_put(&pp);
 }
 
 void
 PIC_bin_coll()
 {
-  PIC_bin_coll_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
+
+  PIC_bin_coll_F77(&pp.n_part, &pp.particles[-1]);
+
+  psc_particles_fortran_put(&pp);
 }
 
 void
 PIC_find_cell_indices()
 {
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
+
   PIC_set_variables();
-  PIC_find_cell_indices_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
+  PIC_find_cell_indices_F77(&pp.n_part, &pp.particles[-1]);
+
+  psc_particles_fortran_put(&pp);
 }
 
 void

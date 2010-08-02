@@ -28,6 +28,8 @@ typedef struct {
 void psc_particles_fortran_alloc(psc_particles_fortran_t *pp, int n_part);
 void psc_particles_fortran_realloc(psc_particles_fortran_t *pp, int new_n_part);
 void psc_particles_fortran_free(psc_particles_fortran_t *pp);
+void psc_particles_fortran_get(psc_particles_fortran_t *pp);
+void psc_particles_fortran_put(psc_particles_fortran_t *pp);
 
 static inline particle_fortran_t *
 psc_particles_fortran_get_one(psc_particles_fortran_t *pp, int n)

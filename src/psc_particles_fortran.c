@@ -36,3 +36,17 @@ psc_particles_fortran_free(psc_particles_fortran_t *pp)
   __alloced = false;
 }
 
+void
+psc_particles_fortran_get(psc_particles_fortran_t *pp)
+{
+  pp->particles = psc.pp.particles;
+  pp->n_part = psc.pp.n_part;
+}
+
+void
+psc_particles_fortran_put(psc_particles_fortran_t *pp)
+{
+  psc.pp.n_part = pp->n_part;
+  psc.pp.particles = pp->particles;
+}
+

@@ -285,9 +285,12 @@ fortran_exchange_particles(void)
     pr = prof_register("fort_xchg_part", 1., 0, 0);
   }
   prof_start(pr);
-  INIT_grid_map();
+
+  psc_particles_fortran_t pp;
+  psc_particles_fortran_get(&pp);
+  
   SET_param_coeff();
-  SET_niloc(psc.pp.n_part);
+  SET_niloc(pp.n_part);
 
   if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
     PIC_pex();
@@ -299,7 +302,9 @@ fortran_exchange_particles(void)
     PIC_pez();
   }
 
-  GET_niloc(&psc.pp.n_part);
+  GET_niloc(&pp.n_part);
+  psc_particles_fortran_put(&pp);
+
   prof_stop(pr);
 }
 
