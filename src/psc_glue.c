@@ -287,6 +287,8 @@ INIT_idistr(void)
 void
 CALC_densities()
 {
+  INIT_grid_map();
+  SET_param_coeff();
   CALC_densities_F77();
 }
 
@@ -363,12 +365,14 @@ PIC_fax(int m)
 void
 PIC_fay(int m)
 {
+  INIT_grid_map();
   PIC_fay_F77(psc.f_fields[m]);
 }
 
 void
 PIC_faz(int m)
 {
+  INIT_grid_map();
   PIC_faz_F77(psc.f_fields[m]);
 }
 
