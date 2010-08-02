@@ -50,11 +50,24 @@ static struct psc_push_field_ops *psc_push_field_ops_list[] = {
   NULL,
 };
 
+static struct psc_randomize_ops *psc_randomize_ops_list[] = {
+  &psc_randomize_ops_fortran,
+  &psc_randomize_ops_none,
+  NULL,
+};
+
 static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_fortran,
   &psc_sort_ops_qsort,
   &psc_sort_ops_countsort,
   &psc_sort_ops_countsort2,
+  &psc_sort_ops_none,
+  NULL,
+};
+
+static struct psc_collision_ops *psc_collision_ops_list[] = {
+  &psc_collision_ops_fortran,
+  &psc_collision_ops_none,
   NULL,
 };
 
@@ -92,6 +105,17 @@ psc_find_push_field_ops(const char *ops_name)
   abort();
 }
 
+static struct psc_randomize_ops *
+psc_find_randomize_ops(const char *ops_name)
+{
+  for (int i = 0; psc_randomize_ops_list[i]; i++) {
+    if (strcasecmp(psc_randomize_ops_list[i]->name, ops_name) == 0)
+      return psc_randomize_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_randomize_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
 static struct psc_sort_ops *
 psc_find_sort_ops(const char *ops_name)
 {
@@ -100,6 +124,17 @@ psc_find_sort_ops(const char *ops_name)
       return psc_sort_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_sort_ops '%s' not available.\n", ops_name);
+  abort();
+}
+
+static struct psc_collision_ops *
+psc_find_collision_ops(const char *ops_name)
+{
+  for (int i = 0; psc_collision_ops_list[i]; i++) {
+    if (strcasecmp(psc_collision_ops_list[i]->name, ops_name) == 0)
+      return psc_collision_ops_list[i];
+  }
+  fprintf(stderr, "ERROR: psc_collision_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -130,7 +165,9 @@ psc_find_bnd_ops(const char *ops_name)
 static struct param psc_mod_config_descr[] = {
   { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
   { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
+  { "mod_randomize"   , VAR(mod_randomize)      , PARAM_STRING(NULL)  },
   { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
+  { "mod_collision"   , VAR(mod_collision)      , PARAM_STRING(NULL)  },
   { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
   { "mod_bnd"         , VAR(mod_bnd)            , PARAM_STRING(NULL)  },
   {},
@@ -146,8 +183,12 @@ psc_create(struct psc_mod_config *conf)
     conf->mod_particle = "fortran";
   if (!conf->mod_field)
     conf->mod_field = "fortran";
+  if (!conf->mod_randomize)
+    conf->mod_randomize = "none";
   if (!conf->mod_sort)
-    conf->mod_sort = "fortran";
+    conf->mod_sort = "none";
+  if (!conf->mod_collision)
+    conf->mod_collision = "none";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
   if (!conf->mod_bnd)
@@ -166,9 +207,17 @@ psc_create(struct psc_mod_config *conf)
   if (psc.push_field_ops->create) {
     psc.push_field_ops->create();
   }
+  psc.randomize_ops = psc_find_randomize_ops(conf->mod_randomize);
+  if (psc.randomize_ops->create) {
+    psc.randomize_ops->create();
+  }
   psc.sort_ops = psc_find_sort_ops(conf->mod_sort);
   if (psc.sort_ops->create) {
     psc.sort_ops->create();
+  }
+  psc.collision_ops = psc_find_collision_ops(conf->mod_collision);
+  if (psc.collision_ops->create) {
+    psc.collision_ops->create();
   }
   psc.output_ops = psc_find_output_ops(conf->mod_output);
   if (psc.output_ops->create) {
@@ -503,13 +552,34 @@ psc_exchange_particles(void)
 }
 
 // ----------------------------------------------------------------------
+// psc_randomize
+
+void
+psc_randomize()
+{
+  assert(psc.randomize_ops->randomize);
+  psc.randomize_ops->randomize();
+}
+
+// ----------------------------------------------------------------------
 // psc_sort
 
 void
 psc_sort()
 {
+  PIC_find_cell_indices();
   assert(psc.sort_ops->sort);
   psc.sort_ops->sort();
+}
+
+// ----------------------------------------------------------------------
+// psc_collision
+
+void
+psc_collision()
+{
+  assert(psc.collision_ops->collision);
+  psc.collision_ops->collision();
 }
 
 // ----------------------------------------------------------------------

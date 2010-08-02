@@ -90,6 +90,26 @@ struct psc_ops psc_ops_fortran = {
 };
 
 // ======================================================================
+// fortran randomize
+
+static void
+fortran_randomize()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_randomize", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_randomize();
+  prof_stop(pr);
+}
+
+struct psc_randomize_ops psc_randomize_ops_fortran = {
+  .name      = "fortran",
+  .randomize = fortran_randomize,
+};
+
+// ======================================================================
 // fortran sort
 
 static void
@@ -107,6 +127,26 @@ fortran_sort()
 struct psc_sort_ops psc_sort_ops_fortran = {
   .name = "fortran",
   .sort = fortran_sort,
+};
+
+// ======================================================================
+// fortran collision
+
+static void
+fortran_collision()
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_collision", 1., 0, 0);
+  }
+  prof_start(pr);
+  PIC_bin_coll();
+  prof_stop(pr);
+}
+
+struct psc_collision_ops psc_collision_ops_fortran = {
+  .name      = "fortran",
+  .collision = fortran_collision,
 };
 
 // ======================================================================
