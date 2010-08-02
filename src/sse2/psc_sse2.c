@@ -61,27 +61,27 @@ sse2_particles_from_fortran(void)
   }
 
   for (int n = 0; n < n_part; n++) {
-    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
+    particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
     struct sse2_particle *part = &sse2->part[n];
 
-    part->xi  = f_part->xi;
-    part->yi  = f_part->yi;
-    part->zi  = f_part->zi;
-    part->pxi = f_part->pxi;
-    part->pyi = f_part->pyi;
-    part->pzi = f_part->pzi;
-    part->qni = f_part->qni;
-    part->mni = f_part->mni;
-    part->wni = f_part->wni;
+    part->xi  = base_part->xi;
+    part->yi  = base_part->yi;
+    part->zi  = base_part->zi;
+    part->pxi = base_part->pxi;
+    part->pyi = base_part->pyi;
+    part->pzi = base_part->pzi;
+    part->qni = base_part->qni;
+    part->mni = base_part->mni;
+    part->wni = base_part->wni;
     assert(round(part->xi) == 0); ///< \FIXME This assert only fits for the yz pusher. Idealy, no assert would be needed here, but until we can promise 'true 2D' some check is needed.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
-    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n_part-1);
+    particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n_part - 1);
     struct sse2_particle *part = &sse2->part[n];
-    part->xi  = f_part->xi; //We need to be sure the padding loads fields inside the local domain
-    part->yi  = f_part->yi;
-    part->zi  = f_part->zi;
+    part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
+    part->yi  = base_part->yi;
+    part->zi  = base_part->zi;
     part->mni = 1.0;
   }
 }
@@ -93,18 +93,18 @@ sse2_particles_to_fortran()
    struct psc_sse2 *sse2 = psc.c_ctx;
    
    for(int n = 0; n < psc.pp.n_part; n++) {
-     particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
+     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
      struct sse2_particle *part = &sse2->part[n];
      
-     f_part->xi  = part->xi;
-     f_part->yi  = part->yi;
-     f_part->zi  = part->zi;
-     f_part->pxi = part->pxi;
-     f_part->pyi = part->pyi;
-     f_part->pzi = part->pzi;
-     f_part->qni = part->qni;
-     f_part->mni = part->mni;
-     f_part->wni = part->wni;
+     base_part->xi  = part->xi;
+     base_part->yi  = part->yi;
+     base_part->zi  = part->zi;
+     base_part->pxi = part->pxi;
+     base_part->pyi = part->pyi;
+     base_part->pzi = part->pzi;
+     base_part->qni = part->qni;
+     base_part->mni = part->mni;
+     base_part->wni = part->wni;
    }
 }
 
