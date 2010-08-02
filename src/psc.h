@@ -69,6 +69,8 @@ struct f_particle {
 
 #endif
 
+typedef f_real fields_base_real_t;
+
 // user settable parameters
 struct psc_param {
   double qq;

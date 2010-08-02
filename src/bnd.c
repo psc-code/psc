@@ -15,7 +15,7 @@ struct c_bnd_ctx {
 };
 
 static void
-copy_to_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
+copy_to_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
 {
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -27,7 +27,7 @@ copy_to_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
 }
 
 static void
-add_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
+add_from_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
 {
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -39,7 +39,7 @@ add_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
 }
 
 static void
-copy_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
+copy_from_buf(int fld_nr, int ilo[3], int ihi[3], fields_base_real_t *buf)
 {
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
