@@ -56,10 +56,11 @@ struct f_particle {
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
 
+typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(m, jx,jy,jz)
+#define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 
 // user settable parameters
 struct psc_param {
@@ -234,7 +235,7 @@ struct psc {
   int img[3];         // total # points per dir incl. ghost points
   int fld_size;       // total # points per field incl. ghost points
 
-  f_real *f_fields[NR_FIELDS];
+  psc_fields_base_t pf;
 
   // C data structures
   void *c_ctx;

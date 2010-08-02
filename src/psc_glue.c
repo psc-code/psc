@@ -168,10 +168,10 @@ PIC_push_part_yz()
 {
   PIC_set_variables();
   PIC_push_part_yz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		       psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
-		       psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
-		       psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
-		       psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+		       psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
+		       psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
+		       psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
+		       psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
 }
 
 void
@@ -179,9 +179,9 @@ PIC_push_part_xz()
 {
   PIC_set_variables();
   PIC_push_part_xz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		       psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
-		       psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
-		       psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+		       psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
+		       psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
+		       psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
 }
 
 void
@@ -189,10 +189,10 @@ PIC_push_part_yz_a()
 {
   PIC_set_variables();
   PIC_push_part_yz_a_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-			 psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
-			 psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
-			 psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
-			 psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+			 psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
+			 psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
+			 psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
+			 psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
 }
 
 void
@@ -200,10 +200,10 @@ PIC_push_part_yz_b()
 {
   PIC_set_variables();
   PIC_push_part_yz_b_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-			 psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
-			 psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
-			 psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
-			 psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+			 psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
+			 psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
+			 psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
+			 psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
 }
 
 void
@@ -211,10 +211,10 @@ PIC_push_part_z()
 {
   PIC_set_variables();
   PIC_push_part_z_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		      psc.f_fields[NE], psc.f_fields[NI], psc.f_fields[NN],
-		      psc.f_fields[JXI], psc.f_fields[JYI], psc.f_fields[JZI],
-		      psc.f_fields[EX], psc.f_fields[EY], psc.f_fields[EZ],
-		      psc.f_fields[BX], psc.f_fields[BY], psc.f_fields[BZ]);
+		      psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
+		      psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
+		      psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
+		      psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
 }
 
 void
@@ -359,39 +359,39 @@ void
 PIC_fax(int m)
 {
   INIT_grid_map();
-  PIC_fax_F77(psc.f_fields[m]);
+  PIC_fax_F77(psc.pf.flds[m]);
 }
 
 void
 PIC_fay(int m)
 {
   INIT_grid_map();
-  PIC_fay_F77(psc.f_fields[m]);
+  PIC_fay_F77(psc.pf.flds[m]);
 }
 
 void
 PIC_faz(int m)
 {
   INIT_grid_map();
-  PIC_faz_F77(psc.f_fields[m]);
+  PIC_faz_F77(psc.pf.flds[m]);
 }
 
 void
 PIC_fex(int m)
 {
-  PIC_fex_F77(psc.f_fields[m]);
+  PIC_fex_F77(psc.pf.flds[m]);
 }
 
 void
 PIC_fey(int m)
 {
-  PIC_fey_F77(psc.f_fields[m]);
+  PIC_fey_F77(psc.pf.flds[m]);
 }
 
 void
 PIC_fez(int m)
 {
-  PIC_fez_F77(psc.f_fields[m]);
+  PIC_fez_F77(psc.pf.flds[m]);
 }
 
 void

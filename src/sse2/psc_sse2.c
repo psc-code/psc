@@ -116,7 +116,7 @@ sse2_fields_from_fortran(){
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
-      sse2->fields[m * psc.fld_size + n] = (sse2_real)psc.f_fields[m][n];
+      sse2->fields[m * psc.fld_size + n] = (sse2_real)psc.pf.flds[m][n];
     }
   }
 }
@@ -128,7 +128,7 @@ sse2_fields_to_fortran(){
   assert(sse2->fields != NULL);
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
-      psc.f_fields[m][n] = sse2->fields[m * psc.fld_size + n];
+      psc.pf.flds[m][n] = sse2->fields[m * psc.fld_size + n];
     }
   }
   _mm_free(sse2->fields);

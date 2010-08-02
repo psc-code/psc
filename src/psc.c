@@ -248,7 +248,7 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   for (int m = 0; m < NR_FIELDS; m++) {
-    psc.f_fields[m] = calloc(psc.fld_size, sizeof(f_real));
+    psc.pf.flds[m] = calloc(psc.fld_size, sizeof(f_real));
   }
 
   psc.n_part = n_part;
@@ -266,12 +266,12 @@ psc_destroy()
 
   if (psc.allocated) {
     for (int m = 0; m < NR_FIELDS; m++) {
-      free(psc.f_fields[m]);
+      free(psc.pf.flds[m]);
     }
 
     free(psc.f_part);
   } else {
-    if (psc.f_fields[0]) {
+    if (psc.pf.flds[0]) {
       FREE_field();
     }
     if (psc.f_part) {
@@ -296,7 +296,7 @@ void
 psc_setup_fields_zero()
 {
   for (int m = 0; m < NR_FIELDS; m++) {
-    memset(psc.f_fields[m], 0, psc.fld_size * sizeof(f_real));
+    memset(psc.pf.flds[m], 0, psc.fld_size * sizeof(f_real));
   }
 }
 
@@ -642,7 +642,7 @@ psc_init(const char *case_name)
 
   f_real **fields = ALLOC_field();
   for (int n = 0; n < NR_FIELDS; n++) {
-    psc.f_fields[n] = fields[n];
+    psc.pf.flds[n] = fields[n];
   }
   psc_init_field();
 }
@@ -694,8 +694,12 @@ psc_save_fields_ref()
     }
   }
   for (int m = 0; m < NR_FIELDS; m++) {
-    for (int n = 0; n < psc.fld_size; n++){
-      field_ref[m][n] = psc.f_fields[m][n];
+    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
+      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
+	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
+	  _FF3(field_ref[m], ix,iy,iz) = F3_BASE(m, ix,iy,iz);
+	}
+      }
     }
   }
 } 
