@@ -33,18 +33,7 @@ typedef double f_real;
 typedef int f_int;
 
 #include "psc_fields_fortran.h"
-
-// this matches the Fortran particle data structure
-
-struct f_particle {
-  f_real xi, yi, zi;
-  f_real pxi, pyi, pzi;
-  f_real qni;
-  f_real mni;
-  f_real cni;
-  f_real lni;
-  f_real wni;
-};
+#include "psc_particles_fortran.h"
 
 // ----------------------------------------------------------------------
 // macros to access Fortran fields
