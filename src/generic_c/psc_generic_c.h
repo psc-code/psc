@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_fields_c.h"
+#include "psc_particles_c.h"
 
 // switch between double and float in generic_c
 // constants need to always be given like 1.5f
@@ -31,16 +32,8 @@ typedef float creal;
 // ----------------------------------------------------------------------
 // generic C data structures
 
-struct c_particle {
-  creal xi, yi, zi;
-  creal pxi, pyi, pzi;
-  creal qni;
-  creal mni;
-  creal wni;
-};
-
 struct psc_genc {
-  struct c_particle *part;
+  particle_c_t *part;
   int part_allocated;
   psc_fields_c_t pf;
 };

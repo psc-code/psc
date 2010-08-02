@@ -44,7 +44,7 @@ genc_push_part_xz()
 	 psc.fld_size * sizeof(creal));
   
   for (int n = 0; n < psc.pp.n_part; n++) {
-    struct c_particle *part = &genc->part[n];
+    particle_c_t *part = &genc->part[n];
 
     // x^n, p^n -> x^(n+.5), p^n
 

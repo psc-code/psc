@@ -26,7 +26,7 @@ genc_push_part_yz_b()
   creal dzi = 1.f / psc.dx[2];
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    struct c_particle *part = &genc->part[n];
+    particle_c_t *part = &genc->part[n];
 
     creal root = 1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vyi = part->pyi * root;
