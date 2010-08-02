@@ -101,7 +101,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-4);
-  psc_check_currents_ref(); 
+  psc_check_currents_ref(1e-4); 
   psc_destroy();
 #endif
 
