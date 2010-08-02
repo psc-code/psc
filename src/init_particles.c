@@ -19,7 +19,7 @@ get_n_in_cell(real n)
 }
 
 void
-psc_init_partition(int *n_part)
+psc_init_partition(int *n_part, int *particle_label_offset)
 {
   if (!psc.Case) {
     INIT_partition(n_part);
@@ -97,12 +97,15 @@ psc_init_partition(int *n_part)
   }
 
   *n_part = np;
+  // calculate global particle label offset for unique numbering
+  MPI_Exscan(n_part, particle_label_offset, 1, MPI_INT, MPI_SUM,
+	   MPI_COMM_WORLD);
 }
 
 void INIT_idistr();
 
 void
-psc_init_particles()
+psc_init_particles(int particle_label_offset)
 {
   if (!psc.Case) {
     INIT_idistr();
@@ -154,7 +157,7 @@ psc_init_particles()
 	      p->pzi = pz;
 	      p->qni = npt.q;
 	      p->mni = npt.m;
-	      p->lni = -1; // FIXME?
+	      p->lni = particle_label_offset + 1;
 	      if (psc.prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;
 	      } else {
