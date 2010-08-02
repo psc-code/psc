@@ -2,8 +2,9 @@
 #ifndef PSC_SSE2_H
 #define PSC_SSE2_H
 
-#include "psc_fields_sse2.h"
+#include "psc.h"
 #include "psc_particles_sse2.h"
+#include "psc_fields_sse2.h"
 
 #include <assert.h>
 #include <emmintrin.h>

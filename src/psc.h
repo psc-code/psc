@@ -15,6 +15,7 @@
 
 #define FIELDS_FORTRAN 1
 #define FIELDS_C       2
+#define FIELDS_SSE2    3
 
 #define PARTICLES_FORTRAN 1
 #define PARTICLES_C       2
@@ -123,6 +124,22 @@ typedef fields_c_real_t fields_base_real_t;
 #define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
 #define MPI_F3_BASE_REAL      MPI_F3_C_REAL
 
+#elif FIELDS_BASE == FIELDS_SSE2
+
+#include "psc_field_sse2.h"
+
+typedef psc_fields_sse2_t psc_fields_base_t;
+typedef psc_fields_sse2_real_t psc_fields_base_real_t;
+
+#define psc_fields_base_alloc psc_fields_sse2_alloc
+#define psc_fields_base_free  psc_fields_sse2_free
+#define psc_fields_base_zero  psc_fields_sse2_zero
+
+#define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
+#define MPI_F3_BASE_REAL      MPI_F3_SSE2_REAL
+
+#else
+#error unknown FIELDS_BASE
 #endif
 
 // user settable parameters

@@ -22,7 +22,7 @@ typedef struct {
 #if 1
 
 #define F3_SSE2(pf, fldnr, jx,jy,jz)		\
-  (pf->flds[F3_OFF_SSE2(fldnr, jx,jy,jz)])
+  ((pf)->flds[F3_OFF_SSE2(fldnr, jx,jy,jz)])
 
 #else
 //out of range debugging
@@ -30,15 +30,15 @@ typedef struct {
   (*({int off = F3_OFF_SSE2(fldnr, jx,jy,jz);				\
       assert(off >= 0);							\
       assert(off < NR_FIELDS * psc.fld_size);				\
-      &(pf->flds[off]);							\
+      &((pf)->flds[off]);						\
     }))
 
 #endif
 
-//void psc_fields_sse2_alloc(struct psc_fields_c *pf);
-//void psc_fields_sse2_free(struct psc_fields_c *pf);
+void psc_fields_sse2_alloc(psc_fields_sse2_t *pf);
+void psc_fields_sse2_free(psc_fields_sse2_t *pf);
 void psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me);
 void psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me);
-//void psc_fields_sse2_zero(struct psc_fields_c *pf, int m);
+void psc_fields_sse2_zero(psc_fields_sse2_t *pf, int m);
 
 #endif

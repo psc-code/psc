@@ -6,6 +6,34 @@
 #include <string.h>
 #include <assert.h>
 
+#if FIELDS_BASE == FIELDS_SSE2
+
+void
+psc_fields_sse2_alloc(struct psc_fields_sse2 *pf)
+{
+  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+}
+
+void
+psc_fields_sse2_free(struct psc_fields_sse2 *pf)
+{
+  free(pf->flds);
+}
+
+void
+psc_fields_sse2_get(struct psc_fields_sse2 *pf, int mb, int me)
+{
+  *pf = psc.pf;
+}
+
+void
+psc_fields_sse2_put(struct psc_fields_sse2 *pf, int mb, int me)
+{
+  pf->flds = NULL;
+}
+
+#else
+
 static bool __gotten; // to check we're pairing get/put correctly
 
 /// Copy fields from base data structure to an SSE2 friendly format.
@@ -42,5 +70,14 @@ psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me)
     }
   }
   _mm_free(pf->flds);
+}
+
+#endif
+
+void
+psc_fields_sse2_zero(psc_fields_sse2_t *pf, int m)
+{
+  memset(&F3_SSE2(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
+	 psc.fld_size * sizeof(psc_fields_sse2_real_t));
 }
 

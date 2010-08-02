@@ -21,6 +21,9 @@
 /// SSE2 floating point type
 typedef double sse2_real;
 
+/// SSE2 MPI type
+#define MPI_SSE2_REAL MPI_DOUBLE
+
 #else
 
 /// Number of elements in a floating point vector (changes with precision)
@@ -28,6 +31,9 @@ typedef double sse2_real;
 
 /// SSE2 floating point type
 typedef float sse2_real;
+
+/// SSE2 MPI type
+#define MPI_SSE2_REAL MPI_FLOAT
 
 #endif
 
