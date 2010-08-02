@@ -108,16 +108,16 @@ harris_init_field(struct psc_case *Case)
 	double dx = psc.dx[0], dz = psc.dx[2];
 	double xx = jx * dx, zz = jz * dz;
 
-	FF3(BX, jx,jy,jz) = 
+	F3_BASE(BX, jx,jy,jz) = 
 	  BB * (-1. 
 		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
 		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
 	  + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
 
-	FF3(BZ, jx,jy,jz) =
+	F3_BASE(BZ, jx,jy,jz) =
 	  - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
 
-	FF3(JYI, jx,jy,jz) = BB/LLL *
+	F3_BASE(JYI, jx,jy,jz) = BB/LLL *
 	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
 	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
 	     * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
@@ -254,16 +254,16 @@ test_yz_init_field(struct psc_case *Case)
 	double dy = psc.dx[1], dz = psc.dx[2];
 	double yy = jy * dy, zz = jz * dz;
 
-	FF3(BY, jx,jy,jz) = 
+	F3_BASE(BY, jx,jy,jz) = 
 	  BB * (-1. 
 		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
 		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
 	  + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
 
-	FF3(BZ, jx,jy,jz) =
+	F3_BASE(BZ, jx,jy,jz) =
 	  - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
 
-	FF3(JXI, jx,jy,jz) = - BB/LLL *
+	F3_BASE(JXI, jx,jy,jz) = - BB/LLL *
 	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
 	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
 	     * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));

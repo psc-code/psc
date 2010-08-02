@@ -77,7 +77,7 @@ genc_fields_from_fortran()
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3(m, jx,jy,jz) = FF3(m, jx,jy,jz);
+	  F3(m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
 	}
       }
     }
@@ -95,7 +95,7 @@ genc_fields_to_fortran()
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  FF3(m, jx,jy,jz) = F3(m, jx,jy,jz);
+	  F3_BASE(m, jx,jy,jz) = F3(m, jx,jy,jz);
 	}
       }
     }

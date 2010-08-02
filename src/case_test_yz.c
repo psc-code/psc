@@ -95,16 +95,16 @@ harris_init_field(void)
 	double dx = psc.dx[0], dz = psc.dx[2];
 	double xx = jx * dx, zz = jz * dz;
 
-	FF3(BX, jx,jy,jz) = 
+	F3_BASE(BX, jx,jy,jz) = 
 	  BB * (-1. 
 		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
 		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
 	  + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
 
-	FF3(BZ, jx,jy,jz) =
+	F3_BASE(BZ, jx,jy,jz) =
 	  - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
 
-	FF3(JYI, jx,jy,jz) = BB/LLL *
+	F3_BASE(JYI, jx,jy,jz) = BB/LLL *
 	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
 	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
 	     * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));

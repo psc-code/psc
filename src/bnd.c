@@ -20,7 +20,7 @@ copy_to_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	DDC_BUF(buf, ix,iy,iz) = FF3(fld_nr, ix,iy,iz);
+	DDC_BUF(buf, ix,iy,iz) = F3_BASE(fld_nr, ix,iy,iz);
       }
     }
   }
@@ -32,7 +32,7 @@ add_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	FF3(fld_nr, ix,iy,iz) += DDC_BUF(buf, ix,iy,iz);
+	F3_BASE(fld_nr, ix,iy,iz) += DDC_BUF(buf, ix,iy,iz);
       }
     }
   }
@@ -44,7 +44,7 @@ copy_from_buf(int fld_nr, int ilo[3], int ihi[3], f_real *buf)
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	FF3(fld_nr, ix,iy,iz) = DDC_BUF(buf, ix,iy,iz);
+	F3_BASE(fld_nr, ix,iy,iz) = DDC_BUF(buf, ix,iy,iz);
       }
     }
   }

@@ -307,12 +307,12 @@ psc_setup_fields_1()
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
     for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
       for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	FF3(EX, jx,jy,jz) = .1 * sin(.5 * jx) + .2 * sin(.4 * jy) + .3 * sin(.3 * jz);
-	FF3(EY, jx,jy,jz) = .2 * sin(.4 * jx) + .3 * sin(.3 * jy) + .4 * sin(.2 * jz);
-	FF3(EZ, jx,jy,jz) = .3 * sin(.3 * jx) + .4 * sin(.2 * jy) + .5 * sin(.1 * jz);
-	FF3(BX, jx,jy,jz) = .1 * cos(.5 * jx) + .2 * cos(.4 * jy) + .3 * cos(.3 * jz);
-	FF3(BY, jx,jy,jz) = .2 * cos(.4 * jx) + .3 * cos(.3 * jy) + .4 * cos(.2 * jz);
-	FF3(BZ, jx,jy,jz) = .3 * cos(.3 * jx) + .4 * cos(.2 * jy) + .5 * cos(.1 * jz);
+	F3_BASE(EX, jx,jy,jz) = .1 * sin(.5 * jx) + .2 * sin(.4 * jy) + .3 * sin(.3 * jz);
+	F3_BASE(EY, jx,jy,jz) = .2 * sin(.4 * jx) + .3 * sin(.3 * jy) + .4 * sin(.2 * jz);
+	F3_BASE(EZ, jx,jy,jz) = .3 * sin(.3 * jx) + .4 * sin(.2 * jy) + .5 * sin(.1 * jz);
+	F3_BASE(BX, jx,jy,jz) = .1 * cos(.5 * jx) + .2 * cos(.4 * jy) + .3 * cos(.3 * jz);
+	F3_BASE(BY, jx,jy,jz) = .2 * cos(.4 * jx) + .3 * cos(.3 * jy) + .4 * cos(.2 * jz);
+	F3_BASE(BZ, jx,jy,jz) = .3 * cos(.3 * jx) + .4 * cos(.2 * jy) + .5 * cos(.1 * jz);
       }
     }
   }
@@ -332,7 +332,7 @@ ascii_dump_field(int m, const char *fname)
   for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
     for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
       for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	fprintf(file, "%d %d %d %g\n", ix, iy, iz, FF3(m, ix,iy,iz));
+	fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(m, ix,iy,iz));
       }
       fprintf(file, "\n");
     }
@@ -738,7 +738,7 @@ psc_check_fields_ref(int *flds, double thres)
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
 	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	  //printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
       }
     }
@@ -759,7 +759,7 @@ psc_check_currents_ref(double thres)
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
       }
     }
@@ -775,7 +775,7 @@ psc_check_currents_ref_noghost(double thres)
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
 	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(FF3(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
       }
     }

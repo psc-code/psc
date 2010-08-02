@@ -105,8 +105,8 @@ thinfoil_init_field(struct psc_case *Case)
 	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
 
 	// FIXME, why this time?
-	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+	F3_BASE(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
       }
     }
   }

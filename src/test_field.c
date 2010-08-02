@@ -15,9 +15,9 @@ setup_fields()
       for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
 	f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
 	f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
-	FF3(JXI, ix,iy,iz) = cos(xx) * sin(zz);
-	FF3(JYI, ix,iy,iz) = sin(xx) * sin(zz);
-	FF3(JZI, ix,iy,iz) = cos(xx) * cos(zz);
+	F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
+	F3_BASE(JYI, ix,iy,iz) = sin(xx) * sin(zz);
+	F3_BASE(JZI, ix,iy,iz) = cos(xx) * cos(zz);
       }
     }
   }

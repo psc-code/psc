@@ -56,11 +56,11 @@ struct f_particle {
 
 #if 1
 
-#define FF3(fldnr, jx,jy,jz) _FF3(psc.f_fields[fldnr], jx,jy,jz)
+#define F3_BASE(fldnr, jx,jy,jz) _FF3(psc.f_fields[fldnr], jx,jy,jz)
 
 #else
 
-#define FF3(fldnr, jx,jy,jz)						\
+#define F3_BASE(fldnr, jx,jy,jz)						\
   (*({int off = FF3_OFF(jx,jy,jz);					\
       assert(off >= 0);							\
       assert(off < psc.fld_size);					\
