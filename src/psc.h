@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "psc_pulse.h"
 #include "psc_case.h"
@@ -50,6 +51,9 @@ typedef particle_fortran_t particle_base_t;
 typedef particle_fortran_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
 
+#define psc_particles_base_alloc   psc_particles_fortran_alloc
+#define psc_particles_base_realloc psc_particles_fortran_realloc
+#define psc_particles_base_free    psc_particles_fortran_free
 #define psc_particles_base_get_one psc_particles_fortran_get_one
 
 

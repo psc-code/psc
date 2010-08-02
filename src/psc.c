@@ -249,10 +249,8 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   psc_fields_base_alloc(&psc.pf);
 
-  psc.pp.n_part = n_part;
-  psc.pp.particles = calloc(n_part, sizeof(*psc.pp.particles));
-
-  psc.allocated = true;
+  psc_particles_base_alloc(&psc.pp, n_part);
+  psc_set_n_particles(n_part);
 }
 
 void
@@ -262,17 +260,8 @@ psc_destroy()
     psc.ops->destroy();
   }
 
-  if (psc.allocated) {
-    free(psc.pp.particles);
-  } else {
-    if (psc.pf.flds[0]) {
-      FREE_field();
-    }
-    if (psc.pp.particles) {
-      FREE_particles();
-    }
-  }
   psc_fields_base_free(&psc.pf);
+  psc_particles_base_free(&psc.pp);
 }
 
 void
@@ -632,7 +621,7 @@ psc_init(const char *case_name)
   psc_init_partition(&n_part, &particle_label_offset);
   SET_subdomain();
 
-  psc.pp.particles = ALLOC_particles(n_part);
+  psc_particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
   psc_fields_base_alloc(&psc.pf);

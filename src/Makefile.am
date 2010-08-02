@@ -23,6 +23,7 @@ libpsc_a_SOURCES = \
 	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
 	psc_fields_fortran.c \
+	psc_particles_fortran.c \
 	PIC_move_part_xz.F PIC_push_part_yz.F \
 	PIC_push_part_z.F \
 	PIC_pex.F PIC_pey.F PIC_pez.F \

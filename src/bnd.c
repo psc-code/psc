@@ -187,7 +187,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
       }
     }
   }
-  psc.pp.particles = REALLOC_particles(new_n_particles);
+  psc_particles_base_realloc(&psc.pp, new_n_particles);
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
