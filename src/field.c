@@ -43,9 +43,7 @@ c_push_field_a()
     }
   }
 
-  psc_fill_ghosts(EX);
-  psc_fill_ghosts(EY);
-  psc_fill_ghosts(EZ);
+  psc_fill_ghosts(EX, EX + 3);
 
   // B-field propagation E^(n+0.5), B^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
@@ -68,9 +66,7 @@ c_push_field_a()
     }
   }
 
-  psc_fill_ghosts(BX);
-  psc_fill_ghosts(BY);
-  psc_fill_ghosts(BZ);
+  psc_fill_ghosts(BX, BX + 3);
 
   prof_stop(pr);
 }
@@ -113,9 +109,7 @@ c_push_field_b()
     }
   }
 
-  psc_fill_ghosts(BX);
-  psc_fill_ghosts(BY);
-  psc_fill_ghosts(BZ);
+  psc_fill_ghosts(BX, BX + 3);
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
@@ -141,9 +135,7 @@ c_push_field_b()
     }
   }
 
-  psc_fill_ghosts(EX);
-  psc_fill_ghosts(EY);
-  psc_fill_ghosts(EZ);
+  psc_fill_ghosts(EX, EX + 3);
 
   prof_stop(pr);
 }

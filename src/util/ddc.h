@@ -13,6 +13,7 @@ struct ddc_params {
   MPI_Comm comm;
   MPI_Datatype mpi_type;
   int size_of_type;
+  int max_n_fields;
   int n_proc[3]; // # procs in 3D grid
   int ilo[3], ihi[3]; // local domain (no ghosts)
   int ibn[3]; // # ghost points

@@ -527,20 +527,20 @@ psc_push_field_b()
 // psc_add_ghosts
 
 void
-psc_add_ghosts(int m)
+psc_add_ghosts(int mb, int me)
 {
   assert(psc.bnd_ops->add_ghosts);
-  psc.bnd_ops->add_ghosts(m);
+  psc.bnd_ops->add_ghosts(mb, me);
 }
 
 // ----------------------------------------------------------------------
 // psc_fill_ghosts
 
 void
-psc_fill_ghosts(int m)
+psc_fill_ghosts(int mb, int me)
 {
   assert(psc.bnd_ops->fill_ghosts);
-  psc.bnd_ops->fill_ghosts(m);
+  psc.bnd_ops->fill_ghosts(mb, me);
 }
 
 // ----------------------------------------------------------------------

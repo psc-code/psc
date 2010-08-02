@@ -62,7 +62,7 @@ ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->prm.size_of_type);
+  sr->buf = malloc(sr->len * ddc->prm.max_n_fields * ddc->prm.size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -93,7 +93,7 @@ ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->prm.size_of_type);
+  sr->buf = malloc(sr->len * ddc->prm.max_n_fields * ddc->prm.size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -196,12 +196,13 @@ ddc_create(struct ddc_params *prm)
 {
   struct ddc_subdomain *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
-  
+
   ddc->prm = *prm;
   MPI_Comm_rank(prm->comm, &ddc->rank);
   MPI_Comm_size(prm->comm, &ddc->size);
 
   assert(prm->n_proc[0] * prm->n_proc[1] * prm->n_proc[2] == ddc->size);
+  assert(prm->max_n_fields > 0);
 
   int rr = ddc->rank;
   ddc->proc[0] = rr % ddc->prm.n_proc[0]; rr /= ddc->prm.n_proc[0];

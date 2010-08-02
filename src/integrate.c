@@ -116,12 +116,8 @@ psc_integrate()
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
     psc_push_particles();
-    int flds[] = { JXI, JYI, JZI, -1 };
-    for (int i = 0; flds[i] >= 0; i++) {
-      int m = flds[i];
-      psc_add_ghosts(m);
-      psc_fill_ghosts(m);
-    }
+    psc_add_ghosts(JXI, JXI + 3);
+    psc_fill_ghosts(JXI, JXI + 3);
     psc_exchange_particles();
     time_stop(STAT_TIME_PARTICLE);
 

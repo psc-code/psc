@@ -206,41 +206,45 @@ struct psc_output_ops psc_output_ops_fortran = {
 // fortran bnd
 
 static void
-fortran_add_ghosts(int m)
+fortran_add_ghosts(int mb, int me)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("fort_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-  if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
-    PIC_fax(m);
-  }
-  if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
-    PIC_fay(m);
-  }
-  if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
-    PIC_faz(m);
+  for (int m = mb; m < me; m++) {
+    if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+      PIC_fax(m);
+    }
+    if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+      PIC_fay(m);
+    }
+    if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+      PIC_faz(m);
+    }
   }
   prof_stop(pr);
 }
 
 static void
-fortran_fill_ghosts(int m)
+fortran_fill_ghosts(int mb, int me)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("fort_fill_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-  if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
-    PIC_fex(m);
-  }
-  if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
-    PIC_fey(m);
-  }
-  if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
-    PIC_fez(m);
+  for (int m = mb; m < me; m++) {
+    if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+      PIC_fex(m);
+    }
+    if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+      PIC_fey(m);
+    }
+    if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+      PIC_fez(m);
+    }
   }
   prof_stop(pr);
 }

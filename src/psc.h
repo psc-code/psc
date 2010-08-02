@@ -206,8 +206,8 @@ struct psc_bnd_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*add_ghosts)(int m);
-  void (*fill_ghosts)(int m);
+  void (*add_ghosts)(int mb, int me);
+  void (*fill_ghosts)(int mb, int me);
   void (*exchange_particles)(void);
 };
 
@@ -285,8 +285,8 @@ void psc_integrate();
 void psc_push_particles();
 void psc_push_field_a();
 void psc_push_field_b();
-void psc_add_ghosts(int m);
-void psc_fill_ghosts(int m);
+void psc_add_ghosts(int mb, int me);
+void psc_fill_ghosts(int mb, int me);
 void psc_exchange_particles(void);
 void psc_setup_parameters();
 void psc_setup_fields_zero();

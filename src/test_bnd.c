@@ -53,14 +53,14 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_jx();
   //  psc_dump_field(JXI, "jx0");
-  psc_add_ghosts(JXI);
+  psc_add_ghosts(JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx();
-  psc_add_ghosts(JXI);
+  psc_add_ghosts(JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref_noghost(1e-10);
   psc_destroy();
@@ -70,14 +70,14 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_jx_noghost();
   psc_dump_field(JXI, "jx0");
-  psc_fill_ghosts(JXI);
+  psc_fill_ghosts(JXI, JXI + 1);
   psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx_noghost();
-  psc_fill_ghosts(JXI);
+  psc_fill_ghosts(JXI, JXI + 1);
   psc_dump_field(JXI, "jx2");
   psc_check_currents_ref(1e-10);
   psc_destroy();

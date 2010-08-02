@@ -212,6 +212,7 @@ create_bnd(void)
     .comm          = MPI_COMM_WORLD,
     .mpi_type      = MPI_FIELDS_BASE_REAL,
     .size_of_type  = sizeof(fields_base_real_t),
+    .max_n_fields  = 6,
     .n_proc        = { psc.domain.nproc[0], psc.domain.nproc[1], psc.domain.nproc[2] },
     .ilo           = { psc.ilo[0], psc.ilo[1], psc.ilo[2] },
     .ihi           = { psc.ihi[0], psc.ihi[1], psc.ihi[2] },
@@ -233,7 +234,7 @@ create_bnd(void)
 }
   
 static void
-c_add_ghosts(int m)
+c_add_ghosts(int mb, int me)
 {
   if (!psc.bnd_data) {
     create_bnd();
@@ -246,13 +247,15 @@ c_add_ghosts(int m)
   }
   prof_start(pr);
 
-  ddc_add_ghosts(c_bnd->ddc, m);
+  for (int m = mb; m < me; m++) {
+    ddc_add_ghosts(c_bnd->ddc, m);
+  }
 
   prof_stop(pr);
 }
 
 static void
-c_fill_ghosts(int m)
+c_fill_ghosts(int mb, int me)
 {
   if (!psc.bnd_data) {
     create_bnd();
@@ -268,7 +271,9 @@ c_fill_ghosts(int m)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  ddc_fill_ghosts(c_bnd->ddc, m);
+  for (int m = mb; m < me; m++) {
+    ddc_fill_ghosts(c_bnd->ddc, m);
+  }
 
   prof_stop(pr);
 }
