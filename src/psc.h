@@ -386,12 +386,12 @@ void INIT_basic(void);
 void INIT_grid_map(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
-void PIC_fax(int m);
-void PIC_fay(int m);
-void PIC_faz(int m);
-void PIC_fex(int m);
-void PIC_fey(int m);
-void PIC_fez(int m);
+void PIC_fax(psc_fields_fortran_t *pf, int m);
+void PIC_fay(psc_fields_fortran_t *pf, int m);
+void PIC_faz(psc_fields_fortran_t *pf, int m);
+void PIC_fex(psc_fields_fortran_t *pf, int m);
+void PIC_fey(psc_fields_fortran_t *pf, int m);
+void PIC_fez(psc_fields_fortran_t *pf, int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);

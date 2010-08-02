@@ -166,55 +166,80 @@ PIC_set_variables()
 void
 PIC_push_part_yz()
 {
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, EX, EX + 6);
+
   PIC_set_variables();
   PIC_push_part_yz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		       psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
-		       psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
-		       psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
-		       psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
+		       pf.flds[NE], pf.flds[NI], pf.flds[NN],
+		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
+		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
+		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
+
+  psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_xz()
 {
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, EX, EX + 6);
+
   PIC_set_variables();
   PIC_push_part_xz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		       psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
-		       psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
-		       psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
+		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
+		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
+		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
+
+  psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_yz_a()
 {
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, EX, EX + 6);
+
   PIC_set_variables();
   PIC_push_part_yz_a_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-			 psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
-			 psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
-			 psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
-			 psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
+			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
+			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
+			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
+			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
+
+  psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_yz_b()
 {
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, EX, EX + 6);
+
   PIC_set_variables();
   PIC_push_part_yz_b_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-			 psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
-			 psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
-			 psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
-			 psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
+			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
+			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
+			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
+			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
+
+  psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
 PIC_push_part_z()
 {
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, EX, EX + 6);
+
   PIC_set_variables();
   PIC_push_part_z_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
-		      psc.pf.flds[NE], psc.pf.flds[NI], psc.pf.flds[NN],
-		      psc.pf.flds[JXI], psc.pf.flds[JYI], psc.pf.flds[JZI],
-		      psc.pf.flds[EX], psc.pf.flds[EY], psc.pf.flds[EZ],
-		      psc.pf.flds[BX], psc.pf.flds[BY], psc.pf.flds[BZ]);
+		      pf.flds[NE], pf.flds[NI], pf.flds[NN],
+		      pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
+		      pf.flds[EX], pf.flds[EY], pf.flds[EZ],
+		      pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
+
+  psc_fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 void
@@ -356,42 +381,39 @@ INIT_grid_map()
 }
 
 void
-PIC_fax(int m)
+PIC_fax(psc_fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
-  PIC_fax_F77(psc.pf.flds[m]);
+  PIC_fax_F77(pf->flds[m]);
 }
 
 void
-PIC_fay(int m)
+PIC_fay(psc_fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
-  PIC_fay_F77(psc.pf.flds[m]);
+  PIC_fay_F77(pf->flds[m]);
 }
 
 void
-PIC_faz(int m)
+PIC_faz(psc_fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
-  PIC_faz_F77(psc.pf.flds[m]);
+  PIC_faz_F77(pf->flds[m]);
 }
 
 void
-PIC_fex(int m)
+PIC_fex(psc_fields_fortran_t *pf, int m)
 {
-  PIC_fex_F77(psc.pf.flds[m]);
+  PIC_fex_F77(pf->flds[m]);
 }
 
 void
-PIC_fey(int m)
+PIC_fey(psc_fields_fortran_t *pf, int m)
 {
-  PIC_fey_F77(psc.pf.flds[m]);
+  PIC_fey_F77(pf->flds[m]);
 }
 
 void
-PIC_fez(int m)
+PIC_fez(psc_fields_fortran_t *pf, int m)
 {
-  PIC_fez_F77(psc.pf.flds[m]);
+  PIC_fez_F77(pf->flds[m]);
 }
 
 void

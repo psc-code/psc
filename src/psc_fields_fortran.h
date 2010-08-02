@@ -29,6 +29,8 @@ typedef struct {
 
 void psc_fields_fortran_alloc(psc_fields_fortran_t *pf);
 void psc_fields_fortran_free(psc_fields_fortran_t *pf);
+void psc_fields_fortran_get(psc_fields_fortran_t *pf, int mb, int me);
+void psc_fields_fortran_put(psc_fields_fortran_t *pf, int mb, int me);
 void psc_fields_fortran_zero(psc_fields_fortran_t *pf, int m);
 
 #endif

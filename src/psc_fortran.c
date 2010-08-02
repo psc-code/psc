@@ -160,7 +160,14 @@ fortran_push_field_a()
     pr = prof_register("fort_push_field_a", 1., 0, 0);
   }
   prof_start(pr);
+
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, JXI, EX + 6);
+
   PIC_msa();
+
+  psc_fields_fortran_put(&pf, EX, EX + 6);
+  
   prof_stop(pr);
 }
 
@@ -172,7 +179,14 @@ fortran_push_field_b()
     pr = prof_register("fort_push_field_b", 1., 0, 0);
   }
   prof_start(pr);
+
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, JXI, EX + 6);
+
   PIC_msb();
+
+  psc_fields_fortran_put(&pf, EX, EX + 6);
+
   prof_stop(pr);
 }
 
@@ -213,17 +227,24 @@ fortran_add_ghosts(int mb, int me)
     pr = prof_register("fort_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
+
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, mb, me);
+
   for (int m = mb; m < me; m++) {
     if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
-      PIC_fax(m);
+      PIC_fax(&pf, m);
     }
     if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
-      PIC_fay(m);
+      PIC_fay(&pf, m);
     }
     if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
-      PIC_faz(m);
+      PIC_faz(&pf, m);
     }
   }
+
+  psc_fields_fortran_put(&pf, mb, me);
+
   prof_stop(pr);
 }
 
@@ -235,17 +256,24 @@ fortran_fill_ghosts(int mb, int me)
     pr = prof_register("fort_fill_ghosts", 1., 0, 0);
   }
   prof_start(pr);
+
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, mb, me);
+
   for (int m = mb; m < me; m++) {
     if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
-      PIC_fex(m);
+      PIC_fex(&pf, m);
     }
     if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
-      PIC_fey(m);
+      PIC_fey(&pf, m);
     }
     if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
-      PIC_fez(m);
+      PIC_fez(&pf, m);
     }
   }
+
+  psc_fields_fortran_put(&pf, mb, me);
+
   prof_stop(pr);
 }
 
