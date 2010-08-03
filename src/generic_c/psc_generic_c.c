@@ -15,6 +15,8 @@ genc_create(void)
   // FIXME, this need a destroy, too.
 }
 
+static int __arr_size;
+
 static void
 genc_particles_from_fortran()
 {
@@ -23,10 +25,10 @@ genc_particles_from_fortran()
     genc = genc_create();
   }
   psc_particles_c_t *pp = &genc->pp;
-  if (psc.pp.n_part > genc->part_allocated) {
+  if (psc.pp.n_part > __arr_size) {
     free(pp->particles);
-    genc->part_allocated = psc.pp.n_part * 1.2;
-    pp->particles = calloc(genc->part_allocated, sizeof(*pp->particles));
+    __arr_size = psc.pp.n_part * 1.2;
+    pp->particles = calloc(__arr_size, sizeof(*pp->particles));
   }
 
   for (int n = 0; n < psc.pp.n_part; n++) {
