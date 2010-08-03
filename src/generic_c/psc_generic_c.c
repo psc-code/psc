@@ -18,14 +18,9 @@ genc_create(void)
 static particle_c_t *__arr;
 static int __arr_size;
 
-static void
-genc_particles_from_fortran()
+void
+genc_particles_from_fortran(psc_particles_c_t *pp)
 {
-  struct psc_genc *genc = psc.c_ctx;
-  if (!genc) {
-    genc = genc_create();
-  }
-  psc_particles_c_t *pp = &genc->pp;
   if (psc.pp.n_part > __arr_size) {
     free(__arr);
     __arr = NULL;
@@ -37,7 +32,7 @@ genc_particles_from_fortran()
 
   pp->particles = __arr;
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = &psc.pp.particles[n];
+    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
     particle_c_t *part = psc_particles_c_get_one(pp, n);
 
     part->xi  = f_part->xi;
@@ -52,14 +47,11 @@ genc_particles_from_fortran()
   }
 }
 
-static void
-genc_particles_to_fortran()
+void
+genc_particles_to_fortran(psc_particles_c_t *pp)
 {
-  struct psc_genc *genc = psc.c_ctx;
-  psc_particles_c_t *pp = &genc->pp;
-
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = &psc.pp.particles[n];
+    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
     particle_c_t *part = psc_particles_c_get_one(pp, n);
 
     f_part->xi  = part->xi;
@@ -79,6 +71,9 @@ genc_fields_from_fortran()
 {
 #ifndef USE_FF3
   struct psc_genc *genc = psc.c_ctx;
+  if (!genc) {
+    genc = genc_create();
+  }
   psc_fields_c_t *pf = &genc->pf;
 
   pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
@@ -118,8 +113,6 @@ genc_fields_to_fortran()
 
 struct psc_ops psc_ops_generic_c = {
   .name = "generic_c",
-  .particles_from_fortran = genc_particles_from_fortran,
-  .particles_to_fortran   = genc_particles_to_fortran,
   .fields_from_fortran    = genc_fields_from_fortran,
   .fields_to_fortran      = genc_fields_to_fortran,
   .push_part_xz           = genc_push_part_xz,

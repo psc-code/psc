@@ -162,13 +162,16 @@ genc_push_part_yz_b()
 {
   struct psc_genc *genc = psc.c_ctx;
   psc_fields_c_t *pf = &genc->pf;
-  psc_particles_c_t *pp = &genc->pp;
+  psc_particles_c_t pp;
+  genc_particles_from_fortran(&pp);
 
   static int pr;
   if (!pr) {
     pr = prof_register("genc_part_yz_b", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_genc_push_part_yz_b(pf, pp);
+  do_genc_push_part_yz_b(pf, &pp);
   prof_stop(pr);
+
+  genc_particles_to_fortran(&pp);
 }
