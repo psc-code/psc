@@ -27,12 +27,9 @@ do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  memset(&F3(JXI, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(creal));
-  memset(&F3(JYI, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(creal));
-  memset(&F3(JZI, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(creal));
+  psc_fields_c_zero(pf, JXI);
+  psc_fields_c_zero(pf, JYI);
+  psc_fields_c_zero(pf, JZI);
   
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_c_t *part = psc_particles_c_get_one(pp, n);

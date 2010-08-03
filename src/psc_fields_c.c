@@ -43,3 +43,9 @@ psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
   pf->flds = NULL;
 }
 
+void
+psc_fields_c_zero(psc_fields_c_t *pf, int m)
+{
+  memset(&F3_C(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
+	 psc.fld_size * sizeof(psc_fields_c_real_t));
+}
