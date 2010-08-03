@@ -7,18 +7,9 @@
 
 // test w/ C data structure, single precision 
 
-void
-genc_push_part_yz_a()
+static void
+do_genc_push_part_yz_a(psc_particles_c_t *pp)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("genc_part_yz_a", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
-  }
-  prof_start(pr);
- 
-  struct psc_genc *genc = psc.c_ctx;
-  psc_particles_c_t *pp = &genc->pp;
-
   creal dt = psc.dt;
   creal yl = .5f * dt;
   creal zl = .5f * dt;
@@ -33,6 +24,20 @@ genc_push_part_yz_a()
     part->yi += vyi * yl;
     part->zi += vzi * zl;
   }
+}
 
+void
+genc_push_part_yz_a()
+{
+  struct psc_genc *genc = psc.c_ctx;
+  psc_particles_c_t *pp = &genc->pp;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("genc_part_yz_a", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+  }
+  prof_start(pr);
+  do_genc_push_part_yz_a(pp);
   prof_stop(pr);
 }
+
