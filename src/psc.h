@@ -14,8 +14,10 @@
 // ----------------------------------------------------------------------
 
 #define FIELDS_FORTRAN 1
+#define FIELDS_C       2
 
 #define PARTICLES_FORTRAN 1
+#define PARTICLES_C       2
 
 // FIELDS_BASE and PARTICLES_BASE macros are defined by configure
 // #define FIELDS_BASE FIELDS_FORTRAN
@@ -53,11 +55,14 @@ typedef int f_int;
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
 
+// always need the fortran types for fortran interface
+#include "psc_particles_fortran.h"
+#include "psc_fields_fortran.h"
+
 // ----------------------------------------------------------------------
 // base particles type
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
-#include "psc_particles_fortran.h"
 
 typedef psc_particles_fortran_t psc_particles_base_t;
 typedef particle_fortran_t particle_base_t;
@@ -69,6 +74,21 @@ typedef particle_fortran_real_t particle_base_real_t;
 #define psc_particles_base_free    psc_particles_fortran_free
 #define psc_particles_base_get_one psc_particles_fortran_get_one
 
+#elif PARTICLES_BASE == PARTICLES_C
+
+#include "psc_particles_c.h"
+
+typedef psc_particles_c_t psc_particles_base_t;
+typedef particle_c_t particle_base_t;
+typedef particle_c_real_t particle_base_real_t;
+
+#define psc_particles_base_alloc   psc_particles_c_alloc
+#define psc_particles_base_realloc psc_particles_c_realloc
+#define psc_particles_base_free    psc_particles_c_free
+#define psc_particles_base_get_one psc_particles_c_get_one
+
+#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
+
 #else
 #error unknown PARTICLES_BASE
 #endif
@@ -77,8 +97,6 @@ typedef particle_fortran_real_t particle_base_real_t;
 // base fields type
 
 #if FIELDS_BASE == FIELDS_FORTRAN
-
-#include "psc_fields_fortran.h"
 
 typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
@@ -90,8 +108,21 @@ typedef fields_fortran_real_t fields_base_real_t;
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 
-#else
-#error unknown FIELDS_BASE
+#elif FIELDS_BASE == FIELDS_C
+
+#include "psc_fields_c.h"
+
+typedef psc_fields_c_t psc_fields_base_t;
+typedef fields_c_real_t fields_base_real_t;
+#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
+
+#define psc_fields_base_alloc psc_fields_c_alloc
+#define psc_fields_base_free  psc_fields_c_free
+#define psc_fields_base_zero  psc_fields_c_zero
+
+#define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
+#define MPI_F3_BASE_REAL      MPI_F3_C_REAL
+
 #endif
 
 // user settable parameters

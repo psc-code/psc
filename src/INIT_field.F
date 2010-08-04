@@ -162,6 +162,8 @@ C     set up various things after the main fields have been initialized
 
 c setting up charge and current densities
 
+c FIXME
+#if 0
       if (niloc.gt.0) then
          do l=1,niloc
 
@@ -183,7 +185,7 @@ c setting up charge and current densities
 
          enddo
       endif
-
+#endif
 
 
 

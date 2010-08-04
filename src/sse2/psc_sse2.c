@@ -114,10 +114,12 @@ sse2_fields_from_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
   sse2->fields = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
 
+  int *ilg = psc.ilg;
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
-      sse2->fields[m * psc.fld_size + n] = (sse2_real)psc.pf.flds[m][n];
+      sse2->fields[m * psc.fld_size + n] =
+	(sse2_real) ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]);
     }
   }
 }
@@ -127,9 +129,12 @@ static void
 sse2_fields_to_fortran(){
   struct psc_sse2 *sse2 = psc.c_ctx;
   assert(sse2->fields != NULL);
+
+  int *ilg = psc.ilg;
   for(int m = 0; m < NR_FIELDS; m++){
     for(int n = 0; n < psc.fld_size; n++){
-      psc.pf.flds[m][n] = sse2->fields[m * psc.fld_size + n];
+      ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]) = 
+	sse2->fields[m * psc.fld_size + n];
     }
   }
   _mm_free(sse2->fields);

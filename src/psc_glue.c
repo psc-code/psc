@@ -499,6 +499,7 @@ C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 		   f_int *niloc, particle_fortran_t *p_niloc,
 		   f_int *dummy)
 {
+#if PARTICLES_BASE == PARTICLES_FORTRAN
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
@@ -512,6 +513,9 @@ C_push_part_yz_F77(f_real *p2A, f_real *p2B,
 
   *p2A = psc.p2A;
   *p2A = psc.p2B;
+#else
+  assert(0);
+#endif
 }
 
 void
@@ -519,6 +523,7 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
 		  f_int *niloc, particle_fortran_t *p_niloc,
 		  f_int *dummy)
 {
+#if PARTICLES_BASE == PARTICLES_FORTRAN
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
@@ -532,12 +537,16 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
 
   *p2A = psc.p2A;
   *p2A = psc.p2B;
+#else
+  assert(0);
+#endif
 }
 
 void
 C_sort_F77(f_int *niloc, particle_fortran_t *p_niloc,
 	   f_int *dummy)
 {
+#if PARTICLES_BASE == PARTICLES_FORTRAN
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
@@ -545,6 +554,9 @@ C_sort_F77(f_int *niloc, particle_fortran_t *p_niloc,
   psc.pp.particles = &p_niloc[1];
 
   psc_sort();
+#else
+  assert(0);
+#endif
 }
 
 void

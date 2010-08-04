@@ -371,6 +371,7 @@ psc_dump_particles(const char *fname)
 void
 psc_setup_particles_1()
 {
+#if PARTICLES_BASE == PARTICLES_FORTRAN
   int n = 0;
   int n_per_cell = psc.pp.n_part / 
     ((psc.ihi[0]-psc.ilo[0])*(psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
@@ -386,13 +387,18 @@ psc_setup_particles_1()
 	  psc.pp.particles[n].pzi = .01;
 	  psc.pp.particles[n].qni = -1.;
 	  psc.pp.particles[n].mni = 1.;
+#if PARTICLES_BASE == PARTICLES_FORTRAN
 	  psc.pp.particles[n].lni = 0.;
+#endif
 	  psc.pp.particles[n].wni = 1.;
 	  n++;
 	}
       }
     }
   }
+#else
+  assert(0);
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -804,12 +810,16 @@ psc_check_currents_ref_noghost(double thres)
 void
 psc_check_particles_sorted()
 {
+#if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;
 
   for (int i = 0; i < psc.pp.n_part; i++) {
     assert(psc.pp.particles[i].cni >= last);
     last = psc.pp.particles[i].cni;
   }
+#else
+  assert(0);
+#endif
 }
 
 // ----------------------------------------------------------------------

@@ -4,10 +4,11 @@
 
 #include "psc.h"
 
-typedef double psc_fields_c_real_t;
+typedef double fields_c_real_t;
+#define MPI_FIELDS_C_REAL MPI_DOUBLE
 
 typedef struct {
-  psc_fields_c_real_t *flds;
+  fields_c_real_t *flds;
 } psc_fields_c_t;
 
 #define F3_OFF_C(fldnr, jx,jy,jz)					\
@@ -32,6 +33,8 @@ typedef struct {
 
 #endif
 
+void psc_fields_c_alloc(psc_fields_c_t *pf);
+void psc_fields_c_free(psc_fields_c_t *pf);
 void psc_fields_c_zero(psc_fields_c_t *pf, int m);
 void psc_fields_c_get(psc_fields_c_t *pf, int mb, int me);
 void psc_fields_c_put(psc_fields_c_t *pf, int mb, int me);

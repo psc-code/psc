@@ -5,6 +5,48 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#if PARTICLES_BASE == PARTICLES_C
+
+static int __arr_size;
+
+void
+psc_particles_c_alloc(psc_particles_c_t *pp, int n_part)
+{
+  __arr_size = n_part * 1.2;
+  pp->particles = calloc(__arr_size, sizeof(*pp->particles));
+}
+
+void
+psc_particles_c_realloc(psc_particles_c_t *pp, int new_n_part)
+{
+  if (__arr_size <= new_n_part)
+    return;
+
+  __arr_size = new_n_part * 1.2;
+  pp->particles = realloc(pp->particles, __arr_size * sizeof(*pp->particles));
+}
+
+void
+psc_particles_c_free(psc_particles_c_t *pp)
+{
+  free(pp->particles);
+  pp->particles = NULL;
+}
+
+void
+psc_particles_c_get(psc_particles_c_t *pp)
+{
+  pp->particles = psc.pp.particles;
+  pp->n_part = psc.pp.n_part;
+}
+
+void
+psc_particles_c_put(psc_particles_c_t *pp)
+{
+}
+
+#else
+
 static particle_c_t *__arr;
 static int __arr_size;
 static int __gotten;
@@ -63,4 +105,6 @@ psc_particles_c_put(psc_particles_c_t *pp)
 
   pp->particles = NULL;
 }
+
+#endif
 

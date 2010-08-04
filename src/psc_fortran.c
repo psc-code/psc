@@ -115,6 +115,7 @@ struct psc_randomize_ops psc_randomize_ops_fortran = {
 static void
 fortran_sort()
 {
+  assert(PARTICLES_BASE == PARTICLES_FORTRAN);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_sort", 1., 0, 0);
@@ -202,6 +203,7 @@ struct psc_push_field_ops psc_push_field_ops_fortran = {
 static void
 fortran_out_field()
 {
+  assert(FIELDS_BASE == FIELDS_FORTRAN);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_out_field", 1., 0, 0);

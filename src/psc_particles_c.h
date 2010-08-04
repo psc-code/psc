@@ -21,6 +21,9 @@ typedef struct {
   int n_part;
 } psc_particles_c_t;
 
+void psc_particles_c_alloc(psc_particles_c_t *pp, int n_part);
+void psc_particles_c_realloc(psc_particles_c_t *pp, int new_n_part);
+void psc_particles_c_free(psc_particles_c_t *pp);
 void psc_particles_c_get(psc_particles_c_t *pp);
 void psc_particles_c_put(psc_particles_c_t *pp);
 

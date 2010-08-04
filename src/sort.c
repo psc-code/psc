@@ -7,14 +7,32 @@
 // ======================================================================
 // quicksort
 
+#if PARTICLES_BASE == PARTICLES_FORTRAN
+
+static inline int
+get_cellindex(const particle_base_t *p)
+{
+  return p->cni;
+}
+
+#else
+
+static inline int
+get_cellindex(const particle_base_t *p)
+{
+  assert(0);
+}
+
+#endif
+
 static int
 compare(const void *_a, const void *_b)
 {
   const particle_base_t *a = _a, *b = _b;
 
-  if (a->cni < b->cni) {
+  if (get_cellindex(a) < get_cellindex(b)) {
     return -1;
-  } else if (a->cni == b->cni) {
+  } else if (get_cellindex(a) == get_cellindex(b)) {
     return 0;
   } else {
     return 1;
@@ -56,7 +74,7 @@ countsort_sort()
 
   // count
   for (int i = 0; i < psc.pp.n_part; i++) {
-    unsigned int cni = psc.pp.particles[i].cni;
+    unsigned int cni = get_cellindex(&psc.pp.particles[i]);
     assert(cni < N);
     cnts[cni]++;
   }
@@ -71,17 +89,17 @@ countsort_sort()
   assert(cur == psc.pp.n_part);
 
   // move into new position
-  particle_base_t *f_part2 = malloc(psc.pp.n_part * sizeof(*f_part2));
+  particle_base_t *particles2 = malloc(psc.pp.n_part * sizeof(*particles2));
   for (int i = 0; i < psc.pp.n_part; i++) {
-    unsigned int cni = psc.pp.particles[i].cni;
-    memcpy(&f_part2[cnts[cni]], &psc.pp.particles[i], sizeof(*f_part2));
+    unsigned int cni = get_cellindex(&psc.pp.particles[i]);
+    memcpy(&particles2[cnts[cni]], &psc.pp.particles[i], sizeof(*particles2));
     cnts[cni]++;
   }
 
   // back to in-place
-  memcpy(psc.pp.particles, f_part2, psc.pp.n_part * sizeof(*f_part2));
+  memcpy(psc.pp.particles, particles2, psc.pp.n_part * sizeof(*particles2));
 
-  free(f_part2);
+  free(particles2);
   free(cnts);
 
   prof_stop(pr);
@@ -108,7 +126,7 @@ countsort2_sort()
 
   unsigned int *cnis = malloc(psc.pp.n_part * sizeof(*cnis));
   for (int i = 0; i < psc.pp.n_part; i++) {
-    cnis[i] = psc.pp.particles[i].cni;
+    cnis[i] = get_cellindex(&psc.pp.particles[i]);
     assert(cnis[i] < N);
   }
 
@@ -133,22 +151,22 @@ countsort2_sort()
   assert(cur == psc.pp.n_part);
 
   // move into new position
-  particle_base_t *f_part2 = malloc(psc.pp.n_part * sizeof(*f_part2));
+  particle_base_t *particles2 = malloc(psc.pp.n_part * sizeof(*particles2));
   for (int i = 0; i < psc.pp.n_part; i++) {
     unsigned int cni = cnis[i];
     int n = 1;
     while (i+n < psc.pp.n_part && cnis[i+n] == cni) {
       n++;
     }
-    memcpy(&f_part2[cnts[cni]], &psc.pp.particles[i], n * sizeof(*f_part2));
+    memcpy(&particles2[cnts[cni]], &psc.pp.particles[i], n * sizeof(*particles2));
     cnts[cni] += n;
     i += n - 1;
   }
 
   // back to in-place
-  memcpy(psc.pp.particles, f_part2, psc.pp.n_part * sizeof(*f_part2));
+  memcpy(psc.pp.particles, particles2, psc.pp.n_part * sizeof(*particles2));
 
-  free(f_part2);
+  free(particles2);
   free(cnts);
 
   prof_stop(pr);

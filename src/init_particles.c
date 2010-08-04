@@ -161,7 +161,9 @@ psc_init_particles(int particle_label_offset)
 	      p->pzi = pz;
 	      p->qni = npt.q;
 	      p->mni = npt.m;
+#if PARTICLES_BASE == PARTICLES_FORTRAN
 	      p->lni = particle_label_offset + 1;
+#endif
 	      if (psc.prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;
 	      } else {

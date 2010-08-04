@@ -6,7 +6,35 @@
 #include <string.h>
 #include <assert.h>
 
-static psc_fields_c_real_t *__flds;
+void
+psc_fields_c_alloc(psc_fields_c_t *pf)
+{
+  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+}
+
+void
+psc_fields_c_free(psc_fields_c_t *pf)
+{
+  free(pf->flds);
+}
+
+#if FIELDS_BASE == FIELDS_C
+
+void
+psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
+{
+  *pf = psc.pf;
+}
+
+void
+psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
+{
+  pf->flds = NULL;
+}
+
+#elif FIELDS_BASE == FIELDS_FORTRAN
+
+static fields_c_real_t *__flds;
 static int __gotten;
 
 void
@@ -50,9 +78,11 @@ psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
   pf->flds = NULL;
 }
 
+#endif
+
 void
 psc_fields_c_zero(psc_fields_c_t *pf, int m)
 {
   memset(&F3_C(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(psc_fields_c_real_t));
+	 psc.fld_size * sizeof(fields_c_real_t));
 }
