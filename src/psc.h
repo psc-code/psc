@@ -60,6 +60,10 @@ typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
+#define psc_fields_base_alloc  psc_fields_fortran_alloc
+#define psc_fields_base_free   psc_fields_fortran_free
+#define psc_fields_base_zero   psc_fields_fortran_zero
+
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 
 // user settable parameters
@@ -227,6 +231,7 @@ struct psc {
   // Fortran compatible particles
   int n_part;
   struct f_particle *f_part;
+  psc_fields_base_t pf;
 
   // Fortran compatible fields
   int ilo[3], ihi[3]; // local domain: il, il+1, ..., ih-1
@@ -234,8 +239,6 @@ struct psc {
   int ilg[3], ihg[3]; // local domain incl ghost points: ilg, ilg+1, ..., ihg-1
   int img[3];         // total # points per dir incl. ghost points
   int fld_size;       // total # points per field incl. ghost points
-
-  psc_fields_base_t pf;
 
   // C data structures
   void *c_ctx;
