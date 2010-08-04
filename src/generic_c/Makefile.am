@@ -7,5 +7,6 @@ libpsc_generic_c_a_SOURCES = \
 	psc_generic_c.c \
 	push_part_xz.c \
 	push_part_yz.c \
+	push_part_z.c \
 	push_part_yz_a.c \
 	push_part_yz_b.c
