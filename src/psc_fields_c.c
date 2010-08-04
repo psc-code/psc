@@ -7,10 +7,14 @@
 #include <assert.h>
 
 static psc_fields_c_real_t *__flds;
+static int __gotten;
 
 void
 psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
 {
+  assert(!__gotten);
+  __gotten = 1;
+
   if (!__flds) {
     __flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
   }
@@ -30,6 +34,9 @@ psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
 void
 psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
 {
+  assert(__gotten);
+  __gotten = 0;
+
   for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {

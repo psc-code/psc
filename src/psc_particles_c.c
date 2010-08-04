@@ -7,6 +7,7 @@
 
 static particle_c_t *__arr;
 static int __arr_size;
+static int __gotten;
 
 void
 psc_particles_c_get(psc_particles_c_t *pp)
@@ -19,6 +20,8 @@ psc_particles_c_get(psc_particles_c_t *pp)
     __arr_size = psc.pp.n_part * 1.2;
     __arr = calloc(__arr_size, sizeof(*__arr));
   }
+  assert(!__gotten);
+  __gotten = 1;
 
   pp->particles = __arr;
   for (int n = 0; n < psc.pp.n_part; n++) {
@@ -40,6 +43,9 @@ psc_particles_c_get(psc_particles_c_t *pp)
 void
 psc_particles_c_put(psc_particles_c_t *pp)
 {
+  assert(__gotten);
+  __gotten = 0;
+
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
     particle_c_t *part = psc_particles_c_get_one(pp, n);
@@ -54,5 +60,7 @@ psc_particles_c_put(psc_particles_c_t *pp)
     f_part->mni = part->mni;
     f_part->wni = part->wni;
   }
+
+  pp->particles = NULL;
 }
 
