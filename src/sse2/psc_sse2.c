@@ -23,7 +23,7 @@ init_vec_numbers(void) {
 }
 
 static size_t __sse2_part_allocated;
-static struct sse2_particle *__sse2_part_data;
+static struct particle_sse2 *__sse2_part_data;
 
 // For now this is all more or less identical to kai's generic_c. 
 /// Copy particles from Fortran data structures to an SSE2 friendly format.
@@ -49,7 +49,7 @@ psc_particles_sse2_get(psc_particles_sse2_t *particles)
 
   for (int n = 0; n < n_part; n++) {
     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
-    struct sse2_particle *part = &particles->particles[n];
+    struct particle_sse2 *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
     part->yi  = base_part->yi;
@@ -65,7 +65,7 @@ psc_particles_sse2_get(psc_particles_sse2_t *particles)
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n_part - 1);
-    struct sse2_particle *part = &particles->particles[n];
+    struct particle_sse2 *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
     part->zi  = base_part->zi;
@@ -79,7 +79,7 @@ psc_particles_sse2_put(psc_particles_sse2_t *particles)
 {
    for(int n = 0; n < psc.pp.n_part; n++) {
      particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
-     struct sse2_particle *part = &particles->particles[n];
+     struct particle_sse2 *part = &particles->particles[n];
      
      base_part->xi  = part->xi;
      base_part->yi  = part->yi;

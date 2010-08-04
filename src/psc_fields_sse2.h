@@ -3,44 +3,14 @@
 #define PSC_FIELD_SSE2_H
 
 #include "psc.h"
-
-#include <xmmintrin.h>
-
-////////
-/// Toggle to switch precision 
-///
-/// 1 is double precision, 0 is single. 
-
-#define SSE2_DOUBLE 1
-
-// ======================================================================
-
-#if SSE2_DOUBLE
-
-/// Number of elements in a floating point vector (changes with precision)
-#define VEC_SIZE 2
-
-/// SSE2 floating point type
-typedef double sse2_real;
-
-#else
-
-/// Number of elements in a floating point vector (changes with precision)
-#define VEC_SIZE 4 
-
-/// SSE2 floating point type
-typedef float sse2_real;
-
-#endif
-
-// ======================================================================
+#include "simd_sse2.h"
 
 typedef sse2_real psc_fields_sse2_real_t;
 
 #define MPI_F3_SSE2_REAL MPI_SSE2_REAL
 
 struct psc_fields_sse2 {
-  sse2_real *flds;
+  psc_fields_sse2_real_t *flds;
 };
 
 typedef struct psc_fields_sse2 psc_fields_sse2_t;

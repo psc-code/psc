@@ -3,26 +3,13 @@
 #define PSC_SSE2_H
 
 #include "psc_fields_sse2.h"
+#include "psc_particles_sse2.h"
 
 #include <assert.h>
 #include <emmintrin.h>
 // Not including any SSE2 emulation at this time (finding an sse proc won't be hard, anything >= a P4 or AMD post 2005 will support these)
 
 #include "simd_wrap.h"
-
-/// Particle structure used by SSE2 implementation.
-struct sse2_particle {
-  sse2_real xi, yi, zi;
-  sse2_real pxi, pyi, pzi;
-  sse2_real qni;
-  sse2_real mni;
-  sse2_real wni;
-};
-
-typedef struct psc_particles_sse2 {
-  struct sse2_particle *particles; ///< Pointer to particle array
-  int n_part;
-} psc_particles_sse2_t;
 
 // Packed vector datatypes, use typedefs to make things a bit prettier
 
@@ -52,9 +39,6 @@ pvReal ones, ///< Vector of "1.0"
   onepfive, ///< Vector of "1.5"
   third; ///< Vector of "1./3."
 pvInt ione; ///< Vector of "1"
-
-void psc_particles_sse2_get(psc_particles_sse2_t *pp);
-void psc_particles_sse2_put(psc_particles_sse2_t *pp);
 
 #endif
 
