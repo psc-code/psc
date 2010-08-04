@@ -100,7 +100,7 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test1 test_part_yz test_part_xz test_field test_bnd \
+noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
 LDADD = libpsc.a generic_c/libpsc_generic_c.a util/libutil.a
