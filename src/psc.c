@@ -402,11 +402,17 @@ void
 psc_push_part_xz()
 {
   assert(psc.ops->push_part_xz);
-  psc.ops->particles_from_fortran();
-  psc.ops->fields_from_fortran();
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
+  if (psc.ops->fields_from_fortran)
+    psc.ops->fields_from_fortran();
+
   psc.ops->push_part_xz();
-  psc.ops->particles_to_fortran();
-  psc.ops->fields_to_fortran();
+
+  if (psc.ops->particles_to_fortran)
+    psc.ops->particles_to_fortran();
+  if (psc.ops->fields_to_fortran)
+    psc.ops->fields_to_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -416,11 +422,17 @@ void
 psc_push_part_yz()
 {
   assert(psc.ops->push_part_yz);
-  psc.ops->particles_from_fortran();
-  psc.ops->fields_from_fortran();
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
+  if (psc.ops->fields_from_fortran)
+    psc.ops->fields_from_fortran();
+  
   psc.ops->push_part_yz();
-  psc.ops->particles_to_fortran();
-  psc.ops->fields_to_fortran();
+
+  if (psc.ops->particles_to_fortran)
+    psc.ops->particles_to_fortran();
+  if (psc.ops->fields_to_fortran)
+    psc.ops->fields_to_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -430,9 +442,17 @@ void
 psc_push_part_z()
 {
   assert(psc.ops->push_part_z);
-  psc.ops->particles_from_fortran();
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
+  if (psc.ops->fields_from_fortran)
+    psc.ops->fields_from_fortran();
+
   psc.ops->push_part_z();
-  psc.ops->particles_to_fortran();
+
+  if (psc.ops->fields_to_fortran)
+    psc.ops->particles_to_fortran();
+  if (psc.ops->particles_to_fortran)
+    psc.ops->fields_to_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -442,9 +462,11 @@ void
 psc_push_part_yz_a()
 {
   assert(psc.ops->push_part_yz_a);
-  psc.ops->particles_from_fortran();
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
   psc.ops->push_part_yz_a();
-  psc.ops->particles_to_fortran();
+  if (psc.ops->particles_to_fortran)
+    psc.ops->particles_to_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -454,11 +476,17 @@ void
 psc_push_part_yz_b()
 {
   assert(psc.ops->push_part_yz_b);
-  psc.ops->particles_from_fortran();
-  psc.ops->fields_from_fortran();
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
+  if (psc.ops->fields_from_fortran)
+    psc.ops->fields_from_fortran();
+
   psc.ops->push_part_yz_b();
-  psc.ops->fields_to_fortran();
-  psc.ops->particles_to_fortran();
+
+  if (psc.ops->fields_to_fortran)
+    psc.ops->fields_to_fortran();
+  if (psc.ops->particles_to_fortran)
+    psc.ops->particles_to_fortran();
 }
 
 // ----------------------------------------------------------------------
