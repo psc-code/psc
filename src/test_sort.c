@@ -11,7 +11,10 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   params_init(argc, argv);
   
-  psc_create_test_1("fortran");
+  struct psc_mod_config conf_fortran = {
+    .mod_sort = "fortran",
+  };
+  psc_create_test_xz(&conf_fortran);
 
   PIC_find_cell_indices();
   PIC_randomize();

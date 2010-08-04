@@ -362,7 +362,6 @@ struct psc_mod_config {
 struct psc psc;
 
 void psc_create(struct psc_mod_config *conf);
-void psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part);
 void psc_destroy();
 
 void psc_init(const char *case_name);
@@ -379,13 +378,8 @@ void psc_fill_ghosts(int mb, int me);
 void psc_exchange_particles(void);
 void psc_calc_densities(void);
 
-void psc_setup_parameters();
-void psc_setup_fields_zero();
-void psc_setup_fields_1();
-void psc_setup_particles_1();
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);
-void psc_create_test_1(const char *ops_name);
 void psc_create_test_xz(struct psc_mod_config *conf);
 void psc_create_test_yz(struct psc_mod_config *conf);
 

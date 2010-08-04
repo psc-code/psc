@@ -234,30 +234,6 @@ psc_create(struct psc_mod_config *conf)
   }
 }
 
-// ----------------------------------------------------------------------
-
-// FIXME, obsolete
-void
-psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
-{
-  for (int d = 0; d < 3; d++) {
-    psc.ilo[d] = ilo[d];
-    psc.ilg[d] = ilo[d] - ibn[d];
-    psc.ihi[d] = ihi[d];
-    psc.ihg[d] = ihi[d] + ibn[d];
-    psc.img[d] = ihi[d] - ilo[d] + 2 * ibn[d];
-    psc.ibn[d] = ibn[d];
-    // for now, local == global (tests running on 1 proc)
-    psc.domain.ilo[d] = ilo[d];
-    psc.domain.ihi[d] = ihi[d];
-  }
-  psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
-  fields_base_alloc(&psc.pf);
-
-  particles_base_alloc(&psc.pp, n_part);
-  psc_set_n_particles(n_part);
-}
-
 void
 psc_destroy()
 {
@@ -267,44 +243,6 @@ psc_destroy()
 
   fields_base_free(&psc.pf);
   particles_base_free(&psc.pp);
-}
-
-void
-psc_setup_parameters()
-{
-  psc.coeff.cori = 2.;
-  psc.coeff.eta = 3.;
-  psc.coeff.alpha = 5.;
-  psc.dt = 1.;
-  psc.dx[0] = 1.;
-  psc.dx[1] = 1.;
-  psc.dx[2] = 1.;
-}
-
-void
-psc_setup_fields_zero()
-{
-  for (int m = 0; m < NR_FIELDS; m++) {
-    fields_base_zero(&psc.pf, m);
-  }
-}
-
-void
-psc_setup_fields_1()
-{
-  psc_setup_fields_zero();
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_BASE(EX, jx,jy,jz) = .1 * sin(.5 * jx) + .2 * sin(.4 * jy) + .3 * sin(.3 * jz);
-	F3_BASE(EY, jx,jy,jz) = .2 * sin(.4 * jx) + .3 * sin(.3 * jy) + .4 * sin(.2 * jz);
-	F3_BASE(EZ, jx,jy,jz) = .3 * sin(.3 * jx) + .4 * sin(.2 * jy) + .5 * sin(.1 * jz);
-	F3_BASE(BX, jx,jy,jz) = .1 * cos(.5 * jx) + .2 * cos(.4 * jy) + .3 * cos(.3 * jz);
-	F3_BASE(BY, jx,jy,jz) = .2 * cos(.4 * jx) + .3 * cos(.3 * jy) + .4 * cos(.2 * jz);
-	F3_BASE(BZ, jx,jy,jz) = .3 * cos(.3 * jx) + .4 * cos(.2 * jy) + .5 * cos(.1 * jz);
-      }
-    }
-  }
 }
 
 static void
@@ -371,39 +309,6 @@ psc_dump_particles(const char *fname)
   } else {
     ascii_dump_particles(fname);
   }
-}
-
-void
-psc_setup_particles_1()
-{
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-  int n = 0;
-  int n_per_cell = psc.pp.n_part / 
-    ((psc.ihi[0]-psc.ilo[0])*(psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
-  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	for (int cnt = 0; cnt < n_per_cell; cnt++) {
-	  psc.pp.particles[n].xi = ix;
-	  psc.pp.particles[n].yi = iy;
-	  psc.pp.particles[n].zi = iz;
-	  psc.pp.particles[n].pxi = .03;
-	  psc.pp.particles[n].pyi = .02;
-	  psc.pp.particles[n].pzi = .01;
-	  psc.pp.particles[n].qni = -1.;
-	  psc.pp.particles[n].mni = 1.;
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-	  psc.pp.particles[n].lni = 0.;
-#endif
-	  psc.pp.particles[n].wni = 1.;
-	  n++;
-	}
-      }
-    }
-  }
-#else
-  assert(0);
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -691,32 +596,6 @@ psc_set_n_particles(int n_part)
 // ======================================================================
 // testing related stuff
 
-
-
-
-// ----------------------------------------------------------------------
-// psc_create_test_1
-//
-// set up test case 1
-
-void
-psc_create_test_1(const char *ops_name)
-{
-  int ilo[3] = { 0,  0,  0 };
-  int ihi[3] = { 1, 16, 16 };
-  int ibn[3] = { 2,  2,  2 }; // FIXME?
-
-  int n_part = 1e3 * (ihi[2] - ilo[2]) * (ihi[1] - ilo[1]);
-
-  struct psc_mod_config conf = {
-    .mod_particle = ops_name,
-  };
-  psc_create(&conf);
-  psc_alloc(ilo, ihi, ibn, n_part);
-  psc_setup_parameters();
-  psc_setup_fields_1();
-  psc_setup_particles_1();
-}
 
 // ----------------------------------------------------------------------
 // psc_create_test_xz
