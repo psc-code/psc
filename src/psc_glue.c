@@ -160,142 +160,82 @@ PIC_set_variables()
 }
 
 void
-PIC_push_part_yz()
+PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6);
-
   PIC_set_variables();
-  PIC_push_part_yz_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
-		       pf.flds[NE], pf.flds[NI], pf.flds[NN],
-		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
-		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
-		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
-
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, JXI + 3);
+  PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+		       pf->flds[NE], pf->flds[NI], pf->flds[NN],
+		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		       pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
 }
 
 void
-PIC_push_part_xz()
+PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  particles_fortran_t pp;
-  fields_fortran_t pf;
-  particles_fortran_get(&pp);
-  fields_fortran_get(&pf, EX, EX + 6);
-
   PIC_set_variables();
-  PIC_push_part_xz_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
-		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
-		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
-		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
-
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, JXI + 3);
+  PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		       pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
 }
 
 void
-PIC_push_part_yz_a()
+PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6);
-
   PIC_set_variables();
-  PIC_push_part_yz_a_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
-			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
-			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
-			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
-			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
-
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, JXI + 3);
+  PIC_push_part_yz_a_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
+			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+			 pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
 }
 
 void
-PIC_push_part_yz_b()
+PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6);
-
   PIC_set_variables();
-  PIC_push_part_yz_b_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
-			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
-			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
-			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
-			 pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
-
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, JXI + 3);
+  PIC_push_part_yz_b_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
+			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+			 pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
 }
 
 void
-PIC_push_part_z()
+PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6);
-
   PIC_set_variables();
-  PIC_push_part_z_F77(&pp.n_part, &pp.particles[-1], &psc.p2A, &psc.p2B,
-		      pf.flds[NE], pf.flds[NI], pf.flds[NN],
-		      pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
-		      pf.flds[EX], pf.flds[EY], pf.flds[EZ],
-		      pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
-
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, JXI + 3);
+  PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+		      pf->flds[NE], pf->flds[NI], pf->flds[NN],
+		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		      pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
 }
 
 void
-PIC_sort()
+PIC_sort(particles_fortran_t *pp)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-
-  PIC_sort_F77(&pp.n_part, &pp.particles[-1]);
-
-  particles_fortran_put(&pp);
+  PIC_sort_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void
-PIC_randomize()
+PIC_randomize(particles_fortran_t *pp)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-
-  PIC_randomize_F77(&pp.n_part, &pp.particles[-1]);
-
-  particles_fortran_put(&pp);
+  PIC_randomize_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void
-PIC_bin_coll()
+PIC_bin_coll(particles_fortran_t *pp)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-
-  PIC_bin_coll_F77(&pp.n_part, &pp.particles[-1]);
-
-  particles_fortran_put(&pp);
+  PIC_bin_coll_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void
-PIC_find_cell_indices()
+PIC_find_cell_indices(particles_fortran_t *pp)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-
   PIC_set_variables();
-  PIC_find_cell_indices_F77(&pp.n_part, &pp.particles[-1]);
-
-  particles_fortran_put(&pp);
+  PIC_find_cell_indices_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void

@@ -9,16 +9,28 @@
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
+static void
+find_cell_indices(particles_base_t *pp)
+{
+  PIC_find_cell_indices(pp);
+}
+
 static inline int
-get_cellindex(const particle_base_t *p)
+get_cell_index(const particle_base_t *p)
 {
   return p->cni;
 }
 
 #else
 
+static void
+find_cell_indices(particles_base_t *pp)
+{
+  assert(0);
+}
+
 static inline int
-get_cellindex(const particle_base_t *p)
+get_cell_index(const particle_base_t *p)
 {
   assert(0);
 }
@@ -30,9 +42,9 @@ compare(const void *_a, const void *_b)
 {
   const particle_base_t *a = _a, *b = _b;
 
-  if (get_cellindex(a) < get_cellindex(b)) {
+  if (get_cell_index(a) < get_cell_index(b)) {
     return -1;
-  } else if (get_cellindex(a) == get_cellindex(b)) {
+  } else if (get_cell_index(a) == get_cell_index(b)) {
     return 0;
   } else {
     return 1;
@@ -47,6 +59,7 @@ qsort_sort()
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
   prof_start(pr);
+  find_cell_indices(&psc.pp);
   qsort(psc.pp.particles, psc.pp.n_part, sizeof(*psc.pp.particles), compare);
   prof_stop(pr);
 }
@@ -68,13 +81,15 @@ countsort_sort()
   }
   prof_start(pr);
   
+  find_cell_indices(&psc.pp);
+
   int N = psc.fld_size;
   unsigned int *cnts = malloc(N * sizeof(*cnts));
   memset(cnts, 0, N * sizeof(*cnts));
 
   // count
   for (int i = 0; i < psc.pp.n_part; i++) {
-    unsigned int cni = get_cellindex(&psc.pp.particles[i]);
+    unsigned int cni = get_cell_index(&psc.pp.particles[i]);
     assert(cni < N);
     cnts[cni]++;
   }
@@ -91,7 +106,7 @@ countsort_sort()
   // move into new position
   particle_base_t *particles2 = malloc(psc.pp.n_part * sizeof(*particles2));
   for (int i = 0; i < psc.pp.n_part; i++) {
-    unsigned int cni = get_cellindex(&psc.pp.particles[i]);
+    unsigned int cni = get_cell_index(&psc.pp.particles[i]);
     memcpy(&particles2[cnts[cni]], &psc.pp.particles[i], sizeof(*particles2));
     cnts[cni]++;
   }
@@ -122,11 +137,13 @@ countsort2_sort()
     pr = prof_register("countsort2_sort", 1., 0, 0);
   }
 
+  find_cell_indices(&psc.pp);
+
   int N = psc.fld_size;
 
   unsigned int *cnis = malloc(psc.pp.n_part * sizeof(*cnis));
   for (int i = 0; i < psc.pp.n_part; i++) {
-    cnis[i] = get_cellindex(&psc.pp.particles[i]);
+    cnis[i] = get_cell_index(&psc.pp.particles[i]);
     assert(cnis[i] < N);
   }
 

@@ -16,8 +16,7 @@ main(int argc, char **argv)
   };
   psc_create_test_xz(&conf_fortran);
 
-  PIC_find_cell_indices();
-  PIC_randomize();
+  psc_randomize();
   psc_sort();
   psc_check_particles_sorted();
 

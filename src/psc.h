@@ -435,15 +435,15 @@ extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
 
 // Wrappers for Fortran functions
-void PIC_push_part_xz();
-void PIC_push_part_yz();
-void PIC_push_part_z();
-void PIC_push_part_yz_a();
-void PIC_push_part_yz_b();
-void PIC_sort();
-void PIC_randomize();
-void PIC_bin_coll();
-void PIC_find_cell_indices();
+void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_sort(particles_fortran_t *pp);
+void PIC_randomize(particles_fortran_t *pp);
+void PIC_bin_coll(particles_fortran_t *pp);
+void PIC_find_cell_indices(particles_fortran_t *pp);
 void PIC_msa();
 void PIC_msb();
 void OUT_field();

@@ -497,7 +497,6 @@ psc_randomize()
 void
 psc_sort()
 {
-  PIC_find_cell_indices();
   assert(psc.sort_ops->sort);
   psc.sort_ops->sort();
 }

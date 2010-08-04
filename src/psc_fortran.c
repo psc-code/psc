@@ -25,55 +25,101 @@ fortran_fields_to_fortran()
 static void
 fortran_push_part_xz()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_xz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
-  PIC_push_part_xz();
+  PIC_push_part_xz(&pp, &pf);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 static void
 fortran_push_part_yz()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
-  PIC_push_part_yz();
+  PIC_push_part_yz(&pp, &pf);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 static void
 fortran_push_part_z()
 {
-  PIC_push_part_z();
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_part_z", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+  }
+  prof_start(pr);
+  PIC_push_part_z(&pp, &pf);
+  prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 static void
 fortran_push_part_yz_a()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz_a", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
-  PIC_push_part_yz_a();
+  PIC_push_part_yz_a(&pp, &pf);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 static void
 fortran_push_part_yz_b()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz_b", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
-  PIC_push_part_yz_b();
+  PIC_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
 }
 
 struct psc_ops psc_ops_fortran = {
@@ -95,13 +141,18 @@ struct psc_ops psc_ops_fortran = {
 static void
 fortran_randomize()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_randomize", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_randomize();
+  PIC_randomize(&pp);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
 }
 
 struct psc_randomize_ops psc_randomize_ops_fortran = {
@@ -115,14 +166,19 @@ struct psc_randomize_ops psc_randomize_ops_fortran = {
 static void
 fortran_sort()
 {
-  assert(PARTICLES_BASE == PARTICLES_FORTRAN);
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_sort();
+  PIC_find_cell_indices(&pp);
+  PIC_sort(&pp);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
 }
 
 struct psc_sort_ops psc_sort_ops_fortran = {
@@ -136,13 +192,18 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 static void
 fortran_collision()
 {
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_collision", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_bin_coll();
+  PIC_bin_coll(&pp);
   prof_stop(pr);
+
+  particles_fortran_put(&pp);
 }
 
 struct psc_collision_ops psc_collision_ops_fortran = {
@@ -156,39 +217,35 @@ struct psc_collision_ops psc_collision_ops_fortran = {
 static void
 fortran_push_field_a()
 {
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, JXI, EX + 6);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_push_field_a", 1., 0, 0);
   }
   prof_start(pr);
-
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, EX + 6);
-
   PIC_msa();
+  prof_stop(pr);
 
   fields_fortran_put(&pf, EX, EX + 6);
-  
-  prof_stop(pr);
 }
 
 static void
 fortran_push_field_b()
 {
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, JXI, EX + 6);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_push_field_b", 1., 0, 0);
   }
   prof_start(pr);
-
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, EX + 6);
-
   PIC_msb();
+  prof_stop(pr);
 
   fields_fortran_put(&pf, EX, EX + 6);
-
-  prof_stop(pr);
 }
 
 struct psc_push_field_ops psc_push_field_ops_fortran = {
