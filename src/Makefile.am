@@ -52,6 +52,11 @@ if HAVE_HDF5
 libpsc_a_SOURCES += output_hdf5.c
 endif
 
+if USE_SSE2
+libpsc_a_SOURCES += \
+	psc_fields_sse2.c psc_particles_sse2.c
+endif USE_SSE2
+
 if USE_CUDA
 libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
