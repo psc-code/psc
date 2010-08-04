@@ -1,7 +1,10 @@
 
+#ifndef PSC_GENERIC_C_H
+#define PSC_GENERIC_C_H
+
 #include "psc.h"
-#include "psc_fields_c.h"
-#include "psc_particles_c.h"
+#include "psc_fields_as_fortran.h"
+#include "psc_particles_as_fortran.h"
 
 // switch between double and float in generic_c
 // constants need to always be given like 1.5f
@@ -28,11 +31,10 @@ void genc_push_part_xz();
 void genc_push_part_yz_a();
 void genc_push_part_yz_b();
 
-#define F3(m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
-
 static inline int
 nint(creal x)
 {
   return (int)(x + 10.5f) - 10;
 }
 
+#endif

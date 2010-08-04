@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
+do_genc_push_part_xz(psc_fields_t *pf, psc_particles_t *pp)
 {
 #define S0X(off) s0x[off+2]
 #define S0Z(off) s0z[off+2]
@@ -27,12 +27,12 @@ do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  psc_fields_c_zero(pf, JXI);
-  psc_fields_c_zero(pf, JYI);
-  psc_fields_c_zero(pf, JZI);
+  psc_fields_zero(pf, JXI);
+  psc_fields_zero(pf, JYI);
+  psc_fields_zero(pf, JZI);
   
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_c_t *part = psc_particles_c_get_one(pp, n);
+    particle_t *part = psc_particles_get_one(pp, n);
 
     // x^n, p^n -> x^(n+.5), p^n
 
@@ -257,7 +257,7 @@ do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
 
 	jxh -= fnqx*wx;
 	jyh = fnqy*wy;
-	JZH(l1) = JZH(l1)-fnqz*wz;
+	JZH(l1) -= fnqz*wz;
 
 	F3(JXI, j1+l1,j2,j3+l3) += jxh;
 	F3(JYI, j1+l1,j2,j3+l3) += jyh;
@@ -270,10 +270,10 @@ do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
 void
 genc_push_part_xz()
 {
-  psc_fields_c_t pf;
-  psc_fields_c_get(&pf, EX, EX + 6);
-  psc_particles_c_t pp;
-  psc_particles_c_get(&pp);
+  psc_fields_t pf;
+  psc_particles_t pp;
+  psc_fields_get(&pf, EX, EX + 6);
+  psc_particles_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -283,6 +283,7 @@ genc_push_part_xz()
   do_genc_push_part_xz(&pf, &pp);
   prof_stop(pr);
 
-  psc_fields_c_put(&pf, JXI, JXI + 3);
-  psc_particles_c_put(&pp);
+  psc_fields_put(&pf, JXI, JXI + 3);
+  psc_particles_put(&pp);
 }
+

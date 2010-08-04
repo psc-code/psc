@@ -8,14 +8,14 @@
 // test w/ C data structure, single precision 
 
 static void
-do_genc_push_part_yz_a(psc_particles_c_t *pp)
+do_genc_push_part_yz_a(psc_particles_t *pp)
 {
   creal dt = psc.dt;
   creal yl = .5f * dt;
   creal zl = .5f * dt;
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_c_t *part = psc_particles_c_get_one(pp, n);
+    particle_t *part = psc_particles_get_one(pp, n);
 
     creal root = 1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vyi = part->pyi * root;
@@ -29,8 +29,8 @@ do_genc_push_part_yz_a(psc_particles_c_t *pp)
 void
 genc_push_part_yz_a()
 {
-  psc_particles_c_t pp;
-  psc_particles_c_get(&pp);
+  psc_particles_t pp;
+  psc_particles_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -40,6 +40,5 @@ genc_push_part_yz_a()
   do_genc_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  psc_particles_c_put(&pp);
+  psc_particles_put(&pp);
 }
-
