@@ -93,6 +93,22 @@ AS_IF(
  [AC_DEFINE([USE_SSE2])
   CFLAGS="$CFLAGS -msse2"])
 AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])
+  	
+AH_TEMPLATE([FIELDS_BASE], [base data structure for storing fields])
+AC_ARG_VAR([FIELDS_BASE], [base data structure for storing fields])
+AS_IF(
+  [test -z "$FIELDS_BASE"],
+  [FIELDS_BASE="FIELDS_FORTRAN"]
+)
+AC_DEFINE_UNQUOTED([FIELDS_BASE], $FIELDS_BASE)
+
+AH_TEMPLATE([PARTICLES_BASE], [base data structure for storing particles])
+AC_ARG_VAR([PARTICLES_BASE], [base data structure for storing particles])
+AS_IF(
+  [test -z "$PARTICLES_BASE"],
+  [PARTICLES_BASE="PARTICLES_FORTRAN"]
+)
+AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 
 AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile
 	         src/generic_c/Makefile

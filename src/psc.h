@@ -11,6 +11,16 @@
 #include "psc_pulse.h"
 #include "psc_case.h"
 
+// ----------------------------------------------------------------------
+
+#define FIELDS_FORTRAN 1
+
+#define PARTICLES_FORTRAN 1
+
+// FIELDS_BASE and PARTICLES_BASE macros are defined by configure
+// #define FIELDS_BASE FIELDS_FORTRAN
+// #define PARTICLES_BASE PARTICLES_FORTRAN
+
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -33,9 +43,6 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
-#include "psc_fields_fortran.h"
-#include "psc_particles_fortran.h"
-
 // ----------------------------------------------------------------------
 // macros to access Fortran fields
 
@@ -45,6 +52,12 @@ typedef int f_int;
    *psc.img[0] + ((jx)-psc.ilg[0]))
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
+
+// ----------------------------------------------------------------------
+// base particles type
+
+#if PARTICLES_BASE == PARTICLES_FORTRAN
+#include "psc_particles_fortran.h"
 
 typedef psc_particles_fortran_t psc_particles_base_t;
 typedef particle_fortran_t particle_base_t;
@@ -56,6 +69,16 @@ typedef particle_fortran_real_t particle_base_real_t;
 #define psc_particles_base_free    psc_particles_fortran_free
 #define psc_particles_base_get_one psc_particles_fortran_get_one
 
+#else
+#error unknown PARTICLES_BASE
+#endif
+
+// ----------------------------------------------------------------------
+// base fields type
+
+#if FIELDS_BASE == FIELDS_FORTRAN
+
+#include "psc_fields_fortran.h"
 
 typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
@@ -66,6 +89,10 @@ typedef fields_fortran_real_t fields_base_real_t;
 #define psc_fields_base_zero   psc_fields_fortran_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
+
+#else
+#error unknown FIELDS_BASE
+#endif
 
 // user settable parameters
 struct psc_param {
