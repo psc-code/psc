@@ -94,7 +94,9 @@ AS_IF(
   CFLAGS="$CFLAGS -msse2"])
 AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])
 
-AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile
+	         src/generic_c/Makefile
+		 src/sse2/Makefile])
 
 AC_OUTPUT
 

@@ -1,5 +1,5 @@
 
-SUBDIRS = util
+SUBDIRS = util generic_c sse2
 
 bin_PROGRAMS = VLI VLA SELECT
 
@@ -17,10 +17,6 @@ libpsc_a_SOURCES = \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c \
 	integrate.c \
-	generic_c/psc_generic_c.c \
-	generic_c/push_part_xz.c \
-	generic_c/push_part_yz_a.c \
-	generic_c/push_part_yz_b.c \
 	psc_fortran.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
@@ -55,10 +51,6 @@ libpsc_a_SOURCES = \
 if HAVE_HDF5
 libpsc_a_SOURCES += output_hdf5.c
 endif
-
-if USE_SSE2
-libpsc_a_SOURCES += sse2/psc_sse2.c sse2/sse2_push_part_yz.c 
-endif USE_SSE2
 
 if USE_CUDA
 libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
@@ -108,7 +100,11 @@ endif
 noinst_PROGRAMS = test1 test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
-LDADD = libpsc.a util/libutil.a
+LDADD = libpsc.a generic_c/libpsc_generic_c.a util/libutil.a
+if USE_SSE2
+LDADD += sse2/libpsc_sse2.a
+endif USE_SSE2
+
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
 	test_sort.sh
