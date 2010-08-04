@@ -21,6 +21,9 @@ typedef struct {
   int n_part;
 } psc_particles_c_t;
 
+void psc_particles_c_get(psc_particles_c_t *pp);
+void psc_particles_c_put(psc_particles_c_t *pp);
+
 static inline particle_c_t *
 psc_particles_c_get_one(psc_particles_c_t *pp, int n)
 {

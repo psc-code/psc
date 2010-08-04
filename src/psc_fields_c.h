@@ -32,4 +32,7 @@ typedef struct {
 
 #endif
 
+void psc_fields_c_get(psc_fields_c_t *pf, int mb, int me);
+void psc_fields_c_put(psc_fields_c_t *pf, int mb, int me);
+
 #endif

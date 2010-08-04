@@ -274,9 +274,9 @@ void
 genc_push_part_xz()
 {
   psc_fields_c_t pf;
-  genc_fields_from_fortran(&pf, EX, EX + 6);
+  psc_fields_c_get(&pf, EX, EX + 6);
   psc_particles_c_t pp;
-  genc_particles_from_fortran(&pp);
+  psc_particles_c_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -286,6 +286,6 @@ genc_push_part_xz()
   do_genc_push_part_xz(&pf, &pp);
   prof_stop(pr);
 
-  genc_fields_to_fortran(&pf, JXI, JXI + 3);
-  genc_particles_to_fortran(&pp);
+  psc_fields_c_put(&pf, JXI, JXI + 3);
+  psc_particles_c_put(&pp);
 }

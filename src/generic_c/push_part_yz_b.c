@@ -161,9 +161,9 @@ void
 genc_push_part_yz_b()
 {
   psc_fields_c_t pf;
-  genc_fields_from_fortran(&pf, EX, EX + 6);
+  psc_fields_c_get(&pf, EX, EX + 6);
   psc_particles_c_t pp;
-  genc_particles_from_fortran(&pp);
+  psc_particles_c_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -173,6 +173,6 @@ genc_push_part_yz_b()
   do_genc_push_part_yz_b(&pf, &pp);
   prof_stop(pr);
 
-  genc_fields_to_fortran(&pf, 0, 0);
-  genc_particles_to_fortran(&pp);
+  psc_fields_c_put(&pf, 0, 0);
+  psc_particles_c_put(&pp);
 }

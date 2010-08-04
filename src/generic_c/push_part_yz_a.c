@@ -30,7 +30,7 @@ void
 genc_push_part_yz_a()
 {
   psc_particles_c_t pp;
-  genc_particles_from_fortran(&pp);
+  psc_particles_c_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -40,6 +40,6 @@ genc_push_part_yz_a()
   do_genc_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  genc_particles_to_fortran(&pp);
+  psc_particles_c_put(&pp);
 }
 

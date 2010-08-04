@@ -28,11 +28,6 @@ void genc_push_part_xz();
 void genc_push_part_yz_a();
 void genc_push_part_yz_b();
 
-void genc_particles_from_fortran(psc_particles_c_t *pp);
-void genc_particles_to_fortran(psc_particles_c_t *pp);
-void genc_fields_from_fortran(psc_fields_c_t *pf, int mb, int me);
-void genc_fields_to_fortran(psc_fields_c_t *pf, int mb, int me);
-
 #define F3(m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
 
 static inline int
