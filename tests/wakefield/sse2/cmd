@@ -1,0 +1,13 @@
+# FAILS!
+openmpirun -n 2 src/VLI \
+	   --nproc_z 2 \
+	   --mod_output c --output_format hdf5 --output_combine --write_tfield no \
+	   --mod_particle sse2 \
+	   --mod_moment generic_c \
+	   --mod_field c \
+	   --case wakefield \
+	   --ihi_z 200 \
+	   --nmax 11
+
+util/compare_field.py -f ne,ni tests/wakefield/c/pfd_0000000.h5 pfd_0000000.h5 
+util/compare_field.py -f ne,ni tests/wakefield/c/pfd_0000010.h5 pfd_0000010.h5 
