@@ -285,7 +285,7 @@ sse2_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_a", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -304,7 +304,7 @@ sse2_push_part_yz_a()
   zl.r = pv_mul_real(half.r, dt.r);
 
 
-  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Bringing in particle specific parameters
@@ -343,7 +343,7 @@ sse2_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_b", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -403,7 +403,7 @@ sse2_push_part_yz_b()
     sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
   
-  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Load Particles
@@ -546,7 +546,7 @@ sse2_push_part_yz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
   }
   prof_start(pr);
 
@@ -624,7 +624,7 @@ sse2_push_part_yz()
     sse2_real * restrict BYpoint = &sse2->fields[BY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict BZpoint = &sse2->fields[BZ*psc.fld_size + 0 - psc.ilg[0]];
 
-  for(int n = 0; n < psc.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Load Particles

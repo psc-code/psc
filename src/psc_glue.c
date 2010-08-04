@@ -170,7 +170,7 @@ PIC_push_part_yz()
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
 		       pf.flds[NE], pf.flds[NI], pf.flds[NN],
 		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
@@ -186,7 +186,7 @@ PIC_push_part_xz()
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_xz_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_xz_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
 		       pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		       pf.flds[EX], pf.flds[EY], pf.flds[EZ],
 		       pf.flds[BX], pf.flds[BY], pf.flds[BZ]);
@@ -201,7 +201,7 @@ PIC_push_part_yz_a()
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_a_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_a_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
 			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
 			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
@@ -217,7 +217,7 @@ PIC_push_part_yz_b()
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_yz_b_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_yz_b_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
 			 pf.flds[NE], pf.flds[NI], pf.flds[NN],
 			 pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 			 pf.flds[EX], pf.flds[EY], pf.flds[EZ],
@@ -233,7 +233,7 @@ PIC_push_part_z()
   psc_fields_fortran_get(&pf, EX, EX + 6);
 
   PIC_set_variables();
-  PIC_push_part_z_F77(&psc.n_part, &psc.f_part[-1], &psc.p2A, &psc.p2B,
+  PIC_push_part_z_F77(&psc.pp.n_part, &psc.pp.particles[-1], &psc.p2A, &psc.p2B,
 		      pf.flds[NE], pf.flds[NI], pf.flds[NN],
 		      pf.flds[JXI], pf.flds[JYI], pf.flds[JZI],
 		      pf.flds[EX], pf.flds[EY], pf.flds[EZ],
@@ -245,26 +245,26 @@ PIC_push_part_z()
 void
 PIC_sort_1()
 {
-  PIC_sort_1_F77(&psc.n_part, &psc.f_part[-1]);
+  PIC_sort_1_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
 }
 
 void
 PIC_randomize()
 {
-  PIC_randomize_F77(&psc.n_part, &psc.f_part[-1]);
+  PIC_randomize_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
 }
 
 void
 PIC_bin_coll()
 {
-  PIC_bin_coll_F77(&psc.n_part, &psc.f_part[-1]);
+  PIC_bin_coll_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
 }
 
 void
 PIC_find_cell_indices()
 {
   PIC_set_variables();
-  PIC_find_cell_indices_F77(&psc.n_part, &psc.f_part[-1]);
+  PIC_find_cell_indices_F77(&psc.pp.n_part, &psc.pp.particles[-1]);
 }
 
 void
@@ -470,8 +470,8 @@ C_push_part_yz_F77(f_real *p2A, f_real *p2B,
   psc.p2A = *p2A;
   psc.p2B = *p2B;
 
-  psc.n_part = *niloc;
-  psc.f_part = &p_niloc[1];
+  psc.pp.n_part = *niloc;
+  psc.pp.particles = &p_niloc[1];
 
   psc_push_part_yz();
 
@@ -490,8 +490,8 @@ C_push_part_z_F77(f_real *p2A, f_real *p2B,
   psc.p2A = *p2A;
   psc.p2B = *p2B;
 
-  psc.n_part = *niloc;
-  psc.f_part = &p_niloc[1];
+  psc.pp.n_part = *niloc;
+  psc.pp.particles = &p_niloc[1];
 
   psc_push_part_z();
 
@@ -506,8 +506,8 @@ C_sort_F77(f_int *niloc, particle_fortran_t *p_niloc,
   // make sure we got passed the right number of arguments
   assert(*dummy == 99);
 
-  psc.n_part = *niloc;
-  psc.f_part = &p_niloc[1];
+  psc.pp.n_part = *niloc;
+  psc.pp.particles = &p_niloc[1];
 
   psc_sort();
 }

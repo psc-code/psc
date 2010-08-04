@@ -10,7 +10,7 @@ genc_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_yz_b", 1., 0, psc.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_yz_b", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
  
@@ -24,7 +24,7 @@ genc_push_part_yz_b()
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  for (int n = 0; n < psc.n_part; n++) {
+  for (int n = 0; n < psc.pp.n_part; n++) {
     struct c_particle *part = &genc->part[n];
 
     creal root = 1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));

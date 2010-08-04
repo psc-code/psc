@@ -187,7 +187,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
       }
     }
   }
-  psc.f_part = REALLOC_particles(new_n_particles);
+  psc.pp.particles = REALLOC_particles(new_n_particles);
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -198,8 +198,9 @@ ddc_particles_comm(struct ddc_particles *ddcp)
 	if (nei->rank < 0) {
 	  continue;
 	}
-	MPI_Irecv(&psc.f_part[ddcp->head], sz * nei->n_recv, MPI_DOUBLE, nei->rank,
-		  2100 + dir1neg, MPI_COMM_WORLD, &ddcp->recv_reqs[dir1]);
+	MPI_Irecv(&psc.pp.particles[ddcp->head], sz * nei->n_recv,
+		  MPI_PARTICLES_BASE_REAL,
+		  nei->rank, 2100 + dir1neg, MPI_COMM_WORLD, &ddcp->recv_reqs[dir1]);
 	ddcp->head += nei->n_recv;
       }
     }
@@ -319,8 +320,8 @@ c_exchange_particles(void)
   for (int dir1 = 0; dir1 < 27; dir1++) {
     ddcp->nei[dir1].n_send = 0;
   }
-  for (int i = 0; i < psc.n_part; i++) {
-    particle_base_t *p = &psc.f_part[i];
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
     particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in
                          // the struct. FIXME
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
@@ -328,7 +329,7 @@ c_exchange_particles(void)
 	xi[2] >= xb[2] && xi[2] <= xe[2]) {
       // fast path
       // inside domain: move into right position
-      psc.f_part[ddcp->head++] = *p;
+      psc.pp.particles[ddcp->head++] = *p;
     } else {
       // slow path
       int dir[3];

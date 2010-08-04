@@ -28,13 +28,13 @@ setup_particles(void)
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) { // xz only !!!
 	for (int ix = psc.ilo[0]-1; ix < psc.ihi[0]+1; ix++) {
 	  particle_base_t *p;
-	  p = &psc.f_part[i++];
+	  p = psc_particles_base_get_one(&psc.pp, i++);
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .01) * psc.dx[0];
 	  p->yi = (iy + .01) * psc.dx[1];
 	  p->zi = (iz + .01) * psc.dx[2];
 
-	  p = &psc.f_part[i++];
+	  p = psc_particles_base_get_one(&psc.pp, i++);
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix - .01) * psc.dx[0];
 	  p->yi = (iy - .01) * psc.dx[1];
@@ -42,9 +42,9 @@ setup_particles(void)
 	}
       }
     }
-    psc.n_part = i;
+    psc.pp.n_part = i;
   } else {
-    psc.n_part = 0;
+    psc.pp.n_part = 0;
   }
 }
 
@@ -66,8 +66,8 @@ check_particles_old_xz(void)
   }
 
   int fail_cnt = 0;
-  for (int i = 0; i < psc.n_part; i++) {
-    particle_base_t *p = &psc.f_part[i];
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -93,8 +93,8 @@ check_particles(void)
   }
 
   int fail_cnt = 0;
-  for (int i = 0; i < psc.n_part; i++) {
-    particle_base_t *p = &psc.f_part[i];
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -111,7 +111,7 @@ get_total_num_particles(void)
 {
   int total_num_part;
 
-  MPI_Allreduce(&psc.n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
+  MPI_Allreduce(&psc.pp.n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
 		MPI_COMM_WORLD);
 
   return total_num_part;

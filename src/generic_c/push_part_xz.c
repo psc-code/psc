@@ -11,7 +11,7 @@ genc_push_part_xz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_xz", 1., 0, psc.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_xz", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
 
@@ -42,7 +42,7 @@ genc_push_part_xz()
   memset(&F3(JZI, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
 	 psc.fld_size * sizeof(creal));
   
-  for (int n = 0; n < psc.n_part; n++) {
+  for (int n = 0; n < psc.pp.n_part; n++) {
     struct c_particle *part = &genc->part[n];
 
     // x^n, p^n -> x^(n+.5), p^n

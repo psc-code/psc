@@ -45,22 +45,23 @@ static void
 sse2_particles_from_fortran(void)
 {
   struct psc_sse2 *sse2 = psc.c_ctx;
+  int n_part = psc.pp.n_part;
   int pad = 0;
-  if((psc.n_part % VEC_SIZE) != 0){
-    pad = VEC_SIZE - (psc.n_part % VEC_SIZE);
+  if((n_part % VEC_SIZE) != 0){
+    pad = VEC_SIZE - (n_part % VEC_SIZE);
   }
   
-  if(psc.n_part > sse2->part_allocated) {
+  if(n_part > sse2->part_allocated) {
     free(sse2->part); // Is this safe? ie, does free(NULL) do nothing as part of the standard?
-    sse2->part_allocated = psc.n_part * 1.2;
-    if(psc.n_part*0.2 < pad){
+    sse2->part_allocated = n_part * 1.2;
+    if(n_part*0.2 < pad){
       sse2->part_allocated += pad;
     }
     sse2->part = calloc(sse2->part_allocated, sizeof(*sse2->part));
   }
 
-  for (int n = 0; n < psc.n_part; n++) {
-    particle_base_t *f_part = &psc.f_part[n];
+  for (int n = 0; n < n_part; n++) {
+    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
     struct sse2_particle *part = &sse2->part[n];
 
     part->xi  = f_part->xi;
@@ -75,8 +76,8 @@ sse2_particles_from_fortran(void)
     assert(round(part->xi) == 0); ///< \FIXME This assert only fits for the yz pusher. Idealy, no assert would be needed here, but until we can promise 'true 2D' some check is needed.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
-  for(int n = psc.n_part; n < (psc.n_part + pad); n++){
-    particle_base_t *f_part = &psc.f_part[psc.n_part-1];
+  for(int n = n_part; n < (n_part + pad); n++){
+    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n_part-1);
     struct sse2_particle *part = &sse2->part[n];
     part->xi  = f_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = f_part->yi;
@@ -91,8 +92,8 @@ sse2_particles_to_fortran()
 {
    struct psc_sse2 *sse2 = psc.c_ctx;
    
-   for(int n = 0; n < psc.n_part; n++) {
-     particle_base_t *f_part = &psc.f_part[n];
+   for(int n = 0; n < psc.pp.n_part; n++) {
+     particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
      struct sse2_particle *part = &sse2->part[n];
      
      f_part->xi  = part->xi;

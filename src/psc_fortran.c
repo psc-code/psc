@@ -27,7 +27,7 @@ fortran_push_part_xz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_xz", 1., 0, psc.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_xz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_xz();
@@ -39,7 +39,7 @@ fortran_push_part_yz()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz", 1., 0, psc.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz();
@@ -57,7 +57,7 @@ fortran_push_part_yz_a()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_a", 1., 0, psc.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz_a", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz_a();
@@ -69,7 +69,7 @@ fortran_push_part_yz_b()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_b", 1., 0, psc.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz_b", 1., 0, psc.pp.n_part * 11 * sizeof(double));
   }
   prof_start(pr);
   PIC_push_part_yz_b();
@@ -287,7 +287,7 @@ fortran_exchange_particles(void)
   prof_start(pr);
   INIT_grid_map();
   SET_param_coeff();
-  SET_niloc(psc.n_part);
+  SET_niloc(psc.pp.n_part);
 
   if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
     PIC_pex();
@@ -299,7 +299,7 @@ fortran_exchange_particles(void)
     PIC_pez();
   }
 
-  GET_niloc(&psc.n_part);
+  GET_niloc(&psc.pp.n_part);
   prof_stop(pr);
 }
 

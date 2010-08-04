@@ -45,9 +45,13 @@ typedef int f_int;
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
 
+typedef psc_particles_fortran_t psc_particles_base_t;
 typedef particle_fortran_t particle_base_t;
 typedef particle_fortran_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
+
+#define psc_particles_base_get_one psc_particles_fortran_get_one
+
 
 typedef psc_fields_fortran_t psc_fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
@@ -221,9 +225,7 @@ struct psc {
   double dt;
   double dx[3];
 
-  // Fortran compatible particles
-  int n_part;
-  particle_base_t *f_part;
+  psc_particles_base_t pp;
   psc_fields_base_t pf;
 
   // Fortran compatible fields

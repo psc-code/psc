@@ -249,8 +249,8 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
   psc_fields_base_alloc(&psc.pf);
 
-  psc.n_part = n_part;
-  psc.f_part = calloc(n_part, sizeof(*psc.f_part));
+  psc.pp.n_part = n_part;
+  psc.pp.particles = calloc(n_part, sizeof(*psc.pp.particles));
 
   psc.allocated = true;
 }
@@ -263,12 +263,12 @@ psc_destroy()
   }
 
   if (psc.allocated) {
-    free(psc.f_part);
+    free(psc.pp.particles);
   } else {
     if (psc.pf.flds[0]) {
       FREE_field();
     }
-    if (psc.f_part) {
+    if (psc.pp.particles) {
       FREE_particles();
     }
   }
@@ -348,8 +348,8 @@ ascii_dump_particles(const char *fname)
 
   FILE *file = fopen(filename, "w");
   fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
-  for (int i = 0; i < psc.n_part; i++) {
-    particle_base_t *p = &psc.f_part[i];
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
     fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 	    i, p->xi, p->yi, p->zi,
 	    p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
@@ -383,22 +383,22 @@ void
 psc_setup_particles_1()
 {
   int n = 0;
-  int n_per_cell = psc.n_part / 
+  int n_per_cell = psc.pp.n_part / 
     ((psc.ihi[0]-psc.ilo[0])*(psc.ihi[1]-psc.ilo[1])*(psc.ihi[2]-psc.ilo[2]));
   for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
     for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
       for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	for (int cnt = 0; cnt < n_per_cell; cnt++) {
-	  psc.f_part[n].xi = ix;
-	  psc.f_part[n].yi = iy;
-	  psc.f_part[n].zi = iz;
-	  psc.f_part[n].pxi = .03;
-	  psc.f_part[n].pyi = .02;
-	  psc.f_part[n].pzi = .01;
-	  psc.f_part[n].qni = -1.;
-	  psc.f_part[n].mni = 1.;
-	  psc.f_part[n].lni = 0.;
-	  psc.f_part[n].wni = 1.;
+	  psc.pp.particles[n].xi = ix;
+	  psc.pp.particles[n].yi = iy;
+	  psc.pp.particles[n].zi = iz;
+	  psc.pp.particles[n].pxi = .03;
+	  psc.pp.particles[n].pyi = .02;
+	  psc.pp.particles[n].pzi = .01;
+	  psc.pp.particles[n].qni = -1.;
+	  psc.pp.particles[n].mni = 1.;
+	  psc.pp.particles[n].lni = 0.;
+	  psc.pp.particles[n].wni = 1.;
 	  n++;
 	}
       }
@@ -632,7 +632,7 @@ psc_init(const char *case_name)
   psc_init_partition(&n_part, &particle_label_offset);
   SET_subdomain();
 
-  psc.f_part = ALLOC_particles(n_part);
+  psc.pp.particles = ALLOC_particles(n_part);
   psc_init_particles(particle_label_offset);
 
   psc_fields_base_alloc(&psc.pf);
@@ -645,7 +645,7 @@ psc_init(const char *case_name)
 void
 psc_set_n_particles(int n_part)
 {
-  psc.n_part = n_part;
+  psc.pp.n_part = n_part;
   SET_niloc(n_part);
 }
 
@@ -665,10 +665,10 @@ void
 psc_save_particles_ref()
 {
   if (!particle_ref) {
-    particle_ref = calloc(psc.n_part, sizeof(*particle_ref));
+    particle_ref = calloc(psc.pp.n_part, sizeof(*particle_ref));
   }
-  for (int i = 0; i < psc.n_part; i++) {
-    particle_ref[i] = psc.f_part[i];
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_ref[i] = *psc_particles_base_get_one(&psc.pp, i);
   }
 }
 
@@ -707,14 +707,15 @@ void
 psc_check_particles_ref(double thres)
 {
   assert(particle_ref);
-  for (int i = 0; i < psc.n_part; i++) {
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    particle_base_t *part = psc_particles_base_get_one(&psc.pp, i);
     //    printf("i = %d\n", i);
-    assert_equal(psc.f_part[i].xi , particle_ref[i].xi, thres);
-    assert_equal(psc.f_part[i].yi , particle_ref[i].yi, thres);
-    assert_equal(psc.f_part[i].zi , particle_ref[i].zi, thres);
-    assert_equal(psc.f_part[i].pxi, particle_ref[i].pxi, thres);
-    assert_equal(psc.f_part[i].pyi, particle_ref[i].pyi, thres);
-    assert_equal(psc.f_part[i].pzi, particle_ref[i].pzi, thres);
+    assert_equal(part->xi , particle_ref[i].xi, thres);
+    assert_equal(part->yi , particle_ref[i].yi, thres);
+    assert_equal(part->zi , particle_ref[i].zi, thres);
+    assert_equal(part->pxi, particle_ref[i].pxi, thres);
+    assert_equal(part->pyi, particle_ref[i].pyi, thres);
+    assert_equal(part->pzi, particle_ref[i].pzi, thres);
   }
 }
 
@@ -788,9 +789,9 @@ psc_check_particles_sorted()
 {
   int last = INT_MIN;
 
-  for (int i = 0; i < psc.n_part; i++) {
-    assert(psc.f_part[i].cni >= last);
-    last = psc.f_part[i].cni;
+  for (int i = 0; i < psc.pp.n_part; i++) {
+    assert(psc.pp.particles[i].cni >= last);
+    last = psc.pp.particles[i].cni;
   }
 }
 
