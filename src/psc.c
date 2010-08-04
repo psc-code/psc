@@ -85,6 +85,7 @@ static struct psc_bnd_ops *psc_bnd_ops_list[] = {
 
 static struct psc_moment_ops *psc_moment_ops_list[] = {
   &psc_moment_ops_fortran,
+  &psc_moment_ops_generic_c,
   NULL,
 };
 

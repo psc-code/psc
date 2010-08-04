@@ -9,4 +9,5 @@ libpsc_generic_c_a_SOURCES = \
 	push_part_yz.c \
 	push_part_z.c \
 	push_part_yz_a.c \
-	push_part_yz_b.c
+	push_part_yz_b.c \
+	calc_densities.c

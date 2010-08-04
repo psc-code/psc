@@ -33,6 +33,8 @@ void genc_push_part_z();
 void genc_push_part_yz_a();
 void genc_push_part_yz_b();
 
+void genc_calc_densities();
+
 static inline int
 nint(creal x)
 {
