@@ -2,14 +2,20 @@
 #include "config.h"
 
 c     ----------------------------------------------------------------------
-      subroutine CALC_densities
+      subroutine CALC_densities(ne, ni, nn)
 c     ----------------------------------------------------------------------
 
       use PIC_variables
-      use VLA_variables
+      use VLA_variables, only: rd1, rd2, rd3, i1mn, i2mn, i3mn,
+     *     i1mx, i2mx, i3mx, alpha, dx, dy, dz, eta
 
       implicit none
-      integer :: l1,l2,l3
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+
+      integer :: l,l1,l2,l3
 
       real(kind=8) :: dxi,dyi,dzi
       real(kind=8) :: pxi,pyi,pzi

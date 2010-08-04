@@ -329,7 +329,10 @@ fortran_calc_densities(void)
   }
   prof_start(pr);
 
-  CALC_densities();
+  psc_fields_fortran_t pf;
+  psc_fields_fortran_get(&pf, 0, 0);
+  CALC_densities(&pf);
+  psc_fields_fortran_put(&pf, NE, NE + 3);
 
   prof_stop(pr);
 }
