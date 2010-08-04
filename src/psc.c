@@ -597,32 +597,6 @@ psc_set_n_particles(int n_part)
 // testing related stuff
 
 
-// ----------------------------------------------------------------------
-// psc_create_test_xz
-
-void
-psc_create_test_xz(struct psc_mod_config *conf)
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  psc_create(conf);
-  psc_init("test_xz");
-}
-
-// ----------------------------------------------------------------------
-// psc_create_test_yz
-
-void
-psc_create_test_yz(struct psc_mod_config *conf)
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  psc_create(conf);
-  psc_init("test_yz");
-}
-
 // ======================================================================
 
 const char *fldname[NR_FIELDS] = {

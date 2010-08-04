@@ -380,8 +380,6 @@ void psc_calc_densities(void);
 
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);
-void psc_create_test_xz(struct psc_mod_config *conf);
-void psc_create_test_yz(struct psc_mod_config *conf);
 
 void psc_push_part_yz();
 void psc_push_part_z();
