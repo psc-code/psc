@@ -19,6 +19,7 @@
 
 #define PARTICLES_FORTRAN 1
 #define PARTICLES_C       2
+#define PARTICLES_SSE2    3
 
 // FIELDS_BASE and PARTICLES_BASE macros are defined by configure
 // #define FIELDS_BASE FIELDS_FORTRAN
@@ -82,13 +83,26 @@ typedef particle_fortran_real_t particle_base_real_t;
 typedef psc_particles_c_t psc_particles_base_t;
 typedef particle_c_t particle_base_t;
 typedef particle_c_real_t particle_base_real_t;
+#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
 
 #define psc_particles_base_alloc   psc_particles_c_alloc
 #define psc_particles_base_realloc psc_particles_c_realloc
 #define psc_particles_base_free    psc_particles_c_free
 #define psc_particles_base_get_one psc_particles_c_get_one
 
-#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
+#elif PARTICLES_BASE == PARTICLES_SSE2
+
+#include "psc_particles_sse2.h"
+
+typedef psc_particles_sse2_t psc_particles_base_t;
+typedef particle_sse2_t particle_base_t;
+typedef particle_sse2_real_t particle_base_real_t;
+#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_SSE2_REAL
+
+#define psc_particles_base_alloc   psc_particles_sse2_alloc
+#define psc_particles_base_realloc psc_particles_sse2_realloc
+#define psc_particles_base_free    psc_particles_sse2_free
+#define psc_particles_base_get_one psc_particles_sse2_get_one
 
 #else
 #error unknown PARTICLES_BASE
@@ -122,21 +136,20 @@ typedef fields_c_real_t fields_base_real_t;
 #define psc_fields_base_zero  psc_fields_c_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
-#define MPI_F3_BASE_REAL      MPI_F3_C_REAL
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
-#include "psc_field_sse2.h"
+#include "psc_fields_sse2.h"
 
 typedef psc_fields_sse2_t psc_fields_base_t;
-typedef psc_fields_sse2_real_t psc_fields_base_real_t;
+typedef fields_sse2_real_t fields_base_real_t;
+#define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
 #define psc_fields_base_alloc psc_fields_sse2_alloc
 #define psc_fields_base_free  psc_fields_sse2_free
 #define psc_fields_base_zero  psc_fields_sse2_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
-#define MPI_F3_BASE_REAL      MPI_F3_SSE2_REAL
 
 #else
 #error unknown FIELDS_BASE

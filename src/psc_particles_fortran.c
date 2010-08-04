@@ -62,7 +62,7 @@ psc_particles_fortran_get(psc_particles_fortran_t *pp)
   assert(!__gotten);
   __gotten = 1;
 
-  psc_particles_c_t *pp_base = &psc.pp;
+  psc_particles_base_t *pp_base = &psc.pp;
 
   psc_particles_fortran_alloc(pp, pp_base->n_part);
   pp->n_part = pp_base->n_part;

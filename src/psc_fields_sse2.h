@@ -5,12 +5,12 @@
 #include "psc.h"
 #include "simd_sse2.h"
 
-typedef sse2_real psc_fields_sse2_real_t;
+typedef sse2_real fields_sse2_real_t;
 
-#define MPI_F3_SSE2_REAL MPI_SSE2_REAL
+#define MPI_FIELDS_SSE2_REAL MPI_SSE2_REAL
 
 typedef struct {
-  psc_fields_sse2_real_t *flds;
+  fields_sse2_real_t *flds;
 } psc_fields_sse2_t;
 
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\

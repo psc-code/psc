@@ -6,6 +6,49 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#if PARTICLES_BASE == PARTICLES_SSE2
+
+static size_t __arr_size;
+
+void
+psc_particles_sse2_alloc(psc_particles_sse2_t *pp, int n_part)
+{
+  __arr_size = ((size_t)(n_part * 1.2) + VEC_SIZE - 1) & ~(VEC_SIZE - 1);
+  pp->particles = calloc(__arr_size, sizeof(*pp->particles));
+}
+
+void
+psc_particles_sse2_realloc(psc_particles_sse2_t *pp, int new_n_part)
+{
+  if (__arr_size <= new_n_part)
+    return;
+
+  __arr_size = ((size_t)(new_n_part * 1.2) + VEC_SIZE - 1) & ~(VEC_SIZE - 1);
+  pp->particles = realloc(pp->particles, __arr_size * sizeof(*pp->particles));
+}
+
+void
+psc_particles_sse2_free(psc_particles_sse2_t *pp)
+{
+  free(pp->particles);
+  pp->particles = NULL;
+}
+
+void
+psc_particles_sse2_get(psc_particles_sse2_t *pp)
+{
+  pp->particles = psc.pp.particles;
+
+  pp->n_part = psc.pp.n_part;
+}
+
+void
+psc_particles_sse2_put(psc_particles_sse2_t *pp)
+{
+}
+
+#else
+
 static size_t __sse2_part_allocated;
 static particle_sse2_t *__sse2_part_data;
 
@@ -76,3 +119,4 @@ psc_particles_sse2_put(psc_particles_sse2_t *particles)
    }
 }
 
+#endif
