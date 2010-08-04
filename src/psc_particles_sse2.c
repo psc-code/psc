@@ -11,14 +11,14 @@
 static size_t __arr_size;
 
 void
-psc_particles_sse2_alloc(psc_particles_sse2_t *pp, int n_part)
+particles_sse2_alloc(particles_sse2_t *pp, int n_part)
 {
   __arr_size = ((size_t)(n_part * 1.2) + VEC_SIZE - 1) & ~(VEC_SIZE - 1);
   pp->particles = calloc(__arr_size, sizeof(*pp->particles));
 }
 
 void
-psc_particles_sse2_realloc(psc_particles_sse2_t *pp, int new_n_part)
+particles_sse2_realloc(particles_sse2_t *pp, int new_n_part)
 {
   if (__arr_size <= new_n_part)
     return;
@@ -28,14 +28,14 @@ psc_particles_sse2_realloc(psc_particles_sse2_t *pp, int new_n_part)
 }
 
 void
-psc_particles_sse2_free(psc_particles_sse2_t *pp)
+particles_sse2_free(particles_sse2_t *pp)
 {
   free(pp->particles);
   pp->particles = NULL;
 }
 
 void
-psc_particles_sse2_get(psc_particles_sse2_t *pp)
+particles_sse2_get(particles_sse2_t *pp)
 {
   pp->particles = psc.pp.particles;
 
@@ -43,7 +43,7 @@ psc_particles_sse2_get(psc_particles_sse2_t *pp)
 }
 
 void
-psc_particles_sse2_put(psc_particles_sse2_t *pp)
+particles_sse2_put(particles_sse2_t *pp)
 {
 }
 
@@ -54,7 +54,7 @@ static particle_sse2_t *__sse2_part_data;
 
 /// Copy particles from base data structures to an SSE2 friendly format.
 void
-psc_particles_sse2_get(psc_particles_sse2_t *particles)
+particles_sse2_get(particles_sse2_t *particles)
 {
   int n_part = psc.pp.n_part;
   int pad = 0;
@@ -74,7 +74,7 @@ psc_particles_sse2_get(psc_particles_sse2_t *particles)
   particles->n_part = n_part;
 
   for (int n = 0; n < n_part; n++) {
-    particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
+    particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
     particle_sse2_t *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
@@ -90,7 +90,7 @@ psc_particles_sse2_get(psc_particles_sse2_t *particles)
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
-    particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n_part - 1);
+    particle_base_t *base_part = particles_base_get_one(&psc.pp, n_part - 1);
     particle_sse2_t *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
@@ -101,10 +101,10 @@ psc_particles_sse2_get(psc_particles_sse2_t *particles)
 
 /// Copy particles from SSE2 data structures to base structures.
 void
-psc_particles_sse2_put(psc_particles_sse2_t *particles)
+particles_sse2_put(particles_sse2_t *particles)
 {
    for(int n = 0; n < psc.pp.n_part; n++) {
-     particle_base_t *base_part = psc_particles_base_get_one(&psc.pp, n);
+     particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
      particle_sse2_t *part = &particles->particles[n];
      
      base_part->xi  = part->xi;

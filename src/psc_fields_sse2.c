@@ -9,25 +9,25 @@
 #if FIELDS_BASE == FIELDS_SSE2
 
 void
-psc_fields_sse2_alloc(psc_fields_sse2_t *pf)
+fields_sse2_alloc(fields_sse2_t *pf)
 {
   pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
 }
 
 void
-psc_fields_sse2_free(psc_fields_sse2_t *pf)
+fields_sse2_free(fields_sse2_t *pf)
 {
   free(pf->flds);
 }
 
 void
-psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me)
+fields_sse2_get(fields_sse2_t *pf, int mb, int me)
 {
   *pf = psc.pf;
 }
 
 void
-psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me)
+fields_sse2_put(fields_sse2_t *pf, int mb, int me)
 {
   pf->flds = NULL;
 }
@@ -38,7 +38,7 @@ static bool __gotten; // to check we're pairing get/put correctly
 
 /// Copy fields from base data structure to an SSE2 friendly format.
 void
-psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me)
+fields_sse2_get(fields_sse2_t *pf, int mb, int me)
 {
   assert(!__gotten);
   __gotten = true;
@@ -57,7 +57,7 @@ psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me)
 
 /// Copy fields from SSE2 data structures into base structures.
 void
-psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me)
+fields_sse2_put(fields_sse2_t *pf, int mb, int me)
 {
   assert(__gotten);
   __gotten = false;
@@ -75,7 +75,7 @@ psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me)
 #endif
 
 void
-psc_fields_sse2_zero(psc_fields_sse2_t *pf, int m)
+fields_sse2_zero(fields_sse2_t *pf, int m)
 {
   memset(&F3_SSE2(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
 	 psc.fld_size * sizeof(fields_sse2_real_t));

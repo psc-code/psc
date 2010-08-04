@@ -23,16 +23,16 @@ typedef struct {
 typedef struct {
   particle_fortran_t *particles;
   int n_part;
-} psc_particles_fortran_t;
+} particles_fortran_t;
 
-void psc_particles_fortran_alloc(psc_particles_fortran_t *pp, int n_part);
-void psc_particles_fortran_realloc(psc_particles_fortran_t *pp, int new_n_part);
-void psc_particles_fortran_free(psc_particles_fortran_t *pp);
-void psc_particles_fortran_get(psc_particles_fortran_t *pp);
-void psc_particles_fortran_put(psc_particles_fortran_t *pp);
+void particles_fortran_alloc(particles_fortran_t *pp, int n_part);
+void particles_fortran_realloc(particles_fortran_t *pp, int new_n_part);
+void particles_fortran_free(particles_fortran_t *pp);
+void particles_fortran_get(particles_fortran_t *pp);
+void particles_fortran_put(particles_fortran_t *pp);
 
 static inline particle_fortran_t *
-psc_particles_fortran_get_one(psc_particles_fortran_t *pp, int n)
+particles_fortran_get_one(particles_fortran_t *pp, int n)
 {
   return &pp->particles[n];
 }

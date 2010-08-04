@@ -281,7 +281,7 @@ push_pi_dt(struct particle_vec * p,
 /// current momentum
 
 static void
-do_push_part_yz_a(psc_particles_sse2_t *pp)
+do_push_part_yz_a(particles_sse2_t *pp)
 {
   //-----------------------------------------------------
   // Initialization stuff 
@@ -330,7 +330,7 @@ do_push_part_yz_a(psc_particles_sse2_t *pp)
 /// does not update current and charge densities
 
 static void
-do_push_part_yz_b(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
+do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff
@@ -524,7 +524,7 @@ do_push_part_yz_b(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
 /// SSE2 implementation of the 
 /// yz particle pushers
 static void
-do_push_part_yz(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
+do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
 {
   //-----------------------------------------------------
   // Initialization stuff (not sure what all of this is for)
@@ -931,8 +931,8 @@ do_push_part_yz(psc_particles_sse2_t *pp, psc_fields_sse2_t *pf)
 void
 sse2_push_part_yz_a()
 {
-  psc_particles_sse2_t pp;
-  psc_particles_sse2_get(&pp);
+  particles_sse2_t pp;
+  particles_sse2_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -942,16 +942,16 @@ sse2_push_part_yz_a()
   do_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  psc_particles_sse2_put(&pp);
+  particles_sse2_put(&pp);
 }
 
 void
 sse2_push_part_yz_b()
 {
-  psc_particles_sse2_t pp;
-  psc_fields_sse2_t pf;
-  psc_particles_sse2_get(&pp);
-  psc_fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_t pp;
+  fields_sse2_t pf;
+  particles_sse2_get(&pp);
+  fields_sse2_get(&pf, EX, EX + 6);
 
   static int pr;
   if (!pr) {
@@ -961,17 +961,17 @@ sse2_push_part_yz_b()
   do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
 
-  psc_particles_sse2_put(&pp);
-  psc_fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp);
+  fields_sse2_put(&pf, JXI, JXI + 3);
 }
 
 void
 sse2_push_part_yz()
 {
-  psc_particles_sse2_t pp;
-  psc_fields_sse2_t pf;
-  psc_particles_sse2_get(&pp);
-  psc_fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_t pp;
+  fields_sse2_t pf;
+  particles_sse2_get(&pp);
+  fields_sse2_get(&pf, EX, EX + 6);
 
   static int pr;
   if (!pr) {
@@ -981,8 +981,8 @@ sse2_push_part_yz()
   do_push_part_yz(&pp, &pf);
   prof_stop(pr);
 
-  psc_particles_sse2_put(&pp);
-  psc_fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp);
+  fields_sse2_put(&pf, JXI, JXI + 3);
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

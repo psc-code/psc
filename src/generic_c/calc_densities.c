@@ -7,11 +7,11 @@
 #include <string.h>
 
 static void
-do_genc_calc_densities(psc_fields_t *pf, psc_particles_t *pp)
+do_genc_calc_densities(fields_t *pf, particles_t *pp)
 {
-  psc_fields_zero(pf, NE);
-  psc_fields_zero(pf, NI);
-  psc_fields_zero(pf, NN);
+  fields_zero(pf, NE);
+  fields_zero(pf, NI);
+  fields_zero(pf, NN);
   
   creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
   creal dxi = 1.f / psc.dx[0];
@@ -19,7 +19,7 @@ do_genc_calc_densities(psc_fields_t *pf, psc_particles_t *pp)
   creal dzi = 1.f / psc.dx[2];
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_t *part = psc_particles_get_one(pp, n);
+    particle_t *part = particles_get_one(pp, n);
 
     creal u = part->xi * dxi;
     creal v = part->yi * dyi;
@@ -96,10 +96,10 @@ do_genc_calc_densities(psc_fields_t *pf, psc_particles_t *pp)
 void
 genc_calc_densities()
 {
-  psc_fields_t pf;
-  psc_particles_t pp;
-  psc_fields_get(&pf, 0, 0);
-  psc_particles_get(&pp);
+  fields_t pf;
+  particles_t pp;
+  fields_get(&pf, 0, 0);
+  particles_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -109,8 +109,8 @@ genc_calc_densities()
   do_genc_calc_densities(&pf, &pp);
   prof_stop(pr);
 
-  psc_fields_put(&pf, NE, NE + 3);
-  psc_particles_put(&pp);
+  fields_put(&pf, NE, NE + 3);
+  particles_put(&pp);
 
   psc_add_ghosts(NE, NE + 3);
 }

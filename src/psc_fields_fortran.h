@@ -9,7 +9,7 @@ typedef double fields_fortran_real_t;
 
 typedef struct {
   fields_fortran_real_t *flds[NR_FIELDS];
-} psc_fields_fortran_t;
+} fields_fortran_t;
 
 #if 1
 
@@ -27,10 +27,10 @@ typedef struct {
 
 #endif
 
-void psc_fields_fortran_alloc(psc_fields_fortran_t *pf);
-void psc_fields_fortran_free(psc_fields_fortran_t *pf);
-void psc_fields_fortran_get(psc_fields_fortran_t *pf, int mb, int me);
-void psc_fields_fortran_put(psc_fields_fortran_t *pf, int mb, int me);
-void psc_fields_fortran_zero(psc_fields_fortran_t *pf, int m);
+void fields_fortran_alloc(fields_fortran_t *pf);
+void fields_fortran_free(fields_fortran_t *pf);
+void fields_fortran_get(fields_fortran_t *pf, int mb, int me);
+void fields_fortran_put(fields_fortran_t *pf, int mb, int me);
+void fields_fortran_zero(fields_fortran_t *pf, int m);
 
 #endif

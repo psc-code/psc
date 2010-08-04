@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 static void
-do_genc_push_part_yz_b(psc_fields_t *pf, psc_particles_t *pp)
+do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
 {
   creal dt = psc.dt;
   creal yl = .5f * dt;
@@ -17,7 +17,7 @@ do_genc_push_part_yz_b(psc_fields_t *pf, psc_particles_t *pp)
   creal dzi = 1.f / psc.dx[2];
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_t *part = psc_particles_get_one(pp, n);
+    particle_t *part = particles_get_one(pp, n);
 
     creal root = 1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vyi = part->pyi * root;
@@ -160,10 +160,10 @@ do_genc_push_part_yz_b(psc_fields_t *pf, psc_particles_t *pp)
 void
 genc_push_part_yz_b()
 {
-  psc_fields_t pf;
-  psc_particles_t pp;
-  psc_fields_get(&pf, EX, EX + 6);
-  psc_particles_get(&pp);
+  fields_t pf;
+  particles_t pp;
+  fields_get(&pf, EX, EX + 6);
+  particles_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -173,7 +173,7 @@ genc_push_part_yz_b()
   do_genc_push_part_yz_b(&pf, &pp);
   prof_stop(pr);
 
-  psc_particles_put(&pp);
-  psc_fields_put(&pf, JXI, JXI + 3);
+  particles_put(&pp);
+  fields_put(&pf, JXI, JXI + 3);
 }
 

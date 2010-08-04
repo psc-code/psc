@@ -7,13 +7,13 @@
 #include <assert.h>
 
 void
-psc_fields_c_alloc(psc_fields_c_t *pf)
+fields_c_alloc(fields_c_t *pf)
 {
   pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
 }
 
 void
-psc_fields_c_free(psc_fields_c_t *pf)
+fields_c_free(fields_c_t *pf)
 {
   free(pf->flds);
 }
@@ -21,13 +21,13 @@ psc_fields_c_free(psc_fields_c_t *pf)
 #if FIELDS_BASE == FIELDS_C
 
 void
-psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
+fields_c_get(fields_c_t *pf, int mb, int me)
 {
   *pf = psc.pf;
 }
 
 void
-psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
+fields_c_put(fields_c_t *pf, int mb, int me)
 {
   pf->flds = NULL;
 }
@@ -38,7 +38,7 @@ static fields_c_real_t *__flds;
 static int __gotten;
 
 void
-psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
+fields_c_get(fields_c_t *pf, int mb, int me)
 {
   assert(!__gotten);
   __gotten = 1;
@@ -60,7 +60,7 @@ psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
 }
 
 void
-psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
+fields_c_put(fields_c_t *pf, int mb, int me)
 {
   assert(__gotten);
   __gotten = 0;
@@ -81,7 +81,7 @@ psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
 #endif
 
 void
-psc_fields_c_zero(psc_fields_c_t *pf, int m)
+fields_c_zero(fields_c_t *pf, int m)
 {
   memset(&F3_C(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
 	 psc.fld_size * sizeof(fields_c_real_t));

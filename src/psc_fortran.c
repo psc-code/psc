@@ -162,12 +162,12 @@ fortran_push_field_a()
   }
   prof_start(pr);
 
-  psc_fields_fortran_t pf;
-  psc_fields_fortran_get(&pf, JXI, EX + 6);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, JXI, EX + 6);
 
   PIC_msa();
 
-  psc_fields_fortran_put(&pf, EX, EX + 6);
+  fields_fortran_put(&pf, EX, EX + 6);
   
   prof_stop(pr);
 }
@@ -181,12 +181,12 @@ fortran_push_field_b()
   }
   prof_start(pr);
 
-  psc_fields_fortran_t pf;
-  psc_fields_fortran_get(&pf, JXI, EX + 6);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, JXI, EX + 6);
 
   PIC_msb();
 
-  psc_fields_fortran_put(&pf, EX, EX + 6);
+  fields_fortran_put(&pf, EX, EX + 6);
 
   prof_stop(pr);
 }
@@ -230,8 +230,8 @@ fortran_add_ghosts(int mb, int me)
   }
   prof_start(pr);
 
-  psc_fields_fortran_t pf;
-  psc_fields_fortran_get(&pf, mb, me);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, mb, me);
 
   for (int m = mb; m < me; m++) {
     if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
@@ -245,7 +245,7 @@ fortran_add_ghosts(int mb, int me)
     }
   }
 
-  psc_fields_fortran_put(&pf, mb, me);
+  fields_fortran_put(&pf, mb, me);
 
   prof_stop(pr);
 }
@@ -259,8 +259,8 @@ fortran_fill_ghosts(int mb, int me)
   }
   prof_start(pr);
 
-  psc_fields_fortran_t pf;
-  psc_fields_fortran_get(&pf, mb, me);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, mb, me);
 
   for (int m = mb; m < me; m++) {
     if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
@@ -274,7 +274,7 @@ fortran_fill_ghosts(int mb, int me)
     }
   }
 
-  psc_fields_fortran_put(&pf, mb, me);
+  fields_fortran_put(&pf, mb, me);
 
   prof_stop(pr);
 }
@@ -288,8 +288,8 @@ fortran_exchange_particles(void)
   }
   prof_start(pr);
 
-  psc_particles_fortran_t pp;
-  psc_particles_fortran_get(&pp);
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
   
   SET_param_coeff();
   SET_niloc(pp.n_part);
@@ -305,7 +305,7 @@ fortran_exchange_particles(void)
   }
 
   GET_niloc(&pp.n_part);
-  psc_particles_fortran_put(&pp);
+  particles_fortran_put(&pp);
 
   prof_stop(pr);
 }
@@ -329,10 +329,10 @@ fortran_calc_densities(void)
   }
   prof_start(pr);
 
-  psc_fields_fortran_t pf;
-  psc_fields_fortran_get(&pf, 0, 0);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, 0, 0);
   CALC_densities(&pf);
-  psc_fields_fortran_put(&pf, NE, NE + 3);
+  fields_fortran_put(&pf, NE, NE + 3);
 
   prof_stop(pr);
 }

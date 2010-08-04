@@ -10,14 +10,14 @@
 static int __arr_size;
 
 void
-psc_particles_c_alloc(psc_particles_c_t *pp, int n_part)
+particles_c_alloc(particles_c_t *pp, int n_part)
 {
   __arr_size = n_part * 1.2;
   pp->particles = calloc(__arr_size, sizeof(*pp->particles));
 }
 
 void
-psc_particles_c_realloc(psc_particles_c_t *pp, int new_n_part)
+particles_c_realloc(particles_c_t *pp, int new_n_part)
 {
   if (__arr_size <= new_n_part)
     return;
@@ -27,21 +27,21 @@ psc_particles_c_realloc(psc_particles_c_t *pp, int new_n_part)
 }
 
 void
-psc_particles_c_free(psc_particles_c_t *pp)
+particles_c_free(particles_c_t *pp)
 {
   free(pp->particles);
   pp->particles = NULL;
 }
 
 void
-psc_particles_c_get(psc_particles_c_t *pp)
+particles_c_get(particles_c_t *pp)
 {
   pp->particles = psc.pp.particles;
   pp->n_part = psc.pp.n_part;
 }
 
 void
-psc_particles_c_put(psc_particles_c_t *pp)
+particles_c_put(particles_c_t *pp)
 {
 }
 
@@ -52,7 +52,7 @@ static int __arr_size;
 static int __gotten;
 
 void
-psc_particles_c_get(psc_particles_c_t *pp)
+particles_c_get(particles_c_t *pp)
 {
   if (psc.pp.n_part > __arr_size) {
     free(__arr);
@@ -67,8 +67,8 @@ psc_particles_c_get(psc_particles_c_t *pp)
 
   pp->particles = __arr;
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
-    particle_c_t *part = psc_particles_c_get_one(pp, n);
+    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
+    particle_c_t *part = particles_c_get_one(pp, n);
 
     part->xi  = f_part->xi;
     part->yi  = f_part->yi;
@@ -83,14 +83,14 @@ psc_particles_c_get(psc_particles_c_t *pp)
 }
 
 void
-psc_particles_c_put(psc_particles_c_t *pp)
+particles_c_put(particles_c_t *pp)
 {
   assert(__gotten);
   __gotten = 0;
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = psc_particles_base_get_one(&psc.pp, n);
-    particle_c_t *part = psc_particles_c_get_one(pp, n);
+    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
+    particle_c_t *part = particles_c_get_one(pp, n);
 
     f_part->xi  = part->xi;
     f_part->yi  = part->yi;

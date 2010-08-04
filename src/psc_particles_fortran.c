@@ -7,7 +7,7 @@
 static bool __alloced;
 
 void
-psc_particles_fortran_alloc(psc_particles_fortran_t *pp, int n_part)
+particles_fortran_alloc(particles_fortran_t *pp, int n_part)
 {
   if (!__alloced) {
     __alloced = true;
@@ -21,14 +21,14 @@ psc_particles_fortran_alloc(psc_particles_fortran_t *pp, int n_part)
 }
 
 void
-psc_particles_fortran_realloc(psc_particles_fortran_t *pp, int new_n_part)
+particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
 {
   assert(__alloced);
   pp->particles = REALLOC_particles(new_n_part);
 }
 
 void
-psc_particles_fortran_free(psc_particles_fortran_t *pp)
+particles_fortran_free(particles_fortran_t *pp)
 {
   assert(__alloced);
   FREE_particles();
@@ -39,14 +39,14 @@ psc_particles_fortran_free(psc_particles_fortran_t *pp)
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 void
-psc_particles_fortran_get(psc_particles_fortran_t *pp)
+particles_fortran_get(particles_fortran_t *pp)
 {
   pp->particles = psc.pp.particles;
   pp->n_part = psc.pp.n_part;
 }
 
 void
-psc_particles_fortran_put(psc_particles_fortran_t *pp)
+particles_fortran_put(particles_fortran_t *pp)
 {
   psc.pp.n_part = pp->n_part;
   psc.pp.particles = pp->particles;
@@ -57,20 +57,20 @@ psc_particles_fortran_put(psc_particles_fortran_t *pp)
 static int __gotten;
 
 void
-psc_particles_fortran_get(psc_particles_fortran_t *pp)
+particles_fortran_get(particles_fortran_t *pp)
 {
   assert(!__gotten);
   __gotten = 1;
 
-  psc_particles_base_t *pp_base = &psc.pp;
+  particles_base_t *pp_base = &psc.pp;
 
-  psc_particles_fortran_alloc(pp, pp_base->n_part);
+  particles_fortran_alloc(pp, pp_base->n_part);
   pp->n_part = pp_base->n_part;
   SET_niloc(pp->n_part);
 
   for (int n = 0; n < pp_base->n_part; n++) {
-    particle_fortran_t *f_part = psc_particles_fortran_get_one(pp, n);
-    particle_base_t *part = psc_particles_base_get_one(pp_base, n);
+    particle_fortran_t *f_part = particles_fortran_get_one(pp, n);
+    particle_base_t *part = particles_base_get_one(pp_base, n);
 
     f_part->xi  = part->xi;
     f_part->yi  = part->yi;
@@ -85,18 +85,18 @@ psc_particles_fortran_get(psc_particles_fortran_t *pp)
 }
 
 void
-psc_particles_fortran_put(psc_particles_fortran_t *pp)
+particles_fortran_put(particles_fortran_t *pp)
 {
   assert(__gotten);
   __gotten = 0;
 
   GET_niloc(&pp->n_part);
-  psc_particles_base_t *pp_base = &psc.pp;
+  particles_base_t *pp_base = &psc.pp;
   pp_base->n_part = pp->n_part;
 
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_fortran_t *f_part = &pp->particles[n];
-    particle_base_t *part = psc_particles_base_get_one(pp_base, n);
+    particle_base_t *part = particles_base_get_one(pp_base, n);
 
     part->xi  = f_part->xi;
     part->yi  = f_part->yi;

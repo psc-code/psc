@@ -5,11 +5,11 @@
 #include "psc_particles_fortran.h"
 
 typedef particle_fortran_t particle_t;
-typedef psc_particles_fortran_t psc_particles_t;
+typedef particles_fortran_t particles_t;
 
-#define psc_particles_get          psc_particles_fortran_get
-#define psc_particles_put          psc_particles_fortran_put
-#define psc_particles_get_one      psc_particles_fortran_get_one
+#define particles_get          particles_fortran_get
+#define particles_put          particles_fortran_put
+#define particles_get_one      particles_fortran_get_one
 
 #endif
 

@@ -20,16 +20,16 @@ typedef struct {
 typedef struct {
   particle_sse2_t *particles;
   int n_part;
-} psc_particles_sse2_t;
+} particles_sse2_t;
 
-void psc_particles_sse2_alloc(psc_particles_sse2_t *pp, int n_part);
-void psc_particles_sse2_realloc(psc_particles_sse2_t *pp, int new_n_part);
-void psc_particles_sse2_free(psc_particles_sse2_t *pp);
-void psc_particles_sse2_get(psc_particles_sse2_t *pp);
-void psc_particles_sse2_put(psc_particles_sse2_t *pp);
+void particles_sse2_alloc(particles_sse2_t *pp, int n_part);
+void particles_sse2_realloc(particles_sse2_t *pp, int new_n_part);
+void particles_sse2_free(particles_sse2_t *pp);
+void particles_sse2_get(particles_sse2_t *pp);
+void particles_sse2_put(particles_sse2_t *pp);
 
 static inline particle_sse2_t *
-psc_particles_sse2_get_one(psc_particles_sse2_t *pp, int n)
+particles_sse2_get_one(particles_sse2_t *pp, int n)
 {
   return &pp->particles[n];
 }

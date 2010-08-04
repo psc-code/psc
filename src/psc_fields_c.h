@@ -9,7 +9,7 @@ typedef double fields_c_real_t;
 
 typedef struct {
   fields_c_real_t *flds;
-} psc_fields_c_t;
+} fields_c_t;
 
 #define F3_OFF_C(fldnr, jx,jy,jz)					\
   (((((fldnr								\
@@ -33,10 +33,10 @@ typedef struct {
 
 #endif
 
-void psc_fields_c_alloc(psc_fields_c_t *pf);
-void psc_fields_c_free(psc_fields_c_t *pf);
-void psc_fields_c_zero(psc_fields_c_t *pf, int m);
-void psc_fields_c_get(psc_fields_c_t *pf, int mb, int me);
-void psc_fields_c_put(psc_fields_c_t *pf, int mb, int me);
+void fields_c_alloc(fields_c_t *pf);
+void fields_c_free(fields_c_t *pf);
+void fields_c_zero(fields_c_t *pf, int m);
+void fields_c_get(fields_c_t *pf, int mb, int me);
+void fields_c_put(fields_c_t *pf, int mb, int me);
 
 #endif

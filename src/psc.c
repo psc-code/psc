@@ -271,9 +271,9 @@ psc_alloc(int ilo[3], int ihi[3], int ibn[3], int n_part)
     psc.domain.ihi[d] = ihi[d];
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
-  psc_fields_base_alloc(&psc.pf);
+  fields_base_alloc(&psc.pf);
 
-  psc_particles_base_alloc(&psc.pp, n_part);
+  particles_base_alloc(&psc.pp, n_part);
   psc_set_n_particles(n_part);
 }
 
@@ -284,8 +284,8 @@ psc_destroy()
     psc.ops->destroy();
   }
 
-  psc_fields_base_free(&psc.pf);
-  psc_particles_base_free(&psc.pp);
+  fields_base_free(&psc.pf);
+  particles_base_free(&psc.pp);
 }
 
 void
@@ -304,7 +304,7 @@ void
 psc_setup_fields_zero()
 {
   for (int m = 0; m < NR_FIELDS; m++) {
-    psc_fields_base_zero(&psc.pf, m);
+    fields_base_zero(&psc.pf, m);
   }
 }
 
@@ -362,7 +362,7 @@ ascii_dump_particles(const char *fname)
   FILE *file = fopen(filename, "w");
   fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
+    particle_base_t *p = particles_base_get_one(&psc.pp, i);
     fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 	    i, p->xi, p->yi, p->zi,
 	    p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
@@ -690,10 +690,10 @@ psc_init(const char *case_name)
   psc_init_partition(&n_part, &particle_label_offset);
   SET_subdomain();
 
-  psc_particles_base_alloc(&psc.pp, n_part);
+  particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
-  psc_fields_base_alloc(&psc.pf);
+  fields_base_alloc(&psc.pf);
   psc_init_field();
 }
 
@@ -726,7 +726,7 @@ psc_save_particles_ref()
     particle_ref = calloc(psc.pp.n_part, sizeof(*particle_ref));
   }
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_ref[i] = *psc_particles_base_get_one(&psc.pp, i);
+    particle_ref[i] = *particles_base_get_one(&psc.pp, i);
   }
 }
 
@@ -766,7 +766,7 @@ psc_check_particles_ref(double thres)
 {
   assert(particle_ref);
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *part = psc_particles_base_get_one(&psc.pp, i);
+    particle_base_t *part = particles_base_get_one(&psc.pp, i);
     //    printf("i = %d\n", i);
     assert_equal(part->xi , particle_ref[i].xi, thres);
     assert_equal(part->yi , particle_ref[i].yi, thres);

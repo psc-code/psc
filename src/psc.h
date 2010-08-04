@@ -66,43 +66,43 @@ typedef int f_int;
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
-typedef psc_particles_fortran_t psc_particles_base_t;
+typedef particles_fortran_t particles_base_t;
 typedef particle_fortran_t particle_base_t;
 typedef particle_fortran_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
 
-#define psc_particles_base_alloc   psc_particles_fortran_alloc
-#define psc_particles_base_realloc psc_particles_fortran_realloc
-#define psc_particles_base_free    psc_particles_fortran_free
-#define psc_particles_base_get_one psc_particles_fortran_get_one
+#define particles_base_alloc   particles_fortran_alloc
+#define particles_base_realloc particles_fortran_realloc
+#define particles_base_free    particles_fortran_free
+#define particles_base_get_one particles_fortran_get_one
 
 #elif PARTICLES_BASE == PARTICLES_C
 
 #include "psc_particles_c.h"
 
-typedef psc_particles_c_t psc_particles_base_t;
+typedef particles_c_t particles_base_t;
 typedef particle_c_t particle_base_t;
 typedef particle_c_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
 
-#define psc_particles_base_alloc   psc_particles_c_alloc
-#define psc_particles_base_realloc psc_particles_c_realloc
-#define psc_particles_base_free    psc_particles_c_free
-#define psc_particles_base_get_one psc_particles_c_get_one
+#define particles_base_alloc   particles_c_alloc
+#define particles_base_realloc particles_c_realloc
+#define particles_base_free    particles_c_free
+#define particles_base_get_one particles_c_get_one
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
 #include "psc_particles_sse2.h"
 
-typedef psc_particles_sse2_t psc_particles_base_t;
+typedef particles_sse2_t particles_base_t;
 typedef particle_sse2_t particle_base_t;
 typedef particle_sse2_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_SSE2_REAL
 
-#define psc_particles_base_alloc   psc_particles_sse2_alloc
-#define psc_particles_base_realloc psc_particles_sse2_realloc
-#define psc_particles_base_free    psc_particles_sse2_free
-#define psc_particles_base_get_one psc_particles_sse2_get_one
+#define particles_base_alloc   particles_sse2_alloc
+#define particles_base_realloc particles_sse2_realloc
+#define particles_base_free    particles_sse2_free
+#define particles_base_get_one particles_sse2_get_one
 
 #else
 #error unknown PARTICLES_BASE
@@ -113,13 +113,13 @@ typedef particle_sse2_real_t particle_base_real_t;
 
 #if FIELDS_BASE == FIELDS_FORTRAN
 
-typedef psc_fields_fortran_t psc_fields_base_t;
+typedef fields_fortran_t fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define psc_fields_base_alloc  psc_fields_fortran_alloc
-#define psc_fields_base_free   psc_fields_fortran_free
-#define psc_fields_base_zero   psc_fields_fortran_zero
+#define fields_base_alloc  fields_fortran_alloc
+#define fields_base_free   fields_fortran_free
+#define fields_base_zero   fields_fortran_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 
@@ -127,13 +127,13 @@ typedef fields_fortran_real_t fields_base_real_t;
 
 #include "psc_fields_c.h"
 
-typedef psc_fields_c_t psc_fields_base_t;
+typedef fields_c_t fields_base_t;
 typedef fields_c_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define psc_fields_base_alloc psc_fields_c_alloc
-#define psc_fields_base_free  psc_fields_c_free
-#define psc_fields_base_zero  psc_fields_c_zero
+#define fields_base_alloc fields_c_alloc
+#define fields_base_free  fields_c_free
+#define fields_base_zero  fields_c_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
 
@@ -141,13 +141,13 @@ typedef fields_c_real_t fields_base_real_t;
 
 #include "psc_fields_sse2.h"
 
-typedef psc_fields_sse2_t psc_fields_base_t;
+typedef fields_sse2_t fields_base_t;
 typedef fields_sse2_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
-#define psc_fields_base_alloc psc_fields_sse2_alloc
-#define psc_fields_base_free  psc_fields_sse2_free
-#define psc_fields_base_zero  psc_fields_sse2_zero
+#define fields_base_alloc fields_sse2_alloc
+#define fields_base_free  fields_sse2_free
+#define fields_base_zero  fields_sse2_zero
 
 #define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
 
@@ -325,8 +325,8 @@ struct psc {
   double dt;
   double dx[3];
 
-  psc_particles_base_t pp;
-  psc_fields_base_t pf;
+  particles_base_t pp;
+  fields_base_t pf;
 
   // Fortran compatible fields
   int ilo[3], ihi[3]; // local domain: il, il+1, ..., ih-1
@@ -463,7 +463,7 @@ void PIC_msa();
 void PIC_msb();
 void OUT_field();
 void OUT_part();
-void CALC_densities(psc_fields_fortran_t *pf);
+void CALC_densities(fields_fortran_t *pf);
 void SET_param_domain();
 void SET_param_pml();
 void SET_param_psc();
@@ -487,12 +487,12 @@ void INIT_basic(void);
 void INIT_grid_map(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 
-void PIC_fax(psc_fields_fortran_t *pf, int m);
-void PIC_fay(psc_fields_fortran_t *pf, int m);
-void PIC_faz(psc_fields_fortran_t *pf, int m);
-void PIC_fex(psc_fields_fortran_t *pf, int m);
-void PIC_fey(psc_fields_fortran_t *pf, int m);
-void PIC_fez(psc_fields_fortran_t *pf, int m);
+void PIC_fax(fields_fortran_t *pf, int m);
+void PIC_fay(fields_fortran_t *pf, int m);
+void PIC_faz(fields_fortran_t *pf, int m);
+void PIC_fex(fields_fortran_t *pf, int m);
+void PIC_fey(fields_fortran_t *pf, int m);
+void PIC_fez(fields_fortran_t *pf, int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);

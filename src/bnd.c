@@ -187,7 +187,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
       }
     }
   }
-  psc_particles_base_realloc(&psc.pp, new_n_particles);
+  particles_base_realloc(&psc.pp, new_n_particles);
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -324,7 +324,7 @@ c_exchange_particles(void)
     ddcp->nei[dir1].n_send = 0;
   }
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = psc_particles_base_get_one(&psc.pp, i);
+    particle_base_t *p = particles_base_get_one(&psc.pp, i);
     particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in
                          // the struct. FIXME
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&

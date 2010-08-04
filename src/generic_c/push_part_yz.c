@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_yz(psc_fields_t *pf, psc_particles_t *pp)
+do_genc_push_part_yz(fields_t *pf, particles_t *pp)
 {
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
@@ -27,12 +27,12 @@ do_genc_push_part_yz(psc_fields_t *pf, psc_particles_t *pp)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  psc_fields_zero(pf, JXI);
-  psc_fields_zero(pf, JYI);
-  psc_fields_zero(pf, JZI);
+  fields_zero(pf, JXI);
+  fields_zero(pf, JYI);
+  fields_zero(pf, JZI);
   
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_t *part = psc_particles_get_one(pp, n);
+    particle_t *part = particles_get_one(pp, n);
 
     // x^n, p^n -> x^(n+.5), p^n
 
@@ -270,10 +270,10 @@ do_genc_push_part_yz(psc_fields_t *pf, psc_particles_t *pp)
 void
 genc_push_part_yz()
 {
-  psc_fields_t pf;
-  psc_particles_t pp;
-  psc_fields_get(&pf, EX, EX + 6);
-  psc_particles_get(&pp);
+  fields_t pf;
+  particles_t pp;
+  fields_get(&pf, EX, EX + 6);
+  particles_get(&pp);
 
   static int pr;
   if (!pr) {
@@ -283,7 +283,7 @@ genc_push_part_yz()
   do_genc_push_part_yz(&pf, &pp);
   prof_stop(pr);
 
-  psc_fields_put(&pf, JXI, JXI + 3);
-  psc_particles_put(&pp);
+  fields_put(&pf, JXI, JXI + 3);
+  particles_put(&pp);
 }
 

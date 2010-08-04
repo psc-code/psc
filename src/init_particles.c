@@ -129,7 +129,7 @@ psc_init_particles(int particle_label_offset)
 	    
 	    int n_in_cell = get_n_in_cell(npt.n);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_base_t *p = psc_particles_base_get_one(&psc.pp, i++);
+	      particle_base_t *p = particles_base_get_one(&psc.pp, i++);
 	      
 	      // FIXME? this gives same random numbers on all procs
 	      float ran1, ran2, ran3, ran4, ran5, ran6;

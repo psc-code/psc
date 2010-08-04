@@ -11,7 +11,7 @@ typedef sse2_real fields_sse2_real_t;
 
 typedef struct {
   fields_sse2_real_t *flds;
-} psc_fields_sse2_t;
+} fields_sse2_t;
 
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
   (((((fldnr								\
@@ -35,10 +35,10 @@ typedef struct {
 
 #endif
 
-void psc_fields_sse2_alloc(psc_fields_sse2_t *pf);
-void psc_fields_sse2_free(psc_fields_sse2_t *pf);
-void psc_fields_sse2_get(psc_fields_sse2_t *pf, int mb, int me);
-void psc_fields_sse2_put(psc_fields_sse2_t *pf, int mb, int me);
-void psc_fields_sse2_zero(psc_fields_sse2_t *pf, int m);
+void fields_sse2_alloc(fields_sse2_t *pf);
+void fields_sse2_free(fields_sse2_t *pf);
+void fields_sse2_get(fields_sse2_t *pf, int mb, int me);
+void fields_sse2_put(fields_sse2_t *pf, int mb, int me);
+void fields_sse2_zero(fields_sse2_t *pf, int m);
 
 #endif

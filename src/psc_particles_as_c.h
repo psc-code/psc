@@ -5,11 +5,11 @@
 #include "psc_particles_c.h"
 
 typedef particle_c_t particle_t;
-typedef psc_particles_c_t psc_particles_t;
+typedef particles_c_t particles_t;
 
-#define psc_particles_get          psc_particles_c_get
-#define psc_particles_put          psc_particles_c_put
-#define psc_particles_get_one      psc_particles_c_get_one
+#define particles_get          particles_c_get
+#define particles_put          particles_c_put
+#define particles_get_one      particles_c_get_one
 
 #endif
 
