@@ -6,10 +6,15 @@
 #include <string.h>
 #include <assert.h>
 
+static psc_fields_c_real_t *__flds;
+
 void
 psc_fields_c_get(psc_fields_c_t *pf, int mb, int me)
 {
-  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+  if (!__flds) {
+    __flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+  }
+  pf->flds = __flds;
 
   for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -35,6 +40,6 @@ psc_fields_c_put(psc_fields_c_t *pf, int mb, int me)
     }
   }
 
-  free(pf->flds);
+  pf->flds = NULL;
 }
 
