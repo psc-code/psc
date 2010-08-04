@@ -4,17 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct psc_genc *
-genc_create(void)
-{
-  struct psc_genc *genc = malloc(sizeof(*genc));
-  memset(genc, 0, sizeof(*genc));
-
-  psc.c_ctx = genc;
-  return genc;
-  // FIXME, this need a destroy, too.
-}
-
 static particle_c_t *__arr;
 static int __arr_size;
 
@@ -66,16 +55,9 @@ genc_particles_to_fortran(psc_particles_c_t *pp)
   }
 }
 
-static void
-genc_fields_from_fortran()
+void
+genc_fields_from_fortran(psc_fields_c_t *pf)
 {
-#ifndef USE_FF3
-  struct psc_genc *genc = psc.c_ctx;
-  if (!genc) {
-    genc = genc_create();
-  }
-  psc_fields_c_t *pf = &genc->pf;
-
   pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
 
   for (int m = EX; m <= BZ; m++) {
@@ -87,16 +69,11 @@ genc_fields_from_fortran()
       }
     }
   }
-#endif
 }
 
-static void
-genc_fields_to_fortran()
+void
+genc_fields_to_fortran(psc_fields_c_t *pf)
 {
-#ifndef USE_FF3
-  struct psc_genc *genc = psc.c_ctx;
-  psc_fields_c_t *pf = &genc->pf;
-
   for (int m = JXI; m <= JZI; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
@@ -108,13 +85,10 @@ genc_fields_to_fortran()
   }
 
   free(pf->flds);
-#endif
 }
 
 struct psc_ops psc_ops_generic_c = {
   .name = "generic_c",
-  .fields_from_fortran    = genc_fields_from_fortran,
-  .fields_to_fortran      = genc_fields_to_fortran,
   .push_part_xz           = genc_push_part_xz,
   .push_part_yz_a         = genc_push_part_yz_a,
   .push_part_yz_b         = genc_push_part_yz_b,

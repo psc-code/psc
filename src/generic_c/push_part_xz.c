@@ -273,8 +273,8 @@ do_genc_push_part_xz(psc_fields_c_t *pf, psc_particles_c_t *pp)
 void
 genc_push_part_xz()
 {
-  struct psc_genc *genc = psc.c_ctx;
-  psc_fields_c_t *pf = &genc->pf;
+  psc_fields_c_t pf;
+  genc_fields_from_fortran(&pf);
   psc_particles_c_t pp;
   genc_particles_from_fortran(&pp);
 
@@ -283,8 +283,9 @@ genc_push_part_xz()
     pr = prof_register("genc_part_xz", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_genc_push_part_xz(pf, &pp);
+  do_genc_push_part_xz(&pf, &pp);
   prof_stop(pr);
 
+  genc_fields_to_fortran(&pf);
   genc_particles_to_fortran(&pp);
 }
