@@ -15,6 +15,7 @@ genc_push_part_yz_b()
   prof_start(pr);
  
   struct psc_genc *genc = psc.c_ctx;
+  psc_fields_c_t *pf = &genc->pf;
 
   creal dt = psc.dt;
   creal yl = .5f * dt;

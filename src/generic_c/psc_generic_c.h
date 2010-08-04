@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_fields_c.h"
 
 // switch between double and float in generic_c
 // constants need to always be given like 1.5f
@@ -41,42 +42,14 @@ struct c_particle {
 struct psc_genc {
   struct c_particle *part;
   int part_allocated;
-  creal *flds;
+  psc_fields_c_t pf;
 };
 
 void genc_push_part_xz();
 void genc_push_part_yz_a();
 void genc_push_part_yz_b();
 
-#ifdef USE_FF3
-
-#define F3(fldnr, jx,jy,jz) FF3(fldnr, jx,jy,jz)
-
-#else
-
-#define F3_OFF(fldnr, jx,jy,jz)						\
-  (((((fldnr								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
-
-#if 1
-
-#define F3(fldnr, jx,jy,jz)			\
-  (genc->flds[F3_OFF(fldnr, jx,jy,jz)])
-
-#else
-
-#define F3(fldnr, jx,jy,jz)						\
-  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < NR_FIELDS*psc.fld_size);				\
-      &(genc->flds[off]);						\
-    }))
-
-#endif
-
-#endif
+#define F3(m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
 
 static inline int
 nint(creal x)

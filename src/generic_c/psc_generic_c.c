@@ -70,14 +70,15 @@ genc_fields_from_fortran()
 {
 #ifndef USE_FF3
   struct psc_genc *genc = psc.c_ctx;
+  psc_fields_c_t *pf = &genc->pf;
 
-  genc->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*genc->flds));
+  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
 
   for (int m = EX; m <= BZ; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3(m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
+	  F3_C(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
 	}
       }
     }
@@ -90,18 +91,19 @@ genc_fields_to_fortran()
 {
 #ifndef USE_FF3
   struct psc_genc *genc = psc.c_ctx;
+  psc_fields_c_t *pf = &genc->pf;
 
   for (int m = JXI; m <= JZI; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_BASE(m, jx,jy,jz) = F3(m, jx,jy,jz);
+	  F3_BASE(m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
 	}
       }
     }
   }
 
-  free(genc->flds);
+  free(pf->flds);
 #endif
 }
 

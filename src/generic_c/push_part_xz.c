@@ -23,6 +23,7 @@ genc_push_part_xz()
   creal s0x[5] = {}, s0z[5] = {}, s1x[5], s1z[5];
 
   struct psc_genc *genc = psc.c_ctx;
+  psc_fields_c_t *pf = &genc->pf;
 
   creal dt = psc.dt;
   creal xl = .5f * dt;
