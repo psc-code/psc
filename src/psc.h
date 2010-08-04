@@ -32,6 +32,8 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
+#include "psc_fields_fortran.h"
+
 // this matches the Fortran particle data structure
 
 struct f_particle {
@@ -54,23 +56,10 @@ struct f_particle {
 
 #define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
 
-#if 1
+typedef fields_fortran_real_t fields_base_real_t;
+#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define F3_BASE(fldnr, jx,jy,jz) _FF3(psc.f_fields[fldnr], jx,jy,jz)
-
-#else
-
-#define F3_BASE(fldnr, jx,jy,jz)						\
-  (*({int off = FF3_OFF(jx,jy,jz);					\
-      assert(off >= 0);							\
-      assert(off < psc.fld_size);					\
-      &(psc.f_fields[fldnr][off]);					\
-    }))
-
-#endif
-
-typedef f_real fields_base_real_t;
-#define MPI_FIELDS_BASE_REAL MPI_DOUBLE
+#define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(m, jx,jy,jz)
 
 // user settable parameters
 struct psc_param {
