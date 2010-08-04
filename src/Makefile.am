@@ -15,7 +15,7 @@ libpsc_a_SOURCES = \
 	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_fields.c init_particles.c \
 	INIT_param.F \
-	psc.h psc_glue.c psc.c \
+	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
 	psc_fortran.c \
 	psc_fields_fortran.c psc_fields_c.c \

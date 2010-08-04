@@ -1,5 +1,5 @@
 
-#include "psc.h"
+#include "psc_testing.h"
 #include "util/profile.h"
 
 #include <stdio.h>
