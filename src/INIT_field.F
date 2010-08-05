@@ -200,6 +200,7 @@ c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
+      use out_fields_pml
 
       implicit none
 
@@ -272,6 +273,7 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use fields
+      use out_fields_pml
 
       implicit none
 

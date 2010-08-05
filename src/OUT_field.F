@@ -1,4 +1,6 @@
 
+#include "config.h"
+
 c FIELD OUTPUT!
 
 c     ======================================================================
@@ -167,6 +169,9 @@ c     ----------------------------------------------------------------------
       use VLA_variables
       use fields
       use out_fields
+#ifdef USE_PML
+      use out_fields_pml
+#endif
 
       implicit none
       integer :: i1a,i1e,i2a,i2e,i3a,i3e

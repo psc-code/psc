@@ -8,6 +8,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       use VLA_variables
       use PIC_variables
       use fields
+      use out_fields_pml
 
       implicit none
 
