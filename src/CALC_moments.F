@@ -2,15 +2,17 @@
 #include "config.h"
 
 c     ----------------------------------------------------------------------
-      subroutine CALC_densities(ne, ni, nn)
+      subroutine CALC_densities(niloc, p_niloc, ne, ni, nn)
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
+      use PIC_variables, only: cori
       use VLA_variables, only: rd1, rd2, rd3, i1mn, i2mn, i3mn,
      *     i1mx, i2mx, i3mx, alpha, dx, dy, dz, eta
 
       implicit none
 
+      integer :: niloc
+      real(kind=8) :: p_niloc(0:*)
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn

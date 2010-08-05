@@ -449,7 +449,7 @@ void PIC_msa(void);
 void PIC_msb(void);
 void OUT_field(void);
 void OUT_part(void);
-void CALC_densities(fields_fortran_t *pf);
+void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
 void SET_param_domain(void);
 void SET_param_pml(void);
 void SET_param_psc(void);

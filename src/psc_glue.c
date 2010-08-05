@@ -106,7 +106,8 @@ void OUT_field_F77(void);
 void OUT_part_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
-void CALC_densities_F77(f_real *ne, f_real *ni, f_real *nn);
+void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
+			f_real *ne, f_real *ni, f_real *nn);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
 		       f_int *i3bn);
@@ -281,11 +282,12 @@ INIT_idistr(void)
 }
 
 void
-CALC_densities(fields_fortran_t *pf)
+CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   INIT_grid_map();
   SET_param_coeff();
-  CALC_densities_F77(pf->flds[NE], pf->flds[NI], pf->flds[NN]);
+  CALC_densities_F77(&pp->n_part, &pp->particles[-1],
+		     pf->flds[NE], pf->flds[NI], pf->flds[NN]);
 }
 
 void

@@ -386,9 +386,14 @@ fortran_calc_densities(void)
   }
   prof_start(pr);
 
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
   fields_fortran_t pf;
   fields_fortran_get(&pf, 0, 0);
-  CALC_densities(&pf);
+
+  CALC_densities(&pp, &pf);
+
+  particles_fortran_put(&pp);
   fields_fortran_put(&pf, NE, NE + 3);
 
   prof_stop(pr);

@@ -15,7 +15,7 @@ c     wrapper for C to be able to access these parameters
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
-      integer :: use_pml_
+      logical :: use_pml_
 
       length(1)=lengthx
       length(2)=lengthy
@@ -70,7 +70,7 @@ c     wrapper for C to be able to set these parameters
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
-      integer :: use_pml_
+      logical :: use_pml_
 
       lengthx=length(1)
       lengthy=length(2)
