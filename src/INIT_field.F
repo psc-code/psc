@@ -10,8 +10,6 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      call OUT_alloc_fields
-
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
 
@@ -115,8 +113,6 @@ c FIXME
 
 
 c setting up time-averaged fields
-
-      call OUT_setup_fields
 
 #ifdef USE_PML
       call PML_fields_setup

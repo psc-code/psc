@@ -107,6 +107,9 @@ c     ----------------------------------------------------------------------
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
 
+      call OUT_alloc_fields_pml
+      call OUT_setup_fields_pml
+
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
          do i2=i2mn,i2mx,100
@@ -234,6 +237,9 @@ c     ----------------------------------------------------------------------
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
 
+      call OUT_alloc_fields
+      call OUT_setup_fields
+
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
          do i2=i2mn,i2mx,100
@@ -354,6 +360,12 @@ c     ----------------------------------------------------------------------
       real(kind=8) :: s_cpud
       real(kind=8) :: s_cpuh
 
+
+      if (.not. allocated(ext)) then
+         call OUT_alloc_fields
+         call OUT_setup_fields
+         call OUT_alloc_fields_pml
+      endif
 
       s_cpub=0.0d0
       s_cpud=0.0d0

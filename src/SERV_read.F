@@ -71,11 +71,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       allocate(nn(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      call OUT_alloc_fields
-#ifdef USE_PML
-      call OUT_alloc_fields_pml
-#endif
-
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
 
@@ -93,11 +88,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       ne=0.0d0
       ni=0.0d0
       nn=0.0d0
-
-      call OUT_setup_fields
-#ifdef USE_PML
-      call OUT_setup_fields_pml
-#endif
 
       do i1=0,11*niloc+10,100
          i1e=min(i1+99,11*niloc+10)

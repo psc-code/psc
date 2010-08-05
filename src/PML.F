@@ -52,8 +52,6 @@ c     ----------------------------------------------------------------------
       allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      call OUT_alloc_fields_pml
-
       dvx=0.0d0
       dvy=0.0d0
       dvz=0.0d0
@@ -91,7 +89,6 @@ c     ----------------------------------------------------------------------
       eps = 1.0
       mu = 1.0
 
-      call OUT_setup_fields_pml
       call OUT_poyn_setup
 
       end subroutine PML_fields_setup
