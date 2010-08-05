@@ -12,11 +12,8 @@ c     ----------------------------------------------------------------------
 
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
-
-#ifdef USE_PML
-      call PML_coeff_alloc
-      call PML_fields_alloc
-#endif
+      cpu=0.0d0
+      cpu_ary=0.0d0
 
       end subroutine ALLOC_field_fortran
 
@@ -63,16 +60,52 @@ c initialization of the fields
          enddo
       enddo
 
+#ifdef USE_PML
+      call INIT_field_pml
+#endif
+
       end subroutine INIT_field
 
-C     set up various things after the main fields have been initialized
+#ifdef USE_PML
+c     ----------------------------------------------------------------------
+      subroutine INIT_field_pml
+c     ----------------------------------------------------------------------
+      use VLA_variables
+      use fields
 
+      implicit none
+      
+      ! initialisation of additional fields - added by ab
+      ! because of normalization these are equal to e and b fields
+
+      dvx=ex
+      dvy=ey
+      dvz=ez
+      bx=hx
+      by=hy
+      bz=hz
+      
+      ! initialisation of permittivity tensors, always set to 1.0
+      ! due to scaling these are dimensionless
+      
+      eps = 1.0
+      mu = 1.0
+
+      end subroutine INIT_field_pml
+#endif
+
+c     ----------------------------------------------------------------------
       subroutine SETUP_field
+c     ----------------------------------------------------------------------
+c     set up various things after the main fields have been initialized
 
       use PIC_variables
       use VLA_variables
 
       implicit none
+
+c FIXME
+#if 0
       integer :: l1,l2,l3
 
       real(kind=8) :: xi,yi,zi
@@ -85,8 +118,6 @@ C     set up various things after the main fields have been initialized
 
 c setting up charge and current densities
 
-c FIXME
-#if 0
       if (niloc.gt.0) then
          do l=1,niloc
 
@@ -110,18 +141,13 @@ c FIXME
       endif
 #endif
 
-
-
-c setting up time-averaged fields
-
 #ifdef USE_PML
-      call PML_fields_setup
+      call PML_coeff_alloc
       call PML_coeff_setup
 #endif
+      call OUT_poyn_setup
 
 
-      cpu=0.0d0
-      cpu_ary=0.0d0
 
       end subroutine SETUP_field
 

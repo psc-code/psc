@@ -15,6 +15,19 @@ c jxi-jzi: current densities
       real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
       real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
 
+#ifdef USE_PML
+! for the pml the declaration of d and h field is required
+! dvx-hz: additional em field arrays
+! dvx-dvz is chosen because of the existence of dx-dz for spatial range
+
+      real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
+      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz   ! added by ab
+
+! electric and magnetic permittivity tensors
+
+      real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
+#endif
+
       end module FIELDS
 
 c     ----------------------------------------------------------------------
@@ -65,6 +78,9 @@ c     ----------------------------------------------------------------------
       jyi=0.0d0
       jzi=0.0d0
 
+#ifdef USE_PML
+      call FIELDS_alloc_pml
+#endif
 
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
@@ -78,7 +94,6 @@ c     ----------------------------------------------------------------------
       subroutine FIELDS_free
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
       use VLA_variables
       use fields
 
@@ -97,5 +112,70 @@ c     ----------------------------------------------------------------------
       deallocate(ni)
       deallocate(nn)
 
+#ifdef USE_PML
+      call FIELDS_free_pml
+#endif
+
       end subroutine FIELDS_free
 
+#ifdef USE_PML
+c     ======================================================================
+c     PML specific extensions
+
+c     ----------------------------------------------------------------------
+      subroutine FIELDS_alloc_pml
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use fields
+
+      implicit none
+
+      allocate(dvx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(dvy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(dvz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(bx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(by(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(bz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(eps(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+      allocate(mu(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+     &            i3mn-rd3:i3mx+rd3))
+
+      dvx=0.0d0
+      dvy=0.0d0
+      dvz=0.0d0
+      bx=0.0d0
+      by=0.0d0
+      bz=0.0d0
+      eps = 1.0
+      mu = 1.0
+
+      end subroutine FIELDS_alloc_pml
+
+c     ----------------------------------------------------------------------
+      subroutine FIELDS_free_pml
+c     ----------------------------------------------------------------------
+
+      use fields
+
+      implicit none
+
+      deallocate(dvx)
+      deallocate(dvy)
+      deallocate(dvz)
+      deallocate(bx)
+      deallocate(by)
+      deallocate(bz)
+      deallocate(eps)
+      deallocate(mu)
+
+      end subroutine FIELDS_free_pml
+
+#endif

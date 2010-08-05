@@ -332,7 +332,6 @@ c     ----------------------------------------------------------------------
       use fields
       use out_fields
 #ifdef USE_PML
-      use fields_pml
       use out_fields_pml
 #endif
 
