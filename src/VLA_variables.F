@@ -332,20 +332,3 @@ c jxi-jzi: current densities
 
       end module fields
 
-c     ======================================================================
-      module out_fields
-c     ======================================================================
-      implicit none
-
-c ext-bzt: time averaged field
-c net: time averaged electron density
-c nit: time averaged ion density
-c nnt: time averaged neutral density
-c jxit-jzit: time averaged current density
-
-      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
-      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
-      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
-      real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
-
-      end module out_fields

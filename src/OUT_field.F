@@ -1,8 +1,167 @@
 
 c FIELD OUTPUT!
 
-      subroutine OUT_field
+c     ======================================================================
+      module out_fields
+c     ======================================================================
+      implicit none
 
+c ext-bzt: time averaged field
+c net: time averaged electron density
+c nit: time averaged ion density
+c nnt: time averaged neutral density
+c jxit-jzit: time averaged current density
+
+      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
+      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
+      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
+      real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
+
+      end module out_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_alloc_fields
+c     ----------------------------------------------------------------------
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      allocate(ext(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(eyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(ezt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(bxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(byt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(bzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(net(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(nit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(nnt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jxit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      
+      end subroutine OUT_alloc_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_setup_fields
+c     ----------------------------------------------------------------------
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      ext=0.0d0
+      eyt=0.0d0
+      ezt=0.0d0
+      bxt=0.0d0
+      byt=0.0d0
+      bzt=0.0d0
+      jxit=0.0d0
+      jyit=0.0d0
+      jzit=0.0d0
+      net=0.0d0
+      nit=0.0d0
+      nnt=0.0d0
+
+      end subroutine OUT_setup_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_serv_read_fields
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      integer i1a,i1e,i2a,i2e,i3a,i3e
+
+      do i3=i3mn,i3mx,100
+         i3e=min(i3+99,i3mx)
+         do i2=i2mn,i2mx,100
+            i2e=min(i2+99,i2mx)
+            do i1=i1mn,i1mx,100
+               i1e=min(i1+99,i1mx)
+               read(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+            enddo
+         enddo
+      enddo
+
+      end subroutine OUT_serv_read_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_serv_write_fields
+c     ----------------------------------------------------------------------
+
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      integer i1a,i1e,i2a,i2e,i3a,i3e
+
+      do i3=i3mn,i3mx,100
+         i3e=min(i3+99,i3mx)
+         do i2=i2mn,i2mx,100
+            i2e=min(i2+99,i2mx)
+            do i1=i1mn,i1mx,100
+               i1e=min(i1+99,i1mx)
+               write(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+            enddo
+         enddo
+      enddo
+
+      end subroutine OUT_serv_write_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_field
+c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables

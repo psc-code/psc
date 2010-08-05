@@ -2,52 +2,6 @@
 #include "config.h"
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_alloc_fields
-c     ----------------------------------------------------------------------
-      use VLA_variables
-      use out_fields
-
-      implicit none
-
-      allocate(ext(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(eyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ezt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(byt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(net(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(nit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(nnt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jxit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      
-      end subroutine OUT_alloc_fields
-
-c     ----------------------------------------------------------------------
-      subroutine OUT_setup_fields
-c     ----------------------------------------------------------------------
-      use VLA_variables
-      use out_fields
-
-      implicit none
-
-      ext=0.0d0
-      eyt=0.0d0
-      ezt=0.0d0
-      bxt=0.0d0
-      byt=0.0d0
-      bzt=0.0d0
-      jxit=0.0d0
-      jyit=0.0d0
-      jzit=0.0d0
-      net=0.0d0
-      nit=0.0d0
-      nnt=0.0d0
-
-      end subroutine OUT_setup_fields
-
-c     ----------------------------------------------------------------------
       subroutine ALLOC_field_fortran
 c     ----------------------------------------------------------------------
 
