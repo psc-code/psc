@@ -180,40 +180,6 @@ c boundary_part_z: particle boundary conditions in z
 
       integer thick, cushion, size, pml
 
-! kappax_max, sigmax_max: attenuation coefficients in x direction
-! kappay_max, sigmay_max: attenuation coefficients in y direction
-! kappaz_max, sigmaz_max: attenuation coefficients in z direction
-
-      real(kind=8) kappax_max,sigmax_max
-      real(kind=8) kappay_max,sigmay_max
-      real(kind=8) kappaz_max,sigmaz_max
-
-! kappax, sigmax: coefficient arrays in x
-! kappay, sigmay: coefficient arrays in y
-! kappaz, sigmaz: coefficient arrays in z
-
-      real(kind=8),allocatable,dimension(:) :: kappax,sigmax
-      real(kind=8),allocatable,dimension(:) :: kappay,sigmay
-      real(kind=8),allocatable,dimension(:) :: kappaz,sigmaz
-
-! coefficient at integer position
-      
-      real(kind=8),allocatable,dimension(:) :: cxp, cxm
-      real(kind=8),allocatable,dimension(:) :: fbx, fcx, fdx, fex
-      real(kind=8),allocatable,dimension(:) :: cyp, cym
-      real(kind=8),allocatable,dimension(:) :: fby, fcy, fdy, fey
-      real(kind=8),allocatable,dimension(:) :: czp, czm
-      real(kind=8),allocatable,dimension(:) :: fbz, fcz, fdz, fez
-
-! coefficient at position moved by half space
-
-      real(kind=8),allocatable,dimension(:) :: bxp, bxm
-      real(kind=8),allocatable,dimension(:) :: gbx, gcx, gdx, gex
-      real(kind=8),allocatable,dimension(:) :: byp, bym
-      real(kind=8),allocatable,dimension(:) :: gby, gcy, gdy, gey
-      real(kind=8),allocatable,dimension(:) :: bzp, bzm
-      real(kind=8),allocatable,dimension(:) :: gbz, gcz, gdz, gez
-
 ! pmlcheck hacky globals...
 
       integer :: pml_xmin,pml_xmax     ! ab
@@ -293,24 +259,3 @@ c jxi-jzi: current densities
 
       end module fields
 
-#ifdef USE_PML
-
-c     ======================================================================
-      module fields_pml
-c     ======================================================================
-      implicit none
-
-! for the pml the declaration of d and h field is required
-! dvx-hz: additional em field arrays
-! dvx-dvz is chosen because of the existence of dx-dz for spatial range
-
-      real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
-
-! electric and magnetic permittivity tensors
-
-      real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
-
-      end module fields_pml
-
-#endif

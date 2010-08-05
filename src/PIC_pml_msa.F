@@ -10,9 +10,8 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+0.5)*dt.
       use PIC_variables
       use VLA_variables
       use fields
-#ifdef USE_PML
       use fields_pml
-#endif
+      use coeff_pml
 
       implicit none
 

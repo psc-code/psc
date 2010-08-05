@@ -221,16 +221,9 @@ c     setup processor map
       deltay = thick*dy
       deltaz = thick*dz
 
-! attenuation factors
-      
-      kappax_max = 1.34
-      sigmax_max = 13.8*eps0/deltax
-
-      kappay_max = 1.34
-      sigmay_max = 13.8*eps0/deltay
-
-      kappaz_max = 1.34
-      sigmaz_max = 13.8*eps0/deltaz
+#ifdef USE_PML
+      call PML_coeff_init_param
+#endif
 
 ! position condition for time dependent pml
 

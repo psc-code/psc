@@ -1,3 +1,6 @@
+
+#include "config.h"
+
 c This subroutine exchanges the Maxwell fields between
 c computation domains for the parallel Maxwell solver.
 c Is called in PIC_msa.f and PIC_msb.f.
@@ -7,6 +10,9 @@ c Is called in PIC_msa.f and PIC_msb.f.
       
       use PIC_variables
       use VLA_variables
+#ifdef USE_PML
+      use coeff_pml
+#endif
 
       implicit none
       include './mpif.h'

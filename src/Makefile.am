@@ -6,7 +6,13 @@ bin_PROGRAMS = VLI VLA SELECT
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
-	PIC_variables.F VLA_variables.F \
+	PIC_variables.F VLA_variables.F
+
+if USE_PML
+libpsc_a_SOURCES += PML.F PIC_pml_msa.F PIC_pml_msb.F
+endif
+
+libpsc_a_SOURCES += \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
 	INIT_ppulse_x2.F INIT_spulse_x2.F \
 	INIT_ppulse_y1.F INIT_spulse_y1.F \
@@ -60,10 +66,6 @@ endif USE_SSE2
 if USE_CUDA
 libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
-
-if USE_PML
-libpsc_a_SOURCES += PIC_pml_msa.F PIC_pml_msb.F
-endif
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
