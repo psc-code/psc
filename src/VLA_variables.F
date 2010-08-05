@@ -78,7 +78,6 @@ c np:  number of timesteps for time-averaging
       real(kind=8) ex2B,ey2B,ez2B,bx2B,by2B,bz2B
       real(kind=8) pox,poy,poz,je
       real(kind=8) p2A,p2B
-      real(kind=8) sum_fed,sum_ped
 
 c i0: irradiance in Wum**2/m**2
 c n0: peak atom density in m**3

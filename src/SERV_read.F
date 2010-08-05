@@ -39,8 +39,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       if (tmxvc.lt.tmxvco) tmxvc=tmxvco
 
       call OUT_poyn_serv_read
-      read(10) sum_fed,sum_ped
-
 
       read(10) niloc,nialloc,cori
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 

@@ -28,8 +28,6 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       write(10) tmnvc,tmxvc
 
       call OUT_poyn_serv_write
-      write(10) sum_fed,sum_ped
-
 
       write(10) niloc,nialloc,cori
       write(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx

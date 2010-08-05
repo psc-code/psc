@@ -271,9 +271,6 @@ c     ----------------------------------------------------------------------
       call OUT_setup_fields_pml
       call OUT_poyn_setup
 
-      sum_fed=0.0d0
-      sum_ped=0.0d0
-
 ! deriving pml attenuation coefficients
 
 ! not moved by half step
