@@ -241,19 +241,3 @@ c     ======================================================================
 
       end subroutine PIC_set_variables
 
-c     ======================================================================
-      module fields
-c     ======================================================================
-      implicit none
-
-c ex-bz: em field arrays 
-c ne-nn: charge densities
-c jxi-jzi: current densities
-
-      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
-      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz
-      real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
-      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
-
-      end module fields
-

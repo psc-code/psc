@@ -1,10 +1,24 @@
 
 #include "config.h"
 
-c THIS SUBROUTINE ALLOCATES THE ELECTROMAGNETIC FIELDS.
+c     ======================================================================
+      module FIELDS
+c     ======================================================================
+      implicit none
+
+c ex-hz: em field arrays 
+c ne-nn: charge densities
+c jxi-jzi: current densities
+
+      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
+      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz
+      real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
+      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
+
+      end module FIELDS
 
 c     ----------------------------------------------------------------------
-      subroutine ALLOC_field
+      subroutine FIELDS_alloc
 c     ----------------------------------------------------------------------
 
       use PIC_variables
@@ -54,14 +68,14 @@ c     ----------------------------------------------------------------------
 
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
-      call C_ALLOC_field_cb(ne, ni, nn, jxi, jyi, jzi,
+      call C_fields_alloc_cb(ne, ni, nn, jxi, jyi, jzi,
      &     ex, ey, ez, hx, hy, hz)
 #endif
 
-      end subroutine ALLOC_field
+      end subroutine FIELDS_alloc
 
 c     ----------------------------------------------------------------------
-      subroutine FREE_field
+      subroutine FIELDS_free
 c     ----------------------------------------------------------------------
 
       use PIC_variables
@@ -83,5 +97,5 @@ c     ----------------------------------------------------------------------
       deallocate(ni)
       deallocate(nn)
 
-      end subroutine FREE_field
+      end subroutine FIELDS_free
 

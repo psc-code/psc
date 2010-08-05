@@ -26,9 +26,9 @@
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
 #define REALLOC_particles_F77 F77_FUNC_(realloc_particles, REALLOC_PARTICLES)
-#define ALLOC_field_F77 F77_FUNC_(alloc_field, ALLOC_FIELD)
 #define FREE_particles_F77 F77_FUNC_(free_particles, FREE_PARTICLES)
-#define FREE_field_F77 F77_FUNC_(free_field, FREE_FIELD)
+#define FIELDS_alloc_F77 F77_FUNC_(fields_alloc, FIELDS_ALLOC)
+#define FIELDS_free_F77 F77_FUNC_(fields_free, FIELDS_FREE)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
 #define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
 #define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
@@ -47,7 +47,7 @@
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 
 #define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
-#define C_alloc_field_cb_F77 F77_FUNC(c_alloc_field_cb,C_ALLOC_FIELD_CB)
+#define C_fields_alloc_cb_F77 F77_FUNC(c_fields_alloc_cb,C_FIELDS_ALLOC_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
@@ -117,9 +117,9 @@ void SET_niloc_F77(f_int *niloc);
 void GET_niloc_F77(f_int *niloc);
 void ALLOC_particles_F77(f_int *n_part);
 void REALLOC_particles_F77(f_int *n_part_n);
-void ALLOC_field_F77(void);
 void FREE_particles_F77(void);
-void FREE_field_F77(void);
+void FIELDS_alloc_F77(void);
+void FIELDS_free_F77(void);
 
 void PIC_fax_F77(f_real *f);
 void PIC_fay_F77(f_real *f);
@@ -478,17 +478,23 @@ ALLOC_field()
 {
   SET_param_domain();
   SET_subdomain();
-  ALLOC_field_F77();
+  FIELDS_alloc_F77();
   // the callback function below will have magically been called,
   // setting __f_flds
   return __f_flds;
 }
 
 void
-C_alloc_field_cb_F77(f_real *ne, f_real *ni, f_real *nn,
-		     f_real *jxi, f_real *jyi, f_real *jzi,
-		     f_real *ex, f_real *ey, f_real *ez,
-		     f_real *bx, f_real *by, f_real *bz)
+FREE_field(void)
+{
+  FIELDS_free_F77();
+}
+
+void
+C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
+		      f_real *jxi, f_real *jyi, f_real *jzi,
+		      f_real *ex, f_real *ey, f_real *ez,
+		      f_real *bx, f_real *by, f_real *bz)
 {
   __f_flds[NE] = ne;
   __f_flds[NI] = ni;
@@ -508,11 +514,5 @@ void
 FREE_particles(void)
 {
   FREE_particles_F77();
-}
-
-void
-FREE_field(void)
-{
-  FREE_field_F77();
 }
 

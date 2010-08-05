@@ -6,7 +6,8 @@ bin_PROGRAMS = VLI VLA SELECT
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
-	PIC_variables.F VLA_variables.F
+	PIC_variables.F VLA_variables.F \
+	FIELDS.F
 
 if USE_PML
 libpsc_a_SOURCES += PML.F PIC_pml_msa.F PIC_pml_msb.F
@@ -36,7 +37,7 @@ libpsc_a_SOURCES += \
 	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
 	SERV_labelgen.F SERV_systime.F \
-	ALLOC_particles.F ALLOC_field.F \
+	ALLOC_particles.F \
 	INIT_param.F INIT_field.F \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
