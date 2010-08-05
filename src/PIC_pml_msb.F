@@ -6,6 +6,7 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
 
       use PIC_variables
       use VLA_variables
+      use fields
 
       implicit none
 
