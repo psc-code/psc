@@ -253,9 +253,7 @@ OUT_part()
 void
 SET_param_pml()
 {
-#ifdef USE_PML
   SET_param_pml_F77(&psc.pml.thick, &psc.pml.cushion, &psc.pml.size, &psc.pml.order);
-#endif
 }
 
 real
@@ -412,21 +410,21 @@ PIC_msa()
 {
   INIT_grid_map();
   SET_param_coeff();
-#ifdef USE_PML
-  PIC_pml_msa_F77();
-#else
-  PIC_msa_F77();
-#endif
+  if (psc.domain.use_pml) {
+    PIC_pml_msa_F77();
+  } else {
+    PIC_msa_F77();
+  }
 }
 
 void
 PIC_msb()
 {
-#ifdef USE_PML
-  PIC_pml_msb_F77(); 
-#else
-  PIC_msb_F77(); 
-#endif
+  if (psc.domain.use_pml) {
+    PIC_pml_msb_F77(); 
+  } else {
+    PIC_msb_F77(); 
+  }
 }
 
 // ----------------------------------------------------------------------

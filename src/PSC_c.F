@@ -4,7 +4,7 @@
 c     wrapper for C to be able to access these parameters
 
       subroutine GET_param_domain(length, itot, in, ix,
-     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd)
+     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
       use VLA_variables
       use PIC_variables
@@ -15,6 +15,7 @@ c     wrapper for C to be able to access these parameters
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
+      integer :: use_pml_
 
       length(1)=lengthx
       length(2)=lengthy
@@ -51,12 +52,14 @@ c     wrapper for C to be able to access these parameters
       rd(2)=rd2
       rd(3)=rd3
 
+      use_pml_ = use_pml
+
       end subroutine GET_param_domain
 
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_domain(length, itot, in, ix,
-     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd)
+     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
       use VLA_variables
       use PIC_variables
@@ -67,6 +70,7 @@ c     wrapper for C to be able to set these parameters
       integer :: itot(3), in(3), ix(3)
       integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
+      integer :: use_pml_
 
       lengthx=length(1)
       lengthy=length(2)
@@ -102,6 +106,8 @@ c     wrapper for C to be able to set these parameters
       rd1=rd(1)
       rd2=rd(2)
       rd3=rd(3)
+
+      use_pml = use_pml_
 
       end subroutine SET_param_domain
 

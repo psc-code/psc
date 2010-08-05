@@ -224,6 +224,7 @@ struct psc_domain {
   int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
   int nghost[3];
   int nproc[3];
+  bool use_pml;
 };
 
 // ----------------------------------------------------------------------

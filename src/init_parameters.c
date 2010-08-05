@@ -61,6 +61,8 @@ static struct param psc_domain_descr[] = {
   { "nproc_x",        VAR(nproc[0])        , PARAM_INT(1)         },
   { "nproc_y",        VAR(nproc[1])        , PARAM_INT(1)         },
   { "nproc_z",        VAR(nproc[2])        , PARAM_INT(1)         },
+
+  { "use_pml",        VAR(use_pml)         , PARAM_BOOL(1)        },
   {},
 };
 
@@ -82,6 +84,7 @@ init_param_domain()
 
   SET_param_pml();
 
+  bool need_pml = false;
   for (int d = 0; d < 3; d++) {
     if (domain->ihi[d] - domain->ilo[d] == 1) {
       // if invariant in this direction:
@@ -93,7 +96,16 @@ init_param_domain()
     } else {
       // on every proc, need domain at least nghost wide
       assert((domain->ihi[d] - domain->ilo[d]) >= domain->nproc[d] * domain->nghost[d]);
+      if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
+	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
+	need_pml = true;
+      }
     }
+  }
+  if (need_pml && !psc.domain.use_pml) {
+    fprintf(stderr,
+	    "ERROR: use_pml is disabled but pml boundary conditions requested.\n");
+    abort();
   }
 }
 
@@ -368,10 +380,10 @@ void INIT_param_domain_F77(void);
 void INIT_param_psc_F77(void);
 void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
-			  f_int *nproc, f_int *nghost);
+			  f_int *nproc, f_int *nghost, f_int *use_pml);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
-			  f_int *nproc, f_int *nghost);
+			  f_int *nproc, f_int *nghost, f_int *use_pml);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
@@ -390,8 +402,11 @@ GET_param_domain()
   struct psc_domain *p = &psc.domain;
   int imax[3];
 
+  int use_pml_;
   GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
-		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost);
+		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost,
+		       &use_pml_);
+  p->use_pml = use_pml_;
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
   }
@@ -406,8 +421,9 @@ SET_param_domain()
   for (int d = 0; d < 3; d++) {
     imax[d] = p->ihi[d] - 1;
   }
+  int use_pml_ = p->use_pml;
   SET_param_domain_F77(p->length, p->itot, p->ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, p->nproc, p->nghost);
+		       p->bnd_part, p->nproc, p->nghost, &use_pml_);
 }
 
 void
