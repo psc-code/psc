@@ -14,6 +14,9 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       use PIC_variables
       use VLA_variables
       use fields
+#ifdef USE_PML
+      use fields_pml
+#endif
 
       implicit none
       integer :: j1,j2,j3,k1,k2,l1,l2,l3

@@ -5,19 +5,6 @@
       implicit none
 
 #ifdef USE_PML
-c jxi-jzi: charge and current densities
-
-! for the pml the declaration of d and h field is required
-! dvx-hz: additional em field arrays
-! dvx-dvz is chosen because of the existence of dx-dz for spatial range
-
-      real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
-
-! electric and magnetic permittivity tensors
-
-      real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
-
       real(kind=8) dx2A,dy2A,dz2A,hx2A,hy2A,hz2A  ! ab  
       real(kind=8) dx2B,dy2B,dz2B,hx2B,hy2B,hz2B  ! ab
       real(kind=8) poyx1i,poyx1o,poyx2i,poyx2o                 ! ab
@@ -306,3 +293,24 @@ c jxi-jzi: current densities
 
       end module fields
 
+#ifdef USE_PML
+
+c     ======================================================================
+      module fields_pml
+c     ======================================================================
+      implicit none
+
+! for the pml the declaration of d and h field is required
+! dvx-hz: additional em field arrays
+! dvx-dvz is chosen because of the existence of dx-dz for spatial range
+
+      real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
+      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
+
+! electric and magnetic permittivity tensors
+
+      real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
+
+      end module fields_pml
+
+#endif

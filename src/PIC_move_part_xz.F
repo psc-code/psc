@@ -365,6 +365,9 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use fields
+#ifdef USE_PML
+      use fields_pml
+#endif
 
       implicit none
 

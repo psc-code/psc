@@ -1,3 +1,6 @@
+
+#include "config.h"
+
 c THIS SUBROUTINE DETERMINES A 3D SOLUTION OF MAXWELLS EQUATIONS.
 c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
 
@@ -7,6 +10,9 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
       use PIC_variables
       use VLA_variables
       use fields
+#ifdef USE_PML
+      use fields_pml
+#endif
 
       implicit none
 
