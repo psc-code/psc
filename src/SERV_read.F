@@ -130,10 +130,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       call OUT_FIELDS_serv_read
 
-#ifdef USE_PML
-      call OUT_serv_read_fields_pml
-#endif
-
       cpu=0.0d0
       cpu_ary=0.0d0
 
