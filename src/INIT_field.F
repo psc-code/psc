@@ -7,6 +7,7 @@ c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
+      use out_fields
 
       implicit none
 
@@ -105,6 +106,7 @@ c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
 
       use PIC_variables
       use VLA_variables
+      use fields
 
       implicit none
       integer :: l1,l2,l3
@@ -148,6 +150,7 @@ C     set up various things after the main fields have been initialized
 
       use PIC_variables
       use VLA_variables
+      use out_fields
 
       implicit none
       integer :: l1,l2,l3

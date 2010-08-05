@@ -4,26 +4,6 @@
       module VLA_variables
       implicit none
 
-c ex-bz: em field arrays 
-c ne-nn: charge densities
-c jxi-jzi: current densities
-
-      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
-      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz
-      real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
-      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
-
-c ext-bzt: time averaged field
-c net: time averaged electron density
-c nit: time averaged ion density
-c nnt: time averaged neutral density
-c jxit-jzit: time averaged current density
-
-      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
-      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
-      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
-      real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
-
 #ifdef USE_PML
 c jxi-jzi: charge and current densities
 
@@ -336,3 +316,36 @@ c     ======================================================================
 
       end subroutine PIC_set_variables
 
+c     ======================================================================
+      module fields
+c     ======================================================================
+      implicit none
+
+c ex-bz: em field arrays 
+c ne-nn: charge densities
+c jxi-jzi: current densities
+
+      real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
+      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz
+      real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
+      real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
+
+      end module fields
+
+c     ======================================================================
+      module out_fields
+c     ======================================================================
+      implicit none
+
+c ext-bzt: time averaged field
+c net: time averaged electron density
+c nit: time averaged ion density
+c nnt: time averaged neutral density
+c jxit-jzit: time averaged current density
+
+      real(kind=4),allocatable,dimension(:,:,:) :: ext,eyt,ezt
+      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt
+      real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
+      real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
+
+      end module out_fields

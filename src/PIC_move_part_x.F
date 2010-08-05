@@ -13,6 +13,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
       use PIC_variables
       use VLA_variables
+      use fields
 
       implicit none
       integer :: j1,j2,j3,k1,l1,l2,l3

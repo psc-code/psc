@@ -6,6 +6,8 @@ c FIELD OUTPUT!
 
       use PIC_variables
       use VLA_variables
+      use fields
+      use out_fields
 
       implicit none
       integer :: i1a,i1e,i2a,i2e,i3a,i3e

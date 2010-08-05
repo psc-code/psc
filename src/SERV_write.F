@@ -4,6 +4,8 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
 
       use VLA_variables
       use PIC_variables
+      use fields
+      use out_fields
 
       implicit none
 

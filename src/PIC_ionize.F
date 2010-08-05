@@ -7,6 +7,7 @@ c korrigierte Version
 
       use PIC_variables
       use VLA_variables
+      use fields
 
       implicit none
       integer :: m,le,la

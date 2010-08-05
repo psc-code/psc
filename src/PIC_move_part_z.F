@@ -331,6 +331,7 @@ c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
+      use fields
 
       implicit none
 
