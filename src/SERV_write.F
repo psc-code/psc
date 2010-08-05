@@ -74,54 +74,6 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
 
       call OUT_FIELDS_serv_write
 
-#ifdef USE_PML
-      do i3=i3mn,i3mx,100
-         i3e=min(i3+99,i3mx)
-         do i2=i2mn,i2mx,100
-            i2e=min(i2+99,i2mx)
-            do i1=i1mn,i1mx,100
-               i1e=min(i1+99,i1mx)
-               write(10) (((hxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((hyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((hzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((ex2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((ey2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((ez2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((bx2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((by2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((bz2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((hx2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((hy2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((hz2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jxexit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jyeyit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jzezit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((poyxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((poyyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((poyzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-            enddo
-         enddo
-      enddo
-#endif
-
       close(10)
 
       end subroutine SERV_write
