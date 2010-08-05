@@ -1,6 +1,5 @@
 #include "config.h"
 
-
 c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       subroutine SERV_read
@@ -8,7 +7,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       use VLA_variables
       use PIC_variables
       use fields
-      use out_fields_pml
 
       implicit none
 
@@ -83,24 +81,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       call OUT_alloc_fields
 #ifdef USE_PML
-      allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ex2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ey2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ez2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(by2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jxexit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jyeyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jzezit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(poyzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      call OUT_alloc_fields_pml
 #endif
 
       allocate(cpu(1:5))
@@ -123,24 +104,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       call OUT_setup_fields
 #ifdef USE_PML
-      hxt=0.0d0
-      hyt=0.0d0
-      hzt=0.0d0
-      ex2t=0.0d0
-      ey2t=0.0d0
-      ez2t=0.0d0
-      bx2t=0.0d0
-      by2t=0.0d0
-      bz2t=0.0d0
-      hx2t=0.0d0
-      hy2t=0.0d0
-      hz2t=0.0d0
-      jxexit=0.0d0
-      jyeyit=0.0d0
-      jzezit=0.0d0
-      poyxt=0.0d0
-      poyyt=0.0d0
-      poyzt=0.0d0
+      call OUT_setup_fields_pml
 #endif
 
       do i1=0,11*niloc+10,100
@@ -185,51 +149,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       call OUT_serv_read_fields
 
 #ifdef USE_PML
-      do i3=i3mn,i3mx,100
-         i3e=min(i3+99,i3mx)
-         do i2=i2mn,i2mx,100
-            i2e=min(i2+99,i2mx)
-            do i1=i1mn,i1mx,100
-               i1e=min(i1+99,i1mx)
-               read(10) (((hxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((ex2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((ey2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((ez2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bx2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((by2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bz2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hx2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hy2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hz2t(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jxexit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jyeyit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jzezit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((poyxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((poyyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((poyzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-            enddo
-         enddo
-      enddo
+      call OUT_serv_read_fields_pml
 #endif
 
       cpu=0.0d0
