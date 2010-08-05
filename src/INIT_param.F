@@ -211,16 +211,6 @@ c     setup processor map
 
       implicit none
 
-! PML PARAMETERS - added by ab
-
-! deltax: thickness of pml in x direction
-! deltay: thickness of pml in y direction
-! deltaz: thickness of pml in z direction
-
-      deltax = thick*dx
-      deltay = thick*dy
-      deltaz = thick*dz
-
 #ifdef USE_PML
       call PML_coeff_init_param
 #endif
@@ -444,11 +434,6 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
 ! size: thickness of pml and buffer region in gridpoints
 ! pml: polynomial order of pml
 
-      thick = 10
-      cushion = int(thick/3)
-      size = thick+cushion
-      pml = 3
-       
       end subroutine INIT_param_domain
 
 c     initialize some parameters

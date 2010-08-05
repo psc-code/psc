@@ -189,7 +189,7 @@ c UPDATING LOCAL BOUNDARY e4
       endif
       endif
 
-
+#ifdef USE_PML
 ! pml continuation at y1
 
       if (nodej.eq.1) then
@@ -224,7 +224,7 @@ c UPDATING LOCAL BOUNDARY e4
 c            boundary_pml_y1 = 'done'
          endif
       endif
-
+#endif
 
 c UPDATING LOCAL e2
 
@@ -323,6 +323,7 @@ c UPDATING LOCAL BOUNDARY e2
       endif
 
 
+#ifdef USE_PML
 ! pml continuation at y2
 
       if (nodej.eq.ynpe) then
@@ -357,7 +358,7 @@ c UPDATING LOCAL BOUNDARY e2
 c            boundary_pml_y2 = 'done'
          endif
       endif
-
+#endif
 
       deallocate(rimy)
 

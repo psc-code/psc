@@ -101,6 +101,11 @@ c     ======================================================================
 c     ======================================================================
       implicit none
 
+! cushion: thickness of buffer between pml region and free space
+! pml: polynomial order of pml
+
+      integer cushion, pml
+
 ! kappax_max, sigmax_max: attenuation coefficients in x direction
 ! kappay_max, sigmay_max: attenuation coefficients in y direction
 ! kappaz_max, sigmaz_max: attenuation coefficients in z direction
@@ -140,13 +145,28 @@ c     ======================================================================
 c     ----------------------------------------------------------------------
       subroutine PML_coeff_init_param
 c     ----------------------------------------------------------------------
-c     attenuation factors
 
       use VLA_variables
       use coeff_pml
 
       implicit none
       
+      thick = 10
+      cushion = int(thick/3)
+      size = thick+cushion
+      pml = 3
+       
+! PML PARAMETERS - added by ab
+
+! deltax: thickness of pml in x direction
+! deltay: thickness of pml in y direction
+! deltaz: thickness of pml in z direction
+
+      deltax = thick*dx
+      deltay = thick*dy
+      deltaz = thick*dz
+
+! attenuation factors
       kappax_max = 1.34
       sigmax_max = 13.8*eps0/deltax
 

@@ -214,12 +214,14 @@ c     wrapper for C to be able to set these coefficients
 
       end subroutine SET_param_coeff
 
+#ifdef USE_PML
 c     wrapper for C to be able to set pml parameters
 
       subroutine SET_param_pml(thick_, cushion_, size_, pml_)
 
       use VLA_variables
       use PIC_variables
+      use coeff_pml
 
       implicit none
 
@@ -231,6 +233,7 @@ c     wrapper for C to be able to set pml parameters
       pml = pml_
 
       end subroutine SET_param_pml
+#endif
 
 c     ----------------------------------------------------------------------
       subroutine SET_subdomain(i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_,

@@ -23,6 +23,7 @@ c     ----------------------------------------------------------------------
 
 ! x
 
+#ifdef USE_PML
       allocate(kappax(i1mn-rd1:i1mx+rd1))
       allocate(sigmax(i1mn-rd1:i1mx+rd1))
       
@@ -83,6 +84,7 @@ c     ----------------------------------------------------------------------
       allocate(gcz(i3mn-rd3:i3mx+rd3))
       allocate(gdz(i3mn-rd3:i3mx+rd3))
       allocate(gez(i3mn-rd3:i3mx+rd3))
+#endif
 
 #ifdef USE_PML
       call PML_fields_alloc

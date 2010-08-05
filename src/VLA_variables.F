@@ -174,11 +174,9 @@ c boundary_part_z: particle boundary conditions in z
       real(kind=8) pos_z2
 
 ! thick: thickness of pml in gridpoints
-! cushion: thickness of buffer between pml region and free space
 ! size: thickness of pml and buffer region in gridpoints
-! pml: polynomial order of pml
 
-      integer thick, cushion, size, pml
+      integer thick, size
 
 ! pmlcheck hacky globals...
 

@@ -253,7 +253,9 @@ OUT_part()
 void
 SET_param_pml()
 {
+#ifdef USE_PML
   SET_param_pml_F77(&psc.pml.thick, &psc.pml.cushion, &psc.pml.size, &psc.pml.order);
+#endif
 }
 
 real
