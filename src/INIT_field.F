@@ -2,10 +2,8 @@
 #include "config.h"
 
 c     ----------------------------------------------------------------------
-      subroutine ALLOC_field_fortran
+      subroutine OUT_alloc_fields
 c     ----------------------------------------------------------------------
-
-      use PIC_variables
       use VLA_variables
       use out_fields
 
@@ -24,6 +22,42 @@ c     ----------------------------------------------------------------------
       allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       
+      end subroutine OUT_alloc_fields
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_setup_fields
+c     ----------------------------------------------------------------------
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      ext=0.0d0
+      eyt=0.0d0
+      ezt=0.0d0
+      bxt=0.0d0
+      byt=0.0d0
+      bzt=0.0d0
+      jxit=0.0d0
+      jyit=0.0d0
+      jzit=0.0d0
+      net=0.0d0
+      nit=0.0d0
+      nnt=0.0d0
+
+      end subroutine OUT_setup_fields
+
+c     ----------------------------------------------------------------------
+      subroutine ALLOC_field_fortran
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+
+      implicit none
+
+      call OUT_alloc_fields
+
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
 
@@ -150,7 +184,6 @@ C     set up various things after the main fields have been initialized
 
       use PIC_variables
       use VLA_variables
-      use out_fields
 
       implicit none
       integer :: l1,l2,l3
@@ -194,19 +227,7 @@ c FIXME
 
 c setting up time-averaged fields
 
-
-      ext=0.0d0
-      eyt=0.0d0
-      ezt=0.0d0
-      bxt=0.0d0
-      byt=0.0d0
-      bzt=0.0d0
-      jxit=0.0d0
-      jyit=0.0d0
-      jzit=0.0d0
-      net=0.0d0
-      nit=0.0d0
-      nnt=0.0d0
+      call OUT_setup_fields
 
 #ifdef USE_PML
       call PML_setup_field

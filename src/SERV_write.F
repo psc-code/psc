@@ -1,11 +1,56 @@
 c CHECKPOINTING ROUTINE FOR SIMULATION DATA
 
+      subroutine OUT_serv_write_fields
+
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      integer i1a,i1e,i2a,i2e,i3a,i3e
+
+      do i3=i3mn,i3mx,100
+         i3e=min(i3+99,i3mx)
+         do i2=i2mn,i2mx,100
+            i2e=min(i2+99,i2mx)
+            do i1=i1mn,i1mx,100
+               i1e=min(i1+99,i1mx)
+               write(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+               write(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                      i2a=i2,i2e),i3a=i3,i3e)
+            enddo
+         enddo
+      enddo
+
+      end subroutine OUT_serv_write_fields
+
+
       subroutine SERV_write(timestep)
 
       use VLA_variables
       use PIC_variables
       use fields
-      use out_fields
 
       implicit none
 
@@ -45,7 +90,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
          i1e=min(i1+99,11*niloc+10)
          write(10) (p_niloc(i1a),i1a=i1,i1e)
       enddo
-            
+
       do i3=i3mn-rd3,i3mx+rd3,100
          i3e=min(i3+99,i3mx+rd3)
          do i2=i2mn-rd2,i2mx+rd2,100
@@ -80,39 +125,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
          enddo
       enddo
 
-      do i3=i3mn,i3mx,100
-         i3e=min(i3+99,i3mx)
-         do i2=i2mn,i2mx,100
-            i2e=min(i2+99,i2mx)
-            do i1=i1mn,i1mx,100
-               i1e=min(i1+99,i1mx)
-               write(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-               write(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                      i2a=i2,i2e),i3a=i3,i3e)
-            enddo
-         enddo
-      enddo
+      call OUT_serv_write_fields
 
 #ifdef USE_PML
       do i3=i3mn,i3mx,100

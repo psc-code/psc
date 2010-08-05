@@ -1,5 +1,51 @@
 #include "config.h"
 
+      subroutine OUT_serv_read_fields
+
+      use VLA_variables
+      use out_fields
+
+      implicit none
+
+      integer i1a,i1e,i2a,i2e,i3a,i3e
+
+      do i3=i3mn,i3mx,100
+         i3e=min(i3+99,i3mx)
+         do i2=i2mn,i2mx,100
+            i2e=min(i2+99,i2mx)
+            do i1=i1mn,i1mx,100
+               i1e=min(i1+99,i1mx)
+               read(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+               read(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
+     &                     i2a=i2,i2e),i3a=i3,i3e)
+            enddo
+         enddo
+      enddo
+
+      end subroutine OUT_serv_read_fields
+
+
 c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       subroutine SERV_read
@@ -7,7 +53,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       use VLA_variables
       use PIC_variables
       use fields
-      use out_fields
 
       implicit none
 
@@ -80,18 +125,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       allocate(nn(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
-      allocate(ext(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(eyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(ezt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(byt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(bzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(net(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(nit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(nnt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jxit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
+      call OUT_alloc_fields
 #ifdef USE_PML
       allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
@@ -131,18 +165,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       ni=0.0d0
       nn=0.0d0
 
-      ext=0.0d0
-      eyt=0.0d0
-      ezt=0.0d0
-      bxt=0.0d0
-      byt=0.0d0
-      bzt=0.0d0
-      net=0.0d0
-      nit=0.0d0
-      nnt=0.0d0
-      jxit=0.0d0
-      jyit=0.0d0
-      jzit=0.0d0
+      call OUT_setup_fields
 #ifdef USE_PML
       hxt=0.0d0
       hyt=0.0d0
@@ -203,39 +226,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
          enddo
       enddo
 
-      do i3=i3mn,i3mx,100
-         i3e=min(i3+99,i3mx)
-         do i2=i2mn,i2mx,100
-            i2e=min(i2+99,i2mx)
-            do i1=i1mn,i1mx,100
-               i1e=min(i1+99,i1mx)
-               read(10) (((ext(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((eyt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((ezt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((net(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((nit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((nnt(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jxit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jyit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((jzit(i1a,i2a,i3a),i1a=i1,i1e),
-     &                     i2a=i2,i2e),i3a=i3,i3e)
-            enddo
-         enddo
-      enddo
+      call OUT_serv_read_fields
 
 #ifdef USE_PML
       do i3=i3mn,i3mx,100
