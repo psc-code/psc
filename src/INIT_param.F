@@ -24,6 +24,11 @@ c cpus: WALL CLOCK time at start time
 
       call SERV_systime(cpus)
 
+      allocate(cpu(1:5))
+      allocate(cpu_ary(1:5,0:npe-1))
+      cpu=0.0d0
+      cpu_ary=0.0d0
+
       end subroutine INIT_basic
 
 c PARAMETER INITIALIZATION 

@@ -68,10 +68,8 @@ psc_log_step(double stats[NR_STATS])
   }
 }
 
-#define ALLOC_field_fortran_F77 F77_FUNC_(alloc_field_fortran, ALLOC_FIELD_FORTRAN)
 #define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
 
-void ALLOC_field_fortran_F77(void);
 void SETUP_field_F77(void);
 
 /////////////////////////////////////////////////////////////////////////
@@ -86,7 +84,6 @@ psc_integrate()
     pr = prof_register("psc_step", 1., 0, 0);
   }
 
-  ALLOC_field_fortran_F77();
   SETUP_field_F77();
 
   double stats[NR_STATS];

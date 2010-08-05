@@ -1,22 +1,6 @@
 
 #include "config.h"
 
-c     ----------------------------------------------------------------------
-      subroutine ALLOC_field_fortran
-c     ----------------------------------------------------------------------
-
-      use PIC_variables
-      use VLA_variables
-
-      implicit none
-
-      allocate(cpu(1:5))
-      allocate(cpu_ary(1:5,0:npe-1))
-      cpu=0.0d0
-      cpu_ary=0.0d0
-
-      end subroutine ALLOC_field_fortran
-
 c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
 
 
