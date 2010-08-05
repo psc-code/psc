@@ -2,7 +2,7 @@
 #include "config.h"
 
 c     ======================================================================
-      module out_poyn
+      module OUT_POYN
 c     ======================================================================
       implicit none
 
@@ -20,9 +20,10 @@ c     ======================================================================
       end module out_poyn
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_poyn_setup
+      subroutine OUT_POYN_alloc
 c     ----------------------------------------------------------------------
-      use out_poyn
+
+      use OUT_POYN
 
       implicit none
       
@@ -51,15 +52,15 @@ c     ----------------------------------------------------------------------
       enDZt=0.0d0   ! ab
 #endif
 
-      end subroutine OUT_poyn_setup
+      end subroutine OUT_POYN_ALLOC
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_poyn_serv_write
+      subroutine OUT_POYN_serv_write
 c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
-      use out_poyn
+      use OUT_POYN
 
       write(10) fluxit,fluxot
       write(10) ent,poxt,poyt,pozt,jet
@@ -69,15 +70,16 @@ c     ----------------------------------------------------------------------
       write(10) enBXt,enBYt,enBZt
 #endif
 
-      end subroutine OUT_poyn_serv_write
+      end subroutine OUT_POYN_serv_write
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_poyn_serv_read
+      subroutine OUT_POYN_serv_read
 c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
-      use out_poyn
+      use OUT_POYN
+
       read(10) fluxit,fluxot
       read(10) ent,poxt,poyt,pozt,jet
       read(10) enEXt,enEYt,enEZt
@@ -86,7 +88,7 @@ c     ----------------------------------------------------------------------
       read(10) enBXt,enBYt,enBZt
 #endif
 
-      end subroutine OUT_poyn_serv_read
+      end subroutine OUT_POYN_serv_read
 
 c THIS SUBROUTINE CHECKS THE POYNTING LAW IN 3D.
 
@@ -96,7 +98,7 @@ c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
-      use out_poyn
+      use OUT_POYN
 
       implicit none
 
@@ -131,13 +133,8 @@ c Time-averaging
          enBZt=enBZt+bz2B-bz2A
 #endif
 
-#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#else
-         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
@@ -170,13 +167,8 @@ c         jet=jet+dt*je
          enBZt=enBZt+bz2B-bz2A
 #endif
 
-#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#else
-         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
@@ -212,13 +204,8 @@ c         jet=jet+dt*je
          enBZt=enBZt+bz2B-bz2A
 #endif
 
-#ifdef USE_PML
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#else
-         ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
-#endif
 
          poxt=poxt+dt*pox
          poyt=poyt+dt*poy
