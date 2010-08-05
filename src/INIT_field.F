@@ -7,9 +7,6 @@ c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
-#ifdef USE_PML
-      use coeff_pml
-#endif
 
       implicit none
 
@@ -18,75 +15,8 @@ c     ----------------------------------------------------------------------
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
 
-! array allocation
-! size of pml should be equal to size of em field arrays
-
-! x
-
 #ifdef USE_PML
-      allocate(kappax(i1mn-rd1:i1mx+rd1))
-      allocate(sigmax(i1mn-rd1:i1mx+rd1))
-      
-      allocate(cxp(i1mn-rd1:i1mx+rd1))
-      allocate(cxm(i1mn-rd1:i1mx+rd1))
-     
-      allocate(fbx(i1mn-rd1:i1mx+rd1))
-      allocate(fcx(i1mn-rd1:i1mx+rd1))
-      allocate(fdx(i1mn-rd1:i1mx+rd1))
-      allocate(fex(i1mn-rd1:i1mx+rd1))
-
-      allocate(bxp(i1mn-rd1:i1mx+rd1))
-      allocate(bxm(i1mn-rd1:i1mx+rd1))
-      
-      allocate(gbx(i1mn-rd1:i1mx+rd1))
-      allocate(gcx(i1mn-rd1:i1mx+rd1))
-      allocate(gdx(i1mn-rd1:i1mx+rd1))
-      allocate(gex(i1mn-rd1:i1mx+rd1))
-
-! y
-      
-      allocate(kappay(i2mn-rd2:i2mx+rd2))
-      allocate(sigmay(i2mn-rd2:i2mx+rd2))
-      
-      allocate(cyp(i2mn-rd2:i2mx+rd2))
-      allocate(cym(i2mn-rd2:i2mx+rd2))
-      
-      allocate(fby(i2mn-rd2:i2mx+rd2))
-      allocate(fcy(i2mn-rd2:i2mx+rd2))
-      allocate(fdy(i2mn-rd2:i2mx+rd2))
-      allocate(fey(i2mn-rd2:i2mx+rd2))
-
-      allocate(byp(i2mn-rd2:i2mx+rd2))
-      allocate(bym(i2mn-rd2:i2mx+rd2))
-      
-      allocate(gby(i2mn-rd2:i2mx+rd2))
-      allocate(gcy(i2mn-rd2:i2mx+rd2))
-      allocate(gdy(i2mn-rd2:i2mx+rd2))
-      allocate(gey(i2mn-rd2:i2mx+rd2))
-
-! z
-      
-      allocate(kappaz(i3mn-rd3:i3mx+rd3))
-      allocate(sigmaz(i3mn-rd3:i3mx+rd3))
-      
-      allocate(czp(i3mn-rd3:i3mx+rd3))
-      allocate(czm(i3mn-rd3:i3mx+rd3))
-      
-      allocate(fbz(i3mn-rd3:i3mx+rd3))
-      allocate(fcz(i3mn-rd3:i3mx+rd3))
-      allocate(fdz(i3mn-rd3:i3mx+rd3))
-      allocate(fez(i3mn-rd3:i3mx+rd3))
-
-      allocate(bzp(i3mn-rd3:i3mx+rd3))
-      allocate(bzm(i3mn-rd3:i3mx+rd3))
-      
-      allocate(gbz(i3mn-rd3:i3mx+rd3))
-      allocate(gcz(i3mn-rd3:i3mx+rd3))
-      allocate(gdz(i3mn-rd3:i3mx+rd3))
-      allocate(gez(i3mn-rd3:i3mx+rd3))
-#endif
-
-#ifdef USE_PML
+      call PML_coeff_alloc
       call PML_fields_alloc
 #endif
 
