@@ -27,13 +27,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       write(10) tmnvp,tmxvp
       write(10) tmnvc,tmxvc
 
-      write(10) fluxit,fluxot
-      write(10) ent,poxt,poyt,pozt,jet
-      write(10) enEXt,enEYt,enEZt
-      write(10) enBXt,enBYt,enBZt
-#ifdef USE_PML
-      write(10) enHXt,enHYt,enHZt
-#endif
+      call OUT_poyn_serv_write
       write(10) sum_fed,sum_ped
 
 

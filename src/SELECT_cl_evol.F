@@ -4,6 +4,7 @@
 
       use PIC_variables
       use VLA_variables
+      use out_poyn
 
       implicit none
       integer tm,time,tstart,tend,tstep

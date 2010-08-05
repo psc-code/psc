@@ -27,7 +27,7 @@ libpsc_a_SOURCES = \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
 	PIC_msa.F PIC_msb.F \
 	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
-	OUT_field.F OUT_part.F \
+	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
 	SERV_labelgen.F SERV_systime.F \
 	ALLOC_particles.F ALLOC_field.F \
@@ -68,7 +68,7 @@ endif
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
 	SERV_write.F \
-	OUT_param.F OUT_part.F OUT_poyc.F \
+	OUT_param.F OUT_part.F \
 	OUT_count.F OUT_energy.F \
 	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
@@ -79,7 +79,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
 	SERV_write.F SERV_read.F \
-	OUT_param.F OUT_poyc.F \
+	OUT_param.F \
 	OUT_count.F OUT_energy.F \
 	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \

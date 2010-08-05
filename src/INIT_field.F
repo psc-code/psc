@@ -269,28 +269,7 @@ c     ----------------------------------------------------------------------
       mu = 1.0
 
       call OUT_setup_fields_pml
-
-      fluxit=0.0d0
-      fluxot=0.0d0
-
-      enEXt=0.0d0
-      enEYt=0.0d0
-      enEZt=0.0d0
-      enBXt=0.0d0
-      enBYt=0.0d0
-      enBZt=0.0d0
-      enHXt=0.0d0   ! ab
-      enHYt=0.0d0   ! ab
-      enHZt=0.0d0   ! ab
-      enDXt=0.0d0   ! ab
-      enDYt=0.0d0   ! ab
-      enDZt=0.0d0   ! ab
-
-      ent=0.0d0
-      poxt=0.0d0
-      poyt=0.0d0
-      pozt=0.0d0
-      jet=0.0d0
+      call OUT_poyn_setup
 
       sum_fed=0.0d0
       sum_ped=0.0d0

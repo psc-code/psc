@@ -38,13 +38,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       if (tmnvc.lt.tmnvco) tmnvc=tmnvco
       if (tmxvc.lt.tmxvco) tmxvc=tmxvco
 
-      read(10) fluxit,fluxot
-      read(10) ent,poxt,poyt,pozt,jet
-      read(10) enEXt,enEYt,enEZt
-      read(10) enBXt,enBYt,enBZt
-#ifdef USE_PML      
-      read(10) enHXt,enHYt,enHZt
-#endif
+      call OUT_poyn_serv_read
       read(10) sum_fed,sum_ped
 
 

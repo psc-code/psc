@@ -1,12 +1,102 @@
+
 #include "config.h"
 
-c THIS SUBROUTINE CHECKS THE POYNTING LAW IN 3D.
+c     ======================================================================
+      module out_poyn
+c     ======================================================================
+      implicit none
 
+      real(kind=8) fluxit,fluxot
+      real(kind=8) ent,poxt,poyt,pozt,jet
+      real(kind=8) enEXt,enEYt,enEZt
+      real(kind=8) enBXt,enBYt,enBZt
 
-      subroutine OUT_poyc
+#ifdef USE_PML
+      real(kind=8) enHXt,enHYt,enHZt            ! ab
+      real(kind=8) enDXt,enDYt,enDZt            ! ab
+      real(kind=8) poynit, poynot               ! ab
+#endif
+
+      end module out_poyn
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_poyn_setup
+c     ----------------------------------------------------------------------
+      use out_poyn
+
+      implicit none
+      
+      fluxit=0.0d0
+      fluxot=0.0d0
+
+      ent=0.0d0
+      poxt=0.0d0
+      poyt=0.0d0
+      pozt=0.0d0
+      jet=0.0d0
+
+      enEXt=0.0d0
+      enEYt=0.0d0
+      enEZt=0.0d0
+      enBXt=0.0d0
+      enBYt=0.0d0
+      enBZt=0.0d0
+
+#ifdef USE_PML
+      enHXt=0.0d0   ! ab
+      enHYt=0.0d0   ! ab
+      enHZt=0.0d0   ! ab
+      enDXt=0.0d0   ! ab
+      enDYt=0.0d0   ! ab
+      enDZt=0.0d0   ! ab
+#endif
+
+      end subroutine OUT_poyn_setup
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_poyn_serv_write
+c     ----------------------------------------------------------------------
 
       use PIC_variables
       use VLA_variables
+      use out_poyn
+
+      write(10) fluxit,fluxot
+      write(10) ent,poxt,poyt,pozt,jet
+      write(10) enEXt,enEYt,enEZt
+      write(10) enBXt,enBYt,enBZt
+#ifdef USE_PML
+      write(10) enHXt,enHYt,enHZt
+#endif
+
+      end subroutine OUT_poyn_serv_write
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_poyn_serv_read
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+      use out_poyn
+      read(10) fluxit,fluxot
+      read(10) ent,poxt,poyt,pozt,jet
+      read(10) enEXt,enEYt,enEZt
+      read(10) enBXt,enBYt,enBZt
+#ifdef USE_PML      
+      read(10) enHXt,enHYt,enHZt
+#endif
+
+      end subroutine OUT_poyn_serv_read
+
+c THIS SUBROUTINE CHECKS THE POYNTING LAW IN 3D.
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_poyc
+c     ----------------------------------------------------------------------
+
+      use PIC_variables
+      use VLA_variables
+      use out_poyn
 
       implicit none
 

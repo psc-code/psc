@@ -24,12 +24,6 @@ c jxi-jzi: charge and current densities
       real(kind=8) poyy1i,poyy1o,poyy2i,poyy2o                 ! ab
       real(kind=8) poyz1i,poyz1o,poyz2i,poyz2o                 ! ab
       real(kind=8) poyni, poyno                 ! ab
-      real(kind=8) enHXt,enHYt,enHZt            ! ab
-      real(kind=8) enDXt,enDYt,enDZt            ! ab
-      real(kind=8) poyx1it,poyx1ot,poyx2it,poyx2ot             ! ab
-      real(kind=8) poyy1it,poyy1ot,poyy2it,poyy2ot             ! ab
-      real(kind=8) poyz1it,poyz1ot,poyz2it,poyz2ot             ! ab
-      real(kind=8) poynit, poynot               ! ab
 #endif
 
 c seg_i1: x-label of distributed data segment
@@ -85,11 +79,6 @@ c np:  number of timesteps for time-averaging
       real(kind=8) pox,poy,poz,je
       real(kind=8) p2A,p2B
       real(kind=8) sum_fed,sum_ped
-
-      real(kind=8) fluxit,fluxot
-      real(kind=8) enEXt,enEYt,enEZt
-      real(kind=8) enBXt,enBYt,enBZt
-      real(kind=8) ent,poxt,poyt,pozt,jet
 
 c i0: irradiance in Wum**2/m**2
 c n0: peak atom density in m**3
