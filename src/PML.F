@@ -9,7 +9,7 @@ c     ======================================================================
 ! dvx-dvz is chosen because of the existence of dx-dz for spatial range
 
       real(kind=8),allocatable,dimension(:,:,:) :: dvx,dvy,dvz   ! added by ab
-      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz   ! added by ab
+      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz   ! added by ab
 
 ! electric and magnetic permittivity tensors
 
@@ -36,13 +36,13 @@ c     ----------------------------------------------------------------------
      &            i3mn-rd3:i3mx+rd3))
 
 
-      ! additional h field - added by ab
+      ! additional b field - added by ab
 
-      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(bx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(by(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(bz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
 
       ! electric and magnetic permittivity tensors - added by ab
@@ -57,9 +57,9 @@ c     ----------------------------------------------------------------------
       dvx=0.0d0
       dvy=0.0d0
       dvz=0.0d0
-      hx=0.0d0
-      hy=0.0d0
-      hz=0.0d0
+      bx=0.0d0
+      by=0.0d0
+      bz=0.0d0
       eps = 1.0
       mu = 1.0
 
@@ -81,9 +81,9 @@ c     ----------------------------------------------------------------------
       dvx=ex
       dvy=ey
       dvz=ez
-      hx=bx
-      hy=by
-      hz=bz
+      bx=hx
+      by=hy
+      bz=hz
       
       ! initialisation of permittivity tensors, always set to 1.0
       ! due to scaling these are dimensionless

@@ -200,9 +200,9 @@ c PREPARATION
             read(12) enHYt
             read(12) enHZt
 #ifdef USE_PML
-            read(12) enHXt       ! ab
-            read(12) enHYt       ! ab
-            read(12) enHZt       ! ab
+            read(12) enBXt       ! ab
+            read(12) enBYt       ! ab
+            read(12) enBZt       ! ab
 #endif
             read(12) ent
             read(12) poxt
@@ -223,13 +223,13 @@ c PREPARATION
             glo_enEXt=glo_enEXt+enEXt
             glo_enEYt=glo_enEYt+enEYt
             glo_enEZt=glo_enEZt+enEZt
-            glo_enBXt=glo_enBXt+enHXt
-            glo_enBYt=glo_enBYt+enHYt
-            glo_enBZt=glo_enBZt+enHZt
-#ifdef USE_PML
             glo_enHXt=glo_enHXt+enHXt
             glo_enHYt=glo_enHYt+enHYt
             glo_enHZt=glo_enHZt+enHZt
+#ifdef USE_PML
+            glo_enBXt=glo_enBXt+enBXt
+            glo_enBYt=glo_enBYt+enBYt
+            glo_enBZt=glo_enBZt+enBZt
 #endif
 
             glo_ent=glo_ent+ent
@@ -379,9 +379,9 @@ c PREPARATION
             read(12) enHYt
             read(12) enHZt
 #ifdef USE_PML
-            read(12) enHXt   ! ab
-            read(12) enHYt   ! ab
-            read(12) enHZt   ! ab
+            read(12) enBXt   ! ab
+            read(12) enBYt   ! ab
+            read(12) enBZt   ! ab
 #endif
             read(12) ent
             read(12) poxt
@@ -403,9 +403,9 @@ c PREPARATION
             sum_enHYt=sum_enHYt+enHYt
             sum_enHZt=sum_enHZt+enHZt
 #ifdef USE_PML
-            sum_enHXt=sum_enHXt+enHXt    ! ab
-            sum_enHYt=sum_enHYt+enHYt    ! ab 
-            sum_enHZt=sum_enHZt+enHZt    ! ab
+            sum_enBXt=sum_enBXt+enBXt    ! ab
+            sum_enBYt=sum_enBYt+enBYt    ! ab 
+            sum_enBZt=sum_enBZt+enBZt    ! ab
 #endif
 
             sum_ent=sum_ent+ent
@@ -438,9 +438,9 @@ c PREPARATION
             write(11,*) 'ENHY:',enHYt*unit,'mJ'
             write(11,*) 'ENHZ:',enHZt*unit,'mJ'
 #ifdef USE_PML
-            write(11,*) 'ENHX:',enHXt*unit,'mJ'   ! ab
-            write(11,*) 'ENHY:',enHYt*unit,'mJ'   ! ab
-            write(11,*) 'ENHZ:',enHZt*unit,'mJ'   ! ab
+            write(11,*) 'ENBX:',enBXt*unit,'mJ'   ! ab
+            write(11,*) 'ENBY:',enBYt*unit,'mJ'   ! ab
+            write(11,*) 'ENBZ:',enBZt*unit,'mJ'   ! ab
 #endif
             write(11,*) '------------------------------------------'
             write(11,*) 'TOTAL ENERGY DISTRIBUTION (LIGHT)'

@@ -13,11 +13,11 @@ c jxit-jzit: time averaged charge and current densities
 c jxexit-jzezit: time averaged energy depositions
 c poyxt-poyzt: time averaged poynting vector
 
-      real(kind=4),allocatable,dimension(:,:,:) :: hxt,hyt,hzt      ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: bxt,byt,bzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dxt,dyt,dzt      ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: ex2t,ey2t,ez2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
-      real(kind=4),allocatable,dimension(:,:,:) :: hx2t,hy2t,hz2t   ! ab
+      real(kind=4),allocatable,dimension(:,:,:) :: bx2t,by2t,bz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: dx2t,dy2t,dz2t   ! ab
       real(kind=4),allocatable,dimension(:,:,:) :: jxexit,jyeyit,jzezit
       real(kind=4),allocatable,dimension(:,:,:) :: poyxt,poyyt,poyzt
@@ -33,9 +33,9 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      allocate(hxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(hyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
-      allocate(hzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(bxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(byt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
+      allocate(bzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(dxt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(dyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
       allocate(dzt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))    ! ab
@@ -45,9 +45,9 @@ c     ----------------------------------------------------------------------
       allocate(hx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(hy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(hz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
-      allocate(hx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(hy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
-      allocate(hz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(bx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(by2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
+      allocate(bz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dx2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dy2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
       allocate(dz2t(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))   ! ab
@@ -69,9 +69,9 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      hxt=0.0d0       ! ab
-      hyt=0.0d0       ! ab
-      hzt=0.0d0       ! ab
+      bxt=0.0d0       ! ab
+      byt=0.0d0       ! ab
+      bzt=0.0d0       ! ab
       dxt=0.0d0       ! ab
       dyt=0.0d0       ! ab
       dzt=0.0d0       ! ab
@@ -81,9 +81,9 @@ c     ----------------------------------------------------------------------
       hx2t=0.0d0
       hy2t=0.0d0
       hz2t=0.0d0
-      hx2t=0.0d0      ! ab
-      hy2t=0.0d0      ! ab
-      hz2t=0.0d0      ! ab
+      bx2t=0.0d0      ! ab
+      by2t=0.0d0      ! ab
+      bz2t=0.0d0      ! ab
       dx2t=0.0d0      ! ab
       dy2t=0.0d0      ! ab
       dz2t=0.0d0      ! ab
@@ -113,11 +113,11 @@ c     ----------------------------------------------------------------------
             i2e=min(i2+99,i2mx)
             do i1=i1mn,i1mx,100
                i1e=min(i1+99,i1mx)
-               read(10) (((hxt(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((bxt(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hyt(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((byt(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hzt(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((bzt(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
                read(10) (((ex2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
@@ -131,11 +131,11 @@ c     ----------------------------------------------------------------------
      &                     i2a=i2,i2e),i3a=i3,i3e)
                read(10) (((hz2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hx2t(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((bx2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hy2t(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((by2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((hz2t(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((bz2t(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
                read(10) (((jxexit(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
@@ -340,10 +340,10 @@ c     ----------------------------------------------------------------------
       real(kind=8) :: nes,nis,nns
       real(kind=8) :: jxis,jyis,jzis
 #ifdef USE_PML
-      real(kind=8) :: hxs,hys,hzs
+      real(kind=8) :: bxs,bys,bzs
       real(kind=8) :: ex2s,ey2s,ez2s
       real(kind=8) :: hx2s,hy2s,hz2s
-      real(kind=8) :: hx2s,hy2s,hz2s
+      real(kind=8) :: bx2s,by2s,bz2s
       real(kind=8) :: jxexis,jyeyis,jzezis
       real(kind=8) :: poyxs,poyys,poyzs
 #endif
@@ -385,9 +385,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
          hyt=0.0
          hzt=0.0
 #ifdef USE_PML
-         hxt=0.0
-         hyt=0.0
-         hzt=0.0
+         bxt=0.0
+         byt=0.0
+         bzt=0.0
 
          jxexit=0.0
          jyeyit=0.0
@@ -402,9 +402,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
          hx2t=0.0
          hy2t=0.0
          hz2t=0.0
-         hx2t=0.0
-         hy2t=0.0
-         hz2t=0.0
+         bx2t=0.0
+         by2t=0.0
+         bz2t=0.0
 #endif
          do i3=i3mn,i3mx
             do i2=i2mn,i2mx
@@ -426,12 +426,12 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
      &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
 #ifdef USE_PML
-                  hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
-     &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
-                  hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
-     &                      +hy(i1-1,i2,i3)+hy(i1-1,i2,i3-1))
-                  hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
-     &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
+                  bxs=0.25*(bx(i1,i2,i3)+bx(i1,i2,i3-1)
+     &                      +bx(i1,i2-1,i3)+bx(i1,i2-1,i3-1))
+                  bys=0.25*(by(i1,i2,i3)+by(i1,i2,i3-1)
+     &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
+                  bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
+     &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
                   jxexis=exs*jxis
                   jyeyis=eys*jyis
                   jzezis=ezs*jzis
@@ -464,9 +464,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
 #ifdef USE_PML
-                  hxt(i1,i2,i3)=hxt(i1,i2,i3)+0.5*hxs/np
-                  hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
-                  hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
+                  bxt(i1,i2,i3)=bxt(i1,i2,i3)+0.5*bxs/np
+                  byt(i1,i2,i3)=byt(i1,i2,i3)+0.5*bys/np
+                  bzt(i1,i2,i3)=bzt(i1,i2,i3)+0.5*bzs/np
                   jxexit(i1,i2,i3)=jxexit(i1,i2,i3)+0.5*jxexis/np
                   jyeyit(i1,i2,i3)=jyeyit(i1,i2,i3)+0.5*jyeyis/np
                   jzezit(i1,i2,i3)=jzezit(i1,i2,i3)+0.5*jzezis/np
@@ -512,12 +512,12 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
      &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
 #ifdef USE_PML
-                  hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
-     &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
-                  hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
-     &                      +hy(i1-1,i2,i3)+hy(i1-1,i2,i3-1))
-                  hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
-     &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
+                  bxs=0.25*(bx(i1,i2,i3)+bx(i1,i2,i3-1)
+     &                      +bx(i1,i2-1,i3)+bx(i1,i2-1,i3-1))
+                  bys=0.25*(by(i1,i2,i3)+by(i1,i2,i3-1)
+     &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
+                  bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
+     &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
                   jxexis=exs*jxis
                   jyeyis=eys*jyis
                   jzezis=ezs*jzis
@@ -533,9 +533,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2s=hxs*hxs
                   hy2s=hys*hys
                   hz2s=hzs*hzs
-                  hx2s=hxs*hxs
-                  hy2s=hys*hys
-                  hz2s=hzs*hzs
+                  bx2s=bxs*bxs
+                  by2s=bys*bys
+                  bz2s=bzs*bzs
 #endif
                   net(i1,i2,i3)=net(i1,i2,i3)+nes/np
                   nit(i1,i2,i3)=nit(i1,i2,i3)+nis/np
@@ -550,9 +550,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+hzs/np
 #ifdef USE_PML
-                  hxt(i1,i2,i3)=hxt(i1,i2,i3)+hxs/np
-                  hyt(i1,i2,i3)=hyt(i1,i2,i3)+hys/np
-                  hzt(i1,i2,i3)=hzt(i1,i2,i3)+hzs/np
+                  bxt(i1,i2,i3)=bxt(i1,i2,i3)+bxs/np
+                  byt(i1,i2,i3)=byt(i1,i2,i3)+bys/np
+                  bzt(i1,i2,i3)=bzt(i1,i2,i3)+bzs/np
                   jxexit(i1,i2,i3)=jxexit(i1,i2,i3)+jxexis/np
                   jyeyit(i1,i2,i3)=jyeyit(i1,i2,i3)+jyeyis/np
                   jzezit(i1,i2,i3)=jzezit(i1,i2,i3)+jzezis/np
@@ -565,9 +565,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+hx2s/np
                   hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+hy2s/np
                   hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+hz2s/np
-                  hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+hx2s/np
-                  hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+hy2s/np
-                  hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+hz2s/np
+                  bx2t(i1,i2,i3)=bx2t(i1,i2,i3)+bx2s/np
+                  by2t(i1,i2,i3)=by2t(i1,i2,i3)+by2s/np
+                  bz2t(i1,i2,i3)=bz2t(i1,i2,i3)+bz2s/np
 #endif
                enddo
             enddo
@@ -600,12 +600,12 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
      &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
 #ifdef USE_PML
-                  hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
-     &                      +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
-                  hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
-     &                      +hy(i1-1,i2,i3)+hy(i1-1,i2,i3-1))
-                  hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
-     &                      +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
+                  bxs=0.25*(bx(i1,i2,i3)+bx(i1,i2,i3-1)
+     &                      +bx(i1,i2-1,i3)+bx(i1,i2-1,i3-1))
+                  bys=0.25*(by(i1,i2,i3)+by(i1,i2,i3-1)
+     &                      +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
+                  bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
+     &                      +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
                   jxexis=exs*jxis
                   jyeyis=eys*jyis
                   jzezis=ezs*jzis
@@ -621,9 +621,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2s=hxs*hxs
                   hy2s=hys*hys
                   hz2s=hzs*hzs
-                  hx2s=hxs*hxs
-                  hy2s=hys*hys
-                  hz2s=hzs*hzs
+                  bx2s=bxs*bxs
+                  by2s=bys*bys
+                  bz2s=bzs*bzs
 #endif
                   net(i1,i2,i3)=net(i1,i2,i3)+0.5*nes/np
                   nit(i1,i2,i3)=nit(i1,i2,i3)+0.5*nis/np
@@ -638,9 +638,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
                   hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
 #ifdef USE_PML
-                  hxt(i1,i2,i3)=hxt(i1,i2,i3)+0.5*hxs/np
-                  hyt(i1,i2,i3)=hyt(i1,i2,i3)+0.5*hys/np
-                  hzt(i1,i2,i3)=hzt(i1,i2,i3)+0.5*hzs/np
+                  bxt(i1,i2,i3)=bxt(i1,i2,i3)+0.5*bxs/np
+                  byt(i1,i2,i3)=byt(i1,i2,i3)+0.5*bys/np
+                  bzt(i1,i2,i3)=bzt(i1,i2,i3)+0.5*bzs/np
                   jxexit(i1,i2,i3)=jxexit(i1,i2,i3)+0.5*jxexis/np
                   jyeyit(i1,i2,i3)=jyeyit(i1,i2,i3)+0.5*jyeyis/np
                   jzezit(i1,i2,i3)=jzezit(i1,i2,i3)+0.5*jzezis/np
@@ -653,9 +653,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                   hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+0.5*hx2s/np
                   hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+0.5*hy2s/np
                   hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+0.5*hz2s/np
-                  hx2t(i1,i2,i3)=hx2t(i1,i2,i3)+0.5*hx2s/np
-                  hy2t(i1,i2,i3)=hy2t(i1,i2,i3)+0.5*hy2s/np
-                  hz2t(i1,i2,i3)=hz2t(i1,i2,i3)+0.5*hz2s/np
+                  bx2t(i1,i2,i3)=bx2t(i1,i2,i3)+0.5*bx2s/np
+                  by2t(i1,i2,i3)=by2t(i1,i2,i3)+0.5*by2s/np
+                  bz2t(i1,i2,i3)=bz2t(i1,i2,i3)+0.5*bz2s/np
 #endif
                enddo
             enddo
@@ -710,9 +710,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      write(11) sngl(hys)
                      write(11) sngl(hzs)
 #ifdef USE_PML
-                     hxs=hxt(i1,i2,i3)
-                     hys=hyt(i1,i2,i3)
-                     hzs=hzt(i1,i2,i3)
+                     bxs=bxt(i1,i2,i3)
+                     bys=byt(i1,i2,i3)
+                     bzs=bzt(i1,i2,i3)
                      jxexis=jxexit(i1,i2,i3)
                      jyeyis=jyeyit(i1,i2,i3)
                      jzezis=jzezit(i1,i2,i3)
@@ -725,9 +725,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      hx2s=hx2t(i1,i2,i3)
                      hy2s=hy2t(i1,i2,i3)
                      hz2s=hz2t(i1,i2,i3)
-                     hx2s=hx2t(i1,i2,i3)
-                     hy2s=hy2t(i1,i2,i3)
-                     hz2s=hz2t(i1,i2,i3)
+                     bx2s=bx2t(i1,i2,i3)
+                     by2s=by2t(i1,i2,i3)
+                     bz2s=bz2t(i1,i2,i3)
                      write(11) sngl(hxs)
                      write(11) sngl(hys)
                      write(11) sngl(hzs)
@@ -743,9 +743,9 @@ c CALCULATION OF TIME AVERAGED FIELDS
                      write(11) sngl(hx2s)
                      write(11) sngl(hy2s)
                      write(11) sngl(hz2s)
-                     write(11) sngl(hx2s)
-                     write(11) sngl(hy2s)
-                     write(11) sngl(hz2s)
+                     write(11) sngl(bx2s)
+                     write(11) sngl(by2s)
+                     write(11) sngl(bz2s)
 #endif
 
                   endif
@@ -821,12 +821,12 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      write(11) sngl(hzs)
 
 #ifdef USE_PML
-                     hxs=0.25*(hx(i1,i2,i3)+hx(i1,i2,i3-1)
-     &                         +hx(i1,i2-1,i3)+hx(i1,i2-1,i3-1))
-                     hys=0.25*(hy(i1,i2,i3)+hy(i1,i2,i3-1)
-     &                         +hy(i1-1,i2,i3)+hy(i1-1,i2,i3-1))
-                     hzs=0.25*(hz(i1,i2,i3)+hz(i1,i2-1,i3)
-     &                         +hz(i1-1,i2,i3)+hz(i1-1,i2-1,i3))
+                     bxs=0.25*(bx(i1,i2,i3)+bx(i1,i2,i3-1)
+     &                         +bx(i1,i2-1,i3)+bx(i1,i2-1,i3-1))
+                     bys=0.25*(by(i1,i2,i3)+by(i1,i2,i3-1)
+     &                         +by(i1-1,i2,i3)+by(i1-1,i2,i3-1))
+                     bzs=0.25*(bz(i1,i2,i3)+bz(i1,i2-1,i3)
+     &                         +bz(i1-1,i2,i3)+bz(i1-1,i2-1,i3))
                      jxexis=exs*jxis
                      jyeyis=eys*jyis
                      jzezis=ezs*jzis
@@ -842,12 +842,12 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      hx2s=hxs*hxs
                      hy2s=hys*hys
                      hz2s=hzs*hzs
-                     hx2s=hxs*hxs
-                     hy2s=hys*hys
-                     hz2s=hzs*hzs
-                     write(11) sngl(hxs)
-                     write(11) sngl(hys)
-                     write(11) sngl(hzs)
+                     bx2s=bxs*bxs
+                     by2s=bys*bys
+                     bz2s=bzs*bzs
+                     write(11) sngl(bxs)
+                     write(11) sngl(bys)
+                     write(11) sngl(bzs)
                      write(11) sngl(jxexis)
                      write(11) sngl(jyeyis)
                      write(11) sngl(jzezis)
@@ -860,9 +860,9 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
                      write(11) sngl(hx2s)
                      write(11) sngl(hy2s)
                      write(11) sngl(hz2s)
-                     write(11) sngl(hx2s)
-                     write(11) sngl(hy2s)
-                     write(11) sngl(hz2s)
+                     write(11) sngl(bx2s)
+                     write(11) sngl(by2s)
+                     write(11) sngl(bz2s)
 #endif
 
                   endif
