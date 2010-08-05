@@ -87,18 +87,18 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
       +h0z*F3(EZ, j1,j2,l3)
       +h1z*F3(EZ, j1,j2,l3+1);
 
-    creal bxq =
-       hmz*F3(BX, j1,l2,l3-1)
-      +h0z*F3(BX, j1,l2,l3)
-      +h1z*F3(BX, j1,l2,l3+1);
-    creal byq =
-       hmz*F3(BY, l1,j2,l3-1)
-      +h0z*F3(BY, l1,j2,l3)
-      +h1z*F3(BY, l1,j2,l3+1);
-    creal bzq =
-       gmz*F3(BZ, l1,l2,j3-1)
-      +g0z*F3(BZ, l1,l2,j3)
-      +g1z*F3(BZ, l1,l2,j3+1);
+    creal hxq =
+       hmz*F3(HX, j1,l2,l3-1)
+      +h0z*F3(HX, j1,l2,l3)
+      +h1z*F3(HX, j1,l2,l3+1);
+    creal hyq =
+       hmz*F3(HY, l1,j2,l3-1)
+      +h0z*F3(HY, l1,j2,l3)
+      +h1z*F3(HY, l1,j2,l3+1);
+    creal hzq =
+       gmz*F3(HZ, l1,l2,j3-1)
+      +g0z*F3(HZ, l1,l2,j3)
+      +g1z*F3(HZ, l1,l2,j3+1);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -108,9 +108,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     creal pzm = part->pzi + dq*ezq;
 
     root = dq / creal_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    creal taux = bxq*root;
-    creal tauy = byq*root;
-    creal tauz = bzq*root;
+    creal taux = hxq*root;
+    creal tauy = hyq*root;
+    creal tauz = hzq*root;
 
     creal tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
     creal pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 

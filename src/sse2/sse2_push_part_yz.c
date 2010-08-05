@@ -163,7 +163,7 @@ form_factor_l(pvReal *h, pvReal * restrict xlx){
 static void
 push_pi_dt(struct particle_vec * p,
 	   pvReal * exq, pvReal * eyq,  pvReal * ezq,
-	   pvReal * bxq, pvReal * byq,  pvReal * bzq,
+	   pvReal * hxq, pvReal * hyq,  pvReal * hzq,
 	   pvReal * dqs){
 
   pvReal tmpx, tmpy, tmpz, root;
@@ -194,9 +194,9 @@ push_pi_dt(struct particle_vec * p,
   root.r = pv_sqrt_real(root.r);
   root.r = pv_div_real(dq.r, root.r);
 
-  taux.r = pv_mul_real(bxq->r, root.r);
-  tauy.r = pv_mul_real(byq->r, root.r);
-  tauz.r = pv_mul_real(bzq->r, root.r);
+  taux.r = pv_mul_real(hxq->r, root.r);
+  tauy.r = pv_mul_real(hyq->r, root.r);
+  tauz.r = pv_mul_real(hzq->r, root.r);
 
   txx.r = pv_mul_real(taux.r, taux.r);
   tyy.r = pv_mul_real(tauy.r, tauy.r);
@@ -382,9 +382,9 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &pf->flds[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &pf->flds[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &pf->flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + 0 - psc.ilg[0]];
   
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -480,19 +480,19 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     //---------------------------------------------
     // Field Interpolation
     
-    pvReal exq, eyq, ezq, bxq, byq, bzq;
+    pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
     INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
     INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
     INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(BX,l2,l3,h,h,bxq);
-    INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
-    INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
+    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
  
     //---------------------------------------------
     // Advance momenta one full dt
 
-    push_pi_dt(&p, &exq, &eyq, &ezq, &bxq, &byq, &bzq, &dqs);
+    push_pi_dt(&p, &exq, &eyq, &ezq, &hxq, &hyq, &hzq, &dqs);
 
     //---------------------------------------------
     // Half step particles with new momenta
@@ -594,9 +594,9 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + 0 - psc.ilg[0]]; 
     sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + 0 - psc.ilg[0]];
     sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BXpoint = &pf->flds[BX*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BYpoint = &pf->flds[BY*psc.fld_size + 0 - psc.ilg[0]];
-    sse2_real * restrict BZpoint = &pf->flds[BZ*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + 0 - psc.ilg[0]];
+    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + 0 - psc.ilg[0]];
 
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -708,14 +708,14 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     //---------------------------------------------
     // Field Interpolation
     
-    pvReal exq, eyq, ezq, bxq, byq, bzq;
+    pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
     INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
     INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
     INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(BX,l2,l3,h,h,bxq);
-    INTERP_FIELD_YZ(BY,j2,l3,h,g,byq);
-    INTERP_FIELD_YZ(BZ,l2,j3,g,h,bzq);
+    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
 
     //---------------------------------------------
     // Calculate current density form factors
@@ -735,7 +735,7 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     //---------------------------------------------
     // Advance momenta one full dt
 
-    push_pi_dt(&p, &exq, &eyq, &ezq, &bxq, &byq, &bzq, &dqs);
+    push_pi_dt(&p, &exq, &eyq, &ezq, &hxq, &hyq, &hzq, &dqs);
 
     //---------------------------------------------
     // Half step particles with new momenta

@@ -52,10 +52,10 @@ main(int argc, char **argv)
   // psc_dump_field(EX, "ex2");
   // psc_dump_field(EY, "ey2");
   // psc_dump_field(EZ, "ez2");
-  // psc_dump_field(BX, "bx2");
-  // psc_dump_field(BY, "by2");
-  // psc_dump_field(BZ, "bz2");
-  psc_check_fields_ref((int []) { EX, EY, EZ, BX, BY, BZ, -1 }, 1e-7);
+  // psc_dump_field(HX, "hx2");
+  // psc_dump_field(HY, "hy2");
+  // psc_dump_field(HZ, "hz2");
+  psc_check_fields_ref((int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_destroy();
 
   // test push_field_a
@@ -74,10 +74,10 @@ main(int argc, char **argv)
   psc_dump_field(EX, "ex2");
   psc_dump_field(EY, "ey2");
   psc_dump_field(EZ, "ez2");
-  psc_dump_field(BX, "bx2");
-  psc_dump_field(BY, "by2");
-  psc_dump_field(BZ, "bz2");
-  psc_check_fields_ref((int []) { EX, EY, EZ, BX, BY, BZ, -1 }, 1e-7);
+  psc_dump_field(HX, "hx2");
+  psc_dump_field(HY, "hy2");
+  psc_dump_field(HZ, "hz2");
+  psc_check_fields_ref((int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_destroy();
 
   prof_print();

@@ -17,7 +17,7 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
   [X_NE]   = "ne"  , [X_NI]   = "ni"  , [X_NN]   = "nn",
   [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
   [X_EX]   = "ex"  , [X_EY]   = "ey"  , [X_EZ]   = "ez",
-  [X_BX]   = "bx"  , [X_BY]   = "by"  , [X_BZ]   = "bz",
+  [X_HX]   = "hx"  , [X_HY]   = "hy"  , [X_HZ]   = "hz",
   [X_JXEX] = "jxex", [X_JYEY] = "jyey", [X_JZEZ] = "jzez",
   [X_POYX] = "poyx", [X_POYY] = "poyy", [X_POYZ] = "poyz",
   [X_E2X ] = "e2x" , [X_E2Y]  = "e2y" , [X_E2Z]  = "e2z",
@@ -78,18 +78,18 @@ calculate_pfields(struct psc_extra_fields *p)
            p->all[X_EZ][j] = .5f * ( F3_BASE(EZ,ix,iy,iz)
                                     +F3_BASE(EZ,ix,iy,iz-1));
 
-           p->all[X_BX][j] =  .25f * ( F3_BASE(BX,ix,iy,iz)
-                                      +F3_BASE(BX,ix,iy-1,iz)
-                                      +F3_BASE(BX,ix,iy,iz-1) 
-  			              +F3_BASE(BX,ix,iy-1,iz-1));
-           p->all[X_BY][j] =  .25f * ( F3_BASE(BY,ix,iy,iz)
-                                      +F3_BASE(BY,ix-1,iy,iz)
-                                      +F3_BASE(BY,ix,iy,iz-1) 
-				      +F3_BASE(BY,ix-1,iy,iz-1));
-           p->all[X_BZ][j] =  .25f * ( F3_BASE(BZ,ix,iy,iz)
-                                      +F3_BASE(BZ,ix-1,iy,iz)
-                                      +F3_BASE(BZ,ix,iy-1,iz) 
-                                      +F3_BASE(BZ,ix-1,iy-1,iz));
+           p->all[X_HX][j] =  .25f * ( F3_BASE(HX,ix,iy,iz)
+                                      +F3_BASE(HX,ix,iy-1,iz)
+                                      +F3_BASE(HX,ix,iy,iz-1) 
+  			              +F3_BASE(HX,ix,iy-1,iz-1));
+           p->all[X_HY][j] =  .25f * ( F3_BASE(HY,ix,iy,iz)
+                                      +F3_BASE(HY,ix-1,iy,iz)
+                                      +F3_BASE(HY,ix,iy,iz-1) 
+				      +F3_BASE(HY,ix-1,iy,iz-1));
+           p->all[X_HZ][j] =  .25f * ( F3_BASE(HZ,ix,iy,iz)
+                                      +F3_BASE(HZ,ix-1,iy,iz)
+                                      +F3_BASE(HZ,ix,iy-1,iz) 
+                                      +F3_BASE(HZ,ix-1,iy-1,iz));
 
            p->all[X_JXI][j] = .5f * ( F3_BASE(JXI,ix,iy,iz) + F3_BASE(JXI,ix-1,iy,iz) );
            p->all[X_JYI][j] = .5f * ( F3_BASE(JYI,ix,iy,iz) + F3_BASE(JYI,ix,iy-1,iz) );
@@ -99,17 +99,17 @@ calculate_pfields(struct psc_extra_fields *p)
            p->all[X_JYEY][j] = p->all[X_JYI][j] * p->all[X_EY][j];
            p->all[X_JZEZ][j] = p->all[X_JZI][j] * p->all[X_EZ][j];
 
-           p->all[X_POYX][j] = p->all[X_EY][j] * p->all[X_BZ][j] - p->all[X_EZ][j] * p->all[X_BY][j];
-           p->all[X_POYY][j] = p->all[X_EZ][j] * p->all[X_BX][j] - p->all[X_EX][j] * p->all[X_BZ][j];
-           p->all[X_POYZ][j] = p->all[X_EX][j] * p->all[X_BY][j] - p->all[X_EY][j] * p->all[X_BX][j];
+           p->all[X_POYX][j] = p->all[X_EY][j] * p->all[X_HZ][j] - p->all[X_EZ][j] * p->all[X_HY][j];
+           p->all[X_POYY][j] = p->all[X_EZ][j] * p->all[X_HX][j] - p->all[X_EX][j] * p->all[X_HZ][j];
+           p->all[X_POYZ][j] = p->all[X_EX][j] * p->all[X_HY][j] - p->all[X_EY][j] * p->all[X_HX][j];
 
            p->all[X_E2X][j] = p->all[X_EX][j]*p->all[X_EX][j];
            p->all[X_E2Y][j] = p->all[X_EY][j]*p->all[X_EY][j];
            p->all[X_E2Z][j] = p->all[X_EZ][j]*p->all[X_EZ][j];
 
-           p->all[X_B2X][j] = p->all[X_BX][j]*p->all[X_BX][j];
-           p->all[X_B2Y][j] = p->all[X_BY][j]*p->all[X_BY][j];
-           p->all[X_B2Z][j] = p->all[X_BZ][j]*p->all[X_BZ][j];
+           p->all[X_B2X][j] = p->all[X_HX][j]*p->all[X_HX][j];
+           p->all[X_B2Y][j] = p->all[X_HY][j]*p->all[X_HY][j];
+           p->all[X_B2Z][j] = p->all[X_HZ][j]*p->all[X_HZ][j];
 
            j++;
          }
@@ -200,9 +200,9 @@ static struct param psc_output_c_descr[] = {
   { "output_write_ex"    , VAR(dowrite_fd[X_EX])     , PARAM_BOOL(1)        },
   { "output_write_ey"    , VAR(dowrite_fd[X_EY])     , PARAM_BOOL(1)        },
   { "output_write_ez"    , VAR(dowrite_fd[X_EZ])     , PARAM_BOOL(1)        },
-  { "output_write_bx"    , VAR(dowrite_fd[X_BX])     , PARAM_BOOL(1)        },
-  { "output_write_by"    , VAR(dowrite_fd[X_BY])     , PARAM_BOOL(1)        },
-  { "output_write_bz"    , VAR(dowrite_fd[X_BZ])     , PARAM_BOOL(1)        },
+  { "output_write_hx"    , VAR(dowrite_fd[X_HX])     , PARAM_BOOL(1)        },
+  { "output_write_hy"    , VAR(dowrite_fd[X_HY])     , PARAM_BOOL(1)        },
+  { "output_write_hz"    , VAR(dowrite_fd[X_HZ])     , PARAM_BOOL(1)        },
   { "output_write_jxex"  , VAR(dowrite_fd[X_JXEX])   , PARAM_BOOL(0)        },
   { "output_write_jyey"  , VAR(dowrite_fd[X_JYEY])   , PARAM_BOOL(0)        },
   { "output_write_jzez"  , VAR(dowrite_fd[X_JZEZ])   , PARAM_BOOL(0)        },

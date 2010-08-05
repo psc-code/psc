@@ -63,35 +63,35 @@ void PIC_push_part_xz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
-			  f_real *bx, f_real *by, f_real *bz);
+			  f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_yz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
 			  f_real *ne, f_real *ni, f_real *nn,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
-			  f_real *bx, f_real *by, f_real *bz);
+			  f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_yz_a_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
 			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
-			    f_real *bx, f_real *by, f_real *bz);
+			    f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_yz_b_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
 			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
-			    f_real *bx, f_real *by, f_real *bz);
+			    f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_z_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			 f_real *p2A, f_real *p2B,
 			 f_real *ne, f_real *ni, f_real *nn,
 			 f_real *jxi, f_real *jyi, f_real *jzi,
 			 f_real *ex, f_real *ey, f_real *ez,
-			 f_real *bx, f_real *by, f_real *bz);
+			 f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_sort_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
@@ -168,7 +168,7 @@ PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
 		       pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		       pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
+		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
@@ -178,7 +178,7 @@ PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf)
   PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		       pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
+		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
@@ -189,7 +189,7 @@ PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf)
 			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-			 pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
+			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
@@ -200,7 +200,7 @@ PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf)
 			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-			 pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
+			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
@@ -211,7 +211,7 @@ PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf)
 		      pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		      pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
+		      pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
@@ -494,7 +494,7 @@ void
 C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
 		      f_real *jxi, f_real *jyi, f_real *jzi,
 		      f_real *ex, f_real *ey, f_real *ez,
-		      f_real *bx, f_real *by, f_real *bz)
+		      f_real *hx, f_real *hy, f_real *hz)
 {
   __f_flds[NE] = ne;
   __f_flds[NI] = ni;
@@ -505,9 +505,9 @@ C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
   __f_flds[EX] = ex;
   __f_flds[EY] = ey;
   __f_flds[EZ] = ez;
-  __f_flds[BX] = bx;
-  __f_flds[BY] = by;
-  __f_flds[BZ] = bz;
+  __f_flds[HX] = hx;
+  __f_flds[HY] = hy;
+  __f_flds[HZ] = hz;
 }
 
 void

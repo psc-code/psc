@@ -106,7 +106,7 @@ thinfoil_init_field(struct psc_case *Case)
 
 	// FIXME, why this time?
 	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-	F3_BASE(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+	F3_BASE(HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
       }
     }
   }

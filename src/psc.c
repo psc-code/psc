@@ -608,7 +608,7 @@ const char *fldname[NR_FIELDS] = {
   [EX]  = "ex",
   [EY]  = "ey",
   [EZ]  = "ez",
-  [BX]  = "bx",
-  [BY]  = "by",
-  [BZ]  = "bz",
+  [HX]  = "hx",
+  [HY]  = "hy",
+  [HZ]  = "hz",
 };

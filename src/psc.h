@@ -29,7 +29,7 @@ enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
   EX , EY , EZ ,
-  BX , BY , BZ ,
+  HX , HY , HZ ,
   NR_FIELDS,
 };
 

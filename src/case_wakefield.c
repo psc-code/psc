@@ -104,7 +104,7 @@ wakefield_init_field(struct psc_case *Case)
 	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
 
 	// FIXME, this pulse needs a - to propagate in the right direction (+z)
-	F3_BASE(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+	F3_BASE(HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
       }
     }
   }
