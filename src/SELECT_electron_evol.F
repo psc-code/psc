@@ -24,7 +24,7 @@
       call SERV_labelgen(tm,label)
       do pec=0,xnpe*ynpe*znpe-1
          call SERV_labelgen(pec,node)
-         open(11,file='./'//node//'electron'//label,
+         open(11,file=trim(data_out)//'/'//node//'electron'//label,
      &        access='sequential',form='unformatted')
          read(11,end=3001) cori,shift_z
  3000    read(11,end=3001) xi,yi,zi,pxi,pyi,pzi,qni,mni,cni,lni,wni
@@ -34,7 +34,7 @@
       enddo
 
 
-      open(12,file='./'//'E'//label//'.data',
+      open(12,file=trim(data_processed)//'/'//'E'//label//'.data',
      &     access='sequential',form='formatted')
 
       write(12,1000) nc
@@ -51,7 +51,7 @@
       call SERV_labelgen(tm,label)
       do pec=0,xnpe*ynpe*znpe-1
          call SERV_labelgen(pec,node)
-         open(11,file='./'//node//'electron'//label,
+         open(11,file=trim(data_out)//'/'//node//'electron'//label,
      &        access='sequential',form='unformatted')
          read(11,end=2001) cori,shift_z
  2000    read(11,end=2001) xi,yi,zi,pxi,pyi,pzi,qni,mni,cni,lni,wni
