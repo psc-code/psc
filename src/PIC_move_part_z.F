@@ -343,7 +343,7 @@ c     ----------------------------------------------------------------------
       call SERV_systime(cpug)
 
       call PIC_push_part_z(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
       call SERV_systime(cpua)
       call PIC_faz(jxi)

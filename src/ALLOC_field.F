@@ -19,11 +19,11 @@ c     ----------------------------------------------------------------------
      &            i3mn-rd3:i3mx+rd3))
       allocate(ez(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(bx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(by(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(bz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
       allocate(jxi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
@@ -41,9 +41,9 @@ c     ----------------------------------------------------------------------
       ex=0.0d0
       ey=0.0d0
       ez=0.0d0
-      bx=0.0d0
-      by=0.0d0
-      bz=0.0d0
+      hx=0.0d0
+      hy=0.0d0
+      hz=0.0d0
       ne=0.0d0
       ni=0.0d0
       nn=0.0d0
@@ -55,7 +55,7 @@ c     ----------------------------------------------------------------------
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
       call C_ALLOC_field_cb(ne, ni, nn, jxi, jyi, jzi,
-     &     ex, ey, ez, bx, by, bz)
+     &     ex, ey, ez, hx, hy, hz)
 #endif
 
       end subroutine ALLOC_field
@@ -73,9 +73,9 @@ c     ----------------------------------------------------------------------
       deallocate(ex)
       deallocate(ey)
       deallocate(ez)
-      deallocate(bx)
-      deallocate(by)
-      deallocate(bz)
+      deallocate(hx)
+      deallocate(hy)
+      deallocate(hz)
       deallocate(jxi)
       deallocate(jyi)
       deallocate(jzi)

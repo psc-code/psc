@@ -49,10 +49,10 @@ c initialization of the fields
                ey(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3,-0.5*dt)
                ey(i1,i2,i3)=0.0d0
                ez(i1,i2,i3)=0.0d0
-               bx(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3+0.5*dz,0.0*dt)
-               bx(i1,i2,i3)=0.0d0
-               by(i1,i2,i3)=0.0d0
-               bz(i1,i2,i3)=0.0d0
+               hx(i1,i2,i3)=p_pulse_z2(h1,h2+0.5*dy,h3+0.5*dz,0.0*dt)
+               hx(i1,i2,i3)=0.0d0
+               hy(i1,i2,i3)=0.0d0
+               hz(i1,i2,i3)=0.0d0
 
                jxi(i1,i2,i3)=0.0d0
                jyi(i1,i2,i3)=0.0d0

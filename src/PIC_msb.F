@@ -28,8 +28,8 @@ c THE UPDATED E AND B-FIELDS ARE AT t=(n+0.5)*dt.
       real(kind=8) :: s_pulse_x2
       real(kind=8) :: t,x,y,z
 
-      real(kind=8) :: exh,eyh,ezh,bxh,byh,bzh
-      real(kind=8) :: exk,eyk,ezk,bxk,byk,bzk
+      real(kind=8) :: exh,eyh,ezh,hxh,hyh,hzh
+      real(kind=8) :: exk,eyk,ezk,hxk,hyk,hzk
 
       real(kind=8) :: s_cpub
       real(kind=8) :: s_cpuh
@@ -56,66 +56,66 @@ c B-field propagation E^(n+0.5), B^(n+0.5), j^(n+1.0), m^(n+0.5)
 c -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
 
-      bx2B=0.0
+      hx2B=0.0
       do i3=i3mn,i3mx
          do i2=i2mn,i2mx
             do i1=i1mn,i1mx
-               bxh=bx(i1,i2,i3)
-               bxk=bx(i1,i2,i3)
+               hxh=hx(i1,i2,i3)
+               hxk=hx(i1,i2,i3)
      &             -cny*(ez(i1,i2+1,i3)-ez(i1,i2,i3))
      &             +cnz*(ey(i1,i2,i3+1)-ey(i1,i2,i3))
-               bx2B=bx2B+dx*dy*dz*bxh*bxk
+               hx2B=hx2B+dx*dy*dz*hxh*hxk
             enddo
          enddo
       enddo
       do i3=i3mn-1,i3mx+1
          do i2=i2mn-1,i2mx+1
             do i1=i1mn-1,i1mx+1
-               bx(i1,i2,i3)=bx(i1,i2,i3)
+               hx(i1,i2,i3)=hx(i1,i2,i3)
      &                      -cny*(ez(i1,i2+1,i3)-ez(i1,i2,i3))
      &                      +cnz*(ey(i1,i2,i3+1)-ey(i1,i2,i3))
             enddo
          enddo
       enddo
 
-      by2B=0.0
+      hy2B=0.0
       do i3=i3mn,i3mx
          do i2=i2mn,i2mx
             do i1=i1mn,i1mx
-               byh=by(i1,i2,i3)
-               byk=by(i1,i2,i3)
+               hyh=hy(i1,i2,i3)
+               hyk=hy(i1,i2,i3)
      &             -cnz*(ex(i1,i2,i3+1)-ex(i1,i2,i3))
      &             +cnx*(ez(i1+1,i2,i3)-ez(i1,i2,i3))
-               by2B=by2B+dx*dy*dz*byh*byk
+               hy2B=hy2B+dx*dy*dz*hyh*hyk
             enddo
          enddo
       enddo
       do i3=i3mn-1,i3mx+1
          do i2=i2mn-1,i2mx+1
             do i1=i1mn-1,i1mx+1
-               by(i1,i2,i3)=by(i1,i2,i3)
+               hy(i1,i2,i3)=hy(i1,i2,i3)
      &                      -cnz*(ex(i1,i2,i3+1)-ex(i1,i2,i3))
      &                      +cnx*(ez(i1+1,i2,i3)-ez(i1,i2,i3))
             enddo
          enddo
       enddo
 
-      bz2B=0.0
+      hz2B=0.0
       do i3=i3mn,i3mx
          do i2=i2mn,i2mx
             do i1=i1mn,i1mx
-               bzh=bz(i1,i2,i3)
-               bzk=bz(i1,i2,i3)
+               hzh=hz(i1,i2,i3)
+               hzk=hz(i1,i2,i3)
      &             -cnx*(ey(i1+1,i2,i3)-ey(i1,i2,i3))
      &             +cny*(ex(i1,i2+1,i3)-ex(i1,i2,i3))
-               bz2B=bz2B+dx*dy*dz*bzh*bzk
+               hz2B=hz2B+dx*dy*dz*hzh*hzk
             enddo
          enddo
       enddo
       do i3=i3mn-1,i3mx+1
          do i2=i2mn-1,i2mx+1
             do i1=i1mn-1,i1mx+1
-               bz(i1,i2,i3)=bz(i1,i2,i3)
+               hz(i1,i2,i3)=hz(i1,i2,i3)
      &                      -cnx*(ey(i1+1,i2,i3)-ey(i1,i2,i3))
      &                      +cny*(ex(i1,i2+1,i3)-ex(i1,i2,i3))
             enddo
@@ -137,10 +137,10 @@ c open boundary at z1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            by(i1,i2,i3-1)=(+4.0*s_pulse_z1(x+0.5*dx,y,z,t)
+            hy(i1,i2,i3-1)=(+4.0*s_pulse_z1(x+0.5*dx,y,z,t)
      &                      -2.0*ex(i1,i2,i3)
-     &                      -(1.0-lz)*by(i1,i2,i3)
-     &                      -ly*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
+     &                      -(1.0-lz)*hy(i1,i2,i3)
+     &                      -ly*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
      &                      +dt*jx)/(1.0+lz)
          enddo
       enddo
@@ -154,10 +154,10 @@ c open boundary at z1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jy=jyi(i1,i2,i3)
-            bx(i1,i2,i3-1)=(-4.0*p_pulse_z1(x,y+0.5*dy,z,t)
+            hx(i1,i2,i3-1)=(-4.0*p_pulse_z1(x,y+0.5*dy,z,t)
      &                      +2.0*ey(i1,i2,i3)
-     &                      -(1.0-lz)*bx(i1,i2,i3)
-     &                      -lx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
+     &                      -(1.0-lz)*hx(i1,i2,i3)
+     &                      -lx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
      &                      -dt*jy)/(1.0+lz)
          enddo
       enddo
@@ -178,10 +178,10 @@ c open boundary at z2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            by(i1,i2,i3)=(-4.0*s_pulse_z2(x+0.5*dx,y,z,t)
+            hy(i1,i2,i3)=(-4.0*s_pulse_z2(x+0.5*dx,y,z,t)
      &                    +2.0*ex(i1,i2,i3)
-     &                    -(1.0-lz)*by(i1,i2,i3-1)
-     &                    +ly*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
+     &                    -(1.0-lz)*hy(i1,i2,i3-1)
+     &                    +ly*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
      &                    -dt*jx)/(1.0+lz)
          enddo
       enddo
@@ -195,10 +195,10 @@ c open boundary at z2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jy=jyi(i1,i2,i3)
-            bx(i1,i2,i3)=(+4.0*p_pulse_z2(x,y+0.5*dy,z,t)
+            hx(i1,i2,i3)=(+4.0*p_pulse_z2(x,y+0.5*dy,z,t)
      &                    -2.0*ey(i1,i2,i3)
-     &                    -(1.0-lz)*bx(i1,i2,i3-1)
-     &                    +lx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
+     &                    -(1.0-lz)*hx(i1,i2,i3-1)
+     &                    +lx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
      &                    +dt*jy)/(1.0+lz)
          enddo
       enddo
@@ -219,10 +219,10 @@ c open boundary at y1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            bz(i1,i2-1,i3)=(-4.0*s_pulse_y1(x+0.5*dx,y,z,t)
+            hz(i1,i2-1,i3)=(-4.0*s_pulse_y1(x+0.5*dx,y,z,t)
      &                      +2.0*ex(i1,i2,i3)
-     &                      -(1.0-ly)*bz(i1,i2,i3)
-     &                      -lz*(by(i1,i2,i3)-by(i1,i2,i3-1))
+     &                      -(1.0-ly)*hz(i1,i2,i3)
+     &                      -lz*(hy(i1,i2,i3)-hy(i1,i2,i3-1))
      &                      +dt*jx)/(1.0+ly)
          enddo
       enddo
@@ -236,10 +236,10 @@ c open boundary at y1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jz=jzi(i1,i2,i3)
-            bx(i1,i2-1,i3)=(4.0*p_pulse_y1(x,y,z+0.5*dz,t)
+            hx(i1,i2-1,i3)=(4.0*p_pulse_y1(x,y,z+0.5*dz,t)
      &                      -2.0*ez(i1,i2,i3)
-     &                      -(1.0-ly)*bx(i1,i2,i3)
-     &                      -lx*(by(i1,i2,i3)-by(i1-1,i2,i3))
+     &                      -(1.0-ly)*hx(i1,i2,i3)
+     &                      -lx*(hy(i1,i2,i3)-hy(i1-1,i2,i3))
      &                      +dt*jz)/(1.0+ly)
          enddo
       enddo
@@ -260,10 +260,10 @@ c open boundary at y2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            bz(i1,i2,i3)=(4.0*s_pulse_y2(x+0.5*dx,y,z,t)
+            hz(i1,i2,i3)=(4.0*s_pulse_y2(x+0.5*dx,y,z,t)
      &                    -2.0*ex(i1,i2,i3)
-     &                    -(1.0-ly)*bz(i1,i2-1,i3)
-     &                    +lz*(by(i1,i2,i3)-by(i1,i2,i3-1))
+     &                    -(1.0-ly)*hz(i1,i2-1,i3)
+     &                    +lz*(hy(i1,i2,i3)-hy(i1,i2,i3-1))
      &                    -dt*jx)/(1.0+ly)
          enddo
       enddo
@@ -277,10 +277,10 @@ c open boundary at y2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jz=jzi(i1,i2,i3)
-            bx(i1,i2,i3)=(-4.0*p_pulse_y2(x,y,z+0.5*dz,t)
+            hx(i1,i2,i3)=(-4.0*p_pulse_y2(x,y,z+0.5*dz,t)
      &                    +2.0*ez(i1,i2,i3)
-     &                    -(1.0-ly)*bx(i1,i2-1,i3)
-     &                    +lx*(by(i1,i2,i3)-by(i1-1,i2,i3))
+     &                    -(1.0-ly)*hx(i1,i2-1,i3)
+     &                    +lx*(hy(i1,i2,i3)-hy(i1-1,i2,i3))
      &                    -dt*jz)/(1.0+ly)
          enddo
       enddo
@@ -301,10 +301,10 @@ c open boundary at x1 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jy=jyi(i1,i2,i3)
-            bz(i1-1,i2,i3)=(4.0*s_pulse_x1(x,y+0.5*dy,z,t)
+            hz(i1-1,i2,i3)=(4.0*s_pulse_x1(x,y+0.5*dy,z,t)
      &                      -2.0*ey(i1,i2,i3)
-     &                      -(1.0-lx)*bz(i1,i2,i3)
-     &                      -lz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
+     &                      -(1.0-lx)*hz(i1,i2,i3)
+     &                      -lz*(hx(i1,i2,i3)-hx(i1,i2,i3-1))
      &                      -dt*jy)/(1.0+lx)
          enddo
       enddo
@@ -318,10 +318,10 @@ c open boundary at x1 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jz=jzi(i1,i2,i3)
-            by(i1-1,i2,i3)=(-4.0*p_pulse_x1(x,y,z+0.5*dz,t)
+            hy(i1-1,i2,i3)=(-4.0*p_pulse_x1(x,y,z+0.5*dz,t)
      &                      +2.0*ez(i1,i2,i3)
-     &                      -(1.0-lx)*by(i1,i2,i3)
-     &                      +ly*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
+     &                      -(1.0-lx)*hy(i1,i2,i3)
+     &                      +ly*(hx(i1,i2,i3)-hx(i1,i2-1,i3))
      &                      +dt*jz)/(1.0+lx)
          enddo
       enddo
@@ -342,10 +342,10 @@ c open boundary at x2 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jy=jyi(i1,i2,i3)
-            bz(i1,i2,i3)=(-4.0*s_pulse_x2(x,y+0.5*dy,z,t)
+            hz(i1,i2,i3)=(-4.0*s_pulse_x2(x,y+0.5*dy,z,t)
      &                      +2.0*ey(i1,i2,i3)
-     &                      -(1.0-lx)*bz(i1-1,i2,i3)
-     &                      -lz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
+     &                      -(1.0-lx)*hz(i1-1,i2,i3)
+     &                      -lz*(hx(i1,i2,i3)-hx(i1,i2,i3-1))
      &                      +dt*jy)/(1.0+lx)
          enddo
       enddo
@@ -359,10 +359,10 @@ c open boundary at x2 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jz=jzi(i1,i2,i3)
-            by(i1,i2,i3)=(4.0*p_pulse_x2(x,y,z+0.5*dz,t)
+            hy(i1,i2,i3)=(4.0*p_pulse_x2(x,y,z+0.5*dz,t)
      &                      -2.0*ez(i1,i2,i3)
-     &                      -(1.0-lx)*by(i1-1,i2,i3)
-     &                      +ly*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
+     &                      -(1.0-lx)*hy(i1-1,i2,i3)
+     &                      +ly*(hx(i1,i2,i3)-hx(i1,i2-1,i3))
      &                      -dt*jz)/(1.0+lx)
          enddo
       enddo
@@ -370,15 +370,15 @@ c open boundary at x2 plus incident laser pulse
 
 
       call SERV_systime(cpua)
-      call PIC_fex(bx)
-      call PIC_fey(bx)
-      call PIC_fez(bx)
-      call PIC_fex(by)
-      call PIC_fey(by)
-      call PIC_fez(by)
-      call PIC_fex(bz)
-      call PIC_fey(bz)
-      call PIC_fez(bz)
+      call PIC_fex(hx)
+      call PIC_fey(hx)
+      call PIC_fez(hx)
+      call PIC_fex(hy)
+      call PIC_fey(hy)
+      call PIC_fez(hy)
+      call PIC_fex(hz)
+      call PIC_fey(hz)
+      call PIC_fez(hz)
       call SERV_systime(cpub)
       s_cpub=s_cpub+cpub-cpua
 
@@ -394,8 +394,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
                jx=jxi(i1,i2,i3)
                exh=ex(i1,i2,i3)
                exk=ex(i1,i2,i3)
-     &             +cny*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
-     &             -cnz*(by(i1,i2,i3)-by(i1,i2,i3-1))
+     &             +cny*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
+     &             -cnz*(hy(i1,i2,i3)-hy(i1,i2,i3-1))
      &             -0.5*dt*jx
                ex2B=ex2B+dx*dy*dz*exh*exk
             enddo
@@ -406,8 +406,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
             do i1=i1mn-1,i1mx+1
                jx=jxi(i1,i2,i3)
                ex(i1,i2,i3)=ex(i1,i2,i3)
-     &                       +cny*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
-     &                       -cnz*(by(i1,i2,i3)-by(i1,i2,i3-1))
+     &                       +cny*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
+     &                       -cnz*(hy(i1,i2,i3)-hy(i1,i2,i3-1))
      &                       -0.5*dt*jx
             enddo
          enddo
@@ -420,8 +420,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
                jy=jyi(i1,i2,i3)
                eyh=ey(i1,i2,i3)
                eyk=ey(i1,i2,i3)
-     &             +cnz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
-     &             -cnx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
+     &             +cnz*(hx(i1,i2,i3)-hx(i1,i2,i3-1))
+     &             -cnx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
      &             -0.5*dt*jy
                ey2B=ey2B+dx*dy*dz*eyh*eyk
             enddo
@@ -432,8 +432,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
             do i1=i1mn-1,i1mx+1
                jy=jyi(i1,i2,i3)
                ey(i1,i2,i3)=ey(i1,i2,i3)
-     &                       +cnz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
-     &                       -cnx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
+     &                       +cnz*(hx(i1,i2,i3)-hx(i1,i2,i3-1))
+     &                       -cnx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
      &                       -0.5*dt*jy
             enddo
          enddo
@@ -446,8 +446,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
                jz=jzi(i1,i2,i3)
                ezh=ez(i1,i2,i3)
                ezk=ez(i1,i2,i3)
-     &             +cnx*(by(i1,i2,i3)-by(i1-1,i2,i3))
-     &             -cny*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
+     &             +cnx*(hy(i1,i2,i3)-hy(i1-1,i2,i3))
+     &             -cny*(hx(i1,i2,i3)-hx(i1,i2-1,i3))
      &             -0.5*dt*jz
                ez2B=ez2B+dx*dy*dz*ezh*ezk
             enddo
@@ -458,8 +458,8 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
             do i1=i1mn-1,i1mx+1
                jz=jzi(i1,i2,i3)
                ez(i1,i2,i3)=ez(i1,i2,i3)
-     &                       +cnx*(by(i1,i2,i3)-by(i1-1,i2,i3))
-     &                       -cny*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
+     &                       +cnx*(hy(i1,i2,i3)-hy(i1-1,i2,i3))
+     &                       -cny*(hx(i1,i2,i3)-hx(i1,i2-1,i3))
      &                       -0.5*dt*jz
             enddo
          enddo

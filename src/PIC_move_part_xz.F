@@ -383,7 +383,7 @@ c     ----------------------------------------------------------------------
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 #else
       call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
-     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 #endif
 
       call SERV_systime(cpua)

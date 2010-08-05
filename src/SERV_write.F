@@ -62,11 +62,11 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      &                       i2a=i2,i2e),i3a=i3,i3e)
                 write(10) (((ez(i1a,i2a,i3a),i1a=i1,i1e),
      &                       i2a=i2,i2e),i3a=i3,i3e)
-                write(10) (((bx(i1a,i2a,i3a),i1a=i1,i1e),
+                write(10) (((hx(i1a,i2a,i3a),i1a=i1,i1e),
      &                       i2a=i2,i2e),i3a=i3,i3e)
-                write(10) (((by(i1a,i2a,i3a),i1a=i1,i1e),
+                write(10) (((hy(i1a,i2a,i3a),i1a=i1,i1e),
      &                       i2a=i2,i2e),i3a=i3,i3e)
-                write(10) (((bz(i1a,i2a,i3a),i1a=i1,i1e),
+                write(10) (((hz(i1a,i2a,i3a),i1a=i1,i1e),
      &                       i2a=i2,i2e),i3a=i3,i3e)
             enddo
          enddo

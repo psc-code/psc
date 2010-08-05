@@ -9,7 +9,7 @@ c     ======================================================================
       real(kind=8) fluxit,fluxot
       real(kind=8) ent,poxt,poyt,pozt,jet
       real(kind=8) enEXt,enEYt,enEZt
-      real(kind=8) enBXt,enBYt,enBZt
+      real(kind=8) enHXt,enHYt,enHZt
 
 #ifdef USE_PML
       real(kind=8) enHXt,enHYt,enHZt            ! ab
@@ -38,9 +38,9 @@ c     ----------------------------------------------------------------------
       enEXt=0.0d0
       enEYt=0.0d0
       enEZt=0.0d0
-      enBXt=0.0d0
-      enBYt=0.0d0
-      enBZt=0.0d0
+      enHXt=0.0d0
+      enHYt=0.0d0
+      enHZt=0.0d0
 
 #ifdef USE_PML
       enHXt=0.0d0   ! ab
@@ -64,7 +64,7 @@ c     ----------------------------------------------------------------------
       write(10) fluxit,fluxot
       write(10) ent,poxt,poyt,pozt,jet
       write(10) enEXt,enEYt,enEZt
-      write(10) enBXt,enBYt,enBZt
+      write(10) enHXt,enHYt,enHZt
 #ifdef USE_PML
       write(10) enHXt,enHYt,enHZt
 #endif
@@ -81,7 +81,7 @@ c     ----------------------------------------------------------------------
       read(10) fluxit,fluxot
       read(10) ent,poxt,poyt,pozt,jet
       read(10) enEXt,enEYt,enEZt
-      read(10) enBXt,enBYt,enBZt
+      read(10) enHXt,enHYt,enHZt
 #ifdef USE_PML      
       read(10) enHXt,enHYt,enHZt
 #endif
@@ -122,9 +122,9 @@ c Time-averaging
          enEXt=enEXt+ex2B-ex2A
          enEYt=enEYt+ey2B-ey2A
          enEZt=enEZt+ez2B-ez2A
-         enBXt=enBXt+bx2B-bx2A
-         enBYt=enBYt+by2B-by2A
-         enBZt=enBZt+bz2B-bz2A
+         enHXt=enHXt+hx2B-hx2A
+         enHYt=enHYt+hy2B-hy2A
+         enHZt=enHZt+hz2B-hz2A
 #ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
@@ -136,7 +136,7 @@ c Time-averaging
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #else
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #endif
 
          poxt=poxt+dt*pox
@@ -144,8 +144,8 @@ c Time-averaging
          pozt=pozt+dt*poz
 
 #ifdef USE_PML
-         poynit = poynit+dt*poyni          ! added by ab
-         poynot = poynot+dt*poyno          ! added by ab
+         poynit = poynit+dt*poyni          ! added hy ab
+         poynot = poynot+dt*poyno          ! added hy ab
 #endif
 
          jet=jet+dx*dy*dz*(p2B)
@@ -161,9 +161,9 @@ c         jet=jet+dt*je
          enEXt=enEXt+ex2B-ex2A
          enEYt=enEYt+ey2B-ey2A
          enEZt=enEZt+ez2B-ez2A
-         enBXt=enBXt+bx2B-bx2A
-         enBYt=enBYt+by2B-by2A
-         enBZt=enBZt+bz2B-bz2A
+         enHXt=enHXt+hx2B-hx2A
+         enHYt=enHYt+hy2B-hy2A
+         enHZt=enHZt+hz2B-hz2A
 #ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
@@ -175,7 +175,7 @@ c         jet=jet+dt*je
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #else
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #endif
 
          poxt=poxt+dt*pox
@@ -183,8 +183,8 @@ c         jet=jet+dt*je
          pozt=pozt+dt*poz
 
 #ifdef USE_PML
-         poynit = poynit+dt*poyni          ! added by ab
-         poynot = poynot+dt*poyno          ! added by ab
+         poynit = poynit+dt*poyni          ! added hy ab
+         poynot = poynot+dt*poyno          ! added hy ab
 #endif
 
          jet=jet+dx*dy*dz*(p2B)
@@ -203,9 +203,9 @@ c         jet=jet+dt*je
          enEXt=enEXt+ex2B-ex2A
          enEYt=enEYt+ey2B-ey2A
          enEZt=enEZt+ez2B-ez2A
-         enBXt=enBXt+bx2B-bx2A
-         enBYt=enBYt+by2B-by2A
-         enBZt=enBZt+bz2B-bz2A
+         enHXt=enHXt+hx2B-hx2A
+         enHYt=enHYt+hy2B-hy2A
+         enHZt=enHZt+hz2B-hz2A
 #ifdef USE_PML
          enHXt=enHXt+hx2B-hx2A
          enHYt=enHYt+hy2B-hy2A
@@ -217,7 +217,7 @@ c         jet=jet+dt*je
      &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #else
          ent=ent+ex2B-ex2A+ey2B-ey2A+ez2B-ez2A
-     &          +bx2B-bx2A+by2B-by2A+bz2B-bz2A
+     &          +hx2B-hx2A+hy2B-hy2A+hz2B-hz2A
 #endif
 
          poxt=poxt+dt*pox
@@ -225,8 +225,8 @@ c         jet=jet+dt*je
          pozt=pozt+dt*poz
 
 #ifdef USE_PML
-         poynit = poynit+dt*poyni          ! added by ab
-         poynot = poynot+dt*poyno          ! added by ab
+         poynit = poynit+dt*poyni          ! added hy ab
+         poynot = poynot+dt*poyno          ! added hy ab
 #endif
 
          jet=jet+dx*dy*dz*(p2B)
@@ -252,9 +252,9 @@ c         jet=jet+dt*je
          write(11) enEXt
          write(11) enEYt
          write(11) enEZt
-         write(11) enBXt
-         write(11) enBYt
-         write(11) enBZt
+         write(11) enHXt
+         write(11) enHYt
+         write(11) enHZt
 #ifdef USE_PML
          write(11) enHXt
          write(11) enHYt
@@ -281,9 +281,9 @@ c         jet=jet+dt*je
          enEXt=0.0
          enEYt=0.0
          enEZt=0.0
-         enBXt=0.0
-         enBYt=0.0
-         enBZt=0.0
+         enHXt=0.0
+         enHYt=0.0
+         enHZt=0.0
 #ifdef USE_PML
          enHXt=0.0
          enHYt=0.0

@@ -196,9 +196,9 @@ c PREPARATION
             read(12) enEXt
             read(12) enEYt
             read(12) enEZt
-            read(12) enBXt
-            read(12) enBYt
-            read(12) enBZt
+            read(12) enHXt
+            read(12) enHYt
+            read(12) enHZt
 #ifdef USE_PML
             read(12) enHXt       ! ab
             read(12) enHYt       ! ab
@@ -223,9 +223,9 @@ c PREPARATION
             glo_enEXt=glo_enEXt+enEXt
             glo_enEYt=glo_enEYt+enEYt
             glo_enEZt=glo_enEZt+enEZt
-            glo_enBXt=glo_enBXt+enBXt
-            glo_enBYt=glo_enBYt+enBYt
-            glo_enBZt=glo_enBZt+enBZt
+            glo_enBXt=glo_enBXt+enHXt
+            glo_enBYt=glo_enBYt+enHYt
+            glo_enBZt=glo_enBZt+enHZt
 #ifdef USE_PML
             glo_enHXt=glo_enHXt+enHXt
             glo_enHYt=glo_enHYt+enHYt
@@ -375,9 +375,9 @@ c PREPARATION
             read(12) enEXt
             read(12) enEYt
             read(12) enEZt
-            read(12) enBXt
-            read(12) enBYt
-            read(12) enBZt
+            read(12) enHXt
+            read(12) enHYt
+            read(12) enHZt
 #ifdef USE_PML
             read(12) enHXt   ! ab
             read(12) enHYt   ! ab
@@ -399,9 +399,9 @@ c PREPARATION
             sum_enEXt=sum_enEXt+enEXt
             sum_enEYt=sum_enEYt+enEYt
             sum_enEZt=sum_enEZt+enEZt
-            sum_enBXt=sum_enBXt+enBXt
-            sum_enBYt=sum_enBYt+enBYt
-            sum_enBZt=sum_enBZt+enBZt
+            sum_enHXt=sum_enHXt+enHXt
+            sum_enHYt=sum_enHYt+enHYt
+            sum_enHZt=sum_enHZt+enHZt
 #ifdef USE_PML
             sum_enHXt=sum_enHXt+enHXt    ! ab
             sum_enHYt=sum_enHYt+enHYt    ! ab 
@@ -434,9 +434,9 @@ c PREPARATION
             write(11,*) 'ENEX:',enEXt*unit,'mJ'
             write(11,*) 'ENEY:',enEYt*unit,'mJ'
             write(11,*) 'ENEZ:',enEZt*unit,'mJ'
-            write(11,*) 'ENBX:',enBXt*unit,'mJ'
-            write(11,*) 'ENBY:',enBYt*unit,'mJ'
-            write(11,*) 'ENBZ:',enBZt*unit,'mJ'
+            write(11,*) 'ENHX:',enHXt*unit,'mJ'
+            write(11,*) 'ENHY:',enHYt*unit,'mJ'
+            write(11,*) 'ENHZ:',enHZt*unit,'mJ'
 #ifdef USE_PML
             write(11,*) 'ENHX:',enHXt*unit,'mJ'   ! ab
             write(11,*) 'ENHY:',enHYt*unit,'mJ'   ! ab

@@ -52,11 +52,11 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      &            i3mn-rd3:i3mx+rd3))
       allocate(ez(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(bx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(by(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
-      allocate(bz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
+      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &            i3mn-rd3:i3mx+rd3))
       allocate(jxi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
      &             i3mn-rd3:i3mx+rd3))
@@ -84,9 +84,9 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       ex=0.0d0
       ey=0.0d0
       ez=0.0d0
-      bx=0.0d0
-      by=0.0d0
-      bz=0.0d0
+      hx=0.0d0
+      hy=0.0d0
+      hz=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
@@ -128,11 +128,11 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      &                     i2a=i2,i2e),i3a=i3,i3e)
                read(10) (((ez(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bx(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((hx(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((by(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((hy(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
-               read(10) (((bz(i1a,i2a,i3a),i1a=i1,i1e),
+               read(10) (((hz(i1a,i2a,i3a),i1a=i1,i1e),
      &                     i2a=i2,i2e),i3a=i3,i3e)
             enddo
          enddo

@@ -61,8 +61,8 @@ c np:  number of timesteps for time-averaging
       integer nmax,nstart,shift_c,shift_l,np,nnp
 
       real(kind=8) fluxi,fluxo
-      real(kind=8) ex2A,ey2A,ez2A,bx2A,by2A,bz2A
-      real(kind=8) ex2B,ey2B,ez2B,bx2B,by2B,bz2B
+      real(kind=8) ex2A,ey2A,ez2A,hx2A,hy2A,hz2A
+      real(kind=8) ex2B,ey2B,ez2B,hx2B,hy2B,hz2B
       real(kind=8) pox,poy,poz,je
       real(kind=8) p2A,p2B
 
@@ -251,7 +251,7 @@ c ne-nn: charge densities
 c jxi-jzi: current densities
 
       real(kind=8),allocatable,dimension(:,:,:) :: ex,ey,ez
-      real(kind=8),allocatable,dimension(:,:,:) :: bx,by,bz
+      real(kind=8),allocatable,dimension(:,:,:) :: hx,hy,hz
       real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
       real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
 
