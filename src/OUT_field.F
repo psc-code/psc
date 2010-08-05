@@ -163,7 +163,7 @@ c     ----------------------------------------------------------------------
 c FIELD OUTPUT!
 
 c     ======================================================================
-      module out_fields
+      module OUT_FIELDS
 c     ======================================================================
       implicit none
 
@@ -178,13 +178,13 @@ c jxit-jzit: time averaged current density
       real(kind=4),allocatable,dimension(:,:,:) :: net,nit,nnt
       real(kind=4),allocatable,dimension(:,:,:) :: jxit,jyit,jzit
 
-      end module out_fields
+      end module OUT_FIELDS
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_alloc_fields
+      subroutine OUT_FIELDS_alloc
 c     ----------------------------------------------------------------------
       use VLA_variables
-      use out_fields
+      use OUT_FIELDS
 
       implicit none
 
@@ -201,16 +201,6 @@ c     ----------------------------------------------------------------------
       allocate(jyit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(jzit(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       
-      end subroutine OUT_alloc_fields
-
-c     ----------------------------------------------------------------------
-      subroutine OUT_setup_fields
-c     ----------------------------------------------------------------------
-      use VLA_variables
-      use out_fields
-
-      implicit none
-
       ext=0.0d0
       eyt=0.0d0
       ezt=0.0d0
@@ -224,21 +214,20 @@ c     ----------------------------------------------------------------------
       nit=0.0d0
       nnt=0.0d0
 
-      end subroutine OUT_setup_fields
+      end subroutine OUT_FIELDS_alloc
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_serv_read_fields
+      subroutine OUT_FIELDS_serv_read
 c     ----------------------------------------------------------------------
 
       use VLA_variables
-      use out_fields
+      use OUT_FIELDS
 
       implicit none
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
 
-      call OUT_alloc_fields
-      call OUT_setup_fields
+      call OUT_FIELDS_alloc
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
@@ -274,14 +263,14 @@ c     ----------------------------------------------------------------------
          enddo
       enddo
 
-      end subroutine OUT_serv_read_fields
+      end subroutine OUT_FIELDS_serv_read
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_serv_write_fields
+      subroutine OUT_FIELDS_serv_write
 c     ----------------------------------------------------------------------
 
       use VLA_variables
-      use out_fields
+      use OUT_FIELDS
 
       implicit none
 
@@ -321,7 +310,7 @@ c     ----------------------------------------------------------------------
          enddo
       enddo
 
-      end subroutine OUT_serv_write_fields
+      end subroutine OUT_FIELDS_serv_write
 
 c     ----------------------------------------------------------------------
       subroutine OUT_field
@@ -330,7 +319,7 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use fields
-      use out_fields
+      use OUT_FIELDS
 #ifdef USE_PML
       use out_fields_pml
 #endif
@@ -361,8 +350,7 @@ c     ----------------------------------------------------------------------
 
 
       if (.not. allocated(ext)) then
-         call OUT_alloc_fields
-         call OUT_setup_fields
+         call OUT_FIELDS_alloc
          call OUT_alloc_fields_pml
       endif
 

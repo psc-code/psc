@@ -72,7 +72,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
          enddo
       enddo
 
-      call OUT_serv_write_fields
+      call OUT_FIELDS_serv_write
 
 #ifdef USE_PML
       do i3=i3mn,i3mx,100
