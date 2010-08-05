@@ -10,9 +10,7 @@ c Is called in PIC_msa.f and PIC_msb.f.
       
       use PIC_variables
       use VLA_variables
-#ifdef USE_PML
       use coeff_pml
-#endif
 
       implicit none
       include './mpif.h'
@@ -188,7 +186,6 @@ c UPDATING LOCAL BOUNDARY e1
       endif
 
 
-#ifdef USE_PML
 ! pml continuation at x1
 
       if (nodei.eq.1) then
@@ -223,7 +220,6 @@ c UPDATING LOCAL BOUNDARY e1
 c            boundary_pml_x1 = 'done'
          endif
       endif
-#endif
 
 c UPDATING LOCAL e3
 
@@ -321,7 +317,6 @@ c UPDATING LOCAL BOUNDARY e3
       endif
 
 
-#ifdef USE_PML
 ! pml continuation at x2
 
       if (nodei.eq.xnpe) then
@@ -356,7 +351,6 @@ c UPDATING LOCAL BOUNDARY e3
 c            boundary_pml_x2 = 'done'
          endif
       endif
-#endif
 
       deallocate(rimx)
 

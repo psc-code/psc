@@ -15,7 +15,6 @@ c jxi-jzi: current densities
       real(kind=8),allocatable,dimension(:,:,:) :: jxi,jyi,jzi
       real(kind=8),allocatable,dimension(:,:,:) :: ne,ni,nn
 
-#ifdef USE_PML
 ! for the pml the declaration of d and h field is required
 ! dvx-hz: additional em field arrays
 ! dvx-dvz is chosen because of the existence of dx-dz for spatial range
@@ -26,7 +25,6 @@ c jxi-jzi: current densities
 ! electric and magnetic permittivity tensors
 
       real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
-#endif
 
       end module FIELDS
 
@@ -78,9 +76,7 @@ c     ----------------------------------------------------------------------
       jyi=0.0d0
       jzi=0.0d0
 
-#ifdef USE_PML
-      call FIELDS_alloc_pml
-#endif
+      if (use_pml) call FIELDS_alloc_pml
 
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
@@ -112,13 +108,10 @@ c     ----------------------------------------------------------------------
       deallocate(ni)
       deallocate(nn)
 
-#ifdef USE_PML
-      call FIELDS_free_pml
-#endif
+      if (use_pml) call FIELDS_free_pml
 
       end subroutine FIELDS_free
 
-#ifdef USE_PML
 c     ======================================================================
 c     PML specific extensions
 
@@ -178,4 +171,3 @@ c     ----------------------------------------------------------------------
 
       end subroutine FIELDS_free_pml
 
-#endif

@@ -32,15 +32,19 @@ c         call PIC_bin_coll    ! binary collisions
          call OUT_part        ! particle output at t=n*dt
 c         call OUT_poyc        ! energy conservation
 
-#ifdef USE_PML
-         call PIC_pml_msa     ! field propagation n*dt -> (n+0.5)*dt       !ab
+         if (use_pml) then
+            call PIC_pml_msa    ! field propagation n*dt -> (n+0.5)*dt       !ab
+         else
+            call PIC_msa        ! field propagation n*dt -> (n+0.5)*dt
+         endif
+
          call PIC_move_part   ! particle propagation n*dt -> (n+1.0)*dt  
-         call PIC_pml_msb     ! field propagation (n+0.5)*dt -> (n+1.0)*dt !ab
-#else
-         call PIC_msa         ! field propagation n*dt -> (n+0.5)*dt
-         call PIC_move_part   ! particle propagation n*dt -> (n+1.0)*dt
-         call PIC_msb         ! field propagation (n+0.5)*dt -> (n+1.0)*dt
-#endif
+
+         if (use_pml) then
+            call PIC_pml_msb    ! field propagation (n+0.5)*dt -> (n+1.0)*dt !ab
+         else
+            call PIC_msb        ! field propagation (n+0.5)*dt -> (n+1.0)*dt
+         endif
 
          call MPI_BARRIER(MPI_COMM_WORLD,info)
 

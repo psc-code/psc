@@ -24,6 +24,8 @@ c cpus: WALL CLOCK time at start time
 
       call SERV_systime(cpus)
 
+      if (allocated(cpu)) return
+
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
       cpu=0.0d0
@@ -41,7 +43,6 @@ c     ----------------------------------------------------------------------
       use PIC_variables
 
       implicit none
-
 
 c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
@@ -216,9 +217,7 @@ c     setup processor map
 
       implicit none
 
-#ifdef USE_PML
-      call PML_coeff_init_param
-#endif
+      if (use_pml) call PML_coeff_init_param
 
 ! position condition for time dependent pml
 
@@ -392,6 +391,12 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
       use PIC_variables
 
       implicit none
+
+#ifdef USE_PML
+      use_pml = .true.
+#else
+      use_pml = .false.
+#endif
 
       rd1=3
       rd2=3

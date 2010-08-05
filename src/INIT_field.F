@@ -44,13 +44,10 @@ c initialization of the fields
          enddo
       enddo
 
-#ifdef USE_PML
-      call INIT_field_pml
-#endif
+      if (use_pml) call INIT_field_pml
 
       end subroutine INIT_field
 
-#ifdef USE_PML
 c     ----------------------------------------------------------------------
       subroutine INIT_field_pml
 c     ----------------------------------------------------------------------
@@ -76,7 +73,6 @@ c     ----------------------------------------------------------------------
       mu = 1.0
 
       end subroutine INIT_field_pml
-#endif
 
 c     ----------------------------------------------------------------------
       subroutine SETUP_field
@@ -125,10 +121,10 @@ c setting up charge and current densities
       endif
 #endif
 
-#ifdef USE_PML
-      call PML_coeff_alloc
-      call PML_coeff_setup
-#endif
+      if (use_pml) then
+         call PML_coeff_alloc
+         call PML_coeff_setup
+      endif
 
       end subroutine SETUP_field
 

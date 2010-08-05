@@ -375,13 +375,8 @@ c     ----------------------------------------------------------------------
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
-#ifdef USE_PML
       call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-#else
-      call PIC_push_part_xz(niloc, p_niloc, p2A, p2B,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-#endif
 
       call SERV_systime(cpua)
       call PIC_fax(jxi)
