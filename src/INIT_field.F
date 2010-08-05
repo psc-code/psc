@@ -129,7 +129,6 @@ c setting up charge and current densities
       call PML_coeff_alloc
       call PML_coeff_setup
 #endif
-      call OUT_poyn_alloc
 
       end subroutine SETUP_field
 

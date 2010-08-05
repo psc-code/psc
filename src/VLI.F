@@ -32,9 +32,9 @@ c     ----------------------------------------------------------------------
       call ALLOC_particles(niloc_new)
       call INIT_idistr(part_label_off,rd1n,rd1x,rd2n,rd2x,rd3n,rd3x)
       call ALLOC_field
-      call ALLOC_field_fortran
       call INIT_field
       call SETUP_field
+      call OUT_poyn_alloc
 
 c      call INIT_MCC
 
