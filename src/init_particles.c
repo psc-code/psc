@@ -22,6 +22,8 @@ void
 psc_init_partition(int *n_part, int *particle_label_offset)
 {
   if (!psc.Case) {
+    assert(FIELDS_BASE == FIELDS_FORTRAN);
+    assert(PARTICLES_BASE == PARTICLES_FORTRAN);
     INIT_partition(n_part);
     return;
   }
