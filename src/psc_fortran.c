@@ -225,7 +225,7 @@ fortran_push_field_a()
     pr = prof_register("fort_push_field_a", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_msa();
+  PIC_msa(&pf);
   prof_stop(pr);
 
   fields_fortran_put(&pf, EX, EX + 6);
@@ -242,7 +242,7 @@ fortran_push_field_b()
     pr = prof_register("fort_push_field_b", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_msb();
+  PIC_msb(&pf);
   prof_stop(pr);
 
   fields_fortran_put(&pf, EX, EX + 6);

@@ -7,6 +7,7 @@ c     this contains the main driver for the code, shared between VLI and VLA
 
       use VLA_variables
       use PIC_variables
+      use FIELDS
 
       implicit none
       include 'mpif.h'
@@ -32,18 +33,20 @@ c         call PIC_bin_coll    ! binary collisions
          call OUT_part        ! particle output at t=n*dt
 c         call OUT_poyc        ! energy conservation
 
+         ! field propagation n*dt -> (n+0.5)*dt
          if (use_pml) then
-            call PIC_pml_msa    ! field propagation n*dt -> (n+0.5)*dt       !ab
+            call PIC_pml_msa
          else
-            call PIC_msa        ! field propagation n*dt -> (n+0.5)*dt
+            call PIC_msa(ex, ey, ez, bx, by, bz, jxi, jyi, jzi)
          endif
 
          call PIC_move_part   ! particle propagation n*dt -> (n+1.0)*dt  
 
+         ! field propagation (n+0.5)*dt -> (n+1.0)*dt
          if (use_pml) then
-            call PIC_pml_msb    ! field propagation (n+0.5)*dt -> (n+1.0)*dt !ab
+            call PIC_pml_msb
          else
-            call PIC_msb        ! field propagation (n+0.5)*dt -> (n+1.0)*dt
+            call PIC_msb(ex, ey, ez, bx, by, bz, jxi, jyi, jzi)    
          endif
 
          call MPI_BARRIER(MPI_COMM_WORLD,info)

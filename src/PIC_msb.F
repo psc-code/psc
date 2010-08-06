@@ -1,14 +1,23 @@
 c THIS SUBROUTINE DETERMINES A 3D SOLUTION OF MAXWELLS EQUATIONS.
-c THE UPDATED E AND B-FIELDS ARE AT t=(n+0.5)*dt.
+c THE UPDATED E AND H-FIELDS ARE AT t=(n+0.5)*dt.
 
 
-      subroutine PIC_msb
+      subroutine PIC_msb(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
 
       use PIC_variables
       use VLA_variables
-      use fields
 
       implicit none
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
 
       real(kind=8) :: cnx,cny,cnz
       real(kind=8) :: lx,ly,lz

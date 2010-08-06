@@ -445,8 +445,8 @@ void PIC_sort(particles_fortran_t *pp);
 void PIC_randomize(particles_fortran_t *pp);
 void PIC_bin_coll(particles_fortran_t *pp);
 void PIC_find_cell_indices(particles_fortran_t *pp);
-void PIC_msa(void);
-void PIC_msb(void);
+void PIC_msa(fields_fortran_t *pf);
+void PIC_msb(fields_fortran_t *pf);
 void OUT_field(void);
 void OUT_part(void);
 void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
@@ -482,8 +482,6 @@ void PIC_fez(fields_fortran_t *pf, int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);
-void PIC_msa(void);
-void PIC_msb(void);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

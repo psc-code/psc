@@ -131,8 +131,12 @@ void PIC_fez_F77(f_real *f);
 void PIC_pex_F77(void);
 void PIC_pey_F77(void);
 void PIC_pez_F77(void);
-void PIC_msa_F77(void);
-void PIC_msb_F77(void);
+void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
+		 f_real *hx, f_real *hy, f_real *hz,
+		 f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msb_F77(f_real *ex, f_real *ey, f_real *ez,
+		 f_real *hx, f_real *hy, f_real *hz,
+		 f_real *jxi, f_real *jyi, f_real *jzi);
 void PIC_pml_msa_F77(void);
 void PIC_pml_msb_F77(void);
 void INIT_basic_F77(void);
@@ -408,24 +412,28 @@ PIC_pez()
 }
 
 void
-PIC_msa()
+PIC_msa(fields_fortran_t *pf)
 {
   INIT_grid_map();
   SET_param_coeff();
   if (psc.domain.use_pml) {
     PIC_pml_msa_F77();
   } else {
-    PIC_msa_F77();
+    PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
   }
 }
 
 void
-PIC_msb()
+PIC_msb(fields_fortran_t *pf)
 {
   if (psc.domain.use_pml) {
     PIC_pml_msb_F77(); 
   } else {
-    PIC_msb_F77(); 
+    PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
   }
 }
 
