@@ -73,6 +73,8 @@ particles_sse2_get(particles_sse2_t *particles)
   particles->particles = __sse2_part_data;
   particles->n_part = n_part;
 
+  particle_sse2_real_t dxi = 1. / psc.dx[0];
+
   for (int n = 0; n < n_part; n++) {
     particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
     particle_sse2_t *part = &particles->particles[n];
@@ -86,7 +88,8 @@ particles_sse2_get(particles_sse2_t *particles)
     part->qni = base_part->qni;
     part->mni = base_part->mni;
     part->wni = base_part->wni;
-    assert(round(part->xi) == 0); ///< \FIXME This assert only fits for the yz pusher. Idealy, no assert would be needed here, but until we can promise 'true 2D' some check is needed.
+    int j1 = part->xi * dxi + .5;
+    assert(j1 == psc.ilo[0]); ///< \FIXME This assert only fits for the yz pusher.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
