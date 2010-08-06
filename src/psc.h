@@ -456,6 +456,8 @@ void PIC_bin_coll(particles_fortran_t *pp);
 void PIC_find_cell_indices(particles_fortran_t *pp);
 void PIC_msa(fields_fortran_t *pf);
 void PIC_msb(fields_fortran_t *pf);
+void PIC_pml_msa(fields_fortran_t *pf);
+void PIC_pml_msb(fields_fortran_t *pf);
 void OUT_field(void);
 void OUT_part(void);
 void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);

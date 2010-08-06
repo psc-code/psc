@@ -426,35 +426,41 @@ PIC_msa(fields_fortran_t *pf)
 {
   INIT_grid_map();
   SET_param_coeff();
-  if (psc.domain.use_pml) {
-    PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		    pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		    pf->flds[DX], pf->flds[DY], pf->flds[DZ],
-		    pf->flds[BX], pf->flds[BY], pf->flds[BZ],
-		    pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		    pf->flds[EPS], pf->flds[MU]);
-  } else {
-    PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
-  }
+  PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_pml_msa(fields_fortran_t *pf)
+{
+  INIT_grid_map();
+  SET_param_coeff();
+  PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
+		  pf->flds[BX], pf->flds[BY], pf->flds[BZ],
+		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		  pf->flds[EPS], pf->flds[MU]);
 }
 
 void
 PIC_msb(fields_fortran_t *pf)
 {
-  if (psc.domain.use_pml) {
-    PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		    pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		    pf->flds[DX], pf->flds[DY], pf->flds[DZ],
-		    pf->flds[BX], pf->flds[BY], pf->flds[BZ],
-		    pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		    pf->flds[EPS], pf->flds[MU]);
-  } else {
-    PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
-  }
+  PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_pml_msb(fields_fortran_t *pf)
+{
+  PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
+		  pf->flds[BX], pf->flds[BY], pf->flds[BZ],
+		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		  pf->flds[EPS], pf->flds[MU]);
 }
 
 // ----------------------------------------------------------------------

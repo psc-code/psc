@@ -217,35 +217,65 @@ struct psc_collision_ops psc_collision_ops_fortran = {
 static void
 fortran_push_field_a()
 {
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, EX + 6);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_push_field_a", 1., 0, 0);
+  if (psc.domain.use_pml) {
+    fields_fortran_t pf;
+    fields_fortran_get(&pf, JXI, MU + 1);
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("fort_field_pml_a", 1., 0, 0);
+    }
+    prof_start(pr);
+    PIC_pml_msa(&pf);
+    prof_stop(pr);
+    
+    fields_fortran_put(&pf, EX, BZ + 1);
+  } else {
+    fields_fortran_t pf;
+    fields_fortran_get(&pf, JXI, HZ + 1);
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("fort_field_a", 1., 0, 0);
+    }
+    prof_start(pr);
+    PIC_msa(&pf);
+    prof_stop(pr);
+    
+    fields_fortran_put(&pf, EX, HZ + 1);
   }
-  prof_start(pr);
-  PIC_msa(&pf);
-  prof_stop(pr);
-
-  fields_fortran_put(&pf, EX, EX + 6);
 }
 
 static void
 fortran_push_field_b()
 {
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, EX + 6);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_push_field_b", 1., 0, 0);
+  if (psc.domain.use_pml) {
+    fields_fortran_t pf;
+    fields_fortran_get(&pf, JXI, MU + 1);
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("fort_field_pml_b", 1., 0, 0);
+    }
+    prof_start(pr);
+    PIC_pml_msb(&pf);
+    prof_stop(pr);
+    
+    fields_fortran_put(&pf, EX, BZ + 1);
+  } else {
+    fields_fortran_t pf;
+    fields_fortran_get(&pf, JXI, HZ + 1);
+    
+    static int pr;
+    if (!pr) {
+      pr = prof_register("fort_field_b", 1., 0, 0);
+    }
+    prof_start(pr);
+    PIC_msb(&pf);
+    prof_stop(pr);
+    
+    fields_fortran_put(&pf, EX, HZ + 1);
   }
-  prof_start(pr);
-  PIC_msb(&pf);
-  prof_stop(pr);
-
-  fields_fortran_put(&pf, EX, EX + 6);
 }
 
 struct psc_push_field_ops psc_push_field_ops_fortran = {

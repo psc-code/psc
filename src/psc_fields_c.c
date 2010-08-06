@@ -6,6 +6,9 @@
 #include <string.h>
 #include <assert.h>
 
+// FIXME, we're allocating all fields even if the PML ones aren't
+// going to be used
+
 void
 fields_c_alloc(fields_c_t *pf)
 {
