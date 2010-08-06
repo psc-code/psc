@@ -5,14 +5,33 @@ c THIS SUBROUTINE DETERMINES A 3D SOLUTION OF MAXWELLS EQUATIONS.
 c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+0.5)*dt.
 
 
-      subroutine PIC_pml_msa
+      subroutine PIC_pml_msa(ex, ey, ez, hx, hy, hz, dvx, dvy, dvz,
+     &     bx, by, bz, jxi, jyi, jzi, eps, mu)
 
       use PIC_variables
       use VLA_variables
-      use fields
       use coeff_pml
 
       implicit none
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: dvx, dvy, dvz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: eps, mu
 
       real(kind=8) :: cnx,cny,cnz
       real(kind=8) :: lx,ly,lz

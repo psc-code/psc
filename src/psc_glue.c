@@ -137,8 +137,18 @@ void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
 void PIC_msb_F77(f_real *ex, f_real *ey, f_real *ez,
 		 f_real *hx, f_real *hy, f_real *hz,
 		 f_real *jxi, f_real *jyi, f_real *jzi);
-void PIC_pml_msa_F77(void);
-void PIC_pml_msb_F77(void);
+void PIC_pml_msa_F77(f_real *ex, f_real *ey, f_real *ez,
+		     f_real *hx, f_real *hy, f_real *hz,
+		     f_real *dx, f_real *dy, f_real *dz,
+		     f_real *bx, f_real *by, f_real *bz,
+		     f_real *jxi, f_real *jyi, f_real *jzi,
+		     f_real *eps, f_real *mu);
+void PIC_pml_msb_F77(f_real *ex, f_real *ey, f_real *ez,
+		     f_real *hx, f_real *hy, f_real *hz,
+		     f_real *dx, f_real *dy, f_real *dz,
+		     f_real *bx, f_real *by, f_real *bz,
+		     f_real *jxi, f_real *jyi, f_real *jzi,
+		     f_real *eps, f_real *mu);
 void INIT_basic_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
@@ -417,7 +427,12 @@ PIC_msa(fields_fortran_t *pf)
   INIT_grid_map();
   SET_param_coeff();
   if (psc.domain.use_pml) {
-    PIC_pml_msa_F77();
+    PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		    pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		    pf->flds[DX], pf->flds[DY], pf->flds[DZ],
+		    pf->flds[BX], pf->flds[BY], pf->flds[BZ],
+		    pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		    pf->flds[EPS], pf->flds[MU]);
   } else {
     PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
@@ -429,7 +444,12 @@ void
 PIC_msb(fields_fortran_t *pf)
 {
   if (psc.domain.use_pml) {
-    PIC_pml_msb_F77(); 
+    PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		    pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		    pf->flds[DX], pf->flds[DY], pf->flds[DZ],
+		    pf->flds[BX], pf->flds[BY], pf->flds[BZ],
+		    pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		    pf->flds[EPS], pf->flds[MU]);
   } else {
     PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
