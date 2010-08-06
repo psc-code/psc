@@ -24,7 +24,7 @@ c jxi-jzi: current densities
 
 ! electric and magnetic permittivity tensors
 
-      real(kind=4),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
+      real(kind=8),allocatable,dimension(:,:,:) :: eps, mu  ! added by ab
 
       end module FIELDS
 
