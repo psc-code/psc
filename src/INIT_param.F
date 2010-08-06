@@ -392,7 +392,7 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
 
       implicit none
 
-      use_pml = .true.
+      use_pml = .false.
 
       rd1=3
       rd2=3

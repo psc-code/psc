@@ -104,8 +104,10 @@ init_param_domain()
   }
   if (need_pml && !psc.domain.use_pml) {
     fprintf(stderr,
-	    "ERROR: use_pml is disabled but pml boundary conditions requested.\n");
-    abort();
+	    "WARNING: use_pml is disabled but pml boundary conditions requested.\n");
+    fprintf(stderr,
+	    "         I'm enabling use_pml.\n");
+    psc.domain.use_pml = true;
   }
 }
 
