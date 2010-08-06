@@ -5,11 +5,27 @@
 
 void INIT_field(void);
 
+static void
+psc_init_field_pml(void)
+{
+  fields_base_copy(&psc.pf, DX, EX);
+  fields_base_copy(&psc.pf, DY, EY);
+  fields_base_copy(&psc.pf, DZ, EZ);
+  fields_base_copy(&psc.pf, BX, HX);
+  fields_base_copy(&psc.pf, BY, HY);
+  fields_base_copy(&psc.pf, BZ, HZ);
+  fields_base_set(&psc.pf, EPS, 1.);
+  fields_base_set(&psc.pf, MU, 1.);
+}
+
 void
 psc_init_field()
 {
   if (psc.Case) {
     psc_case_init_field(psc.Case);
+    if (psc.domain.use_pml) {
+      psc_init_field_pml();
+    }
   } else {
     INIT_field();
   }

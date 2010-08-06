@@ -86,3 +86,27 @@ fields_c_zero(fields_c_t *pf, int m)
   memset(&F3_C(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
 	 psc.fld_size * sizeof(fields_c_real_t));
 }
+
+void
+fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
+{
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	F3_C(pf, m, jx, jy, jz) = val;
+      }
+    }
+  }
+}
+
+void
+fields_c_copy(fields_c_t *pf, int m_to, int m_from)
+{
+  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	F3_C(pf, m_to, jx, jy, jz) = F3_C(pf, m_from, jx, jy, jz);
+      }
+    }
+  }
+}

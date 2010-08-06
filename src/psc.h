@@ -123,6 +123,8 @@ typedef fields_fortran_real_t fields_base_real_t;
 #define fields_base_alloc  fields_fortran_alloc
 #define fields_base_free   fields_fortran_free
 #define fields_base_zero   fields_fortran_zero
+#define fields_base_set    fields_fortran_set
+#define fields_base_copy   fields_fortran_copy
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 
@@ -137,6 +139,8 @@ typedef fields_c_real_t fields_base_real_t;
 #define fields_base_alloc fields_c_alloc
 #define fields_base_free  fields_c_free
 #define fields_base_zero  fields_c_zero
+#define fields_base_set   fields_c_set
+#define fields_base_copy  fields_c_copy
 
 #define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
 
@@ -151,6 +155,8 @@ typedef fields_sse2_real_t fields_base_real_t;
 #define fields_base_alloc fields_sse2_alloc
 #define fields_base_free  fields_sse2_free
 #define fields_base_zero  fields_sse2_zero
+#define fields_base_set   fields_sse2_set
+#define fields_base_copy  fields_sse2_copy
 
 #define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
 
