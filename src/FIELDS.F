@@ -81,7 +81,7 @@ c     ----------------------------------------------------------------------
 #ifdef USE_C_INTERFACE
 c     need to let C code know about the newly allocated fields
       call C_fields_alloc_cb(ne, ni, nn, jxi, jyi, jzi,
-     &     ex, ey, ez, hx, hy, hz)
+     &     ex, ey, ez, hx, hy, hz, dvx, dvy, dvz, bx, by, bz, eps, mu)
 #endif
 
       end subroutine FIELDS_alloc

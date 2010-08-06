@@ -502,7 +502,10 @@ void
 C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
 		      f_real *jxi, f_real *jyi, f_real *jzi,
 		      f_real *ex, f_real *ey, f_real *ez,
-		      f_real *hx, f_real *hy, f_real *hz)
+		      f_real *hx, f_real *hy, f_real *hz,
+		      f_real *dx, f_real *dy, f_real *dz,
+		      f_real *bx, f_real *by, f_real *bz,
+		      f_real *eps, f_real *mu)
 {
   __f_flds[NE] = ne;
   __f_flds[NI] = ni;
@@ -516,6 +519,14 @@ C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
   __f_flds[HX] = hx;
   __f_flds[HY] = hy;
   __f_flds[HZ] = hz;
+  __f_flds[DX] = dx;
+  __f_flds[DY] = dy;
+  __f_flds[DZ] = dz;
+  __f_flds[BX] = bx;
+  __f_flds[BY] = by;
+  __f_flds[BZ] = bz;
+  __f_flds[EPS] = eps;
+  __f_flds[MU] = mu;
 }
 
 void

@@ -611,4 +611,12 @@ const char *fldname[NR_FIELDS] = {
   [HX]  = "hx",
   [HY]  = "hy",
   [HZ]  = "hz",
+  [DX]  = "dx",
+  [DY]  = "dy",
+  [DZ]  = "dz",
+  [BX]  = "bx",
+  [BY]  = "by",
+  [BZ]  = "bz",
+  [EPS] = "eps",
+  [MU]  = "mu",
 };
