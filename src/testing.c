@@ -12,7 +12,10 @@
 void
 __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 {
-  double max = fmax(fabs(x), fabs(y)) + 1e-10;
+  double max = fmax(fabs(x), fabs(y));
+  if (max < thres)
+    return;
+
   double eps = fabs((x - y) / max);
   if (eps > thres) {
     fprintf(stderr, "assert_equal: fail %s = %g, %s = %g rel err = %g thres = %g\n",
