@@ -29,7 +29,7 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-4);
+  psc_check_particles_ref(1e-6);
   psc_destroy();
 
 #ifdef USE_CUDA
@@ -49,11 +49,10 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(5e-4);
+  psc_check_particles_ref(1e-6);
   psc_destroy();
 #endif
 
-#if 1
   printf("=== testing push_part_yz_b()\n");
 
   psc_create_test_yz(&conf_fortran);
@@ -66,7 +65,7 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_b();
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-2);
+  psc_check_particles_ref(1e-6);
   psc_destroy();
 
 #ifdef USE_CUDA
@@ -83,7 +82,6 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-2);
   psc_destroy();
-#endif
 #endif
 
   printf("=== testing push_part_yz()\n");
