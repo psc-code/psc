@@ -108,8 +108,8 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-4);
-  psc_check_currents_ref(1e-4); 
+  psc_check_particles_ref(1e-8);
+  psc_check_currents_ref(2e-6); 
   psc_destroy();
 #endif
 

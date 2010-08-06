@@ -5,6 +5,28 @@
 #include <xmmintrin.h>
 #include <emmintrin.h>
 
+//////////////////////////////////////////////////////////////////////
+/// Slow (serial) but correct version of 2D field interpolation
+///
+/// FIXME: gh2 and gh3 should switch positions in the argument list
+
+#define F3YZ(m, j,k) F3_SSE2(pf, m, psc.ilo[0],j,k)
+
+#define INTERP_FIELD_YZ_SLOW(m, jl2, jl3, gh3, gh2, var) do {		\
+    for (int c = 0; c < VEC_SIZE; c++) {				\
+      var.v[c]								\
+	= (gh3##mz.v[c]*( gh2##my.v[c]*F3YZ(m,jl2.v[c]-1,jl3.v[c]-1) +	\
+			  gh2##Oy.v[c]*F3YZ(m,jl2.v[c]  ,jl3.v[c]-1) +	\
+			  gh2##ly.v[c]*F3YZ(m,jl2.v[c]+1,jl3.v[c]-1)) +	\
+	   gh3##Oz.v[c]*( gh2##my.v[c]*F3YZ(m,jl2.v[c]-1,jl3.v[c]  ) +	\
+			  gh2##Oy.v[c]*F3YZ(m,jl2.v[c]  ,jl3.v[c]  ) +	\
+			  gh2##ly.v[c]*F3YZ(m,jl2.v[c]+1,jl3.v[c]  )) +	\
+	   gh3##lz.v[c]*( gh2##my.v[c]*F3YZ(m,jl2.v[c]-1,jl3.v[c]+1) +	\
+			  gh2##Oy.v[c]*F3YZ(m,jl2.v[c]  ,jl3.v[c]+1) +	\
+			  gh2##ly.v[c]*F3YZ(m,jl2.v[c]+1,jl3.v[c]+1)));	\
+    }									\
+  } while (0)
+
 //---------------------------------------------
 /// Calculates the offset for accessing pointers to 
 /// flattened (2-D YZ only) fields using vector operations
@@ -135,7 +157,7 @@ union packed_int{
 // Field interpolation for true 2D yz pusher.
 // This may be ugly, but it smokes the serial version.
 
-#define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
+#define INTERP_FIELD_YZ_FAST(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
     pvReal field##tmp1, field##tmp2, field##tmp3;			\
     pvReal field##_in_A1, field##_in_B1;	\
     pvReal field##_in_A2, field##_in_B2;	\
@@ -212,6 +234,7 @@ union packed_int{
     field.r = pv_add_real(field.r, field##tmp1.r);			\
   }
 
+#define INTERP_FIELD_YZ INTERP_FIELD_YZ_SLOW
 
 #else // Single Precision
 

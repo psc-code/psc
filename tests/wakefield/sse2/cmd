@@ -1,4 +1,3 @@
-# FAILS!
 openmpirun -n 2 src/VLI \
 	   --nproc_z 2 \
 	   --mod_output c --output_format hdf5 --output_combine --write_tfield no \

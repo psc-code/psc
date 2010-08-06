@@ -3,7 +3,7 @@ openmpirun -n 2 src/VLI \
 	   --mod_output c --output_format hdf5 --output_combine --write_tfield no \
 	   --mod_particle generic_c \
 	   --mod_moment generic_c \
-	   --mod_fields c \
+	   --mod_field c \
 	   --case wakefield \
 	   --ihi_z 200 \
 	   --nmax 11
