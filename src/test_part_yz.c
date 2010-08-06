@@ -12,9 +12,11 @@ main(int argc, char **argv)
 
   struct psc_mod_config conf_fortran = {
     .mod_particle = "fortran",
+    .mod_sort = "qsort",
   };
   struct psc_mod_config conf_generic_c = {
     .mod_particle = "generic_c",
+    .mod_sort = "qsort",
   };
 
   printf("=== testing push_part_yz_a()\n");
@@ -35,6 +37,7 @@ main(int argc, char **argv)
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
     .mod_particle = "cuda",
+    .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_cuda);
   psc_push_part_yz_a();
@@ -45,6 +48,7 @@ main(int argc, char **argv)
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
+    .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
