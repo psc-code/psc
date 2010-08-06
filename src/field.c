@@ -3,11 +3,11 @@
 #include "util/profile.h"
 
 static void
-c_push_field_a()
+c_push_field_a_nopml()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_push_field_a", 1., 0, 0);
+    pr = prof_register("c_field_a", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -19,8 +19,8 @@ c_push_field_a()
   f_real cny = .5 * ly;
   f_real cnz = .5 * lz;
 
-  // E-field propagation E^(n)    , B^(n), j^(n) 
-  //                  -> E^(n+0.5), B^(n), j^(n)
+  // E-field propagation E^(n)    , H^(n), j^(n) 
+  //                  -> E^(n+0.5), H^(n), j^(n)
 
   for (int iz = psc.ilo[2] - 1; iz < psc.ihi[2] + 1; iz++) {
     for (int iy = psc.ilo[1] - 1; iy < psc.ihi[1] + 1; iy++) {
@@ -45,8 +45,8 @@ c_push_field_a()
 
   psc_fill_ghosts(EX, EX + 3);
 
-  // B-field propagation E^(n+0.5), B^(n    ), j^(n), m^(n+0.5)
-  //                  -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
+  // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
+  //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
 
   for (int iz = psc.ilo[2] - 1; iz < psc.ihi[2] + 1; iz++) {
     for (int iy = psc.ilo[1] - 1; iy < psc.ihi[1] + 1; iy++) {
@@ -72,11 +72,11 @@ c_push_field_a()
 }
 
 static void
-c_push_field_b()
+c_push_field_b_nopml()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_push_field_b", 1., 0, 0);
+    pr = prof_register("c_field_b", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -138,6 +138,26 @@ c_push_field_b()
   psc_fill_ghosts(EX, EX + 3);
 
   prof_stop(pr);
+}
+
+static void
+c_push_field_a(void)
+{
+  if (psc.domain.use_pml) {
+    assert(0);
+  } else {
+    c_push_field_a_nopml();
+  }
+}
+
+static void
+c_push_field_b(void)
+{
+  if (psc.domain.use_pml) {
+    assert(0);
+  } else {
+    c_push_field_b_nopml();
+  }
 }
 
 struct psc_push_field_ops psc_push_field_ops_c = {
