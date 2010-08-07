@@ -146,19 +146,19 @@ struct d_part {
 typedef struct {
   struct d_part h_part; // all particles, on host
   struct d_part d_part; // all particles, on device
+  int nr_blocks;        // number of blocks
+  int b_mx[3];          // number of blocks by direction
 } particles_cuda_t;
 
 struct psc_cuda {
   particles_cuda_t p;
-  int nr_blocks;        // number of blocks
-  int b_mx[3];          // number of blocks by direction
 };
 
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void cuda_push_part_yz_b2();
-EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
-EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
+EXTERN_C void __cuda_particles_from_fortran(particles_cuda_t *cuda);
+EXTERN_C void __cuda_particles_to_fortran(particles_cuda_t *cuda);
 EXTERN_C void __cuda_fields_from_fortran(fields_cuda_t *pf);
 EXTERN_C void __cuda_fields_to_fortran(fields_cuda_t *pf);
 

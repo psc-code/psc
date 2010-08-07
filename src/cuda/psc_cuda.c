@@ -14,7 +14,7 @@ find_cell(real xi, real yi, real zi, int l[3])
 }
 
 static inline int
-find_blockIdx(struct psc_cuda *cuda, real xi, real yi, real zi)
+find_blockIdx(particles_cuda_t *pp, real xi, real yi, real zi)
 {
   int bi[3];
   find_cell(xi, yi, zi, bi);
@@ -22,20 +22,20 @@ find_blockIdx(struct psc_cuda *cuda, real xi, real yi, real zi)
   bi[1] /= BLOCKSIZE_Y;
   bi[2] /= BLOCKSIZE_Z;
 
-  assert(bi[0] >= 0 && bi[0] < cuda->b_mx[0]);
-  assert(bi[1] >= 0 && bi[1] < cuda->b_mx[1]);
-  assert(bi[2] >= 0 && bi[2] < cuda->b_mx[2]);
+  assert(bi[0] >= 0 && bi[0] < pp->b_mx[0]);
+  assert(bi[1] >= 0 && bi[1] < pp->b_mx[1]);
+  assert(bi[2] >= 0 && bi[2] < pp->b_mx[2]);
 
-  return (bi[2] * cuda->b_mx[1] + bi[1]) * cuda->b_mx[0] + bi[0];
+  return (bi[2] * pp->b_mx[1] + bi[1]) * pp->b_mx[0] + bi[0];
 }
 
 static inline void
-blockIdx_to_blockCrd(struct psc_cuda *cuda, int bidx, int bi[3])
+blockIdx_to_blockCrd(particles_cuda_t *pp, int bidx, int bi[3])
 {
-  bi[2] = bidx / (cuda->b_mx[1] * cuda->b_mx[0]);
-  bidx -= bi[2] * (cuda->b_mx[1] * cuda->b_mx[0]);
-  bi[1] = bidx / cuda->b_mx[0];
-  bidx -= bi[1] * cuda->b_mx[0];
+  bi[2] = bidx / (pp->b_mx[1] * pp->b_mx[0]);
+  bidx -= bi[2] * (pp->b_mx[1] * pp->b_mx[0]);
+  bi[1] = bidx / pp->b_mx[0];
+  bidx -= bi[1] * pp->b_mx[0];
   bi[0] = bidx;
 }
 
@@ -90,19 +90,19 @@ cuda_particles_from_fortran()
   h_part->xi4 = xi4;
   h_part->pxi4 = pxi4;
 
-  cuda->b_mx[0] = (psc.ihi[0] - psc.ilo[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
-  cuda->b_mx[1] = (psc.ihi[1] - psc.ilo[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
-  cuda->b_mx[2] = (psc.ihi[2] - psc.ilo[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
-  cuda->nr_blocks = cuda->b_mx[0] * cuda->b_mx[1] * cuda->b_mx[2];
-  h_part->offsets = calloc(cuda->nr_blocks + 1, sizeof(*h_part->offsets));
+  pp->b_mx[0] = (psc.ihi[0] - psc.ilo[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
+  pp->b_mx[1] = (psc.ihi[1] - psc.ilo[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
+  pp->b_mx[2] = (psc.ihi[2] - psc.ilo[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+  pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
+  h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
   int last_block = -1;
   for (int i = 0; i <= psc.pp.n_part; i++) {
     int block;
     if (i < psc.pp.n_part) {
-      block = find_blockIdx(cuda, psc.pp.particles[i].xi, psc.pp.particles[i].yi,
+      block = find_blockIdx(pp, psc.pp.particles[i].xi, psc.pp.particles[i].yi,
 			    psc.pp.particles[i].zi);
     } else {
-      block = cuda->nr_blocks;
+      block = pp->nr_blocks;
     }
     assert(last_block <= block);
     while (last_block < block) {
@@ -120,7 +120,7 @@ cuda_particles_from_fortran()
   }
 #endif
 
-  __cuda_particles_from_fortran(cuda);
+  __cuda_particles_from_fortran(pp);
 
   free(h_part->offsets);
 }
@@ -134,7 +134,7 @@ cuda_particles_to_fortran()
   float4 *xi4  = h_part->xi4;
   float4 *pxi4 = h_part->pxi4;
 
-  __cuda_particles_to_fortran(cuda);
+  __cuda_particles_to_fortran(pp);
 
   for (int i = 0; i < psc.pp.n_part; i++) {
     f_real qni_div_mni = xi4[i].w;
