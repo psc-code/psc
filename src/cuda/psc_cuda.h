@@ -132,6 +132,10 @@ nint(real x)
 
 // ======================================================================
 
+typedef float particle_cuda_real_t;
+
+#define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
+
 struct d_part {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
   float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
@@ -139,10 +143,12 @@ struct d_part {
                   // are at indices offsets[block] .. offsets[block+1]-1
 };
 
+typedef struct {
+  struct d_part h_part;
+} particles_cuda_t;
+
 struct psc_cuda {
-  float4 *xi4;
-  float4 *pxi4;
-  int *offsets;
+  particles_cuda_t p;
   struct d_part d_part; // all particles, on device
   int nr_blocks;        // number of blocks
   int b_mx[3];          // number of blocks by direction

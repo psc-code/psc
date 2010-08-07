@@ -59,6 +59,8 @@ static void
 cuda_particles_from_fortran()
 {
   struct psc_cuda *cuda = psc.c_ctx;
+  particles_cuda_t *pp = &cuda->p;
+  struct d_part *h_part = &pp->h_part;
 
   float4 *xi4  = calloc(psc.pp.n_part, sizeof(float4));
   float4 *pxi4 = calloc(psc.pp.n_part, sizeof(float4));
@@ -85,14 +87,14 @@ cuda_particles_from_fortran()
     pxi4[i].w = qni_wni;
   }
 
-  cuda->xi4 = xi4;
-  cuda->pxi4 = pxi4;
+  h_part->xi4 = xi4;
+  h_part->pxi4 = pxi4;
 
   cuda->b_mx[0] = (psc.ihi[0] - psc.ilo[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
   cuda->b_mx[1] = (psc.ihi[1] - psc.ilo[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
   cuda->b_mx[2] = (psc.ihi[2] - psc.ilo[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
   cuda->nr_blocks = cuda->b_mx[0] * cuda->b_mx[1] * cuda->b_mx[2];
-  cuda->offsets = calloc(cuda->nr_blocks + 1, sizeof(*cuda->offsets));
+  h_part->offsets = calloc(cuda->nr_blocks + 1, sizeof(*h_part->offsets));
   int last_block = -1;
   for (int i = 0; i <= psc.pp.n_part; i++) {
     int block;
@@ -104,7 +106,7 @@ cuda_particles_from_fortran()
     }
     assert(last_block <= block);
     while (last_block < block) {
-      cuda->offsets[last_block+1] = i;
+      h_part->offsets[last_block+1] = i;
       last_block++;
     }
   }
@@ -114,21 +116,23 @@ cuda_particles_from_fortran()
     int ci[3];
     blockIdx_to_blockCrd(cuda, c, ci);
     printf("cell %d [%d,%d,%d]: %d:%d\n", c, ci[0], ci[1], ci[2],
-	   cuda->offsets[c], cuda->offsets[c+1]);
+	   h_part->offsets[c], h_part->offsets[c+1]);
   }
 #endif
 
   __cuda_particles_from_fortran(cuda);
 
-  free(cuda->offsets);
+  free(h_part->offsets);
 }
 
 static void
 cuda_particles_to_fortran()
 {
   struct psc_cuda *cuda = psc.c_ctx;
-  float4 *xi4  = cuda->xi4;
-  float4 *pxi4 = cuda->pxi4;
+  particles_cuda_t *pp = &cuda->p;
+  struct d_part *h_part = &pp->h_part;
+  float4 *xi4  = h_part->xi4;
+  float4 *pxi4 = h_part->pxi4;
 
   __cuda_particles_to_fortran(cuda);
 
