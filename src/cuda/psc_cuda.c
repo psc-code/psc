@@ -162,15 +162,15 @@ cuda_particles_to_fortran()
   free(pxi4);
 }
 
-static void
-cuda_fields_from_fortran()
+void
+fields_cuda_get(fields_cuda_t *pf, int mb, int me)
 {
-  struct psc_cuda *cuda = psc.c_ctx;
-  fields_cuda_t *pf = &cuda->f;
+  assert(!psc.domain.use_pml);
+  int nr_fields = HZ + 1;
 
-  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+  pf->flds = calloc(nr_fields * psc.fld_size, sizeof(*pf->flds));
   
-  for (int m = EX; m <= HZ; m++) {
+  for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
@@ -183,13 +183,20 @@ cuda_fields_from_fortran()
   __cuda_fields_from_fortran(pf);
 }
 
-static void
-cuda_fields_to_fortran()
+void
+fields_cuda_put(fields_cuda_t *pf, int mb, int me)
 {
-  struct psc_cuda *cuda = psc.c_ctx;
-  fields_cuda_t *pf = &cuda->f;
-
   __cuda_fields_to_fortran(pf);
+
+  for (int m = mb; m < me; m++) {
+    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
+      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
+	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+	  F3_BASE(m, jx,jy,jz) = F3_CUDA(pf, m, jx,jy,jz);
+	}
+      }
+    }
+  }
 
   free(pf->flds);
 }
@@ -200,8 +207,6 @@ struct psc_ops psc_ops_cuda = {
   .destroy                = cuda_destroy,
   .particles_from_fortran = cuda_particles_from_fortran,
   .particles_to_fortran   = cuda_particles_to_fortran,
-  .fields_from_fortran    = cuda_fields_from_fortran,
-  .fields_to_fortran      = cuda_fields_to_fortran,
   .push_part_yz_a         = cuda_push_part_yz_a,
   .push_part_yz_b         = cuda_push_part_yz_b2,
 };

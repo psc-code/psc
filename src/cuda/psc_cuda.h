@@ -137,6 +137,8 @@ typedef struct {
   fields_cuda_real_t *d_flds;
 } fields_cuda_t;
 
+void fields_cuda_get(fields_cuda_t *pf, int mb, int me);
+void fields_cuda_put(fields_cuda_t *pf, int mb, int me);
 
 struct d_part {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
@@ -148,7 +150,6 @@ struct d_part {
 struct psc_cuda {
   float4 *xi4;
   float4 *pxi4;
-  fields_cuda_t f;
   int *offsets;
   struct d_part d_part; // all particles, on device
   int nr_blocks;        // number of blocks
