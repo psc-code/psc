@@ -197,7 +197,7 @@ push_pxi_dt(struct d_particle *p,
 }
 
 __device__ static void
-push_part_yz_a_one(int n, struct d_part d_particles, real *d_flds)
+push_part_yz_a_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
 {
   struct d_particle p;
   LOAD_PARTICLE(p, d_particles, n);
@@ -212,7 +212,7 @@ push_part_yz_a_one(int n, struct d_part d_particles, real *d_flds)
 }
 
 __device__ static void
-push_part_yz_b_one(int n, struct d_part d_particles, real *d_flds)
+push_part_yz_b_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
 {
   struct d_particle p;
   LOAD_PARTICLE(p, d_particles, n);
@@ -267,7 +267,7 @@ push_part_yz_b_one(int n, struct d_part d_particles, real *d_flds)
 }
 
 __device__ static void
-push_part_yz_b2_one(int n, struct d_part d_particles, real *d_flds, int l0[3])
+push_part_yz_b2_one(int n, particles_cuda_dev_t d_particles, real *d_flds, int l0[3])
 {
   struct d_particle p;
   LOAD_PARTICLE(p, d_particles, n);
@@ -336,7 +336,7 @@ push_part_yz_b2_one(int n, struct d_part d_particles, real *d_flds, int l0[3])
 }
 
 __global__ static void
-push_part_yz_a(int n_part, struct d_part d_part, float *d_flds, int stride)
+push_part_yz_a(int n_part, particles_cuda_dev_t d_part, float *d_flds, int stride)
 {
   int n = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -347,7 +347,7 @@ push_part_yz_a(int n_part, struct d_part d_part, float *d_flds, int stride)
 }
 
 __global__ static void
-push_part_yz_b(int n_part, struct d_part d_part, float *d_flds, int stride)
+push_part_yz_b(int n_part, particles_cuda_dev_t d_part, float *d_flds, int stride)
 {
   int n = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -358,7 +358,7 @@ push_part_yz_b(int n_part, struct d_part d_part, float *d_flds, int stride)
 }
 
 __global__ static void
-push_part_yz_b2(int n_particles, struct d_part d_part, real *d_flds)
+push_part_yz_b2(int n_particles, particles_cuda_dev_t d_part, real *d_flds)
 {
   int tid = threadIdx.x, bid = blockIdx.x;
   int block_begin = d_part.offsets[bid];
@@ -395,8 +395,6 @@ cuda_push_part_yz_a()
   }
   prof_start(pr);
 
-  set_constants(&pp);
-
   const int threadsPerBlock = 128;
   const int gridSize = 256;
   int dimBlock[2]  = { threadsPerBlock, 1 };
@@ -424,8 +422,6 @@ cuda_push_part_yz_b()
     pr = prof_register("cuda_part_yz_b", 1., 0, psc.pp.n_part * 16 * sizeof(float));
   }
   prof_start(pr);
-
-  set_constants(&pp);
 
   const int threadsPerBlock = 128;
   const int gridSize = 256;
@@ -455,8 +451,6 @@ cuda_push_part_yz_b2()
   }
   prof_start(pr);
 
-  set_constants(&pp);
-
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { pp.nr_blocks, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
@@ -469,11 +463,11 @@ cuda_push_part_yz_b2()
 }
 
 EXTERN_C void
-__cuda_particles_from_fortran(particles_cuda_t *pp)
+__particles_cuda_get(particles_cuda_t *pp)
 {
   int n_part = psc.pp.n_part;
-  struct d_part *h_part = &pp->h_part;
-  struct d_part *d_part = &pp->d_part;
+  particles_cuda_dev_t *h_part = &pp->h_part;
+  particles_cuda_dev_t *d_part = &pp->d_part;
 
   check(cudaMalloc((void **) &d_part->xi4, n_part * sizeof(float4)));
   check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
@@ -486,14 +480,16 @@ __cuda_particles_from_fortran(particles_cuda_t *pp)
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(d_part->offsets, h_part->offsets,
 		   (pp->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
+
+  set_constants(pp);
 }
 
 EXTERN_C void
-__cuda_particles_to_fortran(particles_cuda_t *pp)
+__particles_cuda_put(particles_cuda_t *pp)
 {
   int n_part = psc.pp.n_part;
-  struct d_part *h_part = &pp->h_part;
-  struct d_part *d_part = &pp->d_part;
+  particles_cuda_dev_t *h_part = &pp->h_part;
+  particles_cuda_dev_t *d_part = &pp->d_part;
 
   check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
@@ -505,7 +501,7 @@ __cuda_particles_to_fortran(particles_cuda_t *pp)
 }
 
 EXTERN_C void
-__cuda_fields_from_fortran(fields_cuda_t *pf)
+__fields_cuda_get(fields_cuda_t *pf)
 {
   assert(!psc.domain.use_pml);
   int nr_fields = HZ + 1; // FIXME, repeated
@@ -518,7 +514,7 @@ __cuda_fields_from_fortran(fields_cuda_t *pf)
 }
 
 EXTERN_C void
-__cuda_fields_to_fortran(fields_cuda_t *pf)
+__fields_cuda_put(fields_cuda_t *pf)
 {
   check(cudaFree(pf->d_flds));
 }

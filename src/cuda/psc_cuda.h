@@ -136,30 +136,31 @@ typedef float particle_cuda_real_t;
 
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
-struct d_part {
+typedef struct {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
   float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
-};
+} particles_cuda_dev_t;
 
 typedef struct {
-  struct d_part h_part; // all particles, on host
-  struct d_part d_part; // all particles, on device
-  int nr_blocks;        // number of blocks
-  int b_mx[3];          // number of blocks by direction
+  particles_cuda_dev_t h_part; // all particles, on host
+  particles_cuda_dev_t d_part; // all particles, on device
+  int nr_blocks;               // number of blocks
+  int b_mx[3];                 // number of blocks by direction
 } particles_cuda_t;
 
 EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
 EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
 
+EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
+EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
+EXTERN_C void __fields_cuda_get(fields_cuda_t *pf);
+EXTERN_C void __fields_cuda_put(fields_cuda_t *pf);
+
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void cuda_push_part_yz_b2();
-EXTERN_C void __cuda_particles_from_fortran(particles_cuda_t *pp);
-EXTERN_C void __cuda_particles_to_fortran(particles_cuda_t *pp);
-EXTERN_C void __cuda_fields_from_fortran(fields_cuda_t *pf);
-EXTERN_C void __cuda_fields_to_fortran(fields_cuda_t *pf);
 
 struct d_particle {
   real xi[3];

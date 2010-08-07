@@ -44,7 +44,7 @@ blockIdx_to_blockCrd(particles_cuda_t *pp, int bidx, int bi[3])
 void
 particles_cuda_get(particles_cuda_t *pp)
 {
-  struct d_part *h_part = &pp->h_part;
+  particles_cuda_dev_t *h_part = &pp->h_part;
 
   float4 *xi4  = calloc(psc.pp.n_part, sizeof(float4));
   float4 *pxi4 = calloc(psc.pp.n_part, sizeof(float4));
@@ -104,7 +104,7 @@ particles_cuda_get(particles_cuda_t *pp)
   }
 #endif
 
-  __cuda_particles_from_fortran(pp);
+  __particles_cuda_get(pp);
 
   free(h_part->offsets);
 }
@@ -112,11 +112,11 @@ particles_cuda_get(particles_cuda_t *pp)
 void
 particles_cuda_put(particles_cuda_t *pp)
 {
-  struct d_part *h_part = &pp->h_part;
+  particles_cuda_dev_t *h_part = &pp->h_part;
   float4 *xi4  = h_part->xi4;
   float4 *pxi4 = h_part->pxi4;
 
-  __cuda_particles_to_fortran(pp);
+  __particles_cuda_put(pp);
 
   for (int i = 0; i < psc.pp.n_part; i++) {
     f_real qni_div_mni = xi4[i].w;
@@ -166,13 +166,13 @@ fields_cuda_get(fields_cuda_t *pf, int mb, int me)
     }
   }
 
-  __cuda_fields_from_fortran(pf);
+  __fields_cuda_get(pf);
 }
 
 void
 fields_cuda_put(fields_cuda_t *pf, int mb, int me)
 {
-  __cuda_fields_to_fortran(pf);
+  __fields_cuda_put(pf);
 
   for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
