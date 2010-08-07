@@ -393,6 +393,7 @@ cuda_push_part_yz_a()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  particles_cuda_t *pp = &cuda->p;
   set_constants(cuda);
 
   const int threadsPerBlock = 128;
@@ -400,7 +401,7 @@ cuda_push_part_yz_a()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.pp.n_part, cuda->d_part, pf.d_flds,
+	     push_part_yz_a, (psc.pp.n_part, pp->d_part, pf.d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -421,6 +422,7 @@ cuda_push_part_yz_b()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  particles_cuda_t *pp = &cuda->p;
   set_constants(cuda);
 
   const int threadsPerBlock = 128;
@@ -428,7 +430,7 @@ cuda_push_part_yz_b()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b, (psc.pp.n_part, cuda->d_part, pf.d_flds,
+	     push_part_yz_b, (psc.pp.n_part, pp->d_part, pf.d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -449,12 +451,13 @@ cuda_push_part_yz_b2()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  particles_cuda_t *pp = &cuda->p;
   set_constants(cuda);
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { cuda->nr_blocks, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b2, (psc.pp.n_part, cuda->d_part, pf.d_flds));
+	     push_part_yz_b2, (psc.pp.n_part, pp->d_part, pf.d_flds));
 
   prof_stop(pr);
 
@@ -467,17 +470,18 @@ __cuda_particles_from_fortran(struct psc_cuda *cuda)
   int n_part = psc.pp.n_part;
   particles_cuda_t *pp = &cuda->p;
   struct d_part *h_part = &pp->h_part;
+  struct d_part *d_part = &pp->d_part;
 
-  check(cudaMalloc((void **) &cuda->d_part.xi4, n_part * sizeof(float4)));
-  check(cudaMalloc((void **) &cuda->d_part.pxi4, n_part * sizeof(float4)));
-  check(cudaMalloc((void **) &cuda->d_part.offsets, 
+  check(cudaMalloc((void **) &d_part->xi4, n_part * sizeof(float4)));
+  check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
+  check(cudaMalloc((void **) &d_part->offsets, 
 		   (cuda->nr_blocks + 1) * sizeof(int)));
 
-  check(cudaMemcpy(cuda->d_part.xi4, h_part->xi4, n_part * sizeof(float4),
+  check(cudaMemcpy(d_part->xi4, h_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(cuda->d_part.pxi4, h_part->pxi4, n_part * sizeof(float4),
+  check(cudaMemcpy(d_part->pxi4, h_part->pxi4, n_part * sizeof(float4),
 		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(cuda->d_part.offsets, h_part->offsets,
+  check(cudaMemcpy(d_part->offsets, h_part->offsets,
 		   (cuda->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
 }
 
@@ -487,13 +491,15 @@ __cuda_particles_to_fortran(struct psc_cuda *cuda)
   int n_part = psc.pp.n_part;
   particles_cuda_t *pp = &cuda->p;
   struct d_part *h_part = &pp->h_part;
+  struct d_part *d_part = &pp->d_part;
 
-  check(cudaMemcpy(h_part->xi4, cuda->d_part.xi4, n_part * sizeof(float4),
+  check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(h_part->pxi4, cuda->d_part.pxi4, n_part * sizeof(float4),
+  check(cudaMemcpy(h_part->pxi4, d_part->pxi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaFree(cuda->d_part.xi4));
-  check(cudaFree(cuda->d_part.pxi4));
+  check(cudaFree(d_part->xi4));
+  check(cudaFree(d_part->pxi4));
+  check(cudaFree(d_part->offsets));
 }
 
 EXTERN_C void
