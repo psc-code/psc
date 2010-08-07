@@ -15,11 +15,6 @@
 
 // ======================================================================
 
-EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
-EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
-EXTERN_C void __fields_cuda_get(fields_cuda_t *pf);
-EXTERN_C void __fields_cuda_put(fields_cuda_t *pf);
-
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void cuda_push_part_yz_b2();
@@ -32,9 +27,6 @@ struct d_particle {
 };
 
 #define THREADS_PER_BLOCK 128
-#define BLOCKSIZE_X 1
-#define BLOCKSIZE_Y 1
-#define BLOCKSIZE_Z 1
 
 #define LOAD_PARTICLE(pp, d_p, n) do {					\
     (pp).xi[0]       = d_p.xi4[n].x;					\

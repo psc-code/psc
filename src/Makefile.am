@@ -76,7 +76,9 @@ libpsc_a_SOURCES += \
 endif USE_SSE2
 
 if USE_CUDA
-libpsc_a_SOURCES += cuda/psc_cuda.c cuda/push_part_yz.c
+libpsc_a_SOURCES += \
+	psc_fields_cuda.c psc_particles_cuda.c \
+	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \

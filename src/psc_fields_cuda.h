@@ -3,6 +3,7 @@
 #define PSC_FIELD_CUDA_H
 
 #include "psc.h"
+#include "cuda_wrap.h"
 
 typedef float fields_cuda_real_t;
 
@@ -68,5 +69,8 @@ typedef struct {
 void fields_cuda_get(fields_cuda_t *pf, int mb, int me);
 void fields_cuda_put(fields_cuda_t *pf, int mb, int me);
 //void fields_cuda_zero(fields_cuda_t *pf, int m);
+
+EXTERN_C void __fields_cuda_get(fields_cuda_t *pf);
+EXTERN_C void __fields_cuda_put(fields_cuda_t *pf);
 
 #endif
