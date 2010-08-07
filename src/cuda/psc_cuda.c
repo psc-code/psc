@@ -202,7 +202,7 @@ fields_cuda_put(fields_cuda_t *pf, int mb, int me)
 }
 
 struct psc_ops psc_ops_cuda = {
-  .name = "cuda",
+  .name                   = "cuda",
   .create                 = cuda_create,
   .destroy                = cuda_destroy,
   .particles_from_fortran = cuda_particles_from_fortran,

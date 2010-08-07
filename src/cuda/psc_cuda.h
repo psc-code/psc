@@ -2,6 +2,8 @@
 #ifndef PSC_CUDA_H
 #define PSC_CUDA_H
 
+#include "psc_fields_cuda.h"
+
 #include <assert.h>
 #include <math.h>
 #include <psc.h>
@@ -130,16 +132,6 @@ nint(real x)
 
 // ======================================================================
 
-typedef float fields_cuda_real_t;
-
-typedef struct {
-  fields_cuda_real_t *flds;
-  fields_cuda_real_t *d_flds;
-} fields_cuda_t;
-
-void fields_cuda_get(fields_cuda_t *pf, int mb, int me);
-void fields_cuda_put(fields_cuda_t *pf, int mb, int me);
-
 struct d_part {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
   float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
@@ -200,55 +192,5 @@ struct d_particle {
     d_p.pxi4[n].z = (pp).pxi[2];					\
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
-
-// ----------------------------------------------------------------------
-// macros to access fields from CUDA
-
-#define F3_OFF(fldnr, jx,jy,jz)						\
-  ((((fldnr)								\
-     *d_mx[2] + ((jz)-d_iglo[2]))					\
-    *d_mx[1] + ((jy)-d_iglo[1]))					\
-   *d_mx[0] + ((jx)-d_iglo[0]))
-
-#if 1
-
-#define F3(fldnr, jx,jy,jz) \
-  (d_flds)[F3_OFF(fldnr, jx,jy,jz)]
-
-#else
-
-#define F3(fldnr, jx,jy,jz)						\
-  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < NR_FIELDS * d_mx[0] * d_mx[1] * d_mx[2]);		\
-      &(d_flds[off]);							\
-    }))
-
-#endif
-
-// ----------------------------------------------------------------------
-// macros to access C (host) versions of the fields
-
-#define F3_OFF_CUDA(fldnr, jx,jy,jz)					\
-  (((((fldnr								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
-
-#if 1
-
-#define F3_CUDA(pf, fldnr, jx,jy,jz)		\
-  ((pf)->flds[F3_OFF_CUDA(fldnr, jx,jy,jz)])
-
-#else
-//out of range debugging
-#define F3_CUDA(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_CUDA(fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < NR_FIELDS * psc.fld_size);				\
-      &((pf)->flds[off]);						\
-    }))
-
-#endif
 
 #endif
