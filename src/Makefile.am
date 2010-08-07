@@ -126,10 +126,11 @@ if USE_CUDA
 NVCC = /usr/local/cuda/bin/nvcc
 NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)) $(EXTRA_NVCFLAGS)
 
-LDADD += -L/usr/local/cuda/lib64 -lcudart
+#LDADD += -L/usr/local/cuda/lib64 -lcudart
 
-push_part_yz.o: cuda/push_part_yz.cu
-	$(NVCC) $(NVCFLAGS) -c $< -o $@
+#push_part_yz.o: cuda/push_part_yz.cu
+#push_part_yz.o: cuda/push_part_yz.c
+#	$(NVCC) $(NVCFLAGS) -c $< -o $@
 
 %.cu: %.c
 	ln -sf $(<F) $@

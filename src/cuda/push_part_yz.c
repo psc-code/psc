@@ -78,7 +78,7 @@ cache_fields(real *d_flds, const int l[3])
     //    int m = tmp + EX;
     //    printf("n %d ti %d m %d, jx %d,%d,%d\n", n, ti, m, jx, jy, jz);
     // currently it seems faster to do the loop rather than do m by threadidx
-    for (int m = EX; m <= BZ; m++) {
+    for (int m = EX; m <= HZ; m++) {
       F3C(m, jx,jy,jz) = F3(m, jx+l[0],jy+l[1],jz+l[2]);
     }
     ti += blockDim.x;
@@ -99,7 +99,7 @@ cache_fields(real *d_flds, const int l[3])
       //    int m = tmp + EX;
       //    printf("n %d ti %d m %d, jx %d,%d,%d\n", n, ti, m, jx, jy, jz);
       // currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= BZ; m++) {
+      for (int m = EX; m <= HZ; m++) {
 	F3C(m, jx,jy,jz) = F3(m, jx+l[0],jy+l[1],jz+l[2]);
       }
     }
@@ -169,7 +169,7 @@ find_interp_to_grid_coeff(real *arr, const real h[3])
 
 __device__ static void
 push_pxi_dt(struct d_particle *p,
-	    real exq, real eyq, real ezq, real bxq, real byq, real bzq)
+	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
   real dq = p->qni_div_mni * d_dqs;
   real pxm = p->pxi[0] + dq*exq;
@@ -177,7 +177,7 @@ push_pxi_dt(struct d_particle *p,
   real pzm = p->pxi[2] + dq*ezq;
   
   real root = dq * rsqrtr(real(1.) + sqr(pxm) + sqr(pym) + sqr(pzm));
-  real taux = bxq * root, tauy = byq * root, tauz = bzq * root;
+  real taux = hxq * root, tauy = hyq * root, tauz = hzq * root;
   
   real tau = real(1.) / (real(1.) + sqr(taux) + sqr(tauy) + sqr(tauz));
   real pxp = ( (real(1.) + sqr(taux) - sqr(tauy) - sqr(tauz)) * pxm
@@ -246,15 +246,15 @@ push_part_yz_b_one(int n, struct d_part d_particles, real *d_flds)
   INTERPOLATE_FIELD(exq, EX, gg, gg, j, j, j);
   INTERPOLATE_FIELD(eyq, EY, hh, gg, j, l, j);
   INTERPOLATE_FIELD(ezq, EZ, gg, hh, j, j, l);
-  INTERPOLATE_FIELD(bxq, BX, hh, hh, j, l, l);
-  INTERPOLATE_FIELD(byq, BY, gg, hh, j, j, l);
-  INTERPOLATE_FIELD(bzq, BZ, hh, gg, j, l, j);
+  INTERPOLATE_FIELD(hxq, HX, hh, hh, j, l, l);
+  INTERPOLATE_FIELD(hyq, HY, gg, hh, j, j, l);
+  INTERPOLATE_FIELD(hzq, HZ, hh, gg, j, l, j);
 
 #undef INTERPOLATE_FIELD
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  push_pxi_dt(&p, exq, eyq, ezq, bxq, byq, bzq);
+  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
 
@@ -311,19 +311,19 @@ push_part_yz_b2_one(int n, struct d_part d_particles, real *d_flds, int l0[3])
       F3C(fldnr, 0, ddy+1, ddz+1);					\
   } while(0)
 
-  real exq, eyq, ezq, bxq, byq, bzq;
+  real exq, eyq, ezq, hxq, hyq, hzq;
   INTERPOLATE_FIELD(exq, EX, g, g);
   INTERPOLATE_FIELD(eyq, EY, h, g);
   INTERPOLATE_FIELD(ezq, EZ, g, h);
-  INTERPOLATE_FIELD(bxq, BX, h, h);
-  INTERPOLATE_FIELD(byq, BY, g, h);
-  INTERPOLATE_FIELD(bzq, BZ, h, g);
+  INTERPOLATE_FIELD(hxq, HX, h, h);
+  INTERPOLATE_FIELD(hyq, HY, g, h);
+  INTERPOLATE_FIELD(hzq, HZ, h, g);
 
 #undef INTERPOLATE_FIELD
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  push_pxi_dt(&p, exq, eyq, ezq, bxq, byq, bzq);
+  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
 
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
 

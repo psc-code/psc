@@ -64,10 +64,10 @@ cuda_particles_from_fortran()
   float4 *pxi4 = calloc(psc.pp.n_part, sizeof(float4));
 
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_t *p = psc_particles_base_get_one(&psc.pp, i);
-    real qni = psc.pp.f_part[i].qni;
-    real wni = psc.pp.f_part[i].wni;
-    real qni_div_mni = qni / psc.pp.f_part[i].mni;
+    particle_base_t *p = particles_base_get_one(&psc.pp, i);
+    real qni = psc.pp.particles[i].qni;
+    real wni = psc.pp.particles[i].wni;
+    real qni_div_mni = qni / psc.pp.particles[i].mni;
     real qni_wni;
     if (qni != 0.) {
       qni_wni = qni * wni;
@@ -75,13 +75,13 @@ cuda_particles_from_fortran()
       qni_wni = wni;
     }
 
-    xi4[i].x  = psc.pp.f_part[i].xi;
-    xi4[i].y  = psc.pp.f_part[i].yi;
-    xi4[i].z  = psc.pp.f_part[i].zi;
+    xi4[i].x  = psc.pp.particles[i].xi;
+    xi4[i].y  = psc.pp.particles[i].yi;
+    xi4[i].z  = psc.pp.particles[i].zi;
     xi4[i].w  = qni_div_mni;
-    pxi4[i].x = psc.pp.f_part[i].pxi;
-    pxi4[i].y = psc.pp.f_part[i].pyi;
-    pxi4[i].z = psc.pp.f_part[i].pzi;
+    pxi4[i].x = psc.pp.particles[i].pxi;
+    pxi4[i].y = psc.pp.particles[i].pyi;
+    pxi4[i].z = psc.pp.particles[i].pzi;
     pxi4[i].w = qni_wni;
   }
 
@@ -97,8 +97,8 @@ cuda_particles_from_fortran()
   for (int i = 0; i <= psc.pp.n_part; i++) {
     int block;
     if (i < psc.pp.n_part) {
-      block = find_blockIdx(cuda, psc.pp.f_part[i].xi, psc.pp.f_part[i].yi,
-			    psc.pp.f_part[i].zi);
+      block = find_blockIdx(cuda, psc.pp.particles[i].xi, psc.pp.particles[i].yi,
+			    psc.pp.particles[i].zi);
     } else {
       block = cuda->nr_blocks;
     }
@@ -147,15 +147,15 @@ cuda_particles_to_fortran()
       wni = qni_wni / qni;
     }
 
-    psc.pp.f_part[i].xi  = xi4[i].x;
-    psc.pp.f_part[i].yi  = xi4[i].y;
-    psc.pp.f_part[i].zi  = xi4[i].z;
-    psc.pp.f_part[i].pxi = pxi4[i].x;
-    psc.pp.f_part[i].pyi = pxi4[i].y;
-    psc.pp.f_part[i].pzi = pxi4[i].z;
-    psc.pp.f_part[i].qni = qni;
-    psc.pp.f_part[i].mni = mni;
-    psc.pp.f_part[i].wni = wni;
+    psc.pp.particles[i].xi  = xi4[i].x;
+    psc.pp.particles[i].yi  = xi4[i].y;
+    psc.pp.particles[i].zi  = xi4[i].z;
+    psc.pp.particles[i].pxi = pxi4[i].x;
+    psc.pp.particles[i].pyi = pxi4[i].y;
+    psc.pp.particles[i].pzi = pxi4[i].z;
+    psc.pp.particles[i].qni = qni;
+    psc.pp.particles[i].mni = mni;
+    psc.pp.particles[i].wni = wni;
   }
 
   free(xi4);
@@ -169,7 +169,7 @@ cuda_fields_from_fortran()
 
   cuda->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(float));
   
-  for (int m = EX; m <= BZ; m++) {
+  for (int m = EX; m <= HZ; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
