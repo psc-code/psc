@@ -150,15 +150,14 @@ typedef struct {
   int b_mx[3];          // number of blocks by direction
 } particles_cuda_t;
 
-struct psc_cuda {
-  particles_cuda_t p;
-};
+EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
+EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
 
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void cuda_push_part_yz_b2();
-EXTERN_C void __cuda_particles_from_fortran(particles_cuda_t *cuda);
-EXTERN_C void __cuda_particles_to_fortran(particles_cuda_t *cuda);
+EXTERN_C void __cuda_particles_from_fortran(particles_cuda_t *pp);
+EXTERN_C void __cuda_particles_to_fortran(particles_cuda_t *pp);
 EXTERN_C void __cuda_fields_from_fortran(fields_cuda_t *pf);
 EXTERN_C void __cuda_fields_to_fortran(fields_cuda_t *pf);
 

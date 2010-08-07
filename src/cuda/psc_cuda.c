@@ -41,25 +41,9 @@ blockIdx_to_blockCrd(particles_cuda_t *pp, int bidx, int bi[3])
 
 // ======================================================================
 
-static void
-cuda_create()
+void
+particles_cuda_get(particles_cuda_t *pp)
 {
-  struct psc_cuda *cuda = malloc(sizeof(*cuda));
-  psc.c_ctx = cuda;
-}
-
-static void
-cuda_destroy()
-{
-  struct psc_cuda *cuda = psc.c_ctx;
-  free(cuda);
-}
-
-static void
-cuda_particles_from_fortran()
-{
-  struct psc_cuda *cuda = psc.c_ctx;
-  particles_cuda_t *pp = &cuda->p;
   struct d_part *h_part = &pp->h_part;
 
   float4 *xi4  = calloc(psc.pp.n_part, sizeof(float4));
@@ -125,11 +109,9 @@ cuda_particles_from_fortran()
   free(h_part->offsets);
 }
 
-static void
-cuda_particles_to_fortran()
+void
+particles_cuda_put(particles_cuda_t *pp)
 {
-  struct psc_cuda *cuda = psc.c_ctx;
-  particles_cuda_t *pp = &cuda->p;
   struct d_part *h_part = &pp->h_part;
   float4 *xi4  = h_part->xi4;
   float4 *pxi4 = h_part->pxi4;
@@ -207,10 +189,6 @@ fields_cuda_put(fields_cuda_t *pf, int mb, int me)
 
 struct psc_ops psc_ops_cuda = {
   .name                   = "cuda",
-  .create                 = cuda_create,
-  .destroy                = cuda_destroy,
-  .particles_from_fortran = cuda_particles_from_fortran,
-  .particles_to_fortran   = cuda_particles_to_fortran,
   .push_part_yz_a         = cuda_push_part_yz_a,
   .push_part_yz_b         = cuda_push_part_yz_b2,
 };
