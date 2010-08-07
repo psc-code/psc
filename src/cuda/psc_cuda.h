@@ -3,155 +3,17 @@
 #define PSC_CUDA_H
 
 #include "psc_fields_cuda.h"
+#include "psc_particles_cuda.h"
 
 #include <assert.h>
 #include <math.h>
 #include <psc.h>
-
-#define rsqrtr rsqrtf
-
-#ifndef __CUDACC__
-
-// ======================================================================
-// CUDA emulation
-
-#include <stdlib.h>
-#include <string.h>
-
-#ifndef __unused
-#define __unused __attribute__((unused))
-#endif
-
-static struct {
-  int x, y;
-} threadIdx __unused;
-
-static struct {
-  int x, y;
-} blockIdx __unused;
-
-static struct {
-  int x, y;
-} blockDim __unused;
-
-#define RUN_KERNEL(dimGrid, dimBlock, func, params) do {		\
-    blockDim.x = dimBlock[0];						\
-    blockDim.y = dimBlock[1];						\
-    for (blockIdx.y = 0; blockIdx.y < dimGrid[1]; blockIdx.y++) {	\
-      for (blockIdx.x = 0; blockIdx.x < dimGrid[0]; blockIdx.x++) {	\
-	for (threadIdx.y = 0; threadIdx.y < dimBlock[1]; threadIdx.y++) { \
-	  for (threadIdx.x = 0; threadIdx.x < dimBlock[0]; threadIdx.x++) { \
-	    func params;						\
-	  }								\
-	}								\
-      }									\
-    }									\
-  } while (0)
-
-//#define __syncthreads() do {} while (0)
-
-#define __device__
-#define __global__
-#define __constant__
-#define __shared__
-
-enum {
-  cudaSuccess,
-};
-
-enum {
-  cudaMemcpyHostToDevice,
-  cudaMemcpyDeviceToHost,
-};
-
-static inline int
-cudaMalloc(void **p, size_t len)
-{
-  *p = malloc(len);
-  return cudaSuccess;
-}
-
-static inline int
-cudaMemcpy(void *to, void *from, size_t len, int dir)
-{
-  memcpy(to, from, len);
-  return cudaSuccess;
-}
-
-static inline int
-cudaFree(void *p)
-{
-  free(p);
-  return cudaSuccess;
-}
-
-#define cudaMemcpyToSymbol(to, from, len)		\
-  cudaMemcpy(&to, from, len, cudaMemcpyHostToDevice) 
- 
-typedef struct {
-  float x, y, z, w;
-} float4;
-
-#define EXTERN_C
-
-static inline float
-rsqrtf(float x)
-{
-  return 1.f / sqrtf(x);
-}
-
-static inline int
-nint(real x)
-{
-  // FIXME?
-  return (int)(x + real(10.5)) - 10;
-}
-
-#else
-
-#define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
-    dim3 dG(dimGrid[0], dimGrid[1]);				\
-    dim3 dB(dimBlock[0], dimBlock[1]);				\
-    func<<<dG, dB>>>params;					\
-    check(cudaThreadSynchronize()); /* FIXME */			\
-  } while (0)
-
-#define EXTERN_C extern "C"
-
-__device__ static inline int
-nint(real x)
-{
-  return __float2int_rn(x);
-}
-
-#endif
 
 // ======================================================================
 
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
-
-typedef float particle_cuda_real_t;
-
-#define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
-
-typedef struct {
-  float4 *xi4;    // xi , yi , zi , qni_div_mni
-  float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
-  int *offsets;   // particles per block are
-                  // are at indices offsets[block] .. offsets[block+1]-1
-} particles_cuda_dev_t;
-
-typedef struct {
-  particles_cuda_dev_t h_part; // all particles, on host
-  particles_cuda_dev_t d_part; // all particles, on device
-  int nr_blocks;               // number of blocks
-  int b_mx[3];                 // number of blocks by direction
-} particles_cuda_t;
-
-EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
-EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
 
 EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
 EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
