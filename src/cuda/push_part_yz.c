@@ -390,6 +390,7 @@ cuda_push_part_yz_a()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  fields_cuda_t *pf = &cuda->f;
 
   set_constants(cuda);
 
@@ -398,7 +399,7 @@ cuda_push_part_yz_a()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.pp.n_part, cuda->d_part, cuda->d_flds,
+	     push_part_yz_a, (psc.pp.n_part, cuda->d_part, pf->d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -414,6 +415,7 @@ cuda_push_part_yz_b()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  fields_cuda_t *pf = &cuda->f;
 
   set_constants(cuda);
 
@@ -422,7 +424,7 @@ cuda_push_part_yz_b()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b, (psc.pp.n_part, cuda->d_part, cuda->d_flds,
+	     push_part_yz_b, (psc.pp.n_part, cuda->d_part, pf->d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -438,13 +440,14 @@ cuda_push_part_yz_b2()
   prof_start(pr);
 
   struct psc_cuda *cuda = (struct psc_cuda *) psc.c_ctx;
+  fields_cuda_t *pf = &cuda->f;
 
   set_constants(cuda);
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { cuda->nr_blocks, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b2, (psc.pp.n_part, cuda->d_part, cuda->d_flds));
+	     push_part_yz_b2, (psc.pp.n_part, cuda->d_part, pf->d_flds));
 
   prof_stop(pr);
 }
@@ -481,17 +484,17 @@ __cuda_particles_to_fortran(struct psc_cuda *cuda)
 }
 
 EXTERN_C void
-__cuda_fields_from_fortran(struct psc_cuda *cuda)
+__cuda_fields_from_fortran(fields_cuda_t *pf)
 {
-  check(cudaMalloc((void **) &cuda->d_flds, NR_FIELDS * psc.fld_size * sizeof(float)));
-  check(cudaMemcpy(cuda->d_flds + EX * psc.fld_size,
-		   cuda->flds + EX * psc.fld_size,
+  check(cudaMalloc((void **) &pf->d_flds, NR_FIELDS * psc.fld_size * sizeof(float)));
+  check(cudaMemcpy(pf->d_flds + EX * psc.fld_size,
+		   pf->flds + EX * psc.fld_size,
 		   6 * psc.fld_size * sizeof(float),
 		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
-__cuda_fields_to_fortran(struct psc_cuda *cuda)
+__cuda_fields_to_fortran(fields_cuda_t *pf)
 {
-  check(cudaFree(cuda->d_flds));
+  check(cudaFree(pf->d_flds));
 }

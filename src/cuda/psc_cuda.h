@@ -130,6 +130,13 @@ nint(real x)
 
 // ======================================================================
 
+typedef float fields_cuda_real_t;
+
+typedef struct {
+  fields_cuda_real_t *flds;
+  fields_cuda_real_t *d_flds;
+} fields_cuda_t;
+
 
 struct d_part {
   float4 *xi4;    // xi , yi , zi , qni_div_mni
@@ -141,10 +148,9 @@ struct d_part {
 struct psc_cuda {
   float4 *xi4;
   float4 *pxi4;
-  float *flds;
+  fields_cuda_t f;
   int *offsets;
   struct d_part d_part; // all particles, on device
-  float *d_flds;        // all fields, on device
   int nr_blocks;        // number of blocks
   int b_mx[3];          // number of blocks by direction
 };
@@ -154,8 +160,8 @@ EXTERN_C void cuda_push_part_yz_b();
 EXTERN_C void cuda_push_part_yz_b2();
 EXTERN_C void __cuda_particles_from_fortran(struct psc_cuda *cuda);
 EXTERN_C void __cuda_particles_to_fortran(struct psc_cuda *cuda);
-EXTERN_C void __cuda_fields_from_fortran(struct psc_cuda *cuda);
-EXTERN_C void __cuda_fields_to_fortran(struct psc_cuda *cuda);
+EXTERN_C void __cuda_fields_from_fortran(fields_cuda_t *pf);
+EXTERN_C void __cuda_fields_to_fortran(fields_cuda_t *pf);
 
 struct d_particle {
   real xi[3];
@@ -222,50 +228,26 @@ struct d_particle {
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
-#define CF3_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *psc.img[2] + ((jz)-psc.ilg[2]))					\
-    *psc.img[1] + ((jy)-psc.ilg[1]))					\
-   *psc.img[0] + ((jx)-psc.ilg[0]))
-
-#define CF3(fldnr, jx,jy,jz) \
-  (cuda->flds)[CF3_OFF(fldnr, jx,jy,jz)]
-
-// ----------------------------------------------------------------------
-// macros to access fields from CUDA
-
-#define F3_OFF(fldnr, jx,jy,jz)						\
-  ((((fldnr)								\
-     *d_mx[2] + ((jz)-d_iglo[2]))					\
-    *d_mx[1] + ((jy)-d_iglo[1]))					\
-   *d_mx[0] + ((jx)-d_iglo[0]))
+#define F3_OFF_CUDA(fldnr, jx,jy,jz)					\
+  (((((fldnr								\
+       *psc.img[2] + ((jz)-psc.ilg[2]))					\
+      *psc.img[1] + ((jy)-psc.ilg[1]))					\
+     *psc.img[0] + ((jx)-psc.ilg[0]))))
 
 #if 1
 
-#define F3(fldnr, jx,jy,jz) \
-  (d_flds)[F3_OFF(fldnr, jx,jy,jz)]
+#define F3_CUDA(pf, fldnr, jx,jy,jz)		\
+  ((pf)->flds[F3_OFF_CUDA(fldnr, jx,jy,jz)])
 
 #else
-
-#define F3(fldnr, jx,jy,jz)						\
-  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
+//out of range debugging
+#define F3_CUDA(pf, fldnr, jx,jy,jz)					\
+  (*({int off = F3_OFF_CUDA(fldnr, jx,jy,jz);				\
       assert(off >= 0);							\
-      assert(off < NR_FIELDS * d_mx[0] * d_mx[1] * d_mx[2]);		\
-      &(d_flds[off]);							\
+      assert(off < NR_FIELDS * psc.fld_size);				\
+      &((pf)->flds[off]);						\
     }))
 
 #endif
-
-// ----------------------------------------------------------------------
-// macros to access C (host) versions of the fields
-
-#define CF3_OFF(fldnr, jx,jy,jz)					\
-  ((((fldnr)								\
-     *psc.img[2] + ((jz)-psc.ilg[2]))					\
-    *psc.img[1] + ((jy)-psc.ilg[1]))					\
-   *psc.img[0] + ((jx)-psc.ilg[0]))
-
-#define CF3(fldnr, jx,jy,jz) \
-  (cuda->flds)[CF3_OFF(fldnr, jx,jy,jz)]
 
 #endif

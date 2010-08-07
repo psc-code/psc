@@ -64,7 +64,7 @@ cuda_particles_from_fortran()
   float4 *pxi4 = calloc(psc.pp.n_part, sizeof(float4));
 
   for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = particles_base_get_one(&psc.pp, i);
+    //    particle_base_t *p = particles_base_get_one(&psc.pp, i);
     real qni = psc.pp.particles[i].qni;
     real wni = psc.pp.particles[i].wni;
     real qni_div_mni = qni / psc.pp.particles[i].mni;
@@ -166,30 +166,32 @@ static void
 cuda_fields_from_fortran()
 {
   struct psc_cuda *cuda = psc.c_ctx;
+  fields_cuda_t *pf = &cuda->f;
 
-  cuda->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(float));
+  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
   
   for (int m = EX; m <= HZ; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  CF3(m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
+	  F3_CUDA(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
 	}
       }
     }
   }
 
-  __cuda_fields_from_fortran(cuda);
+  __cuda_fields_from_fortran(pf);
 }
 
 static void
 cuda_fields_to_fortran()
 {
   struct psc_cuda *cuda = psc.c_ctx;
+  fields_cuda_t *pf = &cuda->f;
 
-  __cuda_fields_to_fortran(cuda);
+  __cuda_fields_to_fortran(pf);
 
-  free(cuda->flds);
+  free(pf->flds);
 }
 
 struct psc_ops psc_ops_cuda = {
