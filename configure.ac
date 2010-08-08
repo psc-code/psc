@@ -4,13 +4,16 @@
 AC_PREREQ(2.59)
 AC_INIT([psc], [1.90])
 AM_INIT_AUTOMAKE([foreign])
-#AC_CONFIG_MACRO_DIR([m4])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
 # Check for (MPI) compilers
 
 AC_PROG_CC([openmpicc mpicc])
-AC_PROG_CC_C99
+m4_ifdef([AC_PROG_CC_C99],
+	 [AC_PROG_CC_C99],
+	 [AC_MSG_WARN([Assuming $CC is gcc!])
+          CC="$CC -std=gnu99"])
 if test -z "$CC" || test "X$CC" = "Xno"; then
   AC_MSG_ERROR([No suitable C99 compiler found])
 fi
