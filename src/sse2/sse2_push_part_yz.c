@@ -1,35 +1,17 @@
 #include "psc_sse2.h"
 #include "simd_wrap.h"
+#include "simd_push_common.h"
 #include "util/profile.h"
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
+// contrary to my initial beliefs, I think the 
+// push_xi function is the only one which changes
+// based on the axes of the system. The rest 
+// have been offloaded to simd_push_common.c
 
-//---------------------------------------------
-// calc_vi - Calculates the velocities from momenta.
-// root is used to update p2X, so need to have it
-// stored to a variable in the push_part_yx_ function
-
-static inline void 
-calc_vi(struct particle_vec *p, pvReal * restrict vxi, pvReal * restrict vyi,
-	pvReal * restrict vzi, pvReal * restrict root){
-  pvReal tmpx, tmpy, tmpz;
-  
-  tmpx.r = pv_mul_real(p->pxi.r, p->pxi.r);
-  tmpy.r = pv_mul_real(p->pyi.r, p->pyi.r);
-  tmpz.r = pv_mul_real(p->pzi.r, p->pzi.r);
-  
-  tmpx.r = pv_add_real(tmpx.r, tmpy.r);
-  tmpz.r = pv_add_real(ones.r, tmpz.r);
-  tmpx.r = pv_add_real(tmpx.r, tmpz.r);
-  root->r = pv_sqrt_real(tmpx.r);
-                                             
-  vxi->r = pv_div_real(p->pxi.r, root->r);
-  vyi->r = pv_div_real(p->pyi.r, root->r);
-  vzi->r = pv_div_real(p->pzi.r, root->r);
-}
 
 //---------------------------------------------
 // push_xi_halfdt - advances the posistions .5dt
@@ -44,236 +26,6 @@ push_xi_halfdt(struct particle_vec *p, pvReal *vyi, pvReal *vzi, pvReal *yl, pvR
   p->zi.r = pv_add_real(p->zi.r, tmpz.r);
 }
 
-
-//---------------------------------------------
-// find_index_Cround - finds the index corresponding
-// to position xi using the C99 built in round.
-// This is slower, and should really only be used
-// when there is no weighting to suppress strange behavior
-// in the intrinsic round
-
-static inline void
-find_index_Cround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
-  pvReal tmp;
-  tmp.r = pv_mul_real(xi->r, dxi->r);
-  for(int m = 0; m < VEC_SIZE; m++){
-      j->v[m] = round(tmp.v[m]);
-  }
-  h->r = pv_cvt_int_to_real(j->r);
-  h->r = pv_sub_real(h->r, tmp.r);
-}
-
-//---------------------------------------------
-// find_index_Iround - Finds index using intrinsic round
-// Sometimes .5 is treated as .5-epsilon (not sure why)
-// and is rounded the wrong direction. This isn't a problem
-// most of the time due to the weighting coeffecients, but
-// can be a problem for any unweighted dimension (here, x)
-
-static inline void
-find_index_Iround(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h){
-  pvReal tmp;
-  tmp.r = pv_mul_real(xi->r, dxi->r);
-  j->r = pv_cvt_real_to_int(tmp.r);
-  h->r = pv_cvt_int_to_real(j->r);
-  h->r = pv_sub_real(h->r, tmp.r);
-}
-
-//---------------------------------------------
-// find_index_minus_shift - Same as find_index_Iround
-// except it subtracts the vector 'shift' before 
-// rounding.
-
-static inline void
-find_index_minus_shift(pvReal *xi, pvReal *dxi, pvInt * restrict j, pvReal * restrict h, pvReal *shift){
-  pvReal tmp;
-  tmp.r = pv_mul_real(xi->r, dxi->r);
-  tmp.r = pv_sub_real(tmp.r, shift->r);
-  j->r = pv_cvt_real_to_int(tmp.r);
-  h->r = pv_cvt_int_to_real(j->r);
-  h->r = pv_sub_real(h->r, tmp.r);
-}
-
-//---------------------------------------------
-// ip_to_grid_m - finds the first (m) weight factor
-// for field interpolation on the grid
-
-static inline void
-ip_to_grid_m(pvReal *h, pvReal * restrict xmx){
-  xmx->r = pv_add_real(half.r, h->r);
-  xmx->r = pv_mul_real(xmx->r, xmx->r);
-  xmx->r = pv_mul_real(half.r, xmx->r);
-}
-
-//---------------------------------------------
-// ip_to_grid_O - finds the second (O here, 0 in F90) weight factor
-// for field interpolation on the grid
-
-static inline void
-ip_to_grid_O(pvReal *h, pvReal * restrict xOx){
-  xOx->r = pv_mul_real(h->r, h->r);
-  xOx->r = pv_sub_real(threefourths.r, xOx->r);
-}
-
-//---------------------------------------------
-// ip_to_grid_l - finds the third (l here, 1 in F90) weight factor
-// for field interpolation on the grid
-
-static inline void
-ip_to_grid_l(pvReal *h, pvReal * restrict xlx){
-  xlx->r = pv_sub_real(half.r, h->r);
-  xlx->r = pv_mul_real(xlx->r, xlx->r);
-  xlx->r = pv_mul_real(half.r, xlx->r);
-}
-
-//---------------------------------------------
-// form_factor_... - I'm not sure my understanding 
-// of this is correct. I believe these calculate 
-// the extent of the quasi-particle on the grid
-// before updating the charge and current densities
-
-static inline void
-form_factor_m(pvReal *h, pvReal * restrict xmx){
-  xmx->r = pv_sub_real(h->r,ones.r);
-  xmx->r = pv_add_real(onepfive.r, xmx->r); // h-1 always <0
-  xmx->r = pv_mul_real(xmx->r, xmx->r);
-  xmx->r = pv_mul_real(half.r, xmx->r);
-}
-
-static inline void
-form_factor_O(pvReal *h, pvReal * restrict xOx){
-  xOx->r = pv_mul_real(h->r, h->r);
-  xOx->r = pv_sub_real(threefourths.r, xOx->r);
-}
-
-static inline void
-form_factor_l(pvReal *h, pvReal * restrict xlx){
-  xlx->r = pv_add_real(ones.r, h->r); 
-  xlx->r = pv_sub_real(onepfive.r, xlx->r);//h+1 always >0
-  xlx->r = pv_mul_real(xlx->r, xlx->r);
-  xlx->r = pv_mul_real(half.r, xlx->r);
-}
-
-//---------------------------------------------
-// push_pi_dt - advances the momentum a full time
-// step using the interpolated fields
-// This looks long, nasty, and intricate, but from 
-// what I can tell it's bug free and runs pretty quick
-
-static void
-push_pi_dt(struct particle_vec * p,
-	   pvReal * exq, pvReal * eyq,  pvReal * ezq,
-	   pvReal * hxq, pvReal * hyq,  pvReal * hzq,
-	   pvReal * dqs){
-
-  pvReal tmpx, tmpy, tmpz, root;
-  // Half step momentum  with E-field
-
-  pvReal dq, dqex, dqey, dqez;
-  dq.r = pv_div_real(dqs->r, p->mni.r);
-  dq.r = pv_mul_real(p->qni.r, dq.r);
-  
-  dqex.r = pv_mul_real(dq.r, exq->r);
-  dqey.r = pv_mul_real(dq.r, eyq->r);
-  dqez.r = pv_mul_real(dq.r, ezq->r);
-  
-  p->pxi.r = pv_add_real(p->pxi.r, dqex.r);
-  p->pyi.r = pv_add_real(p->pyi.r, dqey.r);
-  p->pzi.r = pv_add_real(p->pzi.r, dqez.r);
-
-
-// Rotate with B-field
-  pvReal taux, tauy, tauz, txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
-  
-  tmpx.r = pv_mul_real(p->pxi.r, p->pxi.r);
-  tmpy.r = pv_mul_real(p->pyi.r, p->pyi.r);
-  tmpz.r = pv_mul_real(p->pzi.r, p->pzi.r);
-  root.r = pv_add_real(ones.r, tmpx.r);
-  tmpy.r = pv_add_real(tmpy.r, tmpz.r);
-  root.r = pv_add_real(root.r, tmpy.r);
-  root.r = pv_sqrt_real(root.r);
-  root.r = pv_div_real(dq.r, root.r);
-
-  taux.r = pv_mul_real(hxq->r, root.r);
-  tauy.r = pv_mul_real(hyq->r, root.r);
-  tauz.r = pv_mul_real(hzq->r, root.r);
-
-  txx.r = pv_mul_real(taux.r, taux.r);
-  tyy.r = pv_mul_real(tauy.r, tauy.r);
-  tzz.r = pv_mul_real(tauz.r, tauz.r);
-  t2xy.r = pv_mul_real(taux.r, tauy.r);
-  t2xz.r = pv_mul_real(taux.r, tauz.r);
-  t2yz.r = pv_mul_real(tauy.r, tauz.r);
-  t2xy.r = pv_add_real(t2xy.r, t2xy.r);
-  t2xz.r = pv_add_real(t2xz.r, t2xz.r);
-  t2yz.r = pv_add_real(t2yz.r, t2yz.r);
-
-  pvReal tau;
-
-  tau.r = pv_add_real(ones.r, txx.r);
-  tmpx.r = pv_add_real(tyy.r, tzz.r);
-  tau.r = pv_add_real(tau.r, tmpx.r);
-  tau.r = pv_div_real(ones.r, tau.r); //recp is evil! evil evil evil evil!!!!
-    
-  //Never use tau_ without a two in front
-  taux.r = pv_add_real(taux.r, taux.r);
-  tauy.r = pv_add_real(tauy.r, tauy.r);
-  tauz.r = pv_add_real(tauz.r, tauz.r);
-    
-  //pxp
-  tmpx.r = pv_add_real(ones.r, txx.r);
-  tmpx.r = pv_sub_real(tmpx.r, tyy.r);
-  tmpx.r = pv_sub_real(tmpx.r, tzz.r);
-  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
-    
-  tmpy.r = pv_add_real(t2xy.r, tauz.r);
-  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
-
-  tmpz.r = pv_sub_real(t2xz.r, tauy.r);
-  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
-
-  pxp.r = pv_add_real(tmpx.r, tmpy.r);
-  pxp.r = pv_add_real(pxp.r, tmpz.r);
-  pxp.r = pv_mul_real(pxp.r, tau.r);
-    
-  //pyp
-  tmpx.r = pv_sub_real(t2xy.r, tauz.r);
-  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
-
-  tmpy.r = pv_sub_real(ones.r, txx.r);
-  tmpy.r = pv_add_real(tmpy.r, tyy.r);
-  tmpy.r = pv_sub_real(tmpy.r, tzz.r);
-  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
-  
-  tmpz.r = pv_add_real(t2yz.r, taux.r);
-  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
-
-  pyp.r = pv_add_real(tmpx.r, tmpy.r);
-  pyp.r = pv_add_real(pyp.r, tmpz.r);
-  pyp.r = pv_mul_real(pyp.r, tau.r);
-   
-  //pzp
-  tmpx.r = pv_add_real(t2xz.r, tauy.r);
-  tmpx.r = pv_mul_real(tmpx.r, p->pxi.r);
-
-  tmpy.r = pv_sub_real(t2yz.r, taux.r);
-  tmpy.r = pv_mul_real(tmpy.r, p->pyi.r);
-
-  tmpz.r = pv_sub_real(ones.r, txx.r);
-  tmpz.r = pv_sub_real(tmpz.r, tyy.r);
-  tmpz.r = pv_add_real(tmpz.r, tzz.r);
-  tmpz.r = pv_mul_real(tmpz.r, p->pzi.r);
-
-  pzp.r = pv_add_real(tmpx.r, tmpy.r);
-  pzp.r = pv_add_real(pzp.r, tmpz.r);
-  pzp.r = pv_mul_real(pzp.r, tau.r);
-
-// Half step momentum  with E-field
-
-  p->pxi.r = pv_add_real(pxp.r, dqex.r);
-  p->pyi.r = pv_add_real(pyp.r, dqey.r);
-  p->pzi.r = pv_add_real(pzp.r, dqez.r);
-}
 
 //---------------------------------------------
 /// Reads in the particles
@@ -526,8 +278,8 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
 static void
 do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
 {
-  //-----------------------------------------------------
-  // Initialization stuff (not sure what all of this is for)
+//-----------------------------------------------------
+// Initialization stuff (not sure what all of this is for)
   
   psc.p2A = 0.;
   psc.p2B = 0.;

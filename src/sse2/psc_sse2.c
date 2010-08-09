@@ -21,7 +21,7 @@ init_vec_numbers(void) {
 /// Pointers to functions optimized for SSE2
 
 struct psc_ops psc_ops_sse2 = {
-  .name                   = "sse2",
+  .name = "sse2",
   .push_part_yz_a         = sse2_push_part_yz_a,
   .push_part_yz_b         = sse2_push_part_yz_b,
   .push_part_yz           = sse2_push_part_yz,
