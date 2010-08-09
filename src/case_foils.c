@@ -32,40 +32,41 @@ struct foils {
   double Line1_Preplasma;
 
   double Te, Ti;
-  double x0, y0, z0; // location of density center in m of the first(0) foil
-  double L0; // gradient of density profile in m of the first foil
-  double width0; // width of transverse / longitudinal 
+  
+  double HollowSphere0_x0, HollowSphere0_y0, HollowSphere0_z0; // location of density center in m of the first(0) foil
+  double HollowSphere0_Preplasma; // gradient of density profile in m of the first foil
+  double HollowSphere0_Thickness; // width of transverse / longitudinal 
                                  // density profile in m of the first foil 
   double mass_ratio; // M_i / M_e
   double charge_state;   // Charge state of the ion
-  double R_curv0;  // curvature of the first foil  in meters
+  double R_curv0;  // curvature of the hollowsphere0 foil  in meters
 };
 
 #define VAR(x) (void *)offsetof(struct foils, x)
 
 static struct param foils_descr[] = {
-  { "Line0_x0"      , VAR(Line0_x0)        , PARAM_DOUBLE(1. * 1e-6)           },
-  { "Line0_x1"      , VAR(Line0_x1)        , PARAM_DOUBLE(2. * 1e-6)             },
-  { "Line0_z0"      , VAR(Line0_z0)        , PARAM_DOUBLE(2.0 * 1e-6)            },
-  { "Line0_z1"      , VAR(Line0_z1)        , PARAM_DOUBLE(4.0 * 1e-6)           },
-  { "Line0_Thickness", VAR(Line0_Thickness)        , PARAM_DOUBLE(0.2 * 1e-6)          },
-  { "Line0_Preplasma", VAR(Line0_Preplasma) , PARAM_DOUBLE(1. * 1e-9)     },
-  { "Line1_x0"      , VAR(Line1_x0)        , PARAM_DOUBLE(1. * 1e-6)           },
-  { "Line1_x1"      , VAR(Line1_x1)        , PARAM_DOUBLE(4. * 1e-6)             },
-  { "Line1_z0"      , VAR(Line1_z0)        , PARAM_DOUBLE(2.0 * 1e-6)            },
-  { "Line1_z1"      , VAR(Line1_z1)        , PARAM_DOUBLE(2.0 * 1e-6)           },
-  { "Line1_Thickness", VAR(Line1_Thickness)        , PARAM_DOUBLE(0.2 * 1e-6)          },
-  { "Line1_Preplasma", VAR(Line1_Preplasma) , PARAM_DOUBLE(1. * 1e-9)     },
-  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
-  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
-  { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.5 * 1e-6)     },
-  { "y0"            , VAR(y0)              , PARAM_DOUBLE(.01 * 1e-6)     },
-  { "z0"            , VAR(z0)              , PARAM_DOUBLE(2.5  * 1e-6)     },
-  { "L0"            , VAR(L0)              , PARAM_DOUBLE(10.  * 1e-9)     },
-  { "width0"        , VAR(width0)          , PARAM_DOUBLE(200. * 1e-9)     },
-  { "mass_ratio"    , VAR(mass_ratio)      , PARAM_DOUBLE(12.*1836.)      },
-  { "charge_state"  , VAR(charge_state)    , PARAM_DOUBLE(6.)             },
-  { "R_curv0"     , VAR(R_curv0)      ,       PARAM_DOUBLE(2.5 * 1e-6)             },
+  { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(1. * 1e-6)           },
+  { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(2. * 1e-6)             },
+  { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(2.0 * 1e-6)            },
+  { "Line0_z1"                           , VAR(Line0_z1)                   , PARAM_DOUBLE(4.0 * 1e-6)           },
+  { "Line0_Thickness"                    , VAR(Line0_Thickness)            , PARAM_DOUBLE(0.2 * 1e-6)          },
+  { "Line0_Preplasma"                    , VAR(Line0_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
+  { "Line1_x0"                           , VAR(Line1_x0)                   , PARAM_DOUBLE(1. * 1e-6)           },
+  { "Line1_x1"                           , VAR(Line1_x1)                   , PARAM_DOUBLE(4. * 1e-6)             },
+  { "Line1_z0"                           , VAR(Line1_z0)                   , PARAM_DOUBLE(2.0 * 1e-6)            },
+  { "Line1_z1"                           , VAR(Line1_z1)                   , PARAM_DOUBLE(2.0 * 1e-6)           },
+  { "Line1_Thickness"                    , VAR(Line1_Thickness)            , PARAM_DOUBLE(0.2 * 1e-6)          },
+  { "Line1_Preplasma"                    , VAR(Line1_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
+  { "Te"                                 , VAR(Te)                         , PARAM_DOUBLE(0.)             },
+  { "Ti"                                 , VAR(Ti)                         , PARAM_DOUBLE(0.)             },
+  { "HollowSphere0_x0"                   , VAR(HollowSphere0_x0)           , PARAM_DOUBLE(2.5 * 1e-6)     },
+  { "HollowSphere0_y0"                   , VAR(HollowSphere0_y0)           , PARAM_DOUBLE(.01 * 1e-6)     },
+  { "HollowSphere0_z0"                   , VAR(HollowSphere0_z0)           , PARAM_DOUBLE(2.5  * 1e-6)     },
+  { "HollowSphere0_Preplasma"            , VAR(HollowSphere0_Preplasma)    , PARAM_DOUBLE(10.  * 1e-9)     },
+  { "HollowSphere0_Thickness"            , VAR(HollowSphere0_Thickness)    , PARAM_DOUBLE(200. * 1e-9)     },
+  { "mass_ratio"                         , VAR(mass_ratio)                 , PARAM_DOUBLE(12.*1836.)      },
+  { "charge_state"                       , VAR(charge_state)               , PARAM_DOUBLE(6.)             },
+  { "R_curv0"                            , VAR(R_curv0)                    , PARAM_DOUBLE(2.5 * 1e-6)             },
   {},
 };
 
@@ -92,22 +93,33 @@ static real Line_dens(double x0, double z0, double x1, double z1, double xc, dou
 
   real xmiddle = (x0+x1)*0.5;
   real zmiddle = (z0+z1)*0.5;
-  
-  //real yr = x[1];
-  //real xr = Line0_sinrot * (x[0]-Line0_xmiddle) + Line0_cosrot * (x[2]-Line0_zmiddle) + Line0_xmiddle;
-  //real zr = Line0_sinrot * (x[2]-Line0_zmiddle) - Line0_cosrot * (x[0]-Line0_xmiddle) + Line0_zmiddle;
 
-   real xr = sinrot * (xc - xmiddle) + cosrot * (zc - zmiddle) + xmiddle;
-   real zr = sinrot * (zc - zmiddle) - cosrot * (xc - xmiddle) + zmiddle;
+  real xr = sinrot * (xc - xmiddle) + cosrot * (zc - zmiddle) + xmiddle;
+  real zr = sinrot * (zc - zmiddle) - cosrot * (xc - xmiddle) + zmiddle;
 
    real argx = (fabs(xr-xmiddle)-0.5*Length)/Preplasma;
-//  real argy = (fabs(yr-Line0_y0))/1e-9;
    real argz = (fabs(zr-zmiddle)-0.5*Thickness)/Preplasma;
   if (argx > 200.0) argx = 200.0;
-//  if (argy > 200.0) argy = 200.0;
   if (argz > 200.0) argz = 200.0;
 
   return 1. / ((1. + exp(argx)) * (1. + exp(argz)));
+}
+
+static real HollowSphere_dens(double x0, double z0, double Radius, double xc, double zc, double Thickness, double Preplasma)
+{
+    // returns the density in the current cell for the hollow sphere density distribution
+    // x0,z0 - coordinates of the center of the sphere
+    // Radius - radius of the sphere
+    // xc, zc - current coordinates of the grid
+    // Thickness - thickness of the wall of the sphere
+    // Preplasma - preplasma 
+   
+  real RadiusAtCurrentCell = sqrt((xc-x0)*(xc-x0)+(zc-z0)*(zc-z0));
+  real argsphere = (fabs(RadiusAtCurrentCell-Radius)-Thickness)/Preplasma;
+
+  if (argsphere > 200.0) argsphere = 200.0;
+
+  return 1./(1.+exp(argsphere));
 }
 
 static void
@@ -224,9 +236,16 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   real Line1_Thickness = foils->Line1_Thickness / ld;
   real Line1_Preplasma = foils->Line1_Preplasma / ld;
 
-
+  real HollowSphere0_x0 = foils->HollowSphere0_x0 / ld;
+  real HollowSphere0_y0 = foils->HollowSphere0_y0 / ld;
+  real HollowSphere0_z0 = foils->HollowSphere0_y0 / ld; 
+  real HollowSphere0_Radius = foils->R_curv0 / ld;
+  real HollowSphere0_Preplasma = foils->HollowSphere0_Preplasma / ld;
+  real HollowSphere0_Thickness = foils->HollowSphere0_Thickness / ld;
+   
   real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
   dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
+  dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
 
   if (dens>1.0) dens=1.0;
 
