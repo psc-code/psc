@@ -75,7 +75,7 @@ c PREPARATION
       read(5,*) tstep
 
 
-      open(11,file='./'//'poynting'//'.data',
+      open(11,file=trim(data_processed)//'/'//'poynting'//'.data',
      &     access='sequential',form='formatted')
 
       write(11,*) ' '
@@ -182,7 +182,7 @@ c PREPARATION
 
             call SERV_labelgen(pec,node)
 
-            open(12,file='./'//node//'poynting'//label,
+            open(12,file=trim(data_out)//'/'//node//'poynting'//label,
      &           access='sequential',form='unformatted')
             read(12) time
             read(12) i1mn
@@ -353,7 +353,7 @@ c PREPARATION
          do tm=tstart,tend,tstep
             call SERV_labelgen(tm,label)
 
-            open(12,file='./'//node//'poynting'//label,
+            open(12,file=trim(data_out)//'/'//node//'poynting'//label,
      &           access='sequential',form='unformatted')
             read(12) time
             read(12) i1mn

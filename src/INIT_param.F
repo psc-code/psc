@@ -286,7 +286,8 @@ c data_chk: path of checkpointing directory
 
       data_out='.'
       data_chk='.'
-
+      data_processed='.'
+      
 c OTHER SETTINGS THAT SHOULD NOT BE CHANGED
 c UNDER NORMAL CONDITIONS
 
@@ -469,7 +470,7 @@ c n0: peak atom density in m**3
       cc=3.0e8
       eps0=8.8542e-12
 
-      nmax=0 ! calculate later
+      nmax=100 ! calculate later (or manual control here)
       cpum=100000.0
       lw=3.2*1.0e-6
       i0=1.0e21          ! modified from 22

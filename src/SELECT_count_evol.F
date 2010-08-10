@@ -27,7 +27,7 @@
       call SERV_labelgen(tm,label)
       do pec=0,xnpe*ynpe*znpe-1
          call SERV_labelgen(pec,node)
-         open(11,file='./'//node//'count'//label,
+         open(11,file=trim(data_out)//'/'//node//'count'//label,
      &        access='sequential',form='unformatted')
  3000    read(11,end=3001) count_in,count_ou,time
          nc=nc+1
@@ -38,7 +38,7 @@
       enddo
 
 
-      open(12,file='./'//'COUNT'//label//'.data',
+      open(12,file=trim(data_processed)//'/'//'COUNT'//label//'.data',
      &     access='sequential',form='formatted')
 
       write(12,1000) nc

@@ -75,7 +75,7 @@
       do pec=0,xnpe*ynpe*znpe-1
 
          call SERV_labelgen(pec,node)
-         open(11,file='./'//node//'tfield'//label,
+         open(11,file=trim(data_out)//'/'//node//'tfield'//label,
      &        access='sequential',form='unformatted')
 
          read(11) i1n,i1x,i2n,i2x,i3n,i3x
@@ -122,9 +122,11 @@
       enddo
 
 
-      open(11,file='./'//trim(fieldname)//label//'.data',
+      open(11,file=trim(data_processed)//'/'//trim(fieldname)//label
+     & //'.data',
      &     access='sequential',form='formatted')
-      open(12,file='./'//trim(fieldname)//label//'.vtk',
+      open(12,file=trim(data_processed)//'/'//trim(fieldname)//label
+     & //'.vtk',
      &     access='sequential',form='formatted')
 
 
