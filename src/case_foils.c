@@ -162,8 +162,8 @@ foils_init_param(struct psc_case *Case)
   psc.prm.nmax = 500;
   psc.prm.cpum = 25000;
   psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 1.0e10;
-  psc.prm.n0 = 2.0e29;
+  psc.prm.i0 = 1.37e24;
+  psc.prm.n0 = 1.1e29;
 
   psc.prm.nicell = 50;
 
