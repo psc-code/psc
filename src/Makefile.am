@@ -47,6 +47,7 @@ libpsc_a_SOURCES = \
 	case_langmuir.c \
 	case_wakefield.c \
 	case_thinfoil.c \
+	case_foils.c \
 	case_curvedfoil.c \
 	case_singlepart.c \
 	case_harris.c
