@@ -289,5 +289,5 @@ struct psc_case_ops psc_case_ops_foils = {
   .create     = foils_create,
   .init_param = foils_init_param,
   .init_field = foils_init_field,
-//  .init_npt   = foils_init_npt,
+  .init_npt   = foils_init_npt,
 };
