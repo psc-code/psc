@@ -52,7 +52,7 @@ static struct param curvedfoil_descr[] = {
 static void
 curvedfoil_create(struct psc_case *Case)
 {
-  struct psc_pulse_flattop prm_p = {
+  struct psc_pulse_gauss prm_p = {
     .xm = 2.5   * 1e-6,
     .ym = 2.5   * 1e-6,
     .zm = -0. * 1e-6,
@@ -63,7 +63,7 @@ curvedfoil_create(struct psc_case *Case)
     .phase = 0.0,
   };
   
-  struct psc_pulse_flattop prm_s = {
+  struct psc_pulse_gauss prm_s = {
     .xm = 2.5   * 1e-6,
     .ym = 2.5   * 1e-6,
     .zm = -0. * 1e-6,
@@ -74,8 +74,8 @@ curvedfoil_create(struct psc_case *Case)
     .phase = M_PI / 2.,
   };
 
- // psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
- // psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
+//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
+//  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
 
   psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
   psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
