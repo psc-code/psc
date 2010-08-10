@@ -25,12 +25,19 @@ struct foils {
   double Line0_x1, Line0_z1;   // coordinates of the end of the line0
   double Line0_Thickness;       // thickness of the line
   double Line0_Preplasma;    
+ 
+  double Line1_x0, Line1_z0;
+  double Line1_x1, Line1_z1;
+  double Line1_Thickness;
+  double Line1_Preplasma;
+
   double Te, Ti;
   double x0, y0, z0; // location of density center in m of the first(0) foil
   double L0; // gradient of density profile in m of the first foil
   double width0; // width of transverse / longitudinal 
                                  // density profile in m of the first foil 
   double mass_ratio; // M_i / M_e
+  double charge_state;   // Charge state of the ion
   double R_curv0;  // curvature of the first foil  in meters
 };
 
@@ -38,11 +45,17 @@ struct foils {
 
 static struct param foils_descr[] = {
   { "Line0_x0"      , VAR(Line0_x0)        , PARAM_DOUBLE(1. * 1e-6)           },
-  { "Line0_x1"      , VAR(Line0_x1)        , PARAM_DOUBLE(4. * 1e-6)             },
+  { "Line0_x1"      , VAR(Line0_x1)        , PARAM_DOUBLE(2. * 1e-6)             },
   { "Line0_z0"      , VAR(Line0_z0)        , PARAM_DOUBLE(2.0 * 1e-6)            },
-  { "Line0_z1"      , VAR(Line0_z1)        , PARAM_DOUBLE(2.0 * 1e-6)           },
+  { "Line0_z1"      , VAR(Line0_z1)        , PARAM_DOUBLE(4.0 * 1e-6)           },
   { "Line0_Thickness", VAR(Line0_Thickness)        , PARAM_DOUBLE(0.2 * 1e-6)          },
   { "Line0_Preplasma", VAR(Line0_Preplasma) , PARAM_DOUBLE(1. * 1e-9)     },
+  { "Line1_x0"      , VAR(Line1_x0)        , PARAM_DOUBLE(1. * 1e-6)           },
+  { "Line1_x1"      , VAR(Line1_x1)        , PARAM_DOUBLE(4. * 1e-6)             },
+  { "Line1_z0"      , VAR(Line1_z0)        , PARAM_DOUBLE(2.0 * 1e-6)            },
+  { "Line1_z1"      , VAR(Line1_z1)        , PARAM_DOUBLE(2.0 * 1e-6)           },
+  { "Line1_Thickness", VAR(Line1_Thickness)        , PARAM_DOUBLE(0.2 * 1e-6)          },
+  { "Line1_Preplasma", VAR(Line1_Preplasma) , PARAM_DOUBLE(1. * 1e-9)     },
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.5 * 1e-6)     },
@@ -51,11 +64,51 @@ static struct param foils_descr[] = {
   { "L0"            , VAR(L0)              , PARAM_DOUBLE(10.  * 1e-9)     },
   { "width0"        , VAR(width0)          , PARAM_DOUBLE(200. * 1e-9)     },
   { "mass_ratio"    , VAR(mass_ratio)      , PARAM_DOUBLE(12.*1836.)      },
+  { "charge_state"  , VAR(charge_state)    , PARAM_DOUBLE(6.)             },
   { "R_curv0"     , VAR(R_curv0)      ,       PARAM_DOUBLE(2.5 * 1e-6)             },
   {},
 };
 
 #undef VAR
+
+static real Line_dens(double x0, double z0, double x1, double z1, double xc, double zc, double Thickness, double Preplasma)
+{
+    // returns the density in the current cell for the line density distribution
+    // x0,z0 - coordinates of the beginning of the line
+    // x1,z1 - coordinates of the end of the line
+    // xc, zc - current coordinates of the grid
+    // Thickness - thickness of the line
+    // Preplasma - preplasma of the line
+
+    real Length = sqrt(sqr(x0-x1)+sqr(z0-z1));
+    real cosrot = 1.0;
+    real sinrot = 0.0;
+
+    if(Length!=0.0)
+    { 
+      cosrot = -(z0 - z1) / Length;
+      sinrot = -(x0 - x1) / Length;  
+    }
+
+  real xmiddle = (x0+x1)*0.5;
+  real zmiddle = (z0+z1)*0.5;
+  
+  //real yr = x[1];
+  //real xr = Line0_sinrot * (x[0]-Line0_xmiddle) + Line0_cosrot * (x[2]-Line0_zmiddle) + Line0_xmiddle;
+  //real zr = Line0_sinrot * (x[2]-Line0_zmiddle) - Line0_cosrot * (x[0]-Line0_xmiddle) + Line0_zmiddle;
+
+   real xr = sinrot * (xc - xmiddle) + cosrot * (zc - zmiddle) + xmiddle;
+   real zr = sinrot * (zc - zmiddle) - cosrot * (xc - xmiddle) + zmiddle;
+
+   real argx = (fabs(xr-xmiddle)-0.5*Length)/Preplasma;
+//  real argy = (fabs(yr-Line0_y0))/1e-9;
+   real argz = (fabs(zr-zmiddle)-0.5*Thickness)/Preplasma;
+  if (argx > 200.0) argx = 200.0;
+//  if (argy > 200.0) argy = 200.0;
+  if (argz > 200.0) argz = 200.0;
+
+  return 1. / ((1. + exp(argx)) * (1. + exp(argz)));
+}
 
 static void
 foils_create(struct psc_case *Case)
@@ -163,40 +216,19 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   real Line0_z1 = foils->Line0_z1 / ld;
   real Line0_Thickness = foils->Line0_Thickness / ld;
   real Line0_Preplasma = foils->Line0_Preplasma / ld;
-  real Line0_sinrot = 0.0;
-  real Line0_cosrot = 1.0;
+
+  real Line1_x0 = foils->Line1_x0 / ld;  
+  real Line1_x1 = foils->Line1_x1 / ld;   
+  real Line1_z0 = foils->Line1_z0 / ld;
+  real Line1_z1 = foils->Line1_z1 / ld;
+  real Line1_Thickness = foils->Line1_Thickness / ld;
+  real Line1_Preplasma = foils->Line1_Preplasma / ld;
 
 
-  real Line0_Length = sqrt(sqr(Line0_x0-Line0_x1)+sqr(Line0_z0-Line0_z1));
+  real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
+  dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
 
-  //real Line0_Length = sqrt(sqr(Line0_x0-Line0_x1));
-  if(Line0_Length!=0.0)
-  { 
-    Line0_cosrot = -(Line0_z0 - Line0_z1) / Line0_Length;
-    //Line0_sinrot = sqrt(1.0-sqr(Line0_cosrot));
-    Line0_sinrot = -(Line0_x0 - Line0_x1) / Line0_Length;  
-  }
-
-  real Line0_xmiddle = (Line0_x0+Line0_x1)*0.5;
-  real Line0_zmiddle = (Line0_z0+Line0_z1)*0.5;
-  
-  real yr = x[1];
-  real xr = Line0_sinrot * (x[0]-Line0_xmiddle) + Line0_cosrot * (x[2]-Line0_zmiddle) + Line0_xmiddle;
-  real zr = Line0_sinrot * (x[2]-Line0_zmiddle) - Line0_cosrot * (x[0]-Line0_xmiddle) + Line0_zmiddle;
-//  real xr = x[0];
-//  real zr = x[2];
-
-
-  real argx = (fabs(xr-Line0_xmiddle)-0.5*Line0_Length)/Line0_Preplasma;
-//  real argy = (fabs(yr-Line0_y0))/1e-9;
-  real argz = (fabs(zr-Line0_zmiddle)-0.5*Line0_Thickness)/Line0_Preplasma;
-  if (argx > 200.0) argx = 200.0;
-//  if (argy > 200.0) argy = 200.0;
-  if (argz > 200.0) argz = 200.0;
-
-  real dens = 1. / ((1. + exp(argx)) * (1. + exp(argz)));
-// real dens = 1. / (1. + exp(argz));
-
+  if (dens>1.0) dens=1.0;
 
   //real xr = x[0];
   //real yr = x[1];
@@ -232,9 +264,9 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->T[2] = Te;
     break;
   case 1: // ions
-    npt->q = 1.;
+    npt->q = foils->charge_state;
     npt->m = foils->mass_ratio;
-    npt->n = dens;
+    npt->n = dens/foils->charge_state;
     npt->T[0] = Ti;
     npt->T[1] = Ti;
     npt->T[2] = Ti;
