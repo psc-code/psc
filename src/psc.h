@@ -349,6 +349,7 @@ extern struct psc_bnd_ops psc_bnd_ops_c;
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
 extern struct psc_case_ops psc_case_ops_thinfoil;
+extern struct psc_case_ops psc_case_ops_curvedfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
 extern struct psc_case_ops psc_case_ops_test_xz;
