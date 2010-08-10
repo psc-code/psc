@@ -56,6 +56,7 @@ psc_pulse_field(struct psc_pulse *pulse, double x, double y, double z, double t)
 struct psc_pulse_gauss {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // width of pulse in m
+  double phase;         // CEP-phase  (from -pi to pi)
 };
 
 struct psc_pulse *psc_pulse_gauss_create(struct psc_pulse_gauss *ctx);
@@ -67,6 +68,7 @@ struct psc_pulse_flattop {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // slope of pulse in m
   double zb; // width of pulse in m
+  double phase; // CEP-phase (from -pi to pi)
 };
 
 struct psc_pulse *psc_pulse_flattop_create(struct psc_pulse_flattop *prm);

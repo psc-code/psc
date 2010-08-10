@@ -8,7 +8,11 @@
 #include <assert.h>
 #include <math.h>
 
-// #define OUTPUT_VTK_RECTILINEAR 1
+#define OUTPUT_VTK_STRUCTURED_POINTS  1
+#define OUTPUT_VTK_RECTILINEAR_POINTS 2
+#define OUTPUT_VTK_RECTILINEAR_CELLS  3
+
+#define OUTPUT_VTK OUTPUT_VTK_STRUCTURED_POINTS
 
 // ======================================================================
 // vtk_ctx
@@ -24,39 +28,58 @@ vtk_open(struct psc_fields_list *list, const char *filename, void **pctx)
 
   assert(list->nr_flds > 0);
   struct psc_field *fld = &list->flds[0];
-  int *ilo = fld->ilo, *ihi = fld->ihi;
+  int *ilo = fld->ilo;
 
   vtk->file = fopen(filename, "w");
   fprintf(vtk->file, "# vtk DataFile Version 3.0\n");
   fprintf(vtk->file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
   fprintf(vtk->file, "ASCII\n");
-#ifdef OUTPUT_VTK_RECTILINEAR
-  fprintf(vtk->file, "DATASET RECTILINEAR_GRID\n");
-#else
+#if OUTPUT_VTK == OUTPUT_VTK_STRUCTURED_POINTS
   fprintf(vtk->file, "DATASET STRUCTURED_POINTS\n");
-#endif
-  fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
-	  ihi[0] - ilo[0],
-	  ihi[1] - ilo[1],
-	  ihi[2] - ilo[2]);
-
-#ifdef OUTPUT_VTK_RECTILINEAR
-  for (int d = 0; d < 3; d++) {
-    fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d, ihi[d] - ilo[d]);
-    for (int i = ilo[d]; i < ihi[d]; i++) {
-      fprintf(vtk->file, " %g", (i + .5) * psc.dx[d]);
-    }
-    fprintf(vtk->file, "\n");
-  }
 #else
+  int extra;
+  double offset;
+  int *ihi = fld->ihi;
+#if OUTPUT_VTK == OUTPUT_VTK_RECTILINEAR_POINTS
+  extra = 0;
+  offset = .5;
+#else
+  extra = 1;
+  offset = 0.;
+#endif
+  fprintf(vtk->file, "DATASET RECTILINEAR_GRID\n");
+  fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
+	  ihi[0] - ilo[0] + extra,
+	  ihi[1] - ilo[1] + extra,
+	  ihi[2] - ilo[2] + extra);
+#endif
+
+#if OUTPUT_VTK == OUTPUT_VTK_STRUCTURED_POINTS
+
   fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
   fprintf(vtk->file, "ORIGIN %g %g %g\n",
 	  psc.dx[0] * ilo[0],
 	  psc.dx[1] * ilo[1],
 	  psc.dx[2] * ilo[2]);
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
+
+#else
+
+  for (int d = 0; d < 3; d++) {
+    fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d, ihi[d] - ilo[d]);
+    for (int i = ilo[d]; i < ihi[d] + extra; i++) {
+      fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
+    }
+    fprintf(vtk->file, "\n");
+  }
+#if OUTPUT_VTK == OUTPUT_VTK_RECTILINEAR_POINTS
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
+#else
+  fprintf(vtk->file, "\nCELL_DATA %d\n", fld->size);
 #endif
 
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
+#endif
+
 
   *pctx = vtk;
 }

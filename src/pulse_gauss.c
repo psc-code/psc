@@ -38,6 +38,7 @@ static struct param psc_pulse_gauss_descr[] = {
   { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_phase"   , VAR(phase)           , PARAM_DOUBLE(0.0)            },
   {},
 };
 
@@ -71,7 +72,7 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
   double yr = yl - prm->ym;
   double zr = zl - prm->zm;
 
-  return sin(zr)
+  return sin(zr+prm->phase)
     // * exp(-sqr(xr/prm->dxm))
     * exp(-sqr(yr/prm->dym))
     * exp(-sqr(zr/prm->dzm));

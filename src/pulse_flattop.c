@@ -13,6 +13,7 @@ static struct param psc_pulse_flattop_descr[] = {
   { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_zb"      , VAR(zb)              , PARAM_DOUBLE(1.5 * 1e-6)     },
+  { "pulse_phase"   , VAR(phase)           , PARAM_DOUBLE(0.0)            },
   {},
 };
 
@@ -47,7 +48,7 @@ psc_pulse_flattop_field(struct psc_pulse *pulse,
   double yr = yl - prm->ym;
   double zr = zl - prm->zm;
 
-  return sin(zr)
+  return sin(zr+prm->phase)
     * exp(-sqr(xr/prm->dxm))
     * exp(-sqr(yr/prm->dym))
     * 1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm));
