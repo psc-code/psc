@@ -32,7 +32,7 @@ struct psc_particle_npt {
 ///     can override defaults (e.g. instead of the physical units used by default,
 ///     you can set the electron charge to 1).
 ///   @param init_field Set initial condition for the fields (E, B, j).
-///   @param init_nvt Set up particles. For the cell located at the passed
+///   @param init_npt Set up particles. For the cell located at the passed
 ///     arguments, set charge (q), density (n), mass (m), velocity (v) and
 ///     temperature (T).
 /// - Add "case_<casename>.c" to "src/Makefile.am" next to the other cases.
