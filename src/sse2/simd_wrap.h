@@ -30,7 +30,7 @@
 //---------------------------------------------
 /// Calculates the offset for accessing pointers to 
 /// flattened (2-D YZ only) fields using vector operations
-#define VEC_OFF(foff,jy, jz) {				\
+#define VEC_OFF_yz(foff,jy, jz) {				\
     foff.r = pv_sub_int(jz.r,ilg[2].r);					\
     itemp1.r = pv_sub_int(jy.r,ilg[1].r);				\
     foff.r = pv_mul_int(foff.r, img[1].r);				\
@@ -39,6 +39,13 @@
   }
 
 
+#define VEC_OFF_xz(foff,jx,jz){				\
+    foff.r = pv_sub_int(jz.r,ilg[2].r);			\
+    itemp1.r = pv_sub_int(jx.r, ilg[0].r);		\
+    foff.r = pv_mul_int(foff.r, img[1].r);		\
+    foff.r = pv_mul_int(foff.r, img[0].r);		\
+    foff.r = pv_add_int(foff.r, itemp1.r);		\
+  }
 
 #if SSE2_DOUBLE
 
@@ -157,80 +164,80 @@ union packed_int{
 // Field interpolation for true 2D yz pusher.
 // This may be ugly, but it smokes the serial version.
 
-#define INTERP_FIELD_YZ_FAST(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
+#define INTERP_FIELD_2D_SIMD(inner_dir, outer_dir, F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
     pvReal field##tmp1, field##tmp2, field##tmp3;			\
     pvReal field##_in_A1, field##_in_B1;	\
     pvReal field##_in_A2, field##_in_B2;	\
     pvReal field##_in_A3, field##_in_B3;	\
     pvInt field##off1, field##off2, field##off3;			\
-    VEC_OFF(field##off1,indx2##mns1,indx3##mns1);			\
-    VEC_OFF(field##off2,indx2,indx3##mns1);				\
-    VEC_OFF(field##off3,indx2##pls1,indx3##mns1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3##mns1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3##mns1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3##mns1);			\
 									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
     field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);	\
 									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);	\
 									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);	\
     									\
-    VEC_OFF(field##off1,indx2##mns1,indx3);				\
-    VEC_OFF(field##off2,indx2,indx3);					\
-    VEC_OFF(field##off3,indx2##pls1,indx3);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3);					\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3);				\
     									\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field.r = pv_mul_real(outer_coeff##mz.r, field##tmp1.r);		\
+    field.r = pv_mul_real(outer_coeff##m##outer_dir.r, field##tmp1.r);		\
     									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
     field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);		\
 									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);		\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);		\
 									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);	\
 									\
-    VEC_OFF(field##off1,indx2##mns1,indx3##pls1);			\
-    VEC_OFF(field##off2,indx2,indx3##pls1);				\
-    VEC_OFF(field##off3,indx2##pls1,indx3##pls1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3##pls1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3##pls1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3##pls1);				\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field##tmp1.r = pv_mul_real(outer_coeff##Oz.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(outer_coeff##O##outer_dir.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
     									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
     field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
     field##tmp1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_B1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);		\
     									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
     field##tmp2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_B2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);	\
     									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
     field##tmp3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_B3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);		\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);		\
     									\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field##tmp1.r = pv_mul_real(outer_coeff##lz.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(outer_coeff##l##outer_dir.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
   }
 
@@ -385,14 +392,14 @@ union packed_int{
 /// units and decreasing pipelining efficiency, but by and large
 /// the tests are inconclusive
 #define STORE_PARTS(p_struct) {				\
-    for(int m=0; m < VEC_SIZE; m++){			\
+  for(int m=0; m < VEC_SIZE; m++){		\
       (pp->particles[n+m]).xi = p_struct.xi.v[m];	\
       (pp->particles[n+m]).yi = p_struct.yi.v[m];	\
       (pp->particles[n+m]).zi = p_struct.zi.v[m];	\
       (pp->particles[n+m]).pxi = p_struct.pxi.v[m];	\
       (pp->particles[n+m]).pyi = p_struct.pyi.v[m];	\
       (pp->particles[n+m]).pzi = p_struct.pzi.v[m];	\
-    }							\
+  }						\
 }
 
 ////////////////////////
@@ -411,7 +418,7 @@ union packed_int{
 /// stack everytime it is requested. This method is slow. Shuffles/unpacks, while complicated to 
 /// write, are significantly faster, and should be used whenever possible. A similar method is used
 /// for particle loading.
-#define INTERP_FIELD_YZ(F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
+#define INTERP_FIELD_2D_SIMD(inner_dir, outer_dir, F_ENUM, indx2, indx3, outer_coeff, inner_coeff, field) { \
 									\
     pvReal field##tmp1, field##tmp2, field##tmp3;			\
     pvReal field##shuffAC_1, field##shuffBD_1, field##shuffAC_2, field##shuffBD_2, field##shuffAC_3, field##shuffBD_3; \
@@ -419,9 +426,9 @@ union packed_int{
     pvReal field##_in_A2, field##_in_B2, field##_in_C2, field##_in_D2;	\
     pvReal field##_in_A3, field##_in_B3, field##_in_C3, field##_in_D3;	\
     pvInt field##off1, field##off2, field##off3;			\
-    VEC_OFF(field##off1,indx2##mns1,indx3##mns1);			\
-    VEC_OFF(field##off2,indx2,indx3##mns1);				\
-    VEC_OFF(field##off3,indx2##pls1,indx3##mns1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3##mns1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3##mns1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3##mns1);			\
 									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
     field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
@@ -430,7 +437,7 @@ union packed_int{
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);	\
 									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
@@ -439,7 +446,7 @@ union packed_int{
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);	\
 									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
@@ -448,15 +455,15 @@ union packed_int{
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);	\
     									\
-    VEC_OFF(field##off1,indx2##mns1,indx3);				\
-    VEC_OFF(field##off2,indx2,indx3);					\
-    VEC_OFF(field##off3,indx2##pls1,indx3);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3);					\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3);				\
     									\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field.r = pv_mul_real(outer_coeff##mz.r, field##tmp1.r);		\
+    field.r = pv_mul_real(outer_coeff##m##outer_dir.r, field##tmp1.r);		\
     									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
     field##_in_B1.r = pv_loads_real(F_ENUM##point+field##off1.v[1]);		\
@@ -465,7 +472,7 @@ union packed_int{
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);		\
 									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
@@ -474,7 +481,7 @@ union packed_int{
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);		\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);		\
 									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
@@ -483,14 +490,14 @@ union packed_int{
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);	\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);	\
 									\
-    VEC_OFF(field##off1,indx2##mns1,indx3##pls1);			\
-    VEC_OFF(field##off2,indx2,indx3##pls1);				\
-    VEC_OFF(field##off3,indx2##pls1,indx3##pls1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off1,indx2##mns1,indx3##pls1);			\
+    VEC_OFF_##inner_dir##outer_dir(field##off2,indx2,indx3##pls1);				\
+    VEC_OFF_##inner_dir##outer_dir(field##off3,indx2##pls1,indx3##pls1);				\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field##tmp1.r = pv_mul_real(outer_coeff##Oz.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(outer_coeff##O##outer_dir.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
     									\
     field##_in_A1.r = pv_loads_real(F_ENUM##point+field##off1.v[0]);		\
@@ -500,7 +507,7 @@ union packed_int{
     field##shuffAC_1.r = pv_unpacklo_real( field##_in_A1.r, field##_in_C1.r); \
     field##shuffBD_1.r = pv_unpacklo_real( field##_in_B1.r, field##_in_D1.r); \
     field##tmp1.r = pv_unpacklo_real( field##shuffAC_1.r, field##shuffBD_1.r); \
-    field##tmp1.r = pv_mul_real(inner_coeff##my.r, field##tmp1.r);		\
+    field##tmp1.r = pv_mul_real(inner_coeff##m##inner_dir.r, field##tmp1.r);		\
     									\
     field##_in_A2.r = pv_loads_real(F_ENUM##point+field##off2.v[0]);		\
     field##_in_B2.r = pv_loads_real(F_ENUM##point+field##off2.v[1]);		\
@@ -509,7 +516,7 @@ union packed_int{
     field##shuffAC_2.r = pv_unpacklo_real( field##_in_A2.r, field##_in_C2.r); \
     field##shuffBD_2.r = pv_unpacklo_real( field##_in_B2.r, field##_in_D2.r); \
     field##tmp2.r = pv_unpacklo_real( field##shuffAC_2.r, field##shuffBD_2.r); \
-    field##tmp2.r = pv_mul_real(inner_coeff##Oy.r, field##tmp2.r);	\
+    field##tmp2.r = pv_mul_real(inner_coeff##O##inner_dir.r, field##tmp2.r);	\
     									\
     field##_in_A3.r = pv_loads_real(F_ENUM##point+field##off3.v[0]);		\
     field##_in_B3.r = pv_loads_real(F_ENUM##point+field##off3.v[1]);		\
@@ -518,11 +525,11 @@ union packed_int{
     field##shuffAC_3.r = pv_unpacklo_real( field##_in_A3.r, field##_in_C3.r); \
     field##shuffBD_3.r = pv_unpacklo_real( field##_in_B3.r, field##_in_D3.r); \
     field##tmp3.r = pv_unpacklo_real( field##shuffAC_3.r, field##shuffBD_3.r); \
-    field##tmp3.r = pv_mul_real(inner_coeff##ly.r, field##tmp3.r);		\
+    field##tmp3.r = pv_mul_real(inner_coeff##l##inner_dir.r, field##tmp3.r);		\
     									\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp2.r);		\
     field##tmp1.r = pv_add_real(field##tmp1.r, field##tmp3.r);		\
-    field##tmp1.r = pv_mul_real(outer_coeff##lz.r, field##tmp1.r);	\
+    field##tmp1.r = pv_mul_real(outer_coeff##l##outer_dir.r, field##tmp1.r);	\
     field.r = pv_add_real(field.r, field##tmp1.r);			\
   }
 

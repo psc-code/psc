@@ -30,6 +30,7 @@ struct particle_vec{
 void sse2_push_part_yz_a(void);
 void sse2_push_part_yz_b(void);
 void sse2_push_part_yz(void);
+void sse2_push_part_xz(void);
 void init_vec_numbers(void);
 
 // SSE2 needs to have these numbers packed into 

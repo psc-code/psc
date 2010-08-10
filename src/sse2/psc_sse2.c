@@ -25,6 +25,7 @@ struct psc_ops psc_ops_sse2 = {
   .push_part_yz_a         = sse2_push_part_yz_a,
   .push_part_yz_b         = sse2_push_part_yz_b,
   .push_part_yz           = sse2_push_part_yz,
+  .push_part_xz           = sse2_push_part_xz,
 }; 
 
 /// \file psc_sse2.c Backend functions for SSE2 implementation.

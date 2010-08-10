@@ -73,7 +73,7 @@ libpsc_a_SOURCES += \
 if USE_SSE2
 libpsc_a_SOURCES += \
 	sse2/psc_sse2.c sse2/simd_push_common.c \
-    sse2/sse2_push_part_yz.c \
+    sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c\
 	psc_fields_sse2.c psc_particles_sse2.c
 endif USE_SSE2
 

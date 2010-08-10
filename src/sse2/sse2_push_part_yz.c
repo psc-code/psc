@@ -234,12 +234,12 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
-    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
-    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
-    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
-    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
-    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
+    INTERP_FIELD_2D_SIMD(y,z,EX,j2,j3,g,g,exq);
+    INTERP_FIELD_2D_SIMD(y,z,EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_2D_SIMD(y,z,EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_2D_SIMD(y,z,HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_2D_SIMD(y,z,HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_2D_SIMD(y,z,HZ,l2,j3,g,h,hzq);
  
     //---------------------------------------------
     // Advance momenta one full dt
@@ -278,8 +278,8 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
 static void
 do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
 {
-//-----------------------------------------------------
-// Initialization stuff (not sure what all of this is for)
+  //-----------------------------------------------------
+  // Initialization stuff (not sure what all of this is for)
   
   psc.p2A = 0.;
   psc.p2B = 0.;
@@ -462,13 +462,12 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
-    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
-    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
-    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
-    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
-    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
-
+    INTERP_FIELD_2D_SIMD(y,z,EX,j2,j3,g,g,exq);
+    INTERP_FIELD_2D_SIMD(y,z,EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_2D_SIMD(y,z,EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_2D_SIMD(y,z,HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_2D_SIMD(y,z,HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_2D_SIMD(y,z,HZ,l2,j3,g,h,hzq);
     //---------------------------------------------
     // Calculate current density form factors
     // indexing here departs from FORTRAN a little bit

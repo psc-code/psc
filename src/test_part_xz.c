@@ -34,6 +34,18 @@ main(int argc, char **argv)
   psc_check_currents_ref(1e-7);
   psc_destroy();
 
+#ifdef USE_SSE2
+  struct psc_mod_config conf_sse2 = {
+    .mod_particle = "sse2",
+  };
+  psc_create_test_xz(&conf_sse2);
+  psc_push_particles();
+  //  psc_dump_particles("part-2");
+  psc_check_particles_ref(1e-7);
+  psc_check_currents_ref(1e-6);
+  psc_destroy();
+#endif
+
   prof_print();
 
   MPI_Finalize();
