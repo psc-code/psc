@@ -27,6 +27,15 @@
          open(11,file='./'//node//'atom'//label,
      &        access='sequential',form='unformatted')
          read(11,end=3001) cori,shift_z
+         read(11,end=3001) i1n,i1x,i2n,i2x,i3n,i3x
+         read(11,end=3001) np
+         read(11,end=3001) nmax,xnpe,ynpe
+         read(11,end=3001) nprparti,dnprparti,nistep
+         read(11,end=3001) dt,dx,dy,dz
+         read(11,end=3001) i0,e0,b0,j0,rho0,n0,cori,shift_z
+         read(11,end=3001) wl,wp,ld
+         read(11,end=3001) alpha,beta,eta
+         read(11,end=3001) vos,vt,cc,qq,mm,tt,eps0
  3000    read(11,end=3001) xi,yi,zi,pxi,pyi,pzi,qni,mni,cni,lni,wni
          nc=nc+1
          goto 3000
@@ -54,6 +63,15 @@
          open(11,file='./'//node//'atom'//label,
      &        access='sequential',form='unformatted')
          read(11,end=2001) cori,shift_z
+         read(11,end=2001) i1n,i1x,i2n,i2x,i3n,i3x
+         read(11,end=2001) np
+         read(11,end=2001) nmax,xnpe,ynpe
+         read(11,end=2001) nprparti,dnprparti,nistep
+         read(11,end=2001) dt,dx,dy,dz
+         read(11,end=2001) i0,e0,b0,j0,rho0,n0,cori,shift_z
+         read(11,end=2001) wl,wp,ld
+         read(11,end=2001) alpha,beta,eta
+         read(11,end=2001) vos,vt,cc,qq,mm,tt,eps0
  2000    read(11,end=2001) xi,yi,zi,pxi,pyi,pzi,qni,mni,cni,lni,wni
          write(12,1001) xi
          write(12,1001) yi
