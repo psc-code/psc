@@ -218,6 +218,7 @@ struct psc {
   struct psc_bnd_ops *bnd_ops;
   void *bnd_data;
   struct psc_pulse *pulse_p_z1;
+  struct psc_pulse *pulse_s_z1;
   struct psc_case *Case;
   // user-configurable parameters
   struct psc_param prm;
@@ -314,6 +315,7 @@ void psc_out_particles();
 void psc_set_n_particles(int n_part);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
+real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
 
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
@@ -389,6 +391,7 @@ void FREE_field(void);
 void INIT_basic(void);
 void INIT_grid_map(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
+real PSC_s_pulse_z1(real x, real y, real z, real t);
 
 void PIC_fax(int m);
 void PIC_fay(int m);
