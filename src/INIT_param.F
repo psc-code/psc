@@ -297,9 +297,9 @@ c tmxvc: ending time averaging of counting
 c data_out: path of data output directory
 c data_chk: path of checkpointing directory
 
-      data_out='./data'
-      data_chk='./data/checkpoints'
-      data_processed='./results'
+      data_out='.'
+      data_chk='.'
+      data_processed='.'
       
 c OTHER SETTINGS THAT SHOULD NOT BE CHANGED
 c UNDER NORMAL CONDITIONS
