@@ -78,8 +78,17 @@
          open(11,file='./'//node//'pfield'//label,
      &        access='sequential',form='unformatted')
 
+         read(11) i1n,i1x,i2n,i2x,i3n,i3x
+         read(11) np
+         read(11) nmax,xnpe,ynpe
+         read(11) nprf,dnprf
+         read(11) dt,dx,dy,dz,shift_z
+         read(11) i0,e0,b0,j0,rho0,n0
+         read(11) wl,wp,ld
+         read(11) alpha,beta,eta
+         read(11) vos,vt,cc,qq,mm,tt,eps0
          read(11) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx,shift_z
-         read(11) r1n,r1x,r2n,r2x,r3n,r3x,shift_z
+         read(11) r1n,r1x,r2n,r2x,r3n,r3x
          read(11) x0,y0,z0,rot
 
          do i3=i3mn,i3mx

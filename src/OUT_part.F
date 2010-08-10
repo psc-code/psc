@@ -53,9 +53,40 @@ c OUTPUT OF PARTICLES AT SELECTED TIMESTEPS
      &        //'/'//node//'atom'//label,
      &        access='sequential',form='unformatted')
 
+
          write(11) cori,shift_z
+         write(11) i1n,i1x,i2n,i2x,i3n,i3x
+         write(11) np
+         write(11) nmax,xnpe,ynpe
+         write(11) nprparti,dnprparti,nistep
+         write(11) dt,dx,dy,dz
+         write(11) i0,e0,b0,j0,rho0,n0,cori,shift_z
+         write(11) wl,wp,ld
+         write(11) alpha,beta,eta
+         write(11) vos,vt,cc,qq,mm,tt,eps0
+
          write(12) cori,shift_z
+         write(12) i1n,i1x,i2n,i2x,i3n,i3x
+         write(12) np
+         write(12) nmax,xnpe,ynpe
+         write(12) nprparti,dnprparti,nistep
+         write(12) dt,dx,dy,dz
+         write(12) i0,e0,b0,j0,rho0,n0,cori,shift_z
+         write(12) wl,wp,ld
+         write(12) alpha,beta,eta
+         write(12) vos,vt,cc,qq,mm,tt,eps0
+
          write(13) cori,shift_z
+         write(13) i1n,i1x,i2n,i2x,i3n,i3x
+         write(13) np
+         write(13) nmax,xnpe,ynpe
+         write(13) nprparti,dnprparti,nistep
+         write(13) dt,dx,dy,dz
+         write(13) i0,e0,b0,j0,rho0,n0,cori,shift_z
+         write(13) wl,wp,ld
+         write(13) alpha,beta,eta
+         write(13) vos,vt,cc,qq,mm,tt,eps0
+
 
          do l=1,niloc,nistep
 
