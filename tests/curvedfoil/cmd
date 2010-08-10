@@ -1,4 +1,6 @@
 mpirun -n 2 src/VLI \
 	   --nproc_z 2 \
-	   --mod_output c --output_format vtk --output_combine --write_tfield no \
-	   --case curvedfoil
+	   --mod_output c --output_format vtk --output_pfield_first 3000 --output_pfield_step 200 \
+           --output_write_nn no --output_write_jx no --output_write_jy no --output_write_jz no \
+           --output_combine --write_tfield no \
+	   --case foils

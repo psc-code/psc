@@ -45,17 +45,17 @@ struct foils {
 #define VAR(x) (void *)offsetof(struct foils, x)
 
 static struct param foils_descr[] = {
-  { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(1. * 1e-6)           },
-  { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(2. * 1e-6)             },
-  { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(2.0 * 1e-6)            },
-  { "Line0_z1"                           , VAR(Line0_z1)                   , PARAM_DOUBLE(4.0 * 1e-6)           },
-  { "Line0_Thickness"                    , VAR(Line0_Thickness)            , PARAM_DOUBLE(0.2 * 1e-6)          },
+  { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(15. * 1e-6)           },
+  { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(11.5 * 1e-6)             },
+  { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(3.0 * 1e-6)            },
+  { "Line0_z1"                           , VAR(Line0_z1)                   , PARAM_DOUBLE(23. * 1e-6)           },
+  { "Line0_Thickness"                    , VAR(Line0_Thickness)            , PARAM_DOUBLE(0.5 * 1e-6)          },
   { "Line0_Preplasma"                    , VAR(Line0_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
-  { "Line1_x0"                           , VAR(Line1_x0)                   , PARAM_DOUBLE(1. * 1e-6)           },
-  { "Line1_x1"                           , VAR(Line1_x1)                   , PARAM_DOUBLE(4. * 1e-6)             },
-  { "Line1_z0"                           , VAR(Line1_z0)                   , PARAM_DOUBLE(2.0 * 1e-6)            },
-  { "Line1_z1"                           , VAR(Line1_z1)                   , PARAM_DOUBLE(2.0 * 1e-6)           },
-  { "Line1_Thickness"                    , VAR(Line1_Thickness)            , PARAM_DOUBLE(0.2 * 1e-6)          },
+  { "Line1_x0"                           , VAR(Line1_x0)                   , PARAM_DOUBLE(5. * 1e-6)           },
+  { "Line1_x1"                           , VAR(Line1_x1)                   , PARAM_DOUBLE(8.5 * 1e-6)             },
+  { "Line1_z0"                           , VAR(Line1_z0)                   , PARAM_DOUBLE(3.0 * 1e-6)            },
+  { "Line1_z1"                           , VAR(Line1_z1)                   , PARAM_DOUBLE(23. * 1e-6)           },
+  { "Line1_Thickness"                    , VAR(Line1_Thickness)            , PARAM_DOUBLE(0.5 * 1e-6)          },
   { "Line1_Preplasma"                    , VAR(Line1_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
   { "Te"                                 , VAR(Te)                         , PARAM_DOUBLE(0.)             },
   { "Ti"                                 , VAR(Ti)                         , PARAM_DOUBLE(0.)             },
@@ -125,32 +125,38 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 static void
 foils_create(struct psc_case *Case)
 {
+  
+  float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
+   //  float Coeff_FHHM = 1.0;       // uncomment this line if you want the old input  
+   // T_L = 3.33 e -15   for 1 micron wavelength
+   // T_L = 2.66 e -15   for 0.8 micron wavelength
+
   struct psc_pulse_gauss prm_p = {
-    .xm = 2.5   * 1e-6,
+    .xm = 10.   * 1e-6,                       // transverse position of the focus
     .ym = 2.5   * 1e-6,
-    .zm = -0. * 1e-6,
-    .dxm = 0.5   * 1e-6,
+    .zm = -45. * 1e-6,
+    .dxm = 3.75  * 1e-6 * Coeff_FWHM,
     .dym = 2.   * 1e-6,
-    .dzm = 4.   * 1e-6,
+    .dzm = 15.   * 1e-6 * Coeff_FWHM,
 //    .zb  = 10. * 1e-6,
     .phase = 0.0,
   };
   
   struct psc_pulse_gauss prm_s = {
-    .xm = 2.5   * 1e-6,
+    .xm = 10.   * 1e-6,
     .ym = 2.5   * 1e-6,
-    .zm = -0. * 1e-6,
-    .dxm = 0.5   * 1e-6,
+    .zm = -45. * 1e-6,
+    .dxm = 3.75   * 1e-6 * Coeff_FWHM,
     .dym = 2.   * 1e-6,
-    .dzm = 4.   * 1e-6,
+    .dzm = 15.   * 1e-6 * Coeff_FWHM,
 //    .zb  = 10. * 1e-6,
-    .phase = M_PI / 2.,
+    .phase = 0.0,
   };
 
 //  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
 //  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
 
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
+//  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
   psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
 }
 
@@ -159,27 +165,32 @@ foils_create(struct psc_case *Case)
 static void
 foils_init_param(struct psc_case *Case)
 {
-  psc.prm.nmax = 500;
-  psc.prm.cpum = 25000;
+  psc.prm.nmax = 15000;
+  psc.prm.cpum = 15000;
   psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 1.37e24;
+  psc.prm.i0 = 2e24;
+   
+  // n_cr = 1.1e27 for 1 micron wavelength and scales as lambda^-2
+
   psc.prm.n0 = 1.1e29;
 
-  psc.prm.nicell = 50;
+  
 
-  psc.domain.length[0] = 5.0 * 1e-6;			// length of the domain in x-direction (transverse)
+  psc.prm.nicell = 200;
+
+  psc.domain.length[0] = 20.0 * 1e-6;			// length of the domain in x-direction (transverse)
   psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 5.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  psc.domain.length[2] = 30.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 500;				// total number of steps in x-direction. dx=length/itot;
+  psc.domain.itot[0] = 2000;				// total number of steps in x-direction. dx=length/itot;
   psc.domain.itot[1] = 10;				
-  psc.domain.itot[2] = 500;				// total number of steps in z-direction. dz=length/itot;
+  psc.domain.itot[2] = 3000;				// total number of steps in z-direction. dz=length/itot;
   psc.domain.ilo[0] = 0;
   psc.domain.ilo[1] = 9;
   psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 500;
+  psc.domain.ihi[0] = 2000;
   psc.domain.ihi[1] = 10;
-  psc.domain.ihi[2] = 500;
+  psc.domain.ihi[2] = 3000;
 
   psc.domain.bnd_fld_lo[0] = 1;
   psc.domain.bnd_fld_hi[0] = 1;
@@ -203,10 +214,10 @@ foils_init_field(struct psc_case *Case)
 	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
 
 	// FIXME, why this time?
-	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-	FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-	FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+//	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+//	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+//	FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+//	FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
       }
     }
   }
@@ -245,33 +256,9 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
    
   real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
   dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
-  dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
+  //dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
 
   if (dens>1.0) dens=1.0;
-
-  //real xr = x[0];
-  //real yr = x[1];
-  //real zr = x[2];
-
-
-/*  real x0 = foils->x0 / ld;
-  real y0 = foils->y0 / ld;
-  real z0 = foils->z0 / ld;
-  real L0 = foils->L0 / ld;
-  real width0 = foils->width0 / ld;
-  real R_curv0 = foils->R_curv0 / ld;
-
-
-  real xsphere0 = x0;                    // coordinates 
-  real ysphere0 = y0;                    // of the 
-  real zsphere0 = z0;                    // sphere0 center
-
-  real Radius0AtCurrentCell = sqrt((xr-xsphere0)*(xr-xsphere0)+(yr-ysphere0)*(yr-ysphere0)+(zr-zsphere0)*(zr-zsphere0));
-  real argsphere0 = (fabs(Radius0AtCurrentCell-R_curv0)-width0)/L0;
-
-  if (argsphere0 > 200.0) argsphere0 = 200.0;
-
-  real dens = 1./(1.+exp(argsphere0));*/
 
   switch (kind) {
   case 0: // electrons
@@ -302,5 +289,5 @@ struct psc_case_ops psc_case_ops_foils = {
   .create     = foils_create,
   .init_param = foils_init_param,
   .init_field = foils_init_field,
-  .init_npt   = foils_init_npt,
+//  .init_npt   = foils_init_npt,
 };
