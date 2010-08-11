@@ -43,6 +43,7 @@ libpsc_a_SOURCES = \
 	collision.c \
 	PIC_bin_coll.F \
 	bnd.c \
+	none.c \
 	output_fields.c output_binary.c output_vtk.c \
 	case_langmuir.c \
 	case_wakefield.c \

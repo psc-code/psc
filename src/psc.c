@@ -16,6 +16,7 @@ struct psc psc;
 static struct psc_ops *psc_ops_list[] = {
   &psc_ops_generic_c,
   &psc_ops_fortran,
+  &psc_ops_none,
 #ifdef USE_CUDA
   &psc_ops_cuda,
 #endif
@@ -28,6 +29,7 @@ static struct psc_ops *psc_ops_list[] = {
 static struct psc_push_field_ops *psc_push_field_ops_list[] = {
   &psc_push_field_ops_fortran,
   &psc_push_field_ops_c,
+  &psc_push_field_ops_none,
   NULL,
 };
 
@@ -604,10 +606,6 @@ psc_set_n_particles(int n_part)
   psc.pp.n_part = n_part;
   SET_niloc(n_part);
 }
-
-// ======================================================================
-// testing related stuff
-
 
 // ======================================================================
 
