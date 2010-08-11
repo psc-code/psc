@@ -33,6 +33,7 @@ missing
 compile
 depcomp
 stamp-h1
+.dirstamp
 config.h
 config.h.in
 .deps

@@ -1,5 +1,5 @@
 
-SUBDIRS = util generic_c sse2
+SUBDIRS = util
 
 bin_PROGRAMS = VLI VLA SELECT
 
@@ -56,8 +56,18 @@ if HAVE_HDF5
 libpsc_a_SOURCES += output_hdf5.c
 endif
 
+libpsc_a_SOURCES += \
+	generic_c/psc_generic_c.c \
+	generic_c/push_part_xz.c \
+	generic_c/push_part_yz.c \
+	generic_c/push_part_z.c \
+	generic_c/push_part_yz_a.c \
+	generic_c/push_part_yz_b.c \
+	generic_c/calc_densities.c
+
 if USE_SSE2
 libpsc_a_SOURCES += \
+	sse2/psc_sse2.c sse2/sse2_push_part_yz.c \
 	psc_fields_sse2.c psc_particles_sse2.c
 endif USE_SSE2
 
@@ -103,10 +113,7 @@ endif
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
-LDADD = libpsc.a generic_c/libpsc_generic_c.a util/libutil.a
-if USE_SSE2
-LDADD += sse2/libpsc_sse2.a
-endif USE_SSE2
+LDADD = libpsc.a util/libutil.a
 
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \

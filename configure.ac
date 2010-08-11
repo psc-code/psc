@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT([psc], [1.90])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
@@ -104,9 +104,7 @@ AS_IF(
 )
 AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 
-AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile
-	         src/generic_c/Makefile
-		 src/sse2/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile])
 
 AC_OUTPUT
 
