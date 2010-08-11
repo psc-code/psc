@@ -63,6 +63,26 @@ fortran_push_part_yz()
 }
 
 static void
+fortran_push_part_xyz()
+{
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, EX, EX + 6);
+  
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fort_part_xyz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+  }
+  prof_start(pr);
+  PIC_push_part_xyz(&pp, &pf);
+  prof_stop(pr);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, JXI, JXI + 3);
+}
+
+static void
 fortran_push_part_z()
 {
   particles_fortran_t pp;
@@ -130,6 +150,7 @@ struct psc_ops psc_ops_fortran = {
   .fields_to_fortran      = fortran_fields_to_fortran,
   .push_part_xz           = fortran_push_part_xz,
   .push_part_yz           = fortran_push_part_yz,
+  .push_part_xyz          = fortran_push_part_xyz,
   .push_part_z            = fortran_push_part_z,
   .push_part_yz_a         = fortran_push_part_yz_a,
   .push_part_yz_b         = fortran_push_part_yz_b,

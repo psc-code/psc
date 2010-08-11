@@ -23,6 +23,7 @@ libpsc_a_SOURCES = \
 	psc_fortran.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
+	PIC_move_part_xyz.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_z.F \
 	PIC_pex.F PIC_pey.F PIC_pez.F \
@@ -81,7 +82,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	SERV_write.F \
 	OUT_param.F OUT_part.F \
 	OUT_count.F OUT_energy.F \
-	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
+	PIC_move_part.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
 	PIC_move_part_y.F PIC_move_part_z.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
@@ -92,7 +93,7 @@ VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	SERV_write.F SERV_read.F \
 	OUT_param.F \
 	OUT_count.F OUT_energy.F \
-	PIC_move_part.F PIC_move_part_xyz.F PIC_move_part_xy.F \
+	PIC_move_part.F PIC_move_part_xy.F \
 	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
 	PIC_move_part_y.F PIC_move_part_z.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \

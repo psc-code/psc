@@ -6,6 +6,7 @@
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
 #define PIC_push_part_yz_F77 F77_FUNC(pic_push_part_yz,PIC_PUSH_PART_YZ)
+#define PIC_push_part_xyz_F77 F77_FUNC(pic_push_part_xyz,PIC_PUSH_PART_XYZ)
 #define PIC_push_part_yz_a_F77 F77_FUNC(pic_push_part_yz_a,PIC_PUSH_PART_YZ_A)
 #define PIC_push_part_yz_b_F77 F77_FUNC(pic_push_part_yz_b,PIC_PUSH_PART_YZ_B)
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
@@ -73,6 +74,13 @@ void PIC_push_part_yz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
 			  f_real *hx, f_real *hy, f_real *hz);
+
+void PIC_push_part_xyz_F77(f_int *niloc, particle_fortran_t *p_niloc,
+		 	   f_real *p2A, f_real *p2B,
+			   f_real *ne, f_real *ni, f_real *nn,
+			   f_real *jxi, f_real *jyi, f_real *jzi,
+			   f_real *ex, f_real *ey, f_real *ez,
+			   f_real *bx, f_real *by, f_real *bz);
 
 void PIC_push_part_yz_a_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
@@ -196,6 +204,17 @@ PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf)
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+}
+
+void
+PIC_push_part_xyz(particles_fortran_t *pp, fields_fortran_t *pf)
+{
+  PIC_set_variables();
+  PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+			pf->flds[NE], pf->flds[NI], pf->flds[NN],
+			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+			pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void

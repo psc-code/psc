@@ -127,12 +127,12 @@ psc_find_collision_ops(const char *ops_name)
   abort();
 }
 
-static struct psc_output_ops *
+static struct psc_output_ops *             // takes module name from command line
 psc_find_output_ops(const char *ops_name)
 {
   for (int i = 0; psc_output_ops_list[i]; i++) {
     if (strcasecmp(psc_output_ops_list[i]->name, ops_name) == 0)
-      return psc_output_ops_list[i];
+      return psc_output_ops_list[i];       // module name shows up in psc_output_ops_list
   }
   fprintf(stderr, "ERROR: psc_output_ops '%s' not available.\n", ops_name);
   abort();
@@ -334,6 +334,26 @@ psc_push_part_xz()
 }
 
 // ----------------------------------------------------------------------
+// psc_push_part_xyz
+
+void
+psc_push_part_xyz()
+{
+  assert(psc.ops->push_part_xyz);
+  if (psc.ops->particles_from_fortran)
+    psc.ops->particles_from_fortran();
+  if (psc.ops->fields_from_fortran)
+    psc.ops->fields_from_fortran();
+  
+  psc.ops->push_part_xyz();
+
+  if (psc.ops->particles_to_fortran)
+    psc.ops->particles_to_fortran();
+  if (psc.ops->fields_to_fortran)
+    psc.ops->fields_to_fortran();
+}
+
+// ----------------------------------------------------------------------
 // psc_push_part_yz
 
 void
@@ -419,7 +439,7 @@ psc_push_particles()
     psc.domain.ihi[2] - psc.domain.ilo[2],
   };
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    assert(0);
+    psc_push_part_xyz();
   } else if (im[0] > 1 && im[2] > 1) { // xz
     psc_push_part_xz();
   } else if (im[0] > 1 && im[1] > 1) { // xy

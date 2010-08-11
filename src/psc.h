@@ -249,6 +249,7 @@ struct psc_ops {
   void (*fields_to_fortran)(void);
   void (*push_part_xz)(void);
   void (*push_part_yz)(void);
+  void (*push_part_xyz)(void);
   void (*push_part_z)(void);
   void (*push_part_yz_a)(void); // only does the simple first half step
   void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
@@ -392,6 +393,7 @@ void psc_calc_densities(void);
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);
 
+void psc_push_part_xyz();
 void psc_push_part_yz(void);
 void psc_push_part_z(void);
 void psc_push_part_yz_a(void);
@@ -451,6 +453,7 @@ extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
 
 // Wrappers for Fortran functions
+void PIC_push_part_xyz();
 void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
