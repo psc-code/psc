@@ -131,6 +131,7 @@ foils_create(struct psc_case *Case)
    // T_L = 3.33 e -15   for 1 micron wavelength
    // T_L = 2.66 e -15   for 0.8 micron wavelength
 
+#if 0
   struct psc_pulse_gauss prm_p = {
     .xm = 10.   * 1e-6,                       // transverse position of the focus
     .ym = 2.5   * 1e-6,
@@ -141,7 +142,11 @@ foils_create(struct psc_case *Case)
 //    .zb  = 10. * 1e-6,
     .phase = 0.0,
   };
-  
+
+//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
+//  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
+#endif
+
   struct psc_pulse_gauss prm_s = {
     .xm = 10.   * 1e-6,
     .ym = 2.5   * 1e-6,
@@ -153,10 +158,7 @@ foils_create(struct psc_case *Case)
     .phase = 0.0,
   };
 
-//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
 //  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
-
-//  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
   psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
 }
 
@@ -206,6 +208,7 @@ foils_init_param(struct psc_case *Case)
 static void
 foils_init_field(struct psc_case *Case)
 {
+#if 0
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
     for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
@@ -214,13 +217,14 @@ foils_init_field(struct psc_case *Case)
 	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
 
 	// FIXME, why this time?
-//	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-//	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-//	FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-//	FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+	FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+	FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
       }
     }
   }
+#endif
 }
 
 static void
@@ -247,6 +251,10 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   real Line1_Thickness = foils->Line1_Thickness / ld;
   real Line1_Preplasma = foils->Line1_Preplasma / ld;
 
+  real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
+  dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
+
+#if 0
   real HollowSphere0_x0 = foils->HollowSphere0_x0 / ld;
   real HollowSphere0_y0 = foils->HollowSphere0_y0 / ld;
   real HollowSphere0_z0 = foils->HollowSphere0_y0 / ld; 
@@ -254,9 +262,8 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   real HollowSphere0_Preplasma = foils->HollowSphere0_Preplasma / ld;
   real HollowSphere0_Thickness = foils->HollowSphere0_Thickness / ld;
    
-  real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
-  dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
-  //dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
+  dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
+#endif
 
   if (dens>1.0) dens=1.0;
 

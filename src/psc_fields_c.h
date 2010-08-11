@@ -35,9 +35,10 @@ typedef struct {
 
 void fields_c_alloc(fields_c_t *pf);
 void fields_c_free(fields_c_t *pf);
-void fields_c_zero(fields_c_t *pf, int m);
-void fields_c_set(fields_c_t *pf, int m, fields_c_real_t val);
 void fields_c_get(fields_c_t *pf, int mb, int me);
 void fields_c_put(fields_c_t *pf, int mb, int me);
+void fields_c_zero(fields_c_t *pf, int m);
+void fields_c_set(fields_c_t *pf, int m, fields_c_real_t val);
+void fields_c_copy(fields_c_t *pf, int m_to, int m_from);
 
 #endif

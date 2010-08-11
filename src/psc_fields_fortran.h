@@ -32,5 +32,7 @@ void fields_fortran_free(fields_fortran_t *pf);
 void fields_fortran_get(fields_fortran_t *pf, int mb, int me);
 void fields_fortran_put(fields_fortran_t *pf, int mb, int me);
 void fields_fortran_zero(fields_fortran_t *pf, int m);
+void fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val);
+void fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from);
 
 #endif
