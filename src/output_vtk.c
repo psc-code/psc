@@ -28,31 +28,28 @@ vtk_open(struct psc_fields_list *list, const char *filename, void **pctx)
 
   assert(list->nr_flds > 0);
   struct psc_field *fld = &list->flds[0];
-  int *ilo = fld->ilo;
+  int *ilo = fld->ilo, *ihi = fld->ihi;
+  
 
   vtk->file = fopen(filename, "w");
   fprintf(vtk->file, "# vtk DataFile Version 3.0\n");
   fprintf(vtk->file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
   fprintf(vtk->file, "ASCII\n");
+  int extra = 0;
 #if OUTPUT_VTK == OUTPUT_VTK_STRUCTURED_POINTS
   fprintf(vtk->file, "DATASET STRUCTURED_POINTS\n");
 #else
-  int extra;
-  double offset;
-  int *ihi = fld->ihi;
-#if OUTPUT_VTK == OUTPUT_VTK_RECTILINEAR_POINTS
-  extra = 0;
-  offset = .5;
-#else
+  double offset = .5;
+  fprintf(vtk->file, "DATASET RECTILINEAR_GRID\n");
+#if OUTPUT_VTK == OUTPUT_VTK_RECTILINEAR_CELLS
   extra = 1;
   offset = 0.;
 #endif
-  fprintf(vtk->file, "DATASET RECTILINEAR_GRID\n");
+#endif
   fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
 	  ihi[0] - ilo[0] + extra,
 	  ihi[1] - ilo[1] + extra,
 	  ihi[2] - ilo[2] + extra);
-#endif
 
 #if OUTPUT_VTK == OUTPUT_VTK_STRUCTURED_POINTS
 
@@ -66,7 +63,7 @@ vtk_open(struct psc_fields_list *list, const char *filename, void **pctx)
 #else
 
   for (int d = 0; d < 3; d++) {
-    fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d, ihi[d] - ilo[d]);
+    fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d, ihi[d] - ilo[d] + extra);
     for (int i = ilo[d]; i < ihi[d] + extra; i++) {
       fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
     }
