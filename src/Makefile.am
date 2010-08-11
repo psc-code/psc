@@ -52,7 +52,8 @@ libpsc_a_SOURCES = \
 	case_foils.c \
 	case_curvedfoil.c \
 	case_singlepart.c \
-	case_harris.c
+	case_harris.c \
+	case_collisions.c
 
 if HAVE_HDF5
 libpsc_a_SOURCES += output_hdf5.c

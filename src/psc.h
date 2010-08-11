@@ -449,6 +449,7 @@ extern struct psc_case_ops psc_case_ops_foils;
 extern struct psc_case_ops psc_case_ops_curvedfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
+extern struct psc_case_ops psc_case_ops_collisions;
 extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
 

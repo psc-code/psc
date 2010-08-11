@@ -1,0 +1,21 @@
+openmpirun -np 1 ../src/VLI \
+	   --mod_output c \
+	   --case thinfoil \
+	   --mod_randomize fortran \
+	   --mod_sort qsort \
+	   --mod_collision fortran \
+	   --itot_x 20 \
+	   --ilo_x 9 --ihi_x 10 \
+	   --itot_y 20 \
+	   --ilo_y 9 --ihi_y 10 \
+	   --itot_z 1000 \
+	   --ilo_z 0 --ihi_z 1000 \
+	   --output_format vtk \
+	   --output_combine \
+	   --pfield_step 100 \
+	   --nmax 10000 \
+	   --nicell 1000 \
+	   --nproc_z 1 \
+   	   --n0 1.0e29 \
+	   --i0 1.0e20
+

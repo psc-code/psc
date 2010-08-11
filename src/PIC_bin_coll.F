@@ -35,8 +35,8 @@ c ====================================================================
 
 
       lnL=5.0d0                                   ! Coulomb logarithm
-      NPMAX=2000                                  ! max number of particles per cell
-      spx_nsp=4                                   ! determines maximum number of species in cell
+      NPMAX=5000                                  ! max number of particles per cell
+      spx_nsp=7                                   ! determines maximum number of species in cell
 
       allocate(spx_list(0:spx_nsp,0:NPMAX))       ! matrix spx_list required for selection rules
       allocate(spx_np(0:spx_nsp))
@@ -132,6 +132,45 @@ c BEGIN LOOP OVER PARTICLES
                   stop 
                endif
 
+            else if (qni==+1.0.and.mni==12*1836.0) then
+               sp=5                                            ! C+
+               spx_list(sp,spx_np(sp))=l                       ! store particle index in list
+               spx_np(sp)=spx_np(sp)+1                         ! increase particle counter by one
+
+               if (spx_np(sp).gt.NPMAX) then
+                  if (mpe==0) then
+                     write(6,*) "PIC_bin_coll: NPMAX too small!"
+                  endif
+                  call MPI_FINALIZE(info)
+                  stop 
+               endif
+
+            else if (qni==+2.0.and.mni==12*1836.0) then
+               sp=6                                            ! C2+
+               spx_list(sp,spx_np(sp))=l                       ! store particle index in list
+               spx_np(sp)=spx_np(sp)+1                         ! increase particle counter by one
+
+               if (spx_np(sp).gt.NPMAX) then
+                  if (mpe==0) then
+                     write(6,*) "PIC_bin_coll: NPMAX too small!"
+                  endif
+                  call MPI_FINALIZE(info)
+                  stop 
+               endif
+
+            else if (qni==+3.0.and.mni==12*1836.0) then
+               sp=7                                            ! C3+
+               spx_list(sp,spx_np(sp))=l                       ! store particle index in list
+               spx_np(sp)=spx_np(sp)+1                         ! increase particle counter by one
+
+               if (spx_np(sp).gt.NPMAX) then
+                  if (mpe==0) then
+                     write(6,*) "PIC_bin_coll: NPMAX too small!"
+                  endif
+                  call MPI_FINALIZE(info)
+                  stop 
+               endif
+
             endif
 
 
@@ -210,7 +249,7 @@ c*******************************************************************************
                
 c PERFORM INTRA-SPECIES COLLISIONS
 
-                  goto 1111
+c                  goto 1111                                     ! use to turn same particle collisions off
                   do sp1=0,spx_nsp
 
                      if (spx_np(sp1).gt.1) then
@@ -301,11 +340,12 @@ c                        write(6,*) 'rho:',rho,spx_np(sp1)
                         endif
                      endif 
                   enddo
- 1111             continue
+c 1111             continue
 
 c PERFORM INTER-SPECIES COLLISIONS 
-                  
 
+                  
+c                  goto 2222                                     ! use to turn inter-particle collisions off
                   do sp1=0,spx_nsp
                   do sp2=sp1+1,spx_nsp
  
@@ -447,7 +487,8 @@ c                              write(6,*) 'rho4:',rho
 
                   enddo
                   enddo
-                
+c 2222             continue
+
 
 c END COLLISIONS
 

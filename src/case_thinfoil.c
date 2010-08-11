@@ -25,8 +25,8 @@ struct thinfoil {
 #define VAR(x) (void *)offsetof(struct thinfoil, x)
 
 static struct param thinfoil_descr[] = {
-  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
-  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
+  { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.1)            },
+  { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.1)            },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)     },
   { "y0"            , VAR(y0)              , PARAM_DOUBLE(.01 * 1e-6)     },
   { "z0"            , VAR(z0)              , PARAM_DOUBLE(1.  * 1e-6)     },
@@ -65,7 +65,7 @@ thinfoil_init_param(struct psc_case *Case)
   psc.prm.cpum = 25000;
   psc.prm.lw = 1. * 1e-6;
   psc.prm.i0 = 1.0e20;
-  psc.prm.n0 = 2.0e29;
+  psc.prm.n0 = 1.0e29;
 
   psc.prm.nicell = 1000;
 
