@@ -51,3 +51,5 @@ data
 doxygen/doxy_err.log
 doxygen/html
 TAGS
+.DS_Store
+
