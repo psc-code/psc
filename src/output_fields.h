@@ -44,5 +44,7 @@ struct psc_output_format_ops {
 extern struct psc_output_format_ops psc_output_format_ops_binary;
 extern struct psc_output_format_ops psc_output_format_ops_hdf5;
 extern struct psc_output_format_ops psc_output_format_ops_vtk;
+extern struct psc_output_format_ops psc_output_format_ops_vtk_points;
+extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
 
 #endif

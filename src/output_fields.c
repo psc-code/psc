@@ -150,6 +150,8 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_hdf5,
 #endif
   &psc_output_format_ops_vtk,
+  &psc_output_format_ops_vtk_points,
+  &psc_output_format_ops_vtk_cells,
   NULL,
 };
 
