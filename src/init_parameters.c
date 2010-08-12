@@ -144,6 +144,8 @@ static struct param psc_param_descr[] = {
   // only useful when actually doing lasers.
   { "adjust_dt_to_cycles"
                     , VAR(adjust_dt_to_cycles), PARAM_BOOL(0)  },
+  { "wallclock_limit"
+                    , VAR(wallclock_limit)    , PARAM_DOUBLE(0.) },
   {},
 };
 

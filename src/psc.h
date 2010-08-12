@@ -186,6 +186,7 @@ struct psc_param {
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
   bool adjust_dt_to_cycles;
+  double wallclock_limit;
 };
 
 // coefficients needed for computations
@@ -352,6 +353,8 @@ struct psc {
 
   // did we allocate the fields / particles (otherwise, Fortran did)
   bool allocated;
+
+  double time_start;
 };
 
 // ----------------------------------------------------------------------
@@ -404,6 +407,8 @@ void psc_collision(void);
 void psc_out_field(void);
 void psc_out_particles(void);
 void psc_set_n_particles(int n_part);
+
+void psc_write_checkpoint(void);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
@@ -504,6 +509,7 @@ void PIC_fez(fields_fortran_t *pf, int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);
+void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

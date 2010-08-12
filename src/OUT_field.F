@@ -136,6 +136,10 @@ c     ----------------------------------------------------------------------
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
 
+      if (.not.allocated(ext)) then
+         return
+      endif
+
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
          do i2=i2mn,i2mx,100
