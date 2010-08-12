@@ -15,7 +15,6 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       integer timestep
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
-      real(kind=8) :: p2A, p2B
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn

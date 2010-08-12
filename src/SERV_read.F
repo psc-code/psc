@@ -4,13 +4,25 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       subroutine SERV_read
 
+      call SERV_read_1
+
+      call ALLOC_particles(niloc)
+      call FIELDS_alloc
+
+      call SERV_read_2(niloc, p_niloc,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+
+      end subroutine SERV_read
+
+
+
+      subroutine SERV_read_1
+
       use VLA_variables
       use PIC_variables
-      use fields
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
       character*5 node
 
 
@@ -43,51 +55,41 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       read(10) niloc,nialloc,cori
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 
 
+      end subroutine SERV_read_1
 
-      call ALLOC_particles(niloc)
 
-      allocate(ex(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(ey(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(ez(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(hx(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(hy(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(hz(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(jxi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
-      allocate(jyi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
-      allocate(jzi(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &             i3mn-rd3:i3mx+rd3))
-      allocate(ne(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(ni(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
-      allocate(nn(i1mn-rd1:i1mx+rd1,i2mn-rd2:i2mx+rd2,
-     &            i3mn-rd3:i3mx+rd3))
+
+      subroutine SERV_read_2(niloc, p_niloc,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
+     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,cpu,cpu_ary,npe
+
+      use PIC_variables, only: cori,nialloc,nprparti
+
+      implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+
+      integer i1,i2,i3
+      integer i1a,i1e,i2a,i2e,i3a,i3e
 
       allocate(cpu(1:5))
       allocate(cpu_ary(1:5,0:npe-1))
-
-
-      p_niloc=0.0
-      ex=0.0d0
-      ey=0.0d0
-      ez=0.0d0
-      hx=0.0d0
-      hy=0.0d0
-      hz=0.0d0
-      jxi=0.0d0
-      jyi=0.0d0
-      jzi=0.0d0
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
 
       do i1=0,11*niloc+10,100
          i1e=min(i1+99,11*niloc+10)
@@ -135,4 +137,4 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       close(10)
 
-      end subroutine SERV_read
+      end subroutine SERV_read_2
