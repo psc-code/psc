@@ -32,6 +32,7 @@ void sse2_push_part_yz_b(void);
 void sse2_push_part_yz(void);
 void sse2_push_part_xz(void);
 void init_vec_numbers(void);
+__m128i func_mul_epu32(__m128i a, __m128i b);
 
 // SSE2 needs to have these numbers packed into 
 // vectors to utilize them effectively. 

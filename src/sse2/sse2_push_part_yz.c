@@ -468,6 +468,7 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     INTERP_FIELD_2D_SIMD(y,z,HX,l2,l3,h,h,hxq);
     INTERP_FIELD_2D_SIMD(y,z,HY,j2,l3,h,g,hyq);
     INTERP_FIELD_2D_SIMD(y,z,HZ,l2,j3,g,h,hzq);
+
     //---------------------------------------------
     // Calculate current density form factors
     // indexing here departs from FORTRAN a little bit

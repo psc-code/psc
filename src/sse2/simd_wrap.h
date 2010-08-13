@@ -30,20 +30,20 @@
 //---------------------------------------------
 /// Calculates the offset for accessing pointers to 
 /// flattened (2-D YZ only) fields using vector operations
+
 #define VEC_OFF_yz(foff,jy, jz) {				\
     foff.r = pv_sub_int(jz.r,ilg[2].r);					\
     itemp1.r = pv_sub_int(jy.r,ilg[1].r);				\
-    foff.r = pv_mul_int(foff.r, img[1].r);				\
+    foff.r = pv_mul_uint(foff.r, img[1].r);				\
     foff.r = pv_add_int(foff.r, itemp1.r);				\
-    foff.r = pv_mul_int(foff.r, img[0].r);				\
+    foff.r = pv_mul_uint(foff.r, img[0].r);				\
   }
-
 
 #define VEC_OFF_xz(foff,jx,jz){				\
     foff.r = pv_sub_int(jz.r,ilg[2].r);			\
     itemp1.r = pv_sub_int(jx.r, ilg[0].r);		\
-    foff.r = pv_mul_int(foff.r, img[1].r);		\
-    foff.r = pv_mul_int(foff.r, img[0].r);		\
+    foff.r = pv_mul_uint(foff.r, img[1].r);		\
+    foff.r = pv_mul_uint(foff.r, img[0].r);		\
     foff.r = pv_add_int(foff.r, itemp1.r);		\
   }
 
@@ -56,7 +56,7 @@ union packed_vector{
 
 union packed_int{
   __m128i r;
-  int v[2] __attribute__ ((aligned (16))); 
+  int v[4] __attribute__ ((aligned (16))); 
                                            
 } ; 
 
@@ -87,7 +87,7 @@ union packed_int{
 // int functions
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r )
 #define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r )
-#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r )
+#define pv_mul_uint(var1_r, var2_r) func_mul_epu32( var1_r, var2_r )
 #define pv_set1_int(number) _mm_set1_epi32( number )
 
 //conversion functions (round or pad)
@@ -305,10 +305,10 @@ union packed_int{
 #define pv_add_int(var1_r, var2_r) _mm_add_epi32( var1_r, var2_r ) 
 /// Integer subtraction.
 #define pv_sub_int(var1_r, var2_r) _mm_sub_epi32( var1_r, var2_r ) 
-/// Integer multiplication.
-#define pv_mul_int(var1_r, var2_r) _mm_mullo_epi16( var1_r, var2_r ) 
-/// \FIXME For sse2 using _mm_mullo_epi16 for integer multiplication is an oversimplification
-/// and could lead to trouble in the future.
+/// Unsigned Integer multiplication. 
+///
+/// Calls the function func_mul_epu32() in psc_sse2.c
+#define pv_mul_uint(var1_r, var2_r) func_mul_epu32( var1_r, var2_r )
 
 // Sets and loads
 /// Set all elements of an integer vector to the same value
