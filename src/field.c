@@ -11,6 +11,13 @@ c_push_field_a_nopml()
   }
   prof_start(pr);
 
+  assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
+  assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
+  assert(psc.domain.bnd_fld_lo[2] == BND_FLD_PERIODIC);
+  assert(psc.domain.bnd_fld_hi[0] == BND_FLD_PERIODIC);
+  assert(psc.domain.bnd_fld_hi[1] == BND_FLD_PERIODIC);
+  assert(psc.domain.bnd_fld_hi[2] == BND_FLD_PERIODIC);
+
   f_real lx = psc.dt / psc.dx[0];
   f_real ly = psc.dt / psc.dx[1];
   f_real lz = psc.dt / psc.dx[2];
