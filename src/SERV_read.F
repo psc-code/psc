@@ -4,7 +4,16 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       subroutine SERV_read
 
-      call SERV_read_1
+      use VLA_variables, only: cpu,cpu_ary,npe,nstart
+      use PIC_variables, only: niloc,p_niloc
+      use fields
+
+      implicit none
+
+      allocate(cpu(1:5))
+      allocate(cpu_ary(1:5,0:npe-1))
+
+      call SERV_read_1(nstart,niloc)
 
       call ALLOC_particles(niloc)
       call FIELDS_alloc
@@ -16,15 +25,15 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
 
 
-      subroutine SERV_read_1
+      subroutine SERV_read_1(nstart_,niloc_)
 
       use VLA_variables
       use PIC_variables
 
       implicit none
 
+      integer nstart_,niloc_
       character*5 node
-
 
       call SERV_labelgen(mpe,node)
 
@@ -32,7 +41,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       open(10,file=trim(data_chk)//'/'//node//'CPNEW',
      &     access='sequential',form='unformatted')
 
-      read(10) nstart
+      read(10) nstart_
       read(10) shift_c,shift_z
       read(10) nprfo,nprco
       read(10) nprpartio
@@ -40,9 +49,9 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       read(10) tmnvpo,tmxvpo
       read(10) tmnvco,tmxvco
 
-      if (nprf.lt.nstart) nprf=nprfo 
-      if (nprc.lt.nstart) nprc=nprco
-      if (nprparti.lt.nstart) nprparti=nprpartio
+      if (nprf.lt.nstart_) nprf=nprfo 
+      if (nprc.lt.nstart_) nprc=nprco
+      if (nprparti.lt.nstart_) nprparti=nprpartio
       if (tmnvf.lt.tmnvfo) tmnvf=tmnvfo
       if (tmxvf.lt.tmxvfo) tmxvf=tmxvfo
       if (tmnvp.lt.tmnvpo) tmnvp=tmnvpo
@@ -52,7 +61,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       call OUT_poyn_serv_read
 
-      read(10) niloc,nialloc,cori
+      read(10) niloc_,nialloc,cori
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 
 
       end subroutine SERV_read_1
@@ -87,9 +96,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       integer i1,i2,i3
       integer i1a,i1e,i2a,i2e,i3a,i3e
-
-      allocate(cpu(1:5))
-      allocate(cpu_ary(1:5,0:npe-1))
 
       do i1=0,11*niloc+10,100
          i1e=min(i1+99,11*niloc+10)
