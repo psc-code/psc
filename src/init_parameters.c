@@ -146,6 +146,8 @@ static struct param psc_param_descr[] = {
                     , VAR(adjust_dt_to_cycles), PARAM_BOOL(0)  },
   { "wallclock_limit"
                     , VAR(wallclock_limit)    , PARAM_DOUBLE(0.) },
+  { "from_checkpoint"
+                    , VAR(from_checkpoint)    , PARAM_BOOL(false) },
   {},
 };
 

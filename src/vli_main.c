@@ -14,6 +14,9 @@ main(int argc, char **argv)
   };
   psc_create(&conf);
   psc_init(NULL);
+  if (psc.prm.from_checkpoint) {
+    psc_read_checkpoint();
+  }
   psc_integrate();
 
   MPI_Finalize();

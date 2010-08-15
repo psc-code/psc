@@ -54,7 +54,7 @@ libpsc_a_SOURCES = \
 	case_singlepart.c \
 	case_harris.c \
 	case_collisions.c \
-	SERV_write.F
+	SERV_read.F SERV_write.F
 
 if HAVE_HDF5
 libpsc_a_SOURCES += output_hdf5.c
@@ -91,7 +91,6 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 
 VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
-	SERV_read.F \
 	OUT_param.F \
 	OUT_count.F OUT_energy.F \
 	PIC_move_part.F PIC_move_part_xy.F \

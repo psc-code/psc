@@ -187,6 +187,7 @@ struct psc_param {
   bool fortran_particle_weight_hack;
   bool adjust_dt_to_cycles;
   double wallclock_limit;
+  bool from_checkpoint;
 };
 
 // coefficients needed for computations
@@ -408,6 +409,7 @@ void psc_out_field(void);
 void psc_out_particles(void);
 void psc_set_n_particles(int n_part);
 
+void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
@@ -509,6 +511,8 @@ void PIC_fez(fields_fortran_t *pf, int m);
 void PIC_pex(void);
 void PIC_pey(void);
 void PIC_pez(void);
+void SERV_read_1(int *timestep, int *n_part);
+void SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf);
 void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 
 // ----------------------------------------------------------------------
