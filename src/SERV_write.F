@@ -32,13 +32,12 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       integer i1a,i1e,i2a,i2e,i3a,i3e
       character*5 node
 
-
       call SERV_labelgen(mpe,node)
 
       open(10,file=trim(data_chk)//'/'//node//'CPNEW',
      &     access='sequential',form='unformatted')
 
-      write(10) timestep+1
+      write(10) timestep
       write(10) shift_c,shift_z
       write(10) nprf,nprc
       write(10) nprparti
