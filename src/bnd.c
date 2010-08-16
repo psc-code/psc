@@ -308,15 +308,27 @@ c_exchange_particles(void)
   // FIXME, calculate once
 
   for (int d = 0; d < 3; d++) {
-    // ensure periodic b.c.
-    if (psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
-      assert(psc.domain.bnd_part[d] == 1);
-    }
     xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xgb[d] = (psc.domain.ilo[d]-.5) * psc.dx[d];
+    } else {
+      xgb[d] = psc.domain.ilo[d] * psc.dx[d];
+      if (psc.ilo[d] == psc.domain.ilo[d]) {
+	xb[d] = xgb[d];
+      }
+    }
+
     xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
-    xgb[d] = (psc.domain.ilo[d]-.5) * psc.dx[d];
-    xge[d] = (psc.domain.ihi[d]-.5) * psc.dx[d];
-    xgl[d] = (psc.domain.ihi[d]-psc.domain.ilo[d]) * psc.dx[d];
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xge[d] = (psc.domain.ihi[d]-.5) * psc.dx[d];
+    } else {
+      xge[d] = (psc.domain.ihi[d]-1) * psc.dx[d];
+      if (psc.ihi[d] == psc.domain.ihi[d]) {
+	xe[d] = xge[d];
+      }
+    }
+
+    xgl[d] = xge[d] - xgb[d];
   }
 
   ddcp->head = 0;
@@ -325,8 +337,8 @@ c_exchange_particles(void)
   }
   for (int i = 0; i < psc.pp.n_part; i++) {
     particle_base_t *p = particles_base_get_one(&psc.pp, i);
-    particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in
-                         // the struct. FIXME
+    particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+    particle_base_real_t *pxi = &p->pxi;
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
 	xi[1] >= xb[1] && xi[1] <= xe[1] &&
 	xi[2] >= xb[2] && xi[2] <= xe[2]) {
@@ -339,19 +351,51 @@ c_exchange_particles(void)
       for (int d = 0; d < 3; d++) {
 	if (xi[d] < xb[d]) {
 	  if (xi[d] < xgb[d]) {
-	    xi[d] += xgl[d];
+	    switch (psc.domain.bnd_part[d]) {
+	    case BND_PART_REFLECTING:
+	      xi[d] = 2.f * xgb[d] - xi[d];
+	      pxi[d] = -pxi[d];
+	      dir[d] = 0;
+	      break;
+	    case BND_PART_PERIODIC:
+	      xi[d] += xgl[d];
+	      dir[d] = -1;
+	      break;
+	    default:
+	      assert(0);
+	    }
+	  } else {
+	    // computational bnd
+	    dir[d] = -1;
 	  }
-	  dir[d] = -1;
 	} else if (xi[d] > xe[d]) {
 	  if (xi[d] > xge[d]) {
-	    xi[d] -= xgl[d];
+	    switch (psc.domain.bnd_part[d]) {
+	    case BND_PART_REFLECTING:
+	      xi[d] = 2.f * xge[d] - xi[d];
+	      pxi[d] = -pxi[d];
+	      dir[d] = 0;
+	      break;
+	    case BND_PART_PERIODIC:
+	      xi[d] -= xgl[d];
+	      dir[d] = +1;
+	      break;
+	    default:
+	      assert(0);
+	    }
+	  } else {
+	    dir[d] = +1;
 	  }
-	  dir[d] = +1;
 	} else {
+	  // computational bnd
 	  dir[d] = 0;
 	}
       }
-      ddc_particles_queue(ddcp, dir, p);
+      if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	psc.pp.particles[ddcp->head++] = *p;
+      } else {
+	ddc_particles_queue(ddcp, dir, p);
+      }
     }
   }
 
