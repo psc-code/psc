@@ -4,7 +4,7 @@ openmpirun -n 2 src/VLI \
 	   --mod_particle generic_c \
 	   --mod_moment generic_c \
 	   --mod_field fortran \
-	   --mod_bnd fortran \
+	   --mod_bnd c \
 	   --case wakefield \
 	   --ihi_z 200 \
 	   --nmax 11
