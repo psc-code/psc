@@ -136,5 +136,19 @@ psc_integrate()
     // FIXME, check whether cpu time expired?
     prof_stop(pr);
     prof_print_mpi(MPI_COMM_WORLD);
+
+    if (psc.prm.wallclock_limit > 0.) {
+      double wallclock_elapsed = MPI_Wtime() - psc.time_start;
+      double wallclock_elapsed_max;
+      MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
+		    MPI_COMM_WORLD);
+      
+      if (wallclock_elapsed_max > psc.prm.wallclock_limit) {
+	mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
+	break;
+      }
+    }
   }
+
+  psc_write_checkpoint();
 }

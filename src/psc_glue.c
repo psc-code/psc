@@ -43,6 +43,9 @@
 #define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
+#define SERV_read_1_F77 F77_FUNC_(serv_read_1, SERV_READ_1)
+#define SERV_read_2_F77 F77_FUNC_(serv_read_2, SERV_READ_2)
+#define SERV_write_F77 F77_FUNC_(serv_write, SERV_WRITE)
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
@@ -159,6 +162,19 @@ void PIC_pml_msb_F77(f_real *ex, f_real *ey, f_real *ez,
 		     f_real *bx, f_real *by, f_real *bz,
 		     f_real *jxi, f_real *jyi, f_real *jzi,
 		     f_real *eps, f_real *mu);
+void SERV_read_1_F77(f_int *timestep, f_int *n_part);
+void SERV_read_2_F77(f_int *niloc, particle_fortran_t *p_niloc,
+		     f_real *ne, f_real *ni, f_real *nn,
+		     f_real *jxi, f_real *jyi, f_real *jzi,
+		     f_real *ex, f_real *ey, f_real *ez,
+		     f_real *hx, f_real *hy, f_real *hz);
+void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
+		    f_real *ne, f_real *ni, f_real *nn,
+		    f_real *jxi, f_real *jyi, f_real *jzi,
+		    f_real *ex, f_real *ey, f_real *ez,
+		    f_real *hx, f_real *hy, f_real *hz);
+
+
 void INIT_basic_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
@@ -490,6 +506,33 @@ PIC_pml_msb(fields_fortran_t *pf)
 		  pf->flds[BX], pf->flds[BY], pf->flds[BZ],
 		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		  pf->flds[EPS], pf->flds[MU]);
+}
+
+void
+SERV_read_1(int *timestep, int *n_part)
+{
+  SERV_read_1_F77(timestep, n_part);
+}
+
+void
+SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf)
+{
+  SERV_read_2_F77(&pp->n_part, &pp->particles[-1],
+		  pf->flds[NE], pf->flds[NI], pf->flds[NN],
+		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		  pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+}
+
+void
+SERV_write(particles_fortran_t *pp, fields_fortran_t *pf)
+{
+  SERV_write_F77(&psc.timestep,
+		 &pp->n_part, &pp->particles[-1],
+		 pf->flds[NE], pf->flds[NI], pf->flds[NN],
+		 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 // ----------------------------------------------------------------------

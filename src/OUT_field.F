@@ -84,7 +84,11 @@ c     ----------------------------------------------------------------------
       implicit none
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
+      logical out_fields_present
 
+      read(10) out_fields_present
+      if (.not.out_fields_present) return
+         
       call OUT_FIELDS_alloc
 
       do i3=i3mn,i3mx,100
@@ -135,6 +139,12 @@ c     ----------------------------------------------------------------------
       implicit none
 
       integer i1a,i1e,i2a,i2e,i3a,i3e
+      logical out_fields_present
+
+      out_fields_present = allocated(ext)
+
+      write(10) out_fields_present
+      if (.not.out_fields_present) return
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)

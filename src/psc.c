@@ -234,6 +234,8 @@ psc_create(struct psc_mod_config *conf)
   if (psc.moment_ops->create) {
     psc.moment_ops->create();
   }
+
+  psc.time_start = MPI_Wtime();
 }
 
 void
@@ -625,6 +627,49 @@ psc_set_n_particles(int n_part)
 {
   psc.pp.n_part = n_part;
   SET_niloc(n_part);
+}
+
+// ----------------------------------------------------------------------
+// psc_write_checkpoint
+
+void
+psc_read_checkpoint(void)
+{
+  mpi_printf(MPI_COMM_WORLD, "INFO: Reading checkpoint.\n");
+  
+  int n_part;
+  SERV_read_1(&psc.timestep, &n_part);
+  particles_base_realloc(&psc.pp, n_part);
+  psc_set_n_particles(n_part);
+  
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, 0, 0);
+
+  SERV_read_2(&pp, &pf);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, NE, HZ + 1);
+}
+
+// ----------------------------------------------------------------------
+// psc_write_checkpoint
+
+void
+psc_write_checkpoint(void)
+{
+  mpi_printf(MPI_COMM_WORLD, "INFO: Writing checkpoint.\n");
+  
+  particles_fortran_t pp;
+  particles_fortran_get(&pp);
+  fields_fortran_t pf;
+  fields_fortran_get(&pf, NE, HZ + 1);
+
+  SERV_write(&pp, &pf);
+
+  particles_fortran_put(&pp);
+  fields_fortran_put(&pf, 0, 0);
 }
 
 // ======================================================================

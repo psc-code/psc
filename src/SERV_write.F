@@ -1,25 +1,43 @@
 c CHECKPOINTING ROUTINE FOR SIMULATION DATA
 
 
-      subroutine SERV_write(timestep)
+      subroutine SERV_write(timestep, niloc, p_niloc,
+     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables
-      use PIC_variables
-      use fields
+      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
+     *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
+     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
+
+      use PIC_variables, only: cori,nialloc,nprparti
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
       integer timestep
-      character*5 node
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
 
+      integer i1,i2,i3
+      integer i1a,i1e,i2a,i2e,i3a,i3e
+      character*5 node
 
       call SERV_labelgen(mpe,node)
 
       open(10,file=trim(data_chk)//'/'//node//'CPNEW',
      &     access='sequential',form='unformatted')
 
-      write(10) timestep+1
+      write(10) timestep
       write(10) shift_c,shift_z
       write(10) nprf,nprc
       write(10) nprparti
