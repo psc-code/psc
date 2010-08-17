@@ -150,7 +150,6 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     //---------------------------------------------
     // Declare locals for computation      
     pvReal vxi, vyi, vzi, tmpx, tmpy, root, h2, h3;
-    pvInt itemp1;
 
 
     //---------------------------------------------
@@ -179,12 +178,6 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     find_index_Iround(&(p.yi), &dyi, &j2, &h2);
     find_index_Iround(&(p.zi), &dzi, &j3, &h3);
 
-    pvInt j2pls1, j2mns1, j3pls1, j3mns1;
-    j2pls1.r = pv_add_int(j2.r, ione.r);
-    j2mns1.r = pv_sub_int(j2.r, ione.r);
-    j3pls1.r = pv_add_int(j3.r, ione.r);
-    j3mns1.r = pv_sub_int(j3.r, ione.r);
-
 
     pvReal gmy, gmz, gOy, gOz, gly, glz;// NB: this is gO as in octogon instead of g0, 
                                          // and gl as in library instead of g1.
@@ -206,11 +199,6 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
 
-    pvInt l2pls1, l2mns1, l3pls1, l3mns1;
-    l2pls1.r = pv_add_int(l2.r, ione.r);
-    l2mns1.r = pv_sub_int(l2.r, ione.r);
-    l3pls1.r = pv_add_int(l3.r, ione.r);
-    l3mns1.r = pv_sub_int(l3.r, ione.r);
 
     pvReal hmy, hmz, hOy, hOz, hly, hlz; // NB: this is hO as in octogon instead of h0, 
                                          // and hl as in library instead of h1.
@@ -228,18 +216,17 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     ip_to_grid_l(&h2, &hly);
     ip_to_grid_l(&h3, &hlz);
 
-
     //---------------------------------------------
     // Field Interpolation
     
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
-    INTERP_FIELD_2D_SIMD(y,z,EX,j2,j3,g,g,exq);
-    INTERP_FIELD_2D_SIMD(y,z,EY,l2,j3,g,h,eyq);
-    INTERP_FIELD_2D_SIMD(y,z,EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_2D_SIMD(y,z,HX,l2,l3,h,h,hxq);
-    INTERP_FIELD_2D_SIMD(y,z,HY,j2,l3,h,g,hyq);
-    INTERP_FIELD_2D_SIMD(y,z,HZ,l2,j3,g,h,hzq);
+    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
+    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
  
     //---------------------------------------------
     // Advance momenta one full dt
@@ -363,7 +350,6 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     // Declare locals for computation      
 
     pvReal vxi, vyi, vzi, tmpx, tmpy, root, h2, h3;
-    pvInt itemp1;
 
     //---------------------------------------------
     // Half step positions with current momenta
@@ -406,13 +392,6 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     find_index_Iround(&(p.yi), &dyi, &j2, &H2);
     find_index_Iround(&(p.zi), &dzi, &j3, &H3);
 
-    pvInt j2pls1, j2mns1, j3pls1, j3mns1;
-    j2pls1.r = pv_add_int(j2.r, ione.r);
-    j2mns1.r = pv_sub_int(j2.r, ione.r);
-    j3pls1.r = pv_add_int(j3.r, ione.r);
-    j3mns1.r = pv_sub_int(j3.r, ione.r);
-
-
     pvReal gmy, gmz, gOy, gOz, gly, glz;// NB: this is gO as in octogon instead of g0, 
                                          // and gl as in library instead of g1.
                                          // This is done to let me paste in the CPP macro
@@ -434,12 +413,6 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     find_index_minus_shift(&(p.yi), &dyi, &l2, &h2, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
     
-    pvInt l2pls1, l2mns1, l3pls1, l3mns1;
-    l2pls1.r = pv_add_int(l2.r, ione.r);
-    l2mns1.r = pv_sub_int(l2.r, ione.r);
-    l3pls1.r = pv_add_int(l3.r, ione.r);
-    l3mns1.r = pv_sub_int(l3.r, ione.r);
-    
     pvReal hmy, hmz, hOy, hOz, hly, hlz; // NB: this is hO as in octogon instead of h0, 
                                          // and hl as in library instead of h1.
                                          // This is done to let me paste in the CPP macro
@@ -456,18 +429,17 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     ip_to_grid_l(&h2, &hly);
     ip_to_grid_l(&h3, &hlz);
 
-
     //---------------------------------------------
     // Field Interpolation
     
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
-    INTERP_FIELD_2D_SIMD(y,z,EX,j2,j3,g,g,exq);
-    INTERP_FIELD_2D_SIMD(y,z,EY,l2,j3,g,h,eyq);
-    INTERP_FIELD_2D_SIMD(y,z,EZ,j2,l3,h,g,ezq);
-    INTERP_FIELD_2D_SIMD(y,z,HX,l2,l3,h,h,hxq);
-    INTERP_FIELD_2D_SIMD(y,z,HY,j2,l3,h,g,hyq);
-    INTERP_FIELD_2D_SIMD(y,z,HZ,l2,j3,g,h,hzq);
+    INTERP_FIELD_YZ(EX,j2,j3,g,g,exq);
+    INTERP_FIELD_YZ(EY,l2,j3,g,h,eyq);
+    INTERP_FIELD_YZ(EZ,j2,l3,h,g,ezq);
+    INTERP_FIELD_YZ(HX,l2,l3,h,h,hxq);
+    INTERP_FIELD_YZ(HY,j2,l3,h,g,hyq);
+    INTERP_FIELD_YZ(HZ,l2,j3,g,h,hzq);
 
     //---------------------------------------------
     // Calculate current density form factors

@@ -100,22 +100,22 @@ do_push_part_xz(particles_sse2_t *pp, fields_sse2_t *pf)
     //Set up some pointers for fields assuming y is uniform
     
     sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
    
     sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
     
     sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
     
-    sse2_real * restrict HXpoint = &pf->flds[BX*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size 
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
     
-    sse2_real * restrict HYpoint = &pf->flds[BY*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size 
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
     
-    sse2_real * restrict HZpoint = &pf->flds[BZ*psc.fld_size 
-						 + (psc.ilo[1] + psc.ibn[1])*psc.img[0] ];
+    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size 
+						 + (psc.ilo[1] - psc.ilg[1])*psc.img[0] ];
 
   for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
 
@@ -130,7 +130,6 @@ do_push_part_xz(particles_sse2_t *pp, fields_sse2_t *pf)
     // Declare locals for computation      
 
     pvReal vxi, vyi, vzi, tmpx, tmpy, root, h1, h3;
-    pvInt itemp1;
 
     //---------------------------------------------
     // Half step positions with current momenta
@@ -171,12 +170,6 @@ do_push_part_xz(particles_sse2_t *pp, fields_sse2_t *pf)
     find_index_Iround(&(p.xi), &dxi, &j1, &H1);
     find_index_Iround(&(p.zi), &dzi, &j3, &H3);
 
-    pvInt j1pls1, j1mns1, j3pls1, j3mns1;
-    j1pls1.r = pv_add_int(j1.r, ione.r);
-    j1mns1.r = pv_sub_int(j1.r, ione.r);
-    j3pls1.r = pv_add_int(j3.r, ione.r);
-    j3mns1.r = pv_sub_int(j3.r, ione.r);
-
 
     pvReal gmx, gmz, gOx, gOz, glx, glz;// NB: this is gO as in octogon instead of g0, 
                                          // and gl as in library instead of g1.
@@ -198,12 +191,6 @@ do_push_part_xz(particles_sse2_t *pp, fields_sse2_t *pf)
 
     find_index_minus_shift(&(p.xi), &dxi, &l1, &h1, &half);
     find_index_minus_shift(&(p.zi), &dzi, &l3, &h3, &half);
-    
-    pvInt l1pls1, l1mns1, l3pls1, l3mns1;
-    l1pls1.r = pv_add_int(l1.r, ione.r);
-    l1mns1.r = pv_sub_int(l1.r, ione.r);
-    l3pls1.r = pv_add_int(l3.r, ione.r);
-    l3mns1.r = pv_sub_int(l3.r, ione.r);
     
     pvReal hmx, hmz, hOx, hOz, hlx, hlz; // NB: this is hO as in octogon instead of h0, 
                                          // and hl as in library instead of h1.
@@ -227,12 +214,12 @@ do_push_part_xz(particles_sse2_t *pp, fields_sse2_t *pf)
     
     pvReal exq, eyq, ezq, hxq, hyq, hzq;
 
-    INTERP_FIELD_2D_SIMD(x,z,EX,l1,j3,g,h,exq);
-    INTERP_FIELD_2D_SIMD(x,z,EY,j1,j3,g,g,eyq);
-    INTERP_FIELD_2D_SIMD(x,z,EZ,j1,l3,h,g,ezq);
-    INTERP_FIELD_2D_SIMD(x,z,HX,j1,l3,h,g,hxq);
-    INTERP_FIELD_2D_SIMD(x,z,HY,l1,l3,h,h,hyq);
-    INTERP_FIELD_2D_SIMD(x,z,HZ,l1,j3,g,h,hzq);
+    INTERP_FIELD_XZ(EX,l1,j3,g,h,exq);
+    INTERP_FIELD_XZ(EY,j1,j3,g,g,eyq);
+    INTERP_FIELD_XZ(EZ,j1,l3,h,g,ezq);
+    INTERP_FIELD_XZ(HX,j1,l3,h,g,hxq);
+    INTERP_FIELD_XZ(HY,l1,l3,h,h,hyq);
+    INTERP_FIELD_XZ(HZ,l1,j3,g,h,hzq);
 
     //---------------------------------------------
     // Calculate current density form factors

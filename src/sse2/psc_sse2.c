@@ -28,8 +28,9 @@ init_vec_numbers(void) {
 /// If simd_wrap is expanded to use altivec, this function will need to defined
 /// differently ( as the __m128i data type is SSE exclusive)
 
-__m128i 
+inline __m128i 
 func_mul_epu32(__m128i a, __m128i b){
+#if 1
   // Multiply elements 0 and 2, and bput the 64 bit results into a vector.
   __m128i tmp02 = _mm_mul_epu32(a, b);
   // Shift the vectors by one word to the right, making 3->2, and 1->0, and 
@@ -42,6 +43,18 @@ func_mul_epu32(__m128i a, __m128i b){
   __m128i tmpres13 = _mm_shuffle_epi32(tmp13, _MM_SHUFFLE(0,0,2,0));
   // upcack the shuffled vectors into a return value
   return _mm_unpacklo_epi32(tmpres02, tmpres13);
+#else
+  pvInt ret;
+  int * p_a;
+  int * p_b;
+  p_a = (int *)&a;
+  p_b = (int *)&b;
+  for(int m=0; m < VEC_SIZE; m++){
+    ret.v[m] = p_a[m] * p_b[m];
+  }
+  return ret.r;
+#endif
+    
 }
 				      
 /// Pointers to functions optimized for SSE2
