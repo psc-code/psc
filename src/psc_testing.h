@@ -13,7 +13,7 @@ void psc_save_fields_ref();
 void psc_check_currents_ref(double thres);
 void psc_check_currents_ref_noghost(double thres);
 void psc_check_fields_ref(int *flds, double thres);
-void psc_check_particles_ref(double thres);
+void psc_check_particles_ref(double thres, const char *test_str);
 void psc_check_particles_sorted();
 
 void psc_create_test_xz(struct psc_mod_config *conf);

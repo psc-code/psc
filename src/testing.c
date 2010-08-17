@@ -74,12 +74,19 @@ psc_save_fields_ref()
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(double thres)
+psc_check_particles_ref(double thres, const char *test_str)
 {
   assert(particle_ref);
+  particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   for (int i = 0; i < psc.pp.n_part; i++) {
     particle_base_t *part = particles_base_get_one(&psc.pp, i);
     //    printf("i = %d\n", i);
+    xi  = fmax(xi , fabs(part->xi  - particle_ref[i].xi));
+    yi  = fmax(yi , fabs(part->yi  - particle_ref[i].yi));
+    zi  = fmax(zi , fabs(part->zi  - particle_ref[i].zi));
+    pxi = fmax(pxi, fabs(part->pxi - particle_ref[i].pxi));
+    pyi = fmax(pyi, fabs(part->pyi - particle_ref[i].pyi));
+    pzi = fmax(pzi, fabs(part->pzi - particle_ref[i].pzi));
     assert_equal(part->xi , particle_ref[i].xi, thres);
     assert_equal(part->yi , particle_ref[i].yi, thres);
     assert_equal(part->zi , particle_ref[i].zi, thres);
@@ -87,6 +94,9 @@ psc_check_particles_ref(double thres)
     assert_equal(part->pyi, particle_ref[i].pyi, thres);
     assert_equal(part->pzi, particle_ref[i].pzi, thres);
   }
+  printf("max delta: (%s)\n", test_str);
+  printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
+	 xi, yi, zi, pxi, pyi, pzi);
 }
 
 
@@ -104,7 +114,7 @@ psc_check_fields_ref(int *flds, double thres)
     for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
 	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	  //printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
 	}
       }
@@ -122,14 +132,32 @@ psc_check_currents_ref(double thres)
 {
   assert(field_ref[JXI]);
   for (int m = JXI; m <= JZI; m++){
+    double max_delta = 0.;
+    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
+      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
+	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
+	  double val = F3_BASE(m, ix,iy,iz);
+	  if (fabs(val) > 0.) {
+	    printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
+		   ix, iy, iz, val);
+	  }
+	}
+      }
+    }
+  }
+  for (int m = JXI; m <= JZI; m++){
+    double max_delta = 0.;
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  max_delta = fmax(max_delta, 
+			   fabs(F3_BASE(m, ix,iy,iz) - _FF3(field_ref[m], ix,iy,iz)));
 	}
       }
     }
+    printf("max_delta (%s) %g\n", fldname[m], max_delta);
   }
 }
 

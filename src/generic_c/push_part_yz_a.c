@@ -17,7 +17,7 @@ do_genc_push_part_yz_a(particles_t *pp)
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
-    creal root = 1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vyi = part->pyi * root;
     creal vzi = part->pzi * root;
 
