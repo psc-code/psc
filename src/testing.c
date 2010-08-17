@@ -221,6 +221,7 @@ psc_create_test_yz(struct psc_mod_config *conf)
 
   psc_create(conf);
   psc_init("test_yz");
+  psc.pp.n_part = 1;
   psc_sort();
 }
 
