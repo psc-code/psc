@@ -1,6 +1,24 @@
-c Laser pulse initialization (p-polarization).
+#include "config.h"
 
       function p_pulse_z2(x,y,z,t)
+
+      implicit none
+      real(kind=8) :: t,x,y,z
+      real(kind=8) :: p_pulse_z2
+      real(kind=8) :: p_pulse_z2_
+      real(kind=8) :: C_p_pulse_z2
+
+#ifdef USE_C_INTERFACE
+      p_pulse_z2 = C_p_pulse_z2(x,y,z,t)
+#else
+      p_pulse_z2 = p_pulse_z2_(x,y,z,t)
+#endif
+
+      end function p_pulse_z2
+
+c Laser pulse initialization (p-polarization).
+
+      function p_pulse_z2_(x,y,z,t)
 
       use VLA_variables
       use PIC_variables
@@ -11,7 +29,7 @@ c Laser pulse initialization (p-polarization).
       real(kind=8) :: dxm,dym,dzm
       real(kind=8) :: xl,yl,zl
       real(kind=8) :: xr,yr,zr
-      real(kind=8) :: p_pulse_z2
+      real(kind=8) :: p_pulse_z2_
 
 
 c NOTE: The pulse is placed behind of the
@@ -77,12 +95,12 @@ c zm: z-location of pulse center in m
 
 
       if (zl.lt.zm) then
-         p_pulse_z2=dsin(-zr)
+         p_pulse_z2_=dsin(-zr)
      &           *dexp(-(xr/dxm)**2)
      &           *dexp(-(yr/dym)**2)
      &           *1.0/(1.0+dexp((abs(zr)-zb)/dzm))
       else if (zm.le.zl) then
-          p_pulse_z2=dsin(-zr)
+          p_pulse_z2_=dsin(-zr)
      &           *dexp(-(xr/dxm)**2)
      &           *dexp(-(yr/dym)**2)
      &           *1.0/(1.0+dexp((abs(zr)-zb)/dzm))
@@ -93,7 +111,7 @@ c zm: z-location of pulse center in m
 c Turn pulse off
 
 
-      p_pulse_z2=0.0d0
+      p_pulse_z2_=0.0d0
 
 
-      end function p_pulse_z2
+      end function p_pulse_z2_
