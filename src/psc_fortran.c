@@ -413,6 +413,9 @@ fortran_exchange_particles(void)
   }
 
   GET_niloc(&pp.n_part);
+  // don't really reallocate, just get the new array pointer
+  // if PIC_pe[xyz]() reallocated during the previous calls
+  pp.particles = REALLOC_particles(pp.n_part);
   particles_fortran_put(&pp);
 
   prof_stop(pr);
