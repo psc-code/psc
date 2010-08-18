@@ -63,6 +63,9 @@ static void
 calculate_pfields(struct psc_extra_fields *p)
 {
    int j = 0;
+   int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
+   int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
+   int dz = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1;
 
    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
@@ -72,28 +75,28 @@ calculate_pfields(struct psc_extra_fields *p)
 	  p->all[X_NN][j] = F3_BASE(NN,ix,iy,iz);
 
            p->all[X_EX][j] = .5f * ( F3_BASE(EX,ix,iy,iz)
-                                    +F3_BASE(EX,ix-1,iy,iz));
+                                    +F3_BASE(EX,ix-dx,iy,iz));
            p->all[X_EY][j] = .5f * ( F3_BASE(EY,ix,iy,iz)
-                                    +F3_BASE(EY,ix,iy-1,iz));
+                                    +F3_BASE(EY,ix,iy-dy,iz));
            p->all[X_EZ][j] = .5f * ( F3_BASE(EZ,ix,iy,iz)
-                                    +F3_BASE(EZ,ix,iy,iz-1));
+                                    +F3_BASE(EZ,ix,iy,iz-dz));
 
            p->all[X_HX][j] =  .25f * ( F3_BASE(HX,ix,iy,iz)
-                                      +F3_BASE(HX,ix,iy-1,iz)
-                                      +F3_BASE(HX,ix,iy,iz-1) 
-  			              +F3_BASE(HX,ix,iy-1,iz-1));
+                                      +F3_BASE(HX,ix,iy-dy,iz)
+                                      +F3_BASE(HX,ix,iy,iz-dz) 
+  			              +F3_BASE(HX,ix,iy-dy,iz-dz));
            p->all[X_HY][j] =  .25f * ( F3_BASE(HY,ix,iy,iz)
-                                      +F3_BASE(HY,ix-1,iy,iz)
-                                      +F3_BASE(HY,ix,iy,iz-1) 
-				      +F3_BASE(HY,ix-1,iy,iz-1));
+                                      +F3_BASE(HY,ix-dx,iy,iz)
+                                      +F3_BASE(HY,ix,iy,iz-dz) 
+				      +F3_BASE(HY,ix-dx,iy,iz-dz));
            p->all[X_HZ][j] =  .25f * ( F3_BASE(HZ,ix,iy,iz)
-                                      +F3_BASE(HZ,ix-1,iy,iz)
-                                      +F3_BASE(HZ,ix,iy-1,iz) 
-                                      +F3_BASE(HZ,ix-1,iy-1,iz));
+                                      +F3_BASE(HZ,ix-dx,iy,iz)
+                                      +F3_BASE(HZ,ix,iy-dy,iz) 
+                                      +F3_BASE(HZ,ix-dx,iy-dy,iz));
 
-           p->all[X_JXI][j] = .5f * ( F3_BASE(JXI,ix,iy,iz) + F3_BASE(JXI,ix-1,iy,iz) );
-           p->all[X_JYI][j] = .5f * ( F3_BASE(JYI,ix,iy,iz) + F3_BASE(JYI,ix,iy-1,iz) );
-           p->all[X_JZI][j] = .5f * ( F3_BASE(JZI,ix,iy,iz) + F3_BASE(JZI,ix,iy,iz-1) );
+           p->all[X_JXI][j] = .5f * ( F3_BASE(JXI,ix,iy,iz) + F3_BASE(JXI,ix-dx,iy,iz) );
+           p->all[X_JYI][j] = .5f * ( F3_BASE(JYI,ix,iy,iz) + F3_BASE(JYI,ix,iy-dy,iz) );
+           p->all[X_JZI][j] = .5f * ( F3_BASE(JZI,ix,iy,iz) + F3_BASE(JZI,ix,iy,iz-dz) );
 
            p->all[X_JXEX][j] = p->all[X_JXI][j] * p->all[X_EX][j];
            p->all[X_JYEY][j] = p->all[X_JYI][j] * p->all[X_EY][j];
