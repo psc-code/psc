@@ -26,6 +26,16 @@ c_push_field_a_nopml()
   f_real cny = .5 * ly;
   f_real cnz = .5 * lz;
 
+  if (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) {
+    cnx = 0.;
+  }
+  if (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) {
+    cny = 0.;
+  }
+  if (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) {
+    cnz = 0.;
+  }
+
   // E-field propagation E^(n)    , H^(n), j^(n) 
   //                  -> E^(n+0.5), H^(n), j^(n)
 
@@ -94,6 +104,16 @@ c_push_field_b_nopml()
   f_real cnx = .5 * lx;
   f_real cny = .5 * ly;
   f_real cnz = .5 * lz;
+
+  if (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) {
+    cnx = 0.;
+  }
+  if (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) {
+    cny = 0.;
+  }
+  if (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) {
+    cnz = 0.;
+  }
 
   // B-field propagation E^(n+0.5), B^(n+0.5), j^(n+1.0), m^(n+0.5)
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
