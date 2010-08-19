@@ -7,12 +7,6 @@
 #include <string.h>
 #include <assert.h>
 
-struct psc_extra_fields {
-  unsigned int size;
-  unsigned int naccum;
-  float *all[NR_EXTRA_FIELDS];
-};
-
 static const char *x_fldname[NR_EXTRA_FIELDS] = {
   [X_NE]   = "ne"  , [X_NI]   = "ni"  , [X_NN]   = "nn",
   [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
@@ -151,6 +145,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_binary,
 #ifdef HAVE_LIBHDF5
   &psc_output_format_ops_hdf5,
+  &psc_output_format_ops_xdmf,
 #endif
   &psc_output_format_ops_vtk,
   &psc_output_format_ops_vtk_points,
@@ -169,21 +164,6 @@ find_output_format_ops(const char *ops_name)
   abort();
 }
 
-struct psc_output_c {
-  char *data_dir;
-  char *output_format;
-  bool output_combine;
-  bool dowrite_pfield, dowrite_tfield;
-  int pfield_next, tfield_next;
-  int pfield_step, tfield_step;
-  bool dowrite_fd[NR_EXTRA_FIELDS];
-
-  // storage for output
-  struct psc_extra_fields pfd, tfd;
-
-  struct psc_output_format_ops *format_ops;
-};
-
 #define VAR(x) (void *)offsetof(struct psc_output_c, x)
 
 static struct param psc_output_c_descr[] = {
@@ -191,10 +171,10 @@ static struct param psc_output_c_descr[] = {
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
   { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)        },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
-  { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
+  { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)         },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
-  { "tfield_first"       , VAR(tfield_next)          , PARAM_INT(0)         },
+  { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)         },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
   { "output_write_ne"    , VAR(dowrite_fd[X_NE])     , PARAM_BOOL(1)        },
   { "output_write_ni"    , VAR(dowrite_fd[X_NI])     , PARAM_BOOL(1)        },
@@ -235,6 +215,9 @@ static void output_c_create(void)
   struct psc_output_c *out = &psc_output_c;
   params_parse_cmdline(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
   params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+
+  out->pfield_next = out->pfield_first;
+  out->tfield_next = out->tfield_first;
 
   out->format_ops = find_output_format_ops(out->output_format);
   if (out->format_ops->create) {
@@ -289,6 +272,29 @@ copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
 // ----------------------------------------------------------------------
 // write_fields_combine
 
+char *
+psc_output_c_filename(struct psc_output_c *out, const char *pfx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    
+  char *filename = malloc(strlen(out->data_dir) + 30);
+  if (out->output_combine) {
+    sprintf(filename, "%s/%s_%07d%s", out->data_dir, pfx, psc.timestep,
+	    out->format_ops->ext);
+  } else {
+    sprintf(filename, "%s/%s_%06d_%07d%s", out->data_dir, pfx, rank, psc.timestep,
+	    out->format_ops->ext);
+  }
+  if (rank == 0) {
+    printf("[%d] write_fields: %s\n", rank, filename);
+  }
+  return filename;
+}
+
+// ----------------------------------------------------------------------
+// write_fields_combine
+
 static void
 write_fields_combine(struct psc_output_c *out,
 		     struct psc_fields_list *list, const char *prefix)
@@ -311,11 +317,7 @@ write_fields_combine(struct psc_output_c *out,
       }
       list_combined.flds[m].name = list->flds[m].name;
     }
-    char filename[strlen(out->data_dir) + 30];
-    sprintf(filename, "%s/%s_%07d%s", out->data_dir, prefix, psc.timestep,
-	    out->format_ops->ext);
-    printf("[%d] write_fields_combine: %s\n", rank, filename);
-    out->format_ops->open(&list_combined, filename, &ctx);
+    out->format_ops->open(out, &list_combined, prefix, &ctx);
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -398,15 +400,8 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
     return write_fields_combine(out, list, prefix);
   }
 
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  char filename[strlen(out->data_dir) + 30];
-  sprintf(filename, "%s/%s_%06d_%07d%s", out->data_dir, prefix, rank, psc.timestep,
-	  out->format_ops->ext);
-
   void *ctx;
-  out->format_ops->open(list, filename, &ctx);
+  out->format_ops->open(out, list, prefix, &ctx);
 
   for (int m = 0; m < list->nr_flds; m++) {
     out->format_ops->write_field(ctx, &list->flds[m]);

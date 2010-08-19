@@ -12,7 +12,8 @@ struct binary_ctx {
 };
 
 static void
-binary_open(struct psc_fields_list *list, const char *filename, void **pctx)
+binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
+	    void **pctx)
 {
   const char headstr[] = "PSC ";
   const char datastr[] = "DATA";
@@ -25,7 +26,9 @@ binary_open(struct psc_fields_list *list, const char *filename, void **pctx)
 
   struct binary_ctx *binary = malloc(sizeof(*binary));
   
+  char *filename = psc_output_c_filename(out, pfx);
   binary->file = fopen(filename, "wb");
+  free(filename);
   FILE *file = binary->file;
 
   // Header  
