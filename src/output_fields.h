@@ -31,12 +31,21 @@ struct psc_fields_list {
   bool *dowrite_fd; // FIXME, obsolete -- don't use
 };
 
+struct psc_extra_fields {
+  unsigned int size;
+  unsigned int naccum;
+  float *all[NR_EXTRA_FIELDS];
+};
+
+struct psc_output_c;
+
 struct psc_output_format_ops {
   const char *name;
   const char *ext;
   void (*create)(void);
   void (*destroy)(void);
-  void (*open)(struct psc_fields_list *flds, const char *filename, void **pctx);
+  void (*open)(struct psc_output_c *out, struct psc_fields_list *flds,
+	       const char *prefix, void **pctx);
   void (*close)(void *ctx);
   void (*write_field)(void *ctx, struct psc_field *fld);
 };
@@ -46,5 +55,22 @@ extern struct psc_output_format_ops psc_output_format_ops_hdf5;
 extern struct psc_output_format_ops psc_output_format_ops_vtk;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
+
+struct psc_output_c {
+  char *data_dir;
+  char *output_format;
+  bool output_combine;
+  bool dowrite_pfield, dowrite_tfield;
+  int pfield_next, tfield_next;
+  int pfield_step, tfield_step;
+  bool dowrite_fd[NR_EXTRA_FIELDS];
+
+  // storage for output
+  struct psc_extra_fields pfd, tfd;
+
+  struct psc_output_format_ops *format_ops;
+};
+
+char *psc_output_c_filename(struct psc_output_c *out, const char *pfx);
 
 #endif

@@ -20,11 +20,14 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_fields_list *list, const char *filename, void **pctx)
+hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
+	  void **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
+  char *filename = psc_output_c_filename(out, pfx);
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  free(filename);
 
   hdf5->group = H5Gcreate(hdf5->file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
