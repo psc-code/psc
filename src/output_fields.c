@@ -145,6 +145,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_binary,
 #ifdef HAVE_LIBHDF5
   &psc_output_format_ops_hdf5,
+  &psc_output_format_ops_xdmf,
 #endif
   &psc_output_format_ops_vtk,
   &psc_output_format_ops_vtk_points,
@@ -170,10 +171,10 @@ static struct param psc_output_c_descr[] = {
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
   { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)        },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
-  { "pfield_first"       , VAR(pfield_next)          , PARAM_INT(0)         },
+  { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)         },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
-  { "tfield_first"       , VAR(tfield_next)          , PARAM_INT(0)         },
+  { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)         },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
   { "output_write_ne"    , VAR(dowrite_fd[X_NE])     , PARAM_BOOL(1)        },
   { "output_write_ni"    , VAR(dowrite_fd[X_NI])     , PARAM_BOOL(1)        },
@@ -214,6 +215,9 @@ static void output_c_create(void)
   struct psc_output_c *out = &psc_output_c;
   params_parse_cmdline(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
   params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+
+  out->pfield_next = out->pfield_first;
+  out->tfield_next = out->tfield_first;
 
   out->format_ops = find_output_format_ops(out->output_format);
   if (out->format_ops->create) {

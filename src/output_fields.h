@@ -52,6 +52,7 @@ struct psc_output_format_ops {
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;
 extern struct psc_output_format_ops psc_output_format_ops_hdf5;
+extern struct psc_output_format_ops psc_output_format_ops_xdmf;
 extern struct psc_output_format_ops psc_output_format_ops_vtk;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
@@ -61,10 +62,11 @@ struct psc_output_c {
   char *output_format;
   bool output_combine;
   bool dowrite_pfield, dowrite_tfield;
-  int pfield_next, tfield_next;
+  int pfield_first, tfield_first;
   int pfield_step, tfield_step;
   bool dowrite_fd[NR_EXTRA_FIELDS];
 
+  int pfield_next, tfield_next;
   // storage for output
   struct psc_extra_fields pfd, tfd;
 
