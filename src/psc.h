@@ -326,6 +326,8 @@ struct psc {
   struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
+  struct psc_pulse *pulse_p_z2;
+  struct psc_pulse *pulse_s_z2;
   struct psc_case *Case;
   // user-configurable parameters
   struct psc_param prm;
@@ -415,6 +417,10 @@ void psc_write_checkpoint(void);
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
 
+real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
+real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
+
+
 // various implementations of the psc
 // (something like Fortran, generic C, CUDA, ...)
 
@@ -501,6 +507,8 @@ void INIT_basic(void);
 void INIT_grid_map(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 real PSC_s_pulse_z1(real x, real y, real z, real t);
+real PSC_p_pulse_z2(real x, real y, real z, real t);
+real PSC_s_pulse_z2(real x, real y, real z, real t);
 
 void PIC_fax(fields_fortran_t *pf, int m);
 void PIC_fay(fields_fortran_t *pf, int m);

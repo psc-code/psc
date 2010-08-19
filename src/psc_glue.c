@@ -50,11 +50,15 @@
 
 #define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
 #define s_pulse_z1__F77 F77_FUNC(s_pulse_z1_,S_PULSE_Z1_)
+#define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
+#define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
 
 #define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
 #define C_fields_alloc_cb_F77 F77_FUNC(c_fields_alloc_cb,C_FIELDS_ALLOC_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 #define C_s_pulse_z1_F77 F77_FUNC(c_s_pulse_z1,C_S_PULSE_Z1)
+#define C_p_pulse_z2_F77 F77_FUNC(c_p_pulse_z2,C_P_PULSE_Z2)
+#define C_s_pulse_z2_F77 F77_FUNC(c_s_pulse_z2,C_S_PULSE_Z2)
 
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_int *i1mx, f_int *i2mx, f_int *i3mx,
@@ -179,6 +183,8 @@ void INIT_basic_F77(void);
 
 f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 f_real s_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
+f_real p_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
+f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -322,6 +328,21 @@ PSC_s_pulse_z1(real xx, real yy, real zz, real tt)
   f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
   return s_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
 }
+
+real
+PSC_p_pulse_z2(real xx, real yy, real zz, real tt)
+{
+  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
+  return p_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
+}
+
+real
+PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
+{
+  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
+  return s_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
+}
+
 
 static int rd1n, rd1x, rd2n, rd2x, rd3n, rd3x;
 static int part_label_offset;
@@ -550,6 +571,20 @@ C_s_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
   return psc_s_pulse_z1(*xx, *yy, *zz, *tt);
 }
+
+f_real
+C_p_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_p_pulse_z2(*xx, *yy, *zz, *tt);
+}
+
+
+f_real
+C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_s_pulse_z2(*xx, *yy, *zz, *tt);
+}
+
 
 // ----------------------------------------------------------------------
 // slightly hacky way to do the equivalent of "malloc" using
