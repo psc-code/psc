@@ -19,20 +19,13 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 };
 
 static void
-init_output_fields(fields_base_t *f)
+output_c_setup(struct psc_output_c *out)
 {
-  fields_base_alloc(f, psc.ilo, psc.ihi, NR_EXTRA_FIELDS);
-  fields_base_zero_all(f);
+  fields_base_alloc(&out->pfd, psc.ilo, psc.ihi, NR_EXTRA_FIELDS);
+  fields_base_alloc(&out->tfd, psc.ilo, psc.ihi, NR_EXTRA_FIELDS);
+  fields_base_zero_all(&out->tfd);
+  out->naccum = 0;
 }
-
-#if 0 // unused
-static void
-free_output_fields(struct psc_extra_fields *f)
-{
-  for (int m = 0; m < NR_EXTRA_FIELDS ; m++)
-    free(f->all[m]);
-}
-#endif
 
 static void
 output_calculate_pfields(struct psc_output_c *out)
@@ -95,23 +88,6 @@ output_calculate_pfields(struct psc_output_c *out)
       }
     }
   }
-}
-
-static void
-output_accumulate_tfields(struct psc_output_c *out)
-{
-  // tfd += pfd
-  fields_base_axpy_all(&out->tfd, 1., &out->pfd);
-  out->naccum++;
-}
-
-
-// convert accumulated values to correct temporal mean
-// (divide by naccum)
-static void
-output_mean_tfields(struct psc_output_c *out)
-{
-  fields_base_scale_all(&out->tfd, 1. / out->naccum);
 }
 
 static struct psc_output_format_ops *psc_output_format_ops_list[] = {
@@ -393,9 +369,7 @@ output_c_field()
 
   static bool first_time = true;
   if (first_time) {
-    out->naccum = 0;
-    init_output_fields(&out->pfd);
-    init_output_fields(&out->tfd);
+    output_c_setup(out);
     first_time = false;
   }
 
@@ -418,10 +392,14 @@ output_c_field()
   }
 
   if (out->dowrite_tfield) {
-    output_accumulate_tfields(out);
+    fields_base_axpy_all(&out->tfd, 1., &out->pfd); // tfd += pfd
+    out->naccum++;
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
-      output_mean_tfields(out);
+
+      // convert accumulated values to correct temporal mean
+      fields_base_scale_all(&out->tfd, 1. / out->naccum);
+
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
       write_fields(out, &flds_list, "tfd");
