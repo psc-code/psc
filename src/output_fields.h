@@ -38,7 +38,6 @@ struct psc_fields_list {
 };
 
 struct psc_extra_fields {
-  unsigned int size;
   float *all[NR_EXTRA_FIELDS];
 };
 

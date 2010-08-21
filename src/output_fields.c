@@ -21,8 +21,12 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 static void
 reset_fields(struct psc_extra_fields *f)
 {
+  unsigned int sz = ((psc.ihi[0]-psc.ilo[0]) *
+		     (psc.ihi[1]-psc.ilo[1]) *
+		     (psc.ihi[2]-psc.ilo[2]));
+
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < f->size; j++)  {
+    for (int j = 0; j < sz; j++)  {
       f->all[m][j] = 0.0;
     }
   }
@@ -31,12 +35,12 @@ reset_fields(struct psc_extra_fields *f)
 static void
 init_output_fields(struct psc_extra_fields *f)
 {
-  f->size = ((psc.ihi[0]-psc.ilo[0]) *
-	     (psc.ihi[1]-psc.ilo[1]) *
-	     (psc.ihi[2]-psc.ilo[2]));
+  unsigned int sz = ((psc.ihi[0]-psc.ilo[0]) *
+		     (psc.ihi[1]-psc.ilo[1]) *
+		     (psc.ihi[2]-psc.ilo[2]));
 
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    f->all[m] = malloc(f->size * sizeof(float));
+    f->all[m] = malloc(sz * sizeof(float));
   }
 
   reset_fields(f);
@@ -118,10 +122,12 @@ static void
 output_accumulate_tfields(struct psc_output_c *out)
 {
   struct psc_extra_fields *pfd = &out->pfd, *tfd = &out->tfd;
+  unsigned int sz = ((psc.ihi[0]-psc.ilo[0]) *
+		     (psc.ihi[1]-psc.ilo[1]) *
+		     (psc.ihi[2]-psc.ilo[2]));
 
-  assert(pfd->size == tfd->size);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < pfd->size; j++)  {
+    for (int j = 0; j < sz; j++)  {
       tfd->all[m][j] += pfd->all[m][j];
     }
   }
@@ -135,10 +141,13 @@ static void
 output_mean_tfields(struct psc_output_c *out)
 {
   struct psc_extra_fields *tfd = &out->tfd;
+  unsigned int sz = ((psc.ihi[0]-psc.ilo[0]) *
+		     (psc.ihi[1]-psc.ilo[1]) *
+		     (psc.ihi[2]-psc.ilo[2]));
 
   assert(out->naccum > 0);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < tfd->size; j++) {
+    for (int j = 0; j < sz; j++) {
       tfd->all[m][j] /= out->naccum;
     }
   }
