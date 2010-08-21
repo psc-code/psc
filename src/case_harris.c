@@ -67,7 +67,7 @@ harris_init_param(struct psc_case *Case)
   psc.prm.nicell = 50;
 
   psc.domain.length[0] = harris->lx * sqrt(harris->MMi);
-  psc.domain.length[1] = 10000000.; // no y dependence 
+  psc.domain.length[1] = 1.; // no y dependence 
   psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
 
   psc.domain.itot[0] = 640;
