@@ -444,17 +444,15 @@ fortran_calc_densities(fields_base_t *pf_base, int m_NE)
   }
   prof_start(pr);
 
-  assert(pf_base == &psc.pf);
-  assert(m_NE == NE);
   particles_fortran_t pp;
   particles_fortran_get(&pp);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, 0, 0);
+  fields_fortran_get_from(&pf, 0, 0, pf_base, 0);
 
   CALC_densities(&pp, &pf);
 
   particles_fortran_put(&pp);
-  fields_fortran_put(&pf, NE, NE + 3);
+  fields_fortran_put_to(&pf, NE, NE + 3, pf_base, m_NE);
 
   prof_stop(pr);
 }
