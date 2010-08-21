@@ -317,7 +317,7 @@ struct psc_moment_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*calc_densities)(void);
+  void (*calc_densities)(fields_base_t *pf, int m_NE);
 };
 
 struct psc {
@@ -400,7 +400,7 @@ void psc_push_field_b(void);
 void psc_add_ghosts(fields_base_t *pf, int mb, int me);
 void psc_fill_ghosts(fields_base_t *pf, int mb, int me);
 void psc_exchange_particles(void);
-void psc_calc_densities(void);
+void psc_calc_densities(fields_base_t *pf, int m_NE);
 
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);

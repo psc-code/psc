@@ -612,10 +612,10 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 // psc_calc_densities
 
 void
-psc_calc_densities()
+psc_calc_densities(fields_base_t *pf, int m_NE)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities();
+  psc.moment_ops->calc_densities(pf, m_NE);
 }
 
 // ----------------------------------------------------------------------

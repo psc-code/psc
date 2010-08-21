@@ -436,7 +436,7 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
 // fortran moment
 
 static void
-fortran_calc_densities(void)
+fortran_calc_densities(fields_base_t *pf_base, int m_NE)
 {
   static int pr;
   if (!pr) {
@@ -444,6 +444,8 @@ fortran_calc_densities(void)
   }
   prof_start(pr);
 
+  assert(pf_base == &psc.pf);
+  assert(m_NE == NE);
   particles_fortran_t pp;
   particles_fortran_get(&pp);
   fields_fortran_t pf;
