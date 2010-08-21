@@ -1,13 +1,21 @@
 
-#include "psc_generic_c.h"
+#include "psc.h"
 
 #include "util/profile.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
+typedef fields_base_real_t creal;
+
+static inline int
+nint(creal x)
+{
+  return (int)(x + 10.5f) - 10;
+}
+
 static void
-do_genc_calc_densities(void)
+do_c_calc_densities(void)
 {
   fields_base_zero(&psc.pf, NE);
   fields_base_zero(&psc.pf, NI);
@@ -94,17 +102,20 @@ do_genc_calc_densities(void)
 }
 
 void
-genc_calc_densities()
+c_calc_densities()
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("c_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_genc_calc_densities();
+  do_c_calc_densities();
   prof_stop(pr);
 
   psc_add_ghosts(NE, NE + 3);
 }
 
-
+struct psc_moment_ops psc_moment_ops_c = {
+  .name                   = "c",
+  .calc_densities         = c_calc_densities,
+};

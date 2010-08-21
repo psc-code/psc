@@ -38,6 +38,7 @@ libpsc_a_SOURCES = \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
+	calc_densities.c \
 	field.c \
 	randomize.c \
 	sort.c \
@@ -66,8 +67,7 @@ libpsc_a_SOURCES += \
 	generic_c/push_part_yz.c \
 	generic_c/push_part_z.c \
 	generic_c/push_part_yz_a.c \
-	generic_c/push_part_yz_b.c \
-	generic_c/calc_densities.c
+	generic_c/push_part_yz_b.c
 
 if USE_SSE2
 libpsc_a_SOURCES += \

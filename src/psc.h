@@ -459,7 +459,7 @@ extern struct psc_bnd_ops psc_bnd_ops_fortran;
 extern struct psc_bnd_ops psc_bnd_ops_c;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
-extern struct psc_moment_ops psc_moment_ops_generic_c;
+extern struct psc_moment_ops psc_moment_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
