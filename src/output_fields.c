@@ -39,10 +39,6 @@ output_calculate_pfields(struct psc_output_c *out)
   for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
     for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
       for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	XF3_BASE(p, X_NE, ix,iy,iz) = F3_BASE(NE,ix,iy,iz);
-	XF3_BASE(p, X_NI, ix,iy,iz) = F3_BASE(NI,ix,iy,iz);
-	XF3_BASE(p, X_NN, ix,iy,iz) = F3_BASE(NN,ix,iy,iz);
-
 	XF3_BASE(p, X_EX, ix,iy,iz) = .5f * ( F3_BASE(EX,ix,iy,iz)
 					     +F3_BASE(EX,ix-dx,iy,iz));
 	XF3_BASE(p, X_EY, ix,iy,iz) = .5f * ( F3_BASE(EY,ix,iy,iz)
@@ -385,7 +381,7 @@ output_c_field()
   }
   prof_start(pr);
 
-  psc_calc_densities(&psc.pf, NE);
+  psc_calc_densities(&out->pfd, X_NE);
   output_calculate_pfields(out);
 
   if (out->dowrite_pfield) {
