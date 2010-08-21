@@ -52,8 +52,10 @@ free_output_fields(struct psc_extra_fields *f)
 #endif
 
 static void
-calculate_pfields(struct psc_extra_fields *p)
+output_calculate_pfields(struct psc_output_c *out)
 {
+  struct psc_extra_fields *p = &out->pfd;
+
    int j = 0;
    int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
    int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
@@ -113,29 +115,31 @@ calculate_pfields(struct psc_extra_fields *p)
 }
 
 static void
-accumulate_tfields(struct psc_output_c *out, struct psc_extra_fields *p,
-		   struct psc_extra_fields *t)
+output_accumulate_tfields(struct psc_output_c *out)
 {
-  out->naccum++;
+  struct psc_extra_fields *pfd = &out->pfd, *tfd = &out->tfd;
 
-  assert(p->size == t->size);
+  assert(pfd->size == tfd->size);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < p->size; j++)  {
-      t->all[m][j] += p->all[m][j];
+    for (int j = 0; j < pfd->size; j++)  {
+      tfd->all[m][j] += pfd->all[m][j];
     }
   }
+  out->naccum++;
 }
 
 
 // convert accumulated values to correct temporal mean
 // (divide by naccum)
 static void
-mean_tfields(struct psc_output_c *out, struct psc_extra_fields *f)
+output_mean_tfields(struct psc_output_c *out)
 {
+  struct psc_extra_fields *tfd = &out->tfd;
+
   assert(out->naccum > 0);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    for (int j = 0; j < f->size; j++) {
-      f->all[m][j] /= out->naccum;
+    for (int j = 0; j < tfd->size; j++) {
+      tfd->all[m][j] /= out->naccum;
     }
   }
 }
@@ -430,7 +434,7 @@ output_c_field()
   prof_start(pr);
 
   psc_calc_densities();
-  calculate_pfields(&out->pfd);
+  output_calculate_pfields(out);
 
   if (out->dowrite_pfield) {
     if (psc.timestep >= out->pfield_next) {
@@ -442,10 +446,10 @@ output_c_field()
   }
 
   if (out->dowrite_tfield) {
-    accumulate_tfields(out, &out->pfd, &out->tfd);
+    output_accumulate_tfields(out);
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
-      mean_tfields(out, &out->tfd);
+      output_mean_tfields(out);
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
       write_fields(out, &flds_list, "tfd");
