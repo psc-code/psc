@@ -643,7 +643,7 @@ psc_init(const char *case_name)
   particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
-  fields_base_alloc(&psc.pf);
+  fields_base_alloc(&psc.pf, psc.ilg, psc.ihg, NR_FIELDS);
   psc_init_field();
 }
 

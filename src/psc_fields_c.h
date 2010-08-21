@@ -7,33 +7,39 @@
 typedef double fields_c_real_t;
 #define MPI_FIELDS_C_REAL MPI_DOUBLE
 
+// Lower bounds and dims are intentionally not called ilg, ihg, img,
+// to lessen confusion with psc.ilg, psc.ihg, etc.. These bounds may
+// be psc.ilo, psc.ihi or psc.ilg, psc.ihg, or something yet different.
+
 typedef struct {
   fields_c_real_t *flds;
+  int ib[3], im[3]; //> lower bounds and length per direction
+  int nr_comp; //> nr of components
 } fields_c_t;
 
-#define F3_OFF_C(fldnr, jx,jy,jz)					\
+#define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
   (((((fldnr								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
+       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
+      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
+     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
 #if 1
 
 #define F3_C(pf, fldnr, jx,jy,jz)		\
-  ((pf)->flds[F3_OFF_C(fldnr, jx,jy,jz)])
+  ((pf)->flds[F3_OFF_C(pf, fldnr, jx,jy,jz)])
 
 #else
 
 #define F3_C(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_C(fldnr, jx,jy,jz);				\
+  (*({int off = F3_OFF_C(pf, fldnr, jx,jy,jz);				\
       assert(off >= 0);							\
-      assert(off < NR_FIELDS*psc.fld_size);				\
+      assert(off < pf->nr_comp * pf->im[0] * pf->im[1] * pf->im[2]);	\
       &((pf)->flds[off]);						\
     }))
 
 #endif
 
-void fields_c_alloc(fields_c_t *pf);
+void fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp);
 void fields_c_free(fields_c_t *pf);
 void fields_c_get(fields_c_t *pf, int mb, int me);
 void fields_c_put(fields_c_t *pf, int mb, int me);

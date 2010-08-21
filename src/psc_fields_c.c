@@ -10,9 +10,16 @@
 // going to be used
 
 void
-fields_c_alloc(fields_c_t *pf)
+fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
 {
-  pf->flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
+  unsigned int size = 1;
+  for (int d = 0; d < 3; d++) {
+    pf->ib[d] = ib[d];
+    pf->im[d] = ie[d] - ib[d];
+    size *= pf->im[d];
+  }
+  pf->nr_comp = nr_comp;
+  pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
 }
 
 void
@@ -35,21 +42,12 @@ fields_c_put(fields_c_t *pf, int mb, int me)
   pf->flds = NULL;
 }
 
-#elif FIELDS_BASE == FIELDS_FORTRAN
-
-static fields_c_real_t *__flds;
-static int __gotten;
+#else
 
 void
 fields_c_get(fields_c_t *pf, int mb, int me)
 {
-  assert(!__gotten);
-  __gotten = 1;
-
-  if (!__flds) {
-    __flds = calloc(NR_FIELDS * psc.fld_size, sizeof(*pf->flds));
-  }
-  pf->flds = __flds;
+  fields_c_alloc(pf, psc.ilg, psc.ihg, NR_FIELDS);
 
   for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -65,9 +63,6 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 void
 fields_c_put(fields_c_t *pf, int mb, int me)
 {
-  assert(__gotten);
-  __gotten = 0;
-
   for (int m = mb; m < me; m++) {
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
@@ -78,6 +73,7 @@ fields_c_put(fields_c_t *pf, int mb, int me)
     }
   }
 
+  fields_c_free(pf);
   pf->flds = NULL;
 }
 
@@ -86,16 +82,16 @@ fields_c_put(fields_c_t *pf, int mb, int me)
 void
 fields_c_zero(fields_c_t *pf, int m)
 {
-  memset(&F3_C(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(fields_c_real_t));
+  memset(&F3_C(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
+	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_c_real_t));
 }
 
 void
 fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
+    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
+      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
 	F3_C(pf, m, jx, jy, jz) = val;
       }
     }
@@ -105,9 +101,9 @@ fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
 void
 fields_c_copy(fields_c_t *pf, int m_to, int m_from)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
+  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
+    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
+      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
 	F3_C(pf, m_to, jx, jy, jz) = F3_C(pf, m_from, jx, jy, jz);
       }
     }
