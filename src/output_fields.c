@@ -305,16 +305,8 @@ write_fields_combine(struct psc_output_c *out,
       MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       fields_base_t fld;
-      fld.nr_comp = 1;
-      fld.name = malloc(sizeof(*fld.name));
+      fields_base_alloc(&fld, psc.domain.ilo, psc.domain.ihi, 1);
       fld.name[0] = list->flds[m].name[0];
-      unsigned int sz = 1;
-      for (int d = 0; d < 3; d++) {
-	fld.ib[d] = psc.domain.ilo[d];
-	fld.im[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
-	sz *= fld.im[d];
-      }
-      fld.flds = calloc(sz, sizeof(*fld.flds));
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
@@ -346,8 +338,7 @@ write_fields_combine(struct psc_output_c *out,
 	}
       }
       out->format_ops->write_field(ctx, &fld);
-      free(fld.flds);
-      free(fld.name);
+      fields_base_free(&fld);
     }
   }
 
