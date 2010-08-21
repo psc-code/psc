@@ -15,11 +15,11 @@ nint(creal x)
 }
 
 static void
-do_c_calc_densities(void)
+do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
 {
-  fields_base_zero(&psc.pf, NE);
-  fields_base_zero(&psc.pf, NI);
-  fields_base_zero(&psc.pf, NN);
+  fields_base_zero(pf, m_NE);
+  fields_base_zero(pf, m_NI);
+  fields_base_zero(pf, m_NN);
   
   creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
   creal dxi = 1.f / psc.dx[0];
@@ -63,41 +63,41 @@ do_c_calc_densities(void)
     int m;
     if (part->qni < 0.) {
       fnq = part->qni * part->wni * fnqs;
-      m = NE;
+      m = m_NE;
     } else if (part->qni > 0.) {
       fnq = part->qni * part->wni * fnqs;
-      m = NI;
+      m = m_NI;
     } else {
       fnq = part->wni * fnqs;
-      m = NN;
+      m = m_NN;
     }
-    F3_BASE(m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
-    F3_BASE(m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
-    F3_BASE(m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
-    F3_BASE(m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
-    F3_BASE(m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
-    F3_BASE(m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
-    F3_BASE(m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
-    F3_BASE(m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
-    F3_BASE(m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
-    F3_BASE(m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
-    F3_BASE(m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
-    F3_BASE(m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
-    F3_BASE(m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
-    F3_BASE(m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3_BASE(m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3_BASE(m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
-    F3_BASE(m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3_BASE(m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3_BASE(m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
-    F3_BASE(m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
-    F3_BASE(m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
-    F3_BASE(m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
-    F3_BASE(m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3_BASE(m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3_BASE(m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
-    F3_BASE(m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3_BASE(m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    XF3_BASE(pf,m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    XF3_BASE(pf,m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    XF3_BASE(pf,m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    XF3_BASE(pf,m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    XF3_BASE(pf,m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    XF3_BASE(pf,m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    XF3_BASE(pf,m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    XF3_BASE(pf,m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    XF3_BASE(pf,m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    XF3_BASE(pf,m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    XF3_BASE(pf,m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    XF3_BASE(pf,m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    XF3_BASE(pf,m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    XF3_BASE(pf,m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    XF3_BASE(pf,m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    XF3_BASE(pf,m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    XF3_BASE(pf,m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    XF3_BASE(pf,m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    XF3_BASE(pf,m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    XF3_BASE(pf,m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    XF3_BASE(pf,m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    XF3_BASE(pf,m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    XF3_BASE(pf,m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    XF3_BASE(pf,m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    XF3_BASE(pf,m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    XF3_BASE(pf,m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    XF3_BASE(pf,m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
   }  
 }
 
@@ -109,7 +109,7 @@ c_calc_densities()
     pr = prof_register("c_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_c_calc_densities();
+  do_c_calc_densities(&psc.pf, NE, NI, NN);
   prof_stop(pr);
 
   psc_add_ghosts(NE, NE + 3);
