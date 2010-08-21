@@ -3,7 +3,7 @@
 
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_yz(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 c     ----------------------------------------------------------------------
 c     particle pusher yz, w/o the following boundary exchange
 
@@ -16,9 +16,6 @@ c     particle pusher yz, w/o the following boundary exchange
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
       real(kind=8) :: p2A, p2B
-      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
-     &                       i2mn-rd2:i2mx+rd2,
-     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
@@ -74,9 +71,6 @@ c INITIALIZATION
       dzi=1.0/dz
 
 
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
@@ -284,41 +278,6 @@ c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
             g0z=0.75-abs(h3)*abs(h3)
             g1z=0.5*(1.5-abs(h3+1.0))*(1.5-abs(h3+1.0))
 
-            if (qni.lt.0.0) then
-               fnq=qni*wni*fnqs
-               ne(l1,l2-1,l3-1)=ne(l1,l2-1,l3-1)+fnq*gmy*gmz
-               ne(l1,l2,l3-1)=ne(l1,l2,l3-1)+fnq*g0y*gmz
-               ne(l1,l2+1,l3-1)=ne(l1,l2+1,l3-1)+fnq*g1y*gmz
-               ne(l1,l2-1,l3)=ne(l1,l2-1,l3)+fnq*gmy*g0z
-               ne(l1,l2,l3)=ne(l1,l2,l3)+fnq*g0y*g0z
-               ne(l1,l2+1,l3)=ne(l1,l2+1,l3)+fnq*g1y*g0z
-               ne(l1,l2-1,l3+1)=ne(l1,l2-1,l3+1)+fnq*gmy*g1z
-               ne(l1,l2,l3+1)=ne(l1,l2,l3+1)+fnq*g0y*g1z
-               ne(l1,l2+1,l3+1)=ne(l1,l2+1,l3+1)+fnq*g1y*g1z
-            else if (qni.gt.0.0) then
-               fnq=qni*wni*fnqs
-               ni(l1,l2-1,l3-1)=ni(l1,l2-1,l3-1)+fnq*gmy*gmz
-               ni(l1,l2,l3-1)=ni(l1,l2,l3-1)+fnq*g0y*gmz
-               ni(l1,l2+1,l3-1)=ni(l1,l2+1,l3-1)+fnq*g1y*gmz
-               ni(l1,l2-1,l3)=ni(l1,l2-1,l3)+fnq*gmy*g0z
-               ni(l1,l2,l3)=ni(l1,l2,l3)+fnq*g0y*g0z
-               ni(l1,l2+1,l3)=ni(l1,l2+1,l3)+fnq*g1y*g0z
-               ni(l1,l2-1,l3+1)=ni(l1,l2-1,l3+1)+fnq*gmy*g1z
-               ni(l1,l2,l3+1)=ni(l1,l2,l3+1)+fnq*g0y*g1z
-               ni(l1,l2+1,l3+1)=ni(l1,l2+1,l3+1)+fnq*g1y*g1z
-            else if (qni.eq.0.0) then
-               fnq=wni*fnqs
-               nn(l1,l2-1,l3-1)=nn(l1,l2-1,l3-1)+fnq*gmy*gmz
-               nn(l1,l2,l3-1)=nn(l1,l2,l3-1)+fnq*g0y*gmz
-               nn(l1,l2+1,l3-1)=nn(l1,l2+1,l3-1)+fnq*g1y*gmz
-               nn(l1,l2-1,l3)=nn(l1,l2-1,l3)+fnq*gmy*g0z
-               nn(l1,l2,l3)=nn(l1,l2,l3)+fnq*g0y*g0z
-               nn(l1,l2+1,l3)=nn(l1,l2+1,l3)+fnq*g1y*g0z
-               nn(l1,l2-1,l3+1)=nn(l1,l2-1,l3+1)+fnq*gmy*g1z
-               nn(l1,l2,l3+1)=nn(l1,l2,l3+1)+fnq*g0y*g1z
-               nn(l1,l2+1,l3+1)=nn(l1,l2+1,l3+1)+fnq*g1y*g1z
-            endif
-
 c CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
 c x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
 
@@ -421,7 +380,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       call SERV_systime(cpug)
 
       call PIC_push_part_yz(niloc, p_niloc,p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
      
       call SERV_systime(cpua)
 
@@ -473,7 +432,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
 
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_yz_a(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 c     ----------------------------------------------------------------------
 c     first half step only (x^n -> x^{n+1/2}), for testing purposes
 
@@ -486,9 +445,6 @@ c     first half step only (x^n -> x^{n+1/2}), for testing purposes
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
       real(kind=8) :: p2A, p2B
-      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
-     &                       i2mn-rd2:i2mx+rd2,
-     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
@@ -544,9 +500,6 @@ c INITIALIZATION
       dzi=1.0/dz
 
 
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
@@ -593,7 +546,7 @@ c x^n, p^n -> x^(n+0.5), p^n
 
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_yz_b(niloc, p_niloc, p2A, p2B,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
+     &     jxi, jyi, jzi, ex, ey, ez, bx, by, bz)
 c     ----------------------------------------------------------------------
 c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2}), for testing
 
@@ -606,9 +559,6 @@ c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2}), for testing
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
       real(kind=8) :: p2A, p2B
-      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
-     &                       i2mn-rd2:i2mx+rd2,
-     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
       real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
      &                       i2mn-rd2:i2mx+rd2,
      &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
@@ -664,9 +614,6 @@ c INITIALIZATION
       dzi=1.0/dz
 
 
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
