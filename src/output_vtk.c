@@ -142,7 +142,7 @@ vtk_write_field(void *ctx, fields_base_t *fld)
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
       for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
-	float val = fld->flds[((iz-ib[2]) * im[1] + iy-ib[1]) * im[0] + ix-ib[0]];
+	float val = XF3_BASE(fld, 0, ix,iy,iz);
 	if (fabsf(val) < 1e-37) {
 	  fprintf(vtk->file, "%g ", 0.);
 	} else {
