@@ -21,8 +21,6 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 static void
 reset_fields(struct psc_extra_fields *f)
 {
-  f->naccum = 0;
-
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
     for (int j = 0; j < f->size; j++)  {
       f->all[m][j] = 0.0;
@@ -115,9 +113,10 @@ calculate_pfields(struct psc_extra_fields *p)
 }
 
 static void
-accumulate_tfields(struct psc_extra_fields *p, struct psc_extra_fields *t)
+accumulate_tfields(struct psc_output_c *out, struct psc_extra_fields *p,
+		   struct psc_extra_fields *t)
 {
-  t->naccum = t->naccum + 1;
+  out->naccum++;
 
   assert(p->size == t->size);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
@@ -131,12 +130,12 @@ accumulate_tfields(struct psc_extra_fields *p, struct psc_extra_fields *t)
 // convert accumulated values to correct temporal mean
 // (divide by naccum)
 static void
-mean_tfields(struct psc_extra_fields *f)
+mean_tfields(struct psc_output_c *out, struct psc_extra_fields *f)
 {
-  assert(f->naccum > 0);
+  assert(out->naccum > 0);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
     for (int j = 0; j < f->size; j++) {
-      f->all[m][j] /= f->naccum;
+      f->all[m][j] /= out->naccum;
     }
   }
 }
@@ -419,6 +418,7 @@ output_c_field()
   struct psc_output_c *out = &psc_output_c;
 
   if (!out->pfd.all[0]) {
+    out->naccum = 0;
     init_output_fields(&out->pfd);
     init_output_fields(&out->tfd);
   }
@@ -442,14 +442,15 @@ output_c_field()
   }
 
   if (out->dowrite_tfield) {
-    accumulate_tfields(&out->pfd, &out->tfd);
+    accumulate_tfields(out, &out->pfd, &out->tfd);
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
-      mean_tfields(&out->tfd);
+      mean_tfields(out, &out->tfd);
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
       write_fields(out, &flds_list, "tfd");
       reset_fields(&out->tfd);
+      out->naccum = 0;
     }
   }
   

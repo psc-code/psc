@@ -33,7 +33,6 @@ struct psc_fields_list {
 
 struct psc_extra_fields {
   unsigned int size;
-  unsigned int naccum;
   float *all[NR_EXTRA_FIELDS];
 };
 
@@ -68,6 +67,7 @@ struct psc_output_c {
 
   int pfield_next, tfield_next;
   // storage for output
+  unsigned int naccum;
   struct psc_extra_fields pfd, tfd;
 
   struct psc_output_format_ops *format_ops;
