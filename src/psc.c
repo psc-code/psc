@@ -678,7 +678,7 @@ psc_read_checkpoint(void)
   SERV_read_2(&pp, &pf);
 
   particles_fortran_put(&pp);
-  fields_fortran_put(&pf, NE, HZ + 1);
+  fields_fortran_put(&pf, JXI, HZ + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -692,7 +692,7 @@ psc_write_checkpoint(void)
   particles_fortran_t pp;
   particles_fortran_get(&pp);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, NE, HZ + 1);
+  fields_fortran_get(&pf, JXI, HZ + 1);
 
   SERV_write(&pp, &pf);
 

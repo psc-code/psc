@@ -163,12 +163,10 @@ void PIC_pml_msb_F77(f_real *ex, f_real *ey, f_real *ez,
 		     f_real *eps, f_real *mu);
 void SERV_read_1_F77(f_int *timestep, f_int *n_part);
 void SERV_read_2_F77(f_int *niloc, particle_fortran_t *p_niloc,
-		     f_real *ne, f_real *ni, f_real *nn,
 		     f_real *jxi, f_real *jyi, f_real *jzi,
 		     f_real *ex, f_real *ey, f_real *ez,
 		     f_real *hx, f_real *hy, f_real *hz);
 void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
-		    f_real *ne, f_real *ni, f_real *nn,
 		    f_real *jxi, f_real *jyi, f_real *jzi,
 		    f_real *ex, f_real *ey, f_real *ez,
 		    f_real *hx, f_real *hy, f_real *hz);
@@ -529,7 +527,6 @@ void
 SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   SERV_read_2_F77(&pp->n_part, &pp->particles[-1],
-		  pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -540,7 +537,6 @@ SERV_write(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   SERV_write_F77(&psc.timestep,
 		 &pp->n_part, &pp->particles[-1],
-		 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
