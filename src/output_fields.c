@@ -187,14 +187,9 @@ make_fields_list(struct psc_fields_list *list, fields_base_t *f,
       continue;
 
     fields_base_t *fld = &list->flds[list->nr_flds++];
-    fld->flds = &XF3_BASE(f, m, psc.ilo[0], psc.ilo[1], psc.ilo[2]);
-    fld->nr_comp = 1;
-    fld->name = malloc(sizeof(*fld->name));
-    fld->name[0] = (char *) x_fldname[m];
-    for (int d = 0; d < 3; d++) {
-      fld->ib[d] = psc.ilo[d];
-      fld->im[d] = psc.ihi[d] - psc.ilo[d];
-    }
+    fields_base_alloc_with_array(fld, psc.ilo, psc.ihi, 1,
+				 &XF3_BASE(f, m, psc.ilo[0], psc.ilo[1], psc.ilo[2]));
+    fld->name[0] = strdup(x_fldname[m]);
   }
   list->dowrite_fd = dowrite_fd;
 }
@@ -203,7 +198,7 @@ static void
 free_fields_list(struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    free(list->flds[m].name);
+    fields_base_free(&list->flds[m]);
   }
 }
 
@@ -267,18 +262,19 @@ write_fields_combine(struct psc_output_c *out,
   if (rank == 0) {
     struct psc_fields_list list_combined;
     list_combined.nr_flds = list->nr_flds;
+
     for (int m = 0; m < list->nr_flds; m++) {
-      for (int d = 0; d < 3; d++) {
-	list_combined.flds[m].ib[d] = psc.domain.ilo[d];
-	list_combined.flds[m].im[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
-      }
-      list_combined.flds[m].nr_comp = 1;
-      list_combined.flds[m].name = malloc(sizeof(*list_combined.flds[m].name));
-      list_combined.flds[m].name[0] = list->flds[m].name[0];
+      fields_base_t *fld = &list_combined.flds[m];
+      // We're creating a fake list here, with the data arrays being left
+      // out. We don't want to have them all in memory at the same time,
+      // and at this point, the list_combined is only used to convey info
+      // about the data to come.
+      fields_base_alloc_with_array(fld, psc.domain.ilo, psc.domain.ihi, 1, NULL);
+      fld->name[0] = strdup(list->flds[m].name[0]);
     }
     out->format_ops->open(out, &list_combined, prefix, &ctx);
     for (int m = 0; m < list->nr_flds; m++) {
-      free(list_combined.flds[m].name);
+      fields_base_free(&list_combined.flds[m]);
     }
   }
 
@@ -306,7 +302,7 @@ write_fields_combine(struct psc_output_c *out,
     } else { // rank == 0
       fields_base_t fld;
       fields_base_alloc(&fld, psc.domain.ilo, psc.domain.ihi, 1);
-      fld.name[0] = list->flds[m].name[0];
+      fld.name[0] = strdup(list->flds[m].name[0]);
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
