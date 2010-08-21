@@ -42,8 +42,10 @@ static fields_fortran_t __flds;
 static int __gotten; // to check we're pairing get/put correctly
 
 void
-fields_fortran_get(fields_fortran_t *pf, int mb, int me)
+fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
+			void *_pf_base, int mb_base)
 {
+  fields_base_t *pf_base = _pf_base;
   assert(!__gotten);
   __gotten = 1;
 
@@ -58,7 +60,7 @@ fields_fortran_get(fields_fortran_t *pf, int mb, int me)
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
+	  F3_FORTRAN(pf, m, jx,jy,jz) = XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
 	}
       }
     }
@@ -66,8 +68,16 @@ fields_fortran_get(fields_fortran_t *pf, int mb, int me)
 }
 
 void
-fields_fortran_put(fields_fortran_t *pf, int mb, int me)
+fields_fortran_get(fields_fortran_t *pf, int mb, int me)
 {
+  fields_fortran_get_from(pf, mb, me, &psc.pf, mb);
+}
+
+void
+fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
+		      void *_pf_base, int mb_base)
+{
+  fields_base_t *pf_base = _pf_base;
   assert(__gotten);
   __gotten = 0;
 
@@ -75,7 +85,7 @@ fields_fortran_put(fields_fortran_t *pf, int mb, int me)
     for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
       for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
 	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_BASE(m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
+	  XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
 	}
       }
     }
@@ -84,6 +94,12 @@ fields_fortran_put(fields_fortran_t *pf, int mb, int me)
   for (int m = 0; m < NR_FIELDS; m++) {
     pf->flds[0] = NULL;
   }
+}
+
+void
+fields_fortran_put(fields_fortran_t *pf, int mb, int me)
+{
+  return fields_fortran_put_to(pf, mb, me, &psc.pf, mb);
 }
 
 #endif
