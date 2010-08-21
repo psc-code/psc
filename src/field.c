@@ -60,7 +60,7 @@ c_push_field_a_nopml()
     }
   }
 
-  psc_fill_ghosts(EX, EX + 3);
+  psc_fill_ghosts(&psc.pf, EX, EX + 3);
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
@@ -83,7 +83,7 @@ c_push_field_a_nopml()
     }
   }
 
-  psc_fill_ghosts(HX, HX + 3);
+  psc_fill_ghosts(&psc.pf, HX, HX + 3);
 
   prof_stop(pr);
 }
@@ -136,7 +136,7 @@ c_push_field_b_nopml()
     }
   }
 
-  psc_fill_ghosts(HX, HX + 3);
+  psc_fill_ghosts(&psc.pf, HX, HX + 3);
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
@@ -162,7 +162,7 @@ c_push_field_b_nopml()
     }
   }
 
-  psc_fill_ghosts(EX, EX + 3);
+  psc_fill_ghosts(&psc.pf, EX, EX + 3);
 
   prof_stop(pr);
 }

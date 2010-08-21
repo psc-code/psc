@@ -112,7 +112,7 @@ c_calc_densities()
   do_c_calc_densities(&psc.pf, NE, NI, NN);
   prof_stop(pr);
 
-  psc_add_ghosts(NE, NE + 3);
+  psc_add_ghosts(&psc.pf, NE, NE + 3);
 }
 
 struct psc_moment_ops psc_moment_ops_c = {

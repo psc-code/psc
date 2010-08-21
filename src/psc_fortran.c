@@ -330,8 +330,10 @@ struct psc_output_ops psc_output_ops_fortran = {
 // fortran bnd
 
 static void
-fortran_add_ghosts(int mb, int me)
+fortran_add_ghosts(fields_base_t *pf_base, int mb, int me)
 {
+  assert(pf_base == &psc.pf);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_add_ghosts", 1., 0, 0);
@@ -359,8 +361,10 @@ fortran_add_ghosts(int mb, int me)
 }
 
 static void
-fortran_fill_ghosts(int mb, int me)
+fortran_fill_ghosts(fields_base_t *pf_base, int mb, int me)
 {
+  assert(pf_base == &psc.pf);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_fill_ghosts", 1., 0, 0);
