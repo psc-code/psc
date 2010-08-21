@@ -132,7 +132,6 @@ psc_check_currents_ref(double thres)
 {
   assert(field_ref[JXI]);
   for (int m = JXI; m <= JZI; m++){
-    double max_delta = 0.;
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
