@@ -16,6 +16,7 @@ typedef struct {
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
   char **name; //> name for each component
+  bool with_array; //> indicates whether data array was passed in instead of alloc'd
 } fields_c_t;
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
@@ -41,6 +42,8 @@ typedef struct {
 #endif
 
 void fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp);
+void fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
+			       fields_c_real_t *arr);
 void fields_c_free(fields_c_t *pf);
 void fields_c_get(fields_c_t *pf, int mb, int me);
 void fields_c_put(fields_c_t *pf, int mb, int me);

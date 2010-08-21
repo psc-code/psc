@@ -6,11 +6,9 @@
 #include <string.h>
 #include <assert.h>
 
-// FIXME, we're allocating all fields even if the PML ones aren't
-// going to be used
-
 void
-fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
+__fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
+		 fields_c_real_t *arr, bool with_array)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -19,7 +17,12 @@ fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
     size *= pf->im[d];
   }
   pf->nr_comp = nr_comp;
-  pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
+  if (with_array) {
+    pf->flds = arr;
+  } else {
+    pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
+  }
+  pf->with_array = with_array;
   pf->name = calloc(nr_comp, sizeof(*pf->name));
   for (int m = 0; m < nr_comp; m++) {
     pf->name[m] = NULL;
@@ -27,9 +30,24 @@ fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
 }
 
 void
+fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
+{
+  return __fields_c_alloc(pf, ib, ie, nr_comp, NULL, false);
+}
+
+void
+fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
+			  fields_c_real_t *arr)
+{
+  return __fields_c_alloc(pf, ib, ie, nr_comp, arr, true);
+}
+
+void
 fields_c_free(fields_c_t *pf)
 {
-  free(pf->flds);
+  if (!pf->with_array) {
+    free(pf->flds);
+  }
   for (int m = 0; m < pf->nr_comp; m++) {
     free(pf->name[m]);
   }
