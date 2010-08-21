@@ -21,9 +21,15 @@ enum {
 struct psc_field {
   float *data;
   int ilo[3], ihi[3];
-  unsigned int size;
   const char *name;
 };
+
+static inline unsigned int
+psc_field_size(struct psc_field *pf)
+{
+  return (pf->ihi[0] - pf->ilo[0]) * (pf->ihi[1] - pf->ilo[1]) * 
+    (pf->ihi[2] - pf->ilo[2]);
+}
 
 struct psc_fields_list {
   int nr_flds;

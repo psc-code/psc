@@ -242,7 +242,6 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
 
     struct psc_field *fld = &list->flds[list->nr_flds++];
     fld->data = f->all[m];
-    fld->size = f->size;
     fld->name = x_fldname[m];
     for (int d = 0; d < 3; d++) {
       fld->ilo[d] = psc.ilo[d];
@@ -312,11 +311,9 @@ write_fields_combine(struct psc_output_c *out,
     struct psc_fields_list list_combined;
     list_combined.nr_flds = list->nr_flds;
     for (int m = 0; m < list->nr_flds; m++) {
-      list_combined.flds[m].size = 1;
       for (int d = 0; d < 3; d++) {
 	list_combined.flds[m].ilo[d] = psc.domain.ilo[d];
 	list_combined.flds[m].ihi[d] = psc.domain.ihi[d];
-	list_combined.flds[m].size *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
       }
       list_combined.flds[m].name = list->flds[m].name;
     }
@@ -342,17 +339,18 @@ write_fields_combine(struct psc_output_c *out,
       MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
       MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
       MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-      MPI_Send(s_data, list->flds[m].size, MPI_FLOAT, 0, 104, MPI_COMM_WORLD);
+      unsigned int sz = s_img[0] * s_img[1] * s_img[2];
+      MPI_Send(s_data, sz, MPI_FLOAT, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       struct psc_field fld;
       fld.name = list->flds[m].name;
-      fld.size = 1;
+      unsigned int sz = 1;
       for (int d = 0; d < 3; d++) {
 	fld.ilo[d] = psc.domain.ilo[d];
 	fld.ihi[d] = psc.domain.ihi[d];
-	fld.size *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
+	sz *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
       }
-      fld.data = calloc(fld.size, sizeof(*fld.data));
+      fld.data = calloc(sz, sizeof(*fld.data));
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
