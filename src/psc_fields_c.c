@@ -20,12 +20,20 @@ fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
   }
   pf->nr_comp = nr_comp;
   pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
+  pf->name = calloc(nr_comp, sizeof(*pf->name));
+  for (int m = 0; m < nr_comp; m++) {
+    pf->name[m] = NULL;
+  }
 }
 
 void
 fields_c_free(fields_c_t *pf)
 {
   free(pf->flds);
+  for (int m = 0; m < pf->nr_comp; m++) {
+    free(pf->name[m]);
+  }
+  free(pf->name);
 }
 
 #if FIELDS_BASE == FIELDS_C
