@@ -7,11 +7,11 @@
 #include <string.h>
 
 static void
-do_genc_calc_densities(fields_t *pf, particles_t *pp)
+do_genc_calc_densities(void)
 {
-  fields_zero(pf, NE);
-  fields_zero(pf, NI);
-  fields_zero(pf, NN);
+  fields_base_zero(&psc.pf, NE);
+  fields_base_zero(&psc.pf, NI);
+  fields_base_zero(&psc.pf, NN);
   
   creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
   creal dxi = 1.f / psc.dx[0];
@@ -19,7 +19,7 @@ do_genc_calc_densities(fields_t *pf, particles_t *pp)
   creal dzi = 1.f / psc.dx[2];
 
   for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+    particle_base_t *part = particles_base_get_one(&psc.pp, n);
 
     creal u = part->xi * dxi;
     creal v = part->yi * dyi;
@@ -63,54 +63,46 @@ do_genc_calc_densities(fields_t *pf, particles_t *pp)
       fnq = part->wni * fnqs;
       m = NN;
     }
-    F3(m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
-    F3(m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
-    F3(m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
-    F3(m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
-    F3(m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
-    F3(m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
-    F3(m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
-    F3(m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
-    F3(m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
-    F3(m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
-    F3(m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
-    F3(m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
-    F3(m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
-    F3(m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3(m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3(m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
-    F3(m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3(m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3(m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
-    F3(m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
-    F3(m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
-    F3(m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
-    F3(m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3(m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3(m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
-    F3(m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3(m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    F3_BASE(m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    F3_BASE(m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    F3_BASE(m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    F3_BASE(m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    F3_BASE(m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    F3_BASE(m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    F3_BASE(m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    F3_BASE(m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    F3_BASE(m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    F3_BASE(m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    F3_BASE(m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    F3_BASE(m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    F3_BASE(m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    F3_BASE(m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3_BASE(m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3_BASE(m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    F3_BASE(m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3_BASE(m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3_BASE(m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    F3_BASE(m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    F3_BASE(m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    F3_BASE(m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    F3_BASE(m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3_BASE(m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3_BASE(m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    F3_BASE(m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3_BASE(m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
   }  
 }
 
 void
 genc_calc_densities()
 {
-  fields_t pf;
-  particles_t pp;
-  fields_get(&pf, 0, 0);
-  particles_get(&pp);
-
   static int pr;
   if (!pr) {
     pr = prof_register("genc_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_genc_calc_densities(&pf, &pp);
+  do_genc_calc_densities();
   prof_stop(pr);
-
-  fields_put(&pf, NE, NE + 3);
-  particles_put(&pp);
 
   psc_add_ghosts(NE, NE + 3);
 }
