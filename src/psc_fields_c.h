@@ -20,7 +20,7 @@ typedef struct {
 } fields_c_t;
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
-  (((((fldnr								\
+  ((((((fldnr)								\
        * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))

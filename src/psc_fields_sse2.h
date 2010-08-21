@@ -14,7 +14,7 @@ typedef struct {
 } fields_sse2_t;
 
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
-  (((((fldnr								\
+  ((((((fldnr)								\
        *psc.img[2] + ((jz)-psc.ilg[2]))					\
       *psc.img[1] + ((jy)-psc.ilg[1]))					\
      *psc.img[0] + ((jx)-psc.ilg[0]))))
