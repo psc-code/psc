@@ -20,7 +20,7 @@ struct vtk_ctx {
 
 static void
 vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
-	      int extra, struct psc_field *fld, struct psc_output_c *out)
+	      int extra, fields_base_t *fld, struct psc_output_c *out)
 {
   char *filename = psc_output_c_filename(out, pfx);
   vtk->file = fopen(filename, "w");
@@ -31,9 +31,9 @@ vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
 
   fprintf(vtk->file, "DATASET %s\n", dataset_type);
   fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
-	  fld->ihi[0] - fld->ilo[0] + extra,
-	  fld->ihi[1] - fld->ilo[1] + extra,
-	  fld->ihi[2] - fld->ilo[2] + extra);
+	  fld->im[0] + extra,
+	  fld->im[1] + extra,
+	  fld->im[2] + extra);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -41,12 +41,12 @@ vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
 
 static void
 vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset,
-		      struct psc_field *fld)
+		      fields_base_t *fld)
 {
   for (int d = 0; d < 3; d++) {
     fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d,
-	    fld->ihi[d] - fld->ilo[d] + extra);
-    for (int i = fld->ilo[d]; i < fld->ihi[d] + extra; i++) {
+	    fld->im[d] + extra);
+    for (int i = fld->ib[d]; i < fld->ib[d] + fld->im[d] + extra; i++) {
       fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
     }
     fprintf(vtk->file, "\n");
@@ -63,17 +63,17 @@ vtk_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
-  int *ilo = fld->ilo;
+  fields_base_t *fld = &list->flds[0];
+  int *ib = fld->ib;
 
   vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, fld, out);
 
   fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
   fprintf(vtk->file, "ORIGIN %g %g %g\n",
-	  psc.dx[0] * ilo[0],
-	  psc.dx[1] * ilo[1],
-	  psc.dx[2] * ilo[2]);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", psc_field_size(fld));
+	  psc.dx[0] * ib[0],
+	  psc.dx[1] * ib[1],
+	  psc.dx[2] * ib[2]);
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(fld));
 
   *pctx = vtk;
 }
@@ -88,11 +88,11 @@ vtk_points_open(struct psc_output_c *out, struct psc_fields_list *list,
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
+  fields_base_t *fld = &list->flds[0];
   
   vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, fld, out);
   vtk_write_coordinates(vtk, 0, 0., fld);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", psc_field_size(fld));
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(fld));
 
   *pctx = vtk;
 }
@@ -107,11 +107,11 @@ vtk_cells_open(struct psc_output_c *out, struct psc_fields_list *list,
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
+  fields_base_t *fld = &list->flds[0];
   
   vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, fld, out);
   vtk_write_coordinates(vtk, 1, .5, fld);
-  fprintf(vtk->file, "\nCELL_DATA %d\n", psc_field_size(fld));
+  fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(fld));
 
   *pctx = vtk;
 }
@@ -131,22 +131,18 @@ vtk_close(void *ctx)
 /// Write one field to VTK file.
 
 static void
-vtk_write_field(void *ctx, struct psc_field *fld)
+vtk_write_field(void *ctx, fields_base_t *fld)
 {
   struct vtk_ctx *vtk = ctx;
   
-  int mm[3];
-  for (int d = 0; d < 3; d++) {
-    mm[d] = fld->ihi[d] - fld->ilo[d];
-  }
-
-  fprintf(vtk->file, "SCALARS %s float\n", fld->name);
+  int *ib = fld->ib, *im = fld->im;
+  fprintf(vtk->file, "SCALARS %s float\n", fld->name[0]);
   fprintf(vtk->file, "LOOKUP_TABLE default\n");
 
-  for (int iz = fld->ilo[2]; iz < fld->ihi[2]; iz++) {
-    for (int iy = fld->ilo[1]; iy < fld->ihi[1]; iy++) {
-      for (int ix = fld->ilo[0]; ix < fld->ihi[0]; ix++) {
-	float val = fld->data[((iz-fld->ilo[2]) * mm[1] + iy-fld->ilo[1]) * mm[0] + ix-fld->ilo[0]];
+  for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
+    for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
+      for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
+	float val = fld->flds[((iz-ib[2]) * im[1] + iy-ib[1]) * im[0] + ix-ib[0]];
 	if (fabsf(val) < 1e-37) {
 	  fprintf(vtk->file, "%g ", 0.);
 	} else {

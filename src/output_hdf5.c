@@ -53,23 +53,25 @@ hdf5_close(void *ctx)
 }
 
 static void
-hdf5_write_field(void *ctx, struct psc_field *fld)
+hdf5_write_field(void *ctx, fields_base_t *fld)
 {
   struct hdf5_ctx *hdf5 = ctx;
 
   hsize_t dims[3];
+  int ie[3];
   for (int d = 0; d < 3; d++) {
     // reverse dimensions because of Fortran order
-    dims[d] = fld->ihi[2-d] - fld->ilo[2-d];
+    dims[d] = fld->im[2-d];
+    ie[d] = fld->ib[d] + fld->im[d];
   }
   
-  if (sizeof(*fld->data) == 4) {
-    H5LTmake_dataset_float(hdf5->group_fld, fld->name, 3, dims, (float *) fld->data);
+  if (sizeof(*fld->flds) == 4) {
+    H5LTmake_dataset_float(hdf5->group_fld, fld->name[0], 3, dims, (float *) fld->flds);
   } else {
-    H5LTmake_dataset_double(hdf5->group_fld, fld->name, 3, dims, (double *) fld->data);
+    H5LTmake_dataset_double(hdf5->group_fld, fld->name[0], 3, dims, (double *) fld->flds);
   }
-  H5LTset_attribute_int(hdf5->group_fld, fld->name, "lo", fld->ilo, 3);
-  H5LTset_attribute_int(hdf5->group_fld, fld->name, "hi", fld->ihi, 3);
+  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "lo", fld->ib, 3);
+  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "hi", ie, 3);
 }
 
 // ======================================================================
@@ -100,7 +102,7 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
     sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
     FILE *f = fopen(fname, "w");
 
-    struct psc_field *fld = &list->flds[0];
+    fields_base_t *fld = &list->flds[0];
     fprintf(f, "<?xml version=\"1.0\" ?>\n");
     fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
     fprintf(f, "<Domain>\n");
@@ -112,9 +114,7 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
 	  fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
 		  kx, ky, kz, psc.timestep);
 	  fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
-		  fld->ihi[2] - fld->ilo[2] + 1,
-		  fld->ihi[1] - fld->ilo[1] + 1,
-		  fld->ihi[0] - fld->ilo[0] + 1);
+		  fld->im[2] + 1, fld->im[1] + 1, fld->im[0] + 1);
 	  fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
 	  fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	  fprintf(f, "        %g %g %g\n",
@@ -130,14 +130,14 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
 	  for (int m = 0; m < list->nr_flds; m++) {
 	    fld = &list->flds[m];
 	    fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
-		    fld->name);
+		    fld->name[0]);
 	    fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-		    fld->ihi[2] - fld->ilo[2],
-		    fld->ihi[1] - fld->ilo[1],
-		    fld->ihi[0] - fld->ilo[0]);
+		    fld->im[2],
+		    fld->im[1],
+		    fld->im[0]);
 	    int proc = (kz * psc.domain.nproc[1] + ky) * psc.domain.nproc[0] + kx;
 	    fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
-		    pfx, proc, psc.timestep, fld->name);
+		    pfx, proc, psc.timestep, fld->name[0]);
 	    fprintf(f, "       </DataItem>\n");
 	    fprintf(f, "     </Attribute>\n");
  	  }

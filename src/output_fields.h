@@ -18,22 +18,9 @@ enum {
 
 #define MAX_FIELDS_LIST NR_EXTRA_FIELDS
 
-struct psc_field {
-  fields_base_real_t *data;
-  int ilo[3], ihi[3];
-  const char *name;
-};
-
-static inline unsigned int
-psc_field_size(struct psc_field *pf)
-{
-  return (pf->ihi[0] - pf->ilo[0]) * (pf->ihi[1] - pf->ilo[1]) * 
-    (pf->ihi[2] - pf->ilo[2]);
-}
-
 struct psc_fields_list {
   int nr_flds;
-  struct psc_field flds[MAX_FIELDS_LIST];
+  fields_base_t flds[MAX_FIELDS_LIST];
   bool *dowrite_fd; // FIXME, obsolete -- don't use
 };
 
@@ -47,7 +34,7 @@ struct psc_output_format_ops {
   void (*open)(struct psc_output_c *out, struct psc_fields_list *flds,
 	       const char *prefix, void **pctx);
   void (*close)(void *ctx);
-  void (*write_field)(void *ctx, struct psc_field *fld);
+  void (*write_field)(void *ctx, fields_base_t *fld);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

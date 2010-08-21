@@ -74,18 +74,18 @@ binary_close(void *ctx)
 }
 
 static void
-binary_write_field(void *ctx, struct psc_field *fld)
+binary_write_field(void *ctx, fields_base_t *fld)
 {
   struct binary_ctx *binary = ctx;
 
   // convert to float
-  unsigned int sz = psc_field_size(fld);
+  unsigned int sz = fields_base_size(fld);
   float *data = calloc(sz, sizeof(float));
   for (int i = 0; i < sz; i++) {
-    data[i] = fld->data[i];
+    data[i] = fld->flds[i];
   }
     
-  fwrite(data, sizeof(*data), psc_field_size(fld), binary->file);
+  fwrite(data, sizeof(*data), sz, binary->file);
 
   free(data);
 }

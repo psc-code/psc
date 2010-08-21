@@ -186,15 +186,25 @@ make_fields_list(struct psc_fields_list *list, fields_base_t *f,
     if (!dowrite_fd[m])
       continue;
 
-    struct psc_field *fld = &list->flds[list->nr_flds++];
-    fld->data = &XF3_BASE(f, m, psc.ilo[0], psc.ilo[1], psc.ilo[2]);
-    fld->name = x_fldname[m];
+    fields_base_t *fld = &list->flds[list->nr_flds++];
+    fld->flds = &XF3_BASE(f, m, psc.ilo[0], psc.ilo[1], psc.ilo[2]);
+    fld->nr_comp = 1;
+    fld->name = malloc(sizeof(*fld->name));
+    fld->name[0] = (char *) x_fldname[m];
     for (int d = 0; d < 3; d++) {
-      fld->ilo[d] = psc.ilo[d];
-      fld->ihi[d] = psc.ihi[d];
+      fld->ib[d] = psc.ilo[d];
+      fld->im[d] = psc.ihi[d] - psc.ilo[d];
     }
   }
   list->dowrite_fd = dowrite_fd;
+}
+
+static void
+free_fields_list(struct psc_fields_list *list)
+{
+  for (int m = 0; m < list->nr_flds; m++) {
+    free(list->flds[m].name);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -259,12 +269,17 @@ write_fields_combine(struct psc_output_c *out,
     list_combined.nr_flds = list->nr_flds;
     for (int m = 0; m < list->nr_flds; m++) {
       for (int d = 0; d < 3; d++) {
-	list_combined.flds[m].ilo[d] = psc.domain.ilo[d];
-	list_combined.flds[m].ihi[d] = psc.domain.ihi[d];
+	list_combined.flds[m].ib[d] = psc.domain.ilo[d];
+	list_combined.flds[m].im[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
       }
-      list_combined.flds[m].name = list->flds[m].name;
+      list_combined.flds[m].nr_comp = 1;
+      list_combined.flds[m].name = malloc(sizeof(*list_combined.flds[m].name));
+      list_combined.flds[m].name[0] = list->flds[m].name[0];
     }
     out->format_ops->open(out, &list_combined, prefix, &ctx);
+    for (int m = 0; m < list->nr_flds; m++) {
+      free(list_combined.flds[m].name);
+    }
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
@@ -272,11 +287,11 @@ write_fields_combine(struct psc_output_c *out,
 
   for (int m = 0; m < list->nr_flds; m++) {
     int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-    fields_base_real_t *s_data = list->flds[m].data;
+    fields_base_real_t *s_data = list->flds[m].flds;
 
     for (int d = 0; d < 3; d++) {
-      s_ilo[d] = list->flds[m].ilo[d];
-      s_ihi[d] = list->flds[m].ihi[d];
+      s_ilo[d] = list->flds[m].ib[d];
+      s_ihi[d] = list->flds[m].ib[d] + list->flds[m].im[d];
       s_ilg[d] = s_ilo[d];
       s_img[d] = s_ihi[d] - s_ilo[d];
     }
@@ -289,15 +304,17 @@ write_fields_combine(struct psc_output_c *out,
       unsigned int sz = s_img[0] * s_img[1] * s_img[2];
       MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
-      struct psc_field fld;
-      fld.name = list->flds[m].name;
+      fields_base_t fld;
+      fld.nr_comp = 1;
+      fld.name = malloc(sizeof(*fld.name));
+      fld.name[0] = list->flds[m].name[0];
       unsigned int sz = 1;
       for (int d = 0; d < 3; d++) {
-	fld.ilo[d] = psc.domain.ilo[d];
-	fld.ihi[d] = psc.domain.ihi[d];
-	sz *= (psc.domain.ihi[d] - psc.domain.ilo[d]);
+	fld.ib[d] = psc.domain.ilo[d];
+	fld.im[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
+	sz *= fld.im[d];
       }
-      fld.data = calloc(sz, sizeof(*fld.data));
+      fld.flds = calloc(sz, sizeof(*fld.flds));
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
@@ -323,19 +340,21 @@ write_fields_combine(struct psc_output_c *out,
 	}
 	/* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	/*        ihi[0], ihi[1], ihi[2]); */
-	copy_to_global(fld.data, buf, ilo, ihi, ilg, img);
+	copy_to_global(fld.flds, buf, ilo, ihi, ilg, img);
 	if (n != 0) {
 	  free(buf);
 	}
       }
       out->format_ops->write_field(ctx, &fld);
-      free(fld.data);
+      free(fld.flds);
+      free(fld.name);
     }
   }
 
   if (rank == 0) {
     out->format_ops->close(ctx);
   }
+
 }
 
 // ----------------------------------------------------------------------
@@ -388,6 +407,7 @@ output_c_field()
        struct psc_fields_list flds_list;
        make_fields_list(&flds_list, &out->pfd, out->dowrite_fd);
        write_fields(out, &flds_list, "pfd");
+       free_fields_list(&flds_list);
     }
   }
 
@@ -403,6 +423,7 @@ output_c_field()
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
       write_fields(out, &flds_list, "tfd");
+      free_fields_list(&flds_list);
       fields_base_zero_all(&out->tfd);
       out->naccum = 0;
     }
