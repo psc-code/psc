@@ -37,10 +37,6 @@ struct psc_fields_list {
   bool *dowrite_fd; // FIXME, obsolete -- don't use
 };
 
-struct psc_extra_fields {
-  fields_base_real_t *all[NR_EXTRA_FIELDS];
-};
-
 struct psc_output_c;
 
 struct psc_output_format_ops {
@@ -73,7 +69,7 @@ struct psc_output_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  struct psc_extra_fields pfd, tfd;
+  fields_base_t pfd, tfd;
 
   struct psc_output_format_ops *format_ops;
 };
