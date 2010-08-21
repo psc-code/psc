@@ -78,11 +78,23 @@ binary_write_field(void *ctx, fields_base_t *fld)
 {
   struct binary_ctx *binary = ctx;
 
-  // convert to float
-  unsigned int sz = fields_base_size(fld);
+  int *ilo = psc.ilo, *ihi = psc.ihi;
+
+  // make sure we are writing per-proc output, not "output_combine"
+  assert(fld->ib[0] == psc.ilg[0] && 
+	 fld->ib[1] == psc.ilg[1] &&
+	 fld->ib[2] == psc.ilg[2]);
+  unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+
+  // convert to float, drop ghost points
   float *data = calloc(sz, sizeof(float));
-  for (int i = 0; i < sz; i++) {
-    data[i] = fld->flds[i];
+  int i = 0;
+  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	data[i++] = XF3_BASE(fld,0, ix,iy,iz);
+      }
+    }
   }
     
   fwrite(data, sizeof(*data), sz, binary->file);

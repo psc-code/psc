@@ -21,8 +21,8 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 static void
 output_c_setup(struct psc_output_c *out)
 {
-  fields_base_alloc(&out->pfd, psc.ilo, psc.ihi, NR_EXTRA_FIELDS);
-  fields_base_alloc(&out->tfd, psc.ilo, psc.ihi, NR_EXTRA_FIELDS);
+  fields_base_alloc(&out->pfd, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
+  fields_base_alloc(&out->tfd, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
   fields_base_zero_all(&out->tfd);
   out->naccum = 0;
 }
@@ -187,8 +187,8 @@ make_fields_list(struct psc_fields_list *list, fields_base_t *f,
       continue;
 
     fields_base_t *fld = &list->flds[list->nr_flds++];
-    fields_base_alloc_with_array(fld, psc.ilo, psc.ihi, 1,
-				 &XF3_BASE(f, m, psc.ilo[0], psc.ilo[1], psc.ilo[2]));
+    fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
+				 &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
     fld->name[0] = strdup(x_fldname[m]);
   }
   list->dowrite_fd = dowrite_fd;
@@ -286,10 +286,10 @@ write_fields_combine(struct psc_output_c *out,
     fields_base_real_t *s_data = list->flds[m].flds;
 
     for (int d = 0; d < 3; d++) {
-      s_ilo[d] = list->flds[m].ib[d];
-      s_ihi[d] = list->flds[m].ib[d] + list->flds[m].im[d];
-      s_ilg[d] = s_ilo[d];
-      s_img[d] = s_ihi[d] - s_ilo[d];
+      s_ilo[d] = psc.ilo[d];
+      s_ihi[d] = psc.ihi[d];
+      s_ilg[d] = psc.ilg[d];
+      s_img[d] = psc.img[d];
     }
     
     if (rank != 0) {
@@ -297,7 +297,7 @@ write_fields_combine(struct psc_output_c *out,
       MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
       MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
       MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-      unsigned int sz = s_img[0] * s_img[1] * s_img[2];
+      unsigned int sz = fields_base_size(&list->flds[m]);
       MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       fields_base_t fld;

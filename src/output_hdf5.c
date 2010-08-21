@@ -57,19 +57,50 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
 {
   struct hdf5_ctx *hdf5 = ctx;
 
-  hsize_t dims[3];
+  hid_t mem_type;
+  if (sizeof(*fld->flds) == 4) { // FIXME
+    mem_type = H5T_NATIVE_FLOAT;
+  } else {
+    mem_type = H5T_NATIVE_DOUBLE;
+  }
+
+  hsize_t file_dims[3], mem_dims[3];
   int ie[3];
   for (int d = 0; d < 3; d++) {
     // reverse dimensions because of Fortran order
-    dims[d] = fld->im[2-d];
+    mem_dims[d] = fld->im[2-d];
     ie[d] = fld->ib[d] + fld->im[d];
   }
+  hid_t mem_space = H5Screate_simple(3, mem_dims, NULL);
   
-  if (sizeof(*fld->flds) == 4) {
-    H5LTmake_dataset_float(hdf5->group_fld, fld->name[0], 3, dims, (float *) fld->flds);
+  if (fld->im[0] == psc.img[0] &&
+      fld->im[1] == psc.img[1] &&
+      fld->im[2] == psc.img[2]) {
+    // we're writing the local field, let's drop the ghost points
+    hsize_t start[3], count[3];
+    for (int d = 0; d < 3; d++) {
+      // reverse dimensions because of Fortran order
+      file_dims[d] = psc.ihi[2-d] - psc.ilo[2-d];
+      start[d] = psc.ilo[2-d] - psc.ilg[2-d];
+      count[d] = psc.ihi[2-d] - psc.ilo[2-d];
+    }
+    H5Sselect_hyperslab(mem_space, H5S_SELECT_SET, start, NULL, count, NULL);
   } else {
-    H5LTmake_dataset_double(hdf5->group_fld, fld->name[0], 3, dims, (double *) fld->flds);
+    for (int d = 0; d < 3; d++) {
+      file_dims[d] = mem_dims[d];
+    }
   }
+
+  hid_t file_space = H5Screate_simple(3, file_dims, NULL); 
+  hid_t dataset = H5Dcreate(hdf5->group_fld, fld->name[0], H5T_NATIVE_FLOAT,
+			    file_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Sclose(file_space);
+  
+  H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT, fld->flds);
+  H5Sclose(mem_space);
+  
+  H5Dclose(dataset);
+
   H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "lo", fld->ib, 3);
   H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "hi", ie, 3);
 }
@@ -108,19 +139,23 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
     fprintf(f, "<Domain>\n");
     fprintf(f, "<Grid GridType='Collection' CollectionType='Spatial'>\n");
     fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
+    int im[3];
+    for (int d = 0; d < 3; d++) {
+      im[d] = (psc.domain.ihi[d] - psc.domain.ilo[d]) / psc.domain.nproc[d];
+    }
     for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
       for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {
 	for (int kx = 0; kx < psc.domain.nproc[0]; kx++) {
 	  fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
 		  kx, ky, kz, psc.timestep);
 	  fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
-		  fld->im[2] + 1, fld->im[1] + 1, fld->im[0] + 1);
+		  im[2] + 1, im[1] + 1, im[0] + 1);
 	  fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
 	  fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	  fprintf(f, "        %g %g %g\n",
-		  (psc.domain.ilo[2] + (psc.domain.ihi[2] - psc.domain.ilo[2]) / psc.domain.nproc[2] * kz) * psc.dx[2],
-		  (psc.domain.ilo[1] + (psc.domain.ihi[1] - psc.domain.ilo[1]) / psc.domain.nproc[1] * ky) * psc.dx[1],
-		  (psc.domain.ilo[0] + (psc.domain.ihi[0] - psc.domain.ilo[0]) / psc.domain.nproc[0] * kx) * psc.dx[0]);
+		  (psc.domain.ilo[2] + im[2] * kz) * psc.dx[2],
+		  (psc.domain.ilo[1] + im[1] * ky) * psc.dx[1],
+		  (psc.domain.ilo[0] + im[0] * kx) * psc.dx[0]);
 	  fprintf(f, "     </DataStructure>\n");
 	  fprintf(f, "     <DataStructure Name=\"Spacing\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	  fprintf(f, "        %g %g %g\n", psc.dx[2], psc.dx[1], psc.dx[0]);
@@ -132,9 +167,7 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
 	    fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
 		    fld->name[0]);
 	    fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-		    fld->im[2],
-		    fld->im[1],
-		    fld->im[0]);
+		    im[2], im[1], im[0]);
 	    int proc = (kz * psc.domain.nproc[1] + ky) * psc.domain.nproc[0] + kx;
 	    fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
 		    pfx, proc, psc.timestep, fld->name[0]);
