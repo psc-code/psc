@@ -95,6 +95,13 @@ fields_c_zero(fields_c_t *pf, int m)
 }
 
 void
+fields_c_zero_all(fields_c_t *pf)
+{
+  memset(pf->flds, 0,
+	 pf->nr_comp * pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_c_real_t));
+}
+
+void
 fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
 {
   for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
@@ -117,3 +124,33 @@ fields_c_copy(fields_c_t *pf, int m_to, int m_from)
     }
   }
 }
+
+void
+fields_c_axpy_all(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
+{
+  assert(y->nr_comp == x->nr_comp);
+  for (int m = 0; m < y->nr_comp; m++) {
+    for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
+      for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
+	for (int jx = y->ib[0]; jx < y->ib[0] + y->im[0]; jx++) {
+	  F3_C(y, m, jx, jy, jz) += a * F3_C(x, m, jx, jy, jz);
+	}
+      }
+    }
+  }
+}
+
+void
+fields_c_scale_all(fields_c_t *pf, fields_c_real_t val)
+{
+  for (int m = 0; m < pf->nr_comp; m++) {
+    for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
+      for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
+	for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
+	  F3_C(pf, m, jx, jy, jz) *= val;
+	}
+      }
+    }
+  }
+}
+
