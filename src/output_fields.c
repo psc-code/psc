@@ -133,22 +133,44 @@ static struct output_field output_fields[] = {
   {},
 };
 
+static struct output_field *
+find_output_field(const char *name)
+{
+  for (int i = 0; output_fields[i].name; i++) {
+    struct output_field *of = &output_fields[i];
+    if (strcasecmp(of->name, name) == 0) {
+      return of;
+    }
+  }
+  fprintf(stderr, "ERROR: output_field '%s' unknown!\n", name);
+  abort();
+}
+
 static void
 output_c_setup(struct psc_output_c *out)
 {
   struct psc_fields_list *pfd = &out->pfd;
 
+  // setup pfd according to output_fields as given
+  // (potentially) on the command line
   pfd->nr_flds = 0;
-  for (int i = 0; output_fields[i].name; i++) {
-    struct output_field *of = &output_fields[i];
-    fields_base_t *f = &pfd->flds[pfd->nr_flds++];
-
+  // parse comma separated list of fields
+  char *p, *s = strdup(out->output_fields);
+  while ((p = strsep(&s, ", "))) {
+    struct output_field *of = find_output_field(p);
+    fields_base_t *f = &pfd->flds[pfd->nr_flds];
+    out->out_flds[pfd->nr_flds] = of;
+    pfd->nr_flds++;
+      
     fields_base_alloc(f, psc.ilg, psc.ihg, of->nr_comp);
     for (int m = 0; m < of->nr_comp; m++) {
       f->name[m] = strdup(of->fld_names[m]);
     }
   }
+  free(s);
 
+  // create tfd to look just like pfd
+  // FIXME, only if necessary
   struct psc_fields_list *tfd = &out->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
@@ -187,16 +209,16 @@ find_output_format_ops(const char *ops_name)
 #define VAR(x) (void *)offsetof(struct psc_output_c, x)
 
 static struct param psc_output_c_descr[] = {
-  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")      },
-  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary") },
-  { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)        },
-  { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)        },
-  { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)         },
-  { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)        },
-  { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
-  { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)         },
-  { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
-
+  { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
+  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary")  },
+  { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)           },
+  { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
+  { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
+  { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
+  { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)           },
+  { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)           },
+  { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)            },
+  { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)           },
   {},
 };
 
@@ -228,6 +250,9 @@ static void output_c_create(void)
 static void
 make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 {
+  // the only thing this still does is to flatten
+  // the list so that it only contains 1-component entries
+
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
     fields_base_t *f = &list_in->flds[i];

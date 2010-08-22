@@ -34,6 +34,7 @@ extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
 struct psc_output_c {
   char *data_dir;
   char *output_format;
+  char *output_fields;
   bool output_combine;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
@@ -43,6 +44,7 @@ struct psc_output_c {
   // storage for output
   unsigned int naccum;
   struct psc_fields_list pfd, tfd;
+  struct output_field *out_flds[MAX_FIELDS_LIST];
 
   struct psc_output_format_ops *format_ops;
 };
