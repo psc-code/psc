@@ -60,73 +60,60 @@ output_c_setup(struct psc_output_c *out)
   out->naccum = 0;
 }
 
+#define foreach_3d(ix, iy, iz)						\
+  int dx __unused = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;	\
+  int dy __unused = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;	\
+  int dz __unused = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1;	\
+									\
+  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {			\
+    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {			\
+      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++)			\
+
+#define foreach_3d_end }}
+
 static void
 calc_j(fields_base_t *f)
 {
-  int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
-  int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
-  int dz = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1;
-
-  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	XF3_BASE(f, 0, ix,iy,iz) = .5f * ( F3_BASE(JXI,ix,iy,iz) 
-					  +F3_BASE(JXI,ix-dx,iy,iz));
-	XF3_BASE(f, 1, ix,iy,iz) = .5f * ( F3_BASE(JYI,ix,iy,iz)
-					  +F3_BASE(JYI,ix,iy-dy,iz));
-	XF3_BASE(f, 2, ix,iy,iz) = .5f * ( F3_BASE(JZI,ix,iy,iz)
-					  +F3_BASE(JZI,ix,iy,iz-dz));
-      }
-    }
-  }
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) = .5f * ( F3_BASE(JXI,ix,iy,iz) 
+				      +F3_BASE(JXI,ix-dx,iy,iz));
+    XF3_BASE(f, 1, ix,iy,iz) = .5f * ( F3_BASE(JYI,ix,iy,iz)
+				      +F3_BASE(JYI,ix,iy-dy,iz));
+    XF3_BASE(f, 2, ix,iy,iz) = .5f * ( F3_BASE(JZI,ix,iy,iz)
+				      +F3_BASE(JZI,ix,iy,iz-dz));
+  } foreach_3d_end;
 }
 
 static void
 calc_E(fields_base_t *f)
 {
-  int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
-  int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
-  int dz = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1;
-
-  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	XF3_BASE(f, 0, ix,iy,iz) = .5f * ( F3_BASE(EX,ix,iy,iz)
-					  +F3_BASE(EX,ix-dx,iy,iz));
-	XF3_BASE(f, 1, ix,iy,iz) = .5f * ( F3_BASE(EY,ix,iy,iz)
-					  +F3_BASE(EY,ix,iy-dy,iz));
-	XF3_BASE(f, 2, ix,iy,iz) = .5f * ( F3_BASE(EZ,ix,iy,iz)
-					  +F3_BASE(EZ,ix,iy,iz-dz));
-      }
-    }
-  }
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) = .5f * ( F3_BASE(EX,ix,iy,iz)
+				      +F3_BASE(EX,ix-dx,iy,iz));
+    XF3_BASE(f, 1, ix,iy,iz) = .5f * ( F3_BASE(EY,ix,iy,iz)
+				      +F3_BASE(EY,ix,iy-dy,iz));
+    XF3_BASE(f, 2, ix,iy,iz) = .5f * ( F3_BASE(EZ,ix,iy,iz)
+				      +F3_BASE(EZ,ix,iy,iz-dz));
+  } foreach_3d_end;
 }
 
 static void
 calc_H(fields_base_t *f)
 {
-  int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
-  int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
-  int dz = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1;
-
-  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	XF3_BASE(f, 0, ix,iy,iz) =  .25f * ( F3_BASE(HX,ix,iy,iz)
-					    +F3_BASE(HX,ix,iy-dy,iz)
-					    +F3_BASE(HX,ix,iy,iz-dz) 
-					    +F3_BASE(HX,ix,iy-dy,iz-dz));
-	XF3_BASE(f, 1, ix,iy,iz) =  .25f * ( F3_BASE(HY,ix,iy,iz)
-					    +F3_BASE(HY,ix-dx,iy,iz)
-					    +F3_BASE(HY,ix,iy,iz-dz) 
-					    +F3_BASE(HY,ix-dx,iy,iz-dz));
-	XF3_BASE(f, 2, ix,iy,iz) =  .25f * ( F3_BASE(HZ,ix,iy,iz)
-					    +F3_BASE(HZ,ix-dx,iy,iz)
-					    +F3_BASE(HZ,ix,iy-dy,iz) 
-					    +F3_BASE(HZ,ix-dx,iy-dy,iz));
-      }
-    }
-  }
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) =  .25f * ( F3_BASE(HX,ix,iy,iz)
+					+F3_BASE(HX,ix,iy-dy,iz)
+					+F3_BASE(HX,ix,iy,iz-dz) 
+					+F3_BASE(HX,ix,iy-dy,iz-dz));
+    XF3_BASE(f, 1, ix,iy,iz) =  .25f * ( F3_BASE(HY,ix,iy,iz)
+					+F3_BASE(HY,ix-dx,iy,iz)
+					+F3_BASE(HY,ix,iy,iz-dz) 
+					+F3_BASE(HY,ix-dx,iy,iz-dz));
+    XF3_BASE(f, 2, ix,iy,iz) =  .25f * ( F3_BASE(HZ,ix,iy,iz)
+					+F3_BASE(HZ,ix-dx,iy,iz)
+					+F3_BASE(HZ,ix,iy-dy,iz) 
+					+F3_BASE(HZ,ix-dx,iy-dy,iz));
+  } foreach_3d_end;
 }
 
 static void
