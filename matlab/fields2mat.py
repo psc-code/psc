@@ -19,7 +19,7 @@ out = {};
 PT = 't';
 
 # datadir
-datadir = '../data/'
+datadir = '.'
 
 outfile = datadir  +'/' + PT + 'fields.mat'
 print 'Outfile: ' + outfile
@@ -32,8 +32,8 @@ out['ts'] = 1.0 * ts			# 1.0 * : force to be double
 npe = 2;
 
 # decimation of data
-decX = 5
-decZ = 4
+decX = 1
+decZ = 1
 
 # whether to decimate by averaging (1) or simple choosing (0)
 # for averaging to work, we require that the number of data points 
