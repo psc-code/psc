@@ -7,13 +7,6 @@
 #include <string.h>
 #include <assert.h>
 
-static const char *x_fldname[NR_EXTRA_FIELDS] = {
-  [X_JXEX] = "jxex", [X_JYEY] = "jyey", [X_JZEZ] = "jzez",
-  [X_POYX] = "poyx", [X_POYY] = "poyy", [X_POYZ] = "poyz",
-  [X_E2X ] = "e2x" , [X_E2Y]  = "e2y" , [X_E2Z]  = "e2z",
-  [X_B2X ] = "b2x" , [X_B2Y]  = "b2y" , [X_B2Z]  = "b2z",
-};
-
 #define foreach_3d(ix, iy, iz)						\
   int dx __unused = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;	\
   int dy __unused = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;	\
@@ -71,27 +64,45 @@ calc_H(fields_base_t *f)
 }
 
 static void
-output_calculate_pfields(fields_base_t *p)
+calc_jdote(fields_base_t *f)
 {
   foreach_3d(ix, iy, iz) {
-    XF3_BASE(p, X_JXEX, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
-    XF3_BASE(p, X_JYEY, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
-    XF3_BASE(p, X_JZEZ, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
+    XF3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
+    XF3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
+    XF3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
+  } foreach_3d_end;
+}
 
-    XF3_BASE(p, X_POYX, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
-				     EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
-    XF3_BASE(p, X_POYY, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
-				     EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
-    XF3_BASE(p, X_POYZ, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
-				     EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
-    
-    XF3_BASE(p, X_E2X, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
-    XF3_BASE(p, X_E2Y, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
-    XF3_BASE(p, X_E2Z, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
-    
-    XF3_BASE(p, X_B2X, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
-    XF3_BASE(p, X_B2Y, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
-    XF3_BASE(p, X_B2Z, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
+static void
+calc_poyn(fields_base_t *f)
+{
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
+				EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
+    XF3_BASE(f, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
+				EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
+    XF3_BASE(f, 2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
+				EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
+  } foreach_3d_end;
+}
+
+static void
+calc_E2(fields_base_t *f)
+{
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
+    XF3_BASE(f, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
+    XF3_BASE(f, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
+  } foreach_3d_end;
+}
+
+static void
+calc_H2(fields_base_t *f)
+{
+  foreach_3d(ix, iy, iz) {
+    XF3_BASE(f, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
+    XF3_BASE(f, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
+    XF3_BASE(f, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
   } foreach_3d_end;
 }
 
@@ -103,14 +114,22 @@ struct output_field {
 };
 
 static struct output_field output_fields[] = {
-  { .name = "n"   , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
+  { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
     .calc = psc_calc_densities },
-  { .name = "j"   , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
+  { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
-  { .name = "e"   , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
+  { .name = "e"    , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
     .calc = calc_E },
-  { .name = "h"   , .nr_comp = 3, .fld_names = { "hx", "hy", "hz" },
+  { .name = "h"    , .nr_comp = 3, .fld_names = { "hx", "hy", "hz" },
     .calc = calc_H },
+  { .name = "jdote", .nr_comp = 3, .fld_names = { "jxex", "jyey", "jzez" },
+    .calc = calc_jdote },
+  { .name = "poyn" , .nr_comp = 3, .fld_names = { "poynx", "poyny", "poynz" },
+    .calc = calc_poyn },
+  { .name = "e2"   , .nr_comp = 3, .fld_names = { "ex2", "ey2", "ez2" },
+    .calc = calc_E2 },
+  { .name = "h2"   , .nr_comp = 3, .fld_names = { "hx2", "hy2", "hz2" },
+    .calc = calc_H2 },
   {},
 };
 
@@ -128,12 +147,6 @@ output_c_setup(struct psc_output_c *out)
     for (int m = 0; m < of->nr_comp; m++) {
       f->name[m] = strdup(of->fld_names[m]);
     }
-  }
-
-  fields_base_t *f = &pfd->flds[pfd->nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    f->name[m] = strdup(x_fldname[m]);
   }
 
   struct psc_fields_list *tfd = &out->tfd;
@@ -184,18 +197,6 @@ static struct param psc_output_c_descr[] = {
   { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)         },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
 
-  { "output_write_jxex"  , VAR(dowrite_fd[X_JXEX])   , PARAM_BOOL(0)        },
-  { "output_write_jyey"  , VAR(dowrite_fd[X_JYEY])   , PARAM_BOOL(0)        },
-  { "output_write_jzez"  , VAR(dowrite_fd[X_JZEZ])   , PARAM_BOOL(0)        },
-  { "output_write_poyx"  , VAR(dowrite_fd[X_POYX])   , PARAM_BOOL(0)        },
-  { "output_write_poyy"  , VAR(dowrite_fd[X_POYY])   , PARAM_BOOL(0)        },
-  { "output_write_poyz"  , VAR(dowrite_fd[X_POYZ])   , PARAM_BOOL(0)        },
-  { "output_write_e2x"   , VAR(dowrite_fd[X_E2X])    , PARAM_BOOL(0)        },
-  { "output_write_e2y"   , VAR(dowrite_fd[X_E2Y])    , PARAM_BOOL(0)        },
-  { "output_write_e2z"   , VAR(dowrite_fd[X_E2Z])    , PARAM_BOOL(0)        },
-  { "output_write_b2x"   , VAR(dowrite_fd[X_B2X])    , PARAM_BOOL(0)        },
-  { "output_write_b2y"   , VAR(dowrite_fd[X_B2Y])    , PARAM_BOOL(0)        },
-  { "output_write_b2z"   , VAR(dowrite_fd[X_B2Z])    , PARAM_BOOL(0)        },
   {},
 };
 
@@ -225,16 +226,12 @@ static void output_c_create(void)
 // make_fields_list
 
 static void
-make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in,
-		 bool *dowrite_fd)
+make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 {
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
     fields_base_t *f = &list_in->flds[i];
     for (int m = 0; m < f->nr_comp; m++) {
-      if (i == list_in->nr_flds - 1 && !dowrite_fd[m])
-	continue;
-      
       fields_base_t *fld = &list->flds[list->nr_flds++];
       fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
 				   &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
@@ -435,16 +432,15 @@ output_c_field()
   prof_start(pr);
 
   struct psc_fields_list *pfd = &out->pfd;
-  for (int i = 0; i < pfd->nr_flds - 1; i++) {
+  for (int i = 0; i < pfd->nr_flds; i++) {
     output_fields[i].calc(&pfd->flds[i]);
   }
-  output_calculate_pfields(&pfd->flds[pfd->nr_flds - 1]);
   
   if (out->dowrite_pfield) {
     if (psc.timestep >= out->pfield_next) {
        out->pfield_next += out->pfield_step;
        struct psc_fields_list flds_list;
-       make_fields_list(&flds_list, &out->pfd, out->dowrite_fd);
+       make_fields_list(&flds_list, &out->pfd);
        write_fields(out, &flds_list, "pfd");
        free_fields_list(&flds_list);
     }
@@ -464,7 +460,7 @@ output_c_field()
       }
 
       struct psc_fields_list flds_list;
-      make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
+      make_fields_list(&flds_list, &out->tfd);
       write_fields(out, &flds_list, "tfd");
       free_fields_list(&flds_list);
       for (int m = 0; m < out->tfd.nr_flds; m++) {

@@ -4,20 +4,11 @@
 
 #include "psc.h"
 
-enum {
-  X_JXEX, X_JYEY, X_JZEZ,
-  X_POYX, X_POYY, X_POYZ,
-  X_E2X, X_E2Y, X_E2Z,
-  X_B2X, X_B2Y, X_B2Z,
-  NR_EXTRA_FIELDS,
-};
-
-#define MAX_FIELDS_LIST NR_EXTRA_FIELDS
+#define MAX_FIELDS_LIST 30
 
 struct psc_fields_list {
   int nr_flds;
   fields_base_t flds[MAX_FIELDS_LIST];
-  bool *dowrite_fd; // FIXME, obsolete -- don't use
 };
 
 struct psc_output_c;
@@ -47,7 +38,6 @@ struct psc_output_c {
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
-  bool dowrite_fd[NR_EXTRA_FIELDS];
 
   int pfield_next, tfield_next;
   // storage for output
