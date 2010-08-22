@@ -63,7 +63,11 @@ hdf5_write_field(void *ctx, struct psc_field *fld)
     dims[d] = fld->ihi[2-d] - fld->ilo[2-d];
   }
   
-  H5LTmake_dataset_float(hdf5->group_fld, fld->name, 3, dims, fld->data);
+  if (sizeof(*fld->data) == 4) {
+    H5LTmake_dataset_float(hdf5->group_fld, fld->name, 3, dims, (float *) fld->data);
+  } else {
+    H5LTmake_dataset_double(hdf5->group_fld, fld->name, 3, dims, (double *) fld->data);
+  }
   H5LTset_attribute_int(hdf5->group_fld, fld->name, "lo", fld->ilo, 3);
   H5LTset_attribute_int(hdf5->group_fld, fld->name, "hi", fld->ihi, 3);
 }

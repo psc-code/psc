@@ -40,7 +40,7 @@ init_output_fields(struct psc_extra_fields *f)
 		     (psc.ihi[2]-psc.ilo[2]));
 
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    f->all[m] = malloc(sz * sizeof(float));
+    f->all[m] = malloc(sz * sizeof(*f->all[m]));
   }
 
   reset_fields(f);
@@ -264,7 +264,8 @@ make_fields_list(struct psc_fields_list *list, struct psc_extra_fields *f,
 // copy_to_global helper
 
 static void
-copy_to_global(float *fld, float *buf, int *ilo, int *ihi, int *ilg, int *img)
+copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
+	       int *ilo, int *ihi, int *ilg, int *img)
 {
   int *glo = psc.domain.ilo, *ghi = psc.domain.ihi;
   int my = ghi[1] - glo[1];
@@ -334,7 +335,7 @@ write_fields_combine(struct psc_output_c *out,
 
   for (int m = 0; m < list->nr_flds; m++) {
     int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-    float *s_data = list->flds[m].data;
+    fields_base_real_t *s_data = list->flds[m].data;
 
     for (int d = 0; d < 3; d++) {
       s_ilo[d] = list->flds[m].ilo[d];
@@ -349,7 +350,7 @@ write_fields_combine(struct psc_output_c *out,
       MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
       MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
       unsigned int sz = s_img[0] * s_img[1] * s_img[2];
-      MPI_Send(s_data, sz, MPI_FLOAT, 0, 104, MPI_COMM_WORLD);
+      MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
     } else { // rank == 0
       struct psc_field fld;
       fld.name = list->flds[m].name;
@@ -363,7 +364,7 @@ write_fields_combine(struct psc_output_c *out,
 
       for (int n = 0; n < size; n++) {
 	int ilo[3], ihi[3], ilg[3], img[3];
-	float *buf;
+	fields_base_real_t *buf;
 	
 	if (n == 0) {
 	  for (int d = 0; d < 3; d++) {
@@ -380,7 +381,8 @@ write_fields_combine(struct psc_output_c *out,
 	  MPI_Recv(img, 3, MPI_INT, n, 103, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	  int ntot = img[0] * img[1] * img[2];
 	  buf = calloc(ntot, sizeof(*buf));
-	  MPI_Recv(buf, ntot, MPI_FLOAT, n, 104, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	  MPI_Recv(buf, ntot, MPI_FIELDS_BASE_REAL, n, 104, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
 	}
 	/* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	/*        ihi[0], ihi[1], ihi[2]); */

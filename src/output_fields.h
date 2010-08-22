@@ -19,7 +19,7 @@ enum {
 #define MAX_FIELDS_LIST NR_EXTRA_FIELDS
 
 struct psc_field {
-  float *data;
+  fields_base_real_t *data;
   int ilo[3], ihi[3];
   const char *name;
 };
@@ -38,7 +38,7 @@ struct psc_fields_list {
 };
 
 struct psc_extra_fields {
-  float *all[NR_EXTRA_FIELDS];
+  fields_base_real_t *all[NR_EXTRA_FIELDS];
 };
 
 struct psc_output_c;
