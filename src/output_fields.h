@@ -56,7 +56,7 @@ struct psc_output_c {
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;
-  fields_base_t pfd, tfd;
+  struct psc_fields_list pfd, tfd;
 
   struct psc_output_format_ops *format_ops;
 };

@@ -27,15 +27,17 @@ output_c_setup(struct psc_output_c *out)
       nr_flds++;
     }
   }
-  fields_base_alloc(&out->pfd, psc.ilg, psc.ihg, nr_flds);
-  fields_base_alloc(&out->tfd, psc.ilg, psc.ihg, nr_flds);
-  fields_base_zero_all(&out->tfd);
+  out->pfd.nr_flds = 1;
+  fields_base_alloc(&out->pfd.flds[0], psc.ilg, psc.ihg, nr_flds);
+  out->tfd.nr_flds = 1;
+  fields_base_alloc(&out->tfd.flds[0], psc.ilg, psc.ihg, nr_flds);
+  fields_base_zero_all(&out->tfd.flds[0]);
   out->naccum = 0;
 
   nr_flds = 0;
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    out->pfd.name[nr_flds] = strdup(x_fldname[m]);
-    out->tfd.name[nr_flds] = strdup(x_fldname[m]);
+    out->pfd.flds[0].name[nr_flds] = strdup(x_fldname[m]);
+    out->tfd.flds[0].name[nr_flds] = strdup(x_fldname[m]);
     nr_flds++;
   }
 }
@@ -43,7 +45,7 @@ output_c_setup(struct psc_output_c *out)
 static void
 output_calculate_pfields(struct psc_output_c *out)
 {
-  fields_base_t *p = &out->pfd;
+  fields_base_t *p = &out->pfd.flds[0];
 
   int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
   int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
@@ -187,9 +189,11 @@ static void output_c_create(void)
 // make_fields_list
 
 static void
-make_fields_list(struct psc_fields_list *list, fields_base_t *f,
+make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in,
 		 bool *dowrite_fd)
 {
+  fields_base_t *f = &list_in->flds[0];
+
   list->nr_flds = 0;
   for (int m = 0; m < f->nr_comp; m++) {
     if (!dowrite_fd[m])
@@ -394,7 +398,7 @@ output_c_field()
   }
   prof_start(pr);
 
-  psc_calc_densities(&out->pfd, X_NE);
+  psc_calc_densities(&out->pfd.flds[0], X_NE);
   output_calculate_pfields(out);
 
   if (out->dowrite_pfield) {
@@ -408,19 +412,25 @@ output_c_field()
   }
 
   if (out->dowrite_tfield) {
-    fields_base_axpy_all(&out->tfd, 1., &out->pfd); // tfd += pfd
+    for (int m = 0; m < out->tfd.nr_flds; m++) {
+      fields_base_axpy_all(&out->tfd.flds[m], 1., &out->pfd.flds[m]); // tfd += pfd
+    }
     out->naccum++;
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
 
       // convert accumulated values to correct temporal mean
-      fields_base_scale_all(&out->tfd, 1. / out->naccum);
+      for (int m = 0; m < out->tfd.nr_flds; m++) {
+	fields_base_scale_all(&out->tfd.flds[m], 1. / out->naccum);
+      }
 
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd, out->dowrite_fd);
       write_fields(out, &flds_list, "tfd");
       free_fields_list(&flds_list);
-      fields_base_zero_all(&out->tfd);
+      for (int m = 0; m < out->tfd.nr_flds; m++) {
+	fields_base_zero_all(&out->tfd.flds[m]);
+      }
       out->naccum = 0;
     }
   }
