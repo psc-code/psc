@@ -21,10 +21,23 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 static void
 output_c_setup(struct psc_output_c *out)
 {
-  fields_base_alloc(&out->pfd, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
-  fields_base_alloc(&out->tfd, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
+  int nr_flds = 0;
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    if (1 || out->dowrite_fd[m]) {
+      nr_flds++;
+    }
+  }
+  fields_base_alloc(&out->pfd, psc.ilg, psc.ihg, nr_flds);
+  fields_base_alloc(&out->tfd, psc.ilg, psc.ihg, nr_flds);
   fields_base_zero_all(&out->tfd);
   out->naccum = 0;
+
+  nr_flds = 0;
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    out->pfd.name[nr_flds] = strdup(x_fldname[m]);
+    out->tfd.name[nr_flds] = strdup(x_fldname[m]);
+    nr_flds++;
+  }
 }
 
 static void
@@ -178,14 +191,14 @@ make_fields_list(struct psc_fields_list *list, fields_base_t *f,
 		 bool *dowrite_fd)
 {
   list->nr_flds = 0;
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+  for (int m = 0; m < f->nr_comp; m++) {
     if (!dowrite_fd[m])
       continue;
 
     fields_base_t *fld = &list->flds[list->nr_flds++];
     fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
 				 &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
-    fld->name[0] = strdup(x_fldname[m]);
+    fld->name[0] = strdup(f->name[m]);
   }
   list->dowrite_fd = dowrite_fd;
 }
