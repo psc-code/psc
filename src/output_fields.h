@@ -5,8 +5,6 @@
 #include "psc.h"
 
 enum {
-  X_EX , X_EY , X_EZ ,
-  X_HX , X_HY , X_HZ ,
   X_JXEX, X_JYEY, X_JZEZ,
   X_POYX, X_POYY, X_POYZ,
   X_E2X, X_E2Y, X_E2Z,
