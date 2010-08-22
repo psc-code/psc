@@ -456,9 +456,12 @@ output_c_field()
   }
   prof_start(pr);
 
-  struct psc_fields_list *pfd = &out->pfd;
-  for (int i = 0; i < pfd->nr_flds; i++) {
-    output_fields[i].calc(&pfd->flds[i]);
+  if ((out->dowrite_pfield && psc.timestep >= out->pfield_next) ||
+      out->dowrite_tfield) {
+    struct psc_fields_list *pfd = &out->pfd;
+    for (int i = 0; i < pfd->nr_flds; i++) {
+      out->out_flds[i]->calc(&pfd->flds[i]);
+    }
   }
   
   if (out->dowrite_pfield) {
