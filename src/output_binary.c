@@ -56,9 +56,13 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
   fwrite(&psc.domain.ihi[1], sizeof(psc.domain.ihi[1]), 1, file);
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
-  
-  assert(list->dowrite_fd);
-  fwrite(list->dowrite_fd, sizeof(bool), NR_EXTRA_FIELDS, file);
+
+  fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);
+  for (int i = 0; i < list->nr_flds; i++) {
+    char fldname[8] = {};
+    snprintf(fldname, 8, "%s", list->flds[i].name[0]);
+    fwrite(fldname, 8, 1, file); 
+  }
 
   fwrite(datastr, sizeof(char), 4, file);
   

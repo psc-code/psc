@@ -8,7 +8,6 @@
 #include <assert.h>
 
 static const char *x_fldname[NR_EXTRA_FIELDS] = {
-  [X_NE]   = "ne"  , [X_NI]   = "ni"  , [X_NN]   = "nn",
   [X_JXI]  = "jx"  , [X_JYI]  = "jy"  , [X_JZI]  = "jz",
   [X_EX]   = "ex"  , [X_EY]   = "ey"  , [X_EZ]   = "ez",
   [X_HX]   = "hx"  , [X_HY]   = "hy"  , [X_HZ]   = "hz",
@@ -21,31 +20,32 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
 static void
 output_c_setup(struct psc_output_c *out)
 {
-  int nr_flds = 0;
+  out->pfd.nr_flds = 2;
+  fields_base_alloc(&out->pfd.flds[0], psc.ilg, psc.ihg, 3);
+  out->pfd.flds[0].name[0] = strdup("ne");
+  out->pfd.flds[0].name[1] = strdup("ni");
+  out->pfd.flds[0].name[2] = strdup("nn");
+
+  fields_base_alloc(&out->pfd.flds[1], psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
   for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    if (1 || out->dowrite_fd[m]) {
-      nr_flds++;
+    out->pfd.flds[1].name[m] = strdup(x_fldname[m]);
+  }
+
+  out->tfd.nr_flds = out->pfd.nr_flds;
+  for (int i = 0; i < out->pfd.nr_flds; i++) {
+    fields_base_alloc(&out->tfd.flds[i], psc.ilg, psc.ihg, out->pfd.flds[i].nr_comp);
+    fields_base_zero_all(&out->tfd.flds[i]);
+    for (int m = 0; m < out->pfd.flds[i].nr_comp; m++) {
+      out->tfd.flds[i].name[m] = strdup(out->pfd.flds[i].name[m]);
     }
   }
-  out->pfd.nr_flds = 1;
-  fields_base_alloc(&out->pfd.flds[0], psc.ilg, psc.ihg, nr_flds);
-  out->tfd.nr_flds = 1;
-  fields_base_alloc(&out->tfd.flds[0], psc.ilg, psc.ihg, nr_flds);
-  fields_base_zero_all(&out->tfd.flds[0]);
   out->naccum = 0;
-
-  nr_flds = 0;
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    out->pfd.flds[0].name[nr_flds] = strdup(x_fldname[m]);
-    out->tfd.flds[0].name[nr_flds] = strdup(x_fldname[m]);
-    nr_flds++;
-  }
 }
 
 static void
 output_calculate_pfields(struct psc_output_c *out)
 {
-  fields_base_t *p = &out->pfd.flds[0];
+  fields_base_t *p = &out->pfd.flds[1];
 
   int dx = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;
   int dy = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;
@@ -136,9 +136,7 @@ static struct param psc_output_c_descr[] = {
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)        },
   { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)         },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)        },
-  { "output_write_ne"    , VAR(dowrite_fd[X_NE])     , PARAM_BOOL(1)        },
-  { "output_write_ni"    , VAR(dowrite_fd[X_NI])     , PARAM_BOOL(1)        },
-  { "output_write_nn"    , VAR(dowrite_fd[X_NN])     , PARAM_BOOL(1)        },
+
   { "output_write_jx"    , VAR(dowrite_fd[X_JXI])    , PARAM_BOOL(1)        },
   { "output_write_jy"    , VAR(dowrite_fd[X_JYI])    , PARAM_BOOL(1)        },
   { "output_write_jz"    , VAR(dowrite_fd[X_JZI])    , PARAM_BOOL(1)        },
@@ -192,19 +190,19 @@ static void
 make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in,
 		 bool *dowrite_fd)
 {
-  fields_base_t *f = &list_in->flds[0];
-
   list->nr_flds = 0;
-  for (int m = 0; m < f->nr_comp; m++) {
-    if (!dowrite_fd[m])
-      continue;
-
-    fields_base_t *fld = &list->flds[list->nr_flds++];
-    fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
-				 &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
-    fld->name[0] = strdup(f->name[m]);
+  for (int i = 0; i < list_in->nr_flds; i++) {
+    fields_base_t *f = &list_in->flds[i];
+    for (int m = 0; m < f->nr_comp; m++) {
+      if (i == 1 && !dowrite_fd[m])
+	continue;
+      
+      fields_base_t *fld = &list->flds[list->nr_flds++];
+      fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
+				   &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
+      fld->name[0] = strdup(f->name[m]);
+    }
   }
-  list->dowrite_fd = dowrite_fd;
 }
 
 static void
@@ -398,7 +396,7 @@ output_c_field()
   }
   prof_start(pr);
 
-  psc_calc_densities(&out->pfd.flds[0], X_NE);
+  psc_calc_densities(&out->pfd.flds[0], 0); // FIXME
   output_calculate_pfields(out);
 
   if (out->dowrite_pfield) {

@@ -5,7 +5,6 @@
 #include "psc.h"
 
 enum {
-  X_NE, X_NI, X_NN,
   X_JXI, X_JYI, X_JZI,
   X_EX , X_EY , X_EZ ,
   X_HX , X_HY , X_HZ ,
