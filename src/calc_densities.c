@@ -102,17 +102,17 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
 }
 
 void
-c_calc_densities(fields_base_t *pf, int m_NE)
+c_calc_densities(fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
   }
   prof_start(pr);
-  do_c_calc_densities(pf, m_NE, m_NE + 1, m_NE + 2);
+  do_c_calc_densities(pf, 0, 1, 2);
   prof_stop(pr);
 
-  psc_add_ghosts(pf, m_NE, m_NE + 3);
+  psc_add_ghosts(pf, 0, 3);
 }
 
 struct psc_moment_ops psc_moment_ops_c = {

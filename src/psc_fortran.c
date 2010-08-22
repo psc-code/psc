@@ -436,7 +436,7 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
 // fortran moment
 
 static void
-fortran_calc_densities(fields_base_t *pf_base, int m_NE)
+fortran_calc_densities(fields_base_t *pf_base)
 {
   static int pr;
   if (!pr) {
@@ -452,7 +452,7 @@ fortran_calc_densities(fields_base_t *pf_base, int m_NE)
   CALC_densities(&pp, &pf);
 
   particles_fortran_put(&pp);
-  fields_fortran_put_to(&pf, NE, NE + 3, pf_base, m_NE);
+  fields_fortran_put_to(&pf, NE, NE + 3, pf_base, 0);
 
   prof_stop(pr);
 }

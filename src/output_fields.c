@@ -429,7 +429,7 @@ output_c_field()
   }
   prof_start(pr);
 
-  psc_calc_densities(&out->pfd.flds[0], 0); // FIXME
+  psc_calc_densities(&out->pfd.flds[0]);
   calc_j(&out->pfd.flds[1]);
   calc_E(&out->pfd.flds[2]);
   calc_H(&out->pfd.flds[3]);
