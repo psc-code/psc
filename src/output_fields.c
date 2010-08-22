@@ -14,52 +14,6 @@ static const char *x_fldname[NR_EXTRA_FIELDS] = {
   [X_B2X ] = "b2x" , [X_B2Y]  = "b2y" , [X_B2Z]  = "b2z",
 };
 
-static void
-output_c_setup(struct psc_output_c *out)
-{
-  out->pfd.nr_flds = 0;
-
-  fields_base_t *f = &out->pfd.flds[out->pfd.nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
-  f->name[0] = strdup("ne");
-  f->name[1] = strdup("ni");
-  f->name[2] = strdup("nn");
-
-  f = &out->pfd.flds[out->pfd.nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
-  f->name[0] = strdup("jx");
-  f->name[1] = strdup("jy");
-  f->name[2] = strdup("jz");
-
-  f = &out->pfd.flds[out->pfd.nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
-  f->name[0] = strdup("ex");
-  f->name[1] = strdup("ey");
-  f->name[2] = strdup("ez");
-
-  f = &out->pfd.flds[out->pfd.nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
-  f->name[0] = strdup("hx");
-  f->name[1] = strdup("hy");
-  f->name[2] = strdup("hz");
-
-  f = &out->pfd.flds[out->pfd.nr_flds++];
-  fields_base_alloc(f, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
-  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
-    f->name[m] = strdup(x_fldname[m]);
-  }
-
-  out->tfd.nr_flds = out->pfd.nr_flds;
-  for (int i = 0; i < out->pfd.nr_flds; i++) {
-    fields_base_alloc(&out->tfd.flds[i], psc.ilg, psc.ihg, out->pfd.flds[i].nr_comp);
-    fields_base_zero_all(&out->tfd.flds[i]);
-    for (int m = 0; m < out->pfd.flds[i].nr_comp; m++) {
-      out->tfd.flds[i].name[m] = strdup(out->pfd.flds[i].name[m]);
-    }
-  }
-  out->naccum = 0;
-}
-
 #define foreach_3d(ix, iy, iz)						\
   int dx __unused = (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) ? 0 : 1;	\
   int dy __unused = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1;	\
@@ -141,6 +95,52 @@ output_calculate_pfields(struct psc_output_c *out)
     XF3_BASE(p, X_B2Y, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
     XF3_BASE(p, X_B2Z, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
   } foreach_3d_end;
+}
+
+static void
+output_c_setup(struct psc_output_c *out)
+{
+  out->pfd.nr_flds = 0;
+
+  fields_base_t *f = &out->pfd.flds[out->pfd.nr_flds++];
+  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
+  f->name[0] = strdup("ne");
+  f->name[1] = strdup("ni");
+  f->name[2] = strdup("nn");
+
+  f = &out->pfd.flds[out->pfd.nr_flds++];
+  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
+  f->name[0] = strdup("jx");
+  f->name[1] = strdup("jy");
+  f->name[2] = strdup("jz");
+
+  f = &out->pfd.flds[out->pfd.nr_flds++];
+  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
+  f->name[0] = strdup("ex");
+  f->name[1] = strdup("ey");
+  f->name[2] = strdup("ez");
+
+  f = &out->pfd.flds[out->pfd.nr_flds++];
+  fields_base_alloc(f, psc.ilg, psc.ihg, 3);
+  f->name[0] = strdup("hx");
+  f->name[1] = strdup("hy");
+  f->name[2] = strdup("hz");
+
+  f = &out->pfd.flds[out->pfd.nr_flds++];
+  fields_base_alloc(f, psc.ilg, psc.ihg, NR_EXTRA_FIELDS);
+  for (int m = 0; m < NR_EXTRA_FIELDS; m++) {
+    f->name[m] = strdup(x_fldname[m]);
+  }
+
+  out->tfd.nr_flds = out->pfd.nr_flds;
+  for (int i = 0; i < out->pfd.nr_flds; i++) {
+    fields_base_alloc(&out->tfd.flds[i], psc.ilg, psc.ihg, out->pfd.flds[i].nr_comp);
+    fields_base_zero_all(&out->tfd.flds[i]);
+    for (int m = 0; m < out->pfd.flds[i].nr_comp; m++) {
+      out->tfd.flds[i].name[m] = strdup(out->pfd.flds[i].name[m]);
+    }
+  }
+  out->naccum = 0;
 }
 
 static struct psc_output_format_ops *psc_output_format_ops_list[] = {
