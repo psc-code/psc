@@ -116,35 +116,31 @@ psc_init_particles(int particle_label_offset)
   }
 
   double beta = psc.coeff.beta;
-  int i = 0;
-
 
   // particles must not be placed in the pml regions
   // check if pml bnds are set and restrict avoid particle placement inside pml regions
-
-  int pml_size_lo[3];
-  int pml_size_hi[3];
+  int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
-    pml_size_lo[d] = 0;
-    pml_size_hi[d] = 0;
-    if (psc.ilo[d] == psc.domain.ilo[d] && // left-most proc in this dir
+    ilo[d] = psc.ilo[d];
+    if (ilo[d] == psc.domain.ilo[d] && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-      pml_size_lo[d] = psc.pml.size+1;
+      ilo[d] += psc.pml.size+1;
     }
-    if (psc.ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
+    ihi[d] = psc.ihi[d];
+    if (ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-      pml_size_hi[d] = psc.pml.size+1;
+      ihi[d] -= psc.pml.size+1;
     }
   }
 
-
+  int i = 0;
   if (psc.Case->ops->init_npt) {
     for (int kind = 0; kind < 2; kind++) {
-      for (int jz = psc.ilo[2]+pml_size_lo[2]; jz < psc.ihi[2]-pml_size_hi[2]; jz++) {
-	for (int jy = psc.ilo[1]+pml_size_lo[1]; jy < psc.ihi[1]-pml_size_hi[1]; jy++) {
-	  for (int jx = psc.ilo[0]+pml_size_lo[0]; jx < psc.ihi[0]-pml_size_hi[0]; jx++) {
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 
 	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	    double xx[3] = { jx * dx, jy * dy, jz * dz };
