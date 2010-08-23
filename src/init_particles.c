@@ -121,28 +121,18 @@ psc_init_particles(int particle_label_offset)
 
   // particles must not be placed in the pml regions
   // check if pml bnds are set and restrict avoid particle placement inside pml regions
-  MPI_Comm comm = MPI_COMM_WORLD;
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-
-  int bnd_proc_flag[3];
-  int r = rank;
-  bnd_proc_flag[0] = r % psc.domain.nproc[0]; r /= psc.domain.nproc[0];
-  bnd_proc_flag[1] = r % psc.domain.nproc[1]; r /= psc.domain.nproc[1];
-  bnd_proc_flag[2] = r;
 
   int pml_size_lo[3];
   int pml_size_hi[3];
   for (int d = 0; d < 3; d++) {
     pml_size_lo[d] = 0;
     pml_size_hi[d] = 0;
-    if (bnd_proc_flag[d] == 0 && // left-most proc in this dir
+    if (psc.ilo[d] == psc.domain.ilo[d] && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
       pml_size_lo[d] = psc.pml.size+1;
     }
-    if (bnd_proc_flag[d] == psc.domain.nproc[d] - 1 && // right-most proc in this dir
+    if (psc.ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       pml_size_hi[d] = psc.pml.size+1;
