@@ -18,6 +18,28 @@ get_n_in_cell(real n)
   return n / psc.coeff.cori + .5;
 }
 
+// particles must not be placed in the pml regions
+// check if pml bnds are set and restrict avoid particle placement inside pml regions
+
+static void
+pml_find_bounds(int ilo[3], int ihi[3])
+{
+  for (int d = 0; d < 3; d++) {
+    ilo[d] = psc.ilo[d];
+    if (ilo[d] == psc.domain.ilo[d] && // left-most proc in this dir
+	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
+	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
+      ilo[d] += psc.pml.size+1;
+    }
+    ihi[d] = psc.ihi[d];
+    if (ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
+	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
+	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
+      ihi[d] -= psc.pml.size+1;
+    }
+  }
+}
+
 void
 psc_init_partition(int *n_part, int *particle_label_offset)
 {
@@ -78,12 +100,15 @@ psc_init_partition(int *n_part, int *particle_label_offset)
     MPI_Barrier(comm);
   }
 
+  int ilo[3], ihi[3];
+  pml_find_bounds(ilo, ihi);
+
   int np = 0;
   if (psc.Case->ops->init_npt) {
     for (int kind = 0; kind < 2; kind++) {
-      for (int jz = psc.ilo[2]; jz < psc.ihi[2]; jz++) {
-	for (int jy = psc.ilo[1]; jy < psc.ihi[1]; jy++) {
-	  for (int jx = psc.ilo[0]; jx < psc.ihi[0]; jx++) {
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
 	    double xx[3] = { jx * dx, jy * dy, jz * dz };
 	    struct psc_particle_npt npt = { // init to all zero
@@ -117,23 +142,8 @@ psc_init_particles(int particle_label_offset)
 
   double beta = psc.coeff.beta;
 
-  // particles must not be placed in the pml regions
-  // check if pml bnds are set and restrict avoid particle placement inside pml regions
   int ilo[3], ihi[3];
-  for (int d = 0; d < 3; d++) {
-    ilo[d] = psc.ilo[d];
-    if (ilo[d] == psc.domain.ilo[d] && // left-most proc in this dir
-	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-      ilo[d] += psc.pml.size+1;
-    }
-    ihi[d] = psc.ihi[d];
-    if (ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
-	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-      ihi[d] -= psc.pml.size+1;
-    }
-  }
+  pml_find_bounds(ilo, ihi);
 
   int i = 0;
   if (psc.Case->ops->init_npt) {
