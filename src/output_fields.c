@@ -331,22 +331,7 @@ write_fields_combine(struct psc_output_c *out,
 
   void *ctx;
   if (rank == 0) {
-    struct psc_fields_list list_combined;
-    list_combined.nr_flds = list->nr_flds;
-
-    for (int m = 0; m < list->nr_flds; m++) {
-      fields_base_t *fld = &list_combined.flds[m];
-      // We're creating a fake list here, with the data arrays being left
-      // out. We don't want to have them all in memory at the same time,
-      // and at this point, the list_combined is only used to convey info
-      // about the data to come.
-      fields_base_alloc_with_array(fld, psc.domain.ilo, psc.domain.ihi, 1, NULL);
-      fld->name[0] = strdup(list->flds[m].name[0]);
-    }
-    out->format_ops->open(out, &list_combined, prefix, &ctx);
-    for (int m = 0; m < list->nr_flds; m++) {
-      fields_base_free(&list_combined.flds[m]);
-    }
+    out->format_ops->open(out, NULL, prefix, &ctx);
   }
 
   /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
