@@ -60,61 +60,6 @@ vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset)
 }
 
 //////////////////////////////////////////////////////////////////////
-/// Open VTK file for STRUCTURED_POINTS output.
-
-static void
-vtk_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	 void **pctx)
-{
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
-
-  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
-  if (vtk->rank == 0) {
-    fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
-    fprintf(vtk->file, "ORIGIN %g %g %g\n",
-	    psc.dx[0] * psc.domain.ilo[0],
-	    psc.dx[1] * psc.domain.ilo[1],
-	    psc.dx[2] * psc.domain.ilo[2]);
-    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
-  }
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Open VTK file for RECTILINEAR_GRID output with data values on points.
-
-static void
-vtk_points_open(struct psc_output_c *out, struct psc_fields_list *list,
-		const char *pfx, void **pctx)
-{
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
-
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
-  if (vtk->rank == 0) {
-    vtk_write_coordinates(vtk, 0, 0.);
-    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
-  }
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Open VTK file for RECTILINEAR_GRID output with data values on cells.
-
-static void
-vtk_cells_open(struct psc_output_c *out, struct psc_fields_list *list,
-	       const char *pfx, void **pctx)
-{
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
-
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
-  if (vtk->rank == 0) {
-    vtk_write_coordinates(vtk, 1, .5);
-    fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
-  }
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
 /// Close VTK file.
 
 static void
@@ -154,34 +99,64 @@ vtk_write_field(void *ctx, fields_base_t *fld)
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for STRUCTURED_POINTS output.
+
 static void
 vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 		 const char *pfx)
 {
-  void *ctx;
-  vtk_open(out, flds, pfx, &ctx);
-  write_fields_combine(flds, vtk_write_field, ctx);
-  vtk_close(ctx);
+  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+
+  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
+  if (vtk->rank == 0) {
+    fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+    fprintf(vtk->file, "ORIGIN %g %g %g\n",
+	    psc.dx[0] * psc.domain.ilo[0],
+	    psc.dx[1] * psc.domain.ilo[1],
+	    psc.dx[2] * psc.domain.ilo[2]);
+    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+  }
+
+  write_fields_combine(flds, vtk_write_field, vtk);
+  vtk_close(vtk);
 }
+
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for RECTILINEAR_GRID output with data values on points.
 
 static void
 vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 			const char *pfx)
 {
-  void *ctx;
-  vtk_points_open(out, flds, pfx, &ctx);
-  write_fields_combine(flds, vtk_write_field, ctx);
-  vtk_close(ctx);
+  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+
+  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
+  if (vtk->rank == 0) {
+    vtk_write_coordinates(vtk, 0, 0.);
+    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+  }
+
+  write_fields_combine(flds, vtk_write_field, vtk);
+  vtk_close(vtk);
 }
+
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for RECTILINEAR_GRID output with data values on cells.
 
 static void
 vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 		       const char *pfx)
 {
-  void *ctx;
-  vtk_cells_open(out, flds, pfx, &ctx);
-  write_fields_combine(flds, vtk_write_field, ctx);
-  vtk_close(ctx);
+  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+
+  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
+  if (vtk->rank == 0) {
+    vtk_write_coordinates(vtk, 1, .5);
+    fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
+  }
+  write_fields_combine(flds, vtk_write_field, vtk);
+  vtk_close(vtk);
 }
 
 //////////////////////////////////////////////////////////////////////
