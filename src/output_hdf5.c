@@ -20,8 +20,8 @@ struct hdf5_ctx {
 };
 
 static void
-__hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
-	    const char *filename, void **pctx)
+hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
+	  const char *filename, void **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
@@ -41,7 +41,7 @@ __hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
 }
 
 static void
-__hdf5_close(void *ctx)
+hdf5_close(void *ctx)
 {
   struct hdf5_ctx *hdf5 = ctx;
 
@@ -51,7 +51,7 @@ __hdf5_close(void *ctx)
 }
 
 static void
-__hdf5_write_field(void *ctx, fields_base_t *fld)
+hdf5_write_field(void *ctx, fields_base_t *fld)
 {
   struct hdf5_ctx *hdf5 = ctx;
 
@@ -106,38 +106,23 @@ __hdf5_write_field(void *ctx, fields_base_t *fld)
 // ======================================================================
 
 static void
-hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	  void **pctx)
+hdf5_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+		  const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  void *ctx;
   if (rank == 0) {
     char filename[strlen(out->data_dir) + 30];
     sprintf(filename, "%s/%s_%07d.h5", out->data_dir, pfx, psc.timestep);
-    __hdf5_open(out, list, filename, pctx);
+    hdf5_open(out, list, filename, &ctx);
   }
-}
-
-static void
-hdf5_close(void *ctx)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  write_fields_combine(list, hdf5_write_field, ctx);
 
   if (rank == 0) {
-    __hdf5_close(ctx);
+    hdf5_close(ctx);
   }
-}
-
-static void
-hdf5_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
-		  const char *pfx)
-{
-  void *ctx;
-  hdf5_open(out, flds, pfx, &ctx);
-  write_fields_combine(flds, __hdf5_write_field, ctx);
-  hdf5_close(ctx);
 }
 
 // ======================================================================
@@ -151,118 +136,114 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
 // ======================================================================
 
 static void
-xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	  void **pctx)
+xdmf_write(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx)
+{
+  char fname[strlen(out->data_dir) + strlen(pfx) + 20];
+  sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
+  FILE *f = fopen(fname, "w");
+
+  fields_base_t *fld = &list->flds[0];
+  fprintf(f, "<?xml version=\"1.0\" ?>\n");
+  fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
+  fprintf(f, "<Domain>\n");
+  fprintf(f, "<Grid GridType='Collection' CollectionType='Spatial'>\n");
+  fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
+  int im[3];
+  for (int d = 0; d < 3; d++) {
+    im[d] = (psc.domain.ihi[d] - psc.domain.ilo[d]) / psc.domain.nproc[d];
+  }
+  for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
+    for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {
+      for (int kx = 0; kx < psc.domain.nproc[0]; kx++) {
+	fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
+		kx, ky, kz, psc.timestep);
+	fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
+		im[2] + 1, im[1] + 1, im[0] + 1);
+	fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
+	fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+	fprintf(f, "        %g %g %g\n",
+		(psc.domain.ilo[2] + im[2] * kz) * psc.dx[2],
+		(psc.domain.ilo[1] + im[1] * ky) * psc.dx[1],
+		(psc.domain.ilo[0] + im[0] * kx) * psc.dx[0]);
+	fprintf(f, "     </DataStructure>\n");
+	fprintf(f, "     <DataStructure Name=\"Spacing\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+	fprintf(f, "        %g %g %g\n", psc.dx[2], psc.dx[1], psc.dx[0]);
+	fprintf(f, "     </DataStructure>\n");
+	fprintf(f, "     </Geometry>\n");
+	fprintf(f, "\n");
+	for (int m = 0; m < list->nr_flds; m++) {
+	  fld = &list->flds[m];
+	  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
+		  fld->name[0]);
+	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
+		  im[2], im[1], im[0]);
+	  int proc = (kz * psc.domain.nproc[1] + ky) * psc.domain.nproc[0] + kx;
+	  fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
+		  pfx, proc, psc.timestep, fld->name[0]);
+	  fprintf(f, "       </DataItem>\n");
+	  fprintf(f, "     </Attribute>\n");
+	}
+	fprintf(f, "   </Grid>\n");
+      }
+    }
+  }
+  fprintf(f, "</Grid>\n");
+  fprintf(f, "</Domain>\n");
+  fprintf(f, "</Xdmf>\n");
+  fclose(f);
+
+
+  // It'd be easier to create those files line by line as time goes by.
+  // However, then we won't be able to get the timeseries into Paraview
+  // until the solution is all finished.
+  // So this version rewrites the xdmf file completely every timestep,
+  // which needs however some way to figure out what times we've written
+  // before.
+  sprintf(fname, "%s.xdmf", pfx);
+  f = fopen(fname, "w");
+  fprintf(f, "<?xml version='1.0' ?>\n");
+  fprintf(f, "<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>\n");
+  fprintf(f, "<Domain>\n");
+  fprintf(f, "  <Grid GridType='Collection' CollectionType='Temporal'>\n");
+  int first, step;
+  if (strcmp(pfx, "pfd") == 0) {
+    first = out->pfield_first;
+    step = out->pfield_step;
+  } else {
+    first = out->tfield_first;
+    step = out->tfield_step;
+  }
+  for (int i = first; i <= psc.timestep; i += step) {
+    fprintf(f, "  <xi:include href='%s_%07d.xdmf' xpointer='xpointer(//Xdmf/Domain/Grid)'/>\n", pfx, i);
+  }
+  fprintf(f, "  </Grid>\n");
+  fprintf(f, "  </Domain>\n");
+  fprintf(f, "</Xdmf>\n");
+  fclose(f);
+}
+
+static void
+xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+		  const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  void *ctx;
+
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, psc.timestep);
-  
-  __hdf5_open(out, list, filename, pctx);
+  hdf5_open(out, list, filename, &ctx);
 
   if (rank == 0) {
-    char fname[strlen(out->data_dir) + strlen(pfx) + 20];
-    sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
-    FILE *f = fopen(fname, "w");
-
-    fields_base_t *fld = &list->flds[0];
-    fprintf(f, "<?xml version=\"1.0\" ?>\n");
-    fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
-    fprintf(f, "<Domain>\n");
-    fprintf(f, "<Grid GridType='Collection' CollectionType='Spatial'>\n");
-    fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
-    int im[3];
-    for (int d = 0; d < 3; d++) {
-      im[d] = (psc.domain.ihi[d] - psc.domain.ilo[d]) / psc.domain.nproc[d];
-    }
-    for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
-      for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {
-	for (int kx = 0; kx < psc.domain.nproc[0]; kx++) {
-	  fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
-		  kx, ky, kz, psc.timestep);
-	  fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
-		  im[2] + 1, im[1] + 1, im[0] + 1);
-	  fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
-	  fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-	  fprintf(f, "        %g %g %g\n",
-		  (psc.domain.ilo[2] + im[2] * kz) * psc.dx[2],
-		  (psc.domain.ilo[1] + im[1] * ky) * psc.dx[1],
-		  (psc.domain.ilo[0] + im[0] * kx) * psc.dx[0]);
-	  fprintf(f, "     </DataStructure>\n");
-	  fprintf(f, "     <DataStructure Name=\"Spacing\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-	  fprintf(f, "        %g %g %g\n", psc.dx[2], psc.dx[1], psc.dx[0]);
-	  fprintf(f, "     </DataStructure>\n");
-	  fprintf(f, "     </Geometry>\n");
-	  fprintf(f, "\n");
-	  for (int m = 0; m < list->nr_flds; m++) {
-	    fld = &list->flds[m];
-	    fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
-		    fld->name[0]);
-	    fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-		    im[2], im[1], im[0]);
-	    int proc = (kz * psc.domain.nproc[1] + ky) * psc.domain.nproc[0] + kx;
-	    fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
-		    pfx, proc, psc.timestep, fld->name[0]);
-	    fprintf(f, "       </DataItem>\n");
-	    fprintf(f, "     </Attribute>\n");
- 	  }
-	  fprintf(f, "   </Grid>\n");
-	}
-      }
-    }
-    fprintf(f, "</Grid>\n");
-    fprintf(f, "</Domain>\n");
-    fprintf(f, "</Xdmf>\n");
-    fclose(f);
-
-
-    // It'd be easier to create those files line by line as time goes by.
-    // However, then we won't be able to get the timeseries into Paraview
-    // until the solution is all finished.
-    // So this version rewrites the xdmf file completely every timestep,
-    // which needs however some way to figure out what times we've written
-    // before.
-    sprintf(fname, "%s.xdmf", pfx);
-    f = fopen(fname, "w");
-    fprintf(f, "<?xml version='1.0' ?>\n");
-    fprintf(f, "<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>\n");
-    fprintf(f, "<Domain>\n");
-    fprintf(f, "  <Grid GridType='Collection' CollectionType='Temporal'>\n");
-    int first, step;
-    if (strcmp(pfx, "pfd") == 0) {
-      first = out->pfield_first;
-      step = out->pfield_step;
-    } else {
-      first = out->tfield_first;
-      step = out->tfield_step;
-    }
-    for (int i = first; i <= psc.timestep; i += step) {
-      fprintf(f, "  <xi:include href='%s_%07d.xdmf' xpointer='xpointer(//Xdmf/Domain/Grid)'/>\n", pfx, i);
-    }
-    fprintf(f, "  </Grid>\n");
-    fprintf(f, "  </Domain>\n");
-    fprintf(f, "</Xdmf>\n");
-    fclose(f);
+    xdmf_write(out, list, pfx);
   }
-}
 
-static void
-xdmf_close(void *ctx)
-{
-  __hdf5_close(ctx);
-}
-
-static void
-xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
-		  const char *pfx)
-{
-  void *ctx;
-  xdmf_open(out, flds, pfx, &ctx);
-  for (int m = 0; m < flds->nr_flds; m++) {
-    __hdf5_write_field(ctx, &flds->flds[m]);
+  for (int m = 0; m < list->nr_flds; m++) {
+    hdf5_write_field(ctx, &list->flds[m]);
   }
-  xdmf_close(ctx);
+
+  hdf5_close(ctx);
 }
 
 // ======================================================================
