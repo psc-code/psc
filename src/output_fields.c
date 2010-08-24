@@ -211,7 +211,6 @@ find_output_format_ops(const char *ops_name)
 static struct param psc_output_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary")  },
-  { "output_combine"     , VAR(output_combine)       , PARAM_BOOL(0)           },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },

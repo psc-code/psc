@@ -153,8 +153,6 @@ static void
 xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
 	  void **pctx)
 {
-  assert(!out->output_combine);
-
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   char filename[strlen(out->data_dir) + 30];
