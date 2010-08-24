@@ -22,6 +22,7 @@ struct psc_output_format_ops {
 	       const char *prefix, void **pctx);
   void (*close)(void *ctx);
   void (*write_field)(void *ctx, fields_base_t *fld);
+  void (*write_fields)(void *ctx, struct psc_fields_list *flds);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

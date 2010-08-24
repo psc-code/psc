@@ -245,6 +245,13 @@ xdmf_close(void *ctx)
   __hdf5_close(ctx);
 }
 
+static void
+xdmf_write_fields(void *ctx, struct psc_fields_list *flds)
+{
+  for (int m = 0; m < flds->nr_flds; m++) {
+    hdf5_write_field(ctx, &flds->flds[m]);
+  }
+}
 
 // ======================================================================
 // psc_output_format_ops_xdmf
@@ -254,7 +261,7 @@ struct psc_output_format_ops psc_output_format_ops_xdmf = {
   .ext          = ".h5",
   .open         = xdmf_open,
   .close        = xdmf_close,
-  .write_field  = hdf5_write_field,
+  .write_fields = xdmf_write_fields,
 };
 
 // ======================================================================

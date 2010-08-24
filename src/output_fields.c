@@ -400,9 +400,7 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   if (out->output_combine) {
     write_fields_combine(list, ctx, out->format_ops->write_field);
   } else {
-    for (int m = 0; m < list->nr_flds; m++) {
-      out->format_ops->write_field(ctx, &list->flds[m]);
-    }
+    out->format_ops->write_fields(ctx, list);
   }
 
   out->format_ops->close(ctx);
