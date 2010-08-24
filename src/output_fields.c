@@ -295,7 +295,7 @@ copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
 }
 
 // ----------------------------------------------------------------------
-// write_fields_combine
+// psc_output_c_filename
 
 char *
 psc_output_c_filename(struct psc_output_c *out, const char *pfx)
