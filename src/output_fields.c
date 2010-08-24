@@ -320,7 +320,7 @@ psc_output_c_filename(struct psc_output_c *out, const char *pfx)
 // ----------------------------------------------------------------------
 // write_fields_combine
 
-static void
+void
 write_fields_combine(struct psc_fields_list *list, 
 		     void (*write_field)(void *ctx, fields_base_t *fld), void *ctx)
 {
@@ -396,13 +396,7 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 {
   void *ctx;
   out->format_ops->open(out, list, prefix, &ctx);
-
-  if (out->output_combine) {
-    write_fields_combine(list, ctx, out->format_ops->write_field);
-  } else {
-    out->format_ops->write_fields(ctx, list);
-  }
-
+  out->format_ops->write_fields(ctx, list);
   out->format_ops->close(ctx);
 }
 

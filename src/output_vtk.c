@@ -153,6 +153,12 @@ vtk_write_field(void *ctx, fields_base_t *fld)
   }
 }
 
+static void
+vtk_write_fields(void *ctx, struct psc_fields_list *flds)
+{
+  write_fields_combine(flds, vtk_write_field, ctx);
+}
+
 //////////////////////////////////////////////////////////////////////
 /// VTK output format writing ASCII STRUCTURED_POINTS file.
 
@@ -161,7 +167,7 @@ struct psc_output_format_ops psc_output_format_ops_vtk = {
   .ext          = ".vtk",
   .open         = vtk_open,
   .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -174,7 +180,7 @@ struct psc_output_format_ops psc_output_format_ops_vtk_points = {
   .ext          = ".vtk",
   .open         = vtk_points_open,
   .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -189,6 +195,6 @@ struct psc_output_format_ops psc_output_format_ops_vtk_cells = {
   .ext          = ".vtk",
   .open         = vtk_cells_open,
   .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_write_fields,
 };
 
