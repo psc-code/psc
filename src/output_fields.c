@@ -330,12 +330,7 @@ write_fields_combine(struct psc_output_c *out,
   MPI_Comm_size(comm, &size);
 
   void *ctx;
-  if (rank == 0) {
-    out->format_ops->open(out, NULL, prefix, &ctx);
-  }
-
-  /* printf("glo %d %d %d ghi %d %d %d\n", glo[0], glo[1], glo[2], */
-  /* 	     ghi[0], ghi[1], ghi[2]); */
+  out->format_ops->open(out, NULL, prefix, &ctx);
 
   for (int m = 0; m < list->nr_flds; m++) {
     int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
@@ -394,10 +389,7 @@ write_fields_combine(struct psc_output_c *out,
     }
   }
 
-  if (rank == 0) {
-    out->format_ops->close(ctx);
-  }
-
+  out->format_ops->close(ctx);
 }
 
 // ----------------------------------------------------------------------

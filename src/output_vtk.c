@@ -13,6 +13,7 @@
 
 struct vtk_ctx {
   FILE *file;
+  int rank;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -22,6 +23,11 @@ static void
 vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
 	      int extra, struct psc_output_c *out)
 {
+  MPI_Comm_rank(MPI_COMM_WORLD, &vtk->rank);
+  if (vtk->rank != 0) {
+    return;
+  }
+
   char *filename = psc_output_c_filename(out, pfx);
   vtk->file = fopen(filename, "w");
   free(filename);
@@ -62,14 +68,14 @@ vtk_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
-
-  fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
-  fprintf(vtk->file, "ORIGIN %g %g %g\n",
-	  psc.dx[0] * psc.domain.ilo[0],
-	  psc.dx[1] * psc.domain.ilo[1],
-	  psc.dx[2] * psc.domain.ilo[2]);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
-
+  if (vtk->rank == 0) {
+    fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+    fprintf(vtk->file, "ORIGIN %g %g %g\n",
+	    psc.dx[0] * psc.domain.ilo[0],
+	    psc.dx[1] * psc.domain.ilo[1],
+	    psc.dx[2] * psc.domain.ilo[2]);
+    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+  }
   *pctx = vtk;
 }
 
@@ -83,9 +89,10 @@ vtk_points_open(struct psc_output_c *out, struct psc_fields_list *list,
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
-  vtk_write_coordinates(vtk, 0, 0.);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
-
+  if (vtk->rank == 0) {
+    vtk_write_coordinates(vtk, 0, 0.);
+    fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+  }
   *pctx = vtk;
 }
 
@@ -99,9 +106,10 @@ vtk_cells_open(struct psc_output_c *out, struct psc_fields_list *list,
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
   vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
-  vtk_write_coordinates(vtk, 1, .5);
-  fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
-
+  if (vtk->rank == 0) {
+    vtk_write_coordinates(vtk, 1, .5);
+    fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
+  }
   *pctx = vtk;
 }
 
@@ -113,7 +121,9 @@ vtk_close(void *ctx)
 {
   struct vtk_ctx *vtk = ctx;
 
-  fclose(vtk->file);
+  if (vtk->rank == 0) {
+    fclose(vtk->file);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -20,8 +20,8 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	  void **pctx)
+__hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
+	    void **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
@@ -43,13 +43,38 @@ hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
 }
 
 static void
-hdf5_close(void *ctx)
+__hdf5_close(void *ctx)
 {
   struct hdf5_ctx *hdf5 = ctx;
 
   H5Gclose(hdf5->group_fld);
   H5Gclose(hdf5->group);
   H5Fclose(hdf5->file);
+}
+
+// ======================================================================
+
+static void
+hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
+	  void **pctx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if (rank == 0) {
+    __hdf5_open(out, list, pfx, pctx);
+  }
+}
+
+static void
+hdf5_close(void *ctx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if (rank == 0) {
+    __hdf5_close(ctx);
+  }
 }
 
 static void
@@ -214,6 +239,13 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
   }
 }
 
+static void
+xdmf_close(void *ctx)
+{
+  __hdf5_close(ctx);
+}
+
+
 // ======================================================================
 // psc_output_format_ops_xdmf
 
@@ -221,7 +253,7 @@ struct psc_output_format_ops psc_output_format_ops_xdmf = {
   .name         = "xdmf",
   .ext          = ".h5",
   .open         = xdmf_open,
-  .close        = hdf5_close,
+  .close        = xdmf_close,
   .write_field  = hdf5_write_field,
 };
 
