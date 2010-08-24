@@ -21,7 +21,6 @@ struct psc_output_format_ops {
   void (*open)(struct psc_output_c *out, struct psc_fields_list *flds,
 	       const char *prefix, void **pctx);
   void (*close)(void *ctx);
-  void (*write_field)(void *ctx, fields_base_t *fld);
   void (*write_fields)(void *ctx, struct psc_fields_list *flds);
 };
 
