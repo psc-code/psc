@@ -88,7 +88,8 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
 			    file_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Sclose(file_space);
   
-  H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT, fld->flds);
+  H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT,
+	   &XF3_BASE(fld, 0, fld->ib[0], fld->ib[1], fld->ib[2]));
   H5Sclose(mem_space);
   
   H5Dclose(dataset);

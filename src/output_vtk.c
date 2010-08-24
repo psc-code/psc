@@ -93,7 +93,10 @@ vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 	    psc.dx[0] * psc.domain.ilo[0],
 	    psc.dx[1] * psc.domain.ilo[1],
 	    psc.dx[2] * psc.domain.ilo[2]);
-    fprintf(file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+    fprintf(file, "\nPOINT_DATA %d\n",
+	    (psc.domain.ihi[0] - psc.domain.ilo[0]) * 
+	    (psc.domain.ihi[1] - psc.domain.ilo[1]) *
+	    (psc.domain.ihi[2] - psc.domain.ilo[2]));
   }
 
   write_fields_combine(flds, vtk_write_field, file);

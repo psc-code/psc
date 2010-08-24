@@ -120,13 +120,19 @@ typedef fields_fortran_t fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define fields_base_alloc  fields_fortran_alloc
-#define fields_base_free   fields_fortran_free
-#define fields_base_zero   fields_fortran_zero
-#define fields_base_set    fields_fortran_set
-#define fields_base_copy   fields_fortran_copy
+#define fields_base_alloc            fields_fortran_alloc
+#define fields_base_alloc_with_array fields_fortran_alloc_with_array
+#define fields_base_free             fields_fortran_free
+#define fields_base_zero             fields_fortran_zero
+#define fields_base_zero_all         fields_fortran_zero_all
+#define fields_base_set              fields_fortran_set
+#define fields_base_copy             fields_fortran_copy
+#define fields_base_axpy_all         fields_fortran_axpy_all
+#define fields_base_scale_all        fields_fortran_scale_all
+#define fields_base_size             fields_fortran_size
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
+#define XF3_BASE(pf, m, jx,jy,jz) F3_FORTRAN(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_C
 
