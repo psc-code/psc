@@ -20,14 +20,12 @@ struct hdf5_ctx {
 };
 
 static void
-__hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	    void **pctx)
+__hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
+	    const char *filename, void **pctx)
 {
   struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
 
-  char *filename = psc_output_c_filename(out, pfx);
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  free(filename);
 
   hdf5->group = H5Gcreate(hdf5->file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
@@ -115,7 +113,9 @@ hdf5_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0) {
-    __hdf5_open(out, list, pfx, pctx);
+    char filename[strlen(out->data_dir) + 30];
+    sprintf(filename, "%s/%s_%07d.h5", out->data_dir, pfx, psc.timestep);
+    __hdf5_open(out, list, filename, pctx);
   }
 }
 
@@ -155,10 +155,13 @@ xdmf_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pf
 {
   assert(!out->output_combine);
 
-  hdf5_open(out, list, pfx, pctx);
-
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, psc.timestep);
+  
+  __hdf5_open(out, list, filename, pctx);
+
   if (rank == 0) {
     char fname[strlen(out->data_dir) + strlen(pfx) + 20];
     sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);

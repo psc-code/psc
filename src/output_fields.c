@@ -295,29 +295,6 @@ copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
 }
 
 // ----------------------------------------------------------------------
-// psc_output_c_filename
-
-char *
-psc_output_c_filename(struct psc_output_c *out, const char *pfx)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
-  char *filename = malloc(strlen(out->data_dir) + 30);
-  if (out->output_combine) {
-    sprintf(filename, "%s/%s_%07d%s", out->data_dir, pfx, psc.timestep,
-	    out->format_ops->ext);
-  } else {
-    sprintf(filename, "%s/%s_%06d_%07d%s", out->data_dir, pfx, rank, psc.timestep,
-	    out->format_ops->ext);
-  }
-  if (rank == 0) {
-    printf("[%d] write_fields: %s\n", rank, filename);
-  }
-  return filename;
-}
-
-// ----------------------------------------------------------------------
 // write_fields_combine
 
 void

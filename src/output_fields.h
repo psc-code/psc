@@ -54,6 +54,4 @@ struct psc_output_c {
   struct psc_output_format_ops *format_ops;
 };
 
-char *psc_output_c_filename(struct psc_output_c *out, const char *pfx);
-
 #endif

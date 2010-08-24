@@ -25,10 +25,13 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
   float t_float;
 
   struct binary_ctx *binary = malloc(sizeof(*binary));
-  
-  char *filename = psc_output_c_filename(out, pfx);
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%06d_%07d.psc", out->data_dir, pfx, rank, psc.timestep);
+
   binary->file = fopen(filename, "wb");
-  free(filename);
   FILE *file = binary->file;
 
   // Header  

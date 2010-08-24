@@ -28,9 +28,10 @@ vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
     return;
   }
 
-  char *filename = psc_output_c_filename(out, pfx);
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%07d.vtk", out->data_dir, pfx, psc.timestep);
+
   vtk->file = fopen(filename, "w");
-  free(filename);
   fprintf(vtk->file, "# vtk DataFile Version 3.0\n");
   fprintf(vtk->file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
   fprintf(vtk->file, "ASCII\n");
