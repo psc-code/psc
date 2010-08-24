@@ -7,13 +7,32 @@
 #include <mpi.h>
 #include <string.h>
 
-struct binary_ctx {
-  FILE *file;
-};
+static void
+binary_write_field(FILE *file, fields_base_t *fld)
+{
+  int *ilo = psc.ilo, *ihi = psc.ihi;
+
+  unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+
+  // convert to float, drop ghost points
+  float *data = calloc(sz, sizeof(float));
+  int i = 0;
+  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	data[i++] = XF3_BASE(fld,0, ix,iy,iz);
+      }
+    }
+  }
+    
+  fwrite(data, sizeof(*data), sz, file);
+
+  free(data);
+}
 
 static void
-binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	    void **pctx)
+binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+		    const char *pfx)
 {
   const char headstr[] = "PSC ";
   const char datastr[] = "DATA";
@@ -24,15 +43,12 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
   
   float t_float;
 
-  struct binary_ctx *binary = malloc(sizeof(*binary));
-
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%06d_%07d.psc", out->data_dir, pfx, rank, psc.timestep);
 
-  binary->file = fopen(filename, "wb");
-  FILE *file = binary->file;
+  FILE *file = fopen(filename, "wb");
 
   // Header  
   fwrite(headstr, sizeof(char), 4, file);
@@ -69,56 +85,11 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
 
   fwrite(datastr, sizeof(char), 4, file);
   
-  *pctx = binary;
-}
-
-static void
-binary_close(void *ctx)
-{
-  struct binary_ctx *binary = ctx;
-
-  fclose(binary->file);
-}
-
-static void
-binary_write_field(void *ctx, fields_base_t *fld)
-{
-  struct binary_ctx *binary = ctx;
-
-  int *ilo = psc.ilo, *ihi = psc.ihi;
-
-  // make sure we are writing per-proc output, not "output_combine"
-  assert(fld->ib[0] == psc.ilg[0] && 
-	 fld->ib[1] == psc.ilg[1] &&
-	 fld->ib[2] == psc.ilg[2]);
-  unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
-
-  // convert to float, drop ghost points
-  float *data = calloc(sz, sizeof(float));
-  int i = 0;
-  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	data[i++] = XF3_BASE(fld,0, ix,iy,iz);
-      }
-    }
+  for (int m = 0; m < list->nr_flds; m++) {
+    binary_write_field(file, &list->flds[m]);
   }
-    
-  fwrite(data, sizeof(*data), sz, binary->file);
 
-  free(data);
-}
-
-static void
-binary_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
-		    const char *pfx)
-{
-  void *ctx;
-  binary_open(out, flds, pfx, &ctx);
-  for (int m = 0; m < flds->nr_flds; m++) {
-    binary_write_field(ctx, &flds->flds[m]);
-  }
-  binary_close(ctx);
+  fclose(file);
 }
 
 // ======================================================================
