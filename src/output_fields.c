@@ -307,7 +307,8 @@ write_fields_combine(struct psc_fields_list *list,
 
   for (int m = 0; m < list->nr_flds; m++) {
     int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-    fields_base_real_t *s_data = list->flds[m].flds;
+    fields_base_real_t *s_data = &XF3_BASE(&list->flds[m], 0,
+					   psc.ilg[0], psc.ilg[1], psc.ilg[2]);
 
     for (int d = 0; d < 3; d++) {
       s_ilo[d] = psc.ilo[d];
@@ -352,7 +353,7 @@ write_fields_combine(struct psc_fields_list *list,
 	}
 	/* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	/*        ihi[0], ihi[1], ihi[2]); */
-	copy_to_global(fld.flds, buf, ilo, ihi, ilg, img);
+	copy_to_global(&XF3_BASE(&fld, 0, psc.domain.ilo[0], psc.domain.ilo[1], psc.domain.ilo[2]), buf, ilo, ihi, ilg, img);
 	if (n != 0) {
 	  free(buf);
 	}
