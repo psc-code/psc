@@ -110,11 +110,15 @@ binary_write_field(void *ctx, fields_base_t *fld)
 }
 
 static void
-binary_write_fields(void *ctx, struct psc_fields_list *flds)
+binary_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+		    const char *pfx)
 {
+  void *ctx;
+  binary_open(out, flds, pfx, &ctx);
   for (int m = 0; m < flds->nr_flds; m++) {
     binary_write_field(ctx, &flds->flds[m]);
   }
+  binary_close(ctx);
 }
 
 // ======================================================================
@@ -123,8 +127,6 @@ binary_write_fields(void *ctx, struct psc_fields_list *flds)
 struct psc_output_format_ops psc_output_format_ops_binary = {
   .name         = "binary",
   .ext          = ".psc",
-  .open         = binary_open,
-  .close        = binary_close,
   .write_fields = binary_write_fields,
 };
 

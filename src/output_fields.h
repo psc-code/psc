@@ -18,10 +18,8 @@ struct psc_output_format_ops {
   const char *ext;
   void (*create)(void);
   void (*destroy)(void);
-  void (*open)(struct psc_output_c *out, struct psc_fields_list *flds,
-	       const char *prefix, void **pctx);
-  void (*close)(void *ctx);
-  void (*write_fields)(void *ctx, struct psc_fields_list *flds);
+  void (*write_fields)(struct psc_output_c *out, struct psc_fields_list *flds,
+		       const char *prefix);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;

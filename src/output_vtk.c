@@ -155,9 +155,33 @@ vtk_write_field(void *ctx, fields_base_t *fld)
 }
 
 static void
-vtk_write_fields(void *ctx, struct psc_fields_list *flds)
+vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+		 const char *pfx)
 {
+  void *ctx;
+  vtk_open(out, flds, pfx, &ctx);
   write_fields_combine(flds, vtk_write_field, ctx);
+  vtk_close(ctx);
+}
+
+static void
+vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+			const char *pfx)
+{
+  void *ctx;
+  vtk_points_open(out, flds, pfx, &ctx);
+  write_fields_combine(flds, vtk_write_field, ctx);
+  vtk_close(ctx);
+}
+
+static void
+vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+		       const char *pfx)
+{
+  void *ctx;
+  vtk_cells_open(out, flds, pfx, &ctx);
+  write_fields_combine(flds, vtk_write_field, ctx);
+  vtk_close(ctx);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -166,8 +190,6 @@ vtk_write_fields(void *ctx, struct psc_fields_list *flds)
 struct psc_output_format_ops psc_output_format_ops_vtk = {
   .name         = "vtk",
   .ext          = ".vtk",
-  .open         = vtk_open,
-  .close        = vtk_close,
   .write_fields = vtk_write_fields,
 };
 
@@ -179,9 +201,7 @@ struct psc_output_format_ops psc_output_format_ops_vtk = {
 struct psc_output_format_ops psc_output_format_ops_vtk_points = {
   .name         = "vtk_points",
   .ext          = ".vtk",
-  .open         = vtk_points_open,
-  .close        = vtk_close,
-  .write_fields = vtk_write_fields,
+  .write_fields = vtk_points_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -194,8 +214,6 @@ struct psc_output_format_ops psc_output_format_ops_vtk_points = {
 struct psc_output_format_ops psc_output_format_ops_vtk_cells = {
   .name         = "vtk_cells",
   .ext          = ".vtk",
-  .open         = vtk_cells_open,
-  .close        = vtk_close,
-  .write_fields = vtk_write_fields,
+  .write_fields = vtk_cells_write_fields,
 };
 

@@ -370,10 +370,7 @@ static void
 write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 	     const char *prefix)
 {
-  void *ctx;
-  out->format_ops->open(out, list, prefix, &ctx);
-  out->format_ops->write_fields(ctx, list);
-  out->format_ops->close(ctx);
+  out->format_ops->write_fields(out, list, prefix);
 }
 
 // ----------------------------------------------------------------------
