@@ -21,10 +21,8 @@ struct hdf5_ctx {
 
 static void
 hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
-	  const char *filename, void **pctx)
+	  const char *filename, struct hdf5_ctx *hdf5)
 {
-  struct hdf5_ctx *hdf5 = malloc(sizeof(*hdf5));
-
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
   hdf5->group = H5Gcreate(hdf5->file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -36,15 +34,11 @@ hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
 
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
 			      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-  *pctx = hdf5;
 }
 
 static void
-hdf5_close(void *ctx)
+hdf5_close(struct hdf5_ctx *hdf5)
 {
-  struct hdf5_ctx *hdf5 = ctx;
-
   H5Gclose(hdf5->group_fld);
   H5Gclose(hdf5->group);
   H5Fclose(hdf5->file);
@@ -112,16 +106,16 @@ hdf5_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  void *ctx;
+  struct hdf5_ctx hdf5;
   if (rank == 0) {
     char filename[strlen(out->data_dir) + 30];
     sprintf(filename, "%s/%s_%07d.h5", out->data_dir, pfx, psc.timestep);
-    hdf5_open(out, list, filename, &ctx);
+    hdf5_open(out, list, filename, &hdf5);
   }
-  write_fields_combine(list, hdf5_write_field, ctx);
+  write_fields_combine(list, hdf5_write_field, &hdf5);
 
   if (rank == 0) {
-    hdf5_close(ctx);
+    hdf5_close(&hdf5);
   }
 }
 
@@ -235,15 +229,15 @@ xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
-  void *ctx;
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, psc.timestep);
-  hdf5_open(out, list, filename, &ctx);
+  struct hdf5_ctx hdf5;
+  hdf5_open(out, list, filename, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    hdf5_write_field(ctx, &list->flds[m]);
+    hdf5_write_field(&hdf5, &list->flds[m]);
   }
-  hdf5_close(ctx);
+  hdf5_close(&hdf5);
 
   if (rank == 0) {
     xdmf_write_spatial_collection(out, list, pfx);
