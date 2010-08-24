@@ -13,7 +13,6 @@
 
 struct vtk_ctx {
   FILE *file;
-  int rank;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -23,11 +22,6 @@ static void
 vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
 	      int extra, struct psc_output_c *out)
 {
-  MPI_Comm_rank(MPI_COMM_WORLD, &vtk->rank);
-  if (vtk->rank != 0) {
-    return;
-  }
-
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%07d.vtk", out->data_dir, pfx, psc.timestep);
 
@@ -56,19 +50,6 @@ vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset)
       fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
     }
     fprintf(vtk->file, "\n");
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Close VTK file.
-
-static void
-vtk_close(void *ctx)
-{
-  struct vtk_ctx *vtk = ctx;
-
-  if (vtk->rank == 0) {
-    fclose(vtk->file);
   }
 }
 
@@ -106,10 +87,12 @@ static void
 vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 		 const char *pfx)
 {
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
-  if (vtk->rank == 0) {
+  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+  if (rank == 0) {
+    vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
     fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
     fprintf(vtk->file, "ORIGIN %g %g %g\n",
 	    psc.dx[0] * psc.domain.ilo[0],
@@ -119,7 +102,10 @@ vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
   }
 
   write_fields_combine(flds, vtk_write_field, vtk);
-  vtk_close(vtk);
+
+  if (rank == 0) {
+    fclose(vtk->file);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -129,16 +115,22 @@ static void
 vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 			const char *pfx)
 {
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
-  if (vtk->rank == 0) {
+  if (rank == 0) {
+    vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
     vtk_write_coordinates(vtk, 0, 0.);
     fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
   }
 
   write_fields_combine(flds, vtk_write_field, vtk);
-  vtk_close(vtk);
+
+  if (rank == 0) {
+    fclose(vtk->file);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -148,15 +140,21 @@ static void
 vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 		       const char *pfx)
 {
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
-  if (vtk->rank == 0) {
+  if (rank == 0) {
+    vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
     vtk_write_coordinates(vtk, 1, .5);
     fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
   }
   write_fields_combine(flds, vtk_write_field, vtk);
-  vtk_close(vtk);
+
+  if (rank == 0) {
+    fclose(vtk->file);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
