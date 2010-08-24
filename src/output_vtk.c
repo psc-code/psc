@@ -20,7 +20,7 @@ struct vtk_ctx {
 
 static void
 vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
-	      int extra, fields_base_t *fld, struct psc_output_c *out)
+	      int extra, struct psc_output_c *out)
 {
   char *filename = psc_output_c_filename(out, pfx);
   vtk->file = fopen(filename, "w");
@@ -31,22 +31,21 @@ vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
 
   fprintf(vtk->file, "DATASET %s\n", dataset_type);
   fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
-	  fld->im[0] + extra,
-	  fld->im[1] + extra,
-	  fld->im[2] + extra);
+	  psc.domain.ihi[0] - psc.domain.ilo[0] + extra,
+	  psc.domain.ihi[1] - psc.domain.ilo[1] + extra,
+	  psc.domain.ihi[2] - psc.domain.ilo[2] + extra);
 }
 
 //////////////////////////////////////////////////////////////////////
 /// Helper to write the coordinates to the VTK file.
 
 static void
-vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset,
-		      fields_base_t *fld)
+vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset)
 {
   for (int d = 0; d < 3; d++) {
     fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d,
-	    fld->im[d] + extra);
-    for (int i = fld->ib[d]; i < fld->ib[d] + fld->im[d] + extra; i++) {
+	    psc.domain.ihi[d] - psc.domain.ilo[d] + extra);
+    for (int i = psc.domain.ilo[d]; i < psc.domain.ihi[d] + extra; i++) {
       fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
     }
     fprintf(vtk->file, "\n");
@@ -62,18 +61,14 @@ vtk_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx
 {
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
-  assert(list->nr_flds > 0);
-  fields_base_t *fld = &list->flds[0];
-  int *ib = fld->ib;
-
-  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, fld, out);
+  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, out);
 
   fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
   fprintf(vtk->file, "ORIGIN %g %g %g\n",
-	  psc.dx[0] * ib[0],
-	  psc.dx[1] * ib[1],
-	  psc.dx[2] * ib[2]);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(fld));
+	  psc.dx[0] * psc.domain.ilo[0],
+	  psc.dx[1] * psc.domain.ilo[1],
+	  psc.dx[2] * psc.domain.ilo[2]);
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
 
   *pctx = vtk;
 }
@@ -87,12 +82,9 @@ vtk_points_open(struct psc_output_c *out, struct psc_fields_list *list,
 {
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
-  assert(list->nr_flds > 0);
-  fields_base_t *fld = &list->flds[0];
-  
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, fld, out);
-  vtk_write_coordinates(vtk, 0, 0., fld);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(fld));
+  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, out);
+  vtk_write_coordinates(vtk, 0, 0.);
+  fprintf(vtk->file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
 
   *pctx = vtk;
 }
@@ -106,12 +98,9 @@ vtk_cells_open(struct psc_output_c *out, struct psc_fields_list *list,
 {
   struct vtk_ctx *vtk = malloc(sizeof(*vtk));
 
-  assert(list->nr_flds > 0);
-  fields_base_t *fld = &list->flds[0];
-  
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, fld, out);
-  vtk_write_coordinates(vtk, 1, .5, fld);
-  fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(fld));
+  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, out);
+  vtk_write_coordinates(vtk, 1, .5);
+  fprintf(vtk->file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
 
   *pctx = vtk;
 }
