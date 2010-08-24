@@ -136,7 +136,8 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
 // ======================================================================
 
 static void
-xdmf_write(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx)
+xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *list,
+			      const char *pfx)
 {
   char fname[strlen(out->data_dir) + strlen(pfx) + 20];
   sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
@@ -191,16 +192,21 @@ xdmf_write(struct psc_output_c *out, struct psc_fields_list *list, const char *p
   fprintf(f, "</Domain>\n");
   fprintf(f, "</Xdmf>\n");
   fclose(f);
+}
 
-
+static void
+xdmf_write_temporal_collection(struct psc_output_c *out, const char *pfx)
+{
   // It'd be easier to create those files line by line as time goes by.
   // However, then we won't be able to get the timeseries into Paraview
   // until the solution is all finished.
   // So this version rewrites the xdmf file completely every timestep,
   // which needs however some way to figure out what times we've written
   // before.
+  char fname[strlen(out->data_dir) + strlen(pfx) + 20];
   sprintf(fname, "%s.xdmf", pfx);
-  f = fopen(fname, "w");
+  FILE *f = fopen(fname, "w");
+
   fprintf(f, "<?xml version='1.0' ?>\n");
   fprintf(f, "<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>\n");
   fprintf(f, "<Domain>\n");
@@ -230,20 +236,19 @@ xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   void *ctx;
-
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, psc.timestep);
   hdf5_open(out, list, filename, &ctx);
 
-  if (rank == 0) {
-    xdmf_write(out, list, pfx);
-  }
-
   for (int m = 0; m < list->nr_flds; m++) {
     hdf5_write_field(ctx, &list->flds[m]);
   }
-
   hdf5_close(ctx);
+
+  if (rank == 0) {
+    xdmf_write_spatial_collection(out, list, pfx);
+    xdmf_write_temporal_collection(out, pfx);
+  }
 }
 
 // ======================================================================
