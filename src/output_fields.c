@@ -321,8 +321,8 @@ psc_output_c_filename(struct psc_output_c *out, const char *pfx)
 // write_fields_combine
 
 static void
-write_fields_combine(struct psc_output_c *out,
-		     struct psc_fields_list *list, const char *prefix, void *ctx)
+write_fields_combine(struct psc_fields_list *list, 
+		     void (*write_field)(void *ctx, fields_base_t *fld), void *ctx)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -381,7 +381,7 @@ write_fields_combine(struct psc_output_c *out,
 	  free(buf);
 	}
       }
-      out->format_ops->write_field(ctx, &fld);
+      write_field(ctx, &fld);
       fields_base_free(&fld);
     }
   }
@@ -398,7 +398,7 @@ write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   out->format_ops->open(out, list, prefix, &ctx);
 
   if (out->output_combine) {
-    write_fields_combine(out, list, prefix, ctx);
+    write_fields_combine(list, ctx, out->format_ops->write_field);
   } else {
     for (int m = 0; m < list->nr_flds; m++) {
       out->format_ops->write_field(ctx, &list->flds[m]);
