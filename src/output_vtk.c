@@ -189,7 +189,6 @@ vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 
 struct psc_output_format_ops psc_output_format_ops_vtk = {
   .name         = "vtk",
-  .ext          = ".vtk",
   .write_fields = vtk_write_fields,
 };
 
@@ -200,7 +199,6 @@ struct psc_output_format_ops psc_output_format_ops_vtk = {
 
 struct psc_output_format_ops psc_output_format_ops_vtk_points = {
   .name         = "vtk_points",
-  .ext          = ".vtk",
   .write_fields = vtk_points_write_fields,
 };
 
@@ -213,7 +211,6 @@ struct psc_output_format_ops psc_output_format_ops_vtk_points = {
 
 struct psc_output_format_ops psc_output_format_ops_vtk_cells = {
   .name         = "vtk_cells",
-  .ext          = ".vtk",
   .write_fields = vtk_cells_write_fields,
 };
 

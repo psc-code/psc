@@ -15,7 +15,6 @@ struct psc_output_c;
 
 struct psc_output_format_ops {
   const char *name;
-  const char *ext;
   void (*create)(void);
   void (*destroy)(void);
   void (*write_fields)(struct psc_output_c *out, struct psc_fields_list *flds,

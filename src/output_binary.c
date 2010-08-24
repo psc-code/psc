@@ -126,7 +126,6 @@ binary_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 
 struct psc_output_format_ops psc_output_format_ops_binary = {
   .name         = "binary",
-  .ext          = ".psc",
   .write_fields = binary_write_fields,
 };
 

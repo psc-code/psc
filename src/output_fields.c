@@ -364,16 +364,6 @@ write_fields_combine(struct psc_fields_list *list,
 }
 
 // ----------------------------------------------------------------------
-// write_fields
-
-static void
-write_fields(struct psc_output_c *out, struct psc_fields_list *list,
-	     const char *prefix)
-{
-  out->format_ops->write_fields(out, list, prefix);
-}
-
-// ----------------------------------------------------------------------
 // output_c_field
 
 static void
@@ -406,7 +396,7 @@ output_c_field()
        out->pfield_next += out->pfield_step;
        struct psc_fields_list flds_list;
        make_fields_list(&flds_list, &out->pfd);
-       write_fields(out, &flds_list, "pfd");
+       out->format_ops->write_fields(out, &flds_list, "pfd");
        free_fields_list(&flds_list);
     }
   }
@@ -426,7 +416,7 @@ output_c_field()
 
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd);
-      write_fields(out, &flds_list, "tfd");
+      out->format_ops->write_fields(out, &flds_list, "tfd");
       free_fields_list(&flds_list);
       for (int m = 0; m < out->tfd.nr_flds; m++) {
 	fields_base_zero_all(&out->tfd.flds[m]);

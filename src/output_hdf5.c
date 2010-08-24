@@ -145,7 +145,6 @@ hdf5_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 
 struct psc_output_format_ops psc_output_format_ops_hdf5 = {
   .name         = "hdf5",
-  .ext          = ".h5",
   .write_fields = hdf5_write_fields,
 };
 
@@ -271,7 +270,6 @@ xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 
 struct psc_output_format_ops psc_output_format_ops_xdmf = {
   .name         = "xdmf",
-  .ext          = ".h5",
   .write_fields = xdmf_write_fields,
 };
 
