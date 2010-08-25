@@ -120,13 +120,19 @@ typedef fields_fortran_t fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define fields_base_alloc  fields_fortran_alloc
-#define fields_base_free   fields_fortran_free
-#define fields_base_zero   fields_fortran_zero
-#define fields_base_set    fields_fortran_set
-#define fields_base_copy   fields_fortran_copy
+#define fields_base_alloc            fields_fortran_alloc
+#define fields_base_alloc_with_array fields_fortran_alloc_with_array
+#define fields_base_free             fields_fortran_free
+#define fields_base_zero             fields_fortran_zero
+#define fields_base_zero_all         fields_fortran_zero_all
+#define fields_base_set              fields_fortran_set
+#define fields_base_copy             fields_fortran_copy
+#define fields_base_axpy_all         fields_fortran_axpy_all
+#define fields_base_scale_all        fields_fortran_scale_all
+#define fields_base_size             fields_fortran_size
 
 #define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
+#define XF3_BASE(pf, m, jx,jy,jz) F3_FORTRAN(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_C
 
@@ -136,13 +142,19 @@ typedef fields_c_t fields_base_t;
 typedef fields_c_real_t fields_base_real_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define fields_base_alloc fields_c_alloc
-#define fields_base_free  fields_c_free
-#define fields_base_zero  fields_c_zero
-#define fields_base_set   fields_c_set
-#define fields_base_copy  fields_c_copy
+#define fields_base_alloc            fields_c_alloc
+#define fields_base_alloc_with_array fields_c_alloc_with_array
+#define fields_base_free             fields_c_free
+#define fields_base_zero             fields_c_zero
+#define fields_base_zero_all         fields_c_zero_all
+#define fields_base_set              fields_c_set
+#define fields_base_copy             fields_c_copy
+#define fields_base_axpy_all         fields_c_axpy_all
+#define fields_base_scale_all        fields_c_scale_all
+#define fields_base_size             fields_c_size
 
 #define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
+#define XF3_BASE(pf, m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
@@ -302,8 +314,8 @@ struct psc_bnd_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*add_ghosts)(int mb, int me);
-  void (*fill_ghosts)(int mb, int me);
+  void (*add_ghosts)(fields_base_t *pf, int mb, int me);
+  void (*fill_ghosts)(fields_base_t *pf, int mb, int me);
   void (*exchange_particles)(void);
 };
 
@@ -311,7 +323,7 @@ struct psc_moment_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*calc_densities)(void);
+  void (*calc_densities)(fields_base_t *pf);
 };
 
 struct psc {
@@ -391,10 +403,10 @@ void psc_integrate(void);
 void psc_push_particles(void);
 void psc_push_field_a(void);
 void psc_push_field_b(void);
-void psc_add_ghosts(int mb, int me);
-void psc_fill_ghosts(int mb, int me);
+void psc_add_ghosts(fields_base_t *pf, int mb, int me);
+void psc_fill_ghosts(fields_base_t *pf, int mb, int me);
 void psc_exchange_particles(void);
-void psc_calc_densities(void);
+void psc_calc_densities(fields_base_t *pf);
 
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);
@@ -453,7 +465,7 @@ extern struct psc_bnd_ops psc_bnd_ops_fortran;
 extern struct psc_bnd_ops psc_bnd_ops_c;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
-extern struct psc_moment_ops psc_moment_ops_generic_c;
+extern struct psc_moment_ops psc_moment_ops_c;
 
 extern struct psc_case_ops psc_case_ops_langmuir;
 extern struct psc_case_ops psc_case_ops_wakefield;
@@ -528,6 +540,6 @@ void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 
 #define sqr(a) ((a) * (a))
 
-#define HERE printf("HERE: in %s() at %s:%d\n", __FUNCTION__, __FILE__, __LINE__)
+#define HERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
 
 #endif

@@ -78,7 +78,7 @@ c         call OUT_poyc        ! energy conservation
 c END OF TIME LOOP
 
       call SERV_write(nmax+1, niloc, p_niloc,
-     &     ne, ni, nn, jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
       call MPI_BARRIER(MPI_COMM_WORLD,info)
 
       if (mpe.eq.0) then

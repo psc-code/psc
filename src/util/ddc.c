@@ -101,8 +101,9 @@ ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 
 static void
 ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
-	void (*to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf),
-	void (*from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf))
+	void *ctx,
+	void (*to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx),
+	void (*from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   int dir[3];
 
@@ -136,7 +137,7 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 	int dir1 = dir2idx(dir);
 	struct ddc_sendrecv *s = &patt->send[dir1];
 	if (s->len > 0) {
-	  to_buf(mb, me, s->ilo, s->ihi, s->buf);
+	  to_buf(mb, me, s->ilo, s->ihi, s->buf, ctx);
 #if 0
 	  printf("[%d] send to %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
 		 s->rank_nei,
@@ -160,7 +161,7 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 	int dir1 = dir2idx(dir);
 	struct ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
-	  from_buf(mb, me, r->ilo, r->ihi, r->buf);
+	  from_buf(mb, me, r->ilo, r->ihi, r->buf, ctx);
 	}
       }
     }
@@ -174,9 +175,9 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 // ddc_add_ghosts
 
 void
-ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me)
+ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx)
 {
-  ddc_run(ddc, &ddc->add_ghosts, mb, me,
+  ddc_run(ddc, &ddc->add_ghosts, mb, me, ctx,
 	  ddc->prm.copy_to_buf, ddc->prm.add_from_buf);
 }
 
@@ -184,9 +185,9 @@ ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me)
 // ddc_fill_ghosts
 
 void
-ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me)
+ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx)
 {
-  ddc_run(ddc, &ddc->fill_ghosts, mb, me,
+  ddc_run(ddc, &ddc->fill_ghosts, mb, me, ctx,
 	  ddc->prm.copy_to_buf, ddc->prm.copy_from_buf);
 }
 

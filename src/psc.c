@@ -68,7 +68,7 @@ static struct psc_bnd_ops *psc_bnd_ops_list[] = {
 
 static struct psc_moment_ops *psc_moment_ops_list[] = {
   &psc_moment_ops_fortran,
-  &psc_moment_ops_generic_c,
+  &psc_moment_ops_c,
   NULL,
 };
 
@@ -479,20 +479,20 @@ psc_push_field_b()
 // psc_add_ghosts
 
 void
-psc_add_ghosts(int mb, int me)
+psc_add_ghosts(fields_base_t *pf, int mb, int me)
 {
   assert(psc.bnd_ops->add_ghosts);
-  psc.bnd_ops->add_ghosts(mb, me);
+  psc.bnd_ops->add_ghosts(pf, mb, me);
 }
 
 // ----------------------------------------------------------------------
 // psc_fill_ghosts
 
 void
-psc_fill_ghosts(int mb, int me)
+psc_fill_ghosts(fields_base_t *pf, int mb, int me)
 {
   assert(psc.bnd_ops->fill_ghosts);
-  psc.bnd_ops->fill_ghosts(mb, me);
+  psc.bnd_ops->fill_ghosts(pf, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -612,10 +612,10 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 // psc_calc_densities
 
 void
-psc_calc_densities()
+psc_calc_densities(fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities();
+  psc.moment_ops->calc_densities(pf);
 }
 
 // ----------------------------------------------------------------------
@@ -643,7 +643,7 @@ psc_init(const char *case_name)
   particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
-  fields_base_alloc(&psc.pf);
+  fields_base_alloc(&psc.pf, psc.ilg, psc.ihg, NR_FIELDS);
   psc_init_field();
 }
 
@@ -678,7 +678,7 @@ psc_read_checkpoint(void)
   SERV_read_2(&pp, &pf);
 
   particles_fortran_put(&pp);
-  fields_fortran_put(&pf, NE, HZ + 1);
+  fields_fortran_put(&pf, JXI, HZ + 1);
 }
 
 // ----------------------------------------------------------------------
@@ -692,7 +692,7 @@ psc_write_checkpoint(void)
   particles_fortran_t pp;
   particles_fortran_get(&pp);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, NE, HZ + 1);
+  fields_fortran_get(&pf, JXI, HZ + 1);
 
   SERV_write(&pp, &pf);
 

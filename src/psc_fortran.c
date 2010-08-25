@@ -330,8 +330,10 @@ struct psc_output_ops psc_output_ops_fortran = {
 // fortran bnd
 
 static void
-fortran_add_ghosts(int mb, int me)
+fortran_add_ghosts(fields_base_t *pf_base, int mb, int me)
 {
+  assert(pf_base == &psc.pf);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_add_ghosts", 1., 0, 0);
@@ -359,8 +361,10 @@ fortran_add_ghosts(int mb, int me)
 }
 
 static void
-fortran_fill_ghosts(int mb, int me)
+fortran_fill_ghosts(fields_base_t *pf_base, int mb, int me)
 {
+  assert(pf_base == &psc.pf);
+
   static int pr;
   if (!pr) {
     pr = prof_register("fort_fill_ghosts", 1., 0, 0);
@@ -432,7 +436,7 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
 // fortran moment
 
 static void
-fortran_calc_densities(void)
+fortran_calc_densities(fields_base_t *pf_base)
 {
   static int pr;
   if (!pr) {
@@ -443,12 +447,12 @@ fortran_calc_densities(void)
   particles_fortran_t pp;
   particles_fortran_get(&pp);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, 0, 0);
+  fields_fortran_get_from(&pf, 0, 0, pf_base, 0);
 
   CALC_densities(&pp, &pf);
 
   particles_fortran_put(&pp);
-  fields_fortran_put(&pf, NE, NE + 3);
+  fields_fortran_put_to(&pf, NE, NE + 3, pf_base, 0);
 
   prof_stop(pr);
 }

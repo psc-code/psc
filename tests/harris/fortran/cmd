@@ -4,8 +4,5 @@ openmpirun -n 2 src/VLI \
 	   --case harris \
 	   --itot_x 64 --itot_z 64 --ihi_x 64 --ihi_z 64 \
 	   --nmax 11
-
-util/compare_field.py -f ne,ni tests/harris/c/field_000000010.h5 pfd_0000010.h5 
-
-#openmpirun -n 2 src/VLI --mod_output hdf5 --case harris --itot_x 64 --itot_z 64 --ihi_x 64 --ihi_z 64 --nproc_x 2 --nmax 11
-#util/compare_field.py -f ne,ni tests/harris/c/field_000000010.h5 field_000000010.h5 
+util/compare_field.py -f ne,ni tests/harris/c/pfd_0000000.h5 pfd_0000000.h5 
+util/compare_field.py -f ne,ni tests/harris/c/pfd_0000010.h5 pfd_0000010.h5 

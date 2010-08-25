@@ -9,152 +9,147 @@
 #include <math.h>
 
 //////////////////////////////////////////////////////////////////////
-/// Stores information private to the VTK writers.
-
-struct vtk_ctx {
-  FILE *file;
-};
-
-//////////////////////////////////////////////////////////////////////
 /// Helper to open the file and write the header.
 
 static void
-vtk_open_file(struct vtk_ctx *vtk, const char *pfx, const char *dataset_type,
-	      int extra, struct psc_field *fld, struct psc_output_c *out)
+vtk_open_file(const char *pfx, const char *dataset_type, int extra,
+	      struct psc_output_c *out, FILE **pfile)
 {
-  char *filename = psc_output_c_filename(out, pfx);
-  vtk->file = fopen(filename, "w");
-  free(filename);
-  fprintf(vtk->file, "# vtk DataFile Version 3.0\n");
-  fprintf(vtk->file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
-  fprintf(vtk->file, "ASCII\n");
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%07d.vtk", out->data_dir, pfx, psc.timestep);
 
-  fprintf(vtk->file, "DATASET %s\n", dataset_type);
-  fprintf(vtk->file, "DIMENSIONS %d %d %d\n",
-	  fld->ihi[0] - fld->ilo[0] + extra,
-	  fld->ihi[1] - fld->ilo[1] + extra,
-	  fld->ihi[2] - fld->ilo[2] + extra);
+  FILE *file = fopen(filename, "w");
+  fprintf(file, "# vtk DataFile Version 3.0\n");
+  fprintf(file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
+  fprintf(file, "ASCII\n");
+
+  fprintf(file, "DATASET %s\n", dataset_type);
+  fprintf(file, "DIMENSIONS %d %d %d\n",
+	  psc.domain.ihi[0] - psc.domain.ilo[0] + extra,
+	  psc.domain.ihi[1] - psc.domain.ilo[1] + extra,
+	  psc.domain.ihi[2] - psc.domain.ilo[2] + extra);
+  
+  *pfile = file;
 }
 
 //////////////////////////////////////////////////////////////////////
 /// Helper to write the coordinates to the VTK file.
 
 static void
-vtk_write_coordinates(struct vtk_ctx *vtk, int extra, double offset,
-		      struct psc_field *fld)
+vtk_write_coordinates(FILE *file, int extra, double offset)
 {
   for (int d = 0; d < 3; d++) {
-    fprintf(vtk->file, "%c_COORDINATES %d float", 'X' + d,
-	    fld->ihi[d] - fld->ilo[d] + extra);
-    for (int i = fld->ilo[d]; i < fld->ihi[d] + extra; i++) {
-      fprintf(vtk->file, " %g", (i + offset) * psc.dx[d]);
+    fprintf(file, "%c_COORDINATES %d float", 'X' + d,
+	    psc.domain.ihi[d] - psc.domain.ilo[d] + extra);
+    for (int i = psc.domain.ilo[d]; i < psc.domain.ihi[d] + extra; i++) {
+      fprintf(file, " %g", (i + offset) * psc.dx[d]);
     }
-    fprintf(vtk->file, "\n");
+    fprintf(file, "\n");
   }
 }
 
 //////////////////////////////////////////////////////////////////////
-/// Open VTK file for STRUCTURED_POINTS output.
+/// Helper to write one field to VTK file.
 
 static void
-vtk_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	 void **pctx)
+vtk_write_field(void *ctx, fields_base_t *fld)
 {
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
+  FILE *file = ctx;
 
-  assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
-  int *ilo = fld->ilo;
+  int *ib = fld->ib, *im = fld->im;
+  fprintf(file, "SCALARS %s float\n", fld->name[0]);
+  fprintf(file, "LOOKUP_TABLE default\n");
 
-  vtk_open_file(vtk, pfx, "STRUCTURED_POINTS", 0, fld, out);
-
-  fprintf(vtk->file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
-  fprintf(vtk->file, "ORIGIN %g %g %g\n",
-	  psc.dx[0] * ilo[0],
-	  psc.dx[1] * ilo[1],
-	  psc.dx[2] * ilo[2]);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
-
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Open VTK file for RECTILINEAR_GRID output with data values on points.
-
-static void
-vtk_points_open(struct psc_output_c *out, struct psc_fields_list *list,
-		const char *pfx, void **pctx)
-{
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
-
-  assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
-  
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 0, fld, out);
-  vtk_write_coordinates(vtk, 0, 0., fld);
-  fprintf(vtk->file, "\nPOINT_DATA %d\n", fld->size);
-
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Open VTK file for RECTILINEAR_GRID output with data values on cells.
-
-static void
-vtk_cells_open(struct psc_output_c *out, struct psc_fields_list *list,
-	       const char *pfx, void **pctx)
-{
-  struct vtk_ctx *vtk = malloc(sizeof(*vtk));
-
-  assert(list->nr_flds > 0);
-  struct psc_field *fld = &list->flds[0];
-  
-  vtk_open_file(vtk, pfx, "RECTILINEAR_GRID", 1, fld, out);
-  vtk_write_coordinates(vtk, 1, .5, fld);
-  fprintf(vtk->file, "\nCELL_DATA %d\n", fld->size);
-
-  *pctx = vtk;
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Close VTK file.
-
-static void
-vtk_close(void *ctx)
-{
-  struct vtk_ctx *vtk = ctx;
-
-  fclose(vtk->file);
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Write one field to VTK file.
-
-static void
-vtk_write_field(void *ctx, struct psc_field *fld)
-{
-  struct vtk_ctx *vtk = ctx;
-  
-  int mm[3];
-  for (int d = 0; d < 3; d++) {
-    mm[d] = fld->ihi[d] - fld->ilo[d];
-  }
-
-  fprintf(vtk->file, "SCALARS %s float\n", fld->name);
-  fprintf(vtk->file, "LOOKUP_TABLE default\n");
-
-  for (int iz = fld->ilo[2]; iz < fld->ihi[2]; iz++) {
-    for (int iy = fld->ilo[1]; iy < fld->ihi[1]; iy++) {
-      for (int ix = fld->ilo[0]; ix < fld->ihi[0]; ix++) {
-	float val = fld->data[((iz-fld->ilo[2]) * mm[1] + iy-fld->ilo[1]) * mm[0] + ix-fld->ilo[0]];
+  for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
+    for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
+      for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
+	float val = XF3_BASE(fld, 0, ix,iy,iz);
 	if (fabsf(val) < 1e-37) {
-	  fprintf(vtk->file, "%g ", 0.);
+	  fprintf(file, "%g ", 0.);
 	} else {
-	  fprintf(vtk->file, "%g ", val);
+	  fprintf(file, "%g ", val);
 	}
       }
-      fprintf(vtk->file, "\n");
+      fprintf(file, "\n");
     }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for STRUCTURED_POINTS output.
+
+static void
+vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+		 const char *pfx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  FILE *file;
+  if (rank == 0) {
+    vtk_open_file(pfx, "STRUCTURED_POINTS", 0, out, &file);
+    fprintf(file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+    fprintf(file, "ORIGIN %g %g %g\n",
+	    psc.dx[0] * psc.domain.ilo[0],
+	    psc.dx[1] * psc.domain.ilo[1],
+	    psc.dx[2] * psc.domain.ilo[2]);
+    fprintf(file, "\nPOINT_DATA %d\n",
+	    (psc.domain.ihi[0] - psc.domain.ilo[0]) * 
+	    (psc.domain.ihi[1] - psc.domain.ilo[1]) *
+	    (psc.domain.ihi[2] - psc.domain.ilo[2]));
+  }
+
+  write_fields_combine(flds, vtk_write_field, file);
+
+  if (rank == 0) {
+    fclose(file);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for RECTILINEAR_GRID output with data values on points.
+
+static void
+vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+			const char *pfx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  FILE *file;
+  if (rank == 0) {
+    vtk_open_file(pfx, "RECTILINEAR_GRID", 0, out, &file);
+    vtk_write_coordinates(file, 0, 0.);
+    fprintf(file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+  }
+
+  write_fields_combine(flds, vtk_write_field, file);
+
+  if (rank == 0) {
+    fclose(file);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/// Write VTK file for RECTILINEAR_GRID output with data values on cells.
+
+static void
+vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+		       const char *pfx)
+{
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  FILE *file;
+  if (rank == 0) {
+    vtk_open_file(pfx, "RECTILINEAR_GRID", 1, out, &file);
+    vtk_write_coordinates(file, 1, .5);
+    fprintf(file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
+  }
+  write_fields_combine(flds, vtk_write_field, file);
+
+  if (rank == 0) {
+    fclose(file);
   }
 }
 
@@ -163,10 +158,7 @@ vtk_write_field(void *ctx, struct psc_field *fld)
 
 struct psc_output_format_ops psc_output_format_ops_vtk = {
   .name         = "vtk",
-  .ext          = ".vtk",
-  .open         = vtk_open,
-  .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -176,10 +168,7 @@ struct psc_output_format_ops psc_output_format_ops_vtk = {
 
 struct psc_output_format_ops psc_output_format_ops_vtk_points = {
   .name         = "vtk_points",
-  .ext          = ".vtk",
-  .open         = vtk_points_open,
-  .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_points_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -191,9 +180,6 @@ struct psc_output_format_ops psc_output_format_ops_vtk_points = {
 
 struct psc_output_format_ops psc_output_format_ops_vtk_cells = {
   .name         = "vtk_cells",
-  .ext          = ".vtk",
-  .open         = vtk_cells_open,
-  .close        = vtk_close,
-  .write_field  = vtk_write_field,
+  .write_fields = vtk_cells_write_fields,
 };
 

@@ -77,35 +77,30 @@ void PIC_push_part_xz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 
 void PIC_push_part_yz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
-			  f_real *ne, f_real *ni, f_real *nn,
 			  f_real *jxi, f_real *jyi, f_real *jzi,
 			  f_real *ex, f_real *ey, f_real *ez,
 			  f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_xyz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 		 	   f_real *p2A, f_real *p2B,
-			   f_real *ne, f_real *ni, f_real *nn,
 			   f_real *jxi, f_real *jyi, f_real *jzi,
 			   f_real *ex, f_real *ey, f_real *ez,
 			   f_real *bx, f_real *by, f_real *bz);
 
 void PIC_push_part_yz_a_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
-			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
 			    f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_yz_b_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			    f_real *p2A, f_real *p2B,
-			    f_real *ne, f_real *ni, f_real *nn,
 			    f_real *jxi, f_real *jyi, f_real *jzi,
 			    f_real *ex, f_real *ey, f_real *ez,
 			    f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_z_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			 f_real *p2A, f_real *p2B,
-			 f_real *ne, f_real *ni, f_real *nn,
 			 f_real *jxi, f_real *jyi, f_real *jzi,
 			 f_real *ex, f_real *ey, f_real *ez,
 			 f_real *hx, f_real *hy, f_real *hz);
@@ -168,12 +163,10 @@ void PIC_pml_msb_F77(f_real *ex, f_real *ey, f_real *ez,
 		     f_real *eps, f_real *mu);
 void SERV_read_1_F77(f_int *timestep, f_int *n_part);
 void SERV_read_2_F77(f_int *niloc, particle_fortran_t *p_niloc,
-		     f_real *ne, f_real *ni, f_real *nn,
 		     f_real *jxi, f_real *jyi, f_real *jzi,
 		     f_real *ex, f_real *ey, f_real *ez,
 		     f_real *hx, f_real *hy, f_real *hz);
 void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
-		    f_real *ne, f_real *ni, f_real *nn,
 		    f_real *jxi, f_real *jyi, f_real *jzi,
 		    f_real *ex, f_real *ey, f_real *ez,
 		    f_real *hx, f_real *hy, f_real *hz);
@@ -212,7 +205,6 @@ PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
-		       pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -233,7 +225,6 @@ PIC_push_part_xyz(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
-			pf->flds[NE], pf->flds[NI], pf->flds[NN],
 			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -244,7 +235,6 @@ PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_yz_a_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
-			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -255,7 +245,6 @@ PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_yz_b_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
-			 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -266,7 +255,6 @@ PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
-		      pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		      pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -539,7 +527,6 @@ void
 SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   SERV_read_2_F77(&pp->n_part, &pp->particles[-1],
-		  pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -550,7 +537,6 @@ SERV_write(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   SERV_write_F77(&psc.timestep,
 		 &pp->n_part, &pp->particles[-1],
-		 pf->flds[NE], pf->flds[NI], pf->flds[NN],
 		 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);

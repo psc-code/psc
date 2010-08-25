@@ -19,7 +19,7 @@ out = {};
 PT = 't';
 
 # datadir
-datadir = '../data/'
+datadir = '.'
 
 outfile = datadir  +'/' + PT + 'fields.mat'
 print 'Outfile: ' + outfile
@@ -32,51 +32,28 @@ out['ts'] = 1.0 * ts			# 1.0 * : force to be double
 npe = 2;
 
 # decimation of data
-decX = 5
-decZ = 4
+decX = 1
+decZ = 1
 
-# whether to decimate by averaging (1) or simple choosing (0)
+# fields to keep in the matlab file (if a field is not in the original output,
+# it will be ignored)
+
+keep = set(['ne', 'ni'])
+
+# whether to decimate by averaging (True) or simple choosing
 # for averaging to work, we require that the number of data points 
 # along z be a multiple of decZ, (and analogously for decX)
-meanDec = 1
+meanDec = True
 
 out['decX'] = array( [1.0*decX] )
 out['decZ'] = array( [1.0*decZ] )
-
-# data to end up with.  1 or 0 indicates whether you want to keep it
-# Order reflects order of their output in OUT_fields.f, so is important
-field = [
-  {'name' : 'ne',   'keep' : 1},
-  {'name' : 'ni',   'keep' : 1},
-  {'name' : 'nn',   'keep' : 1},
-  {'name' : 'ex',   'keep' : 1},
-  {'name' : 'ey',   'keep' : 1},
-  {'name' : 'ez',   'keep' : 1},
-  {'name' : 'bx',   'keep' : 1},
-  {'name' : 'by',   'keep' : 1},
-  {'name' : 'bz',   'keep' : 1},
-  {'name' : 'jx',   'keep' : 1},
-  {'name' : 'jy',   'keep' : 1},
-  {'name' : 'jz',   'keep' : 1},
-  {'name' : 'jxex', 'keep' : 0},
-  {'name' : 'jyey', 'keep' : 0},
-  {'name' : 'jzez', 'keep' : 0},
-  {'name' : 'poyx', 'keep' : 0},
-  {'name' : 'poyy', 'keep' : 0},
-  {'name' : 'poyz', 'keep' : 0},
-  {'name' : 'ex2',  'keep' : 0},
-  {'name' : 'ey2',  'keep' : 0},
-  {'name' : 'ez2',  'keep' : 0},
-  {'name' : 'bx2',  'keep' : 0},
-  {'name' : 'by2',  'keep' : 0},
-  {'name' : 'bz2',  'keep' : 0},
-] 
-
 
 # GO!
 
 for k in range(len(ts)):
     print ts[k]
+
+    field = []
     for pe in range(npe):
         filename = '%s/%cfd_%06d_%07d.psc' % ( datadir, PT, pe, ts[k] )
 
@@ -140,34 +117,26 @@ for k in range(len(ts)):
         r2_ind = arange(r2n, r2x, 1)
         r3_ind = arange(r3n, r3x, decZ)
 
+        nr_flds = unpack(LB + 'i', f.read(4))[0]
         # which fields were written to the data file... PSC dowrite_* vars
-        for j in range(24):
-           field[j]['wrote'] = (unpack( LB + 'c', f.read(1) )[0] == '\x01')
+        for j in range(nr_flds):
+            name = unpack(LB + '8s', f.read(8))[0].strip('\00')
+            if pe == 0:
+                field.append(name)
 
         # Can now initialize out field matrices 
         if k == 0 and pe == 0:
-            for j in range(24):
-                if field[j]['wrote'] and field[j]['keep']:
-                    out[field[j]['name']] = zeros( (len(ts), len(r1_ind), 
-                                                   len(r2_ind), len(r3_ind)) )
-
+            for fld in field:
+                if fld in keep:
+                    out[fld] = zeros((len(ts), len(r1_ind), len(r2_ind), len(r3_ind)))
 
         # Temporary field matrices (pre decimation)
         if pe == 0:
            tmp = {}
-           for j in range(24):
-               if field[j]['wrote'] and field[j]['keep']:
-                   tmp[field[j]['name']] = zeros( (r1x-r1n, 
-                                               r2x-r2n, r3x-r3n) )
+           for fld in field:
+               if fld in keep:
+                   tmp[fld] = zeros( (r1x-r1n, r2x-r2n, r3x-r3n) )
      
-        # Index range actually written into this data file
-#        i1a = unpack( LB + 'i', f.read(4) )[0]
-#        i1e = unpack( LB + 'i', f.read(4) )[0]
-#        i2a = unpack( LB + 'i', f.read(4) )[0]
-#        i2e = unpack( LB + 'i', f.read(4) )[0]
-#        i3a = unpack( LB + 'i', f.read(4) )[0]
-#        i3e = unpack( LB + 'i', f.read(4) )[0]
-
         i1a = i1mn;
         i1e = i1mx;
         i2a = i2mn;
@@ -192,48 +161,32 @@ for k in range(len(ts)):
             t_i3a = i3a - r3n;
             t_i3e = i3e - r3n;      
 
-            for j in range(24):
-                if field[j]['wrote']:
+            for fld in field:
+                datachunk = array(unpack( LB + '%df' % Ndata, f.read(4*Ndata)));
 
-                    datachunk = array(unpack( LB + '%df' % Ndata, f.read(4*Ndata)));
-
-
-#                    print datachunk.shape
+                if fld in keep:
+                    datachunk = reshape(datachunk, (i1e-i1a, 
+                                                    i2e-i2a, i3e-i3a), order='F')
                     
-                    if field[j]['keep']:
-                        datachunk = reshape(datachunk, (i1e-i1a, 
-                                              i2e-i2a, i3e-i3a), order='F')
-
-                        tmp[field[j]['name']][t_i1a:t_i1e, 
-                           t_i2a:t_i2e, t_i3a:t_i3e] = datachunk
-                else:
-                    if field[j]['keep']:
-                        raise Exception('HELP! Want to keep field %s \
-                               but it was not saved' % field[j]['name'] )
-                # end if wrote
-            # end for j fields 
-        # end if Ndata > 0
+                    tmp[fld][t_i1a:t_i1e, t_i2a:t_i2e, t_i3a:t_i3e] = datachunk
                         
         f.close();
     # end for each proc
 
     # assemble out from tmp
-    for j in range(24):
-       if field[j]['wrote'] and field[j]['keep']:
-           if meanDec==1:
-               out[field[j]['name']][k,:,:,:] =  \
-                 mean( mean( mean(
-                  reshape(tmp[field[j]['name']], 
-                     (decX, len(r1_ind), 1, len(r2_ind), decZ, len(r3_ind)),
-                     order='F'),
-                 4), 2), 0)
-           else:
-               out[field[j]['name']][k,:,:,:] =  \
-                 tmp[field[j]['name']][r1_ind, r2_ind, r3_ind]
-           # if meanDec
-       # if wrote and keep
-    # for each field
-
+    for fld in field:
+       if fld not in keep:
+           continue
+       
+       if meanDec:
+           out[fld][k,:,:,:] = mean( mean( mean(
+               reshape(tmp[fld], 
+                       (decX, len(r1_ind), 1, len(r2_ind), decZ, len(r3_ind)),
+                       order='F'),
+               4), 2), 0)
+       else:
+           out[fld][k,:,:,:] = tmp[fld][r1_ind, r2_ind, r3_ind]
+           
 # end for each time slice
 
 # Compression has to wait for Scipy 0.8

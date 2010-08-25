@@ -47,6 +47,7 @@ src/cuda/push_part_yz.cu
 src/util/test_params
 /*.h5
 /*.xdmf
+/*.psc
 *.vtk
 data
 doxygen/doxy_err.log

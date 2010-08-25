@@ -4,50 +4,21 @@
 
 #include "psc.h"
 
-enum {
-  X_NE, X_NI, X_NN,
-  X_JXI, X_JYI, X_JZI,
-  X_EX , X_EY , X_EZ ,
-  X_HX , X_HY , X_HZ ,
-  X_JXEX, X_JYEY, X_JZEZ,
-  X_POYX, X_POYY, X_POYZ,
-  X_E2X, X_E2Y, X_E2Z,
-  X_B2X, X_B2Y, X_B2Z,
-  NR_EXTRA_FIELDS,
-};
-
-#define MAX_FIELDS_LIST NR_EXTRA_FIELDS
-
-struct psc_field {
-  float *data;
-  int ilo[3], ihi[3];
-  unsigned int size;
-  const char *name;
-};
+#define MAX_FIELDS_LIST 30
 
 struct psc_fields_list {
   int nr_flds;
-  struct psc_field flds[MAX_FIELDS_LIST];
-  bool *dowrite_fd; // FIXME, obsolete -- don't use
-};
-
-struct psc_extra_fields {
-  unsigned int size;
-  unsigned int naccum;
-  float *all[NR_EXTRA_FIELDS];
+  fields_base_t flds[MAX_FIELDS_LIST];
 };
 
 struct psc_output_c;
 
 struct psc_output_format_ops {
   const char *name;
-  const char *ext;
   void (*create)(void);
   void (*destroy)(void);
-  void (*open)(struct psc_output_c *out, struct psc_fields_list *flds,
-	       const char *prefix, void **pctx);
-  void (*close)(void *ctx);
-  void (*write_field)(void *ctx, struct psc_field *fld);
+  void (*write_fields)(struct psc_output_c *out, struct psc_fields_list *flds,
+		       const char *prefix);
 };
 
 extern struct psc_output_format_ops psc_output_format_ops_binary;
@@ -60,19 +31,22 @@ extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
 struct psc_output_c {
   char *data_dir;
   char *output_format;
-  bool output_combine;
+  char *output_fields;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
-  bool dowrite_fd[NR_EXTRA_FIELDS];
 
   int pfield_next, tfield_next;
   // storage for output
-  struct psc_extra_fields pfd, tfd;
+  unsigned int naccum;
+  struct psc_fields_list pfd, tfd;
+  struct output_field *out_flds[MAX_FIELDS_LIST];
 
   struct psc_output_format_ops *format_ops;
 };
 
-char *psc_output_c_filename(struct psc_output_c *out, const char *pfx);
+void write_fields_combine(struct psc_fields_list *list, 
+			  void (*write_field)(void *ctx, fields_base_t *fld),
+			  void *ctx);
 
 #endif

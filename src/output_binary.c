@@ -7,13 +7,32 @@
 #include <mpi.h>
 #include <string.h>
 
-struct binary_ctx {
-  FILE *file;
-};
+static void
+binary_write_field(FILE *file, fields_base_t *fld)
+{
+  int *ilo = psc.ilo, *ihi = psc.ihi;
+
+  unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
+
+  // convert to float, drop ghost points
+  float *data = calloc(sz, sizeof(float));
+  int i = 0;
+  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	data[i++] = XF3_BASE(fld,0, ix,iy,iz);
+      }
+    }
+  }
+    
+  fwrite(data, sizeof(*data), sz, file);
+
+  free(data);
+}
 
 static void
-binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *pfx,
-	    void **pctx)
+binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+		    const char *pfx)
 {
   const char headstr[] = "PSC ";
   const char datastr[] = "DATA";
@@ -24,12 +43,12 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
   
   float t_float;
 
-  struct binary_ctx *binary = malloc(sizeof(*binary));
-  
-  char *filename = psc_output_c_filename(out, pfx);
-  binary->file = fopen(filename, "wb");
-  free(filename);
-  FILE *file = binary->file;
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  char filename[strlen(out->data_dir) + 30];
+  sprintf(filename, "%s/%s_%06d_%07d.psc", out->data_dir, pfx, rank, psc.timestep);
+
+  FILE *file = fopen(filename, "wb");
 
   // Header  
   fwrite(headstr, sizeof(char), 4, file);
@@ -56,29 +75,21 @@ binary_open(struct psc_output_c *out, struct psc_fields_list *list, const char *
   fwrite(&psc.domain.ihi[1], sizeof(psc.domain.ihi[1]), 1, file);
   fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
-  
-  assert(list->dowrite_fd);
-  fwrite(list->dowrite_fd, sizeof(bool), NR_EXTRA_FIELDS, file);
+
+  fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);
+  for (int i = 0; i < list->nr_flds; i++) {
+    char fldname[8] = {};
+    snprintf(fldname, 8, "%s", list->flds[i].name[0]);
+    fwrite(fldname, 8, 1, file); 
+  }
 
   fwrite(datastr, sizeof(char), 4, file);
   
-  *pctx = binary;
-}
+  for (int m = 0; m < list->nr_flds; m++) {
+    binary_write_field(file, &list->flds[m]);
+  }
 
-static void
-binary_close(void *ctx)
-{
-  struct binary_ctx *binary = ctx;
-
-  fclose(binary->file);
-}
-
-static void
-binary_write_field(void *ctx, struct psc_field *fld)
-{
-  struct binary_ctx *binary = ctx;
-
-  fwrite(fld->data, sizeof(float), fld->size, binary->file);
+  fclose(file);
 }
 
 // ======================================================================
@@ -86,10 +97,7 @@ binary_write_field(void *ctx, struct psc_field *fld)
 
 struct psc_output_format_ops psc_output_format_ops_binary = {
   .name         = "binary",
-  .ext          = ".psc",
-  .open         = binary_open,
-  .close        = binary_close,
-  .write_field  = binary_write_field,
+  .write_fields = binary_write_fields,
 };
 
 

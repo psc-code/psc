@@ -18,9 +18,9 @@ struct ddc_params {
   int ilo[3], ihi[3]; // local domain (no ghosts)
   int ibn[3]; // # ghost points
   int bc[3]; // boundary condition
-  void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf);
-  void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf);
-  void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf);
+  void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
 struct ddc_sendrecv {
@@ -46,8 +46,8 @@ struct ddc_subdomain {
 };
 
 struct ddc_subdomain *ddc_create(struct ddc_params *prm);
-void ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me);
-void ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me);
+void ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
+void ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
 
 int ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3]);
 
