@@ -41,7 +41,7 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_sse2);
   psc_push_particles();
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-7);
+  psc_check_particles_ref(1e-7, "push_part_xz -- sse2");
   psc_check_currents_ref(1e-6);
   psc_destroy();
 #endif
