@@ -199,7 +199,7 @@ xdmf_write_temporal_collection(struct psc_output_c *out, const char *pfx)
   // which needs however some way to figure out what times we've written
   // before.
   char fname[strlen(out->data_dir) + strlen(pfx) + 20];
-  sprintf(fname, "%s.xdmf", pfx);
+  sprintf(fname, "%s/%s.xdmf", out->data_dir, pfx);
   FILE *f = fopen(fname, "w");
 
   fprintf(f, "<?xml version='1.0' ?>\n");
