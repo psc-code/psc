@@ -125,7 +125,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
 
   *n_part = np;
   // calculate global particle label offset for unique numbering
-  particle_label_offset = 0; // necessary on proc 0
+  *particle_label_offset = 0; // necessary on proc 0
   MPI_Exscan(n_part, particle_label_offset, 1, MPI_INT, MPI_SUM,
 	     MPI_COMM_WORLD);
 }
