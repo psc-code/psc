@@ -2,7 +2,7 @@ openmpirun -n 2 src/VLI \
 	   --nproc_z 2 \
 	   --mod_output c --output_format hdf5 --output_combine --write_tfield no \
 	   --mod_particle generic_c \
-	   --mod_moment generic_c \
+	   --mod_moment c \
 	   --mod_field fortran \
 	   --mod_bnd c \
 	   --case wakefield \
