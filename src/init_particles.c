@@ -1,13 +1,17 @@
-
 #include "psc.h"
+#include "util/params.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <mpi.h>
+#include <time.h>
 
-// simple division into equal sized chunks / direction
+static struct param seed_by_time_descr[] = {
+  { "seed_by_time"          , 0       , PARAM_BOOL(false)   },
+  {},
+};
 
 static int
 get_n_in_cell(real n)
@@ -116,6 +120,21 @@ psc_init_particles(int particle_label_offset)
   }
 
   double beta = psc.coeff.beta;
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  // if seed_by_time is set, different random numbers are generated in each run. 
+  bool seed_by_time;
+  params_parse_cmdline(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
+  params_print(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
+  
+  if (seed_by_time) {
+    srandom(10*rank + time(NULL));
+  } else {
+    srandom(rank);
+  }
+
   int i = 0;
 
   if (psc.Case->ops->init_npt) {
@@ -133,7 +152,6 @@ psc_init_particles(int particle_label_offset)
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_base_t *p = particles_base_get_one(&psc.pp, i++);
 	      
-	      // FIXME? this gives same random numbers on all procs
 	      float ran1, ran2, ran3, ran4, ran5, ran6;
 	      do {
 		ran1 = random() / ((float) RAND_MAX + 1);
