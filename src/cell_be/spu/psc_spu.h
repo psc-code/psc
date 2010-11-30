@@ -1,4 +1,4 @@
-\#ifndef PSC_SPU_H
+#ifndef PSC_SPU_H
 #define PSC_SPU_H 
 #include <simdmath.h>
 #include "psc_cbe.h"
@@ -171,9 +171,10 @@ const vector unsigned char uphi_pat =
   __A = spu_shuffle(__alpha, __beta, uplo_pat);		\
   *((v_real *) &(part[(n)+2].xi)) = __A;		\
   __gamma = spu_shuffle(pyi, qni, uphi_pat);		\
-   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
+b   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
   __C = spu_shuffle(__gamma, __delta, uplo_pat);	\
   *((v_real *) &(part[(n)+2].pyi)) = __C;		\
+
   __B = spu_shuffle(__alpha, __beta, uphi_pat);		\
   *((v_real *) &(part[(n)+3].xi)) = __B;		\
   __D = spu_shuffle(__gamma, __delta, uphi_pat);	\
@@ -188,6 +189,10 @@ const vector unsigned char uphi_pat =
      *img[1] + ((jy)-ilg[1]))					\
     *img[0] + ((jx)-ilg[0]))					\
    *NR_FIELDS + fldnr)
+
+// Some global variables on the spu
+extern psc_cell_env_t psc_env;
+extern psc_cell_block_t psc_block;
 
 
 

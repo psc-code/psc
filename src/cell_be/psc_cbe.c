@@ -1,68 +1,42 @@
 #include <stdlib.h>
-#include <alf.h>
 #include <assert.h>
 #include "psc.h"
 #include "psc_cbe.h"
-#include "psc_alf.h"
 
-alf_handle_t alf_env_shared = ALF_NULL_HANDLE;
+#ifdef CELLEMU
+#include <libspe2_c.h>
+#else
+#include <libspe2.h>
+#endif 
 
-///////
-/// Set up a shared ALF environment.
-/// 
-/// Queries the system for number of available spus.
-/// Pass max_nodes = 0 to use all available spus.
-/// If max_nodes is greater than than the number of 
-/// available nodes, all available nodes are used.
-/// If max_nodes is less than the number of available
-/// nodes, only max_nodes are used. On certain systems, 
-/// for example Blade Centers with dual CBE configurations, 
-/// it may be useful to restrict the number of nodes used 
-/// to the ALF environment to only on chip (8) spus, if
-/// memory bandwidth is a major limitation.
-void
-psc_alf_env_shared_create(unsigned int max_nodes)
-{
+#include <pthread.h>
+#include <string.h>
 
-  int ierr;
-  unsigned int avail_nodes;
-  unsigned int nodes;
+#ifdef CELLEMU
+#define NR_SPE (1)
+#else
+#define NR_SPE (8)
+#endif 
 
-  
-  // Create alf environment
-  // Right now, path to shared accelerator code libraries is gathered from 
-  // environment variable ALF_LIBRARY_PATH
-  ierr = alf_init_shared(NULL, &alf_env_shared); ACE; 
-  
-  //Find out how many spu's we have available.
-  ierr = alf_query_system_info(alf_env_shared, ALF_QUERY_NUM_ACCEL, 0 ,&avail_nodes); ACE; 
-  assert(avail_nodes > 0);
-  if( max_nodes == 0) {
-    nodes = avail_nodes;
-  } else if ( max_nodes < avail_nodes ) {
-    nodes = max_nodes;
-  } else {
-    nodes = avail_nodes;
-  }
 
-  // Tell alf how many spus to use.
-  ierr = alf_num_instances_set(alf_env_shared, nodes); ACE;
-}
 
-///////
-/// Shut down shared ALF environment.
-///
-/// Will wait at most 'wait_time' milliseconds for
-/// any running tasks to finish before forcing shutdown
-/// and setting alf_env_shared to ALF_NULL_HANDLE.
-/// Passing 0 forces immediate shutdown. 
-/// Passing <0 will wait forever (*not* recommended).
-void
-psc_alf_env_shared_destroy(int wait_time)
-{
-    int ierr = alf_exit(alf_env_shared, ALF_EXIT_POLICY_WAIT, wait_time);ACE;
-    alf_env_shared = ALF_NULL_HANDLE;
-}
+enum { 
+  SPE_IDLE,
+  SPE_RUN,
+};
+
+struct psc_spu_ops spu_progs = {
+  .test = test_handle,
+};
+
+psc_cell_ctx_t global_ctx __attribute__((aligned(128)));
+pcs_cell_block_t *spe_blocks[NR_SPE];
+static int spes_inited;
+static int active_spes;
+static int spe_state[NR_SPE];
+static spe_context_ptr_t spe_id[NR_SPE];
+static pthread_t thread_id[NR_SPE];
+
 
 ///////
 /// Computes the global parameters for the task context and registers their existence
@@ -154,11 +128,45 @@ wb_current_cache_store(fields_cbe_t *pf, spu_curr_cache_t * cache)
 }
 #undef JC_OFF
 
+static void *
+spe_thread_function(void *data)
+{
+  int i = (unsigned long) data;
+  int rc; 
+  unsigned int entry = SPE_DEFAULT_ENTRY;
+
+  do {
+    rc = spe_context_run(spe_id[i], &entry, 0,
+			 spe_blocks[i], &global_ctx, NULL);
+  } while (rc > 0);
+
+  pthread_exit(NULL);
+}
+
 static void 
 cbe_create(void)
 {
-  if( alf_env_shared == ALF_NULL_HANDLE ){
-    psc_alf_env_shared_create(0);
+  assert(sizeof(psc_cell_env_t) % 16 == 0);
+  int rc; 
+  spu_program_handle_t spu_prog;
+
+  spu_prog = spu_progs.test;
+  
+  for (int i = 0; i < NR_SPE; i++){
+    void *m;
+    rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
+    assert(rc == 0);
+    spe_blocks[i] = (psc_cell_block_t * m);
+    spe_id[i] = spe_context_create(0,NULL);
+    spe_program_load(spe_id[i],&spu_prog);
+    rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
+			(void *)(unsigned long) i); 
+    assert(rc == 0);
+    spe_state[i] = SPE_IDLE;
+  }
+  active_spes = 0;
+  
+  spes_inited = 1; 
   }
 }
 
@@ -172,6 +180,7 @@ cbe_destroy(void)
     psc_alf_env_shared_destroy(6000);
   }
 }
+
 
 struct psc_ops psc_ops_cbe = {
   .name                   = "cbe",
