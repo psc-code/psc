@@ -68,6 +68,12 @@ typedef struct
 } spu_curr_cache_t;
 
 
+typedef struct _block_node_t
+{
+  psc_cell_block_t * block; 
+  struct _block_node * next;
+} block_node_t; 
+
 struct psc_spu_ops {
   void (*spu_test)(void);
   void (*spu_1d)(void);

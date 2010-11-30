@@ -50,11 +50,14 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 #ifndef NDEBUG
     printf("spu main [%#llx]\n", spe_id);
 #endif
-    spu_dma_get(&psc_env, env, sizeof(psc_env));
-    psc_env.spe_id = spe_id; 
+    spu_dma_get(&global_ctx, env, sizeof(global_ctx));
+    global_ctx.spe_id = spe_id; 
   // Using loop lets us run switches 
   // inside an infinite loop.
   int rc; 
+  msg_out = SPU_IDLE; 
+  rc = spu_write_out_mbox(msg_out);
+  
   for(;;){
     msg_in = spu_read_in_mbox();
 

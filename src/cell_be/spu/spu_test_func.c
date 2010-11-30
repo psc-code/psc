@@ -3,13 +3,13 @@
 
 int spu_psc_hello(void) 
 { 
-  printf("%s from [%#llx]\n",psc_env.hello,psc_env.spe_id);
+  printf("%s from [%#llx]\n",global_ctx.hello,global_ctx.spe_id);
   return 0;
 }
 
 int spu_psc_goodbye(void) 
 {
-  printf("%s from [%#llx]\n",psc_env.bye,psc_env.spe_id);
+  printf("%s from [%#llx]\n",global_ctx.bye,global_ctx.spe_id);
   return 0;
 }
 

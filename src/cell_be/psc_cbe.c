@@ -30,7 +30,10 @@ struct psc_spu_ops spu_progs = {
 };
 
 psc_cell_ctx_t global_ctx __attribute__((aligned(128)));
-pcs_cell_block_t *spe_blocks[NR_SPE];
+psc_cell_block_t *spe_blocks[NR_SPE];
+block_node_t * staged_blocks; 
+block_node_t * finished_blocks; 
+
 static int spes_inited;
 static int active_spes;
 static int spe_state[NR_SPE];
@@ -156,7 +159,7 @@ cbe_create(void)
     void *m;
     rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
     assert(rc == 0);
-    spe_blocks[i] = (psc_cell_block_t * m);
+    spe_blocks[i] = (psc_cell_block_t *) m;
     spe_id[i] = spe_context_create(0,NULL);
     spe_program_load(spe_id[i],&spu_prog);
     rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
@@ -170,6 +173,72 @@ cbe_create(void)
   }
 }
 
+
+int
+get_spe(void)
+{
+  assert(spes_inited);
+  
+  int spe; 
+  
+  // Look for first idle spe
+  for(spe = 0; spe <= NR_SPE; spe++){
+    if (spe_state[spe] == SPE_IDLE)
+      break;
+  }
+
+  // This assert checks that we never call this function
+  // when all the SPEs are being used ( I think)
+  assert(spe < NR_SPE);
+  
+  spe_state[spe] = SPE_RUN;
+  active_spes++;
+  
+  assert(active_spes <= NR_SPE);
+
+  return spe;
+}
+
+void
+put_spe(int spe)
+{
+  spe_state[spe] = SPE_IDLE;
+  active_spes--;
+}
+
+block_node_t *
+block_ll_pop(block_node_t ** head) 
+{
+  block_node_t * old_head = *head;
+  *head = *head->next;
+  return old_head;
+}
+
+void
+block_ll_push(block_node_t * new, block_node_t ** head)
+{
+  new->next = *head;
+  *head = new; 
+}
+
+block_node_t *
+block_create(int * blo, int * bhi)
+{
+  block_node_t * node = malloc(sizeof(block_node_t));
+  node->block = calloc(1,sizeof(psc_cell_block_t));
+  assert(node->block != NULL);
+  node->next = NULL;
+  return node;
+}
+ 
+void
+block_ll_create(void)
+{
+  for(int i = 0; i < NR_SPES * 2; i++){
+    block_ll_push(block_create(1,1), &staged_blocks);
+  }
+}
+ 
 /// \FIXME Do the particle module destroy functions every get called?
 /// If not, we're going to be leaking an ALF environment...
 
@@ -186,5 +255,5 @@ struct psc_ops psc_ops_cbe = {
   .name                   = "cbe",
   .create                 = cbe_create,
   .destroy                = cbe_destroy,
-  .push_part_yz           = cbe_push_part_yz,
+  .push_part_xy           = cbe_push_part_2d,
 };
