@@ -5,11 +5,33 @@
 #include "psc_particles_cbe.h"
 #include "psc_fields_cbe.h"
 
+#ifdef CELLEMU
+#include "libspe2_c.h"
+#else
+#include <libspe2.h>
+#endif 
+
+#ifdef CELLEMU
+#define NR_SPE (1)
+#else
+#define NR_SPE (8)
+#endif 
+
+
 enum kern {
   SPU_HELLO,
   SPU_BYE,
   NR_KERN,
 };
+
+enum { 
+  SPU_QUIT,
+  SPU_ERROR,
+  SPU_RUNJOB,
+  SPE_IDLE,
+  SPE_RUN,
+};
+
 
 // The SPU can only load off 16byte boundaries, and as a 
 // consequence each particle need to occupy some multiple
@@ -21,10 +43,10 @@ enum kern {
 /// kernels. 
 typedef struct _psc_cell_ctx
 {
-  const char hello[8];
-  const char bye[8];
+  char hello[8];
+  char bye[8];
   unsigned long long spe_id; 
-
+  unsigned long long padding; 
   /*
   cbe_real dxi; ///< 1/dx
   cbe_real dyi; ///< 1/dy
@@ -48,7 +70,8 @@ typedef struct _psc_cell_ctx
 /// Parameters specific to each work block
 typedef struct _psc_cell_block
 {
-  enum kern job;
+  unsigned long long job;
+  unsigned long long padding; 
   /*
   unsigned long long p_start; ///< starting address of WB particles. 
   unsigned long long p_pad; ///< address of WB padding particles. 
@@ -68,22 +91,29 @@ typedef struct
 } spu_curr_cache_t;
 
 
-typedef struct _block_node_t
-{
-  psc_cell_block_t * block; 
-  struct _block_node * next;
-} block_node_t; 
 
 struct psc_spu_ops {
-  void (*spu_test)(void);
-  void (*spu_1d)(void);
-  void (*spu_2d)(void);
-  void (*spu_3d)(void);
-}
+  spe_program_handle_t spu_test;
+  spe_program_handle_t spu_1d;
+  spe_program_handle_t spu_2d;
+  spe_program_handle_t spu_3d;
+};
+
+int spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
+	     unsigned long long env);
+
+void cbe_push_part_2d(void);
+
+extern psc_cell_block_t *spe_blocks[NR_SPE];
+extern psc_cell_block_t **block_list; 
+extern int active_spes;
+extern spe_context_ptr_t spe_id[NR_SPE];
+// Deprecated alf stuff
+/*
 void cbe_push_part_yz(void);
 void psc_alf_env_shared_create(unsigned int max_nodes);
 void psc_alf_env_shared_destroy(int wait_time);
 void wb_current_cache_init(spu_curr_cache_t * cache, push_wb_context_t * blk);
 void wb_current_cache_store(fields_cbe_t * pf, spu_curr_cache_t * cache);
-
+*/
 #endif

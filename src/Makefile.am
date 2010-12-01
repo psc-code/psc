@@ -94,6 +94,13 @@ libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_yz.c \
 	psc_particles_cbe.c psc_fields_cbe.c
 endif
 
+if CELLEMU
+libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
+	cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/spu/spu_dma.c \
+	cell_be/spu/spu_mfcio_c.c 
+#	psc_particles_cbe.c psc_fields_cbe.c
+endif
+
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
 	OUT_param.F OUT_part.F \
@@ -128,13 +135,17 @@ VLA_SOURCES += vla_main.c
 endif
 
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
-	test_exchange_particles test_sort
+	test_exchange_particles test_sort test_cell_framework
+
+if CELLEMU
+	noinst_PROGRAMS += test_cell_framework
+endif
 
 LDADD = libpsc.a util/libutil.a
 
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
-	test_sort.sh
+	test_sort.sh test_cell_framwork
 
 if USE_CUDA
 

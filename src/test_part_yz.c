@@ -18,6 +18,7 @@ main(int argc, char **argv)
     .mod_particle = "generic_c",
     .mod_sort = "qsort",
   };
+
 #if 0
   printf("=== testing push_part_yz_a()\n");
 
@@ -62,7 +63,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif 
 
-#if 0
 
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
@@ -90,8 +90,6 @@ main(int argc, char **argv)
   psc_check_particles_ref(1e-7);
   psc_destroy();
 #endif
-
-#if 0
 
   printf("=== testing push_part_yz_b()\n");
 
@@ -126,6 +124,7 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-6, "push_part_yz_b -- sse2");
   psc_destroy();
+#endif
 #endif
   printf("=== testing push_part_yz()\n");
 

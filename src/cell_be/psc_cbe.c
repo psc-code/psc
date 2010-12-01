@@ -3,41 +3,23 @@
 #include "psc.h"
 #include "psc_cbe.h"
 
-#ifdef CELLEMU
-#include <libspe2_c.h>
-#else
-#include <libspe2.h>
-#endif 
 
 #include <pthread.h>
 #include <string.h>
 
-#ifdef CELLEMU
-#define NR_SPE (1)
-#else
-#define NR_SPE (8)
-#endif 
 
+spe_program_handle_t test_handle = spu_main;
 
-
-enum { 
-  SPE_IDLE,
-  SPE_RUN,
-};
-
-struct psc_spu_ops spu_progs = {
-  .test = test_handle,
-};
+struct psc_spu_ops spu_progs; 
 
 psc_cell_ctx_t global_ctx __attribute__((aligned(128)));
 psc_cell_block_t *spe_blocks[NR_SPE];
-block_node_t * staged_blocks; 
-block_node_t * finished_blocks; 
+psc_cell_block_t ** block_list; 
+int active_spes;
+spe_context_ptr_t spe_id[NR_SPE];
 
 static int spes_inited;
-static int active_spes;
 static int spe_state[NR_SPE];
-static spe_context_ptr_t spe_id[NR_SPE];
 static pthread_t thread_id[NR_SPE];
 
 
@@ -46,6 +28,8 @@ static pthread_t thread_id[NR_SPE];
 /// in the task description
 ///
 /// Call after the task has been fully described but before task creation.
+
+/*
 void 
 psc_alf_init_push_task_context(push_task_context_t * tcs, alf_task_desc_handle_t * task_desc, fields_cbe_t *pf)
 {
@@ -130,14 +114,15 @@ wb_current_cache_store(fields_cbe_t *pf, spu_curr_cache_t * cache)
   }
 }
 #undef JC_OFF
-
+*/
 static void *
 spe_thread_function(void *data)
 {
   int i = (unsigned long) data;
   int rc; 
   unsigned int entry = SPE_DEFAULT_ENTRY;
-
+  
+  //  fprintf(stderr, "block pointer %p\n", spe_blocks[i]);
   do {
     rc = spe_context_run(spe_id[i], &entry, 0,
 			 spe_blocks[i], &global_ctx, NULL);
@@ -149,17 +134,36 @@ spe_thread_function(void *data)
 static void 
 cbe_create(void)
 {
-  assert(sizeof(psc_cell_env_t) % 16 == 0);
+  spu_progs.spu_test = test_handle; 
+  //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
   int rc; 
-  spu_program_handle_t spu_prog;
+  spe_program_handle_t spu_prog;
 
-  spu_prog = spu_progs.test;
+  char hello[8] = {'H','e','l','l','o','!'};
+  char bye[8] = {'G','o','o','d','b','y','e'};
+
+  strcpy(global_ctx.hello,hello);
+  strcpy(global_ctx.bye, bye);
+
+  int nblocks = 16; 
+  
+  block_list = calloc(nblocks+1, sizeof(psc_cell_block_t*));
+
+  psc_cell_block_t **curr_block = block_list;
+
+  for(int i = 0; i < nblocks; i++){
+    *curr_block = calloc(1,sizeof(psc_cell_block_t));
+    curr_block++;
+  }
+  curr_block = NULL;
+  spu_prog = spu_progs.spu_test;
   
   for (int i = 0; i < NR_SPE; i++){
     void *m;
     rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
     assert(rc == 0);
     spe_blocks[i] = (psc_cell_block_t *) m;
+    assert(spe_blocks[i] != NULL);
     spe_id[i] = spe_context_create(0,NULL);
     spe_program_load(spe_id[i],&spu_prog);
     rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
@@ -170,7 +174,7 @@ cbe_create(void)
   active_spes = 0;
   
   spes_inited = 1; 
-  }
+  
 }
 
 
@@ -206,42 +210,21 @@ put_spe(int spe)
   active_spes--;
 }
 
-block_node_t *
-block_ll_pop(block_node_t ** head) 
-{
-  block_node_t * old_head = *head;
-  *head = *head->next;
-  return old_head;
-}
 
-void
-block_ll_push(block_node_t * new, block_node_t ** head)
-{
-  new->next = *head;
-  *head = new; 
-}
 
-block_node_t *
-block_create(int * blo, int * bhi)
-{
-  block_node_t * node = malloc(sizeof(block_node_t));
-  node->block = calloc(1,sizeof(psc_cell_block_t));
-  assert(node->block != NULL);
-  node->next = NULL;
-  return node;
-}
- 
-void
+/* 
+void *
 block_ll_create(void)
 {
-  for(int i = 0; i < NR_SPES * 2; i++){
+  for(int i = 0; i < NR_SPE * 2; i++){
     block_ll_push(block_create(1,1), &staged_blocks);
   }
 }
- 
+*/
 /// \FIXME Do the particle module destroy functions every get called?
 /// If not, we're going to be leaking an ALF environment...
 
+/*
 static void
 cbe_destroy(void)
 {
@@ -249,11 +232,13 @@ cbe_destroy(void)
     psc_alf_env_shared_destroy(6000);
   }
 }
-
+*/
 
 struct psc_ops psc_ops_cbe = {
   .name                   = "cbe",
   .create                 = cbe_create,
-  .destroy                = cbe_destroy,
-  .push_part_xy           = cbe_push_part_2d,
+  .push_part_yz           = cbe_push_part_2d,
 };
+
+
+

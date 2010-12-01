@@ -26,6 +26,10 @@ static struct psc_ops *psc_ops_list[] = {
 #ifdef USE_CBE
   &psc_ops_cbe,
 #endif
+#ifdef CELLEMU
+  &psc_ops_cbe,
+#endif
+
   NULL,
 };
 

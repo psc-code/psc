@@ -1,14 +1,23 @@
 #ifndef PSC_SPU_H
 #define PSC_SPU_H 
-#include <simdmath.h>
-#include "psc_cbe.h"
-#include "psc_alf.h"
+// #include <simdmath.h>
+#include "../psc_cbe.h"
+
+
+
+
+
+// Some global variables on the spu
+extern psc_cell_ctx_t spu_ctx;
+extern psc_cell_block_t psc_block;
 
 
 /// \FIXME Ordering of particle load/store operations is 
 /// based on the estimated latencies of 
 /// the comparable sse2 instructions. It may not be the best layout for 
 /// the spe. Likewise this method may be very slow
+
+#if 0
 
 #if CBE_DOUBLE
 #define spu_sqrt( vec ) sqrtd2( vec )
@@ -190,10 +199,9 @@ b   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
     *img[0] + ((jx)-ilg[0]))					\
    *NR_FIELDS + fldnr)
 
-// Some global variables on the spu
-extern psc_cell_env_t psc_env;
-extern psc_cell_block_t psc_block;
 
 
 
+#endif 
+void spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size);
 #endif

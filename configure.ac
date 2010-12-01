@@ -88,13 +88,13 @@ AS_IF(
   CFLAGS="$CFLAGS -msse2"])
 AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])
 
-AH_TEMPLATE([USE_CBE], [use spu-cc to create Cell BE code])
+AH_TEMPLATE([CELLEMU], [emulate Cell BE for testing])
 AC_ARG_ENABLE(
-  [cbe],
-  [AS_HELP_STRING([--enable-cbe], [use code optimized for the Cell Broadband Engine])],
-  [AC_DEFINE([USE_CBE])]
+  [cellemu],
+  [AS_HELP_STRING([--enable-cellemu], [pretend we have a Cell Broadband Engine])],
+  [AC_DEFINE([CELLEMU])]
 )
-AM_CONDITIONAL([USE_CBE], [test "$enable_cbe" = "yes"])
+AM_CONDITIONAL([CELLEMU], [test "$enable_cellemu" = "yes"])
   	
 AH_TEMPLATE([USE_CBE], [use spu-cc to create Cell BE code])
 AC_ARG_ENABLE(
