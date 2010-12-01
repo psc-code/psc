@@ -1,3 +1,6 @@
+all:
+	$(MAKE) all-local
+
 all-local: spu_psc_csf.o
 
 SPU_EMBED = embedspu -m64

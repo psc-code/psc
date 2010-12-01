@@ -102,7 +102,7 @@ libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/s
 else !CELLEMU
 
 SUBDIRS += cell_be/spu
-libpsc_a_LIBADD = spu/spu_psc_csf.o
+libpsc_a_LIBADD = cell_be/spu/spu_psc_csf.o
 
 endif !CELLEMU
 

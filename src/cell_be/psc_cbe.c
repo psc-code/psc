@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <libspe2.h>
 #include "psc.h"
 #include "psc_ppu.h"
 
@@ -10,6 +11,8 @@
 #if CELLEMU
 spe_program_handle_t test_handle = spu_main;
 #endif
+
+extern spe_program_handle_t test_handle;
 
 struct psc_spu_ops spu_progs; 
 
