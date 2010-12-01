@@ -1,4 +1,4 @@
-#include "../psc_cbe.h"
+#include "../psc_cbe_common.h"
 #ifdef __SPU__
 #include <spu_mfcio.h>
 #else

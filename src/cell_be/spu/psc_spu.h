@@ -1,7 +1,7 @@
 #ifndef PSC_SPU_H
 #define PSC_SPU_H 
 // #include <simdmath.h>
-#include "../psc_cbe.h"
+#include "../psc_cbe_common.h"
 
 
 

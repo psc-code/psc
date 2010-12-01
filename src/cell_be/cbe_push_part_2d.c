@@ -1,6 +1,11 @@
 #include <string.h>
-#include "psc_cbe.h"
+#include "psc_ppu.h"
+
+#ifdef CELLEMU
 #include "libspe2_c.h"
+#else
+#include <libspe2.h>
+#endif
 
 void
 cbe_push_part_2d(void)

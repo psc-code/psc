@@ -1,14 +1,15 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "psc.h"
-#include "psc_cbe.h"
+#include "psc_ppu.h"
 
 
 #include <pthread.h>
 #include <string.h>
 
-
+#if CELLEMU
 spe_program_handle_t test_handle = spu_main;
+#endif
 
 struct psc_spu_ops spu_progs; 
 

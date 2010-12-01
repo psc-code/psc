@@ -4,7 +4,7 @@ SUBDIRS = util
 if USE_CBE
 # spu build system is still all wonky
 # But what's there will build
-SUBDIRS += cell_be/spu
+
 endif
 
 bin_PROGRAMS = VLI VLA SELECT
@@ -90,16 +90,23 @@ libpsc_a_SOURCES += \
 endif USE_CUDA
 
 if USE_CBE
-libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_yz.c \
-	psc_particles_cbe.c psc_fields_cbe.c
+
+libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c 
 endif
 
 if CELLEMU
-libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
-	cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/spu/spu_dma.c \
+libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/spu/spu_dma.c \
 	cell_be/spu/spu_mfcio_c.c 
 #	psc_particles_cbe.c psc_fields_cbe.c
-endif
+
+else !CELLEMU
+
+SUBDIRS += cell_be/spu
+libpsc_a_LIBADD = spu/spu_psc_csf.o
+
+endif !CELLEMU
+
+
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \
@@ -137,7 +144,7 @@ endif
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort test_cell_framework
 
-if CELLEMU
+if USE_CBE
 	noinst_PROGRAMS += test_cell_framework
 endif
 
@@ -163,6 +170,3 @@ NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCL
 
 endif USE_CUDA
 
-if USE_CBE
-LDADD += -lalf
-endif 
