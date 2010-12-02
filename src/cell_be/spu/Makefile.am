@@ -16,3 +16,4 @@ test: $(SPU_TEST_OBJS)
 
 $(SPU_TEST_OBJS): %.o: %.c
 	$(SPU_CC) $(SPU_CFLAGS) -i $@ -c $<
+	

@@ -26,7 +26,10 @@ cbe_push_part_2d(void)
 	msg = SPU_RUNJOB;
 	spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
 	active++;
+	active_spes |= (1 << spe);
       }
+      else if(msg == SPE_IDLE)
+	active_spes ^= (1 << spe);
     }
   }
   
@@ -41,7 +44,11 @@ cbe_push_part_2d(void)
 	msg = SPU_RUNJOB;
 	spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
 	active++;
+	active_spes |= (1 << spe);
       }
+      else if(msg == SPE_IDLE)
+	active_spes ^= (1 << spe);
+
     }
   }
 

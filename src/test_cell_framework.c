@@ -20,7 +20,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
   //psc_check_particles_ref(1e-7);
-  //psc_destroy();
+  psc_destroy();
   //  prof_print();
 
   MPI_Finalize();

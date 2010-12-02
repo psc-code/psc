@@ -95,6 +95,8 @@ AC_ARG_ENABLE(
   [AC_DEFINE([CELLEMU])]
 )
 AM_CONDITIONAL([CELLEMU], [test "$enable_cellemu" = "yes"])
+
+AC_CHECK_LIB([spe2], [spe_context_create])
   	
 AH_TEMPLATE([USE_CBE], [use spu-cc to create Cell BE code])
 AC_ARG_ENABLE(

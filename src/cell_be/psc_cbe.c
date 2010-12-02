@@ -157,9 +157,11 @@ cbe_create(void)
 
   for(int i = 0; i < nblocks; i++){
     *curr_block = calloc(1,sizeof(psc_cell_block_t));
+    assert(*curr_block != NULL);
     curr_block++;
   }
-  curr_block = NULL;
+  
+  *curr_block = NULL;
   spu_prog = spu_progs.spu_test;
   
   for (int i = 0; i < NR_SPE; i++){
@@ -228,19 +230,31 @@ block_ll_create(void)
 /// \FIXME Do the particle module destroy functions every get called?
 /// If not, we're going to be leaking an ALF environment...
 
-/*
+
 static void
 cbe_destroy(void)
 {
-  if( alf_env_shared != ALF_NULL_HANDLE ){
-    psc_alf_env_shared_destroy(6000);
+  unsigned int msg; 
+  for(int i = 0; i<NR_SPE; i++){
+    msg = SPU_QUIT;
+    spe_in_mbox_write(spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
+    free(spe_blocks[i]);
+  }
+
+  psc_cell_block_t ** active; 
+  active = block_list; 
+
+  while(*active != NULL){
+    free(*active);
+    active++;
   }
 }
-*/
+
 
 struct psc_ops psc_ops_cbe = {
   .name                   = "cbe",
   .create                 = cbe_create,
+  .destroy                = cbe_destroy, 
   .push_part_yz           = cbe_push_part_2d,
 };
 
