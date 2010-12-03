@@ -108,6 +108,9 @@ extern psc_cell_block_t *spe_blocks[NR_SPE];
 extern psc_cell_block_t **block_list; 
 extern int active_spes;
 extern spe_context_ptr_t spe_id[NR_SPE];
+
+int get_spe(void);
+void update_idle_spes(void);
 // Deprecated alf stuff
 /*
 void cbe_push_part_yz(void);

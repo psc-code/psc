@@ -4,13 +4,15 @@
 
 int spu_psc_hello(void) 
 { 
-  printf("%s from [%#llx]\n",spu_ctx.hello,spu_ctx.spe_id);
+  fprintf(stdout,"%s from [%#llx]\n",spu_ctx.hello,spu_ctx.spe_id);
+  fflush(stdout);
   return 0;
 }
 
 int spu_psc_goodbye(void) 
 {
-  printf("%s from [%#llx]\n",spu_ctx.bye,spu_ctx.spe_id);
+  fprintf(stdout,"%s from [%#llx]\n",spu_ctx.bye,spu_ctx.spe_id);
+  fflush(stdout);
   return 0;
 }
 

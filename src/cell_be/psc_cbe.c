@@ -216,6 +216,18 @@ put_spe(int spe)
   active_spes--;
 }
 
+void
+update_idle_spes(void)
+{
+  for(int spe=0; spe < NR_SPE; spe++){
+    unsigned int msg;
+    spe_out_mbox_read(spe_id[spe], &msg,1);
+    if(msg == SPE_IDLE){
+      spe_state[spe] = SPE_IDLE;
+      active_spes--;
+    }
+  }
+}
 
 
 /* 
