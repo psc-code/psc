@@ -590,6 +590,7 @@ int cbe_push_part_yz_kernel(void *p_task_context, // const accross all pars here
 
       STORE_PARTICLES_SPU(n);
 
+
       yi = spu_add(yi, tmpy);
       zi = spu_add(zi, tmpz);
 

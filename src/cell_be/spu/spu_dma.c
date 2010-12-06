@@ -1,4 +1,6 @@
 #include "../psc_cbe_common.h"
+#include "psc_cbe_particles.h"
+#include "spu_particles.h"
 #ifdef __SPU__
 #include <spu_mfcio.h>
 #else
@@ -20,6 +22,8 @@ struct bl_info {
   int tagid; 
 };
 
+struct part_buffs buff; 
+
 // Is this a hardware limit?
 #define MAX_TAGID (32)
 
@@ -29,7 +33,7 @@ struct mfc_dma_el {
   unsigned long eal;
 };
 
-static unsigned int tagmask, tagmask_storing, tagmask_loading;
+static unsigned int tagmask;
 
 // returns the first available tag, and sets
 // that bit to 1 in the tagmask 
@@ -95,3 +99,44 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
   wait_tagid(tagid);
   put_tagid(tagid);
 }
+
+
+// I'm not quite sure how to integrate these functions, 
+// of if they even need to be seperate functions. 
+// They're here, but for now I'm leaving them commented out.
+
+/*
+void
+part_dma_get(struct part_buffs *buff, unsigned long long np_ea){
+  mfc_get(buff->lb1, np_ea, sizeof(2 * particle_cbe_t), 
+	  tagp_get, 0, 0);
+    // Breaking moved to end of loop
+}
+
+unsigned long long
+part_dma_put(struct part_buffs *buff, unsigned long long cp_ea){
+  unsigned long long np_ea = cp_ea + 2 * sizeof(struct particle_cbe_t);
+  end = psc_block.part_end; 
+  // rotate the buffers 
+  unsigned long btmp1, btmp2;
+  btmp1 = buff->sb1;
+  btmp2 = buff->sb2;
+  buff->sb1 = buff->lb1;
+  buff->sb2 = buff->lb2;
+  buff->lb1 = buff->plb1;
+  buff->lb2 = buff->plb2;
+  buff->plb1 = btmp1;
+  buff->plb2 = btmp2;
+  
+  if(__builtin_expect((np_ea >= end),0)) {
+    mfc_put(buff->sb1, cp_ea, (unsigned size_t) (end - cp_ea),
+	    tagp_put, 0, 0);
+  }
+  else {
+    mfc_put(buff->sb1, cp_ea, 2 * sizeof(struct particle_cbe_t),
+	    tagp_put, 0, 0);
+  }
+
+  return np_ea;
+}
+*/

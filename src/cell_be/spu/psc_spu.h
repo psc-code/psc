@@ -25,8 +25,6 @@ extern psc_cell_block_t psc_block;
 #define spu_round_real( vec ) roundd2( (vec) )
 #define spu_round_int( vec ) llroundd2( (vec) )
 
-typedef vector double v_real;
-typedef vector signed long long v_int;
 
 const vector unsigned char uplo_pat = 
   {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // first word from first vec

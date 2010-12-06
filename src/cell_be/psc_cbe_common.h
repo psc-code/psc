@@ -61,7 +61,7 @@ typedef struct _psc_cell_ctx
 typedef struct _psc_cell_block
 {
   unsigned long long job;
-  unsigned long long padding; 
+  unsigned long long part_end; 
   /*
   unsigned long long p_start; ///< starting address of WB particles. 
   unsigned long long p_pad; ///< address of WB padding particles. 
