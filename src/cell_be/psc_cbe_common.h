@@ -1,6 +1,7 @@
 #ifndef PSC_CBE_COMMON_H
 #define PSC_CBE_COMMON_H
 
+#include "../simd_cbe.h"
 
 enum kern {
   SPU_HELLO,
@@ -29,7 +30,6 @@ enum {
 typedef struct _psc_cell_ctx
 {
   unsigned long long spe_id; // 8B
-  //  unsigned long long padding; 
   cbe_real dx[3]; // 24/12 B
   cbe_real dt; // 8/4 B
   cbe_real eta; // 8/4 B

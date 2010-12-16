@@ -1,5 +1,6 @@
 #include "psc.h"
 #include "psc_ppu.h"
+#include "util/profile.h"
 
 #include <string.h>
 
@@ -9,7 +10,7 @@
 // cut the number of variables per particle down to 8.
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
-static inline in
+static inline int
 __nint(real x)
 {
   return (int)(x + real(10.5)) - 10;
@@ -25,10 +26,19 @@ find_cell(real xi, real yi, real zi, int l[3])
 
 
 static void
-cbe_find_cell_indices(particles_base_t *pp)
+find_cell_indices(particles_base_t *pp)
 {
-  int block_size[3] = spu_ctl.block_size;
-  int blkgd[3] = spu_ctl.block_grid;
+  spu_ctl.nblocks = 16;
+
+  int block_size[3];
+  block_size[0] = spu_ctl.block_size[0];
+  block_size[1] = spu_ctl.block_size[1];
+  block_size[2] = spu_ctl.block_size[2];
+
+  int blkgd[3];
+  blkgd[0]= spu_ctl.block_grid[0];
+  blkgd[1]= spu_ctl.block_grid[1];
+  blkgd[2]= spu_ctl.block_grid[2];
 
   for (int i = 0; i < pp->n_part; i++) {
     particle_base_t *p = particles_base_get_one(pp,i);
@@ -41,8 +51,14 @@ cbe_find_cell_indices(particles_base_t *pp)
     p->cni = ((ci[2] 
 	      * blkgd[1] + ci[1])
 	      * blkgd[0] + ci[0]);
-    assert(p->cni < spu_ctl.blocks);
+    assert(p->cni < spu_ctl.nblocks);
   }
+}
+
+static inline int
+get_cell_index(const particle_base_t *p)
+{
+  return p->cni;
 }
 
 static void
@@ -52,14 +68,33 @@ cbe_countsort()
   if (!pr) {
     pr = prof_register("cbe_countsort",1.,0,0);
   }
-  
+
+  printf("%d %d %d \n", psc.img[0], psc.img[1], psc.img[2]);
+  assert(psc.img[0] == 7);
+  assert(psc.img[1] == 110);
+  assert(psc.img[2] == 110);
+
+  spu_ctl.nblocks = 16;
+
+  spu_ctl.block_size[0] = 1;
+  spu_ctl.block_size[1] = 26;
+  spu_ctl.block_size[2] = 26;
+
+  spu_ctl.block_grid[0] = 1;
+  spu_ctl.block_grid[1] = 4;
+  spu_ctl.block_grid[2] = 4;
+
+  if(!block_list){
+    block_list = calloc(spu_ctl.nblocks+1, sizeof(psc_cell_block_t*));
+  }
+
   find_cell_indices(&psc.pp);
   
   int N = 2 * spu_ctl.nblocks; 
 
   // For offloading to the spes we need to save the offsets 
   // of each block in the particle array. 
-  unsigned in *cnis = malloc(psc.pp.n_part * sizeof(*cnis));
+  unsigned int *cnis = malloc(psc.pp.n_part * sizeof(*cnis));
   for (int i = 0; i < psc.pp.n_part; i++) {
     cnis[i] = get_cell_index(&psc.pp.particles[i]);
     assert(cnis[i] < N);
@@ -92,6 +127,7 @@ cbe_countsort()
     cnts[i] = cur;
     cur += n;
   }
+  printf("is %d should be %d\n", cur, psc.pp.n_part);
   assert(cur == psc.pp.n_part);
 
   // move into new position
@@ -117,7 +153,7 @@ cbe_countsort()
   // addresses to the blocks, which means we 
   // get to have a little fun. 
 
-  psc_cell_block_t * curr = *blocks_list;
+  psc_cell_block_t * curr = *block_list;
   for(int i = 1; i <= spu_ctl.nblocks; i++){
     curr->part_start = (unsigned long long) (psc.pp.particles + cnts[i]);
     curr->part_end = (unsigned long long) (psc.pp.particles + cnts[i+1]);
@@ -129,10 +165,12 @@ cbe_countsort()
   prof_stop(pr);
 }
 
-struct psc_sort_ops psc_sort_ops_cbe = {
+struct psc_sort_ops psc_sort_ops_cbe_countsort = {
   .name = "cbesort",
   .sort = cbe_countsort,
 };
+
+#endif
 
 /// \file cbe_sort.h 
 ///

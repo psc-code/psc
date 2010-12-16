@@ -1,11 +1,6 @@
 
 SUBDIRS = util 
 
-if USE_CBE
-# spu build system is still all wonky
-# But what's there will build
-
-endif
 
 bin_PROGRAMS = VLI VLA SELECT
 
@@ -79,7 +74,7 @@ libpsc_a_SOURCES += \
 if USE_SSE2
 libpsc_a_SOURCES += \
 	sse2/psc_sse2.c sse2/simd_push_common.c \
-    sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c\
+	sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c\
 	psc_fields_sse2.c psc_particles_sse2.c
 endif USE_SSE2
 
@@ -91,7 +86,8 @@ endif USE_CUDA
 
 if USE_CBE
 
-libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c 
+libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
+	cell_be/cbe_sort.c
 endif
 
 if CELLEMU

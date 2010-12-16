@@ -12,7 +12,7 @@
 spe_program_handle_t test_handle = spu_main;
 #endif
 
-extern spe_program_handle_t test_handle;
+//extern spe_program_handle_t test_handle;
 extern spe_program_handle_t spu_2d_handle; 
 
 struct psc_spu_ops spu_ctl; 
@@ -124,12 +124,12 @@ wb_current_cache_store(fields_cbe_t *pf, spu_curr_cache_t * cache)
 static void 
 init_global_ctx()
 {
-  global_ctx.spe_id = NULL;
+  global_ctx.spe_id = 0;
   global_ctx.dx[0] = psc.dx[0];
   global_ctx.dx[1] = psc.dx[1];
   global_ctx.dx[2] = psc.dx[2];
   global_ctx.dt = psc.dt;
-  global_ctx.eta = psc.eta;
+  global_ctx.eta = psc.coeff.eta;
   global_ctx.fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
 }
 
@@ -153,15 +153,15 @@ static void
 setup_blocks()
 {
   
-  assert(psc.img[0] == 5);
-  assert(psc.img[1] == 116);
-  assert(psc.img[2] == 116);
+  assert(psc.img[0] == 7);
+  assert(psc.img[1] == 110);
+  assert(psc.img[2] == 110);
 
-  spu_ctl.blocks = 16;
+  spu_ctl.nblocks = 16;
 
   spu_ctl.block_size[0] = 1;
-  spu_ctl.block_size[1] = 32;
-  spu_ctl.block_size[2] = 32;
+  spu_ctl.block_size[1] = 26;
+  spu_ctl.block_size[2] = 26;
 
   spu_ctl.block_grid[0] = 1;
   spu_ctl.block_grid[1] = 4;
@@ -180,14 +180,13 @@ setup_blocks()
   }
   
   *curr_block = NULL;
-  spu_prog = spu_progs.spu_test;
 
 }
 
 static void 
 cbe_create(void)
 {
-  spu_ctl.spu_test = test_handle; 
+  //  spu_ctl.spu_test = test_handle; 
   spu_ctl.spu_2d = spu_2d_handle; 
   spu_ctl.blocks_ready = 0; 
   spu_ctl.cnts = NULL; 
@@ -198,7 +197,9 @@ cbe_create(void)
   init_global_ctx();
   setup_blocks(); 
   
-  
+
+  spu_prog = spu_ctl.spu_2d;  
+
   for (int i = 0; i < NR_SPE; i++){
     void *m;
     rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 

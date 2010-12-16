@@ -460,6 +460,10 @@ extern struct psc_sort_ops psc_sort_ops_qsort;
 extern struct psc_sort_ops psc_sort_ops_countsort;
 extern struct psc_sort_ops psc_sort_ops_countsort2;
 extern struct psc_sort_ops psc_sort_ops_none;
+#ifdef USE_CBE
+extern struct psc_sort_ops psc_sort_ops_cbe_countsort;
+#endif
+
 
 extern struct psc_collision_ops psc_collision_ops_fortran;
 extern struct psc_collision_ops psc_collision_ops_none;

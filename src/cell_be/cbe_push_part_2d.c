@@ -23,7 +23,7 @@ cbe_push_part_2d(void)
     while(active_spes < NR_SPE && *active_blk != NULL){
       int spe = get_spe();
       (*active_blk)->job = SPU_PART;
-      (*active_blk)->part_start
+      (*active_blk)->part_start;
       memcpy(spe_blocks[spe], *active_blk, sizeof(psc_cell_block_t));
       msg = SPU_RUNJOB;
       spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);

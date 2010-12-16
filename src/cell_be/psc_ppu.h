@@ -2,6 +2,7 @@
 #define PSC_CBE_H
 
 #include "psc.h"
+#include "psc_cbe_common.h"
 #include "psc_particles_cbe.h"
 #include "psc_fields_cbe.h"
 
@@ -32,7 +33,7 @@ struct psc_spu_ops {
   int block_grid[3]; ///< The number of subdomains in each direction 
   int nblocks; ///< Number of sub-domains. 
   int blocks_ready; ///< A flag to check if the blocks are ready to be passed to the spes (ie sorted, domain decomposed, etc)
-  int * cnts; ///< The number of particles in each block. Easier to just save this here. 
+  unsigned int * cnts; ///< The number of particles in each block. Easier to just save this here. 
 };
 
 int spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,

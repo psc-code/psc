@@ -12,18 +12,17 @@ main(int argc, char **argv)
 
   struct psc_mod_config conf_fortran = {
     .mod_particle = "fortran",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
   struct psc_mod_config conf_generic_c = {
     .mod_particle = "generic_c",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
 
   printf("=== testing push_part_yz_a()\n");
 
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
-  PIC_find_cell_indices();
   psc_sort();
   psc_push_part_yz_a();
   //  psc_dump_particles("part-1");
@@ -31,7 +30,6 @@ main(int argc, char **argv)
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
-  PIC_find_cell_indices();
   psc_sort();
 
   psc_push_part_yz_a();
@@ -43,7 +41,7 @@ main(int argc, char **argv)
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
     .mod_particle = "cuda",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_cuda);
   psc_push_part_yz_a();
@@ -55,7 +53,7 @@ main(int argc, char **argv)
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
@@ -71,11 +69,11 @@ main(int argc, char **argv)
     .mod_sort = "countsort2",
   };
   psc_create_test_yz(&conf_cbe);
-  PIC_find_cell_indices();
+
   psc_sort();
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-7);
+  psc_check_particles_ref(1e-7, "push_part_yz_a -- cbe");
   psc_destroy();
 #endif
 
@@ -106,7 +104,7 @@ main(int argc, char **argv)
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_b();
@@ -145,7 +143,7 @@ main(int argc, char **argv)
 #ifdef USE_CBE
   struct psc_mod_config conf_cbe = {
     .mod_particle = "cbe",
-    .mod_sort = "qsort",
+    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_cbe);
   psc_push_part_yz();

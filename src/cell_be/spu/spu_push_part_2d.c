@@ -1,14 +1,24 @@
-#include spu_particles.h
-#include psc_spu.h
-#include psc_spu_2d.h
+#include "spu_particles.h"
+#include "psc_spu.h"
+#include "psc_spu_2d.h"
+#include <stddef.h>
 
-void
+#include <simdmath.h>
+
+#ifdef __SPU__
+#include <spu_mfcio.h>
+#else
+#include "spu_mfcio_c.h"
+#endif
+
+
+int
 spu_push_part_2d(void){
 
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
 
-  struct particle_cbe_t _bufferA[2], _bufferB[2], _bufferC[2];
+  particle_cbe_t _bufferA[2], _bufferB[2], _bufferC[2];
 
   buff.plb1 = &(_bufferA[0]);
   buff.plb2 = &(_bufferA[1]);
@@ -19,7 +29,7 @@ spu_push_part_2d(void){
 
   // Get the first two particles
   mfc_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t), 
-	  tagp_get, 0, 0);
+	  tag_pget, 0, 0);
 
   np_ea = cp_ea + 2*sizeof(particle_cbe_t);
 
@@ -29,8 +39,18 @@ spu_push_part_2d(void){
   // insert assignment, promotions, and constant 
   // calculations here.
 
-  mfc_write_tag_mask(1 << tagp_get);
+  v_real dt, yl, zl, half, one;
+  dt = spu_splats(spu_ctx.dt);
+  half = spu_splats(0.5);
+  yl = spu_mul(half, dt);
+  zl = spu_mul(half, dt);
+  one = spu_splats(1.0);
+  
+  mfc_write_tag_mask(1 << tag_pget);
   unsigned int mask = mfc_read_tag_status_any();
+
+  particle_cbe_t null_part = *(buff.plb1);
+  null_part.wni = 0.0;
 
 
   unsigned long long end = psc_block.part_end; 
@@ -42,15 +62,15 @@ spu_push_part_2d(void){
     // issue dma request for particle we will need 
     // next time through the loop.
     if(__builtin_expect((np_ea < end),1)) {
-      mfc_write_tag_mask(1 << tagp_get);
+      mfc_write_tag_mask(1 << tag_pget);
       mask = mfc_read_tag_status_any();
       mfc_get(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t), 
-	      tagp_get, 0, 0);
+	      tag_pget, 0, 0);
     }    
     // we may need to insert some padding here, so we have to stop and check.
     // The last particle is going to be very slow (probably).
     else if(__builtin_expect(((end - cp_ea) != sizeof(particle_cbe_t)),0)){ 
-      buff->lp2 = &null_part;
+      buff.lb2 = &null_part;
     }
 
     v_real xi, yi, zi, pxi, pyi, pzi, qni, mni, wni;
@@ -86,28 +106,28 @@ spu_push_part_2d(void){
 
     
     // rotate the buffers 
-    unsigned long btmp1, btmp2;
-    btmp1 = buff->sb1;
-    btmp2 = buff->sb2;
-    buff->sb1 = buff->lb1;
-    buff->sb2 = buff->lb2;
-    buff->lb1 = buff->plb1;
-    buff->lb2 = buff->plb2;
-    buff->plb1 = btmp1;
-    buff->plb2 = btmp2;
+    particle_cbe_t *btmp1, *btmp2;
+    btmp1 = buff.sb1;
+    btmp2 = buff.sb2;
+    buff.sb1 = buff.lb1;
+    buff.sb2 = buff.lb2;
+    buff.lb1 = buff.plb1;
+    buff.lb2 = buff.plb2;
+    buff.plb1 = btmp1;
+    buff.plb2 = btmp2;
     
     if(__builtin_expect((np_ea >= end),0)) { // if we've run out of particles
-      mfc_write_tag_mask(1 << tagp_put);
+      mfc_write_tag_mask(1 << tag_pput);
       mask = mfc_read_tag_status_any();
-      mfc_put(buff->sb1, cp_ea, (unsigned size_t) (end - cp_ea),
-	      tagp_put, 0, 0);
+      mfc_put(buff.sb1, cp_ea, (size_t) (end - cp_ea),
+	      tag_pput, 0, 0);
       run = 0; 
     }
     else {
-      mfc_write_tag_mask(1 << tagp_put);
+      mfc_write_tag_mask(1 << tag_pput);
       mask = mfc_read_tag_status_any();
-      mfc_put(buff->sb1, cp_ea, 2 * sizeof(particle_cbe_t),
-	      tagp_put, 0, 0);
+      mfc_put(buff.sb1, cp_ea, 2 * sizeof(particle_cbe_t),
+	      tag_pput, 0, 0);
 
       cp_ea = np_ea;
       np_ea += 2*sizeof(particle_cbe_t);
@@ -117,4 +137,6 @@ spu_push_part_2d(void){
     }
 
   } while(__builtin_expect((run),1));
+  return 0;
+
 }

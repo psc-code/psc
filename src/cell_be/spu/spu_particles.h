@@ -1,9 +1,8 @@
 #ifndef SPU_PARTICLES_H
 #define SPU_PARTICLES_H
 
-typedef vector double v_real;
-typedef vector signed long long v_int;
-
+#include "psc_spu.h"
+#include "../../psc_particles_cbe.h"
 
 #define LOAD_PARTICLES_SPU {						\
     particle_cbe_t *part1 = buff.lb1;					\
@@ -68,14 +67,14 @@ typedef vector signed long long v_int;
 
 
 struct part_buffs {
-  unsigned long plb1, pb2; // LS add of pre-load buffers
-  unsigned long lb1, lb2; // LS add of load buffers
-  unsigned long sb1, sb2; // LS add of store buffers 
+  particle_cbe_t *plb1, *plb2; // LS add of pre-load buffers
+  particle_cbe_t *lb1, *lb2; // LS add of load buffers
+  particle_cbe_t *sb1, *sb2; // LS add of store buffers 
 };
 
 extern struct part_buffs buff; 
 
-const unsigned int tag_pget = 1;
-const unsigned int tag_pput = 2;
+extern const unsigned int tag_pget;
+extern const unsigned int tag_pput;
 
 #endif

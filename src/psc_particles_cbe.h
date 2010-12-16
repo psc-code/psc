@@ -2,7 +2,7 @@
 #ifndef PSC_PARTICLES_CBE_H
 #define PSC_PARTICLES_CBE_H
 
-#include "psc.h"
+//#include "psc.h"
 #include "simd_cbe.h"
 
 typedef cbe_real particle_cbe_real_t;

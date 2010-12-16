@@ -1,11 +1,7 @@
 #ifndef PSC_SPU_H
 #define PSC_SPU_H 
-// #include <simdmath.h>
+#include <simdmath.h>
 #include "../psc_cbe_common.h"
-
-
-
-
 
 // Some global variables on the spu
 extern psc_cell_ctx_t spu_ctx;
@@ -17,81 +13,21 @@ extern psc_cell_block_t psc_block;
 /// the comparable sse2 instructions. It may not be the best layout for 
 /// the spe. Likewise this method may be very slow
 
-#if 0
-
 #if CBE_DOUBLE
+
 #define spu_sqrt( vec ) sqrtd2( vec )
 #define spu_div( vec1, vec2 ) divd2( (vec1), (vec2) ) /// \FIXME: this could be slow
 #define spu_round_real( vec ) roundd2( (vec) )
 #define spu_round_int( vec ) llroundd2( (vec) )
 
 
-const vector unsigned char uplo_pat = 
-  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // first word from first vec
-   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}; // first word from second vec
+typedef vector double v_real;
+typedef vector signed long long v_int;
 
-const vector unsigned char uphi_pat = 
-  {0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, // second word from first vec
-   0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}; // second word from second vec
+extern const vector unsigned char uplo_pat;
+extern const vector unsigned char uphi_pat;
+extern const vector signed long long element_assign[2];
 
-const vector signed long long element_assign[2] = {{-1ll, 0}, {0, -1ll}};
-
-#define LOAD_PARTICLES_SPU(n) {						\
-    v_real __A, __B, __C, __D, __E, __F, __G, __H;			\
-    __A = *((v_real * ) &(part[(n)].xi));				\
-    __E = *((v_real * ) &(part[(n)+1].xi));				\
-									\
-    __B = *((v_real * ) &(part[(n)].zi));				\
-    __F = *((v_real * ) &(part[(n)+1].zi));				\
-									\
-    xi = spu_shuffle(__A, __E, uplo_pat);				\
-    yi = spu_shuffle(__A, __E, uphi_pat);				\
-									\
-    zi = spu_shuffle(__B, __F, uplo_pat);				\
-    pxi = spu_shuffle(__B, __F, uphi_pat);				\
-									\
-    __C = *((v_real * ) &(part[(n)].pyi));				\
-    __G = *((v_real * ) &(part[(n)+1].pyi));				\
-									\
-    __D = *((v_real * ) &(part[(n)].qni));				\
-    __H = *((v_real * ) &(part[(n)+1].qni));				\
-									\
-    pyi = spu_shuffle(__C, __G, uplo_pat);				\
-    pzi = spu_shuffle(__C, __G, uphi_pat);				\
-									\
-    qni = spu_shuffle(__D, __H, uplo_pat);				\
-    mni = spu_shuffle(__D, __H, uphi_pat);				\
-									\
-    __A = *((v_real * ) &(part[(n)].wni));				\
-    __E = *((v_real * ) &(part[(n)+1].wni));				\
-									\
-    wni = spu_shuffle(__A, __E, uplo_pat);				\
-  }
-
-#define STORE_PARTICLES_SPU(n) {		\
-    v_real __A, __B, __C, __D, __E, __F;	\
-						\
-						\
-    __A = spu_shuffle(xi, yi, uplo_pat);	\
-						\
-    *((v_real * ) &(part[(n)].xi)) = __A;	\
-						\
-    __B = spu_shuffle(zi, pxi, uplo_pat);	\
-    __C = spu_shuffle(pyi, pzi, uplo_pat);	\
-						\
-    *((v_real * ) &(part[(n)].zi)) = __B;	\
-						\
-    __E = spu_shuffle(xi, yi, uphi_pat);	\
-    __F = spu_shuffle(zi, pxi, uphi_pat);	\
-						\
-    *((v_real * ) &(part[(n)].pyi)) = __C ;	\
-						\
-    __D = spu_shuffle(pyi, pzi, uphi_pat);	\
-						\
-    *((v_real * ) &(part[(n)+1].xi)) = __E;	\
-    *((v_real * ) &(part[(n)+1].zi)) = __F;	\
-    *((v_real * ) &(part[(n)+1].pyi)) = __D;	\
-  }
 
 
 #else 
@@ -199,7 +135,5 @@ b   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
 
 
 
-
-#endif 
 void spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size);
 #endif
