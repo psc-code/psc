@@ -16,6 +16,9 @@ typedef struct {
   particle_cbe_real_t pxi, pyi, pzi;
   particle_cbe_real_t qni, mni, wni;
   particle_cbe_real_t cni;
+  // cni is just padding now. If I can managed to cut
+  // one more element (possibly using the q/m ratio
+  // modification) we can get rid of the padding all together. 
 } particle_cbe_t;
 
 #else
@@ -26,13 +29,15 @@ typedef struct {
   particle_cbe_real_t qni, mni, wni;
   particle_cbe_real_t cni;
   particle_cbe_real_t pad1, pad2;
+  // cni is just padding now. If I can managed to cut
+  // one more element (possibly using the q/m ratio
+  // modification) we can get rid of the padding all together. 
 } particle_cbe_t;
 
 #endif
 
 typedef struct {
   particle_cbe_t *particles;
-  particle_cbe_t *null_particles;
   int n_part;
 } particles_cbe_t;
 

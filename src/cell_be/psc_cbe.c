@@ -13,8 +13,9 @@ spe_program_handle_t test_handle = spu_main;
 #endif
 
 extern spe_program_handle_t test_handle;
+extern spe_program_handle_t spu_2d_handle; 
 
-struct psc_spu_ops spu_progs; 
+struct psc_spu_ops spu_ctl; 
 
 psc_cell_ctx_t global_ctx __attribute__((aligned(128)));
 psc_cell_block_t *spe_blocks[NR_SPE];
@@ -119,6 +120,19 @@ wb_current_cache_store(fields_cbe_t *pf, spu_curr_cache_t * cache)
 }
 #undef JC_OFF
 */
+
+static void 
+init_global_ctx()
+{
+  global_ctx.spe_id = NULL;
+  global_ctx.dx[0] = psc.dx[0];
+  global_ctx.dx[1] = psc.dx[1];
+  global_ctx.dx[2] = psc.dx[2];
+  global_ctx.dt = psc.dt;
+  global_ctx.eta = psc.eta;
+  global_ctx.fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
+}
+
 static void *
 spe_thread_function(void *data)
 {
@@ -136,21 +150,25 @@ spe_thread_function(void *data)
 }
 
 static void 
-cbe_create(void)
+setup_blocks()
 {
-  spu_progs.spu_test = test_handle; 
-  //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
-  int rc; 
-  spe_program_handle_t spu_prog;
-
-  char hello[8] = {'H','e','l','l','o','!'};
-  char bye[8] = {'G','o','o','d','b','y','e'};
-
-  strcpy(global_ctx.hello,hello);
-  strcpy(global_ctx.bye, bye);
-
-  int nblocks = 16; 
   
+  assert(psc.img[0] == 5);
+  assert(psc.img[1] == 116);
+  assert(psc.img[2] == 116);
+
+  spu_ctl.blocks = 16;
+
+  spu_ctl.block_size[0] = 1;
+  spu_ctl.block_size[1] = 32;
+  spu_ctl.block_size[2] = 32;
+
+  spu_ctl.block_grid[0] = 1;
+  spu_ctl.block_grid[1] = 4;
+  spu_ctl.block_grid[2] = 4;
+
+  int nblocks = spu_ctl.nblocks; 
+
   block_list = calloc(nblocks+1, sizeof(psc_cell_block_t*));
 
   psc_cell_block_t **curr_block = block_list;
@@ -163,6 +181,23 @@ cbe_create(void)
   
   *curr_block = NULL;
   spu_prog = spu_progs.spu_test;
+
+}
+
+static void 
+cbe_create(void)
+{
+  spu_ctl.spu_test = test_handle; 
+  spu_ctl.spu_2d = spu_2d_handle; 
+  spu_ctl.blocks_ready = 0; 
+  spu_ctl.cnts = NULL; 
+  //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
+  int rc; 
+  spe_program_handle_t spu_prog;
+
+  init_global_ctx();
+  setup_blocks(); 
+  
   
   for (int i = 0; i < NR_SPE; i++){
     void *m;

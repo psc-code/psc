@@ -1,9 +1,11 @@
 #include spu_particles.h
+#include psc_spu.h
+#include psc_spu_2d.h
 
-static void
-spu_push_part_2d(unsigned long ea){
+void
+spu_push_part_2d(void){
 
-  unsigned long long cp_ea = ea;
+  unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
 
   struct particle_cbe_t _bufferA[2], _bufferB[2], _bufferC[2];

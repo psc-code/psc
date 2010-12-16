@@ -19,10 +19,6 @@ particles_cbe_alloc(particles_cbe_t *pp, int n_part)
   int ierr = posix_memalign(&m, 128, __arr_size * sizeof(*pp->particles));
   assert(ierr = 0);
   pp->particles = (cbe_particle_t *) m;
-  __pad_size = psc.fld_size * VEC_SIZE; 
-  ierr = posix_memalign(&m, 128, __pad_size * sizeof(*pp->null_particles));
-  assert(ierr = 0);
-  pp->null_particles = (cbe_particle_t *) m;
 }
 
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
@@ -39,9 +35,7 @@ void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
 void particles_cbe_free(particles_cbe_t *pp)
 {
   free(pp->particles);
-  free(pp->null_particles);
   pp->particles = NULL;
-  pp->null_particles = NULL;
 }
 
 void
@@ -59,7 +53,6 @@ particles_cbe_put(particles_c_t *pp)
 #else
 
 static particle_cbe_t *__arr;
-static particle_cbe_t *__pad;
 static int __arr_size;
 static int __pad_size;
 static int __gotten;
@@ -77,15 +70,6 @@ particles_cbe_get(particles_cbe_t *pp)
     __arr_size = psc.pp.n_part * 1.2;
     ierr = posix_memalign(&m, 128, __arr_size * sizeof(*__arr));
     __arr = (particle_cbe_t *) m;
-  }
-  if (psc.fld_size * VEC_SIZE > __pad_size) {
-    free(__pad);
-    __pad = NULL;
-  }
-  if (!__pad) {
-    __pad_size = psc.fld_size * VEC_SIZE;
-    ierr = posix_memalign(&m, 128, __pad_size * sizeof(*__pad));
-    __pad = (particle_cbe_t *) m;
   }
   
   assert(!__gotten);
