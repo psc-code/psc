@@ -2,6 +2,7 @@
 #include "psc_spu.h"
 #include "psc_spu_2d.h"
 #include <stddef.h>
+#include <stdio.h>
 
 #include <simdmath.h>
 
@@ -15,10 +16,14 @@
 int
 spu_push_part_2d(void){
 
+  printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
+
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
 
-  particle_cbe_t _bufferA[2], _bufferB[2], _bufferC[2];
+  particle_cbe_t _bufferA[2] __attribute__((aligned(16))), 
+    _bufferB[2] __attribute__((aligned(16))), 
+    _bufferC[2] __attribute__((aligned(16)));
 
   buff.plb1 = &(_bufferA[0]);
   buff.plb2 = &(_bufferA[1]);
@@ -28,10 +33,11 @@ spu_push_part_2d(void){
   buff.sb2 = &(_bufferC[1]);
 
   // Get the first two particles
-  mfc_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t), 
-	  tag_pget, 0, 0);
+  //spu_dma_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t));
 
-  np_ea = cp_ea + 2*sizeof(particle_cbe_t);
+    mfc_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t), 
+    	  tag_pget, 0, 0);
+    np_ea = cp_ea + 2*sizeof(particle_cbe_t);
 
   // we have some stuff to do while we wait for
   // it to come in.
@@ -47,25 +53,30 @@ spu_push_part_2d(void){
   one = spu_splats(1.0);
   
   mfc_write_tag_mask(1 << tag_pget);
+
   unsigned int mask = mfc_read_tag_status_any();
 
-  particle_cbe_t null_part = *(buff.plb1);
+  //  fprintf(stderr, "mask %d \n", mask);
+  particle_cbe_t null_part = *(buff.lb1);
   null_part.wni = 0.0;
 
 
   unsigned long long end = psc_block.part_end; 
 
   int run = 1;
+  int n = 0;
 
   do {
 
     // issue dma request for particle we will need 
     // next time through the loop.
     if(__builtin_expect((np_ea < end),1)) {
-      mfc_write_tag_mask(1 << tag_pget);
-      mask = mfc_read_tag_status_any();
+      //      fprintf(stderr,"Preloading particle\n");
       mfc_get(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t), 
 	      tag_pget, 0, 0);
+      mfc_write_tag_mask(1 << tag_pget);
+      mask = mfc_read_tag_status_any();
+
     }    
     // we may need to insert some padding here, so we have to stop and check.
     // The last particle is going to be very slow (probably).
@@ -117,26 +128,31 @@ spu_push_part_2d(void){
     buff.plb2 = btmp2;
     
     if(__builtin_expect((np_ea >= end),0)) { // if we've run out of particles
-      mfc_write_tag_mask(1 << tag_pput);
-      mask = mfc_read_tag_status_any();
+      fprintf(stderr, "Storing particle\n");
       mfc_put(buff.sb1, cp_ea, (size_t) (end - cp_ea),
 	      tag_pput, 0, 0);
+      mfc_write_tag_mask(1 << tag_pput);
+      mask = mfc_read_tag_status_any();
       run = 0; 
     }
     else {
-      mfc_write_tag_mask(1 << tag_pput);
-      mask = mfc_read_tag_status_any();
       mfc_put(buff.sb1, cp_ea, 2 * sizeof(particle_cbe_t),
 	      tag_pput, 0, 0);
 
       cp_ea = np_ea;
       np_ea += 2*sizeof(particle_cbe_t);
+      mfc_write_tag_mask(1 << tag_pput);
+      mask = mfc_read_tag_status_any();
+
       // cp_ea now points to the particle which will be used
       // next time in the loop. 
       // np_ea points to the one which needs to be pre-loaded.
     }
+    n++;
 
   } while(__builtin_expect((run),1));
+
+  fprintf(stderr, "[[%#llx] ran %d particles\n", spu_ctx.spe_id, n);
   return 0;
 
 }

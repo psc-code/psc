@@ -149,8 +149,8 @@ spe_thread_function(void *data)
   pthread_exit(NULL);
 }
 
-static void 
-setup_blocks()
+void 
+cbe_setup_blocks(void)
 {
   
   assert(psc.img[0] == 7);
@@ -188,16 +188,12 @@ cbe_create(void)
 {
   //  spu_ctl.spu_test = test_handle; 
   spu_ctl.spu_2d = spu_2d_handle; 
-  spu_ctl.blocks_ready = 0; 
-  spu_ctl.cnts = NULL; 
   //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
   int rc; 
   spe_program_handle_t spu_prog;
 
   init_global_ctx();
-  setup_blocks(); 
   
-
   spu_prog = spu_ctl.spu_2d;  
 
   for (int i = 0; i < NR_SPE; i++){

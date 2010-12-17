@@ -34,8 +34,8 @@ struct bl_info {
   int tagid; 
 };
 
-const unsigned int tag_pget = 1;
-const unsigned int tag_pput = 2;
+const unsigned int tag_pget = 20;
+const unsigned int tag_pput = 21;
 
 struct part_buffs buff; 
 

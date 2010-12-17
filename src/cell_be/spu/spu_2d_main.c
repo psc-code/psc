@@ -51,9 +51,9 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 {
   unsigned int msg_in, msg_out; 
 
-#ifndef NDEBUG
-    printf("spu main [%#llx]\n", spe_id);
-#endif
+  //#ifndef NDEBUG
+    fprintf(stderr,"spu main [%#llx]\n", spe_id);
+    //#endif
     //    fprintf(stderr, "spu main [%#llx] ea %p env %p \n", spe_id, spu_comm_ea, env);
     //    fprintf(stderr, "spu main [%#llx] spu_ctx %p size %d \n", spe_id, &spu_ctx, sizeof(spu_ctx));
     spu_dma_get(&spu_ctx, env, sizeof(spu_ctx));

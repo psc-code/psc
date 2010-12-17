@@ -9,7 +9,6 @@
 #if PARTICLES_BASE == PARTICLES_CBE
 
 static int __arr_size;
-static int __pad_size;
 
 void
 particles_cbe_alloc(particles_cbe_t *pp, int n_part)
@@ -54,7 +53,6 @@ particles_cbe_put(particles_c_t *pp)
 
 static particle_cbe_t *__arr;
 static int __arr_size;
-static int __pad_size;
 static int __gotten;
 
 void
@@ -68,14 +66,14 @@ particles_cbe_get(particles_cbe_t *pp)
   }
   if (!__arr) {
     __arr_size = psc.pp.n_part * 1.2;
-    ierr = posix_memalign(&m, 128, __arr_size * sizeof(*__arr));
+    ierr = posix_memalign(&m, 16, __arr_size * sizeof(*__arr));
     __arr = (particle_cbe_t *) m;
   }
   
   assert(!__gotten);
   __gotten = 1;
   pp->particles = __arr;
-  pp->null_particles = __pad;
+
   
   for(int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *f_part = particles_base_get_one(&psc.pp, n);

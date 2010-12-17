@@ -1,4 +1,3 @@
-
 #ifndef PSC_PARTICLES_CBE_H
 #define PSC_PARTICLES_CBE_H
 

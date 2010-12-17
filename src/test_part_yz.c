@@ -23,14 +23,14 @@ main(int argc, char **argv)
 
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
-  psc_sort();
+  //  psc_sort();
   psc_push_part_yz_a();
   //  psc_dump_particles("part-1");
   psc_save_particles_ref();
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
-  psc_sort();
+  //  psc_sort();
 
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2");
@@ -70,9 +70,10 @@ main(int argc, char **argv)
   };
   psc_create_test_yz(&conf_cbe);
 
-  psc_sort();
+  //psc_sort();
+  psc_dump_particles("part-2");
   psc_push_part_yz();
-  //  psc_dump_particles("part-3");
+  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-7, "push_part_yz_a -- cbe");
   psc_destroy();
 #endif

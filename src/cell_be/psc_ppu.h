@@ -15,7 +15,7 @@
 #ifdef CELLEMU
 #define NR_SPE (1)
 #else
-#define NR_SPE (8)
+#define NR_SPE (1)
 #endif 
 
 
@@ -49,6 +49,7 @@ extern struct psc_spu_ops spu_ctl; ///< Information related to domains and spu p
 
 int get_spe(void);
 void update_idle_spes(void);
+void cbe_setup_blocks(void);\
 // Deprecated alf stuff
 /*
 void cbe_push_part_yz(void);

@@ -26,7 +26,7 @@ find_cell(real xi, real yi, real zi, int l[3])
 
 
 static void
-find_cell_indices(particles_base_t *pp)
+cbe_find_cell_indices(particles_base_t *pp)
 {
   spu_ctl.nblocks = 16;
 
@@ -51,7 +51,7 @@ find_cell_indices(particles_base_t *pp)
     p->cni = ((ci[2] 
 	      * blkgd[1] + ci[1])
 	      * blkgd[0] + ci[0]);
-    assert(p->cni < spu_ctl.nblocks);
+    assert(p->cni < spu_ctl.nblocks+1);
   }
 }
 
@@ -69,7 +69,13 @@ cbe_countsort()
     pr = prof_register("cbe_countsort",1.,0,0);
   }
 
-  printf("%d %d %d \n", psc.img[0], psc.img[1], psc.img[2]);
+  fprintf(stderr, "%d %d %d \n", psc.img[0], psc.img[1], psc.img[2]);
+
+  if( ! block_list)
+    cbe_setup_blocks();
+
+  /*
+
   assert(psc.img[0] == 7);
   assert(psc.img[1] == 110);
   assert(psc.img[2] == 110);
@@ -87,8 +93,9 @@ cbe_countsort()
   if(!block_list){
     block_list = calloc(spu_ctl.nblocks+1, sizeof(psc_cell_block_t*));
   }
+  */
 
-  find_cell_indices(&psc.pp);
+  cbe_find_cell_indices(&psc.pp);
   
   int N = 2 * spu_ctl.nblocks; 
 
@@ -104,13 +111,17 @@ cbe_countsort()
 
   unsigned int *cnts;
 
+  fprintf(stderr, "cnts %p\n", spu_ctl.cnts);
   if (! spu_ctl.cnts) {
+    fprintf(stderr, "Allocating cnts\n");
     cnts = malloc(N * sizeof(*cnts));
     spu_ctl.cnts = cnts;
   }
   else {
     cnts = spu_ctl.cnts;
   }
+
+  fprintf(stderr, "cnts %p\n", spu_ctl.cnts);
 
   memset(cnts, 0, N * sizeof(*cnts));
 
@@ -122,7 +133,7 @@ cbe_countsort()
 
   // calc offsets
   int cur = 0;
-  for(int i = 1; i < N; i++) {
+  for(int i = 0; i < N; i++) {
     int n = cnts[i];
     cnts[i] = cur;
     cur += n;
@@ -147,21 +158,15 @@ cbe_countsort()
   memcpy(psc.pp.particles, particles2, psc.pp.n_part * sizeof(*particles2));
 
   free(particles2);
-  free(cnts);
+  //  free(cnts);
 
   // Need to assign particle beginning/ending
   // addresses to the blocks, which means we 
   // get to have a little fun. 
 
-  psc_cell_block_t * curr = *block_list;
-  for(int i = 1; i <= spu_ctl.nblocks; i++){
-    curr->part_start = (unsigned long long) (psc.pp.particles + cnts[i]);
-    curr->part_end = (unsigned long long) (psc.pp.particles + cnts[i+1]);
-    cur++;
-  }
+  if(psc.ops == &psc_ops_cbe){
 
-  spu_ctl.blocks_ready = 1;
-  
+  }
   prof_stop(pr);
 }
 
