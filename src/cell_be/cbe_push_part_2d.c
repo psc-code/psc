@@ -27,15 +27,17 @@ do_cbe_push_part_2d(particles_cbe_t *pp, fields_cbe_t *pf)
 
   psc_cell_block_t ** curr = block_list;
   (*curr)->part_start =  fp;
-  (*curr)->part_end = (fp + cnts[1]);
+  (*curr)->part_end = (fp + cnts[0]);
+  fprintf(stderr, "[0] cnts[0] %d\n", cnts[0]);
+  fprintf(stderr, "[0] start %p end %p\n", 0, (*curr)->part_start, (*curr)->part_end);
   curr++;
   
-  fprintf(stderr, "nblocks %i \n", spu_ctl.nblocks);
+  fprintf(stderr, "nblocks %d fp: %p \n", spu_ctl.nblocks, fp);
 
   for(int i = 1; i < spu_ctl.nblocks; i++){
-    fprintf(stderr, "[%d] ctns[i] %d cnts[i+1] %d\n", i, cnts[i], cnts[i+1]);
-    (*curr)->part_start = (fp + cnts[i]);
-    (*curr)->part_end = (fp + cnts[i+1]);
+    fprintf(stderr, "[%d] ctns[%d - 1] %d cnts[%d] %d\n", i, i, cnts[i-1], i, cnts[i]);
+    (*curr)->part_start = (fp + cnts[i-1]);
+    (*curr)->part_end = (fp + cnts[i]);
     fprintf(stderr, "[%d] start %p end %p\n", i, (*curr)->part_start, (*curr)->part_end);
     curr++;
   }
@@ -75,6 +77,8 @@ cbe_push_part_2d(void)
 
   particles_cbe_get(&pp);
   fields_cbe_get(&pf, EX, EX+6);
+
+  init_global_ctx();
   
   static int pr;
   if (!pr) {

@@ -56,8 +56,6 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
     //#endif
     //    fprintf(stderr, "spu main [%#llx] ea %p env %p \n", spe_id, spu_comm_ea, env);
     //    fprintf(stderr, "spu main [%#llx] spu_ctx %p size %d \n", spe_id, &spu_ctx, sizeof(spu_ctx));
-    spu_dma_get(&spu_ctx, env, sizeof(spu_ctx));
-    spu_ctx.spe_id = spe_id; 
 
     int rc; 
     msg_out = SPE_IDLE; 
@@ -71,6 +69,10 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 	return 0;
 	
       case SPU_RUNJOB:
+	spu_dma_get(&spu_ctx, env, sizeof(spu_ctx));
+	fprintf(stderr,"context %#llx, dt: %g\n", env, spu_ctx.dt);
+	spu_ctx.spe_id = spe_id; 
+
 	rc = spu_run_job(spu_comm_ea);
 	assert(rc == 0); 
 	msg_out = SPE_IDLE;

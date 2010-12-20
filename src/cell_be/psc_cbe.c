@@ -121,7 +121,7 @@ wb_current_cache_store(fields_cbe_t *pf, spu_curr_cache_t * cache)
 #undef JC_OFF
 */
 
-static void 
+void 
 init_global_ctx()
 {
   global_ctx.spe_id = 0;
@@ -131,6 +131,7 @@ init_global_ctx()
   global_ctx.dt = psc.dt;
   global_ctx.eta = psc.coeff.eta;
   global_ctx.fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
+  fprintf(stderr, "psc.dt: %g ctx_dt: %g \n", psc.dt, global_ctx.dt);
 }
 
 static void *

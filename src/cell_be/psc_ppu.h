@@ -40,6 +40,7 @@ int spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 	     unsigned long long env);
 
 void cbe_push_part_2d(void);
+void init_global_ctx(void);
 
 extern psc_cell_block_t *spe_blocks[NR_SPE]; ///< Block Cache for each spe
 extern psc_cell_block_t **block_list;  ///< List of all the work blocks

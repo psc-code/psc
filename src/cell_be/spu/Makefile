@@ -16,3 +16,6 @@ $(SPU_2D_OBJS): %.o: %.c
 
 clean:
 	rm *.o
+
+distclean: 
+	rm *.o

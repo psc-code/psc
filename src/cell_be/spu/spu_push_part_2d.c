@@ -108,7 +108,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-    
+
     STORE_PARTICLES_SPU;
 
     np_ea = cp_ea +  2 * sizeof(particle_cbe_t);
@@ -148,7 +148,7 @@ spu_push_part_2d(void){
       // next time in the loop. 
       // np_ea points to the one which needs to be pre-loaded.
     }
-    n++;
+  n += 2; 
 
   } while(__builtin_expect((run),1));
 

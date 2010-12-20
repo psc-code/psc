@@ -24,11 +24,12 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
   //  psc_sort();
+  psc_dump_particles("part-1");
   psc_push_part_yz_a();
-  //  psc_dump_particles("part-1");
   psc_save_particles_ref();
   psc_destroy();
 
+#if 0
   psc_create_test_yz(&conf_generic_c);
   //  psc_sort();
 
@@ -36,7 +37,7 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
-
+#endif
 
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
@@ -66,7 +67,7 @@ main(int argc, char **argv)
 #ifdef USE_CBE
   struct psc_mod_config conf_cbe = {
     .mod_particle = "cbe",
-    .mod_sort = "countsort2",
+    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_cbe);
 
