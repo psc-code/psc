@@ -5,10 +5,8 @@
 
 #ifdef CELLEMU
 #include "libspe2_c.h"
-const unsigned int all_spes = 1;
 #else
 #include <libspe2.h>
-const unsigned int all_spes = 255;
 #endif
 
 static void
@@ -19,54 +17,31 @@ do_cbe_push_part_2d(particles_cbe_t *pp, fields_cbe_t *pf)
   int state;
   psc_cell_block_t ** active_blk; 
 
-  assert(spu_ctl.cnts);
+  if(!spu_ctl.spes_inited)
+    psc_init_spes();
 
-  unsigned int *cnts = spu_ctl.cnts;
+  cbe_assign_parts_to_blocks(pp);
 
-  particle_cbe_t *fp = pp->particles; 
+  active_blk = spu_ctl.block_list; 
 
-  psc_cell_block_t ** curr = block_list;
-  (*curr)->part_start =  fp;
-  (*curr)->part_end = (fp + cnts[0]);
-  fprintf(stderr, "[0] cnts[0] %d\n", cnts[0]);
-  fprintf(stderr, "[0] start %p end %p\n", 0, (*curr)->part_start, (*curr)->part_end);
-  curr++;
-  
-  fprintf(stderr, "nblocks %d fp: %p \n", spu_ctl.nblocks, fp);
-
-  for(int i = 1; i < spu_ctl.nblocks; i++){
-    fprintf(stderr, "[%d] ctns[%d - 1] %d cnts[%d] %d\n", i, i, cnts[i-1], i, cnts[i]);
-    (*curr)->part_start = (fp + cnts[i-1]);
-    (*curr)->part_end = (fp + cnts[i]);
-    fprintf(stderr, "[%d] start %p end %p\n", i, (*curr)->part_start, (*curr)->part_end);
-    curr++;
-  }
-    
-    spu_ctl.blocks_ready = 1;
-
-
-  active_blk = block_list; 
-
-  while( (*active_blk != NULL) || (active_spes != 0)){
-    while(active_spes < NR_SPE && *active_blk != NULL){
+  while( (*active_blk != NULL) || (spu_ctl.active_spes != 0)){
+    while(spu_ctl.active_spes < NR_SPE && *active_blk != NULL){
       int spe = get_spe();
       (*active_blk)->job = SPU_PART;
       printf(" Running block %p \n", *active_blk);
-      memcpy(spe_blocks[spe], *active_blk, sizeof(psc_cell_block_t));
-      fprintf(stderr, "[ppe queing %#llx] start %p end %p\n", spe_id[spe],
-	      spe_blocks[spe]->part_start, spe_blocks[spe]->part_end);
+      memcpy(spu_ctl.spe_blocks[spe], *active_blk, sizeof(psc_cell_block_t));
+      fprintf(stderr, "[ppe queing %#llx] start %p end %p\n", spu_ctl.spe_id[spe],
+	      spu_ctl.spe_blocks[spe]->part_start, spu_ctl.spe_blocks[spe]->part_end);
       msg = SPU_RUNJOB;
-      spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
-      fprintf(stderr, "mass of first p %g \n", 
-	      ((particle_cbe_t *)spe_blocks[spe]->part_start)->mni);
+      spe_in_mbox_write(spu_ctl.spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
       active_blk++;
     }
-    //    fprintf(stderr, " active spes: %d \n", active_spes);
     update_idle_spes();
-    //    fprintf(stderr, " active spes: %d \n", active_spes);
     fflush(stderr);
     fflush(stdout);
   }
+
+  spu_ctl.particles_coarse_sorted = 0; 
 }  
 
 void

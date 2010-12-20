@@ -87,7 +87,8 @@ endif USE_CUDA
 if USE_CBE
 
 libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
-	cell_be/cbe_sort.c psc_particles_cbe.c psc_fields_cbe.c
+	cell_be/cbe_sort.c psc_particles_cbe.c psc_fields_cbe.c \
+	cell_be/cbe_blocks.
 endif
 
 if CELLEMU

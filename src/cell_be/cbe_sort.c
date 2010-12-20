@@ -28,18 +28,17 @@ find_cell(real xi, real yi, real zi, int l[3])
 static void
 cbe_find_cell_indices(particles_base_t *pp)
 {
-  spu_ctl.nblocks = 16;
 
-  int block_size[3];
-  block_size[0] = spu_ctl.block_size[0];
+  int *block_size = spu_ctl.layout->block_size;
+  /*  block_size[0] = spu_ctl.block_size[0];
   block_size[1] = spu_ctl.block_size[1];
   block_size[2] = spu_ctl.block_size[2];
-
-  int blkgd[3];
-  blkgd[0]= spu_ctl.block_grid[0];
+  */
+  int *blkgd = spu_ctl.layout->block_grid;
+  /*  blkgd[0]= spu_ctl.block_grid[0];
   blkgd[1]= spu_ctl.block_grid[1];
   blkgd[2]= spu_ctl.block_grid[2];
-
+  */
   for (int i = 0; i < pp->n_part; i++) {
     particle_base_t *p = particles_base_get_one(pp,i);
 
@@ -69,10 +68,8 @@ cbe_countsort()
     pr = prof_register("cbe_countsort",1.,0,0);
   }
 
-  fprintf(stderr, "%d %d %d \n", psc.img[0], psc.img[1], psc.img[2]);
-
-  if( ! block_list)
-    cbe_setup_blocks();
+  if( ! spu_ctl.layout)
+    cbe_setup_layout();
 
   /*
 
@@ -97,7 +94,7 @@ cbe_countsort()
 
   cbe_find_cell_indices(&psc.pp);
   
-  int N = 2 * spu_ctl.nblocks; 
+  int N = 2 * spu_ctl.layout->nblocks; 
 
   // For offloading to the spes we need to save the offsets 
   // of each block in the particle array. 
@@ -111,9 +108,7 @@ cbe_countsort()
 
   unsigned int *cnts;
 
-  fprintf(stderr, "cnts %p\n", spu_ctl.cnts);
   if (! spu_ctl.cnts) {
-    fprintf(stderr, "Allocating cnts\n");
     cnts = malloc(N * sizeof(*cnts));
     spu_ctl.cnts = cnts;
   }
@@ -158,15 +153,8 @@ cbe_countsort()
   memcpy(psc.pp.particles, particles2, psc.pp.n_part * sizeof(*particles2));
 
   free(particles2);
-  //  free(cnts);
 
-  // Need to assign particle beginning/ending
-  // addresses to the blocks, which means we 
-  // get to have a little fun. 
-
-  if(psc.ops == &psc_ops_cbe){
-
-  }
+  spu_ctl.particles_coarse_sorted = 1; 
   prof_stop(pr);
 }
 
