@@ -17,7 +17,7 @@ int
 spu_push_part_2d(void){
 
 
-#ifndef NDEBUG
+#if PRINT_DEBUG
   printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
 #endif
   unsigned long long cp_ea = psc_block.part_start;
@@ -54,7 +54,6 @@ spu_push_part_2d(void){
   zl = spu_mul(half, dt);
   one = spu_splats(1.0);
   
-  //  fprintf(stderr, "mask %d \n", mask);
 
   unsigned long long end = psc_block.part_end; 
 
@@ -88,7 +87,9 @@ spu_push_part_2d(void){
     // we may need to insert some padding here, so we have to stop and check.
     // The last particle is going to be very slow (probably).
     else if(__builtin_expect(((end - cp_ea) != 2*sizeof(particle_cbe_t)),0)){ 
+#if PRINT_DEBUG
       fprintf(stderr, "Detected odd particle out\n"); 
+#endif
       wait_for_preload();
       null_part = *(buff.lb1);
       null_part.wni = 0.0;
@@ -146,9 +147,9 @@ spu_push_part_2d(void){
   } while(__builtin_expect((run),1));
 
   end_wait_particles_stored();
-
+#if PRINT_DEBUG
   fprintf(stderr, "[[%#llx] ran %d particles\n", spu_ctx.spe_id, n);
-
+#endif
   return 0;
 
 }

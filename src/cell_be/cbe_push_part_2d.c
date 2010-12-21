@@ -28,8 +28,10 @@ do_cbe_push_part_2d(particles_cbe_t *pp, fields_cbe_t *pf)
       memcpy(spu_ctl.spe_blocks[spe], *active_blk, sizeof(psc_cell_block_t));
       msg = SPU_RUNJOB;
       spe_in_mbox_write(spu_ctl.spe_id[spe], &msg, 1, SPE_MBOX_ANY_BLOCKING);
+#if PRINT_DEBUG
       fprintf(stderr, "[ppe queing %p] start %#llx end %#llx\n", spu_ctl.spe_id[spe],
 	      spu_ctl.spe_blocks[spe]->part_start, spu_ctl.spe_blocks[spe]->part_end);
+#endif
       active_blk++;
     }
     update_spes_status();

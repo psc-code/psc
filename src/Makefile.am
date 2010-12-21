@@ -89,7 +89,7 @@ if USE_CBE
 libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
 	cell_be/cbe_sort.c psc_particles_cbe.c psc_fields_cbe.c \
 	cell_be/cbe_blocks.c
-endif
+
 
 if CELLEMU
 libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/spu/spu_dma.c \
@@ -98,12 +98,13 @@ libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_test_func.c cell_be/s
 
 else !CELLEMU
 
+
 SUBDIRS += cell_be/spu
 libpsc_a_LIBADD = cell_be/spu/spu_psc_csf.o
 
 endif !CELLEMU
 
-
+endif
 
 VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	PIC_bpulse.F PIC_ionize.F \

@@ -79,7 +79,7 @@ psc_check_particles_ref(double thres, const char *test_str)
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   for (int i = 0; i < psc.pp.n_part; i++) {
     particle_base_t *part = particles_base_get_one(&psc.pp, i);
-    printf("i = %d\n", i);
+    //    printf("i = %d\n", i);
     xi  = fmax(xi , fabs(part->xi  - particle_ref[i].xi));
     yi  = fmax(yi , fabs(part->yi  - particle_ref[i].yi));
     zi  = fmax(zi , fabs(part->zi  - particle_ref[i].zi));

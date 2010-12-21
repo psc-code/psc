@@ -15,7 +15,7 @@
 #ifdef CELLEMU
 #define NR_SPE (1)
 #else
-#define NR_SPE (1)
+#define NR_SPE (8)
 #endif 
 
 

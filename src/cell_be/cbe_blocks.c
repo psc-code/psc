@@ -88,21 +88,20 @@ cbe_assign_parts_to_blocks(particles_cbe_t * pp)
 
   (*curr)->part_start =  (unsigned long long) fp;
   (*curr)->part_end = (unsigned long long) (fp + cnts[0]);
-
+#if PRINT_DEBUG
   fprintf(stderr, "nblocks %d fp: %p \n", spu_ctl.layout->nblocks, fp);
   fprintf(stderr, "[0] cnts[0] %d\n", cnts[0]);
   fprintf(stderr, "[0] start %p end %p\n", (*curr)->part_start, (*curr)->part_end);
-
+#endif
   curr++;
   
   for(int i = 1; i < spu_ctl.layout->nblocks; i++){
     (*curr)->part_start = (unsigned long long)(fp + cnts[i-1]);
     (*curr)->part_end = (unsigned long long)(fp + cnts[i]);
-
+#if PRINT_DEBUG
     fprintf(stderr, "[%d] ctns[%d - 1] %d cnts[%d] %d\n", i, i, cnts[i-1], i, cnts[i]);
-
     fprintf(stderr, "[%d] start %p end %p\n", i, (*curr)->part_start, (*curr)->part_end);
-
+#endif
     curr++;
   }
   

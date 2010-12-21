@@ -210,7 +210,9 @@ update_spes_status(void)
     spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
     assert(msg != SPU_ERROR);
     if((msg == SPE_IDLE) && (spu_ctl.spe_state[spe] == SPE_RUN)){
-      fprintf(stderr, "Got SPE_IDLE\n");
+#if PRINT_DEBUG
+      fprintf(stderr, "[ppe] Got SPE_IDLE\n");
+#endif
       put_spe(spe);
       unsigned int msg_out = SPE_CLEAR;
       spe_in_mbox_write(spu_ctl.spe_id[spe], &msg_out, 1, SPE_MBOX_ANY_BLOCKING);

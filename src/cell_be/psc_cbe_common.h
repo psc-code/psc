@@ -3,6 +3,8 @@
 
 #include "../simd_cbe.h"
 
+#define PRINT_DEBUG 0
+
 enum kern {
   SPU_HELLO,
   SPU_BYE,

@@ -12,11 +12,19 @@ main(int argc, char **argv)
 
   struct psc_mod_config conf_fortran = {
     .mod_particle = "fortran",
+#ifdef USE_CBE
     .mod_sort = "cbesort",
+#else
+    .mod_sort = "qsort",
+#endif
   };
   struct psc_mod_config conf_generic_c = {
     .mod_particle = "generic_c",
+#ifdef USE_CBE
     .mod_sort = "cbesort",
+#else
+    .mod_sort = "qsort",
+#endif
   };
 
   printf("=== testing push_part_yz_a()\n");
@@ -25,11 +33,10 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-0");
   //  psc_sort();
   psc_push_part_yz_a();
-  psc_dump_particles("part-1");
+  //psc_dump_particles("part-1");
   psc_save_particles_ref();
   psc_destroy();
 
-#if 0 
   psc_create_test_yz(&conf_generic_c);
   //  psc_sort();
 
@@ -37,7 +44,7 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
-#endif
+
 
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
@@ -54,7 +61,7 @@ main(int argc, char **argv)
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
-    .mod_sort = "cbesort",
+    .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
@@ -72,9 +79,9 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_cbe);
 
   //psc_sort();
-  psc_dump_particles("part-2");
+  //  psc_dump_particles("part-2");
   psc_push_part_yz();
-  psc_dump_particles("part-3");
+  //  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-7, "push_part_yz_a -- cbe");
   psc_destroy();
 #endif

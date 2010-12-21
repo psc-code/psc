@@ -51,12 +51,12 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 {
   unsigned int msg_in, msg_out; 
 
-#ifndef NDEBUG
+#if PRINT_DEBUG
     fprintf(stderr,"spu main [%#llx]\n", spe_id);
 #endif
     
     spu_dma_get(&spu_ctx, env, sizeof(spu_ctx));
-#ifndef NDEBUG
+#if PRINT_DEBUG
     fprintf(stderr,"context %#llx, dt: %g\n", env, spu_ctx.dt);
 #endif
     spu_ctx.spe_id = spe_id; 
@@ -66,32 +66,40 @@ spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
     spu_write_out_mbox(msg_out);
     
     for(;;){
+#if PRINT_DEBUG
       fprintf(stderr, "Sitting in Loop\n");
+#endif
       msg_in = spu_read_in_mbox();
       
       switch(msg_in) {
       case SPU_QUIT:
+#if PRINT_DEBUG
 	fprintf(stderr, "Got msg SPU_QUIT\n");
+#endif
 	return 0;
 	
       case SPU_RUNJOB:
+#if PRINT_DEBUG
 	fprintf(stderr, "Got msg SPU_RUNJOB\n");
+#endif
 	rc = spu_run_job(spu_comm_ea);
 	assert(rc == 0); 
 	msg_out = SPE_IDLE;
-	fprintf(stderr, "sending msg SPU_IDLE\n");
 	spu_write_out_mbox(msg_out); 
-	fprintf(stderr, "sent msg SPU_IDLE\n");
 	break;
 	  
       case SPE_CLEAR:
+#if PRINT_DEBUG
 	fprintf(stderr, "Got msg SPU_ClEAR\n");
+#endif
 	msg_out = SPE_CLEAR;
 	spu_write_out_mbox(msg_out);
 	break;
 	
       default:
+#if PRINT_DEBUG
 	fprintf(stderr, "spu: unknown msg %#x\n", msg_in);
+#endif
 	spu_error();
 	return -1;
       }
