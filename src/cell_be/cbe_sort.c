@@ -50,7 +50,7 @@ cbe_find_cell_indices(particles_base_t *pp)
     p->cni = ((ci[2] 
 	      * blkgd[1] + ci[1])
 	      * blkgd[0] + ci[0]);
-    assert(p->cni < spu_ctl.nblocks+1);
+    assert(p->cni < spu_ctl.layout->nblocks+1);
   }
 }
 

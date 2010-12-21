@@ -15,7 +15,9 @@ enum {
   SPU_ERROR,
   SPU_RUNJOB,
   SPE_IDLE,
+  SPE_CLEAR, 
   SPE_RUN,
+  SPE_READY,
 };
 
 

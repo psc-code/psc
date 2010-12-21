@@ -34,8 +34,8 @@ struct bl_info {
   int tagid; 
 };
 
-const unsigned int tag_pget = 20;
-const unsigned int tag_pput = 21;
+unsigned int tag_preload;
+unsigned int tag_store;
 
 struct part_buffs buff; 
 
@@ -76,7 +76,7 @@ put_tagid(int tagid)
 
 	
 
-static void
+void
 wait_tagid(int tagid)
 {
   assert(tagid >= 0 && tagid < MAX_TAGID);
@@ -115,6 +115,46 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
   put_tagid(tagid);
 }
 
+void
+first_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size)
+{
+  tag_preload = get_tagid();
+  tag_store = 0; 
+  mfc_get(ls, ea, size, tag_preload, 0, 0);
+}
+
+void
+loop_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size)
+{
+  wait_tagid(tag_preload);
+  mfc_get(ls, ea, size, tag_preload, 0, 0);
+}
+
+void
+loop_store_particle(volatile void *ls, unsigned long long ea, unsigned long size)
+{
+  if(__builtin_expect((tag_store != 0), 1)){
+       wait_tagid(tag_store);
+  } else {
+    tag_store = get_tagid();
+  }
+  
+  mfc_put(ls, ea, size, tag_store, 0, 0);
+}
+
+void
+end_wait_particles_stored(void)
+{
+  wait_tagid(tag_store);
+  put_tagid(tag_store);
+  put_tagid(tag_preload);
+}
+
+void
+wait_for_preload(void)
+{
+  wait_tagid(tag_preload);
+}
 
 // I'm not quite sure how to integrate these functions, 
 // of if they even need to be seperate functions. 

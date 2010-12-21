@@ -16,8 +16,10 @@
 int
 spu_push_part_2d(void){
 
-  printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
 
+#ifndef NDEBUG
+  printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
+#endif
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
 
@@ -35,13 +37,13 @@ spu_push_part_2d(void){
   // Get the first two particles
   //spu_dma_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t));
 
-    mfc_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t), 
-    	  tag_pget, 0, 0);
-    np_ea = cp_ea + 2*sizeof(particle_cbe_t);
+  first_preload_particle(buff.plb1, cp_ea, 2*sizeof(particle_cbe_t));
+
+  np_ea = cp_ea + 2*sizeof(particle_cbe_t);
 
   // we have some stuff to do while we wait for
   // it to come in.
-
+  
   // insert assignment, promotions, and constant 
   // calculations here.
 
@@ -52,35 +54,43 @@ spu_push_part_2d(void){
   zl = spu_mul(half, dt);
   one = spu_splats(1.0);
   
-  mfc_write_tag_mask(1 << tag_pget);
-
-  unsigned int mask = mfc_read_tag_status_any();
-
   //  fprintf(stderr, "mask %d \n", mask);
-  particle_cbe_t null_part = *(buff.lb1);
-  null_part.wni = 0.0;
-
 
   unsigned long long end = psc_block.part_end; 
 
   int run = 1;
   int n = 0;
 
+  particle_cbe_t null_part; 
+    
+
   do {
+
+    // rotate the buffers 
+    particle_cbe_t *btmp1, *btmp2;
+    btmp1 = buff.sb1;
+    btmp2 = buff.sb2;
+    buff.sb1 = buff.lb1;
+    buff.sb2 = buff.lb2;
+    buff.lb1 = buff.plb1;
+    buff.lb2 = buff.plb2;
+    buff.plb1 = btmp1;
+    buff.plb2 = btmp2;
+
 
     // issue dma request for particle we will need 
     // next time through the loop.
     if(__builtin_expect((np_ea < end),1)) {
-      //      fprintf(stderr,"Preloading particle\n");
-      mfc_get(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t), 
-	      tag_pget, 0, 0);
-      mfc_write_tag_mask(1 << tag_pget);
-      mask = mfc_read_tag_status_any();
+
+      loop_preload_particle(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t));
 
     }    
     // we may need to insert some padding here, so we have to stop and check.
     // The last particle is going to be very slow (probably).
-    else if(__builtin_expect(((end - cp_ea) != sizeof(particle_cbe_t)),0)){ 
+    else if(__builtin_expect(((end - cp_ea) != 2*sizeof(particle_cbe_t)),0)){ 
+      wait_for_preload();
+      null_part = *(buff.lb1);
+      null_part.wni = 0.0;
       buff.lb2 = &null_part;
     }
 
@@ -112,38 +122,18 @@ spu_push_part_2d(void){
     STORE_PARTICLES_SPU;
 
     np_ea = cp_ea +  2 * sizeof(particle_cbe_t);
-    // At this point, np_ea is one ahead of the
+    // At this point, np_ea is one load ahead of the
     // current particle.
 
     
-    // rotate the buffers 
-    particle_cbe_t *btmp1, *btmp2;
-    btmp1 = buff.sb1;
-    btmp2 = buff.sb2;
-    buff.sb1 = buff.lb1;
-    buff.sb2 = buff.lb2;
-    buff.lb1 = buff.plb1;
-    buff.lb2 = buff.plb2;
-    buff.plb1 = btmp1;
-    buff.plb2 = btmp2;
-    
     if(__builtin_expect((np_ea >= end),0)) { // if we've run out of particles
-      fprintf(stderr, "Storing particle\n");
-      mfc_put(buff.sb1, cp_ea, (size_t) (end - cp_ea),
-	      tag_pput, 0, 0);
-      mfc_write_tag_mask(1 << tag_pput);
-      mask = mfc_read_tag_status_any();
+      loop_store_particle(buff.lb1, cp_ea, (size_t) (end - cp_ea));
       run = 0; 
     }
     else {
-      mfc_put(buff.sb1, cp_ea, 2 * sizeof(particle_cbe_t),
-	      tag_pput, 0, 0);
-
+      loop_store_particle(buff.lb1, cp_ea, 2 * sizeof(particle_cbe_t));
       cp_ea = np_ea;
       np_ea += 2*sizeof(particle_cbe_t);
-      mfc_write_tag_mask(1 << tag_pput);
-      mask = mfc_read_tag_status_any();
-
       // cp_ea now points to the particle which will be used
       // next time in the loop. 
       // np_ea points to the one which needs to be pre-loaded.
@@ -152,7 +142,10 @@ spu_push_part_2d(void){
 
   } while(__builtin_expect((run),1));
 
+  end_wait_particles_stored();
+
   fprintf(stderr, "[[%#llx] ran %d particles\n", spu_ctx.spe_id, n);
+
   return 0;
 
 }

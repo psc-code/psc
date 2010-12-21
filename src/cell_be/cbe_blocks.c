@@ -2,7 +2,6 @@
 #include "psc_ppu.h"
 
 
-
 void cbe_setup_layout(void)
 {
   assert(!spu_ctl.layout);
@@ -14,15 +13,15 @@ void cbe_setup_layout(void)
 
   struct cbe_block_layout *layout = spu_ctl.layout;  
 
-  layout.nblocks = 16;
+  layout->nblocks = 16;
 
-  layout.block_size[0] = 1;
-  layout.block_size[1] = 26;
-  layout.block_size[2] = 26;
+  layout->block_size[0] = 1;
+  layout->block_size[1] = 26;
+  layout->block_size[2] = 26;
 
-  layout.block_grid[0] = 1;
-  layout.block_grid[1] = 4;
-  layout.block_grid[2] = 4;
+  layout->block_grid[0] = 1;
+  layout->block_grid[1] = 4;
+  layout->block_grid[2] = 4;
 }
 
 
@@ -35,7 +34,7 @@ cbe_blocks_create(void)
   if(!spu_ctl.layout) 
     cbe_setup_layout();
 
-  int nblocks = spu_ctl.nblocks; 
+  int nblocks = spu_ctl.layout->nblocks; 
 
   spu_ctl.block_list = calloc(nblocks+1, sizeof(psc_cell_block_t*));
 
@@ -64,7 +63,7 @@ cbe_blocks_destroy(void)
 
   while(*active != NULL){
     free(*active);
-    *active == NULL; 
+    *active = NULL; 
     active++;
   }
 }
@@ -87,19 +86,23 @@ cbe_assign_parts_to_blocks(particles_cbe_t * pp)
 
   psc_cell_block_t ** curr = spu_ctl.block_list;
 
-  fprintf(stderr, "nblocks %d fp: %p \n", spu_ctl.nblocks, fp);
+  (*curr)->part_start =  (unsigned long long) fp;
+  (*curr)->part_end = (unsigned long long) (fp + cnts[0]);
 
-  (*curr)->part_start =  fp;
-  (*curr)->part_end = (fp + cnts[0]);
+  fprintf(stderr, "nblocks %d fp: %p \n", spu_ctl.layout->nblocks, fp);
   fprintf(stderr, "[0] cnts[0] %d\n", cnts[0]);
-  fprintf(stderr, "[0] start %p end %p\n", 0, (*curr)->part_start, (*curr)->part_end);
+  fprintf(stderr, "[0] start %p end %p\n", (*curr)->part_start, (*curr)->part_end);
+
   curr++;
   
-  for(int i = 1; i < spu_ctl.nblocks; i++){
+  for(int i = 1; i < spu_ctl.layout->nblocks; i++){
+    (*curr)->part_start = (unsigned long long)(fp + cnts[i-1]);
+    (*curr)->part_end = (unsigned long long)(fp + cnts[i]);
+
     fprintf(stderr, "[%d] ctns[%d - 1] %d cnts[%d] %d\n", i, i, cnts[i-1], i, cnts[i]);
-    (*curr)->part_start = (fp + cnts[i-1]);
-    (*curr)->part_end = (fp + cnts[i]);
+
     fprintf(stderr, "[%d] start %p end %p\n", i, (*curr)->part_start, (*curr)->part_end);
+
     curr++;
   }
   

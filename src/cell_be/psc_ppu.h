@@ -33,7 +33,7 @@ struct psc_spu_ops {
   spe_program_handle_t spu_3d; ///< Handle for 3-dimensional spe executable
   spe_context_ptr_t spe_id[NR_SPE]; ///< Address of each spe 
   int spes_inited; ///< Has the task been loaded onto the spes
-  int active_spes; ///< Number of spes currently running a job
+  volatile int active_spes; ///< Number of spes currently running a job
   int spe_state[NR_SPE]; ///< Which spes are doing what
   pthread_t thread_id[NR_SPE]; ///< The thread corresponding to each spe
   psc_cell_block_t *spe_blocks[NR_SPE]; ///< Each spe's job description load/store cache
@@ -60,7 +60,7 @@ void psc_init_spes(void);
 void psc_kill_spes(void);
 int get_spe(void);
 void put_spe(int spe);
-void update_idle_spes(void);
+void update_spes_status(void);
 
 // Block handeling functions from cbe_blocks.
 void cbe_setup_layout(void);

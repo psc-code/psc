@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <libspe2.h>
+#include <sys/time.h>
 #include "psc.h"
 #include "psc_ppu.h"
 
@@ -14,6 +15,8 @@ spe_program_handle_t test_handle = spu_main;
 
 //extern spe_program_handle_t test_handle;
 extern spe_program_handle_t spu_2d_handle; 
+
+static pthread_t thread_id[NR_SPE];
 
 struct psc_spu_ops spu_ctl; 
 
@@ -105,7 +108,7 @@ psc_init_spes(void)
   int rc; 
   spe_program_handle_t spu_prog;
 
-  init_global_ctx();
+  global_ctx_create();
 
   spu_prog = spu_ctl.spu_2d;  
 
@@ -113,14 +116,35 @@ psc_init_spes(void)
     void *m;
     rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
     assert(rc == 0);
-    spe_blocks[i] = (psc_cell_block_t *) m;
-    assert(spe_blocks[i] != NULL);
-    spe_id[i] = spe_context_create(0,NULL);
-    spe_program_load(spe_id[i],&spu_prog);
+    spu_ctl.spe_blocks[i] = (psc_cell_block_t *) m;
+    assert(spu_ctl.spe_blocks[i] != NULL);
+    spu_ctl.spe_id[i] = spe_context_create(0,NULL);
+    spe_program_load(spu_ctl.spe_id[i],&spu_prog);
     rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
 			(void *)(unsigned long) i); 
     assert(rc == 0);
-    spe_state[i] = SPE_IDLE;
+  }
+  
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  double start =  tv.tv_sec;
+
+  int ready = 0; 
+  while(ready < NR_SPE){
+    for(int spe=0; spe < NR_SPE; spe++){
+      unsigned int msg;
+      spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
+      if(msg == SPE_READY){
+	spu_ctl.spe_state[spe] = SPE_IDLE;
+	ready++;
+      }
+      assert(msg != SPU_ERROR);
+      gettimeofday(&tv, NULL);
+      if((tv.tv_sec - start) > 30) {
+	fprintf(stderr, "Did not obtian ready from all spes after 30s. Exiting\n");
+	assert(0);
+      }
+    }
   }
   
   spu_ctl.active_spes = 0;
@@ -139,7 +163,7 @@ psc_kill_spes(void)
     msg = SPU_QUIT;
     spe_in_mbox_write(spu_ctl.spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
     free(spu_ctl.spe_blocks[i]);
-    spu_ctl.spe_blocks[i] = NULL: 
+    spu_ctl.spe_blocks[i] = NULL;
   }
 }
   
@@ -179,14 +203,16 @@ put_spe(int spe)
 }
 
 void
-update_idle_spes(void)
+update_spes_status(void)
 {
   for(int spe=0; spe < NR_SPE; spe++){
     unsigned int msg;
     spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
-    if(msg == SPE_IDLE){
-      spu_ctl.spe_state[spe] = SPE_IDLE;
-      spu_ctl.active_spes--;
+    assert(msg != SPU_ERROR);
+    if((msg == SPE_IDLE) && (spu_ctl.spe_state[spe] == SPE_RUN)){
+      put_spe(spe);
+      unsigned int msg_out = SPE_CLEAR;
+      spe_in_mbox_write(spu_ctl.spe_id[spe], &msg_out, 1, SPE_MBOX_ANY_NONBLOCKING);
     }
   }
 }

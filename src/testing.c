@@ -1,4 +1,3 @@
-\
 #include "psc_testing.h"
 
 #include <math.h>
