@@ -219,7 +219,7 @@ test_yz_init_param(struct psc_case *Case)
   
   struct harris *harris = Case->ctx;
 
-  psc.prm.nicell = 100;
+  psc.prm.nicell = 200;
 
   psc.domain.length[0] = 10000000;
   psc.domain.length[1] = harris->lx * sqrt(harris->MMi);

@@ -88,10 +88,13 @@ spu_push_part_2d(void){
     // we may need to insert some padding here, so we have to stop and check.
     // The last particle is going to be very slow (probably).
     else if(__builtin_expect(((end - cp_ea) != 2*sizeof(particle_cbe_t)),0)){ 
+      fprintf(stderr, "Detected odd particle out\n"); 
       wait_for_preload();
       null_part = *(buff.lb1);
       null_part.wni = 0.0;
       buff.lb2 = &null_part;
+    } else {
+      wait_for_preload();
     }
 
     v_real xi, yi, zi, pxi, pyi, pzi, qni, mni, wni;

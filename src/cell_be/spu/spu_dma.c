@@ -145,7 +145,7 @@ loop_store_particle(volatile void *ls, unsigned long long ea, unsigned long size
 void
 end_wait_particles_stored(void)
 {
-  wait_tagid(tag_store);
+  //  wait_tagid(tag_store);
   put_tagid(tag_store);
   put_tagid(tag_preload);
 }
