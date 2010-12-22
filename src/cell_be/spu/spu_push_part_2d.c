@@ -20,6 +20,17 @@ spu_push_part_2d(void){
 #if PRINT_DEBUG
   printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
 #endif
+
+  fields_c_real_t ls_fld[6*32*32] __attribute__((aligned(128)));
+
+  spu_dma_get(ls_fld, 
+	      (unsigned long long) (psc_block.wb_flds + 
+				    F2_BLOCK_OFF(&psc_block,EX,
+						 psc_block.ib[0],
+						 psc_block.ib[1],
+						 psc_block.ib[2])),
+	      6*32*32*sizeof(fields_c_real_t));
+
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
 

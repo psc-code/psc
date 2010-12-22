@@ -3,6 +3,26 @@
 #include <simdmath.h>
 #include "../psc_cbe_common.h"
 
+// To keep the spu code isolated as much
+// as possible from the main code, psc.h
+// is not included (don't want all those
+// globals here). So, we have to redefine
+// the field enumerated type. If the layout 
+// in psc.h changes, this **must** also
+// change. 
+
+enum {
+  NE , NI , NN ,
+  JXI, JYI, JZI,
+  EX , EY , EZ ,
+  HX , HY , HZ ,
+  DX , DY , DZ ,
+  BX , BY , BZ ,
+  EPS, MU ,
+  NR_FIELDS,
+};
+
+
 // Some global variables on the spu
 extern psc_cell_ctx_t spu_ctx;
 extern psc_cell_block_t psc_block;

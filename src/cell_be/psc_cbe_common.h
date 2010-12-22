@@ -22,13 +22,10 @@ enum {
   SPE_READY,
 };
 
+#ifndef PSC_FIELD_C_H
+typedef double fields_c_real_t;
+#endif
 
-// The SPU can only load off 16byte boundaries, and as a 
-// consequence each particle need to occupy some multiple
-// of 16B. There might be another way around this, but
-// for now this is a hacky workaround.
-
-  
 /// Parameters which are the same across all blocks and compute
 /// kernels. 
 typedef struct _psc_cell_ctx
@@ -50,11 +47,21 @@ typedef struct _psc_cell_block
   unsigned long long job;        // 8B
   unsigned long long part_start; // 8B
   unsigned long long part_end;   // 8B
-  unsigned long long wb_flds;    // 8B
-  int blg[3];                    // 12B
-  int bhg[3];                    // 12B
-  unsigned long long padding;    // 8B
+  fields_c_real_t *wb_flds;    // 8B
+  int ib[3];                    // 12B
+  int im[3];                    // 12B
+  unsigned long long padding;    // 8B wait. why is this here?
   // Total:                      // 64B
 } psc_cell_block_t;
+
+
+#define F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)	\
+      ((((((fldnr)								\
+	   * (pbl)->im[2] + ((jz)-(pbl)->ib[2]))				\
+      * (pbl)->im[1] + ((jy)-(pbl)->ib[1]))				\
+     * (pbl)->im[0] + ((jx)-(pbl)->ib[0]))))
+
+#define F2_BLOCK(pbl, fldnr, jx, jy, jz)	\
+    ((pbl)->wb_flds[F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)
 
 #endif

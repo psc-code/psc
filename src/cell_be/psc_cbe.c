@@ -229,6 +229,15 @@ static void
 cbe_create(void)
 {
 
+  // Because I don't want to take the performance
+  // it of storing the cached fields to the full domain
+  // between each mode, I'm going to force a consistency 
+  // check. If cbe_create is being called (you're using
+  // the cbe particle pusher) you damn well better be using
+  // the other cell mods too. Right now, they're just going to 
+  // wrap the C versions (excepting the sort), but they 
+  // will be implemented eventually. 
+
   spu_ctl.spes_inited = 0;
   spu_ctl.blocks_inited = 0;
   spu_ctl.particles_coarse_sorted = 0; 
@@ -242,9 +251,6 @@ cbe_create(void)
   spu_ctl.global_ctx = NULL; 
 
 }
-
-
-
 
 
 static void

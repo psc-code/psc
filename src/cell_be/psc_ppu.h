@@ -1,10 +1,15 @@
 #ifndef PSC_CBE_H
 #define PSC_CBE_H
 
+// Order of includes is important!
+// There are preprocessor sections in 
+// psc_cbe_common.h which depend on 
+// which include files preceded it. 
+// I have a feeling this is very bad form.
 #include "psc.h"
-#include "psc_cbe_common.h"
 #include "psc_particles_cbe.h"
-#include "psc_fields_cbe.h"
+#include "psc_fields_c.h"
+#include "psc_cbe_common.h"
 
 #ifdef CELLEMU
 #include "libspe2_c.h"
@@ -67,6 +72,8 @@ void cbe_setup_layout(void);
 void cbe_blocks_create(void);
 void cbe_blocks_destroy(void);
 void cbe_assign_parts_to_blocks(particles_cbe_t * pp);
+void cbe_field_blocks_get(fields_c_t *pf, int mb, int me);
+void cbe_field_blocks_get(fields_c_t *pf, int mb, int me);
 
 
 

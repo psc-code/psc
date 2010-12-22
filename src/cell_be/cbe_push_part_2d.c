@@ -10,7 +10,7 @@
 #endif
 
 static void
-do_cbe_push_part_2d(particles_cbe_t *pp, fields_cbe_t *pf)
+do_cbe_push_part_2d(particles_cbe_t *pp, fields_c_t *pf)
  {
   
   unsigned int msg; 
@@ -45,15 +45,16 @@ do_cbe_push_part_2d(particles_cbe_t *pp, fields_cbe_t *pf)
 void
 cbe_push_part_2d(void)
 {
-  fields_cbe_t pf;
+  fields_c_t pf;
   particles_cbe_t pp;
 
   particles_cbe_get(&pp);
-  fields_cbe_get(&pf, EX, EX+6);
+  fields_c_get(&pf, EX, EX+6);
 
   if(!spu_ctl.spes_inited)
     psc_init_spes();
 
+  cbe_field_blocks_get(pf,EX,EX+6);
   
   static int pr;
   if (!pr) {
@@ -64,5 +65,5 @@ cbe_push_part_2d(void)
   prof_stop(pr);
 
   particles_cbe_put(&pp);
-  fields_cbe_put(&pf,JXI,JXI+3);
+  fields_c_put(&pf,JXI,JXI+3);
 }
