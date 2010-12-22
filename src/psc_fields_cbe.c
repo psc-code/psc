@@ -56,7 +56,7 @@ fields_cbe_get(fields_cbe_t *pf, int mb, int me)
   assert(ierr == 0);
   memset(m, 0, NR_FIELDS*psc.fld_size*sizeof(fields_cbe_real_t));
   pf->flds = (fields_cbe_real_t *) m;
-  
+x  
   int *ilg = psc.ilg;
   int *ihg = psc.ihg;
   for(int m = mb; m < me; m++){
@@ -126,3 +126,19 @@ fields_cbe_copy(fields_cbe_t *pf, int m_to, int m_from)
     }
   }
 }
+
+
+/// \file psc_field_cbe.c
+///
+/// File containing the global field functions for the CBE implementation.
+/// Because the CellBE implementation requires off loading to sub-domains
+/// and caches, there isn't really any reason why the global fields need
+/// to be different from the regular C fields. The only possible difference
+/// would be if the C functions and the Cell functions have different 
+/// floating point precisions. Frankly, I'm sick of each implementation
+/// having a different precision flag. To that end, I'm going to assume
+/// that the **entire** code (excepting the fortran) is running with the
+/// same precision, and I'll actually put in the configure options later. 
+/// Therefore, the cbe global field functions can just wrap the C global
+/// field functions. Actual handling of the block fields will be done 
+/// in cbe_blocks.c 
