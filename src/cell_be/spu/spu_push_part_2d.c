@@ -18,6 +18,7 @@ enum{
   NR_LSFLDS,
 };
 
+v_real half, one, threefourths, onepfive,third,zero;
 
 static inline void
 find_index(v_real *xi, v_real *dxi, v_int *j, v_real *h)
@@ -111,10 +112,10 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   int align_0 = off_0 & 1;						\
   int align_1 = off_1 & 1;						\
 									\
-  _in_A[0] = *(ls_fld + off_0 - align_0);				\
-  _in_A[1] = *(ls_fld + off_0 + 2 - align_0);				\
-  _in_B[0] = *(ls_fld + off_1 - align_1);				\
-  _in_B[1] = *(ls_fld + off_1 + 2 - align_1);				\
+  _in_A[0] = *(v_real *)(ls_fld + off_0 - align_0);				\
+  _in_A[1] = *(v_real *)(ls_fld + off_0 + 2 - align_0);				\
+  _in_B[0] = *(v_real *)(ls_fld + off_1 - align_1);				\
+  _in_B[1] = *(v_real *)(ls_fld + off_1 + 2 - align_1);				\
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]);\
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
@@ -131,10 +132,10 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
 									\
-  _in_A[0] = *(ls_fld + off_0 - align_0);				\
-  _in_A[1] = *(ls_fld + off_0 + 2 - align_0);				\
-  _in_B[0] = *(ls_fld + off_1 - align_1);				\
-  _in_B[1] = *(ls_fld + off_1 + 2 - align_1);				\
+  _in_A[0] = *(v_real *)(ls_fld + off_0 - align_0);				\
+  _in_A[1] = *(v_real *)(ls_fld + off_0 + 2 - align_0);				\
+  _in_B[0] = *(v_real *)(ls_fld + off_1 - align_1);				\
+  _in_B[1] = *(v_real *)(ls_fld + off_1 + 2 - align_1);				\
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]);\
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
@@ -151,10 +152,10 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
 									\
-  _in_A[0] = *(ls_fld + off_0 - align_0);				\
-  _in_A[1] = *(ls_fld + off_0 + 2 - align_0);				\
-  _in_B[0] = *(ls_fld + off_1 - align_1);				\
-  _in_B[1] = *(ls_fld + off_1 + 2 - align_1);				\
+  _in_A[0] = *(v_real *)(ls_fld + off_0 - align_0);				\
+  _in_A[1] = *(v_real *)(ls_fld + off_0 + 2 - align_0);				\
+  _in_B[0] = *(v_real *)(ls_fld + off_1 - align_1);				\
+  _in_B[1] = *(v_real *)(ls_fld + off_1 + 2 - align_1);				\
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]); \
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
@@ -257,16 +258,19 @@ spu_push_part_2d(void){
   // insert assignment, promotions, and constant 
   // calculations here.
 
-  v_real dt, yl, zl, half, one, threefourths, onepfive,third,zero;
+  v_real dt, yl, zl, dyi, dzi, dqs;
   dt = spu_splats(spu_ctx.dt);
+  half = spu_splats(0.5);
   yl = spu_mul(half, dt);
   zl = spu_mul(half, dt);
+  dyi = spu_splats(spu_ctx.dx[1]);
+  dzi = spu_splats(spu_ctx.dx[2]);
   one = spu_splats(1.0);
-  half = spu_splats(0.5);
   threefourths = spu_splats(0.75);
   onepfive = spu_splats(1.5);
   third = spu_splats(1./3.);
   zero = spu_splats(0.0);
+  dqs = spu_splats(0.5 * spu_ctx.eta * spu_ctx.dt);
 
   unsigned long long end = psc_block.part_end; 
 
@@ -314,7 +318,7 @@ spu_push_part_2d(void){
     v_real xi, yi, zi, pxi, pyi, pzi, qni, mni, wni;
   
     LOAD_PARTICLES_SPU;
-    
+
     v_real vxi,vyi,vzi,root,tmpx,tmpy,tmpz; 
     
     tmpx = spu_mul(pxi,pxi);
@@ -335,6 +339,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
+
 
     v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
     v_int j2, j3, l2, l3;
@@ -369,12 +374,12 @@ spu_push_part_2d(void){
     
     v_real exq, eyq, ezq, hxq, hyq, hzq;
     
-    IP_FIELD_SPU(s_EX,lo,j2,j3,g,g,exq);
-    IP_FIELD_SPU(s_EX,hi,l2,j3,g,h,eyq);
-    IP_FIELD_SPU(s_EZ,lo,j2,l3,h,g,ezq);
-    IP_FIELD_SPU(s_EZ,hi,l2,l3,h,h,hxq);
-    IP_FIELD_SPU(s_HY,lo,j2,l3,h,g,hyq);
-    IP_FIELD_SPU(s_HY,hi,l2,j3,g,h,hzq);
+    IP_FIELD_SPU(ls_EX,j2,j3,g,g,exq);
+    IP_FIELD_SPU(ls_EY,l2,j3,g,h,eyq);
+    IP_FIELD_SPU(ls_EZ,j2,l3,h,g,ezq);
+    IP_FIELD_SPU(ls_HX,l2,l3,h,h,hxq);
+    IP_FIELD_SPU(ls_HY,j2,l3,h,g,hyq);
+    IP_FIELD_SPU(ls_HZ,l2,j3,g,h,hzq);
     
     v_real s0y[5], s0z[5], s1y[5], s1z[5];
     for(int mp=0; mp<5; mp++){
@@ -528,7 +533,7 @@ spu_push_part_2d(void){
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
     
-    
+
     STORE_PARTICLES_SPU;
 
     np_ea = cp_ea +  2 * sizeof(particle_cbe_t);

@@ -27,6 +27,8 @@ main(int argc, char **argv)
 #endif
   };
 
+
+#if 0 
   printf("=== testing push_part_yz_a()\n");
 
   psc_create_test_yz(&conf_fortran);
@@ -70,7 +72,7 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-
+#endif
   printf("=== testing push_part_yz_b()\n");
 
   psc_create_test_yz(&conf_fortran);
@@ -80,11 +82,29 @@ main(int argc, char **argv)
   psc_save_particles_ref();
   psc_destroy();
 
+#if 0 
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_b();
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-6, "push_part_yz_b -- generic_c");
   psc_destroy();
+#endif
+
+#ifdef USE_CBE
+  struct psc_mod_config conf_cbe = {
+    .mod_particle = "cbe",
+    .mod_sort = "cbesort",
+  };
+  psc_create_test_yz(&conf_cbe);
+
+  //psc_sort();
+  //  psc_dump_particles("part-2");
+  psc_push_part_yz();
+  //  psc_dump_particles("part-3");
+  psc_check_particles_ref(1e-7, "push_part_yz_b -- cbe");
+  psc_destroy();
+#endif
+
 
 #ifdef USE_CUDA
   psc_create_test_yz(&conf_cuda);
@@ -106,20 +126,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-#ifdef USE_CBE
-  struct psc_mod_config conf_cbe = {
-    .mod_particle = "cbe",
-    .mod_sort = "cbesort",
-  };
-  psc_create_test_yz(&conf_cbe);
-
-  //psc_sort();
-  //  psc_dump_particles("part-2");
-  psc_push_part_yz();
-  //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-7, "push_part_yz_a -- cbe");
-  psc_destroy();
-#endif
 
 
 #if 0
