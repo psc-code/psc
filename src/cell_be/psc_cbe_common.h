@@ -47,7 +47,7 @@ typedef struct _psc_cell_block
   unsigned long long job;        // 8B
   unsigned long long part_start; // 8B
   unsigned long long part_end;   // 8B
-  fields_c_real_t *wb_flds;    // 8B
+  unsigned long long wb_flds;    // 8B
   int ib[3];                    // 12B
   int im[3];                    // 12B
   unsigned long long padding;    // 8B wait. why is this here?
@@ -62,6 +62,6 @@ typedef struct _psc_cell_block
      * (pbl)->im[0] + ((jx)-(pbl)->ib[0]))))
 
 #define F2_BLOCK(pbl, fldnr, jx, jy, jz)	\
-    ((pbl)->wb_flds[F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)
+  (*(fields_c_real_t *)((pbl)->wb_flds + sizeof(fields_c_real_t)*F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)))
 
 #endif

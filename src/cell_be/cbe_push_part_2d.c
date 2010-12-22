@@ -54,7 +54,7 @@ cbe_push_part_2d(void)
   if(!spu_ctl.spes_inited)
     psc_init_spes();
 
-  cbe_field_blocks_get(pf,EX,EX+6);
+  cbe_field_blocks_get(&pf,EX,EX+6);
   
   static int pr;
   if (!pr) {

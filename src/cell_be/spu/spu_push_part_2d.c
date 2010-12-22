@@ -12,6 +12,12 @@
 #include "spu_mfcio_c.h"
 #endif
 
+enum{
+  ls_EX, ls_EY, ls_EZ,
+  ls_HX, ls_HY, ls_HZ,
+  NR_LSFLDS,
+};
+
 
 int
 spu_push_part_2d(void){
@@ -23,17 +29,63 @@ spu_push_part_2d(void){
 
   fields_c_real_t ls_fld[6*32*32] __attribute__((aligned(128)));
 
+  // If we try to dma in all the field data at once, we run into the 
+  // mfc 16KB per request limit. For now, we'll split it into 6 different
+  // requests. Depending on whether the limit is 16KB = 1000 * 16B 
+  // or 1024*16B, we could group these two by two.
+  
   spu_dma_get(ls_fld, 
-	      (unsigned long long) (psc_block.wb_flds + 
-				    F2_BLOCK_OFF(&psc_block,EX,
-						 psc_block.ib[0],
-						 psc_block.ib[1],
-						 psc_block.ib[2])),
-	      6*32*32*sizeof(fields_c_real_t));
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EX,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
 
+  spu_dma_get(&ls_fld[ls_EY*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EY,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_EZ*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EZ,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_HX*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HX,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_HY*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HY,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_HZ*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HZ,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
-
+  
   particle_cbe_t _bufferA[2] __attribute__((aligned(16))), 
     _bufferB[2] __attribute__((aligned(16))), 
     _bufferC[2] __attribute__((aligned(16)));

@@ -8,7 +8,7 @@
 #endif
 
 #include <assert.h>
-
+#include <stdio.h>
 
 const vector unsigned char uplo_pat = 
   {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // first word from first vec
@@ -104,12 +104,12 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
   assert((ea & 15) == 0);
   assert((size & 15) == 0);
   //fflush(stdout);
-  //  fprintf(stderr,"dma_get %p %#llx %#lx\n", ls, ea, size);
+  //  fprintf(stderr,"dma_get %p %llu %lu\n", ls, ea, size);
 
   int tagid = get_tagid();
   assert(tagid >= 0);
   
-  //  fprintf(stderr, " size %d \n", size);
+  //  fprintf(stderr, " size %lu \n", size);
   mfc_get(ls, ea, size, tagid, 0, 0);
   wait_tagid(tagid);
   put_tagid(tagid);
