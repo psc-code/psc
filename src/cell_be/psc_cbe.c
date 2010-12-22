@@ -216,6 +216,7 @@ update_spes_status(void)
       put_spe(spe);
       unsigned int msg_out = SPE_CLEAR;
       spe_in_mbox_write(spu_ctl.spe_id[spe], &msg_out, 1, SPE_MBOX_ANY_BLOCKING);
+      // could eliminate this by checking the return value 
       while(msg != SPE_CLEAR){
 	spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
       }
