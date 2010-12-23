@@ -3,6 +3,7 @@
 #include "psc_spu_2d.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <simdmath.h>
 
@@ -234,6 +235,8 @@ spu_push_part_2d(void){
 						      psc_block.ib[2])),
 	      32*32*sizeof(fields_c_real_t));
 
+  memset(&ls_fld[ls_JXI*32*32], 0, 3*32*32*sizeof(fields_c_real_t));
+
 #endif
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
@@ -262,7 +265,7 @@ spu_push_part_2d(void){
   // insert assignment, promotions, and constant 
   // calculations here.
 
-  v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs,;
+  v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
   yl = spu_mul(half, dt);
@@ -666,11 +669,11 @@ spu_push_part_2d(void){
 		
 	for(int m = 0; m < VEC_SIZE; m++){
 	  cbe_real wx_s = spu_extract(wx,m);
-	  ls_fld[F2_SPU_OFF(ls_JXI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	  ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
 	  cbe_real jyh_s = spu_extract(jyh,m);
-	  ls_fld[F2_SPU_OFF(ls_JYI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	  ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
 	  cbe_real jzh_s = spu_extract(jzh[l2i],m);
-	  ls_fld[F2_SPU_OFF(ls_JZI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+	  ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
 	}
       }
     }  

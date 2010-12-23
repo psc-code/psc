@@ -20,7 +20,7 @@
 #ifdef CELLEMU
 #define NR_SPE (1)
 #else
-#define NR_SPE (1)
+#define NR_SPE (8)
 #endif 
 
 
@@ -74,7 +74,7 @@ void cbe_blocks_destroy(void);
 void cbe_assign_parts_to_blocks(particles_cbe_t * pp);
 void cbe_field_blocks_get(fields_c_t *pf, int mb, int me);
 void cbe_field_blocks_get(fields_c_t *pf, int mb, int me);
-
+void cbe_currents_put(fields_c_t *pf);
 
 
 #endif

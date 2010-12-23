@@ -137,6 +137,7 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
   put_tagid(tagid);
 }
 
+
 void
 spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size)
 {

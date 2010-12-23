@@ -1,6 +1,6 @@
 #include "psc.h"
 #include "psc_ppu.h"
-
+#include "psc_fields_as_c.h"
 
 void cbe_setup_layout(void)
 {

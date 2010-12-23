@@ -28,6 +28,13 @@ main(int argc, char **argv)
   };
 
 
+#ifdef USE_SSE2
+  struct psc_mod_config conf_sse2 = {
+    .mod_particle = "sse2",
+    .mod_sort = "qsort",
+  };
+#endif
+
 #if 0 
   printf("=== testing push_part_yz_a()\n");
 
@@ -62,10 +69,6 @@ main(int argc, char **argv)
 
 
 #ifdef USE_SSE2
-  struct psc_mod_config conf_sse2 = {
-    .mod_particle = "sse2",
-    .mod_sort = "qsort",
-  };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
   //  psc_dump_particles("part-3");
