@@ -44,30 +44,6 @@ extern psc_cell_block_t psc_block;
 typedef vector double v_real;
 typedef vector signed long long v_int;
 
-const vector unsigned char uplo_pat = 
-  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // first word from first vec
-   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}; // first word from second vec
-
-const vector unsigned char uphi_pat = 
-  {0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, // second word from first vec
-   0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}; // second word from second vec
-
-const vector unsigned char lohi_pat = 
-  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // first word from first vec
-   0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}; // second word from second vec
-
-const vector unsigned char hilo_pat = 
-  {0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, // second word from first vec
-   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}; // first word from second vec
-
-// This may not work. Not sure if 2d arrays can be initialized this way
-
-const vector unsigned char fld_ip_pat[2][2] = 
-  {{uplo_pat, lohi_pat}, {hilo_pat, uphi_pat}};
-
-const vector signed long long element_assign[2] = {{-1ll, 0}, {0, -1ll}};
-
-
 
 #else 
 #define spu_sqrt( vec ) sqrtf4( vec )
@@ -181,5 +157,15 @@ void wait_for_preload(void);
 void end_wait_particles_stored(void);
 void loop_store_particle(volatile void *ls, unsigned long long ea, unsigned long size);
 
+// Externed here, defined in spu_dma.c
+// because that seemed as good a place 
+// as any to put it. 
+
+extern const vector unsigned char uplo_pat;
+extern const vector unsigned char uphi_pat;
+extern const vector unsigned char hilo_pat;
+extern const vector unsigned char lohi_pat;
+extern const vector unsigned char fld_ip_pat[2][2];
+extern const vector signed long long element_assign[2];
 
 #endif
