@@ -138,6 +138,28 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
 }
 
 void
+spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size)
+{
+    // Check that we're on 16B boundaries, and 
+  // the size of the struct we're bringing in is 
+  // a multiple of 16B 
+  //  fprintf(stderr, "size %d\n", size);
+  assert(((unsigned long)ls & 15) == 0);
+  assert((ea & 15) == 0);
+  assert((size & 15) == 0);
+  //fflush(stdout);
+  //  fprintf(stderr,"dma_get %p %llu %lu\n", ls, ea, size);
+
+  int tagid = get_tagid();
+  assert(tagid >= 0);
+  
+  //  fprintf(stderr, " size %lu \n", size);
+  mfc_put(ls, ea, size, tagid, 0, 0);
+  wait_tagid(tagid);
+  put_tagid(tagid);
+}
+
+void
 first_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size)
 {
   tag_preload = get_tagid();

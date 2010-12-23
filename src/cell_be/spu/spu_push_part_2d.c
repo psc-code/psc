@@ -15,6 +15,7 @@
 enum{
   ls_EX, ls_EY, ls_EZ,
   ls_HX, ls_HY, ls_HZ,
+  ls_JXI, ls_JYI, ls_JZI,
   NR_LSFLDS,
 };
 
@@ -178,7 +179,7 @@ spu_push_part_2d(void){
 #endif
 
 #if 1
-  fields_c_real_t ls_fld[6*32*32] __attribute__((aligned(128)));
+  fields_c_real_t ls_fld[NR_LSFLDS*32*32] __attribute__((aligned(128)));
 
   // If we try to dma in all the field data at once, we run into the 
   // mfc 16KB per request limit. For now, we'll split it into 6 different
@@ -261,7 +262,7 @@ spu_push_part_2d(void){
   // insert assignment, promotions, and constant 
   // calculations here.
 
-  v_real dt, yl, zl, dyi, dzi, dqs;
+  v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs,;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
   yl = spu_mul(half, dt);
@@ -274,7 +275,10 @@ spu_push_part_2d(void){
   third = spu_splats(1./3.);
   zero = spu_splats(0.0);
   dqs = spu_splats(0.5 * spu_ctx.eta * spu_ctx.dt);
-
+  fnqs = spu_splats(spu_ctx.fnqs);
+  fnqxs = spu_splats(spu_ctx.dx[0] * spu_ctx.fnqs / spu_ctx.dt);
+  fnqys = spu_splats(spu_ctx.dx[1] * spu_ctx.fnqs / spu_ctx.dt);
+  fnqzs = spu_splats(spu_ctx.dx[2] * spu_ctx.fnqs / spu_ctx.dt);
   unsigned long long end = psc_block.part_end; 
 
   int run = 1;
@@ -556,9 +560,150 @@ spu_push_part_2d(void){
       // next time in the loop. 
       // np_ea points to the one which needs to be pre-loaded.
     }
-  n += 2; 
 
+
+    yi = spu_add(yi, tmpy);
+    zi = spu_add(zi, tmpz);
+
+    v_int k2,k3;
+    
+    find_index(&yi, &dyi, &k2, &h2);
+    find_index(&zi, &dzi, &k3, &h3);
+    
+    // God help me, there's some things I just can't fgure out how to parallelize
+    // The g-- here are just temporary variables. I can't do the assignments in parallel, 
+    // but I'll be damned if I can't do the FLOPS in parallel
+    
+    form_factor_m(&h2, &gmy);
+    form_factor_O(&h2, &gOy);
+    form_factor_l(&h2, &gly);
+    
+    form_factor_m(&h3, &gmz);
+    form_factor_O(&h3, &gOz);
+    form_factor_l(&h3, &glz);
+    
+    signed long long j2_scal[2], j3_scal[2];
+    j2_scal[0] = spu_extract(j2, 0);
+    j2_scal[1] = spu_extract(j2, 1);
+    j3_scal[0] = spu_extract(j3, 0);
+    j3_scal[1] = spu_extract(j3, 1);
+    
+    signed long long dfy[2];
+    signed long long  dfz[2];
+    dfy[0] = spu_extract(k2,0) - j2_scal[0];
+    dfy[1] = spu_extract(k2,1) - j2_scal[1];
+    dfz[0] = spu_extract(k3,0) - j3_scal[0];
+    dfz[1] = spu_extract(k3,1) - j3_scal[1];
+    
+    
+    for(int p=0; p < VEC_SIZE; p++){
+      s1y[(int)dfy[p] + 1] = spu_sel(s1y[(int)dfy[p] + 1], gmy, (vector unsigned long long) element_assign[p]);
+      s1y[(int)dfy[p] + 2] = spu_sel(s1y[(int)dfy[p] + 2], gOy, (vector unsigned long long) element_assign[p]);
+      s1y[(int)dfy[p] + 3] = spu_sel(s1y[(int)dfy[p] + 3], gly, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 1] = spu_sel(s1z[(int)dfz[p] + 1], gmz, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 2] = spu_sel(s1z[(int)dfz[p] + 2], gOz, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 3] = spu_sel(s1z[(int)dfz[p] + 3], glz, (vector unsigned long long) element_assign[p]);
+    }
+    
+    for(int m=0; m<5; m++){
+      s1y[m] = spu_sub(s1y[m], s0y[m]);
+      s1z[m] = spu_sub(s1z[m], s0z[m]);
+    }
+    
+    
+    // I'm pretty sure this is exactly the same as the
+    // branching in the serial code. Will test in 
+    // sse2 code.
+    
+    int l2min = 1 + ((dfy[0] | dfy[1]) >> 1),
+      l2max = 3 + (((dfy[0]>>1)^dfy[0]) | ((dfy[1]>>1)^dfy[1])),
+      l3min = 1 + ((dfz[0] | dfz[1]) >> 1),
+      l3max = 3 + (((dfz[0]>>1)^dfz[0]) | ((dfz[1]>>1)^dfz[1]));
+    
+    v_real fnqx, fnqy, fnqz;
+    
+    fnqx = spu_mul(wni, fnqs);
+    fnqx = spu_mul(qni, fnqx);
+    fnqx = spu_mul(vxi, fnqx);
+    
+    fnqy = spu_mul(wni, fnqys);
+    fnqy = spu_mul(qni, fnqy);
+    
+    fnqz = spu_mul(wni, fnqzs);
+    fnqz = spu_mul(qni, fnqz);
+    
+    v_real jzh[5]; // As per Will's suggestion, using the minimal 
+    // variable here, and for jyh below, gives a nice
+    // performance boost
+    memset(jzh,0,5*sizeof(v_real));
+    v_real jyh;
+    for(int l3i=l3min; l3i<=l3max; l3i++){
+      jyh = spu_splats(0.0);
+      for(int l2i=l2min; l2i<=l2max; l2i++){
+	v_real wx, wy, wz;
+	wx = spu_mul(half,s1y[l2i]);
+	wx = spu_add(s0y[l2i], wx);
+	wx = spu_mul(s0z[l3i], wx);
+	tmpx = spu_mul(half, s0y[l2i]);
+	tmpy = spu_mul(third, s1y[l2i]);
+	tmpx = spu_add(tmpx, tmpy);
+	tmpx = spu_mul(tmpx, s1z[l3i]);
+	wx = spu_add(wx, tmpx);
+	
+	wy = spu_mul(half, s1z[l3i]);
+	wy = spu_add(s0z[l3i], wy);
+	wy = spu_mul(s1y[l2i], wy);
+	
+	wz = spu_mul(half, s1y[l2i]);
+	wz = spu_add(s0y[l2i], wz);
+	wz = spu_mul(s1z[l3i], wz);
+	
+	wx = spu_mul(fnqx, wx);
+	wy = spu_mul(fnqy, wy);
+	jyh = spu_sub(jyh, wy);
+	wz = spu_mul(fnqz, wz);
+	jzh[l2i] = spu_sub(jzh[l2i], wz);
+		
+	for(int m = 0; m < VEC_SIZE; m++){
+	  cbe_real wx_s = spu_extract(wx,m);
+	  ls_fld[F2_SPU_OFF(ls_JXI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	  cbe_real jyh_s = spu_extract(jyh,m);
+	  ls_fld[F2_SPU_OFF(ls_JYI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	  cbe_real jzh_s = spu_extract(jzh[l2i],m);
+	  ls_fld[F2_SPU_OFF(ls_JZI,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+	}
+      }
+    }  
+    
+    
+    n += 2; 
+    
   } while(__builtin_expect((run),1));
+
+  spu_dma_put(&ls_fld[ls_JXI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JXI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_put(&ls_fld[ls_JYI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JYI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_put(&ls_fld[ls_JZI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JZI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      psc_block.ib[2])),
+	      32*32*sizeof(fields_c_real_t));
+  
 
   end_wait_particles_stored();
 #if PRINT_DEBUG

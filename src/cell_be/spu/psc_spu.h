@@ -151,6 +151,7 @@ b   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
 
 
 void spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size);
+void spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long size);
 void first_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size);
 void loop_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size);
 void wait_for_preload(void);

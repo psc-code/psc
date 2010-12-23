@@ -64,6 +64,8 @@ cbe_push_part_2d(void)
   do_cbe_push_part_2d(&pp, &pf);
   prof_stop(pr);
 
+  cbe_currents_put(&pf);
+
   particles_cbe_put(&pp);
   fields_c_put(&pf,JXI,JXI+3);
 }

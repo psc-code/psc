@@ -195,3 +195,36 @@ cbe_field_blocks_put(fields_c_t *pf, int mb, int me)
   }
 }
 
+void
+cbe_currents_put(fields_c_t *pf)
+{
+  psc_cell_block_t ** curr = spu_ctl.block_list; 
+
+  fields_zero(pf, JXI);
+  fields_zero(pf, JYI);
+  fields_zero(pf, JZI);
+
+  while ((*curr) != NULL) {
+
+    int xlo = (*curr)->ib[0];
+    int ylo = (*curr)->ib[1];
+    int zlo = (*curr)->ib[2];
+    
+    int xhi = xlo + (*curr)->im[0];
+    int yhi = ylo + (*curr)->im[1];
+    int zhi = zlo + (*curr)->im[2];
+    
+
+    for (int m = JXI; m <= JZI; m++) {
+      for (int jz = zlo; jz < zhi; jz++) {
+	for (int jy = ylo; jy < yhi; jy++){
+	  for (int jx = xlo; jx < xhi; jx++){
+	    F3_C(pf,m,jx,jy,jz) += F2_BLOCK((*curr),m,jx,jy,jz);
+	  }
+	}
+      }
+    }
+    
+    curr++;
+  }
+}

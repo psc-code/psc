@@ -48,11 +48,6 @@ main(int argc, char **argv)
   psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
 
-#endif
-
-
-#if 0 
-
 
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
@@ -78,7 +73,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-#endif
   printf("=== testing push_part_yz_b()\n");
 
   psc_create_test_yz(&conf_fortran);
@@ -112,9 +106,6 @@ main(int argc, char **argv)
 #endif
 
 
-#if 0 
-
-
 #ifdef USE_CUDA
   psc_create_test_yz(&conf_cuda);
   psc_push_part_yz_b();
@@ -135,7 +126,7 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-
+#endif
   printf("=== testing push_part_yz()\n");
 
   psc_create_test_yz(&conf_fortran);
@@ -143,7 +134,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
   psc_save_particles_ref();
-  //  psc_save_fields_ref();
+  psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
@@ -151,7 +142,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
   psc_check_particles_ref(1e-7, "push_part_yz -- generic_c");
-  //psc_check_currents_ref(1e-7);
+  psc_check_currents_ref(1e-7);
   psc_destroy();
 
 #ifdef USE_SSE2
@@ -176,7 +167,7 @@ main(int argc, char **argv)
   psc_destroy();
 #endif  
 
-#endif
+
   prof_print();
 
   MPI_Finalize();
