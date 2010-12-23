@@ -216,7 +216,7 @@ update_spes_status(void)
 	fprintf(stderr, "[ppe] Got SPE_IDLE\n");
 #endif
 	put_spe(spe);
-	spe_in_mbox_write(spu_ctl.spe_id[spe], &msg_out, 1, SPE_MBOX_ANY_BLOCKING);
+	nmesg--;
 	// could eliminate this by checking the return value 
       }
     }

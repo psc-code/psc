@@ -54,6 +54,9 @@ cbe_blocks_create(void)
     (*curr_block)->im[0] = 1;
     (*curr_block)->im[1] = 32;
     (*curr_block)->im[2] = 32;
+#if PRINT_DEBUG
+    printf("block % ibs %d %d %d\n", i, (*curr_block)->ib[0], (*curr_block)->ib[1], (*curr_block)->ib[2]);
+#endif
     void *m;
     int ierr = posix_memalign(&m, 128, cache_size * sizeof(fields_c_real_t));
     assert(ierr == 0);
@@ -135,6 +138,7 @@ cbe_field_blocks_get(fields_c_t *pf, int mb, int me)
 
   psc_cell_block_t ** curr = spu_ctl.block_list; 
 
+
   while ((*curr) != NULL) {
     
     int xlo = (*curr)->ib[0];
@@ -155,9 +159,10 @@ cbe_field_blocks_get(fields_c_t *pf, int mb, int me)
 	}
       }
     }
-    
+
     curr++;
   }
+
 }
 
 void

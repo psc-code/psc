@@ -121,13 +121,13 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
   _tmp1 = spu_mul(inner_coeff##my,_tmp1);				\
   _tmp2 = spu_mul(inner_coeff##Oy,_tmp2);				\
-  _tmp3 = spu_mul(inner_coeff##ly, _tmp3);				\
+  _tmp3 = spu_mul(inner_coeff##ly,_tmp3);				\
   _tmp1 = spu_add(_tmp1, _tmp2);					\
   _tmp1 = spu_add(_tmp1, _tmp3);					\
   field = spu_mul(outer_coeff##mz, _tmp1);				\
 									\
-  off_0 = F2_SPU_OFF(fldnr, 0, jy_0, jz_0 - 1);				\
-  off_1 = F2_SPU_OFF(fldnr, 0, jy_1, jz_1 - 1);				\
+  off_0 = F2_SPU_OFF(fldnr, 0, jy_0-1, jz_0);				\
+  off_1 = F2_SPU_OFF(fldnr, 0, jy_1-1, jz_1);				\
   									\
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
@@ -141,13 +141,13 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
   _tmp1 = spu_mul(inner_coeff##my,_tmp1);				\
   _tmp2 = spu_mul(inner_coeff##Oy,_tmp2);				\
-  _tmp3 = spu_mul(inner_coeff##ly, _tmp3);				\
+  _tmp3 = spu_mul(inner_coeff##ly,_tmp3);				\
   _tmp1 = spu_add(_tmp1, _tmp2);					\
   _tmp1 = spu_add(_tmp1, _tmp3);					\
   field = spu_madd(outer_coeff##Oz, _tmp1, field);			\
 									\
-  off_0 = F2_SPU_OFF(fldnr, 0, jy_0 + 1, jz_0 - 1);				\
-  off_1 = F2_SPU_OFF(fldnr, 0, jy_1 + 1, jz_1 - 1);				\
+  off_0 = F2_SPU_OFF(fldnr, 0, jy_0 - 1, jz_0+1);				\
+  off_1 = F2_SPU_OFF(fldnr, 0, jy_1 - 1, jz_1+1);				\
   									\
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
@@ -172,10 +172,12 @@ spu_push_part_2d(void){
 
 
 #if PRINT_DEBUG
+
   printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
+
 #endif
 
-#if 0
+#if 1
   fields_c_real_t ls_fld[6*32*32] __attribute__((aligned(128)));
 
   // If we try to dma in all the field data at once, we run into the 
@@ -231,7 +233,7 @@ spu_push_part_2d(void){
 						      psc_block.ib[2])),
 	      32*32*sizeof(fields_c_real_t));
 
-#end  
+#endif
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
   
@@ -264,8 +266,8 @@ spu_push_part_2d(void){
   half = spu_splats(0.5);
   yl = spu_mul(half, dt);
   zl = spu_mul(half, dt);
-  dyi = spu_splats(spu_ctx.dx[1]);
-  dzi = spu_splats(spu_ctx.dx[2]);
+  dyi = spu_splats(1./spu_ctx.dx[1]);
+  dzi = spu_splats(1./spu_ctx.dx[2]);
   one = spu_splats(1.0);
   threefourths = spu_splats(0.75);
   onepfive = spu_splats(1.5);
@@ -340,7 +342,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-#if 0 
+#if 1 
     v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
     v_int j2, j3, l2, l3;
       

@@ -31,6 +31,7 @@ main(int argc, char **argv)
 #if 0 
   printf("=== testing push_part_yz_a()\n");
 
+
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
   //  psc_sort();
@@ -46,6 +47,11 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
+
+#endif
+
+
+#if 0 
 
 
 #ifdef USE_CUDA
@@ -82,13 +88,13 @@ main(int argc, char **argv)
   psc_save_particles_ref();
   psc_destroy();
 
-#if 0 
+
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_b();
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-6, "push_part_yz_b -- generic_c");
   psc_destroy();
-#endif
+
 
 #ifdef USE_CBE
   struct psc_mod_config conf_cbe = {
@@ -104,6 +110,9 @@ main(int argc, char **argv)
   psc_check_particles_ref(1e-7, "push_part_yz_b -- cbe");
   psc_destroy();
 #endif
+
+
+#if 0 
 
 
 #ifdef USE_CUDA
@@ -126,9 +135,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-
-
-#if 0
 
   printf("=== testing push_part_yz()\n");
 
