@@ -174,6 +174,7 @@ spu_push_part_2d(void){
   printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
 #endif
 
+#if 0
   fields_c_real_t ls_fld[6*32*32] __attribute__((aligned(128)));
 
   // If we try to dma in all the field data at once, we run into the 
@@ -229,7 +230,7 @@ spu_push_part_2d(void){
 						      psc_block.ib[2])),
 	      32*32*sizeof(fields_c_real_t));
 
-  
+#end  
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
   
@@ -335,7 +336,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-
+#if 0 
     v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
     v_int j2, j3, l2, l3;
       
@@ -528,6 +529,7 @@ spu_push_part_2d(void){
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
     
+#endif
     
     STORE_PARTICLES_SPU;
 
