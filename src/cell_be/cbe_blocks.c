@@ -228,3 +228,108 @@ cbe_currents_put(fields_c_t *pf)
     curr++;
   }
 }
+
+
+//////////////////////////////////
+/// Write the cells needed for ghost point
+/// exchanges into the global field.
+///
+/// Currently copies the stencils needed for both 
+/// the exchanges off proc and between blocks. 
+/// In the future it may be possible to do 
+/// away with the global field all together, which
+/// would be nice. 
+
+void
+cbe_ghosts_put(fields_c_t *pf)
+{
+  psc_cell_block_t ** curr = spu_ctl.block_list;
+  
+  while ((*curr) != NULL) {
+
+    int xlo = (*curr)->ib[0];
+    int ylo = (*curr)->ib[1];
+    int zlo = (*curr)->ib[2];
+    
+    int xhi = xlo + (*curr)->im[0];
+    int yhi = ylo + (*curr)->im[1];
+    int zhi = zlo + (*curr)->im[2];
+    
+    /// \FIXME Right now this only works for the yz case!
+    // Need to figure out some way to adapt this when I 'squish'
+    // in another direction. 
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = zlo + psc.ibn[2]; jz < zlo + 2 * psc.ibn[2]; jz++) {
+	for (int jy = ylo + psc.ibn[1]; jy < ylo + 2 * psc.ibn[1]; jy++){
+	  for (int jx = xlo ; jx < xhi; jx++){
+	    F3_C(pf,m,jx,jy,jz) = F2_BLOCK((*curr),m,jx,jy,jz);
+	  }
+	}
+      }
+    }
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = zhi - 2 * psc.ibn[2]; jz < zhi - psc.ibn[2]; jz++) {
+	for (int jy = yhi - 2 * psc.ibn[1]; jy < yhi - psc.ibn[1]; jy++){
+	  for (int jx = xlo ; jx < xhi; jx++){
+	    F3_C(pf,m,jx,jy,jz) = F2_BLOCK((*curr),m,jx,jy,jz);
+	  }
+	}
+      }
+    }
+    
+    curr++;
+  }
+}
+
+//////////////////////////////////
+/// Get the ghost cell data from the global field.
+///
+/// In the future it may be possible to do 
+/// away with the global field all together, which
+/// would be nice. 
+
+void
+cbe_ghosts_get(fields_c_t *pf)
+{
+  psc_cell_block_t ** curr = spu_ctl.block_list;
+  
+  while ((*curr) != NULL) {
+
+    int xlo = (*curr)->ib[0];
+    int ylo = (*curr)->ib[1];
+    int zlo = (*curr)->ib[2];
+    
+    int xhi = xlo + (*curr)->im[0];
+    int yhi = ylo + (*curr)->im[1];
+    int zhi = zlo + (*curr)->im[2];
+    
+    /// \FIXME Right now this only works for the yz case!
+    // Need to figure out some way to adapt this when I 'squish'
+    // in another direction. 
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = zlo; jz < zlo + psc.ibn[2]; jz++) {
+	for (int jy = ylo ; jy < ylo + psc.ibn[1]; jy++){
+	  for (int jx = xlo ; jx < xhi; jx++){
+	    F2_BLOCK((*curr),m,jx,jy,jz) = F3_C(pf,m,jx,jy,jz);
+	  }
+	}
+      }
+    }
+
+    for (int m = mb; m < me; m++) {
+      for (int jz = zhi - psc.ibn[2]; jz < zhi; jz++) {
+	for (int jy = yhi - psc.ibn[1]; jy < yhi; jy++){
+	  for (int jx = xlo ; jx < xhi; jx++){
+	    F2_BLOCK((*curr),m,jx,jy,jz) = F3_C(pf,m,jx,jy,jz);
+	  }
+	}
+      }
+    }
+    
+    curr++;
+  }
+}
+
