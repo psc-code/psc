@@ -3,26 +3,6 @@
 #include "util/profile.h"
 
 static void
-fortran_particles_from_fortran()
-{
-}
-
-static void
-fortran_particles_to_fortran()
-{
-}
-
-static void
-fortran_fields_from_fortran()
-{
-}
-
-static void
-fortran_fields_to_fortran()
-{
-}
-
-static void
 fortran_push_part_xz()
 {
   particles_fortran_t pp;
@@ -144,10 +124,6 @@ fortran_push_part_yz_b()
 
 struct psc_ops psc_ops_fortran = {
   .name = "fortran",
-  .particles_from_fortran = fortran_particles_from_fortran,
-  .particles_to_fortran   = fortran_particles_to_fortran,
-  .fields_from_fortran    = fortran_fields_from_fortran,
-  .fields_to_fortran      = fortran_fields_to_fortran,
   .push_part_xz           = fortran_push_part_xz,
   .push_part_yz           = fortran_push_part_yz,
   .push_part_xyz          = fortran_push_part_xyz,

@@ -257,10 +257,6 @@ struct psc_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*particles_from_fortran)(void);
-  void (*particles_to_fortran)(void);
-  void (*fields_from_fortran)(void);
-  void (*fields_to_fortran)(void);
   void (*push_part_xz)(void);
   void (*push_part_yz)(void);
   void (*push_part_xyz)(void);
