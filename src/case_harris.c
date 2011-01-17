@@ -66,9 +66,10 @@ harris_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 50;
 
-  psc.domain.length[0] = harris->lx * sqrt(harris->MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  psc.domain.length[0] = harris->lx * d_i;
   psc.domain.length[1] = 1.; // no y dependence 
-  psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
+  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
   psc.domain.itot[0] = 640;
   psc.domain.itot[1] = 1;
@@ -96,10 +97,11 @@ harris_init_field(struct psc_case *Case)
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLx = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
-  double AA = harris->pert * BB * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLx = harris->lx * d_i, LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -132,9 +134,10 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
   double nnb = harris->nnb;
   double TTi = harris->Ti * sqr(BB);
   double TTe = harris->Te * sqr(BB);
@@ -221,9 +224,10 @@ test_yz_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 100;
 
+  real d_i = sqrt(harris->MMi); // in units of d_e
   psc.domain.length[0] = 10000000;
-  psc.domain.length[1] = harris->lx * sqrt(harris->MMi);
-  psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
+  psc.domain.length[1] = harris->lx * d_i;
+  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
   psc.domain.itot[0] = 1;
   psc.domain.itot[1] = 64;
@@ -242,10 +246,11 @@ test_yz_init_field(struct psc_case *Case)
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLy = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
-  double AA = harris->pert * BB * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLy = harris->lx * d_i, LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
   for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
@@ -278,9 +283,10 @@ test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
   double nnb = harris->nnb;
   double TTi = harris->Ti * sqr(BB);
   double TTe = harris->Te * sqr(BB);
