@@ -166,7 +166,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-10, "push_part_yz -- cbe");
-  psc_check_currents_ref(2e-6); 
+  //psc_check_currents_ref(2e-6); 
   psc_destroy();
 #endif  
 

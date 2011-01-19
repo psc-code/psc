@@ -151,12 +151,14 @@ b   __delta = spu_shuffle(pzi, mni, uphi_pat);		\
 
 
 void spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size);
-void spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long size);
+
 void first_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size);
 void loop_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size);
 void wait_for_preload(void);
 void end_wait_particles_stored(void);
 void loop_store_particle(volatile void *ls, unsigned long long ea, unsigned long size);
+
+void spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size);
 
 // Externed here, defined in spu_dma.c
 // because that seemed as good a place 

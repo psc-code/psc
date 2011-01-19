@@ -1,5 +1,6 @@
 #include "../psc_cbe_common.h"
 #include "spu_particles.h"
+#include "psc_spu.h"
 
 #ifdef __SPU__
 #include <spu_mfcio.h>
@@ -58,6 +59,9 @@ const vector unsigned char fld_ip_pat[2][2] =
      0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f}
    }};
 
+// [ (lo,lo) (lo,hi) ]
+// [ (hi,lo) (hi,hi) ]
+
 const vector signed long long element_assign[2] = {{-1ll, 0}, {0, -1ll}};
 
 
@@ -115,6 +119,30 @@ wait_tagid(int tagid)
 
 }
 
+
+void
+spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size)
+{
+    // Check that we're on 16B boundaries, and 
+  // the size of the struct we're bringing in is 
+  // a multiple of 16B 
+  //  fprintf(stderr, "size %d\n", size);
+  assert(((unsigned long)ls & 15) == 0);
+  assert((ea & 15) == 0);
+  assert((size & 15) == 0);
+  //fflush(stdout);
+  //  fprintf(stderr,"dma_get %p %llu %lu\n", ls, ea, size);
+
+  int tagid = get_tagid();
+  assert(tagid >= 0);
+  
+  //  fprintf(stderr, " size %lu \n", size);
+  mfc_put(ls, ea, size, tagid, 0, 0);
+  wait_tagid(tagid);
+  put_tagid(tagid);
+}
+
+
 void
 spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
 {
@@ -138,27 +166,6 @@ spu_dma_get(volatile void *ls, unsigned long long ea, unsigned long size)
 }
 
 
-void
-spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size)
-{
-    // Check that we're on 16B boundaries, and 
-  // the size of the struct we're bringing in is 
-  // a multiple of 16B 
-  //  fprintf(stderr, "size %d\n", size);
-  assert(((unsigned long)ls & 15) == 0);
-  assert((ea & 15) == 0);
-  assert((size & 15) == 0);
-  //fflush(stdout);
-  //  fprintf(stderr,"dma_get %p %llu %lu\n", ls, ea, size);
-
-  int tagid = get_tagid();
-  assert(tagid >= 0);
-  
-  //  fprintf(stderr, " size %lu \n", size);
-  mfc_put(ls, ea, size, tagid, 0, 0);
-  wait_tagid(tagid);
-  put_tagid(tagid);
-}
 
 void
 first_preload_particle(volatile void *ls, unsigned long long ea, unsigned long size)
