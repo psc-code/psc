@@ -665,7 +665,7 @@ spu_push_part_2d(void){
       int store_off_0 = F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2);
       int store_off_1 = F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1] + l3i - 2);
 
-      int l2i = 0;
+
       v_real wx, wy, wz;
       
 #define CALC_J_POINT {				\
@@ -692,9 +692,8 @@ spu_push_part_2d(void){
 	wz = spu_mul(fnqz, wz);			\
 	jzh[l2i] = spu_sub(jzh[l2i], wz);	\
 	}
-
-
-
+#if 1
+      int l2i = 0;
       CALC_J_POINT;
       
       sjx0_a = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
@@ -757,25 +756,25 @@ spu_push_part_2d(void){
 
       if((store_off_0 & 1) == 0) {
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] - 2 ))) += sjx0_a;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2 ))) += sjx0_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjx0_b;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0]+ l3i - 2 ))) += sjx0_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjx0_c;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0] + l3i- 2 ))) += sjx0_c;
 
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] - 2, j3_scal[0] - 2 ))) += sjy0_a;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2 ))) += sjy0_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjy0_b;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0] + l3i - 2 ))) += sjy0_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjy0_c;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0] + l3i - 2 ))) += sjy0_c;
 
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] - 2, j3_scal[0] - 2 ))) += sjz0_a;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] - 2, j3_scal[0] + l3i- 2 ))) += sjz0_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjz0_b;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + VEC_SIZE - 2, j3_scal[0]+ l3i - 2 ))) += sjz0_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0] - 2 ))) += sjz0_c;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + 2 * VEC_SIZE - 2, j3_scal[0]+ l3i - 2 ))) += sjz0_c;
     } else { // if we're unaligned
 	v_real newx1, newx2, newx3;
 	v_real newy1, newy2, newy3;
@@ -786,56 +785,56 @@ spu_push_part_2d(void){
 	newx3 = spu_shuffle(sjx0_b, sjx0_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2 - 1, j3_scal[0] - 2 ))) += newx1;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newx1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newx2;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newx2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newx3;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newx3;
 
 	newy1 = spu_shuffle(zero, sjy0_a, uplo_pat);
 	newy2 = spu_shuffle(sjy0_a, sjy0_b, fld_ip_pat[1][0]);
 	newy3 = spu_shuffle(sjy0_b, sjy0_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] - 2 - 1, j3_scal[0] - 2 ))) += newy1;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newy1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newy2;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newy2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newy3;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newy3;
 
 	newz1 = spu_shuffle(zero, sjz0_a, uplo_pat);
 	newz2 = spu_shuffle(sjz0_a, sjz0_b, fld_ip_pat[1][0]);
 	newz3 = spu_shuffle(sjz0_b, sjz0_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] - 2 - 1, j3_scal[0] - 2 ))) += newz1;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newz1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newz2;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newz2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0] - 2 ))) += newz3;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[0] + 2 * VEC_SIZE - 2 - 1, j3_scal[0]+ l3i - 2 ))) += newz3;
       }
 
     if((store_off_1 & 1) == 0) {
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1] - 2 ))) += sjx1_a;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1]+ l3i - 2 ))) += sjx1_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjx1_b;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1]+ l3i - 2 ))) += sjx1_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjx1_c;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1]+ l3i - 2 ))) += sjx1_c;
 
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] - 2, j3_scal[1] - 2 ))) += sjy1_a;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] - 2, j3_scal[1]+ l3i - 2 ))) += sjy1_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjy1_b;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1] + l3i- 2 ))) += sjy1_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjy1_c;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1]+ l3i - 2 ))) += sjy1_c;
 
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] - 2, j3_scal[1] - 2 ))) += sjz1_a;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] - 2, j3_scal[1]+ l3i - 2 ))) += sjz1_a;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjz1_b;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + VEC_SIZE - 2, j3_scal[1]+ l3i - 2 ))) += sjz1_b;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1] - 2 ))) += sjz1_c;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + 2 * VEC_SIZE - 2, j3_scal[1]+ l3i - 2 ))) += sjz1_c;
     }  else { // if we're unaligned
 	v_real newx1, newx2, newx3;
 	v_real newy1, newy2, newy3;
@@ -846,37 +845,37 @@ spu_push_part_2d(void){
 	newx3 = spu_shuffle(sjx1_b, sjx1_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2 - 1, j3_scal[1] - 2 ))) += newx1;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newx1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newx2;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newx2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newx3;
+		     F2_SPU_OFF(ls_JXI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newx3;
 
 	newy1 = spu_shuffle(zero, sjy1_a, uplo_pat);
 	newy2 = spu_shuffle(sjy1_a, sjy1_b, fld_ip_pat[1][0]);
 	newy3 = spu_shuffle(sjy1_b, sjy1_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] - 2 - 1, j3_scal[1] - 2 ))) += newy1;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newy1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newy2;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newy2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newy3;
+		     F2_SPU_OFF(ls_JYI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newy3;
 
 	newz1 = spu_shuffle(zero, sjz1_a, uplo_pat);
 	newz2 = spu_shuffle(sjz1_a, sjz1_b, fld_ip_pat[1][0]);
 	newz3 = spu_shuffle(sjz1_b, sjz1_c, fld_ip_pat[1][0]);
 	
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] - 2 - 1, j3_scal[1] - 2 ))) += newz1;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newz1;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newz2;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newz2;
 	*((v_real *)(ls_fld + 
-		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1] - 2 ))) += newz3;
+		     F2_SPU_OFF(ls_JZI,0,j2_scal[1] + 2 * VEC_SIZE - 2 - 1, j3_scal[1]+ l3i - 2 ))) += newz3;
       }
 
-      
-#if 0		
+#endif
+#if 0	
       for(int l2i=l2min; l2i<=l2max; l2i++){
 	CALC_J_POINT;
 	int m = 0; 
