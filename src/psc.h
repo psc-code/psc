@@ -257,6 +257,7 @@ struct psc_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
+  void (*push_part_xy)(void);
   void (*push_part_xz)(void);
   void (*push_part_yz)(void);
   void (*push_part_xyz)(void);
@@ -320,6 +321,8 @@ struct psc_moment_ops {
   void (*create)(void);
   void (*destroy)(void);
   void (*calc_densities)(fields_base_t *pf);
+  void (*calc_v)(fields_base_t *pf);
+  void (*calc_vv)(fields_base_t *pf);
 };
 
 struct psc {
@@ -403,6 +406,8 @@ void psc_add_ghosts(fields_base_t *pf, int mb, int me);
 void psc_fill_ghosts(fields_base_t *pf, int mb, int me);
 void psc_exchange_particles(void);
 void psc_calc_densities(fields_base_t *pf);
+void psc_calc_moments_v(fields_base_t *pf);
+void psc_calc_moments_vv(fields_base_t *pf);
 
 void psc_dump_particles(const char *fname);
 void psc_dump_field(int m, const char *fname);
@@ -410,6 +415,7 @@ void psc_dump_field(int m, const char *fname);
 void psc_push_part_xyz();
 void psc_push_part_yz(void);
 void psc_push_part_z(void);
+void psc_push_part_xy(void);
 void psc_push_part_yz_a(void);
 void psc_push_part_yz_b(void);
 void psc_randomize(void);
@@ -470,12 +476,14 @@ extern struct psc_case_ops psc_case_ops_foils;
 extern struct psc_case_ops psc_case_ops_curvedfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
+extern struct psc_case_ops psc_case_ops_harris_xy;
 extern struct psc_case_ops psc_case_ops_collisions;
 extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
 
 // Wrappers for Fortran functions
 void PIC_push_part_xyz();
+void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);

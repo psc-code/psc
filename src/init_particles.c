@@ -191,7 +191,7 @@ psc_init_particles(int particle_label_offset)
 		ran6 = random() / ((float) RAND_MAX + 1);
 	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
 		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
+
 	      float px =
 		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
 		+ npt.p[0];

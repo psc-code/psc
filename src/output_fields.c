@@ -109,13 +109,18 @@ calc_H2(fields_base_t *f)
 struct output_field {
   char *name;
   int nr_comp;
-  char *fld_names[3];
+  char *fld_names[6];
   void (*calc)(fields_base_t *f);
 };
 
 static struct output_field output_fields[] = {
   { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
     .calc = psc_calc_densities },
+  { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
+    .calc = psc_calc_moments_v },
+  { .name = "vv"    , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
+						   "vixvix", "viyviy", "vizivz" },
+    .calc = psc_calc_moments_vv },
   { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
   { .name = "e"    , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },

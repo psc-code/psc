@@ -150,5 +150,5 @@ psc_integrate()
     }
   }
 
-  psc_write_checkpoint();
+  //  psc_write_checkpoint();
 }

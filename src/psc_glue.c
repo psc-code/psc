@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
+#define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
 #define PIC_push_part_yz_F77 F77_FUNC(pic_push_part_yz,PIC_PUSH_PART_YZ)
 #define PIC_push_part_xyz_F77 F77_FUNC(pic_push_part_xyz,PIC_PUSH_PART_XYZ)
@@ -68,6 +69,12 @@ void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_real *cori, f_real *alpha, f_real *eta, 
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
+
+void PIC_push_part_xy_F77(f_int *niloc, particle_fortran_t *p_niloc,
+			  f_real *p2A, f_real *p2B,
+			  f_real *jxi, f_real *jyi, f_real *jzi,
+			  f_real *ex, f_real *ey, f_real *ez,
+			  f_real *hx, f_real *hy, f_real *hz);
 
 void PIC_push_part_xz_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
@@ -205,6 +212,16 @@ PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   PIC_set_variables();
   PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
+		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+}
+
+void
+PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf)
+{
+  PIC_set_variables();
+  PIC_push_part_xy_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);

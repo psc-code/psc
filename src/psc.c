@@ -336,6 +336,16 @@ psc_push_part_xyz()
 }
 
 // ----------------------------------------------------------------------
+// psc_push_part_xy
+
+void
+psc_push_part_xy()
+{
+  assert(psc.ops->push_part_xy);
+  psc.ops->push_part_xy();
+}
+
+// ----------------------------------------------------------------------
 // psc_push_part_yz
 
 void
@@ -391,7 +401,7 @@ psc_push_particles()
   } else if (im[0] > 1 && im[2] > 1) { // xz
     psc_push_part_xz();
   } else if (im[0] > 1 && im[1] > 1) { // xy
-    assert(0);
+    psc_push_part_xy();
   } else if (im[1] > 1 && im[2] > 1) { // yz
     psc_push_part_yz();
   } else if (im[2] > 1) { // z
@@ -555,13 +565,27 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 
 
 // ----------------------------------------------------------------------
-// psc_calc_densities
+// psc moments
 
 void
 psc_calc_densities(fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_densities);
   psc.moment_ops->calc_densities(pf);
+}
+
+void
+psc_calc_moments_v(fields_base_t *pf)
+{
+  assert(psc.moment_ops->calc_v);
+  psc.moment_ops->calc_v(pf);
+}
+
+void
+psc_calc_moments_vv(fields_base_t *pf)
+{
+  assert(psc.moment_ops->calc_vv);
+  psc.moment_ops->calc_vv(pf);
 }
 
 // ----------------------------------------------------------------------
