@@ -26,7 +26,7 @@ enum{
 
 // Some floating points constants which are needed
 // in vector form. 
-v_real half, one, threefourths, onepfive,third,zero;
+v_real half, one, two,  threefourths, onepfive,third,zero;
 
 // A bunch of standard functions, set out here as static
 // inlines for ease of reading the actual source. 
@@ -322,6 +322,7 @@ spu_push_part_2d(void){
   dyi = spu_splats(1./spu_ctx.dx[1]);
   dzi = spu_splats(1./spu_ctx.dx[2]);
   one = spu_splats(1.0);
+  two = spu_splats(2.0);
   threefourths = spu_splats(0.75);
   onepfive = spu_splats(1.5);
   third = spu_splats(1./3.);
@@ -498,8 +499,47 @@ spu_push_part_2d(void){
     // It would be nice to offload the momentum to a function, but it may not
     // be necessary
     
-    v_real dq;
+    v_real dq, pxp, pyp, pzp, taux, tauy, tauz, tau;
     
+    // Let's see if the compiler can beat me when it comes
+    // to translating the math to atomics.
+#if 1
+    dq = dqs * qni / mni;
+    pxi += dq * exq;
+    pyi += dq * eyq;
+    pzi += dq * ezq;
+
+    root = dq / sqrt(one + pxi*pxi + pyi*pyi + pzi*pzi);
+    taux = hxq * root;
+    tauy = hyq * root;
+    tayz = hzq * root;
+
+    tau = one / (one + taux*taux + tauy*tauy + tauz*tauz);
+
+    pxp = ((one+taux*taux-tauy*tauy-tauz*tauz)*pxi + 
+	   (two*taux*tauy+two*tauz)*pyi + 
+	   (two*taux*tauz-two*tauy)*pzi)*tau;
+
+    pyp = ((two*taux*tauy-two*tauz)*pxi +
+	   (one-taux*taux+tauy*tauy-tauz*tauz)*pyi +
+	   (two*tauy*tauz+two*taux)*pzi)*tau;
+
+    pzp = ((two*taux*tauz+two*tauy)*pxi +
+	   (two*tauy*tauz-two*taux)*pyi +
+	   (one-taux*taux-tauy*tauy+tauz*tauz)*pzi)*tau;
+
+    pxi = pxp + dq*exq;
+    pyi = pyp + dq*eyq;
+    pzi + pzp + dq*ezq;
+
+    root = one / sqrt(one + pxi*pxi + pyi*pyi + pzi*pzi);
+    vxi = pxi * root; 
+    vyi = pyi * root;
+    vzi = pzi * root;
+
+    yi += vyi * yl;
+    zi += vzi * zl;
+#else
     dq = spu_mul(qni, dqs);
     dq = spu_div(dq, mni);
     
@@ -518,7 +558,7 @@ spu_push_part_2d(void){
     pyi = spu_add(pyi, dqey);
     pzi = spu_add(pzi, dqez);
     
-    v_real taux, tauy, tauz, txx, tyy, tzz, t2xy, t2xz, t2yz, pxp, pyp, pzp;
+    v_real txx, tyy, tzz, t2xy, t2xz, t2yz;
     
     tmpx = spu_mul(pxi, pxi);
     tmpy = spu_mul(pyi, pyi);
@@ -544,7 +584,6 @@ spu_push_part_2d(void){
     t2xz = spu_add(t2xz, t2xz);
     t2yz = spu_add(t2yz, t2yz);
     
-    v_real tau;
     tau = spu_add(one, txx);
     tmpx = spu_add(tyy, tzz);
     tau = spu_add(tau, tmpx);
@@ -630,7 +669,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-    
+#endif
 
     STORE_PARTICLES_SPU;
 
