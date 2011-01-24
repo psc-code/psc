@@ -501,45 +501,11 @@ spu_push_part_2d(void){
     
     v_real dq, pxp, pyp, pzp, taux, tauy, tauz, tau;
     
-    // Let's see if the compiler can beat me when it comes
-    // to translating the math to atomics.
-#if 1
-    dq = dqs * qni / mni;
-    pxi += dq * exq;
-    pyi += dq * eyq;
-    pzi += dq * ezq;
+    // My version is faster than the fast-math 
+    // version ( ie mine = .86 * fast-math)
+    // so even though this is harder to read, 
+    // I'm going to use it instead.
 
-    root = dq / sqrt(one + pxi*pxi + pyi*pyi + pzi*pzi);
-    taux = hxq * root;
-    tauy = hyq * root;
-    tayz = hzq * root;
-
-    tau = one / (one + taux*taux + tauy*tauy + tauz*tauz);
-
-    pxp = ((one+taux*taux-tauy*tauy-tauz*tauz)*pxi + 
-	   (two*taux*tauy+two*tauz)*pyi + 
-	   (two*taux*tauz-two*tauy)*pzi)*tau;
-
-    pyp = ((two*taux*tauy-two*tauz)*pxi +
-	   (one-taux*taux+tauy*tauy-tauz*tauz)*pyi +
-	   (two*tauy*tauz+two*taux)*pzi)*tau;
-
-    pzp = ((two*taux*tauz+two*tauy)*pxi +
-	   (two*tauy*tauz-two*taux)*pyi +
-	   (one-taux*taux-tauy*tauy+tauz*tauz)*pzi)*tau;
-
-    pxi = pxp + dq*exq;
-    pyi = pyp + dq*eyq;
-    pzi + pzp + dq*ezq;
-
-    root = one / sqrt(one + pxi*pxi + pyi*pyi + pzi*pzi);
-    vxi = pxi * root; 
-    vyi = pyi * root;
-    vzi = pzi * root;
-
-    yi += vyi * yl;
-    zi += vzi * zl;
-#else
     dq = spu_mul(qni, dqs);
     dq = spu_div(dq, mni);
     
@@ -669,7 +635,6 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-#endif
 
     STORE_PARTICLES_SPU;
 

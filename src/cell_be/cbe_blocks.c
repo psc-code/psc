@@ -241,7 +241,7 @@ cbe_currents_put(fields_c_t *pf)
 /// would be nice. 
 
 void
-cbe_ghosts_put(fields_c_t *pf)
+cbe_ghosts_put(fields_c_t *pf, int mb, int me)
 {
   psc_cell_block_t ** curr = spu_ctl.block_list;
   
@@ -291,7 +291,7 @@ cbe_ghosts_put(fields_c_t *pf)
 /// would be nice. 
 
 void
-cbe_ghosts_get(fields_c_t *pf)
+cbe_ghosts_get(fields_c_t *pf, int mb, int me)
 {
   psc_cell_block_t ** curr = spu_ctl.block_list;
   
