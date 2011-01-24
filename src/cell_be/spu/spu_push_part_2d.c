@@ -179,7 +179,6 @@ spu_push_part_2d(void){
 
 #endif
 
-#if 1
   fields_c_real_t ls_fld[NR_LSFLDS*32*32] __attribute__((aligned(128)));
 
   // If we try to dma in all the field data at once, we run into the 
@@ -237,7 +236,6 @@ spu_push_part_2d(void){
 
   memset(&ls_fld[ls_JXI*32*32], 0, 3*32*32*sizeof(fields_c_real_t));
 
-#endif
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
   
@@ -306,6 +304,7 @@ spu_push_part_2d(void){
 
     // issue dma request for particle we will need 
     // next time through the loop.
+
     if(__builtin_expect((np_ea < end),1)) {
 
       loop_preload_particle(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t));
@@ -324,6 +323,7 @@ spu_push_part_2d(void){
     } else {
       wait_for_preload();
     }
+
 
     v_real xi, yi, zi, pxi, pyi, pzi, qni, mni, wni;
   
@@ -349,7 +349,7 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
-#if 1 
+
     v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
     v_int j2, j3, l2, l3;
       
@@ -542,7 +542,6 @@ spu_push_part_2d(void){
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
     
-#endif
 
     STORE_PARTICLES_SPU;
 
@@ -550,7 +549,7 @@ spu_push_part_2d(void){
     // At this point, np_ea is one load ahead of the
     // current particle.
 
-    
+
     if(__builtin_expect((np_ea >= end),0)) { // if we've run out of particles
       loop_store_particle(buff.lb1, cp_ea, (size_t) (end - cp_ea));
       run = 0; 
@@ -563,7 +562,6 @@ spu_push_part_2d(void){
       // next time in the loop. 
       // np_ea points to the one which needs to be pre-loaded.
     }
-
 
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
@@ -639,49 +637,449 @@ spu_push_part_2d(void){
     // variable here, and for jyh below, gives a nice
     // performance boost
     memset(jzh,0,5*sizeof(v_real));
+    v_real sjx0_a, sjx0_b, sjx0_c;
+    v_real sjx1_a, sjx1_b, sjx1_c;
+
+    v_real sjy0_a, sjy0_b, sjy0_c;
+    v_real sjy1_a, sjy1_b, sjy1_c;
+
+    v_real sjz0_a, sjz0_b, sjz0_c;
+    v_real sjz1_a, sjz1_b, sjz1_c;
+
+    sjx0_c = zero;
+
+    sjx1_c = zero;
+
+    sjy0_c = zero;
+
+    sjy1_c = zero;
+
+    sjz0_c = zero;
+
+    sjz1_c = zero;
+
     v_real jyh;
     for(int l3i=l3min; l3i<=l3max; l3i++){
       jyh = spu_splats(0.0);
-      for(int l2i=l2min; l2i<=l2max; l2i++){
-	v_real wx, wy, wz;
-	wx = spu_mul(half,s1y[l2i]);
-	wx = spu_add(s0y[l2i], wx);
-	wx = spu_mul(s0z[l3i], wx);
-	tmpx = spu_mul(half, s0y[l2i]);
-	tmpy = spu_mul(third, s1y[l2i]);
-	tmpx = spu_add(tmpx, tmpy);
-	tmpx = spu_mul(tmpx, s1z[l3i]);
-	wx = spu_add(wx, tmpx);
 	
-	wy = spu_mul(half, s1z[l3i]);
-	wy = spu_add(s0z[l3i], wy);
-	wy = spu_mul(s1y[l2i], wy);
-	
-	wz = spu_mul(half, s1y[l2i]);
-	wz = spu_add(s0y[l2i], wz);
-	wz = spu_mul(s1z[l3i], wz);
-	
-	wx = spu_mul(fnqx, wx);
-	wy = spu_mul(fnqy, wy);
-	jyh = spu_sub(jyh, wy);
-	wz = spu_mul(fnqz, wz);
-	jzh[l2i] = spu_sub(jzh[l2i], wz);
-		
-	for(int m = 0; m < VEC_SIZE; m++){
-	  cbe_real wx_s = spu_extract(wx,m);
-	  ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
-	  cbe_real jyh_s = spu_extract(jyh,m);
-	  ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
-	  cbe_real jzh_s = spu_extract(jzh[l2i],m);
-	  ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+      long int store_off_0 = F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2);
+      long int store_off_1 = F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1] + l3i - 2);
+
+
+      v_real wx, wy, wz;
+      
+#define CALC_J_POINT {				\
+	wx = spu_mul(half,s1y[l2i]);		\
+	wx = spu_add(s0y[l2i], wx);		\
+	wx = spu_mul(s0z[l3i], wx);		\
+	tmpx = spu_mul(half, s0y[l2i]);		\
+	tmpy = spu_mul(third, s1y[l2i]);	\
+	tmpx = spu_add(tmpx, tmpy);		\
+	tmpx = spu_mul(tmpx, s1z[l3i]);		\
+	wx = spu_add(wx, tmpx);			\
+						\
+	wy = spu_mul(half, s1z[l3i]);		\
+	wy = spu_add(s0z[l3i], wy);		\
+	wy = spu_mul(s1y[l2i], wy);		\
+						\
+	wz = spu_mul(half, s1y[l2i]);		\
+	wz = spu_add(s0y[l2i], wz);		\
+	wz = spu_mul(s1z[l3i], wz);		\
+						\
+	wx = spu_mul(fnqx, wx);			\
+	wy = spu_mul(fnqy, wy);			\
+	jyh = spu_sub(jyh, wy);			\
+	wz = spu_mul(fnqz, wz);			\
+	jzh[l2i] = spu_sub(jzh[l2i], wz);	\
 	}
-      }
-    }  
+
+      v_real l0x_a, l0x_b, l0x_c;
+      v_real l0y_a, l0y_b, l0y_c;
+      v_real l0z_a, l0z_b, l0z_c;
+      v_real l1x_a, l1x_b, l1x_c;
+      v_real l1y_a, l1y_b, l1y_c;
+      v_real l1z_a, l1z_b, l1z_c;
+
+
+      // need to load these up here and hope the compiler
+      // is smart enough to realize we're preloading for when
+      // we get to the bottom.
+      
+      l0x_a = *((v_real *)(ls_fld + (store_off_0 & ~1)));
+      
+      l0x_b = *((v_real *)(ls_fld + (store_off_0 & ~1) + 2));
+
+      l0x_c = *((v_real *)(ls_fld + (store_off_0 & ~1) + 4));
+
+      l0y_a = *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1)));
+      
+      l0y_b = *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1) + 2));
+
+      l0y_c = *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1) + 4));
+
+      l0z_a = *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1)));
+      
+      l0z_b = *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1) + 2));
+
+      l0z_c = *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1) + 4));
+
+      
+      // now for second particle
+
+      l1x_a = *((v_real *)(ls_fld + (store_off_1 & ~1)));
+      
+      l1x_b = *((v_real *)(ls_fld + (store_off_1 & ~1) + 2));
+
+      l1x_c = *((v_real *)(ls_fld + (store_off_1 & ~1) + 4));
+
+      l1y_a = *((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1)));
+      
+      l1y_b = *((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 2));
+
+      l1y_c = *((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 4));
+
+      l1z_a = *((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1)));
+      
+      l1z_b = *((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 2));
+
+      l1z_c = *((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 4));
+
+      
+
+#if 1
+      int l2i = 0;
+      CALC_J_POINT;
+      
+      sjx0_a = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_a = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_a = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
+      
+      sjx1_a = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_a = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_a = spu_shuffle(jzh[l2i], zero, uphi_pat);
+      
+      l2i = 1;
+      
+      CALC_J_POINT; 
+      
+      sjx0_a = spu_shuffle(sjx0_a, wx, uplo_pat);
+      sjy0_a = spu_shuffle(sjy0_a, jyh, uplo_pat);
+      sjz0_a = spu_shuffle(sjz0_a, jzh[l2i], uplo_pat);
+      
+      sjx1_a = spu_sel(sjx1_a, wx, (vector unsigned long long) element_assign[1]);
+      sjy1_a = spu_sel(sjy1_a, jyh, (vector unsigned long long) element_assign[1]);
+      sjz1_a = spu_sel(sjz1_a, jzh[l2i], (vector unsigned long long) element_assign[1]);
+      
+      l2i = 2;
+      
+      CALC_J_POINT;
+      
+      sjx0_b = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_b = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_b = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
+      
+      sjx1_b = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_b = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_b = spu_shuffle(jzh[l2i], zero, uphi_pat);
+      
+      l2i = 3;
+      
+      CALC_J_POINT; 
+      
+      sjx0_b = spu_shuffle(sjx0_b, wx, uplo_pat);
+      sjy0_b = spu_shuffle(sjy0_b, jyh, uplo_pat);
+      sjz0_b = spu_shuffle(sjz0_b, jzh[l2i], uplo_pat);
+      
+      sjx1_b = spu_sel(sjx1_b, wx, (vector unsigned long long) element_assign[1]);
+      sjy1_b = spu_sel(sjy1_b, jyh, (vector unsigned long long) element_assign[1]);
+      sjz1_b = spu_sel(sjz1_b, jzh[l2i], (vector unsigned long long) element_assign[1]);
+      
+      
+      l2i = 4;
+      
+      CALC_J_POINT;
+      
+      sjx0_c = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_c = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_c = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
+      
+      sjx1_c = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_c = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_c = spu_shuffle(jzh[l2i], zero, uphi_pat);
+
+
+      int pain = store_off_1/2 - store_off_0/2;
+
+      if((store_off_0 & 1) == 0) {
+
+	l0x_a += sjx0_a;
+	l0x_b += sjx0_b;
+	l0x_c += sjx0_c;
+
+	l0y_a += sjy0_a;
+	l0y_b += sjy0_b;
+	l0y_c += sjy0_c;
+
+	l0z_a += sjz0_a;
+	l0z_b += sjz0_b;
+	l0z_c += sjz0_c;
+	
+      } 
     
+      else { // if we're unaligned
+	v_real newx1, newx2, newx3;
+	v_real newy1, newy2, newy3;
+	v_real newz1, newz2, newz3;
+	
+	newx1 = spu_shuffle(zero, sjx0_a, uplo_pat);
+	newx2 = spu_shuffle(sjx0_a, sjx0_b, fld_ip_pat[1][0]);
+	newx3 = spu_shuffle(sjx0_b, sjx0_c, fld_ip_pat[1][0]);
+	
+	l0x_a += newx1;
+	l0x_b += newx2;
+	l0x_c += newx3;
+
+	newy1 = spu_shuffle(zero, sjy0_a, uplo_pat);
+	newy2 = spu_shuffle(sjy0_a, sjy0_b, fld_ip_pat[1][0]);
+	newy3 = spu_shuffle(sjy0_b, sjy0_c, fld_ip_pat[1][0]);
+	
+	l0y_a += newy1;
+	l0y_b += newy2;
+	l0y_c += newy3;
+
+	newz1 = spu_shuffle(zero, sjz0_a, uplo_pat);
+	newz2 = spu_shuffle(sjz0_a, sjz0_b, fld_ip_pat[1][0]);
+	newz3 = spu_shuffle(sjz0_b, sjz0_c, fld_ip_pat[1][0]);
+	
+	l0z_a += newz1;
+	l0z_b += newz2;
+	l0z_c += newz3;
+      }
+      
+
+      if((store_off_1 & 1) == 1) { // if we're unaligned
+	v_real newx1, newx2, newx3;
+	v_real newy1, newy2, newy3;
+	v_real newz1, newz2, newz3;
+	
+	newx1 = spu_shuffle(zero, sjx1_a, uplo_pat);
+	newx2 = spu_shuffle(sjx1_a, sjx1_b, fld_ip_pat[1][0]);
+	newx3 = spu_shuffle(sjx1_b, sjx1_c, fld_ip_pat[1][0]);
+	
+	sjx1_a = newx1;
+	sjx1_b = newx2;
+	sjx1_c = newx3;
+
+	newy1 = spu_shuffle(zero, sjy1_a, uplo_pat);
+	newy2 = spu_shuffle(sjy1_a, sjy1_b, fld_ip_pat[1][0]);
+	newy3 = spu_shuffle(sjy1_b, sjy1_c, fld_ip_pat[1][0]);
+	
+	sjy1_a = newy1;
+	sjy1_b = newy2;
+	sjy1_c = newy3;
+
+	newz1 = spu_shuffle(zero, sjz1_a, uplo_pat);
+	newz2 = spu_shuffle(sjz1_a, sjz1_b, fld_ip_pat[1][0]);
+	newz3 = spu_shuffle(sjz1_b, sjz1_c, fld_ip_pat[1][0]);
+	
+	sjz1_a = newz1;
+	sjz1_b = newz2;
+	sjz1_c = newz3;
+      }
+
+      if( (pain == -3) || (pain == 3)) {
+	l1x_a += sjx1_a;
+	l1x_b += sjx1_b;
+	l1x_c += sjx1_c;
+
+	l1y_a += sjy1_a;
+	l1y_b += sjy1_b;
+	l1y_c += sjy1_c;
+
+	l1z_a += sjz1_a;
+	l1z_b += sjz1_b;
+	l1z_c += sjz1_c;
+
+	*((v_real *)(ls_fld + (store_off_1 & ~1))) = l1x_a;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 2)) = l1x_b;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 4)) = l1x_c;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1))) = l1y_a;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 2)) = l1y_b;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 4)) = l1y_c;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1))) = l1z_a;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 2)) = l1z_b;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 4)) = l1z_c;
+	
+	
+      }
+      else if (pain == -2) {
+	l1x_a += sjx1_a;
+	l1x_b += sjx1_b;
+
+	l1y_a += sjy1_a;
+	l1y_b += sjy1_b;
+
+	l1z_a += sjz1_a;
+	l1z_b += sjz1_b;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1))) = l1x_a;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 2)) = l1x_b;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1))) = l1y_a;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 2)) = l1y_b;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1))) = l1z_a;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 2)) = l1z_b;
+
+	l0x_a += sjx1_c;
+	l0y_a += sjy1_c;
+	l0z_a += sjz1_c;
+
+      } 
+      else if (pain == 2) {
+	l1x_b += sjx1_b;
+	l1x_c += sjx1_c;
+
+	l1y_b += sjy1_b;
+	l1y_c += sjy1_c;
+
+	l1z_b += sjz1_b;
+	l1z_c += sjz1_c;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 2)) = l1x_b;
+	
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 4)) = l1x_c;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 2)) = l1y_b;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 4)) = l1y_c;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 2)) = l1z_b;
+	
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 4)) = l1z_c;
+
+	l0x_c += sjx1_a;
+	l0y_c += sjy1_a;
+	l0z_c += sjz1_a;
+
+      } 
+      else if (pain == -1) {
+
+	l1x_a += sjx1_a;
+
+	l1y_a += sjy1_a;
+
+	l1z_a += sjz1_a;
+
+	*((v_real *)(ls_fld + (store_off_1 & ~1))) = l1x_a;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1))) = l1y_a;
+      
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1))) = l1z_a;
+
+	l0x_a += sjx1_b;
+	l0x_b += sjx1_c;
+	l0y_a += sjy1_b;
+	l0y_b += sjy1_c;
+	l0z_a += sjz1_b;
+	l0z_b += sjz1_c;
+
+      } 
+      else if (pain == 1) {
+	l1x_c += sjx1_c;
+
+	l1y_c += sjy1_c;
+
+	l1z_c += sjz1_c;
+
+	*((v_real *)(ls_fld + (store_off_1 & ~1) + 4 )) = l1x_c;
+
+	*((v_real *)(ls_fld + ((store_off_1 + 32*32) & ~1) + 4 )) = l1y_c;
+      
+	*((v_real *)(ls_fld + ((store_off_1 + 2*32*32) & ~1) + 4)) = l1z_c;
+
+	l0x_b += sjx1_a;
+	l0x_c += sjx1_b;
+	l0y_b += sjy1_a;
+	l0y_c += sjy1_b;
+	l0z_b += sjz1_a;
+	l0z_c += sjz1_b;
+	
+      }
+      else if (pain == 0) {
+	l0x_a += sjx1_a;
+	l0x_b += sjx1_b;
+	l0x_c += sjx1_c;
+	l0y_a += sjy1_a;
+	l0y_b += sjy1_b;
+	l0y_c += sjy1_c;
+	l0z_a += sjz1_a;
+	l0z_b += sjz1_b;
+	l0z_c += sjz1_c;
+      }
+
+      // Time to store and hope for the best.
+
+
+      *((v_real *)(ls_fld + (store_off_0 & ~1))) = l0x_a ;
+      
+      *((v_real *)(ls_fld + (store_off_0 & ~1) + 2)) = l0x_b; 
+
+      *((v_real *)(ls_fld + (store_off_0 & ~1) + 4)) = l0x_c;
+
+      *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1))) = l0y_a;
+      
+      *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1) + 2)) = l0y_b;
+
+      *((v_real *)(ls_fld + ((store_off_0 + 32*32) & ~1) + 4)) = l0y_c;
+
+      *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1))) = l0z_a;
+      
+      *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1) + 2)) = l0z_b;
+
+      *((v_real *)(ls_fld + ((store_off_0 + 2*32*32) & ~1) + 4)) = l0z_c;
+
+
+
+
+#endif
+#if 0	
+      for(int l2i=l2min; l2i<=l2max; l2i++){
+	CALC_J_POINT;
+	int m = 0; 
+	cbe_real wx_s = spu_extract(wx,m);
+	ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	cbe_real jyh_s = spu_extract(jyh,m);
+	ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	cbe_real jzh_s = spu_extract(jzh[l2i],m);
+	ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+	m = 1; 
+	wx_s = spu_extract(wx,m);
+	ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	jyh_s = spu_extract(jyh,m);
+	ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	jzh_s = spu_extract(jzh[l2i],m);
+	ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+      }	
+#endif
+
+    }  
     
     n += 2; 
     
   } while(__builtin_expect((run),1));
+
 
   spu_dma_put(&ls_fld[ls_JXI*32*32], 
 	      (psc_block.wb_flds + 
