@@ -13,6 +13,9 @@
 #include "spu_mfcio_c.h"
 #endif
 
+// Things are indexed a little differently on the
+// local store, so we want our own enum for each
+// compute kernel.
 enum{
   ls_EX, ls_EY, ls_EZ,
   ls_HX, ls_HY, ls_HZ,
@@ -20,7 +23,15 @@ enum{
   NR_LSFLDS,
 };
 
+
+// Some floating points constants which are needed
+// in vector form. 
 v_real half, one, threefourths, onepfive,third,zero;
+
+// A bunch of standard functions, set out here as static
+// inlines for ease of reading the actual source. 
+// These are essential slightly modified versions of the
+// SSE2 functions.
 
 static inline void
 find_index(v_real *xi, v_real *dxi, v_int *j, v_real *h)
@@ -92,12 +103,22 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   *xlx = spu_mul(half, *xlx);
 }
 
+// A bit messy. We need a macro to access the offsets in the local store. 
+// This will actually work for a full three dimensional field, or any combination
+// of dimensions, as long as the elements of psc_block are are initialized correctly
+// on the ppu.
+
 #define F2_SPU_OFF(fldnr, jx, jy, jz)		\
       ((((((fldnr)								\
 	   * psc_block.im[2] + ((jz)-psc_block.ib[2]))			\
       * psc_block.im[1] + ((jy)-psc_block.ib[1]))				\
      * psc_block.im[0] + ((jx)-psc_block.ib[0]))))
 
+
+// A very ugly macro. This does the field interpolation. As far as I can tell,
+// it does it in a very effecient manner. Could be wrong about that to.
+// This macro could use a careful look in asmvis. If precision switching
+// is going to work, we're going to need a single precision version of this too.
 
 #define IP_FIELD_SPU(fldnr, jy, jz, outer_coeff, inner_coeff, field) {	\
   v_real _tmp1, _tmp2, _tmp3;						\
@@ -169,6 +190,7 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   field = spu_madd(outer_coeff##lz, _tmp1, field);			\
   }
 
+// The actual compute kernel function.
 int
 spu_push_part_2d(void){
 
@@ -179,6 +201,7 @@ spu_push_part_2d(void){
 
 #endif
 
+  // Local store for the fields. At this point, contains E,H, and J.
   fields_c_real_t ls_fld[NR_LSFLDS*32*32] __attribute__((aligned(128)));
 
   // If we try to dma in all the field data at once, we run into the 
@@ -186,6 +209,13 @@ spu_push_part_2d(void){
   // requests. Depending on whether the limit is 16KB = 1000 * 16B 
   // or 1024*16B, we could group these two by two.
   
+  // There might be a faster way to do this using dma lists. One would
+  // think we're stalling pretty bad here, but until I get a good idea 
+  // of the bandwidth and latency of the mfc I can't really say for sure.
+
+  // This could be pretty easily generalized for precision switching, but 
+  // right now it won't work with single precision. 
+
   spu_dma_get(ls_fld, 
 	      (psc_block.wb_flds + 
 	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EX,
@@ -234,11 +264,29 @@ spu_push_part_2d(void){
 						      psc_block.ib[2])),
 	      32*32*sizeof(fields_c_real_t));
 
+
+  // We need to make sure the currents are zeroed out before we start work.
   memset(&ls_fld[ls_JXI*32*32], 0, 3*32*32*sizeof(fields_c_real_t));
 
+  // These two pointers reference the current particle being 
+  // worked on by the spu (cp_ea) and the next particle which needs
+  // to be preloaded (np_ea). The addresses are in main memory.
   unsigned long long cp_ea = psc_block.part_start;
   unsigned long long np_ea; 
   
+  // We're triple buffering the particles here: One preloading, 
+  // one being worked on, and one storing. (when I say one, I actually 
+  // mean one vector set of particles. Two for double, four for single.)
+  //
+  // Kai feels we might ineffeciently using the mfc by only loading one set
+  // of particles at a time, feeling instead that each buffer should be some
+  // larger group of particles to cut down on the latency. 
+  //
+  // He may be correct, however I am of the opinion that the code is computationally
+  // bound, so we're not really going to be speeding things up, and life will just become
+  // more difficult. It's really going to take more testing, because I really can't
+  // say for now. For now let's assume Kai is correct (the more likely case) and I need
+  // to work on the buffering system a bit. 
   particle_cbe_t _bufferA[2] __attribute__((aligned(16))), 
     _bufferB[2] __attribute__((aligned(16))), 
     _bufferC[2] __attribute__((aligned(16)));
@@ -250,9 +298,12 @@ spu_push_part_2d(void){
   buff.sb1 = &(_bufferC[0]);
   buff.sb2 = &(_bufferC[1]);
 
-  // Get the first two particles
-  //spu_dma_get(buff.lb1, cp_ea, 2*sizeof(particle_cbe_t));
-
+  // Get the first two particles, we need to preload them
+  // before we actually start work on the loop.
+  // Doing it requires a slightly different function call than 
+  // we'll use inside the loop. I'm not really happy with having 
+  // this off-loaded to a function in spu_dma.c, but this is a pretty 
+  // small complaint. 
   first_preload_particle(buff.plb1, cp_ea, 2*sizeof(particle_cbe_t));
 
   np_ea = cp_ea + 2*sizeof(particle_cbe_t);
@@ -262,7 +313,7 @@ spu_push_part_2d(void){
   
   // insert assignment, promotions, and constant 
   // calculations here.
-
+  // When we change precision, this area will need to be modified. 
   v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
@@ -285,9 +336,14 @@ spu_push_part_2d(void){
   int run = 1;
   int n = 0;
 
+  // We might need an empty particle to pad out the last 
+  // time through the loop if we have an odd number of particles. 
   particle_cbe_t null_part; 
     
 
+  // Time to actually do the loop. This is a while loop, instead of
+  // a for. It will terminate when the variable 'run', defined above, 
+  // is set to '0'.
   do {
 
     // rotate the buffers 
@@ -321,16 +377,29 @@ spu_push_part_2d(void){
       null_part.wni = 0.0;
       buff.lb2 = &null_part;
     } else {
+      // Final branch: If this is the last particle, 
+      // and we don't need to add any padding. 
       wait_for_preload();
     }
 
 
+    // The actual computational loop. This is pretty straight
+    // forward, but I need to test if using the atomic intrinsics
+    // really helps. It's really a question as to whether I'm better at 
+    // writing assembly than the compiler.
+    // Will test soon.
+
     v_real xi, yi, zi, pxi, pyi, pzi, qni, mni, wni;
   
+    // The particle loading/storing macro was ported directly
+    // from the SSE2 implementation. We should really take a look
+    // at the assembly and see if it could be optimized more for 
+    // the cell.
     LOAD_PARTICLES_SPU;
 
     v_real vxi,vyi,vzi,root,tmpx,tmpy,tmpz; 
     
+    // Regular part a, as expected.
     tmpx = spu_mul(pxi,pxi);
     tmpy = spu_mul(pyi,pyi);
     tmpz = spu_mul(pzi, pzi);
@@ -349,6 +418,8 @@ spu_push_part_2d(void){
     
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
+
+    // A little part b loving. 
 
     v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
     v_int j2, j3, l2, l3;
@@ -390,6 +461,22 @@ spu_push_part_2d(void){
     IP_FIELD_SPU(ls_HY,j2,l3,h,g,hyq);
     IP_FIELD_SPU(ls_HZ,l2,j3,g,h,hzq);
     
+
+    // These arrays may be sort of a problem.
+    // It all sorts of depends on how smart the compiler is. 
+    // Allow me to explain in some depth. Arrays are groups
+    // of sequential memory, and indexing the array involves 
+    // adding the index to the address of the first element. 
+    // The problem is, because registers don't have an address, 
+    // you can't really create an array of registers. So, these variables
+    // are probably always on the stack, and any operations we do are 
+    // using them off the stack, which is slower than just keeping them 
+    // in registers. The compiler, however, may be smart enough to unroll 
+    // the loops and use them as registers. Again, I'll have to look
+    // at the assembly and figure out exactly what's happening. At the 
+    // very least, we could probably manually unroll the loop for the
+    // s0* and make sure they stay in registers. Unfortunately, I'm not really
+    // sure it will be possible to do that with the s1*.
     v_real s0y[5], s0z[5], s1y[5], s1z[5];
     for(int mp=0; mp<5; mp++){
       s0y[mp] = spu_splats(0.0);
@@ -405,6 +492,8 @@ spu_push_part_2d(void){
     form_factor_O(&H3, &s0z[2]);
     form_factor_l(&H3, &s0z[3]);
     
+    // FIXME: I'm missing a step here. I need to look into it. 
+    // should just be some sort of reduction. 
     
     // It would be nice to offload the momentum to a function, but it may not
     // be necessary
@@ -550,6 +639,7 @@ spu_push_part_2d(void){
     // current particle.
 
 
+    // Need to issue the particle dma out requests. 
     if(__builtin_expect((np_ea >= end),0)) { // if we've run out of particles
       loop_store_particle(buff.lb1, cp_ea, (size_t) (end - cp_ea));
       run = 0; 
@@ -563,6 +653,7 @@ spu_push_part_2d(void){
       // np_ea points to the one which needs to be pre-loaded.
     }
 
+    // The final piece, current calculations. 
     yi = spu_add(yi, tmpy);
     zi = spu_add(zi, tmpz);
 
@@ -583,6 +674,13 @@ spu_push_part_2d(void){
     form_factor_O(&h3, &gOz);
     form_factor_l(&h3, &glz);
     
+
+    // This next part is kind of a pain. The two particles can be in 
+    // different cells and move different directions, so we need to 
+    // be able to get the cell index for each one. This prompts these
+    // spu_extracts into scalar variables. Extracts are slow, as each one 
+    // is a combination of some number of rotates and what not. Sadly, 
+    // I can't really think of any alteranative. 
     signed long long j2_scal[2], j3_scal[2];
     j2_scal[0] = spu_extract(j2, 0);
     j2_scal[1] = spu_extract(j2, 1);
@@ -597,6 +695,9 @@ spu_push_part_2d(void){
     dfz[1] = spu_extract(k3,1) - j3_scal[1];
     
     
+    // This is the main section which is preventing me from 
+    // eliminating the arrays. It may be a major bottleneck, 
+    // depending on how the compiler has implemented it. 
     for(int p=0; p < VEC_SIZE; p++){
       s1y[(int)dfy[p] + 1] = spu_sel(s1y[(int)dfy[p] + 1], gmy, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 2] = spu_sel(s1y[(int)dfy[p] + 2], gOy, (vector unsigned long long) element_assign[p]);
@@ -612,10 +713,10 @@ spu_push_part_2d(void){
     }
     
     
-    // I'm pretty sure this is exactly the same as the
-    // branching in the serial code. Will test in 
-    // sse2 code.
-    
+    // This section appears to effectively eliminate
+    // the branching section in the original code. 
+    // The l2min/max part is not, at this moment, needed
+    // as I have unrolled the inner loop in the current assign.    
     int l2min = 1 + ((dfy[0] | dfy[1]) >> 1),
       l2max = 3 + (((dfy[0]>>1)^dfy[0]) | ((dfy[1]>>1)^dfy[1])),
       l3min = 1 + ((dfz[0] | dfz[1]) >> 1),
@@ -637,6 +738,16 @@ spu_push_part_2d(void){
     // variable here, and for jyh below, gives a nice
     // performance boost
     memset(jzh,0,5*sizeof(v_real));
+
+    // This is an ugly section, and it 
+    // doesn't translate well to single 
+    // precision. The += to the local 
+    // store are a very bad idea. They stall
+    // the processor rather significantly. As
+    // such, we need to do some acrobatics. 
+    // First, we're going to shuffle each current element
+    // for each particle into some registers lined up on the
+    // fast running index. 
     v_real sjx0_a, sjx0_b, sjx0_c;
     v_real sjx1_a, sjx1_b, sjx1_c;
 
@@ -662,12 +773,16 @@ spu_push_part_2d(void){
     for(int l3i=l3min; l3i<=l3max; l3i++){
       jyh = spu_splats(0.0);
 	
+      // Let's find the offsets in the local store to which 
+      // we will store the new currents. 
       long int store_off_0 = F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2);
       long int store_off_1 = F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1] + l3i - 2);
 
 
       v_real wx, wy, wz;
       
+      // This macro defined so we can unroll
+      // the inner current loop.
 #define CALC_J_POINT {				\
 	wx = spu_mul(half,s1y[l2i]);		\
 	wx = spu_add(s0y[l2i], wx);		\
@@ -693,6 +808,8 @@ spu_push_part_2d(void){
 	jzh[l2i] = spu_sub(jzh[l2i], wz);	\
 	}
 
+      // Now we need to preload in the currents in
+      // local store that will be affected by each particle. 
       v_real l0x_a, l0x_b, l0x_c;
       v_real l0y_a, l0y_b, l0y_c;
       v_real l0z_a, l0z_b, l0z_c;
@@ -747,6 +864,12 @@ spu_push_part_2d(void){
       
 
 #if 1
+      // Now for the unrolled loop. We calculate the 
+      // value of each particles current at each point, 
+      // and then shuffle into the appropriate place in the 
+      // registers we allocated before. Note, we use spu_sel whenever
+      // possible. A shuffle is 4 cycles, a select (ie pass through)
+      // is only 2. 
       int l2i = 0;
       CALC_J_POINT;
       
@@ -808,9 +931,21 @@ spu_push_part_2d(void){
       sjz1_c = spu_shuffle(jzh[l2i], zero, uphi_pat);
 
 
+      // I call this pain, and it is. Basically, we need 
+      // to account for the currents from the two particles
+      // overlapping each other. There are six cases we need to consider,
+      // and this variable will let us differentiate them. This 
+      // variable is calculated up here so the branches can be predicted. 
+      // I'm not sure if I specifically have to issue some instruction
+      // for the spe to do the branch prediction. 
       int pain = store_off_1/2 - store_off_0/2;
 
-      if((store_off_0 & 1) == 0) {
+      // First, if particle is unaligned, we need to 
+      // shift the new currents one to the right in our 
+      // store registers. This is not easy, as the currents
+      // to be stored span three registers. With a smart use of shuffles, 
+      // however, it's not too expensive. 
+      if((store_off_0 & 1) == 0) { // we're aligned.
 
 	l0x_a += sjx0_a;
 	l0x_b += sjx0_b;
@@ -857,6 +992,8 @@ spu_push_part_2d(void){
       }
       
 
+      // If the second particle is also unaligned, we need
+      // to do the same shifting buisness. 
       if((store_off_1 & 1) == 1) { // if we're unaligned
 	v_real newx1, newx2, newx3;
 	v_real newy1, newy2, newy3;
@@ -886,8 +1023,14 @@ spu_push_part_2d(void){
 	sjz1_b = newz2;
 	sjz1_c = newz3;
       }
+      
+      // Now we need to account for the six
+      // cases of relative position between the two 
+      // particles. 
 
-      if( (pain == -3) || (pain == 3)) {
+      if( (pain <= -3) || (pain >= 3)) {
+	// There is no overlap between the particles, 
+	// so we can store them seperately. 
 	l1x_a += sjx1_a;
 	l1x_b += sjx1_b;
 	l1x_c += sjx1_c;
@@ -921,6 +1064,9 @@ spu_push_part_2d(void){
 	
       }
       else if (pain == -2) {
+	// The particles overlap at one point, as shown below. 
+	// | 0a | 0b | 0c |    |
+	// |    |    | 1a | 1b | 1c |
 	l1x_a += sjx1_a;
 	l1x_b += sjx1_b;
 
@@ -948,6 +1094,9 @@ spu_push_part_2d(void){
 
       } 
       else if (pain == 2) {
+	// Overlap at one point:
+	// |    |    | 0a | 0b | 0c | 
+	// | 1a | 1b | 1c |    |    |
 	l1x_b += sjx1_b;
 	l1x_c += sjx1_c;
 
@@ -975,6 +1124,9 @@ spu_push_part_2d(void){
 
       } 
       else if (pain == -1) {
+	// Overlap at two points:
+	// | 0a | 0b | 0c |    |
+	// |    | 1a | 1b | 1c |
 
 	l1x_a += sjx1_a;
 
@@ -997,6 +1149,9 @@ spu_push_part_2d(void){
 
       } 
       else if (pain == 1) {
+	// Overlap at two points:
+	// |    | 0a | 0b | 0c |
+	// | 1a | 1b | 1c |    |
 	l1x_c += sjx1_c;
 
 	l1y_c += sjy1_c;
@@ -1018,6 +1173,9 @@ spu_push_part_2d(void){
 	
       }
       else if (pain == 0) {
+	// Overlap at all three points
+	// | 0a | 0b | 0c |
+	// | 1a | 1b | 1c |
 	l0x_a += sjx1_a;
 	l0x_b += sjx1_b;
 	l0x_c += sjx1_c;
@@ -1076,11 +1234,14 @@ spu_push_part_2d(void){
 
     }  
     
+    // This just counts how many particles we've run.
+    // It's only here for debugging purposes. 
     n += 2; 
     
   } while(__builtin_expect((run),1));
 
 
+  // Now it's time to write out the currents
   spu_dma_put(&ls_fld[ls_JXI*32*32], 
 	      (psc_block.wb_flds + 
 	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JXI,
@@ -1106,6 +1267,8 @@ spu_push_part_2d(void){
 	      32*32*sizeof(fields_c_real_t));
   
 
+  // Then we just wait to make sure the particles have 
+  // finished storing. 
   end_wait_particles_stored();
 #if PRINT_DEBUG
   fprintf(stderr, "[[%#llx] ran %d particles\n", spu_ctx.spe_id, n);
