@@ -88,7 +88,9 @@ particles_cbe_get(particles_cbe_t *pp)
     part->qni = f_part->qni;
     part->mni = f_part->mni;
     part->wni = f_part->wni;
+#if PARTICLES_BASE != PARTICLES_C
     part->cni = f_part->cni;
+#endif
   }
 }
 
