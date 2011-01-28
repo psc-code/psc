@@ -115,7 +115,11 @@ vtk_write_fields_binary(struct psc_output_c *out, struct psc_fields_list *flds,
 
 
   
-  vtk_write_field_binary(file, &flds->flds[0], out);
+  for (int m = 0; m < flds->nr_flds; m++) 
+  {	
+	  vtk_write_field_binary(file, &flds->flds[m], out);
+  }
+  
   fclose(file);
 
 }
