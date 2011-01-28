@@ -477,6 +477,7 @@ extern struct psc_case_ops psc_case_ops_harris;
 extern struct psc_case_ops psc_case_ops_collisions;
 extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
+extern struct psc_case_ops psc_case_ops_cone;
 
 // Wrappers for Fortran functions
 void PIC_push_part_xyz();

@@ -56,6 +56,7 @@ libpsc_a_SOURCES = \
 	case_singlepart.c \
 	case_harris.c \
 	case_collisions.c \
+	case_cone.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5

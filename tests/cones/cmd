@@ -1,0 +1,6 @@
+openmpirun -n 2 src/VLI \
+	   --nproc_z 2 \
+	   --mod_output c --output_format vtk_binary --pfield_first 0 --pfield_step 200 \
+                           --output_fields n,j,e,h \
+                           --write_tfield no \
+	   --case cone
