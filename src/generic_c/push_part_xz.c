@@ -88,65 +88,65 @@ do_genc_push_part_xz(fields_t *pf, particles_t *pp)
 
     // FIELD INTERPOLATION
 
-    creal exq=gmz*(hmx*F3(EX, l1-1,j2,j3-1)
-		  +h0x*F3(EX, l1,j2,j3-1)
-		  +h1x*F3(EX, l1+1,j2,j3-1))
-      +g0z*(hmx*F3(EX, l1-1,j2,j3)
-	    +h0x*F3(EX, l1,j2,j3)
-	    +h1x*F3(EX, l1+1,j2,j3))
-      +g1z*(hmx*F3(EX, l1-1,j2,j3+1)
-	    +h0x*F3(EX, l1,j2,j3+1)
-	    +h1x*F3(EX, l1+1,j2,j3+1));
+    creal exq = (gmz*(hmx*F3(EX, l1-1,j2,j3-1) +
+		      h0x*F3(EX, l1  ,j2,j3-1) +
+		      h1x*F3(EX, l1+1,j2,j3-1)) +
+		 g0z*(hmx*F3(EX, l1-1,j2,j3  ) +
+		      h0x*F3(EX, l1  ,j2,j3  ) +
+		      h1x*F3(EX, l1+1,j2,j3  )) +
+		 g1z*(hmx*F3(EX, l1-1,j2,j3+1) +
+		      h0x*F3(EX, l1  ,j2,j3+1) +
+		      h1x*F3(EX, l1+1,j2,j3+1)));
 
-    creal eyq=gmz*(gmx*F3(EY, j1-1,l2,j3-1)
-                   +g0x*F3(EY, j1,l2,j3-1)
-                   +g1x*F3(EY, j1+1,l2,j3-1))
-              +g0z*(gmx*F3(EY, j1-1,l2,j3)
-                   +g0x*F3(EY, j1,l2,j3)
-                   +g1x*F3(EY, j1+1,l2,j3))
-              +g1z*(gmx*F3(EY, j1-1,l2,j3+1)
-                   +g0x*F3(EY, j1,l2,j3+1)
-		    +g1x*F3(EY, j1+1,l2,j3+1));
+    creal eyq = (gmz*(gmx*F3(EY, j1-1,l2,j3-1) +
+		      g0x*F3(EY, j1  ,l2,j3-1) +
+		      g1x*F3(EY, j1+1,l2,j3-1)) +
+		 g0z*(gmx*F3(EY, j1-1,l2,j3  ) +
+		      g0x*F3(EY, j1  ,l2,j3  ) +
+		      g1x*F3(EY, j1+1,l2,j3  )) +
+		 g1z*(gmx*F3(EY, j1-1,l2,j3+1) +
+		      g0x*F3(EY, j1  ,l2,j3+1) +
+		      g1x*F3(EY, j1+1,l2,j3+1)));
 
-    creal ezq=hmz*(gmx*F3(EZ, j1-1,j2,l3-1)
-		   +g0x*F3(EZ, j1,j2,l3-1)
-                   +g1x*F3(EZ, j1+1,j2,l3-1))
-              +h0z*(gmx*F3(EZ, j1-1,j2,l3)
-                   +g0x*F3(EZ, j1,j2,l3)
-                   +g1x*F3(EZ, j1+1,j2,l3))
-              +h1z*(gmx*F3(EZ, j1-1,j2,l3+1)
-                   +g0x*F3(EZ, j1,j2,l3+1)
-		    +g1x*F3(EZ, j1+1,j2,l3+1));
+    creal ezq = (hmz*(gmx*F3(EZ, j1-1,j2,l3-1) +
+		      g0x*F3(EZ, j1  ,j2,l3-1) +
+		      g1x*F3(EZ, j1+1,j2,l3-1)) +
+		 h0z*(gmx*F3(EZ, j1-1,j2,l3  ) +
+		      g0x*F3(EZ, j1  ,j2,l3  ) +
+		      g1x*F3(EZ, j1+1,j2,l3  )) +
+		 h1z*(gmx*F3(EZ, j1-1,j2,l3+1) +
+		      g0x*F3(EZ, j1  ,j2,l3+1) +
+		      g1x*F3(EZ, j1+1,j2,l3+1)));
 
-    creal hxq=hmz*(gmx*F3(HX, j1-1,l2,l3-1)
-                   +g0x*F3(HX, j1,l2,l3-1)
-                   +g1x*F3(HX, j1+1,l2,l3-1))
-              +h0z*(gmx*F3(HX, j1-1,l2,l3)
-                   +g0x*F3(HX, j1,l2,l3)
-                   +g1x*F3(HX, j1+1,l2,l3))
-              +h1z*(gmx*F3(HX, j1-1,l2,l3+1)
-                   +g0x*F3(HX, j1,l2,l3+1)
-		    +g1x*F3(HX, j1+1,l2,l3+1));
+    creal hxq = (hmz*(gmx*F3(HX, j1-1,l2,l3-1) +
+		      g0x*F3(HX, j1  ,l2,l3-1) +
+		      g1x*F3(HX, j1+1,l2,l3-1)) +
+		 h0z*(gmx*F3(HX, j1-1,l2,l3  ) +
+		      g0x*F3(HX, j1  ,l2,l3  ) +
+		      g1x*F3(HX, j1+1,l2,l3  )) +
+		 h1z*(gmx*F3(HX, j1-1,l2,l3+1) +
+		      g0x*F3(HX, j1  ,l2,l3+1) +
+		      g1x*F3(HX, j1+1,l2,l3+1)));
 
-    creal hyq=hmz*(hmx*F3(HY, l1-1,j2,l3-1)
-                   +h0x*F3(HY, l1,j2,l3-1)
-                   +h1x*F3(HY, l1+1,j2,l3-1))
-              +h0z*(hmx*F3(HY, l1-1,j2,l3)
-                   +h0x*F3(HY, l1,j2,l3)
-                   +h1x*F3(HY, l1+1,j2,l3))
-              +h1z*(hmx*F3(HY, l1-1,j2,l3+1)
-                   +h0x*F3(HY, l1,j2,l3+1)
-		    +h1x*F3(HY, l1+1,j2,l3+1));
+    creal hyq = (hmz*(hmx*F3(HY, l1-1,j2,l3-1) +
+		      h0x*F3(HY, l1  ,j2,l3-1) +
+		      h1x*F3(HY, l1+1,j2,l3-1)) +
+		 h0z*(hmx*F3(HY, l1-1,j2,l3  ) +
+		      h0x*F3(HY, l1  ,j2,l3  ) +
+		      h1x*F3(HY, l1+1,j2,l3  )) +
+		 h1z*(hmx*F3(HY, l1-1,j2,l3+1) +
+		      h0x*F3(HY, l1  ,j2,l3+1) +
+		      h1x*F3(HY, l1+1,j2,l3+1)));
 
-    creal hzq=gmz*(hmx*F3(HZ, l1-1,l2,j3-1)
-		    +h0x*F3(HZ, l1,l2,j3-1)
-                   +h1x*F3(HZ, l1+1,l2,j3-1))
-              +g0z*(hmx*F3(HZ, l1-1,l2,j3)
-                   +h0x*F3(HZ, l1,l2,j3)
-                   +h1x*F3(HZ, l1+1,l2,j3))
-              +g1z*(hmx*F3(HZ, l1-1,l2,j3+1)
-                   +h0x*F3(HZ, l1,l2,j3+1)
-		    +h1x*F3(HZ, l1+1,l2,j3+1));
+    creal hzq = (gmz*(hmx*F3(HZ, l1-1,l2,j3-1) +
+		      h0x*F3(HZ, l1  ,l2,j3-1) +
+		      h1x*F3(HZ, l1+1,l2,j3-1)) +
+		 g0z*(hmx*F3(HZ, l1-1,l2,j3  ) +
+		      h0x*F3(HZ, l1  ,l2,j3  ) +
+		      h1x*F3(HZ, l1+1,l2,j3  )) +
+		 g1z*(hmx*F3(HZ, l1-1,l2,j3+1) +
+		      h0x*F3(HZ, l1  ,l2,j3+1) +
+		      h1x*F3(HZ, l1+1,l2,j3+1)));
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
