@@ -27,6 +27,7 @@ typedef float creal;
 
 #endif
 
+void genc_push_part_xy();
 void genc_push_part_xz();
 void genc_push_part_yz();
 void genc_push_part_z();
