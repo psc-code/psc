@@ -180,19 +180,19 @@ foils_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 200;
 
-  psc.domain.length[0] = 20.0 * 1e-6;			// length of the domain in x-direction (transverse)
+  psc.domain.length[0] = 10.0 * 1e-6;			// length of the domain in x-direction (transverse)
   psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 30.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  psc.domain.length[2] = 10.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 2000;				// total number of steps in x-direction. dx=length/itot;
+  psc.domain.itot[0] = 100;				// total number of steps in x-direction. dx=length/itot;
   psc.domain.itot[1] = 10;				
-  psc.domain.itot[2] = 3000;				// total number of steps in z-direction. dz=length/itot;
+  psc.domain.itot[2] = 100;				// total number of steps in z-direction. dz=length/itot;
   psc.domain.ilo[0] = 0;
   psc.domain.ilo[1] = 9;
   psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 2000;
+  psc.domain.ihi[0] = 100;
   psc.domain.ihi[1] = 10;
-  psc.domain.ihi[2] = 3000;
+  psc.domain.ihi[2] = 100;
 
   psc.domain.bnd_fld_lo[0] = 1;
   psc.domain.bnd_fld_hi[0] = 1;
