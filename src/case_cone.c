@@ -19,7 +19,7 @@
 // needs the coordinates of its beginning and end, thickness 
 //
 
-struct foils {
+struct cone {
   
   double Line0_x0, Line0_z0;   // coordinates of the beginning of the line0
   double Line0_x1, Line0_z1;   // coordinates of the end of the line0
@@ -42,19 +42,19 @@ struct foils {
   double R_curv0;  // curvature of the hollowsphere0 foil  in meters
 };
 
-#define VAR(x) (void *)offsetof(struct foils, x)
+#define VAR(x) (void *)offsetof(struct cone, x)
 
-static struct param foils_descr[] = {
-  { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(15. * 1e-6)           },
-  { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(11.5 * 1e-6)             },
-  { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(3.0 * 1e-6)            },
-  { "Line0_z1"                           , VAR(Line0_z1)                   , PARAM_DOUBLE(23. * 1e-6)           },
+static struct param cone_descr[] = {
+  { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(11. * 1e-6)           },
+  { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(7.5 * 1e-6)             },
+  { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(0.5 * 1e-6)            },
+  { "Line0_z1"                           , VAR(Line0_z1)                   , PARAM_DOUBLE(30.5 * 1e-6)           },
   { "Line0_Thickness"                    , VAR(Line0_Thickness)            , PARAM_DOUBLE(0.5 * 1e-6)          },
   { "Line0_Preplasma"                    , VAR(Line0_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
-  { "Line1_x0"                           , VAR(Line1_x0)                   , PARAM_DOUBLE(5. * 1e-6)           },
-  { "Line1_x1"                           , VAR(Line1_x1)                   , PARAM_DOUBLE(8.5 * 1e-6)             },
-  { "Line1_z0"                           , VAR(Line1_z0)                   , PARAM_DOUBLE(3.0 * 1e-6)            },
-  { "Line1_z1"                           , VAR(Line1_z1)                   , PARAM_DOUBLE(23. * 1e-6)           },
+  { "Line1_x0"                           , VAR(Line1_x0)                   , PARAM_DOUBLE(1. * 1e-6)           },
+  { "Line1_x1"                           , VAR(Line1_x1)                   , PARAM_DOUBLE(4.5 * 1e-6)             },
+  { "Line1_z0"                           , VAR(Line1_z0)                   , PARAM_DOUBLE(0.5 * 1e-6)            },
+  { "Line1_z1"                           , VAR(Line1_z1)                   , PARAM_DOUBLE(30.5 * 1e-6)           },
   { "Line1_Thickness"                    , VAR(Line1_Thickness)            , PARAM_DOUBLE(0.5 * 1e-6)          },
   { "Line1_Preplasma"                    , VAR(Line1_Preplasma)            , PARAM_DOUBLE(1. * 1e-9)     },
   { "Te"                                 , VAR(Te)                         , PARAM_DOUBLE(0.)             },
@@ -123,7 +123,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 }
 
 static void
-foils_create(struct psc_case *Case)
+cone_create(struct psc_case *Case)
 {
   
   float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
@@ -131,21 +131,20 @@ foils_create(struct psc_case *Case)
    // T_L = 3.33 e -15   for 1 micron wavelength
    // T_L = 2.66 e -15   for 0.8 micron wavelength
 
-#if 0
   struct psc_pulse_gauss prm_p = {
-    .xm = 10.   * 1e-6,                       // transverse position of the focus
-    .ym = 2.5   * 1e-6,
+    .xm = 6.   * 1e-6,                       // transverse position of the focus
+    .ym = 0.   * 1e-6,
     .zm = -45. * 1e-6,
-    .dxm = 3.75  * 1e-6 * Coeff_FWHM,
+    .dxm = 3.  * 1e-6 * Coeff_FWHM,
     .dym = 2.   * 1e-6,
-    .dzm = 15.   * 1e-6 * Coeff_FWHM,
+    .dzm = 7.5   * 1e-6 * Coeff_FWHM,
 //    .zb  = 10. * 1e-6,
     .phase = 0.0,
   };
 
 //  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
 //  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
-#endif
+
 
   struct psc_pulse_gauss prm_s = {
     .xm = 10.   * 1e-6,
@@ -159,13 +158,13 @@ foils_create(struct psc_case *Case)
   };
 
 //  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
-  psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
+  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
 }
 
 
 
 static void
-foils_init_param(struct psc_case *Case)
+cone_init_param(struct psc_case *Case)
 {
   psc.prm.nmax = 15000;
   psc.prm.cpum = 15000;
@@ -180,19 +179,19 @@ foils_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 200;
 
-  psc.domain.length[0] = 10.0 * 1e-6;			// length of the domain in x-direction (transverse)
+  psc.domain.length[0] = 12.0 * 1e-6;			// length of the domain in x-direction (transverse)
   psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 10.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  psc.domain.length[2] = 31.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 100;				// total number of steps in x-direction. dx=length/itot;
+  psc.domain.itot[0] = 1200;				// total number of steps in x-direction. dx=length/itot;
   psc.domain.itot[1] = 10;				
-  psc.domain.itot[2] = 100;				// total number of steps in z-direction. dz=length/itot;
+  psc.domain.itot[2] = 3100;				// total number of steps in z-direction. dz=length/itot;
   psc.domain.ilo[0] = 0;
   psc.domain.ilo[1] = 9;
   psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 100;
+  psc.domain.ihi[0] = 1200;
   psc.domain.ihi[1] = 10;
-  psc.domain.ihi[2] = 100;
+  psc.domain.ihi[2] = 3100;
 
   psc.domain.bnd_fld_lo[0] = 1;
   psc.domain.bnd_fld_hi[0] = 1;
@@ -206,7 +205,7 @@ foils_init_param(struct psc_case *Case)
 }
 
 static void
-foils_init_field(struct psc_case *Case)
+cone_init_field(struct psc_case *Case)
 {
 #if 0
   // FIXME, do we need the ghost points?
@@ -228,39 +227,39 @@ foils_init_field(struct psc_case *Case)
 }
 
 static void
-foils_init_npt(struct psc_case *Case, int kind, double x[3], 
+cone_init_npt(struct psc_case *Case, int kind, double x[3], 
 		  struct psc_particle_npt *npt)
 {
-  struct foils *foils = Case->ctx;
+  struct cone *cone = Case->ctx;
 
-  real Te = foils->Te, Ti = foils->Ti;
+  real Te = cone->Te, Ti = cone->Ti;
 
   real ld = psc.coeff.ld;   
  
-  real Line0_x0 = foils->Line0_x0 / ld;  
-  real Line0_x1 = foils->Line0_x1 / ld;   
-  real Line0_z0 = foils->Line0_z0 / ld;
-  real Line0_z1 = foils->Line0_z1 / ld;
-  real Line0_Thickness = foils->Line0_Thickness / ld;
-  real Line0_Preplasma = foils->Line0_Preplasma / ld;
+  real Line0_x0 = cone->Line0_x0 / ld;  
+  real Line0_x1 = cone->Line0_x1 / ld;   
+  real Line0_z0 = cone->Line0_z0 / ld;
+  real Line0_z1 = cone->Line0_z1 / ld;
+  real Line0_Thickness = cone->Line0_Thickness / ld;
+  real Line0_Preplasma = cone->Line0_Preplasma / ld;
 
-  real Line1_x0 = foils->Line1_x0 / ld;  
-  real Line1_x1 = foils->Line1_x1 / ld;   
-  real Line1_z0 = foils->Line1_z0 / ld;
-  real Line1_z1 = foils->Line1_z1 / ld;
-  real Line1_Thickness = foils->Line1_Thickness / ld;
-  real Line1_Preplasma = foils->Line1_Preplasma / ld;
+  real Line1_x0 = cone->Line1_x0 / ld;  
+  real Line1_x1 = cone->Line1_x1 / ld;   
+  real Line1_z0 = cone->Line1_z0 / ld;
+  real Line1_z1 = cone->Line1_z1 / ld;
+  real Line1_Thickness = cone->Line1_Thickness / ld;
+  real Line1_Preplasma = cone->Line1_Preplasma / ld;
 
   real dens = Line_dens(Line0_x0, Line0_z0, Line0_x1, Line0_z1, x[0], x[2], Line0_Thickness, Line0_Preplasma);
   dens += Line_dens(Line1_x0, Line1_z0, Line1_x1, Line1_z1, x[0], x[2], Line1_Thickness, Line1_Preplasma);
 
 #if 0
-  real HollowSphere0_x0 = foils->HollowSphere0_x0 / ld;
-  real HollowSphere0_y0 = foils->HollowSphere0_y0 / ld;
-  real HollowSphere0_z0 = foils->HollowSphere0_y0 / ld; 
-  real HollowSphere0_Radius = foils->R_curv0 / ld;
-  real HollowSphere0_Preplasma = foils->HollowSphere0_Preplasma / ld;
-  real HollowSphere0_Thickness = foils->HollowSphere0_Thickness / ld;
+  real HollowSphere0_x0 = cone->HollowSphere0_x0 / ld;
+  real HollowSphere0_y0 = cone->HollowSphere0_y0 / ld;
+  real HollowSphere0_z0 = cone->HollowSphere0_y0 / ld; 
+  real HollowSphere0_Radius = cone->R_curv0 / ld;
+  real HollowSphere0_Preplasma = cone->HollowSphere0_Preplasma / ld;
+  real HollowSphere0_Thickness = cone->HollowSphere0_Thickness / ld;
    
   dens += HollowSphere_dens(HollowSphere0_x0, HollowSphere0_z0, HollowSphere0_Radius, x[0], x[2], HollowSphere0_Thickness, HollowSphere0_Preplasma);
 #endif
@@ -277,9 +276,9 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
     npt->T[2] = Te;
     break;
   case 1: // ions
-    npt->q = foils->charge_state;
-    npt->m = foils->mass_ratio;
-    npt->n = dens/foils->charge_state;
+    npt->q = cone->charge_state;
+    npt->m = cone->mass_ratio;
+    npt->n = dens/cone->charge_state;
     npt->T[0] = Ti;
     npt->T[1] = Ti;
     npt->T[2] = Ti;
@@ -289,12 +288,12 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_foils = {
-  .name       = "foils",
-  .ctx_size   = sizeof(struct foils),
-  .ctx_descr  = foils_descr,
-  .create     = foils_create,
-  .init_param = foils_init_param,
-  .init_field = foils_init_field,
-  .init_npt   = foils_init_npt,
+struct psc_case_ops psc_case_ops_cone = {
+  .name       = "cone",
+  .ctx_size   = sizeof(struct cone),
+  .ctx_descr  = cone_descr,
+  .create     = cone_create,
+  .init_param = cone_init_param,
+  .init_field = cone_init_field,
+  .init_npt   = cone_init_npt,
 };
