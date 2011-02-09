@@ -192,6 +192,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_vtk,
   &psc_output_format_ops_vtk_points,
   &psc_output_format_ops_vtk_cells,
+  &psc_output_format_ops_vtk_binary,
   NULL,
 };
 
@@ -218,6 +219,12 @@ static struct param psc_output_c_descr[] = {
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)           },
   { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)            },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)           },
+  { "pfield_out_x_min"   , VAR(rn[0])                , PARAM_INT(0)            },  
+  { "pfield_out_x_max"   , VAR(rx[0])                , PARAM_INT(1000000000)  },     // a big number to change it later to domain.ihi or command line number
+  { "pfield_out_y_min"   , VAR(rn[1])                , PARAM_INT(0)           }, 
+  { "pfield_out_y_max"   , VAR(rx[1])                , PARAM_INT(1000000000)  },
+  { "pfield_out_z_min"   , VAR(rn[2])                , PARAM_INT(0)            }, 
+  { "pfield_out_z_max"   , VAR(rx[2])                , PARAM_INT(1000000000)  },
   {},
 };
 
@@ -283,6 +290,33 @@ output_c_field()
   static bool first_time = true;
   if (first_time) {
     output_c_setup(out);
+	  
+	// set the output ranges
+	for(int i=0;i<3;++i)
+	{
+		if(out->rn[i]<psc.domain.ilo[i]) out->rn[i]=psc.domain.ilo[i];
+		if(out->rx[i]>psc.domain.ihi[i]) out->rx[i]=psc.domain.ihi[i];
+		
+		if(out->rx[i]>psc.ihi[i]) out->rx[i]=psc.ihi[i];
+		if(out->rn[i]<psc.ilo[i]) out->rn[i]=psc.ilo[i];
+		
+		if(out->rn[i]>psc.ihi[i])
+		{
+			out->rn[i]=psc.ihi[i]; 
+			out->rx[i]=psc.ihi[i];
+		}
+		if(out->rx[i]<psc.ilo[i]) 
+		{
+			out->rx[i]=psc.ilo[i]; 
+			out->rn[i]=psc.ilo[i];
+		}
+		
+	}
+	
+	// done setting output ranges
+	  printf("rnx=%d\t rny=%d\t rnz=%d\n", out->rn[0], out->rn[1], out->rn[2]);
+	  printf("rxx=%d\t rxy=%d\t rxz=%d\n", out->rx[0], out->rx[1], out->rx[2]);	  
+	  
     first_time = false;
   }
 

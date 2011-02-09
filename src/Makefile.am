@@ -47,7 +47,7 @@ libpsc_a_SOURCES = \
 	bnd.c \
 	none.c \
 	output_fields.c output_c_combine.c \
-	output_binary.c output_vtk.c \
+	output_binary.c output_vtk.c output_vtk_binary.c \
 	case_langmuir.c \
 	case_wakefield.c \
 	case_thinfoil.c \
