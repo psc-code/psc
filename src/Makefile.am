@@ -66,6 +66,7 @@ endif
 
 libpsc_a_SOURCES += \
 	generic_c/psc_generic_c.c \
+	generic_c/push_part_xyz.c \
 	generic_c/push_part_xy.c \
 	generic_c/push_part_xz.c \
 	generic_c/push_part_yz.c \
