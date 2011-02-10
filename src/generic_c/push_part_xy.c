@@ -94,23 +94,23 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
 		      h0x*F3(EX, l1  ,j2+1,j3) +
 		      h1x*F3(EX, l1+1,j2+1,j3)));
 
-    creal eyq = (gmy*(gmx*F3(EY, j1-1,l2-1,j3) +
+    creal eyq = (hmy*(gmx*F3(EY, j1-1,l2-1,j3) +
 		      g0x*F3(EY, j1  ,l2-1,j3) +
 		      g1x*F3(EY, j1+1,l2-1,j3)) +
-		 g0y*(gmx*F3(EY, j1-1,l2  ,j3) +
+		 h0y*(gmx*F3(EY, j1-1,l2  ,j3) +
 		      g0x*F3(EY, j1  ,l2  ,j3) +
 		      g1x*F3(EY, j1+1,l2  ,j3)) +
-		 g1y*(gmx*F3(EY, j1-1,l2+1,j3) +
+		 h1y*(gmx*F3(EY, j1-1,l2+1,j3) +
 		      g0x*F3(EY, j1  ,l2+1,j3) +
 		      g1x*F3(EY, j1+1,l2+1,j3)));
 
-    creal ezq = (hmy*(gmx*F3(EZ, j1-1,j2-1,l3) +
+    creal ezq = (gmy*(gmx*F3(EZ, j1-1,j2-1,l3) +
 		      g0x*F3(EZ, j1  ,j2-1,l3) +
 		      g1x*F3(EZ, j1+1,j2-1,l3)) +
-		 h0y*(gmx*F3(EZ, j1-1,j2  ,l3) +
+		 g0y*(gmx*F3(EZ, j1-1,j2  ,l3) +
 		      g0x*F3(EZ, j1  ,j2  ,l3) +
 		      g1x*F3(EZ, j1+1,j2  ,l3)) +
-		 h1y*(gmx*F3(EZ, j1-1,j2+1,l3) +
+		 g1y*(gmx*F3(EZ, j1-1,j2+1,l3) +
 		      g0x*F3(EZ, j1  ,j2+1,l3) +
 		      g1x*F3(EZ, j1+1,j2+1,l3)));
 
@@ -124,23 +124,23 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
 		      g0x*F3(HX, j1  ,l2+1,l3) +
 		      g1x*F3(HX, j1+1,l2+1,l3)));
 
-    creal hyq = (hmy*(hmx*F3(HY, l1-1,j2-1,l3) +
+    creal hyq = (gmy*(hmx*F3(HY, l1-1,j2-1,l3) +
 		      h0x*F3(HY, l1  ,j2-1,l3) +
 		      h1x*F3(HY, l1+1,j2-1,l3)) +
-		 h0y*(hmx*F3(HY, l1-1,j2  ,l3) +
+		 g0y*(hmx*F3(HY, l1-1,j2  ,l3) +
 		      h0x*F3(HY, l1  ,j2  ,l3) +
 		      h1x*F3(HY, l1+1,j2  ,l3)) +
-		 h1y*(hmx*F3(HY, l1-1,j2+1,l3) +
+		 g1y*(hmx*F3(HY, l1-1,j2+1,l3) +
 		      h0x*F3(HY, l1  ,j2+1,l3) +
 		      h1x*F3(HY, l1+1,j2+1,l3)));
 
-    creal hzq = (gmy*(hmx*F3(HZ, l1-1,l2-1,j3) +
+    creal hzq = (hmy*(hmx*F3(HZ, l1-1,l2-1,j3) +
 		      h0x*F3(HZ, l1  ,l2-1,j3) +
 		      h1x*F3(HZ, l1+1,l2-1,j3)) +
-		 g0y*(hmx*F3(HZ, l1-1,l2  ,j3) +
+		 h0y*(hmx*F3(HZ, l1-1,l2  ,j3) +
 		      h0x*F3(HZ, l1  ,l2  ,j3) +
 		      h1x*F3(HZ, l1+1,l2  ,j3)) +
-		 g1y*(hmx*F3(HZ, l1-1,l2+1,j3) +
+		 h1y*(hmx*F3(HZ, l1-1,l2+1,j3) +
 		      h0x*F3(HZ, l1  ,l2+1,j3) +
 		      h1x*F3(HZ, l1+1,l2+1,j3)));
 		 
