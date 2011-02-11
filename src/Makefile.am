@@ -1,5 +1,5 @@
 
-SUBDIRS = util
+SUBDIRS = util libmrc
 
 bin_PROGRAMS = VLI VLA SELECT
 
