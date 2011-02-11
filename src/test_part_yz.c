@@ -1,6 +1,6 @@
 
 #include "psc_testing.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 #include <stdio.h>
 #include <mpi.h>

@@ -2,7 +2,7 @@
 #include "psc.h"
 #include "output_fields.h"
 
-#include "util/profile.h"
+#include <mrc_profile.h>
 #include <mrc_common.h>
 #include <mrc_params.h>
 

@@ -1,7 +1,7 @@
 
 #include "psc.h"
+#include <mrc_profile.h>
 
-#include "util/profile.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

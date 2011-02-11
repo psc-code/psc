@@ -1,7 +1,7 @@
 
 #include "psc.h"
 #include <mrc_common.h>
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 // ======================================================================
 // simple statistics

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 static void
 c_push_field_a_nopml()

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 static void
 fortran_push_part_xy()
