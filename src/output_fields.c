@@ -1,7 +1,7 @@
 #include "psc.h"
 #include "output_fields.h"
-#include "util/params.h"
-#include "util/profile.h"
+#include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -243,8 +243,8 @@ static struct psc_output_c psc_output_c;
 static void output_c_create(void)
 { 
   struct psc_output_c *out = &psc_output_c;
-  params_parse_cmdline(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
-  params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+  mrc_params_parse(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+  mrc_params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
 
   out->pfield_next = out->pfield_first;
   out->tfield_next = out->tfield_first;

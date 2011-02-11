@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include <mrc_common.h>
 #include "util/profile.h"
 
 // ======================================================================

@@ -1,6 +1,7 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_common.h>
+#include <mrc_params.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -197,8 +198,8 @@ psc_create(struct psc_mod_config *conf)
   if (!conf->mod_moment)
     conf->mod_moment = "fortran";
 
-  params_parse_cmdline_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-  params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
   memset(&psc, 0, sizeof(psc));
 

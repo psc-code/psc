@@ -19,11 +19,11 @@ psc_pulse_create(struct psc_pulse_ops *ops, void *prm)
     sprintf(name, "Pulse %s", ops->name);
     if (prm) { // custom defaults were passed
       memcpy(pulse->ctx, prm, ops->ctx_size);
-      params_parse_cmdline_nodefault(pulse->ctx, descr, name, MPI_COMM_WORLD);
+      mrc_params_parse_nodefault(pulse->ctx, descr, name, MPI_COMM_WORLD);
     } else {
-      params_parse_cmdline(pulse->ctx, descr, name, MPI_COMM_WORLD);
+      mrc_params_parse(pulse->ctx, descr, name, MPI_COMM_WORLD);
     }
-    params_print(pulse->ctx, descr, name, MPI_COMM_WORLD);
+    mrc_params_print(pulse->ctx, descr, name, MPI_COMM_WORLD);
   }
 
   return pulse;

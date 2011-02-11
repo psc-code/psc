@@ -1,5 +1,5 @@
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -152,8 +152,8 @@ psc_init_particles(int particle_label_offset)
 
   // if seed_by_time is set, different random numbers are generated in each run. 
   bool seed_by_time;
-  params_parse_cmdline(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
-  params_print(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
+  mrc_params_parse(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
+  mrc_params_print(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
   
   if (seed_by_time) {
     srandom(10*rank + time(NULL));

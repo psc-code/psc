@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <assert.h>
@@ -11,7 +11,7 @@ struct psc_cmdline {
 
 #define VAR(x) (void *)offsetof(struct psc_domain, x)
 
-static struct param_select bnd_fld_descr[] = {
+static struct mrc_param_select bnd_fld_descr[] = {
   { .val = BND_FLD_OPEN        , .str = "open"        },
   { .val = BND_FLD_PERIODIC    , .str = "periodic"    },
   { .val = BND_FLD_UPML        , .str = "upml"        },
@@ -19,7 +19,7 @@ static struct param_select bnd_fld_descr[] = {
   {},
 };
 
-static struct param_select bnd_part_descr[] = {
+static struct mrc_param_select bnd_part_descr[] = {
   { .val = BND_PART_REFLECTING , .str = "reflecting"  },
   { .val = BND_PART_PERIODIC   , .str = "periodic"    },
   {},
@@ -73,9 +73,9 @@ init_param_domain()
 {
   struct psc_domain *domain = &psc.domain;
 
-  params_parse_cmdline_nodefault(domain, psc_domain_descr, "PSC domain",
-				 MPI_COMM_WORLD);
-  params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
+  mrc_params_parse_nodefault(domain, psc_domain_descr, "PSC domain",
+			     MPI_COMM_WORLD);
+  mrc_params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 
   psc.pml.thick = 10;
   psc.pml.cushion = psc.pml.thick / 3;
@@ -156,9 +156,9 @@ static struct param psc_param_descr[] = {
 void
 init_param_psc()
 {
-  params_parse_cmdline_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
-				 MPI_COMM_WORLD);
-  params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
+  mrc_params_parse_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
+			     MPI_COMM_WORLD);
+  mrc_params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
 }
 
 // ----------------------------------------------------------------------
@@ -207,8 +207,8 @@ psc_case_create(const char *case_name)
   if (ctx_descr) {
     char cn[strlen(case_name) + 6];
     sprintf(cn, "case %s", case_name);
-    params_parse_cmdline(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
-    params_print(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+    mrc_params_parse(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+    mrc_params_print(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
   }
 
   if (Case->ops->create) {
@@ -247,8 +247,8 @@ init_case(const char *case_name)
 {
   struct par_case par;
   par.case_name = case_name;
-  params_parse_cmdline_nodefault(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
-  params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
+  mrc_params_parse_nodefault(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
+  mrc_params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
 
   if (par.case_name) {
     psc.Case = psc_case_create(par.case_name);

@@ -3,7 +3,7 @@
 #define PSC_PULSE_H
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <stdlib.h>
 #include <string.h>

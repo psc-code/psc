@@ -3,7 +3,8 @@
 #include "output_fields.h"
 
 #include "util/profile.h"
-#include "util/params.h"
+#include <mrc_common.h>
+#include <mrc_params.h>
 
 #include <mpi.h>
 #include <string.h>

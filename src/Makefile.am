@@ -3,6 +3,8 @@ SUBDIRS = util libmrc
 
 bin_PROGRAMS = VLI VLA SELECT
 
+AM_CFLAGS = -I$(srcdir)/libmrc/include
+
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
@@ -122,7 +124,7 @@ endif
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
-LDADD = libpsc.a util/libutil.a
+LDADD = libpsc.a util/libutil.a libmrc/src/libmrc.a
 
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \

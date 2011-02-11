@@ -2,13 +2,13 @@
 #include <mpi.h>
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
-  params_init(argc, argv);
+  libmrc_params_init(argc, argv);
 
   struct psc_mod_config conf = {
   };
