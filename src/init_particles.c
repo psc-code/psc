@@ -67,6 +67,25 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   p[1] = r % psc.domain.nproc[1]; r /= psc.domain.nproc[1];
   p[2] = r;
 
+  struct mrc_domain_simple_params domain_par;
+  for (int d = 0; d < 3; d++) {
+    int gdim = psc.domain.ihi[d] - psc.domain.ilo[d];
+    assert(gdim % psc.domain.nproc[d] == 0);
+    domain_par.ldims[d] = gdim / psc.domain.nproc[d];
+    domain_par.nr_procs[d] = psc.domain.nproc[d];
+
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
+	psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
+      domain_par.bc[d] = BC_PERIODIC;
+    }
+  }
+
+  psc.mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
+  mrc_domain_set_type(psc.mrc_domain, "simple");
+  mrc_domain_simple_set_params(psc.mrc_domain, &domain_par);
+  mrc_domain_setup(psc.mrc_domain);
+  mrc_domain_view(psc.mrc_domain);
+
   int m[3], n[3];
   for (int d = 0; d < 3; d++) {
     m[d] = psc.domain.ihi[d] - psc.domain.ilo[d];

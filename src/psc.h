@@ -4,6 +4,8 @@
 
 #include <config.h>
 
+#include <mrc_domain.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
@@ -354,8 +356,9 @@ struct psc {
 
   particles_base_t pp;
   fields_base_t pf;
+  struct mrc_domain *mrc_domain;
 
-  // Fortran compatible fields
+  // local domain size
   int ilo[3], ihi[3]; // local domain: il, il+1, ..., ih-1
   int ibn[3];         // number of ghost points
   int ilg[3], ihg[3]; // local domain incl ghost points: ilg, ilg+1, ..., ihg-1

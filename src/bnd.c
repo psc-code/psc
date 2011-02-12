@@ -227,26 +227,6 @@ create_bnd(void)
   struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
   memset(c_bnd, 0, sizeof(*c_bnd));
 
-  struct mrc_domain_simple_params domain_par = {
-    .ldims = { psc.ihi[0] - psc.ilo[0],
-	       psc.ihi[1] - psc.ilo[1],
-	       psc.ihi[2] - psc.ilo[2] },
-    .nr_procs = { psc.domain.nproc[0],
-		  psc.domain.nproc[1],
-		  psc.domain.nproc[2] },
-  };
-  for (int d = 0; d < 3; d++) {
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	  psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
-	domain_par.bc[d] = BC_PERIODIC;
-    }
-  }
-  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
-  mrc_domain_set_type(domain, "simple");
-  mrc_domain_simple_set_params(domain, &domain_par);
-  mrc_domain_setup(domain);
-  mrc_domain_view(domain);
-
   struct mrc_ddc_params ddc_par = {
     .mpi_type      = MPI_FIELDS_BASE_REAL,
     .size_of_type  = sizeof(fields_base_real_t),
@@ -254,8 +234,7 @@ create_bnd(void)
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
   };
 
-  c_bnd->ddc = mrc_domain_create_ddc(domain, &ddc_par, &ddc_ops);
-  mrc_domain_destroy(domain);
+  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par, &ddc_ops);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 
