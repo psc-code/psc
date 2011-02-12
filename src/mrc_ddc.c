@@ -178,7 +178,7 @@ void
 mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->add_ghosts, mb, me, ctx,
-	  ddc->prm.copy_to_buf, ddc->prm.add_from_buf);
+	  ddc->ops->copy_to_buf, ddc->ops->add_from_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -188,19 +188,21 @@ void
 mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->fill_ghosts, mb, me, ctx,
-	  ddc->prm.copy_to_buf, ddc->prm.copy_from_buf);
+	  ddc->ops->copy_to_buf, ddc->ops->copy_from_buf);
 }
 
 // ----------------------------------------------------------------------
 // mrc_ddc_create
 
 struct mrc_ddc *
-mrc_ddc_create(struct mrc_ddc_params *prm)
+mrc_ddc_create(struct mrc_ddc_params *prm,
+	       struct mrc_ddc_ops *ops)
 {
   struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
 
   ddc->prm = *prm;
+  ddc->ops = ops;
   MPI_Comm_rank(prm->comm, &ddc->rank);
   MPI_Comm_size(prm->comm, &ddc->size);
 

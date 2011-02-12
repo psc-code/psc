@@ -191,11 +191,8 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
   ddc_par->comm = domain->obj.comm;
   ddc_par->mpi_type = MPI_FLOAT;
   ddc_par->size_of_type = sizeof(float);
-  ddc_par->copy_to_buf = 0; // !!!
-  ddc_par->copy_from_buf = 0;
-  ddc_par->add_from_buf = 0;
 
-  return mrc_ddc_create(ddc_par);
+  return mrc_ddc_create(ddc_par, ddc_ops);
 }
 
 static struct mrc_param_select bc_descr[] = {
