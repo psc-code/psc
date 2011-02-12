@@ -55,20 +55,13 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   }
 
   MPI_Comm comm = MPI_COMM_WORLD;
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
 
-  assert(psc.domain.nproc[0] * psc.domain.nproc[1] * psc.domain.nproc[2] == size);
-
-  int p[3];
-  int r = rank;
-  p[0] = r % psc.domain.nproc[0]; r /= psc.domain.nproc[0];
-  p[1] = r % psc.domain.nproc[1]; r /= psc.domain.nproc[1];
-  p[2] = r;
-
+  // create a very simple domain decomposition
   struct mrc_domain_simple_params domain_par;
   for (int d = 0; d < 3; d++) {
+    // FIXME, either we handle the case of domain.ilo != 0, or we should
+    // do away with domain.ilo in the first place.
+    assert(psc.domain.ilo[d] == 0);
     int gdim = psc.domain.ihi[d] - psc.domain.ilo[d];
     assert(gdim % psc.domain.nproc[d] == 0);
     domain_par.ldims[d] = gdim / psc.domain.nproc[d];
@@ -80,30 +73,31 @@ psc_init_partition(int *n_part, int *particle_label_offset)
     }
   }
 
-  psc.mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
+  psc.mrc_domain = mrc_domain_create(comm);
   mrc_domain_set_type(psc.mrc_domain, "simple");
   mrc_domain_simple_set_params(psc.mrc_domain, &domain_par);
   mrc_domain_setup(psc.mrc_domain);
   mrc_domain_view(psc.mrc_domain);
 
-  int m[3], n[3];
+  // set up index bounds,
+  // sanity checks for the decomposed domain
+  int off[3], ldims[3], lidx[3];
+  mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
+  mrc_domain_get_local_idx(psc.mrc_domain, lidx);
   for (int d = 0; d < 3; d++) {
-    m[d] = psc.domain.ihi[d] - psc.domain.ilo[d];
-    assert(m[d] % psc.domain.nproc[d] == 0);
-    n[d] = m[d] / psc.domain.nproc[d];
-    psc.ilo[d] = psc.domain.ilo[d] + p[d] * n[d];
-    psc.ihi[d] = psc.domain.ilo[d] + (p[d] + 1) * n[d];
+    psc.ilo[d] = off[d];
+    psc.ihi[d] = off[d] + ldims[d];
     psc.ibn[d] = psc.domain.nghost[d];
     psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
     psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
     int min_size = 1;
-    if (p[d] == 0 && // left-most proc in this dir
+    if (lidx[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
       min_size += psc.pml.size;
     }
-    if (p[d] == psc.domain.nproc[d] - 1 && // right-most proc in this dir
+    if (lidx[d] == psc.domain.nproc[d] - 1 && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       min_size += psc.pml.size;
@@ -112,6 +106,10 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
 
+#if 0
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
   MPI_Barrier(comm);
   for (int n = 0; n < size; n++) {
     if (rank == n) {
@@ -122,6 +120,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
     }
     MPI_Barrier(comm);
   }
+#endif
 
   int ilo[3], ihi[3];
   pml_find_bounds(ilo, ihi);
