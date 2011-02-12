@@ -227,7 +227,6 @@ create_bnd(void)
   memset(c_bnd, 0, sizeof(*c_bnd));
 
   struct mrc_ddc_params prm = {
-    .comm          = MPI_COMM_WORLD,
     .mpi_type      = MPI_FIELDS_BASE_REAL,
     .size_of_type  = sizeof(fields_base_real_t),
     .max_n_fields  = 6,
@@ -242,7 +241,7 @@ create_bnd(void)
       prm.bc[d] = DDC_BC_PERIODIC;
     }
   }
-  c_bnd->ddc = mrc_ddc_create(&prm, &ddc_ops);
+  c_bnd->ddc = mrc_ddc_create(MPI_COMM_WORLD, &prm, &ddc_ops);
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 
   psc.bnd_data = c_bnd;

@@ -122,7 +122,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->len);
 #endif
 	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->prm.mpi_type, r->rank_nei,
-		    0x1000 + dir1neg, ddc->prm.comm, &ddc->recv_reqs[dir1]);
+		    0x1000 + dir1neg, ddc->comm, &ddc->recv_reqs[dir1]);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -145,7 +145,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->len);
 #endif
 	  MPI_Isend(s->buf, s->len * (me - mb), ddc->prm.mpi_type, s->rank_nei,
-		    0x1000 + dir1, ddc->prm.comm, &ddc->send_reqs[dir1]);
+		    0x1000 + dir1, ddc->comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -195,16 +195,17 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // mrc_ddc_create
 
 struct mrc_ddc *
-mrc_ddc_create(struct mrc_ddc_params *prm,
+mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
 	       struct mrc_ddc_ops *ops)
 {
   struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
 
+  ddc->comm = comm;
   ddc->prm = *prm;
   ddc->ops = ops;
-  MPI_Comm_rank(prm->comm, &ddc->rank);
-  MPI_Comm_size(prm->comm, &ddc->size);
+  MPI_Comm_rank(comm, &ddc->rank);
+  MPI_Comm_size(comm, &ddc->size);
 
   assert(prm->n_proc[0] * prm->n_proc[1] * prm->n_proc[2] == ddc->size);
   assert(prm->max_n_fields > 0);
