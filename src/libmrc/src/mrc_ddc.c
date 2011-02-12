@@ -202,7 +202,9 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
   struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
 
-  ddc->comm = comm;
+  MPI_Comm ncomm;
+  MPI_Comm_dup(comm, &ncomm);
+  ddc->comm = ncomm;
   ddc->prm = *prm;
   ddc->ops = ops;
   MPI_Comm_rank(comm, &ddc->rank);
