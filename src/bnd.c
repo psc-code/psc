@@ -65,6 +65,12 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
   }
 }
 
+struct mrc_ddc_ops ddc_ops = {
+  .copy_to_buf   = copy_to_buf,
+  .copy_from_buf = copy_from_buf,
+  .add_from_buf  = add_from_buf,
+};
+
 // ======================================================================
 
 struct ddcp_nei {
@@ -229,9 +235,6 @@ create_bnd(void)
     .ilo           = { psc.ilo[0], psc.ilo[1], psc.ilo[2] },
     .ihi           = { psc.ihi[0], psc.ihi[1], psc.ihi[2] },
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
-    .copy_to_buf   = copy_to_buf,
-    .copy_from_buf = copy_from_buf,
-    .add_from_buf  = add_from_buf,
   };
   for (int d = 0; d < 3; d++) {
       if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
@@ -239,7 +242,7 @@ create_bnd(void)
       prm.bc[d] = DDC_BC_PERIODIC;
     }
   }
-  c_bnd->ddc = mrc_ddc_create(&prm);
+  c_bnd->ddc = mrc_ddc_create(&prm, &ddc_ops);
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 
   psc.bnd_data = c_bnd;

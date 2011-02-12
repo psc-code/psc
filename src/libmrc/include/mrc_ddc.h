@@ -18,6 +18,9 @@ struct mrc_ddc_params {
   int ilo[3], ihi[3]; // local domain (no ghosts)
   int ibn[3]; // # ghost points
   int bc[3]; // boundary condition
+};
+
+struct mrc_ddc_ops {
   void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
@@ -37,6 +40,7 @@ struct mrc_ddc_pattern {
 
 struct mrc_ddc {
   struct mrc_ddc_params prm;
+  struct mrc_ddc_ops *ops;
   int rank, size;
   int proc[3]; // this proc's position in the 3D proc grid
   struct mrc_ddc_pattern add_ghosts;
@@ -45,7 +49,8 @@ struct mrc_ddc {
   MPI_Request recv_reqs[27];
 };
 
-struct mrc_ddc *mrc_ddc_create(struct mrc_ddc_params *prm);
+struct mrc_ddc *mrc_ddc_create(struct mrc_ddc_params *prm,
+			       struct mrc_ddc_ops *ops);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 
