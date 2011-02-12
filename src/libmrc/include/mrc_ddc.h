@@ -2,40 +2,66 @@
 #ifndef DDC_H
 #define DDC_H
 
-#include <mrc_common.h>
-
 #include <mpi.h>
 
-struct mrc_ddc;
+enum {
+  DDC_BC_NONE,
+  DDC_BC_PERIODIC,
+};
 
 struct mrc_ddc_params {
-  int n[3];       // size of local domain (w/o ghosts)
-  int np[3];      // number of processors in each crd direction
-  int bc[3];      // boundary condition in each crd direction (BC_NONE,BC_PERIODIC)
-  int bnd;        // number of ghost points
-  int max_n_comp; // maximum # of components in fields
+  MPI_Comm comm;
+  MPI_Datatype mpi_type;
+  int size_of_type;
+  int max_n_fields;
+  int n_proc[3]; // # procs in 3D grid
+  int ilo[3], ihi[3]; // local domain (no ghosts)
+  int ibn[3]; // # ghost points
+  int bc[3]; // boundary condition
+  void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
-struct mrc_ddc_ops {
-  void (*copy_to_buf)(struct mrc_ddc_params *ddc_params, float *x, float *buf,
-		      const int ib[3], const int ie[3], int mb, int me);
-  void (*copy_from_buf)(struct mrc_ddc_params *ddc_params, float *x, float *buf,
-			const int ib[3], const int ie[3], int mb, int me);
+struct ddc_sendrecv {
+  int ilo[3], ihi[3];
+  int rank_nei;
+  int len;
+  void *buf;
 };
 
-struct mrc_ddc *mrc_ddc_create(MPI_Comm, struct mrc_ddc_params *params,
-			       struct mrc_ddc_ops *ops);
-void mrc_ddc_destroy(struct mrc_ddc *ddc);
-void mrc_ddc_fill_ghosts_begin(struct mrc_ddc *ddc, float *x, int mb, int me);
-void mrc_ddc_fill_ghosts_end(struct mrc_ddc *ddc, float *x, int mb, int me);
-void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, float *x, int mb, int me);
+struct ddc_pattern {
+  struct ddc_sendrecv send[27];
+  struct ddc_sendrecv recv[27];
+};
 
-// for implementing copy_{to,from}_buf()
+struct ddc_subdomain {
+  struct mrc_ddc_params prm;
+  int rank, size;
+  int proc[3]; // this proc's position in the 3D proc grid
+  struct ddc_pattern add_ghosts;
+  struct ddc_pattern fill_ghosts;
+  MPI_Request send_reqs[27];
+  MPI_Request recv_reqs[27];
+};
 
-#define MRC_DDC_BUF3(buf,m, ix,iy,iz)					\
-  ((buf)[((((iz)-ib[2]) * (ie[1]-ib[1]) + ((iy)-ib[1])) * (ie[0]-ib[0]) + ((ix)-ib[0])) * (me-mb) + ((m)-mb)])
+struct ddc_subdomain *ddc_create(struct mrc_ddc_params *prm);
+void ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
+void ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
 
-// for standard Fortran layout fields (component: slow idx)
-extern struct mrc_ddc_ops mrc_ddc_ops_fortran;
+int ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3]);
+
+#define DDC_BUF(buf,m, ix,iy,iz)		\
+  (buf[(((m) * (ihi[2] - ilo[2]) +		\
+	 iz - ilo[2]) * (ihi[1] - ilo[1]) +	\
+	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
+       ix - ilo[0]])
 
 #endif
+
+static inline int
+dir2idx(int dir[3])
+{
+  return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
+}
+

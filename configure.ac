@@ -104,9 +104,10 @@ AS_IF(
 )
 AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 
-AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile
+AC_CONFIG_FILES([Makefile src/Makefile
 		 src/libmrc/Makefile
-		 src/libmrc/src/Makefile src/libmrc/tests/Makefile])
+		 src/libmrc/src/Makefile
+		 src/libmrc/tests/Makefile])
 
 AC_OUTPUT
 

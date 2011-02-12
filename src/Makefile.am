@@ -1,5 +1,5 @@
 
-SUBDIRS = util libmrc
+SUBDIRS = libmrc
 
 bin_PROGRAMS = VLI VLA SELECT
 
@@ -124,7 +124,7 @@ endif
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
-LDADD = libpsc.a util/libutil.a libmrc/src/libmrc.a
+LDADD = libpsc.a libmrc/src/libmrc.a
 
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \

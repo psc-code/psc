@@ -1,7 +1,7 @@
 
 #include "psc.h"
 #include <mrc_profile.h>
-#include "util/ddc.h"
+#include <mrc_ddc.h>
 
 #include <mpi.h>
 #include <string.h>
@@ -220,7 +220,7 @@ create_bnd(void)
   struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
   memset(c_bnd, 0, sizeof(*c_bnd));
 
-  struct ddc_params prm = {
+  struct mrc_ddc_params prm = {
     .comm          = MPI_COMM_WORLD,
     .mpi_type      = MPI_FIELDS_BASE_REAL,
     .size_of_type  = sizeof(fields_base_real_t),
