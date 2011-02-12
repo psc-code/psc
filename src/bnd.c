@@ -238,7 +238,7 @@ create_bnd(void)
   for (int d = 0; d < 3; d++) {
       if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
 	  psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
-      prm.bc[d] = DDC_BC_PERIODIC;
+      prm.bc[d] = BC_PERIODIC;
     }
   }
   c_bnd->ddc = mrc_ddc_create(MPI_COMM_WORLD, &prm, &ddc_ops);

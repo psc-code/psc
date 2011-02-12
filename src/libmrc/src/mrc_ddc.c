@@ -20,7 +20,7 @@ mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
     proc_nei[d] = ddc->proc[d] + dir[d];
-    if (ddc->prm.bc[d] == DDC_BC_PERIODIC) {
+    if (ddc->prm.bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
 	proc_nei[d] += ddc->prm.n_proc[d];
       }
