@@ -173,7 +173,7 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
   }
 }
 
-static struct ddc_subdomain *
+static struct mrc_ddc *
 mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
 			     struct mrc_ddc_ops *ddc_ops)
 {
@@ -195,7 +195,7 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
   ddc_par->copy_from_buf = 0;
   ddc_par->add_from_buf = 0;
 
-  return ddc_create(ddc_par);
+  return mrc_ddc_create(ddc_par);
 }
 
 static struct mrc_param_select bc_descr[] = {

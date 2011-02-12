@@ -10,7 +10,7 @@
 // C bnd
 
 struct c_bnd_ctx {
-  struct ddc_subdomain *ddc;
+  struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
 };
 
@@ -24,7 +24,7 @@ copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  DDC_BUF(buf, m - mb, ix,iy,iz) = XF3_BASE(pf, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = XF3_BASE(pf, m, ix,iy,iz);
 	}
       }
     }
@@ -41,7 +41,7 @@ add_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix,iy,iz) += DDC_BUF(buf, m - mb, ix,iy,iz);
+	  XF3_BASE(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -58,7 +58,7 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix,iy,iz) = DDC_BUF(buf, m - mb, ix,iy,iz);
+	  XF3_BASE(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -84,7 +84,7 @@ struct ddc_particles {
 };
 
 static struct ddc_particles *
-ddc_particles_create(struct ddc_subdomain *ddc)
+ddc_particles_create(struct mrc_ddc *ddc)
 {
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
@@ -94,7 +94,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	ddcp->send_reqs[dir1] = MPI_REQUEST_NULL;
 	ddcp->sendp_reqs[dir1] = MPI_REQUEST_NULL;
@@ -108,7 +108,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
 	nei->send_buf_size = 8;
 	nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
 	nei->n_send = 0;
-	nei->rank = ddc_get_rank_nei(ddc, dir);
+	nei->rank = mrc_ddc_get_rank_nei(ddc, dir);
       }
     }
   }
@@ -119,7 +119,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
 static void
 ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 {
-  struct ddcp_nei *nei = &ddcp->nei[dir2idx(dir)];
+  struct ddcp_nei *nei = &ddcp->nei[mrc_ddc_dir2idx(dir)];
 
   if (nei->n_send == nei->send_buf_size) {
     // reallocate a larger buffer, doubling buffer size each time
@@ -141,8 +141,8 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	int dir1 = mrc_ddc_dir2idx(dir);
+	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  ddcp->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -158,7 +158,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
@@ -180,7 +180,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
@@ -195,8 +195,8 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	int dir1 = mrc_ddc_dir2idx(dir);
+	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
@@ -239,7 +239,7 @@ create_bnd(void)
       prm.bc[d] = DDC_BC_PERIODIC;
     }
   }
-  c_bnd->ddc = ddc_create(&prm);
+  c_bnd->ddc = mrc_ddc_create(&prm);
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 
   psc.bnd_data = c_bnd;
@@ -259,7 +259,7 @@ c_add_ghosts(fields_base_t *pf, int mb, int me)
   }
   prof_start(pr);
 
-  ddc_add_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, pf);
 
   prof_stop(pr);
 }
@@ -281,7 +281,7 @@ c_fill_ghosts(fields_base_t *pf, int mb, int me)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  ddc_fill_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, pf);
 
   prof_stop(pr);
 }
