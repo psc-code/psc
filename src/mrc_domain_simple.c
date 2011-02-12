@@ -173,7 +173,7 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
   }
 }
 
-static struct mrc_ddc *
+static struct ddc_subdomain *
 mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
 			     struct mrc_ddc_ops *ddc_ops)
 {
@@ -183,12 +183,19 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
   mrc_domain_get_bc(domain, bc);
 
   for (int d = 0; d < 3; d++) {
-    ddc_par->n[d]  = ldims[d];
-    ddc_par->np[d] = nr_procs[d];
+    ddc_par->ilo[d] = 0;
+    ddc_par->ihi[d] = ldims[d];
+    ddc_par->n_proc[d] = nr_procs[d];
     ddc_par->bc[d] = bc[d];
   }
+  ddc_par->comm = domain->obj.comm;
+  ddc_par->mpi_type = MPI_FLOAT;
+  ddc_par->size_of_type = sizeof(float);
+  ddc_par->copy_to_buf = 0; // !!!
+  ddc_par->copy_from_buf = 0;
+  ddc_par->add_from_buf = 0;
 
-  return mrc_ddc_create(domain->obj.comm, ddc_par, ddc_ops);
+  return ddc_create(ddc_par);
 }
 
 static struct mrc_param_select bc_descr[] = {
