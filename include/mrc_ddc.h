@@ -23,35 +23,35 @@ struct mrc_ddc_params {
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
-struct ddc_sendrecv {
+struct mrc_ddc_sendrecv {
   int ilo[3], ihi[3];
   int rank_nei;
   int len;
   void *buf;
 };
 
-struct ddc_pattern {
-  struct ddc_sendrecv send[27];
-  struct ddc_sendrecv recv[27];
+struct mrc_ddc_pattern {
+  struct mrc_ddc_sendrecv send[27];
+  struct mrc_ddc_sendrecv recv[27];
 };
 
-struct ddc_subdomain {
+struct mrc_ddc {
   struct mrc_ddc_params prm;
   int rank, size;
   int proc[3]; // this proc's position in the 3D proc grid
-  struct ddc_pattern add_ghosts;
-  struct ddc_pattern fill_ghosts;
+  struct mrc_ddc_pattern add_ghosts;
+  struct mrc_ddc_pattern fill_ghosts;
   MPI_Request send_reqs[27];
   MPI_Request recv_reqs[27];
 };
 
-struct ddc_subdomain *ddc_create(struct mrc_ddc_params *prm);
-void ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
-void ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx);
+struct mrc_ddc *mrc_ddc_create(struct mrc_ddc_params *prm);
+void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 
-int ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3]);
+int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
 
-#define DDC_BUF(buf,m, ix,iy,iz)		\
+#define MRC_DDC_BUF3(buf,m, ix,iy,iz)		\
   (buf[(((m) * (ihi[2] - ilo[2]) +		\
 	 iz - ilo[2]) * (ihi[1] - ilo[1]) +	\
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
@@ -60,7 +60,7 @@ int ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3]);
 #endif
 
 static inline int
-dir2idx(int dir[3])
+mrc_ddc_dir2idx(int dir[3])
 {
   return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
 }
