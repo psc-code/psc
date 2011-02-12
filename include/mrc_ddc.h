@@ -10,7 +10,6 @@ enum {
 };
 
 struct mrc_ddc_params {
-  MPI_Comm comm;
   MPI_Datatype mpi_type;
   int size_of_type;
   int max_n_fields;
@@ -39,6 +38,7 @@ struct mrc_ddc_pattern {
 };
 
 struct mrc_ddc {
+  MPI_Comm comm;
   struct mrc_ddc_params prm;
   struct mrc_ddc_ops *ops;
   int rank, size;
@@ -49,7 +49,7 @@ struct mrc_ddc {
   MPI_Request recv_reqs[27];
 };
 
-struct mrc_ddc *mrc_ddc_create(struct mrc_ddc_params *prm,
+struct mrc_ddc *mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
 			       struct mrc_ddc_ops *ops);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
