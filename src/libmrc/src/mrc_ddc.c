@@ -1,5 +1,6 @@
 
 #include "mrc_ddc.h"
+#include "mrc_ddc_private.h"
 
 #include <string.h>
 #include <stdlib.h>

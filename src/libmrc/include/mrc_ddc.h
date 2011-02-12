@@ -1,10 +1,12 @@
 
-#ifndef DDC_H
-#define DDC_H
+#ifndef MRC_DDC_H
+#define MRC_DDC_H
 
 #include <mrc_common.h>
 
 #include <mpi.h>
+
+struct mrc_ddc;
 
 struct mrc_ddc_params {
   MPI_Datatype mpi_type;
@@ -22,30 +24,6 @@ struct mrc_ddc_ops {
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
-struct mrc_ddc_sendrecv {
-  int ilo[3], ihi[3];
-  int rank_nei;
-  int len;
-  void *buf;
-};
-
-struct mrc_ddc_pattern {
-  struct mrc_ddc_sendrecv send[27];
-  struct mrc_ddc_sendrecv recv[27];
-};
-
-struct mrc_ddc {
-  MPI_Comm comm;
-  struct mrc_ddc_params prm;
-  struct mrc_ddc_ops *ops;
-  int rank, size;
-  int proc[3]; // this proc's position in the 3D proc grid
-  struct mrc_ddc_pattern add_ghosts;
-  struct mrc_ddc_pattern fill_ghosts;
-  MPI_Request send_reqs[27];
-  MPI_Request recv_reqs[27];
-};
-
 struct mrc_ddc *mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
 			       struct mrc_ddc_ops *ops);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
@@ -59,11 +37,11 @@ int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
        ix - ilo[0]])
 
-#endif
-
 static inline int
 mrc_ddc_dir2idx(int dir[3])
 {
   return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
 }
+
+#endif
 
