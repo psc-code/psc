@@ -177,19 +177,17 @@ static struct mrc_ddc *
 mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
 			     struct mrc_ddc_ops *ddc_ops)
 {
-  int ldims[3], nr_procs[3], bc[3];
-  mrc_domain_get_local_offset_dims(domain, NULL, ldims);
+  int off[3], ldims[3], nr_procs[3], bc[3];
+  mrc_domain_get_local_offset_dims(domain, off, ldims);
   mrc_domain_get_nr_procs(domain, nr_procs);
   mrc_domain_get_bc(domain, bc);
 
   for (int d = 0; d < 3; d++) {
-    ddc_par->ilo[d] = 0;
+    ddc_par->ilo[d] = off[d];
     ddc_par->ihi[d] = ldims[d];
     ddc_par->n_proc[d] = nr_procs[d];
     ddc_par->bc[d] = bc[d];
   }
-  ddc_par->mpi_type = MPI_FLOAT;
-  ddc_par->size_of_type = sizeof(float);
 
   return mrc_ddc_create(domain->obj.comm, ddc_par, ddc_ops);
 }
