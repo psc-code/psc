@@ -2,12 +2,9 @@
 #ifndef DDC_H
 #define DDC_H
 
-#include <mpi.h>
+#include <mrc_common.h>
 
-enum {
-  DDC_BC_NONE,
-  DDC_BC_PERIODIC,
-};
+#include <mpi.h>
 
 struct mrc_ddc_params {
   MPI_Datatype mpi_type;
