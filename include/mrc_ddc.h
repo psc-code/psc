@@ -9,7 +9,6 @@
 struct mrc_ddc;
 
 struct mrc_ddc_params {
-  MPI_Datatype mpi_type;
   int size_of_type;
   int max_n_fields;
   int n_proc[3]; // # procs in 3D grid
