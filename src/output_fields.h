@@ -28,6 +28,7 @@ extern struct psc_output_format_ops psc_output_format_ops_vtk;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_binary;
+extern struct psc_output_format_ops psc_output_format_ops_mrc;
 
 struct psc_output_c {
   char *data_dir;

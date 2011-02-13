@@ -198,6 +198,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_vtk_points,
   &psc_output_format_ops_vtk_cells,
   &psc_output_format_ops_vtk_binary,
+  &psc_output_format_ops_mrc,
   NULL,
 };
 
