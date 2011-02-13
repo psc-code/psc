@@ -24,6 +24,7 @@ struct mrc_ddc {
   struct mrc_ddc_ops *ops;
   int rank, size;
   int proc[3]; // this proc's position in the 3D proc grid
+  MPI_Datatype mpi_type;
   struct mrc_ddc_pattern add_ghosts;
   struct mrc_ddc_pattern fill_ghosts;
   MPI_Request send_reqs[N_DIR];

@@ -228,7 +228,6 @@ create_bnd(void)
   memset(c_bnd, 0, sizeof(*c_bnd));
 
   struct mrc_ddc_params ddc_par = {
-    .mpi_type      = MPI_FIELDS_BASE_REAL,
     .size_of_type  = sizeof(fields_base_real_t),
     .max_n_fields  = 6,
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },

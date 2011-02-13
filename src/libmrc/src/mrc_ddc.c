@@ -122,7 +122,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
 		 r->len);
 #endif
-	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->prm.mpi_type, r->rank_nei,
+	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->rank_nei,
 		    0x1000 + dir1neg, ddc->comm, &ddc->recv_reqs[dir1]);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -145,7 +145,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
 		 s->len);
 #endif
-	  MPI_Isend(s->buf, s->len * (me - mb), ddc->prm.mpi_type, s->rank_nei,
+	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->rank_nei,
 		    0x1000 + dir1, ddc->comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
@@ -206,6 +206,13 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
   MPI_Comm_dup(comm, &ncomm);
   ddc->comm = ncomm;
   ddc->prm = *prm;
+  if (ddc->prm.size_of_type == sizeof(float)) {
+    ddc->mpi_type = MPI_FLOAT;
+  } else if (ddc->prm.size_of_type == sizeof(double)) {
+    ddc->mpi_type = MPI_DOUBLE;
+  } else {
+    assert(0);
+  }
   ddc->ops = ops;
   MPI_Comm_rank(comm, &ddc->rank);
   MPI_Comm_size(comm, &ddc->size);
