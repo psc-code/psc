@@ -108,7 +108,9 @@ psc_integrate()
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    psc_sort();
+    if (psc.timestep % 10 == 0) {
+      psc_sort();
+    }
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
