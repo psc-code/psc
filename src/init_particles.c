@@ -57,7 +57,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   MPI_Comm comm = MPI_COMM_WORLD;
 
   // create a very simple domain decomposition
-  struct mrc_domain_simple_params domain_par;
+  struct mrc_domain_simple_params domain_par = {};
   for (int d = 0; d < 3; d++) {
     // FIXME, either we handle the case of domain.ilo != 0, or we should
     // do away with domain.ilo in the first place.
@@ -76,6 +76,13 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   psc.mrc_domain = mrc_domain_create(comm);
   mrc_domain_set_type(psc.mrc_domain, "simple");
   mrc_domain_simple_set_params(psc.mrc_domain, &domain_par);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(psc.mrc_domain);
+  mrc_crds_set_param_int(crds, "sw", 2);
+  mrc_crds_set_param_float(crds, "xh",  psc.domain.length[0]);
+  mrc_crds_set_param_float(crds, "yh",  psc.domain.length[1]);
+  mrc_crds_set_param_float(crds, "zh",  psc.domain.length[2]);
+
   mrc_domain_setup(psc.mrc_domain);
   mrc_domain_view(psc.mrc_domain);
 
