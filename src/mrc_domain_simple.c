@@ -184,7 +184,7 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
 
   for (int d = 0; d < 3; d++) {
     ddc_par->ilo[d] = off[d];
-    ddc_par->ihi[d] = ldims[d];
+    ddc_par->ihi[d] = off[d] + ldims[d];
     ddc_par->n_proc[d] = nr_procs[d];
     ddc_par->bc[d] = bc[d];
   }
