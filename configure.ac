@@ -26,6 +26,7 @@ AC_PROG_F77([openmpif90 mpif90])
 
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
+FLIBS=`echo $FLIBS | sed s,-lpthread,,g`
 LIBS="$LIBS $FLIBS"
 
 AC_PROG_RANLIB
