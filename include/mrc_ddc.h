@@ -25,6 +25,7 @@ struct mrc_ddc_ops {
 
 struct mrc_ddc *mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
 			       struct mrc_ddc_ops *ops);
+void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 
@@ -35,6 +36,8 @@ int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
 	 iz - ilo[2]) * (ihi[1] - ilo[1]) +	\
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
        ix - ilo[0]])
+
+struct mrc_ddc_ops mrc_ddc_ops_f3;
 
 static inline int
 mrc_ddc_dir2idx(int dir[3])
