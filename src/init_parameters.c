@@ -350,6 +350,8 @@ init_param_coeff()
     }
   }
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
+  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc.dt);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
 
   // adjust to match laser cycles FIXME, this isn't a good place,
   // and hardcoded params (2, 30.)

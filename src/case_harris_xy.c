@@ -118,6 +118,8 @@ harris_xy_init_param(struct psc_case *Case)
   mpi_printf(MPI_COMM_WORLD, "::: om_pi  = %g\n", sqrt(n0 * sqr(e) / (m_i * eps0)));
   mpi_printf(MPI_COMM_WORLD, "::: om_ce  = %g\n", harris->_Bguide * e / m_e);
   mpi_printf(MPI_COMM_WORLD, "::: om_ci  = %g\n", harris->_Bguide * e / m_i);
+  mpi_printf(MPI_COMM_WORLD, "::: om_cep  = %g\n", harris->_B0 * e / m_e);
+  mpi_printf(MPI_COMM_WORLD, "::: om_cip  = %g\n", harris->_B0 * e / m_i);
   mpi_printf(MPI_COMM_WORLD, "::: d_e    = %g d_e\n", c / sqrt(n0 * sqr(e) / (m_e * eps0)));
   mpi_printf(MPI_COMM_WORLD, "::: d_i    = %g d_e\n", c / sqrt(n0 * sqr(e) / (m_i * eps0)));
   mpi_printf(MPI_COMM_WORLD, "::: l_Debye= %g d_e\n", sqrt(eps0 * harris->_Te / (n0 * sqr(e))));
