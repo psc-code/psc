@@ -60,4 +60,5 @@ src/libmrc/tests/test_io
 src/libmrc/tests/test_io_read
 src/libmrc/tests/test_mrc_obj
 src/libmrc/tests/test_spherical_harmonics
-
+src/libmrc/tests/test_ddc
+src/libmrc/tests/run.*

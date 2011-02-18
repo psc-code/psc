@@ -245,3 +245,60 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
   return ddc;
 }
 
+// ----------------------------------------------------------------------
+// mrc_ddc_destroy
+
+void mrc_ddc_destroy(struct mrc_ddc *ddc)
+{
+  MPI_Comm_free(&ddc->comm);
+  free(ddc);
+}
+
+// ======================================================================
+// mrc_ddc_ops_f3 for mrc_f3
+
+#include <mrc_fld.h>
+
+// FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
+
+static void
+mrc_f3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd);
+	}
+      }
+    }
+  }
+}
+
+static void
+mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
+	}
+      }
+    }
+  }
+}
+
+struct mrc_ddc_ops mrc_ddc_ops_f3 = {
+  .copy_to_buf   = mrc_f3_copy_to_buf,
+  .copy_from_buf = mrc_f3_copy_from_buf,
+};
+
