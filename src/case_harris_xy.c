@@ -219,23 +219,19 @@ harris_xy_init_field(struct psc_case *Case)
   struct harris_xy *harris = Case->ctx;
 
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dy = psc.dx[1];
-	double xx = jx * dx, yy = jy * dy;
-
-	F3_BASE(HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
-	F3_BASE(HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
-	F3_BASE(HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
-
-	// FIXME centering
-	F3_BASE(JXI, jx,jy,jz) = Jx(harris, xx, yy);
-	F3_BASE(JYI, jx,jy,jz) = Jy(harris, xx, yy);
-	F3_BASE(JZI, jx,jy,jz) = Jz(harris, xx, yy);
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    double dx = psc.dx[0], dy = psc.dx[1];
+    double xx = jx * dx, yy = jy * dy;
+    
+    F3_BASE(HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
+    F3_BASE(HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
+    F3_BASE(HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
+    
+    // FIXME centering
+    F3_BASE(JXI, jx,jy,jz) = Jx(harris, xx, yy);
+    F3_BASE(JYI, jx,jy,jz) = Jy(harris, xx, yy);
+    F3_BASE(JZI, jx,jy,jz) = Jz(harris, xx, yy);
+  } foreach_3d_g_end;
 }
 
 static void

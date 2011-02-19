@@ -374,6 +374,14 @@ struct psc {
   double time_start;
 };
 
+#define foreach_3d_g(ix, iy, iz)			\
+  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {	\
+  for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {	\
+  for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++)	\
+
+#define foreach_3d_g_end			\
+  } }
+
 // ----------------------------------------------------------------------
 // psc_config
 

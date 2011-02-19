@@ -10,15 +10,11 @@
 static void
 setup_jx()
 {
-  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-	f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
-	F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
-      }
-    }
-  }
+  foreach_3d_g(ix, iy, iz) {
+    f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
+    f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+    F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
+  } foreach_3d_g_end;
 }
 
 static void

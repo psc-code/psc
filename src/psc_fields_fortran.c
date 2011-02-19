@@ -97,13 +97,9 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 
   fields_base_t *pf_base = _pf_base;
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_FORTRAN(pf, m, jx,jy,jz) = XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      F3_FORTRAN(pf, m, jx,jy,jz) = XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 }
 
@@ -118,13 +114,9 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
 {
   fields_base_t *pf_base = _pf_base;
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
+    } foreach_3d_g_end;
   }
   
   fields_fortran_put(pf, mb, me);
@@ -149,13 +141,9 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
   *pf = __flds;
 
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_FORTRAN(pf, m, jx,jy,jz) = XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      F3_FORTRAN(pf, m, jx,jy,jz) = XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 }
 
@@ -174,13 +162,9 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
   __gotten = 0;
 
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      XF3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 }
 
@@ -210,25 +194,17 @@ fields_fortran_zero_all(fields_fortran_t *pf)
 void
 fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_FORTRAN(pf, m, jx, jy, jz) = val;
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    F3_FORTRAN(pf, m, jx, jy, jz) = val;
+  } foreach_3d_g_end;
 }
 
 void
 fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_FORTRAN(pf, m_to, jx, jy, jz) = F3_FORTRAN(pf, m_from, jx, jy, jz);
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    F3_FORTRAN(pf, m_to, jx, jy, jz) = F3_FORTRAN(pf, m_from, jx, jy, jz);
+  } foreach_3d_g_end;
 }
 
 void

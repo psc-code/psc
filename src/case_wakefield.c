@@ -94,20 +94,16 @@ static void
 wakefield_init_field(struct psc_case *Case)
 {
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-
-	// FIXME, why this time?
-	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
-
-	// FIXME, this pulse needs a - to propagate in the right direction (+z)
-	F3_BASE(HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    double xx = jx * dx, yy = jy * dy, zz = jz * dz;
+    
+    // FIXME, why this time?
+    F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
+    
+    // FIXME, this pulse needs a - to propagate in the right direction (+z)
+    F3_BASE(HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+  } foreach_3d_g_end;
 }
 
 static void

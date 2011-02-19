@@ -84,23 +84,15 @@ fields_sse2_zero(fields_sse2_t *pf, int m)
 void
 fields_sse2_set(fields_sse2_t *pf, int m, fields_sse2_real_t val)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_SSE2(pf, m, jx, jy, jz) = val;
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    F3_SSE2(pf, m, jx, jy, jz) = val;
+  } foreach_3d_g_end;
 }
 
 void
 fields_sse2_copy(fields_sse2_t *pf, int m_to, int m_from)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_SSE2(pf, m_to, jx, jy, jz) = F3_SSE2(pf, m_from, jx, jy, jz);
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    F3_SSE2(pf, m_to, jx, jy, jz) = F3_SSE2(pf, m_from, jx, jy, jz);
+  } foreach_3d_g_end;
 }

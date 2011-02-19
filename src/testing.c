@@ -57,13 +57,9 @@ psc_save_fields_ref()
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   for (int m = 0; m < me; m++) {
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  XF3_BASE(field_ref,m, ix,iy,iz) = F3_BASE(m, ix,iy,iz);
-	}
-      }
-    }
+    foreach_3d_g(ix, iy, iz) {
+      XF3_BASE(field_ref,m, ix,iy,iz) = F3_BASE(m, ix,iy,iz);
+    } foreach_3d_g_end;
   }
 } 
 
@@ -131,30 +127,22 @@ psc_check_currents_ref(double thres)
 {
   assert(field_ref);
   for (int m = JXI; m <= JZI; m++){
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  double val = F3_BASE(m, ix,iy,iz);
-	  if (fabs(val) > 0.) {
-	    printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
-		   ix, iy, iz, val);
-	  }
-	}
-      }
+    foreach_3d_g(ix, iy, iz) {
+      double val = F3_BASE(m, ix,iy,iz);
+      if (fabs(val) > 0.) {
+	printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
+	       ix, iy, iz, val);
+      } foreach_3d_g_end;
     }
   }
   for (int m = JXI; m <= JZI; m++){
     double max_delta = 0.;
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref,m, ix,iy,iz), thres);
-	  max_delta = fmax(max_delta, 
-			   fabs(F3_BASE(m, ix,iy,iz) - XF3_BASE(field_ref, m, ix,iy,iz)));
-	}
-      }
-    }
+    foreach_3d_g(ix, iy, iz) {
+      //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+      assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref,m, ix,iy,iz), thres);
+      max_delta = fmax(max_delta, 
+		       fabs(F3_BASE(m, ix,iy,iz) - XF3_BASE(field_ref, m, ix,iy,iz)));
+    } foreach_3d_g_end;
     printf("max_delta (%s) %g\n", fldname[m], max_delta);
   }
 }

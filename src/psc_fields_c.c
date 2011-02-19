@@ -76,13 +76,9 @@ fields_c_get(fields_c_t *pf, int mb, int me)
   fields_c_alloc(pf, psc.ilg, psc.ihg, NR_FIELDS);
 
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_C(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      F3_C(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 }
 
@@ -90,13 +86,9 @@ void
 fields_c_put(fields_c_t *pf, int mb, int me)
 {
   for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_BASE(m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
-	}
-      }
-    }
+    foreach_3d_g(jx, jy, jz) {
+      F3_BASE(m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 
   fields_c_free(pf);

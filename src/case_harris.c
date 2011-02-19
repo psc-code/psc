@@ -104,28 +104,24 @@ harris_init_field(struct psc_case *Case)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dz = psc.dx[2];
-	double xx = jx * dx, zz = jz * dz;
-
-	F3_BASE(HX, jx,jy,jz) = 
-	  BB * (-1. 
-		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
-		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
-	  + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
-
-	F3_BASE(HZ, jx,jy,jz) =
-	  - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
-
-	F3_BASE(JYI, jx,jy,jz) = BB/LLL *
-	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
-	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
-	     * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
-      }
-    }
-  }
+  foreach_3d_g(jx, jy, jz) {
+    double dx = psc.dx[0], dz = psc.dx[2];
+    double xx = jx * dx, zz = jz * dz;
+    
+    F3_BASE(HX, jx,jy,jz) = 
+      BB * (-1. 
+	    + tanh((zz + .5*dz - 0.5*LLz)/LLL)
+	    - tanh((zz + .5*dz - 1.5*LLz)/LLL))
+      + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
+    
+    F3_BASE(HZ, jx,jy,jz) =
+      - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
+    
+    F3_BASE(JYI, jx,jy,jz) = BB/LLL *
+      (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+      - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
+	 * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
+  } foreach_3d_g_end;
 }
 
 static void
@@ -253,28 +249,24 @@ test_yz_init_field(struct psc_case *Case)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dy = psc.dx[1], dz = psc.dx[2];
-	double yy = jy * dy, zz = jz * dz;
+  foreach_3d_g(jx, jy, jz) {
+    double dy = psc.dx[1], dz = psc.dx[2];
+    double yy = jy * dy, zz = jz * dz;
 
-	F3_BASE(HY, jx,jy,jz) = 
-	  BB * (-1. 
-		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
-		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
-	  + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
-
-	F3_BASE(HZ, jx,jy,jz) =
-	  - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
-
-	F3_BASE(JXI, jx,jy,jz) = - BB/LLL *
-	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
-	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
-	     * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
-      }
-    }
-  }
+    F3_BASE(HY, jx,jy,jz) = 
+      BB * (-1. 
+	    + tanh((zz + .5*dz - 0.5*LLz)/LLL)
+	    - tanh((zz + .5*dz - 1.5*LLz)/LLL))
+      + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
+    
+    F3_BASE(HZ, jx,jy,jz) =
+      - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
+    
+    F3_BASE(JXI, jx,jy,jz) = - BB/LLL *
+      (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+      - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
+	 * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
+  } foreach_3d_g_end;
 }
 
 static void
