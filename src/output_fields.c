@@ -286,7 +286,7 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
     for (int m = 0; m < f->nr_comp; m++) {
       fields_base_t *fld = &list->flds[list->nr_flds++];
       fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
-				   &XF3_BASE(f,m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
+				   &F3_BASE(f,m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
       fld->name[0] = strdup(f->name[m]);
     }
   }

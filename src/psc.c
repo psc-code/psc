@@ -262,14 +262,16 @@ ascii_dump_field(int m, const char *fname)
 
   fields_base_t *pf = &psc.pf;
   FILE *file = fopen(filename, "w");
-  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	fprintf(file, "%d %d %d %g\n", ix, iy, iz, XF3_BASE(pf, m, ix,iy,iz));
+  foreach_patch(patch) {
+    for (int iz = patch->ilg[2]; iz < patch->ihg[2]; iz++) {
+      for (int iy = patch->ilg[1]; iy < patch->ihg[1]; iy++) {
+	for (int ix = patch->ilg[0]; ix < patch->ihg[0]; ix++) {
+	  fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
+	}
+	fprintf(file, "\n");
       }
       fprintf(file, "\n");
     }
-    fprintf(file, "\n");
   }
   fclose(file);
 }

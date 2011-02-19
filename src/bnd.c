@@ -25,8 +25,7 @@ copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) =
-	    XF3_BASE(pf, m, ix+psc.ilo[0],iy+psc.ilo[1],iz+psc.ilo[2]);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
 	}
       }
     }
@@ -43,8 +42,7 @@ add_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix+psc.ilo[0],iy+psc.ilo[1],iz+psc.ilo[2])
-	    += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3_BASE(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -61,8 +59,7 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix+psc.ilo[0],iy+psc.ilo[1],iz+psc.ilo[2])
-	    = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3_BASE(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }

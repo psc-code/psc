@@ -17,12 +17,10 @@ binary_write_field(FILE *file, fields_base_t *fld)
   // convert to float, drop ghost points
   float *data = calloc(sz, sizeof(float));
   int i = 0;
-  for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-    for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-      for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	data[i++] = XF3_BASE(fld,0, ix,iy,iz);
-      }
-    }
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      data[i++] = F3_BASE(fld,0, ix,iy,iz);
+    } foreach_3d_end;
   }
     
   fwrite(data, sizeof(*data), sz, file);

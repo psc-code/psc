@@ -21,10 +21,9 @@ static struct mrc_io *ios[NR_IO_TYPES];
 static void
 copy_to_mrc_fld(struct mrc_f3 *mrc_fld, fields_base_t *fld)
 {
-  int *ilo = psc.ilo;
   int sw = mrc_fld->sw;
   mrc_f3_foreach(mrc_fld, ix,iy,iz, 2,2) {
-    MRC_F3(mrc_fld,0, ix,iy,iz) = XF3_BASE(fld,0, ix-sw+ilo[0],iy-sw+ilo[1],iz-sw+ilo[2]);
+    MRC_F3(mrc_fld,0, ix,iy,iz) = F3_BASE(fld,0, ix-sw,iy-sw,iz-sw);
   } mrc_f3_foreach_end;
 }
 

@@ -90,7 +90,7 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
   H5Sclose(file_space);
   
   H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT,
-	   &XF3_BASE(fld, 0, fld->ib[0], fld->ib[1], fld->ib[2]));
+	   &F3_BASE(fld, 0, fld->ib[0]-psc.ilo[0], fld->ib[1]-psc.ilo[1], fld->ib[2]-psc.ilo[2]));
   H5Sclose(mem_space);
   
   H5Dclose(dataset);
@@ -282,7 +282,7 @@ hdf5_dump_field(int m, const char *fname)
   hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   assert(sizeof(fields_base_real_t) == sizeof(double));
   H5LTmake_dataset_double(group_fld, fldname[m], 3, dims,
-			  &XF3_BASE(&psc.pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
+			  &F3_BASE(&psc.pf, m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
   H5Gclose(group_fld);
   H5Gclose(group);
   H5Fclose(file);
