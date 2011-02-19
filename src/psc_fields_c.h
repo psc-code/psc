@@ -25,7 +25,7 @@ typedef struct {
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
-#if 1
+#ifndef BOUNDS_CHECK
 
 #define F3_C(pf, fldnr, jx,jy,jz)		\
   ((pf)->flds[F3_OFF_C(pf, fldnr, jx,jy,jz)])
@@ -34,8 +34,10 @@ typedef struct {
 
 #define F3_C(pf, fldnr, jx,jy,jz)					\
   (*({int off = F3_OFF_C(pf, fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < pf->nr_comp * pf->im[0] * pf->im[1] * pf->im[2]);	\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
       &((pf)->flds[off]);						\
     }))
 
