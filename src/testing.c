@@ -25,7 +25,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 }
 
 static particle_base_t *particle_ref;
-static f_real *field_ref[NR_FIELDS];
+static fields_base_t *field_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -51,17 +51,16 @@ psc_save_particles_ref()
 void
 psc_save_fields_ref()
 {
-  if (!field_ref[EX]) { //FIXME this is bad mojo
-    for (int m = 0; m < NR_FIELDS; m++) {
-      field_ref[m] = calloc(psc.fld_size, sizeof(f_real));
-    }
+  if (!field_ref) {
+    field_ref = calloc(1, sizeof(*field_ref));
+    fields_base_alloc(field_ref, psc.ilg, psc.ihg, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   for (int m = 0; m < me; m++) {
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  _FF3(field_ref[m], ix,iy,iz) = F3_BASE(m, ix,iy,iz);
+	  XF3_BASE(field_ref,m, ix,iy,iz) = F3_BASE(m, ix,iy,iz);
 	}
       }
     }
@@ -108,14 +107,14 @@ psc_check_particles_ref(double thres, const char *test_str)
 void
 psc_check_fields_ref(int *flds, double thres)
 {
-  assert(field_ref[EX]);
+  assert(field_ref);
   for (int i = 0; flds[i] >= 0; i++) {
     int m = flds[i];
     for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
 	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
 	}
       }
     }
@@ -130,7 +129,7 @@ psc_check_fields_ref(int *flds, double thres)
 void
 psc_check_currents_ref(double thres)
 {
-  assert(field_ref[JXI]);
+  assert(field_ref);
   for (int m = JXI; m <= JZI; m++){
     for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
@@ -150,9 +149,9 @@ psc_check_currents_ref(double thres)
       for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
 	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref,m, ix,iy,iz), thres);
 	  max_delta = fmax(max_delta, 
-			   fabs(F3_BASE(m, ix,iy,iz) - _FF3(field_ref[m], ix,iy,iz)));
+			   fabs(F3_BASE(m, ix,iy,iz) - XF3_BASE(field_ref, m, ix,iy,iz)));
 	}
       }
     }
@@ -163,13 +162,13 @@ psc_check_currents_ref(double thres)
 void
 psc_check_currents_ref_noghost(double thres)
 {
-  assert(field_ref[JXI]);
+  assert(field_ref);
   for (int m = JXI; m <= JZI; m++){
     for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
       for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
 	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
 	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
+	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
 	}
       }
     }

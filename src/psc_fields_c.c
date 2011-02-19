@@ -20,7 +20,7 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
   if (with_array) {
     pf->flds = arr;
   } else {
-    pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
+    pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
   }
   pf->with_array = with_array;
   pf->name = calloc(nr_comp, sizeof(*pf->name));
