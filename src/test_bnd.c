@@ -20,15 +20,11 @@ setup_jx()
 static void
 setup_jx_noghost()
 {
-  for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-    for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-      for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-	f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
-	F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
-      }
-    }
-  }
+  foreach_3d(ix, iy, iz, 0, 0) {
+    f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
+    f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+    F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
+  } foreach_3d_end;
 }
 
 int

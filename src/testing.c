@@ -106,14 +106,10 @@ psc_check_fields_ref(int *flds, double thres)
   assert(field_ref);
   for (int i = 0; flds[i] >= 0; i++) {
     int m = flds[i];
-    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
-	}
-      }
-    }
+    foreach_3d(ix, iy, iz, 0, 0) {
+      //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+      assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
+    } foreach_3d_end;
   }
 }
 
@@ -152,14 +148,10 @@ psc_check_currents_ref_noghost(double thres)
 {
   assert(field_ref);
   for (int m = JXI; m <= JZI; m++){
-    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
-	}
-      }
-    }
+    foreach_3d(ix, iy, iz, 0, 0) {
+      //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+      assert_equal(F3_BASE(m, ix,iy,iz), XF3_BASE(field_ref, m, ix,iy,iz), thres);
+    } foreach_3d_end;
   }
 }
 

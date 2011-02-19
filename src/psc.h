@@ -376,10 +376,18 @@ struct psc {
 
 #define foreach_3d_g(ix, iy, iz)			\
   for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {	\
-  for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {	\
-  for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++)	\
+    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {	\
+      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++)
 
 #define foreach_3d_g_end			\
+  } }
+
+#define foreach_3d(ix, iy, iz, l, r)					\
+  for (int iz = psc.ilo[2] - l; iz < psc.ihi[2] + r; iz++) {		\
+    for (int iy = psc.ilo[1] - l; iy < psc.ihi[1] + r; iy++) {		\
+      for (int ix = psc.ilo[0] - l; ix < psc.ihi[0] + r; ix++)
+
+#define foreach_3d_end				\
   } }
 
 // ----------------------------------------------------------------------
