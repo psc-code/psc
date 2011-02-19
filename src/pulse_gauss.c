@@ -64,12 +64,12 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
 {
   struct psc_pulse_gauss *prm = pulse->ctx;
 
-    double xl = xx;
-  double yl = yy;
+  double xl = xx;
+  //  double yl = yy;
   double zl = zz - tt;
 
-    double xr = xl - prm->xm;
-  double yr = yl - prm->ym;
+  double xr = xl - prm->xm;
+  //  double yr = yl - prm->ym;
   double zr = zl - prm->zm;
 
   return sin(zr+prm->phase)

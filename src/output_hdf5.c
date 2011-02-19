@@ -261,6 +261,7 @@ struct psc_output_format_ops psc_output_format_ops_xdmf = {
 
 // FIXME still assuming fortran layout for buf
 
+#if 0
 static void
 hdf5_dump_field(int m, const char *fname)
 {
@@ -285,3 +286,4 @@ hdf5_dump_field(int m, const char *fname)
   H5Gclose(group);
   H5Fclose(file);
 }
+#endif

@@ -105,6 +105,7 @@ static real Line_dens(double x0, double z0, double x1, double z1, double xc, dou
   return 1. / ((1. + exp(argx)) * (1. + exp(argz)));
 }
 
+#if 0
 static real HollowSphere_dens(double x0, double z0, double Radius, double xc, double zc, double Thickness, double Preplasma)
 {
     // returns the density in the current cell for the hollow sphere density distribution
@@ -121,6 +122,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 
   return 1./(1.+exp(argsphere));
 }
+#endif
 
 static void
 foils_create(struct psc_case *Case)

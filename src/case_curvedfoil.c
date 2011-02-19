@@ -139,6 +139,7 @@ curvedfoil_init_field(struct psc_case *Case)
   }
 }
 
+#if 0
 static void
 curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
 		  struct psc_particle_npt *npt)
@@ -196,6 +197,7 @@ curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3],
     assert(0);
   }
 }
+#endif
 
 struct psc_case_ops psc_case_ops_curvedfoil = {
   .name       = "curvedfoil",

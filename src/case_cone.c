@@ -105,6 +105,7 @@ static real Line_dens(double x0, double z0, double x1, double z1, double xc, dou
   return 1. / ((1. + exp(argx)) * (1. + exp(argz)));
 }
 
+#if 0
 static real HollowSphere_dens(double x0, double z0, double Radius, double xc, double zc, double Thickness, double Preplasma)
 {
     // returns the density in the current cell for the hollow sphere density distribution
@@ -121,6 +122,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 
   return 1./(1.+exp(argsphere));
 }
+#endif
 
 static void
 cone_create(struct psc_case *Case)
@@ -145,7 +147,7 @@ cone_create(struct psc_case *Case)
 //  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
 //  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
 
-
+#if 0
   struct psc_pulse_gauss prm_s = {
     .xm = 10.   * 1e-6,
     .ym = 2.5   * 1e-6,
@@ -156,6 +158,8 @@ cone_create(struct psc_case *Case)
 //    .zb  = 10. * 1e-6,
     .phase = 0.0,
   };
+#endif
+
 
 //  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
   psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
