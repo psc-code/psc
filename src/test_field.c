@@ -10,12 +10,13 @@
 static void
 setup_fields()
 {
+  fields_base_t *pf = &psc.pf;
   foreach_3d_g(ix, iy, iz) {
     f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
     f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
-    F3_BASE(JXI, ix,iy,iz) = cos(xx) * sin(zz);
-    F3_BASE(JYI, ix,iy,iz) = sin(xx) * sin(zz);
-    F3_BASE(JZI, ix,iy,iz) = cos(xx) * cos(zz);
+    XF3_BASE(pf, JXI, ix,iy,iz) = cos(xx) * sin(zz);
+    XF3_BASE(pf, JYI, ix,iy,iz) = sin(xx) * sin(zz);
+    XF3_BASE(pf, JZI, ix,iy,iz) = cos(xx) * cos(zz);
   } foreach_3d_g_end;
 
 }

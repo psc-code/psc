@@ -133,7 +133,6 @@ typedef fields_fortran_real_t fields_base_real_t;
 #define fields_base_scale_all        fields_fortran_scale_all
 #define fields_base_size             fields_fortran_size
 
-#define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
 #define XF3_BASE(pf, m, jx,jy,jz) F3_FORTRAN(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_C
@@ -155,7 +154,6 @@ typedef fields_c_real_t fields_base_real_t;
 #define fields_base_scale_all        fields_c_scale_all
 #define fields_base_size             fields_c_size
 
-#define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
 #define XF3_BASE(pf, m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_SSE2
@@ -172,7 +170,7 @@ typedef fields_sse2_real_t fields_base_real_t;
 #define fields_base_set   fields_sse2_set
 #define fields_base_copy  fields_sse2_copy
 
-#define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
+#define XF3_BASE(pf, m, jx,jy,jz) F3_SSE2(pf, m, jx,jy,jz)
 
 #else
 #error unknown FIELDS_BASE

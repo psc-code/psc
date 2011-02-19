@@ -77,7 +77,7 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 
   for (int m = mb; m < me; m++) {
     foreach_3d_g(jx, jy, jz) {
-      F3_C(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
+      F3_C(pf, m, jx,jy,jz) = XF3_BASE(&psc.pf, m, jx,jy,jz);
     } foreach_3d_g_end;
   }
 }
@@ -87,7 +87,7 @@ fields_c_put(fields_c_t *pf, int mb, int me)
 {
   for (int m = mb; m < me; m++) {
     foreach_3d_g(jx, jy, jz) {
-      F3_BASE(m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
+      XF3_BASE(&psc.pf, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
     } foreach_3d_g_end;
   }
 

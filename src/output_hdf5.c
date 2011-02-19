@@ -282,7 +282,7 @@ hdf5_dump_field(int m, const char *fname)
   hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   assert(sizeof(fields_base_real_t) == sizeof(double));
   H5LTmake_dataset_double(group_fld, fldname[m], 3, dims,
-			  &F3_BASE(m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
+			  &XF3_BASE(&psc.pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]));
   H5Gclose(group_fld);
   H5Gclose(group);
   H5Fclose(file);

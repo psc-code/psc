@@ -50,7 +50,7 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me)
     for(int n = 0; n < psc.fld_size; n++){
       //preserve Fortran ordering for now
       pf->flds[m * psc.fld_size + n] =
-	(sse2_real) ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]);
+	(sse2_real) ((&XF3_BASE(&psc.pf, m, ilg[0],ilg[1],ilg[2]))[n]);
     }
   }
 }
@@ -65,7 +65,7 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
   int *ilg = psc.ilg;
   for(int m = mb; m < me; m++){
     for(int n = 0; n < psc.fld_size; n++){
-      ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]) = 
+      ((&XF3_BASE(&psc.pf, m, ilg[0],ilg[1],ilg[2]))[n]) = 
 	pf->flds[m * psc.fld_size + n];
     }
   }

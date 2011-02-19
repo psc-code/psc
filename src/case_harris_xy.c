@@ -216,6 +216,7 @@ Jz(struct harris_xy *harris, real x, real y)
 static void
 harris_xy_init_field(struct psc_case *Case)
 {
+  fields_base_t *pf = &psc.pf;
   struct harris_xy *harris = Case->ctx;
 
   // FIXME, do we need the ghost points?
@@ -223,14 +224,14 @@ harris_xy_init_field(struct psc_case *Case)
     double dx = psc.dx[0], dy = psc.dx[1];
     double xx = jx * dx, yy = jy * dy;
     
-    F3_BASE(HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
-    F3_BASE(HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
-    F3_BASE(HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
+    XF3_BASE(pf, HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
+    XF3_BASE(pf, HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
+    XF3_BASE(pf, HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
     
     // FIXME centering
-    F3_BASE(JXI, jx,jy,jz) = Jx(harris, xx, yy);
-    F3_BASE(JYI, jx,jy,jz) = Jy(harris, xx, yy);
-    F3_BASE(JZI, jx,jy,jz) = Jz(harris, xx, yy);
+    XF3_BASE(pf, JXI, jx,jy,jz) = Jx(harris, xx, yy);
+    XF3_BASE(pf, JYI, jx,jy,jz) = Jy(harris, xx, yy);
+    XF3_BASE(pf, JZI, jx,jy,jz) = Jz(harris, xx, yy);
   } foreach_3d_g_end;
 }
 

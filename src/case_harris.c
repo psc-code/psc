@@ -95,6 +95,7 @@ harris_init_param(struct psc_case *Case)
 static void
 harris_init_field(struct psc_case *Case)
 {
+  fields_base_t *pf = &psc.pf;
   struct harris *harris = Case->ctx;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
@@ -108,16 +109,16 @@ harris_init_field(struct psc_case *Case)
     double dx = psc.dx[0], dz = psc.dx[2];
     double xx = jx * dx, zz = jz * dz;
     
-    F3_BASE(HX, jx,jy,jz) = 
+    XF3_BASE(pf, HX, jx,jy,jz) = 
       BB * (-1. 
 	    + tanh((zz + .5*dz - 0.5*LLz)/LLL)
 	    - tanh((zz + .5*dz - 1.5*LLz)/LLL))
       + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
     
-    F3_BASE(HZ, jx,jy,jz) =
+    XF3_BASE(pf, HZ, jx,jy,jz) =
       - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
     
-    F3_BASE(JYI, jx,jy,jz) = BB/LLL *
+    XF3_BASE(pf, JYI, jx,jy,jz) = BB/LLL *
       (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
       - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
 	 * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
@@ -240,6 +241,7 @@ test_yz_init_param(struct psc_case *Case)
 static void
 test_yz_init_field(struct psc_case *Case)
 {
+  fields_base_t *pf = &psc.pf;
   struct harris *harris = Case->ctx;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
@@ -253,16 +255,16 @@ test_yz_init_field(struct psc_case *Case)
     double dy = psc.dx[1], dz = psc.dx[2];
     double yy = jy * dy, zz = jz * dz;
 
-    F3_BASE(HY, jx,jy,jz) = 
+    XF3_BASE(pf, HY, jx,jy,jz) = 
       BB * (-1. 
 	    + tanh((zz + .5*dz - 0.5*LLz)/LLL)
 	    - tanh((zz + .5*dz - 1.5*LLz)/LLL))
       + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
     
-    F3_BASE(HZ, jx,jy,jz) =
+    XF3_BASE(pf, HZ, jx,jy,jz) =
       - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
     
-    F3_BASE(JXI, jx,jy,jz) = - BB/LLL *
+    XF3_BASE(pf, JXI, jx,jy,jz) = - BB/LLL *
       (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
       - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
 	 * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));

@@ -11,6 +11,8 @@ c_push_field_a_nopml()
   }
   prof_start(pr);
 
+  fields_base_t *pf = &psc.pf;
+
   assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[2] == BND_FLD_PERIODIC);
@@ -40,20 +42,20 @@ c_push_field_a_nopml()
   //                  -> E^(n+0.5), H^(n), j^(n)
 
   foreach_3d(ix, iy, iz, 1, 1) {
-    F3_BASE(EX, ix,iy,iz) +=
-      cny * (F3_BASE(HZ, ix,iy,iz) - F3_BASE(HZ, ix,iy-1,iz)) -
-      cnz * (F3_BASE(HY, ix,iy,iz) - F3_BASE(HY, ix,iy,iz-1)) -
-      .5 * psc.dt * F3_BASE(JXI, ix,iy,iz);
+    XF3_BASE(pf, EX, ix,iy,iz) +=
+      cny * (XF3_BASE(pf, HZ, ix,iy,iz) - XF3_BASE(pf, HZ, ix,iy-1,iz)) -
+      cnz * (XF3_BASE(pf, HY, ix,iy,iz) - XF3_BASE(pf, HY, ix,iy,iz-1)) -
+      .5 * psc.dt * XF3_BASE(pf, JXI, ix,iy,iz);
     
-    F3_BASE(EY, ix,iy,iz) +=
-      cnz * (F3_BASE(HX, ix,iy,iz) - F3_BASE(HX, ix,iy,iz-1)) -
-      cnx * (F3_BASE(HZ, ix,iy,iz) - F3_BASE(HZ, ix-1,iy,iz)) -
-      .5 * psc.dt * F3_BASE(JYI, ix,iy,iz);
+    XF3_BASE(pf, EY, ix,iy,iz) +=
+      cnz * (XF3_BASE(pf, HX, ix,iy,iz) - XF3_BASE(pf, HX, ix,iy,iz-1)) -
+      cnx * (XF3_BASE(pf, HZ, ix,iy,iz) - XF3_BASE(pf, HZ, ix-1,iy,iz)) -
+      .5 * psc.dt * XF3_BASE(pf, JYI, ix,iy,iz);
     
-    F3_BASE(EZ, ix,iy,iz) +=
-      cnx * (F3_BASE(HY, ix,iy,iz) - F3_BASE(HY, ix-1,iy,iz)) -
-      cny * (F3_BASE(HX, ix,iy,iz) - F3_BASE(HX, ix,iy-1,iz)) -
-      .5 * psc.dt * F3_BASE(JZI, ix,iy,iz);
+    XF3_BASE(pf, EZ, ix,iy,iz) +=
+      cnx * (XF3_BASE(pf, HY, ix,iy,iz) - XF3_BASE(pf, HY, ix-1,iy,iz)) -
+      cny * (XF3_BASE(pf, HX, ix,iy,iz) - XF3_BASE(pf, HX, ix,iy-1,iz)) -
+      .5 * psc.dt * XF3_BASE(pf, JZI, ix,iy,iz);
   } foreach_3d_end;
 
   psc_fill_ghosts(&psc.pf, EX, EX + 3);
@@ -62,17 +64,17 @@ c_push_field_a_nopml()
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
 
   foreach_3d(ix, iy, iz, 1, 1) {
-    F3_BASE(HX, ix,iy,iz) -=
-      cny * (F3_BASE(EZ, ix,iy+1,iz) - F3_BASE(EZ, ix,iy,iz)) -
-      cnz * (F3_BASE(EY, ix,iy,iz+1) - F3_BASE(EY, ix,iy,iz));
+    XF3_BASE(pf, HX, ix,iy,iz) -=
+      cny * (XF3_BASE(pf, EZ, ix,iy+1,iz) - XF3_BASE(pf, EZ, ix,iy,iz)) -
+      cnz * (XF3_BASE(pf, EY, ix,iy,iz+1) - XF3_BASE(pf, EY, ix,iy,iz));
     
-    F3_BASE(HY, ix,iy,iz) -=
-      cnz * (F3_BASE(EX, ix,iy,iz+1) - F3_BASE(EX, ix,iy,iz)) -
-      cnx * (F3_BASE(EZ, ix+1,iy,iz) - F3_BASE(EZ, ix,iy,iz));
+    XF3_BASE(pf, HY, ix,iy,iz) -=
+      cnz * (XF3_BASE(pf, EX, ix,iy,iz+1) - XF3_BASE(pf, EX, ix,iy,iz)) -
+      cnx * (XF3_BASE(pf, EZ, ix+1,iy,iz) - XF3_BASE(pf, EZ, ix,iy,iz));
     
-    F3_BASE(HZ, ix,iy,iz) -=
-      cnx * (F3_BASE(EY, ix+1,iy,iz) - F3_BASE(EY, ix,iy,iz)) -
-      cny * (F3_BASE(EX, ix,iy+1,iz) - F3_BASE(EX, ix,iy,iz));
+    XF3_BASE(pf, HZ, ix,iy,iz) -=
+      cnx * (XF3_BASE(pf, EY, ix+1,iy,iz) - XF3_BASE(pf, EY, ix,iy,iz)) -
+      cny * (XF3_BASE(pf, EX, ix,iy+1,iz) - XF3_BASE(pf, EX, ix,iy,iz));
   } foreach_3d_end;
 
   psc_fill_ghosts(&psc.pf, HX, HX + 3);
@@ -88,6 +90,8 @@ c_push_field_b_nopml()
     pr = prof_register("c_field_b", 1., 0, 0);
   }
   prof_start(pr);
+
+  fields_base_t *pf = &psc.pf;
 
   f_real lx = psc.dt / psc.dx[0];
   f_real ly = psc.dt / psc.dx[1];
@@ -111,17 +115,17 @@ c_push_field_b_nopml()
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
   foreach_3d(ix, iy, iz, 1, 1) {
-    F3_BASE(HX, ix,iy,iz) -=
-      cny * (F3_BASE(EZ, ix,iy+1,iz) - F3_BASE(EZ, ix,iy,iz)) -
-      cnz * (F3_BASE(EY, ix,iy,iz+1) - F3_BASE(EY, ix,iy,iz));
+    XF3_BASE(pf, HX, ix,iy,iz) -=
+      cny * (XF3_BASE(pf, EZ, ix,iy+1,iz) - XF3_BASE(pf, EZ, ix,iy,iz)) -
+      cnz * (XF3_BASE(pf, EY, ix,iy,iz+1) - XF3_BASE(pf, EY, ix,iy,iz));
     
-    F3_BASE(HY, ix,iy,iz) -=
-      cnz * (F3_BASE(EX, ix,iy,iz+1) - F3_BASE(EX, ix,iy,iz)) -
-      cnx * (F3_BASE(EZ, ix+1,iy,iz) - F3_BASE(EZ, ix,iy,iz));
+    XF3_BASE(pf, HY, ix,iy,iz) -=
+      cnz * (XF3_BASE(pf, EX, ix,iy,iz+1) - XF3_BASE(pf, EX, ix,iy,iz)) -
+      cnx * (XF3_BASE(pf, EZ, ix+1,iy,iz) - XF3_BASE(pf, EZ, ix,iy,iz));
     
-    F3_BASE(HZ, ix,iy,iz) -=
-      cnx * (F3_BASE(EY, ix+1,iy,iz) - F3_BASE(EY, ix,iy,iz)) -
-      cny * (F3_BASE(EX, ix,iy+1,iz) - F3_BASE(EX, ix,iy,iz));
+    XF3_BASE(pf, HZ, ix,iy,iz) -=
+      cnx * (XF3_BASE(pf, EY, ix+1,iy,iz) - XF3_BASE(pf, EY, ix,iy,iz)) -
+      cny * (XF3_BASE(pf, EX, ix,iy+1,iz) - XF3_BASE(pf, EX, ix,iy,iz));
   } foreach_3d_end;
 
   psc_fill_ghosts(&psc.pf, HX, HX + 3);
@@ -130,20 +134,20 @@ c_push_field_b_nopml()
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
 
   foreach_3d(ix, iy, iz, 1, 1) {
-    F3_BASE(EX, ix,iy,iz) +=
-      cny * (F3_BASE(HZ, ix,iy,iz) - F3_BASE(HZ, ix,iy-1,iz)) -
-      cnz * (F3_BASE(HY, ix,iy,iz) - F3_BASE(HY, ix,iy,iz-1)) -
-      .5 * psc.dt * F3_BASE(JXI, ix,iy,iz);
+    XF3_BASE(pf, EX, ix,iy,iz) +=
+      cny * (XF3_BASE(pf, HZ, ix,iy,iz) - XF3_BASE(pf, HZ, ix,iy-1,iz)) -
+      cnz * (XF3_BASE(pf, HY, ix,iy,iz) - XF3_BASE(pf, HY, ix,iy,iz-1)) -
+      .5 * psc.dt * XF3_BASE(pf, JXI, ix,iy,iz);
     
-    F3_BASE(EY, ix,iy,iz) +=
-      cnz * (F3_BASE(HX, ix,iy,iz) - F3_BASE(HX, ix,iy,iz-1)) -
-      cnx * (F3_BASE(HZ, ix,iy,iz) - F3_BASE(HZ, ix-1,iy,iz)) -
-      .5 * psc.dt * F3_BASE(JYI, ix,iy,iz);
+    XF3_BASE(pf, EY, ix,iy,iz) +=
+      cnz * (XF3_BASE(pf, HX, ix,iy,iz) - XF3_BASE(pf, HX, ix,iy,iz-1)) -
+      cnx * (XF3_BASE(pf, HZ, ix,iy,iz) - XF3_BASE(pf, HZ, ix-1,iy,iz)) -
+      .5 * psc.dt * XF3_BASE(pf, JYI, ix,iy,iz);
     
-    F3_BASE(EZ, ix,iy,iz) +=
-      cnx * (F3_BASE(HY, ix,iy,iz) - F3_BASE(HY, ix-1,iy,iz)) -
-      cny * (F3_BASE(HX, ix,iy,iz) - F3_BASE(HX, ix,iy-1,iz)) -
-      .5 * psc.dt * F3_BASE(JZI, ix,iy,iz);
+    XF3_BASE(pf, EZ, ix,iy,iz) +=
+      cnx * (XF3_BASE(pf, HY, ix,iy,iz) - XF3_BASE(pf, HY, ix-1,iy,iz)) -
+      cny * (XF3_BASE(pf, HX, ix,iy,iz) - XF3_BASE(pf, HX, ix,iy-1,iz)) -
+      .5 * psc.dt * XF3_BASE(pf, JZI, ix,iy,iz);
   } foreach_3d_end;
 
   psc_fill_ghosts(&psc.pf, EX, EX + 3);
