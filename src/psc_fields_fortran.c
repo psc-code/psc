@@ -27,9 +27,11 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
       pf->flds[i] = arr;
     }
   } else {
-    if (nr_comp == NR_FIELDS &&
+    static bool ALLOC_field_called;
+    if (!ALLOC_field_called && nr_comp == NR_FIELDS &&
 	ib[0] == psc.ilg[0] && ib[1] == psc.ilg[1] && ib[2] == psc.ilg[2] &&
 	ie[0] == psc.ihg[0] && ie[1] == psc.ihg[1] && ie[2] == psc.ihg[2]) {
+      ALLOC_field_called = true;
       f_real **fields = ALLOC_field();
       for (int i = 0; i < NR_FIELDS; i++) {
 	pf->flds[i] = fields[i];
