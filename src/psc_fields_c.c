@@ -78,7 +78,7 @@ fields_c_get(fields_c_t *pf, int mb, int me)
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_C(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = F3_BASE(&psc.pf, m, jx,jy,jz);
+	F3_C(pf, m, jx,jy,jz) = F3_BASE(&psc.pf, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -90,7 +90,7 @@ fields_c_put(fields_c_t *pf, int mb, int me)
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_BASE(&psc.pf, m, jx,jy,jz) = F3_C(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]);
+	F3_BASE(&psc.pf, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
   }

@@ -72,6 +72,14 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     creal h0z=.75f-h3*h3;
     creal h1z=.5f*(.5f-h3)*(.5f-h3);
 
+    j1 -= psc.ilo[0];
+    j2 -= psc.ilo[1];
+    j3 -= psc.ilo[2];
+
+    l1 -= psc.ilo[0];
+    l2 -= psc.ilo[1];
+    l3 -= psc.ilo[2];
+
     // FIELD INTERPOLATION
 
     creal exq = 
@@ -142,6 +150,8 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     w = zi * dzi;
     int k3 = nint(w);
     h3 = k3 - w;
+
+    k3 -= psc.ilo[2];
 
     for (int i = -2; i <= 2; i++) {
       S1Z(i) = 0.f;

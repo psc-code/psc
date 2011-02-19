@@ -53,7 +53,8 @@ psc_save_fields_ref()
 {
   if (!field_ref) {
     field_ref = calloc(1, sizeof(*field_ref));
-    fields_base_alloc(field_ref, psc.ilg, psc.ihg, NR_FIELDS);
+    struct psc_patch *patch = &psc.patch[0];
+    fields_base_alloc(&psc.pf, patch->ilg, patch->ihg, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   foreach_patch(patch) {

@@ -101,6 +101,14 @@ do_genc_push_part_xyz(fields_t *pf, particles_t *pp)
     creal h1y=.5f*(.5f-h2)*(.5f-h2);
     creal h1z=.5f*(.5f-h3)*(.5f-h3);
 
+    j1 -= psc.ilo[0];
+    j2 -= psc.ilo[1];
+    j3 -= psc.ilo[2];
+
+    l1 -= psc.ilo[0];
+    l2 -= psc.ilo[1];
+    l3 -= psc.ilo[2];
+
     // FIELD INTERPOLATION
 
 #define INTERP_3D(m, gx, gy, gz, lx, ly, lz)				\
@@ -191,6 +199,10 @@ do_genc_push_part_xyz(fields_t *pf, particles_t *pp)
     h1 = k1 - u;
     h2 = k2 - v;
     h3 = k3 - w;
+
+    k1 -= psc.ilo[0];
+    k2 -= psc.ilo[1];
+    k3 -= psc.ilo[2];
 
     for (int i = -2; i <= 2; i++) {
       S1X(i) = 0.f;

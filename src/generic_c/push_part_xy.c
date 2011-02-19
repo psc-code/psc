@@ -82,6 +82,14 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
     creal h1x=.5f*(.5f-h1)*(.5f-h1);
     creal h1y=.5f*(.5f-h2)*(.5f-h2);
 
+    j1 -= psc.ilo[0];
+    j2 -= psc.ilo[1];
+    j3 -= psc.ilo[2];
+
+    l1 -= psc.ilo[0];
+    l2 -= psc.ilo[1];
+    l3 -= psc.ilo[2];
+
     // FIELD INTERPOLATION
 
     creal exq = (gmy*(hmx*F3(EX, l1-1,j2-1,j3) +
@@ -191,6 +199,9 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
     int k2 = nint(v);
     h1 = k1 - u;
     h2 = k2 - v;
+
+    k1 -= psc.ilo[0];
+    k2 -= psc.ilo[1];
 
     for (int i = -2; i <= 2; i++) {
       S1X(i) = 0.f;

@@ -181,8 +181,9 @@ output_c_setup(struct psc_output_c *out)
     fields_base_t *f = &pfd->flds[pfd->nr_flds];
     out->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
-      
-    fields_base_alloc(f, psc.ilg, psc.ihg, of->nr_comp);
+
+    struct psc_patch *patch = &psc.patch[0];
+    fields_base_alloc(f, patch->ilg, patch->ihg, of->nr_comp);
     for (int m = 0; m < of->nr_comp; m++) {
       f->name[m] = strdup(of->fld_names[m]);
     }
@@ -194,7 +195,8 @@ output_c_setup(struct psc_output_c *out)
   struct psc_fields_list *tfd = &out->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    fields_base_alloc(&tfd->flds[i], psc.ilg, psc.ihg, pfd->flds[i].nr_comp);
+    struct psc_patch *patch = &psc.patch[0];
+    fields_base_alloc(&tfd->flds[i], patch->ilg, patch->ihg, pfd->flds[i].nr_comp);
     fields_base_zero_all(&tfd->flds[i]);
     for (int m = 0; m < pfd->flds[i].nr_comp; m++) {
       tfd->flds[i].name[m] = strdup(pfd->flds[i].name[m]);
@@ -283,9 +285,10 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
     fields_base_t *f = &list_in->flds[i];
+    struct psc_patch *patch = &psc.patch[0];
     for (int m = 0; m < f->nr_comp; m++) {
       fields_base_t *fld = &list->flds[list->nr_flds++];
-      fields_base_alloc_with_array(fld, psc.ilg, psc.ihg, 1,
+      fields_base_alloc_with_array(fld, patch->ilg, patch->ihg, 1,
 				   &F3_BASE(f,m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
       fld->name[0] = strdup(f->name[m]);
     }

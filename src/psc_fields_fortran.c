@@ -101,7 +101,7 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
+	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -120,7 +120,7 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]);
+	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -142,14 +142,15 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
   __gotten = 1;
 
   if (!__flds.flds) {
-    fields_fortran_alloc(&__flds, psc.ilg, psc.ihg, NR_FIELDS);
+    struct psc_patch *patch = &psc.patch[0];
+    fields_fortran_alloc(&__flds, patch->ilg, patch->ihg, NR_FIELDS);
   }
   *pf = __flds;
 
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
+	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -172,7 +173,7 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
-	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]);
+	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -206,7 +207,7 @@ fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val)
 {
   foreach_patch(patch) {
     foreach_3d_g(patch, jx, jy, jz) {
-      F3_FORTRAN(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = val;
+      F3_FORTRAN(pf, m, jx,jy,jz) = val;
     } foreach_3d_g_end;
   }
 }
@@ -216,7 +217,7 @@ fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from)
 {
   foreach_patch(patch) {
     foreach_3d_g(patch, jx, jy, jz) {
-      F3_FORTRAN(pf, m_to, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = F3_FORTRAN(pf, m_from, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]);
+      F3_FORTRAN(pf, m_to, jx,jy,jz) = F3_FORTRAN(pf, m_from, jx,jy,jz);
     } foreach_3d_g_end;
   }
 }
