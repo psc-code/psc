@@ -124,16 +124,18 @@ curvedfoil_init_field(struct psc_case *Case)
 {
   fields_base_t *pf = &psc.pf;
   // FIXME, do we need the ghost points?
-  foreach_3d_g(jx, jy, jz) {
-    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-    double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-    
-    // FIXME, why this time?
-    XF3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-    XF3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-    XF3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-    XF3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
-  } foreach_3d_g_end;
+  foreach_patch(patch) {
+    foreach_3d_g(patch, jx, jy, jz) {
+      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double xx = CRDX(patch, jx), yy = CRDY(patch, jy), zz = CRDZ(patch, jz);
+      
+      // FIXME, why this time?
+      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+    } foreach_3d_g_end;
+  }
 }
 
 #if 0

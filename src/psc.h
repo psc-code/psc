@@ -176,6 +176,8 @@ typedef fields_sse2_real_t fields_base_real_t;
 #error unknown FIELDS_BASE
 #endif
 
+#define F3_BASE(pf, m, jx,jy,jz) XF3_BASE(pf, m, (jx)+psc.ilo[0], (jy)+psc.ilo[1], (jz)+psc.ilo[2])
+
 // user settable parameters
 struct psc_param {
   double qq;
@@ -325,6 +327,25 @@ struct psc_moment_ops {
   void (*calc_vv)(fields_base_t *pf);
 };
 
+struct psc_patch {
+  int ilo[3], ihi[3]; // ilo[d] <= i < ihi[d]
+  int ilg[3], ihg[3];
+  int off[3];
+};
+
+static inline void
+psc_local_to_global_indices(struct psc_patch *patch, int jx, int jy, int jz,
+			    int *ix, int *iy, int *iz)
+{
+  *ix = jx + patch->off[0];
+  *iy = jy + patch->off[1];
+  *iz = jz + patch->off[2];
+}
+
+#define CRDX(patch, jx) (psc.dx[0] * ((jx) + patch->off[0]))
+#define CRDY(patch, jy) (psc.dx[1] * ((jy) + patch->off[1]))
+#define CRDZ(patch, jz) (psc.dx[2] * ((jz) + patch->off[2]))
+
 struct psc {
   struct psc_ops *ops;
   struct psc_push_field_ops *push_field_ops;
@@ -356,6 +377,7 @@ struct psc {
   fields_base_t pf;
   struct mrc_domain *mrc_domain;
 
+  struct psc_patch patch[1];
   // local domain size
   int ilo[3], ihi[3]; // local domain: il, il+1, ..., ih-1
   int ibn[3];         // number of ghost points
@@ -372,21 +394,29 @@ struct psc {
   double time_start;
 };
 
-#define foreach_3d_g(ix, iy, iz)			\
-  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {	\
-    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {	\
-      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++)
-
-#define foreach_3d_g_end			\
-  } }
-
-#define foreach_3d(ix, iy, iz, l, r)					\
-  for (int iz = psc.ilo[2] - l; iz < psc.ihi[2] + r; iz++) {		\
-    for (int iy = psc.ilo[1] - l; iy < psc.ihi[1] + r; iy++) {		\
-      for (int ix = psc.ilo[0] - l; ix < psc.ihi[0] + r; ix++)
+#define foreach_3d(patch, ix, iy, iz, l, r) {				\
+  int __ilo[3] = { patch->ilo[0] - l, patch->ilo[1] - l, patch->ilo[2] - l }; \
+  int __ihi[3] = { patch->ihi[0] + r, patch->ihi[1] + r, patch->ihi[2] + r }; \
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
 
 #define foreach_3d_end				\
-  } }
+  } } }
+
+#define foreach_3d_g(patch, ix, iy, iz) {				\
+  int __ilo[3] = { patch->ilg[0], patch->ilg[1], patch->ilg[2] };	\
+  int __ihi[3] = { patch->ihg[0], patch->ihg[1], patch->ihg[2] };	\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define foreach_3d_g_end				\
+  } } }
+
+#define foreach_patch(patch)				\
+  for (struct psc_patch *patch = &psc.patch[0]; patch < &psc.patch[1]; patch++)
+
 
 // ----------------------------------------------------------------------
 // psc_config

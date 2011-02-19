@@ -213,16 +213,18 @@ cone_init_field(struct psc_case *Case)
 {
 #if 0
   // FIXME, do we need the ghost points?
-  foreach_3d_g(jx, jy, jz) {
-    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-    double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-    
-    // FIXME, why this time?
-    FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-    FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-    FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-    FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
-  } foreach_3d_g_end;
+  foreach_patch(patch) {
+    foreach_3d_g(patch, jx, jy, jz) {
+      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double xx = CRDX(patch, xx), yy = CRDY(patch, yy), zz = CRDZ(patch, zz);
+      
+      // FIXME, why this time?
+      FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+      FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+      FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+    } foreach_3d_g_end;
+  }
 #endif
 }
 

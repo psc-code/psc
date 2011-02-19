@@ -11,14 +11,17 @@ static void
 setup_fields()
 {
   fields_base_t *pf = &psc.pf;
-  foreach_3d_g(ix, iy, iz) {
-    f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-    f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
-    XF3_BASE(pf, JXI, ix,iy,iz) = cos(xx) * sin(zz);
-    XF3_BASE(pf, JYI, ix,iy,iz) = sin(xx) * sin(zz);
-    XF3_BASE(pf, JZI, ix,iy,iz) = cos(xx) * cos(zz);
-  } foreach_3d_g_end;
-
+  foreach_patch(patch) {
+    foreach_3d_g(patch, jx, jy, jz) {
+      int ix, iy, iz;
+      psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
+      f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
+      f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
+      F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(zz);
+      F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(zz);
+    } foreach_3d_g_end;
+  }
 }
 
 int

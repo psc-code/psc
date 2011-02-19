@@ -98,6 +98,13 @@ psc_init_partition(int *n_part, int *particle_label_offset)
     psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
     psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
+
+    psc.patch[0].ilo[d] = 0;
+    psc.patch[0].ihi[d] = ldims[d];
+    psc.patch[0].ilg[d] = psc.patch[0].ilo[d] - psc.ibn[d];
+    psc.patch[0].ihg[d] = psc.patch[0].ihi[d] + psc.ibn[d];
+    psc.patch[0].off[d] = off[d];
+
     int min_size = 1;
     if (lidx[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 

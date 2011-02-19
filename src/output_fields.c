@@ -12,99 +12,113 @@
   int dy __unused = (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) ? 0 : 1; \
   int dz __unused = (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) ? 0 : 1
 
-#define JX_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, JXI,ix,iy,iz) + XF3_BASE(&psc.pf, JXI,ix-dx,iy,iz)))
-#define JY_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, JYI,ix,iy,iz) + XF3_BASE(&psc.pf, JYI,ix,iy-dy,iz)))
-#define JZ_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, JZI,ix,iy,iz) + XF3_BASE(&psc.pf, JZI,ix,iy,iz-dz)))
+#define JX_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, JXI,ix,iy,iz) + F3_BASE(&psc.pf, JXI,ix-dx,iy,iz)))
+#define JY_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, JYI,ix,iy,iz) + F3_BASE(&psc.pf, JYI,ix,iy-dy,iz)))
+#define JZ_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, JZI,ix,iy,iz) + F3_BASE(&psc.pf, JZI,ix,iy,iz-dz)))
 
 static void
 calc_j(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
-    XF3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
-    XF3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
+      F3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
+      F3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
-#define EX_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, EX,ix,iy,iz) + XF3_BASE(&psc.pf, EX,ix-dx,iy,iz)))
-#define EY_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, EY,ix,iy,iz) + XF3_BASE(&psc.pf, EY,ix,iy-dy,iz)))
-#define EZ_CC(ix,iy,iz) (.5f * (XF3_BASE(&psc.pf, EZ,ix,iy,iz) + XF3_BASE(&psc.pf, EZ,ix,iy,iz-dz)))
+#define EX_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, EX,ix,iy,iz) + F3_BASE(&psc.pf, EX,ix-dx,iy,iz)))
+#define EY_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, EY,ix,iy,iz) + F3_BASE(&psc.pf, EY,ix,iy-dy,iz)))
+#define EZ_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, EZ,ix,iy,iz) + F3_BASE(&psc.pf, EZ,ix,iy,iz-dz)))
 
 static void
 calc_E(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
-    XF3_BASE(f, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
-    XF3_BASE(f, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
+      F3_BASE(f, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
+      F3_BASE(f, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
-#define HX_CC(ix,iy,iz) (.25f*(XF3_BASE(&psc.pf, HX,ix,iy,iz   ) + XF3_BASE(&psc.pf, HX,ix,iy-dy,iz   ) + \
-			       XF3_BASE(&psc.pf, HX,ix,iy,iz-dz) + XF3_BASE(&psc.pf, HX,ix,iy-dy,iz-dz)))
-#define HY_CC(ix,iy,iz) (.25f*(XF3_BASE(&psc.pf, HY,ix,iy,iz   ) + XF3_BASE(&psc.pf, HY,ix-dx,iy,iz   ) + \
-			       XF3_BASE(&psc.pf, HY,ix,iy,iz-dz) + XF3_BASE(&psc.pf, HY,ix-dx,iy,iz-dz)))
-#define HZ_CC(ix,iy,iz) (.25f*(XF3_BASE(&psc.pf, HZ,ix,iy   ,iz) + XF3_BASE(&psc.pf, HZ,ix-dx,iy   ,iz) + \
-			       XF3_BASE(&psc.pf, HZ,ix,iy-dy,iz) + XF3_BASE(&psc.pf, HZ,ix-dx,iy-dy,iz)))
+#define HX_CC(ix,iy,iz) (.25f*(F3_BASE(&psc.pf, HX,ix,iy,iz   ) + F3_BASE(&psc.pf, HX,ix,iy-dy,iz   ) + \
+			       F3_BASE(&psc.pf, HX,ix,iy,iz-dz) + F3_BASE(&psc.pf, HX,ix,iy-dy,iz-dz)))
+#define HY_CC(ix,iy,iz) (.25f*(F3_BASE(&psc.pf, HY,ix,iy,iz   ) + F3_BASE(&psc.pf, HY,ix-dx,iy,iz   ) + \
+			       F3_BASE(&psc.pf, HY,ix,iy,iz-dz) + F3_BASE(&psc.pf, HY,ix-dx,iy,iz-dz)))
+#define HZ_CC(ix,iy,iz) (.25f*(F3_BASE(&psc.pf, HZ,ix,iy   ,iz) + F3_BASE(&psc.pf, HZ,ix-dx,iy   ,iz) + \
+			       F3_BASE(&psc.pf, HZ,ix,iy-dy,iz) + F3_BASE(&psc.pf, HZ,ix-dx,iy-dy,iz)))
 
 static void
 calc_H(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
-    XF3_BASE(f, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
-    XF3_BASE(f, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
+      F3_BASE(f, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
+      F3_BASE(f, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 static void
 calc_jdote(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
-    XF3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
-    XF3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
+      F3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
+      F3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 static void
 calc_poyn(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
-				EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
-    XF3_BASE(f, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
-				EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
-    XF3_BASE(f, 2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
-				EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
+				 EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
+      F3_BASE(f, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
+				 EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
+      F3_BASE(f, 2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
+				 EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 static void
 calc_E2(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
-    XF3_BASE(f, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
-    XF3_BASE(f, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
+      F3_BASE(f, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
+      F3_BASE(f, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 static void
 calc_H2(fields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(ix, iy, iz, 0, 0) {
-    XF3_BASE(f, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
-    XF3_BASE(f, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
-    XF3_BASE(f, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(patch) {
+    foreach_3d(patch, ix, iy, iz, 0, 0) {
+      F3_BASE(f, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
+      F3_BASE(f, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
+      F3_BASE(f, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 struct output_field {
