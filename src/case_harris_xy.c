@@ -208,13 +208,13 @@ Jz(struct harris_xy *harris, real x, real y)
 }
 
 static void
-harris_xy_init_field(struct psc_case *Case)
+harris_xy_init_field(struct psc_case *Case, struct psc_mfields *flds)
 {
   struct harris_xy *harris = Case->ctx;
 
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       double dx = psc.dx[0], dy = psc.dx[1];
       double xx = CRDX(p, jx), yy = CRDY(p, jy);

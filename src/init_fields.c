@@ -24,7 +24,7 @@ void
 psc_init_field(struct psc_mfields *flds)
 {
   if (psc.Case) {
-    psc_case_init_field(psc.Case);
+    psc_case_init_field(psc.Case, flds);
     if (psc.domain.use_pml) {
       psc_init_field_pml(flds);
     }

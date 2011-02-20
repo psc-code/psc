@@ -87,7 +87,7 @@ harris_init_param(struct psc_case *Case)
 }
 
 static void
-harris_init_field(struct psc_case *Case)
+harris_init_field(struct psc_case *Case, struct psc_mfields *flds)
 {
   struct harris *harris = Case->ctx;
 
@@ -99,7 +99,7 @@ harris_init_field(struct psc_case *Case)
 
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       double dx = psc.dx[0], dz = psc.dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
@@ -223,7 +223,7 @@ test_yz_init_param(struct psc_case *Case)
 }
 
 static void
-test_yz_init_field(struct psc_case *Case)
+test_yz_init_field(struct psc_case *Case, struct psc_mfields *flds)
 {
   struct harris *harris = Case->ctx;
 
@@ -235,7 +235,7 @@ test_yz_init_field(struct psc_case *Case)
 
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       double dy = psc.dx[1], dz = psc.dx[2];
       double yy = CRDY(p, jy), zz = CRDZ(p, jz);
