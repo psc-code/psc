@@ -43,13 +43,18 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me)
   assert(!__gotten);
   __gotten = true;
 
-  pf->flds = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+  pf->flds = _mm_malloc(NR_FIELDS*sz*sizeof(sse2_real), 16);
   
   int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
-    for(int n = 0; n < psc.fld_size; n++){
+    for(int n = 0; n < sz; n++){
       //preserve Fortran ordering for now
-      pf->flds[m * psc.fld_size + n] =
+      pf->flds[m * sz + n] =
 	(sse2_real) ((&F3_BASE(&psc.pf, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
     }
   }
@@ -62,11 +67,16 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
   assert(__gotten);
   __gotten = false;
 
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
   int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
-    for(int n = 0; n < psc.fld_size; n++){
+    for(int n = 0; n < sz; n++){
       ((&F3_BASE(&psc.pf, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
-	pf->flds[m * psc.fld_size + n];
+	pf->flds[m * sz + n];
     }
   }
   _mm_free(pf->flds);
@@ -77,8 +87,13 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
 void
 fields_sse2_zero(fields_sse2_t *pf, int m)
 {
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
   memset(&F3_SSE2(pf, m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]), 0,
-	 psc.fld_size * sizeof(fields_sse2_real_t));
+	 sz * sizeof(fields_sse2_real_t));
 }
 
 void

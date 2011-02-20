@@ -80,10 +80,14 @@ countsort_sort()
     pr = prof_register("countsort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  
+ 
+  struct psc_patch *patch = &psc.patch[0];
   find_cell_indices(&psc.pp);
 
-  int N = psc.fld_size;
+  int N = 1;
+  for (int d = 0; d < 3; d++) {
+    N *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
   unsigned int *cnts = malloc(N * sizeof(*cnts));
   memset(cnts, 0, N * sizeof(*cnts));
 
@@ -137,9 +141,13 @@ countsort2_sort()
     pr = prof_register("countsort2_sort", 1., 0, 0);
   }
 
+  struct psc_patch *patch = &psc.patch[0];
   find_cell_indices(&psc.pp);
 
-  int N = psc.fld_size;
+  int N = 1;
+  for (int d = 0; d < 3; d++) {
+    N *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
 
   unsigned int *cnis = malloc(psc.pp.n_part * sizeof(*cnis));
   for (int i = 0; i < psc.pp.n_part; i++) {

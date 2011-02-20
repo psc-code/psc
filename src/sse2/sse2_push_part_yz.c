@@ -371,6 +371,11 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     //---------------------------------------------
     //Vector versions of integer parameters
     struct psc_patch *patch = &psc.patch[0];
+    int sz = 1;
+    for (int d = 0; d < 3; d++) {
+      sz *= patch->ldims[d] + 2 * psc.ibn[d];
+    }
+
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(-psc.ibn[0]);					
     ilg[1].r = pv_set1_int(-psc.ibn[1]);					
@@ -378,7 +383,7 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
     img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
     img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
-    fld_size.r = pv_set1_int(psc.fld_size);				
+    fld_size.r = pv_set1_int(sz);				
     		
     //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
@@ -536,19 +541,25 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   psc.p2A = 0.;
   psc.p2B = 0.;
   
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+
   for (int m = JXI; m <= JZI; m++) {
-    memset(&pf->flds[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
+    memset(&pf->flds[m*sz], 0, sz * sizeof(sse2_real));
   }  
 
   //---------------------------------------------
   // An implementation of Will's 'squished' currents
   // that excludes the x direction all together
   sse2_real * restrict s_jxi, * restrict s_jyi, * restrict s_jzi;
-  int sz = ((psc.patch[0].ldims[1] + 2 * psc.ibn[1]) * 
-	    (psc.patch[0].ldims[2] + 2 * psc.ibn[2]));
-  s_jxi = calloc(sz, sizeof(sse2_real));
-  s_jyi = calloc(sz, sizeof(sse2_real));
-  s_jzi = calloc(sz, sizeof(sse2_real));
+  int jsz = ((patch->ldims[1] + 2 * psc.ibn[1]) * 
+	     (patch->ldims[2] + 2 * psc.ibn[2]));
+  s_jxi = calloc(jsz, sizeof(sse2_real));
+  s_jyi = calloc(jsz, sizeof(sse2_real));
+  s_jzi = calloc(jsz, sizeof(sse2_real));
 
   // -------------------------------
   // Macros for accessing the 'squished' currents allocated above
@@ -585,7 +596,6 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     
     //-----------------------------------------------------
     //Vector versions of integer parameters
-    struct psc_patch *patch = &psc.patch[0];
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(-psc.ibn[0]);					
     ilg[1].r = pv_set1_int(-psc.ibn[1]);					
@@ -593,7 +603,7 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
     img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
     img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
-    fld_size.r = pv_set1_int(psc.fld_size);				
+    fld_size.r = pv_set1_int(sz);				
     
     //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
