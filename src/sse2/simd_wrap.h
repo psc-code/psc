@@ -10,7 +10,7 @@
 ///
 /// FIXME: gh2 and gh3 should switch positions in the argument list
 
-#define F3YZ(m, j,k) F3_SSE2(pf, m, psc.ilo[0],j,k)
+#define F3YZ(m, j,k) F3_SSE2(pf, m, 0,j,k)
 
 #define INTERP_FIELD_YZ_SLOW(m, jl2, jl3, gh3, gh2, var) do {		\
     for (int c = 0; c < VEC_SIZE; c++) {				\

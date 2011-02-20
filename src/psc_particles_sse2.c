@@ -89,7 +89,7 @@ particles_sse2_get(particles_sse2_t *particles)
     part->mni = base_part->mni;
     part->wni = base_part->wni;
     int j1 = part->xi * dxi + .5;
-    assert(j1 == psc.ilo[0]); ///< \FIXME This assert only fits for the yz pusher.
+    assert(j1 == 0); ///< \FIXME This assert only fits for the yz pusher.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){

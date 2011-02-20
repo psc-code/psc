@@ -86,7 +86,7 @@ fields_sse2_set(fields_sse2_t *pf, int m, fields_sse2_real_t val)
 {
   foreach_patch(patch) {
     foreach_3d_g(patch, jx, jy, jz) {
-      F3_SSE2(pf, m, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = val;
+      F3_SSE2(pf, m, jx,jy,jz) = val;
     } foreach_3d_g_end;
   }
 }
@@ -96,7 +96,7 @@ fields_sse2_copy(fields_sse2_t *pf, int m_to, int m_from)
 {
   foreach_patch(patch) {
     foreach_3d_g(patch, jx, jy, jz) {
-      F3_SSE2(pf, m_to, jx+psc.ilo[0],jy+psc.ilo[1],jz+psc.ilo[2]) = F3_SSE2(pf, m_from, jx, jy, jz);
+      F3_SSE2(pf, m_to, jx,jy,jz) = F3_SSE2(pf, m_from, jx,jy,jz);
     } foreach_3d_g_end;
   }
 }

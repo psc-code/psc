@@ -911,9 +911,9 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   // FIXME: Assumes x-dir always rounds down to 0!
   for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
     for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
-      F3_SSE2(pf, JXI, psc.ilo[0]+0,iy,iz) = JSX(iy, iz);
-      F3_SSE2(pf, JYI, psc.ilo[0]+0,iy,iz) = JSY(iy, iz);
-      F3_SSE2(pf, JZI, psc.ilo[0]+0,iy,iz) = JSZ(iy, iz);
+      F3_SSE2(pf, JXI, 0,iy,iz) = JSX(iy, iz);
+      F3_SSE2(pf, JYI, 0,iy,iz) = JSY(iy, iz);
+      F3_SSE2(pf, JZI, 0,iy,iz) = JSZ(iy, iz);
     }
   }
   // Always pick up your trash
