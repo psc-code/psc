@@ -87,7 +87,6 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   psc.fld_size = 1;
   for (int d = 0; d < 3; d++) {
     psc.ibn[d] = psc.domain.nghost[d];
-    psc.ilg[d] = off[d] - psc.ibn[d];
     psc.fld_size *= ldims[d] + 2 * psc.ibn[d];
 
     psc.patch[0].ldims[d] = ldims[d];

@@ -31,7 +31,7 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
   } else {
     static bool ALLOC_field_called;
     if (!ALLOC_field_called && nr_comp == NR_FIELDS &&
-	ib[0] == psc.ilg[0] && ib[1] == psc.ilg[1] && ib[2] == psc.ilg[2] &&
+	ib[0] == -psc.ibn[0] && ib[1] == -psc.ibn[1] && ib[2] == -psc.ibn[2] &&
 	ie[0] == patch->ldims[0] + psc.ibn[0] &&
 	ie[1] == patch->ldims[1] + psc.ibn[1] &&
 	ie[2] == patch->ldims[2] + psc.ibn[2]) {

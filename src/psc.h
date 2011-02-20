@@ -382,7 +382,6 @@ struct psc {
   struct psc_patch patch[1];
   // local domain size
   int ibn[3];         // number of ghost points
-  int ilg[3];         // local domain incl ghost points: ilg, ilg+1, ..., ihg-1
   int fld_size;       // total # points per field incl. ghost points
 
   // C data structures

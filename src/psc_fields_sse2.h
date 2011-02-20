@@ -16,9 +16,9 @@ typedef struct {
 // FIXME, this needs to be looked into for efficiency
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
   ((((((fldnr)								\
-       *(psc.patch[0].ldims[2] + 2*psc.ibn[0]) + ((jz)-psc.ilg[2]))	\
-      *(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((jy)-psc.ilg[1]))	\
-     *(psc.patch[0].ldims[0] + 2*psc.ibn[0]) + ((jx)-psc.ilg[0]))))
+       *(psc.patch[0].ldims[2] + 2*psc.ibn[0]) + ((jz)+psc.ibn[2]))	\
+      *(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((jy)+psc.ibn[1]))	\
+     *(psc.patch[0].ldims[0] + 2*psc.ibn[0]) + ((jx)+psc.ibn[0]))))
 
 #if 1
 

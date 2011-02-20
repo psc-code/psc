@@ -77,7 +77,7 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
 void
 fields_sse2_zero(fields_sse2_t *pf, int m)
 {
-  memset(&F3_SSE2(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
+  memset(&F3_SSE2(pf, m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]), 0,
 	 psc.fld_size * sizeof(fields_sse2_real_t));
 }
 
