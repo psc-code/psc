@@ -15,7 +15,7 @@
 
 // ----------------------------------------------------------------------
 
-//#define BOUNDS_CHECK
+#define BOUNDS_CHECK
 
 // ----------------------------------------------------------------------
 
@@ -330,9 +330,8 @@ struct psc_moment_ops {
 };
 
 struct psc_patch {
-  int ldims[3];        // size of local domain (w/o ghost points)
-  int ilg[3], ihg[3];
-  int off[3];         // ix[d] + off[d] is global index for local ix
+  int ldims[3];       // size of local domain (w/o ghost points)
+  int off[3];         // local to global offset
 };
 
 static inline void
@@ -398,7 +397,7 @@ struct psc {
 
 #define foreach_3d(patch, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\
-  int __ihi[3] = { patch->ihi[0] + r, patch->ihi[1] + r, patch->ihi[2] + r }; \
+  int __ihi[3] = { patch->ldims[0] + r, patch->ldims[1] + r, patch->ldims[2] + r }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -407,8 +406,10 @@ struct psc {
   } } }
 
 #define foreach_3d_g(patch, ix, iy, iz) {				\
-  int __ilo[3] = { patch->ilg[0], patch->ilg[1], patch->ilg[2] };	\
-  int __ihi[3] = { patch->ihg[0], patch->ihg[1], patch->ihg[2] };	\
+  int __ilo[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };		\
+  int __ihi[3] = { patch->ldims[0] + psc.ibn[0],			\
+		   patch->ldims[1] + psc.ibn[1],			\
+		   patch->ldims[2] + psc.ibn[2] };			\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)

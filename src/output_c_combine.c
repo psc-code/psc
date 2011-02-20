@@ -38,7 +38,7 @@ write_fields_combine(struct psc_fields_list *list,
     for (int m = 0; m < list->nr_flds; m++) {
       int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
       fields_base_real_t *s_data = &F3_BASE(&list->flds[m], 0,
-					    patch->ilg[0], patch->ilg[1], patch->ilg[2]);
+					    -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]);
       
       for (int d = 0; d < 3; d++) {
 	s_ilo[d] = psc.ilo[d];

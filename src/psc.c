@@ -263,9 +263,9 @@ ascii_dump_field(int m, const char *fname)
   fields_base_t *pf = &psc.pf;
   FILE *file = fopen(filename, "w");
   foreach_patch(patch) {
-    for (int iz = patch->ilg[2]; iz < patch->ihg[2]; iz++) {
-      for (int iy = patch->ilg[1]; iy < patch->ihg[1]; iy++) {
-	for (int ix = patch->ilg[0]; ix < patch->ihg[0]; ix++) {
+    for (int iz = -psc.ibn[2]; iz < patch->ldims[2] + psc.ibn[2]; iz++) {
+      for (int iy = -psc.ibn[1]; iy < patch->ldims[1] + psc.ibn[1]; iy++) {
+	for (int ix = -psc.ibn[0]; ix < patch->ldims[0] +  psc.ibn[0]; ix++) {
 	  fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
 	}
 	fprintf(file, "\n");
@@ -618,7 +618,11 @@ psc_init(const char *case_name)
   psc_init_particles(particle_label_offset);
 
   struct psc_patch *patch = &psc.patch[0];
-  fields_base_alloc(&psc.pf, patch->ilg, patch->ihg, NR_FIELDS);
+  int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+  int ihg[3] = { patch->ldims[0] + psc.ibn[0],
+		 patch->ldims[1] + psc.ibn[1],
+		 patch->ldims[2] + psc.ibn[2] };
+  fields_base_alloc(&psc.pf, ilg, ihg, NR_FIELDS);
   psc_init_field();
 }
 
