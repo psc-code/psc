@@ -8,14 +8,16 @@ void INIT_field(void);
 static void
 psc_init_field_pml(void)
 {
-  fields_base_copy(&psc.pf, DX, EX);
-  fields_base_copy(&psc.pf, DY, EY);
-  fields_base_copy(&psc.pf, DZ, EZ);
-  fields_base_copy(&psc.pf, BX, HX);
-  fields_base_copy(&psc.pf, BY, HY);
-  fields_base_copy(&psc.pf, BZ, HZ);
-  fields_base_set(&psc.pf, EPS, 1.);
-  fields_base_set(&psc.pf, MU, 1.);
+  foreach_patch(p) {
+    fields_base_copy(&psc.flds.f[p], DX, EX);
+    fields_base_copy(&psc.flds.f[p], DY, EY);
+    fields_base_copy(&psc.flds.f[p], DZ, EZ);
+    fields_base_copy(&psc.flds.f[p], BX, HX);
+    fields_base_copy(&psc.flds.f[p], BY, HY);
+    fields_base_copy(&psc.flds.f[p], BZ, HZ);
+    fields_base_set(&psc.flds.f[p], EPS, 1.);
+    fields_base_set(&psc.flds.f[p], MU, 1.);
+  }
 }
 
 void

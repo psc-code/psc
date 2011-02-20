@@ -116,12 +116,12 @@ curvedfoil_init_param(struct psc_case *Case)
 static void
 curvedfoil_init_field(struct psc_case *Case)
 {
-  fields_base_t *pf = &psc.pf;
   // FIXME, do we need the ghost points?
-  foreach_patch(patch) {
-    foreach_3d_g(patch, jx, jy, jz) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d_g(p, jx, jy, jz) {
       double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-      double xx = CRDX(patch, jx), yy = CRDY(patch, jy), zz = CRDZ(patch, jz);
+      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
       F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);

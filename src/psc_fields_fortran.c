@@ -91,7 +91,8 @@ fields_fortran_free(fields_fortran_t *pf)
 void
 fields_fortran_get(fields_fortran_t *pf, int mb, int me)
 {
-  fields_fortran_t *pf_base = &psc.pf;
+  assert(psc.nr_patches == 1);
+  fields_fortran_t *pf_base = &psc.flds.f[0];
   *pf = *pf_base;
 }
 

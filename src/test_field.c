@@ -10,11 +10,11 @@
 static void
 setup_fields()
 {
-  fields_base_t *pf = &psc.pf;
-  foreach_patch(patch) {
-    foreach_3d_g(patch, jx, jy, jz) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);

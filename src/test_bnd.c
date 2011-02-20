@@ -10,13 +10,14 @@
 static void
 setup_jx()
 {
-  foreach_patch(patch) {
-    foreach_3d_g(patch, jx, jy, jz) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
-      F3_BASE(&psc.pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
+      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_g_end;
   }
 }
@@ -24,13 +25,14 @@ setup_jx()
 static void
 setup_jx_noghost()
 {
-  foreach_patch(patch) {
-    foreach_3d(patch, jx, jy, jz, 0, 0) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
-      F3_BASE(&psc.pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
+      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_end;
   }
 }
@@ -53,14 +55,14 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_jx();
   //  psc_dump_field(JXI, "jx0");
-  psc_add_ghosts(&psc.pf, JXI, JXI + 1);
+  psc_add_ghosts(&psc.flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx();
-  psc_add_ghosts(&psc.pf, JXI, JXI + 1);
+  psc_add_ghosts(&psc.flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref_noghost(1e-10);
   psc_destroy();
@@ -70,14 +72,14 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_jx_noghost();
   psc_dump_field(JXI, "jx0");
-  psc_fill_ghosts(&psc.pf, JXI, JXI + 1);
+  psc_fill_ghosts(&psc.flds, JXI, JXI + 1);
   psc_dump_field(JXI, "jx1");
   psc_save_fields_ref();
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_jx_noghost();
-  psc_fill_ghosts(&psc.pf, JXI, JXI + 1);
+  psc_fill_ghosts(&psc.flds, JXI, JXI + 1);
   psc_dump_field(JXI, "jx2");
   psc_check_currents_ref(1e-10);
   psc_destroy();

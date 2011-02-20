@@ -121,8 +121,8 @@ psc_integrate()
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
     psc_push_particles();
-    psc_add_ghosts(&psc.pf, JXI, JXI + 3);
-    psc_fill_ghosts(&psc.pf, JXI, JXI + 3);
+    psc_add_ghosts(&psc.flds, JXI, JXI + 3);
+    psc_fill_ghosts(&psc.flds, JXI, JXI + 3);
     psc_exchange_particles();
     time_stop(STAT_TIME_PARTICLE);
 

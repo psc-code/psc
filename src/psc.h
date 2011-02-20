@@ -253,6 +253,10 @@ struct psc_domain {
   bool use_pml;
 };
 
+struct psc_mfields {
+  fields_base_t *f;
+};
+
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
@@ -366,7 +370,9 @@ struct psc {
   double dx[3];
 
   particles_base_t pp;
-  fields_base_t pf;
+
+  struct psc_mfields flds;
+  //  fields_base_t pf;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
@@ -450,8 +456,8 @@ void psc_integrate(void);
 void psc_push_particles(void);
 void psc_push_field_a(void);
 void psc_push_field_b(void);
-void psc_add_ghosts(fields_base_t *pf, int mb, int me);
-void psc_fill_ghosts(fields_base_t *pf, int mb, int me);
+void psc_add_ghosts(struct psc_mfields *flds, int mb, int me);
+void psc_fill_ghosts(struct psc_mfields *flds, int mb, int me);
 void psc_exchange_particles(void);
 void psc_calc_densities(fields_base_t *pf);
 void psc_calc_moments_v(fields_base_t *pf);

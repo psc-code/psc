@@ -80,10 +80,12 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 		 patch->ldims[2] + psc.ibn[2] };
   fields_c_alloc(pf, ilg, ihg, NR_FIELDS);
 
-  foreach_patch(patch) {
+  assert(psc.nr_patches == 1);
+  foreach_patch(p) {
+    fields_base_t *pf_base = &psc.flds.f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(patch, jx, jy, jz) {
-	F3_C(pf, m, jx,jy,jz) = F3_BASE(&psc.pf, m, jx,jy,jz);
+      foreach_3d_g(p, jx, jy, jz) {
+	F3_C(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -92,10 +94,12 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 void
 fields_c_put(fields_c_t *pf, int mb, int me)
 {
-  foreach_patch(patch) {
+  assert(psc.nr_patches == 1);
+  foreach_patch(p) {
+    fields_base_t *pf_base = &psc.flds.f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(patch, jx, jy, jz) {
-	F3_BASE(&psc.pf, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
+      foreach_3d_g(p, jx, jy, jz) {
+	F3_BASE(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
   }

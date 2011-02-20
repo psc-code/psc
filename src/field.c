@@ -11,8 +11,6 @@ c_push_field_a_nopml()
   }
   prof_start(pr);
 
-  fields_base_t *pf = &psc.pf;
-
   assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[2] == BND_FLD_PERIODIC);
@@ -41,8 +39,9 @@ c_push_field_a_nopml()
   // E-field propagation E^(n)    , H^(n), j^(n) 
   //                  -> E^(n+0.5), H^(n), j^(n)
 
-  foreach_patch(patch) {
-    foreach_3d(patch, ix, iy, iz, 1, 1) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, EX, ix,iy,iz) +=
 	cny * (F3_BASE(pf, HZ, ix,iy,iz) - F3_BASE(pf, HZ, ix,iy-1,iz)) -
 	cnz * (F3_BASE(pf, HY, ix,iy,iz) - F3_BASE(pf, HY, ix,iy,iz-1)) -
@@ -60,13 +59,14 @@ c_push_field_a_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.pf, EX, EX + 3);
+  psc_fill_ghosts(&psc.flds, EX, EX + 3);
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
 
-  foreach_patch(patch) {
-    foreach_3d(patch, ix, iy, iz, 1, 1) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, HX, ix,iy,iz) -=
 	cny * (F3_BASE(pf, EZ, ix,iy+1,iz) - F3_BASE(pf, EZ, ix,iy,iz)) -
 	cnz * (F3_BASE(pf, EY, ix,iy,iz+1) - F3_BASE(pf, EY, ix,iy,iz));
@@ -81,7 +81,7 @@ c_push_field_a_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.pf, HX, HX + 3);
+  psc_fill_ghosts(&psc.flds, HX, HX + 3);
 
   prof_stop(pr);
 }
@@ -94,8 +94,6 @@ c_push_field_b_nopml()
     pr = prof_register("c_field_b", 1., 0, 0);
   }
   prof_start(pr);
-
-  fields_base_t *pf = &psc.pf;
 
   f_real lx = psc.dt / psc.dx[0];
   f_real ly = psc.dt / psc.dx[1];
@@ -118,8 +116,9 @@ c_push_field_b_nopml()
   // B-field propagation E^(n+0.5), B^(n+0.5), j^(n+1.0), m^(n+0.5)
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
-  foreach_patch(patch) {
-    foreach_3d(patch, ix, iy, iz, 1, 1) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, HX, ix,iy,iz) -=
 	cny * (F3_BASE(pf, EZ, ix,iy+1,iz) - F3_BASE(pf, EZ, ix,iy,iz)) -
 	cnz * (F3_BASE(pf, EY, ix,iy,iz+1) - F3_BASE(pf, EY, ix,iy,iz));
@@ -134,13 +133,14 @@ c_push_field_b_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.pf, HX, HX + 3);
+  psc_fill_ghosts(&psc.flds, HX, HX + 3);
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
 
-  foreach_patch(patch) {
-    foreach_3d(patch, ix, iy, iz, 1, 1) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, EX, ix,iy,iz) +=
 	cny * (F3_BASE(pf, HZ, ix,iy,iz) - F3_BASE(pf, HZ, ix,iy-1,iz)) -
 	cnz * (F3_BASE(pf, HY, ix,iy,iz) - F3_BASE(pf, HY, ix,iy,iz-1)) -
@@ -158,7 +158,7 @@ c_push_field_b_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.pf, EX, EX + 3);
+  psc_fill_ghosts(&psc.flds, EX, EX + 3);
 
   prof_stop(pr);
 }

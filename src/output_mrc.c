@@ -54,7 +54,8 @@ mrc_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 
   mrc_io_open(io, "w", psc.timestep, psc.timestep * psc.dt);
   for (int m = 0; m < list->nr_flds; m++) {
-    fields_base_t *fld = &list->flds[m];
+    struct psc_mfields *flds = &list->flds[m];
+    fields_base_t *fld = &flds->f[0];
     assert(fld->nr_comp == 1);
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])

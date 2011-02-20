@@ -44,6 +44,7 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me)
   __gotten = true;
 
   struct psc_patch *patch = &psc.patch[0];
+  fields_base_t *pf_base = &psc.flds.f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {
     sz *= patch->ldims[d] + 2 * psc.ibn[d];
@@ -55,7 +56,7 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me)
     for(int n = 0; n < sz; n++){
       //preserve Fortran ordering for now
       pf->flds[m * sz + n] =
-	(sse2_real) ((&F3_BASE(&psc.pf, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
+	(sse2_real) ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
     }
   }
 }
@@ -68,6 +69,7 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
   __gotten = false;
 
   struct psc_patch *patch = &psc.patch[0];
+  fields_base_t *pf_base = &psc.flds.f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {
     sz *= patch->ldims[d] + 2 * psc.ibn[d];
@@ -75,7 +77,7 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
   int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
     for(int n = 0; n < sz; n++){
-      ((&F3_BASE(&psc.pf, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
+      ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
 	pf->flds[m * sz + n];
     }
   }

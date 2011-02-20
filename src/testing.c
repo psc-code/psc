@@ -61,10 +61,11 @@ psc_save_fields_ref()
     fields_base_alloc(field_ref, ilg, ihg, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
-  foreach_patch(patch) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
     for (int m = 0; m < me; m++) {
-      foreach_3d_g(patch, ix, iy, iz) {
-	F3_BASE(field_ref,m, ix,iy,iz) = F3_BASE(&psc.pf, m, ix,iy,iz);
+      foreach_3d_g(p, ix, iy, iz) {
+	F3_BASE(field_ref,m, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
       } foreach_3d_g_end;
     }
   }
@@ -111,12 +112,13 @@ void
 psc_check_fields_ref(int *flds, double thres)
 {
   assert(field_ref);
-  for (int i = 0; flds[i] >= 0; i++) {
-    int m = flds[i];
-    foreach_patch(patch) {
-      foreach_3d(patch, ix, iy, iz, 0, 0) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    for (int i = 0; flds[i] >= 0; i++) {
+      int m = flds[i];
+      foreach_3d(p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(&psc.pf, m, ix,iy,iz), F3_BASE(field_ref, m, ix,iy,iz), thres);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(field_ref, m, ix,iy,iz), thres);
       } foreach_3d_end;
     }
   }
@@ -131,10 +133,11 @@ void
 psc_check_currents_ref(double thres)
 {
   assert(field_ref);
-  foreach_patch(patch) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
     for (int m = JXI; m <= JZI; m++){
-      foreach_3d_g(patch, ix, iy, iz) {
-	double val = F3_BASE(&psc.pf, m, ix,iy,iz);
+      foreach_3d_g(p, ix, iy, iz) {
+	double val = F3_BASE(pf, m, ix,iy,iz);
 	if (fabs(val) > 0.) {
 	  printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
 		 ix, iy, iz, val);
@@ -142,14 +145,15 @@ psc_check_currents_ref(double thres)
       }
     }
   }
-  foreach_patch(patch) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
     for (int m = JXI; m <= JZI; m++){
       double max_delta = 0.;
-      foreach_3d_g(patch, ix, iy, iz) {
+      foreach_3d_g(p, ix, iy, iz) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(&psc.pf, m, ix,iy,iz), F3_BASE(field_ref,m, ix,iy,iz), thres);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(field_ref,m, ix,iy,iz), thres);
 	max_delta = fmax(max_delta, 
-			 fabs(F3_BASE(&psc.pf, m, ix,iy,iz) - F3_BASE(field_ref, m, ix,iy,iz)));
+			 fabs(F3_BASE(pf, m, ix,iy,iz) - F3_BASE(field_ref, m, ix,iy,iz)));
       } foreach_3d_g_end;
       printf("max_delta (%s) %g\n", fldname[m], max_delta);
     }
@@ -160,11 +164,12 @@ void
 psc_check_currents_ref_noghost(double thres)
 {
   assert(field_ref);
-  for (int m = JXI; m <= JZI; m++){
-    foreach_patch(patch) {
-      foreach_3d(patch, ix, iy, iz, 0, 0) {
+  foreach_patch(p) {
+    fields_base_t *pf = &psc.flds.f[p];
+    for (int m = JXI; m <= JZI; m++){
+      foreach_3d(p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(&psc.pf, m, ix,iy,iz), F3_BASE(field_ref, m, ix,iy,iz), thres);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(field_ref, m, ix,iy,iz), thres);
       } foreach_3d_end;
     }
   }

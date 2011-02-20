@@ -113,7 +113,9 @@ c_calc_densities(fields_base_t *pf)
   do_c_calc_densities(pf, 0, 1, 2);
   prof_stop(pr);
 
-  psc_add_ghosts(pf, 0, 3);
+  struct psc_mfields flds;
+  flds.f = pf;
+  psc_add_ghosts(&flds, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -221,7 +223,9 @@ c_calc_v(fields_base_t *pf)
   do_c_calc_v(pf);
   prof_stop(pr);
 
-  psc_add_ghosts(pf, 0, 3);
+  struct psc_mfields flds;
+  flds.f = pf;
+  psc_add_ghosts(&flds, 0, 3);
 }
 
 static void
@@ -327,7 +331,9 @@ c_calc_vv(fields_base_t *pf)
   do_c_calc_vv(pf);
   prof_stop(pr);
 
-  psc_add_ghosts(pf, 0, 3);
+  struct psc_mfields flds;
+  flds.f = pf;
+  psc_add_ghosts(&flds, 0, 3);
 }
 
 struct psc_moment_ops psc_moment_ops_c = {
