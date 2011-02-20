@@ -73,7 +73,12 @@ fields_c_put(fields_c_t *pf, int mb, int me)
 void
 fields_c_get(fields_c_t *pf, int mb, int me)
 {
-  fields_c_alloc(pf, psc.ilg, psc.ihg, NR_FIELDS);
+  struct psc_patch *patch = &psc.patch[0];
+  int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+  int ihg[3] = { patch->ldims[0] + psc.ibn[0],
+		 patch->ldims[1] + psc.ibn[1],
+		 patch->ldims[2] + psc.ibn[2] };
+  fields_c_alloc(pf, ilg, ihg, NR_FIELDS);
 
   foreach_patch(patch) {
     for (int m = mb; m < me; m++) {

@@ -6,6 +6,8 @@ void
 __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
 		       fields_fortran_real_t *arr, bool with_array)
 {
+  struct psc_patch *patch = &psc.patch[0];
+  
   pf->flds = calloc(nr_comp, sizeof(*pf->flds));
   pf->name = calloc(nr_comp, sizeof(*pf->name));
   for (int m = 0; m < nr_comp; m++) {
@@ -30,7 +32,9 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
     static bool ALLOC_field_called;
     if (!ALLOC_field_called && nr_comp == NR_FIELDS &&
 	ib[0] == psc.ilg[0] && ib[1] == psc.ilg[1] && ib[2] == psc.ilg[2] &&
-	ie[0] == psc.ihg[0] && ie[1] == psc.ihg[1] && ie[2] == psc.ihg[2]) {
+	ie[0] == patch->ldims[0] + psc.ibn[0] &&
+	ie[1] == patch->ldims[1] + psc.ibn[1] &&
+	ie[2] == patch->ldims[2] + psc.ibn[2]) {
       ALLOC_field_called = true;
       f_real **fields = ALLOC_field();
       for (int i = 0; i < NR_FIELDS; i++) {

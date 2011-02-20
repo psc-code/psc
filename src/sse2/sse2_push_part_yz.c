@@ -913,8 +913,8 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   //---------------------------------------------
   // Store the squished currents into the global currents
   // FIXME: Assumes x-dir always rounds down to 0!
-  for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
-    for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
+  for(int iz = -psc.ibn[2]; iz < patch->ldims[2] + psc.ibn[2]; iz++){
+    for(int iy = -psc.ibn[1]; iy < patch->ldims[2] + psc.ibn[1]; iy++){ 
       F3_SSE2(pf, JXI, 0,iy,iz) = JSX(iy, iz);
       F3_SSE2(pf, JYI, 0,iy,iz) = JSY(iy, iz);
       F3_SSE2(pf, JZI, 0,iy,iz) = JSZ(iy, iz);
