@@ -454,9 +454,8 @@ psc_push_field_b(struct psc_mfields *flds)
 void
 psc_add_ghosts(struct psc_mfields *flds, int mb, int me)
 {
-  assert(psc.nr_patches == 1);
   assert(psc.bnd_ops->add_ghosts);
-  psc.bnd_ops->add_ghosts(flds->f, mb, me);
+  psc.bnd_ops->add_ghosts(flds, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -465,9 +464,8 @@ psc_add_ghosts(struct psc_mfields *flds, int mb, int me)
 void
 psc_fill_ghosts(struct psc_mfields *flds, int mb, int me)
 {
-  assert(psc.nr_patches == 1);
   assert(psc.bnd_ops->fill_ghosts);
-  psc.bnd_ops->fill_ghosts(flds->f, mb, me);
+  psc.bnd_ops->fill_ghosts(flds, mb, me);
 }
 
 // ----------------------------------------------------------------------

@@ -324,8 +324,8 @@ struct psc_bnd_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*add_ghosts)(fields_base_t *pf, int mb, int me);
-  void (*fill_ghosts)(fields_base_t *pf, int mb, int me);
+  void (*add_ghosts)(struct psc_mfields *flds, int mb, int me);
+  void (*fill_ghosts)(struct psc_mfields *flds, int mb, int me);
   void (*exchange_particles)(void);
 };
 
