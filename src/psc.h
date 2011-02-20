@@ -330,9 +330,9 @@ struct psc_moment_ops {
 };
 
 struct psc_patch {
-  int ilo[3], ihi[3]; // ilo[d] <= i < ihi[d]
+  int ihi[3];         // 0 <= i < ihi[d] : inside domain
   int ilg[3], ihg[3];
-  int off[3];
+  int off[3];         // ix[d] + off[d] is global index for local ix
 };
 
 static inline void
@@ -397,7 +397,7 @@ struct psc {
 };
 
 #define foreach_3d(patch, ix, iy, iz, l, r) {				\
-  int __ilo[3] = { patch->ilo[0] - l, patch->ilo[1] - l, patch->ilo[2] - l }; \
+  int __ilo[3] = { -l, -l, -l };					\
   int __ihi[3] = { patch->ihi[0] + r, patch->ihi[1] + r, patch->ihi[2] + r }; \
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
