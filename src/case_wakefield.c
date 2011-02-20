@@ -69,9 +69,6 @@ wakefield_init_param(struct psc_case *Case)
   psc.domain.length[1] = 40. * 1e-6;
   psc.domain.length[2] = 60. * 1e-6;
 
-  psc.domain.itot[0] = 200;
-  psc.domain.itot[1] = 400;
-  psc.domain.itot[2] = 600;
   psc.domain.ihi[0] = 200;
   psc.domain.ihi[1] = 400;
   psc.domain.ihi[2] = 600;

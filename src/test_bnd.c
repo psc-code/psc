@@ -14,8 +14,8 @@ setup_jx()
     foreach_3d_g(patch, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
-      f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-      f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+      f_real xx = 2.*M_PI * ix / psc.domain.ihi[0];
+      f_real zz = 2.*M_PI * iz / psc.domain.ihi[2];
       F3_BASE(&psc.pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_g_end;
   }
@@ -28,8 +28,8 @@ setup_jx_noghost()
     foreach_3d(patch, jx, jy, jz, 0, 0) {
       int ix, iy, iz;
       psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
-      f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-      f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+      f_real xx = 2.*M_PI * ix / psc.domain.ihi[0];
+      f_real zz = 2.*M_PI * iz / psc.domain.ihi[2];
       F3_BASE(&psc.pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_end;
   }

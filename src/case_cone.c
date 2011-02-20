@@ -187,9 +187,6 @@ cone_init_param(struct psc_case *Case)
   psc.domain.length[1] = 0.02 * 1e-6;
   psc.domain.length[2] = 31.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 1200;				// total number of steps in x-direction. dx=length/itot;
-  psc.domain.itot[1] = 1;				
-  psc.domain.itot[2] = 3100;				// total number of steps in z-direction. dz=length/itot;
   psc.domain.ihi[0] = 1200;
   psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 3100;

@@ -58,10 +58,7 @@ collisions_init_param(struct psc_case *Case)
   psc.domain.length[1] = 0.02 * 1e-6;
   psc.domain.length[2] = 0.02  * 1e-6;
 
-  psc.domain.itot[0] = 20;
-  psc.domain.itot[1] = 20;
-  psc.domain.itot[2] = 20;
-  psc.domain.ihi[0] = 0;
+  psc.domain.ihi[0] = 1;
   psc.domain.ihi[1] = 20;
   psc.domain.ihi[2] = 20;
 

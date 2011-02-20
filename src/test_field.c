@@ -15,8 +15,8 @@ setup_fields()
     foreach_3d_g(patch, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(patch, jx, jy, jz, &ix, &iy, &iz);
-      f_real xx = 2.*M_PI * ix / psc.domain.itot[0];
-      f_real zz = 2.*M_PI * iz / psc.domain.itot[2];
+      f_real xx = 2.*M_PI * ix / psc.domain.ihi[0];
+      f_real zz = 2.*M_PI * iz / psc.domain.ihi[2];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
       F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(zz);
       F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(zz);
