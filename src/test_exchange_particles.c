@@ -23,10 +23,15 @@ setup_particles(void)
   // (could go either way), so let's shift them a bit so we get a unique answer
   // we can check.
   if (rank == 0) {
+    struct psc_patch *patch = &psc.patch[0];
+    int ihi[3] = { patch->off[0] + patch->ldims[0],
+		   patch->off[1] + patch->ldims[1],
+		   patch->off[2] + patch->ldims[2] };
     int i = 0;
-    for (int iz = psc.ilo[2]-1; iz < psc.ihi[2]+1; iz++) {
-      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) { // xz only !!!
-	for (int ix = psc.ilo[0]-1; ix < psc.ihi[0]+1; ix++) {
+
+    for (int iz = psc.ilo[2]-1; iz < ihi[2]+1; iz++) {
+      for (int iy = psc.ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
+	for (int ix = psc.ilo[0]-1; ix < ihi[0]+1; ix++) {
 	  particle_base_t *p;
 	  p = particles_base_get_one(&psc.pp, i++);
 	  memset(p, 0, sizeof(*p));
@@ -51,6 +56,10 @@ setup_particles(void)
 static void
 check_particles_old_xz(void)
 {
+  struct psc_patch *patch = &psc.patch[0];
+  int ihi[3] = { patch->off[0] + patch->ldims[0],
+		 patch->off[1] + patch->ldims[1],
+		 patch->off[2] + patch->ldims[2] };
   f_real xb[3], xe[3];
   
   // These boundaries are, I believe, what the Fortran code guarantees.
@@ -62,7 +71,7 @@ check_particles_old_xz(void)
   // but that's the opposite of what's happening here.
   for (int d = 0; d < 3; d++) {
     xb[d] = (psc.ilo[d]-2) * psc.dx[d];
-    xe[d] = (psc.ihi[d]+1) * psc.dx[d];
+    xe[d] = (ihi[d]+1) * psc.dx[d];
   }
 
   int fail_cnt = 0;
@@ -82,6 +91,10 @@ check_particles_old_xz(void)
 static void
 check_particles(void)
 {
+  struct psc_patch *patch = &psc.patch[0];
+  int ihi[3] = { patch->off[0] + patch->ldims[0],
+		 patch->off[1] + patch->ldims[1],
+		 patch->off[2] + patch->ldims[2] };
   f_real xb[3], xe[3];
 
   // New-style boundary requirements.
@@ -89,7 +102,7 @@ check_particles(void)
   
   for (int d = 0; d < 3; d++) {
     xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
-    xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
+    xe[d] = (ihi[d]-.5) * psc.dx[d];
   }
 
   int fail_cnt = 0;

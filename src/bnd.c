@@ -305,6 +305,7 @@ c_exchange_particles(void)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
+  struct psc_patch *patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
     xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
@@ -316,12 +317,12 @@ c_exchange_particles(void)
       }
     }
 
-    xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
+    xe[d] = (patch->off[d] + patch->ldims[d] - .5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
     } else {
       xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
-      if (psc.ihi[d] == psc.domain.gdims[d]) {
+      if (patch->off[d] + patch->ldims[d] == psc.domain.gdims[d]) {
 	xe[d] = xge[d];
       }
     }

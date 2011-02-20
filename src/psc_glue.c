@@ -181,7 +181,10 @@ f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 static void
 PIC_set_variables()
 {
-  int i0mx = psc.ihi[0] - 1, i1mx = psc.ihi[1] - 1, i2mx = psc.ihi[2] - 1;
+  struct psc_patch *patch = &psc.patch[0];
+  int i0mx = patch->off[0] + patch->ldims[0] - 1;
+  int i1mx = patch->off[1] + patch->ldims[1] - 1;
+  int i2mx = patch->off[2] + patch->ldims[2] - 1;
   int i0x = psc.domain.gdims[0] - 1;
   int i1x = psc.domain.gdims[1] - 1;
   int i2x = psc.domain.gdims[2] - 1;
@@ -350,12 +353,13 @@ CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 void
 SET_subdomain()
 {
+  struct psc_patch *patch = &psc.patch[0];
   f_int i1mn = psc.ilo[0];
   f_int i2mn = psc.ilo[1];
   f_int i3mn = psc.ilo[2];
-  f_int i1mx = psc.ihi[0] - 1;
-  f_int i2mx = psc.ihi[1] - 1;
-  f_int i3mx = psc.ihi[2] - 1;
+  f_int i1mx = patch->off[0] + patch->ldims[0] - 1;
+  f_int i2mx = patch->off[1] + patch->ldims[1] - 1;
+  f_int i3mx = patch->off[2] + patch->ldims[2] - 1;
   f_int i1bn = psc.ibn[0];
   f_int i2bn = psc.ibn[1];
   f_int i3bn = psc.ibn[2];

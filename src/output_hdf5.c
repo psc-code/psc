@@ -47,6 +47,7 @@ hdf5_close(struct hdf5_ctx *hdf5)
 static void
 hdf5_write_field(void *ctx, fields_base_t *fld)
 {
+  struct psc_patch *patch = &psc.patch[0];
   struct hdf5_ctx *hdf5 = ctx;
 
   hid_t mem_type;
@@ -72,9 +73,9 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
     hsize_t start[3], count[3];
     for (int d = 0; d < 3; d++) {
       // reverse dimensions because of Fortran order
-      file_dims[d] = psc.ihi[2-d] - psc.ilo[2-d];
+      file_dims[d] = patch->ldims[2-d];
       start[d] = psc.ilo[2-d] - psc.ilg[2-d];
-      count[d] = psc.ihi[2-d] - psc.ilo[2-d];
+      count[d] = patch->off[2-d] + patch->ldims[2-d] - psc.ilo[2-d];
     }
     H5Sselect_hyperslab(mem_space, H5S_SELECT_SET, start, NULL, count, NULL);
   } else {

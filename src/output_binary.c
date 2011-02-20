@@ -10,7 +10,10 @@
 static void
 binary_write_field(FILE *file, fields_base_t *fld)
 {
-  int *ilo = psc.ilo, *ihi = psc.ihi;
+  struct psc_patch *patch = &psc.patch[0];
+  int *ilo = psc.ilo, ihi[3] = { patch->off[0] + patch->ldims[0],
+				 patch->off[1] + patch->ldims[1],
+				 patch->off[2] + patch->ldims[2] };
 
   unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
@@ -32,6 +35,10 @@ static void
 binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 		    const char *pfx)
 {
+  struct psc_patch *patch = &psc.patch[0];
+  int ihi[3] = { patch->off[0] + patch->ldims[0],
+		 patch->off[1] + patch->ldims[1],
+		 patch->off[2] + patch->ldims[2] };
   const char headstr[] = "PSC ";
   const char datastr[] = "DATA";
 
@@ -60,19 +67,19 @@ binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 
   // Indices on local proc
   fwrite(&psc.ilo[0], sizeof(psc.ilo[0]), 1, file);
-  fwrite(&psc.ihi[0], sizeof(psc.ihi[0]), 1, file);
+  fwrite(&ihi[0], sizeof(ihi[0]), 1, file);
   fwrite(&psc.ilo[1], sizeof(psc.ilo[1]), 1, file);
-  fwrite(&psc.ihi[1], sizeof(psc.ihi[1]), 1, file);
+  fwrite(&ihi[1], sizeof(ihi[1]), 1, file);
   fwrite(&psc.ilo[2], sizeof(psc.ilo[2]), 1, file);
-  fwrite(&psc.ihi[2], sizeof(psc.ihi[2]), 1, file);
+  fwrite(&ihi[2], sizeof(ihi[2]), 1, file);
 
   // Globally saved indices (everything for now...)
-  int ilo[3] = {};
-  fwrite(&ilo[0], sizeof(ilo[0]), 1, file);
+  int glo[3] = {};
+  fwrite(&glo[0], sizeof(glo[0]), 1, file);
   fwrite(&psc.domain.gdims[0], sizeof(psc.domain.gdims[0]), 1, file);
-  fwrite(&ilo[1], sizeof(ilo[1]), 1, file);
+  fwrite(&glo[1], sizeof(glo[1]), 1, file);
   fwrite(&psc.domain.gdims[1], sizeof(psc.domain.gdims[1]), 1, file);
-  fwrite(&ilo[2], sizeof(ilo[2]), 1, file);
+  fwrite(&glo[2], sizeof(glo[2]), 1, file);
   fwrite(&psc.domain.gdims[2], sizeof(psc.domain.gdims[2]), 1, file);
 
   fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);

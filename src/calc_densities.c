@@ -50,13 +50,13 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
       
-    if (psc.ihi[0] - psc.ilo[0] == 1) {
+    if (psc.domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.ihi[1] - psc.ilo[1] == 1) {
+    if (psc.domain.gdims[1] == 1) {
       j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.ihi[2] - psc.ilo[2] == 1) {
+    if (psc.domain.gdims[2] == 1) {
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
 
@@ -154,13 +154,13 @@ do_c_calc_v(fields_base_t *pf)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 
-    if (psc.ihi[0] - psc.ilo[0] == 1) {
+    if (psc.domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.ihi[1] - psc.ilo[1] == 1) {
+    if (psc.domain.gdims[1] == 1) {
       j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.ihi[2] - psc.ilo[2] == 1) {
+    if (psc.domain.gdims[2] == 1) {
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
@@ -260,13 +260,13 @@ do_c_calc_vv(fields_base_t *pf)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 
-    if (psc.ihi[0] - psc.ilo[0] == 1) {
+    if (psc.domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.ihi[1] - psc.ilo[1] == 1) {
+    if (psc.domain.gdims[1] == 1) {
       j2 = 1; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.ihi[2] - psc.ilo[2] == 1) {
+    if (psc.domain.gdims[2] == 1) {
       j3 = 2; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     

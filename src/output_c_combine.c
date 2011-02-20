@@ -42,7 +42,7 @@ write_fields_combine(struct psc_fields_list *list,
       
       for (int d = 0; d < 3; d++) {
 	s_ilo[d] = psc.ilo[d];
-	s_ihi[d] = psc.ihi[d];
+	s_ihi[d] = patch->off[d] + patch->ldims[d];
 	s_ilg[d] = psc.ilg[d];
 	s_img[d] = psc.img[d];
       }

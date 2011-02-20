@@ -28,6 +28,7 @@ get_n_in_cell(real n)
 static void
 pml_find_bounds(int ilo[3], int ihi[3])
 {
+  struct psc_patch *patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
     ilo[d] = psc.ilo[d];
     if (ilo[d] == 0 && // left-most proc in this dir
@@ -35,7 +36,7 @@ pml_find_bounds(int ilo[3], int ihi[3])
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
       ilo[d] += psc.pml.size+1;
     }
-    ihi[d] = psc.ihi[d];
+    ihi[d] = patch->off[d] + patch->ldims[d];
     if (ihi[d] == psc.domain.gdims[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
@@ -85,10 +86,9 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   mrc_domain_get_local_idx(psc.mrc_domain, lidx);
   for (int d = 0; d < 3; d++) {
     psc.ilo[d] = off[d];
-    psc.ihi[d] = off[d] + ldims[d];
     psc.ibn[d] = psc.domain.nghost[d];
     psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
-    psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
+    psc.ihg[d] = off[d] + ldims[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
 
     psc.patch[0].ldims[d] = ldims[d];
@@ -106,7 +106,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       min_size += psc.pml.size;
     }
-    assert(psc.ihi[d] - psc.ilo[d] >= min_size);
+    assert(psc.patch[0].ldims[d] >= min_size);
   }
   psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
 
