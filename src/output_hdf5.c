@@ -74,8 +74,8 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
     for (int d = 0; d < 3; d++) {
       // reverse dimensions because of Fortran order
       file_dims[d] = patch->ldims[2-d];
-      start[d] = psc.ilo[2-d] - psc.ilg[2-d];
-      count[d] = patch->off[2-d] + patch->ldims[2-d] - psc.ilo[2-d];
+      start[d] = patch->off[2-d] - psc.ilg[2-d];
+      count[d] = patch->ldims[2-d];
     }
     H5Sselect_hyperslab(mem_space, H5S_SELECT_SET, start, NULL, count, NULL);
   } else {

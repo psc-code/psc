@@ -190,7 +190,7 @@ PIC_set_variables()
   int i2x = psc.domain.gdims[2] - 1;
   int ilo[3] = {};
 
-  PIC_set_variables_F77(&psc.ilo[0], &psc.ilo[1], &psc.ilo[2],
+  PIC_set_variables_F77(&patch->off[0], &patch->off[1], &patch->off[2],
 			&i0mx, &i1mx, &i2mx,
 			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
 			&ilo[0], &ilo[1], &ilo[2],
@@ -354,9 +354,9 @@ void
 SET_subdomain()
 {
   struct psc_patch *patch = &psc.patch[0];
-  f_int i1mn = psc.ilo[0];
-  f_int i2mn = psc.ilo[1];
-  f_int i3mn = psc.ilo[2];
+  f_int i1mn = patch->off[0];
+  f_int i2mn = patch->off[1];
+  f_int i3mn = patch->off[2];
   f_int i1mx = patch->off[0] + patch->ldims[0] - 1;
   f_int i2mx = patch->off[1] + patch->ldims[1] - 1;
   f_int i3mx = patch->off[2] + patch->ldims[2] - 1;

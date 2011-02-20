@@ -77,7 +77,7 @@ vtk_write_field_binary(void *ctx, fields_base_t *fld, struct psc_output_c *out)
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-		  float val = F3_BASE(fld, 0, ix-psc.ilo[0],iy-psc.ilo[1],iz-psc.ilo[2]);
+		  float val = F3_BASE(fld, 0, ix,iy,iz);
 		  
 		  if (fabsf(val) < 1e-37) {
 			  fprintf(file, "%g ", 0.);

@@ -307,12 +307,12 @@ c_exchange_particles(void)
 
   struct psc_patch *patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
+    xb[d] = (patch->off[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xgb[d] = -.5 * psc.dx[d];
     } else {
       xgb[d] = 0.;
-      if (psc.ilo[d] == 0) {
+      if (patch->off[d] == 0) {
 	xb[d] = xgb[d];
       }
     }

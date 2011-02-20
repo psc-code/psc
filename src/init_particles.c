@@ -30,7 +30,7 @@ pml_find_bounds(int ilo[3], int ihi[3])
 {
   struct psc_patch *patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
-    ilo[d] = psc.ilo[d];
+    ilo[d] = patch->off[d];
     if (ilo[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
@@ -85,9 +85,8 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
   mrc_domain_get_local_idx(psc.mrc_domain, lidx);
   for (int d = 0; d < 3; d++) {
-    psc.ilo[d] = off[d];
     psc.ibn[d] = psc.domain.nghost[d];
-    psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
+    psc.ilg[d] = off[d] - psc.ibn[d];
     psc.ihg[d] = off[d] + ldims[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
 

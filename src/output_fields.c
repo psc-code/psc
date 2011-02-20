@@ -335,17 +335,17 @@ output_c_field()
 		if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
 		
 		if(out->rx[i]>patch->off[i] + patch->ldims[i]) out->rx[i]=patch->off[i] + patch->ldims[i];
-		if(out->rn[i]<psc.ilo[i]) out->rn[i]=psc.ilo[i];
+		if(out->rn[i]<patch->off[i]) out->rn[i]=patch->off[i];
 		
 		if(out->rn[i]>patch->off[i] + patch->ldims[i])
 		{
 		  out->rn[i]=patch->off[i] + patch->ldims[i];
 		  out->rx[i]=out->rn[i];
 		}
-		if(out->rx[i]<psc.ilo[i]) 
+		if(out->rx[i]<patch->off[i]) 
 		{
-			out->rx[i]=psc.ilo[i]; 
-			out->rn[i]=psc.ilo[i];
+		  out->rx[i]=patch->off[i]; 
+		  out->rn[i]=out->rx[i];
 		}
 		
 	}

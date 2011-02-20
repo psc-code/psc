@@ -11,9 +11,9 @@ static void
 binary_write_field(FILE *file, fields_base_t *fld)
 {
   struct psc_patch *patch = &psc.patch[0];
-  int *ilo = psc.ilo, ihi[3] = { patch->off[0] + patch->ldims[0],
-				 patch->off[1] + patch->ldims[1],
-				 patch->off[2] + patch->ldims[2] };
+  int *ilo = patch->off, ihi[3] = { patch->off[0] + patch->ldims[0],
+				    patch->off[1] + patch->ldims[1],
+				    patch->off[2] + patch->ldims[2] };
 
   unsigned int sz = (ihi[0] - ilo[0]) * (ihi[1] - ilo[1]) * (ihi[2] - ilo[2]);
 
@@ -66,11 +66,11 @@ binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   t_float = (float) psc.dt;     fwrite(&t_float, sizeof(float), 1, file);
 
   // Indices on local proc
-  fwrite(&psc.ilo[0], sizeof(psc.ilo[0]), 1, file);
+  fwrite(&patch->off[0], sizeof(patch->off[0]), 1, file);
   fwrite(&ihi[0], sizeof(ihi[0]), 1, file);
-  fwrite(&psc.ilo[1], sizeof(psc.ilo[1]), 1, file);
+  fwrite(&patch->off[1], sizeof(patch->off[1]), 1, file);
   fwrite(&ihi[1], sizeof(ihi[1]), 1, file);
-  fwrite(&psc.ilo[2], sizeof(psc.ilo[2]), 1, file);
+  fwrite(&patch->off[2], sizeof(patch->off[2]), 1, file);
   fwrite(&ihi[2], sizeof(ihi[2]), 1, file);
 
   // Globally saved indices (everything for now...)

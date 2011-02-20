@@ -24,14 +24,15 @@ setup_particles(void)
   // we can check.
   if (rank == 0) {
     struct psc_patch *patch = &psc.patch[0];
+    int *ilo = patch->off;
     int ihi[3] = { patch->off[0] + patch->ldims[0],
 		   patch->off[1] + patch->ldims[1],
 		   patch->off[2] + patch->ldims[2] };
     int i = 0;
 
-    for (int iz = psc.ilo[2]-1; iz < ihi[2]+1; iz++) {
-      for (int iy = psc.ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
-	for (int ix = psc.ilo[0]-1; ix < ihi[0]+1; ix++) {
+    for (int iz = ilo[2]-1; iz < ihi[2]+1; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
+	for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
 	  particle_base_t *p;
 	  p = particles_base_get_one(&psc.pp, i++);
 	  memset(p, 0, sizeof(*p));
@@ -57,6 +58,7 @@ static void
 check_particles_old_xz(void)
 {
   struct psc_patch *patch = &psc.patch[0];
+  int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
 		 patch->off[2] + patch->ldims[2] };
@@ -70,7 +72,7 @@ check_particles_old_xz(void)
   // gyrating near a boundary don't keep getting bounced between processors --
   // but that's the opposite of what's happening here.
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc.ilo[d]-2) * psc.dx[d];
+    xb[d] = (ilo[d]-2) * psc.dx[d];
     xe[d] = (ihi[d]+1) * psc.dx[d];
   }
 
@@ -92,6 +94,7 @@ static void
 check_particles(void)
 {
   struct psc_patch *patch = &psc.patch[0];
+  int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
 		 patch->off[2] + patch->ldims[2] };
@@ -101,7 +104,7 @@ check_particles(void)
   // These will need revisiting when it comes to non-periodic domains.
   
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
+    xb[d] = (ilo[d]-.5) * psc.dx[d];
     xe[d] = (ihi[d]-.5) * psc.dx[d];
   }
 
