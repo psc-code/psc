@@ -125,9 +125,9 @@ harris_xy_init_param(struct psc_case *Case)
   mpi_printf(MPI_COMM_WORLD, "::: l_Debye= %g d_e\n", sqrt(eps0 * harris->_Te / (n0 * sqr(e))));
   mpi_printf(MPI_COMM_WORLD, "\n");
 
-  psc.domain.ihi[0] = 128;
-  psc.domain.ihi[1] = 128;
-  psc.domain.ihi[2] = 1;
+  psc.domain.gdims[0] = 128;
+  psc.domain.gdims[1] = 128;
+  psc.domain.gdims[2] = 1;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;

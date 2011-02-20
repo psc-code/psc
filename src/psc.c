@@ -395,7 +395,7 @@ psc_push_part_yz_b()
 void
 psc_push_particles()
 {
-  int *im = psc.domain.ihi;
+  int *im = psc.domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
     psc_push_part_xyz();
   } else if (im[0] > 1 && im[2] > 1) { // xz

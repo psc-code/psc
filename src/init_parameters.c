@@ -29,9 +29,9 @@ static struct param psc_domain_descr[] = {
   { "length_x"      , VAR(length[0])       , PARAM_DOUBLE(1e-6)   },
   { "length_y"      , VAR(length[1])       , PARAM_DOUBLE(1e-6)   },
   { "length_z"      , VAR(length[2])       , PARAM_DOUBLE(20e-6)  },
-  { "ihi_x"         , VAR(ihi[0])          , PARAM_INT(1)         },
-  { "ihi_y"         , VAR(ihi[1])          , PARAM_INT(1)         },
-  { "ihi_z"         , VAR(ihi[2])          , PARAM_INT(400)       },
+  { "gdims_x"       , VAR(gdims[0])        , PARAM_INT(1)         },
+  { "gdims_y"       , VAR(gdims[1])        , PARAM_INT(1)         },
+  { "gdims_z"       , VAR(gdims[2])        , PARAM_INT(400)       },
 
   { "bnd_field_lo_x", VAR(bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
 							  bnd_fld_descr) },
@@ -80,7 +80,7 @@ init_param_domain()
 
   bool need_pml = false;
   for (int d = 0; d < 3; d++) {
-    if (domain->ihi[d] == 1) {
+    if (domain->gdims[d] == 1) {
       // if invariant in this direction:
       // can't domain decompose in, set bnd to periodic
       assert(domain->nproc[d] == 1);
@@ -89,7 +89,7 @@ init_param_domain()
       domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
       // on every proc, need domain at least nghost wide
-      assert(domain->ihi[d] >= domain->nproc[d] * domain->nghost[d]);
+      assert(domain->gdims[d] >= domain->nproc[d] * domain->nghost[d]);
       if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
 	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
 	need_pml = true;
@@ -331,9 +331,9 @@ init_param_coeff()
 
   for (int d = 0; d < 3; d++) {
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
-      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.ihi[d];
+      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.gdims[d];
     } else {
-      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / (psc.domain.ihi[d] - 1);
+      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / (psc.domain.gdims[d] - 1);
     }
   }
   psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
@@ -411,7 +411,7 @@ GET_param_domain()
   assert(itot[0] == imax[0] + 1 && itot[1] == imax[1] + 1 && itot[2] == imax[2] + 1);
   p->use_pml = use_pml_;
   for (int d = 0; d < 3; d++) {
-    p->ihi[d] = imax[d] + 1;
+    p->gdims[d] = imax[d] + 1;
   }
 }
 
@@ -422,11 +422,11 @@ SET_param_domain()
   int imax[3];
 
   for (int d = 0; d < 3; d++) {
-    imax[d] = p->ihi[d] - 1;
+    imax[d] = p->gdims[d] - 1;
   }
   int use_pml_ = p->use_pml;
   int ilo[3] = {};
-  SET_param_domain_F77(p->length, p->ihi, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
+  SET_param_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
 		       p->bnd_part, p->nproc, p->nghost, &use_pml_);
 }
 

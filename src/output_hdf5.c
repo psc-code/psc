@@ -30,7 +30,7 @@ hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
   H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dt", &psc.dt, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dx", psc.dx, 3);
-  H5LTset_attribute_int(hdf5->group, ".", "hi", psc.domain.ihi, 3);
+  H5LTset_attribute_int(hdf5->group, ".", "gdims", psc.domain.gdims, 3);
 
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
 			      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -146,7 +146,7 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
   fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
   int im[3];
   for (int d = 0; d < 3; d++) {
-    im[d] = psc.domain.ihi[d] / psc.domain.nproc[d];
+    im[d] = psc.domain.gdims[d] / psc.domain.nproc[d];
   }
   for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
     for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {

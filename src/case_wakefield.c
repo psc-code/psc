@@ -69,9 +69,9 @@ wakefield_init_param(struct psc_case *Case)
   psc.domain.length[1] = 40. * 1e-6;
   psc.domain.length[2] = 60. * 1e-6;
 
-  psc.domain.ihi[0] = 200;
-  psc.domain.ihi[1] = 400;
-  psc.domain.ihi[2] = 600;
+  psc.domain.gdims[0] = 200;
+  psc.domain.gdims[1] = 400;
+  psc.domain.gdims[2] = 600;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;

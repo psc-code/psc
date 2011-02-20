@@ -318,10 +318,10 @@ c_exchange_particles(void)
 
     xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (psc.domain.ihi[d]-.5) * psc.dx[d];
+      xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
     } else {
-      xge[d] = (psc.domain.ihi[d]-1) * psc.dx[d];
-      if (psc.ihi[d] == psc.domain.ihi[d]) {
+      xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
+      if (psc.ihi[d] == psc.domain.gdims[d]) {
 	xe[d] = xge[d];
       }
     }

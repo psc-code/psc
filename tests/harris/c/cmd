@@ -6,7 +6,7 @@ openmpirun -n 2 src/VLI \
 	   --mod_field c \
 	   --mod_bnd c \
 	   --case harris \
-	   --itot_x 64 --itot_z 64 --ihi_x 64 --ihi_z 64 \
+	   --gdims_x 64 --gdims_z 64 \
 	   --nmax 11
 
 util/compare_field.py -f ne,ni tests/harris/c/pfd_0000000.h5 pfd_0000000.h5 

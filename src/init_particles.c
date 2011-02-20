@@ -36,7 +36,7 @@ pml_find_bounds(int ilo[3], int ihi[3])
       ilo[d] += psc.pml.size+1;
     }
     ihi[d] = psc.ihi[d];
-    if (ihi[d] == psc.domain.ihi[d] && // right-most proc in this dir
+    if (ihi[d] == psc.domain.gdims[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       ihi[d] -= psc.pml.size+1;
@@ -59,13 +59,13 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   // create a very simple domain decomposition
   struct mrc_domain_simple_params domain_par = {};
   for (int d = 0; d < 3; d++) {
-    int gdim = psc.domain.ihi[d];
+    int gdim = psc.domain.gdims[d];
     assert(gdim % psc.domain.nproc[d] == 0);
     domain_par.ldims[d] = gdim / psc.domain.nproc[d];
     domain_par.nr_procs[d] = psc.domain.nproc[d];
 
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	psc.domain.ihi[d] > 1) {
+	psc.domain.gdims[d] > 1) {
       domain_par.bc[d] = BC_PERIODIC;
     }
   }

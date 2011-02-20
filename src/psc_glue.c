@@ -193,9 +193,9 @@ static void
 PIC_set_variables()
 {
   int i0mx = psc.ihi[0] - 1, i1mx = psc.ihi[1] - 1, i2mx = psc.ihi[2] - 1;
-  int i0x = psc.domain.ihi[0] - 1;
-  int i1x = psc.domain.ihi[1] - 1;
-  int i2x = psc.domain.ihi[2] - 1;
+  int i0x = psc.domain.gdims[0] - 1;
+  int i1x = psc.domain.gdims[1] - 1;
+  int i2x = psc.domain.gdims[2] - 1;
   int ilo[3] = {};
 
   PIC_set_variables_F77(&psc.ilo[0], &psc.ilo[1], &psc.ilo[2],

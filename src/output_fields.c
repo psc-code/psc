@@ -8,9 +8,9 @@
 #include <assert.h>
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx __unused = (psc.domain.ihi[0] == 1) ? 0 : 1;			\
-  int dy __unused = (psc.domain.ihi[1] == 1) ? 0 : 1;			\
-  int dz __unused = (psc.domain.ihi[2] == 1) ? 0 : 1
+  int dx __unused = (psc.domain.gdims[0] == 1) ? 0 : 1;			\
+  int dy __unused = (psc.domain.gdims[1] == 1) ? 0 : 1;			\
+  int dz __unused = (psc.domain.gdims[2] == 1) ? 0 : 1
 
 #define JX_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, JXI,ix,iy,iz) + F3_BASE(&psc.pf, JXI,ix-dx,iy,iz)))
 #define JY_CC(ix,iy,iz) (.5f * (F3_BASE(&psc.pf, JYI,ix,iy,iz) + F3_BASE(&psc.pf, JYI,ix,iy-dy,iz)))
@@ -331,7 +331,7 @@ output_c_field()
 	for(int i=0;i<3;++i)
 	{
 	        if(out->rn[i]<0) out->rn[i]=0;
-		if(out->rx[i]>psc.domain.ihi[i]) out->rx[i]=psc.domain.ihi[i];
+		if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
 		
 		if(out->rx[i]>psc.ihi[i]) out->rx[i]=psc.ihi[i];
 		if(out->rn[i]<psc.ilo[i]) out->rn[i]=psc.ilo[i];
