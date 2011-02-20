@@ -27,6 +27,7 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
+  struct psc_patch *patch = &psc.patch[0];
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
@@ -39,9 +40,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 
     part->zi += vzi * zl;
 
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = (part->xi - patch->xb[0]) * dxi;
+    creal v = (part->yi - patch->xb[1]) * dyi;
+    creal w = (part->zi - patch->xb[2]) * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -59,9 +60,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
     S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
-    u = part->xi*dxi-.5f;
-    v = part->yi*dyi;
-    w = part->zi*dzi-.5f;
+    u = (part->xi - patch->xb[0]) * dxi - .5f;
+    v = (part->yi - patch->xb[1]) * dyi;
+    w = (part->zi - patch->xb[2]) * dzi - .5f;
     int l1=nint(u);
     int l2=nint(v);
     int l3=nint(w);
@@ -71,14 +72,6 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     creal hmz=.5f*(.5f+h3)*(.5f+h3);
     creal h0z=.75f-h3*h3;
     creal h1z=.5f*(.5f-h3)*(.5f-h3);
-
-    j1 -= psc.ilo[0];
-    j2 -= psc.ilo[1];
-    j3 -= psc.ilo[2];
-
-    l1 -= psc.ilo[0];
-    l2 -= psc.ilo[1];
-    l3 -= psc.ilo[2];
 
     // FIELD INTERPOLATION
 
@@ -147,11 +140,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 
     creal zi = part->zi + vzi * zl;
 
-    w = zi * dzi;
+    w = (zi - patch->xb[2]) * dzi;
     int k3 = nint(w);
     h3 = k3 - w;
-
-    k3 -= psc.ilo[2];
 
     for (int i = -2; i <= 2; i++) {
       S1Z(i) = 0.f;

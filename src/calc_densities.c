@@ -26,12 +26,13 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
+  struct psc_patch *patch = &psc.patch[0];
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *part = particles_base_get_one(&psc.pp, n);
       
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = (part->xi - patch->xb[0]) * dxi;
+    creal v = (part->yi - patch->xb[1]) * dyi;
+    creal w = (part->zi - patch->xb[2]) * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -50,19 +51,15 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
       
     if (psc.ihi[0] - psc.ilo[0] == 1) {
-      j1 = psc.ilo[0]; gmx = 0.; g0x = 1.; g1x = 0.;
+      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
     if (psc.ihi[1] - psc.ilo[1] == 1) {
-      j2 = psc.ilo[1]; gmy = 0.; g0y = 1.; g1y = 0.;
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
     if (psc.ihi[2] - psc.ilo[2] == 1) {
-      j3 = psc.ilo[2]; gmz = 0.; g0z = 1.; g1z = 0.;
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
 
-    j1 -= psc.ilo[0];
-    j2 -= psc.ilo[1];
-    j3 -= psc.ilo[2];
-      
     creal fnq;
     int m;
     if (part->qni < 0.) {
@@ -133,12 +130,13 @@ do_c_calc_v(fields_base_t *pf)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
+  struct psc_patch *patch = &psc.patch[0];
   for (int n = 0; n < psc.pp.n_part; n++) {
     particle_base_t *part = particles_base_get_one(&psc.pp, n);
 
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = (part->xi - patch->xb[0]) * dxi;
+    creal v = (part->yi - patch->xb[1]) * dyi;
+    creal w = (part->zi - patch->xb[2]) * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -157,19 +155,15 @@ do_c_calc_v(fields_base_t *pf)
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 
     if (psc.ihi[0] - psc.ilo[0] == 1) {
-      j1 = psc.ilo[0]; gmx = 0.; g0x = 1.; g1x = 0.;
+      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
     if (psc.ihi[1] - psc.ilo[1] == 1) {
-      j2 = psc.ilo[1]; gmy = 0.; g0y = 1.; g1y = 0.;
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
     if (psc.ihi[2] - psc.ilo[2] == 1) {
-      j3 = psc.ilo[2]; gmz = 0.; g0z = 1.; g1z = 0.;
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
-    j1 -= psc.ilo[0];
-    j2 -= psc.ilo[1];
-    j3 -= psc.ilo[2];
-      
     creal pxi = part->pxi;
     creal pyi = part->pyi;
     creal pzi = part->pzi;

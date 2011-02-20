@@ -30,6 +30,7 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
+  struct psc_patch *patch = &psc.patch[0];
   int n_part = psc.pp.n_part;
   for (int n = 0; n < n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -43,8 +44,8 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
 
     part->xi += vxi * xl;
     part->yi += vyi * yl;
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
+    creal u = (part->xi - patch->xb[0]) * dxi;
+    creal v = (part->yi - patch->xb[1]) * dyi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = 0;
@@ -67,8 +68,8 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
     S0Y(+0) = .75f-creal_abs(h2)*creal_abs(h2);
     S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
 
-    u = part->xi*dxi-.5f;
-    v = part->yi*dyi-.5f;
+    u = (part->xi - patch->xb[0]) * dxi - .5f;
+    v = (part->yi - patch->xb[1]) * dyi - .5f;
     int l1 = nint(u);
     int l2 = nint(v);
     int l3 = 0;
@@ -81,14 +82,6 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
     creal h0y=.75f-h2*h2;
     creal h1x=.5f*(.5f-h1)*(.5f-h1);
     creal h1y=.5f*(.5f-h2)*(.5f-h2);
-
-    j1 -= psc.ilo[0];
-    j2 -= psc.ilo[1];
-    j3 -= psc.ilo[2];
-
-    l1 -= psc.ilo[0];
-    l2 -= psc.ilo[1];
-    l3 -= psc.ilo[2];
 
     // FIELD INTERPOLATION
 
@@ -193,15 +186,12 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
     creal xi = part->xi + vxi * xl;
     creal yi = part->yi + vyi * yl;
 
-    u = xi * dxi;
-    v = yi * dyi;
+    u = (xi - patch->xb[0]) * dxi;
+    v = (yi - patch->xb[1]) * dyi;
     int k1 = nint(u);
     int k2 = nint(v);
     h1 = k1 - u;
     h2 = k2 - v;
-
-    k1 -= psc.ilo[0];
-    k2 -= psc.ilo[1];
 
     for (int i = -2; i <= 2; i++) {
       S1X(i) = 0.f;

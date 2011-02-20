@@ -98,6 +98,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
 
     psc.patch[0].ldims[d] = ldims[d];
     psc.patch[0].off[d] = off[d];
+    psc.patch[0].xb[d]  = off[d] * psc.dx[d];
 
     int min_size = 1;
     if (lidx[d] == 0 && // left-most proc in this dir

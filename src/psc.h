@@ -332,6 +332,7 @@ struct psc_moment_ops {
 struct psc_patch {
   int ldims[3];       // size of local domain (w/o ghost points)
   int off[3];         // local to global offset
+  double xb[3];       // lower left corner of the domain in this patch
 };
 
 static inline void
