@@ -15,15 +15,12 @@
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
-#define INIT_partition_F77 F77_FUNC_(init_partition, INIT_PARTITION)
-#define INIT_idistr_F77 F77_FUNC_(init_idistr, INIT_IDISTR)
 #define OUT_field_F77 F77_FUNC(out_field,OUT_FIELD)
 #define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
 #define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
-#define GET_subdomain_F77 F77_FUNC_(get_subdomain, GET_SUBDOMAIN)
 #define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
@@ -116,11 +113,6 @@ void PIC_sort_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void INIT_partition_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
-			f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x,
-			f_int *niloc_new);
-void INIT_idistr_F77(f_int *part_label_off, f_int *rd1n, f_int *rd1x,
-		     f_int *rd2n, f_int *rd2x, f_int *rd3n, f_int *rd3x);
 void OUT_field_F77(void);
 void OUT_part_F77(void);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
@@ -128,9 +120,6 @@ void INIT_grid_map_F77(void);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
 void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
-		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
-		       f_int *i3bn);
-void GET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
 		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
 		       f_int *i3bn);
 void SET_niloc_F77(f_int *niloc);
@@ -349,24 +338,6 @@ PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
   return s_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
 }
 
-
-static int rd1n, rd1x, rd2n, rd2x, rd3n, rd3x;
-static int part_label_offset;
-
-void
-INIT_partition(int *n_part)
-{
-  INIT_partition_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x,
-		     n_part);
-  GET_subdomain();
-}
-
-void
-INIT_idistr(void)
-{
-  INIT_idistr_F77(&part_label_offset, &rd1n, &rd1x, &rd2n, &rd2x, &rd3n, &rd3x);
-}
-
 void
 CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
@@ -389,28 +360,6 @@ SET_subdomain()
   f_int i2bn = psc.ibn[1];
   f_int i3bn = psc.ibn[2];
   SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx, &i1bn, &i2bn, &i3bn);
-}
-
-void
-GET_subdomain()
-{
-  f_int i1mn, i2mn, i3mn, i1mx, i2mx, i3mx, i1bn, i2bn, i3bn;
-  GET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx, &i1bn, &i2bn, &i3bn);
-  psc.ilo[0] = i1mn;
-  psc.ilo[1] = i2mn;
-  psc.ilo[2] = i3mn;
-  psc.ihi[0] = i1mx + 1;
-  psc.ihi[1] = i2mx + 1;
-  psc.ihi[2] = i3mx + 1;
-  psc.ibn[0] = i1bn;
-  psc.ibn[1] = i2bn;
-  psc.ibn[2] = i3bn;
-  for (int d = 0; d < 3; d++) {
-    psc.ilg[d] = psc.ilo[d] - psc.ibn[d];
-    psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
-    psc.img[d] = psc.ihg[d] - psc.ilg[d];
-  }
-  psc.fld_size = psc.img[0] * psc.img[1] * psc.img[2];
 }
 
 void

@@ -47,12 +47,7 @@ pml_find_bounds(int ilo[3], int ihi[3])
 void
 psc_init_partition(int *n_part, int *particle_label_offset)
 {
-  if (!psc.Case) {
-    assert(FIELDS_BASE == FIELDS_FORTRAN);
-    assert(PARTICLES_BASE == PARTICLES_FORTRAN);
-    INIT_partition(n_part);
-    return;
-  }
+  assert(psc.Case);
 
   MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -161,17 +156,9 @@ psc_init_partition(int *n_part, int *particle_label_offset)
 	     MPI_COMM_WORLD);
 }
 
-void INIT_idistr();
-
 void
 psc_init_particles(int particle_label_offset)
 {
-  if (!psc.Case) {
-    INIT_idistr();
-    GET_niloc(&psc.pp.n_part);
-    return;
-  }
-
   double beta = psc.coeff.beta;
 
   int rank;
