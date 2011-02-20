@@ -57,14 +57,14 @@ psc_save_particles_ref()
 // save current field data as reference solution
 
 void
-psc_save_fields_ref()
+psc_save_fields_ref(struct psc_mfields *flds)
 {
   if (!flds_ref.f) {
     psc_mfields_alloc(&flds_ref, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = 0; m < me; m++) {
       foreach_3d_g(p, ix, iy, iz) {
@@ -118,13 +118,13 @@ psc_check_particles_ref(double thres, const char *test_str)
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(int *flds, double thres)
+psc_check_fields_ref(struct psc_mfields *flds, int *m_flds, double thres)
 {
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
-    for (int i = 0; flds[i] >= 0; i++) {
-      int m = flds[i];
+    for (int i = 0; m_flds[i] >= 0; i++) {
+      int m = m_flds[i];
       foreach_3d(p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
@@ -139,10 +139,10 @@ psc_check_fields_ref(int *flds, double thres)
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(double thres)
+psc_check_currents_ref(struct psc_mfields *flds, double thres)
 {
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
 	double val = F3_BASE(pf, m, ix,iy,iz);
@@ -154,7 +154,7 @@ psc_check_currents_ref(double thres)
     }
   }
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = JXI; m <= JZI; m++){
       double max_delta = 0.;
@@ -170,10 +170,10 @@ psc_check_currents_ref(double thres)
 }
 
 void
-psc_check_currents_ref_noghost(double thres)
+psc_check_currents_ref_noghost(struct psc_mfields *flds, double thres)
 {
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = JXI; m <= JZI; m++){
       foreach_3d(p, ix, iy, iz, 0, 0) {

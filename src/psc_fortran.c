@@ -233,7 +233,7 @@ struct psc_collision_ops psc_collision_ops_fortran = {
 // fortran push field
 
 static void
-fortran_push_field_a()
+fortran_push_field_a(struct psc_mfields *flds)
 {
   if (psc.domain.use_pml) {
     fields_fortran_t pf;
@@ -265,7 +265,7 @@ fortran_push_field_a()
 }
 
 static void
-fortran_push_field_b()
+fortran_push_field_b(struct psc_mfields *flds)
 {
   if (psc.domain.use_pml) {
     fields_fortran_t pf;
@@ -435,7 +435,7 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
 // fortran moment
 
 static void
-fortran_calc_densities(fields_base_t *pf_base)
+fortran_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
@@ -445,13 +445,13 @@ fortran_calc_densities(fields_base_t *pf_base)
 
   particles_fortran_t pp;
   particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get_from(&pf, 0, 0, pf_base, 0);
+  fields_fortran_t pf_fortran;
+  fields_fortran_get_from(&pf_fortran, 0, 0, pf, 0);
 
-  CALC_densities(&pp, &pf);
+  CALC_densities(&pp, &pf_fortran);
 
   particles_fortran_put(&pp);
-  fields_fortran_put_to(&pf, NE, NE + 3, pf_base, 0);
+  fields_fortran_put_to(&pf_fortran, NE, NE + 3, pf, 0);
 
   prof_stop(pr);
 }

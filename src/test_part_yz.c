@@ -91,11 +91,12 @@ main(int argc, char **argv)
   printf("=== testing push_part_yz()\n");
 
   psc_create_test_yz(&conf_fortran);
+  struct psc_mfields *flds = &psc.flds;
   //  psc_dump_particles("part-0");
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
   psc_save_particles_ref();
-  psc_save_fields_ref();
+  psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
@@ -103,7 +104,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
   psc_check_particles_ref(1e-7, "push_part_yz -- generic_c");
-  psc_check_currents_ref(1e-7);
+  psc_check_currents_ref(flds, 1e-7);
   psc_destroy();
 
 #ifdef USE_SSE2
@@ -111,7 +112,7 @@ main(int argc, char **argv)
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
   psc_check_particles_ref(1e-8, "push_part_yz -- sse2");
-  psc_check_currents_ref(2e-6); 
+  psc_check_currents_ref(flds, 2e-6); 
   psc_destroy();
 #endif
 

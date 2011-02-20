@@ -6,27 +6,27 @@
 void INIT_field(void);
 
 static void
-psc_init_field_pml(void)
+psc_init_field_pml(struct psc_mfields *flds)
 {
   foreach_patch(p) {
-    fields_base_copy(&psc.flds.f[p], DX, EX);
-    fields_base_copy(&psc.flds.f[p], DY, EY);
-    fields_base_copy(&psc.flds.f[p], DZ, EZ);
-    fields_base_copy(&psc.flds.f[p], BX, HX);
-    fields_base_copy(&psc.flds.f[p], BY, HY);
-    fields_base_copy(&psc.flds.f[p], BZ, HZ);
-    fields_base_set(&psc.flds.f[p], EPS, 1.);
-    fields_base_set(&psc.flds.f[p], MU, 1.);
+    fields_base_copy(&flds->f[p], DX, EX);
+    fields_base_copy(&flds->f[p], DY, EY);
+    fields_base_copy(&flds->f[p], DZ, EZ);
+    fields_base_copy(&flds->f[p], BX, HX);
+    fields_base_copy(&flds->f[p], BY, HY);
+    fields_base_copy(&flds->f[p], BZ, HZ);
+    fields_base_set(&flds->f[p], EPS, 1.);
+    fields_base_set(&flds->f[p], MU, 1.);
   }
 }
 
 void
-psc_init_field()
+psc_init_field(struct psc_mfields *flds)
 {
   if (psc.Case) {
     psc_case_init_field(psc.Case);
     if (psc.domain.use_pml) {
-      psc_init_field_pml();
+      psc_init_field_pml(flds);
     }
   } else {
     INIT_field();
@@ -50,5 +50,5 @@ INIT_field()
 void
 C_INIT_field_F77()
 {
-  psc_init_field();
+  psc_init_field(&psc.flds);
 }

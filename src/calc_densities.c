@@ -104,7 +104,7 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
 }
 
 void
-c_calc_densities(fields_base_t *pf)
+c_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
@@ -116,6 +116,7 @@ c_calc_densities(fields_base_t *pf)
 
   struct psc_mfields flds;
   flds.f = pf;
+  assert(psc.nr_patches == 1);
   psc_add_ghosts(&flds, 0, 3);
 }
 
@@ -215,7 +216,7 @@ do_c_calc_v(fields_base_t *pf)
 }
 
 void
-c_calc_v(fields_base_t *pf)
+c_calc_v(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
@@ -324,7 +325,7 @@ do_c_calc_vv(fields_base_t *pf)
 }
 
 void
-c_calc_vv(fields_base_t *pf)
+c_calc_vv(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {

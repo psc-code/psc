@@ -87,6 +87,8 @@ psc_integrate()
 
   SETUP_field_F77();
 
+  struct psc_mfields *flds = &psc.flds;
+
   double stats[NR_STATS];
 
   for (; psc.timestep < psc.prm.nmax; psc.timestep++) {
@@ -94,7 +96,7 @@ psc_integrate()
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_out_field();
+    psc_out_field(flds);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
@@ -115,20 +117,20 @@ psc_integrate()
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_field_a();
+    psc_push_field_a(flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
     psc_push_particles();
-    psc_add_ghosts(&psc.flds, JXI, JXI + 3);
-    psc_fill_ghosts(&psc.flds, JXI, JXI + 3);
+    psc_add_ghosts(flds, JXI, JXI + 3);
+    psc_fill_ghosts(flds, JXI, JXI + 3);
     psc_exchange_particles();
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_field_b();
+    psc_push_field_b(flds);
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = 0;

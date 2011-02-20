@@ -283,8 +283,8 @@ struct psc_push_field_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*push_field_a)(void); // 1st half step
-  void (*push_field_b)(void); // 2nd half step
+  void (*push_field_a)(struct psc_mfields *); // 1st half step
+  void (*push_field_b)(struct psc_mfields *); // 2nd half step
 };
 
 // FIXME, the randomize / sort interaction needs more work
@@ -315,7 +315,7 @@ struct psc_output_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*out_field)(void);
+  void (*out_field)(struct psc_mfields *flds);
   void (*dump_field)(int m, const char *fname);
   void (*dump_particles)(const char *fname);
 };
@@ -333,9 +333,9 @@ struct psc_moment_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*calc_densities)(fields_base_t *pf);
-  void (*calc_v)(fields_base_t *pf);
-  void (*calc_vv)(fields_base_t *pf);
+  void (*calc_densities)(int p, fields_base_t *pf_base, fields_base_t *pf);
+  void (*calc_v)(int p, fields_base_t *pf_base, fields_base_t *pf);
+  void (*calc_vv)(int p, fields_base_t *pf_base, fields_base_t *pf);
 };
 
 struct psc_patch {
@@ -455,20 +455,20 @@ void psc_init(const char *case_name);
 void psc_init_param(const char *case_name);
 void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
-void psc_init_field(void);
+void psc_init_field(struct psc_mfields *flds);
 void psc_integrate(void);
 void psc_push_particles(void);
-void psc_push_field_a(void);
-void psc_push_field_b(void);
+void psc_push_field_a(struct psc_mfields *flds);
+void psc_push_field_b(struct psc_mfields *flds);
 void psc_add_ghosts(struct psc_mfields *flds, int mb, int me);
 void psc_fill_ghosts(struct psc_mfields *flds, int mb, int me);
 void psc_exchange_particles(void);
-void psc_calc_densities(fields_base_t *pf);
-void psc_calc_moments_v(fields_base_t *pf);
-void psc_calc_moments_vv(fields_base_t *pf);
+void psc_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf);
+void psc_calc_moments_v(int p, fields_base_t *pf_base, fields_base_t *pf);
+void psc_calc_moments_vv(int p, fields_base_t *pf_base, fields_base_t *pf);
 
 void psc_dump_particles(const char *fname);
-void psc_dump_field(int m, const char *fname);
+void psc_dump_field(struct psc_mfields *flds, int m, const char *fname);
 
 void psc_push_part_xyz();
 void psc_push_part_yz(void);
@@ -479,7 +479,7 @@ void psc_push_part_yz_b(void);
 void psc_randomize(void);
 void psc_sort(void);
 void psc_collision(void);
-void psc_out_field(void);
+void psc_out_field(struct psc_mfields *flds);
 void psc_out_particles(void);
 void psc_set_n_particles(int p, int n_part);
 

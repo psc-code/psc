@@ -23,9 +23,14 @@ struct psc_ops psc_ops_none = {
 
 // field advance
 
+static void
+none_push_field(struct psc_mfields *flds)
+{
+}
+
 struct psc_push_field_ops psc_push_field_ops_none = {
   .name         = "none",
-  .push_field_a = do_nothing,
-  .push_field_b = do_nothing,
+  .push_field_a = none_push_field,
+  .push_field_b = none_push_field,
 };
 

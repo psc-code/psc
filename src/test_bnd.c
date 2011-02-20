@@ -8,10 +8,10 @@
 #include <mpi.h>
 
 static void
-setup_jx()
+setup_jx(struct psc_mfields *flds)
 {
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
@@ -23,10 +23,10 @@ setup_jx()
 }
 
 static void
-setup_jx_noghost()
+setup_jx_noghost(struct psc_mfields *flds)
 {
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
@@ -53,35 +53,36 @@ main(int argc, char **argv)
   };
 
   psc_create_test_xz(&conf_fortran);
-  setup_jx();
+  struct psc_mfields *flds = &psc.flds;
+  setup_jx(flds);
   //  psc_dump_field(JXI, "jx0");
-  psc_add_ghosts(&psc.flds, JXI, JXI + 1);
+  psc_add_ghosts(flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx1");
-  psc_save_fields_ref();
+  psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
-  setup_jx();
-  psc_add_ghosts(&psc.flds, JXI, JXI + 1);
+  setup_jx(flds);
+  psc_add_ghosts(flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref_noghost(1e-10);
+  psc_check_currents_ref_noghost(flds, 1e-10);
   psc_destroy();
 
   // test psc_fill_ghosts()
 
   psc_create_test_xz(&conf_fortran);
-  setup_jx_noghost();
-  psc_dump_field(JXI, "jx0");
-  psc_fill_ghosts(&psc.flds, JXI, JXI + 1);
-  psc_dump_field(JXI, "jx1");
-  psc_save_fields_ref();
+  setup_jx_noghost(flds);
+  psc_dump_field(flds, JXI, "jx0");
+  psc_fill_ghosts(flds, JXI, JXI + 1);
+  psc_dump_field(flds, JXI, "jx1");
+  psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
-  setup_jx_noghost();
-  psc_fill_ghosts(&psc.flds, JXI, JXI + 1);
-  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref(1e-10);
+  setup_jx_noghost(flds);
+  psc_fill_ghosts(flds, JXI, JXI + 1);
+  psc_dump_field(flds, JXI, "jx2");
+  psc_check_currents_ref(flds, 1e-10);
   psc_destroy();
 
   prof_print();

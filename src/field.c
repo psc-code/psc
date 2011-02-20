@@ -3,7 +3,7 @@
 #include <mrc_profile.h>
 
 static void
-c_push_field_a_nopml()
+c_push_field_a_nopml(struct psc_mfields *flds)
 {
   static int pr;
   if (!pr) {
@@ -40,7 +40,7 @@ c_push_field_a_nopml()
   //                  -> E^(n+0.5), H^(n), j^(n)
 
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, EX, ix,iy,iz) +=
 	cny * (F3_BASE(pf, HZ, ix,iy,iz) - F3_BASE(pf, HZ, ix,iy-1,iz)) -
@@ -59,13 +59,13 @@ c_push_field_a_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.flds, EX, EX + 3);
+  psc_fill_ghosts(flds, EX, EX + 3);
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
 
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, HX, ix,iy,iz) -=
 	cny * (F3_BASE(pf, EZ, ix,iy+1,iz) - F3_BASE(pf, EZ, ix,iy,iz)) -
@@ -81,13 +81,13 @@ c_push_field_a_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.flds, HX, HX + 3);
+  psc_fill_ghosts(flds, HX, HX + 3);
 
   prof_stop(pr);
 }
 
 static void
-c_push_field_b_nopml()
+c_push_field_b_nopml(struct psc_mfields *flds)
 {
   static int pr;
   if (!pr) {
@@ -117,7 +117,7 @@ c_push_field_b_nopml()
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, HX, ix,iy,iz) -=
 	cny * (F3_BASE(pf, EZ, ix,iy+1,iz) - F3_BASE(pf, EZ, ix,iy,iz)) -
@@ -133,13 +133,13 @@ c_push_field_b_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.flds, HX, HX + 3);
+  psc_fill_ghosts(flds, HX, HX + 3);
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
 
   foreach_patch(p) {
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     foreach_3d(p, ix, iy, iz, 1, 1) {
       F3_BASE(pf, EX, ix,iy,iz) +=
 	cny * (F3_BASE(pf, HZ, ix,iy,iz) - F3_BASE(pf, HZ, ix,iy-1,iz)) -
@@ -158,28 +158,28 @@ c_push_field_b_nopml()
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(&psc.flds, EX, EX + 3);
+  psc_fill_ghosts(flds, EX, EX + 3);
 
   prof_stop(pr);
 }
 
 static void
-c_push_field_a(void)
+c_push_field_a(struct psc_mfields *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
   } else {
-    c_push_field_a_nopml();
+    c_push_field_a_nopml(flds);
   }
 }
 
 static void
-c_push_field_b(void)
+c_push_field_b(struct psc_mfields *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
   } else {
-    c_push_field_b_nopml();
+    c_push_field_b_nopml(flds);
   }
 }
 

@@ -240,22 +240,30 @@ psc_create(struct psc_mod_config *conf)
 }
 
 void
+psc_fields_destroy(struct psc_mfields *flds)
+{
+  foreach_patch(p) {
+    fields_base_free(&flds->f[p]);
+  }
+  free(flds->f);
+}
+
+void
 psc_destroy()
 {
   if (psc.ops->destroy) {
     psc.ops->destroy();
   }
 
+  psc_fields_destroy(&psc.flds);
   foreach_patch(p) {
-    fields_base_free(&psc.flds.f[p]);
     particles_base_free(&psc.particles.p[p]);
   }
-  free(psc.flds.f);
   free(psc.particles.p);
 }
 
 static void
-ascii_dump_field(int m, const char *fname)
+ascii_dump_field(struct psc_mfields *flds, int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -265,7 +273,7 @@ ascii_dump_field(int m, const char *fname)
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-    fields_base_t *pf = &psc.flds.f[p];
+    fields_base_t *pf = &flds->f[p];
     FILE *file = fopen(filename, "w");
     free(filename);
     foreach_patch(patch) {
@@ -309,12 +317,12 @@ ascii_dump_particles(const char *fname)
 }
 
 void
-psc_dump_field(int m, const char *fname)
+psc_dump_field(struct psc_mfields *flds, int m, const char *fname)
 {
   if (psc.output_ops->dump_field) {
     psc.output_ops->dump_field(m, fname);
   } else {
-    ascii_dump_field(m, fname);
+    ascii_dump_field(flds, m, fname);
   }
 }
 
@@ -424,20 +432,20 @@ psc_push_particles()
 // psc_push_field_a
 
 void
-psc_push_field_a()
+psc_push_field_a(struct psc_mfields *flds)
 {
   assert(psc.push_field_ops->push_field_a);
-  psc.push_field_ops->push_field_a();
+  psc.push_field_ops->push_field_a(flds);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_field_b
 
 void
-psc_push_field_b()
+psc_push_field_b(struct psc_mfields *flds)
 {
   assert(psc.push_field_ops->push_field_b);
-  psc.push_field_ops->push_field_b();
+  psc.push_field_ops->push_field_b(flds);
 }
 
 // ----------------------------------------------------------------------
@@ -506,10 +514,10 @@ psc_collision()
 // psc_out_field
 
 void
-psc_out_field()
+psc_out_field(struct psc_mfields *flds)
 {
   assert(psc.output_ops->out_field);
-  psc.output_ops->out_field();
+  psc.output_ops->out_field(flds);
 }
 
 // ----------------------------------------------------------------------
@@ -579,24 +587,24 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 // psc moments
 
 void
-psc_calc_densities(fields_base_t *pf)
+psc_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities(pf);
+  psc.moment_ops->calc_densities(p, pf_base, pf);
 }
 
 void
-psc_calc_moments_v(fields_base_t *pf)
+psc_calc_moments_v(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_v);
-  psc.moment_ops->calc_v(pf);
+  psc.moment_ops->calc_v(p, pf_base, pf);
 }
 
 void
-psc_calc_moments_vv(fields_base_t *pf)
+psc_calc_moments_vv(int p, fields_base_t *pf_base, fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_vv);
-  psc.moment_ops->calc_vv(pf);
+  psc.moment_ops->calc_vv(p, pf_base, pf);
 }
 
 // ----------------------------------------------------------------------
@@ -624,7 +632,7 @@ psc_init(const char *case_name)
   psc_init_particles(particle_label_offset);
 
   psc_mfields_alloc(&psc.flds, NR_FIELDS);
-  psc_init_field();
+  psc_init_field(&psc.flds);
 }
 
 // ----------------------------------------------------------------------
