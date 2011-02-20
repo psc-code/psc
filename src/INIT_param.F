@@ -261,8 +261,8 @@ c nistep: index increment for ion output
 c plin: smallest particle number for output
 c plix: largest particle number for output
 
-      nprparti=0
-      dnprparti=10
+      nprparti=10000
+      dnprparti=1000
       nistep=1
       plin=0
       plix=30000000
