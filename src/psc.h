@@ -330,7 +330,7 @@ struct psc_moment_ops {
 };
 
 struct psc_patch {
-  int ihi[3];         // 0 <= i < ihi[d] : inside domain
+  int ldims[3];        // size of local domain (w/o ghost points)
   int ilg[3], ihg[3];
   int off[3];         // ix[d] + off[d] is global index for local ix
 };

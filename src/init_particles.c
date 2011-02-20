@@ -99,7 +99,7 @@ psc_init_partition(int *n_part, int *particle_label_offset)
     psc.ihg[d] = psc.ihi[d] + psc.ibn[d];
     psc.img[d] = psc.ihg[d] - psc.ilg[d];
 
-    psc.patch[0].ihi[d] = ldims[d];
+    psc.patch[0].ldims[d] = ldims[d];
     psc.patch[0].ilg[d] = - psc.ibn[d];
     psc.patch[0].ihg[d] = ldims[d] + psc.ibn[d];
     psc.patch[0].off[d] = off[d];
