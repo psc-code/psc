@@ -263,9 +263,9 @@ ascii_dump_field(int m, const char *fname)
   fields_base_t *pf = &psc.pf;
   FILE *file = fopen(filename, "w");
   foreach_patch(patch) {
-    for (int iz = -psc.ibn[2]; iz < patch->ldims[2] + psc.ibn[2]; iz++) {
-      for (int iy = -psc.ibn[1]; iy < patch->ldims[1] + psc.ibn[1]; iy++) {
-	for (int ix = -psc.ibn[0]; ix < patch->ldims[0] +  psc.ibn[0]; ix++) {
+    for (int iz = -psc.ibn[2]; iz < psc.patch[patch].ldims[2] + psc.ibn[2]; iz++) {
+      for (int iy = -psc.ibn[1]; iy < psc.patch[patch].ldims[1] + psc.ibn[1]; iy++) {
+	for (int ix = -psc.ibn[0]; ix < psc.patch[patch].ldims[0] +  psc.ibn[0]; ix++) {
 	  fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
 	}
 	fprintf(file, "\n");

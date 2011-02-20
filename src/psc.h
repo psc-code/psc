@@ -334,18 +334,9 @@ struct psc_patch {
   double xb[3];       // lower left corner of the domain in this patch
 };
 
-static inline void
-psc_local_to_global_indices(struct psc_patch *patch, int jx, int jy, int jz,
-			    int *ix, int *iy, int *iz)
-{
-  *ix = jx + patch->off[0];
-  *iy = jy + patch->off[1];
-  *iz = jz + patch->off[2];
-}
-
-#define CRDX(patch, jx) (psc.dx[0] * ((jx) + patch->off[0]))
-#define CRDY(patch, jy) (psc.dx[1] * ((jy) + patch->off[1]))
-#define CRDZ(patch, jz) (psc.dx[2] * ((jz) + patch->off[2]))
+#define CRDX(p, jx) (psc.dx[0] * ((jx) + psc.patch[p].off[0]))
+#define CRDY(p, jy) (psc.dx[1] * ((jy) + psc.patch[p].off[1]))
+#define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
   struct psc_ops *ops;
@@ -378,6 +369,7 @@ struct psc {
   fields_base_t pf;
   struct mrc_domain *mrc_domain;
 
+  int nr_patches;
   struct psc_patch patch[1];
   int ibn[3];         // number of ghost points
 
@@ -390,9 +382,11 @@ struct psc {
   double time_start;
 };
 
-#define foreach_3d(patch, ix, iy, iz, l, r) {				\
+#define foreach_3d(p, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\
-  int __ihi[3] = { patch->ldims[0] + r, patch->ldims[1] + r, patch->ldims[2] + r }; \
+  int __ihi[3] = { psc.patch[p].ldims[0] + r,				\
+		   psc.patch[p].ldims[1] + r,				\
+		   psc.patch[p].ldims[2] + r };				\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -400,11 +394,11 @@ struct psc {
 #define foreach_3d_end				\
   } } }
 
-#define foreach_3d_g(patch, ix, iy, iz) {				\
+#define foreach_3d_g(p, ix, iy, iz) {					\
   int __ilo[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };		\
-  int __ihi[3] = { patch->ldims[0] + psc.ibn[0],			\
-		   patch->ldims[1] + psc.ibn[1],			\
-		   patch->ldims[2] + psc.ibn[2] };			\
+  int __ihi[3] = { psc.patch[p].ldims[0] + psc.ibn[0],			\
+		   psc.patch[p].ldims[1] + psc.ibn[1],			\
+		   psc.patch[p].ldims[2] + psc.ibn[2] };		\
   for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
@@ -412,8 +406,8 @@ struct psc {
 #define foreach_3d_g_end				\
   } } }
 
-#define foreach_patch(patch)				\
-  for (struct psc_patch *patch = &psc.patch[0]; patch < &psc.patch[1]; patch++)
+#define foreach_patch(p)				\
+  for (int p = 0; p < psc.nr_patches; p++)
 
 
 // ----------------------------------------------------------------------
@@ -434,6 +428,15 @@ struct psc_mod_config {
 // FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
 struct psc psc;
+
+static inline void
+psc_local_to_global_indices(int p, int jx, int jy, int jz,
+			    int *ix, int *iy, int *iz)
+{
+  *ix = jx + psc.patch[p].off[0];
+  *iy = jy + psc.patch[p].off[1];
+  *iz = jz + psc.patch[p].off[2];
+}
 
 void psc_create(struct psc_mod_config *conf);
 void psc_destroy(void);

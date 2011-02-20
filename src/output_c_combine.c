@@ -41,10 +41,10 @@ write_fields_combine(struct psc_fields_list *list,
 					    -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]);
       
       for (int d = 0; d < 3; d++) {
-	s_ilo[d] = patch->off[d];
-	s_ihi[d] = patch->off[d] + patch->ldims[d];
-	s_ilg[d] = patch->off[d] - psc.ibn[d];
-	s_img[d] = patch->ldims[d] + 2 * psc.ibn[d];
+	s_ilo[d] = psc.patch[patch].off[d];
+	s_ihi[d] = psc.patch[patch].off[d] + psc.patch[patch].ldims[d];
+	s_ilg[d] = psc.patch[patch].off[d] - psc.ibn[d];
+	s_img[d] = psc.patch[patch].ldims[d] + 2 * psc.ibn[d];
       }
       
       if (rank != 0) {
