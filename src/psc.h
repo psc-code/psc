@@ -56,16 +56,6 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
-// ----------------------------------------------------------------------
-// macros to access Fortran fields
-
-#define FF3_OFF(jx,jy,jz)						\
-  (((((jz)-psc.ilg[2]))							\
-    *psc.img[1] + ((jy)-psc.ilg[1]))					\
-   *psc.img[0] + ((jx)-psc.ilg[0]))
-
-#define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
-
 // always need the fortran types for fortran interface
 #include "psc_particles_fortran.h"
 #include "psc_fields_fortran.h"
