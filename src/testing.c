@@ -58,7 +58,7 @@ psc_save_fields_ref()
     int ihg[3] = { patch->ldims[0] + psc.ibn[0],
 		   patch->ldims[1] + psc.ibn[1],
 		   patch->ldims[2] + psc.ibn[2] };
-    fields_base_alloc(&psc.pf, ilg, ihg, NR_FIELDS);
+    fields_base_alloc(field_ref, ilg, ihg, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   foreach_patch(patch) {
