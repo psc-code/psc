@@ -383,7 +383,6 @@ struct psc {
   // local domain size
   int ibn[3];         // number of ghost points
   int ilg[3], ihg[3]; // local domain incl ghost points: ilg, ilg+1, ..., ihg-1
-  int img[3];         // total # points per dir incl. ghost points
   int fld_size;       // total # points per field incl. ghost points
 
   // C data structures

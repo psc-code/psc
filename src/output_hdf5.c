@@ -66,9 +66,9 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
   }
   hid_t mem_space = H5Screate_simple(3, mem_dims, NULL);
   
-  if (fld->im[0] == psc.img[0] &&
-      fld->im[1] == psc.img[1] &&
-      fld->im[2] == psc.img[2]) {
+  if (fld->im[0] == patch->ldims[0] + 2 * psc.ibn[0] &&
+      fld->im[1] == patch->ldims[1] + 2 * psc.ibn[1] &&
+      fld->im[2] == patch->ldims[2] + 2 * psc.ibn[2]) {
     // we're writing the local field, let's drop the ghost points
     hsize_t start[3], count[3];
     for (int d = 0; d < 3; d++) {

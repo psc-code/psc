@@ -13,11 +13,12 @@ typedef struct {
   fields_sse2_real_t *flds;
 } fields_sse2_t;
 
+// FIXME, this needs to be looked into for efficiency
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
   ((((((fldnr)								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
+       *(psc.patch[0].ldims[2] + 2*psc.ibn[0]) + ((jz)-psc.ilg[2]))	\
+      *(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((jy)-psc.ilg[1]))	\
+     *(psc.patch[0].ldims[0] + 2*psc.ibn[0]) + ((jx)-psc.ilg[0]))))
 
 #if 1
 

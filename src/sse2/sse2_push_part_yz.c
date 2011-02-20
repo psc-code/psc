@@ -367,13 +367,14 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     
     //---------------------------------------------
     //Vector versions of integer parameters
+    struct psc_patch *patch = &psc.patch[0];
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(psc.ilg[0]);					
     ilg[1].r = pv_set1_int(psc.ilg[1]);					
     ilg[2].r = pv_set1_int(psc.ilg[2]);					
-    img[0].r = pv_set1_int(psc.img[0]);					
-    img[1].r = pv_set1_int(psc.img[1]);					
-    img[2].r = pv_set1_int(psc.img[2]);					
+    img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
+    img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
+    img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
     fld_size.r = pv_set1_int(psc.fld_size);				
     		
     //---------------------------------------------			
@@ -540,15 +541,17 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   // An implementation of Will's 'squished' currents
   // that excludes the x direction all together
   sse2_real * restrict s_jxi, * restrict s_jyi, * restrict s_jzi;
-  s_jxi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
-  s_jyi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
-  s_jzi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+  int sz = ((psc.patch[0].ldims[1] + 2 * psc.ibn[1]) * 
+	    (psc.patch[0].ldims[2] + 2 * psc.ibn[2]));
+  s_jxi = calloc(sz, sizeof(sse2_real));
+  s_jyi = calloc(sz, sizeof(sse2_real));
+  s_jzi = calloc(sz, sizeof(sse2_real));
 
   // -------------------------------
   // Macros for accessing the 'squished' currents allocated above
-#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) - psc.ilg[1])]
+#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) - psc.ilg[1])]
+#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) - psc.ilg[1])]
   
   //-----------------------------------------------------
   //Set vector forms of numbers 1, 0.5, etc
@@ -579,13 +582,14 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     
     //-----------------------------------------------------
     //Vector versions of integer parameters
+    struct psc_patch *patch = &psc.patch[0];
     pvInt ilg[3], img[3], fld_size;					
     ilg[0].r = pv_set1_int(psc.ilg[0]);					
     ilg[1].r = pv_set1_int(psc.ilg[1]);					
     ilg[2].r = pv_set1_int(psc.ilg[2]);					
-    img[0].r = pv_set1_int(psc.img[0]);					
-    img[1].r = pv_set1_int(psc.img[1]);					
-    img[2].r = pv_set1_int(psc.img[2]);					
+    img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
+    img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
+    img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
     fld_size.r = pv_set1_int(psc.fld_size);				
     
     //-----------------------------------------------------

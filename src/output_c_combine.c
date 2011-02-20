@@ -44,7 +44,7 @@ write_fields_combine(struct psc_fields_list *list,
 	s_ilo[d] = patch->off[d];
 	s_ihi[d] = patch->off[d] + patch->ldims[d];
 	s_ilg[d] = psc.ilg[d];
-	s_img[d] = psc.img[d];
+	s_img[d] = patch->ldims[d] + 2 * psc.ibn[d];
       }
       
       if (rank != 0) {
