@@ -89,7 +89,7 @@ init_param_domain()
       domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
       // on every proc, need domain at least nghost wide
-      assert(domain->gdims[d] >= domain->nproc[d] * domain->nghost[d]);
+      assert(domain->gdims[d] >= domain->nproc[d] * psc.ibn[d]);
       if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
 	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
 	need_pml = true;
@@ -405,7 +405,7 @@ GET_param_domain()
   int use_pml_;
   int ilo[3], itot[3];
   GET_param_domain_F77(p->length, itot, ilo, imax,
-		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost,
+		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, psc.ibn,
 		       &use_pml_);
   assert(ilo[0] == 0 && ilo[1] == 0 && ilo[2] == 0);
   assert(itot[0] == imax[0] + 1 && itot[1] == imax[1] + 1 && itot[2] == imax[2] + 1);
@@ -427,7 +427,7 @@ SET_param_domain()
   int use_pml_ = p->use_pml;
   int ilo[3] = {};
   SET_param_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, p->nproc, p->nghost, &use_pml_);
+		       p->bnd_part, p->nproc, psc.ibn, &use_pml_);
 }
 
 void
