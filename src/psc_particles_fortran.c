@@ -41,15 +41,13 @@ particles_fortran_free(particles_fortran_t *pp)
 void
 particles_fortran_get(particles_fortran_t *pp)
 {
-  pp->particles = psc.pp.particles;
-  pp->n_part = psc.pp.n_part;
+  *pp = psc.particles.p[0];
 }
 
 void
 particles_fortran_put(particles_fortran_t *pp)
 {
-  psc.pp.n_part = pp->n_part;
-  psc.pp.particles = pp->particles;
+  psc.particles.p[0] = *pp;
 }
 
 #else

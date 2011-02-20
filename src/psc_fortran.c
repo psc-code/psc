@@ -12,7 +12,7 @@ fortran_push_part_xy()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_xy", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_xy", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_xy(&pp, &pf);
@@ -32,7 +32,7 @@ fortran_push_part_xz()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_xz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_xz", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_xz(&pp, &pf);
@@ -52,7 +52,7 @@ fortran_push_part_yz()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_yz(&pp, &pf);
@@ -72,7 +72,7 @@ fortran_push_part_xyz()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_xyz", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_xyz", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_xyz(&pp, &pf);
@@ -92,7 +92,7 @@ fortran_push_part_z()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_z", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_z", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_z(&pp, &pf);
@@ -112,7 +112,7 @@ fortran_push_part_yz_a()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_a", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_yz_a(&pp, &pf);
@@ -132,7 +132,7 @@ fortran_push_part_yz_b()
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_yz_b", 1., 0, psc.pp.n_part * 11 * sizeof(double));
+    pr = prof_register("fort_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
   PIC_push_part_yz_b(&pp, &pf);

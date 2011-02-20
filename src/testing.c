@@ -24,7 +24,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static particle_base_t *particle_ref;
+static struct psc_mparticles particles_ref;
 static struct psc_mfields flds_ref;
 
 // ----------------------------------------------------------------------
@@ -35,11 +35,19 @@ static struct psc_mfields flds_ref;
 void
 psc_save_particles_ref()
 {
-  if (!particle_ref) {
-    particle_ref = calloc(psc.pp.n_part, sizeof(*particle_ref));
+  if (!particles_ref.p) {
+    particles_ref.p = calloc(psc.nr_patches, sizeof(*particles_ref.p));
+    foreach_patch(p) {
+      particles_base_t *pp = &psc.particles.p[p];
+      particles_base_alloc(&particles_ref.p[p], pp->n_part);
+    }
   }
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_ref[i] = *particles_base_get_one(&psc.pp, i);
+  foreach_patch(p) {
+    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp_ref = &particles_ref.p[p];
+    for (int i = 0; i < pp->n_part; i++) {
+      *particles_base_get_one(pp_ref, i) = *particles_base_get_one(pp, i);
+    }
   }
 }
 
@@ -74,23 +82,29 @@ psc_save_fields_ref()
 void
 psc_check_particles_ref(double thres, const char *test_str)
 {
-  assert(particle_ref);
+  assert(particles_ref.p);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *part = particles_base_get_one(&psc.pp, i);
-    //    printf("i = %d\n", i);
-    xi  = fmax(xi , fabs(part->xi  - particle_ref[i].xi));
-    yi  = fmax(yi , fabs(part->yi  - particle_ref[i].yi));
-    zi  = fmax(zi , fabs(part->zi  - particle_ref[i].zi));
-    pxi = fmax(pxi, fabs(part->pxi - particle_ref[i].pxi));
-    pyi = fmax(pyi, fabs(part->pyi - particle_ref[i].pyi));
-    pzi = fmax(pzi, fabs(part->pzi - particle_ref[i].pzi));
-    assert_equal(part->xi , particle_ref[i].xi, thres);
-    assert_equal(part->yi , particle_ref[i].yi, thres);
-    assert_equal(part->zi , particle_ref[i].zi, thres);
-    assert_equal(part->pxi, particle_ref[i].pxi, thres);
-    assert_equal(part->pyi, particle_ref[i].pyi, thres);
-    assert_equal(part->pzi, particle_ref[i].pzi, thres);
+  foreach_patch(p) {
+    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp_ref = &particles_ref.p[p];
+    
+    for (int i = 0; i < pp->n_part; i++) {
+      particle_base_t *part = particles_base_get_one(pp, i);
+      particle_base_t *part_ref = particles_base_get_one(pp_ref, i);
+      //    printf("i = %d\n", i);
+      xi  = fmax(xi , fabs(part->xi  - part_ref->xi));
+      yi  = fmax(yi , fabs(part->yi  - part_ref->yi));
+      zi  = fmax(zi , fabs(part->zi  - part_ref->zi));
+      pxi = fmax(pxi, fabs(part->pxi - part_ref->pxi));
+      pyi = fmax(pyi, fabs(part->pyi - part_ref->pyi));
+      pzi = fmax(pzi, fabs(part->pzi - part_ref->pzi));
+      assert_equal(part->xi , part_ref->xi, thres);
+      assert_equal(part->yi , part_ref->yi, thres);
+      assert_equal(part->zi , part_ref->zi, thres);
+      assert_equal(part->pxi, part_ref->pxi, thres);
+      assert_equal(part->pyi, part_ref->pyi, thres);
+      assert_equal(part->pzi, part_ref->pzi, thres);
+    }
   }
   printf("max delta: (%s)\n", test_str);
   printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
@@ -181,9 +195,12 @@ psc_check_particles_sorted()
 #if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;
 
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    assert(psc.pp.particles[i].cni >= last);
-    last = psc.pp.particles[i].cni;
+  foreach_patch(p) {
+    particles_base_t *pp = &psc.particles.p[p];
+    for (int i = 0; i < pp->n_part; i++) {
+      assert(pp->particles[i].cni >= last);
+      last = pp->particles[i].cni;
+    }
   }
 #else
   assert(0);
@@ -214,7 +231,7 @@ psc_create_test_yz(struct psc_mod_config *conf)
 
   psc_create(conf);
   psc_init("test_yz");
-  psc.pp.n_part = 1;
+  psc.particles.p[0].n_part = 1;
   psc_sort();
 }
 

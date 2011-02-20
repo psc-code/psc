@@ -253,6 +253,10 @@ struct psc_domain {
   bool use_pml;
 };
 
+struct psc_mparticles {
+  particles_base_t *p;
+};
+
 struct psc_mfields {
   fields_base_t *f;
 };
@@ -371,10 +375,8 @@ struct psc {
   double dt;
   double dx[3];
 
-  particles_base_t pp;
-
+  struct psc_mparticles particles;
   struct psc_mfields flds;
-  //  fields_base_t pf;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
@@ -451,7 +453,7 @@ void psc_destroy(void);
 
 void psc_init(const char *case_name);
 void psc_init_param(const char *case_name);
-void psc_init_partition(int *n_part, int *particle_label_offset);
+void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
 void psc_init_field(void);
 void psc_integrate(void);
@@ -479,7 +481,7 @@ void psc_sort(void);
 void psc_collision(void);
 void psc_out_field(void);
 void psc_out_particles(void);
-void psc_set_n_particles(int n_part);
+void psc_set_n_particles(int p, int n_part);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);

@@ -248,8 +248,10 @@ psc_destroy()
 
   foreach_patch(p) {
     fields_base_free(&psc.flds.f[p]);
+    particles_base_free(&psc.particles.p[p]);
   }
-  particles_base_free(&psc.pp);
+  free(psc.flds.f);
+  free(psc.particles.p);
 }
 
 static void
@@ -286,22 +288,24 @@ ascii_dump_particles(const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  char *filename = malloc(strlen(fname) + 10);
-  sprintf(filename, "%s-p%d.asc", fname, rank);
-  mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
 
-  FILE *file = fopen(filename, "w");
-  fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = particles_base_get_one(&psc.pp, i);
-    fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
-	    i, p->xi, p->yi, p->zi,
-	    p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
+  foreach_patch(p) {
+    particles_base_t *pp = &psc.particles.p[p];
+    char *filename = malloc(strlen(fname) + 10);
+    sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
+    mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
+    
+    FILE *file = fopen(filename, "w");
+    fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
+    for (int i = 0; i < pp->n_part; i++) {
+      particle_base_t *p = particles_base_get_one(pp, i);
+      fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+	      i, p->xi, p->yi, p->zi,
+	      p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
+    }
+    fclose(file);
+    free(filename);
   }
-  fclose(file);
-
-  free(filename);
 }
 
 void
@@ -613,11 +617,10 @@ psc_init(const char *case_name)
   INIT_basic();
   INIT_param_fortran_F77();
 
-  int n_part, particle_label_offset;
-  psc_init_partition(&n_part, &particle_label_offset);
+  int particle_label_offset;
+  psc_init_partition(&particle_label_offset);
   SET_subdomain();
 
-  particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
   psc_mfields_alloc(&psc.flds, NR_FIELDS);
@@ -628,9 +631,9 @@ psc_init(const char *case_name)
 // psc_set_n_particles
 
 void
-psc_set_n_particles(int n_part)
+psc_set_n_particles(int p, int n_part)
 {
-  psc.pp.n_part = n_part;
+  psc.particles.p[p].n_part = n_part;
   SET_niloc(n_part);
 }
 
@@ -644,8 +647,8 @@ psc_read_checkpoint(void)
   
   int n_part;
   SERV_read_1(&psc.timestep, &n_part);
-  particles_base_realloc(&psc.pp, n_part);
-  psc_set_n_particles(n_part);
+  particles_base_realloc(&psc.particles.p[0], n_part);
+  psc_set_n_particles(0, n_part);
   
   particles_fortran_t pp;
   particles_fortran_get(&pp);

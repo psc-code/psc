@@ -141,6 +141,8 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 static void
 ddc_particles_comm(struct ddc_particles *ddcp)
 {
+  particles_base_t *pp = &psc.particles.p[0];
+
   int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
   int dir[3];
 
@@ -197,7 +199,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
       }
     }
   }
-  particles_base_realloc(&psc.pp, new_n_particles);
+  particles_base_realloc(pp, new_n_particles);
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -208,7 +210,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
 	if (nei->rank < 0) {
 	  continue;
 	}
-	MPI_Irecv(&psc.pp.particles[ddcp->head], sz * nei->n_recv,
+	MPI_Irecv(&pp->particles[ddcp->head], sz * nei->n_recv,
 		  MPI_PARTICLES_BASE_REAL,
 		  nei->rank, 2100 + dir1neg, MPI_COMM_WORLD, &ddcp->recv_reqs[dir1]);
 	ddcp->head += nei->n_recv;
@@ -284,6 +286,8 @@ c_fill_ghosts(fields_base_t *pf, int mb, int me)
 static void
 c_exchange_particles(void)
 {
+  particles_base_t *pp = &psc.particles.p[0];
+
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -334,8 +338,8 @@ c_exchange_particles(void)
   for (int dir1 = 0; dir1 < 27; dir1++) {
     ddcp->nei[dir1].n_send = 0;
   }
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = particles_base_get_one(&psc.pp, i);
+  for (int i = 0; i < pp->n_part; i++) {
+    particle_base_t *p = particles_base_get_one(pp, i);
     particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_base_real_t *pxi = &p->pxi;
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
@@ -343,7 +347,7 @@ c_exchange_particles(void)
 	xi[2] >= xb[2] && xi[2] <= xe[2]) {
       // fast path
       // inside domain: move into right position
-      psc.pp.particles[ddcp->head++] = *p;
+      pp->particles[ddcp->head++] = *p;
     } else {
       // slow path
       int dir[3];
@@ -391,7 +395,7 @@ c_exchange_particles(void)
 	}
       }
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	psc.pp.particles[ddcp->head++] = *p;
+	pp->particles[ddcp->head++] = *p;
       } else {
 	ddc_particles_queue(ddcp, dir, p);
       }
@@ -402,7 +406,7 @@ c_exchange_particles(void)
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp);
-  psc_set_n_particles(ddcp->head);
+  psc_set_n_particles(0, ddcp->head);
   prof_stop(pr_B);
 
   prof_stop(pr);

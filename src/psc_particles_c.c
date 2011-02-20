@@ -54,20 +54,21 @@ static int __gotten;
 void
 particles_c_get(particles_c_t *pp)
 {
-  if (psc.pp.n_part > __arr_size) {
+  particles_base_t *pp_base = &psc.particles.p[0];
+  if (pp_base->n_part > __arr_size) {
     free(__arr);
     __arr = NULL;
   }
   if (!__arr) {
-    __arr_size = psc.pp.n_part * 1.2;
+    __arr_size = pp_base->n_part * 1.2;
     __arr = calloc(__arr_size, sizeof(*__arr));
   }
   assert(!__gotten);
   __gotten = 1;
 
   pp->particles = __arr;
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *f_part = particles_base_get_one(pp_base, n);
     particle_c_t *part = particles_c_get_one(pp, n);
 
     part->xi  = f_part->xi;
@@ -88,8 +89,9 @@ particles_c_put(particles_c_t *pp)
   assert(__gotten);
   __gotten = 0;
 
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
+  particles_base_t *pp_base = &psc.particles.p[0];
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *f_part = particles_base_get_one(pp_base, n);
     particle_c_t *part = particles_c_get_one(pp, n);
 
     f_part->xi  = part->xi;

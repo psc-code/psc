@@ -56,7 +56,8 @@ static particle_sse2_t *__sse2_part_data;
 void
 particles_sse2_get(particles_sse2_t *particles)
 {
-  int n_part = psc.pp.n_part;
+  particles_base_t *pp_base = &psc.particles.p[0];
+  int n_part = pp_base->n_part;
   int pad = 0;
   if((n_part % VEC_SIZE) != 0){
     pad = VEC_SIZE - (n_part % VEC_SIZE);
@@ -76,7 +77,7 @@ particles_sse2_get(particles_sse2_t *particles)
   particle_sse2_real_t dxi = 1. / psc.dx[0];
 
   for (int n = 0; n < n_part; n++) {
-    particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
+    particle_base_t *base_part = particles_base_get_one(pp_base, n);
     particle_sse2_t *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
@@ -93,7 +94,7 @@ particles_sse2_get(particles_sse2_t *particles)
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
-    particle_base_t *base_part = particles_base_get_one(&psc.pp, n_part - 1);
+    particle_base_t *base_part = particles_base_get_one(pp_base, n_part - 1);
     particle_sse2_t *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
@@ -106,20 +107,21 @@ particles_sse2_get(particles_sse2_t *particles)
 void
 particles_sse2_put(particles_sse2_t *particles)
 {
-   for(int n = 0; n < psc.pp.n_part; n++) {
-     particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
-     particle_sse2_t *part = &particles->particles[n];
-     
-     base_part->xi  = part->xi;
-     base_part->yi  = part->yi;
-     base_part->zi  = part->zi;
-     base_part->pxi = part->pxi;
-     base_part->pyi = part->pyi;
-     base_part->pzi = part->pzi;
-     base_part->qni = part->qni;
-     base_part->mni = part->mni;
-     base_part->wni = part->wni;
-   }
+  particles_base_t *pp_base = &psc.particles.p[0];
+  for(int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *base_part = particles_base_get_one(pp_base, n);
+    particle_sse2_t *part = &particles->particles[n];
+    
+    base_part->xi  = part->xi;
+    base_part->yi  = part->yi;
+    base_part->zi  = part->zi;
+    base_part->pxi = part->pxi;
+    base_part->pyi = part->pyi;
+    base_part->pzi = part->pzi;
+    base_part->qni = part->qni;
+    base_part->mni = part->mni;
+    base_part->wni = part->wni;
+  }
 }
 
 #endif

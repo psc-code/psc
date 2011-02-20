@@ -32,7 +32,7 @@ do_genc_push_part_yz(fields_t *pf, particles_t *pp)
   fields_zero(pf, JZI);
   
   struct psc_patch *patch = &psc.patch[0];
-  for (int n = 0; n < psc.pp.n_part; n++) {
+  for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
     // x^n, p^n -> x^(n+.5), p^n
@@ -278,7 +278,7 @@ genc_push_part_yz()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_yz", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_yz", 1., 0, 0);
   }
   prof_start(pr);
   do_genc_push_part_yz(&pf, &pp);

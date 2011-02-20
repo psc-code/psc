@@ -27,8 +27,9 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *part = particles_base_get_one(&psc.pp, n);
+  particles_base_t *pp = &psc.particles.p[0];
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp, n);
       
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -107,7 +108,7 @@ c_calc_densities(fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_densities", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("c_densities", 1., 0, 0);
   }
   prof_start(pr);
   do_c_calc_densities(pf, 0, 1, 2);
@@ -133,8 +134,9 @@ do_c_calc_v(fields_base_t *pf)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *part = particles_base_get_one(&psc.pp, n);
+  particles_base_t *pp = &psc.particles.p[0];
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -217,7 +219,7 @@ c_calc_v(fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_calc_v", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("c_calc_v", 1., 0, 0);
   }
   prof_start(pr);
   do_c_calc_v(pf);
@@ -241,8 +243,9 @@ do_c_calc_vv(fields_base_t *pf)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *part = particles_base_get_one(&psc.pp, n);
+  particles_base_t *pp = &psc.particles.p[0];
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -325,7 +328,7 @@ c_calc_vv(fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_calc_vv", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("c_calc_vv", 1., 0, 0);
   }
   prof_start(pr);
   do_c_calc_vv(pf);

@@ -131,7 +131,10 @@ psc_integrate()
     psc_push_field_b();
     time_stop(STAT_TIME_FIELD);
 
-    stats[STAT_NR_PARTICLES] = psc.pp.n_part;
+    stats[STAT_NR_PARTICLES] = 0;
+    foreach_patch(p) {
+      stats[STAT_NR_PARTICLES] += psc.particles.p[p].n_part;
+    }
     time_stop(STAT_TIME_STEP);
     psc_log_step(stats);
     // FIXME, check whether cpu time expired?

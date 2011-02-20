@@ -26,9 +26,9 @@ get_n_in_cell(real n)
 // check if pml bnds are set and restrict avoid particle placement inside pml regions
 
 static void
-pml_find_bounds(int ilo[3], int ihi[3])
+pml_find_bounds(int p, int ilo[3], int ihi[3])
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &psc.patch[p];
   for (int d = 0; d < 3; d++) {
     ilo[d] = patch->off[d];
     if (ilo[d] == 0 && // left-most proc in this dir
@@ -46,7 +46,7 @@ pml_find_bounds(int ilo[3], int ihi[3])
 }
 
 void
-psc_init_partition(int *n_part, int *particle_label_offset)
+psc_init_partition(int *particle_label_offset)
 {
   assert(psc.Case);
 
@@ -122,33 +122,38 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   }
 #endif
 
-  int ilo[3], ihi[3];
-  pml_find_bounds(ilo, ihi);
+  int np_total = 0;
+  psc.particles.p = calloc(psc.nr_patches, sizeof(*psc.particles.p));
+  foreach_patch(p) {
+    int ilo[3], ihi[3];
+    pml_find_bounds(p, ilo, ihi);
 
-  int np = 0;
-  if (psc.Case->ops->init_npt) {
-    for (int kind = 0; kind < 2; kind++) {
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	    double xx[3] = { jx * dx, jy * dy, jz * dz };
-	    struct psc_particle_npt npt = { // init to all zero
-	    };
-	    psc_case_init_npt(psc.Case, kind, xx, &npt);
-	    
-	    int n_in_cell = get_n_in_cell(npt.n);
-	    np += n_in_cell;
+    int np = 0;
+    if (psc.Case->ops->init_npt) {
+      for (int kind = 0; kind < 2; kind++) {
+	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
+	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      struct psc_particle_npt npt = { // init to all zero
+	      };
+	      psc_case_init_npt(psc.Case, kind, xx, &npt);
+	      
+	      int n_in_cell = get_n_in_cell(npt.n);
+	      np += n_in_cell;
+	    }
 	  }
 	}
       }
     }
-  }
 
-  *n_part = np;
+    particles_base_alloc(&psc.particles.p[p], np);
+    np_total += np;
+  }
   // calculate global particle label offset for unique numbering
   *particle_label_offset = 0; // necessary on proc 0
-  MPI_Exscan(n_part, particle_label_offset, 1, MPI_INT, MPI_SUM,
+  MPI_Exscan(&np_total, particle_label_offset, 1, MPI_INT, MPI_SUM,
 	     MPI_COMM_WORLD);
 }
 
@@ -171,68 +176,71 @@ psc_init_particles(int particle_label_offset)
     srandom(rank);
   }
 
-  int ilo[3], ihi[3];
-  pml_find_bounds(ilo, ihi);
+  foreach_patch(p) {
+    int ilo[3], ihi[3];
+    pml_find_bounds(p, ilo, ihi);
+    particles_base_t *pp = &psc.particles.p[p];
 
-  int i = 0;
-  if (psc.Case->ops->init_npt) {
-    for (int kind = 0; kind < 2; kind++) {
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-
-	    double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	    double xx[3] = { jx * dx, jy * dy, jz * dz };
-	    struct psc_particle_npt npt = { // init to all zero
-	    };
-	    psc_case_init_npt(psc.Case, kind, xx, &npt);
-	    
-	    int n_in_cell = get_n_in_cell(npt.n);
-	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_base_t *p = particles_base_get_one(&psc.pp, i++);
+    int i = 0;
+    if (psc.Case->ops->init_npt) {
+      for (int kind = 0; kind < 2; kind++) {
+	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
 	      
-	      float ran1, ran2, ran3, ran4, ran5, ran6;
-	      do {
-		ran1 = random() / ((float) RAND_MAX + 1);
-		ran2 = random() / ((float) RAND_MAX + 1);
-		ran3 = random() / ((float) RAND_MAX + 1);
-		ran4 = random() / ((float) RAND_MAX + 1);
-		ran5 = random() / ((float) RAND_MAX + 1);
-		ran6 = random() / ((float) RAND_MAX + 1);
-	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-
-	      float px =
-		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-		+ npt.p[0];
-	      float py =
-		sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-		+ npt.p[1];
-	      float pz =
-		sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-		+ npt.p[2];
+	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
+	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      struct psc_particle_npt npt = { // init to all zero
+	      };
+	      psc_case_init_npt(psc.Case, kind, xx, &npt);
 	      
-	      p->xi = xx[0];
-	      p->yi = xx[1];
-	      p->zi = xx[2];
-	      p->pxi = px;
-	      p->pyi = py;
-	      p->pzi = pz;
-	      p->qni = npt.q;
-	      p->mni = npt.m;
+	      int n_in_cell = get_n_in_cell(npt.n);
+	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
+		particle_base_t *p = particles_base_get_one(pp, i++);
+		
+		float ran1, ran2, ran3, ran4, ran5, ran6;
+		do {
+		  ran1 = random() / ((float) RAND_MAX + 1);
+		  ran2 = random() / ((float) RAND_MAX + 1);
+		  ran3 = random() / ((float) RAND_MAX + 1);
+		  ran4 = random() / ((float) RAND_MAX + 1);
+		  ran5 = random() / ((float) RAND_MAX + 1);
+		  ran6 = random() / ((float) RAND_MAX + 1);
+		} while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+			 ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+		
+		float px =
+		  sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
+		  + npt.p[0];
+		float py =
+		  sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
+		  + npt.p[1];
+		float pz =
+		  sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
+		  + npt.p[2];
+		
+		p->xi = xx[0];
+		p->yi = xx[1];
+		p->zi = xx[2];
+		p->pxi = px;
+		p->pyi = py;
+		p->pzi = pz;
+		p->qni = npt.q;
+		p->mni = npt.m;
 #if PARTICLES_BASE == PARTICLES_FORTRAN
-	      p->lni = particle_label_offset + 1;
+		p->lni = particle_label_offset + 1;
 #endif
-	      if (psc.prm.fortran_particle_weight_hack) {
-		p->wni = npt.n;
-	      } else {
-		p->wni = npt.n / (n_in_cell * psc.coeff.cori);
+		if (psc.prm.fortran_particle_weight_hack) {
+		  p->wni = npt.n;
+		} else {
+		  p->wni = npt.n / (n_in_cell * psc.coeff.cori);
+		}
 	      }
 	    }
 	  }
 	}
       }
     }
+    psc_set_n_particles(p, i);
   }
-  psc_set_n_particles(i);
 }

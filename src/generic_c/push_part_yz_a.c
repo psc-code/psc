@@ -14,7 +14,7 @@ do_genc_push_part_yz_a(particles_t *pp)
   creal yl = .5f * dt;
   creal zl = .5f * dt;
 
-  for (int n = 0; n < psc.pp.n_part; n++) {
+  for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
@@ -34,7 +34,7 @@ genc_push_part_yz_a()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_yz_a", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
   do_genc_push_part_yz_a(&pp);
