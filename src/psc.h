@@ -257,6 +257,8 @@ struct psc_mfields {
   fields_base_t *f;
 };
 
+void psc_mfields_alloc(struct psc_mfields *flds, int nr_fields);
+
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 

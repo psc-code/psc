@@ -185,18 +185,15 @@ output_c_setup(struct psc_output_c *out)
   char *p, *s = strdup(out->output_fields);
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    fields_base_t *f = &pfd->flds[pfd->nr_flds];
+    struct psc_mfields *flds = &pfd->flds[pfd->nr_flds];
     out->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
 
-    struct psc_patch *patch = &psc.patch[0];
-    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-    int ihg[3] = { patch->ldims[0] + psc.ibn[0],
-		   patch->ldims[1] + psc.ibn[1],
-		   patch->ldims[2] + psc.ibn[2] };
-    fields_base_alloc(f, ilg, ihg, of->nr_comp);
-    for (int m = 0; m < of->nr_comp; m++) {
-      f->name[m] = strdup(of->fld_names[m]);
+    psc_mfields_alloc(flds, of->nr_comp);
+    foreach_patch(pp) {
+      for (int m = 0; m < of->nr_comp; m++) {
+	flds->f[pp].name[m] = strdup(of->fld_names[m]);
+      }
     }
   }
   free(s);
@@ -206,15 +203,11 @@ output_c_setup(struct psc_output_c *out)
   struct psc_fields_list *tfd = &out->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    struct psc_patch *patch = &psc.patch[0];
-    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-    int ihg[3] = { patch->ldims[0] + psc.ibn[0],
-		   patch->ldims[1] + psc.ibn[1],
-		   patch->ldims[2] + psc.ibn[2] };
-    fields_base_alloc(&tfd->flds[i], ilg, ihg, pfd->flds[i].nr_comp);
-    fields_base_zero_all(&tfd->flds[i]);
-    for (int m = 0; m < pfd->flds[i].nr_comp; m++) {
-      tfd->flds[i].name[m] = strdup(pfd->flds[i].name[m]);
+    psc_mfields_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
+    foreach_patch(pp) {
+      for (int m = 0; m < pfd->flds[i].f[pp].nr_comp; m++) {
+	tfd->flds[i].f[pp].name[m] = strdup(pfd->flds[i].f[pp].name[m]);
+      }
     }
   }
   out->naccum = 0;
@@ -299,17 +292,19 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
-    fields_base_t *f = &list_in->flds[i];
-    struct psc_patch *patch = &psc.patch[0];
-    for (int m = 0; m < f->nr_comp; m++) {
-      fields_base_t *fld = &list->flds[list->nr_flds++];
-      int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-      int ihg[3] = { patch->ldims[0] + psc.ibn[0],
-		     patch->ldims[1] + psc.ibn[1],
-		     patch->ldims[2] + psc.ibn[2] };
-      fields_base_alloc_with_array(fld, ilg, ihg, 1,
-				   &F3_BASE(f,m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
-      fld->name[0] = strdup(f->name[m]);
+    struct psc_mfields *flds_in = &list_in->flds[i];
+    for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
+      struct psc_mfields *flds = &list->flds[list->nr_flds++];
+      flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
+      foreach_patch(p) {
+	int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+	int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
+		       psc.patch[p].ldims[1] + psc.ibn[1],
+		       psc.patch[p].ldims[2] + psc.ibn[2] };
+	fields_base_alloc_with_array(&flds->f[p], ilg, ihg, 1,
+				     &F3_BASE(&flds_in->f[p],m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
+	flds->f[p].name[0] = strdup(flds_in->f[p].name[m]);
+      }
     }
   }
 }
@@ -318,7 +313,10 @@ static void
 free_fields_list(struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    fields_base_free(&list->flds[m]);
+    foreach_patch(p) {
+      fields_base_free(&list->flds[m].f[p]);
+    }
+    free(list->flds[m].f);
   }
 }
 
@@ -373,8 +371,10 @@ output_c_field()
   if ((out->dowrite_pfield && psc.timestep >= out->pfield_next) ||
       out->dowrite_tfield) {
     struct psc_fields_list *pfd = &out->pfd;
-    for (int i = 0; i < pfd->nr_flds; i++) {
-      out->out_flds[i]->calc(&pfd->flds[i]);
+    foreach_patch(p) {
+      for (int i = 0; i < pfd->nr_flds; i++) {
+	out->out_flds[i]->calc(&pfd->flds[i].f[p]);
+      }
     }
   }
   
@@ -389,24 +389,31 @@ output_c_field()
   }
 
   if (out->dowrite_tfield) {
-    for (int m = 0; m < out->tfd.nr_flds; m++) {
-      fields_base_axpy_all(&out->tfd.flds[m], 1., &out->pfd.flds[m]); // tfd += pfd
+    foreach_patch(p) {
+      for (int m = 0; m < out->tfd.nr_flds; m++) {
+	// tfd += pfd
+	fields_base_axpy_all(&out->tfd.flds[m].f[p], 1., &out->pfd.flds[m].f[p]);
+      }
     }
     out->naccum++;
     if (psc.timestep >= out->tfield_next) {
       out->tfield_next += out->tfield_step;
 
       // convert accumulated values to correct temporal mean
-      for (int m = 0; m < out->tfd.nr_flds; m++) {
-	fields_base_scale_all(&out->tfd.flds[m], 1. / out->naccum);
+      foreach_patch(p) {
+	for (int m = 0; m < out->tfd.nr_flds; m++) {
+	  fields_base_scale_all(&out->tfd.flds[m].f[p], 1. / out->naccum);
+	}
       }
 
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out->tfd);
       out->format_ops->write_fields(out, &flds_list, "tfd");
       free_fields_list(&flds_list);
-      for (int m = 0; m < out->tfd.nr_flds; m++) {
-	fields_base_zero_all(&out->tfd.flds[m]);
+      foreach_patch(p) {
+	for (int m = 0; m < out->tfd.nr_flds; m++) {
+	  fields_base_zero_all(&out->tfd.flds[m].f[p]);
+	}
       }
       out->naccum = 0;
     }

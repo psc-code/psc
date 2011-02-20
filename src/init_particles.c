@@ -85,7 +85,6 @@ psc_init_partition(int *n_part, int *particle_label_offset)
   mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
   mrc_domain_get_local_idx(psc.mrc_domain, lidx);
   psc.nr_patches = 1;
-  psc.flds.f = calloc(psc.nr_patches, sizeof(*psc.flds.f));
   foreach_patch(p) {
     for (int d = 0; d < 3; d++) {
       psc.patch[p].ldims[d] = ldims[d];

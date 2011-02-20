@@ -34,17 +34,17 @@ write_fields_combine(struct psc_fields_list *list,
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
-  foreach_patch(patch) {
+  foreach_patch(p) {
     for (int m = 0; m < list->nr_flds; m++) {
       int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-      fields_base_real_t *s_data = &F3_BASE(&list->flds[m], 0,
+      fields_base_real_t *s_data = &F3_BASE(&list->flds[m].f[p], 0,
 					    -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]);
       
       for (int d = 0; d < 3; d++) {
-	s_ilo[d] = psc.patch[patch].off[d];
-	s_ihi[d] = psc.patch[patch].off[d] + psc.patch[patch].ldims[d];
-	s_ilg[d] = psc.patch[patch].off[d] - psc.ibn[d];
-	s_img[d] = psc.patch[patch].ldims[d] + 2 * psc.ibn[d];
+	s_ilo[d] = psc.patch[p].off[d];
+	s_ihi[d] = psc.patch[p].off[d] + psc.patch[p].ldims[d];
+	s_ilg[d] = psc.patch[p].off[d] - psc.ibn[d];
+	s_img[d] = psc.patch[p].ldims[d] + 2 * psc.ibn[d];
       }
       
       if (rank != 0) {
@@ -52,12 +52,12 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
 	MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
 	MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-	unsigned int sz = fields_base_size(&list->flds[m]);
+	unsigned int sz = fields_base_size(&list->flds[m].f[p]);
 	MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
 	fields_base_t fld;
 	fields_base_alloc(&fld, (int []) { 0, 0, 0}, psc.domain.gdims, 1);
-	fld.name[0] = strdup(list->flds[m].name[0]);
+	fld.name[0] = strdup(list->flds[m].f[p].name[0]);
 	
 	for (int n = 0; n < size; n++) {
 	  int ilo[3], ihi[3], ilg[3], img[3];

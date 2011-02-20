@@ -620,13 +620,7 @@ psc_init(const char *case_name)
   particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
-  foreach_patch(p) {
-    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-    int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
-		   psc.patch[p].ldims[1] + psc.ibn[1],
-		   psc.patch[p].ldims[2] + psc.ibn[2] };
-    fields_base_alloc(&psc.flds.f[p], ilg, ihg, NR_FIELDS);
-  }
+  psc_mfields_alloc(&psc.flds, NR_FIELDS);
   psc_init_field();
 }
 
@@ -681,6 +675,21 @@ psc_write_checkpoint(void)
 
   particles_fortran_put(&pp);
   fields_fortran_put(&pf, 0, 0);
+}
+
+// ======================================================================
+
+void
+psc_mfields_alloc(struct psc_mfields *flds, int nr_fields)
+{
+  flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
+  foreach_patch(p) {
+    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+    int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
+		   psc.patch[p].ldims[1] + psc.ibn[1],
+		   psc.patch[p].ldims[2] + psc.ibn[2] };
+    fields_base_alloc(&flds->f[p], ilg, ihg, nr_fields);
+  }
 }
 
 // ======================================================================
