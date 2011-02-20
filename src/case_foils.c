@@ -187,13 +187,10 @@ foils_init_param(struct psc_case *Case)
   psc.domain.length[2] = 10.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
   psc.domain.itot[0] = 100;				// total number of steps in x-direction. dx=length/itot;
-  psc.domain.itot[1] = 10;				
+  psc.domain.itot[1] = 1;				
   psc.domain.itot[2] = 100;				// total number of steps in z-direction. dz=length/itot;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 9;
-  psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 100;
-  psc.domain.ihi[1] = 10;
+  psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 100;
 
   psc.domain.bnd_fld_lo[0] = 1;

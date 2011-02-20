@@ -73,14 +73,11 @@ thinfoil_init_param(struct psc_case *Case)
   psc.domain.length[1] = 0.02 * 1e-6;
   psc.domain.length[2] = 2.0  * 1e-6;
 
-  psc.domain.itot[0] = 20;
-  psc.domain.itot[1] = 20;
+  psc.domain.itot[0] = 1;
+  psc.domain.itot[1] = 1;
   psc.domain.itot[2] = 500;
-  psc.domain.ilo[0] = 9;
-  psc.domain.ilo[1] = 9;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 10;
-  psc.domain.ihi[1] = 10;
+  psc.domain.ihi[0] = 1;
+  psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 500;
 
   psc.domain.bnd_fld_lo[0] = 1;

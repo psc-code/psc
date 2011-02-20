@@ -30,7 +30,6 @@ hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
   H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dt", &psc.dt, 1);
   H5LTset_attribute_double(hdf5->group, ".", "dx", psc.dx, 3);
-  H5LTset_attribute_int(hdf5->group, ".", "lo", psc.domain.ilo, 3);
   H5LTset_attribute_int(hdf5->group, ".", "hi", psc.domain.ihi, 3);
 
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
@@ -147,7 +146,7 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
   fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
   int im[3];
   for (int d = 0; d < 3; d++) {
-    im[d] = (psc.domain.ihi[d] - psc.domain.ilo[d]) / psc.domain.nproc[d];
+    im[d] = psc.domain.ihi[d] / psc.domain.nproc[d];
   }
   for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
     for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {
@@ -159,9 +158,9 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
 	fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
 	fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	fprintf(f, "        %g %g %g\n",
-		(psc.domain.ilo[2] + im[2] * kz) * psc.dx[2],
-		(psc.domain.ilo[1] + im[1] * ky) * psc.dx[1],
-		(psc.domain.ilo[0] + im[0] * kx) * psc.dx[0]);
+		(im[2] * kz) * psc.dx[2],
+		(im[1] * ky) * psc.dx[1],
+		(im[0] * kx) * psc.dx[0]);
 	fprintf(f, "     </DataStructure>\n");
 	fprintf(f, "     <DataStructure Name=\"Spacing\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	fprintf(f, "        %g %g %g\n", psc.dx[2], psc.dx[1], psc.dx[0]);

@@ -128,9 +128,6 @@ harris_xy_init_param(struct psc_case *Case)
   psc.domain.itot[0] = 128;
   psc.domain.itot[1] = 128;
   psc.domain.itot[2] = 1;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 128;
   psc.domain.ihi[1] = 128;
   psc.domain.ihi[2] = 1;

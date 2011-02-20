@@ -308,10 +308,10 @@ c_exchange_particles(void)
   for (int d = 0; d < 3; d++) {
     xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = (psc.domain.ilo[d]-.5) * psc.dx[d];
+      xgb[d] = -.5 * psc.dx[d];
     } else {
-      xgb[d] = psc.domain.ilo[d] * psc.dx[d];
-      if (psc.ilo[d] == psc.domain.ilo[d]) {
+      xgb[d] = 0.;
+      if (psc.ilo[d] == 0) {
 	xb[d] = xgb[d];
       }
     }

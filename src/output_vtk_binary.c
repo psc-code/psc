@@ -49,8 +49,8 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 {
   for (int d = 0; d < 3; d++) {
     fprintf(file, "%c_COORDINATES %d float", 'X' + d,
-	    psc.domain.ihi[d] - psc.domain.ilo[d] + extra);
-    for (int i = psc.domain.ilo[d]; i < psc.domain.ihi[d] + extra; i++) {
+	    psc.domain.ihi[d] + extra);
+    for (int i = 0; i < psc.domain.ihi[d] + extra; i++) {
       fprintf(file, " %g", (i + offset) * psc.dx[d]);
     }
     fprintf(file, "\n");

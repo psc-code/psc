@@ -8,14 +8,14 @@ static void
 copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
 	       int *ilo, int *ihi, int *ilg, int *img)
 {
-  int *glo = psc.domain.ilo, *ghi = psc.domain.ihi;
-  int my = ghi[1] - glo[1];
-  int mx = ghi[0] - glo[0];
+  int *ghi = psc.domain.ihi;
+  int my = ghi[1];
+  int mx = ghi[0];
 
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	fld[((iz - glo[2]) * my + iy - glo[1]) * mx + ix - glo[0]] =
+	fld[(iz * my + iy) * mx + ix] =
 	  buf[((iz - ilg[2]) * img[1] + iy - ilg[1]) * img[0] + ix - ilg[0]];
       }
     }
@@ -56,7 +56,8 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
 	fields_base_t fld;
-	fields_base_alloc(&fld, psc.domain.ilo, psc.domain.ihi, 1);
+	int ilo[3] = {};
+	fields_base_alloc(&fld, ilo, psc.domain.ihi, 1);
 	fld.name[0] = strdup(list->flds[m].name[0]);
 	
 	for (int n = 0; n < size; n++) {

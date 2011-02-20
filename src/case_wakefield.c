@@ -72,10 +72,7 @@ wakefield_init_param(struct psc_case *Case)
   psc.domain.itot[0] = 200;
   psc.domain.itot[1] = 400;
   psc.domain.itot[2] = 600;
-  psc.domain.ilo[0] = 99;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 100;
+  psc.domain.ihi[0] = 200;
   psc.domain.ihi[1] = 400;
   psc.domain.ihi[2] = 600;
 

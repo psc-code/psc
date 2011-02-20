@@ -67,11 +67,12 @@ binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
   fwrite(&psc.ihi[2], sizeof(psc.ihi[2]), 1, file);
 
   // Globally saved indices (everything for now...)
-  fwrite(&psc.domain.ilo[0], sizeof(psc.domain.ilo[0]), 1, file);
+  int ilo[3] = {};
+  fwrite(&ilo[0], sizeof(ilo[0]), 1, file);
   fwrite(&psc.domain.ihi[0], sizeof(psc.domain.ihi[0]), 1, file);
-  fwrite(&psc.domain.ilo[1], sizeof(psc.domain.ilo[1]), 1, file);
+  fwrite(&ilo[1], sizeof(ilo[1]), 1, file);
   fwrite(&psc.domain.ihi[1], sizeof(psc.domain.ihi[1]), 1, file);
-  fwrite(&psc.domain.ilo[2], sizeof(psc.domain.ilo[2]), 1, file);
+  fwrite(&ilo[2], sizeof(ilo[2]), 1, file);
   fwrite(&psc.domain.ihi[2], sizeof(psc.domain.ihi[2]), 1, file);
 
   fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);

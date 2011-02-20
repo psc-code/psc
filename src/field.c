@@ -28,13 +28,13 @@ c_push_field_a_nopml()
   f_real cny = .5 * ly;
   f_real cnz = .5 * lz;
 
-  if (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) {
+  if (psc.domain.ihi[0] == 1) {
     cnx = 0.;
   }
-  if (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) {
+  if (psc.domain.ihi[1] == 1) {
     cny = 0.;
   }
-  if (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) {
+  if (psc.domain.ihi[2] == 1) {
     cnz = 0.;
   }
 
@@ -105,13 +105,13 @@ c_push_field_b_nopml()
   f_real cny = .5 * ly;
   f_real cnz = .5 * lz;
 
-  if (psc.domain.ihi[0] - psc.domain.ilo[0] == 1) {
+  if (psc.domain.ihi[0] == 1) {
     cnx = 0.;
   }
-  if (psc.domain.ihi[1] - psc.domain.ilo[1] == 1) {
+  if (psc.domain.ihi[1] == 1) {
     cny = 0.;
   }
-  if (psc.domain.ihi[2] - psc.domain.ilo[2] == 1) {
+  if (psc.domain.ihi[2] == 1) {
     cnz = 0.;
   }
 

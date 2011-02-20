@@ -74,9 +74,6 @@ harris_init_param(struct psc_case *Case)
   psc.domain.itot[0] = 640;
   psc.domain.itot[1] = 1;
   psc.domain.itot[2] = 640;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 640;
   psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 640;
@@ -191,9 +188,6 @@ test_xz_init_param(struct psc_case *Case)
   psc.domain.itot[0] = 64;
   psc.domain.itot[1] = 1;
   psc.domain.itot[2] = 64;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 64;
   psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 64;
@@ -231,9 +225,6 @@ test_yz_init_param(struct psc_case *Case)
   psc.domain.itot[0] = 1;
   psc.domain.itot[1] = 64;
   psc.domain.itot[2] = 64;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
   psc.domain.ihi[0] = 1;
   psc.domain.ihi[1] = 64;
   psc.domain.ihi[2] = 64;

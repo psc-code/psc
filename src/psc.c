@@ -395,11 +395,7 @@ psc_push_part_yz_b()
 void
 psc_push_particles()
 {
-  int im[3] = {
-    psc.domain.ihi[0] - psc.domain.ilo[0],
-    psc.domain.ihi[1] - psc.domain.ilo[1],
-    psc.domain.ihi[2] - psc.domain.ilo[2],
-  };
+  int *im = psc.domain.ihi;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
     psc_push_part_xyz();
   } else if (im[0] > 1 && im[2] > 1) { // xz

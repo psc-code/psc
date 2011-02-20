@@ -196,11 +196,12 @@ PIC_set_variables()
   int i0x = psc.domain.ihi[0] - 1;
   int i1x = psc.domain.ihi[1] - 1;
   int i2x = psc.domain.ihi[2] - 1;
+  int ilo[3] = {};
 
   PIC_set_variables_F77(&psc.ilo[0], &psc.ilo[1], &psc.ilo[2],
 			&i0mx, &i1mx, &i2mx,
 			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
-			&psc.domain.ilo[0], &psc.domain.ilo[1], &psc.domain.ilo[2],
+			&ilo[0], &ilo[1], &ilo[2],
 			&i0x, &i1x, &i2x,
 			&psc.coeff.cori, &psc.coeff.alpha, &psc.coeff.eta,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],

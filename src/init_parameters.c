@@ -32,9 +32,6 @@ static struct param psc_domain_descr[] = {
   { "itot_x"        , VAR(itot[0])         , PARAM_INT(10)        },
   { "itot_y"        , VAR(itot[1])         , PARAM_INT(10)        },
   { "itot_z"        , VAR(itot[2])         , PARAM_INT(400)       },
-  { "ilo_x"         , VAR(ilo[0])          , PARAM_INT(8)         },
-  { "ilo_y"         , VAR(ilo[1])          , PARAM_INT(8)         },
-  { "ilo_z"         , VAR(ilo[2])          , PARAM_INT(0)         },
   { "ihi_x"         , VAR(ihi[0])          , PARAM_INT(9)         },
   { "ihi_y"         , VAR(ihi[1])          , PARAM_INT(9)         },
   { "ihi_z"         , VAR(ihi[2])          , PARAM_INT(400)       },
@@ -86,7 +83,7 @@ init_param_domain()
 
   bool need_pml = false;
   for (int d = 0; d < 3; d++) {
-    if (domain->ihi[d] - domain->ilo[d] == 1) {
+    if (domain->ihi[d] == 1) {
       // if invariant in this direction:
       // can't domain decompose in, set bnd to periodic
       assert(domain->nproc[d] == 1);
@@ -95,7 +92,7 @@ init_param_domain()
       domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
       // on every proc, need domain at least nghost wide
-      assert((domain->ihi[d] - domain->ilo[d]) >= domain->nproc[d] * domain->nghost[d]);
+      assert(domain->ihi[d] >= domain->nproc[d] * domain->nghost[d]);
       if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
 	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
 	need_pml = true;
@@ -273,19 +270,16 @@ init_param_domain_default()
   psc.domain.length[1] = 1.  * 1e-6;
   psc.domain.length[2] = 20. * 1e-6;
 
-  psc.domain.itot[0] = 10;
-  psc.domain.itot[1] = 10;
+  psc.domain.itot[0] = 1;
+  psc.domain.itot[1] = 1;
   psc.domain.itot[2] = 400;
 
   psc.domain.nproc[0] = 1;
   psc.domain.nproc[1] = 1;
   psc.domain.nproc[2] = 1;
 
-  psc.domain.ilo[0] = 8;
-  psc.domain.ihi[0] = 9;
-  psc.domain.ilo[1] = 8;
-  psc.domain.ihi[1] = 9;
-  psc.domain.ilo[2] = 0;
+  psc.domain.ihi[0] = 1;
+  psc.domain.ihi[1] = 1;
   psc.domain.ihi[2] = 400;
 
   psc.domain.bnd_fld[0] = BND_FLD_PERIODIC;
@@ -416,9 +410,11 @@ GET_param_domain()
   int imax[3];
 
   int use_pml_;
-  GET_param_domain_F77(p->length, p->itot, p->ilo, imax,
+  int ilo[3];
+  GET_param_domain_F77(p->length, p->itot, ilo, imax,
 		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, p->nghost,
 		       &use_pml_);
+  assert(ilo[0] == 0 && ilo[1] == 0 && ilo[2] == 0);
   p->use_pml = use_pml_;
   for (int d = 0; d < 3; d++) {
     p->ihi[d] = imax[d] + 1;
@@ -435,7 +431,8 @@ SET_param_domain()
     imax[d] = p->ihi[d] - 1;
   }
   int use_pml_ = p->use_pml;
-  SET_param_domain_F77(p->length, p->itot, p->ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
+  int ilo[3] = {};
+  SET_param_domain_F77(p->length, p->itot, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
 		       p->bnd_part, p->nproc, p->nghost, &use_pml_);
 }
 

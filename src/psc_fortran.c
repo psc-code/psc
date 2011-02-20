@@ -341,13 +341,13 @@ fortran_add_ghosts(fields_base_t *pf_base, int mb, int me)
   fields_fortran_get(&pf, mb, me);
 
   for (int m = mb; m < me; m++) {
-    if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+    if (psc.domain.ihi[0] > 1) {
       PIC_fax(&pf, m);
     }
-    if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+    if (psc.domain.ihi[1] > 1) {
       PIC_fay(&pf, m);
     }
-    if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+    if (psc.domain.ihi[2] > 1) {
       PIC_faz(&pf, m);
     }
   }
@@ -372,13 +372,13 @@ fortran_fill_ghosts(fields_base_t *pf_base, int mb, int me)
   fields_fortran_get(&pf, mb, me);
 
   for (int m = mb; m < me; m++) {
-    if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+    if (psc.domain.ihi[0] > 1) {
       PIC_fex(&pf, m);
     }
-    if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+    if (psc.domain.ihi[1] > 1) {
       PIC_fey(&pf, m);
     }
-    if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+    if (psc.domain.ihi[2] > 1) {
       PIC_fez(&pf, m);
     }
   }
@@ -403,13 +403,13 @@ fortran_exchange_particles(void)
   SET_param_coeff();
   SET_niloc(pp.n_part);
 
-  if (psc.domain.ihi[0] - psc.domain.ilo[0] > 1) {
+  if (psc.domain.ihi[0] > 1) {
     PIC_pex();
   }
-  if (psc.domain.ihi[1] - psc.domain.ilo[1] > 1) {
+  if (psc.domain.ihi[1] > 1) {
     PIC_pey();
   }
-  if (psc.domain.ihi[2] - psc.domain.ilo[2] > 1) {
+  if (psc.domain.ihi[2] > 1) {
     PIC_pez();
   }
 
