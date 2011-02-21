@@ -389,7 +389,7 @@ fortran_fill_ghosts(struct psc_mfields *flds, int mb, int me)
 }
 
 static void
-fortran_exchange_particles(void)
+fortran_exchange_particles(struct psc_mparticles *pp_base)
 {
   static int pr;
   if (!pr) {
@@ -433,7 +433,8 @@ struct psc_bnd_ops psc_bnd_ops_fortran = {
 // fortran moment
 
 static void
-fortran_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
+fortran_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		       fields_base_t *pf)
 {
   static int pr;
   if (!pr) {

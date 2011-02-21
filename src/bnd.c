@@ -139,9 +139,9 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 }
 
 static void
-ddc_particles_comm(struct ddc_particles *ddcp)
+ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *particles)
 {
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
 
   int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
   int dir[3];
@@ -290,9 +290,9 @@ c_fill_ghosts(struct psc_mfields *flds, int mb, int me)
 }
 
 static void
-c_exchange_particles(void)
+c_exchange_particles(struct psc_mparticles *particles)
 {
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
 
   if (!psc.bnd_data) {
     create_bnd();
@@ -411,8 +411,8 @@ c_exchange_particles(void)
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp);
-  psc_set_n_particles(0, ddcp->head);
+  ddc_particles_comm(ddcp, particles);
+  psc_set_n_particles(pp, ddcp->head);
   prof_stop(pr_B);
 
   prof_stop(pr);

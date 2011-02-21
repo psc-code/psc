@@ -241,6 +241,6 @@ psc_init_particles(int particle_label_offset)
 	}
       }
     }
-    psc_set_n_particles(p, i);
+    psc_set_n_particles(pp, i);
   }
 }

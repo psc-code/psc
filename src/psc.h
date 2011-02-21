@@ -291,7 +291,7 @@ struct psc_sort_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*sort)(void);
+  void (*sort)(struct psc_mparticles *particles);
 };
 
 struct psc_collision_ops {
@@ -305,7 +305,7 @@ struct psc_output_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*out_field)(struct psc_mfields *flds);
+  void (*out_field)(struct psc_mfields *flds, struct psc_mparticles *particles);
   void (*dump_field)(int m, const char *fname);
   void (*dump_particles)(const char *fname);
 };
@@ -316,16 +316,19 @@ struct psc_bnd_ops {
   void (*destroy)(void);
   void (*add_ghosts)(struct psc_mfields *flds, int mb, int me);
   void (*fill_ghosts)(struct psc_mfields *flds, int mb, int me);
-  void (*exchange_particles)(void);
+  void (*exchange_particles)(struct psc_mparticles *particles);
 };
 
 struct psc_moment_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*calc_densities)(int p, fields_base_t *pf_base, fields_base_t *pf);
-  void (*calc_v)(int p, fields_base_t *pf_base, fields_base_t *pf);
-  void (*calc_vv)(int p, fields_base_t *pf_base, fields_base_t *pf);
+  void (*calc_densities)(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+			 fields_base_t *pf);
+  void (*calc_v)(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		 fields_base_t *pf);
+  void (*calc_vv)(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		  fields_base_t *pf);
 };
 
 struct psc_patch {
@@ -365,7 +368,7 @@ struct psc {
   double dt;
   double dx[3];
 
-  struct psc_mparticles particles;
+  struct psc_mparticles particles __attribute__((deprecated));
   struct psc_mfields flds;
   struct mrc_domain *mrc_domain;
 
@@ -452,12 +455,15 @@ void psc_push_field_a(struct psc_mfields *flds);
 void psc_push_field_b(struct psc_mfields *flds);
 void psc_add_ghosts(struct psc_mfields *flds, int mb, int me);
 void psc_fill_ghosts(struct psc_mfields *flds, int mb, int me);
-void psc_exchange_particles(void);
-void psc_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf);
-void psc_calc_moments_v(int p, fields_base_t *pf_base, fields_base_t *pf);
-void psc_calc_moments_vv(int p, fields_base_t *pf_base, fields_base_t *pf);
+void psc_exchange_particles(struct psc_mparticles *particles);
+void psc_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+			fields_base_t *pf);
+void psc_calc_moments_v(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+			fields_base_t *pf);
+void psc_calc_moments_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+			 fields_base_t *pf);
 
-void psc_dump_particles(const char *fname);
+void psc_dump_particles(struct psc_mparticles *particles, const char *fname);
 void psc_dump_field(struct psc_mfields *flds, int m, const char *fname);
 
 void psc_push_part_xyz();
@@ -467,11 +473,11 @@ void psc_push_part_xy(void);
 void psc_push_part_yz_a(void);
 void psc_push_part_yz_b(void);
 void psc_randomize(void);
-void psc_sort(void);
+void psc_sort(struct psc_mparticles *particles);
 void psc_collision(void);
-void psc_out_field(struct psc_mfields *flds);
+void psc_out_field(struct psc_mfields *flds, struct psc_mparticles *particles);
 void psc_out_particles(void);
-void psc_set_n_particles(int p, int n_part);
+void psc_set_n_particles(particles_base_t *pp, int n_part);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);

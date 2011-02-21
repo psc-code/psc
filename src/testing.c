@@ -33,17 +33,17 @@ static struct psc_mfields flds_ref;
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref()
+psc_save_particles_ref(struct psc_mparticles *particles)
 {
   if (!particles_ref.p) {
     particles_ref.p = calloc(psc.nr_patches, sizeof(*particles_ref.p));
     foreach_patch(p) {
-      particles_base_t *pp = &psc.particles.p[p];
+      particles_base_t *pp = &particles->p[p];
       particles_base_alloc(&particles_ref.p[p], pp->n_part);
     }
   }
   foreach_patch(p) {
-    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp = &particles->p[p];
     particles_base_t *pp_ref = &particles_ref.p[p];
     for (int i = 0; i < pp->n_part; i++) {
       *particles_base_get_one(pp_ref, i) = *particles_base_get_one(pp, i);
@@ -80,12 +80,12 @@ psc_save_fields_ref(struct psc_mfields *flds)
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(double thres, const char *test_str)
+psc_check_particles_ref(struct psc_mparticles *particles, double thres, const char *test_str)
 {
   assert(particles_ref.p);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   foreach_patch(p) {
-    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp = &particles->p[p];
     particles_base_t *pp_ref = &particles_ref.p[p];
     
     for (int i = 0; i < pp->n_part; i++) {
@@ -190,13 +190,13 @@ psc_check_currents_ref_noghost(struct psc_mfields *flds, double thres)
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted()
+psc_check_particles_sorted(struct psc_mparticles *particles)
 {
 #if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;
 
   foreach_patch(p) {
-    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp = &particles->p[p];
     for (int i = 0; i < pp->n_part; i++) {
       assert(pp->particles[i].cni >= last);
       last = pp->particles[i].cni;
@@ -232,6 +232,6 @@ psc_create_test_yz(struct psc_mod_config *conf)
   psc_create(conf);
   psc_init("test_yz");
   psc.particles.p[0].n_part = 1;
-  psc_sort();
+  psc_sort(&psc.particles);
 }
 

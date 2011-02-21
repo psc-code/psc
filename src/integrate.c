@@ -87,6 +87,7 @@ psc_integrate()
 
   SETUP_field_F77();
 
+  struct psc_mparticles *particles = &psc.particles;
   struct psc_mfields *flds = &psc.flds;
 
   double stats[NR_STATS];
@@ -96,7 +97,7 @@ psc_integrate()
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_out_field(flds);
+    psc_out_field(flds, particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
@@ -109,7 +110,7 @@ psc_integrate()
 
     time_start(STAT_TIME_SORT);
     if (psc.timestep % 10 == 0) {
-      psc_sort();
+      psc_sort(particles);
     }
     time_stop(STAT_TIME_SORT);
 
@@ -127,7 +128,7 @@ psc_integrate()
     psc_push_particles();
     psc_add_ghosts(flds, JXI, JXI + 3);
     psc_fill_ghosts(flds, JXI, JXI + 3);
-    psc_exchange_particles();
+    psc_exchange_particles(particles);
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
@@ -137,7 +138,7 @@ psc_integrate()
 
     stats[STAT_NR_PARTICLES] = 0;
     foreach_patch(p) {
-      stats[STAT_NR_PARTICLES] += psc.particles.p[p].n_part;
+      stats[STAT_NR_PARTICLES] += particles->p[p].n_part;
     }
     time_stop(STAT_TIME_STEP);
     psc_log_step(stats);

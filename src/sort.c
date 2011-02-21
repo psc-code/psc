@@ -52,7 +52,7 @@ compare(const void *_a, const void *_b)
 }
 
 static void
-qsort_sort()
+qsort_sort(struct psc_mparticles *particles)
 {
   static int pr;
   if (!pr) {
@@ -60,7 +60,7 @@ qsort_sort()
   }
   prof_start(pr);
   foreach_patch(p) {
-    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp = &particles->p[p];
     find_cell_indices(pp);
     qsort(pp->particles, pp->n_part, sizeof(*pp->particles), compare);
   }
@@ -76,7 +76,7 @@ struct psc_sort_ops psc_sort_ops_qsort = {
 // counting sort
 
 static void
-countsort_sort()
+countsort_sort(struct psc_mparticles *particles)
 {
   static int pr;
   if (!pr) {
@@ -85,7 +85,7 @@ countsort_sort()
   prof_start(pr);
  
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   find_cell_indices(pp);
 
   int N = 1;
@@ -138,7 +138,7 @@ struct psc_sort_ops psc_sort_ops_countsort = {
 // use a separate array of cell indices 
 
 static void
-countsort2_sort()
+countsort2_sort(struct psc_mparticles *particles)
 {
   static int pr;
   if (!pr) {
@@ -146,7 +146,7 @@ countsort2_sort()
   }
 
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   find_cell_indices(pp);
 
   int N = 1;

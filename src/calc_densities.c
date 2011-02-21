@@ -15,7 +15,8 @@ nint(creal x)
 }
 
 static void
-do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
+do_c_calc_densities(fields_base_t *pf, particles_base_t *pp_base,
+		    int m_NE, int m_NI, int m_NN)
 {
   fields_base_zero(pf, m_NE);
   fields_base_zero(pf, m_NI);
@@ -27,9 +28,8 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp, n);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp_base, n);
       
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -104,14 +104,14 @@ do_c_calc_densities(fields_base_t *pf, int m_NE, int m_NI, int m_NN)
 }
 
 void
-c_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
+c_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_densities", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_densities(pf, 0, 1, 2);
+  do_c_calc_densities(pf, pp_base, 0, 1, 2);
   prof_stop(pr);
 
   struct psc_mfields flds;
@@ -123,7 +123,7 @@ c_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_c_calc_v(fields_base_t *pf)
+do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -135,9 +135,8 @@ do_c_calc_v(fields_base_t *pf)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp, n);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp_base, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -216,14 +215,14 @@ do_c_calc_v(fields_base_t *pf)
 }
 
 void
-c_calc_v(int p, fields_base_t *pf_base, fields_base_t *pf)
+c_calc_v(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_v", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_v(pf);
+  do_c_calc_v(pf, pp_base);
   prof_stop(pr);
 
   struct psc_mfields flds;
@@ -232,7 +231,7 @@ c_calc_v(int p, fields_base_t *pf_base, fields_base_t *pf)
 }
 
 static void
-do_c_calc_vv(fields_base_t *pf)
+do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -244,9 +243,8 @@ do_c_calc_vv(fields_base_t *pf)
   creal dzi = 1.f / psc.dx[2];
 
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp, n);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp_base, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -325,14 +323,14 @@ do_c_calc_vv(fields_base_t *pf)
 }
 
 void
-c_calc_vv(int p, fields_base_t *pf_base, fields_base_t *pf)
+c_calc_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_vv(pf);
+  do_c_calc_vv(pf, pp_base);
   prof_stop(pr);
 
   struct psc_mfields flds;

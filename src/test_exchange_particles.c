@@ -9,7 +9,7 @@
 #include <string.h>
 
 void
-setup_particles(void)
+setup_particles(struct psc_mparticles *particles)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -22,7 +22,7 @@ setup_particles(void)
   // for the old ordering, nodes aren't good because they're indeterminate
   // (could go either way), so let's shift them a bit so we get a unique answer
   // we can check.
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   if (rank == 0) {
     struct psc_patch *patch = &psc.patch[0];
     int *ilo = patch->off;
@@ -56,7 +56,7 @@ setup_particles(void)
 }
 
 static void
-check_particles_old_xz(void)
+check_particles_old_xz(struct psc_mparticles *particles)
 {
   struct psc_patch *patch = &psc.patch[0];
   int *ilo = patch->off;
@@ -78,7 +78,7 @@ check_particles_old_xz(void)
   }
 
   int fail_cnt = 0;
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   for (int i = 0; i < pp->n_part; i++) {
     particle_base_t *p = particles_base_get_one(pp, i);
     if (p->xi < xb[0] || p->xi > xe[0] ||
@@ -93,10 +93,10 @@ check_particles_old_xz(void)
 }
 
 static void
-check_particles(void)
+check_particles(struct psc_mparticles *particles)
 {
   struct psc_patch *patch = &psc.patch[0];
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
@@ -126,9 +126,9 @@ check_particles(void)
 }
 
 static int
-get_total_num_particles(void)
+get_total_num_particles(struct psc_mparticles *particles)
 {
-  particles_base_t *pp = &psc.particles.p[0];
+  particles_base_t *pp = &particles->p[0];
   int total_num_part;
 
   MPI_Allreduce(&pp->n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
@@ -153,24 +153,25 @@ main(int argc, char **argv)
   };
 
   psc_create_test_xz(&conf_fortran);
-  setup_particles();
+  struct psc_mparticles *particles = &psc.particles;
+  setup_particles(particles);
   //  psc_dump_particles("part-0");
-  int total_num_particles_before = get_total_num_particles();
-  psc_exchange_particles();
+  int total_num_particles_before = get_total_num_particles(particles);
+  psc_exchange_particles(particles);
   //  psc_dump_particles("part-1");
-  int total_num_particles_after = get_total_num_particles();
-  check_particles_old_xz();
+  int total_num_particles_after = get_total_num_particles(particles);
+  check_particles_old_xz(particles);
   assert(total_num_particles_before == total_num_particles_after);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
-  setup_particles();
+  setup_particles(particles);
   //  psc_dump_particles("part-0");
-  total_num_particles_before = get_total_num_particles();
-  psc_exchange_particles();
+  total_num_particles_before = get_total_num_particles(particles);
+  psc_exchange_particles(particles);
   //  psc_dump_particles("part-1");
-  total_num_particles_after = get_total_num_particles();
-  check_particles();
+  total_num_particles_after = get_total_num_particles(particles);
+  check_particles(particles);
   assert(total_num_particles_before == total_num_particles_after);
   psc_destroy();
 

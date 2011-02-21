@@ -8,13 +8,13 @@
 
 void __assert_equal(double x, double y, const char *xs, const char *ys, double thres);
 
-void psc_save_particles_ref(void);
+void psc_save_particles_ref(struct psc_mparticles *particles);
 void psc_save_fields_ref(struct psc_mfields *flds);
 void psc_check_currents_ref(struct psc_mfields *flds, double thres);
 void psc_check_currents_ref_noghost(struct psc_mfields *flds, double thres);
 void psc_check_fields_ref(struct psc_mfields *flds, int *m_flds, double thres);
-void psc_check_particles_ref(double thres, const char *test_str);
-void psc_check_particles_sorted(void);
+void psc_check_particles_ref(struct psc_mparticles *particles, double thres, const char *test_str);
+void psc_check_particles_sorted(struct psc_mparticles *particles);
 
 void psc_create_test_xz(struct psc_mod_config *conf);
 void psc_create_test_yz(struct psc_mod_config *conf);

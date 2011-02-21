@@ -15,10 +15,11 @@ main(int argc, char **argv)
     .mod_sort = "fortran",
   };
   psc_create_test_xz(&conf_fortran);
+  struct psc_mparticles *particles = &psc.particles;
 
   psc_randomize();
-  psc_sort();
-  psc_check_particles_sorted();
+  psc_sort(particles);
+  psc_check_particles_sorted(particles);
 
   psc_destroy();
 

@@ -22,16 +22,17 @@ main(int argc, char **argv)
   printf("=== testing push_part_yz_a()\n");
 
   psc_create_test_yz(&conf_fortran);
+  struct psc_mparticles *particles = &psc.particles;
   //  psc_dump_particles("part-0");
   psc_push_part_yz_a();
   //  psc_dump_particles("part-1");
-  psc_save_particles_ref();
+  psc_save_particles_ref(particles);
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_a();
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
 
 #ifdef USE_CUDA
@@ -53,7 +54,7 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_a();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- sse2");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_a -- sse2");
   psc_destroy();
 #endif
 
@@ -63,13 +64,13 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-0");
   psc_push_part_yz_b();
   //  psc_dump_particles("part-1");
-  psc_save_particles_ref();
+  psc_save_particles_ref(particles);
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
   psc_push_part_yz_b();
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-6, "push_part_yz_b -- generic_c");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_b -- generic_c");
   psc_destroy();
 
 #ifdef USE_CUDA
@@ -84,7 +85,7 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_b();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-6, "push_part_yz_b -- sse2");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_b -- sse2");
   psc_destroy();
 #endif
 
@@ -95,7 +96,7 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-0");
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
-  psc_save_particles_ref();
+  psc_save_particles_ref(particles);
   psc_save_fields_ref(flds);
   psc_destroy();
 
@@ -103,7 +104,7 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-0");
   psc_push_part_yz();
   //  psc_dump_particles("part-1");
-  psc_check_particles_ref(1e-7, "push_part_yz -- generic_c");
+  psc_check_particles_ref(particles, 1e-7, "push_part_yz -- generic_c");
   psc_check_currents_ref(flds, 1e-7);
   psc_destroy();
 
@@ -111,7 +112,7 @@ main(int argc, char **argv)
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz();
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-8, "push_part_yz -- sse2");
+  psc_check_particles_ref(particles, 1e-8, "push_part_yz -- sse2");
   psc_check_currents_ref(flds, 2e-6); 
   psc_destroy();
 #endif

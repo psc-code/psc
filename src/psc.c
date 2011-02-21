@@ -249,6 +249,15 @@ psc_fields_destroy(struct psc_mfields *flds)
 }
 
 void
+psc_particles_destroy(struct psc_mparticles *particles)
+{
+  foreach_patch(p) {
+    particles_base_free(&particles->p[p]);
+  }
+  free(particles->p);
+}
+
+void
 psc_destroy()
 {
   if (psc.ops->destroy) {
@@ -256,10 +265,7 @@ psc_destroy()
   }
 
   psc_fields_destroy(&psc.flds);
-  foreach_patch(p) {
-    particles_base_free(&psc.particles.p[p]);
-  }
-  free(psc.particles.p);
+  psc_particles_destroy(&psc.particles);
 }
 
 static void
@@ -292,13 +298,13 @@ ascii_dump_field(struct psc_mfields *flds, int m, const char *fname)
 }
 
 static void
-ascii_dump_particles(const char *fname)
+ascii_dump_particles(struct psc_mparticles *particles, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   foreach_patch(p) {
-    particles_base_t *pp = &psc.particles.p[p];
+    particles_base_t *pp = &particles->p[p];
     char *filename = malloc(strlen(fname) + 10);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
@@ -327,12 +333,12 @@ psc_dump_field(struct psc_mfields *flds, int m, const char *fname)
 }
 
 void
-psc_dump_particles(const char *fname)
+psc_dump_particles(struct psc_mparticles *particles, const char *fname)
 {
   if (psc.output_ops->dump_particles) {
     psc.output_ops->dump_particles(fname);
   } else {
-    ascii_dump_particles(fname);
+    ascii_dump_particles(particles, fname);
   }
 }
 
@@ -472,10 +478,10 @@ psc_fill_ghosts(struct psc_mfields *flds, int mb, int me)
 // psc_exchange_particles
 
 void
-psc_exchange_particles(void)
+psc_exchange_particles(struct psc_mparticles *particles)
 {
   assert(psc.bnd_ops->exchange_particles);
-  psc.bnd_ops->exchange_particles();
+  psc.bnd_ops->exchange_particles(particles);
 }
 
 // ----------------------------------------------------------------------
@@ -492,10 +498,10 @@ psc_randomize()
 // psc_sort
 
 void
-psc_sort()
+psc_sort(struct psc_mparticles *particles)
 {
   assert(psc.sort_ops->sort);
-  psc.sort_ops->sort();
+  psc.sort_ops->sort(particles);
 }
 
 // ----------------------------------------------------------------------
@@ -512,10 +518,10 @@ psc_collision()
 // psc_out_field
 
 void
-psc_out_field(struct psc_mfields *flds)
+psc_out_field(struct psc_mfields *flds, struct psc_mparticles *particles)
 {
   assert(psc.output_ops->out_field);
-  psc.output_ops->out_field(flds);
+  psc.output_ops->out_field(flds, particles);
 }
 
 // ----------------------------------------------------------------------
@@ -585,24 +591,27 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 // psc moments
 
 void
-psc_calc_densities(int p, fields_base_t *pf_base, fields_base_t *pf)
+psc_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		   fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities(p, pf_base, pf);
+  psc.moment_ops->calc_densities(p, pf_base, pp_base, pf);
 }
 
 void
-psc_calc_moments_v(int p, fields_base_t *pf_base, fields_base_t *pf)
+psc_calc_moments_v(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		   fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_v);
-  psc.moment_ops->calc_v(p, pf_base, pf);
+  psc.moment_ops->calc_v(p, pf_base, pp_base, pf);
 }
 
 void
-psc_calc_moments_vv(int p, fields_base_t *pf_base, fields_base_t *pf)
+psc_calc_moments_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base,
+		    fields_base_t *pf)
 {
   assert(psc.moment_ops->calc_vv);
-  psc.moment_ops->calc_vv(p, pf_base, pf);
+  psc.moment_ops->calc_vv(p, pf_base, pp_base, pf);
 }
 
 // ----------------------------------------------------------------------
@@ -637,9 +646,9 @@ psc_init(const char *case_name)
 // psc_set_n_particles
 
 void
-psc_set_n_particles(int p, int n_part)
+psc_set_n_particles(particles_base_t *pp, int n_part)
 {
-  psc.particles.p[p].n_part = n_part;
+  pp->n_part = n_part;
   SET_niloc(n_part);
 }
 
