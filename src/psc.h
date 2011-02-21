@@ -368,7 +368,7 @@ struct psc {
   double dt;
   double dx[3];
 
-  struct psc_mparticles particles __attribute__((deprecated));
+  struct psc_mparticles particles;
   struct psc_mfields flds;
   struct mrc_domain *mrc_domain;
 
