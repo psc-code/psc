@@ -57,13 +57,13 @@ fields_c_free(fields_c_t *pf)
 #if FIELDS_BASE == FIELDS_C
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me)
+fields_c_get(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
-  *pf = psc.pf;
+  *pf = flds_base->f[0];
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me)
+fields_c_put(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
   pf->flds = NULL;
 }

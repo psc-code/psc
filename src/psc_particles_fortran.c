@@ -55,12 +55,12 @@ particles_fortran_put(particles_fortran_t *pp, struct psc_mparticles *particles_
 static int __gotten;
 
 void
-particles_fortran_get(particles_fortran_t *pp)
+particles_fortran_get(particles_fortran_t *pp, struct psc_mparticles *particles_base)
 {
   assert(!__gotten);
   __gotten = 1;
 
-  particles_base_t *pp_base = &psc.pp;
+  particles_base_t *pp_base = &particles_base->p[0];
 
   particles_fortran_alloc(pp, pp_base->n_part);
   pp->n_part = pp_base->n_part;
@@ -83,13 +83,13 @@ particles_fortran_get(particles_fortran_t *pp)
 }
 
 void
-particles_fortran_put(particles_fortran_t *pp)
+particles_fortran_put(particles_fortran_t *pp, struct psc_mparticles *particles_base)
 {
   assert(__gotten);
   __gotten = 0;
 
   GET_niloc(&pp->n_part);
-  particles_base_t *pp_base = &psc.pp;
+  particles_base_t *pp_base = &particles_base->p[0];
   pp_base->n_part = pp->n_part;
 
   for (int n = 0; n < pp_base->n_part; n++) {

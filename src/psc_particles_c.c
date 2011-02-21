@@ -34,14 +34,13 @@ particles_c_free(particles_c_t *pp)
 }
 
 void
-particles_c_get(particles_c_t *pp)
+particles_c_get(particles_c_t *pp, struct psc_mparticles *particles_base)
 {
-  pp->particles = psc.pp.particles;
-  pp->n_part = psc.pp.n_part;
+  *pp = particles_base->p[0];
 }
 
 void
-particles_c_put(particles_c_t *pp)
+particles_c_put(particles_c_t *pp, struct psc_mparticles *particles_base)
 {
 }
 

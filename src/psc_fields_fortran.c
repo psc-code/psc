@@ -147,8 +147,12 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
   __gotten = 1;
 
   if (!__flds.flds) {
-    struct psc_patch *patch = &psc.patch[0];
-    fields_fortran_alloc(&__flds, patch->ilg, patch->ihg, NR_FIELDS);
+    int p = 0;
+    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+    int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
+		   psc.patch[p].ldims[1] + psc.ibn[1],
+		   psc.patch[p].ldims[2] + psc.ibn[2] };
+    fields_fortran_alloc(&__flds, ilg, ihg, NR_FIELDS);
   }
   *pf = __flds;
 
@@ -162,9 +166,10 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 }
 
 void
-fields_fortran_get(fields_fortran_t *pf, int mb, int me)
+fields_fortran_get(fields_fortran_t *pf, int mb, int me,
+		   struct psc_mfields *flds_base)
 {
-  fields_fortran_get_from(pf, mb, me, &psc.pf, mb);
+  fields_fortran_get_from(pf, mb, me, &flds_base->f[0], mb);
 }
 
 void
@@ -185,9 +190,10 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
 }
 
 void
-fields_fortran_put(fields_fortran_t *pf, int mb, int me)
+fields_fortran_put(fields_fortran_t *pf, int mb, int me,
+		   struct psc_mfields *flds_base)
 {
-  return fields_fortran_put_to(pf, mb, me, &psc.pf, mb);
+  return fields_fortran_put_to(pf, mb, me, &flds_base->f[0], mb);
 }
 
 #endif
