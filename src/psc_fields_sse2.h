@@ -38,8 +38,8 @@ typedef struct {
 
 void fields_sse2_alloc(fields_sse2_t *pf);
 void fields_sse2_free(fields_sse2_t *pf);
-void fields_sse2_get(fields_sse2_t *pf, int mb, int me);
-void fields_sse2_put(fields_sse2_t *pf, int mb, int me);
+void fields_sse2_get(fields_sse2_t *pf, int mb, int me, struct psc_mfields *flds_base);
+void fields_sse2_put(fields_sse2_t *pf, int mb, int me, struct psc_mfields *flds_base);
 void fields_sse2_zero(fields_sse2_t *pf, int m);
 
 #endif

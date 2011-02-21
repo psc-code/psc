@@ -38,13 +38,13 @@ static bool __gotten; // to check we're pairing get/put correctly
 
 /// Copy fields from base data structure to an SSE2 friendly format.
 void
-fields_sse2_get(fields_sse2_t *pf, int mb, int me)
+fields_sse2_get(fields_sse2_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
   assert(!__gotten);
   __gotten = true;
 
   struct psc_patch *patch = &psc.patch[0];
-  fields_base_t *pf_base = &psc.flds.f[0];
+  fields_base_t *pf_base = &flds_base->f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {
     sz *= patch->ldims[d] + 2 * psc.ibn[d];
@@ -63,13 +63,13 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me)
 
 /// Copy fields from SSE2 data structures into base structures.
 void
-fields_sse2_put(fields_sse2_t *pf, int mb, int me)
+fields_sse2_put(fields_sse2_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
   assert(__gotten);
   __gotten = false;
 
   struct psc_patch *patch = &psc.patch[0];
-  fields_base_t *pf_base = &psc.flds.f[0];
+  fields_base_t *pf_base = &flds_base->f[0];
   int sz = 1;
   for (int d = 0; d < 3; d++) {
     sz *= patch->ldims[d] + 2 * psc.ibn[d];

@@ -949,7 +949,7 @@ void
 sse2_push_part_yz_a(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   particles_sse2_t pp;
-  particles_sse2_get(&pp);
+  particles_sse2_get(&pp, particles_base);
 
   static int pr;
   if (!pr) {
@@ -959,7 +959,7 @@ sse2_push_part_yz_a(struct psc_mfields *flds_base, struct psc_mparticles *partic
   do_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
+  particles_sse2_put(&pp, particles_base);
 }
 
 void
@@ -967,8 +967,8 @@ sse2_push_part_yz_b(struct psc_mfields *flds_base, struct psc_mparticles *partic
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp);
-  fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_get(&pp, particles_base);
+  fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
   if (!pr) {
@@ -978,8 +978,8 @@ sse2_push_part_yz_b(struct psc_mfields *flds_base, struct psc_mparticles *partic
   do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
-  fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp, particles_base);
+  fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 
 void
@@ -987,8 +987,8 @@ sse2_push_part_yz(struct psc_mfields *flds_base, struct psc_mparticles *particle
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp);
-  fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_get(&pp, particles_base);
+  fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
   if (!pr) {
@@ -998,8 +998,8 @@ sse2_push_part_yz(struct psc_mfields *flds_base, struct psc_mparticles *particle
   do_push_part_yz(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
-  fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp, particles_base);
+  fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

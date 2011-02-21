@@ -54,7 +54,7 @@ static particle_sse2_t *__sse2_part_data;
 
 /// Copy particles from base data structures to an SSE2 friendly format.
 void
-particles_sse2_get(particles_sse2_t *particles)
+particles_sse2_get(particles_sse2_t *particles, struct psc_mparticles *particles_base)
 {
   particles_base_t *pp_base = &psc.particles.p[0];
   int n_part = pp_base->n_part;
@@ -105,7 +105,7 @@ particles_sse2_get(particles_sse2_t *particles)
 
 /// Copy particles from SSE2 data structures to base structures.
 void
-particles_sse2_put(particles_sse2_t *particles)
+particles_sse2_put(particles_sse2_t *particles, struct psc_mparticles *particles_base)
 {
   particles_base_t *pp_base = &psc.particles.p[0];
   for(int n = 0; n < pp_base->n_part; n++) {

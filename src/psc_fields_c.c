@@ -71,7 +71,7 @@ fields_c_put(fields_c_t *pf, int mb, int me)
 #else
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me)
+fields_c_get(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
   struct psc_patch *patch = &psc.patch[0];
   int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
@@ -82,7 +82,7 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 
   assert(psc.nr_patches == 1);
   foreach_patch(p) {
-    fields_base_t *pf_base = &psc.flds.f[p];
+    fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
       foreach_3d_g(p, jx, jy, jz) {
 	F3_C(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
@@ -92,11 +92,11 @@ fields_c_get(fields_c_t *pf, int mb, int me)
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me)
+fields_c_put(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 {
   assert(psc.nr_patches == 1);
   foreach_patch(p) {
-    fields_base_t *pf_base = &psc.flds.f[p];
+    fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
       foreach_3d_g(p, jx, jy, jz) {
 	F3_BASE(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
