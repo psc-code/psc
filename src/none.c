@@ -6,7 +6,7 @@
 // functionality off.
 
 static void
-do_nothing(void)
+none_push_part(struct psc_mfields *flds, struct psc_mparticles *particles)
 {
 }
 
@@ -14,11 +14,11 @@ do_nothing(void)
 
 struct psc_ops psc_ops_none = {
   .name                   = "none",
-  .push_part_xz           = do_nothing,
-  .push_part_yz           = do_nothing,
-  .push_part_z            = do_nothing,
-  .push_part_yz_a         = do_nothing,
-  .push_part_yz_b         = do_nothing,
+  .push_part_xz           = none_push_part,
+  .push_part_yz           = none_push_part,
+  .push_part_z            = none_push_part,
+  .push_part_yz_a         = none_push_part,
+  .push_part_yz_b         = none_push_part,
 };
 
 // field advance

@@ -346,89 +346,89 @@ psc_dump_particles(struct psc_mparticles *particles, const char *fname)
 // psc_push_part_xz
 
 void
-psc_push_part_xz()
+psc_push_part_xz(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_xz);
-  psc.ops->push_part_xz();
+  psc.ops->push_part_xz(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_xyz
 
 void
-psc_push_part_xyz()
+psc_push_part_xyz(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_xyz);
-  psc.ops->push_part_xyz();
+  psc.ops->push_part_xyz(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_xy
 
 void
-psc_push_part_xy()
+psc_push_part_xy(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_xy);
-  psc.ops->push_part_xy();
+  psc.ops->push_part_xy(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz
 
 void
-psc_push_part_yz()
+psc_push_part_yz(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_yz);
-  psc.ops->push_part_yz();
+  psc.ops->push_part_yz(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_z
 
 void
-psc_push_part_z()
+psc_push_part_z(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_z);
-  psc.ops->push_part_z();
+  psc.ops->push_part_z(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz_a
 
 void
-psc_push_part_yz_a()
+psc_push_part_yz_a(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_yz_a);
-  psc.ops->push_part_yz_a();
+  psc.ops->push_part_yz_a(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz_b
 
 void
-psc_push_part_yz_b()
+psc_push_part_yz_b(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   assert(psc.ops->push_part_yz_b);
-  psc.ops->push_part_yz_b();
+  psc.ops->push_part_yz_b(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_particles
 
 void
-psc_push_particles()
+psc_push_particles(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   int *im = psc.domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    psc_push_part_xyz();
+    psc_push_part_xyz(flds_base, particles_base);
   } else if (im[0] > 1 && im[2] > 1) { // xz
-    psc_push_part_xz();
+    psc_push_part_xz(flds_base, particles_base);
   } else if (im[0] > 1 && im[1] > 1) { // xy
-    psc_push_part_xy();
+    psc_push_part_xy(flds_base, particles_base);
   } else if (im[1] > 1 && im[2] > 1) { // yz
-    psc_push_part_yz();
+    psc_push_part_yz(flds_base, particles_base);
   } else if (im[2] > 1) { // z
-    psc_push_part_z();
+    psc_push_part_z(flds_base, particles_base);
   } else {
     assert(0);
   }
@@ -488,10 +488,10 @@ psc_exchange_particles(struct psc_mparticles *particles)
 // psc_randomize
 
 void
-psc_randomize()
+psc_randomize(struct psc_mparticles *particles)
 {
   assert(psc.randomize_ops->randomize);
-  psc.randomize_ops->randomize();
+  psc.randomize_ops->randomize(particles);
 }
 
 // ----------------------------------------------------------------------
@@ -508,10 +508,10 @@ psc_sort(struct psc_mparticles *particles)
 // psc_collision
 
 void
-psc_collision()
+psc_collision(struct psc_mparticles *particles)
 {
   assert(psc.collision_ops->collision);
-  psc.collision_ops->collision();
+  psc.collision_ops->collision(particles);
 }
 
 // ----------------------------------------------------------------------
@@ -666,14 +666,14 @@ psc_read_checkpoint(void)
   psc_set_n_particles(0, n_part);
   
   particles_fortran_t pp;
-  particles_fortran_get(&pp);
+  particles_fortran_get(&pp, &psc.particles);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, 0, 0);
+  fields_fortran_get(&pf, 0, 0, &psc.flds);
 
   SERV_read_2(&pp, &pf);
 
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, HZ + 1);
+  particles_fortran_put(&pp, &psc.particles);
+  fields_fortran_put(&pf, JXI, HZ + 1, &psc.flds);
 }
 
 // ----------------------------------------------------------------------
@@ -685,14 +685,14 @@ psc_write_checkpoint(void)
   mpi_printf(MPI_COMM_WORLD, "INFO: Writing checkpoint.\n");
   
   particles_fortran_t pp;
-  particles_fortran_get(&pp);
+  particles_fortran_get(&pp, &psc.particles);
   fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, HZ + 1);
+  fields_fortran_get(&pf, JXI, HZ + 1, &psc.flds);
 
   SERV_write(&pp, &pf);
 
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, 0, 0);
+  particles_fortran_put(&pp, &psc.particles);
+  fields_fortran_put(&pf, 0, 0, &psc.flds);
 }
 
 // ======================================================================

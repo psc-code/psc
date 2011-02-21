@@ -27,10 +27,10 @@ do_genc_push_part_yz_a(particles_t *pp)
 }
 
 void
-genc_push_part_yz_a()
+genc_push_part_yz_a(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   particles_t pp;
-  particles_get(&pp);
+  particles_get(&pp, particles_base);
 
   static int pr;
   if (!pr) {
@@ -40,5 +40,5 @@ genc_push_part_yz_a()
   do_genc_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  particles_put(&pp);
+  particles_put(&pp, particles_base);
 }

@@ -17,7 +17,7 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   struct psc_mparticles *particles = &psc.particles;
 
-  psc_randomize();
+  psc_randomize(particles);
   psc_sort(particles);
   psc_check_particles_sorted(particles);
 

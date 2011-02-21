@@ -105,7 +105,7 @@ psc_integrate()
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize();
+    psc_randomize(particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
@@ -115,7 +115,7 @@ psc_integrate()
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision();
+    psc_collision(particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
@@ -125,7 +125,7 @@ psc_integrate()
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles();
+    psc_push_particles(flds, particles);
     psc_add_ghosts(flds, JXI, JXI + 3);
     psc_fill_ghosts(flds, JXI, JXI + 3);
     psc_exchange_particles(particles);

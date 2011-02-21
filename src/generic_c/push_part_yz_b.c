@@ -158,12 +158,12 @@ do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_yz_b()
+genc_push_part_yz_b(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
 {
   fields_t pf;
   particles_t pp;
-  fields_get(&pf, EX, EX + 6);
-  particles_get(&pp);
+  fields_get(&pf, EX, EX + 6, flds_base);
+  particles_get(&pp, particles_base);
 
   static int pr;
   if (!pr) {
@@ -173,7 +173,7 @@ genc_push_part_yz_b()
   do_genc_push_part_yz_b(&pf, &pp);
   prof_stop(pr);
 
-  particles_put(&pp);
-  fields_put(&pf, JXI, JXI + 3);
+  particles_put(&pp, particles_base);
+  fields_put(&pf, JXI, JXI + 3, flds_base);
 }
 
