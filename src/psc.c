@@ -591,27 +591,27 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 // psc moments
 
 void
-psc_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
-		   fields_base_t *pf)
+psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+		   mfields_base_t *f)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities(p, pf_base, pp_base, pf);
+  psc.moment_ops->calc_densities(flds, particles, f);
 }
 
 void
-psc_calc_moments_v(int p, fields_base_t *pf_base, particles_base_t *pp_base,
-		   fields_base_t *pf)
+psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
+		   mfields_base_t *f)
 {
   assert(psc.moment_ops->calc_v);
-  psc.moment_ops->calc_v(p, pf_base, pp_base, pf);
+  psc.moment_ops->calc_v(flds, particles, f);
 }
 
 void
-psc_calc_moments_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base,
-		    fields_base_t *pf)
+psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
+		    mfields_base_t *f)
 {
   assert(psc.moment_ops->calc_vv);
-  psc.moment_ops->calc_vv(p, pf_base, pp_base, pf);
+  psc.moment_ops->calc_vv(flds, particles, f);
 }
 
 // ----------------------------------------------------------------------

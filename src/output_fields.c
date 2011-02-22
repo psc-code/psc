@@ -17,14 +17,18 @@
 #define JZ_CC(ix,iy,iz) (.5f * (F3_BASE(pf, JZI,ix,iy,iz) + F3_BASE(pf, JZI,ix,iy,iz-dz)))
 
 static void
-calc_j(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_j(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
-    F3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
-    F3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
+      F3_BASE(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
+      F3_BASE(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 #define EX_CC(ix,iy,iz) (.5f * (F3_BASE(pf, EX,ix,iy,iz) + F3_BASE(pf, EX,ix-dx,iy,iz)))
@@ -32,14 +36,18 @@ calc_j(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
 #define EZ_CC(ix,iy,iz) (.5f * (F3_BASE(pf, EZ,ix,iy,iz) + F3_BASE(pf, EZ,ix,iy,iz-dz)))
 
 static void
-calc_E(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_E(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
-    F3_BASE(f, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
-    F3_BASE(f, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
+      F3_BASE(ff, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
+      F3_BASE(ff, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 #define HX_CC(ix,iy,iz) (.25f*(F3_BASE(pf, HX,ix,iy,iz   ) + F3_BASE(pf, HX,ix,iy-dy,iz   ) + \
@@ -50,68 +58,88 @@ calc_E(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
 			       F3_BASE(pf, HZ,ix,iy-dy,iz) + F3_BASE(pf, HZ,ix-dx,iy-dy,iz)))
 
 static void
-calc_H(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_H(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
-    F3_BASE(f, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
-    F3_BASE(f, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
+      F3_BASE(ff, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
+      F3_BASE(ff, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 static void
-calc_jdote(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_jdote(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
-    F3_BASE(f, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
-    F3_BASE(f, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
+      F3_BASE(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
+      F3_BASE(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
 }
 
 static void
-calc_poyn(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_poyn(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
-			       EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
-    F3_BASE(f, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
-			       EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
-    F3_BASE(f, 2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
-			       EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
+				  EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
+      F3_BASE(ff, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
+				  EX_CC(ix,iy,iz) * HZ_CC(ix,iy,iz));
+      F3_BASE(ff, 2, ix,iy,iz) = (EX_CC(ix,iy,iz) * HY_CC(ix,iy,iz) -
+				  EY_CC(ix,iy,iz) * HX_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 static void
-calc_E2(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_E2(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
-    F3_BASE(f, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
-    F3_BASE(f, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
+      F3_BASE(ff, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
+      F3_BASE(ff, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 static void
-calc_H2(int p, fields_base_t *pf, particles_base_t *pp, fields_base_t *f)
+calc_H2(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  foreach_3d(p, ix, iy, iz, 0, 0) {
-    F3_BASE(f, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
-    F3_BASE(f, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
-    F3_BASE(f, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
-  } foreach_3d_end;
+  foreach_patch(p) {
+    fields_base_t *ff = &f->f[p];
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d(p, ix, iy, iz, 0, 0) {
+      F3_BASE(ff, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
+      F3_BASE(ff, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
+      F3_BASE(ff, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
+    } foreach_3d_end;
+  }
 }
 
 struct output_field {
   char *name;
   int nr_comp;
   char *fld_names[6];
-  void (*calc)(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *f);
+  void (*calc)(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f);
 };
 
 static struct output_field output_fields[] = {
@@ -350,10 +378,8 @@ output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
   if ((out->dowrite_pfield && psc.timestep >= out->pfield_next) ||
       out->dowrite_tfield) {
     struct psc_fields_list *pfd = &out->pfd;
-    foreach_patch(p) {
-      for (int i = 0; i < pfd->nr_flds; i++) {
-	out->out_flds[i]->calc(p, &flds->f[p], &particles->p[p], &pfd->flds[i].f[p]);
-      }
+    for (int i = 0; i < pfd->nr_flds; i++) {
+      out->out_flds[i]->calc(flds, particles, &pfd->flds[i]);
     }
   }
   

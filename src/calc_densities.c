@@ -104,20 +104,20 @@ do_c_calc_densities(fields_base_t *pf, particles_base_t *pp_base,
 }
 
 void
-c_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
+c_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+		 mfields_base_t *f)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_densities", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_densities(pf, pp_base, 0, 1, 2);
+  foreach_patch(p) {
+    do_c_calc_densities(&f->f[p], &particles->p[p], 0, 1, 2);
+  }
   prof_stop(pr);
 
-  mfields_base_t flds;
-  flds.f = pf;
-  assert(psc.nr_patches == 1);
-  psc_add_ghosts(&flds, 0, 3);
+  psc_add_ghosts(f, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -215,19 +215,19 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
 }
 
 void
-c_calc_v(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
+c_calc_v(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_v", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_v(pf, pp_base);
+  foreach_patch(p) {
+    do_c_calc_v(&f->f[p], &particles->p[p]);
+  }
   prof_stop(pr);
 
-  mfields_base_t flds;
-  flds.f = pf;
-  psc_add_ghosts(&flds, 0, 3);
+  psc_add_ghosts(f, 0, 3);
 }
 
 static void
@@ -323,19 +323,19 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
 }
 
 void
-c_calc_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t *pf)
+c_calc_vv(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
   prof_start(pr);
-  do_c_calc_vv(pf, pp_base);
+  foreach_patch(p) {
+    do_c_calc_vv(&f->f[p], &particles->p[p]);
+  }
   prof_stop(pr);
 
-  mfields_base_t flds;
-  flds.f = pf;
-  psc_add_ghosts(&flds, 0, 3);
+  psc_add_ghosts(f, 0, 3);
 }
 
 struct psc_moment_ops psc_moment_ops_c = {
