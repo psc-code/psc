@@ -66,6 +66,7 @@ particles_c_get(particles_c_t *pp, void *_particles_base)
   assert(!__gotten);
   __gotten = 1;
 
+  pp->n_part = pp_base->n_part;
   pp->particles = __arr;
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *f_part = particles_base_get_one(pp_base, n);

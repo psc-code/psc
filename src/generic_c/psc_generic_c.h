@@ -4,7 +4,7 @@
 
 #include "psc.h"
 #include "psc_fields_as_c.h"
-#include "psc_particles_as_fortran.h"
+#include "psc_particles_as_c.h"
 
 // switch between double and float in generic_c
 // constants need to always be given like 1.5f
