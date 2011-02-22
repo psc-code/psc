@@ -98,15 +98,16 @@ fields_fortran_get(fields_fortran_t *pf, int mb, int me, void *_flds_base)
 }
 
 void
-fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
-			void *_pf_base, int mb_base)
+fields_fortran_get_from(fields_fortran_t *pf, int mb, int me, void *_flds_base,
+			int mb_base)
 {
   fields_fortran_get(pf, mb, me, &psc.flds);
 
-  fields_base_t *pf_base = _pf_base;
-  foreach_patch(patch) {
+  mfields_base_t *flds_base = _flds_base;
+  foreach_patch(p) {
+    fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(patch, jx, jy, jz) {
+      foreach_3d_g(p, jx, jy, jz) {
 	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
       } foreach_3d_g_end;
     }
@@ -119,13 +120,14 @@ fields_fortran_put(fields_fortran_t *pf, int mb, int me, void *_flds_base)
 }
 
 void
-fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
-		      void *_pf_base, int mb_base)
+fields_fortran_put_to(fields_fortran_t *pf, int mb, int me, void *_flds_base,
+		      int mb_base)
 {
-  fields_base_t *pf_base = _pf_base;
-  foreach_patch(patch) {
+  mfields_base_t *flds_base = _flds_base;
+  foreach_patch(p) {
+    fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(patch, jx, jy, jz) {
+      foreach_3d_g(p, jx, jy, jz) {
 	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
@@ -140,10 +142,10 @@ static fields_fortran_t __flds;
 static int __gotten; // to check we're pairing get/put correctly
 
 void
-fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
-			void *_pf_base, int mb_base)
+fields_fortran_get_from(fields_fortran_t *pf, int mb, int me, void *_flds_base,
+			int mb_base)
 {
-  fields_base_t *pf_base = _pf_base;
+  mfields_base_t *flds_base = _flds_base;
   assert(!__gotten);
   __gotten = 1;
 
@@ -157,9 +159,10 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
   }
   *pf = __flds;
 
-  foreach_patch(patch) {
+  foreach_patch(p) {
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(patch, jx, jy, jz) {
+      fields_base_t *pf_base = &flds_base->f[p];
+      foreach_3d_g(p, jx, jy, jz) {
 	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
       } foreach_3d_g_end;
     }
@@ -167,21 +170,21 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 }
 
 void
-fields_fortran_get(fields_fortran_t *pf, int mb, int me,
-		   mfields_base_t *flds_base)
+fields_fortran_get(fields_fortran_t *pf, int mb, int me, mfields_base_t *flds_base)
 {
-  fields_fortran_get_from(pf, mb, me, &flds_base->f[0], mb);
+  fields_fortran_get_from(pf, mb, me, flds_base, mb);
 }
 
 void
-fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
-		      void *_pf_base, int mb_base)
+fields_fortran_put_to(fields_fortran_t *pf, int mb, int me, void *_flds_base,
+		      int mb_base)
 {
-  fields_base_t *pf_base = _pf_base;
+  mfields_base_t *flds_base = _flds_base;
   assert(__gotten);
   __gotten = 0;
 
-  foreach_patch(patch) {
+  foreach_patch(p) {
+    fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
       foreach_3d_g(patch, jx, jy, jz) {
 	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
@@ -194,7 +197,7 @@ void
 fields_fortran_put(fields_fortran_t *pf, int mb, int me,
 		   mfields_base_t *flds_base)
 {
-  return fields_fortran_put_to(pf, mb, me, &flds_base->f[0], mb);
+  return fields_fortran_put_to(pf, mb, me, flds_base, mb);
 }
 
 #endif

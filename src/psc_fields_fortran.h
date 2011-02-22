@@ -48,11 +48,11 @@ void fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
 				     int nr_comp, fields_fortran_real_t *arr);
 void fields_fortran_free(fields_fortran_t *pf);
 void fields_fortran_get(fields_fortran_t *pf, int mb, int me, void *flds_base);
-void fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
-			     void *pf_base, int mb_base);
+void fields_fortran_get_from(fields_fortran_t *pf, int mb, int me, void *flds_base,
+			     int mb_base);
 void fields_fortran_put(fields_fortran_t *pf, int mb, int me, void *flds_base);
-void fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
-			   void *pf_base, int mb_base);
+void fields_fortran_put_to(fields_fortran_t *pf, int mb, int me, void *flds_base,
+			   int mb_base);
 void fields_fortran_zero(fields_fortran_t *pf, int m);
 void fields_fortran_zero_all(fields_fortran_t *pf);
 void fields_fortran_zero(fields_fortran_t *pf, int m);

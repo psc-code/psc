@@ -444,13 +444,15 @@ fortran_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
 
   particles_fortran_t pp;
   particles_fortran_get(&pp, &psc.particles);
+  mfields_base_t flds;
+  flds.f[0] = *pf;
   fields_fortran_t pf_fortran;
-  fields_fortran_get_from(&pf_fortran, 0, 0, pf, 0);
+  fields_fortran_get_from(&pf_fortran, 0, 0, &flds, 0);
 
   CALC_densities(&pp, &pf_fortran);
 
   particles_fortran_put(&pp, &psc.particles);
-  fields_fortran_put_to(&pf_fortran, NE, NE + 3, pf, 0);
+  fields_fortran_put_to(&pf_fortran, NE, NE + 3, &flds, 0);
 
   prof_stop(pr);
 }
