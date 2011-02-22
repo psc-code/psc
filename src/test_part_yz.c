@@ -22,7 +22,7 @@ main(int argc, char **argv)
   printf("=== testing push_part_yz_a()\n");
 
   psc_create_test_yz(&conf_fortran);
-  struct psc_mparticles *particles = &psc.particles;
+  mparticles_base_t *particles = &psc.particles;
   mfields_base_t *flds = &psc.flds;
   //  psc_dump_particles("part-0");
   psc_push_part_yz_a(flds, particles);

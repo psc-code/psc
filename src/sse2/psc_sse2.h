@@ -27,9 +27,9 @@ struct particle_vec{
   union packed_vector qni, mni, wni;
 };
 
-void sse2_push_part_yz_a(mfields_base_t *flds_base, struct psc_mparticles *particles_base);
-void sse2_push_part_yz_b(mfields_base_t *flds_base, struct psc_mparticles *particles_base);
-void sse2_push_part_yz(mfields_base_t *flds_base, struct psc_mparticles *particles_base);
+void sse2_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void sse2_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void sse2_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void init_vec_numbers(void);
 
 // SSE2 needs to have these numbers packed into 

@@ -260,7 +260,7 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_xy(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+genc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   fields_t pf;
   particles_t pp;

@@ -3,7 +3,7 @@
 #include <mrc_profile.h>
 
 static void
-fortran_push_part_xy(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -23,7 +23,7 @@ fortran_push_part_xy(mfields_base_t *flds_base, struct psc_mparticles *particles
 }
 
 static void
-fortran_push_part_xz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -43,7 +43,7 @@ fortran_push_part_xz(mfields_base_t *flds_base, struct psc_mparticles *particles
 }
 
 static void
-fortran_push_part_yz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -63,7 +63,7 @@ fortran_push_part_yz(mfields_base_t *flds_base, struct psc_mparticles *particles
 }
 
 static void
-fortran_push_part_xyz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -83,7 +83,7 @@ fortran_push_part_xyz(mfields_base_t *flds_base, struct psc_mparticles *particle
 }
 
 static void
-fortran_push_part_z(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -103,7 +103,7 @@ fortran_push_part_z(mfields_base_t *flds_base, struct psc_mparticles *particles_
 }
 
 static void
-fortran_push_part_yz_a(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -123,7 +123,7 @@ fortran_push_part_yz_a(mfields_base_t *flds_base, struct psc_mparticles *particl
 }
 
 static void
-fortran_push_part_yz_b(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+fortran_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -157,7 +157,7 @@ struct psc_ops psc_ops_fortran = {
 // fortran randomize
 
 static void
-fortran_randomize(struct psc_mparticles *particles_base)
+fortran_randomize(mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -182,7 +182,7 @@ struct psc_randomize_ops psc_randomize_ops_fortran = {
 // fortran sort
 
 static void
-fortran_sort(struct psc_mparticles *particles_base)
+fortran_sort(mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -208,7 +208,7 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 // fortran collision
 
 static void
-fortran_collision(struct psc_mparticles *particles_base)
+fortran_collision(mparticles_base_t *particles_base)
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
@@ -389,7 +389,7 @@ fortran_fill_ghosts(mfields_base_t *flds_base, int mb, int me)
 }
 
 static void
-fortran_exchange_particles(struct psc_mparticles *particles_base)
+fortran_exchange_particles(mparticles_base_t *particles_base)
 {
   static int pr;
   if (!pr) {

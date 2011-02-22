@@ -51,8 +51,9 @@ static int __arr_size;
 static int __gotten;
 
 void
-particles_c_get(particles_c_t *pp, struct psc_mparticles *particles_base)
+particles_c_get(particles_c_t *pp, void *_particles_base)
 {
+  mparticles_base_t *particles_base = _particles_base;
   particles_base_t *pp_base = &particles_base->p[0];
   if (pp_base->n_part > __arr_size) {
     free(__arr);
@@ -83,11 +84,12 @@ particles_c_get(particles_c_t *pp, struct psc_mparticles *particles_base)
 }
 
 void
-particles_c_put(particles_c_t *pp, struct psc_mparticles *particles_base)
+particles_c_put(particles_c_t *pp, void *_particles_base)
 {
   assert(__gotten);
   __gotten = 0;
 
+  mparticles_base_t *particles_base = _particles_base;
   particles_base_t *pp_base = &particles_base->p[0];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *f_part = particles_base_get_one(pp_base, n);

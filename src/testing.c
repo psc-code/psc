@@ -24,7 +24,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static struct psc_mparticles particles_ref;
+static mparticles_base_t particles_ref;
 static mfields_base_t flds_ref;
 
 // ----------------------------------------------------------------------
@@ -33,7 +33,7 @@ static mfields_base_t flds_ref;
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref(struct psc_mparticles *particles)
+psc_save_particles_ref(mparticles_base_t *particles)
 {
   if (!particles_ref.p) {
     particles_ref.p = calloc(psc.nr_patches, sizeof(*particles_ref.p));
@@ -80,7 +80,7 @@ psc_save_fields_ref(mfields_base_t *flds)
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(struct psc_mparticles *particles, double thres, const char *test_str)
+psc_check_particles_ref(mparticles_base_t *particles, double thres, const char *test_str)
 {
   assert(particles_ref.p);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
@@ -190,7 +190,7 @@ psc_check_currents_ref_noghost(mfields_base_t *flds, double thres)
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted(struct psc_mparticles *particles)
+psc_check_particles_sorted(mparticles_base_t *particles)
 {
 #if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;

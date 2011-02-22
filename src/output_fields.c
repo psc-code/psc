@@ -303,7 +303,7 @@ free_fields_list(struct psc_fields_list *list)
 // output_c_field
 
 static void
-output_c_field(mfields_base_t *flds, struct psc_mparticles *particles)
+output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
 {
   struct psc_output_c *out = &psc_output_c;
 

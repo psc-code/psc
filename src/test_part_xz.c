@@ -21,7 +21,7 @@ main(int argc, char **argv)
 
   psc_create_test_xz(&conf_fortran);
   mfields_base_t *flds = &psc.flds;
-  struct psc_mparticles *particles = &psc.particles;
+  mparticles_base_t *particles = &psc.particles;
   //  psc_dump_particles("part-0");
   psc_push_particles(flds, particles);
   //  psc_dump_particles("part-1");

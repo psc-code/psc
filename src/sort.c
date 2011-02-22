@@ -52,7 +52,7 @@ compare(const void *_a, const void *_b)
 }
 
 static void
-qsort_sort(struct psc_mparticles *particles)
+qsort_sort(mparticles_base_t *particles)
 {
   static int pr;
   if (!pr) {
@@ -76,7 +76,7 @@ struct psc_sort_ops psc_sort_ops_qsort = {
 // counting sort
 
 static void
-countsort_sort(struct psc_mparticles *particles)
+countsort_sort(mparticles_base_t *particles)
 {
   static int pr;
   if (!pr) {
@@ -138,7 +138,7 @@ struct psc_sort_ops psc_sort_ops_countsort = {
 // use a separate array of cell indices 
 
 static void
-countsort2_sort(struct psc_mparticles *particles)
+countsort2_sort(mparticles_base_t *particles)
 {
   static int pr;
   if (!pr) {

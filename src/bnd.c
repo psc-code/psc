@@ -139,7 +139,7 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 }
 
 static void
-ddc_particles_comm(struct ddc_particles *ddcp, struct psc_mparticles *particles)
+ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 {
   particles_base_t *pp = &particles->p[0];
 
@@ -290,7 +290,7 @@ c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 }
 
 static void
-c_exchange_particles(struct psc_mparticles *particles)
+c_exchange_particles(mparticles_base_t *particles)
 {
   particles_base_t *pp = &particles->p[0];
 

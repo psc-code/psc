@@ -249,7 +249,7 @@ psc_fields_destroy(mfields_base_t *flds)
 }
 
 void
-psc_particles_destroy(struct psc_mparticles *particles)
+psc_particles_destroy(mparticles_base_t *particles)
 {
   foreach_patch(p) {
     particles_base_free(&particles->p[p]);
@@ -298,7 +298,7 @@ ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
 }
 
 static void
-ascii_dump_particles(struct psc_mparticles *particles, const char *fname)
+ascii_dump_particles(mparticles_base_t *particles, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -333,7 +333,7 @@ psc_dump_field(mfields_base_t *flds, int m, const char *fname)
 }
 
 void
-psc_dump_particles(struct psc_mparticles *particles, const char *fname)
+psc_dump_particles(mparticles_base_t *particles, const char *fname)
 {
   if (psc.output_ops->dump_particles) {
     psc.output_ops->dump_particles(fname);
@@ -346,7 +346,7 @@ psc_dump_particles(struct psc_mparticles *particles, const char *fname)
 // psc_push_part_xz
 
 void
-psc_push_part_xz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_xz);
   psc.ops->push_part_xz(flds_base, particles_base);
@@ -356,7 +356,7 @@ psc_push_part_xz(mfields_base_t *flds_base, struct psc_mparticles *particles_bas
 // psc_push_part_xyz
 
 void
-psc_push_part_xyz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_xyz);
   psc.ops->push_part_xyz(flds_base, particles_base);
@@ -366,7 +366,7 @@ psc_push_part_xyz(mfields_base_t *flds_base, struct psc_mparticles *particles_ba
 // psc_push_part_xy
 
 void
-psc_push_part_xy(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_xy);
   psc.ops->push_part_xy(flds_base, particles_base);
@@ -376,7 +376,7 @@ psc_push_part_xy(mfields_base_t *flds_base, struct psc_mparticles *particles_bas
 // psc_push_part_yz
 
 void
-psc_push_part_yz(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz);
   psc.ops->push_part_yz(flds_base, particles_base);
@@ -386,7 +386,7 @@ psc_push_part_yz(mfields_base_t *flds_base, struct psc_mparticles *particles_bas
 // psc_push_part_z
 
 void
-psc_push_part_z(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_z);
   psc.ops->push_part_z(flds_base, particles_base);
@@ -396,7 +396,7 @@ psc_push_part_z(mfields_base_t *flds_base, struct psc_mparticles *particles_base
 // psc_push_part_yz_a
 
 void
-psc_push_part_yz_a(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz_a);
   psc.ops->push_part_yz_a(flds_base, particles_base);
@@ -406,7 +406,7 @@ psc_push_part_yz_a(mfields_base_t *flds_base, struct psc_mparticles *particles_b
 // psc_push_part_yz_b
 
 void
-psc_push_part_yz_b(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz_b);
   psc.ops->push_part_yz_b(flds_base, particles_base);
@@ -416,7 +416,7 @@ psc_push_part_yz_b(mfields_base_t *flds_base, struct psc_mparticles *particles_b
 // psc_push_particles
 
 void
-psc_push_particles(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
+psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   int *im = psc.domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
@@ -478,7 +478,7 @@ psc_fill_ghosts(mfields_base_t *flds, int mb, int me)
 // psc_exchange_particles
 
 void
-psc_exchange_particles(struct psc_mparticles *particles)
+psc_exchange_particles(mparticles_base_t *particles)
 {
   assert(psc.bnd_ops->exchange_particles);
   psc.bnd_ops->exchange_particles(particles);
@@ -488,7 +488,7 @@ psc_exchange_particles(struct psc_mparticles *particles)
 // psc_randomize
 
 void
-psc_randomize(struct psc_mparticles *particles)
+psc_randomize(mparticles_base_t *particles)
 {
   assert(psc.randomize_ops->randomize);
   psc.randomize_ops->randomize(particles);
@@ -498,7 +498,7 @@ psc_randomize(struct psc_mparticles *particles)
 // psc_sort
 
 void
-psc_sort(struct psc_mparticles *particles)
+psc_sort(mparticles_base_t *particles)
 {
   assert(psc.sort_ops->sort);
   psc.sort_ops->sort(particles);
@@ -508,7 +508,7 @@ psc_sort(struct psc_mparticles *particles)
 // psc_collision
 
 void
-psc_collision(struct psc_mparticles *particles)
+psc_collision(mparticles_base_t *particles)
 {
   assert(psc.collision_ops->collision);
   psc.collision_ops->collision(particles);
@@ -518,7 +518,7 @@ psc_collision(struct psc_mparticles *particles)
 // psc_out_field
 
 void
-psc_out_field(mfields_base_t *flds, struct psc_mparticles *particles)
+psc_out_field(mfields_base_t *flds, mparticles_base_t *particles)
 {
   assert(psc.output_ops->out_field);
   psc.output_ops->out_field(flds, particles);

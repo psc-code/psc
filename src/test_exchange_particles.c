@@ -9,7 +9,7 @@
 #include <string.h>
 
 void
-setup_particles(struct psc_mparticles *particles)
+setup_particles(mparticles_base_t *particles)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -56,7 +56,7 @@ setup_particles(struct psc_mparticles *particles)
 }
 
 static void
-check_particles_old_xz(struct psc_mparticles *particles)
+check_particles_old_xz(mparticles_base_t *particles)
 {
   struct psc_patch *patch = &psc.patch[0];
   int *ilo = patch->off;
@@ -93,7 +93,7 @@ check_particles_old_xz(struct psc_mparticles *particles)
 }
 
 static void
-check_particles(struct psc_mparticles *particles)
+check_particles(mparticles_base_t *particles)
 {
   struct psc_patch *patch = &psc.patch[0];
   particles_base_t *pp = &particles->p[0];
@@ -126,7 +126,7 @@ check_particles(struct psc_mparticles *particles)
 }
 
 static int
-get_total_num_particles(struct psc_mparticles *particles)
+get_total_num_particles(mparticles_base_t *particles)
 {
   particles_base_t *pp = &particles->p[0];
   int total_num_part;
@@ -153,7 +153,7 @@ main(int argc, char **argv)
   };
 
   psc_create_test_xz(&conf_fortran);
-  struct psc_mparticles *particles = &psc.particles;
+  mparticles_base_t *particles = &psc.particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);

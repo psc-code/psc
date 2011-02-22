@@ -6,7 +6,7 @@
 // functionality off.
 
 static void
-none_push_part(mfields_base_t *flds, struct psc_mparticles *particles)
+none_push_part(mfields_base_t *flds, mparticles_base_t *particles)
 {
 }
 

@@ -39,14 +39,16 @@ particles_fortran_free(particles_fortran_t *pp)
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 void
-particles_fortran_get(particles_fortran_t *pp, struct psc_mparticles *particles_base)
+particles_fortran_get(particles_fortran_t *pp, void *_particles_base)
 {
+  mparticles_base_t *particles_base = _particles_base;
   *pp = particles_base->p[0];
 }
 
 void
-particles_fortran_put(particles_fortran_t *pp, struct psc_mparticles *particles_base)
+particles_fortran_put(particles_fortran_t *pp, void *_particles_base)
 {
+  mparticles_base_t *particles_base = _particles_base;
   particles_base->p[0] = *pp;
 }
 
