@@ -3,7 +3,7 @@
 #include <mrc_profile.h>
 
 static void
-c_push_field_a_nopml(struct psc_mfields *flds)
+c_push_field_a_nopml(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -87,7 +87,7 @@ c_push_field_a_nopml(struct psc_mfields *flds)
 }
 
 static void
-c_push_field_b_nopml(struct psc_mfields *flds)
+c_push_field_b_nopml(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -164,7 +164,7 @@ c_push_field_b_nopml(struct psc_mfields *flds)
 }
 
 static void
-c_push_field_a(struct psc_mfields *flds)
+c_push_field_a(mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -174,7 +174,7 @@ c_push_field_a(struct psc_mfields *flds)
 }
 
 static void
-c_push_field_b(struct psc_mfields *flds)
+c_push_field_b(mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);

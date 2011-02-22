@@ -88,7 +88,7 @@ psc_integrate()
   SETUP_field_F77();
 
   struct psc_mparticles *particles = &psc.particles;
-  struct psc_mfields *flds = &psc.flds;
+  mfields_base_t *flds = &psc.flds;
 
   double stats[NR_STATS];
 

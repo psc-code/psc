@@ -6,7 +6,7 @@
 void INIT_field(void);
 
 static void
-psc_init_field_pml(struct psc_mfields *flds)
+psc_init_field_pml(mfields_base_t *flds)
 {
   foreach_patch(p) {
     fields_base_copy(&flds->f[p], DX, EX);
@@ -21,7 +21,7 @@ psc_init_field_pml(struct psc_mfields *flds)
 }
 
 void
-psc_init_field(struct psc_mfields *flds)
+psc_init_field(mfields_base_t *flds)
 {
   if (psc.Case) {
     psc_case_init_field(psc.Case, flds);

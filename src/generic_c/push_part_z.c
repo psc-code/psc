@@ -193,7 +193,7 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_z(struct psc_mfields *flds_base, struct psc_mparticles *particles_base)
+genc_push_part_z(mfields_base_t *flds_base, struct psc_mparticles *particles_base)
 {
   fields_t pf;
   particles_t pp;

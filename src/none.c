@@ -6,7 +6,7 @@
 // functionality off.
 
 static void
-none_push_part(struct psc_mfields *flds, struct psc_mparticles *particles)
+none_push_part(mfields_base_t *flds, struct psc_mparticles *particles)
 {
 }
 
@@ -24,7 +24,7 @@ struct psc_ops psc_ops_none = {
 // field advance
 
 static void
-none_push_field(struct psc_mfields *flds)
+none_push_field(mfields_base_t *flds)
 {
 }
 

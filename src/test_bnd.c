@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 static void
-setup_jx(struct psc_mfields *flds)
+setup_jx(mfields_base_t *flds)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
@@ -23,7 +23,7 @@ setup_jx(struct psc_mfields *flds)
 }
 
 static void
-setup_jx_noghost(struct psc_mfields *flds)
+setup_jx_noghost(mfields_base_t *flds)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
@@ -53,7 +53,7 @@ main(int argc, char **argv)
   };
 
   psc_create_test_xz(&conf_fortran);
-  struct psc_mfields *flds = &psc.flds;
+  mfields_base_t *flds = &psc.flds;
   setup_jx(flds);
   //  psc_dump_field(JXI, "jx0");
   psc_add_ghosts(flds, JXI, JXI + 1);

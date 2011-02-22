@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 static void
-setup_fields(struct psc_mfields *flds)
+setup_fields(mfields_base_t *flds)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
@@ -40,7 +40,7 @@ main(int argc, char **argv)
   // test push_field_a
 
   psc_create_test_xz(&conf_fortran);
-  struct psc_mfields *flds = &psc.flds;
+  mfields_base_t *flds = &psc.flds;
   setup_fields(flds);
   // psc_dump_field(EX, "ex0");
   psc_push_field_a(flds);

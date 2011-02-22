@@ -63,7 +63,7 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field_binary(void *ctx, struct psc_mfields *flds, struct psc_output_c *out)
+vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_c *out)
 {
   FILE *file = ctx;
 

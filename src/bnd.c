@@ -243,7 +243,7 @@ create_bnd(void)
 }
   
 static void
-c_add_ghosts(struct psc_mfields *flds, int mb, int me)
+c_add_ghosts(mfields_base_t *flds, int mb, int me)
 {
   assert(psc.nr_patches == 1);
   fields_base_t *pf = &flds->f[0];
@@ -265,7 +265,7 @@ c_add_ghosts(struct psc_mfields *flds, int mb, int me)
 }
 
 static void
-c_fill_ghosts(struct psc_mfields *flds, int mb, int me)
+c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 {
   assert(psc.nr_patches == 1);
   fields_base_t *pf = &flds->f[0];

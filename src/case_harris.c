@@ -87,7 +87,7 @@ harris_init_param(struct psc_case *Case)
 }
 
 static void
-harris_init_field(struct psc_case *Case, struct psc_mfields *flds)
+harris_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   struct harris *harris = Case->ctx;
 
@@ -223,7 +223,7 @@ test_yz_init_param(struct psc_case *Case)
 }
 
 static void
-test_yz_init_field(struct psc_case *Case, struct psc_mfields *flds)
+test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   struct harris *harris = Case->ctx;
 

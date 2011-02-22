@@ -114,7 +114,7 @@ c_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base, field
   do_c_calc_densities(pf, pp_base, 0, 1, 2);
   prof_stop(pr);
 
-  struct psc_mfields flds;
+  mfields_base_t flds;
   flds.f = pf;
   assert(psc.nr_patches == 1);
   psc_add_ghosts(&flds, 0, 3);
@@ -225,7 +225,7 @@ c_calc_v(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_t
   do_c_calc_v(pf, pp_base);
   prof_stop(pr);
 
-  struct psc_mfields flds;
+  mfields_base_t flds;
   flds.f = pf;
   psc_add_ghosts(&flds, 0, 3);
 }
@@ -333,7 +333,7 @@ c_calc_vv(int p, fields_base_t *pf_base, particles_base_t *pp_base, fields_base_
   do_c_calc_vv(pf, pp_base);
   prof_stop(pr);
 
-  struct psc_mfields flds;
+  mfields_base_t flds;
   flds.f = pf;
   psc_add_ghosts(&flds, 0, 3);
 }

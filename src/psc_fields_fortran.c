@@ -89,9 +89,10 @@ fields_fortran_free(fields_fortran_t *pf)
 #if FIELDS_BASE == FIELDS_FORTRAN
 
 void
-fields_fortran_get(fields_fortran_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_fortran_get(fields_fortran_t *pf, int mb, int me, void *_flds_base)
 {
   assert(psc.nr_patches == 1);
+  mfields_base_t *flds_base = _flds_base;
   fields_fortran_t *pf_base = &flds_base->f[0];
   *pf = *pf_base;
 }
@@ -113,7 +114,7 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 }
 
 void
-fields_fortran_put(fields_fortran_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_fortran_put(fields_fortran_t *pf, int mb, int me, void *_flds_base)
 {
 }
 
@@ -167,7 +168,7 @@ fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 
 void
 fields_fortran_get(fields_fortran_t *pf, int mb, int me,
-		   struct psc_mfields *flds_base)
+		   mfields_base_t *flds_base)
 {
   fields_fortran_get_from(pf, mb, me, &flds_base->f[0], mb);
 }
@@ -191,7 +192,7 @@ fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
 
 void
 fields_fortran_put(fields_fortran_t *pf, int mb, int me,
-		   struct psc_mfields *flds_base)
+		   mfields_base_t *flds_base)
 {
   return fields_fortran_put_to(pf, mb, me, &flds_base->f[0], mb);
 }

@@ -16,6 +16,10 @@ typedef struct {
   bool fortran_alloc; //> was alloc'ed through fortran
 } fields_fortran_t;
 
+typedef struct {
+  fields_fortran_t *f;
+} mfields_fortran_t;
+
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
   (((((((jz)-(pf)->ib[2]))				\
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))		\
@@ -43,10 +47,10 @@ void fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_com
 void fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
 				     int nr_comp, fields_fortran_real_t *arr);
 void fields_fortran_free(fields_fortran_t *pf);
-void fields_fortran_get(fields_fortran_t *pf, int mb, int me, struct psc_mfields *flds_base);
+void fields_fortran_get(fields_fortran_t *pf, int mb, int me, void *flds_base);
 void fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
 			     void *pf_base, int mb_base);
-void fields_fortran_put(fields_fortran_t *pf, int mb, int me, struct psc_mfields *flds_base);
+void fields_fortran_put(fields_fortran_t *pf, int mb, int me, void *flds_base);
 void fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
 			   void *pf_base, int mb_base);
 void fields_fortran_zero(fields_fortran_t *pf, int m);

@@ -164,11 +164,11 @@ output_c_setup(struct psc_output_c *out)
   char *p, *s = strdup(out->output_fields);
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    struct psc_mfields *flds = &pfd->flds[pfd->nr_flds];
+    mfields_base_t *flds = &pfd->flds[pfd->nr_flds];
     out->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
 
-    psc_mfields_alloc(flds, of->nr_comp);
+    mfields_base_alloc(flds, of->nr_comp);
     foreach_patch(pp) {
       for (int m = 0; m < of->nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(of->fld_names[m]);
@@ -182,7 +182,7 @@ output_c_setup(struct psc_output_c *out)
   struct psc_fields_list *tfd = &out->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    psc_mfields_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
+    mfields_base_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
     foreach_patch(pp) {
       for (int m = 0; m < pfd->flds[i].f[pp].nr_comp; m++) {
 	tfd->flds[i].f[pp].name[m] = strdup(pfd->flds[i].f[pp].name[m]);
@@ -271,9 +271,9 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
-    struct psc_mfields *flds_in = &list_in->flds[i];
+    mfields_base_t *flds_in = &list_in->flds[i];
     for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
-      struct psc_mfields *flds = &list->flds[list->nr_flds++];
+      mfields_base_t *flds = &list->flds[list->nr_flds++];
       flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
       foreach_patch(p) {
 	int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
@@ -303,7 +303,7 @@ free_fields_list(struct psc_fields_list *list)
 // output_c_field
 
 static void
-output_c_field(struct psc_mfields *flds, struct psc_mparticles *particles)
+output_c_field(mfields_base_t *flds, struct psc_mparticles *particles)
 {
   struct psc_output_c *out = &psc_output_c;
 

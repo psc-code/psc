@@ -208,7 +208,7 @@ Jz(struct harris_xy *harris, real x, real y)
 }
 
 static void
-harris_xy_init_field(struct psc_case *Case, struct psc_mfields *flds)
+harris_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   struct harris_xy *harris = Case->ctx;
 

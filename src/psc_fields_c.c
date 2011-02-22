@@ -57,13 +57,14 @@ fields_c_free(fields_c_t *pf)
 #if FIELDS_BASE == FIELDS_C
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_c_get(fields_c_t *pf, int mb, int me, void *_flds_base)
 {
+  mfields_base_t *flds_base = _flds_base;
   *pf = flds_base->f[0];
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_c_put(fields_c_t *pf, int mb, int me, void *_flds_base)
 {
   pf->flds = NULL;
 }
@@ -71,8 +72,9 @@ fields_c_put(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 #else
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_c_get(fields_c_t *pf, int mb, int me, void *_flds_base)
 {
+  mfields_base_t *flds_base = _flds_base;
   struct psc_patch *patch = &psc.patch[0];
   int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
   int ihg[3] = { patch->ldims[0] + psc.ibn[0],
@@ -92,8 +94,9 @@ fields_c_get(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me, struct psc_mfields *flds_base)
+fields_c_put(fields_c_t *pf, int mb, int me, void *_flds_base)
 {
+  mfields_base_t *flds_base = _flds_base;
   assert(psc.nr_patches == 1);
   foreach_patch(p) {
     fields_base_t *pf_base = &flds_base->f[p];

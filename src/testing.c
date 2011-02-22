@@ -25,7 +25,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 }
 
 static struct psc_mparticles particles_ref;
-static struct psc_mfields flds_ref;
+static mfields_base_t flds_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -57,10 +57,10 @@ psc_save_particles_ref(struct psc_mparticles *particles)
 // save current field data as reference solution
 
 void
-psc_save_fields_ref(struct psc_mfields *flds)
+psc_save_fields_ref(mfields_base_t *flds)
 {
   if (!flds_ref.f) {
-    psc_mfields_alloc(&flds_ref, NR_FIELDS);
+    mfields_base_alloc(&flds_ref, NR_FIELDS);
   }
   int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
   foreach_patch(p) {
@@ -118,7 +118,7 @@ psc_check_particles_ref(struct psc_mparticles *particles, double thres, const ch
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(struct psc_mfields *flds, int *m_flds, double thres)
+psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
@@ -139,7 +139,7 @@ psc_check_fields_ref(struct psc_mfields *flds, int *m_flds, double thres)
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc_mfields *flds, double thres)
+psc_check_currents_ref(mfields_base_t *flds, double thres)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
@@ -170,7 +170,7 @@ psc_check_currents_ref(struct psc_mfields *flds, double thres)
 }
 
 void
-psc_check_currents_ref_noghost(struct psc_mfields *flds, double thres)
+psc_check_currents_ref_noghost(mfields_base_t *flds, double thres)
 {
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];

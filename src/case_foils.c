@@ -202,7 +202,7 @@ foils_init_param(struct psc_case *Case)
 }
 
 static void
-foils_init_field(struct psc_case *Case, struct psc_mfields *flds)
+foils_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
 #if 0
   // FIXME, do we need the ghost points?

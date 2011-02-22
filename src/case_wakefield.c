@@ -85,7 +85,7 @@ wakefield_init_param(struct psc_case *Case)
 }
 
 static void
-wakefield_init_field(struct psc_case *Case, struct psc_mfields *flds)
+wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {

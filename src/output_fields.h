@@ -8,7 +8,7 @@
 
 struct psc_fields_list {
   int nr_flds;
-  struct psc_mfields flds[MAX_FIELDS_LIST];
+  mfields_base_t flds[MAX_FIELDS_LIST];
 };
 
 struct psc_output_c;

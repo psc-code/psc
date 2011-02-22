@@ -42,7 +42,6 @@ struct psc_particle_npt {
 ///   "src/init_parameters.c".
 
 struct psc_case;
-struct psc_mfields;
 
 struct psc_case_ops {
   const char *name; ///< Name of case.
@@ -51,7 +50,7 @@ struct psc_case_ops {
   void (*create)(struct psc_case *); ///< Function to set up needed environment.
   void (*destroy)(struct psc_case *); ///< Funtion to cleanup environment.
   void (*init_param)(struct psc_case *); ///< Initialize simulation parameters based on case.
-  void (*init_field)(struct psc_case *, struct psc_mfields *flds); ///< Initialize fields relevant to case.
+  void (*init_field)(struct psc_case *, mfields_base_t *flds); ///< Initialize fields relevant to case.
   void (*init_npt)(struct psc_case *, int kind, double x[3],
 		   struct psc_particle_npt *npt);
 };
@@ -73,7 +72,7 @@ psc_case_init_param(struct psc_case *Case)
 }
 
 static inline void
-psc_case_init_field(struct psc_case *Case, struct psc_mfields *flds)
+psc_case_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   if (Case->ops->init_field) {
     Case->ops->init_field(Case, flds);
