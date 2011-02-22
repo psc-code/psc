@@ -7,19 +7,19 @@ fortran_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_bas
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_xy", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xy(&pp, &pf);
+  PIC_push_part_xy(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -27,19 +27,19 @@ fortran_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_bas
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_xz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xz(&pp, &pf);
+  PIC_push_part_xz(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -47,19 +47,19 @@ fortran_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_bas
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz(&pp, &pf);
+  PIC_push_part_yz(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -67,19 +67,19 @@ fortran_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_ba
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_xyz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xyz(&pp, &pf);
+  PIC_push_part_xyz(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -87,19 +87,19 @@ fortran_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_z", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_z(&pp, &pf);
+  PIC_push_part_z(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -107,19 +107,19 @@ fortran_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_b
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz_a(&pp, &pf);
+  PIC_push_part_yz_a(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
@@ -127,19 +127,19 @@ fortran_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_b
 {
   particles_fortran_t pp;
   particles_fortran_get(&pp, particles_base);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, EX, EX + 6, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
     pr = prof_register("fort_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz_b(&pp, &pf);
+  PIC_push_part_yz_b(&pp, &flds.f[0]);
   prof_stop(pr);
 
   particles_fortran_put(&pp, particles_base);
-  fields_fortran_put(&pf, JXI, JXI + 3, flds_base);
+  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 struct psc_ops psc_ops_fortran = {
@@ -236,31 +236,31 @@ static void
 fortran_push_field_a(mfields_base_t *flds_base)
 {
   if (psc.domain.use_pml) {
-    fields_fortran_t pf;
-    fields_fortran_get(&pf, JXI, MU + 1, flds_base);
+    mfields_fortran_t flds;
+    fields_fortran_get(&flds, JXI, MU + 1, flds_base);
     
     static int pr;
     if (!pr) {
       pr = prof_register("fort_field_pml_a", 1., 0, 0);
     }
     prof_start(pr);
-    PIC_pml_msa(&pf);
+    PIC_pml_msa(&flds.f[0]);
     prof_stop(pr);
     
-    fields_fortran_put(&pf, EX, BZ + 1, flds_base);
+    fields_fortran_put(&flds, EX, BZ + 1, flds_base);
   } else {
-    fields_fortran_t pf;
-    fields_fortran_get(&pf, JXI, HZ + 1, flds_base);
+    mfields_fortran_t flds;
+    fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
     
     static int pr;
     if (!pr) {
       pr = prof_register("fort_field_a", 1., 0, 0);
     }
     prof_start(pr);
-    PIC_msa(&pf);
+    PIC_msa(&flds.f[0]);
     prof_stop(pr);
     
-    fields_fortran_put(&pf, EX, HZ + 1, flds_base);
+    fields_fortran_put(&flds, EX, HZ + 1, flds_base);
   }
 }
 
@@ -268,31 +268,31 @@ static void
 fortran_push_field_b(mfields_base_t *flds_base)
 {
   if (psc.domain.use_pml) {
-    fields_fortran_t pf;
-    fields_fortran_get(&pf, JXI, MU + 1, flds_base);
+    mfields_fortran_t flds;
+    fields_fortran_get(&flds, JXI, MU + 1, flds_base);
     
     static int pr;
     if (!pr) {
       pr = prof_register("fort_field_pml_b", 1., 0, 0);
     }
     prof_start(pr);
-    PIC_pml_msb(&pf);
+    PIC_pml_msb(&flds.f[0]);
     prof_stop(pr);
     
-    fields_fortran_put(&pf, EX, BZ + 1, flds_base);
+    fields_fortran_put(&flds, EX, BZ + 1, flds_base);
   } else {
-    fields_fortran_t pf;
-    fields_fortran_get(&pf, JXI, HZ + 1, flds_base);
+    mfields_fortran_t flds;
+    fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
     
     static int pr;
     if (!pr) {
       pr = prof_register("fort_field_b", 1., 0, 0);
     }
     prof_start(pr);
-    PIC_msb(&pf);
+    PIC_msb(&flds.f[0]);
     prof_stop(pr);
     
-    fields_fortran_put(&pf, EX, HZ + 1, flds_base);
+    fields_fortran_put(&flds, EX, HZ + 1, flds_base);
   }
 }
 
@@ -337,22 +337,22 @@ fortran_add_ghosts(mfields_base_t *flds_base, int mb, int me)
   }
   prof_start(pr);
 
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, mb, me, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
     if (psc.domain.gdims[0] > 1) {
-      PIC_fax(&pf, m);
+      PIC_fax(&flds.f[0], m);
     }
     if (psc.domain.gdims[1] > 1) {
-      PIC_fay(&pf, m);
+      PIC_fay(&flds.f[0], m);
     }
     if (psc.domain.gdims[2] > 1) {
-      PIC_faz(&pf, m);
+      PIC_faz(&flds.f[0], m);
     }
   }
 
-  fields_fortran_put(&pf, mb, me, flds_base);
+  fields_fortran_put(&flds, mb, me, flds_base);
 
   prof_stop(pr);
 }
@@ -368,22 +368,22 @@ fortran_fill_ghosts(mfields_base_t *flds_base, int mb, int me)
   }
   prof_start(pr);
 
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, mb, me, flds_base);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
     if (psc.domain.gdims[0] > 1) {
-      PIC_fex(&pf, m);
+      PIC_fex(&flds.f[0], m);
     }
     if (psc.domain.gdims[1] > 1) {
-      PIC_fey(&pf, m);
+      PIC_fey(&flds.f[0], m);
     }
     if (psc.domain.gdims[2] > 1) {
-      PIC_fez(&pf, m);
+      PIC_fez(&flds.f[0], m);
     }
   }
 
-  fields_fortran_put(&pf, mb, me, flds_base);
+  fields_fortran_put(&flds, mb, me, flds_base);
 
   prof_stop(pr);
 }
@@ -446,13 +446,13 @@ fortran_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
   particles_fortran_get(&pp, &psc.particles);
   mfields_base_t flds;
   flds.f[0] = *pf;
-  fields_fortran_t pf_fortran;
-  fields_fortran_get_from(&pf_fortran, 0, 0, &flds, 0);
+  mfields_fortran_t flds_fortran;
+  fields_fortran_get_from(&flds_fortran, 0, 0, &flds, 0);
 
-  CALC_densities(&pp, &pf_fortran);
+  CALC_densities(&pp, &flds_fortran.f[0]);
 
   particles_fortran_put(&pp, &psc.particles);
-  fields_fortran_put_to(&pf_fortran, NE, NE + 3, &flds, 0);
+  fields_fortran_put_to(&flds_fortran, NE, NE + 3, &flds, 0);
 
   prof_stop(pr);
 }

@@ -195,9 +195,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 void
 genc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  fields_t pf;
+  mfields_t flds;
   particles_t pp;
-  fields_get(&pf, EX, EX + 6, flds_base);
+  fields_get(&flds, EX, EX + 6, flds_base);
   particles_get(&pp, particles_base);
 
   static int pr;
@@ -205,10 +205,12 @@ genc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
     pr = prof_register("genc_part_z", 1., 0, 0);
   }
   prof_start(pr);
-  do_genc_push_part_z(&pf, &pp);
+  foreach_patch(p) {
+    do_genc_push_part_z(&flds.f[p], &pp);
+  }
   prof_stop(pr);
 
-  fields_put(&pf, JXI, JXI + 3, flds_base);
+  fields_put(&flds, JXI, JXI + 3, flds_base);
   particles_put(&pp, particles_base);
 }
 

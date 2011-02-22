@@ -5,6 +5,7 @@
 #include "psc_fields_fortran.h"
 
 typedef fields_fortran_t fields_t;
+typedef mfields_fortran_t mfields_t;
 
 #define F3(fldnr, jx,jy,jz) F3_FORTRAN(pf, fldnr, jx,jy,jz)
 

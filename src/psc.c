@@ -667,13 +667,13 @@ psc_read_checkpoint(void)
   
   particles_fortran_t pp;
   particles_fortran_get(&pp, &psc.particles);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, 0, 0, &psc.flds);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, 0, 0, &psc.flds);
 
-  SERV_read_2(&pp, &pf);
+  SERV_read_2(&pp, &flds.f[0]);
 
   particles_fortran_put(&pp, &psc.particles);
-  fields_fortran_put(&pf, JXI, HZ + 1, &psc.flds);
+  fields_fortran_put(&flds, JXI, HZ + 1, &psc.flds);
 }
 
 // ----------------------------------------------------------------------
@@ -686,13 +686,13 @@ psc_write_checkpoint(void)
   
   particles_fortran_t pp;
   particles_fortran_get(&pp, &psc.particles);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, HZ + 1, &psc.flds);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, JXI, HZ + 1, &psc.flds);
 
-  SERV_write(&pp, &pf);
+  SERV_write(&pp, &flds.f[0]);
 
   particles_fortran_put(&pp, &psc.particles);
-  fields_fortran_put(&pf, 0, 0, &psc.flds);
+  fields_fortran_put(&flds, 0, 0, &psc.flds);
 }
 
 // ======================================================================
