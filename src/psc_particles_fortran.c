@@ -39,17 +39,17 @@ particles_fortran_free(particles_fortran_t *pp)
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 void
-particles_fortran_get(particles_fortran_t *pp, void *_particles_base)
+particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
-  *pp = particles_base->p[0];
+  *particles = *particles_base;
 }
 
 void
-particles_fortran_put(particles_fortran_t *pp, void *_particles_base)
+particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
-  particles_base->p[0] = *pp;
+  *particles_base = *particles;
 }
 
 #else
@@ -57,12 +57,16 @@ particles_fortran_put(particles_fortran_t *pp, void *_particles_base)
 static int __gotten;
 
 void
-particles_fortran_get(particles_fortran_t *pp, struct psc_mparticles *particles_base)
+particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
   assert(!__gotten);
   __gotten = 1;
 
+  assert(psc.nr_patches == 1);
+  mparticles_base_t *particles_base = _particles_base;
   particles_base_t *pp_base = &particles_base->p[0];
+  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
+  particles_fortran_t *pp = &particles->p[0];
 
   particles_fortran_alloc(pp, pp_base->n_part);
   pp->n_part = pp_base->n_part;
@@ -85,11 +89,13 @@ particles_fortran_get(particles_fortran_t *pp, struct psc_mparticles *particles_
 }
 
 void
-particles_fortran_put(particles_fortran_t *pp, struct psc_mparticles *particles_base)
+particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
   assert(__gotten);
   __gotten = 0;
 
+  mparticles_base_t *particles_base = _particles_base;
+  particles_fortran_t *pp = &particles->p[0];
   GET_niloc(&pp->n_part);
   particles_base_t *pp_base = &particles_base->p[0];
   pp_base->n_part = pp->n_part;
@@ -108,6 +114,8 @@ particles_fortran_put(particles_fortran_t *pp, struct psc_mparticles *particles_
     part->mni = f_part->mni;
     part->wni = f_part->wni;
   }
+  free(particles->p);
+  particles->p = NULL;
 }
 
 #endif

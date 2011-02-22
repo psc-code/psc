@@ -5,8 +5,8 @@
 static void
 fortran_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -15,18 +15,18 @@ fortran_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_bas
     pr = prof_register("fort_part_xy", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xy(&pp, &flds.f[0]);
+  PIC_push_part_xy(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -35,18 +35,18 @@ fortran_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_bas
     pr = prof_register("fort_part_xz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xz(&pp, &flds.f[0]);
+  PIC_push_part_xz(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -55,18 +55,18 @@ fortran_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_bas
     pr = prof_register("fort_part_yz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz(&pp, &flds.f[0]);
+  PIC_push_part_yz(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -75,18 +75,18 @@ fortran_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_ba
     pr = prof_register("fort_part_xyz", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_xyz(&pp, &flds.f[0]);
+  PIC_push_part_xyz(&particles, &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -95,18 +95,18 @@ fortran_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base
     pr = prof_register("fort_part_z", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_z(&pp, &flds.f[0]);
+  PIC_push_part_z(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -115,18 +115,18 @@ fortran_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_b
     pr = prof_register("fort_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz_a(&pp, &flds.f[0]);
+  PIC_push_part_yz_a(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
 static void
 fortran_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, EX, EX + 6, flds_base);
   
@@ -135,10 +135,10 @@ fortran_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_b
     pr = prof_register("fort_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_push_part_yz_b(&pp, &flds.f[0]);
+  PIC_push_part_yz_b(&particles.p[0], &flds.f[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
   fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
 }
 
@@ -159,18 +159,18 @@ struct psc_ops psc_ops_fortran = {
 static void
 fortran_randomize(mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("fort_randomize", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_randomize(&pp);
+  PIC_randomize(&particles.p[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
 }
 
 struct psc_randomize_ops psc_randomize_ops_fortran = {
@@ -184,19 +184,19 @@ struct psc_randomize_ops psc_randomize_ops_fortran = {
 static void
 fortran_sort(mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("fort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_find_cell_indices(&pp);
-  PIC_sort(&pp);
+  PIC_find_cell_indices(&particles.p[0]);
+  PIC_sort(&particles.p[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
 }
 
 struct psc_sort_ops psc_sort_ops_fortran = {
@@ -210,18 +210,18 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 static void
 fortran_collision(mparticles_base_t *particles_base)
 {
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("fort_collision", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_bin_coll(&pp);
+  PIC_bin_coll(&particles.p[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&pp, particles_base);
+  particles_fortran_put(&particles, particles_base);
 }
 
 struct psc_collision_ops psc_collision_ops_fortran = {
@@ -397,11 +397,11 @@ fortran_exchange_particles(mparticles_base_t *particles_base)
   }
   prof_start(pr);
 
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, particles_base);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, particles_base);
   
   SET_param_coeff();
-  SET_niloc(pp.n_part);
+  SET_niloc(particles.p[0].n_part);
 
   if (psc.domain.gdims[0] > 1) {
     PIC_pex();
@@ -413,11 +413,11 @@ fortran_exchange_particles(mparticles_base_t *particles_base)
     PIC_pez();
   }
 
-  GET_niloc(&pp.n_part);
+  GET_niloc(&particles.p[0].n_part);
   // don't really reallocate, just get the new array pointer
   // if PIC_pe[xyz]() reallocated during the previous calls
-  pp.particles = REALLOC_particles(pp.n_part);
-  particles_fortran_put(&pp, particles_base);
+  particles.p[0].particles = REALLOC_particles(particles.p[0].n_part);
+  particles_fortran_put(&particles, particles_base);
 
   prof_stop(pr);
 }
@@ -442,16 +442,16 @@ fortran_calc_densities(int p, fields_base_t *pf_base, particles_base_t *pp_base,
   }
   prof_start(pr);
 
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, &psc.particles);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
   mfields_base_t flds;
   flds.f[0] = *pf;
   mfields_fortran_t flds_fortran;
   fields_fortran_get_from(&flds_fortran, 0, 0, &flds, 0);
 
-  CALC_densities(&pp, &flds_fortran.f[0]);
+  CALC_densities(&particles.p[0], &flds_fortran.f[0]);
 
-  particles_fortran_put(&pp, &psc.particles);
+  particles_fortran_put(&particles, &psc.particles);
   fields_fortran_put_to(&flds_fortran, NE, NE + 3, &flds, 0);
 
   prof_stop(pr);

@@ -29,16 +29,18 @@ do_genc_push_part_yz_a(particles_t *pp)
 void
 genc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  particles_t pp;
-  particles_get(&pp, particles_base);
+  mparticles_t particles;
+  particles_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("genc_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
-  do_genc_push_part_yz_a(&pp);
+  foreach_patch(p) {
+    do_genc_push_part_yz_a(&particles.p[p]);
+  }
   prof_stop(pr);
 
-  particles_put(&pp, particles_base);
+  particles_put(&particles, particles_base);
 }

@@ -665,14 +665,14 @@ psc_read_checkpoint(void)
   particles_base_realloc(&psc.particles.p[0], n_part);
   psc_set_n_particles(0, n_part);
   
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, &psc.particles);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, 0, 0, &psc.flds);
 
-  SERV_read_2(&pp, &flds.f[0]);
+  SERV_read_2(&particles.p[0], &flds.f[0]);
 
-  particles_fortran_put(&pp, &psc.particles);
+  particles_fortran_put(&particles, &psc.particles);
   fields_fortran_put(&flds, JXI, HZ + 1, &psc.flds);
 }
 
@@ -684,14 +684,14 @@ psc_write_checkpoint(void)
 {
   mpi_printf(MPI_COMM_WORLD, "INFO: Writing checkpoint.\n");
   
-  particles_fortran_t pp;
-  particles_fortran_get(&pp, &psc.particles);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
   mfields_fortran_t flds;
   fields_fortran_get(&flds, JXI, HZ + 1, &psc.flds);
 
-  SERV_write(&pp, &flds.f[0]);
+  SERV_write(&particles.p[0], &flds.f[0]);
 
-  particles_fortran_put(&pp, &psc.particles);
+  particles_fortran_put(&particles, &psc.particles);
   fields_fortran_put(&flds, 0, 0, &psc.flds);
 }
 
