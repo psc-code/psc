@@ -7,6 +7,7 @@ libmrc_a_SOURCES = \
 	mrc_mod.c \
 	mrc_domain.c \
 	mrc_domain_simple.c \
+	mrc_domain_multi.c \
 	mrc_crds.c \
 	mrc_fld.c \
 	mrc_params.c \
