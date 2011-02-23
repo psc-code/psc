@@ -569,7 +569,13 @@ hdf5_write_crds(struct mrc_io *io, int im[3], struct mrc_domain *domain, int sw)
   if (!hdf5->gdims[0]) {
     mrc_domain_get_global_dims(domain, hdf5->gdims);
     mrc_domain_get_nr_procs(domain, hdf5->nr_procs);
-    mrc_domain_get_local_offset_dims(domain, hdf5->off, hdf5->ldims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      hdf5->off[d] = patches[0].off[d];
+      hdf5->ldims[d] = patches[0].ldims[d];
+    }
   }
 
   const char *xyz[3] = { "x", "y", "z" };
@@ -998,7 +1004,13 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
   struct mrc_crds *gcrds = mrc_domain_get_crds(gdomain);
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
-    mrc_domain_get_local_offset_dims(gdomain, ib, im);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(gdomain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      ib[d] = patches[0].off[d];
+      im[d] = patches[0].ldims[d];
+    }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     for (int d = 0; d < 3; d++) {
       MPI_Send(&MRC_CRD(gcrds, d, sw), im[d], MPI_FLOAT, 0,
@@ -1011,7 +1023,13 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
       float *recv_crds[3];
       int iw[6], *ib = iw, *im = iw + 3;
       if (n == 0) {
-	mrc_domain_get_local_offset_dims(gdomain, ib, im);
+	int nr_patches;
+	struct mrc_patch *patches = mrc_domain_get_patches(gdomain, &nr_patches);
+	assert(nr_patches == 1);
+	for (int d = 0; d < 3; d++) {
+	  ib[d] = patches[0].off[d];
+	  im[d] = patches[0].ldims[d];
+	}
 	for (int d = 0; d < 3; d++) {
 	  recv_crds[d] = &MRC_CRD(gcrds, d, sw);
 	}
@@ -1051,7 +1069,13 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
-    mrc_domain_get_local_offset_dims(send_fld->domain, ib, im);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(send_fld->domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      ib[d] = patches[0].off[d];
+      im[d] = patches[0].ldims[d];
+    }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     MPI_Send(send_fld->arr, send_fld->len, MPI_FLOAT, 0, TAG_DATA, io->obj.comm);
   } else { // io->rank == 0
@@ -1217,9 +1241,12 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
 
   const char *xyz[3] = { "x", "y", "z" };
 
-  int gdims[3], off[3], ldims[3], nr_procs[3], idx[3];
+  int gdims[3], nr_procs[3], idx[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *ldims = patches[0].ldims, *off = patches[0].off;
   mrc_domain_get_local_idx(fld->domain, idx);
   mrc_domain_get_nr_procs(fld->domain, nr_procs);
   for (int d = 0; d < 3; d++) {
@@ -1379,9 +1406,12 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
   MPI_Barrier(io->obj.comm);
 #endif
 
-  int gdims[3], off[3], ldims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *off = patches[0].off, *ldims = patches[0].ldims;
 
   struct mrc_f3 *lfld = mrc_f3_alloc(MPI_COMM_SELF, NULL, ldims);
   mrc_f3_setup(lfld);
@@ -1472,9 +1502,12 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   MPI_Barrier(io->obj.comm);
 #endif
 
-  int gdims[3], off[3], ldims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *off = patches[0].off, *ldims = patches[0].ldims;
 
   // strip boundary, could be done through hyperslab, but
   // still have to scale, anyway

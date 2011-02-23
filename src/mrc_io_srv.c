@@ -69,7 +69,13 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
   struct diagc_combined_params *par = io->obj.subctx;
     
   int iw[9], *off = iw, *ldims = iw + 3, *gdims = iw + 6;
-  mrc_domain_get_local_offset_dims(domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int d = 0; d < 3; d++) {
+    off[d] = patches[0].off[d];
+    ldims[d] = patches[0].ldims[d];
+  }
   mrc_domain_get_global_dims(domain, gdims);
   MPI_Send(iw, 9, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD);
 
@@ -177,8 +183,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 
   diagc_combined_send_domain_info(io, fld->domain);
 
-  int ldims[3];
-  mrc_domain_get_local_offset_dims(fld->domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *ldims = patches[0].ldims;
   assert(ldims[0] == fld->im[0]-4 && ldims[1] == fld->im[1]-4 && ldims[2] == fld->im[2]-4);
   int nout = ldims[0] * ldims[1] * ldims[2];
   float *buf = calloc(sizeof(float), nout);
@@ -196,7 +204,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
   copy_and_scale(buf, fld, m, scale);
 
   int iw[6], *off = iw, *dims = iw + 3; // off, then dims
-  mrc_domain_get_local_offset_dims(fld->domain, off, dims);
+  for (int d = 0; d < 3; d++) {
+    off[d] = patches[0].off[d];
+    dims[d] = patches[0].ldims[d];
+  }
 
   MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
   MPI_Send(buf, nout, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_DATA, MPI_COMM_WORLD);
@@ -229,7 +240,13 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   int iw[6] = { -1, };
   if (fld->arr) { // part of the slice?
     int *off = iw, *dims = iw + 3; // off, then dims
-    mrc_domain_get_local_offset_dims(fld->domain, off, dims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      off[d] = patches[0].off[d];
+      dims[d] = patches[0].ldims[d];
+    }
     off[dim] = 0;
     dims[dim] = 1;
 

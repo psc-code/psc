@@ -78,6 +78,14 @@ _mrc_domain_write(struct mrc_obj *obj, struct mrc_io *io)
   mrc_crds_write(mrc_domain_get_crds(domain), io);
 }
 
+struct mrc_patch *
+mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches)
+{
+  check_is_setup(domain);
+  assert(mrc_domain_ops(domain)->get_patches);
+  return mrc_domain_ops(domain)->get_patches(domain, nr_patches);
+}
+
 struct mrc_crds *
 mrc_domain_get_crds(struct mrc_domain *domain)
 {
@@ -89,13 +97,6 @@ mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
 {
   check_is_setup(domain);
   return mrc_domain_ops(domain)->get_neighbor_rank(domain, shift);
-}
-
-void
-mrc_domain_get_local_offset_dims(struct mrc_domain *domain, int *off, int *dims)
-{
-  check_is_setup(domain);
-  mrc_domain_ops(domain)->get_local_offset_dims(domain, off, dims);
 }
 
 void
@@ -148,9 +149,11 @@ struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 {
   int ldims[3];
-  mrc_domain_get_local_offset_dims(domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
   for (int d = 0; d < 3; d++) {
-    ldims[d] += 2 * bnd;
+    ldims[d] = patches[0].ldims[d] + 2 * bnd;
   }
   struct mrc_f3 *f3 = mrc_f3_alloc(domain->obj.comm, NULL, ldims);
   f3->domain = domain;
@@ -176,6 +179,7 @@ static void
 mrc_domain_init()
 {
   libmrc_domain_register_simple();
+  libmrc_domain_register_multi();
 }
 
 struct mrc_class mrc_class_mrc_domain = {

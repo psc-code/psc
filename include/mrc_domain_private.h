@@ -18,7 +18,7 @@ struct mrc_domain {
 
 struct mrc_domain_ops {
   MRC_OBJ_OPS;
-  void (*get_local_offset_dims)(struct mrc_domain *domain, int *off, int *dims);
+  struct mrc_patch *(*get_patches)(struct mrc_domain *domain, int *nr_patches);
   void (*get_local_idx)(struct mrc_domain *domain, int *idx);
   void (*get_global_dims)(struct mrc_domain *domain, int *dims);
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
@@ -35,11 +35,10 @@ void libmrc_domain_register(struct mrc_domain_ops *ops);
 
 struct mrc_domain_simple {
   int gdims[3];
-  int ldims[3];
+  struct mrc_patch patch;
   int nr_procs[3];
   int bc[3];
 
-  int off[3];
   int proc[3];
 };
 

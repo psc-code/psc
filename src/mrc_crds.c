@@ -126,14 +126,16 @@ mrc_crds_uniform_setup(struct mrc_obj *obj)
     return;
 
   int sw = crds->par.sw;
-  int off[3], ldims[3], gdims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  mrc_domain_get_local_offset_dims(crds->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
   for (int d = 0; d < 3; d++) {
-    mrc_crds_alloc(crds, d, ldims[d] + 2 * sw);
-    for (int i = -sw; i < ldims[d] +  sw; i++) {
-      MRC_CRD(crds, d, i + sw) = xl[d] + (i + off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+    mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
+    for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
+      MRC_CRD(crds, d, i + sw) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
     }
   }
 }
@@ -167,12 +169,14 @@ mrc_crds_rectilinear_setup(struct mrc_obj *obj)
     return;
 
   int sw = crds->par.sw;
-  int off[3], ldims[3], gdims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  mrc_domain_get_local_offset_dims(crds->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  assert(nr_patches == 1);
   for (int d = 0; d < 3; d++) {
     if (!crds->crd[d]) {
-      mrc_crds_alloc(crds, d, ldims[d] + 2 * sw);
+      mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
     }
   }
 }
