@@ -34,12 +34,13 @@ void libmrc_domain_register(struct mrc_domain_ops *ops);
 // mrc_domain_simple
 
 struct mrc_domain_simple {
-  int ldims[3];
-  int off[3];
   int gdims[3];
+  int ldims[3];
   int nr_procs[3];
-  int proc[3];
   int bc[3];
+
+  int off[3];
+  int proc[3];
 };
 
 void libmrc_domain_register_simple(void);
