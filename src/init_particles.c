@@ -54,13 +54,8 @@ psc_init_partition(int *particle_label_offset)
 
   psc.mrc_domain = mrc_domain_create(comm);
   // create a very simple domain decomposition
-  int np[3], ldims[3], bc[3] = {};
+  int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    int gdim = psc.domain.gdims[d];
-    assert(gdim % psc.domain.nproc[d] == 0);
-    ldims[d] = gdim / psc.domain.nproc[d];
-    np[d] = psc.domain.nproc[d];
-
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
 	psc.domain.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
@@ -68,12 +63,12 @@ psc_init_partition(int *particle_label_offset)
   }
 
   mrc_domain_set_type(psc.mrc_domain, "simple");
-  mrc_domain_set_param_int(psc.mrc_domain, "npx", np[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "npy", np[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "npz", np[2]);
-  mrc_domain_set_param_int(psc.mrc_domain, "lmx", ldims[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "lmy", ldims[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "lmz", ldims[2]);
+  mrc_domain_set_param_int(psc.mrc_domain, "npx", psc.domain.nproc[0]);
+  mrc_domain_set_param_int(psc.mrc_domain, "npy", psc.domain.nproc[1]);
+  mrc_domain_set_param_int(psc.mrc_domain, "npz", psc.domain.nproc[2]);
+  mrc_domain_set_param_int(psc.mrc_domain, "mx", psc.domain.gdims[0]);
+  mrc_domain_set_param_int(psc.mrc_domain, "my", psc.domain.gdims[1]);
+  mrc_domain_set_param_int(psc.mrc_domain, "mz", psc.domain.gdims[2]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcx", bc[0]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcy", bc[1]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcz", bc[2]);
@@ -89,7 +84,7 @@ psc_init_partition(int *particle_label_offset)
 
   // set up index bounds,
   // sanity checks for the decomposed domain
-  int off[3], lidx[3];
+  int off[3], ldims[3], lidx[3];
   mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
   mrc_domain_get_local_idx(psc.mrc_domain, lidx);
   psc.nr_patches = 1;
