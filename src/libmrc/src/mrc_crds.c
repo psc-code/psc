@@ -206,13 +206,9 @@ mrc_crds_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_params, x)
 static struct param mrc_crds_params_descr[] = {
-  { "xl"              , VAR(xl[0])        , PARAM_FLOAT(0.)       },
-  { "yl"              , VAR(xl[1])        , PARAM_FLOAT(0.)       },
-  { "zl"              , VAR(xl[2])        , PARAM_FLOAT(0.)       },
-  { "xh"              , VAR(xh[0])        , PARAM_FLOAT(1.)       },
-  { "yh"              , VAR(xh[1])        , PARAM_FLOAT(1.)       },
-  { "zh"              , VAR(xh[2])        , PARAM_FLOAT(1.)       },
-  { "sw"              , VAR(sw)           , PARAM_INT(0)          },
+  { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
+  { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
+  { "sw"             , VAR(sw)            , PARAM_INT(0)             },
   {},
 };
 #undef VAR

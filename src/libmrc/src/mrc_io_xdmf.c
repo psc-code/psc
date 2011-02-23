@@ -646,6 +646,9 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_INT3:
     H5LTget_attribute_int(group, ".", name, pv->u_int3);
     break;
+  case PT_FLOAT3:
+    H5LTget_attribute_float(group, ".", name, pv->u_float3);
+    break;
   }
   H5Gclose(group);
 }
@@ -683,6 +686,9 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_INT3:
     H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
+    break;
+  case PT_FLOAT3:
+    H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
     break;
   }
   H5Gclose(group);

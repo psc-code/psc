@@ -206,6 +206,28 @@ mrc_params_get_option_int3(const char *name, int *pval)
   return retval;
 }
 
+int
+mrc_params_get_option_float3(const char *name, float *pval)
+{
+  int retval = -1;
+  char namex[strlen(name) + 2];
+  for (int d = 0; d < 3; d++) {
+    sprintf(namex, "%s%c", name, 'x' + d);
+    struct option *p = find_option(namex);
+  
+    if (!p)
+      continue;
+    
+    retval = 0;
+    int rv = sscanf(p->value, "%g", pval + d);
+    if (rv != 1) {
+      fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
+      abort();
+    }
+  }
+  return retval;
+}
+
 void
 mrc_params_set_default(void *p, struct param *params)
 {
@@ -235,6 +257,13 @@ mrc_params_set_default(void *p, struct param *params)
 	pv->u_int3[d] = params[i].u.ini_int3[d];
       }
       break;
+    case PT_FLOAT3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_float3[d] = params[i].u.ini_float3[d];
+      }
+      break;
+    default:
+      assert(0);
     }
   }
 }
@@ -271,6 +300,11 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_INT3:
       for (int d = 0; d < 3; d++) {
 	pv->u_int3[d] = pval->u_int3[d];
+      }
+      break;
+    case PT_FLOAT3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_float3[d] = pval->u_float3[d];
       }
       break;
     default:
@@ -402,6 +436,9 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_INT3:
       mrc_params_get_option_int3(params[i].name, &pv->u_int3[0]);
       break;
+    case PT_FLOAT3:
+      mrc_params_get_option_float3(params[i].name, &pv->u_float3[0]);
+      break;
     default:
       assert(0);
     }
@@ -439,6 +476,10 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     case PT_INT3:
       mpi_printf(comm, "%-20s| %d, %d, %d\n", params[i].name,
 		 pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);
+      break;
+    case PT_FLOAT3:
+      mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
+		 pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
       break;
     }
   }
