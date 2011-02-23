@@ -188,8 +188,10 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
   assert(outtype >= DIAG_TYPE_2D_X && outtype <= DIAG_TYPE_2D_Z);
   int dim = outtype - DIAG_TYPE_2D_X;
 
-  int dims[3];
-  mrc_domain_get_local_offset_dims(fld->domain, NULL, dims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *dims = patches[0].ldims;
 
   //check for existence on local proc.
   //0,1, nnx-2, nnx-1 are the ghostpoints

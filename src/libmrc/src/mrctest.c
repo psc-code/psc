@@ -101,10 +101,12 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
   mrc_domain_set_from_options(domain);
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
-  int sw, ldims[3];
+  int sw;
   mrc_crds_get_param_int(crds, "sw", &sw);
-  mrc_domain_get_local_offset_dims(domain, NULL, ldims);
-  for (int ix = 0; ix < ldims[0] + 2 * sw; ix++) {
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
     MRC_CRDX(crds, ix) = ix*ix;
   }
 
@@ -219,10 +221,11 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
     assert(crds1->par.xh[d] == crds2->par.xh[d]);
   }
 
-  int ldims[3];
-  mrc_domain_get_local_offset_dims(crds1->domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds1->domain, &nr_patches);
+  assert(nr_patches == 1);
   float diff = 0.;
-  for (int ix = 0; ix < ldims[0] + 2 * sw; ix++) {
+  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
     diff = fmaxf(diff, fabsf(MRC_CRDX(crds1, ix) - MRC_CRDX(crds2, ix)));
     if (diff > 0.) {
       mprintf("mrctest_crds_compare: ix = %d diff = %g\n", ix, diff);

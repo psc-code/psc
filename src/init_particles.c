@@ -79,16 +79,15 @@ psc_init_partition(int *particle_label_offset)
 
   // set up index bounds,
   // sanity checks for the decomposed domain
-  int off[3], ldims[3], gdims[3];
-  mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
+  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
+  int gdims[3];
   mrc_domain_get_global_dims(psc.mrc_domain, gdims);
-  psc.nr_patches = 1;
   foreach_patch(p) {
     struct psc_patch *patch = &psc.patch[p];
     for (int d = 0; d < 3; d++) {
-      patch->ldims[d] = ldims[d];
-      patch->off[d] = off[d];
-      patch->xb[d]  = off[d] * psc.dx[d];
+      patch->ldims[d] = patches[p].ldims[d];
+      patch->off[d] = patches[p].off[d];
+      patch->xb[d]  = patches[p].off[d] * psc.dx[d];
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir
