@@ -45,6 +45,20 @@ struct mrc_domain_simple {
 void libmrc_domain_register_simple(void);
 
 // ======================================================================
+// mrc_domain_multi
+
+struct mrc_domain_multi {
+  int gdims[3];
+  struct mrc_patch patch;
+  int nr_procs[3];
+  int bc[3];
+
+  int proc[3];
+};
+
+void libmrc_domain_register_multi(void);
+
+// ======================================================================
 
 static inline struct mrc_domain *
 to_mrc_domain(struct mrc_obj *obj)
