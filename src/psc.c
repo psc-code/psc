@@ -626,7 +626,6 @@ psc_init(const char *case_name)
 {
   psc_init_param(case_name);
 
-  SET_param_domain();
   SET_param_psc();
   SET_param_coeff();
   INIT_basic();
@@ -634,6 +633,7 @@ psc_init(const char *case_name)
 
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);
+  SET_param_domain();
   SET_subdomain();
 
   psc_init_particles(particle_label_offset);

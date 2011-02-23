@@ -246,7 +246,6 @@ struct psc_domain {
   double length[3];
   int gdims[3];
   int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
-  int nproc[3];
   bool use_pml;
 };
 

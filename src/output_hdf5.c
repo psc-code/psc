@@ -138,6 +138,10 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
   char fname[strlen(out->data_dir) + strlen(pfx) + 20];
   sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
   FILE *f = fopen(fname, "w");
+  int np[3];
+  mrc_domain_get_param_int(psc.mrc_domain, "npx", &np[0]);
+  mrc_domain_get_param_int(psc.mrc_domain, "npy", &np[1]);
+  mrc_domain_get_param_int(psc.mrc_domain, "npz", &np[2]);
 
   fields_base_t *fld = &list->flds[0].f[0];
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
@@ -147,11 +151,11 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
   fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
   int im[3];
   for (int d = 0; d < 3; d++) {
-    im[d] = psc.domain.gdims[d] / psc.domain.nproc[d];
+    im[d] = psc.domain.gdims[d] / np[d];
   }
-  for (int kz = 0; kz < psc.domain.nproc[2]; kz++) {
-    for (int ky = 0; ky < psc.domain.nproc[1]; ky++) {
-      for (int kx = 0; kx < psc.domain.nproc[0]; kx++) {
+  for (int kz = 0; kz < np[2]; kz++) {
+    for (int ky = 0; ky < np[1]; ky++) {
+      for (int kx = 0; kx < np[0]; kx++) {
 	fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
 		kx, ky, kz, psc.timestep);
 	fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
@@ -174,7 +178,7 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
 		  fld->name[0]);
 	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
 		  im[2], im[1], im[0]);
-	  int proc = (kz * psc.domain.nproc[1] + ky) * psc.domain.nproc[0] + kx;
+	  int proc = (kz * np[1] + ky) * np[0] + kx;
 	  fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
 		  pfx, proc, psc.timestep, fld->name[0]);
 	  fprintf(f, "       </DataItem>\n");

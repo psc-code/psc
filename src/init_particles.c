@@ -63,9 +63,6 @@ psc_init_partition(int *particle_label_offset)
   }
 
   mrc_domain_set_type(psc.mrc_domain, "simple");
-  mrc_domain_set_param_int(psc.mrc_domain, "npx", psc.domain.nproc[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "npy", psc.domain.nproc[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "npz", psc.domain.nproc[2]);
   mrc_domain_set_param_int(psc.mrc_domain, "mx", psc.domain.gdims[0]);
   mrc_domain_set_param_int(psc.mrc_domain, "my", psc.domain.gdims[1]);
   mrc_domain_set_param_int(psc.mrc_domain, "mz", psc.domain.gdims[2]);
@@ -79,28 +76,30 @@ psc_init_partition(int *particle_label_offset)
   mrc_crds_set_param_float(crds, "yh",  psc.domain.length[1]);
   mrc_crds_set_param_float(crds, "zh",  psc.domain.length[2]);
 
+  mrc_domain_set_from_options(psc.mrc_domain);
   mrc_domain_setup(psc.mrc_domain);
   mrc_domain_view(psc.mrc_domain);
 
   // set up index bounds,
   // sanity checks for the decomposed domain
-  int off[3], ldims[3], lidx[3];
+  int off[3], ldims[3], gdims[3];
   mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
-  mrc_domain_get_local_idx(psc.mrc_domain, lidx);
+  mrc_domain_get_global_dims(psc.mrc_domain, gdims);
   psc.nr_patches = 1;
   foreach_patch(p) {
+    struct psc_patch *patch = &psc.patch[p];
     for (int d = 0; d < 3; d++) {
-      psc.patch[p].ldims[d] = ldims[d];
-      psc.patch[p].off[d] = off[d];
-      psc.patch[p].xb[d]  = off[d] * psc.dx[d];
+      patch->ldims[d] = ldims[d];
+      patch->off[d] = off[d];
+      patch->xb[d]  = off[d] * psc.dx[d];
       
       int min_size = 1;
-      if (lidx[d] == 0 && // left-most proc in this dir
+      if (patch->off[d] == 0 && // left-most patch in this dir
 	  (psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	   psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
 	min_size += psc.pml.size;
       }
-      if (lidx[d] == psc.domain.nproc[d] - 1 && // right-most proc in this dir
+      if (patch->off[d] + patch->ldims[d] == gdims[d] && // right-most patch in this dir
 	  (psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	   psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
 	min_size += psc.pml.size;

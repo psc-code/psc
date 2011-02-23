@@ -52,10 +52,6 @@ static struct param psc_domain_descr[] = {
 							  bnd_part_descr) },
   { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
 							  bnd_part_descr) },
-  { "nproc_x",        VAR(nproc[0])        , PARAM_INT(1)         },
-  { "nproc_y",        VAR(nproc[1])        , PARAM_INT(1)         },
-  { "nproc_z",        VAR(nproc[2])        , PARAM_INT(1)         },
-
   { "use_pml",        VAR(use_pml)         , PARAM_BOOL(1)        },
   {},
 };
@@ -82,14 +78,11 @@ init_param_domain()
   for (int d = 0; d < 3; d++) {
     if (domain->gdims[d] == 1) {
       // if invariant in this direction:
-      // can't domain decompose in, set bnd to periodic
-      assert(domain->nproc[d] == 1);
+      // set bnd to periodic (FIXME?)
       domain->bnd_fld_lo[d] = BND_FLD_PERIODIC;
       domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
       domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
-      // on every proc, need domain at least nghost wide
-      assert(domain->gdims[d] >= domain->nproc[d] * psc.ibn[d]);
       if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
 	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
 	need_pml = true;
@@ -403,9 +396,9 @@ GET_param_domain()
   int imax[3];
 
   int use_pml_;
-  int ilo[3], itot[3];
+  int ilo[3], itot[3], np[3];
   GET_param_domain_F77(p->length, itot, ilo, imax,
-		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, p->nproc, psc.ibn,
+		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, np, psc.ibn,
 		       &use_pml_);
   assert(ilo[0] == 0 && ilo[1] == 0 && ilo[2] == 0);
   assert(itot[0] == imax[0] + 1 && itot[1] == imax[1] + 1 && itot[2] == imax[2] + 1);
@@ -419,15 +412,18 @@ void
 SET_param_domain()
 {
   struct psc_domain *p = &psc.domain;
-  int imax[3];
+  int imax[3], np[3];
 
+  mrc_domain_get_param_int(psc.mrc_domain, "npx", &np[0]);
+  mrc_domain_get_param_int(psc.mrc_domain, "npy", &np[1]);
+  mrc_domain_get_param_int(psc.mrc_domain, "npz", &np[2]);
   for (int d = 0; d < 3; d++) {
     imax[d] = p->gdims[d] - 1;
   }
   int use_pml_ = p->use_pml;
   int ilo[3] = {};
   SET_param_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, p->nproc, psc.ibn, &use_pml_);
+		       p->bnd_part, np, psc.ibn, &use_pml_);
 }
 
 void
