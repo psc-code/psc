@@ -318,6 +318,13 @@ mrc_obj_set_param_select(struct mrc_obj *obj, const char *name, int val)
 }
 
 void
+mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, int val[3])
+{
+  union param_u uval = { .u_int3 = { val[0], val[1], val[2] } };
+  mrc_obj_set_param_type(obj, name, PT_INT3, &uval);
+}
+
+void
 mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 {
   union param_u uval;
@@ -331,6 +338,16 @@ mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val
   union param_u uval;
   mrc_obj_get_param_type(obj, name, PT_STRING, &uval);
   *val = uval.u_string;
+}
+
+void
+mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_INT3, &uval);
+  for (int d = 0; d < 3; d++) {
+    pval[d] = uval.u_int3[d];
+  }
 }
 
 void

@@ -26,12 +26,8 @@ test(bool periodic)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int(domain, "lmx", 4);
-  mrc_domain_set_param_int(domain, "lmy", 8);
-  mrc_domain_set_param_int(domain, "lmz", 16);
-  mrc_domain_set_param_int(domain, "npx", 2);
-  mrc_domain_set_param_int(domain, "npy", 1);
-  mrc_domain_set_param_int(domain, "npz", 1);
+  mrc_domain_set_param_int3(domain, "lm", (int [3]) { 4, 8, 16 });
+  mrc_domain_set_param_int3(domain, "np", (int [3]) { 2, 1, 1 });
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
   mrc_domain_set_param_int(domain, "bcz", bc[2]);

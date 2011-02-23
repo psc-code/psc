@@ -193,15 +193,9 @@ static struct mrc_param_select bc_descr[] = {
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
-  { "lmx"             , VAR(ldims[0])        , PARAM_INT(0)           },
-  { "lmy"             , VAR(ldims[1])        , PARAM_INT(0)           },
-  { "lmz"             , VAR(ldims[2])        , PARAM_INT(0)           },
-  { "mx"              , VAR(gdims[0])        , PARAM_INT(32)          },
-  { "my"              , VAR(gdims[1])        , PARAM_INT(32)          },
-  { "mz"              , VAR(gdims[2])        , PARAM_INT(32)          },
-  { "npx"             , VAR(nr_procs[0])     , PARAM_INT(1)           },
-  { "npy"             , VAR(nr_procs[1])     , PARAM_INT(1)           },
-  { "npz"             , VAR(nr_procs[2])     , PARAM_INT(1)           },
+  { "lm"              , VAR(ldims)           , PARAM_INT3(0, 0, 0)    },
+  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
+  { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
   { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,

@@ -267,6 +267,10 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
       MPI_Send((char *)pv->u_string, strlen(pv->u_string) + 1, MPI_CHAR, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
+    case PT_INT3:
+      MPI_Send(pv->u_int3, 3, MPI_INT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
     default:
       assert(0);
     }
@@ -732,9 +736,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
     if (rank == 0) {
       domain = mrc_domain_create(MPI_COMM_SELF);
       mrc_domain_set_type(domain, "simple");
-      mrc_domain_set_param_int(domain, "mx", gdims[0]);
-      mrc_domain_set_param_int(domain, "my", gdims[1]);
-      mrc_domain_set_param_int(domain, "mz", gdims[2]);
+      mrc_domain_set_param_int3(domain, "m", gdims);
       crds = mrc_domain_get_crds(domain);
       mrc_crds_set_type(crds, "rectilinear");
       mrc_domain_setup(domain);
@@ -874,6 +876,10 @@ static struct param diagsrv_params_descr[] = {
 	  MPI_Recv(str, 100, MPI_CHAR, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
 	  val.u_string = strdup(str);
+	  break;
+	case PT_INT3:
+	  MPI_Recv(val.u_int3, 3, MPI_INT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
 	  break;
 	default:
 	  assert(0);
