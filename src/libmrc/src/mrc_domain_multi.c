@@ -49,12 +49,12 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
+  multi->nr_patches = 1;
+  multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
   int total_procs = 1;
   for (int d = 0; d < 3; d++) {
-    if (multi->patch.ldims[d] == 0) {
-      assert(multi->gdims[d] % multi->nr_procs[d] == 0);
-      multi->patch.ldims[d] = multi->gdims[d] / multi->nr_procs[d];
-    }
+    assert(multi->gdims[d] % multi->nr_procs[d] == 0);
+    multi->patches[0].ldims[d] = multi->gdims[d] / multi->nr_procs[d];
     total_procs *= multi->nr_procs[d];
   }
   assert(total_procs == domain->size);
@@ -69,15 +69,15 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
       int dir[3] = {};
       dir[d] = -1;
       int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
-      MPI_Recv(&multi->patch.off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
+      MPI_Recv(&multi->patches[0].off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
 	       MPI_STATUS_IGNORE);
     } else {
-      multi->patch.off[d] = 0;
+      multi->patches[0].off[d] = 0;
     }
 
     // then send next offset to the right
     if (proc[d] < multi->nr_procs[d] - 1) {
-      int off_nei = multi->patch.off[d] + multi->patch.ldims[d];
+      int off_nei = multi->patches[0].off[d] + multi->patches[0].ldims[d];
       int dir[3] = {};
       dir[d] = 1;
       int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
@@ -91,13 +91,22 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
 
   if (domain->rank == rank_last) {
     for (int d = 0; d < 3; d++) {
-      multi->gdims[d] = multi->patch.off[d] + multi->patch.ldims[d];
+      multi->gdims[d] = multi->patches[0].off[d] + multi->patches[0].ldims[d];
     }
   }
   MPI_Bcast(multi->gdims, 3, MPI_INTEGER, rank_last, domain->obj.comm);
 
   //  mprintf("off   %d %d %d\n", multi->off[0], multi->off[1], multi->off[2]);
   //  mprintf("gdims %d %d %d\n", multi->gdims[0], multi->gdims[1], multi->gdims[2]);
+}
+
+static void
+mrc_domain_multi_destroy(struct mrc_obj *obj)
+{
+  struct mrc_domain *domain = to_mrc_domain(obj);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  free(multi->patches);
 }
 
 static int
@@ -118,9 +127,9 @@ mrc_domain_multi_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   if (nr_patches) {
-    *nr_patches = 1;
+    *nr_patches = multi->nr_patches;
   }
-  return &multi->patch;
+  return multi->patches;
 }
 
 static void
@@ -171,7 +180,7 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *dd
 
   for (int d = 0; d < 3; d++) {
     ddc_par->ilo[d] = 0;
-    ddc_par->ihi[d] = multi->patch.ldims[d];
+    ddc_par->ihi[d] = multi->patches[0].ldims[d];
     ddc_par->n_proc[d] = nr_procs[d];
     ddc_par->bc[d] = bc[d];
   }
@@ -187,7 +196,6 @@ static struct mrc_param_select bc_descr[] = {
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
 static struct param mrc_domain_multi_params_descr[] = {
-  { "lm"              , VAR(patch.ldims)     , PARAM_INT3(0, 0, 0)    },
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
   { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
@@ -205,6 +213,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .size                  = sizeof(struct mrc_domain_multi),
   .param_descr           = mrc_domain_multi_params_descr,
   .setup                 = mrc_domain_multi_setup,
+  .destroy               = mrc_domain_multi_destroy,
   .get_neighbor_rank     = mrc_domain_multi_get_neighbor_rank,
   .get_patches           = mrc_domain_multi_get_patches,
   .get_local_idx         = mrc_domain_multi_get_local_idx,

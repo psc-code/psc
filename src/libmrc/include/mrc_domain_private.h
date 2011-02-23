@@ -49,7 +49,8 @@ void libmrc_domain_register_simple(void);
 
 struct mrc_domain_multi {
   int gdims[3];
-  struct mrc_patch patch;
+  int nr_patches;
+  struct mrc_patch *patches;
   int nr_procs[3];
   int bc[3];
 
