@@ -15,14 +15,6 @@ mrc_domain_simple(struct mrc_domain *domain)
   return domain->obj.subctx;
 }
 
-void
-mrc_domain_simple_set_params(struct mrc_domain *domain, struct mrc_domain_simple_params *par)
-{
-  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-
-  simple->par = *par;
-}
-
 static void
 mrc_domain_simple_rank2proc(struct mrc_domain *domain, int rank, int proc[3])
 {
@@ -59,10 +51,7 @@ mrc_domain_simple_setup(struct mrc_obj *obj)
 
   int total_procs = 1;
   for (int d = 0; d < 3; d++) {
-    simple->ldims[d] = simple->par.ldims[d];
-    simple->nr_procs[d] = simple->par.nr_procs[d];
-    total_procs *= simple->par.nr_procs[d];
-    simple->bc[d] = simple->par.bc[d];
+    total_procs *= simple->nr_procs[d];
   }
   assert(total_procs == domain->size);
   mrc_domain_simple_rank2proc(domain, domain->rank, simple->proc);
@@ -198,7 +187,7 @@ static struct mrc_param_select bc_descr[] = {
   {},
 };
 
-#define VAR(x) (void *)offsetof(struct mrc_domain_simple_params, x)
+#define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
   { "lmx"             , VAR(ldims[0])        , PARAM_INT(32)          },
   { "lmy"             , VAR(ldims[1])        , PARAM_INT(32)          },
@@ -220,7 +209,6 @@ static struct mrc_domain_ops mrc_domain_simple_ops = {
   .name                  = "simple",
   .size                  = sizeof(struct mrc_domain_simple),
   .param_descr           = mrc_domain_simple_params_descr,
-  .param_offset          = offsetof(struct mrc_domain_simple, par),
   .setup                 = mrc_domain_simple_setup,
   .get_neighbor_rank     = mrc_domain_simple_get_neighbor_rank,
   .get_local_offset_dims = mrc_domain_simple_get_local_offset_dims,

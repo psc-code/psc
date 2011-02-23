@@ -34,7 +34,6 @@ void libmrc_domain_register(struct mrc_domain_ops *ops);
 // mrc_domain_simple
 
 struct mrc_domain_simple {
-  struct mrc_domain_simple_params par;
   int ldims[3];
   int off[3];
   int gdims[3];

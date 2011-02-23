@@ -1084,13 +1084,11 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 
   if (io->rank == 0) {
     mrc_domain_get_global_dims(fld->domain, gdims);
-    struct mrc_domain_simple_params lpar = {
-      .ldims    = { gdims[0], gdims[1], gdims[2] },
-      .nr_procs = { 1, 1, 1 },
-    };
     ldomain = mrc_domain_create(MPI_COMM_SELF);
     mrc_domain_set_type(ldomain, "simple");
-    mrc_domain_simple_set_params(ldomain, &lpar);
+    mrc_domain_set_param_int(ldomain, "lmx", gdims[0]);
+    mrc_domain_set_param_int(ldomain, "lmy", gdims[1]);
+    mrc_domain_set_param_int(ldomain, "lmz", gdims[2]);
     struct mrc_crds *crds = mrc_domain_get_crds(ldomain);
     mrc_crds_set_type(crds, "rectilinear");
     mrc_domain_setup(ldomain);
