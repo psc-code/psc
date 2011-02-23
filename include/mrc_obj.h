@@ -69,8 +69,10 @@ void mrc_obj_set_param_int(struct mrc_obj *obj, const char *name, int val);
 void mrc_obj_set_param_float(struct mrc_obj *obj, const char *name, float val);
 void mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val);
 void mrc_obj_set_param_select(struct mrc_obj *obj, const char *name, int val);
+void mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, int val[3]);
 void mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val);
+void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
 void mrc_obj_setup_sub(struct mrc_obj *obj);
@@ -153,9 +155,21 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   }									\
 									\
   static inline void 							\
+  pfx ## _set_param_int3(class_type *obj, const char *name, int val[3])	\
+  {									\
+    mrc_obj_set_param_int3((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void 							\
   pfx ## _get_param_int(class_type *obj, const char *name, int *pval)	\
   {									\
     mrc_obj_get_param_int((struct mrc_obj *)obj, name, pval);		\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _get_param_int3(class_type *obj, const char *name, int *pval)	\
+  {									\
+    mrc_obj_get_param_int3((struct mrc_obj *)obj, name, pval);		\
   }									\
 									\
   static inline void 							\

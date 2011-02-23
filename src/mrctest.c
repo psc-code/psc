@@ -73,12 +73,8 @@ mrctest_create_domain(MPI_Comm comm, struct mrctest_domain_params *par)
 {
   struct mrc_domain *domain = mrc_domain_create(comm);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int(domain, "mx", par->gdims[0]);
-  mrc_domain_set_param_int(domain, "my", par->gdims[1]);
-  mrc_domain_set_param_int(domain, "mz", par->gdims[2]);
-  mrc_domain_set_param_int(domain, "npx", par->nproc[0]);
-  mrc_domain_set_param_int(domain, "npy", par->nproc[1]);
-  mrc_domain_set_param_int(domain, "npz", par->nproc[2]);
+  mrc_domain_set_param_int3(domain, "m", par->gdims);
+  mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", SW_2);
   mrc_crds_set_param_float(crds, "xl", -30.);
@@ -99,12 +95,8 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
 {
   struct mrc_domain *domain = mrc_domain_create(comm);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int(domain, "mx", par->gdims[0]);
-  mrc_domain_set_param_int(domain, "my", par->gdims[1]);
-  mrc_domain_set_param_int(domain, "mz", par->gdims[2]);
-  mrc_domain_set_param_int(domain, "npx", par->nproc[0]);
-  mrc_domain_set_param_int(domain, "npy", par->nproc[1]);
-  mrc_domain_set_param_int(domain, "npz", par->nproc[2]);
+  mrc_domain_set_param_int3(domain, "m", par->gdims);
+  mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_int(crds, "sw", SW_2);

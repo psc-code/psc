@@ -643,6 +643,9 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     pv->u_string = malloc(sz);
     H5LTget_attribute_string(group, ".", name, (char *)pv->u_string);
     break;
+  case PT_INT3:
+    H5LTget_attribute_int(group, ".", name, pv->u_int3);
+    break;
   }
   H5Gclose(group);
 }
@@ -677,6 +680,9 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_STRING:
     H5LTset_attribute_string(group, ".", name, pv->u_string);
+    break;
+  case PT_INT3:
+    H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
     break;
   }
   H5Gclose(group);
@@ -1086,9 +1092,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
     mrc_domain_get_global_dims(fld->domain, gdims);
     ldomain = mrc_domain_create(MPI_COMM_SELF);
     mrc_domain_set_type(ldomain, "simple");
-    mrc_domain_set_param_int(ldomain, "mx", gdims[0]);
-    mrc_domain_set_param_int(ldomain, "my", gdims[1]);
-    mrc_domain_set_param_int(ldomain, "mz", gdims[2]);
+    mrc_domain_set_param_int3(ldomain, "m", gdims);
     struct mrc_crds *crds = mrc_domain_get_crds(ldomain);
     mrc_crds_set_type(crds, "rectilinear");
     mrc_domain_setup(ldomain);

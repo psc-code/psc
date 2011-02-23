@@ -184,6 +184,28 @@ mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
   abort();
 }
 
+int
+mrc_params_get_option_int3(const char *name, int *pval)
+{
+  int retval = -1;
+  char namex[strlen(name) + 2];
+  for (int d = 0; d < 3; d++) {
+    sprintf(namex, "%s%c", name, 'x' + d);
+    struct option *p = find_option(namex);
+  
+    if (!p)
+      continue;
+    
+    retval = 0;
+    int rv = sscanf(p->value, "%d", pval + d);
+    if (rv != 1) {
+      fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
+      abort();
+    }
+  }
+  return retval;
+}
+
 void
 mrc_params_set_default(void *p, struct param *params)
 {
@@ -207,6 +229,11 @@ mrc_params_set_default(void *p, struct param *params)
       break;
     case PT_SELECT:
       pv->u_select = params[i].u.ini_select;
+      break;
+    case PT_INT3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_int3[d] = params[i].u.ini_int3[d];
+      }
       break;
     }
   }
@@ -240,6 +267,11 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       break;
     case PT_SELECT:
       pv->u_select = pval->u_select;
+      break;
+    case PT_INT3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_int3[d] = pval->u_int3[d];
+      }
       break;
     default:
       assert(0);
@@ -277,6 +309,11 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
       break;
     case PT_SELECT:
       pval->u_select = pv->u_select;
+      break;
+    case PT_INT3:
+      for (int d = 0; d < 3; d++) {
+	pval->u_int3[d] = pv->u_int3[d];
+      }
       break;
     default:
       assert(0);
@@ -331,6 +368,8 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       pv->u_select = params[i].u.ini_select;
       mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select);
       break;
+    default:
+      assert(0);
     }
   }
 }
@@ -360,6 +399,11 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_SELECT:
       mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select);
       break;
+    case PT_INT3:
+      mrc_params_get_option_int3(params[i].name, &pv->u_int3[0]);
+      break;
+    default:
+      assert(0);
     }
   }
 }
@@ -391,6 +435,10 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     case PT_SELECT:
       mpi_printf(comm, "%-20s| %s\n", params[i].name,
 		 params[i].descr[pv->u_select].str);
+      break;
+    case PT_INT3:
+      mpi_printf(comm, "%-20s| %d, %d, %d\n", params[i].name,
+		 pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);
       break;
     }
   }
