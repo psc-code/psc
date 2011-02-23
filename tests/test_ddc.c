@@ -17,19 +17,24 @@ test(bool periodic)
 {
   const int bnd = SW_2;
 
-  struct mrc_domain_simple_params simple_par = {
-    .ldims    = { 4, 8, 16 },
-    .nr_procs = { 2, 1, 1 },
-  };
+  int bc[3] = { BC_NONE, BC_NONE, BC_NONE };
   if (periodic) {
-    simple_par.bc[0] = BC_PERIODIC;
-    simple_par.bc[1] = BC_PERIODIC;
-    simple_par.bc[2] = BC_PERIODIC;
+    bc[0] = BC_PERIODIC;
+    bc[1] = BC_PERIODIC;
+    bc[2] = BC_PERIODIC;
   }
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_simple_set_params(domain, &simple_par);
+  mrc_domain_set_param_int(domain, "lmx", 4);
+  mrc_domain_set_param_int(domain, "lmy", 8);
+  mrc_domain_set_param_int(domain, "lmz", 16);
+  mrc_domain_set_param_int(domain, "npx", 2);
+  mrc_domain_set_param_int(domain, "npy", 1);
+  mrc_domain_set_param_int(domain, "npz", 1);
+  mrc_domain_set_param_int(domain, "bcx", bc[0]);
+  mrc_domain_set_param_int(domain, "bcy", bc[1]);
+  mrc_domain_set_param_int(domain, "bcz", bc[2]);
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);

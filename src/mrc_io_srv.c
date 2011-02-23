@@ -730,13 +730,11 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
   for (int rank = 0; rank < nr_procs; rank++) {
     MPI_Recv(iw, 9, MPI_INT, rank, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     if (rank == 0) {
-      struct mrc_domain_simple_params par = {
-	.ldims    = { gdims[0], gdims[1], gdims[2] },
-	.nr_procs = { 1, 1, 1 },
-      };
       domain = mrc_domain_create(MPI_COMM_SELF);
       mrc_domain_set_type(domain, "simple");
-      mrc_domain_simple_set_params(domain, &par);
+      mrc_domain_set_param_int(domain, "lmx", gdims[0]);
+      mrc_domain_set_param_int(domain, "lmy", gdims[1]);
+      mrc_domain_set_param_int(domain, "lmz", gdims[2]);
       crds = mrc_domain_get_crds(domain);
       mrc_crds_set_type(crds, "rectilinear");
       mrc_domain_setup(domain);

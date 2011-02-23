@@ -36,13 +36,4 @@ struct mrc_ddc *
 mrc_domain_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *params,
 		      struct mrc_ddc_ops *ddc_ops);
 
-struct mrc_domain_simple_params {
-  int ldims[3];
-  int nr_procs[3];
-  int bc[3];
-};
-
-void mrc_domain_simple_set_params(struct mrc_domain *domain,
-				  struct mrc_domain_simple_params *params);
-
 #endif
