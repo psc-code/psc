@@ -20,7 +20,7 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
   if (with_array) {
     pf->flds = arr;
   } else {
-    pf->flds = calloc(nr_comp * psc.fld_size, sizeof(*pf->flds));
+    pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
   }
   pf->with_array = with_array;
   pf->name = calloc(nr_comp, sizeof(*pf->name));
@@ -57,50 +57,62 @@ fields_c_free(fields_c_t *pf)
 #if FIELDS_BASE == FIELDS_C
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me)
+fields_c_get(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
-  *pf = psc.pf;
+  mfields_base_t *flds_base = _flds_base;
+  *flds = *flds_base;
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me)
+fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
-  pf->flds = NULL;
+  flds->f = NULL;
 }
 
 #else
 
 void
-fields_c_get(fields_c_t *pf, int mb, int me)
+fields_c_get(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
-  fields_c_alloc(pf, psc.ilg, psc.ihg, NR_FIELDS);
+  mfields_base_t *flds_base = _flds_base;
+  flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
+  foreach_patch(p) {
+    fields_c_t *pf = &flds->f[p];
+    struct psc_patch *patch = &psc.patch[p];
+    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+    int ihg[3] = { patch->ldims[0] + psc.ibn[0],
+		   patch->ldims[1] + psc.ibn[1],
+		   patch->ldims[2] + psc.ibn[2] };
+    fields_c_alloc(pf, ilg, ihg, NR_FIELDS);
 
-  for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_C(pf, m, jx,jy,jz) = F3_BASE(m, jx,jy,jz);
-	}
-      }
+    fields_base_t *pf_base = &flds_base->f[p];
+    for (int m = mb; m < me; m++) {
+      foreach_3d_g(p, jx, jy, jz) {
+	F3_C(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
+      } foreach_3d_g_end;
     }
   }
 }
 
 void
-fields_c_put(fields_c_t *pf, int mb, int me)
+fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
-  for (int m = mb; m < me; m++) {
-    for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-      for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-	for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	  F3_BASE(m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
-	}
+  mfields_base_t *flds_base = _flds_base;
+  assert(psc.nr_patches == 1);
+  foreach_patch(p) {
+    fields_c_t *pf = &flds->f[p];
+    fields_base_t *pf_base = &flds_base->f[p];
+    for (int m = mb; m < me; m++) {
+      foreach_3d_g(p, jx, jy, jz) {
+	F3_BASE(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
       }
-    }
-  }
+    } foreach_3d_g_end;
 
-  fields_c_free(pf);
-  pf->flds = NULL;
+    fields_c_free(pf);
+  }
+  
+  free(flds->f);
+  flds->f = NULL;
 }
 
 #endif

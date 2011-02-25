@@ -1,7 +1,7 @@
 #include "psc_sse2.h"
 #include "simd_wrap.h"
 #include "simd_push_common.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -11,6 +11,10 @@
 // push_xi function is the only one which changes
 // based on the axes of the system. The rest 
 // have been offloaded to simd_push_common.c
+
+// FIXME: indices are now 0-based for the local domain --
+// pretty much everything is 0-based, other than actual particle
+// positions, which need subtracting patch->xb[d] still.
 
 
 //---------------------------------------------
@@ -48,7 +52,7 @@ do_push_part_yz_a(particles_sse2_t *pp)
   zl.r = pv_mul_real(half.r, dt.r);
 
 
-  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < pp->n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Bringing in particle specific parameters
@@ -119,26 +123,32 @@ do_push_part_yz_b(particles_sse2_t *pp, fields_sse2_t *pf)
     
     //---------------------------------------------
     //Vector versions of integer parameters
+    struct psc_patch *patch = &psc.patch[0];
+    int sz = 1;
+    for (int d = 0; d < 3; d++) {
+      sz *= patch->ldims[d] + 2 * psc.ibn[d];
+    }
+
     pvInt ilg[3], img[3], fld_size;					
-    ilg[0].r = pv_set1_int(psc.ilg[0]);					
-    ilg[1].r = pv_set1_int(psc.ilg[1]);					
-    ilg[2].r = pv_set1_int(psc.ilg[2]);					
-    img[0].r = pv_set1_int(psc.img[0]);					
-    img[1].r = pv_set1_int(psc.img[1]);					
-    img[2].r = pv_set1_int(psc.img[2]);					
-    fld_size.r = pv_set1_int(psc.fld_size);				
+    ilg[0].r = pv_set1_int(-psc.ibn[0]);					
+    ilg[1].r = pv_set1_int(-psc.ibn[1]);					
+    ilg[2].r = pv_set1_int(-psc.ibn[2]);					
+    img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
+    img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
+    img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
+    fld_size.r = pv_set1_int(sz);				
     		
     //---------------------------------------------			
     // Assign pointers to fields assuming x is uniform
     // FIXME : this assumes xi always rounds down to 0!
-    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
   
-  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < pp->n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Load Particles
@@ -276,23 +286,31 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   psc.p2A = 0.;
   psc.p2B = 0.;
   
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+
   for (int m = JXI; m <= JZI; m++) {
-    memset(&pf->flds[m*psc.fld_size], 0, psc.fld_size * sizeof(sse2_real));
+    memset(&pf->flds[m*sz], 0, sz * sizeof(sse2_real));
   }  
 
   //---------------------------------------------
   // An implementation of Will's 'squished' currents
   // that excludes the x direction all together
   sse2_real * restrict s_jxi, * restrict s_jyi, * restrict s_jzi;
-  s_jxi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
-  s_jyi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
-  s_jzi = calloc((psc.img[1] * psc.img[2]), sizeof(sse2_real));
+  int jsz = ((patch->ldims[1] + 2 * psc.ibn[1]) * 
+	     (patch->ldims[2] + 2 * psc.ibn[2]));
+  s_jxi = calloc(jsz, sizeof(sse2_real));
+  s_jyi = calloc(jsz, sizeof(sse2_real));
+  s_jzi = calloc(jsz, sizeof(sse2_real));
 
   // -------------------------------
   // Macros for accessing the 'squished' currents allocated above
-#define JSX(indx2, indx3) s_jxi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSY(indx2, indx3) s_jyi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
-#define JSZ(indx2, indx3) s_jzi[((indx3) - psc.ilg[2])*psc.img[1] + ((indx2) - psc.ilg[1])]
+#define JSX(indx2, indx3) s_jxi[((indx3) + psc.ibn[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) + psc.ibn[1])]
+#define JSY(indx2, indx3) s_jyi[((indx3) + psc.ibn[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) + psc.ibn[1])]
+#define JSZ(indx2, indx3) s_jzi[((indx3) + psc.ibn[2])*(psc.patch[0].ldims[1] + 2*psc.ibn[1]) + ((indx2) + psc.ibn[1])]
   
   //-----------------------------------------------------
   //Set vector forms of numbers 1, 0.5, etc
@@ -324,25 +342,25 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
     //-----------------------------------------------------
     //Vector versions of integer parameters
     pvInt ilg[3], img[3], fld_size;					
-    ilg[0].r = pv_set1_int(psc.ilg[0]);					
-    ilg[1].r = pv_set1_int(psc.ilg[1]);					
-    ilg[2].r = pv_set1_int(psc.ilg[2]);					
-    img[0].r = pv_set1_int(psc.img[0]);					
-    img[1].r = pv_set1_int(psc.img[1]);					
-    img[2].r = pv_set1_int(psc.img[2]);					
-    fld_size.r = pv_set1_int(psc.fld_size);				
+    ilg[0].r = pv_set1_int(-psc.ibn[0]);					
+    ilg[1].r = pv_set1_int(-psc.ibn[1]);					
+    ilg[2].r = pv_set1_int(-psc.ibn[2]);					
+    img[0].r = pv_set1_int(patch->ldims[0] + 2 * psc.ibn[0]);
+    img[1].r = pv_set1_int(patch->ldims[1] + 2 * psc.ibn[1]);
+    img[2].r = pv_set1_int(patch->ldims[2] + 2 * psc.ibn[2]);
+    fld_size.r = pv_set1_int(sz);				
     
     //-----------------------------------------------------
     //Set up some pointers for fields assuming x is uniform
     //this assumes xi always rounds down to psc.ilo[]
-    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + psc.ilo[0] - psc.ilg[0]]; 
-    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
-    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict EXpoint = &pf->flds[EX*psc.fld_size + psc.ilo[0] - psc.ilg[0]]; 
+    //    sse2_real * restrict EYpoint = &pf->flds[EY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict EZpoint = &pf->flds[EZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HXpoint = &pf->flds[HX*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HYpoint = &pf->flds[HY*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
+    //    sse2_real * restrict HZpoint = &pf->flds[HZ*psc.fld_size + psc.ilo[0] - psc.ilg[0]];
 
-  for(int n = 0; n < psc.pp.n_part; n += VEC_SIZE) {
+  for(int n = 0; n < pp->n_part; n += VEC_SIZE) {
 
     //---------------------------------------------
     // Load Particles
@@ -638,11 +656,11 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
   //---------------------------------------------
   // Store the squished currents into the global currents
   // FIXME: Assumes x-dir always rounds down to 0!
-  for(int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++){
-    for(int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++){ 
-      F3_SSE2(pf, JXI, psc.ilo[0]+0,iy,iz) = JSX(iy, iz);
-      F3_SSE2(pf, JYI, psc.ilo[0]+0,iy,iz) = JSY(iy, iz);
-      F3_SSE2(pf, JZI, psc.ilo[0]+0,iy,iz) = JSZ(iy, iz);
+  for(int iz = -psc.ibn[2]; iz < patch->ldims[2] + psc.ibn[2]; iz++){
+    for(int iy = -psc.ibn[1]; iy < patch->ldims[2] + psc.ibn[1]; iy++){ 
+      F3_SSE2(pf, JXI, 0,iy,iz) = JSX(iy, iz);
+      F3_SSE2(pf, JYI, 0,iy,iz) = JSY(iy, iz);
+      F3_SSE2(pf, JZI, 0,iy,iz) = JSZ(iy, iz);
     }
   }
   // Always pick up your trash
@@ -658,60 +676,60 @@ do_push_part_yz(particles_sse2_t *pp, fields_sse2_t *pf)
 // ======================================================================
 
 void
-sse2_push_part_yz_a()
+sse2_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_sse2_t pp;
-  particles_sse2_get(&pp);
+  particles_sse2_get(&pp, particles_base);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_a", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
   do_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
+  particles_sse2_put(&pp, particles_base);
 }
 
 void
-sse2_push_part_yz_b()
+sse2_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp);
-  fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_get(&pp, particles_base);
+  fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz_b", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
   do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
-  fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp, particles_base);
+  fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 
 void
-sse2_push_part_yz()
+sse2_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp);
-  fields_sse2_get(&pf, EX, EX + 6);
+  particles_sse2_get(&pp, particles_base);
+  fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("sse2_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(sse2_real));
+    pr = prof_register("sse2_part_yz", 1., 0, 0);
   }
   prof_start(pr);
   do_push_part_yz(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp);
-  fields_sse2_put(&pf, JXI, JXI + 3);
+  particles_sse2_put(&pp, particles_base);
+  fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 
 /// \file sse2_push_part_yz.c SSE2 implementation of the yz particle pusher.

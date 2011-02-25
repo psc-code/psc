@@ -8,7 +8,7 @@
 
 struct psc_fields_list {
   int nr_flds;
-  fields_base_t flds[MAX_FIELDS_LIST];
+  mfields_base_t flds[MAX_FIELDS_LIST];
 };
 
 struct psc_output_c;
@@ -27,6 +27,8 @@ extern struct psc_output_format_ops psc_output_format_ops_xdmf;
 extern struct psc_output_format_ops psc_output_format_ops_vtk;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct psc_output_format_ops psc_output_format_ops_vtk_cells;
+extern struct psc_output_format_ops psc_output_format_ops_vtk_binary;
+extern struct psc_output_format_ops psc_output_format_ops_mrc;
 
 struct psc_output_c {
   char *data_dir;
@@ -35,7 +37,9 @@ struct psc_output_c {
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
-
+  int rn[3];
+  int rx[3];
+	
   int pfield_next, tfield_next;
   // storage for output
   unsigned int naccum;

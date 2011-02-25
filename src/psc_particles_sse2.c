@@ -54,9 +54,11 @@ static particle_sse2_t *__sse2_part_data;
 
 /// Copy particles from base data structures to an SSE2 friendly format.
 void
-particles_sse2_get(particles_sse2_t *particles)
+particles_sse2_get(particles_sse2_t *particles, void *_particles_base)
 {
-  int n_part = psc.pp.n_part;
+  mparticles_base_t *particles_base = _particles_base;
+  particles_base_t *pp_base = &particles_base->p[0];
+  int n_part = pp_base->n_part;
   int pad = 0;
   if((n_part % VEC_SIZE) != 0){
     pad = VEC_SIZE - (n_part % VEC_SIZE);
@@ -73,17 +75,11 @@ particles_sse2_get(particles_sse2_t *particles)
   particles->particles = __sse2_part_data;
   particles->n_part = n_part;
 
-  int im[3] = {
-    psc.domain.ihi[0] - psc.domain.ilo[0],
-    psc.domain.ihi[1] - psc.domain.ilo[1],
-    psc.domain.ihi[2] - psc.domain.ilo[2],
-  };
-  
   particle_sse2_real_t dxi = 1. / psc.dx[0];
   particle_sse2_real_t dyi = 1. / psc.dx[1];
 
   for (int n = 0; n < n_part; n++) {
-    particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
+    particle_base_t *base_part = particles_base_get_one(pp_base, n);
     particle_sse2_t *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
@@ -95,21 +91,12 @@ particles_sse2_get(particles_sse2_t *particles)
     part->qni = base_part->qni;
     part->mni = base_part->mni;
     part->wni = base_part->wni;
-    ///< \FIXME It would be nice to do away with the asserts checking that the ignored
-    /// direction can actually be ignored.
-    if (im[0] > 1 && im[2] > 1) { // xz
-      int j2 = part->yi * dyi + .5;
-      assert(j2 == psc.ilo[1]); 
-    } else if (im[0] > 1 && im[1] > 1) { // xy
-      assert(0);
-    } else if (im[1] > 1 && im[2] > 1) { // yz
-      int j1 = part->xi * dxi + .5;
-      assert(j1 == psc.ilo[0]); 
-    }    
+    int j1 = part->xi * dxi + .5;
+    assert(j1 == 0); ///< \FIXME This assert only fits for the yz pusher.
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
-    particle_base_t *base_part = particles_base_get_one(&psc.pp, n_part - 1);
+    particle_base_t *base_part = particles_base_get_one(pp_base, n_part - 1);
     particle_sse2_t *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
@@ -120,22 +107,24 @@ particles_sse2_get(particles_sse2_t *particles)
 
 /// Copy particles from SSE2 data structures to base structures.
 void
-particles_sse2_put(particles_sse2_t *particles)
+particles_sse2_put(particles_sse2_t *particles, void *_particles_base)
 {
-   for(int n = 0; n < psc.pp.n_part; n++) {
-     particle_base_t *base_part = particles_base_get_one(&psc.pp, n);
-     particle_sse2_t *part = &particles->particles[n];
-     
-     base_part->xi  = part->xi;
-     base_part->yi  = part->yi;
-     base_part->zi  = part->zi;
-     base_part->pxi = part->pxi;
-     base_part->pyi = part->pyi;
-     base_part->pzi = part->pzi;
-     base_part->qni = part->qni;
-     base_part->mni = part->mni;
-     base_part->wni = part->wni;
-   }
+  mparticles_base_t *particles_base = _particles_base;
+  particles_base_t *pp_base = &particles_base->p[0];
+  for(int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *base_part = particles_base_get_one(pp_base, n);
+    particle_sse2_t *part = &particles->particles[n];
+    
+    base_part->xi  = part->xi;
+    base_part->yi  = part->yi;
+    base_part->zi  = part->zi;
+    base_part->pxi = part->pxi;
+    base_part->pyi = part->pyi;
+    base_part->pzi = part->pzi;
+    base_part->qni = part->qni;
+    base_part->mni = part->mni;
+    base_part->wni = part->wni;
+  }
 }
 
 #endif

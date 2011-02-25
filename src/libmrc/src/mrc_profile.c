@@ -1,5 +1,5 @@
 
-#include "profile.h"
+#include "mrc_profile.h"
 
 #include <assert.h>
 #include <string.h>
@@ -23,8 +23,18 @@ static const int events[] = {
   PAPI_TOT_CYC, // this one should be kept unchanged
   PAPI_TOT_INS, 
 #ifdef PROF_UOPS
-  0x4000805b,
-  0x4000405b,
+  0x4000005b,
+  0x4000205b,
+#elif defined(PROF_CACHE)
+  //  0x40040037, // prefetch_hit
+  //  0x40080037, // prefetch_miss
+  //  0x40008037, // ld_hit
+  //  0x40010037, // ld_miss
+  0x40000006, // llc_misses
+  //  0x4000082f, // l1d_prefetch:requests
+  //  0x4000102f, // l1d_prefetch:triggers
+  //  0x40000417, // dtlb_misses
+  PAPI_FP_OPS,
 #else
   PAPI_FP_OPS,
 #endif
@@ -64,7 +74,7 @@ prof_print_file(FILE *f)
 {
   int rc;
 
-  fprintf(f, "%15s %7s %4s %7s", "", "tottime", "cnt", "time");
+  fprintf(f, "%20s %7s %4s %7s", "", "tottime", "cnt", "time");
   for (int i = 0; i < NR_EVENTS; i++) {
     char name[200];
     rc = PAPI_event_code_to_name(events[i], name);
@@ -83,7 +93,7 @@ prof_print_file(FILE *f)
 
     long long cycles = pinfo->counters[0];
     float rtime = pinfo->time;
-    fprintf(f, "%15s %7g %4d %7g", prof_data[pr].name, rtime/1e3, cnt, 
+    fprintf(f, "%20s %7g %4d %7g", prof_data[pr].name, rtime/1e3, cnt, 
 	    rtime / 1e3 / cnt);
     for (int i = 0; i < NR_EVENTS; i++) {
       long long counter = pinfo->counters[i];
@@ -96,7 +106,7 @@ prof_print_file(FILE *f)
     fprintf(f, " %12g", prof_data[pr].bytes / 1e6);
     fprintf(f, "\n");
 
-    fprintf(f, "%15s %7s %4s %7s", "", "", "", "");
+    fprintf(f, "%20s %7s %4s %7s", "", "", "", "");
     for (int i = 0; i < NR_EVENTS; i++) {
       long long counter = pinfo->counters[i];
       if (events[i] == PAPI_FP_OPS) {
@@ -108,7 +118,7 @@ prof_print_file(FILE *f)
     fprintf(f, " %12g", (float) prof_data[pr].bytes / (cycles/cnt));
     fprintf(f, " / cycle\n");
 
-    fprintf(f, "%15s %7s %4s %7s", "", "", "", "");
+    fprintf(f, "%20s %7s %4s %7s", "", "", "", "");
     for (int i = 0; i < NR_EVENTS; i++) {
       long long counter = pinfo->counters[i];
       if (events[i] == PAPI_FP_OPS) {
@@ -189,7 +199,11 @@ prof_print_mpi(MPI_Comm comm)
 
   for (int pr = 0; pr < nr_prof_data; pr++) {
     struct prof_info *pinfo = &prof_globals.info[pr];
-    times[pr] = pinfo->time / 1e3;
+    if (pinfo->cnt > 0) {
+      times[pr] = pinfo->time / pinfo->cnt / 1e3;
+    } else {
+      times[pr] = -1;
+    }
   }
 
   int rank, size;

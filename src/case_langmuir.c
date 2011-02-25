@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -40,8 +40,8 @@ langmuir_create(struct psc_case *Case)
 {
   struct langmuir *langmuir = Case->ctx;
 
-  params_parse_cmdline(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
-  params_print(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
+  mrc_params_parse(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
+  mrc_params_print(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
 }
 
 static void

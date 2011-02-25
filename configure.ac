@@ -26,6 +26,7 @@ AC_PROG_F77([openmpif90 mpif90])
 
 AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
+FLIBS=`echo $FLIBS | sed s,-lpthread,,g`
 LIBS="$LIBS $FLIBS"
 
 AC_PROG_RANLIB
@@ -126,7 +127,10 @@ AS_IF(
 )
 AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 
-AC_CONFIG_FILES([Makefile src/Makefile src/util/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile
+		 src/libmrc/Makefile
+		 src/libmrc/src/Makefile
+		 src/libmrc/tests/Makefile])
 
 AC_OUTPUT
 

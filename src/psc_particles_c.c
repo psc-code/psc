@@ -34,76 +34,82 @@ particles_c_free(particles_c_t *pp)
 }
 
 void
-particles_c_get(particles_c_t *pp)
+particles_c_get(mparticles_c_t *particles, void *_particles_base)
 {
-  pp->particles = psc.pp.particles;
-  pp->n_part = psc.pp.n_part;
+  mparticles_base_t *particles_base = _particles_base;
+  *particles = *particles_base;
 }
 
 void
-particles_c_put(particles_c_t *pp)
+particles_c_put(mparticles_c_t *particles, void *particles_base)
 {
 }
 
 #else
 
-static particle_c_t *__arr;
-static int __arr_size;
-static int __gotten;
+static bool __gotten;
 
 void
-particles_c_get(particles_c_t *pp)
+particles_c_get(mparticles_c_t *particles, void *_particles_base)
 {
-  if (psc.pp.n_part > __arr_size) {
-    free(__arr);
-    __arr = NULL;
-  }
-  if (!__arr) {
-    __arr_size = psc.pp.n_part * 1.2;
-    __arr = calloc(__arr_size, sizeof(*__arr));
-  }
   assert(!__gotten);
-  __gotten = 1;
+  __gotten = true;
+    
+  mparticles_base_t *particles_base = _particles_base;
 
-  pp->particles = __arr;
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
-    particle_c_t *part = particles_c_get_one(pp, n);
-
-    part->xi  = f_part->xi;
-    part->yi  = f_part->yi;
-    part->zi  = f_part->zi;
-    part->pxi = f_part->pxi;
-    part->pyi = f_part->pyi;
-    part->pzi = f_part->pzi;
-    part->qni = f_part->qni;
-    part->mni = f_part->mni;
-    part->wni = f_part->wni;
+  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
+  foreach_patch(p) {
+    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp = &particles->p[p];
+    pp->n_part = pp_base->n_part;
+    pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
+    for (int n = 0; n < pp_base->n_part; n++) {
+      particle_base_t *part_base = particles_base_get_one(pp_base, n);
+      particle_c_t *part = particles_c_get_one(pp, n);
+      
+      part->xi  = part_base->xi;
+      part->yi  = part_base->yi;
+      part->zi  = part_base->zi;
+      part->pxi = part_base->pxi;
+      part->pyi = part_base->pyi;
+      part->pzi = part_base->pzi;
+      part->qni = part_base->qni;
+      part->mni = part_base->mni;
+      part->wni = part_base->wni;
+    }
   }
 }
 
 void
-particles_c_put(particles_c_t *pp)
+particles_c_put(mparticles_c_t *particles, void *_particles_base)
 {
   assert(__gotten);
-  __gotten = 0;
+  __gotten = false;
 
-  for (int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
-    particle_c_t *part = particles_c_get_one(pp, n);
+  mparticles_base_t *particles_base = _particles_base;
+  foreach_patch(p) {
+    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp = &particles->p[p];
+    assert(pp->n_part == pp_base->n_part);
+    for (int n = 0; n < pp_base->n_part; n++) {
+      particle_base_t *part_base = particles_base_get_one(pp_base, n);
+      particle_c_t *part = particles_c_get_one(pp, n);
+      
+      part_base->xi  = part->xi;
+      part_base->yi  = part->yi;
+      part_base->zi  = part->zi;
+      part_base->pxi = part->pxi;
+      part_base->pyi = part->pyi;
+      part_base->pzi = part->pzi;
+      part_base->qni = part->qni;
+      part_base->mni = part->mni;
+      part_base->wni = part->wni;
+    }
 
-    f_part->xi  = part->xi;
-    f_part->yi  = part->yi;
-    f_part->zi  = part->zi;
-    f_part->pxi = part->pxi;
-    f_part->pyi = part->pyi;
-    f_part->pzi = part->pzi;
-    f_part->qni = part->qni;
-    f_part->mni = part->mni;
-    f_part->wni = part->wni;
+    free(pp->particles);
   }
-
-  pp->particles = NULL;
+  free(particles->p);
+  particles->p = NULL;
 }
 
 #endif

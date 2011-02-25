@@ -1,12 +1,13 @@
 
-#include "ddc.h"
+#include "mrc_ddc.h"
+#include "mrc_ddc_private.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 
 static int
-get_rank(struct ddc_subdomain *ddc, const int proc[3])
+get_rank(struct mrc_ddc *ddc, const int proc[3])
 {
   for (int d = 0; d < 3; d++) {
     assert(proc[d] >= 0 && proc[d] < ddc->prm.n_proc[d]);
@@ -15,12 +16,12 @@ get_rank(struct ddc_subdomain *ddc, const int proc[3])
 }
 
 int
-ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
+mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
 {
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
     proc_nei[d] = ddc->proc[d] + dir[d];
-    if (ddc->prm.bc[d] == DDC_BC_PERIODIC) {
+    if (ddc->prm.bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
 	proc_nei[d] += ddc->prm.n_proc[d];
       }
@@ -38,9 +39,9 @@ ddc_get_rank_nei(struct ddc_subdomain *ddc, int dir[3])
 // ddc_init_outside
 
 static void
-ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
+ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = ddc_get_rank_nei(ddc, dir);
+  sr->rank_nei = mrc_ddc_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
@@ -69,9 +70,9 @@ ddc_init_outside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 // ddc_init_inside
 
 static void
-ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
+ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = ddc_get_rank_nei(ddc, dir);
+  sr->rank_nei = mrc_ddc_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
@@ -100,7 +101,7 @@ ddc_init_inside(struct ddc_subdomain *ddc, struct ddc_sendrecv *sr, int dir[3])
 // ddc_run
 
 static void
-ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
+ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void *ctx,
 	void (*to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx))
@@ -111,9 +112,9 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	struct ddc_sendrecv *r = &patt->recv[dir1];
+	int dir1 = mrc_ddc_dir2idx(dir);
+	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	struct mrc_ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
 #if 0
 	  printf("[%d] recv from %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
@@ -121,8 +122,8 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
 		 r->len);
 #endif
-	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->prm.mpi_type, r->rank_nei,
-		    0x1000 + dir1neg, ddc->prm.comm, &ddc->recv_reqs[dir1]);
+	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->rank_nei,
+		    0x1000 + dir1neg, ddc->comm, &ddc->recv_reqs[dir1]);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -134,8 +135,8 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	struct ddc_sendrecv *s = &patt->send[dir1];
+	int dir1 = mrc_ddc_dir2idx(dir);
+	struct mrc_ddc_sendrecv *s = &patt->send[dir1];
 	if (s->len > 0) {
 	  to_buf(mb, me, s->ilo, s->ihi, s->buf, ctx);
 #if 0
@@ -144,8 +145,8 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
 		 s->len);
 #endif
-	  MPI_Isend(s->buf, s->len * (me - mb), ddc->prm.mpi_type, s->rank_nei,
-		    0x1000 + dir1, ddc->prm.comm, &ddc->send_reqs[dir1]);
+	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->rank_nei,
+		    0x1000 + dir1, ddc->comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -158,8 +159,8 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	struct ddc_sendrecv *r = &patt->recv[dir1];
+	int dir1 = mrc_ddc_dir2idx(dir);
+	struct mrc_ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
 	  from_buf(mb, me, r->ilo, r->ihi, r->buf, ctx);
 	}
@@ -172,37 +173,49 @@ ddc_run(struct ddc_subdomain *ddc, struct ddc_pattern *patt, int mb, int me,
 }
 
 // ----------------------------------------------------------------------
-// ddc_add_ghosts
+// mrc_ddc_add_ghosts
 
 void
-ddc_add_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx)
+mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->add_ghosts, mb, me, ctx,
-	  ddc->prm.copy_to_buf, ddc->prm.add_from_buf);
+	  ddc->ops->copy_to_buf, ddc->ops->add_from_buf);
 }
 
 // ----------------------------------------------------------------------
-// ddc_fill_ghosts
+// mrc_ddc_fill_ghosts
 
 void
-ddc_fill_ghosts(struct ddc_subdomain *ddc, int mb, int me, void *ctx)
+mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->fill_ghosts, mb, me, ctx,
-	  ddc->prm.copy_to_buf, ddc->prm.copy_from_buf);
+	  ddc->ops->copy_to_buf, ddc->ops->copy_from_buf);
 }
 
 // ----------------------------------------------------------------------
-// ddc_create
+// mrc_ddc_create
 
-struct ddc_subdomain *
-ddc_create(struct ddc_params *prm)
+struct mrc_ddc *
+mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
+	       struct mrc_ddc_ops *ops)
 {
-  struct ddc_subdomain *ddc = malloc(sizeof(*ddc));
+  struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
 
+  MPI_Comm ncomm;
+  MPI_Comm_dup(comm, &ncomm);
+  ddc->comm = ncomm;
   ddc->prm = *prm;
-  MPI_Comm_rank(prm->comm, &ddc->rank);
-  MPI_Comm_size(prm->comm, &ddc->size);
+  if (ddc->prm.size_of_type == sizeof(float)) {
+    ddc->mpi_type = MPI_FLOAT;
+  } else if (ddc->prm.size_of_type == sizeof(double)) {
+    ddc->mpi_type = MPI_DOUBLE;
+  } else {
+    assert(0);
+  }
+  ddc->ops = ops;
+  MPI_Comm_rank(comm, &ddc->rank);
+  MPI_Comm_size(comm, &ddc->size);
 
   assert(prm->n_proc[0] * prm->n_proc[1] * prm->n_proc[2] == ddc->size);
   assert(prm->max_n_fields > 0);
@@ -220,15 +233,72 @@ ddc_create(struct ddc_params *prm)
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
 	  continue;
 
-	ddc_init_outside(ddc, &ddc->add_ghosts.send[dir2idx(dir)], dir);
-	ddc_init_inside(ddc, &ddc->add_ghosts.recv[dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &ddc->add_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &ddc->add_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
 
-	ddc_init_inside(ddc, &ddc->fill_ghosts.send[dir2idx(dir)], dir);
-	ddc_init_outside(ddc, &ddc->fill_ghosts.recv[dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &ddc->fill_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &ddc->fill_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
       }
     }
   }
 
   return ddc;
 }
+
+// ----------------------------------------------------------------------
+// mrc_ddc_destroy
+
+void mrc_ddc_destroy(struct mrc_ddc *ddc)
+{
+  MPI_Comm_free(&ddc->comm);
+  free(ddc);
+}
+
+// ======================================================================
+// mrc_ddc_ops_f3 for mrc_f3
+
+#include <mrc_fld.h>
+
+// FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
+
+static void
+mrc_f3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd);
+	}
+      }
+    }
+  }
+}
+
+static void
+mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
+	}
+      }
+    }
+  }
+}
+
+struct mrc_ddc_ops mrc_ddc_ops_f3 = {
+  .copy_to_buf   = mrc_f3_copy_to_buf,
+  .copy_from_buf = mrc_f3_copy_from_buf,
+};
 

@@ -1,8 +1,9 @@
 
-SUBDIRS = util 
-
+SUBDIRS = libmrc
 
 bin_PROGRAMS = VLI VLA SELECT
+
+AM_CFLAGS = -I$(srcdir)/libmrc/include
 
 noinst_LIBRARIES = libpsc.a
 
@@ -25,7 +26,7 @@ libpsc_a_SOURCES = \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
 	PIC_move_part_xyz.F \
-	PIC_move_part_xz.F PIC_move_part_yz.F \
+	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_z.F \
 	PIC_pex.F PIC_pey.F PIC_pez.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
@@ -48,7 +49,8 @@ libpsc_a_SOURCES = \
 	bnd.c \
 	none.c \
 	output_fields.c output_c_combine.c \
-	output_binary.c output_vtk.c \
+	output_binary.c output_vtk.c output_vtk_binary.c \
+	output_mrc.c \
 	case_langmuir.c \
 	case_wakefield.c \
 	case_thinfoil.c \
@@ -56,7 +58,9 @@ libpsc_a_SOURCES = \
 	case_curvedfoil.c \
 	case_singlepart.c \
 	case_harris.c \
+	case_harris_xy.c \
 	case_collisions.c \
+	case_cone.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5
@@ -65,6 +69,8 @@ endif
 
 libpsc_a_SOURCES += \
 	generic_c/psc_generic_c.c \
+	generic_c/push_part_xyz.c \
+	generic_c/push_part_xy.c \
 	generic_c/push_part_xz.c \
 	generic_c/push_part_yz.c \
 	generic_c/push_part_z.c \
@@ -146,7 +152,7 @@ if USE_CBE
 	noinst_PROGRAMS += test_cell_framework
 endif
 
-LDADD = libpsc.a util/libutil.a
+LDADD = libpsc.a libmrc/src/libmrc.a
 
 
 TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \

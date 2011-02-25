@@ -16,12 +16,16 @@ typedef struct {
   bool fortran_alloc; //> was alloc'ed through fortran
 } fields_fortran_t;
 
+typedef struct {
+  fields_fortran_t *f;
+} mfields_fortran_t;
+
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
   (((((((jz)-(pf)->ib[2]))				\
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))		\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
-#if 1
+#ifndef BOUNDS_CHECK
 
 #define F3_FORTRAN(pf, fldnr, jx,jy,jz)                \
   ((pf)->flds[fldnr][F3_OFF_FORTRAN(pf, jx,jy,jz)])
@@ -30,8 +34,10 @@ typedef struct {
 
 #define F3_FORTRAN(pf, fldnr, jx,jy,jz)					\
   (*({int off = F3_OFF_FORTRAN(pf, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < pf->im[0] * pf->im[1] * pf->im[2]);			\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
       &((pf)->flds[fldnr][off]);					\
     }))
 
@@ -41,12 +47,12 @@ void fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_com
 void fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
 				     int nr_comp, fields_fortran_real_t *arr);
 void fields_fortran_free(fields_fortran_t *pf);
-void fields_fortran_get(fields_fortran_t *pf, int mb, int me);
-void fields_fortran_get_from(fields_fortran_t *pf, int mb, int me,
-			     void *pf_base, int mb_base);
-void fields_fortran_put(fields_fortran_t *pf, int mb, int me);
-void fields_fortran_put_to(fields_fortran_t *pf, int mb, int me,
-			   void *pf_base, int mb_base);
+void fields_fortran_get(mfields_fortran_t *pf, int mb, int me, void *flds_base);
+void fields_fortran_get_from(mfields_fortran_t *pf, int mb, int me, void *flds_base,
+			     int mb_base);
+void fields_fortran_put(mfields_fortran_t *pf, int mb, int me, void *flds_base);
+void fields_fortran_put_to(mfields_fortran_t *pf, int mb, int me, void *flds_base,
+			   int mb_base);
 void fields_fortran_zero(fields_fortran_t *pf, int m);
 void fields_fortran_zero_all(fields_fortran_t *pf);
 void fields_fortran_zero(fields_fortran_t *pf, int m);

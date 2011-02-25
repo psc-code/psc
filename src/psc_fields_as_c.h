@@ -5,6 +5,7 @@
 #include "psc_fields_c.h"
 
 typedef fields_c_t fields_t;
+typedef mfields_c_t mfields_t;
 
 #define F3(fldnr, jx,jy,jz) F3_C(pf, fldnr, jx,jy,jz)
 

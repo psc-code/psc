@@ -27,10 +27,9 @@ struct particle_vec{
   union packed_vector qni, mni, wni;
 };
 
-void sse2_push_part_yz_a(void);
-void sse2_push_part_yz_b(void);
-void sse2_push_part_yz(void);
-void sse2_push_part_xz(void);
+void sse2_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void sse2_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void sse2_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void init_vec_numbers(void);
 __m128i func_mul_epu32(__m128i a, __m128i b);
 

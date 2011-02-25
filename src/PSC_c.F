@@ -244,27 +244,3 @@ c     ----------------------------------------------------------------------
 
       end subroutine SET_subdomain
 
-c     ----------------------------------------------------------------------
-      subroutine GET_subdomain(i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_,
-     &     i1bn_, i2bn_, i3bn_)
-c     ----------------------------------------------------------------------
-
-      use VLA_variables
-
-      implicit none
-
-      integer :: i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_
-      integer :: i1bn_, i2bn_, i3bn_
-
-      i1mn_ = i1mn
-      i2mn_ = i2mn
-      i3mn_ = i3mn
-      i1mx_ = i1mx
-      i2mx_ = i2mx
-      i3mx_ = i3mx
-      i1bn_ = rd1
-      i2bn_ = rd2
-      i3bn_ = rd3
-
-      end subroutine GET_subdomain
-

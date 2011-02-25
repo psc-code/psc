@@ -261,8 +261,8 @@ c nistep: index increment for ion output
 c plin: smallest particle number for output
 c plix: largest particle number for output
 
-      nprparti=0
-      dnprparti=10
+      nprparti=10000
+      dnprparti=1000
       nistep=1
       plin=0
       plix=30000000
@@ -403,18 +403,18 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
       lengthy=1.0*1.0e-6
       lengthz=20.0*1.0e-6
 
-      i1tot=10.0
-      i2tot=10.0
-      i3tot=400.0
+      i1tot=1
+      i2tot=1
+      i3tot=400
 
       xnpe=1
       ynpe=1
       znpe=1
 
-      i1n=8
-      i1x=8
-      i2n=8
-      i2x=8
+      i1n=0
+      i1x=0
+      i2n=0
+      i2x=0
       i3n=0
       i3x=399
 

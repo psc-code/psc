@@ -1,6 +1,6 @@
 
 #include "psc_testing.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -40,39 +40,42 @@ main(int argc, char **argv)
 
 
   psc_create_test_yz(&conf_fortran);
+  mparticles_base_t *particles = &psc.particles;
+  mfields_base_t *flds = &psc.flds;
   //  psc_dump_particles("part-0");
-  //  psc_sort();
-  psc_push_part_yz_a();
-  //psc_dump_particles("part-1");
-  psc_save_particles_ref();
+  psc_push_part_yz_a(flds, particles);
+  //  psc_dump_particles("part-1");
+  psc_save_particles_ref(particles);
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
-  //  psc_sort();
-
-  psc_push_part_yz_a();
+  psc_push_part_yz_a(flds, particles);
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- generic_c");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_a -- generic_c");
   psc_destroy();
 
 
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
     .mod_particle = "cuda",
-    .mod_sort = "cbesort",
+    .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_cuda);
-  psc_push_part_yz_a();
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- cuda");
+  psc_push_part_yz_a(flds,particles);
+  psc_check_particles_ref(particles,1e-6, "push_part_yz_a -- cuda");
   psc_destroy();
 #endif 
 
 
 #ifdef USE_SSE2
+  struct psc_mod_config conf_sse2 = {
+    .mod_particle = "sse2",
+    .mod_sort = "qsort",
+  };
   psc_create_test_yz(&conf_sse2);
-  psc_push_part_yz_a();
+  psc_push_part_yz_a(flds, particles);
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- sse2");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_a -- sse2");
   psc_destroy();
 #endif
 
@@ -80,34 +83,17 @@ main(int argc, char **argv)
 
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
-  psc_push_part_yz_b();
+  psc_push_part_yz_b(flds, particles);
   //  psc_dump_particles("part-1");
-  psc_save_particles_ref();
+  psc_save_particles_ref(particles);
   psc_destroy();
 
 
   psc_create_test_yz(&conf_generic_c);
-  psc_push_part_yz_b();
+  psc_push_part_yz_b(flds, particles);
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-6, "push_part_yz_b -- generic_c");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_b -- generic_c");
   psc_destroy();
-
-
-#ifdef USE_CBE
-  struct psc_mod_config conf_cbe = {
-    .mod_particle = "cbe",
-    .mod_sort = "cbesort",
-  };
-  psc_create_test_yz(&conf_cbe);
-
-  //psc_sort();
-  //  psc_dump_particles("part-2");
-  psc_push_part_yz();
-  //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-7, "push_part_yz_b -- cbe");
-  psc_destroy();
-#endif
-
 
 #ifdef USE_CUDA
   psc_create_test_yz(&conf_cuda);
@@ -123,9 +109,9 @@ main(int argc, char **argv)
     .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_sse2);
-  psc_push_part_yz_b();
+  psc_push_part_yz_b(flds, particles);
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-6, "push_part_yz_b -- sse2");
+  psc_check_particles_ref(particles, 1e-6, "push_part_yz_b -- sse2");
   psc_destroy();
 #endif
 
@@ -134,26 +120,26 @@ main(int argc, char **argv)
 
   psc_create_test_yz(&conf_fortran);
   //  psc_dump_particles("part-0");
-  psc_push_part_yz();
+  psc_push_part_yz(flds, particles);
   //  psc_dump_particles("part-1");
-  psc_save_particles_ref();
-  psc_save_fields_ref();
+  psc_save_particles_ref(particles);
+  psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_yz(&conf_generic_c);
   //  psc_dump_particles("part-0");
-  psc_push_part_yz();
+  psc_push_part_yz(flds, particles);
   //  psc_dump_particles("part-1");
-  psc_check_particles_ref(1e-7, "push_part_yz -- generic_c");
-  psc_check_currents_ref(1e-7);
+  psc_check_particles_ref(particles, 1e-7, "push_part_yz -- generic_c");
+  psc_check_currents_ref(flds, 1e-7);
   psc_destroy();
 
 #ifdef USE_SSE2
   psc_create_test_yz(&conf_sse2);
-  psc_push_part_yz();
+  psc_push_part_yz(flds, particles);
   //  psc_dump_particles("part-3");
-  psc_check_particles_ref(1e-8, "push_part_yz -- sse2");
-  psc_check_currents_ref(2e-6); 
+  psc_check_particles_ref(particles, 1e-8, "push_part_yz -- sse2");
+  psc_check_currents_ref(flds, 2e-6); 
   psc_destroy();
 #endif
 
@@ -163,10 +149,10 @@ main(int argc, char **argv)
     .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_cbe);
-  psc_push_part_yz();
+  psc_push_part_yz(flds,particles);
   //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-10, "push_part_yz -- cbe");
-  psc_check_currents_ref(2e-6); 
+  psc_check_particles_ref(particles,1e-10, "push_part_yz -- cbe");
+  psc_check_currents_ref(flds,2e-6); 
   psc_destroy();
 #endif  
 

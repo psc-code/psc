@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -98,15 +98,9 @@ curvedfoil_init_param(struct psc_case *Case)
   psc.domain.length[1] = 0.02 * 1e-6;
   psc.domain.length[2] = 5.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 200;				// total number of steps in x-direction. dx=length/itot;
-  psc.domain.itot[1] = 20;				
-  psc.domain.itot[2] = 200;				// total number of steps in z-direction. dz=length/itot;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 9;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 200;
-  psc.domain.ihi[1] = 10;
-  psc.domain.ihi[2] = 200;
+  psc.domain.gdims[0] = 200;
+  psc.domain.gdims[1] = 1;
+  psc.domain.gdims[2] = 200;
 
   psc.domain.bnd_fld_lo[0] = 1;
   psc.domain.bnd_fld_hi[0] = 1;
@@ -120,25 +114,25 @@ curvedfoil_init_param(struct psc_case *Case)
 }
 
 static void
-curvedfoil_init_field(struct psc_case *Case)
+curvedfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-
-	// FIXME, why this time?
-	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-	F3_BASE(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-	F3_BASE(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-	F3_BASE(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
-      }
-    }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d_g(p, jx, jy, jz) {
+      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
+      
+      // FIXME, why this time?
+      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+    } foreach_3d_g_end;
   }
 }
 
+#if 0
 static void
 curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
 		  struct psc_particle_npt *npt)
@@ -196,6 +190,7 @@ curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3],
     assert(0);
   }
 }
+#endif
 
 struct psc_case_ops psc_case_ops_curvedfoil = {
   .name       = "curvedfoil",

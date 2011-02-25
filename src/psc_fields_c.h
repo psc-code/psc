@@ -19,13 +19,17 @@ typedef struct {
   bool with_array; //> indicates whether data array was passed in instead of alloc'd
 } fields_c_t;
 
+typedef struct {
+  fields_c_t *f;
+} mfields_c_t;
+
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
   ((((((fldnr)								\
        * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
       * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
      * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
-#if 1
+#ifndef BOUNDS_CHECK
 
 #define F3_C(pf, fldnr, jx,jy,jz)		\
   ((pf)->flds[F3_OFF_C(pf, fldnr, jx,jy,jz)])
@@ -34,8 +38,10 @@ typedef struct {
 
 #define F3_C(pf, fldnr, jx,jy,jz)					\
   (*({int off = F3_OFF_C(pf, fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < pf->nr_comp * pf->im[0] * pf->im[1] * pf->im[2]);	\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
       &((pf)->flds[off]);						\
     }))
 
@@ -45,8 +51,8 @@ void fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp);
 void fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
 			       fields_c_real_t *arr);
 void fields_c_free(fields_c_t *pf);
-void fields_c_get(fields_c_t *pf, int mb, int me);
-void fields_c_put(fields_c_t *pf, int mb, int me);
+void fields_c_get(mfields_c_t *pf, int mb, int me, void *flds_base);
+void fields_c_put(mfields_c_t *pf, int mb, int me, void *flds_base);
 void fields_c_zero(fields_c_t *pf, int m);
 void fields_c_zero_all(fields_c_t *pf);
 void fields_c_set(fields_c_t *pf, int m, fields_c_real_t val);

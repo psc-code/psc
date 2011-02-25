@@ -1,6 +1,7 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_common.h>
+#include <mrc_params.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -203,8 +204,8 @@ psc_create(struct psc_mod_config *conf)
   if (!conf->mod_moment)
     conf->mod_moment = "fortran";
 
-  params_parse_cmdline_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-  params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
   memset(&psc, 0, sizeof(psc));
 
@@ -245,79 +246,105 @@ psc_create(struct psc_mod_config *conf)
 }
 
 void
+psc_fields_destroy(mfields_base_t *flds)
+{
+  foreach_patch(p) {
+    fields_base_free(&flds->f[p]);
+  }
+  free(flds->f);
+}
+
+void
+psc_particles_destroy(mparticles_base_t *particles)
+{
+  foreach_patch(p) {
+    particles_base_free(&particles->p[p]);
+  }
+  free(particles->p);
+}
+
+void
 psc_destroy()
 {
   if (psc.ops->destroy) {
     psc.ops->destroy();
   }
 
-  fields_base_free(&psc.pf);
-  particles_base_free(&psc.pp);
+  psc_fields_destroy(&psc.flds);
+  psc_particles_destroy(&psc.particles);
 }
 
 static void
-ascii_dump_field(int m, const char *fname)
+ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  char *filename = malloc(strlen(fname) + 10);
-  sprintf(filename, "%s-p%d.asc", fname, rank);
-  mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-  FILE *file = fopen(filename, "w");
-  for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-    for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-      for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(m, ix,iy,iz));
+  foreach_patch(p) {
+    char *filename = malloc(strlen(fname) + 10);
+    sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
+    mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
+
+    fields_base_t *pf = &flds->f[p];
+    FILE *file = fopen(filename, "w");
+    free(filename);
+    foreach_patch(patch) {
+      for (int iz = -psc.ibn[2]; iz < psc.patch[patch].ldims[2] + psc.ibn[2]; iz++) {
+	for (int iy = -psc.ibn[1]; iy < psc.patch[patch].ldims[1] + psc.ibn[1]; iy++) {
+	  for (int ix = -psc.ibn[0]; ix < psc.patch[patch].ldims[0] +  psc.ibn[0]; ix++) {
+	    fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
+	  }
+	  fprintf(file, "\n");
+	}
+	fprintf(file, "\n");
       }
-      fprintf(file, "\n");
     }
-    fprintf(file, "\n");
+    fclose(file);
   }
-  fclose(file);
 }
 
 static void
-ascii_dump_particles(const char *fname)
+ascii_dump_particles(mparticles_base_t *particles, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  char *filename = malloc(strlen(fname) + 10);
-  sprintf(filename, "%s-p%d.asc", fname, rank);
-  mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
 
-  FILE *file = fopen(filename, "w");
-  fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = particles_base_get_one(&psc.pp, i);
-    fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
-	    i, p->xi, p->yi, p->zi,
-	    p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
+  foreach_patch(p) {
+    particles_base_t *pp = &particles->p[p];
+    char *filename = malloc(strlen(fname) + 10);
+    sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
+    mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
+    
+    FILE *file = fopen(filename, "w");
+    fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
+    for (int i = 0; i < pp->n_part; i++) {
+      particle_base_t *p = particles_base_get_one(pp, i);
+      fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
+	      i, p->xi, p->yi, p->zi,
+	      p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
+    }
+    fclose(file);
+    free(filename);
   }
-  fclose(file);
-
-  free(filename);
 }
 
 void
-psc_dump_field(int m, const char *fname)
+psc_dump_field(mfields_base_t *flds, int m, const char *fname)
 {
   if (psc.output_ops->dump_field) {
     psc.output_ops->dump_field(m, fname);
   } else {
-    ascii_dump_field(m, fname);
+    ascii_dump_field(flds, m, fname);
   }
 }
 
 void
-psc_dump_particles(const char *fname)
+psc_dump_particles(mparticles_base_t *particles, const char *fname)
 {
   if (psc.output_ops->dump_particles) {
     psc.output_ops->dump_particles(fname);
   } else {
-    ascii_dump_particles(fname);
+    ascii_dump_particles(particles, fname);
   }
 }
 
@@ -325,137 +352,89 @@ psc_dump_particles(const char *fname)
 // psc_push_part_xz
 
 void
-psc_push_part_xz()
+psc_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_xz);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  if (psc.ops->fields_from_fortran)
-    psc.ops->fields_from_fortran();
-
-  psc.ops->push_part_xz();
-
-  if (psc.ops->particles_to_fortran)
-    psc.ops->particles_to_fortran();
-  if (psc.ops->fields_to_fortran)
-    psc.ops->fields_to_fortran();
+  psc.ops->push_part_xz(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_xyz
 
 void
-psc_push_part_xyz()
+psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_xyz);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  if (psc.ops->fields_from_fortran)
-    psc.ops->fields_from_fortran();
-  
-  psc.ops->push_part_xyz();
+  psc.ops->push_part_xyz(flds_base, particles_base);
+}
 
-  if (psc.ops->particles_to_fortran)
-    psc.ops->particles_to_fortran();
-  if (psc.ops->fields_to_fortran)
-    psc.ops->fields_to_fortran();
+// ----------------------------------------------------------------------
+// psc_push_part_xy
+
+void
+psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
+{
+  assert(psc.ops->push_part_xy);
+  psc.ops->push_part_xy(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz
 
 void
-psc_push_part_yz()
+psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  if (psc.ops->fields_from_fortran)
-    psc.ops->fields_from_fortran();
-  
-  psc.ops->push_part_yz();
-
-  if (psc.ops->particles_to_fortran)
-    psc.ops->particles_to_fortran();
-  if (psc.ops->fields_to_fortran)
-    psc.ops->fields_to_fortran();
+  psc.ops->push_part_yz(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_z
 
 void
-psc_push_part_z()
+psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_z);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  if (psc.ops->fields_from_fortran)
-    psc.ops->fields_from_fortran();
-
-  psc.ops->push_part_z();
-
-  if (psc.ops->fields_to_fortran)
-    psc.ops->particles_to_fortran();
-  if (psc.ops->particles_to_fortran)
-    psc.ops->fields_to_fortran();
+  psc.ops->push_part_z(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz_a
 
 void
-psc_push_part_yz_a()
+psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz_a);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  psc.ops->push_part_yz_a();
-  if (psc.ops->particles_to_fortran)
-    psc.ops->particles_to_fortran();
+  psc.ops->push_part_yz_a(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_part_yz_b
 
 void
-psc_push_part_yz_b()
+psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
   assert(psc.ops->push_part_yz_b);
-  if (psc.ops->particles_from_fortran)
-    psc.ops->particles_from_fortran();
-  if (psc.ops->fields_from_fortran)
-    psc.ops->fields_from_fortran();
-
-  psc.ops->push_part_yz_b();
-
-  if (psc.ops->fields_to_fortran)
-    psc.ops->fields_to_fortran();
-  if (psc.ops->particles_to_fortran)
-    psc.ops->particles_to_fortran();
+  psc.ops->push_part_yz_b(flds_base, particles_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_particles
 
 void
-psc_push_particles()
+psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  int im[3] = {
-    psc.domain.ihi[0] - psc.domain.ilo[0],
-    psc.domain.ihi[1] - psc.domain.ilo[1],
-    psc.domain.ihi[2] - psc.domain.ilo[2],
-  };
+  int *im = psc.domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    psc_push_part_xyz();
+    psc_push_part_xyz(flds_base, particles_base);
   } else if (im[0] > 1 && im[2] > 1) { // xz
-    psc_push_part_xz();
+    psc_push_part_xz(flds_base, particles_base);
   } else if (im[0] > 1 && im[1] > 1) { // xy
-    assert(0);
+    psc_push_part_xy(flds_base, particles_base);
   } else if (im[1] > 1 && im[2] > 1) { // yz
-    psc_push_part_yz();
+    psc_push_part_yz(flds_base, particles_base);
   } else if (im[2] > 1) { // z
-    psc_push_part_z();
+    psc_push_part_z(flds_base, particles_base);
   } else {
     assert(0);
   }
@@ -465,90 +444,90 @@ psc_push_particles()
 // psc_push_field_a
 
 void
-psc_push_field_a()
+psc_push_field_a(mfields_base_t *flds)
 {
   assert(psc.push_field_ops->push_field_a);
-  psc.push_field_ops->push_field_a();
+  psc.push_field_ops->push_field_a(flds);
 }
 
 // ----------------------------------------------------------------------
 // psc_push_field_b
 
 void
-psc_push_field_b()
+psc_push_field_b(mfields_base_t *flds)
 {
   assert(psc.push_field_ops->push_field_b);
-  psc.push_field_ops->push_field_b();
+  psc.push_field_ops->push_field_b(flds);
 }
 
 // ----------------------------------------------------------------------
 // psc_add_ghosts
 
 void
-psc_add_ghosts(fields_base_t *pf, int mb, int me)
+psc_add_ghosts(mfields_base_t *flds, int mb, int me)
 {
   assert(psc.bnd_ops->add_ghosts);
-  psc.bnd_ops->add_ghosts(pf, mb, me);
+  psc.bnd_ops->add_ghosts(flds, mb, me);
 }
 
 // ----------------------------------------------------------------------
 // psc_fill_ghosts
 
 void
-psc_fill_ghosts(fields_base_t *pf, int mb, int me)
+psc_fill_ghosts(mfields_base_t *flds, int mb, int me)
 {
   assert(psc.bnd_ops->fill_ghosts);
-  psc.bnd_ops->fill_ghosts(pf, mb, me);
+  psc.bnd_ops->fill_ghosts(flds, mb, me);
 }
 
 // ----------------------------------------------------------------------
 // psc_exchange_particles
 
 void
-psc_exchange_particles(void)
+psc_exchange_particles(mparticles_base_t *particles)
 {
   assert(psc.bnd_ops->exchange_particles);
-  psc.bnd_ops->exchange_particles();
+  psc.bnd_ops->exchange_particles(particles);
 }
 
 // ----------------------------------------------------------------------
 // psc_randomize
 
 void
-psc_randomize()
+psc_randomize(mparticles_base_t *particles)
 {
   assert(psc.randomize_ops->randomize);
-  psc.randomize_ops->randomize();
+  psc.randomize_ops->randomize(particles);
 }
 
 // ----------------------------------------------------------------------
 // psc_sort
 
 void
-psc_sort()
+psc_sort(mparticles_base_t *particles)
 {
   assert(psc.sort_ops->sort);
-  psc.sort_ops->sort();
+  psc.sort_ops->sort(particles);
 }
 
 // ----------------------------------------------------------------------
 // psc_collision
 
 void
-psc_collision()
+psc_collision(mparticles_base_t *particles)
 {
   assert(psc.collision_ops->collision);
-  psc.collision_ops->collision();
+  psc.collision_ops->collision(particles);
 }
 
 // ----------------------------------------------------------------------
 // psc_out_field
 
 void
-psc_out_field()
+psc_out_field(mfields_base_t *flds, mparticles_base_t *particles)
 {
   assert(psc.output_ops->out_field);
-  psc.output_ops->out_field();
+  psc.output_ops->out_field(flds, particles);
 }
 
 // ----------------------------------------------------------------------
@@ -615,13 +594,30 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 
 
 // ----------------------------------------------------------------------
-// psc_calc_densities
+// psc moments
 
 void
-psc_calc_densities(fields_base_t *pf)
+psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+		   mfields_base_t *f)
 {
   assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities(pf);
+  psc.moment_ops->calc_densities(flds, particles, f);
+}
+
+void
+psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
+		   mfields_base_t *f)
+{
+  assert(psc.moment_ops->calc_v);
+  psc.moment_ops->calc_v(flds, particles, f);
+}
+
+void
+psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
+		    mfields_base_t *f)
+{
+  assert(psc.moment_ops->calc_vv);
+  psc.moment_ops->calc_vv(flds, particles, f);
 }
 
 // ----------------------------------------------------------------------
@@ -636,30 +632,29 @@ psc_init(const char *case_name)
 {
   psc_init_param(case_name);
 
-  SET_param_domain();
   SET_param_psc();
   SET_param_coeff();
   INIT_basic();
   INIT_param_fortran_F77();
 
-  int n_part, particle_label_offset;
-  psc_init_partition(&n_part, &particle_label_offset);
+  int particle_label_offset;
+  psc_init_partition(&particle_label_offset);
+  SET_param_domain();
   SET_subdomain();
 
-  particles_base_alloc(&psc.pp, n_part);
   psc_init_particles(particle_label_offset);
 
-  fields_base_alloc(&psc.pf, psc.ilg, psc.ihg, NR_FIELDS);
-  psc_init_field();
+  mfields_base_alloc(&psc.flds, NR_FIELDS);
+  psc_init_field(&psc.flds);
 }
 
 // ----------------------------------------------------------------------
 // psc_set_n_particles
 
 void
-psc_set_n_particles(int n_part)
+psc_set_n_particles(particles_base_t *pp, int n_part)
 {
-  psc.pp.n_part = n_part;
+  pp->n_part = n_part;
   SET_niloc(n_part);
 }
 
@@ -673,18 +668,18 @@ psc_read_checkpoint(void)
   
   int n_part;
   SERV_read_1(&psc.timestep, &n_part);
-  particles_base_realloc(&psc.pp, n_part);
-  psc_set_n_particles(n_part);
+  particles_base_realloc(&psc.particles.p[0], n_part);
+  psc_set_n_particles(0, n_part);
   
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, 0, 0);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, 0, 0, &psc.flds);
 
-  SERV_read_2(&pp, &pf);
+  SERV_read_2(&particles.p[0], &flds.f[0]);
 
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, JXI, HZ + 1);
+  particles_fortran_put(&particles, &psc.particles);
+  fields_fortran_put(&flds, JXI, HZ + 1, &psc.flds);
 }
 
 // ----------------------------------------------------------------------
@@ -695,14 +690,30 @@ psc_write_checkpoint(void)
 {
   mpi_printf(MPI_COMM_WORLD, "INFO: Writing checkpoint.\n");
   
-  particles_fortran_t pp;
-  particles_fortran_get(&pp);
-  fields_fortran_t pf;
-  fields_fortran_get(&pf, JXI, HZ + 1);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, JXI, HZ + 1, &psc.flds);
 
-  SERV_write(&pp, &pf);
-  particles_fortran_put(&pp);
-  fields_fortran_put(&pf, 0, 0);
+  SERV_write(&particles.p[0], &flds.f[0]);
+
+  particles_fortran_put(&particles, &psc.particles);
+  fields_fortran_put(&flds, 0, 0, &psc.flds);
+}
+
+// ======================================================================
+
+void
+mfields_base_alloc(mfields_base_t *flds, int nr_fields)
+{
+  flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
+  foreach_patch(p) {
+    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
+    int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
+		   psc.patch[p].ldims[1] + psc.ibn[1],
+		   psc.patch[p].ldims[2] + psc.ibn[2] };
+    fields_base_alloc(&flds->f[p], ilg, ihg, nr_fields);
+  }
 }
 
 // ======================================================================

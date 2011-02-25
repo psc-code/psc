@@ -1,0 +1,13 @@
+openmpirun -n 1 src/VLI \
+	   --nproc_x 1 \
+	   --mod_output c --output_format xdmf --output_combine \
+	   --output_fields n,j,e,h \
+	   --write_tfield no \
+	   --mod_particle fortran \
+	   --mod_moment c \
+	   --mod_field c \
+	   --mod_bnd c \
+	   --case harris_xy --xlambda .1 \
+           --itot_x 128 --itot_y 64 --ihi_x 128 --ihi_y 64 \
+	   --nmax 1001
+

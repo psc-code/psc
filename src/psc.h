@@ -4,12 +4,17 @@
 
 #include <config.h>
 
+#include <mrc_domain.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
 
 #include "psc_pulse.h"
-#include "psc_case.h"
+
+// ----------------------------------------------------------------------
+
+#define BOUNDS_CHECK
 
 // ----------------------------------------------------------------------
 
@@ -52,16 +57,6 @@ typedef float real;
 typedef double f_real;
 typedef int f_int;
 
-// ----------------------------------------------------------------------
-// macros to access Fortran fields
-
-#define FF3_OFF(jx,jy,jz)						\
-  (((((jz)-psc.ilg[2]))							\
-    *psc.img[1] + ((jy)-psc.ilg[1]))					\
-   *psc.img[0] + ((jx)-psc.ilg[0]))
-
-#define _FF3(fld, jx,jy,jz)  (fld[FF3_OFF(jx,jy,jz)])
-
 // always need the fortran types for fortran interface
 #include "psc_particles_fortran.h"
 #include "psc_fields_fortran.h"
@@ -72,6 +67,7 @@ typedef int f_int;
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 typedef particles_fortran_t particles_base_t;
+typedef mparticles_fortran_t mparticles_base_t;
 typedef particle_fortran_t particle_base_t;
 typedef particle_fortran_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
@@ -86,6 +82,7 @@ typedef particle_fortran_real_t particle_base_real_t;
 #include "psc_particles_c.h"
 
 typedef particles_c_t particles_base_t;
+typedef mparticles_c_t mparticles_base_t;
 typedef particle_c_t particle_base_t;
 typedef particle_c_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
@@ -100,6 +97,7 @@ typedef particle_c_real_t particle_base_real_t;
 #include "psc_particles_sse2.h"
 
 typedef particles_sse2_t particles_base_t;
+typedef mparticles_sse2_t mparticles_base_t;
 typedef particle_sse2_t particle_base_t;
 typedef particle_sse2_real_t particle_base_real_t;
 #define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_SSE2_REAL
@@ -120,6 +118,7 @@ typedef particle_sse2_real_t particle_base_real_t;
 
 typedef fields_fortran_t fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
+typedef mfields_fortran_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
 #define fields_base_alloc            fields_fortran_alloc
@@ -133,8 +132,7 @@ typedef fields_fortran_real_t fields_base_real_t;
 #define fields_base_scale_all        fields_fortran_scale_all
 #define fields_base_size             fields_fortran_size
 
-#define F3_BASE(m, jx,jy,jz)  F3_FORTRAN(&psc.pf, m, jx,jy,jz)
-#define XF3_BASE(pf, m, jx,jy,jz) F3_FORTRAN(pf, m, jx,jy,jz)
+#define F3_BASE(pf, m, jx,jy,jz)     F3_FORTRAN(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_C
 
@@ -142,6 +140,7 @@ typedef fields_fortran_real_t fields_base_real_t;
 
 typedef fields_c_t fields_base_t;
 typedef fields_c_real_t fields_base_real_t;
+typedef mfields_c_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
 #define fields_base_alloc            fields_c_alloc
@@ -155,8 +154,7 @@ typedef fields_c_real_t fields_base_real_t;
 #define fields_base_scale_all        fields_c_scale_all
 #define fields_base_size             fields_c_size
 
-#define F3_BASE(m, jx,jy,jz)  F3_C(&psc.pf, m, jx,jy,jz)
-#define XF3_BASE(pf, m, jx,jy,jz) F3_C(pf, m, jx,jy,jz)
+#define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
@@ -164,6 +162,7 @@ typedef fields_c_real_t fields_base_real_t;
 
 typedef fields_sse2_t fields_base_t;
 typedef fields_sse2_real_t fields_base_real_t;
+typedef mfields_sse2_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
 #define fields_base_alloc fields_sse2_alloc
@@ -172,11 +171,13 @@ typedef fields_sse2_real_t fields_base_real_t;
 #define fields_base_set   fields_sse2_set
 #define fields_base_copy  fields_sse2_copy
 
-#define F3_BASE(m, jx,jy,jz)  F3_SSE2(&psc.pf, m, jx,jy,jz)
+#define F3_BASE(pf, m, jx,jy,jz) F3_SSE2(pf, m, jx,jy,jz)
 
 #else
 #error unknown FIELDS_BASE
 #endif
+
+#include "psc_case.h"
 
 // user settable parameters
 struct psc_param {
@@ -245,12 +246,12 @@ enum {
 
 struct psc_domain {
   double length[3];
-  int itot[3], ilo[3], ihi[3];
+  int gdims[3];
   int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
-  int nghost[3];
-  int nproc[3];
   bool use_pml;
 };
+
+void mfields_base_alloc(mfields_base_t *flds, int nr_fields);
 
 // ----------------------------------------------------------------------
 // general info / parameters for the code
@@ -259,24 +260,21 @@ struct psc_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*particles_from_fortran)(void);
-  void (*particles_to_fortran)(void);
-  void (*fields_from_fortran)(void);
-  void (*fields_to_fortran)(void);
-  void (*push_part_xz)(void);
-  void (*push_part_yz)(void);
-  void (*push_part_xyz)(void);
-  void (*push_part_z)(void);
-  void (*push_part_yz_a)(void); // only does the simple first half step
-  void (*push_part_yz_b)(void); // 1/2 x and 1/1 p step
+  void (*push_part_xy)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+  void (*push_part_xz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+  void (*push_part_yz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+  void (*push_part_xyz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+  void (*push_part_z)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+  void (*push_part_yz_a)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // only does the simple first half step
+  void (*push_part_yz_b)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // 1/2 x and 1/1 p step
 };
 
 struct psc_push_field_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*push_field_a)(void); // 1st half step
-  void (*push_field_b)(void); // 2nd half step
+  void (*push_field_a)(mfields_base_t *); // 1st half step
+  void (*push_field_b)(mfields_base_t *); // 2nd half step
 };
 
 // FIXME, the randomize / sort interaction needs more work
@@ -286,28 +284,28 @@ struct psc_randomize_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*randomize)(void);
+  void (*randomize)(mparticles_base_t *);
 };
 
 struct psc_sort_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*sort)(void);
+  void (*sort)(mparticles_base_t *particles);
 };
 
 struct psc_collision_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*collision)(void);
+  void (*collision)(mparticles_base_t *particles);
 };
 
 struct psc_output_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*out_field)(void);
+  void (*out_field)(mfields_base_t *flds, mparticles_base_t *particles);
   void (*dump_field)(int m, const char *fname);
   void (*dump_particles)(const char *fname);
 };
@@ -316,17 +314,32 @@ struct psc_bnd_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*add_ghosts)(fields_base_t *pf, int mb, int me);
-  void (*fill_ghosts)(fields_base_t *pf, int mb, int me);
-  void (*exchange_particles)(void);
+  void (*add_ghosts)(mfields_base_t *flds, int mb, int me);
+  void (*fill_ghosts)(mfields_base_t *flds, int mb, int me);
+  void (*exchange_particles)(mparticles_base_t *particles);
 };
 
 struct psc_moment_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*calc_densities)(fields_base_t *pf);
+  void (*calc_densities)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
+			 mfields_base_t *pf);
+  void (*calc_v)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
+		 mfields_base_t *pf);
+  void (*calc_vv)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
+		  mfields_base_t *pf);
 };
+
+struct psc_patch {
+  int ldims[3];       // size of local domain (w/o ghost points)
+  int off[3];         // local to global offset
+  double xb[3];       // lower left corner of the domain in this patch
+};
+
+#define CRDX(p, jx) (psc.dx[0] * ((jx) + psc.patch[p].off[0]))
+#define CRDY(p, jy) (psc.dx[1] * ((jy) + psc.patch[p].off[1]))
+#define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
   struct psc_ops *ops;
@@ -355,15 +368,13 @@ struct psc {
   double dt;
   double dx[3];
 
-  particles_base_t pp;
-  fields_base_t pf;
+  mparticles_base_t particles;
+  mfields_base_t flds;
+  struct mrc_domain *mrc_domain;
 
-  // Fortran compatible fields
-  int ilo[3], ihi[3]; // local domain: il, il+1, ..., ih-1
+  int nr_patches;
+  struct psc_patch patch[1];
   int ibn[3];         // number of ghost points
-  int ilg[3], ihg[3]; // local domain incl ghost points: ilg, ilg+1, ..., ihg-1
-  int img[3];         // total # points per dir incl. ghost points
-  int fld_size;       // total # points per field incl. ghost points
 
   // C data structures
   void *c_ctx;
@@ -373,6 +384,34 @@ struct psc {
 
   double time_start;
 };
+
+#define foreach_3d(p, ix, iy, iz, l, r) {				\
+  int __ilo[3] = { -l, -l, -l };					\
+  int __ihi[3] = { psc.patch[p].ldims[0] + r,				\
+		   psc.patch[p].ldims[1] + r,				\
+		   psc.patch[p].ldims[2] + r };				\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define foreach_3d_end				\
+  } } }
+
+#define foreach_3d_g(p, ix, iy, iz) {					\
+  int __ilo[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };		\
+  int __ihi[3] = { psc.patch[p].ldims[0] + psc.ibn[0],			\
+		   psc.patch[p].ldims[1] + psc.ibn[1],			\
+		   psc.patch[p].ldims[2] + psc.ibn[2] };		\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define foreach_3d_g_end				\
+  } } }
+
+#define foreach_patch(p)				\
+  for (int p = 0; p < psc.nr_patches; p++)
+
 
 // ----------------------------------------------------------------------
 // psc_config
@@ -393,37 +432,52 @@ struct psc_mod_config {
 
 struct psc psc;
 
+static inline void
+psc_local_to_global_indices(int p, int jx, int jy, int jz,
+			    int *ix, int *iy, int *iz)
+{
+  *ix = jx + psc.patch[p].off[0];
+  *iy = jy + psc.patch[p].off[1];
+  *iz = jz + psc.patch[p].off[2];
+}
+
 void psc_create(struct psc_mod_config *conf);
 void psc_destroy(void);
 
 void psc_init(const char *case_name);
 void psc_init_param(const char *case_name);
-void psc_init_partition(int *n_part, int *particle_label_offset);
+void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
-void psc_init_field(void);
+void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
-void psc_push_particles(void);
-void psc_push_field_a(void);
-void psc_push_field_b(void);
-void psc_add_ghosts(fields_base_t *pf, int mb, int me);
-void psc_fill_ghosts(fields_base_t *pf, int mb, int me);
-void psc_exchange_particles(void);
-void psc_calc_densities(fields_base_t *pf);
+void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
+void psc_push_field_a(mfields_base_t *flds);
+void psc_push_field_b(mfields_base_t *flds);
+void psc_add_ghosts(mfields_base_t *flds, int mb, int me);
+void psc_fill_ghosts(mfields_base_t *flds, int mb, int me);
+void psc_exchange_particles(mparticles_base_t *particles);
+void psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+			mfields_base_t *f);
+void psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
+			mfields_base_t *f);
+void psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
+			 mfields_base_t *f);
 
-void psc_dump_particles(const char *fname);
-void psc_dump_field(int m, const char *fname);
+void psc_dump_particles(mparticles_base_t *particles, const char *fname);
+void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 
-void psc_push_part_xyz();
-void psc_push_part_yz(void);
-void psc_push_part_z(void);
-void psc_push_part_yz_a(void);
-void psc_push_part_yz_b(void);
-void psc_randomize(void);
-void psc_sort(void);
-void psc_collision(void);
-void psc_out_field(void);
+void psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
+void psc_randomize(mparticles_base_t *particles);
+void psc_sort(mparticles_base_t *particles);
+void psc_collision(mparticles_base_t *particles);
+void psc_out_field(mfields_base_t *flds, mparticles_base_t *particles);
 void psc_out_particles(void);
-void psc_set_n_particles(int n_part);
+void psc_set_n_particles(particles_base_t *pp, int n_part);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
@@ -484,12 +538,15 @@ extern struct psc_case_ops psc_case_ops_foils;
 extern struct psc_case_ops psc_case_ops_curvedfoil;
 extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
+extern struct psc_case_ops psc_case_ops_harris_xy;
 extern struct psc_case_ops psc_case_ops_collisions;
 extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
+extern struct psc_case_ops psc_case_ops_cone;
 
 // Wrappers for Fortran functions
 void PIC_push_part_xyz();
+void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
@@ -514,12 +571,9 @@ void SET_niloc(int niloc);
 void SET_subdomain(void);
 void GET_param_domain(void);
 void GET_niloc(int *niloc);
-void GET_subdomain(void);
 void INIT_param_domain(void);
 void INIT_param_psc(void);
 void INIT_grid_map(void);
-void INIT_partition(int *n_part);
-void INIT_idistr(void);
 particle_fortran_t *ALLOC_particles(int n_part);
 particle_fortran_t *REALLOC_particles(int n_part_n);
 f_real **ALLOC_field(void);

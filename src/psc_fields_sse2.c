@@ -38,35 +38,49 @@ static bool __gotten; // to check we're pairing get/put correctly
 
 /// Copy fields from base data structure to an SSE2 friendly format.
 void
-fields_sse2_get(fields_sse2_t *pf, int mb, int me)
+fields_sse2_get(fields_sse2_t *pf, int mb, int me, void *_flds_base)
 {
   assert(!__gotten);
   __gotten = true;
 
-  pf->flds = _mm_malloc(NR_FIELDS*psc.fld_size*sizeof(sse2_real), 16);
+  struct psc_patch *patch = &psc.patch[0];
+  mfields_base_t *flds_base = _flds_base;
+  fields_base_t *pf_base = &flds_base->f[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+  pf->flds = _mm_malloc(NR_FIELDS*sz*sizeof(sse2_real), 16);
   
-  int *ilg = psc.ilg;
+  int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
-    for(int n = 0; n < psc.fld_size; n++){
+    for(int n = 0; n < sz; n++){
       //preserve Fortran ordering for now
-      pf->flds[m * psc.fld_size + n] =
-	(sse2_real) ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]);
+      pf->flds[m * sz + n] =
+	(sse2_real) ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
     }
   }
 }
 
 /// Copy fields from SSE2 data structures into base structures.
 void
-fields_sse2_put(fields_sse2_t *pf, int mb, int me)
+fields_sse2_put(fields_sse2_t *pf, int mb, int me, void *_flds_base)
 {
   assert(__gotten);
   __gotten = false;
 
-  int *ilg = psc.ilg;
+  struct psc_patch *patch = &psc.patch[0];
+  mfields_base_t *flds_base = _flds_base;
+  fields_base_t *pf_base = &flds_base->f[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+  int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
-    for(int n = 0; n < psc.fld_size; n++){
-      ((&F3_BASE(m, ilg[0],ilg[1],ilg[2]))[n]) = 
-	pf->flds[m * psc.fld_size + n];
+    for(int n = 0; n < sz; n++){
+      ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
+	pf->flds[m * sz + n];
     }
   }
   _mm_free(pf->flds);
@@ -77,30 +91,31 @@ fields_sse2_put(fields_sse2_t *pf, int mb, int me)
 void
 fields_sse2_zero(fields_sse2_t *pf, int m)
 {
-  memset(&F3_SSE2(pf, m, psc.ilg[0], psc.ilg[1], psc.ilg[2]), 0,
-	 psc.fld_size * sizeof(fields_sse2_real_t));
+  struct psc_patch *patch = &psc.patch[0];
+  int sz = 1;
+  for (int d = 0; d < 3; d++) {
+    sz *= patch->ldims[d] + 2 * psc.ibn[d];
+  }
+  memset(&F3_SSE2(pf, m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]), 0,
+	 sz * sizeof(fields_sse2_real_t));
 }
 
 void
 fields_sse2_set(fields_sse2_t *pf, int m, fields_sse2_real_t val)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_SSE2(pf, m, jx, jy, jz) = val;
-      }
-    }
+  foreach_patch(patch) {
+    foreach_3d_g(patch, jx, jy, jz) {
+      F3_SSE2(pf, m, jx,jy,jz) = val;
+    } foreach_3d_g_end;
   }
 }
 
 void
 fields_sse2_copy(fields_sse2_t *pf, int m_to, int m_from)
 {
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	F3_SSE2(pf, m_to, jx, jy, jz) = F3_SSE2(pf, m_from, jx, jy, jz);
-      }
-    }
+  foreach_patch(patch) {
+    foreach_3d_g(patch, jx, jy, jz) {
+      F3_SSE2(pf, m_to, jx,jy,jz) = F3_SSE2(pf, m_from, jx,jy,jz);
+    } foreach_3d_g_end;
   }
 }

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -66,19 +66,14 @@ harris_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 50;
 
-  psc.domain.length[0] = harris->lx * sqrt(harris->MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  psc.domain.length[0] = harris->lx * d_i;
   psc.domain.length[1] = 1.; // no y dependence 
-  psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
+  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
-  psc.domain.itot[0] = 640;
-  psc.domain.itot[1] = 1;
-  psc.domain.itot[2] = 640;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 640;
-  psc.domain.ihi[1] = 1;
-  psc.domain.ihi[2] = 640;
+  psc.domain.gdims[0] = 640;
+  psc.domain.gdims[1] = 1;
+  psc.domain.gdims[2] = 640;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
@@ -92,37 +87,37 @@ harris_init_param(struct psc_case *Case)
 }
 
 static void
-harris_init_field(struct psc_case *Case)
+harris_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLx = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
-  double AA = harris->pert * BB * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLx = harris->lx * d_i, LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dz = psc.dx[2];
-	double xx = jx * dx, zz = jz * dz;
-
-	F3_BASE(HX, jx,jy,jz) = 
-	  BB * (-1. 
-		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
-		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
-	  + AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
-
-	F3_BASE(HZ, jx,jy,jz) =
-	  - AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
-
-	F3_BASE(JYI, jx,jy,jz) = BB/LLL *
-	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
-	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
-	     * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
-      }
-    }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d_g(p, jx, jy, jz) {
+      double dx = psc.dx[0], dz = psc.dx[2];
+      double xx = CRDX(p, jx), zz = CRDZ(p, jz);
+    
+      F3_BASE(pf, HX, jx,jy,jz) = 
+	BB * (-1. 
+	      + tanh((zz + .5*dz - 0.5*LLz)/LLL)
+	      - tanh((zz + .5*dz - 1.5*LLz)/LLL))
+	+ AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
+      
+      F3_BASE(pf, HZ, jx,jy,jz) =
+	- AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
+      
+      F3_BASE(pf, JYI, jx,jy,jz) = BB/LLL *
+	(1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+	- (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
+	   * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
+    } foreach_3d_g_end;
   }
 }
 
@@ -132,9 +127,10 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
   double nnb = harris->nnb;
   double TTi = harris->Ti * sqr(BB);
   double TTe = harris->Te * sqr(BB);
@@ -186,15 +182,9 @@ test_xz_init_param(struct psc_case *Case)
   
   psc.prm.nicell = 100;
 
-  psc.domain.itot[0] = 64;
-  psc.domain.itot[1] = 1;
-  psc.domain.itot[2] = 64;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 64;
-  psc.domain.ihi[1] = 1;
-  psc.domain.ihi[2] = 64;
+  psc.domain.gdims[0] = 64;
+  psc.domain.gdims[1] = 1;
+  psc.domain.gdims[2] = 64;
   
 }
 
@@ -219,68 +209,51 @@ test_yz_init_param(struct psc_case *Case)
   
   struct harris *harris = Case->ctx;
 
-  psc.prm.nicell = 200;
+  psc.prm.nicell = 100;
 
+  real d_i = sqrt(harris->MMi); // in units of d_e
   psc.domain.length[0] = 10000000;
-  psc.domain.length[1] = harris->lx * sqrt(harris->MMi);
-  psc.domain.length[2] = 2. * harris->lz * sqrt(harris->MMi); // double tearing
-  /*
-#define DOM 64
-  psc.domain.itot[0] = 1;
-  psc.domain.itot[1] = DOM;
-  psc.domain.itot[2] = DOM;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 1;
-  psc.domain.ihi[1] = DOM;
-  psc.domain.ihi[2] = DOM;
+  psc.domain.length[1] = harris->lx * d_i;
+  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
-  */
-  psc.domain.itot[0] = 1;
-  psc.domain.itot[1] = 104;
-  psc.domain.itot[2] = 104;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 1;
-  psc.domain.ihi[1] = 104;
-  psc.domain.ihi[2] = 104;
+  psc.domain.gdims[0] = 1;
+  psc.domain.gdims[1] = 64;
+  psc.domain.gdims[2] = 64;
   
 }
 
 static void
-test_yz_init_field(struct psc_case *Case)
+test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLy = harris->lx * sqrt(MMi), LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
-  double AA = harris->pert * BB * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLy = harris->lx * d_i, LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dy = psc.dx[1], dz = psc.dx[2];
-	double yy = jy * dy, zz = jz * dz;
-
-	F3_BASE(HY, jx,jy,jz) = 
-	  BB * (-1. 
-		+ tanh((zz + .5*dz - 0.5*LLz)/LLL)
-		- tanh((zz + .5*dz - 1.5*LLz)/LLL))
-	  + AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
-
-	F3_BASE(HZ, jx,jy,jz) =
-	  - AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
-
-	F3_BASE(JXI, jx,jy,jz) = - BB/LLL *
-	  (1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
-	  - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
-	     * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
-      }
-    }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d_g(p, jx, jy, jz) {
+      double dy = psc.dx[1], dz = psc.dx[2];
+      double yy = CRDY(p, jy), zz = CRDZ(p, jz);
+      
+      F3_BASE(pf, HY, jx,jy,jz) = 
+	BB * (-1. 
+	      + tanh((zz + .5*dz - 0.5*LLz)/LLL)
+	      - tanh((zz + .5*dz - 1.5*LLz)/LLL))
+	+ AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
+      
+      F3_BASE(pf, HZ, jx,jy,jz) =
+	- AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
+      
+      F3_BASE(pf, JXI, jx,jy,jz) = - BB/LLL *
+	(1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
+	- (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
+	   * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
+    } foreach_3d_g_end;
   }
 }
 
@@ -290,9 +263,10 @@ test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
 {
   struct harris *harris = Case->ctx;
 
-  double BB = harris->BB, MMi = harris->MMi;
-  double LLz = harris->lz * sqrt(MMi);
-  double LLL = harris->lambda * sqrt(MMi);
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLz = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
   double nnb = harris->nnb;
   double TTi = harris->Ti * sqr(BB);
   double TTe = harris->Te * sqr(BB);

@@ -1,7 +1,7 @@
 
 #include "psc_generic_c.h"
+#include <mrc_profile.h>
 
-#include "util/profile.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -16,7 +16,7 @@ do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  for (int n = 0; n < psc.pp.n_part; n++) {
+  for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
@@ -158,22 +158,24 @@ do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_yz_b()
+genc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  fields_t pf;
-  particles_t pp;
-  fields_get(&pf, EX, EX + 6);
-  particles_get(&pp);
+  mfields_t flds;
+  mparticles_t particles;
+  fields_get(&flds, EX, EX + 6, flds_base);
+  particles_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_yz_b", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
-  do_genc_push_part_yz_b(&pf, &pp);
+  foreach_patch(p) {
+    do_genc_push_part_yz_b(&flds.f[p], &particles.p[p]);
+  }
   prof_stop(pr);
 
-  particles_put(&pp);
-  fields_put(&pf, JXI, JXI + 3);
+  particles_put(&particles, particles_base);
+  fields_put(&flds, JXI, JXI + 3, flds_base);
 }
 

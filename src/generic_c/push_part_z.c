@@ -1,7 +1,7 @@
 
 #include "psc_generic_c.h"
 
-#include "util/profile.h"
+#include <mrc_profile.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +27,8 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
-  for (int n = 0; n < psc.pp.n_part; n++) {
+  struct psc_patch *patch = &psc.patch[0];
+  for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
     // x^n, p^n -> x^(n+.5), p^n
@@ -39,9 +40,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 
     part->zi += vzi * zl;
 
-    creal u = part->xi * dxi;
-    creal v = part->yi * dyi;
-    creal w = part->zi * dzi;
+    creal u = (part->xi - patch->xb[0]) * dxi;
+    creal v = (part->yi - patch->xb[1]) * dyi;
+    creal w = (part->zi - patch->xb[2]) * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -59,9 +60,9 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
     S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
     S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
-    u = part->xi*dxi-.5f;
-    v = part->yi*dyi;
-    w = part->zi*dzi-.5f;
+    u = (part->xi - patch->xb[0]) * dxi - .5f;
+    v = (part->yi - patch->xb[1]) * dyi;
+    w = (part->zi - patch->xb[2]) * dzi - .5f;
     int l1=nint(u);
     int l2=nint(v);
     int l3=nint(w);
@@ -139,7 +140,7 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 
     creal zi = part->zi + vzi * zl;
 
-    w = zi * dzi;
+    w = (zi - patch->xb[2]) * dzi;
     int k3 = nint(w);
     h3 = k3 - w;
 
@@ -192,22 +193,24 @@ do_genc_push_part_z(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_z()
+genc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  fields_t pf;
-  particles_t pp;
-  fields_get(&pf, EX, EX + 6);
-  particles_get(&pp);
+  mfields_t flds;
+  mparticles_t particles;
+  fields_get(&flds, EX, EX + 6, flds_base);
+  particles_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("genc_part_z", 1., 0, psc.pp.n_part * 12 * sizeof(creal));
+    pr = prof_register("genc_part_z", 1., 0, 0);
   }
   prof_start(pr);
-  do_genc_push_part_z(&pf, &pp);
+  foreach_patch(p) {
+    do_genc_push_part_z(&flds.f[p], &particles.p[p]);
+  }
   prof_stop(pr);
 
-  fields_put(&pf, JXI, JXI + 3);
-  particles_put(&pp);
+  fields_put(&flds, JXI, JXI + 3, flds_base);
+  particles_put(&particles, particles_base);
 }
 

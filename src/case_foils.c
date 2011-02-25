@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -105,6 +105,7 @@ static real Line_dens(double x0, double z0, double x1, double z1, double xc, dou
   return 1. / ((1. + exp(argx)) * (1. + exp(argz)));
 }
 
+#if 0
 static real HollowSphere_dens(double x0, double z0, double Radius, double xc, double zc, double Thickness, double Preplasma)
 {
     // returns the density in the current cell for the hollow sphere density distribution
@@ -121,6 +122,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 
   return 1./(1.+exp(argsphere));
 }
+#endif
 
 static void
 foils_create(struct psc_case *Case)
@@ -180,19 +182,13 @@ foils_init_param(struct psc_case *Case)
 
   psc.prm.nicell = 200;
 
-  psc.domain.length[0] = 20.0 * 1e-6;			// length of the domain in x-direction (transverse)
+  psc.domain.length[0] = 10.0 * 1e-6;			// length of the domain in x-direction (transverse)
   psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 30.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  psc.domain.length[2] = 10.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.itot[0] = 2000;				// total number of steps in x-direction. dx=length/itot;
-  psc.domain.itot[1] = 10;				
-  psc.domain.itot[2] = 3000;				// total number of steps in z-direction. dz=length/itot;
-  psc.domain.ilo[0] = 0;
-  psc.domain.ilo[1] = 9;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 2000;
-  psc.domain.ihi[1] = 10;
-  psc.domain.ihi[2] = 3000;
+  psc.domain.gdims[0] = 100;
+  psc.domain.gdims[1] = 1;
+  psc.domain.gdims[2] = 100;
 
   psc.domain.bnd_fld_lo[0] = 1;
   psc.domain.bnd_fld_hi[0] = 1;
@@ -206,23 +202,22 @@ foils_init_param(struct psc_case *Case)
 }
 
 static void
-foils_init_field(struct psc_case *Case)
+foils_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
 #if 0
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-
-	// FIXME, why this time?
-	FF3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-	FF3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-	FF3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-	FF3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
-      }
-    }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d_g(p, jx, jy, jz) {
+      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double xx = CRDX(patch, jx), yy = CRDY(patch, jy), zz = CRDZ(patch, jz);
+    
+      // FIXME, why this time?
+      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+    } foreach_3d_g_end;
   }
 #endif
 }

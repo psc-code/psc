@@ -1,7 +1,8 @@
 
 #include "psc.h"
-#include "util/profile.h"
-#include "util/ddc.h"
+#include <mrc_profile.h>
+#include <mrc_ddc.h>
+#include <mrc_domain.h>
 
 #include <mpi.h>
 #include <string.h>
@@ -10,7 +11,7 @@
 // C bnd
 
 struct c_bnd_ctx {
-  struct ddc_subdomain *ddc;
+  struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
 };
 
@@ -24,7 +25,7 @@ copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  DDC_BUF(buf, m - mb, ix,iy,iz) = XF3_BASE(pf, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
 	}
       }
     }
@@ -41,7 +42,7 @@ add_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix,iy,iz) += DDC_BUF(buf, m - mb, ix,iy,iz);
+	  F3_BASE(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -58,12 +59,18 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  XF3_BASE(pf, m, ix,iy,iz) = DDC_BUF(buf, m - mb, ix,iy,iz);
+	  F3_BASE(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
   }
 }
+
+struct mrc_ddc_ops ddc_ops = {
+  .copy_to_buf   = copy_to_buf,
+  .copy_from_buf = copy_from_buf,
+  .add_from_buf  = add_from_buf,
+};
 
 // ======================================================================
 
@@ -84,7 +91,7 @@ struct ddc_particles {
 };
 
 static struct ddc_particles *
-ddc_particles_create(struct ddc_subdomain *ddc)
+ddc_particles_create(struct mrc_ddc *ddc)
 {
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
@@ -94,7 +101,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	ddcp->send_reqs[dir1] = MPI_REQUEST_NULL;
 	ddcp->sendp_reqs[dir1] = MPI_REQUEST_NULL;
@@ -108,7 +115,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
 	nei->send_buf_size = 8;
 	nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
 	nei->n_send = 0;
-	nei->rank = ddc_get_rank_nei(ddc, dir);
+	nei->rank = mrc_ddc_get_rank_nei(ddc, dir);
       }
     }
   }
@@ -119,7 +126,7 @@ ddc_particles_create(struct ddc_subdomain *ddc)
 static void
 ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 {
-  struct ddcp_nei *nei = &ddcp->nei[dir2idx(dir)];
+  struct ddcp_nei *nei = &ddcp->nei[mrc_ddc_dir2idx(dir)];
 
   if (nei->n_send == nei->send_buf_size) {
     // reallocate a larger buffer, doubling buffer size each time
@@ -132,8 +139,10 @@ ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 }
 
 static void
-ddc_particles_comm(struct ddc_particles *ddcp)
+ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 {
+  particles_base_t *pp = &particles->p[0];
+
   int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
   int dir[3];
 
@@ -141,8 +150,8 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	int dir1 = mrc_ddc_dir2idx(dir);
+	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  ddcp->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -158,7 +167,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
@@ -180,7 +189,7 @@ ddc_particles_comm(struct ddc_particles *ddcp)
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
+	int dir1 = mrc_ddc_dir2idx(dir);
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
@@ -190,18 +199,18 @@ ddc_particles_comm(struct ddc_particles *ddcp)
       }
     }
   }
-  particles_base_realloc(&psc.pp, new_n_particles);
+  particles_base_realloc(pp, new_n_particles);
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = dir2idx(dir);
-	int dir1neg = dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	int dir1 = mrc_ddc_dir2idx(dir);
+	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	struct ddcp_nei *nei = &ddcp->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
 	}
-	MPI_Irecv(&psc.pp.particles[ddcp->head], sz * nei->n_recv,
+	MPI_Irecv(&pp->particles[ddcp->head], sz * nei->n_recv,
 		  MPI_PARTICLES_BASE_REAL,
 		  nei->rank, 2100 + dir1neg, MPI_COMM_WORLD, &ddcp->recv_reqs[dir1]);
 	ddcp->head += nei->n_recv;
@@ -220,34 +229,25 @@ create_bnd(void)
   struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
   memset(c_bnd, 0, sizeof(*c_bnd));
 
-  struct ddc_params prm = {
-    .comm          = MPI_COMM_WORLD,
-    .mpi_type      = MPI_FIELDS_BASE_REAL,
+  struct mrc_ddc_params ddc_par = {
     .size_of_type  = sizeof(fields_base_real_t),
     .max_n_fields  = 6,
-    .n_proc        = { psc.domain.nproc[0], psc.domain.nproc[1], psc.domain.nproc[2] },
-    .ilo           = { psc.ilo[0], psc.ilo[1], psc.ilo[2] },
-    .ihi           = { psc.ihi[0], psc.ihi[1], psc.ihi[2] },
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
-    .copy_to_buf   = copy_to_buf,
-    .copy_from_buf = copy_from_buf,
-    .add_from_buf  = add_from_buf,
   };
-  for (int d = 0; d < 3; d++) {
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	  psc.domain.ihi[d] - psc.domain.ilo[d] > 1) {
-      prm.bc[d] = DDC_BC_PERIODIC;
-    }
-  }
-  c_bnd->ddc = ddc_create(&prm);
+
+  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par, &ddc_ops);
+
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 
   psc.bnd_data = c_bnd;
 }
   
 static void
-c_add_ghosts(fields_base_t *pf, int mb, int me)
+c_add_ghosts(mfields_base_t *flds, int mb, int me)
 {
+  assert(psc.nr_patches == 1);
+  fields_base_t *pf = &flds->f[0];
+  
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -259,14 +259,17 @@ c_add_ghosts(fields_base_t *pf, int mb, int me)
   }
   prof_start(pr);
 
-  ddc_add_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, pf);
 
   prof_stop(pr);
 }
 
 static void
-c_fill_ghosts(fields_base_t *pf, int mb, int me)
+c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 {
+  assert(psc.nr_patches == 1);
+  fields_base_t *pf = &flds->f[0];
+  
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -281,14 +284,16 @@ c_fill_ghosts(fields_base_t *pf, int mb, int me)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  ddc_fill_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, pf);
 
   prof_stop(pr);
 }
 
 static void
-c_exchange_particles(void)
+c_exchange_particles(mparticles_base_t *particles)
 {
+  particles_base_t *pp = &particles->p[0];
+
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -310,23 +315,24 @@ c_exchange_particles(void)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
+  struct psc_patch *patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc.ilo[d]-.5) * psc.dx[d];
+    xb[d] = (patch->off[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = (psc.domain.ilo[d]-.5) * psc.dx[d];
+      xgb[d] = -.5 * psc.dx[d];
     } else {
-      xgb[d] = psc.domain.ilo[d] * psc.dx[d];
-      if (psc.ilo[d] == psc.domain.ilo[d]) {
+      xgb[d] = 0.;
+      if (patch->off[d] == 0) {
 	xb[d] = xgb[d];
       }
     }
 
-    xe[d] = (psc.ihi[d]-.5) * psc.dx[d];
+    xe[d] = (patch->off[d] + patch->ldims[d] - .5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (psc.domain.ihi[d]-.5) * psc.dx[d];
+      xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
     } else {
-      xge[d] = (psc.domain.ihi[d]-1) * psc.dx[d];
-      if (psc.ihi[d] == psc.domain.ihi[d]) {
+      xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
+      if (patch->off[d] + patch->ldims[d] == psc.domain.gdims[d]) {
 	xe[d] = xge[d];
       }
     }
@@ -338,8 +344,8 @@ c_exchange_particles(void)
   for (int dir1 = 0; dir1 < 27; dir1++) {
     ddcp->nei[dir1].n_send = 0;
   }
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *p = particles_base_get_one(&psc.pp, i);
+  for (int i = 0; i < pp->n_part; i++) {
+    particle_base_t *p = particles_base_get_one(pp, i);
     particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     particle_base_real_t *pxi = &p->pxi;
     if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
@@ -347,7 +353,7 @@ c_exchange_particles(void)
 	xi[2] >= xb[2] && xi[2] <= xe[2]) {
       // fast path
       // inside domain: move into right position
-      psc.pp.particles[ddcp->head++] = *p;
+      pp->particles[ddcp->head++] = *p;
     } else {
       // slow path
       int dir[3];
@@ -395,7 +401,7 @@ c_exchange_particles(void)
 	}
       }
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	psc.pp.particles[ddcp->head++] = *p;
+	pp->particles[ddcp->head++] = *p;
       } else {
 	ddc_particles_queue(ddcp, dir, p);
       }
@@ -405,8 +411,8 @@ c_exchange_particles(void)
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp);
-  psc_set_n_particles(ddcp->head);
+  ddc_particles_comm(ddcp, particles);
+  psc_set_n_particles(pp, ddcp->head);
   prof_stop(pr_B);
 
   prof_stop(pr);

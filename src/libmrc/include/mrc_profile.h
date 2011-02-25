@@ -11,10 +11,11 @@
 #endif
 
 //#define PROF_UOPS
+#define PROF_CACHE
 
 #ifdef HAVE_LIBPAPI
 
-#ifdef PROF_UOPS
+#if defined(PROF_UOPS) || defined(PROF_CACHE)
 #define NR_EVENTS (4)
 #else
 #define NR_EVENTS (3)

@@ -1,0 +1,24 @@
+
+AM_CPPFLAGS = -I$(srcdir)/../include
+
+noinst_PROGRAMS = \
+	test_mrc_obj \
+	test_io \
+	test_io_read \
+	test_dict \
+	test_spherical_harmonics \
+	test_ddc
+
+LDADD = ../src/libmrctest.a ../src/libmrc.a
+
+TESTS = \
+	test_io_0.sh \
+	test_io_1.sh \
+	test_io_2.sh \
+	test_io_3.sh \
+	test_io_read_0.sh \
+	test_io_read_1.sh \
+	test_io_read_2.sh \
+	test_io_read_3.sh \
+	test_io_read_4.sh \
+	test_ddc_0.sh

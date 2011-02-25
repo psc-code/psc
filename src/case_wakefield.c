@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -69,15 +69,9 @@ wakefield_init_param(struct psc_case *Case)
   psc.domain.length[1] = 40. * 1e-6;
   psc.domain.length[2] = 60. * 1e-6;
 
-  psc.domain.itot[0] = 200;
-  psc.domain.itot[1] = 400;
-  psc.domain.itot[2] = 600;
-  psc.domain.ilo[0] = 99;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 100;
-  psc.domain.ihi[1] = 400;
-  psc.domain.ihi[2] = 600;
+  psc.domain.gdims[0] = 200;
+  psc.domain.gdims[1] = 400;
+  psc.domain.gdims[2] = 600;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
@@ -91,22 +85,21 @@ wakefield_init_param(struct psc_case *Case)
 }
 
 static void
-wakefield_init_field(struct psc_case *Case)
+wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
-  for (int jz = psc.ilg[2]; jz < psc.ihg[2]; jz++) {
-    for (int jy = psc.ilg[1]; jy < psc.ihg[1]; jy++) {
-      for (int jx = psc.ilg[0]; jx < psc.ihg[0]; jx++) {
-	double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
-	double xx = jx * dx, yy = jy * dy, zz = jz * dz;
-
-	// FIXME, why this time?
-	F3_BASE(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
-
-	// FIXME, this pulse needs a - to propagate in the right direction (+z)
-	F3_BASE(HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-      }
-    }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    foreach_3d_g(p, jx, jy, jz) {
+      double dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
+      
+      // FIXME, why this time?
+      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
+      
+      // FIXME, this pulse needs a - to propagate in the right direction (+z)
+      F3_BASE(pf, HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+    } foreach_3d_g_end;
   }
 }
 

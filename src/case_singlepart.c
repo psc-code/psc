@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "util/params.h"
+#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -44,15 +44,9 @@ singlepart_init_param(struct psc_case *Case)
   psc.domain.length[1] = 40. * 1e-6;
   psc.domain.length[2] = 60. * 1e-6;
 
-  psc.domain.itot[0] = 200;
-  psc.domain.itot[1] = 400;
-  psc.domain.itot[2] = 600;
-  psc.domain.ilo[0] = 99;
-  psc.domain.ilo[1] = 0;
-  psc.domain.ilo[2] = 0;
-  psc.domain.ihi[0] = 100;
-  psc.domain.ihi[1] = 400;
-  psc.domain.ihi[2] = 600;
+  psc.domain.gdims[0] = 1;
+  psc.domain.gdims[1] = 400;
+  psc.domain.gdims[2] = 600;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_UPML;
   psc.domain.bnd_fld_hi[0] = BND_FLD_UPML;
@@ -80,11 +74,11 @@ singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
 		 singlepart->z0 / ld };
 
   real dens = 0.0;
-  if ((psc.domain.ihi[0] - psc.domain.ilo[0] == 1 ||
+  if ((psc.domain.gdims[0] == 1 ||
        (int) (x[0] / psc.dx[0] + .5) == (int) (x0[0] / psc.dx[0] + .5)) && 
-      (psc.domain.ihi[1] - psc.domain.ilo[1] == 1 ||
+      (psc.domain.gdims[1] == 1 ||
        (int) (x[1] / psc.dx[1] + .5) == (int) (x0[1] / psc.dx[1] + .5)) && 
-      (psc.domain.ihi[2] - psc.domain.ilo[2] == 1 ||
+      (psc.domain.gdims[2] == 1 ||
        (int) (x[2] / psc.dx[2] + .5) == (int) (x0[2] / psc.dx[2] + .5))) {
     dens = 1.0;
   }

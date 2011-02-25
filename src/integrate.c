@@ -1,6 +1,7 @@
 
 #include "psc.h"
-#include "util/profile.h"
+#include <mrc_common.h>
+#include <mrc_profile.h>
 
 // ======================================================================
 // simple statistics
@@ -86,6 +87,9 @@ psc_integrate()
 
   SETUP_field_F77();
 
+  mparticles_base_t *particles = &psc.particles;
+  mfields_base_t *flds = &psc.flds;
+
   double stats[NR_STATS];
 
   for (; psc.timestep < psc.prm.nmax; psc.timestep++) {
@@ -93,7 +97,7 @@ psc_integrate()
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_out_field();
+    psc_out_field(flds, particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
@@ -101,36 +105,41 @@ psc_integrate()
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize();
+    psc_randomize(particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    psc_sort();
+    if (psc.timestep % 10 == 0) {
+      psc_sort(particles);
+    }
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision();
+    psc_collision(particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_field_a();
+    psc_push_field_a(flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles();
-    psc_add_ghosts(&psc.pf, JXI, JXI + 3);
-    psc_fill_ghosts(&psc.pf, JXI, JXI + 3);
-    psc_exchange_particles();
+    psc_push_particles(flds, particles);
+    psc_add_ghosts(flds, JXI, JXI + 3);
+    psc_fill_ghosts(flds, JXI, JXI + 3);
+    psc_exchange_particles(particles);
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_field_b();
+    psc_push_field_b(flds);
     time_stop(STAT_TIME_FIELD);
 
-    stats[STAT_NR_PARTICLES] = psc.pp.n_part;
+    stats[STAT_NR_PARTICLES] = 0;
+    foreach_patch(p) {
+      stats[STAT_NR_PARTICLES] += particles->p[p].n_part;
+    }
     time_stop(STAT_TIME_STEP);
     psc_log_step(stats);
     // FIXME, check whether cpu time expired?
@@ -150,5 +159,5 @@ psc_integrate()
     }
   }
 
-  psc_write_checkpoint();
+  //  psc_write_checkpoint();
 }

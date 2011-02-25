@@ -23,8 +23,8 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static particle_base_t *particle_ref;
-static f_real *field_ref[NR_FIELDS];
+static mparticles_base_t particles_ref;
+static mfields_base_t flds_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -32,13 +32,21 @@ static f_real *field_ref[NR_FIELDS];
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref()
+psc_save_particles_ref(mparticles_base_t *particles)
 {
-  if (!particle_ref) {
-    particle_ref = calloc(psc.pp.n_part, sizeof(*particle_ref));
+  if (!particles_ref.p) {
+    particles_ref.p = calloc(psc.nr_patches, sizeof(*particles_ref.p));
+    foreach_patch(p) {
+      particles_base_t *pp = &particles->p[p];
+      particles_base_alloc(&particles_ref.p[p], pp->n_part);
+    }
   }
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_ref[i] = *particles_base_get_one(&psc.pp, i);
+  foreach_patch(p) {
+    particles_base_t *pp = &particles->p[p];
+    particles_base_t *pp_ref = &particles_ref.p[p];
+    for (int i = 0; i < pp->n_part; i++) {
+      *particles_base_get_one(pp_ref, i) = *particles_base_get_one(pp, i);
+    }
   }
 }
 
@@ -48,21 +56,19 @@ psc_save_particles_ref()
 // save current field data as reference solution
 
 void
-psc_save_fields_ref()
+psc_save_fields_ref(mfields_base_t *flds)
 {
-  if (!field_ref[EX]) { //FIXME this is bad mojo
-    for (int m = 0; m < NR_FIELDS; m++) {
-      field_ref[m] = calloc(psc.fld_size, sizeof(f_real));
-    }
+  if (!flds_ref.f) {
+    mfields_base_alloc(&flds_ref, NR_FIELDS);
   }
-  int me = psc.domain.use_pml ? NR_FIELDS : JZI + 1;
-  for (int m = 0; m < me; m++) {
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  _FF3(field_ref[m], ix,iy,iz) = F3_BASE(m, ix,iy,iz);
-	}
-      }
+  int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    fields_base_t *pf_ref = &flds_ref.f[p];
+    for (int m = 0; m < me; m++) {
+      foreach_3d_g(p, ix, iy, iz) {
+	F3_BASE(pf_ref, m, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
+      } foreach_3d_g_end;
     }
   }
 } 
@@ -73,25 +79,31 @@ psc_save_fields_ref()
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(double thres, const char *test_str)
+psc_check_particles_ref(mparticles_base_t *particles, double thres, const char *test_str)
 {
-  assert(particle_ref);
+  assert(particles_ref.p);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    particle_base_t *part = particles_base_get_one(&psc.pp, i);
-    //printf("i = %d\n", i);
-    xi  = fmax(xi , fabs(part->xi  - particle_ref[i].xi));
-    yi  = fmax(yi , fabs(part->yi  - particle_ref[i].yi));
-    zi  = fmax(zi , fabs(part->zi  - particle_ref[i].zi));
-    pxi = fmax(pxi, fabs(part->pxi - particle_ref[i].pxi));
-    pyi = fmax(pyi, fabs(part->pyi - particle_ref[i].pyi));
-    pzi = fmax(pzi, fabs(part->pzi - particle_ref[i].pzi));
-    assert_equal(part->xi , particle_ref[i].xi, thres);
-    assert_equal(part->yi , particle_ref[i].yi, thres);
-    assert_equal(part->zi , particle_ref[i].zi, thres);
-    assert_equal(part->pxi, particle_ref[i].pxi, thres);
-    assert_equal(part->pyi, particle_ref[i].pyi, thres);
-    assert_equal(part->pzi, particle_ref[i].pzi, thres);
+  foreach_patch(p) {
+    particles_base_t *pp = &particles->p[p];
+    particles_base_t *pp_ref = &particles_ref.p[p];
+    
+    for (int i = 0; i < pp->n_part; i++) {
+      particle_base_t *part = particles_base_get_one(pp, i);
+      particle_base_t *part_ref = particles_base_get_one(pp_ref, i);
+      //    printf("i = %d\n", i);
+      xi  = fmax(xi , fabs(part->xi  - part_ref->xi));
+      yi  = fmax(yi , fabs(part->yi  - part_ref->yi));
+      zi  = fmax(zi , fabs(part->zi  - part_ref->zi));
+      pxi = fmax(pxi, fabs(part->pxi - part_ref->pxi));
+      pyi = fmax(pyi, fabs(part->pyi - part_ref->pyi));
+      pzi = fmax(pzi, fabs(part->pzi - part_ref->pzi));
+      assert_equal(part->xi , part_ref->xi, thres);
+      assert_equal(part->yi , part_ref->yi, thres);
+      assert_equal(part->zi , part_ref->zi, thres);
+      assert_equal(part->pxi, part_ref->pxi, thres);
+      assert_equal(part->pyi, part_ref->pyi, thres);
+      assert_equal(part->pzi, part_ref->pzi, thres);
+    }
   }
   printf("max delta: (%s)\n", test_str);
   printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
@@ -105,18 +117,17 @@ psc_check_particles_ref(double thres, const char *test_str)
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(int *flds, double thres)
+psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
 {
-  assert(field_ref[EX]);
-  for (int i = 0; flds[i] >= 0; i++) {
-    int m = flds[i];
-    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
-	}
-      }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    fields_base_t *pf_ref = &flds_ref.f[p];
+    for (int i = 0; m_flds[i] >= 0; i++) {
+      int m = m_flds[i];
+      foreach_3d(p, ix, iy, iz, 0, 0) {
+	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
+      } foreach_3d_end;
     }
   }
 }
@@ -127,50 +138,47 @@ psc_check_fields_ref(int *flds, double thres)
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(double thres)
+psc_check_currents_ref(mfields_base_t *flds, double thres)
 {
-  assert(field_ref[JXI]);
-  for (int m = JXI; m <= JZI; m++){
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  double val = F3_BASE(m, ix,iy,iz);
-	  if (fabs(val) > 0.) {
-	    printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
-		   ix, iy, iz, val);
-	  }
-	}
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    for (int m = JXI; m <= JZI; m++){
+      foreach_3d_g(p, ix, iy, iz) {
+	double val = F3_BASE(pf, m, ix,iy,iz);
+	if (fabs(val) > 0.) {
+	  printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
+		 ix, iy, iz, val);
+	} foreach_3d_g_end;
       }
     }
   }
-  for (int m = JXI; m <= JZI; m++){
-    double max_delta = 0.;
-    for (int iz = psc.ilg[2]; iz < psc.ihg[2]; iz++) {
-      for (int iy = psc.ilg[1]; iy < psc.ihg[1]; iy++) {
-	for (int ix = psc.ilg[0]; ix < psc.ihg[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz); fflush(stdout);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
-	  max_delta = fmax(max_delta, 
-			   fabs(F3_BASE(m, ix,iy,iz) - _FF3(field_ref[m], ix,iy,iz)));
-	}
-      }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    fields_base_t *pf_ref = &flds_ref.f[p];
+    for (int m = JXI; m <= JZI; m++){
+      double max_delta = 0.;
+      foreach_3d_g(p, ix, iy, iz) {
+	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref,m, ix,iy,iz), thres);
+	max_delta = fmax(max_delta, 
+			 fabs(F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz)));
+      } foreach_3d_g_end;
+      printf("max_delta (%s) %g\n", fldname[m], max_delta);
     }
-    printf("max_delta (%s) %g\n", fldname[m], max_delta);
   }
 }
 
 void
-psc_check_currents_ref_noghost(double thres)
+psc_check_currents_ref_noghost(mfields_base_t *flds, double thres)
 {
-  assert(field_ref[JXI]);
-  for (int m = JXI; m <= JZI; m++){
-    for (int iz = psc.ilo[2]; iz < psc.ihi[2]; iz++) {
-      for (int iy = psc.ilo[1]; iy < psc.ihi[1]; iy++) {
-	for (int ix = psc.ilo[0]; ix < psc.ihi[0]; ix++) {
-	  //	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	  assert_equal(F3_BASE(m, ix,iy,iz), _FF3(field_ref[m], ix,iy,iz), thres);
-	}
-      }
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    fields_base_t *pf_ref = &flds_ref.f[p];
+    for (int m = JXI; m <= JZI; m++){
+      foreach_3d(p, ix, iy, iz, 0, 0) {
+	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
+      } foreach_3d_end;
     }
   }
 }
@@ -181,14 +189,17 @@ psc_check_currents_ref_noghost(double thres)
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted()
+psc_check_particles_sorted(mparticles_base_t *particles)
 {
 #if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;
 
-  for (int i = 0; i < psc.pp.n_part; i++) {
-    assert(psc.pp.particles[i].cni >= last);
-    last = psc.pp.particles[i].cni;
+  foreach_patch(p) {
+    particles_base_t *pp = &particles->p[p];
+    for (int i = 0; i < pp->n_part; i++) {
+      assert(pp->particles[i].cni >= last);
+      last = pp->particles[i].cni;
+    }
   }
 #else
   assert(0);
@@ -219,8 +230,7 @@ psc_create_test_yz(struct psc_mod_config *conf)
 
   psc_create(conf);
   psc_init("test_yz");
-
-  //psc.pp.n_part = 1;
-  psc_sort();
+  psc.particles.p[0].n_part = 1;
+  psc_sort(&psc.particles);
 }
 

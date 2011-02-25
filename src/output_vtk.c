@@ -25,9 +25,9 @@ vtk_open_file(const char *pfx, const char *dataset_type, int extra,
 
   fprintf(file, "DATASET %s\n", dataset_type);
   fprintf(file, "DIMENSIONS %d %d %d\n",
-	  psc.domain.ihi[0] - psc.domain.ilo[0] + extra,
-	  psc.domain.ihi[1] - psc.domain.ilo[1] + extra,
-	  psc.domain.ihi[2] - psc.domain.ilo[2] + extra);
+	  psc.domain.gdims[0] + extra,
+	  psc.domain.gdims[1] + extra,
+	  psc.domain.gdims[2] + extra);
   
   *pfile = file;
 }
@@ -40,8 +40,8 @@ vtk_write_coordinates(FILE *file, int extra, double offset)
 {
   for (int d = 0; d < 3; d++) {
     fprintf(file, "%c_COORDINATES %d float", 'X' + d,
-	    psc.domain.ihi[d] - psc.domain.ilo[d] + extra);
-    for (int i = psc.domain.ilo[d]; i < psc.domain.ihi[d] + extra; i++) {
+	    psc.domain.gdims[d] + extra);
+    for (int i = 0; i < psc.domain.gdims[d] + extra; i++) {
       fprintf(file, " %g", (i + offset) * psc.dx[d]);
     }
     fprintf(file, "\n");
@@ -63,7 +63,7 @@ vtk_write_field(void *ctx, fields_base_t *fld)
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
       for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
-	float val = XF3_BASE(fld, 0, ix,iy,iz);
+	float val = F3_BASE(fld, 0, ix,iy,iz);
 	if (fabsf(val) < 1e-37) {
 	  fprintf(file, "%g ", 0.);
 	} else {
@@ -89,14 +89,9 @@ vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
   if (rank == 0) {
     vtk_open_file(pfx, "STRUCTURED_POINTS", 0, out, &file);
     fprintf(file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
-    fprintf(file, "ORIGIN %g %g %g\n",
-	    psc.dx[0] * psc.domain.ilo[0],
-	    psc.dx[1] * psc.domain.ilo[1],
-	    psc.dx[2] * psc.domain.ilo[2]);
+    fprintf(file, "ORIGIN 0. 0. 0.\n");
     fprintf(file, "\nPOINT_DATA %d\n",
-	    (psc.domain.ihi[0] - psc.domain.ilo[0]) * 
-	    (psc.domain.ihi[1] - psc.domain.ilo[1]) *
-	    (psc.domain.ihi[2] - psc.domain.ilo[2]));
+	    psc.domain.gdims[0] * psc.domain.gdims[1] * psc.domain.gdims[2]);
   }
 
   write_fields_combine(flds, vtk_write_field, file);
@@ -120,7 +115,7 @@ vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 0, out, &file);
     vtk_write_coordinates(file, 0, 0.);
-    fprintf(file, "\nPOINT_DATA %d\n", fields_base_size(&psc.pf));
+    fprintf(file, "\nPOINT_DATA %d\n", fields_base_size(&psc.flds.f[0]));
   }
 
   write_fields_combine(flds, vtk_write_field, file);
@@ -144,7 +139,7 @@ vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 1, out, &file);
     vtk_write_coordinates(file, 1, .5);
-    fprintf(file, "\nCELL_DATA %d\n", fields_base_size(&psc.pf));
+    fprintf(file, "\nCELL_DATA %d\n", fields_base_size(&psc.flds.f[0]));
   }
   write_fields_combine(flds, vtk_write_field, file);
 
