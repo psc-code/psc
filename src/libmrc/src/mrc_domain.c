@@ -162,6 +162,17 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 }
 
 // ======================================================================
+
+struct mrc_m3 *
+mrc_domain_m3_create(struct mrc_domain *domain, int sw)
+{
+  struct mrc_m3 *m3 = mrc_m3_create(domain->obj.comm);
+  mrc_m3_set_param_int(m3, "sw", sw);
+  m3->domain = domain;
+  return m3;
+}
+
+// ======================================================================
 // mrc_domain class
 
 static LIST_HEAD(mrc_domain_subclasses);
