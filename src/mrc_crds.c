@@ -130,7 +130,7 @@ mrc_crds_uniform_setup(struct mrc_obj *obj)
   mrc_domain_get_global_dims(crds->domain, gdims);
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  assert(nr_patches == 1);
+  //  assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
   for (int d = 0; d < 3; d++) {
     mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
