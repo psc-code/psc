@@ -38,14 +38,14 @@ void particles_cbe_free(particles_cbe_t *pp)
 }
 
 void
-particles_cbe_get(particles_cbe_t *pp)
+particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 {
-  pp->particles = psc.pp.particles;
-  pp->n_part = psc.pp.n_part;
+  mparticles_base_t *particles_base = _particles_base;
+  *particles = *particles_base;
 }
 
 void
-particles_cbe_put(particles_c_t *pp)
+particles_cbe_put(mparticles_c_t *particles, void *particles_base)
 {
 }
 
@@ -53,69 +53,85 @@ particles_cbe_put(particles_c_t *pp)
 
 static particle_cbe_t *__arr;
 static int __arr_size;
-static int __gotten;
+static bool __gotten;
 
 void
-particles_cbe_get(particles_cbe_t *pp)
+particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 {
-  void *m;
-  int ierr;
-  if (psc.pp.n_part > __arr_size) {
-    free(__arr);
-    __arr = NULL;
-  }
-  if (!__arr) {
-    __arr_size = psc.pp.n_part * 1.2;
-    ierr = posix_memalign(&m, 16, __arr_size * sizeof(*__arr));
-    __arr = (particle_cbe_t *) m;
-  }
-  
   assert(!__gotten);
-  __gotten = 1;
-  pp->particles = __arr;
+  __gotten = true;
 
-  
-  for(int n = 0; n < psc.pp.n_part; n++) {
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
-    particle_cbe_t *part = particles_cbe_get_one(pp,n);
+  mparticles_base_t *particles_base = _particles_base;
+  // With some recent changes, it appears we are allocating/freeing
+  // the particles each time. This should encourage us to stop switching
+  // between languages/types for the different modules.
 
-    part->xi  = f_part->xi;
-    part->yi  = f_part->yi;
-    part->zi  = f_part->zi;
-    part->pxi = f_part->pxi;
-    part->pyi = f_part->pyi;
-    part->pzi = f_part->pzi;
-    part->qni = f_part->qni;
-    part->mni = f_part->mni;
-    part->wni = f_part->wni;
+  // I cannot currently think of any reason we would offload 
+  // the list of patches to the spes, so let's just use calloc 
+  // for this one.
+  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
+  foreach_patch(p) {
+    particles_base_t *pp_base = &particles_base->p[p];
+    particles_cbe_t *pp = &particles->p[p];
+    pp->n_part = pp_base->n_part;
+    // These will be heading to the spes, so we need some memalign lovin'
+    void *m;
+    int ierr;
+    ierr = posix_memalign(&m, 16, pp->n_part * sizeof(*pp->particles));
+    for (int n = 0; n < pp_base->n_part; n++) {
+      particle_base_t *part_base = particles_base_get_one(pp_base,n);
+      particle_cbe_t *part = particles_cbe_get_one(pp,n);
+
+      part->xi  = part_base->xi;
+      part->yi  = part_base->yi;
+      part->zi  = part_base->zi;
+      part->pxi = part_base->pxi;
+      part->pyi = part_base->pyi;
+      part->pzi = part_base->pzi;
+      part->qni = part_base->qni;
+      part->mni = part_base->mni;
+      part->wni = part_base->wni;
 #if PARTICLES_BASE != PARTICLES_C
-    part->cni = f_part->cni;
+      part->cni = part_base->cni;
 #endif
+    }
   }
 }
+      
+
 
 void
 particles_cbe_put(particles_cbe_t *pp)
 {
   assert(__gotten);
-  __gotten = 0;
+  __gotten = false;
   
-  for(int n = 0; n < psc.pp.n_part; n++){
-    particle_base_t *f_part = particles_base_get_one(&psc.pp, n);
-    particle_cbe_t *part = particles_cbe_get_one(pp,n);
+  mparticles_base_t *particles_base = _particles_base;
+  foreach_patch(p) {
+    particles_base_t *pp_base = &particles_base->p[p];
+    particles_cbe_t *pp = &particles->p[p];
+    assert(pp->n_part == pp_base->n_part);
+    for (int n = 0; n < pp_base->n_part; n++){
+      particle_base_t *part_base = particles_base_get_one(pp_base,n);
+      particle_cbe_t *part = particles_cbe_get_one(pp,n);
 
-    f_part->xi  = part->xi;
-    f_part->yi  = part->yi;
-    f_part->zi  = part->zi;
-    f_part->pxi = part->pxi;
-    f_part->pyi = part->pyi;
-    f_part->pzi = part->pzi;
-    f_part->qni = part->qni;
-    f_part->mni = part->mni;
-    f_part->wni = part->wni;
+      part_base->xi  = part->xi;
+      part_base->yi  = part->yi;
+      part_base->zi  = part->zi;
+      part_base->pxi = part->pxi;
+      part_base->pyi = part->pyi;
+      part_base->pzi = part->pzi;
+      part_base->qni = part->qni;
+      part_base->mni = part->mni;
+      part_base->wni = part->wni;
+    }
+    free(pp->particles);
+    pp->particles = NULL;
   }
-
-  pp->particles = NULL;
+  free(particles->p);
+  particles->p = NULL:
+    
 }
+
 
 #endif

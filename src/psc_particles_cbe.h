@@ -39,11 +39,15 @@ typedef struct {
   int n_part;
 } particles_cbe_t;
 
+typedef struct {
+  particles_cbe_t *p; ///< Pointers to each 'patch' of particles.
+} mparticles_cbe_t;
+
 void particles_cbe_alloc(particles_cbe_t *pp, int n_part);
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part);
 void particles_cbe_free(particles_cbe_t *pp);
-void particles_cbe_get(particles_cbe_t *pp);
-void particles_cbe_put(particles_cbe_t *pp);
+void particles_cbe_get(mparticles_cbe_t *particles, void *particles_base);
+void particles_cbe_put(mparticles_cbe_t *particles, void *particles_base);
 
 static inline particle_cbe_t *
 particles_cbe_get_one(particles_cbe_t *pp, int n)
@@ -52,3 +56,22 @@ particles_cbe_get_one(particles_cbe_t *pp, int n)
 }
 
 #endif
+
+/// \file psc_particles_cbe.h Particle structure definitions and handeling
+/// functions for the cell_be implementation. 
+///
+/// As Kai begins to implement his 'patch' system from libmrc, it becomes
+/// less important that the cell have separate data structures. As this point, 
+/// there are two things which prevent us from just being able to use the 
+/// the default C particles base: we need the particles to be stored in 
+/// 16 byte aligned memory; it makes life a great deal easier if each particle
+/// is a multiple of 16 bytes. The memory alignment issue could easily be 
+/// resolved by using posix_memalign in the C particles base. It might end up
+/// being slower to allocate the memory (default is 8 in glibc), but it might
+/// (possibly but unlikely) result in an overall speed increase. The issue 
+/// of padding is significantly more difficult. Basically, we need to get rid
+/// of one of the standard particle attributes. Obviously, the positions and 
+/// momenta need to stay. That leaves us with somehow reducing qni,mni,and wni
+/// to just two variables. If these two issues can be solved, we can do away with 
+/// the PARTICLES_CBE base.
+
