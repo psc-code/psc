@@ -4,6 +4,7 @@
 #include "mrc_ddc.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -38,6 +39,48 @@ mrc_domain_multi_proc2rank(struct mrc_domain *domain, int proc[3])
   return ((proc[2] * multi->nr_procs[1]) + proc[1]) * multi->nr_procs[0] + proc[0];
 }
 
+static int
+part2index(struct mrc_domain_multi *multi, int p[3])
+{
+  int *np = multi->nr_procs;
+  return (p[2] * np[1] + p[1]) * np[0] + p[0];
+}
+
+static void
+mrc_domain_multi_view(struct mrc_obj *obj)
+{
+  struct mrc_domain *domain = to_mrc_domain(obj);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  for (int proc = 0; proc < domain->size; proc++) {
+    if (domain->rank == proc) {
+      for (int p = 0; p < multi->nr_patches; p++) {
+	struct mrc_patch *patch = &multi->patches[p];
+	mprintf("  patch: ldims %dx%dx%d off %dx%dx%d\n",
+		patch->ldims[0], patch->ldims[1], patch->ldims[2],
+	      patch->off[0], patch->off[1], patch->off[2]);
+      }
+    }
+    MPI_Barrier(obj->comm);
+  }
+
+#if 0
+  assert(domain->is_setup);
+  int *np = multi->nr_procs;
+  int p3[3];
+  for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
+    for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
+      for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
+	struct mrc_patch *patch = &multi->all_patches[part2index(multi, p3)];
+	mprintf("  patch: ldims %dx%dx%d off %dx%dx%d\n",
+		patch->ldims[0], patch->ldims[1], patch->ldims[2],
+		patch->off[0], patch->off[1], patch->off[2]);
+      }
+    }
+  }
+#endif
+}
+
 static void
 mrc_domain_multi_setup(struct mrc_obj *obj)
 {
@@ -49,55 +92,49 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
-  multi->nr_patches = 1;
+  // FIXME: allow setting of desired decomposition using ldims
+  int ldims[3], rmndr[3], *np = multi->nr_procs;
+  int nr_all_patches = 1;
+  for (int d = 0; d < 3; d++) {
+    nr_all_patches *= np[d];
+    ldims[d] = multi->gdims[d] / np[d];
+    rmndr[d] = multi->gdims[d] % np[d];
+  }
+  multi->all_patches = calloc(nr_all_patches, sizeof(*multi->all_patches));
+  int p3[3];
+  for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
+    for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
+      for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
+	struct mrc_patch *patch = &multi->all_patches[part2index(multi, p3)];
+	for (int d = 0; d < 3; d++) {
+	  patch->ldims[d] = ldims[d] + (p3[d] < rmndr[d]);
+	  if (p3[d] == 0) {
+	    patch->off[d] = 0;
+	  } else {
+	    int q3[3] = { p3[0], p3[1], p3[2] };
+	    q3[d]--;
+	    struct mrc_patch *p_patch = &multi->all_patches[part2index(multi, q3)];
+	    patch->off[d] = p_patch->off[d] + p_patch->ldims[d];
+	  }
+	}
+      }
+    }
+  }
+
+  int patches_per_proc = nr_all_patches / domain->size;
+  int patches_per_proc_rmndr = nr_all_patches % domain->size;
+
+  multi->nr_patches = patches_per_proc + (domain->rank < patches_per_proc_rmndr);
+  int patches_off;
+  if (domain->rank < patches_per_proc_rmndr) {
+    patches_off = domain->rank * (patches_per_proc + 1);
+  } else {
+    patches_off = domain->rank * patches_per_proc + patches_per_proc_rmndr;
+  }
   multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
-  int total_procs = 1;
-  for (int d = 0; d < 3; d++) {
-    assert(multi->gdims[d] % multi->nr_procs[d] == 0);
-    multi->patches[0].ldims[d] = multi->gdims[d] / multi->nr_procs[d];
-    total_procs *= multi->nr_procs[d];
+  for (int p = 0; p < multi->nr_patches; p++) {
+    multi->patches[p] = multi->all_patches[p + patches_off];
   }
-  assert(total_procs == domain->size);
-  mrc_domain_multi_rank2proc(domain, domain->rank, multi->proc);
-
-  // find local offsets into global domain
-  // these are basically scans along subsets (lines).
-  int *proc = multi->proc;
-  for (int d = 0; d < 3; d++) {
-    // get local offset from left neighbor
-    if (proc[d] > 0) {
-      int dir[3] = {};
-      dir[d] = -1;
-      int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
-      MPI_Recv(&multi->patches[0].off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
-	       MPI_STATUS_IGNORE);
-    } else {
-      multi->patches[0].off[d] = 0;
-    }
-
-    // then send next offset to the right
-    if (proc[d] < multi->nr_procs[d] - 1) {
-      int off_nei = multi->patches[0].off[d] + multi->patches[0].ldims[d];
-      int dir[3] = {};
-      dir[d] = 1;
-      int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
-      MPI_Send(&off_nei, 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm);
-    }
-  }
-    
-  int rank_last =
-    mrc_domain_multi_proc2rank(domain, (int [3]) { multi->nr_procs[0] - 1,
-	  multi->nr_procs[1] - 1, multi->nr_procs[2] - 1});
-
-  if (domain->rank == rank_last) {
-    for (int d = 0; d < 3; d++) {
-      multi->gdims[d] = multi->patches[0].off[d] + multi->patches[0].ldims[d];
-    }
-  }
-  MPI_Bcast(multi->gdims, 3, MPI_INTEGER, rank_last, domain->obj.comm);
-
-  //  mprintf("off   %d %d %d\n", multi->off[0], multi->off[1], multi->off[2]);
-  //  mprintf("gdims %d %d %d\n", multi->gdims[0], multi->gdims[1], multi->gdims[2]);
 }
 
 static void
@@ -213,6 +250,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .size                  = sizeof(struct mrc_domain_multi),
   .param_descr           = mrc_domain_multi_params_descr,
   .setup                 = mrc_domain_multi_setup,
+  .view                  = mrc_domain_multi_view,
   .destroy               = mrc_domain_multi_destroy,
   .get_neighbor_rank     = mrc_domain_multi_get_neighbor_rank,
   .get_patches           = mrc_domain_multi_get_patches,

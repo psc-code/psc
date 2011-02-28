@@ -7,7 +7,8 @@ noinst_PROGRAMS = \
 	test_io_read \
 	test_dict \
 	test_spherical_harmonics \
-	test_ddc
+	test_ddc \
+	test_mrc_domain_multi
 
 LDADD = ../src/libmrctest.a ../src/libmrc.a
 

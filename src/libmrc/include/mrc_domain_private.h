@@ -51,6 +51,7 @@ struct mrc_domain_multi {
   int gdims[3];
   int nr_patches;
   struct mrc_patch *patches;
+  struct mrc_patch *all_patches;
   int nr_procs[3];
   int bc[3];
 
