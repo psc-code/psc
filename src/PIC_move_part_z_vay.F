@@ -2,7 +2,7 @@
 #include "config.h"
 
 c     ----------------------------------------------------------------------
-      subroutine PIC_push_part_z(niloc, p_niloc, p2A, p2B,
+      subroutine PIC_push_part_z_vay(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 c     ----------------------------------------------------------------------
 c     particle pusher z, w/o the following boundary exchange
@@ -34,10 +34,13 @@ c     particle pusher z, w/o the following boundary exchange
 
       real(kind=8) :: dxi,dyi,dzi
       real(kind=8) :: pxi,pyi,pzi
-      real(kind=8) :: pxm,pym,pzm,pxp,pyp,pzp
       real(kind=8) :: qni,mni,cni,lni,wni
       real(kind=8) :: xi,yi,zi,vxi,vyi,vzi,root
       real(kind=8) :: xl,yl,zl
+			real(kind=8) :: usx, usy, usz
+			real(kind=8) :: gammas2, sigma, sigma2
+			real(kind=8) :: ustau, ustau2
+			real(kind=8) :: uscrosstaux, uscrosstauy, uscrosstauz
       
       real(kind=8) :: dqs,fnqs,fnqxs,fnqys,fnqzs
       real(kind=8) :: dq,fnq,fnqx,fnqy,fnqz
@@ -189,40 +192,55 @@ c               ezq=ezq+0.01*dsin(1.0*wp*n*dt/wl)
 c            endif
 
 
-            dq=qni*dqs/mni
-            pxm=pxi+dq*exq
-            pym=pyi+dq*eyq
-            pzm=pzi+dq*ezq
+c this is the method from Vay, Physics of Plasmas 2008
 
-            root=dq/dsqrt(1.0+pxm*pxm+pym*pym+pzm*pzm)
-!            taux=bxq*root
-!            tauy=byq*root
-!            tauz=bzq*root
-            taux=hxq*root
-            tauy=hyq*root
-            tauz=hzq*root
 
-            tau=1.0/(1.0+taux*taux+tauy*tauy+tauz*tauz)
-            pxp=((1.0+taux*taux-tauy*tauy-tauz*tauz)*pxm
-     &          +(2.0*taux*tauy+2.0*tauz)*pym
-     &          +(2.0*taux*tauz-2.0*tauy)*pzm)*tau
-            pyp=((2.0*taux*tauy-2.0*tauz)*pxm
-     &          +(1.0-taux*taux+tauy*tauy-tauz*tauz)*pym
-     &          +(2.0*tauy*tauz+2.0*taux)*pzm)*tau
-            pzp=((2.0*taux*tauz+2.0*tauy)*pxm
-     &          +(2.0*tauy*tauz-2.0*taux)*pym
-     &          +(1.0-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau
+						dq=qni/mni*dt*eta                 ! eta is essentially a0, so it is here, not in fields
 
-            pxi=pxp+dq*exq
-            pyi=pyp+dq*eyq
-            pzi=pzp+dq*ezq
-
-            root=1.0/dsqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi)
+						usx=pxi+dq*exq+0.5*dq*(vyi*hzq-vzi*hyq)  ! u' x component
+						usy=pyi+dq*eyq+0.5*dq*(vzi*hxq-vxi*hzq)  ! u' y component
+						usz=pzi+dq*ezq+0.5*dq*(vxi*hyq-vyi*hxq)  ! u' z component
+						
+						taux=0.5*dq*hxq   ! tau x component
+						tauy=0.5*dq*hyq   ! tau y component
+						tauz=0.5*dq*hzq   ! tau z component
+						
+						tau=taux*taux+tauy*tauy+tauz*tauz    ! tau squared
+						
+						gammas2=(1.0+usx*usx+usy*usy+usz*usz)     ! gamma' squared
+						sigma=gammas2-tau        
+						sigma2=sigma*sigma
+						
+						ustau=usx*taux+usy*tauy+usz*tauz           ! u' dot tau
+						ustau2=ustau*ustau
+						
+						root=1/dsqrt(0.5*(sigma+dsqrt(sigma2+4.0*(tau+ustau2))))   ! see Vay for details, reciprocal gamma
+						
+						taux=taux*root															
+						tauy=tauy*root
+						tauz=tauz*root
+						sigma=1./(1+taux*taux+tauy*tauy+tauz*tauz)
+						
+						ustau=usx*taux+usy*tauy+usz*tauz
+						
+						uscrosstaux=usy*tauz-usz*tauy
+						uscrosstauy=usz*taux-usx*tauz
+						uscrosstauz=usx*tauy-usy*taux
+						
+						pxi=sigma*(usx+taux*ustau+uscrosstaux)
+						pyi=sigma*(usy+tauy*ustau+uscrosstauy)
+						pzi=sigma*(usz+tauz*ustau+uscrosstauz)
+						
+						root=1.0/dsqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi)
             vxi=pxi*root
             vyi=pyi*root
             vzi=pzi*root
 
             zi=zi+vzi*zl
+						
+c end Vay method
+
+            
 
             p_niloc(11*l)=xi
             p_niloc(11*l+1)=yi
@@ -305,7 +323,7 @@ c CURRENT DENSITY AT (n+1.0)*dt
       end subroutine
 
 c     ----------------------------------------------------------------------
-      subroutine PIC_move_part_z
+      subroutine PIC_move_part_z_vay
 c     ----------------------------------------------------------------------
 
       use PIC_variables
@@ -321,7 +339,7 @@ c     ----------------------------------------------------------------------
       s_cpuh=0.0d0
       call SERV_systime(cpug)
 
-      call PIC_push_part_z(niloc, p_niloc, p2A, p2B,
+      call PIC_push_part_z_vay(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
       call SERV_systime(cpua)
@@ -354,4 +372,4 @@ c     ----------------------------------------------------------------------
       cpucomp=cpucomp+s_cpuh-s_cpub
 
 
-      end subroutine PIC_move_part_z
+      end subroutine PIC_move_part_z_vay

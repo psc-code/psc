@@ -23,6 +23,7 @@ static struct psc_ops *psc_ops_list[] = {
 #ifdef USE_SSE2
   &psc_ops_sse2,
 #endif
+	&psc_ops_fortran_vay,
   NULL,
 };
 

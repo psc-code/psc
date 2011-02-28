@@ -415,6 +415,7 @@ void psc_dump_field(int m, const char *fname);
 void psc_push_part_xyz();
 void psc_push_part_yz(void);
 void psc_push_part_z(void);
+void psc_push_part_z_vay(void);
 void psc_push_part_xy(void);
 void psc_push_part_yz_a(void);
 void psc_push_part_yz_b(void);
@@ -443,6 +444,7 @@ extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 extern struct psc_ops psc_ops_none;
+extern struct psc_ops psc_ops_fortran_vay;
 
 extern struct psc_push_field_ops psc_push_field_ops_fortran;
 extern struct psc_push_field_ops psc_push_field_ops_c;
@@ -488,6 +490,7 @@ void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_z_vay(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_sort(particles_fortran_t *pp);
