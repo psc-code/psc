@@ -1,6 +1,6 @@
 #include <string.h>
 #include "psc_ppu.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 #include "psc_particles_cbe.h"
 
 #ifdef CELLEMU

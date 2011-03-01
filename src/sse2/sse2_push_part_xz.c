@@ -1,7 +1,7 @@
 #include "psc_sse2.h"
 #include "simd_wrap.h"
 #include "simd_push_common.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>

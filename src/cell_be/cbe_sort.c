@@ -1,6 +1,6 @@
 #include "psc.h"
 #include "psc_ppu.h"
-#include "util/profile.h"
+#include <mrc_profile.h>
 
 #include <string.h>
 
