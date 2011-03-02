@@ -29,6 +29,7 @@ struct mrc_crds *mrc_domain_get_crds(struct mrc_domain *domain);
 
 struct mrc_f3 *mrc_domain_f3_create(struct mrc_domain *domain, int bnd);
 struct mrc_m3 *mrc_domain_m3_create(struct mrc_domain *domain, int bnd);
+struct mrc_m1 *mrc_domain_m1_create(struct mrc_domain *domain, int dim, int bnd);
 
 struct mrc_ddc_params;
 struct mrc_ddc_ops;

@@ -57,9 +57,16 @@ _mrc_crds_write(struct mrc_obj *obj, struct mrc_io *io)
   mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
 		       (struct mrc_obj *) crds->domain);
   for (int d = 0; d < 3; d++) {
-    char s[5];
-    sprintf(s, "crd%d", d);
-    mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->crd[d]);
+    if (crds->crd[d]) {
+      char s[5];
+      sprintf(s, "crd%d", d);
+      mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->crd[d]);
+    }
+    if (crds->mcrd[d]) {
+      char s[6];
+      sprintf(s, "mcrd%d", d);
+      mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->mcrd[d]);
+    }
   }
 }
 
@@ -114,6 +121,20 @@ mrc_crds_alloc(struct mrc_crds *crds, int d, int dim)
   mrc_f1_setup(crds->crd[d]);
 }
 
+static void
+mrc_crds_multi_alloc(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    mrc_m1_destroy(crds->mcrd[d]);
+    crds->mcrd[d] = mrc_domain_m1_create(crds->domain, d, crds->par.sw);
+    char s[5]; sprintf(s, "crd%d", d);
+    mrc_m1_set_name(crds->mcrd[d], s);
+    crds->mcrd[d]->name[0] = strdup(s);
+    mrc_m1_setup(crds->mcrd[d]);
+    mrc_m1_view(crds->mcrd[d]);
+  }
+}
+
 // ======================================================================
 // mrc_crds_uniform
 
@@ -130,7 +151,7 @@ mrc_crds_uniform_setup(struct mrc_obj *obj)
   mrc_domain_get_global_dims(crds->domain, gdims);
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
-  //  assert(nr_patches == 1);
+  assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
   for (int d = 0; d < 3; d++) {
     mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
@@ -188,6 +209,40 @@ static struct mrc_crds_ops crds_ops_rectilinear = {
 };
 
 // ======================================================================
+// mrc_crds_multi_uniform
+
+static void
+mrc_crds_multi_uniform_setup(struct mrc_obj *obj)
+{
+  struct mrc_crds *crds = to_mrc_crds(obj);
+  assert(crds->domain);
+  if (!mrc_domain_is_setup(crds->domain))
+    return;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  float *xl = crds->par.xl, *xh = crds->par.xh;
+
+  mrc_crds_multi_alloc(crds);
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
+  for (int d = 0; d < 3; d++) {
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      mrc_m1_foreach(mcrd_p, i, 0, 0) {
+	MRC_MCRD(mcrd_p, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+      } mrc_m1_foreach_end;
+      mrc_m1_patch_put(mcrd);
+    }
+  }
+}
+
+static struct mrc_crds_ops crds_ops_multi_uniform = {
+  .name  = "multi_uniform",
+  .setup = mrc_crds_multi_uniform_setup,
+};
+
+// ======================================================================
 // mrc_crds class
 
 static LIST_HEAD(mrc_crds_subs);
@@ -206,6 +261,7 @@ mrc_crds_init()
 {
   mrc_crds_register(&crds_ops_uniform);
   mrc_crds_register(&crds_ops_rectilinear);
+  mrc_crds_register(&crds_ops_multi_uniform);
 }
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_params, x)

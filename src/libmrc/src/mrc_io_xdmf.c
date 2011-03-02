@@ -52,11 +52,12 @@ struct xdmf_subdomain {
 struct xdmf_spatial {
   char *sfx;
   float sheet;
+  int p;
   int nr_subdomains;
   struct xdmf_subdomain *subdomains;
   int nr_fld_info;
   struct fld_info fld_info[MAX_FLD_INFO];
-  void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet);
+  void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet, int p);
   void (*write_fld)(FILE *f, struct fld_info *fld_info, int im[3], const char *filename);
   list_t entry;
 };
@@ -204,26 +205,38 @@ xdmf_write_header(FILE *f)
 }
 
 static void
-xdmf_write_topology_3d(FILE *f, int im[3], const char *filename, float sheet)
+xdmf_write_topology_3d(FILE *f, int im[3], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[2] + 1, im[1] + 1, im[0] + 1);
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
-  fprintf(f, "        ./%s:/crd/x\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/x-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/x\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[1] + 1);
-  fprintf(f, "        ./%s:/crd/y\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/y-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/y\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VZ\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[2] + 1);
-  fprintf(f, "        ./%s:/crd/z\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/z-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/z\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
 }
 
 static void
-xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[1] + 1, im[0] + 1, 2);
@@ -242,7 +255,7 @@ xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[1] + 1, 2, im[0] + 1);
@@ -261,7 +274,7 @@ xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  2, im[1] + 1, im[0] + 1);
@@ -280,7 +293,7 @@ xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_iono(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_iono(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"2DSMesh\" Dimensions=\"%d %d\"/>\n", im[1], im[0]);
   fprintf(f, "     <Geometry GeometryType=\"XYZ\">\n");
@@ -361,9 +374,9 @@ xdmf_write_fld_3d(FILE *f, struct fld_info *fld_info, int im[3], const char *fil
 }
 
 static struct xdmf_spatial *
-xdmf_spatial_create(struct mrc_io *io, const char *sfx, float sheet, int nr_subdomains,
+xdmf_spatial_create(struct mrc_io *io, const char *sfx, float sheet, int p, int nr_subdomains,
 		    struct xdmf_subdomain *subdomains, int size,
-		    void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet),
+		    void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet, int p),
 		    void (*write_fld)(FILE *f, struct fld_info *fld_info, int im[3],
 				      const char *filename))
 {
@@ -428,7 +441,7 @@ xdmf_write_spatial_collection(struct mrc_io *io, struct xdmf_spatial *xs, const 
     char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     sprintf(fname, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename, io->step, s);
     int *im = xs->subdomains[s].im;
-    xs->write_topology(f, im, fname, xs->sheet);
+    xs->write_topology(f, im, fname, xs->sheet, xs->p);
     
     for (int m = 0; m < xs->nr_fld_info; m++) {
       xs->write_fld(f, &xs->fld_info[m], im, fname);
@@ -604,7 +617,57 @@ hdf5_write_crds(struct mrc_io *io, int im[3], struct mrc_domain *domain, int sw)
     free(crd_nc);
     hdf5->crd_written[d] = true;
   }
+}
 
+static void
+hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  if (!hdf5->gdims[0]) {
+    mrc_domain_get_global_dims(domain, hdf5->gdims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      hdf5->off[d] = patches[0].off[d];
+      hdf5->ldims[d] = patches[0].ldims[d];
+    }
+  }
+
+  
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  for (int d = 0; d < 3; d++) {
+    if (hdf5->crd_written[d])
+      continue;
+
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
+      int im = mcrdp->im[0];
+      float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
+      if (sw > 0) {
+	for (int i = 0; i <= im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	}
+      } else {
+	for (int i = 1; i < im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	}
+	// extrapolate
+	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
+	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+      }
+      hsize_t im1 = im + 1;
+      char name[20];
+      sprintf(name, "%c-%d", 'x' + d, p);
+      H5LTmake_dataset_float(hdf5->group_crd, name, 1, &im1, crd_nc);
+
+      free(crd_nc);
+      mrc_m1_patch_put(mcrd);
+    }
+    hdf5->crd_written[d] = true;
+  }
 }
 
 static void
@@ -741,7 +804,7 @@ save_fld_info(struct xdmf_spatial *xs, char *fld_name, char *path, bool is_vec)
 }
 
 static struct xdmf_spatial *
-xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int nr_subdomains)
+xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int p, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -752,7 +815,7 @@ xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int nr_subdomains)
     }
   }
 
-  return xdmf_spatial_create(io, "3df", -1, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, "3df", -1, p, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_3d, xdmf_write_fld_3d);
 }
 
@@ -769,7 +832,7 @@ xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_x, xdmf_write_fld_2d_x);
 }
 
@@ -786,7 +849,7 @@ xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_y, xdmf_write_fld_2d_y);
 }
 
@@ -803,7 +866,7 @@ xdmf_spatial_create_2d_z(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_z, xdmf_write_fld_2d_z);
 }
 
@@ -815,7 +878,7 @@ xdmf_spatial_create_iono(struct mrc_io *io, int im[2])
     subdomain->im[d] = im[d];
   }
 
-  return xdmf_spatial_create(io, "iof", -1, 1, subdomain, 1,
+  return xdmf_spatial_create(io, "iof", -1, -1, 1, subdomain, 1,
 			     xdmf_write_topology_iono, xdmf_write_fld_2d_iono);
 }
 
@@ -832,7 +895,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   struct xdmf_spatial *xs;
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
-    xs = xdmf_spatial_create_3d(io, im, io->size);
+    xs = xdmf_spatial_create_3d(io, im, -1, io->size);
     hdf5_write_crds(io, im, fld->domain, fld->sw);
   }
 
@@ -935,8 +998,10 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     if (!xs) {
       int np[3];
       mrc_domain_get_param_int3(m3->domain, "np", np);
-      xs = xdmf_spatial_create_3d(io, m3p->im, np[0] * np[1] * np[2]);
-      hdf5_write_crds(io, m3p->im, m3->domain, m3->sw);
+      xs = xdmf_spatial_create_3d(io, m3p->im, p, np[0] * np[1] * np[2]);
+      if (p == 0) {
+	hdf5_write_mcrds(io, m3->domain, m3->sw);
+      }
     }
 
     for (int m = 0; m < m3->nr_comp; m++) {
@@ -1182,7 +1247,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
-    xs = xdmf_spatial_create_3d(io, gdims, 1);
+    xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     hdf5_write_crds(io, gdims, ldomain, fld->sw);
   }
   save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
@@ -1562,7 +1627,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   if (io->rank == 0) {
     struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
     if (!xs) {
-      xs = xdmf_spatial_create_3d(io, gdims, 1);
+      xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     }
     save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
   }
