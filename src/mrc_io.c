@@ -159,6 +159,17 @@ mrc_io_write_f3(struct mrc_io *io, const char *path,
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_write_m3
+
+void
+mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->write_m3);
+  ops->write_m3(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_write_field2d
 
 void

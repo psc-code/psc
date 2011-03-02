@@ -2,8 +2,10 @@
 #include <mrc_params.h>
 #include <mrc_domain.h>
 #include <mrc_fld.h>
+#include <mrc_io.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 static void
@@ -38,6 +40,26 @@ check_m3(struct mrc_m3 *m3)
   }
 }
 
+static void
+write_m3(struct mrc_m3 *m3)
+{
+  struct mrc_io *io = mrc_io_create(mrc_m3_comm(m3));
+
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_view(io);
+
+  mrc_io_open(io, "w", 0, 0.);
+  mrc_m3_write(m3, io);
+  mrc_io_close(io);
+
+  mrc_io_open(io, "w", 1, 1.);
+  mrc_m3_write(m3, io);
+  mrc_io_close(io);
+
+  mrc_io_destroy(io);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -51,11 +73,15 @@ main(int argc, char **argv)
   mrc_domain_view(domain);
 
   struct mrc_m3 *m3 = mrc_domain_m3_create(domain, 0);
+  mrc_m3_set_param_int(m3, "nr_comps", 2);
   mrc_m3_setup(m3);
+  m3->name[0] = strdup("fld0");
+  m3->name[1] = strdup("fld1");
   mrc_m3_view(m3);
 
   set_m3(m3);
   check_m3(m3);
+  write_m3(m3);
 
   mrc_m3_destroy(m3);
 

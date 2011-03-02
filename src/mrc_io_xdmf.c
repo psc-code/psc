@@ -919,6 +919,44 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   hdf5_write_field2d_serial(io, scale, fld, path);
 }
 
+static void
+ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
+
+  mrc_m3_foreach_patch(m3, p) {
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+
+    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", p);
+    if (!xs) {
+      int np[3];
+      mrc_domain_get_param_int3(m3->domain, "np", np);
+      xs = xdmf_spatial_create_3d(io, m3p->im, np[0] * np[1] * np[2]);
+      hdf5_write_crds(io, m3p->im, m3->domain, m3->sw);
+    }
+
+    for (int m = 0; m < m3->nr_comp; m++) {
+      char fld_name[strlen(m3->name[m]) + 5];
+
+      sprintf(fld_name, "%s-%d", m3->name[m], p);
+      mprintf("fld_name %s\n", fld_name);
+
+      save_fld_info(xs, strdup(fld_name), strdup(path), false);
+      hsize_t hdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, m3p->arr); CE;
+      ierr = H5Gclose(group); CE;
+      mrc_m3_patch_put(m3);
+    }
+  }
+
+  H5Gclose(group0);
+}
+
 static struct mrc_io_ops mrc_io_ops_xdmf = {
   .name          = "xdmf",
   .size          = sizeof(struct diag_hdf5),
@@ -930,6 +968,7 @@ static struct mrc_io_ops mrc_io_ops_xdmf = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
+  .write_m3      = ds_xdmf_write_m3,
 };
 
 static struct mrc_io_ops mrc_io_ops_xdmf_serial = {
