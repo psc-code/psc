@@ -162,6 +162,7 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 }
 
 // ======================================================================
+// mrc_domain_m3_create
 
 struct mrc_m3 *
 mrc_domain_m3_create(struct mrc_domain *domain, int sw)
@@ -170,6 +171,19 @@ mrc_domain_m3_create(struct mrc_domain *domain, int sw)
   mrc_m3_set_param_int(m3, "sw", sw);
   m3->domain = domain;
   return m3;
+}
+
+// ======================================================================
+// mrc_domain_m1_create
+
+struct mrc_m1 *
+mrc_domain_m1_create(struct mrc_domain *domain, int dim, int sw)
+{
+  struct mrc_m1 *m1 = mrc_m1_create(domain->obj.comm);
+  mrc_m1_set_param_int(m1, "sw", sw);
+  mrc_m1_set_param_int(m1, "dim", dim);
+  m1->domain = domain;
+  return m1;
 }
 
 // ======================================================================

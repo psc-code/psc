@@ -104,6 +104,55 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
     } do {} while (0)				\
 
 // ======================================================================
+// mrc_m1
+
+extern struct mrc_class mrc_class_mrc_m1;
+
+struct mrc_m1_patch {
+  float *arr;
+  int im[1];
+  int ib[1];
+};
+
+struct mrc_m1 {
+  struct mrc_obj obj;
+  int nr_comp;
+  int nr_patches;
+  int dim; //< this dimension of the domain
+  struct mrc_m1_patch *patches;
+  struct mrc_domain *domain;
+  int sw;
+  char **name;
+};
+
+MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_m1, struct mrc_m1);
+
+static inline struct mrc_m1_patch *
+mrc_m1_patch_get(struct mrc_m1 *m1, int p)
+{
+  return &m1->patches[p];
+}
+
+static inline void
+mrc_m1_patch_put(struct mrc_m1 *m1)
+{
+}
+
+#define MRC_M1(m1p,m, ix)					\
+  ((m1p)->arr[((m) * (m1p)->im[0] + (ix) - (m1p)->ib[0])])
+
+#define mrc_m1_foreach_patch(m1, p) \
+  for (int p = 0; p < m1->nr_patches; p++)
+
+#define mrc_m1_foreach(m1p, ix, l,r) {		\
+  int _l[1] = { -l };				\
+  int _r[1] = { m1p->im[0] + 2 * m1p->ib[0] };	\
+  for (int ix = _l[0]; ix < _r[0]; ix++)	\
+
+#define mrc_m1_foreach_end  }
+  
+
+// ======================================================================
 // mrc_m3
 
 extern struct mrc_class mrc_class_mrc_m3;

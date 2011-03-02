@@ -68,6 +68,8 @@ main(int argc, char **argv)
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "multi");
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_type(crds, "multi_uniform");
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);

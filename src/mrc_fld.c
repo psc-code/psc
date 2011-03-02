@@ -343,6 +343,112 @@ struct mrc_class mrc_class_mrc_f3 = {
 };
 
 // ======================================================================
+// mrc_m1
+
+#define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
+
+static void
+_mrc_m1_create(struct mrc_obj *obj)
+{
+  struct mrc_m1 *m1 = to_mrc_m1(obj);
+
+  m1->name = calloc(m1->nr_comp, sizeof(*m1->name));
+}
+
+static void
+_mrc_m1_destroy(struct mrc_obj *obj)
+{
+  struct mrc_m1 *m1 = to_mrc_m1(obj);
+
+  for (int p = 0; p < m1->nr_patches; p++) {
+    struct mrc_m1_patch *m1p = &m1->patches[p];
+    free(m1p->arr);
+  }
+  free(m1->patches);
+
+  for (int m = 0; m < m1->nr_comp; m++) {
+    free(m1->name[m]);
+  }
+  free(m1->name);
+}
+
+static void
+_mrc_m1_setup(struct mrc_obj *obj)
+{
+  struct mrc_m1 *m1 = to_mrc_m1(obj);
+
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, &nr_patches);
+
+  m1->nr_patches = nr_patches;
+  m1->patches = calloc(nr_patches, sizeof(*patches));
+  for (int p = 0; p < nr_patches; p++) {
+    struct mrc_m1_patch *m1p = &m1->patches[p];
+    m1p->ib[0] = -m1->sw;
+    m1p->im[0] = patches[p].ldims[m1->dim] + 2 * m1->sw;
+    int len = m1p->im[0] * m1->nr_comp;
+    m1p->arr = calloc(len, sizeof(*m1p->arr));
+  }
+}
+
+static void
+_mrc_m1_view(struct mrc_obj *obj)
+{
+  struct mrc_m1 *m1 = to_mrc_m1(obj);
+  
+  int rank, size;
+  MPI_Comm_rank(obj->comm, &rank);
+  MPI_Comm_size(obj->comm, &size);
+
+  for (int r = 0; r < size; r++) {
+    if (r == rank) {
+      mrc_m1_foreach_patch(m1, p) {
+	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+	mprintf("patch %d: ib = %d im = %d\n", p,
+		m1p->ib[0], m1p->im[0]);
+      }
+    }
+    MPI_Barrier(obj->comm);
+  }
+}
+
+static void
+_mrc_m1_write(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_m1 *m1 = to_mrc_m1(obj);
+
+  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+		       (struct mrc_obj *) m1->domain);
+  //  mrc_io_write_m1(io, mrc_obj_name(obj), m1);
+}
+
+// ----------------------------------------------------------------------
+// mrc_class_mrc_m1
+
+#define VAR(x) (void *)offsetof(struct mrc_m1, x)
+static struct param mrc_m1_params_descr[] = {
+  { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
+  { "sw"              , VAR(sw)           , PARAM_INT(0)           },
+  { "dim"             , VAR(dim)          , PARAM_INT(0)           },
+  {},
+};
+#undef VAR
+
+struct mrc_class mrc_class_mrc_m1 = {
+  .name         = "mrc_m1",
+  .size         = sizeof(struct mrc_m1),
+  .param_descr  = mrc_m1_params_descr,
+  .create       = _mrc_m1_create,
+  .destroy      = _mrc_m1_destroy,
+  .setup        = _mrc_m1_setup,
+  .view         = _mrc_m1_view,
+#if 0
+  .read         = _mrc_m1_read,
+#endif
+  .write        = _mrc_m1_write,
+};
+
+// ======================================================================
 // mrc_m3
 
 #define to_mrc_m3(o) container_of(o, struct mrc_m3, obj)

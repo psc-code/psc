@@ -15,12 +15,15 @@ struct mrc_crds {
   struct mrc_crds_params par;
   struct mrc_domain *domain;
   struct mrc_f1 *crd[3];
+  struct mrc_m1 *mcrd[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
 #define MRC_CRDX(crds, ix) MRC_CRD(crds, 0, ix)
 #define MRC_CRDY(crds, iy) MRC_CRD(crds, 1, iy)
 #define MRC_CRDZ(crds, iz) MRC_CRD(crds, 2, iz)
+
+#define MRC_MCRD(mcrd_p, ix) MRC_M1(mcrd_p,0, ix)
 
 struct mrc_crds_ops {
   MRC_OBJ_OPS;
