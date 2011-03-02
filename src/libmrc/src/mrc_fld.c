@@ -282,7 +282,7 @@ _mrc_f3_write(struct mrc_obj *obj, struct mrc_io *io)
 {
   struct mrc_f3 *f3 = to_mrc_f3(obj);
 
-  mrc_io_write_attr_int(io, mrc_obj_name(obj), "sw", f3->sw);
+  mrc_io_write_attr_int(io, mrc_obj_name(obj), "sw", f3->sw); // FIXME, should be unnec
   mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
 		       (struct mrc_obj *) f3->domain);
   mrc_io_write_f3(io, mrc_obj_name(obj), f3, 1.);
@@ -415,6 +415,16 @@ _mrc_m3_view(struct mrc_obj *obj)
   }
 }
 
+static void
+_mrc_m3_write(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_m3 *m3 = to_mrc_m3(obj);
+
+  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+		       (struct mrc_obj *) m3->domain);
+  mrc_io_write_m3(io, mrc_obj_name(obj), m3);
+}
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m3
 
@@ -436,7 +446,7 @@ struct mrc_class mrc_class_mrc_m3 = {
   .view         = _mrc_m3_view,
 #if 0
   .read         = _mrc_m3_read,
-  .write        = _mrc_m3_write,
 #endif
+  .write        = _mrc_m3_write,
 };
 
