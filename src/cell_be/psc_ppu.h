@@ -7,8 +7,9 @@
 // which include files preceded it. 
 // I have a feeling this is very bad form.
 #include "psc.h"
-#include "psc_particles_cbe.h"
-#include "psc_fields_c.h"
+#include "psc_particles_as_cbe.h"
+#include "psc_fields_as_c.h"
+
 #include "psc_cbe_common.h"
 
 #ifdef CELLEMU

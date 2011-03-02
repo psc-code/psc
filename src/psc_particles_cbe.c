@@ -45,7 +45,7 @@ particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 }
 
 void
-particles_cbe_put(mparticles_c_t *particles, void *particles_base)
+particles_cbe_put(mparticles_cbe_t *particles, void *particles_base)
 {
 }
 
@@ -101,7 +101,7 @@ particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 
 
 void
-particles_cbe_put(particles_cbe_t *pp)
+particles_cbe_put(mparticles_cbe_t *particles, void *_particles_base)
 {
   assert(__gotten);
   __gotten = false;
