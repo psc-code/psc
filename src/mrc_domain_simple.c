@@ -176,8 +176,10 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
     ddc_par->bc[d] = bc[d];
   }
 
-  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm, ddc_par);
+  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
+  mrc_ddc_set_params(ddc, ddc_par);
   mrc_ddc_set_ops(ddc, ddc_ops);
+  mrc_ddc_setup(ddc);
   return ddc;
 }
 
