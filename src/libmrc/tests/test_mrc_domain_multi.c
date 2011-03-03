@@ -81,6 +81,7 @@ main(int argc, char **argv)
   struct mrc_m3 *m3 = mrc_domain_m3_create(domain);
   mrc_m3_set_name(m3, "test_m3");
   mrc_m3_set_param_int(m3, "nr_comps", 2);
+  mrc_m3_set_from_options(m3);
   mrc_m3_setup(m3);
   m3->name[0] = strdup("fld0");
   m3->name[1] = strdup("fld1");
