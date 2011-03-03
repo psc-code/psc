@@ -205,6 +205,38 @@ mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
   }
 }
 
+static void
+mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  *nr_global_patches = multi->nr_procs[0] * multi->nr_procs[1] * multi->nr_procs[2];
+}
+
+static void
+mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
+				       struct mrc_patch_info *info)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int nr_global_patches = multi->nr_procs[0] * multi->nr_procs[1] * multi->nr_procs[2];
+  int patches_per_proc = nr_global_patches / domain->size;
+  int patches_per_proc_rmndr = nr_global_patches % domain->size;
+  
+  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
+    info->rank = gpatch / (patches_per_proc + 1);
+    info->patch = gpatch % (patches_per_proc + 1);
+  } else {
+    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
+    info->rank = tmp / patches_per_proc + patches_per_proc_rmndr;
+    info->patch = tmp % patches_per_proc;
+  }
+
+  for (int d = 0; d < 3; d++) {
+    info->ldims[d] = multi->all_patches[gpatch].ldims[d];
+  }
+}
+
 static struct mrc_ddc *
 mrc_domain_multi_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
 			     struct mrc_ddc_ops *ddc_ops)
@@ -258,6 +290,8 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_global_dims       = mrc_domain_multi_get_global_dims,
   .get_nr_procs          = mrc_domain_multi_get_nr_procs,
   .get_bc                = mrc_domain_multi_get_bc,
+  .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
+  .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
   .create_ddc            = mrc_domain_multi_create_ddc,
 };
 

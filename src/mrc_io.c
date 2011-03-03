@@ -83,6 +83,7 @@ mrc_io_open(struct mrc_io *io, const char *mode, int step, float time)
   io->step = step;
   io->time = time;
   INIT_LIST_HEAD(&io->obj_list);
+  assert(ops->open);
   ops->open(io, mode);
 }
 
@@ -100,6 +101,7 @@ mrc_io_close(struct mrc_io *io)
     mrc_obj_put(p->obj);
     free(p);
   }
+  assert(ops->close);
   ops->close(io);
   io->step = -1;
   io->time = -1.;
@@ -372,6 +374,7 @@ mrc_io_init()
 {
 #ifdef HAVE_HDF5_H
   libmrc_io_register_xdmf();
+  libmrc_io_register_xdmf2();
 #endif
   libmrc_io_register_ascii();
   libmrc_io_register_combined();

@@ -135,6 +135,22 @@ mrc_crds_multi_alloc(struct mrc_crds *crds)
   }
 }
 
+void
+mrc_crds_patch_get(struct mrc_crds *crds, int p)
+{
+  for (int d = 0; d < 3; d++) {
+    crds->mcrd_p[d] = mrc_m1_patch_get(crds->mcrd[d], p);
+  }
+}
+
+void
+mrc_crds_patch_put(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    crds->mcrd_p[d] = NULL;
+  }
+}
+
 // ======================================================================
 // mrc_crds_uniform
 
@@ -230,7 +246,7 @@ mrc_crds_multi_uniform_setup(struct mrc_obj *obj)
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
       mrc_m1_foreach(mcrd_p, i, 0, 0) {
-	MRC_MCRD(mcrd_p, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+	MRC_M1(mcrd_p,0, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
       mrc_m1_patch_put(mcrd);
     }

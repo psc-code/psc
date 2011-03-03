@@ -62,6 +62,7 @@ extern struct diagsrv_srv_ops ds_srv_cache_ops;
 
 void libmrc_io_register_ascii();
 void libmrc_io_register_xdmf();
+void libmrc_io_register_xdmf2();
 void libmrc_io_register_combined();
 
 void libmrc_io_register(struct mrc_io_ops *ops);
