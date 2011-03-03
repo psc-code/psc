@@ -23,8 +23,8 @@ struct mrc_ddc_ops {
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
-struct mrc_ddc *mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
-			       struct mrc_ddc_ops *ops);
+struct mrc_ddc *mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm);
+void mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);

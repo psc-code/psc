@@ -196,8 +196,7 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // mrc_ddc_create
 
 struct mrc_ddc *
-mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
-	       struct mrc_ddc_ops *ops)
+mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm)
 {
   struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
@@ -213,7 +212,6 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
   } else {
     assert(0);
   }
-  ddc->ops = ops;
   MPI_Comm_rank(comm, &ddc->rank);
   MPI_Comm_size(comm, &ddc->size);
 
@@ -246,9 +244,19 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm,
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_set_ops
+
+void
+mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops)
+{
+  ddc->ops = ops;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_destroy
 
-void mrc_ddc_destroy(struct mrc_ddc *ddc)
+void
+mrc_ddc_destroy(struct mrc_ddc *ddc)
 {
   MPI_Comm_free(&ddc->comm);
   free(ddc);
