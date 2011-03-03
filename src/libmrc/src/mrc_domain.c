@@ -133,6 +133,21 @@ mrc_domain_is_setup(struct mrc_domain *domain)
   return domain->is_setup;
 }
 
+void
+mrc_domain_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_nr_global_patches(domain, nr_global_patches);
+}
+
+void
+mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
+				 struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_global_patch_info(domain, gp, info);
+}
+
 // ======================================================================
 
 struct mrc_ddc *

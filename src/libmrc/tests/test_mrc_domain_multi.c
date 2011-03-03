@@ -12,15 +12,19 @@ static void
 set_m3(struct mrc_m3 *m3)
 {
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, NULL);
+  struct mrc_crds *crds = mrc_domain_get_crds(m3->domain);
 
   mrc_m3_foreach_patch(m3, p) {
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    mrc_crds_patch_get(crds, p);
     int *off = patches[p].off;
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p, 0, ix,iy,iz) =
 	(iz + off[2]) * 10000 + (iy + off[1]) * 100 + (ix + off[0]);
+      MRC_M3(m3p, 1, ix,iy,iz) = MRC_MCRD(crds, 0, ix);
     } mrc_m3_foreach_end;
     mrc_m3_patch_put(m3);
+    mrc_crds_patch_put(crds);
   }
 }
 
@@ -75,6 +79,7 @@ main(int argc, char **argv)
   mrc_domain_view(domain);
 
   struct mrc_m3 *m3 = mrc_domain_m3_create(domain, 0);
+  mrc_m3_set_name(m3, "test_m3");
   mrc_m3_set_param_int(m3, "nr_comps", 2);
   mrc_m3_setup(m3);
   m3->name[0] = strdup("fld0");

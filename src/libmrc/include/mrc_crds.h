@@ -16,6 +16,9 @@ struct mrc_crds {
   struct mrc_domain *domain;
   struct mrc_f1 *crd[3];
   struct mrc_m1 *mcrd[3];
+
+  // temporally available between patch_get() and patch_put()
+  struct mrc_m1_patch *mcrd_p[3];
 };
 
 #define MRC_CRD(crds, d, ix) MRC_F1((crds)->crd[d],0, ix)
@@ -23,7 +26,10 @@ struct mrc_crds {
 #define MRC_CRDY(crds, iy) MRC_CRD(crds, 1, iy)
 #define MRC_CRDZ(crds, iz) MRC_CRD(crds, 2, iz)
 
-#define MRC_MCRD(mcrd_p, ix) MRC_M1(mcrd_p,0, ix)
+#define MRC_MCRD(crds, d, ix) MRC_M1((crds)->mcrd_p[d],0, ix)
+#define MRC_MCRDX(crds, ix) MRC_MCRD(crds, 0, ix)
+#define MRC_MCRDY(crds, iy) MRC_MCRD(crds, 1, iy)
+#define MRC_MCRDZ(crds, iz) MRC_MCRD(crds, 2, iz)
 
 struct mrc_crds_ops {
   MRC_OBJ_OPS;
@@ -40,6 +46,8 @@ void mrc_crds_set_values(struct mrc_crds *crds, float *crdx, int mx,
 void mrc_crds_setup(struct mrc_crds *crds);
 void mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3]);
 void mrc_crds_get_dx(struct mrc_crds *crds, float dx[3]);
+void mrc_crds_patch_get(struct mrc_crds *crds, int p);
+void mrc_crds_patch_put(struct mrc_crds *crds);
 
 #endif
 
