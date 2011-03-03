@@ -199,10 +199,22 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       char s_patch[10];
       sprintf(s_patch, "p%d", p);
 
-      hsize_t hdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hsize_t mdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hsize_t fdims[3] = { m3p->im[2] + 2 * m3p->ib[2],
+			   m3p->im[1] + 2 * m3p->ib[1],
+			   m3p->im[0] + 2 * m3p->ib[0] };
+      hsize_t off[3] = { -m3p->ib[1], -m3p->ib[1], -m3p->ib[0] };
+
       hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, 
-				    &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2])); CE;
+      hid_t filespace = H5Screate_simple(3, fdims, NULL);
+      hid_t memspace = H5Screate_simple(3, mdims, NULL);
+      H5Sselect_hyperslab(memspace, H5S_SELECT_SET, off, NULL, fdims, NULL);
+
+      hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			     H5P_DEFAULT, H5P_DEFAULT);
+      H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
+	       &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]));
+      H5Dclose(dset);
       ierr = H5Gclose(group); CE;
       mrc_m3_patch_put(m3);
     }
