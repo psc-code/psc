@@ -1,0 +1,158 @@
+<?xml version='1.0' ?>
+<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
+<Domain>
+<Grid GridType="Collection" CollectionType="Spatial">
+   <Time Type="Single" Value="1" />
+   <Grid Name="patch-mrc_domain-0" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="12" Format="HDF">
+        run.000001_p000000.h5:/crd0/p0/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000000.h5:/crd1/p0/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000000.h5:/crd2/p0/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-1" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="12" Format="HDF">
+        run.000001_p000000.h5:/crd0/p1/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000000.h5:/crd1/p1/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000000.h5:/crd2/p1/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld0/p1/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld1/p1/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-2" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 11"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="11" Format="HDF">
+        run.000001_p000001.h5:/crd0/p0/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000001.h5:/crd1/p0/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000001.h5:/crd2/p0/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-3" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="12" Format="HDF">
+        run.000001_p000001.h5:/crd0/p1/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000001.h5:/crd1/p1/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000001.h5:/crd2/p1/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3/fld0/p1/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000001.h5:/test_m3/fld1/p1/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-4" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 12"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="12" Format="HDF">
+        run.000001_p000002.h5:/crd0/p0/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000002.h5:/crd1/p0/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000002.h5:/crd2/p0/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000002.h5:/test_m3/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 11" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000002.h5:/test_m3/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+   <Grid Name="patch-mrc_domain-5" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 17 11"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="11" Format="HDF">
+        run.000001_p000003.h5:/crd0/p0/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="17" Format="HDF">
+        run.000001_p000003.h5:/crd1/p0/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000003.h5:/crd2/p0/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000003.h5:/test_m3/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 16 10" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000003.h5:/test_m3/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+</Grid>
+</Domain>
+</Xdmf>

@@ -141,7 +141,7 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
-      int im = mcrdp->im[0];
+      int im = mcrdp->im[0] + 2 * mcrdp->ib[0];
       // get node-centered coordinates
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
       if (sw > 0) {

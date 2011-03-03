@@ -133,7 +133,6 @@ mrc_crds_multi_alloc(struct mrc_crds *crds)
     mrc_m1_set_name(crds->mcrd[d], s);
     crds->mcrd[d]->name[0] = strdup(s);
     mrc_m1_setup(crds->mcrd[d]);
-    mrc_m1_view(crds->mcrd[d]);
   }
 }
 
