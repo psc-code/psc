@@ -144,10 +144,15 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 #define mrc_m1_foreach_patch(m1, p) \
   for (int p = 0; p < m1->nr_patches; p++)
 
-#define mrc_m1_foreach(m1p, ix, l,r) {		\
-  int _l[1] = { -l };				\
-  int _r[1] = { m1p->im[0] + 2 * m1p->ib[0] };	\
-  for (int ix = _l[0]; ix < _r[0]; ix++)	\
+#define mrc_m1_foreach(m1p, ix, l,r) {			\
+  int _l[1] = { -l };					\
+  int _r[1] = { m1p->im[0] + 2 * m1p->ib[0]  + r};	\
+  for (int ix = _l[0]; ix < _r[0]; ix++)		\
+
+#define mrc_m1_foreach_bnd(m1p, ix) {			\
+  int _l[1] = { m1p->ib[0] };				\
+  int _r[1] = { m1p->ib[0] + m1p->im[0]};		\
+  for (int ix = _l[0]; ix < _r[0]; ix++)		\
 
 #define mrc_m1_foreach_end  }
   
