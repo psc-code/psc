@@ -1,0 +1,33 @@
+<?xml version='1.0' ?>
+<Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
+<Domain>
+<Grid GridType="Collection" CollectionType="Spatial">
+   <Time Type="Single" Value="1" />
+   <Grid Name="patch-mrc_domain-0" GridType="Uniform">
+     <Topology TopologyType="3DRectMesh" Dimensions="33 33 33"/>
+     <Geometry GeometryType="VXVYVZ">
+     <DataItem Name="VX" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000000.h5:/crd0/p0/1d
+     </DataItem>
+     <DataItem Name="VY" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000000.h5:/crd1/p0/1d
+     </DataItem>
+     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
+        run.000001_p000000.h5:/crd2/p0/1d
+     </DataItem>
+     </Geometry>
+
+     <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 32 32" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld0/p0/3d
+       </DataItem>
+     </Attribute>
+     <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
+       <DataItem Dimensions="32 32 32" NumberType="Float" Precision="4" Format="HDF">
+        run.000001_p000000.h5:/test_m3/fld1/p0/3d
+       </DataItem>
+     </Attribute>
+   </Grid>
+</Grid>
+</Domain>
+</Xdmf>

@@ -2,9 +2,9 @@
 
 set -e
 
-openmpirun -n 1 ./test_mrc_domain_multi --mrc_io_type xdmf2
+openmpirun -n 4 ./test_mrc_domain_multi --npx 3 --npy 2 --mrc_io_type xdmf2
 
-TEST=0
+TEST=1
 for a in reference_results/$TEST/*.xdmf; do 
     b=`basename $a`
     cmp $b $a
