@@ -196,7 +196,7 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // mrc_ddc_create
 
 struct mrc_ddc *
-mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm)
+mrc_ddc_create(MPI_Comm comm)
 {
   struct mrc_ddc *ddc = malloc(sizeof(*ddc));
   memset(ddc, 0, sizeof(*ddc));
@@ -204,7 +204,36 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm)
   MPI_Comm ncomm;
   MPI_Comm_dup(comm, &ncomm);
   ddc->comm = ncomm;
+  MPI_Comm_rank(comm, &ddc->rank);
+  MPI_Comm_size(comm, &ddc->size);
+
+  return ddc;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_set_ops
+
+void
+mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops)
+{
+  ddc->ops = ops;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_set_params
+
+void
+mrc_ddc_set_params(struct mrc_ddc *ddc, struct mrc_ddc_params *prm)
+{
   ddc->prm = *prm;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_setup
+
+void
+mrc_ddc_setup(struct mrc_ddc *ddc)
+{
   if (ddc->prm.size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
   } else if (ddc->prm.size_of_type == sizeof(double)) {
@@ -212,11 +241,9 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm)
   } else {
     assert(0);
   }
-  MPI_Comm_rank(comm, &ddc->rank);
-  MPI_Comm_size(comm, &ddc->size);
 
-  assert(prm->n_proc[0] * prm->n_proc[1] * prm->n_proc[2] == ddc->size);
-  assert(prm->max_n_fields > 0);
+  assert(ddc->prm.n_proc[0] * ddc->prm.n_proc[1] * ddc->prm.n_proc[2] == ddc->size);
+  assert(ddc->prm.max_n_fields > 0);
 
   int rr = ddc->rank;
   ddc->proc[0] = rr % ddc->prm.n_proc[0]; rr /= ddc->prm.n_proc[0];
@@ -239,17 +266,6 @@ mrc_ddc_create(MPI_Comm comm, struct mrc_ddc_params *prm)
       }
     }
   }
-
-  return ddc;
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_set_ops
-
-void
-mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops)
-{
-  ddc->ops = ops;
 }
 
 // ----------------------------------------------------------------------
