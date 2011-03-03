@@ -88,6 +88,10 @@ void mrc_params_parse(void *p, struct param *params, const char *title,
 // if an option is not provided, preserve the value unchanged
 void mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
 				MPI_Comm comm);
+// parses the cmd line for the parameters described, prefixed with "title_"
+// if an option is not provided, preserve the value unchanged
+void mrc_params_parse_pfx(void *p, struct param *params, const char *title,
+			  MPI_Comm comm);
 void mrc_params_print(void *p, struct param *params, const char *title,
 		      MPI_Comm comm);
 

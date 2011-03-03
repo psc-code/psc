@@ -446,6 +446,45 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
 }
 
 void
+mrc_params_parse_pfx(void *p, struct param *params, const char *title,
+		     MPI_Comm comm)
+{
+  for (int i = 0; params[i].name; i++) {
+    union param_u *pv = p + (unsigned long) params[i].var;
+    char name[strlen(params[i].name) + strlen(title) + 2];
+    sprintf(name, "%s_%s", title, params[i].name);
+    switch (params[i].type) {
+    case PT_INT:
+      mrc_params_get_option_int(name, &pv->u_int);
+      break;
+    case PT_BOOL:
+      get_option_bool(name, &pv->u_bool);
+      break;
+    case PT_FLOAT:
+      get_option_float(name, &pv->u_float);
+      break;
+    case PT_DOUBLE:
+      get_option_double(name, &pv->u_double);
+      break;
+    case PT_STRING:
+      mrc_params_get_option_string(name, &pv->u_string);
+      break;
+    case PT_SELECT:
+      mrc_params_get_option_select(name, params[i].descr, &pv->u_select);
+      break;
+    case PT_INT3:
+      mrc_params_get_option_int3(name, &pv->u_int3[0]);
+      break;
+    case PT_FLOAT3:
+      mrc_params_get_option_float3(name, &pv->u_float3[0]);
+      break;
+    default:
+      assert(0);
+    }
+  }
+}
+
+void
 mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm)
 {
   mpi_printf(comm, "\n");
