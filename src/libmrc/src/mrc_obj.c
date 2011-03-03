@@ -233,12 +233,14 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
   if (class->param_descr) {
     char *p = (char *) obj + class->param_offset;
     mrc_params_parse_nodefault(p, class->param_descr, mrc_obj_name(obj), obj->comm);
+    mrc_params_parse_pfx(p, class->param_descr, mrc_obj_name(obj), obj->comm);
   }
 
   if (obj->ops) {
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
       mrc_params_parse_nodefault(p, obj->ops->param_descr, obj->ops->name, obj->comm);
+      mrc_params_parse_pfx(p, obj->ops->param_descr, obj->ops->name, obj->comm);
     }
     
     if (obj->ops->set_from_options) {
