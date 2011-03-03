@@ -199,10 +199,26 @@ void mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io);
 void mrc_m3_write_scaled(struct mrc_m3 *m3, struct mrc_io *io, float scale);
 void mrc_m3_write_comps(struct mrc_m3 *m3, struct mrc_io *io, int mm[]);
 
+#ifdef BOUNDS_CHECK
+
+#define MRC_M3(m3p,m, ix,iy,iz) (*({					\
+  assert((ix) >= (m3p)->ib[0] && ix < (m3p)->ib[0] + (m3p)->im[0]);     \
+  assert((iy) >= (m3p)->ib[1] && iy < (m3p)->ib[1] + (m3p)->im[1]);     \
+  assert((iz) >= (m3p)->ib[2] && iz < (m3p)->ib[2] + (m3p)->im[2]);     \
+  float *__p = &((m3p)->arr[(((m) * (m3p)->im[2] + (iz) - (m3p)->ib[2]) * \
+			    (m3p)->im[1] + (iy) - (m3p)->ib[1]) *	\
+			   (m3p)->im[0] + (ix) - (m3p)->ib[0]]);	\
+  __p;									\
+      }))
+
+#else
+
 #define MRC_M3(m3p,m, ix,iy,iz)					\
   ((m3p)->arr[(((m) * (m3p)->im[2] + (iz) - (m3p)->ib[2]) *	\
 	       (m3p)->im[1] + (iy) - (m3p)->ib[1]) *		\
 	      (m3p)->im[0] + (ix) - (m3p)->ib[0]])
+
+#endif
 
 #define mrc_m3_foreach_patch(m3, p) \
   for (int p = 0; p < m3->nr_patches; p++)
