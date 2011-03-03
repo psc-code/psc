@@ -126,7 +126,9 @@ mrc_crds_multi_alloc(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
     mrc_m1_destroy(crds->mcrd[d]);
-    crds->mcrd[d] = mrc_domain_m1_create(crds->domain, d, crds->par.sw);
+    crds->mcrd[d] = mrc_domain_m1_create(crds->domain);
+    mrc_m1_set_param_int(crds->mcrd[d], "sw", crds->par.sw);
+    mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
     char s[5]; sprintf(s, "crd%d", d);
     mrc_m1_set_name(crds->mcrd[d], s);
     crds->mcrd[d]->name[0] = strdup(s);
