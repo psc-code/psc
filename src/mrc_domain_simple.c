@@ -176,7 +176,9 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
     ddc_par->bc[d] = bc[d];
   }
 
-  return mrc_ddc_create(domain->obj.comm, ddc_par, ddc_ops);
+  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm, ddc_par);
+  mrc_ddc_set_ops(ddc, ddc_ops);
+  return ddc;
 }
 
 static struct mrc_param_select bc_descr[] = {
