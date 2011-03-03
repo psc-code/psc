@@ -19,6 +19,7 @@ libmrc_a_SOURCES = \
 	mrc_io_asc.c \
 	mrc_io_xdmf.c \
 	mrc_io_xdmf2.c \
+	mrc_io_xdmf_lib.c \
 	mrc_dict.c \
 	mrc_obj.c
 
