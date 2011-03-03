@@ -126,7 +126,7 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 
 static void
 xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
-			 struct mrc_domain *domain, int sw)
+			 struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (xs->crds_done)
@@ -144,7 +144,7 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
       int im = mcrdp->im[0] + 2 * mcrdp->ib[0];
       // get node-centered coordinates
       float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
-      if (sw > 0) {
+      if (mcrdp->ib[0] < 0) {
 	for (int i = 0; i <= im; i++) {
 	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
 	}
@@ -186,7 +186,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   if (!xs) {
     xs = xdmf_spatial_create_m3(&file->xdmf_spatial_list,
 				mrc_domain_name(m3->domain), m3->domain);
-    xdmf_spatial_write_mcrds(xs, file, m3->domain, m3->sw);
+    xdmf_spatial_write_mcrds(xs, file, m3->domain);
   }
 
   for (int m = 0; m < m3->nr_comp; m++) {

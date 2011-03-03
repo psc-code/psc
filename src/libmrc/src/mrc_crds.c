@@ -246,7 +246,7 @@ mrc_crds_multi_uniform_setup(struct mrc_obj *obj)
     struct mrc_m1 *mcrd = crds->mcrd[d];
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
-      mrc_m1_foreach(mcrd_p, i, 0, 0) {
+      mrc_m1_foreach_bnd(mcrd_p, i) {
 	MRC_M1(mcrd_p,0, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
       } mrc_m1_foreach_end;
       mrc_m1_patch_put(mcrd);
