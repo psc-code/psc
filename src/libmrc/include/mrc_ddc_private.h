@@ -35,6 +35,7 @@ struct mrc_ddc_ops {
   MRC_OBJ_OPS;
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+  int  (*get_rank_nei)(struct mrc_ddc *ddc, int dir[3]);
 };
 
 void libmrc_ddc_register(struct mrc_ddc_ops *ops);
@@ -45,6 +46,9 @@ void libmrc_ddc_register(struct mrc_ddc_ops *ops);
 // mrc_ddc_simple
 
 struct mrc_ddc_simple {
+  int n_proc[3]; // # procs in 3D grid
+  int ilo[3], ihi[3]; // local domain (no ghosts)
+  int bc[3]; // boundary condition
 };
 
 void libmrc_ddc_register_simple(void);

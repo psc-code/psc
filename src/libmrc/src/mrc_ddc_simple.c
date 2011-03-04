@@ -1,8 +1,47 @@
 
 #include "mrc_ddc_private.h"
 
+#include <mrc_params.h>
+
 #include <stdlib.h>
 #include <assert.h>
+
+#define to_mrc_ddc_simple(ddc) ((struct mrc_ddc_simple *) (ddc)->obj.subctx)
+
+// ----------------------------------------------------------------------
+// mrc_ddc_simple_get_rank_nei
+
+static int
+get_rank(struct mrc_ddc *ddc, const int proc[3])
+{
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  for (int d = 0; d < 3; d++) {
+    assert(proc[d] >= 0 && proc[d] < simple->n_proc[d]);
+  }
+  return (proc[2] * simple->n_proc[1] + proc[1]) * simple->n_proc[0] + proc[0];
+}
+
+static int
+mrc_ddc_simple_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
+{
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+
+  int proc_nei[3];
+  for (int d = 0; d < 3; d++) {
+    proc_nei[d] = ddc->proc[d] + dir[d];
+    if (simple->bc[d] == BC_PERIODIC) {
+      if (proc_nei[d] < 0) {
+	proc_nei[d] += simple->n_proc[d];
+      }
+      if (proc_nei[d] >= simple->n_proc[d]) {
+	proc_nei[d] -= simple->n_proc[d];
+      }
+    }
+    if (proc_nei[d] < 0 || proc_nei[d] >= simple->n_proc[d])
+      return - 1;
+  }
+  return get_rank(ddc, proc_nei);
+}
 
 // ----------------------------------------------------------------------
 // ddc_init_outside
@@ -10,7 +49,9 @@
 static void
 ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = mrc_ddc_get_rank_nei(ddc, dir);
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+
+  sr->rank_nei = mrc_ddc_simple_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
@@ -18,16 +59,16 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = ddc->prm.ilo[d] - ddc->prm.ibn[d];
-      sr->ihi[d] = ddc->prm.ilo[d];
+      sr->ilo[d] = simple->ilo[d] - ddc->prm.ibn[d];
+      sr->ihi[d] = simple->ilo[d];
       break;
     case 0:
-      sr->ilo[d] = ddc->prm.ilo[d];
-      sr->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = simple->ilo[d];
+      sr->ihi[d] = simple->ihi[d];
       break;
     case 1:
-      sr->ilo[d] = ddc->prm.ihi[d];
-      sr->ihi[d] = ddc->prm.ihi[d] + ddc->prm.ibn[d];
+      sr->ilo[d] = simple->ihi[d];
+      sr->ihi[d] = simple->ihi[d] + ddc->prm.ibn[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -41,7 +82,9 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 static void
 ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
-  sr->rank_nei = mrc_ddc_get_rank_nei(ddc, dir);
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+
+  sr->rank_nei = mrc_ddc_simple_get_rank_nei(ddc, dir);
   if (sr->rank_nei < 0)
     return;
 
@@ -49,16 +92,16 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = ddc->prm.ilo[d];
-      sr->ihi[d] = ddc->prm.ilo[d] + ddc->prm.ibn[d];
+      sr->ilo[d] = simple->ilo[d];
+      sr->ihi[d] = simple->ilo[d] + ddc->prm.ibn[d];
       break;
     case 0:
-      sr->ilo[d] = ddc->prm.ilo[d];
-      sr->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = simple->ilo[d];
+      sr->ihi[d] = simple->ihi[d];
       break;
     case 1:
-      sr->ilo[d] = ddc->prm.ihi[d] - ddc->prm.ibn[d];
-      sr->ihi[d] = ddc->prm.ihi[d];
+      sr->ilo[d] = simple->ihi[d] - ddc->prm.ibn[d];
+      sr->ihi[d] = simple->ihi[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -73,6 +116,7 @@ static void
 mrc_ddc_simple_setup(struct mrc_obj *obj)
 {
   struct mrc_ddc *ddc = to_mrc_ddc(obj);
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
 
   if (ddc->prm.size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
@@ -82,12 +126,12 @@ mrc_ddc_simple_setup(struct mrc_obj *obj)
     assert(0);
   }
 
-  assert(ddc->prm.n_proc[0] * ddc->prm.n_proc[1] * ddc->prm.n_proc[2] == ddc->size);
+  assert(simple->n_proc[0] * simple->n_proc[1] * simple->n_proc[2] == ddc->size);
   assert(ddc->prm.max_n_fields > 0);
 
   int rr = ddc->rank;
-  ddc->proc[0] = rr % ddc->prm.n_proc[0]; rr /= ddc->prm.n_proc[0];
-  ddc->proc[1] = rr % ddc->prm.n_proc[1]; rr /= ddc->prm.n_proc[1];
+  ddc->proc[0] = rr % simple->n_proc[0]; rr /= simple->n_proc[0];
+  ddc->proc[1] = rr % simple->n_proc[1]; rr /= simple->n_proc[1];
   ddc->proc[2] = rr;
 
   int dir[3];
@@ -206,13 +250,23 @@ mrc_ddc_simple_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // ======================================================================
 // mrc_ddc_simple_ops
 
+#define VAR(x) (void *)offsetof(struct mrc_ddc_simple, x)
+static struct param mrc_ddc_simple_params_descr[] = {
+  { "n_proc"          , VAR(n_proc)       , PARAM_INT3(0, 0, 0)    },
+  { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
+  { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
+  { "bc"              , VAR(bc)           , PARAM_INT3(0, 0, 0)    }, // FIXME, select
+  {}
+};
+
 static struct mrc_ddc_ops mrc_ddc_simple_ops = {
   .name                  = "simple",
   .size                  = sizeof(struct mrc_ddc_simple),
-  //  .param_descr           = mrc_ddc_simple_params_descr,
+  .param_descr           = mrc_ddc_simple_params_descr,
   .setup                 = mrc_ddc_simple_setup,
   .fill_ghosts           = mrc_ddc_simple_fill_ghosts,
   .add_ghosts            = mrc_ddc_simple_add_ghosts,
+  .get_rank_nei          = mrc_ddc_simple_get_rank_nei,
 };
 
 void
@@ -220,3 +274,52 @@ libmrc_ddc_register_simple()
 {
   libmrc_ddc_register(&mrc_ddc_simple_ops);
 }
+
+// ======================================================================
+// mrc_ddc_funcs_f3 for mrc_f3
+
+#include <mrc_fld.h>
+
+// FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
+
+static void
+mrc_f3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd);
+	}
+      }
+    }
+  }
+}
+
+static void
+mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+{
+  struct mrc_f3 *fld = ctx;
+  float *buf = _buf;
+  int bnd = fld->sw;
+
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
+	}
+      }
+    }
+  }
+}
+
+struct mrc_ddc_funcs mrc_ddc_funcs_f3 = {
+  .copy_to_buf   = mrc_f3_copy_to_buf,
+  .copy_from_buf = mrc_f3_copy_from_buf,
+};
+
