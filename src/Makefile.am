@@ -93,7 +93,7 @@ endif USE_CUDA
 if USE_CBE
 
 libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
-	cell_be/cbe_sort.c psc_particles_cbe.c 
+	psc_particles_cbe.c 
 
 
 if CELLEMU
@@ -145,7 +145,7 @@ VLA_SOURCES += vla_main.c
 endif
 
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
-	test_exchange_particles test_sort test_cell_framework
+	test_exchange_particles test_sort
 
 if USE_CBE
 	noinst_PROGRAMS += test_cell_framework

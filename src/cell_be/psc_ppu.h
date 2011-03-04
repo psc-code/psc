@@ -39,15 +39,12 @@ struct psc_spu_ops {
 int spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
 	     unsigned long long env);
 
-void cbe_push_part_2d(void);
-
+void cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 extern int spes_inited; ///< Has the task been loaded onto the spes
 
 // Spe handeling functions from psc_cbe.c
 void psc_init_spes(void);
 void psc_kill_spes(void);
-int get_spe(void);
-void put_spe(int spe);
 void update_spes_status(void);
 void cell_run_patch(fields_t *pf, particles_t *pp, int job);
 void wait_all_spe(void);

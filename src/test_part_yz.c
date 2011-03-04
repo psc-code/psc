@@ -35,7 +35,6 @@ main(int argc, char **argv)
   };
 #endif
 
-#if 0 
   printf("=== testing push_part_yz_a()\n");
 
 
@@ -115,7 +114,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-#endif
   printf("=== testing push_part_yz()\n");
 
   psc_create_test_yz(&conf_fortran);

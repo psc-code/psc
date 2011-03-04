@@ -16,18 +16,12 @@ cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   fields_get(&flds, EX, EX +6,flds_base);
   particles_get(&particles, particles_base);
 
-  particles_cbe_get(&pp);
-  fields_c_get(&pf, EX, EX+6);
-
   if(spes_inited)
     psc_init_spes();
-
-  // This may not be needed anymore...
-  cbe_field_blocks_get(&pf,EX,EX+6);
   
   static int pr;
   if (!pr) {
-    pr = prof_register("cbe_part_yz", 1., 0, psc.pp.n_part * 9 * sizeof(cbe_real));
+    pr = prof_register("cbe_part_2d", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -44,10 +38,10 @@ cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
     cell_run_patch(&flds.f[p], &particles.p[p], job);
   }
 
-  wait_all_spe(void);
+  wait_all_spe();
 
   prof_stop(pr);
 
-  fields_put(&pf,JXI,JXI+3);
-  particles_put(&pp);
+  fields_put(&flds, JXI, JXI + 3, flds_base);
+  particles_put(&particles, particles_base);
 }

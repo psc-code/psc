@@ -15,9 +15,10 @@ particles_cbe_alloc(particles_cbe_t *pp, int n_part)
 {
   void * m;
   __arr_size = n_part * 1.2;
-  int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
-  assert(ierr = 0);
-  pp->particles = (cbe_particle_t *) m;
+  printf("Called to alloc %g particles\n", __arr_size);
+ int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
+  assert(ierr == 0);
+  pp->particles = (particle_cbe_t *) m;
 }
 
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
@@ -28,8 +29,8 @@ void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
   __arr_size = new_n_part * 1.2;
   free(pp->particles);
   int ierr = posix_memalign(&m, 128, __arr_size * sizeof(*pp->particles));
-  assert(ierr = 0);
-  pp->particles = (cbe_particle_t *) m;
+  assert(ierr == 0);
+  pp->particles = (particle_cbe_t *) m;
 }
 
 void particles_cbe_free(particles_cbe_t *pp)
@@ -130,7 +131,7 @@ particles_cbe_put(mparticles_cbe_t *particles, void *_particles_base)
     pp->particles = NULL;
   }
   free(particles->p);
-  particles->p = NULL:
+  particles->p = NULL;
     
 }
 

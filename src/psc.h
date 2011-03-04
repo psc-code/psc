@@ -107,6 +107,21 @@ typedef particle_sse2_real_t particle_base_real_t;
 #define particles_base_free    particles_sse2_free
 #define particles_base_get_one particles_sse2_get_one
 
+#elif PARTICLES_BASE == PARTICLES_CBE
+
+#include "psc_particles_cbe.h"
+
+typedef particles_cbe_t particles_base_t;
+typedef mparticles_cbe_t mparticles_base_t;
+typedef particle_cbe_t particle_base_t;
+typedef particle_cbe_real_t particle_base_real_t;
+#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_CBE_REAL
+
+#define particles_base_alloc   particles_cbe_alloc
+#define particles_base_realloc particles_cbe_realloc
+#define particles_base_free    particles_cbe_free
+#define particles_base_get_one particles_cbe_get_one
+
 #else
 #error unknown PARTICLES_BASE
 #endif

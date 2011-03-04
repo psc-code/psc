@@ -21,7 +21,7 @@ static pthread_t thread_id[NR_SPE];
 // Handles to the spu code in different dimensions. Accessed through the
 // spu_psc_cfs.o library. 
 //extern spe_program_handle_t spu_1d; ///< Handle for 1-dimensional spe executable
-extern spe_program_handle_t spu_2d; ///< Handle for 2-dimensional spe executable
+static spe_program_handle_t spu_2d; ///< Handle for 2-dimensional spe executable
 //extern spe_program_handle_t spu_3d; ///< Handle for 3-dimensional spe executable
 
 // Some static variables dealing with spe control which are only needed
@@ -235,7 +235,7 @@ void cell_run_patch(fields_t *pf, particles_t *pp, int job)
   spe_blocks[spe]->part_start = (unsigned long long) pp->particles;
   spe_blocks[spe]->part_end = (unsigned long long) (pp->particles + pp->n_part);
 
-  int msg = SPU_RUNJOB;
+  unsigned int msg = SPU_RUNJOB;
   int nmesg =  spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
   assert(nmesg ==1);
 
