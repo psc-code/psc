@@ -54,7 +54,7 @@ struct mrc_domain_multi {
   int nr_patches;
   struct mrc_patch *patches;
   struct mrc_patch *all_patches;
-  int nr_procs[3];
+  int np[3]; //< # of patches per direction
   int bc[3];
 
   int proc[3];
