@@ -12,13 +12,14 @@
 // mrc_ddc_multi_get_rank_nei
 
 static int
-get_rank(struct mrc_ddc *ddc, const int proc[3])
+get_rank(struct mrc_ddc *ddc, const int patch_idx[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
   for (int d = 0; d < 3; d++) {
-    assert(proc[d] >= 0 && proc[d] < multi->n_proc[d]);
+    assert(patch_idx[d] >= 0 && patch_idx[d] < multi->np[d]);
   }
-  return (proc[2] * multi->n_proc[1] + proc[1]) * multi->n_proc[0] + proc[0];
+  return (patch_idx[2] * multi->np[1] + patch_idx[1]) * multi->np[0] + patch_idx[0];
 }
 
 static int
@@ -31,14 +32,14 @@ mrc_ddc_multi_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
     proc_nei[d] = ddc->proc[d] + dir[d];
     if (multi->bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
-	proc_nei[d] += multi->n_proc[d];
+	proc_nei[d] += multi->np[d];
       }
-      if (proc_nei[d] >= multi->n_proc[d]) {
-	proc_nei[d] -= multi->n_proc[d];
+      if (proc_nei[d] >= multi->np[d]) {
+	proc_nei[d] -= multi->np[d];
       }
     }
-    if (proc_nei[d] < 0 || proc_nei[d] >= multi->n_proc[d])
-      return - 1;
+    if (proc_nei[d] < 0 || proc_nei[d] >= multi->np[d])
+      return -1;
   }
   return get_rank(ddc, proc_nei);
 }
@@ -137,12 +138,11 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
     assert(0);
   }
 
-  assert(multi->n_proc[0] * multi->n_proc[1] * multi->n_proc[2] == ddc->size);
   assert(ddc->max_n_fields > 0);
 
   int rr = ddc->rank;
-  ddc->proc[0] = rr % multi->n_proc[0]; rr /= multi->n_proc[0];
-  ddc->proc[1] = rr % multi->n_proc[1]; rr /= multi->n_proc[1];
+  ddc->proc[0] = rr % multi->np[0]; rr /= multi->np[0];
+  ddc->proc[1] = rr % multi->np[1]; rr /= multi->np[1];
   ddc->proc[2] = rr;
 
   int dir[3];
@@ -263,7 +263,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc_multi, x)
 static struct param mrc_ddc_multi_params_descr[] = {
-  { "n_proc"          , VAR(n_proc)       , PARAM_INT3(0, 0, 0)    },
+  { "np"              , VAR(np)           , PARAM_INT3(0, 0, 0)    },
   { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
   { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
   { "bc"              , VAR(bc)           , PARAM_INT3(0, 0, 0)    }, // FIXME, select
