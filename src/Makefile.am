@@ -13,6 +13,7 @@ libmrc_a_SOURCES = \
 	mrc_params.c \
 	mrc_ddc.c \
 	mrc_ddc_simple.c \
+	mrc_ddc_multi.c \
 	mrc_profile.c \
 	mrc_io.c \
 	mrc_io_util.c \

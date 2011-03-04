@@ -32,6 +32,17 @@ mrc_ddc_set_funcs(struct mrc_ddc *ddc, struct mrc_ddc_funcs *funcs)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_set_domain
+
+void
+mrc_ddc_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
+{
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->set_domain);
+  ops->set_domain(ddc, domain);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_fill_ghosts
 
 void
@@ -82,6 +93,7 @@ static void
 mrc_ddc_init()
 {
   libmrc_ddc_register_simple();
+  libmrc_ddc_register_multi();
 }
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc, x)
