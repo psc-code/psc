@@ -59,7 +59,7 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   for (int d = 0; d < 3; d++) {
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = simple->ilo[d] - ddc->prm.ibn[d];
+      sr->ilo[d] = simple->ilo[d] - ddc->ibn[d];
       sr->ihi[d] = simple->ilo[d];
       break;
     case 0:
@@ -68,12 +68,12 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
       break;
     case 1:
       sr->ilo[d] = simple->ihi[d];
-      sr->ihi[d] = simple->ihi[d] + ddc->prm.ibn[d];
+      sr->ihi[d] = simple->ihi[d] + ddc->ibn[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->prm.max_n_fields * ddc->prm.size_of_type);
+  sr->buf = malloc(sr->len * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -93,20 +93,20 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = simple->ilo[d];
-      sr->ihi[d] = simple->ilo[d] + ddc->prm.ibn[d];
+      sr->ihi[d] = simple->ilo[d] + ddc->ibn[d];
       break;
     case 0:
       sr->ilo[d] = simple->ilo[d];
       sr->ihi[d] = simple->ihi[d];
       break;
     case 1:
-      sr->ilo[d] = simple->ihi[d] - ddc->prm.ibn[d];
+      sr->ilo[d] = simple->ihi[d] - ddc->ibn[d];
       sr->ihi[d] = simple->ihi[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->prm.max_n_fields * ddc->prm.size_of_type);
+  sr->buf = malloc(sr->len * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -118,16 +118,16 @@ mrc_ddc_simple_setup(struct mrc_obj *obj)
   struct mrc_ddc *ddc = to_mrc_ddc(obj);
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
 
-  if (ddc->prm.size_of_type == sizeof(float)) {
+  if (ddc->size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
-  } else if (ddc->prm.size_of_type == sizeof(double)) {
+  } else if (ddc->size_of_type == sizeof(double)) {
     ddc->mpi_type = MPI_DOUBLE;
   } else {
     assert(0);
   }
 
   assert(simple->n_proc[0] * simple->n_proc[1] * simple->n_proc[2] == ddc->size);
-  assert(ddc->prm.max_n_fields > 0);
+  assert(ddc->max_n_fields > 0);
 
   int rr = ddc->rank;
   ddc->proc[0] = rr % simple->n_proc[0]; rr /= simple->n_proc[0];

@@ -7,12 +7,6 @@
 
 #include <mpi.h>
 
-struct mrc_ddc_params {
-  int size_of_type;
-  int max_n_fields;
-  int ibn[3]; // # ghost points
-};
-
 struct mrc_ddc_funcs {
   void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);

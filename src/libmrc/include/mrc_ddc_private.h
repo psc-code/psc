@@ -20,8 +20,12 @@ struct mrc_ddc_pattern {
 
 struct mrc_ddc {
   struct mrc_obj obj;
+  // parameters
+  int size_of_type;
+  int max_n_fields;
+  int ibn[3]; // # ghost points
+
   int rank, size;
-  struct mrc_ddc_params prm;
   struct mrc_ddc_funcs *funcs;
   int proc[3]; // this proc's position in the 3D proc grid
   MPI_Datatype mpi_type;
