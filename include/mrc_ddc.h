@@ -3,10 +3,9 @@
 #define MRC_DDC_H
 
 #include <mrc_common.h>
+#include <mrc_obj.h>
 
 #include <mpi.h>
-
-struct mrc_ddc;
 
 struct mrc_ddc_params {
   int size_of_type;
@@ -23,7 +22,9 @@ struct mrc_ddc_ops {
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
-struct mrc_ddc *mrc_ddc_create(MPI_Comm comm);
+extern struct mrc_class mrc_class_mrc_ddc;
+MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_ddc, struct mrc_ddc)
+
 void mrc_ddc_set_params(struct mrc_ddc *ddc, struct mrc_ddc_params *prm);
 void mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops);
 void mrc_ddc_setup(struct mrc_ddc *ddc);

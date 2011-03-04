@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define to_mrc_ddc(obj) container_of(obj, struct mrc_ddc, obj)
+
 static int
 get_rank(struct mrc_ddc *ddc, const int proc[3])
 {
@@ -123,7 +125,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->len);
 #endif
 	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->rank_nei,
-		    0x1000 + dir1neg, ddc->comm, &ddc->recv_reqs[dir1]);
+		    0x1000 + dir1neg, ddc->obj.comm, &ddc->recv_reqs[dir1]);
 	} else {
 	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -146,7 +148,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->len);
 #endif
 	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->rank_nei,
-		    0x1000 + dir1, ddc->comm, &ddc->send_reqs[dir1]);
+		    0x1000 + dir1, ddc->obj.comm, &ddc->send_reqs[dir1]);
 	} else {
 	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
@@ -195,19 +197,13 @@ mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // ----------------------------------------------------------------------
 // mrc_ddc_create
 
-struct mrc_ddc *
-mrc_ddc_create(MPI_Comm comm)
+static void
+_mrc_ddc_create(struct mrc_obj *obj)
 {
-  struct mrc_ddc *ddc = malloc(sizeof(*ddc));
-  memset(ddc, 0, sizeof(*ddc));
+  struct mrc_ddc *ddc = to_mrc_ddc(obj);
 
-  MPI_Comm ncomm;
-  MPI_Comm_dup(comm, &ncomm);
-  ddc->comm = ncomm;
-  MPI_Comm_rank(comm, &ddc->rank);
-  MPI_Comm_size(comm, &ddc->size);
-
-  return ddc;
+  MPI_Comm_rank(obj->comm, &ddc->rank);
+  MPI_Comm_size(obj->comm, &ddc->size);
 }
 
 // ----------------------------------------------------------------------
@@ -231,9 +227,11 @@ mrc_ddc_set_params(struct mrc_ddc *ddc, struct mrc_ddc_params *prm)
 // ----------------------------------------------------------------------
 // mrc_ddc_setup
 
-void
-mrc_ddc_setup(struct mrc_ddc *ddc)
+static void
+_mrc_ddc_setup(struct mrc_obj *obj)
 {
+  struct mrc_ddc *ddc = to_mrc_ddc(obj);
+
   if (ddc->prm.size_of_type == sizeof(float)) {
     ddc->mpi_type = MPI_FLOAT;
   } else if (ddc->prm.size_of_type == sizeof(double)) {
@@ -271,11 +269,9 @@ mrc_ddc_setup(struct mrc_ddc *ddc)
 // ----------------------------------------------------------------------
 // mrc_ddc_destroy
 
-void
-mrc_ddc_destroy(struct mrc_ddc *ddc)
+static void
+_mrc_ddc_destroy(struct mrc_obj *obj)
 {
-  MPI_Comm_free(&ddc->comm);
-  free(ddc);
 }
 
 // ======================================================================
@@ -324,5 +320,37 @@ mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *c
 struct mrc_ddc_ops mrc_ddc_ops_f3 = {
   .copy_to_buf   = mrc_f3_copy_to_buf,
   .copy_from_buf = mrc_f3_copy_from_buf,
+};
+
+// ======================================================================
+// mrc_ddc class
+
+static LIST_HEAD(mrc_ddc_subclasses);
+
+#if 0
+void
+libmrc_ddc_register(struct mrc_ddc_ops *ops)
+{
+  list_add_tail(&ops->list, &mrc_ddc_subclasses);
+}
+#endif
+
+// ----------------------------------------------------------------------
+// mrc_ddc_init
+
+static void
+mrc_ddc_init()
+{
+  //  libmrc_ddc_register_simple();
+}
+
+struct mrc_class mrc_class_mrc_ddc = {
+  .name             = "mrc_ddc",
+  .size             = sizeof(struct mrc_ddc),
+  .subclasses       = &mrc_ddc_subclasses,
+  .init             = mrc_ddc_init,
+  .create           = _mrc_ddc_create,
+  .destroy          = _mrc_ddc_destroy,
+  .setup            = _mrc_ddc_setup,
 };
 
