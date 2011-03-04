@@ -35,19 +35,16 @@ test(bool periodic)
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
 
-  struct mrc_ddc_params ddc_params = {
-    .ibn = { bnd, bnd, bnd },
-    .max_n_fields = 2,
-    .size_of_type = sizeof(float),
-  };
-
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   int *off = patches[0].off;
 
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(domain, &ddc_params);
+  struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
   mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_f3);
+  mrc_ddc_set_param_int3(ddc, "ibn", (int [3]) { bnd, bnd, bnd });
+  mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
+  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
 

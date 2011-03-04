@@ -229,14 +229,11 @@ create_bnd(void)
   struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
   memset(c_bnd, 0, sizeof(*c_bnd));
 
-  struct mrc_ddc_params ddc_par = {
-    .size_of_type  = sizeof(fields_base_real_t),
-    .max_n_fields  = 6,
-    .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
-  };
-
-  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par);
+  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain);
   mrc_ddc_set_funcs(c_bnd->ddc, &ddc_funcs);
+  mrc_ddc_set_param_int3(c_bnd->ddc, "ibn", psc.ibn);
+  mrc_ddc_set_param_int(c_bnd->ddc, "max_n_fields", 6);
+  mrc_ddc_set_param_int(c_bnd->ddc, "size_of_type", sizeof(fields_base_real_t));
   mrc_ddc_setup(c_bnd->ddc);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
