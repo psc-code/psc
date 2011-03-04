@@ -84,7 +84,7 @@ mrc_ddc_init()
   libmrc_ddc_register_simple();
 }
 
-#define VAR(x) (void *)offsetof(struct mrc_ddc_params, x)
+#define VAR(x) (void *)offsetof(struct mrc_ddc, x)
 static struct param mrc_ddc_params_descr[] = {
   { "size_of_type"    , VAR(size_of_type) , PARAM_INT(0)           },
   { "max_n_fields"    , VAR(max_n_fields) , PARAM_INT(1)           },
@@ -97,7 +97,6 @@ struct mrc_class mrc_class_mrc_ddc = {
   .name             = "mrc_ddc",
   .size             = sizeof(struct mrc_ddc),
   .param_descr      = mrc_ddc_params_descr,
-  .param_offset     = offsetof(struct mrc_ddc, prm),
   .subclasses       = &mrc_ddc_subclasses,
   .init             = mrc_ddc_init,
   .create           = _mrc_ddc_create,
