@@ -240,13 +240,9 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 static struct mrc_ddc *
 mrc_domain_multi_create_ddc(struct mrc_domain *domain)
 {
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
   struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
   mrc_ddc_set_type(ddc, "multi");
   mrc_ddc_set_domain(ddc, domain);
-  mrc_ddc_set_param_int3(ddc, "ilo", (int[3]) { 0, 0, 0 });
-  mrc_ddc_set_param_int3(ddc, "ihi", multi->patches[0].ldims);
   return ddc;
 }
 

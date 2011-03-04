@@ -144,6 +144,13 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
   mrc_domain_get_nr_procs(multi->domain, multi->np);
   mrc_domain_get_bc(multi->domain, multi->bc);
 
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(multi->domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int d = 0; d < 3; d++) {
+    multi->ihi[d] = patches[0].ldims[d];
+  }
+
   int rr = ddc->rank;
   ddc->proc[0] = rr % multi->np[0]; rr /= multi->np[0];
   ddc->proc[1] = rr % multi->np[1]; rr /= multi->np[1];
@@ -265,17 +272,9 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // ======================================================================
 // mrc_ddc_multi_ops
 
-#define VAR(x) (void *)offsetof(struct mrc_ddc_multi, x)
-static struct param mrc_ddc_multi_params_descr[] = {
-  { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
-  { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
-  {}
-};
-
 static struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .name                  = "multi",
   .size                  = sizeof(struct mrc_ddc_multi),
-  .param_descr           = mrc_ddc_multi_params_descr,
   .setup                 = mrc_ddc_multi_setup,
   .set_domain            = mrc_ddc_multi_set_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
