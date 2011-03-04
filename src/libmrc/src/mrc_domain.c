@@ -152,10 +152,10 @@ mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
 
 struct mrc_ddc *
 mrc_domain_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
-		      struct mrc_ddc_ops *ddc_ops)
+		      struct mrc_ddc_funcs *ddc_funcs)
 {
   check_is_setup(domain);
-  return mrc_domain_ops(domain)->create_ddc(domain, ddc_par, ddc_ops);
+  return mrc_domain_ops(domain)->create_ddc(domain, ddc_par, ddc_funcs);
 }
 
 // ======================================================================

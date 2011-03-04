@@ -181,7 +181,7 @@ void
 mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->add_ghosts, mb, me, ctx,
-	  ddc->ops->copy_to_buf, ddc->ops->add_from_buf);
+	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -191,7 +191,7 @@ void
 mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   ddc_run(ddc, &ddc->fill_ghosts, mb, me, ctx,
-	  ddc->ops->copy_to_buf, ddc->ops->copy_from_buf);
+	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 
 // ----------------------------------------------------------------------
@@ -207,12 +207,12 @@ _mrc_ddc_create(struct mrc_obj *obj)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_set_ops
+// mrc_ddc_set_funcs
 
 void
-mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops)
+mrc_ddc_set_funcs(struct mrc_ddc *ddc, struct mrc_ddc_funcs *funcs)
 {
-  ddc->ops = ops;
+  ddc->funcs = funcs;
 }
 
 // ----------------------------------------------------------------------
@@ -317,7 +317,7 @@ mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *c
   }
 }
 
-struct mrc_ddc_ops mrc_ddc_ops_f3 = {
+struct mrc_ddc_funcs mrc_ddc_funcs_f3 = {
   .copy_to_buf   = mrc_f3_copy_to_buf,
   .copy_from_buf = mrc_f3_copy_from_buf,
 };

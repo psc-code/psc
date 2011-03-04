@@ -66,7 +66,7 @@ copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
   }
 }
 
-struct mrc_ddc_ops ddc_ops = {
+struct mrc_ddc_funcs ddc_funcs = {
   .copy_to_buf   = copy_to_buf,
   .copy_from_buf = copy_from_buf,
   .add_from_buf  = add_from_buf,
@@ -235,7 +235,7 @@ create_bnd(void)
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
   };
 
-  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par, &ddc_ops);
+  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par, &ddc_funcs);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 

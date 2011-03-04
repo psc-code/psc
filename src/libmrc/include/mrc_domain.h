@@ -46,10 +46,10 @@ struct mrc_m3 *mrc_domain_m3_create(struct mrc_domain *domain);
 struct mrc_m1 *mrc_domain_m1_create(struct mrc_domain *domain);
 
 struct mrc_ddc_params;
-struct mrc_ddc_ops;
+struct mrc_ddc_funcs;
 
 struct mrc_ddc *
 mrc_domain_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *params,
-		      struct mrc_ddc_ops *ddc_ops);
+		      struct mrc_ddc_funcs *ddc_funcs);
 
 #endif
