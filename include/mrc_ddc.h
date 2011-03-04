@@ -10,10 +10,7 @@
 struct mrc_ddc_params {
   int size_of_type;
   int max_n_fields;
-  int n_proc[3]; // # procs in 3D grid
-  int ilo[3], ihi[3]; // local domain (no ghosts)
   int ibn[3]; // # ghost points
-  int bc[3]; // boundary condition
 };
 
 struct mrc_ddc_funcs {
@@ -30,7 +27,6 @@ void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
-
 int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
 
 #define MRC_DDC_BUF3(buf,m, ix,iy,iz)		\
