@@ -18,47 +18,22 @@ extern spe_program_handle_t spu_2d_handle;
 
 static pthread_t thread_id[NR_SPE];
 
-struct psc_spu_ops spu_ctl; 
+// Handles to the spu code in different dimensions. Accessed through the
+// spu_psc_cfs.o library. 
+//extern spe_program_handle_t spu_1d; ///< Handle for 1-dimensional spe executable
+extern spe_program_handle_t spu_2d; ///< Handle for 2-dimensional spe executable
+//extern spe_program_handle_t spu_3d; ///< Handle for 3-dimensional spe executable
 
+// Some static variables dealing with spe control which are only needed
+// in this file (which is why they are static, duh)
+static spe_context_ptr_t spe_id[NR_SPE]; ///< Address of each spe 
+static pthread_t thread_id[NR_SPE]; ///< The thread corresponding to each spe
+static int spe_state[NR_SPE]; ///< Which spes are doing what
+static int active_spes; ///< Number of spes currently running a job
+static psc_cell_block_t *spe_blocks[NR_SPE]; ///< Each spe's job description load/store cache
+static psc_cell_ctx_t *global_ctx; ///< Params and such needed on each spu for entire run.
 
-///////
-/// Computes the global parameters for the task context and registers their existence
-/// in the task description
-///
-/// Call after the task has been fully described but before task creation.
-
-/*
-void 
-psc_alf_init_push_task_context(push_task_context_t * tcs, alf_task_desc_handle_t * task_desc, fields_cbe_t *pf)
-{
-  // Calculate the values, and stick them into the struct
-  tcs->dxi = 1.0 / psc.dx[0];
-  tcs->dyi = 1.0 / psc.dx[1];
-  tcs->dzi = 1.0 / psc.dx[2];
-  tcs->dt = psc.dt;
-  tcs->xl = 0.5 * psc.dt;
-  tcs->yl = 0.5 * psc.dt;
-  tcs->zl = 0.5 * psc.dt;
-  tcs->eta = psc.coeff.eta;
-  tcs->fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-  tcs->fnqxs = psc.dx[0] * tcs->fnqs / psc.dt;
-  tcs->fnqys = psc.dx[1] * tcs->fnqs / psc.dt;
-  tcs->fnqzs = psc.dx[2] * tcs->fnqs / psc.dt;
-  tcs->dqs = 0.5*psc.coeff.eta*psc.dt;
-  tcs->ilg[0] = psc.ilg[0];
-  tcs->ilg[1] = psc.ilg[1];
-  tcs->ilg[2] = psc.ilg[2];
-  tcs->img[0] = psc.img[0];
-  tcs->img[1] = psc.img[1];
-  tcs->img[2] = psc.img[2];
-  tcs->p_fields = (unsigned long long) pf->flds;
-  // Register the number and type of the parameters in the handle
-  int ierr;
-  ierr = alf_task_desc_ctx_entry_add(*task_desc, ALF_DATA_BYTE, sizeof(push_task_context_t) ); ACE;
-}
-
-*/
-
+int spes_inited; ///< Has the task been loaded onto the spes
 
 
 static void 
@@ -68,8 +43,7 @@ global_ctx_create()
   void *m; 
   rc = posix_memalign(&m, 128, sizeof(psc_cell_ctx_t));
   assert(rc == 0);
-  spu_ctl.global_ctx = (psc_cell_ctx_t *) m;
-  psc_cell_ctx_t * global_ctx = spu_ctl.global_ctx; 
+  global_ctx = (psc_cell_ctx_t *) m;
   global_ctx->spe_id = 0;
   global_ctx->dx[0] = psc.dx[0];
   global_ctx->dx[1] = psc.dx[1];
@@ -80,6 +54,9 @@ global_ctx_create()
 }
 
 
+// I'm not entirely sure what the point of only passing this
+// function a void pointer is...
+// (which is odd, because I wrote it)
 static void *
 spe_thread_function(void *data)
 {
@@ -89,8 +66,8 @@ spe_thread_function(void *data)
   
   //  fprintf(stderr, "block pointer %p\n", spe_blocks[i]);
   do {
-    rc = spe_context_run(spu_ctl.spe_id[i], &entry, 0,
-			 spu_ctl.spe_blocks[i], spu_ctl.global_ctx, NULL);
+    rc = spe_context_run(spe_id[i], &entry, 0,
+			 spe_blocks[i], global_ctx, NULL);
   } while (rc > 0);
 
   pthread_exit(NULL);
@@ -100,26 +77,26 @@ void
 psc_init_spes(void)
 {
   
-  assert(!spu_ctl.spes_inited);
+  assert(!spes_inited);
 
-  //  spu_ctl.spu_test = test_handle; 
-  spu_ctl.spu_2d = spu_2d_handle; 
+  //  spu_test = test_handle; 
+  spu_2d = spu_2d_handle; 
   //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
   int rc; 
   spe_program_handle_t spu_prog;
 
   global_ctx_create();
 
-  spu_prog = spu_ctl.spu_2d;  
+  spu_prog = spu_2d;  
 
   for (int i = 0; i < NR_SPE; i++){
     void *m;
     rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
     assert(rc == 0);
-    spu_ctl.spe_blocks[i] = (psc_cell_block_t *) m;
-    assert(spu_ctl.spe_blocks[i] != NULL);
-    spu_ctl.spe_id[i] = spe_context_create(0,NULL);
-    spe_program_load(spu_ctl.spe_id[i],&spu_prog);
+    spe_blocks[i] = (psc_cell_block_t *) m;
+    assert(spe_blocks[i] != NULL);
+    spe_id[i] = spe_context_create(0,NULL);
+    spe_program_load(spe_id[i],&spu_prog);
     rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
 			(void *)(unsigned long) i); 
     assert(rc == 0);
@@ -129,16 +106,27 @@ psc_init_spes(void)
   gettimeofday(&tv, NULL);
   double start =  tv.tv_sec;
 
+
+  // FIXME: There may be something wrong with this construct, and it
+  // feels kind of clumsy. Better way to check that spe's actually loaded
+  // the program?
+  //
+  // This may be a good place to use some of the more sophisticated spe
+  // synchroniztion or error handeling function.
   int ready = 0; 
   while(ready < NR_SPE){
     for(int spe=0; spe < NR_SPE; spe++){
-      unsigned int msg;
-      spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
-      if(msg == SPE_READY){
-	spu_ctl.spe_state[spe] = SPE_IDLE;
-	ready++;
+      if (spe_out_mbox_status(spe_id[spe]) > 0) {
+	unsigned int msg;
+	int nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
+	while(nmesg > 0) {
+	  if(msg == SPE_READY){
+	    spe_state[spe] = SPE_IDLE;
+	    ready++;
+	  }
+	  assert(msg != SPU_ERROR);
+	}
       }
-      assert(msg != SPU_ERROR);
       gettimeofday(&tv, NULL);
       if((tv.tv_sec - start) > 30) {
 	fprintf(stderr, "Did not obtian ready from all spes after 30s. Exiting\n");
@@ -147,59 +135,61 @@ psc_init_spes(void)
     }
   }
   
-  spu_ctl.active_spes = 0;
+  active_spes = 0;
   
-  spu_ctl.spes_inited = 1; 
+  spes_inited = 1; 
 }
 
 void
 psc_kill_spes(void)
 {
   
-  assert(spu_ctl.spes_inited);
+  assert(spes_inited);
   
   unsigned int msg; 
   for(int i = 0; i<NR_SPE; i++){
     msg = SPU_QUIT;
-    spe_in_mbox_write(spu_ctl.spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
-    free(spu_ctl.spe_blocks[i]);
-    spu_ctl.spe_blocks[i] = NULL;
+    int nmesg = spe_in_mbox_write(spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
+    assert(nmesg == 1);
+    free(spe_blocks[i]);
+    spe_blocks[i] = NULL;
   }
 }
   
 
 
-int
+static int
 get_spe(void)
 {
-  assert(spu_ctl.spes_inited);
+  assert(spes_inited);
   
   int spe; 
   
   // Look for first idle spe
   for(spe = 0; spe <= NR_SPE; spe++){
-    if (spu_ctl.spe_state[spe] == SPE_IDLE)
+    if (spe_state[spe] == SPE_IDLE)
       break;
   }
   
   // This assert checks that we never call this function
   // when all the SPEs are being used ( I think)
+  // seems a bit... paranoid.
   assert(spe < NR_SPE);
   
-  spu_ctl.spe_state[spe] = SPE_RUN;
-  spu_ctl.active_spes++;
+  spe_state[spe] = SPE_RUN;
+  active_spes++;
   
-  assert(spu_ctl.active_spes <= NR_SPE);
+  assert(active_spes <= NR_SPE);
 
   return spe;
 }
 
 
-void
+static void
 put_spe(int spe)
 {
-  spu_ctl.spe_state[spe] = SPE_IDLE;
-  spu_ctl.active_spes--;
+  spe_state[spe] = SPE_IDLE;
+  active_spes--;
 }
 
 void
@@ -208,7 +198,7 @@ update_spes_status(void)
   for(int spe=0; spe < NR_SPE; spe++){
     unsigned int msg;
     int nmesg; 
-    nmesg = spe_out_mbox_read(spu_ctl.spe_id[spe], &msg,1);
+    nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
     assert(msg != SPU_ERROR);
     while(nmesg > 0){
       if (msg == SPE_IDLE) {
@@ -219,36 +209,67 @@ update_spes_status(void)
 	nmesg--;
 	// could eliminate this by checking the return value 
       }
+      assert(msg != SPU_ERROR);
     }
   }
 }
 
 
+void cell_run_patch(fields_t *pf, particles_t *pp, int job) 
+{
+
+  while(active_spes == NR_SPE) {
+    update_spes_status();
+  }
+  
+  int spe = get_spe();
+  
+  spe_blocks[spe]->job = job;
+  spe_blocks[spe]->wb_flds = (unsigned long long) pf->flds;
+  spe_blocks[spe]->ib[0] = pf->ib[0];
+  spe_blocks[spe]->ib[1] = pf->ib[1];
+  spe_blocks[spe]->ib[2] = pf->ib[2];
+  spe_blocks[spe]->im[0] = pf->im[0];
+  spe_blocks[spe]->im[1] = pf->im[1];
+  spe_blocks[spe]->im[2] = pf->im[2];
+  spe_blocks[spe]->part_start = (unsigned long long) pp->particles;
+  spe_blocks[spe]->part_end = (unsigned long long) (pp->particles + pp->n_part);
+
+  int msg = SPU_RUNJOB;
+  int nmesg =  spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
+  assert(nmesg ==1);
+
+}
+
+void wait_all_spe(void)
+{
+  while(active_spes != 0) {
+    update_spes_status();
+  }
+}
 
 static void 
 cbe_create(void)
 {
+  // FIXME:
+  // This code is the only one that still has a 
+  // create function. I don't like that. If I can figure out a
+  // way to set spes_inited to 0 without having a create function, 
+  // I will use that instead. 
 
-  // Because I don't want to take the performance
-  // it of storing the cached fields to the full domain
-  // between each mode, I'm going to force a consistency 
-  // check. If cbe_create is being called (you're using
-  // the cbe particle pusher) you damn well better be using
-  // the other cell mods too. Right now, they're just going to 
-  // wrap the C versions (excepting the sort), but they 
-  // will be implemented eventually. 
+  
+  // Asssuming the new code-wide subdomain system is working
+  // properly, we should just need to start up the spes, then 
+  // all is groovy with the world. 
 
-  spu_ctl.spes_inited = 0;
-  spu_ctl.blocks_inited = 0;
-  spu_ctl.particles_coarse_sorted = 0; 
+  spes_inited = 0;
+
 
   // To make sure every thing is layed out as planned,
   // we'll set anything to be allocated in the control 
   // struct to null:
-  spu_ctl.layout = NULL; 
-  spu_ctl.block_list = NULL;
-  spu_ctl.cnts = NULL; 
-  spu_ctl.global_ctx = NULL; 
+
+  global_ctx = NULL; 
 
 }
 
@@ -257,19 +278,16 @@ static void
 cbe_destroy(void)
 {
   
+  // Kill just needs to shut down the spes and free
+  // the global context array.
+  // I'm wondering if there's a different place we could
+  // do this?
+  
   psc_kill_spes(); 
-
-  cbe_blocks_destroy(); 
   
-  free(spu_ctl.global_ctx);
-  spu_ctl.global_ctx = NULL;
+  free(global_ctx);
+  global_ctx = NULL;
   
-  free(spu_ctl.cnts);
-  spu_ctl.cnts = NULL; 
-
-  free(spu_ctl.layout);
-  spu_ctl.layout = NULL; 
-   
 }
 
 

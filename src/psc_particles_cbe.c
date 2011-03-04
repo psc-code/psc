@@ -24,11 +24,12 @@ void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
 {
   if (__arr_size >= new_n_part)
     return;
-
+  void * m; 
   __arr_size = new_n_part * 1.2;
   free(pp->particles);
   int ierr = posix_memalign(&m, 128, __arr_size * sizeof(*pp->particles));
   assert(ierr = 0);
+  pp->particles = (cbe_particle_t *) m;
 }
 
 void particles_cbe_free(particles_cbe_t *pp)

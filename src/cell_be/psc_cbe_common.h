@@ -44,13 +44,13 @@ typedef struct _psc_cell_ctx
 /// Parameters specific to each work block
 typedef struct _psc_cell_block
 {
-  unsigned long long job;        // 8B
-  unsigned long long part_start; // 8B
-  unsigned long long part_end;   // 8B
-  unsigned long long wb_flds;    // 8B
-  int ib[3];                    // 12B
-  int im[3];                    // 12B
-  unsigned long long padding;    // 8B wait. why is this here?
+  unsigned long long job;        // 8B What to run
+  unsigned long long part_start; // 8B Particles start address
+  unsigned long long part_end;   // 8B Particle end address
+  unsigned long long part_move;  // 8B wait. why is this here?
+  unsigned long long wb_flds;    // 8B Pointer to fields
+  int ib[3];                    // 12B local to global offse t
+  int im[3];                    // 12B number of points per direction
   // Total:                      // 64B
 } psc_cell_block_t;
 

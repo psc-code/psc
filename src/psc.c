@@ -49,9 +49,6 @@ static struct psc_sort_ops *psc_sort_ops_list[] = {
   &psc_sort_ops_countsort,
   &psc_sort_ops_countsort2,
   &psc_sort_ops_none,
-#ifdef USE_CBE
-  &psc_sort_ops_cbe_countsort,
-#endif
   NULL,
 };
 
