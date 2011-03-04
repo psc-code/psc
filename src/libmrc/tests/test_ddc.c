@@ -46,7 +46,9 @@ test(bool periodic)
   assert(nr_patches == 1);
   int *off = patches[0].off;
 
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(domain, &ddc_params, &mrc_ddc_funcs_f3);
+  struct mrc_ddc *ddc = mrc_domain_create_ddc(domain, &ddc_params);
+  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_f3);
+  mrc_ddc_setup(ddc);
 
   struct mrc_f3 *fld = mrc_domain_f3_create(domain, bnd);
   mrc_f3_set_param_int(fld, "nr_comps", 2);

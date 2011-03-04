@@ -160,8 +160,7 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static struct mrc_ddc *
-mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
-			     struct mrc_ddc_funcs *ddc_funcs)
+mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
 
@@ -178,8 +177,6 @@ mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *d
 
   struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
   mrc_ddc_set_params(ddc, ddc_par);
-  mrc_ddc_set_funcs(ddc, ddc_funcs);
-  mrc_ddc_setup(ddc);
   return ddc;
 }
 

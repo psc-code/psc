@@ -235,7 +235,9 @@ create_bnd(void)
     .ibn           = { psc.ibn[0], psc.ibn[1], psc.ibn[2] },
   };
 
-  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par, &ddc_funcs);
+  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain, &ddc_par);
+  mrc_ddc_set_funcs(c_bnd->ddc, &ddc_funcs);
+  mrc_ddc_setup(c_bnd->ddc);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 

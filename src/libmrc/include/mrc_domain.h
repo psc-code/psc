@@ -28,7 +28,6 @@ struct mrc_patch_info {
 extern struct mrc_class mrc_class_mrc_domain;
 
 MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_domain, struct mrc_domain)
-void mrc_domain_setup(struct mrc_domain *domain);
 void mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims);
 void mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx);
 void mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs);
@@ -46,10 +45,8 @@ struct mrc_m3 *mrc_domain_m3_create(struct mrc_domain *domain);
 struct mrc_m1 *mrc_domain_m1_create(struct mrc_domain *domain);
 
 struct mrc_ddc_params;
-struct mrc_ddc_funcs;
 
-struct mrc_ddc *
-mrc_domain_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *params,
-		      struct mrc_ddc_funcs *ddc_funcs);
+struct mrc_ddc *mrc_domain_create_ddc(struct mrc_domain *domain,
+				      struct mrc_ddc_params *params);
 
 #endif
