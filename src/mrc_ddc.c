@@ -2,6 +2,8 @@
 #include "mrc_ddc.h"
 #include "mrc_ddc_private.h"
 
+#include <mrc_params.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -344,9 +346,24 @@ mrc_ddc_init()
   //  libmrc_ddc_register_simple();
 }
 
+#define VAR(x) (void *)offsetof(struct mrc_ddc_params, x)
+static struct param mrc_ddc_params_descr[] = {
+  { "size_of_type"    , VAR(size_of_type) , PARAM_INT(0)           },
+  { "max_n_fields"    , VAR(max_n_fields) , PARAM_INT(1)           },
+  { "n_proc"          , VAR(n_proc)       , PARAM_INT3(0, 0, 0)    },
+  { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
+  { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
+  { "ibn"             , VAR(ibn)          , PARAM_INT3(0, 0, 0)    },
+  { "bc"              , VAR(bc)           , PARAM_INT3(0, 0, 0)    }, // FIXME, select
+  {},
+};
+#undef VAR
+
 struct mrc_class mrc_class_mrc_ddc = {
   .name             = "mrc_ddc",
   .size             = sizeof(struct mrc_ddc),
+  .param_descr      = mrc_ddc_params_descr,
+  .param_offset     = offsetof(struct mrc_ddc, prm),
   .subclasses       = &mrc_ddc_subclasses,
   .init             = mrc_ddc_init,
   .create           = _mrc_ddc_create,
