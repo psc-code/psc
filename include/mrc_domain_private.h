@@ -27,7 +27,7 @@ struct mrc_domain_ops {
   void (*get_nr_global_patches)(struct mrc_domain *domain, int *nr_global_patches);
   void (*get_global_patch_info)(struct mrc_domain *domain, int gp,
 				struct mrc_patch_info *info);
-  struct mrc_ddc *(*create_ddc)(struct mrc_domain *, struct mrc_ddc_params *ddc_par);
+  struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
 };
 
 void libmrc_domain_register(struct mrc_domain_ops *ops);
