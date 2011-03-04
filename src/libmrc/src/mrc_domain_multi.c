@@ -20,11 +20,11 @@ static void
 mrc_domain_multi_rank2proc(struct mrc_domain *domain, int rank, int proc[3])
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-  int *nr_procs = multi->nr_procs;
+  int *np = multi->np;
 
-  proc[0] = rank % nr_procs[0]; rank /= nr_procs[0];
-  proc[1] = rank % nr_procs[1]; rank /= nr_procs[1];
-  proc[2] = rank % nr_procs[2];
+  proc[0] = rank % np[0]; rank /= np[0];
+  proc[1] = rank % np[1]; rank /= np[1];
+  proc[2] = rank % np[2];
 }
 
 static int
@@ -33,16 +33,16 @@ mrc_domain_multi_proc2rank(struct mrc_domain *domain, int proc[3])
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int d = 0; d < 3; d++) {
-    if (proc[d] < 0 || proc[d] >= multi->nr_procs[d])
+    if (proc[d] < 0 || proc[d] >= multi->np[d])
       return -1;
   }
-  return ((proc[2] * multi->nr_procs[1]) + proc[1]) * multi->nr_procs[0] + proc[0];
+  return ((proc[2] * multi->np[1]) + proc[1]) * multi->np[0] + proc[0];
 }
 
 static int
 part2index(struct mrc_domain_multi *multi, int p[3])
 {
-  int *np = multi->nr_procs;
+  int *np = multi->np;
   return (p[2] * np[1] + p[1]) * np[0] + p[0];
 }
 
@@ -93,7 +93,7 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
   // FIXME: allow setting of desired decomposition using ldims
-  int ldims[3], rmndr[3], *np = multi->nr_procs;
+  int ldims[3], rmndr[3], *np = multi->np;
   int nr_all_patches = 1;
   for (int d = 0; d < 3; d++) {
     nr_all_patches *= np[d];
@@ -191,7 +191,7 @@ mrc_domain_multi_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int d = 0; d < 3; d++) {
-    nr_procs[d] = multi->nr_procs[d];
+    nr_procs[d] = multi->np[d];
   }
 }
 
@@ -210,7 +210,7 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  *nr_global_patches = multi->nr_procs[0] * multi->nr_procs[1] * multi->nr_procs[2];
+  *nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
 }
 
 static void
@@ -219,7 +219,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int nr_global_patches = multi->nr_procs[0] * multi->nr_procs[1] * multi->nr_procs[2];
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
   int patches_per_proc = nr_global_patches / domain->size;
   int patches_per_proc_rmndr = nr_global_patches % domain->size;
   
@@ -247,7 +247,7 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain)
   mrc_ddc_set_domain(ddc, domain);
   mrc_ddc_set_param_int3(ddc, "ilo", (int[3]) { 0, 0, 0 });
   mrc_ddc_set_param_int3(ddc, "ihi", multi->patches[0].ldims);
-  mrc_ddc_set_param_int3(ddc, "n_proc", multi->nr_procs);
+  mrc_ddc_set_param_int3(ddc, "n_proc", multi->np);
   mrc_ddc_set_param_int3(ddc, "bc", multi->bc);
   return ddc;
 }
@@ -261,7 +261,7 @@ static struct mrc_param_select bc_descr[] = {
 #define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
 static struct param mrc_domain_multi_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
-  { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
+  { "np"              , VAR(np)              , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
   { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
