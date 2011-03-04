@@ -2,6 +2,7 @@
 #include "mrc_ddc_private.h"
 
 #include <mrc_params.h>
+#include <mrc_domain.h>
 
 #include <stdlib.h>
 #include <assert.h>
@@ -139,6 +140,8 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
   }
 
   assert(ddc->max_n_fields > 0);
+  assert(multi->domain);
+  mrc_domain_get_nr_procs(multi->domain, multi->np);
 
   int rr = ddc->rank;
   ddc->proc[0] = rr % multi->np[0]; rr /= multi->np[0];
@@ -263,7 +266,6 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc_multi, x)
 static struct param mrc_ddc_multi_params_descr[] = {
-  { "np"              , VAR(np)           , PARAM_INT3(0, 0, 0)    },
   { "ilo"             , VAR(ilo)          , PARAM_INT3(0, 0, 0)    },
   { "ihi"             , VAR(ihi)          , PARAM_INT3(0, 0, 0)    },
   { "bc"              , VAR(bc)           , PARAM_INT3(0, 0, 0)    }, // FIXME, select

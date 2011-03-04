@@ -247,7 +247,6 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain)
   mrc_ddc_set_domain(ddc, domain);
   mrc_ddc_set_param_int3(ddc, "ilo", (int[3]) { 0, 0, 0 });
   mrc_ddc_set_param_int3(ddc, "ihi", multi->patches[0].ldims);
-  mrc_ddc_set_param_int3(ddc, "np", multi->np);
   mrc_ddc_set_param_int3(ddc, "bc", multi->bc);
   return ddc;
 }
