@@ -22,7 +22,7 @@ struct mrc_ddc {
   struct mrc_obj obj;
   int rank, size;
   struct mrc_ddc_params prm;
-  struct mrc_ddc_ops *ops;
+  struct mrc_ddc_funcs *funcs;
   int proc[3]; // this proc's position in the 3D proc grid
   MPI_Datatype mpi_type;
   struct mrc_ddc_pattern add_ghosts;

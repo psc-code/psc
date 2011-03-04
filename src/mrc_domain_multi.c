@@ -239,7 +239,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 
 static struct mrc_ddc *
 mrc_domain_multi_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
-			     struct mrc_ddc_ops *ddc_ops)
+			     struct mrc_ddc_funcs *ddc_funcs)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -256,7 +256,7 @@ mrc_domain_multi_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *dd
 
   struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
   mrc_ddc_set_params(ddc, ddc_par);
-  mrc_ddc_set_ops(ddc, ddc_ops);
+  mrc_ddc_set_funcs(ddc, ddc_funcs);
   mrc_ddc_setup(ddc);
   return ddc;
 }

@@ -16,7 +16,7 @@ struct mrc_ddc_params {
   int bc[3]; // boundary condition
 };
 
-struct mrc_ddc_ops {
+struct mrc_ddc_funcs {
   void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
   void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
@@ -26,7 +26,7 @@ extern struct mrc_class mrc_class_mrc_ddc;
 MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_ddc, struct mrc_ddc)
 
 void mrc_ddc_set_params(struct mrc_ddc *ddc, struct mrc_ddc_params *prm);
-void mrc_ddc_set_ops(struct mrc_ddc *ddc, struct mrc_ddc_ops *ops);
+void mrc_ddc_set_funcs(struct mrc_ddc *ddc, struct mrc_ddc_funcs *funcs);
 void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
@@ -40,7 +40,7 @@ int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
        ix - ilo[0]])
 
-struct mrc_ddc_ops mrc_ddc_ops_f3;
+struct mrc_ddc_funcs mrc_ddc_funcs_f3;
 
 static inline int
 mrc_ddc_dir2idx(int dir[3])
