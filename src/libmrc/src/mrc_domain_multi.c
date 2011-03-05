@@ -71,9 +71,11 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
     info->patch = tmp % patches_per_proc;
   }
 
+  int p3[3];
+  gpatch_to_idx3(multi, gpatch, p3);
   for (int d = 0; d < 3; d++) {
-    info->ldims[d] = multi->all_patches[gpatch].ldims[d];
-    info->off[d] = multi->all_patches[gpatch].off[d];
+    info->ldims[d] = multi->ldims[d][p3[d]];
+    info->off[d] = multi->off[d][p3[d]];
   }
 }
 
