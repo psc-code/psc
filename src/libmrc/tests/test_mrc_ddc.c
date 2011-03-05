@@ -17,13 +17,14 @@
 // FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
 
 static void
-mrc_m3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_m3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+		   void *_buf, void *ctx)
 {
   //  mprintf("to %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
   struct mrc_m3 *m3 = ctx;
   float *buf = _buf;
 
-  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
+  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -36,13 +37,14 @@ mrc_m3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx
 }
 
 static void
-mrc_m3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_m3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+		     void *_buf, void *ctx)
 {
   //  mprintf("from %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
   struct mrc_m3 *m3 = ctx;
   float *buf = _buf;
 
-  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
+  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -91,6 +93,13 @@ check_m3(struct mrc_m3 *m3)
       int jx = (ix + off[0] + gdims[0]) % gdims[0];
       int jy = (iy + off[1] + gdims[1]) % gdims[1];
       int jz = (iz + off[2] + gdims[2]) % gdims[2];
+#if 0
+      if (MRC_M3(m3p, 0, ix,iy,iz) != jz * 10000 + jy * 100 + jx) {
+	printf("ixyz %d %d %d jxyz %d %d %d : %d val %g\n",
+	       ix,iy,iz, jx,jy,jz, jz * 10000 + jy * 100 + jx,
+	       MRC_M3(m3p, 0, ix,iy,iz));
+      }
+#endif
       assert(MRC_M3(m3p, 0, ix,iy,iz) == jz * 10000 + jy * 100 + jx);
     } mrc_m3_foreach_end;
     mrc_m3_patch_put(m3);

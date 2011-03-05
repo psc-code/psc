@@ -77,8 +77,8 @@ struct mrc_ddc_multi {
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
-  MPI_Request send_reqs[N_DIR];
-  MPI_Request recv_reqs[N_DIR];
+  MPI_Request *send_reqs;
+  MPI_Request *recv_reqs;
 };
 
 void libmrc_ddc_register_multi(void);
