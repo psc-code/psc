@@ -13,12 +13,12 @@
 // mrc_ddc_multi_get_nei_patch_info
 
 static void
-mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int dir[3],
+mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int p, int dir[3],
 				 struct mrc_patch_info *info)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[0];
+  struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
   int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
     patch_idx_nei[d] = ddc_patch->patch_idx[d] + dir[d];
@@ -49,9 +49,10 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, dir, &info);
-  sr->rank_nei = info.rank;
-  if (sr->rank_nei < 0)
+  mrc_ddc_multi_nei_get_patch_info(ddc, 0, dir, &info);
+  sr->nei_rank = info.rank;
+  sr->nei_patch = info.patch;
+  if (sr->nei_rank < 0)
     return;
 
   sr->len = 1;
@@ -87,9 +88,10 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, dir, &info);
-  sr->rank_nei = info.rank;
-  if (sr->rank_nei < 0)
+  mrc_ddc_multi_nei_get_patch_info(ddc, 0, dir, &info);
+  sr->nei_rank = info.rank;
+  sr->nei_patch = info.patch;
+  if (sr->nei_rank < 0)
     return;
 
   sr->len = 1;
@@ -205,7 +207,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
 		 r->len);
 #endif
-	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->rank_nei,
+	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->nei_rank,
 		    0x1000 + dir1neg, ddc->obj.comm, &multi->recv_reqs[dir1]);
 	} else {
 	  multi->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -228,7 +230,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
 		 s->len);
 #endif
-	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->rank_nei,
+	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->nei_rank,
 		    0x1000 + dir1, ddc->obj.comm, &multi->send_reqs[dir1]);
 	} else {
 	  multi->send_reqs[dir1] = MPI_REQUEST_NULL;
