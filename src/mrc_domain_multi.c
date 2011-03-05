@@ -16,6 +16,8 @@ mrc_domain_multi(struct mrc_domain *domain)
   return domain->obj.subctx;
 }
 
+// ======================================================================
+
 static int
 idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
@@ -31,6 +33,48 @@ gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
   p[1] = gpatch % np[1]; gpatch /= np[1];
   p[2] = gpatch;
 }
+
+// ======================================================================
+
+static void
+get_nr_patches_gpatch_off(struct mrc_domain *domain, int rank,
+			  int *nr_patches, int *gpatch_off)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  int patches_per_proc = nr_global_patches / domain->size;
+  int patches_per_proc_rmndr = nr_global_patches % domain->size;
+
+  *nr_patches = patches_per_proc + (rank < patches_per_proc_rmndr);
+  if (rank < patches_per_proc_rmndr) {
+    *gpatch_off = rank * (patches_per_proc + 1);
+  } else {
+    *gpatch_off = rank * patches_per_proc + patches_per_proc_rmndr;
+  }
+}
+
+static void
+gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
+		     int *rank, int *patch)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  int patches_per_proc = nr_global_patches / domain->size;
+  int patches_per_proc_rmndr = nr_global_patches % domain->size;
+  
+  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
+    *rank = gpatch / (patches_per_proc + 1);
+    *patch = gpatch % (patches_per_proc + 1);
+  } else {
+    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
+    *rank = tmp / patches_per_proc + patches_per_proc_rmndr;
+    *patch = tmp % patches_per_proc;
+  }
+}
+
+// ======================================================================
 
 static void
 mrc_domain_multi_view(struct mrc_obj *obj)
@@ -58,18 +102,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-  
-  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
-    info->rank = gpatch / (patches_per_proc + 1);
-    info->patch = gpatch % (patches_per_proc + 1);
-  } else {
-    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
-    info->rank = tmp / patches_per_proc + patches_per_proc_rmndr;
-    info->patch = tmp % patches_per_proc;
-  }
+  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
 
   int p3[3];
   gpatch_to_idx3(multi, gpatch, p3);
@@ -90,11 +123,9 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
-  // FIXME: allow setting of desired decomposition using ldims
+  // FIXME: allow setting of desired decomposition by user?
   int *np = multi->np;
-  int nr_total_patches = 1;
   for (int d = 0; d < 3; d++) {
-    nr_total_patches *= np[d];
     int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
     rmndr[d] = multi->gdims[d] % np[d];
@@ -109,15 +140,9 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
     }
   }
 
-  int patches_per_proc = nr_total_patches / domain->size;
-  int patches_per_proc_rmndr = nr_total_patches % domain->size;
+  get_nr_patches_gpatch_off(domain, domain->rank,
+			    &multi->nr_patches, &multi->gpatch_off);
 
-  multi->nr_patches = patches_per_proc + (domain->rank < patches_per_proc_rmndr);
-  if (domain->rank < patches_per_proc_rmndr) {
-    multi->gpatch_off = domain->rank * (patches_per_proc + 1);
-  } else {
-    multi->gpatch_off = domain->rank * patches_per_proc + patches_per_proc_rmndr;
-  }
   multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
   for (int p = 0; p < multi->nr_patches; p++) {
     struct mrc_patch_info info;
