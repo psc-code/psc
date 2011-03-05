@@ -10,23 +10,11 @@
 #define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_get_rank_nei
+// mrc_ddc_multi_get_nei_patch_info
 
 static void
-get_rank_patch(struct mrc_ddc *ddc, const int patch_idx[3], int *rank, int *patch)
-{
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
-
-  for (int d = 0; d < 3; d++) {
-    assert(patch_idx[d] >= 0 && patch_idx[d] < multi->np[d]);
-  }
-  *rank = (patch_idx[2] * multi->np[1] + patch_idx[1]) * multi->np[0] + patch_idx[0];
-  *patch = 0;
-}
-
-static void
-mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int dir[3], int *rank,
-				 int *patch)
+mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int dir[3],
+				 struct mrc_patch_info *info)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
@@ -43,12 +31,13 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int dir[3], int *rank,
       }
     }
     if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
-      *rank = -1;
-      *patch = -1;
+      info->rank = -1;
+      info->patch = -1;
       return;
     }
   }
-  get_rank_patch(ddc, patch_idx_nei, rank, patch);
+  mrc_domain_get_idx3_patch_info(multi->domain, patch_idx_nei, info);
+  //  get_rank_patch(ddc, patch_idx_nei, rank, patch);
 }
 
 // ----------------------------------------------------------------------
@@ -59,8 +48,9 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  int patch;
-  mrc_ddc_multi_get_nei_rank_patch(ddc, dir, &sr->rank_nei, &patch);
+  struct mrc_patch_info info;
+  mrc_ddc_multi_nei_get_patch_info(ddc, dir, &info);
+  sr->rank_nei = info.rank;
   if (sr->rank_nei < 0)
     return;
 
@@ -96,8 +86,9 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  int patch;
-  mrc_ddc_multi_get_nei_rank_patch(ddc, dir, &sr->rank_nei, &patch);
+  struct mrc_patch_info info;
+  mrc_ddc_multi_nei_get_patch_info(ddc, dir, &info);
+  sr->rank_nei = info.rank;
   if (sr->rank_nei < 0)
     return;
 
