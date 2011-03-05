@@ -44,12 +44,12 @@ mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int p, int dir[3],
 // ddc_init_outside
 
 static void
-ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
+ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, 0, dir, &info);
+  mrc_ddc_multi_nei_get_patch_info(ddc, p, dir, &info);
   sr->nei_rank = info.rank;
   sr->nei_patch = info.patch;
   if (sr->nei_rank < 0)
@@ -59,7 +59,7 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    ihi[d] = multi->patches[0].ldims[d];
+    ihi[d] = multi->patches[p].ldims[d];
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = ilo[d] - ddc->ibn[d];
@@ -83,12 +83,12 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 // ddc_init_inside
 
 static void
-ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
+ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, 0, dir, &info);
+  mrc_ddc_multi_nei_get_patch_info(ddc, p, dir, &info);
   sr->nei_rank = info.rank;
   sr->nei_patch = info.patch;
   if (sr->nei_rank < 0)
@@ -98,7 +98,7 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
   int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
-    ihi[d] = multi->patches[0].ldims[d];
+    ihi[d] = multi->patches[p].ldims[d];
     switch (dir[d]) {
     case -1:
       sr->ilo[d] = ilo[d];
@@ -159,23 +159,24 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
   for (int p = 0; p < multi->nr_patches; p++) {
     struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
     mrc_domain_get_patch_idx3(multi->domain, p, ddc_patch->patch_idx);
-  }
-  assert(multi->nr_patches == 1);
 
-  int dir[3];
-  for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-    for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-      for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
-	  continue;
+    int dir[3];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
+	    continue;
+	  
+	  int dir1 = mrc_ddc_dir2idx(dir);
 
-	struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[0];
-	ddc_init_outside(ddc, &add_ghosts->send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_inside(ddc, &add_ghosts->recv[mrc_ddc_dir2idx(dir)], dir);
-
-	struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[0];
-	ddc_init_inside(ddc, &fill_ghosts->send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_outside(ddc, &fill_ghosts->recv[mrc_ddc_dir2idx(dir)], dir);
+	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
+	  ddc_init_outside(ddc, p, &add_ghosts->send[dir1], dir);
+	  ddc_init_inside(ddc, p, &add_ghosts->recv[dir1], dir);
+	  
+	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
+	  ddc_init_inside(ddc, p, &fill_ghosts->send[dir1], dir);
+	  ddc_init_outside(ddc, p, &fill_ghosts->recv[dir1], dir);
+	}
       }
     }
   }
