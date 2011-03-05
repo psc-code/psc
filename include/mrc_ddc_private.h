@@ -31,4 +31,23 @@ struct mrc_ddc {
   MPI_Request recv_reqs[N_DIR];
 };
 
+struct mrc_ddc_ops {
+  MRC_OBJ_OPS;
+  void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+  void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
+};
+
+void libmrc_ddc_register(struct mrc_ddc_ops *ops);
+
+#define to_mrc_ddc(obj) container_of(obj, struct mrc_ddc, obj)
+
+// ======================================================================
+// mrc_ddc_simple
+
+struct mrc_ddc_simple {
+};
+
+void libmrc_ddc_register_simple(void);
+
+
 #endif
