@@ -142,11 +142,11 @@ mrc_ddc_simple_setup(struct mrc_obj *obj)
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
 	  continue;
 
-	ddc_init_outside(ddc, &ddc->add_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_inside(ddc, &ddc->add_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &simple->add_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &simple->add_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
 
-	ddc_init_inside(ddc, &ddc->fill_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
-	ddc_init_outside(ddc, &ddc->fill_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_inside(ddc, &simple->fill_ghosts.send[mrc_ddc_dir2idx(dir)], dir);
+	ddc_init_outside(ddc, &simple->fill_ghosts.recv[mrc_ddc_dir2idx(dir)], dir);
       }
     }
   }
@@ -161,6 +161,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void (*to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
   int dir[3];
 
   // post all receives
@@ -178,9 +179,9 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 r->len);
 #endif
 	  MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->rank_nei,
-		    0x1000 + dir1neg, ddc->obj.comm, &ddc->recv_reqs[dir1]);
+		    0x1000 + dir1neg, ddc->obj.comm, &simple->recv_reqs[dir1]);
 	} else {
-	  ddc->recv_reqs[dir1] = MPI_REQUEST_NULL;
+	  simple->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	}
       }
     }
@@ -201,16 +202,16 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		 s->len);
 #endif
 	  MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->rank_nei,
-		    0x1000 + dir1, ddc->obj.comm, &ddc->send_reqs[dir1]);
+		    0x1000 + dir1, ddc->obj.comm, &simple->send_reqs[dir1]);
 	} else {
-	  ddc->send_reqs[dir1] = MPI_REQUEST_NULL;
+	  simple->send_reqs[dir1] = MPI_REQUEST_NULL;
 	}
       }
     }
   }
 
   // finish receives
-  MPI_Waitall(27, ddc->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(27, simple->recv_reqs, MPI_STATUSES_IGNORE);
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -224,7 +225,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
   }
 
   // finish sends
-  MPI_Waitall(27, ddc->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(27, simple->send_reqs, MPI_STATUSES_IGNORE);
 }
 
 // ----------------------------------------------------------------------
@@ -233,7 +234,9 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 static void
 mrc_ddc_simple_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  ddc_run(ddc, &ddc->add_ghosts, mb, me, ctx,
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+
+  ddc_run(ddc, &simple->add_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
@@ -243,7 +246,9 @@ mrc_ddc_simple_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 static void
 mrc_ddc_simple_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
-  ddc_run(ddc, &ddc->fill_ghosts, mb, me, ctx,
+  struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+
+  ddc_run(ddc, &simple->fill_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 

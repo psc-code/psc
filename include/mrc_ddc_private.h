@@ -28,10 +28,6 @@ struct mrc_ddc {
   int rank, size;
   struct mrc_ddc_funcs *funcs;
   MPI_Datatype mpi_type;
-  struct mrc_ddc_pattern add_ghosts;
-  struct mrc_ddc_pattern fill_ghosts;
-  MPI_Request send_reqs[N_DIR];
-  MPI_Request recv_reqs[N_DIR];
 };
 
 struct mrc_ddc_ops {
@@ -56,6 +52,10 @@ struct mrc_ddc_simple {
   int bc[3]; // boundary condition
 
   int proc[3]; // this proc's position in the 3D proc grid
+  struct mrc_ddc_pattern add_ghosts;
+  struct mrc_ddc_pattern fill_ghosts;
+  MPI_Request send_reqs[N_DIR];
+  MPI_Request recv_reqs[N_DIR];
 };
 
 void libmrc_ddc_register_simple(void);
@@ -70,6 +70,10 @@ struct mrc_ddc_multi {
   int nr_patches;
   struct mrc_patch *patches;
   int proc[3]; // this proc's position in the 3D proc grid
+  struct mrc_ddc_pattern add_ghosts;
+  struct mrc_ddc_pattern fill_ghosts;
+  MPI_Request send_reqs[N_DIR];
+  MPI_Request recv_reqs[N_DIR];
 };
 
 void libmrc_ddc_register_multi(void);
