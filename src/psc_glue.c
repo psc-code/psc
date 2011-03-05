@@ -395,18 +395,21 @@ INIT_grid_map()
 void
 PIC_fax(fields_fortran_t *pf, int m)
 {
+  INIT_grid_map();
   PIC_fax_F77(pf->flds[m]);
 }
 
 void
 PIC_fay(fields_fortran_t *pf, int m)
 {
+  INIT_grid_map();
   PIC_fay_F77(pf->flds[m]);
 }
 
 void
 PIC_faz(fields_fortran_t *pf, int m)
 {
+  INIT_grid_map();
   PIC_faz_F77(pf->flds[m]);
 }
 
