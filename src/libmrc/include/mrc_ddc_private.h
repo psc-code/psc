@@ -70,8 +70,8 @@ struct mrc_ddc_multi {
   int nr_patches;
   struct mrc_patch *patches;
   int proc[3]; // this proc's position in the 3D proc grid
-  struct mrc_ddc_pattern add_ghosts;
-  struct mrc_ddc_pattern fill_ghosts;
+  struct mrc_ddc_pattern *add_ghosts;
+  struct mrc_ddc_pattern *fill_ghosts;
   MPI_Request send_reqs[N_DIR];
   MPI_Request recv_reqs[N_DIR];
 };
