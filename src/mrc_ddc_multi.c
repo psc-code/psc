@@ -58,19 +58,22 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
     return;
 
   sr->len = 1;
+  int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
+    ilo[d] = 0;
+    ihi[d] = multi->patches[0].ldims[d];
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = multi->ilo[d] - ddc->ibn[d];
-      sr->ihi[d] = multi->ilo[d];
+      sr->ilo[d] = ilo[d] - ddc->ibn[d];
+      sr->ihi[d] = ilo[d];
       break;
     case 0:
-      sr->ilo[d] = multi->ilo[d];
-      sr->ihi[d] = multi->ihi[d];
+      sr->ilo[d] = ilo[d];
+      sr->ihi[d] = ihi[d];
       break;
     case 1:
-      sr->ilo[d] = multi->ihi[d];
-      sr->ihi[d] = multi->ihi[d] + ddc->ibn[d];
+      sr->ilo[d] = ihi[d];
+      sr->ihi[d] = ihi[d] + ddc->ibn[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -91,19 +94,22 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
     return;
 
   sr->len = 1;
+  int ilo[3], ihi[3];
   for (int d = 0; d < 3; d++) {
+    ilo[d] = 0;
+    ihi[d] = multi->patches[0].ldims[d];
     switch (dir[d]) {
     case -1:
-      sr->ilo[d] = multi->ilo[d];
-      sr->ihi[d] = multi->ilo[d] + ddc->ibn[d];
+      sr->ilo[d] = ilo[d];
+      sr->ihi[d] = ilo[d] + ddc->ibn[d];
       break;
     case 0:
-      sr->ilo[d] = multi->ilo[d];
-      sr->ihi[d] = multi->ihi[d];
+      sr->ilo[d] = ilo[d];
+      sr->ihi[d] = ihi[d];
       break;
     case 1:
-      sr->ilo[d] = multi->ihi[d] - ddc->ibn[d];
-      sr->ihi[d] = multi->ihi[d];
+      sr->ilo[d] = ihi[d] - ddc->ibn[d];
+      sr->ihi[d] = ihi[d];
       break;
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
@@ -144,12 +150,9 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
   mrc_domain_get_nr_procs(multi->domain, multi->np);
   mrc_domain_get_bc(multi->domain, multi->bc);
 
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(multi->domain, &nr_patches);
-  assert(nr_patches == 1);
-  for (int d = 0; d < 3; d++) {
-    multi->ihi[d] = patches[0].ldims[d];
-  }
+  multi->patches = mrc_domain_get_patches(multi->domain,
+					  &multi->nr_patches);
+  assert(multi->nr_patches == 1);
 
   int rr = ddc->rank;
   ddc->proc[0] = rr % multi->np[0]; rr /= multi->np[0];
