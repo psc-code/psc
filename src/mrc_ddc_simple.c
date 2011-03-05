@@ -158,8 +158,8 @@ mrc_ddc_simple_setup(struct mrc_obj *obj)
 static void
 ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void *ctx,
-	void (*to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx),
-	void (*from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx))
+	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
+	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
   int dir[3];
@@ -194,7 +194,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	int dir1 = mrc_ddc_dir2idx(dir);
 	struct mrc_ddc_sendrecv *s = &patt->send[dir1];
 	if (s->len > 0) {
-	  to_buf(mb, me, s->ilo, s->ihi, s->buf, ctx);
+	  to_buf(mb, me, 0, s->ilo, s->ihi, s->buf, ctx);
 #if 0
 	  printf("[%d] send to %d [%d,%d] x [%d,%d] x [%d,%d] len %d\n", ddc->rank,
 		 s->rank_nei,
@@ -218,7 +218,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	int dir1 = mrc_ddc_dir2idx(dir);
 	struct mrc_ddc_sendrecv *r = &patt->recv[dir1];
 	if (r->len > 0) {
-	  from_buf(mb, me, r->ilo, r->ihi, r->buf, ctx);
+	  from_buf(mb, me, 0, r->ilo, r->ihi, r->buf, ctx);
 	}
       }
     }
@@ -288,7 +288,7 @@ libmrc_ddc_register_simple()
 // FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
 
 static void
-mrc_f3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_f3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   struct mrc_f3 *fld = ctx;
   float *buf = _buf;
@@ -306,7 +306,7 @@ mrc_f3_copy_to_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx
 }
 
 static void
-mrc_f3_copy_from_buf(int mb, int me, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_f3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   struct mrc_f3 *fld = ctx;
   float *buf = _buf;

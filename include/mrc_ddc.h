@@ -8,9 +8,9 @@
 #include <mpi.h>
 
 struct mrc_ddc_funcs {
-  void (*copy_to_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
-  void (*copy_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
-  void (*add_from_buf)(int mb, int me, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*copy_to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*copy_from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx);
+  void (*add_from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx);
 };
 
 struct mrc_domain;
