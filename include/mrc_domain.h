@@ -15,14 +15,15 @@ enum {
 };
 
 struct mrc_patch {
-  int off[3];
   int ldims[3];
+  int off[3];
 };
 
 struct mrc_patch_info {
   int rank;
   int patch;
   int ldims[3];
+  int off[3];
 };
 
 extern struct mrc_class mrc_class_mrc_domain;

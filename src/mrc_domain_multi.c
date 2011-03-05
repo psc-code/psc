@@ -40,22 +40,32 @@ mrc_domain_multi_view(struct mrc_obj *obj)
     }
     MPI_Barrier(obj->comm);
   }
+}
 
-#if 0
-  assert(domain->is_setup);
-  int *np = multi->nr_procs;
-  int p3[3];
-  for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
-    for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
-      for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
-	struct mrc_patch *patch = &multi->all_patches[part2index(multi, p3)];
-	mprintf("  patch: ldims %dx%dx%d off %dx%dx%d\n",
-		patch->ldims[0], patch->ldims[1], patch->ldims[2],
-		patch->off[0], patch->off[1], patch->off[2]);
-      }
-    }
+// FIXME, get rid of this one always use idx3 one?
+static void
+mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
+				       struct mrc_patch_info *info)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  int patches_per_proc = nr_global_patches / domain->size;
+  int patches_per_proc_rmndr = nr_global_patches % domain->size;
+  
+  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
+    info->rank = gpatch / (patches_per_proc + 1);
+    info->patch = gpatch % (patches_per_proc + 1);
+  } else {
+    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
+    info->rank = tmp / patches_per_proc + patches_per_proc_rmndr;
+    info->patch = tmp % patches_per_proc;
   }
-#endif
+
+  for (int d = 0; d < 3; d++) {
+    info->ldims[d] = multi->all_patches[gpatch].ldims[d];
+    info->off[d] = multi->all_patches[gpatch].off[d];
+  }
 }
 
 static void
@@ -181,31 +191,6 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   *nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-}
-
-// FIXME, get rid of this one always use idx3 one?
-static void
-mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
-				       struct mrc_patch_info *info)
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-  
-  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
-    info->rank = gpatch / (patches_per_proc + 1);
-    info->patch = gpatch % (patches_per_proc + 1);
-  } else {
-    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
-    info->rank = tmp / patches_per_proc + patches_per_proc_rmndr;
-    info->patch = tmp % patches_per_proc;
-  }
-
-  for (int d = 0; d < 3; d++) {
-    info->ldims[d] = multi->all_patches[gpatch].ldims[d];
-  }
 }
 
 static void
