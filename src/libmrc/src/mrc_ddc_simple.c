@@ -21,10 +21,12 @@ get_rank(struct mrc_ddc *ddc, const int proc[3])
   return (proc[2] * simple->n_proc[1] + proc[1]) * simple->n_proc[0] + proc[0];
 }
 
-static int
-mrc_ddc_simple_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
+static void
+mrc_ddc_simple_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
+				  int *nei_rank, int *nei_patch)
 {
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
+  assert(p == 0);
 
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
@@ -37,10 +39,14 @@ mrc_ddc_simple_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
 	proc_nei[d] -= simple->n_proc[d];
       }
     }
-    if (proc_nei[d] < 0 || proc_nei[d] >= simple->n_proc[d])
-      return - 1;
+    if (proc_nei[d] < 0 || proc_nei[d] >= simple->n_proc[d]) {
+      *nei_rank = -1;
+      *nei_patch = -1;
+      return;
+    }
   }
-  return get_rank(ddc, proc_nei);
+  *nei_rank = get_rank(ddc, proc_nei);
+  *nei_patch = 0;
 }
 
 // ----------------------------------------------------------------------
@@ -51,7 +57,8 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
 
-  sr->nei_rank = mrc_ddc_simple_get_rank_nei(ddc, dir);
+  int dummy;
+  mrc_ddc_simple_get_nei_rank_patch(ddc, 0, dir, &sr->nei_rank, &dummy);
   if (sr->nei_rank < 0)
     return;
 
@@ -84,7 +91,8 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
 
-  sr->nei_rank = mrc_ddc_simple_get_rank_nei(ddc, dir);
+  int dummy;
+  mrc_ddc_simple_get_nei_rank_patch(ddc, 0, dir, &sr->nei_rank, &dummy);
   if (sr->nei_rank < 0)
     return;
 
@@ -271,7 +279,7 @@ static struct mrc_ddc_ops mrc_ddc_simple_ops = {
   .setup                 = mrc_ddc_simple_setup,
   .fill_ghosts           = mrc_ddc_simple_fill_ghosts,
   .add_ghosts            = mrc_ddc_simple_add_ghosts,
-  .get_rank_nei          = mrc_ddc_simple_get_rank_nei,
+  .get_nei_rank_patch    = mrc_ddc_simple_get_nei_rank_patch,
 };
 
 void

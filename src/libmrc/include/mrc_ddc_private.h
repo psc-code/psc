@@ -36,7 +36,8 @@ struct mrc_ddc_ops {
   void (*set_domain)(struct mrc_ddc *ddc, struct mrc_domain *domain);
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
-  int  (*get_rank_nei)(struct mrc_ddc *ddc, int dir[3]);
+  void (*get_nei_rank_patch)(struct mrc_ddc *ddc, int p, int dir[3],
+			     int *nei_rank, int *nei_patch);
 };
 
 void libmrc_ddc_register(struct mrc_ddc_ops *ops);

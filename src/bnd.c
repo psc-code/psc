@@ -118,7 +118,8 @@ ddc_particles_create(struct mrc_ddc *ddc)
 	nei->send_buf_size = 8;
 	nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
 	nei->n_send = 0;
-	nei->rank = mrc_ddc_get_rank_nei(ddc, dir);
+	int dummy;
+	mrc_ddc_get_nei_rank_patch(ddc, 0, dir, &nei->rank, &dummy);
       }
     }
   }
