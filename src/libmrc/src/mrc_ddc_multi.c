@@ -28,9 +28,10 @@ mrc_ddc_multi_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
+  struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[0];
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
-    proc_nei[d] = multi->proc[d] + dir[d];
+    proc_nei[d] = ddc_patch->patch_idx[d] + dir[d];
     if (multi->bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
 	proc_nei[d] += multi->np[d];
@@ -154,12 +155,16 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
 					  &multi->nr_patches);
   multi->add_ghosts = calloc(multi->nr_patches, sizeof(*multi->add_ghosts));
   multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
+  multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
+  for (int p = 0; p < multi->nr_patches; p++) {
+    int rr = ddc->rank;
+    struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
+    ddc_patch->patch_idx[0] = rr % multi->np[0]; rr /= multi->np[0];
+    ddc_patch->patch_idx[1] = rr % multi->np[1]; rr /= multi->np[1];
+    ddc_patch->patch_idx[2] = rr;
+  }
   assert(multi->nr_patches == 1);
 
-  int rr = ddc->rank;
-  multi->proc[0] = rr % multi->np[0]; rr /= multi->np[0];
-  multi->proc[1] = rr % multi->np[1]; rr /= multi->np[1];
-  multi->proc[2] = rr;
 
   int dir[3];
 
