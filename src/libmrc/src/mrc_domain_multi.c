@@ -16,17 +16,6 @@ mrc_domain_multi(struct mrc_domain *domain)
   return domain->obj.subctx;
 }
 
-static void
-mrc_domain_multi_rank2proc(struct mrc_domain *domain, int rank, int proc[3])
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-  int *np = multi->np;
-
-  proc[0] = rank % np[0]; rank /= np[0];
-  proc[1] = rank % np[1]; rank /= np[1];
-  proc[2] = rank % np[2];
-}
-
 static int
 mrc_domain_multi_proc2rank(struct mrc_domain *domain, int proc[3])
 {
@@ -170,12 +159,6 @@ mrc_domain_multi_get_patches(struct mrc_domain *domain, int *nr_patches)
 }
 
 static void
-mrc_domain_multi_get_local_idx(struct mrc_domain *domain, int *idx)
-{
-  mrc_domain_multi_rank2proc(domain, domain->rank, idx);
-}
-
-static void
 mrc_domain_multi_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -275,7 +258,6 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .destroy               = mrc_domain_multi_destroy,
   .get_neighbor_rank     = mrc_domain_multi_get_neighbor_rank,
   .get_patches           = mrc_domain_multi_get_patches,
-  .get_local_idx         = mrc_domain_multi_get_local_idx,
   .get_global_dims       = mrc_domain_multi_get_global_dims,
   .get_nr_procs          = mrc_domain_multi_get_nr_procs,
   .get_bc                = mrc_domain_multi_get_bc,
