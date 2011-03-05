@@ -27,7 +27,6 @@ struct mrc_ddc {
 
   int rank, size;
   struct mrc_ddc_funcs *funcs;
-  int proc[3]; // this proc's position in the 3D proc grid
   MPI_Datatype mpi_type;
   struct mrc_ddc_pattern add_ghosts;
   struct mrc_ddc_pattern fill_ghosts;
@@ -51,9 +50,12 @@ void libmrc_ddc_register(struct mrc_ddc_ops *ops);
 // mrc_ddc_simple
 
 struct mrc_ddc_simple {
+  // parameters
   int n_proc[3]; // # procs in 3D grid
   int ilo[3], ihi[3]; // local domain (no ghosts)
   int bc[3]; // boundary condition
+
+  int proc[3]; // this proc's position in the 3D proc grid
 };
 
 void libmrc_ddc_register_simple(void);
@@ -67,6 +69,7 @@ struct mrc_ddc_multi {
   int bc[3]; // boundary condition
   int nr_patches;
   struct mrc_patch *patches;
+  int proc[3]; // this proc's position in the 3D proc grid
 };
 
 void libmrc_ddc_register_multi(void);

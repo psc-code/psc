@@ -28,7 +28,7 @@ mrc_ddc_simple_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
 
   int proc_nei[3];
   for (int d = 0; d < 3; d++) {
-    proc_nei[d] = ddc->proc[d] + dir[d];
+    proc_nei[d] = simple->proc[d] + dir[d];
     if (simple->bc[d] == BC_PERIODIC) {
       if (proc_nei[d] < 0) {
 	proc_nei[d] += simple->n_proc[d];
@@ -130,9 +130,9 @@ mrc_ddc_simple_setup(struct mrc_obj *obj)
   assert(ddc->max_n_fields > 0);
 
   int rr = ddc->rank;
-  ddc->proc[0] = rr % simple->n_proc[0]; rr /= simple->n_proc[0];
-  ddc->proc[1] = rr % simple->n_proc[1]; rr /= simple->n_proc[1];
-  ddc->proc[2] = rr;
+  simple->proc[0] = rr % simple->n_proc[0]; rr /= simple->n_proc[0];
+  simple->proc[1] = rr % simple->n_proc[1]; rr /= simple->n_proc[1];
+  simple->proc[2] = rr;
 
   int dir[3];
 
