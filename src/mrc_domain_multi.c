@@ -109,20 +109,6 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
     }
   }
 
-  multi->all_patches = calloc(nr_total_patches, sizeof(*multi->all_patches));
-  int p3[3];
-  for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
-    for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
-      for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
-	struct mrc_patch *patch = &multi->all_patches[idx3_to_gpatch(multi, p3)];
-	for (int d = 0; d < 3; d++) {
-	  patch->ldims[d] = multi->ldims[d][p3[d]];
-	  patch->off[d] = multi->off[d][p3[d]];
-	}
-      }
-    }
-  }
-
   int patches_per_proc = nr_total_patches / domain->size;
   int patches_per_proc_rmndr = nr_total_patches % domain->size;
 
