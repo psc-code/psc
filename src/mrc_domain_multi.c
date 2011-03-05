@@ -17,10 +17,19 @@ mrc_domain_multi(struct mrc_domain *domain)
 }
 
 static int
-part2index(struct mrc_domain_multi *multi, int p[3])
+idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
   int *np = multi->np;
   return (p[2] * np[1] + p[1]) * np[0] + p[0];
+}
+
+static void
+gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
+{
+  int *np = multi->np;
+  p[0] = gpatch % np[0]; gpatch /= np[0];
+  p[1] = gpatch % np[1]; gpatch /= np[1];
+  p[2] = gpatch;
 }
 
 static void
@@ -103,7 +112,7 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
     for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
       for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
-	struct mrc_patch *patch = &multi->all_patches[part2index(multi, p3)];
+	struct mrc_patch *patch = &multi->all_patches[idx3_to_gpatch(multi, p3)];
 	for (int d = 0; d < 3; d++) {
 	  patch->ldims[d] = multi->ldims[d][p3[d]];
 	  patch->off[d] = multi->off[d][p3[d]];
@@ -208,7 +217,7 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int gpatch = part2index(multi, idx);
+  int gpatch = idx3_to_gpatch(multi, idx);
   mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
