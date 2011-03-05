@@ -12,38 +12,43 @@
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_get_rank_nei
 
-static int
-get_rank(struct mrc_ddc *ddc, const int patch_idx[3])
+static void
+get_rank_patch(struct mrc_ddc *ddc, const int patch_idx[3], int *rank, int *patch)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   for (int d = 0; d < 3; d++) {
     assert(patch_idx[d] >= 0 && patch_idx[d] < multi->np[d]);
   }
-  return (patch_idx[2] * multi->np[1] + patch_idx[1]) * multi->np[0] + patch_idx[0];
+  *rank = (patch_idx[2] * multi->np[1] + patch_idx[1]) * multi->np[0] + patch_idx[0];
+  *patch = 0;
 }
 
-static int
-mrc_ddc_multi_get_rank_nei(struct mrc_ddc *ddc, int dir[3])
+static void
+mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int dir[3], int *rank,
+				 int *patch)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[0];
-  int proc_nei[3];
+  int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
-    proc_nei[d] = ddc_patch->patch_idx[d] + dir[d];
+    patch_idx_nei[d] = ddc_patch->patch_idx[d] + dir[d];
     if (multi->bc[d] == BC_PERIODIC) {
-      if (proc_nei[d] < 0) {
-	proc_nei[d] += multi->np[d];
+      if (patch_idx_nei[d] < 0) {
+	patch_idx_nei[d] += multi->np[d];
       }
-      if (proc_nei[d] >= multi->np[d]) {
-	proc_nei[d] -= multi->np[d];
+      if (patch_idx_nei[d] >= multi->np[d]) {
+	patch_idx_nei[d] -= multi->np[d];
       }
     }
-    if (proc_nei[d] < 0 || proc_nei[d] >= multi->np[d])
-      return -1;
+    if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
+      *rank = -1;
+      *patch = -1;
+      return;
+    }
   }
-  return get_rank(ddc, proc_nei);
+  get_rank_patch(ddc, patch_idx_nei, rank, patch);
 }
 
 // ----------------------------------------------------------------------
@@ -54,7 +59,8 @@ ddc_init_outside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  sr->rank_nei = mrc_ddc_multi_get_rank_nei(ddc, dir);
+  int patch;
+  mrc_ddc_multi_get_nei_rank_patch(ddc, dir, &sr->rank_nei, &patch);
   if (sr->rank_nei < 0)
     return;
 
@@ -90,7 +96,8 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  sr->rank_nei = mrc_ddc_multi_get_rank_nei(ddc, dir);
+  int patch;
+  mrc_ddc_multi_get_nei_rank_patch(ddc, dir, &sr->rank_nei, &patch);
   if (sr->rank_nei < 0)
     return;
 
