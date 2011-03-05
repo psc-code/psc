@@ -64,8 +64,9 @@ void libmrc_ddc_register_simple(void);
 struct mrc_ddc_multi {
   struct mrc_domain *domain;
   int np[3]; // # patches per direction
-  int ilo[3], ihi[3]; // local domain (no ghosts)
   int bc[3]; // boundary condition
+  int nr_patches;
+  struct mrc_patch *patches;
 };
 
 void libmrc_ddc_register_multi(void);
