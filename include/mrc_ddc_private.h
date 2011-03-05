@@ -63,13 +63,17 @@ void libmrc_ddc_register_simple(void);
 // ======================================================================
 // mrc_ddc_multi
 
+struct mrc_ddc_patch {
+  int patch_idx[3];
+};
+
 struct mrc_ddc_multi {
   struct mrc_domain *domain;
   int np[3]; // # patches per direction
   int bc[3]; // boundary condition
   int nr_patches;
   struct mrc_patch *patches;
-  int proc[3]; // this proc's position in the 3D proc grid
+  struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
   MPI_Request send_reqs[N_DIR];
