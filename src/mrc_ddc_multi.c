@@ -312,3 +312,53 @@ libmrc_ddc_register_multi()
   libmrc_ddc_register(&mrc_ddc_multi_ops);
 }
 
+// ======================================================================
+// mrc_ddc_funcs_m3 for mrc_m3
+
+#include <mrc_fld.h>
+
+static void
+mrc_m3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+		   void *_buf, void *ctx)
+{
+  //  mprintf("to %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
+  struct mrc_m3 *m3 = ctx;
+  float *buf = _buf;
+
+  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_M3(m3p,m, ix,iy,iz);
+	}
+      }
+    }
+  }
+}
+
+static void
+mrc_m3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3],
+		     void *_buf, void *ctx)
+{
+  //  mprintf("from %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
+  struct mrc_m3 *m3 = ctx;
+  float *buf = _buf;
+
+  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+  for (int m = mb; m < me; m++) {
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_M3(m3p,m, ix,iy,iz) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
+	}
+      }
+    }
+  }
+}
+
+struct mrc_ddc_funcs mrc_ddc_funcs_m3 = {
+  .copy_to_buf   = mrc_m3_copy_to_buf,
+  .copy_from_buf = mrc_m3_copy_from_buf,
+};
+

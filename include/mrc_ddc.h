@@ -33,6 +33,7 @@ int mrc_ddc_get_rank_nei(struct mrc_ddc *ddc, int dir[3]);
        ix - ilo[0]])
 
 struct mrc_ddc_funcs mrc_ddc_funcs_f3;
+struct mrc_ddc_funcs mrc_ddc_funcs_m3;
 
 static inline int
 mrc_ddc_dir2idx(int dir[3])
