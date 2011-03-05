@@ -8,7 +8,8 @@
 
 struct mrc_ddc_sendrecv {
   int ilo[3], ihi[3];
-  int rank_nei;
+  int nei_rank;
+  int nei_patch;
   int len;
   void *buf;
 };
