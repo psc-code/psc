@@ -18,7 +18,8 @@ struct c_bnd_ctx {
 static void
 copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  fields_base_t *pf = ctx;
+  mfields_base_t *flds = ctx;
+  fields_base_t *pf = &flds->f[p];
   fields_base_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -35,7 +36,8 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx
 static void
 add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  fields_base_t *pf = ctx;
+  mfields_base_t *flds = ctx;
+  fields_base_t *pf = &flds->f[p];
   fields_base_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -52,7 +54,8 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ct
 static void
 copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  fields_base_t *pf = ctx;
+  mfields_base_t *flds = ctx;
+  fields_base_t *pf = &flds->f[p];
   fields_base_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -244,9 +247,6 @@ create_bnd(void)
 static void
 c_add_ghosts(mfields_base_t *flds, int mb, int me)
 {
-  assert(psc.nr_patches == 1);
-  fields_base_t *pf = &flds->f[0];
-  
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -258,7 +258,7 @@ c_add_ghosts(mfields_base_t *flds, int mb, int me)
   }
   prof_start(pr);
 
-  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, flds);
 
   prof_stop(pr);
 }
@@ -266,9 +266,6 @@ c_add_ghosts(mfields_base_t *flds, int mb, int me)
 static void
 c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 {
-  assert(psc.nr_patches == 1);
-  fields_base_t *pf = &flds->f[0];
-  
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -283,7 +280,7 @@ c_fill_ghosts(mfields_base_t *flds, int mb, int me)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, pf);
+  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, flds);
 
   prof_stop(pr);
 }
