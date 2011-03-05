@@ -303,7 +303,6 @@ static struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .set_domain            = mrc_ddc_multi_set_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
-  .get_rank_nei          = mrc_ddc_get_rank_nei,
 };
 
 void
