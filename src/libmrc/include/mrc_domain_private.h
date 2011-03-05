@@ -28,6 +28,8 @@ struct mrc_domain_ops {
   void (*get_nr_global_patches)(struct mrc_domain *domain, int *nr_global_patches);
   void (*get_global_patch_info)(struct mrc_domain *domain, int gp,
 				struct mrc_patch_info *info);
+  void (*get_idx3_patch_info)(struct mrc_domain *domain, int idx[3],
+			      struct mrc_patch_info *info);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
 };
 
@@ -58,8 +60,6 @@ struct mrc_domain_multi {
   struct mrc_patch *all_patches;
   int np[3]; //< # of patches per direction
   int bc[3];
-
-  int proc[3];
 };
 
 void libmrc_domain_register_multi(void);

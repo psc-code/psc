@@ -155,6 +155,14 @@ mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
   mrc_domain_ops(domain)->get_global_patch_info(domain, gp, info);
 }
 
+void
+mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
+			       struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
+}
+
 // ======================================================================
 
 struct mrc_ddc *

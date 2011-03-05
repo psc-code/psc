@@ -17,18 +17,6 @@ mrc_domain_multi(struct mrc_domain *domain)
 }
 
 static int
-mrc_domain_multi_proc2rank(struct mrc_domain *domain, int proc[3])
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  for (int d = 0; d < 3; d++) {
-    if (proc[d] < 0 || proc[d] >= multi->np[d])
-      return -1;
-  }
-  return ((proc[2] * multi->np[1]) + proc[1]) * multi->np[0] + proc[0];
-}
-
-static int
 part2index(struct mrc_domain_multi *multi, int p[3])
 {
   int *np = multi->np;
@@ -134,19 +122,6 @@ mrc_domain_multi_destroy(struct mrc_obj *obj)
   free(multi->patches);
 }
 
-static int
-mrc_domain_multi_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  int nei[3];
-  for (int d = 0; d < 3; d++) {
-    nei[d] = multi->proc[d] + shift[d];
-  }
-
-  return mrc_domain_multi_proc2rank(domain, nei);
-}
-
 static struct mrc_patch *
 mrc_domain_multi_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
@@ -208,6 +183,7 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
   *nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
 }
 
+// FIXME, get rid of this one always use idx3 one?
 static void
 mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				       struct mrc_patch_info *info)
@@ -230,6 +206,16 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->all_patches[gpatch].ldims[d];
   }
+}
+
+static void
+mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
+				     struct mrc_patch_info *info)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int gpatch = part2index(multi, idx);
+  mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
 static struct mrc_ddc *
@@ -268,7 +254,6 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .setup                 = mrc_domain_multi_setup,
   .view                  = mrc_domain_multi_view,
   .destroy               = mrc_domain_multi_destroy,
-  .get_neighbor_rank     = mrc_domain_multi_get_neighbor_rank,
   .get_patches           = mrc_domain_multi_get_patches,
   .get_patch_idx3        = mrc_domain_multi_get_patch_idx3,
   .get_global_dims       = mrc_domain_multi_get_global_dims,
@@ -276,6 +261,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_bc                = mrc_domain_multi_get_bc,
   .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
+  .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
   .create_ddc            = mrc_domain_multi_create_ddc,
 };
 
