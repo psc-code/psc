@@ -58,6 +58,8 @@ struct mrc_domain_multi {
   int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
   struct mrc_patch *patches;
   struct mrc_patch *all_patches;
+  int *ldims[3]; //< patch dims for all patches by direction
+  int *off[3]; //< offsets for all patches by direction
   int np[3]; //< # of patches per direction
   int bc[3];
 };

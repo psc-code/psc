@@ -80,36 +80,40 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
   // FIXME: allow setting of desired decomposition using ldims
-  int ldims[3], rmndr[3], *np = multi->np;
-  int nr_all_patches = 1;
+  int *np = multi->np;
+  int nr_total_patches = 1;
   for (int d = 0; d < 3; d++) {
-    nr_all_patches *= np[d];
+    nr_total_patches *= np[d];
+    int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
     rmndr[d] = multi->gdims[d] % np[d];
+
+    multi->ldims[d] = calloc(np[d], sizeof(*multi->ldims[d]));
+    multi->off[d] = calloc(np[d], sizeof(*multi->off[d]));
+    for (int i = 0; i < np[d]; i++) {
+      multi->ldims[d][i] = ldims[d] + (i < rmndr[d]);
+      if (i > 0) {
+	multi->off[d][i] = multi->off[d][i-1] + multi->ldims[d][i-1];
+      }
+    }
   }
-  multi->all_patches = calloc(nr_all_patches, sizeof(*multi->all_patches));
+
+  multi->all_patches = calloc(nr_total_patches, sizeof(*multi->all_patches));
   int p3[3];
   for (p3[2] = 0; p3[2] < np[2]; p3[2]++) {
     for (p3[1] = 0; p3[1] < np[1]; p3[1]++) {
       for (p3[0] = 0; p3[0] < np[0]; p3[0]++) {
 	struct mrc_patch *patch = &multi->all_patches[part2index(multi, p3)];
 	for (int d = 0; d < 3; d++) {
-	  patch->ldims[d] = ldims[d] + (p3[d] < rmndr[d]);
-	  if (p3[d] == 0) {
-	    patch->off[d] = 0;
-	  } else {
-	    int q3[3] = { p3[0], p3[1], p3[2] };
-	    q3[d]--;
-	    struct mrc_patch *p_patch = &multi->all_patches[part2index(multi, q3)];
-	    patch->off[d] = p_patch->off[d] + p_patch->ldims[d];
-	  }
+	  patch->ldims[d] = multi->ldims[d][p3[d]];
+	  patch->off[d] = multi->off[d][p3[d]];
 	}
       }
     }
   }
 
-  int patches_per_proc = nr_all_patches / domain->size;
-  int patches_per_proc_rmndr = nr_all_patches % domain->size;
+  int patches_per_proc = nr_total_patches / domain->size;
+  int patches_per_proc_rmndr = nr_total_patches % domain->size;
 
   multi->nr_patches = patches_per_proc + (domain->rank < patches_per_proc_rmndr);
   if (domain->rank < patches_per_proc_rmndr) {
