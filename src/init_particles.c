@@ -62,7 +62,7 @@ psc_init_partition(int *particle_label_offset)
     }
   }
 
-  mrc_domain_set_type(psc.mrc_domain, "simple");
+  mrc_domain_set_type(psc.mrc_domain, "multi");
   mrc_domain_set_param_int3(psc.mrc_domain, "m", psc.domain.gdims);
   mrc_domain_set_param_int(psc.mrc_domain, "bcx", bc[0]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcy", bc[1]);

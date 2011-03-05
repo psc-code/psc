@@ -11,11 +11,11 @@
 #define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_get_nei_patch_info
+// mrc_ddc_multi_get_nei_rank_patch
 
 static void
-mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int p, int dir[3],
-				 struct mrc_patch_info *info)
+mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
+				 int *nei_rank, int *nei_patch)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
@@ -32,13 +32,15 @@ mrc_ddc_multi_nei_get_patch_info(struct mrc_ddc *ddc, int p, int dir[3],
       }
     }
     if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
-      info->rank = -1;
-      info->patch = -1;
+      *nei_rank = -1;
+      *nei_patch = -1;
       return;
     }
   }
-  mrc_domain_get_idx3_patch_info(multi->domain, patch_idx_nei, info);
-  //  get_rank_patch(ddc, patch_idx_nei, rank, patch);
+  struct mrc_patch_info info;
+  mrc_domain_get_idx3_patch_info(multi->domain, patch_idx_nei, &info);
+  *nei_rank = info.rank;
+  *nei_patch = info.patch;
 }
 
 // ----------------------------------------------------------------------
@@ -49,10 +51,7 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, p, dir, &info);
-  sr->nei_rank = info.rank;
-  sr->nei_patch = info.patch;
+  mrc_ddc_multi_get_nei_rank_patch(ddc, p, dir, &sr->nei_rank, &sr->nei_patch);
   if (sr->nei_rank < 0)
     return;
 
@@ -88,10 +87,7 @@ ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  struct mrc_patch_info info;
-  mrc_ddc_multi_nei_get_patch_info(ddc, p, dir, &info);
-  sr->nei_rank = info.rank;
-  sr->nei_patch = info.patch;
+  mrc_ddc_multi_get_nei_rank_patch(ddc, p, dir, &sr->nei_rank, &sr->nei_patch);
   if (sr->nei_rank < 0)
     return;
 
@@ -303,6 +299,7 @@ static struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .set_domain            = mrc_ddc_multi_set_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
+  .get_nei_rank_patch    = mrc_ddc_multi_get_nei_rank_patch,
 };
 
 void
