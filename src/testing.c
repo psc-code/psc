@@ -141,6 +141,7 @@ psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
 void
 psc_check_currents_ref(mfields_base_t *flds, double thres)
 {
+#if 0
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     for (int m = JXI; m <= JZI; m++){
@@ -153,6 +154,7 @@ psc_check_currents_ref(mfields_base_t *flds, double thres)
       }
     }
   }
+#endif
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
