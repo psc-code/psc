@@ -18,6 +18,7 @@ src/test4
 src/test_part_xz
 src/test_part_yz
 src/test_bnd
+src/test_bnd_multi
 src/test_sort
 src/test_field
 src/test_exchange_particles
