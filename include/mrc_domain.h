@@ -29,9 +29,10 @@ extern struct mrc_class mrc_class_mrc_domain;
 
 MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_domain, struct mrc_domain)
 void mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims);
-void mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx);
-void mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs);
 void mrc_domain_get_bc(struct mrc_domain *domain, int *bc);
+void mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx);
+void mrc_domain_get_patch_idx3(struct mrc_domain *domain, int p, int *idx);
+void mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs);
 void mrc_domain_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches);
 void mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				      struct mrc_patch_info *info);
