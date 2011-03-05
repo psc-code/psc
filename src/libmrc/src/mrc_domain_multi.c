@@ -119,7 +119,12 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
   }
   multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
   for (int p = 0; p < multi->nr_patches; p++) {
-    multi->patches[p] = multi->all_patches[p + multi->gpatch_off];
+    struct mrc_patch_info info;
+    mrc_domain_multi_get_global_patch_info(domain, p + multi->gpatch_off, &info);
+    for (int d = 0; d < 3; d++) {
+      multi->patches[p].ldims[d] = info.ldims[d];
+      multi->patches[p].off[d] = info.off[d];
+    }
   }
 }
 
