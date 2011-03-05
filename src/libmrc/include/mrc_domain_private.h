@@ -20,6 +20,7 @@ struct mrc_domain_ops {
   MRC_OBJ_OPS;
   struct mrc_patch *(*get_patches)(struct mrc_domain *domain, int *nr_patches);
   void (*get_local_idx)(struct mrc_domain *domain, int *idx);
+  void (*get_patch_idx3)(struct mrc_domain *domain, int p, int *idx);
   void (*get_global_dims)(struct mrc_domain *domain, int *dims);
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
   void (*get_bc)(struct mrc_domain *domain, int *bc);
@@ -52,6 +53,7 @@ void libmrc_domain_register_simple(void);
 struct mrc_domain_multi {
   int gdims[3];
   int nr_patches;
+  int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
   struct mrc_patch *patches;
   struct mrc_patch *all_patches;
   int np[3]; //< # of patches per direction

@@ -157,17 +157,12 @@ mrc_ddc_multi_setup(struct mrc_obj *obj)
   multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
   multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
   for (int p = 0; p < multi->nr_patches; p++) {
-    int rr = ddc->rank;
     struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
-    ddc_patch->patch_idx[0] = rr % multi->np[0]; rr /= multi->np[0];
-    ddc_patch->patch_idx[1] = rr % multi->np[1]; rr /= multi->np[1];
-    ddc_patch->patch_idx[2] = rr;
+    mrc_domain_get_patch_idx3(multi->domain, p, ddc_patch->patch_idx);
   }
   assert(multi->nr_patches == 1);
 
-
   int dir[3];
-
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
