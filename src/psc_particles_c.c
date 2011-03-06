@@ -7,23 +7,21 @@
 
 #if PARTICLES_BASE == PARTICLES_C
 
-static int __arr_size;
-
 void
 particles_c_alloc(particles_c_t *pp, int n_part)
 {
-  __arr_size = n_part * 1.2;
-  pp->particles = calloc(__arr_size, sizeof(*pp->particles));
+  pp->n_alloced = n_part * 1.2;
+  pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
 }
 
 void
 particles_c_realloc(particles_c_t *pp, int new_n_part)
 {
-  if (__arr_size <= new_n_part)
+  if (new_n_part <= pp->n_alloced)
     return;
 
-  __arr_size = new_n_part * 1.2;
-  pp->particles = realloc(pp->particles, __arr_size * sizeof(*pp->particles));
+  pp->n_alloced = new_n_part * 1.2;
+  pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 
 void
