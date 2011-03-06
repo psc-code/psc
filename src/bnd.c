@@ -84,6 +84,7 @@ struct ddcp_nei {
   int n_send;
   int n_recv;
   int rank;
+  int patch;
   int send_buf_size;
 };
 
@@ -105,32 +106,33 @@ ddc_particles_create(struct mrc_ddc *ddc)
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
 
-  int dir[3];
-
   ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
   ddcp->send_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
   ddcp->sendp_reqs = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
   ddcp->recv_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->recv_reqs));
-  struct ddcp_patch *patch = &ddcp->patches[0];
-  for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-    for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-      for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	int dir1 = mrc_ddc_dir2idx(dir);
-	struct ddcp_nei *nei = &patch->nei[dir1];
-	ddcp->send_reqs[dir1] = MPI_REQUEST_NULL;
-	ddcp->sendp_reqs[dir1] = MPI_REQUEST_NULL;
-	ddcp->recv_reqs[dir1] = MPI_REQUEST_NULL;
+  foreach_patch(p) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
 
-	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  nei->rank = -1;
-	  continue;
+    int dir[3];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  ddcp->send_reqs[dir1 + p * N_DIR] = MPI_REQUEST_NULL;
+	  ddcp->sendp_reqs[dir1 + p * N_DIR] = MPI_REQUEST_NULL;
+	  ddcp->recv_reqs[dir1 + p * N_DIR] = MPI_REQUEST_NULL;
+	  
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    nei->rank = -1;
+	    continue;
+	  }
+	  
+	  nei->send_buf_size = 8;
+	  nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
+	  nei->n_send = 0;
+	  mrc_ddc_get_nei_rank_patch(ddc, 0, dir, &nei->rank, &nei->patch);
 	}
-
-	nei->send_buf_size = 8;
-	nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
-	nei->n_send = 0;
-	int dummy;
-	mrc_ddc_get_nei_rank_patch(ddc, 0, dir, &nei->rank, &dummy);
       }
     }
   }
