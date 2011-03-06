@@ -434,18 +434,21 @@ PIC_fez(fields_fortran_t *pf, int m)
 void
 PIC_pex()
 {
+  INIT_grid_map();
   PIC_pex_F77();
 }
 
 void
 PIC_pey()
 {
+  INIT_grid_map();
   PIC_pey_F77();
 }
 
 void
 PIC_pez()
 {
+  INIT_grid_map();
   PIC_pez_F77();
 }
 
