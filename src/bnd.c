@@ -141,9 +141,8 @@ ddc_particles_create(struct mrc_ddc *ddc)
 }
 
 static void
-ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
+ddc_particles_queue(struct ddcp_patch *patch, int dir[3], particle_base_t *p)
 {
-  struct ddcp_patch *patch = &ddcp->patches[0];
   struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
   if (nei->n_send == nei->send_buf_size) {
@@ -304,8 +303,6 @@ c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 static void
 c_exchange_particles(mparticles_base_t *particles)
 {
-  particles_base_t *pp = &particles->p[0];
-
   if (!psc.bnd_data) {
     create_bnd();
   }
@@ -327,105 +324,112 @@ c_exchange_particles(mparticles_base_t *particles)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
-  struct psc_patch *psc_patch = &psc.patch[0];
-  for (int d = 0; d < 3; d++) {
-    xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
-    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = -.5 * psc.dx[d];
-    } else {
-      xgb[d] = 0.;
-      if (psc_patch->off[d] == 0) {
-	xb[d] = xgb[d];
+  foreach_patch(p) {
+    struct psc_patch *psc_patch = &psc.patch[p];
+    particles_base_t *pp = &particles->p[p];
+
+    for (int d = 0; d < 3; d++) {
+      xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
+      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+	xgb[d] = -.5 * psc.dx[d];
+      } else {
+	xgb[d] = 0.;
+	if (psc_patch->off[d] == 0) {
+	  xb[d] = xgb[d];
+	}
       }
+      
+      xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
+      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+	xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
+      } else {
+	xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
+	if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
+	  xe[d] = xge[d];
+	}
+      }
+      
+      xgl[d] = xge[d] - xgb[d];
     }
 
-    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
-    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
-    } else {
-      xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
-      if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
-	xe[d] = xge[d];
-      }
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    ddcp->head = 0;
+    for (int dir1 = 0; dir1 < N_DIR; dir1++) {
+      patch->nei[dir1].n_send = 0;
     }
-
-    xgl[d] = xge[d] - xgb[d];
-  }
-
-  struct ddcp_patch *patch = &ddcp->patches[0];
-  ddcp->head = 0;
-  for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-    patch->nei[dir1].n_send = 0;
-  }
-  for (int i = 0; i < pp->n_part; i++) {
-    particle_base_t *p = particles_base_get_one(pp, i);
-    particle_base_real_t *xi = &p->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-    particle_base_real_t *pxi = &p->pxi;
-    if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
-	xi[1] >= xb[1] && xi[1] <= xe[1] &&
-	xi[2] >= xb[2] && xi[2] <= xe[2]) {
-      // fast path
-      // inside domain: move into right position
-      pp->particles[ddcp->head++] = *p;
-    } else {
-      // slow path
-      int dir[3];
-      for (int d = 0; d < 3; d++) {
-	if (xi[d] < xb[d]) {
-	  if (xi[d] < xgb[d]) {
-	    switch (psc.domain.bnd_part[d]) {
-	    case BND_PART_REFLECTING:
-	      xi[d] = 2.f * xgb[d] - xi[d];
-	      pxi[d] = -pxi[d];
-	      dir[d] = 0;
-	      break;
-	    case BND_PART_PERIODIC:
-	      xi[d] += xgl[d];
+    for (int i = 0; i < pp->n_part; i++) {
+      particle_base_t *part = particles_base_get_one(pp, i);
+      particle_base_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+      particle_base_real_t *pxi = &part->pxi;
+      if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
+	  xi[1] >= xb[1] && xi[1] <= xe[1] &&
+	  xi[2] >= xb[2] && xi[2] <= xe[2]) {
+	// fast path
+	// inside domain: move into right position
+	pp->particles[ddcp->head++] = *part;
+      } else {
+	// slow path
+	int dir[3];
+	for (int d = 0; d < 3; d++) {
+	  if (xi[d] < xb[d]) {
+	    if (xi[d] < xgb[d]) {
+	      switch (psc.domain.bnd_part[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xgb[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] += xgl[d];
+		dir[d] = -1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      // computational bnd
 	      dir[d] = -1;
-	      break;
-	    default:
-	      assert(0);
+	    }
+	  } else if (xi[d] > xe[d]) {
+	    if (xi[d] > xge[d]) {
+	      switch (psc.domain.bnd_part[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xge[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] -= xgl[d];
+		dir[d] = +1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      dir[d] = +1;
 	    }
 	  } else {
 	    // computational bnd
-	    dir[d] = -1;
+	    dir[d] = 0;
 	  }
-	} else if (xi[d] > xe[d]) {
-	  if (xi[d] > xge[d]) {
-	    switch (psc.domain.bnd_part[d]) {
-	    case BND_PART_REFLECTING:
-	      xi[d] = 2.f * xge[d] - xi[d];
-	      pxi[d] = -pxi[d];
-	      dir[d] = 0;
-	      break;
-	    case BND_PART_PERIODIC:
-	      xi[d] -= xgl[d];
-	      dir[d] = +1;
-	      break;
-	    default:
-	      assert(0);
-	    }
-	  } else {
-	    dir[d] = +1;
-	  }
-	} else {
-	  // computational bnd
-	  dir[d] = 0;
 	}
-      }
-      if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	pp->particles[ddcp->head++] = *p;
-      } else {
-	ddc_particles_queue(ddcp, dir, p);
+	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	  pp->particles[ddcp->head++] = *part;
+	} else {
+	  ddc_particles_queue(patch, dir, part);
+	}
       }
     }
   }
-
   prof_stop(pr_A);
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
-  psc_set_n_particles(pp, ddcp->head);
+
+  foreach_patch(p) {
+    particles_base_t *pp = &particles->p[p];
+    psc_set_n_particles(pp, ddcp->head);
+  }
   prof_stop(pr_B);
 
   prof_stop(pr);
