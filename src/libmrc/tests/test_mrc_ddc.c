@@ -30,7 +30,8 @@ set_m3(struct mrc_m3 *m3)
 static void
 check_m3(struct mrc_m3 *m3)
 {
-  int gdims[3];
+  int bc[3], gdims[3];
+  mrc_domain_get_bc(m3->domain, bc);
   mrc_domain_get_global_dims(m3->domain, gdims);
 
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, NULL);
@@ -38,9 +39,30 @@ check_m3(struct mrc_m3 *m3)
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     int *off = patches[p].off;
     mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
-      int jx = (ix + off[0] + gdims[0]) % gdims[0];
-      int jy = (iy + off[1] + gdims[1]) % gdims[1];
-      int jz = (iz + off[2] + gdims[2]) % gdims[2];
+      int jx = ix + off[0];
+      int jy = iy + off[1];
+      int jz = iz + off[2];
+      if (jx < 0 || jx >= gdims[0]) {
+	if (bc[0] == BC_PERIODIC) {
+	  jx = (jx + gdims[0]) % gdims[0];
+	} else {
+	  continue;
+	}
+      }
+      if (jy < 0 || jy >= gdims[1]) {
+	if (bc[1] == BC_PERIODIC) {
+	  jy = (jy + gdims[1]) % gdims[1];
+	} else {
+	  continue;
+	}
+      }
+      if (jz < 0 || jz >= gdims[2]) {
+	if (bc[2] == BC_PERIODIC) {
+	  jz = (jz + gdims[2]) % gdims[2];
+	} else {
+	  continue;
+	}
+      }
 #if 0
       if (MRC_M3(m3p, 0, ix,iy,iz) != jz * 10000 + jy * 100 + jx) {
 	printf("ixyz %d %d %d jxyz %d %d %d : %d val %g\n",
