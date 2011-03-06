@@ -80,9 +80,10 @@ psc_init_partition(int *particle_label_offset)
 
   // set up index bounds,
   // sanity checks for the decomposed domain
-  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
   int gdims[3];
   mrc_domain_get_global_dims(psc.mrc_domain, gdims);
+  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
+  psc.patch = calloc(psc.nr_patches, sizeof(*psc.patch));
   foreach_patch(p) {
     struct psc_patch *patch = &psc.patch[p];
     for (int d = 0; d < 3; d++) {

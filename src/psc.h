@@ -367,7 +367,7 @@ struct psc {
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
-  struct psc_patch patch[1];
+  struct psc_patch *patch;
   int ibn[3];         // number of ghost points
 
   // C data structures
