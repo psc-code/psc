@@ -77,6 +77,8 @@ struct mrc_ddc_funcs ddc_funcs = {
 
 // ======================================================================
 
+#define N_DIR (27)
+
 struct ddcp_nei {
   particle_base_t *send_buf;
   int n_send;
@@ -85,11 +87,15 @@ struct ddcp_nei {
   int send_buf_size;
 };
 
+struct ddcp_patch {
+  struct ddcp_nei nei[N_DIR];
+};
+
 struct ddc_particles {
-  struct ddcp_nei nei[27];
-  MPI_Request send_reqs[27];
-  MPI_Request sendp_reqs[27];
-  MPI_Request recv_reqs[27];
+  struct ddcp_patch patches[1];
+  MPI_Request send_reqs[N_DIR];
+  MPI_Request sendp_reqs[N_DIR];
+  MPI_Request recv_reqs[N_DIR];
   int head;
 };
 
@@ -101,11 +107,12 @@ ddc_particles_create(struct mrc_ddc *ddc)
 
   int dir[3];
 
+  struct ddcp_patch *patch = &ddcp->patches[0];
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = mrc_ddc_dir2idx(dir);
-	struct ddcp_nei *nei = &ddcp->nei[dir1];
+	struct ddcp_nei *nei = &patch->nei[dir1];
 	ddcp->send_reqs[dir1] = MPI_REQUEST_NULL;
 	ddcp->sendp_reqs[dir1] = MPI_REQUEST_NULL;
 	ddcp->recv_reqs[dir1] = MPI_REQUEST_NULL;
@@ -130,7 +137,8 @@ ddc_particles_create(struct mrc_ddc *ddc)
 static void
 ddc_particles_queue(struct ddc_particles *ddcp, int dir[3], particle_base_t *p)
 {
-  struct ddcp_nei *nei = &ddcp->nei[mrc_ddc_dir2idx(dir)];
+  struct ddcp_patch *patch = &ddcp->patches[0];
+  struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
   if (nei->n_send == nei->send_buf_size) {
     // reallocate a larger buffer, doubling buffer size each time
@@ -150,13 +158,14 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
   int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
   int dir[3];
 
+  struct ddcp_patch *patch = &ddcp->patches[0];
   // post receives for # particles we'll receive in the next step
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = mrc_ddc_dir2idx(dir);
 	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	struct ddcp_nei *nei = &ddcp->nei[dir1];
+	struct ddcp_nei *nei = &patch->nei[dir1];
 	if (nei->rank < 0) {
 	  ddcp->recv_reqs[dir1] = MPI_REQUEST_NULL;
 	  continue;
@@ -172,7 +181,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = mrc_ddc_dir2idx(dir);
-	struct ddcp_nei *nei = &ddcp->nei[dir1];
+	struct ddcp_nei *nei = &patch->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
 	}
@@ -185,7 +194,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
     }
   }
 
-  MPI_Waitall(27, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
 
   // calc total # of particles
   int new_n_particles = ddcp->head; // particles which stayed on this proc
@@ -194,7 +203,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = mrc_ddc_dir2idx(dir);
-	struct ddcp_nei *nei = &ddcp->nei[dir1];
+	struct ddcp_nei *nei = &patch->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
 	}
@@ -210,7 +219,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
       for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	int dir1 = mrc_ddc_dir2idx(dir);
 	int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	struct ddcp_nei *nei = &ddcp->nei[dir1];
+	struct ddcp_nei *nei = &patch->nei[dir1];
 	if (nei->rank < 0) {
 	  continue;
 	}
@@ -222,9 +231,9 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
     }
   }
 
-  MPI_Waitall(27, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(27, ddcp->send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(27, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(N_DIR, ddcp->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
 }
 
 static void
@@ -312,24 +321,24 @@ c_exchange_particles(mparticles_base_t *particles)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *psc_patch = &psc.patch[0];
   for (int d = 0; d < 3; d++) {
-    xb[d] = (patch->off[d]-.5) * psc.dx[d];
+    xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xgb[d] = -.5 * psc.dx[d];
     } else {
       xgb[d] = 0.;
-      if (patch->off[d] == 0) {
+      if (psc_patch->off[d] == 0) {
 	xb[d] = xgb[d];
       }
     }
 
-    xe[d] = (patch->off[d] + patch->ldims[d] - .5) * psc.dx[d];
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
     if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
     } else {
       xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
-      if (patch->off[d] + patch->ldims[d] == psc.domain.gdims[d]) {
+      if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
 	xe[d] = xge[d];
       }
     }
@@ -337,9 +346,10 @@ c_exchange_particles(mparticles_base_t *particles)
     xgl[d] = xge[d] - xgb[d];
   }
 
+  struct ddcp_patch *patch = &ddcp->patches[0];
   ddcp->head = 0;
-  for (int dir1 = 0; dir1 < 27; dir1++) {
-    ddcp->nei[dir1].n_send = 0;
+  for (int dir1 = 0; dir1 < N_DIR; dir1++) {
+    patch->nei[dir1].n_send = 0;
   }
   for (int i = 0; i < pp->n_part; i++) {
     particle_base_t *p = particles_base_get_one(pp, i);
