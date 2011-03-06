@@ -89,6 +89,7 @@ struct ddcp_nei {
 };
 
 struct ddcp_patch {
+  int head;
   struct ddcp_nei nei[N_DIR];
 };
 
@@ -97,7 +98,6 @@ struct ddc_particles {
   MPI_Request *send_reqs;
   MPI_Request *sendp_reqs;
   MPI_Request *recv_reqs;
-  int head;
 };
 
 static struct ddc_particles *
@@ -202,7 +202,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
   MPI_Waitall(N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
 
   // calc total # of particles
-  int new_n_particles = ddcp->head; // particles which stayed on this proc
+  int new_n_particles = patch->head; // particles which stayed on this proc
 
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -228,10 +228,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 	if (nei->rank < 0) {
 	  continue;
 	}
-	MPI_Irecv(&pp->particles[ddcp->head], sz * nei->n_recv,
+	MPI_Irecv(&pp->particles[patch->head], sz * nei->n_recv,
 		  MPI_PARTICLES_BASE_REAL,
 		  nei->rank, 2100 + dir1neg, MPI_COMM_WORLD, &ddcp->recv_reqs[dir1]);
-	ddcp->head += nei->n_recv;
+	patch->head += nei->n_recv;
       }
     }
   }
@@ -353,7 +353,7 @@ c_exchange_particles(mparticles_base_t *particles)
     }
 
     struct ddcp_patch *patch = &ddcp->patches[p];
-    ddcp->head = 0;
+    patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       patch->nei[dir1].n_send = 0;
     }
@@ -366,7 +366,7 @@ c_exchange_particles(mparticles_base_t *particles)
 	  xi[2] >= xb[2] && xi[2] <= xe[2]) {
 	// fast path
 	// inside domain: move into right position
-	pp->particles[ddcp->head++] = *part;
+	pp->particles[patch->head++] = *part;
       } else {
 	// slow path
 	int dir[3];
@@ -414,7 +414,7 @@ c_exchange_particles(mparticles_base_t *particles)
 	  }
 	}
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  pp->particles[ddcp->head++] = *part;
+	  pp->particles[patch->head++] = *part;
 	} else {
 	  ddc_particles_queue(patch, dir, part);
 	}
@@ -428,7 +428,8 @@ c_exchange_particles(mparticles_base_t *particles)
 
   foreach_patch(p) {
     particles_base_t *pp = &particles->p[p];
-    psc_set_n_particles(pp, ddcp->head);
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    psc_set_n_particles(pp, patch->head);
   }
   prof_stop(pr_B);
 
