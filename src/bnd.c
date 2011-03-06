@@ -92,10 +92,10 @@ struct ddcp_patch {
 };
 
 struct ddc_particles {
-  struct ddcp_patch patches[1];
-  MPI_Request send_reqs[N_DIR];
-  MPI_Request sendp_reqs[N_DIR];
-  MPI_Request recv_reqs[N_DIR];
+  struct ddcp_patch *patches;
+  MPI_Request *send_reqs;
+  MPI_Request *sendp_reqs;
+  MPI_Request *recv_reqs;
   int head;
 };
 
@@ -107,6 +107,10 @@ ddc_particles_create(struct mrc_ddc *ddc)
 
   int dir[3];
 
+  ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
+  ddcp->send_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
+  ddcp->sendp_reqs = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
+  ddcp->recv_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->recv_reqs));
   struct ddcp_patch *patch = &ddcp->patches[0];
   for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
     for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
