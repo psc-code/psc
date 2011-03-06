@@ -459,6 +459,7 @@ void psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
+void psc_check_particles(mparticles_base_t *particles);
 
 void psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);

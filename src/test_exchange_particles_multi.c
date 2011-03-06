@@ -59,41 +59,6 @@ setup_particles(mparticles_base_t *particles)
   }
 }
 
-static void
-check_particles(mparticles_base_t *particles)
-{
-  int fail_cnt = 0;
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
-    particles_base_t *pp = &particles->p[p];
-    int *ilo = patch->off;
-    int ihi[3] = { patch->off[0] + patch->ldims[0],
-		   patch->off[1] + patch->ldims[1],
-		   patch->off[2] + patch->ldims[2] };
-    f_real xb[3], xe[3];
-    
-    // New-style boundary requirements.
-    // These will need revisiting when it comes to non-periodic domains.
-    
-    for (int d = 0; d < 3; d++) {
-      xb[d] = (ilo[d]-.5) * psc.dx[d];
-      xe[d] = (ihi[d]-.5) * psc.dx[d];
-    }
-    
-    for (int i = 0; i < pp->n_part; i++) {
-      particle_base_t *p = particles_base_get_one(pp, i);
-      if (p->xi < xb[0] || p->xi > xe[0] ||
-	  p->zi < xb[2] || p->zi > xe[2]) {
-	if (fail_cnt++ < 10) {
-	  printf("FAIL: xi %g [%g:%g]\n", p->xi, xb[0], xe[0]);
-	  printf("      zi %g [%g:%g]\n", p->zi, xb[2], xe[2]);
-	}
-      }
-    }
-  }
-  assert(fail_cnt == 0);
-}
-
 // FIXME, make generic
 static int
 get_total_num_particles(mparticles_base_t *particles)
@@ -131,7 +96,7 @@ main(int argc, char **argv)
   psc_exchange_particles(particles);
   //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles(particles);
-  check_particles(particles);
+  psc_check_particles(particles);
   assert(total_num_particles_before == total_num_particles_after);
   psc_destroy();
 
