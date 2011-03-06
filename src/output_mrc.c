@@ -19,12 +19,16 @@ static struct mrc_io *ios[NR_IO_TYPES];
 // copy_to_mrc_fld
 
 static void
-copy_to_mrc_fld(struct mrc_f3 *mrc_fld, fields_base_t *fld)
+copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
 {
-  int sw = mrc_fld->sw;
-  mrc_f3_foreach(mrc_fld, ix,iy,iz, 2,2) {
-    MRC_F3(mrc_fld,0, ix,iy,iz) = F3_BASE(fld,0, ix-sw,iy-sw,iz-sw);
-  } mrc_f3_foreach_end;
+  foreach_patch(p) {
+    fields_base_t *pf = &flds->f[p];
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
+      MRC_M3(m3p,0, ix,iy,iz) = F3_BASE(pf,0, ix,iy,iz);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(m3);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -60,16 +64,17 @@ mrc_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
     // FIXME, 3 doesn't work -- how about 0?
-    struct mrc_f3 *mrc_fld = mrc_domain_f3_create(psc.mrc_domain, 2);
-    mrc_f3_set_name(mrc_fld, fld->name[0]);
-    mrc_f3_setup(mrc_fld);
+    struct mrc_m3 *mrc_fld = mrc_domain_m3_create(psc.mrc_domain);
+    mrc_m3_set_name(mrc_fld, fld->name[0]);
+    mrc_m3_set_param_int(mrc_fld, "sw", 2);
+    mrc_m3_setup(mrc_fld);
     // FIXME, there should be a little function for this
     mrc_fld->name[0] = strdup(fld->name[0]);
-    copy_to_mrc_fld(mrc_fld, fld);
+    copy_to_mrc_fld(mrc_fld, flds);
 
-    mrc_f3_write(mrc_fld, io);
+    mrc_m3_write(mrc_fld, io);
 
-    mrc_f3_destroy(mrc_fld);
+    mrc_m3_destroy(mrc_fld);
   }
   mrc_io_close(io);
 }

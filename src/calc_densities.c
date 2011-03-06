@@ -15,7 +15,7 @@ nint(creal x)
 }
 
 static void
-do_c_calc_densities(fields_base_t *pf, particles_base_t *pp_base,
+do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
 		    int m_NE, int m_NI, int m_NN)
 {
   fields_base_zero(pf, m_NE);
@@ -27,7 +27,7 @@ do_c_calc_densities(fields_base_t *pf, particles_base_t *pp_base,
   creal dyi = 1.f / psc.dx[1];
   creal dzi = 1.f / psc.dx[2];
 
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &psc.patch[p];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
       
@@ -111,9 +111,10 @@ c_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
   if (!pr) {
     pr = prof_register("c_densities", 1., 0, 0);
   }
+
   prof_start(pr);
   foreach_patch(p) {
-    do_c_calc_densities(&f->f[p], &particles->p[p], 0, 1, 2);
+    do_c_calc_densities(p, &f->f[p], &particles->p[p], 0, 1, 2);
   }
   prof_stop(pr);
 

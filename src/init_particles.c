@@ -30,14 +30,14 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 {
   struct psc_patch *patch = &psc.patch[p];
   for (int d = 0; d < 3; d++) {
-    ilo[d] = patch->off[d];
-    if (ilo[d] == 0 && // left-most proc in this dir
+    ilo[d] = 0;
+    if (patch->off[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
       ilo[d] += psc.pml.size+1;
     }
-    ihi[d] = patch->off[d] + patch->ldims[d];
-    if (ihi[d] == psc.domain.gdims[d] && // right-most proc in this dir
+    ihi[d] = patch->ldims[d];
+    if (ihi[d] + patch->off[d] == psc.domain.gdims[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       ihi[d] -= psc.pml.size+1;
@@ -134,8 +134,7 @@ psc_init_partition(int *particle_label_offset)
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
 	      psc_case_init_npt(psc.Case, kind, xx, &npt);
@@ -187,9 +186,7 @@ psc_init_particles(int particle_label_offset)
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      
-	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
 	      psc_case_init_npt(psc.Case, kind, xx, &npt);
