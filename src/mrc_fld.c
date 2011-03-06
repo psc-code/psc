@@ -454,14 +454,6 @@ struct mrc_class mrc_class_mrc_m1 = {
 #define to_mrc_m3(o) container_of(o, struct mrc_m3, obj)
 
 static void
-_mrc_m3_create(struct mrc_obj *obj)
-{
-  struct mrc_m3 *m3 = to_mrc_m3(obj);
-
-  m3->name = calloc(m3->nr_comp, sizeof(*m3->name));
-}
-
-static void
 _mrc_m3_destroy(struct mrc_obj *obj)
 {
   struct mrc_m3 *m3 = to_mrc_m3(obj);
@@ -483,11 +475,13 @@ _mrc_m3_setup(struct mrc_obj *obj)
 {
   struct mrc_m3 *m3 = to_mrc_m3(obj);
 
+  m3->name = calloc(m3->nr_comp, sizeof(*m3->name));
+
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
 
   m3->nr_patches = nr_patches;
-  m3->patches = calloc(nr_patches, sizeof(*patches));
+  m3->patches = calloc(nr_patches, sizeof(*m3->patches));
   for (int p = 0; p < nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
     for (int d = 0; d < 3; d++) {
@@ -546,7 +540,6 @@ struct mrc_class mrc_class_mrc_m3 = {
   .name         = "mrc_m3",
   .size         = sizeof(struct mrc_m3),
   .param_descr  = mrc_m3_params_descr,
-  .create       = _mrc_m3_create,
   .destroy      = _mrc_m3_destroy,
   .setup        = _mrc_m3_setup,
   .view         = _mrc_m3_view,
