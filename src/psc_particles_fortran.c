@@ -9,6 +9,8 @@ static bool __alloced;
 void
 particles_fortran_alloc(particles_fortran_t *pp, int n_part)
 {
+  assert(psc.nr_patches == 1);
+
   if (!__alloced) {
     __alloced = true;
     pp->particles = ALLOC_particles(n_part);

@@ -69,6 +69,7 @@ psc_init_partition(int *particle_label_offset)
   mrc_domain_set_param_int(psc.mrc_domain, "bcz", bc[2]);
 
   struct mrc_crds *crds = mrc_domain_get_crds(psc.mrc_domain);
+  mrc_crds_set_type(crds, "multi_uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
   mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc.domain.length[0],
 	psc.domain.length[1], psc.domain.length[2] });
