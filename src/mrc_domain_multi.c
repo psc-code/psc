@@ -18,20 +18,132 @@ mrc_domain_multi(struct mrc_domain *domain)
 
 // ======================================================================
 
+// ----------------------------------------------------------------------
+// bydim space filling curve
+
+static void
+sfc_bydim_setup(struct mrc_domain_multi *multi)
+{
+}
+
 static int
-idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
+sfc_bydim_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
   int *np = multi->np;
   return (p[2] * np[1] + p[1]) * np[0] + p[0];
 }
 
 static void
-gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
+sfc_bydim_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
 {
   int *np = multi->np;
   p[0] = gpatch % np[0]; gpatch /= np[0];
   p[1] = gpatch % np[1]; gpatch /= np[1];
   p[2] = gpatch;
+}
+
+// ----------------------------------------------------------------------
+// morton space filling curve
+
+static void
+sfc_morton_setup(struct mrc_domain_multi *multi)
+{
+  int *np = multi->np;
+  int *nbits = multi->nbits;
+  for (int d = 0; d < 3; d++) {
+    int n = np[d];
+    nbits[d] = 0;
+    while (n > 1) {
+      n >>= 1;
+      nbits[d]++;
+    }
+    // each dim must be power of 2
+    assert(np[d] == 1 << nbits[d]);
+  }
+
+  multi->nbits_max = nbits[0];
+  if (nbits[1] > multi->nbits_max) multi->nbits_max = nbits[1];
+  if (nbits[2] > multi->nbits_max) multi->nbits_max = nbits[2];
+}
+
+static int
+sfc_morton_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
+{
+  int *nbits = multi->nbits;
+  int nbits_max = multi->nbits_max;
+
+  int pos = 0;
+  int idx = 0;
+  for (int b = 0; b < nbits_max; b++) {
+    for (int d = 0; d < 3; d++) {
+      if (b >= nbits[d])
+	continue;
+
+      if (p[d] & (1 << b)) {
+	idx |= (1 << pos);
+      }
+      pos++;
+    }
+  }
+
+  return idx;
+}
+
+static void
+sfc_morton_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
+{
+  int *nbits = multi->nbits;
+  int nbits_max = multi->nbits_max;
+
+  for (int d = 0; d < 3; d++) {
+    p[d] = 0;
+  }
+
+  int pos = 0;
+  for (int b = 0; b < nbits_max; b++) {
+    for (int d = 0; d < 3; d++) {
+      if (b >= nbits[d])
+	continue;
+
+      if (gpatch & (1 << pos)) {
+	p[d] |= (1 << b);
+      }
+      pos++;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// space filling curve
+
+static void
+sfc_setup(struct mrc_domain_multi *multi)
+{
+  switch (multi->curve_type) {
+  case CURVE_BYDIM: return sfc_bydim_setup(multi);
+  case CURVE_MORTON: return sfc_morton_setup(multi);
+  default: assert(0);
+  }
+}
+
+static int
+sfc_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
+{
+  switch (multi->curve_type) {
+  case CURVE_BYDIM: return sfc_bydim_idx3_to_gpatch(multi, p);
+  case CURVE_MORTON: return sfc_morton_idx3_to_gpatch(multi, p);
+  default: assert(0);
+  }
+}
+
+static void
+sfc_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
+{
+  switch (multi->curve_type) {
+  case CURVE_BYDIM: return sfc_bydim_gpatch_to_idx3(multi, gpatch, p);
+  case CURVE_MORTON: return sfc_morton_gpatch_to_idx3(multi, gpatch, p);
+  default: assert(0);
+  }
 }
 
 // ======================================================================
@@ -107,7 +219,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
 
   int p3[3];
-  gpatch_to_idx3(multi, gpatch, p3);
+  sfc_gpatch_to_idx3(multi, gpatch, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d][p3[d]];
     info->off[d] = multi->off[d][p3[d]];
@@ -141,6 +253,8 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
       }
     }
   }
+
+  sfc_setup(multi);
 
   get_nr_patches_gpatch_off(domain, domain->rank,
 			    &multi->nr_patches, &multi->gpatch_off);
@@ -181,11 +295,8 @@ mrc_domain_multi_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   assert(p >= 0 && p < multi->nr_patches);
   int gpatch = p + multi->gpatch_off;
-  int *np = multi->np;
 
-  idx[0] = gpatch % np[0]; gpatch /= np[0];
-  idx[1] = gpatch % np[1]; gpatch /= np[1];
-  idx[2] = gpatch % np[2];
+  sfc_gpatch_to_idx3(multi, gpatch, idx);
 }
 
 static void
@@ -232,7 +343,7 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int gpatch = idx3_to_gpatch(multi, idx);
+  int gpatch = sfc_idx3_to_gpatch(multi, idx);
   mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
@@ -294,6 +405,12 @@ static struct mrc_param_select bc_descr[] = {
   {},
 };
 
+static struct mrc_param_select curve_descr[] = {
+  { .val = CURVE_BYDIM   , .str = "bydim"    },
+  { .val = CURVE_MORTON  , .str = "morton"   },
+  {},
+};
+
 #define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
 static struct param mrc_domain_multi_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
@@ -304,6 +421,8 @@ static struct param mrc_domain_multi_params_descr[] = {
 							    bc_descr) },
   { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
+  { "curve_type"      , VAR(curve_type)      , PARAM_SELECT(CURVE_BYDIM,
+							    curve_descr) },
   {},
 };
 #undef VAR
