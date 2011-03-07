@@ -80,6 +80,8 @@ particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
     void *m;
     int ierr;
     ierr = posix_memalign(&m, 16, pp->n_part * sizeof(*pp->particles));
+    pp->particles = (particle_cbe_t *)m;
+    assert(ierr == 0);
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_base_t *part_base = particles_base_get_one(pp_base,n);
       particle_cbe_t *part = particles_cbe_get_one(pp,n);

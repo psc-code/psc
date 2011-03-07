@@ -125,6 +125,7 @@ psc_init_spes(void)
 	    ready++;
 	  }
 	  assert(msg != SPU_ERROR);
+	  nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
 	}
       }
       gettimeofday(&tv, NULL);
@@ -206,7 +207,7 @@ update_spes_status(void)
 	fprintf(stderr, "[ppe] Got SPE_IDLE\n");
 #endif
 	put_spe(spe);
-	nmesg--;
+	nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
 	// could eliminate this by checking the return value 
       }
       assert(msg != SPU_ERROR);

@@ -16,7 +16,7 @@ cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   fields_get(&flds, EX, EX +6,flds_base);
   particles_get(&particles, particles_base);
 
-  if(spes_inited)
+  if(!spes_inited)
     psc_init_spes();
   
   static int pr;

@@ -12,26 +12,18 @@ main(int argc, char **argv)
 
   struct psc_mod_config conf_fortran = {
     .mod_particle = "fortran",
-#ifdef USE_CBE
-    .mod_sort = "cbesort",
-#else
-    .mod_sort = "qsort",
-#endif
+    // .mod_sort = "qsort",
   };
   struct psc_mod_config conf_generic_c = {
     .mod_particle = "generic_c",
-#ifdef USE_CBE
-    .mod_sort = "cbesort",
-#else
-    .mod_sort = "qsort",
-#endif
+    // .mod_sort = "qsort",
   };
 
 
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
-    .mod_sort = "qsort",
+    // .mod_sort = "qsort",
   };
 #endif
 
@@ -57,7 +49,7 @@ main(int argc, char **argv)
 #ifdef USE_CUDA
   struct psc_mod_config conf_cuda = {
     .mod_particle = "cuda",
-    .mod_sort = "qsort",
+    // .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_cuda);
   psc_push_part_yz_a(flds,particles);
@@ -105,7 +97,6 @@ main(int argc, char **argv)
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
-    .mod_sort = "cbesort",
   };
   psc_create_test_yz(&conf_sse2);
   psc_push_part_yz_b(flds, particles);
@@ -144,7 +135,7 @@ main(int argc, char **argv)
 #ifdef USE_CBE
   struct psc_mod_config conf_cbe = {
     .mod_particle = "cbe",
-    .mod_sort = "cbesort",
+    // .mod_sort = "qsort",
   };
   psc_create_test_yz(&conf_cbe);
   psc_push_part_yz(flds,particles);
