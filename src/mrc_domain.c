@@ -163,6 +163,13 @@ mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
   mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
 }
 
+void
+mrc_domain_plot(struct mrc_domain *domain)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->plot(domain);
+}
+
 // ======================================================================
 
 struct mrc_ddc *

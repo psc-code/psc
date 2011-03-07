@@ -30,6 +30,7 @@ struct mrc_domain_ops {
 				struct mrc_patch_info *info);
   void (*get_idx3_patch_info)(struct mrc_domain *domain, int idx[3],
 			      struct mrc_patch_info *info);
+  void (*plot)(struct mrc_domain *domain);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
 };
 
