@@ -53,6 +53,11 @@ void libmrc_domain_register_simple(void);
 // ======================================================================
 // mrc_domain_multi
 
+enum {
+  CURVE_BYDIM,
+  CURVE_MORTON,
+};
+
 struct mrc_domain_multi {
   int gdims[3];
   int nr_patches;
@@ -62,6 +67,11 @@ struct mrc_domain_multi {
   int *off[3]; //< offsets for all patches by direction
   int np[3]; //< # of patches per direction
   int bc[3];
+  int curve_type; //< type of space filling curve
+
+  // for sfc morton
+  int nbits[3];
+  int nbits_max;
 };
 
 void libmrc_domain_register_multi(void);
