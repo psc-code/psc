@@ -79,6 +79,7 @@ gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 static void
 mrc_domain_multi_view(struct mrc_obj *obj)
 {
+#if 0
   struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -86,13 +87,14 @@ mrc_domain_multi_view(struct mrc_obj *obj)
     if (domain->rank == proc) {
       for (int p = 0; p < multi->nr_patches; p++) {
 	struct mrc_patch *patch = &multi->patches[p];
-	mprintf("  patch: ldims %dx%dx%d off %dx%dx%d\n",
+	mprintf("patch %d: ldims %dx%dx%d off %dx%dx%d\n", p,
 		patch->ldims[0], patch->ldims[1], patch->ldims[2],
 	      patch->off[0], patch->off[1], patch->off[2]);
       }
     }
     MPI_Barrier(obj->comm);
   }
+#endif
 }
 
 // FIXME, get rid of this one always use idx3 one?
