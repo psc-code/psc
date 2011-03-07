@@ -239,9 +239,16 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 static void
 mrc_domain_multi_plot(struct mrc_domain *domain)
 {
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
   if (domain->rank != 0) {
     return;
   }
+
+  if (multi->np[2] != 1) {
+    mprintf("WARNING: plotting only x-y domain\n");
+  }
+
   const char *name = mrc_domain_name(domain);
   char filename[strlen(name) + 20];
   sprintf(filename, "%s-patches.asc", name);
