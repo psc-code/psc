@@ -92,6 +92,7 @@ main(int argc, char **argv)
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
+  mrc_domain_plot(domain);
 
   struct mrc_m3 *m3 = mrc_domain_m3_create(domain);
   mrc_m3_set_name(m3, "test_m3");

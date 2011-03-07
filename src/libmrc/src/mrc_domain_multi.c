@@ -234,6 +234,42 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
   mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
+static void
+mrc_domain_multi_plot(struct mrc_domain *domain)
+{
+  if (domain->rank != 0) {
+    return;
+  }
+  const char *name = mrc_domain_name(domain);
+  char filename[strlen(name) + 20];
+  sprintf(filename, "%s-patches.asc", name);
+  FILE *file = fopen(filename, "w");
+  sprintf(filename, "%s-curve.asc", name);
+  FILE *file_curve = fopen(filename, "w");
+
+  int nr_global_patches;
+  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
+  
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(domain, gp, &info);
+    fprintf(file, "%d %d %d\n", info.off[0], info.off[1], info.rank);
+    fprintf(file, "%d %d %d\n", info.off[0] + info.ldims[0], info.off[1], info.rank);
+    fprintf(file, "\n");
+    fprintf(file, "%d %d %d\n", info.off[0], info.off[1] + info.ldims[1], info.rank);
+    fprintf(file, "%d %d %d\n", info.off[0] + info.ldims[0], info.off[1] + info.ldims[1],
+	    info.rank);
+    fprintf(file, "\n");
+    fprintf(file, "\n");
+
+    fprintf(file_curve, "%g %g %d\n", info.off[0] + .5 * info.ldims[0],
+	    info.off[1] + .5 * info.ldims[1], info.rank);
+  }
+
+  fclose(file);
+  fclose(file_curve);
+}
+
 static struct mrc_ddc *
 mrc_domain_multi_create_ddc(struct mrc_domain *domain)
 {
@@ -278,6 +314,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
   .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
+  .plot                  = mrc_domain_multi_plot,
   .create_ddc            = mrc_domain_multi_create_ddc,
 };
 
