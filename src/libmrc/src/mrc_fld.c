@@ -394,6 +394,7 @@ _mrc_m1_setup(struct mrc_obj *obj)
 static void
 _mrc_m1_view(struct mrc_obj *obj)
 {
+#if 0
   struct mrc_m1 *m1 = to_mrc_m1(obj);
   
   int rank, size;
@@ -410,6 +411,7 @@ _mrc_m1_view(struct mrc_obj *obj)
     }
     MPI_Barrier(obj->comm);
   }
+#endif
 }
 
 static void
@@ -496,6 +498,7 @@ _mrc_m3_setup(struct mrc_obj *obj)
 static void
 _mrc_m3_view(struct mrc_obj *obj)
 {
+#if 0
   struct mrc_m3 *m3 = to_mrc_m3(obj);
   
   int rank, size;
@@ -513,6 +516,7 @@ _mrc_m3_view(struct mrc_obj *obj)
     }
     MPI_Barrier(obj->comm);
   }
+#endif
 }
 
 static void
