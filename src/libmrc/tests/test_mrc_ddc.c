@@ -63,7 +63,7 @@ check_m3(struct mrc_m3 *m3)
 	  continue;
 	}
       }
-#if 0
+#if 1
       if (MRC_M3(m3p, 0, ix,iy,iz) != jz * 10000 + jy * 100 + jx) {
 	printf("ixyz %d %d %d jxyz %d %d %d : %d val %g\n",
 	       ix,iy,iz, jx,jy,jz, jz * 10000 + jy * 100 + jx,

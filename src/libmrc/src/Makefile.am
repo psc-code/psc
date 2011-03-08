@@ -23,7 +23,8 @@ libmrc_a_SOURCES = \
 	mrc_io_xdmf2.c \
 	mrc_io_xdmf_lib.c \
 	mrc_dict.c \
-	mrc_obj.c
+	mrc_obj.c \
+	hilbert.c
 
 libmrctest_a_SOURCES = \
 	mrctest.c

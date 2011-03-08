@@ -114,6 +114,56 @@ sfc_morton_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
 }
 
 // ----------------------------------------------------------------------
+// hilbert space filling curve
+
+#include "hilbert.h"
+
+static void
+sfc_hilbert_setup(struct mrc_domain_multi *multi)
+{
+  int *np = multi->np;
+  int *nbits = multi->nbits;
+  for (int d = 0; d < 3; d++) {
+    int n = np[d];
+    nbits[d] = 0;
+    while (n > 1) {
+      n >>= 1;
+      nbits[d]++;
+    }
+    // each dim must be power of 2
+    assert(np[d] == 1 << nbits[d]);
+  }
+
+  multi->nbits_max = nbits[0];
+  if (nbits[1] > multi->nbits_max) multi->nbits_max = nbits[1];
+  if (nbits[2] > multi->nbits_max) multi->nbits_max = nbits[2];
+  assert(nbits[2] == 0); // FIXME for now
+  assert(nbits[0] == nbits[1]);
+}
+
+static int
+sfc_hilbert_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
+{
+  int nbits_max = multi->nbits_max;
+
+  bitmask_t p_bm[2] = { p[0], p[1] };
+  return hilbert_c2i(2, nbits_max, p_bm);
+}
+
+static void
+sfc_hilbert_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
+{
+  int nbits_max = multi->nbits_max;
+
+  bitmask_t p_bm[2];
+  hilbert_i2c(2, nbits_max, gpatch, p_bm);
+  for (int d = 0; d < 2; d++) {
+    p[d] = p_bm[d];
+  }
+  p[2] = 0;
+}
+
+// ----------------------------------------------------------------------
 // space filling curve
 
 static void
@@ -122,6 +172,7 @@ sfc_setup(struct mrc_domain_multi *multi)
   switch (multi->curve_type) {
   case CURVE_BYDIM: return sfc_bydim_setup(multi);
   case CURVE_MORTON: return sfc_morton_setup(multi);
+  case CURVE_HILBERT: return sfc_hilbert_setup(multi);
   default: assert(0);
   }
 }
@@ -132,6 +183,7 @@ sfc_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
   switch (multi->curve_type) {
   case CURVE_BYDIM: return sfc_bydim_idx3_to_gpatch(multi, p);
   case CURVE_MORTON: return sfc_morton_idx3_to_gpatch(multi, p);
+  case CURVE_HILBERT: return sfc_hilbert_idx3_to_gpatch(multi, p);
   default: assert(0);
   }
 }
@@ -142,6 +194,7 @@ sfc_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
   switch (multi->curve_type) {
   case CURVE_BYDIM: return sfc_bydim_gpatch_to_idx3(multi, gpatch, p);
   case CURVE_MORTON: return sfc_morton_gpatch_to_idx3(multi, gpatch, p);
+  case CURVE_HILBERT: return sfc_hilbert_gpatch_to_idx3(multi, gpatch, p);
   default: assert(0);
   }
 }
@@ -408,6 +461,7 @@ static struct mrc_param_select bc_descr[] = {
 static struct mrc_param_select curve_descr[] = {
   { .val = CURVE_BYDIM   , .str = "bydim"    },
   { .val = CURVE_MORTON  , .str = "morton"   },
+  { .val = CURVE_HILBERT , .str = "hilbert"  },
   {},
 };
 
