@@ -70,9 +70,13 @@ struct mrc_domain_multi {
   int bc[3];
   int curve_type; //< type of space filling curve
 
-  // for sfc morton
+  // for sfc morton, hilbert
   int nbits[3];
   int nbits_max;
+
+  // for sfc hilbert
+  int hilbert_nr_dims;
+  int hilbert_dim[3];
 };
 
 void libmrc_domain_register_multi(void);

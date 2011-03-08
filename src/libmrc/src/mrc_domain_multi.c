@@ -137,8 +137,20 @@ sfc_hilbert_setup(struct mrc_domain_multi *multi)
   multi->nbits_max = nbits[0];
   if (nbits[1] > multi->nbits_max) multi->nbits_max = nbits[1];
   if (nbits[2] > multi->nbits_max) multi->nbits_max = nbits[2];
-  assert(nbits[2] == 0); // FIXME for now
-  assert(nbits[0] == nbits[1]);
+  multi->hilbert_nr_dims = 0;
+  for (int d = 0; d < 3; d++) {
+    if (nbits[d] == 0)
+      continue;
+
+    multi->hilbert_dim[multi->hilbert_nr_dims] = d;
+    multi->hilbert_nr_dims++;
+  }
+  // all not invariant dimensions must be equal
+  int d0 = multi->hilbert_dim[0];
+  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
+    int d = multi->hilbert_dim[i];
+    assert(nbits[d] == nbits[d0]);
+  }
 }
 
 static int
@@ -146,8 +158,12 @@ sfc_hilbert_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
   int nbits_max = multi->nbits_max;
 
-  bitmask_t p_bm[2] = { p[0], p[1] };
-  return hilbert_c2i(2, nbits_max, p_bm);
+  bitmask_t p_bm[3];
+  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
+    int d = multi->hilbert_dim[i];
+    p_bm[i] = p[d];
+  }
+  return hilbert_c2i(multi->hilbert_nr_dims, nbits_max, p_bm);
 }
 
 static void
@@ -155,12 +171,15 @@ sfc_hilbert_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
 {
   int nbits_max = multi->nbits_max;
 
-  bitmask_t p_bm[2];
-  hilbert_i2c(2, nbits_max, gpatch, p_bm);
-  for (int d = 0; d < 2; d++) {
-    p[d] = p_bm[d];
+  bitmask_t p_bm[3];
+  hilbert_i2c(multi->hilbert_nr_dims, nbits_max, gpatch, p_bm);
+  for (int d = 0; d < 3; d++) {
+    p[d] = 0;
   }
-  p[2] = 0;
+  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
+    int d = multi->hilbert_dim[i];
+    p[d] = p_bm[i];
+  }
 }
 
 // ----------------------------------------------------------------------
