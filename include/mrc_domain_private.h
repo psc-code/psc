@@ -56,6 +56,7 @@ void libmrc_domain_register_simple(void);
 enum {
   CURVE_BYDIM,
   CURVE_MORTON,
+  CURVE_HILBERT,
 };
 
 struct mrc_domain_multi {
