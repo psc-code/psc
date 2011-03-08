@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_xy(fields_t *pf, particles_t *pp)
+do_genc_push_part_xy(int p, fields_t *pf, particles_t *pp)
 {
 #define S0X(off) s0x[off+2]
 #define S0Y(off) s0y[off+2]
@@ -30,7 +30,7 @@ do_genc_push_part_xy(fields_t *pf, particles_t *pp)
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &psc.patch[p];
   int n_part = pp->n_part;
   for (int n = 0; n < n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -273,7 +273,7 @@ genc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   }
   prof_start(pr);
   foreach_patch(p) {
-    do_genc_push_part_xy(&flds.f[p], &particles.p[p]);
+    do_genc_push_part_xy(p, &flds.f[p], &particles.p[p]);
   }
   prof_stop(pr);
 
