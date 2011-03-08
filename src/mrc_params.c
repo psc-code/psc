@@ -170,7 +170,7 @@ mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
 
   for (int i = 0; descr[i].str; i++) {
     if (strcasecmp(descr[i].str, p->value) == 0) {
-      *pval = i;
+      *pval = descr[i].val;
       return;
     }
   }
