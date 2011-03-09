@@ -30,7 +30,8 @@ struct mrc_obj {
   void (*destroy)(struct mrc_obj *);		 \
   void (*set_from_options)(struct mrc_obj *);	 \
   void (*view)(struct mrc_obj *);		 \
-  void (*setup)(struct mrc_obj *)
+  void (*setup)(struct mrc_obj *);		 \
+  void (*write)(struct mrc_obj *, struct mrc_io *)
 
 struct mrc_obj_ops {
   MRC_OBJ_OPS;

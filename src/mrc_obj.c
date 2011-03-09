@@ -479,5 +479,8 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   if (class->write) {
     class->write(obj, io);
   }
+  if (obj->ops && obj->ops->write) {
+    obj->ops->write(obj, io);
+  }
 }
 
