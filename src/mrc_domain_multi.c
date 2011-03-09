@@ -2,6 +2,7 @@
 #include "mrc_domain_private.h"
 #include "mrc_params.h"
 #include "mrc_ddc.h"
+#include "mrc_io.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -288,6 +289,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  info->global_patch = gpatch;
   gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
 
   int p3[3];
@@ -296,6 +298,16 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
     info->ldims[d] = multi->ldims[d][p3[d]];
     info->off[d] = multi->off[d][p3[d]];
   }
+}
+
+static void
+mrc_domain_multi_get_local_patch_info(struct mrc_domain *domain, int patch,
+				      struct mrc_patch_info *info)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  mrc_domain_multi_get_global_patch_info(domain, multi->gpatch_off + patch,
+					 info);
 }
 
 static void
@@ -420,6 +432,26 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 }
 
 static void
+mrc_domain_multi_write(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_domain *domain = to_mrc_domain(obj);
+
+  int nr_global_patches;
+  mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
+
+  mrc_io_write_attr_int(io, mrc_obj_name(obj), "nr_global_patches",
+			nr_global_patches);
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_multi_get_global_patch_info(domain, gp, &info);
+    char path[strlen(mrc_obj_name(obj)) + 10];
+    sprintf(path, "%s/p%d", mrc_obj_name(obj), gp);
+    mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
+    mrc_io_write_attr_int3(io, path, "off", info.off);
+  }
+}
+
+static void
 mrc_domain_multi_plot(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -506,6 +538,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .param_descr           = mrc_domain_multi_params_descr,
   .setup                 = mrc_domain_multi_setup,
   .view                  = mrc_domain_multi_view,
+  .write                 = mrc_domain_multi_write,
   .destroy               = mrc_domain_multi_destroy,
   .get_patches           = mrc_domain_multi_get_patches,
   .get_patch_idx3        = mrc_domain_multi_get_patch_idx3,
@@ -514,6 +547,7 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_bc                = mrc_domain_multi_get_bc,
   .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
+  .get_local_patch_info  = mrc_domain_multi_get_local_patch_info,
   .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
   .plot                  = mrc_domain_multi_plot,
   .create_ddc            = mrc_domain_multi_create_ddc,

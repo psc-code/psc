@@ -28,6 +28,8 @@ struct mrc_domain_ops {
   void (*get_nr_global_patches)(struct mrc_domain *domain, int *nr_global_patches);
   void (*get_global_patch_info)(struct mrc_domain *domain, int gp,
 				struct mrc_patch_info *info);
+  void (*get_local_patch_info)(struct mrc_domain *domain, int p,
+			       struct mrc_patch_info *info);
   void (*get_idx3_patch_info)(struct mrc_domain *domain, int idx[3],
 			      struct mrc_patch_info *info);
   void (*plot)(struct mrc_domain *domain);

@@ -22,6 +22,7 @@ struct mrc_patch {
 struct mrc_patch_info {
   int rank;
   int patch;
+  int global_patch;
   int ldims[3];
   int off[3];
 };
@@ -37,6 +38,8 @@ void mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs);
 void mrc_domain_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches);
 void mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				      struct mrc_patch_info *info);
+void mrc_domain_get_local_patch_info(struct mrc_domain *domain, int patch,
+				     struct mrc_patch_info *info);
 void mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				    struct mrc_patch_info *info);
 void mrc_domain_plot(struct mrc_domain *domain);

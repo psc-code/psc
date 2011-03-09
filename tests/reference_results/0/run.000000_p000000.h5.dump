@@ -309,11 +309,25 @@ GROUP "/" {
          (0): "mrc_crds"
          }
       }
+      ATTRIBUTE "curve_type" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
       ATTRIBUTE "m" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 32, 32, 32
+         }
+      }
+      ATTRIBUTE "mpi_size" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
          }
       }
       ATTRIBUTE "mrc_obj_class" {
@@ -345,6 +359,29 @@ GROUP "/" {
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 1, 1, 1
+         }
+      }
+      ATTRIBUTE "nr_global_patches" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      GROUP "p0" {
+         ATTRIBUTE "ldims" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 32, 32, 32
+            }
+         }
+         ATTRIBUTE "off" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 0, 0, 0
+            }
          }
       }
    }
@@ -396,6 +433,13 @@ GROUP "/" {
       }
       GROUP "fld0" {
          GROUP "p0" {
+            ATTRIBUTE "global_patch" {
+               DATATYPE  H5T_STD_I32LE
+               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATA {
+               (0): 0
+               }
+            }
             DATASET "3d" {
                DATATYPE  H5T_IEEE_F32LE
                DATASPACE  SIMPLE { ( 32, 32, 32 ) / ( 32, 32, 32 ) }
@@ -6197,6 +6241,13 @@ GROUP "/" {
       }
       GROUP "fld1" {
          GROUP "p0" {
+            ATTRIBUTE "global_patch" {
+               DATATYPE  H5T_STD_I32LE
+               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATA {
+               (0): 0
+               }
+            }
             DATASET "3d" {
                DATATYPE  H5T_IEEE_F32LE
                DATASPACE  SIMPLE { ( 32, 32, 32 ) / ( 32, 32, 32 ) }
