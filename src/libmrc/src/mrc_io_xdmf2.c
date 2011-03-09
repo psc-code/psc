@@ -206,6 +206,9 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       hsize_t off[3] = { -m3p->ib[1], -m3p->ib[1], -m3p->ib[0] };
 
       hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(m3->domain, p, &info);
+      H5LTset_attribute_int(group, ".", "global_patch", &info.global_patch, 1);
       hid_t filespace = H5Screate_simple(3, fdims, NULL);
       hid_t memspace = H5Screate_simple(3, mdims, NULL);
       H5Sselect_hyperslab(memspace, H5S_SELECT_SET, off, NULL, fdims, NULL);

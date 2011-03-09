@@ -157,6 +157,14 @@ mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
 }
 
 void
+mrc_domain_get_local_patch_info(struct mrc_domain *domain, int p,
+				struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_local_patch_info(domain, p, info);
+}
+
+void
 mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 			       struct mrc_patch_info *info)
 {
