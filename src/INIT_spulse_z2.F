@@ -1,19 +1,12 @@
 
-#include "config.h"
-
       function s_pulse_z2(x,y,z,t)
 
       implicit none
       real(kind=8) :: t,x,y,z
       real(kind=8) :: s_pulse_z2
-      real(kind=8) :: s_pulse_z2_
       real(kind=8) :: C_s_pulse_z2
 
-#ifdef USE_C_INTERFACE
       s_pulse_z2 = C_s_pulse_z2(x,y,z,t)
-#else
-      s_pulse_z2 = s_pulse_z2_(x,y,z,t)
-#endif
 
       end function s_pulse_z2
 

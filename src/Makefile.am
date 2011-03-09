@@ -94,7 +94,7 @@ libpsc_a_SOURCES += \
 	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
-VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
+VLI_SOURCES = vli_main.c VLA_variables.F PIC_variables.F \
 	PIC_bpulse.F PIC_ionize.F \
 	OUT_param.F OUT_part.F \
 	OUT_count.F OUT_energy.F \
@@ -104,7 +104,7 @@ VLI_SOURCES = VLA_variables.F PIC_variables.F VLI.F \
 	MCC_variables.F MCC_init.F MCC_impact.F \
 	PSC_driver.F
 
-VLA_SOURCES = VLA_variables.F PIC_variables.F VLA.F \
+VLA_SOURCES = vla_main.c VLA_variables.F PIC_variables.F VLA.F \
 	PIC_bpulse.F PIC_ionize.F \
 	OUT_param.F \
 	OUT_count.F OUT_energy.F \
@@ -119,13 +119,6 @@ SELECT_SOURCES = VLA_variables.F PIC_variables.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
-
-if USE_C_INTERFACE
-
-VLI_SOURCES += vli_main.c
-VLA_SOURCES += vla_main.c
-
-endif
 
 noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \

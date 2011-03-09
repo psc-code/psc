@@ -18,9 +18,7 @@ c     ======================================================================
       nialloc=nint(niloc_overfac*niloc_+10)
       allocate(p_niloc(0:11*nialloc+10))
 
-#ifdef USE_C_INTERFACE
       call C_ALLOC_particles_cb(p_niloc)
-#endif
 
       end subroutine ALLOC_particles
  
@@ -115,8 +113,6 @@ c     reallocating if necessary
          cpuinou=cpuinou+cpud-cpuc
       endif
 
-#ifdef USE_C_INTERFACE
       call C_ALLOC_particles_cb(p_niloc)
-#endif
 
       end subroutine REALLOC_particles
