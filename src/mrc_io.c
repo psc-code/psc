@@ -324,6 +324,17 @@ mrc_io_write_attr_int(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name,
+		       int val[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_int3 = { val[0], val[1], val[2] } };
+    ops->write_attr(io, path, PT_INT3, name, &u);
+  }
+}
+
+void
 mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			 const char *val)
 {
