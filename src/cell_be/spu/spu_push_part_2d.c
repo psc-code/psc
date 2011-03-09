@@ -103,15 +103,24 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   *xlx = spu_mul(half, *xlx);
 }
 
-// A bit messy. We need a macro to access the offsets in the local store. 
-// This will actually work for a full three dimensional field, or any combination
-// of dimensions, as long as the elements of psc_block are are initialized correctly
-// on the ppu.
 
-#define F2_SPU_OFF(fldnr, jx, jy, jz)		\
-      ((((((fldnr)								\
-	   * psc_block.im[2] + ((jz)-psc_block.ib[2]))			\
-      * psc_block.im[1] + ((jy)-psc_block.ib[1]))				\
+// For dma purposes, we need C fields access macro here on the spu, but I don't
+// want to contaminate the spu code, so it's just copied here. 
+#define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
+  ((((((fldnr)								\
+       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
+      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
+     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
+
+
+
+// FIXME Assumes xy plane!!
+// We need a macro to access the offsets in the local store. 
+// The fields in the local store will only be 2d, and right now I'm going to 
+// force them to be 2d in the xy plane, life is too messy otherwise.
+#define F2_SPU_OFF(fldnr, jx, jy)					\
+  (((((fldnr)								\
+      * psc_block.im[1] + ((jy)-psc_block.ib[1]))			\
      * psc_block.im[0] + ((jx)-psc_block.ib[0]))))
 
 
@@ -120,17 +129,17 @@ form_factor_l(v_real *h, v_real * restrict xlx)
 // This macro could use a careful look in asmvis. If precision switching
 // is going to work, we're going to need a single precision version of this too.
 
-#define IP_FIELD_SPU(fldnr, jy, jz, outer_coeff, inner_coeff, field) {	\
+#define IP_FIELD_SPU(fldnr, jx, jy, outer_coeff, inner_coeff, field) {	\
   v_real _tmp1, _tmp2, _tmp3;						\
   v_real _in_A[2];							\
   v_real _in_B[2];							\
+  int jx_0 = (int)spu_extract(jx,0);					\
+  int jx_1 = (int)spu_extract(jx,1);					\
   int jy_0 = (int)spu_extract(jy,0);					\
   int jy_1 = (int)spu_extract(jy,1);					\
-  int jz_0 = (int)spu_extract(jz,0);					\
-  int jz_1 = (int)spu_extract(jz,1);					\
 									\
-  int off_0 = F2_SPU_OFF(fldnr, 0, jy_0 - 1, jz_0 - 1);			\
-  int off_1 = F2_SPU_OFF(fldnr, 0, jy_1 - 1, jz_1 - 1);			\
+  int off_0 = F2_SPU_OFF(fldnr, jx_0 - 1, jy_0 - 1);			\
+  int off_1 = F2_SPU_OFF(fldnr, jx_1 - 1, jy_1 - 1);			\
 									\
   int align_0 = off_0 & 1;						\
   int align_1 = off_1 & 1;						\
@@ -142,15 +151,15 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]);\
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
-  _tmp1 = spu_mul(inner_coeff##my,_tmp1);				\
-  _tmp2 = spu_mul(inner_coeff##Oy,_tmp2);				\
-  _tmp3 = spu_mul(inner_coeff##ly,_tmp3);				\
+  _tmp1 = spu_mul(inner_coeff##mx,_tmp1);				\
+  _tmp2 = spu_mul(inner_coeff##Ox,_tmp2);				\
+  _tmp3 = spu_mul(inner_coeff##lx,_tmp3);				\
   _tmp1 = spu_add(_tmp1, _tmp2);					\
   _tmp1 = spu_add(_tmp1, _tmp3);					\
-  field = spu_mul(outer_coeff##mz, _tmp1);				\
+  field = spu_mul(outer_coeff##my, _tmp1);				\
 									\
-  off_0 = F2_SPU_OFF(fldnr, 0, jy_0-1, jz_0);				\
-  off_1 = F2_SPU_OFF(fldnr, 0, jy_1-1, jz_1);				\
+  off_0 = F2_SPU_OFF(fldnr, jx_0-1, jy_0);				\
+  off_1 = F2_SPU_OFF(fldnr, jx_1-1, jy_1);				\
   									\
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
@@ -162,15 +171,15 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]);\
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
-  _tmp1 = spu_mul(inner_coeff##my,_tmp1);				\
-  _tmp2 = spu_mul(inner_coeff##Oy,_tmp2);				\
-  _tmp3 = spu_mul(inner_coeff##ly,_tmp3);				\
+  _tmp1 = spu_mul(inner_coeff##mx,_tmp1);				\
+  _tmp2 = spu_mul(inner_coeff##Ox,_tmp2);				\
+  _tmp3 = spu_mul(inner_coeff##lx,_tmp3);				\
   _tmp1 = spu_add(_tmp1, _tmp2);					\
   _tmp1 = spu_add(_tmp1, _tmp3);					\
-  field = spu_madd(outer_coeff##Oz, _tmp1, field);			\
+  field = spu_madd(outer_coeff##Oy, _tmp1, field);			\
 									\
-  off_0 = F2_SPU_OFF(fldnr, 0, jy_0 - 1, jz_0+1);				\
-  off_1 = F2_SPU_OFF(fldnr, 0, jy_1 - 1, jz_1+1);				\
+  off_0 = F2_SPU_OFF(fldnr, jx_0 - 1, jy_0+1);				\
+  off_1 = F2_SPU_OFF(fldnr, jx_1 - 1, jy_1+1);				\
   									\
   align_0 = off_0 & 1;							\
   align_1 = off_1 & 1;							\
@@ -182,12 +191,12 @@ form_factor_l(v_real *h, v_real * restrict xlx)
   _tmp1 = spu_shuffle(_in_A[0], _in_B[0], fld_ip_pat[align_0][align_1]); \
   _tmp2 = spu_shuffle(_in_A[align_0], _in_B[align_1], fld_ip_pat[align_0 ^ 1][align_1 ^ 1]); \
   _tmp3 = spu_shuffle(_in_A[1], _in_B[1], fld_ip_pat[align_0][align_1]); \
-  _tmp1 = spu_mul(inner_coeff##my,_tmp1);				\
-  _tmp2 = spu_mul(inner_coeff##Oy,_tmp2);				\
-  _tmp3 = spu_mul(inner_coeff##ly, _tmp3);				\
+  _tmp1 = spu_mul(inner_coeff##mx,_tmp1);				\
+  _tmp2 = spu_mul(inner_coeff##Ox,_tmp2);				\
+  _tmp3 = spu_mul(inner_coeff##lx, _tmp3);				\
   _tmp1 = spu_add(_tmp1, _tmp2);					\
   _tmp1 = spu_add(_tmp1, _tmp3);					\
-  field = spu_madd(outer_coeff##lz, _tmp1, field);			\
+  field = spu_madd(outer_coeff##ly, _tmp1, field);			\
   }
 
 // The actual compute kernel function.
@@ -216,52 +225,54 @@ spu_push_part_2d(void){
   // This could be pretty easily generalized for precision switching, but 
   // right now it won't work with single precision. 
 
+  // FIXME: This assumes the index in the symmetry direction is 0.
+
   spu_dma_get(ls_fld, 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EX,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,EX,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_get(&ls_fld[ls_EY*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EY,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,EY,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_get(&ls_fld[ls_EZ*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,EZ,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,EZ,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_get(&ls_fld[ls_HX*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HX,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,HX,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_get(&ls_fld[ls_HY*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HY,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,HY,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_get(&ls_fld[ls_HZ*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,HZ,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,HZ,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
 
@@ -314,7 +325,7 @@ spu_push_part_2d(void){
   // insert assignment, promotions, and constant 
   // calculations here.
   // When we change precision, this area will need to be modified. 
-  v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs;
+  v_real dt, yl, xl, dyi, dxi, dqs,fnqs,fnqxs,fnqys,fnqzs;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
   xl = spu_mul(half, dt);
@@ -704,7 +715,7 @@ spu_push_part_2d(void){
     // depending on how the compiler has implemented it. 
     for(int p=0; p < VEC_SIZE; p++){
       s1x[(int)dfx[p] + 1] = spu_sel(s1x[(int)dfx[p] + 1], gmx, (vector unsigned long long) element_assign[p]);
-      s1y[(int)dfx[p] + 2] = spu_sel(s1x[(int)dfx[p] + 2], gOx, (vector unsigned long long) element_assign[p]);
+      s1x[(int)dfx[p] + 2] = spu_sel(s1x[(int)dfx[p] + 2], gOx, (vector unsigned long long) element_assign[p]);
       s1x[(int)dfx[p] + 3] = spu_sel(s1x[(int)dfx[p] + 3], glx, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 1] = spu_sel(s1y[(int)dfy[p] + 1], gmy, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 2] = spu_sel(s1y[(int)dfy[p] + 2], gOy, (vector unsigned long long) element_assign[p]);
@@ -776,12 +787,12 @@ spu_push_part_2d(void){
 
 
     for(int l2i=l2min; l2i<=l2max; l2i++){
-      jxh = spu_splats(0.0);
+      v_real jxh = spu_splats(0.0);
 	
       // Let's find the offsets in the local store to which 
       // we will store the new currents. 
-      long int store_off_0 = F2_SPU_OFF(ls_JXI,0,j1_scal[0] - 2, j2_scal[0] + l2i - 2);
-      long int store_off_1 = F2_SPU_OFF(ls_JXI,0,j1_scal[1] - 2, j2_scal[1] + l2i - 2);
+      long int store_off_0 = F2_SPU_OFF(ls_JXI,j1_scal[0] - 2, j2_scal[0] + l2i - 2);
+      long int store_off_1 = F2_SPU_OFF(ls_JXI,j1_scal[1] - 2, j2_scal[1] + l2i - 2);
 
 
       v_real wx, wy, wz;
@@ -1239,28 +1250,30 @@ spu_push_part_2d(void){
 
 
   // Now it's time to write out the currents
+
+  // FIXME: This assumes the index of the plane in 0 in the symmetry direction.
   spu_dma_put(&ls_fld[ls_JXI*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JXI,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JXI,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_put(&ls_fld[ls_JYI*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JYI,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JYI,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
 
   spu_dma_put(&ls_fld[ls_JZI*32*32], 
 	      (psc_block.wb_flds + 
-	       sizeof(fields_c_real_t) * F2_OFF_BLOCK(&psc_block,JZI,
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JZI,
 						      psc_block.ib[0],
 						      psc_block.ib[1],
-						      psc_block.ib[2])),
+						      0)),
 	      32*32*sizeof(fields_c_real_t));
   
 

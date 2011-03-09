@@ -551,6 +551,7 @@ extern struct psc_case_ops psc_case_ops_singlepart;
 extern struct psc_case_ops psc_case_ops_harris;
 extern struct psc_case_ops psc_case_ops_harris_xy;
 extern struct psc_case_ops psc_case_ops_collisions;
+extern struct psc_case_ops psc_case_ops_test_xy;
 extern struct psc_case_ops psc_case_ops_test_xz;
 extern struct psc_case_ops psc_case_ops_test_yz;
 extern struct psc_case_ops psc_case_ops_cone;

@@ -208,6 +208,20 @@ psc_check_particles_sorted(mparticles_base_t *particles)
 
 // ----------------------------------------------------------------------
 // psc_create_test_xz
+// Hacked in to test Cell BE work.
+void
+psc_create_test_xy(struct psc_mod_config *conf)
+{
+  // make sure if we call it again, we really get the same i.c.
+  srandom(0);
+
+  psc_create(conf);
+  psc_init("test_xy");
+}
+
+
+// ----------------------------------------------------------------------
+// psc_create_test_xz
 
 void
 psc_create_test_xz(struct psc_mod_config *conf)

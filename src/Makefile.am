@@ -144,7 +144,7 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
+noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_exchange_particles test_sort
 
 if USE_CBE
@@ -154,8 +154,8 @@ endif
 LDADD = libpsc.a libmrc/src/libmrc.a
 
 
-TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
-	test_sort.sh test_cell_framwork
+TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
+	test_sort.sh
 
 if USE_CUDA
 

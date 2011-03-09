@@ -132,19 +132,6 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-#ifdef USE_CBE
-  struct psc_mod_config conf_cbe = {
-    .mod_particle = "cbe",
-    // .mod_sort = "qsort",
-  };
-  psc_create_test_yz(&conf_cbe);
-  psc_push_part_yz(flds,particles);
-  //  psc_dump_particles("part-2");
-  psc_check_particles_ref(particles,1e-10, "push_part_yz -- cbe");
-  psc_check_currents_ref(flds,2e-6); 
-  psc_destroy();
-#endif  
-
 
   prof_print();
 

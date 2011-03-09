@@ -16,6 +16,7 @@ void psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres);
 void psc_check_particles_ref(mparticles_base_t *particles, double thres, const char *test_str);
 void psc_check_particles_sorted(mparticles_base_t *particles);
 
+void psc_create_test_xy(struct psc_mod_config *conf);
 void psc_create_test_xz(struct psc_mod_config *conf);
 void psc_create_test_yz(struct psc_mod_config *conf);
 

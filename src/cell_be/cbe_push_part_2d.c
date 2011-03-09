@@ -15,6 +15,7 @@ cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   mparticles_t particles;
   fields_get(&flds, EX, EX +6,flds_base);
   particles_get(&particles, particles_base);
+  
 
   if(!spes_inited)
     psc_init_spes();
@@ -35,6 +36,9 @@ cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
     // So, another thing I'm not too please about. The function that's getting
     // called here will basically stall the ppu until it manages to start the patch
     // on an spe...
+    fields_zero(&flds.f[p], JXI);
+    fields_zero(&flds.f[p], JYI);
+    fields_zero(&flds.f[p], JZI);
     cell_run_patch(&flds.f[p], &particles.p[p], job);
   }
 

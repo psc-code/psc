@@ -226,13 +226,11 @@ void cell_run_patch(fields_t *pf, particles_t *pp, int job)
   int spe = get_spe();
   
   spe_blocks[spe]->job = job;
+  for(int i = 0; i < 3; i++){
+    spe_blocks[spe]->ib[i] = pf->ib[i];
+    spe_blocks[spe]->im[i] = pf->im[i];
+  }
   spe_blocks[spe]->wb_flds = (unsigned long long) pf->flds;
-  spe_blocks[spe]->ib[0] = pf->ib[0];
-  spe_blocks[spe]->ib[1] = pf->ib[1];
-  spe_blocks[spe]->ib[2] = pf->ib[2];
-  spe_blocks[spe]->im[0] = pf->im[0];
-  spe_blocks[spe]->im[1] = pf->im[1];
-  spe_blocks[spe]->im[2] = pf->im[2];
   spe_blocks[spe]->part_start = (unsigned long long) pp->particles;
   spe_blocks[spe]->part_end = (unsigned long long) (pp->particles + pp->n_part);
 
@@ -296,7 +294,7 @@ struct psc_ops psc_ops_cbe = {
   .name                   = "cbe",
   .create                 = cbe_create,
   .destroy                = cbe_destroy, 
-  .push_part_yz           = cbe_push_part_2d,
+  .push_part_xy           = cbe_push_part_2d,
 };
 
 
