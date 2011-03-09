@@ -317,10 +317,10 @@ spu_push_part_2d(void){
   v_real dt, yl, zl, dyi, dzi, dqs,fnqs,fnqxs,fnqys,fnqzs;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
-  xl = spu_mul(half, dt);
   yl = spu_mul(half, dt);
-  dxi = spu_splats(1./spu_ctx.dx[0]);
+  zl = spu_mul(half, dt);
   dyi = spu_splats(1./spu_ctx.dx[1]);
+  dzi = spu_splats(1./spu_ctx.dx[2]);
   one = spu_splats(1.0);
   two = spu_splats(2.0);
   threefourths = spu_splats(0.75);
@@ -414,55 +414,55 @@ spu_push_part_2d(void){
     vyi = spu_div(pyi, root);
     vzi = spu_div(pzi, root);
     
-    tmpx = spu_mul(vxi, xl);
     tmpy = spu_mul(vyi, yl);
+    tmpz = spu_mul(vzi, zl);
     
-    xi = spu_add(xi, tmpx);
     yi = spu_add(yi, tmpy);
+    zi = spu_add(zi, tmpz);
 
     // A little part b loving. 
 
-    v_real gmx, gmy, gOx, gOy, glx, gly, H1, H2, h1, h2;
-    v_int j1, j2, l1, l2;
+    v_real gmy, gmz, gOy, gOz, gly, glz, H2, H3, h2, h3;
+    v_int j2, j3, l2, l3;
       
-    find_index(&xi, &dxi, &j1, &H1);
     find_index(&yi, &dyi, &j2, &H2);
+    find_index(&zi, &dzi, &j3, &H3);
     
-    ip_to_grid_m(&H1, &gmx);
     ip_to_grid_m(&H2, &gmy);
+    ip_to_grid_m(&H3, &gmz);
     
-    ip_to_grid_O(&H1, &gOx);
     ip_to_grid_O(&H2, &gOy);
+    ip_to_grid_O(&H3, &gOz);
     
-    ip_to_grid_l(&H1, &glx);
     ip_to_grid_l(&H2, &gly);
+    ip_to_grid_l(&H3, &glz);
     
-    find_index_minus_shift(&xi, &dxi, &l1, &h1, &half);
     find_index_minus_shift(&yi, &dyi, &l2, &h2, &half);
+    find_index_minus_shift(&zi, &dzi, &l3, &h3, &half);
     
-    v_real hmx, hmy, hOx, hOy, hlx, hly;
-
-    ip_to_grid_m(&h1, &hmx);
+    v_real hmy, hmz, hOy, hOz, hly, hlz;
+    
     ip_to_grid_m(&h2, &hmy);
+    ip_to_grid_m(&h3, &hmz);
     
-    ip_to_grid_O(&h1, &hOx);
     ip_to_grid_O(&h2, &hOy);
+    ip_to_grid_O(&h3, &hOz);
     
-    ip_to_grid_l(&h1, &hlx);
     ip_to_grid_l(&h2, &hly);
+    ip_to_grid_l(&h3, &hlz);
     
     // Field interpolation here. urg...
     
     v_real exq, eyq, ezq, hxq, hyq, hzq;
     
-    IP_FIELD_SPU(ls_EX,l1,j2,g,h,exq);
-    IP_FIELD_SPU(ls_EY,j1,l2,h,g,eyq);
-    IP_FIELD_SPU(ls_EZ,j1,j2,g,g,ezq);
-    IP_FIELD_SPU(ls_HX,j1,l2,h,g,hxq);
-    IP_FIELD_SPU(ls_HY,l1,j2,g,h,hyq);
-    IP_FIELD_SPU(ls_HZ,l1,l2,h,h,hzq);
+    IP_FIELD_SPU(ls_EX,j2,j3,g,g,exq);
+    IP_FIELD_SPU(ls_EY,l2,j3,g,h,eyq);
+    IP_FIELD_SPU(ls_EZ,j2,l3,h,g,ezq);
+    IP_FIELD_SPU(ls_HX,l2,l3,h,h,hxq);
+    IP_FIELD_SPU(ls_HY,j2,l3,h,g,hyq);
+    IP_FIELD_SPU(ls_HZ,l2,j3,g,h,hzq);
     
-    
+
     // These arrays may be sort of a problem.
     // It all sorts of depends on how smart the compiler is. 
     // Allow me to explain in some depth. Arrays are groups
@@ -478,20 +478,20 @@ spu_push_part_2d(void){
     // very least, we could probably manually unroll the loop for the
     // s0* and make sure they stay in registers. Unfortunately, I'm not really
     // sure it will be possible to do that with the s1*.
-    v_real s0x[5], s0y[5], s1x[5], s1y[5];
+    v_real s0y[5], s0z[5], s1y[5], s1z[5];
     for(int mp=0; mp<5; mp++){
-      s0x[mp] = spu_splats(0.0);
-      s1x[mp] = spu_splats(0.0);
       s0y[mp] = spu_splats(0.0);
       s1y[mp] = spu_splats(0.0);
+      s0z[mp] = spu_splats(0.0);
+      s1z[mp] = spu_splats(0.0);
     }
-    form_factor_m(&H1, &s0x[1]);
-    form_factor_O(&H1, &s0x[2]);
-    form_factor_l(&H1, &s0x[3]);
-    
     form_factor_m(&H2, &s0y[1]);
     form_factor_O(&H2, &s0y[2]);
     form_factor_l(&H2, &s0y[3]);
+    
+    form_factor_m(&H3, &s0z[1]);
+    form_factor_O(&H3, &s0z[2]);
+    form_factor_l(&H3, &s0z[3]);
     
     // FIXME: I'm missing a step here. I need to look into it. 
     // should just be some sort of reduction. 
@@ -630,11 +630,11 @@ spu_push_part_2d(void){
     vyi = spu_div(pyi, root);
     vzi = spu_div(pzi, root);
     
-    tmpx = spu_mul(vxi, xl);
     tmpy = spu_mul(vyi, yl);
+    tmpz = spu_mul(vzi, zl);
     
-    xi = spu_add(xi, tmpx);
     yi = spu_add(yi, tmpy);
+    zi = spu_add(zi, tmpz);
 
     STORE_PARTICLES_SPU;
 
@@ -658,25 +658,25 @@ spu_push_part_2d(void){
     }
 
     // The final piece, current calculations. 
-    xi = spu_add(xi, tmpx);
     yi = spu_add(yi, tmpy);
+    zi = spu_add(zi, tmpz);
 
-    v_int k1,k2;
+    v_int k2,k3;
     
-    find_index(&xi, &dxi, &k1, &h1);
     find_index(&yi, &dyi, &k2, &h2);
+    find_index(&zi, &dzi, &k3, &h3);
     
     // God help me, there's some things I just can't fgure out how to parallelize
     // The g-- here are just temporary variables. I can't do the assignments in parallel, 
     // but I'll be damned if I can't do the FLOPS in parallel
     
-    form_factor_m(&h1, &gmx);
-    form_factor_O(&h1, &gOx);
-    form_factor_l(&h1, &glx);
-    
     form_factor_m(&h2, &gmy);
     form_factor_O(&h2, &gOy);
     form_factor_l(&h2, &gly);
+    
+    form_factor_m(&h3, &gmz);
+    form_factor_O(&h3, &gOz);
+    form_factor_l(&h3, &glz);
     
 
     // This next part is kind of a pain. The two particles can be in 
@@ -685,35 +685,35 @@ spu_push_part_2d(void){
     // spu_extracts into scalar variables. Extracts are slow, as each one 
     // is a combination of some number of rotates and what not. Sadly, 
     // I can't really think of any alteranative. 
-    signed long long j1_scal[2], j2_scal[2];
-    j1_scal[0] = spu_extract(j1, 0);
-    j1_scal[1] = spu_extract(j1, 1);
+    signed long long j2_scal[2], j3_scal[2];
     j2_scal[0] = spu_extract(j2, 0);
     j2_scal[1] = spu_extract(j2, 1);
+    j3_scal[0] = spu_extract(j3, 0);
+    j3_scal[1] = spu_extract(j3, 1);
     
-    signed long long dfx[2];
-    signed long long  dfy[2];
-    dfx[0] = spu_extract(k1,0) - j1_scal[0];
-    dfx[1] = spu_extract(k1,1) - j1_scal[1];
+    signed long long dfy[2];
+    signed long long  dfz[2];
     dfy[0] = spu_extract(k2,0) - j2_scal[0];
     dfy[1] = spu_extract(k2,1) - j2_scal[1];
+    dfz[0] = spu_extract(k3,0) - j3_scal[0];
+    dfz[1] = spu_extract(k3,1) - j3_scal[1];
     
     
     // This is the main section which is preventing me from 
     // eliminating the arrays. It may be a major bottleneck, 
     // depending on how the compiler has implemented it. 
     for(int p=0; p < VEC_SIZE; p++){
-      s1x[(int)dfx[p] + 1] = spu_sel(s1x[(int)dfx[p] + 1], gmx, (vector unsigned long long) element_assign[p]);
-      s1y[(int)dfx[p] + 2] = spu_sel(s1x[(int)dfx[p] + 2], gOx, (vector unsigned long long) element_assign[p]);
-      s1x[(int)dfx[p] + 3] = spu_sel(s1x[(int)dfx[p] + 3], glx, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 1] = spu_sel(s1y[(int)dfy[p] + 1], gmy, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 2] = spu_sel(s1y[(int)dfy[p] + 2], gOy, (vector unsigned long long) element_assign[p]);
       s1y[(int)dfy[p] + 3] = spu_sel(s1y[(int)dfy[p] + 3], gly, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 1] = spu_sel(s1z[(int)dfz[p] + 1], gmz, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 2] = spu_sel(s1z[(int)dfz[p] + 2], gOz, (vector unsigned long long) element_assign[p]);
+      s1z[(int)dfz[p] + 3] = spu_sel(s1z[(int)dfz[p] + 3], glz, (vector unsigned long long) element_assign[p]);
     }
     
     for(int m=0; m<5; m++){
-      s1x[m] = spu_sub(s1x[m], s0x[m]);
       s1y[m] = spu_sub(s1y[m], s0y[m]);
+      s1z[m] = spu_sub(s1z[m], s0z[m]);
     }
     
     
@@ -721,24 +721,28 @@ spu_push_part_2d(void){
     // the branching section in the original code. 
     // The l2min/max part is not, at this moment, needed
     // as I have unrolled the inner loop in the current assign.    
-    int l1min = 1 + ((dfx[0] | dfx[1]) >> 1),
-      l1max = 3 + (((dfx[0]>>1)^dfx[0]) | ((dfx[1]>>1)^dfx[1])),
-      l2min = 1 + ((dfy[0] | dfy[1]) >> 1),
-      l2max = 3 + (((dfy[0]>>1)^dfy[0]) | ((dfy[1]>>1)^dfy[1]));
+    int l2min = 1 + ((dfy[0] | dfy[1]) >> 1),
+      l2max = 3 + (((dfy[0]>>1)^dfy[0]) | ((dfy[1]>>1)^dfy[1])),
+      l3min = 1 + ((dfz[0] | dfz[1]) >> 1),
+      l3max = 3 + (((dfz[0]>>1)^dfz[0]) | ((dfz[1]>>1)^dfz[1]));
     
     v_real fnqx, fnqy, fnqz;
     
-    fnqx = spu_mul(wni, fnqxs);
+    fnqx = spu_mul(wni, fnqs);
     fnqx = spu_mul(qni, fnqx);
+    fnqx = spu_mul(vxi, fnqx);
     
     fnqy = spu_mul(wni, fnqys);
     fnqy = spu_mul(qni, fnqy);
     
-    fnqz = spu_mul(wni, fnqs);
+    fnqz = spu_mul(wni, fnqzs);
     fnqz = spu_mul(qni, fnqz);
-    fnqz = spu_mul(vzi, fnqz);
-
     
+    v_real jzh[5]; // As per Will's suggestion, using the minimal 
+    // variable here, and for jyh below, gives a nice
+    // performance boost
+    memset(jzh,0,5*sizeof(v_real));
+
     // This is an ugly section, and it 
     // doesn't translate well to single 
     // precision. The += to the local 
@@ -769,50 +773,44 @@ spu_push_part_2d(void){
 
     sjz1_c = zero;
 
-    v_real jyh[5]; // As per Will's suggestion, using the minimal 
-    // variable here, and for jyh below, gives a nice
-    // performance boost
-    memset(jyh,0,5*sizeof(v_real));
-
-
-    for(int l2i=l2min; l2i<=l2max; l2i++){
-      jxh = spu_splats(0.0);
+    v_real jyh;
+    for(int l3i=l3min; l3i<=l3max; l3i++){
+      jyh = spu_splats(0.0);
 	
       // Let's find the offsets in the local store to which 
       // we will store the new currents. 
-      long int store_off_0 = F2_SPU_OFF(ls_JXI,0,j1_scal[0] - 2, j2_scal[0] + l2i - 2);
-      long int store_off_1 = F2_SPU_OFF(ls_JXI,0,j1_scal[1] - 2, j2_scal[1] + l2i - 2);
+      long int store_off_0 = F2_SPU_OFF(ls_JXI,0,j2_scal[0] - 2, j3_scal[0] + l3i - 2);
+      long int store_off_1 = F2_SPU_OFF(ls_JXI,0,j2_scal[1] - 2, j3_scal[1] + l3i - 2);
 
 
       v_real wx, wy, wz;
       
-#define CALC_J_X {				\
-	wx = spu_mul(half, s1y[l2i]);		\
+      // This macro defined so we can unroll
+      // the inner current loop.
+#define CALC_J_POINT {				\
+	wx = spu_mul(half,s1y[l2i]);		\
 	wx = spu_add(s0y[l2i], wx);		\
-	wx = spu_mul(s1x[l1i], wx);		\
-	wx = spu_mul(fnqx, wx);			\
-	jxh = spu_sub(jxh, wx);			\
-      }
-      
-#define CALC_J_Y {				\
-	wy = spu_mul(half, s1x[l1i]);		\
-	wy = spu_add(s0x[l1i], wy);		\
+	wx = spu_mul(s0z[l3i], wx);		\
+	tmpx = spu_mul(half, s0y[l2i]);		\
+	tmpy = spu_mul(third, s1y[l2i]);	\
+	tmpx = spu_add(tmpx, tmpy);		\
+	tmpx = spu_mul(tmpx, s1z[l3i]);		\
+	wx = spu_add(wx, tmpx);			\
+						\
+	wy = spu_mul(half, s1z[l3i]);		\
+	wy = spu_add(s0z[l3i], wy);		\
 	wy = spu_mul(s1y[l2i], wy);		\
+						\
+	wz = spu_mul(half, s1y[l2i]);		\
+	wz = spu_add(s0y[l2i], wz);		\
+	wz = spu_mul(s1z[l3i], wz);		\
+						\
+	wx = spu_mul(fnqx, wx);			\
 	wy = spu_mul(fnqy, wy);			\
-	jyh[l1i] = spu_sub(jyh[l1i],wy);	\
-      }
-      
-#define CALC_J_Z {					\
-	wz = spu_mul(half,s1x[l1i]);			\
-	wz = spu_add(s0x[l1i], wz);			\
-	wz = spu_mul(s0y[l2i], wz);			\
-	tmpx = spu_mul(half, s0x[l1i]);			\
-	tmpy = spu_mul(third, s1x[l1i]);		\
-	tmpx = spu_add(tmpx, tmpy);			\
-	tmpx = spu_mul(tmpx, s1y[l2i]);			\
-	wz = spu_add(wz, tmpx);				\
-	wz = spu_mul(fnqz, wz);				\
-      }
+	jyh = spu_sub(jyh, wy);			\
+	wz = spu_mul(fnqz, wz);			\
+	jzh[l2i] = spu_sub(jzh[l2i], wz);	\
+	}
 
       // Now we need to preload in the currents in
       // local store that will be affected by each particle. 
@@ -876,75 +874,65 @@ spu_push_part_2d(void){
       // registers we allocated before. Note, we use spu_sel whenever
       // possible. A shuffle is 4 cycles, a select (ie pass through)
       // is only 2. 
-      int l1i = 0;
-      CALC_J_X;
-      CALC_J_Y;
-      CALC_J_Z;
-
-      sjx0_a = spu_sel(zero, jxh, (vector unsigned long long) element_assign[0]);
-      sjy0_a = spu_sel(zero, jyh[l1i], (vector unsigned long long) element_assign[0]);
-      sjz0_a = spu_sel(zero, wz, (vector unsigned long long) element_assign[0]);
+      int l2i = 0;
+      CALC_J_POINT;
       
-      sjx1_a = spu_shuffle(jxh, zero, uphi_pat);
-      sjy1_a = spu_shuffle(jyh[l1i], zero, uphi_pat);
-      sjz1_a = spu_shuffle(wz, zero, uphi_pat);
+      sjx0_a = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_a = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_a = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
       
-      l1i = 1;
+      sjx1_a = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_a = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_a = spu_shuffle(jzh[l2i], zero, uphi_pat);
       
-      CALC_J_X;
-      CALC_J_Y;
-      CALC_J_Z;
+      l2i = 1;
       
-      sjx0_a = spu_shuffle(sjx0_a, jxh, uplo_pat);
-      sjy0_a = spu_shuffle(sjy0_a, jyh[l1i], uplo_pat);
-      sjz0_a = spu_shuffle(sjz0_a, wz, uplo_pat);
+      CALC_J_POINT; 
       
-      sjx1_a = spu_sel(sjx1_a, jxh, (vector unsigned long long) element_assign[1]);
-      sjy1_a = spu_sel(sjy1_a, jyh[l1i], (vector unsigned long long) element_assign[1]);
-      sjz1_a = spu_sel(sjz1_a, wz, (vector unsigned long long) element_assign[1]);
+      sjx0_a = spu_shuffle(sjx0_a, wx, uplo_pat);
+      sjy0_a = spu_shuffle(sjy0_a, jyh, uplo_pat);
+      sjz0_a = spu_shuffle(sjz0_a, jzh[l2i], uplo_pat);
       
-      l1i = 2;
+      sjx1_a = spu_sel(sjx1_a, wx, (vector unsigned long long) element_assign[1]);
+      sjy1_a = spu_sel(sjy1_a, jyh, (vector unsigned long long) element_assign[1]);
+      sjz1_a = spu_sel(sjz1_a, jzh[l2i], (vector unsigned long long) element_assign[1]);
       
-      CALC_J_X;
-      CALC_J_Y;
-      CALC_J_Z;
-            
-      sjx0_b = spu_sel(zero, jxh, (vector unsigned long long) element_assign[0]);
-      sjy0_b = spu_sel(zero, jyh[l1i], (vector unsigned long long) element_assign[0]);
-      sjz0_b = spu_sel(zero, wz, (vector unsigned long long) element_assign[0]);
+      l2i = 2;
       
-      sjx1_b = spu_shuffle(jxh, zero, uphi_pat);
-      sjy1_b = spu_shuffle(jyh[l1i], zero, uphi_pat);
-      sjz1_b = spu_shuffle(wz, zero, uphi_pat);
+      CALC_J_POINT;
       
-      l1i = 3;
+      sjx0_b = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_b = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_b = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
       
-      CALC_J_X;
-      CALC_J_Y;
-      CALC_J_Z;
+      sjx1_b = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_b = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_b = spu_shuffle(jzh[l2i], zero, uphi_pat);
       
-      sjx0_b = spu_shuffle(sjx0_b, jxh, uplo_pat);
-      sjy0_b = spu_shuffle(sjy0_b, jyh[l1i], uplo_pat);
-      sjz0_b = spu_shuffle(sjz0_b, wz, uplo_pat);
+      l2i = 3;
       
-      sjx1_b = spu_sel(sjx1_b, jxh, (vector unsigned long long) element_assign[1]);
-      sjy1_b = spu_sel(sjy1_b, jyh[l1i], (vector unsigned long long) element_assign[1]);
-      sjz1_b = spu_sel(sjz1_b, wz, (vector unsigned long long) element_assign[1]);
+      CALC_J_POINT; 
+      
+      sjx0_b = spu_shuffle(sjx0_b, wx, uplo_pat);
+      sjy0_b = spu_shuffle(sjy0_b, jyh, uplo_pat);
+      sjz0_b = spu_shuffle(sjz0_b, jzh[l2i], uplo_pat);
+      
+      sjx1_b = spu_sel(sjx1_b, wx, (vector unsigned long long) element_assign[1]);
+      sjy1_b = spu_sel(sjy1_b, jyh, (vector unsigned long long) element_assign[1]);
+      sjz1_b = spu_sel(sjz1_b, jzh[l2i], (vector unsigned long long) element_assign[1]);
       
       
-      l1i = 4;
+      l2i = 4;
       
-      CALC_J_X;
-      CALC_J_Y;
-      CALC_J_Z;
+      CALC_J_POINT;
       
-      sjx0_c = spu_sel(zero, jxh, (vector unsigned long long) element_assign[0]);
-      sjy0_c = spu_sel(zero, jyh[l1i], (vector unsigned long long) element_assign[0]);
-      sjz0_c = spu_sel(zero, wz, (vector unsigned long long) element_assign[0]);
+      sjx0_c = spu_sel(zero, wx, (vector unsigned long long) element_assign[0]);
+      sjy0_c = spu_sel(zero, jyh, (vector unsigned long long) element_assign[0]);
+      sjz0_c = spu_sel(zero, jzh[l2i], (vector unsigned long long) element_assign[0]);
       
-      sjx1_c = spu_shuffle(jxh, zero, uphi_pat);
-      sjy1_c = spu_shuffle(jyh[l1i], zero, uphi_pat);
-      sjz1_c = spu_shuffle(wz, zero, uphi_pat);
+      sjx1_c = spu_shuffle(wx, zero, uphi_pat);
+      sjy1_c = spu_shuffle(jyh, zero, uphi_pat);
+      sjz1_c = spu_shuffle(jzh[l2i], zero, uphi_pat);
 
 
       // I call this pain, and it is. Basically, we need 
@@ -1227,6 +1215,25 @@ spu_push_part_2d(void){
 
 
 
+#endif
+#if 0	
+      for(int l2i=l2min; l2i<=l2max; l2i++){
+	CALC_J_POINT;
+	int m = 0; 
+	cbe_real wx_s = spu_extract(wx,m);
+	ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	cbe_real jyh_s = spu_extract(jyh,m);
+	ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	cbe_real jzh_s = spu_extract(jzh[l2i],m);
+	ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+	m = 1; 
+	wx_s = spu_extract(wx,m);
+	ls_fld[F2_SPU_OFF(ls_JXI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += wx_s;
+	jyh_s = spu_extract(jyh,m);
+	ls_fld[F2_SPU_OFF(ls_JYI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jyh_s;
+	jzh_s = spu_extract(jzh[l2i],m);
+	ls_fld[F2_SPU_OFF(ls_JZI,0,j2_scal[m] + l2i - 2, j3_scal[m] + l3i - 2 )] += jzh_s;
+      }	
 #endif
 
     }  
