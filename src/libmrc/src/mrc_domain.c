@@ -73,6 +73,7 @@ static void
 _mrc_domain_write(struct mrc_obj *obj, struct mrc_io *io)
 {
   struct mrc_domain *domain = to_mrc_domain(obj);
+  mrc_io_write_attr_int(io, mrc_obj_name(obj), "mpi_size", domain->size);
   mrc_io_write_attr_string(io, mrc_obj_name(obj), "crds",
 			   mrc_crds_name(domain->crds));
   mrc_crds_write(mrc_domain_get_crds(domain), io);
