@@ -17,11 +17,6 @@ struct psc_bnd_ops {
 
 // ======================================================================
 
-struct psc_bnd_c {
-  struct mrc_ddc *ddc;
-  struct ddc_particles *ddcp;
-};
-
 extern struct psc_bnd_ops psc_bnd_c_ops;
 
 #define to_psc_bnd(o) (container_of(o, struct psc_bnd, obj))

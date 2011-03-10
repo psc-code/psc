@@ -5,6 +5,11 @@
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
 
+struct psc_bnd_c {
+  struct mrc_ddc *ddc;
+  struct ddc_particles *ddcp;
+};
+
 #define to_psc_bnd_c(bnd) ((struct psc_bnd_c *)((bnd)->obj.subctx))
 
 // ======================================================================
