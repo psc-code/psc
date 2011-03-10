@@ -1,9 +1,9 @@
 
 #include "psc_bnd_private.h"
 
-#include "psc.h"
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
+#include <mrc_profile.h>
 
 #define to_psc_bnd_c(bnd) ((struct psc_bnd_c *)((bnd)->obj.subctx))
 
@@ -91,6 +91,41 @@ psc_bnd_c_setup(struct mrc_obj *obj)
   create_bnd();
 }
 
+static void
+psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+{
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_add_ghosts", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, flds);
+
+  prof_stop(pr);
+}
+
+static void
+psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+{
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_fill_ghosts", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  // FIXME
+  // I don't think we need as many points, and only stencil star
+  // rather then box
+  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, flds);
+
+  prof_stop(pr);
+}
+
 // ======================================================================
 // psc_bnd: subclass "c"
 
@@ -98,4 +133,6 @@ struct psc_bnd_ops psc_bnd_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_bnd_c),
   .setup                 = psc_bnd_c_setup,
+  .add_ghosts            = psc_bnd_c_add_ghosts,
+  .fill_ghosts           = psc_bnd_c_fill_ghosts,
 };

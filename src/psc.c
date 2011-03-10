@@ -462,26 +462,6 @@ psc_push_field_b(mfields_base_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// psc_add_ghosts
-
-void
-psc_add_ghosts(mfields_base_t *flds, int mb, int me)
-{
-  assert(psc.bnd_ops->add_ghosts);
-  psc.bnd_ops->add_ghosts(flds, mb, me);
-}
-
-// ----------------------------------------------------------------------
-// psc_fill_ghosts
-
-void
-psc_fill_ghosts(mfields_base_t *flds, int mb, int me)
-{
-  assert(psc.bnd_ops->fill_ghosts);
-  psc.bnd_ops->fill_ghosts(flds, mb, me);
-}
-
-// ----------------------------------------------------------------------
 // psc_exchange_particles
 
 void

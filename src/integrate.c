@@ -1,5 +1,7 @@
 
 #include "psc.h"
+#include "psc_bnd.h"
+
 #include <mrc_common.h>
 #include <mrc_profile.h>
 
@@ -126,8 +128,8 @@ psc_integrate()
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
     psc_push_particles(flds, particles);
-    psc_add_ghosts(flds, JXI, JXI + 3);
-    psc_fill_ghosts(flds, JXI, JXI + 3);
+    psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 3);
     psc_exchange_particles(particles);
     time_stop(STAT_TIME_PARTICLE);
 

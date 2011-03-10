@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 
 #include <math.h>
@@ -118,7 +119,7 @@ c_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
   }
   prof_stop(pr);
 
-  psc_add_ghosts(f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -228,7 +229,7 @@ c_calc_v(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
   }
   prof_stop(pr);
 
-  psc_add_ghosts(f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
 }
 
 static void
@@ -336,7 +337,7 @@ c_calc_vv(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
   }
   prof_stop(pr);
 
-  psc_add_ghosts(f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
 }
 
 struct psc_moment_ops psc_moment_ops_c = {

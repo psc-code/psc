@@ -10,6 +10,8 @@ struct psc_bnd {
 
 struct psc_bnd_ops {
   MRC_OBJ_OPS;
+  void (*add_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
+  void (*fill_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
 };
 
 // ======================================================================
@@ -22,5 +24,6 @@ struct psc_bnd_c {
 extern struct psc_bnd_ops psc_bnd_c_ops;
 
 #define to_psc_bnd(o) (container_of(o, struct psc_bnd, obj))
+#define psc_bnd_ops(bnd) ((struct psc_bnd_ops *)((bnd)->obj.ops))
 
 #endif

@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 
 static void
@@ -59,7 +60,7 @@ c_push_field_a_nopml(mfields_base_t *flds)
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(flds, EX, EX + 3);
+  psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
@@ -81,7 +82,7 @@ c_push_field_a_nopml(mfields_base_t *flds)
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(flds, HX, HX + 3);
+  psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 
   prof_stop(pr);
 }
@@ -133,7 +134,7 @@ c_push_field_b_nopml(mfields_base_t *flds)
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(flds, HX, HX + 3);
+  psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
@@ -158,7 +159,7 @@ c_push_field_b_nopml(mfields_base_t *flds)
     } foreach_3d_end;
   }
 
-  psc_fill_ghosts(flds, EX, EX + 3);
+  psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
 
   prof_stop(pr);
 }

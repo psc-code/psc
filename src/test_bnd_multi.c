@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -97,7 +98,7 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_c);
   mfields_base_t *flds = &psc.flds;
   setup_jx(flds);
-  psc_fill_ghosts(flds, JXI, JXI + 1);
+  psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   check_jx(flds);
   psc_destroy();
 

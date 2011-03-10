@@ -447,8 +447,6 @@ void psc_integrate(void);
 void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
 void psc_push_field_a(mfields_base_t *flds);
 void psc_push_field_b(mfields_base_t *flds);
-void psc_add_ghosts(mfields_base_t *flds, int mb, int me);
-void psc_fill_ghosts(mfields_base_t *flds, int mb, int me);
 void psc_exchange_particles(mparticles_base_t *particles);
 void psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
 			mfields_base_t *f);

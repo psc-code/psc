@@ -216,43 +216,6 @@ create_bnd(void)
 }
   
 static void
-c_add_ghosts(mfields_base_t *flds, int mb, int me)
-{
-  struct psc_bnd *bnd = psc.bnd;
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_add_ghosts", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, flds);
-
-  prof_stop(pr);
-}
-
-static void
-c_fill_ghosts(mfields_base_t *flds, int mb, int me)
-{
-  struct psc_bnd *bnd = psc.bnd;
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_fill_ghosts", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  // FIXME
-  // I don't think we need as many points, and only stencil star
-  // rather then box
-  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, flds);
-
-  prof_stop(pr);
-}
-
-static void
 c_exchange_particles(mparticles_base_t *particles)
 {
   struct psc_bnd *bnd = psc.bnd;
@@ -389,7 +352,5 @@ c_exchange_particles(mparticles_base_t *particles)
 
 struct _psc_bnd_ops psc_bnd_ops_c = {
   .name               = "c",
-  .add_ghosts         = c_add_ghosts,
-  .fill_ghosts        = c_fill_ghosts,
   .exchange_particles = c_exchange_particles,
 };
