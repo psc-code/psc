@@ -21,16 +21,3 @@ struct psc_ops psc_ops_none = {
   .push_part_yz_b         = none_push_part,
 };
 
-// field advance
-
-static void
-none_push_field(mfields_base_t *flds)
-{
-}
-
-struct psc_push_field_ops psc_push_field_ops_none = {
-  .name         = "none",
-  .push_field_a = none_push_field,
-  .push_field_b = none_push_field,
-};
-

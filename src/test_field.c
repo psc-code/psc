@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_push_fields.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -43,14 +44,14 @@ main(int argc, char **argv)
   mfields_base_t *flds = &psc.flds;
   setup_fields(flds);
   // psc_dump_field(EX, "ex0");
-  psc_push_field_a(flds);
+  psc_push_fields_step_a(psc.push_fields, flds);
   // psc_dump_field(EX, "ex1");
   psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_fields(flds);
-  psc_push_field_a(flds);
+  psc_push_fields_step_a(psc.push_fields, flds);
   // psc_dump_field(EX, "ex2");
   // psc_dump_field(EY, "ey2");
   // psc_dump_field(EZ, "ez2");
@@ -65,14 +66,14 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   setup_fields(flds);
   psc_dump_field(flds, EX, "ex0");
-  psc_push_field_b(flds);
+  psc_push_fields_step_b(psc.push_fields, flds);
   psc_dump_field(flds, EX, "ex1");
   psc_save_fields_ref(flds);
   psc_destroy();
 
   psc_create_test_xz(&conf_c);
   setup_fields(flds);
-  psc_push_field_b(flds);
+  psc_push_fields_step_b(psc.push_fields, flds);
   psc_dump_field(flds, EX, "ex2");
   psc_dump_field(flds, EY, "ey2");
   psc_dump_field(flds, EZ, "ez2");

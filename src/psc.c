@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -25,13 +26,6 @@ static struct psc_ops *psc_ops_list[] = {
 #ifdef USE_SSE2
   &psc_ops_sse2,
 #endif
-  NULL,
-};
-
-static struct psc_push_field_ops *psc_push_field_ops_list[] = {
-  &psc_push_field_ops_fortran,
-  &psc_push_field_ops_c,
-  &psc_push_field_ops_none,
   NULL,
 };
 
@@ -76,17 +70,6 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
-static struct psc_push_field_ops *
-psc_find_push_field_ops(const char *ops_name)
-{
-  for (int i = 0; psc_push_field_ops_list[i]; i++) {
-    if (strcasecmp(psc_push_field_ops_list[i]->name, ops_name) == 0)
-      return psc_push_field_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_push_field_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -168,6 +151,11 @@ psc_create(struct psc_mod_config *conf)
 
   MPI_Comm comm = MPI_COMM_WORLD;
 
+  psc.push_fields = psc_push_fields_create(comm);
+  if (conf->mod_field) {
+    psc_push_fields_set_type(psc.push_fields, conf->mod_field);
+  }
+
   psc.bnd = psc_bnd_create(comm);
   if (conf->mod_bnd) {
     psc_bnd_set_type(psc.bnd, conf->mod_bnd);
@@ -195,10 +183,6 @@ psc_create(struct psc_mod_config *conf)
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
-  }
-  psc.push_field_ops = psc_find_push_field_ops(conf->mod_field);
-  if (psc.push_field_ops->create) {
-    psc.push_field_ops->create();
   }
   psc.randomize_ops = psc_find_randomize_ops(conf->mod_randomize);
   if (psc.randomize_ops->create) {
@@ -422,26 +406,6 @@ psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 }
 
 // ----------------------------------------------------------------------
-// psc_push_field_a
-
-void
-psc_push_field_a(mfields_base_t *flds)
-{
-  assert(psc.push_field_ops->push_field_a);
-  psc.push_field_ops->push_field_a(flds);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_field_b
-
-void
-psc_push_field_b(mfields_base_t *flds)
-{
-  assert(psc.push_field_ops->push_field_b);
-  psc.push_field_ops->push_field_b(flds);
-}
-
-// ----------------------------------------------------------------------
 // psc_randomize
 
 void
@@ -594,6 +558,10 @@ psc_init(const char *case_name)
   SET_subdomain();
 
   psc_init_particles(particle_label_offset);
+
+  psc_push_fields_set_from_options(psc.push_fields);
+  psc_push_fields_setup(psc.push_fields);
+  psc_push_fields_view(psc.push_fields);
 
   psc_bnd_set_from_options(psc.bnd);
   psc_bnd_setup(psc.bnd);

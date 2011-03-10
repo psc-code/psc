@@ -46,6 +46,7 @@ libpsc_a_SOURCES = \
 	sort.c \
 	collision.c \
 	PIC_bin_coll.F \
+	psc_push_fields.c psc_push_fields_fortran.c \
 	psc_bnd.c \
 	psc_bnd_c.c \
 	psc_bnd_fortran.c \

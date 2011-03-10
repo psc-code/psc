@@ -184,9 +184,3 @@ c_push_field_b(mfields_base_t *flds)
   }
 }
 
-struct psc_push_field_ops psc_push_field_ops_c = {
-  .name         = "c",
-  .push_field_a = c_push_field_a,
-  .push_field_b = c_push_field_b,
-};
-

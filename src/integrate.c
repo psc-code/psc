@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_push_fields.h"
 #include "psc_bnd.h"
 
 #include <mrc_common.h>
@@ -122,7 +123,7 @@ psc_integrate()
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_field_a(flds);
+    psc_push_fields_step_a(psc.push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
@@ -135,7 +136,7 @@ psc_integrate()
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_field_b(flds);
+    psc_push_fields_step_b(psc.push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = 0;

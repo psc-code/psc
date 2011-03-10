@@ -1,8 +1,6 @@
 
 #include "psc_bnd_private.h"
 
-#include <mrc_domain.h>
-#include <mrc_ddc.h>
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------

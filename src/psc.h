@@ -263,14 +263,6 @@ struct psc_ops {
   void (*push_part_yz_b)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // 1/2 x and 1/1 p step
 };
 
-struct psc_push_field_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*push_field_a)(mfields_base_t *); // 1st half step
-  void (*push_field_b)(mfields_base_t *); // 2nd half step
-};
-
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
 
@@ -327,9 +319,9 @@ struct psc_patch {
 #define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
+  struct psc_push_fields *push_fields;
   struct psc_bnd *bnd;
   struct psc_ops *ops;
-  struct psc_push_field_ops *push_field_ops;
   struct psc_randomize_ops *randomize_ops;
   struct psc_sort_ops *sort_ops;
   struct psc_collision_ops *collision_ops;
@@ -436,8 +428,6 @@ void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
 void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
-void psc_push_field_a(mfields_base_t *flds);
-void psc_push_field_b(mfields_base_t *flds);
 void psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
 			mfields_base_t *f);
 void psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
@@ -480,10 +470,6 @@ extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 extern struct psc_ops psc_ops_none;
-
-extern struct psc_push_field_ops psc_push_field_ops_fortran;
-extern struct psc_push_field_ops psc_push_field_ops_c;
-extern struct psc_push_field_ops psc_push_field_ops_none;
 
 extern struct psc_randomize_ops psc_randomize_ops_fortran;
 extern struct psc_randomize_ops psc_randomize_ops_none;
