@@ -48,7 +48,7 @@ struct mrc_domain_simple {
   int proc[3];
 };
 
-void libmrc_domain_register_simple(void);
+extern struct mrc_domain_ops mrc_domain_simple_ops;
 
 // ======================================================================
 // mrc_domain_multi
@@ -79,7 +79,7 @@ struct mrc_domain_multi {
   int hilbert_dim[3];
 };
 
-void libmrc_domain_register_multi(void);
+extern struct mrc_domain_ops mrc_domain_multi_ops;
 
 // ======================================================================
 

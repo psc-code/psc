@@ -292,7 +292,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 // ======================================================================
 // mrc_ddc_multi_ops
 
-static struct mrc_ddc_ops mrc_ddc_multi_ops = {
+struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .name                  = "multi",
   .size                  = sizeof(struct mrc_ddc_multi),
   .setup                 = mrc_ddc_multi_setup,
@@ -301,12 +301,6 @@ static struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
   .get_nei_rank_patch    = mrc_ddc_multi_get_nei_rank_patch,
 };
-
-void
-libmrc_ddc_register_multi()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
-}
 
 // ======================================================================
 // mrc_ddc_funcs_m3 for mrc_m3

@@ -82,8 +82,8 @@ mrc_ddc_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 static void
 mrc_ddc_init()
 {
-  libmrc_ddc_register_simple();
-  libmrc_ddc_register_multi();
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
 }
 
 // ======================================================================

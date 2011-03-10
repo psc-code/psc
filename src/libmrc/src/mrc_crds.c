@@ -178,7 +178,7 @@ mrc_crds_uniform_setup(struct mrc_obj *obj)
   }
 }
 
-static struct mrc_crds_ops crds_ops_uniform = {
+static struct mrc_crds_ops mrc_crds_uniform_ops = {
   .name  = "uniform",
   .setup = mrc_crds_uniform_setup,
 };
@@ -219,7 +219,7 @@ mrc_crds_rectilinear_setup(struct mrc_obj *obj)
   }
 }
 
-static struct mrc_crds_ops crds_ops_rectilinear = {
+static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
   .name       = "rectilinear",
   .setup      = mrc_crds_rectilinear_setup,
   .set_values = mrc_crds_rectilinear_set_values,
@@ -254,30 +254,24 @@ mrc_crds_multi_uniform_setup(struct mrc_obj *obj)
   }
 }
 
-static struct mrc_crds_ops crds_ops_multi_uniform = {
+static struct mrc_crds_ops mrc_crds_multi_uniform_ops = {
   .name  = "multi_uniform",
   .setup = mrc_crds_multi_uniform_setup,
 };
 
 // ======================================================================
-// mrc_crds class
-
-void
-mrc_crds_register(struct mrc_crds_ops *ops)
-{
-  list_add_tail(&ops->list, &mrc_class_mrc_crds.subclasses);
-}
-
-// ----------------------------------------------------------------------
 // mrc_crds_init
 
 static void
 mrc_crds_init()
 {
-  mrc_crds_register(&crds_ops_uniform);
-  mrc_crds_register(&crds_ops_rectilinear);
-  mrc_crds_register(&crds_ops_multi_uniform);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_uniform_ops);
 }
+
+// ======================================================================
+// mrc_crds class
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_params, x)
 static struct param mrc_crds_params_descr[] = {

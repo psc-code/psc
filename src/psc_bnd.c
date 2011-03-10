@@ -7,7 +7,7 @@
 static void
 psc_bnd_init()
 {
-  psc_bnd_register_c();
+  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
 }
 
 // ======================================================================

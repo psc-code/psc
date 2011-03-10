@@ -1022,7 +1022,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   H5Gclose(group0);
 }
 
-static struct mrc_io_ops mrc_io_ops_xdmf = {
+struct mrc_io_ops mrc_io_xdmf_ops = {
   .name          = "xdmf",
   .size          = sizeof(struct diag_hdf5),
   .parallel      = true,
@@ -1036,7 +1036,7 @@ static struct mrc_io_ops mrc_io_ops_xdmf = {
   .write_m3      = ds_xdmf_write_m3,
 };
 
-static struct mrc_io_ops mrc_io_ops_xdmf_serial = {
+struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .name          = "xdmf_serial",
   .size          = sizeof(struct diag_hdf5),
   .destroy       = ds_xdmf_destroy,
@@ -1263,7 +1263,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 }
 
 
-static struct mrc_io_ops mrc_io_ops_xdmf_to_one = {
+struct mrc_io_ops mrc_io_xdmf_to_one_ops = {
   .name          = "xdmf_to_one",
   .size          = sizeof(struct diag_hdf5),
   .parallel      = true,
@@ -1662,7 +1662,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   mrc_f3_destroy(lfld);
 }
 
-static struct mrc_io_ops mrc_io_ops_xdmf_parallel = {
+struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .name          = "xdmf_parallel",
   .size          = sizeof(struct diag_hdf5),
   .param_descr   = diag_hdf5_params_descr,
@@ -1683,17 +1683,6 @@ static struct mrc_io_ops mrc_io_ops_xdmf_parallel = {
 #endif
 
 // ======================================================================
-
-void
-libmrc_io_register_xdmf()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf);
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_serial);
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_to_one);
-#ifdef H5_HAVE_PARALLEL
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_parallel);
-#endif
-}
 
 #endif
 

@@ -298,7 +298,7 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
   }
 }
 
-static struct mrc_io_ops mrc_io_ops_combined = {
+struct mrc_io_ops mrc_io_combined_ops = {
   .name          = "combined",
   .size          = sizeof(struct diagc_combined_params),
   .param_descr   = diagc_combined_params_descr,
@@ -999,10 +999,4 @@ static struct param diagsrv_params_descr[] = {
   }
 
   srv_ops->destroy(&ds);
-}
-
-void
-libmrc_io_register_combined()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_combined);
 }

@@ -58,7 +58,7 @@ struct mrc_ddc_simple {
   MPI_Request recv_reqs[N_DIR];
 };
 
-void libmrc_ddc_register_simple(void);
+extern struct mrc_ddc_ops mrc_ddc_simple_ops;
 
 // ======================================================================
 // mrc_ddc_multi
@@ -80,7 +80,7 @@ struct mrc_ddc_multi {
   MPI_Request *recv_reqs;
 };
 
-void libmrc_ddc_register_multi(void);
+extern struct mrc_ddc_ops mrc_ddc_multi_ops;
 
 
 #endif
