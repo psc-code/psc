@@ -1,4 +1,6 @@
 
+#include "psc_push_fields_private.h"
+
 #include "psc.h"
 #include "psc_bnd.h"
 #include <mrc_profile.h>
@@ -164,8 +166,11 @@ c_push_field_b_nopml(mfields_base_t *flds)
   prof_stop(pr);
 }
 
+// ----------------------------------------------------------------------
+// psc_push_fields_c_step_a
+
 static void
-c_push_field_a(mfields_base_t *flds)
+psc_push_fields_c_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -174,8 +179,11 @@ c_push_field_a(mfields_base_t *flds)
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_push_fields_c_step_b
+
 static void
-c_push_field_b(mfields_base_t *flds)
+psc_push_fields_c_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -184,3 +192,11 @@ c_push_field_b(mfields_base_t *flds)
   }
 }
 
+// ======================================================================
+// psc_push_fields: subclass "c"
+
+struct psc_push_fields_ops psc_push_fields_c_ops = {
+  .name                  = "c",
+  .step_a                = psc_push_fields_c_step_a,
+  .step_b                = psc_push_fields_c_step_b,
+};
