@@ -47,10 +47,11 @@ libpsc_a_SOURCES = \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
 	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
-	none.c \
+	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
 	output_fields.c output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \
 	output_mrc.c \
+	none.c \
 	checks.c \
 	case_langmuir.c \
 	case_wakefield.c \

@@ -5,6 +5,7 @@
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
+#include "psc_output_fields.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -33,12 +34,6 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
-static struct psc_output_ops *psc_output_ops_list[] = {
-  &psc_output_ops_fortran,
-  &psc_output_ops_c,
-  NULL,
-};
-
 static struct psc_moment_ops *psc_moment_ops_list[] = {
   &psc_moment_ops_fortran,
   &psc_moment_ops_c,
@@ -53,17 +48,6 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
-static struct psc_output_ops *             // takes module name from command line
-psc_find_output_ops(const char *ops_name)
-{
-  for (int i = 0; psc_output_ops_list[i]; i++) {
-    if (strcasecmp(psc_output_ops_list[i]->name, ops_name) == 0)
-      return psc_output_ops_list[i];       // module name shows up in psc_output_ops_list
-  }
-  fprintf(stderr, "ERROR: psc_output_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -99,6 +83,9 @@ psc_create(struct psc_mod_config *conf)
 {
   memset(&psc, 0, sizeof(psc));
 
+  mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+  mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
+
   MPI_Comm comm = MPI_COMM_WORLD;
 
   psc.push_fields = psc_push_fields_create(comm);
@@ -126,24 +113,20 @@ psc_create(struct psc_mod_config *conf)
     psc_sort_set_type(psc.sort, conf->mod_sort);
   }
 
+  psc.output_fields = psc_output_fields_create(comm);
+  if (conf->mod_output) {
+    psc_output_fields_set_type(psc.output_fields, conf->mod_output);
+  }
+
   // defaults
   if (!conf->mod_particle)
     conf->mod_particle = "fortran";
-  if (!conf->mod_output)
-    conf->mod_output = "fortran";
   if (!conf->mod_moment)
     conf->mod_moment = "fortran";
-
-  mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-  mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
-  }
-  psc.output_ops = psc_find_output_ops(conf->mod_output);
-  if (psc.output_ops->create) {
-    psc.output_ops->create();
   }
   psc.moment_ops = psc_find_moment_ops(conf->mod_moment);
   if (psc.moment_ops->create) {
@@ -241,21 +224,13 @@ ascii_dump_particles(mparticles_base_t *particles, const char *fname)
 void
 psc_dump_field(mfields_base_t *flds, int m, const char *fname)
 {
-  if (psc.output_ops->dump_field) {
-    psc.output_ops->dump_field(m, fname);
-  } else {
-    ascii_dump_field(flds, m, fname);
-  }
+  ascii_dump_field(flds, m, fname);
 }
 
 void
 psc_dump_particles(mparticles_base_t *particles, const char *fname)
 {
-  if (psc.output_ops->dump_particles) {
-    psc.output_ops->dump_particles(fname);
-  } else {
-    ascii_dump_particles(particles, fname);
-  }
+  ascii_dump_particles(particles, fname);
 }
 
 // ----------------------------------------------------------------------
@@ -348,16 +323,6 @@ psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   } else {
     assert(0);
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_out_field
-
-void
-psc_out_field(mfields_base_t *flds, mparticles_base_t *particles)
-{
-  assert(psc.output_ops->out_field);
-  psc.output_ops->out_field(flds, particles);
 }
 
 // ----------------------------------------------------------------------
@@ -493,6 +458,10 @@ psc_init(const char *case_name)
   psc_sort_set_from_options(psc.sort);
   psc_sort_setup(psc.sort);
   psc_sort_view(psc.sort);
+
+  psc_output_fields_set_from_options(psc.output_fields);
+  psc_output_fields_setup(psc.output_fields);
+  psc_output_fields_view(psc.output_fields);
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);

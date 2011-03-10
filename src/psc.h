@@ -266,15 +266,6 @@ struct psc_ops {
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
 
-struct psc_output_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*out_field)(mfields_base_t *flds, mparticles_base_t *particles);
-  void (*dump_field)(int m, const char *fname);
-  void (*dump_particles)(const char *fname);
-};
-
 struct psc_moment_ops {
   const char *name;
   void (*create)(void);
@@ -303,8 +294,8 @@ struct psc {
   struct psc_collision *collision;
   struct psc_randomize *randomize;
   struct psc_sort *sort;
+  struct psc_output_fields *output_fields;
   struct psc_ops *ops;
-  struct psc_output_ops *output_ops;
   struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
@@ -423,7 +414,6 @@ void psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_bas
 void psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_out_field(mfields_base_t *flds, mparticles_base_t *particles);
 void psc_out_particles(void);
 void psc_set_n_particles(particles_base_t *pp, int n_part);
 
@@ -445,9 +435,6 @@ extern struct psc_ops psc_ops_generic_c;
 extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 extern struct psc_ops psc_ops_none;
-
-extern struct psc_output_ops psc_output_ops_fortran;
-extern struct psc_output_ops psc_output_ops_c;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
 extern struct psc_moment_ops psc_moment_ops_c;

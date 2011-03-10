@@ -273,7 +273,7 @@ static struct psc_output_c psc_output_c;
 // ----------------------------------------------------------------------
 // output_c_create
 
-static void output_c_create(void)
+void output_c_create(void)
 { 
   struct psc_output_c *out = &psc_output_c;
   mrc_params_parse(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
@@ -330,7 +330,7 @@ free_fields_list(struct psc_fields_list *list)
 // ----------------------------------------------------------------------
 // output_c_field
 
-static void
+void
 output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
 {
   struct psc_output_c *out = &psc_output_c;
@@ -426,13 +426,4 @@ output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
   
   prof_stop(pr);
 }
-
-// ======================================================================
-// psc_output_ops_c
-
-struct psc_output_ops psc_output_ops_c = {
-  .name           = "c",
-  .create         = output_c_create,
-  .out_field      = output_c_field,
-};
 

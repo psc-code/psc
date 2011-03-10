@@ -154,27 +154,6 @@ struct psc_ops psc_ops_fortran = {
 };
 
 // ======================================================================
-// fortran output
-
-static void
-fortran_out_field()
-{
-  assert(FIELDS_BASE == FIELDS_FORTRAN);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_out_field", 1., 0, 0);
-  }
-  prof_start(pr);
-  OUT_field();
-  prof_stop(pr);
-}
-
-struct psc_output_ops psc_output_ops_fortran = {
-  .name      = "fortran",
-  .out_field = fortran_out_field,
-};
-
-// ======================================================================
 // fortran moment
 
 static void
