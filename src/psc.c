@@ -3,6 +3,7 @@
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include "psc_collision.h"
+#include "psc_randomize.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -28,12 +29,6 @@ static struct psc_ops *psc_ops_list[] = {
 #ifdef USE_SSE2
   &psc_ops_sse2,
 #endif
-  NULL,
-};
-
-static struct psc_randomize_ops *psc_randomize_ops_list[] = {
-  &psc_randomize_ops_fortran,
-  &psc_randomize_ops_none,
   NULL,
 };
 
@@ -66,17 +61,6 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
-static struct psc_randomize_ops *
-psc_find_randomize_ops(const char *ops_name)
-{
-  for (int i = 0; psc_randomize_ops_list[i]; i++) {
-    if (strcasecmp(psc_randomize_ops_list[i]->name, ops_name) == 0)
-      return psc_randomize_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_randomize_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -151,17 +135,16 @@ psc_create(struct psc_mod_config *conf)
     psc_collision_set_type(psc.collision, conf->mod_collision);
   }
 
+  psc.randomize = psc_randomize_create(comm);
+  if (conf->mod_randomize) {
+    psc_randomize_set_type(psc.randomize, conf->mod_randomize);
+  }
+
   // defaults
   if (!conf->mod_particle)
     conf->mod_particle = "fortran";
-  if (!conf->mod_field)
-    conf->mod_field = "fortran";
-  if (!conf->mod_randomize)
-    conf->mod_randomize = "none";
   if (!conf->mod_sort)
     conf->mod_sort = "none";
-  if (!conf->mod_collision)
-    conf->mod_collision = "none";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
   if (!conf->mod_moment)
@@ -173,10 +156,6 @@ psc_create(struct psc_mod_config *conf)
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
-  }
-  psc.randomize_ops = psc_find_randomize_ops(conf->mod_randomize);
-  if (psc.randomize_ops->create) {
-    psc.randomize_ops->create();
   }
   psc.sort_ops = psc_find_sort_ops(conf->mod_sort);
   if (psc.sort_ops->create) {
@@ -392,16 +371,6 @@ psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 }
 
 // ----------------------------------------------------------------------
-// psc_randomize
-
-void
-psc_randomize(mparticles_base_t *particles)
-{
-  assert(psc.randomize_ops->randomize);
-  psc.randomize_ops->randomize(particles);
-}
-
-// ----------------------------------------------------------------------
 // psc_sort
 
 void
@@ -546,6 +515,10 @@ psc_init(const char *case_name)
   psc_collision_set_from_options(psc.collision);
   psc_collision_setup(psc.collision);
   psc_collision_view(psc.collision);
+
+  psc_randomize_set_from_options(psc.randomize);
+  psc_randomize_setup(psc.randomize);
+  psc_randomize_view(psc.randomize);
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);

@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_randomize.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -17,7 +18,7 @@ main(int argc, char **argv)
   psc_create_test_xz(&conf_fortran);
   mparticles_base_t *particles = &psc.particles;
 
-  psc_randomize(particles);
+  psc_randomize_run(psc.randomize, particles);
   psc_sort(particles);
   psc_check_particles_sorted(particles);
 

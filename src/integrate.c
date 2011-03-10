@@ -3,6 +3,7 @@
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include "psc_collision.h"
+#include "psc_randomize.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -109,7 +110,7 @@ psc_integrate()
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize(particles);
+    psc_randomize_run(psc.randomize, particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);

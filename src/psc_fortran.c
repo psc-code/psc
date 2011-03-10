@@ -154,31 +154,6 @@ struct psc_ops psc_ops_fortran = {
 };
 
 // ======================================================================
-// fortran randomize
-
-static void
-fortran_randomize(mparticles_base_t *particles_base)
-{
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_randomize", 1., 0, 0);
-  }
-  prof_start(pr);
-  PIC_randomize(&particles.p[0]);
-  prof_stop(pr);
-
-  particles_fortran_put(&particles, particles_base);
-}
-
-struct psc_randomize_ops psc_randomize_ops_fortran = {
-  .name      = "fortran",
-  .randomize = fortran_randomize,
-};
-
-// ======================================================================
 // fortran sort
 
 static void
