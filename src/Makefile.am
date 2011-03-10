@@ -43,12 +43,10 @@ libpsc_a_SOURCES = \
 	calc_densities.c \
 	randomize.c \
 	sort.c \
-	collision.c \
 	PIC_bin_coll.F \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
-	psc_bnd.c \
-	psc_bnd_c.c \
-	psc_bnd_fortran.c \
+	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
+	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	none.c \
 	output_fields.c output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \

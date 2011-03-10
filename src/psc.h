@@ -280,13 +280,6 @@ struct psc_sort_ops {
   void (*sort)(mparticles_base_t *particles);
 };
 
-struct psc_collision_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*collision)(mparticles_base_t *particles);
-};
-
 struct psc_output_ops {
   const char *name;
   void (*create)(void);
@@ -321,10 +314,10 @@ struct psc_patch {
 struct psc {
   struct psc_push_fields *push_fields;
   struct psc_bnd *bnd;
+  struct psc_collision *collision;
   struct psc_ops *ops;
   struct psc_randomize_ops *randomize_ops;
   struct psc_sort_ops *sort_ops;
-  struct psc_collision_ops *collision_ops;
   struct psc_output_ops *output_ops;
   struct _psc_bnd_ops *bnd_ops;
   struct psc_moment_ops *moment_ops;
@@ -447,7 +440,6 @@ void psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_
 void psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void psc_randomize(mparticles_base_t *particles);
 void psc_sort(mparticles_base_t *particles);
-void psc_collision(mparticles_base_t *particles);
 void psc_out_field(mfields_base_t *flds, mparticles_base_t *particles);
 void psc_out_particles(void);
 void psc_set_n_particles(particles_base_t *pp, int n_part);
@@ -479,9 +471,6 @@ extern struct psc_sort_ops psc_sort_ops_qsort;
 extern struct psc_sort_ops psc_sort_ops_countsort;
 extern struct psc_sort_ops psc_sort_ops_countsort2;
 extern struct psc_sort_ops psc_sort_ops_none;
-
-extern struct psc_collision_ops psc_collision_ops_fortran;
-extern struct psc_collision_ops psc_collision_ops_none;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;

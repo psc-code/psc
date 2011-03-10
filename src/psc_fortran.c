@@ -205,31 +205,6 @@ struct psc_sort_ops psc_sort_ops_fortran = {
 };
 
 // ======================================================================
-// fortran collision
-
-static void
-fortran_collision(mparticles_base_t *particles_base)
-{
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_collision", 1., 0, 0);
-  }
-  prof_start(pr);
-  PIC_bin_coll(&particles.p[0]);
-  prof_stop(pr);
-
-  particles_fortran_put(&particles, particles_base);
-}
-
-struct psc_collision_ops psc_collision_ops_fortran = {
-  .name      = "fortran",
-  .collision = fortran_collision,
-};
-
-// ======================================================================
 // fortran output
 
 static void

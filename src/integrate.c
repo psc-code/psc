@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
+#include "psc_collision.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -118,7 +119,7 @@ psc_integrate()
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision(particles);
+    psc_collision_run(psc.collision, particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
