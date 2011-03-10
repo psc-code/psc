@@ -36,8 +36,6 @@ struct mrc_domain_ops {
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
 };
 
-void libmrc_domain_register(struct mrc_domain_ops *ops);
-
 // ======================================================================
 // mrc_domain_simple
 

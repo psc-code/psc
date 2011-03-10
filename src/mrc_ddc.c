@@ -77,17 +77,6 @@ mrc_ddc_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 }
 
 // ======================================================================
-// mrc_ddc class
-
-static LIST_HEAD(mrc_ddc_subclasses);
-
-void
-libmrc_ddc_register(struct mrc_ddc_ops *ops)
-{
-  list_add_tail(&ops->list, &mrc_ddc_subclasses);
-}
-
-// ----------------------------------------------------------------------
 // mrc_ddc_init
 
 static void
@@ -96,6 +85,9 @@ mrc_ddc_init()
   libmrc_ddc_register_simple();
   libmrc_ddc_register_multi();
 }
+
+// ======================================================================
+// mrc_ddc class
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc, x)
 static struct param mrc_ddc_params_descr[] = {
@@ -110,7 +102,6 @@ struct mrc_class mrc_class_mrc_ddc = {
   .name             = "mrc_ddc",
   .size             = sizeof(struct mrc_ddc),
   .param_descr      = mrc_ddc_params_descr,
-  .subclasses       = &mrc_ddc_subclasses,
   .init             = mrc_ddc_init,
   .create           = _mrc_ddc_create,
 };

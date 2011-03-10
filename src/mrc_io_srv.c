@@ -1004,5 +1004,5 @@ static struct param diagsrv_params_descr[] = {
 void
 libmrc_io_register_combined()
 {
-  libmrc_io_register(&mrc_io_ops_combined);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_combined);
 }

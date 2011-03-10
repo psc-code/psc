@@ -39,7 +39,7 @@ struct mrc_obj_ops {
 
 struct mrc_class {
   const char *name;
-  list_t *subclasses;
+  list_t subclasses;
   list_t instances;
   size_t size;
   struct param *param_descr;
@@ -209,6 +209,14 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
   }									\
-									\
+
+
+// use a macro here to do the casting to mrc_obj_ops
+
+#define mrc_class_register_subclass(class, ops) \
+  __mrc_class_register_subclass(class, (struct mrc_obj_ops *)(ops))
+
+void __mrc_class_register_subclass(struct mrc_class *class,
+				   struct mrc_obj_ops *ops);
 
 #endif

@@ -305,7 +305,7 @@ static struct mrc_ddc_ops mrc_ddc_multi_ops = {
 void
 libmrc_ddc_register_multi()
 {
-  libmrc_ddc_register(&mrc_ddc_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
 }
 
 // ======================================================================

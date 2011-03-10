@@ -229,17 +229,6 @@ mrc_domain_m1_create(struct mrc_domain *domain)
 }
 
 // ======================================================================
-// mrc_domain class
-
-static LIST_HEAD(mrc_domain_subclasses);
-
-void
-libmrc_domain_register(struct mrc_domain_ops *ops)
-{
-  list_add_tail(&ops->list, &mrc_domain_subclasses);
-}
-
-// ----------------------------------------------------------------------
 // mrc_domain_init
 
 static void
@@ -249,10 +238,12 @@ mrc_domain_init()
   libmrc_domain_register_multi();
 }
 
+// ======================================================================
+// mrc_domain class
+
 struct mrc_class mrc_class_mrc_domain = {
   .name             = "mrc_domain",
   .size             = sizeof(struct mrc_domain),
-  .subclasses       = &mrc_domain_subclasses,
   .init             = mrc_domain_init,
   .create           = _mrc_domain_create,
   .destroy          = _mrc_domain_destroy,

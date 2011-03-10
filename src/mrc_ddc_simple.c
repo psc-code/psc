@@ -285,7 +285,7 @@ static struct mrc_ddc_ops mrc_ddc_simple_ops = {
 void
 libmrc_ddc_register_simple()
 {
-  libmrc_ddc_register(&mrc_ddc_simple_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
 }
 
 // ======================================================================

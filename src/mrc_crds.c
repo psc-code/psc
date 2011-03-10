@@ -262,12 +262,10 @@ static struct mrc_crds_ops crds_ops_multi_uniform = {
 // ======================================================================
 // mrc_crds class
 
-static LIST_HEAD(mrc_crds_subs);
-
 void
 mrc_crds_register(struct mrc_crds_ops *ops)
 {
-  list_add_tail(&ops->list, &mrc_crds_subs);
+  list_add_tail(&ops->list, &mrc_class_mrc_crds.subclasses);
 }
 
 // ----------------------------------------------------------------------
@@ -293,7 +291,6 @@ static struct param mrc_crds_params_descr[] = {
 struct mrc_class mrc_class_mrc_crds = {
   .name         = "mrc_crds",
   .size         = sizeof(struct mrc_crds),
-  .subclasses   = &mrc_crds_subs,
   .param_descr  = mrc_crds_params_descr,
   .param_offset = offsetof(struct mrc_crds, par),
   .init         = mrc_crds_init,
