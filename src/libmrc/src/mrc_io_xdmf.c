@@ -1687,11 +1687,11 @@ static struct mrc_io_ops mrc_io_ops_xdmf_parallel = {
 void
 libmrc_io_register_xdmf()
 {
-  libmrc_io_register(&mrc_io_ops_xdmf);
-  libmrc_io_register(&mrc_io_ops_xdmf_serial);
-  libmrc_io_register(&mrc_io_ops_xdmf_to_one);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_serial);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_to_one);
 #ifdef H5_HAVE_PARALLEL
-  libmrc_io_register(&mrc_io_ops_xdmf_parallel);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf_parallel);
 #endif
 }
 

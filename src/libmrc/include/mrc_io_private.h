@@ -65,8 +65,6 @@ void libmrc_io_register_xdmf();
 void libmrc_io_register_xdmf2();
 void libmrc_io_register_combined();
 
-void libmrc_io_register(struct mrc_io_ops *ops);
-
 // ======================================================================
 
 static inline struct mrc_io *

@@ -93,5 +93,5 @@ static struct mrc_io_ops mrc_io_ops_ascii = {
 void
 libmrc_io_register_ascii()
 {
-  libmrc_io_register(&mrc_io_ops_ascii);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_ascii);
 }

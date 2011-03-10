@@ -214,5 +214,5 @@ static struct mrc_domain_ops mrc_domain_simple_ops = {
 void
 libmrc_domain_register_simple()
 {
-  libmrc_domain_register(&mrc_domain_simple_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
 }

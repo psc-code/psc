@@ -15,5 +15,5 @@ static struct psc_bnd_ops psc_bnd_c_ops = {
 void
 psc_bnd_register_c()
 {
-  psc_bnd_register(&psc_bnd_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
 }

@@ -367,17 +367,6 @@ mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
 }
 
 // ======================================================================
-// mrc_io class
-
-static LIST_HEAD(mrc_io_subclasses);
-
-void
-libmrc_io_register(struct mrc_io_ops *ops)
-{
-  list_add_tail(&ops->list, &mrc_io_subclasses);
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_init
 
 static void
@@ -391,6 +380,9 @@ mrc_io_init()
   libmrc_io_register_combined();
 }
 
+// ======================================================================
+// mrc_io class
+
 #define VAR(x) (void *)offsetof(struct mrc_io_params, x)
 static struct param mrc_io_params_descr[] = {
   { "outdir"          , VAR(outdir)       , PARAM_STRING(".")      },
@@ -402,7 +394,6 @@ static struct param mrc_io_params_descr[] = {
 struct mrc_class mrc_class_mrc_io = {
   .name         = "mrc_io",
   .size         = sizeof(struct mrc_io),
-  .subclasses   = &mrc_io_subclasses,
   .param_descr  = mrc_io_params_descr,
   .param_offset = offsetof(struct mrc_io, par),
   .init         = mrc_io_init,

@@ -556,5 +556,5 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
 void
 libmrc_domain_register_multi()
 {
-  libmrc_domain_register(&mrc_domain_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
 }

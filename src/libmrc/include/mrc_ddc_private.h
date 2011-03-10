@@ -40,8 +40,6 @@ struct mrc_ddc_ops {
 			     int *nei_rank, int *nei_patch);
 };
 
-void libmrc_ddc_register(struct mrc_ddc_ops *ops);
-
 #define to_mrc_ddc(obj) container_of(obj, struct mrc_ddc, obj)
 
 // ======================================================================

@@ -30,9 +30,9 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
   }
 
   // set subclass to first in list as default
-  if (!obj->ops && class->subclasses && !list_empty(class->subclasses)) {
+  if (!obj->ops && !list_empty(&class->subclasses)) {
     struct mrc_obj_ops *ops =
-      list_entry(class->subclasses->next, struct mrc_obj_ops, list);
+      list_entry(class->subclasses.next, struct mrc_obj_ops, list);
     mrc_obj_set_type(obj, ops->name);
   }
 
@@ -48,14 +48,14 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   if (!subclass)
     return NULL;
 
-  if (!class->subclasses) {
+  if (list_empty(&class->subclasses)) {
     mpi_printf(MPI_COMM_WORLD,
 	       "ERROR: requested subclass '%s', but class '%s' has no subclasses!\n",
 	       subclass, class->name);
   }
 
   struct mrc_obj_ops *ops;
-  list_for_each_entry(ops, class->subclasses, list) {
+  list_for_each_entry(ops, &class->subclasses, list) {
     assert(ops->name);
     if (strcmp(subclass, ops->name) == 0) {
       return ops;
@@ -65,7 +65,7 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   mpi_printf(MPI_COMM_WORLD, "ERROR: unknown subclass '%s' of class '%s'\n", subclass,
 	  class->name);
   mpi_printf(MPI_COMM_WORLD, "valid choices are:\n");
-  list_for_each_entry(ops, class->subclasses, list) {
+  list_for_each_entry(ops, &class->subclasses, list) {
     mpi_printf(MPI_COMM_WORLD, "- %s\n", ops->name);
   }
   abort();
@@ -76,6 +76,7 @@ mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
 {
   if (!class->initialized) {
     class->initialized = true;
+    INIT_LIST_HEAD(&class->subclasses);
     INIT_LIST_HEAD(&class->instances);
     if (class->init) {
       class->init();
@@ -446,7 +447,7 @@ mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
     char *p = (char *) obj + class->param_offset;
     mrc_params_read(p, class->param_descr, mrc_obj_name(obj), io);
   }
-  if (class->subclasses) {
+  if (!list_empty(&class->subclasses)) {
     char *type;
     mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_type", &type);
     mrc_obj_set_type(obj, type);
@@ -491,5 +492,14 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   if (obj->ops && obj->ops->write) {
     obj->ops->write(obj, io);
   }
+}
+
+void
+__mrc_class_register_subclass(struct mrc_class *class, struct mrc_obj_ops *ops)
+{
+  if (!class->subclasses.next) {
+    INIT_LIST_HEAD(&class->subclasses);
+  }
+  list_add_tail(&ops->list, &class->subclasses);
 }
 
