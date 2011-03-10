@@ -48,7 +48,6 @@ libpsc_a_SOURCES = \
 	PIC_bin_coll.F \
 	psc_bnd.c \
 	psc_bnd_c.c \
-	bnd.c \
 	none.c \
 	output_fields.c output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \

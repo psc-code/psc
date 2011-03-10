@@ -20,6 +20,14 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
   ops->fill_ghosts(bnd, flds, mb, me);
 }
 
+void
+psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
+{
+  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
+  assert(ops->exchange_particles);
+  ops->exchange_particles(bnd, particles);
+}
+
 // ======================================================================
 // psc_bnd_init
 

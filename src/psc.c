@@ -64,7 +64,6 @@ static struct psc_output_ops *psc_output_ops_list[] = {
 
 static struct _psc_bnd_ops *psc_bnd_ops_list[] = {
   &psc_bnd_ops_fortran,
-  &psc_bnd_ops_c,
   NULL,
 };
 
@@ -467,8 +466,7 @@ psc_push_field_b(mfields_base_t *flds)
 void
 psc_exchange_particles(mparticles_base_t *particles)
 {
-  assert(psc.bnd_ops->exchange_particles);
-  psc.bnd_ops->exchange_particles(particles);
+  psc_bnd_exchange_particles(psc.bnd, particles);
 }
 
 // ----------------------------------------------------------------------
