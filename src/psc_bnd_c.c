@@ -1,8 +1,6 @@
 
 #include "psc_bnd_private.h"
 
-struct psc_bnd_c {
-};
 
 // ======================================================================
 // psc_bnd: subclass "c"

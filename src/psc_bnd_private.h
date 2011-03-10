@@ -12,6 +12,12 @@ struct psc_bnd_ops {
   MRC_OBJ_OPS;
 };
 
+// ======================================================================
+
+struct psc_bnd_c {
+};
+
 extern struct psc_bnd_ops psc_bnd_c_ops;
+
 
 #endif
