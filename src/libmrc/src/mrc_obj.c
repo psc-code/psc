@@ -48,6 +48,12 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   if (!subclass)
     return NULL;
 
+  if (!class->subclasses) {
+    mpi_printf(MPI_COMM_WORLD,
+	       "ERROR: requested subclass '%s', but class '%s' has no subclasses!\n",
+	       subclass, class->name);
+  }
+
   struct mrc_obj_ops *ops;
   list_for_each_entry(ops, class->subclasses, list) {
     assert(ops->name);
@@ -200,6 +206,7 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
   free(obj->subctx);
   
   struct mrc_obj_ops *ops = find_subclass_ops(obj->class, subclass);
+  assert(ops);
   obj->ops = ops;
 
   if (ops->size) {
@@ -394,7 +401,7 @@ mrc_obj_view(struct mrc_obj *obj)
 void
 mrc_obj_setup_sub(struct mrc_obj *obj)
 {
-  if (obj->ops->setup) {
+  if (obj->ops && obj->ops->setup) {
     obj->ops->setup(obj);
   }
 }
