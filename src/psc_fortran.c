@@ -422,13 +422,6 @@ fortran_exchange_particles(mparticles_base_t *particles_base)
   prof_stop(pr);
 }
 
-struct _psc_bnd_ops psc_bnd_ops_fortran = {
-  .name               = "fortran",
-  .add_ghosts         = fortran_add_ghosts,
-  .fill_ghosts        = fortran_fill_ghosts,
-  .exchange_particles = fortran_exchange_particles,
-};
-
 // ======================================================================
 // fortran moment
 

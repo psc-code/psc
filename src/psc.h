@@ -304,15 +304,6 @@ struct psc_output_ops {
   void (*dump_particles)(const char *fname);
 };
 
-struct _psc_bnd_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*add_ghosts)(mfields_base_t *flds, int mb, int me);
-  void (*fill_ghosts)(mfields_base_t *flds, int mb, int me);
-  void (*exchange_particles)(mparticles_base_t *particles);
-};
-
 struct psc_moment_ops {
   const char *name;
   void (*create)(void);
@@ -508,8 +499,6 @@ extern struct psc_collision_ops psc_collision_ops_none;
 
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;
-
-extern struct _psc_bnd_ops psc_bnd_ops_fortran;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
 extern struct psc_moment_ops psc_moment_ops_c;

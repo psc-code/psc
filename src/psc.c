@@ -62,11 +62,6 @@ static struct psc_output_ops *psc_output_ops_list[] = {
   NULL,
 };
 
-static struct _psc_bnd_ops *psc_bnd_ops_list[] = {
-  &psc_bnd_ops_fortran,
-  NULL,
-};
-
 static struct psc_moment_ops *psc_moment_ops_list[] = {
   &psc_moment_ops_fortran,
   &psc_moment_ops_c,
@@ -139,17 +134,6 @@ psc_find_output_ops(const char *ops_name)
   abort();
 }
 
-static struct _psc_bnd_ops *
-psc_find_bnd_ops(const char *ops_name)
-{
-  for (int i = 0; psc_bnd_ops_list[i]; i++) {
-    if (strcasecmp(psc_bnd_ops_list[i]->name, ops_name) == 0)
-      return psc_bnd_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_bnd_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
 static struct psc_moment_ops *
 psc_find_moment_ops(const char *ops_name)
 {
@@ -185,6 +169,9 @@ psc_create(struct psc_mod_config *conf)
   MPI_Comm comm = MPI_COMM_WORLD;
 
   psc.bnd = psc_bnd_create(comm);
+  if (conf->mod_bnd) {
+    psc_bnd_set_type(psc.bnd, conf->mod_bnd);
+  }
 
   // defaults
   if (!conf->mod_particle)
@@ -199,8 +186,6 @@ psc_create(struct psc_mod_config *conf)
     conf->mod_collision = "none";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
-  if (!conf->mod_bnd)
-    conf->mod_bnd = "fortran";
   if (!conf->mod_moment)
     conf->mod_moment = "fortran";
 
@@ -230,10 +215,6 @@ psc_create(struct psc_mod_config *conf)
   psc.output_ops = psc_find_output_ops(conf->mod_output);
   if (psc.output_ops->create) {
     psc.output_ops->create();
-  }
-  psc.bnd_ops = psc_find_bnd_ops(conf->mod_bnd);
-  if (psc.bnd_ops->create) {
-    psc.bnd_ops->create();
   }
   psc.moment_ops = psc_find_moment_ops(conf->mod_moment);
   if (psc.moment_ops->create) {
