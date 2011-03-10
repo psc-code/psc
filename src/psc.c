@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_bnd.h"
 #include <mrc_common.h>
 #include <mrc_params.h>
 
@@ -180,6 +181,12 @@ static struct param psc_mod_config_descr[] = {
 void
 psc_create(struct psc_mod_config *conf)
 {
+  MPI_Comm comm = MPI_COMM_WORLD;
+  psc.bnd = psc_bnd_create(comm);
+  psc_bnd_set_from_options(psc.bnd);
+  psc_bnd_setup(psc.bnd);
+  psc_bnd_view(psc.bnd);
+
   // defaults
   if (!conf->mod_particle)
     conf->mod_particle = "fortran";
@@ -266,6 +273,8 @@ psc_destroy()
 
   psc_fields_destroy(&psc.flds);
   psc_particles_destroy(&psc.particles);
+
+  psc_bnd_destroy(psc.bnd);
 }
 
 static void

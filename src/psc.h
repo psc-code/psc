@@ -336,6 +336,7 @@ struct psc_patch {
 #define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
+  struct psc_bnd *bnd;
   struct psc_ops *ops;
   struct psc_push_field_ops *push_field_ops;
   struct psc_randomize_ops *randomize_ops;
