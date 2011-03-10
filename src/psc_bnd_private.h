@@ -18,6 +18,7 @@ struct psc_bnd_ops {
 // ======================================================================
 
 extern struct psc_bnd_ops psc_bnd_c_ops;
+extern struct psc_bnd_ops psc_bnd_fortran_ops;
 
 #define to_psc_bnd(o) (container_of(o, struct psc_bnd, obj))
 #define psc_bnd_ops(bnd) ((struct psc_bnd_ops *)((bnd)->obj.ops))
