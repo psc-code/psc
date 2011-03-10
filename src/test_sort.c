@@ -1,6 +1,8 @@
 
 #include "psc_testing.h"
 #include "psc_randomize.h"
+#include "psc_sort.h"
+
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -19,7 +21,7 @@ main(int argc, char **argv)
   mparticles_base_t *particles = &psc.particles;
 
   psc_randomize_run(psc.randomize, particles);
-  psc_sort(particles);
+  psc_sort_run(psc.sort, particles);
   psc_check_particles_sorted(particles);
 
   psc_destroy();

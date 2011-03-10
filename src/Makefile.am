@@ -41,12 +41,12 @@ libpsc_a_SOURCES = \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	calc_densities.c \
-	sort.c \
 	PIC_bin_coll.F \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
+	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
 	none.c \
 	output_fields.c output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \

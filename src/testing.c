@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_sort.h"
 
 #include <math.h>
 #include <limits.h>
@@ -234,6 +235,6 @@ psc_create_test_yz(struct psc_mod_config *conf)
   psc_create(conf);
   psc_init("test_yz");
   psc.particles.p[0].n_part = 1;
-  psc_sort(&psc.particles);
+  psc_sort_run(psc.sort, &psc.particles);
 }
 

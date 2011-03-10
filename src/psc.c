@@ -4,6 +4,7 @@
 #include "psc_bnd.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
+#include "psc_sort.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -32,15 +33,6 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
-static struct psc_sort_ops *psc_sort_ops_list[] = {
-  &psc_sort_ops_fortran,
-  &psc_sort_ops_qsort,
-  &psc_sort_ops_countsort,
-  &psc_sort_ops_countsort2,
-  &psc_sort_ops_none,
-  NULL,
-};
-
 static struct psc_output_ops *psc_output_ops_list[] = {
   &psc_output_ops_fortran,
   &psc_output_ops_c,
@@ -61,17 +53,6 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
-static struct psc_sort_ops *
-psc_find_sort_ops(const char *ops_name)
-{
-  for (int i = 0; psc_sort_ops_list[i]; i++) {
-    if (strcasecmp(psc_sort_ops_list[i]->name, ops_name) == 0)
-      return psc_sort_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_sort_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -140,11 +121,14 @@ psc_create(struct psc_mod_config *conf)
     psc_randomize_set_type(psc.randomize, conf->mod_randomize);
   }
 
+  psc.sort = psc_sort_create(comm);
+  if (conf->mod_sort) {
+    psc_sort_set_type(psc.sort, conf->mod_sort);
+  }
+
   // defaults
   if (!conf->mod_particle)
     conf->mod_particle = "fortran";
-  if (!conf->mod_sort)
-    conf->mod_sort = "none";
   if (!conf->mod_output)
     conf->mod_output = "fortran";
   if (!conf->mod_moment)
@@ -156,10 +140,6 @@ psc_create(struct psc_mod_config *conf)
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
-  }
-  psc.sort_ops = psc_find_sort_ops(conf->mod_sort);
-  if (psc.sort_ops->create) {
-    psc.sort_ops->create();
   }
   psc.output_ops = psc_find_output_ops(conf->mod_output);
   if (psc.output_ops->create) {
@@ -371,16 +351,6 @@ psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 }
 
 // ----------------------------------------------------------------------
-// psc_sort
-
-void
-psc_sort(mparticles_base_t *particles)
-{
-  assert(psc.sort_ops->sort);
-  psc.sort_ops->sort(particles);
-}
-
-// ----------------------------------------------------------------------
 // psc_out_field
 
 void
@@ -519,6 +489,10 @@ psc_init(const char *case_name)
   psc_randomize_set_from_options(psc.randomize);
   psc_randomize_setup(psc.randomize);
   psc_randomize_view(psc.randomize);
+
+  psc_sort_set_from_options(psc.sort);
+  psc_sort_setup(psc.sort);
+  psc_sort_view(psc.sort);
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);

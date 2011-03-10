@@ -4,6 +4,7 @@
 #include "psc_bnd.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
+#include "psc_sort.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -115,7 +116,7 @@ psc_integrate()
 
     time_start(STAT_TIME_SORT);
     if (psc.timestep % 10 == 0) {
-      psc_sort(particles);
+      psc_sort_run(psc.sort, particles);
     }
     time_stop(STAT_TIME_SORT);
 

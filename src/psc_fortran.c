@@ -154,32 +154,6 @@ struct psc_ops psc_ops_fortran = {
 };
 
 // ======================================================================
-// fortran sort
-
-static void
-fortran_sort(mparticles_base_t *particles_base)
-{
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_sort", 1., 0, 0);
-  }
-  prof_start(pr);
-  PIC_find_cell_indices(&particles.p[0]);
-  PIC_sort(&particles.p[0]);
-  prof_stop(pr);
-
-  particles_fortran_put(&particles, particles_base);
-}
-
-struct psc_sort_ops psc_sort_ops_fortran = {
-  .name = "fortran",
-  .sort = fortran_sort,
-};
-
-// ======================================================================
 // fortran output
 
 static void
