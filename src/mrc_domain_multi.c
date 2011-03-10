@@ -532,7 +532,7 @@ static struct param mrc_domain_multi_params_descr[] = {
 };
 #undef VAR
 
-static struct mrc_domain_ops mrc_domain_multi_ops = {
+struct mrc_domain_ops mrc_domain_multi_ops = {
   .name                  = "multi",
   .size                  = sizeof(struct mrc_domain_multi),
   .param_descr           = mrc_domain_multi_params_descr,
@@ -553,8 +553,3 @@ static struct mrc_domain_ops mrc_domain_multi_ops = {
   .create_ddc            = mrc_domain_multi_create_ddc,
 };
 
-void
-libmrc_domain_register_multi()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
-}

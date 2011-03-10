@@ -60,10 +60,13 @@ char *diagc_make_filename(struct mrc_io *io, const char *ext);
 extern struct diagsrv_srv_ops ds_srv_ops;
 extern struct diagsrv_srv_ops ds_srv_cache_ops;
 
-void libmrc_io_register_ascii();
-void libmrc_io_register_xdmf();
-void libmrc_io_register_xdmf2();
-void libmrc_io_register_combined();
+extern struct mrc_io_ops mrc_io_ascii_ops;
+extern struct mrc_io_ops mrc_io_xdmf_ops;
+extern struct mrc_io_ops mrc_io_xdmf_serial_ops;
+extern struct mrc_io_ops mrc_io_xdmf_to_one_ops;
+extern struct mrc_io_ops mrc_io_xdmf_parallel_ops;
+extern struct mrc_io_ops mrc_io_xdmf2_ops;
+extern struct mrc_io_ops mrc_io_combined_ops;
 
 // ======================================================================
 

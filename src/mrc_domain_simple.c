@@ -197,7 +197,7 @@ static struct param mrc_domain_simple_params_descr[] = {
 };
 #undef VAR
 
-static struct mrc_domain_ops mrc_domain_simple_ops = {
+struct mrc_domain_ops mrc_domain_simple_ops = {
   .name                  = "simple",
   .size                  = sizeof(struct mrc_domain_simple),
   .param_descr           = mrc_domain_simple_params_descr,
@@ -211,8 +211,3 @@ static struct mrc_domain_ops mrc_domain_simple_ops = {
   .create_ddc            = mrc_domain_simple_create_ddc,
 };
 
-void
-libmrc_domain_register_simple()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
-}

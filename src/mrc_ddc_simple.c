@@ -272,7 +272,7 @@ static struct param mrc_ddc_simple_params_descr[] = {
   {}
 };
 
-static struct mrc_ddc_ops mrc_ddc_simple_ops = {
+struct mrc_ddc_ops mrc_ddc_simple_ops = {
   .name                  = "simple",
   .size                  = sizeof(struct mrc_ddc_simple),
   .param_descr           = mrc_ddc_simple_params_descr,
@@ -281,12 +281,6 @@ static struct mrc_ddc_ops mrc_ddc_simple_ops = {
   .add_ghosts            = mrc_ddc_simple_add_ghosts,
   .get_nei_rank_patch    = mrc_ddc_simple_get_nei_rank_patch,
 };
-
-void
-libmrc_ddc_register_simple()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
-}
 
 // ======================================================================
 // mrc_ddc_funcs_f3 for mrc_f3

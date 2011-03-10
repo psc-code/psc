@@ -231,7 +231,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 // ----------------------------------------------------------------------
 // mrc_io_ops_xdmf
 
-static struct mrc_io_ops mrc_io_ops_xdmf2 = {
+struct mrc_io_ops mrc_io_xdmf2_ops = {
   .name          = "xdmf2",
   .size          = sizeof(struct xdmf),
   .parallel      = true,
@@ -242,12 +242,3 @@ static struct mrc_io_ops mrc_io_ops_xdmf2 = {
   .write_attr    = xdmf_write_attr,
   .write_m3      = xdmf_write_m3,
 };
-
-// ======================================================================
-
-void
-libmrc_io_register_xdmf2()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_xdmf2);
-}
-

@@ -234,8 +234,8 @@ mrc_domain_m1_create(struct mrc_domain *domain)
 static void
 mrc_domain_init()
 {
-  libmrc_domain_register_simple();
-  libmrc_domain_register_multi();
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
 }
 
 // ======================================================================

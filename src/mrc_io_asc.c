@@ -81,7 +81,7 @@ ds_ascii_write_attr(struct mrc_io *io, const char *path, int type,
   }
 }
 
-static struct mrc_io_ops mrc_io_ops_ascii = {
+struct mrc_io_ops mrc_io_ascii_ops = {
   .name        = "ascii",
   .size        = sizeof(struct mrc_io_ascii),
   .open        = ds_ascii_open,
@@ -89,9 +89,3 @@ static struct mrc_io_ops mrc_io_ops_ascii = {
   .write_field = ds_ascii_write_field,
   .write_attr  = ds_ascii_write_attr,
 };
-
-void
-libmrc_io_register_ascii()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ops_ascii);
-}
