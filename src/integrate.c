@@ -130,7 +130,7 @@ psc_integrate()
     psc_push_particles(flds, particles);
     psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 3);
     psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 3);
-    psc_exchange_particles(particles);
+    psc_bnd_exchange_particles(psc.bnd, particles);
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt

@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -93,7 +94,7 @@ main(int argc, char **argv)
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);
-  psc_exchange_particles(particles);
+  psc_bnd_exchange_particles(psc.bnd, particles);
   //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles(particles);
   psc_check_particles(particles);

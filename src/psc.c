@@ -461,15 +461,6 @@ psc_push_field_b(mfields_base_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// psc_exchange_particles
-
-void
-psc_exchange_particles(mparticles_base_t *particles)
-{
-  psc_bnd_exchange_particles(psc.bnd, particles);
-}
-
-// ----------------------------------------------------------------------
 // psc_randomize
 
 void
