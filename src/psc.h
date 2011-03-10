@@ -304,7 +304,7 @@ struct psc_output_ops {
   void (*dump_particles)(const char *fname);
 };
 
-struct psc_bnd_ops {
+struct _psc_bnd_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
@@ -343,7 +343,7 @@ struct psc {
   struct psc_sort_ops *sort_ops;
   struct psc_collision_ops *collision_ops;
   struct psc_output_ops *output_ops;
-  struct psc_bnd_ops *bnd_ops;
+  struct _psc_bnd_ops *bnd_ops;
   void *bnd_data;
   struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
@@ -513,8 +513,8 @@ extern struct psc_collision_ops psc_collision_ops_none;
 extern struct psc_output_ops psc_output_ops_fortran;
 extern struct psc_output_ops psc_output_ops_c;
 
-extern struct psc_bnd_ops psc_bnd_ops_fortran;
-extern struct psc_bnd_ops psc_bnd_ops_c;
+extern struct _psc_bnd_ops psc_bnd_ops_fortran;
+extern struct _psc_bnd_ops psc_bnd_ops_c;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
 extern struct psc_moment_ops psc_moment_ops_c;

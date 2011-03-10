@@ -62,7 +62,7 @@ static struct psc_output_ops *psc_output_ops_list[] = {
   NULL,
 };
 
-static struct psc_bnd_ops *psc_bnd_ops_list[] = {
+static struct _psc_bnd_ops *psc_bnd_ops_list[] = {
   &psc_bnd_ops_fortran,
   &psc_bnd_ops_c,
   NULL,
@@ -140,7 +140,7 @@ psc_find_output_ops(const char *ops_name)
   abort();
 }
 
-static struct psc_bnd_ops *
+static struct _psc_bnd_ops *
 psc_find_bnd_ops(const char *ops_name)
 {
   for (int i = 0; psc_bnd_ops_list[i]; i++) {

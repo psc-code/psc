@@ -466,7 +466,7 @@ c_exchange_particles(mparticles_base_t *particles)
   prof_stop(pr);
 }
 
-struct psc_bnd_ops psc_bnd_ops_c = {
+struct _psc_bnd_ops psc_bnd_ops_c = {
   .name               = "c",
   .add_ghosts         = c_add_ghosts,
   .fill_ghosts        = c_fill_ghosts,
