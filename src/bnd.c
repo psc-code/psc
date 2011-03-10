@@ -9,69 +9,6 @@
 #include <string.h>
 
 // ======================================================================
-// C bnd
-
-static void
-copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-static void
-add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3_BASE(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-static void
-copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
-{
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
-
-  for (int m = mb; m < me; m++) {
-    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3_BASE(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
-	}
-      }
-    }
-  }
-}
-
-struct mrc_ddc_funcs ddc_funcs = {
-  .copy_to_buf   = copy_to_buf,
-  .copy_from_buf = copy_from_buf,
-  .add_from_buf  = add_from_buf,
-};
-
-// ======================================================================
 
 #define N_DIR (27)
 
@@ -274,13 +211,6 @@ create_bnd(void)
 {
   struct psc_bnd *bnd = psc.bnd;
   struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
-
-  c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain);
-  mrc_ddc_set_funcs(c_bnd->ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(c_bnd->ddc, "ibn", psc.ibn);
-  mrc_ddc_set_param_int(c_bnd->ddc, "max_n_fields", 6);
-  mrc_ddc_set_param_int(c_bnd->ddc, "size_of_type", sizeof(fields_base_real_t));
-  mrc_ddc_setup(c_bnd->ddc);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
 }
