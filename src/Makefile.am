@@ -46,6 +46,7 @@ libpsc_a_SOURCES = \
 	sort.c \
 	collision.c \
 	PIC_bin_coll.F \
+	psc_bnd.c \
 	bnd.c \
 	none.c \
 	output_fields.c output_c_combine.c \
