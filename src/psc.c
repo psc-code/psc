@@ -181,11 +181,11 @@ static struct param psc_mod_config_descr[] = {
 void
 psc_create(struct psc_mod_config *conf)
 {
+  memset(&psc, 0, sizeof(psc));
+
   MPI_Comm comm = MPI_COMM_WORLD;
+
   psc.bnd = psc_bnd_create(comm);
-  psc_bnd_set_from_options(psc.bnd);
-  psc_bnd_setup(psc.bnd);
-  psc_bnd_view(psc.bnd);
 
   // defaults
   if (!conf->mod_particle)
@@ -207,8 +207,6 @@ psc_create(struct psc_mod_config *conf)
 
   mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
   mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-
-  memset(&psc, 0, sizeof(psc));
 
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
@@ -646,6 +644,10 @@ psc_init(const char *case_name)
   SET_subdomain();
 
   psc_init_particles(particle_label_offset);
+
+  psc_bnd_set_from_options(psc.bnd);
+  psc_bnd_setup(psc.bnd);
+  psc_bnd_view(psc.bnd);
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);
