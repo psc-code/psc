@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_bnd_private.h"
 #include <mrc_profile.h>
 #include <mrc_ddc.h>
 #include <mrc_domain.h>
@@ -9,11 +10,6 @@
 
 // ======================================================================
 // C bnd
-
-struct c_bnd_ctx {
-  struct mrc_ddc *ddc;
-  struct ddc_particles *ddcp;
-};
 
 static void
 copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
@@ -271,11 +267,13 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
   MPI_Waitall(psc.nr_patches * N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
 }
 
-static void
+#define to_psc_bnd_c(bnd) ((struct psc_bnd_c *)((bnd)->obj.subctx))
+
+void
 create_bnd(void)
 {
-  struct c_bnd_ctx *c_bnd = malloc(sizeof(*c_bnd));
-  memset(c_bnd, 0, sizeof(*c_bnd));
+  struct psc_bnd *bnd = psc.bnd;
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
 
   c_bnd->ddc = mrc_domain_create_ddc(psc.mrc_domain);
   mrc_ddc_set_funcs(c_bnd->ddc, &ddc_funcs);
@@ -285,17 +283,13 @@ create_bnd(void)
   mrc_ddc_setup(c_bnd->ddc);
 
   c_bnd->ddcp = ddc_particles_create(c_bnd->ddc);
-
-  psc.bnd_data = c_bnd;
 }
   
 static void
 c_add_ghosts(mfields_base_t *flds, int mb, int me)
 {
-  if (!psc.bnd_data) {
-    create_bnd();
-  }
-  struct c_bnd_ctx *c_bnd = psc.bnd_data;
+  struct psc_bnd *bnd = psc.bnd;
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
 
   static int pr;
   if (!pr) {
@@ -311,10 +305,8 @@ c_add_ghosts(mfields_base_t *flds, int mb, int me)
 static void
 c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 {
-  if (!psc.bnd_data) {
-    create_bnd();
-  }
-  struct c_bnd_ctx *c_bnd = psc.bnd_data;
+  struct psc_bnd *bnd = psc.bnd;
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
 
   static int pr;
   if (!pr) {
@@ -333,9 +325,9 @@ c_fill_ghosts(mfields_base_t *flds, int mb, int me)
 static void
 c_exchange_particles(mparticles_base_t *particles)
 {
-  if (!psc.bnd_data) {
-    create_bnd();
-  }
+  struct psc_bnd *bnd = psc.bnd;
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+
   static int pr, pr_A, pr_B;
   if (!pr) {
     pr = prof_register("c_xchg_part", 1., 0, 0);
@@ -345,7 +337,6 @@ c_exchange_particles(mparticles_base_t *particles)
   prof_start(pr);
   prof_start(pr_A);
 
-  struct c_bnd_ctx *c_bnd = psc.bnd_data;
   struct ddc_particles *ddcp = c_bnd->ddcp;
 
   f_real xb[3], xe[3], xgb[3], xge[3], xgl[3];

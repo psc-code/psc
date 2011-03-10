@@ -15,6 +15,8 @@ struct psc_bnd_ops {
 // ======================================================================
 
 struct psc_bnd_c {
+  struct mrc_ddc *ddc;
+  struct ddc_particles *ddcp;
 };
 
 extern struct psc_bnd_ops psc_bnd_c_ops;

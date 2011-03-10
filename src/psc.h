@@ -344,7 +344,6 @@ struct psc {
   struct psc_collision_ops *collision_ops;
   struct psc_output_ops *output_ops;
   struct _psc_bnd_ops *bnd_ops;
-  void *bnd_data;
   struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
