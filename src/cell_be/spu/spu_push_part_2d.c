@@ -33,74 +33,61 @@ v_real half, one, two,  threefourths, onepfive,third,zero;
 // These are essential slightly modified versions of the
 // SSE2 functions.
 
-static inline void
-find_index(v_real *xi, v_real *dxi, v_int *j, v_real *h)
-{
-  v_real tmp;
-  tmp = spu_mul(*xi, *dxi);
-  *h = spu_round_real(tmp);
-  *j = spu_round_int(tmp);
-  *h = spu_sub(*h, tmp);
+
+
+#define find_index(xi, dxi, j, h) {		\
+    v_real tmp;					\
+    tmp = spu_mul( xi, dxi);			\
+    h = spu_round_real(tmp);			\
+    j = spu_round_int(tmp);			\
+    h = spu_sub(h, tmp);			\
 } 
 
 
-static inline void
-find_index_minus_shift(v_real *xi, v_real *dxi, v_int *j, v_real *h, v_real *shift)
-{
-  v_real tmp;
-  tmp = spu_msub(*xi, *dxi, *shift);
-  *h = spu_round_real(tmp);
-  *j = spu_round_int(tmp);
-  *h = spu_sub(*h, tmp);
+#define find_index_minus_shift(xi,dxi,j,h,shift){	\
+    v_real tmp;						\
+    tmp = spu_msub(xi, dxi, shift);			\
+    h = spu_round_real(tmp);				\
+    j = spu_round_int(tmp);				\
+    h = spu_sub(h, tmp);				\
 } 
 
-static inline void
-ip_to_grid_m(v_real *h, v_real * xmx)
-{
-  *xmx = spu_add(half, *h);
-  *xmx = spu_mul(*xmx, *xmx);
-  *xmx = spu_mul(half, *xmx);
+
+#define ip_to_grid_m(h,xmx){			\
+    xmx = spu_add(half, h);			\
+    xmx = spu_mul(xmx, xmx);			\
+    xmx = spu_mul(half, xmx);			\
 }
 
-static inline void
-ip_to_grid_O(v_real *h, v_real *xOx)
-{
-  *xOx = spu_mul( *h , *h);
-  *xOx = spu_sub(threefourths, *xOx);
-
+#define ip_to_grid_O(h, xOx) {			\
+    xOx = spu_mul( h , h);			\
+    xOx = spu_sub(threefourths, xOx);		\
 }
 
-static inline void
-ip_to_grid_l(v_real *h, v_real * xlx)
-{
-  *xlx = spu_sub(half, *h);
-  *xlx = spu_mul( *xlx, *xlx);
-  *xlx = spu_mul(half, *xlx);
+#define ip_to_grid_l(h, xlx) {			\
+    xlx = spu_sub(half, h);			\
+    xlx = spu_mul( xlx, xlx);			\
+    xlx = spu_mul(half, xlx);			\
 }
 
-static inline void
-form_factor_m(v_real *h, v_real * restrict xmx)
-{
-  *xmx = spu_sub(*h,one);
-  *xmx = spu_add(onepfive,*xmx); // h-1 always <0
-  *xmx = spu_mul(*xmx, *xmx);
-  *xmx = spu_mul(half, *xmx);
+#define form_factor_m(h, xmx) {			\
+    xmx = spu_sub(h,one);			\
+    xmx = spu_add(onepfive,xmx);					\
+    xmx = spu_mul(xmx, xmx);						\
+    xmx = spu_mul(half, xmx);						\
 }
 
-static inline void
-form_factor_O(v_real *h, v_real * restrict xOx)
-{
-  *xOx = spu_mul(*h, *h);
-  *xOx = spu_sub(threefourths, *xOx);
+
+#define form_factor_O(h, xOx) {			\
+    xOx = spu_mul(h, h);			\
+    xOx = spu_sub(threefourths, xOx);		\
 }
 
-static inline void
-form_factor_l(v_real *h, v_real * restrict xlx)
-{
-  *xlx = spu_add(one, *h); 
-  *xlx = spu_sub(onepfive, *xlx);//h+1 always >0
-  *xlx = spu_mul(*xlx, *xlx);
-  *xlx = spu_mul(half, *xlx);
+#define form_factor_l(h, xlx) {			\
+    xlx = spu_add(one, h);			\
+    xlx = spu_sub(onepfive, xlx);		\
+    xlx = spu_mul(xlx, xlx);			\
+    xlx = spu_mul(half, xlx);			\
 }
 
 
@@ -436,31 +423,31 @@ spu_push_part_2d(void){
     v_real gmx, gmy, gOx, gOy, glx, gly, H1, H2, h1, h2;
     v_int j1, j2, l1, l2;
       
-    find_index(&xi, &dxi, &j1, &H1);
-    find_index(&yi, &dyi, &j2, &H2);
+    find_index(xi, dxi, j1, H1);
+    find_index(yi, dyi, j2, H2);
     
-    ip_to_grid_m(&H1, &gmx);
-    ip_to_grid_m(&H2, &gmy);
+    ip_to_grid_m(H1, gmx);
+    ip_to_grid_m(H2, gmy);
     
-    ip_to_grid_O(&H1, &gOx);
-    ip_to_grid_O(&H2, &gOy);
+    ip_to_grid_O(H1, gOx);
+    ip_to_grid_O(H2, gOy);
     
-    ip_to_grid_l(&H1, &glx);
-    ip_to_grid_l(&H2, &gly);
+    ip_to_grid_l(H1, glx);
+    ip_to_grid_l(H2, gly);
     
-    find_index_minus_shift(&xi, &dxi, &l1, &h1, &half);
-    find_index_minus_shift(&yi, &dyi, &l2, &h2, &half);
+    find_index_minus_shift(xi, dxi, l1, h1, half);
+    find_index_minus_shift(yi, dyi, l2, h2, half);
     
     v_real hmx, hmy, hOx, hOy, hlx, hly;
 
-    ip_to_grid_m(&h1, &hmx);
-    ip_to_grid_m(&h2, &hmy);
+    ip_to_grid_m(h1, hmx);
+    ip_to_grid_m(h2, hmy);
     
-    ip_to_grid_O(&h1, &hOx);
-    ip_to_grid_O(&h2, &hOy);
+    ip_to_grid_O(h1, hOx);
+    ip_to_grid_O(h2, hOy);
     
-    ip_to_grid_l(&h1, &hlx);
-    ip_to_grid_l(&h2, &hly);
+    ip_to_grid_l(h1, hlx);
+    ip_to_grid_l(h2, hly);
     
     // Field interpolation here. urg...
     
@@ -496,13 +483,13 @@ spu_push_part_2d(void){
       s0y[mp] = spu_splats(0.0);
       s1y[mp] = spu_splats(0.0);
     }
-    form_factor_m(&H1, &s0x[1]);
-    form_factor_O(&H1, &s0x[2]);
-    form_factor_l(&H1, &s0x[3]);
+    form_factor_m(H1, s0x[1]);
+    form_factor_O(H1, s0x[2]);
+    form_factor_l(H1, s0x[3]);
     
-    form_factor_m(&H2, &s0y[1]);
-    form_factor_O(&H2, &s0y[2]);
-    form_factor_l(&H2, &s0y[3]);
+    form_factor_m(H2, s0y[1]);
+    form_factor_O(H2, s0y[2]);
+    form_factor_l(H2, s0y[3]);
     
     // FIXME: I'm missing a step here. I need to look into it. 
     // should just be some sort of reduction. 
@@ -674,20 +661,20 @@ spu_push_part_2d(void){
 
     v_int k1,k2;
     
-    find_index(&xi, &dxi, &k1, &h1);
-    find_index(&yi, &dyi, &k2, &h2);
+    find_index(xi, dxi, k1, h1);
+    find_index(yi, dyi, k2, h2);
     
     // God help me, there's some things I just can't fgure out how to parallelize
     // The g-- here are just temporary variables. I can't do the assignments in parallel, 
     // but I'll be damned if I can't do the FLOPS in parallel
     
-    form_factor_m(&h1, &gmx);
-    form_factor_O(&h1, &gOx);
-    form_factor_l(&h1, &glx);
+    form_factor_m(h1, gmx);
+    form_factor_O(h1, gOx);
+    form_factor_l(h1, glx);
     
-    form_factor_m(&h2, &gmy);
-    form_factor_O(&h2, &gOy);
-    form_factor_l(&h2, &gly);
+    form_factor_m(h2, gmy);
+    form_factor_O(h2, gOy);
+    form_factor_l(h2, gly);
     
 
     // This next part is kind of a pain. The two particles can be in 
