@@ -375,11 +375,13 @@ mrc_obj_view(struct mrc_obj *obj)
     mrc_params_print(p, class->param_descr, mrc_obj_name(obj), obj->comm);
   } else {
     mpi_printf(obj->comm, 
-	       "\n------------------------------------------------------------- %s",
+	       "\n---------------------------------------------------- class -- %s",
 	       mrc_obj_name(obj));
   } 
   if (class->view) {
     class->view(obj);
+  } else {
+    mpi_printf(obj->comm, "\n");
   }
 
   if (obj->ops) {
@@ -388,7 +390,7 @@ mrc_obj_view(struct mrc_obj *obj)
       mrc_params_print(p, obj->ops->param_descr, obj->ops->name, obj->comm);
     } else {
       mpi_printf(obj->comm, 
-		 "------------------------------------------------------------- %s\n\n",
+		 "----------------------------------------------------- type -- %s\n\n",
 		 obj->ops->name);
     } 
 
