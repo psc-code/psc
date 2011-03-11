@@ -51,6 +51,7 @@ libpsc_a_SOURCES = \
 	output_binary.c output_vtk.c output_vtk_binary.c \
 	output_mrc.c \
 	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
+	psc_pulse.c \
 	checks.c \
 	case_langmuir.c \
 	case_wakefield.c \
