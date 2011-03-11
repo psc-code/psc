@@ -419,6 +419,7 @@ extern struct psc_case_ops psc_case_ops_test_yz;
 extern struct psc_case_ops psc_case_ops_cone;
 
 // Wrappers for Fortran functions
+void PSC_set_globals(void);
 void PIC_push_part_xyz();
 void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);

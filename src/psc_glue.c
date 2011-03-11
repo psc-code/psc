@@ -3,6 +3,7 @@
 
 #include <assert.h>
 
+#define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
@@ -58,12 +59,14 @@
 #define C_p_pulse_z2_F77 F77_FUNC(c_p_pulse_z2,C_P_PULSE_Z2)
 #define C_s_pulse_z2_F77 F77_FUNC(c_s_pulse_z2,C_S_PULSE_Z2)
 
+void PSC_set_globals_F77(f_real *cori);
+
 void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
 			   f_int *i1mx, f_int *i2mx, f_int *i3mx,
 			   f_int *rd1, f_int *rd2, f_int *rd3,
 			   f_int *i1n, f_int *i2n, f_int *i3n,
 			   f_int *i1x, f_int *i2x, f_int *i3x,
-			   f_real *cori, f_real *alpha, f_real *eta, 
+			   f_real *alpha, f_real *eta, 
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
 
@@ -178,6 +181,13 @@ f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
 
+void
+PSC_set_globals()
+{
+  struct psc_coeff *p = &psc.coeff;
+  PSC_set_globals_F77(&p->cori);
+}
+
 static void
 PIC_set_variables()
 {
@@ -195,7 +205,7 @@ PIC_set_variables()
 			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
 			&ilo[0], &ilo[1], &ilo[2],
 			&i0x, &i1x, &i2x,
-			&psc.coeff.cori, &psc.coeff.alpha, &psc.coeff.eta,
+			&psc.coeff.alpha, &psc.coeff.eta,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],
 			&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
 }

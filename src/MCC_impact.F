@@ -220,6 +220,7 @@ c PERFORM IMPACT IONIZATION EVENTS IN EACH CELL
       use PIC_variables
       use VLA_variables
       use MCC_variables
+      use PSC_globals
 
       implicit none
 

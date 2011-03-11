@@ -8,7 +8,8 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
 
-      use PIC_variables, only: cori,nialloc,nprparti
+      use PIC_variables, only: nialloc,nprparti
+      use PSC_globals
 
       implicit none
 

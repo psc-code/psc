@@ -20,7 +20,7 @@
       real(kind=8), dimension(:), allocatable :: p_re5i
       real(kind=8), dimension(:), allocatable :: p_re6i
 
-      real(kind=8) :: cori,nudt,coll_add,coll_tot
+      real(kind=8) :: nudt,coll_add,coll_tot
       real(kind=8), dimension(:,:), allocatable :: nudt_min
       real(kind=8), dimension(:,:), allocatable :: nudt_max
       real(kind=8), dimension(:,:), allocatable :: nudt_mean

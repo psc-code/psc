@@ -937,6 +937,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use PIC_variables
+      use PSC_globals
 
       implicit none
       

@@ -29,6 +29,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       use VLA_variables
       use PIC_variables
+      use PSC_globals
 
       implicit none
 
@@ -75,7 +76,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,cpu,cpu_ary,npe
 
-      use PIC_variables, only: cori,nialloc,nprparti
+      use PIC_variables, only: nialloc,nprparti
 
       implicit none
 

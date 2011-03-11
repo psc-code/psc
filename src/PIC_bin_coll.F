@@ -10,6 +10,7 @@ c ====================================================================
 
       use PIC_variables
       use VLA_variables
+      use PSC_globals
 
       implicit none
       integer :: sp,sp1,sp2,spx_nsp
