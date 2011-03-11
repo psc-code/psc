@@ -1,5 +1,6 @@
 
 #include "psc_sse2.h"
+#include "psc_push_particles_private.h"
 
 #include <stdlib.h>
 #include <assert.h>
@@ -20,11 +21,14 @@ init_vec_numbers(void) {
 
 /// Pointers to functions optimized for SSE2
 
-struct psc_ops psc_ops_sse2 = {
-  .name                   = "sse2",
-  .push_part_yz_a         = sse2_push_part_yz_a,
-  .push_part_yz_b         = sse2_push_part_yz_b,
-  .push_part_yz           = sse2_push_part_yz,
-}; 
+// ======================================================================
+// psc_push_particles: subclass "sse2"
+
+struct psc_push_particles_ops psc_push_particles_sse2_ops = {
+  .name                  = "sse2",
+  .push_yz               = psc_push_particles_sse2_push_yz,
+  .push_yz_a             = psc_push_particles_sse2_push_yz_a,
+  .push_yz_b             = psc_push_particles_sse2_push_yz_b,
+};
 
 /// \file psc_sse2.c Backend functions for SSE2 implementation.

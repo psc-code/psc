@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include "psc_collision.h"
@@ -132,7 +133,7 @@ psc_integrate()
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles(flds, particles);
+    psc_push_particles_run(psc.push_particles, particles, flds);
     psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 3);
     psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 3);
     psc_bnd_exchange_particles(psc.bnd, particles);

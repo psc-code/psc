@@ -250,19 +250,6 @@ void mfields_base_alloc(mfields_base_t *flds, int nr_fields);
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
-struct psc_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*push_part_xy)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_xz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_yz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_xyz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_z)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_yz_a)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // only does the simple first half step
-  void (*push_part_yz_b)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // 1/2 x and 1/1 p step
-};
-
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
 
@@ -277,6 +264,7 @@ struct psc_patch {
 #define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
+  struct psc_push_particles *push_particles;
   struct psc_push_fields *push_fields;
   struct psc_bnd *bnd;
   struct psc_collision *collision;
@@ -284,7 +272,7 @@ struct psc {
   struct psc_sort *sort;
   struct psc_output_fields *output_fields;
   struct psc_moments *moments;
-  struct psc_ops *ops;
+
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
@@ -384,18 +372,11 @@ void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
-void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
-void psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 void psc_out_particles(void);
 void psc_set_n_particles(particles_base_t *pp, int n_part);
 

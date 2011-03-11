@@ -22,7 +22,6 @@ libpsc_a_SOURCES = \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
-	psc_fortran.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
 	PIC_move_part_xyz.F \
@@ -41,6 +40,7 @@ libpsc_a_SOURCES = \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	PIC_bin_coll.F \
+	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
@@ -51,7 +51,6 @@ libpsc_a_SOURCES = \
 	output_binary.c output_vtk.c output_vtk_binary.c \
 	output_mrc.c \
 	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
-	none.c \
 	checks.c \
 	case_langmuir.c \
 	case_wakefield.c \
@@ -70,7 +69,7 @@ libpsc_a_SOURCES += output_hdf5.c
 endif
 
 libpsc_a_SOURCES += \
-	generic_c/psc_generic_c.c \
+	generic_c/psc_push_particles_generic_c.c \
 	generic_c/push_part_xyz.c \
 	generic_c/push_part_xy.c \
 	generic_c/push_part_xz.c \

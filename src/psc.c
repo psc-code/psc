@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
 #include "psc_collision.h"
@@ -19,32 +20,6 @@
 #include <assert.h>
 
 struct psc psc;
-
-// ----------------------------------------------------------------------
-
-static struct psc_ops *psc_ops_list[] = {
-  &psc_ops_generic_c,
-  &psc_ops_fortran,
-  &psc_ops_none,
-#ifdef USE_CUDA
-  &psc_ops_cuda,
-#endif
-#ifdef USE_SSE2
-  &psc_ops_sse2,
-#endif
-  NULL,
-};
-
-static struct psc_ops *
-psc_find_ops(const char *ops_name)
-{
-  for (int i = 0; psc_ops_list[i]; i++) {
-    if (strcasecmp(psc_ops_list[i]->name, ops_name) == 0)
-      return psc_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
 
 #define VAR(x) (void *)offsetof(struct psc_mod_config, x)
 
@@ -71,6 +46,11 @@ psc_create(struct psc_mod_config *conf)
   mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
   MPI_Comm comm = MPI_COMM_WORLD;
+
+  psc.push_particles = psc_push_particles_create(comm);
+  if (conf->mod_particle) {
+    psc_push_particles_set_type(psc.push_particles, conf->mod_particle);
+  }
 
   psc.push_fields = psc_push_fields_create(comm);
   if (conf->mod_field) {
@@ -107,15 +87,6 @@ psc_create(struct psc_mod_config *conf)
     psc_moments_set_type(psc.moments, conf->mod_moment);
   }
 
-  // defaults
-  if (!conf->mod_particle)
-    conf->mod_particle = "fortran";
-
-  psc.ops = psc_find_ops(conf->mod_particle);
-  if (psc.ops->create) {
-    psc.ops->create();
-  }
-
   psc.time_start = MPI_Wtime();
 }
 
@@ -140,13 +111,10 @@ psc_particles_destroy(mparticles_base_t *particles)
 void
 psc_destroy()
 {
-  if (psc.ops->destroy) {
-    psc.ops->destroy();
-  }
-
   psc_fields_destroy(&psc.flds);
   psc_particles_destroy(&psc.particles);
 
+#warning FIXME destroy
   psc_bnd_destroy(psc.bnd);
 }
 
@@ -216,97 +184,15 @@ psc_dump_particles(mparticles_base_t *particles, const char *fname)
   ascii_dump_particles(particles, fname);
 }
 
-// ----------------------------------------------------------------------
-// psc_push_part_xz
-
-void
-psc_push_part_xz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_xz);
-  psc.ops->push_part_xz(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_xyz
-
-void
-psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_xyz);
-  psc.ops->push_part_xyz(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_xy
-
-void
-psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_xy);
-  psc.ops->push_part_xy(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_yz
-
-void
-psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_yz);
-  psc.ops->push_part_yz(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_z
-
-void
-psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_z);
-  psc.ops->push_part_z(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_yz_a
-
-void
-psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_yz_a);
-  psc.ops->push_part_yz_a(flds_base, particles_base);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_part_yz_b
-
-void
-psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-  assert(psc.ops->push_part_yz_b);
-  psc.ops->push_part_yz_b(flds_base, particles_base);
-}
-
+#if 0
 // ----------------------------------------------------------------------
 // psc_push_particles
 
 void
 psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
 {
-  int *im = psc.domain.gdims;
-  if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
-    psc_push_part_xyz(flds_base, particles_base);
-  } else if (im[0] > 1 && im[2] > 1) { // xz
-    psc_push_part_xz(flds_base, particles_base);
-  } else if (im[0] > 1 && im[1] > 1) { // xy
-    psc_push_part_xy(flds_base, particles_base);
-  } else if (im[1] > 1 && im[2] > 1) { // yz
-    psc_push_part_yz(flds_base, particles_base);
-  } else if (im[2] > 1) { // z
-    psc_push_part_z(flds_base, particles_base);
-  } else {
-    assert(0);
-  }
 }
+#endif
 
 // ----------------------------------------------------------------------
 // psc_out_particles
@@ -392,6 +278,10 @@ psc_init(const char *case_name)
   SET_subdomain();
 
   psc_init_particles(particle_label_offset);
+
+  psc_push_particles_set_from_options(psc.push_particles);
+  psc_push_particles_setup(psc.push_particles);
+  psc_push_particles_view(psc.push_particles);
 
   psc_push_fields_set_from_options(psc.push_fields);
   psc_push_fields_setup(psc.push_fields);
