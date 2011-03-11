@@ -90,6 +90,54 @@ psc_create(struct psc_mod_config *conf)
   psc.time_start = MPI_Wtime();
 }
 
+// ----------------------------------------------------------------------
+// psc_set_from_options
+
+void
+psc_set_from_options(void)
+{
+  psc_push_particles_set_from_options(psc.push_particles);
+  psc_push_fields_set_from_options(psc.push_fields);
+  psc_bnd_set_from_options(psc.bnd);
+  psc_collision_set_from_options(psc.collision);
+  psc_randomize_set_from_options(psc.randomize);
+  psc_sort_set_from_options(psc.sort);
+  psc_output_fields_set_from_options(psc.output_fields);
+  psc_moments_set_from_options(psc.moments);
+}
+
+// ----------------------------------------------------------------------
+// psc_setup
+
+void
+psc_setup(void)
+{
+  psc_push_particles_setup(psc.push_particles);
+  psc_push_fields_setup(psc.push_fields);
+  psc_bnd_setup(psc.bnd);
+  psc_collision_setup(psc.collision);
+  psc_randomize_setup(psc.randomize);
+  psc_sort_setup(psc.sort);
+  psc_output_fields_setup(psc.output_fields);
+  psc_moments_setup(psc.moments);
+}
+
+// ----------------------------------------------------------------------
+// psc_view
+
+void
+psc_view(void)
+{
+  psc_push_particles_view(psc.push_particles);
+  psc_push_fields_view(psc.push_fields);
+  psc_bnd_view(psc.bnd);
+  psc_collision_view(psc.collision);
+  psc_randomize_view(psc.randomize);
+  psc_sort_view(psc.sort);
+  psc_output_fields_view(psc.output_fields);
+  psc_moments_view(psc.moments);
+}
+
 void
 psc_fields_destroy(mfields_base_t *flds)
 {
@@ -108,14 +156,23 @@ psc_particles_destroy(mparticles_base_t *particles)
   free(particles->p);
 }
 
+// ----------------------------------------------------------------------
+// psc_destroy
+
 void
 psc_destroy()
 {
   psc_fields_destroy(&psc.flds);
   psc_particles_destroy(&psc.particles);
 
-#warning FIXME destroy
+  psc_push_particles_destroy(psc.push_particles);
+  psc_push_fields_destroy(psc.push_fields);
   psc_bnd_destroy(psc.bnd);
+  psc_collision_destroy(psc.collision);
+  psc_randomize_destroy(psc.randomize);
+  psc_sort_destroy(psc.sort);
+  psc_output_fields_destroy(psc.output_fields);
+  psc_moments_destroy(psc.moments);
 }
 
 static void
@@ -183,16 +240,6 @@ psc_dump_particles(mparticles_base_t *particles, const char *fname)
 {
   ascii_dump_particles(particles, fname);
 }
-
-#if 0
-// ----------------------------------------------------------------------
-// psc_push_particles
-
-void
-psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles_base)
-{
-}
-#endif
 
 // ----------------------------------------------------------------------
 // psc_out_particles
@@ -278,38 +325,9 @@ psc_init(const char *case_name)
   SET_subdomain();
 
   psc_init_particles(particle_label_offset);
-
-  psc_push_particles_set_from_options(psc.push_particles);
-  psc_push_particles_setup(psc.push_particles);
-  psc_push_particles_view(psc.push_particles);
-
-  psc_push_fields_set_from_options(psc.push_fields);
-  psc_push_fields_setup(psc.push_fields);
-  psc_push_fields_view(psc.push_fields);
-
-  psc_bnd_set_from_options(psc.bnd);
-  psc_bnd_setup(psc.bnd);
-  psc_bnd_view(psc.bnd);
-
-  psc_collision_set_from_options(psc.collision);
-  psc_collision_setup(psc.collision);
-  psc_collision_view(psc.collision);
-
-  psc_randomize_set_from_options(psc.randomize);
-  psc_randomize_setup(psc.randomize);
-  psc_randomize_view(psc.randomize);
-
-  psc_sort_set_from_options(psc.sort);
-  psc_sort_setup(psc.sort);
-  psc_sort_view(psc.sort);
-
-  psc_output_fields_set_from_options(psc.output_fields);
-  psc_output_fields_setup(psc.output_fields);
-  psc_output_fields_view(psc.output_fields);
-
-  psc_moments_set_from_options(psc.moments);
-  psc_moments_setup(psc.moments);
-  psc_moments_view(psc.moments);
+  psc_set_from_options();
+  psc_setup();
+  psc_view();
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);
