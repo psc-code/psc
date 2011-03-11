@@ -21,47 +21,41 @@ mrc_domain_ops(struct mrc_domain *domain)
 // mrc_domain
 
 static void
-_mrc_domain_create(struct mrc_obj *obj)
+_mrc_domain_create(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   domain->crds = mrc_crds_create(domain->obj.comm);
   mrc_crds_set_domain(domain->crds, domain);
 }
 
 static void
-_mrc_domain_destroy(struct mrc_obj *obj)
+_mrc_domain_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_destroy(domain->crds);
 }
 
 static void
-_mrc_domain_set_from_options(struct mrc_obj *obj)
+_mrc_domain_set_from_options(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_set_from_options(domain->crds);
 }
 
 static void
-_mrc_domain_view(struct mrc_obj *obj)
+_mrc_domain_view(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_view(domain->crds);
 }
 
 static void
-_mrc_domain_setup(struct mrc_obj *obj)
+_mrc_domain_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
-  mrc_obj_setup_sub(obj);
+  mrc_obj_setup_sub(&domain->obj);
   mrc_crds_setup(domain->crds);
 }
 
 static void
-_mrc_domain_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 {
   // FIXME, the whole ldims business doesn't work if ldims aren't the same everywhere
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_destroy(domain->crds);
   char *s;
   mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
@@ -70,11 +64,10 @@ _mrc_domain_read(struct mrc_obj *obj, struct mrc_io *io)
 }
 
 static void
-_mrc_domain_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
-  mrc_io_write_attr_int(io, mrc_obj_name(obj), "mpi_size", domain->size);
-  mrc_io_write_attr_string(io, mrc_obj_name(obj), "crds",
+  mrc_io_write_attr_int(io, mrc_domain_name(domain), "mpi_size", domain->size);
+  mrc_io_write_attr_string(io, mrc_domain_name(domain), "crds",
 			   mrc_crds_name(domain->crds));
   mrc_crds_write(mrc_domain_get_crds(domain), io);
 }

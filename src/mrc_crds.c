@@ -9,62 +9,51 @@
 #include <assert.h>
 #include <stdio.h>
 
-// ----------------------------------------------------------------------
-
 static inline
 struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 {
   return (struct mrc_crds_ops *) crds->obj.ops;
 }
 
-static inline
-struct mrc_crds *to_mrc_crds(struct mrc_obj *obj)
-{
-  return container_of(obj, struct mrc_crds, obj);
-}
-
 // ----------------------------------------------------------------------
 // mrc_crds_* wrappers
 
 static void
-_mrc_crds_destroy(struct mrc_obj *obj)
+_mrc_crds_destroy(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   for (int d = 0; d < 3; d++) {
     mrc_f1_destroy(crds->crd[d]);
   }
 }
 
 static void
-_mrc_crds_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   crds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_obj_name(obj), "domain", &mrc_class_mrc_domain);
+    mrc_io_read_obj_ref(io, mrc_crds_name(crds), "domain", &mrc_class_mrc_domain);
   for (int d = 0; d < 3; d++) {
     char s[5];
     sprintf(s, "crd%d", d);
     crds->crd[d] = (struct mrc_f1 *)
-      mrc_io_read_obj_ref(io, mrc_obj_name(obj), s, &mrc_class_mrc_f1);
+      mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_f1);
   }
 }
 
 static void
-_mrc_crds_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
-  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+  mrc_io_write_obj_ref(io, mrc_crds_name(crds), "domain",
 		       (struct mrc_obj *) crds->domain);
   for (int d = 0; d < 3; d++) {
     if (crds->crd[d]) {
       char s[5];
       sprintf(s, "crd%d", d);
-      mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->crd[d]);
+      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->crd[d]);
     }
     if (crds->mcrd[d]) {
       char s[6];
       sprintf(s, "mcrd%d", d);
-      mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->mcrd[d]);
+      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
     }
   }
 }

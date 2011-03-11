@@ -11,7 +11,7 @@ struct mrc_test {
 };
 
 static void
-_mrc_test_destroy(struct mrc_obj *obj)
+_mrc_test_destroy(struct mrc_test *test)
 {
   mprintf("destroy called\n");
 }

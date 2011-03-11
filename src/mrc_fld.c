@@ -14,10 +14,8 @@
 #define to_mrc_f1(o) container_of(o, struct mrc_f1, obj)
 
 static void
-_mrc_f1_destroy(struct mrc_obj *obj)
+_mrc_f1_destroy(struct mrc_f1 *f1)
 {
-  struct mrc_f1 *f1 = to_mrc_f1(obj);
-
   if (!f1->with_array) {
     free(f1->arr);
   }
@@ -29,18 +27,14 @@ _mrc_f1_destroy(struct mrc_obj *obj)
 }
 
 static void
-_mrc_f1_create(struct mrc_obj *obj)
+_mrc_f1_create(struct mrc_f1 *f1)
 {
-  struct mrc_f1 *f1 = to_mrc_f1(obj);
-
   f1->name = calloc(f1->nr_comp, sizeof(*f1->name));
 }
 
 static void
-_mrc_f1_setup(struct mrc_obj *obj)
+_mrc_f1_setup(struct mrc_f1 *f1)
 {
-  struct mrc_f1 *f1 = to_mrc_f1(obj);
-  
   f1->len = f1->im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -52,20 +46,16 @@ _mrc_f1_setup(struct mrc_obj *obj)
 }
 
 static void
-_mrc_f1_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  struct mrc_f1 *f1 = to_mrc_f1(obj);
-
   mrc_f1_setup(f1);
-  mrc_io_read_f1(io, mrc_obj_name(obj), f1);
+  mrc_io_read_f1(io, mrc_f1_name(f1), f1);
 }
 
 static void
-_mrc_f1_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  struct mrc_f1 *f1 = to_mrc_f1(obj);
-
-  mrc_io_write_f1(io, mrc_obj_name(obj), f1);
+  mrc_io_write_f1(io, mrc_f1_name(f1), f1);
 }
 
 // ----------------------------------------------------------------------
@@ -157,10 +147,8 @@ mrc_f2_free(struct mrc_f2 *f2)
 #define to_mrc_f3(o) container_of(o, struct mrc_f3, obj)
 
 static void
-_mrc_f3_destroy(struct mrc_obj *obj)
+_mrc_f3_destroy(struct mrc_f3 *f3)
 {
-  struct mrc_f3 *f3 = to_mrc_f3(obj);
-
   if (!f3->with_array) {
     free(f3->arr);
   }
@@ -172,10 +160,8 @@ _mrc_f3_destroy(struct mrc_obj *obj)
 }
 
 static void
-_mrc_f3_create(struct mrc_obj *obj)
+_mrc_f3_create(struct mrc_f3 *f3)
 {
-  struct mrc_f3 *f3 = to_mrc_f3(obj);
-
   f3->name = calloc(f3->nr_comp, sizeof(*f3->name));
 }
 
@@ -205,10 +191,8 @@ mrc_f3_alloc_with_array(MPI_Comm comm, int ib[3], int im[3], float *arr)
 }
 
 static void
-_mrc_f3_setup(struct mrc_obj *obj)
+_mrc_f3_setup(struct mrc_f3 *f3)
 {
-  struct mrc_f3 *f3 = to_mrc_f3(obj);
-  
   f3->len = f3->im[0] * f3->im[1] * f3->im[2] * f3->nr_comp;
 
   if (!f3->arr) {
@@ -265,27 +249,23 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
 }
 
 static void
-_mrc_f3_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  struct mrc_f3 *f3 = to_mrc_f3(obj);
-
-  mrc_io_read_attr_int(io, mrc_obj_name(obj), "sw", &f3->sw);
+  mrc_io_read_attr_int(io, mrc_f3_name(f3), "sw", &f3->sw);
   f3->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_obj_name(obj), "domain", &mrc_class_mrc_domain);
+    mrc_io_read_obj_ref(io, mrc_f3_name(f3), "domain", &mrc_class_mrc_domain);
   
   mrc_f3_setup(f3);
-  mrc_io_read_f3(io, mrc_obj_name(obj), f3);
+  mrc_io_read_f3(io, mrc_f3_name(f3), f3);
 }
 
 static void
-_mrc_f3_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  struct mrc_f3 *f3 = to_mrc_f3(obj);
-
-  mrc_io_write_attr_int(io, mrc_obj_name(obj), "sw", f3->sw); // FIXME, should be unnec
-  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+  mrc_io_write_attr_int(io, mrc_f3_name(f3), "sw", f3->sw); // FIXME, should be unnec
+  mrc_io_write_obj_ref(io, mrc_f3_name(f3), "domain",
 		       (struct mrc_obj *) f3->domain);
-  mrc_io_write_f3(io, mrc_obj_name(obj), f3, 1.);
+  mrc_io_write_f3(io, mrc_f3_name(f3), f3, 1.);
 }
 
 void
@@ -348,18 +328,14 @@ struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
 
 static void
-_mrc_m1_create(struct mrc_obj *obj)
+_mrc_m1_create(struct mrc_m1 *m1)
 {
-  struct mrc_m1 *m1 = to_mrc_m1(obj);
-
   m1->name = calloc(m1->nr_comp, sizeof(*m1->name));
 }
 
 static void
-_mrc_m1_destroy(struct mrc_obj *obj)
+_mrc_m1_destroy(struct mrc_m1 *m1)
 {
-  struct mrc_m1 *m1 = to_mrc_m1(obj);
-
   for (int p = 0; p < m1->nr_patches; p++) {
     struct mrc_m1_patch *m1p = &m1->patches[p];
     free(m1p->arr);
@@ -373,10 +349,8 @@ _mrc_m1_destroy(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m1_setup(struct mrc_obj *obj)
+_mrc_m1_setup(struct mrc_m1 *m1)
 {
-  struct mrc_m1 *m1 = to_mrc_m1(obj);
-
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, &nr_patches);
 
@@ -392,11 +366,9 @@ _mrc_m1_setup(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m1_view(struct mrc_obj *obj)
+_mrc_m1_view(struct mrc_m1 *m1)
 {
 #if 0
-  struct mrc_m1 *m1 = to_mrc_m1(obj);
-  
   int rank, size;
   MPI_Comm_rank(obj->comm, &rank);
   MPI_Comm_size(obj->comm, &size);
@@ -415,11 +387,9 @@ _mrc_m1_view(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m1_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  struct mrc_m1 *m1 = to_mrc_m1(obj);
-
-  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+  mrc_io_write_obj_ref(io, mrc_m1_name(m1), "domain",
 		       (struct mrc_obj *) m1->domain);
   //  mrc_io_write_m1(io, mrc_obj_name(obj), m1);
 }
@@ -456,10 +426,8 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
 #define to_mrc_m3(o) container_of(o, struct mrc_m3, obj)
 
 static void
-_mrc_m3_destroy(struct mrc_obj *obj)
+_mrc_m3_destroy(struct mrc_m3 *m3)
 {
-  struct mrc_m3 *m3 = to_mrc_m3(obj);
-
   for (int p = 0; p < m3->nr_patches; p++) {
     struct mrc_m3_patch *m3p = &m3->patches[p];
     free(m3p->arr);
@@ -473,10 +441,8 @@ _mrc_m3_destroy(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m3_setup(struct mrc_obj *obj)
+_mrc_m3_setup(struct mrc_m3 *m3)
 {
-  struct mrc_m3 *m3 = to_mrc_m3(obj);
-
   m3->name = calloc(m3->nr_comp, sizeof(*m3->name));
 
   int nr_patches;
@@ -496,11 +462,9 @@ _mrc_m3_setup(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m3_view(struct mrc_obj *obj)
+_mrc_m3_view(struct mrc_m3 *m3)
 {
 #if 0
-  struct mrc_m3 *m3 = to_mrc_m3(obj);
-  
   int rank, size;
   MPI_Comm_rank(obj->comm, &rank);
   MPI_Comm_size(obj->comm, &size);
@@ -520,13 +484,11 @@ _mrc_m3_view(struct mrc_obj *obj)
 }
 
 static void
-_mrc_m3_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  struct mrc_m3 *m3 = to_mrc_m3(obj);
-
-  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+  mrc_io_write_obj_ref(io, mrc_m3_name(m3), "domain",
 		       (struct mrc_obj *) m3->domain);
-  mrc_io_write_m3(io, mrc_obj_name(obj), m3);
+  mrc_io_write_m3(io, mrc_m3_name(m3), m3);
 }
 
 // ----------------------------------------------------------------------
