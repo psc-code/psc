@@ -27,9 +27,8 @@ struct mrc_patch_info {
   int off[3];
 };
 
-extern struct mrc_class mrc_class_mrc_domain;
+MRC_CLASS_DECLARE(mrc_domain, struct mrc_domain);
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_domain, struct mrc_domain)
 void mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims);
 void mrc_domain_get_bc(struct mrc_domain *domain, int *bc);
 void mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx);

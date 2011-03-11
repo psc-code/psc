@@ -37,9 +37,8 @@ struct mrc_crds_ops {
 		     float *crdy, int my, float *crdz, int mz);
 };
 
-extern struct mrc_class mrc_class_mrc_crds;
+MRC_CLASS_DECLARE(mrc_crds, struct mrc_crds);
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_crds, struct mrc_crds)
 void mrc_crds_set_domain(struct mrc_crds *crds, struct mrc_domain *domain);
 void mrc_crds_set_values(struct mrc_crds *crds, float *crdx, int mx,
 			 float *crdy, int my, float *crdz, int mz);
