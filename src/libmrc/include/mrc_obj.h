@@ -37,7 +37,7 @@ struct mrc_obj_ops {
   MRC_SUBCLASS_OPS(struct mrc_obj);
 };
 
-#define DECLARE_STRUCT_MRC_CLASS(sfx)			\
+#define DECLARE_STRUCT_MRC_CLASS(sfx, obj_type)		\
   struct mrc_class ## sfx {				\
     const char *name;					\
     list_t subclasses;					\
@@ -47,16 +47,16 @@ struct mrc_obj_ops {
     size_t param_offset;				\
     void (*init)(void);					\
     bool initialized;					\
-    void (*create)(struct mrc_obj *);			\
-    void (*destroy)(struct mrc_obj *);			\
-    void (*set_from_options)(struct mrc_obj *);		\
-    void (*view)(struct mrc_obj *);			\
-    void (*setup)(struct mrc_obj *);			\
-    void (*read)(struct mrc_obj *, struct mrc_io *);	\
-    void (*write)(struct mrc_obj *, struct mrc_io *);	\
+    void (*create)(obj_type *);				\
+    void (*destroy)(obj_type *);			\
+    void (*set_from_options)(obj_type *);		\
+    void (*view)(obj_type *);				\
+    void (*setup)(obj_type *);				\
+    void (*read)(obj_type *, struct mrc_io *);		\
+    void (*write)(obj_type *, struct mrc_io *);		\
   }
 
-DECLARE_STRUCT_MRC_CLASS();
+DECLARE_STRUCT_MRC_CLASS(, struct mrc_obj);
 
 struct mrc_io;
 
@@ -85,7 +85,8 @@ void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
 
 #define MRC_CLASS_DECLARE(pfx, class_type)				\
-  DECLARE_STRUCT_MRC_CLASS(_ ## pfx);					\
+  class_type;								\
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, class_type);			\
 									\
   extern struct mrc_class_ ##pfx mrc_class_ ## pfx;			\
   static inline class_type *						\

@@ -21,7 +21,6 @@ extern struct psc_sort_ops psc_sort_qsort_ops;
 extern struct psc_sort_ops psc_sort_countsort_ops;
 extern struct psc_sort_ops psc_sort_countsort2_ops;
 
-#define to_psc_sort(o) (container_of(o, struct psc_sort, obj))
 #define psc_sort_ops(sort) ((struct psc_sort_ops *)((sort)->obj.ops))
 
 #endif

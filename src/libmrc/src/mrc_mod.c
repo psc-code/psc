@@ -27,15 +27,12 @@ struct mrc_mod_entry {
 
 // ======================================================================
 
-#define to_mrc_mod(o) container_of(o, struct mrc_mod, obj)
-
 // ----------------------------------------------------------------------
 // mrc_mod_create
 
 static void
-_mrc_mod_create(struct mrc_obj *obj)
+_mrc_mod_create(struct mrc_mod *mod)
 {
-  struct mrc_mod *mod = to_mrc_mod(obj);
   INIT_LIST_HEAD(&mod->list);
   mod->mod_comm = MPI_COMM_NULL;
 }
@@ -44,9 +41,8 @@ _mrc_mod_create(struct mrc_obj *obj)
 // mrc_mod_destroy
 
 static void
-_mrc_mod_destroy(struct mrc_obj *obj)
+_mrc_mod_destroy(struct mrc_mod *mod)
 {
-  struct mrc_mod *mod = to_mrc_mod(obj);
   if (mod->mod_comm != MPI_COMM_NULL) {
     MPI_Comm_free(&mod->mod_comm);
   }
@@ -63,12 +59,11 @@ _mrc_mod_destroy(struct mrc_obj *obj)
 // mrc_mod_view
 
 static void
-_mrc_mod_view(struct mrc_obj *obj)
+_mrc_mod_view(struct mrc_mod *mod)
 {
-  struct mrc_mod *mod = to_mrc_mod(obj);
   struct mrc_mod_entry *p;
   list_for_each_entry(p, &mod->list, entry) {
-    mpi_printf(obj->comm, "%20s| '%s': %d proc%s\n", "", 
+    mpi_printf(mrc_mod_comm(mod), "%20s| '%s': %d proc%s\n", "", 
 	       p->name, p->nr_procs, p->nr_procs == 1 ? "" : "s");
   }
 }
@@ -77,13 +72,11 @@ _mrc_mod_view(struct mrc_obj *obj)
 // mrc_mod_setup
 
 static void
-_mrc_mod_setup(struct mrc_obj *obj)
+_mrc_mod_setup(struct mrc_mod *mod)
 {
-  struct mrc_mod *mod = to_mrc_mod(obj);
-
   int rank, size;
-  MPI_Comm_rank(obj->comm, &rank);
-  MPI_Comm_size(obj->comm, &size);
+  MPI_Comm_rank(mrc_mod_comm(mod), &rank);
+  MPI_Comm_size(mrc_mod_comm(mod), &size);
 
   int color = 0, nr_procs = 0, nr_colors = 0;
   struct mrc_mod_entry *p;
@@ -96,7 +89,7 @@ _mrc_mod_setup(struct mrc_obj *obj)
   }
 
   if (nr_procs > size) {
-    mpi_printf(obj->comm, "ERROR: need %d procs, only have %d!\n",
+    mpi_printf(mrc_mod_comm(mod), "ERROR: need %d procs, only have %d!\n",
 	       nr_procs, size);
     abort();
   }

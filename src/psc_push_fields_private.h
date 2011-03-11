@@ -19,7 +19,6 @@ struct psc_push_fields_ops {
 extern struct psc_push_fields_ops psc_push_fields_c_ops;
 extern struct psc_push_fields_ops psc_push_fields_fortran_ops;
 
-#define to_psc_push_fields(o) (container_of(o, struct psc_push_fields, obj))
 #define psc_push_fields_ops(push_fields) ((struct psc_push_fields_ops *)((push_fields)->obj.ops))
 
 #endif

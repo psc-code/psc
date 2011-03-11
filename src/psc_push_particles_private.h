@@ -37,7 +37,6 @@ extern struct psc_push_particles_ops psc_push_particles_generic_c_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
 
-#define to_psc_push_particles(o) (container_of(o, struct psc_push_particles, obj))
 #define psc_push_particles_ops(push_particles) ((struct psc_push_particles_ops *)((push_particles)->obj.ops))
 
 #endif

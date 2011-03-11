@@ -5,8 +5,6 @@
 #include <mrc_profile.h>
 #include <math.h>
 
-#define to_psc_moments_c(out) ((struct psc_moments_c *)((out)->obj.subctx))
-
 // ======================================================================
 
 typedef fields_base_real_t creal;

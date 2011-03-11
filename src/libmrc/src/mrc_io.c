@@ -60,10 +60,8 @@ mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj)
 // mrc_io_setup
 
 static void
-_mrc_io_setup(struct mrc_obj *obj)
+_mrc_io_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
-
   MPI_Comm_rank(io->obj.comm, &io->rank);
   MPI_Comm_size(io->obj.comm, &io->size);
   if (mrc_io_ops(io)->setup) {

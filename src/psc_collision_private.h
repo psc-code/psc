@@ -18,7 +18,6 @@ struct psc_collision_ops {
 extern struct psc_collision_ops psc_collision_none_ops;
 extern struct psc_collision_ops psc_collision_fortran_ops;
 
-#define to_psc_collision(o) (container_of(o, struct psc_collision, obj))
 #define psc_collision_ops(collision) ((struct psc_collision_ops *)((collision)->obj.ops))
 
 #endif

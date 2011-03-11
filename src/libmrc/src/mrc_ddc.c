@@ -14,12 +14,10 @@
 // mrc_ddc_create
 
 static void
-_mrc_ddc_create(struct mrc_obj *obj)
+_mrc_ddc_create(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc *ddc = to_mrc_ddc(obj);
-
-  MPI_Comm_rank(obj->comm, &ddc->rank);
-  MPI_Comm_size(obj->comm, &ddc->size);
+  MPI_Comm_rank(mrc_ddc_comm(ddc), &ddc->rank);
+  MPI_Comm_size(mrc_ddc_comm(ddc), &ddc->size);
 }
 
 // ----------------------------------------------------------------------
