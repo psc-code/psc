@@ -40,6 +40,8 @@ libpsc_a_SOURCES = \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	PIC_bin_coll.F \
+	mfields.c \
+	mparticles.c \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
