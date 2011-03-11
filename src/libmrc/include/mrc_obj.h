@@ -84,136 +84,136 @@ void mrc_obj_setup_sub(struct mrc_obj *obj);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
 
-#define MRC_CLASS_DECLARE(pfx, class_type)				\
-  class_type;								\
-  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, class_type);			\
+#define MRC_CLASS_DECLARE(pfx, obj_type)				\
+  obj_type;								\
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx, obj_type);				\
 									\
   extern struct mrc_class_ ##pfx mrc_class_ ## pfx;			\
-  static inline class_type *						\
+  static inline obj_type *						\
   pfx ## _create(MPI_Comm comm)						\
   {									\
-    return (class_type *)						\
+    return (obj_type *)							\
       mrc_obj_create(comm, (struct mrc_class *) &mrc_class_ ## pfx);	\
   }									\
 									\
-  static inline class_type *						\
-  pfx ## _get(class_type *obj)						\
+  static inline obj_type *						\
+  pfx ## _get(obj_type *obj)						\
   {									\
-    return (class_type *)						\
+    return (obj_type *)							\
       mrc_obj_get((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline void 							\
-  pfx ## _destroy(class_type *obj)					\
+  pfx ## _destroy(obj_type *obj)					\
   {									\
     mrc_obj_destroy((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline void 							\
-  pfx ## _put(class_type *obj)						\
+  pfx ## _put(obj_type *obj)						\
   {									\
     mrc_obj_put((struct mrc_obj *)obj);					\
   }									\
 									\
   static inline MPI_Comm						\
-  pfx ## _comm(class_type *obj)						\
+  pfx ## _comm(obj_type *obj)						\
   {									\
     return mrc_obj_comm((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline const char *						\
-  pfx ## _name(class_type *obj)						\
+  pfx ## _name(obj_type *obj)						\
   {									\
     return mrc_obj_name((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_name(class_type *obj, const char *name)			\
+  pfx ## _set_name(obj_type *obj, const char *name)			\
   {									\
     mrc_obj_set_name((struct mrc_obj *)obj, name);			\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_type(class_type *obj, const char *name)			\
+  pfx ## _set_type(obj_type *obj, const char *name)			\
   {									\
     mrc_obj_set_type((struct mrc_obj *)obj, name);			\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_int(class_type *obj, const char *name, int val)	\
+  pfx ## _set_param_int(obj_type *obj, const char *name, int val)	\
   {									\
     mrc_obj_set_param_int((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_float(class_type *obj, const char *name, float val)	\
+  pfx ## _set_param_float(obj_type *obj, const char *name, float val)	\
   {									\
     mrc_obj_set_param_float((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_string(class_type *obj, const char *name, const char *val) \
+  pfx ## _set_param_string(obj_type *obj, const char *name, const char *val) \
   {									\
     mrc_obj_set_param_string((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_select(class_type *obj, const char *name, int val)	\
+  pfx ## _set_param_select(obj_type *obj, const char *name, int val)	\
   {									\
     mrc_obj_set_param_select((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_int3(class_type *obj, const char *name, int val[3])	\
+  pfx ## _set_param_int3(obj_type *obj, const char *name, int val[3])	\
   {									\
     mrc_obj_set_param_int3((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_param_float3(class_type *obj, const char *name, float val[3])	\
+  pfx ## _set_param_float3(obj_type *obj, const char *name, float val[3])	\
   {									\
     mrc_obj_set_param_float3((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _get_param_int(class_type *obj, const char *name, int *pval)	\
+  pfx ## _get_param_int(obj_type *obj, const char *name, int *pval)	\
   {									\
     mrc_obj_get_param_int((struct mrc_obj *)obj, name, pval);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _get_param_int3(class_type *obj, const char *name, int *pval)	\
+  pfx ## _get_param_int3(obj_type *obj, const char *name, int *pval)	\
   {									\
     mrc_obj_get_param_int3((struct mrc_obj *)obj, name, pval);		\
   }									\
 									\
   static inline void 							\
-  pfx ## _set_from_options(class_type *obj)				\
+  pfx ## _set_from_options(obj_type *obj)				\
   {									\
     mrc_obj_set_from_options((struct mrc_obj *)obj);			\
   }									\
 									\
   static inline void 							\
-  pfx ## _view(class_type *obj)						\
+  pfx ## _view(obj_type *obj)						\
   {									\
     mrc_obj_view((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline void 							\
-  pfx ## _setup(class_type *obj)					\
+  pfx ## _setup(obj_type *obj)						\
   {									\
     mrc_obj_setup((struct mrc_obj *)obj);				\
   }									\
 									\
-  static inline class_type *						\
+  static inline obj_type *						\
   pfx ## _read(struct mrc_io *io, const char *name)			\
   {									\
-    return (class_type *) mrc_obj_read(io, name,			\
+    return (obj_type *) mrc_obj_read(io, name,				\
 			      (struct mrc_class *) &mrc_class_ ## pfx); \
   }									\
 									\
   static inline void 							\
-  pfx ## _write(class_type *obj, struct mrc_io *io)			\
+  pfx ## _write(obj_type *obj, struct mrc_io *io)			\
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
   }									\
