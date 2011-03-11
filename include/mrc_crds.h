@@ -32,7 +32,7 @@ struct mrc_crds {
 #define MRC_MCRDZ(crds, iz) MRC_MCRD(crds, 2, iz)
 
 struct mrc_crds_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct mrc_crds);
   void (*set_values)(struct mrc_crds *crds, float *crdx, int mx,
 		     float *crdy, int my, float *crdz, int mz);
 };

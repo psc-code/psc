@@ -20,21 +20,21 @@ struct mrc_obj {
   list_t instance_entry;
 };
 
-#define MRC_OBJ_OPS				 \
-  list_t list;					 \
-  const char *name;				 \
-  size_t size;					 \
-  struct param *param_descr;			 \
-  size_t param_offset;				 \
-  void (*create)(struct mrc_obj *);		 \
-  void (*destroy)(struct mrc_obj *);		 \
-  void (*set_from_options)(struct mrc_obj *);	 \
-  void (*view)(struct mrc_obj *);		 \
-  void (*setup)(struct mrc_obj *);		 \
-  void (*write)(struct mrc_obj *, struct mrc_io *)
+#define MRC_SUBCLASS_OPS(obj_type)			\
+  list_t list;						\
+  const char *name;					\
+  size_t size;						\
+  struct param *param_descr;				\
+  size_t param_offset;					\
+  void (*create)(obj_type *);				\
+  void (*destroy)(obj_type *);				\
+  void (*set_from_options)(obj_type *);			\
+  void (*view)(obj_type *);				\
+  void (*setup)(obj_type *);				\
+  void (*write)(obj_type *, struct mrc_io *)
 
 struct mrc_obj_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct mrc_obj);
 };
 
 struct mrc_class {

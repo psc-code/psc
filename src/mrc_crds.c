@@ -156,9 +156,8 @@ mrc_crds_patch_put(struct mrc_crds *crds)
 // mrc_crds_uniform
 
 static void
-mrc_crds_uniform_setup(struct mrc_obj *obj)
+mrc_crds_uniform_setup(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
@@ -199,9 +198,8 @@ mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
 }
 
 static void
-mrc_crds_rectilinear_setup(struct mrc_obj *obj)
+mrc_crds_rectilinear_setup(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
@@ -229,9 +227,8 @@ static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
 // mrc_crds_multi_uniform
 
 static void
-mrc_crds_multi_uniform_setup(struct mrc_obj *obj)
+mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;

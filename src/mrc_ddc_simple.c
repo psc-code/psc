@@ -121,9 +121,8 @@ ddc_init_inside(struct mrc_ddc *ddc, struct mrc_ddc_sendrecv *sr, int dir[3])
 // mrc_ddc_simple_setup
 
 static void
-mrc_ddc_simple_setup(struct mrc_obj *obj)
+mrc_ddc_simple_setup(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc *ddc = to_mrc_ddc(obj);
   struct mrc_ddc_simple *simple = to_mrc_ddc_simple(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {

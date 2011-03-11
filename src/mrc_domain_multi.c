@@ -262,10 +262,9 @@ gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 // ======================================================================
 
 static void
-mrc_domain_multi_view(struct mrc_obj *obj)
+mrc_domain_multi_view(struct mrc_domain *domain)
 {
 #if 0
-  struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int proc = 0; proc < domain->size; proc++) {
@@ -311,9 +310,8 @@ mrc_domain_multi_get_local_patch_info(struct mrc_domain *domain, int patch,
 }
 
 static void
-mrc_domain_multi_setup(struct mrc_obj *obj)
+mrc_domain_multi_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   assert(!domain->is_setup);
   domain->is_setup = true;
@@ -355,9 +353,8 @@ mrc_domain_multi_setup(struct mrc_obj *obj)
 }
 
 static void
-mrc_domain_multi_destroy(struct mrc_obj *obj)
+mrc_domain_multi_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   free(multi->patches);
@@ -432,20 +429,18 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 }
 
 static void
-mrc_domain_multi_write(struct mrc_obj *obj, struct mrc_io *io)
+mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
-
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
 
-  mrc_io_write_attr_int(io, mrc_obj_name(obj), "nr_global_patches",
+  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
 			nr_global_patches);
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_multi_get_global_patch_info(domain, gp, &info);
-    char path[strlen(mrc_obj_name(obj)) + 10];
-    sprintf(path, "%s/p%d", mrc_obj_name(obj), gp);
+    char path[strlen(mrc_domain_name(domain)) + 10];
+    sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
   }

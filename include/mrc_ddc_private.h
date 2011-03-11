@@ -32,7 +32,7 @@ struct mrc_ddc {
 };
 
 struct mrc_ddc_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct mrc_ddc);
   void (*set_domain)(struct mrc_ddc *ddc, struct mrc_domain *domain);
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
