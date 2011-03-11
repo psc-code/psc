@@ -1,4 +1,5 @@
 #include "psc.h"
+#include "psc_output_fields_c.h"
 #include "output_fields.h"
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -181,7 +182,7 @@ find_output_field(const char *name)
 }
 
 static void
-output_c_setup(struct psc_output_c *out)
+output_c_setup(struct psc_output_fields_c *out)
 {
   struct psc_fields_list *pfd = &out->pfd;
 
@@ -245,9 +246,9 @@ find_output_format_ops(const char *ops_name)
   abort();
 }
 
-#define VAR(x) (void *)offsetof(struct psc_output_c, x)
+#define VAR(x) (void *)offsetof(struct psc_output_fields_c, x)
 
-static struct param psc_output_c_descr[] = {
+static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_format"      , VAR(output_format)        , PARAM_STRING("binary")  },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
@@ -268,23 +269,20 @@ static struct param psc_output_c_descr[] = {
 
 #undef VAR
 
-static struct psc_output_c psc_output_c;
-
 // ----------------------------------------------------------------------
 // output_c_create
 
-void output_c_create(void)
+void output_c_create(struct psc_output_fields_c *out_c)
 { 
-  struct psc_output_c *out = &psc_output_c;
-  mrc_params_parse(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
-  mrc_params_print(out, psc_output_c_descr, "PSC output C", MPI_COMM_WORLD);
+  mrc_params_parse(out_c, psc_output_fields_c_descr, "PSC output C", MPI_COMM_WORLD);
+  mrc_params_print(out_c, psc_output_fields_c_descr, "PSC output C", MPI_COMM_WORLD);
 
-  out->pfield_next = out->pfield_first;
-  out->tfield_next = out->tfield_first;
+  out_c->pfield_next = out_c->pfield_first;
+  out_c->tfield_next = out_c->tfield_first;
 
-  out->format_ops = find_output_format_ops(out->output_format);
-  if (out->format_ops->create) {
-    out->format_ops->create();
+  out_c->format_ops = find_output_format_ops(out_c->output_format);
+  if (out_c->format_ops->create) {
+    out_c->format_ops->create();
   }
 };
 
@@ -331,40 +329,39 @@ free_fields_list(struct psc_fields_list *list)
 // output_c_field
 
 void
-output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
+output_c_field(struct psc_output_fields_c *out_c,
+	       mfields_base_t *flds, mparticles_base_t *particles)
 {
-  struct psc_output_c *out = &psc_output_c;
-
   static bool first_time = true;
   struct psc_patch *patch = &psc.patch[0];
   if (first_time) {
-    output_c_setup(out);
+    output_c_setup(out_c);
 	  
 	// set the output ranges
 	for(int i=0;i<3;++i)
 	{
-	        if(out->rn[i]<0) out->rn[i]=0;
-		if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
+	        if(out_c->rn[i]<0) out_c->rn[i]=0;
+		if(out_c->rx[i]>psc.domain.gdims[i]) out_c->rx[i]=psc.domain.gdims[i];
 		
-		if(out->rx[i]>patch->off[i] + patch->ldims[i]) out->rx[i]=patch->off[i] + patch->ldims[i];
-		if(out->rn[i]<patch->off[i]) out->rn[i]=patch->off[i];
+		if(out_c->rx[i]>patch->off[i] + patch->ldims[i]) out_c->rx[i]=patch->off[i] + patch->ldims[i];
+		if(out_c->rn[i]<patch->off[i]) out_c->rn[i]=patch->off[i];
 		
-		if(out->rn[i]>patch->off[i] + patch->ldims[i])
+		if(out_c->rn[i]>patch->off[i] + patch->ldims[i])
 		{
-		  out->rn[i]=patch->off[i] + patch->ldims[i];
-		  out->rx[i]=out->rn[i];
+		  out_c->rn[i]=patch->off[i] + patch->ldims[i];
+		  out_c->rx[i]=out_c->rn[i];
 		}
-		if(out->rx[i]<patch->off[i]) 
+		if(out_c->rx[i]<patch->off[i]) 
 		{
-		  out->rx[i]=patch->off[i]; 
-		  out->rn[i]=out->rx[i];
+		  out_c->rx[i]=patch->off[i]; 
+		  out_c->rn[i]=out_c->rx[i];
 		}
 		
 	}
 	
 	// done setting output ranges
-	  printf("rnx=%d\t rny=%d\t rnz=%d\n", out->rn[0], out->rn[1], out->rn[2]);
-	  printf("rxx=%d\t rxy=%d\t rxz=%d\n", out->rx[0], out->rx[1], out->rx[2]);	  
+	  printf("rnx=%d\t rny=%d\t rnz=%d\n", out_c->rn[0], out_c->rn[1], out_c->rn[2]);
+	  printf("rxx=%d\t rxy=%d\t rxz=%d\n", out_c->rx[0], out_c->rx[1], out_c->rx[2]);	  
 	  
     first_time = false;
   }
@@ -375,52 +372,52 @@ output_c_field(mfields_base_t *flds, mparticles_base_t *particles)
   }
   prof_start(pr);
 
-  if ((out->dowrite_pfield && psc.timestep >= out->pfield_next) ||
-      out->dowrite_tfield) {
-    struct psc_fields_list *pfd = &out->pfd;
+  if ((out_c->dowrite_pfield && psc.timestep >= out_c->pfield_next) ||
+      out_c->dowrite_tfield) {
+    struct psc_fields_list *pfd = &out_c->pfd;
     for (int i = 0; i < pfd->nr_flds; i++) {
-      out->out_flds[i]->calc(flds, particles, &pfd->flds[i]);
+      out_c->out_flds[i]->calc(flds, particles, &pfd->flds[i]);
     }
   }
   
-  if (out->dowrite_pfield) {
-    if (psc.timestep >= out->pfield_next) {
-       out->pfield_next += out->pfield_step;
+  if (out_c->dowrite_pfield) {
+    if (psc.timestep >= out_c->pfield_next) {
+       out_c->pfield_next += out_c->pfield_step;
        struct psc_fields_list flds_list;
-       make_fields_list(&flds_list, &out->pfd);
-       out->format_ops->write_fields(out, &flds_list, "pfd");
+       make_fields_list(&flds_list, &out_c->pfd);
+       out_c->format_ops->write_fields(out_c, &flds_list, "pfd");
        free_fields_list(&flds_list);
     }
   }
 
-  if (out->dowrite_tfield) {
+  if (out_c->dowrite_tfield) {
     foreach_patch(p) {
-      for (int m = 0; m < out->tfd.nr_flds; m++) {
+      for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	// tfd += pfd
-	fields_base_axpy_all(&out->tfd.flds[m].f[p], 1., &out->pfd.flds[m].f[p]);
+	fields_base_axpy_all(&out_c->tfd.flds[m].f[p], 1., &out_c->pfd.flds[m].f[p]);
       }
     }
-    out->naccum++;
-    if (psc.timestep >= out->tfield_next) {
-      out->tfield_next += out->tfield_step;
+    out_c->naccum++;
+    if (psc.timestep >= out_c->tfield_next) {
+      out_c->tfield_next += out_c->tfield_step;
 
       // convert accumulated values to correct temporal mean
       foreach_patch(p) {
-	for (int m = 0; m < out->tfd.nr_flds; m++) {
-	  fields_base_scale_all(&out->tfd.flds[m].f[p], 1. / out->naccum);
+	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
+	  fields_base_scale_all(&out_c->tfd.flds[m].f[p], 1. / out_c->naccum);
 	}
       }
 
       struct psc_fields_list flds_list;
-      make_fields_list(&flds_list, &out->tfd);
-      out->format_ops->write_fields(out, &flds_list, "tfd");
+      make_fields_list(&flds_list, &out_c->tfd);
+      out_c->format_ops->write_fields(out_c, &flds_list, "tfd");
       free_fields_list(&flds_list);
       foreach_patch(p) {
-	for (int m = 0; m < out->tfd.nr_flds; m++) {
-	  fields_base_zero_all(&out->tfd.flds[m].f[p]);
+	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
+	  fields_base_zero_all(&out_c->tfd.flds[m].f[p]);
 	}
       }
-      out->naccum = 0;
+      out_c->naccum = 0;
     }
   }
   

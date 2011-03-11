@@ -35,7 +35,7 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
 // mrc_write_fields
 
 static void
-mrc_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 		  const char *pfx)
 {
   int io_type;

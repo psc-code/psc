@@ -21,7 +21,7 @@ struct hdf5_ctx {
 };
 
 static void
-hdf5_open(struct psc_output_c *out, struct psc_fields_list *list,
+hdf5_open(struct psc_output_fields_c *out, struct psc_fields_list *list,
 	  const char *filename, struct hdf5_ctx *hdf5)
 {
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -102,7 +102,7 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
 // ======================================================================
 
 static void
-hdf5_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+hdf5_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 		  const char *pfx)
 {
   int rank;
@@ -132,7 +132,7 @@ struct psc_output_format_ops psc_output_format_ops_hdf5 = {
 // ======================================================================
 
 static void
-xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *list,
+xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields_list *list,
 			      const char *pfx)
 {
   char fname[strlen(out->data_dir) + strlen(pfx) + 20];
@@ -195,7 +195,7 @@ xdmf_write_spatial_collection(struct psc_output_c *out, struct psc_fields_list *
 }
 
 static void
-xdmf_write_temporal_collection(struct psc_output_c *out, const char *pfx)
+xdmf_write_temporal_collection(struct psc_output_fields_c *out, const char *pfx)
 {
   // It'd be easier to create those files line by line as time goes by.
   // However, then we won't be able to get the timeseries into Paraview
@@ -229,7 +229,7 @@ xdmf_write_temporal_collection(struct psc_output_c *out, const char *pfx)
 }
 
 static void
-xdmf_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+xdmf_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 		  const char *pfx)
 {
   int rank;

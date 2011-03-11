@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "output_fields.h"
+#include "psc_output_fields_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -32,7 +33,7 @@ binary_write_field(FILE *file, fields_base_t *fld)
 }
 
 static void
-binary_write_fields(struct psc_output_c *out, struct psc_fields_list *list,
+binary_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 		    const char *pfx)
 {
   struct psc_patch *patch = &psc.patch[0];

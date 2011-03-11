@@ -13,7 +13,7 @@
 
 static void
 vtk_open_file_binary(const char *pfx, const char *dataset_type, int extra,
-	      struct psc_output_c *out, FILE **pfile)
+	      struct psc_output_fields_c *out, FILE **pfile)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
@@ -63,7 +63,7 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_c *out)
+vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields_c *out)
 {
   FILE *file = ctx;
 
@@ -96,7 +96,7 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_c *out
 /// Write VTK file for STRUCTURED_POINTS output.
 
 static void
-vtk_write_fields_binary(struct psc_output_c *out, struct psc_fields_list *flds,
+vtk_write_fields_binary(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 		 const char *pfx)
 {
   int rank;

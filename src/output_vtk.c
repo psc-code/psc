@@ -13,7 +13,7 @@
 
 static void
 vtk_open_file(const char *pfx, const char *dataset_type, int extra,
-	      struct psc_output_c *out, FILE **pfile)
+	      struct psc_output_fields_c *out, FILE **pfile)
 {
   char filename[strlen(out->data_dir) + 30];
   sprintf(filename, "%s/%s_%07d.vtk", out->data_dir, pfx, psc.timestep);
@@ -79,7 +79,7 @@ vtk_write_field(void *ctx, fields_base_t *fld)
 /// Write VTK file for STRUCTURED_POINTS output.
 
 static void
-vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+vtk_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 		 const char *pfx)
 {
   int rank;
@@ -105,7 +105,7 @@ vtk_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 /// Write VTK file for RECTILINEAR_GRID output with data values on points.
 
 static void
-vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+vtk_points_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 			const char *pfx)
 {
   int rank;
@@ -129,7 +129,7 @@ vtk_points_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
 /// Write VTK file for RECTILINEAR_GRID output with data values on cells.
 
 static void
-vtk_cells_write_fields(struct psc_output_c *out, struct psc_fields_list *flds,
+vtk_cells_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 		       const char *pfx)
 {
   int rank;
