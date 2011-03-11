@@ -266,18 +266,6 @@ struct psc_ops {
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
 
-struct psc_moment_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*calc_densities)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-			 mfields_base_t *pf);
-  void (*calc_v)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-		 mfields_base_t *pf);
-  void (*calc_vv)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-		  mfields_base_t *pf);
-};
-
 struct psc_patch {
   int ldims[3];       // size of local domain (w/o ghost points)
   int off[3];         // local to global offset
@@ -295,8 +283,8 @@ struct psc {
   struct psc_randomize *randomize;
   struct psc_sort *sort;
   struct psc_output_fields *output_fields;
+  struct psc_moments *moments;
   struct psc_ops *ops;
-  struct psc_moment_ops *moment_ops;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
@@ -397,12 +385,6 @@ void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
 void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
-void psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
-			mfields_base_t *f);
-void psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
-			mfields_base_t *f);
-void psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
-			 mfields_base_t *f);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);

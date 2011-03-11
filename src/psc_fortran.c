@@ -153,34 +153,3 @@ struct psc_ops psc_ops_fortran = {
   .push_part_yz_b         = fortran_push_part_yz_b,
 };
 
-// ======================================================================
-// fortran moment
-
-static void
-fortran_calc_densities(mfields_base_t *flds_base, mparticles_base_t *particles_base,
-		       mfields_base_t *f)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_densities", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, &particles_base);
-  mfields_fortran_t flds_fortran;
-  fields_fortran_get_from(&flds_fortran, 0, 0, f, 0);
-
-  CALC_densities(&particles.p[0], &flds_fortran.f[0]);
-
-  particles_fortran_put(&particles, &psc.particles);
-  fields_fortran_put_to(&flds_fortran, NE, NE + 3, f, 0);
-
-  prof_stop(pr);
-}
-
-struct psc_moment_ops psc_moment_ops_fortran = {
-  .name               = "fortran",
-  .calc_densities     = fortran_calc_densities,
-};
-

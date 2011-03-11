@@ -6,6 +6,7 @@
 #include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_output_fields.h"
+#include "psc_moments.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -34,12 +35,6 @@ static struct psc_ops *psc_ops_list[] = {
   NULL,
 };
 
-static struct psc_moment_ops *psc_moment_ops_list[] = {
-  &psc_moment_ops_fortran,
-  &psc_moment_ops_c,
-  NULL,
-};
-
 static struct psc_ops *
 psc_find_ops(const char *ops_name)
 {
@@ -48,17 +43,6 @@ psc_find_ops(const char *ops_name)
       return psc_ops_list[i];
   }
   fprintf(stderr, "ERROR: psc_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
-static struct psc_moment_ops *
-psc_find_moment_ops(const char *ops_name)
-{
-  for (int i = 0; psc_moment_ops_list[i]; i++) {
-    if (strcasecmp(psc_moment_ops_list[i]->name, ops_name) == 0)
-      return psc_moment_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_moment_ops '%s' not available.\n", ops_name);
   abort();
 }
 
@@ -118,19 +102,18 @@ psc_create(struct psc_mod_config *conf)
     psc_output_fields_set_type(psc.output_fields, conf->mod_output);
   }
 
+  psc.moments = psc_moments_create(comm);
+  if (conf->mod_moment) {
+    psc_moments_set_type(psc.moments, conf->mod_moment);
+  }
+
   // defaults
   if (!conf->mod_particle)
     conf->mod_particle = "fortran";
-  if (!conf->mod_moment)
-    conf->mod_moment = "fortran";
 
   psc.ops = psc_find_ops(conf->mod_particle);
   if (psc.ops->create) {
     psc.ops->create();
-  }
-  psc.moment_ops = psc_find_moment_ops(conf->mod_moment);
-  if (psc.moment_ops->create) {
-    psc.moment_ops->create();
   }
 
   psc.time_start = MPI_Wtime();
@@ -386,35 +369,6 @@ psc_s_pulse_z2(real x, real y, real z, real t)
   return psc_pulse_field(psc.pulse_s_z2, x, y, z, t);
 }
 
-
-
-// ----------------------------------------------------------------------
-// psc moments
-
-void
-psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
-		   mfields_base_t *f)
-{
-  assert(psc.moment_ops->calc_densities);
-  psc.moment_ops->calc_densities(flds, particles, f);
-}
-
-void
-psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
-		   mfields_base_t *f)
-{
-  assert(psc.moment_ops->calc_v);
-  psc.moment_ops->calc_v(flds, particles, f);
-}
-
-void
-psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
-		    mfields_base_t *f)
-{
-  assert(psc.moment_ops->calc_vv);
-  psc.moment_ops->calc_vv(flds, particles, f);
-}
-
 // ----------------------------------------------------------------------
 // psc_init
 
@@ -462,6 +416,10 @@ psc_init(const char *case_name)
   psc_output_fields_set_from_options(psc.output_fields);
   psc_output_fields_setup(psc.output_fields);
   psc_output_fields_view(psc.output_fields);
+
+  psc_moments_set_from_options(psc.moments);
+  psc_moments_setup(psc.moments);
+  psc_moments_view(psc.moments);
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);

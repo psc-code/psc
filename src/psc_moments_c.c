@@ -1,11 +1,13 @@
 
-#include "psc.h"
+#include "psc_moments_private.h"
+
 #include "psc_bnd.h"
 #include <mrc_profile.h>
-
 #include <math.h>
-#include <stdlib.h>
-#include <string.h>
+
+#define to_psc_moments_c(out) ((struct psc_moments_c *)((out)->obj.subctx))
+
+// ======================================================================
 
 typedef fields_base_real_t creal;
 
@@ -104,9 +106,9 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
   }
 }
 
-void
-c_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
-		 mfields_base_t *f)
+static void
+psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
+			     mparticles_base_t *particles, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
@@ -115,11 +117,11 @@ c_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
 
   prof_start(pr);
   foreach_patch(p) {
-    do_c_calc_densities(p, &f->f[p], &particles->p[p], 0, 1, 2);
+    do_c_calc_densities(p, &res->f[p], &particles->p[p], 0, 1, 2);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -216,8 +218,9 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
   }
 }
 
-void
-c_calc_v(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+static void
+psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
+		     mparticles_base_t *particles, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
@@ -225,11 +228,11 @@ c_calc_v(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
   }
   prof_start(pr);
   foreach_patch(p) {
-    do_c_calc_v(&f->f[p], &particles->p[p]);
+    do_c_calc_v(&res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
 }
 
 static void
@@ -324,8 +327,9 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
   }
 }
 
-void
-c_calc_vv(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+static void
+psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
+		      mparticles_base_t *particles, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
@@ -333,16 +337,19 @@ c_calc_vv(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
   }
   prof_start(pr);
   foreach_patch(p) {
-    do_c_calc_vv(&f->f[p], &particles->p[p]);
+    do_c_calc_vv(&res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, f, 0, 3);
+  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
 }
 
-struct psc_moment_ops psc_moment_ops_c = {
-  .name                   = "c",
-  .calc_densities         = c_calc_densities,
-  .calc_v                 = c_calc_v,
-  .calc_vv                = c_calc_vv,
+// ======================================================================
+// psc_moments: subclass "c"
+
+struct psc_moments_ops psc_moments_c_ops = {
+  .name                  = "c",
+  .calc_densities        = psc_moments_c_calc_densities,
+  .calc_v                = psc_moments_c_calc_v,
+  .calc_vv               = psc_moments_c_calc_vv,
 };

@@ -1,5 +1,6 @@
 
 #include "psc_output_fields_c.h"
+#include "psc_moments.h"
 
 #include <mrc_profile.h>
 
@@ -142,14 +143,35 @@ struct output_field {
   void (*calc)(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f);
 };
 
+static void
+calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+	       mfields_base_t *res)
+{
+  return psc_moments_calc_densities(psc.moments, flds, particles, res);
+}
+
+static void
+calc_v(mfields_base_t *flds, mparticles_base_t *particles,
+	       mfields_base_t *res)
+{
+  return psc_moments_calc_v(psc.moments, flds, particles, res);
+}
+
+static void
+calc_vv(mfields_base_t *flds, mparticles_base_t *particles,
+	mfields_base_t *res)
+{
+  return psc_moments_calc_vv(psc.moments, flds, particles, res);
+}
+
 static struct output_field output_fields[] = {
   { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
-    .calc = psc_calc_densities },
+    .calc = calc_densities },
   { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
-    .calc = psc_calc_moments_v },
+    .calc = calc_v },
   { .name = "vv"    , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
 						   "vixvix", "viyviy", "vizivz" },
-    .calc = psc_calc_moments_vv },
+    .calc = calc_vv },
   { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
   { .name = "e"    , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
