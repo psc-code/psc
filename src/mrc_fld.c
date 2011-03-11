@@ -81,7 +81,7 @@ static struct param mrc_f1_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_f1 = {
+struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .name         = "mrc_f1",
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
@@ -331,7 +331,7 @@ static struct param mrc_f3_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_f3 = {
+struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
   .name         = "mrc_f3",
   .size         = sizeof(struct mrc_f3),
   .param_descr  = mrc_f3_params_descr,
@@ -436,7 +436,7 @@ static struct param mrc_m1_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_m1 = {
+struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .name         = "mrc_m1",
   .size         = sizeof(struct mrc_m1),
   .param_descr  = mrc_m1_params_descr,
@@ -540,7 +540,7 @@ static struct param mrc_m3_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_m3 = {
+struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .name         = "mrc_m3",
   .size         = sizeof(struct mrc_m3),
   .param_descr  = mrc_m3_params_descr,

@@ -37,23 +37,26 @@ struct mrc_obj_ops {
   MRC_SUBCLASS_OPS(struct mrc_obj);
 };
 
-struct mrc_class {
-  const char *name;
-  list_t subclasses;
-  list_t instances;
-  size_t size;
-  struct param *param_descr;
-  size_t param_offset;
-  void (*init)(void);
-  bool initialized;
-  void (*create)(struct mrc_obj *);
-  void (*destroy)(struct mrc_obj *);
-  void (*set_from_options)(struct mrc_obj *);
-  void (*view)(struct mrc_obj *);
-  void (*setup)(struct mrc_obj *);
-  void (*read)(struct mrc_obj *, struct mrc_io *);
-  void (*write)(struct mrc_obj *, struct mrc_io *);
-};
+#define DECLARE_STRUCT_MRC_CLASS(sfx)			\
+  struct mrc_class ## sfx {				\
+    const char *name;					\
+    list_t subclasses;					\
+    list_t instances;					\
+    size_t size;					\
+    struct param *param_descr;				\
+    size_t param_offset;				\
+    void (*init)(void);					\
+    bool initialized;					\
+    void (*create)(struct mrc_obj *);			\
+    void (*destroy)(struct mrc_obj *);			\
+    void (*set_from_options)(struct mrc_obj *);		\
+    void (*view)(struct mrc_obj *);			\
+    void (*setup)(struct mrc_obj *);			\
+    void (*read)(struct mrc_obj *, struct mrc_io *);	\
+    void (*write)(struct mrc_obj *, struct mrc_io *);	\
+  }
+
+DECLARE_STRUCT_MRC_CLASS();
 
 struct mrc_io;
 
@@ -82,12 +85,14 @@ void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
 
 #define MRC_CLASS_DECLARE(pfx, class_type)				\
-  extern struct mrc_class mrc_class_ ## pfx;				\
+  DECLARE_STRUCT_MRC_CLASS(_ ## pfx);					\
+									\
+  extern struct mrc_class_ ##pfx mrc_class_ ## pfx;			\
   static inline class_type *						\
   pfx ## _create(MPI_Comm comm)						\
   {									\
     return (class_type *)						\
-      mrc_obj_create(comm, &mrc_class_ ## pfx);				\
+      mrc_obj_create(comm, (struct mrc_class *) &mrc_class_ ## pfx);	\
   }									\
 									\
   static inline class_type *						\
@@ -202,7 +207,8 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   static inline class_type *						\
   pfx ## _read(struct mrc_io *io, const char *name)			\
   {									\
-    return (class_type *) mrc_obj_read(io, name, &mrc_class_ ## pfx);	\
+    return (class_type *) mrc_obj_read(io, name,			\
+			      (struct mrc_class *) &mrc_class_ ## pfx); \
   }									\
 									\
   static inline void 							\
@@ -218,7 +224,7 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
 // use a macro here to do the casting to mrc_obj_ops
 
 #define mrc_class_register_subclass(class, ops) \
-  __mrc_class_register_subclass(class, (struct mrc_obj_ops *)(ops))
+  __mrc_class_register_subclass((struct mrc_class *)(class), (struct mrc_obj_ops *)(ops))
 
 void __mrc_class_register_subclass(struct mrc_class *class,
 				   struct mrc_obj_ops *ops);

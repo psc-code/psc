@@ -98,7 +98,7 @@ static struct param mrc_ddc_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_ddc = {
+struct mrc_class_mrc_ddc mrc_class_mrc_ddc = {
   .name             = "mrc_ddc",
   .size             = sizeof(struct mrc_ddc),
   .param_descr      = mrc_ddc_params_descr,
