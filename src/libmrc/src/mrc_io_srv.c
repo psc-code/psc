@@ -89,9 +89,8 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
 }
 
 static void
-diagc_combined_setup(struct mrc_obj *obj)
+diagc_combined_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
   struct mrc_io_params *par_io = &io->par;
   struct diagc_combined_params *par = io->obj.subctx;
 
@@ -148,9 +147,8 @@ diagc_combined_close(struct mrc_io *io)
 // shuts down the diag server process
 
 static void
-diagc_combined_destroy(struct mrc_obj *obj)
+diagc_combined_destroy(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *) obj;
   struct diagc_combined_params *par = io->obj.subctx;
 
   if (io->rank == 0) {

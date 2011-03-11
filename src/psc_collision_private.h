@@ -9,7 +9,7 @@ struct psc_collision {
 };
 
 struct psc_collision_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct psc_collision);
   void (*run)(struct psc_collision *collision, mparticles_base_t *particles);
 };
 

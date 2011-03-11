@@ -130,9 +130,8 @@ mrc_ddc_multi_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 // mrc_ddc_multi_setup
 
 static void
-mrc_ddc_multi_setup(struct mrc_obj *obj)
+mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 {
-  struct mrc_ddc *ddc = to_mrc_ddc(obj);
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {

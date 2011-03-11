@@ -546,9 +546,8 @@ xdmf_close(struct mrc_io *io)
 }
 
 static void
-ds_xdmf_setup(struct mrc_obj *obj)
+ds_xdmf_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *)obj;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
   sprintf(filename, "%s/%s.xdmf", io->par.outdir, io->par.basename);
@@ -556,9 +555,8 @@ ds_xdmf_setup(struct mrc_obj *obj)
 }
 
 static void
-ds_xdmf_destroy(struct mrc_obj *obj)
+ds_xdmf_destroy(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *)obj;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   if (hdf5->xdmf_temporal) {

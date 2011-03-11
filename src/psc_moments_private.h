@@ -9,7 +9,7 @@ struct psc_moments {
 };
 
 struct psc_moments_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct psc_moments);
   void (*calc_densities)(struct psc_moments *moments,
 			 mfields_base_t *flds, mparticles_base_t *particles,
 			 mfields_base_t *res);

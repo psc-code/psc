@@ -9,7 +9,7 @@ struct psc_bnd {
 };
 
 struct psc_bnd_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct psc_bnd);
   void (*add_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
   void (*fill_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
   void (*exchange_particles)(struct psc_bnd *bnd, mparticles_base_t *particles);

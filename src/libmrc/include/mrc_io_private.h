@@ -29,7 +29,7 @@ struct mrc_io {
 };
 
 struct mrc_io_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct mrc_io);
   bool parallel;
   void (*open)(struct mrc_io *, const char *mode);
   void (*close)(struct mrc_io *);

@@ -236,9 +236,8 @@ find_output_format_ops(const char *ops_name)
 // psc_output_fields_c_create
 
 static void
-psc_output_fields_c_create(struct mrc_obj *obj)
+psc_output_fields_c_create(struct psc_output_fields *out)
 {
-  struct psc_output_fields *out = to_psc_output_fields(obj);
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
   out_c->pfield_next = out_c->pfield_first;

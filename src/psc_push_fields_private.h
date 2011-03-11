@@ -9,7 +9,7 @@ struct psc_push_fields {
 };
 
 struct psc_push_fields_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct psc_push_fields);
   void (*step_a)(struct psc_push_fields *push, mfields_base_t *flds);
   void (*step_b)(struct psc_push_fields *push, mfields_base_t *flds);
 };

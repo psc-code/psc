@@ -30,9 +30,8 @@ struct xdmf {
 // xdmf
 
 static void
-xdmf_setup(struct mrc_obj *obj)
+xdmf_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
   struct xdmf *xdmf = to_xdmf(io);
 
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
@@ -41,9 +40,8 @@ xdmf_setup(struct mrc_obj *obj)
 }
 
 static void
-xdmf_destroy(struct mrc_obj *obj)
+xdmf_destroy(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
   struct xdmf *xdmf = to_xdmf(io);
 
   if (xdmf->xdmf_temporal) {

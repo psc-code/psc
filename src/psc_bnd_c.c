@@ -279,9 +279,8 @@ struct mrc_ddc_funcs ddc_funcs = {
 // psc_bnd_c_setup
 
 static void
-psc_bnd_c_setup(struct mrc_obj *obj)
+psc_bnd_c_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd *bnd = to_psc_bnd(obj);
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
 
   bnd_c->ddc = mrc_domain_create_ddc(psc.mrc_domain);

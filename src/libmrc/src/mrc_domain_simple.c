@@ -39,9 +39,8 @@ mrc_domain_simple_proc2rank(struct mrc_domain *domain, int proc[3])
 }
 
 static void
-mrc_domain_simple_setup(struct mrc_obj *obj)
+mrc_domain_simple_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
   assert(!domain->is_setup);
   domain->is_setup = true;
