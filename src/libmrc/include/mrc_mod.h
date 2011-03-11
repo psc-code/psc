@@ -4,9 +4,8 @@
 
 #include <mrc_obj.h>
 
-extern struct mrc_class mrc_class_mrc_mod;
+MRC_CLASS_DECLARE(mrc_mod, struct mrc_mod);
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_mod, struct mrc_mod);
 void mrc_mod_register(struct mrc_mod *mod, const char *name, int nr_procs,
 		      void (*func)(struct mrc_mod *, void *), void *arg);
 void mrc_mod_run(struct mrc_mod *mod);

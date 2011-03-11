@@ -21,10 +21,10 @@ enum {
   NR_DIAG_TYPE,
 };
 
-extern struct mrc_class mrc_class_mrc_io;
 union param_u;
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_io, struct mrc_io);
+MRC_CLASS_DECLARE(mrc_io, struct mrc_io);
+
 void mrc_io_open(struct mrc_io *io, const char *mode, int step, float time);
 void mrc_io_close(struct mrc_io *io);
 void mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1);

@@ -81,7 +81,8 @@ void mrc_obj_setup_sub(struct mrc_obj *obj);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
 
-#define MRC_OBJ_DEFINE_STANDARD_METHODS(pfx, class_type)		\
+#define MRC_CLASS_DECLARE(pfx, class_type)				\
+  extern struct mrc_class mrc_class_ ## pfx;				\
   static inline class_type *						\
   pfx ## _create(MPI_Comm comm)						\
   {									\
@@ -209,6 +210,9 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
   }									\
+									\
+  /* force a semicolon following the macro use */			\
+  struct __dummy
 
 
 // use a macro here to do the casting to mrc_obj_ops

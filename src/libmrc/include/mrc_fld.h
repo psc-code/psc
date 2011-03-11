@@ -24,8 +24,6 @@ struct mrc_io;
 // ======================================================================
 // mrc_f1
 
-extern struct mrc_class mrc_class_mrc_f1;
-
 struct mrc_f1 {
   struct mrc_obj obj;
   float *arr;
@@ -37,7 +35,7 @@ struct mrc_f1 {
   char **name;
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_f1, struct mrc_f1);
+MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 
 // ======================================================================
 
@@ -59,8 +57,6 @@ void mrc_f2_free(struct mrc_f2 *f2);
 
 // ======================================================================
 
-extern struct mrc_class mrc_class_mrc_f3;
-
 struct mrc_f3 {
   struct mrc_obj obj;
   float *arr;
@@ -74,7 +70,8 @@ struct mrc_f3 {
   char **name;
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_f3, struct mrc_f3);
+MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
+
 struct mrc_f3 *mrc_f3_alloc(MPI_Comm comm, int ib[3], int im[3]);
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
@@ -106,8 +103,6 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 // ======================================================================
 // mrc_m1
 
-extern struct mrc_class mrc_class_mrc_m1;
-
 struct mrc_m1_patch {
   float *arr;
   int im[1];
@@ -125,7 +120,7 @@ struct mrc_m1 {
   char **name;
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_m1, struct mrc_m1);
+MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
 
 static inline struct mrc_m1_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
@@ -160,8 +155,6 @@ mrc_m1_patch_put(struct mrc_m1 *m1)
 // ======================================================================
 // mrc_m3
 
-extern struct mrc_class mrc_class_mrc_m3;
-
 struct mrc_m3_patch {
   float *arr;
   int im[3];
@@ -178,7 +171,8 @@ struct mrc_m3 {
   char **name;
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_m3, struct mrc_m3);
+MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);
+
 void mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps); // FIXME
 
 static inline struct mrc_m3_patch *

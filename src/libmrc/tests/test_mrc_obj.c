@@ -22,7 +22,7 @@ struct mrc_class mrc_class_mrc_test = {
   .destroy      = _mrc_test_destroy,
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_test, struct mrc_test);
+MRC_CLASS_DECLARE(mrc_test, struct mrc_test);
 
 // ----------------------------------------------------------------------
 

@@ -32,7 +32,7 @@ struct mrc_class mrc_class_test_io_attrs = {
   .param_descr  = test_io_attrs_descr,
 };
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(test_io_attrs, struct test_io_attrs);
+MRC_CLASS_DECLARE(test_io_attrs, struct test_io_attrs);
 
 // ----------------------------------------------------------------------
 
