@@ -65,6 +65,34 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 static void
 vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields_c *out)
 {
+  static bool first_time = true;
+  if (first_time) {
+    struct psc_patch *patch = &psc.patch[0];
+    // set the output ranges
+    for(int i=0;i<3;++i) {
+      if(out->rn[i]<0) out->rn[i]=0;
+      if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
+      
+      if(out->rx[i]>patch->off[i] + patch->ldims[i]) out->rx[i]=patch->off[i] + patch->ldims[i];
+      if(out->rn[i]<patch->off[i]) out->rn[i]=patch->off[i];
+      
+      if(out->rn[i]>patch->off[i] + patch->ldims[i]) {
+	out->rn[i]=patch->off[i] + patch->ldims[i];
+	out->rx[i]=out->rn[i];
+      }
+      if(out->rx[i]<patch->off[i]) {
+	out->rx[i]=patch->off[i]; 
+	out->rn[i]=out->rx[i];
+      }
+    }
+	
+    // done setting output ranges
+    printf("rnx=%d\t rny=%d\t rnz=%d\n", out->rn[0], out->rn[1], out->rn[2]);
+    printf("rxx=%d\t rxy=%d\t rxz=%d\n", out->rx[0], out->rx[1], out->rx[2]);	  
+
+    first_time = false;
+  }
+	  
   FILE *file = ctx;
 
   fields_base_t *fld = &flds->f[0];

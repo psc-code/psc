@@ -322,33 +322,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
   static bool first_time = true;
-  struct psc_patch *patch = &psc.patch[0];
 
   if (first_time) {
     output_c_setup(out_c);
-	  
-    // set the output ranges
-    for(int i=0;i<3;++i) {
-      if(out_c->rn[i]<0) out_c->rn[i]=0;
-      if(out_c->rx[i]>psc.domain.gdims[i]) out_c->rx[i]=psc.domain.gdims[i];
-      
-      if(out_c->rx[i]>patch->off[i] + patch->ldims[i]) out_c->rx[i]=patch->off[i] + patch->ldims[i];
-      if(out_c->rn[i]<patch->off[i]) out_c->rn[i]=patch->off[i];
-      
-      if(out_c->rn[i]>patch->off[i] + patch->ldims[i]) {
-	out_c->rn[i]=patch->off[i] + patch->ldims[i];
-	out_c->rx[i]=out_c->rn[i];
-      }
-      if(out_c->rx[i]<patch->off[i]) {
-	out_c->rx[i]=patch->off[i]; 
-	out_c->rn[i]=out_c->rx[i];
-      }
-    }
-	
-    // done setting output ranges
-    printf("rnx=%d\t rny=%d\t rnz=%d\n", out_c->rn[0], out_c->rn[1], out_c->rn[2]);
-    printf("rxx=%d\t rxy=%d\t rxz=%d\n", out_c->rx[0], out_c->rx[1], out_c->rx[2]);	  
-	  
     first_time = false;
   }
 
