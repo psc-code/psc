@@ -20,7 +20,6 @@ struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 static inline
 struct mrc_crds *to_mrc_crds(struct mrc_obj *obj)
 {
-  assert(obj->class == &mrc_class_mrc_crds);
   return container_of(obj, struct mrc_crds, obj);
 }
 
@@ -279,7 +278,7 @@ static struct param mrc_crds_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_crds = {
+struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .name         = "mrc_crds",
   .size         = sizeof(struct mrc_crds),
   .param_descr  = mrc_crds_params_descr,

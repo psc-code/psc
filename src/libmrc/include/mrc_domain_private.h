@@ -86,7 +86,6 @@ extern struct mrc_domain_ops mrc_domain_multi_ops;
 static inline struct mrc_domain *
 to_mrc_domain(struct mrc_obj *obj)
 {
-  assert(obj->class == &mrc_class_mrc_domain);
   return container_of(obj, struct mrc_domain, obj);
 }
 

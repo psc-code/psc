@@ -33,7 +33,7 @@ psc_push_fields_init()
 // ======================================================================
 // psc_push_fields class
 
-struct mrc_class mrc_class_psc_push_fields = {
+struct mrc_class_psc_push_fields mrc_class_psc_push_fields = {
   .name             = "psc_push_fields",
   .size             = sizeof(struct psc_push_fields),
   .init             = psc_push_fields_init,

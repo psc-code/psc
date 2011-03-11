@@ -25,7 +25,7 @@ psc_randomize_init()
 // ======================================================================
 // psc_randomize class
 
-struct mrc_class mrc_class_psc_randomize = {
+struct mrc_class_psc_randomize mrc_class_psc_randomize = {
   .name             = "psc_randomize",
   .size             = sizeof(struct psc_randomize),
   .init             = psc_randomize_init,

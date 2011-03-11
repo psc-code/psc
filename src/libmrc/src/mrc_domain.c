@@ -241,7 +241,7 @@ mrc_domain_init()
 // ======================================================================
 // mrc_domain class
 
-struct mrc_class mrc_class_mrc_domain = {
+struct mrc_class_mrc_domain mrc_class_mrc_domain = {
   .name             = "mrc_domain",
   .size             = sizeof(struct mrc_domain),
   .init             = mrc_domain_init,

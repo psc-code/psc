@@ -144,7 +144,7 @@ mrc_dict_add_string(struct mrc_dict *dict, const char *name, const char *val)
   mrc_dict_add(dict, PT_STRING, name, &uval);
 }
 
-struct mrc_class mrc_class_mrc_dict = {
+struct mrc_class_mrc_dict mrc_class_mrc_dict = {
   .name         = "mrc_dict",
   .size         = sizeof(struct mrc_dict),
   .create       = _mrc_dict_create,

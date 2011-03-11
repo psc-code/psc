@@ -185,7 +185,7 @@ mrc_mod_get_nr_procs(struct mrc_mod *mod, const char *name)
 // ----------------------------------------------------------------------
 // mrc_class_mrc_mod
 
-struct mrc_class mrc_class_mrc_mod = {
+struct mrc_class_mrc_mod mrc_class_mrc_mod = {
   .name         = "mrc_mod",
   .size         = sizeof(struct mrc_mod),
   .create       = _mrc_mod_create,

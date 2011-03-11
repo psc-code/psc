@@ -73,7 +73,6 @@ extern struct mrc_io_ops mrc_io_combined_ops;
 static inline struct mrc_io *
 to_mrc_io(struct mrc_obj *obj)
 {
-  assert(obj->class == &mrc_class_mrc_io);
   return container_of(obj, struct mrc_io, obj);
 }
 

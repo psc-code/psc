@@ -26,7 +26,7 @@ psc_output_fields_init()
 // ======================================================================
 // psc_output_fields class
 
-struct mrc_class mrc_class_psc_output_fields = {
+struct mrc_class_psc_output_fields mrc_class_psc_output_fields = {
   .name             = "psc_output_fields",
   .size             = sizeof(struct psc_output_fields),
   .init             = psc_output_fields_init,

@@ -47,7 +47,7 @@ psc_moments_init()
 // ======================================================================
 // psc_moments class
 
-struct mrc_class mrc_class_psc_moments = {
+struct mrc_class_psc_moments mrc_class_psc_moments = {
   .name             = "psc_moments",
   .size             = sizeof(struct psc_moments),
   .init             = psc_moments_init,

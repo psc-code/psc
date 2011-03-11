@@ -64,7 +64,7 @@ psc_push_particles_init()
 // ======================================================================
 // psc_push_particles class
 
-struct mrc_class mrc_class_psc_push_particles = {
+struct mrc_class_psc_push_particles mrc_class_psc_push_particles = {
   .name             = "psc_push_particles",
   .size             = sizeof(struct psc_push_particles),
   .init             = psc_push_particles_init,

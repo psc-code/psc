@@ -26,13 +26,13 @@ static struct param test_io_attrs_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_test_io_attrs = {
+MRC_CLASS_DECLARE(test_io_attrs, struct test_io_attrs);
+
+struct mrc_class_test_io_attrs mrc_class_test_io_attrs = {
   .name         = "test_io_attrs",
   .size         = sizeof(struct test_io_attrs),
   .param_descr  = test_io_attrs_descr,
 };
-
-MRC_CLASS_DECLARE(test_io_attrs, struct test_io_attrs);
 
 // ----------------------------------------------------------------------
 

@@ -28,7 +28,7 @@ psc_sort_init()
 // ======================================================================
 // psc_sort class
 
-struct mrc_class mrc_class_psc_sort = {
+struct mrc_class_psc_sort mrc_class_psc_sort = {
   .name             = "psc_sort",
   .size             = sizeof(struct psc_sort),
   .init             = psc_sort_init,

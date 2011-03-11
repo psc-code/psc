@@ -41,7 +41,7 @@ psc_bnd_init()
 // ======================================================================
 // psc_bnd class
 
-struct mrc_class mrc_class_psc_bnd = {
+struct mrc_class_psc_bnd mrc_class_psc_bnd = {
   .name             = "psc_bnd",
   .size             = sizeof(struct psc_bnd),
   .init             = psc_bnd_init,

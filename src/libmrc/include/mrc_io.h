@@ -50,8 +50,11 @@ void mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *nam
 void mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			      const char *val);
 
-struct mrc_obj *mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
-				    struct mrc_class *class);
+// automate the cast to (struct mrc_class *)
+#define mrc_io_read_obj_ref(io, path, name, class)			\
+  __mrc_io_read_obj_ref(io, path, name, (struct mrc_class *)(class))
+struct mrc_obj *__mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
+				      struct mrc_class *class);
 void mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
 			  struct mrc_obj *obj);
 

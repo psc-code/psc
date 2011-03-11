@@ -348,8 +348,8 @@ mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 // ----------------------------------------------------------------------
 
 struct mrc_obj *
-mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
-		    struct mrc_class *class)
+__mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
+		      struct mrc_class *class)
 {
   char *s;
   mrc_io_read_attr_string(io, path, name, &s);
@@ -394,7 +394,7 @@ static struct param mrc_io_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_io = {
+struct mrc_class_mrc_io mrc_class_mrc_io = {
   .name         = "mrc_io",
   .size         = sizeof(struct mrc_io),
   .param_descr  = mrc_io_params_descr,

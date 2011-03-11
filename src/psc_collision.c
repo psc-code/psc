@@ -25,7 +25,7 @@ psc_collision_init()
 // ======================================================================
 // psc_collision class
 
-struct mrc_class mrc_class_psc_collision = {
+struct mrc_class_psc_collision mrc_class_psc_collision = {
   .name             = "psc_collision",
   .size             = sizeof(struct psc_collision),
   .init             = psc_collision_init,
