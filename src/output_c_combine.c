@@ -1,5 +1,5 @@
 
-#include "output_fields.h"
+#include "psc_output_fields_c.h"
 
 // ----------------------------------------------------------------------
 // copy_to_global helper

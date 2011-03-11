@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "output_fields.h"
+#include "psc_output_fields_c.h"
 
 #include <mrc_profile.h>
 #include <mrc_common.h>
