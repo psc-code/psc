@@ -9,7 +9,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 !     ------------------------------------------------------------
 
       use PIC_variables, only: p_e2i, p_e4i, re2i, p_re2i, p_re4i,
-     *     e2i, e4i, lpi, re4i
+     *     e2i, e4i, re4i
       use VLA_variables
       use PSC_patch
 
@@ -21,7 +21,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       character*(5) :: node
 
-      integer :: la,le
+      integer :: lpi
       integer :: nodei,nodej,nodek
       integer :: mtag,status(MPI_STATUS_SIZE)
 
@@ -122,7 +122,6 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
 
       e2i=0
       e4i=0
-      lpi=0
 
       if (niloc.gt.0) then
          do l=1,niloc
@@ -134,8 +133,6 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
                e4i=e4i+1
             else if (yi>ybx) then
                e2i=e2i+1
-            else
-               lpi=lpi+1
             endif
 
          enddo
@@ -507,7 +504,7 @@ c LOCAL PARTICLE ARRAY UPDATE
       deallocate(p_e2i)
       deallocate(p_e4i)
 
-
+      niloc=lpi
       niloc_n=lpi+re2i+re4i
 
       end subroutine PIC_pey_a
@@ -517,8 +514,7 @@ c LOCAL PARTICLE ARRAY UPDATE
       subroutine PIC_pey_b(niloc, p_niloc)
 !     ------------------------------------------------------------
 
-      use PIC_variables, only: p_e2i, p_e4i, re2i, p_re2i, p_re4i,
-     *     e2i, e4i, lpi, re4i
+      use PIC_variables, only: p_re2i, p_re4i, re2i, re4i
       use PSC_patch
 
       implicit none
@@ -529,7 +525,6 @@ c LOCAL PARTICLE ARRAY UPDATE
 
       integer      :: l
 
-      niloc=lpi
       if (re2i>0) then
          do l=1,re2i
             niloc=niloc+1

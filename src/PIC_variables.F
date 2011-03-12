@@ -26,7 +26,6 @@
       real(kind=8), dimension(:,:), allocatable :: nudt_mean
       real(kind=8), dimension(:,:), allocatable :: coll_count
 
-      integer :: lpi
       integer :: e1i,e2i,e3i,e4i,e5i,e6i
       integer :: re1i,re2i,re3i,re4i,re5i,re6i
 
