@@ -3,15 +3,20 @@ c THIS SUBROUTINE EXCHANGES PARTICLES IN X-DIRECTION.
 c THE ROUTINE IS CALLED BY PIC_move_part.f PIC_pex.f, 
 c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
+!     ------------------------------------------------------------
+      subroutine PIC_pex_a(niloc, p_niloc, niloc_n)
+!     ------------------------------------------------------------
 
-      subroutine PIC_pex
-
-      use PIC_variables
+      use PIC_variables, only: p_e1i, p_e3i, p_re1i, p_re3i, e1i,
+     *     e3i, lpi, re1i, re3i
       use VLA_variables
       use PSC_patch
 
       implicit none
       include './mpif.h'
+
+      integer      :: niloc, niloc_n
+      real(kind=8) :: p_niloc(0:*)
 
       character*(5) :: node
 
@@ -26,7 +31,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       real(kind=8) :: qni,mni,cni,lni,wni
 
       real(kind=8) :: s_cpub  
-  
+
 
       s_cpub=0.0d0
 
@@ -502,9 +507,28 @@ c LOCAL PARTICLE ARRAY UPDATE
       deallocate(p_e1i)
       deallocate(p_e3i)
 
-
       niloc_n=lpi+re1i+re3i
-      call REALLOC_particles(niloc_n)
+
+      cpumess=cpumess+s_cpub
+
+      end subroutine PIC_pex_a
+
+
+!     ------------------------------------------------------------
+      subroutine PIC_pex_b(niloc, p_niloc)
+!     ------------------------------------------------------------
+
+      use PIC_variables, only: p_e1i, p_e3i, p_re1i, p_re3i, e1i,
+     *     e3i, lpi, re1i, re3i
+      use PSC_patch
+
+      implicit none
+      include './mpif.h'
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
+      integer      :: l
 
       niloc=lpi
       if (re1i>0) then
@@ -546,7 +570,4 @@ c LOCAL PARTICLE ARRAY UPDATE
       deallocate(p_re3i)
 
 
-      cpumess=cpumess+s_cpub
-
-
-      end subroutine PIC_pex
+      end subroutine PIC_pex_b

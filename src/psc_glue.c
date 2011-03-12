@@ -35,9 +35,12 @@
 #define PIC_fex_F77 F77_FUNC(pic_fex, PIC_FEX)
 #define PIC_fey_F77 F77_FUNC(pic_fey, PIC_FEY)
 #define PIC_fez_F77 F77_FUNC(pic_fez, PIC_FEZ)
-#define PIC_pex_F77 F77_FUNC(pic_pex, PIC_PEX)
-#define PIC_pey_F77 F77_FUNC(pic_pey, PIC_PEY)
-#define PIC_pez_F77 F77_FUNC(pic_pez, PIC_PEZ)
+#define PIC_pex_a_F77 F77_FUNC(pic_pex_a, PIC_PEX_A)
+#define PIC_pex_b_F77 F77_FUNC(pic_pex_b, PIC_PEX_B)
+#define PIC_pey_a_F77 F77_FUNC(pic_pey_a, PIC_PEY_A)
+#define PIC_pey_b_F77 F77_FUNC(pic_pey_b, PIC_PEY_B)
+#define PIC_pez_a_F77 F77_FUNC(pic_pez_a, PIC_PEZ_A)
+#define PIC_pez_b_F77 F77_FUNC(pic_pez_b, PIC_PEZ_B)
 #define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
 #define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
@@ -134,9 +137,12 @@ void PIC_faz_F77(f_real *f);
 void PIC_fex_F77(f_real *f);
 void PIC_fey_F77(f_real *f);
 void PIC_fez_F77(f_real *f);
-void PIC_pex_F77(void);
-void PIC_pey_F77(void);
-void PIC_pez_F77(void);
+void PIC_pex_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
+void PIC_pex_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_pey_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
+void PIC_pey_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
+void PIC_pez_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
+void PIC_pez_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
 		 f_real *hx, f_real *hy, f_real *hz,
 		 f_real *jxi, f_real *jyi, f_real *jzi);
@@ -423,24 +429,33 @@ PIC_fez(fields_fortran_t *pf, int m)
 }
 
 void
-PIC_pex()
+PIC_pex(particles_fortran_t *pp)
 {
   INIT_grid_map();
-  PIC_pex_F77();
+  f_int niloc_n;
+  PIC_pex_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
+  pp->particles = REALLOC_particles(niloc_n);
+  PIC_pex_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void
-PIC_pey()
+PIC_pey(particles_fortran_t *pp)
 {
   INIT_grid_map();
-  PIC_pey_F77();
+  f_int niloc_n;
+  PIC_pey_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
+  pp->particles = REALLOC_particles(niloc_n);
+  PIC_pey_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void
-PIC_pez()
+PIC_pez(particles_fortran_t *pp)
 {
   INIT_grid_map();
-  PIC_pez_F77();
+  f_int niloc_n;
+  PIC_pez_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
+  pp->particles = REALLOC_particles(niloc_n);
+  PIC_pez_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void

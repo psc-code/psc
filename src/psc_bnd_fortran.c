@@ -90,24 +90,22 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
 
   mparticles_fortran_t particles;
   particles_fortran_get(&particles, particles_base);
-  
+  assert(psc.nr_patches == 1);
+  particles_fortran_t *pp = &particles.p[0];
+
   SET_param_coeff();
-  SET_niloc(particles.p[0].n_part);
+  SET_niloc(pp->n_part);
 
   if (psc.domain.gdims[0] > 1) {
-    PIC_pex();
+    PIC_pex(pp);
   }
   if (psc.domain.gdims[1] > 1) {
-    PIC_pey();
+    PIC_pey(pp);
   }
   if (psc.domain.gdims[2] > 1) {
-    PIC_pez();
+    PIC_pez(pp);
   }
 
-  GET_niloc(&particles.p[0].n_part);
-  // don't really reallocate, just get the new array pointer
-  // if PIC_pe[xyz]() reallocated during the previous calls
-  particles.p[0].particles = REALLOC_particles(particles.p[0].n_part);
   particles_fortran_put(&particles, particles_base);
 
   prof_stop(pr);

@@ -4,14 +4,20 @@ c THE ROUTINE IS CALLED BY PIC_move_part.f. PIC_pex.f,
 c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
 
-      subroutine PIC_pez
+!     ------------------------------------------------------------
+      subroutine PIC_pez_a(niloc, p_niloc, niloc_n)
+!     ------------------------------------------------------------
 
-      use PIC_variables
+      use PIC_variables, only: p_e5i, p_e6i, p_re5i, p_re6i, e5i,
+     *     e6i, lpi, re5i, re6i
       use VLA_variables
       use PSC_patch
 
       implicit none
       include './mpif.h'
+
+      integer      :: niloc, niloc_n
+      real(kind=8) :: p_niloc(0:*)
 
       character*(5) :: node
 
@@ -501,8 +507,26 @@ c LOCAL PARTICLE ARRAY UPDATE
 
 
       niloc_n=lpi+re5i+re6i
-      call REALLOC_particles(niloc_n)
 
+      cpumess=cpumess+s_cpub
+
+      end subroutine PIC_pez_a
+
+
+!     ------------------------------------------------------------
+      subroutine PIC_pez_b(niloc, p_niloc)
+!     ------------------------------------------------------------
+
+      use PIC_variables, only: p_re5i, p_re6i, re5i, re6i, lpi
+      use PSC_patch
+
+      implicit none
+      include './mpif.h'
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
+      integer      :: l
 
       niloc=lpi
       if (re5i>0) then
@@ -544,7 +568,4 @@ c LOCAL PARTICLE ARRAY UPDATE
       deallocate(p_re6i)
 
 
-      cpumess=cpumess+s_cpub
-
-
-      end subroutine PIC_pez
+      end subroutine PIC_pez_b
