@@ -693,7 +693,6 @@ c CALCULATION OF BEAM DENSITY VIA AREA DETERMINATION
       call SERV_systime(cpuh)
       s_cpuh=s_cpuh+cpuh-cpug
 
-      cpumess=cpumess+s_cpub
       cpuinou=cpuinou+s_cpud
       cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
 

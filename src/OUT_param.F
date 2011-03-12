@@ -82,7 +82,6 @@ c DATA PROTOCOL ROUTINE
          write(6,*) 'xnpe: ',xnpe
          write(6,*) 'ynpe: ',ynpe
          write(6,*) 'znpe: ',znpe
-         write(6,*) 'cpum:',cpum
          write(6,*) 'data_out:',trim(data_out)
          write(6,*) 'data_chk:',trim(data_chk)
          write(6,*) ' ' 

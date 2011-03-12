@@ -42,13 +42,6 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+0.5)*dt.
       real(kind=8) :: bns,bls,hns,hls           ! added by ab
       real(kind=8) :: bstore,dstore             ! added by ab
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
 
 c initialization
 
@@ -203,7 +196,6 @@ c -> E^(n+0.5), B^(n), j^(n)
       enddo
 
 
-      call SERV_systime(cpua)
       call PIC_fex(ex)
       call PIC_fey(ex)
       call PIC_fez(ex)
@@ -222,9 +214,6 @@ c -> E^(n+0.5), B^(n), j^(n)
       call PIC_fex(dvz)
       call PIC_fey(dvz)
       call PIC_fez(dvz)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
 
 c B-field propagation E^(n+0.5), B^(n), j^(n), m^(n+0.5)
 c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
@@ -328,7 +317,6 @@ c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
       enddo
 
 
-      call SERV_systime(cpua)
       call PIC_fex(bx)
       call PIC_fey(bx)
       call PIC_fez(bx)
@@ -347,9 +335,6 @@ c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
       call PIC_fex(hz)
       call PIC_fey(hz)
       call PIC_fez(hz)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
 
 c energy conservation
 
@@ -474,14 +459,6 @@ c energy conservation
             enddo
          enddo
       enddo
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
 
 
       end subroutine PIC_pml_msa

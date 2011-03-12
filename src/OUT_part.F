@@ -23,16 +23,6 @@ c PARTICLE OUTPUT!
       real(kind=4) pxq,pyq,pzq
       real(kind=4) qnq,mnq,cnq,lnq,wnq
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
-
-      s_cpub=0.0d0
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
 
       x0=5.0*1.0e-6/ld
       y0=5.0*1.0e-6/ld
@@ -48,8 +38,6 @@ c OUTPUT OF PARTICLES AT SELECTED TIMESTEPS
 
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
-
-         call SERV_systime(cpuc)
 
          open(11,file=trim(data_out)
      &        //'/'//node//'electron'//label,
@@ -164,22 +152,11 @@ c OUTPUT OF PARTICLES AT SELECTED TIMESTEPS
             endif
          enddo
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
          close(11)
          close(12)
          close(13)
 
       endif
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpumess=cpumess+s_cpub
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
-
 
       end subroutine OUT_part
 

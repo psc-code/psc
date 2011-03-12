@@ -33,7 +33,7 @@ libpsc_a_SOURCES = \
 	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
 	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
-	SERV_labelgen.F SERV_systime.F \
+	SERV_labelgen.F \
 	INIT_param.F INIT_field.F \
 	INIT_den.F \
 	PSC_c.F \

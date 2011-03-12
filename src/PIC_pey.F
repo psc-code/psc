@@ -41,11 +41,6 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       real(kind=8) :: pxi,pyi,pzi
       real(kind=8) :: qni,mni,cni,lni,wni
 
-      real(kind=8) :: s_cpub  
-
-
-      s_cpub=0.0d0
-
 
 c---------------------------------------------------------------------
 c TOPOLOGY AND CONVENTIONS (example of 12 nodes)
@@ -222,7 +217,6 @@ c LOADING MESSAGE PASSING ARRAYS
 C ARRAY DIMENSION EXCHANGE
 
 
-      call SERV_systime(cpua)
       if (nodej.lt.ynpe.and.restj<0.25) then               ! UPDATING e4
          pec=seg_inv(nodei,nodej+1,nodek)
          call MPI_SSEND(e2i,1,MPI_INTEGER,
@@ -502,11 +496,6 @@ c      ys=(i2x-i2n)*dy
          endif
       endif
 
-
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-      cpumess=cpumess+s_cpub
 
 c LOCAL PARTICLE ARRAY UPDATE
 

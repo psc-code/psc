@@ -97,14 +97,6 @@ c     ----------------------------------------------------------------------
 
       character*5 label,node
 
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
 
 c Time-averaging
 
@@ -203,8 +195,6 @@ c         jet=jet+dt*je
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
 
-         call SERV_systime(cpuc)
-
          open(11,file=trim(data_out)//'/'//node//'poynting'//label,
      &        access='sequential',form='unformatted')
 
@@ -236,9 +226,6 @@ c         jet=jet+dt*je
 
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
          fluxit=0.0
          fluxot=0.0
 
@@ -263,11 +250,5 @@ c         jet=jet+dt*je
 
       endif
 
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
 
       end subroutine OUT_poyc

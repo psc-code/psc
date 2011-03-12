@@ -6,20 +6,14 @@ c     ======================================================================
 c     ======================================================================
 c     THIS SUBROUTINE SORTS THE PARTICLES TO CELLS
 
-      use VLA_variables
-
       implicit none
 
       integer :: niloc
       real(kind=8) :: p_niloc(0:*)
 
-      real(kind=8) :: s_cpuh
       integer :: ii,jj,ll,ir
       real(kind=8) :: rr0,rr1,rr2,rr3,rr4,rr5,rr6,rr7,rra,rr9,rr10
 
-
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
       if (niloc.lt.2) goto 30
       ll=niloc/2+1
@@ -122,9 +116,4 @@ c     THIS SUBROUTINE SORTS THE PARTICLES TO CELLS
       
  30   continue
       
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpucomp=cpucomp+s_cpuh
-
       end subroutine PIC_sort

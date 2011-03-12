@@ -116,7 +116,7 @@ c     wrapper for C to be able to set these parameters
 c     wrapper for C to be able to access these parameters
 
       subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
+     *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
      *     a0_, nicell_)
 
       use VLA_variables
@@ -136,7 +136,6 @@ c     wrapper for C to be able to access these parameters
       eps0_ = eps0
 
       nmax_ = nmax
-      cpum_ = cpum
       lw_ = lw
       i0_ = i0
       n0_ = n0
@@ -153,7 +152,7 @@ c     wrapper for C to be able to access these parameters
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, cpum_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
+     *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
      *     a0_, nicell_)
 
       use VLA_variables
@@ -162,7 +161,7 @@ c     wrapper for C to be able to set these parameters
       implicit none
 
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
-      real(kind=8) :: cpum_, lw_
+      real(kind=8) :: lw_
       real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
       integer :: nmax_, nicell_
 
@@ -173,7 +172,6 @@ c     wrapper for C to be able to set these parameters
       eps0 = eps0_
 
       nmax = nmax_
-      cpum = cpum_
       lw = lw_
       i0 = i0_
       n0 = n0_

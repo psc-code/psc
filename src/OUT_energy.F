@@ -16,9 +16,6 @@ c by A.Kemp 11/15/2005
       character*100 :: fname='energy.data'
       character*100 :: fnames='-spectrum.data'
 
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-  
       real(kind=8) :: te,ti,ekini,ekine,ekin
       real(kind=8) :: ekinl,ekinx,dekin
       real(kind=8) :: ikinl,ikinx,dikin
@@ -27,10 +24,6 @@ c by A.Kemp 11/15/2005
 
       real(kind=8),allocatable,dimension(:) :: enwe,enwi
 
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
       ekine=0.0
       ekini=0.0
@@ -111,7 +104,6 @@ c by A.Kemp 11/15/2005
       te=ekine/xne          
       ti=ekini/xni
 
-      call SERV_systime(cpuc)
       call SERV_labelgen(mpe,node)
       call SERV_labelgen(n,label)
       
@@ -160,17 +152,6 @@ c        write(11) '# Ek[MeV]   dN/dE   Ntot=', ntot
         enddo
         close(11)
       endif
-
-      call SERV_systime(cpud)
-      s_cpud=s_cpud+cpud-cpuc
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
-
 
       deallocate(enwe)
       deallocate(enwi)

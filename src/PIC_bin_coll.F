@@ -28,16 +28,8 @@ c ====================================================================
       real(kind=8) :: qni,mni,wni
       real(kind=8) :: rest,rho,lnL
 
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
       integer,allocatable,dimension(:,:) :: spx_list
       integer,allocatable,dimension(:) :: spx_np
-
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
 
       lnL=5.0d0                                   ! Coulomb logarithm
@@ -514,7 +506,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
          if (n.eq.nprc) then
             nprc=nprc+dnprc
 
-            call SERV_systime(cpuc)
             call SERV_labelgen(mpe,node)
             call SERV_labelgen(n,label)
 
@@ -540,9 +531,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
 
             close(11)      
 
-            call SERV_systime(cpud)
-            s_cpud=s_cpud+cpud-cpuc
-
          endif
       endif
 
@@ -554,13 +542,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
       deallocate(nudt_min)
       deallocate(nudt_max)
       deallocate(nudt_mean)
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
 
 
       end subroutine PIC_bin_coll

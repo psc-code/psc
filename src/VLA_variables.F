@@ -21,24 +21,6 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       integer,allocatable, dimension(:) :: seg_i1,seg_i2,seg_i3
       integer,allocatable, dimension(:,:,:) :: seg_inv
 
-c cpumess: WALL CLOCK time for cumulative communication
-c cpucomp: WALL CLOCK time for cumulative computation
-c cpuinou: WALL CLOCK time for cumulative input/output
-c cpus: WALL CLOCK time at program start
-c cpuf: WALL CLOCK time at program stop
-c cpue: MAXIMUM WALL CLOCK time of all PEs at program end
-c cpum: WALL CLOCK time limit
-c cpu: stores WALL CLOCK times on individual PEs
-c cpu_ary: stores WALL CLOCK times of all PEs
-
-      real(kind=8) cpumess,cpucomp,cpuinou
-      real(kind=8) cpua,cpub
-      real(kind=8) cpuc,cpud
-      real(kind=8) cpug,cpuh
-      real(kind=8) cpus,cpuf,cpue,cpum
-      real(kind=8),allocatable,dimension(:) :: cpu
-      real(kind=8),allocatable,dimension(:,:) :: cpu_ary
-
 c nprf: time step counter for data output
 c nprc: time step counter for collision data output
 c tmnvf: time step counter for starting time averaging of fields

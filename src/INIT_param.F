@@ -20,17 +20,6 @@ c pi: pi
       call MPI_COMM_SIZE(MPI_COMM_WORLD,npe,info)
       call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,info)
 
-c cpus: WALL CLOCK time at start time
-
-      call SERV_systime(cpus)
-
-      if (allocated(cpu)) return
-
-      allocate(cpu(1:5))
-      allocate(cpu_ary(1:5,0:npe-1))
-      cpu=0.0d0
-      cpu_ary=0.0d0
-
       end subroutine INIT_basic
 
 c PARAMETER INITIALIZATION 
@@ -296,7 +285,6 @@ c UNDER NORMAL CONDITIONS
 c nstart: time step counter for starting the code
 c shift_c: time step counter for shifting the frame in the code
 c shift_z: shifts the density function in the code
-c cpumess: WALL CLOCK time required for message passing
 c cpuinou: WALL CLOCK time required for I/O
 c cpucomp: WALL CLOCK time required for computation
 c cpus: WALL CLOCK time at end time
@@ -306,10 +294,6 @@ c cpus: WALL CLOCK time at end time
       shift_c=0
       shift_l=0
       shift_z=0.0
-      cpumess=0.0
-      cpucomp=0.0
-      cpuinou=0.0
-      cpuf=0.0
 
 
       r1n=max(i1n,r1n)
@@ -460,7 +444,6 @@ c c: light velocity in m/s
 c eps0: eps0 in As/Vm
 
 c nmax: maximum number of time steps
-c cpum: CPU time limit
 c lw: laser wavelength in m
 c i0: irradiance in W um**2/m**2
 c n0: peak atom density in m**3
@@ -472,7 +455,6 @@ c n0: peak atom density in m**3
       eps0=8.8542e-12
 
       nmax=100 ! calculate later (or manual control here)
-      cpum=100000.0
       lw=3.2*1.0e-6
       i0=1.0e21          ! modified from 22
       n0=1.0e26          ! modified from 28

@@ -52,7 +52,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       use VLA_variables, only:
      *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,cpu,cpu_ary,npe
+     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,npe
 
       use PIC_variables, only: nprparti
       use PSC_patch
@@ -108,9 +108,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       enddo
 
       call OUT_FIELDS_serv_read
-
-      cpu=0.0d0
-      cpu_ary=0.0d0
 
       close(10)
 

@@ -379,11 +379,11 @@ void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
 			  f_int *nproc, f_int *nghost, f_int *use_pml);
 void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
-		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
+		       f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
 		       f_real *a0, f_int *nicell);
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
-		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
+		       f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
 		       f_real *a0, f_int *nicell);
 void SET_param_coeff_F77(f_real *beta,
@@ -430,7 +430,7 @@ GET_param_psc()
 {
   struct psc_param *p = &psc.prm;
   GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
+		    &p->nmax, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
 		    &p->j0, &p->rho0, &p->phi0, &p->a0,
 		    &p->nicell);
 }
@@ -440,7 +440,7 @@ SET_param_psc()
 {
   struct psc_param *p = &psc.prm;
   SET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->cpum, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
+		    &p->nmax, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
 		    &p->j0, &p->rho0, &p->phi0, &p->a0,
 		    &p->nicell);
 }

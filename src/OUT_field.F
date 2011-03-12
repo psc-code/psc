@@ -216,18 +216,9 @@ c     ----------------------------------------------------------------------
       real(kind=8) :: x0,y0,z0
       real(kind=8) :: xr,yr,zr,rot
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
       if (.not. allocated(ext)) then
          call OUT_FIELDS_alloc
       endif
-
-      s_cpub=0.0d0
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
       x0=5.0*1.0e-6/ld
       y0=5.0*1.0e-6/ld
@@ -536,8 +527,6 @@ c CALCULATION OF TIME AVERAGED FIELDS
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
 
-         call SERV_systime(cpuc)
-
          open(11,file=trim(data_out)//'/'//node//'tfield'//label,
      &        access='sequential',form='unformatted')
 
@@ -637,9 +626,6 @@ c CALCULATION OF TIME AVERAGED FIELDS
 
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
       endif
 
 
@@ -651,8 +637,6 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
 
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
-
-         call SERV_systime(cpuc)
 
          open(11,file=trim(data_out)//'/'//node//'pfield'//label,
      &         access='sequential',form='unformatted')
@@ -762,19 +746,7 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
               
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
       endif 
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
 
 
       end subroutine OUT_field
