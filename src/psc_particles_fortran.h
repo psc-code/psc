@@ -23,6 +23,7 @@ typedef struct {
 typedef struct {
   particle_fortran_t *particles;
   int n_part;
+  int n_alloced;
 } particles_fortran_t;
 
 typedef struct {

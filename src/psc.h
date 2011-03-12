@@ -381,7 +381,6 @@ void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
 void psc_out_particles(void);
-void psc_set_n_particles(particles_base_t *pp, int n_part);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
@@ -442,10 +441,8 @@ void SET_param_domain(void);
 void SET_param_pml(void);
 void SET_param_psc(void);
 void SET_param_coeff(void);
-void SET_niloc(int niloc);
 void PSC_set_patch(int p);
 void GET_param_domain(void);
-void GET_niloc(int *niloc);
 void INIT_param_domain(void);
 void INIT_param_psc(void);
 void INIT_grid_map(void);

@@ -94,7 +94,6 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
   particles_fortran_t *pp = &particles.p[0];
 
   SET_param_coeff();
-  SET_niloc(pp->n_part);
 
   if (psc.domain.gdims[0] > 1) {
     PIC_pex(pp);

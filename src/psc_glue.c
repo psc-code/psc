@@ -22,11 +22,6 @@
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
-#define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
-#define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
-#define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
-#define REALLOC_particles_F77 F77_FUNC_(realloc_particles, REALLOC_PARTICLES)
-#define FREE_particles_F77 F77_FUNC_(free_particles, FREE_PARTICLES)
 #define FIELDS_alloc_F77 F77_FUNC_(fields_alloc, FIELDS_ALLOC)
 #define FIELDS_free_F77 F77_FUNC_(fields_free, FIELDS_FREE)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
@@ -55,7 +50,6 @@
 #define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
 #define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
 
-#define C_alloc_particles_cb_F77 F77_FUNC(c_alloc_particles_cb,C_ALLOC_PARTICLES_CB)
 #define C_fields_alloc_cb_F77 F77_FUNC(c_fields_alloc_cb,C_FIELDS_ALLOC_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 #define C_s_pulse_z1_F77 F77_FUNC(c_s_pulse_z1,C_S_PULSE_Z1)
@@ -123,11 +117,6 @@ void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
-void SET_niloc_F77(f_int *niloc);
-void GET_niloc_F77(f_int *niloc);
-void ALLOC_particles_F77(f_int *n_part);
-void REALLOC_particles_F77(f_int *n_part_n);
-void FREE_particles_F77(void);
 void FIELDS_alloc_F77(void);
 void FIELDS_free_F77(void);
 
@@ -364,18 +353,6 @@ CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-SET_niloc(int niloc)
-{
-  SET_niloc_F77(&niloc);
-}
-
-void
-GET_niloc(int *p_niloc)
-{
-  GET_niloc_F77(p_niloc);
-}
-
-void
 INIT_basic()
 {
   INIT_basic_F77();
@@ -434,7 +411,7 @@ PIC_pex(particles_fortran_t *pp)
   INIT_grid_map();
   f_int niloc_n;
   PIC_pex_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  pp->particles = REALLOC_particles(niloc_n);
+  particles_fortran_realloc(pp, niloc_n);
   PIC_pex_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
@@ -444,7 +421,7 @@ PIC_pey(particles_fortran_t *pp)
   INIT_grid_map();
   f_int niloc_n;
   PIC_pey_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  pp->particles = REALLOC_particles(niloc_n);
+  particles_fortran_realloc(pp, niloc_n);
   PIC_pey_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
@@ -454,7 +431,7 @@ PIC_pez(particles_fortran_t *pp)
   INIT_grid_map();
   f_int niloc_n;
   PIC_pez_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  pp->particles = REALLOC_particles(niloc_n);
+  particles_fortran_realloc(pp, niloc_n);
   PIC_pez_b_F77(&pp->n_part, &pp->particles[-1]);
 }
 
@@ -556,36 +533,6 @@ C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 
 
 // ----------------------------------------------------------------------
-// slightly hacky way to do the equivalent of "malloc" using
-// Fortran's allocate()
-
-static particle_fortran_t *__f_part;
-
-particle_fortran_t *
-ALLOC_particles(int n_part)
-{
-  ALLOC_particles_F77(&n_part);
-  // the callback function below will have magically been called,
-  // setting __f_part
-  return __f_part;
-}
-
-particle_fortran_t *
-REALLOC_particles(int n_part_n)
-{
-  REALLOC_particles_F77(&n_part_n);
-  // the callback function below will have magically been called,
-  // setting __f_part
-  return __f_part;
-}
-
-void
-C_alloc_particles_cb_F77(particle_fortran_t *p_niloc)
-{
-  __f_part = &p_niloc[1];
-}
-
-// ----------------------------------------------------------------------
 // same thing for allocating fields
 
 f_real *__f_flds[NR_FIELDS];
@@ -638,10 +585,3 @@ C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
   __f_flds[EPS] = eps;
   __f_flds[MU] = mu;
 }
-
-void
-FREE_particles(void)
-{
-  FREE_particles_F77();
-}
-

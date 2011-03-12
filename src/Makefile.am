@@ -34,7 +34,6 @@ libpsc_a_SOURCES = \
 	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
 	SERV_labelgen.F SERV_systime.F \
-	ALLOC_particles.F \
 	INIT_param.F INIT_field.F \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
@@ -95,7 +94,6 @@ libpsc_a_SOURCES += \
 endif USE_CUDA
 
 VLI_SOURCES = vli_main.c VLA_variables.F PIC_variables.F \
-	PIC_bpulse.F \
 	OUT_param.F OUT_part.F \
 	OUT_count.F OUT_energy.F
 

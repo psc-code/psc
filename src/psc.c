@@ -204,16 +204,6 @@ psc_init(const char *case_name)
 }
 
 // ----------------------------------------------------------------------
-// psc_set_n_particles
-
-void
-psc_set_n_particles(particles_base_t *pp, int n_part)
-{
-  pp->n_part = n_part;
-  SET_niloc(n_part);
-}
-
-// ----------------------------------------------------------------------
 // psc_write_checkpoint
 
 void
@@ -224,7 +214,7 @@ psc_read_checkpoint(void)
   int n_part;
   SERV_read_1(&psc.timestep, &n_part);
   particles_base_realloc(&psc.particles.p[0], n_part);
-  psc_set_n_particles(0, n_part);
+  psc.particles.p[0].n_part = n_part;
   
   mparticles_fortran_t particles;
   particles_fortran_get(&particles, &psc.particles);
