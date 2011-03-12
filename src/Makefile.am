@@ -95,14 +95,9 @@ libpsc_a_SOURCES += \
 endif USE_CUDA
 
 VLI_SOURCES = vli_main.c VLA_variables.F PIC_variables.F \
-	PIC_bpulse.F PIC_ionize.F \
+	PIC_bpulse.F \
 	OUT_param.F OUT_part.F \
-	OUT_count.F OUT_energy.F \
-	PIC_move_part.F PIC_move_part_xy.F \
-	PIC_move_part_xz.F PIC_move_part_yz.F PIC_move_part_x.F \
-	PIC_move_part_y.F PIC_move_part_z.F \
-	MCC_variables.F MCC_init.F MCC_impact.F \
-	PSC_driver.F
+	OUT_count.F OUT_energy.F
 
 SELECT_SOURCES = VLA_variables.F PIC_variables.F \
 	SELECT.F SERV_labelgen.F \
