@@ -1,18 +1,31 @@
-#include "config.h"
 
-c THIS SUBROUTINE IS THE PARTICLE MOVER.
+c     ----------------------------------------------------------------------
+      subroutine PIC_push_part_y(niloc, p_niloc, p2A, p2B,
+     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
+c     ----------------------------------------------------------------------
+c     particle pusher z, w/o the following boundary exchange
 
-      subroutine PIC_move_part_y
-
-      use PIC_variables
-      use VLA_variables
       use PSC_globals
       use PSC_patch
-      use fields
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+      real(kind=8) :: p2A, p2B
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+
       integer :: j1,j2,j3,k2,l1,l2,l3
       integer :: l2min,l2max
+      integer :: l
 
       real(kind=8) :: dxi,dyi,dzi
       real(kind=8) :: pxi,pyi,pzi
@@ -29,32 +42,15 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       real(kind=8) :: gmy,g0y,g1y
       real(kind=8) :: wx,wy,wz
       real(kind=8) :: exq,eyq,ezq
-!      real(kind=8) :: bxq,byq,bzq
       real(kind=8) :: hxq,hyq,hzq
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      real(kind=8),allocatable,dimension(:) :: s0y
-
-
-      real(kind=8),allocatable,dimension(:) :: s1y
-      real(kind=8),allocatable,dimension(:,:,:) :: jxh,jyh,jzh
-
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
-      allocate(s0y(-2:2))
-      allocate(s1y(-2:2))
-
-      allocate(jxh(-3:2,-2:2,-2:2))
-      allocate(jyh(-2:2,-3:2,-2:2))
-      allocate(jzh(-2:2,-2:2,-3:2))
-
+      real(kind=8),dimension(-2:2) :: s0y
+      real(kind=8),dimension(-2:2) :: s1y
+      real(kind=8),dimension(-3:2,-2:2,-2:2) :: jxh
+      real(kind=8),dimension(-2:2,-3:2,-2:2) :: jyh
+      real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
 
 c INITIALIZATION
 
@@ -72,9 +68,6 @@ c INITIALIZATION
       dzi=1.0/dz
 
 
-      ne=0.0d0
-      ni=0.0d0
-      nn=0.0d0
       jxi=0.0d0
       jyi=0.0d0
       jzi=0.0d0
@@ -157,18 +150,6 @@ c     FIELD INTERPOLATION
      &          +g0y*ez(j1,j2,l3)
      &          +g1y*ez(j1,j2+1,l3)
 
-!            bxq=hmy*bx(j1,l2-1,l3)
-!     &          +h0y*bx(j1,l2,l3)
-!     &          +h1y*bx(j1,l2+1,l3)
-
-!            byq=gmy*by(l1,j2-1,l3)
-!     &          +g0y*by(l1,j2,l3)
-!     &          +g1y*by(l1,j2+1,l3)
-
-!            bzq=hmy*bz(l1,l2-1,j3)
-!     &          +h0y*bz(l1,l2,j3)
-!     &          +h1y*bz(l1,l2+1,j3)
-
             hxq=hmy*hx(j1,l2-1,l3)
      &          +h0y*hx(j1,l2,l3)
      &          +h1y*hx(j1,l2+1,l3)
@@ -189,9 +170,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             pzm=pzi+dq*ezq
 
             root=dq/dsqrt(1.0+pxm*pxm+pym*pym+pzm*pzm)
-!            taux=bxq*root
-!            tauy=byq*root
-!            tauz=bzq*root
             taux=hxq*root
             tauy=hyq*root
             tauz=hzq*root
@@ -226,37 +204,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             p_niloc(11*l+5)=pzi
 
             p2B=p2B+wni*mni*fnqs*(1.0d0/root-1.0d0)/eta
-
-c DETERMINE THE DENSITIES AT t=(n+1.0)*dt
-
-            u=xi*dxi
-            v=yi*dyi
-            w=zi*dzi
-            l1=nint(u)
-            l2=nint(v)
-            l3=nint(w)
-            h2=l2-v
-
-            gmy=0.5*(1.5-abs(h2-1.0))*(1.5-abs(h2-1.0))
-            g0y=0.75-abs(h2)*abs(h2)
-            g1y=0.5*(1.5-abs(h2+1.0))*(1.5-abs(h2+1.0))
-
-            if (qni.lt.0.0) then
-               fnq=qni*wni*fnqs
-               ne(l1,l2-1,l3)=ne(l1,l2-1,l3)+fnq*gmy
-               ne(l1,l2,l3)=ne(l1,l2,l3)+fnq*g0y
-               ne(l1,l2+1,l3)=ne(l1,l2+1,l3)+fnq*g1y
-            else if (qni.gt.0.0) then
-               fnq=qni*wni*fnqs
-               ni(l1,l2-1,l3)=ni(l1,l2-1,l3)+fnq*gmy
-               ni(l1,l2,l3)=ni(l1,l2,l3)+fnq*g0y
-               ni(l1,l2+1,l3)=ni(l1,l2+1,l3)+fnq*g1y
-            else if (qni.eq.0.0) then
-               fnq=wni*fnqs
-               nn(l1,l2-1,l3)=nn(l1,l2-1,l3)+fnq*gmy
-               nn(l1,l2,l3)=nn(l1,l2,l3)+fnq*g0y
-               nn(l1,l2+1,l3)=nn(l1,l2+1,l3)+fnq*g1y
-            endif
 
 c CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
 c x^(n+1), p^(n+1) -> x^(n+1.5), p^(n+1)
@@ -313,39 +260,4 @@ c CURRENT DENSITY AT (n+1.0)*dt
          enddo
       endif
 
-      call SERV_systime(cpua)
-      call PIC_fay(jxi)
-      call PIC_fay(jyi)
-      call PIC_fay(jzi)
-
-      call PIC_fey(jxi)
-      call PIC_fey(jyi)
-      call PIC_fey(jzi)
-
-      call PIC_fay(ne)
-      call PIC_fay(ni)
-      call PIC_fay(nn)
-
-      call PIC_fey(ne)
-      call PIC_fey(ni)
-      call PIC_fey(nn)
-
-      call PIC_pey
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-
-      deallocate(s0y)
-      deallocate(s1y)
-      deallocate(jxh,jyh,jzh)
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
-
-
-      end subroutine PIC_move_part_y
+      end subroutine PIC_push_part_y

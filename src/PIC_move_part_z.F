@@ -1,6 +1,4 @@
 
-#include "config.h"
-
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_z(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
@@ -28,8 +26,8 @@ c     particle pusher z, w/o the following boundary exchange
 
       real(kind=8) :: pi
 
-      integer :: j1,j2,j3,k2,k3,l1,l2,l3
-      integer :: l2min,l2max,l3min,l3max
+      integer :: j1,j2,j3,k3,l1,l2,l3
+      integer :: l3min,l3max
       integer :: l
 
       real(kind=8) :: dxi,dyi,dzi
@@ -42,17 +40,17 @@ c     particle pusher z, w/o the following boundary exchange
       real(kind=8) :: dqs,fnqs,fnqxs,fnqys,fnqzs
       real(kind=8) :: dq,fnq,fnqx,fnqy,fnqz
 
-      real(kind=8) :: h1,h2,h3
-      real(kind=8) :: hmy,h0y,h1y,hmz,h0z,h1z
-      real(kind=8) :: gmy,g0y,g1y,gmz,g0z,g1z
+      real(kind=8) :: h3
+      real(kind=8) :: hmz,h0z,h1z
+      real(kind=8) :: gmz,g0z,g1z
       real(kind=8) :: wx,wy,wz
       real(kind=8) :: exq,eyq,ezq
       real(kind=8) :: hxq,hyq,hzq
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
-      real(kind=8),dimension(-2:2) :: s0y,s0z
-      real(kind=8),dimension(-2:2) :: s1y,s1z
+      real(kind=8),dimension(-2:2) :: s0z
+      real(kind=8),dimension(-2:2) :: s1z
       real(kind=8),dimension(-3:2,-2:2,-2:2) :: jxh
       real(kind=8),dimension(-2:2,-3:2,-2:2) :: jyh
       real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
@@ -156,18 +154,6 @@ c     FIELD INTERPOLATION
      &         +h0z*ez(j1,j2,l3)
      &         +h1z*ez(j1,j2,l3+1)
 
-!            bxq=hmz*bx(j1,l2,l3-1)
-!     &          +h0z*bx(j1,l2,l3)
-!     &          +h1z*bx(j1,l2,l3+1)
-
-!            byq=hmz*by(l1,j2,l3-1)
-!     &         +h0z*by(l1,j2,l3)
-!     &         +h1z*by(l1,j2,l3+1)
-
-!            bzq=gmz*bz(l1,l2,j3-1)
-!     &          +g0z*bz(l1,l2,j3)
-!     &          +g1z*bz(l1,l2,j3+1)
-
             hxq=hmz*hx(j1,l2,l3-1)
      &          +h0z*hx(j1,l2,l3)
      &          +h1z*hx(j1,l2,l3+1)
@@ -193,9 +179,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             pzm=pzi+dq*ezq
 
             root=dq/dsqrt(1.0+pxm*pxm+pym*pym+pzm*pzm)
-!            taux=bxq*root
-!            tauy=byq*root
-!            tauz=bzq*root
             taux=hxq*root
             tauy=hyq*root
             tauz=hzq*root
@@ -300,5 +283,4 @@ c CURRENT DENSITY AT (n+1.0)*dt
          enddo
       endif
 
-      end subroutine
-
+      end subroutine PIC_push_part_z
