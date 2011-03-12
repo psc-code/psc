@@ -2,29 +2,6 @@
 
 c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
-      subroutine SERV_read
-
-      use VLA_variables, only: cpu,cpu_ary,npe,nstart
-      use PIC_variables, only: niloc,p_niloc
-      use fields
-
-      implicit none
-
-      allocate(cpu(1:5))
-      allocate(cpu_ary(1:5,0:npe-1))
-
-      call SERV_read_1(nstart,niloc)
-
-      call ALLOC_particles(niloc)
-      call FIELDS_alloc
-
-      call SERV_read_2(niloc, p_niloc,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-
-      end subroutine SERV_read
-
-
-
       subroutine SERV_read_1(nstart_,niloc_)
 
       use VLA_variables
