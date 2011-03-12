@@ -420,13 +420,13 @@ extern struct psc_case_ops psc_case_ops_cone;
 
 // Wrappers for Fortran functions
 void PSC_set_globals(void);
-void PIC_push_part_xyz();
-void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_xz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_z(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz_a(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_yz_b(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_sort(particles_fortran_t *pp);
 void PIC_randomize(particles_fortran_t *pp);
 void PIC_bin_coll(particles_fortran_t *pp);

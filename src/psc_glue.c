@@ -208,9 +208,9 @@ PIC_set_variables()
 }
 
 void
-PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -218,9 +218,9 @@ PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_xy_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -228,9 +228,9 @@ PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -238,9 +238,9 @@ PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_xyz(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -248,9 +248,9 @@ PIC_push_part_xyz(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz_a(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_yz_a_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -258,9 +258,9 @@ PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz_b(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_yz_b_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -268,9 +268,9 @@ PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_z(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PIC_set_variables();
+  PSC_set_patch(patch);
   PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
 		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
