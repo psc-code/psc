@@ -135,14 +135,6 @@ c Please do not change
       endif
 
 
-c QUASI-PARTICLE MASS FACTOR
-
-      if (nicell.gt.0) then
-         cori=1.0/nicell
-      else
-         cori=1.0e20
-      endif
-
 c wl: laser frequency
 c phi0: electric potential normalization
 c a0: vector potential normalization
@@ -459,8 +451,6 @@ c n0: peak atom density in m**3
       i0=1.0e21          ! modified from 22
       n0=1.0e26          ! modified from 28
       e0=0 ! calculate later
-
-      nicell=200         ! maximum number of particles per spezies and cell
 
       end subroutine INIT_param_psc
 

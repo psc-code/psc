@@ -117,7 +117,7 @@ c     wrapper for C to be able to access these parameters
 
       subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
      *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
-     *     a0_, nicell_)
+     *     a0_)
 
       use VLA_variables
       use PIC_variables
@@ -127,7 +127,7 @@ c     wrapper for C to be able to access these parameters
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
       real(kind=8) :: cpum_, lw_
       real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
-      integer :: nmax_, nicell_
+      integer :: nmax_
 
       qq_ = qq
       mm_ = mm
@@ -145,7 +145,6 @@ c     wrapper for C to be able to access these parameters
       rho0_ = rho0
       phi0_ = phi0
       a0_ = a0
-      nicell_ = nicell
 
       end subroutine GET_param_psc
 
@@ -153,7 +152,7 @@ c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,
      *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
-     *     a0_, nicell_)
+     *     a0_)
 
       use VLA_variables
       use PIC_variables
@@ -163,7 +162,7 @@ c     wrapper for C to be able to set these parameters
       real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
       real(kind=8) :: lw_
       real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
-      integer :: nmax_, nicell_
+      integer :: nmax_
 
       qq = qq_
       mm = mm_
@@ -181,7 +180,6 @@ c     wrapper for C to be able to set these parameters
       rho0 = rho0_
       phi0 = phi0_
       a0 = a0_
-      nicell = nicell_
 
       end subroutine SET_param_psc
 
