@@ -5,7 +5,6 @@ c     ----------------------------------------------------------------------
       subroutine CALC_densities(niloc, p_niloc, ne, ni, nn)
 c     ----------------------------------------------------------------------
 
-      use VLA_variables, only: dx, dy, dz
       use PSC_globals
       use PSC_patch
 

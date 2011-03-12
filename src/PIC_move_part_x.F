@@ -7,6 +7,7 @@ c THIS SUBROUTINE IS THE PARTICLE MOVER.
       use PIC_variables
       use VLA_variables
       use PSC_globals
+      use PSC_patch
       use fields
 
       implicit none

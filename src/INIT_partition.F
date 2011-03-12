@@ -915,6 +915,7 @@ c     ----------------------------------------------------------------------
       function get_density(ix,iy,iz)
 
       use VLA_variables
+      use PSC_patch
 
       implicit none
       

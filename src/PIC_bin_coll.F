@@ -572,6 +572,7 @@ C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
 
       use PIC_variables
       use VLA_variables
+      use PSC_patch
 
       implicit none
 

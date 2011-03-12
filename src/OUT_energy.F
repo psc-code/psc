@@ -5,6 +5,7 @@ c by A.Kemp 11/15/2005
 
       use PIC_variables
       use VLA_variables
+      use PSC_patch
 
       implicit none
 

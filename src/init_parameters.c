@@ -388,7 +388,7 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_real *a0, f_int *nicell);
 void SET_param_coeff_F77(f_real *beta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
-			 f_real *dx, f_real *dt, f_int *np, f_int *nnp);
+			 f_int *np, f_int *nnp);
 
 void
 GET_param_domain()
@@ -451,7 +451,7 @@ SET_param_coeff()
   struct psc_coeff *p = &psc.coeff;
   SET_param_coeff_F77(&p->beta,
 		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
-		      psc.dx, &psc.dt, &p->np, &p->nnp);
+		      &p->np, &p->nnp);
 }
 
 void

@@ -7,7 +7,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher yz, w/o the following boundary exchange
 
-      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
       use PSC_patch
 
@@ -436,7 +435,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     first half step only (x^n -> x^{n+1/2}), for testing purposes
 
-      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
       use PSC_patch
 
@@ -550,7 +548,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2}), for testing
 
-      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
       use PSC_patch
 

@@ -5,6 +5,7 @@ c     INITIALIZE IMPACT IONIZATION PACKAGE BEFORE CALLING MCC_impact:
       use PIC_variables
       use VLA_variables
       use MCC_variables
+      use PSC_patch
 
       implicit none
 

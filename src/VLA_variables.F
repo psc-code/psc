@@ -79,10 +79,6 @@ c tt: atom temperature in J
 c cc: light velocity in m/s
 c eps0: eps0 in As/Vm
 c pi: the number pi
-c dt: time resolution in dimensionless units
-c dx: gridspacing in x-direction in dimensionless units
-c dy: gridspacing in y-direction in dimensionless units
-c dz: gridspacing in z-direction in dimensionless units
 c shift_z: density function shift in dimensionless units
 c xnpe: number of PEs in x-direction
 c ynpe: number of PEs in y-direction
@@ -108,7 +104,7 @@ c r3x: max output range along x in grid points
       real(kind=8) i0,n0,lw,wl
       real(kind=8) qq,mm,tt,cc,eps0,pi
       real(kind=8) ld,wp,vos,vt
-      real(kind=8) dt,dx,dy,dz,shift_z
+      real(kind=8) shift_z
       real(kind=8) beta
       real(kind=8) e0,b0,j0,rho0, phi0, a0
       real(kind=8) lengthx,lengthy,lengthz
@@ -184,18 +180,15 @@ c     ======================================================================
       subroutine PIC_set_variables(
      *     i1n_, i2n_, i3n_,
      *     i1x_, i2x_, i3x_,
-     *     dt_, dx_, dy_, dz_,
      *     wl_, wp_, n_)
 c     ======================================================================
 
       use PIC_variables
       use VLA_variables
-
       implicit none
 
       integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
       integer :: n_
-      real(kind=8) :: dt_, dx_, dy_, dz_
       real(kind=8) :: wl_, wp_
 
       i1n = i1n_
@@ -205,11 +198,6 @@ c     ======================================================================
       i2x = i2x_
       i3x = i3x_
       
-      dt = dt_
-      dx = dx_
-      dy = dy_
-      dz = dz_
-
       wl = wl_
       wp = wp_
       n = n_

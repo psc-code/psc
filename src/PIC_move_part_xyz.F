@@ -6,7 +6,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher xyz, w/o the following boundary exchange
 
-      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
       use PSC_patch
 

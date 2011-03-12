@@ -4,6 +4,7 @@ c Laser pulse initialization (p-polarization).
 
       use VLA_variables
       use PIC_variables
+      use PSC_patch
 
       implicit none
       real(kind=8) :: t,x,y,z
