@@ -1,13 +1,16 @@
 c PARTICLE OUTPUT!
 
 
-      subroutine OUT_count
+      subroutine OUT_count(niloc, p_niloc)
 
-      use PIC_variables
+      use PIC_variables, only: nprparti, dnprparti, nistep, pli
       use VLA_variables
       use PSC_patch
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
 
       integer :: count_in
       integer :: count_ou

@@ -1,13 +1,15 @@
 c THIS SUBROUTINE WRITES DETAILED KINETIC TEMPERATURES FOR ELECTRONS AND IONS
 c by A.Kemp 11/15/2005
 
-      subroutine OUT_energy
+      subroutine OUT_energy(niloc, p_niloc)
 
-      use PIC_variables
       use VLA_variables
       use PSC_patch
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
 
       character*(5) node, label
 
