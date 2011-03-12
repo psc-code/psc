@@ -3,7 +3,7 @@ c PARTICLE OUTPUT!
 
       subroutine OUT_count(niloc, p_niloc)
 
-      use PIC_variables, only: nprparti, dnprparti, nistep, pli
+      use PIC_variables, only: nprparti, dnprparti, nistep
       use VLA_variables
       use PSC_patch
 
@@ -16,6 +16,8 @@ c PARTICLE OUTPUT!
       integer :: count_ou
 
       character*5 label,node
+
+      integer :: pli
 
       real(kind=4) xq,yq,zq
       real(kind=4) x0,y0,z0,xr,yr,zr,rot

@@ -40,7 +40,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       call OUT_poyn_serv_read
 
-      read(10) niloc_,nialloc,cori
+      read(10) niloc_,cori
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 
 
       end subroutine SERV_read_1
@@ -54,7 +54,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,cpu,cpu_ary,npe
 
-      use PIC_variables, only: nialloc,nprparti
+      use PIC_variables, only: nprparti
       use PSC_patch
 
       implicit none

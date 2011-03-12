@@ -3,7 +3,7 @@ c PARTICLE OUTPUT!
 
       subroutine OUT_part(niloc, p_niloc)
 
-      use PIC_variables, only: nprparti, dnprparti, nistep, pli, plin,
+      use PIC_variables, only: nprparti, dnprparti, nistep, plin,
      *     plix
       use VLA_variables
       use PSC_globals
@@ -15,6 +15,8 @@ c PARTICLE OUTPUT!
       real(kind=8) :: p_niloc(0:*)
 
       character*5 label,node
+
+      integer :: pli
 
       real(kind=4) xq,yq,zq
       real(kind=4) x0,y0,z0,xr,yr,zr,rot

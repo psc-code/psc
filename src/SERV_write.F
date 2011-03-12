@@ -8,7 +8,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
 
-      use PIC_variables, only: nialloc,nprparti
+      use PIC_variables, only: nprparti
       use PSC_globals
       use PSC_patch
 
@@ -46,7 +46,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
 
       call OUT_poyn_serv_write
 
-      write(10) niloc,nialloc,cori
+      write(10) niloc,cori
       write(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx
 
 
