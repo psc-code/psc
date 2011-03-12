@@ -115,7 +115,7 @@ void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void OUT_field_F77(void);
-void OUT_part_F77(void);
+void OUT_part_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
@@ -309,9 +309,9 @@ OUT_field()
 }
 
 void
-OUT_part()
+OUT_part(particles_fortran_t *pp)
 {
-  OUT_part_F77();
+  OUT_part_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void

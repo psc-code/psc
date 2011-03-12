@@ -163,7 +163,13 @@ psc_destroy()
 void
 psc_out_particles()
 {
-  OUT_part();
+  assert(psc.nr_patches == 1);
+  mparticles_fortran_t particles;
+  particles_fortran_get(&particles, &psc.particles);
+
+  OUT_part(&particles.p[0]);
+  
+  particles_fortran_put(&particles, &psc.particles);
 }
 
 // ----------------------------------------------------------------------
