@@ -12,6 +12,7 @@ c***************************************************************
 
       use PIC_variables
       use VLA_variables
+      use PSC_patch
 
       implicit none
       include './mpif.h'

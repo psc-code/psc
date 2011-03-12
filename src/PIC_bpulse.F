@@ -7,6 +7,7 @@ c THEY MAY HAVE TEMPERATURE ALONG THE SURFACE NORMAL.
       use PIC_variables
       use VLA_variables
       use PSC_globals
+      use PSC_patch
 
       implicit none
       include './mpif.h'

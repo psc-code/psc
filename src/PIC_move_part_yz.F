@@ -7,9 +7,9 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher yz, w/o the following boundary exchange
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,dt,dx,dy,dz
+      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -436,9 +436,9 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     first half step only (x^n -> x^{n+1/2}), for testing purposes
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,dt,dx,dy,dz
+      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -550,9 +550,9 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2}), for testing
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,dt,dx,dy,dz
+      use VLA_variables, only: dt,dx,dy,dz
       use PSC_globals
+      use PSC_patch
 
       implicit none
 

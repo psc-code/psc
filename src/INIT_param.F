@@ -42,6 +42,7 @@ c     ----------------------------------------------------------------------
       use VLA_variables
       use PIC_variables
       use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -389,6 +390,7 @@ c i2n=i2x and i3n=i3x: 1D run along x-axis
 
       use VLA_variables
       use PIC_variables
+      use PSC_patch
 
       implicit none
 

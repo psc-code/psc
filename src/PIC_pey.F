@@ -8,6 +8,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       use PIC_variables
       use VLA_variables
+      use PSC_patch
 
       implicit none
       include './mpif.h'

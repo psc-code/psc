@@ -87,12 +87,6 @@ c shift_z: density function shift in dimensionless units
 c xnpe: number of PEs in x-direction
 c ynpe: number of PEs in y-direction
 c znpe: number of PEs in z-direction
-c i1mn: local size of the grid in x on a slave PE
-c i1mx: local size of the grid in x on a slave PE
-c i2mn: local size of the grid in y on a slave PE
-c i2mx: local size of the grid in y on a slave PE
-c i3mn: local size of the grid in z on a slave PE
-c i3mx: local size of the grid in z on a slave PE
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
 c dnprf: time increment for output of fields
@@ -128,9 +122,8 @@ c r3x: max output range along x in grid points
       integer r1n,r1x,r2n,r2x,r3n,r3x
 
       integer xnpe,ynpe,znpe
-      integer i1mn,i1mx,i2mn,i2mx,i3mn,i3mx
       integer npe,mpe
-      integer rd1,rd2,rd3,dnprf,dnprc
+      integer dnprf,dnprc
 
 c data_out: data out directory
 c data_chk: data checkpointing directory
@@ -189,9 +182,6 @@ c boundary_part_z: particle boundary conditions in z
 
 c     ======================================================================
       subroutine PIC_set_variables(
-     *     i1mn_, i2mn_, i3mn_,
-     *     i1mx_, i2mx_, i3mx_,
-     *     rd1_, rd2_, rd3_,
      *     i1n_, i2n_, i3n_,
      *     i1x_, i2x_, i3x_,
      *     dt_, dx_, dy_, dz_,
@@ -203,22 +193,11 @@ c     ======================================================================
 
       implicit none
 
-      integer :: i1mn_, i2mn_, i3mn_, i1mx_, i2mx_, i3mx_
-      integer :: rd1_, rd2_, rd3_
       integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
       integer :: n_
       real(kind=8) :: dt_, dx_, dy_, dz_
       real(kind=8) :: wl_, wp_
 
-      i1mn = i1mn_
-      i2mn = i2mn_
-      i3mn = i3mn_
-      i1mx = i1mx_
-      i2mx = i2mx_
-      i3mx = i3mx_
-      rd1 = rd1_
-      rd2 = rd2_
-      rd3 = rd3_
       i1n = i1n_
       i2n = i2n_
       i3n = i3n_

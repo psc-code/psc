@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
+#define PSC_set_patch_F77 F77_FUNC_(psc_set_patch, PSC_SET_PATCH)
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
@@ -21,7 +22,6 @@
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
-#define SET_subdomain_F77 F77_FUNC_(set_subdomain, SET_SUBDOMAIN)
 #define SET_niloc_F77 F77_FUNC_(set_niloc, SET_NILOC)
 #define GET_niloc_F77 F77_FUNC_(get_niloc, GET_NILOC)
 #define ALLOC_particles_F77 F77_FUNC_(alloc_particles, ALLOC_PARTICLES)
@@ -61,10 +61,9 @@
 
 void PSC_set_globals_F77(f_real *cori, f_real *alpha, f_real *eta);
 
-void PIC_set_variables_F77(f_int *i1mn, f_int *i2mn, f_int *i3mn,
-			   f_int *i1mx, f_int *i2mx, f_int *i3mx,
-			   f_int *rd1, f_int *rd2, f_int *rd3,
-			   f_int *i1n, f_int *i2n, f_int *i3n,
+void PSC_set_patch_F77(f_int *imn, f_int *imx, f_int *rd);
+
+void PIC_set_variables_F77(f_int *i1n, f_int *i2n, f_int *i3n,
 			   f_int *i1x, f_int *i2x, f_int *i3x,
 			   f_real *dt, f_real *dx, f_real *dy, f_real *dz,
 			   f_real *wl, f_real *wp, f_int *n);
@@ -121,9 +120,6 @@ void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void INIT_grid_map_F77(void);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
-void SET_subdomain_F77(f_int *i1mn, f_int *i1mx, f_int *i2mn, f_int *i2mx,
-		       f_int *i3mn, f_int *i3mx, f_int *i1bn, f_int *i2bn,
-		       f_int *i3bn);
 void SET_niloc_F77(f_int *niloc);
 void GET_niloc_F77(f_int *niloc);
 void ALLOC_particles_F77(f_int *n_part);
@@ -187,22 +183,26 @@ PSC_set_globals()
   PSC_set_globals_F77(&p->cori, &p->alpha, &p->eta);
 }
 
+void
+PSC_set_patch(int p)
+{
+  struct psc_patch *patch = &psc.patch[p];
+  int imx[3];
+  for (int d = 0; d < 3; d++) {
+    imx[d] = patch->off[d] + patch->ldims[d] - 1;
+  }
+  PSC_set_patch_F77(patch->off, imx, psc.ibn);
+}
+
 static void
 PIC_set_variables()
 {
-  struct psc_patch *patch = &psc.patch[0];
-  int i0mx = patch->off[0] + patch->ldims[0] - 1;
-  int i1mx = patch->off[1] + patch->ldims[1] - 1;
-  int i2mx = patch->off[2] + patch->ldims[2] - 1;
   int i0x = psc.domain.gdims[0] - 1;
   int i1x = psc.domain.gdims[1] - 1;
   int i2x = psc.domain.gdims[2] - 1;
   int ilo[3] = {};
 
-  PIC_set_variables_F77(&patch->off[0], &patch->off[1], &patch->off[2],
-			&i0mx, &i1mx, &i2mx,
-			&psc.ibn[0], &psc.ibn[1], &psc.ibn[2],
-			&ilo[0], &ilo[1], &ilo[2],
+  PIC_set_variables_F77(&ilo[0], &ilo[1], &ilo[2],
 			&i0x, &i1x, &i2x,
 			&psc.dt, &psc.dx[0], &psc.dx[1], &psc.dx[2],
 			&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
@@ -356,22 +356,6 @@ CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
   SET_param_coeff();
   CALC_densities_F77(&pp->n_part, &pp->particles[-1],
 		     pf->flds[NE], pf->flds[NI], pf->flds[NN]);
-}
-
-void
-SET_subdomain()
-{
-  struct psc_patch *patch = &psc.patch[0];
-  f_int i1mn = patch->off[0];
-  f_int i2mn = patch->off[1];
-  f_int i3mn = patch->off[2];
-  f_int i1mx = patch->off[0] + patch->ldims[0] - 1;
-  f_int i2mx = patch->off[1] + patch->ldims[1] - 1;
-  f_int i3mx = patch->off[2] + patch->ldims[2] - 1;
-  f_int i1bn = psc.ibn[0];
-  f_int i2bn = psc.ibn[1];
-  f_int i3bn = psc.ibn[2];
-  SET_subdomain_F77(&i1mn, &i1mx, &i2mn, &i2mx, &i3mn, &i3mx, &i1bn, &i2bn, &i3bn);
 }
 
 void
@@ -595,8 +579,9 @@ f_real *__f_flds[NR_FIELDS];
 f_real **
 ALLOC_field()
 {
+  assert(psc.nr_patches == 1);
   SET_param_domain();
-  SET_subdomain();
+  PSC_set_patch(0);
   FIELDS_alloc_F77();
   // the callback function below will have magically been called,
   // setting __f_flds

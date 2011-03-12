@@ -35,6 +35,7 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -119,6 +120,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use FIELDS
+      use PSC_patch
 
       implicit none
 

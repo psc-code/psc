@@ -91,6 +91,7 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use OUT_POYN
+      use PSC_patch
 
       implicit none
 

@@ -4,12 +4,13 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       subroutine SERV_write(timestep, niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
+      use VLA_variables, only:
+     *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
 
       use PIC_variables, only: nialloc,nprparti
       use PSC_globals
+      use PSC_patch
 
       implicit none
 

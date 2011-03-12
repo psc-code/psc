@@ -41,6 +41,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -80,6 +81,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -135,6 +137,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -193,6 +196,7 @@ c     ----------------------------------------------------------------------
       use fields
       use PSC_globals
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
       integer :: i1a,i1e,i2a,i2e,i3a,i3e
@@ -785,6 +789,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -846,6 +851,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -905,6 +911,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 

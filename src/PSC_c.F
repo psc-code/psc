@@ -8,6 +8,7 @@ c     wrapper for C to be able to access these parameters
 
       use VLA_variables
       use PIC_variables
+      use PSC_patch
 
       implicit none
 
@@ -63,6 +64,7 @@ c     wrapper for C to be able to set these parameters
 
       use VLA_variables
       use PIC_variables
+      use PSC_patch
 
       implicit none
 
@@ -216,28 +218,4 @@ c     wrapper for C to be able to set these coefficients
       nnp = nnp_
 
       end subroutine SET_param_coeff
-
-c     ----------------------------------------------------------------------
-      subroutine SET_subdomain(i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_,
-     &     i1bn_, i2bn_, i3bn_)
-c     ----------------------------------------------------------------------
-
-      use VLA_variables
-
-      implicit none
-
-      integer :: i1mn_, i1mx_, i2mn_, i2mx_, i3mn_, i3mx_
-      integer :: i1bn_, i2bn_, i3bn_
-
-      i1mn = i1mn_
-      i2mn = i2mn_
-      i3mn = i3mn_
-      i1mx = i1mx_
-      i2mx = i2mx_
-      i3mx = i3mx_
-      rd1 = i1bn_
-      rd2 = i2bn_
-      rd3 = i3bn_
-
-      end subroutine SET_subdomain
 

@@ -443,7 +443,7 @@ void SET_param_pml(void);
 void SET_param_psc(void);
 void SET_param_coeff(void);
 void SET_niloc(int niloc);
-void SET_subdomain(void);
+void PSC_set_patch(int p);
 void GET_param_domain(void);
 void GET_niloc(int *niloc);
 void INIT_param_domain(void);

@@ -50,6 +50,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables
+      use PSC_patch
       use coeff_pml
 
       implicit none
@@ -183,6 +184,7 @@ c     ----------------------------------------------------------------------
 c     deriving pml attenuation coefficients
 
       use VLA_variables
+      use PSC_patch
       use coeff_pml
 
       implicit none

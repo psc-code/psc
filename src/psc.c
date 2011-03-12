@@ -186,7 +186,7 @@ psc_init(const char *case_name)
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);
   SET_param_domain();
-  SET_subdomain();
+  PSC_set_patch(0);
 
   psc_init_particles(particle_label_offset);
   psc_set_from_options();

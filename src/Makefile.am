@@ -8,7 +8,7 @@ AM_CFLAGS = -I$(srcdir)/libmrc/include
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
-	PSC_globals.F PIC_variables.F VLA_variables.F \
+	PSC_globals.F PSC_patch.F PIC_variables.F VLA_variables.F \
 	FIELDS.F \
 	PML.F PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \

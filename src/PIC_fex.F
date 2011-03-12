@@ -10,6 +10,7 @@ c Is called in PIC_msa.f and PIC_msb.f.
       
       use PIC_variables
       use VLA_variables
+      use PSC_patch
       use coeff_pml
 
       implicit none

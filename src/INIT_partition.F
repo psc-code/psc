@@ -8,6 +8,7 @@ c     based upon density from INIT_den()
 
       use PIC_variables
       use VLA_variables
+      use PSC_patch
 
       implicit none
       include './mpif.h'
