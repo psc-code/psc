@@ -5,11 +5,20 @@ c ROUTINE MUST BE SET UP PROPERLY FOR EACH SIMULATION TO TAKE ACCOUNT
 c OF ALL POSSIBLE BINARY COLLISIONS.
 c ====================================================================
 
+      module PIC_bin_collision
+
+      real(kind=8) :: nudt,coll_add,coll_tot
+      real(kind=8), dimension(:,:), allocatable :: nudt_min
+      real(kind=8), dimension(:,:), allocatable :: nudt_max
+      real(kind=8), dimension(:,:), allocatable :: nudt_mean
+      real(kind=8), dimension(:,:), allocatable :: coll_count
+
+      end module PIC_bin_collision
  
+
       subroutine PIC_bin_coll(niloc, p_niloc)
 
-      use PIC_variables, only: coll_count, nudt_min, nudt_max,
-     *     nudt_mean, coll_add, coll_tot, nudt
+      use PIC_bin_collision
       use VLA_variables
       use PSC_globals
 
@@ -556,7 +565,7 @@ C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
 
       subroutine bc(p_niloc, rho,lnL,indl,indm,nu_half)
 
-      use PIC_variables, only: coll_add, nudt
+      use PIC_bin_collision
       use VLA_variables
       use PSC_patch
 

@@ -7,12 +7,6 @@
       real(kind=8), dimension(:), allocatable :: p_c3i
       real(kind=8), dimension(:), allocatable :: p_c4i
 
-      real(kind=8) :: nudt,coll_add,coll_tot
-      real(kind=8), dimension(:,:), allocatable :: nudt_min
-      real(kind=8), dimension(:,:), allocatable :: nudt_max
-      real(kind=8), dimension(:,:), allocatable :: nudt_mean
-      real(kind=8), dimension(:,:), allocatable :: coll_count
-
       integer :: nicell
 
       integer :: nprpartio,nprparti
