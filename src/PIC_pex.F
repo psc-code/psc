@@ -4,11 +4,20 @@ c THE ROUTINE IS CALLED BY PIC_move_part.f PIC_pex.f,
 c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
 !     ------------------------------------------------------------
+      module PIC_pex
+!     ------------------------------------------------------------
+
+      integer :: re1i,re3i
+      real(kind=8), dimension(:), allocatable :: p_re1i
+      real(kind=8), dimension(:), allocatable :: p_re3i
+
+      end module PIC_pex
+
+!     ------------------------------------------------------------
       subroutine PIC_pex_a(niloc, p_niloc, niloc_n)
 !     ------------------------------------------------------------
 
-      use PIC_variables, only: p_e1i, p_e3i, p_re1i, p_re3i, e1i,
-     *     e3i, re1i, re3i
+      use PIC_pex
       use VLA_variables
       use PSC_patch
 
@@ -20,10 +29,12 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       character*(5) :: node
 
-      integer :: lpi
+      integer :: lpi, e1i, e3i
       integer :: nodei,nodej,nodek
       integer :: mtag,status(MPI_STATUS_SIZE)
 
+      real(kind=8), dimension(:), allocatable :: p_e1i
+      real(kind=8), dimension(:), allocatable :: p_e3i
       real(kind=8) :: resti,xs
       real(kind=8) :: xbn,xbx,xpn,xpx
       real(kind=8) :: xi,yi,zi
@@ -516,7 +527,7 @@ c LOCAL PARTICLE ARRAY UPDATE
       subroutine PIC_pex_b(niloc, p_niloc)
 !     ------------------------------------------------------------
 
-      use PIC_variables, only: p_re1i, p_re3i, re1i, re3i
+      use PIC_pex
       use PSC_patch
 
       implicit none

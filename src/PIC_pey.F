@@ -3,13 +3,21 @@ c THIS SUBROUTINE EXCHANGES PARTICLES IN Y-DIRECTION.
 c THE ROUTINE IS CALLED BY PIC_move_part.f. PIC_pex.f, 
 c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
+!     ------------------------------------------------------------
+      module PIC_pey
+!     ------------------------------------------------------------
+
+      integer :: re2i,re4i
+      real(kind=8), dimension(:), allocatable :: p_re2i
+      real(kind=8), dimension(:), allocatable :: p_re4i
+
+      end module PIC_pey
 
 !     ------------------------------------------------------------
       subroutine PIC_pey_a(niloc, p_niloc, niloc_n)
 !     ------------------------------------------------------------
 
-      use PIC_variables, only: p_e2i, p_e4i, re2i, p_re2i, p_re4i,
-     *     e2i, e4i, re4i
+      use PIC_pey
       use VLA_variables
       use PSC_patch
 
@@ -21,10 +29,12 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       character*(5) :: node
 
-      integer :: lpi
+      integer :: lpi, e2i, e4i
       integer :: nodei,nodej,nodek
       integer :: mtag,status(MPI_STATUS_SIZE)
 
+      real(kind=8), dimension(:), allocatable :: p_e2i
+      real(kind=8), dimension(:), allocatable :: p_e4i
       real(kind=8) :: restj,ys
       real(kind=8) :: ybn,ybx,ypn,ypx
       real(kind=8) :: xi,yi,zi
@@ -514,7 +524,7 @@ c LOCAL PARTICLE ARRAY UPDATE
       subroutine PIC_pey_b(niloc, p_niloc)
 !     ------------------------------------------------------------
 
-      use PIC_variables, only: p_re2i, p_re4i, re2i, re4i
+      use PIC_pey
       use PSC_patch
 
       implicit none
