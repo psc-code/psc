@@ -187,7 +187,7 @@ c     wrapper for C to be able to set these parameters
 
 c     wrapper for C to be able to set these coefficients
 
-      subroutine SET_param_coeff(alpha_, beta_, eta_,
+      subroutine SET_param_coeff(beta_,
      *     wl_, ld_, vos_, vt_, wp_, dx_, dt_, np_, nnp_)
 
       use VLA_variables
@@ -200,9 +200,7 @@ c     wrapper for C to be able to set these coefficients
       real(kind=8) :: dx_(3)
       integer :: np_, nnp_
 
-      alpha = alpha_
       beta = beta_
-      eta = eta_
       wl = wl_
       ld = ld_
       vos = vos_

@@ -191,6 +191,7 @@ c     ----------------------------------------------------------------------
       use PIC_variables
       use VLA_variables
       use fields
+      use PSC_globals
       use OUT_FIELDS
 
       implicit none

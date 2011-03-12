@@ -6,7 +6,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables, only: rd1, rd2, rd3, i1mn, i2mn, i3mn,
-     *     i1mx, i2mx, i3mx, alpha, dx, dy, dz, eta
+     *     i1mx, i2mx, i3mx, dx, dy, dz
       use PSC_globals
 
       implicit none

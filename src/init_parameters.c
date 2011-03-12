@@ -386,7 +386,7 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 		       f_int *nmax, f_real *cpum, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
 		       f_real *a0, f_int *nicell);
-void SET_param_coeff_F77(f_real *alpha, f_real *beta, f_real *eta,
+void SET_param_coeff_F77(f_real *beta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
 			 f_real *dx, f_real *dt, f_int *np, f_int *nnp);
 
@@ -449,7 +449,7 @@ void
 SET_param_coeff()
 {
   struct psc_coeff *p = &psc.coeff;
-  SET_param_coeff_F77(&p->alpha, &p->beta, &p->eta,
+  SET_param_coeff_F77(&p->beta,
 		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
 		      psc.dx, &psc.dt, &p->np, &p->nnp);
 }

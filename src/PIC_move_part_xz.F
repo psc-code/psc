@@ -8,7 +8,7 @@ c     ----------------------------------------------------------------------
 c     particle pusher yz, w/o the following boundary exchange
 
       use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
+     *     rd1,rd2,rd3,dt,dx,dy,dz
       use PSC_globals
 
       implicit none

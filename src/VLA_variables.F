@@ -115,7 +115,7 @@ c r3x: max output range along x in grid points
       real(kind=8) qq,mm,tt,cc,eps0,pi
       real(kind=8) ld,wp,vos,vt
       real(kind=8) dt,dx,dy,dz,shift_z
-      real(kind=8) alpha,beta,eta
+      real(kind=8) beta
       real(kind=8) e0,b0,j0,rho0, phi0, a0
       real(kind=8) lengthx,lengthy,lengthz
       real(kind=8) deltax, deltay, deltaz            ! added by ab
@@ -194,7 +194,6 @@ c     ======================================================================
      *     rd1_, rd2_, rd3_,
      *     i1n_, i2n_, i3n_,
      *     i1x_, i2x_, i3x_,
-     *     alpha_, eta_,
      *     dt_, dx_, dy_, dz_,
      *     wl_, wp_, n_)
 c     ======================================================================
@@ -208,7 +207,6 @@ c     ======================================================================
       integer :: rd1_, rd2_, rd3_
       integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
       integer :: n_
-      real(kind=8) :: alpha_, eta_
       real(kind=8) :: dt_, dx_, dy_, dz_
       real(kind=8) :: wl_, wp_
 
@@ -228,8 +226,6 @@ c     ======================================================================
       i2x = i2x_
       i3x = i3x_
       
-      alpha = alpha_
-      eta = eta_
       dt = dt_
       dx = dx_
       dy = dy_

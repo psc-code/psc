@@ -5,6 +5,7 @@
       use PIC_variables
       use VLA_variables
       use out_poyn
+      use PSC_globals
 
       implicit none
       integer tm,time,tstart,tend,tstep
