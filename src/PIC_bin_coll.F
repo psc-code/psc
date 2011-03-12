@@ -6,13 +6,18 @@ c OF ALL POSSIBLE BINARY COLLISIONS.
 c ====================================================================
 
  
-      subroutine PIC_bin_coll
+      subroutine PIC_bin_coll(niloc, p_niloc)
 
-      use PIC_variables
+      use PIC_variables, only: coll_count, nudt_min, nudt_max,
+     *     nudt_mean, coll_add, coll_tot, nudt
       use VLA_variables
       use PSC_globals
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
       integer :: sp,sp1,sp2,spx_nsp
       integer :: intg,limit
       integer :: cnh1,cnh2
@@ -568,13 +573,15 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
 C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
 
 
-      subroutine bc(rho,lnL,indl,indm,nu_half)
+      subroutine bc(p_niloc, rho,lnL,indl,indm,nu_half)
 
-      use PIC_variables
+      use PIC_variables, only: coll_add, nudt
       use VLA_variables
       use PSC_patch
 
       implicit none
+
+      real(kind=8) :: p_niloc(0:*)
 
       integer :: indl,indm,nu_half
 
