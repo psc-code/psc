@@ -9,6 +9,7 @@ c Is called in PIC_msa.f and PIC_msb.f.
       subroutine PIC_fez(fd)
       
       use VLA_variables
+      use PSC_domain
       use PSC_patch
       use coeff_pml
 

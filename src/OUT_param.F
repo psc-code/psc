@@ -8,6 +8,7 @@ c DATA PROTOCOL ROUTINE
       use OUT_fields
       use OUT_poyn
       use PSC_globals
+      use PSC_domain
       use PSC_patch
 
       implicit none

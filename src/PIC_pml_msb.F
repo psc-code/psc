@@ -9,6 +9,7 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
      &     bx, by, bz, jxi, jyi, jzi, eps, mu)
 
       use VLA_variables
+      use PSC_domain
       use PSC_patch
       use coeff_pml
 
