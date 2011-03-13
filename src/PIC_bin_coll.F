@@ -33,7 +33,7 @@ c dnprc: timestep increment for output of collision parameters
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
 
-      integer :: sp,sp1,sp2,spx_nsp
+      integer :: i,j,k,l,sp,sp1,sp2,spx_nsp
       integer :: intg,limit
       integer :: cnh1,cnh2
       integer :: spx_all,NPMAX

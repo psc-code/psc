@@ -21,7 +21,7 @@ c by A.Kemp 11/15/2005
       real(kind=8) :: ekinl,ekinx,dekin
       real(kind=8) :: ikinl,ikinx,dikin
       real(kind=8) :: xne,xni,qni,mni,wni,ux,uy,uz
-      integer      :: bek,ntot
+      integer      :: l,bek,ntot
 
       real(kind=8),allocatable,dimension(:) :: enwe,enwi
 

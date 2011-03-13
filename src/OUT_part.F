@@ -35,7 +35,7 @@ c plix: largest particle number for output
 
       character*5 label,node
 
-      integer :: pli
+      integer :: l,pli
 
       real(kind=4) xq,yq,zq
       real(kind=4) x0,y0,z0,xr,yr,zr,rot

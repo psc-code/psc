@@ -61,7 +61,7 @@ c info: error message from mpi routines
       real(kind=8) deltax, deltay, deltaz            ! added by ab
 
       integer info
-      integer n,i,j,k,l
+      integer n
 
       integer npe,mpe
 
