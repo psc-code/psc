@@ -22,7 +22,6 @@
 #define OUT_field_F77 F77_FUNC(out_field,OUT_FIELD)
 #define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
-#define INIT_grid_map_F77 F77_FUNC(init_grid_map,INIT_GRID_MAP)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
 #define FIELDS_alloc_F77 F77_FUNC_(fields_alloc, FIELDS_ALLOC)
 #define FIELDS_free_F77 F77_FUNC_(fields_free, FIELDS_FREE)
@@ -123,7 +122,6 @@ void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void OUT_field_F77(void);
 void OUT_part_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
-void INIT_grid_map_F77(void);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
 void FIELDS_alloc_F77(void);
@@ -379,7 +377,6 @@ PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
 void
 CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  INIT_grid_map();
   SET_param_coeff();
   CALC_densities_F77(&pp->n_part, &pp->particles[-1],
 		     pf->flds[NE], pf->flds[NI], pf->flds[NN]);
@@ -392,31 +389,20 @@ INIT_basic()
 }
 
 void
-INIT_grid_map()
-{
-  INIT_basic();
-  PSC_set_domain();
-  INIT_grid_map_F77();
-}
-
-void
 PIC_fax(fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
   PIC_fax_F77(pf->flds[m]);
 }
 
 void
 PIC_fay(fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
   PIC_fay_F77(pf->flds[m]);
 }
 
 void
 PIC_faz(fields_fortran_t *pf, int m)
 {
-  INIT_grid_map();
   PIC_faz_F77(pf->flds[m]);
 }
 
@@ -441,7 +427,6 @@ PIC_fez(fields_fortran_t *pf, int m)
 void
 PIC_pex(particles_fortran_t *pp)
 {
-  INIT_grid_map();
   f_int niloc_n;
   PIC_pex_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
   particles_fortran_realloc(pp, niloc_n);
@@ -451,7 +436,6 @@ PIC_pex(particles_fortran_t *pp)
 void
 PIC_pey(particles_fortran_t *pp)
 {
-  INIT_grid_map();
   f_int niloc_n;
   PIC_pey_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
   particles_fortran_realloc(pp, niloc_n);
@@ -461,7 +445,6 @@ PIC_pey(particles_fortran_t *pp)
 void
 PIC_pez(particles_fortran_t *pp)
 {
-  INIT_grid_map();
   f_int niloc_n;
   PIC_pez_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
   particles_fortran_realloc(pp, niloc_n);
@@ -471,7 +454,6 @@ PIC_pez(particles_fortran_t *pp)
 void
 PIC_msa(fields_fortran_t *pf)
 {
-  INIT_grid_map();
   SET_param_coeff();
   PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
@@ -481,7 +463,6 @@ PIC_msa(fields_fortran_t *pf)
 void
 PIC_pml_msa(fields_fortran_t *pf)
 {
-  INIT_grid_map();
   SET_param_coeff();
   PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],

@@ -220,37 +220,3 @@ c shift_z: shifts the density function in the code
 
       end subroutine INIT_param_fortran
 
-c     ----------------------------------------------------------------------
-      subroutine INIT_grid_map
-c     ----------------------------------------------------------------------
-
-      use PSC_domain
-
-      implicit none
-
-      integer :: i1, i2, i3, pec
-
-      if (allocated(seg_i1)) then
-         return
-      endif
-
-      allocate(seg_i1(0:xnpe*ynpe*znpe-1))
-      allocate(seg_i2(0:xnpe*ynpe*znpe-1))
-      allocate(seg_i3(0:xnpe*ynpe*znpe-1))
-      allocate(seg_inv(1:xnpe,1:ynpe,1:znpe))
-
-      do i3=1,znpe
-         do i2=1,ynpe
-            do i1=1,xnpe
-               pec=(i3-1)*xnpe*ynpe+(i2-1)*xnpe+(i1-1)
-               seg_i1(pec)=i1
-               seg_i2(pec)=i2
-               seg_i3(pec)=i3
-               seg_inv(i1,i2,i3)=pec
-            enddo
-         enddo
-      enddo
-
-      end subroutine INIT_grid_map
-
-

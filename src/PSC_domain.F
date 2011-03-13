@@ -70,6 +70,8 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
       integer :: nproc(3), rd(3)
       logical :: use_pml_
+      integer :: i1, i2, i3, pec
+
 
       lengthx=length(1)
       lengthy=length(2)
@@ -107,6 +109,27 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       rd3=rd(3)
 
       use_pml = use_pml_
+
+      if (allocated(seg_i1)) then
+         return
+      endif
+
+      allocate(seg_i1(0:xnpe*ynpe*znpe-1))
+      allocate(seg_i2(0:xnpe*ynpe*znpe-1))
+      allocate(seg_i3(0:xnpe*ynpe*znpe-1))
+      allocate(seg_inv(1:xnpe,1:ynpe,1:znpe))
+
+      do i3=1,znpe
+         do i2=1,ynpe
+            do i1=1,xnpe
+               pec=(i3-1)*xnpe*ynpe+(i2-1)*xnpe+(i1-1)
+               seg_i1(pec)=i1
+               seg_i2(pec)=i2
+               seg_i3(pec)=i3
+               seg_inv(i1,i2,i3)=pec
+            enddo
+         enddo
+      enddo
 
       end subroutine PSC_set_domain
 
