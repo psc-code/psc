@@ -13,14 +13,6 @@
       real(kind=8) poyz1i,poyz1o,poyz2i,poyz2o                 ! ab
       real(kind=8) poyni, poyno                 ! ab
 
-c seg_i1: x-label of distributed data segment
-c seg_i2: y-label of distributed data segment
-c seg_i3: z-label of distributed data segment
-c seg_inv: returns node number after x-, y-label, and z-label input
-
-      integer,allocatable, dimension(:) :: seg_i1,seg_i2,seg_i3
-      integer,allocatable, dimension(:,:,:) :: seg_inv
-
 c nmax: maximum number of time steps 
 c nstart: time step counter for restarting the code
 c shift_c: time step counter for moving the frame in the code
@@ -51,9 +43,6 @@ c cc: light velocity in m/s
 c eps0: eps0 in As/Vm
 c pi: the number pi
 c shift_z: density function shift in dimensionless units
-c xnpe: number of PEs in x-direction
-c ynpe: number of PEs in y-direction
-c znpe: number of PEs in z-direction
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
 c lengthx: x extension of simulation box in m
@@ -76,7 +65,6 @@ c pec: PE counter
       integer i1,i2,i3
       integer n,i,j,k,l
 
-      integer xnpe,ynpe,znpe
       integer npe,mpe
 
 c data_out: data out directory

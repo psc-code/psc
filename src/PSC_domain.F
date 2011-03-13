@@ -29,4 +29,18 @@ c boundary_part_z: particle boundary conditions in z
       integer boundary_fld_z1
       integer boundary_fld_z2
 
+c xnpe: number of PEs in x-direction
+c ynpe: number of PEs in y-direction
+c znpe: number of PEs in z-direction
+
+      integer :: xnpe,ynpe,znpe
+
+c seg_i1: x-label of distributed data segment
+c seg_i2: y-label of distributed data segment
+c seg_i3: z-label of distributed data segment
+c seg_inv: returns node number after x-, y-label, and z-label input
+
+      integer,allocatable, dimension(:) :: seg_i1,seg_i2,seg_i3
+      integer,allocatable, dimension(:,:,:) :: seg_inv
+
       end module PSC_domain
