@@ -4,7 +4,6 @@ c THE UPDATED E AND H-FIELDS ARE AT t=(n+0.5)*dt.
 
       subroutine PIC_msb(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
 
-      use PIC_variables
       use VLA_variables
       use PSC_patch
 

@@ -1,6 +1,5 @@
       subroutine SELECT_tfield_evol
 
-      use PIC_variables
       use VLA_variables
       use PSC_globals
       use PSC_patch

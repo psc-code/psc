@@ -5,7 +5,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       subroutine SERV_read_1(nstart_,niloc_)
 
       use VLA_variables
-      use PIC_variables
+      use OUT_particles
       use PSC_globals
       use PSC_patch
 
@@ -54,7 +54,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,npe
 
-      use PIC_variables, only: nprparti
+      use OUT_particles
       use PSC_patch
 
       implicit none

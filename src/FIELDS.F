@@ -32,7 +32,6 @@ c     ----------------------------------------------------------------------
       subroutine FIELDS_alloc
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
       use VLA_variables
       use FIELDS
       use PSC_patch

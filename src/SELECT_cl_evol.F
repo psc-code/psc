@@ -2,7 +2,6 @@
 
       subroutine SELECT_cl_evol
 
-      use PIC_variables
       use VLA_variables
       use out_poyn
       use PSC_globals

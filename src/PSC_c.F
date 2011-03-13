@@ -7,7 +7,6 @@ c     wrapper for C to be able to set these parameters
      &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
       use VLA_variables
-      use PIC_variables
       use PSC_patch
 
       implicit none
@@ -64,7 +63,6 @@ c     wrapper for C to be able to set these parameters
      *     a0_)
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
 
@@ -98,7 +96,6 @@ c     wrapper for C to be able to set these coefficients
      *     wl_, ld_, vos_, vt_, wp_, np_, nnp_)
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
 

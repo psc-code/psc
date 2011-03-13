@@ -6,7 +6,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
       include 'mpif.h'
@@ -29,7 +28,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables
-      use PIC_variables
       use PSC_globals
       use PSC_patch
 
@@ -189,7 +187,6 @@ c     ----------------------------------------------------------------------
 c     setup processor map
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
 
@@ -230,18 +227,6 @@ c dnprc: timestep increment for output of collision parameters
 
       nprc=0
       dnprc=100
-
-c nprparti: first time step for output of ions
-c dnprparti: timestep increment for output of ions
-c nistep: index increment for ion output
-c plin: smallest particle number for output
-c plix: largest particle number for output
-
-      nprparti=10000
-      dnprparti=1000
-      nistep=1
-      plin=0
-      plix=30000000
 
 c tmnvf: starting time averaging of fields
 c tmxvf: ending time averaging of fields
@@ -295,7 +280,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
 

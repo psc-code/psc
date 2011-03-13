@@ -4,7 +4,7 @@ c DATA PROTOCOL ROUTINE
       subroutine OUT_param
 
       use VLA_variables
-      use PIC_variables
+      use OUT_particles
       use PSC_globals
       use PSC_patch
 

@@ -3,7 +3,7 @@ c PARTICLE OUTPUT!
 
       subroutine OUT_count(niloc, p_niloc)
 
-      use PIC_variables, only: nprparti, dnprparti, nistep
+      use OUT_particles
       use VLA_variables
       use PSC_patch
 

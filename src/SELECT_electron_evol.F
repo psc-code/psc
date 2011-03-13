@@ -1,6 +1,6 @@
       subroutine SELECT_electron_evol
 
-      use PIC_variables
+      use OUT_particles
       use VLA_variables
       use PSC_globals
       use PSC_patch

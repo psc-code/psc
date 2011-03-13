@@ -3,7 +3,6 @@ c Laser pulse initialization (p-polarization).
       function p_pulse_y2(x,y,z,t)
 
       use VLA_variables
-      use PIC_variables
       use PSC_patch
 
       implicit none

@@ -8,7 +8,7 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
      *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
 
-      use PIC_variables, only: nprparti
+      use OUT_particles
       use PSC_globals
       use PSC_patch
 

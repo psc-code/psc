@@ -8,7 +8,7 @@ AM_CFLAGS = -I$(srcdir)/libmrc/include
 noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
-	PSC_globals.F PSC_patch.F PIC_variables.F VLA_variables.F \
+	PSC_globals.F PSC_patch.F VLA_variables.F \
 	FIELDS.F \
 	PML.F PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
@@ -93,11 +93,11 @@ libpsc_a_SOURCES += \
 	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
-VLI_SOURCES = vli_main.c VLA_variables.F PIC_variables.F \
+VLI_SOURCES = vli_main.c VLA_variables.F \
 	OUT_param.F OUT_part.F \
 	OUT_count.F OUT_energy.F
 
-SELECT_SOURCES = VLA_variables.F PIC_variables.F \
+SELECT_SOURCES = VLA_variables.F \
 	SELECT.F SERV_labelgen.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \

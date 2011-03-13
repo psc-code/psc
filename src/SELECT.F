@@ -6,7 +6,6 @@ c OUT-ROUTINES AND MERGES THEM INTO GLOBAL DATA FILES!
       program SELECT
 
       use VLA_variables
-      use PIC_variables
 
       implicit none
       call MPI_INIT(info)

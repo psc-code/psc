@@ -6,7 +6,6 @@ c CAN BE FREELY INTERCHANGED.
 
       subroutine PIC_fay(fd)
 
-      use PIC_variables
       use VLA_variables
       use PSC_patch
 

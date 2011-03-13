@@ -165,7 +165,6 @@ c     ----------------------------------------------------------------------
 c     wrapper for C to be able to set pml parameters
 
       use VLA_variables
-      use PIC_variables
       use coeff_pml
 
       implicit none

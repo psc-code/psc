@@ -1,10 +1,27 @@
+
 c PARTICLE OUTPUT!
+
+      module OUT_particles
+      implicit none
+
+c nprparti: first time step for output of ions
+c dnprparti: timestep increment for output of ions
+c nistep: index increment for ion output
+c plin: smallest particle number for output
+c plix: largest particle number for output
+
+      integer :: nprparti = 10000
+      integer :: dnprparti = 1000
+      integer :: nistep = 1
+      real(kind=8) :: plin = 0, plix = 300000000
+      integer :: nprpartio
+
+      end module OUT_particles
 
 
       subroutine OUT_part(niloc, p_niloc)
 
-      use PIC_variables, only: nprparti, dnprparti, nistep, plin,
-     *     plix
+      use OUT_particles
       use VLA_variables
       use PSC_globals
       use PSC_patch
