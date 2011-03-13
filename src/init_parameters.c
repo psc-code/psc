@@ -258,24 +258,7 @@ init_param_domain_default()
 static void
 init_param_psc_default()
 {
-  INIT_param_psc();
-
-#if 0
-  psc.prm.qq = 1.6021e-19;
-  psc.prm.mm = 9.1091e-31;
-  psc.prm.tt = 1.6021e-16;
-  psc.prm.cc = 3.0e8;
-  psc.prm.eps0 = 8.8542e-12;
-
-  psc.prm.nmax = 0;
-  psc.prm.cpum = 100000.0;
-  psc.prm.lw = 3.2*1.0e-6;
-  psc.prm.i0 = 1.0e21;
-  psc.prm.n0 = 1.0e26;
-  psc.prm.e0 = 0;
-
-  psc.prm.nicell = 200;
-#endif
+  mrc_params_set_default(&psc.prm, psc_param_descr);
 }
 
 static void
@@ -339,9 +322,7 @@ psc_init_param(const char *case_name)
 // ======================================================================
 // Fortran glue
 
-#define INIT_param_psc_F77      F77_FUNC_(init_param_psc, INIT_PARAM_PSC)
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
-#define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
 #define SET_param_coeff_F77     F77_FUNC_(set_param_coeff, SET_PARAM_COEFF)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
@@ -350,10 +331,6 @@ void INIT_param_psc_F77(void);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
 			  f_int *nproc, f_int *nghost, f_int *use_pml);
-void GET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
-		       f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
-		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
-		       f_real *a0);
 void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 		       f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
 		       f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
@@ -379,15 +356,6 @@ SET_param_domain()
 }
 
 void
-GET_param_psc()
-{
-  struct psc_param *p = &psc.prm;
-  GET_param_psc_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
-		    &p->nmax, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
-		    &p->j0, &p->rho0, &p->phi0, &p->a0);
-}
-
-void
 SET_param_psc()
 {
   struct psc_param *p = &psc.prm;
@@ -405,9 +373,3 @@ SET_param_coeff()
 		      &p->np, &p->nnp);
 }
 
-void
-INIT_param_psc()
-{
-  INIT_param_psc_F77();
-  GET_param_psc();
-}

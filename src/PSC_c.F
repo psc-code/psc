@@ -57,41 +57,6 @@ c     wrapper for C to be able to set these parameters
 
       end subroutine SET_param_domain
 
-c     wrapper for C to be able to access these parameters
-
-      subroutine GET_param_psc(qq_, mm_, tt_, cc_, eps0_,
-     *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
-     *     a0_)
-
-      use VLA_variables
-      use PIC_variables
-
-      implicit none
-
-      real(kind=8) :: qq_, mm_, tt_, cc_, eps0_
-      real(kind=8) :: cpum_, lw_
-      real(kind=8) :: i0_, n0_, e0_, b0_, j0_, rho0_, phi0_, a0_
-      integer :: nmax_
-
-      qq_ = qq
-      mm_ = mm
-      tt_ = tt
-      cc_ = cc
-      eps0_ = eps0
-
-      nmax_ = nmax
-      lw_ = lw
-      i0_ = i0
-      n0_ = n0
-      e0_ = e0
-      b0_ = b0
-      j0_ = j0
-      rho0_ = rho0
-      phi0_ = phi0
-      a0_ = a0
-
-      end subroutine GET_param_psc
-
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_psc(qq_, mm_, tt_, cc_, eps0_,

@@ -35,12 +35,6 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
-c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
-c PARAMETERS!
-
-      call INIT_param_psc
-
 c REQUIRED SETTINGS
 c Please do not change
 
@@ -328,38 +322,4 @@ c     ----------------------------------------------------------------------
 
       end subroutine INIT_grid_map
 
-
-c     initialize some parameters
-
-      subroutine INIT_param_psc
-
-      use VLA_variables
-      use PIC_variables
-
-      implicit none
-
-c qq: reference charge in As
-c mm: reference mass in kg
-c tt: reference temperature in J
-c c: light velocity in m/s
-c eps0: eps0 in As/Vm
-
-c nmax: maximum number of time steps
-c lw: laser wavelength in m
-c i0: irradiance in W um**2/m**2
-c n0: peak atom density in m**3
-
-      qq=1.6021e-19
-      mm=9.1091e-31
-      tt=1.6021e-16
-      cc=3.0e8
-      eps0=8.8542e-12
-
-      nmax=100 ! calculate later (or manual control here)
-      lw=3.2*1.0e-6
-      i0=1.0e21          ! modified from 22
-      n0=1.0e26          ! modified from 28
-      e0=0 ! calculate later
-
-      end subroutine INIT_param_psc
 
