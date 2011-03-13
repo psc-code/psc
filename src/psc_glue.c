@@ -5,6 +5,7 @@
 
 #define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
 #define PSC_set_patch_F77 F77_FUNC_(psc_set_patch, PSC_SET_PATCH)
+#define PSC_set_params_F77 F77_FUNC_(psc_set_params, PSC_SET_PARAMS)
 #define PIC_set_variables_F77 F77_FUNC(pic_set_variables,PIC_SET_VARIABLES)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
@@ -60,6 +61,11 @@ void PSC_set_globals_F77(f_real *cori, f_real *alpha, f_real *eta);
 
 void PSC_set_patch_F77(f_int *imn, f_int *imx, f_int *rd,
 		       f_real *dt, f_real *dxyz);
+
+void PSC_set_params_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
+			f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
+			f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
+			f_real *a0);
 
 void PIC_set_variables_F77(f_real *wl, f_real *wp, f_int *n);
 
@@ -191,6 +197,15 @@ static void
 PIC_set_variables()
 {
   PIC_set_variables_F77(&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
+}
+
+void
+PSC_set_params()
+{
+  struct psc_param *p = &psc.prm;
+  PSC_set_params_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
+		     &p->nmax, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
+		     &p->j0, &p->rho0, &p->phi0, &p->a0);
 }
 
 void

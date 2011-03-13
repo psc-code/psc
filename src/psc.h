@@ -439,7 +439,7 @@ void OUT_part(particles_fortran_t *pp);
 void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
 void SET_param_domain(void);
 void SET_param_pml(void);
-void SET_param_psc(void);
+void PSC_set_params(void);
 void SET_param_coeff(void);
 void PSC_set_patch(int p);
 void GET_param_domain(void);
