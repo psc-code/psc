@@ -31,7 +31,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
       character*(5) :: node
 
       integer :: lpi, e1i, e3i
-      integer :: nodei,nodej,nodek
+      integer :: nodei,nodej,nodek,pec
       integer :: mtag,status(MPI_STATUS_SIZE)
 
       real(kind=8), dimension(:), allocatable :: p_e1i

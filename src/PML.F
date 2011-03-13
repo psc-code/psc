@@ -189,6 +189,8 @@ c     deriving pml attenuation coefficients
 
       implicit none
 
+      integer :: i1, i2, i3
+
 ! not moved by half step
       
       ! x

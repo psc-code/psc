@@ -7,7 +7,7 @@
       use PSC_patch
 
       implicit none
-      integer tm,nc
+      integer tm,nc,pec
 
       character*5 label,node
 

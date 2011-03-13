@@ -123,7 +123,7 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
       logical out_fields_present
 
       read(10) out_fields_present
@@ -179,7 +179,7 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
       logical out_fields_present
 
       out_fields_present = allocated(ext)
@@ -237,7 +237,7 @@ c     ----------------------------------------------------------------------
       use PSC_patch
 
       implicit none
-      integer :: i1a,i1e,i2a,i2e,i3a,i3e
+      integer :: i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       character*(5) node,label
 
@@ -865,7 +865,7 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
@@ -925,7 +925,7 @@ c     ----------------------------------------------------------------------
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)

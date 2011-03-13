@@ -11,7 +11,7 @@
 
       implicit none
       integer tm,time,tstart,tend,tstep
-      integer nodei,nodej,nodek
+      integer nodei,nodej,nodek,pec,i1,i2,i3
 
       character*5 label,node
 

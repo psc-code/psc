@@ -26,6 +26,8 @@ c THE UPDATED E AND H-FIELDS ARE AT t=n*dt.
       real(kind=8) :: exh,eyh,ezh,hxh,hyh,hzh
       real(kind=8) :: exk,eyk,ezk,hxk,hyk,hzk
 
+      integer :: i1, i2, i3
+
 c initialization
 
 

@@ -8,7 +8,7 @@
 
       implicit none
       integer :: tm,nc
-      integer :: count_in,count_ou
+      integer :: count_in,count_ou,pec
 
       character*5 label,node
 

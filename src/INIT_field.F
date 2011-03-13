@@ -11,7 +11,7 @@ c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
       use fields
 
       implicit none
-      integer :: l1,l2,l3
+      integer :: i1,i2,i3,l1,l2,l3
 
       real(kind=8) :: h1,h2,h3
       real(kind=8) :: p_pulse_z2

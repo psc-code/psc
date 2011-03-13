@@ -49,7 +49,6 @@ c lengthx: x extension of simulation box in m
 c lengthy: y extension of simulation box in m
 c lengthz: z extension of simulation box in m
 c info: error message from mpi routines
-c pec: PE counter
 ! deltax,y,z: width of pml in dimensionless units
 
       real(kind=8) i0,n0,lw,wl
@@ -61,8 +60,7 @@ c pec: PE counter
       real(kind=8) lengthx,lengthy,lengthz
       real(kind=8) deltax, deltay, deltaz            ! added by ab
 
-      integer info,pec
-      integer i1,i2,i3
+      integer info
       integer n,i,j,k,l
 
       integer npe,mpe

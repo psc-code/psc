@@ -235,9 +235,10 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use PSC_domain
-      use VLA_variables
 
       implicit none
+
+      integer :: i1, i2, i3, pec
 
       if (allocated(seg_i1)) then
          return

@@ -8,7 +8,7 @@
 
       implicit none
       integer tm,index,ic
-      integer :: i1e,i2e,i3e,i1a,i2a,i3a
+      integer :: i1e,i2e,i3e,i1a,i2a,i3a,i1,i2,i3,pec
 
       character*5 label,node
       character(6) fieldname

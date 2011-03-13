@@ -56,6 +56,7 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
       real(kind=8) :: bns,bls,hns,hls    ! added by ab
       real(kind=8) :: dstore,bstore      ! added by ab
 
+      integer :: i1,i2,i3
 
 c initialization
 

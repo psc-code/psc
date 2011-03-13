@@ -13,7 +13,7 @@ c CAN BE FREELY INTERCHANGED.
       implicit none
       include './mpif.h'
 
-      integer rxsize
+      integer rxsize,pec,i1,i2,i3
       integer nodei,nodej,nodek
       integer mtag,status(MPI_STATUS_SIZE)
       

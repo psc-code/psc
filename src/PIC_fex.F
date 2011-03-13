@@ -16,7 +16,7 @@ c Is called in PIC_msa.f and PIC_msb.f.
       implicit none
       include './mpif.h'
 
-      integer nodei,nodej,nodek
+      integer nodei,nodej,nodek,pec,i1,i2,i3
       integer mtag,status(MPI_STATUS_SIZE)
       integer rxsize
       
