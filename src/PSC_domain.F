@@ -5,6 +5,12 @@
       integer :: i1tot,i2tot,i3tot
       integer :: i1n,i1x,i2n,i2x,i3n,i3x
 
+c lengthx: x extension of simulation box in m
+c lengthy: y extension of simulation box in m
+c lengthz: z extension of simulation box in m
+
+      real(kind=8) lengthx,lengthy,lengthz
+
 c boundary_part_x: particle boundary conditions in x
 c boundary_part_y: particle boundary conditions in y
 c boundary_part_z: particle boundary conditions in z

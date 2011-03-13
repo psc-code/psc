@@ -26,6 +26,10 @@ c     ======================================================================
       integer :: pml_ymin,pml_ymax     ! ab
       integer :: pml_zmin,pml_zmax     ! ab
 
+! deltax,y,z: width of pml in dimensionless units
+
+      real(kind=8) deltax, deltay, deltaz            ! added by ab
+
 ! kappax_max, sigmax_max: attenuation coefficients in x direction
 ! kappay_max, sigmay_max: attenuation coefficients in y direction
 ! kappaz_max, sigmaz_max: attenuation coefficients in z direction

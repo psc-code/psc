@@ -32,16 +32,10 @@ c pi: the number pi
 c shift_z: density function shift in dimensionless units
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
-c lengthx: x extension of simulation box in m
-c lengthy: y extension of simulation box in m
-c lengthz: z extension of simulation box in m
 c info: error message from mpi routines
-! deltax,y,z: width of pml in dimensionless units
 
       real(kind=8) pi
       real(kind=8) shift_z
-      real(kind=8) lengthx,lengthy,lengthz
-      real(kind=8) deltax, deltay, deltaz            ! added by ab
 
       integer info
       integer n
