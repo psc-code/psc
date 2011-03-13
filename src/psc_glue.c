@@ -6,6 +6,7 @@
 #define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
 #define PSC_set_patch_F77 F77_FUNC_(psc_set_patch, PSC_SET_PATCH)
 #define PSC_set_params_F77 F77_FUNC_(psc_set_params, PSC_SET_PARAMS)
+#define PSC_set_domain_F77  F77_FUNC_(psc_set_domain, PSC_SET_DOMAIN)
 #define PSC_set_timestep_F77 F77_FUNC(psc_set_timestep, PSC_SET_TIMESTEP)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
@@ -66,6 +67,10 @@ void PSC_set_params_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *
 			f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
 			f_real *e0, f_real *b0, f_real *j0, f_real *rho0, f_real *phi0,
 			f_real *a0);
+
+void PSC_set_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
+			f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
+			f_int *nproc, f_int *nghost, f_int *use_pml);
 
 void PSC_set_timestep_F77(f_int *n);
 
@@ -191,6 +196,22 @@ PSC_set_patch(int p)
     imx[d] = patch->off[d] + patch->ldims[d] - 1;
   }
   PSC_set_patch_F77(patch->off, imx, psc.ibn, &psc.dt, psc.dx);
+}
+
+void
+PSC_set_domain()
+{
+  struct psc_domain *p = &psc.domain;
+  int imax[3], np[3];
+
+  mrc_domain_get_param_int3(psc.mrc_domain, "np", np);
+  for (int d = 0; d < 3; d++) {
+    imax[d] = p->gdims[d] - 1;
+  }
+  int use_pml_ = p->use_pml;
+  int ilo[3] = {};
+  PSC_set_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
+		       p->bnd_part, np, psc.ibn, &use_pml_);
 }
 
 static void
@@ -374,7 +395,7 @@ void
 INIT_grid_map()
 {
   INIT_basic();
-  SET_param_domain();
+  PSC_set_domain();
   INIT_grid_map_F77();
 }
 
@@ -553,7 +574,7 @@ f_real **
 ALLOC_field()
 {
   assert(psc.nr_patches == 1);
-  SET_param_domain();
+  PSC_set_domain();
   PSC_set_patch(0);
   FIELDS_alloc_F77();
   // the callback function below will have magically been called,

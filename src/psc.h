@@ -437,7 +437,7 @@ void PIC_pml_msb(fields_fortran_t *pf);
 void OUT_field(void);
 void OUT_part(particles_fortran_t *pp);
 void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
-void SET_param_domain(void);
+void PSC_set_domain(void);
 void SET_param_pml(void);
 void PSC_set_params(void);
 void SET_param_coeff(void);

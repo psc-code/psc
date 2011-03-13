@@ -211,9 +211,6 @@ c UNDER NORMAL CONDITIONS
 c nstart: time step counter for starting the code
 c shift_c: time step counter for shifting the frame in the code
 c shift_z: shifts the density function in the code
-c cpuinou: WALL CLOCK time required for I/O
-c cpucomp: WALL CLOCK time required for computation
-c cpus: WALL CLOCK time at end time
 
 
       nstart=0

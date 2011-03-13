@@ -322,33 +322,13 @@ psc_init_param(const char *case_name)
 // ======================================================================
 // Fortran glue
 
-#define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
 #define SET_param_coeff_F77     F77_FUNC_(set_param_coeff, SET_PARAM_COEFF)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
 void INIT_param_psc_F77(void);
-void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
-			  f_int *nproc, f_int *nghost, f_int *use_pml);
 void SET_param_coeff_F77(f_real *beta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
 			 f_int *np, f_int *nnp);
-
-void
-SET_param_domain()
-{
-  struct psc_domain *p = &psc.domain;
-  int imax[3], np[3];
-
-  mrc_domain_get_param_int3(psc.mrc_domain, "np", np);
-  for (int d = 0; d < 3; d++) {
-    imax[d] = p->gdims[d] - 1;
-  }
-  int use_pml_ = p->use_pml;
-  int ilo[3] = {};
-  SET_param_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, np, psc.ibn, &use_pml_);
-}
 
 void
 SET_param_coeff()

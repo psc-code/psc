@@ -55,3 +55,58 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       integer,allocatable, dimension(:,:,:) :: seg_inv
 
       end module PSC_domain
+
+      subroutine PSC_set_domain(length, itot, in, ix,
+     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
+
+      use VLA_variables
+      use PSC_domain
+      use PSC_patch
+
+      implicit none
+
+      real(kind=8) :: length(3)
+      integer :: itot(3), in(3), ix(3)
+      integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
+      integer :: nproc(3), rd(3)
+      logical :: use_pml_
+
+      lengthx=length(1)
+      lengthy=length(2)
+      lengthz=length(3)
+
+      i1tot=itot(1)
+      i2tot=itot(2)
+      i3tot=itot(3)
+
+      i1n=in(1)
+      i2n=in(2)
+      i3n=in(3)
+
+      i1x=ix(1)
+      i2x=ix(2)
+      i3x=ix(3)
+
+      xnpe=nproc(1)
+      ynpe=nproc(2)
+      znpe=nproc(3)
+
+      boundary_fld_x1=bnd_fld_lo(1)
+      boundary_fld_y1=bnd_fld_lo(2)
+      boundary_fld_z1=bnd_fld_lo(3)
+      boundary_fld_x2=bnd_fld_hi(1)
+      boundary_fld_y2=bnd_fld_hi(2)
+      boundary_fld_z2=bnd_fld_hi(3)
+
+      boundary_part_x=bnd_part(1)
+      boundary_part_y=bnd_part(2)
+      boundary_part_z=bnd_part(3)
+
+      rd1=rd(1)
+      rd2=rd(2)
+      rd3=rd(3)
+
+      use_pml = use_pml_
+
+      end subroutine PSC_set_domain
+
