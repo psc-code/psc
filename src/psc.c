@@ -185,7 +185,7 @@ psc_init(const char *case_name)
   psc_init_param(case_name);
 
   PSC_set_params();
-  SET_param_coeff();
+  PSC_set_coeff();
   INIT_basic();
   INIT_param_fortran_F77();
 

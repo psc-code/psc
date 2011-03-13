@@ -322,20 +322,7 @@ psc_init_param(const char *case_name)
 // ======================================================================
 // Fortran glue
 
-#define SET_param_coeff_F77     F77_FUNC_(set_param_coeff, SET_PARAM_COEFF)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
 void INIT_param_psc_F77(void);
-void SET_param_coeff_F77(f_real *beta,
-			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
-			 f_int *np, f_int *nnp);
-
-void
-SET_param_coeff()
-{
-  struct psc_coeff *p = &psc.coeff;
-  SET_param_coeff_F77(&p->beta,
-		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
-		      &p->np, &p->nnp);
-}
 

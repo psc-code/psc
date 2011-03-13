@@ -6,7 +6,8 @@
 #define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
 #define PSC_set_patch_F77 F77_FUNC_(psc_set_patch, PSC_SET_PATCH)
 #define PSC_set_params_F77 F77_FUNC_(psc_set_params, PSC_SET_PARAMS)
-#define PSC_set_domain_F77  F77_FUNC_(psc_set_domain, PSC_SET_DOMAIN)
+#define PSC_set_domain_F77 F77_FUNC_(psc_set_domain, PSC_SET_DOMAIN)
+#define PSC_set_coeff_F77 F77_FUNC_(psc_set_coeff, PSC_SET_COEFF)
 #define PSC_set_timestep_F77 F77_FUNC(psc_set_timestep, PSC_SET_TIMESTEP)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
@@ -70,6 +71,10 @@ void PSC_set_params_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *
 void PSC_set_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
 			f_int *nproc, f_int *nghost, f_int *use_pml);
+
+void PSC_set_coeff_F77(f_real *beta,
+		       f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
+		       f_int *np, f_int *nnp);
 
 void PSC_set_timestep_F77(f_int *n);
 
@@ -210,6 +215,15 @@ PSC_set_domain()
   int ilo[3] = {};
   PSC_set_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
 		       p->bnd_part, np, psc.ibn, &use_pml_);
+}
+
+void
+PSC_set_coeff()
+{
+  struct psc_coeff *p = &psc.coeff;
+  PSC_set_coeff_F77(&p->beta,
+		    &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
+		    &p->np, &p->nnp);
 }
 
 static void
@@ -377,7 +391,6 @@ PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
 void
 CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  SET_param_coeff();
   CALC_densities_F77(&pp->n_part, &pp->particles[-1],
 		     pf->flds[NE], pf->flds[NI], pf->flds[NN]);
 }
@@ -454,7 +467,6 @@ PIC_pez(particles_fortran_t *pp)
 void
 PIC_msa(fields_fortran_t *pf)
 {
-  SET_param_coeff();
   PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -463,7 +475,6 @@ PIC_msa(fields_fortran_t *pf)
 void
 PIC_pml_msa(fields_fortran_t *pf)
 {
-  SET_param_coeff();
   PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],

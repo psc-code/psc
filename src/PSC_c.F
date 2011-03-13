@@ -35,30 +35,3 @@ c     wrapper for C to be able to set these parameters
       a0 = a0_
 
       end subroutine SET_param_psc
-
-c     wrapper for C to be able to set these coefficients
-
-      subroutine SET_param_coeff(beta_,
-     *     wl_, ld_, vos_, vt_, wp_, np_, nnp_)
-
-      use PSC_params
-      use VLA_variables
-
-      implicit none
-
-      real(kind=8) :: alpha_, beta_, eta_
-      real(kind=8) :: wl_, ld_, vos_, vt_, wp_
-      integer :: np_, nnp_
-
-      beta = beta_
-      wl = wl_
-      ld = ld_
-      vos = vos_
-      vt = vt_
-      wp = wp_
-
-      np = np_
-      nnp = nnp_
-
-      end subroutine SET_param_coeff
-
