@@ -11,6 +11,15 @@ c     ======================================================================
 
       integer cushion, pml
 
+! checking condition for time dependent pml
+
+      real(kind=8) pos_x1
+      real(kind=8) pos_x2
+      real(kind=8) pos_y1
+      real(kind=8) pos_y2
+      real(kind=8) pos_z1
+      real(kind=8) pos_z2
+
 ! kappax_max, sigmax_max: attenuation coefficients in x direction
 ! kappay_max, sigmay_max: attenuation coefficients in y direction
 ! kappaz_max, sigmaz_max: attenuation coefficients in z direction
@@ -130,6 +139,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use PSC_patch
+      use PSC_domain
       use coeff_pml
 
       implicit none
@@ -159,6 +169,15 @@ c     ----------------------------------------------------------------------
       kappaz_max = 1.34
       sigmaz_max = 13.8*eps0/deltaz
 
+! position condition for time dependent pml
+
+      pos_x1=0.0
+      pos_x2=0.0
+      pos_y1=0.0
+      pos_y2=0.0
+      pos_z1=0.0
+      pos_z2=0.0
+
       end subroutine PML_coeff_init_param
 
 c     ----------------------------------------------------------------------
@@ -166,7 +185,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     wrapper for C to be able to set pml parameters
 
-      use VLA_variables
+      use PSC_domain
       use coeff_pml
 
       implicit none

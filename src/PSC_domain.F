@@ -29,6 +29,11 @@ c boundary_part_z: particle boundary conditions in z
       integer boundary_fld_z1
       integer boundary_fld_z2
 
+! thick: thickness of pml in gridpoints
+! size: thickness of pml and buffer region in gridpoints
+
+      integer thick, size
+
 c xnpe: number of PEs in x-direction
 c ynpe: number of PEs in y-direction
 c znpe: number of PEs in z-direction

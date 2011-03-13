@@ -57,20 +57,6 @@ c data_chk: data checkpointing directory
       character*(20) char
       character*(5) pe
 
-! checking condition for time dependent pml
-
-      real(kind=8) pos_x1
-      real(kind=8) pos_x2
-      real(kind=8) pos_y1
-      real(kind=8) pos_y2
-      real(kind=8) pos_z1
-      real(kind=8) pos_z2
-
-! thick: thickness of pml in gridpoints
-! size: thickness of pml and buffer region in gridpoints
-
-      integer thick, size
-
 ! pmlcheck hacky globals...
 
       integer :: pml_xmin,pml_xmax     ! ab

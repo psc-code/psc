@@ -18,6 +18,8 @@ c Laser pulse initialization (p-polarization).
       use VLA_variables
       use PSC_params
       use PSC_patch
+      use PSC_domain
+      use COEFF_pml
 
       implicit none
       real(kind=8) :: t,x,y,z

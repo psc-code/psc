@@ -32,6 +32,7 @@ c     ----------------------------------------------------------------------
       use PSC_domain
       use PSC_params
       use PSC_patch
+      use COEFF_pml
 
       implicit none
 
@@ -193,15 +194,6 @@ c     setup processor map
       implicit none
 
       if (use_pml) call PML_coeff_init_param
-
-! position condition for time dependent pml
-
-      pos_x1=0.0
-      pos_x2=0.0
-      pos_y1=0.0
-      pos_y2=0.0
-      pos_z1=0.0
-      pos_z2=0.0
 
 
 c I/O CONTROL PARAMETERS
