@@ -23,8 +23,6 @@ c seg_inv: returns node number after x-, y-label, and z-label input
 
 c tmnvp: time step counter for starting time averaging of poynting flux
 c tmxvp: time step counter for ending time averaging of poynting flux
-c tmnvc: time step counter for starting time averaging of particle counting
-c tmxvc: time step counter for ending time averaging of particle counting
 c nmax: maximum number of time steps 
 c nstart: time step counter for restarting the code
 c shift_c: time step counter for moving the frame in the code
@@ -32,9 +30,8 @@ c shift_l: step counter for moving the frame in the code
 c nnp: number of timesteps for one full cycle
 c np:  number of timesteps for time-averaging
 
-      integer nprfo,nprco,nprc
+      integer nprfo,nprco
       integer tmnvpo,tmxvpo,tmnvp,tmxvp
-      integer tmnvco,tmxvco,tmnvc,tmxvc
       integer nmax,nstart,shift_c,shift_l,np,nnp
 
       real(kind=8) fluxi,fluxo
@@ -62,7 +59,6 @@ c ynpe: number of PEs in y-direction
 c znpe: number of PEs in z-direction
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
-c dnprc: time increment for output of collision data
 c lengthx: x extension of simulation box in m
 c lengthy: y extension of simulation box in m
 c lengthz: z extension of simulation box in m
@@ -87,7 +83,6 @@ c pec: PE counter
 
       integer xnpe,ynpe,znpe
       integer npe,mpe
-      integer dnprc
 
 c data_out: data out directory
 c data_chk: data checkpointing directory

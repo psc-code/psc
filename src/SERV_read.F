@@ -7,6 +7,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       use VLA_variables
       use OUT_particles
       use OUT_fields
+      use PIC_bin_collision ! for I/O params
       use PSC_globals
       use PSC_patch
 
@@ -27,7 +28,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       read(10) nprpartio
       read(10) tmnvfo,tmxvfo
       read(10) tmnvpo,tmxvpo
-      read(10) tmnvco,tmxvco
 
       if (nprf.lt.nstart_) nprf=nprfo 
       if (nprc.lt.nstart_) nprc=nprco
@@ -36,8 +36,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       if (tmxvf.lt.tmxvfo) tmxvf=tmxvfo
       if (tmnvp.lt.tmnvpo) tmnvp=tmnvpo
       if (tmxvp.lt.tmxvpo) tmxvp=tmxvpo
-      if (tmnvc.lt.tmnvco) tmnvc=tmnvco
-      if (tmxvc.lt.tmxvco) tmxvc=tmxvco
 
       call OUT_poyn_serv_read
 
@@ -52,10 +50,10 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
       use VLA_variables, only:
-     *     data_chk,mpe,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvp,tmxvp,npe
+     *     data_chk,mpe,shift_c,shift_z,tmnvp,tmxvp,npe
       use OUT_particles
       use OUT_fields
+      use PIC_bin_collision ! for I/O params
       use PSC_patch
 
       implicit none

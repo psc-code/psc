@@ -7,6 +7,12 @@ c ====================================================================
 
       module PIC_bin_collision
 
+c nprc: first time step for output of collision parameters
+c dnprc: timestep increment for output of collision parameters
+
+      integer :: nprc = 0
+      integer :: dnprc = 100
+
       real(kind=8) :: nudt,coll_add,coll_tot
       real(kind=8), dimension(:,:), allocatable :: nudt_min
       real(kind=8), dimension(:,:), allocatable :: nudt_max

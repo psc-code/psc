@@ -204,21 +204,11 @@ c     setup processor map
 
 c I/O CONTROL PARAMETERS
 
-c nprc: first time step for output of collision parameters
-c dnprc: timestep increment for output of collision parameters
-
-      nprc=0
-      dnprc=100
-
 c tmnvp: starting time averaging of poynting flux
 c tmxvp: ending time averaging of poynting flux
-c tmnvc: starting time averaging of counting
-c tmxvc: ending time averaging of counting
 
       tmnvp=0*nnp+1         
       tmxvp=0*nnp+np
-      tmnvc=0*nnp+1         
-      tmxvc=0*nnp+np
 
 c data_out: path of data output directory
 c data_chk: path of checkpointing directory
