@@ -66,19 +66,15 @@ c data_chk: data checkpointing directory
       end module VLA_variables
 
 c     ======================================================================
-      subroutine PIC_set_variables(wl_, wp_, n_)
+      subroutine PSC_set_timestep(n_)
 c     ======================================================================
 
       use VLA_variables, only: n
-      use PSC_params
       implicit none
 
       integer :: n_
-      real(kind=8) :: wl_, wp_
 
-      wl = wl_
-      wp = wp_
       n = n_
 
-      end subroutine PIC_set_variables
+      end subroutine PSC_set_timestep
 
