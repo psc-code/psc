@@ -60,6 +60,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
       use VLA_variables
       use OUT_FIELDS
+      use PSC_domain
       use PSC_patch
 
       implicit none
@@ -232,6 +233,7 @@ c     ----------------------------------------------------------------------
       use fields
       use PSC_globals
       use OUT_FIELDS
+      use PSC_domain
       use PSC_patch
 
       implicit none

@@ -29,6 +29,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables
       use PSC_globals
+      use PSC_domain
       use PSC_patch
 
       implicit none

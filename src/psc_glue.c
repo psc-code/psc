@@ -61,9 +61,7 @@ void PSC_set_globals_F77(f_real *cori, f_real *alpha, f_real *eta);
 void PSC_set_patch_F77(f_int *imn, f_int *imx, f_int *rd,
 		       f_real *dt, f_real *dxyz);
 
-void PIC_set_variables_F77(f_int *i1n, f_int *i2n, f_int *i3n,
-			   f_int *i1x, f_int *i2x, f_int *i3x,
-			   f_real *wl, f_real *wp, f_int *n);
+void PIC_set_variables_F77(f_real *wl, f_real *wp, f_int *n);
 
 void PIC_push_part_xy_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
@@ -192,14 +190,7 @@ PSC_set_patch(int p)
 static void
 PIC_set_variables()
 {
-  int i0x = psc.domain.gdims[0] - 1;
-  int i1x = psc.domain.gdims[1] - 1;
-  int i2x = psc.domain.gdims[2] - 1;
-  int ilo[3] = {};
-
-  PIC_set_variables_F77(&ilo[0], &ilo[1], &ilo[2],
-			&i0x, &i1x, &i2x,
-			&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
+  PIC_set_variables_F77(&psc.coeff.wl, &psc.coeff.wp, &psc.timestep);
 }
 
 void

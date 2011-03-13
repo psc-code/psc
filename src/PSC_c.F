@@ -7,6 +7,7 @@ c     wrapper for C to be able to set these parameters
      &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
       use VLA_variables
+      use PSC_domain
       use PSC_patch
 
       implicit none

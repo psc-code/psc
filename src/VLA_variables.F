@@ -75,8 +75,6 @@ c pec: PE counter
       integer info,pec
       integer i1,i2,i3
       integer n,i,j,k,l
-      integer i1tot,i2tot,i3tot
-      integer i1n,i1x,i2n,i2x,i3n,i3x
 
       integer xnpe,ynpe,znpe
       integer npe,mpe
@@ -137,26 +135,16 @@ c boundary_part_z: particle boundary conditions in z
       end module VLA_variables
 
 c     ======================================================================
-      subroutine PIC_set_variables(
-     *     i1n_, i2n_, i3n_,
-     *     i1x_, i2x_, i3x_,
-     *     wl_, wp_, n_)
+      subroutine PIC_set_variables(wl_, wp_, n_)
 c     ======================================================================
 
       use VLA_variables
+      use PSC_domain
       implicit none
 
-      integer :: i1n_, i2n_, i3n_, i1x_, i2x_, i3x_
       integer :: n_
       real(kind=8) :: wl_, wp_
 
-      i1n = i1n_
-      i2n = i2n_
-      i3n = i3n_
-      i1x = i1x_
-      i2x = i2x_
-      i3x = i3x_
-      
       wl = wl_
       wp = wp_
       n = n_

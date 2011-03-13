@@ -25,6 +25,7 @@ c plix: largest particle number for output
       use OUT_particles
       use VLA_variables
       use PSC_globals
+      use PSC_domain
       use PSC_patch
 
       implicit none

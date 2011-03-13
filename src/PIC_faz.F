@@ -7,6 +7,7 @@ c CAN BE FREELY INTERCHANGED.
       subroutine PIC_faz(fd)
 
       use VLA_variables
+      use PSC_domain
       use PSC_patch
 
       implicit none

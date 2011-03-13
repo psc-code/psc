@@ -19,6 +19,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       use PIC_pex
       use VLA_variables
+      use PSC_domain
       use PSC_patch
 
       implicit none
