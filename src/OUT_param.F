@@ -6,6 +6,7 @@ c DATA PROTOCOL ROUTINE
       use VLA_variables
       use OUT_particles
       use OUT_fields
+      use OUT_poyn
       use PSC_globals
       use PSC_patch
 

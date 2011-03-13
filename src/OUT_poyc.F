@@ -2,9 +2,14 @@
 #include "config.h"
 
 c     ======================================================================
-      module OUT_POYN
+      module OUT_poyn
 c     ======================================================================
       implicit none
+
+c tmnvp: time step counter for starting time averaging of poynting flux
+c tmxvp: time step counter for ending time averaging of poynting flux
+
+      integer :: tmnvpo,tmxvpo,tmnvp,tmxvp
 
       real(kind=8) fluxit,fluxot
       real(kind=8) ent,poxt,poyt,pozt,jet
@@ -21,10 +26,17 @@ c     ----------------------------------------------------------------------
       subroutine OUT_POYN_alloc
 c     ----------------------------------------------------------------------
 
-      use OUT_POYN
+      use OUT_poyn
+      use VLA_variables, only: np, nnp
 
       implicit none
       
+c tmnvp: starting time averaging of poynting flux
+c tmxvp: ending time averaging of poynting flux
+
+      tmnvp=0*nnp+1         
+      tmxvp=0*nnp+np
+
       fluxit=0.0d0
       fluxot=0.0d0
 

@@ -21,8 +21,6 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       integer,allocatable, dimension(:) :: seg_i1,seg_i2,seg_i3
       integer,allocatable, dimension(:,:,:) :: seg_inv
 
-c tmnvp: time step counter for starting time averaging of poynting flux
-c tmxvp: time step counter for ending time averaging of poynting flux
 c nmax: maximum number of time steps 
 c nstart: time step counter for restarting the code
 c shift_c: time step counter for moving the frame in the code
@@ -30,8 +28,7 @@ c shift_l: step counter for moving the frame in the code
 c nnp: number of timesteps for one full cycle
 c np:  number of timesteps for time-averaging
 
-      integer nprfo,nprco
-      integer tmnvpo,tmxvpo,tmnvp,tmxvp
+
       integer nmax,nstart,shift_c,shift_l,np,nnp
 
       real(kind=8) fluxi,fluxo

@@ -204,12 +204,6 @@ c     setup processor map
 
 c I/O CONTROL PARAMETERS
 
-c tmnvp: starting time averaging of poynting flux
-c tmxvp: ending time averaging of poynting flux
-
-      tmnvp=0*nnp+1         
-      tmxvp=0*nnp+np
-
 c data_out: path of data output directory
 c data_chk: path of checkpointing directory
 
