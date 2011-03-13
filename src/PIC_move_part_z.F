@@ -5,8 +5,9 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher z, w/o the following boundary exchange
 
-      use VLA_variables, only: wl,wp,n
+      use VLA_variables, only: n
       use PSC_globals
+      use PSC_params
       use PSC_patch
 
       implicit none

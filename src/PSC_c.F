@@ -63,6 +63,7 @@ c     wrapper for C to be able to set these parameters
      *     nmax_, lw_, i0_, n0_, e0_, b0_, j0_, rho0_, phi0_,
      *     a0_)
 
+      use PSC_params
       use VLA_variables
 
       implicit none
@@ -96,6 +97,7 @@ c     wrapper for C to be able to set these coefficients
       subroutine SET_param_coeff(beta_,
      *     wl_, ld_, vos_, vt_, wp_, np_, nnp_)
 
+      use PSC_params
       use VLA_variables
 
       implicit none

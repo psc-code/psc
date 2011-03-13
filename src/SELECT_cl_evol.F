@@ -6,6 +6,7 @@
       use OUT_fields
       use out_poyn
       use PSC_globals
+      use PSC_params
       use PSC_domain
       use PSC_patch
 

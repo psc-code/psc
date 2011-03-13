@@ -2,6 +2,8 @@
 c     ======================================================================
       module coeff_pml
 c     ======================================================================
+      use PSC_params
+
       implicit none
 
 ! cushion: thickness of buffer between pml region and free space

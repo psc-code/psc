@@ -27,6 +27,7 @@ c dnprc: timestep increment for output of collision parameters
       use PIC_bin_collision
       use VLA_variables
       use PSC_globals
+      use PSC_params
 
       implicit none
 
@@ -573,6 +574,7 @@ C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
 
       use PIC_bin_collision
       use VLA_variables
+      use PSC_params
       use PSC_patch
 
       implicit none

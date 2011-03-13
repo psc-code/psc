@@ -6,6 +6,7 @@ c Beachte: Intensität zurück auf 0.1 setzen !!
       function p_pulse_y1(x,y,z,t)
 
       use VLA_variables
+      use PSC_params
       use PSC_patch
 
       implicit none

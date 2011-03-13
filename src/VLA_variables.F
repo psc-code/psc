@@ -29,18 +29,6 @@ c np:  number of timesteps for time-averaging
       real(kind=8) pox,poy,poz,je
       real(kind=8) p2A,p2B
 
-c i0: irradiance in Wum**2/m**2
-c n0: peak atom density in m**3
-c lw: laser wavelength
-c wl: laser frequency
-c wp: plasma frequency
-c vt: thermal velocity
-c ld: plasma wavelength
-c qq: reference charge in As
-c mm: reference mass in kg
-c tt: atom temperature in J
-c cc: light velocity in m/s
-c eps0: eps0 in As/Vm
 c pi: the number pi
 c shift_z: density function shift in dimensionless units
 c npe: total number of PEs in the partition
@@ -51,12 +39,8 @@ c lengthz: z extension of simulation box in m
 c info: error message from mpi routines
 ! deltax,y,z: width of pml in dimensionless units
 
-      real(kind=8) i0,n0,lw,wl
-      real(kind=8) qq,mm,tt,cc,eps0,pi
-      real(kind=8) ld,wp,vos,vt
+      real(kind=8) pi
       real(kind=8) shift_z
-      real(kind=8) beta
-      real(kind=8) e0,b0,j0,rho0, phi0, a0
       real(kind=8) lengthx,lengthy,lengthz
       real(kind=8) deltax, deltay, deltaz            ! added by ab
 
@@ -100,8 +84,8 @@ c     ======================================================================
       subroutine PIC_set_variables(wl_, wp_, n_)
 c     ======================================================================
 
-      use VLA_variables
-      use PSC_domain
+      use VLA_variables, only: n
+      use PSC_params
       implicit none
 
       integer :: n_
