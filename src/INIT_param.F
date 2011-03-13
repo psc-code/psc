@@ -39,7 +39,6 @@ c THESE PARAMETRES ARE USED FOR DETERMINING GRID SIZE,
 c PARTICLE NUMBER, DATA PARTITIONING, AND PHYSICAL
 c PARAMETERS!
 
-      call INIT_param_domain
       call INIT_param_psc
 
 c REQUIRED SETTINGS
@@ -329,96 +328,6 @@ c     ----------------------------------------------------------------------
 
       end subroutine INIT_grid_map
 
-
-
-c rd1=3: excess data points on local node
-c rd2=3: excess data points on local node
-c rd3=3: excess data points on local node
-
-c lengthx: x extension of simulation box in m
-c lengthy: y extension of simulation box in m
-c lengthz: z extension of simulation box in m
-
-c i1tot: global size of the grid in x
-c i2tot: global size of the grid in y
-c i3tot: global size of the grid in z
-
-c xnpe: number of PEs in x-direction
-c ynpe: number of PEs in y-direction
-c znpe: number of PEs in z-direction
-
-c i1n: smallest grid index of the grid in x
-c i1x: largest grid index of the grid in x
-c i2n: smallest grid index of the grid in y
-c i2x: largest grid index of the grid in y
-c i3n: smallest grid index of the grid in z
-c i3x: largest grid index of the grid in z
-
-c i1n=i1x: 2D run in the yz-plane
-c i2n=i2x: 2D run in the xz-plane
-c i3n=i3x: 2D run in the xy-plane
-
-c i1n=i1x and i2n=i2x: 1D run along z-axis
-c i1n=i1x and i3n=i3x: 1D run along y-axis
-c i2n=i2x and i3n=i3x: 1D run along x-axis
-
-      subroutine INIT_param_domain
-
-      use VLA_variables
-      use PIC_variables
-      use PSC_patch
-
-      implicit none
-
-      use_pml = .false.
-
-      rd1=3
-      rd2=3
-      rd3=3
-
-      lengthx=1.0*1.0e-6
-      lengthy=1.0*1.0e-6
-      lengthz=20.0*1.0e-6
-
-      i1tot=1
-      i2tot=1
-      i3tot=400
-
-      xnpe=1
-      ynpe=1
-      znpe=1
-
-      i1n=0
-      i1x=0
-      i2n=0
-      i2x=0
-      i3n=0
-      i3x=399
-
-      boundary_part_x=1
-      boundary_part_y=1
-      boundary_part_z=1
-
-! PML BOUNDARY CONDITIONS 
-
-! condition = 0 : radiating boundaries
-! condition = 1 : periodic boundaries
-! condition = 2 : upmls
-! condition = 3 : radiating boundaries with upmls at a given time
-
-      boundary_fld_x1 = 1
-      boundary_fld_x2 = 1
-      boundary_fld_y1 = 1
-      boundary_fld_y2 = 1
-      boundary_fld_z1 = 1
-      boundary_fld_z2 = 1
-
-! thick: thickness of pml in grid points
-! cushion: thickness of buffer region in gridpoints
-! size: thickness of pml and buffer region in gridpoints
-! pml: polynomial order of pml
-
-      end subroutine INIT_param_domain
 
 c     initialize some parameters
 

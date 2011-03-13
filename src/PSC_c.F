@@ -1,62 +1,6 @@
 
 #include "config.h"
 
-c     wrapper for C to be able to access these parameters
-
-      subroutine GET_param_domain(length, itot, in, ix,
-     &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
-
-      use VLA_variables
-      use PIC_variables
-      use PSC_patch
-
-      implicit none
-
-      real(kind=8) :: length(3)
-      integer :: itot(3), in(3), ix(3)
-      integer :: bnd_fld_lo(3), bnd_fld_hi(3), bnd_part(3)
-      integer :: nproc(3), rd(3)
-      logical :: use_pml_
-
-      length(1)=lengthx
-      length(2)=lengthy
-      length(3)=lengthz
-
-      itot(1)=i1tot
-      itot(2)=i2tot
-      itot(3)=i3tot
-
-      in(1)=i1n
-      in(2)=i2n
-      in(3)=i3n
-
-      ix(1)=i1x
-      ix(2)=i2x
-      ix(3)=i3x
-
-      nproc(1)=xnpe
-      nproc(2)=ynpe
-      nproc(3)=znpe
-
-      bnd_fld_lo(1)=boundary_fld_x1
-      bnd_fld_lo(2)=boundary_fld_y1
-      bnd_fld_lo(3)=boundary_fld_z1
-      bnd_fld_hi(1)=boundary_fld_x2
-      bnd_fld_hi(2)=boundary_fld_y2
-      bnd_fld_hi(3)=boundary_fld_z2
-
-      bnd_part(1)=boundary_part_x
-      bnd_part(2)=boundary_part_y
-      bnd_part(3)=boundary_part_z
-
-      rd(1)=rd1
-      rd(2)=rd2
-      rd(3)=rd3
-
-      use_pml_ = use_pml
-
-      end subroutine GET_param_domain
-
 c     wrapper for C to be able to set these parameters
 
       subroutine SET_param_domain(length, itot, in, ix,

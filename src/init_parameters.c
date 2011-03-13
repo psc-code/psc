@@ -52,7 +52,7 @@ static struct param psc_domain_descr[] = {
 							  bnd_part_descr) },
   { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
 							  bnd_part_descr) },
-  { "use_pml",        VAR(use_pml)         , PARAM_BOOL(1)        },
+  { "use_pml",        VAR(use_pml)         , PARAM_BOOL(false)    },
   {},
 };
 
@@ -249,32 +249,10 @@ init_case(const char *case_name)
 static void
 init_param_domain_default()
 {
-  INIT_param_domain();
-
-#if 0 // if we ever want to throw out Fortran entirely...
-  psc.domain.nghost[0] = 3;
-  psc.domain.nghost[1] = 3;
-  psc.domain.nghost[2] = 3;
-
-  psc.domain.length[0] = 1.  * 1e-6;
-  psc.domain.length[1] = 1.  * 1e-6;
-  psc.domain.length[2] = 20. * 1e-6;
-
-  psc.domain.nproc[0] = 1;
-  psc.domain.nproc[1] = 1;
-  psc.domain.nproc[2] = 1;
-
-  psc.domain.ihi[0] = 1;
-  psc.domain.ihi[1] = 1;
-  psc.domain.ihi[2] = 400;
-
-  psc.domain.bnd_fld[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
-#endif
+  mrc_params_set_default(&psc.domain, psc_domain_descr);
+  for (int d = 0; d < 3; d++) {
+    psc.ibn[d] = 3;
+  }
 }
 
 static void
@@ -361,20 +339,14 @@ psc_init_param(const char *case_name)
 // ======================================================================
 // Fortran glue
 
-#define INIT_param_domain_F77   F77_FUNC_(init_param_domain, INIT_PARAM_DOMAIN)
 #define INIT_param_psc_F77      F77_FUNC_(init_param_psc, INIT_PARAM_PSC)
-#define GET_param_domain_F77    F77_FUNC_(get_param_domain, GET_PARAM_DOMAIN)
 #define SET_param_domain_F77    F77_FUNC_(set_param_domain, SET_PARAM_DOMAIN)
 #define GET_param_psc_F77       F77_FUNC_(get_param_psc, GET_PARAM_PSC)
 #define SET_param_psc_F77       F77_FUNC_(set_param_psc, SET_PARAM_PSC)
 #define SET_param_coeff_F77     F77_FUNC_(set_param_coeff, SET_PARAM_COEFF)
 #define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
 
-void INIT_param_domain_F77(void);
 void INIT_param_psc_F77(void);
-void GET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
-			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
-			  f_int *nproc, f_int *nghost, f_int *use_pml);
 void SET_param_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			  f_int *bnd_fld_lo, f_int *bnd_fld_hi, f_int *bnd_part,
 			  f_int *nproc, f_int *nghost, f_int *use_pml);
@@ -389,25 +361,6 @@ void SET_param_psc_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *e
 void SET_param_coeff_F77(f_real *beta,
 			 f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
 			 f_int *np, f_int *nnp);
-
-void
-GET_param_domain()
-{
-  struct psc_domain *p = &psc.domain;
-  int imax[3];
-
-  int use_pml_;
-  int ilo[3], itot[3], np[3];
-  GET_param_domain_F77(p->length, itot, ilo, imax,
-		       p->bnd_fld_lo, p->bnd_fld_hi, p->bnd_part, np, psc.ibn,
-		       &use_pml_);
-  assert(ilo[0] == 0 && ilo[1] == 0 && ilo[2] == 0);
-  assert(itot[0] == imax[0] + 1 && itot[1] == imax[1] + 1 && itot[2] == imax[2] + 1);
-  p->use_pml = use_pml_;
-  for (int d = 0; d < 3; d++) {
-    p->gdims[d] = imax[d] + 1;
-  }
-}
 
 void
 SET_param_domain()
@@ -450,13 +403,6 @@ SET_param_coeff()
   SET_param_coeff_F77(&p->beta,
 		      &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
 		      &p->np, &p->nnp);
-}
-
-void
-INIT_param_domain()
-{
-  INIT_param_domain_F77();
-  GET_param_domain();
 }
 
 void
