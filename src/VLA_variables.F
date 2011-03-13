@@ -57,12 +57,6 @@ c data_chk: data checkpointing directory
       character*(20) char
       character*(5) pe
 
-! pmlcheck hacky globals...
-
-      integer :: pml_xmin,pml_xmax     ! ab
-      integer :: pml_ymin,pml_ymax     ! ab
-      integer :: pml_zmin,pml_zmax     ! ab
-
       end module VLA_variables
 
 c     ======================================================================

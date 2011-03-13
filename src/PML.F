@@ -20,6 +20,12 @@ c     ======================================================================
       real(kind=8) pos_z1
       real(kind=8) pos_z2
 
+! pmlcheck hacky globals...
+
+      integer :: pml_xmin,pml_xmax     ! ab
+      integer :: pml_ymin,pml_ymax     ! ab
+      integer :: pml_zmin,pml_zmax     ! ab
+
 ! kappax_max, sigmax_max: attenuation coefficients in x direction
 ! kappay_max, sigmay_max: attenuation coefficients in y direction
 ! kappaz_max, sigmaz_max: attenuation coefficients in z direction
