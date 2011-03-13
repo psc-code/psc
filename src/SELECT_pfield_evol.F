@@ -1,6 +1,7 @@
       subroutine SELECT_pfield_evol
 
       use VLA_variables
+      use OUT_fields
       use PSC_globals
       use PSC_patch
 

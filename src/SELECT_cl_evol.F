@@ -3,6 +3,7 @@
       subroutine SELECT_cl_evol
 
       use VLA_variables
+      use OUT_fields
       use out_poyn
       use PSC_globals
       use PSC_patch

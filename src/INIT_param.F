@@ -204,39 +204,17 @@ c     setup processor map
 
 c I/O CONTROL PARAMETERS
 
-c nprf: first time step for output of fields
-c dnprf: timestep increment for output of fields
-c r1n: min output range along x
-c r1x: max output range along x
-c r2n: min output range along y
-c r2x: max output range along y
-c r3n: min output range along z
-c r3x: max output range along z
-
-      nprf=0
-      dnprf=10                                      ! changed by ab
-      r1n=i1n
-      r1x=i1x
-      r2n=i2n
-      r2x=i2x
-      r3n=i3n
-      r3x=i3x
-
 c nprc: first time step for output of collision parameters
 c dnprc: timestep increment for output of collision parameters
 
       nprc=0
       dnprc=100
 
-c tmnvf: starting time averaging of fields
-c tmxvf: ending time averaging of fields
 c tmnvp: starting time averaging of poynting flux
 c tmxvp: ending time averaging of poynting flux
 c tmnvc: starting time averaging of counting
 c tmxvc: ending time averaging of counting
 
-      tmnvf=0*nnp+1
-      tmxvf=0*nnp+np
       tmnvp=0*nnp+1         
       tmxvp=0*nnp+np
       tmnvc=0*nnp+1         
@@ -264,14 +242,6 @@ c cpus: WALL CLOCK time at end time
       shift_c=0
       shift_l=0
       shift_z=0.0
-
-
-      r1n=max(i1n,r1n)
-      r1x=min(i1x,r1x)
-      r2n=max(i2n,r2n)
-      r2x=min(i2x,r2x)
-      r3n=max(i3n,r3n)
-      r3x=min(i3x,r3x)
 
       end subroutine INIT_param_fortran
 

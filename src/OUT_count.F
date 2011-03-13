@@ -4,6 +4,7 @@ c PARTICLE OUTPUT!
       subroutine OUT_count(niloc, p_niloc)
 
       use OUT_particles
+      use OUT_fields, only: r1n,r1x,r2n,r2x,r3n,r3x
       use VLA_variables
       use PSC_patch
 

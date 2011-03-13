@@ -5,10 +5,10 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
       use VLA_variables, only:
-     *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
-
+     *     data_chk,mpe,nprc,shift_c,shift_z,
+     *     tmnvc,tmxvc,tmnvp,tmxvp
       use OUT_particles
+      use OUT_fields
       use PSC_globals
       use PSC_patch
 

@@ -21,10 +21,6 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       integer,allocatable, dimension(:) :: seg_i1,seg_i2,seg_i3
       integer,allocatable, dimension(:,:,:) :: seg_inv
 
-c nprf: time step counter for data output
-c nprc: time step counter for collision data output
-c tmnvf: time step counter for starting time averaging of fields
-c tmxvf: time step counter for ending time averaging of fields
 c tmnvp: time step counter for starting time averaging of poynting flux
 c tmxvp: time step counter for ending time averaging of poynting flux
 c tmnvc: time step counter for starting time averaging of particle counting
@@ -36,8 +32,7 @@ c shift_l: step counter for moving the frame in the code
 c nnp: number of timesteps for one full cycle
 c np:  number of timesteps for time-averaging
 
-      integer nprfo,nprf,nprco,nprc
-      integer tmnvfo,tmxvfo,tmnvf,tmxvf
+      integer nprfo,nprco,nprc
       integer tmnvpo,tmxvpo,tmnvp,tmxvp
       integer tmnvco,tmxvco,tmnvc,tmxvc
       integer nmax,nstart,shift_c,shift_l,np,nnp
@@ -67,20 +62,12 @@ c ynpe: number of PEs in y-direction
 c znpe: number of PEs in z-direction
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
-c dnprf: time increment for output of fields
 c dnprc: time increment for output of collision data
 c lengthx: x extension of simulation box in m
 c lengthy: y extension of simulation box in m
 c lengthz: z extension of simulation box in m
 c info: error message from mpi routines
 c pec: PE counter
-c r1n: min output range along x in grid points
-c r1x: max output range along x in grid points
-c r2n: min output range along y in grid points
-c r2x: max output range along y in grid points
-c r3n: min output range along x in grid points
-c r3x: max output range along x in grid points
-
 ! deltax,y,z: width of pml in dimensionless units
 
       real(kind=8) i0,n0,lw,wl
@@ -97,11 +84,10 @@ c r3x: max output range along x in grid points
       integer n,i,j,k,l
       integer i1tot,i2tot,i3tot
       integer i1n,i1x,i2n,i2x,i3n,i3x
-      integer r1n,r1x,r2n,r2x,r3n,r3x
 
       integer xnpe,ynpe,znpe
       integer npe,mpe
-      integer dnprf,dnprc
+      integer dnprc
 
 c data_out: data out directory
 c data_chk: data checkpointing directory

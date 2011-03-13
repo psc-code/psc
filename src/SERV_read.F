@@ -6,6 +6,7 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       use VLA_variables
       use OUT_particles
+      use OUT_fields
       use PSC_globals
       use PSC_patch
 
@@ -51,10 +52,10 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
       use VLA_variables, only:
-     *     data_chk,mpe,nprf,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,npe
-
+     *     data_chk,mpe,nprc,shift_c,shift_z,
+     *     tmnvc,tmxvc,tmnvp,tmxvp,npe
       use OUT_particles
+      use OUT_fields
       use PSC_patch
 
       implicit none

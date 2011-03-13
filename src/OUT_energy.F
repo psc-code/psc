@@ -4,6 +4,7 @@ c by A.Kemp 11/15/2005
       subroutine OUT_energy(niloc, p_niloc)
 
       use VLA_variables
+      use OUT_fields
       use PSC_patch
 
       implicit none
