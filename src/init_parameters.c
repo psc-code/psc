@@ -319,10 +319,3 @@ psc_init_param(const char *case_name)
   init_param_coeff();
 }
 
-// ======================================================================
-// Fortran glue
-
-#define C_init_param_F77        F77_FUNC_(c_init_param, C_INIT_PARAM)
-
-void INIT_param_psc_F77(void);
-
