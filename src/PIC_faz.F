@@ -6,7 +6,6 @@ c CAN BE FREELY INTERCHANGED.
 
       subroutine PIC_faz(fd)
 
-      use VLA_variables, only: mpe
       use PSC_domain
       use PSC_patch
 

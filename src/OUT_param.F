@@ -3,7 +3,7 @@ c DATA PROTOCOL ROUTINE
 
       subroutine OUT_param
 
-      use VLA_variables, only: data_chk, data_out, mpe, nnp, np
+      use VLA_variables, only: data_chk, data_out, nnp, np
       use OUT_particles
       use OUT_fields
       use OUT_poyn

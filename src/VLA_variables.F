@@ -28,15 +28,11 @@ c np:  number of timesteps for time-averaging
 
 c pi: the number pi
 c shift_z: density function shift in dimensionless units
-c npe: total number of PEs in the partition
-c mpe: number of the PE the code is running on
 
       real(kind=8) pi
       real(kind=8) shift_z
 
       integer n
-
-      integer npe,mpe
 
 c data_out: data out directory
 c data_chk: data checkpointing directory

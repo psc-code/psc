@@ -7,6 +7,8 @@ c ====================================================================
 
       module PIC_bin_collision
 
+      use PSC_domain, only: mpe
+
 c nprc: first time step for output of collision parameters
 c dnprc: timestep increment for output of collision parameters
 
@@ -25,7 +27,7 @@ c dnprc: timestep increment for output of collision parameters
       subroutine PIC_bin_coll(niloc, p_niloc)
 
       use PIC_bin_collision
-      use VLA_variables, only: data_out, mpe, n
+      use VLA_variables, only: data_out, n
       use PSC_globals
       use PSC_params
 
@@ -573,7 +575,8 @@ C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
       subroutine bc(p_niloc, rho,lnL,indl,indm,nu_half)
 
       use PIC_bin_collision
-      use VLA_variables, only: mpe, npe, pi
+      use VLA_variables, only: pi
+      use PSC_domain, only: npe, mpe
       use PSC_params
       use PSC_patch
 

@@ -47,11 +47,11 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       subroutine SERV_read_2(niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only:
-     *     data_chk,mpe,shift_c,shift_z,npe
+      use VLA_variables, only: data_chk,shift_c,shift_z
       use OUT_particles
       use OUT_fields
       use PIC_bin_collision ! for I/O params
+      use PSC_domain, only: mpe
       use PSC_patch
 
       implicit none

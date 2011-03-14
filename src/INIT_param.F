@@ -5,7 +5,8 @@ c     ----------------------------------------------------------------------
       subroutine INIT_basic
 c     ----------------------------------------------------------------------
 
-      use VLA_variables, only: pi, npe, mpe
+      use VLA_variables, only: pi
+      use PSC_domain, only: npe, mpe
 
       implicit none
       include 'mpif.h'

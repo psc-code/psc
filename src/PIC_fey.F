@@ -8,7 +8,7 @@ c Is called in PIC_msa.f and PIC_msb.f.
 
       subroutine PIC_fey(fd)
       
-      use VLA_variables, only: mpe, n
+      use VLA_variables, only: n
       use PSC_domain
       use PSC_patch
       use coeff_pml

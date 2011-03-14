@@ -44,6 +44,11 @@ c boundary_part_z: particle boundary conditions in z
 
       integer thick, size
 
+c npe: total number of PEs in the partition
+c mpe: number of the PE the code is running on
+
+      integer npe,mpe
+
 c xnpe: number of PEs in x-direction
 c ynpe: number of PEs in y-direction
 c znpe: number of PEs in z-direction

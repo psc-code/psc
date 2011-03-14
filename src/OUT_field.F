@@ -229,7 +229,7 @@ c     ----------------------------------------------------------------------
       subroutine OUT_field
 c     ----------------------------------------------------------------------
 
-      use VLA_variables, only: data_out, mpe, n, np, shift_z
+      use VLA_variables, only: data_out, n, np, shift_z
       use fields
       use OUT_FIELDS
       use PSC_globals

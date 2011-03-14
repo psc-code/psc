@@ -5,7 +5,8 @@ c PARTICLE OUTPUT!
 
       use OUT_particles
       use OUT_fields, only: r1n,r1x,r2n,r2x,r3n,r3x
-      use VLA_variables, only: data_out, mpe, n
+      use VLA_variables, only: data_out, n
+      use PSC_domain, only: mpe
       use PSC_params
       use PSC_patch
 

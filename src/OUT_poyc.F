@@ -97,10 +97,11 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables, only: bx2A, bx2B, by2A, by2B, bz2A, bz2B,
-     *     data_out, mpe, n, np, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
+     *     data_out, n, np, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
      *     fluxi, fluxo, hx2A, hx2B, hy2A, hy2B, hz2A, hz2B,
      *     p2B,pox,poy,poz,poyni,poyno
       use OUT_POYN
+      use PSC_domain
       use PSC_patch
 
       implicit none
