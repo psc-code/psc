@@ -172,7 +172,9 @@ psc_destroy()
 void
 psc_init()
 {
-  psc_init_param();
+  psc_init_param_domain();
+  psc_init_param_psc();
+  psc_init_param_coeff();
 
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);

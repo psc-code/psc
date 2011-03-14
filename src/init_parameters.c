@@ -59,7 +59,7 @@ static struct param psc_domain_descr[] = {
 #undef VAR
 
 void
-init_param_domain()
+psc_init_param_domain()
 {
   struct psc_domain *domain = &psc.domain;
 
@@ -141,7 +141,7 @@ static struct param psc_param_descr[] = {
 #undef VAR
 
 void
-init_param_psc()
+psc_init_param_psc()
 {
   mrc_params_parse_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
 			     MPI_COMM_WORLD);
@@ -219,8 +219,8 @@ psc_init_param_psc_default()
   mrc_params_set_default(&psc.prm, psc_param_descr);
 }
 
-static void
-init_param_coeff()
+void
+psc_init_param_coeff()
 {
   assert(psc.prm.nicell > 0);
   psc.coeff.cori = 1. / psc.prm.nicell;
@@ -262,13 +262,5 @@ init_param_coeff()
   if (psc.prm.nmax == 0) {
     psc.prm.nmax = 30. * psc.coeff.nnp;
   }
-}
-
-void
-psc_init_param()
-{
-  init_param_domain();
-  init_param_psc();
-  init_param_coeff();
 }
 
