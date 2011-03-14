@@ -6,14 +6,14 @@ c CAN BE FREELY INTERCHANGED.
 
       subroutine PIC_fay(fd)
 
-      use VLA_variables, only: info, mpe
+      use VLA_variables, only: mpe
       use PSC_domain
       use PSC_patch
 
       implicit none
       include './mpif.h'
 
-      integer rysize,pec,i1,i2,i3
+      integer rysize,pec,i1,i2,i3,ierr
       integer nodei,nodej,nodek
       integer mtag,status(MPI_STATUS_SIZE)
       
@@ -104,12 +104,12 @@ c*************************************************************************
             enddo
          enddo
          call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodej.and.restj>0.25) then
          pec=seg_inv(nodei,nodej-1,nodek)
          call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
          do i3=i3mn-rd3,i3mx+rd3
             do i2=1,rd2 
                do i1=i1mn-rd1,i1mx+rd1
@@ -130,12 +130,12 @@ c*************************************************************************
             enddo
          enddo
          call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodej.and.restj<0.25) then
          pec=seg_inv(nodei,nodej-1,nodek)
          call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
          do i3=i3mn-rd3,i3mx+rd3
             do i2=1,rd2
                do i1=i1mn-rd1,i1mx+rd1
@@ -161,12 +161,12 @@ c*************************************************************************
                enddo
             enddo
             call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                     pec,mtag,MPI_COMM_WORLD,info)
+     &                     pec,mtag,MPI_COMM_WORLD,ierr)
          endif
          if (1.eq.nodej) then
             pec=seg_inv(nodei,ynpe,nodek)
             call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                    pec,mtag,MPI_COMM_WORLD,status,info)
+     &                    pec,mtag,MPI_COMM_WORLD,status,ierr)
             do i3=i3mn-rd3,i3mx+rd3
                do i2=1,rd2 
                   do i1=i1mn-rd1,i1mx+rd1
@@ -213,12 +213,12 @@ c*************************************************************************
             enddo
          enddo
          call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodej.lt.ynpe.and.restj>0.25) then
          pec=seg_inv(nodei,nodej+1,nodek)
          call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
          do i3=i3mn-rd3,i3mx+rd3
             do i2=1,rd2
                do i1=i1mn-rd1,i1mx+rd1
@@ -239,12 +239,12 @@ c*************************************************************************
             enddo
          enddo
          call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodej.lt.ynpe.and.restj<0.25) then
          pec=seg_inv(nodei,nodej+1,nodek)
          call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
          do i3=i3mn-rd3,i3mx+rd3
             do i2=1,rd2
                do i1=i1mn-rd1,i1mx+rd1
@@ -270,12 +270,12 @@ c*************************************************************************
                enddo
             enddo
             call MPI_SSEND(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                     pec,mtag,MPI_COMM_WORLD,info)
+     &                     pec,mtag,MPI_COMM_WORLD,ierr)
          endif
          if (nodej.eq.ynpe) then
             pec=seg_inv(nodei,1,nodek)
             call MPI_RECV(rimy,rysize,MPI_DOUBLE_PRECISION,
-     &                    pec,mtag,MPI_COMM_WORLD,status,info)
+     &                    pec,mtag,MPI_COMM_WORLD,status,ierr)
             do i3=i3mn-rd3,i3mx+rd3
                do i2=1,rd2
                   do i1=i1mn-rd1,i1mx+rd1

@@ -32,12 +32,10 @@ c pi: the number pi
 c shift_z: density function shift in dimensionless units
 c npe: total number of PEs in the partition
 c mpe: number of the PE the code is running on
-c info: error message from mpi routines
 
       real(kind=8) pi
       real(kind=8) shift_z
 
-      integer info
       integer n
 
       integer npe,mpe

@@ -3,7 +3,7 @@ c by A.Kemp 11/15/2005
 
       subroutine OUT_energy(niloc, p_niloc)
 
-      use VLA_variables, only: data_out, info, mpe, n
+      use VLA_variables, only: data_out, mpe, n
       use OUT_fields
       use PSC_params
       use PSC_patch
@@ -22,7 +22,7 @@ c by A.Kemp 11/15/2005
       real(kind=8) :: ekinl,ekinx,dekin
       real(kind=8) :: ikinl,ikinx,dikin
       real(kind=8) :: xne,xni,qni,mni,wni,ux,uy,uz
-      integer      :: l,bek,ntot
+      integer      :: l,bek,ntot,ierr
 
       real(kind=8),allocatable,dimension(:) :: enwe,enwi
 
@@ -70,12 +70,12 @@ c by A.Kemp 11/15/2005
                  ntot=ntot+1
               else 
                  write(*,*) 'bek out of range'
-                 call MPI_FINALIZE(info)
+                 call MPI_FINALIZE(ierr)
                  stop
               endif
            else
               write(*,*) 'ekin out of range', ekin
-              call MPI_FINALIZE(info)
+              call MPI_FINALIZE(ierr)
               stop
            endif
 
@@ -90,12 +90,12 @@ c by A.Kemp 11/15/2005
                  enwi(bek)=enwi(bek)+1 
               else 
                  write(*,*) 'bek-i out of range'
-                 call MPI_FINALIZE(info)
+                 call MPI_FINALIZE(ierr)
                  stop
               endif
            else
               write(*,*) 'ekin-i out of range', ekin
-              call MPI_FINALIZE(info)
+              call MPI_FINALIZE(ierr)
               stop
            endif
  	endif

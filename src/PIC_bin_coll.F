@@ -25,7 +25,7 @@ c dnprc: timestep increment for output of collision parameters
       subroutine PIC_bin_coll(niloc, p_niloc)
 
       use PIC_bin_collision
-      use VLA_variables, only: data_out, info, mpe, n
+      use VLA_variables, only: data_out, mpe, n
       use PSC_globals
       use PSC_params
 
@@ -34,7 +34,7 @@ c dnprc: timestep increment for output of collision parameters
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
 
-      integer :: i,j,k,l,sp,sp1,sp2,spx_nsp
+      integer :: i,j,k,l,sp,sp1,sp2,spx_nsp,ierr
       integer :: intg,limit
       integer :: cnh1,cnh2
       integer :: spx_all,NPMAX
@@ -90,7 +90,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -103,7 +103,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -116,7 +116,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -129,7 +129,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -142,7 +142,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -155,7 +155,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -168,7 +168,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -181,7 +181,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 

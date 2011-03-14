@@ -18,7 +18,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 !     ------------------------------------------------------------
 
       use PIC_pez
-      use VLA_variables
+      use VLA_variables, only: mpe
       use PSC_domain
       use PSC_patch
 
@@ -30,7 +30,7 @@ c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
       character*(5) :: node
 
-      integer :: l, lpi, e5i, e6i
+      integer :: ierr, l, lpi, e5i, e6i
       integer :: nodei,nodej,nodek,pec
       integer :: mtag,status(MPI_STATUS_SIZE)
 
@@ -220,23 +220,23 @@ C ARRAY DIMENSION EXCHANGE
       if (nodek.lt.znpe.and.restk<0.25) then               ! UPDATING e6
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_SSEND(e5i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodek.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_RECV(re6i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (nodek.lt.znpe.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_SSEND(e5i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodek.and.restk<0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_RECV(re6i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -245,12 +245,12 @@ C ARRAY DIMENSION EXCHANGE
             if (nodek.eq.znpe) then
                pec=seg_inv(nodei,nodej,1)
                call MPI_SSEND(e5i,1,MPI_INTEGER,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (1.eq.nodek) then
                pec=seg_inv(nodei,nodej,znpe)
                call MPI_RECV(re6i,1,MPI_INTEGER,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
             endif
          else
             re6i=e5i
@@ -261,23 +261,23 @@ C ARRAY DIMENSION EXCHANGE
       if (1.lt.nodek.and.restk<0.25) then               ! UPDATING e5
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_SSEND(e6i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodek.lt.znpe.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_RECV(re5i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (1.lt.nodek.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_SSEND(e6i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodek.lt.znpe.and.restk<0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_RECV(re5i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -286,12 +286,12 @@ C ARRAY DIMENSION EXCHANGE
             if (1.eq.nodek) then
                pec=seg_inv(nodei,nodej,znpe)
                call MPI_SSEND(e6i,1,MPI_INTEGER,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (nodek.eq.znpe) then
                pec=seg_inv(nodei,nodej,1)
                call MPI_RECV(re5i,1,MPI_INTEGER,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
             endif
          else
             re5i=e6i
@@ -314,23 +314,23 @@ c      zs=(i3x-i3n)*dz
       if (nodek.lt.znpe.and.restk<0.25) then               ! UPDATING e6
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_SSEND(p_e5i,11*e5i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodek.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_RECV(p_re6i,11*re6i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (nodek.lt.znpe.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_SSEND(p_e5i,11*e5i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodek.and.restk<0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_RECV(p_re6i,11*re6i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -339,12 +339,12 @@ c      zs=(i3x-i3n)*dz
             if (nodek.eq.znpe) then
                pec=seg_inv(nodei,nodej,1)
                call MPI_SSEND(p_e5i,11*e5i+11,MPI_DOUBLE_PRECISION,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (1.eq.nodek) then
                pec=seg_inv(nodei,nodej,znpe)
                call MPI_RECV(p_re6i,11*re6i+11,MPI_DOUBLE_PRECISION,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
                do l=1,re6i
                   p_re6i(11*l+2)=p_re6i(11*l+2)-zs
                enddo
@@ -407,23 +407,23 @@ c      zs=(i3x-i3n)*dz
       if (1.lt.nodek.and.restk<0.25) then               ! UPDATING e5
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_SSEND(p_e6i,11*e6i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodek.lt.znpe.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_RECV(p_re5i,11*re5i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (1.lt.nodek.and.restk>0.25) then
          pec=seg_inv(nodei,nodej,nodek-1)
          call MPI_SSEND(p_e6i,11*e6i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodek.lt.znpe.and.restk<0.25) then
          pec=seg_inv(nodei,nodej,nodek+1)
          call MPI_RECV(p_re5i,11*re5i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -432,12 +432,12 @@ c      zs=(i3x-i3n)*dz
             if (1.eq.nodek) then
                pec=seg_inv(nodei,nodej,znpe)
                call MPI_SSEND(p_e6i,11*e6i+11,MPI_DOUBLE_PRECISION,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (nodek.eq.znpe) then
                pec=seg_inv(nodei,nodej,1)
                call MPI_RECV(p_re5i,11*re5i+11,MPI_DOUBLE_PRECISION,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
                do l=1,re5i
                   p_re5i(11*l+2)=p_re5i(11*l+2)+zs
                enddo
