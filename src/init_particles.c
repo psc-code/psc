@@ -11,11 +11,6 @@
 
 static inline int
 get_n_in_cell(struct psc *psc, real n)
-static struct param seed_by_time_descr[] = {
-  { "seed_by_time"          , 0       , PARAM_BOOL(false)   },
-  {},
-};
-
 {
   if (psc->prm.const_num_particles_per_cell) {
     return psc->prm.nicell;
@@ -105,12 +100,7 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  // if seed_by_time is set, different random numbers are generated in each run. 
-  bool seed_by_time;
-  mrc_params_parse(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
-  mrc_params_print(&seed_by_time, seed_by_time_descr, "seed by time", MPI_COMM_WORLD);
-  
-  if (seed_by_time) {
+  if (_case->seed_by_time) {
     srandom(10*rank + time(NULL));
   } else {
     srandom(rank);

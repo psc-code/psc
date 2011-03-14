@@ -130,10 +130,18 @@ psc_case_init()
 // ======================================================================
 // psc_case class
 
+#define VAR(x) (void *)offsetof(struct psc_case, x)
+static struct param psc_case_descr[] = {
+  { "seed_by_time"          , VAR(seed_by_time)     , PARAM_BOOL(false)   },
+  {},
+};
+#undef VAR
+
 struct mrc_class_psc_case mrc_class_psc_case = {
   .name             = "psc_case",
   .size             = sizeof(struct psc_case),
   .init             = psc_case_init,
+  .param_descr      = psc_case_descr,
   .create           = _psc_case_create,
   .set_from_options = _psc_case_set_from_options,
   .setup            = _psc_case_setup,
