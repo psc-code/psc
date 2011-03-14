@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -18,6 +19,8 @@
 // AA = perturbation (units of B * de)
 
 // FIXME (description), below parameters don't include scaling factors
+
+#define to_harris(_case) ((struct harris *)(_case)->obj.subctx)
 
 struct harris {
   double BB;
@@ -47,9 +50,9 @@ static struct param harris_descr[] = {
 #undef VAR
 
 static void
-harris_init_param(struct psc_case *Case)
+_psc_case_harris_set_from_options(struct _psc_case *_case)
 {
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
   psc.prm.qq = 1.;
   psc.prm.mm = 1.;
@@ -87,9 +90,9 @@ harris_init_param(struct psc_case *Case)
 }
 
 static void
-harris_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_harris_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -122,10 +125,10 @@ harris_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-harris_init_npt(struct psc_case *Case, int kind, double x[3],
-		struct psc_particle_npt *npt)
+_psc_case_harris_init_npt(struct _psc_case *_case, int kind, double x[3],
+			  struct psc_particle_npt *npt)
 {
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -161,13 +164,13 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_harris = {
-  .name       = "harris",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = harris_init_param,
-  .init_field = harris_init_field,
-  .init_npt   = harris_init_npt,
+struct _psc_case_ops _psc_case_harris_ops = {
+  .name             = "harris",
+  .size             = sizeof(struct harris),
+  .param_descr      = harris_descr,
+  .set_from_options = _psc_case_harris_set_from_options,
+  .init_field       = _psc_case_harris_init_field,
+  .init_npt         = _psc_case_harris_init_npt,
 };
 
 // ----------------------------------------------------------------------
@@ -176,9 +179,9 @@ struct psc_case_ops psc_case_ops_harris = {
 // basically the same as harris
 
 static void
-test_xz_init_param(struct psc_case *Case)
+_psc_case_test_xz_set_from_options(struct _psc_case *_case)
 {
-  harris_init_param(Case);
+  _psc_case_harris_set_from_options(_case);
   
   psc.prm.nicell = 100;
 
@@ -188,13 +191,13 @@ test_xz_init_param(struct psc_case *Case)
   
 }
 
-struct psc_case_ops psc_case_ops_test_xz = {
-  .name       = "test_xz",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = test_xz_init_param,
-  .init_field = harris_init_field,
-  .init_npt   = harris_init_npt,
+struct _psc_case_ops _psc_case_test_xz_ops = {
+  .name             = "test_xz",
+  .size             = sizeof(struct harris),
+  .param_descr      = harris_descr,
+  .set_from_options = _psc_case_test_xz_set_from_options,
+  .init_field       = _psc_case_harris_init_field,
+  .init_npt         = _psc_case_harris_init_npt,
 };
 
 // ----------------------------------------------------------------------
@@ -203,12 +206,12 @@ struct psc_case_ops psc_case_ops_test_xz = {
 // basically the same as harris, but with different coordinates
 
 static void
-test_yz_init_param(struct psc_case *Case)
+_psc_case_test_yz_set_from_options(struct _psc_case *_case)
 {
-  harris_init_param(Case);
-  
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
+  _psc_case_harris_set_from_options(_case);
+  
   psc.prm.nicell = 100;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
@@ -219,13 +222,12 @@ test_yz_init_param(struct psc_case *Case)
   psc.domain.gdims[0] = 1;
   psc.domain.gdims[1] = 64;
   psc.domain.gdims[2] = 64;
-  
 }
 
 static void
-test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_test_yz_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -258,10 +260,10 @@ test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
-		 struct psc_particle_npt *npt)
+_psc_case_test_yz_init_npt(struct _psc_case *_case, int kind, double x[3],
+			   struct psc_particle_npt *npt)
 {
-  struct harris *harris = Case->ctx;
+  struct harris *harris = to_harris(_case);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -297,11 +299,12 @@ test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_test_yz = {
-  .name       = "test_yz",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = test_yz_init_param,
-  .init_field = test_yz_init_field,
-  .init_npt   = test_yz_init_npt,
+struct _psc_case_ops _psc_case_test_yz_ops = {
+  .name                  = "test_yz",
+  .size                  = sizeof(struct harris),
+  .param_descr           = harris_descr,
+  .set_from_options      = _psc_case_test_yz_set_from_options,
+  .init_field            = _psc_case_test_yz_init_field,
+  .init_npt              = _psc_case_test_yz_init_npt,
 };
+

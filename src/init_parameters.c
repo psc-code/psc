@@ -233,11 +233,8 @@ static struct psc_case_ops *psc_case_ops_list[] = {
   &psc_case_ops_foils,
   &psc_case_ops_curvedfoil,
   &psc_case_ops_singlepart,
-  &psc_case_ops_harris,
   &psc_case_ops_harris_xy,
   &psc_case_ops_collisions,
-  &psc_case_ops_test_xz,
-  &psc_case_ops_test_yz,
   &psc_case_ops_cone,	
   NULL,
 };

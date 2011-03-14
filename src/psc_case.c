@@ -62,7 +62,10 @@ void
 _psc_case_init_npt(struct _psc_case *_case, int kind, double x[3],
 		   struct psc_particle_npt *npt)
 {
-  _case->Case->ops->init_npt(_psc_case->Case, kind, x, npt);
+  if (!_psc_case_ops(_case)->init_npt)
+    return;
+
+  _psc_case_ops(_case)->init_npt(_case, kind, x, npt);
 }
 
 // ----------------------------------------------------------------------
@@ -71,7 +74,10 @@ _psc_case_init_npt(struct _psc_case *_case, int kind, double x[3],
 void
 _psc_case_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
-  _case->Case->ops->init_field(_case->Case, flds);
+  if (!_psc_case_ops(_case)->init_field)
+    return;
+
+  _psc_case_ops(_case)->init_field(_case, flds);
 }
 
 // ======================================================================
@@ -82,7 +88,7 @@ static struct _psc_case_ops _psc_case_default_ops = {
 };
 
 static void
-_psc_case_create_sub(struct _psc_case *_case)
+_psc_case_sub_create(struct _psc_case *_case)
 {
   _case->Case = psc_case_create(_case->obj.ops->name);
   if (_case->Case->ops->create) {
@@ -109,29 +115,24 @@ _psc_case_sub_set_from_options(struct _psc_case *_case)
 }
 
 static void
-_psc_case_sub_setup(struct _psc_case *_case)
+_psc_case_sub_init_npt(struct _psc_case *_case, int kind, double x[3],
+		       struct psc_particle_npt *npt)
 {
+  _case->Case->ops->init_npt(_case->Case, kind, x, npt);
 }
 
-static struct _psc_case_ops _psc_case_test_yz_ops = {
-  .name                  = "test_yz",
-  .create                = _psc_case_create_sub,
-  .set_from_options      = _psc_case_sub_set_from_options,
-  .setup                 = _psc_case_sub_setup,
-};
-
-static struct _psc_case_ops _psc_case_test_xz_ops = {
-  .name                  = "test_xz",
-  .create                = _psc_case_create_sub,
-  .set_from_options      = _psc_case_sub_set_from_options,
-  .setup                 = _psc_case_sub_setup,
-};
+static void
+_psc_case_sub_init_field(struct _psc_case *_case, mfields_base_t *flds)
+{
+  _case->Case->ops->init_field(_case->Case, flds);
+}
 
 static struct _psc_case_ops _psc_case_harris_xy_ops = {
   .name                  = "harris_xy",
-  .create                = _psc_case_create_sub,
+  .create                = _psc_case_sub_create,
   .set_from_options      = _psc_case_sub_set_from_options,
-  .setup                 = _psc_case_sub_setup,
+  .init_npt              = _psc_case_sub_init_npt,
+  .init_field            = _psc_case_sub_init_field,
 };
 
 static void
@@ -140,6 +141,7 @@ _psc_case_init()
   mrc_class_register_subclass(&mrc_class__psc_case, &_psc_case_default_ops);
   mrc_class_register_subclass(&mrc_class__psc_case, &_psc_case_test_yz_ops);
   mrc_class_register_subclass(&mrc_class__psc_case, &_psc_case_test_xz_ops);
+  mrc_class_register_subclass(&mrc_class__psc_case, &_psc_case_harris_ops);
   mrc_class_register_subclass(&mrc_class__psc_case, &_psc_case_harris_xy_ops);
 }
 

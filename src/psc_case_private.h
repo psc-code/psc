@@ -11,7 +11,14 @@ struct _psc_case {
 
 struct _psc_case_ops {
   MRC_SUBCLASS_OPS(struct _psc_case);
+  void (*init_npt)(struct _psc_case *_case, int kind, double x[3],
+		   struct psc_particle_npt *npt);
+  void (*init_field)(struct _psc_case *_case, mfields_base_t *flds);
 };
+
+extern struct _psc_case_ops _psc_case_harris_ops;
+extern struct _psc_case_ops _psc_case_test_xz_ops;
+extern struct _psc_case_ops _psc_case_test_yz_ops;
 
 // ======================================================================
 
