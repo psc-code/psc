@@ -230,4 +230,6 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
 void __mrc_class_register_subclass(struct mrc_class *class,
 				   struct mrc_obj_ops *ops);
 
+#define mrc_to_subobj(o, subobj_type) ((subobj_type *)((o)->obj.subctx))
+
 #endif
