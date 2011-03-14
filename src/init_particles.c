@@ -1,4 +1,5 @@
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -48,7 +49,7 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 void
 psc_init_partition(int *particle_label_offset)
 {
-  assert(psc.Case);
+  assert(_psc_case->Case);
 
   MPI_Comm comm = MPI_COMM_WORLD;
 
@@ -129,7 +130,7 @@ psc_init_partition(int *particle_label_offset)
     pml_find_bounds(p, ilo, ihi);
 
     int np = 0;
-    if (psc.Case->ops->init_npt) {
+    if (_psc_case->Case->ops->init_npt) {
       for (int kind = 0; kind < 2; kind++) {
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -137,7 +138,7 @@ psc_init_partition(int *particle_label_offset)
 	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
-	      psc_case_init_npt(psc.Case, kind, xx, &npt);
+	      psc_case_init_npt(_psc_case->Case, kind, xx, &npt);
 	      
 	      int n_in_cell = get_n_in_cell(npt.n);
 	      np += n_in_cell;
@@ -181,7 +182,7 @@ psc_init_particles(int particle_label_offset)
     particles_base_t *pp = &psc.particles.p[p];
 
     int i = 0;
-    if (psc.Case->ops->init_npt) {
+    if (_psc_case->Case->ops->init_npt) {
       for (int kind = 0; kind < 2; kind++) {
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
@@ -189,7 +190,7 @@ psc_init_particles(int particle_label_offset)
 	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
-	      psc_case_init_npt(psc.Case, kind, xx, &npt);
+	      psc_case_init_npt(_psc_case->Case, kind, xx, &npt);
 	      
 	      int n_in_cell = get_n_in_cell(npt.n);
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {

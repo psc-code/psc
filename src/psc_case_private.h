@@ -6,6 +6,7 @@
 
 struct _psc_case {
   struct mrc_obj obj;
+  struct psc_case *Case;
 };
 
 // ======================================================================

@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 
 #include <string.h>
 
@@ -23,8 +24,8 @@ psc_init_field_pml(mfields_base_t *flds)
 void
 psc_init_field(mfields_base_t *flds)
 {
-  if (psc.Case) {
-    psc_case_init_field(psc.Case, flds);
+  if (_psc_case->Case) {
+    psc_case_init_field(_psc_case->Case, flds);
     if (psc.domain.use_pml) {
       psc_init_field_pml(flds);
     }

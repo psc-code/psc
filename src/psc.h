@@ -283,7 +283,6 @@ struct psc {
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
   struct psc_pulse *pulse_s_z2;
-  struct psc_case *Case;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_coeff coeff;

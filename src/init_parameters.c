@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -238,7 +239,7 @@ init_case(const char *case_name)
   mrc_params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
 
   if (par.case_name) {
-    psc.Case = psc_case_create(par.case_name);
+    _psc_case->Case = psc_case_create(par.case_name);
   }
 }
 
@@ -309,8 +310,8 @@ psc_init_param(const char *case_name)
   init_case(case_name);
   init_param_domain_default();
   init_param_psc_default();
-  if (psc.Case) {
-    psc_case_init_param(psc.Case);
+  if (_psc_case->Case) {
+    psc_case_init_param(_psc_case->Case);
   }
   init_param_domain();
   init_param_psc();
