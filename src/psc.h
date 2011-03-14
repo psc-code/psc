@@ -412,19 +412,6 @@ extern struct psc_ops psc_ops_none;
 extern struct psc_moment_ops psc_moment_ops_fortran;
 extern struct psc_moment_ops psc_moment_ops_c;
 
-extern struct psc_case_ops psc_case_ops_langmuir;
-extern struct psc_case_ops psc_case_ops_wakefield;
-extern struct psc_case_ops psc_case_ops_thinfoil;
-extern struct psc_case_ops psc_case_ops_foils;
-extern struct psc_case_ops psc_case_ops_curvedfoil;
-extern struct psc_case_ops psc_case_ops_singlepart;
-extern struct psc_case_ops psc_case_ops_harris;
-extern struct psc_case_ops psc_case_ops_harris_xy;
-extern struct psc_case_ops psc_case_ops_collisions;
-extern struct psc_case_ops psc_case_ops_test_xz;
-extern struct psc_case_ops psc_case_ops_test_yz;
-extern struct psc_case_ops psc_case_ops_cone;
-
 // Wrappers for Fortran functions
 void psc_setup_fortran(void);
 

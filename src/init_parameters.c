@@ -226,47 +226,6 @@ psc_set_from_options_psc()
 // ----------------------------------------------------------------------
 // set up cases
 
-static struct psc_case_ops *psc_case_ops_list[] = {
-  NULL,
-};
-
-static struct psc_case_ops *
-psc_find_case(const char *name)
-{
-  for (int i = 0; psc_case_ops_list[i]; i++) {
-    if (strcasecmp(psc_case_ops_list[i]->name, name) == 0)
-      return psc_case_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_case '%s' not available.\n", name);
-  abort();
-}
-
-struct psc_case *
-psc_case_create(const char *case_name)
-{
-  struct psc_case *Case = malloc(sizeof(*Case));
-  Case->ops = psc_find_case(case_name);
-
-  size_t ctx_size = Case->ops->ctx_size;
-  if (ctx_size) {
-    Case->ctx = malloc(ctx_size);
-    memset(Case->ctx, 0, ctx_size);
-  }
-
-  return Case;
-}
-
-void
-psc_case_destroy(struct psc_case *Case)
-{
-  if (Case->ops->destroy) {
-    Case->ops->destroy(Case);
-  }
-
-  free(Case->ctx);
-  free(Case);
-}
-
 void
 psc_setup_coeff()
 {

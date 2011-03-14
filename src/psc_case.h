@@ -12,6 +12,7 @@ struct psc_particle_npt {
   double T[3]; ///< temperature
 };
 
+// FIXME, update
 /////////////////////////////////////////////////////////////////////////
 /// Physics cases (initial conditions and other parameters).
 ///
@@ -40,28 +41,6 @@ struct psc_particle_npt {
 ///   for the other cases.
 /// - Add your psc_case_ops_<casename> to the list of available cases in 
 ///   "src/init_parameters.c".
-
-struct psc_case;
-
-struct psc_case_ops {
-  const char *name; ///< Name of case.
-  size_t ctx_size; ///< Size of private context (e.g., for parameters)
-  struct param *ctx_descr; ///< Description of user-settable parameters
-  void (*create)(struct psc_case *); ///< Function to set up needed environment.
-  void (*destroy)(struct psc_case *); ///< Funtion to cleanup environment.
-  void (*init_param)(struct psc_case *); ///< Initialize simulation parameters based on case.
-  void (*init_field)(struct psc_case *, mfields_base_t *flds); ///< Initialize fields relevant to case.
-  void (*init_npt)(struct psc_case *, int kind, double x[3],
-		   struct psc_particle_npt *npt);
-};
-
-struct psc_case {
-  struct psc_case_ops *ops;
-  void *ctx;
-};
-
-struct psc_case *psc_case_create(const char *case_name);
-void psc_case_destroy(struct psc_case *Case);
 
 MRC_CLASS_DECLARE(_psc_case, struct _psc_case);
 
