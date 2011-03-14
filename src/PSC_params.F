@@ -62,7 +62,7 @@ c nmax: maximum number of time steps
      *     wl_, ld_, vos_, vt_, wp_, np_, nnp_)
 
       use PSC_params
-      use VLA_variables
+      use VLA_variables, only: np, nnp
 
       implicit none
 

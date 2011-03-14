@@ -15,7 +15,6 @@ c Laser pulse initialization (p-polarization).
 
       function s_pulse_z1_(x,y,z,t)
 
-      use VLA_variables
       use PSC_params
 
       implicit none

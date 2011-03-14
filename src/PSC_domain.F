@@ -59,7 +59,7 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       subroutine PSC_set_domain(length, itot, in, ix,
      &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
-      use VLA_variables
+      use VLA_variables, only: use_pml
       use PSC_domain
       use PSC_patch
 

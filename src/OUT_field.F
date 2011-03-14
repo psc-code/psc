@@ -58,7 +58,7 @@ c poyxt-poyzt: time averaged poynting vector
 c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_alloc
 c     ----------------------------------------------------------------------
-      use VLA_variables
+      use VLA_variables, only: nnp, np, use_pml
       use OUT_FIELDS
       use PSC_domain
       use PSC_patch
@@ -117,7 +117,7 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_read
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: use_pml
       use OUT_FIELDS
       use PSC_patch
 
@@ -173,7 +173,7 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_write
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: use_pml
       use OUT_FIELDS
       use PSC_patch
 
@@ -229,7 +229,7 @@ c     ----------------------------------------------------------------------
       subroutine OUT_field
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: data_out, mpe, n, np, shift_z, use_pml
       use fields
       use OUT_FIELDS
       use PSC_globals
@@ -798,7 +798,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_alloc_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
       use PSC_patch
 
@@ -860,7 +859,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_read_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
       use PSC_patch
 
@@ -920,7 +918,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_write_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
       use PSC_patch
 

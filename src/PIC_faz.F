@@ -6,7 +6,7 @@ c CAN BE FREELY INTERCHANGED.
 
       subroutine PIC_faz(fd)
 
-      use VLA_variables
+      use VLA_variables, only: info, mpe
       use PSC_domain
       use PSC_patch
 
@@ -14,6 +14,7 @@ c CAN BE FREELY INTERCHANGED.
       include './mpif.h'
 
       integer rzsize,pec,i1,i2,i3
+
       integer nodei,nodej,nodek
       integer mtag,status(MPI_STATUS_SIZE)
       

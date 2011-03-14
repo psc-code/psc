@@ -5,9 +5,12 @@ c OUT-ROUTINES AND MERGES THEM INTO GLOBAL DATA FILES!
 
       program SELECT
 
-      use VLA_variables
+      use VLA_variables, only: info
 
       implicit none
+
+      character*(20) char
+
       call MPI_INIT(info)
       call INIT_basic
       call INIT_param

@@ -2,7 +2,7 @@
 
       subroutine SELECT_cl_evol
 
-      use VLA_variables
+      use VLA_variables, only: data_out, data_processed, np, shift_z
       use OUT_fields
       use out_poyn
       use PSC_globals

@@ -66,7 +66,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_POYN_serv_write
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_POYN
 
       write(10) fluxit,fluxot
@@ -81,7 +80,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_POYN_serv_read
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_POYN
 
       read(10) fluxit,fluxot
@@ -98,7 +96,10 @@ c     ----------------------------------------------------------------------
       subroutine OUT_poyc
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: bx2A, bx2B, by2A, by2B, bz2A, bz2B,
+     *     data_out, mpe, n, np, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
+     *     fluxi, fluxo, hx2A, hx2B, hy2A, hy2B, hz2A, hz2B,
+     *     p2B,pox,poy,poz,poyni,poyno
       use OUT_POYN
       use PSC_patch
 

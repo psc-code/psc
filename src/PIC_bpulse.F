@@ -4,8 +4,6 @@ c THEY MAY HAVE TEMPERATURE ALONG THE SURFACE NORMAL.
 
       subroutine PIC_bpulse
 
-      use PIC_variables
-      use VLA_variables
       use PSC_globals
       use PSC_patch
 

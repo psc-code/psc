@@ -6,8 +6,6 @@ c     ======================================================================
 c     set up local domain boundaries in load-balanced manner,
 c     based upon density from INIT_den()
 
-      use PIC_variables
-      use VLA_variables
       use PSC_patch
 
       implicit none
@@ -898,8 +896,6 @@ c     ----------------------------------------------------------------------
       function pmlcheck(x,y,z)
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
-
       implicit none
       integer :: x,y,z
       real(kind=8) :: pmlcheck
@@ -914,7 +910,6 @@ c     ----------------------------------------------------------------------
 
       function get_density(ix,iy,iz)
 
-      use VLA_variables
       use PSC_patch
 
       implicit none
@@ -937,8 +932,6 @@ c     ----------------------------------------------------------------------
       function get_ncel(ix,iy,iz)
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
-      use PIC_variables
       use PSC_globals
 
       implicit none

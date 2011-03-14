@@ -1,7 +1,7 @@
       subroutine SELECT_count_evol
 
       use OUT_particles
-      use VLA_variables
+      use VLA_variables, only: data_out, data_processed, np, shift_z
       use PSC_globals
       use PSC_params
       use PSC_domain

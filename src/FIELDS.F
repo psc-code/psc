@@ -32,7 +32,7 @@ c     ----------------------------------------------------------------------
       subroutine FIELDS_alloc
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: use_pml
       use FIELDS
       use PSC_patch
 
@@ -88,7 +88,7 @@ c     ----------------------------------------------------------------------
       subroutine FIELDS_free
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: use_pml
       use FIELDS
 
       implicit none
@@ -117,7 +117,6 @@ c     ----------------------------------------------------------------------
       subroutine FIELDS_alloc_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use FIELDS
       use PSC_patch
 

@@ -70,7 +70,6 @@ c     ----------------------------------------------------------------------
       subroutine PML_coeff_alloc
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use PSC_patch
       use coeff_pml
 
@@ -147,7 +146,6 @@ c     ----------------------------------------------------------------------
       subroutine PML_coeff_init_param
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use PSC_patch
       use PSC_domain
       use coeff_pml
@@ -214,7 +212,6 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     deriving pml attenuation coefficients
 
-      use VLA_variables
       use PSC_patch
       use coeff_pml
 

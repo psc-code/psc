@@ -2,9 +2,6 @@ c Laser pulse initialization (p-polarization).
 
       function p_pulse_z1(x,y,z,t)
 
-      use VLA_variables
-      use PIC_variables
-
       implicit none
       real(kind=8) :: t,x,y,z
       real(kind=8) :: xm,ym,zm

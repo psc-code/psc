@@ -5,7 +5,7 @@ c     ----------------------------------------------------------------------
       subroutine INIT_basic
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: pi, npe, mpe, info
 
       implicit none
       include 'mpif.h'
@@ -27,7 +27,7 @@ c     ----------------------------------------------------------------------
       subroutine INIT_param
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
+      use VLA_variables, only: nnp, np, pi
       use PSC_globals
       use PSC_domain
       use PSC_params

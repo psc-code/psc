@@ -48,8 +48,6 @@ c data_chk: data checkpointing directory
       character*(200) data_out
       character*(200) data_chk
       character*(200) data_processed
-      character*(20) char
-      character*(5) pe
 
       end module VLA_variables
 

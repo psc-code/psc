@@ -5,7 +5,6 @@ c korrigierte Version
 
       subroutine PIC_ionize
 
-      use PIC_variables
       use VLA_variables
       use PSC_patch
       use fields

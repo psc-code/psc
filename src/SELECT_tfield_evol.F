@@ -1,6 +1,6 @@
       subroutine SELECT_tfield_evol
 
-      use VLA_variables
+      use VLA_variables, only: data_out, data_processed, np, shift_z
       use OUT_fields
       use PSC_globals
       use PSC_params

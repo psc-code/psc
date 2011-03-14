@@ -9,9 +9,6 @@ c BETWEEN DENSITY PROFILE AND SIMULATION BOX.
 
       function INIT_den(x,y,z)
 
-      use VLA_variables
-      use PIC_variables
-
       implicit none 
       real(kind=8) x,y,z
       real(kind=8) x0,y0,z0,Lx,Ly,Lz
