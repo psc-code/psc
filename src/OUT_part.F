@@ -21,7 +21,7 @@ c plix: largest particle number for output
 
       subroutine OUT_part(niloc, p_niloc)
 
-      use OUT_fields, only: r1n,r1x,r2n,r2x,r3n,r3x
+      use OUT_params
       use OUT_particles
       use VLA_variables, only: data_out, n, np, shift_z
       use PSC_globals

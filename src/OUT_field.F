@@ -1,11 +1,10 @@
 
-#include "config.h"
-
 c FIELD OUTPUT!
 
 c     ======================================================================
       module OUT_FIELDS
 c     ======================================================================
+
       implicit none
 
 c nprf: first time step for output of fields
@@ -16,16 +15,6 @@ c tmxvf: time step counter for ending time averaging of fields
       integer :: nprf = 0
       integer :: dnprf = 10
       integer :: tmnvfo,tmxvfo,tmnvf,tmxvf
-
-c r1n: min output range along x
-c r1x: max output range along x
-c r2n: min output range along y
-c r2x: max output range along y
-c r3n: min output range along z
-c r3x: max output range along z
-
-      ! if needed, override defaults below in OUT_fields_alloc!
-      integer :: r1n, r1x, r2n, r2x, r3n, r3x
 
 c ext-hzt: time averaged field
 c net: time averaged electron density
@@ -60,6 +49,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
       use VLA_variables, only: nnp, np
       use OUT_FIELDS
+      use OUT_params
       use PSC_domain
       use PSC_patch
 
@@ -231,6 +221,7 @@ c     ----------------------------------------------------------------------
 
       use VLA_variables, only: data_out, n, np, shift_z
       use fields
+      use OUT_params
       use OUT_FIELDS
       use PSC_globals
       use PSC_domain

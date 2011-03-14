@@ -31,6 +31,7 @@ libpsc_a_SOURCES = \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
 	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
+	OUT_params.F \
 	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
 	SERV_labelgen.F \
