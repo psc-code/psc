@@ -8,6 +8,7 @@
 
 struct vector {
   struct mrc_obj obj;
+  int nr_elements;
 };
 
 MRC_CLASS_DECLARE(vector, struct vector);
@@ -26,6 +27,8 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
 
   struct vector *vec = vector_create(MPI_COMM_WORLD);
+  vec->nr_elements = 3;
+  assert(vec->nr_elements == 3);
   vector_destroy(vec);
 
   MPI_Finalize();
