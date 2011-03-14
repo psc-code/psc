@@ -133,6 +133,15 @@ psc_setup(void)
   psc_output_fields_setup(psc.output_fields);
   psc_output_particles_setup(psc.output_particles);
   psc_moments_setup(psc.moments);
+
+  int particle_label_offset;
+  psc_init_partition(&particle_label_offset);
+  psc_init_particles(particle_label_offset);
+
+  mfields_base_alloc(&psc.flds, NR_FIELDS);
+  psc_init_field(&psc.flds);
+
+  psc_setup_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -170,22 +179,6 @@ psc_destroy()
   psc_output_fields_destroy(psc.output_fields);
   psc_output_particles_destroy(psc.output_particles);
   psc_moments_destroy(psc.moments);
-}
-
-// ----------------------------------------------------------------------
-// psc_init
-
-void
-psc_init()
-{
-  int particle_label_offset;
-  psc_init_partition(&particle_label_offset);
-  psc_init_particles(particle_label_offset);
-
-  mfields_base_alloc(&psc.flds, NR_FIELDS);
-  psc_init_field(&psc.flds);
-
-  psc_setup_fortran();
 }
 
 // ----------------------------------------------------------------------

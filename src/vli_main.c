@@ -14,7 +14,6 @@ main(int argc, char **argv)
   _psc_case_set_from_options(_psc_case);
 
   psc_setup();
-  psc_init();
   if (psc.prm.from_checkpoint) {
     psc_read_checkpoint();
   }
