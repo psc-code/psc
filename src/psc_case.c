@@ -65,7 +65,7 @@ _psc_case_setup(struct psc_case *_case)
     psc_init_field_pml(_case, &psc.flds);
   }
 
-  psc_setup_fortran();
+  psc_setup_fortran(&psc);
 }
 
 // ----------------------------------------------------------------------

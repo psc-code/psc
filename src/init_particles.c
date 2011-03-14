@@ -9,39 +9,39 @@
 #include <mpi.h>
 #include <time.h>
 
+static inline int
+get_n_in_cell(struct psc *psc, real n)
 static struct param seed_by_time_descr[] = {
   { "seed_by_time"          , 0       , PARAM_BOOL(false)   },
   {},
 };
 
-static int
-get_n_in_cell(real n)
 {
-  if (psc.prm.const_num_particles_per_cell) {
-    return psc.prm.nicell;
+  if (psc->prm.const_num_particles_per_cell) {
+    return psc->prm.nicell;
   }
-  return n / psc.coeff.cori + .5;
+  return n / psc->coeff.cori + .5;
 }
 
 // particles must not be placed in the pml regions
 // check if pml bnds are set and restrict avoid particle placement inside pml regions
 
 static void
-pml_find_bounds(int p, int ilo[3], int ihi[3])
+pml_find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 {
-  struct psc_patch *patch = &psc.patch[p];
+  struct psc_patch *patch = &psc->patch[p];
   for (int d = 0; d < 3; d++) {
     ilo[d] = 0;
     if (patch->off[d] == 0 && // left-most proc in this dir
-	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-      ilo[d] += psc.pml.size+1;
+	(psc->domain.bnd_fld_lo[d] == BND_FLD_UPML || 
+	 psc->domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
+      ilo[d] += psc->pml.size+1;
     }
     ihi[d] = patch->ldims[d];
-    if (ihi[d] + patch->off[d] == psc.domain.gdims[d] && // right-most proc in this dir
-	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-      ihi[d] -= psc.pml.size+1;
+    if (ihi[d] + patch->off[d] == psc->domain.gdims[d] && // right-most proc in this dir
+	(psc->domain.bnd_fld_hi[d] == BND_FLD_UPML || 
+	 psc->domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
+      ihi[d] -= psc->pml.size+1;
     }
   }
 }
@@ -69,7 +69,7 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
   psc.particles.p = calloc(psc.nr_patches, sizeof(*psc.particles.p));
   foreach_patch(p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(p, ilo, ihi);
+    pml_find_bounds(&psc, p, ilo, ihi);
 
     int np = 0;
     for (int kind = 0; kind < 2; kind++) {
@@ -81,7 +81,7 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(npt.n);
+	    int n_in_cell = get_n_in_cell(&psc, npt.n);
 	    np += n_in_cell;
 	  }
 	}
@@ -118,7 +118,7 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 
   foreach_patch(p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(p, ilo, ihi);
+    pml_find_bounds(&psc, p, ilo, ihi);
     particles_base_t *pp = &psc.particles.p[p];
 
     int i = 0;
@@ -131,7 +131,7 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(npt.n);
+	    int n_in_cell = get_n_in_cell(&psc, npt.n);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_base_t *p = particles_base_get_one(pp, i++);
 	      

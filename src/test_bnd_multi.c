@@ -15,7 +15,7 @@ setup_jx(mfields_base_t *flds)
     fields_base_t *pf = &flds->f[p];
     foreach_3d(p, jx, jy, jz, 0, 0) {
       int ix, iy, iz;
-      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
       F3_BASE(pf, JXI, jx,jy,jz) = iz * 10000 + iy * 100 + ix;
     } foreach_3d_end;
   }
@@ -32,7 +32,7 @@ check_jx(mfields_base_t *flds)
     fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
       if (ix < 0) {
 	if (bc[0] == BC_PERIODIC) {
 	  ix += gdims[0];

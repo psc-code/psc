@@ -15,7 +15,7 @@ setup_jx(mfields_base_t *flds)
     fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
@@ -30,7 +30,7 @@ setup_jx_noghost(mfields_base_t *flds)
     fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);

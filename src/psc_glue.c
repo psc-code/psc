@@ -630,7 +630,7 @@ C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
 }
 
 void
-psc_setup_fortran()
+psc_setup_fortran(struct psc *psc)
 {
   INIT_basic();
   PSC_set_globals();

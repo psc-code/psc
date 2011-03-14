@@ -359,12 +359,12 @@ struct psc_mod_config {
 struct psc psc;
 
 static inline void
-psc_local_to_global_indices(int p, int jx, int jy, int jz,
+psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
 			    int *ix, int *iy, int *iz)
 {
-  *ix = jx + psc.patch[p].off[0];
-  *iy = jy + psc.patch[p].off[1];
-  *iz = jz + psc.patch[p].off[2];
+  *ix = jx + psc->patch[p].off[0];
+  *iy = jy + psc->patch[p].off[1];
+  *iz = jz + psc->patch[p].off[2];
 }
 
 void psc_create(struct psc *psc);
@@ -399,7 +399,7 @@ real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
 
-void psc_setup_fortran(void);
+void psc_setup_fortran(struct psc *psc);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
