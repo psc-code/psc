@@ -137,7 +137,6 @@ psc_setup_domain()
 
   mrc_domain_set_from_options(psc.mrc_domain);
   mrc_domain_setup(psc.mrc_domain);
-  mrc_domain_view(psc.mrc_domain);
 
   // set up index bounds,
   // sanity checks for the decomposed domain

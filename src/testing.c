@@ -223,8 +223,8 @@ psc_create_test_xz(struct psc_mod_config *conf)
   _psc_case_set_type(_psc_case, "test_xz");
   psc_set_conf(conf);
   _psc_case_set_from_options(_psc_case);
-  psc_setup();
-  psc_view();
+  _psc_case_setup(_psc_case);
+  _psc_case_view(_psc_case);
 }
 
 // ----------------------------------------------------------------------
@@ -240,8 +240,8 @@ psc_create_test_yz(struct psc_mod_config *conf)
   _psc_case_set_type(_psc_case, "test_yz");
   psc_set_conf(conf);
   _psc_case_set_from_options(_psc_case);
-  psc_setup();
-  psc_view();
+  _psc_case_setup(_psc_case);
+  _psc_case_view(_psc_case);
   psc.particles.p[0].n_part = 1;
   psc_sort_run(psc.sort, &psc.particles);
 }
