@@ -40,13 +40,18 @@ static void
 _psc_case_create_sub(struct _psc_case *_case)
 {
   _case->Case = psc_case_create(_case->obj.ops->name);
+  if (_case->Case->ops->create) {
+    _case->Case->ops->create(_case->Case);
+  }
 }
 
 static void
 _psc_case_sub_set_from_options(struct _psc_case *_case)
 {
-  // set params, but also updated psc-params accordingly
-  psc_case_init_param(_psc_case->Case);
+  // update psc-params accordingly
+  if (_case->Case->ops->init_param) {
+    _case->Case->ops->init_param(_case->Case);
+  }
 }
 
 static struct _psc_case_ops _psc_case_test_yz_ops = {

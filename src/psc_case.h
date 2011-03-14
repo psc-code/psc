@@ -63,29 +63,6 @@ struct psc_case {
 struct psc_case *psc_case_create(const char *case_name);
 void psc_case_destroy(struct psc_case *Case);
 
-static inline void
-psc_case_init_param(struct psc_case *Case)
-{
-  if (Case->ops->init_param) {
-    Case->ops->init_param(Case);
-  }
-}
-
-static inline void
-psc_case_init_field(struct psc_case *Case, mfields_base_t *flds)
-{
-  if (Case->ops->init_field) {
-    Case->ops->init_field(Case, flds);
-  }
-}
-
-static inline void
-psc_case_init_npt(struct psc_case *Case, int kind, double xx[3],
-		  struct psc_particle_npt *npt)
-{
-  Case->ops->init_npt(Case, kind, xx, npt);
-}
-
 MRC_CLASS_DECLARE(_psc_case, struct _psc_case);
 
 void _psc_case_init_field(struct _psc_case *_case, mfields_base_t *flds);

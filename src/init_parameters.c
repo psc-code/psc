@@ -198,10 +198,6 @@ psc_case_create(const char *case_name)
     mrc_params_print(Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
   }
 
-  if (Case->ops->create) {
-    Case->ops->create(Case);
-  }
-  
   return Case;
 }
 
