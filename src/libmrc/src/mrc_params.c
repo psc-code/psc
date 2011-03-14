@@ -129,17 +129,17 @@ mrc_params_get_option_string(const char *name, const char **pval)
   return 0;
 }
 
-static void
-get_option_bool(const char *name, bool *pval)
+int
+mrc_params_get_option_bool(const char *name, bool *pval)
 {
   struct option *p = find_option(name);
 
   if (!p)
-    return;
+    return -1;
 
   if (!p->value) { // just "--something"
     *pval = true;
-    return;
+    return 0;
   }
 
   if (strcasecmp(p->value, "yes") == 0 ||
@@ -152,6 +152,7 @@ get_option_bool(const char *name, bool *pval)
     fprintf(stderr, "error: cannot parse bool from '%s'\n", p->value);
     abort();
   }
+  return 0;
 }
 
 void
@@ -384,7 +385,7 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       break;
     case PT_BOOL:
       pv->u_bool = params[i].u.ini_bool;
-      get_option_bool(params[i].name, &pv->u_bool);
+      mrc_params_get_option_bool(params[i].name, &pv->u_bool);
       break;
     case PT_FLOAT:
       pv->u_float = params[i].u.ini_float;
@@ -419,7 +420,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       mrc_params_get_option_int(params[i].name, &pv->u_int);
       break;
     case PT_BOOL:
-      get_option_bool(params[i].name, &pv->u_bool);
+      mrc_params_get_option_bool(params[i].name, &pv->u_bool);
       break;
     case PT_FLOAT:
       get_option_float(params[i].name, &pv->u_float);
@@ -458,7 +459,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_int(name, &pv->u_int);
       break;
     case PT_BOOL:
-      get_option_bool(name, &pv->u_bool);
+      mrc_params_get_option_bool(name, &pv->u_bool);
       break;
     case PT_FLOAT:
       get_option_float(name, &pv->u_float);
