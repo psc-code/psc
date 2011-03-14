@@ -217,32 +217,6 @@ psc_case_destroy(struct psc_case *Case)
   free(Case);
 }
 
-struct par_case {
-  const char *case_name;
-};
-
-#define VAR(x) (void *)offsetof(struct par_case, x)
-
-static struct param par_case_descr[] = {
-  { "case"          , VAR(case_name)        , PARAM_STRING(NULL)   },
-  {},
-};
-
-#undef VAR
-
-void
-init_case(const char *case_name)
-{
-  struct par_case par;
-  par.case_name = case_name;
-  mrc_params_parse_nodefault(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
-  mrc_params_print(&par, par_case_descr, "PSC case", MPI_COMM_WORLD);
-
-  if (par.case_name) {
-    _psc_case->Case = psc_case_create(par.case_name);
-  }
-}
-
 static void
 init_param_domain_default()
 {
@@ -307,7 +281,8 @@ void
 psc_init_param(const char *case_name)
 {
   _psc_case = _psc_case_create(MPI_COMM_WORLD);
-  init_case(case_name);
+  _psc_case_set_param_string(_psc_case, "case", case_name);
+  _psc_case_set_from_options(_psc_case);
   init_param_domain_default();
   init_param_psc_default();
   if (_psc_case->Case) {
