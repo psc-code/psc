@@ -27,6 +27,16 @@ _vector_setup(struct vector *vec)
 }
 
 // ----------------------------------------------------------------------
+// vector_destroy
+
+void
+_vector_destroy(struct vector *vec)
+{
+  free(vec->elements);
+  vec->elements = NULL; // just to be safe
+}
+
+// ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct vector, x)
 static struct param vector_descr[] = {
@@ -40,6 +50,7 @@ struct mrc_class_vector mrc_class_vector = {
   .size             = sizeof(struct vector),
   .param_descr      = vector_descr,
   .setup            = _vector_setup,
+  .destroy          = _vector_destroy,
 };
 
 // ======================================================================
