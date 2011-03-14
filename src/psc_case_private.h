@@ -6,8 +6,11 @@
 
 struct _psc_case {
   struct mrc_obj obj;
-  char *case_name;
   struct psc_case *Case;
+};
+
+struct _psc_case_ops {
+  MRC_SUBCLASS_OPS(struct _psc_case);
 };
 
 // ======================================================================

@@ -220,7 +220,7 @@ psc_create_test_xz(struct psc_mod_config *conf)
   srandom(0);
 
   _psc_case = _psc_case_create(MPI_COMM_WORLD);
-  _psc_case_set_param_string(_psc_case, "case", "test_xz");
+  _psc_case_set_type(_psc_case, "test_xz");
   _psc_case_set_from_options(_psc_case);
   psc_set_conf(conf);
   psc_init();
@@ -236,7 +236,7 @@ psc_create_test_yz(struct psc_mod_config *conf)
   srandom(0);
 
   _psc_case = _psc_case_create(MPI_COMM_WORLD);
-  _psc_case_set_param_string(_psc_case, "case", "test_yz");
+  _psc_case_set_type(_psc_case, "test_yz");
   _psc_case_set_from_options(_psc_case);
   psc_set_conf(conf);
   psc_init();
