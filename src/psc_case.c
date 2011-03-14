@@ -48,6 +48,15 @@ _psc_case_create_sub(struct _psc_case *_case)
 static void
 _psc_case_sub_set_from_options(struct _psc_case *_case)
 {
+  struct param *ctx_descr = _case->Case->ops->ctx_descr;
+  if (ctx_descr) {
+    const char *case_name = _case->obj.ops->name;
+    char cn[strlen(case_name) + 6];
+    sprintf(cn, "case %s", case_name);
+    mrc_params_parse(_case->Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+    mrc_params_print(_case->Case->ctx, ctx_descr, cn, MPI_COMM_WORLD);
+  }
+
   // update psc-params accordingly
   if (_case->Case->ops->init_param) {
     _case->Case->ops->init_param(_case->Case);
