@@ -59,7 +59,16 @@ static struct param psc_domain_descr[] = {
 #undef VAR
 
 void
-psc_init_param_domain()
+psc_set_default_domain()
+{
+  mrc_params_set_default(&psc.domain, psc_domain_descr);
+  for (int d = 0; d < 3; d++) {
+    psc.ibn[d] = 3;
+  }
+}
+
+void
+psc_set_from_options_domain()
 {
   struct psc_domain *domain = &psc.domain;
 
@@ -71,6 +80,12 @@ psc_init_param_domain()
   psc.pml.cushion = psc.pml.thick / 3;
   psc.pml.size = psc.pml.thick + psc.pml.cushion;
   psc.pml.order = 3;
+}
+
+void
+psc_setup_domain()
+{
+  struct psc_domain *domain = &psc.domain;
 
   SET_param_pml();
 
@@ -141,7 +156,13 @@ static struct param psc_param_descr[] = {
 #undef VAR
 
 void
-psc_init_param_psc()
+psc_set_default_psc()
+{
+  mrc_params_set_default(&psc.prm, psc_param_descr);
+}
+
+void
+psc_set_from_options_psc()
 {
   mrc_params_parse_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
 			     MPI_COMM_WORLD);
@@ -205,22 +226,7 @@ psc_case_destroy(struct psc_case *Case)
 }
 
 void
-psc_init_param_domain_default()
-{
-  mrc_params_set_default(&psc.domain, psc_domain_descr);
-  for (int d = 0; d < 3; d++) {
-    psc.ibn[d] = 3;
-  }
-}
-
-void
-psc_init_param_psc_default()
-{
-  mrc_params_set_default(&psc.prm, psc_param_descr);
-}
-
-void
-psc_init_param_coeff()
+psc_setup_coeff()
 {
   assert(psc.prm.nicell > 0);
   psc.coeff.cori = 1. / psc.prm.nicell;

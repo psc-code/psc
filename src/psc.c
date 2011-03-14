@@ -91,8 +91,8 @@ psc_create()
 
   psc.time_start = MPI_Wtime();
 
-  psc_init_param_domain_default();
-  psc_init_param_psc_default();
+  psc_set_default_domain();
+  psc_set_default_psc();
 }
 
 // ----------------------------------------------------------------------
@@ -172,9 +172,10 @@ psc_destroy()
 void
 psc_init()
 {
-  psc_init_param_domain();
-  psc_init_param_psc();
-  psc_init_param_coeff();
+  psc_set_from_options_domain();
+  psc_set_from_options_psc();
+  psc_setup_domain();
+  psc_setup_coeff();
 
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);

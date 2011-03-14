@@ -378,11 +378,12 @@ void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
-void psc_init_param_domain_default();
-void psc_init_param_psc_default();
-void psc_init_param_domain(void);
-void psc_init_param_psc(void);
-void psc_init_param_coeff(void);
+void psc_set_default_domain(void);
+void psc_set_from_options_domain(void);
+void psc_set_default_psc(void);
+void psc_set_from_options_psc(void);
+void psc_setup_domain(void);
+void psc_setup_coeff(void);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
