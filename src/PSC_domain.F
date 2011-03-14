@@ -35,6 +35,10 @@ c boundary_part_z: particle boundary conditions in z
       integer boundary_fld_z1
       integer boundary_fld_z2
 
+! whether to PML is being used
+
+      logical use_pml
+
 ! thick: thickness of pml in gridpoints
 ! size: thickness of pml and buffer region in gridpoints
 
@@ -59,7 +63,6 @@ c seg_inv: returns node number after x-, y-label, and z-label input
       subroutine PSC_set_domain(length, itot, in, ix,
      &     bnd_fld_lo, bnd_fld_hi, bnd_part, nproc, rd, use_pml_)
 
-      use VLA_variables, only: use_pml
       use PSC_domain
       use PSC_patch
 

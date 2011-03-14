@@ -6,7 +6,7 @@ c THIS SUBROUTINE INITIALIZES THE ELECTROMAGNETIC FIELDS.
 
       subroutine INIT_field
 
-      use VLA_variables, only: use_pml
+      use PSC_domain
       use PSC_patch
       use fields
 
@@ -78,7 +78,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     set up various things after the main fields have been initialized
 
-      use VLA_variables, only: use_pml
+      use PSC_domain
 
       implicit none
 
