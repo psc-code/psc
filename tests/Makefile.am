@@ -12,6 +12,8 @@ noinst_PROGRAMS = \
 	test_mrc_ddc \
 	tutorial_mrc_obj
 
+tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c
+
 LDADD = ../src/libmrctest.a ../src/libmrc.a
 
 TESTS = \
