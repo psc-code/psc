@@ -188,17 +188,10 @@ psc_init(const char *case_name)
   psc_setup();
   psc_view();
 
-  INIT_basic();
-  PSC_set_globals();
-  PSC_set_params();
-  PSC_set_coeff();
-  PSC_set_domain();
-  PSC_set_patch(0);
-  OUT_params_set();
-  SETUP_field();
-
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);
+
+  psc_setup_fortran();
 }
 
 // ----------------------------------------------------------------------

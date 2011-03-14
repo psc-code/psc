@@ -627,3 +627,17 @@ C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
   __f_flds[EPS] = eps;
   __f_flds[MU] = mu;
 }
+
+void
+psc_setup_fortran()
+{
+  INIT_basic();
+  PSC_set_globals();
+  PSC_set_params();
+  PSC_set_coeff();
+  PSC_set_domain();
+  PSC_set_patch(0);
+  OUT_params_set();
+  SETUP_field();
+}
+

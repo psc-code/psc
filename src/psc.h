@@ -418,12 +418,7 @@ extern struct psc_case_ops psc_case_ops_test_yz;
 extern struct psc_case_ops psc_case_ops_cone;
 
 // Wrappers for Fortran functions
-void PSC_set_globals(void);
-void PSC_set_domain(void);
-void PSC_set_params(void);
-void PSC_set_coeff(void);
-void OUT_params_set(void);
-void SETUP_field(void);
+void psc_setup_fortran(void);
 
 void PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
@@ -448,10 +443,7 @@ void PSC_set_patch(int p);
 void GET_param_domain(void);
 void INIT_param_domain(void);
 void INIT_param_psc(void);
-particle_fortran_t *ALLOC_particles(int n_part);
-particle_fortran_t *REALLOC_particles(int n_part_n);
 f_real **ALLOC_field(void);
-void FREE_particles(void);
 void FREE_field(void);
 void INIT_basic(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
