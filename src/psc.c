@@ -110,6 +110,9 @@ psc_set_from_options(void)
   psc_output_fields_set_from_options(psc.output_fields);
   psc_output_particles_set_from_options(psc.output_particles);
   psc_moments_set_from_options(psc.moments);
+
+  psc_set_from_options_domain();
+  psc_set_from_options_psc();
 }
 
 // ----------------------------------------------------------------------
@@ -172,8 +175,6 @@ psc_destroy()
 void
 psc_init()
 {
-  psc_set_from_options_domain();
-  psc_set_from_options_psc();
   psc_setup_domain();
   psc_setup_coeff();
 
