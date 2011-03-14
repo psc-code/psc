@@ -7,6 +7,7 @@
 #include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_output_fields.h"
+#include "psc_output_particles.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -103,7 +104,7 @@ psc_integrate()
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
-    psc_out_particles();
+    psc_output_particles_run(psc.output_particles, particles);
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);

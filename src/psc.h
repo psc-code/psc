@@ -274,6 +274,7 @@ struct psc {
   struct psc_randomize *randomize;
   struct psc_sort *sort;
   struct psc_output_fields *output_fields;
+  struct psc_output_particles *output_particles;
   struct psc_moments *moments;
 
   struct psc_pulse *pulse_p_z1;
@@ -379,8 +380,6 @@ void psc_integrate(void);
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
-
-void psc_out_particles(void);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
