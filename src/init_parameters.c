@@ -216,8 +216,8 @@ psc_case_destroy(struct psc_case *Case)
   free(Case);
 }
 
-static void
-init_param_domain_default()
+void
+psc_init_param_domain_default()
 {
   mrc_params_set_default(&psc.domain, psc_domain_descr);
   for (int d = 0; d < 3; d++) {
@@ -225,8 +225,8 @@ init_param_domain_default()
   }
 }
 
-static void
-init_param_psc_default()
+void
+psc_init_param_psc_default()
 {
   mrc_params_set_default(&psc.prm, psc_param_descr);
 }
@@ -279,8 +279,6 @@ init_param_coeff()
 void
 psc_init_param()
 {
-  init_param_domain_default();
-  init_param_psc_default();
   _psc_case_init_param(_psc_case);
   init_param_domain();
   init_param_psc();

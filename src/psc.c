@@ -90,6 +90,9 @@ psc_create()
   psc.moments = psc_moments_create(comm);
 
   psc.time_start = MPI_Wtime();
+
+  psc_init_param_domain_default();
+  psc_init_param_psc_default();
 }
 
 // ----------------------------------------------------------------------
