@@ -25,6 +25,11 @@ __psc_case_set_from_options(struct _psc_case *_case)
 static void
 __psc_case_setup(struct _psc_case *_case)
 {
+  // FIXME
+  if (psc.prm.from_checkpoint) {
+    assert(0);
+    psc_read_checkpoint();
+  }
   psc_setup();
 }
 
