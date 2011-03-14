@@ -49,6 +49,15 @@ vector_get_element(struct vector *vec, int i)
 }
 
 // ----------------------------------------------------------------------
+// vector_init
+
+static void
+vector_init()
+{
+  mrc_class_register_subclass(&mrc_class_vector, &vector_double_ops);
+}
+
+// ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct vector, x)
 static struct param vector_descr[] = {
@@ -60,6 +69,7 @@ static struct param vector_descr[] = {
 struct mrc_class_vector mrc_class_vector = {
   .name             = "vector",
   .size             = sizeof(struct vector),
+  .init             = vector_init,
   .param_descr      = vector_descr,
   .setup            = _vector_setup,
   .destroy          = _vector_destroy,
