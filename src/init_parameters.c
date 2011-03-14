@@ -240,10 +240,6 @@ init_case(const char *case_name)
   if (par.case_name) {
     psc.Case = psc_case_create(par.case_name);
   }
-
-  if (psc.Case) {
-    psc_case_init_param(psc.Case);
-  }
 }
 
 static void
@@ -309,9 +305,13 @@ init_param_coeff()
 void
 psc_init_param(const char *case_name)
 {
+  _psc_case = _psc_case_create(MPI_COMM_WORLD);
+  init_case(case_name);
   init_param_domain_default();
   init_param_psc_default();
-  init_case(case_name);
+  if (psc.Case) {
+    psc_case_init_param(psc.Case);
+  }
   init_param_domain();
   init_param_psc();
   init_param_coeff();

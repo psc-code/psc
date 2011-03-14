@@ -38,6 +38,7 @@ libpsc_a_SOURCES = \
 	INIT_param.F INIT_field.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
 	PIC_bin_coll.F \
+	psc_case.c \
 	mfields.c \
 	mparticles.c \
 	psc_push_particles.c psc_push_particles_fortran.c \

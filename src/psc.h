@@ -173,6 +173,8 @@ typedef mfields_sse2_t mfields_base_t;
 
 #include "psc_case.h"
 
+struct _psc_case *_psc_case;
+
 // user settable parameters
 struct psc_param {
   double qq;

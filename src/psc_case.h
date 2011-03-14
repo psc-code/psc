@@ -86,5 +86,7 @@ psc_case_init_npt(struct psc_case *Case, int kind, double xx[3],
   Case->ops->init_npt(Case, kind, xx, npt);
 }
 
+MRC_CLASS_DECLARE(_psc_case, struct _psc_case);
+
 #endif
 
