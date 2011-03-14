@@ -375,9 +375,6 @@ void psc_setup(void);
 void psc_view(void);
 void psc_destroy(void);
 
-void psc_init_partition(int *particle_label_offset);
-void psc_init_particles(int particle_label_offset);
-void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
 void psc_set_default_domain(void);
 void psc_set_from_options_domain(void);

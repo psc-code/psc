@@ -48,5 +48,12 @@ void psc_case_init_field(struct psc_case *_case, mfields_base_t *flds);
 void psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
 			struct psc_particle_npt *npt);
 
+// ----------------------------------------------------------------------
+// psc_case internal
+
+void psc_case_init_partition(struct psc_case *_case, int *particle_label_offset);
+void psc_case_init_particles(struct psc_case *_case, int particle_label_offset);
+void psc_case_init_fields(struct psc_case *_case, mfields_base_t *flds);
+
 #endif
 

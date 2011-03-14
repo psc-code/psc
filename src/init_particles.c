@@ -46,7 +46,7 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 }
 
 void
-psc_init_partition(int *particle_label_offset)
+psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 {
 #if 0
   int rank, size;
@@ -78,7 +78,7 @@ psc_init_partition(int *particle_label_offset)
 	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	    struct psc_particle_npt npt = { // init to all zero
 	    };
-	    psc_case_init_npt(_psc_case, kind, xx, &npt);
+	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
 	    int n_in_cell = get_n_in_cell(npt.n);
 	    np += n_in_cell;
@@ -97,7 +97,7 @@ psc_init_partition(int *particle_label_offset)
 }
 
 void
-psc_init_particles(int particle_label_offset)
+psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 {
   double beta = psc.coeff.beta;
 

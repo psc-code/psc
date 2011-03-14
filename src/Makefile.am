@@ -19,7 +19,7 @@ libpsc_a_SOURCES = \
 	INIT_ppulse_y2.F INIT_spulse_y2.F \
 	INIT_ppulse_z1.F INIT_spulse_z1.F \
 	INIT_ppulse_z2.F INIT_spulse_z2.F \
-	init_parameters.c init_fields.c init_particles.c \
+	init_parameters.c init_particles.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
