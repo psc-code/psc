@@ -12,8 +12,6 @@ c OUT-ROUTINES AND MERGES THEM INTO GLOBAL DATA FILES!
 
       call MPI_INIT(ierr)
       call INIT_basic
-      call INIT_param
-      call INIT_param_fortran
       
 
 c SELECT DATA FILES
