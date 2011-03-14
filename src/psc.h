@@ -171,10 +171,6 @@ typedef mfields_sse2_t mfields_base_t;
 #error unknown FIELDS_BASE
 #endif
 
-#include "psc_case.h"
-
-struct psc_case *_psc_case;
-
 // user settable parameters
 struct psc_param {
   double qq;

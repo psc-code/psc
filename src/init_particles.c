@@ -1,4 +1,5 @@
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -128,7 +129,7 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	    struct psc_particle_npt npt = { // init to all zero
 	    };
-	    psc_case_init_npt(_psc_case, kind, xx, &npt);
+	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
 	    int n_in_cell = get_n_in_cell(npt.n);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {

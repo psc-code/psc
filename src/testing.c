@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_sort.h"
+#include "psc_case.h"
 
 #include <math.h>
 #include <limits.h>
@@ -219,12 +220,12 @@ psc_create_test_xz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  _psc_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_psc_case, "test_xz");
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_xz");
   psc_set_conf(conf);
-  psc_case_set_from_options(_psc_case);
-  psc_case_setup(_psc_case);
-  psc_case_view(_psc_case);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
 }
 
 // ----------------------------------------------------------------------
@@ -236,12 +237,12 @@ psc_create_test_yz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  _psc_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_psc_case, "test_yz");
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_yz");
   psc_set_conf(conf);
-  psc_case_set_from_options(_psc_case);
-  psc_case_setup(_psc_case);
-  psc_case_view(_psc_case);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
   psc.particles.p[0].n_part = 1;
   psc_sort_run(psc.sort, &psc.particles);
 }
