@@ -45,17 +45,26 @@ c poyxt-poyzt: time averaged poynting vector
       end module OUT_FIELDS
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_FIELDS_alloc
+      subroutine OUT_FIELDS_set
 c     ----------------------------------------------------------------------
-      use OUT_FIELDS
+      use OUT_fields
       use OUT_params
-      use PSC_domain
-      use PSC_patch
 
       implicit none
 
       tmnvf=0*nnp+1
       tmxvf=0*nnp+np
+      
+      end subroutine OUT_fields_set
+
+c     ----------------------------------------------------------------------
+      subroutine OUT_FIELDS_alloc
+c     ----------------------------------------------------------------------
+      use OUT_FIELDS
+      use PSC_domain
+      use PSC_patch
+
+      implicit none
 
       allocate(ext(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
       allocate(eyt(i1mn:i1mx,i2mn:i2mx,i3mn:i3mx))
@@ -202,7 +211,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
       subroutine OUT_field
 c     ----------------------------------------------------------------------
-      use VLA_variables, only: n
+      use VLA_variables
       use fields
       use OUT_params
       use OUT_FIELDS
