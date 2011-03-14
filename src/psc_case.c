@@ -2,6 +2,15 @@
 #include "psc_case_private.h"
 
 // ----------------------------------------------------------------------
+// __psc_case_create
+
+static void
+__psc_case_create(struct _psc_case *_case)
+{
+  psc_create();
+}
+
+// ----------------------------------------------------------------------
 // __psc_case_set_from_options
 
 static void
@@ -71,6 +80,7 @@ struct mrc_class__psc_case mrc_class__psc_case = {
   .size             = sizeof(struct _psc_case),
   .param_descr      = _psc_case_descr,
   .init             = _psc_case_init,
+  .create           = __psc_case_create,
   .set_from_options = __psc_case_set_from_options,
 };
 
