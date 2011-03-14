@@ -14,11 +14,9 @@
 c nstart: time step counter for restarting the code
 c shift_c: time step counter for moving the frame in the code
 c shift_l: step counter for moving the frame in the code
-c nnp: number of timesteps for one full cycle
-c np:  number of timesteps for time-averaging
 
 
-      integer nstart,shift_c,shift_l,np,nnp
+      integer nstart,shift_c,shift_l
 
       real(kind=8) fluxi,fluxo
       real(kind=8) ex2A,ey2A,ez2A,hx2A,hy2A,hz2A

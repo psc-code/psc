@@ -47,28 +47,12 @@ c poyxt-poyzt: time averaged poynting vector
 c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_alloc
 c     ----------------------------------------------------------------------
-      use VLA_variables, only: nnp, np
       use OUT_FIELDS
       use OUT_params
       use PSC_domain
       use PSC_patch
 
       implicit none
-
-      ! user changeable...
-      r1n=i1n
-      r1x=i1x
-      r2n=i2n
-      r2x=i2x
-      r3n=i3n
-      r3x=i3x
-
-      r1n=max(i1n,r1n)
-      r1x=min(i1x,r1x)
-      r2n=max(i2n,r2n)
-      r2x=min(i2x,r2x)
-      r3n=max(i3n,r3n)
-      r3x=min(i3x,r3x)
 
       tmnvf=0*nnp+1
       tmxvf=0*nnp+np
@@ -218,8 +202,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
       subroutine OUT_field
 c     ----------------------------------------------------------------------
-
-      use VLA_variables, only: n, np, shift_z
+      use VLA_variables, only: n, shift_z
       use fields
       use OUT_params
       use OUT_FIELDS

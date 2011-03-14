@@ -25,9 +25,8 @@ c tmxvp: time step counter for ending time averaging of poynting flux
 c     ----------------------------------------------------------------------
       subroutine OUT_POYN_alloc
 c     ----------------------------------------------------------------------
-
+      use OUT_params
       use OUT_poyn
-      use VLA_variables, only: np, nnp
 
       implicit none
       
@@ -97,7 +96,7 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 
       use VLA_variables, only: bx2A, bx2B, by2A, by2B, bz2A, bz2B,
-     *     n, np, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
+     *     n, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
      *     fluxi, fluxo, hx2A, hx2B, hy2A, hy2B, hz2A, hz2B,
      *     p2B,pox,poy,poz,poyni,poyno
       use OUT_params

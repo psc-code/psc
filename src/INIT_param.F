@@ -30,7 +30,7 @@ c     ----------------------------------------------------------------------
       subroutine INIT_param
 c     ----------------------------------------------------------------------
 
-      use VLA_variables, only: nnp, np, pi
+      use VLA_variables, only: pi
       use PSC_globals
       use PSC_domain
       use PSC_params
@@ -177,14 +177,6 @@ c np:  number of timesteps for time-averaging
 
       dt=0.75*sqrt(1.0/(1.0/dx**2+1.0/dy**2+1.0/dz**2))
 
-c     adjust to match laser cycles
-      nnp=int(2.0*pi/dt)+1
-      dt=2.0*pi/nnp
-      np=2*nnp
-      if (nmax == 0) then
-         nmax=30*nnp
-      endif
-
       end subroutine INIT_param
 
 c     ----------------------------------------------------------------------
@@ -194,22 +186,11 @@ c     setup processor map
 
       use VLA_variables
       use PSC_domain
-      use OUT_params
 
       implicit none
 
       if (use_pml) call PML_coeff_init_param
 
-
-c I/O CONTROL PARAMETERS
-
-c data_out: path of data output directory
-c data_chk: path of checkpointing directory
-
-      data_out='.'
-      data_chk='.'
-      data_processed='.'
-      
 c OTHER SETTINGS THAT SHOULD NOT BE CHANGED
 c UNDER NORMAL CONDITIONS
 

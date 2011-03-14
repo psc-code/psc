@@ -9,6 +9,7 @@
 #define PSC_set_domain_F77 F77_FUNC_(psc_set_domain, PSC_SET_DOMAIN)
 #define PSC_set_coeff_F77 F77_FUNC_(psc_set_coeff, PSC_SET_COEFF)
 #define PSC_set_timestep_F77 F77_FUNC(psc_set_timestep, PSC_SET_TIMESTEP)
+#define OUT_params_set_F77 F77_FUNC_(out_params_set, OUT_PARAMS_SET)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
 #define PIC_push_part_yz_F77 F77_FUNC(pic_push_part_yz,PIC_PUSH_PART_YZ)
@@ -73,10 +74,11 @@ void PSC_set_domain_F77(f_real *length, f_int *itot, f_int *in, f_int *ix,
 			f_int *nproc, f_int *nghost, f_int *use_pml);
 
 void PSC_set_coeff_F77(f_real *beta,
-		       f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp,
-		       f_int *np, f_int *nnp);
+		       f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp);
 
 void PSC_set_timestep_F77(f_int *n);
+
+void OUT_params_set_F77(f_int *np, f_int *nnp);
 
 void PIC_push_part_xy_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			  f_real *p2A, f_real *p2B,
@@ -222,8 +224,14 @@ PSC_set_coeff()
 {
   struct psc_coeff *p = &psc.coeff;
   PSC_set_coeff_F77(&p->beta,
-		    &p->wl, &p->ld, &p->vos, &p->vt, &p->wp,
-		    &p->np, &p->nnp);
+		    &p->wl, &p->ld, &p->vos, &p->vt, &p->wp);
+}
+
+void
+OUT_params_set()
+{
+  struct psc_coeff *p = &psc.coeff;
+  OUT_params_set_F77(&p->np, &p->nnp);
 }
 
 static void

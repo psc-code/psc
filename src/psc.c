@@ -198,6 +198,7 @@ psc_init(const char *case_name)
   psc_set_from_options();
   psc_setup();
   psc_view();
+  OUT_params_set();
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);

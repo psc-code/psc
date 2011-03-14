@@ -23,7 +23,7 @@ c plix: largest particle number for output
 
       use OUT_params
       use OUT_particles
-      use VLA_variables, only: n, np, shift_z
+      use VLA_variables, only: n, shift_z
       use PSC_globals
       use PSC_params
       use PSC_domain

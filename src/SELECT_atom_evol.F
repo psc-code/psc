@@ -2,7 +2,7 @@
 
       use OUT_params
       use OUT_particles
-      use VLA_variables, only: np, shift_z
+      use VLA_variables, only: shift_z
       use PSC_globals
       use PSC_params
       use PSC_domain
