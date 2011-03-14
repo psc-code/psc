@@ -8,11 +8,7 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+0.5)*dt.
       subroutine PIC_pml_msa(ex, ey, ez, hx, hy, hz, dvx, dvy, dvz,
      &     bx, by, bz, jxi, jyi, jzi, eps, mu)
 
-      use VLA_variables, only: bx2A, by2A, bz2A, dx2A, dy2A, dz2A,
-     *     ex2A, ey2A, ez2A, fluxi, fluxo, hx2A, hy2A, hz2A,
-     *     je, pox, poy, poz, poyx1i, poyx1o, poyx2i, poyx2o,
-     *     poyy1i, poyy1o, poyy2i, poyy2o, poyz1i, poyz1o,
-     *     poyz2i, poyz2o
+      use OUT_poyn
       use PSC_patch
       use coeff_pml
 

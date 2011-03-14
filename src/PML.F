@@ -64,6 +64,16 @@ c     ======================================================================
       real(kind=8),allocatable,dimension(:) :: bzp, bzm
       real(kind=8),allocatable,dimension(:) :: gbz, gcz, gdz, gez
 
+!     ...
+
+      real(kind=8) dx2A,dy2A,dz2A,bx2A,by2A,bz2A  ! ab  
+      real(kind=8) dx2B,dy2B,dz2B,bx2B,by2B,bz2B  ! ab
+
+      real(kind=8) poyx1i,poyx1o,poyx2i,poyx2o                 ! ab
+      real(kind=8) poyy1i,poyy1o,poyy2i,poyy2o                 ! ab
+      real(kind=8) poyz1i,poyz1o,poyz2i,poyz2o                 ! ab
+      real(kind=8) poyni, poyno                 ! ab
+
       end module coeff_pml
 
 c     ----------------------------------------------------------------------

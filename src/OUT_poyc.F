@@ -20,6 +20,12 @@ c tmxvp: time step counter for ending time averaging of poynting flux
       real(kind=8) enDXt,enDYt,enDZt            ! ab
       real(kind=8) poynit, poynot               ! ab
 
+      real(kind=8) fluxi,fluxo
+      real(kind=8) ex2A,ey2A,ez2A,hx2A,hy2A,hz2A
+      real(kind=8) ex2B,ey2B,ez2B,hx2B,hy2B,hz2B
+      real(kind=8) pox,poy,poz,je
+      real(kind=8) p2A,p2B
+
       end module out_poyn
 
 c     ----------------------------------------------------------------------
@@ -95,14 +101,12 @@ c     ----------------------------------------------------------------------
       subroutine OUT_poyc
 c     ----------------------------------------------------------------------
 
-      use VLA_variables, only: bx2A, bx2B, by2A, by2B, bz2A, bz2B,
-     *     n, ex2A, ex2B, ey2A, ey2B, ez2A, ez2B,
-     *     fluxi, fluxo, hx2A, hx2B, hy2A, hy2B, hz2A, hz2B,
-     *     p2B,pox,poy,poz,poyni,poyno
+      use VLA_variables
       use OUT_params
       use OUT_POYN
       use PSC_domain
       use PSC_patch
+      use COEFF_pml
 
       implicit none
 

@@ -6,6 +6,7 @@ c THE UPDATED E AND H-FIELDS ARE AT t=n*dt.
 
       use VLA_variables
       use PSC_patch
+      use OUT_poyn
 
       implicit none
 
