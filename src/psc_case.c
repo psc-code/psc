@@ -20,6 +20,34 @@ __psc_case_set_from_options(struct _psc_case *_case)
   _case->Case = psc_case_create(_case->case_name);
 }
 
+// ----------------------------------------------------------------------
+// __psc_case_init_param
+
+void
+_psc_case_init_param(struct _psc_case *_case)
+{
+  psc_case_init_param(_psc_case->Case);
+}
+
+// ----------------------------------------------------------------------
+// __psc_case_init_npt
+
+void
+_psc_case_init_npt(struct _psc_case *_case, int kind, double x[3],
+		   struct psc_particle_npt *npt)
+{
+  _case->Case->ops->init_npt(_psc_case->Case, kind, x, npt);
+}
+
+// ----------------------------------------------------------------------
+// __psc_case_init_field
+
+void
+_psc_case_init_field(struct _psc_case *_case, mfields_base_t *flds)
+{
+  _case->Case->ops->init_field(_case->Case, flds);
+}
+
 // ======================================================================
 // _psc_case_init
 

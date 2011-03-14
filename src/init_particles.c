@@ -1,5 +1,4 @@
 #include "psc.h"
-#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -49,8 +48,6 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 void
 psc_init_partition(int *particle_label_offset)
 {
-  assert(_psc_case->Case);
-
   MPI_Comm comm = MPI_COMM_WORLD;
 
   psc.mrc_domain = mrc_domain_create(comm);
@@ -130,19 +127,17 @@ psc_init_partition(int *particle_label_offset)
     pml_find_bounds(p, ilo, ihi);
 
     int np = 0;
-    if (_psc_case->Case->ops->init_npt) {
-      for (int kind = 0; kind < 2; kind++) {
-	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
-	      struct psc_particle_npt npt = { // init to all zero
-	      };
-	      psc_case_init_npt(_psc_case->Case, kind, xx, &npt);
-	      
-	      int n_in_cell = get_n_in_cell(npt.n);
-	      np += n_in_cell;
-	    }
+    for (int kind = 0; kind < 2; kind++) {
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
+	    struct psc_particle_npt npt = { // init to all zero
+	    };
+	    _psc_case_init_npt(_psc_case, kind, xx, &npt);
+	    
+	    int n_in_cell = get_n_in_cell(npt.n);
+	    np += n_in_cell;
 	  }
 	}
       }
@@ -182,57 +177,55 @@ psc_init_particles(int particle_label_offset)
     particles_base_t *pp = &psc.particles.p[p];
 
     int i = 0;
-    if (_psc_case->Case->ops->init_npt) {
-      for (int kind = 0; kind < 2; kind++) {
-	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
-	      struct psc_particle_npt npt = { // init to all zero
-	      };
-	      psc_case_init_npt(_psc_case->Case, kind, xx, &npt);
+    for (int kind = 0; kind < 2; kind++) {
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
+	    struct psc_particle_npt npt = { // init to all zero
+	    };
+	    _psc_case_init_npt(_psc_case, kind, xx, &npt);
+	    
+	    int n_in_cell = get_n_in_cell(npt.n);
+	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
+	      particle_base_t *p = particles_base_get_one(pp, i++);
 	      
-	      int n_in_cell = get_n_in_cell(npt.n);
-	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		particle_base_t *p = particles_base_get_one(pp, i++);
-		
-		float ran1, ran2, ran3, ran4, ran5, ran6;
-		do {
-		  ran1 = random() / ((float) RAND_MAX + 1);
-		  ran2 = random() / ((float) RAND_MAX + 1);
-		  ran3 = random() / ((float) RAND_MAX + 1);
-		  ran4 = random() / ((float) RAND_MAX + 1);
-		  ran5 = random() / ((float) RAND_MAX + 1);
-		  ran6 = random() / ((float) RAND_MAX + 1);
-		} while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-			 ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-		
-		float px =
-		  sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-		  + npt.p[0];
-		float py =
-		  sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-		  + npt.p[1];
-		float pz =
-		  sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-		  + npt.p[2];
-		
-		p->xi = xx[0];
-		p->yi = xx[1];
-		p->zi = xx[2];
-		p->pxi = px;
-		p->pyi = py;
-		p->pzi = pz;
-		p->qni = npt.q;
-		p->mni = npt.m;
+	      float ran1, ran2, ran3, ran4, ran5, ran6;
+	      do {
+		ran1 = random() / ((float) RAND_MAX + 1);
+		ran2 = random() / ((float) RAND_MAX + 1);
+		ran3 = random() / ((float) RAND_MAX + 1);
+		ran4 = random() / ((float) RAND_MAX + 1);
+		ran5 = random() / ((float) RAND_MAX + 1);
+		ran6 = random() / ((float) RAND_MAX + 1);
+	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+	      
+	      float px =
+		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
+		+ npt.p[0];
+	      float py =
+		sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
+		+ npt.p[1];
+	      float pz =
+		sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
+		+ npt.p[2];
+	      
+	      p->xi = xx[0];
+	      p->yi = xx[1];
+	      p->zi = xx[2];
+	      p->pxi = px;
+	      p->pyi = py;
+	      p->pzi = pz;
+	      p->qni = npt.q;
+	      p->mni = npt.m;
 #if PARTICLES_BASE == PARTICLES_FORTRAN
-		p->lni = particle_label_offset + 1;
+	      p->lni = particle_label_offset + 1;
 #endif
-		if (psc.prm.fortran_particle_weight_hack) {
-		  p->wni = npt.n;
-		} else {
-		  p->wni = npt.n / (n_in_cell * psc.coeff.cori);
-		}
+	      if (psc.prm.fortran_particle_weight_hack) {
+		p->wni = npt.n;
+	      } else {
+		p->wni = npt.n / (n_in_cell * psc.coeff.cori);
 	      }
 	    }
 	  }

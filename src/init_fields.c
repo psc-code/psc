@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_case_private.h"
 
 #include <string.h>
 
@@ -24,32 +23,9 @@ psc_init_field_pml(mfields_base_t *flds)
 void
 psc_init_field(mfields_base_t *flds)
 {
-  if (_psc_case->Case) {
-    psc_case_init_field(_psc_case->Case, flds);
-    if (psc.domain.use_pml) {
-      psc_init_field_pml(flds);
-    }
-  } else {
-    INIT_field();
+  _psc_case_init_field(_psc_case, flds);
+  if (psc.domain.use_pml) {
+    psc_init_field_pml(flds);
   }
 }
 
-// ======================================================================
-// Fortran glue
-
-#define C_INIT_field_F77 F77_FUNC_(c_init_field, C_INIT_FIELD)
-#define INIT_field_F77 F77_FUNC_(init_field, INIT_FIELD)
-
-void INIT_field_F77(void);
-
-void
-INIT_field()
-{
-  INIT_field_F77();
-}
-
-void
-C_INIT_field_F77()
-{
-  psc_init_field(&psc.flds);
-}

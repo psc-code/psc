@@ -1,6 +1,5 @@
 
 #include "psc.h"
-#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -285,9 +284,7 @@ psc_init_param(const char *case_name)
   _psc_case_set_from_options(_psc_case);
   init_param_domain_default();
   init_param_psc_default();
-  if (_psc_case->Case) {
-    psc_case_init_param(_psc_case->Case);
-  }
+  _psc_case_init_param(_psc_case);
   init_param_domain();
   init_param_psc();
   init_param_coeff();
