@@ -22,6 +22,7 @@ struct vector_ops {
 };
 
 extern struct vector_ops vector_double_ops;
+extern struct vector_ops vector_float_ops;
 
 #define vector_ops(vec) ((struct vector_ops *)((vec)->obj.ops))
 
