@@ -13,4 +13,13 @@ struct vector {
   double *elements;
 };
 
+// ======================================================================
+// vector subclass
+
+struct vector_ops {
+  MRC_SUBCLASS_OPS(struct vector);
+};
+
+extern struct vector_ops vector_double_ops;
+
 #endif
