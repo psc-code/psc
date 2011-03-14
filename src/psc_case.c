@@ -11,6 +11,15 @@ __psc_case_create(struct _psc_case *_case)
 }
 
 // ----------------------------------------------------------------------
+// __psc_case_set_from_options
+
+static void
+__psc_case_set_from_options(struct _psc_case *_case)
+{
+  psc_set_from_options();
+}
+
+// ----------------------------------------------------------------------
 // __psc_case_init_npt
 
 void
@@ -98,5 +107,6 @@ struct mrc_class__psc_case mrc_class__psc_case = {
   .size             = sizeof(struct _psc_case),
   .init             = _psc_case_init,
   .create           = __psc_case_create,
+  .set_from_options = __psc_case_set_from_options,
 };
 
