@@ -177,12 +177,12 @@ psc_init()
 {
   psc_setup_domain();
   psc_setup_coeff();
+  psc_setup();
 
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);
 
   psc_init_particles(particle_label_offset);
-  psc_setup();
   psc_view();
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
