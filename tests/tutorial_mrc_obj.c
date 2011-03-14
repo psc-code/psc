@@ -10,7 +10,7 @@
 struct vector {
   struct mrc_obj obj;
   int nr_elements;
-  int *elements;
+  double *elements;
 };
 
 MRC_CLASS_DECLARE(vector, struct vector);
