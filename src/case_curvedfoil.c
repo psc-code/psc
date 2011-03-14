@@ -22,9 +22,7 @@
 //               **
 //              **
 
-#define to_curvedfoil(_case) ((struct curvedfoil *)(_case)->obj.subctx)
-
-struct curvedfoil {
+struct psc_case_curvedfoil {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m of the first(0) foil
   double L0; // gradient of density profile in m of the first foil
@@ -34,9 +32,9 @@ struct curvedfoil {
   double R_curv0;  // curvature of the first foil  in meters
 };
 
-#define VAR(x) (void *)offsetof(struct curvedfoil, x)
+#define VAR(x) (void *)offsetof(struct psc_case_curvedfoil, x)
 
-static struct param curvedfoil_descr[] = {
+static struct param psc_case_curvedfoil_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.5 * 1e-6)     },
@@ -194,8 +192,8 @@ psc_case_curvedfoil_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_curvedfoil_ops = {
   .name             = "curvedfoil",
-  .size             = sizeof(struct curvedfoil),
-  .param_descr      = curvedfoil_descr,
+  .size             = sizeof(struct psc_case_curvedfoil),
+  .param_descr      = psc_case_curvedfoil_descr,
   .create           = psc_case_curvedfoil_create,
   .set_from_options = psc_case_curvedfoil_set_from_options,
   .init_field       = psc_case_curvedfoil_init_field,

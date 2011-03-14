@@ -21,9 +21,7 @@
 //
 // same as harris, but with Bx = tanh(y) type of equilibrium
 
-#define to_harris_xy(_case) ((struct harris_xy *)(_case)->obj.subctx)
-
-struct harris_xy {
+struct psc_case_harris_xy {
   // parameters
   double c_over_vA;
   double Bguide;
@@ -42,9 +40,9 @@ struct harris_xy {
   double _pert;
 };
 
-#define VAR(x) (void *)offsetof(struct harris_xy, x)
+#define VAR(x) (void *)offsetof(struct psc_case_harris_xy, x)
 
-static struct param harris_xy_descr[] = {
+static struct param psc_case_harris_xy_descr[] = {
   { "c_over_vA"     , VAR(c_over_vA)       , PARAM_DOUBLE(20.)    },
   { "Bguide"        , VAR(Bguide)          , PARAM_DOUBLE(5.)     },
   { "mass_ratio"    , VAR(mass_ratio)      , PARAM_DOUBLE(25.)    },
@@ -63,7 +61,7 @@ static struct param harris_xy_descr[] = {
 static void
 psc_case_harris_xy_set_from_options(struct psc_case *_case)
 {
-  struct harris_xy *harris = to_harris_xy(_case);
+  struct psc_case_harris_xy *harris = mrc_to_subobj(_case, struct psc_case_harris_xy);
 
   real c = 1.;
   real eps0 = 1.;
@@ -142,7 +140,7 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
 }
 
 static real
-Bx0(struct harris_xy *harris, real y)
+Bx0(struct psc_case_harris_xy *harris, real y)
 {
   double ly = psc.domain.length[1];
   return harris->_B0 * (-1. 
@@ -155,14 +153,14 @@ Bx0(struct harris_xy *harris, real y)
 }
 
 static real
-Az1(struct harris_xy *harris, real x, real y)
+Az1(struct psc_case_harris_xy *harris, real x, real y)
 {
   double lx = psc.domain.length[0], ly = psc.domain.length[1];
   return harris->_pert / (2.*M_PI / lx) * sin(2.*M_PI * x / lx) * .5 * (1 - cos(2*2.*M_PI * y / ly));
 }
 
 static real
-Bx(struct harris_xy *harris, real x, real y)
+Bx(struct psc_case_harris_xy *harris, real x, real y)
 {
   real dy = 1e-3;
   return Bx0(harris, y) + 
@@ -170,35 +168,35 @@ Bx(struct harris_xy *harris, real x, real y)
 }
 
 static real
-By(struct harris_xy *harris, real x, real y)
+By(struct psc_case_harris_xy *harris, real x, real y)
 {
   real dx = 1e-3;
   return - (Az1(harris, x + dx, y) - Az1(harris, x - dx, y)) / (2.*dx);
 }
 
 static real
-Bz(struct harris_xy *harris, real x, real y)
+Bz(struct psc_case_harris_xy *harris, real x, real y)
 {
   real B0 = harris->_B0;
   return sqrt(sqr(harris->_Bguide) + sqr(B0) - sqr(Bx0(harris, y)));
 }
 
 static real
-Jx(struct harris_xy *harris, real x, real y)
+Jx(struct psc_case_harris_xy *harris, real x, real y)
 {
   real dy = 1e-3;
   return (Bz(harris, x, y + dy) - Bz(harris, x, y - dy)) / (2.*dy);
 }
 
 static real
-Jy(struct harris_xy *harris, real x, real y)
+Jy(struct psc_case_harris_xy *harris, real x, real y)
 {
   real dx = 1e-3;
   return - (Bz(harris, x + dx, y) - Bz(harris, x - dx, y)) / (2.*dx);
 }
 
 static real
-Jz(struct harris_xy *harris, real x, real y)
+Jz(struct psc_case_harris_xy *harris, real x, real y)
 {
   real dx = 1e-3, dy = 1e-3;
   return
@@ -211,7 +209,7 @@ Jz(struct harris_xy *harris, real x, real y)
 static void
 psc_case_harris_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  struct harris_xy *harris = to_harris_xy(_case);
+  struct psc_case_harris_xy *harris = mrc_to_subobj(_case, struct psc_case_harris_xy);
 
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -236,7 +234,7 @@ static void
 psc_case_harris_xy_init_npt(struct psc_case *_case, int kind, double x[3],
 			     struct psc_particle_npt *npt)
 {
-  struct harris_xy *harris = to_harris_xy(_case);
+  struct psc_case_harris_xy *harris = mrc_to_subobj(_case, struct psc_case_harris_xy);
 
   real Ti = harris->Ti, Te = harris->Te;
 
@@ -273,8 +271,8 @@ psc_case_harris_xy_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_harris_xy_ops = {
   .name             = "harris_xy",
-  .size             = sizeof(struct harris_xy),
-  .param_descr      = harris_xy_descr,
+  .size             = sizeof(struct psc_case_harris_xy),
+  .param_descr      = psc_case_harris_xy_descr,
   .set_from_options = psc_case_harris_xy_set_from_options,
   .init_field       = psc_case_harris_xy_init_field,
   .init_npt         = psc_case_harris_xy_init_npt,

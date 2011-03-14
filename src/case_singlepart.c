@@ -9,17 +9,15 @@
 
 // FIXME description
 
-#define to_singlepart(_case) ((struct singlepart *)(_case)->obj.subctx)
-
-struct singlepart {
+struct psc_case_singlepart {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct singlepart, x)
+#define VAR(x) (void *)offsetof(struct psc_case_singlepart, x)
 
-static struct param singlepart_descr[] = {
+static struct param psc_case_singlepart_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
@@ -65,7 +63,7 @@ static void
 psc_case_singlepart_init_npt(struct psc_case *_case, int kind, double x[3],
 			      struct psc_particle_npt *npt)
 {
-  struct singlepart *singlepart = to_singlepart(_case);
+  struct psc_case_singlepart *singlepart = mrc_to_subobj(_case, struct psc_case_singlepart);
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 
@@ -110,8 +108,8 @@ psc_case_singlepart_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_singlepart_ops = {
   .name             = "singlepart",
-  .size             = sizeof(struct singlepart),
-  .param_descr      = singlepart_descr,
+  .size             = sizeof(struct psc_case_singlepart),
+  .param_descr      = psc_case_singlepart_descr,
   .set_from_options = psc_case_singlepart_set_from_options,
   .init_npt         = psc_case_singlepart_init_npt,
 };

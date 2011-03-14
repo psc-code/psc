@@ -12,9 +12,7 @@
 //
 // FIXME description
 
-#define to_collisions(_case) ((struct collisions *)(_case)->obj.subctx)
-
-struct collisions {
+struct psc_case_collisions {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -24,9 +22,9 @@ struct collisions {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct collisions, x)
+#define VAR(x) (void *)offsetof(struct psc_case_collisions, x)
 
-static struct param collisions_descr[] = {
+static struct param psc_case_collisions_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.1)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.1)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)      },
@@ -105,7 +103,7 @@ static void
 psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3], 
 			      struct psc_particle_npt *npt)
 {
-  struct collisions *collisions = to_collisions(_case);
+  struct psc_case_collisions *collisions = mrc_to_subobj(_case, struct psc_case_collisions);
 
   real Te = collisions->Te, Ti = collisions->Ti;
 
@@ -161,8 +159,8 @@ psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_collisions_ops = {
   .name             = "collisions",
-  .size             = sizeof(struct collisions),
-  .param_descr      = collisions_descr,
+  .size             = sizeof(struct psc_case_collisions),
+  .param_descr      = psc_case_collisions_descr,
   .set_from_options = psc_case_collisions_set_from_options,
   .init_field       = psc_case_collisions_init_field,
   .init_npt         = psc_case_collisions_init_npt,

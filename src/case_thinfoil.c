@@ -12,9 +12,7 @@
 //
 // FIXME description
 
-#define to_thinfoil(_case) ((struct thinfoil *)(_case)->obj.subctx)
-
-struct thinfoil {
+struct psc_case_thinfoil {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -24,9 +22,9 @@ struct thinfoil {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct thinfoil, x)
+#define VAR(x) (void *)offsetof(struct psc_case_thinfoil, x)
 
-static struct param thinfoil_descr[] = {
+static struct param psc_case_thinfoil_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.1)            },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.1)            },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)     },
@@ -111,7 +109,7 @@ static void
 psc_case_thinfoil_init_npt(struct psc_case *_case, int kind, double x[3], 
 			    struct psc_particle_npt *npt)
 {
-  struct thinfoil *thinfoil = to_thinfoil(_case);
+  struct psc_case_thinfoil *thinfoil = mrc_to_subobj(_case, struct psc_case_thinfoil);
 
   real Te = thinfoil->Te, Ti = thinfoil->Ti;
 
@@ -165,8 +163,8 @@ psc_case_thinfoil_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_thinfoil_ops = {
   .name             = "thinfoil",
-  .size             = sizeof(struct thinfoil),
-  .param_descr      = thinfoil_descr,
+  .size             = sizeof(struct psc_case_thinfoil),
+  .param_descr      = psc_case_thinfoil_descr,
   .create           = psc_case_thinfoil_create,
   .set_from_options = psc_case_thinfoil_set_from_options,
   .init_field       = psc_case_thinfoil_init_field,

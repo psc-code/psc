@@ -19,10 +19,7 @@
 // needs the coordinates of its beginning and end, thickness 
 //
 
-#define to_cone(_case) ((struct cone *)(_case)->obj.subctx)
-
-struct cone {
-  
+struct psc_case_cone {
   double Line0_x0, Line0_z0;   // coordinates of the beginning of the line0
   double Line0_x1, Line0_z1;   // coordinates of the end of the line0
   double Line0_Thickness;       // thickness of the line
@@ -44,9 +41,9 @@ struct cone {
   double R_curv0;  // curvature of the hollowsphere0 foil  in meters
 };
 
-#define VAR(x) (void *)offsetof(struct cone, x)
+#define VAR(x) (void *)offsetof(struct psc_case_cone, x)
 
-static struct param cone_descr[] = {
+static struct param psc_case_cone_descr[] = {
   { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(11. * 1e-6)           },
   { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(7.5 * 1e-6)             },
   { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(0.5 * 1e-6)            },
@@ -229,7 +226,7 @@ static void
 psc_case_cone_init_npt(struct psc_case *_case, int kind, double x[3], 
 			struct psc_particle_npt *npt)
 {
-  struct cone *cone = to_cone(_case);
+  struct psc_case_cone *cone = mrc_to_subobj(_case, struct psc_case_cone);
 
   real Te = cone->Te, Ti = cone->Ti;
 
@@ -289,8 +286,8 @@ psc_case_cone_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_cone_ops = {
   .name             = "cone",
-  .size             = sizeof(struct cone),
-  .param_descr      = cone_descr,
+  .size             = sizeof(struct psc_case_cone),
+  .param_descr      = psc_case_cone_descr,
   .create           = psc_case_cone_create,
   .set_from_options = psc_case_cone_set_from_options,
   .init_field       = psc_case_cone_init_field,

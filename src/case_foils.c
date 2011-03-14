@@ -19,10 +19,7 @@
 // needs the coordinates of its beginning and end, thickness 
 //
 
-#define to_foils(_case) ((struct foils *)(_case)->obj.subctx)
-
-struct foils {
-  
+struct psc_case_foils {
   double Line0_x0, Line0_z0;   // coordinates of the beginning of the line0
   double Line0_x1, Line0_z1;   // coordinates of the end of the line0
   double Line0_Thickness;       // thickness of the line
@@ -44,9 +41,9 @@ struct foils {
   double R_curv0;  // curvature of the hollowsphere0 foil  in meters
 };
 
-#define VAR(x) (void *)offsetof(struct foils, x)
+#define VAR(x) (void *)offsetof(struct psc_case_foils, x)
 
-static struct param foils_descr[] = {
+static struct param psc_case_foils_descr[] = {
   { "Line0_x0"                           , VAR(Line0_x0)                   , PARAM_DOUBLE(15. * 1e-6)           },
   { "Line0_x1"                           , VAR(Line0_x1)                   , PARAM_DOUBLE(11.5 * 1e-6)             },
   { "Line0_z0"                           , VAR(Line0_z0)                   , PARAM_DOUBLE(3.0 * 1e-6)            },
@@ -228,7 +225,7 @@ static void
 psc_case_foils_init_npt(struct psc_case *_case, int kind, double x[3], 
 			 struct psc_particle_npt *npt)
 {
-  struct foils *foils = to_foils(_case);
+  struct psc_case_foils *foils = mrc_to_subobj(_case, struct psc_case_foils);
 
   real Te = foils->Te, Ti = foils->Ti;
 
@@ -288,8 +285,8 @@ psc_case_foils_init_npt(struct psc_case *_case, int kind, double x[3],
 
 struct psc_case_ops psc_case_foils_ops = {
   .name             = "foils",
-  .size             = sizeof(struct foils),
-  .param_descr      = foils_descr,
+  .size             = sizeof(struct psc_case_foils),
+  .param_descr      = psc_case_foils_descr,
   .create           = psc_case_foils_create,
   .set_from_options = psc_case_foils_set_from_options,
   .init_field       = psc_case_foils_init_field,
