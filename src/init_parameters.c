@@ -279,7 +279,6 @@ init_param_coeff()
 void
 psc_init_param()
 {
-  _psc_case_init_param(_psc_case);
   init_param_domain();
   init_param_psc();
   init_param_coeff();

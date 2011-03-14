@@ -11,15 +11,6 @@ __psc_case_create(struct _psc_case *_case)
 }
 
 // ----------------------------------------------------------------------
-// __psc_case_init_param
-
-void
-_psc_case_init_param(struct _psc_case *_case)
-{
-  psc_case_init_param(_psc_case->Case);
-}
-
-// ----------------------------------------------------------------------
 // __psc_case_init_npt
 
 void
@@ -51,19 +42,29 @@ _psc_case_create_sub(struct _psc_case *_case)
   _case->Case = psc_case_create(_case->obj.ops->name);
 }
 
+static void
+_psc_case_sub_set_from_options(struct _psc_case *_case)
+{
+  // set params, but also updated psc-params accordingly
+  psc_case_init_param(_psc_case->Case);
+}
+
 static struct _psc_case_ops _psc_case_test_yz_ops = {
   .name                  = "test_yz",
   .create                = _psc_case_create_sub,
+  .set_from_options      = _psc_case_sub_set_from_options,
 };
 
 static struct _psc_case_ops _psc_case_test_xz_ops = {
   .name                  = "test_xz",
   .create                = _psc_case_create_sub,
+  .set_from_options      = _psc_case_sub_set_from_options,
 };
 
 static struct _psc_case_ops _psc_case_harris_xy_ops = {
   .name                  = "harris_xy",
   .create                = _psc_case_create_sub,
+  .set_from_options      = _psc_case_sub_set_from_options,
 };
 
 static void

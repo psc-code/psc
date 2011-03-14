@@ -88,7 +88,6 @@ psc_case_init_npt(struct psc_case *Case, int kind, double xx[3],
 
 MRC_CLASS_DECLARE(_psc_case, struct _psc_case);
 
-void _psc_case_init_param(struct _psc_case *_case);
 void _psc_case_init_field(struct _psc_case *_case, mfields_base_t *flds);
 void _psc_case_init_npt(struct _psc_case *_case, int kind, double x[3],
 			struct psc_particle_npt *npt);
