@@ -18,8 +18,12 @@ struct vector {
 
 struct vector_ops {
   MRC_SUBCLASS_OPS(struct vector);
+  void  (*set_element)(struct vector *vec, int i, double val);
+  double (*get_element)(struct vector *vec, int i);
 };
 
 extern struct vector_ops vector_double_ops;
+
+#define vector_ops(vec) ((struct vector_ops *)((vec)->obj.ops))
 
 #endif

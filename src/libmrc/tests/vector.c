@@ -5,27 +5,18 @@
 #include <assert.h>
 
 // ----------------------------------------------------------------------
-// vector_set_element
+// forwarding to subclass
 
 void
 vector_set_element(struct vector *vec, int i, double val)
 {
-  assert(vec->elements);
-  assert(i >= 0 && i < vec->nr_elements);
-
-  vec->elements[i] = val;
+  vector_ops(vec)->set_element(vec, i, val);
 }
-
-// ----------------------------------------------------------------------
-// vector_get_element
 
 double
 vector_get_element(struct vector *vec, int i)
 {
-  assert(vec->elements);
-  assert(i >= 0 && i < vec->nr_elements);
-
-  return vec->elements[i];
+  return vector_ops(vec)->get_element(vec, i);
 }
 
 // ----------------------------------------------------------------------
