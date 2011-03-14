@@ -3,26 +3,6 @@
 
 #include <mrc_params.h>
 #include <assert.h>
-#include <stdlib.h>
-
-// ----------------------------------------------------------------------
-// vector_setup
-
-void
-_vector_setup(struct vector *vec)
-{
-  vec->elements = calloc(vec->nr_elements, sizeof(*vec->elements));
-}
-
-// ----------------------------------------------------------------------
-// vector_destroy
-
-void
-_vector_destroy(struct vector *vec)
-{
-  free(vec->elements);
-  vec->elements = NULL; // just to be safe
-}
 
 // ----------------------------------------------------------------------
 // vector_set_element
@@ -71,7 +51,5 @@ struct mrc_class_vector mrc_class_vector = {
   .size             = sizeof(struct vector),
   .init             = vector_init,
   .param_descr      = vector_descr,
-  .setup            = _vector_setup,
-  .destroy          = _vector_destroy,
 };
 
