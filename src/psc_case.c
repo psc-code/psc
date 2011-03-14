@@ -25,12 +25,25 @@ __psc_case_set_from_options(struct _psc_case *_case)
 static void
 __psc_case_setup(struct _psc_case *_case)
 {
-  // FIXME
+  // FIXME, probably broken, should go into sep subclass?
   if (psc.prm.from_checkpoint) {
     assert(0);
     psc_read_checkpoint();
   }
+  // this sets up everything except allocating fields and particles,
+  // and intializing them
   psc_setup();
+
+  // alloc / initialize particles
+  int particle_label_offset;
+  psc_init_partition(&particle_label_offset);
+  psc_init_particles(particle_label_offset);
+
+  // alloc / initialize fields
+  mfields_base_alloc(&psc.flds, NR_FIELDS);
+  psc_init_field(&psc.flds);
+
+  psc_setup_fortran();
 }
 
 // ----------------------------------------------------------------------
@@ -95,22 +108,30 @@ _psc_case_sub_set_from_options(struct _psc_case *_case)
   }
 }
 
+static void
+_psc_case_sub_setup(struct _psc_case *_case)
+{
+}
+
 static struct _psc_case_ops _psc_case_test_yz_ops = {
   .name                  = "test_yz",
   .create                = _psc_case_create_sub,
   .set_from_options      = _psc_case_sub_set_from_options,
+  .setup                 = _psc_case_sub_setup,
 };
 
 static struct _psc_case_ops _psc_case_test_xz_ops = {
   .name                  = "test_xz",
   .create                = _psc_case_create_sub,
   .set_from_options      = _psc_case_sub_set_from_options,
+  .setup                 = _psc_case_sub_setup,
 };
 
 static struct _psc_case_ops _psc_case_harris_xy_ops = {
   .name                  = "harris_xy",
   .create                = _psc_case_create_sub,
   .set_from_options      = _psc_case_sub_set_from_options,
+  .setup                 = _psc_case_sub_setup,
 };
 
 static void
