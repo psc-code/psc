@@ -35,11 +35,8 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
 
   struct vector *vec = vector_create(MPI_COMM_WORLD);
-
-  assert(vec->nr_elements == 1);
-  vec->nr_elements = 3;
+  vector_set_from_options(vec);
   vector_view(vec);
-
   vector_destroy(vec);
 
   MPI_Finalize();
