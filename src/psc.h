@@ -423,6 +423,7 @@ void PSC_set_domain(void);
 void PSC_set_params(void);
 void PSC_set_coeff(void);
 void OUT_params_set(void);
+void SETUP_field(void);
 
 void PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf);

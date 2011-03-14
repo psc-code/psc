@@ -304,8 +304,6 @@ init_param_coeff()
   if (psc.prm.nmax == 0) {
     psc.prm.nmax = 30. * psc.coeff.nnp;
   }
-
-  PSC_set_globals();
 }
 
 void

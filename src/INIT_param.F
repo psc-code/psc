@@ -1,6 +1,4 @@
 
-#include "config.h"
-
 c     ----------------------------------------------------------------------
       subroutine INIT_basic
 c     ----------------------------------------------------------------------
@@ -23,20 +21,4 @@ c pi: pi
       call MPI_COMM_RANK(MPI_COMM_WORLD,mpe,ierr)
 
       end subroutine INIT_basic
-
-c PARAMETER INITIALIZATION 
-
-c     ----------------------------------------------------------------------
-      subroutine INIT_param_fortran
-c     ----------------------------------------------------------------------
-c     setup processor map
-
-      use VLA_variables
-      use PSC_domain
-
-      implicit none
-
-      if (use_pml) call PML_coeff_init_param
-
-      end subroutine INIT_param_fortran
 

@@ -77,10 +77,6 @@ psc_log_step(double stats[NR_STATS])
   }
 }
 
-#define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
-
-void SETUP_field_F77(void);
-
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.
 ///
@@ -92,8 +88,6 @@ psc_integrate()
   if (!pr) {
     pr = prof_register("psc_step", 1., 0, 0);
   }
-
-  SETUP_field_F77();
 
   mparticles_base_t *particles = &psc.particles;
   mfields_base_t *flds = &psc.flds;

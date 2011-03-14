@@ -10,6 +10,7 @@
 #define PSC_set_coeff_F77 F77_FUNC_(psc_set_coeff, PSC_SET_COEFF)
 #define PSC_set_timestep_F77 F77_FUNC(psc_set_timestep, PSC_SET_TIMESTEP)
 #define OUT_params_set_F77 F77_FUNC_(out_params_set, OUT_PARAMS_SET)
+#define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
 #define PIC_push_part_xy_F77 F77_FUNC(pic_push_part_xy,PIC_PUSH_PART_XY)
 #define PIC_push_part_xz_F77 F77_FUNC(pic_push_part_xz,PIC_PUSH_PART_XZ)
 #define PIC_push_part_yz_F77 F77_FUNC(pic_push_part_yz,PIC_PUSH_PART_YZ)
@@ -77,6 +78,8 @@ void PSC_set_coeff_F77(f_real *beta,
 		       f_real *wl, f_real *ld, f_real *vos, f_real *vt, f_real *wp);
 
 void PSC_set_timestep_F77(f_int *n);
+
+void SETUP_field_F77(void);
 
 void OUT_params_set_F77(f_int *np, f_int *nnp);
 
@@ -232,6 +235,12 @@ OUT_params_set()
 {
   struct psc_coeff *p = &psc.coeff;
   OUT_params_set_F77(&p->np, &p->nnp);
+}
+
+void
+SETUP_field()
+{
+  SETUP_field_F77();
 }
 
 static void

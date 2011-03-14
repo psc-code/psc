@@ -175,30 +175,27 @@ psc_out_particles()
 // ----------------------------------------------------------------------
 // psc_init
 
-#define INIT_param_fortran_F77 F77_FUNC_(init_param_fortran, INIT_PARAM_FORTRAN)
-
-void INIT_param_fortran_F77(void);
-
 void
 psc_init(const char *case_name)
 {
   psc_init_param(case_name);
 
-  PSC_set_params();
-  PSC_set_coeff();
-  INIT_basic();
-  INIT_param_fortran_F77();
-
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);
-  PSC_set_domain();
-  PSC_set_patch(0);
 
   psc_init_particles(particle_label_offset);
   psc_set_from_options();
   psc_setup();
   psc_view();
+
+  INIT_basic();
+  PSC_set_globals();
+  PSC_set_params();
+  PSC_set_coeff();
+  PSC_set_domain();
+  PSC_set_patch(0);
   OUT_params_set();
+  SETUP_field();
 
   mfields_base_alloc(&psc.flds, NR_FIELDS);
   psc_init_field(&psc.flds);
