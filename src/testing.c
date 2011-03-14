@@ -219,8 +219,11 @@ psc_create_test_xz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
+  _psc_case = _psc_case_create(MPI_COMM_WORLD);
+  _psc_case_set_param_string(_psc_case, "case", "test_xz");
+  _psc_case_set_from_options(_psc_case);
   psc_create(conf);
-  psc_init("test_xz");
+  psc_init();
 }
 
 // ----------------------------------------------------------------------
@@ -232,8 +235,11 @@ psc_create_test_yz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
+  _psc_case = _psc_case_create(MPI_COMM_WORLD);
+  _psc_case_set_param_string(_psc_case, "case", "test_yz");
+  _psc_case_set_from_options(_psc_case);
   psc_create(conf);
-  psc_init("test_yz");
+  psc_init();
   psc.particles.p[0].n_part = 1;
   psc_sort_run(psc.sort, &psc.particles);
 }

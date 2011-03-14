@@ -371,8 +371,8 @@ psc_local_to_global_indices(int p, int jx, int jy, int jz,
 void psc_create(struct psc_mod_config *conf);
 void psc_destroy(void);
 
-void psc_init(const char *case_name);
-void psc_init_param(const char *case_name);
+void psc_init(void);
+void psc_init_param(void);
 void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);

@@ -277,11 +277,8 @@ init_param_coeff()
 }
 
 void
-psc_init_param(const char *case_name)
+psc_init_param()
 {
-  _psc_case = _psc_case_create(MPI_COMM_WORLD);
-  _psc_case_set_param_string(_psc_case, "case", case_name);
-  _psc_case_set_from_options(_psc_case);
   init_param_domain_default();
   init_param_psc_default();
   _psc_case_init_param(_psc_case);

@@ -168,9 +168,9 @@ psc_destroy()
 // psc_init
 
 void
-psc_init(const char *case_name)
+psc_init()
 {
-  psc_init_param(case_name);
+  psc_init_param();
 
   int particle_label_offset;
   psc_init_partition(&particle_label_offset);
