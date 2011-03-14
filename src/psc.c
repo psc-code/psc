@@ -121,6 +121,9 @@ psc_set_from_options(void)
 void
 psc_setup(void)
 {
+  psc_setup_domain(); // needs to be done before setting up psc_bnd
+  psc_setup_coeff();
+
   psc_push_particles_setup(psc.push_particles);
   psc_push_fields_setup(psc.push_fields);
   psc_bnd_setup(psc.bnd);
@@ -175,8 +178,6 @@ psc_destroy()
 void
 psc_init()
 {
-  psc_setup_domain();
-  psc_setup_coeff();
   psc_setup();
 
   int particle_label_offset;
