@@ -12,7 +12,7 @@ main(int argc, char **argv)
   psc_case_set_from_options(_case);
   psc_case_setup(_case);
   psc_case_view(_case);
-  psc_integrate();
+  psc_integrate(&psc);
   psc_case_destroy(_case);
 
   MPI_Finalize();

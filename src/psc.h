@@ -373,7 +373,7 @@ void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
-void psc_integrate(void);
+void psc_integrate(struct psc *psc);
 
 void psc_set_default_domain(struct psc *psc);
 void psc_set_from_options_domain(struct psc *psc);
@@ -399,65 +399,7 @@ real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
 
-
-// various implementations of the psc
-// (something like Fortran, generic C, CUDA, ...)
-
-extern struct psc_ops psc_ops_fortran;
-extern struct psc_ops psc_ops_generic_c;
-extern struct psc_ops psc_ops_cuda;
-extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
-extern struct psc_ops psc_ops_none;
-
-extern struct psc_moment_ops psc_moment_ops_fortran;
-extern struct psc_moment_ops psc_moment_ops_c;
-
-// Wrappers for Fortran functions
 void psc_setup_fortran(void);
-
-void PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_z(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_a(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_b(int patch, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_sort(particles_fortran_t *pp);
-void PIC_randomize(particles_fortran_t *pp);
-void PIC_bin_coll(particles_fortran_t *pp);
-void PIC_find_cell_indices(particles_fortran_t *pp);
-void PIC_msa(fields_fortran_t *pf);
-void PIC_msb(fields_fortran_t *pf);
-void PIC_pml_msa(fields_fortran_t *pf);
-void PIC_pml_msb(fields_fortran_t *pf);
-void OUT_field(void);
-void OUT_part(particles_fortran_t *pp);
-void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
-void SET_param_pml(void);
-void PSC_set_patch(int p);
-void GET_param_domain(void);
-void INIT_param_domain(void);
-void INIT_param_psc(void);
-f_real **ALLOC_field(void);
-void FREE_field(void);
-void INIT_basic(void);
-real PSC_p_pulse_z1(real x, real y, real z, real t);
-real PSC_s_pulse_z1(real x, real y, real z, real t);
-real PSC_p_pulse_z2(real x, real y, real z, real t);
-real PSC_s_pulse_z2(real x, real y, real z, real t);
-
-void PIC_fax(fields_fortran_t *pf, int m);
-void PIC_fay(fields_fortran_t *pf, int m);
-void PIC_faz(fields_fortran_t *pf, int m);
-void PIC_fex(fields_fortran_t *pf, int m);
-void PIC_fey(fields_fortran_t *pf, int m);
-void PIC_fez(fields_fortran_t *pf, int m);
-void PIC_pex(particles_fortran_t *pp);
-void PIC_pey(particles_fortran_t *pp);
-void PIC_pez(particles_fortran_t *pp);
-void SERV_read_1(int *timestep, int *n_part);
-void SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf);
-void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

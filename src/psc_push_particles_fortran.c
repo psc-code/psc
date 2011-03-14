@@ -1,5 +1,6 @@
 
 #include "psc_push_particles_private.h"
+#include "psc_glue.h"
 
 #include <mrc_profile.h>
 

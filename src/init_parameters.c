@@ -86,8 +86,6 @@ psc_setup_domain(struct psc *psc)
 {
   struct psc_domain *domain = &psc->domain;
 
-  SET_param_pml();
-
   bool need_pml = false;
   for (int d = 0; d < 3; d++) {
     if (domain->gdims[d] == 1) {

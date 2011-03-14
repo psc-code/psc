@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_glue.h"
 
 #include <assert.h>
 
@@ -636,6 +637,7 @@ psc_setup_fortran()
   PSC_set_params();
   PSC_set_coeff();
   PSC_set_domain();
+  SET_param_pml();
   PSC_set_patch(0);
   OUT_params_set();
   SETUP_field();

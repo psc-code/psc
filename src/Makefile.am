@@ -54,6 +54,7 @@ libpsc_a_SOURCES = \
 	output_mrc.c \
 	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
 	psc_pulse.c \
+	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
 	case_langmuir.c \
