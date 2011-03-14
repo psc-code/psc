@@ -10,7 +10,6 @@
 struct vector {
   struct mrc_obj obj;
   int nr_elements;
-  double *elements;
 };
 
 // ======================================================================
