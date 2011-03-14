@@ -48,62 +48,6 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 void
 psc_init_partition(int *particle_label_offset)
 {
-  MPI_Comm comm = MPI_COMM_WORLD;
-
-  psc.mrc_domain = mrc_domain_create(comm);
-  // create a very simple domain decomposition
-  int bc[3] = {};
-  for (int d = 0; d < 3; d++) {
-    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	psc.domain.gdims[d] > 1) {
-      bc[d] = BC_PERIODIC;
-    }
-  }
-
-  mrc_domain_set_type(psc.mrc_domain, "multi");
-  mrc_domain_set_param_int3(psc.mrc_domain, "m", psc.domain.gdims);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcx", bc[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcy", bc[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcz", bc[2]);
-
-  struct mrc_crds *crds = mrc_domain_get_crds(psc.mrc_domain);
-  mrc_crds_set_type(crds, "multi_uniform");
-  mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc.domain.length[0],
-	psc.domain.length[1], psc.domain.length[2] });
-
-  mrc_domain_set_from_options(psc.mrc_domain);
-  mrc_domain_setup(psc.mrc_domain);
-  mrc_domain_view(psc.mrc_domain);
-
-  // set up index bounds,
-  // sanity checks for the decomposed domain
-  int gdims[3];
-  mrc_domain_get_global_dims(psc.mrc_domain, gdims);
-  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
-  psc.patch = calloc(psc.nr_patches, sizeof(*psc.patch));
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
-    for (int d = 0; d < 3; d++) {
-      patch->ldims[d] = patches[p].ldims[d];
-      patch->off[d] = patches[p].off[d];
-      patch->xb[d]  = patches[p].off[d] * psc.dx[d];
-      
-      int min_size = 1;
-      if (patch->off[d] == 0 && // left-most patch in this dir
-	  (psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	   psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-	min_size += psc.pml.size;
-      }
-      if (patch->off[d] + patch->ldims[d] == gdims[d] && // right-most patch in this dir
-	  (psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	   psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-	min_size += psc.pml.size;
-      }
-      assert(psc.patch[p].ldims[d] >= min_size);
-    }
-  }
-
 #if 0
   int rank, size;
   MPI_Comm_rank(comm, &rank);
