@@ -16,4 +16,11 @@ c r3x: max output range along z
       ! FIXME, if needed, override defaults in OUT_fields_alloc!
       integer :: r1n, r1x, r2n, r2x, r3n, r3x
 
+c data_out: data out directory
+c data_chk: data checkpointing directory
+
+      character*(200) data_out
+      character*(200) data_chk
+      character*(200) data_processed
+
       end module OUT_params

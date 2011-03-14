@@ -3,7 +3,8 @@ c by A.Kemp 11/15/2005
 
       subroutine OUT_energy(niloc, p_niloc)
 
-      use VLA_variables, only: data_out, n
+      use VLA_variables, only: n
+      use OUT_params
       use OUT_fields
       use PSC_domain, only: mpe
       use PSC_params

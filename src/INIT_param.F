@@ -194,6 +194,7 @@ c     setup processor map
 
       use VLA_variables
       use PSC_domain
+      use OUT_params
 
       implicit none
 

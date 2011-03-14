@@ -5,7 +5,7 @@ c PARTICLE OUTPUT!
 
       use OUT_params
       use OUT_particles
-      use VLA_variables, only: data_out, n
+      use VLA_variables, only: n
       use PSC_domain, only: mpe
       use PSC_params
       use PSC_patch

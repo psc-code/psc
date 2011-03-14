@@ -10,6 +10,7 @@ noinst_LIBRARIES = libpsc.a
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
 	FIELDS.F \
+	OUT_params.F \
 	PML.F PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
@@ -31,7 +32,6 @@ libpsc_a_SOURCES = \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
 	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
-	OUT_params.F \
 	OUT_field.F OUT_part.F OUT_poyc.F \
 	CALC_moments.F \
 	SERV_labelgen.F \

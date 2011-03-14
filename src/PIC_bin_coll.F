@@ -27,7 +27,8 @@ c dnprc: timestep increment for output of collision parameters
       subroutine PIC_bin_coll(niloc, p_niloc)
 
       use PIC_bin_collision
-      use VLA_variables, only: data_out, n
+      use VLA_variables, only: n
+      use OUT_params
       use PSC_globals
       use PSC_params
 

@@ -34,13 +34,6 @@ c shift_z: density function shift in dimensionless units
 
       integer n
 
-c data_out: data out directory
-c data_chk: data checkpointing directory
-
-      character*(200) data_out
-      character*(200) data_chk
-      character*(200) data_processed
-
       end module VLA_variables
 
 c     ======================================================================

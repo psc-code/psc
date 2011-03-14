@@ -4,7 +4,8 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       subroutine SERV_write(timestep, niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: data_chk,shift_c,shift_z
+      use VLA_variables, only: shift_c,shift_z
+      use OUT_params
       use OUT_particles
       use OUT_fields
       use PIC_bin_collision ! for I/O params
