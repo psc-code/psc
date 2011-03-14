@@ -371,6 +371,8 @@ psc_local_to_global_indices(int p, int jx, int jy, int jz,
 void psc_create(void);
 void psc_set_conf(struct psc_mod_config *conf);
 void psc_set_from_options(void);
+void psc_setup(void);
+void psc_view(void);
 void psc_destroy(void);
 
 void psc_init(void);
