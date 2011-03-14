@@ -46,7 +46,7 @@ static struct param collisions_descr[] = {
 #undef VAR
 
 static void
-_psc_case_collisions_set_from_options(struct _psc_case *_case)
+psc_case_collisions_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -85,7 +85,7 @@ _psc_case_collisions_set_from_options(struct _psc_case *_case)
 }
 
 static void
-_psc_case_collisions_init_field(struct _psc_case *_case, mfields_base_t *flds)
+psc_case_collisions_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -102,7 +102,7 @@ _psc_case_collisions_init_field(struct _psc_case *_case, mfields_base_t *flds)
 }
 
 static void
-_psc_case_collisions_init_npt(struct _psc_case *_case, int kind, double x[3], 
+psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3], 
 			      struct psc_particle_npt *npt)
 {
   struct collisions *collisions = to_collisions(_case);
@@ -159,11 +159,11 @@ _psc_case_collisions_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_collisions_ops = {
+struct psc_case_ops psc_case_collisions_ops = {
   .name             = "collisions",
   .size             = sizeof(struct collisions),
   .param_descr      = collisions_descr,
-  .set_from_options = _psc_case_collisions_set_from_options,
-  .init_field       = _psc_case_collisions_init_field,
-  .init_npt         = _psc_case_collisions_init_npt,
+  .set_from_options = psc_case_collisions_set_from_options,
+  .init_field       = psc_case_collisions_init_field,
+  .init_npt         = psc_case_collisions_init_npt,
 };

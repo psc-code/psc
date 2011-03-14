@@ -1,8 +1,6 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
-#include <mrc_common.h>
-#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -63,7 +61,7 @@ static struct param harris_xy_descr[] = {
 #undef VAR
 
 static void
-_psc_case_harris_xy_set_from_options(struct _psc_case *_case)
+psc_case_harris_xy_set_from_options(struct psc_case *_case)
 {
   struct harris_xy *harris = to_harris_xy(_case);
 
@@ -211,7 +209,7 @@ Jz(struct harris_xy *harris, real x, real y)
 }
 
 static void
-_psc_case_harris_xy_init_field(struct _psc_case *_case, mfields_base_t *flds)
+psc_case_harris_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct harris_xy *harris = to_harris_xy(_case);
 
@@ -235,7 +233,7 @@ _psc_case_harris_xy_init_field(struct _psc_case *_case, mfields_base_t *flds)
 }
 
 static void
-_psc_case_harris_xy_init_npt(struct _psc_case *_case, int kind, double x[3],
+psc_case_harris_xy_init_npt(struct psc_case *_case, int kind, double x[3],
 			     struct psc_particle_npt *npt)
 {
   struct harris_xy *harris = to_harris_xy(_case);
@@ -273,12 +271,12 @@ _psc_case_harris_xy_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_harris_xy_ops = {
+struct psc_case_ops psc_case_harris_xy_ops = {
   .name             = "harris_xy",
   .size             = sizeof(struct harris_xy),
   .param_descr      = harris_xy_descr,
-  .set_from_options = _psc_case_harris_xy_set_from_options,
-  .init_field       = _psc_case_harris_xy_init_field,
-  .init_npt         = _psc_case_harris_xy_init_npt,
+  .set_from_options = psc_case_harris_xy_set_from_options,
+  .init_field       = psc_case_harris_xy_init_field,
+  .init_npt         = psc_case_harris_xy_init_npt,
 };
 

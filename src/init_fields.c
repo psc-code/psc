@@ -23,7 +23,7 @@ psc_init_field_pml(mfields_base_t *flds)
 void
 psc_init_field(mfields_base_t *flds)
 {
-  _psc_case_init_field(_psc_case, flds);
+  psc_case_init_field(_psc_case, flds);
   if (psc.domain.use_pml) {
     psc_init_field_pml(flds);
   }

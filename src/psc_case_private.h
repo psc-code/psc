@@ -4,33 +4,33 @@
 
 #include <psc_case.h>
 
-struct _psc_case {
+struct psc_case {
   struct mrc_obj obj;
   struct psc_case *Case;
 };
 
-struct _psc_case_ops {
-  MRC_SUBCLASS_OPS(struct _psc_case);
-  void (*init_npt)(struct _psc_case *_case, int kind, double x[3],
+struct psc_case_ops {
+  MRC_SUBCLASS_OPS(struct psc_case);
+  void (*init_npt)(struct psc_case *_case, int kind, double x[3],
 		   struct psc_particle_npt *npt);
-  void (*init_field)(struct _psc_case *_case, mfields_base_t *flds);
+  void (*init_field)(struct psc_case *_case, mfields_base_t *flds);
 };
 
-extern struct _psc_case_ops _psc_case_harris_ops;
-extern struct _psc_case_ops _psc_case_test_xz_ops;
-extern struct _psc_case_ops _psc_case_test_yz_ops;
-extern struct _psc_case_ops _psc_case_harris_xy_ops;
-extern struct _psc_case_ops _psc_case_langmuir_ops;
-extern struct _psc_case_ops _psc_case_wakefield_ops;
-extern struct _psc_case_ops _psc_case_thinfoil_ops;
-extern struct _psc_case_ops _psc_case_foils_ops;
-extern struct _psc_case_ops _psc_case_curvedfoil_ops;
-extern struct _psc_case_ops _psc_case_singlepart_ops;
-extern struct _psc_case_ops _psc_case_collisions_ops;
-extern struct _psc_case_ops _psc_case_cone_ops;
+extern struct psc_case_ops psc_case_harris_ops;
+extern struct psc_case_ops psc_case_test_xz_ops;
+extern struct psc_case_ops psc_case_test_yz_ops;
+extern struct psc_case_ops psc_case_harris_xy_ops;
+extern struct psc_case_ops psc_case_langmuir_ops;
+extern struct psc_case_ops psc_case_wakefield_ops;
+extern struct psc_case_ops psc_case_thinfoil_ops;
+extern struct psc_case_ops psc_case_foils_ops;
+extern struct psc_case_ops psc_case_curvedfoil_ops;
+extern struct psc_case_ops psc_case_singlepart_ops;
+extern struct psc_case_ops psc_case_collisions_ops;
+extern struct psc_case_ops psc_case_cone_ops;
 
 // ======================================================================
 
-#define _psc_case_ops(c) ((struct _psc_case_ops *)((c)->obj.ops))
+#define psc_case_ops(c) ((struct psc_case_ops *)((c)->obj.ops))
 
 #endif

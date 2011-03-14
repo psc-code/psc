@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
-#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -47,7 +46,7 @@ static struct param thinfoil_descr[] = {
 #undef VAR
 
 static void
-_psc_case_thinfoil_create(struct _psc_case *_case)
+psc_case_thinfoil_create(struct psc_case *_case)
 {
   struct psc_pulse_flattop prm = {
     .xm = .01   * 1e-6,
@@ -62,7 +61,7 @@ _psc_case_thinfoil_create(struct _psc_case *_case)
 }
 
 static void
-_psc_case_thinfoil_set_from_options(struct _psc_case *_case)
+psc_case_thinfoil_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -92,7 +91,7 @@ _psc_case_thinfoil_set_from_options(struct _psc_case *_case)
 }
 
 static void
-_psc_case_thinfoil_init_field(struct _psc_case *_case, mfields_base_t *flds)
+psc_case_thinfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -109,7 +108,7 @@ _psc_case_thinfoil_init_field(struct _psc_case *_case, mfields_base_t *flds)
 }
 
 static void
-_psc_case_thinfoil_init_npt(struct _psc_case *_case, int kind, double x[3], 
+psc_case_thinfoil_init_npt(struct psc_case *_case, int kind, double x[3], 
 			    struct psc_particle_npt *npt)
 {
   struct thinfoil *thinfoil = to_thinfoil(_case);
@@ -164,12 +163,12 @@ _psc_case_thinfoil_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_thinfoil_ops = {
+struct psc_case_ops psc_case_thinfoil_ops = {
   .name             = "thinfoil",
   .size             = sizeof(struct thinfoil),
   .param_descr      = thinfoil_descr,
-  .create           = _psc_case_thinfoil_create,
-  .set_from_options = _psc_case_thinfoil_set_from_options,
-  .init_field       = _psc_case_thinfoil_init_field,
-  .init_npt         = _psc_case_thinfoil_init_npt,
+  .create           = psc_case_thinfoil_create,
+  .set_from_options = psc_case_thinfoil_set_from_options,
+  .init_field       = psc_case_thinfoil_init_field,
+  .init_npt         = psc_case_thinfoil_init_npt,
 };

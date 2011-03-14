@@ -32,7 +32,7 @@ static struct param singlepart_descr[] = {
 #undef VAR
 
 static void
-_psc_case_singlepart_set_from_options(struct _psc_case *_case)
+psc_case_singlepart_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -62,7 +62,7 @@ _psc_case_singlepart_set_from_options(struct _psc_case *_case)
 }
 
 static void
-_psc_case_singlepart_init_npt(struct _psc_case *_case, int kind, double x[3],
+psc_case_singlepart_init_npt(struct psc_case *_case, int kind, double x[3],
 			      struct psc_particle_npt *npt)
 {
   struct singlepart *singlepart = to_singlepart(_case);
@@ -108,10 +108,10 @@ _psc_case_singlepart_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_singlepart_ops = {
+struct psc_case_ops psc_case_singlepart_ops = {
   .name             = "singlepart",
   .size             = sizeof(struct singlepart),
   .param_descr      = singlepart_descr,
-  .set_from_options = _psc_case_singlepart_set_from_options,
-  .init_npt         = _psc_case_singlepart_init_npt,
+  .set_from_options = psc_case_singlepart_set_from_options,
+  .init_npt         = psc_case_singlepart_init_npt,
 };

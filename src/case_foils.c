@@ -127,7 +127,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 #endif
 
 static void
-_psc_case_foils_create(struct _psc_case *_case)
+psc_case_foils_create(struct psc_case *_case)
 {
   
   float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
@@ -169,7 +169,7 @@ _psc_case_foils_create(struct _psc_case *_case)
 
 
 static void
-_psc_case_foils_set_from_options(struct _psc_case *_case)
+psc_case_foils_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 15000;
   psc.prm.cpum = 15000;
@@ -204,7 +204,7 @@ _psc_case_foils_set_from_options(struct _psc_case *_case)
 }
 
 static void
-_psc_case_foils_init_field(struct _psc_case *_case, mfields_base_t *flds)
+psc_case_foils_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
 #if 0
   // FIXME, do we need the ghost points?
@@ -225,7 +225,7 @@ _psc_case_foils_init_field(struct _psc_case *_case, mfields_base_t *flds)
 }
 
 static void
-_psc_case_foils_init_npt(struct _psc_case *_case, int kind, double x[3], 
+psc_case_foils_init_npt(struct psc_case *_case, int kind, double x[3], 
 			 struct psc_particle_npt *npt)
 {
   struct foils *foils = to_foils(_case);
@@ -286,12 +286,12 @@ _psc_case_foils_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_foils_ops = {
+struct psc_case_ops psc_case_foils_ops = {
   .name             = "foils",
   .size             = sizeof(struct foils),
   .param_descr      = foils_descr,
-  .create           = _psc_case_foils_create,
-  .set_from_options = _psc_case_foils_set_from_options,
-  .init_field       = _psc_case_foils_init_field,
-  .init_npt         = _psc_case_foils_init_npt,
+  .create           = psc_case_foils_create,
+  .set_from_options = psc_case_foils_set_from_options,
+  .init_field       = psc_case_foils_init_field,
+  .init_npt         = psc_case_foils_init_npt,
 };

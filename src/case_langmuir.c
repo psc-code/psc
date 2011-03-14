@@ -1,7 +1,6 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
-#include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
@@ -39,7 +38,7 @@ static struct param langmuir_descr[] = {
 #undef VAR
 
 static void
-_psc_case_langmuir_init_npt(struct _psc_case *_case, int kind, double x[3],
+psc_case_langmuir_init_npt(struct psc_case *_case, int kind, double x[3],
 			    struct psc_particle_npt *npt)
 {
   struct langmuir *langmuir = to_langmuir(_case);
@@ -89,10 +88,10 @@ _psc_case_langmuir_init_npt(struct _psc_case *_case, int kind, double x[3],
   }
 }
 
-struct _psc_case_ops _psc_case_langmuir_ops = {
+struct psc_case_ops psc_case_langmuir_ops = {
   .name             = "langmuir",
   .size             = sizeof(struct langmuir),
   .param_descr      = langmuir_descr,
-  .init_npt         = _psc_case_langmuir_init_npt,
+  .init_npt         = psc_case_langmuir_init_npt,
 };
 
