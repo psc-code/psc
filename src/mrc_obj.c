@@ -234,6 +234,8 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
   if (mrc_params_get_option_string(option, &type) == 0) {
     mrc_obj_set_type(obj, type);
   }
+  sprintf(option, "%s_view", mrc_obj_name(obj));
+  mrc_params_get_option_bool(option, &obj->view_flag);
 
   if (class->param_descr) {
     char *p = (char *) obj + class->param_offset;
@@ -418,6 +420,10 @@ mrc_obj_setup(struct mrc_obj *obj)
     class->setup(obj);
   } else {
     mrc_obj_setup_sub(obj);
+  }
+  if (obj->view_flag) {
+    obj->view_flag = false;
+    mrc_obj_view(obj);
   }
 }
 

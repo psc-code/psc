@@ -18,6 +18,7 @@ struct mrc_obj {
   void *subctx;
   int refcount;
   list_t instance_entry;
+  bool view_flag; //< if true, call ::view() at the end of ::setup()
 };
 
 #define MRC_SUBCLASS_OPS(obj_type)			\
