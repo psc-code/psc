@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -8,6 +8,8 @@
 #include <assert.h>
 
 // FIXME description
+
+#define to_singlepart(_case) ((struct singlepart *)(_case)->obj.subctx)
 
 struct singlepart {
   double Te, Ti;
@@ -30,7 +32,7 @@ static struct param singlepart_descr[] = {
 #undef VAR
 
 static void
-singlepart_init_param(struct psc_case *Case)
+_psc_case_singlepart_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -60,10 +62,10 @@ singlepart_init_param(struct psc_case *Case)
 }
 
 static void
-singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
-		    struct psc_particle_npt *npt)
+_psc_case_singlepart_init_npt(struct _psc_case *_case, int kind, double x[3],
+			      struct psc_particle_npt *npt)
 {
-  struct singlepart *singlepart = Case->ctx;
+  struct singlepart *singlepart = to_singlepart(_case);
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 
@@ -106,10 +108,10 @@ singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_singlepart = {
-  .name       = "singlepart",
-  .ctx_size   = sizeof(struct singlepart),
-  .ctx_descr  = singlepart_descr,
-  .init_param = singlepart_init_param,
-  .init_npt   = singlepart_init_npt,
+struct _psc_case_ops _psc_case_singlepart_ops = {
+  .name             = "singlepart",
+  .size             = sizeof(struct singlepart),
+  .param_descr      = singlepart_descr,
+  .set_from_options = _psc_case_singlepart_set_from_options,
+  .init_npt         = _psc_case_singlepart_init_npt,
 };

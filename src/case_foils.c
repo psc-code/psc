@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -18,6 +18,8 @@
 // 1. Line
 // needs the coordinates of its beginning and end, thickness 
 //
+
+#define to_foils(_case) ((struct foils *)(_case)->obj.subctx)
 
 struct foils {
   
@@ -125,7 +127,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 #endif
 
 static void
-foils_create(struct psc_case *Case)
+_psc_case_foils_create(struct _psc_case *_case)
 {
   
   float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
@@ -167,7 +169,7 @@ foils_create(struct psc_case *Case)
 
 
 static void
-foils_init_param(struct psc_case *Case)
+_psc_case_foils_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 15000;
   psc.prm.cpum = 15000;
@@ -202,7 +204,7 @@ foils_init_param(struct psc_case *Case)
 }
 
 static void
-foils_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_foils_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
 #if 0
   // FIXME, do we need the ghost points?
@@ -223,10 +225,10 @@ foils_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-foils_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+_psc_case_foils_init_npt(struct _psc_case *_case, int kind, double x[3], 
+			 struct psc_particle_npt *npt)
 {
-  struct foils *foils = Case->ctx;
+  struct foils *foils = to_foils(_case);
 
   real Te = foils->Te, Ti = foils->Ti;
 
@@ -284,12 +286,12 @@ foils_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_foils = {
-  .name       = "foils",
-  .ctx_size   = sizeof(struct foils),
-  .ctx_descr  = foils_descr,
-  .create     = foils_create,
-  .init_param = foils_init_param,
-  .init_field = foils_init_field,
-  .init_npt   = foils_init_npt,
+struct _psc_case_ops _psc_case_foils_ops = {
+  .name             = "foils",
+  .size             = sizeof(struct foils),
+  .param_descr      = foils_descr,
+  .create           = _psc_case_foils_create,
+  .set_from_options = _psc_case_foils_set_from_options,
+  .init_field       = _psc_case_foils_init_field,
+  .init_npt         = _psc_case_foils_init_npt,
 };

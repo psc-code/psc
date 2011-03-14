@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_common.h>
 #include <mrc_params.h>
 
@@ -21,6 +22,8 @@
 // case harris_xy
 //
 // same as harris, but with Bx = tanh(y) type of equilibrium
+
+#define to_harris_xy(_case) ((struct harris_xy *)(_case)->obj.subctx)
 
 struct harris_xy {
   // parameters
@@ -60,9 +63,9 @@ static struct param harris_xy_descr[] = {
 #undef VAR
 
 static void
-harris_xy_init_param(struct psc_case *Case)
+_psc_case_harris_xy_set_from_options(struct _psc_case *_case)
 {
-  struct harris_xy *harris = Case->ctx;
+  struct harris_xy *harris = to_harris_xy(_case);
 
   real c = 1.;
   real eps0 = 1.;
@@ -208,9 +211,9 @@ Jz(struct harris_xy *harris, real x, real y)
 }
 
 static void
-harris_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_harris_xy_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
-  struct harris_xy *harris = Case->ctx;
+  struct harris_xy *harris = to_harris_xy(_case);
 
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -232,10 +235,10 @@ harris_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-harris_xy_init_npt(struct psc_case *Case, int kind, double x[3],
-		   struct psc_particle_npt *npt)
+_psc_case_harris_xy_init_npt(struct _psc_case *_case, int kind, double x[3],
+			     struct psc_particle_npt *npt)
 {
-  struct harris_xy *harris = Case->ctx;
+  struct harris_xy *harris = to_harris_xy(_case);
 
   real Ti = harris->Ti, Te = harris->Te;
 
@@ -270,12 +273,12 @@ harris_xy_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_harris_xy = {
-  .name       = "harris_xy",
-  .ctx_size   = sizeof(struct harris_xy),
-  .ctx_descr  = harris_xy_descr,
-  .init_param = harris_xy_init_param,
-  .init_field = harris_xy_init_field,
-  .init_npt   = harris_xy_init_npt,
+struct _psc_case_ops _psc_case_harris_xy_ops = {
+  .name             = "harris_xy",
+  .size             = sizeof(struct harris_xy),
+  .param_descr      = harris_xy_descr,
+  .set_from_options = _psc_case_harris_xy_set_from_options,
+  .init_field       = _psc_case_harris_xy_init_field,
+  .init_npt         = _psc_case_harris_xy_init_npt,
 };
 

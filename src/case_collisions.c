@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -11,6 +11,8 @@
 // collisions
 //
 // FIXME description
+
+#define to_collisions(_case) ((struct collisions *)(_case)->obj.subctx)
 
 struct collisions {
   double Te, Ti;
@@ -44,7 +46,7 @@ static struct param collisions_descr[] = {
 #undef VAR
 
 static void
-collisions_init_param(struct psc_case *Case)
+_psc_case_collisions_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -83,7 +85,7 @@ collisions_init_param(struct psc_case *Case)
 }
 
 static void
-collisions_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_collisions_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -100,10 +102,10 @@ collisions_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-collisions_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+_psc_case_collisions_init_npt(struct _psc_case *_case, int kind, double x[3], 
+			      struct psc_particle_npt *npt)
 {
-  struct collisions *collisions = Case->ctx;
+  struct collisions *collisions = to_collisions(_case);
 
   real Te = collisions->Te, Ti = collisions->Ti;
 
@@ -157,11 +159,11 @@ collisions_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_collisions = {
-  .name       = "collisions",
-  .ctx_size   = sizeof(struct collisions),
-  .ctx_descr  = collisions_descr,
-  .init_param = collisions_init_param,
-  .init_field = collisions_init_field,
-  .init_npt   = collisions_init_npt,
+struct _psc_case_ops _psc_case_collisions_ops = {
+  .name             = "collisions",
+  .size             = sizeof(struct collisions),
+  .param_descr      = collisions_descr,
+  .set_from_options = _psc_case_collisions_set_from_options,
+  .init_field       = _psc_case_collisions_init_field,
+  .init_npt         = _psc_case_collisions_init_npt,
 };

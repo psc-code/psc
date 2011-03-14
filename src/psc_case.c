@@ -136,16 +136,6 @@ _psc_case_sub_init_field(struct _psc_case *_case, mfields_base_t *flds)
     .init_field            = _psc_case_sub_init_field,		\
   }
 
-WRAP(harris_xy);
-WRAP(langmuir);
-WRAP(wakefield);
-WRAP(thinfoil);
-WRAP(foils);
-WRAP(curvedfoil);
-WRAP(singlepart);
-WRAP(collisions);
-WRAP(cone);
-
 static void
 _psc_case_init()
 {

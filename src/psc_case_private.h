@@ -19,6 +19,15 @@ struct _psc_case_ops {
 extern struct _psc_case_ops _psc_case_harris_ops;
 extern struct _psc_case_ops _psc_case_test_xz_ops;
 extern struct _psc_case_ops _psc_case_test_yz_ops;
+extern struct _psc_case_ops _psc_case_harris_xy_ops;
+extern struct _psc_case_ops _psc_case_langmuir_ops;
+extern struct _psc_case_ops _psc_case_wakefield_ops;
+extern struct _psc_case_ops _psc_case_thinfoil_ops;
+extern struct _psc_case_ops _psc_case_foils_ops;
+extern struct _psc_case_ops _psc_case_curvedfoil_ops;
+extern struct _psc_case_ops _psc_case_singlepart_ops;
+extern struct _psc_case_ops _psc_case_collisions_ops;
+extern struct _psc_case_ops _psc_case_cone_ops;
 
 // ======================================================================
 

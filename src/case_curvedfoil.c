@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -21,6 +21,8 @@
 //                **
 //               **
 //              **
+
+#define to_curvedfoil(_case) ((struct curvedfoil *)(_case)->obj.subctx)
 
 struct curvedfoil {
   double Te, Ti;
@@ -50,7 +52,7 @@ static struct param curvedfoil_descr[] = {
 #undef VAR
 
 static void
-curvedfoil_create(struct psc_case *Case)
+_psc_case_curvedfoil_create(struct _psc_case *_case)
 {
   struct psc_pulse_gauss prm_p = {
     .xm = 2.5   * 1e-6,
@@ -81,10 +83,8 @@ curvedfoil_create(struct psc_case *Case)
   psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
 }
 
-
-
 static void
-curvedfoil_init_param(struct psc_case *Case)
+_psc_case_curvedfoil_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 500;
   psc.prm.cpum = 25000;
@@ -114,7 +114,7 @@ curvedfoil_init_param(struct psc_case *Case)
 }
 
 static void
-curvedfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_curvedfoil_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -134,10 +134,10 @@ curvedfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
 
 #if 0
 static void
-curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+_psc_case_curvedfoil_init_npt(struct _psc_case *_case, int kind, double x[3], 
+			      struct psc_particle_npt *npt)
 {
-  struct curvedfoil *curvedfoil = Case->ctx;
+  struct curvedfoil *curvedfoil = to_curvedfoil(_case);
 
   real Te = curvedfoil->Te, Ti = curvedfoil->Ti;
 
@@ -192,12 +192,12 @@ curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3],
 }
 #endif
 
-struct psc_case_ops psc_case_ops_curvedfoil = {
-  .name       = "curvedfoil",
-  .ctx_size   = sizeof(struct curvedfoil),
-  .ctx_descr  = curvedfoil_descr,
-  .create     = curvedfoil_create,
-  .init_param = curvedfoil_init_param,
-  .init_field = curvedfoil_init_field,
-//  .init_npt   = curvedfoil_init_npt,
+struct _psc_case_ops _psc_case_curvedfoil_ops = {
+  .name             = "curvedfoil",
+  .size             = sizeof(struct curvedfoil),
+  .param_descr      = curvedfoil_descr,
+  .create           = _psc_case_curvedfoil_create,
+  .set_from_options = _psc_case_curvedfoil_set_from_options,
+  .init_field       = _psc_case_curvedfoil_init_field,
+  //  .init_npt         = _psc_case_curvedfoil_init_npt,
 };

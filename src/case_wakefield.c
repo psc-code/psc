@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -8,6 +9,8 @@
 #include <assert.h>
 
 // FIXME description
+
+#define to_wakefield(_case) ((struct wakefield *)(_case)->obj.subctx)
 
 struct wakefield {
   double Te, Ti;
@@ -41,7 +44,7 @@ static struct param wakefield_descr[] = {
 #undef VAR
 
 static void
-wakefield_create(struct psc_case *Case)
+_psc_case_wakefield_create(struct _psc_case *_case)
 {
   struct psc_pulse_gauss prm = {
     .xm  = 20. * 1e-6,
@@ -55,7 +58,7 @@ wakefield_create(struct psc_case *Case)
 }
 
 static void
-wakefield_init_param(struct psc_case *Case)
+_psc_case_wakefield_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -85,7 +88,7 @@ wakefield_init_param(struct psc_case *Case)
 }
 
 static void
-wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_wakefield_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -104,10 +107,10 @@ wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-wakefield_init_npt(struct psc_case *Case, int kind, double x[3], 
-		   struct psc_particle_npt *npt)
+_psc_case_wakefield_init_npt(struct _psc_case *_case, int kind, double x[3], 
+			     struct psc_particle_npt *npt)
 {
-  struct wakefield *wakefield = Case->ctx;
+  struct wakefield *wakefield = to_wakefield(_case);
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 
@@ -159,12 +162,12 @@ wakefield_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_wakefield = {
-  .name       = "wakefield",
-  .ctx_size   = sizeof(struct wakefield),
-  .ctx_descr  = wakefield_descr,
-  .create     = wakefield_create,
-  .init_param = wakefield_init_param,
-  .init_field = wakefield_init_field,
-  .init_npt   = wakefield_init_npt,
+struct _psc_case_ops _psc_case_wakefield_ops = {
+  .name             = "wakefield",
+  .size             = sizeof(struct wakefield),
+  .param_descr      = wakefield_descr,
+  .create           = _psc_case_wakefield_create,
+  .set_from_options = _psc_case_wakefield_set_from_options,
+  .init_field       = _psc_case_wakefield_init_field,
+  .init_npt         = _psc_case_wakefield_init_npt,
 };

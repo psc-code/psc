@@ -1,11 +1,14 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#define to_langmuir(_case) ((struct langmuir *)(_case)->obj.subctx)
 
 struct langmuir {
   double x0, y0, z0; // location of density center in m
@@ -36,19 +39,10 @@ static struct param langmuir_descr[] = {
 #undef VAR
 
 static void
-langmuir_create(struct psc_case *Case)
+_psc_case_langmuir_init_npt(struct _psc_case *_case, int kind, double x[3],
+			    struct psc_particle_npt *npt)
 {
-  struct langmuir *langmuir = Case->ctx;
-
-  mrc_params_parse(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
-  mrc_params_print(langmuir, langmuir_descr, "PSC Langmuir", MPI_COMM_WORLD);
-}
-
-static void
-langmuir_init_npt(struct psc_case *Case, int kind, double x[3],
-		  struct psc_particle_npt *npt)
-{
-  struct langmuir *langmuir = Case->ctx;
+  struct langmuir *langmuir = to_langmuir(_case);
 
   real ld = psc.coeff.ld;
 
@@ -95,10 +89,10 @@ langmuir_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_langmuir = {
-  .name       = "langmuir",
-  .ctx_size   = sizeof(struct langmuir),
-  .ctx_descr  = langmuir_descr,
-  .create     = langmuir_create,
-  .init_npt   = langmuir_init_npt,
+struct _psc_case_ops _psc_case_langmuir_ops = {
+  .name             = "langmuir",
+  .size             = sizeof(struct langmuir),
+  .param_descr      = langmuir_descr,
+  .init_npt         = _psc_case_langmuir_init_npt,
 };
+

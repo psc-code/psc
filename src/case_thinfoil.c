@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -11,6 +12,8 @@
 // thinfoil
 //
 // FIXME description
+
+#define to_thinfoil(_case) ((struct thinfoil *)(_case)->obj.subctx)
 
 struct thinfoil {
   double Te, Ti;
@@ -44,7 +47,7 @@ static struct param thinfoil_descr[] = {
 #undef VAR
 
 static void
-thinfoil_create(struct psc_case *Case)
+_psc_case_thinfoil_create(struct _psc_case *_case)
 {
   struct psc_pulse_flattop prm = {
     .xm = .01   * 1e-6,
@@ -59,7 +62,7 @@ thinfoil_create(struct psc_case *Case)
 }
 
 static void
-thinfoil_init_param(struct psc_case *Case)
+_psc_case_thinfoil_set_from_options(struct _psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -89,7 +92,7 @@ thinfoil_init_param(struct psc_case *Case)
 }
 
 static void
-thinfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
+_psc_case_thinfoil_init_field(struct _psc_case *_case, mfields_base_t *flds)
 {
   // FIXME, do we need the ghost points?
   foreach_patch(p) {
@@ -106,10 +109,10 @@ thinfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-thinfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+_psc_case_thinfoil_init_npt(struct _psc_case *_case, int kind, double x[3], 
+			    struct psc_particle_npt *npt)
 {
-  struct thinfoil *thinfoil = Case->ctx;
+  struct thinfoil *thinfoil = to_thinfoil(_case);
 
   real Te = thinfoil->Te, Ti = thinfoil->Ti;
 
@@ -161,12 +164,12 @@ thinfoil_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_thinfoil = {
-  .name       = "thinfoil",
-  .ctx_size   = sizeof(struct thinfoil),
-  .ctx_descr  = thinfoil_descr,
-  .create     = thinfoil_create,
-  .init_param = thinfoil_init_param,
-  .init_field = thinfoil_init_field,
-  .init_npt   = thinfoil_init_npt,
+struct _psc_case_ops _psc_case_thinfoil_ops = {
+  .name             = "thinfoil",
+  .size             = sizeof(struct thinfoil),
+  .param_descr      = thinfoil_descr,
+  .create           = _psc_case_thinfoil_create,
+  .set_from_options = _psc_case_thinfoil_set_from_options,
+  .init_field       = _psc_case_thinfoil_init_field,
+  .init_npt         = _psc_case_thinfoil_init_npt,
 };
