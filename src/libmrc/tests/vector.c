@@ -26,6 +26,7 @@ static void
 vector_init()
 {
   mrc_class_register_subclass(&mrc_class_vector, &vector_double_ops);
+  mrc_class_register_subclass(&mrc_class_vector, &vector_float_ops);
 }
 
 // ----------------------------------------------------------------------
