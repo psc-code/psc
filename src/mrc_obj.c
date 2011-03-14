@@ -234,9 +234,6 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
   if (mrc_params_get_option_string(option, &type) == 0) {
     mrc_obj_set_type(obj, type);
   }
-  if (class->set_from_options) {
-    class->set_from_options(obj);
-  }
 
   if (class->param_descr) {
     char *p = (char *) obj + class->param_offset;
@@ -254,6 +251,10 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
     if (obj->ops->set_from_options) {
       obj->ops->set_from_options(obj);
     }
+  }
+
+  if (class->set_from_options) {
+    class->set_from_options(obj);
   }
 }
 
