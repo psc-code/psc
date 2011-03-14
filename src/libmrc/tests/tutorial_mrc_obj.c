@@ -16,7 +16,9 @@ main(int argc, char **argv)
   vector_setup(vec);
   vector_view(vec);
 
-  int nr_elements = vec->nr_elements;
+  int nr_elements;
+  vector_get_param_int(vec, "nr_elements", &nr_elements);
+
   for (int i = 0; i < nr_elements; i++) {
     vector_set_element(vec, i, 2. * i);
   }

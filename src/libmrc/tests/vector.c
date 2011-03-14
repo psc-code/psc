@@ -1,5 +1,5 @@
 
-#include <vector.h>
+#include <vector_private.h>
 
 #include <mrc_params.h>
 #include <assert.h>
