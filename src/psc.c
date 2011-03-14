@@ -141,7 +141,8 @@ psc_setup(void)
 void
 psc_view(void)
 {
-  mrc_domain_view(psc.mrc_domain);
+  psc_view_psc();
+  psc_view_domain();
 
   psc_push_particles_view(psc.push_particles);
   psc_push_fields_view(psc.push_fields);

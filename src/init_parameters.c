@@ -74,7 +74,6 @@ psc_set_from_options_domain()
 
   mrc_params_parse_nodefault(domain, psc_domain_descr, "PSC domain",
 			     MPI_COMM_WORLD);
-  mrc_params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
 
   psc.pml.thick = 10;
   psc.pml.cushion = psc.pml.thick / 3;
@@ -167,6 +166,17 @@ psc_setup_domain()
   }
 }
 
+void
+psc_view_domain()
+{
+  struct psc_domain *domain = &psc.domain;
+
+  mrc_params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
+  mrc_domain_view(psc.mrc_domain);
+}
+
+// ======================================================================
+
 #define VAR(x) (void *)offsetof(struct psc_param, x)
 
 static struct param psc_param_descr[] = {
@@ -220,11 +230,15 @@ psc_set_from_options_psc()
 {
   mrc_params_parse_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
 			     MPI_COMM_WORLD);
+}
+
+void
+psc_view_psc()
+{
   mrc_params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
 }
 
-// ----------------------------------------------------------------------
-// set up cases
+// ======================================================================
 
 void
 psc_setup_coeff()

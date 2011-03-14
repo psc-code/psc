@@ -374,8 +374,10 @@ void psc_destroy(void);
 void psc_integrate(void);
 void psc_set_default_domain(void);
 void psc_set_from_options_domain(void);
+void psc_view_domain(void);
 void psc_set_default_psc(void);
 void psc_set_from_options_psc(void);
+void psc_view_psc(void);
 void psc_setup_domain(void);
 void psc_setup_coeff(void);
 
