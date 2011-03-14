@@ -59,32 +59,32 @@ static struct param psc_domain_descr[] = {
 #undef VAR
 
 void
-psc_set_default_domain()
+psc_set_default_domain(struct psc *psc)
 {
-  mrc_params_set_default(&psc.domain, psc_domain_descr);
+  mrc_params_set_default(&psc->domain, psc_domain_descr);
   for (int d = 0; d < 3; d++) {
-    psc.ibn[d] = 3;
+    psc->ibn[d] = 3;
   }
 }
 
 void
-psc_set_from_options_domain()
+psc_set_from_options_domain(struct psc *psc)
 {
-  struct psc_domain *domain = &psc.domain;
+  struct psc_domain *domain = &psc->domain;
 
   mrc_params_parse_nodefault(domain, psc_domain_descr, "PSC domain",
 			     MPI_COMM_WORLD);
 
-  psc.pml.thick = 10;
-  psc.pml.cushion = psc.pml.thick / 3;
-  psc.pml.size = psc.pml.thick + psc.pml.cushion;
-  psc.pml.order = 3;
+  psc->pml.thick = 10;
+  psc->pml.cushion = psc->pml.thick / 3;
+  psc->pml.size = psc->pml.thick + psc->pml.cushion;
+  psc->pml.order = 3;
 }
 
 void
-psc_setup_domain()
+psc_setup_domain(struct psc *psc)
 {
-  struct psc_domain *domain = &psc.domain;
+  struct psc_domain *domain = &psc->domain;
 
   SET_param_pml();
 
@@ -103,76 +103,76 @@ psc_setup_domain()
       }
     }
   }
-  if (need_pml && !psc.domain.use_pml) {
+  if (need_pml && !psc->domain.use_pml) {
     fprintf(stderr,
 	    "WARNING: use_pml is disabled but pml boundary conditions requested.\n");
     fprintf(stderr,
 	    "         I'm enabling use_pml.\n");
-    psc.domain.use_pml = true;
+    psc->domain.use_pml = true;
   }
 
   // FIXME, should be split to create, set_from_options, setup time?
-  psc.mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
+  psc->mrc_domain = mrc_domain_create(MPI_COMM_WORLD);
   // create a very simple domain decomposition
   int bc[3] = {};
   for (int d = 0; d < 3; d++) {
-    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
-	psc.domain.gdims[d] > 1) {
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
+	psc->domain.gdims[d] > 1) {
       bc[d] = BC_PERIODIC;
     }
   }
 
-  mrc_domain_set_type(psc.mrc_domain, "multi");
-  mrc_domain_set_param_int3(psc.mrc_domain, "m", psc.domain.gdims);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcx", bc[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcy", bc[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "bcz", bc[2]);
+  mrc_domain_set_type(psc->mrc_domain, "multi");
+  mrc_domain_set_param_int3(psc->mrc_domain, "m", psc->domain.gdims);
+  mrc_domain_set_param_int(psc->mrc_domain, "bcx", bc[0]);
+  mrc_domain_set_param_int(psc->mrc_domain, "bcy", bc[1]);
+  mrc_domain_set_param_int(psc->mrc_domain, "bcz", bc[2]);
 
-  struct mrc_crds *crds = mrc_domain_get_crds(psc.mrc_domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(psc->mrc_domain);
   mrc_crds_set_type(crds, "multi_uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc.domain.length[0],
-	psc.domain.length[1], psc.domain.length[2] });
+  mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc->domain.length[0],
+	psc->domain.length[1], psc->domain.length[2] });
 
-  mrc_domain_set_from_options(psc.mrc_domain);
-  mrc_domain_setup(psc.mrc_domain);
+  mrc_domain_set_from_options(psc->mrc_domain);
+  mrc_domain_setup(psc->mrc_domain);
 
   // set up index bounds,
   // sanity checks for the decomposed domain
   int gdims[3];
-  mrc_domain_get_global_dims(psc.mrc_domain, gdims);
-  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
-  psc.patch = calloc(psc.nr_patches, sizeof(*psc.patch));
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
+  mrc_domain_get_global_dims(psc->mrc_domain, gdims);
+  struct mrc_patch *patches = mrc_domain_get_patches(psc->mrc_domain, &psc->nr_patches);
+  psc->patch = calloc(psc->nr_patches, sizeof(*psc->patch));
+  psc_foreach_patch(psc, p) {
+    struct psc_patch *patch = &psc->patch[p];
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
-      patch->xb[d]  = patches[p].off[d] * psc.dx[d];
+      patch->xb[d]  = patches[p].off[d] * psc->dx[d];
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir
-	  (psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
-	   psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
-	min_size += psc.pml.size;
+	  (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML || 
+	   psc->domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
+	min_size += psc->pml.size;
       }
       if (patch->off[d] + patch->ldims[d] == gdims[d] && // right-most patch in this dir
-	  (psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
-	   psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
-	min_size += psc.pml.size;
+	  (psc->domain.bnd_fld_hi[d] == BND_FLD_UPML || 
+	   psc->domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
+	min_size += psc->pml.size;
       }
-      assert(psc.patch[p].ldims[d] >= min_size);
+      assert(psc->patch[p].ldims[d] >= min_size);
     }
   }
 }
 
 void
-psc_view_domain()
+psc_view_domain(struct psc *psc)
 {
-  struct psc_domain *domain = &psc.domain;
+  struct psc_domain *domain = &psc->domain;
 
   mrc_params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
-  mrc_domain_view(psc.mrc_domain);
+  mrc_domain_view(psc->mrc_domain);
 }
 
 // ======================================================================
@@ -220,68 +220,68 @@ static struct param psc_param_descr[] = {
 #undef VAR
 
 void
-psc_set_default_psc()
+psc_set_default_psc(struct psc *psc)
 {
-  mrc_params_set_default(&psc.prm, psc_param_descr);
+  mrc_params_set_default(&psc->prm, psc_param_descr);
 }
 
 void
-psc_set_from_options_psc()
+psc_set_from_options_psc(struct psc *psc)
 {
-  mrc_params_parse_nodefault(&psc.prm, psc_param_descr, "PSC parameters",
+  mrc_params_parse_nodefault(&psc->prm, psc_param_descr, "PSC parameters",
 			     MPI_COMM_WORLD);
 }
 
 void
-psc_view_psc()
+psc_view_psc(struct psc *psc)
 {
-  mrc_params_print(&psc.prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
+  mrc_params_print(&psc->prm, psc_param_descr, "PSC parameters", MPI_COMM_WORLD);
 }
 
 // ======================================================================
 
 void
-psc_setup_coeff()
+psc_setup_coeff(struct psc *psc)
 {
-  assert(psc.prm.nicell > 0);
-  psc.coeff.cori = 1. / psc.prm.nicell;
-  psc.coeff.wl = 2. * M_PI * psc.prm.cc / psc.prm.lw;
-  psc.coeff.ld = psc.prm.cc / psc.coeff.wl;
-  if (psc.prm.e0 == 0.) {
-    psc.prm.e0 = sqrt(2.0 * psc.prm.i0 / psc.prm.eps0 / psc.prm.cc) /
-      psc.prm.lw / 1.0e6;
+  assert(psc->prm.nicell > 0);
+  psc->coeff.cori = 1. / psc->prm.nicell;
+  psc->coeff.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
+  psc->coeff.ld = psc->prm.cc / psc->coeff.wl;
+  if (psc->prm.e0 == 0.) {
+    psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
+      psc->prm.lw / 1.0e6;
   }
-  psc.prm.b0 = psc.prm.e0 / psc.prm.cc;
-  psc.prm.rho0 = psc.prm.eps0 * psc.coeff.wl * psc.prm.b0;
-  psc.prm.phi0 = psc.coeff.ld * psc.prm.e0;
-  psc.prm.a0 = psc.prm.e0 / psc.coeff.wl;
-  psc.coeff.vos = psc.prm.qq * psc.prm.e0 / (psc.prm.mm * psc.coeff.wl);
-  psc.coeff.vt = sqrt(psc.prm.tt / psc.prm.mm);
-  psc.coeff.wp = sqrt(sqr(psc.prm.qq) * psc.prm.n0 / psc.prm.eps0 / psc.prm.mm);
-  psc.coeff.alpha = psc.coeff.wp / psc.coeff.wl;
-  psc.coeff.beta = psc.coeff.vt / psc.prm.cc;
-  psc.coeff.eta = psc.coeff.vos / psc.prm.cc;
+  psc->prm.b0 = psc->prm.e0 / psc->prm.cc;
+  psc->prm.rho0 = psc->prm.eps0 * psc->coeff.wl * psc->prm.b0;
+  psc->prm.phi0 = psc->coeff.ld * psc->prm.e0;
+  psc->prm.a0 = psc->prm.e0 / psc->coeff.wl;
+  psc->coeff.vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * psc->coeff.wl);
+  psc->coeff.vt = sqrt(psc->prm.tt / psc->prm.mm);
+  psc->coeff.wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
+  psc->coeff.alpha = psc->coeff.wp / psc->coeff.wl;
+  psc->coeff.beta = psc->coeff.vt / psc->prm.cc;
+  psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
 
   for (int d = 0; d < 3; d++) {
-    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
-      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / psc.domain.gdims[d];
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
+      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
     } else {
-      psc.dx[d] = psc.domain.length[d] / psc.coeff.ld / (psc.domain.gdims[d] - 1);
+      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
     }
   }
-  psc.dt = .75 * sqrt(1./(1./sqr(psc.dx[0]) + 1./sqr(psc.dx[1]) + 1./sqr(psc.dx[2])));
-  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc.dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+  psc->dt = .75 * sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
+  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
 
   // adjust to match laser cycles FIXME, this isn't a good place,
   // and hardcoded params (2, 30.)
-  psc.coeff.nnp = ceil(2.*M_PI / psc.dt);
-  if (psc.prm.adjust_dt_to_cycles) {
-    psc.dt = 2.*M_PI / psc.coeff.nnp;
+  psc->coeff.nnp = ceil(2.*M_PI / psc->dt);
+  if (psc->prm.adjust_dt_to_cycles) {
+    psc->dt = 2.*M_PI / psc->coeff.nnp;
   }
-  psc.coeff.np = 2 * psc.coeff.nnp;
-  if (psc.prm.nmax == 0) {
-    psc.prm.nmax = 30. * psc.coeff.nnp;
+  psc->coeff.np = 2 * psc->coeff.nnp;
+  if (psc->prm.nmax == 0) {
+    psc->prm.nmax = 30. * psc->coeff.nnp;
   }
 }
 

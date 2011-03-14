@@ -163,7 +163,7 @@ main(int argc, char **argv)
   int total_num_particles_after = get_total_num_particles(particles);
   check_particles_old_xz(particles);
   assert(total_num_particles_before == total_num_particles_after);
-  psc_destroy();
+  psc_destroy(&psc);
 
   psc_create_test_xz(&conf_c);
   setup_particles(particles);
@@ -174,7 +174,7 @@ main(int argc, char **argv)
   total_num_particles_after = get_total_num_particles(particles);
   check_particles(particles);
   assert(total_num_particles_before == total_num_particles_after);
-  psc_destroy();
+  psc_destroy(&psc);
 
   prof_print();
 

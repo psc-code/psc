@@ -24,7 +24,7 @@ main(int argc, char **argv)
   psc_sort_run(psc.sort, particles);
   psc_check_particles_sorted(particles);
 
-  psc_destroy();
+  psc_destroy(&psc);
 
   prof_print();
   MPI_Finalize();

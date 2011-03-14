@@ -335,6 +335,9 @@ struct psc {
 #define foreach_patch(p)				\
   for (int p = 0; p < psc.nr_patches; p++)
 
+#define psc_foreach_patch(psc, p)		\
+  for (int p = 0; p < (psc)->nr_patches; p++)
+
 
 // ----------------------------------------------------------------------
 // psc_config
@@ -364,22 +367,24 @@ psc_local_to_global_indices(int p, int jx, int jy, int jz,
   *iz = jz + psc.patch[p].off[2];
 }
 
-void psc_create(void);
-void psc_set_conf(struct psc_mod_config *conf);
-void psc_set_from_options(void);
-void psc_setup(void);
-void psc_view(void);
-void psc_destroy(void);
-
+void psc_create(struct psc *psc);
+void psc_set_conf(struct psc *psc, struct psc_mod_config *conf);
+void psc_set_from_options(struct psc *psc);
+void psc_setup(struct psc *psc);
+void psc_view(struct psc *psc);
+void psc_destroy(struct psc *psc);
 void psc_integrate(void);
-void psc_set_default_domain(void);
-void psc_set_from_options_domain(void);
-void psc_view_domain(void);
-void psc_set_default_psc(void);
-void psc_set_from_options_psc(void);
-void psc_view_psc(void);
-void psc_setup_domain(void);
-void psc_setup_coeff(void);
+
+void psc_set_default_domain(struct psc *psc);
+void psc_set_from_options_domain(struct psc *psc);
+void psc_setup_domain(struct psc *psc);
+void psc_view_domain(struct psc *psc);
+
+void psc_set_default_psc(struct psc *psc);
+void psc_set_from_options_psc(struct psc *psc);
+void psc_view_psc(struct psc *psc);
+
+void psc_setup_coeff(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);

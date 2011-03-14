@@ -60,14 +60,14 @@ main(int argc, char **argv)
   psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref(flds);
-  psc_destroy();
+  psc_destroy(&psc);
 
   psc_create_test_xz(&conf_c);
   setup_jx(flds);
   psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref_noghost(flds, 1e-10);
-  psc_destroy();
+  psc_destroy(&psc);
 
   // test psc_fill_ghosts()
 
@@ -77,14 +77,14 @@ main(int argc, char **argv)
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   psc_dump_field(flds, JXI, "jx1");
   psc_save_fields_ref(flds);
-  psc_destroy();
+  psc_destroy(&psc);
 
   psc_create_test_xz(&conf_c);
   setup_jx_noghost(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   psc_dump_field(flds, JXI, "jx2");
   psc_check_currents_ref(flds, 1e-10);
-  psc_destroy();
+  psc_destroy(&psc);
 
   prof_print();
 

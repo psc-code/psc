@@ -25,7 +25,7 @@ psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 static void
 _psc_case_create(struct psc_case *_case)
 {
-  psc_create();
+  psc_create(&psc);
 }
 
 // ----------------------------------------------------------------------
@@ -35,7 +35,7 @@ static void
 _psc_case_set_from_options(struct psc_case *_case)
 {
   // subclass set_from_options gets called first automatically 
-  psc_set_from_options();
+  psc_set_from_options(&psc);
 }
 
 // ----------------------------------------------------------------------
@@ -51,7 +51,7 @@ _psc_case_setup(struct psc_case *_case)
   }
   // this sets up everything except allocating fields and particles,
   // and intializing them
-  psc_setup();
+  psc_setup(&psc);
 
   // alloc / initialize particles
   int particle_label_offset;
@@ -74,7 +74,7 @@ _psc_case_setup(struct psc_case *_case)
 static void
 _psc_case_view(struct psc_case *_case)
 {
-  psc_view();
+  psc_view(&psc);
 }
 
 // ----------------------------------------------------------------------
@@ -82,7 +82,7 @@ _psc_case_view(struct psc_case *_case)
 
 void
 psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
-		   struct psc_particle_npt *npt)
+		  struct psc_particle_npt *npt)
 {
   if (!psc_case_ops(_case)->init_npt)
     return;

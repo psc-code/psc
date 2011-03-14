@@ -100,7 +100,7 @@ main(int argc, char **argv)
   setup_jx(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   check_jx(flds);
-  psc_destroy();
+  psc_destroy(&psc);
 
   prof_print();
 
