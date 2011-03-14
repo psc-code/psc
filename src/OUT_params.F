@@ -27,6 +27,13 @@ c np:  number of timesteps for time-averaging
 
       integer :: nnp, np
 
+c shift_z: density function shift in dimensionless units
+c shift_c: time step counter for moving the frame in the code
+c shift_l: step counter for moving the frame in the code
+
+      real(kind=8) :: shift_z
+      integer :: shift_c, shift_l
+
       end module OUT_params
 
 c     ----------------------------------------------------------------------
@@ -63,6 +70,17 @@ c data_chk: path of checkpointing directory
       data_chk='.'
       data_processed='.'
       
+c shift_z: shifts the density function in the code
+
+      shift_z=0.0
+
+c shift_c: time step counter for shifting the frame in the code
+
+      shift_c=0
+      shift_l=0
+
+c time averaging
+
       nnp = nnp_
       np = np_
 

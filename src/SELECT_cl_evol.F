@@ -2,7 +2,6 @@
 
       subroutine SELECT_cl_evol
 
-      use VLA_variables, only: shift_z
       use OUT_params
       use OUT_fields
       use out_poyn

@@ -191,18 +191,5 @@ c     setup processor map
 
       if (use_pml) call PML_coeff_init_param
 
-c OTHER SETTINGS THAT SHOULD NOT BE CHANGED
-c UNDER NORMAL CONDITIONS
-
-c nstart: time step counter for starting the code
-c shift_c: time step counter for shifting the frame in the code
-c shift_z: shifts the density function in the code
-
-
-      nstart=0
-      shift_c=0
-      shift_l=0
-      shift_z=0.0
-
       end subroutine INIT_param_fortran
 

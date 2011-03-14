@@ -48,7 +48,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       subroutine SERV_read_2(niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: shift_c,shift_z
       use OUT_params
       use OUT_particles
       use OUT_fields
