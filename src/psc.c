@@ -39,56 +39,55 @@ static struct param psc_mod_config_descr[] = {
 #undef VAR
 
 void
-psc_create(struct psc_mod_config *conf)
+psc_set_conf(struct psc_mod_config *conf)
 {
-  memset(&psc, 0, sizeof(psc));
-
   mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
   mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
 
-  MPI_Comm comm = MPI_COMM_WORLD;
-
-  psc.push_particles = psc_push_particles_create(comm);
   if (conf->mod_particle) {
     psc_push_particles_set_type(psc.push_particles, conf->mod_particle);
   }
-
-  psc.push_fields = psc_push_fields_create(comm);
   if (conf->mod_field) {
     psc_push_fields_set_type(psc.push_fields, conf->mod_field);
   }
-
-  psc.bnd = psc_bnd_create(comm);
   if (conf->mod_bnd) {
     psc_bnd_set_type(psc.bnd, conf->mod_bnd);
   }
-
-  psc.collision = psc_collision_create(comm);
   if (conf->mod_collision) {
     psc_collision_set_type(psc.collision, conf->mod_collision);
   }
-
-  psc.randomize = psc_randomize_create(comm);
   if (conf->mod_randomize) {
     psc_randomize_set_type(psc.randomize, conf->mod_randomize);
   }
-
-  psc.sort = psc_sort_create(comm);
   if (conf->mod_sort) {
     psc_sort_set_type(psc.sort, conf->mod_sort);
   }
-
-  psc.output_fields = psc_output_fields_create(comm);
   if (conf->mod_output) {
     psc_output_fields_set_type(psc.output_fields, conf->mod_output);
   }
-
-  psc.output_particles = psc_output_particles_create(comm);
-
-  psc.moments = psc_moments_create(comm);
   if (conf->mod_moment) {
     psc_moments_set_type(psc.moments, conf->mod_moment);
   }
+}
+
+// ----------------------------------------------------------------------
+// psc_create
+
+void
+psc_create()
+{
+  memset(&psc, 0, sizeof(psc));
+
+  MPI_Comm comm = MPI_COMM_WORLD;
+  psc.push_particles = psc_push_particles_create(comm);
+  psc.push_fields = psc_push_fields_create(comm);
+  psc.bnd = psc_bnd_create(comm);
+  psc.collision = psc_collision_create(comm);
+  psc.randomize = psc_randomize_create(comm);
+  psc.sort = psc_sort_create(comm);
+  psc.output_fields = psc_output_fields_create(comm);
+  psc.output_particles = psc_output_particles_create(comm);
+  psc.moments = psc_moments_create(comm);
 
   psc.time_start = MPI_Wtime();
 }

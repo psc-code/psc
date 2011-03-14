@@ -10,12 +10,10 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct psc_mod_config conf = {
-  };
   _psc_case = _psc_case_create(MPI_COMM_WORLD);
   _psc_case_set_from_options(_psc_case);
 
-  psc_create(&conf);
+  psc_create();
   psc_init();
   if (psc.prm.from_checkpoint) {
     psc_read_checkpoint();
