@@ -16,10 +16,10 @@ setup_fields(mfields_base_t *flds)
       int ix, iy, iz;
       psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
-      f_real zz = 2.*M_PI * iz / psc.domain.gdims[2];
-      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
-      F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(zz);
-      F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(zz);
+      f_real yy = 2.*M_PI * iy / psc.domain.gdims[1];
+      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
+      F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(yy);
+      F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(yy);
     } foreach_3d_g_end;
   }
 }
@@ -37,18 +37,25 @@ main(int argc, char **argv)
     .mod_field = "c",
   };
 
+#ifdef USE_CBE
+  struct psc_mod_config conf_cbe = {
+    .mod_field = "cbe",
+  };
+#endif
+
   // test push_field_a
 
-  psc_create_test_xz(&conf_fortran);
+
+  psc_create_test_xy(&conf_fortran);
   mfields_base_t *flds = &psc.flds;
   setup_fields(flds);
-  // psc_dump_field(EX, "ex0");
+  //  psc_dump_field(flds,EX,"ex0");
   psc_push_field_a(flds);
-  // psc_dump_field(EX, "ex1");
+  psc_dump_field(flds,EX, "ex1");
   psc_save_fields_ref(flds);
   psc_destroy();
 
-  psc_create_test_xz(&conf_c);
+  psc_create_test_xy(&conf_c);
   setup_fields(flds);
   psc_push_field_a(flds);
   // psc_dump_field(EX, "ex2");
@@ -60,27 +67,58 @@ main(int argc, char **argv)
   psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_destroy();
 
-  // test push_field_a
-
-  psc_create_test_xz(&conf_fortran);
+#ifdef USE_CBE
+  psc_create_test_xy(&conf_cbe);
   setup_fields(flds);
-  psc_dump_field(flds, EX, "ex0");
+  psc_dump_field(flds,EX,"ex0");
+  psc_push_field_a(flds);
+  psc_dump_field(flds,EX, "ex2");
+  // psc_dump_field(EY, "ey2");
+  // psc_dump_field(EZ, "ez2");
+  // psc_dump_field(HX, "hx2");
+  // psc_dump_field(HY, "hy2");
+  // psc_dump_field(HZ, "hz2");
+  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy();
+#endif
+
+
+  // test push_field_b
+
+  psc_create_test_xy(&conf_fortran);
+  setup_fields(flds);
+  //  psc_dump_field(flds, EX, "ex0");
   psc_push_field_b(flds);
-  psc_dump_field(flds, EX, "ex1");
+  //  psc_dump_field(flds, EX, "ex1");
   psc_save_fields_ref(flds);
   psc_destroy();
 
-  psc_create_test_xz(&conf_c);
+  psc_create_test_xy(&conf_c);
   setup_fields(flds);
   psc_push_field_b(flds);
-  psc_dump_field(flds, EX, "ex2");
-  psc_dump_field(flds, EY, "ey2");
-  psc_dump_field(flds, EZ, "ez2");
-  psc_dump_field(flds, HX, "hx2");
-  psc_dump_field(flds, HY, "hy2");
-  psc_dump_field(flds, HZ, "hz2");
+  //  psc_dump_field(flds, EX, "ex2");
+  //  psc_dump_field(flds, EY, "ey2");
+  //  psc_dump_field(flds, EZ, "ez2");
+  //  psc_dump_field(flds, HX, "hx2");
+  //  psc_dump_field(flds, HY, "hy2");
+  //  psc_dump_field(flds, HZ, "hz2");
   psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_destroy();
+
+#ifdef USE_CBE
+  psc_create_test_xy(&conf_cbe);
+  setup_fields(flds);
+  psc_push_field_b(flds);
+  //  psc_dump_field(flds,EX, "ex2");
+  // psc_dump_field(EY, "ey2");
+  // psc_dump_field(EZ, "ez2");
+  // psc_dump_field(HX, "hx2");
+  // psc_dump_field(HY, "hy2");
+  // psc_dump_field(HZ, "hz2");
+  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy();
+#endif
+
 
   prof_print();
 

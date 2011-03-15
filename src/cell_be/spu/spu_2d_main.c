@@ -38,6 +38,9 @@ spu_run_job(unsigned long long ea)
   case SPU_FIELD_A:
     return spu_push_field_a_nopml();
     break;
+  case SPU_FIELD_B:
+    return spu_push_field_b_nopml();
+    break;
   default:
 #ifndef NDEBUG
     fprintf(stderr, "spu: unknown job %d\n", psc_block.job);

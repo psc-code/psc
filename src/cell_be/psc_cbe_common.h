@@ -8,6 +8,7 @@
 enum kern {
   SPU_PART,
   SPU_FIELD_A,
+  SPU_FIELD_B,
   NR_KERN,
 };
 
