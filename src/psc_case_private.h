@@ -7,6 +7,8 @@
 struct psc_case {
   struct mrc_obj obj;
   bool seed_by_time;
+
+  struct psc *psc;
 };
 
 struct psc_case_ops {

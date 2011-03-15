@@ -210,12 +210,13 @@ static void
 psc_case_harris_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc_case_harris_xy *harris = mrc_to_subobj(_case, struct psc_case_harris_xy);
+  struct psc *psc = _case->psc;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dx = psc.dx[0], dy = psc.dx[1];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dx = psc->dx[0], dy = psc->dx[1];
       double xx = CRDX(p, jx), yy = CRDY(p, jy);
       
       F3_BASE(pf, HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );

@@ -91,11 +91,13 @@ psc_case_thinfoil_set_from_options(struct psc_case *_case)
 static void
 psc_case_thinfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
+  struct psc *psc = _case->psc;
+
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?

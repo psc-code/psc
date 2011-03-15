@@ -260,9 +260,9 @@ struct psc_patch {
   double xb[3];       // lower left corner of the domain in this patch
 };
 
-#define CRDX(p, jx) (psc.dx[0] * ((jx) + psc.patch[p].off[0]))
-#define CRDY(p, jy) (psc.dx[1] * ((jy) + psc.patch[p].off[1]))
-#define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
+#define CRDX(p, jx) (psc->dx[0] * ((jx) + psc->patch[p].off[0]))
+#define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]))
+#define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]))
 
 struct psc {
   struct psc_push_particles *push_particles;
@@ -299,9 +299,6 @@ struct psc {
   struct psc_patch *patch;
   int ibn[3];         // number of ghost points
 
-  // C data structures
-  void *c_ctx;
-
   // did we allocate the fields / particles (otherwise, Fortran did)
   bool allocated;
 
@@ -330,6 +327,18 @@ struct psc {
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
 
 #define foreach_3d_g_end				\
+  } } }
+
+#define psc_foreach_3d_g(psc, p, ix, iy, iz) {				\
+  int __ilo[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };		\
+  int __ihi[3] = { psc->patch[p].ldims[0] + psc->ibn[0],			\
+		   psc->patch[p].ldims[1] + psc->ibn[1],			\
+		   psc->patch[p].ldims[2] + psc->ibn[2] };		\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define psc_foreach_3d_g_end				\
   } } }
 
 #define foreach_patch(p)				\
@@ -367,7 +376,7 @@ psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
   *iz = jz + psc->patch[p].off[2];
 }
 
-void psc_create(struct psc *psc);
+struct psc *psc_create(void);
 void psc_set_conf(struct psc *psc, struct psc_mod_config *conf);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);

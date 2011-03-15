@@ -91,6 +91,7 @@ static void
 psc_case_harris_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -99,10 +100,10 @@ psc_case_harris_init_field(struct psc_case *_case, mfields_base_t *flds)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dx = psc.dx[0], dz = psc.dx[2];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
     
       F3_BASE(pf, HX, jx,jy,jz) = 
@@ -226,6 +227,7 @@ static void
 psc_case_test_yz_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -234,10 +236,10 @@ psc_case_test_yz_init_field(struct psc_case *_case, mfields_base_t *flds)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2];
       double yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       F3_BASE(pf, HY, jx,jy,jz) = 

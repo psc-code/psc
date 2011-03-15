@@ -73,26 +73,28 @@ psc_set_conf(struct psc *psc, struct psc_mod_config *conf)
 // ----------------------------------------------------------------------
 // psc_create
 
-void
-psc_create(struct psc *psc)
+struct psc *
+psc_create()
 {
-  memset(psc, 0, sizeof(*psc));
+  memset(&psc, 0, sizeof(psc));
 
   MPI_Comm comm = MPI_COMM_WORLD;
-  psc->push_particles = psc_push_particles_create(comm);
-  psc->push_fields = psc_push_fields_create(comm);
-  psc->bnd = psc_bnd_create(comm);
-  psc->collision = psc_collision_create(comm);
-  psc->randomize = psc_randomize_create(comm);
-  psc->sort = psc_sort_create(comm);
-  psc->output_fields = psc_output_fields_create(comm);
-  psc->output_particles = psc_output_particles_create(comm);
-  psc->moments = psc_moments_create(comm);
+  psc.push_particles = psc_push_particles_create(comm);
+  psc.push_fields = psc_push_fields_create(comm);
+  psc.bnd = psc_bnd_create(comm);
+  psc.collision = psc_collision_create(comm);
+  psc.randomize = psc_randomize_create(comm);
+  psc.sort = psc_sort_create(comm);
+  psc.output_fields = psc_output_fields_create(comm);
+  psc.output_particles = psc_output_particles_create(comm);
+  psc.moments = psc_moments_create(comm);
 
-  psc->time_start = MPI_Wtime();
+  psc.time_start = MPI_Wtime();
 
-  psc_set_default_domain(psc);
-  psc_set_default_psc(psc);
+  psc_set_default_domain(&psc);
+  psc_set_default_psc(&psc);
+
+  return &psc;
 }
 
 // ----------------------------------------------------------------------

@@ -44,27 +44,13 @@ pml_find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 void
 psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 {
-#if 0
-  int rank, size;
-  MPI_Comm_rank(comm, &rank);
-  MPI_Comm_size(comm, &size);
-  MPI_Barrier(comm);
-  for (int n = 0; n < size; n++) {
-    if (rank == n) {
-      printf("[%d] [%d:%d] x [%d:%d] x [%d:%d]\n", rank,
-	     psc.ilo[0], psc.ihi[0],
-	     psc.ilo[1], psc.ihi[1],
-	     psc.ilo[2], psc.ihi[2]);
-    }
-    MPI_Barrier(comm);
-  }
-#endif
+  struct psc *psc = _case->psc;
 
   int np_total = 0;
-  psc.particles.p = calloc(psc.nr_patches, sizeof(*psc.particles.p));
-  foreach_patch(p) {
+  psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
+  psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(&psc, p, ilo, ihi);
+    pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
     for (int kind = 0; kind < 2; kind++) {
@@ -76,14 +62,14 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(&psc, npt.n);
+	    int n_in_cell = get_n_in_cell(psc, npt.n);
 	    np += n_in_cell;
 	  }
 	}
       }
     }
 
-    particles_base_alloc(&psc.particles.p[p], np);
+    particles_base_alloc(&psc->particles.p[p], np);
     np_total += np;
   }
   // calculate global particle label offset for unique numbering
@@ -95,7 +81,8 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 void
 psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 {
-  double beta = psc.coeff.beta;
+  struct psc *psc = _case->psc;
+  double beta = psc->coeff.beta;
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -106,10 +93,10 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
     srandom(rank);
   }
 
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
-    pml_find_bounds(&psc, p, ilo, ihi);
-    particles_base_t *pp = &psc.particles.p[p];
+    pml_find_bounds(psc, p, ilo, ihi);
+    particles_base_t *pp = &psc->particles.p[p];
 
     int i = 0;
     for (int kind = 0; kind < 2; kind++) {
@@ -121,7 +108,7 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(&psc, npt.n);
+	    int n_in_cell = get_n_in_cell(psc, npt.n);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_base_t *p = particles_base_get_one(pp, i++);
 	      
@@ -157,10 +144,10 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 	      p->lni = particle_label_offset + 1;
 #endif
-	      if (psc.prm.fortran_particle_weight_hack) {
+	      if (psc->prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;
 	      } else {
-		p->wni = npt.n / (n_in_cell * psc.coeff.cori);
+		p->wni = npt.n / (n_in_cell * psc->coeff.cori);
 	      }
 	    }
 	  }

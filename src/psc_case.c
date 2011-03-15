@@ -25,7 +25,7 @@ psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 static void
 _psc_case_create(struct psc_case *_case)
 {
-  psc_create(&psc);
+  _case->psc = psc_create();
 }
 
 // ----------------------------------------------------------------------
@@ -35,7 +35,7 @@ static void
 _psc_case_set_from_options(struct psc_case *_case)
 {
   // subclass set_from_options gets called first automatically 
-  psc_set_from_options(&psc);
+  psc_set_from_options(_case->psc);
 }
 
 // ----------------------------------------------------------------------
@@ -44,14 +44,15 @@ _psc_case_set_from_options(struct psc_case *_case)
 static void
 _psc_case_setup(struct psc_case *_case)
 {
+  struct psc *psc = _case->psc;
   // FIXME, probably broken, should go into sep subclass?
-  if (psc.prm.from_checkpoint) {
+  if (psc->prm.from_checkpoint) {
     assert(0);
     psc_read_checkpoint();
   }
   // this sets up everything except allocating fields and particles,
   // and intializing them
-  psc_setup(&psc);
+  psc_setup(psc);
 
   // alloc / initialize particles
   int particle_label_offset;
@@ -59,13 +60,13 @@ _psc_case_setup(struct psc_case *_case)
   psc_case_init_particles(_case, particle_label_offset);
 
   // alloc / initialize fields
-  mfields_base_alloc(&psc.flds, NR_FIELDS);
-  psc_case_init_field(_case, &psc.flds);
-  if (psc.domain.use_pml) {
-    psc_init_field_pml(_case, &psc.flds);
+  mfields_base_alloc(&psc->flds, NR_FIELDS);
+  psc_case_init_field(_case, &psc->flds);
+  if (psc->domain.use_pml) {
+    psc_init_field_pml(_case, &psc->flds);
   }
 
-  psc_setup_fortran(&psc);
+  psc_setup_fortran(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -74,7 +75,7 @@ _psc_case_setup(struct psc_case *_case)
 static void
 _psc_case_view(struct psc_case *_case)
 {
-  psc_view(&psc);
+  psc_view(_case->psc);
 }
 
 // ----------------------------------------------------------------------
@@ -100,6 +101,15 @@ psc_case_init_field(struct psc_case *_case, mfields_base_t *flds)
     return;
 
   psc_case_ops(_case)->init_field(_case, flds);
+}
+
+// ----------------------------------------------------------------------
+// psc_case_get_psc
+
+struct psc *
+psc_case_get_psc(struct psc_case *_case)
+{
+  return _case->psc;
 }
 
 // ======================================================================

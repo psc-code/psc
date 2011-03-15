@@ -190,9 +190,9 @@ f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 // Wrappers to be called from C that call into Fortran
 
 void
-PSC_set_globals()
+PSC_set_globals(struct psc *psc)
 {
-  struct psc_coeff *p = &psc.coeff;
+  struct psc_coeff *p = &psc->coeff;
   PSC_set_globals_F77(&p->cori, &p->alpha, &p->eta);
 }
 
@@ -633,7 +633,7 @@ void
 psc_setup_fortran(struct psc *psc)
 {
   INIT_basic();
-  PSC_set_globals();
+  PSC_set_globals(psc);
   PSC_set_params();
   PSC_set_coeff();
   PSC_set_domain();
