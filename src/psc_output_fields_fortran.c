@@ -19,7 +19,8 @@ psc_output_fields_fortran_run(struct psc_output_fields *out,
     pr = prof_register("fort_out_field", 1., 0, 0);
   }
   prof_start(pr);
-  OUT_field();
+  fields_base_t *pf = &flds_base->f[0];
+  OUT_field(pf);
   prof_stop(pr);
 }
 

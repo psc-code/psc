@@ -7,7 +7,6 @@ c korrigierte Version
 
       use VLA_variables
       use PSC_patch
-      use fields
 
       implicit none
       integer :: m,le,la

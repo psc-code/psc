@@ -209,10 +209,10 @@ c     ----------------------------------------------------------------------
       end subroutine OUT_FIELDS_serv_write
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_field
+      subroutine OUT_field(ne, ni, nn, jxi, jyi, jzi, ex, ey, ez,
+     *     hx, hy, hz, dvx, dvy, dvz, bx, by, bz)
 c     ----------------------------------------------------------------------
       use VLA_variables
-      use fields
       use OUT_params
       use OUT_FIELDS
       use PSC_globals
@@ -221,6 +221,26 @@ c     ----------------------------------------------------------------------
       use PSC_patch
 
       implicit none
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: dvx, dvy, dvz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+
       integer :: i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       character*(5) node,label
