@@ -197,44 +197,44 @@ PSC_set_globals(struct psc *psc)
 }
 
 void
-PSC_set_patch(int p)
+PSC_set_patch(struct psc *psc, int p)
 {
-  struct psc_patch *patch = &psc.patch[p];
+  struct psc_patch *patch = &psc->patch[p];
   int imx[3];
   for (int d = 0; d < 3; d++) {
     imx[d] = patch->off[d] + patch->ldims[d] - 1;
   }
-  PSC_set_patch_F77(patch->off, imx, psc.ibn, &psc.dt, psc.dx);
+  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, psc->dx);
 }
 
 void
-PSC_set_domain()
+PSC_set_domain(struct psc *psc)
 {
-  struct psc_domain *p = &psc.domain;
+  struct psc_domain *p = &psc->domain;
   int imax[3], np[3];
 
-  mrc_domain_get_param_int3(psc.mrc_domain, "np", np);
+  mrc_domain_get_param_int3(psc->mrc_domain, "np", np);
   for (int d = 0; d < 3; d++) {
     imax[d] = p->gdims[d] - 1;
   }
   int use_pml_ = p->use_pml;
   int ilo[3] = {};
   PSC_set_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, np, psc.ibn, &use_pml_);
+		       p->bnd_part, np, psc->ibn, &use_pml_);
 }
 
 void
-PSC_set_coeff()
+PSC_set_coeff(struct psc *psc)
 {
-  struct psc_coeff *p = &psc.coeff;
+  struct psc_coeff *p = &psc->coeff;
   PSC_set_coeff_F77(&p->beta,
 		    &p->wl, &p->ld, &p->vos, &p->vt, &p->wp);
 }
 
 void
-OUT_params_set()
+OUT_params_set(struct psc *psc)
 {
-  struct psc_coeff *p = &psc.coeff;
+  struct psc_coeff *p = &psc->coeff;
   OUT_params_set_F77(&p->np, &p->nnp);
 }
 
@@ -245,92 +245,92 @@ SETUP_field()
 }
 
 static void
-PSC_set_timestep()
+PSC_set_timestep(struct psc *psc)
 {
-  PSC_set_timestep_F77(&psc.timestep);
+  PSC_set_timestep_F77(&psc->timestep);
 }
 
 void
-PSC_set_params()
+PSC_set_params(struct psc *psc)
 {
-  struct psc_param *p = &psc.prm;
+  struct psc_param *p = &psc->prm;
   PSC_set_params_F77(&p->qq, &p->mm, &p->tt, &p->cc, &p->eps0,
 		     &p->nmax, &p->lw, &p->i0, &p->n0, &p->e0, &p->b0,
 		     &p->j0, &p->rho0, &p->phi0, &p->a0);
 }
 
 void
-PIC_push_part_yz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xy(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xy(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_xy_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_xy_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xyz(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xyz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_yz_a(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz_a(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_yz_a_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_yz_a_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_yz_b(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz_b(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_yz_b_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_yz_b_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 			 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_z(int patch, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_z(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  PSC_set_timestep();
-  PSC_set_patch(patch);
-  PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc.p2A, &psc.p2B,
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
 		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		      pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
@@ -373,9 +373,9 @@ OUT_part(particles_fortran_t *pp)
 }
 
 void
-SET_param_pml()
+SET_param_pml(struct psc *psc)
 {
-  SET_param_pml_F77(&psc.pml.thick, &psc.pml.cushion, &psc.pml.size, &psc.pml.order);
+  SET_param_pml_F77(&psc->pml.thick, &psc->pml.cushion, &psc->pml.size, &psc->pml.order);
 }
 
 real
@@ -536,9 +536,9 @@ SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-SERV_write(particles_fortran_t *pp, fields_fortran_t *pf)
+SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf)
 {
-  SERV_write_F77(&psc.timestep,
+  SERV_write_F77(&psc->timestep,
 		 &pp->n_part, &pp->particles[-1],
 		 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
@@ -581,11 +581,11 @@ C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real *__f_flds[NR_FIELDS];
 
 f_real **
-ALLOC_field()
+ALLOC_field(struct psc *psc)
 {
-  assert(psc.nr_patches == 1);
-  PSC_set_domain();
-  PSC_set_patch(0);
+  assert(psc->nr_patches == 1);
+  PSC_set_domain(psc);
+  PSC_set_patch(psc, 0);
   FIELDS_alloc_F77();
   // the callback function below will have magically been called,
   // setting __f_flds
@@ -634,12 +634,12 @@ psc_setup_fortran(struct psc *psc)
 {
   INIT_basic();
   PSC_set_globals(psc);
-  PSC_set_params();
-  PSC_set_coeff();
-  PSC_set_domain();
-  SET_param_pml();
-  PSC_set_patch(0);
-  OUT_params_set();
+  PSC_set_params(psc);
+  PSC_set_coeff(psc);
+  PSC_set_domain(psc);
+  SET_param_pml(psc);
+  PSC_set_patch(psc, 0);
+  OUT_params_set(psc);
   SETUP_field();
 }
 

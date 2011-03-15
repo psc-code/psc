@@ -41,7 +41,7 @@ psc_write_checkpoint(void)
   mfields_fortran_t flds;
   fields_fortran_get(&flds, JXI, HZ + 1, &psc.flds);
 
-  SERV_write(&particles.p[0], &flds.f[0]);
+  SERV_write(&psc, &particles.p[0], &flds.f[0]);
 
   particles_fortran_put(&particles, &psc.particles);
   fields_fortran_put(&flds, 0, 0, &psc.flds);

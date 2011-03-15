@@ -37,7 +37,7 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
 	ie[1] == patch->ldims[1] + psc.ibn[1] &&
 	ie[2] == patch->ldims[2] + psc.ibn[2]) {
       ALLOC_field_called = true;
-      f_real **fields = ALLOC_field();
+      f_real **fields = ALLOC_field(&psc);
       for (int i = 0; i < NR_FIELDS; i++) {
 	pf->flds[i] = fields[i];
       }
