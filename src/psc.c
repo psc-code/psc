@@ -33,7 +33,9 @@ static struct psc_ops *psc_ops_list[] = {
 static struct psc_push_field_ops *psc_push_field_ops_list[] = {
   &psc_push_field_ops_fortran,
   &psc_push_field_ops_c,
+#ifdef USE_CBE
   &psc_push_field_ops_cbe,
+#endif
   &psc_push_field_ops_none,
   NULL,
 };

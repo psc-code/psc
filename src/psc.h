@@ -516,7 +516,9 @@ extern struct psc_ops psc_ops_none;
 
 extern struct psc_push_field_ops psc_push_field_ops_fortran;
 extern struct psc_push_field_ops psc_push_field_ops_c;
+#ifdef USE_CBE
 extern struct psc_push_field_ops psc_push_field_ops_cbe;
+#endif
 extern struct psc_push_field_ops psc_push_field_ops_none;
 
 extern struct psc_randomize_ops psc_randomize_ops_fortran;

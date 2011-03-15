@@ -46,12 +46,7 @@ enum{
 int
 spu_push_field_a_nopml(void)
 {
-#if PRINT_DEBUG
-
-  printf("[[%#llx] start ea: %#llx end ea: %#llx \n", spu_ctx.spe_id, psc_block.part_start, psc_block.part_end);
-
-#endif
-
+ 
   // Local store for the fields. At this point, contains E,H, and J.
   fields_c_real_t ls_fld[NR_LSFLDS*32*32] __attribute__((aligned(128)));
 
@@ -118,6 +113,31 @@ spu_push_field_a_nopml(void)
 	      32*32*sizeof(fields_c_real_t));
 
 
+  spu_dma_get(&ls_fld[ls_JXI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JXI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      0)),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_JYI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JYI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      0)),
+	      32*32*sizeof(fields_c_real_t));
+
+  spu_dma_get(&ls_fld[ls_JZI*32*32], 
+	      (psc_block.wb_flds + 
+	       sizeof(fields_c_real_t) * F3_OFF_C(&psc_block,JZI,
+						      psc_block.ib[0],
+						      psc_block.ib[1],
+						      0)),
+	      32*32*sizeof(fields_c_real_t));
+
+
   // Do EX push. Differences along the y (slow running) direction.
   // So, run along that direction on the interior so we can minimize 
   // loads. 
@@ -134,6 +154,8 @@ spu_push_field_a_nopml(void)
 
   v_real buff_pre, buff_curr, buff_minus, J,store;
 
+
+  // This Checks Out
 
   for(int jx = 2; jx < NDIM; jx += 2){
     buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx, 1)));
@@ -158,11 +180,13 @@ spu_push_field_a_nopml(void)
 
   // Now for the fast running index which is, ironically, more difficult
   
+  // This Failing
+
   for(int jy = 2; jy < NDIM; jy++){
     buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 0, jy)));
     buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 2, jy)));
     for(int jx = 2; jx < NDIM - 2; jx +=2) {
-      buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+      buff_minus = spu_shuffle(buff_curr,buff_pre,fast_pat);
       buff_curr = buff_pre;
       buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx+2, jy)));
       J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JYI, jx, jy)));
@@ -170,7 +194,7 @@ spu_push_field_a_nopml(void)
       store -= cnx * (buff_curr - buff_minus) + half_dt * J;
       *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, jx, jy))) = store;
     }
-    buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+    buff_minus = spu_shuffle(buff_curr,buff_pre,fast_pat);
     buff_curr = buff_pre;
     J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JYI, NDIM - 2, jy)));
     store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, NDIM - 2, jy)));
@@ -187,7 +211,7 @@ spu_push_field_a_nopml(void)
     buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 0, jy)));
     buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 2, jy)));
     for(int jx = 2; jx < NDIM - 2; jx +=2) {
-      buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+      buff_minus = spu_shuffle(buff_curr,buff_pre,fast_pat);
       buff_curr = buff_pre;
       buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, jx+2, jy)));
       J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JZI, jx, jy)));
@@ -200,7 +224,7 @@ spu_push_field_a_nopml(void)
 
       *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, jy))) = store;
     }
-    buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+    buff_minus = spu_shuffle(buff_curr,buff_pre,fast_pat);
     buff_curr = buff_pre;
     J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JZI, NDIM - 2, jy)));
     store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, NDIM - 2, jy)));
@@ -224,7 +248,7 @@ spu_push_field_a_nopml(void)
   for(int jx = 2; jx < NDIM - 2; jx += 2){
     buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, NDIM - 2)));
     buff_pre =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, NDIM - 3)));
-    for(int jy = NDIM - 4; jy > 2; jy--){
+    for(int jy = NDIM - 3; jy > 2; jy--){
       store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, jy)));
       buff_minus = buff_curr;
       buff_curr = buff_pre;
@@ -273,10 +297,10 @@ spu_push_field_a_nopml(void)
     for(int jx = NDIM-4; jx > 2; jx -=2) {
       buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
       buff_curr = buff_pre;
-      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, jx+2, jy)));
+      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, jx-2, jy)));
       store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx, jy)));
 
-      store -= cnx * (buff_minus - buff_cur) 	
+      store -= cnx * (buff_minus - buff_curr) 	
 	- cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, jx, jy+1))) - 
 		 *((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, jx, jy))));
 
@@ -286,9 +310,9 @@ spu_push_field_a_nopml(void)
     buff_curr = buff_pre;
     store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 2, jy)));
 
-    store += cnx * (buff_curr - buff_minus) 	
+    store -= cnx * (buff_minus - buff_curr) 	
       - cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, 2, jy+1))) - 
-	       *((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, 2, jy))));
+	        *((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, 2, jy))));
     
     *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 2, jy))) = store;
   }
@@ -349,9 +373,7 @@ spu_push_field_a_nopml(void)
   
 
 
-  // Then we just wait to make sure the particles have 
-  // finished storing. 
-  end_wait_particles_stored();
+
 #if PRINT_DEBUG
   fprintf(stderr, "[[%#llx] ran %d particles\n", spu_ctx.spe_id, n);
 #endif

@@ -9,7 +9,7 @@
 #endif
 
 void
-cbe_push_part_2d(mfields_base_t *flds_base)
+cbe_push_field_a_2d(mfields_base_t *flds_base)
 {
   mfields_t flds;
   fields_get(&flds, JXI, JXI +9,flds_base);
@@ -38,7 +38,7 @@ cbe_push_part_2d(mfields_base_t *flds_base)
     // So, another thing I'm not too please about. The function that's getting
     // called here will basically stall the ppu until it manages to start the patch
     // on an spe...
-    cell_run_patch(&flds.f[p], &null_pars, job);
+    cell_run_patch(&flds.f[p], &null_parts, job);
   }
 
   wait_all_spe();
@@ -46,10 +46,12 @@ cbe_push_part_2d(mfields_base_t *flds_base)
   prof_stop(pr);
 
   fields_put(&flds, JXI, JXI + 9, flds_base);
+  
+  psc_fill_ghosts(flds_base, EX, EX+6);
 }
 
 static void
-c_push_field_a(mfields_base_t *flds)
+cbe_push_field_a(mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -59,7 +61,7 @@ c_push_field_a(mfields_base_t *flds)
 }
 
 static void
-c_push_field_b(mfields_base_t *flds)
+cbe_push_field_b(mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
