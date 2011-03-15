@@ -27,8 +27,6 @@
 #define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
-#define FIELDS_alloc_F77 F77_FUNC_(fields_alloc, FIELDS_ALLOC)
-#define FIELDS_free_F77 F77_FUNC_(fields_free, FIELDS_FREE)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
 #define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
 #define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
@@ -55,7 +53,6 @@
 #define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
 #define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
 
-#define C_fields_alloc_cb_F77 F77_FUNC(c_fields_alloc_cb,C_FIELDS_ALLOC_CB)
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 #define C_s_pulse_z1_F77 F77_FUNC(c_s_pulse_z1,C_S_PULSE_Z1)
 #define C_p_pulse_z2_F77 F77_FUNC(c_p_pulse_z2,C_P_PULSE_Z2)
@@ -140,8 +137,6 @@ void OUT_part_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
-void FIELDS_alloc_F77(void);
-void FIELDS_free_F77(void);
 
 void PIC_fax_F77(f_real *f);
 void PIC_fay_F77(f_real *f);
@@ -584,60 +579,6 @@ C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
   return psc_s_pulse_z2(*xx, *yy, *zz, *tt);
 }
 
-
-// ----------------------------------------------------------------------
-// same thing for allocating fields
-
-f_real *__f_flds[NR_FIELDS];
-
-f_real **
-ALLOC_field(struct psc *psc)
-{
-  assert(psc->nr_patches == 1);
-  PSC_set_domain(psc);
-  PSC_set_patch(psc, 0);
-  FIELDS_alloc_F77();
-  // the callback function below will have magically been called,
-  // setting __f_flds
-  return __f_flds;
-}
-
-void
-FREE_field(void)
-{
-  FIELDS_free_F77();
-}
-
-void
-C_fields_alloc_cb_F77(f_real *ne, f_real *ni, f_real *nn,
-		      f_real *jxi, f_real *jyi, f_real *jzi,
-		      f_real *ex, f_real *ey, f_real *ez,
-		      f_real *hx, f_real *hy, f_real *hz,
-		      f_real *dx, f_real *dy, f_real *dz,
-		      f_real *bx, f_real *by, f_real *bz,
-		      f_real *eps, f_real *mu)
-{
-  __f_flds[NE] = ne;
-  __f_flds[NI] = ni;
-  __f_flds[NN] = nn;
-  __f_flds[JXI] = jxi;
-  __f_flds[JYI] = jyi;
-  __f_flds[JZI] = jzi;
-  __f_flds[EX] = ex;
-  __f_flds[EY] = ey;
-  __f_flds[EZ] = ez;
-  __f_flds[HX] = hx;
-  __f_flds[HY] = hy;
-  __f_flds[HZ] = hz;
-  __f_flds[DX] = dx;
-  __f_flds[DY] = dy;
-  __f_flds[DZ] = dz;
-  __f_flds[BX] = bx;
-  __f_flds[BY] = by;
-  __f_flds[BZ] = bz;
-  __f_flds[EPS] = eps;
-  __f_flds[MU] = mu;
-}
 
 void
 psc_setup_fortran(struct psc *psc)

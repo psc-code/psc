@@ -9,7 +9,6 @@ noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
-	FIELDS.F \
 	OUT_params.F OUT_poyc.F \
 	PML.F PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \

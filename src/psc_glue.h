@@ -26,8 +26,6 @@ void SET_param_pml(struct psc *psc);
 void GET_param_domain(void);
 void INIT_param_domain(void);
 void INIT_param_psc(void);
-f_real **ALLOC_field(struct psc *psc);
-void FREE_field(void);
 void INIT_basic(void);
 real PSC_p_pulse_z1(real x, real y, real z, real t);
 real PSC_s_pulse_z1(real x, real y, real z, real t);
