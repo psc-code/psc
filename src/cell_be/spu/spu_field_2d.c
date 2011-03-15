@@ -164,7 +164,7 @@ spu_push_field_a_nopml(void)
     for(int jx = 2; jx < NDIM - 2; jx +=2) {
       buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
       buff_curr = buff_pre;
-      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, jx+2, jy)));
+      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx+2, jy)));
       J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JYI, jx, jy)));
       store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, jx, jy)));
       store -= cnx * (buff_curr - buff_minus) + half_dt * J;
@@ -177,6 +177,124 @@ spu_push_field_a_nopml(void)
     store -= cnx * (buff_curr - buff_minus) + half_dt * J;
     *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, NDIM - 2, jy))) = store;
   }
+
+  // Because EZ involves both a fast and slow running difference, there's no 
+  // really nice way to set this up. No matter what I'm going to end up 
+  // doing N times more load than I would really like.
+
+  for(int jy = 2; jy < NDIM; jy++){
+    // Buffs are fast running differences.
+    buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 0, jy)));
+    buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 2, jy)));
+    for(int jx = 2; jx < NDIM - 2; jx +=2) {
+      buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+      buff_curr = buff_pre;
+      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, jx+2, jy)));
+      J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JZI, jx, jy)));
+      store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, jy)));
+
+      store += cnx * (buff_curr - buff_minus) 	
+	- cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, jy))) - 
+		 *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, jy-1))))
+	- half_dt * J;
+
+      *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, jy))) = store;
+    }
+    buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+    buff_curr = buff_pre;
+    J =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_JZI, NDIM - 2, jy)));
+    store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, NDIM - 2, jy)));
+
+    store += cnx * (buff_curr - buff_minus) 	
+      - cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, NDIM-2, jy))) - 
+	       *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, NDIM-2, jy-1))))
+      - half_dt * J;
+    
+    *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, NDIM - 2, jy))) = store;
+  }
+
+  // Now, here's the iffy part. In the original code we're doing a ghost point exchange here.
+  // Thing is, based on the bounds of the loop, I don't think we need to do that. I'm going to try 
+  // not to, as getting ghost points would be very expensive. 
+
+
+  // Because these FD derivatives are i+1 - i, we're going to run the inner loops backwards
+  // and have buff_minus - buff_curr. Confusing, I know. 
+
+  for(int jx = 2; jx < NDIM - 2; jx += 2){
+    buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, NDIM - 2)));
+    buff_pre =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, NDIM - 3)));
+    for(int jy = NDIM - 4; jy > 2; jy--){
+      store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, jy)));
+      buff_minus = buff_curr;
+      buff_curr = buff_pre;
+      buff_pre =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx, jy-1)));
+      store -= cny * (buff_minus - buff_curr);
+      *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, jy))) = store;
+    }
+    // Do the last row by hand so we don't have to preload
+    store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, 2)));
+    buff_minus = buff_curr;
+    buff_curr = buff_pre;
+    store -= cny * (buff_minus - buff_curr);
+    *((v_real *)(ls_fld + F2_SPU_OFF(ls_HX, jx, 2))) = store;
+  }
+
+  // Now for the fast running index which is, ironically, more difficult
+  
+  for(int jy = 2; jy < NDIM - 2; jy++){
+    buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, NDIM-2, jy)));
+    buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, NDIM-4, jy)));
+
+    for(int jx = NDIM-4; jx > 2; jx -=2) {
+      buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+      buff_curr = buff_pre;
+      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EZ, jx-2, jy)));
+      store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, jx, jy)));
+      store += cnx * (buff_minus - buff_curr);
+      *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, jx, jy))) = store;
+    }
+    buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+    buff_curr = buff_pre;
+    store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 2, jy)));
+    store += cnx * (buff_minus - buff_curr);
+    *((v_real *)(ls_fld + F2_SPU_OFF(ls_HY, 2, jy))) = store;
+  }
+
+  // Because HZ involves both a fast and slow running difference, there's no 
+  // really nice way to set this up. No matter what I'm going to end up 
+  // doing N times more load than I would really like.
+
+
+  for(int jy = 2; jy < NDIM-2; jy++){
+    // Buffs are fast running differences.
+    buff_curr = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, NDIM-2, jy)));
+    buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, NDIM-4, jy)));
+    for(int jx = NDIM-4; jx > 2; jx -=2) {
+      buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+      buff_curr = buff_pre;
+      buff_pre = *((v_real *)(ls_fld + F2_SPU_OFF(ls_EY, jx+2, jy)));
+      store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx, jy)));
+
+      store -= cnx * (buff_minus - buff_cur) 	
+	- cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, jx, jy+1))) - 
+		 *((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, jx, jy))));
+
+      *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, jx, jy))) = store;
+    }
+    buff_minus = spu_shuffle(buff_pre,buff_curr,fast_pat);
+    buff_curr = buff_pre;
+    store =  *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 2, jy)));
+
+    store += cnx * (buff_curr - buff_minus) 	
+      - cny * (*((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, 2, jy+1))) - 
+	       *((v_real *)(ls_fld + F2_SPU_OFF(ls_EX, 2, jy))));
+    
+    *((v_real *)(ls_fld + F2_SPU_OFF(ls_HZ, 2, jy))) = store;
+  }
+
+
+
   // Write out the fields
   
   // FIXME: This assumes the index of the plane in 0 in the symmetry direction.

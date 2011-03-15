@@ -6,9 +6,8 @@
 #define PRINT_DEBUG 0
 
 enum kern {
-  SPU_HELLO,
-  SPU_BYE,
   SPU_PART,
+  SPU_FIELD_A,
   NR_KERN,
 };
 
