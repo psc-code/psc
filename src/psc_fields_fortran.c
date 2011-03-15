@@ -71,27 +71,8 @@ fields_fortran_free(fields_fortran_t *pf)
 void
 fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
-  assert(psc.nr_patches == 1);
   mfields_base_t *flds_base = _flds_base;
   *flds = *flds_base;
-}
-
-void
-fields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base,
-			int mb_base)
-{
-  fields_fortran_get(flds, mb, me, &psc.flds);
-
-  mfields_base_t *flds_base = _flds_base;
-  foreach_patch(p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
-    for (int m = mb; m < me; m++) {
-      foreach_3d_g(p, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
 }
 
 void
@@ -99,83 +80,12 @@ fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
 }
 
-void
-fields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base,
-		      int mb_base)
-{
-  mfields_base_t *flds_base = _flds_base;
-  foreach_patch(p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
-    for (int m = mb; m < me; m++) {
-      foreach_3d_g(p, jx, jy, jz) {
-	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
-  
-  fields_fortran_put(flds, mb, me, &psc.flds);
-}
-
 #else
-
-static mfields_fortran_t __flds;
-static int __gotten; // to check we're pairing get/put correctly
-
-void
-fields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base,
-			int mb_base)
-{
-  mfields_base_t *flds_base = _flds_base;
-  assert(!__gotten);
-  __gotten = 1;
-
-  if (!__flds.f) {
-    __flds.f = calloc(psc.nr_patches, sizeof(*__flds.f));
-    foreach_patch(p) {
-      int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-      int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
-		     psc.patch[p].ldims[1] + psc.ibn[1],
-		     psc.patch[p].ldims[2] + psc.ibn[2] };
-      fields_fortran_alloc(&__flds.f[p], ilg, ihg, NR_FIELDS);
-    }
-  }
-  *flds = __flds;
-
-  foreach_patch(p) {
-    for (int m = mb; m < me; m++) {
-      fields_fortran_t *pf = &flds->f[p];
-      fields_base_t *pf_base = &flds_base->f[p];
-      foreach_3d_g(p, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
-}
 
 void
 fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *flds_base)
 {
   fields_fortran_get_from(flds, mb, me, flds_base, mb);
-}
-
-void
-fields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base,
-		      int mb_base)
-{
-  mfields_base_t *flds_base = _flds_base;
-  assert(__gotten);
-  __gotten = 0;
-
-  foreach_patch(p) {
-    fields_fortran_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
-    for (int m = mb; m < me; m++) {
-      foreach_3d_g(p, jx, jy, jz) {
-	F3_BASE(pf_base, m - mb + mb_base, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
 }
 
 void
@@ -204,20 +114,24 @@ fields_fortran_zero_all(fields_fortran_t *pf)
 void
 fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val)
 {
-  foreach_patch(patch) {
-    foreach_3d_g(patch, jx, jy, jz) {
-      F3_FORTRAN(pf, m, jx,jy,jz) = val;
-    } foreach_3d_g_end;
+  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
+    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
+      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
+	F3_FORTRAN(pf, m, jx, jy, jz) = val;
+      }
+    }
   }
 }
 
 void
 fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from)
 {
-  foreach_patch(patch) {
-    foreach_3d_g(patch, jx, jy, jz) {
-      F3_FORTRAN(pf, m_to, jx,jy,jz) = F3_FORTRAN(pf, m_from, jx,jy,jz);
-    } foreach_3d_g_end;
+  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
+    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
+      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
+	F3_FORTRAN(pf, m_to, jx,jy,jz) = F3_FORTRAN(pf, m_from, jx,jy,jz);
+      }
+    }
   }
 }
 

@@ -53,7 +53,7 @@ static const char *stat_name[NR_STATS] = {
   } while (0)
 
 static void
-psc_log_step(double stats[NR_STATS])
+psc_log_step(struct psc *psc, double stats[NR_STATS])
 {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -67,7 +67,7 @@ psc_log_step(double stats[NR_STATS])
   if (rank == 0) {
     printf("    "
 	   "======================================================== step %-7d ===\n",
-	   psc.timestep);
+	   psc->timestep);
     printf("    %25s %10s %10s %10s %10s\n", "name",
 	   "avg", "min", "max", "total");
     for (int i = 0; i < NR_STATS; i++) {
@@ -144,7 +144,7 @@ psc_integrate(struct psc *psc)
       stats[STAT_NR_PARTICLES] += particles->p[p].n_part;
     }
     time_stop(STAT_TIME_STEP);
-    psc_log_step(stats);
+    psc_log_step(psc, stats);
     // FIXME, check whether cpu time expired?
     prof_stop(pr);
     prof_print_mpi(MPI_COMM_WORLD);

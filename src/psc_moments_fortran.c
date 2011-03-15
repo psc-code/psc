@@ -23,12 +23,12 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
   mparticles_fortran_t particles;
   particles_fortran_get(&particles, &particles_base);
   mfields_fortran_t flds_fortran;
-  fields_fortran_get_from(&flds_fortran, 0, 0, res, 0);
+  fields_fortran_get(&flds_fortran, 0, 0, res);
 
   CALC_densities(&particles.p[0], &flds_fortran.f[0]);
 
   particles_fortran_put(&particles, &psc.particles);
-  fields_fortran_put_to(&flds_fortran, NE, NE + 3, res, 0);
+  fields_fortran_put(&flds_fortran, NE, NE + 3, res);
 
   prof_stop(pr);
 }
