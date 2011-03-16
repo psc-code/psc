@@ -30,9 +30,9 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
   }
 
   // set subclass to first in list as default
-  if (!obj->ops && class->subclasses && !list_empty(class->subclasses)) {
+  if (!obj->ops && !list_empty(&class->subclasses)) {
     struct mrc_obj_ops *ops =
-      list_entry(class->subclasses->next, struct mrc_obj_ops, list);
+      list_entry(class->subclasses.next, struct mrc_obj_ops, list);
     mrc_obj_set_type(obj, ops->name);
   }
 
@@ -48,8 +48,14 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   if (!subclass)
     return NULL;
 
+  if (list_empty(&class->subclasses)) {
+    mpi_printf(MPI_COMM_WORLD,
+	       "ERROR: requested subclass '%s', but class '%s' has no subclasses!\n",
+	       subclass, class->name);
+  }
+
   struct mrc_obj_ops *ops;
-  list_for_each_entry(ops, class->subclasses, list) {
+  list_for_each_entry(ops, &class->subclasses, list) {
     assert(ops->name);
     if (strcmp(subclass, ops->name) == 0) {
       return ops;
@@ -59,7 +65,7 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   mpi_printf(MPI_COMM_WORLD, "ERROR: unknown subclass '%s' of class '%s'\n", subclass,
 	  class->name);
   mpi_printf(MPI_COMM_WORLD, "valid choices are:\n");
-  list_for_each_entry(ops, class->subclasses, list) {
+  list_for_each_entry(ops, &class->subclasses, list) {
     mpi_printf(MPI_COMM_WORLD, "- %s\n", ops->name);
   }
   abort();
@@ -70,6 +76,7 @@ mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
 {
   if (!class->initialized) {
     class->initialized = true;
+    INIT_LIST_HEAD(&class->subclasses);
     INIT_LIST_HEAD(&class->instances);
     if (class->init) {
       class->init();
@@ -200,6 +207,7 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
   free(obj->subctx);
   
   struct mrc_obj_ops *ops = find_subclass_ops(obj->class, subclass);
+  assert(ops);
   obj->ops = ops;
 
   if (ops->size) {
@@ -233,12 +241,14 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
   if (class->param_descr) {
     char *p = (char *) obj + class->param_offset;
     mrc_params_parse_nodefault(p, class->param_descr, mrc_obj_name(obj), obj->comm);
+    mrc_params_parse_pfx(p, class->param_descr, mrc_obj_name(obj), obj->comm);
   }
 
   if (obj->ops) {
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
       mrc_params_parse_nodefault(p, obj->ops->param_descr, obj->ops->name, obj->comm);
+      mrc_params_parse_pfx(p, obj->ops->param_descr, mrc_obj_name(obj), obj->comm);
     }
     
     if (obj->ops->set_from_options) {
@@ -318,6 +328,20 @@ mrc_obj_set_param_select(struct mrc_obj *obj, const char *name, int val)
 }
 
 void
+mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, int val[3])
+{
+  union param_u uval = { .u_int3 = { val[0], val[1], val[2] } };
+  mrc_obj_set_param_type(obj, name, PT_INT3, &uval);
+}
+
+void
+mrc_obj_set_param_float3(struct mrc_obj *obj, const char *name, float val[3])
+{
+  union param_u uval = { .u_float3 = { val[0], val[1], val[2] } };
+  mrc_obj_set_param_type(obj, name, PT_FLOAT3, &uval);
+}
+
+void
 mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 {
   union param_u uval;
@@ -334,6 +358,16 @@ mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val
 }
 
 void
+mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval)
+{
+  union param_u uval;
+  mrc_obj_get_param_type(obj, name, PT_INT3, &uval);
+  for (int d = 0; d < 3; d++) {
+    pval[d] = uval.u_int3[d];
+  }
+}
+
+void
 mrc_obj_view(struct mrc_obj *obj)
 {
   struct mrc_class *class = obj->class;
@@ -342,11 +376,13 @@ mrc_obj_view(struct mrc_obj *obj)
     mrc_params_print(p, class->param_descr, mrc_obj_name(obj), obj->comm);
   } else {
     mpi_printf(obj->comm, 
-	       "\n------------------------------------------------------------- %s",
+	       "\n---------------------------------------------------- class -- %s",
 	       mrc_obj_name(obj));
   } 
   if (class->view) {
     class->view(obj);
+  } else {
+    mpi_printf(obj->comm, "\n");
   }
 
   if (obj->ops) {
@@ -355,7 +391,7 @@ mrc_obj_view(struct mrc_obj *obj)
       mrc_params_print(p, obj->ops->param_descr, obj->ops->name, obj->comm);
     } else {
       mpi_printf(obj->comm, 
-		 "------------------------------------------------------------- %s\n\n",
+		 "----------------------------------------------------- type -- %s\n\n",
 		 obj->ops->name);
     } 
 
@@ -368,7 +404,7 @@ mrc_obj_view(struct mrc_obj *obj)
 void
 mrc_obj_setup_sub(struct mrc_obj *obj)
 {
-  if (obj->ops->setup) {
+  if (obj->ops && obj->ops->setup) {
     obj->ops->setup(obj);
   }
 }
@@ -411,7 +447,7 @@ mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
     char *p = (char *) obj + class->param_offset;
     mrc_params_read(p, class->param_descr, mrc_obj_name(obj), io);
   }
-  if (class->subclasses) {
+  if (!list_empty(&class->subclasses)) {
     char *type;
     mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_type", &type);
     mrc_obj_set_type(obj, type);
@@ -453,5 +489,17 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   if (class->write) {
     class->write(obj, io);
   }
+  if (obj->ops && obj->ops->write) {
+    obj->ops->write(obj, io);
+  }
+}
+
+void
+__mrc_class_register_subclass(struct mrc_class *class, struct mrc_obj_ops *ops)
+{
+  if (!class->subclasses.next) {
+    INIT_LIST_HEAD(&class->subclasses);
+  }
+  list_add_tail(&ops->list, &class->subclasses);
 }
 

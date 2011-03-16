@@ -21,47 +21,41 @@ mrc_domain_ops(struct mrc_domain *domain)
 // mrc_domain
 
 static void
-_mrc_domain_create(struct mrc_obj *obj)
+_mrc_domain_create(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   domain->crds = mrc_crds_create(domain->obj.comm);
   mrc_crds_set_domain(domain->crds, domain);
 }
 
 static void
-_mrc_domain_destroy(struct mrc_obj *obj)
+_mrc_domain_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_destroy(domain->crds);
 }
 
 static void
-_mrc_domain_set_from_options(struct mrc_obj *obj)
+_mrc_domain_set_from_options(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_set_from_options(domain->crds);
 }
 
 static void
-_mrc_domain_view(struct mrc_obj *obj)
+_mrc_domain_view(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_view(domain->crds);
 }
 
 static void
-_mrc_domain_setup(struct mrc_obj *obj)
+_mrc_domain_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
-  mrc_obj_setup_sub(obj);
+  mrc_obj_setup_sub(&domain->obj);
   mrc_crds_setup(domain->crds);
 }
 
 static void
-_mrc_domain_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 {
   // FIXME, the whole ldims business doesn't work if ldims aren't the same everywhere
-  struct mrc_domain *domain = to_mrc_domain(obj);
   mrc_crds_destroy(domain->crds);
   char *s;
   mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
@@ -70,12 +64,20 @@ _mrc_domain_read(struct mrc_obj *obj, struct mrc_io *io)
 }
 
 static void
-_mrc_domain_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
-  mrc_io_write_attr_string(io, mrc_obj_name(obj), "crds",
+  mrc_io_write_attr_int(io, mrc_domain_name(domain), "mpi_size", domain->size);
+  mrc_io_write_attr_string(io, mrc_domain_name(domain), "crds",
 			   mrc_crds_name(domain->crds));
   mrc_crds_write(mrc_domain_get_crds(domain), io);
+}
+
+struct mrc_patch *
+mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches)
+{
+  check_is_setup(domain);
+  assert(mrc_domain_ops(domain)->get_patches);
+  return mrc_domain_ops(domain)->get_patches(domain, nr_patches);
 }
 
 struct mrc_crds *
@@ -92,13 +94,6 @@ mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
 }
 
 void
-mrc_domain_get_local_offset_dims(struct mrc_domain *domain, int *off, int *dims)
-{
-  check_is_setup(domain);
-  mrc_domain_ops(domain)->get_local_offset_dims(domain, off, dims);
-}
-
-void
 mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   check_is_setup(domain);
@@ -110,6 +105,13 @@ mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx)
 {
   check_is_setup(domain);
   mrc_domain_ops(domain)->get_local_idx(domain, idx);
+}
+
+void
+mrc_domain_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_patch_idx3(domain, p, idx);
 }
 
 void
@@ -132,14 +134,51 @@ mrc_domain_is_setup(struct mrc_domain *domain)
   return domain->is_setup;
 }
 
+void
+mrc_domain_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_nr_global_patches(domain, nr_global_patches);
+}
+
+void
+mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
+				 struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_global_patch_info(domain, gp, info);
+}
+
+void
+mrc_domain_get_local_patch_info(struct mrc_domain *domain, int p,
+				struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_local_patch_info(domain, p, info);
+}
+
+void
+mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
+			       struct mrc_patch_info *info)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
+}
+
+void
+mrc_domain_plot(struct mrc_domain *domain)
+{
+  check_is_setup(domain);
+  mrc_domain_ops(domain)->plot(domain);
+}
+
 // ======================================================================
 
 struct mrc_ddc *
-mrc_domain_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
-		      struct mrc_ddc_ops *ddc_ops)
+mrc_domain_create_ddc(struct mrc_domain *domain)
 {
   check_is_setup(domain);
-  return mrc_domain_ops(domain)->create_ddc(domain, ddc_par, ddc_ops);
+  return mrc_domain_ops(domain)->create_ddc(domain);
 }
 
 // ======================================================================
@@ -148,9 +187,11 @@ struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 {
   int ldims[3];
-  mrc_domain_get_local_offset_dims(domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
   for (int d = 0; d < 3; d++) {
-    ldims[d] += 2 * bnd;
+    ldims[d] = patches[0].ldims[d] + 2 * bnd;
   }
   struct mrc_f3 *f3 = mrc_f3_alloc(domain->obj.comm, NULL, ldims);
   f3->domain = domain;
@@ -159,29 +200,43 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 }
 
 // ======================================================================
-// mrc_domain class
+// mrc_domain_m3_create
 
-static LIST_HEAD(mrc_domain_subclasses);
-
-void
-libmrc_domain_register(struct mrc_domain_ops *ops)
+struct mrc_m3 *
+mrc_domain_m3_create(struct mrc_domain *domain)
 {
-  list_add_tail(&ops->list, &mrc_domain_subclasses);
+  struct mrc_m3 *m3 = mrc_m3_create(domain->obj.comm);
+  m3->domain = domain;
+  return m3;
 }
 
-// ----------------------------------------------------------------------
+// ======================================================================
+// mrc_domain_m1_create
+
+struct mrc_m1 *
+mrc_domain_m1_create(struct mrc_domain *domain)
+{
+  struct mrc_m1 *m1 = mrc_m1_create(domain->obj.comm);
+  m1->domain = domain;
+  return m1;
+}
+
+// ======================================================================
 // mrc_domain_init
 
 static void
 mrc_domain_init()
 {
-  libmrc_domain_register_simple();
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
 }
 
-struct mrc_class mrc_class_mrc_domain = {
+// ======================================================================
+// mrc_domain class
+
+struct mrc_class_mrc_domain mrc_class_mrc_domain = {
   .name             = "mrc_domain",
   .size             = sizeof(struct mrc_domain),
-  .subclasses       = &mrc_domain_subclasses,
   .init             = mrc_domain_init,
   .create           = _mrc_domain_create,
   .destroy          = _mrc_domain_destroy,

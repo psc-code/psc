@@ -69,7 +69,13 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
   struct diagc_combined_params *par = io->obj.subctx;
     
   int iw[9], *off = iw, *ldims = iw + 3, *gdims = iw + 6;
-  mrc_domain_get_local_offset_dims(domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int d = 0; d < 3; d++) {
+    off[d] = patches[0].off[d];
+    ldims[d] = patches[0].ldims[d];
+  }
   mrc_domain_get_global_dims(domain, gdims);
   MPI_Send(iw, 9, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD);
 
@@ -83,9 +89,8 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
 }
 
 static void
-diagc_combined_setup(struct mrc_obj *obj)
+diagc_combined_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
   struct mrc_io_params *par_io = &io->par;
   struct diagc_combined_params *par = io->obj.subctx;
 
@@ -142,9 +147,8 @@ diagc_combined_close(struct mrc_io *io)
 // shuts down the diag server process
 
 static void
-diagc_combined_destroy(struct mrc_obj *obj)
+diagc_combined_destroy(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *) obj;
   struct diagc_combined_params *par = io->obj.subctx;
 
   if (io->rank == 0) {
@@ -177,8 +181,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 
   diagc_combined_send_domain_info(io, fld->domain);
 
-  int ldims[3];
-  mrc_domain_get_local_offset_dims(fld->domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *ldims = patches[0].ldims;
   assert(ldims[0] == fld->im[0]-4 && ldims[1] == fld->im[1]-4 && ldims[2] == fld->im[2]-4);
   int nout = ldims[0] * ldims[1] * ldims[2];
   float *buf = calloc(sizeof(float), nout);
@@ -196,7 +202,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
   copy_and_scale(buf, fld, m, scale);
 
   int iw[6], *off = iw, *dims = iw + 3; // off, then dims
-  mrc_domain_get_local_offset_dims(fld->domain, off, dims);
+  for (int d = 0; d < 3; d++) {
+    off[d] = patches[0].off[d];
+    dims[d] = patches[0].ldims[d];
+  }
 
   MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
   MPI_Send(buf, nout, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_DATA, MPI_COMM_WORLD);
@@ -229,7 +238,13 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   int iw[6] = { -1, };
   if (fld->arr) { // part of the slice?
     int *off = iw, *dims = iw + 3; // off, then dims
-    mrc_domain_get_local_offset_dims(fld->domain, off, dims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      off[d] = patches[0].off[d];
+      dims[d] = patches[0].ldims[d];
+    }
     off[dim] = 0;
     dims[dim] = 1;
 
@@ -267,13 +282,21 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
       MPI_Send((char *)pv->u_string, strlen(pv->u_string) + 1, MPI_CHAR, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
+    case PT_INT3:
+      MPI_Send(pv->u_int3, 3, MPI_INT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
+    case PT_FLOAT3:
+      MPI_Send(pv->u_float3, 3, MPI_FLOAT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
     default:
       assert(0);
     }
   }
 }
 
-static struct mrc_io_ops mrc_io_ops_combined = {
+struct mrc_io_ops mrc_io_combined_ops = {
   .name          = "combined",
   .size          = sizeof(struct diagc_combined_params),
   .param_descr   = diagc_combined_params_descr,
@@ -732,9 +755,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
     if (rank == 0) {
       domain = mrc_domain_create(MPI_COMM_SELF);
       mrc_domain_set_type(domain, "simple");
-      mrc_domain_set_param_int(domain, "mx", gdims[0]);
-      mrc_domain_set_param_int(domain, "my", gdims[1]);
-      mrc_domain_set_param_int(domain, "mz", gdims[2]);
+      mrc_domain_set_param_int3(domain, "m", gdims);
       crds = mrc_domain_get_crds(domain);
       mrc_crds_set_type(crds, "rectilinear");
       mrc_domain_setup(domain);
@@ -875,6 +896,14 @@ static struct param diagsrv_params_descr[] = {
 		   MPI_STATUS_IGNORE);
 	  val.u_string = strdup(str);
 	  break;
+	case PT_INT3:
+	  MPI_Recv(val.u_int3, 3, MPI_INT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  break;
+	case PT_FLOAT3:
+	  MPI_Recv(val.u_float3, 3, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  break;
 	default:
 	  assert(0);
 	}
@@ -968,10 +997,4 @@ static struct param diagsrv_params_descr[] = {
   }
 
   srv_ops->destroy(&ds);
-}
-
-void
-libmrc_io_register_combined()
-{
-  libmrc_io_register(&mrc_io_ops_combined);
 }

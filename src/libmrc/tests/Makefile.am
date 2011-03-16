@@ -7,7 +7,9 @@ noinst_PROGRAMS = \
 	test_io_read \
 	test_dict \
 	test_spherical_harmonics \
-	test_ddc
+	test_ddc \
+	test_mrc_domain_multi \
+	test_mrc_ddc
 
 LDADD = ../src/libmrctest.a ../src/libmrc.a
 
@@ -21,4 +23,8 @@ TESTS = \
 	test_io_read_2.sh \
 	test_io_read_3.sh \
 	test_io_read_4.sh \
-	test_ddc_0.sh
+	test_ddc_0.sh \
+	test_mrc_domain_multi_0.sh \
+	test_mrc_domain_multi_1.sh \
+	test_mrc_domain_multi_2.sh \
+	test_mrc_ddc_1.sh

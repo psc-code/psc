@@ -30,14 +30,14 @@ pml_find_bounds(int p, int ilo[3], int ihi[3])
 {
   struct psc_patch *patch = &psc.patch[p];
   for (int d = 0; d < 3; d++) {
-    ilo[d] = patch->off[d];
-    if (ilo[d] == 0 && // left-most proc in this dir
+    ilo[d] = 0;
+    if (patch->off[d] == 0 && // left-most proc in this dir
 	(psc.domain.bnd_fld_lo[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
       ilo[d] += psc.pml.size+1;
     }
-    ihi[d] = patch->off[d] + patch->ldims[d];
-    if (ihi[d] == psc.domain.gdims[d] && // right-most proc in this dir
+    ihi[d] = patch->ldims[d];
+    if (ihi[d] + patch->off[d] == psc.domain.gdims[d] && // right-most proc in this dir
 	(psc.domain.bnd_fld_hi[d] == BND_FLD_UPML || 
 	 psc.domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
       ihi[d] -= psc.pml.size+1;
@@ -62,19 +62,17 @@ psc_init_partition(int *particle_label_offset)
     }
   }
 
-  mrc_domain_set_type(psc.mrc_domain, "simple");
-  mrc_domain_set_param_int(psc.mrc_domain, "mx", psc.domain.gdims[0]);
-  mrc_domain_set_param_int(psc.mrc_domain, "my", psc.domain.gdims[1]);
-  mrc_domain_set_param_int(psc.mrc_domain, "mz", psc.domain.gdims[2]);
+  mrc_domain_set_type(psc.mrc_domain, "multi");
+  mrc_domain_set_param_int3(psc.mrc_domain, "m", psc.domain.gdims);
   mrc_domain_set_param_int(psc.mrc_domain, "bcx", bc[0]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcy", bc[1]);
   mrc_domain_set_param_int(psc.mrc_domain, "bcz", bc[2]);
 
   struct mrc_crds *crds = mrc_domain_get_crds(psc.mrc_domain);
+  mrc_crds_set_type(crds, "multi_uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_float(crds, "xh",  psc.domain.length[0]);
-  mrc_crds_set_param_float(crds, "yh",  psc.domain.length[1]);
-  mrc_crds_set_param_float(crds, "zh",  psc.domain.length[2]);
+  mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc.domain.length[0],
+	psc.domain.length[1], psc.domain.length[2] });
 
   mrc_domain_set_from_options(psc.mrc_domain);
   mrc_domain_setup(psc.mrc_domain);
@@ -82,16 +80,16 @@ psc_init_partition(int *particle_label_offset)
 
   // set up index bounds,
   // sanity checks for the decomposed domain
-  int off[3], ldims[3], gdims[3];
-  mrc_domain_get_local_offset_dims(psc.mrc_domain, off, ldims);
+  int gdims[3];
   mrc_domain_get_global_dims(psc.mrc_domain, gdims);
-  psc.nr_patches = 1;
+  struct mrc_patch *patches = mrc_domain_get_patches(psc.mrc_domain, &psc.nr_patches);
+  psc.patch = calloc(psc.nr_patches, sizeof(*psc.patch));
   foreach_patch(p) {
     struct psc_patch *patch = &psc.patch[p];
     for (int d = 0; d < 3; d++) {
-      patch->ldims[d] = ldims[d];
-      patch->off[d] = off[d];
-      patch->xb[d]  = off[d] * psc.dx[d];
+      patch->ldims[d] = patches[p].ldims[d];
+      patch->off[d] = patches[p].off[d];
+      patch->xb[d]  = patches[p].off[d] * psc.dx[d];
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir
@@ -136,8 +134,7 @@ psc_init_partition(int *particle_label_offset)
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
 	      psc_case_init_npt(psc.Case, kind, xx, &npt);
@@ -189,9 +186,7 @@ psc_init_particles(int particle_label_offset)
 	for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	  for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	    for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	      
-	      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2];
-	      double xx[3] = { jx * dx, jy * dy, jz * dz };
+	      double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
 	      struct psc_particle_npt npt = { // init to all zero
 	      };
 	      psc_case_init_npt(psc.Case, kind, xx, &npt);

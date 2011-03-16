@@ -14,10 +14,6 @@
 
 // ----------------------------------------------------------------------
 
-#define BOUNDS_CHECK
-
-// ----------------------------------------------------------------------
-
 #define FIELDS_FORTRAN 1
 #define FIELDS_C       2
 #define FIELDS_SSE2    3
@@ -267,84 +263,15 @@ struct psc_domain {
 };
 
 void mfields_base_alloc(mfields_base_t *flds, int nr_fields);
+void mfields_base_destroy(mfields_base_t *flds);
+
+void mparticles_base_destroy(mparticles_base_t *particles);
 
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
-struct psc_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*push_part_xy)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_xz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_yz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_xyz)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_z)(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-  void (*push_part_yz_a)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // only does the simple first half step
-  void (*push_part_yz_b)(mfields_base_t *flds_base, mparticles_base_t *particles_base); // 1/2 x and 1/1 p step
-};
-
-struct psc_push_field_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*push_field_a)(mfields_base_t *); // 1st half step
-  void (*push_field_b)(mfields_base_t *); // 2nd half step
-};
-
 // FIXME, the randomize / sort interaction needs more work
 // In particular, it's better to randomize just per-cell after the sorting
-
-struct psc_randomize_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*randomize)(mparticles_base_t *);
-};
-
-struct psc_sort_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*sort)(mparticles_base_t *particles);
-};
-
-struct psc_collision_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*collision)(mparticles_base_t *particles);
-};
-
-struct psc_output_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*out_field)(mfields_base_t *flds, mparticles_base_t *particles);
-  void (*dump_field)(int m, const char *fname);
-  void (*dump_particles)(const char *fname);
-};
-
-struct psc_bnd_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*add_ghosts)(mfields_base_t *flds, int mb, int me);
-  void (*fill_ghosts)(mfields_base_t *flds, int mb, int me);
-  void (*exchange_particles)(mparticles_base_t *particles);
-};
-
-struct psc_moment_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-  void (*calc_densities)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-			 mfields_base_t *pf);
-  void (*calc_v)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-		 mfields_base_t *pf);
-  void (*calc_vv)(mfields_base_t *pf_base, mparticles_base_t *pp_base,
-		  mfields_base_t *pf);
-};
 
 struct psc_patch {
   int ldims[3];       // size of local domain (w/o ghost points)
@@ -357,15 +284,15 @@ struct psc_patch {
 #define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
 
 struct psc {
-  struct psc_ops *ops;
-  struct psc_push_field_ops *push_field_ops;
-  struct psc_randomize_ops *randomize_ops;
-  struct psc_sort_ops *sort_ops;
-  struct psc_collision_ops *collision_ops;
-  struct psc_output_ops *output_ops;
-  struct psc_bnd_ops *bnd_ops;
-  void *bnd_data;
-  struct psc_moment_ops *moment_ops;
+  struct psc_push_particles *push_particles;
+  struct psc_push_fields *push_fields;
+  struct psc_bnd *bnd;
+  struct psc_collision *collision;
+  struct psc_randomize *randomize;
+  struct psc_sort *sort;
+  struct psc_output_fields *output_fields;
+  struct psc_moments *moments;
+
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
@@ -388,7 +315,7 @@ struct psc {
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
-  struct psc_patch patch[1];
+  struct psc_patch *patch;
   int ibn[3];         // number of ghost points
 
   // C data structures
@@ -465,32 +392,11 @@ void psc_init_partition(int *particle_label_offset);
 void psc_init_particles(int particle_label_offset);
 void psc_init_field(mfields_base_t *flds);
 void psc_integrate(void);
-void psc_push_particles(mfields_base_t *flds_base, mparticles_base_t *particles);
-void psc_push_field_a(mfields_base_t *flds);
-void psc_push_field_b(mfields_base_t *flds);
-void psc_add_ghosts(mfields_base_t *flds, int mb, int me);
-void psc_fill_ghosts(mfields_base_t *flds, int mb, int me);
-void psc_exchange_particles(mparticles_base_t *particles);
-void psc_calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
-			mfields_base_t *f);
-void psc_calc_moments_v(mfields_base_t *flds, mparticles_base_t *particles,
-			mfields_base_t *f);
-void psc_calc_moments_vv(mfields_base_t *flds, mparticles_base_t *particles,
-			 mfields_base_t *f);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
+void psc_check_particles(mparticles_base_t *particles);
 
-void psc_push_part_xyz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_z(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_xy(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_push_part_yz_b(mfields_base_t *flds_base, mparticles_base_t *particles_base);
-void psc_randomize(mparticles_base_t *particles);
-void psc_sort(mparticles_base_t *particles);
-void psc_collision(mparticles_base_t *particles);
-void psc_out_field(mfields_base_t *flds, mparticles_base_t *particles);
 void psc_out_particles(void);
 void psc_set_n_particles(particles_base_t *pp, int n_part);
 
@@ -513,34 +419,6 @@ extern struct psc_ops psc_ops_cuda;
 extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
 extern struct psc_ops psc_ops_cbe; ///< Cell BE optimized code
 extern struct psc_ops psc_ops_none;
-
-extern struct psc_push_field_ops psc_push_field_ops_fortran;
-extern struct psc_push_field_ops psc_push_field_ops_c;
-#ifdef USE_CBE
-extern struct psc_push_field_ops psc_push_field_ops_cbe;
-#endif
-extern struct psc_push_field_ops psc_push_field_ops_none;
-
-extern struct psc_randomize_ops psc_randomize_ops_fortran;
-extern struct psc_randomize_ops psc_randomize_ops_none;
-
-
-
-
-extern struct psc_sort_ops psc_sort_ops_fortran;
-extern struct psc_sort_ops psc_sort_ops_qsort;
-extern struct psc_sort_ops psc_sort_ops_countsort;
-extern struct psc_sort_ops psc_sort_ops_countsort2;
-extern struct psc_sort_ops psc_sort_ops_none;
-
-extern struct psc_collision_ops psc_collision_ops_fortran;
-extern struct psc_collision_ops psc_collision_ops_none;
-
-extern struct psc_output_ops psc_output_ops_fortran;
-extern struct psc_output_ops psc_output_ops_c;
-
-extern struct psc_bnd_ops psc_bnd_ops_fortran;
-extern struct psc_bnd_ops psc_bnd_ops_c;
 
 extern struct psc_moment_ops psc_moment_ops_fortran;
 extern struct psc_moment_ops psc_moment_ops_c;
@@ -620,7 +498,6 @@ void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
 #define sqr(a) ((a) * (a))
 
 #define HERE do { int __rank; MPI_Comm_rank(MPI_COMM_WORLD, &__rank); printf("[%d] HERE: in %s() at %s:%d\n", __rank, __FUNCTION__, __FILE__, __LINE__); } while(0)
-
 
 // ----------------------------------------------------------------------
 // compiler bits

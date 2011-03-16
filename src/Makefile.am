@@ -22,7 +22,6 @@ libpsc_a_SOURCES = \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
-	psc_fortran.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
 	PIC_move_part_xyz.F \
@@ -40,17 +39,23 @@ libpsc_a_SOURCES = \
 	INIT_idistr.F INIT_partition.F INIT_den.F \
 	PSC_c.F \
 	pulse.c pulse_gauss.c pulse_flattop.c \
-	calc_densities.c \
-	field.c \
-	randomize.c \
-	sort.c \
-	collision.c \
 	PIC_bin_coll.F \
-	bnd.c \
-	none.c \
-	output_fields.c output_c_combine.c \
+	mfields.c \
+	mparticles.c \
+	psc_push_particles.c psc_push_particles_fortran.c \
+	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
+	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
+	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
+	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
+	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
+	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
+	output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \
 	output_mrc.c \
+	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
+	psc_pulse.c \
+	psc_dump.c \
+	checks.c \
 	case_langmuir.c \
 	case_wakefield.c \
 	case_thinfoil.c \
@@ -68,7 +73,7 @@ libpsc_a_SOURCES += output_hdf5.c
 endif
 
 libpsc_a_SOURCES += \
-	generic_c/psc_generic_c.c \
+	generic_c/psc_push_particles_generic_c.c \
 	generic_c/push_part_xyz.c \
 	generic_c/push_part_xy.c \
 	generic_c/push_part_xz.c \
@@ -143,12 +148,10 @@ VLA_SOURCES += vla_main.c
 
 endif
 
-noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
-	test_exchange_particles test_sort
 
-if USE_CBE
-	noinst_PROGRAMS += test_cell_framework
-endif
+noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
+	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
+	test_sort
 
 LDADD = libpsc.a libmrc/src/libmrc.a
 

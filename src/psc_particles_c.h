@@ -19,6 +19,7 @@ typedef struct {
 typedef struct {
   particle_c_t *particles;
   int n_part;
+  int n_alloced;
 } particles_c_t;
 
 typedef struct {

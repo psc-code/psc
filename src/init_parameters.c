@@ -415,9 +415,7 @@ SET_param_domain()
   struct psc_domain *p = &psc.domain;
   int imax[3], np[3];
 
-  mrc_domain_get_param_int(psc.mrc_domain, "npx", &np[0]);
-  mrc_domain_get_param_int(psc.mrc_domain, "npy", &np[1]);
-  mrc_domain_get_param_int(psc.mrc_domain, "npz", &np[2]);
+  mrc_domain_get_param_int3(psc.mrc_domain, "np", np);
   for (int d = 0; d < 3; d++) {
     imax[d] = p->gdims[d] - 1;
   }

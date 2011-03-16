@@ -27,15 +27,28 @@ typedef float creal;
 
 #endif
 
-void genc_push_part_xyz();
-void genc_push_part_xy();
-void genc_push_part_xz();
-void genc_push_part_yz();
-void genc_push_part_z();
-void genc_push_part_yz_a();
-void genc_push_part_yz_b();
+void psc_push_particles_generic_c_push_z(struct psc_push_particles *push,
+					 mparticles_base_t *particles_base,
+					 mfields_base_t *flds_base);
+void psc_push_particles_generic_c_push_xy(struct psc_push_particles *push,
+					  mparticles_base_t *particles_base,
+					  mfields_base_t *flds_base);
+void psc_push_particles_generic_c_push_yz(struct psc_push_particles *push,
+					  mparticles_base_t *particles_base,
+					  mfields_base_t *flds_base);
+void psc_push_particles_generic_c_push_xz(struct psc_push_particles *push,
+					  mparticles_base_t *particles_base,
+					  mfields_base_t *flds_base);
+void psc_push_particles_generic_c_push_xyz(struct psc_push_particles *push,
+					   mparticles_base_t *particles_base,
+					   mfields_base_t *flds_base);
 
-void genc_calc_densities();
+void psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
+					    mparticles_base_t *particles_base,
+					    mfields_base_t *flds_base);
+void psc_push_particles_generic_c_push_yz_b(struct psc_push_particles *push,
+					    mparticles_base_t *particles_base,
+					    mfields_base_t *flds_base);
 
 static inline int
 nint(creal x)

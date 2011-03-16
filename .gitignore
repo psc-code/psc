@@ -19,9 +19,11 @@ src/test4
 src/test_part_xz
 src/test_part_yz
 src/test_bnd
+src/test_bnd_multi
 src/test_sort
 src/test_field
 src/test_exchange_particles
+src/test_exchange_particles_multi
 Makefile.in
 Makefile
 aclocal.m4
@@ -62,4 +64,6 @@ src/libmrc/tests/test_io_read
 src/libmrc/tests/test_mrc_obj
 src/libmrc/tests/test_spherical_harmonics
 src/libmrc/tests/test_ddc
+src/libmrc/tests/test_mrc_domain_multi
+src/libmrc/tests/test_mrc_ddc
 src/libmrc/tests/run.*

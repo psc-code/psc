@@ -317,8 +317,6 @@ c cpus: WALL CLOCK time at end time
       r3n=max(i3n,r3n)
       r3x=min(i3x,r3x)
 
-      call INIT_grid_map
-
       end subroutine INIT_param_fortran
 
 c     ----------------------------------------------------------------------

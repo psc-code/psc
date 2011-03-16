@@ -73,20 +73,12 @@ mrctest_create_domain(MPI_Comm comm, struct mrctest_domain_params *par)
 {
   struct mrc_domain *domain = mrc_domain_create(comm);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int(domain, "mx", par->gdims[0]);
-  mrc_domain_set_param_int(domain, "my", par->gdims[1]);
-  mrc_domain_set_param_int(domain, "mz", par->gdims[2]);
-  mrc_domain_set_param_int(domain, "npx", par->nproc[0]);
-  mrc_domain_set_param_int(domain, "npy", par->nproc[1]);
-  mrc_domain_set_param_int(domain, "npz", par->nproc[2]);
+  mrc_domain_set_param_int3(domain, "m", par->gdims);
+  mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float(crds, "xl", -30.);
-  mrc_crds_set_param_float(crds, "yl", -20.);
-  mrc_crds_set_param_float(crds, "zl", -20.);
-  mrc_crds_set_param_float(crds, "xh",  50.);
-  mrc_crds_set_param_float(crds, "yh",  20.);
-  mrc_crds_set_param_float(crds, "zh",  20.);
+  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
+  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
@@ -99,28 +91,22 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
 {
   struct mrc_domain *domain = mrc_domain_create(comm);
   mrc_domain_set_type(domain, "simple");
-  mrc_domain_set_param_int(domain, "mx", par->gdims[0]);
-  mrc_domain_set_param_int(domain, "my", par->gdims[1]);
-  mrc_domain_set_param_int(domain, "mz", par->gdims[2]);
-  mrc_domain_set_param_int(domain, "npx", par->nproc[0]);
-  mrc_domain_set_param_int(domain, "npy", par->nproc[1]);
-  mrc_domain_set_param_int(domain, "npz", par->nproc[2]);
+  mrc_domain_set_param_int3(domain, "m", par->gdims);
+  mrc_domain_set_param_int3(domain, "np", par->nproc);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_int(crds, "sw", SW_2);
-  mrc_crds_set_param_float(crds, "xl", -30.);
-  mrc_crds_set_param_float(crds, "yl", -20.);
-  mrc_crds_set_param_float(crds, "zl", -20.);
-  mrc_crds_set_param_float(crds, "xh",  50.);
-  mrc_crds_set_param_float(crds, "yh",  20.);
-  mrc_crds_set_param_float(crds, "zh",  20.);
+  mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
+  mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
-  int sw, ldims[3];
+  int sw;
   mrc_crds_get_param_int(crds, "sw", &sw);
-  mrc_domain_get_local_offset_dims(domain, NULL, ldims);
-  for (int ix = 0; ix < ldims[0] + 2 * sw; ix++) {
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
     MRC_CRDX(crds, ix) = ix*ix;
   }
 
@@ -235,10 +221,11 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
     assert(crds1->par.xh[d] == crds2->par.xh[d]);
   }
 
-  int ldims[3];
-  mrc_domain_get_local_offset_dims(crds1->domain, NULL, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds1->domain, &nr_patches);
+  assert(nr_patches == 1);
   float diff = 0.;
-  for (int ix = 0; ix < ldims[0] + 2 * sw; ix++) {
+  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
     diff = fmaxf(diff, fabsf(MRC_CRDX(crds1, ix) - MRC_CRDX(crds2, ix)));
     if (diff > 0.) {
       mprintf("mrctest_crds_compare: ix = %d diff = %g\n", ix, diff);

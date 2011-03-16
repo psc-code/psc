@@ -60,14 +60,12 @@ mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj)
 // mrc_io_setup
 
 static void
-_mrc_io_setup(struct mrc_obj *obj)
+_mrc_io_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = to_mrc_io(obj);
-
   MPI_Comm_rank(io->obj.comm, &io->rank);
   MPI_Comm_size(io->obj.comm, &io->size);
   if (mrc_io_ops(io)->setup) {
-    mrc_io_ops(io)->setup(&io->obj);
+    mrc_io_ops(io)->setup(io);
   }
   io->is_setup = true;
 }
@@ -83,6 +81,7 @@ mrc_io_open(struct mrc_io *io, const char *mode, int step, float time)
   io->step = step;
   io->time = time;
   INIT_LIST_HEAD(&io->obj_list);
+  assert(ops->open);
   ops->open(io, mode);
 }
 
@@ -100,6 +99,7 @@ mrc_io_close(struct mrc_io *io)
     mrc_obj_put(p->obj);
     free(p);
   }
+  assert(ops->close);
   ops->close(io);
   io->step = -1;
   io->time = -1.;
@@ -159,6 +159,17 @@ mrc_io_write_f3(struct mrc_io *io, const char *path,
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_write_m3
+
+void
+mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->write_m3);
+  ops->write_m3(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_write_field2d
 
 void
@@ -188,8 +199,10 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
   assert(outtype >= DIAG_TYPE_2D_X && outtype <= DIAG_TYPE_2D_Z);
   int dim = outtype - DIAG_TYPE_2D_X;
 
-  int dims[3];
-  mrc_domain_get_local_offset_dims(fld->domain, NULL, dims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *dims = patches[0].ldims;
 
   //check for existence on local proc.
   //0,1, nnx-2, nnx-1 are the ghostpoints
@@ -309,6 +322,17 @@ mrc_io_write_attr_int(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name,
+		       int val[3])
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_int3 = { val[0], val[1], val[2] } };
+    ops->write_attr(io, path, PT_INT3, name, &u);
+  }
+}
+
+void
 mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			 const char *val)
 {
@@ -322,8 +346,8 @@ mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 // ----------------------------------------------------------------------
 
 struct mrc_obj *
-mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
-		    struct mrc_class *class)
+__mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
+		      struct mrc_class *class)
 {
   char *s;
   mrc_io_read_attr_string(io, path, name, &s);
@@ -341,28 +365,24 @@ mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
 }
 
 // ======================================================================
-// mrc_io class
-
-static LIST_HEAD(mrc_io_subclasses);
-
-void
-libmrc_io_register(struct mrc_io_ops *ops)
-{
-  list_add_tail(&ops->list, &mrc_io_subclasses);
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_init
 
 static void
 mrc_io_init()
 {
 #ifdef HAVE_HDF5_H
-  libmrc_io_register_xdmf();
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_serial_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_to_one_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_ops);
 #endif
-  libmrc_io_register_ascii();
-  libmrc_io_register_combined();
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_combined_ops);
 }
+
+// ======================================================================
+// mrc_io class
 
 #define VAR(x) (void *)offsetof(struct mrc_io_params, x)
 static struct param mrc_io_params_descr[] = {
@@ -372,10 +392,9 @@ static struct param mrc_io_params_descr[] = {
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_io = {
+struct mrc_class_mrc_io mrc_class_mrc_io = {
   .name         = "mrc_io",
   .size         = sizeof(struct mrc_io),
-  .subclasses   = &mrc_io_subclasses,
   .param_descr  = mrc_io_params_descr,
   .param_offset = offsetof(struct mrc_io, par),
   .init         = mrc_io_init,

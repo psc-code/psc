@@ -29,7 +29,7 @@ struct mrc_io {
 };
 
 struct mrc_io_ops {
-  MRC_OBJ_OPS;
+  MRC_SUBCLASS_OPS(struct mrc_io);
   bool parallel;
   void (*open)(struct mrc_io *, const char *mode);
   void (*close)(struct mrc_io *);
@@ -38,6 +38,7 @@ struct mrc_io_ops {
   void (*write_f1)(struct mrc_io *, const char *path, struct mrc_f1 *fld);
   void (*write_f3)(struct mrc_io *, const char *path,
 		   struct mrc_f3 *fld, float scale);
+  void (*write_m3)(struct mrc_io *, const char *path, struct mrc_m3 *m3);
   void (*write_field)(struct mrc_io *, const char *path,
 		      float scale, struct mrc_f3 *fld, int m);
   void (*write_field2d)(struct mrc_io *, float scale, struct mrc_f2 *fld,
@@ -59,21 +60,13 @@ char *diagc_make_filename(struct mrc_io *io, const char *ext);
 extern struct diagsrv_srv_ops ds_srv_ops;
 extern struct diagsrv_srv_ops ds_srv_cache_ops;
 
-void libmrc_io_register_ascii();
-void libmrc_io_register_xdmf();
-void libmrc_io_register_combined();
-
-void libmrc_io_register(struct mrc_io_ops *ops);
-
-// ======================================================================
-
-static inline struct mrc_io *
-to_mrc_io(struct mrc_obj *obj)
-{
-  assert(obj->class == &mrc_class_mrc_io);
-  return container_of(obj, struct mrc_io, obj);
-}
-
+extern struct mrc_io_ops mrc_io_ascii_ops;
+extern struct mrc_io_ops mrc_io_xdmf_ops;
+extern struct mrc_io_ops mrc_io_xdmf_serial_ops;
+extern struct mrc_io_ops mrc_io_xdmf_to_one_ops;
+extern struct mrc_io_ops mrc_io_xdmf_parallel_ops;
+extern struct mrc_io_ops mrc_io_xdmf2_ops;
+extern struct mrc_io_ops mrc_io_combined_ops;
 
 #endif
 

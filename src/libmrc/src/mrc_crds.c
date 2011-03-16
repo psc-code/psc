@@ -9,57 +9,52 @@
 #include <assert.h>
 #include <stdio.h>
 
-// ----------------------------------------------------------------------
-
 static inline
 struct mrc_crds_ops *mrc_crds_ops(struct mrc_crds *crds)
 {
   return (struct mrc_crds_ops *) crds->obj.ops;
 }
 
-static inline
-struct mrc_crds *to_mrc_crds(struct mrc_obj *obj)
-{
-  assert(obj->class == &mrc_class_mrc_crds);
-  return container_of(obj, struct mrc_crds, obj);
-}
-
 // ----------------------------------------------------------------------
 // mrc_crds_* wrappers
 
 static void
-_mrc_crds_destroy(struct mrc_obj *obj)
+_mrc_crds_destroy(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   for (int d = 0; d < 3; d++) {
     mrc_f1_destroy(crds->crd[d]);
   }
 }
 
 static void
-_mrc_crds_read(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   crds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_obj_name(obj), "domain", &mrc_class_mrc_domain);
+    mrc_io_read_obj_ref(io, mrc_crds_name(crds), "domain", &mrc_class_mrc_domain);
   for (int d = 0; d < 3; d++) {
     char s[5];
     sprintf(s, "crd%d", d);
     crds->crd[d] = (struct mrc_f1 *)
-      mrc_io_read_obj_ref(io, mrc_obj_name(obj), s, &mrc_class_mrc_f1);
+      mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_f1);
   }
 }
 
 static void
-_mrc_crds_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
-  mrc_io_write_obj_ref(io, mrc_obj_name(obj), "domain",
+  mrc_io_write_obj_ref(io, mrc_crds_name(crds), "domain",
 		       (struct mrc_obj *) crds->domain);
   for (int d = 0; d < 3; d++) {
-    char s[5];
-    sprintf(s, "crd%d", d);
-    mrc_io_write_obj_ref(io, mrc_obj_name(obj), s, (struct mrc_obj *) crds->crd[d]);
+    if (crds->crd[d]) {
+      char s[5];
+      sprintf(s, "crd%d", d);
+      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->crd[d]);
+    }
+    if (crds->mcrd[d]) {
+      char s[6];
+      sprintf(s, "mcrd%d", d);
+      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
+    }
   }
 }
 
@@ -114,31 +109,63 @@ mrc_crds_alloc(struct mrc_crds *crds, int d, int dim)
   mrc_f1_setup(crds->crd[d]);
 }
 
+static void
+mrc_crds_multi_alloc(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    mrc_m1_destroy(crds->mcrd[d]);
+    crds->mcrd[d] = mrc_domain_m1_create(crds->domain);
+    mrc_m1_set_param_int(crds->mcrd[d], "sw", crds->par.sw);
+    mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
+    char s[5]; sprintf(s, "crd%d", d);
+    mrc_m1_set_name(crds->mcrd[d], s);
+    crds->mcrd[d]->name[0] = strdup(s);
+    mrc_m1_setup(crds->mcrd[d]);
+  }
+}
+
+void
+mrc_crds_patch_get(struct mrc_crds *crds, int p)
+{
+  for (int d = 0; d < 3; d++) {
+    crds->mcrd_p[d] = mrc_m1_patch_get(crds->mcrd[d], p);
+  }
+}
+
+void
+mrc_crds_patch_put(struct mrc_crds *crds)
+{
+  for (int d = 0; d < 3; d++) {
+    crds->mcrd_p[d] = NULL;
+  }
+}
+
 // ======================================================================
 // mrc_crds_uniform
 
 static void
-mrc_crds_uniform_setup(struct mrc_obj *obj)
+mrc_crds_uniform_setup(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
   int sw = crds->par.sw;
-  int off[3], ldims[3], gdims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  mrc_domain_get_local_offset_dims(crds->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  assert(nr_patches == 1);
   float *xl = crds->par.xl, *xh = crds->par.xh;
   for (int d = 0; d < 3; d++) {
-    mrc_crds_alloc(crds, d, ldims[d] + 2 * sw);
-    for (int i = -sw; i < ldims[d] +  sw; i++) {
-      MRC_CRD(crds, d, i + sw) = xl[d] + (i + off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+    mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
+    for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
+      MRC_CRD(crds, d, i + sw) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
     }
   }
 }
 
-static struct mrc_crds_ops crds_ops_uniform = {
+static struct mrc_crds_ops mrc_crds_uniform_ops = {
   .name  = "uniform",
   .setup = mrc_crds_uniform_setup,
 };
@@ -159,68 +186,90 @@ mrc_crds_rectilinear_set_values(struct mrc_crds *crds, float *crdx, int mx,
 }
 
 static void
-mrc_crds_rectilinear_setup(struct mrc_obj *obj)
+mrc_crds_rectilinear_setup(struct mrc_crds *crds)
 {
-  struct mrc_crds *crds = to_mrc_crds(obj);
   assert(crds->domain);
   if (!mrc_domain_is_setup(crds->domain))
     return;
 
   int sw = crds->par.sw;
-  int off[3], ldims[3], gdims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(crds->domain, gdims);
-  mrc_domain_get_local_offset_dims(crds->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, &nr_patches);
+  assert(nr_patches == 1);
   for (int d = 0; d < 3; d++) {
     if (!crds->crd[d]) {
-      mrc_crds_alloc(crds, d, ldims[d] + 2 * sw);
+      mrc_crds_alloc(crds, d, patches[0].ldims[d] + 2 * sw);
     }
   }
 }
 
-static struct mrc_crds_ops crds_ops_rectilinear = {
+static struct mrc_crds_ops mrc_crds_rectilinear_ops = {
   .name       = "rectilinear",
   .setup      = mrc_crds_rectilinear_setup,
   .set_values = mrc_crds_rectilinear_set_values,
 };
 
 // ======================================================================
-// mrc_crds class
+// mrc_crds_multi_uniform
 
-static LIST_HEAD(mrc_crds_subs);
-
-void
-mrc_crds_register(struct mrc_crds_ops *ops)
+static void
+mrc_crds_multi_uniform_setup(struct mrc_crds *crds)
 {
-  list_add_tail(&ops->list, &mrc_crds_subs);
+  assert(crds->domain);
+  if (!mrc_domain_is_setup(crds->domain))
+    return;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  float *xl = crds->par.xl, *xh = crds->par.xh;
+
+  mrc_crds_multi_alloc(crds);
+  struct mrc_patch *patches = mrc_domain_get_patches(crds->domain, NULL);
+  for (int d = 0; d < 3; d++) {
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      mrc_m1_foreach_bnd(mcrd_p, i) {
+	MRC_M1(mcrd_p,0, i) = xl[d] + (i + patches[p].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+      } mrc_m1_foreach_end;
+      mrc_m1_patch_put(mcrd);
+    }
+  }
 }
 
-// ----------------------------------------------------------------------
+static struct mrc_crds_ops mrc_crds_multi_uniform_ops = {
+  .name  = "multi_uniform",
+  .setup = mrc_crds_multi_uniform_setup,
+};
+
+// ======================================================================
 // mrc_crds_init
 
 static void
 mrc_crds_init()
 {
-  mrc_crds_register(&crds_ops_uniform);
-  mrc_crds_register(&crds_ops_rectilinear);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_uniform_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_uniform_ops);
 }
+
+// ======================================================================
+// mrc_crds class
 
 #define VAR(x) (void *)offsetof(struct mrc_crds_params, x)
 static struct param mrc_crds_params_descr[] = {
-  { "xl"              , VAR(xl[0])        , PARAM_FLOAT(0.)       },
-  { "yl"              , VAR(xl[1])        , PARAM_FLOAT(0.)       },
-  { "zl"              , VAR(xl[2])        , PARAM_FLOAT(0.)       },
-  { "xh"              , VAR(xh[0])        , PARAM_FLOAT(1.)       },
-  { "yh"              , VAR(xh[1])        , PARAM_FLOAT(1.)       },
-  { "zh"              , VAR(xh[2])        , PARAM_FLOAT(1.)       },
-  { "sw"              , VAR(sw)           , PARAM_INT(0)          },
+  { "l"              , VAR(xl)            , PARAM_FLOAT3(0., 0., 0.) },
+  { "h"              , VAR(xh)            , PARAM_FLOAT3(1., 1., 1.) },
+  { "sw"             , VAR(sw)            , PARAM_INT(0)             },
   {},
 };
 #undef VAR
 
-struct mrc_class mrc_class_mrc_crds = {
+struct mrc_class_mrc_crds mrc_class_mrc_crds = {
   .name         = "mrc_crds",
   .size         = sizeof(struct mrc_crds),
-  .subclasses   = &mrc_crds_subs,
   .param_descr  = mrc_crds_params_descr,
   .param_offset = offsetof(struct mrc_crds, par),
   .init         = mrc_crds_init,

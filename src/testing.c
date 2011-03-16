@@ -1,4 +1,5 @@
 #include "psc_testing.h"
+#include "psc_sort.h"
 
 #include <math.h>
 #include <limits.h>
@@ -140,6 +141,7 @@ psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
 void
 psc_check_currents_ref(mfields_base_t *flds, double thres)
 {
+#if 0
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     for (int m = JXI; m <= JZI; m++){
@@ -152,6 +154,7 @@ psc_check_currents_ref(mfields_base_t *flds, double thres)
       }
     }
   }
+#endif
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
@@ -245,6 +248,6 @@ psc_create_test_yz(struct psc_mod_config *conf)
   psc_create(conf);
   psc_init("test_yz");
   psc.particles.p[0].n_part = 1;
-  psc_sort(&psc.particles);
+  psc_sort_run(psc.sort, &psc.particles);
 }
 

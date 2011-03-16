@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "output_fields.h"
+#include "psc_output_fields_c.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -13,7 +13,7 @@
 
 static void
 vtk_open_file_binary(const char *pfx, const char *dataset_type, int extra,
-	      struct psc_output_c *out, FILE **pfile)
+	      struct psc_output_fields_c *out, FILE **pfile)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
@@ -63,8 +63,36 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_c *out)
+vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields_c *out)
 {
+  static bool first_time = true;
+  if (first_time) {
+    struct psc_patch *patch = &psc.patch[0];
+    // set the output ranges
+    for(int i=0;i<3;++i) {
+      if(out->rn[i]<0) out->rn[i]=0;
+      if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
+      
+      if(out->rx[i]>patch->off[i] + patch->ldims[i]) out->rx[i]=patch->off[i] + patch->ldims[i];
+      if(out->rn[i]<patch->off[i]) out->rn[i]=patch->off[i];
+      
+      if(out->rn[i]>patch->off[i] + patch->ldims[i]) {
+	out->rn[i]=patch->off[i] + patch->ldims[i];
+	out->rx[i]=out->rn[i];
+      }
+      if(out->rx[i]<patch->off[i]) {
+	out->rx[i]=patch->off[i]; 
+	out->rn[i]=out->rx[i];
+      }
+    }
+	
+    // done setting output ranges
+    printf("rnx=%d\t rny=%d\t rnz=%d\n", out->rn[0], out->rn[1], out->rn[2]);
+    printf("rxx=%d\t rxy=%d\t rxz=%d\n", out->rx[0], out->rx[1], out->rx[2]);	  
+
+    first_time = false;
+  }
+	  
   FILE *file = ctx;
 
   fields_base_t *fld = &flds->f[0];
@@ -96,7 +124,7 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_c *out
 /// Write VTK file for STRUCTURED_POINTS output.
 
 static void
-vtk_write_fields_binary(struct psc_output_c *out, struct psc_fields_list *flds,
+vtk_write_fields_binary(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 		 const char *pfx)
 {
   int rank;

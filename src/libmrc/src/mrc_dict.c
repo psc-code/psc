@@ -24,16 +24,14 @@ struct mrc_dict_entry {
 #define to_mrc_dict(obj) ((struct mrc_dict *)(obj))
 
 static void
-_mrc_dict_create(struct mrc_obj *obj)
+_mrc_dict_create(struct mrc_dict *dict)
 {
-  struct mrc_dict *dict = to_mrc_dict(obj);
   INIT_LIST_HEAD(&dict->list);
 }
 
 static void
-_mrc_dict_destroy(struct mrc_obj *obj)
+_mrc_dict_destroy(struct mrc_dict *dict)
 {
-  struct mrc_dict *dict = to_mrc_dict(obj);
   while (!list_empty(&dict->list)) {
     struct mrc_dict_entry *p =
       list_entry(dict->list.next, struct mrc_dict_entry, entry);
@@ -46,10 +44,9 @@ _mrc_dict_destroy(struct mrc_obj *obj)
 }
 
 static void
-_mrc_dict_view(struct mrc_obj *obj)
+_mrc_dict_view(struct mrc_dict *dict)
 {
-  struct mrc_dict *dict = to_mrc_dict(obj);
-  MPI_Comm comm = obj->comm;
+  MPI_Comm comm = mrc_dict_comm(dict);
 
   mpi_printf(comm, "\n");
   mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
@@ -80,9 +77,8 @@ _mrc_dict_view(struct mrc_obj *obj)
 }
 
 static void
-_mrc_dict_write(struct mrc_obj *obj, struct mrc_io *io)
+_mrc_dict_write(struct mrc_dict *dict, struct mrc_io *io)
 {
-  struct mrc_dict *dict = to_mrc_dict(obj);
   struct mrc_dict_entry *p;
   list_for_each_entry(p, &dict->list, entry) {
     mrc_io_write_attr(io, mrc_dict_name(dict), p->type, p->name, &p->val);
@@ -144,7 +140,7 @@ mrc_dict_add_string(struct mrc_dict *dict, const char *name, const char *val)
   mrc_dict_add(dict, PT_STRING, name, &uval);
 }
 
-struct mrc_class mrc_class_mrc_dict = {
+struct mrc_class_mrc_dict mrc_class_mrc_dict = {
   .name         = "mrc_dict",
   .size         = sizeof(struct mrc_dict),
   .create       = _mrc_dict_create,

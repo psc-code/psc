@@ -52,11 +52,12 @@ struct xdmf_subdomain {
 struct xdmf_spatial {
   char *sfx;
   float sheet;
+  int p;
   int nr_subdomains;
   struct xdmf_subdomain *subdomains;
   int nr_fld_info;
   struct fld_info fld_info[MAX_FLD_INFO];
-  void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet);
+  void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet, int p);
   void (*write_fld)(FILE *f, struct fld_info *fld_info, int im[3], const char *filename);
   list_t entry;
 };
@@ -204,26 +205,38 @@ xdmf_write_header(FILE *f)
 }
 
 static void
-xdmf_write_topology_3d(FILE *f, int im[3], const char *filename, float sheet)
+xdmf_write_topology_3d(FILE *f, int im[3], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[2] + 1, im[1] + 1, im[0] + 1);
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
-  fprintf(f, "        ./%s:/crd/x\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/x-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/x\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[1] + 1);
-  fprintf(f, "        ./%s:/crd/y\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/y-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/y\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VZ\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[2] + 1);
-  fprintf(f, "        ./%s:/crd/z\n", filename);
+  if (p >= 0) {
+    fprintf(f, "        ./%s:/crd/z-%d\n", filename, p);
+  } else {
+    fprintf(f, "        ./%s:/crd/z\n", filename);
+  }
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
 }
 
 static void
-xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[1] + 1, im[0] + 1, 2);
@@ -242,7 +255,7 @@ xdmf_write_topology_2d_x(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[1] + 1, 2, im[0] + 1);
@@ -261,7 +274,7 @@ xdmf_write_topology_2d_y(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  2, im[1] + 1, im[0] + 1);
@@ -280,7 +293,7 @@ xdmf_write_topology_2d_z(FILE *f, int im[2], const char *filename, float sheet)
 }
 
 static void
-xdmf_write_topology_iono(FILE *f, int im[2], const char *filename, float sheet)
+xdmf_write_topology_iono(FILE *f, int im[2], const char *filename, float sheet, int p)
 {
   fprintf(f, "     <Topology TopologyType=\"2DSMesh\" Dimensions=\"%d %d\"/>\n", im[1], im[0]);
   fprintf(f, "     <Geometry GeometryType=\"XYZ\">\n");
@@ -361,9 +374,9 @@ xdmf_write_fld_3d(FILE *f, struct fld_info *fld_info, int im[3], const char *fil
 }
 
 static struct xdmf_spatial *
-xdmf_spatial_create(struct mrc_io *io, const char *sfx, float sheet, int nr_subdomains,
+xdmf_spatial_create(struct mrc_io *io, const char *sfx, float sheet, int p, int nr_subdomains,
 		    struct xdmf_subdomain *subdomains, int size,
-		    void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet),
+		    void (*write_topology)(FILE *f, int im[3], const char *filename, float sheet, int p),
 		    void (*write_fld)(FILE *f, struct fld_info *fld_info, int im[3],
 				      const char *filename))
 {
@@ -428,7 +441,7 @@ xdmf_write_spatial_collection(struct mrc_io *io, struct xdmf_spatial *xs, const 
     char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     sprintf(fname, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename, io->step, s);
     int *im = xs->subdomains[s].im;
-    xs->write_topology(f, im, fname, xs->sheet);
+    xs->write_topology(f, im, fname, xs->sheet, xs->p);
     
     for (int m = 0; m < xs->nr_fld_info; m++) {
       xs->write_fld(f, &xs->fld_info[m], im, fname);
@@ -533,9 +546,8 @@ xdmf_close(struct mrc_io *io)
 }
 
 static void
-ds_xdmf_setup(struct mrc_obj *obj)
+ds_xdmf_setup(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *)obj;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
   sprintf(filename, "%s/%s.xdmf", io->par.outdir, io->par.basename);
@@ -543,9 +555,8 @@ ds_xdmf_setup(struct mrc_obj *obj)
 }
 
 static void
-ds_xdmf_destroy(struct mrc_obj *obj)
+ds_xdmf_destroy(struct mrc_io *io)
 {
-  struct mrc_io *io = (struct mrc_io *)obj;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   if (hdf5->xdmf_temporal) {
@@ -569,7 +580,13 @@ hdf5_write_crds(struct mrc_io *io, int im[3], struct mrc_domain *domain, int sw)
   if (!hdf5->gdims[0]) {
     mrc_domain_get_global_dims(domain, hdf5->gdims);
     mrc_domain_get_nr_procs(domain, hdf5->nr_procs);
-    mrc_domain_get_local_offset_dims(domain, hdf5->off, hdf5->ldims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      hdf5->off[d] = patches[0].off[d];
+      hdf5->ldims[d] = patches[0].ldims[d];
+    }
   }
 
   const char *xyz[3] = { "x", "y", "z" };
@@ -598,7 +615,57 @@ hdf5_write_crds(struct mrc_io *io, int im[3], struct mrc_domain *domain, int sw)
     free(crd_nc);
     hdf5->crd_written[d] = true;
   }
+}
 
+static void
+hdf5_write_mcrds(struct mrc_io *io, struct mrc_domain *domain, int sw)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  if (!hdf5->gdims[0]) {
+    mrc_domain_get_global_dims(domain, hdf5->gdims);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      hdf5->off[d] = patches[0].off[d];
+      hdf5->ldims[d] = patches[0].ldims[d];
+    }
+  }
+
+  
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  for (int d = 0; d < 3; d++) {
+    if (hdf5->crd_written[d])
+      continue;
+
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
+      int im = mcrdp->im[0];
+      float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
+      if (sw > 0) {
+	for (int i = 0; i <= im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	}
+      } else {
+	for (int i = 1; i < im; i++) {
+	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	}
+	// extrapolate
+	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
+	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+      }
+      hsize_t im1 = im + 1;
+      char name[20];
+      sprintf(name, "%c-%d", 'x' + d, p);
+      H5LTmake_dataset_float(hdf5->group_crd, name, 1, &im1, crd_nc);
+
+      free(crd_nc);
+      mrc_m1_patch_put(mcrd);
+    }
+    hdf5->crd_written[d] = true;
+  }
 }
 
 static void
@@ -643,6 +710,12 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     pv->u_string = malloc(sz);
     H5LTget_attribute_string(group, ".", name, (char *)pv->u_string);
     break;
+  case PT_INT3:
+    H5LTget_attribute_int(group, ".", name, pv->u_int3);
+    break;
+  case PT_FLOAT3:
+    H5LTget_attribute_float(group, ".", name, pv->u_float3);
+    break;
   }
   H5Gclose(group);
 }
@@ -677,6 +750,12 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_STRING:
     H5LTset_attribute_string(group, ".", name, pv->u_string);
+    break;
+  case PT_INT3:
+    H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
+    break;
+  case PT_FLOAT3:
+    H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
     break;
   }
   H5Gclose(group);
@@ -723,7 +802,7 @@ save_fld_info(struct xdmf_spatial *xs, char *fld_name, char *path, bool is_vec)
 }
 
 static struct xdmf_spatial *
-xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int nr_subdomains)
+xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int p, int nr_subdomains)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -734,7 +813,7 @@ xdmf_spatial_create_3d(struct mrc_io *io, int im[3], int nr_subdomains)
     }
   }
 
-  return xdmf_spatial_create(io, "3df", -1, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, "3df", -1, p, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_3d, xdmf_write_fld_3d);
 }
 
@@ -751,7 +830,7 @@ xdmf_spatial_create_2d_x(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_x, xdmf_write_fld_2d_x);
 }
 
@@ -768,7 +847,7 @@ xdmf_spatial_create_2d_y(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_y, xdmf_write_fld_2d_y);
 }
 
@@ -785,7 +864,7 @@ xdmf_spatial_create_2d_z(struct mrc_io *io, int im[2],
     }
   }
 
-  return xdmf_spatial_create(io, sfx, sheet, nr_subdomains, subdomains, io->size,
+  return xdmf_spatial_create(io, sfx, sheet, -1, nr_subdomains, subdomains, io->size,
 			     xdmf_write_topology_2d_z, xdmf_write_fld_2d_z);
 }
 
@@ -797,7 +876,7 @@ xdmf_spatial_create_iono(struct mrc_io *io, int im[2])
     subdomain->im[d] = im[d];
   }
 
-  return xdmf_spatial_create(io, "iof", -1, 1, subdomain, 1,
+  return xdmf_spatial_create(io, "iof", -1, -1, 1, subdomain, 1,
 			     xdmf_write_topology_iono, xdmf_write_fld_2d_iono);
 }
 
@@ -814,7 +893,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   struct xdmf_spatial *xs;
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
-    xs = xdmf_spatial_create_3d(io, im, io->size);
+    xs = xdmf_spatial_create_3d(io, im, -1, io->size);
     hdf5_write_crds(io, im, fld->domain, fld->sw);
   }
 
@@ -901,7 +980,47 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   hdf5_write_field2d_serial(io, scale, fld, path);
 }
 
-static struct mrc_io_ops mrc_io_ops_xdmf = {
+static void
+ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
+
+  mrc_m3_foreach_patch(m3, p) {
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+
+    struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", p);
+    if (!xs) {
+      int np[3];
+      mrc_domain_get_param_int3(m3->domain, "np", np);
+      xs = xdmf_spatial_create_3d(io, m3p->im, p, np[0] * np[1] * np[2]);
+      if (p == 0) {
+	hdf5_write_mcrds(io, m3->domain, m3->sw);
+      }
+    }
+
+    for (int m = 0; m < m3->nr_comp; m++) {
+      char fld_name[strlen(m3->name[m]) + 5];
+
+      sprintf(fld_name, "%s-%d", m3->name[m], p);
+      mprintf("fld_name %s\n", fld_name);
+
+      save_fld_info(xs, strdup(fld_name), strdup(path), false);
+      hsize_t hdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
+      hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, m3p->arr); CE;
+      ierr = H5Gclose(group); CE;
+      mrc_m3_patch_put(m3);
+    }
+  }
+
+  H5Gclose(group0);
+}
+
+struct mrc_io_ops mrc_io_xdmf_ops = {
   .name          = "xdmf",
   .size          = sizeof(struct diag_hdf5),
   .parallel      = true,
@@ -912,9 +1031,10 @@ static struct mrc_io_ops mrc_io_ops_xdmf = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
+  .write_m3      = ds_xdmf_write_m3,
 };
 
-static struct mrc_io_ops mrc_io_ops_xdmf_serial = {
+struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .name          = "xdmf_serial",
   .size          = sizeof(struct diag_hdf5),
   .destroy       = ds_xdmf_destroy,
@@ -986,7 +1106,13 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
   struct mrc_crds *gcrds = mrc_domain_get_crds(gdomain);
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
-    mrc_domain_get_local_offset_dims(gdomain, ib, im);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(gdomain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      ib[d] = patches[0].off[d];
+      im[d] = patches[0].ldims[d];
+    }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     for (int d = 0; d < 3; d++) {
       MPI_Send(&MRC_CRD(gcrds, d, sw), im[d], MPI_FLOAT, 0,
@@ -999,7 +1125,13 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
       float *recv_crds[3];
       int iw[6], *ib = iw, *im = iw + 3;
       if (n == 0) {
-	mrc_domain_get_local_offset_dims(gdomain, ib, im);
+	int nr_patches;
+	struct mrc_patch *patches = mrc_domain_get_patches(gdomain, &nr_patches);
+	assert(nr_patches == 1);
+	for (int d = 0; d < 3; d++) {
+	  ib[d] = patches[0].off[d];
+	  im[d] = patches[0].ldims[d];
+	}
 	for (int d = 0; d < 3; d++) {
 	  recv_crds[d] = &MRC_CRD(gcrds, d, sw);
 	}
@@ -1039,7 +1171,13 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
-    mrc_domain_get_local_offset_dims(send_fld->domain, ib, im);
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(send_fld->domain, &nr_patches);
+    assert(nr_patches == 1);
+    for (int d = 0; d < 3; d++) {
+      ib[d] = patches[0].off[d];
+      im[d] = patches[0].ldims[d];
+    }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     MPI_Send(send_fld->arr, send_fld->len, MPI_FLOAT, 0, TAG_DATA, io->obj.comm);
   } else { // io->rank == 0
@@ -1086,9 +1224,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
     mrc_domain_get_global_dims(fld->domain, gdims);
     ldomain = mrc_domain_create(MPI_COMM_SELF);
     mrc_domain_set_type(ldomain, "simple");
-    mrc_domain_set_param_int(ldomain, "mx", gdims[0]);
-    mrc_domain_set_param_int(ldomain, "my", gdims[1]);
-    mrc_domain_set_param_int(ldomain, "mz", gdims[2]);
+    mrc_domain_set_param_int3(ldomain, "m", gdims);
     struct mrc_crds *crds = mrc_domain_get_crds(ldomain);
     mrc_crds_set_type(crds, "rectilinear");
     mrc_domain_setup(ldomain);
@@ -1109,7 +1245,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
-    xs = xdmf_spatial_create_3d(io, gdims, 1);
+    xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     hdf5_write_crds(io, gdims, ldomain, fld->sw);
   }
   save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
@@ -1125,7 +1261,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 }
 
 
-static struct mrc_io_ops mrc_io_ops_xdmf_to_one = {
+struct mrc_io_ops mrc_io_xdmf_to_one_ops = {
   .name          = "xdmf_to_one",
   .size          = sizeof(struct diag_hdf5),
   .parallel      = true,
@@ -1207,9 +1343,12 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
 
   const char *xyz[3] = { "x", "y", "z" };
 
-  int gdims[3], off[3], ldims[3], nr_procs[3], idx[3];
+  int gdims[3], nr_procs[3], idx[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *ldims = patches[0].ldims, *off = patches[0].off;
   mrc_domain_get_local_idx(fld->domain, idx);
   mrc_domain_get_nr_procs(fld->domain, nr_procs);
   for (int d = 0; d < 3; d++) {
@@ -1369,9 +1508,12 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
   MPI_Barrier(io->obj.comm);
 #endif
 
-  int gdims[3], off[3], ldims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *off = patches[0].off, *ldims = patches[0].ldims;
 
   struct mrc_f3 *lfld = mrc_f3_alloc(MPI_COMM_SELF, NULL, ldims);
   mrc_f3_setup(lfld);
@@ -1462,9 +1604,12 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   MPI_Barrier(io->obj.comm);
 #endif
 
-  int gdims[3], off[3], ldims[3];
+  int gdims[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
-  mrc_domain_get_local_offset_dims(fld->domain, off, ldims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  assert(nr_patches == 1);
+  int *off = patches[0].off, *ldims = patches[0].ldims;
 
   // strip boundary, could be done through hyperslab, but
   // still have to scale, anyway
@@ -1480,7 +1625,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   if (io->rank == 0) {
     struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
     if (!xs) {
-      xs = xdmf_spatial_create_3d(io, gdims, 1);
+      xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     }
     save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
   }
@@ -1515,7 +1660,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   mrc_f3_destroy(lfld);
 }
 
-static struct mrc_io_ops mrc_io_ops_xdmf_parallel = {
+struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .name          = "xdmf_parallel",
   .size          = sizeof(struct diag_hdf5),
   .param_descr   = diag_hdf5_params_descr,
@@ -1536,17 +1681,6 @@ static struct mrc_io_ops mrc_io_ops_xdmf_parallel = {
 #endif
 
 // ======================================================================
-
-void
-libmrc_io_register_xdmf()
-{
-  libmrc_io_register(&mrc_io_ops_xdmf);
-  libmrc_io_register(&mrc_io_ops_xdmf_serial);
-  libmrc_io_register(&mrc_io_ops_xdmf_to_one);
-#ifdef H5_HAVE_PARALLEL
-  libmrc_io_register(&mrc_io_ops_xdmf_parallel);
-#endif
-}
 
 #endif
 

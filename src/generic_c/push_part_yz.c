@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_yz(fields_t *pf, particles_t *pp)
+do_genc_push_part_yz(int p, fields_t *pf, particles_t *pp)
 {
 #define S0Y(off) s0y[off+2]
 #define S0Z(off) s0z[off+2]
@@ -31,7 +31,7 @@ do_genc_push_part_yz(fields_t *pf, particles_t *pp)
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &psc.patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
@@ -269,7 +269,9 @@ do_genc_push_part_yz(fields_t *pf, particles_t *pp)
 }
 
 void
-genc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
+psc_push_particles_generic_c_push_yz(struct psc_push_particles *push,
+				     mparticles_base_t *particles_base,
+				     mfields_base_t *flds_base)
 {
   mfields_t flds;
   mparticles_t particles;
@@ -282,7 +284,7 @@ genc_push_part_yz(mfields_base_t *flds_base, mparticles_base_t *particles_base)
   }
   prof_start(pr);
   foreach_patch(p) {
-    do_genc_push_part_yz(&flds.f[p], &particles.p[p]);
+    do_genc_push_part_yz(p, &flds.f[p], &particles.p[p]);
   }
   prof_stop(pr);
 

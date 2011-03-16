@@ -39,9 +39,8 @@ mrc_domain_simple_proc2rank(struct mrc_domain *domain, int proc[3])
 }
 
 static void
-mrc_domain_simple_setup(struct mrc_obj *obj)
+mrc_domain_simple_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = to_mrc_domain(obj);
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
   assert(!domain->is_setup);
   domain->is_setup = true;
@@ -51,9 +50,9 @@ mrc_domain_simple_setup(struct mrc_obj *obj)
 
   int total_procs = 1;
   for (int d = 0; d < 3; d++) {
-    if (simple->ldims[d] == 0) {
+    if (simple->patch.ldims[d] == 0) {
       assert(simple->gdims[d] % simple->nr_procs[d] == 0);
-      simple->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
+      simple->patch.ldims[d] = simple->gdims[d] / simple->nr_procs[d];
     }
     total_procs *= simple->nr_procs[d];
   }
@@ -69,15 +68,15 @@ mrc_domain_simple_setup(struct mrc_obj *obj)
       int dir[3] = {};
       dir[d] = -1;
       int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
-      MPI_Recv(&simple->off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
+      MPI_Recv(&simple->patch.off[d], 1, MPI_INTEGER, rank_nei, TAG_SCAN_OFF + d, domain->obj.comm,
 	       MPI_STATUS_IGNORE);
     } else {
-      simple->off[d] = 0;
+      simple->patch.off[d] = 0;
     }
 
     // then send next offset to the right
     if (proc[d] < simple->nr_procs[d] - 1) {
-      int off_nei = simple->off[d] + simple->ldims[d];
+      int off_nei = simple->patch.off[d] + simple->patch.ldims[d];
       int dir[3] = {};
       dir[d] = 1;
       int rank_nei = mrc_domain_get_neighbor_rank(domain, dir);
@@ -91,7 +90,7 @@ mrc_domain_simple_setup(struct mrc_obj *obj)
 
   if (domain->rank == rank_last) {
     for (int d = 0; d < 3; d++) {
-      simple->gdims[d] = simple->off[d] + simple->ldims[d];
+      simple->gdims[d] = simple->patch.off[d] + simple->patch.ldims[d];
     }
   }
   MPI_Bcast(simple->gdims, 3, MPI_INTEGER, rank_last, domain->obj.comm);
@@ -113,21 +112,14 @@ mrc_domain_simple_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
   return mrc_domain_simple_proc2rank(domain, nei);
 }
 
-static void
-mrc_domain_simple_get_local_offset_dims(struct mrc_domain *domain, int *off, int *dims)
+static struct mrc_patch *
+mrc_domain_simple_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-
-  if (off) {
-    for (int d = 0; d < 3; d++) {
-      off[d] = simple->off[d];
-    }
+  if (nr_patches) {
+    *nr_patches = 1;
   }
-  if (dims) {
-    for (int d = 0; d < 3; d++) {
-      dims[d] = simple->ldims[d];
-    }
-  }
+  return &simple->patch;
 }
 
 static void
@@ -167,22 +159,20 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static struct mrc_ddc *
-mrc_domain_simple_create_ddc(struct mrc_domain *domain, struct mrc_ddc_params *ddc_par,
-			     struct mrc_ddc_ops *ddc_ops)
+mrc_domain_simple_create_ddc(struct mrc_domain *domain)
 {
-  int off[3], ldims[3], nr_procs[3], bc[3];
-  mrc_domain_get_local_offset_dims(domain, off, ldims);
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+
+  int nr_procs[3], bc[3];
   mrc_domain_get_nr_procs(domain, nr_procs);
   mrc_domain_get_bc(domain, bc);
 
-  for (int d = 0; d < 3; d++) {
-    ddc_par->ilo[d] = 0;
-    ddc_par->ihi[d] = ldims[d];
-    ddc_par->n_proc[d] = nr_procs[d];
-    ddc_par->bc[d] = bc[d];
-  }
-
-  return mrc_ddc_create(domain->obj.comm, ddc_par, ddc_ops);
+  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
+  mrc_ddc_set_param_int3(ddc, "ilo", (int[3]) { 0, 0, 0 });
+  mrc_ddc_set_param_int3(ddc, "ihi", simple->patch.ldims);
+  mrc_ddc_set_param_int3(ddc, "n_proc", nr_procs);
+  mrc_ddc_set_param_int3(ddc, "bc", bc);
+  return ddc;
 }
 
 static struct mrc_param_select bc_descr[] = {
@@ -193,15 +183,9 @@ static struct mrc_param_select bc_descr[] = {
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
-  { "lmx"             , VAR(ldims[0])        , PARAM_INT(0)           },
-  { "lmy"             , VAR(ldims[1])        , PARAM_INT(0)           },
-  { "lmz"             , VAR(ldims[2])        , PARAM_INT(0)           },
-  { "mx"              , VAR(gdims[0])        , PARAM_INT(32)          },
-  { "my"              , VAR(gdims[1])        , PARAM_INT(32)          },
-  { "mz"              , VAR(gdims[2])        , PARAM_INT(32)          },
-  { "npx"             , VAR(nr_procs[0])     , PARAM_INT(1)           },
-  { "npy"             , VAR(nr_procs[1])     , PARAM_INT(1)           },
-  { "npz"             , VAR(nr_procs[2])     , PARAM_INT(1)           },
+  { "lm"              , VAR(patch.ldims)     , PARAM_INT3(0, 0, 0)    },
+  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
+  { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
   { "bcy"             , VAR(bc[1])           , PARAM_SELECT(BC_NONE,
@@ -212,13 +196,13 @@ static struct param mrc_domain_simple_params_descr[] = {
 };
 #undef VAR
 
-static struct mrc_domain_ops mrc_domain_simple_ops = {
+struct mrc_domain_ops mrc_domain_simple_ops = {
   .name                  = "simple",
   .size                  = sizeof(struct mrc_domain_simple),
   .param_descr           = mrc_domain_simple_params_descr,
   .setup                 = mrc_domain_simple_setup,
   .get_neighbor_rank     = mrc_domain_simple_get_neighbor_rank,
-  .get_local_offset_dims = mrc_domain_simple_get_local_offset_dims,
+  .get_patches           = mrc_domain_simple_get_patches,
   .get_local_idx         = mrc_domain_simple_get_local_idx,
   .get_global_dims       = mrc_domain_simple_get_global_dims,
   .get_nr_procs          = mrc_domain_simple_get_nr_procs,
@@ -226,8 +210,3 @@ static struct mrc_domain_ops mrc_domain_simple_ops = {
   .create_ddc            = mrc_domain_simple_create_ddc,
 };
 
-void
-libmrc_domain_register_simple()
-{
-  libmrc_domain_register(&mrc_domain_simple_ops);
-}

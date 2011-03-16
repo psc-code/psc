@@ -27,7 +27,9 @@ do_genc_push_part_yz_a(particles_t *pp)
 }
 
 void
-genc_push_part_yz_a(mfields_base_t *flds_base, mparticles_base_t *particles_base)
+psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
+				       mparticles_base_t *particles_base,
+				       mfields_base_t *flds_base)
 {
   mparticles_t particles;
   particles_get(&particles, particles_base);

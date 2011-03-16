@@ -11,18 +11,18 @@ struct mrc_test {
 };
 
 static void
-_mrc_test_destroy(struct mrc_obj *obj)
+_mrc_test_destroy(struct mrc_test *test)
 {
   mprintf("destroy called\n");
 }
 
-struct mrc_class mrc_class_mrc_test = {
+MRC_CLASS_DECLARE(mrc_test, struct mrc_test);
+
+struct mrc_class_mrc_test mrc_class_mrc_test = {
   .name         = "mrc_test",
   .size         = sizeof(struct mrc_test),
   .destroy      = _mrc_test_destroy,
 };
-
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_test, struct mrc_test);
 
 // ----------------------------------------------------------------------
 

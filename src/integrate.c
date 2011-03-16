@@ -1,5 +1,13 @@
 
 #include "psc.h"
+#include "psc_push_particles.h"
+#include "psc_push_fields.h"
+#include "psc_bnd.h"
+#include "psc_collision.h"
+#include "psc_randomize.h"
+#include "psc_sort.h"
+#include "psc_output_fields.h"
+
 #include <mrc_common.h>
 #include <mrc_profile.h>
 
@@ -97,7 +105,7 @@ psc_integrate()
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_out_field(flds, particles);
+    psc_output_fields_run(psc.output_fields, flds, particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
@@ -105,35 +113,35 @@ psc_integrate()
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize(particles);
+    psc_randomize_run(psc.randomize, particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
     if (psc.timestep % 10 == 0) {
-      psc_sort(particles);
+      psc_sort_run(psc.sort, particles);
     }
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision(particles);
+    psc_collision_run(psc.collision, particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_field_a(flds);
+    psc_push_fields_step_a(psc.push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles(flds, particles);
-    psc_add_ghosts(flds, JXI, JXI + 3);
-    psc_fill_ghosts(flds, JXI, JXI + 3);
-    psc_exchange_particles(particles);
+    psc_push_particles_run(psc.push_particles, particles, flds);
+    psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 3);
+    psc_bnd_exchange_particles(psc.bnd, particles);
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_field_b(flds);
+    psc_push_fields_step_b(psc.push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = 0;

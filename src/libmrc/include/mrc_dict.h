@@ -6,9 +6,8 @@
 
 union param_u;
 
-extern struct mrc_class mrc_class_mrc_dict;
+MRC_CLASS_DECLARE(mrc_dict, struct mrc_dict);
 
-MRC_OBJ_DEFINE_STANDARD_METHODS(mrc_dict, struct mrc_dict);
 void mrc_dict_add_int(struct mrc_dict *dict, const char *name, int val);
 void mrc_dict_add_bool(struct mrc_dict *dict, const char *name, bool val);
 void mrc_dict_add_float(struct mrc_dict *dict, const char *name, float val);
