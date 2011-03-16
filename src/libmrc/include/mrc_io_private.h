@@ -64,7 +64,9 @@ extern struct mrc_io_ops mrc_io_ascii_ops;
 extern struct mrc_io_ops mrc_io_xdmf_ops;
 extern struct mrc_io_ops mrc_io_xdmf_serial_ops;
 extern struct mrc_io_ops mrc_io_xdmf_to_one_ops;
+#ifdef H5_HAVE_PARALLEL
 extern struct mrc_io_ops mrc_io_xdmf_parallel_ops;
+#endif
 extern struct mrc_io_ops mrc_io_xdmf2_ops;
 extern struct mrc_io_ops mrc_io_combined_ops;
 

@@ -244,7 +244,7 @@ do_genc_push_part_xy(int p, fields_t *pf, particles_t *pp)
 
 	jxh -= fnqx*wx;
 	F3(JXI, j1+l1,j2+l2,j3) += jxh;
-	F3(JZI, j1+l1,j2+l3,j3) += fnqz * wz;
+	F3(JZI, j1+l1,j2+l2,j3) += fnqz * wz;
       }
     }
     for (int l1 = l1min; l1 <= l1max; l1++) {
