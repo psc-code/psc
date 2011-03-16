@@ -31,13 +31,13 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 
   psc.prm.nmax = 201;
 
-  psc.domain.length[0] = 20 * 1e-6;
-  psc.domain.length[1] = 20 * 1e-6;
-  psc.domain.length[2] = 20 * 1e-6;
+  psc.domain.length[0] = 10 * 1e-6;
+  psc.domain.length[1] = 10 * 1e-6;
+  psc.domain.length[2] = 10 * 1e-6;
 
   psc.domain.gdims[0] = 1;
   psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 128;
+  psc.domain.gdims[2] = 64;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_OPEN;
   psc.domain.bnd_fld_hi[0] = BND_FLD_OPEN;
@@ -51,16 +51,26 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 
   psc_push_fields_set_type(psc.push_fields, "fortran");
 
-  struct psc_pulse_gauss prm_p = {
-    .xm  = 10.  * 1e-6,                       // transverse position of the focus
-    .ym  = 10.  * 1e-6,
+  struct psc_pulse_gauss prm_p_z1 = {
+    .xm  = 5.   * 1e-6,                       // transverse position of the focus
+    .ym  = 5.   * 1e-6,
     .zm  = 0.   * 1e-6,
     .dxm = 3.   * 1e-6,
-    .dym = 2.   * 1e-6,
-    .dzm = 5.   * 1e-6,
+    .dym = 3.   * 1e-6,
+    .dzm = 1.   * 1e-6,
   };
 
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
+  struct psc_pulse_gauss prm_p_z2 = {
+    .xm  = 5.   * 1e-6,                       // transverse position of the focus
+    .ym  = 5.   * 1e-6,
+    .zm  = 10.  * 1e-6,
+    .dxm = 3.   * 1e-6,
+    .dym = 3.   * 1e-6,
+    .dzm = 1.   * 1e-6,
+  };
+
+  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p_z1);
+  psc.pulse_p_z2 = psc_pulse_gauss_create(&prm_p_z2);
 }
 
 static void
@@ -75,9 +85,12 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
-      
+
       F3_BASE(pf, EY, jx,jy,jz) =  psc_p_pulse_z1(xx, yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.);
+
+      F3_BASE(pf, EY, jx,jy,jz) += -psc_p_pulse_z2(xx, yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z2(xx, yy + .5*dy, zz + .5*dz, 0.);
     } psc_foreach_3d_g_end;
   }
 }
