@@ -126,7 +126,7 @@ psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       foreach_3d(p, ix, iy, iz, 0, 0) {
-	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	fprintf(stderr,"m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
       } foreach_3d_end;
     }
@@ -161,7 +161,7 @@ psc_check_currents_ref(mfields_base_t *flds, double thres)
     for (int m = JXI; m <= JZI; m++){
       double max_delta = 0.;
       foreach_3d_g(p, ix, iy, iz) {
-	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+	//	printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref,m, ix,iy,iz), thres);
 	max_delta = fmax(max_delta, 
 			 fabs(F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz)));
@@ -210,7 +210,7 @@ psc_check_particles_sorted(mparticles_base_t *particles)
 }
 
 // ----------------------------------------------------------------------
-// psc_create_test_xz
+// psc_create_test_xy
 // Hacked in to test Cell BE work.
 void
 psc_create_test_xy(struct psc_mod_config *conf)

@@ -78,7 +78,7 @@ main(int argc, char **argv)
   psc_create_test_xy(&conf_cbe);
   setup_fields(flds);
   //psc_dump_field(flds,EX,"ex0");
-  psc_push_fielda_step_a(psc.push_fields, flds);
+  psc_push_fields_step_a(psc.push_fields, flds);
   //psc_dump_field(flds,EX, "ex2");
   // psc_dump_field(EY, "ey2");
   // psc_dump_field(EZ, "ez2");

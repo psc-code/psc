@@ -1,5 +1,6 @@
 
 #include "psc_testing.h"
+#include "psc_push_particles.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -23,7 +24,7 @@ main(int argc, char **argv)
   mfields_base_t *flds = &psc.flds;
   mparticles_base_t *particles = &psc.particles;
   //  psc_dump_particles("part-0");
-  psc_push_particles(flds, particles);
+  psc_push_particles_run(psc.push_particles, particles, flds);
   psc_save_particles_ref(particles);
   psc_save_fields_ref(flds);
   //  psc_dump_particles("part-1");
@@ -31,11 +32,12 @@ main(int argc, char **argv)
 
 
   psc_create_test_xy(&conf_generic_c);
-  psc_push_particles(flds, particles);
+  psc_push_particles_run(psc.push_particles, particles, flds);
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(particles, 1e-7, "push_part_xy -- generic_c");
   psc_check_currents_ref(flds, 1e-7);
   psc_destroy();
+
 
 
 #ifdef USE_SSE2
@@ -43,7 +45,7 @@ main(int argc, char **argv)
     .mod_particle = "sse2",
   };
   psc_create_test_xy(&conf_sse2);
-  psc_push_particles();
+  psc_push_particles_run(psc.push_particles, particles, flds);
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(1e-7, "push_part_xy -- sse2");
   psc_check_currents_ref(1e-6);
@@ -55,7 +57,7 @@ main(int argc, char **argv)
     .mod_particle = "cbe",
   };
   psc_create_test_xy(&conf_cbe);
-  psc_push_particles(flds, particles);
+  psc_push_particles_run(psc.push_particles, particles, flds);
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(particles,1e-7, "push_part_xy -- cbe");
   psc_check_currents_ref(flds,1e-6);

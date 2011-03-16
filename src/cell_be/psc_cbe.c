@@ -289,13 +289,3 @@ cbe_destroy(void)
   
 }
 
-
-struct psc_ops psc_ops_cbe = {
-  .name                   = "cbe",
-  .create                 = cbe_create,
-  .destroy                = cbe_destroy, 
-  .push_part_xy           = cbe_push_part_2d,
-};
-
-
-

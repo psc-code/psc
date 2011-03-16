@@ -3,6 +3,7 @@
 #include <mrc_profile.h>
 
 #include "psc_push_fields_private.h"
+#include "psc_bnd.h"
 
 #ifdef CELLEMU
 #include "libspe2_c.h"
@@ -47,9 +48,9 @@ cbe_push_field_a_2d(mfields_base_t *flds_base)
 
   prof_stop(pr);
 
-  fields_put(&flds, JXI, JXI + 9, flds_base);
-  
-  psc_fill_ghosts(flds_base, EX, EX+6);
+  fields_put(&flds, EX, EX + 6, flds_base);
+
+  psc_bnd_fill_ghosts(psc.bnd,flds_base, EX, EX + 6);  
 }
 
 void
@@ -89,9 +90,10 @@ cbe_push_field_b_2d(mfields_base_t *flds_base)
 
   prof_stop(pr);
 
-  fields_put(&flds, JXI, JXI + 9, flds_base);
+  fields_put(&flds, EX, EX + 6, flds_base);
+
+  psc_bnd_fill_ghosts(psc.bnd,flds_base, EX, EX + 6);
   
-  psc_fill_ghosts(flds_base, EX, EX+6);
 }
 
 static void

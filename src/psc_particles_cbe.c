@@ -15,7 +15,7 @@ particles_cbe_alloc(particles_cbe_t *pp, int n_part)
 {
   void * m;
   __arr_size = n_part * 1.2;
-  printf("Called to alloc %g particles\n", __arr_size);
+  //printf("Called to alloc %g particles\n", __arr_size);
  int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
