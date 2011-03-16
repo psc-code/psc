@@ -17,9 +17,6 @@ struct psc_particle_npt {
 /// Physics cases (initial conditions and other parameters).
 ///
 /// A "case" defines what problem the code is supposed to run.
-/// Currently, we have the following cases predefined:
-/// - "harris": Double Harris sheet in 2D (xz)
-/// - "langmuir": A 1D Langmuir wave (z)
 ///
 /// If you want to run a physics problem that is not included in the predefined
 /// cases, you will have to create a case for it yourself. This requires the
@@ -37,10 +34,17 @@ struct psc_particle_npt {
 ///     arguments, set charge (q), density (n), mass (m), velocity (v) and
 ///     temperature (T).
 /// - Add "case_<casename>.c" to "src/Makefile.am" next to the other cases.
-/// - Add the psc_case_ops_<casename> variable to psc.h following how it's done
+/// - Add 
+///
+///     extern struct psc_case_ops psc_case_<casename>_ops;
+///
+///   to psc_case_private.h, following how it's done
 ///   for the other cases.
-/// - Add your psc_case_ops_<casename> to the list of available cases in 
-///   "src/init_parameters.c".
+/// - Add your psc_case_<casename>_ops to the registration by adding
+///
+///     mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_<casename>_ops);
+///
+///   near the end of "src/psc_case.c".
 
 MRC_CLASS_DECLARE(psc_case, struct psc_case);
 
