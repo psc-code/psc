@@ -135,6 +135,7 @@ psc_case_init()
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_singlepart_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_collisions_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_cone_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_microsphere_ops);
 }
 
 // ======================================================================

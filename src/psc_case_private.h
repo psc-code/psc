@@ -30,6 +30,7 @@ extern struct psc_case_ops psc_case_curvedfoil_ops;
 extern struct psc_case_ops psc_case_singlepart_ops;
 extern struct psc_case_ops psc_case_collisions_ops;
 extern struct psc_case_ops psc_case_cone_ops;
+extern struct psc_case_ops psc_case_microsphere_ops;
 
 // ======================================================================
 
