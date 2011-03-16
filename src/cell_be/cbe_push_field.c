@@ -2,6 +2,8 @@
 #include "psc_ppu.h"
 #include <mrc_profile.h>
 
+#include "psc_push_fields_private.h"
+
 #ifdef CELLEMU
 #include "libspe2_c.h"
 #else
@@ -93,7 +95,7 @@ cbe_push_field_b_2d(mfields_base_t *flds_base)
 }
 
 static void
-cbe_push_field_a(mfields_base_t *flds)
+psc_push_fields_cbe_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -103,7 +105,7 @@ cbe_push_field_a(mfields_base_t *flds)
 }
 
 static void
-cbe_push_field_b(mfields_base_t *flds)
+psc_push_fields_cbe_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (psc.domain.use_pml) {
     assert(0);
@@ -113,8 +115,11 @@ cbe_push_field_b(mfields_base_t *flds)
 }
 
 
-struct psc_push_field_ops psc_push_field_ops_cbe = {
-  .name         = "cbe",
-  .push_field_a = cbe_push_field_a,
-  .push_field_b = cbe_push_field_b,
+// ======================================================================
+// psc_push_fields: subclass "cbe"
+
+struct psc_push_fields_ops psc_push_fields_cbe_ops = {
+  .name                  = "cbe",
+  .step_a                = psc_push_fields_cbe_step_a,
+  .step_b                = psc_push_fields_cbe_step_b,
 };

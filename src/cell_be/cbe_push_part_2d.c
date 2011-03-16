@@ -9,7 +9,9 @@
 #endif
 
 void
-cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base)
+psc_push_particles_cbe_push_xy(struct psc_push_particles *push,
+			       mfields_base_t *flds_base, 
+			       mparticles_base_t *particles_base)
 {
   mfields_t flds;
   mparticles_t particles;

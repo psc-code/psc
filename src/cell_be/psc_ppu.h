@@ -32,14 +32,9 @@
 // I also means we're going to drop the specialized sorting (which doesn't 
 // actually work), and seriously cuts down on the amount of specialized ppu
 // code we need to have. 
-struct psc_spu_ops {
-  // SPE Stuff
-};
 
-int spu_main(unsigned long long spe_id, unsigned long long spu_comm_ea,
-	     unsigned long long env);
+void psc_push_particles_cbe_push_xy(struct psc_push_particles *push, mfields_base_t *flds_base, mparticles_base_t *particles_base);
 
-void cbe_push_part_2d(mfields_base_t *flds_base, mparticles_base_t *particles_base);
 extern int spes_inited; ///< Has the task been loaded onto the spes
 
 // Spe handeling functions from psc_cbe.c

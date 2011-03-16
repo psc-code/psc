@@ -29,14 +29,14 @@ main(int argc, char **argv)
   //  psc_dump_particles("part-1");
   psc_destroy();
 
-#if 0
+
   psc_create_test_xy(&conf_generic_c);
   psc_push_particles(flds, particles);
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(particles, 1e-7, "push_part_xy -- generic_c");
   psc_check_currents_ref(flds, 1e-7);
   psc_destroy();
-#endif
+
 
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {

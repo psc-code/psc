@@ -145,15 +145,15 @@ void
 psc_kill_spes(void)
 {
   
-  assert(spes_inited);
-  
-  unsigned int msg; 
-  for(int i = 0; i<NR_SPE; i++){
-    msg = SPU_QUIT;
-    int nmesg = spe_in_mbox_write(spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
-    assert(nmesg == 1);
-    free(spe_blocks[i]);
-    spe_blocks[i] = NULL;
+  if(spes_inited) {
+    unsigned int msg; 
+    for(int i = 0; i<NR_SPE; i++){
+      msg = SPU_QUIT;
+      int nmesg = spe_in_mbox_write(spe_id[i], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
+      assert(nmesg == 1);
+      free(spe_blocks[i]);
+      spe_blocks[i] = NULL;
+    }
   }
 }
   
