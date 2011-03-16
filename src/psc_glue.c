@@ -490,6 +490,7 @@ PIC_pez(particles_fortran_t *pp)
 void
 PIC_msa(fields_fortran_t *pf)
 {
+  PSC_set_timestep(&psc);
   PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -498,6 +499,7 @@ PIC_msa(fields_fortran_t *pf)
 void
 PIC_pml_msa(fields_fortran_t *pf)
 {
+  PSC_set_timestep(&psc);
   PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
@@ -509,6 +511,7 @@ PIC_pml_msa(fields_fortran_t *pf)
 void
 PIC_msb(fields_fortran_t *pf)
 {
+  PSC_set_timestep(&psc);
   PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -517,6 +520,7 @@ PIC_msb(fields_fortran_t *pf)
 void
 PIC_pml_msb(fields_fortran_t *pf)
 {
+  PSC_set_timestep(&psc);
   PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
