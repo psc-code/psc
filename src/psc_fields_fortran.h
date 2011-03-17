@@ -13,7 +13,6 @@ typedef struct {
   int nr_comp; //> nr of components
   char **name; //> name for each component
   bool with_array; // array was passed in, not alloc'ed
-  bool fortran_alloc; //> was alloc'ed through fortran
 } fields_fortran_t;
 
 typedef struct {

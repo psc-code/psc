@@ -3,6 +3,8 @@
 #include <mrc_params.h>
 #include <mrc_list.h>
 
+#ifdef HAVE_HDF5_H
+
 #include "mrc_io_xdmf_lib.h"
 
 #include <stdlib.h>
@@ -240,3 +242,5 @@ struct mrc_io_ops mrc_io_xdmf2_ops = {
   .write_attr    = xdmf_write_attr,
   .write_m3      = xdmf_write_m3,
 };
+
+#endif

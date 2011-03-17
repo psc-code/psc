@@ -18,6 +18,7 @@ struct mrc_obj {
   void *subctx;
   int refcount;
   list_t instance_entry;
+  bool view_flag; //< if true, call ::view() at the end of ::setup()
 };
 
 #define MRC_SUBCLASS_OPS(obj_type)			\
@@ -229,5 +230,7 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
 
 void __mrc_class_register_subclass(struct mrc_class *class,
 				   struct mrc_obj_ops *ops);
+
+#define mrc_to_subobj(o, subobj_type) ((subobj_type *)((o)->obj.subctx))
 
 #endif

@@ -1,15 +1,14 @@
 
-#include "config.h"
-
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_z(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 c     ----------------------------------------------------------------------
 c     particle pusher z, w/o the following boundary exchange
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz,wl,wp,n
-      use PIC_variables, only: cori
+      use VLA_variables, only: n
+      use PSC_globals
+      use PSC_params
+      use PSC_patch
 
       implicit none
 
@@ -28,8 +27,8 @@ c     particle pusher z, w/o the following boundary exchange
 
       real(kind=8) :: pi
 
-      integer :: j1,j2,j3,k2,k3,l1,l2,l3
-      integer :: l2min,l2max,l3min,l3max
+      integer :: j1,j2,j3,k3,l1,l2,l3
+      integer :: l3min,l3max
       integer :: l
 
       real(kind=8) :: dxi,dyi,dzi
@@ -42,17 +41,17 @@ c     particle pusher z, w/o the following boundary exchange
       real(kind=8) :: dqs,fnqs,fnqxs,fnqys,fnqzs
       real(kind=8) :: dq,fnq,fnqx,fnqy,fnqz
 
-      real(kind=8) :: h1,h2,h3
-      real(kind=8) :: hmy,h0y,h1y,hmz,h0z,h1z
-      real(kind=8) :: gmy,g0y,g1y,gmz,g0z,g1z
+      real(kind=8) :: h3
+      real(kind=8) :: hmz,h0z,h1z
+      real(kind=8) :: gmz,g0z,g1z
       real(kind=8) :: wx,wy,wz
       real(kind=8) :: exq,eyq,ezq
       real(kind=8) :: hxq,hyq,hzq
       real(kind=8) :: taux,tauy,tauz,tau
       real(kind=8) :: u,v,w
 
-      real(kind=8),dimension(-2:2) :: s0y,s0z
-      real(kind=8),dimension(-2:2) :: s1y,s1z
+      real(kind=8),dimension(-2:2) :: s0z
+      real(kind=8),dimension(-2:2) :: s1z
       real(kind=8),dimension(-3:2,-2:2,-2:2) :: jxh
       real(kind=8),dimension(-2:2,-3:2,-2:2) :: jyh
       real(kind=8),dimension(-2:2,-2:2,-3:2) :: jzh
@@ -156,18 +155,6 @@ c     FIELD INTERPOLATION
      &         +h0z*ez(j1,j2,l3)
      &         +h1z*ez(j1,j2,l3+1)
 
-!            bxq=hmz*bx(j1,l2,l3-1)
-!     &          +h0z*bx(j1,l2,l3)
-!     &          +h1z*bx(j1,l2,l3+1)
-
-!            byq=hmz*by(l1,j2,l3-1)
-!     &         +h0z*by(l1,j2,l3)
-!     &         +h1z*by(l1,j2,l3+1)
-
-!            bzq=gmz*bz(l1,l2,j3-1)
-!     &          +g0z*bz(l1,l2,j3)
-!     &          +g1z*bz(l1,l2,j3+1)
-
             hxq=hmz*hx(j1,l2,l3-1)
      &          +h0z*hx(j1,l2,l3)
      &          +h1z*hx(j1,l2,l3+1)
@@ -193,9 +180,6 @@ c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0)
             pzm=pzi+dq*ezq
 
             root=dq/dsqrt(1.0+pxm*pxm+pym*pym+pzm*pzm)
-!            taux=bxq*root
-!            tauy=byq*root
-!            tauz=bzq*root
             taux=hxq*root
             tauy=hyq*root
             tauz=hzq*root
@@ -300,56 +284,4 @@ c CURRENT DENSITY AT (n+1.0)*dt
          enddo
       endif
 
-      end subroutine
-
-c     ----------------------------------------------------------------------
-      subroutine PIC_move_part_z
-c     ----------------------------------------------------------------------
-
-      use PIC_variables
-      use VLA_variables
-      use fields
-
-      implicit none
-
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
-      call PIC_push_part_z(niloc, p_niloc, p2A, p2B,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-
-      call SERV_systime(cpua)
-      call PIC_faz(jxi)
-      call PIC_faz(jyi)
-      call PIC_faz(jzi)
-
-      call PIC_fez(jxi)
-      call PIC_fez(jyi)
-      call PIC_fez(jzi)
-
-      call PIC_faz(ne)
-      call PIC_faz(ni)
-      call PIC_faz(nn)
-
-      call PIC_fez(ne)
-      call PIC_fez(ni)
-      call PIC_fez(nn)
-
-      call PIC_pez
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
-
-
-      end subroutine PIC_move_part_z
+      end subroutine PIC_push_part_z

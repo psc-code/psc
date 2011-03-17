@@ -1,8 +1,6 @@
 
-#include <mpi.h>
-
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case.h"
 
 int
 main(int argc, char **argv)
@@ -10,14 +8,13 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct psc_mod_config conf = {
-  };
-  psc_create(&conf);
-  psc_init(NULL);
-  if (psc.prm.from_checkpoint) {
-    psc_read_checkpoint();
-  }
-  psc_integrate();
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
+  struct psc *psc = psc_case_get_psc(_case);
+  psc_integrate(psc);
+  psc_case_destroy(_case);
 
   MPI_Finalize();
 }

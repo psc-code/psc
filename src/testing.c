@@ -1,5 +1,7 @@
+
 #include "psc_testing.h"
 #include "psc_sort.h"
+#include "psc_case.h"
 
 #include <math.h>
 #include <limits.h>
@@ -33,16 +35,16 @@ static mfields_base_t flds_ref;
 // save current particle data as reference solution
 
 void
-psc_save_particles_ref(mparticles_base_t *particles)
+psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
 {
   if (!particles_ref.p) {
-    particles_ref.p = calloc(psc.nr_patches, sizeof(*particles_ref.p));
-    foreach_patch(p) {
+    particles_ref.p = calloc(psc->nr_patches, sizeof(*particles_ref.p));
+    psc_foreach_patch(psc, p) {
       particles_base_t *pp = &particles->p[p];
       particles_base_alloc(&particles_ref.p[p], pp->n_part);
     }
   }
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
     particles_base_t *pp_ref = &particles_ref.p[p];
     for (int i = 0; i < pp->n_part; i++) {
@@ -57,19 +59,19 @@ psc_save_particles_ref(mparticles_base_t *particles)
 // save current field data as reference solution
 
 void
-psc_save_fields_ref(mfields_base_t *flds)
+psc_save_fields_ref(struct psc *psc, mfields_base_t *flds)
 {
   if (!flds_ref.f) {
     mfields_base_alloc(&flds_ref, NR_FIELDS);
   }
-  int me = psc.domain.use_pml ? NR_FIELDS : HZ + 1;
-  foreach_patch(p) {
+  int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = 0; m < me; m++) {
-      foreach_3d_g(p, ix, iy, iz) {
+      psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3_BASE(pf_ref, m, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
-      } foreach_3d_g_end;
+      } psc_foreach_3d_g_end;
     }
   }
 } 
@@ -80,11 +82,12 @@ psc_save_fields_ref(mfields_base_t *flds)
 // check current particle data agains previously saved reference solution
 
 void
-psc_check_particles_ref(mparticles_base_t *particles, double thres, const char *test_str)
+psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles,
+			double thres, const char *test_str)
 {
   assert(particles_ref.p);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
     particles_base_t *pp_ref = &particles_ref.p[p];
     
@@ -118,17 +121,17 @@ psc_check_particles_ref(mparticles_base_t *particles, double thres, const char *
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
+psc_check_fields_ref(struct psc *psc, mfields_base_t *flds, int *m_flds, double thres)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
-      foreach_3d(p, ix, iy, iz, 0, 0) {
-	//	fprintf(stderr,"m %d %d,%d,%d\n", m, ix,iy,iz);
+      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
-      } foreach_3d_end;
+      } psc_foreach_3d_end;
     }
   }
 }
@@ -139,7 +142,7 @@ psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(mfields_base_t *flds, double thres)
+psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres)
 {
 #if 0
   foreach_patch(p) {
@@ -155,33 +158,33 @@ psc_check_currents_ref(mfields_base_t *flds, double thres)
     }
   }
 #endif
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = JXI; m <= JZI; m++){
       double max_delta = 0.;
-      foreach_3d_g(p, ix, iy, iz) {
-	//	printf("m %d %d,%d,%d\n", m, ix,iy,iz);
+      psc_foreach_3d_g(psc, p, ix, iy, iz) {
+	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref,m, ix,iy,iz), thres);
 	max_delta = fmax(max_delta, 
 			 fabs(F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz)));
-      } foreach_3d_g_end;
+      } psc_foreach_3d_g_end;
       printf("max_delta (%s) %g\n", fldname[m], max_delta);
     }
   }
 }
 
 void
-psc_check_currents_ref_noghost(mfields_base_t *flds, double thres)
+psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds, double thres)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     fields_base_t *pf_ref = &flds_ref.f[p];
     for (int m = JXI; m <= JZI; m++){
-      foreach_3d(p, ix, iy, iz, 0, 0) {
+      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
-      } foreach_3d_end;
+      } psc_foreach_3d_end;
     }
   }
 }
@@ -192,12 +195,12 @@ psc_check_currents_ref_noghost(mfields_base_t *flds, double thres)
 // checks particles are sorted by cell index
 
 void
-psc_check_particles_sorted(mparticles_base_t *particles)
+psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
 {
 #if PARTICLES_BASE == PARTICLES_FORTRAN
   int last = INT_MIN;
 
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
     for (int i = 0; i < pp->n_part; i++) {
       assert(pp->particles[i].cni >= last);
@@ -218,8 +221,13 @@ psc_create_test_xy(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  psc_create(conf);
-  psc_init("test_xy");
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_xy");
+  struct psc *psc = psc_case_get_psc(_case);
+  psc_set_conf(psc, conf);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
 }
 
 
@@ -232,8 +240,13 @@ psc_create_test_xz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  psc_create(conf);
-  psc_init("test_xz");
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_xz");
+  struct psc *psc = psc_case_get_psc(_case);
+  psc_set_conf(psc, conf);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
 }
 
 // ----------------------------------------------------------------------
@@ -245,9 +258,14 @@ psc_create_test_yz(struct psc_mod_config *conf)
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
-  psc_create(conf);
-  psc_init("test_yz");
-  psc.particles.p[0].n_part = 1;
-  psc_sort_run(psc.sort, &psc.particles);
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_yz");
+  struct psc *psc = psc_case_get_psc(_case);
+  psc_set_conf(psc, conf);
+  psc_case_set_from_options(_case);
+  psc_case_setup(_case);
+  psc_case_view(_case);
+  psc->particles.p[0].n_part = 1;
+  psc_sort_run(psc->sort, &psc->particles);
 }
 

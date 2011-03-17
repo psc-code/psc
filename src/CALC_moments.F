@@ -5,9 +5,8 @@ c     ----------------------------------------------------------------------
       subroutine CALC_densities(niloc, p_niloc, ne, ni, nn)
 c     ----------------------------------------------------------------------
 
-      use PIC_variables, only: cori
-      use VLA_variables, only: rd1, rd2, rd3, i1mn, i2mn, i3mn,
-     *     i1mx, i2mx, i3mx, alpha, dx, dy, dz, eta
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 

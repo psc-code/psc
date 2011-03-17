@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -22,7 +22,7 @@
 //               **
 //              **
 
-struct curvedfoil {
+struct psc_case_curvedfoil {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m of the first(0) foil
   double L0; // gradient of density profile in m of the first foil
@@ -32,9 +32,9 @@ struct curvedfoil {
   double R_curv0;  // curvature of the first foil  in meters
 };
 
-#define VAR(x) (void *)offsetof(struct curvedfoil, x)
+#define VAR(x) (void *)offsetof(struct psc_case_curvedfoil, x)
 
-static struct param curvedfoil_descr[] = {
+static struct param psc_case_curvedfoil_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.5 * 1e-6)     },
@@ -50,7 +50,7 @@ static struct param curvedfoil_descr[] = {
 #undef VAR
 
 static void
-curvedfoil_create(struct psc_case *Case)
+psc_case_curvedfoil_create(struct psc_case *_case)
 {
   struct psc_pulse_gauss prm_p = {
     .xm = 2.5   * 1e-6,
@@ -81,10 +81,8 @@ curvedfoil_create(struct psc_case *Case)
   psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
 }
 
-
-
 static void
-curvedfoil_init_param(struct psc_case *Case)
+psc_case_curvedfoil_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 500;
   psc.prm.cpum = 25000;
@@ -114,13 +112,15 @@ curvedfoil_init_param(struct psc_case *Case)
 }
 
 static void
-curvedfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_curvedfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
+  struct psc *psc = _case->psc;
+
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
@@ -134,10 +134,10 @@ curvedfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
 
 #if 0
 static void
-curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+psc_case_curvedfoil_init_npt(struct psc_case *_case, int kind, double x[3], 
+			      struct psc_particle_npt *npt)
 {
-  struct curvedfoil *curvedfoil = Case->ctx;
+  struct curvedfoil *curvedfoil = to_curvedfoil(_case);
 
   real Te = curvedfoil->Te, Ti = curvedfoil->Ti;
 
@@ -192,12 +192,12 @@ curvedfoil_init_npt(struct psc_case *Case, int kind, double x[3],
 }
 #endif
 
-struct psc_case_ops psc_case_ops_curvedfoil = {
-  .name       = "curvedfoil",
-  .ctx_size   = sizeof(struct curvedfoil),
-  .ctx_descr  = curvedfoil_descr,
-  .create     = curvedfoil_create,
-  .init_param = curvedfoil_init_param,
-  .init_field = curvedfoil_init_field,
-//  .init_npt   = curvedfoil_init_npt,
+struct psc_case_ops psc_case_curvedfoil_ops = {
+  .name             = "curvedfoil",
+  .size             = sizeof(struct psc_case_curvedfoil),
+  .param_descr      = psc_case_curvedfoil_descr,
+  .create           = psc_case_curvedfoil_create,
+  .set_from_options = psc_case_curvedfoil_set_from_options,
+  .init_field       = psc_case_curvedfoil_init_field,
+  //  .init_npt         = psc_case_curvedfoil_init_npt,
 };

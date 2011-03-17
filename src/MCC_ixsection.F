@@ -7,8 +7,6 @@ c return sigma and sv in SI units
 
       subroutine MCC_ixsection(mat,cs,ek,sigma,sv)
 
-      use PIC_variables
-      use VLA_variables
       use MCC_variables
 
       implicit none

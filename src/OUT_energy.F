@@ -1,33 +1,33 @@
 c THIS SUBROUTINE WRITES DETAILED KINETIC TEMPERATURES FOR ELECTRONS AND IONS
 c by A.Kemp 11/15/2005
 
-      subroutine OUT_energy
+      subroutine OUT_energy(niloc, p_niloc)
 
-      use PIC_variables
-      use VLA_variables
+      use VLA_variables, only: n
+      use OUT_params
+      use OUT_fields
+      use PSC_domain, only: mpe
+      use PSC_params
+      use PSC_patch
 
       implicit none
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
 
       character*(5) node, label
 
       character*100 :: fname='energy.data'
       character*100 :: fnames='-spectrum.data'
 
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-  
       real(kind=8) :: te,ti,ekini,ekine,ekin
       real(kind=8) :: ekinl,ekinx,dekin
       real(kind=8) :: ikinl,ikinx,dikin
       real(kind=8) :: xne,xni,qni,mni,wni,ux,uy,uz
-      integer      :: bek,ntot
+      integer      :: l,bek,ntot,ierr
 
       real(kind=8),allocatable,dimension(:) :: enwe,enwi
 
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
       ekine=0.0
       ekini=0.0
@@ -72,12 +72,12 @@ c by A.Kemp 11/15/2005
                  ntot=ntot+1
               else 
                  write(*,*) 'bek out of range'
-                 call MPI_FINALIZE(info)
+                 call MPI_FINALIZE(ierr)
                  stop
               endif
            else
               write(*,*) 'ekin out of range', ekin
-              call MPI_FINALIZE(info)
+              call MPI_FINALIZE(ierr)
               stop
            endif
 
@@ -92,12 +92,12 @@ c by A.Kemp 11/15/2005
                  enwi(bek)=enwi(bek)+1 
               else 
                  write(*,*) 'bek-i out of range'
-                 call MPI_FINALIZE(info)
+                 call MPI_FINALIZE(ierr)
                  stop
               endif
            else
               write(*,*) 'ekin-i out of range', ekin
-              call MPI_FINALIZE(info)
+              call MPI_FINALIZE(ierr)
               stop
            endif
  	endif
@@ -108,7 +108,6 @@ c by A.Kemp 11/15/2005
       te=ekine/xne          
       ti=ekini/xni
 
-      call SERV_systime(cpuc)
       call SERV_labelgen(mpe,node)
       call SERV_labelgen(n,label)
       
@@ -157,17 +156,6 @@ c        write(11) '# Ek[MeV]   dN/dE   Ntot=', ntot
         enddo
         close(11)
       endif
-
-      call SERV_systime(cpud)
-      s_cpud=s_cpud+cpud-cpuc
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
-
 
       deallocate(enwe)
       deallocate(enwi)

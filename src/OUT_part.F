@@ -1,29 +1,47 @@
+
 c PARTICLE OUTPUT!
 
+      module OUT_particles
+      implicit none
 
-      subroutine OUT_part
+c nprparti: first time step for output of ions
+c dnprparti: timestep increment for output of ions
+c nistep: index increment for ion output
+c plin: smallest particle number for output
+c plix: largest particle number for output
 
-      use PIC_variables
-      use VLA_variables
+      integer :: nprparti = 10000
+      integer :: dnprparti = 1000
+      integer :: nistep = 1
+      real(kind=8) :: plin = 0, plix = 300000000
+      integer :: nprpartio
+
+      end module OUT_particles
+
+
+      subroutine OUT_part(niloc, p_niloc)
+
+      use OUT_params
+      use OUT_particles
+      use VLA_variables, only: n
+      use PSC_globals
+      use PSC_params
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
       character*5 label,node
+
+      integer :: l,pli
 
       real(kind=4) xq,yq,zq
       real(kind=4) x0,y0,z0,xr,yr,zr,rot
       real(kind=4) pxq,pyq,pzq
       real(kind=4) qnq,mnq,cnq,lnq,wnq
-
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
-
-      s_cpub=0.0d0
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
 
       x0=5.0*1.0e-6/ld
@@ -40,8 +58,6 @@ c OUTPUT OF PARTICLES AT SELECTED TIMESTEPS
 
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
-
-         call SERV_systime(cpuc)
 
          open(11,file=trim(data_out)
      &        //'/'//node//'electron'//label,
@@ -156,22 +172,11 @@ c OUTPUT OF PARTICLES AT SELECTED TIMESTEPS
             endif
          enddo
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
          close(11)
          close(12)
          close(13)
 
       endif
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpumess=cpumess+s_cpub
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
-
 
       end subroutine OUT_part
 

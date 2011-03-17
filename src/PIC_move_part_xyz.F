@@ -6,9 +6,8 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher xyz, w/o the following boundary exchange
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
-      use PIC_variables, only: cori
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -595,57 +594,3 @@ c CURRENT DENSITY AT (n+1.0)*dt
 
       end subroutine PIC_push_part_xyz
 
-c     ----------------------------------------------------------------------
-      subroutine PIC_move_part_xyz
-c     ----------------------------------------------------------------------
-
-      use PIC_variables
-      use VLA_variables
-      use fields
-
-      implicit none
-
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
-      call PIC_push_part_xyz(niloc, p_niloc, p2A, p2B,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-
-      call SERV_systime(cpua)
-      call PIC_fax(jxi)
-      call PIC_fay(jxi)
-      call PIC_faz(jxi)
-      call PIC_fax(jyi)
-      call PIC_fay(jyi)
-      call PIC_faz(jyi)
-      call PIC_fax(jzi)
-      call PIC_fay(jzi)
-      call PIC_faz(jzi)
-
-      call PIC_fex(jxi)
-      call PIC_fey(jxi)
-      call PIC_fez(jxi)
-      call PIC_fex(jyi)
-      call PIC_fey(jyi)
-      call PIC_fez(jyi)
-      call PIC_fex(jzi)
-      call PIC_fey(jzi)
-      call PIC_fez(jzi)
-
-      call PIC_pex
-      call PIC_pey
-      call PIC_pez
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
-
-      end subroutine PIC_move_part_xyz

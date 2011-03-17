@@ -21,7 +21,7 @@ setup_fields(mfields_base_t *flds)
     fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
       f_real yy = 2.*M_PI * iy / psc.domain.gdims[1];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
@@ -59,8 +59,8 @@ main(int argc, char **argv)
   // psc_dump_field(EX, "ex0");
   psc_push_fields_step_a(psc.push_fields, flds);
   // psc_dump_field(EX, "ex1");
-  psc_save_fields_ref(flds);
-  psc_destroy();
+  psc_save_fields_ref(&psc, flds);
+  psc_destroy(&psc);
 
   psc_create_test_xy(&conf_c);
   setup_fields(flds);
@@ -71,8 +71,8 @@ main(int argc, char **argv)
   // psc_dump_field(HX, "hx2");
   // psc_dump_field(HY, "hy2");
   // psc_dump_field(HZ, "hz2");
-  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy();
+  psc_check_fields_ref(&psc, flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy(&psc);
 
 #ifdef USE_CBE
   psc_create_test_xy(&conf_cbe);
@@ -97,8 +97,8 @@ main(int argc, char **argv)
   psc_dump_field(flds, EX, "ex0");
   psc_push_fields_step_b(psc.push_fields, flds);
   psc_dump_field(flds, EX, "ex1");
-  psc_save_fields_ref(flds);
-  psc_destroy();
+  psc_save_fields_ref(&psc, flds);
+  psc_destroy(&psc);
 
   psc_create_test_xy(&conf_c);
   setup_fields(flds);
@@ -109,8 +109,8 @@ main(int argc, char **argv)
   psc_dump_field(flds, HX, "hx2");
   psc_dump_field(flds, HY, "hy2");
   psc_dump_field(flds, HZ, "hz2");
-  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy();
+  psc_check_fields_ref(&psc, flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy(&psc);
 
 #ifdef USE_CBE
   psc_create_test_xy(&conf_cbe);

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -9,15 +9,15 @@
 
 // FIXME description
 
-struct singlepart {
+struct psc_case_singlepart {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct singlepart, x)
+#define VAR(x) (void *)offsetof(struct psc_case_singlepart, x)
 
-static struct param singlepart_descr[] = {
+static struct param psc_case_singlepart_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
@@ -30,7 +30,7 @@ static struct param singlepart_descr[] = {
 #undef VAR
 
 static void
-singlepart_init_param(struct psc_case *Case)
+psc_case_singlepart_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -60,10 +60,10 @@ singlepart_init_param(struct psc_case *Case)
 }
 
 static void
-singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
-		    struct psc_particle_npt *npt)
+psc_case_singlepart_init_npt(struct psc_case *_case, int kind, double x[3],
+			      struct psc_particle_npt *npt)
 {
-  struct singlepart *singlepart = Case->ctx;
+  struct psc_case_singlepart *singlepart = mrc_to_subobj(_case, struct psc_case_singlepart);
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 
@@ -106,10 +106,10 @@ singlepart_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_singlepart = {
-  .name       = "singlepart",
-  .ctx_size   = sizeof(struct singlepart),
-  .ctx_descr  = singlepart_descr,
-  .init_param = singlepart_init_param,
-  .init_npt   = singlepart_init_npt,
+struct psc_case_ops psc_case_singlepart_ops = {
+  .name             = "singlepart",
+  .size             = sizeof(struct psc_case_singlepart),
+  .param_descr      = psc_case_singlepart_descr,
+  .set_from_options = psc_case_singlepart_set_from_options,
+  .init_npt         = psc_case_singlepart_init_npt,
 };

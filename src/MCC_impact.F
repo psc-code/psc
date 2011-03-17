@@ -25,8 +25,6 @@ c MAIN ROUTINE FOR ELECTRON IMPACT IONIZATION
 
       subroutine MCC_impact
 
-      use PIC_variables
-      use VLA_variables
       use MCC_variables
 
       implicit none
@@ -217,9 +215,8 @@ c PERFORM IMPACT IONIZATION EVENTS IN EACH CELL
 
       subroutine MCC_impact_incell
 
-      use PIC_variables
-      use VLA_variables
       use MCC_variables
+      use PSC_globals
 
       implicit none
 
@@ -372,8 +369,6 @@ c CALCULATE IONIZATION X-SECTION FROM LOTZ FORMULA TO BE SIMPLE AND GENERAL
                                                   ! for material mat and initial charge state xs
                                                   ! expect ek in eV
                                                   ! return sigma and sv in SI units
-      use PIC_variables
-      use VLA_variables
       use MCC_variables
 
       implicit none

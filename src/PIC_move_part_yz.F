@@ -7,9 +7,8 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     particle pusher yz, w/o the following boundary exchange
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
-      use PIC_variables, only: cori
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -359,76 +358,6 @@ c CURRENT DENSITY AT (n+1.0)*dt
       end subroutine
 
 
-c THIS SUBROUTINE IS THE PARTICLE MOVER.
-
-
-      subroutine PIC_move_part_yz
-
-      use PIC_variables
-      use VLA_variables
-      use fields
-
-      implicit none
-
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-
-
-      call SERV_systime(cpug)
-
-      call PIC_push_part_yz(niloc, p_niloc,p2A, p2B,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-     
-      call SERV_systime(cpua)
-
-      call PIC_fay(jxi)
-      call PIC_faz(jxi)
-      call PIC_fay(jyi)
-      call PIC_faz(jyi)
-      call PIC_fay(jzi)
-      call PIC_faz(jzi)
-
-      call PIC_fey(jxi)
-      call PIC_fez(jxi)
-      call PIC_fey(jyi)
-      call PIC_fez(jyi)
-      call PIC_fey(jzi)
-      call PIC_fez(jzi)
-
-      call PIC_fay(ne)
-      call PIC_faz(ne)
-      call PIC_fay(ni)
-      call PIC_faz(ni)
-      call PIC_fay(nn)
-      call PIC_faz(nn)
-
-      call PIC_fey(ne)
-      call PIC_fez(ne)
-      call PIC_fey(ni)
-      call PIC_fez(ni)
-      call PIC_fey(nn)
-      call PIC_fez(nn)
-
-      call PIC_pey
-      call PIC_pez
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
-
-
-      end subroutine PIC_move_part_yz
-
-
 
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_yz_a(niloc, p_niloc, p2A, p2B,
@@ -436,9 +365,8 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     first half step only (x^n -> x^{n+1/2}), for testing purposes
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
-      use PIC_variables, only: cori
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -550,9 +478,8 @@ c     ----------------------------------------------------------------------
 c     ----------------------------------------------------------------------
 c     partial: (x^n -> x^{n+1/2}, p^{n-1/2} -> p^{n+1/2}), for testing
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,alpha,eta,dt,dx,dy,dz
-      use PIC_variables, only: cori
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 

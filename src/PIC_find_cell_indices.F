@@ -4,13 +4,15 @@ c     ======================================================================
 c     ======================================================================
 
       use VLA_variables
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
       integer      :: niloc
       real(kind=8) :: p_niloc(0:*)
 
-      integer :: ll
+      integer :: ll,i1,i2,i3
       integer :: rds1,rds2,rds3
       real(kind=8) :: u,v,w
       real(kind=8) :: xh,yh,zh

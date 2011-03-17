@@ -5,14 +5,39 @@ c ROUTINE MUST BE SET UP PROPERLY FOR EACH SIMULATION TO TAKE ACCOUNT
 c OF ALL POSSIBLE BINARY COLLISIONS.
 c ====================================================================
 
- 
-      subroutine PIC_bin_coll
+      module PIC_bin_collision
 
-      use PIC_variables
-      use VLA_variables
+      use PSC_domain, only: mpe
+
+c nprc: first time step for output of collision parameters
+c dnprc: timestep increment for output of collision parameters
+
+      integer :: nprc = 0
+      integer :: dnprc = 100
+
+      real(kind=8) :: nudt,coll_add,coll_tot
+      real(kind=8), dimension(:,:), allocatable :: nudt_min
+      real(kind=8), dimension(:,:), allocatable :: nudt_max
+      real(kind=8), dimension(:,:), allocatable :: nudt_mean
+      real(kind=8), dimension(:,:), allocatable :: coll_count
+
+      end module PIC_bin_collision
+ 
+
+      subroutine PIC_bin_coll(niloc, p_niloc)
+
+      use PIC_bin_collision
+      use VLA_variables, only: n
+      use OUT_params
+      use PSC_globals
+      use PSC_params
 
       implicit none
-      integer :: sp,sp1,sp2,spx_nsp
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
+      integer :: i,j,k,l,sp,sp1,sp2,spx_nsp,ierr
       integer :: intg,limit
       integer :: cnh1,cnh2
       integer :: spx_all,NPMAX
@@ -22,16 +47,8 @@ c ====================================================================
       real(kind=8) :: qni,mni,wni
       real(kind=8) :: rest,rho,lnL
 
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
       integer,allocatable,dimension(:,:) :: spx_list
       integer,allocatable,dimension(:) :: spx_np
-
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
 
       lnL=5.0d0                                   ! Coulomb logarithm
@@ -76,7 +93,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -89,7 +106,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -102,7 +119,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -115,7 +132,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -128,7 +145,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -141,7 +158,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -154,7 +171,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -167,7 +184,7 @@ c BEGIN LOOP OVER PARTICLES
                   if (mpe==0) then
                      write(6,*) "PIC_bin_coll: NPMAX too small!"
                   endif
-                  call MPI_FINALIZE(info)
+                  call MPI_FINALIZE(ierr)
                   stop 
                endif
 
@@ -508,7 +525,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
          if (n.eq.nprc) then
             nprc=nprc+dnprc
 
-            call SERV_systime(cpuc)
             call SERV_labelgen(mpe,node)
             call SERV_labelgen(n,label)
 
@@ -534,9 +550,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
 
             close(11)      
 
-            call SERV_systime(cpud)
-            s_cpud=s_cpud+cpud-cpuc
-
          endif
       endif
 
@@ -550,13 +563,6 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
       deallocate(nudt_mean)
 
 
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
-
-
       end subroutine PIC_bin_coll
 
 
@@ -567,12 +573,17 @@ c OUTPUT OF CRITICAL COLLISION PARAMETERS
 C PROCESS THE BINARY COLLISION BETWEEN ANY TWO GIVEN PARTICLES
 
 
-      subroutine bc(rho,lnL,indl,indm,nu_half)
+      subroutine bc(p_niloc, rho,lnL,indl,indm,nu_half)
 
-      use PIC_variables
-      use VLA_variables
+      use PIC_bin_collision
+      use VLA_variables, only: pi
+      use PSC_domain, only: npe, mpe
+      use PSC_params
+      use PSC_patch
 
       implicit none
+
+      real(kind=8) :: p_niloc(0:*)
 
       integer :: indl,indm,nu_half
 

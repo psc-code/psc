@@ -460,11 +460,10 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
-
   foreach_patch(p) {
     particles_base_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
-    psc_set_n_particles(pp, patch->head);
+    pp->n_part = patch->head;
   }
   prof_stop(pr_B);
 

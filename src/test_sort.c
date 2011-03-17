@@ -22,9 +22,9 @@ main(int argc, char **argv)
 
   psc_randomize_run(psc.randomize, particles);
   psc_sort_run(psc.sort, particles);
-  psc_check_particles_sorted(particles);
+  psc_check_particles_sorted(&psc, particles);
 
-  psc_destroy();
+  psc_destroy(&psc);
 
   prof_print();
   MPI_Finalize();

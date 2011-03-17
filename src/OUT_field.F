@@ -1,12 +1,20 @@
 
-#include "config.h"
-
 c FIELD OUTPUT!
 
 c     ======================================================================
       module OUT_FIELDS
 c     ======================================================================
+
       implicit none
+
+c nprf: first time step for output of fields
+c dnprf: timestep increment for output of fields
+c tmnvf: time step counter for starting time averaging of fields
+c tmxvf: time step counter for ending time averaging of fields
+
+      integer :: nprf = 0
+      integer :: dnprf = 10
+      integer :: tmnvfo,tmxvfo,tmnvf,tmxvf
 
 c ext-hzt: time averaged field
 c net: time averaged electron density
@@ -37,10 +45,24 @@ c poyxt-poyzt: time averaged poynting vector
       end module OUT_FIELDS
 
 c     ----------------------------------------------------------------------
+      subroutine OUT_FIELDS_set
+c     ----------------------------------------------------------------------
+      use OUT_fields
+      use OUT_params
+
+      implicit none
+
+      tmnvf=0*nnp+1
+      tmxvf=0*nnp+np
+      
+      end subroutine OUT_fields_set
+
+c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_alloc
 c     ----------------------------------------------------------------------
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
@@ -78,12 +100,13 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_read
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
       logical out_fields_present
 
       read(10) out_fields_present
@@ -133,12 +156,13 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_write
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
       logical out_fields_present
 
       out_fields_present = allocated(ext)
@@ -185,16 +209,39 @@ c     ----------------------------------------------------------------------
       end subroutine OUT_FIELDS_serv_write
 
 c     ----------------------------------------------------------------------
-      subroutine OUT_field
+      subroutine OUT_field(ne, ni, nn, jxi, jyi, jzi, ex, ey, ez,
+     *     hx, hy, hz, dvx, dvy, dvz, bx, by, bz)
 c     ----------------------------------------------------------------------
-
-      use PIC_variables
       use VLA_variables
-      use fields
+      use OUT_params
       use OUT_FIELDS
+      use PSC_globals
+      use PSC_domain
+      use PSC_params
+      use PSC_patch
 
       implicit none
-      integer :: i1a,i1e,i2a,i2e,i3a,i3e
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ne, ni, nn
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: dvx, dvy, dvz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: bx, by, bz
+
+      integer :: i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       character*(5) node,label
 
@@ -211,18 +258,9 @@ c     ----------------------------------------------------------------------
       real(kind=8) :: x0,y0,z0
       real(kind=8) :: xr,yr,zr,rot
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
       if (.not. allocated(ext)) then
          call OUT_FIELDS_alloc
       endif
-
-      s_cpub=0.0d0
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
       x0=5.0*1.0e-6/ld
       y0=5.0*1.0e-6/ld
@@ -531,8 +569,6 @@ c CALCULATION OF TIME AVERAGED FIELDS
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
 
-         call SERV_systime(cpuc)
-
          open(11,file=trim(data_out)//'/'//node//'tfield'//label,
      &        access='sequential',form='unformatted')
 
@@ -632,9 +668,6 @@ c CALCULATION OF TIME AVERAGED FIELDS
 
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
       endif
 
 
@@ -646,8 +679,6 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
 
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
-
-         call SERV_systime(cpuc)
 
          open(11,file=trim(data_out)//'/'//node//'pfield'//label,
      &         access='sequential',form='unformatted')
@@ -757,19 +788,7 @@ c OUTPUT AFTER PREDEFINED TIME INTERVALS
               
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
       endif 
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
 
 
       end subroutine OUT_field
@@ -782,8 +801,8 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_alloc_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
@@ -843,12 +862,12 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_read_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)
@@ -902,12 +921,12 @@ c     ----------------------------------------------------------------------
       subroutine OUT_FIELDS_serv_write_pml
 c     ----------------------------------------------------------------------
 
-      use VLA_variables
       use OUT_FIELDS
+      use PSC_patch
 
       implicit none
 
-      integer i1a,i1e,i2a,i2e,i3a,i3e
+      integer i1a,i1e,i2a,i2e,i3a,i3e,i1,i2,i3
 
       do i3=i3mn,i3mx,100
          i3e=min(i3+99,i3mx)

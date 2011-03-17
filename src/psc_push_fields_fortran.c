@@ -2,6 +2,7 @@
 #include "psc_push_fields_private.h"
 
 #include "psc.h"
+#include "psc_glue.h"
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------

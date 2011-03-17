@@ -4,11 +4,13 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       subroutine SERV_write(timestep, niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp
-
-      use PIC_variables, only: cori,nialloc,nprparti
+      use OUT_params
+      use OUT_particles
+      use OUT_fields
+      use PIC_bin_collision ! for I/O params
+      use OUT_poyn
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -40,11 +42,10 @@ c CHECKPOINTING ROUTINE FOR SIMULATION DATA
       write(10) nprparti
       write(10) tmnvf,tmxvf
       write(10) tmnvp,tmxvp
-      write(10) tmnvc,tmxvc
 
       call OUT_poyn_serv_write
 
-      write(10) niloc,nialloc,cori
+      write(10) niloc,cori
       write(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx
 
 

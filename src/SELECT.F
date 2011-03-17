@@ -5,14 +5,13 @@ c OUT-ROUTINES AND MERGES THEM INTO GLOBAL DATA FILES!
 
       program SELECT
 
-      use VLA_variables
-      use PIC_variables
-
       implicit none
-      call MPI_INIT(info)
+
+      integer :: ierr
+      character*(20) char
+
+      call MPI_INIT(ierr)
       call INIT_basic
-      call INIT_param
-      call INIT_param_fortran
       
 
 c SELECT DATA FILES

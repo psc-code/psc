@@ -233,10 +233,10 @@ find_output_format_ops(const char *ops_name)
 }
 
 // ----------------------------------------------------------------------
-// psc_output_fields_c_create
+// output_c_setup
 
 static void
-psc_output_fields_c_create(struct psc_output_fields *out)
+psc_output_fields_c_setup(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
@@ -247,25 +247,18 @@ psc_output_fields_c_create(struct psc_output_fields *out)
   if (out_c->format_ops->create) {
     out_c->format_ops->create();
   }
-}
 
-// ----------------------------------------------------------------------
-// output_c_setup
-
-static void
-output_c_setup(struct psc_output_fields_c *out)
-{
-  struct psc_fields_list *pfd = &out->pfd;
+  struct psc_fields_list *pfd = &out_c->pfd;
 
   // setup pfd according to output_fields as given
   // (potentially) on the command line
   pfd->nr_flds = 0;
   // parse comma separated list of fields
-  char *p, *s = strdup(out->output_fields);
+  char *p, *s = strdup(out_c->output_fields);
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
     mfields_base_t *flds = &pfd->flds[pfd->nr_flds];
-    out->out_flds[pfd->nr_flds] = of;
+    out_c->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
 
     mfields_base_alloc(flds, of->nr_comp);
@@ -279,7 +272,7 @@ output_c_setup(struct psc_output_fields_c *out)
 
   // create tfd to look just like pfd
   // FIXME, only if necessary
-  struct psc_fields_list *tfd = &out->tfd;
+  struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
     mfields_base_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
@@ -289,7 +282,7 @@ output_c_setup(struct psc_output_fields_c *out)
       }
     }
   }
-  out->naccum = 0;
+  out_c->naccum = 0;
 }
 
 // ----------------------------------------------------------------------
@@ -342,12 +335,6 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 			mfields_base_t *flds, mparticles_base_t *particles)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
-  static bool first_time = true;
-
-  if (first_time) {
-    output_c_setup(out_c);
-    first_time = false;
-  }
 
   static int pr;
   if (!pr) {
@@ -436,6 +423,6 @@ struct psc_output_fields_ops psc_output_fields_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_output_fields_c),
   .param_descr           = psc_output_fields_c_descr,
-  .create                = psc_output_fields_c_create,
+  .setup                 = psc_output_fields_c_setup,
   .run                   = psc_output_fields_c_run,
 };

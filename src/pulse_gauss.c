@@ -39,6 +39,9 @@ static struct param psc_pulse_gauss_descr[] = {
   { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_phase"   , VAR(phase)           , PARAM_DOUBLE(0.0)            },
+  { "pulse_kx"      , VAR(k[0])            , PARAM_DOUBLE(0.)             },
+  { "pulse_ky"      , VAR(k[1])            , PARAM_DOUBLE(0.)             },
+  { "pulse_kz"      , VAR(k[2])            , PARAM_DOUBLE(0.)             },
   {},
 };
 
@@ -64,18 +67,18 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
 {
   struct psc_pulse_gauss *prm = pulse->ctx;
 
-  double xl = xx;
-  //  double yl = yy;
-  double zl = zz - tt;
+  double xr = xx - prm->xm;
+  double yr = yy - prm->ym;
+  double zr = zz - prm->zm;
 
-  double xr = xl - prm->xm;
-  //  double yr = yl - prm->ym;
-  double zr = zl - prm->zm;
+  double xl = xr - prm->k[0] * tt;
+  double yl = yr - prm->k[1] * tt;
+  double zl = zr - prm->k[2] * tt;
 
-  return sin(zr+prm->phase)
-     * exp(-sqr(xr/prm->dxm))
-    //* exp(-sqr(yr/prm->dym))
-    * exp(-sqr(zr/prm->dzm));
+  return sin(prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt)
+    * exp(-sqr(xl/prm->dxm))
+    * exp(-sqr(yl/prm->dym))
+    * exp(-sqr(zl/prm->dzm));
 }
 
 static struct psc_pulse_ops psc_pulse_ops_gauss = {

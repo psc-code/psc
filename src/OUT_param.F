@@ -3,8 +3,14 @@ c DATA PROTOCOL ROUTINE
 
       subroutine OUT_param
 
-      use VLA_variables
-      use PIC_variables
+      use OUT_params
+      use OUT_particles
+      use OUT_fields
+      use OUT_poyn
+      use PSC_globals
+      use PSC_params
+      use PSC_domain
+      use PSC_patch
 
       implicit none
 
@@ -80,7 +86,6 @@ c DATA PROTOCOL ROUTINE
          write(6,*) 'xnpe: ',xnpe
          write(6,*) 'ynpe: ',ynpe
          write(6,*) 'znpe: ',znpe
-         write(6,*) 'cpum:',cpum
          write(6,*) 'data_out:',trim(data_out)
          write(6,*) 'data_chk:',trim(data_chk)
          write(6,*) ' ' 

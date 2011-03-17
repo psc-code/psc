@@ -1,11 +1,15 @@
       subroutine SELECT_count_evol
 
-      use PIC_variables
-      use VLA_variables
+      use OUT_params
+      use OUT_particles
+      use PSC_globals
+      use PSC_params
+      use PSC_domain
+      use PSC_patch
 
       implicit none
       integer :: tm,nc
-      integer :: count_in,count_ou
+      integer :: count_in,count_ou,pec
 
       character*5 label,node
 

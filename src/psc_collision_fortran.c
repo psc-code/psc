@@ -1,6 +1,7 @@
 
 #include "psc_collision_private.h"
 
+#include "psc_glue.h"
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------

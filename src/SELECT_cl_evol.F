@@ -2,13 +2,17 @@
 
       subroutine SELECT_cl_evol
 
-      use PIC_variables
-      use VLA_variables
+      use OUT_params
+      use OUT_fields
       use out_poyn
+      use PSC_globals
+      use PSC_params
+      use PSC_domain
+      use PSC_patch
 
       implicit none
       integer tm,time,tstart,tend,tstep
-      integer nodei,nodej,nodek
+      integer nodei,nodej,nodek,pec,i1,i2,i3
 
       character*5 label,node
 

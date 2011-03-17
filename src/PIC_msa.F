@@ -4,8 +4,9 @@ c THE UPDATED E AND H-FIELDS ARE AT t=n*dt.
 
       subroutine PIC_msa(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
 
-      use PIC_variables
       use VLA_variables
+      use PSC_patch
+      use OUT_poyn
 
       implicit none
 
@@ -26,14 +27,7 @@ c THE UPDATED E AND H-FIELDS ARE AT t=n*dt.
       real(kind=8) :: exh,eyh,ezh,hxh,hyh,hzh
       real(kind=8) :: exk,eyk,ezk,hxk,hyk,hzk
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
+      integer :: i1, i2, i3
 
 c initialization
 
@@ -148,7 +142,6 @@ c -> E^(n+0.5), B^(n), j^(n)
       enddo
 
 
-      call SERV_systime(cpua)
       call PIC_fex(ex)
       call PIC_fey(ex)
       call PIC_fez(ex)
@@ -158,8 +151,6 @@ c -> E^(n+0.5), B^(n), j^(n)
       call PIC_fex(ez)
       call PIC_fey(ez)
       call PIC_fez(ez)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
 
 
 c B-field propagation E^(n+0.5), B^(n), j^(n), m^(n+0.5)
@@ -233,7 +224,6 @@ c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
       enddo
 
 
-      call SERV_systime(cpua)
       call PIC_fex(hx)
       call PIC_fey(hx)
       call PIC_fez(hx)
@@ -243,9 +233,6 @@ c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
       call PIC_fex(hz)
       call PIC_fey(hz)
       call PIC_fez(hz)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
 
 c energy conservation
 
@@ -288,14 +275,6 @@ c energy conservation
             enddo
          enddo
       enddo
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
 
 
       end subroutine PIC_msa

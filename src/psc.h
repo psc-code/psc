@@ -17,7 +17,6 @@
 #define FIELDS_FORTRAN 1
 #define FIELDS_C       2
 #define FIELDS_SSE2    3
-#define FIELDS_CBE     4
 
 #define PARTICLES_FORTRAN 1
 #define PARTICLES_C       2
@@ -188,8 +187,6 @@ typedef mfields_sse2_t mfields_base_t;
 #error unknown FIELDS_BASE
 #endif
 
-#include "psc_case.h"
-
 // user settable parameters
 struct psc_param {
   double qq;
@@ -279,9 +276,9 @@ struct psc_patch {
   double xb[3];       // lower left corner of the domain in this patch
 };
 
-#define CRDX(p, jx) (psc.dx[0] * ((jx) + psc.patch[p].off[0]))
-#define CRDY(p, jy) (psc.dx[1] * ((jy) + psc.patch[p].off[1]))
-#define CRDZ(p, jz) (psc.dx[2] * ((jz) + psc.patch[p].off[2]))
+#define CRDX(p, jx) (psc->dx[0] * ((jx) + psc->patch[p].off[0]))
+#define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]))
+#define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]))
 
 struct psc {
   struct psc_push_particles *push_particles;
@@ -291,13 +288,21 @@ struct psc {
   struct psc_randomize *randomize;
   struct psc_sort *sort;
   struct psc_output_fields *output_fields;
+  struct psc_output_particles *output_particles;
   struct psc_moments *moments;
 
+  struct psc_pulse *pulse_p_x1;
+  struct psc_pulse *pulse_s_x1;
+  struct psc_pulse *pulse_p_x2;
+  struct psc_pulse *pulse_s_x2;
+  struct psc_pulse *pulse_p_y1;
+  struct psc_pulse *pulse_s_y1;
+  struct psc_pulse *pulse_p_y2;
+  struct psc_pulse *pulse_s_y2;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
   struct psc_pulse *pulse_s_z2;
-  struct psc_case *Case;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_coeff coeff;
@@ -318,9 +323,6 @@ struct psc {
   struct psc_patch *patch;
   int ibn[3];         // number of ghost points
 
-  // C data structures
-  void *c_ctx;
-
   // did we allocate the fields / particles (otherwise, Fortran did)
   bool allocated;
 
@@ -339,6 +341,18 @@ struct psc {
 #define foreach_3d_end				\
   } } }
 
+#define psc_foreach_3d(psc, p, ix, iy, iz, l, r) {			\
+  int __ilo[3] = { -l, -l, -l };					\
+  int __ihi[3] = { psc->patch[p].ldims[0] + r,				\
+		   psc->patch[p].ldims[1] + r,				\
+		   psc->patch[p].ldims[2] + r };				\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define psc_foreach_3d_end				\
+  } } }
+
 #define foreach_3d_g(p, ix, iy, iz) {					\
   int __ilo[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };		\
   int __ihi[3] = { psc.patch[p].ldims[0] + psc.ibn[0],			\
@@ -351,8 +365,23 @@ struct psc {
 #define foreach_3d_g_end				\
   } } }
 
+#define psc_foreach_3d_g(psc, p, ix, iy, iz) {				\
+  int __ilo[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };		\
+  int __ihi[3] = { psc->patch[p].ldims[0] + psc->ibn[0],			\
+		   psc->patch[p].ldims[1] + psc->ibn[1],			\
+		   psc->patch[p].ldims[2] + psc->ibn[2] };		\
+  for (int iz = __ilo[2]; iz < __ihi[2]; iz++) {			\
+    for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
+      for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
+
+#define psc_foreach_3d_g_end				\
+  } } }
+
 #define foreach_patch(p)				\
   for (int p = 0; p < psc.nr_patches; p++)
+
+#define psc_foreach_patch(psc, p)		\
+  for (int p = 0; p < (psc)->nr_patches; p++)
 
 
 // ----------------------------------------------------------------------
@@ -375,33 +404,51 @@ struct psc_mod_config {
 struct psc psc;
 
 static inline void
-psc_local_to_global_indices(int p, int jx, int jy, int jz,
+psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
 			    int *ix, int *iy, int *iz)
 {
-  *ix = jx + psc.patch[p].off[0];
-  *iy = jy + psc.patch[p].off[1];
-  *iz = jz + psc.patch[p].off[2];
+  *ix = jx + psc->patch[p].off[0];
+  *iy = jy + psc->patch[p].off[1];
+  *iz = jz + psc->patch[p].off[2];
 }
 
-void psc_create(struct psc_mod_config *conf);
-void psc_destroy(void);
+struct psc *psc_create(void);
+void psc_set_conf(struct psc *psc, struct psc_mod_config *conf);
+void psc_set_from_options(struct psc *psc);
+void psc_setup(struct psc *psc);
+void psc_view(struct psc *psc);
+void psc_destroy(struct psc *psc);
+void psc_integrate(struct psc *psc);
 
-void psc_init(const char *case_name);
-void psc_init_param(const char *case_name);
-void psc_init_partition(int *particle_label_offset);
-void psc_init_particles(int particle_label_offset);
-void psc_init_field(mfields_base_t *flds);
-void psc_integrate(void);
+void psc_set_default_domain(struct psc *psc);
+void psc_set_from_options_domain(struct psc *psc);
+void psc_setup_domain(struct psc *psc);
+void psc_view_domain(struct psc *psc);
+
+void psc_set_default_psc(struct psc *psc);
+void psc_set_from_options_psc(struct psc *psc);
+void psc_view_psc(struct psc *psc);
+
+void psc_setup_coeff(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
-void psc_out_particles(void);
-void psc_set_n_particles(particles_base_t *pp, int n_part);
-
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
+
+real psc_p_pulse_x1(real xx, real yy, real zz, real tt);
+real psc_s_pulse_x1(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_x2(real xx, real yy, real zz, real tt);
+real psc_s_pulse_x2(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_y1(real xx, real yy, real zz, real tt);
+real psc_s_pulse_y1(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_y2(real xx, real yy, real zz, real tt);
+real psc_s_pulse_y2(real xx, real yy, real zz, real tt);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
@@ -409,88 +456,7 @@ real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
 
-
-// various implementations of the psc
-// (something like Fortran, generic C, CUDA, ...)
-
-extern struct psc_ops psc_ops_fortran;
-extern struct psc_ops psc_ops_generic_c;
-extern struct psc_ops psc_ops_cuda;
-extern struct psc_ops psc_ops_sse2; //Intel SIMD instructions
-extern struct psc_ops psc_ops_cbe; ///< Cell BE optimized code
-extern struct psc_ops psc_ops_none;
-
-extern struct psc_moment_ops psc_moment_ops_fortran;
-extern struct psc_moment_ops psc_moment_ops_c;
-
-extern struct psc_case_ops psc_case_ops_langmuir;
-extern struct psc_case_ops psc_case_ops_wakefield;
-extern struct psc_case_ops psc_case_ops_thinfoil;
-extern struct psc_case_ops psc_case_ops_foils;
-extern struct psc_case_ops psc_case_ops_curvedfoil;
-extern struct psc_case_ops psc_case_ops_singlepart;
-extern struct psc_case_ops psc_case_ops_harris;
-extern struct psc_case_ops psc_case_ops_harris_xy;
-extern struct psc_case_ops psc_case_ops_collisions;
-extern struct psc_case_ops psc_case_ops_test_xy;
-extern struct psc_case_ops psc_case_ops_test_xz;
-extern struct psc_case_ops psc_case_ops_test_yz;
-extern struct psc_case_ops psc_case_ops_cone;
-
-// Wrappers for Fortran functions
-void PIC_push_part_xyz();
-void PIC_push_part_xy(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xz(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_z(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_a(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz_b(particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_sort(particles_fortran_t *pp);
-void PIC_randomize(particles_fortran_t *pp);
-void PIC_bin_coll(particles_fortran_t *pp);
-void PIC_find_cell_indices(particles_fortran_t *pp);
-void PIC_msa(fields_fortran_t *pf);
-void PIC_msb(fields_fortran_t *pf);
-void PIC_pml_msa(fields_fortran_t *pf);
-void PIC_pml_msb(fields_fortran_t *pf);
-void OUT_field(void);
-void OUT_part(void);
-void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
-void SET_param_domain(void);
-void SET_param_pml(void);
-void SET_param_psc(void);
-void SET_param_coeff(void);
-void SET_niloc(int niloc);
-void SET_subdomain(void);
-void GET_param_domain(void);
-void GET_niloc(int *niloc);
-void INIT_param_domain(void);
-void INIT_param_psc(void);
-void INIT_grid_map(void);
-particle_fortran_t *ALLOC_particles(int n_part);
-particle_fortran_t *REALLOC_particles(int n_part_n);
-f_real **ALLOC_field(void);
-void FREE_particles(void);
-void FREE_field(void);
-void INIT_basic(void);
-void INIT_grid_map(void);
-real PSC_p_pulse_z1(real x, real y, real z, real t);
-real PSC_s_pulse_z1(real x, real y, real z, real t);
-real PSC_p_pulse_z2(real x, real y, real z, real t);
-real PSC_s_pulse_z2(real x, real y, real z, real t);
-
-void PIC_fax(fields_fortran_t *pf, int m);
-void PIC_fay(fields_fortran_t *pf, int m);
-void PIC_faz(fields_fortran_t *pf, int m);
-void PIC_fex(fields_fortran_t *pf, int m);
-void PIC_fey(fields_fortran_t *pf, int m);
-void PIC_fez(fields_fortran_t *pf, int m);
-void PIC_pex(void);
-void PIC_pey(void);
-void PIC_pez(void);
-void SERV_read_1(int *timestep, int *n_part);
-void SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf);
-void SERV_write(particles_fortran_t *pp, fields_fortran_t *pf);
+void psc_setup_fortran(struct psc *psc);
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

@@ -1,10 +1,14 @@
       subroutine SELECT_atom_evol
 
-      use PIC_variables
-      use VLA_variables
+      use OUT_params
+      use OUT_particles
+      use PSC_globals
+      use PSC_params
+      use PSC_domain
+      use PSC_patch
 
       implicit none
-      integer tm,nc
+      integer tm,nc,pec
 
       character*5 label,node
 

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -12,7 +12,7 @@
 //
 // FIXME description
 
-struct collisions {
+struct psc_case_collisions {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -22,9 +22,9 @@ struct collisions {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct collisions, x)
+#define VAR(x) (void *)offsetof(struct psc_case_collisions, x)
 
-static struct param collisions_descr[] = {
+static struct param psc_case_collisions_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.1)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.1)             },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)      },
@@ -44,7 +44,7 @@ static struct param collisions_descr[] = {
 #undef VAR
 
 static void
-collisions_init_param(struct psc_case *Case)
+psc_case_collisions_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -83,13 +83,15 @@ collisions_init_param(struct psc_case *Case)
 }
 
 static void
-collisions_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_collisions_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
+  struct psc *psc = _case->psc;
+
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
@@ -100,10 +102,10 @@ collisions_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-collisions_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3], 
+			      struct psc_particle_npt *npt)
 {
-  struct collisions *collisions = Case->ctx;
+  struct psc_case_collisions *collisions = mrc_to_subobj(_case, struct psc_case_collisions);
 
   real Te = collisions->Te, Ti = collisions->Ti;
 
@@ -157,11 +159,11 @@ collisions_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_collisions = {
-  .name       = "collisions",
-  .ctx_size   = sizeof(struct collisions),
-  .ctx_descr  = collisions_descr,
-  .init_param = collisions_init_param,
-  .init_field = collisions_init_field,
-  .init_npt   = collisions_init_npt,
+struct psc_case_ops psc_case_collisions_ops = {
+  .name             = "collisions",
+  .size             = sizeof(struct psc_case_collisions),
+  .param_descr      = psc_case_collisions_descr,
+  .set_from_options = psc_case_collisions_set_from_options,
+  .init_field       = psc_case_collisions_init_field,
+  .init_npt         = psc_case_collisions_init_npt,
 };

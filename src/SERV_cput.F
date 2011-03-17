@@ -3,7 +3,6 @@ c CPU TIME AND PARTICLE NUMBER BROADCAST
 
       cpu_ary(1,mpe)=cpuf-cpus
       cpu_ary(2,mpe)=cpucomp
-      cpu_ary(3,mpe)=cpumess
       cpu_ary(4,mpe)=cpuinou
       cpu_ary(5,mpe)=niloc
 

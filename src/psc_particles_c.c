@@ -28,6 +28,7 @@ void
 particles_c_free(particles_c_t *pp)
 {
   free(pp->particles);
+  pp->n_alloced = 0;
   pp->particles = NULL;
 }
 

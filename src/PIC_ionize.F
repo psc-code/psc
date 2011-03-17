@@ -5,9 +5,8 @@ c korrigierte Version
 
       subroutine PIC_ionize
 
-      use PIC_variables
       use VLA_variables
-      use fields
+      use PSC_patch
 
       implicit none
       integer :: m,le,la

@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -12,7 +12,7 @@
 //
 // FIXME description
 
-struct thinfoil {
+struct psc_case_thinfoil {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -22,9 +22,9 @@ struct thinfoil {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct thinfoil, x)
+#define VAR(x) (void *)offsetof(struct psc_case_thinfoil, x)
 
-static struct param thinfoil_descr[] = {
+static struct param psc_case_thinfoil_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.1)            },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.1)            },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(.01 * 1e-6)     },
@@ -44,7 +44,7 @@ static struct param thinfoil_descr[] = {
 #undef VAR
 
 static void
-thinfoil_create(struct psc_case *Case)
+psc_case_thinfoil_create(struct psc_case *_case)
 {
   struct psc_pulse_flattop prm = {
     .xm = .01   * 1e-6,
@@ -59,7 +59,7 @@ thinfoil_create(struct psc_case *Case)
 }
 
 static void
-thinfoil_init_param(struct psc_case *Case)
+psc_case_thinfoil_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 10000;
   psc.prm.cpum = 25000;
@@ -89,13 +89,15 @@ thinfoil_init_param(struct psc_case *Case)
 }
 
 static void
-thinfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_thinfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
+  struct psc *psc = _case->psc;
+
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
@@ -106,10 +108,10 @@ thinfoil_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-thinfoil_init_npt(struct psc_case *Case, int kind, double x[3], 
-		  struct psc_particle_npt *npt)
+psc_case_thinfoil_init_npt(struct psc_case *_case, int kind, double x[3], 
+			    struct psc_particle_npt *npt)
 {
-  struct thinfoil *thinfoil = Case->ctx;
+  struct psc_case_thinfoil *thinfoil = mrc_to_subobj(_case, struct psc_case_thinfoil);
 
   real Te = thinfoil->Te, Ti = thinfoil->Ti;
 
@@ -161,12 +163,12 @@ thinfoil_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_thinfoil = {
-  .name       = "thinfoil",
-  .ctx_size   = sizeof(struct thinfoil),
-  .ctx_descr  = thinfoil_descr,
-  .create     = thinfoil_create,
-  .init_param = thinfoil_init_param,
-  .init_field = thinfoil_init_field,
-  .init_npt   = thinfoil_init_npt,
+struct psc_case_ops psc_case_thinfoil_ops = {
+  .name             = "thinfoil",
+  .size             = sizeof(struct psc_case_thinfoil),
+  .param_descr      = psc_case_thinfoil_descr,
+  .create           = psc_case_thinfoil_create,
+  .set_from_options = psc_case_thinfoil_set_from_options,
+  .init_field       = psc_case_thinfoil_init_field,
+  .init_npt         = psc_case_thinfoil_init_npt,
 };

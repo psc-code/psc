@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_case_private.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -19,7 +20,7 @@
 
 // FIXME (description), below parameters don't include scaling factors
 
-struct harris {
+struct psc_case_harris {
   double BB;
   double nnb;
   double Te, Ti;
@@ -29,9 +30,9 @@ struct harris {
   double pert;
 };
 
-#define VAR(x) (void *)offsetof(struct harris, x)
+#define VAR(x) (void *)offsetof(struct psc_case_harris, x)
 
-static struct param harris_descr[] = {
+static struct param psc_case_harris_descr[] = {
   { "BB"            , VAR(BB)              , PARAM_DOUBLE(1.)     },
   { "MMi"           , VAR(MMi)             , PARAM_DOUBLE(25.)    },
   { "nnb"           , VAR(nnb)             , PARAM_DOUBLE(.2)     },
@@ -47,9 +48,9 @@ static struct param harris_descr[] = {
 #undef VAR
 
 static void
-harris_init_param(struct psc_case *Case)
+psc_case_harris_set_from_options(struct psc_case *_case)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
 
   psc.prm.qq = 1.;
   psc.prm.mm = 1.;
@@ -87,9 +88,10 @@ harris_init_param(struct psc_case *Case)
 }
 
 static void
-harris_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_harris_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -98,10 +100,10 @@ harris_init_field(struct psc_case *Case, mfields_base_t *flds)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dx = psc.dx[0], dz = psc.dx[2];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
     
       F3_BASE(pf, HX, jx,jy,jz) = 
@@ -122,10 +124,10 @@ harris_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-harris_init_npt(struct psc_case *Case, int kind, double x[3],
-		struct psc_particle_npt *npt)
+psc_case_harris_init_npt(struct psc_case *_case, int kind, double x[3],
+			 struct psc_particle_npt *npt)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -161,13 +163,13 @@ harris_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_harris = {
-  .name       = "harris",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = harris_init_param,
-  .init_field = harris_init_field,
-  .init_npt   = harris_init_npt,
+struct psc_case_ops psc_case_harris_ops = {
+  .name             = "harris",
+  .size             = sizeof(struct psc_case_harris),
+  .param_descr      = psc_case_harris_descr,
+  .set_from_options = psc_case_harris_set_from_options,
+  .init_field       = psc_case_harris_init_field,
+  .init_npt         = psc_case_harris_init_npt,
 };
 
 // ----------------------------------------------------------------------
@@ -176,9 +178,9 @@ struct psc_case_ops psc_case_ops_harris = {
 // basically the same as harris
 
 static void
-test_xz_init_param(struct psc_case *Case)
+psc_case_test_xz_set_from_options(struct psc_case *_case)
 {
-  harris_init_param(Case);
+  psc_case_harris_set_from_options(_case);
   
   psc.prm.nicell = 100;
 
@@ -188,13 +190,13 @@ test_xz_init_param(struct psc_case *Case)
   
 }
 
-struct psc_case_ops psc_case_ops_test_xz = {
-  .name       = "test_xz",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = test_xz_init_param,
-  .init_field = harris_init_field,
-  .init_npt   = harris_init_npt,
+struct psc_case_ops psc_case_test_xz_ops = {
+  .name             = "test_xz",
+  .size             = sizeof(struct psc_case_harris),
+  .param_descr      = psc_case_harris_descr,
+  .set_from_options = psc_case_test_xz_set_from_options,
+  .init_field       = psc_case_harris_init_field,
+  .init_npt         = psc_case_harris_init_npt,
 };
 
 // ----------------------------------------------------------------------
@@ -203,12 +205,12 @@ struct psc_case_ops psc_case_ops_test_xz = {
 // basically the same as harris, but with different coordinates
 
 static void
-test_yz_init_param(struct psc_case *Case)
+psc_case_test_yz_set_from_options(struct psc_case *_case)
 {
-  harris_init_param(Case);
-  
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
 
+  psc_case_harris_set_from_options(_case);
+  
   psc.prm.nicell = 100;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
@@ -219,13 +221,13 @@ test_yz_init_param(struct psc_case *Case)
   psc.domain.gdims[0] = 1;
   psc.domain.gdims[1] = 64;
   psc.domain.gdims[2] = 64;
-  
 }
 
 static void
-test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_test_yz_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -234,10 +236,10 @@ test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2];
       double yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       F3_BASE(pf, HY, jx,jy,jz) = 
@@ -258,10 +260,10 @@ test_yz_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
-		 struct psc_particle_npt *npt)
+psc_case_test_yz_init_npt(struct psc_case *_case, int kind, double x[3],
+			   struct psc_particle_npt *npt)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -297,14 +299,15 @@ test_yz_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_test_yz = {
-  .name       = "test_yz",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = test_yz_init_param,
-  .init_field = test_yz_init_field,
-  .init_npt   = test_yz_init_npt,
+struct psc_case_ops psc_case_test_yz_ops = {
+  .name                  = "test_yz",
+  .size                  = sizeof(struct psc_case_harris),
+  .param_descr           = psc_case_harris_descr,
+  .set_from_options      = psc_case_test_yz_set_from_options,
+  .init_field            = psc_case_test_yz_init_field,
+  .init_npt              = psc_case_test_yz_init_npt,
 };
+
 
 // ----------------------------------------------------------------------
 // case test_xy:
@@ -312,11 +315,11 @@ struct psc_case_ops psc_case_ops_test_yz = {
 // basically the same as harris, but with different coordinates
 
 static void
-test_xy_init_param(struct psc_case *Case)
+psc_case_test_xy_set_from_options(struct psc_case *_case)
 {
-  harris_init_param(Case);
-  
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
+  psc_case_harris_set_from_options(_case);
 
   psc.prm.nicell = 200;
 
@@ -333,10 +336,10 @@ test_xy_init_param(struct psc_case *Case)
   
 }
 
-static void
-test_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -345,9 +348,9 @@ test_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
   double AA = harris->pert * BB * d_i;
 
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
+    psc_foreach_3d_g(psc,p, jx, jy, jz) {
       double dy = psc.dx[1], dx = psc.dx[0];
       double yy = CRDY(p, jy), xx = CRDX(p, jx);
       
@@ -364,15 +367,16 @@ test_xy_init_field(struct psc_case *Case, mfields_base_t *flds)
 	(1./sqr(cosh((xx - 0.5*LLx)/LLL)) -1./sqr(cosh((xx - 1.5*LLx)/LLL)))
 	- (AA*sqr(M_PI) * (1./sqr(LLx) + 4./sqr(LLy)) 
 	   * sin(2.*M_PI*yy/LLy) * sin(M_PI*xx/LLx));
-    } foreach_3d_g_end;
+    } psc_foreach_3d_g_end;
   }
 }
 
 static void
-test_xy_init_npt(struct psc_case *Case, int kind, double x[3],
-		 struct psc_particle_npt *npt)
+psc_case_test_xy_init_npt(struct psc_case *_case, int kind, double x[3],
+			   struct psc_particle_npt *npt)
 {
-  struct harris *harris = Case->ctx;
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
@@ -408,11 +412,13 @@ test_xy_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_test_xy = {
-  .name       = "test_xy",
-  .ctx_size   = sizeof(struct harris),
-  .ctx_descr  = harris_descr,
-  .init_param = test_xy_init_param,
-  .init_field = test_xy_init_field,
-  .init_npt   = test_xy_init_npt,
+struct psc_case_ops psc_case_test_xy_ops = {
+  .name                  = "test_xy",
+  .size                  = sizeof(struct psc_case_harris),
+  .param_descr           = psc_case_harris_descr,
+  .set_from_options      = psc_case_test_xy_set_from_options,
+  .init_field            = psc_case_test_xy_init_field,
+  .init_npt              = psc_case_test_xy_init_npt,
 };
+
+

@@ -7,6 +7,7 @@
 #include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_output_fields.h"
+#include "psc_output_particles.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -52,7 +53,7 @@ static const char *stat_name[NR_STATS] = {
   } while (0)
 
 static void
-psc_log_step(double stats[NR_STATS])
+psc_log_step(struct psc *psc, double stats[NR_STATS])
 {
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -66,7 +67,7 @@ psc_log_step(double stats[NR_STATS])
   if (rank == 0) {
     printf("    "
 	   "======================================================== step %-7d ===\n",
-	   psc.timestep);
+	   psc->timestep);
     printf("    %25s %10s %10s %10s %10s\n", "name",
 	   "avg", "min", "max", "total");
     for (int i = 0; i < NR_STATS; i++) {
@@ -77,90 +78,84 @@ psc_log_step(double stats[NR_STATS])
   }
 }
 
-#define SETUP_field_F77 F77_FUNC_(setup_field, SETUP_FIELD)
-
-void SETUP_field_F77(void);
-
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.
 ///
 
 void
-psc_integrate()
+psc_integrate(struct psc *psc)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("psc_step", 1., 0, 0);
   }
 
-  SETUP_field_F77();
-
-  mparticles_base_t *particles = &psc.particles;
-  mfields_base_t *flds = &psc.flds;
+  mparticles_base_t *particles = &psc->particles;
+  mfields_base_t *flds = &psc->flds;
 
   double stats[NR_STATS];
 
-  for (; psc.timestep < psc.prm.nmax; psc.timestep++) {
+  for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
     prof_start(pr);
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_output_fields_run(psc.output_fields, flds, particles);
+    psc_output_fields_run(psc->output_fields, flds, particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
-    psc_out_particles();
+    psc_output_particles_run(psc->output_particles, particles);
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize_run(psc.randomize, particles);
+    psc_randomize_run(psc->randomize, particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    if (psc.timestep % 10 == 0) {
-      psc_sort_run(psc.sort, particles);
+    if (psc->timestep % 10 == 0) {
+      psc_sort_run(psc->sort, particles);
     }
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision_run(psc.collision, particles);
+    psc_collision_run(psc->collision, particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_fields_step_a(psc.push_fields, flds);
+    psc_push_fields_step_a(psc->push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles_run(psc.push_particles, particles, flds);
-    psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 3);
-    psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 3);
-    psc_bnd_exchange_particles(psc.bnd, particles);
+    psc_push_particles_run(psc->push_particles, particles, flds);
+    psc_bnd_add_ghosts(psc->bnd, flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(psc->bnd, flds, JXI, JXI + 3);
+    psc_bnd_exchange_particles(psc->bnd, particles);
     time_stop(STAT_TIME_PARTICLE);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_fields_step_b(psc.push_fields, flds);
+    psc_push_fields_step_b(psc->push_fields, flds);
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = 0;
-    foreach_patch(p) {
+    psc_foreach_patch(psc, p) {
       stats[STAT_NR_PARTICLES] += particles->p[p].n_part;
     }
     time_stop(STAT_TIME_STEP);
-    psc_log_step(stats);
+    psc_log_step(psc, stats);
     // FIXME, check whether cpu time expired?
     prof_stop(pr);
     prof_print_mpi(MPI_COMM_WORLD);
 
-    if (psc.prm.wallclock_limit > 0.) {
-      double wallclock_elapsed = MPI_Wtime() - psc.time_start;
+    if (psc->prm.wallclock_limit > 0.) {
+      double wallclock_elapsed = MPI_Wtime() - psc->time_start;
       double wallclock_elapsed_max;
       MPI_Allreduce(&wallclock_elapsed, &wallclock_elapsed_max, 1, MPI_DOUBLE, MPI_MAX,
 		    MPI_COMM_WORLD);
       
-      if (wallclock_elapsed_max > psc.prm.wallclock_limit) {
+      if (wallclock_elapsed_max > psc->prm.wallclock_limit) {
 	mpi_printf(MPI_COMM_WORLD, "WARNING: Max wallclock time elapsed!\n");
 	break;
       }

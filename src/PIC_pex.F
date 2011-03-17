@@ -3,31 +3,43 @@ c THIS SUBROUTINE EXCHANGES PARTICLES IN X-DIRECTION.
 c THE ROUTINE IS CALLED BY PIC_move_part.f PIC_pex.f, 
 c PIC_pey.f, and PIC_pez.f CAN BE INTERCHANGED.
 
+!     ------------------------------------------------------------
+      module PIC_pex
+!     ------------------------------------------------------------
 
-      subroutine PIC_pex
+      integer :: re1i,re3i
+      real(kind=8), dimension(:), allocatable :: p_re1i
+      real(kind=8), dimension(:), allocatable :: p_re3i
 
-      use PIC_variables
-      use VLA_variables
+      end module PIC_pex
+
+!     ------------------------------------------------------------
+      subroutine PIC_pex_a(niloc, p_niloc, niloc_n)
+!     ------------------------------------------------------------
+
+      use PIC_pex
+      use PSC_domain
+      use PSC_patch
 
       implicit none
       include './mpif.h'
 
+      integer      :: niloc, niloc_n
+      real(kind=8) :: p_niloc(0:*)
+
       character*(5) :: node
 
-      integer :: la,le
-      integer :: nodei,nodej,nodek
+      integer :: ierr, l, lpi, e1i, e3i
+      integer :: nodei,nodej,nodek,pec
       integer :: mtag,status(MPI_STATUS_SIZE)
 
+      real(kind=8), dimension(:), allocatable :: p_e1i
+      real(kind=8), dimension(:), allocatable :: p_e3i
       real(kind=8) :: resti,xs
       real(kind=8) :: xbn,xbx,xpn,xpx
       real(kind=8) :: xi,yi,zi
       real(kind=8) :: pxi,pyi,pzi
       real(kind=8) :: qni,mni,cni,lni,wni
-
-      real(kind=8) :: s_cpub  
-  
-
-      s_cpub=0.0d0
 
 
 c---------------------------------------------------------------------
@@ -117,7 +129,6 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
 
       e1i=0
       e3i=0
-      lpi=0
 
       if (niloc.gt.0) then
          do l=1,niloc
@@ -129,8 +140,6 @@ c CALCULATION OF ARRAY SIZE FOR DATA EXCHANGE
                e1i=e1i+1
             else if (xi>xbx) then
                e3i=e3i+1
-            else
-               lpi=lpi+1
             endif
 
          enddo
@@ -210,27 +219,26 @@ c LOADING MESSAGE PASSING ARRAYS
 C ARRAY DIMENSION EXCHANGE
 
 
-      call SERV_systime(cpua)
       if (nodei.lt.xnpe.and.resti<0.25) then               ! UPDATING e1
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_SSEND(e3i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodei.and.resti>0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_RECV(re1i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (nodei.lt.xnpe.and.resti>0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_SSEND(e3i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodei.and.resti<0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_RECV(re1i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -239,12 +247,12 @@ C ARRAY DIMENSION EXCHANGE
             if (nodei.eq.xnpe) then
                pec=seg_inv(1,nodej,nodek)
                call MPI_SSEND(e3i,1,MPI_INTEGER,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (1.eq.nodei) then
                pec=seg_inv(xnpe,nodej,nodek)
                call MPI_RECV(re1i,1,MPI_INTEGER,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
            endif
          else
             re1i=e3i
@@ -255,23 +263,23 @@ C ARRAY DIMENSION EXCHANGE
       if (1.lt.nodei.and.resti<0.25) then               ! UPDATING e3
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_SSEND(e1i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodei.lt.xnpe.and.resti>0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_RECV(re3i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (1.lt.nodei.and.resti>0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_SSEND(e1i,1,MPI_INTEGER,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodei.lt.xnpe.and.resti<0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_RECV(re3i,1,MPI_INTEGER,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -280,12 +288,12 @@ C ARRAY DIMENSION EXCHANGE
             if (1.eq.nodei) then
                pec=seg_inv(xnpe,nodej,nodek)
                call MPI_SSEND(e1i,1,MPI_INTEGER,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (nodei.eq.xnpe) then
                pec=seg_inv(1,nodej,nodek)
                call MPI_RECV(re3i,1,MPI_INTEGER,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
             endif
          else
             re3i=e1i
@@ -308,23 +316,23 @@ c      xs=(i1x-i1n)*dx
       if (nodei.lt.xnpe.and.resti<0.25) then               ! UPDATING e1
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_SSEND(p_e3i,11*e3i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodei.and.resti>0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_RECV(p_re1i,11*re1i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (nodei.lt.xnpe.and.resti>0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_SSEND(p_e3i,11*e3i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (1.lt.nodei.and.resti<0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_RECV(p_re1i,11*re1i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -333,12 +341,12 @@ c      xs=(i1x-i1n)*dx
             if (nodei.eq.xnpe) then
                pec=seg_inv(1,nodej,nodek)
                call MPI_SSEND(p_e3i,11*e3i+11,MPI_DOUBLE_PRECISION,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (1.eq.nodei) then
                pec=seg_inv(xnpe,nodej,nodek)
                call MPI_RECV(p_re1i,11*re1i+11,MPI_DOUBLE_PRECISION,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
                do l=1,re1i
                   p_re1i(11*l)=p_re1i(11*l)-xs
                enddo
@@ -401,23 +409,23 @@ c      xs=(i1x-i1n)*dx
       if (1.lt.nodei.and.resti<0.25) then               ! UPDATING e3
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_SSEND(p_e1i,11*e1i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodei.lt.xnpe.and.resti>0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_RECV(p_re3i,11*re3i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
       if (1.lt.nodei.and.resti>0.25) then
          pec=seg_inv(nodei-1,nodej,nodek)
          call MPI_SSEND(p_e1i,11*e1i+11,MPI_DOUBLE_PRECISION,
-     &                  pec,mtag,MPI_COMM_WORLD,info)
+     &                  pec,mtag,MPI_COMM_WORLD,ierr)
       endif
       if (nodei.lt.xnpe.and.resti<0.25) then
          pec=seg_inv(nodei+1,nodej,nodek)
          call MPI_RECV(p_re3i,11*re3i+11,MPI_DOUBLE_PRECISION,
-     &                 pec,mtag,MPI_COMM_WORLD,status,info)
+     &                 pec,mtag,MPI_COMM_WORLD,status,ierr)
       endif
 
 
@@ -426,12 +434,12 @@ c      xs=(i1x-i1n)*dx
             if (1.eq.nodei) then
                pec=seg_inv(xnpe,nodej,nodek)
                call MPI_SSEND(p_e1i,11*e1i+11,MPI_DOUBLE_PRECISION,
-     &                        pec,mtag,MPI_COMM_WORLD,info)
+     &                        pec,mtag,MPI_COMM_WORLD,ierr)
             endif
             if (nodei.eq.xnpe) then
                pec=seg_inv(1,nodej,nodek)
                call MPI_RECV(p_re3i,11*re3i+11,MPI_DOUBLE_PRECISION,
-     &                       pec,mtag,MPI_COMM_WORLD,status,info)
+     &                       pec,mtag,MPI_COMM_WORLD,status,ierr)
                do l=1,re3i
                   p_re3i(11*l)=p_re3i(11*l)+xs
                enddo
@@ -491,21 +499,33 @@ c      xs=(i1x-i1n)*dx
       endif
 
 
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
-
-
 c LOCAL PARTICLE ARRAY UPDATE
 
 
       deallocate(p_e1i)
       deallocate(p_e3i)
 
-
-      niloc_n=lpi+re1i+re3i
-      call REALLOC_particles(niloc_n)
-
       niloc=lpi
+      niloc_n=lpi+re1i+re3i
+
+      end subroutine PIC_pex_a
+
+
+!     ------------------------------------------------------------
+      subroutine PIC_pex_b(niloc, p_niloc)
+!     ------------------------------------------------------------
+
+      use PIC_pex
+      use PSC_patch
+
+      implicit none
+      include './mpif.h'
+
+      integer      :: niloc
+      real(kind=8) :: p_niloc(0:*)
+
+      integer      :: l
+
       if (re1i>0) then
          do l=1,re1i
             niloc=niloc+1
@@ -545,7 +565,4 @@ c LOCAL PARTICLE ARRAY UPDATE
       deallocate(p_re3i)
 
 
-      cpumess=cpumess+s_cpub
-
-
-      end subroutine PIC_pex
+      end subroutine PIC_pex_b

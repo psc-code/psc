@@ -2,9 +2,14 @@
 #include "config.h"
 
 c     ======================================================================
-      module OUT_POYN
+      module OUT_poyn
 c     ======================================================================
       implicit none
+
+c tmnvp: time step counter for starting time averaging of poynting flux
+c tmxvp: time step counter for ending time averaging of poynting flux
+
+      integer :: tmnvpo,tmxvpo,tmnvp,tmxvp
 
       real(kind=8) fluxit,fluxot
       real(kind=8) ent,poxt,poyt,pozt,jet
@@ -15,16 +20,28 @@ c     ======================================================================
       real(kind=8) enDXt,enDYt,enDZt            ! ab
       real(kind=8) poynit, poynot               ! ab
 
+      real(kind=8) fluxi,fluxo
+      real(kind=8) ex2A,ey2A,ez2A,hx2A,hy2A,hz2A
+      real(kind=8) ex2B,ey2B,ez2B,hx2B,hy2B,hz2B
+      real(kind=8) pox,poy,poz,je
+      real(kind=8) p2A,p2B
+
       end module out_poyn
 
 c     ----------------------------------------------------------------------
       subroutine OUT_POYN_alloc
 c     ----------------------------------------------------------------------
-
-      use OUT_POYN
+      use OUT_params
+      use OUT_poyn
 
       implicit none
       
+c tmnvp: starting time averaging of poynting flux
+c tmxvp: ending time averaging of poynting flux
+
+      tmnvp=0*nnp+1         
+      tmxvp=0*nnp+np
+
       fluxit=0.0d0
       fluxot=0.0d0
 
@@ -54,8 +71,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_POYN_serv_write
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
-      use VLA_variables
       use OUT_POYN
 
       write(10) fluxit,fluxot
@@ -70,8 +85,6 @@ c     ----------------------------------------------------------------------
       subroutine OUT_POYN_serv_read
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
-      use VLA_variables
       use OUT_POYN
 
       read(10) fluxit,fluxot
@@ -88,21 +101,16 @@ c     ----------------------------------------------------------------------
       subroutine OUT_poyc
 c     ----------------------------------------------------------------------
 
-      use PIC_variables
       use VLA_variables
+      use OUT_params
       use OUT_POYN
+      use PSC_domain
+      use PSC_patch
+      use COEFF_pml
 
       implicit none
 
       character*5 label,node
-
-      real(kind=8) :: s_cpud
-      real(kind=8) :: s_cpuh
-
-
-      s_cpud=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
 
 
 c Time-averaging
@@ -202,8 +210,6 @@ c         jet=jet+dt*je
          call SERV_labelgen(mpe,node)
          call SERV_labelgen(n,label)
 
-         call SERV_systime(cpuc)
-
          open(11,file=trim(data_out)//'/'//node//'poynting'//label,
      &        access='sequential',form='unformatted')
 
@@ -235,9 +241,6 @@ c         jet=jet+dt*je
 
          close(11)
 
-         call SERV_systime(cpud)
-         s_cpud=s_cpud+cpud-cpuc
-
          fluxit=0.0
          fluxot=0.0
 
@@ -262,11 +265,5 @@ c         jet=jet+dt*je
 
       endif
 
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-      cpuinou=cpuinou+s_cpud
-      cpucomp=cpucomp+s_cpuh-s_cpud
 
       end subroutine OUT_poyc

@@ -1,19 +1,12 @@
 
-#include "config.h"
-
       function s_pulse_z1(x,y,z,t)
 
       implicit none
       real(kind=8) :: t,x,y,z
       real(kind=8) :: s_pulse_z1
-      real(kind=8) :: s_pulse_z1_
       real(kind=8) :: C_s_pulse_z1
 
-#ifdef USE_C_INTERFACE
       s_pulse_z1 = C_s_pulse_z1(x,y,z,t)
-#else
-      s_pulse_z1 = s_pulse_z1_(x,y,z,t)
-#endif
 
       end function s_pulse_z1
 
@@ -22,8 +15,7 @@ c Laser pulse initialization (p-polarization).
 
       function s_pulse_z1_(x,y,z,t)
 
-      use VLA_variables
-      use PIC_variables
+      use PSC_params
 
       implicit none
       real(kind=8) :: t,x,y,z

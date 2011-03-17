@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include <mrc_params.h>
+#include "psc_case_private.h"
 
 #include <math.h>
 #include <string.h>
@@ -9,7 +9,7 @@
 
 // FIXME description
 
-struct wakefield {
+struct psc_case_wakefield {
   double Te, Ti;
   double x0, y0, z0; // location of density center in m
   double Lx, Ly, Lz; // gradient of density profile in m
@@ -19,9 +19,9 @@ struct wakefield {
   double mass_ratio; // M_i / M_e
 };
 
-#define VAR(x) (void *)offsetof(struct wakefield, x)
+#define VAR(x) (void *)offsetof(struct psc_case_wakefield, x)
 
-static struct param wakefield_descr[] = {
+static struct param psc_case_wakefield_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.2)    },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)     },
   { "x0"            , VAR(x0)              , PARAM_DOUBLE(2.  * 1e-5)     },
@@ -41,7 +41,7 @@ static struct param wakefield_descr[] = {
 #undef VAR
 
 static void
-wakefield_create(struct psc_case *Case)
+psc_case_wakefield_create(struct psc_case *_case)
 {
   struct psc_pulse_gauss prm = {
     .xm  = 20. * 1e-6,
@@ -55,7 +55,7 @@ wakefield_create(struct psc_case *Case)
 }
 
 static void
-wakefield_init_param(struct psc_case *Case)
+psc_case_wakefield_set_from_options(struct psc_case *_case)
 {
   psc.prm.nmax = 1000;
   psc.prm.cpum = 20000;
@@ -85,13 +85,14 @@ wakefield_init_param(struct psc_case *Case)
 }
 
 static void
-wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
+psc_case_wakefield_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
+  struct psc *psc = _case->psc;
   // FIXME, do we need the ghost points?
-  foreach_patch(p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
-      double dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
@@ -104,10 +105,10 @@ wakefield_init_field(struct psc_case *Case, mfields_base_t *flds)
 }
 
 static void
-wakefield_init_npt(struct psc_case *Case, int kind, double x[3], 
-		   struct psc_particle_npt *npt)
+psc_case_wakefield_init_npt(struct psc_case *_case, int kind, double x[3], 
+			     struct psc_particle_npt *npt)
 {
-  struct wakefield *wakefield = Case->ctx;
+  struct psc_case_wakefield *wakefield = mrc_to_subobj(_case, struct psc_case_wakefield);
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 
@@ -159,12 +160,12 @@ wakefield_init_npt(struct psc_case *Case, int kind, double x[3],
   }
 }
 
-struct psc_case_ops psc_case_ops_wakefield = {
-  .name       = "wakefield",
-  .ctx_size   = sizeof(struct wakefield),
-  .ctx_descr  = wakefield_descr,
-  .create     = wakefield_create,
-  .init_param = wakefield_init_param,
-  .init_field = wakefield_init_field,
-  .init_npt   = wakefield_init_npt,
+struct psc_case_ops psc_case_wakefield_ops = {
+  .name             = "wakefield",
+  .size             = sizeof(struct psc_case_wakefield),
+  .param_descr      = psc_case_wakefield_descr,
+  .create           = psc_case_wakefield_create,
+  .set_from_options = psc_case_wakefield_set_from_options,
+  .init_field       = psc_case_wakefield_init_field,
+  .init_npt         = psc_case_wakefield_init_npt,
 };

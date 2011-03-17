@@ -4,8 +4,8 @@ c THEY MAY HAVE TEMPERATURE ALONG THE SURFACE NORMAL.
 
       subroutine PIC_bpulse
 
-      use PIC_variables
-      use VLA_variables
+      use PSC_globals
+      use PSC_patch
 
       implicit none
       include './mpif.h'
@@ -691,7 +691,6 @@ c CALCULATION OF BEAM DENSITY VIA AREA DETERMINATION
       call SERV_systime(cpuh)
       s_cpuh=s_cpuh+cpuh-cpug
 
-      cpumess=cpumess+s_cpub
       cpuinou=cpuinou+s_cpud
       cpucomp=cpucomp+s_cpuh-s_cpud-s_cpub
 

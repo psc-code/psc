@@ -4,8 +4,10 @@ c THE UPDATED E AND H-FIELDS ARE AT t=(n+0.5)*dt.
 
       subroutine PIC_msb(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
 
-      use PIC_variables
       use VLA_variables
+      use PSC_domain
+      use PSC_patch
+      use OUT_poyn
 
       implicit none
 
@@ -40,14 +42,7 @@ c THE UPDATED E AND H-FIELDS ARE AT t=(n+0.5)*dt.
       real(kind=8) :: exh,eyh,ezh,hxh,hyh,hzh
       real(kind=8) :: exk,eyk,ezk,hxk,hyk,hzk
 
-      real(kind=8) :: s_cpub
-      real(kind=8) :: s_cpuh
-
-
-      s_cpub=0.0d0
-      s_cpuh=0.0d0
-      call SERV_systime(cpug)
-
+      integer :: i1, i2, i3
 
 c initialization
 
@@ -138,7 +133,7 @@ c open boundary at z1 plus incident laser pulse
       if (boundary_fld_z1==0) then       
 
       t=n*dt
-      i3=i3mn-1
+      i3=i3mn ! ghost cell we're setting: (i3mn - 1) + 1/2
       z=i3*dz
 
       do i2=i2mn-1,i2mx+1
@@ -146,7 +141,7 @@ c open boundary at z1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            hy(i1,i2,i3-1)=(+4.0*s_pulse_z1(x+0.5*dx,y,z,t)
+            hy(i1,i2,i3-1)=(+4.0*s_pulse_z1(x+0.5*dx,y,i3mn*dz,t)
      &                      -2.0*ex(i1,i2,i3)
      &                      -(1.0-lz)*hy(i1,i2,i3)
      &                      -ly*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
@@ -155,7 +150,7 @@ c open boundary at z1 plus incident laser pulse
       enddo
 
       t=n*dt
-      i3=i3mn-1
+      i3=i3mn ! ghost cell we're setting: (i3mn - 1) + 1/2
       z=i3*dz
 
       do i2=i2mn-1,i2mx+1
@@ -163,7 +158,7 @@ c open boundary at z1 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jy=jyi(i1,i2,i3)
-            hx(i1,i2,i3-1)=(-4.0*p_pulse_z1(x,y+0.5*dy,z,t)
+            hx(i1,i2,i3-1)=(-4.0*p_pulse_z1(x,y+0.5*dy,i3mn*dz,t)
      &                      +2.0*ey(i1,i2,i3)
      &                      -(1.0-lz)*hx(i1,i2,i3)
      &                      -lx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
@@ -179,35 +174,35 @@ c open boundary at z2 plus incident laser pulse
       if (boundary_fld_z2==0) then       
 
       t=n*dt
-      i3=i3mx+1
+      i3=i3mx-1 ! ghost cell we're setting: (i3mx - 1 + 1) + 1/2
       z=i3*dz
 
       do i2=i2mn-1,i2mx+1
          y=i2*dy
          do i1=i1mn-1,i1mx+1
             x=i1*dx
-            jx=jxi(i1,i2,i3)
-            hy(i1,i2,i3)=(-4.0*s_pulse_z2(x+0.5*dx,y,z,t)
-     &                    +2.0*ex(i1,i2,i3)
-     &                    -(1.0-lz)*hy(i1,i2,i3-1)
-     &                    +ly*(hz(i1,i2,i3)-hz(i1,i2-1,i3))
+            jx=jxi(i1,i2,i3+1)
+            hy(i1,i2,i3+1)=(-4.0*s_pulse_z2(x+0.5*dx,y,i3mx*dz,t)
+     &                    +2.0*ex(i1,i2,i3+1)
+     &                    -(1.0-lz)*hy(i1,i2,i3)
+     &                    +ly*(hz(i1,i2,i3)-hz(i1,i2-1,i3+1))
      &                    -dt*jx)/(1.0+lz)
          enddo
       enddo
 
       t=n*dt
-      i3=i3mx+1
+      i3=i3mx-1 ! ghost cell we're setting: (i3mx - 1 + 1) + 1/2
       z=i3*dz
 
       do i2=i2mn-1,i2mx+1
          y=i2*dy
          do i1=i1mn-1,i1mx+1
             x=i1*dx
-            jy=jyi(i1,i2,i3)
-            hx(i1,i2,i3)=(+4.0*p_pulse_z2(x,y+0.5*dy,z,t)
-     &                    -2.0*ey(i1,i2,i3)
-     &                    -(1.0-lz)*hx(i1,i2,i3-1)
-     &                    +lx*(hz(i1,i2,i3)-hz(i1-1,i2,i3))
+            jy=jyi(i1,i2,i3+1)
+            hx(i1,i2,i3+1)=(+4.0*p_pulse_z2(x,y+0.5*dy,i3mx*dz,t)
+     &                    -2.0*ey(i1,i2,i3+1)
+     &                    -(1.0-lz)*hx(i1,i2,i3)
+     &                    +lx*(hz(i1,i2,i3+1)-hz(i1-1,i2,i3+1))
      &                    +dt*jy)/(1.0+lz)
          enddo
       enddo
@@ -378,7 +373,6 @@ c open boundary at x2 plus incident laser pulse
       endif
 
 
-      call SERV_systime(cpua)
       call PIC_fex(hx)
       call PIC_fey(hx)
       call PIC_fez(hx)
@@ -388,8 +382,6 @@ c open boundary at x2 plus incident laser pulse
       call PIC_fex(hz)
       call PIC_fey(hz)
       call PIC_fez(hz)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
 
 
 c E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
@@ -475,7 +467,6 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
       enddo
 
 
-      call SERV_systime(cpua)
       call PIC_fex(ex)
       call PIC_fey(ex)
       call PIC_fez(ex)
@@ -485,8 +476,6 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
       call PIC_fex(ez)
       call PIC_fey(ez)
       call PIC_fez(ez)
-      call SERV_systime(cpub)
-      s_cpub=s_cpub+cpub-cpua
 
 
 c energy conservation
@@ -504,14 +493,6 @@ c energy conservation
             enddo
          enddo
       enddo
-
-
-      call SERV_systime(cpuh)
-      s_cpuh=s_cpuh+cpuh-cpug
-
-
-      cpumess=cpumess+s_cpub
-      cpucomp=cpucomp+s_cpuh-s_cpub
 
 
       end subroutine PIC_msb

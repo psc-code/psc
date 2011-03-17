@@ -2,33 +2,16 @@
 
 c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
-      subroutine SERV_read
-
-      use VLA_variables, only: cpu,cpu_ary,npe,nstart
-      use PIC_variables, only: niloc,p_niloc
-      use fields
-
-      implicit none
-
-      allocate(cpu(1:5))
-      allocate(cpu_ary(1:5,0:npe-1))
-
-      call SERV_read_1(nstart,niloc)
-
-      call ALLOC_particles(niloc)
-      call FIELDS_alloc
-
-      call SERV_read_2(niloc, p_niloc,
-     &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
-
-      end subroutine SERV_read
-
-
-
       subroutine SERV_read_1(nstart_,niloc_)
 
       use VLA_variables
-      use PIC_variables
+      use OUT_params
+      use OUT_particles
+      use OUT_fields
+      use PIC_bin_collision ! for I/O params
+      use OUT_poyn
+      use PSC_globals
+      use PSC_patch
 
       implicit none
 
@@ -43,25 +26,19 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
 
       read(10) nstart_
       read(10) shift_c,shift_z
-      read(10) nprfo,nprco
       read(10) nprpartio
       read(10) tmnvfo,tmxvfo
       read(10) tmnvpo,tmxvpo
-      read(10) tmnvco,tmxvco
 
-      if (nprf.lt.nstart_) nprf=nprfo 
-      if (nprc.lt.nstart_) nprc=nprco
       if (nprparti.lt.nstart_) nprparti=nprpartio
       if (tmnvf.lt.tmnvfo) tmnvf=tmnvfo
       if (tmxvf.lt.tmxvfo) tmxvf=tmxvfo
       if (tmnvp.lt.tmnvpo) tmnvp=tmnvpo
       if (tmxvp.lt.tmxvpo) tmxvp=tmxvpo
-      if (tmnvc.lt.tmnvco) tmnvc=tmnvco
-      if (tmxvc.lt.tmxvco) tmxvc=tmxvco
 
       call OUT_poyn_serv_read
 
-      read(10) niloc_,nialloc,cori
+      read(10) niloc_,cori
       read(10) i1mn,i1mx,i2mn,i2mx,i3mn,i3mx 
 
       end subroutine SERV_read_1
@@ -71,11 +48,12 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       subroutine SERV_read_2(niloc, p_niloc,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)
 
-      use VLA_variables, only: i1mn,i2mn,i3mn,i1mx,i2mx,i3mx,
-     *     rd1,rd2,rd3,data_chk,mpe,nprf,nprc,shift_c,shift_z,
-     *     tmnvc,tmxvc,tmnvf,tmnvp,tmxvf,tmxvp,cpu,cpu_ary,npe
-
-      use PIC_variables, only: cori,nialloc,nprparti
+      use OUT_params
+      use OUT_particles
+      use OUT_fields
+      use PIC_bin_collision ! for I/O params
+      use PSC_domain, only: mpe
+      use PSC_patch
 
       implicit none
 
@@ -128,9 +106,6 @@ c CHECKPOINTING ROUTINE FOR DATA WRITEOUT
       enddo
 
       call OUT_FIELDS_serv_read
-
-      cpu=0.0d0
-      cpu_ary=0.0d0
 
       close(10)
 

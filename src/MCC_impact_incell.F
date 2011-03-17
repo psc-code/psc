@@ -2,8 +2,6 @@ c PERFORM IMPACT IONIZATION EVENTS IN EACH CELL
 
       subroutine MCC_impact_incell
 
-      use PIC_variables
-      use VLA_variables
       use MCC_variables
 
       implicit none
