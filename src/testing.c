@@ -126,7 +126,7 @@ psc_check_fields_ref(mfields_base_t *flds, int *m_flds, double thres)
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       foreach_3d(p, ix, iy, iz, 0, 0) {
-	fprintf(stderr,"m %d %d,%d,%d\n", m, ix,iy,iz);
+	//	fprintf(stderr,"m %d %d,%d,%d\n", m, ix,iy,iz);
 	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
       } foreach_3d_end;
     }

@@ -33,7 +33,11 @@ static int active_spes; ///< Number of spes currently running a job
 static psc_cell_block_t *spe_blocks[NR_SPE]; ///< Each spe's job description load/store cache
 static psc_cell_ctx_t *global_ctx; ///< Params and such needed on each spu for entire run.
 
-int spes_inited; ///< Has the task been loaded onto the spes
+// Apparently the standard states that variable declared 'static'
+// are initialized to 0. I'm not realy happy relying on this behaviour, 
+// but at the moment I think is the best way to do it and get rid of
+// the cbe_create function.
+static int spes_inited; ///< Has the task been loaded onto the spes
 
 
 static void 
@@ -77,75 +81,79 @@ void
 psc_init_spes(void)
 {
   
-  assert(!spes_inited);
 
-  //  spu_test = test_handle; 
-  spu_2d = spu_2d_handle; 
-  //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
-  int rc; 
-  spe_program_handle_t spu_prog;
+  if(!spes_inited){
 
-  global_ctx_create();
-
-  spu_prog = spu_2d;  
-
-  for (int i = 0; i < NR_SPE; i++){
-    void *m;
-    rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
-    assert(rc == 0);
-    spe_blocks[i] = (psc_cell_block_t *) m;
-    assert(spe_blocks[i] != NULL);
-    spe_id[i] = spe_context_create(0,NULL);
-    spe_program_load(spe_id[i],&spu_prog);
-    rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
+    //  spu_test = test_handle; 
+    spu_2d = spu_2d_handle; 
+    //  assert(sizeof(psc_cell_ctx_t) % 16 == 0);
+    int rc; 
+    spe_program_handle_t spu_prog;
+    
+    global_ctx_create();
+    
+    spu_prog = spu_2d;  
+    
+    for (int i = 0; i < NR_SPE; i++){
+      void *m;
+      rc = posix_memalign(&m, 128, sizeof(psc_cell_block_t)); 
+      assert(rc == 0);
+      spe_blocks[i] = (psc_cell_block_t *) m;
+      assert(spe_blocks[i] != NULL);
+      spe_id[i] = spe_context_create(0,NULL);
+      spe_program_load(spe_id[i],&spu_prog);
+      rc = pthread_create(&thread_id[i], NULL, spe_thread_function,
 			(void *)(unsigned long) i); 
-    assert(rc == 0);
-  }
+      assert(rc == 0);
+    }
   
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double start =  tv.tv_sec;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    double start =  tv.tv_sec;
 
 
-  // FIXME: There may be something wrong with this construct, and it
-  // feels kind of clumsy. Better way to check that spe's actually loaded
-  // the program?
-  //
-  // This may be a good place to use some of the more sophisticated spe
-  // synchroniztion or error handeling function.
-  int ready = 0; 
-  while(ready < NR_SPE){
-    for(int spe=0; spe < NR_SPE; spe++){
-      if (spe_out_mbox_status(spe_id[spe]) > 0) {
-	unsigned int msg;
-	int nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
-	while(nmesg > 0) {
-	  if(msg == SPE_READY){
-	    spe_state[spe] = SPE_IDLE;
-	    ready++;
+    // FIXME: There may be something wrong with this construct, and it
+    // feels kind of clumsy. Better way to check that spe's actually loaded
+    // the program?
+    //
+    // This may be a good place to use some of the more sophisticated spe
+    // synchroniztion or error handeling function.
+    int ready = 0; 
+    while(ready < NR_SPE){
+      for(int spe=0; spe < NR_SPE; spe++){
+	if (spe_out_mbox_status(spe_id[spe]) > 0) {
+	  unsigned int msg;
+	  int nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
+	  while(nmesg > 0) {
+	    if(msg == SPE_READY){
+	      spe_state[spe] = SPE_IDLE;
+	      ready++;
+	    }
+	    assert(msg != SPU_ERROR);
+	    nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
 	  }
-	  assert(msg != SPU_ERROR);
-	  nmesg = spe_out_mbox_read(spe_id[spe], &msg,1);
+	}
+	gettimeofday(&tv, NULL);
+	if((tv.tv_sec - start) > 30) {
+	  fprintf(stderr, "Did not obtian ready from all spes after 30s. Exiting\n");
+	  assert(0);
 	}
       }
-      gettimeofday(&tv, NULL);
-      if((tv.tv_sec - start) > 30) {
-	fprintf(stderr, "Did not obtian ready from all spes after 30s. Exiting\n");
-	assert(0);
-      }
     }
+  
+    active_spes = 0;
+  
+    spes_inited = 1; 
   }
-  
-  active_spes = 0;
-  
-  spes_inited = 1; 
 }
 
 void
 psc_kill_spes(void)
 {
-  
+ 
+  assert(active_spes == 0);
   if(spes_inited) {
+    // Shutdown the spe threads
     unsigned int msg; 
     for(int i = 0; i<NR_SPE; i++){
       msg = SPU_QUIT;
@@ -154,6 +162,10 @@ psc_kill_spes(void)
       free(spe_blocks[i]);
       spe_blocks[i] = NULL;
     }
+    // free the global ctx
+    free(global_ctx);
+    global_ctx = NULL;
+    spes_inited = 0;
   }
 }
   
@@ -236,7 +248,7 @@ void cell_run_patch(fields_t *pf, particles_t *pp, int job)
 
   unsigned int msg = SPU_RUNJOB;
   int nmesg =  spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);
-  assert(nmesg ==1);
+  assert(nmesg == 1);
 
 }
 
@@ -247,45 +259,5 @@ void wait_all_spe(void)
   }
 }
 
-static void 
-cbe_create(void)
-{
-  // FIXME:
-  // This code is the only one that still has a 
-  // create function. I don't like that. If I can figure out a
-  // way to set spes_inited to 0 without having a create function, 
-  // I will use that instead. 
 
-  
-  // Asssuming the new code-wide subdomain system is working
-  // properly, we should just need to start up the spes, then 
-  // all is groovy with the world. 
-
-  spes_inited = 0;
-
-
-  // To make sure every thing is layed out as planned,
-  // we'll set anything to be allocated in the control 
-  // struct to null:
-
-  global_ctx = NULL; 
-
-}
-
-
-static void
-cbe_destroy(void)
-{
-  
-  // Kill just needs to shut down the spes and free
-  // the global context array.
-  // I'm wondering if there's a different place we could
-  // do this?
-  
-  psc_kill_spes(); 
-  
-  free(global_ctx);
-  global_ctx = NULL;
-  
-}
 

@@ -9,18 +9,16 @@
 #endif
 
 void
-psc_push_particles_cbe_push_xy(struct psc_push_particles *push,
-			       mfields_base_t *flds_base, 
-			       mparticles_base_t *particles_base)
+psc_push_particles_cbe_push_xy(struct psc_push_particles *push, 
+			       mparticles_base_t *particles_base,
+			       mfields_base_t *flds_base)
 {
+  
   mfields_t flds;
   mparticles_t particles;
   fields_get(&flds, EX, EX +6,flds_base);
   particles_get(&particles, particles_base);
   
-
-  if(!spes_inited)
-    psc_init_spes();
   
   static int pr;
   if (!pr) {

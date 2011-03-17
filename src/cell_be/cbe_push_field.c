@@ -17,9 +17,6 @@ cbe_push_field_a_2d(mfields_base_t *flds_base)
   mfields_t flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
 
-  if(!spes_inited)
-    psc_init_spes();
-  
   static int pr;
   if (!pr) {
     pr = prof_register("cbe_field_2d_a", 1., 0, 0);
@@ -58,9 +55,6 @@ cbe_push_field_b_2d(mfields_base_t *flds_base)
 {
   mfields_t flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
-
-  if(!spes_inited)
-    psc_init_spes();
   
   static int pr;
   if (!pr) {
@@ -120,8 +114,27 @@ psc_push_fields_cbe_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 // ======================================================================
 // psc_push_fields: subclass "cbe"
 
+
+static void 
+cbe_push_setup(struct psc_push_fields *push)
+{
+  // Initialize the spes and create the context.
+  printf("Field create called\n");
+  psc_init_spes();
+}
+
+static void 
+cbe_push_destroy(struct psc_push_fields *push)
+{
+  // The spes and free the context
+  psc_kill_spes();
+}
+
+
 struct psc_push_fields_ops psc_push_fields_cbe_ops = {
   .name                  = "cbe",
   .step_a                = psc_push_fields_cbe_step_a,
   .step_b                = psc_push_fields_cbe_step_b,
+  .setup                 = cbe_push_setup,
+  .destroy               = cbe_push_destroy,
 };

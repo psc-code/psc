@@ -128,7 +128,7 @@ spu_dma_put(volatile void *ls, unsigned long long ea, unsigned long long size)
   // a multiple of 16B 
   //  fprintf(stderr, "size %d\n", size);
   assert(((unsigned long)ls & 15) == 0);
-  assert((ea & 15) == 0);
+  assert((ea & 127) == 0);
   assert((size & 15) == 0);
   //fflush(stdout);
   //  fprintf(stderr,"dma_get %p %llu %lu\n", ls, ea, size);

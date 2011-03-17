@@ -54,7 +54,6 @@ typedef struct _psc_cell_block
   // Total:                      // 64B
 } psc_cell_block_t;
 
-
 #define F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)	\
       ((((((fldnr)								\
 	   * (pbl)->im[2] + ((jz)-(pbl)->ib[2]))				\

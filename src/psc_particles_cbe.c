@@ -15,7 +15,6 @@ particles_cbe_alloc(particles_cbe_t *pp, int n_part)
 {
   void * m;
   __arr_size = n_part * 1.2;
-  //printf("Called to alloc %g particles\n", __arr_size);
  int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
@@ -28,7 +27,7 @@ void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
   void * m; 
   __arr_size = new_n_part * 1.2;
   free(pp->particles);
-  int ierr = posix_memalign(&m, 128, __arr_size * sizeof(*pp->particles));
+  int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
 }
@@ -79,7 +78,7 @@ particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
     // These will be heading to the spes, so we need some memalign lovin'
     void *m;
     int ierr;
-    ierr = posix_memalign(&m, 16, pp->n_part * sizeof(*pp->particles));
+    ierr = posix_memalign(&m, 128, pp->n_part * sizeof(*pp->particles));
     pp->particles = (particle_cbe_t *)m;
     assert(ierr == 0);
     for (int n = 0; n < pp_base->n_part; n++) {
