@@ -128,13 +128,6 @@ SELECT_SOURCES = VLA_variables.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
 
-<<<<<<< HEAD
-if USE_C_INTERFACE
-
-VLI_SOURCES += vli_main.c
-VLA_SOURCES += vla_main.c
-
-endif
 
 noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
