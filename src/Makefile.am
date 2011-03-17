@@ -9,8 +9,9 @@ noinst_LIBRARIES = libpsc.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
+	PML.F \
 	OUT_params.F OUT_poyc.F \
-	PML.F PIC_pml_msa.F PIC_pml_msb.F \
+	PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
 	INIT_ppulse_x1.F INIT_spulse_x1.F \
 	INIT_ppulse_x2.F INIT_spulse_x2.F \
@@ -130,3 +131,4 @@ NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCL
 
 endif USE_CUDA
 
+CLEANFILES = *.mod
