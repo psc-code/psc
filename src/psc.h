@@ -275,6 +275,14 @@ struct psc {
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
 
+  struct psc_pulse *pulse_p_x1;
+  struct psc_pulse *pulse_s_x1;
+  struct psc_pulse *pulse_p_x2;
+  struct psc_pulse *pulse_s_x2;
+  struct psc_pulse *pulse_p_y1;
+  struct psc_pulse *pulse_s_y1;
+  struct psc_pulse *pulse_p_y2;
+  struct psc_pulse *pulse_s_y2;
   struct psc_pulse *pulse_p_z1;
   struct psc_pulse *pulse_s_z1;
   struct psc_pulse *pulse_p_z2;
@@ -413,6 +421,18 @@ void psc_check_particles(mparticles_base_t *particles);
 
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
+
+real psc_p_pulse_x1(real xx, real yy, real zz, real tt);
+real psc_s_pulse_x1(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_x2(real xx, real yy, real zz, real tt);
+real psc_s_pulse_x2(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_y1(real xx, real yy, real zz, real tt);
+real psc_s_pulse_y1(real xx, real yy, real zz, real tt);
+
+real psc_p_pulse_y2(real xx, real yy, real zz, real tt);
+real psc_s_pulse_y2(real xx, real yy, real zz, real tt);
 
 real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
 real psc_s_pulse_z1(real xx, real yy, real zz, real tt);

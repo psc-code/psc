@@ -1,6 +1,18 @@
+
 c Laser pulse initialization (p-polarization).
 
       function p_pulse_x1(x,y,z,t)
+
+      implicit none
+      real(kind=8) :: t,x,y,z
+      real(kind=8) :: p_pulse_x1
+      real(kind=8) :: C_p_pulse_x1
+
+      p_pulse_x1 = C_p_pulse_x1(x,y,z,t)
+
+      end function p_pulse_x1
+
+      function p_pulse_x1_(x,y,z,t)
 
       use PSC_params
       use PSC_patch
@@ -13,7 +25,7 @@ c Laser pulse initialization (p-polarization).
       real(kind=8) :: dxm,dym,dzm
       real(kind=8) :: xl,yl,zl
       real(kind=8) :: xr,yr,zr
-      real(kind=8) :: p_pulse_x1
+      real(kind=8) :: p_pulse_x1_
 
 
 c NOTE: The pulse is placed in front of the
@@ -79,12 +91,12 @@ c zm: z-location of pulse center in m
 
 
       if (xl.gt.xm) then
-         p_pulse_x1=dsin(xr)
+         p_pulse_x1_=dsin(xr)
      &           *1.0/(1.0+dexp((abs(xr)-xb)/dxm))
      &           *dexp(-(yr/dym)**2)
      &           *dexp(-(zr/dzm)**2)
       else if (xm.ge.xl) then
-          p_pulse_x1=dsin(xr)
+          p_pulse_x1_=dsin(xr)
      &           *1.0/(1.0+dexp((abs(xr)-xb)/dxm))
      &           *dexp(-(yr/dym)**2)
      &           *dexp(-(zr/dzm)**2)
@@ -95,7 +107,7 @@ c zm: z-location of pulse center in m
 c Turn pulse off
 
 
-      p_pulse_x1=0.0d0
+      p_pulse_x1_=0.0d0
 
 
-      end function p_pulse_x1
+      end function p_pulse_x1_

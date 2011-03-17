@@ -53,6 +53,12 @@
 #define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
 #define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
 
+#define C_p_pulse_x1_F77 F77_FUNC(c_p_pulse_x1,C_P_PULSE_X1)
+#define C_p_pulse_x2_F77 F77_FUNC(c_p_pulse_x2,C_P_PULSE_X2)
+
+#define C_p_pulse_y1_F77 F77_FUNC(c_p_pulse_y1,C_P_PULSE_Y1)
+#define C_p_pulse_y2_F77 F77_FUNC(c_p_pulse_y2,C_P_PULSE_Y2)
+
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 #define C_s_pulse_z1_F77 F77_FUNC(c_s_pulse_z1,C_S_PULSE_Z1)
 #define C_p_pulse_z2_F77 F77_FUNC(c_p_pulse_z2,C_P_PULSE_Z2)
@@ -558,6 +564,32 @@ SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf)
 // Wrappers to be called from Fortran that continue to C
 
 f_real
+C_p_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_p_pulse_x1(*xx, *yy, *zz, *tt);
+}
+
+f_real
+C_p_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_p_pulse_x2(*xx, *yy, *zz, *tt);
+}
+
+
+f_real
+C_p_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_p_pulse_y1(*xx, *yy, *zz, *tt);
+}
+
+f_real
+C_p_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  return psc_p_pulse_y2(*xx, *yy, *zz, *tt);
+}
+
+
+f_real
 C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
   return psc_p_pulse_z1(*xx, *yy, *zz, *tt);
@@ -575,7 +607,6 @@ C_p_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
   return psc_p_pulse_z2(*xx, *yy, *zz, *tt);
 }
-
 
 f_real
 C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)

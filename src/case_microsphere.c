@@ -35,8 +35,8 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   psc.domain.length[1] = 10 * 1e-6;
   psc.domain.length[2] = 10 * 1e-6;
 
-  psc.domain.gdims[0] = 1;
-  psc.domain.gdims[1] = 1;
+  psc.domain.gdims[0] = 64;
+  psc.domain.gdims[1] = 64;
   psc.domain.gdims[2] = 64;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_OPEN;
@@ -51,22 +51,74 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 
   psc_push_fields_set_type(psc.push_fields, "fortran");
 
+  double *length = psc.domain.length;
+  double width_normal = 2. * 1e-6;
+  double width_par    = 3. * 1e-6;
+
+  struct psc_pulse_gauss prm_p_x1 = {
+    .xm  = 0. * length[0],
+    .ym  = .5 * length[1],
+    .zm  = .5 * length[2],
+    .dxm = width_normal,
+    .dym = width_par,
+    .dzm = width_par,
+    .k  = { 1., 0., 0. },
+  };
+
+  struct psc_pulse_gauss prm_p_x2 = {
+    .xm  = 1. * length[0],
+    .ym  = .5 * length[1],
+    .zm  = .5 * length[2],
+    .dxm = width_normal,
+    .dym = width_par,
+    .dzm = width_par,
+    .k  = { -1., 0., 0. },
+  };
+
+  psc.pulse_p_x1 = psc_pulse_gauss_create(&prm_p_x1);
+  psc.pulse_p_x2 = psc_pulse_gauss_create(&prm_p_x2);
+
+  struct psc_pulse_gauss prm_p_y1 = {
+    .xm  = .5 * length[0],
+    .ym  = 0. * length[1],
+    .zm  = .5 * length[2],
+    .dxm = width_par,
+    .dym = width_normal,
+    .dzm = width_par,
+    .k  = { 0., 1., 0. },
+  };
+
+  struct psc_pulse_gauss prm_p_y2 = {
+    .xm  = .5 * length[0],
+    .ym  = 1. * length[1],
+    .zm  = .5 * length[2],
+    .dxm = width_par,
+    .dym = width_normal,
+    .dzm = width_par,
+    .k  = { 0., -1., 0. },
+  };
+
+  psc.pulse_p_y1 = psc_pulse_gauss_create(&prm_p_y1);
+  psc.pulse_p_y2 = psc_pulse_gauss_create(&prm_p_y2);
+
   struct psc_pulse_gauss prm_p_z1 = {
-    .xm  = 5.   * 1e-6,                       // transverse position of the focus
-    .ym  = 5.   * 1e-6,
-    .zm  = 0.   * 1e-6,
-    .dxm = 3.   * 1e-6,
-    .dym = 3.   * 1e-6,
-    .dzm = 1.   * 1e-6,
+    .xm  = .5 * length[0],
+    .ym  = .5 * length[1],
+    .zm  = 0. * length[2],
+    .dxm = width_par,
+    .dym = width_par,
+    .dzm = width_normal,
+    .k  = { 0., 0., 1. },
   };
 
   struct psc_pulse_gauss prm_p_z2 = {
-    .xm  = 5.   * 1e-6,                       // transverse position of the focus
-    .ym  = 5.   * 1e-6,
-    .zm  = 10.  * 1e-6,
-    .dxm = 3.   * 1e-6,
-    .dym = 3.   * 1e-6,
-    .dzm = 1.   * 1e-6,
+    .xm  = .5 * length[0],
+    .ym  = .5 * length[1],
+    .zm  = 1. * length[2],
+    .dxm = width_par,
+    .dym = width_par,
+    .dzm = width_normal,
+    .k  = { 0., 0., -1. },
   };
 
   psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p_z1);
@@ -83,14 +135,38 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dy = psc->dx[1], dz = psc->dx[2];
+      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      F3_BASE(pf, EY, jx,jy,jz) =  psc_p_pulse_z1(xx, yy + .5*dy, zz        , 0.);
-      F3_BASE(pf, HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.);
-
-      F3_BASE(pf, EY, jx,jy,jz) += -psc_p_pulse_z2(xx, yy + .5*dy, zz        , 0.);
-      F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z2(xx, yy + .5*dy, zz + .5*dz, 0.);
+      if (psc->pulse_p_x1) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x1(xx        , yy, zz + .5*dz, 0.);
+	F3_BASE(pf, HY, jx,jy,jz) += -psc_p_pulse_x1(xx + .5*dx, yy, zz + .5*dz, 0.);
+      }
+      
+      if (psc->pulse_p_x2) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x2(xx        , yy, zz + .5*dz, 0.);
+	F3_BASE(pf, HY, jx,jy,jz) +=  psc_p_pulse_x2(xx + .5*dx, yy, zz + .5*dz, 0.);
+      }
+      
+      if (psc->pulse_p_y1) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy + .5*dy, zz + .5*dz, 0.);
+      }
+      
+      if (psc->pulse_p_y2) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_y2(xx, yy + .5*dy, zz + .5*dz, 0.);
+      }
+      
+      if (psc->pulse_p_z1) {
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z1(xx, yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.);
+      }
+      
+      if (psc->pulse_p_z2) {
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z2(xx, yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_z2(xx, yy + .5*dy, zz + .5*dz, 0.);
+      }
     } psc_foreach_3d_g_end;
   }
 }
