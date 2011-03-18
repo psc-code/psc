@@ -342,6 +342,98 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
 }
 
+static void
+do_c_calc_photon_n(int p, fields_base_t *pf, photons_t *photons)
+{
+  fields_base_zero(pf, 0);
+  
+  creal dxi = 1.f / psc.dx[0];
+  creal dyi = 1.f / psc.dx[1];
+  creal dzi = 1.f / psc.dx[2];
+
+  struct psc_patch *patch = &psc.patch[p];
+  for (int n = 0; n < photons->nr; n++) {
+    photon_t *p = photons_get_one(photons, n);
+      
+    creal u = (p->xi - patch->xb[0]) * dxi;
+    creal v = (p->yi - patch->xb[1]) * dyi;
+    creal w = (p->zi - patch->xb[2]) * dzi;
+    int j1 = nint(u);
+    int j2 = nint(v);
+    int j3 = nint(w);
+    creal h1 = j1-u;
+    creal h2 = j2-v;
+    creal h3 = j3-w;
+      
+    creal gmx=.5f*(.5f+h1)*(.5f+h1);
+    creal gmy=.5f*(.5f+h2)*(.5f+h2);
+    creal gmz=.5f*(.5f+h3)*(.5f+h3);
+    creal g0x=.75f-h1*h1;
+    creal g0y=.75f-h2*h2;
+    creal g0z=.75f-h3*h3;
+    creal g1x=.5f*(.5f-h1)*(.5f-h1);
+    creal g1y=.5f*(.5f-h2)*(.5f-h2);
+    creal g1z=.5f*(.5f-h3)*(.5f-h3);
+      
+    if (psc.domain.gdims[0] == 1) {
+      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
+    }
+    if (psc.domain.gdims[1] == 1) {
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
+    }
+    if (psc.domain.gdims[2] == 1) {
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
+    }
+
+    int m = 0;
+    creal fnq = p->wni;
+    F3_BASE(pf,m, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    F3_BASE(pf,m, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    F3_BASE(pf,m, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    F3_BASE(pf,m, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    F3_BASE(pf,m, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    F3_BASE(pf,m, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    F3_BASE(pf,m, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    F3_BASE(pf,m, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    F3_BASE(pf,m, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    F3_BASE(pf,m, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    F3_BASE(pf,m, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    F3_BASE(pf,m, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    F3_BASE(pf,m, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    F3_BASE(pf,m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3_BASE(pf,m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3_BASE(pf,m, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    F3_BASE(pf,m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3_BASE(pf,m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3_BASE(pf,m, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    F3_BASE(pf,m, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    F3_BASE(pf,m, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    F3_BASE(pf,m, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    F3_BASE(pf,m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3_BASE(pf,m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3_BASE(pf,m, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    F3_BASE(pf,m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3_BASE(pf,m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+  }
+}
+
+static void
+psc_moments_c_calc_photon_n(struct psc_moments *moments,
+			    mphotons_t *mphotons, mfields_base_t *res)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_photon_n", 1., 0, 0);
+  }
+  prof_start(pr);
+  foreach_patch(p) {
+    do_c_calc_photon_n(p, &res->f[p], &mphotons->p[p]);
+  }
+  prof_stop(pr);
+
+  psc_bnd_add_ghosts(psc.bnd, res, 0, 1);
+}
+
 // ======================================================================
 // psc_moments: subclass "c"
 
@@ -350,4 +442,5 @@ struct psc_moments_ops psc_moments_c_ops = {
   .calc_densities        = psc_moments_c_calc_densities,
   .calc_v                = psc_moments_c_calc_v,
   .calc_vv               = psc_moments_c_calc_vv,
+  .calc_photon_n         = psc_moments_c_calc_photon_n,
 };

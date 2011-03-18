@@ -19,6 +19,8 @@ struct psc_moments_ops {
   void (*calc_vv)(struct psc_moments *moments,
 		  mfields_base_t *flds, mparticles_base_t *particles,
 		  mfields_base_t *res);
+  void (*calc_photon_n)(struct psc_moments *moments,
+			mphotons_t *photons, mfields_base_t *res);
 };
 
 // ======================================================================

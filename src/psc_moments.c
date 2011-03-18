@@ -34,6 +34,15 @@ psc_moments_calc_vv(struct psc_moments *moments,
   ops->calc_vv(moments, flds, particles, res);
 }
 
+void
+psc_moments_calc_photon_n(struct psc_moments *moments,
+			  mphotons_t *photons, mfields_base_t *res)
+{
+  struct psc_moments_ops *ops = psc_moments_ops(moments);
+  assert(ops->calc_photon_n);
+  ops->calc_photon_n(moments, photons, res);
+}
+
 // ======================================================================
 // psc_moments_init
 

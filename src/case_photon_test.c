@@ -62,7 +62,8 @@ psc_case_photon_test_init_photon_np(struct psc_case *_case, double x[3],
   double dens = photon_test_dens(_case, x);
 
   photon_np->n = dens;
-  photon_np->p[0] = 10.;
+  photon_np->p[0] = 5.;
+  photon_np->n_in_cell = 10.;
 }
 
 struct psc_case_ops psc_case_photon_test_ops = {
