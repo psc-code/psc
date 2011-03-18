@@ -24,20 +24,39 @@ static struct param psc_case_microsphere_descr[] = {
 
 #undef VAR
 
+static double
+microsphere_dens(struct psc_case *_case, double x[3])
+{
+  // center
+  const double xc[3] = { 5. * 1e-6, 5. * 1e-6, 5. * 1e-6 };
+  const double radius = 2. * 1e-6;
+  const double thickness = .4 * 1e-6;
+
+  double xr[3];
+  for (int d = 0; d < 3; d++) {
+    xr[d] = x[d] * psc.coeff.ld - xc[0];
+  };
+
+  double r = sqrt(sqr(xr[0]) + sqr(xr[1]) + sqr(xr[2]));
+
+  return exp(-sqr((r - radius) / thickness));
+}
+
 static void
 psc_case_microsphere_set_from_options(struct psc_case *_case)
 {
   //  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
 
+  psc.prm.nicell = 10;
   psc.prm.nmax = 201;
 
   psc.domain.length[0] = 10 * 1e-6;
   psc.domain.length[1] = 10 * 1e-6;
   psc.domain.length[2] = 10 * 1e-6;
 
-  psc.domain.gdims[0] = 64;
-  psc.domain.gdims[1] = 64;
-  psc.domain.gdims[2] = 64;
+  psc.domain.gdims[0] = 128;
+  psc.domain.gdims[1] = 128;
+  psc.domain.gdims[2] = 128;
 
   psc.domain.bnd_fld_lo[0] = BND_FLD_OPEN;
   psc.domain.bnd_fld_hi[0] = BND_FLD_OPEN;
@@ -176,17 +195,18 @@ psc_case_microsphere_init_npt(struct psc_case *_case, int kind, double x[3],
 			     struct psc_particle_npt *npt)
 {
   //  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
+  double dens = microsphere_dens(_case, x);
 
   switch (kind) {
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1;
-    npt->n = 1.;
+    npt->n = dens;
     break;
   case 1: // ions
     npt->q = 1.;
     npt->m = 100;
-    npt->n = 1.;
+    npt->n = dens;
     break;
   default:
     assert(0);
@@ -199,6 +219,6 @@ struct psc_case_ops psc_case_microsphere_ops = {
   .param_descr      = psc_case_microsphere_descr,
   .set_from_options = psc_case_microsphere_set_from_options,
   .init_field       = psc_case_microsphere_init_field,
-  //  .init_npt         = psc_case_microsphere_init_npt,
+  .init_npt         = psc_case_microsphere_init_npt,
 };
 
