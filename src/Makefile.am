@@ -20,11 +20,13 @@ libpsc_a_SOURCES = \
 	INIT_ppulse_z1.F INIT_spulse_z1.F \
 	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_particles.c \
+	init_photons.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
+	psc_photons.c \
 	PIC_move_part_xyz.F \
 	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_x.F PIC_move_part_y.F PIC_move_part_z.F \
@@ -70,6 +72,7 @@ libpsc_a_SOURCES = \
 	case_collisions.c \
 	case_cone.c \
 	case_microsphere.c \
+	case_photon_test.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5

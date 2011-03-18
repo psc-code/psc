@@ -165,6 +165,7 @@ psc_destroy(struct psc *psc)
 {
   mfields_base_destroy(&psc->flds);
   mparticles_base_destroy(&psc->particles);
+  mphotons_destroy(&psc->mphotons);
 
   psc_push_particles_destroy(psc->push_particles);
   psc_push_fields_destroy(psc->push_fields);

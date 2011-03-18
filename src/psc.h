@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "psc_pulse.h"
+#include "psc_photons.h"
 
 // ----------------------------------------------------------------------
 
@@ -301,6 +302,7 @@ struct psc {
 
   mparticles_base_t particles;
   mfields_base_t flds;
+  mphotons_t mphotons;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
