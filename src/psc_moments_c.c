@@ -355,9 +355,9 @@ do_c_calc_photon_n(int p, fields_base_t *pf, photons_t *photons)
   for (int n = 0; n < photons->nr; n++) {
     photon_t *p = photons_get_one(photons, n);
       
-    creal u = (p->xi - patch->xb[0]) * dxi;
-    creal v = (p->yi - patch->xb[1]) * dyi;
-    creal w = (p->zi - patch->xb[2]) * dzi;
+    creal u = (p->x[0] - patch->xb[0]) * dxi;
+    creal v = (p->x[1] - patch->xb[1]) * dyi;
+    creal w = (p->x[2] - patch->xb[2]) * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);

@@ -36,13 +36,13 @@ psc_case_init_photons(struct psc_case *_case)
       for (int cnt = 0; cnt < photon_np.n_in_cell; cnt++) {
 	photon_t *p = photons_get_one(photons, i++);
 	      
-	p->xi = xx[0];
-	p->yi = xx[1];
-	p->zi = xx[2];
-	p->pxi = photon_np.p[0];
-	p->pyi = photon_np.p[1];
-	p->pzi = photon_np.p[2];
-	p->wni = photon_np.n / photon_np.n_in_cell;
+	p->x[0] = xx[0];
+	p->x[1] = xx[1];
+	p->x[2] = xx[2];
+	p->p[0] = photon_np.p[0];
+	p->p[1] = photon_np.p[1];
+	p->p[2] = photon_np.p[2];
+	p->wni  = photon_np.n / photon_np.n_in_cell;
       }
     } psc_foreach_3d_end;
 

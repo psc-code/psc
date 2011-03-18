@@ -11,9 +11,9 @@ typedef double photon_real_t;
 /// a single photon
 
 typedef struct {
-  photon_real_t xi, yi, zi;
-  photon_real_t pxi, pyi, pzi;
-  photon_real_t wni;
+  photon_real_t x[3]; //< position
+  photon_real_t p[3]; //< momentum
+  photon_real_t wni;  //< weight
 } photon_t;
 
 /// a list of photons
