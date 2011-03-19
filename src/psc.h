@@ -280,6 +280,7 @@ struct psc {
   struct psc_output_fields *output_fields;
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
+  struct psc_event_generator *event_generator;
 
   struct psc_pulse *pulse_p_x1;
   struct psc_pulse *pulse_s_x1;

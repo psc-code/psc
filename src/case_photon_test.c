@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_event_generator.h"
 
 #include <math.h>
 #include <string.h>
@@ -35,6 +36,8 @@ psc_case_photon_test_set_from_options(struct psc_case *_case)
   psc.domain.gdims[0] = 64;
   psc.domain.gdims[1] = 64;
   psc.domain.gdims[2] = 64;
+
+  psc_event_generator_set_type(psc.event_generator, "demo");
 }
 
 static double

@@ -1,13 +1,16 @@
 
-#include "psc.h"
+#include "psc_event_generator_private.h"
+#include "psc_glue.h"
+
+#include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
-// photon_generator_run_patch
+// event_generator_run_patch
 //
 // create new photons on given patch
 
 static void
-photon_generator_run_patch(int p, photons_t *photons)
+event_generator_run_patch(int p, photons_t *photons)
 {
   for (;;) { // loop forever
     // until the random number is > .99, that is, so it'll loop about 100 times
@@ -29,13 +32,23 @@ photon_generator_run_patch(int p, photons_t *photons)
 }
 
 // ----------------------------------------------------------------------
-// photon_generator_run
+// psc_event_generator_demo_run
 
-void
-psc_photon_generator_run(mphotons_t *mphotons)
+static void
+psc_event_generator_demo_run(struct psc_event_generator *gen,
+			  mparticles_base_t *mparticles_base,
+			  mfields_base_t *mflds_base,
+			  mphotons_t *mphotons)
 {
   psc_foreach_patch(&psc, p) {
-    photon_generator_run_patch(p, &mphotons->p[p]);
+    event_generator_run_patch(p, &mphotons->p[p]);
   }
 }
 
+// ======================================================================
+// psc_event_generator: subclass "demo"
+
+struct psc_event_generator_ops psc_event_generator_demo_ops = {
+  .name                  = "demo",
+  .run                   = psc_event_generator_demo_run,
+};

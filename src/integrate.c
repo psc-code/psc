@@ -8,6 +8,7 @@
 #include "psc_sort.h"
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
+#include "psc_event_generator.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -136,8 +137,7 @@ psc_integrate(struct psc *psc)
 
     psc_push_photons_run(&psc->mphotons);
     psc_bnd_exchange_photons(psc->bnd, &psc->mphotons);
-
-    psc_photon_generator_run(&psc->mphotons);
+    psc_event_generator_run(psc->event_generator, particles, flds, &psc->mphotons);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
