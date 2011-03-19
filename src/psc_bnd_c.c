@@ -179,6 +179,42 @@ psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 }
 
 // ----------------------------------------------------------------------
+// calc_domain_bounds
+//
+// calculate bounds of local patch, and global domain
+
+static void
+calc_domain_bounds(int p, double xb[3], double xe[3],
+		   double xgb[3], double xge[3], double xgl[3])
+{
+  struct psc_patch *psc_patch = &psc.patch[p];
+
+  for (int d = 0; d < 3; d++) {
+    xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xgb[d] = -.5 * psc.dx[d];
+    } else {
+      xgb[d] = 0.;
+      if (psc_patch->off[d] == 0) {
+	xb[d] = xgb[d];
+      }
+    }
+    
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
+    if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
+    } else {
+      xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
+      if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
+	  xe[d] = xge[d];
+      }
+    }
+    
+    xgl[d] = xge[d] - xgb[d];
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_c_exchange_particles
 
 static void
@@ -197,40 +233,16 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 
   struct ddc_particles *ddcp = c_bnd->ddcp;
 
-  f_real xb[3], xe[3], xgb[3], xge[3], xgl[3];
+  double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
   foreach_patch(p) {
-    struct psc_patch *psc_patch = &psc.patch[p];
+    calc_domain_bounds(p, xb, xe, xgb, xge, xgl);
+
     particles_base_t *pp = &particles->p[p];
-
-    for (int d = 0; d < 3; d++) {
-      xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-	xgb[d] = -.5 * psc.dx[d];
-      } else {
-	xgb[d] = 0.;
-	if (psc_patch->off[d] == 0) {
-	  xb[d] = xgb[d];
-	}
-      }
-      
-      xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-	xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
-      } else {
-	xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
-	if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
-	  xe[d] = xge[d];
-	}
-      }
-      
-      xgl[d] = xge[d] - xgb[d];
-    }
-
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
@@ -330,40 +342,16 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 
   struct ddc_particles *ddcp = c_bnd->ddcp_photons;
 
-  f_real xb[3], xe[3], xgb[3], xge[3], xgl[3];
+  double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
   foreach_patch(p) {
-    struct psc_patch *psc_patch = &psc.patch[p];
+    calc_domain_bounds(p, xb, xe, xgb, xge, xgl);
+
     photons_t *photons = &mphotons->p[p];
-
-    for (int d = 0; d < 3; d++) {
-      xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-	xgb[d] = -.5 * psc.dx[d];
-      } else {
-	xgb[d] = 0.;
-	if (psc_patch->off[d] == 0) {
-	  xb[d] = xgb[d];
-	}
-      }
-      
-      xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
-      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-	xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
-      } else {
-	xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
-	if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
-	  xe[d] = xge[d];
-	}
-      }
-      
-      xgl[d] = xge[d] - xgb[d];
-    }
-
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
