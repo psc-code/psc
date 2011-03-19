@@ -14,7 +14,8 @@ struct psc_particle_npt {
 
 struct psc_photon_np {
   double n; ///< density
-  double p[3]; ///< momentum
+  double k[3]; ///< wave number
+  double sigma_k[3]; ///< width of Gaussian in momentum space
   int n_in_cell; ///< nr of quasi-particles in this cell
 };
 
