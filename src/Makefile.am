@@ -28,6 +28,7 @@ libpsc_a_SOURCES = \
 	psc_particles_fortran.c psc_particles_c.c \
 	psc_photons.c \
 	psc_push_photons.c \
+	psc_photon_generator.c \
 	PIC_move_part_xyz.F \
 	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_x.F PIC_move_part_y.F PIC_move_part_z.F \
