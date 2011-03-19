@@ -7,12 +7,16 @@
 // ddc_particles
 
 struct ddc_particles *
-ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle)
+ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
+		     void  (*realloc)(void *, int, int),
+		     void *(*get_addr)(void *, int, int))
 {
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
 
   ddcp->size_of_particle = size_of_particle;
+  ddcp->realloc = realloc;
+  ddcp->get_addr = get_addr;
   ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
   ddcp->send_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
   ddcp->sendp_reqs = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
@@ -63,22 +67,6 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
   memcpy(nei->send_buf + nei->n_send * ddcp->size_of_particle, p,
 	 ddcp->size_of_particle);
   nei->n_send++;
-}
-
-static void
-_realloc(void *_particles, int p, int new_n_particles)
-{
-  mparticles_base_t *particles = _particles;
-  particles_base_t *pp = &particles->p[p];
-  particles_base_realloc(pp, new_n_particles);
-}
-
-static void *
-get_addr(void *_particles, int p, int n)
-{
-  mparticles_base_t *particles = _particles;
-  particles_base_t *pp = &particles->p[p];
-  return &pp->particles[n];
 }
 
 void
@@ -162,7 +150,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	}
       }
     }
-    _realloc(particles, p, new_n_particles);
+    ddcp->realloc(particles, p, new_n_particles);
   }
 
   // post particle receives
@@ -182,7 +170,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  mprintf(":%d irecv P from %d:%d tag %d len %d\n", p, nei->rank, nei->patch,
 		  dir1neg + p * N_DIR, nei->n_recv);
 #endif
-	  void *addr = get_addr(particles, p, patch->head);
+	  void *addr = ddcp->get_addr(particles, p, patch->head);
 	  MPI_Irecv(addr, sz * nei->n_recv,
 		    MPI_PARTICLES_BASE_REAL,
 		    nei->rank, dir1neg + p * N_DIR, MPI_COMM_WORLD,

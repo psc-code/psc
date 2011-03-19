@@ -76,6 +76,22 @@ struct mrc_ddc_funcs ddc_funcs = {
   .add_from_buf  = add_from_buf,
 };
 
+static void
+ddcp_particles_base_realloc(void *_particles, int p, int new_n_particles)
+{
+  mparticles_base_t *particles = _particles;
+  particles_base_t *pp = &particles->p[p];
+  particles_base_realloc(pp, new_n_particles);
+}
+
+static void *
+ddcp_particles_base_get_addr(void *_particles, int p, int n)
+{
+  mparticles_base_t *particles = _particles;
+  particles_base_t *pp = &particles->p[p];
+  return &pp->particles[n];
+}
+
 // ----------------------------------------------------------------------
 // psc_bnd_c_setup
 
@@ -91,7 +107,9 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
   mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_base_real_t));
   mrc_ddc_setup(bnd_c->ddc);
 
-  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_base_t));
+  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_base_t),
+				     ddcp_particles_base_realloc,
+				     ddcp_particles_base_get_addr);
 }
 
 // ----------------------------------------------------------------------
