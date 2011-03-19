@@ -150,7 +150,6 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
   //  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
   struct psc *psc = _case->psc;
 
-  // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
@@ -168,13 +167,13 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
       }
       
       if (psc->pulse_p_y1) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy + .5*dy, zz + .5*dz, 0.);
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) += -psc_p_pulse_y1(xx, yy + .5*dy, zz + .5*dz, 0.);
       }
       
       if (psc->pulse_p_y2) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_y2(xx, yy + .5*dy, zz + .5*dz, 0.);
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy + .5*dy, zz + .5*dz, 0.);
       }
       
       if (psc->pulse_p_z1) {
@@ -192,7 +191,7 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
 
 static void
 psc_case_microsphere_init_npt(struct psc_case *_case, int kind, double x[3],
-			     struct psc_particle_npt *npt)
+			      struct psc_particle_npt *npt)
 {
   //  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
   double dens = microsphere_dens(_case, x);
