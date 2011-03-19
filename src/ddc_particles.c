@@ -65,10 +65,27 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
   nei->n_send++;
 }
 
+static void
+_realloc(void *_particles, int p, int new_n_particles)
+{
+  mparticles_base_t *particles = _particles;
+  particles_base_t *pp = &particles->p[p];
+  particles_base_realloc(pp, new_n_particles);
+}
+
+static void *
+get_addr(void *_particles, int p, int n)
+{
+  mparticles_base_t *particles = _particles;
+  particles_base_t *pp = &particles->p[p];
+  return &pp->particles[n];
+}
+
 void
-ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
+ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 {
   // FIXME, this is assuming we have only particle_base_real_t in our struct
+  // FIXME, MPI type, too
   int sz = ddcp->size_of_particle / sizeof(particle_base_real_t);
   int dir[3];
 
@@ -130,7 +147,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
   // calc total # of particles
   foreach_patch(p) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    particles_base_t *pp = &particles->p[p];
     int new_n_particles = patch->head; // particles which stayed on this proc
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -146,13 +162,12 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 	}
       }
     }
-    particles_base_realloc(pp, new_n_particles);
+    _realloc(particles, p, new_n_particles);
   }
 
   // post particle receives
   foreach_patch(p) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    particles_base_t *pp = &particles->p[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -167,7 +182,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 	  mprintf(":%d irecv P from %d:%d tag %d len %d\n", p, nei->rank, nei->patch,
 		  dir1neg + p * N_DIR, nei->n_recv);
 #endif
-	  MPI_Irecv(&pp->particles[patch->head], sz * nei->n_recv,
+	  void *addr = get_addr(particles, p, patch->head);
+	  MPI_Irecv(addr, sz * nei->n_recv,
 		    MPI_PARTICLES_BASE_REAL,
 		    nei->rank, dir1neg + p * N_DIR, MPI_COMM_WORLD,
 		    &ddcp->recv_reqs[dir1 + p * N_DIR]);

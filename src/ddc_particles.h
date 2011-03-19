@@ -31,7 +31,7 @@ struct ddc_particles {
 struct ddc_particles *ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle);
 void ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 			 int dir[3], void *p);
-void ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles);
+void ddc_particles_comm(struct ddc_particles *ddcp, void *particles);
 
 
 #endif
