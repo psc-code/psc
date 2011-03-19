@@ -91,7 +91,7 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
   mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_base_real_t));
   mrc_ddc_setup(bnd_c->ddc);
 
-  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc);
+  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_base_t));
 }
 
 // ----------------------------------------------------------------------
@@ -252,7 +252,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	  pp->particles[patch->head++] = *part;
 	} else {
-	  ddc_particles_queue(patch, dir, part);
+	  ddc_particles_queue(ddcp, patch, dir, part);
 	}
       }
     }

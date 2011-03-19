@@ -7,11 +7,12 @@
 // ddc_particles
 
 struct ddc_particles *
-ddc_particles_create(struct mrc_ddc *ddc)
+ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle)
 {
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
 
+  ddcp->size_of_particle = size_of_particle;
   ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
   ddcp->send_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
   ddcp->sendp_reqs = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
@@ -35,7 +36,7 @@ ddc_particles_create(struct mrc_ddc *ddc)
 	  }
 	  
 	  nei->send_buf_size = 8;
-	  nei->send_buf = malloc(nei->send_buf_size * sizeof(*nei->send_buf));
+	  nei->send_buf = malloc(nei->send_buf_size * size_of_particle);
 	  nei->n_send = 0;
 	  mrc_ddc_get_nei_rank_patch(ddc, p, dir, &nei->rank, &nei->patch);
 	}
@@ -47,7 +48,8 @@ ddc_particles_create(struct mrc_ddc *ddc)
 }
 
 void
-ddc_particles_queue(struct ddcp_patch *patch, int dir[3], particle_base_t *p)
+ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
+		    int dir[3], void *p)
 {
   struct ddcp_nei *nei = &patch->nei[mrc_ddc_dir2idx(dir)];
 
@@ -56,15 +58,18 @@ ddc_particles_queue(struct ddcp_patch *patch, int dir[3], particle_base_t *p)
     assert(nei->send_buf_size > 0);
     nei->send_buf_size *= 2;
     nei->send_buf = realloc(nei->send_buf, 
-			    nei->send_buf_size * sizeof(*nei->send_buf));
+			    nei->send_buf_size * ddcp->size_of_particle);
   }
-  nei->send_buf[nei->n_send++] = *p;
+  memcpy(nei->send_buf + nei->n_send * ddcp->size_of_particle, p,
+	 ddcp->size_of_particle);
+  nei->n_send++;
 }
 
 void
 ddc_particles_comm(struct ddc_particles *ddcp, mparticles_base_t *particles)
 {
-  int sz = sizeof(particle_base_t) / sizeof(particle_base_real_t);
+  // FIXME, this is assuming we have only particle_base_real_t in our struct
+  int sz = ddcp->size_of_particle / sizeof(particle_base_real_t);
   int dir[3];
 
   // post receives for # particles we'll receive in the next step
