@@ -5,29 +5,14 @@
 #include <math.h>
 
 // ======================================================================
-// psc_p_pulse_z1
+// psc_pulse_gauss
 //
-// Laser pulse initialization (p-polarization)
+// Laser pulse initialization
 //
 // NOTE: The pulse is placed behind of the
 // simulation box at a distance "zm" from the
 // origin. The pulse then propagates into the 
 // simulation box from the left. 
-//
-//
-//  COORDINATE SYSTEM
-//
-//                          zm        ^ y
-//                 <----------------->|
-//                                    |
-//            laser pulse             |
-//                                    |     simulation
-//               | | |                |     box
-//               | | |   ----->   ^   |
-//               | | |         ym |   |
-//                                |   |
-//          ------------------------------------------------->
-//                              (i1n,i2n,i3n)=box origin    z 
 
 #define VAR(x) (void *)offsetof(struct psc_pulse_gauss, x)
 
@@ -42,6 +27,7 @@ static struct param psc_pulse_gauss_descr[] = {
   { "pulse_kx"      , VAR(k[0])            , PARAM_DOUBLE(0.)             },
   { "pulse_ky"      , VAR(k[1])            , PARAM_DOUBLE(0.)             },
   { "pulse_kz"      , VAR(k[2])            , PARAM_DOUBLE(0.)             },
+  { "pulse_amplitude", VAR(amplitude)      , PARAM_DOUBLE(1.)             },
   {},
 };
 
@@ -75,7 +61,8 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
   double yl = yr - prm->k[1] * tt;
   double zl = zr - prm->k[2] * tt;
 
-  return sin(prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt)
+  return prm->amplitude *
+    sin(prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt + prm->phase)
     * exp(-sqr(xl/prm->dxm))
     * exp(-sqr(yl/prm->dym))
     * exp(-sqr(zl/prm->dzm));

@@ -82,6 +82,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_par,
     .k  = { 1., 0., 0. },
+    .amplitude = 1.,
   };
 
   struct psc_pulse_gauss prm_p_x2 = {
@@ -92,6 +93,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_par,
     .k  = { -1., 0., 0. },
+    .amplitude = 1.,
   };
 
   psc.pulse_p_x1 = psc_pulse_gauss_create(&prm_p_x1);
@@ -105,6 +107,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_normal,
     .dzm = width_par,
     .k  = { 0., 1., 0. },
+    .amplitude = 1.,
   };
 
   struct psc_pulse_gauss prm_p_y2 = {
@@ -115,6 +118,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_normal,
     .dzm = width_par,
     .k  = { 0., -1., 0. },
+    .amplitude = 1.,
   };
 
   psc.pulse_p_y1 = psc_pulse_gauss_create(&prm_p_y1);
@@ -128,6 +132,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_normal,
     .k  = { 0., 0., 1. },
+    .amplitude = 1.,
   };
 
   struct psc_pulse_gauss prm_p_z2 = {
@@ -138,6 +143,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_normal,
     .k  = { 0., 0., -1. },
+    .amplitude = 1.,
   };
 
   psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p_z1);
