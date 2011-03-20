@@ -217,6 +217,7 @@ xdmf_spatial_close(list_t *xdmf_spatial_list, struct mrc_io *io,
     xdmf_spatial_destroy(xs);
 
     if (io->rank == 0) {
+      sprintf(fname_spatial, "%s.%06d.xdmf", io->par.basename, io->step);
       xdmf_temporal_append(xt, fname_spatial);
       xdmf_temporal_write(xt);
     }
