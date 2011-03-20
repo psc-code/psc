@@ -48,11 +48,6 @@
 #define SERV_write_F77 F77_FUNC_(serv_write, SERV_WRITE)
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 
-#define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
-#define s_pulse_z1__F77 F77_FUNC(s_pulse_z1_,S_PULSE_Z1_)
-#define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
-#define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
-
 #define C_p_pulse_x1_F77 F77_FUNC(c_p_pulse_x1,C_P_PULSE_X1)
 #define C_s_pulse_x1_F77 F77_FUNC(c_s_pulse_x1,C_S_PULSE_X1)
 #define C_p_pulse_x2_F77 F77_FUNC(c_p_pulse_x2,C_P_PULSE_X2)
@@ -190,11 +185,6 @@ void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
 
 
 void INIT_basic_F77(void);
-
-f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real s_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real p_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -391,34 +381,6 @@ void
 SET_param_pml(struct psc *psc)
 {
   SET_param_pml_F77(&psc->pml.thick, &psc->pml.cushion, &psc->pml.size, &psc->pml.order);
-}
-
-real
-PSC_p_pulse_z1(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return p_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_s_pulse_z1(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return s_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_p_pulse_z2(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return p_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return s_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
 }
 
 void

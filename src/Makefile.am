@@ -13,12 +13,6 @@ libpsc_a_SOURCES = \
 	OUT_params.F OUT_poyc.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
-	INIT_ppulse_x1.F INIT_spulse_x1.F \
-	INIT_ppulse_x2.F INIT_spulse_x2.F \
-	INIT_ppulse_y1.F INIT_spulse_y1.F \
-	INIT_ppulse_y2.F INIT_spulse_y2.F \
-	INIT_ppulse_z1.F INIT_spulse_z1.F \
-	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_particles.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \

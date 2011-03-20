@@ -39,18 +39,18 @@ c THE UPDATED E,D,H AND B-FIELDS ARE AT t=(n+1.0)*dt.
       real(kind=8) :: lx,ly,lz
       real(kind=8) :: jx,jy,jz
 
-      real(kind=8) :: p_pulse_z1
-      real(kind=8) :: s_pulse_z1
-      real(kind=8) :: p_pulse_z2
-      real(kind=8) :: s_pulse_z2
-      real(kind=8) :: p_pulse_y1
-      real(kind=8) :: s_pulse_y1
-      real(kind=8) :: p_pulse_y2
-      real(kind=8) :: s_pulse_y2
-      real(kind=8) :: p_pulse_x1
-      real(kind=8) :: s_pulse_x1
-      real(kind=8) :: p_pulse_x2
-      real(kind=8) :: s_pulse_x2
+      real(kind=8) :: C_p_pulse_z1
+      real(kind=8) :: C_s_pulse_z1
+      real(kind=8) :: C_p_pulse_z2
+      real(kind=8) :: C_s_pulse_z2
+      real(kind=8) :: C_p_pulse_y1
+      real(kind=8) :: C_s_pulse_y1
+      real(kind=8) :: C_p_pulse_y2
+      real(kind=8) :: C_s_pulse_y2
+      real(kind=8) :: C_p_pulse_x1
+      real(kind=8) :: C_s_pulse_x1
+      real(kind=8) :: C_p_pulse_x2
+      real(kind=8) :: C_s_pulse_x2
       real(kind=8) :: t,x,y,z
 
       real(kind=8) :: dns,dls,ens,els    ! added by ab
@@ -197,7 +197,7 @@ c open boundary at x1 plus incident laser pulse (ppol polarization ez)
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jy=jyi(i1,i2,i3)
-            bz(i1-1,i2,i3)=(4.0*s_pulse_x1(x,y+0.5*dy,z,t)
+            bz(i1-1,i2,i3)=(4.0*C_s_pulse_x1(x,y+0.5*dy,z,t)
      &                      -2.0*ey(i1,i2,i3)
      &                      -(1.0-lx)*bz(i1,i2,i3)
      &                      -lz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
@@ -215,7 +215,7 @@ c open boundary at x1 plus incident laser pulse (ppol polarization ez)
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jz=jzi(i1,i2,i3)
-            by(i1-1,i2,i3)=(-4.0*p_pulse_x1(x,y,z+0.5*dz,t)
+            by(i1-1,i2,i3)=(-4.0*C_p_pulse_x1(x,y,z+0.5*dz,t)
      &                      +2.0*ez(i1,i2,i3)
      &                      -(1.0-lx)*by(i1,i2,i3)
      &                      +ly*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
@@ -240,7 +240,7 @@ c open boundary at x2 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jy=jyi(i1,i2,i3)
-            bz(i1,i2,i3)=(-4.0*s_pulse_x2(x,y+0.5*dy,z,t)
+            bz(i1,i2,i3)=(-4.0*C_s_pulse_x2(x,y+0.5*dy,z,t)
      &                      +2.0*ey(i1,i2,i3)
      &                      -(1.0-lx)*bz(i1-1,i2,i3)
      &                      -lz*(bx(i1,i2,i3)-bx(i1,i2,i3-1))
@@ -258,7 +258,7 @@ c open boundary at x2 plus incident laser pulse
          do i2=i2mn-1,i2mx+1
             y=i2*dy
             jz=jzi(i1,i2,i3)
-            by(i1,i2,i3)=(4.0*p_pulse_x2(x,y,z+0.5*dz,t)
+            by(i1,i2,i3)=(4.0*C_p_pulse_x2(x,y,z+0.5*dz,t)
      &                      -2.0*ez(i1,i2,i3)
      &                      -(1.0-lx)*by(i1-1,i2,i3)
      &                      +ly*(bx(i1,i2,i3)-bx(i1,i2-1,i3))
@@ -283,7 +283,7 @@ c open boundary at y1 plus incident laser pulse (ppol polarization ex)
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jz=jzi(i1,i2,i3)
-            bx(i1,i2-1,i3)=(4.0*s_pulse_y1(x,y,z+0.5*dz,t)
+            bx(i1,i2-1,i3)=(4.0*C_s_pulse_y1(x,y,z+0.5*dz,t)
      &                      -2.0*ez(i1,i2,i3)
      &                      -(1.0-ly)*bx(i1,i2,i3)
      &                      -lx*(by(i1,i2,i3)-by(i1-1,i2,i3))
@@ -301,7 +301,7 @@ c open boundary at y1 plus incident laser pulse (ppol polarization ex)
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            bz(i1,i2-1,i3)=(-4.0*p_pulse_y1(x+0.5*dx,y,z,t)
+            bz(i1,i2-1,i3)=(-4.0*C_p_pulse_y1(x+0.5*dx,y,z,t)
      &                      +2.0*ex(i1,i2,i3)
      &                      -(1.0-ly)*bz(i1,i2,i3)
      &                      -lz*(by(i1,i2,i3)-by(i1,i2,i3-1))
@@ -326,7 +326,7 @@ c open boundary at y2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jz=jzi(i1,i2,i3)
-            bx(i1,i2,i3)=(-4.0*s_pulse_y2(x,y,z+0.5*dz,t)
+            bx(i1,i2,i3)=(-4.0*C_s_pulse_y2(x,y,z+0.5*dz,t)
      &                    +2.0*ez(i1,i2,i3)
      &                    -(1.0-ly)*bx(i1,i2-1,i3)
      &                    +lx*(by(i1,i2,i3)-by(i1-1,i2,i3))
@@ -344,7 +344,7 @@ c open boundary at y2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            bz(i1,i2,i3)=(4.0*p_pulse_y2(x+0.5*dx,y,z,t)
+            bz(i1,i2,i3)=(4.0*C_p_pulse_y2(x+0.5*dx,y,z,t)
      &                    -2.0*ex(i1,i2,i3)
      &                    -(1.0-ly)*bz(i1,i2-1,i3)
      &                    +lz*(by(i1,i2,i3)-by(i1,i2,i3-1))
@@ -369,7 +369,7 @@ c open boundary at z1 plus incident laser pulse (ppol polarization ey)
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            by(i1,i2,i3-1)=(+4.0*s_pulse_z1(x+0.5*dx,y,z,t)
+            by(i1,i2,i3-1)=(+4.0*C_s_pulse_z1(x+0.5*dx,y,z,t)
      &                      -2.0*ex(i1,i2,i3)
      &                      -(1.0-lz)*by(i1,i2,i3)
      &                      -ly*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
@@ -387,7 +387,7 @@ c open boundary at z1 plus incident laser pulse (ppol polarization ey)
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jy=jyi(i1,i2,i3)
-            bx(i1,i2,i3-1)=(-4.0*p_pulse_z1(x,y+0.5*dy,z,t)
+            bx(i1,i2,i3-1)=(-4.0*C_p_pulse_z1(x,y+0.5*dy,z,t)
      &                      +2.0*ey(i1,i2,i3)
      &                      -(1.0-lz)*bx(i1,i2,i3)
      &                      -lx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
@@ -412,7 +412,7 @@ c open boundary at z2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jx=jxi(i1,i2,i3)
-            by(i1,i2,i3)=(-4.0*s_pulse_z2(x+0.5*dx,y,z,t)
+            by(i1,i2,i3)=(-4.0*C_s_pulse_z2(x+0.5*dx,y,z,t)
      &                    +2.0*ex(i1,i2,i3)
      &                    -(1.0-lz)*by(i1,i2,i3-1)
      &                    +ly*(bz(i1,i2,i3)-bz(i1,i2-1,i3))
@@ -430,7 +430,7 @@ c open boundary at z2 plus incident laser pulse
          do i1=i1mn-1,i1mx+1
             x=i1*dx
             jy=jyi(i1,i2,i3)
-            bx(i1,i2,i3)=(+4.0*p_pulse_z2(x,y+0.5*dy,z,t)
+            bx(i1,i2,i3)=(+4.0*C_p_pulse_z2(x,y+0.5*dy,z,t)
      &                    -2.0*ey(i1,i2,i3)
      &                    -(1.0-lz)*bx(i1,i2,i3-1)
      &                    +lx*(bz(i1,i2,i3)-bz(i1-1,i2,i3))
