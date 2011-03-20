@@ -59,7 +59,9 @@ struct psc_pulse_ops psc_pulse_ops_flattop = {
   .ctx_size   = sizeof(struct psc_pulse_flattop),
   .ctx_descr  = psc_pulse_flattop_descr,
   .setup      = psc_pulse_flattop_setup,
-  .field      = psc_pulse_flattop_field,
+  // FIXME, use different amplitude / phase for p/s
+  .field_p    = psc_pulse_flattop_field,
+  .field_s    = psc_pulse_flattop_field,
 };
 
 struct psc_pulse *

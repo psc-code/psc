@@ -82,7 +82,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_par,
     .k  = { 1., 0., 0. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
   struct psc_pulse_gauss prm_p_x2 = {
@@ -93,11 +93,11 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_par,
     .k  = { -1., 0., 0. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
-  psc.pulse_p_x1 = psc_pulse_gauss_create(&prm_p_x1);
-  psc.pulse_p_x2 = psc_pulse_gauss_create(&prm_p_x2);
+  psc.pulse_x1 = psc_pulse_gauss_create(&prm_p_x1);
+  psc.pulse_x2 = psc_pulse_gauss_create(&prm_p_x2);
 
   struct psc_pulse_gauss prm_p_y1 = {
     .xm  = .5 * length[0],
@@ -107,7 +107,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_normal,
     .dzm = width_par,
     .k  = { 0., 1., 0. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
   struct psc_pulse_gauss prm_p_y2 = {
@@ -118,11 +118,11 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_normal,
     .dzm = width_par,
     .k  = { 0., -1., 0. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
-  psc.pulse_p_y1 = psc_pulse_gauss_create(&prm_p_y1);
-  psc.pulse_p_y2 = psc_pulse_gauss_create(&prm_p_y2);
+  psc.pulse_y1 = psc_pulse_gauss_create(&prm_p_y1);
+  psc.pulse_y2 = psc_pulse_gauss_create(&prm_p_y2);
 
   struct psc_pulse_gauss prm_p_z1 = {
     .xm  = .5 * length[0],
@@ -132,7 +132,7 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_normal,
     .k  = { 0., 0., 1. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
   struct psc_pulse_gauss prm_p_z2 = {
@@ -143,11 +143,11 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
     .dym = width_par,
     .dzm = width_normal,
     .k  = { 0., 0., -1. },
-    .amplitude = 1.,
+    .amplitude_s = 1.,
   };
 
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p_z1);
-  psc.pulse_p_z2 = psc_pulse_gauss_create(&prm_p_z2);
+  psc.pulse_z1 = psc_pulse_gauss_create(&prm_p_z1);
+  psc.pulse_z2 = psc_pulse_gauss_create(&prm_p_z2);
 }
 
 static void
@@ -162,34 +162,48 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
       double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      if (psc->pulse_p_x1) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x1(xx        , yy, zz + .5*dz, 0.);
-	F3_BASE(pf, HY, jx,jy,jz) += -psc_p_pulse_x1(xx + .5*dx, yy, zz + .5*dz, 0.);
+      // FIXME, other polarization
+
+      if (psc->pulse_x1) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x1(xx        , yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HY, jx,jy,jz) += -psc_p_pulse_x1(xx + .5*dx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_s_pulse_x1(xx        , yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_s_pulse_x1(xx + .5*dx, yy + .5*dy, zz        , 0.);
       }
       
-      if (psc->pulse_p_x2) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x2(xx        , yy, zz + .5*dz, 0.);
-	F3_BASE(pf, HY, jx,jy,jz) +=  psc_p_pulse_x2(xx + .5*dx, yy, zz + .5*dz, 0.);
+      if (psc->pulse_x2) {
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x2(xx        , yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HY, jx,jy,jz) +=  psc_p_pulse_x2(xx + .5*dx, yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_s_pulse_x2(xx        , yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) += -psc_s_pulse_x2(xx + .5*dx, yy + .5*dy, zz        , 0.);
       }
       
-      if (psc->pulse_p_y1) {
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y1(xx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) += -psc_p_pulse_y1(xx, yy + .5*dy, zz + .5*dz, 0.);
+      if (psc->pulse_y1) {
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y1(xx + .5*dx, yy        , zz        , 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) += -psc_p_pulse_y1(xx + .5*dx, yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_s_pulse_y1(xx        , yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HX, jx,jy,jz) +=  psc_s_pulse_y1(xx        , yy + .5*dy, zz + .5*dz, 0.);
       }
       
-      if (psc->pulse_p_y2) {
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_p_pulse_y2(xx, yy + .5*dy, zz + .5*dz, 0.);
+      if (psc->pulse_y2) {
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y2(xx + .5*dx, yy        , zz        , 0.);
+	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_p_pulse_y2(xx + .5*dx, yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_s_pulse_y2(xx        , yy        , zz + .5*dz, 0.);
+	F3_BASE(pf, HX, jx,jy,jz) += -psc_s_pulse_y2(xx        , yy + .5*dy, zz + .5*dz, 0.);
       }
       
-      if (psc->pulse_p_z1) {
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z1(xx, yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.);
+      if (psc->pulse_z1) {
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z1(xx        , yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z1(xx        , yy + .5*dy, zz + .5*dz, 0.);
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_s_pulse_z1(xx + .5*dx, yy        , zz        , 0.);
+	F3_BASE(pf, HY, jx,jy,jz) +=  psc_s_pulse_z1(xx + .5*dx, yy        , zz + .5*dz, 0.);
       }
       
-      if (psc->pulse_p_z2) {
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z2(xx, yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_z2(xx, yy + .5*dy, zz + .5*dz, 0.);
+      if (psc->pulse_z2) {
+	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z2(xx        , yy + .5*dy, zz        , 0.);
+	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_z2(xx        , yy + .5*dy, zz + .5*dz, 0.);
+	F3_BASE(pf, EX, jx,jy,jz) +=  psc_s_pulse_z2(xx + .5*dx, yy        , zz        , 0.);
+	F3_BASE(pf, HY, jx,jy,jz) += -psc_s_pulse_z2(xx + .5*dx, yy        , zz + .5*dz, 0.);
       }
     } psc_foreach_3d_g_end;
   }

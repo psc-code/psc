@@ -55,7 +55,7 @@ psc_case_thinfoil_create(struct psc_case *_case)
     .dzm = .1   * 1e-6,
     .zb  = 300. * 1e-6,
   };
-  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm);
+  psc.pulse_z1 = psc_pulse_flattop_create(&prm);
 }
 
 static void

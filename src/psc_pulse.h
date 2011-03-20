@@ -19,8 +19,10 @@ struct psc_pulse_ops {
   struct param *ctx_descr;
   void (*destroy)(struct psc_pulse *);
   void (*setup)(struct psc_pulse *);
-  double (*field)(struct psc_pulse *,
-		  double x, double y, double z, double t);
+  double (*field_s)(struct psc_pulse *,
+		    double x, double y, double z, double t);
+  double (*field_p)(struct psc_pulse *,
+		    double x, double y, double z, double t);
 };  
 
 struct psc_pulse {
@@ -42,12 +44,21 @@ psc_pulse_setup(struct psc_pulse *pulse)
 }
 
 static inline double
-psc_pulse_field(struct psc_pulse *pulse, double x, double y, double z, double t)
+psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double t)
 {
   if (!pulse->is_setup) {
     psc_pulse_setup(pulse);
   }
-  return pulse->ops->field(pulse, x, y, z, t);
+  return pulse->ops->field_s(pulse, x, y, z, t);
+}
+
+static inline double
+psc_pulse_field_p(struct psc_pulse *pulse, double x, double y, double z, double t)
+{
+  if (!pulse->is_setup) {
+    psc_pulse_setup(pulse);
+  }
+  return pulse->ops->field_p(pulse, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -56,8 +67,10 @@ psc_pulse_field(struct psc_pulse *pulse, double x, double y, double z, double t)
 struct psc_pulse_gauss {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // width of pulse in m
-  double phase;         // CEP-phase  (from -pi to pi)
-  double amplitude;     // max amplitude 
+  double amplitude_p;   // max amplitude, p-polarization
+  double amplitude_s;   // max amplitude, s-polarization
+  double phase_p;       // CEP-phase  (from -pi to pi)
+  double phase_s;       // CEP-phase  (from -pi to pi)
   double k[3];
 };
 

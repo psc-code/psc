@@ -156,11 +156,11 @@ psc_case_foils_create(struct psc_case *_case)
     .dym = 2.   * 1e-6,
     .dzm = 15.   * 1e-6 * Coeff_FWHM,
 //    .zb  = 10. * 1e-6,
-    .phase = 0.0,
+    .amplitude_s = 1.,
   };
 
-//  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
-  psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
+//  psc.pulse_z1 = psc_pulse_flattop_create(&prm_s);
+  psc.pulse_z1 = psc_pulse_gauss_create(&prm_s);
 }
 
 

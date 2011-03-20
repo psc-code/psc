@@ -50,8 +50,9 @@ psc_case_wakefield_create(struct psc_case *_case)
     .dxm = 5.  * 1e-6,
     .dym = 5.  * 1e-6,
     .dzm = 1.  * 1e-6,
+    .amplitude_p = 1.,
   };
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm);
+  psc.pulse_z1 = psc_pulse_gauss_create(&prm);
 }
 
 static void

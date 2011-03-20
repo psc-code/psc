@@ -23,11 +23,13 @@ static struct param psc_pulse_gauss_descr[] = {
   { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_phase"   , VAR(phase)           , PARAM_DOUBLE(0.0)            },
+  { "pulse_phase_p" , VAR(phase_p)         , PARAM_DOUBLE(0.0)            },
+  { "pulse_phase_s" , VAR(phase_s)         , PARAM_DOUBLE(0.0)            },
   { "pulse_kx"      , VAR(k[0])            , PARAM_DOUBLE(0.)             },
   { "pulse_ky"      , VAR(k[1])            , PARAM_DOUBLE(0.)             },
   { "pulse_kz"      , VAR(k[2])            , PARAM_DOUBLE(0.)             },
-  { "pulse_amplitude", VAR(amplitude)      , PARAM_DOUBLE(1.)             },
+  { "pulse_amplitude_p", VAR(amplitude_p)  , PARAM_DOUBLE(1.)             },
+  { "pulse_amplitude_s", VAR(amplitude_s)  , PARAM_DOUBLE(1.)             },
   {},
 };
 
@@ -47,9 +49,10 @@ psc_pulse_gauss_setup(struct psc_pulse *pulse)
   prm->dzm /= psc.coeff.ld;
 }
 
-static double
+static void
 psc_pulse_gauss_field(struct psc_pulse *pulse,
-		      double xx, double yy, double zz, double tt)
+		      double xx, double yy, double zz, double tt,
+		      double *phase, double *envelope)
 {
   struct psc_pulse_gauss *prm = pulse->ctx;
 
@@ -61,11 +64,34 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
   double yl = yr - prm->k[1] * tt;
   double zl = zr - prm->k[2] * tt;
 
-  return prm->amplitude *
-    sin(prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt + prm->phase)
-    * exp(-sqr(xl/prm->dxm))
-    * exp(-sqr(yl/prm->dym))
-    * exp(-sqr(zl/prm->dzm));
+  *phase = prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt;
+  *envelope = (exp(-sqr(xl/prm->dxm)) *
+	       exp(-sqr(yl/prm->dym)) *
+	       exp(-sqr(zl/prm->dzm)));
+}
+
+static double
+psc_pulse_gauss_field_p(struct psc_pulse *pulse,
+			double xx, double yy, double zz, double tt)
+{
+  struct psc_pulse_gauss *prm = pulse->ctx;
+
+  double phase, envelope;
+  psc_pulse_gauss_field(pulse, xx, yy, zz, tt, &phase, &envelope);
+
+  return prm->amplitude_p * envelope * sin(phase + prm->phase_p);
+}
+
+static double
+psc_pulse_gauss_field_s(struct psc_pulse *pulse,
+			double xx, double yy, double zz, double tt)
+{
+  struct psc_pulse_gauss *prm = pulse->ctx;
+
+  double phase, envelope;
+  psc_pulse_gauss_field(pulse, xx, yy, zz, tt, &phase, &envelope);
+
+  return prm->amplitude_s * envelope * sin(phase + prm->phase_s);
 }
 
 static struct psc_pulse_ops psc_pulse_ops_gauss = {
@@ -73,7 +99,8 @@ static struct psc_pulse_ops psc_pulse_ops_gauss = {
   .ctx_size   = sizeof(struct psc_pulse_gauss),
   .ctx_descr  = psc_pulse_gauss_descr,
   .setup      = psc_pulse_gauss_setup,
-  .field      = psc_pulse_gauss_field,
+  .field_p    = psc_pulse_gauss_field_p,
+  .field_s    = psc_pulse_gauss_field_s,
 };
 
 
