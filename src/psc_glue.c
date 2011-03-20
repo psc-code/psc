@@ -47,6 +47,7 @@
 #define SERV_read_2_F77 F77_FUNC_(serv_read_2, SERV_READ_2)
 #define SERV_write_F77 F77_FUNC_(serv_write, SERV_WRITE)
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
+#define PIC_fill_ghosts_h_b_F77 F77_FUNC_(pic_fill_ghosts_h_b, PIC_FILL_GHOSTS_H_B)
 
 #define C_p_pulse_x1_F77 F77_FUNC(c_p_pulse_x1,C_P_PULSE_X1)
 #define C_s_pulse_x1_F77 F77_FUNC(c_s_pulse_x1,C_S_PULSE_X1)
@@ -182,6 +183,9 @@ void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
 		    f_real *jxi, f_real *jyi, f_real *jzi,
 		    f_real *ex, f_real *ey, f_real *ez,
 		    f_real *hx, f_real *hy, f_real *hz);
+void PIC_fill_ghosts_h_b_F77(f_real *hx, f_real *hy, f_real *hz,
+			     f_real *ex, f_real *ey, f_real *ez,
+			     f_real *jxi, f_real *jyi, f_real *jzi);
 
 
 void INIT_basic_F77(void);
@@ -524,6 +528,15 @@ SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf)
 		 pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		 pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+}
+
+void
+PIC_fill_ghosts_h_b(fields_fortran_t *pf)
+{
+  PSC_set_timestep(&psc);
+  PIC_fill_ghosts_h_b_F77(pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
 }
 
 // ----------------------------------------------------------------------

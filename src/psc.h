@@ -268,6 +268,7 @@ struct psc {
   struct psc_push_particles *push_particles;
   struct psc_push_fields *push_fields;
   struct psc_bnd *bnd;
+  struct psc_bnd_fields *bnd_fields;
   struct psc_collision *collision;
   struct psc_randomize *randomize;
   struct psc_sort *sort;
