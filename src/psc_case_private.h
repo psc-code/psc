@@ -19,6 +19,7 @@ struct psc_case_ops {
 };
 
 extern struct psc_case_ops psc_case_harris_ops;
+extern struct psc_case_ops psc_case_test_xy_ops;
 extern struct psc_case_ops psc_case_test_xz_ops;
 extern struct psc_case_ops psc_case_test_yz_ops;
 extern struct psc_case_ops psc_case_harris_xy_ops;

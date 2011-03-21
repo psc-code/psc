@@ -336,6 +336,7 @@ psc_case_test_xy_set_from_options(struct psc_case *_case)
   
 }
 
+static void
 psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
@@ -350,8 +351,8 @@ psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d_g(psc,p, jx, jy, jz) {
-      double dy = psc.dx[1], dx = psc.dx[0];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dx = psc->dx[0];
       double yy = CRDY(p, jy), xx = CRDX(p, jx);
       
       F3_BASE(pf, HY, jx,jy,jz) = 

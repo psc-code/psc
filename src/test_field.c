@@ -85,8 +85,8 @@ main(int argc, char **argv)
   // psc_dump_field(HX, "hx2");
   // psc_dump_field(HY, "hy2");
   // psc_dump_field(HZ, "hz2");
-  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy();
+  psc_check_fields_ref(&psc,flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy(&psc);
 #endif
 
 
@@ -122,8 +122,8 @@ main(int argc, char **argv)
   // psc_dump_field(HX, "hx2");
   // psc_dump_field(HY, "hy2");
   // psc_dump_field(HZ, "hz2");
-  psc_check_fields_ref(flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy();
+  psc_check_fields_ref(&psc,flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_destroy(&psc);
 #endif
 
 
