@@ -4,9 +4,9 @@
 #include <math.h>
 
 struct psc_pulse_flattop {
-  double xm, ym, zm; // location of pulse center at time 0 in m 
-  double dxm, dym, dzm; // slope of pulse in m
-  double zb; // width of pulse in m
+  double xm[3];         // location of pulse center at time 0 in m 
+  double dxm[3];        // slope of pulse in m
+  double zb;            // width of pulse in m
   double amplitude_p;   // max amplitude, p-polarization
   double amplitude_s;   // max amplitude, s-polarization
   double phase_p;       // CEP-phase  (from -pi to pi)
@@ -20,12 +20,10 @@ psc_pulse_flattop_setup(struct psc_pulse *pulse)
   struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   // normalization
-  flattop->xm /= psc.coeff.ld;
-  flattop->ym /= psc.coeff.ld;
-  flattop->zm /= psc.coeff.ld;
-  flattop->dxm /= psc.coeff.ld;
-  flattop->dym /= psc.coeff.ld;
-  flattop->dzm /= psc.coeff.ld;
+  for (int d = 0; d < 3; d++) {
+    flattop->xm[d] /= psc.coeff.ld;
+    flattop->dxm[d] /= psc.coeff.ld;
+  }
   flattop->zb /= psc.coeff.ld;
 }
 
@@ -42,14 +40,14 @@ psc_pulse_flattop_field(struct psc_pulse *pulse,
   double yl = yy;
   double zl = zz - tt;
 
-  double xr = xl - flattop->xm;
-  double yr = yl - flattop->ym;
-  double zr = zl - flattop->zm;
+  double xr = xl - flattop->xm[0];
+  double yr = yl - flattop->xm[1];
+  double zr = zl - flattop->xm[2];
 
   *phase = zr;
-  *envelope = (exp(-sqr(xr/flattop->dxm)) *
-	       exp(-sqr(yr/flattop->dym)) *
-	       1. / (1.+exp((fabs(zr)-flattop->zb)/flattop->dzm)));
+  *envelope = (exp(-sqr(xr/flattop->dxm[0])) *
+	       exp(-sqr(yr/flattop->dxm[1])) *
+	       1. / (1.+exp((fabs(zr)-flattop->zb)/flattop->dxm[2])));
 }
 
 static double

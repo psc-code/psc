@@ -5,8 +5,8 @@
 #include <math.h>
 
 struct psc_pulse_gauss {
-  double xm, ym, zm; // location of pulse center at time 0 in m 
-  double dxm, dym, dzm; // width of pulse in m
+  double xm[3];         // location of pulse center at time 0 in m 
+  double dxm[3];        // width of pulse in m
   double amplitude_p;   // max amplitude, p-polarization
   double amplitude_s;   // max amplitude, s-polarization
   double phase_p;       // CEP-phase  (from -pi to pi)
@@ -24,12 +24,10 @@ psc_pulse_gauss_setup(struct psc_pulse *pulse)
   struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
   // normalization
-  gauss->xm /= psc.coeff.ld;
-  gauss->ym /= psc.coeff.ld;
-  gauss->zm /= psc.coeff.ld;
-  gauss->dxm /= psc.coeff.ld;
-  gauss->dym /= psc.coeff.ld;
-  gauss->dzm /= psc.coeff.ld;
+  for (int d = 0; d < 3; d++) {
+    gauss->xm[d] /= psc.coeff.ld;
+    gauss->dxm[d] /= psc.coeff.ld;
+  }
 }
 
 static void
@@ -39,18 +37,18 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
 {
   struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
-  double xr = xx - gauss->xm;
-  double yr = yy - gauss->ym;
-  double zr = zz - gauss->zm;
+  double xr = xx - gauss->xm[0];
+  double yr = yy - gauss->xm[1];
+  double zr = zz - gauss->xm[2];
 
   double xl = xr - gauss->k[0] * tt;
   double yl = yr - gauss->k[1] * tt;
   double zl = zr - gauss->k[2] * tt;
 
   *phase = gauss->k[0] * xr + gauss->k[1] * yr + gauss->k[2] * zr - tt;
-  *envelope = (exp(-sqr(xl/gauss->dxm)) *
-	       exp(-sqr(yl/gauss->dym)) *
-	       exp(-sqr(zl/gauss->dzm)));
+  *envelope = (exp(-sqr(xl/gauss->dxm[0])) *
+	       exp(-sqr(yl/gauss->dxm[1])) *
+	       exp(-sqr(zl/gauss->dxm[2])));
 }
 
 static double
