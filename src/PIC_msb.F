@@ -107,9 +107,6 @@ c -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
          enddo
       enddo
 
-
-      call PIC_fill_ghosts_h_b(hx, hy, hz, ex, ey, ez, jxi, jyi, jzi)
-
       end subroutine PIC_msb_h
 
 

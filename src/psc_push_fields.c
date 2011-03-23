@@ -2,6 +2,7 @@
 #include "psc_push_fields_private.h"
 
 #include "psc_bnd.h"
+#include "psc_bnd_fields.h"
 #include <mrc_profile.h>
 
 // ======================================================================
@@ -94,6 +95,7 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
     ops->pml_b(push, flds);
   } else {
     psc_push_fields_push_b_h(push, flds);
+    psc_bnd_fields_fill_ghosts_H_b(psc.bnd_fields, flds);
     psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 
     psc_push_fields_push_b_e(push, flds);
