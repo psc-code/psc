@@ -273,12 +273,6 @@ struct psc {
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
 
-  struct psc_pulse *pulse_x1;
-  struct psc_pulse *pulse_x2;
-  struct psc_pulse *pulse_y1;
-  struct psc_pulse *pulse_y2;
-  struct psc_pulse *pulse_z1;
-  struct psc_pulse *pulse_z2;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_coeff coeff;

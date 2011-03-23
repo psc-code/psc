@@ -35,6 +35,12 @@ _psc_push_fields_destroy(struct psc_push_fields *push)
   psc_bnd_fields_destroy(push->bnd_fields);
 }
 
+struct psc_bnd_fields *
+psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
+{
+  return push->bnd_fields;
+}
+
 // ======================================================================
 // forward to subclass
 

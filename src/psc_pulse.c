@@ -1,5 +1,7 @@
 
 #include "psc_pulse_private.h"
+#include "psc_push_fields.h"
+#include "psc_bnd_fields_private.h"
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_x1
@@ -7,10 +9,11 @@
 real
 psc_p_pulse_x1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_x1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_x1)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_x1, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_x1, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -19,10 +22,11 @@ psc_p_pulse_x1(real x, real y, real z, real t)
 real
 psc_s_pulse_x1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_x1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_x1)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_x1, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_x1, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -31,10 +35,11 @@ psc_s_pulse_x1(real x, real y, real z, real t)
 real
 psc_p_pulse_x2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_x2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_x2)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_x2, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_x2, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -43,10 +48,11 @@ psc_p_pulse_x2(real x, real y, real z, real t)
 real
 psc_s_pulse_x2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_x2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_x2)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_x2, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_x2, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -55,10 +61,11 @@ psc_s_pulse_x2(real x, real y, real z, real t)
 real
 psc_p_pulse_y1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_y1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_y1)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_y1, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_y1, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -67,10 +74,11 @@ psc_p_pulse_y1(real x, real y, real z, real t)
 real
 psc_s_pulse_y1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_y1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_y1)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_y1, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_y1, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -79,10 +87,11 @@ psc_s_pulse_y1(real x, real y, real z, real t)
 real
 psc_p_pulse_y2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_y2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_y2)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_y2, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_y2, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -91,10 +100,11 @@ psc_p_pulse_y2(real x, real y, real z, real t)
 real
 psc_s_pulse_y2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_y2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_y2)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_y2, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_y2, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -103,10 +113,11 @@ psc_s_pulse_y2(real x, real y, real z, real t)
 real
 psc_p_pulse_z1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_z1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_z1)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_z1, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_z1, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -115,10 +126,11 @@ psc_p_pulse_z1(real x, real y, real z, real t)
 real
 psc_s_pulse_z1(real x, real y, real z, real t)
 {
-  if (!psc.pulse_z1)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_z1)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_z1, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_z1, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -127,10 +139,11 @@ psc_s_pulse_z1(real x, real y, real z, real t)
 real
 psc_p_pulse_z2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_z2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_z2)
     return 0.;
 
-  return psc_pulse_field_p(psc.pulse_z2, x, y, z, t);
+  return psc_pulse_field_p(bnd_fields->pulse_z2, x, y, z, t);
 }
 
 //-----------------------------------------------------------------------
@@ -139,11 +152,13 @@ psc_p_pulse_z2(real x, real y, real z, real t)
 real
 psc_s_pulse_z2(real x, real y, real z, real t)
 {
-  if (!psc.pulse_z2)
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  if (!bnd_fields->pulse_z2)
     return 0.;
 
-  return psc_pulse_field_s(psc.pulse_z2, x, y, z, t);
+  return psc_pulse_field_s(bnd_fields->pulse_z2, x, y, z, t);
 }
+
 
 // ----------------------------------------------------------------------
 // psc_pulse_setup
