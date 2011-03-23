@@ -6,7 +6,7 @@
 #include <mrc_profile.h>
 
 static void
-c_push_field_a_e_nopml(mfields_base_t *flds)
+c_push_field_a_e(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -68,7 +68,7 @@ c_push_field_a_e_nopml(mfields_base_t *flds)
 }
 
 static void
-c_push_field_a_h_nopml(mfields_base_t *flds)
+c_push_field_a_h(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -120,7 +120,7 @@ c_push_field_a_h_nopml(mfields_base_t *flds)
 }
 
 static void
-c_push_field_b_h_nopml(mfields_base_t *flds)
+c_push_field_b_h(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -172,7 +172,7 @@ c_push_field_b_h_nopml(mfields_base_t *flds)
 }
 
 static void
-c_push_field_b_e_nopml(mfields_base_t *flds)
+c_push_field_b_e(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
@@ -232,12 +232,8 @@ c_push_field_b_e_nopml(mfields_base_t *flds)
 static void
 psc_push_fields_c_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  if (psc.domain.use_pml) {
-    assert(0);
-  } else {
-    c_push_field_a_e_nopml(flds);
-    c_push_field_a_h_nopml(flds);
-  }
+  c_push_field_a_e(flds);
+  c_push_field_a_h(flds);
 }
 
 // ----------------------------------------------------------------------
@@ -246,12 +242,8 @@ psc_push_fields_c_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 static void
 psc_push_fields_c_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  if (psc.domain.use_pml) {
-    assert(0);
-  } else {
-    c_push_field_b_h_nopml(flds);
-    c_push_field_b_e_nopml(flds);
-  }
+  c_push_field_b_h(flds);
+  c_push_field_b_e(flds);
 }
 
 // ======================================================================
