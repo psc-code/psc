@@ -12,6 +12,7 @@ static void
 psc_push_fields_fortran_step_a(struct psc_push_fields *push,
 			       mfields_base_t *flds_base)
 {
+  assert(psc.nr_patches == 1);
   if (psc.domain.use_pml) {
     mfields_fortran_t flds;
     fields_fortran_get(&flds, JXI, MU + 1, flds_base);
@@ -34,7 +35,8 @@ psc_push_fields_fortran_step_a(struct psc_push_fields *push,
       pr = prof_register("fort_field_a", 1., 0, 0);
     }
     prof_start(pr);
-    PIC_msa(&flds.f[0]);
+    PIC_msa_e(&flds.f[0]);
+    PIC_msa_h(&flds.f[0]);
     prof_stop(pr);
     
     fields_fortran_put(&flds, EX, HZ + 1, flds_base);

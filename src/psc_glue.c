@@ -39,7 +39,8 @@
 #define PIC_pey_b_F77 F77_FUNC(pic_pey_b, PIC_PEY_B)
 #define PIC_pez_a_F77 F77_FUNC(pic_pez_a, PIC_PEZ_A)
 #define PIC_pez_b_F77 F77_FUNC(pic_pez_b, PIC_PEZ_B)
-#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
+#define PIC_msa_e_F77 F77_FUNC_(pic_msa_e, PIC_MSA_E)
+#define PIC_msa_h_F77 F77_FUNC_(pic_msa_h, PIC_MSA_H)
 #define PIC_msb_h_F77 F77_FUNC_(pic_msb_h, PIC_MSB_H)
 #define PIC_msb_e_F77 F77_FUNC_(pic_msb_e, PIC_MSB_E)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
@@ -157,9 +158,12 @@ void PIC_pey_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
 void PIC_pey_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_pez_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
 void PIC_pez_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
-		 f_real *hx, f_real *hy, f_real *hz,
-		 f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msa_e_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msa_h_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
 void PIC_msb_h_F77(f_real *ex, f_real *ey, f_real *ez,
 		   f_real *hx, f_real *hy, f_real *hz,
 		   f_real *jxi, f_real *jyi, f_real *jzi);
@@ -468,12 +472,21 @@ PIC_pez(particles_fortran_t *pp)
 }
 
 void
-PIC_msa(fields_fortran_t *pf)
+PIC_msa_e(fields_fortran_t *pf)
 {
   PSC_set_timestep(&psc);
-  PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msa_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_msa_h(fields_fortran_t *pf)
+{
+  PSC_set_timestep(&psc);
+  PIC_msa_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
 }
 
 void

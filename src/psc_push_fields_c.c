@@ -6,11 +6,11 @@
 #include <mrc_profile.h>
 
 static void
-c_push_field_a_nopml(mfields_base_t *flds)
+c_push_field_a_e_nopml(mfields_base_t *flds)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("c_field_a", 1., 0, 0);
+    pr = prof_register("c_field_a_e", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -63,6 +63,36 @@ c_push_field_a_nopml(mfields_base_t *flds)
   }
 
   psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
+
+  prof_stop(pr);
+}
+
+static void
+c_push_field_a_h_nopml(mfields_base_t *flds)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_field_a_h", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  f_real lx = psc.dt / psc.dx[0];
+  f_real ly = psc.dt / psc.dx[1];
+  f_real lz = psc.dt / psc.dx[2];
+
+  f_real cnx = .5 * lx;
+  f_real cny = .5 * ly;
+  f_real cnz = .5 * lz;
+
+  if (psc.domain.gdims[0] == 1) {
+    cnx = 0.;
+  }
+  if (psc.domain.gdims[1] == 1) {
+    cny = 0.;
+  }
+  if (psc.domain.gdims[2] == 1) {
+    cnz = 0.;
+  }
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
@@ -205,7 +235,8 @@ psc_push_fields_c_step_a(struct psc_push_fields *push, mfields_base_t *flds)
   if (psc.domain.use_pml) {
     assert(0);
   } else {
-    c_push_field_a_nopml(flds);
+    c_push_field_a_e_nopml(flds);
+    c_push_field_a_h_nopml(flds);
   }
 }
 
