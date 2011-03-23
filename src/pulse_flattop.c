@@ -96,6 +96,8 @@ struct psc_pulse_ops psc_pulse_ops_flattop = {
 struct psc_pulse *
 psc_pulse_flattop_create(struct psc_pulse_flattop *prm)
 {
-  return psc_pulse_create(&psc_pulse_ops_flattop, prm);
+  struct psc_pulse *pulse = psc_pulse_create(MPI_COMM_WORLD);
+  psc_pulse_ini(pulse, &psc_pulse_ops_flattop, prm);
+  return pulse;
 }
 

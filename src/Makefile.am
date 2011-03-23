@@ -30,7 +30,7 @@ libpsc_a_SOURCES = \
 	CALC_moments.F \
 	SERV_labelgen.F \
 	INIT_param.F INIT_field.F \
-	pulse.c pulse_gauss.c pulse_flattop.c \
+	pulse_gauss.c pulse_flattop.c \
 	PIC_bin_coll.F \
 	psc_case.c \
 	mfields.c \

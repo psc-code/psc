@@ -107,6 +107,8 @@ static struct psc_pulse_ops psc_pulse_ops_gauss = {
 struct psc_pulse *
 psc_pulse_gauss_create(struct psc_pulse_gauss *ctx)
 {
-  return psc_pulse_create(&psc_pulse_ops_gauss, ctx);
+  struct psc_pulse *pulse = psc_pulse_create(MPI_COMM_WORLD);
+  psc_pulse_ini(pulse, &psc_pulse_ops_gauss, ctx);
+  return pulse;
 }
 

@@ -11,7 +11,7 @@
 // ----------------------------------------------------------------------
 // psc_pulse
 
-struct psc_pulse;
+MRC_CLASS_DECLARE(psc_pulse, struct psc_pulse);
 
 struct psc_pulse_ops {
   const char *name;
@@ -26,22 +26,13 @@ struct psc_pulse_ops {
 };  
 
 struct psc_pulse {
-  struct psc_pulse_ops *ops;
+  struct mrc_obj obj;
   bool is_setup;
   void *ctx;
+  struct psc_pulse_ops *ops;
 };
 
-struct psc_pulse *psc_pulse_create(struct psc_pulse_ops *ops, void *prm);
-void psc_pulse_destroy(struct psc_pulse *pulse);
-
-static inline void
-psc_pulse_setup(struct psc_pulse *pulse)
-{
-  if (pulse->ops->setup) {
-    pulse->ops->setup(pulse);
-  }
-  pulse->is_setup = true;
-}
+void psc_pulse_ini(struct psc_pulse *pulse, struct psc_pulse_ops *ops, void *prm);
 
 static inline double
 psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double t)
