@@ -263,6 +263,11 @@ mrc_params_set_default(void *p, struct param *params)
 	pv->u_float3[d] = params[i].u.ini_float3[d];
       }
       break;
+    case PT_DOUBLE3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_double3[d] = params[i].u.ini_double3[d];
+      }
+      break;
     default:
       assert(0);
     }
@@ -292,6 +297,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_FLOAT:
       pv->u_float = pval->u_float;
       break;
+    case PT_DOUBLE:
+      pv->u_double = pval->u_double;
+      break;
     case PT_STRING:
       pv->u_string = pval->u_string;
       break;
@@ -306,6 +314,11 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_FLOAT3:
       for (int d = 0; d < 3; d++) {
 	pv->u_float3[d] = pval->u_float3[d];
+      }
+      break;
+    case PT_DOUBLE3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_double3[d] = pval->u_double3[d];
       }
       break;
     default:
@@ -520,6 +533,10 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     case PT_FLOAT3:
       mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
 		 pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
+      break;
+    case PT_DOUBLE3:
+      mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
+		 pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
       break;
     }
   }

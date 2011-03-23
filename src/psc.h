@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "psc_pulse.h"
-
 // ----------------------------------------------------------------------
 
 #define FIELDS_FORTRAN 1

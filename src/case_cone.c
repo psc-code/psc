@@ -1,7 +1,9 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_pulse.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -126,7 +128,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 static void
 psc_case_cone_create(struct psc_case *_case)
 {
-  
+#if 0  
   float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
    //  float Coeff_FHHM = 1.0;       // uncomment this line if you want the old input  
    // T_L = 3.33 e -15   for 1 micron wavelength
@@ -143,8 +145,9 @@ psc_case_cone_create(struct psc_case *_case)
     .phase_p = 0.0,
     .amplitude_p = 1.,
   };
-
-  psc.pulse_z1 = psc_pulse_gauss_create(&prm_p);
+#endif
+  psc.pulse_z1 = psc_pulse_create(psc_case_comm(_case));
+  psc_pulse_set_type(psc.pulse_z1, "gauss");
 }
 
 

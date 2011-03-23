@@ -25,16 +25,16 @@ static struct param psc_pulse_flattop_descr[] = {
 static void
 psc_pulse_flattop_setup(struct psc_pulse *pulse)
 {
-  struct psc_pulse_flattop *prm = pulse->ctx;
+  struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   // normalization
-  prm->xm /= psc.coeff.ld;
-  prm->ym /= psc.coeff.ld;
-  prm->zm /= psc.coeff.ld;
-  prm->dxm /= psc.coeff.ld;
-  prm->dym /= psc.coeff.ld;
-  prm->dzm /= psc.coeff.ld;
-  prm->zb /= psc.coeff.ld;
+  flattop->xm /= psc.coeff.ld;
+  flattop->ym /= psc.coeff.ld;
+  flattop->zm /= psc.coeff.ld;
+  flattop->dxm /= psc.coeff.ld;
+  flattop->dym /= psc.coeff.ld;
+  flattop->dzm /= psc.coeff.ld;
+  flattop->zb /= psc.coeff.ld;
 }
 
 void
@@ -42,7 +42,7 @@ psc_pulse_flattop_field(struct psc_pulse *pulse,
 			double xx, double yy, double zz, double tt,
 			double *phase, double *envelope)
 {
-  struct psc_pulse_flattop *prm = pulse->ctx;
+  struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   // FIXME, only for z direction right now
 
@@ -50,54 +50,45 @@ psc_pulse_flattop_field(struct psc_pulse *pulse,
   double yl = yy;
   double zl = zz - tt;
 
-  double xr = xl - prm->xm;
-  double yr = yl - prm->ym;
-  double zr = zl - prm->zm;
+  double xr = xl - flattop->xm;
+  double yr = yl - flattop->ym;
+  double zr = zl - flattop->zm;
 
   *phase = zr;
-  *envelope = (exp(-sqr(xr/prm->dxm)) *
-	       exp(-sqr(yr/prm->dym)) *
-	       1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm)));
+  *envelope = (exp(-sqr(xr/flattop->dxm)) *
+	       exp(-sqr(yr/flattop->dym)) *
+	       1. / (1.+exp((fabs(zr)-flattop->zb)/flattop->dzm)));
 }
 
 static double
 psc_pulse_flattop_field_p(struct psc_pulse *pulse,
 			  double xx, double yy, double zz, double tt)
 {
-  struct psc_pulse_flattop *prm = pulse->ctx;
+  struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   double phase, envelope;
   psc_pulse_flattop_field(pulse, xx, yy, zz, tt, &phase, &envelope);
 
-  return prm->amplitude_p * envelope * sin(phase + prm->phase_p);
+  return flattop->amplitude_p * envelope * sin(phase + flattop->phase_p);
 }
 
 static double
 psc_pulse_flattop_field_s(struct psc_pulse *pulse,
 			  double xx, double yy, double zz, double tt)
 {
-  struct psc_pulse_flattop *prm = pulse->ctx;
+  struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   double phase, envelope;
   psc_pulse_flattop_field(pulse, xx, yy, zz, tt, &phase, &envelope);
 
-  return prm->amplitude_s * envelope * sin(phase + prm->phase_s);
+  return flattop->amplitude_s * envelope * sin(phase + flattop->phase_s);
 }
 
-struct psc_pulse_ops psc_pulse_ops_flattop = {
-  .name       = "p_z1_flattop",
-  .ctx_size   = sizeof(struct psc_pulse_flattop),
-  .ctx_descr  = psc_pulse_flattop_descr,
-  .setup      = psc_pulse_flattop_setup,
-  .field_p    = psc_pulse_flattop_field_p,
-  .field_s    = psc_pulse_flattop_field_s,
+struct psc_pulse_ops psc_pulse_flattop_ops = {
+  .name        = "flattop",
+  .size        = sizeof(struct psc_pulse_flattop),
+  .param_descr = psc_pulse_flattop_descr,
+  .setup       = psc_pulse_flattop_setup,
+  .field_p     = psc_pulse_flattop_field_p,
+  .field_s     = psc_pulse_flattop_field_s,
 };
-
-struct psc_pulse *
-psc_pulse_flattop_create(struct psc_pulse_flattop *prm)
-{
-  struct psc_pulse *pulse = psc_pulse_create(MPI_COMM_WORLD);
-  psc_pulse_ini(pulse, &psc_pulse_ops_flattop, prm);
-  return pulse;
-}
-

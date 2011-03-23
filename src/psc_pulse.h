@@ -14,11 +14,7 @@
 MRC_CLASS_DECLARE(psc_pulse, struct psc_pulse);
 
 struct psc_pulse_ops {
-  const char *name;
-  size_t ctx_size;
-  struct param *ctx_descr;
-  void (*destroy)(struct psc_pulse *);
-  void (*setup)(struct psc_pulse *);
+  MRC_SUBCLASS_OPS(struct psc_pulse);
   double (*field_s)(struct psc_pulse *,
 		    double x, double y, double z, double t);
   double (*field_p)(struct psc_pulse *,
@@ -28,9 +24,12 @@ struct psc_pulse_ops {
 struct psc_pulse {
   struct mrc_obj obj;
   bool is_setup;
-  void *ctx;
-  struct psc_pulse_ops *ops;
 };
+
+extern struct psc_pulse_ops psc_pulse_gauss_ops;
+extern struct psc_pulse_ops psc_pulse_flattop_ops;
+
+#define psc_pulse_ops(pulse) ((struct psc_pulse_ops *)((pulse)->obj.ops))
 
 void psc_pulse_ini(struct psc_pulse *pulse, struct psc_pulse_ops *ops, void *prm);
 
@@ -40,7 +39,7 @@ psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double 
   if (!pulse->is_setup) {
     psc_pulse_setup(pulse);
   }
-  return pulse->ops->field_s(pulse, x, y, z, t);
+  return psc_pulse_ops(pulse)->field_s(pulse, x, y, z, t);
 }
 
 static inline double
@@ -49,7 +48,7 @@ psc_pulse_field_p(struct psc_pulse *pulse, double x, double y, double z, double 
   if (!pulse->is_setup) {
     psc_pulse_setup(pulse);
   }
-  return pulse->ops->field_p(pulse, x, y, z, t);
+  return psc_pulse_ops(pulse)->field_p(pulse, x, y, z, t);
 }
 
 // ----------------------------------------------------------------------
@@ -65,8 +64,6 @@ struct psc_pulse_gauss {
   double k[3];
 };
 
-struct psc_pulse *psc_pulse_gauss_create(struct psc_pulse_gauss *ctx);
-
 // ----------------------------------------------------------------------
 // psc_pulse_flattop
 
@@ -79,7 +76,5 @@ struct psc_pulse_flattop {
   double phase_p;       // CEP-phase  (from -pi to pi)
   double phase_s;       // CEP-phase  (from -pi to pi)
 };
-
-struct psc_pulse *psc_pulse_flattop_create(struct psc_pulse_flattop *prm);
 
 #endif

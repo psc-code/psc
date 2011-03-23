@@ -4,6 +4,7 @@
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
+#include <string.h>
 
 struct psc_bnd_c {
   struct mrc_ddc *ddc;

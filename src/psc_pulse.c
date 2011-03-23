@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_glue.h"
+#include "psc_pulse.h"
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_x1
@@ -152,37 +152,8 @@ psc_s_pulse_z2(real x, real y, real z, real t)
 static inline void
 _psc_pulse_setup(struct psc_pulse *pulse)
 {
-  if (pulse->ops->setup) {
-    pulse->ops->setup(pulse);
-  }
+  mrc_obj_setup_sub(&pulse->obj);
   pulse->is_setup = true;
-}
-
-// ----------------------------------------------------------------------
-// psc_pulse_ini
-
-void
-psc_pulse_ini(struct psc_pulse *pulse, struct psc_pulse_ops *ops, void *prm)
-{
-  pulse->ops = ops;
-  
-  if (ops->ctx_size) {
-    pulse->ctx = malloc(ops->ctx_size);
-    memset(pulse->ctx, 0, ops->ctx_size);
-  }
-
-  struct param *descr = ops->ctx_descr;
-  if (descr) {
-    char name[strlen(ops->name) + 7];
-    sprintf(name, "Pulse %s", ops->name);
-    if (prm) { // custom defaults were passed
-      memcpy(pulse->ctx, prm, ops->ctx_size);
-      mrc_params_parse_nodefault(pulse->ctx, descr, name, MPI_COMM_WORLD);
-    } else {
-      mrc_params_parse(pulse->ctx, descr, name, MPI_COMM_WORLD);
-    }
-    mrc_params_print(pulse->ctx, descr, name, MPI_COMM_WORLD);
-  }
 }
 
 // ======================================================================
@@ -191,7 +162,8 @@ psc_pulse_ini(struct psc_pulse *pulse, struct psc_pulse_ops *ops, void *prm)
 static void
 psc_pulse_init()
 {
-  //  mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_gauss_ops);
+  mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_gauss_ops);
+  mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_flattop_ops);
 }
 
 // ======================================================================

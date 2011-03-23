@@ -2,6 +2,8 @@
 #include "psc.h"
 #include "psc_case.h"
 
+#include <mrc_params.h>
+
 int
 main(int argc, char **argv)
 {

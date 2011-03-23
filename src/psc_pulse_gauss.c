@@ -1,5 +1,5 @@
 
-#include "psc.h"
+#include "psc_pulse.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -7,46 +7,19 @@
 // ======================================================================
 // psc_pulse_gauss
 //
-// Laser pulse initialization
-//
-// NOTE: The pulse is placed behind of the
-// simulation box at a distance "zm" from the
-// origin. The pulse then propagates into the 
-// simulation box from the left. 
-
-#define VAR(x) (void *)offsetof(struct psc_pulse_gauss, x)
-
-static struct param psc_pulse_gauss_descr[] = {
-  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
-  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_kx"         , VAR(k[0])         , PARAM_DOUBLE(0.)             },
-  { "pulse_ky"         , VAR(k[1])         , PARAM_DOUBLE(0.)             },
-  { "pulse_kz"         , VAR(k[2])         , PARAM_DOUBLE(0.)             },
-  { "pulse_phase_p"    , VAR(phase_p)      , PARAM_DOUBLE(0.0)            },
-  { "pulse_phase_s"    , VAR(phase_s)      , PARAM_DOUBLE(0.0)            },
-  { "pulse_amplitude_p", VAR(amplitude_p)  , PARAM_DOUBLE(1.)             },
-  { "pulse_amplitude_s", VAR(amplitude_s)  , PARAM_DOUBLE(1.)             },
-  {},
-};
-
-#undef VAR
 
 static void
 psc_pulse_gauss_setup(struct psc_pulse *pulse)
 {
-  struct psc_pulse_gauss *prm = pulse->ctx;
+  struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
   // normalization
-  prm->xm /= psc.coeff.ld;
-  prm->ym /= psc.coeff.ld;
-  prm->zm /= psc.coeff.ld;
-  prm->dxm /= psc.coeff.ld;
-  prm->dym /= psc.coeff.ld;
-  prm->dzm /= psc.coeff.ld;
+  gauss->xm /= psc.coeff.ld;
+  gauss->ym /= psc.coeff.ld;
+  gauss->zm /= psc.coeff.ld;
+  gauss->dxm /= psc.coeff.ld;
+  gauss->dym /= psc.coeff.ld;
+  gauss->dzm /= psc.coeff.ld;
 }
 
 static void
@@ -54,61 +27,64 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
 		      double xx, double yy, double zz, double tt,
 		      double *phase, double *envelope)
 {
-  struct psc_pulse_gauss *prm = pulse->ctx;
+  struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
-  double xr = xx - prm->xm;
-  double yr = yy - prm->ym;
-  double zr = zz - prm->zm;
+  double xr = xx - gauss->xm;
+  double yr = yy - gauss->ym;
+  double zr = zz - gauss->zm;
 
-  double xl = xr - prm->k[0] * tt;
-  double yl = yr - prm->k[1] * tt;
-  double zl = zr - prm->k[2] * tt;
+  double xl = xr - gauss->k[0] * tt;
+  double yl = yr - gauss->k[1] * tt;
+  double zl = zr - gauss->k[2] * tt;
 
-  *phase = prm->k[0] * xr + prm->k[1] * yr + prm->k[2] * zr - tt;
-  *envelope = (exp(-sqr(xl/prm->dxm)) *
-	       exp(-sqr(yl/prm->dym)) *
-	       exp(-sqr(zl/prm->dzm)));
+  *phase = gauss->k[0] * xr + gauss->k[1] * yr + gauss->k[2] * zr - tt;
+  *envelope = (exp(-sqr(xl/gauss->dxm)) *
+	       exp(-sqr(yl/gauss->dym)) *
+	       exp(-sqr(zl/gauss->dzm)));
 }
 
 static double
 psc_pulse_gauss_field_p(struct psc_pulse *pulse,
 			double xx, double yy, double zz, double tt)
 {
-  struct psc_pulse_gauss *prm = pulse->ctx;
+  struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
   double phase, envelope;
   psc_pulse_gauss_field(pulse, xx, yy, zz, tt, &phase, &envelope);
 
-  return prm->amplitude_p * envelope * sin(phase + prm->phase_p);
+  return gauss->amplitude_p * envelope * sin(phase + gauss->phase_p);
 }
 
 static double
 psc_pulse_gauss_field_s(struct psc_pulse *pulse,
 			double xx, double yy, double zz, double tt)
 {
-  struct psc_pulse_gauss *prm = pulse->ctx;
+  struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
   double phase, envelope;
   psc_pulse_gauss_field(pulse, xx, yy, zz, tt, &phase, &envelope);
 
-  return prm->amplitude_s * envelope * sin(phase + prm->phase_s);
+  return gauss->amplitude_s * envelope * sin(phase + gauss->phase_s);
 }
 
-static struct psc_pulse_ops psc_pulse_ops_gauss = {
-  .name       = "p_z1_short",
-  .ctx_size   = sizeof(struct psc_pulse_gauss),
-  .ctx_descr  = psc_pulse_gauss_descr,
-  .setup      = psc_pulse_gauss_setup,
-  .field_p    = psc_pulse_gauss_field_p,
-  .field_s    = psc_pulse_gauss_field_s,
+#define VAR(x) (void *)offsetof(struct psc_pulse_gauss, x)
+static struct param psc_pulse_gauss_descr[] = {
+  { "m"               , VAR(xm)           , PARAM_DOUBLE3(0., 0., 0.)       },
+  { "dm"              , VAR(dxm)          , PARAM_DOUBLE3(1e-6, 1e-6, 1e-6) },
+  { "k"               , VAR(k)            , PARAM_DOUBLE3(0., 0., 0.)       },
+  { "phase_p"         , VAR(phase_p)      , PARAM_DOUBLE(0.0)               },
+  { "phase_s"         , VAR(phase_s)      , PARAM_DOUBLE(0.0)               },
+  { "amplitude_p"     , VAR(amplitude_p)  , PARAM_DOUBLE(0.)                },
+  { "amplitude_s"     , VAR(amplitude_s)  , PARAM_DOUBLE(0.)                },
+  {},
 };
+#undef VAR
 
-
-struct psc_pulse *
-psc_pulse_gauss_create(struct psc_pulse_gauss *ctx)
-{
-  struct psc_pulse *pulse = psc_pulse_create(MPI_COMM_WORLD);
-  psc_pulse_ini(pulse, &psc_pulse_ops_gauss, ctx);
-  return pulse;
-}
-
+struct psc_pulse_ops psc_pulse_gauss_ops = {
+  .name        = "gauss",
+  .size        = sizeof(struct psc_pulse_gauss),
+  .param_descr = psc_pulse_gauss_descr,
+  .setup       = psc_pulse_gauss_setup,
+  .field_p     = psc_pulse_gauss_field_p,
+  .field_s     = psc_pulse_gauss_field_s,
+};

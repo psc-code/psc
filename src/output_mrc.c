@@ -6,6 +6,7 @@
 #include <mrc_io.h>
 
 #include <math.h>
+#include <string.h>
 
 enum {
   IO_TYPE_PFD,

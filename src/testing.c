@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <limits.h>
+#include <stdlib.h>
 
 // ----------------------------------------------------------------------
 // assert_equal

@@ -1,8 +1,9 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
-#include "psc_push_fields.h"
+#include "psc_pulse.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -72,80 +73,44 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   double width_normal = 2. * 1e-6;
   double width_par    = 3. * 1e-6;
 
-  struct psc_pulse_gauss prm_p_x1 = {
-    .xm  = 0. * length[0],
-    .ym  = .5 * length[1],
-    .zm  = .5 * length[2],
-    .dxm = width_normal,
-    .dym = width_par,
-    .dzm = width_par,
-    .k  = { 1., 0., 0. },
-    .amplitude_s = 1.,
-  };
+  psc.pulse_x1 = psc_pulse_create(psc_case_comm(_case));
+  psc.pulse_x2 = psc_pulse_create(psc_case_comm(_case));
+  psc.pulse_y1 = psc_pulse_create(psc_case_comm(_case));
+  psc.pulse_y2 = psc_pulse_create(psc_case_comm(_case));
+  psc.pulse_z1 = psc_pulse_create(psc_case_comm(_case));
+  psc.pulse_z2 = psc_pulse_create(psc_case_comm(_case));
 
-  struct psc_pulse_gauss prm_p_x2 = {
-    .xm  = 1. * length[0],
-    .ym  = .5 * length[1],
-    .zm  = .5 * length[2],
-    .dxm = width_normal,
-    .dym = width_par,
-    .dzm = width_par,
-    .k  = { -1., 0., 0. },
-    .amplitude_s = 1.,
-  };
+  psc_pulse_set_param_double3(psc.pulse_x1, "k",  (double[3]) { 1., 0., 0.});
+  psc_pulse_set_param_double3(psc.pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });
+  psc_pulse_set_param_double3(psc.pulse_x1, "dm", (double[3]) { width_normal, width_par, width_par });
+  psc_pulse_set_param_double(psc.pulse_x1, "amplitude_s", 1.);
 
-  psc.pulse_x1 = psc_pulse_gauss_create(&prm_p_x1);
-  psc.pulse_x2 = psc_pulse_gauss_create(&prm_p_x2);
+  psc_pulse_set_param_double3(psc.pulse_x2, "k",  (double[3]) { -1., 0., 0.});
+  psc_pulse_set_param_double3(psc.pulse_x2, "m",  (double[3]) { length[0], .5 * length[1], .5 * length[2] });
+  psc_pulse_set_param_double3(psc.pulse_x2, "dm", (double[3]) { width_normal, width_par, width_par });
+  psc_pulse_set_param_double(psc.pulse_x2, "amplitude_s", 1.);
 
-  struct psc_pulse_gauss prm_p_y1 = {
-    .xm  = .5 * length[0],
-    .ym  = 0. * length[1],
-    .zm  = .5 * length[2],
-    .dxm = width_par,
-    .dym = width_normal,
-    .dzm = width_par,
-    .k  = { 0., 1., 0. },
-    .amplitude_s = 1.,
-  };
 
-  struct psc_pulse_gauss prm_p_y2 = {
-    .xm  = .5 * length[0],
-    .ym  = 1. * length[1],
-    .zm  = .5 * length[2],
-    .dxm = width_par,
-    .dym = width_normal,
-    .dzm = width_par,
-    .k  = { 0., -1., 0. },
-    .amplitude_s = 1.,
-  };
+  psc_pulse_set_param_double3(psc.pulse_y1, "k",  (double[3]) { 0., 1., 0.});
+  psc_pulse_set_param_double3(psc.pulse_y1, "m",  (double[3]) { .5 * length[0], 0., .5 * length[2] });
+  psc_pulse_set_param_double3(psc.pulse_y1, "dm", (double[3]) { width_par, width_normal, width_par });
+  psc_pulse_set_param_double(psc.pulse_y1, "amplitude_s", 1.);
 
-  psc.pulse_y1 = psc_pulse_gauss_create(&prm_p_y1);
-  psc.pulse_y2 = psc_pulse_gauss_create(&prm_p_y2);
+  psc_pulse_set_param_double3(psc.pulse_y2, "k",  (double[3]) { 0., -1., 0.});
+  psc_pulse_set_param_double3(psc.pulse_y2, "m",  (double[3]) { .5 * length[0], length[1], .5 * length[2] });
+  psc_pulse_set_param_double3(psc.pulse_y2, "dm", (double[3]) { width_par, width_normal, width_par });
+  psc_pulse_set_param_double(psc.pulse_y2, "amplitude_s", 1.);
 
-  struct psc_pulse_gauss prm_p_z1 = {
-    .xm  = .5 * length[0],
-    .ym  = .5 * length[1],
-    .zm  = 0. * length[2],
-    .dxm = width_par,
-    .dym = width_par,
-    .dzm = width_normal,
-    .k  = { 0., 0., 1. },
-    .amplitude_s = 1.,
-  };
 
-  struct psc_pulse_gauss prm_p_z2 = {
-    .xm  = .5 * length[0],
-    .ym  = .5 * length[1],
-    .zm  = 1. * length[2],
-    .dxm = width_par,
-    .dym = width_par,
-    .dzm = width_normal,
-    .k  = { 0., 0., -1. },
-    .amplitude_s = 1.,
-  };
+  psc_pulse_set_param_double3(psc.pulse_z1, "k",  (double[3]) { 0., 0., 1.});
+  psc_pulse_set_param_double3(psc.pulse_z1, "m",  (double[3]) { .5 * length[0], .5 * length[1], 0.});
+  psc_pulse_set_param_double3(psc.pulse_z1, "dm", (double[3]) { width_par, width_par, width_normal });
+  psc_pulse_set_param_double(psc.pulse_z1, "amplitude_s", 1.);
 
-  psc.pulse_z1 = psc_pulse_gauss_create(&prm_p_z1);
-  psc.pulse_z2 = psc_pulse_gauss_create(&prm_p_z2);
+  psc_pulse_set_param_double3(psc.pulse_z2, "k",  (double[3]) { 0., 0., -1.});
+  psc_pulse_set_param_double3(psc.pulse_z2, "m",  (double[3]) { .5 * length[0], .5 * length[1], length[2]});
+  psc_pulse_set_param_double3(psc.pulse_z2, "dm", (double[3]) { width_par, width_par, width_normal });
+  psc_pulse_set_param_double(psc.pulse_z2, "amplitude_s", 1.);
 }
 
 static void

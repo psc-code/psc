@@ -1,6 +1,8 @@
 
 #include "psc_case_private.h"
 
+#include <mrc_params.h>
+
 // ----------------------------------------------------------------------
 // psc_init_field_pml helper
 

@@ -1,7 +1,9 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_pulse.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,6 +45,7 @@ static struct param psc_case_wakefield_descr[] = {
 static void
 psc_case_wakefield_create(struct psc_case *_case)
 {
+#if 0
   struct psc_pulse_gauss prm = {
     .xm  = 20. * 1e-6,
     .ym  = 20. * 1e-6,
@@ -52,7 +55,9 @@ psc_case_wakefield_create(struct psc_case *_case)
     .dzm = 1.  * 1e-6,
     .amplitude_p = 1.,
   };
-  psc.pulse_z1 = psc_pulse_gauss_create(&prm);
+#endif
+  psc.pulse_z1 = psc_pulse_create(psc_case_comm(_case));
+  psc_pulse_set_type(psc.pulse_z1, "gauss");
 }
 
 static void

@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include <stdlib.h>
+
 // ----------------------------------------------------------------------
 // mparticles_base_destroy
 

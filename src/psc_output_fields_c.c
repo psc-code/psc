@@ -3,6 +3,8 @@
 #include "psc_moments.h"
 
 #include <mrc_profile.h>
+#include <mrc_params.h>
+#include <string.h>
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 

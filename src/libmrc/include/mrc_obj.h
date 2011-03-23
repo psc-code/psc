@@ -72,10 +72,12 @@ void mrc_obj_set_type(struct mrc_obj *obj, const char *type);
 void mrc_obj_set_from_options(struct mrc_obj *obj);
 void mrc_obj_set_param_int(struct mrc_obj *obj, const char *name, int val);
 void mrc_obj_set_param_float(struct mrc_obj *obj, const char *name, float val);
+void mrc_obj_set_param_double(struct mrc_obj *obj, const char *name, double val);
 void mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val);
 void mrc_obj_set_param_select(struct mrc_obj *obj, const char *name, int val);
 void mrc_obj_set_param_int3(struct mrc_obj *obj, const char *name, int val[3]);
 void mrc_obj_set_param_float3(struct mrc_obj *obj, const char *name, float val[3]);
+void mrc_obj_set_param_double3(struct mrc_obj *obj, const char *name, double val[3]);
 void mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char **val);
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
@@ -153,6 +155,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   }									\
 									\
   static inline void 							\
+  pfx ## _set_param_double(obj_type *obj, const char *name, double val)	\
+  {									\
+    mrc_obj_set_param_double((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void 							\
   pfx ## _set_param_string(obj_type *obj, const char *name, const char *val) \
   {									\
     mrc_obj_set_param_string((struct mrc_obj *)obj, name, val);		\
@@ -174,6 +182,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   pfx ## _set_param_float3(obj_type *obj, const char *name, float val[3])	\
   {									\
     mrc_obj_set_param_float3((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _set_param_double3(obj_type *obj, const char *name, double val[3])	\
+  {									\
+    mrc_obj_set_param_double3((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\

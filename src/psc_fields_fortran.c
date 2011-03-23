@@ -3,6 +3,9 @@
 #include "psc_fields_fortran.h"
 #include "psc_glue.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 void
 __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
 		       fields_fortran_real_t *arr, bool with_array)

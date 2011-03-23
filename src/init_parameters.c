@@ -3,6 +3,7 @@
 #include <mrc_params.h>
 
 #include <math.h>
+#include <stdlib.h>
 #include <assert.h>
 
 struct psc_cmdline {

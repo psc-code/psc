@@ -1,6 +1,9 @@
 
 #include "psc_output_fields_c.h"
 
+#include <string.h>
+#include <stdlib.h>
+
 // ----------------------------------------------------------------------
 // copy_to_global helper
 
