@@ -11,26 +11,8 @@ struct psc_pulse_flattop {
   double amplitude_s;   // max amplitude, s-polarization
   double phase_p;       // CEP-phase  (from -pi to pi)
   double phase_s;       // CEP-phase  (from -pi to pi)
+  double k[3];
 };
-
-#define VAR(x) (void *)offsetof(struct psc_pulse_flattop, x)
-
-static struct param psc_pulse_flattop_descr[] = {
-  { "pulse_xm"      , VAR(xm)              , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_ym"      , VAR(ym)              , PARAM_DOUBLE(5.  * 1e-6)     },
-  { "pulse_zm"      , VAR(zm)              , PARAM_DOUBLE(-4. * 1e-6)     },
-  { "pulse_dxm"     , VAR(dxm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_zb"      , VAR(zb)              , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_phase_p"    , VAR(phase_p)      , PARAM_DOUBLE(0.0)            },
-  { "pulse_phase_s"    , VAR(phase_s)      , PARAM_DOUBLE(0.0)            },
-  { "pulse_amplitude_p", VAR(amplitude_p)  , PARAM_DOUBLE(1.)             },
-  { "pulse_amplitude_s", VAR(amplitude_s)  , PARAM_DOUBLE(1.)             },
-  {},
-};
-
-#undef VAR
 
 static void
 psc_pulse_flattop_setup(struct psc_pulse *pulse)
@@ -93,6 +75,20 @@ psc_pulse_flattop_field_s(struct psc_pulse *pulse,
 
   return flattop->amplitude_s * envelope * sin(phase + flattop->phase_s);
 }
+
+#define VAR(x) (void *)offsetof(struct psc_pulse_flattop, x)
+static struct param psc_pulse_flattop_descr[] = {
+  { "m"               , VAR(xm)           , PARAM_DOUBLE3(0., 0., 0.)       },
+  { "dm"              , VAR(dxm)          , PARAM_DOUBLE3(1e-6, 1e-6, 1e-6) },
+  { "zb"              , VAR(zb)           , PARAM_DOUBLE(1.5 * 1e-6)        },
+  { "k"               , VAR(k)            , PARAM_DOUBLE3(0., 0., 0.)       },
+  { "phase_p"         , VAR(phase_p)      , PARAM_DOUBLE(0.0)               },
+  { "phase_s"         , VAR(phase_s)      , PARAM_DOUBLE(0.0)               },
+  { "amplitude_p"     , VAR(amplitude_p)  , PARAM_DOUBLE(0.)                },
+  { "amplitude_s"     , VAR(amplitude_s)  , PARAM_DOUBLE(0.)                },
+  {},
+};
+#undef VAR
 
 struct psc_pulse_ops psc_pulse_flattop_ops = {
   .name        = "flattop",
