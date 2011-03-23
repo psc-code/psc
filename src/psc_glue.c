@@ -40,7 +40,8 @@
 #define PIC_pez_a_F77 F77_FUNC(pic_pez_a, PIC_PEZ_A)
 #define PIC_pez_b_F77 F77_FUNC(pic_pez_b, PIC_PEZ_B)
 #define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
-#define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
+#define PIC_msb_h_F77 F77_FUNC_(pic_msb_h, PIC_MSB_H)
+#define PIC_msb_e_F77 F77_FUNC_(pic_msb_e, PIC_MSB_E)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 #define SERV_read_1_F77 F77_FUNC_(serv_read_1, SERV_READ_1)
@@ -159,9 +160,12 @@ void PIC_pez_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
 		 f_real *hx, f_real *hy, f_real *hz,
 		 f_real *jxi, f_real *jyi, f_real *jzi);
-void PIC_msb_F77(f_real *ex, f_real *ey, f_real *ez,
-		 f_real *hx, f_real *hy, f_real *hz,
-		 f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msb_h_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msb_e_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
 void PIC_pml_msa_F77(f_real *ex, f_real *ey, f_real *ez,
 		     f_real *hx, f_real *hy, f_real *hz,
 		     f_real *dx, f_real *dy, f_real *dz,
@@ -485,12 +489,21 @@ PIC_pml_msa(fields_fortran_t *pf)
 }
 
 void
-PIC_msb(fields_fortran_t *pf)
+PIC_msb_h(fields_fortran_t *pf)
 {
   PSC_set_timestep(&psc);
-  PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msb_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_msb_e(fields_fortran_t *pf)
+{
+  PSC_set_timestep(&psc);
+  PIC_msb_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
 }
 
 void

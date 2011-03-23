@@ -2,7 +2,7 @@ c THIS SUBROUTINE DETERMINES A 3D SOLUTION OF MAXWELLS EQUATIONS.
 c THE UPDATED E AND H-FIELDS ARE AT t=(n+0.5)*dt.
 
 
-      subroutine PIC_msb(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
+      subroutine PIC_msb_h(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
 
       use VLA_variables
       use PSC_domain
@@ -120,6 +120,42 @@ c -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
       call PIC_fey(hz)
       call PIC_fez(hz)
 
+      end subroutine PIC_msb_h
+
+
+      subroutine PIC_msb_e(ex, ey, ez, hx, hy, hz, jxi, jyi, jzi)
+
+      use VLA_variables
+      use PSC_domain
+      use PSC_patch
+      use OUT_poyn
+
+      implicit none
+
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: ex, ey, ez
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: hx, hy, hz
+      real(kind=8),dimension(i1mn-rd1:i1mx+rd1,
+     &                       i2mn-rd2:i2mx+rd2,
+     &                       i3mn-rd3:i3mx+rd3) :: jxi, jyi, jzi
+
+      real(kind=8) :: cnx,cny,cnz
+
+      real(kind=8) :: jx,jy,jz
+
+      real(kind=8) :: exh,eyh,ezh,hxh,hyh,hzh
+      real(kind=8) :: exk,eyk,ezk,hxk,hyk,hzk
+
+      integer :: i1, i2, i3
+
+c initialization
+
+      cnx=0.5*dt/dx
+      cny=0.5*dt/dy
+      cnz=0.5*dt/dz
 
 c E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
 c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
@@ -232,7 +268,7 @@ c energy conservation
       enddo
 
 
-      end subroutine PIC_msb
+      end subroutine PIC_msb_e
 
 !     ------------------------------------------------------------
       subroutine PIC_fill_ghosts_h_b(hx, hy, hz, ex, ey, ez,
