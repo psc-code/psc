@@ -1,8 +1,18 @@
 
-#include "psc_pulse.h"
-#include <mrc_params.h>
+#include "psc_pulse_private.h"
 
+#include <mrc_params.h>
 #include <math.h>
+
+struct psc_pulse_gauss {
+  double xm, ym, zm; // location of pulse center at time 0 in m 
+  double dxm, dym, dzm; // width of pulse in m
+  double amplitude_p;   // max amplitude, p-polarization
+  double amplitude_s;   // max amplitude, s-polarization
+  double phase_p;       // CEP-phase  (from -pi to pi)
+  double phase_s;       // CEP-phase  (from -pi to pi)
+  double k[3];
+};
 
 // ======================================================================
 // psc_pulse_gauss

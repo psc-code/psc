@@ -1,7 +1,17 @@
 
-#include "psc_pulse.h"
+#include "psc_pulse_private.h"
 
 #include <math.h>
+
+struct psc_pulse_flattop {
+  double xm, ym, zm; // location of pulse center at time 0 in m 
+  double dxm, dym, dzm; // slope of pulse in m
+  double zb; // width of pulse in m
+  double amplitude_p;   // max amplitude, p-polarization
+  double amplitude_s;   // max amplitude, s-polarization
+  double phase_p;       // CEP-phase  (from -pi to pi)
+  double phase_s;       // CEP-phase  (from -pi to pi)
+};
 
 #define VAR(x) (void *)offsetof(struct psc_pulse_flattop, x)
 

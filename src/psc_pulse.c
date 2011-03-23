@@ -1,6 +1,5 @@
 
-#include "psc.h"
-#include "psc_pulse.h"
+#include "psc_pulse_private.h"
 
 // ----------------------------------------------------------------------
 // psc_p_pulse_x1
@@ -154,6 +153,27 @@ _psc_pulse_setup(struct psc_pulse *pulse)
 {
   mrc_obj_setup_sub(&pulse->obj);
   pulse->is_setup = true;
+}
+
+// ----------------------------------------------------------------------
+// forward to subclass
+
+double
+psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double t)
+{
+  if (!pulse->is_setup) {
+    psc_pulse_setup(pulse);
+  }
+  return psc_pulse_ops(pulse)->field_s(pulse, x, y, z, t);
+}
+
+double
+psc_pulse_field_p(struct psc_pulse *pulse, double x, double y, double z, double t)
+{
+  if (!pulse->is_setup) {
+    psc_pulse_setup(pulse);
+  }
+  return psc_pulse_ops(pulse)->field_p(pulse, x, y, z, t);
 }
 
 // ======================================================================
