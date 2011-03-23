@@ -123,8 +123,8 @@ psc_set_from_options(struct psc *psc)
 void
 psc_setup(struct psc *psc)
 {
-  psc_setup_domain(psc); // needs to be done before setting up psc_bnd
   psc_setup_coeff(psc);
+  psc_setup_domain(psc); // needs to be done before setting up psc_bnd
 
   psc_push_particles_setup(psc->push_particles);
   psc_push_fields_setup(psc->push_fields);
