@@ -1,5 +1,7 @@
 
 #include "psc_push_fields_private.h"
+
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 
 // ======================================================================
@@ -76,7 +78,10 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     ops->pml_a(push, flds);
   } else {
     psc_push_fields_push_a_e(push, flds);
+    psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
+
     psc_push_fields_push_a_h(push, flds);
+    psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
   }
 }
 
@@ -89,7 +94,10 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
     ops->pml_b(push, flds);
   } else {
     psc_push_fields_push_b_h(push, flds);
+    psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
+
     psc_push_fields_push_b_e(push, flds);
+    psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
   }
 }
 

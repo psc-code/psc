@@ -2,7 +2,6 @@
 #include "psc_push_fields_private.h"
 
 #include "psc.h"
-#include "psc_bnd.h"
 
 static void
 psc_push_fields_c_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
@@ -50,8 +49,6 @@ psc_push_fields_c_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
 	.5 * psc.dt * F3_BASE(pf, JZI, ix,iy,iz);
     } foreach_3d_end;
   }
-
-  psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
 }
 
 static void
@@ -90,8 +87,6 @@ psc_push_fields_c_push_a_h(struct psc_push_fields *push, mfields_base_t *flds)
 	cny * (F3_BASE(pf, EX, ix,iy+1,iz) - F3_BASE(pf, EX, ix,iy,iz));
     } foreach_3d_end;
   }
-
-  psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 }
 
 static void
@@ -130,8 +125,6 @@ psc_push_fields_c_push_b_h(struct psc_push_fields *push, mfields_base_t *flds)
 	cny * (F3_BASE(pf, EX, ix,iy+1,iz) - F3_BASE(pf, EX, ix,iy,iz));
     } foreach_3d_end;
   }
-
-  psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 }
 
 static void
@@ -173,8 +166,6 @@ psc_push_fields_c_push_b_e(struct psc_push_fields *push, mfields_base_t *flds)
 	.5 * psc.dt * F3_BASE(pf, JZI, ix,iy,iz);
     } foreach_3d_end;
   }
-
-  psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
 }
 
 // ======================================================================

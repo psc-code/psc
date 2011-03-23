@@ -141,17 +141,6 @@ c -> E^(n+0.5), B^(n), j^(n)
          enddo
       enddo
 
-
-      call PIC_fex(ex)
-      call PIC_fey(ex)
-      call PIC_fez(ex)
-      call PIC_fex(ey)
-      call PIC_fey(ey)
-      call PIC_fez(ey)
-      call PIC_fex(ez)
-      call PIC_fey(ez)
-      call PIC_fez(ez)
-
       end subroutine PIC_msa_e
 
 
@@ -265,17 +254,7 @@ c -> E^(n+0.5), B^(n+0.5), j^(n), m^(n+0.5)
       enddo
 
 
-      call PIC_fex(hx)
-      call PIC_fey(hx)
-      call PIC_fez(hx)
-      call PIC_fex(hy)
-      call PIC_fey(hy)
-      call PIC_fez(hy)
-      call PIC_fex(hz)
-      call PIC_fey(hz)
-      call PIC_fez(hz)
-
-c energy conservation
+c energy conservation // FIXME, probably broken since ghost points haven't been set
 
 
       fluxi=0.0

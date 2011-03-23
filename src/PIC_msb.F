@@ -110,16 +110,6 @@ c -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
       call PIC_fill_ghosts_h_b(hx, hy, hz, ex, ey, ez, jxi, jyi, jzi)
 
-      call PIC_fex(hx)
-      call PIC_fey(hx)
-      call PIC_fez(hx)
-      call PIC_fex(hy)
-      call PIC_fey(hy)
-      call PIC_fez(hy)
-      call PIC_fex(hz)
-      call PIC_fey(hz)
-      call PIC_fez(hz)
-
       end subroutine PIC_msb_h
 
 
@@ -240,18 +230,7 @@ c -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
       enddo
 
 
-      call PIC_fex(ex)
-      call PIC_fey(ex)
-      call PIC_fez(ex)
-      call PIC_fex(ey)
-      call PIC_fey(ey)
-      call PIC_fez(ey)
-      call PIC_fex(ez)
-      call PIC_fey(ez)
-      call PIC_fez(ez)
-
-
-c energy conservation
+c energy conservation // FIXME, probably broken since ghost points haven't been set
 
 
       do i3=i3mn,i3mx
