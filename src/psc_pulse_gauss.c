@@ -20,6 +20,7 @@ struct psc_pulse_gauss {
 static void
 psc_pulse_gauss_setup(struct psc_pulse *pulse)
 {
+  // FIXME, not good to change parameters, messes up ::view()
   struct psc_pulse_gauss *gauss = mrc_to_subobj(pulse, struct psc_pulse_gauss);
 
   // normalization

@@ -62,7 +62,6 @@ psc_case_thinfoil_create(struct psc_case *_case)
   };
 #endif
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
-  bnd_fields->pulse_z1 = psc_pulse_create(psc_case_comm(_case));
   psc_pulse_set_type(bnd_fields->pulse_z1, "flattop");
 }
 

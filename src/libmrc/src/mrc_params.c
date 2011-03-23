@@ -222,7 +222,29 @@ mrc_params_get_option_float3(const char *name, float *pval)
     retval = 0;
     int rv = sscanf(p->value, "%g", pval + d);
     if (rv != 1) {
-      fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
+      fprintf(stderr, "error: cannot parse float from '%s'\n", p->value);
+      abort();
+    }
+  }
+  return retval;
+}
+
+int
+mrc_params_get_option_double3(const char *name, double *pval)
+{
+  int retval = -1;
+  char namex[strlen(name) + 2];
+  for (int d = 0; d < 3; d++) {
+    sprintf(namex, "%s%c", name, 'x' + d);
+    struct option *p = find_option(namex);
+  
+    if (!p)
+      continue;
+    
+    retval = 0;
+    int rv = sscanf(p->value, "%lg", pval + d);
+    if (rv != 1) {
+      fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
       abort();
     }
   }
@@ -453,6 +475,9 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_FLOAT3:
       mrc_params_get_option_float3(params[i].name, &pv->u_float3[0]);
       break;
+    case PT_DOUBLE3:
+      mrc_params_get_option_double3(params[i].name, &pv->u_double3[0]);
+      break;
     default:
       assert(0);
     }
@@ -491,6 +516,9 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       break;
     case PT_FLOAT3:
       mrc_params_get_option_float3(name, &pv->u_float3[0]);
+      break;
+    case PT_DOUBLE3:
+      mrc_params_get_option_double3(name, &pv->u_double3[0]);
       break;
     default:
       assert(0);

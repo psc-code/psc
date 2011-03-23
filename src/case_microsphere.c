@@ -77,13 +77,6 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
 
-  bnd_fields->pulse_x1 = psc_pulse_create(psc_case_comm(_case));
-  bnd_fields->pulse_x2 = psc_pulse_create(psc_case_comm(_case));
-  bnd_fields->pulse_y1 = psc_pulse_create(psc_case_comm(_case));
-  bnd_fields->pulse_y2 = psc_pulse_create(psc_case_comm(_case));
-  bnd_fields->pulse_z1 = psc_pulse_create(psc_case_comm(_case));
-  bnd_fields->pulse_z2 = psc_pulse_create(psc_case_comm(_case));
-
   psc_pulse_set_type(bnd_fields->pulse_x1, "gauss");
   psc_pulse_set_param_double3(bnd_fields->pulse_x1, "k",  (double[3]) { 1., 0., 0.});
   psc_pulse_set_param_double3(bnd_fields->pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });
