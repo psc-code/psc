@@ -13,7 +13,10 @@ static struct param psc_pulse_flattop_descr[] = {
   { "pulse_dym"     , VAR(dym)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_dzm"     , VAR(dzm)             , PARAM_DOUBLE(1.5 * 1e-6)     },
   { "pulse_zb"      , VAR(zb)              , PARAM_DOUBLE(1.5 * 1e-6)     },
-  { "pulse_phase"   , VAR(phase)           , PARAM_DOUBLE(0.0)            },
+  { "pulse_phase_p"    , VAR(phase_p)      , PARAM_DOUBLE(0.0)            },
+  { "pulse_phase_s"    , VAR(phase_s)      , PARAM_DOUBLE(0.0)            },
+  { "pulse_amplitude_p", VAR(amplitude_p)  , PARAM_DOUBLE(1.)             },
+  { "pulse_amplitude_s", VAR(amplitude_s)  , PARAM_DOUBLE(1.)             },
   {},
 };
 
@@ -34,11 +37,14 @@ psc_pulse_flattop_setup(struct psc_pulse *pulse)
   prm->zb /= psc.coeff.ld;
 }
 
-double
+void
 psc_pulse_flattop_field(struct psc_pulse *pulse, 
-			double xx, double yy, double zz, double tt)
+			double xx, double yy, double zz, double tt,
+			double *phase, double *envelope)
 {
   struct psc_pulse_flattop *prm = pulse->ctx;
+
+  // FIXME, only for z direction right now
 
   double xl = xx;
   double yl = yy;
@@ -48,10 +54,34 @@ psc_pulse_flattop_field(struct psc_pulse *pulse,
   double yr = yl - prm->ym;
   double zr = zl - prm->zm;
 
-  return sin(zr+prm->phase)
-    * exp(-sqr(xr/prm->dxm))
-    * exp(-sqr(yr/prm->dym))
-    * 1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm));
+  *phase = zr;
+  *envelope = (exp(-sqr(xr/prm->dxm)) *
+	       exp(-sqr(yr/prm->dym)) *
+	       1. / (1.+exp((fabs(zr)-prm->zb)/prm->dzm)));
+}
+
+static double
+psc_pulse_flattop_field_p(struct psc_pulse *pulse,
+			  double xx, double yy, double zz, double tt)
+{
+  struct psc_pulse_flattop *prm = pulse->ctx;
+
+  double phase, envelope;
+  psc_pulse_flattop_field(pulse, xx, yy, zz, tt, &phase, &envelope);
+
+  return prm->amplitude_p * envelope * sin(phase + prm->phase_p);
+}
+
+static double
+psc_pulse_flattop_field_s(struct psc_pulse *pulse,
+			  double xx, double yy, double zz, double tt)
+{
+  struct psc_pulse_flattop *prm = pulse->ctx;
+
+  double phase, envelope;
+  psc_pulse_flattop_field(pulse, xx, yy, zz, tt, &phase, &envelope);
+
+  return prm->amplitude_s * envelope * sin(phase + prm->phase_s);
 }
 
 struct psc_pulse_ops psc_pulse_ops_flattop = {
@@ -59,9 +89,8 @@ struct psc_pulse_ops psc_pulse_ops_flattop = {
   .ctx_size   = sizeof(struct psc_pulse_flattop),
   .ctx_descr  = psc_pulse_flattop_descr,
   .setup      = psc_pulse_flattop_setup,
-  // FIXME, use different amplitude / phase for p/s
-  .field_p    = psc_pulse_flattop_field,
-  .field_s    = psc_pulse_flattop_field,
+  .field_p    = psc_pulse_flattop_field_p,
+  .field_s    = psc_pulse_flattop_field_s,
 };
 
 struct psc_pulse *

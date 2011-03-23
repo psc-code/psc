@@ -83,7 +83,10 @@ struct psc_pulse_flattop {
   double xm, ym, zm; // location of pulse center at time 0 in m 
   double dxm, dym, dzm; // slope of pulse in m
   double zb; // width of pulse in m
-  double phase; // CEP-phase (from -pi to pi)
+  double amplitude_p;   // max amplitude, p-polarization
+  double amplitude_s;   // max amplitude, s-polarization
+  double phase_p;       // CEP-phase  (from -pi to pi)
+  double phase_s;       // CEP-phase  (from -pi to pi)
 };
 
 struct psc_pulse *psc_pulse_flattop_create(struct psc_pulse_flattop *prm);
