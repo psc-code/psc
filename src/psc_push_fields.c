@@ -1,5 +1,6 @@
 
 #include "psc_push_fields_private.h"
+#include <mrc_profile.h>
 
 // ======================================================================
 // forward to subclass
@@ -14,8 +15,21 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     assert(ops->pml_a);
     ops->pml_a(push, flds);
   } else {
-    assert(ops->step_a);
-    ops->step_a(push, flds);
+    static int pr_e, pr_h;
+    if (!pr_e) {
+      pr_e = prof_register("push_fields_a_e", 1., 0, 0);
+      pr_h = prof_register("push_fields_a_h", 1., 0, 0);
+    }
+    assert(ops->push_a_e);
+    assert(ops->push_a_h);
+
+    prof_start(pr_e);
+    ops->push_a_e(push, flds);
+    prof_stop(pr_e);
+
+    prof_start(pr_h);
+    ops->push_a_h(push, flds);
+    prof_stop(pr_h);
   }
 }
 
@@ -27,8 +41,21 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
     assert(ops->pml_b);
     ops->pml_b(push, flds);
   } else {
-    assert(ops->step_b);
-    ops->step_b(push, flds);
+    static int pr_e, pr_h;
+    if (!pr_e) {
+      pr_e = prof_register("push_fields_b_e", 1., 0, 0);
+      pr_h = prof_register("push_fields_b_h", 1., 0, 0);
+    }
+    assert(ops->push_b_h);
+    assert(ops->push_b_e);
+
+    prof_start(pr_e);
+    ops->push_b_h(push, flds);
+    prof_stop(pr_e);
+
+    prof_start(pr_h);
+    ops->push_b_e(push, flds);
+    prof_stop(pr_h);
   }
 }
 

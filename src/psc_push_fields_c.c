@@ -3,17 +3,10 @@
 
 #include "psc.h"
 #include "psc_bnd.h"
-#include <mrc_profile.h>
 
 static void
-c_push_field_a_e(mfields_base_t *flds)
+psc_push_fields_c_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_field_a_e", 1., 0, 0);
-  }
-  prof_start(pr);
-
   assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[2] == BND_FLD_PERIODIC);
@@ -21,13 +14,9 @@ c_push_field_a_e(mfields_base_t *flds)
   assert(psc.domain.bnd_fld_hi[1] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_hi[2] == BND_FLD_PERIODIC);
 
-  f_real lx = psc.dt / psc.dx[0];
-  f_real ly = psc.dt / psc.dx[1];
-  f_real lz = psc.dt / psc.dx[2];
-
-  f_real cnx = .5 * lx;
-  f_real cny = .5 * ly;
-  f_real cnz = .5 * lz;
+  f_real cnx = .5 * psc.dt / psc.dx[0];
+  f_real cny = .5 * psc.dt / psc.dx[1];
+  f_real cnz = .5 * psc.dt / psc.dx[2];
 
   if (psc.domain.gdims[0] == 1) {
     cnx = 0.;
@@ -63,26 +52,14 @@ c_push_field_a_e(mfields_base_t *flds)
   }
 
   psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
-
-  prof_stop(pr);
 }
 
 static void
-c_push_field_a_h(mfields_base_t *flds)
+psc_push_fields_c_push_a_h(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_field_a_h", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  f_real lx = psc.dt / psc.dx[0];
-  f_real ly = psc.dt / psc.dx[1];
-  f_real lz = psc.dt / psc.dx[2];
-
-  f_real cnx = .5 * lx;
-  f_real cny = .5 * ly;
-  f_real cnz = .5 * lz;
+  f_real cnx = .5 * psc.dt / psc.dx[0];
+  f_real cny = .5 * psc.dt / psc.dx[1];
+  f_real cnz = .5 * psc.dt / psc.dx[2];
 
   if (psc.domain.gdims[0] == 1) {
     cnx = 0.;
@@ -115,26 +92,14 @@ c_push_field_a_h(mfields_base_t *flds)
   }
 
   psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
-
-  prof_stop(pr);
 }
 
 static void
-c_push_field_b_h(mfields_base_t *flds)
+psc_push_fields_c_push_b_h(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_field_b_h", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  f_real lx = psc.dt / psc.dx[0];
-  f_real ly = psc.dt / psc.dx[1];
-  f_real lz = psc.dt / psc.dx[2];
-
-  f_real cnx = .5 * lx;
-  f_real cny = .5 * ly;
-  f_real cnz = .5 * lz;
+  f_real cnx = .5 * psc.dt / psc.dx[0];
+  f_real cny = .5 * psc.dt / psc.dx[1];
+  f_real cnz = .5 * psc.dt / psc.dx[2];
 
   if (psc.domain.gdims[0] == 1) {
     cnx = 0.;
@@ -167,26 +132,14 @@ c_push_field_b_h(mfields_base_t *flds)
   }
 
   psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
-
-  prof_stop(pr);
 }
 
 static void
-c_push_field_b_e(mfields_base_t *flds)
+psc_push_fields_c_push_b_e(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_field_b_e", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  f_real lx = psc.dt / psc.dx[0];
-  f_real ly = psc.dt / psc.dx[1];
-  f_real lz = psc.dt / psc.dx[2];
-
-  f_real cnx = .5 * lx;
-  f_real cny = .5 * ly;
-  f_real cnz = .5 * lz;
+  f_real cnx = .5 * psc.dt / psc.dx[0];
+  f_real cny = .5 * psc.dt / psc.dx[1];
+  f_real cnz = .5 * psc.dt / psc.dx[2];
 
   if (psc.domain.gdims[0] == 1) {
     cnx = 0.;
@@ -222,28 +175,6 @@ c_push_field_b_e(mfields_base_t *flds)
   }
 
   psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
-
-  prof_stop(pr);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_fields_c_step_a
-
-static void
-psc_push_fields_c_step_a(struct psc_push_fields *push, mfields_base_t *flds)
-{
-  c_push_field_a_e(flds);
-  c_push_field_a_h(flds);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_fields_c_step_b
-
-static void
-psc_push_fields_c_step_b(struct psc_push_fields *push, mfields_base_t *flds)
-{
-  c_push_field_b_h(flds);
-  c_push_field_b_e(flds);
 }
 
 // ======================================================================
@@ -251,6 +182,8 @@ psc_push_fields_c_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 
 struct psc_push_fields_ops psc_push_fields_c_ops = {
   .name                  = "c",
-  .step_a                = psc_push_fields_c_step_a,
-  .step_b                = psc_push_fields_c_step_b,
+  .push_a_e              = psc_push_fields_c_push_a_e,
+  .push_a_h              = psc_push_fields_c_push_a_h,
+  .push_b_h              = psc_push_fields_c_push_b_h,
+  .push_b_e              = psc_push_fields_c_push_b_e,
 };
