@@ -290,7 +290,7 @@ c energy conservation // FIXME, probably broken since ghost points haven't been 
 
 c open boundary at x1 plus incident laser pulse
 
-      if (boundary_fld_x1==0) then       
+      if (boundary_fld_x1==0 .and. i1mn==0) then       
 
       t=n*dt
       i1=i1mn-1
@@ -318,7 +318,7 @@ c open boundary at x1 plus incident laser pulse
 
 c open boundary at y1 plus incident laser pulse
 
-      if (boundary_fld_y1==0) then       
+      if (boundary_fld_y1==0 .and. i2mn==0) then       
 
       t=n*dt
       i2=i2mn ! ghost cell we're setting: (i2mn - 1) + 1/2
@@ -346,7 +346,7 @@ c open boundary at y1 plus incident laser pulse
 
 c open boundary at z1 plus incident laser pulse
 
-      if (boundary_fld_z1==0) then       
+      if (boundary_fld_z1==0 .and. i3mn==0) then       
 
       t=n*dt
       i3=i3mn-1 ! ghost cell we're setting: (i3mn - 1 - 1) + 1/2
@@ -374,7 +374,7 @@ c open boundary at z1 plus incident laser pulse
 
 c open boundary at x2 plus incident laser pulse
 
-      if (boundary_fld_x2==0) then       
+      if (boundary_fld_x2==0 .and. i1mx==i1x) then       
 
       t=n*dt
       i1=i1mx
@@ -402,7 +402,7 @@ c open boundary at x2 plus incident laser pulse
 
 c open boundary at y2 plus incident laser pulse
 
-      if (boundary_fld_y2==0) then       
+      if (boundary_fld_y2==0 .and. i2mx==i2x) then       
 
       t=n*dt
       i2=i2mx
@@ -430,7 +430,7 @@ c open boundary at y2 plus incident laser pulse
 
 c open boundary at z2 plus incident laser pulse
 
-      if (boundary_fld_z2==0) then       
+      if (boundary_fld_z2==0 .and. i3mx==i3x) then       
 
       t=n*dt
       i3=i3mx ! ghost cell we're setting: (i3mx + 1) + 1/2
