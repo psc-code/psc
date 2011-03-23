@@ -3,7 +3,6 @@
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
-#include "psc_bnd_fields.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
@@ -83,7 +82,6 @@ psc_create()
   psc.push_particles = psc_push_particles_create(comm);
   psc.push_fields = psc_push_fields_create(comm);
   psc.bnd = psc_bnd_create(comm);
-  psc.bnd_fields = psc_bnd_fields_create(comm);
   psc.collision = psc_collision_create(comm);
   psc.randomize = psc_randomize_create(comm);
   psc.sort = psc_sort_create(comm);
@@ -108,7 +106,6 @@ psc_set_from_options(struct psc *psc)
   psc_push_particles_set_from_options(psc->push_particles);
   psc_push_fields_set_from_options(psc->push_fields);
   psc_bnd_set_from_options(psc->bnd);
-  psc_bnd_fields_set_from_options(psc->bnd_fields);
   psc_collision_set_from_options(psc->collision);
   psc_randomize_set_from_options(psc->randomize);
   psc_sort_set_from_options(psc->sort);
@@ -132,7 +129,6 @@ psc_setup(struct psc *psc)
   psc_push_particles_setup(psc->push_particles);
   psc_push_fields_setup(psc->push_fields);
   psc_bnd_setup(psc->bnd);
-  psc_bnd_fields_setup(psc->bnd_fields);
   psc_collision_setup(psc->collision);
   psc_randomize_setup(psc->randomize);
   psc_sort_setup(psc->sort);
@@ -153,7 +149,6 @@ psc_view(struct psc *psc)
   psc_push_particles_view(psc->push_particles);
   psc_push_fields_view(psc->push_fields);
   psc_bnd_view(psc->bnd);
-  psc_bnd_fields_view(psc->bnd_fields);
   psc_collision_view(psc->collision);
   psc_randomize_view(psc->randomize);
   psc_sort_view(psc->sort);
@@ -174,7 +169,6 @@ psc_destroy(struct psc *psc)
   psc_push_particles_destroy(psc->push_particles);
   psc_push_fields_destroy(psc->push_fields);
   psc_bnd_destroy(psc->bnd);
-  psc_bnd_fields_destroy(psc->bnd_fields);
   psc_collision_destroy(psc->collision);
   psc_randomize_destroy(psc->randomize);
   psc_sort_destroy(psc->sort);

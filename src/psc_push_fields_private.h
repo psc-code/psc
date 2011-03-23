@@ -6,6 +6,7 @@
 
 struct psc_push_fields {
   struct mrc_obj obj;
+  struct psc_bnd_fields *bnd_fields;
 };
 
 struct psc_push_fields_ops {
