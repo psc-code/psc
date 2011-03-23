@@ -68,8 +68,6 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   psc.domain.bnd_part[1] = BND_PART_PERIODIC;
   psc.domain.bnd_part[2] = BND_PART_PERIODIC;
 
-  psc_push_fields_set_type(psc.push_fields, "fortran");
-
   double *length = psc.domain.length;
   double width_normal = 2. * 1e-6;
   double width_par    = 3. * 1e-6;

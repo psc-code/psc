@@ -6,13 +6,6 @@
 static void
 psc_push_fields_c_push_a_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
-  assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
-  assert(psc.domain.bnd_fld_lo[2] == BND_FLD_PERIODIC);
-  assert(psc.domain.bnd_fld_hi[0] == BND_FLD_PERIODIC);
-  assert(psc.domain.bnd_fld_hi[1] == BND_FLD_PERIODIC);
-  assert(psc.domain.bnd_fld_hi[2] == BND_FLD_PERIODIC);
-
   f_real cnx = .5 * psc.dt / psc.dx[0];
   f_real cny = .5 * psc.dt / psc.dx[1];
   f_real cnz = .5 * psc.dt / psc.dx[2];
