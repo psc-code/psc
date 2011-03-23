@@ -18,6 +18,7 @@ struct psc_pulse_ops {
 		    double x, double y, double z, double t);
 };  
 
+extern struct psc_pulse_ops psc_pulse_none_ops;
 extern struct psc_pulse_ops psc_pulse_gauss_ops;
 extern struct psc_pulse_ops psc_pulse_flattop_ops;
 

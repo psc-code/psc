@@ -182,6 +182,7 @@ psc_pulse_field_p(struct psc_pulse *pulse, double x, double y, double z, double 
 static void
 psc_pulse_init()
 {
+  mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_none_ops);
   mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_gauss_ops);
   mrc_class_register_subclass(&mrc_class_psc_pulse, &psc_pulse_flattop_ops);
 }

@@ -50,6 +50,7 @@ libpsc_a_SOURCES = \
 	output_mrc.c \
 	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
 	psc_pulse.c \
+	psc_pulse_none.c \
 	psc_pulse_gauss.c \
 	psc_pulse_flattop.c \
 	psc_checkpoint.c \
