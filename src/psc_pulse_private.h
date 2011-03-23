@@ -6,6 +6,7 @@
 
 struct psc_pulse {
   struct mrc_obj obj;
+  double k[3];
   bool is_setup;
 };
 

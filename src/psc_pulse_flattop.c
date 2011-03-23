@@ -11,7 +11,6 @@ struct psc_pulse_flattop {
   double amplitude_s;   // max amplitude, s-polarization
   double phase_p;       // CEP-phase  (from -pi to pi)
   double phase_s;       // CEP-phase  (from -pi to pi)
-  double k[3];
 };
 
 static void
@@ -79,7 +78,6 @@ static struct param psc_pulse_flattop_descr[] = {
   { "m"               , VAR(xm)           , PARAM_DOUBLE3(0., 0., 0.)       },
   { "dm"              , VAR(dxm)          , PARAM_DOUBLE3(1e-6, 1e-6, 1e-6) },
   { "zb"              , VAR(zb)           , PARAM_DOUBLE(1.5 * 1e-6)        },
-  { "k"               , VAR(k)            , PARAM_DOUBLE3(0., 0., 0.)       },
   { "phase_p"         , VAR(phase_p)      , PARAM_DOUBLE(0.0)               },
   { "phase_s"         , VAR(phase_s)      , PARAM_DOUBLE(0.0)               },
   { "amplitude_p"     , VAR(amplitude_p)  , PARAM_DOUBLE(0.)                },

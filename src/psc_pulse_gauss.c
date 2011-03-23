@@ -11,7 +11,6 @@ struct psc_pulse_gauss {
   double amplitude_s;   // max amplitude, s-polarization
   double phase_p;       // CEP-phase  (from -pi to pi)
   double phase_s;       // CEP-phase  (from -pi to pi)
-  double k[3];
 };
 
 // ======================================================================
@@ -41,11 +40,11 @@ psc_pulse_gauss_field(struct psc_pulse *pulse,
   double yr = yy - gauss->xm[1];
   double zr = zz - gauss->xm[2];
 
-  double xl = xr - gauss->k[0] * tt;
-  double yl = yr - gauss->k[1] * tt;
-  double zl = zr - gauss->k[2] * tt;
+  double xl = xr - pulse->k[0] * tt;
+  double yl = yr - pulse->k[1] * tt;
+  double zl = zr - pulse->k[2] * tt;
 
-  *phase = gauss->k[0] * xr + gauss->k[1] * yr + gauss->k[2] * zr - tt;
+  *phase = pulse->k[0] * xr + pulse->k[1] * yr + pulse->k[2] * zr - tt;
   *envelope = (exp(-sqr(xl/gauss->dxm[0])) *
 	       exp(-sqr(yl/gauss->dxm[1])) *
 	       exp(-sqr(zl/gauss->dxm[2])));
@@ -79,7 +78,6 @@ psc_pulse_gauss_field_s(struct psc_pulse *pulse,
 static struct param psc_pulse_gauss_descr[] = {
   { "m"               , VAR(xm)           , PARAM_DOUBLE3(0., 0., 0.)       },
   { "dm"              , VAR(dxm)          , PARAM_DOUBLE3(1e-6, 1e-6, 1e-6) },
-  { "k"               , VAR(k)            , PARAM_DOUBLE3(0., 0., 0.)       },
   { "phase_p"         , VAR(phase_p)      , PARAM_DOUBLE(0.0)               },
   { "phase_s"         , VAR(phase_s)      , PARAM_DOUBLE(0.0)               },
   { "amplitude_p"     , VAR(amplitude_p)  , PARAM_DOUBLE(0.)                },

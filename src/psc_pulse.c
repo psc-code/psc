@@ -189,9 +189,17 @@ psc_pulse_init()
 // ======================================================================
 // psc_pulse class
 
+#define VAR(x) (void *)offsetof(struct psc_pulse, x)
+static struct param psc_pulse_descr[] = {
+  { "k"               , VAR(k)            , PARAM_DOUBLE3(0., 0., 0.)       },
+  {},
+};
+#undef VAR
+
 struct mrc_class_psc_pulse mrc_class_psc_pulse = {
   .name             = "psc_pulse",
   .size             = sizeof(struct psc_pulse),
+  .param_descr      = psc_pulse_descr,
   .init             = psc_pulse_init,
   .setup            = _psc_pulse_setup,
 };
