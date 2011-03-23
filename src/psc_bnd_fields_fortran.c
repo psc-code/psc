@@ -6,10 +6,10 @@
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_fortran_fill_ghosts_H_b
+// psc_bnd_fields_fortran_fill_ghosts_b_H
 
 static void
-psc_bnd_fields_fortran_fill_ghosts_H_b(struct psc_bnd_fields *bnd,
+psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
 				       mfields_base_t *flds_base)
 {
   assert(psc.nr_patches == 1);
@@ -32,5 +32,5 @@ psc_bnd_fields_fortran_fill_ghosts_H_b(struct psc_bnd_fields *bnd,
 
 struct psc_bnd_fields_ops psc_bnd_fields_fortran_ops = {
   .name                  = "fortran",
-  .fill_ghosts_H_b       = psc_bnd_fields_fortran_fill_ghosts_H_b,
+  .fill_ghosts_b_H       = psc_bnd_fields_fortran_fill_ghosts_b_H,
 };

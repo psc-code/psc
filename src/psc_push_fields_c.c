@@ -4,7 +4,7 @@
 #include "psc.h"
 
 static void
-psc_push_fields_c_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_c_push_a_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   assert(psc.domain.bnd_fld_lo[0] == BND_FLD_PERIODIC);
   assert(psc.domain.bnd_fld_lo[1] == BND_FLD_PERIODIC);
@@ -52,7 +52,7 @@ psc_push_fields_c_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 static void
-psc_push_fields_c_push_a_h(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_c_push_a_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   f_real cnx = .5 * psc.dt / psc.dx[0];
   f_real cny = .5 * psc.dt / psc.dx[1];
@@ -90,7 +90,7 @@ psc_push_fields_c_push_a_h(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 static void
-psc_push_fields_c_push_b_h(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_c_push_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   f_real cnx = .5 * psc.dt / psc.dx[0];
   f_real cny = .5 * psc.dt / psc.dx[1];
@@ -128,7 +128,7 @@ psc_push_fields_c_push_b_h(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 static void
-psc_push_fields_c_push_b_e(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_c_push_b_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   f_real cnx = .5 * psc.dt / psc.dx[0];
   f_real cny = .5 * psc.dt / psc.dx[1];
@@ -173,8 +173,8 @@ psc_push_fields_c_push_b_e(struct psc_push_fields *push, mfields_base_t *flds)
 
 struct psc_push_fields_ops psc_push_fields_c_ops = {
   .name                  = "c",
-  .push_a_e              = psc_push_fields_c_push_a_e,
-  .push_a_h              = psc_push_fields_c_push_a_h,
-  .push_b_h              = psc_push_fields_c_push_b_h,
-  .push_b_e              = psc_push_fields_c_push_b_e,
+  .push_a_E              = psc_push_fields_c_push_a_E,
+  .push_a_H              = psc_push_fields_c_push_a_H,
+  .push_b_H              = psc_push_fields_c_push_b_H,
+  .push_b_E              = psc_push_fields_c_push_b_E,
 };

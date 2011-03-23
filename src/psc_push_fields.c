@@ -9,62 +9,62 @@
 // forward to subclass
 
 static inline void
-psc_push_fields_push_a_e(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_a_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_a_e", 1., 0, 0);
+    pr = prof_register("push_fields_a_E", 1., 0, 0);
   }
-  assert(ops->push_a_e);
+  assert(ops->push_a_E);
   
   prof_start(pr);
-  ops->push_a_e(push, flds);
+  ops->push_a_E(push, flds);
   prof_stop(pr);
 }
 
 static inline void
-psc_push_fields_push_a_h(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_a_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_a_h", 1., 0, 0);
+    pr = prof_register("push_fields_a_H", 1., 0, 0);
   }
-  assert(ops->push_a_h);
+  assert(ops->push_a_H);
   
   prof_start(pr);
-  ops->push_a_h(push, flds);
+  ops->push_a_H(push, flds);
   prof_stop(pr);
 }
 
 static inline void
-psc_push_fields_push_b_e(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_b_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_b_e", 1., 0, 0);
+    pr = prof_register("push_fields_b_E", 1., 0, 0);
   }
-  assert(ops->push_b_e);
+  assert(ops->push_b_E);
   
   prof_start(pr);
-  ops->push_b_e(push, flds);
+  ops->push_b_E(push, flds);
   prof_stop(pr);
 }
 
 static inline void
-psc_push_fields_push_b_h(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_push_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_b_h", 1., 0, 0);
+    pr = prof_register("push_fields_b_H", 1., 0, 0);
   }
-  assert(ops->push_b_h);
+  assert(ops->push_b_H);
   
   prof_start(pr);
-  ops->push_b_h(push, flds);
+  ops->push_b_H(push, flds);
   prof_stop(pr);
 }
 
@@ -78,10 +78,10 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     assert(ops->pml_a);
     ops->pml_a(push, flds);
   } else {
-    psc_push_fields_push_a_e(push, flds);
+    psc_push_fields_push_a_E(push, flds);
     psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
 
-    psc_push_fields_push_a_h(push, flds);
+    psc_push_fields_push_a_H(push, flds);
     psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
   }
 }
@@ -94,11 +94,11 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
     assert(ops->pml_b);
     ops->pml_b(push, flds);
   } else {
-    psc_push_fields_push_b_h(push, flds);
-    psc_bnd_fields_fill_ghosts_H_b(psc.bnd_fields, flds);
+    psc_push_fields_push_b_H(push, flds);
+    psc_bnd_fields_fill_ghosts_b_H(psc.bnd_fields, flds);
     psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
 
-    psc_push_fields_push_b_e(push, flds);
+    psc_push_fields_push_b_E(push, flds);
     psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
   }
 }

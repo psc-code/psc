@@ -10,7 +10,7 @@ struct psc_bnd_fields {
 
 struct psc_bnd_fields_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd_fields);
-  void (*fill_ghosts_H_b)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
+  void (*fill_ghosts_b_H)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
 };
 
 // ======================================================================

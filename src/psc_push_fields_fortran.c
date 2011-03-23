@@ -6,10 +6,10 @@
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
-// psc_push_fields_fortran_push_a_e
+// psc_push_fields_fortran_push_a_E
 
 static void
-psc_push_fields_fortran_push_a_e(struct psc_push_fields *push,
+psc_push_fields_fortran_push_a_E(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   mfields_fortran_t flds;
@@ -21,10 +21,10 @@ psc_push_fields_fortran_push_a_e(struct psc_push_fields *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_fields_fortran_push_a_h
+// psc_push_fields_fortran_push_a_H
 
 static void
-psc_push_fields_fortran_push_a_h(struct psc_push_fields *push,
+psc_push_fields_fortran_push_a_H(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   mfields_fortran_t flds;
@@ -36,10 +36,10 @@ psc_push_fields_fortran_push_a_h(struct psc_push_fields *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_fields_fortran_push_b_h
+// psc_push_fields_fortran_push_b_H
 
 static void
-psc_push_fields_fortran_push_b_h(struct psc_push_fields *push,
+psc_push_fields_fortran_push_b_H(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   assert(psc.nr_patches == 1);
@@ -52,10 +52,10 @@ psc_push_fields_fortran_push_b_h(struct psc_push_fields *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_fields_fortran_push_b_e
+// psc_push_fields_fortran_push_b_E
 
 static void
-psc_push_fields_fortran_push_b_e(struct psc_push_fields *push,
+psc_push_fields_fortran_push_b_E(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   assert(psc.nr_patches == 1);
@@ -116,10 +116,10 @@ psc_push_fields_fortran_pml_b(struct psc_push_fields *push,
 
 struct psc_push_fields_ops psc_push_fields_fortran_ops = {
   .name                  = "fortran",
-  .push_a_e              = psc_push_fields_fortran_push_a_e,
-  .push_a_h              = psc_push_fields_fortran_push_a_h,
-  .push_b_h              = psc_push_fields_fortran_push_b_h,
-  .push_b_e              = psc_push_fields_fortran_push_b_e,
+  .push_a_E              = psc_push_fields_fortran_push_a_E,
+  .push_a_H              = psc_push_fields_fortran_push_a_H,
+  .push_b_H              = psc_push_fields_fortran_push_b_H,
+  .push_b_E              = psc_push_fields_fortran_push_b_E,
   .pml_a                 = psc_push_fields_fortran_pml_a,
   .pml_b                 = psc_push_fields_fortran_pml_b,
 };

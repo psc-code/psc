@@ -5,11 +5,11 @@
 // forward to subclass
 
 void
-psc_bnd_fields_fill_ghosts_H_b(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  assert(ops->fill_ghosts_H_b);
-  ops->fill_ghosts_H_b(bnd, flds);
+  assert(ops->fill_ghosts_b_H);
+  ops->fill_ghosts_b_H(bnd, flds);
 }
 
 // ======================================================================
