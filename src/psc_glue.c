@@ -557,9 +557,10 @@ SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf)
 }
 
 void
-PIC_fill_ghosts_h_b(fields_fortran_t *pf)
+PIC_fill_ghosts_h_b(struct psc *psc, int p, fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
   PIC_fill_ghosts_h_b_F77(pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);

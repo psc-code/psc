@@ -98,7 +98,6 @@ void
 fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
-  assert(psc.nr_patches == 1);
   foreach_patch(p) {
     fields_c_t *pf = &flds->f[p];
     fields_base_t *pf_base = &flds_base->f[p];
