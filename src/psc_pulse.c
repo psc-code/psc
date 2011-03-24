@@ -1,7 +1,6 @@
 
 #include "psc_pulse_private.h"
 #include "psc_push_fields.h"
-#include "psc_bnd_fields_private.h"
 
 // ----------------------------------------------------------------------
 // psc_pulse_setup

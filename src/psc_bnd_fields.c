@@ -78,6 +78,45 @@ _psc_bnd_fields_destroy(struct psc_bnd_fields *bnd)
   psc_pulse_destroy(bnd->pulse_z2);
 }
 
+// ----------------------------------------------------------------------
+// psc_bnd_fields_get_pulse_*
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_x1(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_x1;
+}
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_x2(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_x2;
+}
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_y1(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_y1;
+}
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_y2(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_y2;
+}
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_z1(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_z1;
+}
+
+struct psc_pulse *
+psc_bnd_fields_get_pulse_z2(struct psc_bnd_fields *bnd)
+{
+  return bnd->pulse_z2;
+}
+
 // ======================================================================
 // forward to subclass
 

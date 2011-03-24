@@ -3,7 +3,7 @@
 #include "psc_case_private.h"
 #include "psc_pulse.h"
 #include "psc_push_fields.h"
-#include "psc_bnd_fields_private.h"
+#include "psc_bnd_fields.h"
 
 #include <mrc_params.h>
 #include <math.h>
@@ -77,14 +77,14 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
 
-  struct psc_pulse *pulse_x1 = bnd_fields->pulse_x1;
+  struct psc_pulse *pulse_x1 = psc_bnd_fields_get_pulse_x1(bnd_fields);
   psc_pulse_set_type(pulse_x1, "gauss");
   psc_pulse_set_param_double3(pulse_x1, "k",  (double[3]) { 1., 0., 0.});
   psc_pulse_set_param_double3(pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });
   psc_pulse_set_param_double3(pulse_x1, "dm", (double[3]) { width_normal, width_par, width_par });
   psc_pulse_set_param_double(pulse_x1, "amplitude_s", 1.);
 
-  struct psc_pulse *pulse_x2 = bnd_fields->pulse_x2;
+  struct psc_pulse *pulse_x2 = psc_bnd_fields_get_pulse_x2(bnd_fields);
   psc_pulse_set_type(pulse_x2, "gauss");
   psc_pulse_set_param_double3(pulse_x2, "k",  (double[3]) { -1., 0., 0.});
   psc_pulse_set_param_double3(pulse_x2, "m",  (double[3]) { length[0], .5 * length[1], .5 * length[2] });
@@ -92,14 +92,14 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   psc_pulse_set_param_double(pulse_x2, "amplitude_s", 1.);
 
 
-  struct psc_pulse *pulse_y1 = bnd_fields->pulse_y1;
+  struct psc_pulse *pulse_y1 = psc_bnd_fields_get_pulse_y1(bnd_fields);
   psc_pulse_set_type(pulse_y1, "gauss");
   psc_pulse_set_param_double3(pulse_y1, "k",  (double[3]) { 0., 1., 0.});
   psc_pulse_set_param_double3(pulse_y1, "m",  (double[3]) { .5 * length[0], 0., .5 * length[2] });
   psc_pulse_set_param_double3(pulse_y1, "dm", (double[3]) { width_par, width_normal, width_par });
   psc_pulse_set_param_double(pulse_y1, "amplitude_s", 1.);
 
-  struct psc_pulse *pulse_y2 = bnd_fields->pulse_y2;
+  struct psc_pulse *pulse_y2 = psc_bnd_fields_get_pulse_y2(bnd_fields);
   psc_pulse_set_type(pulse_y2, "gauss");
   psc_pulse_set_param_double3(pulse_y2, "k",  (double[3]) { 0., -1., 0.});
   psc_pulse_set_param_double3(pulse_y2, "m",  (double[3]) { .5 * length[0], length[1], .5 * length[2] });
@@ -107,14 +107,14 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   psc_pulse_set_param_double(pulse_y2, "amplitude_s", 1.);
 
 
-  struct psc_pulse *pulse_z1 = bnd_fields->pulse_z1;
+  struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
   psc_pulse_set_param_double3(pulse_z1, "k",  (double[3]) { 0., 0., 1.});
   psc_pulse_set_param_double3(pulse_z1, "m",  (double[3]) { .5 * length[0], .5 * length[1], 0.});
   psc_pulse_set_param_double3(pulse_z1, "dm", (double[3]) { width_par, width_par, width_normal });
   psc_pulse_set_param_double(pulse_z1, "amplitude_s", 1.);
 
-  struct psc_pulse *pulse_z2 = bnd_fields->pulse_z2;
+  struct psc_pulse *pulse_z2 = psc_bnd_fields_get_pulse_z2(bnd_fields);
   psc_pulse_set_type(pulse_z2, "gauss");
   psc_pulse_set_param_double3(pulse_z2, "k",  (double[3]) { 0., 0., -1.});
   psc_pulse_set_param_double3(pulse_z2, "m",  (double[3]) { .5 * length[0], .5 * length[1], length[2]});
@@ -137,37 +137,37 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
       double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      pulse = bnd_fields->pulse_x1;
+      pulse = psc_bnd_fields_get_pulse_x1(bnd_fields);
       F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, 0.);
       F3_BASE(pf, HY, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
       F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       
-      pulse = bnd_fields->pulse_x2;
+      pulse = psc_bnd_fields_get_pulse_x2(bnd_fields);
       F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, 0.);
       F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
       F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       
-      pulse = bnd_fields->pulse_y1;
+      pulse = psc_bnd_fields_get_pulse_y1(bnd_fields);
       F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , 0.);
       F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, 0.);
       F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_y2;
+      pulse = psc_bnd_fields_get_pulse_y2(bnd_fields);
       F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , 0.);
       F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, 0.);
       F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_z1;
+      pulse = psc_bnd_fields_get_pulse_z1(bnd_fields);
       F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);
       F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_z2;
+      pulse = psc_bnd_fields_get_pulse_z2(bnd_fields);
       F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);

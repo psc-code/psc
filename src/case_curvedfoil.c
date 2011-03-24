@@ -3,7 +3,7 @@
 #include "psc_case_private.h"
 #include "psc_pulse.h"
 #include "psc_push_fields.h"
-#include "psc_bnd_fields_private.h"
+#include "psc_bnd_fields.h"
 
 #include <mrc_params.h>
 #include <math.h>
@@ -74,7 +74,8 @@ psc_case_curvedfoil_create(struct psc_case *_case)
 //  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm);
 #endif
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
-  psc_pulse_set_type(bnd_fields->pulse_z1, "gauss");
+  struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
+  psc_pulse_set_type(pulse_z1, "gauss");
 }
 
 static void
@@ -121,7 +122,7 @@ psc_case_curvedfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
-      struct psc_pulse *pulse = bnd_fields->pulse_z1;
+      struct psc_pulse *pulse = psc_bnd_fields_get_pulse_z1(bnd_fields);
       F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
       F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);

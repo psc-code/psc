@@ -3,7 +3,7 @@
 #include "psc_case_private.h"
 #include "psc_pulse.h"
 #include "psc_push_fields.h"
-#include "psc_bnd_fields_private.h"
+#include "psc_bnd_fields.h"
 
 #include <mrc_params.h>
 #include <math.h>
@@ -149,7 +149,8 @@ psc_case_cone_create(struct psc_case *_case)
   };
 #endif
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
-  psc_pulse_set_type(bnd_fields->pulse_z1, "gauss");
+  struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
+  psc_pulse_set_type(pulse_z1, "gauss");
 }
 
 
