@@ -96,18 +96,17 @@ static void
 psc_case_wakefield_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc *psc = _case->psc;
-  // FIXME, do we need the ghost points?
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc->push_fields);
+
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
+      double dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
-      // FIXME, why this time?
-      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, -.5*dt);
-      
-      // FIXME, this pulse needs a - to propagate in the right direction (+z)
-      F3_BASE(pf, HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      struct psc_pulse *pulse = bnd_fields->pulse_z1;
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
     } foreach_3d_g_end;
   }
 }

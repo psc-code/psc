@@ -408,24 +408,6 @@ void psc_check_particles(mparticles_base_t *particles);
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
 
-real psc_p_pulse_x1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_x1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_x2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_x2(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_y1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_y1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_y2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_y2(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
-
 void psc_setup_fortran(struct psc *psc);
 
 // ----------------------------------------------------------------------

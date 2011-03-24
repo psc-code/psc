@@ -111,19 +111,21 @@ static void
 psc_case_curvedfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
   struct psc *psc = _case->psc;
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc->push_fields);
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
+      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
       // FIXME, why this time?
-      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+      struct psc_pulse *pulse = bnd_fields->pulse_z1;
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
+      F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);
+      F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
     } foreach_3d_g_end;
   }
 }

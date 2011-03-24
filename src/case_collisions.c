@@ -84,25 +84,6 @@ psc_case_collisions_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_collisions_init_field(struct psc_case *_case, mfields_base_t *flds)
-{
-  struct psc *psc = _case->psc;
-
-  // FIXME, do we need the ghost points?
-  psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
-      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
-      
-      // FIXME, why this time?
-      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-      F3_BASE(pf, HX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-    } foreach_3d_g_end;
-  }
-}
-
-static void
 psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3], 
 			      struct psc_particle_npt *npt)
 {
@@ -165,6 +146,5 @@ struct psc_case_ops psc_case_collisions_ops = {
   .size             = sizeof(struct psc_case_collisions),
   .param_descr      = psc_case_collisions_descr,
   .set_from_options = psc_case_collisions_set_from_options,
-  .init_field       = psc_case_collisions_init_field,
   .init_npt         = psc_case_collisions_init_npt,
 };

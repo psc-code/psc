@@ -138,52 +138,40 @@ psc_case_microsphere_init_field(struct psc_case *_case, mfields_base_t *flds)
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
       pulse = bnd_fields->pulse_x1;
-      if (pulse) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x1(xx        , yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HY, jx,jy,jz) += -psc_p_pulse_x1(xx + .5*dx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_s_pulse_x1(xx        , yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_s_pulse_x1(xx + .5*dx, yy + .5*dy, zz        , 0.);
-      }
+      F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, HY, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       
       pulse = bnd_fields->pulse_x2;
-      if (pulse) {
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_p_pulse_x2(xx        , yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HY, jx,jy,jz) +=  psc_p_pulse_x2(xx + .5*dx, yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_s_pulse_x2(xx        , yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) += -psc_s_pulse_x2(xx + .5*dx, yy + .5*dy, zz        , 0.);
-      }
+      F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
       
       pulse = bnd_fields->pulse_y1;
-      if (pulse) {
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y1(xx + .5*dx, yy        , zz        , 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) += -psc_p_pulse_y1(xx + .5*dx, yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_s_pulse_y1(xx        , yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HX, jx,jy,jz) +=  psc_s_pulse_y1(xx        , yy + .5*dy, zz + .5*dz, 0.);
-      }
+      F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , 0.);
+      F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_y1;
-      if (pulse) {
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_p_pulse_y2(xx + .5*dx, yy        , zz        , 0.);
-	F3_BASE(pf, HZ, jx,jy,jz) +=  psc_p_pulse_y2(xx + .5*dx, yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, EZ, jx,jy,jz) +=  psc_s_pulse_y2(xx        , yy        , zz + .5*dz, 0.);
-	F3_BASE(pf, HX, jx,jy,jz) += -psc_s_pulse_y2(xx        , yy + .5*dy, zz + .5*dz, 0.);
-      }
+      pulse = bnd_fields->pulse_y2;
+      F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , 0.);
+      F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, 0.);
+      F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_y1;
-      if (pulse) {
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z1(xx        , yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HX, jx,jy,jz) += -psc_p_pulse_z1(xx        , yy + .5*dy, zz + .5*dz, 0.);
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_s_pulse_z1(xx + .5*dx, yy        , zz        , 0.);
-	F3_BASE(pf, HY, jx,jy,jz) +=  psc_s_pulse_z1(xx + .5*dx, yy        , zz + .5*dz, 0.);
-      }
+      pulse = bnd_fields->pulse_z1;
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
+      F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);
+      F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
       
-      pulse = bnd_fields->pulse_y1;
-      if (pulse) {
-	F3_BASE(pf, EY, jx,jy,jz) +=  psc_p_pulse_z2(xx        , yy + .5*dy, zz        , 0.);
-	F3_BASE(pf, HX, jx,jy,jz) +=  psc_p_pulse_z2(xx        , yy + .5*dy, zz + .5*dz, 0.);
-	F3_BASE(pf, EX, jx,jy,jz) +=  psc_s_pulse_z2(xx + .5*dx, yy        , zz        , 0.);
-	F3_BASE(pf, HY, jx,jy,jz) += -psc_s_pulse_z2(xx + .5*dx, yy        , zz + .5*dz, 0.);
-      }
+      pulse = bnd_fields->pulse_z2;
+      F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , 0.);
+      F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, 0.);
+      F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , 0.);
+      F3_BASE(pf, HY, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, 0.);
     } psc_foreach_3d_g_end;
   }
 }
