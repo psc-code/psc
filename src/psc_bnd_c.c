@@ -108,6 +108,8 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
   mrc_ddc_setup(bnd_c->ddc);
 
   bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_base_t),
+				     sizeof(particle_base_real_t),
+				     MPI_PARTICLES_BASE_REAL,
 				     ddcp_particles_base_realloc,
 				     ddcp_particles_base_get_addr);
 }

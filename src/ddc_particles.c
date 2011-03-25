@@ -8,6 +8,7 @@
 
 struct ddc_particles *
 ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
+		     int size_of_real, MPI_Datatype mpi_type_real,
 		     void  (*realloc)(void *, int, int),
 		     void *(*get_addr)(void *, int, int))
 {
@@ -15,6 +16,8 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
   memset(ddcp, 0, sizeof(*ddcp));
 
   ddcp->size_of_particle = size_of_particle;
+  ddcp->size_of_real = size_of_real;
+  ddcp->mpi_type_real = mpi_type_real;
   ddcp->realloc = realloc;
   ddcp->get_addr = get_addr;
   ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
@@ -72,9 +75,9 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 void
 ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 {
-  // FIXME, this is assuming we have only particle_base_real_t in our struct
-  // FIXME, MPI type, too
-  int sz = ddcp->size_of_particle / sizeof(particle_base_real_t);
+  // FIXME, this is assuming our struct is equiv to an array of real_type
+  assert(ddcp->size_of_particle % ddcp->size_of_real == 0);
+  int sz = ddcp->size_of_particle / ddcp->size_of_real;
   int dir[3];
 
   // post receives for # particles we'll receive in the next step
@@ -122,7 +125,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  MPI_Isend(&nei->n_send, 1, MPI_INT,
 		    nei->rank, dir1 + nei->patch * N_DIR, MPI_COMM_WORLD,
 		    &ddcp->send_reqs[dir1 + p * N_DIR]);
-	  MPI_Isend(nei->send_buf, sz * nei->n_send, MPI_PARTICLES_BASE_REAL,
+	  MPI_Isend(nei->send_buf, sz * nei->n_send, ddcp->mpi_type_real,
 		    nei->rank, dir1 + nei->patch * N_DIR, MPI_COMM_WORLD,
 		    &ddcp->sendp_reqs[dir1 + p * N_DIR]);
 	}
@@ -171,8 +174,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 		  dir1neg + p * N_DIR, nei->n_recv);
 #endif
 	  void *addr = ddcp->get_addr(particles, p, patch->head);
-	  MPI_Irecv(addr, sz * nei->n_recv,
-		    MPI_PARTICLES_BASE_REAL,
+	  MPI_Irecv(addr, sz * nei->n_recv, ddcp->mpi_type_real,
 		    nei->rank, dir1neg + p * N_DIR, MPI_COMM_WORLD,
 		    &ddcp->recv_reqs[dir1 + p * N_DIR]);
 	  patch->head += nei->n_recv;
