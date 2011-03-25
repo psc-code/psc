@@ -135,6 +135,7 @@ psc_integrate(struct psc *psc)
     time_stop(STAT_TIME_PARTICLE);
 
     psc_push_photons_run(&psc->mphotons);
+    psc_bnd_exchange_photons(psc->bnd, &psc->mphotons);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);

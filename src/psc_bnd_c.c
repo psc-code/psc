@@ -9,6 +9,7 @@
 struct psc_bnd_c {
   struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
+  struct ddc_particles *ddcp_photons;
 };
 
 #define to_psc_bnd_c(bnd) ((struct psc_bnd_c *)((bnd)->obj.subctx))
@@ -92,6 +93,22 @@ ddcp_particles_base_get_addr(void *_particles, int p, int n)
   return &pp->particles[n];
 }
 
+static void
+ddcp_photons_realloc(void *_particles, int p, int new_n_particles)
+{
+  mphotons_t *particles = _particles;
+  photons_t *pp = &particles->p[p];
+  photons_realloc(pp, new_n_particles);
+}
+
+static void *
+ddcp_photons_get_addr(void *_particles, int p, int n)
+{
+  mphotons_t *mphotons = _particles;
+  photons_t *photons = &mphotons->p[p];
+  return &photons->photons[n];
+}
+
 // ----------------------------------------------------------------------
 // psc_bnd_c_setup
 
@@ -112,6 +129,12 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
 				     MPI_PARTICLES_BASE_REAL,
 				     ddcp_particles_base_realloc,
 				     ddcp_particles_base_get_addr);
+
+  bnd_c->ddcp_photons = ddc_particles_create(bnd_c->ddc, sizeof(photon_t),
+					     sizeof(photon_real_t),
+					     MPI_PHOTONS_REAL,
+					     ddcp_photons_realloc,
+					     ddcp_photons_get_addr);
 }
 
 // ----------------------------------------------------------------------
@@ -291,6 +314,136 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   prof_stop(pr);
 }
 
+// ----------------------------------------------------------------------
+// psc_bnd_c_exchange_photons
+
+static void
+psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
+{
+  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_xchg_photon", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  struct ddc_particles *ddcp = c_bnd->ddcp_photons;
+
+  f_real xb[3], xe[3], xgb[3], xge[3], xgl[3];
+
+  // New-style boundary requirements.
+  // These will need revisiting when it comes to non-periodic domains.
+  // FIXME, calculate once
+
+  foreach_patch(p) {
+    struct psc_patch *psc_patch = &psc.patch[p];
+    photons_t *photons = &mphotons->p[p];
+
+    for (int d = 0; d < 3; d++) {
+      xb[d] = (psc_patch->off[d]-.5) * psc.dx[d];
+      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+	xgb[d] = -.5 * psc.dx[d];
+      } else {
+	xgb[d] = 0.;
+	if (psc_patch->off[d] == 0) {
+	  xb[d] = xgb[d];
+	}
+      }
+      
+      xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc.dx[d];
+      if (psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+	xge[d] = (psc.domain.gdims[d]-.5) * psc.dx[d];
+      } else {
+	xge[d] = (psc.domain.gdims[d]-1) * psc.dx[d];
+	if (psc_patch->off[d] + psc_patch->ldims[d] == psc.domain.gdims[d]) {
+	  xe[d] = xge[d];
+	}
+      }
+      
+      xgl[d] = xge[d] - xgb[d];
+    }
+
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    patch->head = 0;
+    for (int dir1 = 0; dir1 < N_DIR; dir1++) {
+      patch->nei[dir1].n_send = 0;
+    }
+    for (int i = 0; i < photons->nr; i++) {
+      photon_t *ph = photons_get_one(photons, i);
+      photon_real_t *xi = ph->x;
+      photon_real_t *pxi = ph->p;
+      if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
+	  xi[1] >= xb[1] && xi[1] <= xe[1] &&
+	  xi[2] >= xb[2] && xi[2] <= xe[2]) {
+	// fast path
+	// inside domain: move into right position
+	photons->photons[patch->head++] = *ph;
+      } else {
+	// slow path
+	int dir[3];
+	for (int d = 0; d < 3; d++) {
+	  if (xi[d] < xb[d]) {
+	    if (xi[d] < xgb[d]) {
+	      switch (psc.domain.bnd_part[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xgb[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] += xgl[d];
+		dir[d] = -1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      // computational bnd
+	      dir[d] = -1;
+	    }
+	  } else if (xi[d] > xe[d]) {
+	    if (xi[d] > xge[d]) {
+	      switch (psc.domain.bnd_part[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xge[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] -= xgl[d];
+		dir[d] = +1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      dir[d] = +1;
+	    }
+	  } else {
+	    // computational bnd
+	    dir[d] = 0;
+	  }
+	}
+	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	  photons->photons[patch->head++] = *ph;
+	} else {
+	  ddc_particles_queue(ddcp, patch, dir, ph);
+	}
+      }
+    }
+  }
+
+  ddc_particles_comm(ddcp, mphotons);
+  foreach_patch(p) {
+    photons_t *photons = &mphotons->p[p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    photons->nr = patch->head;
+  }
+
+  prof_stop(pr);
+}
+
 
 // ======================================================================
 // psc_bnd: subclass "c"
@@ -302,4 +455,5 @@ struct psc_bnd_ops psc_bnd_c_ops = {
   .add_ghosts            = psc_bnd_c_add_ghosts,
   .fill_ghosts           = psc_bnd_c_fill_ghosts,
   .exchange_particles    = psc_bnd_c_exchange_particles,
+  .exchange_photons      = psc_bnd_c_exchange_photons,
 };
