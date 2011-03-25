@@ -23,10 +23,10 @@ struct psc_case_photon_test {
 
 #define VAR(x) (void *)offsetof(struct psc_case_photon_test, x)
 static struct param psc_case_photon_test_descr[] = {
-  { "n_in_cell"       , VAR(n_in_cell)         , PARAM_INT(1000)     },
-  { "rho_0"           , VAR(rho_0)             , PARAM_DOUBLE(1e-6)  },
-  { "tau_0"           , VAR(tau_0)             , PARAM_DOUBLE(1e-6)  },
-  { "k_L"             , VAR(k_L)               , PARAM_DOUBLE(2.)    },
+  { "n_in_cell"       , VAR(n_in_cell)         , PARAM_INT(1000)      },
+  { "rho_0"           , VAR(rho_0)             , PARAM_DOUBLE(1e-6)   },
+  { "tau_0"           , VAR(tau_0)             , PARAM_DOUBLE(1.5e-6) },
+  { "k_L"             , VAR(k_L)               , PARAM_DOUBLE(1.)     },
   {},
 };
 #undef VAR
