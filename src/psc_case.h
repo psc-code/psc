@@ -12,6 +12,13 @@ struct psc_particle_npt {
   double T[3]; ///< temperature
 };
 
+struct psc_photon_np {
+  double n; ///< density
+  double k[3]; ///< wave number
+  double sigma_k[3]; ///< width of Gaussian in momentum space
+  int n_in_cell; ///< nr of quasi-particles in this cell
+};
+
 // FIXME, update
 /////////////////////////////////////////////////////////////////////////
 /// Physics cases (initial conditions and other parameters).
@@ -59,6 +66,7 @@ struct psc *psc_case_get_psc(struct psc_case *_case);
 void psc_case_init_partition(struct psc_case *_case, int *particle_label_offset);
 void psc_case_init_particles(struct psc_case *_case, int particle_label_offset);
 void psc_case_init_fields(struct psc_case *_case, mfields_base_t *flds);
+void psc_case_init_photons(struct psc_case *_case);
 
 #endif
 

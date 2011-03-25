@@ -9,6 +9,7 @@
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
 #include "psc_moments.h"
+#include "psc_event_generator.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -88,6 +89,7 @@ psc_create()
   psc.output_fields = psc_output_fields_create(comm);
   psc.output_particles = psc_output_particles_create(comm);
   psc.moments = psc_moments_create(comm);
+  psc.event_generator = psc_event_generator_create(comm);
 
   psc.time_start = MPI_Wtime();
 
@@ -112,6 +114,7 @@ psc_set_from_options(struct psc *psc)
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_particles_set_from_options(psc->output_particles);
   psc_moments_set_from_options(psc->moments);
+  psc_event_generator_set_from_options(psc->event_generator);
 
   psc_set_from_options_domain(psc);
   psc_set_from_options_psc(psc);
@@ -135,6 +138,7 @@ psc_setup(struct psc *psc)
   psc_output_fields_setup(psc->output_fields);
   psc_output_particles_setup(psc->output_particles);
   psc_moments_setup(psc->moments);
+  psc_event_generator_setup(psc->event_generator);
 }
 
 // ----------------------------------------------------------------------
@@ -155,6 +159,7 @@ psc_view(struct psc *psc)
   psc_output_fields_view(psc->output_fields);
   psc_output_particles_view(psc->output_particles);
   psc_moments_view(psc->moments);
+  psc_event_generator_view(psc->event_generator);
 }
 
 // ----------------------------------------------------------------------
@@ -165,6 +170,7 @@ psc_destroy(struct psc *psc)
 {
   mfields_base_destroy(&psc->flds);
   mparticles_base_destroy(&psc->particles);
+  mphotons_destroy(&psc->mphotons);
 
   psc_push_particles_destroy(psc->push_particles);
   psc_push_fields_destroy(psc->push_fields);
@@ -175,6 +181,7 @@ psc_destroy(struct psc *psc)
   psc_output_fields_destroy(psc->output_fields);
   psc_output_particles_destroy(psc->output_particles);
   psc_moments_destroy(psc->moments);
+  psc_event_generator_destroy(psc->event_generator);
 }
 
 // ======================================================================

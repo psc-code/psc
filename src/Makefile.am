@@ -14,11 +14,17 @@ libpsc_a_SOURCES = \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
 	init_parameters.c init_particles.c \
+	init_photons.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
+	psc_photons.c \
+	psc_push_photons.c \
+	psc_event_generator.c \
+	psc_event_generator_none.c \
+	psc_event_generator_demo.c \
 	PIC_move_part_xyz.F \
 	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_x.F PIC_move_part_y.F PIC_move_part_z.F \
@@ -39,6 +45,7 @@ libpsc_a_SOURCES = \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
 	psc_bnd_fields.c \
 	psc_bnd_fields_fortran.c \
+	ddc_particles.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
 	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
@@ -67,6 +74,7 @@ libpsc_a_SOURCES = \
 	case_collisions.c \
 	case_cone.c \
 	case_microsphere.c \
+	case_photon_test.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5

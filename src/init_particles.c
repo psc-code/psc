@@ -47,6 +47,7 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
   struct psc *psc = _case->psc;
 
   int np_total = 0;
+  // FIXME, -> mparticles_alloc()
   psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];

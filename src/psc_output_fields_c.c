@@ -166,13 +166,20 @@ calc_vv(mfields_base_t *flds, mparticles_base_t *particles,
   return psc_moments_calc_vv(psc.moments, flds, particles, res);
 }
 
+static void
+calc_photon_n(mfields_base_t *flds, mparticles_base_t *particles,
+	      mfields_base_t *res)
+{
+  return psc_moments_calc_photon_n(psc.moments, &psc.mphotons, res);
+}
+
 static struct output_field output_fields[] = {
   { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
     .calc = calc_densities },
   { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
     .calc = calc_v },
-  { .name = "vv"    , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
-						   "vixvix", "viyviy", "vizivz" },
+  { .name = "vv"   , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
+						  "vixvix", "viyviy", "vizivz" },
     .calc = calc_vv },
   { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
@@ -188,6 +195,8 @@ static struct output_field output_fields[] = {
     .calc = calc_E2 },
   { .name = "h2"   , .nr_comp = 3, .fld_names = { "hx2", "hy2", "hz2" },
     .calc = calc_H2 },
+  { .name = "photon_n", .nr_comp = 1, .fld_names = { "photon_n" },
+    .calc = calc_photon_n },
   {},
 };
 

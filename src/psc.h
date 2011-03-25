@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "psc_photons.h"
+
 // ----------------------------------------------------------------------
 
 #define FIELDS_FORTRAN 1
@@ -246,6 +248,11 @@ void mfields_base_destroy(mfields_base_t *flds);
 
 void mparticles_base_destroy(mparticles_base_t *particles);
 
+// FIXME, turn into mrc_obj
+void psc_push_photons_run(mphotons_t *mphotons);
+// FIXME, turn into mrc_obj
+void psc_photon_generator_run(mphotons_t *mphotons);
+
 // ----------------------------------------------------------------------
 // general info / parameters for the code
 
@@ -272,6 +279,7 @@ struct psc {
   struct psc_output_fields *output_fields;
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
+  struct psc_event_generator *event_generator;
 
   // user-configurable parameters
   struct psc_param prm;
@@ -287,6 +295,7 @@ struct psc {
 
   mparticles_base_t particles;
   mfields_base_t flds;
+  mphotons_t mphotons;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;

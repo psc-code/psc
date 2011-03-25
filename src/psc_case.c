@@ -70,6 +70,9 @@ _psc_case_setup(struct psc_case *_case)
     psc_init_field_pml(_case, &psc->flds);
   }
 
+  // alloc / initialize photons
+  psc_case_init_photons(_case);
+
   psc_setup_fortran(psc);
 }
 
@@ -145,6 +148,7 @@ psc_case_init()
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_collisions_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_cone_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_microsphere_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_photon_test_ops);
 }
 
 // ======================================================================

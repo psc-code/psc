@@ -28,6 +28,21 @@ psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   ops->exchange_particles(bnd, particles);
 }
 
+void
+psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
+{
+  int n_total = 0;
+  foreach_patch(p) {
+    n_total += mphotons->p[p].nr;
+  }
+  if (n_total == 0)
+    return;
+
+  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
+  assert(ops->exchange_photons);
+  ops->exchange_photons(bnd, mphotons);
+}
+
 // ======================================================================
 // psc_bnd_init
 
