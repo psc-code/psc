@@ -44,6 +44,7 @@ libpsc_a_SOURCES = \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
+	ddc_particles.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
 	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
