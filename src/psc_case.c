@@ -1,6 +1,8 @@
 
 #include "psc_case_private.h"
 
+#include <psc_push_fields.h>
+#include <psc_bnd_fields.h>
 #include <mrc_params.h>
 
 // ----------------------------------------------------------------------
@@ -81,7 +83,7 @@ _psc_case_view(struct psc_case *_case)
 }
 
 // ----------------------------------------------------------------------
-// _psc_case_init_npt
+// psc_case_init_npt
 
 void
 psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
@@ -94,15 +96,20 @@ psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
 }
 
 // ----------------------------------------------------------------------
-// _psc_case_init_field
+// psc_case_init_field
 
 void
 psc_case_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  if (!psc_case_ops(_case)->init_field)
-    return;
+  // setup pulses etc
+  struct psc_bnd_fields *bnd_fields =
+    psc_push_fields_get_bnd_fields(_case->psc->push_fields);
+  psc_bnd_fields_setup_fields(bnd_fields, flds);
 
-  psc_case_ops(_case)->init_field(_case, flds);
+  // case-specific other initial condition
+  if (psc_case_ops(_case)->init_field) {
+    psc_case_ops(_case)->init_field(_case, flds);
+  }
 }
 
 // ----------------------------------------------------------------------
