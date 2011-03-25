@@ -10,16 +10,27 @@ _psc_bnd_fields_create(struct psc_bnd_fields *bnd)
 {
   bnd->pulse_x1 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_x1, "pulse_x1");
+  psc_pulse_set_param_double3(bnd->pulse_x1, "k",  (double[3]) {  1., 0., 0.});
+
   bnd->pulse_x2 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_x2, "pulse_x2");
+  psc_pulse_set_param_double3(bnd->pulse_x2, "k",  (double[3]) { -1., 0., 0.});
+
   bnd->pulse_y1 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_y1, "pulse_y1");
+  psc_pulse_set_param_double3(bnd->pulse_y1, "k",  (double[3]) { 0.,  1., 0.});
+
   bnd->pulse_y2 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_y2, "pulse_y2");
+  psc_pulse_set_param_double3(bnd->pulse_y2, "k",  (double[3]) { 0., -1., 0.});
+
   bnd->pulse_z1 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_z1, "pulse_z1");
+  psc_pulse_set_param_double3(bnd->pulse_z1, "k",  (double[3]) { 0., 0.,  1.});
+
   bnd->pulse_z2 = psc_pulse_create(psc_bnd_fields_comm(bnd));
   psc_pulse_set_name(bnd->pulse_z2, "pulse_z2");
+  psc_pulse_set_param_double3(bnd->pulse_z2, "k",  (double[3]) { 0., 0., -1.});
 }
 
 // ----------------------------------------------------------------------
