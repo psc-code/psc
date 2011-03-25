@@ -17,38 +17,43 @@
 
 struct psc_case_microsphere {
   // parameters
+  double radius;         //< radius of spherical shell
+  double thickness;      //< thickness of shell
+  double xc[3];          //< center of sphere, physical coords
+  double width_normal;   //< pulse width normal to propagation direction
+  double width_parallel; //< pulse width along propagation direction
 };
 
 #define VAR(x) (void *)offsetof(struct psc_case_microsphere, x)
-
 static struct param psc_case_microsphere_descr[] = {
+  { "radius"        , VAR(radius)          , PARAM_DOUBLE(2.e-6)              },
+  { "thickness"     , VAR(thickness)       , PARAM_DOUBLE(.4e-6)              },
+  { "center"        , VAR(xc)              , PARAM_DOUBLE3(5e-6, 5e-6, 5e-6)  },
+  { "width_normal"  , VAR(width_normal)    , PARAM_DOUBLE(3e-6)               },
+  { "width_parallel", VAR(width_parallel)  , PARAM_DOUBLE(2e-6)               },
   {},
 };
-
 #undef VAR
 
 static double
 microsphere_dens(struct psc_case *_case, double x[3])
 {
-  // center
-  const double xc[3] = { 5. * 1e-6, 5. * 1e-6, 5. * 1e-6 };
-  const double radius = 2. * 1e-6;
-  const double thickness = .4 * 1e-6;
+  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
 
   double xr[3];
   for (int d = 0; d < 3; d++) {
-    xr[d] = x[d] * psc.coeff.ld - xc[0];
+    xr[d] = x[d] * psc.coeff.ld - msphere->xc[d];
   };
 
   double r = sqrt(sqr(xr[0]) + sqr(xr[1]) + sqr(xr[2]));
 
-  return exp(-sqr((r - radius) / thickness));
+  return exp(-sqr((r - msphere->radius) / msphere->thickness));
 }
 
 static void
 psc_case_microsphere_set_from_options(struct psc_case *_case)
 {
-  //  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
+  struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
 
   psc.prm.nicell = 10;
   psc.prm.nmax = 201;
@@ -72,47 +77,47 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   psc.domain.bnd_part[2] = BND_PART_PERIODIC;
 
   double *length = psc.domain.length;
-  double width_normal = 2. * 1e-6;
-  double width_par    = 3. * 1e-6;
+  double w_normal = msphere->width_normal;
+  double w_par    = msphere->width_parallel;
 
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
 
   struct psc_pulse *pulse_x1 = psc_bnd_fields_get_pulse_x1(bnd_fields);
   psc_pulse_set_type(pulse_x1, "gauss");
   psc_pulse_set_param_double3(pulse_x1, "m",  (double[3]) { 0., .5 * length[1], .5 * length[2] });
-  psc_pulse_set_param_double3(pulse_x1, "dm", (double[3]) { width_normal, width_par, width_par });
+  psc_pulse_set_param_double3(pulse_x1, "dm", (double[3]) { w_par, w_normal, w_normal });
   psc_pulse_set_param_double(pulse_x1, "amplitude_s", 1.);
 
   struct psc_pulse *pulse_x2 = psc_bnd_fields_get_pulse_x2(bnd_fields);
   psc_pulse_set_type(pulse_x2, "gauss");
   psc_pulse_set_param_double3(pulse_x2, "m",  (double[3]) { length[0], .5 * length[1], .5 * length[2] });
-  psc_pulse_set_param_double3(pulse_x2, "dm", (double[3]) { width_normal, width_par, width_par });
+  psc_pulse_set_param_double3(pulse_x2, "dm", (double[3]) { w_par, w_normal, w_normal });
   psc_pulse_set_param_double(pulse_x2, "amplitude_s", 1.);
 
 
   struct psc_pulse *pulse_y1 = psc_bnd_fields_get_pulse_y1(bnd_fields);
   psc_pulse_set_type(pulse_y1, "gauss");
   psc_pulse_set_param_double3(pulse_y1, "m",  (double[3]) { .5 * length[0], 0., .5 * length[2] });
-  psc_pulse_set_param_double3(pulse_y1, "dm", (double[3]) { width_par, width_normal, width_par });
+  psc_pulse_set_param_double3(pulse_y1, "dm", (double[3]) { w_normal, w_par, w_normal });
   psc_pulse_set_param_double(pulse_y1, "amplitude_s", 1.);
 
   struct psc_pulse *pulse_y2 = psc_bnd_fields_get_pulse_y2(bnd_fields);
   psc_pulse_set_type(pulse_y2, "gauss");
   psc_pulse_set_param_double3(pulse_y2, "m",  (double[3]) { .5 * length[0], length[1], .5 * length[2] });
-  psc_pulse_set_param_double3(pulse_y2, "dm", (double[3]) { width_par, width_normal, width_par });
+  psc_pulse_set_param_double3(pulse_y2, "dm", (double[3]) { w_normal, w_par, w_normal });
   psc_pulse_set_param_double(pulse_y2, "amplitude_s", 1.);
 
 
   struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
   psc_pulse_set_param_double3(pulse_z1, "m",  (double[3]) { .5 * length[0], .5 * length[1], 0.});
-  psc_pulse_set_param_double3(pulse_z1, "dm", (double[3]) { width_par, width_par, width_normal });
+  psc_pulse_set_param_double3(pulse_z1, "dm", (double[3]) { w_normal, w_normal, w_par });
   psc_pulse_set_param_double(pulse_z1, "amplitude_s", 1.);
 
   struct psc_pulse *pulse_z2 = psc_bnd_fields_get_pulse_z2(bnd_fields);
   psc_pulse_set_type(pulse_z2, "gauss");
   psc_pulse_set_param_double3(pulse_z2, "m",  (double[3]) { .5 * length[0], .5 * length[1], length[2]});
-  psc_pulse_set_param_double3(pulse_z2, "dm", (double[3]) { width_par, width_par, width_normal });
+  psc_pulse_set_param_double3(pulse_z2, "dm", (double[3]) { w_normal, w_normal, w_par });
   psc_pulse_set_param_double(pulse_z2, "amplitude_s", 1.);
 }
 
