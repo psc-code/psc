@@ -4,6 +4,7 @@
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
 #include <mrc_params.h>
+#include <stdlib.h>
 
 // ----------------------------------------------------------------------
 // psc_init_field_pml helper
@@ -60,9 +61,15 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize particles
   int particle_label_offset;
-  psc_case_init_partition(_case, &particle_label_offset);
+  int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
+  psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
   psc_rebalance_run(psc);
-  psc_case_init_partition(_case, &particle_label_offset);
+  free(nr_particles_by_patch);
+
+  nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
+  psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
+  free(nr_particles_by_patch);
+
   psc_case_init_particles(_case, particle_label_offset);
 
   // alloc / initialize fields

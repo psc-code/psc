@@ -42,11 +42,11 @@ pml_find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 }
 
 void
-psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
+psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
+			int *particle_label_offset)
 {
   struct psc *psc = _case->psc;
 
-  int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   int np_total = 0;
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
@@ -76,7 +76,6 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
   psc_foreach_patch(psc, p) {
     psc->particles.p[p].n_part = nr_particles_by_patch[p];
   }
-  free(nr_particles_by_patch);
 
   // calculate global particle label offset for unique numbering
   *particle_label_offset = 0; // necessary on proc 0
