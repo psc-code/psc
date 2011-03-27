@@ -13,6 +13,53 @@ psc_get_loads(struct psc *psc, double *loads)
   }
 }
 
+static void
+find_best_assignment(int nr_global_patches, double *loads_all,
+		     int size, int *nr_patches_all_new)
+{
+  double loads_sum = 0.;
+  for (int i = 0; i < nr_global_patches; i++) {
+    loads_sum += loads_all[i];
+  }
+  double load_target = loads_sum / size;
+    
+  int p = 0, nr_new_patches = 0;
+  double load = 0.;
+  for (int i = 0; i < nr_global_patches; i++) {
+    load += loads_all[i];
+    nr_new_patches++;
+    double next_target = (p + 1) * load_target;
+    if (p < size - 1) {
+      if (load > next_target) {
+	double above_target = load - next_target;
+	double below_target = next_target - (load - loads_all[i-1]);
+	if (above_target > below_target) {
+	  nr_patches_all_new[p] = nr_new_patches - 1;
+	  nr_new_patches = 1;
+	} else {
+	  nr_patches_all_new[p] = nr_new_patches;
+	  nr_new_patches = 0;
+	}
+	p++;
+      }
+    } else { // last proc takes what's left
+      if (i == nr_global_patches - 1) {
+	nr_patches_all_new[p] = nr_new_patches;
+      }
+    }
+  }
+  
+  int pp = 0;
+  for (int p = 0; p < size; p++) {
+    double load = 0.;
+    for (int i = 0; i < nr_patches_all_new[p]; i++) {
+      load += loads_all[pp++];
+    }
+    printf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
+	   load, load_target, load - load_target);
+  }
+}
+
 void
 psc_rebalance_run(struct psc *psc)
 {
@@ -47,48 +94,14 @@ psc_rebalance_run(struct psc *psc)
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
 
+  int *nr_patches_all_new;
   if (rank == 0) {
-    double loads_sum = 0.;
-    for (int i = 0; i < nr_global_patches; i++) {
-      loads_sum += loads_all[i];
-    }
-    double load_target = loads_sum / size;
-    
-    int p = 0, nr_new_patches = 0;
-    int *nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
-    double load = 0.;
-    for (int i = 0; i < nr_global_patches; i++) {
-      load += loads_all[i];
-      nr_new_patches++;
-      double next_target = (p + 1) * load_target;
-      if (p < size - 1) {
-	if (load > next_target) {
-	  double above_target = load - next_target;
-	  double below_target = next_target - (load - loads_all[i-1]);
-	  if (above_target > below_target) {
-	    nr_patches_all_new[p] = nr_new_patches - 1;
-	    nr_new_patches = 1;
-	  } else {
-	    nr_patches_all_new[p] = nr_new_patches;
-	    nr_new_patches = 0;
-	  }
-	  p++;
-	}
-      } else if (i == nr_global_patches - 1) {
-	nr_patches_all_new[p] = nr_new_patches;
-      }
-    }
+    nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
+    find_best_assignment(nr_global_patches, loads_all, size, nr_patches_all_new);
+  }
 
-    int pp = 0;
-    for (int p = 0; p < size; p++) {
-      double load = 0.;
-      for (int i = 0; i < nr_patches_all_new[p]; i++) {
-	load += loads_all[pp++];
-      }
-      printf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
-	     load, load_target, load - load_target);
-    }
-
+  if (rank == 0) {
+    free(nr_patches_all_new);
     free(loads_all);
     free(nr_patches_all);
     free(displs);
