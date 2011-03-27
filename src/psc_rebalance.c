@@ -101,7 +101,6 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
   MPI_Bcast(nr_patches_all_new, size, MPI_INT, 0, comm);
 
   free(psc->patch);
-  mparticles_base_destroy(&psc->particles);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_all_new[rank]);
 
   free(nr_patches_all_new);

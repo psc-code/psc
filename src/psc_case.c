@@ -63,10 +63,6 @@ _psc_case_setup(struct psc_case *_case)
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
-  mparticles_base_alloc(&psc->particles, nr_particles_by_patch);
-  psc_foreach_patch(psc, p) {
-    psc->particles.p[p].n_part = nr_particles_by_patch[p];
-  }
   psc_rebalance_run(psc, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
