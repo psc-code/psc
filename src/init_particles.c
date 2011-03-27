@@ -71,6 +71,7 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
     }
 
     particles_base_alloc(&psc->particles.p[p], np);
+    psc->particles.p[p].n_part = np;
     np_total += np;
   }
   // calculate global particle label offset for unique numbering
@@ -155,6 +156,6 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
 	}
       }
     }
-    pp->n_part = i;
+    assert(pp->n_part == i);
   }
 }
