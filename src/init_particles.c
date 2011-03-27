@@ -46,9 +46,8 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 {
   struct psc *psc = _case->psc;
 
+  int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   int np_total = 0;
-  // FIXME, -> mparticles_alloc()
-  psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
@@ -69,11 +68,17 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 	}
       }
     }
-
-    particles_base_alloc(&psc->particles.p[p], np);
-    psc->particles.p[p].n_part = np;
+    nr_particles_by_patch[p] = np;
     np_total += np;
   }
+  // FIXME, -> mparticles_alloc()
+  psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
+  psc_foreach_patch(psc, p) {
+    particles_base_alloc(&psc->particles.p[p], nr_particles_by_patch[p]);
+    psc->particles.p[p].n_part = nr_particles_by_patch[p];
+  }
+  free(nr_particles_by_patch);
+
   // calculate global particle label offset for unique numbering
   *particle_label_offset = 0; // necessary on proc 0
   MPI_Exscan(&np_total, particle_label_offset, 1, MPI_INT, MPI_SUM,
