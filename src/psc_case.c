@@ -61,9 +61,9 @@ _psc_case_setup(struct psc_case *_case)
   // alloc / initialize particles
   int particle_label_offset;
   psc_case_init_partition(_case, &particle_label_offset);
-  psc_case_init_particles(_case, particle_label_offset);
-  // FIXME, we should rebalance before allocating and initializing the particles
   psc_rebalance_run(psc);
+  psc_case_init_partition(_case, &particle_label_offset);
+  psc_case_init_particles(_case, particle_label_offset);
 
   // alloc / initialize fields
   mfields_base_alloc(&psc->flds, NR_FIELDS);

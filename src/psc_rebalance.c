@@ -1,5 +1,7 @@
 
 #include "psc.h"
+#include "psc_output_fields.h"
+#include "psc_bnd.h"
 
 #include <stdlib.h>
 
@@ -14,8 +16,8 @@ psc_get_loads(struct psc *psc, double *loads)
 }
 
 static void
-find_best_assignment(int nr_global_patches, double *loads_all,
-		     int size, int *nr_patches_all_new)
+find_best_mapping(int nr_global_patches, double *loads_all,
+		  int size, int *nr_patches_all_new)
 {
   double loads_sum = 0.;
   for (int i = 0; i < nr_global_patches; i++) {
@@ -42,10 +44,10 @@ find_best_assignment(int nr_global_patches, double *loads_all,
 	}
 	p++;
       }
-    } else { // last proc takes what's left
-      if (i == nr_global_patches - 1) {
-	nr_patches_all_new[p] = nr_new_patches;
-      }
+    }
+    // last proc takes what's left
+    if (i == nr_global_patches - 1) {
+      nr_patches_all_new[size - 1] = nr_new_patches;
     }
   }
   
@@ -94,14 +96,19 @@ psc_rebalance_run(struct psc *psc)
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
 
-  int *nr_patches_all_new;
+  int *nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
   if (rank == 0) {
-    nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
-    find_best_assignment(nr_global_patches, loads_all, size, nr_patches_all_new);
+    find_best_mapping(nr_global_patches, loads_all, size, nr_patches_all_new);
   }
+  MPI_Bcast(nr_patches_all_new, size, MPI_INT, 0, comm);
+
+  free(psc->patch);
+  mparticles_base_destroy(&psc->particles);
+  struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_all_new[rank]);
+
+  free(nr_patches_all_new);
 
   if (rank == 0) {
-    free(nr_patches_all_new);
     free(loads_all);
     free(nr_patches_all);
     free(displs);
@@ -109,7 +116,19 @@ psc_rebalance_run(struct psc *psc)
   
   free(loads);
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  //  assert(0);
+  mrc_domain_view(domain_new);
+
+  mrc_domain_destroy(psc->mrc_domain);
+  psc->mrc_domain = domain_new;
+
+  psc_output_fields_destroy(psc->output_fields);
+  psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
+  psc_output_fields_set_from_options(psc->output_fields);
+  psc_output_fields_setup(psc->output_fields);
+
+  psc_bnd_destroy(psc->bnd);
+  psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
+  psc_bnd_set_from_options(psc->bnd);
+  psc_bnd_setup(psc->bnd);
 }
 
