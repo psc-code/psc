@@ -227,16 +227,8 @@ get_nr_patches_gpatch_off(struct mrc_domain *domain, int rank,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-
-  *nr_patches = patches_per_proc + (rank < patches_per_proc_rmndr);
-  if (rank < patches_per_proc_rmndr) {
-    *gpatch_off = rank * (patches_per_proc + 1);
-  } else {
-    *gpatch_off = rank * patches_per_proc + patches_per_proc_rmndr;
-  }
+  *gpatch_off = multi->gpatch_off_all[rank];
+  *nr_patches = multi->gpatch_off_all[rank+1] - *gpatch_off;
 }
 
 static void
@@ -245,17 +237,13 @@ gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-  
-  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
-    *rank = gpatch / (patches_per_proc + 1);
-    *patch = gpatch % (patches_per_proc + 1);
-  } else {
-    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
-    *rank = tmp / patches_per_proc + patches_per_proc_rmndr;
-    *patch = tmp % patches_per_proc;
+  // FIXME, this can be done much more efficiently using binary search...
+  for (int i = 0; i < domain->size; i++) {
+    if (gpatch < multi->gpatch_off_all[i+1]) {
+      *rank = i;
+      *patch = gpatch - multi->gpatch_off_all[i];
+      break;
+    }
   }
 }
 
@@ -338,6 +326,18 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
 
   sfc_setup(multi);
 
+  multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
+  int gpatch_off = 0;
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  int patches_per_proc = nr_global_patches / domain->size;
+  int patches_per_proc_rmndr = nr_global_patches % domain->size;
+  for (int i = 0; i < domain->size; i++) {
+    multi->gpatch_off_all[i] = gpatch_off;
+    int nr_patches = patches_per_proc + (i < patches_per_proc_rmndr);
+    gpatch_off += nr_patches;
+  }
+  multi->gpatch_off_all[domain->size] = nr_global_patches;
+
   get_nr_patches_gpatch_off(domain, domain->rank,
 			    &multi->nr_patches, &multi->gpatch_off);
 
@@ -357,6 +357,7 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  free(multi->gpatch_off_all);
   free(multi->patches);
 }
 
