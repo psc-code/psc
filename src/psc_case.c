@@ -67,7 +67,7 @@ _psc_case_setup(struct psc_case *_case)
   psc_foreach_patch(psc, p) {
     psc->particles.p[p].n_part = nr_particles_by_patch[p];
   }
-  psc_rebalance_run(psc);
+  psc_rebalance_run(psc, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
   nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));

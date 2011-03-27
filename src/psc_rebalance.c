@@ -6,12 +6,10 @@
 #include <stdlib.h>
 
 static void
-psc_get_loads(struct psc *psc, double *loads)
+psc_get_loads(struct psc *psc, double *loads, int *nr_particles_by_patch)
 {
-  mparticles_base_t *mparticles = &psc->particles;
-
   psc_foreach_patch(psc, p) {
-    loads[p] = mparticles->p[p].n_part;
+    loads[p] = nr_particles_by_patch[p];
   }
 }
 
@@ -63,14 +61,14 @@ find_best_mapping(int nr_global_patches, double *loads_all,
 }
 
 void
-psc_rebalance_run(struct psc *psc)
+psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
 {
   struct mrc_domain *domain = psc->mrc_domain;
 
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
   double *loads = calloc(nr_patches, sizeof(*loads));
-  psc_get_loads(psc, loads);
+  psc_get_loads(psc, loads, nr_particles_by_patch);
 
   MPI_Comm comm = mrc_domain_comm(domain);
   int rank, size;

@@ -310,7 +310,7 @@ struct psc {
 };
 
 // FIXME, turn into mrc_obj
-void psc_rebalance_run(struct psc *psc);
+void psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch);
 
 #define foreach_3d(p, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\
