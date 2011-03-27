@@ -71,10 +71,9 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
     nr_particles_by_patch[p] = np;
     np_total += np;
   }
-  // FIXME, -> mparticles_alloc()
-  psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
+
+  mparticles_base_alloc(&psc->particles, nr_particles_by_patch);
   psc_foreach_patch(psc, p) {
-    particles_base_alloc(&psc->particles.p[p], nr_particles_by_patch[p]);
     psc->particles.p[p].n_part = nr_particles_by_patch[p];
   }
   free(nr_particles_by_patch);

@@ -246,6 +246,7 @@ struct psc_domain {
 void mfields_base_alloc(mfields_base_t *flds, int nr_fields);
 void mfields_base_destroy(mfields_base_t *flds);
 
+void mparticles_base_alloc(mparticles_base_t *particles, int *nr_particles_by_patch);
 void mparticles_base_destroy(mparticles_base_t *particles);
 
 // FIXME, turn into mrc_obj
