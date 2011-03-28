@@ -13,7 +13,6 @@ struct psc_fields_list {
 
 struct psc_output_fields_c {
   char *data_dir;
-  char *output_format;
   char *output_fields;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
@@ -32,6 +31,7 @@ struct psc_output_fields_c {
 
 // ======================================================================
 
+extern struct _psc_output_format_ops psc_output_format_ops_mrc;
 extern struct _psc_output_format_ops psc_output_format_ops_binary;
 extern struct _psc_output_format_ops psc_output_format_ops_hdf5;
 extern struct _psc_output_format_ops psc_output_format_ops_xdmf;
@@ -39,7 +39,6 @@ extern struct _psc_output_format_ops psc_output_format_ops_vtk;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_points;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_cells;
 extern struct _psc_output_format_ops psc_output_format_ops_vtk_binary;
-extern struct _psc_output_format_ops psc_output_format_ops_mrc;
 
 void write_fields_combine(struct psc_fields_list *list, 
 			  void (*write_field)(void *ctx, fields_base_t *fld),

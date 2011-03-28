@@ -215,7 +215,37 @@ find_output_field(const char *name)
 }
 
 // ----------------------------------------------------------------------
-// output_c_setup
+// psc_output_fields_c_create
+
+static void
+psc_output_fields_c_create(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  out_c->format = psc_output_format_create(psc_output_fields_comm(out));
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_destroy
+
+static void
+psc_output_fields_c_destroy(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  psc_output_format_destroy(out_c->format);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_set_from_options
+
+static void
+psc_output_fields_c_set_from_options(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  psc_output_format_set_from_options(out_c->format);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_setup
 
 static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
@@ -225,9 +255,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
 
-  out_c->format = psc_output_format_create(psc_output_fields_comm(out));
-  psc_output_format_set_type(out_c->format, out_c->output_format);
-  
   struct psc_fields_list *pfd = &out_c->pfd;
 
   // setup pfd according to output_fields as given
@@ -263,6 +290,16 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     }
   }
   out_c->naccum = 0;
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_view
+
+static void
+psc_output_fields_c_view(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  psc_output_format_view(out_c->format);
 }
 
 // ----------------------------------------------------------------------
@@ -381,7 +418,6 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary")  },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
@@ -403,6 +439,10 @@ struct psc_output_fields_ops psc_output_fields_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_output_fields_c),
   .param_descr           = psc_output_fields_c_descr,
+  .create                = psc_output_fields_c_create,
+  .destroy               = psc_output_fields_c_destroy,
   .setup                 = psc_output_fields_c_setup,
+  .set_from_options      = psc_output_fields_c_set_from_options,
+  .view                  = psc_output_fields_c_view,
   .run                   = psc_output_fields_c_run,
 };
