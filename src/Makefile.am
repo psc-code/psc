@@ -50,6 +50,7 @@ libpsc_a_SOURCES = \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
 	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
 	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
+	psc_output_format.c \
 	psc_output_particles.c psc_output_particles_none.c \
 	psc_output_particles_fortran.c \
 	output_c_combine.c \

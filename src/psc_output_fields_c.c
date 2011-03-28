@@ -1,5 +1,6 @@
 
 #include "psc_output_fields_c.h"
+#include "psc_output_format.h"
 #include "psc_moments.h"
 
 #include <mrc_profile.h>
@@ -254,6 +255,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
 
+  out_c->format = psc_output_format_create(psc_output_fields_comm(out));
+  psc_output_format_set_type(out_c->format, out_c->output_format);
   out_c->format_ops = find_output_format_ops(out_c->output_format);
   if (out_c->format_ops->create) {
     out_c->format_ops->create();
@@ -366,7 +369,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
        out_c->pfield_next += out_c->pfield_step;
        struct psc_fields_list flds_list;
        make_fields_list(&flds_list, &out_c->pfd);
-       out_c->format_ops->write_fields(out_c, &flds_list, "pfd");
+       psc_output_format_write_fields(out_c->format, out_c, &flds_list, "pfd");
        free_fields_list(&flds_list);
     }
   }
@@ -391,7 +394,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out_c->tfd);
-      out_c->format_ops->write_fields(out_c, &flds_list, "tfd");
+      psc_output_format_write_fields(out_c->format, out_c, &flds_list, "tfd");
       free_fields_list(&flds_list);
       foreach_patch(p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {

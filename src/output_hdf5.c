@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 
 #include <mrc_profile.h>
 #include <mrc_common.h>
@@ -102,8 +103,10 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
 // ======================================================================
 
 static void
-hdf5_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-		  const char *pfx)
+psc_output_format_hdf5_write_fields(struct psc_output_format *format,
+				    struct psc_output_fields_c *out,
+				    struct psc_fields_list *list,
+				    const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -126,7 +129,11 @@ hdf5_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 
 struct _psc_output_format_ops psc_output_format_ops_hdf5 = {
   .name         = "hdf5",
-  .write_fields = hdf5_write_fields,
+};
+
+struct psc_output_format_ops psc_output_format_hdf5_ops = {
+  .name                  = "hdf5",
+  .write_fields          = psc_output_format_hdf5_write_fields,
 };
 
 // ======================================================================
@@ -229,8 +236,10 @@ xdmf_write_temporal_collection(struct psc_output_fields_c *out, const char *pfx)
 }
 
 static void
-xdmf_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-		  const char *pfx)
+psc_output_format_xdmf_write_fields(struct psc_output_format *format,
+				    struct psc_output_fields_c *out,
+				    struct psc_fields_list *list,
+				    const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -256,7 +265,11 @@ xdmf_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 
 struct _psc_output_format_ops psc_output_format_ops_xdmf = {
   .name         = "xdmf",
-  .write_fields = xdmf_write_fields,
+};
+
+struct psc_output_format_ops psc_output_format_xdmf_ops = {
+  .name                  = "xdmf",
+  .write_fields          = psc_output_format_xdmf_write_fields,
 };
 
 // ======================================================================

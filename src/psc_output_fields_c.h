@@ -17,8 +17,6 @@ struct _psc_output_format_ops {
   const char *name;
   void (*create)(void);
   void (*destroy)(void);
-  void (*write_fields)(struct psc_output_fields_c *out, struct psc_fields_list *flds,
-		       const char *prefix);
 };
 
 struct psc_output_fields_c {
@@ -38,6 +36,7 @@ struct psc_output_fields_c {
   struct output_field *out_flds[MAX_FIELDS_LIST];
 
   struct _psc_output_format_ops *format_ops;
+  struct psc_output_format *format;
 };
 
 // ======================================================================

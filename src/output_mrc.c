@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 
 #include <mrc_common.h>
 #include <mrc_io.h>
@@ -33,11 +34,13 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// mrc_write_fields
+// psc_output_format_mrc_write_fields
 
 static void
-mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-		  const char *pfx)
+psc_output_format_mrc_write_fields(struct psc_output_format *format,
+				   struct psc_output_fields_c *out,
+				   struct psc_fields_list *list,
+				   const char *pfx)
 {
   int io_type;
   if (strcmp(pfx, "pfd") == 0) {
@@ -85,8 +88,14 @@ mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 
 struct _psc_output_format_ops psc_output_format_ops_mrc = {
   .name         = "mrc",
-  .write_fields = mrc_write_fields,
 };
 
+// ======================================================================
+// psc_output_format: subclass "mrc"
+
+struct psc_output_format_ops psc_output_format_mrc_ops = {
+  .name                  = "mrc",
+  .write_fields          = psc_output_format_mrc_write_fields,
+};
 
 

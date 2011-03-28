@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -79,8 +80,10 @@ vtk_write_field(void *ctx, fields_base_t *fld)
 /// Write VTK file for STRUCTURED_POINTS output.
 
 static void
-vtk_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
-		 const char *pfx)
+psc_output_format_vtk_write_fields(struct psc_output_format *format,
+				   struct psc_output_fields_c *out,
+				   struct psc_fields_list *flds,
+				   const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -105,8 +108,10 @@ vtk_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
 /// Write VTK file for RECTILINEAR_GRID output with data values on points.
 
 static void
-vtk_points_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
-			const char *pfx)
+psc_output_format_vtk_points_write_fields(struct psc_output_format *format,
+					  struct psc_output_fields_c *out,
+					  struct psc_fields_list *flds,
+					  const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -129,8 +134,10 @@ vtk_points_write_fields(struct psc_output_fields_c *out, struct psc_fields_list 
 /// Write VTK file for RECTILINEAR_GRID output with data values on cells.
 
 static void
-vtk_cells_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *flds,
-		       const char *pfx)
+psc_output_format_vtk_cells_write_fields(struct psc_output_format *format,
+					 struct psc_output_fields_c *out,
+					 struct psc_fields_list *flds,
+					 const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -153,7 +160,11 @@ vtk_cells_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *
 
 struct _psc_output_format_ops psc_output_format_ops_vtk = {
   .name         = "vtk",
-  .write_fields = vtk_write_fields,
+};
+
+struct psc_output_format_ops psc_output_format_vtk_ops = {
+  .name                  = "vtk",
+  .write_fields          = psc_output_format_vtk_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -163,7 +174,11 @@ struct _psc_output_format_ops psc_output_format_ops_vtk = {
 
 struct _psc_output_format_ops psc_output_format_ops_vtk_points = {
   .name         = "vtk_points",
-  .write_fields = vtk_points_write_fields,
+};
+
+struct psc_output_format_ops psc_output_format_vtk_points_ops = {
+  .name                  = "vtk_points",
+  .write_fields          = psc_output_format_vtk_points_write_fields,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -175,6 +190,10 @@ struct _psc_output_format_ops psc_output_format_ops_vtk_points = {
 
 struct _psc_output_format_ops psc_output_format_ops_vtk_cells = {
   .name         = "vtk_cells",
-  .write_fields = vtk_cells_write_fields,
+};
+
+struct psc_output_format_ops psc_output_format_vtk_cells_ops = {
+  .name                  = "vtk_cells",
+  .write_fields          = psc_output_format_vtk_cells_write_fields,
 };
 

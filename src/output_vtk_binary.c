@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -124,8 +125,10 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields
 /// Write VTK file for STRUCTURED_POINTS output.
 
 static void
-vtk_write_fields_binary(struct psc_output_fields_c *out, struct psc_fields_list *flds,
-		 const char *pfx)
+psc_output_format_vtk_binary_write_fields(struct psc_output_format *format,
+					  struct psc_output_fields_c *out,
+					  struct psc_fields_list *flds,
+					  const char *pfx)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -160,6 +163,10 @@ vtk_write_fields_binary(struct psc_output_fields_c *out, struct psc_fields_list 
 
 struct _psc_output_format_ops psc_output_format_ops_vtk_binary = {
   .name         = "vtk_binary",
-  .write_fields = vtk_write_fields_binary,
+};
+
+struct psc_output_format_ops psc_output_format_vtk_binary_ops = {
+  .name                  = "vtk_binary",
+  .write_fields          = psc_output_format_vtk_binary_write_fields,
 };
 
