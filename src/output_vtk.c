@@ -158,10 +158,6 @@ psc_output_format_vtk_cells_write_fields(struct psc_output_format *format,
 //////////////////////////////////////////////////////////////////////
 /// VTK output format writing ASCII STRUCTURED_POINTS file.
 
-struct _psc_output_format_ops psc_output_format_ops_vtk = {
-  .name         = "vtk",
-};
-
 struct psc_output_format_ops psc_output_format_vtk_ops = {
   .name                  = "vtk",
   .write_fields          = psc_output_format_vtk_write_fields,
@@ -171,10 +167,6 @@ struct psc_output_format_ops psc_output_format_vtk_ops = {
 /// VTK output format writing ASCII RECTILINEAR_GRID file on points.
 ///
 /// The grid points here are actually the centers of the computational cells.
-
-struct _psc_output_format_ops psc_output_format_ops_vtk_points = {
-  .name         = "vtk_points",
-};
 
 struct psc_output_format_ops psc_output_format_vtk_points_ops = {
   .name                  = "vtk_points",
@@ -187,10 +179,6 @@ struct psc_output_format_ops psc_output_format_vtk_points_ops = {
 /// The grid points here are the true nodes of the computational cells.
 /// The cell-centered field data is written as CELL_DATA, i.e. associated
 /// with the cells, not the grid points.
-
-struct _psc_output_format_ops psc_output_format_ops_vtk_cells = {
-  .name         = "vtk_cells",
-};
 
 struct psc_output_format_ops psc_output_format_vtk_cells_ops = {
   .name                  = "vtk_cells",

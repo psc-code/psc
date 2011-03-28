@@ -11,14 +11,6 @@ struct psc_fields_list {
   mfields_base_t flds[MAX_FIELDS_LIST];
 };
 
-struct psc_output_fields_c;
-
-struct _psc_output_format_ops {
-  const char *name;
-  void (*create)(void);
-  void (*destroy)(void);
-};
-
 struct psc_output_fields_c {
   char *data_dir;
   char *output_format;
@@ -35,7 +27,6 @@ struct psc_output_fields_c {
   struct psc_fields_list pfd, tfd;
   struct output_field *out_flds[MAX_FIELDS_LIST];
 
-  struct _psc_output_format_ops *format_ops;
   struct psc_output_format *format;
 };
 

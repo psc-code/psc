@@ -84,13 +84,6 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
 }
 
 // ======================================================================
-// psc_output_format_ops_mrc
-
-struct _psc_output_format_ops psc_output_format_ops_mrc = {
-  .name         = "mrc",
-};
-
-// ======================================================================
 // psc_output_format: subclass "mrc"
 
 struct psc_output_format_ops psc_output_format_mrc_ops = {

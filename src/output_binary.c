@@ -102,13 +102,6 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
 }
 
 // ======================================================================
-// psc_output_format_ops_binary
-
-struct _psc_output_format_ops psc_output_format_ops_binary = {
-  .name         = "binary",
-};
-
-// ======================================================================
 // psc_output_format: subclass "binary"
 
 struct psc_output_format_ops psc_output_format_binary_ops = {

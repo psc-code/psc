@@ -214,36 +214,6 @@ find_output_field(const char *name)
   abort();
 }
 
-// ======================================================================
-// find_output_format_ops
-
-// FIXME, this should be converted to mrc_obj, too
-
-static struct _psc_output_format_ops *psc_output_format_ops_list[] = {
-  &psc_output_format_ops_binary,
-#ifdef HAVE_LIBHDF5
-  &psc_output_format_ops_hdf5,
-  &psc_output_format_ops_xdmf,
-#endif
-  &psc_output_format_ops_vtk,
-  &psc_output_format_ops_vtk_points,
-  &psc_output_format_ops_vtk_cells,
-  &psc_output_format_ops_vtk_binary,
-  &psc_output_format_ops_mrc,
-  NULL,
-};
-
-static struct _psc_output_format_ops *
-find_output_format_ops(const char *ops_name)
-{
-  for (int i = 0; psc_output_format_ops_list[i]; i++) {
-    if (strcasecmp(psc_output_format_ops_list[i]->name, ops_name) == 0)
-      return psc_output_format_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_output_format_ops '%s' not available.\n", ops_name);
-  abort();
-}
-
 // ----------------------------------------------------------------------
 // output_c_setup
 
@@ -257,11 +227,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 
   out_c->format = psc_output_format_create(psc_output_fields_comm(out));
   psc_output_format_set_type(out_c->format, out_c->output_format);
-  out_c->format_ops = find_output_format_ops(out_c->output_format);
-  if (out_c->format_ops->create) {
-    out_c->format_ops->create();
-  }
-
+  
   struct psc_fields_list *pfd = &out_c->pfd;
 
   // setup pfd according to output_fields as given

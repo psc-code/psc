@@ -125,11 +125,7 @@ psc_output_format_hdf5_write_fields(struct psc_output_format *format,
 }
 
 // ======================================================================
-// psc_output_format_ops_hdf5
-
-struct _psc_output_format_ops psc_output_format_ops_hdf5 = {
-  .name         = "hdf5",
-};
+// psc_output_format: subclass "hdf5"
 
 struct psc_output_format_ops psc_output_format_hdf5_ops = {
   .name                  = "hdf5",
@@ -261,11 +257,7 @@ psc_output_format_xdmf_write_fields(struct psc_output_format *format,
 }
 
 // ======================================================================
-// psc_output_format_ops_xdmf
-
-struct _psc_output_format_ops psc_output_format_ops_xdmf = {
-  .name         = "xdmf",
-};
+// psc_output_format: subclass "xdmf"
 
 struct psc_output_format_ops psc_output_format_xdmf_ops = {
   .name                  = "xdmf",
