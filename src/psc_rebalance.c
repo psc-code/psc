@@ -61,9 +61,10 @@ find_best_mapping(int nr_global_patches, double *loads_all,
 }
 
 void
-psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
+psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
 {
   struct mrc_domain *domain = psc->mrc_domain;
+  int *nr_particles_by_patch = *p_nr_particles_by_patch;
 
   int nr_patches;
   mrc_domain_get_patches(domain, &nr_patches);
@@ -75,6 +76,7 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
+  // gather nr_patches for all procs on proc 0
   int *nr_patches_all = NULL, *displs = NULL;
   int nr_global_patches = -1;
   double *loads_all = NULL;
@@ -83,6 +85,7 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
     displs = calloc(size, sizeof(*displs));
   }
   MPI_Gather(&nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+  // gather loads for all patches on proc 0
   if (rank == 0) {
     nr_global_patches = 0;
     for (int i = 0; i < size; i++) {
@@ -100,11 +103,6 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
   }
   MPI_Bcast(nr_patches_all_new, size, MPI_INT, 0, comm);
 
-  free(psc->patch);
-  struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_all_new[rank]);
-
-  free(nr_patches_all_new);
-
   if (rank == 0) {
     free(loads_all);
     free(nr_patches_all);
@@ -113,10 +111,12 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
   
   free(loads);
 
-  mrc_domain_view(domain_new);
+  free(psc->patch);
+  struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_all_new[rank]);
 
-  mrc_domain_destroy(psc->mrc_domain);
-  psc->mrc_domain = domain_new;
+  free(nr_patches_all_new);
+
+  mrc_domain_view(domain_new);
 
   psc_output_fields_destroy(psc->output_fields);
   psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
@@ -127,5 +127,47 @@ psc_rebalance_run(struct psc *psc, int *nr_particles_by_patch)
   psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
   psc_bnd_set_from_options(psc->bnd);
   psc_bnd_setup(psc->bnd);
+
+  int *nr_particles_by_patch_new = calloc(psc->nr_patches,
+					  sizeof(nr_particles_by_patch_new));
+
+  MPI_Request *send_reqs = calloc(nr_patches, sizeof(*send_reqs));
+  // send info from old local patches
+  for (int p = 0; p < nr_patches; p++) {
+    struct mrc_patch_info info, info_new;
+    mrc_domain_get_local_patch_info(domain, p, &info);
+    mrc_domain_get_global_patch_info(domain_new, info.global_patch, &info_new);
+    if (info_new.rank == rank) {
+      nr_particles_by_patch_new[info_new.patch] = nr_particles_by_patch[p];
+      send_reqs[p] = MPI_REQUEST_NULL;
+    } else {
+      MPI_Isend(&nr_particles_by_patch[p], 1, MPI_INT, info_new.rank, info.global_patch,
+		comm, &send_reqs[p]);
+    }
+  }
+  // recv info for new local patches
+  MPI_Request *recv_reqs = calloc(psc->nr_patches, sizeof(*recv_reqs));
+  for (int p = 0; p < psc->nr_patches; p++) {
+    struct mrc_patch_info info, info_old;
+    mrc_domain_get_local_patch_info(domain_new, p, &info);
+    mrc_domain_get_global_patch_info(domain, info.global_patch, &info_old);
+    if (info_old.rank == rank) {
+      recv_reqs[p] = MPI_REQUEST_NULL;
+    } else {
+      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, info.global_patch,
+		comm, &recv_reqs[p]);
+    }
+  }
+  
+  MPI_Waitall(nr_patches, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(psc->nr_patches, recv_reqs, MPI_STATUSES_IGNORE);
+  free(send_reqs);
+  free(recv_reqs);
+  
+  mrc_domain_destroy(psc->mrc_domain);
+  psc->mrc_domain = domain_new;
+
+  free(*p_nr_particles_by_patch);
+  *p_nr_particles_by_patch = nr_particles_by_patch_new;
 }
 
