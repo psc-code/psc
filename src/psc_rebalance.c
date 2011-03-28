@@ -60,8 +60,36 @@ find_best_mapping(int nr_global_patches, double *loads_all,
   }
 }
 
+static void
+gather_loads(struct mrc_domain *domain, double *loads, double *loads_all,
+		 int nr_patches, int *nr_patches_all)
+{
+  MPI_Comm comm = mrc_domain_comm(domain);
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  int *displs = NULL;
+  if (rank == 0) {
+    displs = calloc(size, sizeof(*displs));
+    int off = 0;
+    for (int i = 0; i < size; i++) {
+      displs[i] = off;
+      off += nr_patches_all[i];
+    }
+  }
+
+  MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
+	      MPI_DOUBLE, 0, comm);
+
+  if (rank == 0) {
+    free(displs);
+  }
+}
+
+
 void
-psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
+psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
 {
   struct mrc_domain *domain = psc->mrc_domain;
   int *nr_particles_by_patch = *p_nr_particles_by_patch;
@@ -77,28 +105,24 @@ psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
   MPI_Comm_size(comm, &size);
 
   // gather nr_patches for all procs on proc 0
-  int *nr_patches_all = NULL, *displs = NULL;
-  int nr_global_patches = -1;
-  double *loads_all = NULL;
+  int *nr_patches_all = NULL;
   if (rank == 0) {
     nr_patches_all = calloc(size, sizeof(*nr_patches_all));
-    displs = calloc(size, sizeof(*displs));
   }
   MPI_Gather(&nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
   // gather loads for all patches on proc 0
+  double *loads_all = NULL;
   if (rank == 0) {
-    nr_global_patches = 0;
-    for (int i = 0; i < size; i++) {
-      displs[i] = nr_global_patches;
-      nr_global_patches += nr_patches_all[i];
-    }
+    int nr_global_patches;
+    mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
     loads_all = calloc(nr_global_patches, sizeof(*loads_all));
   }
-  MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
-	      MPI_DOUBLE, 0, comm);
+  gather_loads(domain, loads, loads_all, nr_patches, nr_patches_all);
 
   int *nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
   if (rank == 0) {
+    int nr_global_patches;
+    mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
     find_best_mapping(nr_global_patches, loads_all, size, nr_patches_all_new);
   }
   MPI_Bcast(nr_patches_all_new, size, MPI_INT, 0, comm);
@@ -106,7 +130,6 @@ psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
   if (rank == 0) {
     free(loads_all);
     free(nr_patches_all);
-    free(displs);
   }
   
   free(loads);
