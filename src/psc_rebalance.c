@@ -118,16 +118,6 @@ psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
 
   mrc_domain_view(domain_new);
 
-  psc_output_fields_destroy(psc->output_fields);
-  psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
-  psc_output_fields_set_from_options(psc->output_fields);
-  psc_output_fields_setup(psc->output_fields);
-
-  psc_bnd_destroy(psc->bnd);
-  psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
-  psc_bnd_set_from_options(psc->bnd);
-  psc_bnd_setup(psc->bnd);
-
   int *nr_particles_by_patch_new = calloc(psc->nr_patches,
 					  sizeof(nr_particles_by_patch_new));
 
@@ -166,6 +156,16 @@ psc_rebalance_run(struct psc *psc, int **p_nr_particles_by_patch)
   
   mrc_domain_destroy(psc->mrc_domain);
   psc->mrc_domain = domain_new;
+
+  psc_output_fields_destroy(psc->output_fields);
+  psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
+  psc_output_fields_set_from_options(psc->output_fields);
+  psc_output_fields_setup(psc->output_fields);
+
+  psc_bnd_destroy(psc->bnd);
+  psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
+  psc_bnd_set_from_options(psc->bnd);
+  psc_bnd_setup(psc->bnd);
 
   free(*p_nr_particles_by_patch);
   *p_nr_particles_by_patch = nr_particles_by_patch_new;

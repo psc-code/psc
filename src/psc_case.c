@@ -64,17 +64,7 @@ _psc_case_setup(struct psc_case *_case)
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
   psc_rebalance_run(psc, &nr_particles_by_patch);
-  int *n2 = nr_particles_by_patch;
-  //  free(nr_particles_by_patch);
 
-  nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
-  psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
-  for (int i = 0; i < psc->nr_patches; i++) {
-    mprintf("yy %d: %d // %d\n", i, n2[i], nr_particles_by_patch[i]);
-    assert(n2[i] == nr_particles_by_patch[i]);
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  assert(0);
   mparticles_base_alloc(&psc->particles, nr_particles_by_patch);
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);
