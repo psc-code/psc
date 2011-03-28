@@ -218,7 +218,7 @@ find_output_field(const char *name)
 
 // FIXME, this should be converted to mrc_obj, too
 
-static struct psc_output_format_ops *psc_output_format_ops_list[] = {
+static struct _psc_output_format_ops *psc_output_format_ops_list[] = {
   &psc_output_format_ops_binary,
 #ifdef HAVE_LIBHDF5
   &psc_output_format_ops_hdf5,
@@ -232,7 +232,7 @@ static struct psc_output_format_ops *psc_output_format_ops_list[] = {
   NULL,
 };
 
-static struct psc_output_format_ops *
+static struct _psc_output_format_ops *
 find_output_format_ops(const char *ops_name)
 {
   for (int i = 0; psc_output_format_ops_list[i]; i++) {

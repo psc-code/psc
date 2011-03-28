@@ -83,7 +83,7 @@ mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 // ======================================================================
 // psc_output_format_ops_mrc
 
-struct psc_output_format_ops psc_output_format_ops_mrc = {
+struct _psc_output_format_ops psc_output_format_ops_mrc = {
   .name         = "mrc",
   .write_fields = mrc_write_fields,
 };

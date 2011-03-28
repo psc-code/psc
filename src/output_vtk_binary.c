@@ -158,7 +158,7 @@ vtk_write_fields_binary(struct psc_output_fields_c *out, struct psc_fields_list 
 //////////////////////////////////////////////////////////////////////
 /// VTK output format writing binary STRUCTURED_POINTS files uncombined.
 
-struct psc_output_format_ops psc_output_format_ops_vtk_binary = {
+struct _psc_output_format_ops psc_output_format_ops_vtk_binary = {
   .name         = "vtk_binary",
   .write_fields = vtk_write_fields_binary,
 };
