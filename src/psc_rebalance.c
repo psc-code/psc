@@ -13,63 +13,87 @@ psc_get_loads(struct psc *psc, double *loads, int *nr_particles_by_patch)
   }
 }
 
-static void
-find_best_mapping(int nr_global_patches, double *loads_all,
-		  int size, int *nr_patches_all_new)
-{
-  double loads_sum = 0.;
-  for (int i = 0; i < nr_global_patches; i++) {
-    loads_sum += loads_all[i];
-  }
-  double load_target = loads_sum / size;
-    
-  int p = 0, nr_new_patches = 0;
-  double load = 0.;
-  for (int i = 0; i < nr_global_patches; i++) {
-    load += loads_all[i];
-    nr_new_patches++;
-    double next_target = (p + 1) * load_target;
-    if (p < size - 1) {
-      if (load > next_target) {
-	double above_target = load - next_target;
-	double below_target = next_target - (load - loads_all[i-1]);
-	if (above_target > below_target) {
-	  nr_patches_all_new[p] = nr_new_patches - 1;
-	  nr_new_patches = 1;
-	} else {
-	  nr_patches_all_new[p] = nr_new_patches;
-	  nr_new_patches = 0;
-	}
-	p++;
-      }
-    }
-    // last proc takes what's left
-    if (i == nr_global_patches - 1) {
-      nr_patches_all_new[size - 1] = nr_new_patches;
-    }
-  }
-  
-  int pp = 0;
-  for (int p = 0; p < size; p++) {
-    double load = 0.;
-    for (int i = 0; i < nr_patches_all_new[p]; i++) {
-      load += loads_all[pp++];
-    }
-    printf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
-	   load, load_target, load - load_target);
-  }
-}
-
-static void
-gather_loads(struct mrc_domain *domain, double *loads, double *loads_all,
-		 int nr_patches, int *nr_patches_all)
+static int
+find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *loads_all)
 {
   MPI_Comm comm = mrc_domain_comm(domain);
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
+  int *nr_patches_all_new = NULL;
+
+  if (rank == 0) { // do the mapping on proc 0
+    nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
+    double loads_sum = 0.;
+    for (int i = 0; i < nr_global_patches; i++) {
+      loads_sum += loads_all[i];
+    }
+    double load_target = loads_sum / size;
+    
+    int p = 0, nr_new_patches = 0;
+    double load = 0.;
+    for (int i = 0; i < nr_global_patches; i++) {
+      load += loads_all[i];
+      nr_new_patches++;
+      double next_target = (p + 1) * load_target;
+      if (p < size - 1) {
+	if (load > next_target) {
+	  double above_target = load - next_target;
+	  double below_target = next_target - (load - loads_all[i-1]);
+	  if (above_target > below_target) {
+	    nr_patches_all_new[p] = nr_new_patches - 1;
+	    nr_new_patches = 1;
+	  } else {
+	    nr_patches_all_new[p] = nr_new_patches;
+	    nr_new_patches = 0;
+	  }
+	  p++;
+	}
+      }
+      // last proc takes what's left
+      if (i == nr_global_patches - 1) {
+	nr_patches_all_new[size - 1] = nr_new_patches;
+      }
+    }
+    
+    int pp = 0;
+    for (int p = 0; p < size; p++) {
+      double load = 0.;
+      for (int i = 0; i < nr_patches_all_new[p]; i++) {
+	load += loads_all[pp++];
+      }
+      mprintf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
+	      load, load_target, load - load_target);
+    }
+  }
+  // then scatter
+  int nr_patches_new;
+  MPI_Scatter(nr_patches_all_new, 1, MPI_INT, &nr_patches_new, 1, MPI_INT,
+	      0, comm);
+  free(nr_patches_all_new);
+  return nr_patches_new;
+}
+
+static double *
+gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
+	     int *p_nr_global_patches)
+{
+  MPI_Comm comm = mrc_domain_comm(domain);
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  // gather nr_patches for all procs on proc 0
+  int *nr_patches_all = NULL;
+  if (rank == 0) {
+    nr_patches_all = calloc(size, sizeof(*nr_patches_all));
+  }
+  MPI_Gather(&nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
+
+  // gather loads for all patches on proc 0
   int *displs = NULL;
+  double *loads_all = NULL;
   if (rank == 0) {
     displs = calloc(size, sizeof(*displs));
     int off = 0;
@@ -77,16 +101,19 @@ gather_loads(struct mrc_domain *domain, double *loads, double *loads_all,
       displs[i] = off;
       off += nr_patches_all[i];
     }
+    mrc_domain_get_nr_global_patches(domain, p_nr_global_patches);
+    loads_all = calloc(*p_nr_global_patches, sizeof(*loads_all));
   }
-
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
 
   if (rank == 0) {
+    free(nr_patches_all);
     free(displs);
   }
-}
 
+  return loads_all;
+}
 
 void
 psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
@@ -99,47 +126,24 @@ psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
   double *loads = calloc(nr_patches, sizeof(*loads));
   psc_get_loads(psc, loads, nr_particles_by_patch);
 
+  int nr_global_patches;
+  double *loads_all = gather_loads(domain, loads, nr_patches, &nr_global_patches);
+  free(loads);
+
+  int nr_patches_new =
+    find_best_mapping(domain, nr_global_patches, loads_all);
+
+  free(loads_all);
+
+  free(psc->patch);
+  struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
+
+  //  mrc_domain_view(domain_new);
+
   MPI_Comm comm = mrc_domain_comm(domain);
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
-
-  // gather nr_patches for all procs on proc 0
-  int *nr_patches_all = NULL;
-  if (rank == 0) {
-    nr_patches_all = calloc(size, sizeof(*nr_patches_all));
-  }
-  MPI_Gather(&nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
-  // gather loads for all patches on proc 0
-  double *loads_all = NULL;
-  if (rank == 0) {
-    int nr_global_patches;
-    mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
-    loads_all = calloc(nr_global_patches, sizeof(*loads_all));
-  }
-  gather_loads(domain, loads, loads_all, nr_patches, nr_patches_all);
-
-  int *nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
-  if (rank == 0) {
-    int nr_global_patches;
-    mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
-    find_best_mapping(nr_global_patches, loads_all, size, nr_patches_all_new);
-  }
-  MPI_Bcast(nr_patches_all_new, size, MPI_INT, 0, comm);
-
-  if (rank == 0) {
-    free(loads_all);
-    free(nr_patches_all);
-  }
-  
-  free(loads);
-
-  free(psc->patch);
-  struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_all_new[rank]);
-
-  free(nr_patches_all_new);
-
-  mrc_domain_view(domain_new);
 
   int *nr_particles_by_patch_new = calloc(psc->nr_patches,
 					  sizeof(nr_particles_by_patch_new));
