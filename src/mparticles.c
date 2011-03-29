@@ -7,10 +7,13 @@
 // mparticles_base_alloc
 
 void
-mparticles_base_alloc(mparticles_base_t *particles, int *nr_particles_by_patch)
+mparticles_base_alloc(struct mrc_domain *domain, mparticles_base_t *particles,
+		      int *nr_particles_by_patch)
 {
-  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
-  foreach_patch(p) {
+  mrc_domain_get_patches(domain, &particles->nr_patches);
+
+  particles->p = calloc(particles->nr_patches, sizeof(*particles->p));
+  for (int p = 0; p < particles->nr_patches; p++) {
     particles_base_alloc(&particles->p[p], nr_particles_by_patch[p]);
   }
 }
@@ -21,9 +24,10 @@ mparticles_base_alloc(mparticles_base_t *particles, int *nr_particles_by_patch)
 void
 mparticles_base_destroy(mparticles_base_t *particles)
 {
-  foreach_patch(p) {
+  for (int p = 0; p < particles->nr_patches; p++) {
     particles_base_free(&particles->p[p]);
   }
   free(particles->p);
+  particles->nr_patches = -1;
 }
 

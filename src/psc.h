@@ -247,7 +247,8 @@ void mfields_base_alloc(struct mrc_domain *domain, mfields_base_t *flds,
 			int nr_fields, int ibn[3]);
 void mfields_base_destroy(mfields_base_t *flds);
 
-void mparticles_base_alloc(mparticles_base_t *particles, int *nr_particles_by_patch);
+void mparticles_base_alloc(struct mrc_domain *domain, mparticles_base_t *particles,
+			   int *nr_particles_by_patch);
 void mparticles_base_destroy(mparticles_base_t *particles);
 
 // FIXME, turn into mrc_obj
