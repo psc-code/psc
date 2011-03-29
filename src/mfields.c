@@ -7,14 +7,16 @@
 // mfields_base_alloc
 
 void
-mfields_base_alloc(mfields_base_t *flds, int nr_fields)
+mfields_base_alloc(struct mrc_domain *domain, mfields_base_t *flds,
+		   int nr_fields, int ibn[3])
 {
-  flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
-  foreach_patch(p) {
-    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-    int ihg[3] = { psc.patch[p].ldims[0] + psc.ibn[0],
-		   psc.patch[p].ldims[1] + psc.ibn[1],
-		   psc.patch[p].ldims[2] + psc.ibn[2] };
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &flds->nr_patches);
+  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
+  for (int p = 0; p < flds->nr_patches; p++) {
+    int ilg[3] = { -ibn[0], -ibn[1], -ibn[2] };
+    int ihg[3] = { patches[p].ldims[0] + ibn[0],
+		   patches[p].ldims[1] + ibn[1],
+		   patches[p].ldims[2] + ibn[2] };
     fields_base_alloc(&flds->f[p], ilg, ihg, nr_fields);
   }
 }
@@ -25,9 +27,10 @@ mfields_base_alloc(mfields_base_t *flds, int nr_fields)
 void
 mfields_base_destroy(mfields_base_t *flds)
 {
-  foreach_patch(p) {
+  for (int p = 0; p < flds->nr_patches; p++) {
     fields_base_free(&flds->f[p]);
   }
   free(flds->f);
+  flds->nr_patches = -1;
 }
 

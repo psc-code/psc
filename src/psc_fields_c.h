@@ -21,6 +21,7 @@ typedef struct {
 
 typedef struct {
   fields_c_t *f;
+  int nr_patches;
 } mfields_c_t;
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\

@@ -268,7 +268,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
 
-    mfields_base_alloc(flds, of->nr_comp);
+    mfields_base_alloc(psc.mrc_domain, flds, of->nr_comp, psc.ibn);
     foreach_patch(pp) {
       for (int m = 0; m < of->nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(of->fld_names[m]);
@@ -282,7 +282,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
+    mfields_base_alloc(psc.mrc_domain, &tfd->flds[i], pfd->flds[i].f[0].nr_comp, psc.ibn);
     foreach_patch(pp) {
       for (int m = 0; m < pfd->flds[i].f[pp].nr_comp; m++) {
 	tfd->flds[i].f[pp].name[m] = strdup(pfd->flds[i].f[pp].name[m]);

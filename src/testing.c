@@ -63,7 +63,7 @@ void
 psc_save_fields_ref(struct psc *psc, mfields_base_t *flds)
 {
   if (!flds_ref.f) {
-    mfields_base_alloc(&flds_ref, NR_FIELDS);
+    mfields_base_alloc(psc->mrc_domain, &flds_ref, NR_FIELDS, psc->ibn);
   }
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
   psc_foreach_patch(psc, p) {
