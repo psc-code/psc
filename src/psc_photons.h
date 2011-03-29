@@ -28,13 +28,14 @@ typedef struct {
 
 typedef struct {
   photons_t *p;
+  int nr_patches;
 } mphotons_t;
 
 void photons_alloc(photons_t *pp, int n_part);
 void photons_realloc(photons_t *pp, int new_n_part);
 void photons_free(photons_t *pp);
 
-void mphotons_alloc(mphotons_t *mphotons);
+void mphotons_alloc(struct mrc_domain *domain, mphotons_t *mphotons);
 void mphotons_destroy(mphotons_t *mphotons);
 
 static inline photon_t *

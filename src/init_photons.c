@@ -10,7 +10,7 @@ psc_case_init_photons(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
 
-  mphotons_alloc(&psc->mphotons);
+  mphotons_alloc(psc->mrc_domain, &psc->mphotons);
 
   if (!psc_case_ops(_case)->init_photon_np) {
     // if photons aren't initialized, we'll just have zero of them

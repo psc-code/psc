@@ -43,9 +43,10 @@ photons_free(photons_t *pp)
 // mphotons_alloc
 
 void
-mphotons_alloc(mphotons_t *mphotons)
+mphotons_alloc(struct mrc_domain *domain, mphotons_t *mphotons)
 {
-  mphotons->p = calloc(psc.nr_patches, sizeof(*mphotons->p));
+  mrc_domain_get_patches(domain, &mphotons->nr_patches);
+  mphotons->p = calloc(mphotons->nr_patches, sizeof(*mphotons->p));
 }
 
 // ----------------------------------------------------------------------
@@ -54,9 +55,10 @@ mphotons_alloc(mphotons_t *mphotons)
 void
 mphotons_destroy(mphotons_t *mphotons)
 {
-  foreach_patch(p) {
+  for (int p = 0; p < mphotons->nr_patches; p++) { 
     photons_free(&mphotons->p[p]);
   }
   free(mphotons->p);
+  mphotons->nr_patches = -1;
 }
 
