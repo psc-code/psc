@@ -157,6 +157,9 @@ sfc_hilbert_setup(struct mrc_domain_multi *multi)
 static int
 sfc_hilbert_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
+  if (multi->hilbert_nr_dims == 0)
+    return 0;
+
   int nbits_max = multi->nbits_max;
 
   bitmask_t p_bm[3];
