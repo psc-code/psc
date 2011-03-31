@@ -63,7 +63,7 @@ _psc_case_setup(struct psc_case *_case)
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
   psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
-  psc_rebalance_initial(psc, &nr_particles_by_patch);
+  //  psc_rebalance_initial(psc, &nr_particles_by_patch);
 
   mparticles_base_alloc(psc->mrc_domain, &psc->particles, nr_particles_by_patch);
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
@@ -80,6 +80,8 @@ _psc_case_setup(struct psc_case *_case)
   psc_case_init_photons(_case);
 
   psc_setup_fortran(psc);
+
+  psc_rebalance_run(psc);
 }
 
 // ----------------------------------------------------------------------
