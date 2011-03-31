@@ -31,8 +31,9 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
       pf->flds[i] = arr;
     }
   } else {
-    for (int i = 0; i < nr_comp; i++) {
-      pf->flds[i] = calloc(sizeof(*pf->flds[i]), size);
+    pf->flds[0] = calloc(size * nr_comp, sizeof(*pf->flds[0]));
+    for (int i = 1; i < nr_comp; i++) {
+      pf->flds[i] = pf->flds[0] + i * size;
     }
   }
 }
@@ -55,9 +56,7 @@ void
 fields_fortran_free(fields_fortran_t *pf)
 {
   if (!pf->with_array) {
-    for (int i = 0; i < pf->nr_comp; i++) {
-      free(pf->flds[i]);
-    }
+    free(pf->flds[0]);
   }
   for (int i = 0; i < pf->nr_comp; i++) {
     pf->flds[i] = NULL;
