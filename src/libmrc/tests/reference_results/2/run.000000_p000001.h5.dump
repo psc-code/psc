@@ -397,6 +397,13 @@ GROUP "/" {
          (0): 6
          }
       }
+      ATTRIBUTE "nr_patches" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 2
+         }
+      }
       GROUP "p0" {
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE

@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#ifdef HAVE_HDF5_H
+#include <hdf5.h>
+#endif
+
 // ======================================================================
 // mrc_io
 
