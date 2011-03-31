@@ -61,7 +61,7 @@ libpsc_a_SOURCES = \
 	psc_pulse_none.c \
 	psc_pulse_gauss.c \
 	psc_pulse_flattop.c \
-	psc_rebalance.c \
+	psc_balance.c \
 	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
