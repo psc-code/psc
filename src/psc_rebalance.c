@@ -4,6 +4,7 @@
 #include "psc_bnd.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 static void
 psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
@@ -251,6 +252,83 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   free(recv_reqs);
 }
 
+static void
+communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
+		   mfields_base_t *flds_old, mfields_base_t *flds_new)
+{
+  MPI_Comm comm = mrc_domain_comm(domain_new);
+  int rank, size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
+
+  int nr_patches_old, nr_patches_new;
+  mrc_domain_get_patches(domain_old, &nr_patches_old);
+  mrc_domain_get_patches(domain_new, &nr_patches_new);
+
+  MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
+  // send from old local patches
+  for (int p = 0; p < nr_patches_old; p++) {
+    struct mrc_patch_info info, info_new;
+    mrc_domain_get_local_patch_info(domain_old, p, &info);
+    mrc_domain_get_global_patch_info(domain_new, info.global_patch, &info_new);
+    if (info_new.rank == rank) {
+      send_reqs[p] = MPI_REQUEST_NULL;
+    } else {
+      fields_base_t *pf_old = &flds_old->f[p];
+      int nn = fields_base_size(pf_old) * pf_old->nr_comp;
+      int *ib = pf_old->ib;
+      void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
+      MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
+		info.global_patch, comm, &send_reqs[p]);
+    }
+  }
+
+  // recv for new local patches
+  MPI_Request *recv_reqs = calloc(nr_patches_new, sizeof(*recv_reqs));
+  for (int p = 0; p < nr_patches_new; p++) {
+    struct mrc_patch_info info, info_old;
+    mrc_domain_get_local_patch_info(domain_new, p, &info);
+    mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
+    if (info_old.rank == rank) {
+      recv_reqs[p] = MPI_REQUEST_NULL;
+    } else {
+      fields_base_t *pf_new = &flds_new->f[p];
+      int nn = fields_base_size(pf_new) * pf_new->nr_comp;
+      int *ib = pf_new->ib;
+      void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
+      MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
+		info.global_patch, comm, &recv_reqs[p]);
+    }
+  }
+
+  // local fields
+  // OPT: could keep the alloced arrays, just move pointers...
+  for (int p = 0; p < nr_patches_new; p++) {
+    struct mrc_patch_info info, info_old;
+    mrc_domain_get_local_patch_info(domain_new, p, &info);
+    mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
+    if (info_old.rank != rank) {
+      continue;
+    }
+
+    fields_base_t *pf_old = &flds_old->f[info_old.patch];
+    fields_base_t *pf_new = &flds_new->f[p];
+
+    assert(pf_old->nr_comp == pf_new->nr_comp);
+    assert(fields_base_size(pf_old) == fields_base_size(pf_new));
+    int size = fields_base_size(pf_old) * pf_old->nr_comp;
+    int *ib = pf_new->ib;
+    void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
+    void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
+    memcpy(addr_new, addr_old, size * sizeof(fields_base_real_t));
+  }
+
+  MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
+  free(send_reqs);
+  free(recv_reqs);
+}
+
 void
 psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
 {
@@ -343,6 +421,9 @@ psc_rebalance_run(struct psc *psc)
   // alloc new fields
   mfields_base_t mflds_new;
   mfields_base_alloc(domain_new, &mflds_new, NR_FIELDS, psc->ibn);
+
+  // communicate fields
+  communicate_fields(domain_old, domain_new, &psc->flds, &mflds_new);
 
   // replace fields by redistributed ones
   mfields_base_destroy(&psc->flds);
