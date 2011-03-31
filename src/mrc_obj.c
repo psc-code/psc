@@ -13,6 +13,7 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
 {
   assert_collective(comm);
 
+  assert(class->size >= sizeof(struct mrc_obj));
   struct mrc_obj *obj = calloc(1, class->size);
   MPI_Comm_dup(comm, &obj->comm);
 
