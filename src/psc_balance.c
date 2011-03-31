@@ -3,11 +3,13 @@
 #include "psc_output_fields.h"
 #include "psc_bnd.h"
 
+#include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
 
 struct psc_balance {
   struct mrc_obj obj;
+  int every;
 };
 
 static void
@@ -337,6 +339,9 @@ void
 psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 		    int **p_nr_particles_by_patch)
 {
+  if (bal->every <= 0)
+    return;
+
   struct mrc_domain *domain_old = psc->mrc_domain;
 
   int nr_patches;
@@ -380,6 +385,12 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 void
 psc_balance_run(struct psc_balance *bal, struct psc *psc)
 {
+  if (bal->every <= 0)
+    return;
+
+  if (psc->timestep == 0 || psc->timestep % bal->every != 0)
+    return;
+
   struct mrc_domain *domain_old = psc->mrc_domain;
 
   int nr_patches;
@@ -405,6 +416,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     nr_particles_by_patch[p] = psc->particles.p[p].n_part;
   }
   communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
+
+  // OPT: if local patches didn't change at all, no need to do anything...
 
   // ----------------------------------------------------------------------
   // particles
@@ -454,6 +467,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_fields_setup(psc->output_fields);
+  psc_output_fields_view(psc->output_fields);
 
   psc_bnd_destroy(psc->bnd);
   psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
@@ -464,8 +478,16 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 // ======================================================================
 // psc_balance class
 
+#define VAR(x) (void *)offsetof(struct psc_balance, x)
+static struct param psc_balance_descr[] = {
+  { "every"            , VAR(every)               , PARAM_INT(0)        },
+  {},
+};
+#undef VAR
+
 struct mrc_class_psc_balance mrc_class_psc_balance = {
   .name             = "psc_balance",
   .size             = sizeof(struct psc_balance),
+  .param_descr      = psc_balance_descr,
 };
 

@@ -9,6 +9,7 @@
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
 #include "psc_event_generator.h"
+#include "psc_balance.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -26,6 +27,7 @@ enum {
   STAT_TIME_COLLISION,
   STAT_TIME_OUT_FIELD,
   STAT_TIME_OUT_PARTICLE,
+  STAT_TIME_BALANCE,
   NR_STATS,
 };
 
@@ -39,6 +41,7 @@ static const char *stat_name[NR_STATS] = {
   [STAT_TIME_COLLISION]    = "time part. collision",
   [STAT_TIME_OUT_FIELD]    = "time field output",
   [STAT_TIME_OUT_PARTICLE] = "time particle output",
+  [STAT_TIME_BALANCE]      = "time balance",
 };
 
 #define time_start(n) do {			\
@@ -107,6 +110,10 @@ psc_integrate(struct psc *psc)
     time_start(STAT_TIME_OUT_PARTICLE);
     psc_output_particles_run(psc->output_particles, particles);
     time_stop(STAT_TIME_OUT_PARTICLE);
+
+    time_start(STAT_TIME_BALANCE);
+    psc_balance_run(psc->balance, psc);
+    time_stop(STAT_TIME_BALANCE);
 
     time_start(STAT_TIME_RANDOMIZE);
     psc_randomize_run(psc->randomize, particles);
