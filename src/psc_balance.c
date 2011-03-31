@@ -1,10 +1,14 @@
 
-#include "psc.h"
+#include "psc_balance.h"
 #include "psc_output_fields.h"
 #include "psc_bnd.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+struct psc_balance {
+  struct mrc_obj obj;
+};
 
 static void
 psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
@@ -330,7 +334,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
 }
 
 void
-psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
+psc_balance_initial(struct psc_balance *bal, struct psc *psc,
+		    int **p_nr_particles_by_patch)
 {
   struct mrc_domain *domain_old = psc->mrc_domain;
 
@@ -373,7 +378,7 @@ psc_rebalance_initial(struct psc *psc, int **p_nr_particles_by_patch)
 // FIXME, way too much duplication from the above
 
 void
-psc_rebalance_run(struct psc *psc)
+psc_balance_run(struct psc_balance *bal, struct psc *psc)
 {
   struct mrc_domain *domain_old = psc->mrc_domain;
 
@@ -455,3 +460,12 @@ psc_rebalance_run(struct psc *psc)
   psc_bnd_set_from_options(psc->bnd);
   psc_bnd_setup(psc->bnd);
 }
+
+// ======================================================================
+// psc_balance class
+
+struct mrc_class_psc_balance mrc_class_psc_balance = {
+  .name             = "psc_balance",
+  .size             = sizeof(struct psc_balance),
+};
+

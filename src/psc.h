@@ -283,6 +283,7 @@ struct psc {
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
   struct psc_event_generator *event_generator;
+  struct psc_balance *balance;
 
   // user-configurable parameters
   struct psc_param prm;
@@ -310,10 +311,6 @@ struct psc {
 
   double time_start;
 };
-
-// FIXME, turn into mrc_obj
-void psc_rebalance_initial(struct psc *psc, int **nr_particles_by_patch);
-void psc_rebalance_run(struct psc *psc);
 
 #define foreach_3d(p, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\

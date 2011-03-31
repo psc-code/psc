@@ -3,6 +3,7 @@
 
 #include <psc_push_fields.h>
 #include <psc_bnd_fields.h>
+#include <psc_balance.h>
 #include <mrc_params.h>
 #include <stdlib.h>
 
@@ -81,7 +82,7 @@ _psc_case_setup(struct psc_case *_case)
 
   psc_setup_fortran(psc);
 
-  psc_rebalance_run(psc);
+  psc_balance_run(psc->balance, psc);
 }
 
 // ----------------------------------------------------------------------

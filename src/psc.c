@@ -10,6 +10,7 @@
 #include "psc_output_particles.h"
 #include "psc_moments.h"
 #include "psc_event_generator.h"
+#include "psc_balance.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -90,6 +91,7 @@ psc_create()
   psc.output_particles = psc_output_particles_create(comm);
   psc.moments = psc_moments_create(comm);
   psc.event_generator = psc_event_generator_create(comm);
+  psc.balance = psc_balance_create(comm);
 
   psc.time_start = MPI_Wtime();
 
@@ -115,6 +117,7 @@ psc_set_from_options(struct psc *psc)
   psc_output_particles_set_from_options(psc->output_particles);
   psc_moments_set_from_options(psc->moments);
   psc_event_generator_set_from_options(psc->event_generator);
+  psc_balance_set_from_options(psc->balance);
 
   psc_set_from_options_domain(psc);
   psc_set_from_options_psc(psc);
@@ -139,6 +142,7 @@ psc_setup(struct psc *psc)
   psc_output_particles_setup(psc->output_particles);
   psc_moments_setup(psc->moments);
   psc_event_generator_setup(psc->event_generator);
+  psc_balance_setup(psc->balance);
 }
 
 // ----------------------------------------------------------------------
@@ -160,6 +164,7 @@ psc_view(struct psc *psc)
   psc_output_particles_view(psc->output_particles);
   psc_moments_view(psc->moments);
   psc_event_generator_view(psc->event_generator);
+  psc_balance_view(psc->balance);
 }
 
 // ----------------------------------------------------------------------
@@ -182,6 +187,7 @@ psc_destroy(struct psc *psc)
   psc_output_particles_destroy(psc->output_particles);
   psc_moments_destroy(psc->moments);
   psc_event_generator_destroy(psc->event_generator);
+  psc_balance_destroy(psc->balance);
 }
 
 // ======================================================================
