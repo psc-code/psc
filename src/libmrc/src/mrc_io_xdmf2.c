@@ -133,7 +133,7 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 }
 
 static void
-xdmf_spatial_write_mcrds_multi(struct xdmf_spatial *xs, struct xdmf_file *file,
+xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
 			       struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
@@ -184,7 +184,12 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 
   xs->crds_done = true;
 
-  xdmf_spatial_write_mcrds_multi(xs, file, domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
+    xdmf_spatial_write_mcrds_multi(file, domain); // FIXME
+  } else {
+    xdmf_spatial_write_mcrds_multi(file, domain);
+  }
 }
 
 static void
@@ -301,18 +306,12 @@ xdmf_parallel_close(struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// xdmf_spatial_write_mcrds_parallel
+// xdmf_spatial_write_mcrds_multi_parallel
 
 static void
-xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
-				  struct xdmf_file *file,
-				  struct mrc_domain *domain)
+xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
+					struct mrc_domain *domain)
 {
-  if (xs->crds_done)
-    return;
-
-  xs->crds_done = true;
-
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
@@ -379,6 +378,53 @@ xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
 
     H5Gclose(group_crdp);
     H5Gclose(group_crd1);
+  }
+}
+
+// ----------------------------------------------------------------------
+// xdmf_spatial_write_mcrds_multi_uniform_parallel
+
+static void
+xdmf_spatial_write_mcrds_multi_uniform_parallel(struct xdmf_file *file,
+						struct mrc_domain *domain)
+{
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+
+  float xl[3], xh[3];
+  mrc_crds_get_xl_xh(crds, xl, xh);
+
+  for (int d = 0; d < 3; d++) {
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+
+    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT);
+
+    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5LTset_attribute_float(group_crdp, ".", "xl", &xl[d], 1);
+    H5LTset_attribute_float(group_crdp, ".", "xh", &xh[d], 1);
+    H5Gclose(group_crdp);
+    H5Gclose(group_crd1);
+  }
+}
+
+// ----------------------------------------------------------------------
+// xdmf_spatial_write_mcrds_parallel
+
+static void
+xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
+				  struct xdmf_file *file,
+				  struct mrc_domain *domain)
+{
+  if (xs->crds_done)
+    return;
+
+  xs->crds_done = true;
+
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
+    xdmf_spatial_write_mcrds_multi_uniform_parallel(file, domain);
+  } else {
+    xdmf_spatial_write_mcrds_multi_parallel(file, domain);
   }
 }
 

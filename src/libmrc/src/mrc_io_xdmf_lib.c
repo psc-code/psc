@@ -19,11 +19,29 @@ xdmf_write_header(FILE *f)
 }
 
 static void
+xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
+{
+  fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
+	  im[2] + 1, im[1] + 1, im[0] + 1);
+
+  fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
+  fprintf(f, "     <DataItem Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+  fprintf(f, "        %g %g %g\n", xl[0], xl[1], xl[2]);
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     <DataItem Name=\"DxDyDz\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+  fprintf(f, "        %g %g %g\n", dx[0], dx[1], dx[2]);
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     </Geometry>\n");
+  fprintf(f, "\n");
+}
+
+static void
 xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
 {
   // FIXME crd[012] hardcoded, should use mrc_m1_name()
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[2] + 1, im[1] + 1, im[0] + 1);
+
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
   fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
@@ -166,6 +184,13 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     mrc_domain_get_global_dims(domain, xs->patch_infos[gp].ldims);
   }
 
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
+    xs->uniform = true;
+    mrc_crds_get_xl_xh(crds, xs->xl, NULL);
+    mrc_crds_get_dx(crds, xs->dx);
+  }
+
   list_add_tail(&xs->entry, xdmf_spatial_list);
   return xs;
 }
@@ -202,7 +227,11 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
     int patch = xs->patch_infos[s].patch;
     sprintf(fname, "%s.%06d_p%06d.h5", io->par.basename, io->step, rank);
     int *ldims = xs->patch_infos[s].ldims;
-    xdmf_write_topology_m3(f, ldims, fname, patch);
+    if (xs->uniform) {
+      xdmf_write_topology_uniform_m3(f, ldims, xs->xl, xs->dx);
+    } else {
+      xdmf_write_topology_m3(f, ldims, fname, patch);
+    }
     
     for (int m = 0; m < xs->nr_fld_info; m++) {
       xdmf_write_fld_m3(f, &xs->fld_info[m], ldims, fname, patch);
