@@ -198,6 +198,7 @@ static void
 psc_bnd_fields_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_fortran_ops);
+  mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_none_ops);
 }
 
 // ======================================================================

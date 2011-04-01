@@ -1,6 +1,8 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_push_fields.h"
+#include "psc_bnd_fields.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -84,6 +86,10 @@ psc_case_bubble_set_from_options(struct psc_case *_case)
   psc.domain.bnd_part[0] = BND_PART_PERIODIC;
   psc.domain.bnd_part[1] = BND_PART_PERIODIC;
   psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+
+  struct psc_bnd_fields *bnd_fields = 
+    psc_push_fields_get_bnd_fields(psc.push_fields);
+  psc_bnd_fields_set_type(bnd_fields, "none");
 }
 
 static void
