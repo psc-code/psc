@@ -34,6 +34,7 @@ extern struct psc_case_ops psc_case_collisions_ops;
 extern struct psc_case_ops psc_case_cone_ops;
 extern struct psc_case_ops psc_case_microsphere_ops;
 extern struct psc_case_ops psc_case_photon_test_ops;
+extern struct psc_case_ops psc_case_bubble_ops;
 
 // ======================================================================
 

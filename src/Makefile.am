@@ -77,6 +77,7 @@ libpsc_a_SOURCES = \
 	case_cone.c \
 	case_microsphere.c \
 	case_photon_test.c \
+	case_bubble.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5
