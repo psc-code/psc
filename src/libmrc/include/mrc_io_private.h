@@ -66,6 +66,7 @@ extern struct mrc_io_ops mrc_io_xdmf_serial_ops;
 extern struct mrc_io_ops mrc_io_xdmf_to_one_ops;
 extern struct mrc_io_ops mrc_io_xdmf_parallel_ops;
 extern struct mrc_io_ops mrc_io_xdmf2_ops;
+extern struct mrc_io_ops mrc_io_xdmf2_parallel_ops;
 extern struct mrc_io_ops mrc_io_combined_ops;
 
 #endif
