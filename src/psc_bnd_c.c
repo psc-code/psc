@@ -229,13 +229,11 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
   struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
 
-  static int pr, pr_A, pr_B;
-  if (!pr) {
-    pr = prof_register("c_xchg_part", 1., 0, 0);
-    pr_A = prof_register("c_xchg_part_A", 1., 0, 0);
-    pr_B = prof_register("c_xchg_part_B", 1., 0, 0);
+  static int pr_A, pr_B;
+  if (!pr_A) {
+    pr_A = prof_register("c_xchg_part_prep", 1., 0, 0);
+    pr_B = prof_register("c_xchg_part_comm", 1., 0, 0);
   }
-  prof_start(pr);
   prof_start(pr_A);
 
   struct ddc_particles *ddcp = c_bnd->ddcp;
@@ -323,14 +321,13 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
+
   foreach_patch(p) {
     particles_base_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     pp->n_part = patch->head;
   }
   prof_stop(pr_B);
-
-  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
