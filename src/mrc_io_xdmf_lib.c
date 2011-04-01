@@ -151,6 +151,25 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   return xs;
 }
 
+struct xdmf_spatial *
+xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name, 
+				struct mrc_domain *domain)
+{
+  // OPT, we could skip this on procs which aren't writing xdmf
+
+  struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
+  xs->name = strdup(name);
+  xs->nr_global_patches = 1;
+  xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
+
+  for (int gp = 0; gp < xs->nr_global_patches; gp++) {
+    mrc_domain_get_global_dims(domain, xs->patch_infos[gp].ldims);
+  }
+
+  list_add_tail(&xs->entry, xdmf_spatial_list);
+  return xs;
+}
+
 void
 xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
 			   char *path, bool is_vec)

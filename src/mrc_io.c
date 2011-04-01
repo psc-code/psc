@@ -381,6 +381,7 @@ mrc_io_init()
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_to_one_ops);
 #ifdef H5_HAVE_PARALLEL
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
 #endif
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
