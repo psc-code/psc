@@ -213,6 +213,12 @@ calc_domain_bounds(int p, double xb[3], double xe[3],
     
     xgl[d] = xge[d] - xgb[d];
   }
+  for (int d = 0; d < 3; d++) {
+    xb[d]  += psc.domain.corner[d];
+    xe[d]  += psc.domain.corner[d];
+    xgb[d] += psc.domain.corner[d];
+    xge[d] += psc.domain.corner[d];
+  }
 }
 
 // ----------------------------------------------------------------------

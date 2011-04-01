@@ -30,6 +30,9 @@ static struct param psc_domain_descr[] = {
   { "length_x"      , VAR(length[0])       , PARAM_DOUBLE(1e-6)   },
   { "length_y"      , VAR(length[1])       , PARAM_DOUBLE(1e-6)   },
   { "length_z"      , VAR(length[2])       , PARAM_DOUBLE(20e-6)  },
+  { "corner_x"      , VAR(corner[0])       , PARAM_DOUBLE(0.)     },
+  { "corner_y"      , VAR(corner[1])       , PARAM_DOUBLE(0.)     },
+  { "corner_z"      , VAR(corner[2])       , PARAM_DOUBLE(0.)     },
   { "gdims_x"       , VAR(gdims[0])        , PARAM_INT(1)         },
   { "gdims_y"       , VAR(gdims[1])        , PARAM_INT(1)         },
   { "gdims_z"       , VAR(gdims[2])        , PARAM_INT(400)       },
@@ -106,8 +109,12 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "multi_uniform");
   mrc_crds_set_param_int(crds, "sw", 2);
-  mrc_crds_set_param_float3(crds, "h",  (float[3]) { psc->domain.length[0],
-	psc->domain.length[1], psc->domain.length[2] });
+  mrc_crds_set_param_float3(crds, "l",  (float[3]) { psc->domain.corner[0],
+	psc->domain.corner[1], psc->domain.corner[2] });
+  mrc_crds_set_param_float3(crds, "h",  (float[3]) {
+      psc->domain.corner[0] + psc->domain.length[0],
+      psc->domain.corner[1] + psc->domain.length[1],
+      psc->domain.corner[2] + psc->domain.length[2] });
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
@@ -123,7 +130,7 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
-      patch->xb[d]  = patches[p].off[d] * psc->dx[d];
+      patch->xb[d]  = patches[p].off[d] * psc->dx[d] + psc->domain.corner[d];
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir
