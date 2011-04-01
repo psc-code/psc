@@ -133,14 +133,10 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 }
 
 static void
-xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
-			 struct mrc_domain *domain)
+xdmf_spatial_write_mcrds_multi(struct xdmf_spatial *xs, struct xdmf_file *file,
+			       struct mrc_domain *domain)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (xs->crds_done)
-    return;
-
-  xs->crds_done = true;
 
   for (int d = 0; d < 3; d++) {
     struct mrc_m1 *mcrd = crds->mcrd[d];
@@ -177,6 +173,18 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 
     H5Gclose(group_crd1);
   }
+}
+
+static void
+xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
+			 struct mrc_domain *domain)
+{
+  if (xs->crds_done)
+    return;
+
+  xs->crds_done = true;
+
+  xdmf_spatial_write_mcrds_multi(xs, file, domain);
 }
 
 static void
