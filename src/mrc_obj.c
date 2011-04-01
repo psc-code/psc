@@ -145,6 +145,15 @@ mrc_obj_name(struct mrc_obj *obj)
   return obj->name;
 }
 
+const char *
+mrc_obj_type(struct mrc_obj *obj)
+{
+  if (!obj->ops) {
+    return NULL;
+  }
+  return obj->ops->name;
+}
+
 void
 mrc_obj_set_name(struct mrc_obj *obj, const char *name)
 {
