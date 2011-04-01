@@ -3,6 +3,7 @@
 #include "psc_fields_fortran.h"
 #include "psc_glue.h"
 
+#include <mrc_profile.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -87,6 +88,12 @@ fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 void
 fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_fortran_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
   mfields_base_t *flds_base = _flds_base;
   flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
   foreach_patch(p) {
@@ -105,11 +112,19 @@ fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
       } foreach_3d_g_end;
     }
   }
+
+  prof_stop(pr);
 }
 
 void
 fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_fortran_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
   mfields_base_t *flds_base = _flds_base;
   foreach_patch(p) {
     fields_fortran_t *pf = &flds->f[p];
@@ -125,6 +140,8 @@ fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
   
   free(flds->f);
   flds->f = NULL;
+
+  prof_stop(pr);
 }
 
 #endif
