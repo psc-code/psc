@@ -24,7 +24,15 @@ struct xdmf_file {
 struct xdmf {
   struct xdmf_file file;
   struct xdmf_temporal *xdmf_temporal;
+  bool use_independent_io;
 };
+
+#define VAR(x) (void *)offsetof(struct xdmf, x)
+static struct param xdmf_parallel_descr[] = {
+  { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
+  {},
+};
+#undef VAR
 
 #define to_xdmf(io) ((struct xdmf *)((io)->obj.subctx))
 
@@ -326,6 +334,7 @@ xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
 	}
       }
       // indep I/O only!
+      // FIXME, do collective ?
       if (skip_write) {
 	continue;
       }
@@ -403,11 +412,35 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     int i0 = 0;
     H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
 
-    hsize_t fdims[3] = { gdims[0], gdims[1], gdims[2] };
+    hsize_t fdims[3] = { gdims[2], gdims[1], gdims[0] };
     hid_t filespace = H5Screate_simple(3, fdims, NULL);
     hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			   H5P_DEFAULT, H5P_DEFAULT);
-    mrc_m3_foreach_patch(m3, p) {
+    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+    if (xdmf->use_independent_io) {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+    } else {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+    }
+    int nr_patches;
+    mrc_domain_get_patches(m3->domain, &nr_patches);
+    int nr_patches_max;
+    // FIXME, mrc_domain may know / cache
+    MPI_Allreduce(&nr_patches, &nr_patches_max, 1, MPI_INT, MPI_MAX,
+		  mrc_domain_comm(m3->domain));
+    for (int p = 0; p < nr_patches_max; p++) {
+      if (p >= nr_patches) {
+	if (xdmf->use_independent_io)
+	  continue;
+
+	// for collective I/O write nothing if no patch left,
+	// but still call H5Dwrite()
+	H5Sselect_none(filespace);
+	hid_t memspace = H5Screate(H5S_NULL);
+	H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, NULL);
+	H5Sclose(memspace);
+	continue;
+      }
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->domain, p, &info);
       struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
@@ -417,18 +450,19 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       hsize_t moff[3] = { -m3p->ib[2], -m3p->ib[1], -m3p->ib[0] };
       hsize_t foff[3] = { info.off[2], info.off[1], info.off[0] };
 
-      hid_t filespace = H5Screate_simple(3, fdims, NULL);
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mcount, NULL);
       hid_t memspace = H5Screate_simple(3, mdims, NULL);
       H5Sselect_hyperslab(memspace, H5S_SELECT_SET, moff, NULL, mcount, NULL);
 
-      H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
+      H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl,
 	       &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]));
+      H5Sclose(memspace);
 
       mrc_m3_patch_put(m3);
     }
     H5Dclose(dset);
     H5Sclose(filespace);
+    H5Pclose(dxpl);
 
     H5Gclose(group);
     H5Gclose(group_fld);
@@ -443,6 +477,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 struct mrc_io_ops mrc_io_xdmf2_parallel_ops = {
   .name          = "xdmf2_parallel",
   .size          = sizeof(struct xdmf),
+  .param_descr   = xdmf_parallel_descr,
   .parallel      = true,
   .setup         = xdmf_setup,
   .destroy       = xdmf_destroy,
