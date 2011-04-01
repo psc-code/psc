@@ -66,6 +66,7 @@ struct mrc_obj *mrc_obj_get(struct mrc_obj *obj);
 void mrc_obj_put(struct mrc_obj *obj);
 void mrc_obj_destroy(struct mrc_obj *obj);
 MPI_Comm mrc_obj_comm(struct mrc_obj *obj);
+const char *mrc_obj_type(struct mrc_obj *obj);
 const char *mrc_obj_name(struct mrc_obj *obj);
 void mrc_obj_set_name(struct mrc_obj *obj, const char *name);
 void mrc_obj_set_type(struct mrc_obj *obj, const char *type);
@@ -128,6 +129,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   pfx ## _name(obj_type *obj)						\
   {									\
     return mrc_obj_name((struct mrc_obj *)obj);				\
+  }									\
+									\
+  static inline const char *						\
+  pfx ## _type(obj_type *obj)						\
+  {									\
+    return mrc_obj_type((struct mrc_obj *)obj);				\
   }									\
 									\
   static inline void 							\
