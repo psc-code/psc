@@ -189,6 +189,15 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     xs->uniform = true;
     mrc_crds_get_xl_xh(crds, xs->xl, NULL);
     mrc_crds_get_dx(crds, xs->dx);
+    int gdims[3];
+    mrc_domain_get_global_dims(domain, gdims);
+    // no extent in invariant directions
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	xs->xl[d] = 0.;
+	xs->dx[d] = 0.;
+      }
+    }
   }
 
   list_add_tail(&xs->entry, xdmf_spatial_list);
@@ -217,10 +226,15 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
   FILE *f = fopen(filename, "w");
   xdmf_write_header(f);
   fprintf(f, "<Domain>\n");
-  fprintf(f, "<Grid GridType=\"Collection\" CollectionType=\"Spatial\">\n");
-  fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+  if (xs->nr_global_patches > 1) {
+    fprintf(f, "<Grid GridType=\"Collection\" CollectionType=\"Spatial\">\n");
+    fprintf(f, "<Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+  }
   for (int s = 0; s < xs->nr_global_patches; s++) {
     fprintf(f, "   <Grid Name=\"patch-%s-%d\" GridType=\"Uniform\">\n", xs->name, s);
+    if (xs->nr_global_patches == 1) {
+      fprintf(f, "<Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+    }
     
     char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     int rank = xs->patch_infos[s].rank;
@@ -238,7 +252,9 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
     }
     fprintf(f, "   </Grid>\n");
   }
-  fprintf(f, "</Grid>\n");
+  if (xs->nr_global_patches > 1) {
+    fprintf(f, "</Grid>\n");
+  }
   fprintf(f, "</Domain>\n");
   fprintf(f, "</Xdmf>\n");
   fclose(f);
