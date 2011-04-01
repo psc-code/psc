@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_fortran.h"
 
+#include <mrc_profile.h>
 #include <stdlib.h>
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
@@ -42,6 +43,12 @@ static bool __gotten;
 void
 particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_fortran_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(!__gotten);
   __gotten = true;
 
@@ -69,11 +76,19 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
       f_part->wni = part->wni;
     }
   }
+
+  prof_stop(pr);
 }
 
 void
 particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_fortran_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(__gotten);
   __gotten = false;
 
@@ -101,6 +116,8 @@ particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
   }
   free(particles->p);
   particles->p = NULL;
+
+  prof_stop(pr);
 }
 
 #endif
