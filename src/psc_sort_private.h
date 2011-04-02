@@ -6,6 +6,7 @@
 
 struct psc_sort {
   struct mrc_obj obj;
+  int every; //< sort every so many steps
 };
 
 struct psc_sort_ops {

@@ -120,9 +120,7 @@ psc_integrate(struct psc *psc)
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    if (psc->timestep % 10 == 0) {
-      psc_sort_run(psc->sort, particles);
-    }
+    psc_sort_run(psc->sort, particles);
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
