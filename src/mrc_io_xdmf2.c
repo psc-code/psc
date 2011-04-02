@@ -53,7 +53,6 @@ static void
 xdmf_destroy(struct mrc_io *io)
 {
   struct xdmf *xdmf = to_xdmf(io);
-
   if (xdmf->xdmf_temporal) {
     xdmf_temporal_destroy(xdmf->xdmf_temporal);
   }
@@ -458,6 +457,13 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   int gdims[3];
   mrc_domain_get_global_dims(m3->domain, gdims);
 
+  int nr_patches;
+  mrc_domain_get_patches(m3->domain, &nr_patches);
+  int nr_patches_max;
+  // FIXME, mrc_domain may know / cache
+  MPI_Allreduce(&nr_patches, &nr_patches_max, 1, MPI_INT, MPI_MAX,
+		mrc_domain_comm(m3->domain));
+
   for (int m = 0; m < m3->nr_comp; m++) {
     xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
 
@@ -476,12 +482,6 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     } else {
       H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
     }
-    int nr_patches;
-    mrc_domain_get_patches(m3->domain, &nr_patches);
-    int nr_patches_max;
-    // FIXME, mrc_domain may know / cache
-    MPI_Allreduce(&nr_patches, &nr_patches_max, 1, MPI_INT, MPI_MAX,
-		  mrc_domain_comm(m3->domain));
     for (int p = 0; p < nr_patches_max; p++) {
       if (p >= nr_patches) {
 	if (xdmf->use_independent_io)
@@ -510,6 +510,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
       H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl,
 	       &MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]));
+
       H5Sclose(memspace);
 
       mrc_m3_patch_put(m3);
