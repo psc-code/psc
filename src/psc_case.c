@@ -35,6 +35,15 @@ _psc_case_create(struct psc_case *_case)
 }
 
 // ----------------------------------------------------------------------
+// _psc_case_destroy
+
+static void
+_psc_case_destroy(struct psc_case *_case)
+{
+  psc_destroy(_case->psc);
+}
+
+// ----------------------------------------------------------------------
 // _psc_case_set_from_options
 
 static void
@@ -175,6 +184,7 @@ struct mrc_class_psc_case mrc_class_psc_case = {
   .init             = psc_case_init,
   .param_descr      = psc_case_descr,
   .create           = _psc_case_create,
+  .destroy          = _psc_case_destroy,
   .set_from_options = _psc_case_set_from_options,
   .setup            = _psc_case_setup,
   .view             = _psc_case_view,
