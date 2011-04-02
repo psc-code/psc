@@ -139,6 +139,19 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_c_destroy
+
+static void
+psc_bnd_c_destroy(struct psc_bnd *bnd)
+{
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+
+  mrc_ddc_destroy(bnd_c->ddc);
+  ddc_particles_destroy(bnd_c->ddcp);
+  ddc_particles_destroy(bnd_c->ddcp_photons);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_c_add_ghosts
 
 static void
@@ -444,6 +457,7 @@ struct psc_bnd_ops psc_bnd_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_bnd_c),
   .setup                 = psc_bnd_c_setup,
+  .destroy               = psc_bnd_c_destroy,
   .add_ghosts            = psc_bnd_c_add_ghosts,
   .fill_ghosts           = psc_bnd_c_fill_ghosts,
   .exchange_particles    = psc_bnd_c_exchange_particles,

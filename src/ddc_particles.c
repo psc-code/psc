@@ -57,6 +57,38 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
 }
 
 void
+ddc_particles_destroy(struct ddc_particles *ddcp)
+{
+  if (!ddcp)
+    return;
+
+  foreach_patch(p) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+
+    int dir[3];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    continue;
+	  }
+	  
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  
+	  free(nei->send_buf);
+	}
+      }
+    }
+  }
+  free(ddcp->patches);
+  free(ddcp->send_reqs);
+  free(ddcp->sendp_reqs);
+  free(ddcp->recv_reqs);
+  free(ddcp);
+}
+
+void
 ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
 		    int dir[3], void *p)
 {
