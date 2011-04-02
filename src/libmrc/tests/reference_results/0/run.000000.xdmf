@@ -1,9 +1,8 @@
 <?xml version='1.0' ?>
 <Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
 <Domain>
-<Grid GridType="Collection" CollectionType="Spatial">
-   <Time Type="Single" Value="0" />
    <Grid Name="patch-mrc_domain-0" GridType="Uniform">
+<Time Type="Single" Value="0" />
      <Topology TopologyType="3DRectMesh" Dimensions="33 33 33"/>
      <Geometry GeometryType="VXVYVZ">
      <DataItem Name="VX" DataType="Float" Dimensions="33" Format="HDF">
@@ -28,6 +27,5 @@
        </DataItem>
      </Attribute>
    </Grid>
-</Grid>
 </Domain>
 </Xdmf>
