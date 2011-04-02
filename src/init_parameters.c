@@ -190,6 +190,12 @@ psc_view_domain(struct psc *psc)
   mrc_domain_view(psc->mrc_domain);
 }
 
+void
+psc_destroy_domain(struct psc *psc)
+{
+  mrc_domain_destroy(psc->mrc_domain);
+}
+
 // ======================================================================
 
 #define VAR(x) (void *)offsetof(struct psc_param, x)

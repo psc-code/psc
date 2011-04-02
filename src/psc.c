@@ -188,6 +188,8 @@ psc_destroy(struct psc *psc)
   psc_moments_destroy(psc->moments);
   psc_event_generator_destroy(psc->event_generator);
   psc_balance_destroy(psc->balance);
+
+  psc_destroy_domain(psc);
 }
 
 // ======================================================================
