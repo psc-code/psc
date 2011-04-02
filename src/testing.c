@@ -215,24 +215,26 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
   particle_base_real_t dyi = 1.f / psc->dx[1];
   particle_base_real_t dzi = 1.f / psc->dx[2];
 
+  int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
     struct psc_patch *patch = &psc->patch[p];
     int *ldims = patch->ldims;
     for (int n = 0; n < pp->n_part; n++) {
+      // FIXME, duplicated
       particle_base_t *part = particles_base_get_one(pp, n);
 
       particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
       particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
       particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
-      int j0 = particle_base_real_nint(u);
-      int j1 = particle_base_real_nint(v);
-      int j2 = particle_base_real_nint(w);
+      int j0 = particle_base_real_nint(u) + ibn[0];
+      int j1 = particle_base_real_nint(v) + ibn[1];
+      int j2 = particle_base_real_nint(w) + ibn[2];
       
-      assert(j0 >= 0 && j0 < ldims[0]);
-      assert(j1 >= 0 && j1 < ldims[1]);
-      assert(j2 >= 0 && j2 < ldims[2]);
-      int cni = ((j2) * ldims[1] + j1) * ldims[0] + j0;
+      assert(j0 >= 0 && j0 < ldims[0] + 2*ibn[0]);
+      assert(j1 >= 0 && j1 < ldims[1] + 2*ibn[1]);
+      assert(j2 >= 0 && j2 < ldims[2] + 2*ibn[2]);
+      int cni = ((j2) * (ldims[1] + 2*ibn[1]) + j1) * (ldims[0] + 2*ibn[0]) + j0;
 
       assert(cni >= last);
       last = cni;
