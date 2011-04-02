@@ -215,6 +215,7 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
   }
 
   free(obj->subctx);
+  obj->subctx = NULL;
   
   struct mrc_obj_ops *ops = find_subclass_ops(obj->class, subclass);
   assert(ops);
