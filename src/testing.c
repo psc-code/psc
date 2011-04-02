@@ -209,7 +209,35 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
     }
   }
 #else
-  assert(0);
+  int last = INT_MIN;
+
+  particle_base_real_t dxi = 1.f / psc->dx[0];
+  particle_base_real_t dyi = 1.f / psc->dx[1];
+  particle_base_real_t dzi = 1.f / psc->dx[2];
+
+  psc_foreach_patch(psc, p) {
+    particles_base_t *pp = &particles->p[p];
+    struct psc_patch *patch = &psc->patch[p];
+    int *ldims = patch->ldims;
+    for (int n = 0; n < pp->n_part; n++) {
+      particle_base_t *part = particles_base_get_one(pp, n);
+
+      particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
+      particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
+      particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
+      int j0 = particle_base_real_nint(u);
+      int j1 = particle_base_real_nint(v);
+      int j2 = particle_base_real_nint(w);
+      
+      assert(j0 >= 0 && j0 < ldims[0]);
+      assert(j1 >= 0 && j1 < ldims[1]);
+      assert(j2 >= 0 && j2 < ldims[2]);
+      int cni = ((j2) * ldims[1] + j1) * ldims[0] + j0;
+
+      assert(cni >= last);
+      last = cni;
+    }
+  }
 #endif
 }
 

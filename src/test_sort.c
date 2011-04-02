@@ -19,11 +19,29 @@ main(int argc, char **argv)
   };
   psc_create_test_xz(&conf_fortran);
   mparticles_base_t *particles = &psc.particles;
-
   psc_randomize_run(psc.randomize, particles);
   psc_sort_run(psc.sort, particles);
   psc_check_particles_sorted(&psc, particles);
+  psc_destroy(&psc);
 
+  struct psc_mod_config conf_countsort = {
+    .mod_sort = "countsort",
+  };
+  psc_create_test_xz(&conf_countsort);
+  particles = &psc.particles;
+  psc_randomize_run(psc.randomize, particles);
+  psc_sort_run(psc.sort, particles);
+  psc_check_particles_sorted(&psc, particles);
+  psc_destroy(&psc);
+
+  struct psc_mod_config conf_countsort2 = {
+    .mod_sort = "countsort2",
+  };
+  psc_create_test_xz(&conf_countsort2);
+  particles = &psc.particles;
+  psc_randomize_run(psc.randomize, particles);
+  psc_sort_run(psc.sort, particles);
+  psc_check_particles_sorted(&psc, particles);
   psc_destroy(&psc);
 
   prof_print();

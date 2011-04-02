@@ -9,12 +9,6 @@
 
 typedef fields_base_real_t creal;
 
-static inline int
-nint(creal x)
-{
-  return (int)(x + 10.5f) - 10;
-}
-
 static void
 do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
 		    int m_NE, int m_NI, int m_NN)
@@ -35,9 +29,9 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = nint(u);
-    int j2 = nint(v);
-    int j3 = nint(w);
+    int j1 = particle_base_real_nint(u);
+    int j2 = particle_base_real_nint(v);
+    int j3 = particle_base_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -143,9 +137,9 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = nint(u);
-    int j2 = nint(v);
-    int j3 = nint(w);
+    int j1 = particle_base_real_nint(u);
+    int j2 = particle_base_real_nint(v);
+    int j3 = particle_base_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -252,9 +246,9 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = nint(u);
-    int j2 = nint(v);
-    int j3 = nint(w);
+    int j1 = particle_base_real_nint(u);
+    int j2 = particle_base_real_nint(v);
+    int j3 = particle_base_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -358,9 +352,9 @@ do_c_calc_photon_n(int p, fields_base_t *pf, photons_t *photons)
     creal u = (p->x[0] - patch->xb[0]) * dxi;
     creal v = (p->x[1] - patch->xb[1]) * dyi;
     creal w = (p->x[2] - patch->xb[2]) * dzi;
-    int j1 = nint(u);
-    int j2 = nint(v);
-    int j3 = nint(w);
+    int j1 = particle_base_real_nint(u);
+    int j2 = particle_base_real_nint(v);
+    int j3 = particle_base_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;

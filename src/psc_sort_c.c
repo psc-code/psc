@@ -12,13 +12,13 @@
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 static void
-find_cell_indices(particles_base_t *pp)
+find_cell_indices(int p, particles_base_t *pp)
 {
   PIC_find_cell_indices(pp);
 }
 
 static inline int
-get_cell_index(const particle_base_t *p)
+get_cell_index(int p, const particle_base_t *p)
 {
   return p->cni;
 }
@@ -26,15 +26,30 @@ get_cell_index(const particle_base_t *p)
 #else
 
 static void
-find_cell_indices(particles_base_t *pp)
+find_cell_indices(int p, particles_base_t *pp)
 {
-  assert(0);
 }
 
 static inline int
-get_cell_index(const particle_base_t *p)
+get_cell_index(int p, const particle_base_t *part)
 {
-  assert(0);
+  struct psc_patch *patch = &psc.patch[p];
+  particle_base_real_t dxi = 1.f / psc.dx[0];
+  particle_base_real_t dyi = 1.f / psc.dx[1];
+  particle_base_real_t dzi = 1.f / psc.dx[2];
+  int *ldims = patch->ldims;
+  
+  particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
+  particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
+  particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
+  int j0 = particle_base_real_nint(u);
+  int j1 = particle_base_real_nint(v);
+  int j2 = particle_base_real_nint(w);
+    
+  assert(j0 >= 0 && j0 < ldims[0]);
+  assert(j1 >= 0 && j1 < ldims[1]);
+  assert(j2 >= 0 && j2 < ldims[2]);
+  return ((j2) * ldims[1] + j1) * ldims[0] + j0;
 }
 
 #endif
@@ -44,9 +59,9 @@ compare(const void *_a, const void *_b)
 {
   const particle_base_t *a = _a, *b = _b;
 
-  if (get_cell_index(a) < get_cell_index(b)) {
+  if (get_cell_index(0, a) < get_cell_index(0, b)) {
     return -1;
-  } else if (get_cell_index(a) == get_cell_index(b)) {
+  } else if (get_cell_index(0, a) == get_cell_index(0, b)) {
     return 0;
   } else {
     return 1;
@@ -56,14 +71,16 @@ compare(const void *_a, const void *_b)
 static void
 psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles)
 {
+
   static int pr;
   if (!pr) {
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
   prof_start(pr);
+  assert(psc.nr_patches == 1);
   foreach_patch(p) {
     particles_base_t *pp = &particles->p[p];
-    find_cell_indices(pp);
+    find_cell_indices(p, pp);
     qsort(pp->particles, pp->n_part, sizeof(*pp->particles), compare);
   }
   prof_stop(pr);
@@ -91,7 +108,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
  
   struct psc_patch *patch = &psc.patch[0];
   particles_base_t *pp = &particles->p[0];
-  find_cell_indices(pp);
+  find_cell_indices(0, pp);
 
   int N = 1;
   for (int d = 0; d < 3; d++) {
@@ -102,14 +119,14 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   // count
   for (int i = 0; i < pp->n_part; i++) {
-    unsigned int cni = get_cell_index(&pp->particles[i]);
+    unsigned int cni = get_cell_index(0, &pp->particles[i]);
     assert(cni < N);
     cnts[cni]++;
   }
 
   // calc offsets
   int cur = 0;
-  for (int i = 1; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     int n = cnts[i];
     cnts[i] = cur;
     cur += n;
@@ -119,7 +136,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
   // move into new position
   particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
   for (int i = 0; i < pp->n_part; i++) {
-    unsigned int cni = get_cell_index(&pp->particles[i]);
+    unsigned int cni = get_cell_index(0, &pp->particles[i]);
     memcpy(&particles2[cnts[cni]], &pp->particles[i], sizeof(*particles2));
     cnts[cni]++;
   }
@@ -155,7 +172,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   struct psc_patch *patch = &psc.patch[0];
   particles_base_t *pp = &particles->p[0];
-  find_cell_indices(pp);
+  find_cell_indices(0, pp);
 
   int N = 1;
   for (int d = 0; d < 3; d++) {
@@ -164,7 +181,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));
   for (int i = 0; i < pp->n_part; i++) {
-    cnis[i] = get_cell_index(&pp->particles[i]);
+    cnis[i] = get_cell_index(0, &pp->particles[i]);
     assert(cnis[i] < N);
   }
 
@@ -181,7 +198,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   // calc offsets
   int cur = 0;
-  for (int i = 1; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     int n = cnts[i];
     cnts[i] = cur;
     cur += n;

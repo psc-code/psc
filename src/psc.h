@@ -425,6 +425,14 @@ void psc_write_checkpoint(void);
 
 void psc_setup_fortran(struct psc *psc);
 
+// FIXME, only used for one thing, could be consolidated?
+
+static inline int
+particle_base_real_nint(particle_base_real_t x)
+{
+  return (int)(x + 10.5f) - 10;
+}
+
 // ----------------------------------------------------------------------
 // other bits and hacks...
 
