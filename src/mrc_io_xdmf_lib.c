@@ -263,7 +263,13 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
 void
 xdmf_spatial_destroy(struct xdmf_spatial *xs)
 {
+  for (int m = 0; m < xs->nr_fld_info; m++) {
+    struct xdmf_fld_info *fld_info = &xs->fld_info[m];
+    free(fld_info->name);
+    free(fld_info->path);
+  }
   list_del(&xs->entry);
+  free(xs->name);
   free(xs->patch_infos);
   free(xs);
 }
