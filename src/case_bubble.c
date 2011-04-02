@@ -3,6 +3,7 @@
 #include "psc_case_private.h"
 #include "psc_push_fields.h"
 #include "psc_bnd_fields.h"
+#include "psc_sort.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -90,6 +91,8 @@ psc_case_bubble_set_from_options(struct psc_case *_case)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc.push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
+
+  psc_sort_set_type(psc.sort, "countsort2");
 }
 
 static void
