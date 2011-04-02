@@ -223,6 +223,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     memcpy(pp->particles, particles2, pp->n_part * sizeof(*particles2));
     
     free(particles2);
+    free(cnis);
     free(cnts);
   }
 
