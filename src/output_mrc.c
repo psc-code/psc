@@ -15,6 +15,7 @@ enum {
   NR_IO_TYPES,
 };
 
+// FIXME, part of subctx
 static struct mrc_io *ios[NR_IO_TYPES];
 
 // ----------------------------------------------------------------------
@@ -30,6 +31,23 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
       MRC_M3(m3p,0, ix,iy,iz) = F3_BASE(pf,0, ix,iy,iz);
     } mrc_m3_foreach_end;
     mrc_m3_patch_put(m3);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_output_format_mrc_destroy
+
+static void
+psc_output_format_mrc_destroy(struct psc_output_format *format)
+{
+  // FIXME, this makes mrc_io persistent across new objects from
+  // this class (see that static var above), which is bad, but actually
+  // helps getting a proper temporal XDMF file...
+  return;
+  
+  for (int i = 0; i < NR_IO_TYPES; i++) {
+    mrc_io_destroy(ios[i]);
+    ios[i] = NULL;
   }
 }
 
@@ -89,6 +107,7 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
 struct psc_output_format_ops psc_output_format_mrc_ops = {
   .name                  = "mrc",
   .write_fields          = psc_output_format_mrc_write_fields,
+  .destroy               = psc_output_format_mrc_destroy,
 };
 
 
