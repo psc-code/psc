@@ -66,6 +66,7 @@ struct param {
 };
 
 void libmrc_params_init(int argc, char **argv);
+void libmrc_params_finalize(void);
 
 void mrc_params_print_all(MPI_Comm comm);
 void mrc_params_insert_option(const char *name, const char *val);
