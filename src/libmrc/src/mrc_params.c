@@ -10,8 +10,8 @@
 #include <assert.h>
 
 struct option {
-  const char *name;
-  const char *value;
+  char *name;
+  char *value;
   list_t entry;
 };
 
@@ -37,6 +37,18 @@ libmrc_params_init(int argc, char **argv)
       i++;
     }
     list_add_tail(&opt->entry, &option_list);
+  }
+}
+
+void
+libmrc_params_finalize()
+{
+  while (!list_empty(&option_list)) {
+    struct option *opt = list_entry(option_list.next, struct option, entry);
+    list_del(&opt->entry);
+    free(opt->name);
+    free(opt->value);
+    free(opt);
   }
 }
 

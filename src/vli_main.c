@@ -18,5 +18,6 @@ main(int argc, char **argv)
   psc_integrate(psc);
   psc_case_destroy(_case);
 
+  libmrc_params_finalize();
   MPI_Finalize();
 }
