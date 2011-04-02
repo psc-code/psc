@@ -360,6 +360,9 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 					 loads_all);
   free(loads_all);
 
+  psc_output_fields_destroy(psc->output_fields);
+  psc_bnd_destroy(psc->bnd);
+
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
@@ -371,12 +374,10 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   // FIXME, this shouldn't be necessary here, the other modules oughta learn
   // to adapt automatically...
-  psc_output_fields_destroy(psc->output_fields);
   psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_fields_setup(psc->output_fields);
 
-  psc_bnd_destroy(psc->bnd);
   psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
   psc_bnd_set_from_options(psc->bnd);
   psc_bnd_setup(psc->bnd);
@@ -408,6 +409,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
 					 loads_all);
   free(loads_all);
+
+  psc_output_fields_destroy(psc->output_fields);
+  psc_bnd_destroy(psc->bnd);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
@@ -465,13 +469,11 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // FIXME, this shouldn't be necessary here, the other modules oughta learn
   // to adapt automatically...
-  psc_output_fields_destroy(psc->output_fields);
   psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_fields_setup(psc->output_fields);
   psc_output_fields_view(psc->output_fields);
 
-  psc_bnd_destroy(psc->bnd);
   psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
   psc_bnd_set_from_options(psc->bnd);
   psc_bnd_setup(psc->bnd);
