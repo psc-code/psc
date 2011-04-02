@@ -231,6 +231,16 @@ static void
 psc_output_fields_c_destroy(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+
+  struct psc_fields_list *pfd = &out_c->pfd;
+  for (int i = 0; i < pfd->nr_flds; i++) {
+    mfields_base_destroy(&pfd->flds[i]);
+  }
+  struct psc_fields_list *tfd = &out_c->tfd;
+  for (int i = 0; i < tfd->nr_flds; i++) {
+    mfields_base_destroy(&tfd->flds[i]);
+  }
+
   psc_output_format_destroy(out_c->format);
 }
 
@@ -265,7 +275,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   // (potentially) on the command line
   pfd->nr_flds = 0;
   // parse comma separated list of fields
-  char *p, *s = strdup(out_c->output_fields);
+  char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
     mfields_base_t *flds = &pfd->flds[pfd->nr_flds];
@@ -279,7 +289,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
       }
     }
   }
-  free(s);
+  free(s_orig);
 
   // create tfd to look just like pfd
   // FIXME, only if necessary
