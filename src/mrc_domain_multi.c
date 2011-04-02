@@ -376,6 +376,10 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  for (int d = 0; d < 3; d++) {
+    free(multi->ldims[d]);
+    free(multi->off[d]);
+  }
   free(multi->gpatch_off_all);
   free(multi->patches);
 }
