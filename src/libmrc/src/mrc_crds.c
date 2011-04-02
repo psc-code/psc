@@ -23,6 +23,7 @@ _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
     mrc_f1_destroy(crds->crd[d]);
+    mrc_m1_destroy(crds->mcrd[d]);
   }
 }
 
