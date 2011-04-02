@@ -1,0 +1,43 @@
+{
+   openmpi-0
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:MPI_Init
+}
+{
+   openmpi-0a
+   Memcheck:Leak
+   fun:realloc
+   ...
+   fun:MPI_Init
+}
+{
+   openmpi-1
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   ...
+   fun:MPI_Init
+}
+{
+   openmpi-2
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:opal_progress
+}
+{
+   openmpi-2
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:ompi_mpi_init
+}
+{
+   openmpi-3
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:ompi_file_open
+}

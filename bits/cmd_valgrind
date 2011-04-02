@@ -1,0 +1,10 @@
+valgrind --leak-check=full --suppressions=bits/mpi.supp src/VLI \
+	 --nmax 3 \
+	   --psc_case_type bubble \
+	   --psc_balance_every 1 \
+	   --npx 2 --npz 1 \
+	   --mrc_io_type xdmf2_parallel \
+	   --pfield_step 10 --write_pfield no \
+	   --tfield_step 1 --write_tfield yes \
+	   --output_fields e,h,j \
+	   --gdims_x 24 --gdims_z 16
