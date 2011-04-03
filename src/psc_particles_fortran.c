@@ -45,7 +45,7 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("particles_fortran_get", 1., 0, 0);
+    pr = prof_register("part_fortran_get", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -85,7 +85,7 @@ particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("particles_fortran_put", 1., 0, 0);
+    pr = prof_register("part_fortran_put", 1., 0, 0);
   }
   prof_start(pr);
 
