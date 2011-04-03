@@ -1,0 +1,72 @@
+
+- psc_bnd_fields: none should be default, pulses should be part of subclass (?)
+- output: _first not working (w/rebalancing?)
+- psc/case: do integrate as part of case_integrate, virtual
+- psc/xchg: use mpi types to describes particles proper ?
+- psc/sort: file naming etc.
+- psc/ddcp: don't use MPI for local exchanges (?)
+- psc/balance: fix output_fields/balance interaction properly
+- psc/balance: fix bnd / ddc interaction properly
+- psc/balance: move pointers for particles that stay
+- psc/balance: move pointers for fields that stay?
+- psc/balance: if nothing changed, do nothing
+- psc/balance: make internal to mrc_domain?
+- psc/balance: base on timing?
+- psc/push: squeezed fields
+- psc/various: merge different sub-class profiling to class
+- psc/moments: fix repeated code
+- psc/moments: 2D performance? 
+- psc/cleanup: reorg directory structure
+- psc/cleanup: rename output_*
+- psc/cleanup: rename case_* ?
+- psc/cleanup: rename pusher generic_c -> c ?
+- psc: make mrc_obj
+
+- libmrc/obj: ops -> subclass
+- libmrc/obj: profiling integration
+- libmrc/obj: dprintf integration
+- libmrc/io: xdmf2_parallel: write crds collectively
+- libmrc/io: merge xdmf, xdmf2
+- libmrc/io: write uniform crds as such for xdmf2 (non-par), and elsewhere
+- libmrc/io: write hyperslab
+- libmrc/obj: automatic track child classes
+- libmrc/obj: consistently override standard methods in subclasses (order)
+- libmrc/ddc: use mpi types instead of copy-to-buffer ?
+- libmrc/ddc: more asynchronous (copy when received)
+- libmrc/ddc: don't use MPI for local exchanges
+- libmrc/params: proper naming
+- libmrc/params,obj: proper hierarchy print
+- libmrc/params.obj: allow for read-only vars, too
+- libmrc/params: help texts
+
+
+- output with FIELDS_FORTRAN
+- fix output_vtk?
+- bnd fortran broken? (get_from_ ...)
+- proper checkpointing
+- disable checkpointing write
+- creal type
+- fix psc_dump_field
+- generic fld3 sth
+- overview doc: kind of modules
+- --enable-sse2 automatic
+- --enable-cuda find nvcc etc
+- rename pp, pf
+- lni
+- test for push_part_z
+- xdmf output
+- cuda: introduce cuda_real, and clean up stuff
+- get rid of to/from stuff
+- psc_ vs not cleanup
+- broken pml
+
+DONE
+- psc: get rid of mod_* stuff
+- testing stuff -> own file, cleanup
+- cleanup psc_glue, pass fortran pf,pp
+- get rid of FF3
+- XF3/F3 unifi
+- clean up c-interface (only)
+- cni/sort, randomize order
+- get rid of ne,ni,nn calc in move_part fortran
+- options to turn output off (none)
