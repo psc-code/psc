@@ -369,19 +369,6 @@ struct psc {
 
 
 // ----------------------------------------------------------------------
-// psc_config
-
-struct psc_mod_config {
-  const char *mod_particle;
-  const char *mod_field;
-  const char *mod_randomize;
-  const char *mod_sort;
-  const char *mod_collision;
-  const char *mod_output;
-  const char *mod_bnd;
-  const char *mod_moment;
-};
-
 // we keep this info global for now.
 // FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
@@ -397,7 +384,6 @@ psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
 }
 
 struct psc *psc_create(void);
-void psc_set_conf(struct psc *psc, struct psc_mod_config *conf);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
 void psc_view(struct psc *psc);

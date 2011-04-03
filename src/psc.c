@@ -24,54 +24,6 @@
 
 struct psc psc;
 
-#define VAR(x) (void *)offsetof(struct psc_mod_config, x)
-
-static struct param psc_mod_config_descr[] = {
-  { "mod_particle"    , VAR(mod_particle)       , PARAM_STRING(NULL)  },
-  { "mod_field"       , VAR(mod_field)          , PARAM_STRING(NULL)  },
-  { "mod_randomize"   , VAR(mod_randomize)      , PARAM_STRING(NULL)  },
-  { "mod_sort"        , VAR(mod_sort)           , PARAM_STRING(NULL)  },
-  { "mod_collision"   , VAR(mod_collision)      , PARAM_STRING(NULL)  },
-  { "mod_output"      , VAR(mod_output)         , PARAM_STRING(NULL)  },
-  { "mod_bnd"         , VAR(mod_bnd)            , PARAM_STRING(NULL)  },
-  { "mod_moment"      , VAR(mod_moment)         , PARAM_STRING(NULL)  },
-  {},
-};
-
-#undef VAR
-
-void
-psc_set_conf(struct psc *psc, struct psc_mod_config *conf)
-{
-  mrc_params_parse_nodefault(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-  mrc_params_print(conf, psc_mod_config_descr, "PSC", MPI_COMM_WORLD);
-
-  if (conf->mod_particle) {
-    psc_push_particles_set_type(psc->push_particles, conf->mod_particle);
-  }
-  if (conf->mod_field) {
-    psc_push_fields_set_type(psc->push_fields, conf->mod_field);
-  }
-  if (conf->mod_bnd) {
-    psc_bnd_set_type(psc->bnd, conf->mod_bnd);
-  }
-  if (conf->mod_collision) {
-    psc_collision_set_type(psc->collision, conf->mod_collision);
-  }
-  if (conf->mod_randomize) {
-    psc_randomize_set_type(psc->randomize, conf->mod_randomize);
-  }
-  if (conf->mod_sort) {
-    psc_sort_set_type(psc->sort, conf->mod_sort);
-  }
-  if (conf->mod_output) {
-    psc_output_fields_set_type(psc->output_fields, conf->mod_output);
-  }
-  if (conf->mod_moment) {
-    psc_moments_set_type(psc->moments, conf->mod_moment);
-  }
-}
-
 // ----------------------------------------------------------------------
 // psc_create
 
