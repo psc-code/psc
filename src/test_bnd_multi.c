@@ -95,12 +95,13 @@ main(int argc, char **argv)
 
   // test psc_fill_ghosts()
 
-  psc_create_test_xz(&conf_c);
+  struct psc_case *_case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   setup_jx(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   check_jx(flds);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   prof_print();
 

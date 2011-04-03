@@ -53,38 +53,42 @@ main(int argc, char **argv)
     .mod_bnd = "c",
   };
 
-  psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   setup_jx(flds);
   //  psc_dump_field(JXI, "jx0");
   psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx1");
   psc_save_fields_ref(&psc, flds);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
-  psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   setup_jx(flds);
   psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
   psc_check_currents_ref_noghost(&psc, flds, 1e-10);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   // test psc_fill_ghosts()
 
-  psc_create_test_xz(&conf_fortran);
+  _case = psc_create_test_xz(&conf_fortran);
+  psc_case_setup(_case);
   setup_jx_noghost(flds);
   psc_dump_field(flds, JXI, "jx0");
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   psc_dump_field(flds, JXI, "jx1");
   psc_save_fields_ref(&psc, flds);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
-  psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   setup_jx_noghost(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   psc_dump_field(flds, JXI, "jx2");
   psc_check_currents_ref(&psc, flds, 1e-10);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   prof_print();
 

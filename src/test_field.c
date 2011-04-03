@@ -40,16 +40,18 @@ main(int argc, char **argv)
 
   // test push_field_a
 
-  psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   setup_fields(flds);
   // psc_dump_field(EX, "ex0");
   psc_push_fields_step_a(psc.push_fields, flds);
   // psc_dump_field(EX, "ex1");
   psc_save_fields_ref(&psc, flds);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
-  psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   setup_fields(flds);
   psc_push_fields_step_a(psc.push_fields, flds);
   // psc_dump_field(EX, "ex2");
@@ -59,19 +61,21 @@ main(int argc, char **argv)
   // psc_dump_field(HY, "hy2");
   // psc_dump_field(HZ, "hz2");
   psc_check_fields_ref(&psc, flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   // test push_field_a
 
-  psc_create_test_xz(&conf_fortran);
+  _case = psc_create_test_xz(&conf_fortran);
+  psc_case_setup(_case);
   setup_fields(flds);
   psc_dump_field(flds, EX, "ex0");
   psc_push_fields_step_b(psc.push_fields, flds);
   psc_dump_field(flds, EX, "ex1");
   psc_save_fields_ref(&psc, flds);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
-  psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   setup_fields(flds);
   psc_push_fields_step_b(psc.push_fields, flds);
   psc_dump_field(flds, EX, "ex2");
@@ -81,7 +85,7 @@ main(int argc, char **argv)
   psc_dump_field(flds, HY, "hy2");
   psc_dump_field(flds, HZ, "hz2");
   psc_check_fields_ref(&psc, flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   prof_print();
 

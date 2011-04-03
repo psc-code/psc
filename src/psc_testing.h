@@ -3,6 +3,7 @@
 #define PSC_TESTING_H
 
 #include "psc.h"
+#include "psc_case.h"
 
 #define assert_equal(x, y, thres) __assert_equal(x, y, #x, #y, thres)
 
@@ -17,7 +18,7 @@ void psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles,
 			     double thres, const char *test_str);
 void psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles);
 
-void psc_create_test_xz(struct psc_mod_config *conf);
+struct psc_case *psc_create_test_xz(struct psc_mod_config *conf);
 void psc_create_test_yz(struct psc_mod_config *conf);
 
 #endif

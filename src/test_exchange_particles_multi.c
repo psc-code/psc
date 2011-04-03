@@ -89,7 +89,8 @@ main(int argc, char **argv)
 
   // test psc_exchange_particles()
 
-  psc_create_test_xz(&conf_c);
+  struct psc_case *_case = psc_create_test_xz(&conf_c);
+  psc_case_setup(_case);
   mparticles_base_t *particles = &psc.particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
@@ -99,7 +100,7 @@ main(int argc, char **argv)
   int total_num_particles_after = get_total_num_particles(particles);
   psc_check_particles(particles);
   assert(total_num_particles_before == total_num_particles_after);
-  psc_destroy(&psc);
+  psc_case_destroy(_case);
 
   prof_print();
 

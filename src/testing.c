@@ -246,7 +246,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
 // ----------------------------------------------------------------------
 // psc_create_test_xz
 
-void
+struct psc_case *
 psc_create_test_xz(struct psc_mod_config *conf)
 {
   // make sure if we call it again, we really get the same i.c.
@@ -257,8 +257,7 @@ psc_create_test_xz(struct psc_mod_config *conf)
   struct psc *psc = psc_case_get_psc(_case);
   psc_set_conf(psc, conf);
   psc_case_set_from_options(_case);
-  psc_case_setup(_case);
-  psc_case_view(_case);
+  return _case;
 }
 
 // ----------------------------------------------------------------------
