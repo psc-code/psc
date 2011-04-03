@@ -19,6 +19,6 @@ void psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles,
 void psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles);
 
 struct psc_case *psc_create_test_xz(void);
-void psc_create_test_yz(struct psc_mod_config *conf);
+struct psc_case *psc_create_test_yz(void);
 
 #endif
