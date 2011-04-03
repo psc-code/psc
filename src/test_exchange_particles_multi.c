@@ -83,13 +83,10 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct psc_mod_config conf_c = {
-    .mod_bnd = "c",
-  };
-
   // test psc_exchange_particles()
 
-  struct psc_case *_case = psc_create_test_xz(&conf_c);
+  struct psc_case *_case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "c");
   psc_case_setup(_case);
   mparticles_base_t *particles = &psc.particles;
   setup_particles(particles);

@@ -31,16 +31,10 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct psc_mod_config conf_fortran = {
-    .mod_field = "fortran",
-  };
-  struct psc_mod_config conf_c = {
-    .mod_field = "c",
-  };
-
   // test push_field_a
 
-  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz();
+  psc_push_fields_set_type(psc.push_fields, "fortran");
   psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   setup_fields(flds);
@@ -50,7 +44,8 @@ main(int argc, char **argv)
   psc_save_fields_ref(&psc, flds);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz();
+  psc_push_fields_set_type(psc.push_fields, "c");
   psc_case_setup(_case);
   setup_fields(flds);
   psc_push_fields_step_a(psc.push_fields, flds);
@@ -63,9 +58,10 @@ main(int argc, char **argv)
   psc_check_fields_ref(&psc, flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
-  // test push_field_a
+  // test push_field_b
 
-  _case = psc_create_test_xz(&conf_fortran);
+  _case = psc_create_test_xz();
+  psc_push_fields_set_type(psc.push_fields, "fortran");
   psc_case_setup(_case);
   setup_fields(flds);
   psc_dump_field(flds, EX, "ex0");
@@ -74,7 +70,8 @@ main(int argc, char **argv)
   psc_save_fields_ref(&psc, flds);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz();
+  psc_push_fields_set_type(psc.push_fields, "c");
   psc_case_setup(_case);
   setup_fields(flds);
   psc_push_fields_step_b(psc.push_fields, flds);

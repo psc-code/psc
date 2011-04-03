@@ -13,14 +13,8 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct psc_mod_config conf_fortran = {
-    .mod_particle = "fortran",
-  };
-  struct psc_mod_config conf_generic_c = {
-    .mod_particle = "generic_c",
-  };
-
-  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz();
+  psc_push_particles_set_type(psc.push_particles, "fortran");
   psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   mparticles_base_t *particles = &psc.particles;
@@ -31,7 +25,8 @@ main(int argc, char **argv)
   psc_save_fields_ref(&psc, flds);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_generic_c);
+  _case = psc_create_test_xz();
+  psc_push_particles_set_type(psc.push_particles, "generic_c");
   psc_case_setup(_case);
   psc_push_particles_run(psc.push_particles, particles, flds);
   //  psc_dump_particles("part-2");

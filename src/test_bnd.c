@@ -46,14 +46,8 @@ main(int argc, char **argv)
 
   // test psc_add_ghosts()
 
-  struct psc_mod_config conf_fortran = {
-    .mod_bnd = "fortran",
-  };
-  struct psc_mod_config conf_c = {
-    .mod_bnd = "c",
-  };
-
-  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "fortran");
   psc_case_setup(_case);
   mfields_base_t *flds = &psc.flds;
   setup_jx(flds);
@@ -63,7 +57,8 @@ main(int argc, char **argv)
   psc_save_fields_ref(&psc, flds);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "c");
   psc_case_setup(_case);
   setup_jx(flds);
   psc_bnd_add_ghosts(psc.bnd, flds, JXI, JXI + 1);
@@ -73,7 +68,8 @@ main(int argc, char **argv)
 
   // test psc_fill_ghosts()
 
-  _case = psc_create_test_xz(&conf_fortran);
+  _case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "fortran");
   psc_case_setup(_case);
   setup_jx_noghost(flds);
   psc_dump_field(flds, JXI, "jx0");
@@ -82,7 +78,8 @@ main(int argc, char **argv)
   psc_save_fields_ref(&psc, flds);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "c");
   psc_case_setup(_case);
   setup_jx_noghost(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);

@@ -146,14 +146,8 @@ main(int argc, char **argv)
 
   // test psc_exchange_particles()
 
-  struct psc_mod_config conf_fortran = {
-    .mod_bnd = "fortran",
-  };
-  struct psc_mod_config conf_c = {
-    .mod_bnd = "c",
-  };
-
-  struct psc_case *_case = psc_create_test_xz(&conf_fortran);
+  struct psc_case *_case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "fortran");
   psc_case_setup(_case);
   mparticles_base_t *particles = &psc.particles;
   setup_particles(particles);
@@ -166,7 +160,8 @@ main(int argc, char **argv)
   assert(total_num_particles_before == total_num_particles_after);
   psc_case_destroy(_case);
 
-  _case = psc_create_test_xz(&conf_c);
+  _case = psc_create_test_xz();
+  psc_bnd_set_type(psc.bnd, "c");
   psc_case_setup(_case);
   setup_particles(particles);
   //  psc_dump_particles("part-0");

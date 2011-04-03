@@ -247,15 +247,13 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
 // psc_create_test_xz
 
 struct psc_case *
-psc_create_test_xz(struct psc_mod_config *conf)
+psc_create_test_xz()
 {
   // make sure if we call it again, we really get the same i.c.
   srandom(0);
 
   struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
   psc_case_set_type(_case, "test_xz");
-  struct psc *psc = psc_case_get_psc(_case);
-  psc_set_conf(psc, conf);
   psc_case_set_from_options(_case);
   return _case;
 }
