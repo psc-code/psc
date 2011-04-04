@@ -24,12 +24,26 @@ struct xdmf_file {
 struct xdmf {
   struct xdmf_file file;
   struct xdmf_temporal *xdmf_temporal;
+  // parallel, collective only
   bool use_independent_io;
+  // collective only
+  int nr_writers;
+  MPI_Comm comm_writers; //< communicator for only the writers
+  int *writers;          //< rank (in mrc_io comm) for each writer
+  int is_writer;         //< this rank is a writer
 };
 
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf_parallel_descr[] = {
   { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
+  {},
+};
+#undef VAR
+
+#define VAR(x) (void *)offsetof(struct xdmf, x)
+static struct param xdmf_collective_descr[] = {
+  { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
+  { "nr_writers"             , VAR(nr_writers)              , PARAM_INT(1)           },
   {},
 };
 #undef VAR
@@ -542,6 +556,474 @@ struct mrc_io_ops mrc_io_xdmf2_parallel_ops = {
   .write_attr    = xdmf_write_attr,
 #endif
   .write_m3      = xdmf_parallel_write_m3,
+};
+
+// ======================================================================
+
+// ----------------------------------------------------------------------
+// xdmf_collective_setup
+
+static void
+xdmf_collective_setup(struct mrc_io *io)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  xdmf_setup(io);
+  
+  if (xdmf->nr_writers > io->size) {
+    xdmf->nr_writers = io->size;
+  }
+  xdmf->writers = calloc(xdmf->nr_writers, sizeof(*xdmf->writers));
+  // setup writers, just use first nr_writers ranks,
+  // could do something fancier in the future
+  for (int i = 0; i < xdmf->nr_writers; i++) {
+    xdmf->writers[i] = i;
+    if (i == io->rank)
+      xdmf->is_writer = 1;
+  }
+  MPI_Comm_split(mrc_io_comm(io), xdmf->is_writer, io->rank, &xdmf->comm_writers);
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_open
+
+static void
+xdmf_collective_destroy(struct mrc_io *io)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  
+  free(xdmf->writers);
+  if (xdmf->comm_writers) {
+    MPI_Comm_free(&xdmf->comm_writers);
+  }
+
+  xdmf_destroy(io);
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_open
+
+static void
+xdmf_collective_open(struct mrc_io *io, const char *mode)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  assert(strcmp(mode, "w") == 0);
+
+  char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
+  sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
+	  io->step, 0);
+
+  if (xdmf->is_writer) {
+    struct xdmf_file *file = &xdmf->file;
+
+    hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plist, xdmf->comm_writers, MPI_INFO_NULL);
+    mprintf("bef H5Fcreate() info = %p\n", MPI_INFO_NULL);
+    file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    mprintf("aft H5Fcreate()\n");
+    H5Pclose(plist);
+
+    xdmf_spatial_open(&file->xdmf_spatial_list);
+  }
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_close
+
+static void
+xdmf_collective_close(struct mrc_io *io)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  if (xdmf->is_writer) {
+    struct xdmf_file *file = &xdmf->file;
+    mprintf("bef H5Fclose()\n");
+    H5Fclose(file->h5_file);
+    mprintf("aft H5Fclose()\n");
+
+    xdmf_spatial_close(&file->xdmf_spatial_list, io, xdmf->xdmf_temporal);
+    memset(file, 0, sizeof(*file));
+  }
+}
+
+// ----------------------------------------------------------------------
+// collective_write_f3
+// does the actual write of the partial f3 to the file
+// only called on writer procs
+
+static void
+collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int m,
+		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(m3->domain, gdims);
+
+  xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
+
+  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  int i0 = 0;
+  H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
+
+  hsize_t fdims[3] = { gdims[2], gdims[1], gdims[0] };
+  hid_t filespace = H5Screate_simple(3, fdims, NULL);
+  hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+  if (xdmf->use_independent_io) {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+  } else {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+  }
+  hsize_t mdims[3] = { f3->im[2], f3->im[1], f3->im[0] };
+  hsize_t foff[3] = { f3->ib[2], f3->ib[1], f3->ib[0] };
+  hid_t memspace = H5Screate_simple(3, mdims, NULL);
+  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
+
+  mprintf("bef H5Dwrite(%p)\n", f3->arr);
+  H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr);
+  mprintf("aft H5Dwrite()\n");
+  
+  H5Dclose(dset);
+  H5Sclose(memspace);
+  H5Sclose(filespace);
+  H5Pclose(dxpl);
+
+  H5Gclose(group);
+  H5Gclose(group_fld);
+}
+
+// ----------------------------------------------------------------------
+// collective_recv_f3
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+static bool
+find_intersection(int *ilo, int *ihi, int *ib1, int *im1, int *ib2, int *im2)
+{
+  for (int d = 0; d < 3; d++) {
+    ilo[d] = MAX(ib1[d], ib2[d]);
+    ihi[d] = MIN(ib1[d] + im1[d], ib2[d] + im2[d]);
+    if (ihi[d] - ilo[d] <= 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static void
+get_writer_off_dims(int writer, int *writer_off, int *writer_dims,
+		    int *gdims, int slow_dim, int slow_indices_per_writer,
+		    int slow_indices_rmndr)
+{
+    for (int d = 0; d < 3; d++) {
+      writer_dims[d] = gdims[d];
+      writer_off[d] = 0;
+    }
+    writer_dims[slow_dim] = slow_indices_per_writer + (writer < slow_indices_rmndr);
+    if (writer < slow_indices_rmndr) {
+      writer_off[slow_dim] = (slow_indices_per_writer + 1) * writer;
+    } else {
+      writer_off[slow_dim] = slow_indices_rmndr +
+	slow_indices_per_writer * writer;
+    }
+}
+
+static void
+collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
+		   int slow_dim, int slow_indices_per_writer,
+		   int slow_indices_rmndr)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  int *nr_patches_per_writer = calloc(xdmf->nr_writers, sizeof(int));
+
+  int gdims[3];
+  mrc_domain_get_global_dims(m3->domain, gdims);
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+  for (int p = 0; p < nr_patches; p++) {
+    int *off = patches[p].off, *ldims = patches[p].ldims;
+    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+      // don't send to self
+      if (xdmf->writers[writer] == io->rank) {
+	continue;
+      }
+      int writer_off[3], writer_dims[3];
+      get_writer_off_dims(writer, writer_off, writer_dims,
+			  gdims, slow_dim, slow_indices_per_writer,
+			  slow_indices_rmndr);
+      int ilo[3], ihi[3];
+      bool has_intersection =
+	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+      if (has_intersection) {
+	nr_patches_per_writer[writer]++;
+      }
+    }
+  }
+  int total_sends = 0;
+  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+    mprintf("w %d: %d\n", writer, nr_patches_per_writer[writer]);
+    total_sends += nr_patches_per_writer[writer];
+  }
+  mprintf("total_sends = %d\n", total_sends);
+  int sr = 0;
+  MPI_Request *send_reqs = calloc(total_sends, sizeof(*send_reqs));
+
+  for (int p = 0; p < nr_patches; p++) {
+    int *off = patches[p].off, *ldims = patches[p].ldims;
+    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+      // don't send to self
+      if (xdmf->writers[writer] == io->rank) {
+	continue;
+      }
+      int writer_off[3], writer_dims[3];
+      get_writer_off_dims(writer, writer_off, writer_dims,
+			  gdims, slow_dim, slow_indices_per_writer,
+			  slow_indices_rmndr);
+      int ilo[3], ihi[3];
+      bool has_intersection =
+	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
+      if (!has_intersection)
+	continue;
+
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(m3->domain, p, &info);
+      mprintf("MPI_Isend -> %d gp %d\n", xdmf->writers[writer], info.global_patch);
+      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+      MPI_Isend(&MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]),
+		m3p->im[0] * m3p->im[1] * m3p->im[2], MPI_FLOAT,
+		xdmf->writers[writer], info.global_patch,
+		mrc_io_comm(io), &send_reqs[sr++]);
+      mrc_m3_patch_put(m3);
+    }
+  }
+
+  MPI_Waitall(total_sends, send_reqs, MPI_STATUSES_IGNORE);
+
+  free(send_reqs);
+  free(nr_patches_per_writer);
+}
+    
+static void
+collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
+		   struct mrc_m3 *m3, int m)
+{
+  // find out who's sending, OPT: this way is non-scalable
+  // could also be optimized by just looking at slow_dim
+  // could be optimized by having the senders determine where to send,
+  // and message that info.
+
+  int *nr_patches_per_rank = calloc(io->size, sizeof(int)); // FIXME, unnecc
+
+  int nr_global_patches;
+  mrc_domain_get_nr_global_patches(m3->domain, &nr_global_patches);
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    // skip local patches for now
+    if (info.rank == io->rank) {
+      continue;
+    }
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     f3->ib, f3->im);
+    if (!has_intersection) {
+      continue;
+    }
+    nr_patches_per_rank[info.rank]++;
+  }
+  int total_recvs = 0;
+  for (int i = 0; i < io->size; i++) {
+    mprintf("recv from %d: # = %d\n", i, nr_patches_per_rank[i]);
+    total_recvs += nr_patches_per_rank[i];
+  }
+  free(nr_patches_per_rank);
+
+  mprintf("total_recvs = %d\n", total_recvs);
+  int rr = 0;
+  int *gps = calloc(total_recvs, sizeof(*gps));
+  MPI_Request *recv_reqs = calloc(total_recvs, sizeof(*recv_reqs));
+  struct mrc_f3 **recv_f3s = calloc(total_recvs, sizeof(*recv_f3s));
+
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    // skip local patches for now
+    if (info.rank == io->rank) {
+      continue;
+    }
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     f3->ib, f3->im);
+    if (!has_intersection) {
+      continue;
+    }
+    int ib[3], im[3];
+    for (int d = 0; d < 3; d++) {
+      ib[d] = -m3->sw;
+      im[d] = info.ldims[d] + 2 * m3->sw;
+    }
+    struct mrc_f3 *recv_f3 = mrc_f3_alloc(MPI_COMM_SELF, ib, im);
+    mrc_f3_setup(recv_f3);
+    recv_f3s[rr] = recv_f3;
+    
+    mprintf("MPI_Irecv <- %d gp %d\n", info.rank, info.global_patch);
+    MPI_Irecv(recv_f3->arr, recv_f3->len, MPI_FLOAT, info.rank,
+	      info.global_patch, mrc_io_comm(io), &recv_reqs[rr++]);
+  }
+
+  MPI_Waitall(total_recvs, recv_reqs, MPI_STATUSES_IGNORE);
+  free(recv_reqs);
+
+  // FIXME, use gps
+  rr = 0;
+  for (int gp = 0; gp < nr_global_patches; gp++) {
+    struct mrc_patch_info info;
+    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    int *off = info.off;
+    // skip local patches for now
+    if (info.rank == io->rank) {
+      continue;
+    }
+    int ilo[3], ihi[3];
+    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					     f3->ib, f3->im);
+    if (!has_intersection) {
+      continue;
+    }
+    struct mrc_f3 *recv_f3 = recv_f3s[rr++];
+
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(f3,0, ix,iy,iz) =
+	    MRC_F3(recv_f3, 0, ix - off[0], iy - off[1], iz - off[2]);
+	}
+      }
+    }
+    
+    mrc_f3_destroy(recv_f3);
+  }
+
+  free(gps);
+
+  // local part
+
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+
+  for (int p = 0; p < nr_patches; p++) {
+    struct mrc_patch *patch = &patches[p];
+    int *off = patch->off, *ldims = patch->ldims;
+
+    int ilo[3], ihi[3];
+    bool has_intersection =
+      find_intersection(ilo, ihi, off, ldims, f3->ib, f3->im);
+    if (!has_intersection) {
+      continue;
+    }
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+    for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+      for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	  MRC_F3(f3,0, ix,iy,iz) =
+	    MRC_M3(m3p, m, ix - off[0], iy - off[1], iz - off[2]);
+	}
+      }
+    }
+    mrc_m3_patch_put(m3);
+  }
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_write_m3
+
+static void
+xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(m3->domain, gdims);
+  int slow_dim = 2;
+  while (gdims[slow_dim] == 1) {
+    slow_dim--;
+  }
+  assert(slow_dim >= 0);
+  int total_slow_indices = gdims[slow_dim];
+  int slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
+  int slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
+  struct mrc_f3 *f3 = NULL;
+  if (xdmf->is_writer) {
+    int writer_rank;
+    MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
+    int writer_dims[3], writer_off[3];
+    get_writer_off_dims(writer_rank, writer_off, writer_dims,
+			gdims, slow_dim, slow_indices_per_writer,
+			slow_indices_rmndr);
+    /* mprintf("writer_off %d %d %d dims %d %d %d\n", */
+    /* 	    writer_off[0], writer_off[1], writer_off[2], */
+    /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
+
+    f3 = mrc_f3_alloc(MPI_COMM_SELF, writer_off, writer_dims);
+    mrc_f3_setup(f3);
+
+    struct xdmf_file *file = &xdmf->file;
+    hid_t group0;
+    if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
+      group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
+    } else {
+      group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    }
+    int nr_1 = 1;
+    H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
+    
+    struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
+						mrc_domain_name(m3->domain));
+    if (!xs) {
+      xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
+					   mrc_domain_name(m3->domain),
+					   m3->domain);
+      xdmf_spatial_write_mcrds_parallel(xs, file, m3->domain);
+    }
+
+    for (int m = 0; m < m3->nr_comp; m++) {
+      collective_send_f3(io, m3, m, slow_dim,
+			 slow_indices_per_writer, slow_indices_rmndr);
+      collective_recv_f3(io, f3, m3, m);
+      collective_write_f3(io, path, f3, m, m3, xs, group0);
+    }
+
+    H5Gclose(group0);
+    mrc_f3_destroy(f3);
+  } else {
+    for (int m = 0; m < m3->nr_comp; m++) {
+      collective_send_f3(io, m3, m, slow_dim, 
+			 slow_indices_per_writer, slow_indices_rmndr);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_io_ops_xdmf_collective
+
+struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
+  .name          = "xdmf2_collective",
+  .size          = sizeof(struct xdmf),
+  .param_descr   = xdmf_collective_descr,
+  .parallel      = true,
+  .setup         = xdmf_collective_setup,
+  .destroy       = xdmf_collective_destroy,
+  .open          = xdmf_collective_open,
+  .close         = xdmf_collective_close,
+#if 0
+  .write_attr    = xdmf_write_attr,
+#endif
+  .write_m3      = xdmf_collective_write_m3,
 };
 
 #endif
