@@ -963,8 +963,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   int total_slow_indices = ctx.gdims[ctx.slow_dim];
   ctx.slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx.slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
-  struct mrc_f3 *f3 = NULL;
+
   if (xdmf->is_writer) {
+    struct mrc_f3 *f3 = NULL;
     int writer_rank;
     MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
     int writer_dims[3], writer_off[3];
@@ -1003,12 +1004,12 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
 
     for (int m = 0; m < m3->nr_comp; m++) {
-      collective_send_f3_begin(&ctx, io, m3, m);
-      collective_send_f3_end(&ctx, io, m3, m);
       collective_recv_f3_begin(&ctx, io, f3, m3);
-      collective_recv_f3_end(&ctx, io, f3, m3, m);
+      collective_send_f3_begin(&ctx, io, m3, m);
       collective_recv_f3_local(&ctx, io, f3, m3, m);
+      collective_recv_f3_end(&ctx, io, f3, m3, m);
       collective_write_f3(io, path, f3, m, m3, xs, group0);
+      collective_send_f3_end(&ctx, io, m3, m);
     }
 
     H5Gclose(group0);
