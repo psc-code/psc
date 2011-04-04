@@ -739,7 +739,7 @@ collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  int *nr_patches_per_writer = calloc(xdmf->nr_writers, sizeof(int));
+  int total_sends = 0;
 
   int gdims[3];
   mrc_domain_get_global_dims(m3->domain, gdims);
@@ -760,16 +760,12 @@ collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
       bool has_intersection =
 	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
       if (has_intersection) {
-	nr_patches_per_writer[writer]++;
+	total_sends++;
       }
     }
   }
-  int total_sends = 0;
-  for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-    mprintf("w %d: %d\n", writer, nr_patches_per_writer[writer]);
-    total_sends += nr_patches_per_writer[writer];
-  }
   mprintf("total_sends = %d\n", total_sends);
+
   int sr = 0;
   MPI_Request *send_reqs = calloc(total_sends, sizeof(*send_reqs));
 
@@ -803,9 +799,7 @@ collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
   }
 
   MPI_Waitall(total_sends, send_reqs, MPI_STATUSES_IGNORE);
-
   free(send_reqs);
-  free(nr_patches_per_writer);
 }
     
 static void
@@ -814,13 +808,10 @@ collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
 {
   // find out who's sending, OPT: this way is non-scalable
   // could also be optimized by just looking at slow_dim
-  // could be optimized by having the senders determine where to send,
-  // and message that info.
-
-  int *nr_patches_per_rank = calloc(io->size, sizeof(int)); // FIXME, unnecc
 
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->domain, &nr_global_patches);
+  int total_recvs = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(m3->domain, gp, &info);
@@ -831,17 +822,10 @@ collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
 					     f3->ib, f3->im);
-    if (!has_intersection) {
-      continue;
+    if (has_intersection) {
+      total_recvs++;
     }
-    nr_patches_per_rank[info.rank]++;
   }
-  int total_recvs = 0;
-  for (int i = 0; i < io->size; i++) {
-    mprintf("recv from %d: # = %d\n", i, nr_patches_per_rank[i]);
-    total_recvs += nr_patches_per_rank[i];
-  }
-  free(nr_patches_per_rank);
 
   mprintf("total_recvs = %d\n", total_recvs);
   int rr = 0;
@@ -862,6 +846,7 @@ collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
     if (!has_intersection) {
       continue;
     }
+    gps[rr] = gp;
     int ib[3], im[3];
     for (int d = 0; d < 3; d++) {
       ib[d] = -m3->sw;
@@ -879,24 +864,15 @@ collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
   MPI_Waitall(total_recvs, recv_reqs, MPI_STATUSES_IGNORE);
   free(recv_reqs);
 
-  // FIXME, use gps
-  rr = 0;
-  for (int gp = 0; gp < nr_global_patches; gp++) {
+  for (int rr = 0; rr < total_recvs; rr++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(m3->domain, gp, &info);
+    mrc_domain_get_global_patch_info(m3->domain, gps[rr], &info);
     int *off = info.off;
-    // skip local patches for now
-    if (info.rank == io->rank) {
-      continue;
-    }
+    // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     f3->ib, f3->im);
-    if (!has_intersection) {
-      continue;
-    }
-    struct mrc_f3 *recv_f3 = recv_f3s[rr++];
+    find_intersection(ilo, ihi, info.off, info.ldims, f3->ib, f3->im);
 
+    struct mrc_f3 *recv_f3 = recv_f3s[rr];
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
@@ -905,10 +881,10 @@ collective_recv_f3(struct mrc_io *io, struct mrc_f3 *f3,
 	}
       }
     }
-    
     mrc_f3_destroy(recv_f3);
   }
 
+  free(recv_f3s);
   free(gps);
 
   // local part
