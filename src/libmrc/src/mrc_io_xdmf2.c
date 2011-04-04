@@ -27,6 +27,8 @@ struct xdmf {
   // parallel, collective only
   bool use_independent_io;
   // collective only
+  char *romio_cb_write;
+  char *romio_ds_write;
   int nr_writers;
   MPI_Comm comm_writers; //< communicator for only the writers
   int *writers;          //< rank (in mrc_io comm) for each writer
@@ -44,6 +46,8 @@ static struct param xdmf_parallel_descr[] = {
 static struct param xdmf_collective_descr[] = {
   { "use_independent_io"     , VAR(use_independent_io)      , PARAM_BOOL(false)      },
   { "nr_writers"             , VAR(nr_writers)              , PARAM_INT(1)           },
+  { "romio_cb_write"         , VAR(romio_cb_write)          , PARAM_STRING(NULL)     },
+  { "romio_ds_write"         , VAR(romio_ds_write)          , PARAM_STRING(NULL)     },
   {},
 };
 #undef VAR
@@ -617,9 +621,18 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
     struct xdmf_file *file = &xdmf->file;
 
     hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(plist, xdmf->comm_writers, MPI_INFO_NULL);
+    MPI_Info info;
+    MPI_Info_create(&info);
+    if (xdmf->romio_cb_write) {
+      MPI_Info_set(info, "romio_cb_write", xdmf->romio_cb_write);
+    }
+    if (xdmf->romio_ds_write) {
+      MPI_Info_set(info, "romio_ds_write", xdmf->romio_ds_write);
+    }
+    H5Pset_fapl_mpio(plist, xdmf->comm_writers, info);
     file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5Pclose(plist);
+    MPI_Info_free(&info);
 
     xdmf_spatial_open(&file->xdmf_spatial_list);
   }
