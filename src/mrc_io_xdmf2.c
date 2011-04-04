@@ -739,17 +739,17 @@ get_writer_off_dims(struct collective_ctx *ctx, int writer,
 }
 
 // ----------------------------------------------------------------------
-// collective_send_f3
+// collective_send_f3_begin
 
 static void
-collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io, struct mrc_m3 *m3, int m)
+collective_send_f3_begin(struct collective_ctx *ctx, struct mrc_io *io,
+			 struct mrc_m3 *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  ctx->total_sends = 0;
-
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
+  ctx->total_sends = 0;
   for (int p = 0; p < nr_patches; p++) {
     int *off = patches[p].off, *ldims = patches[p].ldims;
     for (int writer = 0; writer < xdmf->nr_writers; writer++) {
@@ -798,9 +798,28 @@ collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io, struct mrc_m3 
       mrc_m3_patch_put(m3);
     }
   }
+}
 
+// ----------------------------------------------------------------------
+// collective_send_f3_end
+
+static void
+collective_send_f3_end(struct collective_ctx *ctx, struct mrc_io *io,
+		       struct mrc_m3 *m3, int m)
+{
   MPI_Waitall(ctx->total_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
   free(ctx->send_reqs);
+}
+    
+// ----------------------------------------------------------------------
+// collective_send_f3
+
+static void
+collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io,
+		   struct mrc_m3 *m3, int m)
+{
+  collective_send_f3_begin(ctx, io, m3, m);
+  collective_send_f3_end(ctx, io, m3, m);
 }
     
 // ----------------------------------------------------------------------
