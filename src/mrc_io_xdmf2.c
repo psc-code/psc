@@ -714,35 +714,37 @@ find_intersection(int *ilo, int *ihi, int *ib1, int *im1, int *ib2, int *im2)
   return true;
 }
 
+struct collective_ctx {
+  int gdims[3];
+  int slow_dim;
+  int slow_indices_per_writer;
+  int slow_indices_rmndr;
+};
+
 static void
-get_writer_off_dims(int writer, int *writer_off, int *writer_dims,
-		    int *gdims, int slow_dim, int slow_indices_per_writer,
-		    int slow_indices_rmndr)
+get_writer_off_dims(struct collective_ctx *ctx, int writer,
+		    int *writer_off, int *writer_dims)
 {
     for (int d = 0; d < 3; d++) {
-      writer_dims[d] = gdims[d];
+      writer_dims[d] = ctx->gdims[d];
       writer_off[d] = 0;
     }
-    writer_dims[slow_dim] = slow_indices_per_writer + (writer < slow_indices_rmndr);
-    if (writer < slow_indices_rmndr) {
-      writer_off[slow_dim] = (slow_indices_per_writer + 1) * writer;
+    writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
+    if (writer < ctx->slow_indices_rmndr) {
+      writer_off[ctx->slow_dim] = (ctx->slow_indices_per_writer + 1) * writer;
     } else {
-      writer_off[slow_dim] = slow_indices_rmndr +
-	slow_indices_per_writer * writer;
+      writer_off[ctx->slow_dim] = ctx->slow_indices_rmndr +
+	ctx->slow_indices_per_writer * writer;
     }
 }
 
 static void
-collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
-		   int slow_dim, int slow_indices_per_writer,
-		   int slow_indices_rmndr)
+collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io, struct mrc_m3 *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
   int total_sends = 0;
 
-  int gdims[3];
-  mrc_domain_get_global_dims(m3->domain, gdims);
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
   for (int p = 0; p < nr_patches; p++) {
@@ -753,9 +755,7 @@ collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
 	continue;
       }
       int writer_off[3], writer_dims[3];
-      get_writer_off_dims(writer, writer_off, writer_dims,
-			  gdims, slow_dim, slow_indices_per_writer,
-			  slow_indices_rmndr);
+      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
       int ilo[3], ihi[3];
       bool has_intersection =
 	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
@@ -777,9 +777,7 @@ collective_send_f3(struct mrc_io *io, struct mrc_m3 *m3, int m,
 	continue;
       }
       int writer_off[3], writer_dims[3];
-      get_writer_off_dims(writer, writer_off, writer_dims,
-			  gdims, slow_dim, slow_indices_per_writer,
-			  slow_indices_rmndr);
+      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
       int ilo[3], ihi[3];
       bool has_intersection =
 	find_intersection(ilo, ihi, off, ldims, writer_off, writer_dims);
@@ -923,24 +921,29 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  int gdims[3];
-  mrc_domain_get_global_dims(m3->domain, gdims);
-  int slow_dim = 2;
-  while (gdims[slow_dim] == 1) {
-    slow_dim--;
+  struct collective_ctx ctx;
+  mrc_domain_get_global_dims(m3->domain, ctx.gdims);
+  ctx.slow_dim = 2;
+  while (ctx.gdims[ctx.slow_dim] == 1) {
+    ctx.slow_dim--;
   }
-  assert(slow_dim >= 0);
-  int total_slow_indices = gdims[slow_dim];
-  int slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
-  int slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
+  assert(ctx.slow_dim >= 0);
+  int total_slow_indices = ctx.gdims[ctx.slow_dim];
+  ctx.slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
+  ctx.slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
   struct mrc_f3 *f3 = NULL;
   if (xdmf->is_writer) {
     int writer_rank;
     MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
     int writer_dims[3], writer_off[3];
-    get_writer_off_dims(writer_rank, writer_off, writer_dims,
-			gdims, slow_dim, slow_indices_per_writer,
-			slow_indices_rmndr);
+    int writer = -1;
+    for (int i = 0; i < xdmf->nr_writers; i++) {
+      if (xdmf->writers[i] == writer_rank) {
+	writer = i;
+	break;
+      }
+    }
+    get_writer_off_dims(&ctx, writer, writer_off, writer_dims);
     /* mprintf("writer_off %d %d %d dims %d %d %d\n", */
     /* 	    writer_off[0], writer_off[1], writer_off[2], */
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
@@ -968,8 +971,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
 
     for (int m = 0; m < m3->nr_comp; m++) {
-      collective_send_f3(io, m3, m, slow_dim,
-			 slow_indices_per_writer, slow_indices_rmndr);
+      collective_send_f3(&ctx, io, m3, m);
       collective_recv_f3(io, f3, m3, m);
       collective_write_f3(io, path, f3, m, m3, xs, group0);
     }
@@ -978,8 +980,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     mrc_f3_destroy(f3);
   } else {
     for (int m = 0; m < m3->nr_comp; m++) {
-      collective_send_f3(io, m3, m, slow_dim, 
-			 slow_indices_per_writer, slow_indices_rmndr);
+      collective_send_f3(&ctx, io, m3, m);
     }
   }
 }
