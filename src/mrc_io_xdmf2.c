@@ -804,15 +804,16 @@ collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io, struct mrc_m3 
 }
     
 // ----------------------------------------------------------------------
-// collective_recv_f3
+// collective_recv_f3_begin
 
 static void
-collective_recv_f3(struct collective_ctx *ctx,
-		   struct mrc_io *io, struct mrc_f3 *f3,
-		   struct mrc_m3 *m3, int m)
+collective_recv_f3_begin(struct collective_ctx *ctx,
+			 struct mrc_io *io, struct mrc_f3 *f3,
+			 struct mrc_m3 *m3)
 {
-  // find out who's sending, OPT: this way is non-scalable
+  // find out who's sending, OPT: this way is not very scalable
   // could also be optimized by just looking at slow_dim
+  // FIXME, figure out pattern and cache, at least across components
 
   int nr_global_patches;
   mrc_domain_get_nr_global_patches(m3->domain, &nr_global_patches);
@@ -865,9 +866,17 @@ collective_recv_f3(struct collective_ctx *ctx,
     MPI_Irecv(recv_f3->arr, recv_f3->len, MPI_FLOAT, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
   }
+}
 
+// ----------------------------------------------------------------------
+// collective_recv_f3
+
+static void
+collective_recv_f3_end(struct collective_ctx *ctx,
+		       struct mrc_io *io, struct mrc_f3 *f3,
+		       struct mrc_m3 *m3, int m)
+{
   MPI_Waitall(ctx->total_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
-  free(ctx->recv_reqs);
 
   for (int rr = 0; rr < ctx->total_recvs; rr++) {
     struct mrc_patch_info info;
@@ -889,11 +898,19 @@ collective_recv_f3(struct collective_ctx *ctx,
     mrc_f3_destroy(recv_f3);
   }
 
+  free(ctx->recv_reqs);
   free(ctx->recv_f3s);
   free(ctx->recv_gps);
+}
 
-  // local part
+// ----------------------------------------------------------------------
+// collective_recv_f3_local
 
+static void
+collective_recv_f3_local(struct collective_ctx *ctx,
+			 struct mrc_io *io, struct mrc_f3 *f3,
+			 struct mrc_m3 *m3, int m)
+{
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m3->domain, &nr_patches);
 
@@ -918,6 +935,19 @@ collective_recv_f3(struct collective_ctx *ctx,
     }
     mrc_m3_patch_put(m3);
   }
+}
+
+// ----------------------------------------------------------------------
+// collective_recv_f3
+
+static void
+collective_recv_f3(struct collective_ctx *ctx,
+		   struct mrc_io *io, struct mrc_f3 *f3,
+		   struct mrc_m3 *m3, int m)
+{
+  collective_recv_f3_begin(ctx, io, f3, m3);
+  collective_recv_f3_end(ctx, io, f3, m3, m);
+  collective_recv_f3_local(ctx, io, f3, m3, m);
 }
 
 // ----------------------------------------------------------------------
