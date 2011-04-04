@@ -812,17 +812,6 @@ collective_send_f3_end(struct collective_ctx *ctx, struct mrc_io *io,
 }
     
 // ----------------------------------------------------------------------
-// collective_send_f3
-
-static void
-collective_send_f3(struct collective_ctx *ctx, struct mrc_io *io,
-		   struct mrc_m3 *m3, int m)
-{
-  collective_send_f3_begin(ctx, io, m3, m);
-  collective_send_f3_end(ctx, io, m3, m);
-}
-    
-// ----------------------------------------------------------------------
 // collective_recv_f3_begin
 
 static void
@@ -957,19 +946,6 @@ collective_recv_f3_local(struct collective_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
-// collective_recv_f3
-
-static void
-collective_recv_f3(struct collective_ctx *ctx,
-		   struct mrc_io *io, struct mrc_f3 *f3,
-		   struct mrc_m3 *m3, int m)
-{
-  collective_recv_f3_begin(ctx, io, f3, m3);
-  collective_recv_f3_end(ctx, io, f3, m3, m);
-  collective_recv_f3_local(ctx, io, f3, m3, m);
-}
-
-// ----------------------------------------------------------------------
 // xdmf_collective_write_m3
 
 static void
@@ -1027,8 +1003,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
 
     for (int m = 0; m < m3->nr_comp; m++) {
-      collective_send_f3(&ctx, io, m3, m);
-      collective_recv_f3(&ctx, io, f3, m3, m);
+      collective_send_f3_begin(&ctx, io, m3, m);
+      collective_send_f3_end(&ctx, io, m3, m);
+      collective_recv_f3_begin(&ctx, io, f3, m3);
+      collective_recv_f3_end(&ctx, io, f3, m3, m);
+      collective_recv_f3_local(&ctx, io, f3, m3, m);
       collective_write_f3(io, path, f3, m, m3, xs, group0);
     }
 
@@ -1036,7 +1015,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     mrc_f3_destroy(f3);
   } else {
     for (int m = 0; m < m3->nr_comp; m++) {
-      collective_send_f3(&ctx, io, m3, m);
+      collective_send_f3_begin(&ctx, io, m3, m);
+      collective_send_f3_end(&ctx, io, m3, m);
     }
   }
 }
