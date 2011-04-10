@@ -300,7 +300,9 @@ xdmf_parallel_open(struct mrc_io *io, const char *mode)
 	  io->step, 0);
 
   hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
+#ifdef H5_HAVE_PARALLEL
   H5Pset_fapl_mpio(plist, io->obj.comm, MPI_INFO_NULL);
+#endif
   file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
   H5Pclose(plist);
 
@@ -495,11 +497,13 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			   H5P_DEFAULT, H5P_DEFAULT);
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+#ifdef H5_HAVE_PARALLEL
     if (xdmf->use_independent_io) {
       H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
     } else {
       H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
     }
+#endif
     for (int p = 0; p < nr_patches_max; p++) {
       if (p >= nr_patches) {
 	if (xdmf->use_independent_io)
@@ -573,6 +577,10 @@ xdmf_collective_setup(struct mrc_io *io)
   struct xdmf *xdmf = to_xdmf(io);
 
   xdmf_setup(io);
+
+#ifndef H5_HAVE_PARALLEL
+  assert(xdmf->nr_writers == 1);
+#endif
   
   if (xdmf->nr_writers > io->size) {
     xdmf->nr_writers = io->size;
@@ -629,7 +637,9 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
     if (xdmf->romio_ds_write) {
       MPI_Info_set(info, "romio_ds_write", xdmf->romio_ds_write);
     }
+#ifdef H5_HAVE_PARALLEL
     H5Pset_fapl_mpio(plist, xdmf->comm_writers, info);
+#endif
     file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5Pclose(plist);
     MPI_Info_free(&info);
@@ -664,8 +674,6 @@ static void
 collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int m,
 		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   int gdims[3];
   mrc_domain_get_global_dims(m3->domain, gdims);
 
@@ -681,11 +689,14 @@ collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int 
   hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			 H5P_DEFAULT, H5P_DEFAULT);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+#ifdef H5_HAVE_PARALLEL
+  struct xdmf *xdmf = to_xdmf(io);
   if (xdmf->use_independent_io) {
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
   } else {
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
+#endif
   hsize_t mdims[3] = { f3->im[2], f3->im[1], f3->im[0] };
   hsize_t foff[3] = { f3->ib[2], f3->ib[1], f3->ib[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
