@@ -7,6 +7,22 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
+dnl Source any special site-specific file
+hname="`hostname`"
+while test -n "$hname"; do
+  file=$srcdir/config/host-$hname
+  AC_MSG_CHECKING([for config $file])
+  if test -f "$file"; then
+    . $file
+    AC_MSG_RESULT([found])
+    break
+  fi
+  AC_MSG_RESULT([no])
+  hname_tmp=$hname
+  hname="`echo $hname | cut -d. -f2-99`"
+  test "$hname_tmp" = "$hname" && break
+done
+
 # Check for (MPI) compilers
 
 AC_PROG_CC([openmpicc mpicc])
