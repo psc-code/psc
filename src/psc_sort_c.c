@@ -18,9 +18,9 @@ find_cell_indices(int p, particles_base_t *pp)
 }
 
 static inline int
-get_cell_index(int p, const particle_base_t *p)
+get_cell_index(int p, const particle_base_t *pp)
 {
-  return p->cni;
+  return pp->cni;
 }
 
 #else

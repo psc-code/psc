@@ -3,6 +3,7 @@
 #include "psc_glue.h"
 
 #include <mrc_profile.h>
+#include <stdlib.h>
 
 // ----------------------------------------------------------------------
 // event_generator_run_patch
