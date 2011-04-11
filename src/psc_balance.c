@@ -1,7 +1,6 @@
 
 #include "psc_balance.h"
 #include "psc_output_fields.h"
-#include "psc_bnd.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
@@ -361,7 +360,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   free(loads_all);
 
   psc_output_fields_destroy(psc->output_fields);
-  psc_bnd_destroy(psc->bnd);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
@@ -377,10 +375,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_fields_setup(psc->output_fields);
-
-  psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
-  psc_bnd_set_from_options(psc->bnd);
-  psc_bnd_setup(psc->bnd);
 }
 
 // FIXME, way too much duplication from the above
@@ -411,7 +405,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   free(loads_all);
 
   psc_output_fields_destroy(psc->output_fields);
-  psc_bnd_destroy(psc->bnd);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
@@ -473,10 +466,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_output_fields_set_from_options(psc->output_fields);
   psc_output_fields_setup(psc->output_fields);
   psc_output_fields_view(psc->output_fields);
-
-  psc->bnd = psc_bnd_create(MPI_COMM_WORLD);
-  psc_bnd_set_from_options(psc->bnd);
-  psc_bnd_setup(psc->bnd);
 }
 
 // ======================================================================
