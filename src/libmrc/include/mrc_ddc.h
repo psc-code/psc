@@ -19,6 +19,7 @@ struct mrc_domain;
 
 void mrc_ddc_set_funcs(struct mrc_ddc *ddc, struct mrc_ddc_funcs *funcs);
 void mrc_ddc_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain);
+struct mrc_domain *mrc_ddc_get_domain(struct mrc_ddc *ddc);
 void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);

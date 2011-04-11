@@ -41,6 +41,17 @@ mrc_ddc_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_get_domain
+
+struct mrc_domain *
+mrc_ddc_get_domain(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
+  assert(ops->get_domain);
+  return ops->get_domain(ddc);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_fill_ghosts
 
 void
