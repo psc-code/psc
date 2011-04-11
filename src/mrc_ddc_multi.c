@@ -127,6 +127,17 @@ mrc_ddc_multi_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_multi_get_domain
+
+static struct mrc_domain *
+mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  return multi->domain;
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_multi_setup
 
 static void
@@ -333,6 +344,7 @@ struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .setup                 = mrc_ddc_multi_setup,
   .destroy               = mrc_ddc_multi_destroy,
   .set_domain            = mrc_ddc_multi_set_domain,
+  .get_domain            = mrc_ddc_multi_get_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
   .get_nei_rank_patch    = mrc_ddc_multi_get_nei_rank_patch,
