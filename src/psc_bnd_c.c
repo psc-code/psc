@@ -139,10 +139,10 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_destroy
+// psc_bnd_c_unsetup
 
 static void
-psc_bnd_c_destroy(struct psc_bnd *bnd)
+psc_bnd_c_unsetup(struct psc_bnd *bnd)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
 
@@ -152,12 +152,41 @@ psc_bnd_c_destroy(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_c_destroy
+
+static void
+psc_bnd_c_destroy(struct psc_bnd *bnd)
+{
+  psc_bnd_c_unsetup(bnd);
+}
+
+// ----------------------------------------------------------------------
+// check_domain
+//
+// check if the underlying mrc_domain changed since setup(),
+// which might happen, e.g., through rebalancing.
+// In this case, do setup() over.
+
+static void
+check_domain(struct psc_bnd *bnd)
+{
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+
+  struct mrc_domain *domain = mrc_ddc_get_domain(bnd_c->ddc);
+  if (domain != psc.mrc_domain) {
+    psc_bnd_c_unsetup(bnd);
+    psc_bnd_setup(bnd);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_c_add_ghosts
 
 static void
 psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  check_domain(bnd);
 
   static int pr;
   if (!pr) {
@@ -165,7 +194,7 @@ psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
   }
   prof_start(pr);
 
-  mrc_ddc_add_ghosts(c_bnd->ddc, mb, me, flds);
+  mrc_ddc_add_ghosts(bnd_c->ddc, mb, me, flds);
 
   prof_stop(pr);
 }
@@ -176,7 +205,8 @@ psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 static void
 psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  check_domain(bnd);
 
   static int pr;
   if (!pr) {
@@ -187,7 +217,7 @@ psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(c_bnd->ddc, mb, me, flds);
+  mrc_ddc_fill_ghosts(bnd_c->ddc, mb, me, flds);
 
   prof_stop(pr);
 }
@@ -240,7 +270,8 @@ calc_domain_bounds(int p, double xb[3], double xe[3],
 static void
 psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  check_domain(bnd);
 
   static int pr_A, pr_B;
   if (!pr_A) {
@@ -249,7 +280,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   }
   prof_start(pr_A);
 
-  struct ddc_particles *ddcp = c_bnd->ddcp;
+  struct ddc_particles *ddcp = bnd_c->ddcp;
 
   double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
@@ -349,7 +380,8 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 static void
 psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
-  struct psc_bnd_c *c_bnd = to_psc_bnd_c(bnd);
+  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  check_domain(bnd);
 
   static int pr;
   if (!pr) {
@@ -357,7 +389,7 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   }
   prof_start(pr);
 
-  struct ddc_particles *ddcp = c_bnd->ddcp_photons;
+  struct ddc_particles *ddcp = bnd_c->ddcp_photons;
 
   double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
