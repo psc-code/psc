@@ -41,7 +41,7 @@ struct prof_globals {
 #ifdef HAVE_LIBPAPI
 
 #include <papi.h>
-
+#include <stdlib.h>
 static inline void
 prof_start(int pr)
 {
