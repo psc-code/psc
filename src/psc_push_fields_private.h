@@ -6,12 +6,17 @@
 
 struct psc_push_fields {
   struct mrc_obj obj;
+  struct psc_bnd_fields *bnd_fields;
 };
 
 struct psc_push_fields_ops {
   MRC_SUBCLASS_OPS(struct psc_push_fields);
-  void (*step_a)(struct psc_push_fields *push, mfields_base_t *flds);
-  void (*step_b)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*push_a_E)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*push_a_H)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*push_b_H)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*push_b_E)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*pml_a)(struct psc_push_fields *push, mfields_base_t *flds);
+  void (*pml_b)(struct psc_push_fields *push, mfields_base_t *flds);
 };
 
 // ======================================================================

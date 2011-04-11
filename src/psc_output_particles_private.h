@@ -16,6 +16,7 @@ struct psc_output_particles_ops {
 
 // ======================================================================
 
+extern struct psc_output_particles_ops psc_output_particles_none_ops;
 extern struct psc_output_particles_ops psc_output_particles_fortran_ops;
 
 #define psc_output_particles_ops(output_particles) ((struct psc_output_particles_ops *)((output_particles)->obj.ops))

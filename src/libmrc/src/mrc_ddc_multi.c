@@ -181,6 +181,42 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_multi_destroy
+
+static void
+mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  for (int p = 0; p < multi->nr_patches; p++) {
+    int dir[3];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
+	    continue;
+	  
+	  int dir1 = mrc_ddc_dir2idx(dir);
+
+	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
+	  free(add_ghosts->send[dir1].buf);
+	  free(add_ghosts->recv[dir1].buf);
+	  
+	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
+	  free(fill_ghosts->send[dir1].buf);
+	  free(fill_ghosts->recv[dir1].buf);
+	}
+      }
+    }
+  }
+  free(multi->add_ghosts);
+  free(multi->fill_ghosts);
+  free(multi->ddc_patches);
+  free(multi->send_reqs);
+  free(multi->recv_reqs);
+}
+
+// ----------------------------------------------------------------------
 // ddc_run
 
 static void
@@ -295,6 +331,7 @@ struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .name                  = "multi",
   .size                  = sizeof(struct mrc_ddc_multi),
   .setup                 = mrc_ddc_multi_setup,
+  .destroy               = mrc_ddc_multi_destroy,
   .set_domain            = mrc_ddc_multi_set_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,

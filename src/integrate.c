@@ -8,6 +8,8 @@
 #include "psc_sort.h"
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
+#include "psc_event_generator.h"
+#include "psc_balance.h"
 
 #include <mrc_common.h>
 #include <mrc_profile.h>
@@ -25,6 +27,7 @@ enum {
   STAT_TIME_COLLISION,
   STAT_TIME_OUT_FIELD,
   STAT_TIME_OUT_PARTICLE,
+  STAT_TIME_BALANCE,
   NR_STATS,
 };
 
@@ -38,6 +41,7 @@ static const char *stat_name[NR_STATS] = {
   [STAT_TIME_COLLISION]    = "time part. collision",
   [STAT_TIME_OUT_FIELD]    = "time field output",
   [STAT_TIME_OUT_PARTICLE] = "time particle output",
+  [STAT_TIME_BALANCE]      = "time balance",
 };
 
 #define time_start(n) do {			\
@@ -107,14 +111,16 @@ psc_integrate(struct psc *psc)
     psc_output_particles_run(psc->output_particles, particles);
     time_stop(STAT_TIME_OUT_PARTICLE);
 
+    time_start(STAT_TIME_BALANCE);
+    psc_balance_run(psc->balance, psc);
+    time_stop(STAT_TIME_BALANCE);
+
     time_start(STAT_TIME_RANDOMIZE);
     psc_randomize_run(psc->randomize, particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    if (psc->timestep % 10 == 0) {
-      psc_sort_run(psc->sort, particles);
-    }
+    psc_sort_run(psc->sort, particles);
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
@@ -133,6 +139,10 @@ psc_integrate(struct psc *psc)
     psc_bnd_fill_ghosts(psc->bnd, flds, JXI, JXI + 3);
     psc_bnd_exchange_particles(psc->bnd, particles);
     time_stop(STAT_TIME_PARTICLE);
+
+    psc_push_photons_run(&psc->mphotons);
+    psc_bnd_exchange_photons(psc->bnd, &psc->mphotons);
+    psc_event_generator_run(psc->event_generator, particles, flds, &psc->mphotons);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);

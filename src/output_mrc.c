@@ -1,11 +1,13 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 
 #include <mrc_common.h>
 #include <mrc_io.h>
 
 #include <math.h>
+#include <string.h>
 
 enum {
   IO_TYPE_PFD,
@@ -13,6 +15,7 @@ enum {
   NR_IO_TYPES,
 };
 
+// FIXME, part of subctx
 static struct mrc_io *ios[NR_IO_TYPES];
 
 // ----------------------------------------------------------------------
@@ -32,11 +35,30 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
 }
 
 // ----------------------------------------------------------------------
-// mrc_write_fields
+// psc_output_format_mrc_destroy
 
 static void
-mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-		  const char *pfx)
+psc_output_format_mrc_destroy(struct psc_output_format *format)
+{
+  // FIXME, this makes mrc_io persistent across new objects from
+  // this class (see that static var above), which is bad, but actually
+  // helps getting a proper temporal XDMF file...
+  return;
+  
+  for (int i = 0; i < NR_IO_TYPES; i++) {
+    mrc_io_destroy(ios[i]);
+    ios[i] = NULL;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_output_format_mrc_write_fields
+
+static void
+psc_output_format_mrc_write_fields(struct psc_output_format *format,
+				   struct psc_output_fields_c *out,
+				   struct psc_fields_list *list,
+				   const char *pfx)
 {
   int io_type;
   if (strcmp(pfx, "pfd") == 0) {
@@ -80,12 +102,12 @@ mrc_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
 }
 
 // ======================================================================
-// psc_output_format_ops_mrc
+// psc_output_format: subclass "mrc"
 
-struct psc_output_format_ops psc_output_format_ops_mrc = {
-  .name         = "mrc",
-  .write_fields = mrc_write_fields,
+struct psc_output_format_ops psc_output_format_mrc_ops = {
+  .name                  = "mrc",
+  .write_fields          = psc_output_format_mrc_write_fields,
+  .destroy               = psc_output_format_mrc_destroy,
 };
-
 
 

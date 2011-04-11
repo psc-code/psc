@@ -30,4 +30,5 @@ TESTS = \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_multi_1.sh \
 	test_mrc_domain_multi_2.sh \
+	test_mrc_domain_multi_3.sh \
 	test_mrc_ddc_1.sh

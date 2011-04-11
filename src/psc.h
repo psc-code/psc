@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "psc_pulse.h"
+#include "psc_photons.h"
 
 // ----------------------------------------------------------------------
 
@@ -254,15 +254,24 @@ enum {
 
 struct psc_domain {
   double length[3];
+  double corner[3];
   int gdims[3];
   int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
   bool use_pml;
 };
 
-void mfields_base_alloc(mfields_base_t *flds, int nr_fields);
+void mfields_base_alloc(struct mrc_domain *domain, mfields_base_t *flds,
+			int nr_fields, int ibn[3]);
 void mfields_base_destroy(mfields_base_t *flds);
 
+void mparticles_base_alloc(struct mrc_domain *domain, mparticles_base_t *particles,
+			   int *nr_particles_by_patch);
 void mparticles_base_destroy(mparticles_base_t *particles);
+
+// FIXME, turn into mrc_obj
+void psc_push_photons_run(mphotons_t *mphotons);
+// FIXME, turn into mrc_obj
+void psc_photon_generator_run(mphotons_t *mphotons);
 
 // ----------------------------------------------------------------------
 // general info / parameters for the code
@@ -276,9 +285,9 @@ struct psc_patch {
   double xb[3];       // lower left corner of the domain in this patch
 };
 
-#define CRDX(p, jx) (psc->dx[0] * ((jx) + psc->patch[p].off[0]))
-#define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]))
-#define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]))
+#define CRDX(p, jx) (psc->dx[0] * ((jx) + psc->patch[p].off[0]) + psc->domain.corner[0])
+#define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]) + psc->domain.corner[1])
+#define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]) + psc->domain.corner[2])
 
 struct psc {
   struct psc_push_particles *push_particles;
@@ -290,19 +299,9 @@ struct psc {
   struct psc_output_fields *output_fields;
   struct psc_output_particles *output_particles;
   struct psc_moments *moments;
+  struct psc_event_generator *event_generator;
+  struct psc_balance *balance;
 
-  struct psc_pulse *pulse_p_x1;
-  struct psc_pulse *pulse_s_x1;
-  struct psc_pulse *pulse_p_x2;
-  struct psc_pulse *pulse_s_x2;
-  struct psc_pulse *pulse_p_y1;
-  struct psc_pulse *pulse_s_y1;
-  struct psc_pulse *pulse_p_y2;
-  struct psc_pulse *pulse_s_y2;
-  struct psc_pulse *pulse_p_z1;
-  struct psc_pulse *pulse_s_z1;
-  struct psc_pulse *pulse_p_z2;
-  struct psc_pulse *pulse_s_z2;
   // user-configurable parameters
   struct psc_param prm;
   struct psc_coeff coeff;
@@ -317,6 +316,7 @@ struct psc {
 
   mparticles_base_t particles;
   mfields_base_t flds;
+  mphotons_t mphotons;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
@@ -422,8 +422,10 @@ void psc_integrate(struct psc *psc);
 
 void psc_set_default_domain(struct psc *psc);
 void psc_set_from_options_domain(struct psc *psc);
+struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
 void psc_setup_domain(struct psc *psc);
 void psc_view_domain(struct psc *psc);
+void psc_destroy_domain(struct psc *psc);
 
 void psc_set_default_psc(struct psc *psc);
 void psc_set_from_options_psc(struct psc *psc);
@@ -438,25 +440,15 @@ void psc_check_particles(mparticles_base_t *particles);
 void psc_read_checkpoint(void);
 void psc_write_checkpoint(void);
 
-real psc_p_pulse_x1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_x1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_x2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_x2(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_y1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_y1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_y2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_y2(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_z1(real xx, real yy, real zz, real tt);
-real psc_s_pulse_z1(real xx, real yy, real zz, real tt);
-
-real psc_p_pulse_z2(real xx, real yy, real zz, real tt);
-real psc_s_pulse_z2(real xx, real yy, real zz, real tt);
-
 void psc_setup_fortran(struct psc *psc);
+
+// FIXME, only used for one thing, could be consolidated?
+
+static inline int
+particle_base_real_nint(particle_base_real_t x)
+{
+  return (int)(x + 10.5f) - 10;
+}
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

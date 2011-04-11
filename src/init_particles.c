@@ -42,12 +42,12 @@ pml_find_bounds(struct psc *psc, int p, int ilo[3], int ihi[3])
 }
 
 void
-psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
+psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
+			int *particle_label_offset)
 {
   struct psc *psc = _case->psc;
 
   int np_total = 0;
-  psc->particles.p = calloc(psc->nr_patches, sizeof(*psc->particles.p));
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
@@ -68,10 +68,10 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 	}
       }
     }
-
-    particles_base_alloc(&psc->particles.p[p], np);
+    nr_particles_by_patch[p] = np;
     np_total += np;
   }
+
   // calculate global particle label offset for unique numbering
   *particle_label_offset = 0; // necessary on proc 0
   MPI_Exscan(&np_total, particle_label_offset, 1, MPI_INT, MPI_SUM,
@@ -79,7 +79,8 @@ psc_case_init_partition(struct psc_case *_case, int *particle_label_offset)
 }
 
 void
-psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
+psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
+			int particle_label_offset)
 {
   struct psc *psc = _case->psc;
   double beta = psc->coeff.beta;
@@ -155,5 +156,6 @@ psc_case_init_particles(struct psc_case *_case, int particle_label_offset)
       }
     }
     pp->n_part = i;
+    assert(pp->n_part == nr_particles_by_patch[p]);
   }
 }

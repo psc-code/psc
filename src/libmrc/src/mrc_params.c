@@ -10,8 +10,8 @@
 #include <assert.h>
 
 struct option {
-  const char *name;
-  const char *value;
+  char *name;
+  char *value;
   list_t entry;
 };
 
@@ -37,6 +37,18 @@ libmrc_params_init(int argc, char **argv)
       i++;
     }
     list_add_tail(&opt->entry, &option_list);
+  }
+}
+
+void
+libmrc_params_finalize()
+{
+  while (!list_empty(&option_list)) {
+    struct option *opt = list_entry(option_list.next, struct option, entry);
+    list_del(&opt->entry);
+    free(opt->name);
+    free(opt->value);
+    free(opt);
   }
 }
 
@@ -222,7 +234,29 @@ mrc_params_get_option_float3(const char *name, float *pval)
     retval = 0;
     int rv = sscanf(p->value, "%g", pval + d);
     if (rv != 1) {
-      fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
+      fprintf(stderr, "error: cannot parse float from '%s'\n", p->value);
+      abort();
+    }
+  }
+  return retval;
+}
+
+int
+mrc_params_get_option_double3(const char *name, double *pval)
+{
+  int retval = -1;
+  char namex[strlen(name) + 2];
+  for (int d = 0; d < 3; d++) {
+    sprintf(namex, "%s%c", name, 'x' + d);
+    struct option *p = find_option(namex);
+  
+    if (!p)
+      continue;
+    
+    retval = 0;
+    int rv = sscanf(p->value, "%lg", pval + d);
+    if (rv != 1) {
+      fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
       abort();
     }
   }
@@ -263,6 +297,11 @@ mrc_params_set_default(void *p, struct param *params)
 	pv->u_float3[d] = params[i].u.ini_float3[d];
       }
       break;
+    case PT_DOUBLE3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_double3[d] = params[i].u.ini_double3[d];
+      }
+      break;
     default:
       assert(0);
     }
@@ -292,6 +331,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_FLOAT:
       pv->u_float = pval->u_float;
       break;
+    case PT_DOUBLE:
+      pv->u_double = pval->u_double;
+      break;
     case PT_STRING:
       pv->u_string = pval->u_string;
       break;
@@ -306,6 +348,11 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_FLOAT3:
       for (int d = 0; d < 3; d++) {
 	pv->u_float3[d] = pval->u_float3[d];
+      }
+      break;
+    case PT_DOUBLE3:
+      for (int d = 0; d < 3; d++) {
+	pv->u_double3[d] = pval->u_double3[d];
       }
       break;
     default:
@@ -440,6 +487,9 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_FLOAT3:
       mrc_params_get_option_float3(params[i].name, &pv->u_float3[0]);
       break;
+    case PT_DOUBLE3:
+      mrc_params_get_option_double3(params[i].name, &pv->u_double3[0]);
+      break;
     default:
       assert(0);
     }
@@ -478,6 +528,9 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       break;
     case PT_FLOAT3:
       mrc_params_get_option_float3(name, &pv->u_float3[0]);
+      break;
+    case PT_DOUBLE3:
+      mrc_params_get_option_double3(name, &pv->u_double3[0]);
       break;
     default:
       assert(0);
@@ -520,6 +573,10 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     case PT_FLOAT3:
       mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
 		 pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
+      break;
+    case PT_DOUBLE3:
+      mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
+		 pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
       break;
     }
   }

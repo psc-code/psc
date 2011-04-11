@@ -24,6 +24,7 @@ typedef struct {
 
 typedef struct {
   particles_c_t *p;
+  int nr_patches;
 } mparticles_c_t;
 
 void particles_c_alloc(particles_c_t *pp, int n_part);

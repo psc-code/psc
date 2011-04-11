@@ -1,6 +1,12 @@
 
 #include "psc_case_private.h"
 
+#include <psc_push_fields.h>
+#include <psc_bnd_fields.h>
+#include <psc_balance.h>
+#include <mrc_params.h>
+#include <stdlib.h>
+
 // ----------------------------------------------------------------------
 // psc_init_field_pml helper
 
@@ -26,6 +32,15 @@ static void
 _psc_case_create(struct psc_case *_case)
 {
   _case->psc = psc_create();
+}
+
+// ----------------------------------------------------------------------
+// _psc_case_destroy
+
+static void
+_psc_case_destroy(struct psc_case *_case)
+{
+  psc_destroy(_case->psc);
 }
 
 // ----------------------------------------------------------------------
@@ -56,15 +71,23 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize particles
   int particle_label_offset;
-  psc_case_init_partition(_case, &particle_label_offset);
-  psc_case_init_particles(_case, particle_label_offset);
+  int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
+  psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
+  psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
+
+  mparticles_base_alloc(psc->mrc_domain, &psc->particles, nr_particles_by_patch);
+  psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
+  free(nr_particles_by_patch);
 
   // alloc / initialize fields
-  mfields_base_alloc(&psc->flds, NR_FIELDS);
+  mfields_base_alloc(psc->mrc_domain, &psc->flds, NR_FIELDS, psc->ibn);
   psc_case_init_field(_case, &psc->flds);
   if (psc->domain.use_pml) {
     psc_init_field_pml(_case, &psc->flds);
   }
+
+  // alloc / initialize photons
+  psc_case_init_photons(_case);
 
   psc_setup_fortran(psc);
 }
@@ -79,7 +102,7 @@ _psc_case_view(struct psc_case *_case)
 }
 
 // ----------------------------------------------------------------------
-// _psc_case_init_npt
+// psc_case_init_npt
 
 void
 psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
@@ -92,15 +115,20 @@ psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
 }
 
 // ----------------------------------------------------------------------
-// _psc_case_init_field
+// psc_case_init_field
 
 void
 psc_case_init_field(struct psc_case *_case, mfields_base_t *flds)
 {
-  if (!psc_case_ops(_case)->init_field)
-    return;
+  // setup pulses etc
+  struct psc_bnd_fields *bnd_fields =
+    psc_push_fields_get_bnd_fields(_case->psc->push_fields);
+  psc_bnd_fields_setup_fields(bnd_fields, flds);
 
-  psc_case_ops(_case)->init_field(_case, flds);
+  // case-specific other initial condition
+  if (psc_case_ops(_case)->init_field) {
+    psc_case_ops(_case)->init_field(_case, flds);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -137,6 +165,8 @@ psc_case_init()
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_collisions_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_cone_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_microsphere_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_photon_test_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_bubble_ops);
 }
 
 // ======================================================================
@@ -155,6 +185,7 @@ struct mrc_class_psc_case mrc_class_psc_case = {
   .init             = psc_case_init,
   .param_descr      = psc_case_descr,
   .create           = _psc_case_create,
+  .destroy          = _psc_case_destroy,
   .set_from_options = _psc_case_set_from_options,
   .setup            = _psc_case_setup,
   .view             = _psc_case_view,

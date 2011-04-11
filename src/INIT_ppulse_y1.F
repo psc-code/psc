@@ -1,16 +1,5 @@
 c Laser pulse initialization (p-polarization).
 
-      function p_pulse_y1(x,y,z,t)
-
-      implicit none
-      real(kind=8) :: t,x,y,z
-      real(kind=8) :: p_pulse_y1
-      real(kind=8) :: C_p_pulse_y1
-
-      p_pulse_y1 = C_p_pulse_y1(x,y,z,t)
-
-      end function p_pulse_y1
-
 c Dies ist der blaue Probe von links
 c Beachte: Intensität zurück auf 0.1 setzen !!
 

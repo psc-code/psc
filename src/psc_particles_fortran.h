@@ -28,6 +28,7 @@ typedef struct {
 
 typedef struct {
   particles_fortran_t *p;
+  int nr_patches;
 } mparticles_fortran_t;
 
 void particles_fortran_alloc(particles_fortran_t *pp, int n_part);

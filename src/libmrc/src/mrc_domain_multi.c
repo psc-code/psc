@@ -157,6 +157,9 @@ sfc_hilbert_setup(struct mrc_domain_multi *multi)
 static int
 sfc_hilbert_idx3_to_gpatch(struct mrc_domain_multi *multi, const int p[3])
 {
+  if (multi->hilbert_nr_dims == 0)
+    return 0;
+
   int nbits_max = multi->nbits_max;
 
   bitmask_t p_bm[3];
@@ -222,40 +225,18 @@ sfc_gpatch_to_idx3(struct mrc_domain_multi *multi, int gpatch, int p[3])
 // ======================================================================
 
 static void
-get_nr_patches_gpatch_off(struct mrc_domain *domain, int rank,
-			  int *nr_patches, int *gpatch_off)
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-
-  *nr_patches = patches_per_proc + (rank < patches_per_proc_rmndr);
-  if (rank < patches_per_proc_rmndr) {
-    *gpatch_off = rank * (patches_per_proc + 1);
-  } else {
-    *gpatch_off = rank * patches_per_proc + patches_per_proc_rmndr;
-  }
-}
-
-static void
 gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 		     int *rank, int *patch)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
-  int patches_per_proc = nr_global_patches / domain->size;
-  int patches_per_proc_rmndr = nr_global_patches % domain->size;
-  
-  if (gpatch < (patches_per_proc + 1) * patches_per_proc_rmndr) {
-    *rank = gpatch / (patches_per_proc + 1);
-    *patch = gpatch % (patches_per_proc + 1);
-  } else {
-    int tmp = gpatch - (patches_per_proc + 1) * patches_per_proc_rmndr;
-    *rank = tmp / patches_per_proc + patches_per_proc_rmndr;
-    *patch = tmp % patches_per_proc;
+  // FIXME, this can be done much more efficiently using binary search...
+  for (int i = 0; i < domain->size; i++) {
+    if (gpatch < multi->gpatch_off_all[i+1]) {
+      *rank = i;
+      *patch = gpatch - multi->gpatch_off_all[i];
+      break;
+    }
   }
 }
 
@@ -310,6 +291,42 @@ mrc_domain_multi_get_local_patch_info(struct mrc_domain *domain, int patch,
 }
 
 static void
+setup_gpatch_off_all(struct mrc_domain *domain)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
+  int gpatch_off = 0;
+  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+
+  if (multi->nr_patches > -1) {
+    // prescribed mapping patch <-> proc
+    MPI_Comm comm = mrc_domain_comm(domain);
+    int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
+    MPI_Gather(&multi->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT,
+	       0, comm);
+    MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, comm);
+
+    for (int i = 0; i < domain->size; i++) {
+      multi->gpatch_off_all[i] = gpatch_off;
+      int nr_patches = nr_patches_all[i];
+      gpatch_off += nr_patches;
+    }
+    free(nr_patches_all);
+  } else {
+    // map patch <-> proc uniformly (roughly)
+    int patches_per_proc = nr_global_patches / domain->size;
+    int patches_per_proc_rmndr = nr_global_patches % domain->size;
+    for (int i = 0; i < domain->size; i++) {
+      multi->gpatch_off_all[i] = gpatch_off;
+      int nr_patches = patches_per_proc + (i < patches_per_proc_rmndr);
+      gpatch_off += nr_patches;
+    }
+  }
+  multi->gpatch_off_all[domain->size] = nr_global_patches;
+}
+
+static void
 mrc_domain_multi_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -338,8 +355,10 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
 
   sfc_setup(multi);
 
-  get_nr_patches_gpatch_off(domain, domain->rank,
-			    &multi->nr_patches, &multi->gpatch_off);
+  setup_gpatch_off_all(domain);
+
+  multi->gpatch_off = multi->gpatch_off_all[domain->rank];
+  multi->nr_patches = multi->gpatch_off_all[domain->rank+1] - multi->gpatch_off;
 
   multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
   for (int p = 0; p < multi->nr_patches; p++) {
@@ -357,6 +376,11 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  for (int d = 0; d < 3; d++) {
+    free(multi->ldims[d]);
+    free(multi->off[d]);
+  }
+  free(multi->gpatch_off_all);
   free(multi->patches);
 }
 
@@ -523,6 +547,7 @@ static struct param mrc_domain_multi_params_descr[] = {
 							    bc_descr) },
   { "curve_type"      , VAR(curve_type)      , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
+  { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
   {},
 };
 #undef VAR

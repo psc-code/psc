@@ -13,18 +13,18 @@ libpsc_a_SOURCES = \
 	OUT_params.F OUT_poyc.F \
 	PIC_pml_msa.F PIC_pml_msb.F \
 	PIC_msa.F PIC_msb.F \
-	INIT_ppulse_x1.F INIT_spulse_x1.F \
-	INIT_ppulse_x2.F INIT_spulse_x2.F \
-	INIT_ppulse_y1.F INIT_spulse_y1.F \
-	INIT_ppulse_y2.F INIT_spulse_y2.F \
-	INIT_ppulse_z1.F INIT_spulse_z1.F \
-	INIT_ppulse_z2.F INIT_spulse_z2.F \
 	init_parameters.c init_particles.c \
+	init_photons.c \
 	INIT_param.F \
 	psc.h psc_glue.c psc.c testing.c \
 	integrate.c \
 	psc_fields_fortran.c psc_fields_c.c \
 	psc_particles_fortran.c psc_particles_c.c \
+	psc_photons.c \
+	psc_push_photons.c \
+	psc_event_generator.c \
+	psc_event_generator_none.c \
+	psc_event_generator_demo.c \
 	PIC_move_part_xyz.F \
 	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_x.F PIC_move_part_y.F PIC_move_part_z.F \
@@ -36,7 +36,6 @@ libpsc_a_SOURCES = \
 	CALC_moments.F \
 	SERV_labelgen.F \
 	INIT_param.F INIT_field.F \
-	pulse.c pulse_gauss.c pulse_flattop.c \
 	PIC_bin_coll.F \
 	psc_case.c \
 	mfields.c \
@@ -44,16 +43,26 @@ libpsc_a_SOURCES = \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
+	psc_bnd_fields.c \
+	psc_bnd_fields_fortran.c \
+	psc_bnd_fields_none.c \
+	ddc_particles.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
 	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
 	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
-	psc_output_particles.c psc_output_particles_fortran.c \
+	psc_output_format.c \
+	psc_output_particles.c psc_output_particles_none.c \
+	psc_output_particles_fortran.c \
 	output_c_combine.c \
 	output_binary.c output_vtk.c output_vtk_binary.c \
 	output_mrc.c \
 	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
 	psc_pulse.c \
+	psc_pulse_none.c \
+	psc_pulse_gauss.c \
+	psc_pulse_flattop.c \
+	psc_balance.c \
 	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
@@ -68,6 +77,8 @@ libpsc_a_SOURCES = \
 	case_collisions.c \
 	case_cone.c \
 	case_microsphere.c \
+	case_photon_test.c \
+	case_bubble.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5

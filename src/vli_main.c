@@ -2,6 +2,8 @@
 #include "psc.h"
 #include "psc_case.h"
 
+#include <mrc_params.h>
+
 int
 main(int argc, char **argv)
 {
@@ -16,5 +18,6 @@ main(int argc, char **argv)
   psc_integrate(psc);
   psc_case_destroy(_case);
 
+  libmrc_params_finalize();
   MPI_Finalize();
 }

@@ -1,15 +1,4 @@
 
-      function s_pulse_z2(x,y,z,t)
-
-      implicit none
-      real(kind=8) :: t,x,y,z
-      real(kind=8) :: s_pulse_z2
-      real(kind=8) :: C_s_pulse_z2
-
-      s_pulse_z2 = C_s_pulse_z2(x,y,z,t)
-
-      end function s_pulse_z2
-
 c Laser pulse initialization (p-polarization).
 
       function s_pulse_z2_(x,y,z,t)

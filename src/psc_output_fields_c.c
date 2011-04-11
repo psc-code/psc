@@ -1,8 +1,11 @@
 
 #include "psc_output_fields_c.h"
+#include "psc_output_format.h"
 #include "psc_moments.h"
 
 #include <mrc_profile.h>
+#include <mrc_params.h>
+#include <string.h>
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
@@ -164,13 +167,20 @@ calc_vv(mfields_base_t *flds, mparticles_base_t *particles,
   return psc_moments_calc_vv(psc.moments, flds, particles, res);
 }
 
+static void
+calc_photon_n(mfields_base_t *flds, mparticles_base_t *particles,
+	      mfields_base_t *res)
+{
+  return psc_moments_calc_photon_n(psc.moments, &psc.mphotons, res);
+}
+
 static struct output_field output_fields[] = {
   { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
     .calc = calc_densities },
   { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
     .calc = calc_v },
-  { .name = "vv"    , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
-						   "vixvix", "viyviy", "vizivz" },
+  { .name = "vv"   , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
+						  "vixvix", "viyviy", "vizivz" },
     .calc = calc_vv },
   { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
@@ -186,6 +196,8 @@ static struct output_field output_fields[] = {
     .calc = calc_E2 },
   { .name = "h2"   , .nr_comp = 3, .fld_names = { "hx2", "hy2", "hz2" },
     .calc = calc_H2 },
+  { .name = "photon_n", .nr_comp = 1, .fld_names = { "photon_n" },
+    .calc = calc_photon_n },
   {},
 };
 
@@ -202,38 +214,48 @@ find_output_field(const char *name)
   abort();
 }
 
-// ======================================================================
-// find_output_format_ops
+// ----------------------------------------------------------------------
+// psc_output_fields_c_create
 
-// FIXME, this should be converted to mrc_obj, too
-
-static struct psc_output_format_ops *psc_output_format_ops_list[] = {
-  &psc_output_format_ops_binary,
-#ifdef HAVE_LIBHDF5
-  &psc_output_format_ops_hdf5,
-  &psc_output_format_ops_xdmf,
-#endif
-  &psc_output_format_ops_vtk,
-  &psc_output_format_ops_vtk_points,
-  &psc_output_format_ops_vtk_cells,
-  &psc_output_format_ops_vtk_binary,
-  &psc_output_format_ops_mrc,
-  NULL,
-};
-
-static struct psc_output_format_ops *
-find_output_format_ops(const char *ops_name)
+static void
+psc_output_fields_c_create(struct psc_output_fields *out)
 {
-  for (int i = 0; psc_output_format_ops_list[i]; i++) {
-    if (strcasecmp(psc_output_format_ops_list[i]->name, ops_name) == 0)
-      return psc_output_format_ops_list[i];
-  }
-  fprintf(stderr, "ERROR: psc_output_format_ops '%s' not available.\n", ops_name);
-  abort();
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  out_c->format = psc_output_format_create(psc_output_fields_comm(out));
 }
 
 // ----------------------------------------------------------------------
-// output_c_setup
+// psc_output_fields_c_destroy
+
+static void
+psc_output_fields_c_destroy(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+
+  struct psc_fields_list *pfd = &out_c->pfd;
+  for (int i = 0; i < pfd->nr_flds; i++) {
+    mfields_base_destroy(&pfd->flds[i]);
+  }
+  struct psc_fields_list *tfd = &out_c->tfd;
+  for (int i = 0; i < tfd->nr_flds; i++) {
+    mfields_base_destroy(&tfd->flds[i]);
+  }
+
+  psc_output_format_destroy(out_c->format);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_set_from_options
+
+static void
+psc_output_fields_c_set_from_options(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  psc_output_format_set_from_options(out_c->format);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_setup
 
 static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
@@ -242,10 +264,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
-
-  out_c->format_ops = find_output_format_ops(out_c->output_format);
-  if (out_c->format_ops->create) {
-    out_c->format_ops->create();
+  if (psc.timestep > 0) {
+    out_c->pfield_next = psc.timestep + out_c->pfield_step;
+    out_c->tfield_next = psc.timestep + out_c->tfield_step;
   }
 
   struct psc_fields_list *pfd = &out_c->pfd;
@@ -254,28 +275,28 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   // (potentially) on the command line
   pfd->nr_flds = 0;
   // parse comma separated list of fields
-  char *p, *s = strdup(out_c->output_fields);
+  char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
     mfields_base_t *flds = &pfd->flds[pfd->nr_flds];
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->nr_flds++;
 
-    mfields_base_alloc(flds, of->nr_comp);
+    mfields_base_alloc(psc.mrc_domain, flds, of->nr_comp, psc.ibn);
     foreach_patch(pp) {
       for (int m = 0; m < of->nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(of->fld_names[m]);
       }
     }
   }
-  free(s);
+  free(s_orig);
 
   // create tfd to look just like pfd
   // FIXME, only if necessary
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_alloc(&tfd->flds[i], pfd->flds[i].f[0].nr_comp);
+    mfields_base_alloc(psc.mrc_domain, &tfd->flds[i], pfd->flds[i].f[0].nr_comp, psc.ibn);
     foreach_patch(pp) {
       for (int m = 0; m < pfd->flds[i].f[pp].nr_comp; m++) {
 	tfd->flds[i].f[pp].name[m] = strdup(pfd->flds[i].f[pp].name[m]);
@@ -283,6 +304,16 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     }
   }
   out_c->naccum = 0;
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_view
+
+static void
+psc_output_fields_c_view(struct psc_output_fields *out)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  psc_output_format_view(out_c->format);
 }
 
 // ----------------------------------------------------------------------
@@ -355,7 +386,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
        out_c->pfield_next += out_c->pfield_step;
        struct psc_fields_list flds_list;
        make_fields_list(&flds_list, &out_c->pfd);
-       out_c->format_ops->write_fields(out_c, &flds_list, "pfd");
+       psc_output_format_write_fields(out_c->format, out_c, &flds_list, "pfd");
        free_fields_list(&flds_list);
     }
   }
@@ -380,7 +411,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       struct psc_fields_list flds_list;
       make_fields_list(&flds_list, &out_c->tfd);
-      out_c->format_ops->write_fields(out_c, &flds_list, "tfd");
+      psc_output_format_write_fields(out_c->format, out_c, &flds_list, "tfd");
       free_fields_list(&flds_list);
       foreach_patch(p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
@@ -401,7 +432,6 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "output_format"      , VAR(output_format)        , PARAM_STRING("binary")  },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
@@ -423,6 +453,10 @@ struct psc_output_fields_ops psc_output_fields_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_output_fields_c),
   .param_descr           = psc_output_fields_c_descr,
+  .create                = psc_output_fields_c_create,
+  .destroy               = psc_output_fields_c_destroy,
   .setup                 = psc_output_fields_c_setup,
+  .set_from_options      = psc_output_fields_c_set_from_options,
+  .view                  = psc_output_fields_c_view,
   .run                   = psc_output_fields_c_run,
 };

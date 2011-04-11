@@ -19,6 +19,8 @@ struct xdmf_spatial {
   char *name; //< from domain::name
 
   bool crds_done;
+  bool uniform; //< uniform coords
+  float xl[3], dx[3]; //< uniform origin, dx
 
   int nr_global_patches;
   struct mrc_patch_info *patch_infos;
@@ -53,6 +55,9 @@ struct xdmf_spatial *xdmf_spatial_find(list_t *xdmf_spatial_list,
 struct xdmf_spatial *xdmf_spatial_create_m3(list_t *xdmf_spatial_list,
 					    const char *name, 
 					    struct mrc_domain *domain);
+struct xdmf_spatial *xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list,
+						     const char *name, 
+						     struct mrc_domain *domain);
 void xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
 				char *path, bool is_vec);
 

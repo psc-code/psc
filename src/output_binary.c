@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_output_fields_c.h"
+#include "psc_output_format_private.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -32,8 +33,10 @@ binary_write_field(FILE *file, fields_base_t *fld)
 }
 
 static void
-binary_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-		    const char *pfx)
+psc_output_format_binary_write_fields(struct psc_output_format *format,
+				      struct psc_output_fields_c *out,
+				      struct psc_fields_list *list,
+				      const char *pfx)
 {
   struct psc_patch *patch = &psc.patch[0];
   int ihi[3] = { patch->off[0] + patch->ldims[0],
@@ -99,11 +102,12 @@ binary_write_fields(struct psc_output_fields_c *out, struct psc_fields_list *lis
 }
 
 // ======================================================================
-// psc_output_format_ops_binary
+// psc_output_format: subclass "binary"
 
-struct psc_output_format_ops psc_output_format_ops_binary = {
-  .name         = "binary",
-  .write_fields = binary_write_fields,
+struct psc_output_format_ops psc_output_format_binary_ops = {
+  .name                  = "binary",
+  .write_fields          = psc_output_format_binary_write_fields,
 };
+
 
 

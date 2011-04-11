@@ -19,11 +19,29 @@ xdmf_write_header(FILE *f)
 }
 
 static void
+xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
+{
+  fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
+	  im[2] + 1, im[1] + 1, im[0] + 1);
+
+  fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
+  fprintf(f, "     <DataItem Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+  fprintf(f, "        %g %g %g\n", xl[0], xl[1], xl[2]);
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     <DataItem Name=\"DxDyDz\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
+  fprintf(f, "        %g %g %g\n", dx[0], dx[1], dx[2]);
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     </Geometry>\n");
+  fprintf(f, "\n");
+}
+
+static void
 xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
 {
   // FIXME crd[012] hardcoded, should use mrc_m1_name()
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 	  im[2] + 1, im[1] + 1, im[0] + 1);
+
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
   fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
@@ -151,6 +169,41 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   return xs;
 }
 
+struct xdmf_spatial *
+xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name, 
+				struct mrc_domain *domain)
+{
+  // OPT, we could skip this on procs which aren't writing xdmf
+
+  struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
+  xs->name = strdup(name);
+  xs->nr_global_patches = 1;
+  xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
+
+  for (int gp = 0; gp < xs->nr_global_patches; gp++) {
+    mrc_domain_get_global_dims(domain, xs->patch_infos[gp].ldims);
+  }
+
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
+    xs->uniform = true;
+    mrc_crds_get_xl_xh(crds, xs->xl, NULL);
+    mrc_crds_get_dx(crds, xs->dx);
+    int gdims[3];
+    mrc_domain_get_global_dims(domain, gdims);
+    // no extent in invariant directions
+    for (int d = 0; d < 3; d++) {
+      if (gdims[d] == 1) {
+	xs->xl[d] = 0.;
+	xs->dx[d] = 0.;
+      }
+    }
+  }
+
+  list_add_tail(&xs->entry, xdmf_spatial_list);
+  return xs;
+}
+
 void
 xdmf_spatial_save_fld_info(struct xdmf_spatial *xs, char *fld_name,
 			   char *path, bool is_vec)
@@ -173,24 +226,35 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
   FILE *f = fopen(filename, "w");
   xdmf_write_header(f);
   fprintf(f, "<Domain>\n");
-  fprintf(f, "<Grid GridType=\"Collection\" CollectionType=\"Spatial\">\n");
-  fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+  if (xs->nr_global_patches > 1) {
+    fprintf(f, "<Grid GridType=\"Collection\" CollectionType=\"Spatial\">\n");
+    fprintf(f, "<Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+  }
   for (int s = 0; s < xs->nr_global_patches; s++) {
     fprintf(f, "   <Grid Name=\"patch-%s-%d\" GridType=\"Uniform\">\n", xs->name, s);
+    if (xs->nr_global_patches == 1) {
+      fprintf(f, "<Time Type=\"Single\" Value=\"%g\" />\n", io->time);
+    }
     
     char fname[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     int rank = xs->patch_infos[s].rank;
     int patch = xs->patch_infos[s].patch;
     sprintf(fname, "%s.%06d_p%06d.h5", io->par.basename, io->step, rank);
     int *ldims = xs->patch_infos[s].ldims;
-    xdmf_write_topology_m3(f, ldims, fname, patch);
+    if (xs->uniform) {
+      xdmf_write_topology_uniform_m3(f, ldims, xs->xl, xs->dx);
+    } else {
+      xdmf_write_topology_m3(f, ldims, fname, patch);
+    }
     
     for (int m = 0; m < xs->nr_fld_info; m++) {
       xdmf_write_fld_m3(f, &xs->fld_info[m], ldims, fname, patch);
     }
     fprintf(f, "   </Grid>\n");
   }
-  fprintf(f, "</Grid>\n");
+  if (xs->nr_global_patches > 1) {
+    fprintf(f, "</Grid>\n");
+  }
   fprintf(f, "</Domain>\n");
   fprintf(f, "</Xdmf>\n");
   fclose(f);
@@ -199,7 +263,13 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
 void
 xdmf_spatial_destroy(struct xdmf_spatial *xs)
 {
+  for (int m = 0; m < xs->nr_fld_info; m++) {
+    struct xdmf_fld_info *fld_info = &xs->fld_info[m];
+    free(fld_info->name);
+    free(fld_info->path);
+  }
   list_del(&xs->entry);
+  free(xs->name);
   free(xs->patch_infos);
   free(xs);
 }
@@ -217,6 +287,7 @@ xdmf_spatial_close(list_t *xdmf_spatial_list, struct mrc_io *io,
     xdmf_spatial_destroy(xs);
 
     if (io->rank == 0) {
+      sprintf(fname_spatial, "%s.%06d.xdmf", io->par.basename, io->step);
       xdmf_temporal_append(xt, fname_spatial);
       xdmf_temporal_write(xt);
     }

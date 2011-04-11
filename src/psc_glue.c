@@ -2,6 +2,10 @@
 #include "psc.h"
 #include "psc_glue.h"
 
+#include "psc_push_fields.h"
+#include "psc_bnd_fields_private.h"
+#include "psc_pulse.h"
+
 #include <assert.h>
 
 #define PSC_set_globals_F77 F77_FUNC_(psc_set_globals, PSC_SET_GLOBALS)
@@ -39,25 +43,27 @@
 #define PIC_pey_b_F77 F77_FUNC(pic_pey_b, PIC_PEY_B)
 #define PIC_pez_a_F77 F77_FUNC(pic_pez_a, PIC_PEZ_A)
 #define PIC_pez_b_F77 F77_FUNC(pic_pez_b, PIC_PEZ_B)
-#define PIC_msa_F77 F77_FUNC_(pic_msa, PIC_MSA)
-#define PIC_msb_F77 F77_FUNC_(pic_msb, PIC_MSB)
+#define PIC_msa_e_F77 F77_FUNC_(pic_msa_e, PIC_MSA_E)
+#define PIC_msa_h_F77 F77_FUNC_(pic_msa_h, PIC_MSA_H)
+#define PIC_msb_h_F77 F77_FUNC_(pic_msb_h, PIC_MSB_H)
+#define PIC_msb_e_F77 F77_FUNC_(pic_msb_e, PIC_MSB_E)
 #define PIC_pml_msa_F77 F77_FUNC_(pic_pml_msa, PIC_PML_MSA)
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 #define SERV_read_1_F77 F77_FUNC_(serv_read_1, SERV_READ_1)
 #define SERV_read_2_F77 F77_FUNC_(serv_read_2, SERV_READ_2)
 #define SERV_write_F77 F77_FUNC_(serv_write, SERV_WRITE)
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
-
-#define p_pulse_z1__F77 F77_FUNC(p_pulse_z1_,P_PULSE_Z1_)
-#define s_pulse_z1__F77 F77_FUNC(s_pulse_z1_,S_PULSE_Z1_)
-#define p_pulse_z2__F77 F77_FUNC(p_pulse_z2_,P_PULSE_Z2_)
-#define s_pulse_z2__F77 F77_FUNC(s_pulse_z2_,S_PULSE_Z2_)
+#define PIC_fill_ghosts_h_b_F77 F77_FUNC_(pic_fill_ghosts_h_b, PIC_FILL_GHOSTS_H_B)
 
 #define C_p_pulse_x1_F77 F77_FUNC(c_p_pulse_x1,C_P_PULSE_X1)
+#define C_s_pulse_x1_F77 F77_FUNC(c_s_pulse_x1,C_S_PULSE_X1)
 #define C_p_pulse_x2_F77 F77_FUNC(c_p_pulse_x2,C_P_PULSE_X2)
+#define C_s_pulse_x2_F77 F77_FUNC(c_s_pulse_x2,C_S_PULSE_X2)
 
 #define C_p_pulse_y1_F77 F77_FUNC(c_p_pulse_y1,C_P_PULSE_Y1)
+#define C_s_pulse_y1_F77 F77_FUNC(c_s_pulse_y1,C_S_PULSE_Y1)
 #define C_p_pulse_y2_F77 F77_FUNC(c_p_pulse_y2,C_P_PULSE_Y2)
+#define C_s_pulse_y2_F77 F77_FUNC(c_s_pulse_y2,C_S_PULSE_Y2)
 
 #define C_p_pulse_z1_F77 F77_FUNC(c_p_pulse_z1,C_P_PULSE_Z1)
 #define C_s_pulse_z1_F77 F77_FUNC(c_s_pulse_z1,C_S_PULSE_Z1)
@@ -156,12 +162,18 @@ void PIC_pey_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
 void PIC_pey_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_pez_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
 void PIC_pez_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void PIC_msa_F77(f_real *ex, f_real *ey, f_real *ez,
-		 f_real *hx, f_real *hy, f_real *hz,
-		 f_real *jxi, f_real *jyi, f_real *jzi);
-void PIC_msb_F77(f_real *ex, f_real *ey, f_real *ez,
-		 f_real *hx, f_real *hy, f_real *hz,
-		 f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msa_e_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msa_h_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msb_h_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
+void PIC_msb_e_F77(f_real *ex, f_real *ey, f_real *ez,
+		   f_real *hx, f_real *hy, f_real *hz,
+		   f_real *jxi, f_real *jyi, f_real *jzi);
 void PIC_pml_msa_F77(f_real *ex, f_real *ey, f_real *ez,
 		     f_real *hx, f_real *hy, f_real *hz,
 		     f_real *dx, f_real *dy, f_real *dz,
@@ -183,14 +195,12 @@ void SERV_write_F77(f_int *timestep, f_int *niloc, particle_fortran_t *p_niloc,
 		    f_real *jxi, f_real *jyi, f_real *jzi,
 		    f_real *ex, f_real *ey, f_real *ez,
 		    f_real *hx, f_real *hy, f_real *hz);
+void PIC_fill_ghosts_h_b_F77(f_real *hx, f_real *hy, f_real *hz,
+			     f_real *ex, f_real *ey, f_real *ez,
+			     f_real *jxi, f_real *jyi, f_real *jzi);
 
 
 void INIT_basic_F77(void);
-
-f_real p_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real s_pulse_z1__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real p_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
-f_real s_pulse_z2__F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -389,34 +399,6 @@ SET_param_pml(struct psc *psc)
   SET_param_pml_F77(&psc->pml.thick, &psc->pml.cushion, &psc->pml.size, &psc->pml.order);
 }
 
-real
-PSC_p_pulse_z1(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return p_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_s_pulse_z1(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return s_pulse_z1__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_p_pulse_z2(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return p_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
-real
-PSC_s_pulse_z2(real xx, real yy, real zz, real tt)
-{
-  f_real _xx = xx, _yy = yy, _zz = zz, _tt = tt;
-  return s_pulse_z2__F77(&_xx, &_yy, &_zz, &_tt);
-}
-
 void
 CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
@@ -494,12 +476,21 @@ PIC_pez(particles_fortran_t *pp)
 }
 
 void
-PIC_msa(fields_fortran_t *pf)
+PIC_msa_e(fields_fortran_t *pf)
 {
   PSC_set_timestep(&psc);
-  PIC_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msa_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_msa_h(fields_fortran_t *pf)
+{
+  PSC_set_timestep(&psc);
+  PIC_msa_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
 }
 
 void
@@ -515,12 +506,21 @@ PIC_pml_msa(fields_fortran_t *pf)
 }
 
 void
-PIC_msb(fields_fortran_t *pf)
+PIC_msb_h(fields_fortran_t *pf)
 {
   PSC_set_timestep(&psc);
-  PIC_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-	      pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-	      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msb_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
+void
+PIC_msb_e(fields_fortran_t *pf)
+{
+  PSC_set_timestep(&psc);
+  PIC_msb_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
 }
 
 void
@@ -560,58 +560,115 @@ SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf)
 		 pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
+void
+PIC_fill_ghosts_h_b(struct psc *psc, int p, fields_fortran_t *pf)
+{
+  PSC_set_timestep(psc);
+  PSC_set_patch(psc, p);
+  PIC_fill_ghosts_h_b_F77(pf->flds[HX], pf->flds[HY], pf->flds[HZ],
+			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
+			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+}
+
 // ----------------------------------------------------------------------
 // Wrappers to be called from Fortran that continue to C
 
 f_real
 C_p_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_x1(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_x1;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
 
 f_real
 C_p_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_x2(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_x2;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
+}
+
+f_real
+C_s_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_x1;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
+}
+
+f_real
+C_s_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_x2;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
 
 
 f_real
 C_p_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_y1(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_y1;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
 
 f_real
 C_p_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_y2(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_y2;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
+}
+
+f_real
+C_s_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_y1;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
+}
+
+f_real
+C_s_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_y2;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
 
 
 f_real
 C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_z1(*xx, *yy, *zz, *tt);
-}
-
-
-f_real
-C_s_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
-{
-  return psc_s_pulse_z1(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_z1;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
 
 f_real
 C_p_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_p_pulse_z2(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_z2;
+  return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
+}
+
+f_real
+C_s_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
+{
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_z1;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
 
 f_real
 C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  return psc_s_pulse_z2(*xx, *yy, *zz, *tt);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse = bnd_fields->pulse_z2;
+  return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
 
 

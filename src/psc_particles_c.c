@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_c.h"
 
+#include <mrc_profile.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -51,6 +52,12 @@ static bool __gotten;
 void
 particles_c_get(mparticles_c_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_c_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(!__gotten);
   __gotten = true;
     
@@ -77,11 +84,19 @@ particles_c_get(mparticles_c_t *particles, void *_particles_base)
       part->wni = part_base->wni;
     }
   }
+
+  prof_stop(pr);
 }
 
 void
 particles_c_put(mparticles_c_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_c_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(__gotten);
   __gotten = false;
 
@@ -109,6 +124,8 @@ particles_c_put(mparticles_c_t *particles, void *_particles_base)
   }
   free(particles->p);
   particles->p = NULL;
+
+  prof_stop(pr);
 }
 
 #endif

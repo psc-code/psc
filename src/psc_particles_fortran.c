@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_fortran.h"
 
+#include <mrc_profile.h>
 #include <stdlib.h>
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
@@ -11,16 +12,6 @@ particles_fortran_alloc(particles_fortran_t *pp, int n_part)
 {
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
-}
-
-void
-particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
-{
-  if (new_n_part <= pp->n_alloced)
-    return;
-
-  pp->n_alloced = new_n_part * 1.2;
-  pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 
 void
@@ -52,6 +43,12 @@ static bool __gotten;
 void
 particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_fortran_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(!__gotten);
   __gotten = true;
 
@@ -60,7 +57,7 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
   particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
   foreach_patch(p) {
     particles_base_t *pp_base = &particles_base->p[p];
-    particles_c_t *pp = &particles->p[p];
+    particles_fortran_t *pp = &particles->p[p];
     pp->n_part = pp_base->n_part;
     pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
 
@@ -79,18 +76,26 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
       f_part->wni = part->wni;
     }
   }
+
+  prof_stop(pr);
 }
 
 void
 particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_fortran_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
   assert(__gotten);
   __gotten = false;
 
   mparticles_base_t *particles_base = _particles_base;
   foreach_patch(p) {
     particles_base_t *pp_base = &particles_base->p[p];
-    particles_c_t *pp = &particles->p[p];
+    particles_fortran_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_fortran_t *f_part = &pp->particles[n];
@@ -111,6 +116,19 @@ particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
   }
   free(particles->p);
   particles->p = NULL;
+
+  prof_stop(pr);
 }
 
 #endif
+
+void
+particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
+{
+  if (new_n_part <= pp->n_alloced)
+    return;
+
+  pp->n_alloced = new_n_part * 1.2;
+  pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
+}
+

@@ -23,6 +23,7 @@ _mrc_crds_destroy(struct mrc_crds *crds)
 {
   for (int d = 0; d < 3; d++) {
     mrc_f1_destroy(crds->crd[d]);
+    mrc_m1_destroy(crds->mcrd[d]);
   }
 }
 
@@ -92,8 +93,11 @@ mrc_crds_get_xl_xh(struct mrc_crds *crds, float xl[3], float xh[3])
 void
 mrc_crds_get_dx(struct mrc_crds *crds, float dx[3])
 {
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  // FIXME, only makes sense for uniform coords, should be dispatched!!!
   for (int d = 0; d < 3; d++) {
-    dx[d] = MRC_CRD(crds, d, 1) - MRC_CRD(crds, d, 0);
+    dx[d] = (crds->par.xh[d] - crds->par.xl[d]) / gdims[d];
   }
 }
 

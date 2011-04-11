@@ -1,7 +1,11 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_pulse.h"
+#include "psc_push_fields.h"
+#include "psc_bnd_fields.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -52,7 +56,8 @@ static struct param psc_case_curvedfoil_descr[] = {
 static void
 psc_case_curvedfoil_create(struct psc_case *_case)
 {
-  struct psc_pulse_gauss prm_p = {
+#if 0
+  struct psc_pulse_gauss prm = {
     .xm = 2.5   * 1e-6,
     .ym = 2.5   * 1e-6,
     .zm = -0. * 1e-6,
@@ -60,25 +65,17 @@ psc_case_curvedfoil_create(struct psc_case *_case)
     .dym = 2.   * 1e-6,
     .dzm = 4.   * 1e-6,
 //    .zb  = 10. * 1e-6,
-    .phase = 0.0,
+    .phase_p = 0.0,
+    .phase_s = M_PI / 2.,
+    .amplitude_p = 1.,
+    .amplitude_s = 1.,
   };
   
-  struct psc_pulse_gauss prm_s = {
-    .xm = 2.5   * 1e-6,
-    .ym = 2.5   * 1e-6,
-    .zm = -0. * 1e-6,
-    .dxm = 0.5   * 1e-6,
-    .dym = 2.   * 1e-6,
-    .dzm = 4.   * 1e-6,
-//    .zb  = 10. * 1e-6,
-    .phase = M_PI / 2.,
-  };
-
-//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
-//  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
-
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
-  psc.pulse_s_z1 = psc_pulse_gauss_create(&prm_s);
+//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm);
+#endif
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
+  psc_pulse_set_type(pulse_z1, "gauss");
 }
 
 static void
@@ -109,27 +106,6 @@ psc_case_curvedfoil_set_from_options(struct psc_case *_case)
   psc.domain.bnd_part[0] = 0;
   psc.domain.bnd_part[1] = 0;
   psc.domain.bnd_part[2] = 0;
-}
-
-static void
-psc_case_curvedfoil_init_field(struct psc_case *_case, mfields_base_t *flds)
-{
-  struct psc *psc = _case->psc;
-
-  // FIXME, do we need the ghost points?
-  psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2], dt = psc->dt;
-      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
-      
-      // FIXME, why this time?
-      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
-    } foreach_3d_g_end;
-  }
 }
 
 #if 0
@@ -198,6 +174,5 @@ struct psc_case_ops psc_case_curvedfoil_ops = {
   .param_descr      = psc_case_curvedfoil_descr,
   .create           = psc_case_curvedfoil_create,
   .set_from_options = psc_case_curvedfoil_set_from_options,
-  .init_field       = psc_case_curvedfoil_init_field,
   //  .init_npt         = psc_case_curvedfoil_init_npt,
 };

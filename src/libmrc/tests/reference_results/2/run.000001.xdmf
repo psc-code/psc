@@ -2,7 +2,7 @@
 <Xdmf xmlns:xi='http://www.w3.org/2001/XInclude' Version='2.0'>
 <Domain>
 <Grid GridType="Collection" CollectionType="Spatial">
-   <Time Type="Single" Value="1" />
+<Time Type="Single" Value="1" />
    <Grid Name="patch-mrc_domain-0" GridType="Uniform">
      <Topology TopologyType="3DRectMesh" Dimensions="33 17 12"/>
      <Geometry GeometryType="VXVYVZ">

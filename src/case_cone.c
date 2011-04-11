@@ -1,7 +1,11 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_pulse.h"
+#include "psc_push_fields.h"
+#include "psc_bnd_fields.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -126,7 +130,7 @@ static real HollowSphere_dens(double x0, double z0, double Radius, double xc, do
 static void
 psc_case_cone_create(struct psc_case *_case)
 {
-  
+#if 0  
   float Coeff_FWHM = 0.84932;   // coefficient for putting in values in FWHM of intensity = 1/sqrt(2ln2)
    //  float Coeff_FHHM = 1.0;       // uncomment this line if you want the old input  
    // T_L = 3.33 e -15   for 1 micron wavelength
@@ -140,28 +144,13 @@ psc_case_cone_create(struct psc_case *_case)
     .dym = 2.   * 1e-6,
     .dzm = 7.5   * 1e-6 * Coeff_FWHM,
 //    .zb  = 10. * 1e-6,
-    .phase = 0.0,
-  };
-
-//  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm_p);
-//  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
-
-#if 0
-  struct psc_pulse_gauss prm_s = {
-    .xm = 10.   * 1e-6,
-    .ym = 2.5   * 1e-6,
-    .zm = -45. * 1e-6,
-    .dxm = 3.75   * 1e-6 * Coeff_FWHM,
-    .dym = 2.   * 1e-6,
-    .dzm = 15.   * 1e-6 * Coeff_FWHM,
-//    .zb  = 10. * 1e-6,
-    .phase = 0.0,
+    .phase_p = 0.0,
+    .amplitude_p = 1.,
   };
 #endif
-
-
-//  psc.pulse_s_z1 = psc_pulse_flattop_create(&prm_s);
-  psc.pulse_p_z1 = psc_pulse_gauss_create(&prm_p);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
+  psc_pulse_set_type(pulse_z1, "gauss");
 }
 
 

@@ -1,0 +1,11 @@
+openmpirun -n 2 valgrind --leak-check=full --suppressions=bits/mpi.supp src/VLI \
+	 --nmax 3 \
+	   --psc_case_type bubble \
+	   --psc_sort_every 2 \
+	   --psc_balance_every 2 \
+	   --npx 2 --npz 2 \
+	   --mrc_io_type xdmf2_parallel \
+	   --pfield_step 2 --write_pfield no \
+	   --tfield_step 2 --write_tfield no \
+	   --output_fields e,h,j \
+	   --gdims_x 24 --gdims_z 16

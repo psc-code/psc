@@ -68,6 +68,7 @@ struct mrc_domain_multi {
   int *off[3]; //< offsets for all patches by direction
   int np[3]; //< # of patches per direction
   int bc[3];
+  int *gpatch_off_all;
   int curve_type; //< type of space filling curve
 
   // for sfc morton, hilbert

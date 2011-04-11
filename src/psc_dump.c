@@ -1,6 +1,9 @@
 
 #include "psc.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 // debugging stuff...
 
 static void

@@ -13,6 +13,7 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
 {
   assert_collective(comm);
 
+  assert(class->size >= sizeof(struct mrc_obj));
   struct mrc_obj *obj = calloc(1, class->size);
   MPI_Comm_dup(comm, &obj->comm);
 
@@ -144,6 +145,15 @@ mrc_obj_name(struct mrc_obj *obj)
   return obj->name;
 }
 
+const char *
+mrc_obj_type(struct mrc_obj *obj)
+{
+  if (!obj->ops) {
+    return NULL;
+  }
+  return obj->ops->name;
+}
+
 void
 mrc_obj_set_name(struct mrc_obj *obj, const char *name)
 {
@@ -205,6 +215,7 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
   }
 
   free(obj->subctx);
+  obj->subctx = NULL;
   
   struct mrc_obj_ops *ops = find_subclass_ops(obj->class, subclass);
   assert(ops);
@@ -317,6 +328,13 @@ mrc_obj_set_param_float(struct mrc_obj *obj, const char *name, float val)
 }
 
 void
+mrc_obj_set_param_double(struct mrc_obj *obj, const char *name, double val)
+{
+  union param_u uval = { .u_double = val };
+  mrc_obj_set_param_type(obj, name, PT_DOUBLE, &uval);
+}
+
+void
 mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val)
 {
   union param_u uval = { .u_string = val };
@@ -342,6 +360,13 @@ mrc_obj_set_param_float3(struct mrc_obj *obj, const char *name, float val[3])
 {
   union param_u uval = { .u_float3 = { val[0], val[1], val[2] } };
   mrc_obj_set_param_type(obj, name, PT_FLOAT3, &uval);
+}
+
+void
+mrc_obj_set_param_double3(struct mrc_obj *obj, const char *name, double val[3])
+{
+  union param_u uval = { .u_double3 = { val[0], val[1], val[2] } };
+  mrc_obj_set_param_type(obj, name, PT_DOUBLE3, &uval);
 }
 
 void

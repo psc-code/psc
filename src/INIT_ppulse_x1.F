@@ -1,17 +1,6 @@
 
 c Laser pulse initialization (p-polarization).
 
-      function p_pulse_x1(x,y,z,t)
-
-      implicit none
-      real(kind=8) :: t,x,y,z
-      real(kind=8) :: p_pulse_x1
-      real(kind=8) :: C_p_pulse_x1
-
-      p_pulse_x1 = C_p_pulse_x1(x,y,z,t)
-
-      end function p_pulse_x1
-
       function p_pulse_x1_(x,y,z,t)
 
       use PSC_params

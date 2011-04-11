@@ -16,6 +16,8 @@ struct psc_case_ops {
   void (*init_npt)(struct psc_case *_case, int kind, double x[3],
 		   struct psc_particle_npt *npt);
   void (*init_field)(struct psc_case *_case, mfields_base_t *flds);
+  void (*init_photon_np)(struct psc_case *_case, double x[3],
+			 struct psc_photon_np *np);
 };
 
 extern struct psc_case_ops psc_case_harris_ops;
@@ -32,6 +34,8 @@ extern struct psc_case_ops psc_case_singlepart_ops;
 extern struct psc_case_ops psc_case_collisions_ops;
 extern struct psc_case_ops psc_case_cone_ops;
 extern struct psc_case_ops psc_case_microsphere_ops;
+extern struct psc_case_ops psc_case_photon_test_ops;
+extern struct psc_case_ops psc_case_bubble_ops;
 
 // ======================================================================
 

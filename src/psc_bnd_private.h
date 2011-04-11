@@ -13,6 +13,7 @@ struct psc_bnd_ops {
   void (*add_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
   void (*fill_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
   void (*exchange_particles)(struct psc_bnd *bnd, mparticles_base_t *particles);
+  void (*exchange_photons)(struct psc_bnd *bnd, mphotons_t *photons);
 };
 
 // ======================================================================

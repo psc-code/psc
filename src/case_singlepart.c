@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_case_private.h"
 
+#include <mrc_params.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
