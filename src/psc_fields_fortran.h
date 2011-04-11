@@ -18,6 +18,7 @@ typedef struct {
 typedef struct {
   fields_fortran_t *f;
   int nr_patches;
+  list_t entry;
 } mfields_fortran_t;
 
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\

@@ -3,12 +3,13 @@
 
 #include <stdlib.h>
 
+LIST_HEAD(mfields_list);
+
 // ----------------------------------------------------------------------
 // mfields_base_alloc
 
 mfields_base_t *
-mfields_base_alloc(struct mrc_domain *domain,
-		   int nr_fields, int ibn[3])
+mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3])
 {
   mfields_base_t *flds = calloc(1, sizeof(*flds));
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &flds->nr_patches);
@@ -20,6 +21,7 @@ mfields_base_alloc(struct mrc_domain *domain,
 		   patches[p].ldims[2] + ibn[2] };
     fields_base_alloc(&flds->f[p], ilg, ihg, nr_fields);
   }
+  list_add_tail(&flds->entry, &mfields_list);
   return flds;
 }
 
@@ -33,6 +35,7 @@ mfields_base_destroy(mfields_base_t *flds)
     fields_base_free(&flds->f[p]);
   }
   free(flds->f);
+  list_del(&flds->entry);
   free(flds);
 }
 
