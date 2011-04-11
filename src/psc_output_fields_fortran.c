@@ -13,14 +13,18 @@ psc_output_fields_fortran_run(struct psc_output_fields *out,
 			      mparticles_base_t *particles_base)
 {
   assert(psc.nr_patches == 1);
-  assert(FIELDS_BASE == FIELDS_FORTRAN);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_out_field", 1., 0, 0);
   }
   prof_start(pr);
-  fields_base_t *pf = &flds_base->f[0];
+  mfields_fortran_t flds;
+  fields_fortran_get(&flds, NE, HZ + 1, flds_base);
+
+  fields_fortran_t *pf = &flds.f[0];
   OUT_field(pf);
+
+  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
   prof_stop(pr);
 }
 
