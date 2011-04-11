@@ -17,16 +17,18 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
 
+  struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
+  mrc_domain_get_patches(domain, &ddcp->nr_patches);
   ddcp->size_of_particle = size_of_particle;
   ddcp->size_of_real = size_of_real;
   ddcp->mpi_type_real = mpi_type_real;
   ddcp->realloc = realloc;
   ddcp->get_addr = get_addr;
-  ddcp->patches = calloc(psc.nr_patches, sizeof(*ddcp->patches));
-  ddcp->send_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
-  ddcp->sendp_reqs = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
-  ddcp->recv_reqs  = calloc(psc.nr_patches * N_DIR, sizeof(*ddcp->recv_reqs));
-  foreach_patch(p) {
+  ddcp->patches = calloc(ddcp->nr_patches, sizeof(*ddcp->patches));
+  ddcp->send_reqs  = calloc(ddcp->nr_patches * N_DIR, sizeof(*ddcp->send_reqs));
+  ddcp->sendp_reqs = calloc(ddcp->nr_patches * N_DIR, sizeof(*ddcp->sendp_reqs));
+  ddcp->recv_reqs  = calloc(ddcp->nr_patches * N_DIR, sizeof(*ddcp->recv_reqs));
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
     int dir[3];
@@ -62,7 +64,7 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
   if (!ddcp)
     return;
 
-  foreach_patch(p) {
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
     int dir[3];
@@ -115,7 +117,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   int dir[3];
 
   // post receives for # particles we'll receive in the next step
-  foreach_patch(p) {
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -139,7 +141,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
 
   // post sends for # particles and then the actual particles
-  foreach_patch(p) {
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -167,10 +169,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }
 
-  MPI_Waitall(psc.nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
 
   // calc total # of particles
-  foreach_patch(p) {
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     int new_n_particles = patch->head; // particles which stayed on this proc
 
@@ -191,7 +193,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
 
   // post particle receives
-  foreach_patch(p) {
+  for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -217,8 +219,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }
 
-  MPI_Waitall(psc.nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(psc.nr_patches * N_DIR, ddcp->send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(psc.nr_patches * N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->send_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
 }
 

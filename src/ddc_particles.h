@@ -21,6 +21,7 @@ struct ddcp_patch {
 };
 
 struct ddc_particles {
+  int nr_patches;
   struct ddcp_patch *patches;
   MPI_Request *send_reqs;
   MPI_Request *sendp_reqs;
