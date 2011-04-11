@@ -149,7 +149,7 @@ psc_output_format_vtk_binary_write_fields(struct psc_output_format *format,
   
   for (int m = 0; m < flds->nr_flds; m++) 
   {	
-	  vtk_write_field_binary(file, &flds->flds[m], out);
+	  vtk_write_field_binary(file, flds->flds[m], out);
   }
   
   fclose(file);

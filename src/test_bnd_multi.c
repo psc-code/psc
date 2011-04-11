@@ -94,7 +94,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xz();
   psc_bnd_set_type(psc.bnd, "c");
   psc_case_setup(_case);
-  mfields_base_t *flds = &psc.flds;
+  mfields_base_t *flds = psc.flds;
   setup_jx(flds);
   psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
   check_jx(flds);

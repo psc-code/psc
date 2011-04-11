@@ -28,7 +28,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 }
 
 static mparticles_base_t particles_ref;
-static mfields_base_t flds_ref;
+static mfields_base_t *flds_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -62,13 +62,13 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
 void
 psc_save_fields_ref(struct psc *psc, mfields_base_t *flds)
 {
-  if (!flds_ref.f) {
-    mfields_base_alloc(psc->mrc_domain, &flds_ref, NR_FIELDS, psc->ibn);
+  if (!flds_ref) {
+    flds_ref = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);
   }
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref.f[p];
+    fields_base_t *pf_ref = &flds_ref->f[p];
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3_BASE(pf_ref, m, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
@@ -126,7 +126,7 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds, int *m_flds, double 
 {
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref.f[p];
+    fields_base_t *pf_ref = &flds_ref->f[p];
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
@@ -161,7 +161,7 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres)
 #endif
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref.f[p];
+    fields_base_t *pf_ref = &flds_ref->f[p];
     for (int m = JXI; m <= JZI; m++){
       double max_delta = 0.;
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
@@ -180,7 +180,7 @@ psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds, double thr
 {
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref.f[p];
+    fields_base_t *pf_ref = &flds_ref->f[p];
     for (int m = JXI; m <= JZI; m++){
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);

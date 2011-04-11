@@ -95,7 +95,6 @@ psc_integrate(struct psc *psc)
   }
 
   mparticles_base_t *particles = &psc->particles;
-  mfields_base_t *flds = &psc->flds;
 
   double stats[NR_STATS];
 
@@ -104,7 +103,7 @@ psc_integrate(struct psc *psc)
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_output_fields_run(psc->output_fields, flds, particles);
+    psc_output_fields_run(psc->output_fields, psc->flds, particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
@@ -129,24 +128,24 @@ psc_integrate(struct psc *psc)
 
     // field propagation n*dt -> (n+0.5)*dt
     time_start(STAT_TIME_FIELD);
-    psc_push_fields_step_a(psc->push_fields, flds);
+    psc_push_fields_step_a(psc->push_fields, psc->flds);
     time_stop(STAT_TIME_FIELD);
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles_run(psc->push_particles, particles, flds);
-    psc_bnd_add_ghosts(psc->bnd, flds, JXI, JXI + 3);
-    psc_bnd_fill_ghosts(psc->bnd, flds, JXI, JXI + 3);
+    psc_push_particles_run(psc->push_particles, particles, psc->flds);
+    psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
     psc_bnd_exchange_particles(psc->bnd, particles);
     time_stop(STAT_TIME_PARTICLE);
 
     psc_push_photons_run(&psc->mphotons);
     psc_bnd_exchange_photons(psc->bnd, &psc->mphotons);
-    psc_event_generator_run(psc->event_generator, particles, flds, &psc->mphotons);
+    psc_event_generator_run(psc->event_generator, particles, psc->flds, &psc->mphotons);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
-    psc_push_fields_step_b(psc->push_fields, flds);
+    psc_push_fields_step_b(psc->push_fields, psc->flds);
     time_stop(STAT_TIME_FIELD);
 
     stats[STAT_NR_PARTICLES] = 0;

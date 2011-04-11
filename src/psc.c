@@ -125,7 +125,7 @@ psc_view(struct psc *psc)
 void
 psc_destroy(struct psc *psc)
 {
-  mfields_base_destroy(&psc->flds);
+  mfields_base_destroy(psc->flds);
   mparticles_base_destroy(&psc->particles);
   mphotons_destroy(&psc->mphotons);
 

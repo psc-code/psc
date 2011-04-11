@@ -244,8 +244,7 @@ struct psc_domain {
   bool use_pml;
 };
 
-void mfields_base_alloc(struct mrc_domain *domain, mfields_base_t *flds,
-			int nr_fields, int ibn[3]);
+mfields_base_t *mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3]);
 void mfields_base_destroy(mfields_base_t *flds);
 
 void mparticles_base_alloc(struct mrc_domain *domain, mparticles_base_t *particles,
@@ -299,7 +298,7 @@ struct psc {
   double dx[3];
 
   mparticles_base_t particles;
-  mfields_base_t flds;
+  mfields_base_t *flds;
   mphotons_t mphotons;
   struct mrc_domain *mrc_domain;
 

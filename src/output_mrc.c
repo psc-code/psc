@@ -80,7 +80,7 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
 
   mrc_io_open(io, "w", psc.timestep, psc.timestep * psc.dt);
   for (int m = 0; m < list->nr_flds; m++) {
-    mfields_base_t *flds = &list->flds[m];
+    mfields_base_t *flds = list->flds[m];
     fields_base_t *fld = &flds->f[0];
     assert(fld->nr_comp == 1);
 

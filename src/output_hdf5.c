@@ -146,7 +146,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
   mrc_domain_get_param_int(psc.mrc_domain, "npy", &np[1]);
   mrc_domain_get_param_int(psc.mrc_domain, "npz", &np[2]);
 
-  fields_base_t *fld = &list->flds[0].f[0];
+  fields_base_t *fld = &list->flds[0]->f[0];
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
   fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
   fprintf(f, "<Domain>\n");
@@ -176,7 +176,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 	fprintf(f, "     </Geometry>\n");
 	fprintf(f, "\n");
 	for (int m = 0; m < list->nr_flds; m++) {
-	  fld = &list->flds[m].f[0];
+	  fld = &list->flds[m]->f[0];
 	  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
 		  fld->name[0]);
 	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
@@ -246,7 +246,7 @@ psc_output_format_xdmf_write_fields(struct psc_output_format *format,
   hdf5_open(out, list, filename, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    hdf5_write_field(&hdf5, &list->flds[m].f[0]);
+    hdf5_write_field(&hdf5, &list->flds[m]->f[0]);
   }
   hdf5_close(&hdf5);
 

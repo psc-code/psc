@@ -234,11 +234,11 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   struct psc_fields_list *pfd = &out_c->pfd;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_destroy(&pfd->flds[i]);
+    mfields_base_destroy(pfd->flds[i]);
   }
   struct psc_fields_list *tfd = &out_c->tfd;
   for (int i = 0; i < tfd->nr_flds; i++) {
-    mfields_base_destroy(&tfd->flds[i]);
+    mfields_base_destroy(tfd->flds[i]);
   }
 
   psc_output_format_destroy(out_c->format);
@@ -286,11 +286,10 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    mfields_base_t *flds = &pfd->flds[pfd->nr_flds];
+    mfields_base_t *flds = mfields_base_alloc(psc.mrc_domain, of->nr_comp, psc.ibn);
     out_c->out_flds[pfd->nr_flds] = of;
+    pfd->flds[pfd->nr_flds] = flds;
     pfd->nr_flds++;
-
-    mfields_base_alloc(psc.mrc_domain, flds, of->nr_comp, psc.ibn);
     foreach_patch(pp) {
       for (int m = 0; m < of->nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(of->fld_names[m]);
@@ -304,10 +303,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_alloc(psc.mrc_domain, &tfd->flds[i], pfd->flds[i].f[0].nr_comp, psc.ibn);
+    assert(psc.nr_patches > 0);
+    mfields_base_t *flds = mfields_base_alloc(psc.mrc_domain, pfd->flds[i]->f[0].nr_comp, psc.ibn);
+    tfd->flds[i] = flds;
     foreach_patch(pp) {
-      for (int m = 0; m < pfd->flds[i].f[pp].nr_comp; m++) {
-	tfd->flds[i].f[pp].name[m] = strdup(pfd->flds[i].f[pp].name[m]);
+      for (int m = 0; m < pfd->flds[i]->f[pp].nr_comp; m++) {
+	flds->f[pp].name[m] = strdup(pfd->flds[i]->f[pp].name[m]);
       }
     }
   }
@@ -335,9 +336,10 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
-    mfields_base_t *flds_in = &list_in->flds[i];
+    mfields_base_t *flds_in = list_in->flds[i];
     for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
-      mfields_base_t *flds = &list->flds[list->nr_flds++];
+      mfields_base_t *flds = calloc(1, sizeof(*flds));
+      list->flds[list->nr_flds++] = flds;
       flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
       foreach_patch(p) {
 	int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
@@ -360,9 +362,10 @@ free_fields_list(struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
     foreach_patch(p) {
-      fields_base_free(&list->flds[m].f[p]);
+      fields_base_free(&list->flds[m]->f[p]);
     }
-    free(list->flds[m].f);
+    free(list->flds[m]->f);
+    free(list->flds[m]);
   }
 }
 
@@ -385,7 +388,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       out_c->dowrite_tfield) {
     struct psc_fields_list *pfd = &out_c->pfd;
     for (int i = 0; i < pfd->nr_flds; i++) {
-      out_c->out_flds[i]->calc(flds, particles, &pfd->flds[i]);
+      out_c->out_flds[i]->calc(flds, particles, pfd->flds[i]);
     }
   }
   
@@ -403,7 +406,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
     foreach_patch(p) {
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	// tfd += pfd
-	fields_base_axpy_all(&out_c->tfd.flds[m].f[p], 1., &out_c->pfd.flds[m].f[p]);
+	fields_base_axpy_all(&out_c->tfd.flds[m]->f[p], 1., &out_c->pfd.flds[m]->f[p]);
       }
     }
     out_c->naccum++;
@@ -413,7 +416,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       // convert accumulated values to correct temporal mean
       foreach_patch(p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	  fields_base_scale_all(&out_c->tfd.flds[m].f[p], 1. / out_c->naccum);
+	  fields_base_scale_all(&out_c->tfd.flds[m]->f[p], 1. / out_c->naccum);
 	}
       }
 
@@ -423,7 +426,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       free_fields_list(&flds_list);
       foreach_patch(p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	  fields_base_zero_all(&out_c->tfd.flds[m].f[p]);
+	  fields_base_zero_all(&out_c->tfd.flds[m]->f[p]);
 	}
       }
       out_c->naccum = 0;

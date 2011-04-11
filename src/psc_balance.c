@@ -436,14 +436,13 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // fields
   // alloc new fields
-  mfields_base_t mflds_new;
-  mfields_base_alloc(domain_new, &mflds_new, NR_FIELDS, psc->ibn);
+  mfields_base_t *mflds_new = mfields_base_alloc(domain_new, NR_FIELDS, psc->ibn);
 
   // communicate fields
-  communicate_fields(domain_old, domain_new, &psc->flds, &mflds_new);
+  communicate_fields(domain_old, domain_new, psc->flds, mflds_new);
 
   // replace fields by redistributed ones
-  mfields_base_destroy(&psc->flds);
+  mfields_base_destroy(psc->flds);
   psc->flds = mflds_new;
 
   // ----------------------------------------------------------------------

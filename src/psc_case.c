@@ -80,10 +80,10 @@ _psc_case_setup(struct psc_case *_case)
   free(nr_particles_by_patch);
 
   // alloc / initialize fields
-  mfields_base_alloc(psc->mrc_domain, &psc->flds, NR_FIELDS, psc->ibn);
-  psc_case_init_field(_case, &psc->flds);
+  psc->flds = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);
+  psc_case_init_field(_case, psc->flds);
   if (psc->domain.use_pml) {
-    psc_init_field_pml(_case, &psc->flds);
+    psc_init_field_pml(_case, psc->flds);
   }
 
   // alloc / initialize photons
