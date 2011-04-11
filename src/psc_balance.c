@@ -261,7 +261,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
 
 static void
 communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
-		   mfields_base_t *flds_old, mfields_base_t *flds_new)
+		   mfields_base_t *flds)
 {
   MPI_Comm comm = mrc_domain_comm(domain_new);
   int rank, size;
@@ -270,7 +270,23 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
 
   int nr_patches_old, nr_patches_new;
   mrc_domain_get_patches(domain_old, &nr_patches_old);
-  mrc_domain_get_patches(domain_new, &nr_patches_new);
+  struct mrc_patch *patches_new =
+    mrc_domain_get_patches(domain_new, &nr_patches_new);
+
+  assert(nr_patches_old == flds->nr_patches);
+  assert(nr_patches_old > 0);
+  int ibn[3] = { -flds->f[0].ib[0], -flds->f[0].ib[1], -flds->f[0].ib[2] };
+  int nr_comp = flds->f[0].nr_comp;
+
+  fields_base_t *f_old = flds->f;
+  fields_base_t *f_new = calloc(nr_patches_new, sizeof(*f_new));
+  for (int p = 0; p < nr_patches_new; p++) {
+    int ilg[3] = { -ibn[0], -ibn[1], -ibn[2] };
+    int ihg[3] = { patches_new[p].ldims[0] + ibn[0],
+		   patches_new[p].ldims[1] + ibn[1],
+		   patches_new[p].ldims[2] + ibn[2] };
+    fields_base_alloc(&f_new[p], ilg, ihg, nr_comp);
+  }
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send from old local patches
@@ -281,10 +297,11 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     if (info_new.rank == rank) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_base_t *pf_old = &flds_old->f[p];
+      fields_base_t *pf_old = &f_old[p];
       int nn = fields_base_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
+      mprintf("send %p %d\n", addr_old, nn);
       MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
 		info.global_patch, comm, &send_reqs[p]);
     }
@@ -299,10 +316,11 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_base_t *pf_new = &flds_new->f[p];
+      fields_base_t *pf_new = &f_new[p];
       int nn = fields_base_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
+      mprintf("recv %p %d\n", addr_new, nn);
       MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
 		info.global_patch, comm, &recv_reqs[p]);
     }
@@ -318,8 +336,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       continue;
     }
 
-    fields_base_t *pf_old = &flds_old->f[info_old.patch];
-    fields_base_t *pf_new = &flds_new->f[p];
+    fields_base_t *pf_old = &f_old[info_old.patch];
+    fields_base_t *pf_new = &f_new[p];
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
     assert(fields_base_size(pf_old) == fields_base_size(pf_new));
@@ -334,6 +352,14 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
+
+  for (int p = 0; p < nr_patches_old; p++) {
+    fields_base_free(&f_old[p]);
+  }
+  free(f_old);
+
+  flds->f = f_new;
+  flds->nr_patches = nr_patches_new;
 }
 
 void
@@ -366,6 +392,15 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   //  mrc_domain_view(domain_new);
 
   communicate_new_nr_particles(domain_old, domain_new, p_nr_particles_by_patch);
+
+  // ----------------------------------------------------------------------
+  // fields
+
+  mfields_base_t *mf;
+  list_for_each_entry(mf, &mfields_list, entry) {
+    communicate_fields(domain_old, domain_new, mf);
+  }
+
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
@@ -435,15 +470,11 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // ----------------------------------------------------------------------
   // fields
-  // alloc new fields
-  mfields_base_t *mflds_new = mfields_base_alloc(domain_new, NR_FIELDS, psc->ibn);
 
-  // communicate fields
-  communicate_fields(domain_old, domain_new, psc->flds, mflds_new);
-
-  // replace fields by redistributed ones
-  mfields_base_destroy(psc->flds);
-  psc->flds = mflds_new;
+  mfields_base_t *mf;
+  list_for_each_entry(mf, &mfields_list, entry) {
+    communicate_fields(domain_old, domain_new, mf);
+  }
 
   // ----------------------------------------------------------------------
   // photons
