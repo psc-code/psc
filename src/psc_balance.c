@@ -1,6 +1,5 @@
 
 #include "psc_balance.h"
-#include "psc_output_fields.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
@@ -277,6 +276,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   assert(nr_patches_old > 0);
   int ibn[3] = { -flds->f[0].ib[0], -flds->f[0].ib[1], -flds->f[0].ib[2] };
   int nr_comp = flds->f[0].nr_comp;
+  char **fld_name = flds->f[0].name;
 
   fields_base_t *f_old = flds->f;
   fields_base_t *f_new = calloc(nr_patches_new, sizeof(*f_new));
@@ -286,6 +286,11 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
 		   patches_new[p].ldims[1] + ibn[1],
 		   patches_new[p].ldims[2] + ibn[2] };
     fields_base_alloc(&f_new[p], ilg, ihg, nr_comp);
+    for (int m = 0; m < nr_comp; m++) {
+      if (fld_name[m]) {
+	f_new[p].name[m] = strdup(fld_name[m]);
+      }
+    }
   }
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
@@ -301,7 +306,6 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = fields_base_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
-      mprintf("send %p %d\n", addr_old, nn);
       MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
 		info.global_patch, comm, &send_reqs[p]);
     }
@@ -320,7 +324,6 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = fields_base_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
-      mprintf("recv %p %d\n", addr_new, nn);
       MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
 		info.global_patch, comm, &recv_reqs[p]);
     }
@@ -385,8 +388,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 					 loads_all);
   free(loads_all);
 
-  psc_output_fields_destroy(psc->output_fields);
-
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
@@ -404,12 +405,6 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
-
-  // FIXME, this shouldn't be necessary here, the other modules oughta learn
-  // to adapt automatically...
-  psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
-  psc_output_fields_set_from_options(psc->output_fields);
-  psc_output_fields_setup(psc->output_fields);
 }
 
 // FIXME, way too much duplication from the above
@@ -438,8 +433,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
 					 loads_all);
   free(loads_all);
-
-  psc_output_fields_destroy(psc->output_fields);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
@@ -489,13 +482,6 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
-
-  // FIXME, this shouldn't be necessary here, the other modules oughta learn
-  // to adapt automatically...
-  psc->output_fields = psc_output_fields_create(MPI_COMM_WORLD);
-  psc_output_fields_set_from_options(psc->output_fields);
-  psc_output_fields_setup(psc->output_fields);
-  psc_output_fields_view(psc->output_fields);
 }
 
 // ======================================================================

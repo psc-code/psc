@@ -5,8 +5,6 @@
 - psc/xchg: use mpi types to describes particles proper ?
 - psc/sort: file naming etc.
 - psc/ddcp: don't use MPI for local exchanges (?)
-- psc/balance: fix output_fields/balance interaction properly
-- psc/balance: fix bnd / ddc interaction properly
 - psc/balance: move pointers for particles that stay
 - psc/balance: move pointers for fields that stay?
 - psc/balance: if nothing changed, do nothing
@@ -70,3 +68,5 @@ DONE
 - cni/sort, randomize order
 - get rid of ne,ni,nn calc in move_part fortran
 - options to turn output off (none)
+- psc/balance: fix output_fields/balance interaction properly
+- psc/balance: fix bnd / ddc interaction properly
