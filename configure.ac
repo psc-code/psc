@@ -146,6 +146,7 @@ AS_IF(
 AC_SUBST([MPIRUN])
 
 AC_CONFIG_FILES([Makefile src/Makefile
+                 src/psc_case/Makefile
 		 src/libmrc/Makefile
 		 src/libmrc/src/Makefile
 		 src/libmrc/tests/Makefile

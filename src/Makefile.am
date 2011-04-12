@@ -1,11 +1,13 @@
 
-SUBDIRS = libmrc
+SUBDIRS = libmrc psc_case
 
 bin_PROGRAMS = VLI SELECT
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 noinst_LIBRARIES = libpsc.a
+
+LDADD = psc_case/libpsc_case.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
@@ -37,7 +39,6 @@ libpsc_a_SOURCES = \
 	SERV_labelgen.F \
 	INIT_param.F INIT_field.F \
 	PIC_bin_coll.F \
-	psc_case.c \
 	mfields.c \
 	mparticles.c \
 	psc_push_particles.c psc_push_particles_fortran.c \
@@ -144,7 +145,7 @@ noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
 	test_sort
 
-LDADD = libpsc.a libmrc/src/libmrc.a
+LDADD += libpsc.a libmrc/src/libmrc.a
 
 
 TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
