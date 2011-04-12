@@ -147,6 +147,8 @@ AC_SUBST([MPIRUN])
 
 AC_CONFIG_FILES([Makefile src/Makefile
                  src/psc_balance/Makefile
+                 src/psc_bnd/Makefile
+                 src/psc_bnd_fields/Makefile
                  src/psc_case/Makefile
 		 src/libmrc/Makefile
 		 src/libmrc/src/Makefile

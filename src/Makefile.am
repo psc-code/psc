@@ -1,6 +1,8 @@
 
 SUBDIRS = libmrc \
 	psc_balance \
+	psc_bnd \
+	psc_bnd_fields \
 	psc_case
 
 bin_PROGRAMS = VLI SELECT
@@ -9,8 +11,10 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 noinst_LIBRARIES = libpsc.a
 
-LDADD = psc_case/libpsc_case.a \
-	psc_balance/libpsc_balance.a
+LDADD = psc_balance/libpsc_balance.a \
+	psc_bnd/libpsc_bnd.a \
+	psc_bnd_fields/libpsc_bnd_fields.a \
+	psc_case/libpsc_case.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
@@ -46,10 +50,6 @@ libpsc_a_SOURCES = \
 	mparticles.c \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
-	psc_bnd.c psc_bnd_c.c psc_bnd_fortran.c \
-	psc_bnd_fields.c \
-	psc_bnd_fields_fortran.c \
-	psc_bnd_fields_none.c \
 	ddc_particles.c \
 	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
 	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
