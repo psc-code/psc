@@ -150,6 +150,9 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/psc_bnd/Makefile
                  src/psc_bnd_fields/Makefile
                  src/psc_case/Makefile
+                 src/psc_collision/Makefile
+                 src/psc_randomize/Makefile
+                 src/psc_sort/Makefile
 		 src/libmrc/Makefile
 		 src/libmrc/src/Makefile
 		 src/libmrc/tests/Makefile

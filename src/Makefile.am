@@ -3,7 +3,10 @@ SUBDIRS = libmrc \
 	psc_balance \
 	psc_bnd \
 	psc_bnd_fields \
-	psc_case
+	psc_case \
+	psc_collision \
+	psc_randomize \
+	psc_sort
 
 bin_PROGRAMS = VLI SELECT
 
@@ -14,7 +17,10 @@ noinst_LIBRARIES = libpsc.a
 LDADD = psc_balance/libpsc_balance.a \
 	psc_bnd/libpsc_bnd.a \
 	psc_bnd_fields/libpsc_bnd_fields.a \
-	psc_case/libpsc_case.a
+	psc_case/libpsc_case.a \
+	psc_collision/libpsc_collision.a \
+	psc_randomize/libpsc_randomize.a \
+	psc_sort/libpsc_sort.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
@@ -51,9 +57,6 @@ libpsc_a_SOURCES = \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	ddc_particles.c \
-	psc_collision.c psc_collision_none.c psc_collision_fortran.c \
-	psc_randomize.c psc_randomize_none.c psc_randomize_fortran.c \
-	psc_sort.c psc_sort_none.c psc_sort_fortran.c psc_sort_c.c \
 	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
 	psc_output_format.c \
 	psc_output_particles.c psc_output_particles_none.c \
