@@ -3,7 +3,7 @@ SUBDIRS = libmrc
 
 bin_PROGRAMS = VLI SELECT
 
-AM_CFLAGS = -I$(srcdir)/libmrc/include
+AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 noinst_LIBRARIES = libpsc.a
 
