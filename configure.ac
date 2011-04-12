@@ -136,10 +136,36 @@ AS_IF(
 )
 AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 
+AC_ARG_VAR([MPIRUN], [mpirun command to run tests])
+AS_IF(
+  [test -z "$MPIRUN"],
+  [AS_IF([test "`echo $CC | cut -f1 -d ' '`" = "openmpicc"],
+         [MPIRUN="openmpirun"],
+	 [MPIRUN="mpirun"])]
+)
+AC_SUBST([MPIRUN])
+
 AC_CONFIG_FILES([Makefile src/Makefile
 		 src/libmrc/Makefile
 		 src/libmrc/src/Makefile
-		 src/libmrc/tests/Makefile])
+		 src/libmrc/tests/Makefile
+		 src/libmrc/tests/test_ddc_0.sh
+		 src/libmrc/tests/test_mrc_ddc_1.sh
+		 src/libmrc/tests/test_io_0.sh
+		 src/libmrc/tests/test_io_1.sh
+		 src/libmrc/tests/test_io_2.sh
+		 src/libmrc/tests/test_io_3.sh
+		 src/libmrc/tests/test_io_read_0.sh
+		 src/libmrc/tests/test_io_read_1.sh
+		 src/libmrc/tests/test_io_read_2.sh
+		 src/libmrc/tests/test_io_read_3.sh
+		 src/libmrc/tests/test_io_read_4.sh
+		 src/libmrc/tests/test_mrc_domain_multi_0.sh
+		 src/libmrc/tests/test_mrc_domain_multi_1.sh
+		 src/libmrc/tests/test_mrc_domain_multi_2.sh
+		 src/libmrc/tests/test_mrc_domain_multi_3.sh
+		 src/libmrc/tests/test_mrc_domain_multi_4.sh
+])
 
 AC_OUTPUT
 
@@ -157,5 +183,6 @@ echo "                        LDFLAGS: $LDFLAGS"
 echo "                           LIBS: $LIBS"
 echo "               Shared Libraries: $enable_shared"
 echo "               Static Libraries: $enable_static"
+echo "                         MPIRUN: $MPIRUN"
 echo
 

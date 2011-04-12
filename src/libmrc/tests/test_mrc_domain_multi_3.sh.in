@@ -2,9 +2,10 @@
 
 set -e
 
-openmpirun -n 1 ./test_mrc_domain_multi --mrc_io_type xdmf2
+@MPIRUN@ -n 3 ./test_mrc_domain_multi --npx 2 --npy 2 --mrc_io_type xdmf2_parallel
+#@MPIRUN@ -n 2 dtruss -f -t write ./test_mrc_domain_multi --npx 2 --npy 2 --mrc_io_type xdmf2_parallel
 
-TEST=0
+TEST=3
 for a in reference_results/$TEST/*.xdmf; do 
     b=`basename $a`
     diff -u $a $b

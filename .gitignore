@@ -53,6 +53,8 @@ src/util/test_params
 /*.xdmf
 /*.psc
 *.vtk
+*.sh
+*.log
 data
 doxygen/doxy_err.log
 doxygen/html
