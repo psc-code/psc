@@ -157,6 +157,8 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/psc_output_format/Makefile
                  src/psc_output_particles/Makefile
                  src/psc_pulse/Makefile
+                 src/psc_push_fields/Makefile
+                 src/psc_push_particles/Makefile
                  src/psc_randomize/Makefile
                  src/psc_sort/Makefile
 		 src/libmrc/Makefile

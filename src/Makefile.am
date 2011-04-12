@@ -11,6 +11,8 @@ SUBDIRS = libmrc \
 	psc_output_format \
 	psc_output_particles \
 	psc_pulse \
+	psc_push_fields \
+	psc_push_particles \
 	psc_randomize \
 	psc_sort
 
@@ -31,6 +33,8 @@ LDADD = psc_balance/libpsc_balance.a \
 	psc_output_format/libpsc_output_format.a \
 	psc_output_particles/libpsc_output_particles.a \
 	psc_pulse/libpsc_pulse.a \
+	psc_push_fields/libpsc_push_fields.a \
+	psc_push_particles/libpsc_push_particles.a \
 	psc_randomize/libpsc_randomize.a \
 	psc_sort/libpsc_sort.a
 
@@ -63,8 +67,6 @@ libpsc_a_SOURCES = \
 	PIC_bin_coll.F \
 	mfields.c \
 	mparticles.c \
-	psc_push_particles.c psc_push_particles_fortran.c \
-	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	ddc_particles.c \
 	psc_checkpoint.c \
 	psc_dump.c \
