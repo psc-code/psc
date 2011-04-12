@@ -1,6 +1,5 @@
 
 - psc_bnd_fields: none should be default, pulses should be part of subclass (?)
-- output: _first not working (w/rebalancing?)
 - psc/case: do integrate as part of case_integrate, virtual
 - psc/xchg: use mpi types to describes particles proper ?
 - psc/sort: file naming etc.
@@ -70,3 +69,4 @@ DONE
 - options to turn output off (none)
 - psc/balance: fix output_fields/balance interaction properly
 - psc/balance: fix bnd / ddc interaction properly
+- psc/output: _first not working (w/rebalancing?)

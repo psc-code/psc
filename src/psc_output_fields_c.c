@@ -264,18 +264,6 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
 
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
-  while (out_c->pfield_next < psc.timestep) {
-    out_c->pfield_next += out_c->pfield_step;
-  }
-  while (out_c->tfield_next < psc.timestep) {
-    out_c->tfield_next += out_c->tfield_step;
-  }
-  if (psc.timestep > 0 && out_c->pfield_next == psc.timestep) {
-    out_c->pfield_next += out_c->pfield_step;
-  }
-  if (psc.timestep > 0 && out_c->tfield_next == psc.timestep) {
-    out_c->tfield_next += out_c->tfield_step;
-  }
 
   struct psc_fields_list *pfd = &out_c->pfd;
 
