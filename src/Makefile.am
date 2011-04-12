@@ -1,5 +1,7 @@
 
-SUBDIRS = libmrc psc_case
+SUBDIRS = libmrc \
+	psc_balance \
+	psc_case
 
 bin_PROGRAMS = VLI SELECT
 
@@ -7,7 +9,8 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 noinst_LIBRARIES = libpsc.a
 
-LDADD = psc_case/libpsc_case.a
+LDADD = psc_case/libpsc_case.a \
+	psc_balance/libpsc_balance.a
 
 libpsc_a_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
@@ -63,7 +66,6 @@ libpsc_a_SOURCES = \
 	psc_pulse_none.c \
 	psc_pulse_gauss.c \
 	psc_pulse_flattop.c \
-	psc_balance.c \
 	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
