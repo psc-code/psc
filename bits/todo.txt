@@ -18,6 +18,8 @@
 - psc/cleanup: rename case_* ?
 - psc/cleanup: rename pusher generic_c -> c ?
 - psc: make mrc_obj
+- psc: alloc only as many fields as needed (pml)
+- psc: get rid of NE, NI, NN
 
 - libmrc/obj: ops -> subclass
 - libmrc/obj: profiling integration
@@ -26,16 +28,19 @@
 - libmrc/io: merge xdmf, xdmf2
 - libmrc/io: write uniform crds as such for xdmf2 (non-par), and elsewhere
 - libmrc/io: write hyperslab
+- libmrc/io: non-parallel HDF5 broken?
 - libmrc/obj: automatic track child classes
 - libmrc/obj: consistently override standard methods in subclasses (order)
 - libmrc/ddc: use mpi types instead of copy-to-buffer ?
 - libmrc/ddc: more asynchronous (copy when received)
 - libmrc/ddc: don't use MPI for local exchanges
+- libmrc/ddc: consistent 0-based offsets (OpenGGCM?)
 - libmrc/params: proper naming
 - libmrc/params,obj: proper hierarchy print
 - libmrc/params.obj: allow for read-only vars, too
 - libmrc/params: help texts
-
+- libmrc/fld: set_get_fld_name wrappers
+- libmrc/fld: fld_name from f3/patch -> m3
 
 - output with FIELDS_FORTRAN
 - fix output_vtk?
