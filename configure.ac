@@ -151,6 +151,12 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/psc_bnd_fields/Makefile
                  src/psc_case/Makefile
                  src/psc_collision/Makefile
+                 src/psc_event_generator/Makefile
+                 src/psc_moments/Makefile
+                 src/psc_output_fields/Makefile
+                 src/psc_output_format/Makefile
+                 src/psc_output_particles/Makefile
+                 src/psc_pulse/Makefile
                  src/psc_randomize/Makefile
                  src/psc_sort/Makefile
 		 src/libmrc/Makefile

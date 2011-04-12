@@ -5,6 +5,12 @@ SUBDIRS = libmrc \
 	psc_bnd_fields \
 	psc_case \
 	psc_collision \
+	psc_event_generator \
+	psc_moments \
+	psc_output_fields \
+	psc_output_format \
+	psc_output_particles \
+	psc_pulse \
 	psc_randomize \
 	psc_sort
 
@@ -19,6 +25,12 @@ LDADD = psc_balance/libpsc_balance.a \
 	psc_bnd_fields/libpsc_bnd_fields.a \
 	psc_case/libpsc_case.a \
 	psc_collision/libpsc_collision.a \
+	psc_event_generator/libpsc_event_generator.a \
+	psc_moments/libpsc_moments.a \
+	psc_output_fields/libpsc_output_fields.a \
+	psc_output_format/libpsc_output_format.a \
+	psc_output_particles/libpsc_output_particles.a \
+	psc_pulse/libpsc_pulse.a \
 	psc_randomize/libpsc_randomize.a \
 	psc_sort/libpsc_sort.a
 
@@ -37,9 +49,6 @@ libpsc_a_SOURCES = \
 	psc_particles_fortran.c psc_particles_c.c \
 	psc_photons.c \
 	psc_push_photons.c \
-	psc_event_generator.c \
-	psc_event_generator_none.c \
-	psc_event_generator_demo.c \
 	PIC_move_part_xyz.F \
 	PIC_move_part_xy.F PIC_move_part_xz.F PIC_move_part_yz.F \
 	PIC_move_part_x.F PIC_move_part_y.F PIC_move_part_z.F \
@@ -57,26 +66,10 @@ libpsc_a_SOURCES = \
 	psc_push_particles.c psc_push_particles_fortran.c \
 	psc_push_fields.c psc_push_fields_c.c psc_push_fields_fortran.c \
 	ddc_particles.c \
-	psc_output_fields.c psc_output_fields_fortran.c psc_output_fields_c.c \
-	psc_output_format.c \
-	psc_output_particles.c psc_output_particles_none.c \
-	psc_output_particles_fortran.c \
-	output_c_combine.c \
-	output_binary.c output_vtk.c output_vtk_binary.c \
-	output_mrc.c \
-	psc_moments.c psc_moments_fortran.c psc_moments_c.c \
-	psc_pulse.c \
-	psc_pulse_none.c \
-	psc_pulse_gauss.c \
-	psc_pulse_flattop.c \
 	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
 	SERV_read.F SERV_write.F
-
-if HAVE_HDF5
-libpsc_a_SOURCES += output_hdf5.c
-endif
 
 libpsc_a_SOURCES += \
 	generic_c/psc_push_particles_generic_c.c \
