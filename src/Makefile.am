@@ -67,19 +67,6 @@ libpsc_a_SOURCES = \
 	psc_checkpoint.c \
 	psc_dump.c \
 	checks.c \
-	case_langmuir.c \
-	case_wakefield.c \
-	case_thinfoil.c \
-	case_foils.c \
-	case_curvedfoil.c \
-	case_singlepart.c \
-	case_harris.c \
-	case_harris_xy.c \
-	case_collisions.c \
-	case_cone.c \
-	case_microsphere.c \
-	case_photon_test.c \
-	case_bubble.c \
 	SERV_read.F SERV_write.F
 
 if HAVE_HDF5
