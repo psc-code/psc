@@ -1,0 +1,2 @@
+#! /bin/sh
+@MPIRUN@ -n 3 ./test_io --npx 2 --use_diagsrv 

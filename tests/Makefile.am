@@ -16,6 +16,7 @@ tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_fl
 
 LDADD = ../src/libmrctest.a ../src/libmrc.a
 
+TESTS_ENVIRONMENT = $(SHELL)
 TESTS = \
 	test_io_0.sh \
 	test_io_1.sh \
