@@ -97,7 +97,8 @@ libpsc_a_SOURCES += \
 
 if USE_SSE2
 libpsc_a_SOURCES += \
-	sse2/psc_sse2.c sse2/sse2_push_part_yz.c \
+	sse2/psc_sse2.c sse2/simd_push_common.c \
+	sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c\
 	psc_fields_sse2.c psc_particles_sse2.c
 endif USE_SSE2
 
@@ -106,6 +107,27 @@ libpsc_a_SOURCES += \
 	psc_fields_cuda.c psc_particles_cuda.c \
 	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
+
+if USE_CBE
+
+libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
+	psc_particles_cbe.c cell_be/cbe_push_field.c \
+	cell_be/psc_push_particles_cbe.c
+
+
+if CELLEMU
+libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
+	cell_be/spu/spu_mfcio_c.c 
+
+
+else !CELLEMU
+
+
+libpsc_a_LIBADD = spu_psc_csf.o
+
+endif !CELLEMU
+
+endif
 
 VLI_SOURCES = vli_main.c VLA_variables.F \
 	OUT_param.F OUT_part.F \
@@ -117,14 +139,15 @@ SELECT_SOURCES = VLA_variables.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
 
-noinst_PROGRAMS = test_part_yz test_part_xz test_field test_bnd \
+
+noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
 	test_sort
 
 LDADD = libpsc.a libmrc/src/libmrc.a
 
 
-TESTS = test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
+TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
 	test_sort.sh
 
 if USE_CUDA
@@ -143,4 +166,24 @@ NVCFLAGS = --use_fast_math $(filter-out -Wall,$(DEFS) $(DEFAULT_INCLUDES) $(INCL
 
 endif USE_CUDA
 
+if USE_CBE
+
+SPU_EMBED = embedspu -m64
+SPU_CC = spu-gcc -std=gnu99
+SPU_CFLAGS = -g -Os -DNDEBUG -Wall --save-temps -ffast-math -I. -I$(top_srcdir) -I$(top_srcdir)/cell_be
+SPU_2D_OBJS = cell_be/spu/spu.o cell_be/spu/spu_2d_main.o cell_be/spu/spu_dma.o cell_be/spu/spu_push_part_2d.o \
+		cell_be/spu/spu_field_2d.o
+
+spu_psc_csf.o: spu_2d
+	$(SPU_EMBED) $<_handle $< $@
+
+spu_2d: $(SPU_2D_OBJS)
+	$(SPU_CC) $(SPU_CFLAGS) $^ -o $@ -lsimdmath
+
+$(SPU_2D_OBJS): %.o: %.c
+	$(SPU_CC) $(SPU_CFLAGS) -o $@ -c $<
+
+endif USE_CBE
+
 CLEANFILES = *.mod
+

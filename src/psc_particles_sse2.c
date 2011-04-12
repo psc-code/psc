@@ -76,6 +76,7 @@ particles_sse2_get(particles_sse2_t *particles, void *_particles_base)
   particles->n_part = n_part;
 
   particle_sse2_real_t dxi = 1. / psc.dx[0];
+  particle_sse2_real_t dyi = 1. / psc.dx[1];
 
   for (int n = 0; n < n_part; n++) {
     particle_base_t *base_part = particles_base_get_one(pp_base, n);

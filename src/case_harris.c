@@ -308,3 +308,118 @@ struct psc_case_ops psc_case_test_yz_ops = {
   .init_npt              = psc_case_test_yz_init_npt,
 };
 
+
+// ----------------------------------------------------------------------
+// case test_xy:
+//
+// basically the same as harris, but with different coordinates
+
+static void
+psc_case_test_xy_set_from_options(struct psc_case *_case)
+{
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
+  psc_case_harris_set_from_options(_case);
+
+  psc.prm.nicell = 200;
+
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  psc.domain.length[0] = 2. * harris->lz * d_i; // double tearing
+  psc.domain.length[1] = harris->lx * d_i;
+  psc.domain.length[2] = 10000000;
+
+  // I hacked this in to test the cell pusher, which is why 
+  // the domain is sort of funky shaped. 
+  psc.domain.gdims[0] = 26;
+  psc.domain.gdims[1] = 26;
+  psc.domain.gdims[2] = 1;
+  
+}
+
+static void
+psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
+{
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+  struct psc *psc = _case->psc;
+
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLy = harris->lx * d_i, LLx = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double AA = harris->pert * BB * d_i;
+
+  // FIXME, do we need the ghost points?
+  psc_foreach_patch(psc, p) {
+    fields_base_t *pf = &flds->f[p];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dy = psc->dx[1], dx = psc->dx[0];
+      double yy = CRDY(p, jy), xx = CRDX(p, jx);
+      
+      F3_BASE(pf, HY, jx,jy,jz) = 
+	BB * (-1. 
+	      + tanh((xx + .5*dx - 0.5*LLx)/LLL)
+	      - tanh((xx + .5*dx - 1.5*LLx)/LLL))
+	+ AA*M_PI/LLx * sin(2.*M_PI*yy/LLy) * cos(M_PI*(xx+.5*dx)/LLx);
+      
+      F3_BASE(pf, HZ, jx,jy,jz) =
+	- AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*xx/LLx);
+      
+      F3_BASE(pf, JXI, jx,jy,jz) = - BB/LLL *
+	(1./sqr(cosh((xx - 0.5*LLx)/LLL)) -1./sqr(cosh((xx - 1.5*LLx)/LLL)))
+	- (AA*sqr(M_PI) * (1./sqr(LLx) + 4./sqr(LLy)) 
+	   * sin(2.*M_PI*yy/LLy) * sin(M_PI*xx/LLx));
+    } psc_foreach_3d_g_end;
+  }
+}
+
+static void
+psc_case_test_xy_init_npt(struct psc_case *_case, int kind, double x[3],
+			   struct psc_particle_npt *npt)
+{
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
+
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  double BB = harris->BB;
+  double LLx = harris->lz * d_i;
+  double LLL = harris->lambda * d_i;
+  double nnb = harris->nnb;
+  double TTi = harris->Ti * sqr(BB);
+  double TTe = harris->Te * sqr(BB);
+
+  double jz0 = -1./sqr(cosh((x[0]-0.5*LLx)/LLL)) - 1./sqr(cosh((x[0]-1.5*LLx)/LLL));
+
+  switch (kind) {
+  case 0: // electrons
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = nnb + 1./sqr(cosh((x[0]-0.5*LLx)/LLL)) + 1./sqr(cosh((x[0]-1.5*LLx)/LLL));
+    npt->p[2] = - 2. * TTe / BB / LLL * jz0 / npt->n;
+    npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
+    break;
+  case 1: // ions
+    npt->q = 1.;
+    npt->m = harris->MMi;
+    npt->n = nnb + 1./sqr(cosh((x[0]-0.5*LLx)/LLL)) + 1./sqr(cosh((x[0]-1.5*LLx)/LLL));
+    npt->p[2] = 2. * TTi / BB / LLL * jz0 / npt->n;
+    npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
+    break;
+  default:
+    assert(0);
+  }
+}
+
+struct psc_case_ops psc_case_test_xy_ops = {
+  .name                  = "test_xy",
+  .size                  = sizeof(struct psc_case_harris),
+  .param_descr           = psc_case_harris_descr,
+  .set_from_options      = psc_case_test_xy_set_from_options,
+  .init_field            = psc_case_test_xy_init_field,
+  .init_npt              = psc_case_test_xy_init_npt,
+};
+
+

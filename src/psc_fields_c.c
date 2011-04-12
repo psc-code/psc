@@ -21,7 +21,17 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
   if (with_array) {
     pf->flds = arr;
   } else {
+#ifdef USE_CBE
+    // The Cell processor translation can use the C fields with one modification:
+    // the data needs to be 128 byte aligned (to speed off-loading to spes). This
+    // change is roughly put in below.
+    void *m;
+    int ierr = posix_memalign(&m, 128, nr_comp * size * sizeof(*pf->flds));
+    pf->flds =  m; 
+    assert(ierr == 0);
+#else
     pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
+#endif
   }
   pf->with_array = with_array;
   pf->name = calloc(nr_comp, sizeof(*pf->name));

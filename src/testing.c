@@ -244,6 +244,22 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles)
 }
 
 // ----------------------------------------------------------------------
+// psc_create_test_xy
+
+struct psc_case *
+psc_create_test_xy()
+{
+  // make sure if we call it again, we really get the same i.c.
+  srandom(0);
+
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_xy");
+  psc_case_set_from_options(_case);
+  return _case;
+}
+
+
+// ----------------------------------------------------------------------
 // psc_create_test_xz
 
 struct psc_case *

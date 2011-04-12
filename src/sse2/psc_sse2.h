@@ -37,6 +37,7 @@ void psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
 				       mparticles_base_t *particles_base,
 				       mfields_base_t *flds_base);
 void init_vec_numbers(void);
+__m128i func_mul_epu32(__m128i a, __m128i b);
 
 // SSE2 needs to have these numbers packed into 
 // vectors to utilize them effectively. 
