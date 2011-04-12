@@ -513,6 +513,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 	// but still call H5Dwrite()
 	H5Sselect_none(filespace);
 	hid_t memspace = H5Screate(H5S_NULL);
+	H5Sselect_none(memspace);
 	H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, NULL);
 	H5Sclose(memspace);
 	continue;
