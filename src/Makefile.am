@@ -8,7 +8,6 @@ bin_PROGRAMS = VLI
 VLI_SOURCES = \
 	vli_main.c \
 	integrate.c \
-	psc_push_photons.c \
 	psc_checkpoint.c
 
 LDADD = libpsc/libpsc.la libmrc/libmrc.la

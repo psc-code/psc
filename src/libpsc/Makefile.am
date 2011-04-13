@@ -15,6 +15,7 @@ SUBDIRS = \
 	psc_pulse \
 	psc_push_fields \
 	psc_push_particles \
+	psc_push_photons \
 	psc_randomize \
 	psc_sort \
 	fortran \
@@ -39,6 +40,7 @@ libpsc_la_LIBADD = \
 	psc_pulse/libsubdir.la \
 	psc_push_fields/libsubdir.la \
 	psc_push_particles/libsubdir.la \
+	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
 	fortran/libsubdir.la \

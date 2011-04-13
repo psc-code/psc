@@ -165,6 +165,7 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/libpsc/psc_pulse/Makefile
                  src/libpsc/psc_push_fields/Makefile
                  src/libpsc/psc_push_particles/Makefile
+                 src/libpsc/psc_push_photons/Makefile
                  src/libpsc/psc_randomize/Makefile
                  src/libpsc/psc_sort/Makefile
                  src/libpsc/fortran/Makefile
