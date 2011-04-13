@@ -5,5 +5,13 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_push_particles.c \
-	psc_push_particles_fortran.c
+	psc_push_particles_fortran.c \
+	psc_push_particles_generic_c.c \
+	push_part_xyz.c \
+	push_part_xy.c \
+	push_part_xz.c \
+	push_part_yz.c \
+	push_part_z.c \
+	push_part_yz_a.c \
+	push_part_yz_b.c
 

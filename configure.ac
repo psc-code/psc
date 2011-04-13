@@ -169,7 +169,6 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/libpsc/psc_randomize/Makefile
                  src/libpsc/psc_sort/Makefile
                  src/libpsc/fortran/Makefile
-                 src/libpsc/generic_c/Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/cuda/Makefile
                  src/libpsc/cell_be/Makefile

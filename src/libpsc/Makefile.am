@@ -19,7 +19,6 @@ SUBDIRS = \
 	psc_randomize \
 	psc_sort \
 	fortran \
-	generic_c \
 	sse2 \
 	cuda \
 	cell_be
@@ -43,8 +42,7 @@ libpsc_la_LIBADD = \
 	psc_push_photons/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
-	fortran/libsubdir.la \
-	generic_c/libsubdir.la
+	fortran/libsubdir.la
 
 if USE_SSE2
 libpsc_la_LIBADD += \
