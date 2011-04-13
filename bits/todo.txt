@@ -1,6 +1,5 @@
 
 - psc_bnd_fields: none should be default, pulses should be part of subclass (?)
-- psc/case: do integrate as part of case_integrate, virtual
 - psc/xchg: use mpi types to describes particles proper ?
 - psc/sort: file naming etc.
 - psc/ddcp: don't use MPI for local exchanges (?)
@@ -13,9 +12,6 @@
 - psc/various: merge different sub-class profiling to class
 - psc/moments: fix repeated code
 - psc/moments: 2D performance? 
-- psc/cleanup: reorg directory structure
-- psc/cleanup: rename output_*
-- psc/cleanup: rename case_* ?
 - psc/cleanup: rename pusher generic_c -> c ?
 - psc: make mrc_obj
 - psc: alloc only as many fields as needed (pml)
@@ -75,3 +71,7 @@ DONE
 - psc/balance: fix output_fields/balance interaction properly
 - psc/balance: fix bnd / ddc interaction properly
 - psc/output: _first not working (w/rebalancing?)
+- psc/cleanup: reorg directory structure
+- psc/cleanup: rename output_*
+- psc/cleanup: rename case_* ?
+- psc/case: do integrate as part of case_integrate, virtual
