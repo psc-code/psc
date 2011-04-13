@@ -38,7 +38,7 @@ enum {
   NR_FIELDS,
 };
 
-const char *fldname[NR_FIELDS];
+extern const char *fldname[NR_FIELDS];
 
 // C floating point type
 // used to switch between single and double precision
@@ -385,9 +385,8 @@ struct psc {
 
 // ----------------------------------------------------------------------
 // we keep this info global for now.
-// FIXME, I'd like to declare this extern, but mac os has a problem with that...
 
-struct psc psc;
+extern struct psc psc;
 
 static inline void
 psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,

@@ -23,6 +23,10 @@ while test -n "$hname"; do
   test "$hname_tmp" = "$hname" && break
 done
 
+# Check for libtool
+
+LT_INIT
+
 # Check for (MPI) compilers
 
 AC_PROG_CC([openmpicc mpicc])

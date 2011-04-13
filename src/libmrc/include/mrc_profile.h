@@ -33,7 +33,7 @@ struct prof_info {
 
 #define MAX_PROF (100)
 
-struct prof_globals {
+extern struct prof_globals {
   int event_set;
   struct prof_info info[MAX_PROF];
 } prof_globals;

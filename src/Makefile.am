@@ -20,7 +20,7 @@ bin_PROGRAMS = VLI SELECT
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
-noinst_LIBRARIES = libpsc.a
+noinst_LTLIBRARIES = libpsc.la
 
 LDADD = psc_balance/libpsc_balance.a \
 	psc_bnd/libpsc_bnd.a \
@@ -38,7 +38,7 @@ LDADD = psc_balance/libpsc_balance.a \
 	psc_randomize/libpsc_randomize.a \
 	psc_sort/libpsc_sort.a
 
-libpsc_a_SOURCES = \
+libpsc_la_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
 	PML.F \
 	OUT_params.F OUT_poyc.F \
@@ -73,7 +73,7 @@ libpsc_a_SOURCES = \
 	checks.c \
 	SERV_read.F SERV_write.F
 
-libpsc_a_SOURCES += \
+libpsc_la_SOURCES += \
 	generic_c/psc_push_particles_generic_c.c \
 	generic_c/push_part_xyz.c \
 	generic_c/push_part_xy.c \
@@ -84,45 +84,45 @@ libpsc_a_SOURCES += \
 	generic_c/push_part_yz_b.c
 
 if USE_SSE2
-libpsc_a_SOURCES += \
+libpsc_la_SOURCES += \
 	sse2/psc_sse2.c sse2/simd_push_common.c \
 	sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c\
 	psc_fields_sse2.c psc_particles_sse2.c
 endif USE_SSE2
 
 if USE_CUDA
-libpsc_a_SOURCES += \
+libpsc_la_SOURCES += \
 	psc_fields_cuda.c psc_particles_cuda.c \
 	cuda/psc_cuda.c cuda/push_part_yz.c
 endif USE_CUDA
 
 if USE_CBE
 
-libpsc_a_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
+libpsc_la_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
 	psc_particles_cbe.c cell_be/cbe_push_field.c \
 	cell_be/psc_push_particles_cbe.c
 
 
 if CELLEMU
-libpsc_a_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
+libpsc_la_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
 	cell_be/spu/spu_mfcio_c.c 
 
 
 else !CELLEMU
 
 
-libpsc_a_LIBADD = spu_psc_csf.o
+libpsc_la_LIBADD = spu_psc_csf.o
 
 endif !CELLEMU
 
 endif
 
-VLI_SOURCES = vli_main.c VLA_variables.F \
-	OUT_param.F OUT_part.F \
+VLI_SOURCES = vli_main.c \
+	OUT_param.F \
 	OUT_count.F OUT_energy.F
 
-SELECT_SOURCES = VLA_variables.F \
-	SELECT.F SERV_labelgen.F \
+SELECT_SOURCES = \
+	SELECT.F \
 	SELECT_pfield_evol.F SELECT_tfield_evol.F \
 	SELECT_cl_evol.F SELECT_count_evol.F \
 	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
@@ -132,7 +132,7 @@ noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
 	test_sort
 
-LDADD += libpsc.a libmrc/src/libmrc.a
+LDADD += libpsc.la libmrc/src/libmrc.a
 
 
 TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
