@@ -6,9 +6,7 @@ SUBDIRS = libmrc libpsc tests
 bin_PROGRAMS = VLI
 
 VLI_SOURCES = \
-	vli_main.c \
-	integrate.c \
-	psc_checkpoint.c
+	vli_main.c
 
 LDADD = libpsc/libpsc.la libmrc/libmrc.la
 
