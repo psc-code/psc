@@ -44,9 +44,6 @@ void PIC_fez(fields_fortran_t *pf, int m);
 void PIC_pex(particles_fortran_t *pp);
 void PIC_pey(particles_fortran_t *pp);
 void PIC_pez(particles_fortran_t *pp);
-void SERV_read_1(int *timestep, int *n_part);
-void SERV_read_2(particles_fortran_t *pp, fields_fortran_t *pf);
-void SERV_write(struct psc *psc, particles_fortran_t *pp, fields_fortran_t *pf);
 
 #endif
 

@@ -1,7 +1,7 @@
 
 SUBDIRS = libmrc libpsc
 
-bin_PROGRAMS = VLI SELECT
+bin_PROGRAMS = VLI
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
@@ -23,8 +23,7 @@ libpsc_la_SOURCES = \
 	ddc_particles.c \
 	psc_checkpoint.c \
 	psc_dump.c \
-	checks.c \
-	SERV_read.F SERV_write.F
+	checks.c
 
 libpsc_la_SOURCES += \
 	generic_c/psc_push_particles_generic_c.c \
@@ -70,16 +69,7 @@ endif !CELLEMU
 
 endif
 
-VLI_SOURCES = vli_main.c \
-	OUT_param.F \
-	OUT_count.F OUT_energy.F
-
-SELECT_SOURCES = \
-	SELECT.F \
-	SELECT_pfield_evol.F SELECT_tfield_evol.F \
-	SELECT_cl_evol.F SELECT_count_evol.F \
-	SELECT_electron_evol.F SELECT_ion_evol.F SELECT_atom_evol.F
-
+VLI_SOURCES = vli_main.c
 
 noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
