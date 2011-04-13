@@ -150,21 +150,22 @@ AS_IF(
 AC_SUBST([MPIRUN])
 
 AC_CONFIG_FILES([Makefile src/Makefile
-                 src/psc_balance/Makefile
-                 src/psc_bnd/Makefile
-                 src/psc_bnd_fields/Makefile
-                 src/psc_case/Makefile
-                 src/psc_collision/Makefile
-                 src/psc_event_generator/Makefile
-                 src/psc_moments/Makefile
-                 src/psc_output_fields/Makefile
-                 src/psc_output_format/Makefile
-                 src/psc_output_particles/Makefile
-                 src/psc_pulse/Makefile
-                 src/psc_push_fields/Makefile
-                 src/psc_push_particles/Makefile
-                 src/psc_randomize/Makefile
-                 src/psc_sort/Makefile
+	         src/libpsc/Makefile
+                 src/libpsc/psc_balance/Makefile
+                 src/libpsc/psc_bnd/Makefile
+                 src/libpsc/psc_bnd_fields/Makefile
+                 src/libpsc/psc_case/Makefile
+                 src/libpsc/psc_collision/Makefile
+                 src/libpsc/psc_event_generator/Makefile
+                 src/libpsc/psc_moments/Makefile
+                 src/libpsc/psc_output_fields/Makefile
+                 src/libpsc/psc_output_format/Makefile
+                 src/libpsc/psc_output_particles/Makefile
+                 src/libpsc/psc_pulse/Makefile
+                 src/libpsc/psc_push_fields/Makefile
+                 src/libpsc/psc_push_particles/Makefile
+                 src/libpsc/psc_randomize/Makefile
+                 src/libpsc/psc_sort/Makefile
 		 src/libmrc/Makefile
 		 src/libmrc/src/Makefile
 		 src/libmrc/tests/Makefile
