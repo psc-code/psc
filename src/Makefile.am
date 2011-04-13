@@ -103,7 +103,7 @@ noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
 	test_sort
 
-LDADD = libpsc.la libmrc/src/libmrc.a
+LDADD = libpsc.la libmrc/libmrc.la
 
 
 TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \
