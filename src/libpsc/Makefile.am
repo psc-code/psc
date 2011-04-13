@@ -1,4 +1,6 @@
 
+AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src -I$(top_srcdir)/src/libmrc/include
+
 SUBDIRS = \
 	psc_balance \
 	psc_bnd \
@@ -19,7 +21,6 @@ SUBDIRS = \
 
 noinst_LTLIBRARIES = libpsc.la
 
-libpsc_la_SOURCES =
 libpsc_la_LIBADD = psc_balance/libsubdir.la \
 	psc_bnd/libsubdir.la \
 	psc_bnd_fields/libsubdir.la \
@@ -36,4 +37,57 @@ libpsc_la_LIBADD = psc_balance/libsubdir.la \
 	psc_randomize/libsubdir.la \
 	psc_sort/libsubdir.la \
 	fortran/libsubdir.la
+
+libpsc_la_SOURCES = \
+	mfields.c \
+	mparticles.c \
+	psc_fields_fortran.c \
+	psc_fields_c.c \
+	psc_particles_fortran.c \
+	psc_particles_c.c \
+	psc_photons.c \
+	psc.c \
+	init_parameters.c \
+	init_particles.c \
+	init_photons.c \
+	psc_dump.c \
+	checks.c
+
+libpsc_la_SOURCES += \
+	generic_c/psc_push_particles_generic_c.c \
+	generic_c/push_part_xyz.c \
+	generic_c/push_part_xy.c \
+	generic_c/push_part_xz.c \
+	generic_c/push_part_yz.c \
+	generic_c/push_part_z.c \
+	generic_c/push_part_yz_a.c \
+	generic_c/push_part_yz_b.c
+
+if USE_SSE2
+libpsc_la_SOURCES += \
+	sse2/psc_sse2.c sse2/simd_push_common.c \
+	sse2/sse2_push_part_yz.c sse2/sse2_push_part_xz.c \
+	psc_fields_sse2.c psc_particles_sse2.c
+endif USE_SSE2
+
+if USE_CUDA
+libpsc_la_SOURCES += \
+	psc_fields_cuda.c psc_particles_cuda.c \
+	cuda/psc_cuda.c cuda/push_part_yz.c
+endif USE_CUDA
+
+if USE_CBE
+
+libpsc_la_SOURCES += cell_be/psc_cbe.c cell_be/cbe_push_part_2d.c \
+	psc_particles_cbe.c cell_be/cbe_push_field.c \
+	cell_be/psc_push_particles_cbe.c
+
+if CELLEMU
+libpsc_la_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
+	cell_be/spu/spu_mfcio_c.c 
+else !CELLEMU
+libpsc_la_LIBADD += spu_psc_csf.o
+endif !CELLEMU
+
+endif
 

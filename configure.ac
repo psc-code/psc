@@ -150,6 +150,7 @@ AS_IF(
 AC_SUBST([MPIRUN])
 
 AC_CONFIG_FILES([Makefile src/Makefile
+	         src/tests/Makefile
 	         src/libpsc/Makefile
                  src/libpsc/psc_balance/Makefile
                  src/libpsc/psc_bnd/Makefile

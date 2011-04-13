@@ -20,4 +20,5 @@ libsubdir_la_SOURCES = \
 	CALC_moments.F \
 	SERV_labelgen.F \
 	INIT_field.F \
-	PIC_bin_coll.F
+	PIC_bin_coll.F \
+	psc_glue.c
