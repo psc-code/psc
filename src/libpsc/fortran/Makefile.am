@@ -22,3 +22,5 @@ libsubdir_la_SOURCES = \
 	INIT_field.F \
 	PIC_bin_coll.F \
 	psc_glue.c
+
+CLEANFILES = *.mod
