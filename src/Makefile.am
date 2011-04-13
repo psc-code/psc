@@ -22,21 +22,21 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
 noinst_LTLIBRARIES = libpsc.la
 
-LDADD = psc_balance/libpsc_balance.a \
-	psc_bnd/libpsc_bnd.a \
-	psc_bnd_fields/libpsc_bnd_fields.a \
-	psc_case/libpsc_case.a \
-	psc_collision/libpsc_collision.a \
-	psc_event_generator/libpsc_event_generator.a \
-	psc_moments/libpsc_moments.a \
-	psc_output_fields/libpsc_output_fields.a \
-	psc_output_format/libpsc_output_format.a \
-	psc_output_particles/libpsc_output_particles.a \
-	psc_pulse/libpsc_pulse.a \
-	psc_push_fields/libpsc_push_fields.a \
-	psc_push_particles/libpsc_push_particles.a \
-	psc_randomize/libpsc_randomize.a \
-	psc_sort/libpsc_sort.a
+libpsc_la_LIBADD = psc_balance/libsubdir.la \
+	psc_bnd/libsubdir.la \
+	psc_bnd_fields/libsubdir.la \
+	psc_case/libsubdir.la \
+	psc_collision/libsubdir.la \
+	psc_event_generator/libsubdir.la \
+	psc_moments/libsubdir.la \
+	psc_output_fields/libsubdir.la \
+	psc_output_format/libsubdir.la \
+	psc_output_particles/libsubdir.la \
+	psc_pulse/libsubdir.la \
+	psc_push_fields/libsubdir.la \
+	psc_push_particles/libsubdir.la \
+	psc_randomize/libsubdir.la \
+	psc_sort/libsubdir.la
 
 libpsc_la_SOURCES = \
 	PSC_globals.F VLA_variables.F PSC_patch.F PSC_domain.F PSC_params.F \
@@ -60,10 +60,10 @@ libpsc_la_SOURCES = \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
 	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
-	OUT_field.F OUT_part.F OUT_poyc.F \
+	OUT_field.F OUT_part.F \
 	CALC_moments.F \
 	SERV_labelgen.F \
-	INIT_param.F INIT_field.F \
+	INIT_field.F \
 	PIC_bin_coll.F \
 	mfields.c \
 	mparticles.c \
@@ -111,7 +111,7 @@ libpsc_la_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
 else !CELLEMU
 
 
-libpsc_la_LIBADD = spu_psc_csf.o
+libpsc_la_LIBADD += spu_psc_csf.o
 
 endif !CELLEMU
 
@@ -132,7 +132,7 @@ noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_field test_bnd \
 	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
 	test_sort
 
-LDADD += libpsc.la libmrc/src/libmrc.a
+LDADD = libpsc.la libmrc/src/libmrc.a
 
 
 TESTS = test_part_xy test_part_yz test_part_xz test_field test_bnd test_exchange_particles \

@@ -1,9 +1,9 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src -I$(top_srcdir)/src/libmrc/include
 
-noinst_LIBRARIES = libpsc_bnd_fields.a
+noinst_LTLIBRARIES = libsubdir.la
 
-libpsc_bnd_fields_a_SOURCES = \
+libsubdir_la_SOURCES = \
 	psc_bnd_fields.c \
 	psc_bnd_fields_none.c \
 	psc_bnd_fields_fortran.c
