@@ -18,6 +18,7 @@ struct psc_case_ops {
   void (*init_field)(struct psc_case *_case, mfields_base_t *flds);
   void (*init_photon_np)(struct psc_case *_case, double x[3],
 			 struct psc_photon_np *np);
+  void (*integrate)(struct psc_case *_case);
 };
 
 extern struct psc_case_ops psc_case_harris_ops;

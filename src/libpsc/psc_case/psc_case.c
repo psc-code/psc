@@ -137,7 +137,11 @@ psc_case_init_field(struct psc_case *_case, mfields_base_t *flds)
 void
 psc_case_integrate(struct psc_case *_case)
 {
-  psc_integrate(_case->psc);
+  if (psc_case_ops(_case)->integrate) {
+    psc_case_ops(_case)->integrate(_case);
+  } else {
+    psc_integrate(_case->psc);
+  }
 }
 
 // ----------------------------------------------------------------------
