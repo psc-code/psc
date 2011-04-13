@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <string.h>
 
+struct prof_globals prof_globals;
+
 struct prof_data {
   const char *name;
   float simd;
