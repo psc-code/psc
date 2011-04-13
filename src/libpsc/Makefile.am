@@ -14,7 +14,8 @@ SUBDIRS = \
 	psc_push_fields \
 	psc_push_particles \
 	psc_randomize \
-	psc_sort
+	psc_sort \
+	fortran
 
 noinst_LTLIBRARIES = libpsc.la
 
@@ -33,5 +34,6 @@ libpsc_la_LIBADD = psc_balance/libsubdir.la \
 	psc_push_fields/libsubdir.la \
 	psc_push_particles/libsubdir.la \
 	psc_randomize/libsubdir.la \
-	psc_sort/libsubdir.la
+	psc_sort/libsubdir.la \
+	fortran/libsubdir.la
 
