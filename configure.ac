@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT([psc], [1.90])
-AM_INIT_AUTOMAKE([foreign subdir-objects parallel-tests])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
