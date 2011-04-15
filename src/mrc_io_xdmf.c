@@ -13,9 +13,6 @@
 // use hyperslabs, eventually
 // cell vs node
 
-//FIXME
-#ifdef HAVE_HDF5_H
-
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
@@ -1677,10 +1674,6 @@ struct mrc_io_ops mrc_io_xdmf_parallel_ops = {
   .read_attr     = ds_xdmf_read_attr,
   .write_attr    = ds_xdmf_write_attr,
 };
-
-#endif
-
-// ======================================================================
 
 #endif
 
