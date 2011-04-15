@@ -18,6 +18,17 @@ while test -n "$hname"; do
     break
   fi
   AC_MSG_RESULT([no])
+
+  hname2="`echo $hname | tr -d '0-9'`"
+  file=$srcdir/config/host-$hname2
+  AC_MSG_CHECKING([for config $file])
+  if test -f "$file"; then
+    . $file
+    AC_MSG_RESULT([found])
+    break
+  fi
+  AC_MSG_RESULT([no])
+
   hname_tmp=$hname
   hname="`echo $hname | cut -d. -f2-99`"
   test "$hname_tmp" = "$hname" && break
