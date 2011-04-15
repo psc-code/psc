@@ -136,7 +136,7 @@ AH_TEMPLATE([FIELDS_BASE], [base data structure for storing fields])
 AC_ARG_VAR([FIELDS_BASE], [base data structure for storing fields])
 AS_IF(
   [test -z "$FIELDS_BASE"],
-  [FIELDS_BASE="FIELDS_FORTRAN"]
+  [FIELDS_BASE="FIELDS_C"]
 )
 AC_DEFINE_UNQUOTED([FIELDS_BASE], $FIELDS_BASE)
 
@@ -144,7 +144,7 @@ AH_TEMPLATE([PARTICLES_BASE], [base data structure for storing particles])
 AC_ARG_VAR([PARTICLES_BASE], [base data structure for storing particles])
 AS_IF(
   [test -z "$PARTICLES_BASE"],
-  [PARTICLES_BASE="PARTICLES_FORTRAN"]
+  [PARTICLES_BASE="PARTICLES_C"]
 )
 AC_DEFINE_UNQUOTED([PARTICLES_BASE], $PARTICLES_BASE)
 

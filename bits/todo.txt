@@ -18,7 +18,6 @@
 - psc: get rid of NE, NI, NN
 - psc/build: proper detection of -lz for HDF5
 - psc/build: automatic "--without-papi" on zaphod
-- psc/build: make fields/particles C default
 - psc/build: make Fortran code optional
 - psc/sort: countsort doesn't work with Fortran cell indices ("< N" assert fail)
 
@@ -80,3 +79,4 @@ DONE
 - psc/cleanup: rename output_*
 - psc/cleanup: rename case_* ?
 - psc/case: do integrate as part of case_integrate, virtual
+- psc/build: make fields/particles C default
