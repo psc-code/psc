@@ -16,6 +16,11 @@
 - psc: make mrc_obj
 - psc: alloc only as many fields as needed (pml)
 - psc: get rid of NE, NI, NN
+- psc/build: proper detection of -lz for HDF5
+- psc/build: automatic "--without-papi" on zaphod
+- psc/build: make fields/particles C default
+- psc/build: make Fortran code optional
+- psc/sort: countsort doesn't work with Fortran cell indices ("< N" assert fail)
 
 - libmrc/obj: ops -> subclass
 - libmrc/obj: profiling integration
