@@ -14,7 +14,7 @@ noinst_PROGRAMS = \
 
 tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c
 
-LDADD = ../src/libmrctest.a ../src/libmrc.a
+LDADD = ../src/libmrctest.la ../src/libmrc.la
 
 TESTS_ENVIRONMENT = $(SHELL)
 TESTS = \
