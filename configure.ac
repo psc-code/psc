@@ -23,10 +23,6 @@ while test -n "$hname"; do
   test "$hname_tmp" = "$hname" && break
 done
 
-# Check for libtool
-
-LT_INIT
-
 # Check for (MPI) compilers
 
 AC_PROG_CC([openmpicc mpicc])
@@ -48,7 +44,9 @@ AC_F77_WRAPPERS
 AC_F77_LIBRARY_LDFLAGS
 LIBS="$LIBS $FLIBS"
 
-AC_PROG_RANLIB
+# Check for libtool
+
+LT_INIT([disable-shared])
 
 # Checks for header files.
 
