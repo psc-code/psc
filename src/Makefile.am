@@ -5,6 +5,6 @@ SUBDIRS = libmrc libpsc tests
 
 bin_PROGRAMS = VLI
 
-LDADD = libpsc/libpsc.la libmrc/libmrc.la
+LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
 
