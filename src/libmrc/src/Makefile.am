@@ -19,12 +19,16 @@ libmrc_la_SOURCES = \
 	mrc_io_util.c \
 	mrc_io_srv.c \
 	mrc_io_asc.c \
-	mrc_io_xdmf.c \
-	mrc_io_xdmf2.c \
-	mrc_io_xdmf_lib.c \
 	mrc_dict.c \
 	mrc_obj.c \
 	hilbert.c
+
+if HAVE_HDF5
+libmrc_la_SOURCES += \
+	mrc_io_xdmf.c \
+	mrc_io_xdmf2.c \
+	mrc_io_xdmf_lib.c
+endif HAVE_HDF5
 
 libmrctest_la_SOURCES = \
 	mrctest.c

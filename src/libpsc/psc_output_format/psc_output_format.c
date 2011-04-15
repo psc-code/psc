@@ -26,8 +26,10 @@ psc_output_format_init()
   mrc_class_register_subclass(&mrc_class_psc_output_format, &psc_output_format_vtk_points_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_format, &psc_output_format_vtk_cells_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_format, &psc_output_format_vtk_binary_ops);
+#ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_psc_output_format, &psc_output_format_hdf5_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_format, &psc_output_format_xdmf_ops);
+#endif
 }
 
 // ======================================================================
