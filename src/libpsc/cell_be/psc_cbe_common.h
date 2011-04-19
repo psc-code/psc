@@ -1,7 +1,7 @@
 #ifndef PSC_CBE_COMMON_H
 #define PSC_CBE_COMMON_H
 
-#include "../simd_cbe.h"
+#include "simd_cbe.h"
 
 #define PRINT_DEBUG 0
 

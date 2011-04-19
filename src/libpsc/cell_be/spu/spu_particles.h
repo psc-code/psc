@@ -2,7 +2,7 @@
 #define SPU_PARTICLES_H
 
 #include "psc_spu.h"
-#include "../../psc_particles_cbe.h"
+#include <psc_particles_cbe.h>
 
 #define LOAD_PARTICLES_SPU {						\
     particle_cbe_t *part1 = buff.lb1;					\

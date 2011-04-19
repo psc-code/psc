@@ -56,6 +56,18 @@ main(int argc, char **argv)
   psc_check_fields_ref(&psc, psc.flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
+#ifdef USE_CBE
+  _case = psc_create_test_xy();
+  psc_push_fields_set_type(psc.push_fields, "cbe");
+  psc_case_setup(_case);
+  setup_fields(psc.flds);
+  psc_push_fields_step_a(psc.push_fields, psc.flds);
+  psc_check_fields_ref(&psc, psc.flds,
+		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  psc_case_destroy(_case);
+#endif
+
+
   // test push_field_b
 
   _case = psc_create_test_xy();
@@ -73,14 +85,6 @@ main(int argc, char **argv)
   psc_push_fields_step_b(psc.push_fields, psc.flds);
   psc_check_fields_ref(&psc, psc.flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
-
-#ifdef USE_CBE
-  psc_create_test_xy(&conf_cbe);
-  setup_fields(flds);
-  psc_push_fields_step_a(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc,flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
-  psc_destroy(&psc);
-#endif
 
   // test push_field_b
 

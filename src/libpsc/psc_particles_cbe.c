@@ -2,32 +2,32 @@
 #include "psc.h"
 #include "psc_particles_cbe.h"
 
+#include <mrc_profile.h>
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
 
 #if PARTICLES_BASE == PARTICLES_CBE
 
-static int __arr_size;
 
 void
 particles_cbe_alloc(particles_cbe_t *pp, int n_part)
 {
   void * m;
-  __arr_size = n_part * 1.2;
- int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
+  pp->n_alloced = n_part * 1.2;
+ int ierr = posix_memalign(&m, 16, pp->n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
 }
 
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
 {
-  if (__arr_size >= new_n_part)
+  if (pp->n_alloced >= new_n_part)
     return;
   void * m; 
-  __arr_size = new_n_part * 1.2;
+  pp->n_alloced = new_n_part * 1.2;
   free(pp->particles);
-  int ierr = posix_memalign(&m, 16, __arr_size * sizeof(*pp->particles));
+  int ierr = posix_memalign(&m, 16, pp->n_alloced * sizeof(*pp->particles));
   assert(ierr == 0);
   pp->particles = (particle_cbe_t *) m;
 }
@@ -35,6 +35,7 @@ void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part)
 void particles_cbe_free(particles_cbe_t *pp)
 {
   free(pp->particles);
+  pp->n_alloced = 0;
   pp->particles = NULL;
 }
 
@@ -59,6 +60,14 @@ static bool __gotten;
 void
 particles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 {
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("particles_cbe_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+
   assert(!__gotten);
   __gotten = true;
 

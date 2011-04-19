@@ -11,17 +11,13 @@
 #include <libspe2.h>
 #endif
 
-void
-cbe_push_field_a_2d(mfields_base_t *flds_base)
+
+
+static void
+psc_push_fields_cbe_push_a_2d(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
   mfields_t flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cbe_field_2d_a", 1., 0, 0);
-  }
-  prof_start(pr);
 
   int job = SPU_FIELD_A;
 
@@ -43,25 +39,16 @@ cbe_push_field_a_2d(mfields_base_t *flds_base)
 
   wait_all_spe();
 
-  prof_stop(pr);
-
   fields_put(&flds, EX, EX + 6, flds_base);
 
-  psc_bnd_fill_ghosts(psc.bnd,flds_base, EX, EX + 6);  
 }
 
-void
-cbe_push_field_b_2d(mfields_base_t *flds_base)
+static void
+psc_push_fields_cbe_push_b_2d(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
   mfields_t flds;
   fields_get(&flds, JXI,JXI+9,flds_base);
   
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cbe_field_2d_b", 1., 0, 0);
-  }
-  prof_start(pr);
-
   int job = SPU_FIELD_B;
 
   particles_t null_parts; 
@@ -82,32 +69,31 @@ cbe_push_field_b_2d(mfields_base_t *flds_base)
 
   wait_all_spe();
 
-  prof_stop(pr);
-
   fields_put(&flds, EX, EX + 6, flds_base);
 
-  psc_bnd_fill_ghosts(psc.bnd,flds_base, EX, EX + 6);
   
 }
 
-static void
-psc_push_fields_cbe_step_a(struct psc_push_fields *push, mfields_base_t *flds)
-{
-  if (psc.domain.use_pml) {
-    assert(0);
-  } else {
-    cbe_push_field_a_2d(flds);
-  }
-}
+// So, the latest round of refactoring has made this implementation
+// inconsistent with the rest of the rest of the code. Allow me to explain 
+// the problem. For the cell implementation, the most expensive thing is 
+// moving data on and off the spes. If I split each step of the field push into 
+// two parts (E and H), I have to move both fields onto the spu 4 each timestep, 
+// and move one of them off each timestep. But it together, and for each patch 
+// that's 32*32*12~=12KB moving on and 32*32*6=6KB off each timestep. The way I 
+// have set up now (which is mostly equivalent, except it calculates into the ghost
+// points to avoid the ghost cell exchange) only moves the fields on twice per timestep,
+// and off twice per timestep. Resulting in 32*32*9=9KB on and the same 6KB off. 
+// Those three KB might be insignificant, and might be cheaper than the additional 
+// calculation, but I doubt it. I need to test for sure. But, for now I'm going to 
+// fool the main code, and have everything done during the first push of each step, 
+// and just have the second field be empty. 
+
+// Hence the dummy function.
 
 static void
-psc_push_fields_cbe_step_b(struct psc_push_fields *push, mfields_base_t *flds)
+dummy_function(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  if (psc.domain.use_pml) {
-    assert(0);
-  } else {
-    cbe_push_field_b_2d(flds);
-  }
 }
 
 
@@ -133,8 +119,10 @@ cbe_push_destroy(struct psc_push_fields *push)
 
 struct psc_push_fields_ops psc_push_fields_cbe_ops = {
   .name                  = "cbe",
-  .step_a                = psc_push_fields_cbe_step_a,
-  .step_b                = psc_push_fields_cbe_step_b,
+  .push_a_E              = psc_push_fields_cbe_push_a_2d,
+  .push_a_H              = dummy_function,
+  .push_b_H              = psc_push_fields_cbe_push_b_2d,
+  .push_b_E              = dummy_function,
   .setup                 = cbe_push_setup,
   .destroy               = cbe_push_destroy,
 };

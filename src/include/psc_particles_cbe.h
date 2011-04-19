@@ -37,10 +37,12 @@ typedef struct {
 typedef struct {
   particle_cbe_t *particles;
   int n_part;
+  int n_alloced;
 } particles_cbe_t;
 
 typedef struct {
   particles_cbe_t *p; ///< Pointers to each 'patch' of particles.
+  int nr_patches;
 } mparticles_cbe_t;
 
 void particles_cbe_alloc(particles_cbe_t *pp, int n_part);
