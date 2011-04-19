@@ -20,6 +20,13 @@ _psc_push_fields_set_from_options(struct psc_push_fields *push)
 static void
 _psc_push_fields_setup(struct psc_push_fields *push)
 {
+  // The cbe version (and possibly cuda) need
+  // the subclass (ops) setup to be called at
+  // some point. So we do need to have this forwarded
+  // to the subclass. --sra
+  if(psc_push_fields_ops(push)->setup) {
+    psc_push_fields_ops(push)->setup(push);
+  }
   psc_bnd_fields_setup(push->bnd_fields);
 }
 
@@ -33,6 +40,9 @@ static void
 _psc_push_fields_destroy(struct psc_push_fields *push)
 {
   psc_bnd_fields_destroy(push->bnd_fields);
+  if(psc_push_fields_ops(push)->destroy) {
+    psc_push_fields_ops(push)->destroy(push);
+  }
 }
 
 struct psc_bnd_fields *

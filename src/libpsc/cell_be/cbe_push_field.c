@@ -105,7 +105,6 @@ static void
 cbe_push_setup(struct psc_push_fields *push)
 {
   // Initialize the spes and create the context.
-  printf("Field create called\n");
   psc_init_spes();
 }
 
