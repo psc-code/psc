@@ -20,8 +20,7 @@ SUBDIRS = \
 	psc_sort \
 	fortran \
 	sse2 \
-	cuda \
-	cell_be
+	cuda
 
 noinst_LTLIBRARIES = libpsc.la
 
@@ -55,8 +54,12 @@ libpsc_la_LIBADD += \
 endif USE_CUDA
 
 if USE_CBE
+
+SUBDIRS += cell_be
+
 libpsc_la_LIBADD += \
 	cell_be/libsubdir.la
+
 endif USE_CBE
 
 libpsc_la_SOURCES = \
@@ -66,6 +69,7 @@ libpsc_la_SOURCES = \
 	psc_fields_c.c \
 	psc_particles_fortran.c \
 	psc_particles_c.c \
+	psc_particles_cbe.c \
 	psc_photons.c \
 	psc.c \
 	init_parameters.c \
