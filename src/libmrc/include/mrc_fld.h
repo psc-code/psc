@@ -37,6 +37,11 @@ struct mrc_f1 {
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 
+#define mrc_f1_foreach(f1, ix, l,r)				        \
+  for (int ix = -l; ix < (f1)->im[0] + 2 * (f1)->ib[0] + r; ix++)		\
+
+#define mrc_f1_foreach_end do {} while (0)	\
+
 // ======================================================================
 
 struct mrc_f2 {
