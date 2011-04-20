@@ -22,6 +22,9 @@ struct rmhd_params {
   float S;
   float ky;
 
+  float dx0;
+  float xn;
+  float xm;
   int mx;
   int n_end;
   int out_every;
@@ -32,21 +35,24 @@ struct rmhd_params {
 
 #define VAR(x) (void *)offsetof(struct rmhd_params, x)
 static struct param rmhd_params_descr[] = {
-  { "Lx"              , VAR(Lx)             , PARAM_FLOAT(10.)      },
+  { "Lx"              , VAR(Lx)             , PARAM_FLOAT(40.)      },
   { "lambda"          , VAR(lambda)         , PARAM_FLOAT(1.)       },
-  { "S"               , VAR(S)              , PARAM_FLOAT(100.)     },
-  { "ky"              , VAR(ky)             , PARAM_FLOAT(1.)       },
+  { "S"               , VAR(S)              , PARAM_FLOAT(1000.)    },
+  { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
+  { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
+  { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
+  { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
   { "mx"              , VAR(mx)             , PARAM_INT(100)        },
-  { "n_end"           , VAR(n_end)          , PARAM_INT(100)        },
-  { "out_every"       , VAR(out_every)      , PARAM_INT(10)         },
+  { "n_end"           , VAR(n_end)          , PARAM_INT(10000)      },
+  { "out_every"       , VAR(out_every)      , PARAM_INT(1000)       },
   { "diag_every"      , VAR(diag_every)     , PARAM_INT(10)         },
   {},
 };
 #undef VAR
 
 // FIXME
-static float xb, dx;
-#define CRDX(ix) (xb + ((ix) + .5 ) * dx)
+static struct mrc_f1 *crd;
+#define CRDX(ix) (MRC_F1(crd,0, (ix)))
 
 // FIXME
 static void
@@ -115,7 +121,9 @@ calc_laplace(struct rmhd_params *par, struct mrc_f1 *b, int m_b,
 {
   mrc_f1_foreach(x, ix, 0, 0) {
     MRC_F1(b, m_b, ix) =
-      (MRC_F1(x, m_x, ix+1) - 2.*MRC_F1(x, m_x, ix) + MRC_F1(x, m_x, ix-1)) / sqr(dx) 
+      ((MRC_F1(x, m_x, ix+1) - MRC_F1(x, m_x, ix  )) / (CRDX(ix+1) - CRDX(ix  )) -
+       (MRC_F1(x, m_x, ix  ) - MRC_F1(x, m_x, ix-1)) / (CRDX(ix  ) - CRDX(ix-1)))
+      / (.5 * (CRDX(ix+1) - CRDX(ix-1)))
       - sqr(par->ky) * MRC_F1(x, m_x, ix);
   }
 }
@@ -132,9 +140,9 @@ solve_poisson(struct rmhd_params *par, struct mrc_f1 *x, int m_x,
     cc = calloc(par->mx, sizeof(*cc));
 
     for (int ix = 0; ix < par->mx; ix++) {
-      aa[ix] = 1. / sqr(dx);
-      bb[ix] = -2. / sqr(dx) - sqr(par->ky);
-      cc[ix] = 1. / sqr(dx);
+      aa[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix) - CRDX(ix-1));
+      bb[ix] = -2. / ((CRDX(ix+1) - CRDX(ix)) * (CRDX(ix) - CRDX(ix-1))) - sqr(par->ky);
+      cc[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix+1) - CRDX(ix));
     }
   }
   
@@ -187,10 +195,14 @@ calc_rhs(struct rmhd_params *par, struct mrc_f1 *rhs, struct mrc_f1 *x)
   //  mrc_f1_dump(phi, "phi");
 
   mrc_f1_foreach(x, ix, 0, 0) {
+    float By0pp = 
+      ((MRC_F1(By0,0, ix+1) - MRC_F1(By0,0, ix  )) / (CRDX(ix+1) - CRDX(ix  )) -
+       (MRC_F1(By0,0, ix  ) - MRC_F1(By0,0, ix-1)) / (CRDX(ix  ) - CRDX(ix-1)))
+      / (.5 * (CRDX(ix+1) - CRDX(ix-1)));
+
     MRC_F1(rhs, X_OM, ix) =
       par->ky * (MRC_F1(By0,0, ix) * MRC_F1(j,0, ix) -
-		 (MRC_F1(By0,0, ix+1) - 2.*MRC_F1(By0,0, ix) + MRC_F1(By0,0, ix-1)) / sqr(dx) *
-		 MRC_F1(x, X_PSI, ix));
+		 By0pp * MRC_F1(x, X_PSI, ix));
     MRC_F1(rhs, X_PSI, ix) =
       1. / par->S * MRC_F1(j,0, ix) -
       par->ky * MRC_F1(By0,0, ix) * MRC_F1(phi,0, ix);
@@ -200,6 +212,18 @@ calc_rhs(struct rmhd_params *par, struct mrc_f1 *rhs, struct mrc_f1 *x)
 
   mrc_f1_destroy(j);
   mrc_f1_destroy(phi);
+}
+
+static float
+acoff(int n, float y, float xm, float xn, float d0)
+{
+  float x = n - .5;
+  float yy = y;
+  yy /= d0 * x;
+  yy = pow(yy, 1./xm);
+  yy -= 1.;
+  yy /= pow(x, 2.*xn);
+  return yy;
 }
 
 int
@@ -212,25 +236,38 @@ main(int argc, char **argv)
   mrc_params_parse(&par, rmhd_params_descr, "rmhd", MPI_COMM_WORLD);
   mrc_params_print(&par, rmhd_params_descr, "rmhd", MPI_COMM_WORLD);
 
-  dx = par.Lx / par.mx;
-  xb = - par.Lx / 2.;
-  double dt = .5 * fminf(dx, par.S * sqr(dx));
+  float dx = par.Lx / par.mx;
+  float xb = - par.Lx / 2.;
+  float dt = .5 * fminf(dx, par.S * sqr(dx));
 
   // i.c.
   struct mrc_f1 *x = get_fld(&par, X_NR);
   struct mrc_f1 *By0 = get_fld(&par, 1);
+  struct mrc_f1 *spacing = get_fld(&par, 1);
   par.By0 = By0;
+  crd = get_fld(&par, 1);
 
+  float a = acoff(par.mx / 2, par.Lx / 2, par.xm, par.xn, par.dx0);
   mrc_f1_foreach(x, ix, 1, 1) {
-    float xx = CRDX(ix);
-    MRC_F1(By0, 0, ix) = tanh(par.lambda * xx);
+    float xi = ix - (par.mx / 2 - .5);
+    float s = 1 + a*(pow(xi, (2.*par.xn)));
+    float sm = pow(s, par.xm);
+    float g = par.dx0 * xi * sm;
+    float dg = par.dx0 * (sm + par.xm*xi*2.*par.xn*a*(pow(xi, (2.*par.xn-1.))) * sm / s);
+    CRDX(ix) = g;
+    MRC_F1(spacing,0, ix) = dg;
+    //    CRDX(ix) = (xb + ((ix) + .5 ) * dx);
+
+    MRC_F1(By0, 0, ix) = tanh(par.lambda * CRDX(ix));
     //    MRC_F1(x, X_OM, ix) = xx * exp(-sqr(xx));
-    MRC_F1(x, X_PSI, ix) = exp(-sqr(xx));
+    MRC_F1(x, X_PSI, ix) = exp(-sqr(CRDX(ix)));
     //    MRC_F1(x, X_PSI, ix) = sin(2.*M_PI * (xx - par.Lx / 2.) / par.Lx);
   } mrc_f1_foreach_end;
 
   mrc_f1_dump(By0, "By0");
   mrc_f1_dump(x, "x");
+  mrc_f1_dump(spacing, "dx");
+  mrc_f1_destroy(spacing);
 
   // r.h.s
   struct mrc_f1 *rhs = get_fld(&par, X_NR);
@@ -238,22 +275,6 @@ main(int argc, char **argv)
 
   FILE *f_diag = fopen("diag.asc", "w");
   for (int n = 0; n <= par.n_end; n++) {
-    calc_rhs(&par, rhs, x);
-    //  mrc_f1_dump(rhs, "rhs");
-    mrc_f1_foreach(x, ix, 0, 0) {
-      for (int m = 0; m < X_NR; m++) {
-	MRC_F1(xm,m, ix) = MRC_F1(x,m, ix) + .5 * dt * MRC_F1(rhs,m, ix);
-      }
-    } mrc_f1_foreach_end;
-
-    calc_rhs(&par, rhs, xm);
-    //  mrc_f1_dump(rhs, "rhs");
-    mrc_f1_foreach(x, ix, 0, 0) {
-      for (int m = 0; m < X_NR; m++) {
-	MRC_F1(x,m, ix) += dt * MRC_F1(rhs,m, ix);
-      }
-    } mrc_f1_foreach_end;
-
     if (n % par.out_every == 0) {
       char pfx[10];
       sprintf(pfx, "x-%d", n / par.out_every);
@@ -271,6 +292,22 @@ main(int argc, char **argv)
       fprintf(f_diag, "%g %g %g\n", n*dt, absmax[0], absmax[1]);
       fflush(f_diag);
     }
+
+    calc_rhs(&par, rhs, x);
+    //  mrc_f1_dump(rhs, "rhs");
+    mrc_f1_foreach(x, ix, 0, 0) {
+      for (int m = 0; m < X_NR; m++) {
+	MRC_F1(xm,m, ix) = MRC_F1(x,m, ix) + .5 * dt * MRC_F1(rhs,m, ix);
+      }
+    } mrc_f1_foreach_end;
+
+    calc_rhs(&par, rhs, xm);
+    //  mrc_f1_dump(rhs, "rhs");
+    mrc_f1_foreach(x, ix, 0, 0) {
+      for (int m = 0; m < X_NR; m++) {
+	MRC_F1(x,m, ix) += dt * MRC_F1(rhs,m, ix);
+      }
+    } mrc_f1_foreach_end;
   }
   fclose(f_diag);
 
