@@ -49,9 +49,11 @@ typedef struct _psc_cell_block
   unsigned long long part_end;   // 8B Particle end address
   unsigned long long part_move;  // 8B wait. why is this here?
   unsigned long long wb_flds;    // 8B Pointer to fields
-  int ib[3];                    // 12B local to global offse t
+  int ib[3];                    // 12B local to global offset
   int im[3];                    // 12B number of points per direction
-  // Total:                      // 64B
+  cbe_real xb[3];               // 8/4B lower bound of patch in x
+  cbe_real pad;
+  // Total:                      // 8/4B
 } psc_cell_block_t;
 
 #define F2_OFF_BLOCK(pbl, fldnr, jx, jy, jz)	\

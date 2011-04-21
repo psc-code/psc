@@ -228,7 +228,7 @@ update_spes_status(void)
 }
 
 
-void cell_run_patch(fields_t *pf, particles_t *pp, int job) 
+void cell_run_patch(int p,fields_t *pf, particles_t *pp, int job) 
 {
 
   while(active_spes == NR_SPE) {
@@ -241,10 +241,21 @@ void cell_run_patch(fields_t *pf, particles_t *pp, int job)
   for(int i = 0; i < 3; i++){
     spe_blocks[spe]->ib[i] = pf->ib[i];
     spe_blocks[spe]->im[i] = pf->im[i];
+    spe_blocks[spe]->xb[i] = psc.patch[p].xb[i];
   }
   spe_blocks[spe]->wb_flds = (unsigned long long) pf->flds;
   spe_blocks[spe]->part_start = (unsigned long long) pp->particles;
   spe_blocks[spe]->part_end = (unsigned long long) (pp->particles + pp->n_part);
+
+#ifdef DEBUG_PATCH_SCHED
+  fprintf(stderr, "queing patch %d\n", p);
+  fprintf(stderr, "patch characteristics:\n");
+  fprintf(stderr, "Job ID: %d\n", job);
+  fprintf(stderr, "ib: [%d %d %d]\n",spe_blocks[spe]->ib[0],spe_blocks[spe]->ib[1],spe_blocks[spe]->ib[2]);
+  fprintf(stderr, "im: [%d %d %d]\n",spe_blocks[spe]->im[0],spe_blocks[spe]->im[1],spe_blocks[spe]->im[2]);
+  fprintf(stderr, "xb: [%g %g %g]\n",spe_blocks[spe]->xb[0],spe_blocks[spe]->xb[1],spe_blocks[spe]->xb[2]);
+  fprintf(stderr, "part_start: %lld part_end: %lld\n",spe_blocks[spe]->part_start,spe_blocks[spe]->part_end);
+#endif
 
   unsigned int msg = SPU_RUNJOB;
   int nmesg =  spe_in_mbox_write(spe_id[spe], &msg, 1, SPE_MBOX_ANY_NONBLOCKING);

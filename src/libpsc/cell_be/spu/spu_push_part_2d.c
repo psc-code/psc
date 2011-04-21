@@ -35,18 +35,20 @@ v_real half, one, two,  threefourths, onepfive,third,zero;
 
 
 
-#define find_index(xi, dxi, j, h) {		\
+#define find_index(dir, xi, dxi, j, h) {		\
     v_real tmp;					\
-    tmp = spu_mul( xi, dxi);			\
+    tmp = spu_sub( xi, xb##dir);		\
+    tmp = spu_mul( tmp, dxi);			\
     h = spu_round_real(tmp);			\
     j = spu_round_int(tmp);			\
     h = spu_sub(h, tmp);			\
 } 
 
 
-#define find_index_minus_shift(xi,dxi,j,h,shift){	\
+#define find_index_minus_shift(dir, xi,dxi,j,h,shift){	\
     v_real tmp;						\
-    tmp = spu_msub(xi, dxi, shift);			\
+    tmp = spu_sub( xi, xb##dir);			\
+    tmp = spu_msub(tmp, dxi, shift);			\
     h = spu_round_real(tmp);				\
     j = spu_round_int(tmp);				\
     h = spu_sub(h, tmp);				\
@@ -313,6 +315,7 @@ spu_push_part_2d(void){
   // calculations here.
   // When we change precision, this area will need to be modified. 
   v_real dt, yl, xl, dyi, dxi, dqs,fnqs,fnqxs,fnqys,fnqzs;
+  v_real xbx, xby, xbz;
   dt = spu_splats(spu_ctx.dt);
   half = spu_splats(0.5);
   xl = spu_mul(half, dt);
@@ -330,6 +333,9 @@ spu_push_part_2d(void){
   fnqxs = spu_splats(spu_ctx.dx[0] * spu_ctx.fnqs / spu_ctx.dt);
   fnqys = spu_splats(spu_ctx.dx[1] * spu_ctx.fnqs / spu_ctx.dt);
   fnqzs = spu_splats(spu_ctx.dx[2] * spu_ctx.fnqs / spu_ctx.dt);
+  xbx = spu_splats(psc_block.xb[0]);
+  xby = spu_splats(psc_block.xb[1]);
+  xbz = spu_splats(psc_block.xb[2]);
   unsigned long long end = psc_block.part_end; 
 
   int run = 1;
@@ -361,7 +367,6 @@ spu_push_part_2d(void){
     // next time through the loop.
 
     if(__builtin_expect((np_ea < end),1)) {
-
       loop_preload_particle(buff.plb1, np_ea, 2 * sizeof(particle_cbe_t));
 
     }    
@@ -423,8 +428,8 @@ spu_push_part_2d(void){
     v_real gmx, gmy, gOx, gOy, glx, gly, H1, H2, h1, h2;
     v_int j1, j2, l1, l2;
       
-    find_index(xi, dxi, j1, H1);
-    find_index(yi, dyi, j2, H2);
+    find_index(x,xi, dxi, j1, H1);
+    find_index(y,yi, dyi, j2, H2);
     
     ip_to_grid_m(H1, gmx);
     ip_to_grid_m(H2, gmy);
@@ -435,8 +440,8 @@ spu_push_part_2d(void){
     ip_to_grid_l(H1, glx);
     ip_to_grid_l(H2, gly);
     
-    find_index_minus_shift(xi, dxi, l1, h1, half);
-    find_index_minus_shift(yi, dyi, l2, h2, half);
+    find_index_minus_shift(x,xi, dxi, l1, h1, half);
+    find_index_minus_shift(y,yi, dyi, l2, h2, half);
     
     v_real hmx, hmy, hOx, hOy, hlx, hly;
 
@@ -661,8 +666,8 @@ spu_push_part_2d(void){
 
     v_int k1,k2;
     
-    find_index(xi, dxi, k1, h1);
-    find_index(yi, dyi, k2, h2);
+    find_index(x,xi, dxi, k1, h1);
+    find_index(y,yi, dyi, k2, h2);
     
     // God help me, there's some things I just can't fgure out how to parallelize
     // The g-- here are just temporary variables. I can't do the assignments in parallel, 

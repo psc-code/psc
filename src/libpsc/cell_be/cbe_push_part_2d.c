@@ -39,7 +39,7 @@ psc_push_particles_cbe_push_xy(struct psc_push_particles *push,
     fields_zero(&flds.f[p], JXI);
     fields_zero(&flds.f[p], JYI);
     fields_zero(&flds.f[p], JZI);
-    cell_run_patch(&flds.f[p], &particles.p[p], job);
+    cell_run_patch(p,&flds.f[p], &particles.p[p], job);
   }
 
   wait_all_spe();

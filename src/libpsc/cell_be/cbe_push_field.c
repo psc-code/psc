@@ -34,7 +34,7 @@ psc_push_fields_cbe_push_a_2d(struct psc_push_fields *push, mfields_base_t *flds
     // So, another thing I'm not too please about. The function that's getting
     // called here will basically stall the ppu until it manages to start the patch
     // on an spe...
-    cell_run_patch(&flds.f[p], &null_parts, job);
+    cell_run_patch(p,&flds.f[p], &null_parts, job);
   }
 
   wait_all_spe();
@@ -64,7 +64,7 @@ psc_push_fields_cbe_push_b_2d(struct psc_push_fields *push, mfields_base_t *flds
     // So, another thing I'm not too please about. The function that's getting
     // called here will basically stall the ppu until it manages to start the patch
     // on an spe...
-    cell_run_patch(&flds.f[p], &null_parts, job);
+    cell_run_patch(p,&flds.f[p], &null_parts, job);
   }
 
   wait_all_spe();
