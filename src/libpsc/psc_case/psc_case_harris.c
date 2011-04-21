@@ -326,7 +326,7 @@ psc_case_test_xy_set_from_options(struct psc_case *_case)
   real d_i = sqrt(harris->MMi); // in units of d_e
   psc.domain.length[0] = 2. * harris->lz * d_i; // double tearing
   psc.domain.length[1] = harris->lx * d_i;
-  psc.domain.length[2] = 10000000;
+  psc.domain.length[2] = 1.0;
 
   // I hacked this in to test the cell pusher, which is why 
   // the domain is sort of funky shaped. 
