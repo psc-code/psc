@@ -29,6 +29,10 @@
 - libmrc/io: write uniform crds as such for xdmf2 (non-par), and elsewhere
 - libmrc/io: write hyperslab
 - libmrc/io: non-parallel HDF5 broken?
+- libmrc/io: write vectors as such
+- libmrc/io: too many comm's on hopper
+- libmrc/io: arbitrary sub-slab
+- libmrc/io: xdmf2_collective: be smarter about finding communication partners
 - libmrc/obj: automatic track child classes
 - libmrc/obj: consistently override standard methods in subclasses (order)
 - libmrc/ddc: use mpi types instead of copy-to-buffer ?
