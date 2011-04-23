@@ -440,6 +440,8 @@ static void
 ds_srv_put_gfld_2d(struct diagsrv_one *ds, struct mrc_f2 *gfld, char *fld_name,
 		   int outtype, float sheet)
 {
+  free(gfld->name[0]);
+  gfld->name[0] = strdup(fld_name);
   mrc_io_write_field2d(ds->io, 1., gfld, outtype, sheet);
 }
 

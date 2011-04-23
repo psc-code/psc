@@ -158,6 +158,21 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
   }
 }
 
+static void
+mrc_domain_simple_get_local_patch_info(struct mrc_domain *domain, int patch,
+				       struct mrc_patch_info *info)
+{
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+
+  assert(patch == 0);
+  for (int d = 0; d < 3; d++) {
+    info->ldims[d] = simple->patch.ldims[d];
+    info->off[d] = simple->patch.off[d];
+    info->patch = 0;
+    info->global_patch = -1;
+  }
+}
+
 static struct mrc_ddc *
 mrc_domain_simple_create_ddc(struct mrc_domain *domain)
 {
@@ -207,6 +222,7 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .get_global_dims       = mrc_domain_simple_get_global_dims,
   .get_nr_procs          = mrc_domain_simple_get_nr_procs,
   .get_bc                = mrc_domain_simple_get_bc,
+  .get_local_patch_info  = mrc_domain_simple_get_local_patch_info,
   .create_ddc            = mrc_domain_simple_create_ddc,
 };
 

@@ -382,6 +382,7 @@ xdmf_spatial_create(struct mrc_io *io, const char *sfx, float sheet, int p, int 
   memset(xs, 0, sizeof(*xs));
   xs->sfx            = strdup(sfx);
   xs->sheet          = sheet;
+  xs->p              = p;
   xs->nr_subdomains  = nr_subdomains;
   xs->subdomains     = subdomains;
   xs->write_topology = write_topology;

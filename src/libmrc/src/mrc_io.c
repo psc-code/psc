@@ -262,8 +262,10 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
   } else {
     struct mrc_f2 f2 = {};
     f2.domain = fld->domain;
+    f2.name = calloc(1, sizeof(*f2.name));
     f2.name[0] = strdup(fld->name[0]);
     ops->write_field2d(io, 1., &f2, outtype, sheet);
+    mrc_f2_free(&f2);
   }
 }
 
