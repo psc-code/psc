@@ -891,7 +891,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
       ib[d] = -m3->sw;
       im[d] = info.ldims[d] + 2 * m3->sw;
     }
-    struct mrc_f3 *recv_f3 = mrc_f3_alloc(MPI_COMM_SELF, ib, im);
+    struct mrc_f3 *recv_f3 = mrc_f3_alloc(MPI_COMM_NULL, ib, im);
     mrc_f3_setup(recv_f3);
     ctx->recv_f3s[rr] = recv_f3;
     
@@ -1006,7 +1006,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     /* 	    writer_off[0], writer_off[1], writer_off[2], */
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-    f3 = mrc_f3_alloc(MPI_COMM_SELF, writer_off, writer_dims);
+    f3 = mrc_f3_alloc(MPI_COMM_NULL, writer_off, writer_dims);
     mrc_f3_setup(f3);
 
     struct xdmf_file *file = &xdmf->file;

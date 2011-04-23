@@ -12,7 +12,9 @@ enum {
 #ifndef NDEBUG
 
 #define assert_collective(comm) do {		\
-    MPI_Barrier(comm);			\
+    if (comm != MPI_COMM_NULL) {		\
+      MPI_Barrier(comm);			\
+    }						\
   } while (0)
 
 #else

@@ -15,7 +15,11 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
 
   assert(class->size >= sizeof(struct mrc_obj));
   struct mrc_obj *obj = calloc(1, class->size);
-  MPI_Comm_dup(comm, &obj->comm);
+  if (comm == MPI_COMM_NULL) {
+    obj->comm = MPI_COMM_NULL;
+  } else {
+    MPI_Comm_dup(comm, &obj->comm);
+  }
 
   obj->class = class;
   obj->refcount = 1;
@@ -117,7 +121,9 @@ mrc_obj_put(struct mrc_obj *obj)
     class->destroy(obj);
   }
 
-  MPI_Comm_free(&obj->comm);
+  if (obj->comm != MPI_COMM_NULL) {
+    MPI_Comm_free(&obj->comm);
+  }
   if (obj->name != obj->class->name) {
     free(obj->name);
   }
