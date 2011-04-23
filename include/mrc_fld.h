@@ -36,6 +36,7 @@ struct mrc_f1 {
 };
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
+struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x);
 void mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x,
 		  struct mrc_f1 *y);

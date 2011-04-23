@@ -11,8 +11,6 @@
 // ======================================================================
 // mrc_f1
 
-#define to_mrc_f1(o) container_of(o, struct mrc_f1, obj)
-
 static void
 _mrc_f1_destroy(struct mrc_f1 *f1)
 {
@@ -55,6 +53,19 @@ _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
   mrc_io_write_f1(io, mrc_f1_name(f1), f1);
 }
 
+struct mrc_f1 *
+mrc_f1_duplicate(struct mrc_f1 *f1_in)
+{
+  struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
+
+  f1->ib[0] = f1_in->ib[0];
+  f1->im[0] = f1_in->im[0];
+  f1->nr_comp = f1_in->nr_comp;
+  mrc_f1_setup(f1);
+
+  return f1;
+}
+
 void
 mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 {
@@ -90,7 +101,6 @@ mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
 static struct param mrc_f1_params_descr[] = {
   { "ibx"             , VAR(ib[0])        , PARAM_INT(0)           },
   { "imx"             , VAR(im[0])        , PARAM_INT(0)           },
-
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   {},
 };
