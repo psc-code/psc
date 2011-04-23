@@ -250,6 +250,76 @@ acoff(int n, float y, float xm, float xn, float d0)
   return yy;
 }
 
+// ======================================================================
+
+struct mrc_ts {
+  struct mrc_obj obj;
+  float dt;
+  struct mrc_f1 *x;
+
+  // RK2
+  struct mrc_f1 *rhs;
+  struct mrc_f1 *xm;
+};
+
+MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
+
+void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
+void mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x);
+
+static void _mrc_ts_setup(struct mrc_ts *ts)
+{
+  assert(ts->x);
+
+  // RK2
+  ts->rhs = mrc_f1_duplicate(ts->x);
+  ts->xm = mrc_f1_duplicate(ts->x);
+}
+
+static void _mrc_ts_destroy(struct mrc_ts *ts)
+{
+  assert(ts->x);
+
+  // RK2
+  mrc_f1_destroy(ts->rhs);
+  mrc_f1_destroy(ts->xm);
+}
+
+void
+mrc_ts_set_dt(struct mrc_ts *ts, float dt)
+{
+  ts->dt = dt;
+}
+
+void
+mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x)
+{
+  ts->x = x;
+}
+
+void
+mrc_ts_step(struct mrc_ts *ts, struct rmhd_params *rmhd)
+{
+  struct mrc_f1 *x = ts->x;
+  struct mrc_f1 *xm = ts->xm;
+  struct mrc_f1 *rhs = ts->rhs;
+
+  calc_rhs(rmhd, rhs, x);
+  mrc_f1_waxpy(xm, .5 * ts->dt, rhs, x);
+  
+  calc_rhs(rmhd, rhs, xm);
+  mrc_f1_axpy(x, ts->dt, rhs);
+}
+
+struct mrc_class_mrc_ts mrc_class_mrc_ts = {
+  .name         = "mrc_ts",
+  .size         = sizeof(struct mrc_ts),
+  .setup        = _mrc_ts_setup,
+  .destroy      = _mrc_ts_destroy,
+};
+
+// ======================================================================
+
 int
 main(int argc, char **argv)
 {
@@ -293,8 +363,10 @@ main(int argc, char **argv)
   float dt = par.cfl * fminf(dx, par.S * sqr(dx));
 
   // r.h.s
-  struct mrc_f1 *rhs = get_fld(&par, NR_FLDS);
-  struct mrc_f1 *xm = get_fld(&par, NR_FLDS);
+  struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
+  mrc_ts_set_dt(ts, dt);
+  mrc_ts_set_state(ts, x);
+  mrc_ts_setup(ts);
 
   FILE *f_diag = fopen("diag.asc", "w");
   for (int n = 0; n <= par.n_end; n++) {
@@ -320,16 +392,12 @@ main(int argc, char **argv)
       fflush(f_diag);
     }
 
-    calc_rhs(&par, rhs, x);
-    mrc_f1_waxpy(xm, .5 * dt, rhs, x);
-
-    calc_rhs(&par, rhs, xm);
-    mrc_f1_axpy(x, dt, rhs);
+    mrc_ts_step(ts, &par);
   }
   fclose(f_diag);
+  mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
-  mrc_f1_destroy(rhs);
 
   MPI_Finalize();
   return 0;
