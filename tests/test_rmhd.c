@@ -321,20 +321,10 @@ main(int argc, char **argv)
     }
 
     calc_rhs(&par, rhs, x);
-    //  mrc_f1_dump(rhs, "rhs");
-    mrc_f1_foreach(x, ix, 0, 0) {
-      for (int m = 0; m < NR_FLDS; m++) {
-	MRC_F1(xm,m, ix) = MRC_F1(x,m, ix) + .5 * dt * MRC_F1(rhs,m, ix);
-      }
-    } mrc_f1_foreach_end;
+    mrc_f1_waxpy(xm, .5 * dt, rhs, x);
 
     calc_rhs(&par, rhs, xm);
-    //  mrc_f1_dump(rhs, "rhs");
-    mrc_f1_foreach(x, ix, 0, 0) {
-      for (int m = 0; m < NR_FLDS; m++) {
-	MRC_F1(x,m, ix) += dt * MRC_F1(rhs,m, ix);
-      }
-    } mrc_f1_foreach_end;
+    mrc_f1_axpy(x, dt, rhs);
   }
   fclose(f_diag);
 

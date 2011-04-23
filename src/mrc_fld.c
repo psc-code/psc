@@ -55,6 +55,34 @@ _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
   mrc_io_write_f1(io, mrc_f1_name(f1), f1);
 }
 
+void
+mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
+{
+  assert(w->nr_comp == x->nr_comp);
+  assert(w->nr_comp == y->nr_comp);
+  assert(w->im[0] == x->im[0]);
+  assert(w->im[0] == y->im[0]);
+
+  mrc_f1_foreach(w, ix, 0, 0) {
+    for (int m = 0; m < w->nr_comp; m++) {
+      MRC_F1(w,m, ix) = alpha * MRC_F1(x,m, ix) + MRC_F1(y,m, ix);
+    }
+  } mrc_f1_foreach_end;
+}
+
+void
+mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
+{
+  assert(x->nr_comp == y->nr_comp);
+  assert(x->im[0] == y->im[0]);
+
+  mrc_f1_foreach(x, ix, 0, 0) {
+    for (int m = 0; m < y->nr_comp; m++) {
+      MRC_F1(y,m, ix) += alpha * MRC_F1(x,m, ix);
+    }
+  } mrc_f1_foreach_end;
+}
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_f1
 
