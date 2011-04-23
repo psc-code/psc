@@ -284,6 +284,7 @@ struct mrc_io_ops mrc_io_xdmf2_ops = {
 
 // ======================================================================
 
+#ifdef H5_HAVE_PARALLEL
 
 // ----------------------------------------------------------------------
 // xdmf_parallel_open
@@ -1064,5 +1065,7 @@ struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
 #endif
   .write_m3      = xdmf_collective_write_m3,
 };
+
+#endif
 
 #endif
