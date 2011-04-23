@@ -8,6 +8,116 @@
 #include <stdlib.h>
 #include <assert.h>
 
+// ======================================================================
+
+struct mrc_ts {
+  struct mrc_obj obj;
+  float dt;
+  struct mrc_f1 *x;
+  void *ctx; // FIXME, should be mrc_obj?
+  void (*rhsf)(void *ctx, struct mrc_f1 *x, struct mrc_f1 *rhs);
+  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
+
+  // RK2
+  struct mrc_f1 *rhs;
+  struct mrc_f1 *xm;
+};
+
+MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
+
+void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
+void mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x);
+void mrc_ts_set_context(struct mrc_ts *ts, void *ctx);
+void mrc_ts_set_rhs_function(struct mrc_ts *ts,
+			     void (*rhsf)(void *ctx, struct mrc_f1 *x,
+					  struct mrc_f1 *rhs));
+void mrc_ts_set_diag_function(struct mrc_ts *ts,
+			      void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
+					    FILE *file));
+
+static void
+_mrc_ts_setup(struct mrc_ts *ts)
+{
+  assert(ts->x);
+
+  // RK2
+  ts->rhs = mrc_f1_duplicate(ts->x);
+  ts->xm = mrc_f1_duplicate(ts->x);
+}
+
+static void
+_mrc_ts_destroy(struct mrc_ts *ts)
+{
+  assert(ts->x);
+
+  // RK2
+  mrc_f1_destroy(ts->rhs);
+  mrc_f1_destroy(ts->xm);
+}
+
+void
+mrc_ts_set_dt(struct mrc_ts *ts, float dt)
+{
+  ts->dt = dt;
+}
+
+void
+mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x)
+{
+  ts->x = x;
+}
+
+void
+mrc_ts_set_context(struct mrc_ts *ts, void *ctx)
+{
+  ts->ctx = ctx;
+}
+
+void
+mrc_ts_set_rhs_function(struct mrc_ts *ts,
+			void (*rhsf)(void *ctx, struct mrc_f1 *x,
+				     struct mrc_f1 *rhs))
+{
+  ts->rhsf = rhsf;
+}
+
+void
+mrc_ts_set_diag_function(struct mrc_ts *ts,
+			 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
+				       FILE *file))
+{
+  ts->diagf = diagf;
+}
+
+static void
+mrc_ts_diag(struct mrc_ts *ts, float time, FILE *file)
+{
+  ts->diagf(ts->ctx, time, ts->x, file);
+}
+
+static void
+mrc_ts_step(struct mrc_ts *ts)
+{
+  struct mrc_f1 *x = ts->x;
+  struct mrc_f1 *xm = ts->xm;
+  struct mrc_f1 *rhs = ts->rhs;
+
+  ts->rhsf(ts->ctx, rhs, x);
+  mrc_f1_waxpy(xm, .5 * ts->dt, rhs, x);
+  
+  ts->rhsf(ts->ctx, rhs, xm);
+  mrc_f1_axpy(x, ts->dt, rhs);
+}
+
+struct mrc_class_mrc_ts mrc_class_mrc_ts = {
+  .name         = "mrc_ts",
+  .size         = sizeof(struct mrc_ts),
+  .setup        = _mrc_ts_setup,
+  .destroy      = _mrc_ts_destroy,
+};
+
+// ======================================================================
+
 #define sqr(a) ((a) * (a))
 
 enum {
@@ -171,6 +281,24 @@ solve_poisson(struct rmhd_params *par, struct mrc_f1 *x, int m_x,
 }
 
 static void
+rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
+{
+  float absmax[NR_FLDS] = {};
+  mrc_f1_foreach(x, ix, 0, 0) {
+    for (int m = 0; m < NR_FLDS; m++) {
+      absmax[m] = fmaxf(absmax[m], fabsf(MRC_F1(x,m, ix)));
+    }
+  } mrc_f1_foreach_end;
+  
+  fprintf(file, "%g", time);
+  for (int m = 0; m < NR_FLDS; m++) {
+    fprintf(file, " %g", absmax[m]);
+  }
+  fprintf(file, "\n");
+  fflush(file);
+}
+
+static void
 set_bnd_zero(struct rmhd_params *par, struct mrc_f1 *x, int m_x)
 {
   int mx = par->mx;
@@ -196,10 +324,10 @@ enum {
 #define BZ_I(ix) MRC_F1(x, BZ_I, ix)
 #define VZ_R(ix) MRC_F1(x, VZ_R, ix)
 
-
 static void
-calc_rhs(struct rmhd_params *par, struct mrc_f1 *rhs, struct mrc_f1 *x)
+calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
+  struct rmhd_params *par = ctx;
   struct mrc_f1 *By0 = par->By0;
   struct mrc_f1 *phi = get_fld(par, 1);
 
@@ -252,74 +380,6 @@ acoff(int n, float y, float xm, float xn, float d0)
 
 // ======================================================================
 
-struct mrc_ts {
-  struct mrc_obj obj;
-  float dt;
-  struct mrc_f1 *x;
-
-  // RK2
-  struct mrc_f1 *rhs;
-  struct mrc_f1 *xm;
-};
-
-MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
-
-void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
-void mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x);
-
-static void _mrc_ts_setup(struct mrc_ts *ts)
-{
-  assert(ts->x);
-
-  // RK2
-  ts->rhs = mrc_f1_duplicate(ts->x);
-  ts->xm = mrc_f1_duplicate(ts->x);
-}
-
-static void _mrc_ts_destroy(struct mrc_ts *ts)
-{
-  assert(ts->x);
-
-  // RK2
-  mrc_f1_destroy(ts->rhs);
-  mrc_f1_destroy(ts->xm);
-}
-
-void
-mrc_ts_set_dt(struct mrc_ts *ts, float dt)
-{
-  ts->dt = dt;
-}
-
-void
-mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x)
-{
-  ts->x = x;
-}
-
-void
-mrc_ts_step(struct mrc_ts *ts, struct rmhd_params *rmhd)
-{
-  struct mrc_f1 *x = ts->x;
-  struct mrc_f1 *xm = ts->xm;
-  struct mrc_f1 *rhs = ts->rhs;
-
-  calc_rhs(rmhd, rhs, x);
-  mrc_f1_waxpy(xm, .5 * ts->dt, rhs, x);
-  
-  calc_rhs(rmhd, rhs, xm);
-  mrc_f1_axpy(x, ts->dt, rhs);
-}
-
-struct mrc_class_mrc_ts mrc_class_mrc_ts = {
-  .name         = "mrc_ts",
-  .size         = sizeof(struct mrc_ts),
-  .setup        = _mrc_ts_setup,
-  .destroy      = _mrc_ts_destroy,
-};
-
-// ======================================================================
-
 int
 main(int argc, char **argv)
 {
@@ -364,6 +424,9 @@ main(int argc, char **argv)
 
   // r.h.s
   struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
+  mrc_ts_set_context(ts, &par);
+  mrc_ts_set_rhs_function(ts, calc_rhs);
+  mrc_ts_set_diag_function(ts, rmhd_diag);
   mrc_ts_set_dt(ts, dt);
   mrc_ts_set_state(ts, x);
   mrc_ts_setup(ts);
@@ -377,22 +440,10 @@ main(int argc, char **argv)
     }
 
     if (n % par.diag_every == 0) {
-      float absmax[NR_FLDS] = {};
-      mrc_f1_foreach(x, ix, 0, 0) {
-	for (int m = 0; m < NR_FLDS; m++) {
-	  absmax[m] = fmaxf(absmax[m], fabsf(MRC_F1(x,m, ix)));
-	}
-      } mrc_f1_foreach_end;
-
-      fprintf(f_diag, "%g", n*dt);
-      for (int m = 0; m < NR_FLDS; m++) {
-	fprintf(f_diag, " %g", absmax[m]);
-      }
-      fprintf(f_diag, "\n");
-      fflush(f_diag);
+      mrc_ts_diag(ts, n * dt, f_diag);
     }
 
-    mrc_ts_step(ts, &par);
+    mrc_ts_step(ts);
   }
   fclose(f_diag);
   mrc_ts_destroy(ts);
