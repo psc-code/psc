@@ -8,12 +8,20 @@
 #include <stdlib.h>
 #include <assert.h>
 
+// FIXME
+static void mrc_f1_dump(struct mrc_f1 *f1, const char *pfx);
+
 // ======================================================================
 
 struct mrc_ts {
   struct mrc_obj obj;
-  float dt;
-  struct mrc_f1 *x;
+  // parameters
+  int out_every;
+  int diag_every;
+
+  int n; // current timestep number
+  float dt; // current dt
+  struct mrc_f1 *x; // current state vector
   void *ctx; // FIXME, should be mrc_obj?
   void (*rhsf)(void *ctx, struct mrc_f1 *x, struct mrc_f1 *rhs);
   void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
@@ -92,7 +100,19 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
 static void
 mrc_ts_diag(struct mrc_ts *ts, float time, FILE *file)
 {
-  ts->diagf(ts->ctx, time, ts->x, file);
+  if (ts->n % ts->diag_every == 0) {
+    ts->diagf(ts->ctx, time, ts->x, file);
+  }
+}
+
+static void
+mrc_ts_output(struct mrc_ts *ts)
+{
+  if (ts->n % ts->out_every == 0) {
+    char pfx[10];
+    sprintf(pfx, "x-%d", ts->n / ts->out_every);
+    mrc_f1_dump(ts->x, pfx);
+  }
 }
 
 static void
@@ -109,9 +129,18 @@ mrc_ts_step(struct mrc_ts *ts)
   mrc_f1_axpy(x, ts->dt, rhs);
 }
 
+#define VAR(x) (void *)offsetof(struct mrc_ts, x)
+static struct param mrc_ts_param_descr[] = {
+  { "out_every"       , VAR(out_every)      , PARAM_INT(1000)       },
+  { "diag_every"      , VAR(diag_every)     , PARAM_INT(10)         },
+  {},
+};
+#undef VAR
+
 struct mrc_class_mrc_ts mrc_class_mrc_ts = {
   .name         = "mrc_ts",
   .size         = sizeof(struct mrc_ts),
+  .param_descr  = mrc_ts_param_descr,
   .setup        = _mrc_ts_setup,
   .destroy      = _mrc_ts_destroy,
 };
@@ -141,8 +170,6 @@ struct rmhd_params {
   float xm;
   int mx;
   int n_end;
-  int out_every;
-  int diag_every;
 
   struct mrc_f1 *By0;
 };
@@ -160,8 +187,6 @@ static struct param rmhd_params_descr[] = {
   { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
   { "mx"              , VAR(mx)             , PARAM_INT(100)        },
   { "n_end"           , VAR(n_end)          , PARAM_INT(10000)      },
-  { "out_every"       , VAR(out_every)      , PARAM_INT(1000)       },
-  { "diag_every"      , VAR(diag_every)     , PARAM_INT(10)         },
   {},
 };
 #undef VAR
@@ -429,20 +454,14 @@ main(int argc, char **argv)
   mrc_ts_set_diag_function(ts, rmhd_diag);
   mrc_ts_set_dt(ts, dt);
   mrc_ts_set_state(ts, x);
+  mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
+  mrc_ts_view(ts);
 
   FILE *f_diag = fopen("diag.asc", "w");
-  for (int n = 0; n <= par.n_end; n++) {
-    if (n % par.out_every == 0) {
-      char pfx[10];
-      sprintf(pfx, "x-%d", n / par.out_every);
-      mrc_f1_dump(x, pfx);
-    }
-
-    if (n % par.diag_every == 0) {
-      mrc_ts_diag(ts, n * dt, f_diag);
-    }
-
+  for (ts->n = 0; ts->n <= par.n_end; ts->n++) {
+    mrc_ts_output(ts);
+    mrc_ts_diag(ts, ts->n * dt, f_diag);
     mrc_ts_step(ts);
   }
   fclose(f_diag);
