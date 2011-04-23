@@ -27,14 +27,11 @@ _mrc_f1_destroy(struct mrc_f1 *f1)
 }
 
 static void
-_mrc_f1_create(struct mrc_f1 *f1)
-{
-  f1->name = calloc(f1->nr_comp, sizeof(*f1->name));
-}
-
-static void
 _mrc_f1_setup(struct mrc_f1 *f1)
 {
+  free(f1->name);
+
+  f1->name = calloc(f1->nr_comp, sizeof(*f1->name));
   f1->len = f1->im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -75,7 +72,6 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .name         = "mrc_f1",
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
-  .create       = _mrc_f1_create,
   .destroy      = _mrc_f1_destroy,
   .setup        = _mrc_f1_setup,
   .read         = _mrc_f1_read,
