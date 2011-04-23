@@ -18,12 +18,15 @@ struct mrc_ts {
   // parameters
   int out_every;
   int diag_every;
+  int max_steps;
+  char *diag_filename;
 
   int n; // current timestep number
   float dt; // current dt
   struct mrc_f1 *x; // current state vector
   void *ctx; // FIXME, should be mrc_obj?
   void (*rhsf)(void *ctx, struct mrc_f1 *x, struct mrc_f1 *rhs);
+  FILE *f_diag;
   void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
 
   // RK2
@@ -46,7 +49,7 @@ void mrc_ts_set_diag_function(struct mrc_ts *ts,
 static void
 _mrc_ts_setup(struct mrc_ts *ts)
 {
-  assert(ts->x);
+  ts->f_diag = fopen(ts->diag_filename, "w");
 
   // RK2
   ts->rhs = mrc_f1_duplicate(ts->x);
@@ -56,7 +59,9 @@ _mrc_ts_setup(struct mrc_ts *ts)
 static void
 _mrc_ts_destroy(struct mrc_ts *ts)
 {
-  assert(ts->x);
+  if (ts->f_diag) {
+    fclose(ts->f_diag);
+  }
 
   // RK2
   mrc_f1_destroy(ts->rhs);
@@ -98,10 +103,10 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
 }
 
 static void
-mrc_ts_diag(struct mrc_ts *ts, float time, FILE *file)
+mrc_ts_diag(struct mrc_ts *ts, float time)
 {
   if (ts->n % ts->diag_every == 0) {
-    ts->diagf(ts->ctx, time, ts->x, file);
+    ts->diagf(ts->ctx, time, ts->x, ts->f_diag);
   }
 }
 
@@ -129,10 +134,22 @@ mrc_ts_step(struct mrc_ts *ts)
   mrc_f1_axpy(x, ts->dt, rhs);
 }
 
+void
+mrc_ts_solve(struct mrc_ts *ts)
+{
+  for (ts->n = 0; ts->n <= ts->max_steps; ts->n++) {
+    mrc_ts_output(ts);
+    mrc_ts_diag(ts, ts->n * ts->dt);
+    mrc_ts_step(ts);
+  }
+}
+
 #define VAR(x) (void *)offsetof(struct mrc_ts, x)
 static struct param mrc_ts_param_descr[] = {
-  { "out_every"       , VAR(out_every)      , PARAM_INT(1000)       },
-  { "diag_every"      , VAR(diag_every)     , PARAM_INT(10)         },
+  { "max_steps"     , VAR(max_steps)     , PARAM_INT(10000)          },
+  { "out_every"     , VAR(out_every)     , PARAM_INT(1000)           },
+  { "diag_every"    , VAR(diag_every)    , PARAM_INT(10)             },
+  { "diag_filename" , VAR(diag_filename) , PARAM_STRING("diag.asc")  },
   {},
 };
 #undef VAR
@@ -169,7 +186,6 @@ struct rmhd_params {
   float xn;
   float xm;
   int mx;
-  int n_end;
 
   struct mrc_f1 *By0;
 };
@@ -186,7 +202,6 @@ static struct param rmhd_params_descr[] = {
   { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
   { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
   { "mx"              , VAR(mx)             , PARAM_INT(100)        },
-  { "n_end"           , VAR(n_end)          , PARAM_INT(10000)      },
   {},
 };
 #undef VAR
@@ -456,15 +471,7 @@ main(int argc, char **argv)
   mrc_ts_set_state(ts, x);
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
-  mrc_ts_view(ts);
-
-  FILE *f_diag = fopen("diag.asc", "w");
-  for (ts->n = 0; ts->n <= par.n_end; ts->n++) {
-    mrc_ts_output(ts);
-    mrc_ts_diag(ts, ts->n * dt, f_diag);
-    mrc_ts_step(ts);
-  }
-  fclose(f_diag);
+  mrc_ts_solve(ts);
   mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
