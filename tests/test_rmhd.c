@@ -13,15 +13,16 @@
 enum {
   OM_I,
   PSI_R,
-  NR_FLDS,
   BZ_I,
   VZ_R,
+  NR_FLDS,
 };
 
 struct rmhd_params {
   float Lx;
   float lambda;
   float S;
+  float d_i;
   float ky;
 
   float cfl;
@@ -41,6 +42,7 @@ static struct param rmhd_params_descr[] = {
   { "Lx"              , VAR(Lx)             , PARAM_FLOAT(40.)      },
   { "lambda"          , VAR(lambda)         , PARAM_FLOAT(1.)       },
   { "S"               , VAR(S)              , PARAM_FLOAT(1000.)    },
+  { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
   { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
   { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
   { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
@@ -214,12 +216,21 @@ calc_rhs(struct rmhd_params *par, struct mrc_f1 *rhs, struct mrc_f1 *x)
       / (.5 * (CRDX(ix+1) - CRDX(ix-1)));
     float J_r = Lapl(x, PSI_R, ix);
 
+    MRC_F1(rhs, VZ_R, ix) =
+      - par->ky * By0(ix) * BZ_I(ix);
+
     MRC_F1(rhs, OM_I, ix) =
       par->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
 
     MRC_F1(rhs, PSI_R, ix) =
       1. / par->S * J_r -
-      par->ky * By0(ix) * PHI_I(ix);
+      par->ky * By0(ix) * PHI_I(ix) +
+      par->d_i * By0(ix) * BZ_I(ix);
+
+    MRC_F1(rhs, BZ_I, ix) =
+      1. / par->S * Lapl(x, BZ_I, ix) +
+      par->ky * By0(ix) * VZ_R(ix) +
+      par->d_i * par->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
   }
 
   //  mrc_f1_dump(rhs, "rhs");
@@ -303,7 +314,7 @@ main(int argc, char **argv)
 
       fprintf(f_diag, "%g", n*dt);
       for (int m = 0; m < NR_FLDS; m++) {
-	fprintf(f_diag, " %g\n", absmax[m]);
+	fprintf(f_diag, " %g", absmax[m]);
       }
       fprintf(f_diag, "\n");
       fflush(f_diag);
