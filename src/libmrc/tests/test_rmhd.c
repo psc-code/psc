@@ -38,9 +38,6 @@ struct rmhd {
   float d_i;
   float ky;
   float cfl;
-  float dx0;
-  float xn;
-  float xm;
   int mx;
 
   struct mrc_domain *domain;
@@ -59,6 +56,8 @@ _rmhd_create(struct rmhd *rmhd)
 {
   rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
   mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  mrc_crds_set_type(crds, "rectilinear_jr2");
 }
 
 static void
@@ -78,35 +77,13 @@ rmhd_get_fld(struct rmhd *rmhd, int nr_comps, const char *name)
 }
 
 static void
-rmhd_setup_crd(struct rmhd *rmhd)
-{
-  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-
-  float xm = rmhd->xm, xn = rmhd->xn, dx0 = rmhd->dx0;
-  int mx = rmhd->mx;
-  float xc = mx / 2 - .5;
-  float a = (pow((rmhd->Lx / 2.) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
-  mrc_f1_foreach(crds->crd[0], ix, 1, 1) {
-    float xi = ix - xc;
-    float s = 1 + a*(pow(xi, (2. * xn)));
-    float sm = pow(s, xm);
-    float g = dx0 * xi * sm;
-    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-    CRDX(ix) = g;
-  } mrc_f1_foreach_end;
-}
-
-static void
 _rmhd_setup(struct rmhd *rmhd)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
   mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
-  mrc_crds_set_param_int(crds, "sw", 1);
+  mrc_crds_set_param_int(crds, "sw", BND);
   mrc_domain_setup(rmhd->domain);
-
-  rmhd_setup_crd(rmhd);
 
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
 }
@@ -241,9 +218,6 @@ static struct param rmhd_param_descr[] = {
   { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
   { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
   { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
-  { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
-  { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
-  { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
   { "mx"              , VAR(mx)             , PARAM_INT(100)        },
   {},
 };
@@ -270,6 +244,7 @@ main(int argc, char **argv)
   struct rmhd *rmhd = rmhd_create(MPI_COMM_WORLD);
   rmhd_set_from_options(rmhd);
   rmhd_setup(rmhd);
+  rmhd_view(rmhd);
 
   // i.c.
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
