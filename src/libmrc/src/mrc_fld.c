@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <assert.h>
 
 // ======================================================================
@@ -67,6 +68,29 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 }
 
 void
+mrc_f1_zero(struct mrc_f1 *x)
+{
+  mrc_f1_foreach(x, ix, 0, 0) {
+    for (int m = 0; m < x->nr_comp; m++) {
+      MRC_F1(x,m, ix) = 0.;
+    }
+  } mrc_f1_foreach_end;
+}
+
+void
+mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
+{
+  assert(x->nr_comp == y->nr_comp);
+  assert(x->im[0] == y->im[0]);
+
+  mrc_f1_foreach(x, ix, 0, 0) {
+    for (int m = 0; m < y->nr_comp; m++) {
+      MRC_F1(x,m, ix) = MRC_F1(y,m, ix);
+    }
+  } mrc_f1_foreach_end;
+}
+
+void
 mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 {
   assert(w->nr_comp == x->nr_comp);
@@ -92,6 +116,18 @@ mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
       MRC_F1(y,m, ix) += alpha * MRC_F1(x,m, ix);
     }
   } mrc_f1_foreach_end;
+}
+
+float
+mrc_f1_norm(struct mrc_f1 *x)
+{
+  float res = 0.;
+  mrc_f1_foreach(x, ix, 0, 0) {
+    for (int m = 0; m < x->nr_comp; m++) {
+      res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
+    }
+  } mrc_f1_foreach_end;
+  return res;
 }
 
 // ----------------------------------------------------------------------

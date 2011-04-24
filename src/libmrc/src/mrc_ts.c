@@ -67,19 +67,19 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
   ts->diagf = diagf;
 }
 
-static void
-mrc_ts_diag(struct mrc_ts *ts, float time)
+void
+mrc_ts_diag(struct mrc_ts *ts)
 {
   if (ts->n % ts->diag_every == 0) {
-    ts->diagf(ts->ctx, time, ts->x, ts->f_diag);
+    ts->diagf(ts->ctx, ts->time, ts->x, ts->f_diag);
   }
 }
 
-static void
-mrc_ts_output(struct mrc_ts *ts, float time)
+void
+mrc_ts_output(struct mrc_ts *ts)
 {
   if (ts->n % ts->out_every == 0) {
-    mrc_io_open(ts->io, "w", ts->n / ts->out_every, time);
+    mrc_io_open(ts->io, "w", ts->n / ts->out_every, ts->time);
     mrc_f1_write(ts->x, ts->io);
     mrc_io_close(ts->io);
   }
@@ -95,16 +95,28 @@ mrc_ts_step(struct mrc_ts *ts)
 void
 mrc_ts_solve(struct mrc_ts *ts)
 {
-  for (ts->n = 0; ts->n <= ts->max_steps; ts->n++) {
-    mrc_ts_output(ts, ts->n * ts->dt);
-    mrc_ts_diag(ts, ts->n * ts->dt);
+  if (mrc_ts_ops(ts)->solve) {
+    mrc_ts_ops(ts)->solve(ts);
+    return;
+  }
+
+  while ((ts->time < ts->max_time) && (ts->n < ts->max_steps)) {
+    if (ts->time + ts->dt > ts->max_time) {
+      ts->dt = ts->max_time - ts->time;
+    }
+
+    mrc_ts_output(ts);
+    mrc_ts_diag(ts);
     mrc_ts_step(ts);
+    ts->time += ts->dt;
+    ts->n++;
   }
 }
 
 #define VAR(x) (void *)offsetof(struct mrc_ts, x)
 static struct param mrc_ts_param_descr[] = {
-  { "max_steps"     , VAR(max_steps)     , PARAM_INT(10000)          },
+  { "max_time"      , VAR(max_time)      , PARAM_FLOAT(1.)           },
+  { "max_steps"     , VAR(max_steps)     , PARAM_INT(100000)         },
   { "out_every"     , VAR(out_every)     , PARAM_INT(1000)           },
   { "diag_every"    , VAR(diag_every)    , PARAM_INT(10)             },
   { "diag_filename" , VAR(diag_filename) , PARAM_STRING("diag.asc")  },
@@ -118,6 +130,7 @@ static struct param mrc_ts_param_descr[] = {
 static void
 mrc_ts_init()
 {
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
 }
 
