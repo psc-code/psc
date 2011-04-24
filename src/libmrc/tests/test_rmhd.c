@@ -102,8 +102,8 @@ _rmhd_destroy(struct rmhd *rmhd)
   (Dxx(x, m_x, ix) - sqr(rmhd->ky) * MRC_F1(x, m_x, ix))
 
 static void
-solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
-	      struct mrc_f1 *b, int m_b)
+rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
+		   struct mrc_f1 *b, int m_b)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   static float *aa, *bb, *cc;
@@ -144,7 +144,7 @@ rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
 }
 
 static void
-set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
+rmhd_set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
 {
   int mx = x->im[0] - 2 * x->sw;
   MRC_F1(x, m_x , -1) = 0.;
@@ -170,18 +170,18 @@ enum {
 #define VZ_R(ix) MRC_F1(x, VZ_R, ix)
 
 static void
-calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
+rmhd_calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
   struct rmhd *rmhd = ctx;
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
 
-  set_bnd_zero(rmhd, x, OM_I);
-  set_bnd_zero(rmhd, x, PSI_R);
+  rmhd_set_bnd_zero(rmhd, x, OM_I);
+  rmhd_set_bnd_zero(rmhd, x, PSI_R);
 
-  solve_poisson(rmhd, phi, PHI_I, x, OM_I);
-
+  rmhd_solve_poisson(rmhd, phi, PHI_I, x, OM_I);
+  
   mrc_f1_foreach(x, ix, 0, 0) {
     float By0pp = 
       ((MRC_F1(By0,0, ix+1) - MRC_F1(By0,0, ix  )) / (CRDX(ix+1) - CRDX(ix  )) -
@@ -275,7 +275,7 @@ main(int argc, char **argv)
   // run time integration
   struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
   mrc_ts_set_context(ts, rmhd);
-  mrc_ts_set_rhs_function(ts, calc_rhs);
+  mrc_ts_set_rhs_function(ts, rmhd_calc_rhs);
   mrc_ts_set_diag_function(ts, rmhd_diag);
   mrc_ts_set_dt(ts, dt);
   mrc_ts_set_state(ts, x);
