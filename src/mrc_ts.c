@@ -33,6 +33,17 @@ _mrc_ts_destroy(struct mrc_ts *ts)
   }
 }
 
+static void
+_mrc_ts_view(struct mrc_ts *ts)
+{
+  if (ts->n == 0)
+    return;
+
+  MPI_Comm comm = mrc_ts_comm(ts);
+  mpi_printf(comm, "nr_steps      = %d\n", ts->n);
+  mpi_printf(comm, "nr_rhsf_evals = %d\n", ts->nr_rhsf_evals);
+}
+
 void
 mrc_ts_set_dt(struct mrc_ts *ts, float dt)
 {
@@ -83,6 +94,14 @@ mrc_ts_output(struct mrc_ts *ts)
     mrc_f1_write(ts->x, ts->io);
     mrc_io_close(ts->io);
   }
+}
+
+void
+mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
+	    struct mrc_f1 *x)
+{
+  ts->rhsf(ts->ctx, rhs, x);
+  ts->nr_rhsf_evals++;
 }
 
 static void
@@ -144,6 +163,7 @@ struct mrc_class_mrc_ts mrc_class_mrc_ts = {
   .init         = mrc_ts_init,
   .create       = _mrc_ts_create,
   .setup        = _mrc_ts_setup,
+  .view         = _mrc_ts_view,
   .destroy      = _mrc_ts_destroy,
 };
 

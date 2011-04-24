@@ -7,10 +7,13 @@
 // Adapted from octave's ode45.m
 
 struct mrc_ts_ode45 {
+  float tol;
+  float safety_factor;
   float dt_min;
   float dt_max;
-  float tol;
   float pow;
+
+  int nr_rejected_steps;
 
   struct mrc_f1 *xk[7];
   struct mrc_f1 *x4;
@@ -20,7 +23,8 @@ struct mrc_ts_ode45 {
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_ode45, x)
 static struct param mrc_ts_ode45_descr[] = {
-  { "tol"             , VAR(tol)           , PARAM_FLOAT(1e-5)      },
+  { "tol"             , VAR(tol)           , PARAM_FLOAT(1e-3)      },
+  { "safety_factor"   , VAR(safety_factor) , PARAM_FLOAT(.8)        },
   {},
 };
 #undef VAR
@@ -48,7 +52,6 @@ static const float b5[7] = {
   35./384., 0., 500./1113., 125./192., -2187./6784., 11./84., 0.
 };
 
-// OPT: compute at compile time
 static float c[7];
 
 // ----------------------------------------------------------------------
@@ -56,7 +59,7 @@ static float c[7];
 static void
 mrc_ts_ode45_setup(struct mrc_ts *ts)
 {
-  // FIXME: once would be enough
+  // calculating these once would be enough
   for (int i = 0; i < 7; i++) {
     c[i] = 0.;
     for (int j = 0; j < 6; j++) {
@@ -96,6 +99,18 @@ mrc_ts_ode45_destroy(struct mrc_ts *ts)
 }
 
 static void
+mrc_ts_ode45_view(struct mrc_ts *ts)
+{
+  struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
+
+  if (ts->n == 0)
+    return;
+
+  MPI_Comm comm = mrc_ts_comm(ts);
+  mpi_printf(comm, "nr_rejected_steps = %d\n", ode45->nr_rejected_steps);
+}
+
+static void
 mrc_ts_ode45_solve(struct mrc_ts *ts)
 {
   struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
@@ -105,7 +120,7 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
   struct mrc_f1 *x5 = ode45->x5;
   struct mrc_f1 *gamma1 = ode45->gamma1;
 
-  ts->rhsf(ts->ctx, xk[0], x);
+  mrc_ts_rhsf(ts, xk[0], ts->time, x);
 
   while ((ts->time < ts->max_time) && (ts->dt >= ode45->dt_min)) {
     if (ts->time + ts->dt > ts->max_time) {
@@ -125,8 +140,8 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
       for (int k = 0; k <= j; k++) {
 	mrc_f1_axpy(gamma1, ts->dt * a[j+1][k], xk[k]);
       }
-      // float time = ts->time + c[j+1] * ts->dt;
-      ts->rhsf(ts->ctx, xk[j+1], gamma1);
+      float time = ts->time + c[j+1] * ts->dt;
+      mrc_ts_rhsf(ts, xk[j+1], time, gamma1);
     }
 
     // compute the 4th order estimate
@@ -156,13 +171,16 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
       ts->n++;
       // using the higher order estimate is called 'local extrapolation'
       mrc_f1_copy(x, x5);
+    } else {
+      ode45->nr_rejected_steps++;
     }
 
     // Update the step size
     if (delta == 0.) {
       delta = 1e-16;
     }
-    ts->dt = fminf(ode45->dt_max, 0.8 * ts->dt * pow(tau/delta, ode45->pow));
+    ts->dt = fminf(ode45->dt_max, 
+		   ode45->safety_factor * ts->dt * pow(tau/delta, ode45->pow));
 
     // Assign the last stage for x(k) as the first stage for computing x(k+1).
     // This is part of the Dormand-Prince pair caveat.
@@ -183,5 +201,6 @@ struct mrc_ts_ops mrc_ts_ode45_ops = {
   .param_descr      = mrc_ts_ode45_descr,
   .setup            = mrc_ts_ode45_setup,
   .destroy          = mrc_ts_ode45_destroy,
+  .view             = mrc_ts_ode45_view,
   .solve            = mrc_ts_ode45_solve,
 };

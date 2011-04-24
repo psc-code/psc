@@ -27,8 +27,11 @@ struct mrc_ts {
   void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
 
   struct mrc_f1 *rhs;
+  int nr_rhsf_evals; // statistics
 };
 
+void mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
+		 struct mrc_f1 *x);
 void mrc_ts_diag(struct mrc_ts *ts);
 void mrc_ts_output(struct mrc_ts *ts);
 

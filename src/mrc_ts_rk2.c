@@ -30,10 +30,10 @@ mrc_ts_rk2_step(struct mrc_ts *ts)
   struct mrc_f1 *rhs = ts->rhs;
   struct mrc_f1 *xm = rk2->xm;
 
-  ts->rhsf(ts->ctx, rhs, x);
+  mrc_ts_rhsf(ts, rhs, ts->time, x);
   mrc_f1_waxpy(xm, .5 * ts->dt, rhs, x);
   
-  ts->rhsf(ts->ctx, rhs, xm);
+  mrc_ts_rhsf(ts, rhs, ts->time + .5 * ts->dt, xm);
   mrc_f1_axpy(x, ts->dt, rhs);
 }
 

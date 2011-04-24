@@ -282,6 +282,7 @@ main(int argc, char **argv)
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
   mrc_ts_solve(ts);
+  mrc_ts_view(ts);
   mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
