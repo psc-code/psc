@@ -38,7 +38,6 @@ struct rmhd {
   float d_i;
   float ky;
   float cfl;
-  int mx;
 
   struct mrc_domain *domain;
   struct mrc_f1 *By0;
@@ -109,19 +108,21 @@ solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   static float *aa, *bb, *cc;
 
+  int gdims[3];
+  mrc_domain_get_global_dims(rmhd->domain, gdims);
   if (!aa) {
-    aa = calloc(rmhd->mx, sizeof(*aa));
-    bb = calloc(rmhd->mx, sizeof(*bb));
-    cc = calloc(rmhd->mx, sizeof(*cc));
+    aa = calloc(gdims[0], sizeof(*aa));
+    bb = calloc(gdims[0], sizeof(*bb));
+    cc = calloc(gdims[0], sizeof(*cc));
 
-    for (int ix = 0; ix < rmhd->mx; ix++) {
+    for (int ix = 0; ix < gdims[0]; ix++) {
       aa[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix) - CRDX(ix-1));
       bb[ix] = -2. / ((CRDX(ix+1) - CRDX(ix)) * (CRDX(ix) - CRDX(ix-1))) - sqr(rmhd->ky);
       cc[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix+1) - CRDX(ix));
     }
   }
   
-  mrc_nr_tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), rmhd->mx);
+  mrc_nr_tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), gdims[0]);
 }
 
 static void
@@ -145,7 +146,7 @@ rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
 static void
 set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
 {
-  int mx = rmhd->mx;
+  int mx = x->im[0] - 2 * x->sw;
   MRC_F1(x, m_x , -1) = 0.;
   MRC_F1(x, m_x , mx) = 0.;
 }
@@ -218,7 +219,6 @@ static struct param rmhd_param_descr[] = {
   { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
   { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
   { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
-  { "mx"              , VAR(mx)             , PARAM_INT(100)        },
   {},
 };
 #undef VAR
@@ -267,7 +267,9 @@ main(int argc, char **argv)
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  float dx = rmhd->Lx / rmhd->mx; // FIXME
+  int gdims[3];
+  mrc_domain_get_global_dims(rmhd->domain, gdims);
+  float dx = rmhd->Lx / gdims[0]; // FIXME
   float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
   // run time integration
