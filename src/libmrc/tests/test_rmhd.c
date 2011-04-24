@@ -1,5 +1,6 @@
 
 #include <mrc_fld.h>
+#include <mrc_io.h>
 #include <mrc_params.h>
 
 #include <math.h>
@@ -21,6 +22,7 @@ struct mrc_ts {
   int max_steps;
   char *diag_filename;
 
+  struct mrc_io *io; // for writing state output
   int n; // current timestep number
   float dt; // current dt
   struct mrc_f1 *x; // current state vector
@@ -45,6 +47,13 @@ void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 void mrc_ts_set_diag_function(struct mrc_ts *ts,
 			      void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
 					    FILE *file));
+
+static void
+_mrc_ts_create(struct mrc_ts *ts)
+{
+  ts->io = mrc_io_create(mrc_ts_comm(ts));
+  mrc_ts_add_child(ts, (struct mrc_obj *) ts->io);
+}
 
 static void
 _mrc_ts_setup(struct mrc_ts *ts)
@@ -158,6 +167,7 @@ struct mrc_class_mrc_ts mrc_class_mrc_ts = {
   .name         = "mrc_ts",
   .size         = sizeof(struct mrc_ts),
   .param_descr  = mrc_ts_param_descr,
+  .create       = _mrc_ts_create,
   .setup        = _mrc_ts_setup,
   .destroy      = _mrc_ts_destroy,
 };
@@ -475,6 +485,8 @@ main(int argc, char **argv)
   mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
+  mrc_f1_destroy(By0);
+  mrc_f1_destroy(crd);
 
   MPI_Finalize();
   return 0;
