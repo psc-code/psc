@@ -1,6 +1,6 @@
 
-#ifndef MRC_DIAG_H
-#define MRC_DIAG_H
+#ifndef MRC_IO_H
+#define MRC_IO_H
 
 #include <mrc_obj.h>
 #include <mrc_domain.h>
