@@ -249,29 +249,20 @@ calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
   mrc_f1_destroy(phi);
 }
 
-static float
-acoff(int n, float y, float xm, float xn, float d0)
-{
-  float x = n - .5;
-  float yy = y;
-  yy /= d0 * x;
-  yy = pow(yy, 1./xm);
-  yy -= 1.;
-  yy /= pow(x, 2.*xn);
-  return yy;
-}
-
 static void
 rmhd_setup_crd(struct rmhd *rmhd)
 {
   rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
 
-  float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
+  float xm = rmhd->xm, xn = rmhd->xn, dx0 = rmhd->dx0;
+  int mx = rmhd->mx;
+  float xc = mx / 2 - .5;
+  float a = (pow((rmhd->Lx / 2.) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
   mrc_f1_foreach(rmhd->crd, ix, 1, 1) {
-    float xi = ix - (rmhd->mx / 2 - .5);
-    float s = 1 + a*(pow(xi, (2. * rmhd->xn)));
-    float sm = pow(s, rmhd->xm);
-    float g = rmhd->dx0 * xi * sm;
+    float xi = ix - xc;
+    float s = 1 + a*(pow(xi, (2. * xn)));
+    float sm = pow(s, xm);
+    float g = dx0 * xi * sm;
     //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
     MRC_F1(rmhd->crd,0, ix) = g;
   } mrc_f1_foreach_end;
@@ -290,12 +281,12 @@ main(int argc, char **argv)
   rmhd_setup(rmhd);
 
   // i.c.
-  struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
   rmhd_setup_crd(rmhd);
 
   struct mrc_f1 *crd = rmhd->crd;
   struct mrc_f1 *By0 = rmhd->By0;
+  struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 1, 1) {
