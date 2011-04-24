@@ -78,7 +78,7 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
   ts->diagf = diagf;
 }
 
-void
+static void
 mrc_ts_diag(struct mrc_ts *ts)
 {
   if (ts->n % ts->diag_every == 0) {
@@ -86,7 +86,7 @@ mrc_ts_diag(struct mrc_ts *ts)
   }
 }
 
-void
+static void
 mrc_ts_output(struct mrc_ts *ts)
 {
   if (ts->n % ts->out_every == 0) {
@@ -94,6 +94,13 @@ mrc_ts_output(struct mrc_ts *ts)
     mrc_f1_write(ts->x, ts->io);
     mrc_io_close(ts->io);
   }
+}
+
+void
+mrc_ts_monitors(struct mrc_ts *ts)
+{
+  mrc_ts_output(ts);
+  mrc_ts_diag(ts);
 }
 
 void
@@ -124,8 +131,7 @@ mrc_ts_solve(struct mrc_ts *ts)
       ts->dt = ts->max_time - ts->time;
     }
 
-    mrc_ts_output(ts);
-    mrc_ts_diag(ts);
+    mrc_ts_monitors(ts);
     mrc_ts_step(ts);
     ts->time += ts->dt;
     ts->n++;
