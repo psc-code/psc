@@ -2,6 +2,10 @@
 #include <mrc_ts_private.h>
 
 #include <mrc_params.h>
+#include <assert.h>
+
+
+#define mrc_ts_ops(ts) ((struct mrc_ts_ops *) ts->obj.ops)
 
 static void
 _mrc_ts_create(struct mrc_ts *ts)
@@ -13,23 +17,20 @@ _mrc_ts_create(struct mrc_ts *ts)
 static void
 _mrc_ts_setup(struct mrc_ts *ts)
 {
-  ts->f_diag = fopen(ts->diag_filename, "w");
-
-  // RK2
   ts->rhs = mrc_f1_duplicate(ts->x);
-  ts->xm = mrc_f1_duplicate(ts->x);
+  ts->f_diag = fopen(ts->diag_filename, "w");
+  if (mrc_ts_ops(ts)->setup) {
+    mrc_ts_ops(ts)->setup(ts);
+  }
 }
 
 static void
 _mrc_ts_destroy(struct mrc_ts *ts)
 {
+  mrc_f1_destroy(ts->rhs);
   if (ts->f_diag) {
     fclose(ts->f_diag);
   }
-
-  // RK2
-  mrc_f1_destroy(ts->rhs);
-  mrc_f1_destroy(ts->xm);
 }
 
 void
@@ -87,15 +88,8 @@ mrc_ts_output(struct mrc_ts *ts, float time)
 static void
 mrc_ts_step(struct mrc_ts *ts)
 {
-  struct mrc_f1 *x = ts->x;
-  struct mrc_f1 *xm = ts->xm;
-  struct mrc_f1 *rhs = ts->rhs;
-
-  ts->rhsf(ts->ctx, rhs, x);
-  mrc_f1_waxpy(xm, .5 * ts->dt, rhs, x);
-  
-  ts->rhsf(ts->ctx, rhs, xm);
-  mrc_f1_axpy(x, ts->dt, rhs);
+  assert(mrc_ts_ops(ts)->step);
+  mrc_ts_ops(ts)->step(ts);
 }
 
 void
@@ -118,10 +112,23 @@ static struct param mrc_ts_param_descr[] = {
 };
 #undef VAR
 
+// ======================================================================
+// mrc_ts_init
+
+static void
+mrc_ts_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
+}
+
+// ======================================================================
+// mrc_ts class
+
 struct mrc_class_mrc_ts mrc_class_mrc_ts = {
   .name         = "mrc_ts",
   .size         = sizeof(struct mrc_ts),
   .param_descr  = mrc_ts_param_descr,
+  .init         = mrc_ts_init,
   .create       = _mrc_ts_create,
   .setup        = _mrc_ts_setup,
   .destroy      = _mrc_ts_destroy,

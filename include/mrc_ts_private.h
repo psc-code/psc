@@ -24,9 +24,14 @@ struct mrc_ts {
   FILE *f_diag;
   void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
 
-  // RK2
   struct mrc_f1 *rhs;
-  struct mrc_f1 *xm;
 };
+
+struct mrc_ts_ops {
+  MRC_SUBCLASS_OPS(struct mrc_ts);
+  void (*step)(struct mrc_ts *);
+};
+
+extern struct mrc_ts_ops mrc_ts_rk2_ops;
 
 #endif
