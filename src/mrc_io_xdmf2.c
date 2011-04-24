@@ -265,6 +265,50 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   H5Gclose(group0);
 }
 
+static void
+xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+
+  hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
+  const int i1 = 1, i0 = 0;
+  H5LTset_attribute_int(group0, ".", "nr_patches", &i1, 1);
+
+  for (int m = 0; m < f1->nr_comp; m++) {
+    char *fld_name = f1->name[m];
+    if (!fld_name) {
+      char tmp_fld_name[10];
+      fld_name = tmp_fld_name;
+      // FIXME: warn
+      sprintf(tmp_fld_name, "m%d", m);
+    }
+    hid_t group_fld = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    char s_patch[10];
+    sprintf(s_patch, "p%d", 0);
+
+    hsize_t mdims[1] = { f1->im[0] };
+    hsize_t fdims[1] = { f1->im[0] };
+    hsize_t off[1] = { 0 };
+    
+    hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
+    hid_t filespace = H5Screate_simple(1, fdims, NULL);
+    hid_t memspace = H5Screate_simple(1, mdims, NULL);
+    H5Sselect_hyperslab(memspace, H5S_SELECT_SET, off, NULL, fdims, NULL);
+    
+    hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			   H5P_DEFAULT, H5P_DEFAULT);
+    H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
+	     &MRC_F1(f1, m, f1->ib[0]));
+    H5Dclose(dset);
+    H5Gclose(group);
+
+    H5Gclose(group_fld);
+  }
+  H5Gclose(group0);
+}
+
 
 // ----------------------------------------------------------------------
 // mrc_io_ops_xdmf
@@ -279,6 +323,7 @@ struct mrc_io_ops mrc_io_xdmf2_ops = {
   .close         = xdmf_close,
   .write_attr    = xdmf_write_attr,
   .write_m3      = xdmf_write_m3,
+  .write_f1      = xdmf_write_f1,
 };
 
 
