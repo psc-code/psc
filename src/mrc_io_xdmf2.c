@@ -210,6 +210,46 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 }
 
 static void
+xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
+			       struct mrc_domain *domain)
+{
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+
+  for (int d = 0; d < 1; d++) {
+    struct mrc_f1 *crd = crds->crd[d];
+
+    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT);
+
+    hsize_t im = crd->im[0];
+    char s_patch[10];
+    sprintf(s_patch, "p%d", 0);
+    hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    H5LTmake_dataset_float(group_crdp, "1d", 1, &im, &MRC_F1(crd,0, crd->ib[0]));
+    H5Gclose(group_crdp);
+
+    H5Gclose(group_crd1);
+  }
+}
+
+static void
+xdmf_spatial_write_crds(struct xdmf_spatial *xs, struct xdmf_file *file,
+			struct mrc_domain *domain)
+{
+  if (xs->crds_done)
+    return;
+
+  xs->crds_done = true;
+
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
+    xdmf_spatial_write_crds_nonuni(file, domain); // FIXME
+  } else {
+    xdmf_spatial_write_crds_nonuni(file, domain);
+  }
+}
+
+static void
 xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
@@ -274,6 +314,14 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
   const int i1 = 1, i0 = 0;
   H5LTset_attribute_int(group0, ".", "nr_patches", &i1, 1);
+
+  struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
+					      mrc_domain_name(f1->domain));
+  if (!xs) {
+    xs = xdmf_spatial_create_f1(&file->xdmf_spatial_list,
+				mrc_domain_name(f1->domain), f1->domain);
+    xdmf_spatial_write_crds(xs, file, f1->domain);
+  }
 
   for (int m = 0; m < f1->nr_comp; m++) {
     char *fld_name = f1->name[m];
