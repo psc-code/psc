@@ -17,7 +17,9 @@ struct mrc_obj {
   struct mrc_class *class;
   void *subctx;
   int refcount;
-  list_t instance_entry;
+  list_t instance_entry; //< keep track of all instances of mrc_obj's
+  list_t child_entry; //< an mrc_obj can be child of exactly one parent mrc_obj
+  list_t children_list; //< this is the list where a parent keeps track of children
   bool view_flag; //< if true, call ::view() at the end of ::setup()
 };
 
@@ -85,6 +87,7 @@ void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
 void mrc_obj_setup_sub(struct mrc_obj *obj);
+void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
 
@@ -225,6 +228,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   pfx ## _setup(obj_type *obj)						\
   {									\
     mrc_obj_setup((struct mrc_obj *)obj);				\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _add_child(obj_type *obj, struct mrc_obj *child)		\
+  {									\
+    mrc_obj_add_child((struct mrc_obj *)obj, child);			\
   }									\
 									\
   static inline obj_type *						\
