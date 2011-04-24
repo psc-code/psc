@@ -9,9 +9,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-// FIXME
-static void mrc_f1_dump(struct mrc_f1 *f1, const char *pfx);
-
 // ======================================================================
 
 struct mrc_ts {
@@ -120,12 +117,12 @@ mrc_ts_diag(struct mrc_ts *ts, float time)
 }
 
 static void
-mrc_ts_output(struct mrc_ts *ts)
+mrc_ts_output(struct mrc_ts *ts, float time)
 {
   if (ts->n % ts->out_every == 0) {
-    char pfx[10];
-    sprintf(pfx, "x-%d", ts->n / ts->out_every);
-    mrc_f1_dump(ts->x, pfx);
+    mrc_io_open(ts->io, "w", ts->n / ts->out_every, time);
+    mrc_f1_write(ts->x, ts->io);
+    mrc_io_close(ts->io);
   }
 }
 
@@ -147,7 +144,7 @@ void
 mrc_ts_solve(struct mrc_ts *ts)
 {
   for (ts->n = 0; ts->n <= ts->max_steps; ts->n++) {
-    mrc_ts_output(ts);
+    mrc_ts_output(ts, ts->n * ts->dt);
     mrc_ts_diag(ts, ts->n * ts->dt);
     mrc_ts_step(ts);
   }
