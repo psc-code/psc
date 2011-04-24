@@ -45,30 +45,6 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 
 // ======================================================================
 
-#define VAR(x) (void *)offsetof(struct rmhd, x)
-static struct param rmhd_param_descr[] = {
-  { "Lx"              , VAR(Lx)             , PARAM_FLOAT(40.)      },
-  { "lambda"          , VAR(lambda)         , PARAM_FLOAT(1.)       },
-  { "S"               , VAR(S)              , PARAM_FLOAT(1000.)    },
-  { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
-  { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
-  { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
-  { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
-  { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
-  { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
-  { "mx"              , VAR(mx)             , PARAM_INT(100)        },
-  {},
-};
-#undef VAR
-
-struct mrc_class_rmhd mrc_class_rmhd = {
-  .name         = "rmhd",
-  .size         = sizeof(struct rmhd),
-  .param_descr  = rmhd_param_descr,
-};
-
-// ======================================================================
-
 #define CRDX(ix) (MRC_F1(crd,0, (ix)))
 
 // FIXME
@@ -113,6 +89,39 @@ rmhd_get_fld(struct rmhd *par, int nr_comps, const char *name)
   mrc_f1_set_param_int(x, "nr_comps", nr_comps);
   mrc_f1_setup(x);
   return x;
+}
+
+static void
+rmhd_setup_crd(struct rmhd *rmhd)
+{
+  float xm = rmhd->xm, xn = rmhd->xn, dx0 = rmhd->dx0;
+  int mx = rmhd->mx;
+  float xc = mx / 2 - .5;
+  float a = (pow((rmhd->Lx / 2.) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
+  mrc_f1_foreach(rmhd->crd, ix, 1, 1) {
+    float xi = ix - xc;
+    float s = 1 + a*(pow(xi, (2. * xn)));
+    float sm = pow(s, xm);
+    float g = dx0 * xi * sm;
+    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
+    MRC_F1(rmhd->crd,0, ix) = g;
+  } mrc_f1_foreach_end;
+}
+
+static void
+_rmhd_setup(struct rmhd *rmhd)
+{
+  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
+  rmhd_setup_crd(rmhd);
+
+  rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
+}
+
+static void
+_rmhd_destroy(struct rmhd *rmhd)
+{
+  mrc_f1_destroy(rmhd->crd);
+  mrc_f1_destroy(rmhd->By0);
 }
 
 #define Dxx(x, m_x, ix)							\
@@ -249,24 +258,31 @@ calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
   mrc_f1_destroy(phi);
 }
 
-static void
-rmhd_setup_crd(struct rmhd *rmhd)
-{
-  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
+// ======================================================================
 
-  float xm = rmhd->xm, xn = rmhd->xn, dx0 = rmhd->dx0;
-  int mx = rmhd->mx;
-  float xc = mx / 2 - .5;
-  float a = (pow((rmhd->Lx / 2.) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
-  mrc_f1_foreach(rmhd->crd, ix, 1, 1) {
-    float xi = ix - xc;
-    float s = 1 + a*(pow(xi, (2. * xn)));
-    float sm = pow(s, xm);
-    float g = dx0 * xi * sm;
-    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-    MRC_F1(rmhd->crd,0, ix) = g;
-  } mrc_f1_foreach_end;
-}
+#define VAR(x) (void *)offsetof(struct rmhd, x)
+static struct param rmhd_param_descr[] = {
+  { "Lx"              , VAR(Lx)             , PARAM_FLOAT(40.)      },
+  { "lambda"          , VAR(lambda)         , PARAM_FLOAT(1.)       },
+  { "S"               , VAR(S)              , PARAM_FLOAT(1000.)    },
+  { "d_i"             , VAR(d_i)            , PARAM_FLOAT(0.)       },
+  { "ky"              , VAR(ky)             , PARAM_FLOAT(.5)       },
+  { "cfl"             , VAR(cfl)            , PARAM_FLOAT(.5)       },
+  { "dx0"             , VAR(dx0)            , PARAM_FLOAT(.1)       },
+  { "xn"              , VAR(xn)             , PARAM_FLOAT(2.)       },
+  { "xm"              , VAR(xm)             , PARAM_FLOAT(.5)       },
+  { "mx"              , VAR(mx)             , PARAM_INT(100)        },
+  {},
+};
+#undef VAR
+
+struct mrc_class_rmhd mrc_class_rmhd = {
+  .name         = "rmhd",
+  .size         = sizeof(struct rmhd),
+  .param_descr  = rmhd_param_descr,
+  .setup        = _rmhd_setup,
+  .destroy      = _rmhd_destroy,
+};
 
 // ======================================================================
 
@@ -281,9 +297,6 @@ main(int argc, char **argv)
   rmhd_setup(rmhd);
 
   // i.c.
-  rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
-  rmhd_setup_crd(rmhd);
-
   struct mrc_f1 *crd = rmhd->crd;
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
@@ -321,8 +334,6 @@ main(int argc, char **argv)
   mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
-  mrc_f1_destroy(rmhd->By0);
-  mrc_f1_destroy(crd);
 
   rmhd_destroy(rmhd);
 
