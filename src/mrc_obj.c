@@ -23,6 +23,7 @@ obj_create(MPI_Comm comm, struct mrc_class *class)
 
   obj->class = class;
   obj->refcount = 1;
+  INIT_LIST_HEAD(&obj->children_list);
   mrc_obj_set_name(obj, class->name);
 
   if (class->param_descr) {
@@ -119,6 +120,11 @@ mrc_obj_put(struct mrc_obj *obj)
 
   if (class->destroy) {
     class->destroy(obj);
+  }
+
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_destroy(child);
   }
 
   if (obj->comm != MPI_COMM_NULL) {
@@ -240,8 +246,8 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
   }
 }
 
-void
-mrc_obj_set_from_options(struct mrc_obj *obj)
+static void
+mrc_obj_set_from_options_this(struct mrc_obj *obj)
 {
   struct mrc_class *class = obj->class;
 
@@ -274,6 +280,17 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
 
   if (class->set_from_options) {
     class->set_from_options(obj);
+  }
+}
+
+void
+mrc_obj_set_from_options(struct mrc_obj *obj)
+{
+  mrc_obj_set_from_options_this(obj);
+
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_set_from_options(child);
   }
 }
 
@@ -401,8 +418,8 @@ mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval)
   }
 }
 
-void
-mrc_obj_view(struct mrc_obj *obj)
+static void
+mrc_obj_view_this(struct mrc_obj *obj)
 {
   struct mrc_class *class = obj->class;
   if (class->param_descr) {
@@ -436,6 +453,17 @@ mrc_obj_view(struct mrc_obj *obj)
 }
 
 void
+mrc_obj_view(struct mrc_obj *obj)
+{
+  mrc_obj_view_this(obj);
+
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_view(child);
+  }
+}
+
+void
 mrc_obj_setup_sub(struct mrc_obj *obj)
 {
   if (obj->ops && obj->ops->setup) {
@@ -443,8 +471,8 @@ mrc_obj_setup_sub(struct mrc_obj *obj)
   }
 }
 
-void
-mrc_obj_setup(struct mrc_obj *obj)
+static void
+mrc_obj_setup_this(struct mrc_obj *obj)
 {
   struct mrc_class *class = obj->class;
   if (class->setup) {
@@ -456,6 +484,30 @@ mrc_obj_setup(struct mrc_obj *obj)
     obj->view_flag = false;
     mrc_obj_view(obj);
   }
+}
+
+void
+mrc_obj_setup(struct mrc_obj *obj)
+{
+  mrc_obj_setup_this(obj);
+
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_setup(child);
+  }
+}
+
+void
+mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child)
+{
+  // make sure we're only one parent's child
+  assert(!child->child_entry.next);
+
+  // we're not taking a reference count explicitly,
+  // we are taking over the reference of the child object passed
+  // in instead, so the caller relinquishes control of the object and
+  // should not call ::destroy()
+  list_add_tail(&child->child_entry, &obj->children_list);
 }
 
 struct mrc_obj *
