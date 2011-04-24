@@ -52,6 +52,9 @@ void xdmf_spatial_close(list_t *xdmf_spatial_list, struct mrc_io *io,
 			struct xdmf_temporal *xt);
 struct xdmf_spatial *xdmf_spatial_find(list_t *xdmf_spatial_list,
 				       const char *name);
+struct xdmf_spatial *xdmf_spatial_create_f1(list_t *xdmf_spatial_list,
+					    const char *name, 
+					    struct mrc_domain *domain);
 struct xdmf_spatial *xdmf_spatial_create_m3(list_t *xdmf_spatial_list,
 					    const char *name, 
 					    struct mrc_domain *domain);

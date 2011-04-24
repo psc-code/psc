@@ -3,6 +3,7 @@
 #include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
+#include <mrc_nr.h>
 
 #include <math.h>
 #include <string.h>
@@ -12,7 +13,12 @@
 
 // ======================================================================
 
+// FIXME
 #define sqr(a) ((a) * (a))
+
+// ======================================================================
+
+#define BND 1
 
 enum {
   OM_I,
@@ -37,6 +43,7 @@ struct rmhd {
   float xm;
   int mx;
 
+  struct mrc_domain *domain;
   struct mrc_f1 *crd;
   struct mrc_f1 *By0;
 };
@@ -47,45 +54,25 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 
 #define CRDX(ix) (MRC_F1(crd,0, (ix)))
 
-// FIXME
-/* Taken from NR */
-void
-tridag(float *a, float *b, float *c, float *r, float *u, int n)
+static void
+_rmhd_create(struct rmhd *rmhd)
 {
-  int j;
-  float *gam, bet;
-  
-  gam = calloc(sizeof(*gam), n);
-  assert(fabs(b[0]) >= 1e-7);
-  bet = b[0];
-  u[0] = r[0] / bet;
-  for (j = 1; j < n; j++) {
-    gam[j] = c[j-1] / bet;
-    bet = b[j] - a[j] * gam[j];
-    if (j < n-1 || fabs(bet) >= 1e-7) {
-      assert(fabs(bet) >= 1e-7);
-      u[j] = (r[j] - a[j] * u[j-1]) / bet;
-    } else {
-      assert(fabs(r[j] - a[j] * u[j-1]) < 1e-7);
-      u[j] = 0.;
-    }
-  }
-    
-  for (j = n - 2; j >= 0; j--) {
-    u[j] = u[j] - gam[j+1] * u[j+1];
-  }
-  free(gam);
+  rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  mrc_crds_set_param_int(crds, "sw", 1);
 }
 
-// ======================================================================
+static void
+_rmhd_set_from_options(struct rmhd *rmhd)
+{
+  mrc_domain_set_from_options(rmhd->domain);
+}
 
 static struct mrc_f1 *
-rmhd_get_fld(struct rmhd *par, int nr_comps, const char *name)
+rmhd_get_fld(struct rmhd *rmhd, int nr_comps, const char *name)
 {
-  struct mrc_f1 *x = mrc_f1_create(MPI_COMM_WORLD);
+  struct mrc_f1 *x = mrc_domain_f1_create(rmhd->domain, BND);
   mrc_f1_set_name(x, name);
-  mrc_f1_set_param_int(x, "ibx", -1);
-  mrc_f1_set_param_int(x, "imx", par->mx + 2);
   mrc_f1_set_param_int(x, "nr_comps", nr_comps);
   mrc_f1_setup(x);
   return x;
@@ -111,6 +98,11 @@ rmhd_setup_crd(struct rmhd *rmhd)
 static void
 _rmhd_setup(struct rmhd *rmhd)
 {
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
+  mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
+  mrc_domain_setup(rmhd->domain);
+
   rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
   rmhd_setup_crd(rmhd);
 
@@ -151,27 +143,7 @@ solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
     }
   }
   
-  tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), rmhd->mx);
-
-#if 0
-  // lapl
-  { int ix = 0;
-    MRC_F1(b, m_b, ix) =
-      bb[ix] * MRC_F1(x, m_x, ix) + 
-      cc[ix] * MRC_F1(x, m_x, ix+1);
-  }
-  for (int ix = 1; ix < rmhd->mx - 1; ix++) {
-    MRC_F1(b, m_b, ix) =
-      aa[ix] * MRC_F1(x, m_x, ix-1) +
-      bb[ix] * MRC_F1(x, m_x, ix) + 
-      cc[ix] * MRC_F1(x, m_x, ix+1);
-  }
-  { int ix = rmhd->mx - 1;
-    MRC_F1(b, m_b, ix) =
-      aa[ix] * MRC_F1(x, m_x, ix-1) +
-      bb[ix] * MRC_F1(x, m_x, ix);
-  }
-#endif
+  mrc_nr_tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), rmhd->mx);
 }
 
 static void
@@ -277,11 +249,13 @@ static struct param rmhd_param_descr[] = {
 #undef VAR
 
 struct mrc_class_rmhd mrc_class_rmhd = {
-  .name         = "rmhd",
-  .size         = sizeof(struct rmhd),
-  .param_descr  = rmhd_param_descr,
-  .setup        = _rmhd_setup,
-  .destroy      = _rmhd_destroy,
+  .name             = "rmhd",
+  .size             = sizeof(struct rmhd),
+  .param_descr      = rmhd_param_descr,
+  .create           = _rmhd_create,
+  .set_from_options = _rmhd_set_from_options,
+  .setup            = _rmhd_setup,
+  .destroy          = _rmhd_destroy,
 };
 
 // ======================================================================

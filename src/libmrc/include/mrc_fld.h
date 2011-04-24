@@ -32,6 +32,8 @@ struct mrc_f1 {
   int nr_comp;
   int len;
   bool with_array;
+  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
+  int sw; //< # of ghost points
   char **name;
 };
 

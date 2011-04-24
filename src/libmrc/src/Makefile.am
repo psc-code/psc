@@ -22,6 +22,7 @@ libmrc_la_SOURCES = \
 	mrc_io_asc.c \
 	mrc_dict.c \
 	mrc_obj.c \
+	mrc_nr_tridag.c \
 	hilbert.c
 
 if HAVE_HDF5

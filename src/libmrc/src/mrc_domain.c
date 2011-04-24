@@ -188,6 +188,27 @@ mrc_domain_create_ddc(struct mrc_domain *domain)
 
 // ======================================================================
 
+struct mrc_f1 *
+mrc_domain_f1_create(struct mrc_domain *domain, int bnd)
+{
+  int ib[1], im[1];
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  for (int d = 0; d < 1; d++) {
+    ib[d] = -bnd;
+    im[d] = patches[0].ldims[d] + 2 * bnd;
+  }
+  struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
+  mrc_f1_set_param_int(f1, "ibx", ib[0]);
+  mrc_f1_set_param_int(f1, "imx", im[0]);
+  f1->domain = domain;
+  f1->sw = bnd;
+  return f1;
+}
+
+// ======================================================================
+
 struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 {

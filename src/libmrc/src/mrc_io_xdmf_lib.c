@@ -151,6 +151,26 @@ xdmf_spatial_find(list_t *xdmf_spatial_list, const char *name)
 }
 
 struct xdmf_spatial *
+xdmf_spatial_create_f1(list_t *xdmf_spatial_list, const char *name, 
+		       struct mrc_domain *domain)
+{
+  // OPT, we could skip this on procs which aren't writing xdmf
+
+  struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
+  xs->name = strdup(name);
+  xs->nr_global_patches = 1; // FIXME wrong when parallel
+  xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
+
+  for (int gp = 0; gp < xs->nr_global_patches; gp++) {
+    mrc_domain_get_local_patch_info(domain, gp, &xs->patch_infos[gp]);
+    //    mrc_domain_get_global_patch_info(domain, gp, &xs->patch_infos[gp]);
+  }
+
+  list_add_tail(&xs->entry, xdmf_spatial_list);
+  return xs;
+}
+
+struct xdmf_spatial *
 xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name, 
 		       struct mrc_domain *domain)
 {
