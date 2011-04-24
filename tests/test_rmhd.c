@@ -261,6 +261,22 @@ acoff(int n, float y, float xm, float xn, float d0)
   return yy;
 }
 
+static void
+rmhd_setup_crd(struct rmhd *rmhd)
+{
+  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
+
+  float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
+  mrc_f1_foreach(rmhd->crd, ix, 1, 1) {
+    float xi = ix - (rmhd->mx / 2 - .5);
+    float s = 1 + a*(pow(xi, (2. * rmhd->xn)));
+    float sm = pow(s, rmhd->xm);
+    float g = rmhd->dx0 * xi * sm;
+    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
+    MRC_F1(rmhd->crd,0, ix) = g;
+  } mrc_f1_foreach_end;
+}
+
 // ======================================================================
 
 int
@@ -275,22 +291,13 @@ main(int argc, char **argv)
 
   // i.c.
   struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
-  struct mrc_f1 *By0 = rmhd_get_fld(rmhd, 1, "By0");
-  rmhd->By0 = By0;
-  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
+  rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
+  rmhd_setup_crd(rmhd);
+
   struct mrc_f1 *crd = rmhd->crd;
+  struct mrc_f1 *By0 = rmhd->By0;
 
-  float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
-  float dx = rmhd->Lx / rmhd->mx;
-  mrc_f1_foreach(x, ix, 1, 1) {
-    float xi = ix - (rmhd->mx / 2 - .5);
-    float s = 1 + a*(pow(xi, (2. * rmhd->xn)));
-    float sm = pow(s, rmhd->xm);
-    float g = rmhd->dx0 * xi * sm;
-    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-    CRDX(ix) = g;
-  } mrc_f1_foreach_end;
-
+  // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 1, 1) {
     MRC_F1(By0, 0, ix) = tanh(rmhd->lambda * CRDX(ix));
     MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
@@ -301,14 +308,16 @@ main(int argc, char **argv)
   mrc_io_set_param_string(io, "basename", "rmhd-ini");
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f1_write(By0, io);
+  mrc_f1_write(rmhd->By0, io);
   mrc_f1_write(x, io);
+  mrc_f1_write(crd, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
+  float dx = rmhd->Lx / rmhd->mx; // FIXME
   float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
-  // r.h.s
+  // run time integration
   struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
   mrc_ts_set_context(ts, rmhd);
   mrc_ts_set_rhs_function(ts, calc_rhs);
@@ -321,7 +330,7 @@ main(int argc, char **argv)
   mrc_ts_destroy(ts);
 
   mrc_f1_destroy(x);
-  mrc_f1_destroy(By0);
+  mrc_f1_destroy(rmhd->By0);
   mrc_f1_destroy(crd);
 
   rmhd_destroy(rmhd);
