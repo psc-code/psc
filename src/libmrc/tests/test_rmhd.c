@@ -37,6 +37,7 @@ struct rmhd {
   float xm;
   int mx;
 
+  struct mrc_f1 *crd;
   struct mrc_f1 *By0;
 };
 
@@ -68,8 +69,6 @@ struct mrc_class_rmhd mrc_class_rmhd = {
 
 // ======================================================================
 
-// FIXME
-static struct mrc_f1 *crd;
 #define CRDX(ix) (MRC_F1(crd,0, (ix)))
 
 // FIXME
@@ -125,24 +124,25 @@ rmhd_get_fld(struct rmhd *par, int nr_comps, const char *name)
   (Dxx(x, m_x, ix) - sqr(rmhd->ky) * MRC_F1(x, m_x, ix))
 
 static void
-solve_poisson(struct rmhd *par, struct mrc_f1 *x, int m_x,
+solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
 	      struct mrc_f1 *b, int m_b)
 {
   static float *aa, *bb, *cc;
+  struct mrc_f1 *crd = rmhd->crd;
 
   if (!aa) {
-    aa = calloc(par->mx, sizeof(*aa));
-    bb = calloc(par->mx, sizeof(*bb));
-    cc = calloc(par->mx, sizeof(*cc));
+    aa = calloc(rmhd->mx, sizeof(*aa));
+    bb = calloc(rmhd->mx, sizeof(*bb));
+    cc = calloc(rmhd->mx, sizeof(*cc));
 
-    for (int ix = 0; ix < par->mx; ix++) {
+    for (int ix = 0; ix < rmhd->mx; ix++) {
       aa[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix) - CRDX(ix-1));
-      bb[ix] = -2. / ((CRDX(ix+1) - CRDX(ix)) * (CRDX(ix) - CRDX(ix-1))) - sqr(par->ky);
+      bb[ix] = -2. / ((CRDX(ix+1) - CRDX(ix)) * (CRDX(ix) - CRDX(ix-1))) - sqr(rmhd->ky);
       cc[ix] =  2. / (CRDX(ix+1) - CRDX(ix-1)) * 1. / (CRDX(ix+1) - CRDX(ix));
     }
   }
   
-  tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), par->mx);
+  tridag(aa, bb, cc, &MRC_F1(b, m_b, 0), &MRC_F1(x, m_x, 0), rmhd->mx);
 
 #if 0
   // lapl
@@ -151,13 +151,13 @@ solve_poisson(struct rmhd *par, struct mrc_f1 *x, int m_x,
       bb[ix] * MRC_F1(x, m_x, ix) + 
       cc[ix] * MRC_F1(x, m_x, ix+1);
   }
-  for (int ix = 1; ix < par->mx - 1; ix++) {
+  for (int ix = 1; ix < rmhd->mx - 1; ix++) {
     MRC_F1(b, m_b, ix) =
       aa[ix] * MRC_F1(x, m_x, ix-1) +
       bb[ix] * MRC_F1(x, m_x, ix) + 
       cc[ix] * MRC_F1(x, m_x, ix+1);
   }
-  { int ix = par->mx - 1;
+  { int ix = rmhd->mx - 1;
     MRC_F1(b, m_b, ix) =
       aa[ix] * MRC_F1(x, m_x, ix-1) +
       bb[ix] * MRC_F1(x, m_x, ix);
@@ -184,9 +184,9 @@ rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
 }
 
 static void
-set_bnd_zero(struct rmhd *par, struct mrc_f1 *x, int m_x)
+set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
 {
-  int mx = par->mx;
+  int mx = rmhd->mx;
   MRC_F1(x, m_x , -1) = 0.;
   MRC_F1(x, m_x , mx) = 0.;
 }
@@ -213,6 +213,7 @@ static void
 calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
   struct rmhd *rmhd = ctx;
+  struct mrc_f1 *crd = rmhd->crd;
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
 
@@ -276,7 +277,8 @@ main(int argc, char **argv)
   struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
   struct mrc_f1 *By0 = rmhd_get_fld(rmhd, 1, "By0");
   rmhd->By0 = By0;
-  crd = rmhd_get_fld(rmhd, 1, "crd");
+  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
+  struct mrc_f1 *crd = rmhd->crd;
 
   float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
   float dx = rmhd->Lx / rmhd->mx;
@@ -287,7 +289,9 @@ main(int argc, char **argv)
     float g = rmhd->dx0 * xi * sm;
     //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
     CRDX(ix) = g;
+  } mrc_f1_foreach_end;
 
+  mrc_f1_foreach(x, ix, 1, 1) {
     MRC_F1(By0, 0, ix) = tanh(rmhd->lambda * CRDX(ix));
     MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
   } mrc_f1_foreach_end;
