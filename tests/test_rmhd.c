@@ -1,4 +1,5 @@
 
+#include <mrc_ts.h>
 #include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
@@ -21,13 +22,15 @@ enum {
   NR_FLDS,
 };
 
-struct rmhd_params {
+struct rmhd {
+  struct mrc_obj obj;
+
+  // parameters
   float Lx;
   float lambda;
   float S;
   float d_i;
   float ky;
-
   float cfl;
   float dx0;
   float xn;
@@ -37,8 +40,12 @@ struct rmhd_params {
   struct mrc_f1 *By0;
 };
 
-#define VAR(x) (void *)offsetof(struct rmhd_params, x)
-static struct param rmhd_params_descr[] = {
+MRC_CLASS_DECLARE(rmhd, struct rmhd);
+
+// ======================================================================
+
+#define VAR(x) (void *)offsetof(struct rmhd, x)
+static struct param rmhd_param_descr[] = {
   { "Lx"              , VAR(Lx)             , PARAM_FLOAT(40.)      },
   { "lambda"          , VAR(lambda)         , PARAM_FLOAT(1.)       },
   { "S"               , VAR(S)              , PARAM_FLOAT(1000.)    },
@@ -52,6 +59,14 @@ static struct param rmhd_params_descr[] = {
   {},
 };
 #undef VAR
+
+struct mrc_class_rmhd mrc_class_rmhd = {
+  .name         = "rmhd",
+  .size         = sizeof(struct rmhd),
+  .param_descr  = rmhd_param_descr,
+};
+
+// ======================================================================
 
 // FIXME
 static struct mrc_f1 *crd;
@@ -108,7 +123,7 @@ tridag(float *a, float *b, float *c, float *r, float *u, int n)
 // ======================================================================
 
 static struct mrc_f1 *
-get_fld(struct rmhd_params *par, int nr_comps)
+get_fld(struct rmhd *par, int nr_comps)
 {
   struct mrc_f1 *x = mrc_f1_create(MPI_COMM_WORLD);
   mrc_f1_set_param_int(x, "ibx", -1);
@@ -123,11 +138,11 @@ get_fld(struct rmhd_params *par, int nr_comps)
     (MRC_F1(x, m_x, ix  ) - MRC_F1(x, m_x, ix-1)) / (CRDX(ix  ) - CRDX(ix-1))) \
    / (.5 * (CRDX(ix+1) - CRDX(ix-1))))
 
-#define Lapl(x, m_x, ix) \
-  (Dxx(x, m_x, ix) - sqr(par->ky) * MRC_F1(x, m_x, ix))
+#define Lapl(x, m_x, ix)					\
+  (Dxx(x, m_x, ix) - sqr(rmhd->ky) * MRC_F1(x, m_x, ix))
 
 static void
-solve_poisson(struct rmhd_params *par, struct mrc_f1 *x, int m_x,
+solve_poisson(struct rmhd *par, struct mrc_f1 *x, int m_x,
 	      struct mrc_f1 *b, int m_b)
 {
   static float *aa, *bb, *cc;
@@ -186,7 +201,7 @@ rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
 }
 
 static void
-set_bnd_zero(struct rmhd_params *par, struct mrc_f1 *x, int m_x)
+set_bnd_zero(struct rmhd *par, struct mrc_f1 *x, int m_x)
 {
   int mx = par->mx;
   MRC_F1(x, m_x , -1) = 0.;
@@ -214,14 +229,14 @@ enum {
 static void
 calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
-  struct rmhd_params *par = ctx;
-  struct mrc_f1 *By0 = par->By0;
-  struct mrc_f1 *phi = get_fld(par, 1);
+  struct rmhd *rmhd = ctx;
+  struct mrc_f1 *By0 = rmhd->By0;
+  struct mrc_f1 *phi = get_fld(rmhd, 1);
 
-  set_bnd_zero(par, x, OM_I);
-  set_bnd_zero(par, x, PSI_R);
+  set_bnd_zero(rmhd, x, OM_I);
+  set_bnd_zero(rmhd, x, PSI_R);
 
-  solve_poisson(par, phi, PHI_I, x, OM_I);
+  solve_poisson(rmhd, phi, PHI_I, x, OM_I);
   //  mrc_f1_dump(phi, "phi");
 
   mrc_f1_foreach(x, ix, 0, 0) {
@@ -232,20 +247,20 @@ calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
     float J_r = Lapl(x, PSI_R, ix);
 
     MRC_F1(rhs, VZ_R, ix) =
-      - par->ky * By0(ix) * BZ_I(ix);
+      - rmhd->ky * By0(ix) * BZ_I(ix);
 
     MRC_F1(rhs, OM_I, ix) =
-      par->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
+      rmhd->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
 
     MRC_F1(rhs, PSI_R, ix) =
-      1. / par->S * J_r -
-      par->ky * By0(ix) * PHI_I(ix) +
-      par->d_i * By0(ix) * BZ_I(ix);
+      1. / rmhd->S * J_r -
+      rmhd->ky * By0(ix) * PHI_I(ix) +
+      rmhd->d_i * By0(ix) * BZ_I(ix);
 
     MRC_F1(rhs, BZ_I, ix) =
-      1. / par->S * Lapl(x, BZ_I, ix) +
-      par->ky * By0(ix) * VZ_R(ix) +
-      par->d_i * par->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
+      1. / rmhd->S * Lapl(x, BZ_I, ix) +
+      rmhd->ky * By0(ix) * VZ_R(ix) +
+      rmhd->d_i * rmhd->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
   }
 
   //  mrc_f1_dump(rhs, "rhs");
@@ -273,31 +288,31 @@ main(int argc, char **argv)
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
 
-  struct rmhd_params par;
-  mrc_params_parse(&par, rmhd_params_descr, "rmhd", MPI_COMM_WORLD);
-  mrc_params_print(&par, rmhd_params_descr, "rmhd", MPI_COMM_WORLD);
+  struct rmhd *rmhd = rmhd_create(MPI_COMM_WORLD);
+  rmhd_set_from_options(rmhd);
+  rmhd_setup(rmhd);
 
   // i.c.
-  struct mrc_f1 *x = get_fld(&par, NR_FLDS);
-  struct mrc_f1 *By0 = get_fld(&par, 1);
-  struct mrc_f1 *spacing = get_fld(&par, 1);
-  par.By0 = By0;
-  crd = get_fld(&par, 1);
+  struct mrc_f1 *x = get_fld(rmhd, NR_FLDS);
+  struct mrc_f1 *By0 = get_fld(rmhd, 1);
+  struct mrc_f1 *spacing = get_fld(rmhd, 1);
+  rmhd->By0 = By0;
+  crd = get_fld(rmhd, 1);
 
-  float a = acoff(par.mx / 2, par.Lx / 2, par.xm, par.xn, par.dx0);
-  float dx = par.Lx / par.mx;
+  float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
+  float dx = rmhd->Lx / rmhd->mx;
   mrc_f1_foreach(x, ix, 1, 1) {
-    float xi = ix - (par.mx / 2 - .5);
-    float s = 1 + a*(pow(xi, (2.*par.xn)));
-    float sm = pow(s, par.xm);
-    float g = par.dx0 * xi * sm;
-    float dg = par.dx0 * (sm + par.xm*xi*2.*par.xn*a*(pow(xi, (2.*par.xn-1.))) * sm / s);
+    float xi = ix - (rmhd->mx / 2 - .5);
+    float s = 1 + a*(pow(xi, (2. * rmhd->xn)));
+    float sm = pow(s, rmhd->xm);
+    float g = rmhd->dx0 * xi * sm;
+    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
     CRDX(ix) = g;
     MRC_F1(spacing,0, ix) = dg;
     //    dx = fminf(dx, dg);
     //    CRDX(ix) = (xb + ((ix) + .5 ) * dx);
 
-    MRC_F1(By0, 0, ix) = tanh(par.lambda * CRDX(ix));
+    MRC_F1(By0, 0, ix) = tanh(rmhd->lambda * CRDX(ix));
     MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
     //    MRC_F1(x, X_PSI, ix) = sin(2.*M_PI * (xx - par.Lx / 2.) / par.Lx);
   } mrc_f1_foreach_end;
@@ -307,11 +322,11 @@ main(int argc, char **argv)
   mrc_f1_dump(spacing, "dx");
   mrc_f1_destroy(spacing);
 
-  float dt = par.cfl * fminf(dx, par.S * sqr(dx));
+  float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
   // r.h.s
   struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
-  mrc_ts_set_context(ts, &par);
+  mrc_ts_set_context(ts, rmhd);
   mrc_ts_set_rhs_function(ts, calc_rhs);
   mrc_ts_set_diag_function(ts, rmhd_diag);
   mrc_ts_set_dt(ts, dt);
@@ -324,6 +339,8 @@ main(int argc, char **argv)
   mrc_f1_destroy(x);
   mrc_f1_destroy(By0);
   mrc_f1_destroy(crd);
+
+  rmhd_destroy(rmhd);
 
   MPI_Finalize();
   return 0;
