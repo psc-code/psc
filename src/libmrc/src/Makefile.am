@@ -6,6 +6,7 @@ noinst_LTLIBRARIES = libmrc.la libmrctest.la
 libmrc_la_SOURCES = \
 	mrc_mod.c \
 	mrc_ts.c \
+	mrc_ts_rk2.c \
 	mrc_domain.c \
 	mrc_domain_simple.c \
 	mrc_domain_multi.c \
