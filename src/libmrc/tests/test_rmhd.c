@@ -44,7 +44,6 @@ struct rmhd {
   int mx;
 
   struct mrc_domain *domain;
-  struct mrc_f1 *crd;
   struct mrc_f1 *By0;
 };
 
@@ -52,14 +51,14 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 
 // ======================================================================
 
-#define CRDX(ix) (MRC_F1(crd,0, (ix)))
+// FIXME BND
+#define CRDX(ix) (MRC_CRDX(crds, (ix)+BND))
 
 static void
 _rmhd_create(struct rmhd *rmhd)
 {
   rmhd->domain = mrc_domain_create(rmhd_comm(rmhd));
-  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
-  mrc_crds_set_param_int(crds, "sw", 1);
+  mrc_domain_set_param_int3(rmhd->domain, "m", (int [3]) { 100, 1, 1 });
 }
 
 static void
@@ -81,17 +80,19 @@ rmhd_get_fld(struct rmhd *rmhd, int nr_comps, const char *name)
 static void
 rmhd_setup_crd(struct rmhd *rmhd)
 {
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+
   float xm = rmhd->xm, xn = rmhd->xn, dx0 = rmhd->dx0;
   int mx = rmhd->mx;
   float xc = mx / 2 - .5;
   float a = (pow((rmhd->Lx / 2.) / (dx0 * xc), 1./xm) - 1.) / pow(xc, 2.*xn);
-  mrc_f1_foreach(rmhd->crd, ix, 1, 1) {
+  mrc_f1_foreach(crds->crd[0], ix, 1, 1) {
     float xi = ix - xc;
     float s = 1 + a*(pow(xi, (2. * xn)));
     float sm = pow(s, xm);
     float g = dx0 * xi * sm;
     //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-    MRC_F1(rmhd->crd,0, ix) = g;
+    CRDX(ix) = g;
   } mrc_f1_foreach_end;
 }
 
@@ -99,11 +100,12 @@ static void
 _rmhd_setup(struct rmhd *rmhd)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
+  mrc_crds_set_type(crds, "rectilinear");
   mrc_crds_set_param_float3(crds, "l", (float [3]) { -rmhd->Lx / 2. });
   mrc_crds_set_param_float3(crds, "h", (float [3]) {  rmhd->Lx / 2. });
+  mrc_crds_set_param_int(crds, "sw", 1);
   mrc_domain_setup(rmhd->domain);
 
-  rmhd->crd = rmhd_get_fld(rmhd, 1, "crd");
   rmhd_setup_crd(rmhd);
 
   rmhd->By0 = rmhd_get_fld(rmhd, 1, "By0");
@@ -112,7 +114,6 @@ _rmhd_setup(struct rmhd *rmhd)
 static void
 _rmhd_destroy(struct rmhd *rmhd)
 {
-  mrc_f1_destroy(rmhd->crd);
   mrc_f1_destroy(rmhd->By0);
 }
 
@@ -128,8 +129,8 @@ static void
 solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
 	      struct mrc_f1 *b, int m_b)
 {
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   static float *aa, *bb, *cc;
-  struct mrc_f1 *crd = rmhd->crd;
 
   if (!aa) {
     aa = calloc(rmhd->mx, sizeof(*aa));
@@ -194,7 +195,7 @@ static void
 calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
   struct rmhd *rmhd = ctx;
-  struct mrc_f1 *crd = rmhd->crd;
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
 
@@ -271,7 +272,7 @@ main(int argc, char **argv)
   rmhd_setup(rmhd);
 
   // i.c.
-  struct mrc_f1 *crd = rmhd->crd;
+  struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
 
@@ -288,7 +289,6 @@ main(int argc, char **argv)
   mrc_io_open(io, "w", 0, 0.);
   mrc_f1_write(rmhd->By0, io);
   mrc_f1_write(x, io);
-  mrc_f1_write(crd, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
