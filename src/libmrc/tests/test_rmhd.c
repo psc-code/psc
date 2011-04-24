@@ -73,24 +73,6 @@ static struct mrc_f1 *crd;
 #define CRDX(ix) (MRC_F1(crd,0, (ix)))
 
 // FIXME
-static void
-mrc_f1_dump(struct mrc_f1 *f1, const char *pfx)
-{
-  char fname[strlen(pfx) + 5];
-  sprintf(fname, "%s.asc", pfx);
-
-  FILE *f = fopen(fname, "w");
-  mrc_f1_foreach(f1, ix, 0, 0) {
-    fprintf(f, "%g", CRDX(ix));
-    for (int m = 0; m < f1->nr_comp; m++) {
-      fprintf(f, " %g", MRC_F1(f1, m, ix));
-    }
-    fprintf(f, "\n");
-  } mrc_f1_foreach_end;
-  fclose(f);
-}
-
-// FIXME
 /* Taken from NR */
 void
 tridag(float *a, float *b, float *c, float *r, float *u, int n)
@@ -123,9 +105,10 @@ tridag(float *a, float *b, float *c, float *r, float *u, int n)
 // ======================================================================
 
 static struct mrc_f1 *
-get_fld(struct rmhd *par, int nr_comps)
+rmhd_get_fld(struct rmhd *par, int nr_comps, const char *name)
 {
   struct mrc_f1 *x = mrc_f1_create(MPI_COMM_WORLD);
+  mrc_f1_set_name(x, name);
   mrc_f1_set_param_int(x, "ibx", -1);
   mrc_f1_set_param_int(x, "imx", par->mx + 2);
   mrc_f1_set_param_int(x, "nr_comps", nr_comps);
@@ -231,13 +214,12 @@ calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
 {
   struct rmhd *rmhd = ctx;
   struct mrc_f1 *By0 = rmhd->By0;
-  struct mrc_f1 *phi = get_fld(rmhd, 1);
+  struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
 
   set_bnd_zero(rmhd, x, OM_I);
   set_bnd_zero(rmhd, x, PSI_R);
 
   solve_poisson(rmhd, phi, PHI_I, x, OM_I);
-  //  mrc_f1_dump(phi, "phi");
 
   mrc_f1_foreach(x, ix, 0, 0) {
     float By0pp = 
@@ -262,8 +244,6 @@ calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
       rmhd->ky * By0(ix) * VZ_R(ix) +
       rmhd->d_i * rmhd->ky * (By0(ix) * J_r - By0pp * PSI_R(ix));
   }
-
-  //  mrc_f1_dump(rhs, "rhs");
 
   mrc_f1_destroy(phi);
 }
@@ -293,11 +273,10 @@ main(int argc, char **argv)
   rmhd_setup(rmhd);
 
   // i.c.
-  struct mrc_f1 *x = get_fld(rmhd, NR_FLDS);
-  struct mrc_f1 *By0 = get_fld(rmhd, 1);
-  struct mrc_f1 *spacing = get_fld(rmhd, 1);
+  struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
+  struct mrc_f1 *By0 = rmhd_get_fld(rmhd, 1, "By0");
   rmhd->By0 = By0;
-  crd = get_fld(rmhd, 1);
+  crd = rmhd_get_fld(rmhd, 1, "crd");
 
   float a = acoff(rmhd->mx / 2, rmhd->Lx / 2, rmhd->xm, rmhd->xn, rmhd->dx0);
   float dx = rmhd->Lx / rmhd->mx;
@@ -306,21 +285,22 @@ main(int argc, char **argv)
     float s = 1 + a*(pow(xi, (2. * rmhd->xn)));
     float sm = pow(s, rmhd->xm);
     float g = rmhd->dx0 * xi * sm;
-    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
+    //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
     CRDX(ix) = g;
-    MRC_F1(spacing,0, ix) = dg;
-    //    dx = fminf(dx, dg);
-    //    CRDX(ix) = (xb + ((ix) + .5 ) * dx);
 
     MRC_F1(By0, 0, ix) = tanh(rmhd->lambda * CRDX(ix));
     MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
-    //    MRC_F1(x, X_PSI, ix) = sin(2.*M_PI * (xx - par.Lx / 2.) / par.Lx);
   } mrc_f1_foreach_end;
 
-  mrc_f1_dump(By0, "By0");
-  mrc_f1_dump(x, "x");
-  mrc_f1_dump(spacing, "dx");
-  mrc_f1_destroy(spacing);
+  // write out equilibrium, etc.
+  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_param_string(io, "basename", "rmhd-ini");
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", 0, 0.);
+  mrc_f1_write(By0, io);
+  mrc_f1_write(x, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
 
   float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
