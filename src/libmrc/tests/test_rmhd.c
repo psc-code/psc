@@ -272,25 +272,11 @@ main(int argc, char **argv)
   float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
   // run time integration
-  struct mrc_ts *ts = mrc_ts_create(MPI_COMM_WORLD);
-
-  struct mrc_ts_monitor *mon_output =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_output, "output");
-  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
-  mrc_ts_add_monitor(ts, mon_output);
-
-  struct mrc_ts_monitor *mon_diag =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_diag, "diag");
-  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-  mrc_ts_monitor_diag_set_function(mon_diag, rmhd_diag);
-  mrc_ts_add_monitor(ts, mon_diag);
-
-  mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
-  mrc_ts_set_dt(ts, dt);
+  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rmhd_diag);
   mrc_ts_set_state(ts, x);
+  mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_from_options(ts);
+  mrc_ts_set_dt(ts, dt);
   mrc_ts_setup(ts);
   mrc_ts_solve(ts);
   mrc_ts_view(ts);

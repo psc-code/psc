@@ -102,6 +102,33 @@ mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
 }
 
 // ======================================================================
+// mrc_ts_create_std
+//
+// set up a standard mrc_ts with diag and output
+
+struct mrc_ts *
+mrc_ts_create_std(MPI_Comm comm,
+		  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file))
+{
+  struct mrc_ts *ts = mrc_ts_create(comm);
+
+  struct mrc_ts_monitor *mon_output =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_output, "output");
+  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
+  mrc_ts_add_monitor(ts, mon_output);
+
+  struct mrc_ts_monitor *mon_diag =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_diag, "diag");
+  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
+  mrc_ts_monitor_diag_set_function(mon_diag, diagf);
+  mrc_ts_add_monitor(ts, mon_diag);
+
+  return ts;
+}
+
+// ======================================================================
 // mrc_ts_init
 
 static void
