@@ -5,17 +5,13 @@
 #include <mrc_io.h>
 #include <mrc_params.h>
 #include <mrc_nr.h>
+#include <mrc_bits.h>
 
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
-// ======================================================================
-
-// FIXME
-#define sqr(a) ((a) * (a))
 
 // ======================================================================
 
