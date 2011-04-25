@@ -128,12 +128,10 @@ rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
 static void
 rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
 {
-  float absmax[NR_FLDS] = {};
-  mrc_f1_foreach(x, ix, 0, 0) {
-    for (int m = 0; m < NR_FLDS; m++) {
-      absmax[m] = fmaxf(absmax[m], fabsf(MRC_F1(x,m, ix)));
-    }
-  } mrc_f1_foreach_end;
+  float absmax[NR_FLDS];
+  for (int m = 0; m < NR_FLDS; m++) {
+    absmax[m] = mrc_f1_norm_comp(x, m);
+  }
   
   fprintf(file, "%g", time);
   for (int m = 0; m < NR_FLDS; m++) {

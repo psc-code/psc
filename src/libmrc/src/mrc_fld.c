@@ -130,6 +130,16 @@ mrc_f1_norm(struct mrc_f1 *x)
   return res;
 }
 
+float
+mrc_f1_norm_comp(struct mrc_f1 *x, int m)
+{
+  float res = 0.;
+  mrc_f1_foreach(x, ix, 0, 0) {
+    res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
+  } mrc_f1_foreach_end;
+  return res;
+}
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_f1
 
