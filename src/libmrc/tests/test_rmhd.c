@@ -287,8 +287,7 @@ main(int argc, char **argv)
   mrc_ts_monitor_diag_set_function(mon_diag, rmhd_diag);
   mrc_ts_add_monitor(ts, mon_diag);
 
-  mrc_ts_set_context(ts, rmhd);
-  mrc_ts_set_rhs_function(ts, rmhd_calc_rhs);
+  mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_dt(ts, dt);
   mrc_ts_set_state(ts, x);
   mrc_ts_set_from_options(ts);
