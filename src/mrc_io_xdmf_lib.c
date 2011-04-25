@@ -19,6 +19,27 @@ xdmf_write_header(FILE *f)
 }
 
 static void
+xdmf_write_topology_m1(FILE *f, int im[3], const char *filename, int p)
+{
+  // FIXME crd0 hardcoded, should use mrc_m1_name()
+  fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
+	  1, 1, im[0] + 2);
+
+  fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
+  fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 2);
+  fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"XML\">\n", 1);
+  fprintf(f, "        0\n");
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     <DataItem Name=\"VZ\" DataType=\"Float\" Dimensions=\"%d\" Format=\"XML\">\n", 1);
+  fprintf(f, "        0\n");
+  fprintf(f, "     </DataItem>\n");
+  fprintf(f, "     </Geometry>\n");
+  fprintf(f, "\n");
+}
+
+static void
 xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
 {
   fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
@@ -54,6 +75,19 @@ xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
+}
+
+static void
+xdmf_write_fld_m1(FILE *f, struct xdmf_fld_info *fld_info, int im[3],
+		  const char *filename, int p)
+{
+  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"%s\" Center=\"Node\">\n",
+	  fld_info->name, fld_info->is_vec ? "Vector" : "Scalar");
+  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
+	  1, 1, im[0] + 2, fld_info->is_vec ? " 3" : "");
+  fprintf(f, "        %s:/%s/%s/p%d/1d\n", filename, fld_info->path, fld_info->name, p);
+  fprintf(f, "       </DataItem>\n");
+  fprintf(f, "     </Attribute>\n");
 }
 
 static void
@@ -158,6 +192,7 @@ xdmf_spatial_create_f1(list_t *xdmf_spatial_list, const char *name,
 
   struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
   xs->name = strdup(name);
+  xs->dim = 1;
   xs->nr_global_patches = 1; // FIXME wrong when parallel
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
 
@@ -178,6 +213,7 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
 
   struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
   xs->name = strdup(name);
+  xs->dim = 3;
   mrc_domain_get_nr_global_patches(domain, &xs->nr_global_patches);
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
 
@@ -197,6 +233,7 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
 
   struct xdmf_spatial *xs = calloc(1, sizeof(*xs));
   xs->name = strdup(name);
+  xs->dim = 3;
   xs->nr_global_patches = 1;
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
 
@@ -261,14 +298,30 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
     int patch = xs->patch_infos[s].patch;
     sprintf(fname, "%s.%06d_p%06d.h5", io->par.basename, io->step, rank);
     int *ldims = xs->patch_infos[s].ldims;
-    if (xs->uniform) {
-      xdmf_write_topology_uniform_m3(f, ldims, xs->xl, xs->dx);
+    if (xs->dim == 1) {
+      if (xs->uniform) {
+	assert(0);
+      } else {
+	xdmf_write_topology_m1(f, ldims, fname, patch);
+      }
+    } else if (xs->dim == 3) {
+      if (xs->uniform) {
+	xdmf_write_topology_uniform_m3(f, ldims, xs->xl, xs->dx);
+      } else {
+	xdmf_write_topology_m3(f, ldims, fname, patch);
+      }
     } else {
-      xdmf_write_topology_m3(f, ldims, fname, patch);
+      assert(0);
     }
     
     for (int m = 0; m < xs->nr_fld_info; m++) {
-      xdmf_write_fld_m3(f, &xs->fld_info[m], ldims, fname, patch);
+      if (xs->dim == 1) {
+	xdmf_write_fld_m1(f, &xs->fld_info[m], ldims, fname, patch);
+      } else if (xs->dim == 3) {
+	xdmf_write_fld_m3(f, &xs->fld_info[m], ldims, fname, patch);
+      } else {
+	assert(0);
+      }
     }
     fprintf(f, "   </Grid>\n");
   }
