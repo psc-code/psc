@@ -4,10 +4,13 @@
 #include <mrc_ts_private.h> // FIXME?
 #include <mrc_params.h>
 
+#define to_diag(mon) mrc_to_subobj(mon, struct mrc_ts_monitor_diag)
+
 struct mrc_ts_monitor_diag {
   char *filename;
 
   FILE *file;
+  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_monitor_diag, x)
@@ -20,8 +23,7 @@ static struct param mrc_ts_monitor_diag_descr[] = {
 static void
 mrc_ts_monitor_diag_setup(struct mrc_ts_monitor *mon)
 {
-  struct mrc_ts_monitor_diag *diag =
-    mrc_to_subobj(mon, struct mrc_ts_monitor_diag);
+  struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   diag->file = fopen(diag->filename, "w");
 }
@@ -29,22 +31,30 @@ mrc_ts_monitor_diag_setup(struct mrc_ts_monitor *mon)
 static void
 mrc_ts_monitor_diag_destroy(struct mrc_ts_monitor *mon)
 {
-  struct mrc_ts_monitor_diag *diag =
-    mrc_to_subobj(mon, struct mrc_ts_monitor_diag);
+  struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   if (diag->file) {
     fclose(diag->file);
   }
 }
 
+void
+mrc_ts_monitor_diag_set_function(struct mrc_ts_monitor *mon,
+				 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
+					       FILE *file))
+{
+  struct mrc_ts_monitor_diag *diag = to_diag(mon);
+
+  diag->diagf = diagf;
+}
+
 static void
 mrc_ts_monitor_diag_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 {
-  struct mrc_ts_monitor_diag *diag =
-    mrc_to_subobj(mon, struct mrc_ts_monitor_diag);
+  struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   mpi_printf(mrc_ts_monitor_comm(mon), "writing diag %d (%g)\n", ts->n, ts->time);
-  ts->diagf(ts->ctx, ts->time, ts->x, diag->file);
+  diag->diagf(ts->ctx, ts->time, ts->x, diag->file);
 }
 
 struct mrc_ts_monitor_ops mrc_ts_monitor_diag_ops = {
