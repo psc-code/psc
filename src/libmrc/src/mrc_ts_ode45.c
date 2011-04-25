@@ -127,7 +127,7 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
       ts->dt = ts->max_time - ts->time;
     }
 
-    mrc_ts_monitors(ts);
+    mrc_ts_monitors_run(ts);
 
     // Compute the slopes by computing the k(:,j+1)'th column based on 
     // the previous k(:,1:j) columns
