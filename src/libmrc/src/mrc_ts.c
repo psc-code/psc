@@ -26,6 +26,7 @@ _mrc_ts_create(struct mrc_ts *ts)
   mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
   list_add_tail(&mon_diag->monitors_entry, &ts->monitors);
   mrc_ts_add_child(ts, (struct mrc_obj *) mon_diag);
+  ts->mon_diag = mon_diag;
 }
 
 static void
@@ -85,7 +86,8 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
 			 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
 				       FILE *file))
 {
-  ts->diagf = diagf;
+  struct mrc_ts_monitor *mon_diag = ts->mon_diag;
+  mrc_ts_monitor_diag_set_function(mon_diag, diagf);
 }
 
 void

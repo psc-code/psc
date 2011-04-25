@@ -20,7 +20,7 @@ struct mrc_ts {
   void (*rhsf)(void *ctx, struct mrc_f1 *x, struct mrc_f1 *rhs);
 
   list_t monitors;
-  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
+  struct mrc_ts_monitor *mon_diag;
 
   struct mrc_f1 *rhs;
   int nr_rhsf_evals; // statistics
