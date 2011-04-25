@@ -2,6 +2,7 @@
 #include <mrc_ts_private.h>
 
 struct mrc_ts_rk2 {
+  struct mrc_f1 *rhs;
   struct mrc_f1 *xm;
 };
 
@@ -11,6 +12,7 @@ mrc_ts_rk2_setup(struct mrc_ts *ts)
   struct mrc_ts_rk2 *rk2 = mrc_to_subobj(ts, struct mrc_ts_rk2);
   
   rk2->xm = mrc_f1_duplicate(ts->x);
+  rk2->rhs = mrc_f1_duplicate(ts->x);
 }
 
 static void
@@ -19,6 +21,7 @@ mrc_ts_rk2_destroy(struct mrc_ts *ts)
   struct mrc_ts_rk2 *rk2 = mrc_to_subobj(ts, struct mrc_ts_rk2);
 
   mrc_f1_destroy(rk2->xm);
+  mrc_f1_destroy(rk2->rhs);
 }
 
 static void
@@ -27,7 +30,7 @@ mrc_ts_rk2_step(struct mrc_ts *ts)
   struct mrc_ts_rk2 *rk2 = mrc_to_subobj(ts, struct mrc_ts_rk2);
 
   struct mrc_f1 *x = ts->x;
-  struct mrc_f1 *rhs = ts->rhs;
+  struct mrc_f1 *rhs = rk2->rhs;
   struct mrc_f1 *xm = rk2->xm;
 
   mrc_ts_rhsf(ts, rhs, ts->time, x);

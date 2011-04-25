@@ -21,7 +21,6 @@ struct mrc_ts {
 
   list_t monitors;
 
-  struct mrc_f1 *rhs;
   int nr_rhsf_evals; // statistics
 };
 

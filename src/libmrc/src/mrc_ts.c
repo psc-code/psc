@@ -15,21 +15,6 @@ _mrc_ts_create(struct mrc_ts *ts)
 }
 
 static void
-_mrc_ts_setup(struct mrc_ts *ts)
-{
-  ts->rhs = mrc_f1_duplicate(ts->x);
-  if (mrc_ts_ops(ts)->setup) {
-    mrc_ts_ops(ts)->setup(ts);
-  }
-}
-
-static void
-_mrc_ts_destroy(struct mrc_ts *ts)
-{
-  mrc_f1_destroy(ts->rhs);
-}
-
-static void
 _mrc_ts_view(struct mrc_ts *ts)
 {
   if (ts->n == 0)
@@ -69,23 +54,6 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
   mrc_ts_add_child(ts, (struct mrc_obj *) mon);
 }
 
-void
-mrc_ts_monitors_run(struct mrc_ts *ts)
-{
-  struct mrc_ts_monitor *mon;
-  list_for_each_entry(mon, &ts->monitors, monitors_entry) {
-    mrc_ts_monitor_run(mon, ts);
-  }
-}
-
-void
-mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
-	    struct mrc_f1 *x)
-{
-  ts->rhsf(ts->ctx, rhs, x);
-  ts->nr_rhsf_evals++;
-}
-
 static void
 mrc_ts_step(struct mrc_ts *ts)
 {
@@ -113,13 +81,25 @@ mrc_ts_solve(struct mrc_ts *ts)
   }
 }
 
-#define VAR(x) (void *)offsetof(struct mrc_ts, x)
-static struct param mrc_ts_param_descr[] = {
-  { "max_time"      , VAR(max_time)      , PARAM_FLOAT(1.)           },
-  { "max_steps"     , VAR(max_steps)     , PARAM_INT(100000)         },
-  {},
-};
-#undef VAR
+// ======================================================================
+// helpers for subclasses
+
+void
+mrc_ts_monitors_run(struct mrc_ts *ts)
+{
+  struct mrc_ts_monitor *mon;
+  list_for_each_entry(mon, &ts->monitors, monitors_entry) {
+    mrc_ts_monitor_run(mon, ts);
+  }
+}
+
+void
+mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
+	    struct mrc_f1 *x)
+{
+  ts->rhsf(ts->ctx, rhs, x);
+  ts->nr_rhsf_evals++;
+}
 
 // ======================================================================
 // mrc_ts_init
@@ -134,14 +114,20 @@ mrc_ts_init()
 // ======================================================================
 // mrc_ts class
 
+#define VAR(x) (void *)offsetof(struct mrc_ts, x)
+static struct param mrc_ts_param_descr[] = {
+  { "max_time"      , VAR(max_time)      , PARAM_FLOAT(1.)           },
+  { "max_steps"     , VAR(max_steps)     , PARAM_INT(100000)         },
+  {},
+};
+#undef VAR
+
 struct mrc_class_mrc_ts mrc_class_mrc_ts = {
   .name         = "mrc_ts",
   .size         = sizeof(struct mrc_ts),
   .param_descr  = mrc_ts_param_descr,
   .init         = mrc_ts_init,
   .create       = _mrc_ts_create,
-  .setup        = _mrc_ts_setup,
   .view         = _mrc_ts_view,
-  .destroy      = _mrc_ts_destroy,
 };
 
