@@ -331,6 +331,8 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
       // FIXME: warn
       sprintf(tmp_fld_name, "m%d", m);
     }
+    xdmf_spatial_save_fld_info(xs, strdup(fld_name), strdup(path), false);
+
     hid_t group_fld = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);

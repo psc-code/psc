@@ -19,6 +19,7 @@ struct xdmf_spatial {
   char *name; //< from domain::name
 
   bool crds_done;
+  int dim;
   bool uniform; //< uniform coords
   float xl[3], dx[3]; //< uniform origin, dx
 
