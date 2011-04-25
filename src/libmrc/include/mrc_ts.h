@@ -18,9 +18,6 @@ void mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon);
 void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			     void (*rhsf)(void *ctx, struct mrc_f1 *x,
 					  struct mrc_f1 *rhs));
-void mrc_ts_set_diag_function(struct mrc_ts *ts,
-			      void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
-					    FILE *file));
 void mrc_ts_solve(struct mrc_ts *ts);
 
 #endif

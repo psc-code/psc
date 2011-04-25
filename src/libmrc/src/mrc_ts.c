@@ -12,19 +12,6 @@ static void
 _mrc_ts_create(struct mrc_ts *ts)
 {
   INIT_LIST_HEAD(&ts->monitors);
-
-  struct mrc_ts_monitor *mon_output =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_output, "output");
-  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
-  mrc_ts_add_monitor(ts, mon_output);
-
-  struct mrc_ts_monitor *mon_diag =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_diag, "diag");
-  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-  mrc_ts_add_monitor(ts, mon_diag);
-  ts->mon_diag = mon_diag;
 }
 
 static void
@@ -84,15 +71,6 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
 {
   list_add_tail(&mon->monitors_entry, &ts->monitors);
   mrc_ts_add_child(ts, (struct mrc_obj *) mon);
-}
-
-void
-mrc_ts_set_diag_function(struct mrc_ts *ts,
-			 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
-				       FILE *file))
-{
-  struct mrc_ts_monitor *mon_diag = ts->mon_diag;
-  mrc_ts_monitor_diag_set_function(mon_diag, diagf);
 }
 
 void
