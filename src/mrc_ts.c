@@ -1,24 +1,37 @@
 
 #include <mrc_ts_private.h>
+#include <mrc_ts_monitor_private.h>
 
+#include <mrc_ts_monitor.h>
 #include <mrc_params.h>
 #include <assert.h>
-
 
 #define mrc_ts_ops(ts) ((struct mrc_ts_ops *) ts->obj.ops)
 
 static void
 _mrc_ts_create(struct mrc_ts *ts)
 {
-  ts->io = mrc_io_create(mrc_ts_comm(ts));
-  mrc_ts_add_child(ts, (struct mrc_obj *) ts->io);
+  INIT_LIST_HEAD(&ts->monitors);
+
+  struct mrc_ts_monitor *mon_output =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_output, "output");
+  mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
+  list_add_tail(&mon_output->monitors_entry, &ts->monitors);
+  mrc_ts_add_child(ts, (struct mrc_obj *) mon_output);
+
+  struct mrc_ts_monitor *mon_diag =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_diag, "diag");
+  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
+  list_add_tail(&mon_diag->monitors_entry, &ts->monitors);
+  mrc_ts_add_child(ts, (struct mrc_obj *) mon_diag);
 }
 
 static void
 _mrc_ts_setup(struct mrc_ts *ts)
 {
   ts->rhs = mrc_f1_duplicate(ts->x);
-  ts->f_diag = fopen(ts->diag_filename, "w");
   if (mrc_ts_ops(ts)->setup) {
     mrc_ts_ops(ts)->setup(ts);
   }
@@ -28,9 +41,6 @@ static void
 _mrc_ts_destroy(struct mrc_ts *ts)
 {
   mrc_f1_destroy(ts->rhs);
-  if (ts->f_diag) {
-    fclose(ts->f_diag);
-  }
 }
 
 static void
@@ -78,29 +88,13 @@ mrc_ts_set_diag_function(struct mrc_ts *ts,
   ts->diagf = diagf;
 }
 
-static void
-mrc_ts_diag(struct mrc_ts *ts)
-{
-  if (ts->n % ts->diag_every == 0) {
-    ts->diagf(ts->ctx, ts->time, ts->x, ts->f_diag);
-  }
-}
-
-static void
-mrc_ts_output(struct mrc_ts *ts)
-{
-  if (ts->n % ts->out_every == 0) {
-    mrc_io_open(ts->io, "w", ts->n / ts->out_every, ts->time);
-    mrc_f1_write(ts->x, ts->io);
-    mrc_io_close(ts->io);
-  }
-}
-
 void
-mrc_ts_monitors(struct mrc_ts *ts)
+mrc_ts_monitors_run(struct mrc_ts *ts)
 {
-  mrc_ts_output(ts);
-  mrc_ts_diag(ts);
+  struct mrc_ts_monitor *mon;
+  list_for_each_entry(mon, &ts->monitors, monitors_entry) {
+    mrc_ts_monitor_run(mon, ts);
+  }
 }
 
 void
@@ -131,7 +125,7 @@ mrc_ts_solve(struct mrc_ts *ts)
       ts->dt = ts->max_time - ts->time;
     }
 
-    mrc_ts_monitors(ts);
+    mrc_ts_monitors_run(ts);
     mrc_ts_step(ts);
     ts->time += ts->dt;
     ts->n++;
@@ -142,9 +136,6 @@ mrc_ts_solve(struct mrc_ts *ts)
 static struct param mrc_ts_param_descr[] = {
   { "max_time"      , VAR(max_time)      , PARAM_FLOAT(1.)           },
   { "max_steps"     , VAR(max_steps)     , PARAM_INT(100000)         },
-  { "out_every"     , VAR(out_every)     , PARAM_INT(1000)           },
-  { "diag_every"    , VAR(diag_every)    , PARAM_INT(10)             },
-  { "diag_filename" , VAR(diag_filename) , PARAM_STRING("diag.asc")  },
   {},
 };
 #undef VAR

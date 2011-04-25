@@ -8,6 +8,9 @@ libmrc_la_SOURCES = \
 	mrc_ts.c \
 	mrc_ts_rk2.c \
 	mrc_ts_ode45.c \
+	mrc_ts_monitor.c \
+	mrc_ts_monitor_output.c \
+	mrc_ts_monitor_diag.c \
 	mrc_domain.c \
 	mrc_domain_simple.c \
 	mrc_domain_multi.c \
