@@ -17,15 +17,13 @@ _mrc_ts_create(struct mrc_ts *ts)
     mrc_ts_monitor_create(mrc_ts_comm(ts));
   mrc_ts_monitor_set_type(mon_output, "output");
   mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
-  list_add_tail(&mon_output->monitors_entry, &ts->monitors);
-  mrc_ts_add_child(ts, (struct mrc_obj *) mon_output);
+  mrc_ts_add_monitor(ts, mon_output);
 
   struct mrc_ts_monitor *mon_diag =
     mrc_ts_monitor_create(mrc_ts_comm(ts));
   mrc_ts_monitor_set_type(mon_diag, "diag");
   mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-  list_add_tail(&mon_diag->monitors_entry, &ts->monitors);
-  mrc_ts_add_child(ts, (struct mrc_obj *) mon_diag);
+  mrc_ts_add_monitor(ts, mon_diag);
   ts->mon_diag = mon_diag;
 }
 
@@ -79,6 +77,13 @@ mrc_ts_set_rhs_function(struct mrc_ts *ts,
 				     struct mrc_f1 *rhs))
 {
   ts->rhsf = rhsf;
+}
+
+void
+mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
+{
+  list_add_tail(&mon->monitors_entry, &ts->monitors);
+  mrc_ts_add_child(ts, (struct mrc_obj *) mon);
 }
 
 void
