@@ -20,4 +20,8 @@ void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			     void *ctx);
 void mrc_ts_solve(struct mrc_ts *ts);
 
+struct mrc_ts *mrc_ts_create_std(MPI_Comm comm,
+				 void (*diagf)(void *ctx, float time,
+					       struct mrc_f1 *x, FILE *file));
+
 #endif
