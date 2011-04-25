@@ -68,6 +68,20 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 }
 
 void
+mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
+{
+  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
+  mrc_io_set_name(io, "mrc_f1_dump");
+  mrc_io_set_param_string(io, "basename", basename);
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", n, n);
+  mrc_f1_write(x, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+}
+
+void
 mrc_f1_zero(struct mrc_f1 *x)
 {
   mrc_f1_foreach(x, ix, 0, 0) {

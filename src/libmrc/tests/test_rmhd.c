@@ -1,8 +1,7 @@
 
 #include <mrc_ts.h>
-#include <mrc_ts_monitor.h>
 #include <mrc_fld.h>
-#include <mrc_io.h>
+#include <mrc_domain.h>
 #include <mrc_params.h>
 #include <mrc_nr.h>
 #include <mrc_bits.h>
@@ -252,16 +251,10 @@ main(int argc, char **argv)
     MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
   } mrc_f1_foreach_end;
 
-  // write out equilibrium, etc.
-  struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
-  mrc_io_set_param_string(io, "basename", "rmhd-ini");
-  mrc_io_setup(io);
-  mrc_io_open(io, "w", 0, 0.);
-  mrc_f1_write(rmhd->By0, io);
-  mrc_f1_write(x, io);
-  mrc_io_close(io);
-  mrc_io_destroy(io);
+  // write out equilibrium
+  mrc_f1_dump(rmhd->By0, "By0", 0);
 
+  // calculate dt
   int gdims[3];
   mrc_domain_get_global_dims(rmhd->domain, gdims);
   float dx = rmhd->Lx / gdims[0]; // FIXME
