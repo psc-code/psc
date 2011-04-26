@@ -32,7 +32,7 @@ mrc_ts_set_dt(struct mrc_ts *ts, float dt)
 }
 
 void
-mrc_ts_set_state(struct mrc_ts *ts, struct mrc_f1 *x)
+mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_f1 *x)
 {
   ts->x = x;
 }
