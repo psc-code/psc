@@ -132,7 +132,7 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL);
-  mrc_ts_set_state(ts, x);
+  mrc_ts_set_solution(ts, x);
   mrc_ts_set_rhs_function(ts, kdv_calc_rhs, kdv);
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
