@@ -122,8 +122,9 @@ rmhd_solve_poisson(struct rmhd *rmhd, struct mrc_f1 *x, int m_x,
 }
 
 static void
-rmhd_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
+rmhd_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 {
+  struct mrc_f1 *x = (struct mrc_f1 *) _x;
   float absmax[NR_FLDS];
   for (int m = 0; m < NR_FLDS; m++) {
     absmax[m] = mrc_f1_norm_comp(x, m);
@@ -164,9 +165,10 @@ enum {
 #define VZ_R(ix) MRC_F1(x, VZ_R, ix)
 
 static void
-rmhd_calc_rhs(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
+rmhd_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
 {
   struct rmhd *rmhd = ctx;
+  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
@@ -262,7 +264,7 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rmhd_diag, rmhd);
-  mrc_ts_set_solution(ts, x);
+  mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
   mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_set_dt(ts, dt);

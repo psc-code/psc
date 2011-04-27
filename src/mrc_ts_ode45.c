@@ -15,10 +15,10 @@ struct mrc_ts_ode45 {
 
   int nr_rejected_steps;
 
-  struct mrc_f1 *xk[7];
-  struct mrc_f1 *x4;
-  struct mrc_f1 *x5;
-  struct mrc_f1 *gamma1;
+  struct mrc_obj *xk[7];
+  struct mrc_obj *x4;
+  struct mrc_obj *x5;
+  struct mrc_obj *gamma1;
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_ode45, x)
@@ -72,11 +72,11 @@ mrc_ts_ode45_setup(struct mrc_ts *ts)
   struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
   
   for (int i = 0; i < 7; i++) {
-    ode45->xk[i] = mrc_f1_duplicate(ts->x);
+    ode45->xk[i] = mrc_ts_vec_duplicate(ts, ts->x);
   }
-  ode45->x4 = mrc_f1_duplicate(ts->x);
-  ode45->x5 = mrc_f1_duplicate(ts->x);
-  ode45->gamma1 = mrc_f1_duplicate(ts->x);
+  ode45->x4 = mrc_ts_vec_duplicate(ts, ts->x);
+  ode45->x5 = mrc_ts_vec_duplicate(ts, ts->x);
+  ode45->gamma1 = mrc_ts_vec_duplicate(ts, ts->x);
 
   ode45->pow = 1./6.; // see p.91 in the Ascher & Petzold reference for more infomation.
 
@@ -97,11 +97,11 @@ mrc_ts_ode45_destroy(struct mrc_ts *ts)
   struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
 
   for (int i = 0; i < 7; i++) {
-    mrc_f1_destroy(ode45->xk[i]);
+    mrc_obj_destroy(ode45->xk[i]);
   }
-  mrc_f1_destroy(ode45->x4);
-  mrc_f1_destroy(ode45->x5);
-  mrc_f1_destroy(ode45->gamma1);
+  mrc_obj_destroy(ode45->x4);
+  mrc_obj_destroy(ode45->x5);
+  mrc_obj_destroy(ode45->gamma1);
 }
 
 static void
@@ -120,11 +120,11 @@ static void
 mrc_ts_ode45_solve(struct mrc_ts *ts)
 {
   struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
-  struct mrc_f1 *x = ts->x;
-  struct mrc_f1 **xk = ode45->xk;
-  struct mrc_f1 *x4 = ode45->x4;
-  struct mrc_f1 *x5 = ode45->x5;
-  struct mrc_f1 *gamma1 = ode45->gamma1;
+  struct mrc_obj *x = ts->x;
+  struct mrc_obj **xk = ode45->xk;
+  struct mrc_obj *x4 = ode45->x4;
+  struct mrc_obj *x5 = ode45->x5;
+  struct mrc_obj *gamma1 = ode45->gamma1;
 
   mrc_ts_rhsf(ts, xk[0], ts->time, x);
 
@@ -141,9 +141,9 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
     // s is the number of intermediate RK stages on [t (t+h)] (Dormand-Prince has s=7 stages)
     for (int j = 0; j < 6; j++) {
       // k_(:,j+1) = feval(FUN, t+c_(j+1)*h, x+h*k_(:,1:j)*a_(j+1,1:j) );
-      mrc_f1_copy(gamma1, x);
+      mrc_ts_vec_copy(ts, gamma1, x);
       for (int k = 0; k <= j; k++) {
-	mrc_f1_axpy(gamma1, ts->dt * a[j+1][k], xk[k]);
+	mrc_ts_vec_axpy(ts, gamma1, ts->dt * a[j+1][k], xk[k]);
       }
       float time = ts->time + c[j+1] * ts->dt;
       mrc_ts_rhsf(ts, xk[j+1], time, gamma1);
@@ -151,31 +151,31 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
 
     // compute the 4th order estimate
     //x4=x + h* (k_*b4_);
-    mrc_f1_copy(x4, x);
+    mrc_ts_vec_copy(ts, x4, x);
     for (int k = 0; k < 7; k++) {
-      mrc_f1_axpy(x4, ts->dt * b4[k], xk[k]);
+      mrc_ts_vec_axpy(ts, x4, ts->dt * b4[k], xk[k]);
     }
 
     // compute the 5th order estimate
     //x5=x + h*(k_*b5_);
-    mrc_f1_copy(x5, x);
+    mrc_ts_vec_copy(ts, x5, x);
     for (int k = 0; k < 7; k++) {
-      mrc_f1_axpy(x5, ts->dt * b5[k], xk[k]);
+      mrc_ts_vec_axpy(ts, x5, ts->dt * b5[k], xk[k]);
     }
 
     // estimate the local truncation error
-    mrc_f1_waxpy(gamma1, -1., x4, x5);
+    mrc_ts_vec_waxpy(ts, gamma1, -1., x4, x5);
 
     // Estimate the error and the acceptable error
-    float delta = mrc_f1_norm(gamma1); // actual error
-    float tau = ode45->tol * fmaxf(mrc_f1_norm(x), 1.); // allowable error
+    float delta = mrc_ts_vec_norm(ts, gamma1); // actual error
+    float tau = ode45->tol * fmaxf(mrc_ts_vec_norm(ts, x), 1.); // allowable error
 
     // Update the solution only if the error is acceptable
     if (delta <= tau) {
       ts->time += ts->dt;
       ts->n++;
       // using the higher order estimate is called 'local extrapolation'
-      mrc_f1_copy(x, x5);
+      mrc_ts_vec_copy(ts, x, x5);
     } else {
       ode45->nr_rejected_steps++;
     }
@@ -191,7 +191,7 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
     // This is part of the Dormand-Prince pair caveat.
     // k_(:,7) has already been computed, so use it instead of recomputing it
     // again as k_(:,1) during the next step.
-    mrc_f1_copy(xk[0], xk[6]);
+    mrc_ts_vec_copy(ts, xk[0], xk[6]);
 
     //    mprintf("t %d:%g dt = %g\n", ts->n, ts->time, ts->dt);
   }
