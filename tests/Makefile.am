@@ -3,6 +3,7 @@ AM_CPPFLAGS = -I$(srcdir)/../include
 
 noinst_PROGRAMS = \
 	test_mrc_obj \
+	test_rlc \
 	test_io \
 	test_io_read \
 	test_dict \
