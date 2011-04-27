@@ -12,6 +12,7 @@ void mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts);
 
 void mrc_ts_monitor_diag_set_function(struct mrc_ts_monitor *mon,
 				      void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
-						    FILE *file));
+						    FILE *file),
+				      void *diagf_ctx);
 
 #endif

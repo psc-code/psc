@@ -11,6 +11,7 @@ struct mrc_ts_monitor_diag {
 
   FILE *file;
   void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
+  void *diagf_ctx;
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_monitor_diag, x)
@@ -41,11 +42,13 @@ mrc_ts_monitor_diag_destroy(struct mrc_ts_monitor *mon)
 void
 mrc_ts_monitor_diag_set_function(struct mrc_ts_monitor *mon,
 				 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
-					       FILE *file))
+					       FILE *file),
+				 void *diagf_ctx)
 {
   struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   diag->diagf = diagf;
+  diag->diagf_ctx = diagf;
 }
 
 static void
@@ -54,7 +57,7 @@ mrc_ts_monitor_diag_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   mpi_printf(mrc_ts_monitor_comm(mon), "writing diag %d (%g)\n", ts->n, ts->time);
-  diag->diagf(ts->ctx, ts->time, ts->x, diag->file);
+  diag->diagf(diag->diagf_ctx, ts->time, ts->x, diag->file);
 }
 
 struct mrc_ts_monitor_ops mrc_ts_monitor_diag_ops = {

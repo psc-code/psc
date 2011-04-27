@@ -16,7 +16,7 @@ struct mrc_ts {
   float time; // current integration time
   float dt; // current dt
   struct mrc_f1 *x; // current state vector
-  void *ctx; // FIXME, should be mrc_obj?
+  void *rhsf_ctx;
   void (*rhsf)(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x);
 
   list_t monitors;

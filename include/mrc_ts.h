@@ -22,6 +22,7 @@ void mrc_ts_solve(struct mrc_ts *ts);
 
 struct mrc_ts *mrc_ts_create_std(MPI_Comm comm,
 				 void (*diagf)(void *ctx, float time,
-					       struct mrc_f1 *x, FILE *file));
+					       struct mrc_f1 *x, FILE *file),
+				 void *diagf_ctx);
 
 #endif

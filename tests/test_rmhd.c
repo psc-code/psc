@@ -261,7 +261,7 @@ main(int argc, char **argv)
   float dt = rmhd->cfl * fminf(dx, rmhd->S * sqr(dx));
 
   // run time integration
-  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rmhd_diag);
+  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rmhd_diag, rmhd);
   mrc_ts_set_solution(ts, x);
   mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_from_options(ts);

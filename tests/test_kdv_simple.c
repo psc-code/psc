@@ -88,7 +88,7 @@ main(int argc, char **argv)
   } mrc_f1_foreach_end;
 
   // run time integration
-  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL);
+  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL, NULL);
   mrc_ts_set_solution(ts, x);
   mrc_ts_set_rhs_function(ts, calc_rhs, domain);
   mrc_ts_set_from_options(ts);
