@@ -14,6 +14,7 @@ MRC_CLASS_DECLARE(mrc_ts, struct mrc_ts);
 void mrc_ts_set_dt(struct mrc_ts *ts, float dt);
 void mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_f1 *x);
 void mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon);
+void mrc_ts_set_context(struct mrc_ts *ts, struct mrc_obj *ctx_obj);
 void mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			     void (*rhsf)(void *ctx, struct mrc_f1 *x, float time,
 					  struct mrc_f1 *rhs),

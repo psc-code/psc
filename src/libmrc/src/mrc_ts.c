@@ -38,6 +38,18 @@ mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_f1 *x)
 }
 
 void
+mrc_ts_set_context(struct mrc_ts *ts, struct mrc_obj *ctx_obj)
+{
+  ts->ctx_obj = ctx_obj;
+
+  mrc_void_func_t rhsf = mrc_obj_get_method(ctx_obj, "rhsf");
+  if (rhsf) {
+    mrc_ts_set_rhs_function(ts, (void (*)(void *, struct mrc_f1 *, float, struct mrc_f1 *)) rhsf,
+				 ctx_obj);
+  }
+}
+
+void
 mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			void (*rhsf)(void *ctx, struct mrc_f1 *rhs, float t,
 				     struct mrc_f1 *x),

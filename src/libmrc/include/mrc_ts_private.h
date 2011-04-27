@@ -16,6 +16,7 @@ struct mrc_ts {
   float time; // current integration time
   float dt; // current dt
   struct mrc_f1 *x; // current state vector
+  struct mrc_obj *ctx_obj;
   void *rhsf_ctx;
   void (*rhsf)(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x);
 
