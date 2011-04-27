@@ -116,7 +116,7 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   }									\
 									\
   static inline struct mrc_obj *					\
-  pfx ## _mrc_obj(obj_type *obj)					\
+  pfx ## _to_mrc_obj(obj_type *obj)					\
   {									\
     return (struct mrc_obj *) obj;					\
   }									\
