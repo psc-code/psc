@@ -175,10 +175,20 @@ static struct param mrc_f1_params_descr[] = {
 };
 #undef VAR
 
+static struct mrc_obj_method mrc_f1_methods[] = {
+  MRC_OBJ_METHOD("duplicate", mrc_f1_duplicate),
+  MRC_OBJ_METHOD("copy"     , mrc_f1_copy),
+  MRC_OBJ_METHOD("axpy"     , mrc_f1_axpy),
+  MRC_OBJ_METHOD("waxpy"    , mrc_f1_waxpy),
+  MRC_OBJ_METHOD("norm"     , mrc_f1_norm),
+  {}
+};
+
 struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
   .name         = "mrc_f1",
   .size         = sizeof(struct mrc_f1),
   .param_descr  = mrc_f1_params_descr,
+  .methods      = mrc_f1_methods,
   .destroy      = _mrc_f1_destroy,
   .setup        = _mrc_f1_setup,
   .read         = _mrc_f1_read,

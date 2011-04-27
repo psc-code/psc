@@ -32,9 +32,25 @@ mrc_ts_set_dt(struct mrc_ts *ts, float dt)
 }
 
 void
-mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_f1 *x)
+mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_obj *x)
 {
   ts->x = x;
+
+  ts->vec_duplicate =
+    (struct mrc_obj *(*)(struct mrc_obj *)) mrc_obj_get_method(x, "duplicate");
+  assert(ts->vec_duplicate);
+  ts->vec_copy =
+    (void (*)(struct mrc_obj *, struct mrc_obj *)) mrc_obj_get_method(x, "copy");
+  assert(ts->vec_copy);
+  ts->vec_axpy =
+    (void (*)(struct mrc_obj *, float, struct mrc_obj *)) mrc_obj_get_method(x, "axpy");
+  assert(ts->vec_axpy);
+  ts->vec_waxpy =
+    (void (*)(struct mrc_obj *, float, struct mrc_obj *, struct mrc_obj *)) mrc_obj_get_method(x, "waxpy");
+  assert(ts->vec_waxpy);
+  ts->vec_norm =
+    (float (*)(struct mrc_obj *)) mrc_obj_get_method(x, "norm");
+  assert(ts->vec_norm);
 }
 
 void
@@ -44,15 +60,15 @@ mrc_ts_set_context(struct mrc_ts *ts, struct mrc_obj *ctx_obj)
 
   mrc_void_func_t rhsf = mrc_obj_get_method(ctx_obj, "rhsf");
   if (rhsf) {
-    mrc_ts_set_rhs_function(ts, (void (*)(void *, struct mrc_f1 *, float, struct mrc_f1 *)) rhsf,
+    mrc_ts_set_rhs_function(ts, (void (*)(void *, struct mrc_obj *, float, struct mrc_obj *)) rhsf,
 				 ctx_obj);
   }
 }
 
 void
 mrc_ts_set_rhs_function(struct mrc_ts *ts,
-			void (*rhsf)(void *ctx, struct mrc_f1 *rhs, float t,
-				     struct mrc_f1 *x),
+			void (*rhsf)(void *ctx, struct mrc_obj *rhs, float t,
+				     struct mrc_obj *x),
 			void *ctx)
 {
   ts->rhsf = rhsf;
@@ -108,8 +124,8 @@ mrc_ts_monitors_run(struct mrc_ts *ts)
 }
 
 void
-mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
-	    struct mrc_f1 *x)
+mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_obj *rhs, float time,
+	    struct mrc_obj *x)
 {
   ts->rhsf(ts->rhsf_ctx, rhs, time, x);
   ts->nr_rhsf_evals++;
@@ -122,7 +138,7 @@ mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
 
 struct mrc_ts *
 mrc_ts_create_std(MPI_Comm comm,
-		  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file),
+		  void (*diagf)(void *ctx, float time, struct mrc_obj *x, FILE *file),
 		  void *diagf_ctx)
 {
   struct mrc_ts *ts = mrc_ts_create(comm);

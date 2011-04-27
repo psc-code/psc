@@ -28,7 +28,7 @@ mrc_ts_monitor_output_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
   mpi_printf(mrc_ts_monitor_comm(mon), "Writing output %d (time = %g)\n",
 	     out->nr, ts->time);
   mrc_io_open(out->io, "w", out->nr, ts->time);
-  mrc_f1_write(ts->x, out->io);
+  mrc_obj_write(ts->x, out->io);
   mrc_io_close(out->io);
   out->nr++;
 }

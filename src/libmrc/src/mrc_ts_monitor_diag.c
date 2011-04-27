@@ -10,7 +10,7 @@ struct mrc_ts_monitor_diag {
   char *filename;
 
   FILE *file;
-  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file);
+  void (*diagf)(void *ctx, float time, struct mrc_obj *x, FILE *file);
   void *diagf_ctx;
 };
 
@@ -41,7 +41,7 @@ mrc_ts_monitor_diag_destroy(struct mrc_ts_monitor *mon)
 
 void
 mrc_ts_monitor_diag_set_function(struct mrc_ts_monitor *mon,
-				 void (*diagf)(void *ctx, float time, struct mrc_f1 *x,
+				 void (*diagf)(void *ctx, float time, struct mrc_obj *x,
 					       FILE *file),
 				 void *diagf_ctx)
 {
