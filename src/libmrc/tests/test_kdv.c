@@ -37,18 +37,13 @@ static void
 _kdv_create(struct kdv *kdv)
 {
   kdv->domain = mrc_domain_create(kdv_comm(kdv));
+  kdv_add_child(kdv, (struct mrc_obj *) kdv->domain);
   // set defaults
   mrc_domain_set_param_int3(kdv->domain, "m", (int [3]) { 160, 1, 1 });
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
   mrc_crds_set_param_int(crds, "sw", BND);
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 0., 0. });
-}
-
-static void
-_kdv_set_from_options(struct kdv *kdv)
-{
-  mrc_domain_set_from_options(kdv->domain);
 }
 
 static struct mrc_f1 *
@@ -59,12 +54,6 @@ kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
   mrc_f1_set_param_int(x, "nr_comps", nr_comps);
   mrc_f1_setup(x);
   return x;
-}
-
-static void
-_kdv_setup(struct kdv *kdv)
-{
-  mrc_domain_setup(kdv->domain);
 }
 
 static void
@@ -103,8 +92,6 @@ struct mrc_class_kdv mrc_class_kdv = {
   .name             = "kdv",
   .size             = sizeof(struct kdv),
   .create           = _kdv_create,
-  .set_from_options = _kdv_set_from_options,
-  .setup            = _kdv_setup,
 };
 
 // ======================================================================
