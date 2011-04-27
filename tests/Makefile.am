@@ -3,7 +3,6 @@ AM_CPPFLAGS = -I$(srcdir)/../include
 
 noinst_PROGRAMS = \
 	test_mrc_obj \
-	test_rlc \
 	test_io \
 	test_io_read \
 	test_dict \
@@ -11,6 +10,7 @@ noinst_PROGRAMS = \
 	test_ddc \
 	test_mrc_domain_multi \
 	test_mrc_ddc \
+	test_rlc \
 	test_rmhd \
 	test_kdv \
 	test_kdv_simple \
