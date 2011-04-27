@@ -39,8 +39,8 @@ mrc_ts_set_solution(struct mrc_ts *ts, struct mrc_f1 *x)
 
 void
 mrc_ts_set_rhs_function(struct mrc_ts *ts,
-			void (*rhsf)(void *ctx, struct mrc_f1 *x,
-				     struct mrc_f1 *rhs),
+			void (*rhsf)(void *ctx, struct mrc_f1 *rhs, float t,
+				     struct mrc_f1 *x),
 			void *ctx)
 {
   ts->rhsf = rhsf;
@@ -99,7 +99,7 @@ void
 mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
 	    struct mrc_f1 *x)
 {
-  ts->rhsf(ts->ctx, rhs, x);
+  ts->rhsf(ts->ctx, rhs, time, x);
   ts->nr_rhsf_evals++;
 }
 
