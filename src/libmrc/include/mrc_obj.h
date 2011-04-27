@@ -103,6 +103,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
       mrc_obj_create(comm, (struct mrc_class *) &mrc_class_ ## pfx);	\
   }									\
 									\
+  static inline struct mrc_obj *					\
+  pfx ## _mrc_obj(obj_type *obj)					\
+  {									\
+    return (struct mrc_obj *) obj;					\
+  }									\
+									\
   static inline obj_type *						\
   pfx ## _get(obj_type *obj)						\
   {									\
