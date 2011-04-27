@@ -74,7 +74,7 @@ kdv_fill_ghosts(struct kdv *kdv, struct mrc_f1 *x, int m_x)
   ((MRC_F1(x, m_x, ix+2) - 2.*MRC_F1(x, m_x, ix+1) + 2.*MRC_F1(x, m_x, ix-1) - MRC_F1(x, m_x, ix-2)) / (2.*powf(CRDX(ix+1) - CRDX(ix), 3.)))
 
 static void
-kdv_calc_rhs(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
+kdv_rhsf(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
 {
   struct kdv *kdv = ctx;
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
@@ -88,10 +88,16 @@ kdv_calc_rhs(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
 
 // ======================================================================
 
+static struct mrc_obj_method kdv_methods[] = {
+  MRC_OBJ_METHOD("rhsf", kdv_rhsf),
+  {},
+};
+
 struct mrc_class_kdv mrc_class_kdv = {
   .name             = "kdv",
   .size             = sizeof(struct kdv),
   .create           = _kdv_create,
+  .methods          = kdv_methods,
 };
 
 // ======================================================================
@@ -120,8 +126,8 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, NULL, NULL);
+  mrc_ts_set_context(ts, kdv_mrc_obj(kdv));
   mrc_ts_set_solution(ts, x);
-  mrc_ts_set_rhs_function(ts, kdv_calc_rhs, kdv);
   mrc_ts_set_from_options(ts);
   mrc_ts_setup(ts);
   mrc_ts_solve(ts);
