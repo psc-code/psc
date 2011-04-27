@@ -102,7 +102,7 @@ main(int argc, char **argv)
   I(x) = 0.;
 
   // run time integration
-  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rlc_diag);
+  struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rlc_diag, rlc);
   mrc_ts_set_solution(ts, x);
   mrc_ts_set_rhs_function(ts, rlc_calc_rhs, rlc);
   mrc_ts_set_from_options(ts);

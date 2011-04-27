@@ -44,7 +44,7 @@ mrc_ts_set_rhs_function(struct mrc_ts *ts,
 			void *ctx)
 {
   ts->rhsf = rhsf;
-  ts->ctx = ctx;
+  ts->rhsf_ctx = ctx;
 }
 
 void
@@ -99,7 +99,7 @@ void
 mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
 	    struct mrc_f1 *x)
 {
-  ts->rhsf(ts->ctx, rhs, time, x);
+  ts->rhsf(ts->rhsf_ctx, rhs, time, x);
   ts->nr_rhsf_evals++;
 }
 
@@ -110,7 +110,8 @@ mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_f1 *rhs, float time,
 
 struct mrc_ts *
 mrc_ts_create_std(MPI_Comm comm,
-		  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file))
+		  void (*diagf)(void *ctx, float time, struct mrc_f1 *x, FILE *file),
+		  void *diagf_ctx)
 {
   struct mrc_ts *ts = mrc_ts_create(comm);
 
@@ -125,7 +126,7 @@ mrc_ts_create_std(MPI_Comm comm,
       mrc_ts_monitor_create(mrc_ts_comm(ts));
     mrc_ts_monitor_set_type(mon_diag, "diag");
     mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-    mrc_ts_monitor_diag_set_function(mon_diag, diagf);
+    mrc_ts_monitor_diag_set_function(mon_diag, diagf, diagf_ctx);
     mrc_ts_add_monitor(ts, mon_diag);
   }
 
