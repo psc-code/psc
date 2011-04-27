@@ -164,7 +164,7 @@ enum {
 #define VZ_R(ix) MRC_F1(x, VZ_R, ix)
 
 static void
-rmhd_calc_rhs(void *ctx, struct mrc_f1 *rhs, struct mrc_f1 *x)
+rmhd_calc_rhs(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
 {
   struct rmhd *rmhd = ctx;
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
