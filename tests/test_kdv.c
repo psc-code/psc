@@ -123,6 +123,7 @@ main(int argc, char **argv)
   // i.c.
   struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
   struct mrc_f1 *x = kdv_get_fld(kdv, NR_FLDS, "x");
+  mrc_f1_set_comp_name(x, U, "u");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 0, 0) {
