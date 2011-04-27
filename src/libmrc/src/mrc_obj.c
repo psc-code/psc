@@ -593,3 +593,16 @@ __mrc_class_register_subclass(struct mrc_class *class, struct mrc_obj_ops *ops)
   list_add_tail(&ops->list, &class->subclasses);
 }
 
+mrc_void_func_t
+mrc_obj_get_method(struct mrc_obj *obj, const char *name)
+{
+  struct mrc_obj_method *methods = obj->class->methods;
+
+  for (int i = 0; methods[i].name; i++) {
+    if (strcmp(name, methods[i].name) == 0) {
+      return methods[i].func;
+    }
+  }
+  return NULL;
+}
+

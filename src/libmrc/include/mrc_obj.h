@@ -23,6 +23,16 @@ struct mrc_obj {
   bool view_flag; //< if true, call ::view() at the end of ::setup()
 };
 
+typedef void (*mrc_void_func_t)(void);
+
+struct mrc_obj_method {
+  const char *name;
+  mrc_void_func_t func;
+};
+
+#define MRC_OBJ_METHOD(name, func)		\
+  { name, (mrc_void_func_t) func }
+
 #define MRC_SUBCLASS_OPS(obj_type)			\
   list_t list;						\
   const char *name;					\
@@ -47,6 +57,7 @@ struct mrc_obj_ops {
     list_t instances;					\
     size_t size;					\
     struct param *param_descr;				\
+    struct mrc_obj_method *methods;                     \
     size_t param_offset;				\
     void (*init)(void);					\
     bool initialized;					\
@@ -90,6 +101,7 @@ void mrc_obj_setup_sub(struct mrc_obj *obj);
 void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
+mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
 #define MRC_CLASS_DECLARE(pfx, obj_type)				\
   obj_type;								\
@@ -253,6 +265,12 @@ struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_cla
   pfx ## _write(obj_type *obj, struct mrc_io *io)			\
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
+  }									\
+									\
+  static inline mrc_void_func_t						\
+  pfx ## _get_method(obj_type *obj, const char *name)			\
+  {									\
+    return mrc_obj_get_method((struct mrc_obj *)obj, name);		\
   }									\
 									\
   /* force a semicolon following the macro use */			\
