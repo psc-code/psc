@@ -26,7 +26,11 @@ mrc_ts_monitor_diag_setup(struct mrc_ts_monitor *mon)
 {
   struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
-  diag->file = fopen(diag->filename, "w");
+  int rank;
+  MPI_Comm_rank(mrc_ts_monitor_comm(mon), &rank);
+  if (rank == 0) {
+    diag->file = fopen(diag->filename, "w");
+  }
 }
 
 static void
@@ -48,7 +52,7 @@ mrc_ts_monitor_diag_set_function(struct mrc_ts_monitor *mon,
   struct mrc_ts_monitor_diag *diag = to_diag(mon);
 
   diag->diagf = diagf;
-  diag->diagf_ctx = diagf;
+  diag->diagf_ctx = diagf_ctx;
 }
 
 static void
