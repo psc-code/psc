@@ -361,6 +361,24 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
   }
 }
 
+void
+mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
+{
+  assert(0);
+}
+
+void
+mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
+{
+  assert(0);
+}
+
+float
+mrc_f3_norm(struct mrc_f3 *x)
+{
+  assert(0);
+}
+
 static void
 _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
@@ -408,6 +426,9 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 }
 
 // ----------------------------------------------------------------------
+
+
+// ----------------------------------------------------------------------
 // mrc_class_mrc_f3
 
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
@@ -424,10 +445,20 @@ static struct param mrc_f3_params_descr[] = {
 };
 #undef VAR
 
+static struct mrc_obj_method mrc_f3_methods[] = {
+  MRC_OBJ_METHOD("duplicate", mrc_f3_duplicate),
+  MRC_OBJ_METHOD("copy"     , mrc_f3_copy),
+  MRC_OBJ_METHOD("axpy"     , mrc_f3_axpy),
+  MRC_OBJ_METHOD("waxpy"    , mrc_f3_waxpy),
+  MRC_OBJ_METHOD("norm"     , mrc_f3_norm),
+  {}
+};
+
 struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
   .name         = "mrc_f3",
   .size         = sizeof(struct mrc_f3),
   .param_descr  = mrc_f3_params_descr,
+  .methods      = mrc_f3_methods,
   .create       = _mrc_f3_create,
   .destroy      = _mrc_f3_destroy,
   .setup        = _mrc_f3_setup,
