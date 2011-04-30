@@ -2,3 +2,7 @@ test_rmhd
 test_kdv
 test_kdv_simple
 test_rlc
+test_mrc_ddc
+test_mrc_domain_multi
+tutorial_mrc_obj
+

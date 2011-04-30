@@ -979,6 +979,12 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
 }
 
 static void
+ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+{
+  // FIXME
+}
+
+static void
 ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 {
   int ierr;
@@ -1029,6 +1035,7 @@ struct mrc_io_ops mrc_io_xdmf_ops = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
+  .write_f1      = ds_xdmf_write_f1,
   .write_m3      = ds_xdmf_write_m3,
 };
 
