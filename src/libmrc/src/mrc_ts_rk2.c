@@ -1,6 +1,8 @@
 
 #include <mrc_ts_private.h>
 
+#include <assert.h>
+
 struct mrc_ts_rk2 {
   struct mrc_obj *rhs;
   struct mrc_obj *xm;
@@ -11,6 +13,7 @@ mrc_ts_rk2_setup(struct mrc_ts *ts)
 {
   struct mrc_ts_rk2 *rk2 = mrc_to_subobj(ts, struct mrc_ts_rk2);
   
+  assert(ts->x);
   rk2->xm = mrc_ts_vec_duplicate(ts, ts->x);
   rk2->rhs = mrc_ts_vec_duplicate(ts, ts->x);
 }
@@ -60,6 +63,7 @@ mrc_ts_rk4_setup(struct mrc_ts *ts)
 {
   struct mrc_ts_rk4 *rk4 = mrc_to_subobj(ts, struct mrc_ts_rk4);
   
+  assert(ts->x);
   rk4->xt = mrc_ts_vec_duplicate(ts, ts->x);
   for (int k = 0; k < 4; k++) {
     rk4->xk[k] = mrc_ts_vec_duplicate(ts, ts->x);

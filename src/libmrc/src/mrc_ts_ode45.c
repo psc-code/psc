@@ -3,6 +3,7 @@
 
 #include <mrc_params.h>
 #include <math.h>
+#include <assert.h>
 
 // Adapted from octave's ode45.m
 
@@ -70,6 +71,7 @@ mrc_ts_ode45_setup(struct mrc_ts *ts)
   }
 
   struct mrc_ts_ode45 *ode45 = mrc_to_subobj(ts, struct mrc_ts_ode45);
+  assert(ts->x);
   
   for (int i = 0; i < 7; i++) {
     ode45->xk[i] = mrc_ts_vec_duplicate(ts, ts->x);
