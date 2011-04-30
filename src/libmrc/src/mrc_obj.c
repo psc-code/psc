@@ -82,7 +82,9 @@ mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
 {
   if (!class->initialized) {
     class->initialized = true;
-    INIT_LIST_HEAD(&class->subclasses);
+    if (!class->subclasses.next) {
+      INIT_LIST_HEAD(&class->subclasses);
+    }
     INIT_LIST_HEAD(&class->instances);
     if (class->init) {
       class->init();
