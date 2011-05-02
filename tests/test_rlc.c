@@ -41,15 +41,18 @@ rlc_get_fld(struct rlc *rlc, const char *name)
 }
 
 static void
-rlc_diag(void *ctx, float time, struct mrc_f1 *x, FILE *file)
+rlc_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 {
+  struct mrc_f1 *x = (struct mrc_f1 *) _x;
+
   fprintf(file, "%g %g %g\n", time, Q(x), I(x));
 }
 
 static void
-rlc_calc_rhs(void *ctx, struct mrc_f1 *rhs, float t, struct mrc_f1 *x)
+rlc_calc_rhs(void *ctx, struct mrc_obj *_rhs, float t, struct mrc_obj *_x)
 {
   struct rlc *rlc = ctx;
+  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
   float R = rlc->R, L = rlc->L, C = rlc->C;
   float V0 = rlc->V0, omega = rlc->omega;
   
