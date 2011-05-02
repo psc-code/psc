@@ -43,9 +43,10 @@ fill_ghosts(struct mrc_f1 *x, int m_x)
   ((MRC_F1(x, m_x, ix+2) - 2.*MRC_F1(x, m_x, ix+1) + 2.*MRC_F1(x, m_x, ix-1) - MRC_F1(x, m_x, ix-2)) / (2.*powf(CRDX(ix+1) - CRDX(ix), 3.)))
 
 static void
-calc_rhs(void *ctx, struct mrc_f1 *rhs, float time, struct mrc_f1 *x)
+calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
 {
   struct mrc_domain *domain = ctx;
+  struct mrc_f1 *rhs = (struct mrc_f1 *) _rhs, *x = (struct mrc_f1 *) _x;
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
 
   fill_ghosts(x, U);
