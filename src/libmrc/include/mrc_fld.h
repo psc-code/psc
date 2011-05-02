@@ -92,6 +92,7 @@ MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 struct mrc_f3 *mrc_f3_alloc(MPI_Comm comm, int ib[3], int im[3]);
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
+void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
 void mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from);
 void mrc_f3_set(struct mrc_f3 *f3, float val);
