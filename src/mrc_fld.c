@@ -330,6 +330,13 @@ mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
 }
 
 void
+mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
+{
+  assert(m < f3->nr_comp);
+  f3->name[m] = strdup(name);
+}
+
+void
 mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 {
   assert(!f3->arr);
@@ -341,7 +348,9 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_alloc(f3->obj.comm, f3->ib, f3->im);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
-  mrc_f3_setup(f3_new); // FIXME
+  f3_new->sw = f3->sw;
+  f3_new->domain = f3->domain;
+  mrc_f3_setup(f3_new);
   return f3_new;
 }
 
@@ -364,19 +373,38 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
 void
 mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
 {
-  assert(0);
+  assert(mrc_f3_same_shape(x, y));
+
+  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
+    for (int m = 0; m < x->nr_comp; m++) {
+      MRC_F3(y,m, ix,iy,iz) += alpha * MRC_F3(x,m, ix,iy,iz);
+    }
+  } mrc_f3_foreach_end;
 }
 
 void
 mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
 {
-  assert(0);
+  assert(mrc_f3_same_shape(x, y));
+  assert(mrc_f3_same_shape(x, w));
+
+  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
+    for (int m = 0; m < x->nr_comp; m++) {
+      MRC_F3(w,m, ix,iy,iz) = alpha * MRC_F3(x,m, ix,iy,iz) + MRC_F3(y,m, ix,iy,iz);
+    }
+  } mrc_f3_foreach_end;
 }
 
 float
 mrc_f3_norm(struct mrc_f3 *x)
 {
-  assert(0);
+  float res = 0.;
+  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
+    for (int m = 0; m < x->nr_comp; m++) {
+      res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
+    }
+  } mrc_f3_foreach_end;
+  return res;
 }
 
 static void
