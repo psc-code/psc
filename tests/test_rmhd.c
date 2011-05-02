@@ -194,7 +194,7 @@ rmhd_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
     MRC_F1(rhs, PSI_R, ix) =
       1. / rmhd->S * J_r -
       rmhd->ky * By0(ix) * PHI_I(ix) +
-      rmhd->d_i * By0(ix) * BZ_I(ix);
+      rmhd->d_i * rmhd->ky * By0(ix) * BZ_I(ix);
 
     MRC_F1(rhs, BZ_I, ix) =
       1. / rmhd->S * Lapl(x, BZ_I, ix) +
@@ -246,6 +246,10 @@ main(int argc, char **argv)
   struct mrc_crds *crds = mrc_domain_get_crds(rmhd->domain);
   struct mrc_f1 *By0 = rmhd->By0;
   struct mrc_f1 *x = rmhd_get_fld(rmhd, NR_FLDS, "x");
+  mrc_f1_set_comp_name(x, OM_I, "om_i");
+  mrc_f1_set_comp_name(x, PSI_R, "psi_r");
+  mrc_f1_set_comp_name(x, BZ_I, "bz_i");
+  mrc_f1_set_comp_name(x, VZ_R, "vz_r");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 1, 1) {
