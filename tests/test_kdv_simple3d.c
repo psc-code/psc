@@ -40,7 +40,7 @@ calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_x)
   struct mrc_domain *domain = ctx;
   struct mrc_f3 *rhs = (struct mrc_f3 *) _rhs, *x = (struct mrc_f3 *) _x;
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  struct mrc_ddc *ddc = (struct mrc_ddc *) mrc_domain_find_child(domain, "mrc_ddc");
+  struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
   
   mrc_ddc_fill_ghosts(ddc, 0, NR_FLDS, x);
 
@@ -67,11 +67,8 @@ main(int argc, char **argv)
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 1., 1. });
 
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_f3);
-  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { 2, 2, 2 });
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
-  mrc_domain_add_child(domain, mrc_ddc_to_mrc_obj(ddc));
+  struct mrc_ddc *ddc = mrc_domain_get_ddc(domain);
+  mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { BND, BND, BND });
 
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
