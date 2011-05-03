@@ -138,8 +138,9 @@ void
 mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->write_f1);
-  ops->write_f1(io, path, fld);
+  if (ops->write_f1) { // FIXME
+    ops->write_f1(io, path, fld);
+  }
 }
 
 // ----------------------------------------------------------------------
