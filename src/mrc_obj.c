@@ -513,6 +513,17 @@ mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child)
 }
 
 struct mrc_obj *
+mrc_obj_find_child(struct mrc_obj *obj, const char *name)
+{
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    if (strcmp(child->name, name) == 0)
+      return child;
+  }
+  return NULL;
+}
+
+struct mrc_obj *
 mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
 {
   // FIXME dupl
