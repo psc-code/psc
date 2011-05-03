@@ -67,15 +67,14 @@ main(int argc, char **argv)
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 1., 1. });
 
-  mrc_domain_set_from_options(domain);
-  mrc_domain_setup(domain);
-
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
   mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_f3);
   mrc_ddc_set_param_int3(ddc, "ibn", (int[3]) { 2, 2, 2 });
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
-  mrc_ddc_setup(ddc);
   mrc_domain_add_child(domain, mrc_ddc_to_mrc_obj(ddc));
+
+  mrc_domain_set_from_options(domain);
+  mrc_domain_setup(domain);
 
   struct mrc_f3 *x = mrc_domain_f3_create(domain, BND);
   mrc_f3_set_name(x, "x");
