@@ -111,6 +111,7 @@ void
 mrc_domain_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
 {
   check_is_setup(domain);
+  assert(mrc_domain_ops(domain)->get_patch_idx3);
   mrc_domain_ops(domain)->get_patch_idx3(domain, p, idx);
 }
 
