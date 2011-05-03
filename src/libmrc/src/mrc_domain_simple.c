@@ -209,17 +209,9 @@ mrc_domain_simple_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 static struct mrc_ddc *
 mrc_domain_simple_create_ddc(struct mrc_domain *domain)
 {
-  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-
-  int nr_procs[3], bc[3];
-  mrc_domain_get_nr_procs(domain, nr_procs);
-  mrc_domain_get_bc(domain, bc);
-
   struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
-  mrc_ddc_set_param_int3(ddc, "ilo", (int[3]) { 0, 0, 0 });
-  mrc_ddc_set_param_int3(ddc, "ihi", simple->patch.ldims);
-  mrc_ddc_set_param_int3(ddc, "n_proc", nr_procs);
-  mrc_ddc_set_param_int3(ddc, "bc", bc);
+  mrc_ddc_set_type(ddc, "multi");
+  mrc_ddc_set_domain(ddc, domain);
   return ddc;
 }
 

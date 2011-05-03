@@ -39,6 +39,7 @@
 - libmrc/ddc: more asynchronous (copy when received)
 - libmrc/ddc: don't use MPI for local exchanges
 - libmrc/ddc: consistent 0-based offsets (OpenGGCM?)
+- libmrc/ddc: is it worthwhile keeping ddc "simple" around?
 - libmrc/params: proper naming
 - libmrc/params,obj: proper hierarchy print
 - libmrc/params.obj: allow for read-only vars, too
