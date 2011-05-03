@@ -14,6 +14,7 @@ struct mrc_domain {
   int rank, size;
   int is_setup;
   struct mrc_crds *crds;
+  struct mrc_ddc *ddc;
 };
 
 struct mrc_domain_ops {

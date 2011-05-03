@@ -3,6 +3,7 @@
 #include <mrc_fld.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
+#include <mrc_ddc.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,8 +24,18 @@ mrc_domain_ops(struct mrc_domain *domain)
 static void
 _mrc_domain_create(struct mrc_domain *domain)
 {
-  domain->crds = mrc_crds_create(domain->obj.comm);
-  mrc_crds_set_domain(domain->crds, domain);
+  domain->crds = mrc_crds_create(mrc_domain_comm(domain));
+  mrc_crds_set_domain(domain->crds, domain); // FIXME, should be added as child
+
+  domain->ddc = mrc_ddc_create(mrc_domain_comm(domain));
+  // FIXME, this isn't really general, though ok if we always use
+  // multi for whatever domain. Otherwise, we need a call back for set type to
+  // updated the sub type accordingly... Similar problem exists with crds, btw.
+  mrc_ddc_set_type(domain->ddc, "multi");
+  mrc_ddc_set_domain(domain->ddc, domain);
+  mrc_ddc_set_param_int(domain->ddc, "size_of_type", sizeof(float));
+  mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_f3);
+  mrc_domain_add_child(domain, (struct mrc_obj *) domain->ddc);
 }
 
 static void
@@ -84,6 +95,12 @@ struct mrc_crds *
 mrc_domain_get_crds(struct mrc_domain *domain)
 {
   return domain->crds;
+}
+
+struct mrc_ddc *
+mrc_domain_get_ddc(struct mrc_domain *domain)
+{
+  return domain->ddc;
 }
 
 int
@@ -183,6 +200,7 @@ mrc_domain_plot(struct mrc_domain *domain)
 struct mrc_ddc *
 mrc_domain_create_ddc(struct mrc_domain *domain)
 {
+  assert(mrc_domain_ops(domain)->create_ddc);
   return mrc_domain_ops(domain)->create_ddc(domain);
 }
 
