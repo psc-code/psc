@@ -183,7 +183,6 @@ mrc_domain_plot(struct mrc_domain *domain)
 struct mrc_ddc *
 mrc_domain_create_ddc(struct mrc_domain *domain)
 {
-  check_is_setup(domain);
   return mrc_domain_ops(domain)->create_ddc(domain);
 }
 
