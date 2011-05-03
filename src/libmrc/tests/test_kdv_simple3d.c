@@ -26,7 +26,8 @@ enum {
 #define CRDX(ix) (MRC_CRDX(crds, (ix)))
 
 #define Dx(x, m_x, ix,iy,iz)						\
-  ((MRC_F3(x, m_x, ix+1,iy,iz) - MRC_F3(x, m_x, ix-1,iy,iz)) / (CRDX(ix+1) - CRDX(ix-1)))
+  ((MRC_F3(x, m_x, ix+1,iy,iz) - MRC_F3(x, m_x, ix-1,iy,iz)) \
+   / (CRDX(ix+1) - CRDX(ix-1)))
 
 // assumes uniform coordinates!
 #define Dxxx(x, m_x, ix,iy,iz)						\
@@ -62,6 +63,7 @@ main(int argc, char **argv)
 
   // set defaults
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 160, 1, 1 });
+  mrc_domain_set_param_int(domain, "bcx", BC_PERIODIC);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_param_int(crds, "sw", BND);
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
