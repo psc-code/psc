@@ -150,6 +150,8 @@ mrc_f1_norm(struct mrc_f1 *x)
       res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
     }
   } mrc_f1_foreach_end;
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f1_comm(x));
   return res;
 }
 
@@ -160,6 +162,8 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
   mrc_f1_foreach(x, ix, 0, 0) {
     res = fmaxf(res, fabsf(MRC_F1(x,m, ix)));
   } mrc_f1_foreach_end;
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f1_comm(x));
   return res;
 }
 
@@ -404,6 +408,8 @@ mrc_f3_norm(struct mrc_f3 *x)
       res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
     }
   } mrc_f3_foreach_end;
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f3_comm(x));
   return res;
 }
 
