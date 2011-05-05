@@ -7,6 +7,7 @@ libmrc_la_SOURCES = \
 	mrc_mod.c \
 	mrc_ts.c \
 	mrc_ts_rk2.c \
+	mrc_ts_rk4.c \
 	mrc_ts_ode45.c \
 	mrc_ts_monitor.c \
 	mrc_ts_monitor_output.c \
