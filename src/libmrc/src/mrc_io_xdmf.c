@@ -904,7 +904,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   if (c == 'x') {
     assert(!hdf5->vfld);
     hdf5->vfld = mrc_f3_create(mrc_f3_comm(fld));
-    mrc_f3_set_param_int3(hdf5->vfld, "im", im);
+    mrc_f3_set_param_int3(hdf5->vfld, "ihi", im);
     mrc_f3_set_nr_comps(hdf5->vfld, 3);
     mrc_f3_setup(hdf5->vfld);
     copy_and_scale(hdf5->vfld, 0, fld, m, scale);
@@ -936,7 +936,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
       ierr = H5Gclose(group); CE;
     } else {
       struct mrc_f3 *sfld = mrc_f3_create(mrc_f3_comm(fld));
-      mrc_f3_set_param_int3(sfld, "im", im);
+      mrc_f3_set_param_int3(sfld, "ihi", im);
       mrc_f3_setup(sfld);
       copy_and_scale(sfld, 0, fld, m, scale);
 
@@ -1182,13 +1182,13 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
   copy_and_scale(send_fld, 0, gfld, m, scale);
 
   if (io->rank != 0) {
-    int iw[6], *ib = iw, *im = iw + 3;
+    int iw[6], *ilo = iw, *ihi = iw + 3;
     int nr_patches;
     struct mrc_patch *patches = mrc_domain_get_patches(send_fld->domain, &nr_patches);
     assert(nr_patches == 1);
     for (int d = 0; d < 3; d++) {
-      ib[d] = patches[0].off[d];
-      im[d] = patches[0].ldims[d];
+      ilo[d] = patches[0].off[d];
+      ihi[d] = patches[0].off[d] + patches[0].ldims[d];
     }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     MPI_Send(send_fld->arr, send_fld->len, MPI_FLOAT, 0, TAG_DATA, io->obj.comm);
@@ -1197,16 +1197,16 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
       struct mrc_f3 *recv_fld;
       if (n == 0) {
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "ib", send_fld->_ib);
-	mrc_f3_set_param_int3(recv_fld, "im", send_fld->_im);
+	mrc_f3_set_param_int3(recv_fld, "ilo", send_fld->_ilo);
+	mrc_f3_set_param_int3(recv_fld, "ihi", send_fld->_ihi);
 	mrc_f3_set_array(recv_fld, send_fld->arr);
 	mrc_f3_setup(recv_fld);
       } else {
 	int iw[6], *ib = iw, *im = iw + 3;
 	MPI_Recv(iw, 6, MPI_INT, n, TAG_OFF_DIMS, io->obj.comm, MPI_STATUS_IGNORE);
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "ib", ib);
-	mrc_f3_set_param_int3(recv_fld, "im", im);
+	mrc_f3_set_param_int3(recv_fld, "ilo", ib);
+	mrc_f3_set_param_int3(recv_fld, "ihi", im);
 	mrc_f3_setup(recv_fld);
 	MPI_Recv(recv_fld->arr, recv_fld->len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
 		 MPI_STATUS_IGNORE);
@@ -1534,7 +1534,7 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
   int *off = patches[0].off, *ldims = patches[0].ldims;
 
   struct mrc_f3 *lfld = mrc_f3_create(MPI_COMM_SELF);
-  mrc_f3_set_param_int3(lfld, "im", ldims);
+  mrc_f3_set_param_int3(lfld, "ihi", ldims);
   mrc_f3_setup(lfld);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
@@ -1634,7 +1634,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   // strip boundary, could be done through hyperslab, but
   // still have to scale, anyway
   struct mrc_f3 *lfld = mrc_f3_create(MPI_COMM_SELF);
-  mrc_f3_set_param_int3(lfld, "im", ldims);
+  mrc_f3_set_param_int3(lfld, "ihi", ldims);
   mrc_f3_setup(lfld);
   copy_and_scale(lfld, 0, fld, m, scale);
 

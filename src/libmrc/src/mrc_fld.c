@@ -302,11 +302,11 @@ _mrc_f3_create(struct mrc_f3 *f3)
 static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
-  f3->len = f3->_im[0] * f3->_im[1] * f3->_im[2] * f3->nr_comp;
   for (int d = 0; d < 3; d++) {
-    f3->_ilo[d] = f3->_ib[d] + f3->_sw;
-    f3->_ihi[d] = f3->_ib[d] + f3->_im[d] - f3->_sw;
+    f3->_ib[d] = f3->_ilo[d] - f3->_sw;
+    f3->_im[d] = f3->_ihi[d] - f3->_ilo[d] + 2 * f3->_sw;
   }
+  f3->len = f3->_im[0] * f3->_im[1] * f3->_im[2] * f3->nr_comp;
 
   if (!f3->arr) {
     f3->arr = calloc(f3->len, sizeof(*f3->arr));
@@ -367,8 +367,8 @@ struct mrc_f3 *
 mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
-  mrc_f3_set_param_int3(f3_new, "ib", f3->_ib);
-  mrc_f3_set_param_int3(f3_new, "im", f3->_im);
+  mrc_f3_set_param_int3(f3_new, "ilo", f3->_ilo);
+  mrc_f3_set_param_int3(f3_new, "ihi", f3->_ihi);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
   f3_new->domain = f3->domain;
@@ -464,11 +464,11 @@ void
 mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 {
   for (int i = 0; mm[i] >= 0; i++) {
-    int *ib = f3->_ib, *im = f3->_im;
     struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
-    mrc_f3_set_param_int3(fld1, "ib", ib);
-    mrc_f3_set_param_int3(fld1, "im", im);
+    mrc_f3_set_param_int3(fld1, "ilo", f3->_ilo);
+    mrc_f3_set_param_int3(fld1, "ihi", f3->_ihi);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
+    int *ib = f3->_ib;
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
@@ -484,8 +484,8 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
-  { "ib"              , VAR(_ib)          , PARAM_INT3(0, 0, 0)    },
-  { "im"              , VAR(_im)          , PARAM_INT3(0, 0, 0)    },
+  { "ilo"             , VAR(_ilo)         , PARAM_INT3(0, 0, 0)    },
+  { "ihi"             , VAR(_ihi)         , PARAM_INT3(0, 0, 0)    },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
