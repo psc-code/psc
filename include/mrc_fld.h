@@ -7,17 +7,41 @@
 
 #include <stdbool.h>
 
+//#define BOUNDS_CHECK
+
+#ifdef BOUNDS_CHECK
+
+#include <assert.h>
+
+#define MRC_F1(f1,m, ix)						\
+  (*({ float *p = &(f1)->arr[(m) * (f1)->im[0] + (ix) - (f1)->ib[0]];	\
+      assert((ix) >= (f1)->ib[0] && (ix) < (f1)->ib[0] + (f1)->im[0]);	\
+      p;}))
+
+#define MRC_F3(f3,m, ix,iy,iz)						\
+  (*({ float *p = &(f3)->arr[(((m) * (f3)->im[2] + (iz) - (f3)->ib[2]) * \
+	  (f3)->im[1] + (iy) - (f3)->ib[1]) *				\
+	(f3)->im[0] + (ix) - (f3)->ib[0]];				\
+      assert((ix) >= (f3)->ib[0] && (ix) < (f3)->ib[0] + (f3)->im[0]);	\
+      assert((iy) >= (f3)->ib[1] && (iy) < (f3)->ib[1] + (f3)->im[1]);	\
+      assert((iz) >= (f3)->ib[2] && (iz) < (f3)->ib[2] + (f3)->im[2]);	\
+      p;}))
+
+#else
+
 #define MRC_F1(f1,m, ix)					\
   ((f1)->arr[(m) * (f1)->im[0] + (ix) - (f1)->ib[0]])
-
-#define MRC_F2(f2,m, ix,iy)					\
-  ((f2)->arr[((m) * (f2)->im[1] + (iy) - (f2)->ib[1]) *		\
-	      (f2)->im[0] + (ix) - (f2)->ib[0]])
 
 #define MRC_F3(f3,m, ix,iy,iz)					\
   ((f3)->arr[(((m) * (f3)->im[2] + (iz) - (f3)->ib[2]) *	\
 	      (f3)->im[1] + (iy) - (f3)->ib[1]) *		\
 	     (f3)->im[0] + (ix) - (f3)->ib[0]])
+
+#endif
+
+#define MRC_F2(f2,m, ix,iy)					\
+  ((f2)->arr[((m) * (f2)->im[1] + (iy) - (f2)->ib[1]) *		\
+	      (f2)->im[0] + (ix) - (f2)->ib[0]])
 
 struct mrc_io;
 
