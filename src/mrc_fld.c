@@ -76,6 +76,13 @@ mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
   f1->name[m] = strdup(name);
 }
 
+const char *
+mrc_f1_comp_name(struct mrc_f1 *f1, int m)
+{
+  assert(m < f1->nr_comp);
+  return f1->name[m];
+}
+
 void
 mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n)
 {
@@ -340,6 +347,13 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
   f3->name[m] = strdup(name);
 }
 
+const char *
+mrc_f3_comp_name(struct mrc_f3 *f3, int m)
+{
+  assert(m < f3->nr_comp);
+  return f3->name[m];
+}
+
 void
 mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 {
@@ -450,7 +464,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     struct mrc_f3 *fld1 = mrc_f3_alloc_with_array(f3->obj.comm, ib, im,
 						  &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->name[mm[i]]);
-    fld1->name[0] = strdup(f3->name[mm[i]]);
+    mrc_f3_set_comp_name(fld1, 0, f3->name[mm[i]]);
     fld1->domain = f3->domain;
     fld1->sw = f3->sw;
     mrc_f3_setup(fld1);

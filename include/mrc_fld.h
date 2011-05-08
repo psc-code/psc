@@ -64,6 +64,7 @@ struct mrc_f1 {
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
+const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
@@ -117,6 +118,7 @@ struct mrc_f3 *mrc_f3_alloc(MPI_Comm comm, int ib[3], int im[3]);
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
+const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
 void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
 void mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from);
 void mrc_f3_set(struct mrc_f3 *f3, float val);

@@ -41,7 +41,7 @@ ds_ascii_write_field(struct mrc_io *io, const char *path,
 {
   struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
   FILE *file = ascii->file;
-  fprintf(file, "# %s\n", fld->name[m]);
+  fprintf(file, "# %s\n", mrc_f3_comp_name(fld, m));
 
   for (int iz = 0; iz < fld->im[2]; iz++) {
     for (int iy = 0; iy < fld->im[1]; iy++) {

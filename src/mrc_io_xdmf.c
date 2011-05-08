@@ -896,7 +896,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   }
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  char c = fld->name[m][strlen(fld->name[m]) - 1];
+  const char *fldname = mrc_f3_comp_name(fld, m);
+  char c = fldname[strlen(fldname) - 1];
   if (c == 'x') {
     assert(!hdf5->vfld);
     hdf5->vfld = mrc_f3_alloc(mrc_f3_comm(fld), NULL, im);
@@ -907,8 +908,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     copy_and_scale(hdf5->vfld, 1, fld, m, scale);
   } else if (c == 'z') {
     copy_and_scale(hdf5->vfld, 2, fld, m, scale);
-    char *vec_name = strdup(fld->name[m]);
-    vec_name[strlen(fld->name[m])-1] = 0;
+    char *vec_name = strdup(fldname);
+    vec_name[strlen(fldname) - 1] = 0;
     save_fld_info(xs, vec_name, strdup(path), true);
     struct mrc_f3 *vfld = hdf5->vfld;
     hsize_t hdims[4] = { vfld->im[2], vfld->im[1], vfld->im[0], vfld->nr_comp };
@@ -919,12 +920,12 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     mrc_f3_destroy(vfld);
     hdf5->vfld = NULL;
   } else { // scalar
-    save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
+    save_fld_info(xs, strdup(fldname), strdup(path), false);
     if (io->rank < 0) { // FIXME not happening anymore, still optimize this case
       // on diag srv, ghost points are already gone and scaling is done
       assert(scale == 1.f);
       hsize_t hdims[3] = { fld->im[2], fld->im[1], fld->im[0] };
-      hid_t group = H5Gcreate(group0, fld->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      hid_t group = H5Gcreate(group0, fldname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, &MRC_F3(fld, m, 0,0,0)); CE;
       ierr = H5Gclose(group); CE;
     } else {
@@ -933,7 +934,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
       copy_and_scale(sfld, 0, fld, m, scale);
 
       hsize_t hdims[3] = { sfld->im[2], sfld->im[1], sfld->im[0] };
-      hid_t group = H5Gcreate(group0, fld->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      hid_t group = H5Gcreate(group0, fldname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, sfld->arr); CE;
       ierr = H5Gclose(group); CE;
       mrc_f3_destroy(sfld);
@@ -1251,11 +1252,11 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
     xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     hdf5_write_crds(io, gdims, ldomain, fld->sw);
   }
-  save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
+  save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
   hsize_t hdims[3] = { lfld->im[2], lfld->im[1], lfld->im[0] };
-  hid_t group = H5Gcreate(group0, fld->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group = H5Gcreate(group0, mrc_f3_comp_name(fld, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTmake_dataset_float(group, "3d", 3, hdims, lfld->arr);
   H5Gclose(group);
   H5Gclose(group0);
@@ -1573,7 +1574,7 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
   hsize_t hdims[1] = { f1->im[0] };
   for (int m = 0; m < f1->nr_comp; m++) {
-    hid_t group = H5Gcreate(group0, f1->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     H5LTset_attribute_int(group, ".", "m", &m, 1);
     
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
@@ -1630,14 +1631,14 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
     if (!xs) {
       xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
     }
-    save_fld_info(xs, strdup(fld->name[m]), strdup(path), false);
+    save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
   }
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
   hsize_t hgdims[3] = { gdims[2], gdims[1], gdims[0] };
   hsize_t hldims[3] = { ldims[2], ldims[1], ldims[0] };
   hsize_t hoff[3]   = { off[2], off[1], off[0] };
-  hid_t group = H5Gcreate(group0, fld->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group = H5Gcreate(group0, mrc_f3_comp_name(fld, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTset_attribute_int(group, ".", "m", &m, 1);
 
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
