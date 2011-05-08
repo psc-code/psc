@@ -987,14 +987,8 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
       continue;
     }
     ctx->recv_gps[rr] = gp;
-    int ib[3], im[3];
-    for (int d = 0; d < 3; d++) {
-      ib[d] = -m3->sw;
-      im[d] = info.ldims[d] + 2 * m3->sw;
-    }
     struct mrc_f3 *recv_f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(recv_f3, "ib", ib);
-    mrc_f3_set_param_int3(recv_f3, "im", im);
+    mrc_f3_set_param_int3(recv_f3, "ihi", info.ldims);
     mrc_f3_setup(recv_f3);
     ctx->recv_f3s[rr] = recv_f3;
     
@@ -1111,8 +1105,11 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "ib", writer_off);
-    mrc_f3_set_param_int3(f3, "im", writer_dims);
+    mrc_f3_set_param_int3(f3, "ilo", writer_off);
+    mrc_f3_set_param_int3(f3, "ihi", (int [3]) {
+	writer_dims[0] + writer_off[0],
+	writer_dims[1] + writer_off[1],
+	writer_dims[2] + writer_off[2], });
     mrc_f3_setup(f3);
 
     struct xdmf_file *file = &xdmf->file;

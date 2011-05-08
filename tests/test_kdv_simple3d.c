@@ -77,7 +77,7 @@ main(int argc, char **argv)
 
   struct mrc_f3 *x = mrc_domain_f3_create(domain, BND);
   mrc_f3_set_name(x, "x");
-  mrc_f3_set_param_int(x, "nr_comps", NR_FLDS);
+  mrc_f3_set_nr_comps(x, NR_FLDS);
   mrc_f3_setup(x);
   mrc_f3_set_comp_name(x, U, "u");
 

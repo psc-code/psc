@@ -229,17 +229,11 @@ mrc_domain_f1_create(struct mrc_domain *domain, int bnd)
 struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 {
-  int ldims[3], ib[3];
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
-  for (int d = 0; d < 3; d++) {
-    ldims[d] = patches[0].ldims[d] + 2 * bnd;
-    ib[d] = -bnd;
-  }
   struct mrc_f3 *f3 = mrc_f3_create(mrc_domain_comm(domain));
-  mrc_f3_set_param_int3(f3, "ib", ib);
-  mrc_f3_set_param_int3(f3, "im", ldims);
+  mrc_f3_set_param_int3(f3, "ihi", patches[0].ldims);
   mrc_f3_set_param_int(f3, "sw", bnd);
   f3->domain = domain;
   return f3;
