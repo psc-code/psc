@@ -43,9 +43,10 @@ ds_ascii_write_field(struct mrc_io *io, const char *path,
   FILE *file = ascii->file;
   fprintf(file, "# %s\n", mrc_f3_comp_name(fld, m));
 
-  for (int iz = 0; iz < fld->im[2]; iz++) {
-    for (int iy = 0; iy < fld->im[1]; iy++) {
-      for (int ix = 0; ix < fld->im[0]; ix++) {
+  // FIXME
+  for (int iz = 0; iz < fld->_im[2]; iz++) {
+    for (int iy = 0; iy < fld->_im[1]; iy++) {
+      for (int ix = 0; ix < fld->_im[0]; ix++) {
 	fprintf(file, "%d %d %d %g\n", ix, iy, iz, MRC_F3(fld,m, ix,iy,iz));
       }
       fprintf(file, "\n");

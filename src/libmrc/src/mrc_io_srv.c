@@ -164,9 +164,11 @@ static void
 copy_and_scale(float *buf, struct mrc_f3 *fld, int m, float scale)
 {
   int i = 0;
-  for (int iz = 0; iz < fld->im[2] - 4; iz++) {
-    for (int iy = 0; iy < fld->im[1] - 4; iy++) {
-      for (int ix = 0; ix < fld->im[0] - 4; ix++) {
+  const int *im = mrc_f3_gdims(fld);
+  // FIXME!!!
+  for (int iz = 0; iz < im[2] - 4; iz++) {
+    for (int iy = 0; iy < im[1] - 4; iy++) {
+      for (int ix = 0; ix < im[0] - 4; ix++) {
 	buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
       }
     }
@@ -185,7 +187,8 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
   struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims;
-  assert(ldims[0] == fld->im[0]-4 && ldims[1] == fld->im[1]-4 && ldims[2] == fld->im[2]-4);
+  const int *im = mrc_f3_gdims(fld);
+  assert(ldims[0] == im[0]-4 && ldims[1] == im[1]-4 && ldims[2] == im[2]-4);
   int nout = ldims[0] * ldims[1] * ldims[2];
   float *buf = calloc(sizeof(float), nout);
 
@@ -704,9 +707,9 @@ add_to_field_2d(struct mrc_f2 *g, struct mrc_f2 *l, int ib[2])
 static void
 add_to_field_3d(struct mrc_f3 *g, struct mrc_f3 *l, int ib[3])
 {
-  for (int iz = 0; iz < l->im[2]; iz++) {
-    for (int iy = 0; iy < l->im[1]; iy++) {
-      for (int ix = 0; ix < l->im[0]; ix++) {
+  for (int iz = 0; iz < l->_im[2]; iz++) {
+    for (int iy = 0; iy < l->_im[1]; iy++) {
+      for (int ix = 0; ix < l->_im[0]; ix++) {
 	MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
       }
     }
