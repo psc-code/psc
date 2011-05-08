@@ -62,7 +62,7 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   f1->ib[0] = f1_in->ib[0];
   f1->im[0] = f1_in->im[0];
   f1->nr_comp = f1_in->nr_comp;
-  f1->sw = f1_in->sw;
+  f1->_sw = f1_in->_sw;
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
@@ -183,6 +183,7 @@ static struct param mrc_f1_params_descr[] = {
   { "ibx"             , VAR(ib[0])        , PARAM_INT(0)           },
   { "imx"             , VAR(im[0])        , PARAM_INT(0)           },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
+  { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
 };
 #undef VAR
@@ -345,7 +346,7 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
   mrc_f3_set_param_int3(f3_new, "ib", f3->ib);
   mrc_f3_set_param_int3(f3_new, "im", f3->im);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
-  f3_new->sw = f3->sw;
+  mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
   f3_new->domain = f3->domain;
   mrc_f3_setup(f3_new);
   return f3_new;
@@ -409,7 +410,7 @@ mrc_f3_norm(struct mrc_f3 *x)
 static void
 _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  mrc_io_read_attr_int(io, mrc_f3_name(f3), "sw", &f3->sw);
+  mrc_io_read_attr_int(io, mrc_f3_name(f3), "sw", &f3->_sw);
   f3->domain = (struct mrc_domain *)
     mrc_io_read_obj_ref(io, mrc_f3_name(f3), "domain", &mrc_class_mrc_domain);
   
@@ -420,7 +421,7 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 static void
 _mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  mrc_io_write_attr_int(io, mrc_f3_name(f3), "sw", f3->sw); // FIXME, should be unnec
+  mrc_io_write_attr_int(io, mrc_f3_name(f3), "sw", f3->_sw); // FIXME, should be unnec
   mrc_io_write_obj_ref(io, mrc_f3_name(f3), "domain",
 		       (struct mrc_obj *) f3->domain);
   mrc_io_write_f3(io, mrc_f3_name(f3), f3, 1.);
@@ -443,11 +444,11 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
     mrc_f3_set_param_int3(fld1, "ib", ib);
     mrc_f3_set_param_int3(fld1, "im", im);
+    mrc_f3_set_param_int(fld1, "sw", f3->_sw);
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
     fld1->domain = f3->domain;
-    fld1->sw = f3->sw;
     mrc_f3_setup(fld1);
     mrc_f3_write(fld1, io);
     mrc_f3_destroy(fld1);
@@ -462,6 +463,7 @@ static struct param mrc_f3_params_descr[] = {
   { "ib"              , VAR(ib)           , PARAM_INT3(0, 0, 0)    },
   { "im"              , VAR(im)           , PARAM_INT3(0, 0, 0)    },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
+  { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
 };
 #undef VAR

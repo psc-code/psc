@@ -57,7 +57,7 @@ struct mrc_f1 {
   int len;
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
-  int sw; //< # of ghost points
+  int _sw; //< # of ghost points
   char **_comp_name;
 };
 
@@ -108,7 +108,7 @@ struct mrc_f3 {
   int len;
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
-  int sw; //< # of ghost points
+  int _sw; //< # of ghost points
   char **_comp_name;
 };
 
@@ -135,9 +135,9 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->ib[2] + (f3)->sw - (l); iz < (f3)->ib[2] + (f3)->im[2] - (f3)->sw + (r); iz++) { \
-  for (int iy = (f3)->ib[1] + (f3)->sw - (l); iy < (f3)->ib[1] + (f3)->im[1] - (f3)->sw + (r); iy++) { \
-  for (int ix = (f3)->ib[0] + (f3)->sw - (l); ix < (f3)->ib[0] + (f3)->im[0] - (f3)->sw + (r); ix++) \
+  for (int iz = (f3)->ib[2] + (f3)->_sw - (l); iz < (f3)->ib[2] + (f3)->im[2] - (f3)->_sw + (r); iz++) { \
+  for (int iy = (f3)->ib[1] + (f3)->_sw - (l); iy < (f3)->ib[1] + (f3)->im[1] - (f3)->_sw + (r); iy++) { \
+  for (int ix = (f3)->ib[0] + (f3)->_sw - (l); ix < (f3)->ib[0] + (f3)->im[0] - (f3)->_sw + (r); ix++) \
 
 #define mrc_f3_foreach_end			\
   }						\

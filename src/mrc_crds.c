@@ -111,7 +111,7 @@ mrc_crds_alloc(struct mrc_crds *crds, int d, int dim, int sw)
   mrc_f1_set_name(crds->crd[d], s);
   mrc_f1_set_param_int(crds->crd[d], "ibx", -sw);
   mrc_f1_set_param_int(crds->crd[d], "imx", dim + 2 *sw);
-  crds->crd[d]->sw = sw;
+  mrc_f1_set_param_int(crds->crd[d], "sw", sw);
   mrc_f1_setup(crds->crd[d]);
   mrc_f1_set_comp_name(crds->crd[d], 0, s);
 }
