@@ -59,7 +59,7 @@ kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
 static void
 kdv_fill_ghosts(struct kdv *kdv, struct mrc_f1 *x, int m_x)
 {
-  int mx = mrc_f1_dim(x)[0];
+  int mx = mrc_f1_dims(x)[0];
   MRC_F1(x, m_x , -2  ) = MRC_F1(x, m_x , mx-2);
   MRC_F1(x, m_x , -1  ) = MRC_F1(x, m_x , mx-1);
   MRC_F1(x, m_x , mx  ) = MRC_F1(x, m_x , 0);

@@ -54,7 +54,7 @@ struct mrc_f1 {
   int _im[1];
   int _ib[1];
   int _off[1];
-  int _dim[1];
+  int _dims[1];
   int nr_comp;
   int len;
   bool with_array;
@@ -68,8 +68,8 @@ struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 const int *mrc_f1_off(struct mrc_f1 *x);
-const int *mrc_f1_dim(struct mrc_f1 *x);
-const int *mrc_f1_ghost_dim(struct mrc_f1 *x);
+const int *mrc_f1_dims(struct mrc_f1 *x);
+const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
@@ -80,7 +80,7 @@ float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 #define mrc_f1_foreach(f1, ix, l,r)					\
-  for (int ix = (f1)->_off[0] - l; ix < (f1)->_off[0] + (f1)->_dim[0] + r; ix++) \
+  for (int ix = (f1)->_off[0] - l; ix < (f1)->_off[0] + (f1)->_dims[0] + r; ix++) \
 
 #define mrc_f1_foreach_end do {} while (0)	\
 
@@ -110,7 +110,7 @@ struct mrc_f3 {
   int _im[3];
   int _ib[3];
   int _off[3];
-  int _dim[3];
+  int _dims[3];
   int nr_comp;
   int len;
   bool with_array;
@@ -126,9 +126,9 @@ void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
 const int *mrc_f3_off(struct mrc_f3 *x);
-const int *mrc_f3_dim(struct mrc_f3 *x);
-const int *mrc_f3_ghost_dim(struct mrc_f3 *x);
+const int *mrc_f3_dims(struct mrc_f3 *x);
 const int *mrc_f3_ghost_off(struct mrc_f3 *x);
+const int *mrc_f3_ghost_dims(struct mrc_f3 *x);
 void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
 void mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from);
 void mrc_f3_set(struct mrc_f3 *f3, float val);
@@ -146,9 +146,9 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->_off[2] - (l); iz < (f3)->_off[2] + (f3)->_dim[2] + (r); iz++) { \
-  for (int iy = (f3)->_off[1] - (l); iy < (f3)->_off[1] + (f3)->_dim[1] + (r); iy++) { \
-  for (int ix = (f3)->_off[0] - (l); ix < (f3)->_off[0] + (f3)->_dim[0] + (r); ix++) \
+  for (int iz = (f3)->_off[2] - (l); iz < (f3)->_off[2] + (f3)->_dims[2] + (r); iz++) { \
+  for (int iy = (f3)->_off[1] - (l); iy < (f3)->_off[1] + (f3)->_dims[1] + (r); iy++) { \
+  for (int ix = (f3)->_off[0] - (l); ix < (f3)->_off[0] + (f3)->_dims[0] + (r); ix++) \
 
 #define mrc_f3_foreach_end			\
   }						\

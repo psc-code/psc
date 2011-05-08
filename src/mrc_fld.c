@@ -32,7 +32,7 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
   f1->_ib[0] = f1->_off[0] - f1->_sw;
-  f1->_im[0] = f1->_dim[0] + 2 * f1->_sw;
+  f1->_im[0] = f1->_dims[0] + 2 * f1->_sw;
   f1->len = f1->_im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -62,7 +62,7 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
 
   mrc_f1_set_param_int(f1, "off", f1_in->_off[0]);
-  mrc_f1_set_param_int(f1, "dim", f1_in->_dim[0]);
+  mrc_f1_set_param_int(f1, "dims", f1_in->_dims[0]);
   mrc_f1_set_param_int(f1, "nr_comp", f1_in->nr_comp);
   mrc_f1_set_param_int(f1, "sw", f1_in->_sw);
   f1->domain = f1_in->domain;
@@ -87,13 +87,13 @@ mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 }
 
 const int *
-mrc_f1_dim(struct mrc_f1 *f1)
+mrc_f1_dims(struct mrc_f1 *f1)
 {
-  return f1->_dim;
+  return f1->_dims;
 }
 
 const int *
-mrc_f1_ghost_dim(struct mrc_f1 *f1)
+mrc_f1_ghost_dims(struct mrc_f1 *f1)
 {
   return f1->_im;
 }
@@ -195,7 +195,7 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 #define VAR(x) (void *)offsetof(struct mrc_f1, x)
 static struct param mrc_f1_params_descr[] = {
   { "offx"            , VAR(_off[0])      , PARAM_INT(0)           },
-  { "dimx"            , VAR(_dim[0])      , PARAM_INT(0)           },
+  { "dimsx"           , VAR(_dims[0])     , PARAM_INT(0)           },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
@@ -310,7 +310,7 @@ _mrc_f3_setup(struct mrc_f3 *f3)
 {
   for (int d = 0; d < 3; d++) {
     f3->_ib[d] = f3->_off[d] - f3->_sw;
-    f3->_im[d] = f3->_dim[d] + 2 * f3->_sw;
+    f3->_im[d] = f3->_dims[d] + 2 * f3->_sw;
   }
   f3->len = f3->_im[0] * f3->_im[1] * f3->_im[2] * f3->nr_comp;
 
@@ -364,15 +364,9 @@ mrc_f3_off(struct mrc_f3 *f3)
 }
 
 const int *
-mrc_f3_dim(struct mrc_f3 *f3)
+mrc_f3_dims(struct mrc_f3 *f3)
 {
-  return f3->_dim;
-}
-
-const int *
-mrc_f3_ghost_dim(struct mrc_f3 *f3)
-{
-  return f3->_im;
+  return f3->_dims;
 }
 
 const int *
@@ -381,12 +375,18 @@ mrc_f3_ghost_off(struct mrc_f3 *f3)
   return f3->_ib;
 }
 
+const int *
+mrc_f3_ghost_dims(struct mrc_f3 *f3)
+{
+  return f3->_im;
+}
+
 struct mrc_f3 *
 mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
   mrc_f3_set_param_int3(f3_new, "off", f3->_off);
-  mrc_f3_set_param_int3(f3_new, "dim", f3->_dim);
+  mrc_f3_set_param_int3(f3_new, "dims", f3->_dims);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
   f3_new->domain = f3->domain;
@@ -484,7 +484,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
   for (int i = 0; mm[i] >= 0; i++) {
     struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
     mrc_f3_set_param_int3(fld1, "off", f3->_off);
-    mrc_f3_set_param_int3(fld1, "dim", f3->_dim);
+    mrc_f3_set_param_int3(fld1, "dims", f3->_dims);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
     int *ib = f3->_ib;
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
@@ -503,7 +503,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
   { "off"             , VAR(_off)         , PARAM_INT3(0, 0, 0)    },
-  { "dim"             , VAR(_dim)         , PARAM_INT3(0, 0, 0)    },
+  { "dims"            , VAR(_dims)        , PARAM_INT3(0, 0, 0)    },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},

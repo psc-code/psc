@@ -221,8 +221,8 @@ xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT);
 
-    const int *dim = mrc_f1_dim(crd);
-    hsize_t hdims[1] = { dim[0] };
+    const int *dims = mrc_f1_dims(crd);
+    hsize_t hdims[1] = { dims[0] };
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
     hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -339,9 +339,9 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
 
-    const int *dim = mrc_f1_dim(f1);
-    hsize_t mdims[1] = { dim[0] };
-    hsize_t fdims[1] = { dim[0] };
+    const int *dims = mrc_f1_dims(f1);
+    hsize_t mdims[1] = { dims[0] };
+    hsize_t fdims[1] = { dims[0] };
     hsize_t off[1] = { 0 };
     
     hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -797,7 +797,7 @@ collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int 
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
 #endif
-  const int *im = mrc_f3_ghost_dim(f3), *ib = mrc_f3_ghost_off(f3);
+  const int *im = mrc_f3_ghost_dims(f3), *ib = mrc_f3_ghost_off(f3);
   hsize_t mdims[3] = { im[2], im[1], im[0] };
   hsize_t foff[3] = { ib[2], ib[1], ib[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
@@ -961,7 +961,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
+					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dims(f3));
     if (has_intersection) {
       ctx->total_recvs++;
     }
@@ -982,13 +982,13 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
+					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dims(f3));
     if (!has_intersection) {
       continue;
     }
     ctx->recv_gps[rr] = gp;
     struct mrc_f3 *recv_f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(recv_f3, "dim", info.ldims);
+    mrc_f3_set_param_int3(recv_f3, "dims", info.ldims);
     mrc_f3_setup(recv_f3);
     ctx->recv_f3s[rr] = recv_f3;
     
@@ -1015,7 +1015,7 @@ collective_recv_f3_end(struct collective_ctx *ctx,
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
     find_intersection(ilo, ihi, info.off, info.ldims,
-		      mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
+		      mrc_f3_ghost_off(f3), mrc_f3_ghost_dims(f3));
 
     struct mrc_f3 *recv_f3 = ctx->recv_f3s[rr];
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -1051,7 +1051,7 @@ collective_recv_f3_local(struct collective_ctx *ctx,
 
     int ilo[3], ihi[3];
     bool has_intersection =
-      find_intersection(ilo, ihi, off, ldims, mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
+      find_intersection(ilo, ihi, off, ldims, mrc_f3_ghost_off(f3), mrc_f3_ghost_dims(f3));
     if (!has_intersection) {
       continue;
     }
@@ -1106,7 +1106,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
     f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int3(f3, "off", writer_off);
-    mrc_f3_set_param_int3(f3, "dim", writer_dims);
+    mrc_f3_set_param_int3(f3, "dims", writer_dims);
     mrc_f3_setup(f3);
 
     struct xdmf_file *file = &xdmf->file;
