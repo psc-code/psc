@@ -109,7 +109,6 @@ mrc_obj_put(struct mrc_obj *obj)
     return;
 
   struct mrc_class *class = obj->class;
-
   list_del(&obj->instance_entry);
 
   if (obj->ops) {
@@ -124,14 +123,17 @@ mrc_obj_put(struct mrc_obj *obj)
     class->destroy(obj);
   }
 
-  struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  while (!list_empty(&obj->children_list)) {
+    struct mrc_obj *child = list_entry(obj->children_list.next, struct mrc_obj,
+				       child_entry);
+    list_del(&child->child_entry);
     mrc_obj_destroy(child);
   }
 
   if (obj->comm != MPI_COMM_NULL) {
     MPI_Comm_free(&obj->comm);
   }
+
   if (obj->name != obj->class->name) {
     free(obj->name);
   }
