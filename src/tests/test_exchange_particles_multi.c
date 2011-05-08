@@ -24,14 +24,14 @@ setup_particles(mparticles_base_t *particles)
   // (could go either way), so let's shift them a bit so we get a unique answer
   // we can check.
 
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
     if (rank != 0 || p != 0) {
       pp->n_part = 0;
       continue;
     }
 
-    struct psc_patch *patch = &psc.patch[p];
+    struct psc_patch *patch = &ppsc->patch[p];
     int *ilo = patch->off;
     int ihi[3] = { patch->off[0] + patch->ldims[0],
 		   patch->off[1] + patch->ldims[1],
@@ -44,15 +44,15 @@ setup_particles(mparticles_base_t *particles)
 	  particle_base_t *p;
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix + .01) * psc.dx[0];
-	  p->yi = (iy + .01) * psc.dx[1];
-	  p->zi = (iz + .01) * psc.dx[2];
+	  p->xi = (ix + .01) * ppsc->dx[0];
+	  p->yi = (iy + .01) * ppsc->dx[1];
+	  p->zi = (iz + .01) * ppsc->dx[2];
 	  
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix - .01) * psc.dx[0];
-	  p->yi = (iy - .01) * psc.dx[1];
-	  p->zi = (iz - .01) * psc.dx[2];
+	  p->xi = (ix - .01) * ppsc->dx[0];
+	  p->yi = (iy - .01) * ppsc->dx[1];
+	  p->zi = (iz - .01) * ppsc->dx[2];
 	}
       }
     }
@@ -65,7 +65,7 @@ static int
 get_total_num_particles(mparticles_base_t *particles)
 {
   int nr_part = 0;
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
     nr_part += pp->n_part;
   }
@@ -86,13 +86,13 @@ main(int argc, char **argv)
   // test psc_exchange_particles()
 
   struct psc_case *_case = psc_create_test_xz();
-  psc_bnd_set_type(psc.bnd, "c");
+  psc_bnd_set_type(ppsc->bnd, "c");
   psc_case_setup(_case);
-  mparticles_base_t *particles = &psc.particles;
+  mparticles_base_t *particles = &ppsc->particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);
-  psc_bnd_exchange_particles(psc.bnd, particles);
+  psc_bnd_exchange_particles(ppsc->bnd, particles);
   //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles(particles);
   psc_check_particles(particles);

@@ -25,8 +25,8 @@ psc_pulse_gauss_setup(struct psc_pulse *pulse)
 
   // normalization
   for (int d = 0; d < 3; d++) {
-    gauss->xm[d] /= psc.coeff.ld;
-    gauss->dxm[d] /= psc.coeff.ld;
+    gauss->xm[d] /= ppsc->coeff.ld;
+    gauss->dxm[d] /= ppsc->coeff.ld;
   }
 }
 

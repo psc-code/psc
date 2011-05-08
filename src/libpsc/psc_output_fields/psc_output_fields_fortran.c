@@ -12,7 +12,7 @@ psc_output_fields_fortran_run(struct psc_output_fields *out,
 			      mfields_base_t *flds_base,
 			      mparticles_base_t *particles_base)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_out_field", 1., 0, 0);

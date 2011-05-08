@@ -73,7 +73,7 @@ psc_case_curvedfoil_create(struct psc_case *_case)
   
 //  psc.pulse_p_z1 = psc_pulse_flattop_create(&prm);
 #endif
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
 }
@@ -81,31 +81,31 @@ psc_case_curvedfoil_create(struct psc_case *_case)
 static void
 psc_case_curvedfoil_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 500;
-  psc.prm.cpum = 25000;
-  psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 1.0e20;
-  psc.prm.n0 = 2.0e29;
+  ppsc->prm.nmax = 500;
+  ppsc->prm.cpum = 25000;
+  ppsc->prm.lw = 1. * 1e-6;
+  ppsc->prm.i0 = 1.0e20;
+  ppsc->prm.n0 = 2.0e29;
 
-  psc.prm.nicell = 200;
+  ppsc->prm.nicell = 200;
 
-  psc.domain.length[0] = 5 * 1e-6;			// length of the domain in x-direction (transverse)
-  psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 5.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  ppsc->domain.length[0] = 5 * 1e-6;			// length of the domain in x-direction (transverse)
+  ppsc->domain.length[1] = 0.02 * 1e-6;
+  ppsc->domain.length[2] = 5.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.gdims[0] = 200;
-  psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 200;
+  ppsc->domain.gdims[0] = 200;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 200;
 
-  psc.domain.bnd_fld_lo[0] = 1;
-  psc.domain.bnd_fld_hi[0] = 1;
-  psc.domain.bnd_fld_lo[1] = 1;
-  psc.domain.bnd_fld_hi[1] = 1;
-  psc.domain.bnd_fld_lo[2] = 3; // time
-  psc.domain.bnd_fld_hi[2] = 2; // upml
-  psc.domain.bnd_part[0] = 0;
-  psc.domain.bnd_part[1] = 0;
-  psc.domain.bnd_part[2] = 0;
+  ppsc->domain.bnd_fld_lo[0] = 1;
+  ppsc->domain.bnd_fld_hi[0] = 1;
+  ppsc->domain.bnd_fld_lo[1] = 1;
+  ppsc->domain.bnd_fld_hi[1] = 1;
+  ppsc->domain.bnd_fld_lo[2] = 3; // time
+  ppsc->domain.bnd_fld_hi[2] = 2; // upml
+  ppsc->domain.bnd_part[0] = 0;
+  ppsc->domain.bnd_part[1] = 0;
+  ppsc->domain.bnd_part[2] = 0;
 }
 
 #if 0
@@ -117,7 +117,7 @@ psc_case_curvedfoil_init_npt(struct psc_case *_case, int kind, double x[3],
 
   real Te = curvedfoil->Te, Ti = curvedfoil->Ti;
 
-  real ld = psc.coeff.ld;    // what is ld?
+  real ld = ppsc->coeff.ld;    // what is ld?
 
   real x0 = curvedfoil->x0 / ld;
   real y0 = curvedfoil->y0 / ld;

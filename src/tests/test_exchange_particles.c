@@ -25,7 +25,7 @@ setup_particles(mparticles_base_t *particles)
   // we can check.
   particles_base_t *pp = &particles->p[0];
   if (rank == 0) {
-    struct psc_patch *patch = &psc.patch[0];
+    struct psc_patch *patch = &ppsc->patch[0];
     int *ilo = patch->off;
     int ihi[3] = { patch->off[0] + patch->ldims[0],
 		   patch->off[1] + patch->ldims[1],
@@ -38,15 +38,15 @@ setup_particles(mparticles_base_t *particles)
 	  particle_base_t *p;
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix + .01) * psc.dx[0];
-	  p->yi = (iy + .01) * psc.dx[1];
-	  p->zi = (iz + .01) * psc.dx[2];
+	  p->xi = (ix + .01) * ppsc->dx[0];
+	  p->yi = (iy + .01) * ppsc->dx[1];
+	  p->zi = (iz + .01) * ppsc->dx[2];
 
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix - .01) * psc.dx[0];
-	  p->yi = (iy - .01) * psc.dx[1];
-	  p->zi = (iz - .01) * psc.dx[2];
+	  p->xi = (ix - .01) * ppsc->dx[0];
+	  p->yi = (iy - .01) * ppsc->dx[1];
+	  p->zi = (iz - .01) * ppsc->dx[2];
 	}
       }
     }
@@ -59,7 +59,7 @@ setup_particles(mparticles_base_t *particles)
 static void
 check_particles_old_xz(mparticles_base_t *particles)
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
@@ -74,8 +74,8 @@ check_particles_old_xz(mparticles_base_t *particles)
   // gyrating near a boundary don't keep getting bounced between processors --
   // but that's the opposite of what's happening here.
   for (int d = 0; d < 3; d++) {
-    xb[d] = (ilo[d]-2) * psc.dx[d];
-    xe[d] = (ihi[d]+1) * psc.dx[d];
+    xb[d] = (ilo[d]-2) * ppsc->dx[d];
+    xe[d] = (ihi[d]+1) * ppsc->dx[d];
   }
 
   int fail_cnt = 0;
@@ -96,7 +96,7 @@ check_particles_old_xz(mparticles_base_t *particles)
 static void
 check_particles(mparticles_base_t *particles)
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   particles_base_t *pp = &particles->p[0];
   int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
@@ -108,8 +108,8 @@ check_particles(mparticles_base_t *particles)
   // These will need revisiting when it comes to non-periodic domains.
   
   for (int d = 0; d < 3; d++) {
-    xb[d] = (ilo[d]-.5) * psc.dx[d];
-    xe[d] = (ihi[d]-.5) * psc.dx[d];
+    xb[d] = (ilo[d]-.5) * ppsc->dx[d];
+    xe[d] = (ihi[d]-.5) * ppsc->dx[d];
   }
 
   int fail_cnt = 0;
@@ -147,13 +147,13 @@ main(int argc, char **argv)
   // test psc_exchange_particles()
 
   struct psc_case *_case = psc_create_test_xz();
-  psc_bnd_set_type(psc.bnd, "fortran");
+  psc_bnd_set_type(ppsc->bnd, "fortran");
   psc_case_setup(_case);
-  mparticles_base_t *particles = &psc.particles;
+  mparticles_base_t *particles = &ppsc->particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   int total_num_particles_before = get_total_num_particles(particles);
-  psc_bnd_exchange_particles(psc.bnd, particles);
+  psc_bnd_exchange_particles(ppsc->bnd, particles);
   //  psc_dump_particles("part-1");
   int total_num_particles_after = get_total_num_particles(particles);
   check_particles_old_xz(particles);
@@ -161,12 +161,12 @@ main(int argc, char **argv)
   psc_case_destroy(_case);
 
   _case = psc_create_test_xz();
-  psc_bnd_set_type(psc.bnd, "c");
+  psc_bnd_set_type(ppsc->bnd, "c");
   psc_case_setup(_case);
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   total_num_particles_before = get_total_num_particles(particles);
-  psc_bnd_exchange_particles(psc.bnd, particles);
+  psc_bnd_exchange_particles(ppsc->bnd, particles);
   //  psc_dump_particles("part-1");
   total_num_particles_after = get_total_num_particles(particles);
   check_particles(particles);

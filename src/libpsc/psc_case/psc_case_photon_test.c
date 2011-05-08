@@ -35,15 +35,15 @@ static struct param psc_case_photon_test_descr[] = {
 static void
 psc_case_photon_test_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 201;
+  ppsc->prm.nmax = 201;
 
-  psc.domain.length[0] = 10 * 1e-6;
-  psc.domain.length[1] = 10 * 1e-6;
-  psc.domain.length[2] = 10 * 1e-6;
+  ppsc->domain.length[0] = 10 * 1e-6;
+  ppsc->domain.length[1] = 10 * 1e-6;
+  ppsc->domain.length[2] = 10 * 1e-6;
 
-  psc.domain.gdims[0] = 64;
-  psc.domain.gdims[1] = 64;
-  psc.domain.gdims[2] = 64;
+  ppsc->domain.gdims[0] = 64;
+  ppsc->domain.gdims[1] = 64;
+  ppsc->domain.gdims[2] = 64;
 }
 
 static void
@@ -55,17 +55,17 @@ psc_case_photon_test_init_photon_np(struct psc_case *_case, double x[3],
   double xc[3]; // center of blob
   double xr[3]; // distance from center, renormalized
   for (int d = 0; d < 3; d++) {
-    xc[d] = .5 * psc.domain.length[d];
-    xr[d] = x[d] * psc.coeff.ld - xc[0];
+    xc[d] = .5 * ppsc->domain.length[d];
+    xr[d] = x[d] * ppsc->coeff.ld - xc[0];
   };
 
   photon_np->n = 
     exp(-(sqr(xr[1]) + sqr(xr[2])) / sqr(test->rho_0)) *
     exp(-sqr(test->k_L * xr[0]) / sqr(test->tau_0));
   photon_np->k[0] = test->k_L;
-  photon_np->sigma_k[0] = psc.coeff.ld / test->tau_0;
-  photon_np->sigma_k[1] = psc.coeff.ld / test->rho_0;
-  photon_np->sigma_k[2] = psc.coeff.ld / test->rho_0;
+  photon_np->sigma_k[0] = ppsc->coeff.ld / test->tau_0;
+  photon_np->sigma_k[1] = ppsc->coeff.ld / test->rho_0;
+  photon_np->sigma_k[2] = ppsc->coeff.ld / test->rho_0;
 
   // use n_in_cell particles at max of density (n == 1)
   photon_np->n_in_cell = test->n_in_cell * photon_np->n + .5;

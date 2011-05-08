@@ -17,13 +17,13 @@
 static void
 setup_fields(mfields_base_t *flds)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
+    psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
-      f_real xx = 2.*M_PI * ix / psc.domain.gdims[0];
-      f_real yy = 2.*M_PI * iy / psc.domain.gdims[1];
+      psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
+      f_real xx = 2.*M_PI * ix / ppsc->domain.gdims[0];
+      f_real yy = 2.*M_PI * iy / ppsc->domain.gdims[1];
       F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
       F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(yy);
       F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(yy);
@@ -40,29 +40,29 @@ main(int argc, char **argv)
   // test push_field_a
 
   struct psc_case *_case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "fortran");
+  psc_push_fields_set_type(ppsc->push_fields, "fortran");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
+  setup_fields(ppsc->flds);
   // psc_dump_field(EX, "ex0");
-  psc_push_fields_step_a(psc.push_fields, psc.flds);
-  psc_save_fields_ref(&psc, psc.flds);
+  psc_push_fields_step_a(ppsc->push_fields, ppsc->flds);
+  psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "c");
+  psc_push_fields_set_type(ppsc->push_fields, "c");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_a(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc, psc.flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_a(ppsc->push_fields, ppsc->flds);
+  psc_check_fields_ref(ppsc, ppsc->flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
 #ifdef USE_CBE
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "cbe");
+  psc_push_fields_set_type(ppsc->push_fields, "cbe");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_a(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc, psc.flds,
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_a(ppsc->push_fields, ppsc->flds);
+  psc_check_fields_ref(ppsc, ppsc->flds,
 		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 #endif
@@ -71,47 +71,47 @@ main(int argc, char **argv)
   // test push_field_b
 
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "fortran");
+  psc_push_fields_set_type(ppsc->push_fields, "fortran");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_b(psc.push_fields, psc.flds);
-  psc_save_fields_ref(&psc, psc.flds);
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "c");
+  psc_push_fields_set_type(ppsc->push_fields, "c");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_b(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc, psc.flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_check_fields_ref(ppsc, ppsc->flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
   // test push_field_b
 
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "fortran");
+  psc_push_fields_set_type(ppsc->push_fields, "fortran");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_b(psc.push_fields, psc.flds);
-  psc_save_fields_ref(&psc, psc.flds);
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "c");
+  psc_push_fields_set_type(ppsc->push_fields, "c");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_b(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc, psc.flds,
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_check_fields_ref(ppsc, ppsc->flds,
 		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
 #ifdef USE_CBE
   _case = psc_create_test_xy();
-  psc_push_fields_set_type(psc.push_fields, "cbe");
+  psc_push_fields_set_type(ppsc->push_fields, "cbe");
   psc_case_setup(_case);
-  setup_fields(psc.flds);
-  psc_push_fields_step_b(psc.push_fields, psc.flds);
-  psc_check_fields_ref(&psc, psc.flds,
+  setup_fields(ppsc->flds);
+  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_check_fields_ref(ppsc, ppsc->flds,
 		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 #endif

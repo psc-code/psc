@@ -95,19 +95,19 @@ fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_base_t *flds_base = _flds_base;
-  flds->f = calloc(psc.nr_patches, sizeof(*flds->f));
-  foreach_patch(p) {
+  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
+  psc_foreach_patch(ppsc, p) {
     fields_fortran_t *pf = &flds->f[p];
-    struct psc_patch *patch = &psc.patch[p];
-    int ilg[3] = { -psc.ibn[0], -psc.ibn[1], -psc.ibn[2] };
-    int ihg[3] = { patch->ldims[0] + psc.ibn[0],
-		   patch->ldims[1] + psc.ibn[1],
-		   patch->ldims[2] + psc.ibn[2] };
+    struct psc_patch *patch = &ppsc->patch[p];
+    int ilg[3] = { -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2] };
+    int ihg[3] = { patch->ldims[0] + ppsc->ibn[0],
+		   patch->ldims[1] + ppsc->ibn[1],
+		   patch->ldims[2] + ppsc->ibn[2] };
     fields_fortran_alloc(pf, ilg, ihg, NR_FIELDS);
 
     fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(p, jx, jy, jz) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
 	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
@@ -126,11 +126,11 @@ fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_base_t *flds_base = _flds_base;
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_fortran_t *pf = &flds->f[p];
     fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
-      foreach_3d_g(p, jx, jy, jz) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
 	F3_BASE(pf_base, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;

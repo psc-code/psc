@@ -54,8 +54,8 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 
   mparticles_base_t *particles_base = _particles_base;
 
-  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
-  foreach_patch(p) {
+  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp_base = &particles_base->p[p];
     particles_fortran_t *pp = &particles->p[p];
     pp->n_part = pp_base->n_part;
@@ -93,7 +93,7 @@ particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
   __gotten = false;
 
   mparticles_base_t *particles_base = _particles_base;
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp_base = &particles_base->p[p];
     particles_fortran_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);

@@ -148,7 +148,7 @@ psc_case_cone_create(struct psc_case *_case)
     .amplitude_p = 1.,
   };
 #endif
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
 }
@@ -158,36 +158,36 @@ psc_case_cone_create(struct psc_case *_case)
 static void
 psc_case_cone_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 15000;
-  psc.prm.cpum = 15000;
-  psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 2e24;
+  ppsc->prm.nmax = 15000;
+  ppsc->prm.cpum = 15000;
+  ppsc->prm.lw = 1. * 1e-6;
+  ppsc->prm.i0 = 2e24;
    
   // n_cr = 1.1e27 for 1 micron wavelength and scales as lambda^-2
 
-  psc.prm.n0 = 1.1e29;
+  ppsc->prm.n0 = 1.1e29;
 
   
 
-  psc.prm.nicell = 200;
+  ppsc->prm.nicell = 200;
 
-  psc.domain.length[0] = 12.0 * 1e-6;			// length of the domain in x-direction (transverse)
-  psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 31.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
+  ppsc->domain.length[0] = 12.0 * 1e-6;			// length of the domain in x-direction (transverse)
+  ppsc->domain.length[1] = 0.02 * 1e-6;
+  ppsc->domain.length[2] = 31.0  * 1e-6;			// length of the domain in z-direction (longitudinal)
 
-  psc.domain.gdims[0] = 1200;
-  psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 3100;
+  ppsc->domain.gdims[0] = 1200;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 3100;
 
-  psc.domain.bnd_fld_lo[0] = 1;
-  psc.domain.bnd_fld_hi[0] = 1;
-  psc.domain.bnd_fld_lo[1] = 1;
-  psc.domain.bnd_fld_hi[1] = 1;
-  psc.domain.bnd_fld_lo[2] = 3; // time
-  psc.domain.bnd_fld_hi[2] = 2; // upml
-  psc.domain.bnd_part[0] = 0;
-  psc.domain.bnd_part[1] = 0;
-  psc.domain.bnd_part[2] = 0;
+  ppsc->domain.bnd_fld_lo[0] = 1;
+  ppsc->domain.bnd_fld_hi[0] = 1;
+  ppsc->domain.bnd_fld_lo[1] = 1;
+  ppsc->domain.bnd_fld_hi[1] = 1;
+  ppsc->domain.bnd_fld_lo[2] = 3; // time
+  ppsc->domain.bnd_fld_hi[2] = 2; // upml
+  ppsc->domain.bnd_part[0] = 0;
+  ppsc->domain.bnd_part[1] = 0;
+  ppsc->domain.bnd_part[2] = 0;
 }
 
 static void
@@ -198,7 +198,7 @@ psc_case_cone_init_field(struct psc_case *_case, mfields_base_t *flds)
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     foreach_3d_g(p, jx, jy, jz) {
-      double dx = psc.dx[0], dy = psc.dx[1], dz = psc.dx[2], dt = psc.dt;
+      double dx = ppsc->dx[0], dy = ppsc->dx[1], dz = ppsc->dx[2], dt = ppsc->dt;
       double xx = CRDX(patch, xx), yy = CRDY(patch, yy), zz = CRDZ(patch, zz);
       
       // FIXME, why this time?
@@ -219,7 +219,7 @@ psc_case_cone_init_npt(struct psc_case *_case, int kind, double x[3],
 
   real Te = cone->Te, Ti = cone->Ti;
 
-  real ld = psc.coeff.ld;   
+  real ld = ppsc->coeff.ld;   
  
   real Line0_x0 = cone->Line0_x0 / ld;  
   real Line0_x1 = cone->Line0_x1 / ld;   

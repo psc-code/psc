@@ -20,10 +20,10 @@ psc_pulse_flattop_setup(struct psc_pulse *pulse)
 
   // normalization
   for (int d = 0; d < 3; d++) {
-    flattop->xm[d] /= psc.coeff.ld;
-    flattop->dxm[d] /= psc.coeff.ld;
+    flattop->xm[d] /= ppsc->coeff.ld;
+    flattop->dxm[d] /= ppsc->coeff.ld;
   }
-  flattop->zb /= psc.coeff.ld;
+  flattop->zb /= ppsc->coeff.ld;
 }
 
 void

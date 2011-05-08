@@ -33,12 +33,12 @@ find_cell_indices(int p, particles_base_t *pp)
 static inline int
 get_cell_index(int p, const particle_base_t *part)
 {
-  struct psc_patch *patch = &psc.patch[p];
-  particle_base_real_t dxi = 1.f / psc.dx[0];
-  particle_base_real_t dyi = 1.f / psc.dx[1];
-  particle_base_real_t dzi = 1.f / psc.dx[2];
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_base_real_t dxi = 1.f / ppsc->dx[0];
+  particle_base_real_t dyi = 1.f / ppsc->dx[1];
+  particle_base_real_t dzi = 1.f / ppsc->dx[2];
   int *ldims = patch->ldims;
-  int *ibn = psc.ibn;
+  int *ibn = ppsc->ibn;
   
   particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
   particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
@@ -75,8 +75,8 @@ psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles)
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  assert(psc.nr_patches == 1);
-  foreach_patch(p) {
+  assert(ppsc->nr_patches == 1);
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
     find_cell_indices(p, pp);
     qsort(pp->particles, pp->n_part, sizeof(*pp->particles), compare);
@@ -104,14 +104,14 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
   }
   prof_start(pr);
 
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
+  psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp = &particles->p[p];
     find_cell_indices(p, pp);
     
     int N = 1;
     for (int d = 0; d < 3; d++) {
-      N *= patch->ldims[d] + 2 * psc.ibn[d];
+      N *= patch->ldims[d] + 2 * ppsc->ibn[d];
     }
     unsigned int *cnts = malloc(N * sizeof(*cnts));
     memset(cnts, 0, N * sizeof(*cnts));
@@ -172,14 +172,14 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   prof_start(pr);
     
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
+  psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp = &particles->p[p];
     find_cell_indices(p, pp);
     
     int N = 1;
     for (int d = 0; d < 3; d++) {
-      N *= patch->ldims[d] + 2 * psc.ibn[d];
+      N *= patch->ldims[d] + 2 * ppsc->ibn[d];
     }
     
     unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));

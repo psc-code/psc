@@ -51,48 +51,48 @@ psc_case_bubble_set_from_options(struct psc_case *_case)
 {
   struct psc_case_bubble *bubble = mrc_to_subobj(_case, struct psc_case_bubble);
 
-  psc.prm.qq = 1.;
-  psc.prm.mm = 1.;
-  psc.prm.tt = 1.;
-  psc.prm.cc = 1.;
-  psc.prm.eps0 = 1.;
+  ppsc->prm.qq = 1.;
+  ppsc->prm.mm = 1.;
+  ppsc->prm.tt = 1.;
+  ppsc->prm.cc = 1.;
+  ppsc->prm.eps0 = 1.;
 
-  psc.prm.nmax = 32000;
-  psc.prm.cpum = 5*24.0*60*60;
-  psc.prm.lw = 2.*M_PI;
-  psc.prm.i0 = 0.;
-  psc.prm.n0 = 1.;
-  psc.prm.e0 = 1.;
+  ppsc->prm.nmax = 32000;
+  ppsc->prm.cpum = 5*24.0*60*60;
+  ppsc->prm.lw = 2.*M_PI;
+  ppsc->prm.i0 = 0.;
+  ppsc->prm.n0 = 1.;
+  ppsc->prm.e0 = 1.;
 
-  psc.prm.nicell = 50;
+  ppsc->prm.nicell = 50;
 
-  psc.domain.length[0] = 3. * bubble->LLn;
-  psc.domain.length[1] = 10. * bubble->LLn; // no y dependence 
-  psc.domain.length[2] = 2. * bubble->LLn;
+  ppsc->domain.length[0] = 3. * bubble->LLn;
+  ppsc->domain.length[1] = 10. * bubble->LLn; // no y dependence 
+  ppsc->domain.length[2] = 2. * bubble->LLn;
 
-  psc.domain.corner[0] = -1.5 * bubble->LLn;
-  psc.domain.corner[1] = -5. * bubble->LLn;
-  psc.domain.corner[2] = -1. * bubble->LLn;
+  ppsc->domain.corner[0] = -1.5 * bubble->LLn;
+  ppsc->domain.corner[1] = -5. * bubble->LLn;
+  ppsc->domain.corner[2] = -1. * bubble->LLn;
 
-  psc.domain.gdims[0] = 2400;
-  psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 1600;
+  ppsc->domain.gdims[0] = 2400;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 1600;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
 
   struct psc_bnd_fields *bnd_fields = 
-    psc_push_fields_get_bnd_fields(psc.push_fields);
+    psc_push_fields_get_bnd_fields(ppsc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
 
-  psc_sort_set_type(psc.sort, "countsort2");
+  psc_sort_set_type(ppsc->sort, "countsort2");
 }
 
 static void

@@ -28,10 +28,10 @@ hdf5_open(struct psc_output_fields_c *out, struct psc_fields_list *list,
   hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
   hdf5->group = H5Gcreate(hdf5->file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5LTset_attribute_int(hdf5->group, ".", "timestep", &psc.timestep, 1);
-  H5LTset_attribute_double(hdf5->group, ".", "dt", &psc.dt, 1);
-  H5LTset_attribute_double(hdf5->group, ".", "dx", psc.dx, 3);
-  H5LTset_attribute_int(hdf5->group, ".", "gdims", psc.domain.gdims, 3);
+  H5LTset_attribute_int(hdf5->group, ".", "timestep", &ppsc->timestep, 1);
+  H5LTset_attribute_double(hdf5->group, ".", "dt", &ppsc->dt, 1);
+  H5LTset_attribute_double(hdf5->group, ".", "dx", ppsc->dx, 3);
+  H5LTset_attribute_int(hdf5->group, ".", "gdims", ppsc->domain.gdims, 3);
 
   hdf5->group_fld = H5Gcreate(hdf5->group, "fields",
 			      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -48,7 +48,7 @@ hdf5_close(struct hdf5_ctx *hdf5)
 static void
 hdf5_write_field(void *ctx, fields_base_t *fld)
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   struct hdf5_ctx *hdf5 = ctx;
 
   hid_t mem_type;
@@ -67,15 +67,15 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
   }
   hid_t mem_space = H5Screate_simple(3, mem_dims, NULL);
   
-  if (fld->im[0] == patch->ldims[0] + 2 * psc.ibn[0] &&
-      fld->im[1] == patch->ldims[1] + 2 * psc.ibn[1] &&
-      fld->im[2] == patch->ldims[2] + 2 * psc.ibn[2]) {
+  if (fld->im[0] == patch->ldims[0] + 2 * ppsc->ibn[0] &&
+      fld->im[1] == patch->ldims[1] + 2 * ppsc->ibn[1] &&
+      fld->im[2] == patch->ldims[2] + 2 * ppsc->ibn[2]) {
     // we're writing the local field, let's drop the ghost points
     hsize_t start[3], count[3];
     for (int d = 0; d < 3; d++) {
       // reverse dimensions because of Fortran order
       file_dims[d] = patch->ldims[2-d];
-      start[d] = psc.ibn[2-d];
+      start[d] = ppsc->ibn[2-d];
       count[d] = patch->ldims[2-d];
     }
     H5Sselect_hyperslab(mem_space, H5S_SELECT_SET, start, NULL, count, NULL);
@@ -114,7 +114,7 @@ psc_output_format_hdf5_write_fields(struct psc_output_format *format,
   struct hdf5_ctx hdf5;
   if (rank == 0) {
     char filename[strlen(out->data_dir) + 30];
-    sprintf(filename, "%s/%s_%07d.h5", out->data_dir, pfx, psc.timestep);
+    sprintf(filename, "%s/%s_%07d.h5", out->data_dir, pfx, ppsc->timestep);
     hdf5_open(out, list, filename, &hdf5);
   }
   write_fields_combine(list, hdf5_write_field, &hdf5);
@@ -139,39 +139,39 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 			      const char *pfx)
 {
   char fname[strlen(out->data_dir) + strlen(pfx) + 20];
-  sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, psc.timestep);
+  sprintf(fname, "%s/%s_%07d.xdmf", out->data_dir, pfx, ppsc->timestep);
   FILE *f = fopen(fname, "w");
   int np[3];
-  mrc_domain_get_param_int(psc.mrc_domain, "npx", &np[0]);
-  mrc_domain_get_param_int(psc.mrc_domain, "npy", &np[1]);
-  mrc_domain_get_param_int(psc.mrc_domain, "npz", &np[2]);
+  mrc_domain_get_param_int(ppsc->mrc_domain, "npx", &np[0]);
+  mrc_domain_get_param_int(ppsc->mrc_domain, "npy", &np[1]);
+  mrc_domain_get_param_int(ppsc->mrc_domain, "npz", &np[2]);
 
   fields_base_t *fld = &list->flds[0]->f[0];
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
   fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
   fprintf(f, "<Domain>\n");
   fprintf(f, "<Grid GridType='Collection' CollectionType='Spatial'>\n");
-  fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", psc.timestep * psc.dt);
+  fprintf(f, "   <Time Type=\"Single\" Value=\"%g\" />\n", ppsc->timestep * ppsc->dt);
   int im[3];
   for (int d = 0; d < 3; d++) {
-    im[d] = psc.domain.gdims[d] / np[d];
+    im[d] = ppsc->domain.gdims[d] / np[d];
   }
   for (int kz = 0; kz < np[2]; kz++) {
     for (int ky = 0; ky < np[1]; ky++) {
       for (int kx = 0; kx < np[0]; kx++) {
 	fprintf(f, "   <Grid Name=\"mesh-%d-%d-%d-%d\" GridType=\"Uniform\">\n",
-		kx, ky, kz, psc.timestep);
+		kx, ky, kz, ppsc->timestep);
 	fprintf(f, "     <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"%d %d %d\"/>\n",
 		im[2] + 1, im[1] + 1, im[0] + 1);
 	fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
 	fprintf(f, "     <DataStructure Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
 	fprintf(f, "        %g %g %g\n",
-		(im[2] * kz) * psc.dx[2],
-		(im[1] * ky) * psc.dx[1],
-		(im[0] * kx) * psc.dx[0]);
+		(im[2] * kz) * ppsc->dx[2],
+		(im[1] * ky) * ppsc->dx[1],
+		(im[0] * kx) * ppsc->dx[0]);
 	fprintf(f, "     </DataStructure>\n");
 	fprintf(f, "     <DataStructure Name=\"Spacing\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-	fprintf(f, "        %g %g %g\n", psc.dx[2], psc.dx[1], psc.dx[0]);
+	fprintf(f, "        %g %g %g\n", ppsc->dx[2], ppsc->dx[1], ppsc->dx[0]);
 	fprintf(f, "     </DataStructure>\n");
 	fprintf(f, "     </Geometry>\n");
 	fprintf(f, "\n");
@@ -183,7 +183,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 		  im[2], im[1], im[0]);
 	  int proc = (kz * np[1] + ky) * np[0] + kx;
 	  fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
-		  pfx, proc, psc.timestep, fld->name[0]);
+		  pfx, proc, ppsc->timestep, fld->name[0]);
 	  fprintf(f, "       </DataItem>\n");
 	  fprintf(f, "     </Attribute>\n");
 	}
@@ -222,7 +222,7 @@ xdmf_write_temporal_collection(struct psc_output_fields_c *out, const char *pfx)
     first = out->tfield_first;
     step = out->tfield_step;
   }
-  for (int i = first; i <= psc.timestep; i += step) {
+  for (int i = first; i <= ppsc->timestep; i += step) {
     fprintf(f, "  <xi:include href='%s_%07d.xdmf' xpointer='xpointer(//Xdmf/Domain/Grid)'/>\n", pfx, i);
   }
   fprintf(f, "  </Grid>\n");
@@ -241,7 +241,7 @@ psc_output_format_xdmf_write_fields(struct psc_output_format *format,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   char filename[strlen(out->data_dir) + 30];
-  sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, psc.timestep);
+  sprintf(filename, "%s/%s_%06d_%07d.h5", out->data_dir, pfx, rank, ppsc->timestep);
   struct hdf5_ctx hdf5;
   hdf5_open(out, list, filename, &hdf5);
 
@@ -282,16 +282,16 @@ hdf5_dump_field(int m, const char *fname)
   sprintf(filename, "%s-p%d.h5", fname, rank);
   mpi_printf(MPI_COMM_WORLD, "hdf5_dump_field: '%s'\n", filename);
   
-  hsize_t dims[3] = { psc.ihg[2] - psc.ilg[2],
-		      psc.ihg[1] - psc.ilg[1],
-		      psc.ihg[0] - psc.ilg[0] };
+  hsize_t dims[3] = { ppsc->ihg[2] - ppsc->ilg[2],
+		      ppsc->ihg[1] - ppsc->ilg[1],
+		      ppsc->ihg[0] - ppsc->ilg[0] };
 
   hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
   hid_t group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   assert(sizeof(fields_base_real_t) == sizeof(double));
   H5LTmake_dataset_double(group_fld, fldname[m], 3, dims,
-			  &F3_BASE(&psc.pf, m, -psc.ibn[0], -psc.ibn[1], -psc.ibn[2]));
+			  &F3_BASE(&ppsc->pf, m, -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]));
   H5Gclose(group_fld);
   H5Gclose(group);
   H5Fclose(file);

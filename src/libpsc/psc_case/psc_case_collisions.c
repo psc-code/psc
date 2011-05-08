@@ -47,40 +47,40 @@ static struct param psc_case_collisions_descr[] = {
 static void
 psc_case_collisions_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 10000;
-  psc.prm.cpum = 25000;
-  psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 1.0e20;
-  psc.prm.n0 = 0.0e35;
+  ppsc->prm.nmax = 10000;
+  ppsc->prm.cpum = 25000;
+  ppsc->prm.lw = 1. * 1e-6;
+  ppsc->prm.i0 = 1.0e20;
+  ppsc->prm.n0 = 0.0e35;
 
-  psc.prm.nicell = 10000;
+  ppsc->prm.nicell = 10000;
 
-  psc.domain.length[0] = 0.02 * 1e-6;
-  psc.domain.length[1] = 0.02 * 1e-6;
-  psc.domain.length[2] = 0.02  * 1e-6;
+  ppsc->domain.length[0] = 0.02 * 1e-6;
+  ppsc->domain.length[1] = 0.02 * 1e-6;
+  ppsc->domain.length[2] = 0.02  * 1e-6;
 
-  psc.domain.gdims[0] = 1;
-  psc.domain.gdims[1] = 20;
-  psc.domain.gdims[2] = 20;
+  ppsc->domain.gdims[0] = 1;
+  ppsc->domain.gdims[1] = 20;
+  ppsc->domain.gdims[2] = 20;
 
   //  BND_FLD_OPEN
   //  BND_FLD_PERIODIC
   //  BND_FLD_UPML
   //  BND_FLD_TIME
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
 
   //  BND_PART_REFLECTING
   //  BND_PART_PERIODIC
 
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
 }
 
 static void
@@ -91,7 +91,7 @@ psc_case_collisions_init_npt(struct psc_case *_case, int kind, double x[3],
 
   real Te = collisions->Te, Ti = collisions->Ti;
 
-  real ld = psc.coeff.ld;
+  real ld = ppsc->coeff.ld;
 
   real x0 = collisions->x0 / ld;
   real y0 = collisions->y0 / ld;

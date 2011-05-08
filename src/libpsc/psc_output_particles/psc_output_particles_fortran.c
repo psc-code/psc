@@ -11,7 +11,7 @@ static void
 psc_output_particles_fortran_run(struct psc_output_particles *out,
 				 mparticles_base_t *particles_base)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_out_part", 1., 0, 0);

@@ -42,7 +42,7 @@ microsphere_dens(struct psc_case *_case, double x[3])
 
   double xr[3];
   for (int d = 0; d < 3; d++) {
-    xr[d] = x[d] * psc.coeff.ld - msphere->xc[d];
+    xr[d] = x[d] * ppsc->coeff.ld - msphere->xc[d];
   };
 
   double r = sqrt(sqr(xr[0]) + sqr(xr[1]) + sqr(xr[2]));
@@ -55,32 +55,32 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
 {
   struct psc_case_microsphere *msphere = mrc_to_subobj(_case, struct psc_case_microsphere);
 
-  psc.prm.nicell = 10;
-  psc.prm.nmax = 201;
+  ppsc->prm.nicell = 10;
+  ppsc->prm.nmax = 201;
 
-  psc.domain.length[0] = 10 * 1e-6;
-  psc.domain.length[1] = 10 * 1e-6;
-  psc.domain.length[2] = 10 * 1e-6;
+  ppsc->domain.length[0] = 10 * 1e-6;
+  ppsc->domain.length[1] = 10 * 1e-6;
+  ppsc->domain.length[2] = 10 * 1e-6;
 
-  psc.domain.gdims[0] = 128;
-  psc.domain.gdims[1] = 128;
-  psc.domain.gdims[2] = 128;
+  ppsc->domain.gdims[0] = 128;
+  ppsc->domain.gdims[1] = 128;
+  ppsc->domain.gdims[2] = 128;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_OPEN;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC; // FIXME
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC; // FIXME
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
 
-  double *length = psc.domain.length;
+  double *length = ppsc->domain.length;
   double w_normal = msphere->width_normal;
   double w_par    = msphere->width_parallel;
 
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
 
   struct psc_pulse *pulse_x1 = psc_bnd_fields_get_pulse_x1(bnd_fields);
   psc_pulse_set_type(pulse_x1, "gauss");

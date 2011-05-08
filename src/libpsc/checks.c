@@ -5,8 +5,8 @@ void
 psc_check_particles(mparticles_base_t *particles)
 {
   int fail_cnt = 0;
-  foreach_patch(p) {
-    struct psc_patch *patch = &psc.patch[p];
+  psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp = &particles->p[p];
     f_real xb[3], xe[3];
     
@@ -14,8 +14,8 @@ psc_check_particles(mparticles_base_t *particles)
     // These will need revisiting when it comes to non-periodic domains.
     
     for (int d = 0; d < 3; d++) {
-      xb[d] = (-.5) * psc.dx[d] + patch->xb[d];
-      xe[d] = (patch->ldims[d]-.5) * psc.dx[d] + patch->xb[d];
+      xb[d] = (-.5) * ppsc->dx[d] + patch->xb[d];
+      xe[d] = (patch->ldims[d]-.5) * ppsc->dx[d] + patch->xb[d];
     }
     
     for (int i = 0; i < pp->n_part; i++) {

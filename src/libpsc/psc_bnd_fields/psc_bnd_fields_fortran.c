@@ -20,8 +20,8 @@ psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
     pr = prof_register("fort_fill_H_b", 1., 0, 0);
   }
   prof_start(pr);
-  psc_foreach_patch(&psc, p) {
-    PIC_fill_ghosts_h_b(&psc, p, &flds.f[p]);
+  psc_foreach_patch(ppsc, p) {
+    PIC_fill_ghosts_h_b(ppsc, p, &flds.f[p]);
   }
   prof_stop(pr);
   

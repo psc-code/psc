@@ -33,31 +33,31 @@ static struct param psc_case_singlepart_descr[] = {
 static void
 psc_case_singlepart_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 1000;
-  psc.prm.cpum = 20000;
-  psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 2.0e22;
-  psc.prm.n0 = 1.0e25;
+  ppsc->prm.nmax = 1000;
+  ppsc->prm.cpum = 20000;
+  ppsc->prm.lw = 1. * 1e-6;
+  ppsc->prm.i0 = 2.0e22;
+  ppsc->prm.n0 = 1.0e25;
 
-  psc.prm.nicell = 1;
+  ppsc->prm.nicell = 1;
 
-  psc.domain.length[0] = 20. * 1e-6;
-  psc.domain.length[1] = 40. * 1e-6;
-  psc.domain.length[2] = 60. * 1e-6;
+  ppsc->domain.length[0] = 20. * 1e-6;
+  ppsc->domain.length[1] = 40. * 1e-6;
+  ppsc->domain.length[2] = 60. * 1e-6;
 
-  psc.domain.gdims[0] = 1;
-  psc.domain.gdims[1] = 400;
-  psc.domain.gdims[2] = 600;
+  ppsc->domain.gdims[0] = 1;
+  ppsc->domain.gdims[1] = 400;
+  ppsc->domain.gdims[2] = 600;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_UPML;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_UPML;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_UPML;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_UPML;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_UPML;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_UPML;
-  psc.domain.bnd_part[0] = BND_PART_REFLECTING;
-  psc.domain.bnd_part[1] = BND_PART_REFLECTING;
-  psc.domain.bnd_part[2] = BND_PART_REFLECTING;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_UPML;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_UPML;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_UPML;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_UPML;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_UPML;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_UPML;
+  ppsc->domain.bnd_part[0] = BND_PART_REFLECTING;
+  ppsc->domain.bnd_part[1] = BND_PART_REFLECTING;
+  ppsc->domain.bnd_part[2] = BND_PART_REFLECTING;
 }
 
 static void
@@ -68,19 +68,19 @@ psc_case_singlepart_init_npt(struct psc_case *_case, int kind, double x[3],
 
   real Te = singlepart->Te, Ti = singlepart->Ti;
 
-  real ld = psc.coeff.ld;
+  real ld = ppsc->coeff.ld;
 
   real x0[3] = { singlepart->x0 / ld,
 		 singlepart->y0 / ld,
 		 singlepart->z0 / ld };
 
   real dens = 0.0;
-  if ((psc.domain.gdims[0] == 1 ||
-       (int) (x[0] / psc.dx[0] + .5) == (int) (x0[0] / psc.dx[0] + .5)) && 
-      (psc.domain.gdims[1] == 1 ||
-       (int) (x[1] / psc.dx[1] + .5) == (int) (x0[1] / psc.dx[1] + .5)) && 
-      (psc.domain.gdims[2] == 1 ||
-       (int) (x[2] / psc.dx[2] + .5) == (int) (x0[2] / psc.dx[2] + .5))) {
+  if ((ppsc->domain.gdims[0] == 1 ||
+       (int) (x[0] / ppsc->dx[0] + .5) == (int) (x0[0] / ppsc->dx[0] + .5)) && 
+      (ppsc->domain.gdims[1] == 1 ||
+       (int) (x[1] / ppsc->dx[1] + .5) == (int) (x0[1] / ppsc->dx[1] + .5)) && 
+      (ppsc->domain.gdims[2] == 1 ||
+       (int) (x[2] / ppsc->dx[2] + .5) == (int) (x0[2] / ppsc->dx[2] + .5))) {
     dens = 1.0;
   }
 

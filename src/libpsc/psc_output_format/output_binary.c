@@ -11,7 +11,7 @@
 static void
 binary_write_field(FILE *file, fields_base_t *fld)
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   int *ilo = patch->off, ihi[3] = { patch->off[0] + patch->ldims[0],
 				    patch->off[1] + patch->ldims[1],
 				    patch->off[2] + patch->ldims[2] };
@@ -21,8 +21,8 @@ binary_write_field(FILE *file, fields_base_t *fld)
   // convert to float, drop ghost points
   float *data = calloc(sz, sizeof(float));
   int i = 0;
-  foreach_patch(patch) {
-    foreach_3d(patch, ix, iy, iz, 0, 0) {
+  psc_foreach_patch(ppsc, patch) {
+    psc_foreach_3d(ppsc, patch, ix, iy, iz, 0, 0) {
       data[i++] = F3_BASE(fld,0, ix,iy,iz);
     } foreach_3d_end;
   }
@@ -38,7 +38,7 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
 				      struct psc_fields_list *list,
 				      const char *pfx)
 {
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
 		 patch->off[2] + patch->ldims[2] };
@@ -54,7 +54,7 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   char filename[strlen(out->data_dir) + 30];
-  sprintf(filename, "%s/%s_%06d_%07d.psc", out->data_dir, pfx, rank, psc.timestep);
+  sprintf(filename, "%s/%s_%06d_%07d.psc", out->data_dir, pfx, rank, ppsc->timestep);
 
   FILE *file = fopen(filename, "wb");
 
@@ -63,10 +63,10 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
   fwrite(&magic_big_little, sizeof(unsigned int), 1, file);
   fwrite(&output_version, sizeof(unsigned int), 1, file);
 
-  t_float = (float) psc.dx[0];  fwrite(&t_float, sizeof(float), 1, file);
-  t_float = (float) psc.dx[1];  fwrite(&t_float, sizeof(float), 1, file);
-  t_float = (float) psc.dx[2];  fwrite(&t_float, sizeof(float), 1, file);
-  t_float = (float) psc.dt;     fwrite(&t_float, sizeof(float), 1, file);
+  t_float = (float) ppsc->dx[0];  fwrite(&t_float, sizeof(float), 1, file);
+  t_float = (float) ppsc->dx[1];  fwrite(&t_float, sizeof(float), 1, file);
+  t_float = (float) ppsc->dx[2];  fwrite(&t_float, sizeof(float), 1, file);
+  t_float = (float) ppsc->dt;     fwrite(&t_float, sizeof(float), 1, file);
 
   // Indices on local proc
   fwrite(&patch->off[0], sizeof(patch->off[0]), 1, file);
@@ -79,11 +79,11 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
   // Globally saved indices (everything for now...)
   int glo[3] = {};
   fwrite(&glo[0], sizeof(glo[0]), 1, file);
-  fwrite(&psc.domain.gdims[0], sizeof(psc.domain.gdims[0]), 1, file);
+  fwrite(&ppsc->domain.gdims[0], sizeof(ppsc->domain.gdims[0]), 1, file);
   fwrite(&glo[1], sizeof(glo[1]), 1, file);
-  fwrite(&psc.domain.gdims[1], sizeof(psc.domain.gdims[1]), 1, file);
+  fwrite(&ppsc->domain.gdims[1], sizeof(ppsc->domain.gdims[1]), 1, file);
   fwrite(&glo[2], sizeof(glo[2]), 1, file);
-  fwrite(&psc.domain.gdims[2], sizeof(psc.domain.gdims[2]), 1, file);
+  fwrite(&ppsc->domain.gdims[2], sizeof(ppsc->domain.gdims[2]), 1, file);
 
   fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);
   for (int i = 0; i < list->nr_flds; i++) {

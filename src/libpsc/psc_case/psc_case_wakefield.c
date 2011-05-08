@@ -58,7 +58,7 @@ psc_case_wakefield_create(struct psc_case *_case)
     .amplitude_p = 1.,
   };
 #endif
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
 }
@@ -66,31 +66,31 @@ psc_case_wakefield_create(struct psc_case *_case)
 static void
 psc_case_wakefield_set_from_options(struct psc_case *_case)
 {
-  psc.prm.nmax = 1000;
-  psc.prm.cpum = 20000;
-  psc.prm.lw = 1. * 1e-6;
-  psc.prm.i0 = 2.0e22;
-  psc.prm.n0 = 1.0e25;
+  ppsc->prm.nmax = 1000;
+  ppsc->prm.cpum = 20000;
+  ppsc->prm.lw = 1. * 1e-6;
+  ppsc->prm.i0 = 2.0e22;
+  ppsc->prm.n0 = 1.0e25;
 
-  psc.prm.nicell = 1;
+  ppsc->prm.nicell = 1;
 
-  psc.domain.length[0] = 20. * 1e-6;
-  psc.domain.length[1] = 40. * 1e-6;
-  psc.domain.length[2] = 60. * 1e-6;
+  ppsc->domain.length[0] = 20. * 1e-6;
+  ppsc->domain.length[1] = 40. * 1e-6;
+  ppsc->domain.length[2] = 60. * 1e-6;
 
-  psc.domain.gdims[0] = 200;
-  psc.domain.gdims[1] = 400;
-  psc.domain.gdims[2] = 600;
+  ppsc->domain.gdims[0] = 200;
+  ppsc->domain.gdims[1] = 400;
+  ppsc->domain.gdims[2] = 600;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_OPEN;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_OPEN;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_REFLECTING;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_REFLECTING;
 }
 
 static void
@@ -101,7 +101,7 @@ psc_case_wakefield_init_npt(struct psc_case *_case, int kind, double x[3],
 
   real Te = wakefield->Te, Ti = wakefield->Ti;
 
-  real ld = psc.coeff.ld;
+  real ld = ppsc->coeff.ld;
 
   real x0 = wakefield->x0 / ld;
   real y0 = wakefield->y0 / ld;

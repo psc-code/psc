@@ -8,13 +8,13 @@
 static void
 do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
 {
-  creal dt = psc.dt;
+  creal dt = ppsc->dt;
   creal yl = .5f * dt;
   creal zl = .5f * dt;
-  creal dqs = .5f * psc.coeff.eta * dt;
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
-  creal dzi = 1.f / psc.dx[2];
+  creal dqs = .5f * ppsc->coeff.eta * dt;
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
+  creal dzi = 1.f / ppsc->dx[2];
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -172,7 +172,7 @@ psc_push_particles_generic_c_push_yz_b(struct psc_push_particles *push,
     pr = prof_register("genc_part_yz_b", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_genc_push_part_yz_b(&flds.f[p], &particles.p[p]);
   }
   prof_stop(pr);

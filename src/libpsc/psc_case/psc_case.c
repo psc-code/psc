@@ -13,7 +13,7 @@
 static void
 psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_base_copy(&flds->f[p], DX, EX);
     fields_base_copy(&flds->f[p], DY, EY);
     fields_base_copy(&flds->f[p], DZ, EZ);

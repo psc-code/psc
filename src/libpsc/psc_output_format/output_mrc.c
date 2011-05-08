@@ -24,7 +24,7 @@ static struct mrc_io *ios[NR_IO_TYPES];
 static void
 copy_to_mrc_fld(struct mrc_m3 *m3, mfields_base_t *flds)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_base_t *pf = &flds->f[p];
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
@@ -78,7 +78,7 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
     ios[io_type] = io;
   }
 
-  mrc_io_open(io, "w", psc.timestep, psc.timestep * psc.dt);
+  mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_base_t *flds = list->flds[m];
     fields_base_t *fld = &flds->f[0];
@@ -86,7 +86,7 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
     // FIXME, 3 doesn't work -- how about 0?
-    struct mrc_m3 *mrc_fld = mrc_domain_m3_create(psc.mrc_domain);
+    struct mrc_m3 *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
     mrc_m3_set_name(mrc_fld, fld->name[0]);
     mrc_m3_set_param_int(mrc_fld, "sw", 2);
     mrc_m3_setup(mrc_fld);

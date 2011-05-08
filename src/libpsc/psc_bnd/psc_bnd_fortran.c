@@ -11,7 +11,7 @@ static void
 psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
 			   int mb, int me)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
 
   static int pr;
   if (!pr) {
@@ -23,13 +23,13 @@ psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   fields_fortran_get(&flds, mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
-    if (psc.domain.gdims[0] > 1) {
+    if (ppsc->domain.gdims[0] > 1) {
       PIC_fax(&flds.f[0], m);
     }
-    if (psc.domain.gdims[1] > 1) {
+    if (ppsc->domain.gdims[1] > 1) {
       PIC_fay(&flds.f[0], m);
     }
-    if (psc.domain.gdims[2] > 1) {
+    if (ppsc->domain.gdims[2] > 1) {
       PIC_faz(&flds.f[0], m);
     }
   }
@@ -46,7 +46,7 @@ static void
 psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
 			    int mb, int me)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
 
   static int pr;
   if (!pr) {
@@ -58,13 +58,13 @@ psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   fields_fortran_get(&flds, mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
-    if (psc.domain.gdims[0] > 1) {
+    if (ppsc->domain.gdims[0] > 1) {
       PIC_fex(&flds.f[0], m);
     }
-    if (psc.domain.gdims[1] > 1) {
+    if (ppsc->domain.gdims[1] > 1) {
       PIC_fey(&flds.f[0], m);
     }
-    if (psc.domain.gdims[2] > 1) {
+    if (ppsc->domain.gdims[2] > 1) {
       PIC_fez(&flds.f[0], m);
     }
   }
@@ -81,7 +81,7 @@ static void
 psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
 				   mparticles_base_t *particles_base)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
 
   static int pr;
   if (!pr) {
@@ -91,16 +91,16 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
 
   mparticles_fortran_t particles;
   particles_fortran_get(&particles, particles_base);
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
   particles_fortran_t *pp = &particles.p[0];
 
-  if (psc.domain.gdims[0] > 1) {
+  if (ppsc->domain.gdims[0] > 1) {
     PIC_pex(pp);
   }
-  if (psc.domain.gdims[1] > 1) {
+  if (ppsc->domain.gdims[1] > 1) {
     PIC_pey(pp);
   }
-  if (psc.domain.gdims[2] > 1) {
+  if (ppsc->domain.gdims[2] > 1) {
     PIC_pez(pp);
   }
 

@@ -52,39 +52,39 @@ psc_case_harris_set_from_options(struct psc_case *_case)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
 
-  psc.prm.qq = 1.;
-  psc.prm.mm = 1.;
-  psc.prm.tt = 1.;
-  psc.prm.cc = 1.;
-  psc.prm.eps0 = 1.;
+  ppsc->prm.qq = 1.;
+  ppsc->prm.mm = 1.;
+  ppsc->prm.tt = 1.;
+  ppsc->prm.cc = 1.;
+  ppsc->prm.eps0 = 1.;
 
-  psc.prm.nmax = 16000;
-  psc.prm.cpum = 5*24.0*60*60;
-  psc.prm.lw = 2.*M_PI;
-  psc.prm.i0 = 0.;
-  psc.prm.n0 = 1.;
-  psc.prm.e0 = 1.;
+  ppsc->prm.nmax = 16000;
+  ppsc->prm.cpum = 5*24.0*60*60;
+  ppsc->prm.lw = 2.*M_PI;
+  ppsc->prm.i0 = 0.;
+  ppsc->prm.n0 = 1.;
+  ppsc->prm.e0 = 1.;
 
-  psc.prm.nicell = 50;
+  ppsc->prm.nicell = 50;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
-  psc.domain.length[0] = harris->lx * d_i;
-  psc.domain.length[1] = 1.; // no y dependence 
-  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
+  ppsc->domain.length[0] = harris->lx * d_i;
+  ppsc->domain.length[1] = 1.; // no y dependence 
+  ppsc->domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
-  psc.domain.gdims[0] = 640;
-  psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 640;
+  ppsc->domain.gdims[0] = 640;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 640;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
 }
 
 static void
@@ -182,11 +182,11 @@ psc_case_test_xz_set_from_options(struct psc_case *_case)
 {
   psc_case_harris_set_from_options(_case);
   
-  psc.prm.nicell = 100;
+  ppsc->prm.nicell = 100;
 
-  psc.domain.gdims[0] = 64;
-  psc.domain.gdims[1] = 1;
-  psc.domain.gdims[2] = 64;
+  ppsc->domain.gdims[0] = 64;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 64;
   
 }
 
@@ -211,16 +211,16 @@ psc_case_test_yz_set_from_options(struct psc_case *_case)
 
   psc_case_harris_set_from_options(_case);
   
-  psc.prm.nicell = 100;
+  ppsc->prm.nicell = 100;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
-  psc.domain.length[0] = 10000000;
-  psc.domain.length[1] = harris->lx * d_i;
-  psc.domain.length[2] = 2. * harris->lz * d_i; // double tearing
+  ppsc->domain.length[0] = 10000000;
+  ppsc->domain.length[1] = harris->lx * d_i;
+  ppsc->domain.length[2] = 2. * harris->lz * d_i; // double tearing
 
-  psc.domain.gdims[0] = 1;
-  psc.domain.gdims[1] = 64;
-  psc.domain.gdims[2] = 64;
+  ppsc->domain.gdims[0] = 1;
+  ppsc->domain.gdims[1] = 64;
+  ppsc->domain.gdims[2] = 64;
 }
 
 static void
@@ -321,18 +321,18 @@ psc_case_test_xy_set_from_options(struct psc_case *_case)
 
   psc_case_harris_set_from_options(_case);
 
-  psc.prm.nicell = 200;
+  ppsc->prm.nicell = 200;
 
   real d_i = sqrt(harris->MMi); // in units of d_e
-  psc.domain.length[0] = 2. * harris->lz * d_i; // double tearing
-  psc.domain.length[1] = harris->lx * d_i;
-  psc.domain.length[2] = 1.0;
+  ppsc->domain.length[0] = 2. * harris->lz * d_i; // double tearing
+  ppsc->domain.length[1] = harris->lx * d_i;
+  ppsc->domain.length[2] = 1.0;
 
   // I hacked this in to test the cell pusher, which is why 
   // the domain is sort of funky shaped. 
-  psc.domain.gdims[0] = 26;
-  psc.domain.gdims[1] = 26;
-  psc.domain.gdims[2] = 1;
+  ppsc->domain.gdims[0] = 26;
+  ppsc->domain.gdims[1] = 26;
+  ppsc->domain.gdims[2] = 1;
   
 }
 

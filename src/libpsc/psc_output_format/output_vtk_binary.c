@@ -20,18 +20,18 @@ vtk_open_file_binary(const char *pfx, const char *dataset_type, int extra,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);	
 	
   char filename[strlen(out->data_dir) + 30];
-  sprintf(filename, "%s/%07d_%s_%07d.vtk", out->data_dir, rank, pfx, psc.timestep);
+  sprintf(filename, "%s/%07d_%s_%07d.vtk", out->data_dir, rank, pfx, ppsc->timestep);
 
   FILE *file = fopen(filename, "w");
   fprintf(file, "# vtk DataFile Version 3.0\n");
-  fprintf(file, "PSC fields timestep=%d dt=%g\n", psc.timestep, psc.dt);
+  fprintf(file, "PSC fields timestep=%d dt=%g\n", ppsc->timestep, ppsc->dt);
   fprintf(file, "ASCII\n");
 
   fprintf(file, "DATASET %s\n", dataset_type);
   /*fprintf(file, "DIMENSIONS %d %d %d\n",
-	  psc.ihi[0] - psc.ilo[0] + extra,
-	  psc.ihi[1] - psc.ilo[1] + extra,
-	  psc.ihi[2] - psc.ilo[2] + extra);*/
+	  ppsc->ihi[0] - ppsc->ilo[0] + extra,
+	  ppsc->ihi[1] - ppsc->ilo[1] + extra,
+	  ppsc->ihi[2] - ppsc->ilo[2] + extra);*/
 	
   fprintf(file, "DIMENSIONS %d %d %d\n",
 	  out->rx[0] - out->rn[0] + extra,
@@ -50,9 +50,9 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 {
   for (int d = 0; d < 3; d++) {
     fprintf(file, "%c_COORDINATES %d float", 'X' + d,
-	    psc.domain.ihi[d] + extra);
-    for (int i = 0; i < psc.domain.ihi[d] + extra; i++) {
-      fprintf(file, " %g", (i + offset) * psc.dx[d]);
+	    ppsc->domain.ihi[d] + extra);
+    for (int i = 0; i < ppsc->domain.ihi[d] + extra; i++) {
+      fprintf(file, " %g", (i + offset) * ppsc->dx[d]);
     }
     fprintf(file, "\n");
   }
@@ -68,11 +68,11 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields
 {
   static bool first_time = true;
   if (first_time) {
-    struct psc_patch *patch = &psc.patch[0];
+    struct psc_patch *patch = &ppsc->patch[0];
     // set the output ranges
     for(int i=0;i<3;++i) {
       if(out->rn[i]<0) out->rn[i]=0;
-      if(out->rx[i]>psc.domain.gdims[i]) out->rx[i]=psc.domain.gdims[i];
+      if(out->rx[i]>ppsc->domain.gdims[i]) out->rx[i]=ppsc->domain.gdims[i];
       
       if(out->rx[i]>patch->off[i] + patch->ldims[i]) out->rx[i]=patch->off[i] + patch->ldims[i];
       if(out->rn[i]<patch->off[i]) out->rn[i]=patch->off[i];
@@ -135,11 +135,11 @@ psc_output_format_vtk_binary_write_fields(struct psc_output_format *format,
 
   FILE *file;
     vtk_open_file_binary(pfx, "STRUCTURED_POINTS", 0, out, &file);
-    fprintf(file, "SPACING %g %g %g\n", psc.dx[0], psc.dx[1], psc.dx[2]);
+    fprintf(file, "SPACING %g %g %g\n", ppsc->dx[0], ppsc->dx[1], ppsc->dx[2]);
     fprintf(file, "ORIGIN %g %g %g\n",
-	    psc.dx[0] * out->rn[0],
-	    psc.dx[1] * out->rn[1],
-	    psc.dx[2] * out->rn[2]);
+	    ppsc->dx[0] * out->rn[0],
+	    ppsc->dx[1] * out->rn[1],
+	    ppsc->dx[2] * out->rn[2]);
     fprintf(file, "\nPOINT_DATA %d\n",
 	    (-out->rn[0] + out->rx[0]) * 
 	    (-out->rn[1] + out->rx[1]) *

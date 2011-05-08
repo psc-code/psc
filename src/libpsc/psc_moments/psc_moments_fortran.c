@@ -13,7 +13,7 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
 				   mparticles_base_t *particles_base,
 				   mfields_base_t *res)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
   static int pr;
   if (!pr) {
     pr = prof_register("fort_densities", 1., 0, 0);
@@ -27,7 +27,7 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
 
   CALC_densities(&particles.p[0], &flds_fortran.f[0]);
 
-  particles_fortran_put(&particles, &psc.particles);
+  particles_fortran_put(&particles, &ppsc->particles);
   fields_fortran_put(&flds_fortran, NE, NE + 3, res);
 
   prof_stop(pr);

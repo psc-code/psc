@@ -142,10 +142,10 @@ psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 void
 psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *mflds)
 {
-  struct psc *_psc = &psc;
+  struct psc *_psc = ppsc;
   struct psc_pulse *pulse;
 
-  psc_foreach_patch(&psc, p) {
+  psc_foreach_patch(ppsc, p) {
     struct psc *psc = _psc; // FIXME, ugly hack, don't ask...
     fields_base_t *pf = &mflds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {

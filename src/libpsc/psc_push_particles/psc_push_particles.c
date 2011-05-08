@@ -9,7 +9,7 @@ psc_push_particles_run(struct psc_push_particles *push,
 		       mparticles_base_t *particles, mfields_base_t *flds)
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  int *im = psc.domain.gdims;
+  int *im = ppsc->domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
     assert(ops->push_xyz);
     ops->push_xyz(push, particles, flds);

@@ -9,7 +9,7 @@
 void
 psc_sort_run(struct psc_sort *sort, mparticles_base_t *particles)
 {
-  if (psc.timestep % sort->every != 0)
+  if (ppsc->timestep % sort->every != 0)
     return;
 
   struct psc_sort_ops *ops = psc_sort_ops(sort);

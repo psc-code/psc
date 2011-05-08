@@ -15,8 +15,8 @@ psc_bnd_fields_none_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
   // FIXME, should check that no pulses are set, either,
   // or better, move the pulses -> fortran subclass
   for (int d = 0; d < 3; d++) {
-    assert(psc.domain.bnd_fld_lo[d] == BND_FLD_PERIODIC);
-    assert(psc.domain.bnd_fld_hi[d] == BND_FLD_PERIODIC);
+    assert(ppsc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC);
+    assert(ppsc->domain.bnd_fld_hi[d] == BND_FLD_PERIODIC);
   }
 }
 

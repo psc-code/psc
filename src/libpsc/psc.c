@@ -22,7 +22,8 @@
 #include <limits.h>
 #include <assert.h>
 
-struct psc psc;
+struct psc __psc;
+struct psc *ppsc = &__psc;
 
 // ----------------------------------------------------------------------
 // psc_create
@@ -30,27 +31,27 @@ struct psc psc;
 struct psc *
 psc_create()
 {
-  memset(&psc, 0, sizeof(psc));
+  memset(ppsc, 0, sizeof(*ppsc));
 
   MPI_Comm comm = MPI_COMM_WORLD;
-  psc.push_particles = psc_push_particles_create(comm);
-  psc.push_fields = psc_push_fields_create(comm);
-  psc.bnd = psc_bnd_create(comm);
-  psc.collision = psc_collision_create(comm);
-  psc.randomize = psc_randomize_create(comm);
-  psc.sort = psc_sort_create(comm);
-  psc.output_fields = psc_output_fields_create(comm);
-  psc.output_particles = psc_output_particles_create(comm);
-  psc.moments = psc_moments_create(comm);
-  psc.event_generator = psc_event_generator_create(comm);
-  psc.balance = psc_balance_create(comm);
+  ppsc->push_particles = psc_push_particles_create(comm);
+  ppsc->push_fields = psc_push_fields_create(comm);
+  ppsc->bnd = psc_bnd_create(comm);
+  ppsc->collision = psc_collision_create(comm);
+  ppsc->randomize = psc_randomize_create(comm);
+  ppsc->sort = psc_sort_create(comm);
+  ppsc->output_fields = psc_output_fields_create(comm);
+  ppsc->output_particles = psc_output_particles_create(comm);
+  ppsc->moments = psc_moments_create(comm);
+  ppsc->event_generator = psc_event_generator_create(comm);
+  ppsc->balance = psc_balance_create(comm);
 
-  psc.time_start = MPI_Wtime();
+  ppsc->time_start = MPI_Wtime();
 
-  psc_set_default_domain(&psc);
-  psc_set_default_psc(&psc);
+  psc_set_default_domain(ppsc);
+  psc_set_default_psc(ppsc);
 
-  return &psc;
+  return ppsc;
 }
 
 // ----------------------------------------------------------------------

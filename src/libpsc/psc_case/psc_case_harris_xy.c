@@ -72,20 +72,20 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
   real m_e = 1.;
   real m_i = harris->mass_ratio;
 
-  psc.prm.qq = e;
-  psc.prm.mm = m_e;
-  psc.prm.tt = 1.;
-  psc.prm.cc = c;
-  psc.prm.eps0 = eps0;
+  ppsc->prm.qq = e;
+  ppsc->prm.mm = m_e;
+  ppsc->prm.tt = 1.;
+  ppsc->prm.cc = c;
+  ppsc->prm.eps0 = eps0;
 
-  psc.prm.nmax = 16000;
-  psc.prm.cpum = 5*24.0*60*60;
-  psc.prm.lw = 2.*M_PI;
-  psc.prm.i0 = 0.;
-  psc.prm.n0 = 1.;
-  psc.prm.e0 = 1.;
+  ppsc->prm.nmax = 16000;
+  ppsc->prm.cpum = 5*24.0*60*60;
+  ppsc->prm.lw = 2.*M_PI;
+  ppsc->prm.i0 = 0.;
+  ppsc->prm.n0 = 1.;
+  ppsc->prm.e0 = 1.;
 
-  psc.prm.nicell = 50;
+  ppsc->prm.nicell = 50;
 
   harris->_me = m_e;
   harris->_mi = m_i;
@@ -96,7 +96,7 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
   real d_e = sqrt(m_e);
   real d_i = sqrt(m_i);
   for (int d = 0; d < 3; d++) {
-    psc.domain.length[d] = harris->xl[d] * d_i;
+    ppsc->domain.length[d] = harris->xl[d] * d_i;
   }
   harris->_lambda = harris->lambda * d_i;
 
@@ -111,7 +111,7 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
   mpi_printf(MPI_COMM_WORLD, "::: B0     = %g\n", harris->_B0);
   mpi_printf(MPI_COMM_WORLD, "::: Bguide = %g\n", harris->_Bguide);
   mpi_printf(MPI_COMM_WORLD, "::: domain = %g d_e x %g d_e x %g d_e\n",
-	     psc.domain.length[0], psc.domain.length[1], psc.domain.length[2]);
+	     ppsc->domain.length[0], ppsc->domain.length[1], ppsc->domain.length[2]);
   mpi_printf(MPI_COMM_WORLD, "::: v_A    = %g c\n", v_A);
   mpi_printf(MPI_COMM_WORLD, "::: lambda = %g d_e\n", harris->_lambda);
   mpi_printf(MPI_COMM_WORLD, "::: om_pe  = %g\n", sqrt(n0 * sqr(e) / (m_e * eps0)));
@@ -125,25 +125,25 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
   mpi_printf(MPI_COMM_WORLD, "::: l_Debye= %g d_e\n", sqrt(eps0 * harris->_Te / (n0 * sqr(e))));
   mpi_printf(MPI_COMM_WORLD, "\n");
 
-  psc.domain.gdims[0] = 128;
-  psc.domain.gdims[1] = 128;
-  psc.domain.gdims[2] = 1;
+  ppsc->domain.gdims[0] = 128;
+  ppsc->domain.gdims[1] = 128;
+  ppsc->domain.gdims[2] = 1;
 
-  psc.domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc.domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc.domain.bnd_part[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
 }
 
 static real
 Bx0(struct psc_case_harris_xy *harris, real y)
 {
-  double ly = psc.domain.length[1];
+  double ly = ppsc->domain.length[1];
   return harris->_B0 * (-1. 
 			+ tanh((y - 0.25*ly) / harris->_lambda)
 			- tanh((y - 0.75*ly) / harris->_lambda)
@@ -156,7 +156,7 @@ Bx0(struct psc_case_harris_xy *harris, real y)
 static real
 Az1(struct psc_case_harris_xy *harris, real x, real y)
 {
-  double lx = psc.domain.length[0], ly = psc.domain.length[1];
+  double lx = ppsc->domain.length[0], ly = ppsc->domain.length[1];
   return harris->_pert / (2.*M_PI / lx) * sin(2.*M_PI * x / lx) * .5 * (1 - cos(2*2.*M_PI * y / ly));
 }
 

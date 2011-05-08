@@ -10,7 +10,7 @@
 static void
 do_genc_push_part_yz_a(particles_t *pp)
 {
-  creal dt = psc.dt;
+  creal dt = ppsc->dt;
   creal yl = .5f * dt;
   creal zl = .5f * dt;
 
@@ -39,7 +39,7 @@ psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
     pr = prof_register("genc_part_yz_a", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_genc_push_part_yz_a(&particles.p[p]);
   }
   prof_stop(pr);

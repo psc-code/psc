@@ -44,7 +44,7 @@ psc_case_langmuir_init_npt(struct psc_case *_case, int kind, double x[3],
 {
   struct langmuir *langmuir = to_langmuir(_case);
 
-  real ld = psc.coeff.ld;
+  real ld = ppsc->coeff.ld;
 
   real x0 = langmuir->x0 / ld;
   real y0 = langmuir->y0 / ld;

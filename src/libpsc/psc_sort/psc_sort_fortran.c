@@ -11,7 +11,7 @@ static void
 psc_sort_fortran_run(struct psc_sort *sort,
 			  mparticles_base_t *particles_base)
 {
-  assert(psc.nr_patches == 1);
+  assert(ppsc->nr_patches == 1);
   
   mparticles_fortran_t particles;
   particles_fortran_get(&particles, particles_base);

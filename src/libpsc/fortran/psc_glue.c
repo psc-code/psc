@@ -466,7 +466,7 @@ PIC_pez(particles_fortran_t *pp)
 void
 PIC_msa_e(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_msa_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -475,7 +475,7 @@ PIC_msa_e(fields_fortran_t *pf)
 void
 PIC_msa_h(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_msa_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -484,7 +484,7 @@ PIC_msa_h(fields_fortran_t *pf)
 void
 PIC_pml_msa(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
@@ -496,7 +496,7 @@ PIC_pml_msa(fields_fortran_t *pf)
 void
 PIC_msb_h(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_msb_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -505,7 +505,7 @@ PIC_msb_h(fields_fortran_t *pf)
 void
 PIC_msb_e(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_msb_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
@@ -514,7 +514,7 @@ PIC_msb_e(fields_fortran_t *pf)
 void
 PIC_pml_msb(fields_fortran_t *pf)
 {
-  PSC_set_timestep(&psc);
+  PSC_set_timestep(ppsc);
   PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
 		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
@@ -539,7 +539,7 @@ PIC_fill_ghosts_h_b(struct psc *psc, int p, fields_fortran_t *pf)
 f_real
 C_p_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_x1;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -547,7 +547,7 @@ C_p_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_p_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_x2;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -555,7 +555,7 @@ C_p_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_x1;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
@@ -563,7 +563,7 @@ C_s_pulse_x1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_x2;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
@@ -572,7 +572,7 @@ C_s_pulse_x2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_p_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_y1;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -580,7 +580,7 @@ C_p_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_p_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_y2;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -588,7 +588,7 @@ C_p_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_y1;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
@@ -596,7 +596,7 @@ C_s_pulse_y1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_y2;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
@@ -605,7 +605,7 @@ C_s_pulse_y2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_z1;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -613,7 +613,7 @@ C_p_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_p_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_z2;
   return psc_pulse_field_p(pulse, *xx, *yy, *zz, *tt);
 }
@@ -621,7 +621,7 @@ C_p_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_z1;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
@@ -629,7 +629,7 @@ C_s_pulse_z1_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 f_real
 C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
 {
-  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(psc.push_fields);
+  struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse = bnd_fields->pulse_z2;
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }

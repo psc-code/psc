@@ -16,21 +16,21 @@ do_genc_push_part_xy(int p, fields_t *pf, particles_t *pp)
 
   creal s0x[5] = {}, s0y[5] = {}, s1x[5], s1y[5];
 
-  creal dt = psc.dt;
+  creal dt = ppsc->dt;
   creal xl = .5f * dt;
   creal yl = .5f * dt;
-  creal dqs = .5f * psc.coeff.eta * dt;
-  creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-  creal fnqxs = psc.dx[0] * fnqs / dt;
-  creal fnqys = psc.dx[1] * fnqs / dt;
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
+  creal dqs = .5f * ppsc->coeff.eta * dt;
+  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  creal fnqxs = ppsc->dx[0] * fnqs / dt;
+  creal fnqys = ppsc->dx[1] * fnqs / dt;
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
 
   fields_zero(pf, JXI);
   fields_zero(pf, JYI);
   fields_zero(pf, JZI);
   
-  struct psc_patch *patch = &psc.patch[p];
+  struct psc_patch *patch = &ppsc->patch[p];
   int n_part = pp->n_part;
   for (int n = 0; n < n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -274,7 +274,7 @@ psc_push_particles_generic_c_push_xy(struct psc_push_particles *push,
     pr = prof_register("genc_part_xy", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_genc_push_part_xy(p, &flds.f[p], &particles.p[p]);
   }
   prof_stop(pr);

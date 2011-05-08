@@ -11,11 +11,11 @@
 static void
 setup_jx(mfields_base_t *flds)
 {
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d(p, jx, jy, jz, 0, 0) {
+    psc_foreach_3d(ppsc, p, jx, jy, jz, 0, 0) {
       int ix, iy, iz;
-      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       F3_BASE(pf, JXI, jx,jy,jz) = iz * 10000 + iy * 100 + ix;
     } foreach_3d_end;
   }
@@ -25,14 +25,14 @@ static void
 check_jx(mfields_base_t *flds)
 {
   int bc[3], gdims[3];
-  mrc_domain_get_bc(psc.mrc_domain, bc);
-  mrc_domain_get_global_dims(psc.mrc_domain, gdims);
+  mrc_domain_get_bc(ppsc->mrc_domain, bc);
+  mrc_domain_get_global_dims(ppsc->mrc_domain, gdims);
 
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     fields_base_t *pf = &flds->f[p];
-    foreach_3d_g(p, jx, jy, jz) {
+    psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
-      psc_local_to_global_indices(&psc, p, jx, jy, jz, &ix, &iy, &iz);
+      psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       if (ix < 0) {
 	if (bc[0] == BC_PERIODIC) {
 	  ix += gdims[0];
@@ -92,11 +92,11 @@ main(int argc, char **argv)
   // test psc_fill_ghosts()
 
   struct psc_case *_case = psc_create_test_xz();
-  psc_bnd_set_type(psc.bnd, "c");
+  psc_bnd_set_type(ppsc->bnd, "c");
   psc_case_setup(_case);
-  mfields_base_t *flds = psc.flds;
+  mfields_base_t *flds = ppsc->flds;
   setup_jx(flds);
-  psc_bnd_fill_ghosts(psc.bnd, flds, JXI, JXI + 1);
+  psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 1);
   check_jx(flds);
   psc_case_destroy(_case);
 

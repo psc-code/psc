@@ -32,7 +32,7 @@ void
 psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
   int n_total = 0;
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     n_total += mphotons->p[p].nr;
   }
   if (n_total == 0)

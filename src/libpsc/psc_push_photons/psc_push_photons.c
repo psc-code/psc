@@ -13,7 +13,7 @@ push_photons_patch(int p, photons_t *photons)
     
     for (int d = 0; d < 3; d++) {
       real v = p->p[d] / p_tot;
-      p->x[d] += v * psc.dt;
+      p->x[d] += v * ppsc->dt;
     }
   }
 }
@@ -21,7 +21,7 @@ push_photons_patch(int p, photons_t *photons)
 void
 psc_push_photons_run(mphotons_t *mphotons)
 {
-  psc_foreach_patch(&psc, p) {
+  psc_foreach_patch(ppsc, p) {
     push_photons_patch(p, &mphotons->p[p]);
   }
 }

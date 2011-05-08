@@ -12,7 +12,7 @@ ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     char *filename = malloc(strlen(fname) + 10);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
@@ -20,10 +20,10 @@ ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
     fields_base_t *pf = &flds->f[p];
     FILE *file = fopen(filename, "w");
     free(filename);
-    foreach_patch(patch) {
-      for (int iz = -psc.ibn[2]; iz < psc.patch[patch].ldims[2] + psc.ibn[2]; iz++) {
-	for (int iy = -psc.ibn[1]; iy < psc.patch[patch].ldims[1] + psc.ibn[1]; iy++) {
-	  for (int ix = -psc.ibn[0]; ix < psc.patch[patch].ldims[0] +  psc.ibn[0]; ix++) {
+    psc_foreach_patch(ppsc, patch) {
+      for (int iz = -ppsc->ibn[2]; iz < ppsc->patch[patch].ldims[2] + ppsc->ibn[2]; iz++) {
+	for (int iy = -ppsc->ibn[1]; iy < ppsc->patch[patch].ldims[1] + ppsc->ibn[1]; iy++) {
+	  for (int ix = -ppsc->ibn[0]; ix < ppsc->patch[patch].ldims[0] +  ppsc->ibn[0]; ix++) {
 	    fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
 	  }
 	  fprintf(file, "\n");
@@ -41,7 +41,7 @@ ascii_dump_particles(mparticles_base_t *particles, const char *fname)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
     char *filename = malloc(strlen(fname) + 10);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);

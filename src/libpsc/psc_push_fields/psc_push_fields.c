@@ -117,7 +117,7 @@ psc_push_fields_push_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 void
 psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  if (psc.domain.use_pml) {
+  if (ppsc->domain.use_pml) {
     // FIXME, pml routines sehould be split into E, H push + ghost points, too
     // pml could become a separate push_fields subclass
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -125,27 +125,27 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     ops->pml_a(push, flds);
   } else {
     psc_push_fields_push_a_E(push, flds);
-    psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
 
     psc_push_fields_push_a_H(push, flds);
-    psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
   }
 }
 
 void
 psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  if (psc.domain.use_pml) {
+  if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_b);
     ops->pml_b(push, flds);
   } else {
     psc_push_fields_push_b_H(push, flds);
     psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
-    psc_bnd_fill_ghosts(psc.bnd, flds, HX, HX + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
 
     psc_push_fields_push_b_E(push, flds);
-    psc_bnd_fill_ghosts(psc.bnd, flds, EX, EX + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   }
 }
 

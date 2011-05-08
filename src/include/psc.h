@@ -376,9 +376,6 @@ struct psc {
 #define psc_foreach_3d_g_end				\
   } } }
 
-#define foreach_patch(p)				\
-  for (int p = 0; p < psc.nr_patches; p++)
-
 #define psc_foreach_patch(psc, p)		\
   for (int p = 0; p < (psc)->nr_patches; p++)
 
@@ -386,7 +383,7 @@ struct psc {
 // ----------------------------------------------------------------------
 // we keep this info global for now.
 
-extern struct psc psc;
+extern struct psc *ppsc;
 
 static inline void
 psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,

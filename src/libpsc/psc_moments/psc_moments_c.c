@@ -17,12 +17,12 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
   fields_base_zero(pf, m_NI);
   fields_base_zero(pf, m_NN);
   
-  creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
-  creal dzi = 1.f / psc.dx[2];
+  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
+  creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &psc.patch[p];
+  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
       
@@ -46,13 +46,13 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
       
-    if (psc.domain.gdims[0] == 1) {
+    if (ppsc->domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.domain.gdims[1] == 1) {
+    if (ppsc->domain.gdims[1] == 1) {
       j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.domain.gdims[2] == 1) {
+    if (ppsc->domain.gdims[2] == 1) {
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
 
@@ -108,12 +108,12 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   }
 
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_c_calc_densities(p, &res->f[p], &particles->p[p], 0, 1, 2);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -125,12 +125,12 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
     fields_base_zero(pf, m);
   }
   
-  creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
-  creal dzi = 1.f / psc.dx[2];
+  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
+  creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
 
@@ -154,13 +154,13 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 
-    if (psc.domain.gdims[0] == 1) {
+    if (ppsc->domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.domain.gdims[1] == 1) {
+    if (ppsc->domain.gdims[1] == 1) {
       j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.domain.gdims[2] == 1) {
+    if (ppsc->domain.gdims[2] == 1) {
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
@@ -219,12 +219,12 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
     pr = prof_register("c_calc_v", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_c_calc_v(&res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
 }
 
 static void
@@ -234,12 +234,12 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
     fields_base_zero(pf, m);
   }
   
-  creal fnqs = sqr(psc.coeff.alpha) * psc.coeff.cori / psc.coeff.eta;
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
-  creal dzi = 1.f / psc.dx[2];
+  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
+  creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &psc.patch[0];
+  struct psc_patch *patch = &ppsc->patch[0];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
 
@@ -263,13 +263,13 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
 
-    if (psc.domain.gdims[0] == 1) {
+    if (ppsc->domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.domain.gdims[1] == 1) {
+    if (ppsc->domain.gdims[1] == 1) {
       j2 = 1; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.domain.gdims[2] == 1) {
+    if (ppsc->domain.gdims[2] == 1) {
       j3 = 2; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
@@ -328,12 +328,12 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_c_calc_vv(&res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, res, 0, 3);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
 }
 
 static void
@@ -341,11 +341,11 @@ do_c_calc_photon_n(int p, fields_base_t *pf, photons_t *photons)
 {
   fields_base_zero(pf, 0);
   
-  creal dxi = 1.f / psc.dx[0];
-  creal dyi = 1.f / psc.dx[1];
-  creal dzi = 1.f / psc.dx[2];
+  creal dxi = 1.f / ppsc->dx[0];
+  creal dyi = 1.f / ppsc->dx[1];
+  creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &psc.patch[p];
+  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < photons->nr; n++) {
     photon_t *p = photons_get_one(photons, n);
       
@@ -369,13 +369,13 @@ do_c_calc_photon_n(int p, fields_base_t *pf, photons_t *photons)
     creal g1y=.5f*(.5f-h2)*(.5f-h2);
     creal g1z=.5f*(.5f-h3)*(.5f-h3);
       
-    if (psc.domain.gdims[0] == 1) {
+    if (ppsc->domain.gdims[0] == 1) {
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
-    if (psc.domain.gdims[1] == 1) {
+    if (ppsc->domain.gdims[1] == 1) {
       j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
-    if (psc.domain.gdims[2] == 1) {
+    if (ppsc->domain.gdims[2] == 1) {
       j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
 
@@ -420,12 +420,12 @@ psc_moments_c_calc_photon_n(struct psc_moments *moments,
     pr = prof_register("c_photon_n", 1., 0, 0);
   }
   prof_start(pr);
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     do_c_calc_photon_n(p, &res->f[p], &mphotons->p[p]);
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(psc.bnd, res, 0, 1);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 1);
 }
 
 // ======================================================================
