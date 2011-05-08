@@ -58,7 +58,7 @@ struct mrc_f1 {
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
   int sw; //< # of ghost points
-  char **name;
+  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
@@ -109,7 +109,7 @@ struct mrc_f3 {
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
   int sw; //< # of ghost points
-  char **name;
+  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);

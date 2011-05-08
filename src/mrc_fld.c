@@ -19,18 +19,18 @@ _mrc_f1_destroy(struct mrc_f1 *f1)
     free(f1->arr);
   }
   for (int m = 0; m < f1->nr_comp; m++) {
-    free(f1->name[m]);
+    free(f1->_comp_name[m]);
   }
-  free(f1->name);
+  free(f1->_comp_name);
   f1->arr = NULL;
 }
 
 static void
 _mrc_f1_setup(struct mrc_f1 *f1)
 {
-  free(f1->name);
+  free(f1->_comp_name);
 
-  f1->name = calloc(f1->nr_comp, sizeof(*f1->name));
+  f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
   f1->len = f1->im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -73,14 +73,15 @@ void
 mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
 {
   assert(m < f1->nr_comp);
-  f1->name[m] = strdup(name);
+  free(f1->_comp_name[m]);
+  f1->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
 const char *
 mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 {
   assert(m < f1->nr_comp);
-  return f1->name[m];
+  return f1->_comp_name[m];
 }
 
 void
@@ -277,16 +278,16 @@ _mrc_f3_destroy(struct mrc_f3 *f3)
     free(f3->arr);
   }
   for (int m = 0; m < f3->nr_comp; m++) {
-    free(f3->name[m]);
+    free(f3->_comp_name[m]);
   }
-  free(f3->name);
+  free(f3->_comp_name);
   f3->arr = NULL;
 }
 
 static void
 _mrc_f3_create(struct mrc_f3 *f3)
 {
-  f3->name = calloc(f3->nr_comp, sizeof(*f3->name));
+  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
 }
 
 struct mrc_f3 *
@@ -334,24 +335,25 @@ mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
     return;
 
   for (int m = 0; m < f3->nr_comp; m++) {
-    free(f3->name[m]);
+    free(f3->_comp_name[m]);
   }
   f3->nr_comp = nr_comps;
-  f3->name = calloc(nr_comps, sizeof(*f3->name));
+  f3->_comp_name = calloc(nr_comps, sizeof(*f3->_comp_name));
 }
 
 void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
   assert(m < f3->nr_comp);
-  f3->name[m] = strdup(name);
+  free(f3->_comp_name[m]);
+  f3->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
 const char *
 mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 {
   assert(m < f3->nr_comp);
-  return f3->name[m];
+  return f3->_comp_name[m];
 }
 
 void
@@ -463,8 +465,8 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     int *ib = f3->ib, *im = f3->im;
     struct mrc_f3 *fld1 = mrc_f3_alloc_with_array(f3->obj.comm, ib, im,
 						  &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
-    mrc_f3_set_name(fld1, f3->name[mm[i]]);
-    mrc_f3_set_comp_name(fld1, 0, f3->name[mm[i]]);
+    mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
+    mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
     fld1->domain = f3->domain;
     fld1->sw = f3->sw;
     mrc_f3_setup(fld1);
