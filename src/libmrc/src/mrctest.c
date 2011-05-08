@@ -106,7 +106,7 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
-  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
+  for (int ix = -sw; ix < patches[0].ldims[0] + sw; ix++) {
     MRC_CRDX(crds, ix) = ix*ix;
   }
 
@@ -223,7 +223,7 @@ mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2)
   struct mrc_patch *patches = mrc_domain_get_patches(crds1->domain, &nr_patches);
   assert(nr_patches == 1);
   float diff = 0.;
-  for (int ix = 0; ix < patches[0].ldims[0] + 2 * sw; ix++) {
+  for (int ix = -sw; ix < patches[0].ldims[0] + sw; ix++) {
     diff = fmaxf(diff, fabsf(MRC_CRDX(crds1, ix) - MRC_CRDX(crds2, ix)));
     if (diff > 0.) {
       mprintf("mrctest_crds_compare: ix = %d diff = %g\n", ix, diff);
