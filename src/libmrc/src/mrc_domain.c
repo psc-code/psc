@@ -220,8 +220,8 @@ mrc_domain_f1_create(struct mrc_domain *domain, int bnd)
   struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
   mrc_f1_set_param_int(f1, "ibx", ib[0]);
   mrc_f1_set_param_int(f1, "imx", im[0]);
+  mrc_f1_set_param_int(f1, "sw", bnd);
   f1->domain = domain;
-  f1->sw = bnd;
   return f1;
 }
 
@@ -241,8 +241,8 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
   struct mrc_f3 *f3 = mrc_f3_create(mrc_domain_comm(domain));
   mrc_f3_set_param_int3(f3, "ib", ib);
   mrc_f3_set_param_int3(f3, "im", ldims);
+  mrc_f3_set_param_int(f3, "sw", bnd);
   f3->domain = domain;
-  f3->sw = bnd;
   return f3;
 }
 

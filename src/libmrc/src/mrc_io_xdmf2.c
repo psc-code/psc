@@ -221,11 +221,11 @@ xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT);
 
-    hsize_t im = crd->im[0] - 2 * crd->sw;
+    hsize_t im = crd->im[0] - 2 * crd->_sw;
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
     hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5LTmake_dataset_float(group_crdp, "1d", 1, &im, &MRC_F1(crd,0, crd->ib[0] + crd->sw));
+    H5LTmake_dataset_float(group_crdp, "1d", 1, &im, &MRC_F1(crd,0, 0));
     H5Gclose(group_crdp);
 
     H5Gclose(group_crd1);
@@ -338,8 +338,8 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
 
-    hsize_t mdims[1] = { f1->im[0] - 2 * f1->sw };
-    hsize_t fdims[1] = { f1->im[0] - 2 * f1->sw};
+    hsize_t mdims[1] = { f1->im[0] - 2 * f1->_sw };
+    hsize_t fdims[1] = { f1->im[0] - 2 * f1->_sw};
     hsize_t off[1] = { 0 };
     
     hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -351,7 +351,7 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
 			   H5P_DEFAULT, H5P_DEFAULT);
     H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT,
-	     &MRC_F1(f1, m, f1->ib[0] + f1->sw));
+	     &MRC_F1(f1, m, 0));
     H5Dclose(dset);
     H5Gclose(group);
 

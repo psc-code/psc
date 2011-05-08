@@ -886,13 +886,13 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
   // on diagsrv, ghost points have already been dropped
-  int sw = fld->sw;
+  int sw = fld->_sw;
   int im[3] = { fld->im[0] - 2 * sw, fld->im[1] - 2 * sw, fld->im[2] - 2 * sw };
   struct xdmf_spatial *xs;
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, im, -1, io->size);
-    hdf5_write_crds(io, im, fld->domain, fld->sw);
+    hdf5_write_crds(io, im, fld->domain, fld->_sw);
   }
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
@@ -1108,7 +1108,7 @@ ds_xdmf_to_one_write_attr(struct mrc_io *io, const char *path, int type,
 static void
 communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
 {
-  int sw = gfld->sw;
+  int sw = gfld->_sw;
 
   struct mrc_domain *gdomain = gfld->domain;
   struct mrc_crds *gcrds = mrc_domain_get_crds(gdomain);
@@ -1256,7 +1256,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
-    hdf5_write_crds(io, gdims, ldomain, fld->sw);
+    hdf5_write_crds(io, gdims, ldomain, fld->_sw);
   }
   save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
 
@@ -1383,10 +1383,10 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
       // FIXME make sure it is indep I/O
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, hoff, NULL, hldims, NULL);
       struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
-      float *crd = &MRC_CRD(crds, d, fld->sw);
+      float *crd = &MRC_CRD(crds, d, fld->_sw);
       float *crd_nc = calloc(ldims[d] + 1, sizeof(*crd_nc));
 
-      if (fld->sw > 0) { // FIXME, shouldn't be done here, and should
+      if (fld->_sw > 0) { // FIXME, shouldn't be done here, and should
 	                 // be based on sw for the crds
 	for (int i = 0; i <= ldims[d]; i++) {
 	  crd_nc[i] = .5 * (crd[i-1] + crd[i]);

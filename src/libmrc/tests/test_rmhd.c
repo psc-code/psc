@@ -141,7 +141,7 @@ rmhd_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
 static void
 rmhd_set_bnd_zero(struct rmhd *rmhd, struct mrc_f1 *x, int m_x)
 {
-  int mx = x->im[0] - 2 * x->sw;
+  int mx = x->im[0] - 2 * x->_sw;
   MRC_F1(x, m_x , -1) = 0.;
   MRC_F1(x, m_x , mx) = 0.;
 }
