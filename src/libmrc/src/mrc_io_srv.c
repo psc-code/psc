@@ -964,7 +964,7 @@ static struct param diagsrv_params_descr[] = {
 	  // receive data and add to field
 	  if (iw[0] > -1) {
 	    struct mrc_f3 *lfld3 = mrc_f3_create(MPI_COMM_SELF);
-	    mrc_f3_set_param_int3(lfld3, "dim", dims);
+	    mrc_f3_set_param_int3(lfld3, "dims", dims);
 	    mrc_f3_set_array(lfld3, w2);
 	    mrc_f3_setup(lfld3);
 	    MPI_Recv(lfld3->arr, lfld3->len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
