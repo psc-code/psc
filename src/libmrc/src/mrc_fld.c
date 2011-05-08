@@ -31,8 +31,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   free(f1->_comp_name);
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
-  f1->ilo[0] = f1->_ib[0] + f1->_sw;
-  f1->ihi[0] = f1->_ib[0] + f1->_im[0] - f1->_sw;
+  f1->_ilo[0] = f1->_ib[0] + f1->_sw;
+  f1->_ihi[0] = f1->_ib[0] + f1->_im[0] - f1->_sw;
   f1->len = f1->_im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -303,6 +303,10 @@ static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
   f3->len = f3->_im[0] * f3->_im[1] * f3->_im[2] * f3->nr_comp;
+  for (int d = 0; d < 3; d++) {
+    f3->_ilo[d] = f3->_ib[d] + f3->_sw;
+    f3->_ihi[d] = f3->_ib[d] + f3->_im[d] - f3->_sw;
+  }
 
   if (!f3->arr) {
     f3->arr = calloc(f3->len, sizeof(*f3->arr));
