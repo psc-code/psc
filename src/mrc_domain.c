@@ -238,7 +238,9 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
     ldims[d] = patches[0].ldims[d] + 2 * bnd;
     ib[d] = -bnd;
   }
-  struct mrc_f3 *f3 = mrc_f3_alloc(domain->obj.comm, ib, ldims);
+  struct mrc_f3 *f3 = mrc_f3_create(mrc_domain_comm(domain));
+  mrc_f3_set_param_int3(f3, "ib", ib);
+  mrc_f3_set_param_int3(f3, "im", ldims);
   f3->domain = domain;
   f3->sw = bnd;
   return f3;

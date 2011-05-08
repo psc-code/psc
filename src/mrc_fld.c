@@ -290,31 +290,6 @@ _mrc_f3_create(struct mrc_f3 *f3)
   f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
 }
 
-struct mrc_f3 *
-mrc_f3_alloc(MPI_Comm comm, int ib[3], int im[3])
-{
-  struct mrc_f3 *f3 = mrc_f3_create(comm);
-  for (int d = 0; d < 3; d++) {
-    f3->ib[d] = ib ? ib[d] : 0;
-    f3->im[d] = im[d];
-  }
-
-  return f3;
-}
-
-struct mrc_f3 *
-mrc_f3_alloc_with_array(MPI_Comm comm, int ib[3], int im[3], float *arr)
-{
-  struct mrc_f3 *f3 = mrc_f3_create(comm);
-  for (int d = 0; d < 3; d++) {
-    f3->ib[d] = ib ? ib[d] : 0;
-    f3->im[d] = im[d];
-  }
-
-  f3->arr = arr;
-  return f3;
-}
-
 static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
@@ -366,7 +341,9 @@ mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 struct mrc_f3 *
 mrc_f3_duplicate(struct mrc_f3 *f3)
 {
-  struct mrc_f3 *f3_new = mrc_f3_alloc(f3->obj.comm, f3->ib, f3->im);
+  struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
+  mrc_f3_set_param_int3(f3_new, "ib", f3->ib);
+  mrc_f3_set_param_int3(f3_new, "im", f3->im);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   f3_new->sw = f3->sw;
   f3_new->domain = f3->domain;
@@ -463,8 +440,10 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 {
   for (int i = 0; mm[i] >= 0; i++) {
     int *ib = f3->ib, *im = f3->im;
-    struct mrc_f3 *fld1 = mrc_f3_alloc_with_array(f3->obj.comm, ib, im,
-						  &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
+    struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
+    mrc_f3_set_param_int3(fld1, "ib", ib);
+    mrc_f3_set_param_int3(fld1, "im", im);
+    mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
     fld1->domain = f3->domain;
