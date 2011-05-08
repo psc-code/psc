@@ -28,8 +28,7 @@ enum {
 static void
 fill_ghosts(struct mrc_f1 *x, int m_x)
 {
-  const int *im = mrc_f1_gdims(x);
-  int mx = im[0] - 2 * x->_sw;
+  int mx = mrc_f1_dim(x)[0];
   MRC_F1(x, m_x , -2  ) = MRC_F1(x, m_x , mx-2);
   MRC_F1(x, m_x , -1  ) = MRC_F1(x, m_x , mx-1);
   MRC_F1(x, m_x , mx  ) = MRC_F1(x, m_x , 0);
