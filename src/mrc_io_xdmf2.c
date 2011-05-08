@@ -221,12 +221,12 @@ xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT);
 
-    const int *gdims = mrc_f1_gdims(crd);
-    hsize_t im = gdims[0] - 2 * crd->_sw;
+    const int *dim = mrc_f1_dim(crd);
+    hsize_t hdims[1] = { dim[0] };
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
     hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5LTmake_dataset_float(group_crdp, "1d", 1, &im, &MRC_F1(crd,0, 0));
+    H5LTmake_dataset_float(group_crdp, "1d", 1, hdims, &MRC_F1(crd,0, 0));
     H5Gclose(group_crdp);
 
     H5Gclose(group_crd1);
@@ -339,9 +339,9 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
 
-    const int *im = mrc_f1_gdims(f1);
-    hsize_t mdims[1] = { im[0] - 2 * f1->_sw };
-    hsize_t fdims[1] = { im[0] - 2 * f1->_sw};
+    const int *dim = mrc_f1_dim(f1);
+    hsize_t mdims[1] = { dim[0] };
+    hsize_t fdims[1] = { dim[0] };
     hsize_t off[1] = { 0 };
     
     hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -797,7 +797,7 @@ collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int 
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
 #endif
-  const int *im = mrc_f3_gdims(f3), *ib = mrc_f3_goff(f3);
+  const int *im = mrc_f3_ghost_dim(f3), *ib = mrc_f3_ghost_off(f3);
   hsize_t mdims[3] = { im[2], im[1], im[0] };
   hsize_t foff[3] = { ib[2], ib[1], ib[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
@@ -961,7 +961,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_f3_goff(f3), mrc_f3_gdims(f3));
+					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
     if (has_intersection) {
       ctx->total_recvs++;
     }
@@ -982,7 +982,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_f3_goff(f3), mrc_f3_gdims(f3));
+					     mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
     if (!has_intersection) {
       continue;
     }
@@ -1015,7 +1015,7 @@ collective_recv_f3_end(struct collective_ctx *ctx,
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
     find_intersection(ilo, ihi, info.off, info.ldims,
-		      mrc_f3_goff(f3), mrc_f3_gdims(f3));
+		      mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
 
     struct mrc_f3 *recv_f3 = ctx->recv_f3s[rr];
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -1051,7 +1051,7 @@ collective_recv_f3_local(struct collective_ctx *ctx,
 
     int ilo[3], ihi[3];
     bool has_intersection =
-      find_intersection(ilo, ihi, off, ldims, mrc_f3_goff(f3), mrc_f3_gdims(f3));
+      find_intersection(ilo, ihi, off, ldims, mrc_f3_ghost_off(f3), mrc_f3_ghost_dim(f3));
     if (!has_intersection) {
       continue;
     }

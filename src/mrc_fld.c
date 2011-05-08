@@ -87,7 +87,13 @@ mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 }
 
 const int *
-mrc_f1_gdims(struct mrc_f1 *f1)
+mrc_f1_dim(struct mrc_f1 *f1)
+{
+  return f1->_dim;
+}
+
+const int *
+mrc_f1_ghost_dim(struct mrc_f1 *f1)
 {
   return f1->_im;
 }
@@ -364,13 +370,13 @@ mrc_f3_dim(struct mrc_f3 *f3)
 }
 
 const int *
-mrc_f3_gdims(struct mrc_f3 *f3)
+mrc_f3_ghost_dim(struct mrc_f3 *f3)
 {
   return f3->_im;
 }
 
 const int *
-mrc_f3_goff(struct mrc_f3 *f3)
+mrc_f3_ghost_off(struct mrc_f3 *f3)
 {
   return f3->_ib;
 }

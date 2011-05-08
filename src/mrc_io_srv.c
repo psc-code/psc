@@ -164,15 +164,9 @@ static void
 copy_and_scale(float *buf, struct mrc_f3 *fld, int m, float scale)
 {
   int i = 0;
-  const int *im = mrc_f3_gdims(fld);
-  // FIXME!!!
-  for (int iz = 0; iz < im[2] - 4; iz++) {
-    for (int iy = 0; iy < im[1] - 4; iy++) {
-      for (int ix = 0; ix < im[0] - 4; ix++) {
-	buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
-      }
-    }
-  }
+  mrc_f3_foreach(fld, ix,iy,iz, 0, 0) {
+    buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
+  } mrc_f3_foreach_end;
 }
 
 static void
@@ -187,8 +181,6 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
   struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims;
-  const int *im = mrc_f3_gdims(fld);
-  assert(ldims[0] == im[0]-4 && ldims[1] == im[1]-4 && ldims[2] == im[2]-4);
   int nout = ldims[0] * ldims[1] * ldims[2];
   float *buf = calloc(sizeof(float), nout);
 
