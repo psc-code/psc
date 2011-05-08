@@ -171,7 +171,7 @@ static void
 calc_grad(struct mrc_f3 *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
-  mrc_f3_foreach(f, ix,iy,iz, 1, 1) {
+  mrc_f3_foreach(f, ix,iy,iz, -1, -1) {
     MRC_F3(f, 1, ix,iy,iz) = -
       (MRC_F3(f, 0, ix+1,iy,iz) - MRC_F3(f, 0, ix-1,iy,iz)) / 
       (MRC_CRDX(crds, ix+1) - MRC_CRDX(crds, ix-1));

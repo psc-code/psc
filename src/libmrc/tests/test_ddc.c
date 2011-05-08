@@ -10,8 +10,6 @@
 #include <mrc_domain.h>
 #include <mrc_profile.h>
 
-// FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
-
 static void
 test(bool periodic)
 {
@@ -53,24 +51,24 @@ test(bool periodic)
   mrc_f3_setup(fld);
   mrc_f3_view(fld);
 
-  mrc_f3_foreach(fld, ix,iy,iz, bnd, bnd) {
-    int jx = ix - bnd + off[0];
-    int jy = iy - bnd + off[1];
-    int jz = iz - bnd + off[2];
+  mrc_f3_foreach(fld, ix,iy,iz, 0, 0) {
+    int jx = ix + off[0];
+    int jy = iy + off[1];
+    int jz = iz + off[2];
     MRC_F3(fld,0, ix,iy,iz) = jx * 10000 + jy * 100 + jz;
     MRC_F3(fld,1, ix,iy,iz) = - (jx * 10000 + jy * 100 + jz);
   } mrc_f3_foreach_end;
 
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 1; i++) {
     mrc_ddc_fill_ghosts(ddc, 0, 2, fld);
   }
 
   int N[3];
   mrc_domain_get_global_dims(domain, N);
-  mrc_f3_foreach(fld, ix,iy,iz, 0, 0) {
-    int jx = ix - bnd + off[0];
-    int jy = iy - bnd + off[1];
-    int jz = iz - bnd + off[2];
+  mrc_f3_foreach(fld, ix,iy,iz, bnd, bnd) {
+    int jx = ix + off[0];
+    int jy = iy + off[1];
+    int jz = iz + off[2];
     if (periodic) { 
       jx = (jx + N[0]) % N[0];
       jy = (jy + N[1]) % N[1];

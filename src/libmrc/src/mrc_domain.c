@@ -230,14 +230,15 @@ mrc_domain_f1_create(struct mrc_domain *domain, int bnd)
 struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
 {
-  int ldims[3];
+  int ldims[3], ib[3];
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   for (int d = 0; d < 3; d++) {
     ldims[d] = patches[0].ldims[d] + 2 * bnd;
+    ib[d] = -bnd;
   }
-  struct mrc_f3 *f3 = mrc_f3_alloc(domain->obj.comm, NULL, ldims);
+  struct mrc_f3 *f3 = mrc_f3_alloc(domain->obj.comm, ib, ldims);
   f3->domain = domain;
   f3->sw = bnd;
   return f3;

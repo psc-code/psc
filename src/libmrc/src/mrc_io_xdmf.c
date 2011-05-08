@@ -594,7 +594,7 @@ hdf5_write_crds(struct mrc_io *io, int im[3], struct mrc_domain *domain, int sw)
     if (im[d] == 0 || hdf5->crd_written[d])
       continue;
 
-    float *crd = &MRC_CRD(crds, d, sw);
+    float *crd = &MRC_CRD(crds, d, 0);
     float *crd_nc = calloc(im[d] + 1, sizeof(*crd_nc));
     if (sw > 0) {
       for (int i = 0; i <= im[d]; i++) {
@@ -761,27 +761,27 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 
 static void
 copy_and_scale(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m,
-	       float scale, int bnd)
+	       float scale)
 {
   for (int iz = 0; iz < vfld->im[2]; iz++) {
     for (int iy = 0; iy < vfld->im[1]; iy++) {
       for (int ix = 0; ix < vfld->im[0]; ix++) {
 	// cannot use MRC_F3, because the layout is different (for vecs, fast component)!
 	vfld->arr[(((iz * vfld->im[1]) + iy) * vfld->im[0] + ix) * vfld->nr_comp + m] =
-	  scale * MRC_F3(fld, fld_m, ix+bnd,iy+bnd,iz+bnd);
+	  scale * MRC_F3(fld, fld_m, ix,iy,iz);
       }
     }
   }
 }
 
 static void
-copy_back(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m, int bnd)
+copy_back(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m)
 {
   for (int iz = 0; iz < vfld->im[2]; iz++) {
     for (int iy = 0; iy < vfld->im[1]; iy++) {
       for (int ix = 0; ix < vfld->im[0]; ix++) {
 	// cannot use MRC_F3, because the layout is different (for vecs, fast component)!
-	MRC_F3(fld, fld_m, ix+bnd,iy+bnd,iz+bnd) = 
+	MRC_F3(fld, fld_m, ix,iy,iz) = 
 	  vfld->arr[(((iz * vfld->im[1]) + iy) * vfld->im[0] + ix) * vfld->nr_comp + m];
       }
     }
@@ -902,11 +902,11 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     hdf5->vfld = mrc_f3_alloc(mrc_f3_comm(fld), NULL, im);
     mrc_f3_set_nr_comps(hdf5->vfld, 3);
     mrc_f3_setup(hdf5->vfld);
-    copy_and_scale(hdf5->vfld, 0, fld, m, scale, sw);
+    copy_and_scale(hdf5->vfld, 0, fld, m, scale);
   } else if (c == 'y') {
-    copy_and_scale(hdf5->vfld, 1, fld, m, scale, sw);
+    copy_and_scale(hdf5->vfld, 1, fld, m, scale);
   } else if (c == 'z') {
-    copy_and_scale(hdf5->vfld, 2, fld, m, scale, sw);
+    copy_and_scale(hdf5->vfld, 2, fld, m, scale);
     char *vec_name = strdup(fld->name[m]);
     vec_name[strlen(fld->name[m])-1] = 0;
     save_fld_info(xs, vec_name, strdup(path), true);
@@ -930,7 +930,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     } else {
       struct mrc_f3 *sfld = mrc_f3_alloc(mrc_f3_comm(fld), NULL, im);
       mrc_f3_setup(sfld);
-      copy_and_scale(sfld, 0, fld, m, scale, sw);
+      copy_and_scale(sfld, 0, fld, m, scale);
 
       hsize_t hdims[3] = { sfld->im[2], sfld->im[1], sfld->im[0] };
       hid_t group = H5Gcreate(group0, fld->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -1168,11 +1168,9 @@ static void
 communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 		struct mrc_f3 *lfld)
 {
-  int sw = gfld->sw;
-
   struct mrc_f3 *send_fld = mrc_domain_f3_create(gfld->domain, SW_0);
   mrc_f3_setup(send_fld);
-  copy_and_scale(send_fld, 0, gfld, m, scale, sw);
+  copy_and_scale(send_fld, 0, gfld, m, scale);
 
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
@@ -1497,7 +1495,7 @@ read_f3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   H5Dclose(dset);
 
   // FIXME, could be done w/hyperslab, vectors...
-  copy_back(data->lfld, 0, data->fld, m, data->fld->sw);
+  copy_back(data->lfld, 0, data->fld, m);
 
   H5Gclose(group);
 
@@ -1620,7 +1618,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   // still have to scale, anyway
   struct mrc_f3 *lfld = mrc_f3_alloc(MPI_COMM_SELF, NULL, ldims);
   mrc_f3_setup(lfld);
-  copy_and_scale(lfld, 0, fld, m, scale, fld->sw);
+  copy_and_scale(lfld, 0, fld, m, scale);
 
   if (!hdf5->crds_done) {
     hdf5_write_crds_parallel(io, fld);

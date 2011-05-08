@@ -109,10 +109,10 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 	  f3_1->im[2] == f3_2->im[2]);
 }
 
-#define mrc_f3_foreach(f3, ix,iy,iz, l,r)				        \
-  for (int iz = (f3)->ib[2] + l; iz < (f3)->ib[2] + (f3)->im[2] - r; iz++) {    \
-    for (int iy = (f3)->ib[1] + l; iy < (f3)->ib[1] + (f3)->im[1] - r; iy++) {	\
-      for (int ix = (f3)->ib[0] + l; ix < (f3)->ib[0] + (f3)->im[0] - r; ix++)	\
+#define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
+  for (int iz = (f3)->ib[2] + (f3)->sw - (l); iz < (f3)->ib[2] + (f3)->im[2] - (f3)->sw + (r); iz++) { \
+  for (int iy = (f3)->ib[1] + (f3)->sw - (l); iy < (f3)->ib[1] + (f3)->im[1] - (f3)->sw + (r); iy++) { \
+  for (int ix = (f3)->ib[0] + (f3)->sw - (l); ix < (f3)->ib[0] + (f3)->im[0] - (f3)->sw + (r); ix++) \
 
 #define mrc_f3_foreach_end			\
   }						\

@@ -59,7 +59,7 @@ init_values(struct mrc_f3 *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 2, 2) {
+  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float xx = crds->crd[0][ix];
 
     MRC_F3(f, 0, ix,iy,iz) = 2.f + .2f * sin(xx);

@@ -286,20 +286,18 @@ struct mrc_ddc_ops mrc_ddc_simple_ops = {
 
 #include <mrc_fld.h>
 
-// FIXME, 0-based offsets and ghost points don't match well (not pretty anyway)
-
 static void
 mrc_f3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
+  //  mprintf("to buf %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
   struct mrc_f3 *fld = ctx;
   float *buf = _buf;
-  int bnd = fld->sw;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd);
+	  MRC_DDC_BUF3(buf,m - mb, ix,iy,iz) = MRC_F3(fld,m, ix,iy,iz);
 	}
       }
     }
@@ -309,15 +307,15 @@ mrc_f3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, vo
 static void
 mrc_f3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
+  //  mprintf("from buf %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
   struct mrc_f3 *fld = ctx;
   float *buf = _buf;
-  int bnd = fld->sw;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_F3(fld,m, ix+bnd,iy+bnd,iz+bnd) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
+	  MRC_F3(fld,m, ix,iy,iz) = MRC_DDC_BUF3(buf,m - mb, ix,iy,iz);
 	}
       }
     }

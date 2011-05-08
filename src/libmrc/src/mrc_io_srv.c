@@ -164,9 +164,9 @@ static void
 copy_and_scale(float *buf, struct mrc_f3 *fld, int m, float scale)
 {
   int i = 0;
-  for (int iz = 2; iz < fld->im[2] - 2; iz++) {
-    for (int iy = 2; iy < fld->im[1] - 2; iy++) {
-      for (int ix = 2; ix < fld->im[0] - 2; ix++) {
+  for (int iz = 0; iz < fld->im[2] - 4; iz++) {
+    for (int iy = 0; iy < fld->im[1] - 4; iy++) {
+      for (int ix = 0; ix < fld->im[0] - 4; ix++) {
 	buf[i++] = scale * MRC_F3(fld, m, ix,iy,iz);
       }
     }
@@ -702,7 +702,7 @@ add_to_field_2d(struct mrc_f2 *g, struct mrc_f2 *l, int ib[2])
 }
 
 static void
-add_to_field_3d(struct mrc_f3 *g, struct mrc_f3 *l, int ib[2])
+add_to_field_3d(struct mrc_f3 *g, struct mrc_f3 *l, int ib[3])
 {
   for (int iz = 0; iz < l->im[2]; iz++) {
     for (int iy = 0; iy < l->im[1]; iy++) {
