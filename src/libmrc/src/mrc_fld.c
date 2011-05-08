@@ -31,8 +31,8 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   free(f1->_comp_name);
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
-  f1->_ilo[0] = f1->_ib[0] + f1->_sw;
-  f1->_ihi[0] = f1->_ib[0] + f1->_im[0] - f1->_sw;
+  f1->_im[0] = f1->_ihi[0] - f1->_ilo[0] + 2 * f1->_sw;
+  f1->_ib[0] = f1->_ilo[0] - f1->_sw;
   f1->len = f1->_im[0] * f1->nr_comp;
 
   if (!f1->arr) {
@@ -61,10 +61,10 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 {
   struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
 
-  f1->_ib[0] = f1_in->_ib[0];
-  f1->_im[0] = f1_in->_im[0];
-  f1->nr_comp = f1_in->nr_comp;
-  f1->_sw = f1_in->_sw;
+  mrc_f1_set_param_int(f1, "ilo", f1_in->_ilo[0]);
+  mrc_f1_set_param_int(f1, "ihi", f1_in->_ihi[0]);
+  mrc_f1_set_param_int(f1, "nr_comp", f1_in->nr_comp);
+  mrc_f1_set_param_int(f1, "sw", f1_in->_sw);
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
@@ -188,8 +188,8 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 
 #define VAR(x) (void *)offsetof(struct mrc_f1, x)
 static struct param mrc_f1_params_descr[] = {
-  { "ibx"             , VAR(_ib[0])       , PARAM_INT(0)           },
-  { "imx"             , VAR(_im[0])       , PARAM_INT(0)           },
+  { "ilox"            , VAR(_ilo[0])      , PARAM_INT(0)           },
+  { "ihix"            , VAR(_ihi[0])      , PARAM_INT(0)           },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
