@@ -14,8 +14,8 @@
 #include <assert.h>
 
 #define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->im[0] + (ix) - (f1)->ib[0]];	\
-      assert((ix) >= (f1)->ib[0] && (ix) < (f1)->ib[0] + (f1)->im[0]);	\
+  (*({ float *p = &(f1)->arr[(m) * (f1)->_im[0] + (ix) - (f1)->_ib[0]];	\
+      assert((ix) >= (f1)->_ib[0] && (ix) < (f1)->_ib[0] + (f1)->_im[0]);	\
       p;}))
 
 #define MRC_F3(f3,m, ix,iy,iz)						\
@@ -30,7 +30,7 @@
 #else
 
 #define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->im[0] + (ix) - (f1)->ib[0]])
+  ((f1)->arr[(m) * (f1)->_im[0] + (ix) - (f1)->_ib[0]])
 
 #define MRC_F3(f3,m, ix,iy,iz)					\
   ((f3)->arr[(((m) * (f3)->im[2] + (iz) - (f3)->ib[2]) *	\
@@ -51,8 +51,10 @@ struct mrc_io;
 struct mrc_f1 {
   struct mrc_obj obj;
   float *arr;
-  int im[1];
-  int ib[1];
+  int _im[1];
+  int _ib[1];
+  int ilo[1];
+  int ihi[1];
   int nr_comp;
   int len;
   bool with_array;
@@ -65,6 +67,7 @@ MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
+const int *mrc_f1_gdims(struct mrc_f1 *x);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
@@ -74,8 +77,8 @@ void mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x,
 float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
-#define mrc_f1_foreach(f1, ix, l,r)				        \
-  for (int ix = -l; ix < (f1)->im[0] + 2 * (f1)->ib[0] + r; ix++)		\
+#define mrc_f1_foreach(f1, ix, l,r)				\
+  for (int ix = (f1)->ilo[0] - l; ix < (f1)->ihi[0] + r; ix++)	\
 
 #define mrc_f1_foreach_end do {} while (0)	\
 

@@ -31,7 +31,9 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   free(f1->_comp_name);
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
-  f1->len = f1->im[0] * f1->nr_comp;
+  f1->ilo[0] = f1->_ib[0] + f1->_sw;
+  f1->ihi[0] = f1->_ib[0] + f1->_im[0] - f1->_sw;
+  f1->len = f1->_im[0] * f1->nr_comp;
 
   if (!f1->arr) {
     f1->arr = calloc(f1->len, sizeof(*f1->arr));
@@ -59,8 +61,8 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 {
   struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
 
-  f1->ib[0] = f1_in->ib[0];
-  f1->im[0] = f1_in->im[0];
+  f1->_ib[0] = f1_in->_ib[0];
+  f1->_im[0] = f1_in->_im[0];
   f1->nr_comp = f1_in->nr_comp;
   f1->_sw = f1_in->_sw;
   f1->domain = f1_in->domain;
@@ -82,6 +84,12 @@ mrc_f1_comp_name(struct mrc_f1 *f1, int m)
 {
   assert(m < f1->nr_comp);
   return f1->_comp_name[m];
+}
+
+const int *
+mrc_f1_gdims(struct mrc_f1 *f1)
+{
+  return f1->_im;
 }
 
 void
@@ -112,7 +120,7 @@ void
 mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
 {
   assert(x->nr_comp == y->nr_comp);
-  assert(x->im[0] == y->im[0]);
+  assert(x->_im[0] == y->_im[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
     for (int m = 0; m < y->nr_comp; m++) {
@@ -126,8 +134,8 @@ mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 {
   assert(w->nr_comp == x->nr_comp);
   assert(w->nr_comp == y->nr_comp);
-  assert(w->im[0] == x->im[0]);
-  assert(w->im[0] == y->im[0]);
+  assert(w->_im[0] == x->_im[0]);
+  assert(w->_im[0] == y->_im[0]);
 
   mrc_f1_foreach(w, ix, 0, 0) {
     for (int m = 0; m < w->nr_comp; m++) {
@@ -140,7 +148,7 @@ void
 mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
 {
   assert(x->nr_comp == y->nr_comp);
-  assert(x->im[0] == y->im[0]);
+  assert(x->_im[0] == y->_im[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
     for (int m = 0; m < y->nr_comp; m++) {
@@ -180,8 +188,8 @@ mrc_f1_norm_comp(struct mrc_f1 *x, int m)
 
 #define VAR(x) (void *)offsetof(struct mrc_f1, x)
 static struct param mrc_f1_params_descr[] = {
-  { "ibx"             , VAR(ib[0])        , PARAM_INT(0)           },
-  { "imx"             , VAR(im[0])        , PARAM_INT(0)           },
+  { "ibx"             , VAR(_ib[0])       , PARAM_INT(0)           },
+  { "imx"             , VAR(_im[0])       , PARAM_INT(0)           },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},
