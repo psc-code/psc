@@ -53,7 +53,7 @@ struct mrc_f1 {
   float *arr;
   int _im[1];
   int _ib[1];
-  int _ilo[1];
+  int _off[1];
   int _ihi[1];
   int nr_comp;
   int len;
@@ -67,6 +67,7 @@ MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
 void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
+const int *mrc_f1_off(struct mrc_f1 *x);
 const int *mrc_f1_gdims(struct mrc_f1 *x);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
@@ -78,7 +79,7 @@ float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 #define mrc_f1_foreach(f1, ix, l,r)				\
-  for (int ix = (f1)->_ilo[0] - l; ix < (f1)->_ihi[0] + r; ix++)	\
+  for (int ix = (f1)->_off[0] - l; ix < (f1)->_ihi[0] + r; ix++)	\
 
 #define mrc_f1_foreach_end do {} while (0)	\
 
@@ -107,7 +108,7 @@ struct mrc_f3 {
   float *arr;
   int _im[3];
   int _ib[3];
-  int _ilo[3];
+  int _off[3];
   int _ihi[3];
   int nr_comp;
   int len;
@@ -123,6 +124,7 @@ struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
+const int *mrc_f3_off(struct mrc_f3 *x);
 const int *mrc_f3_gdims(struct mrc_f3 *x);
 const int *mrc_f3_goff(struct mrc_f3 *x);
 void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
@@ -142,9 +144,9 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->_ilo[2] - (l); iz < (f3)->_ihi[2] + (r); iz++) {	\
-  for (int iy = (f3)->_ilo[1] - (l); iy < (f3)->_ihi[1] + (r); iy++) {	\
-  for (int ix = (f3)->_ilo[0] - (l); ix < (f3)->_ihi[0] + (r); ix++)	\
+  for (int iz = (f3)->_off[2] - (l); iz < (f3)->_ihi[2] + (r); iz++) {	\
+  for (int iy = (f3)->_off[1] - (l); iy < (f3)->_ihi[1] + (r); iy++) {	\
+  for (int ix = (f3)->_off[0] - (l); ix < (f3)->_ihi[0] + (r); ix++)	\
 
 #define mrc_f3_foreach_end			\
   }						\

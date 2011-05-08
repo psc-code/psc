@@ -1105,7 +1105,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "ilo", writer_off);
+    mrc_f3_set_param_int3(f3, "off", writer_off);
     mrc_f3_set_param_int3(f3, "ihi", (int [3]) {
 	writer_dims[0] + writer_off[0],
 	writer_dims[1] + writer_off[1],
