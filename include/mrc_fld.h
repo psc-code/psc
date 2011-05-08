@@ -14,28 +14,28 @@
 #include <assert.h>
 
 #define MRC_F1(f1,m, ix)						\
-  (*({ float *p = &(f1)->arr[(m) * (f1)->_im[0] + (ix) - (f1)->_ib[0]];	\
-      assert((ix) >= (f1)->_ib[0] && (ix) < (f1)->_ib[0] + (f1)->_im[0]);	\
+  (*({ float *p = &(f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]];	\
+      assert((ix) >= (f1)->_ghost_off[0] && (ix) < (f1)->_ghost_off[0] + (f1)->_ghost_dims[0]);	\
       p;}))
 
 #define MRC_F3(f3,m, ix,iy,iz)						\
-  (*({ float *p = &(f3)->arr[(((m) * (f3)->_im[2] + (iz) - (f3)->_ib[2]) * \
-	  (f3)->_im[1] + (iy) - (f3)->_ib[1]) *				\
-	(f3)->_im[0] + (ix) - (f3)->_ib[0]];				\
-      assert((ix) >= (f3)->_ib[0] && (ix) < (f3)->_ib[0] + (f3)->_im[0]);	\
-      assert((iy) >= (f3)->_ib[1] && (iy) < (f3)->_ib[1] + (f3)->_im[1]);	\
-      assert((iz) >= (f3)->_ib[2] && (iz) < (f3)->_ib[2] + (f3)->_im[2]);	\
+  (*({ float *p = &(f3)->arr[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_off[2]) * \
+	  (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_off[1]) *				\
+	(f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_off[0]];				\
+      assert((ix) >= (f3)->_ghost_off[0] && (ix) < (f3)->_ghost_off[0] + (f3)->_ghost_dims[0]);	\
+      assert((iy) >= (f3)->_ghost_off[1] && (iy) < (f3)->_ghost_off[1] + (f3)->_ghost_dims[1]);	\
+      assert((iz) >= (f3)->_ghost_off[2] && (iz) < (f3)->_ghost_off[2] + (f3)->_ghost_dims[2]);	\
       p;}))
 
 #else
 
 #define MRC_F1(f1,m, ix)					\
-  ((f1)->arr[(m) * (f1)->_im[0] + (ix) - (f1)->_ib[0]])
+  ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
 
 #define MRC_F3(f3,m, ix,iy,iz)					\
-  ((f3)->arr[(((m) * (f3)->_im[2] + (iz) - (f3)->_ib[2]) *	\
-	      (f3)->_im[1] + (iy) - (f3)->_ib[1]) *		\
-	     (f3)->_im[0] + (ix) - (f3)->_ib[0]])
+  ((f3)->arr[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_off[2]) *	\
+	      (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_off[1]) *		\
+	     (f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_off[0]])
 
 #endif
 
@@ -51,8 +51,8 @@ struct mrc_io;
 struct mrc_f1 {
   struct mrc_obj obj;
   float *arr;
-  int _im[1];
-  int _ib[1];
+  int _ghost_off[1];
+  int _ghost_dims[1];
   int _off[1];
   int _dims[1];
   int nr_comp;
@@ -107,8 +107,8 @@ void mrc_f2_free(struct mrc_f2 *f2);
 struct mrc_f3 {
   struct mrc_obj obj;
   float *arr;
-  int _im[3];
-  int _ib[3];
+  int _ghost_off[3];
+  int _ghost_dims[3];
   int _off[3];
   int _dims[3];
   int nr_comp;
@@ -140,9 +140,9 @@ static inline bool
 mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 {
   return (f3_1->nr_comp == f3_2->nr_comp &&
-	  f3_1->_im[0] == f3_2->_im[0] &&
-	  f3_1->_im[1] == f3_2->_im[1] &&
-	  f3_1->_im[2] == f3_2->_im[2]);
+	  f3_1->_ghost_dims[0] == f3_2->_ghost_dims[0] &&
+	  f3_1->_ghost_dims[1] == f3_2->_ghost_dims[1] &&
+	  f3_1->_ghost_dims[2] == f3_2->_ghost_dims[2]);
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\

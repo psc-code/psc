@@ -699,13 +699,9 @@ add_to_field_2d(struct mrc_f2 *g, struct mrc_f2 *l, int ib[2])
 static void
 add_to_field_3d(struct mrc_f3 *g, struct mrc_f3 *l, int ib[3])
 {
-  for (int iz = 0; iz < l->_im[2]; iz++) {
-    for (int iy = 0; iy < l->_im[1]; iy++) {
-      for (int ix = 0; ix < l->_im[0]; ix++) {
-	MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
-      }
-    }
-  }
+  mrc_f3_foreach(l, ix,iy,iz, 0, 0) {
+    MRC_F3(g,0, ix+ib[0],iy+ib[1],iz+ib[2]) = MRC_F3(l,0, ix,iy,iz);
+  } mrc_f3_foreach_end;
 }
 
 // ----------------------------------------------------------------------

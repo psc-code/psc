@@ -31,9 +31,9 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   free(f1->_comp_name);
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
-  f1->_ib[0] = f1->_off[0] - f1->_sw;
-  f1->_im[0] = f1->_dims[0] + 2 * f1->_sw;
-  f1->len = f1->_im[0] * f1->nr_comp;
+  f1->_ghost_off[0] = f1->_off[0] - f1->_sw;
+  f1->_ghost_dims[0] = f1->_dims[0] + 2 * f1->_sw;
+  f1->len = f1->_ghost_dims[0] * f1->nr_comp;
 
   if (!f1->arr) {
     f1->arr = calloc(f1->len, sizeof(*f1->arr));
@@ -95,7 +95,7 @@ mrc_f1_dims(struct mrc_f1 *f1)
 const int *
 mrc_f1_ghost_dims(struct mrc_f1 *f1)
 {
-  return f1->_im;
+  return f1->_ghost_dims;
 }
 
 void
@@ -126,7 +126,7 @@ void
 mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y)
 {
   assert(x->nr_comp == y->nr_comp);
-  assert(x->_im[0] == y->_im[0]);
+  assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
     for (int m = 0; m < y->nr_comp; m++) {
@@ -140,8 +140,8 @@ mrc_f1_waxpy(struct mrc_f1 *w, float alpha, struct mrc_f1 *x, struct mrc_f1 *y)
 {
   assert(w->nr_comp == x->nr_comp);
   assert(w->nr_comp == y->nr_comp);
-  assert(w->_im[0] == x->_im[0]);
-  assert(w->_im[0] == y->_im[0]);
+  assert(w->_ghost_dims[0] == x->_ghost_dims[0]);
+  assert(w->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(w, ix, 0, 0) {
     for (int m = 0; m < w->nr_comp; m++) {
@@ -154,7 +154,7 @@ void
 mrc_f1_axpy(struct mrc_f1 *y, float alpha, struct mrc_f1 *x)
 {
   assert(x->nr_comp == y->nr_comp);
-  assert(x->_im[0] == y->_im[0]);
+  assert(x->_ghost_dims[0] == y->_ghost_dims[0]);
 
   mrc_f1_foreach(x, ix, 0, 0) {
     for (int m = 0; m < y->nr_comp; m++) {
@@ -309,10 +309,10 @@ static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
   for (int d = 0; d < 3; d++) {
-    f3->_ib[d] = f3->_off[d] - f3->_sw;
-    f3->_im[d] = f3->_dims[d] + 2 * f3->_sw;
+    f3->_ghost_off[d] = f3->_off[d] - f3->_sw;
+    f3->_ghost_dims[d] = f3->_dims[d] + 2 * f3->_sw;
   }
-  f3->len = f3->_im[0] * f3->_im[1] * f3->_im[2] * f3->nr_comp;
+  f3->len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
 
   if (!f3->arr) {
     f3->arr = calloc(f3->len, sizeof(*f3->arr));
@@ -372,13 +372,13 @@ mrc_f3_dims(struct mrc_f3 *f3)
 const int *
 mrc_f3_ghost_off(struct mrc_f3 *f3)
 {
-  return f3->_ib;
+  return f3->_ghost_off;
 }
 
 const int *
 mrc_f3_ghost_dims(struct mrc_f3 *f3)
 {
-  return f3->_im;
+  return f3->_ghost_dims;
 }
 
 struct mrc_f3 *
@@ -486,7 +486,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     mrc_f3_set_param_int3(fld1, "off", f3->_off);
     mrc_f3_set_param_int3(fld1, "dims", f3->_dims);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
-    int *ib = f3->_ib;
+    int *ib = f3->_ghost_off;
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
