@@ -221,7 +221,8 @@ xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
 				 H5P_DEFAULT, H5P_DEFAULT);
 
-    hsize_t im = crd->im[0] - 2 * crd->_sw;
+    const int *gdims = mrc_f1_gdims(crd);
+    hsize_t im = gdims[0] - 2 * crd->_sw;
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
     hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
@@ -338,8 +339,9 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
 
-    hsize_t mdims[1] = { f1->im[0] - 2 * f1->_sw };
-    hsize_t fdims[1] = { f1->im[0] - 2 * f1->_sw};
+    const int *im = mrc_f1_gdims(f1);
+    hsize_t mdims[1] = { im[0] - 2 * f1->_sw };
+    hsize_t fdims[1] = { im[0] - 2 * f1->_sw};
     hsize_t off[1] = { 0 };
     
     hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
