@@ -19,12 +19,12 @@
       p;}))
 
 #define MRC_F3(f3,m, ix,iy,iz)						\
-  (*({ float *p = &(f3)->arr[(((m) * (f3)->im[2] + (iz) - (f3)->ib[2]) * \
-	  (f3)->im[1] + (iy) - (f3)->ib[1]) *				\
-	(f3)->im[0] + (ix) - (f3)->ib[0]];				\
-      assert((ix) >= (f3)->ib[0] && (ix) < (f3)->ib[0] + (f3)->im[0]);	\
-      assert((iy) >= (f3)->ib[1] && (iy) < (f3)->ib[1] + (f3)->im[1]);	\
-      assert((iz) >= (f3)->ib[2] && (iz) < (f3)->ib[2] + (f3)->im[2]);	\
+  (*({ float *p = &(f3)->arr[(((m) * (f3)->_im[2] + (iz) - (f3)->_ib[2]) * \
+	  (f3)->_im[1] + (iy) - (f3)->_ib[1]) *				\
+	(f3)->_im[0] + (ix) - (f3)->_ib[0]];				\
+      assert((ix) >= (f3)->_ib[0] && (ix) < (f3)->_ib[0] + (f3)->_im[0]);	\
+      assert((iy) >= (f3)->_ib[1] && (iy) < (f3)->_ib[1] + (f3)->_im[1]);	\
+      assert((iz) >= (f3)->_ib[2] && (iz) < (f3)->_ib[2] + (f3)->_im[2]);	\
       p;}))
 
 #else
@@ -33,9 +33,9 @@
   ((f1)->arr[(m) * (f1)->_im[0] + (ix) - (f1)->_ib[0]])
 
 #define MRC_F3(f3,m, ix,iy,iz)					\
-  ((f3)->arr[(((m) * (f3)->im[2] + (iz) - (f3)->ib[2]) *	\
-	      (f3)->im[1] + (iy) - (f3)->ib[1]) *		\
-	     (f3)->im[0] + (ix) - (f3)->ib[0]])
+  ((f3)->arr[(((m) * (f3)->_im[2] + (iz) - (f3)->_ib[2]) *	\
+	      (f3)->_im[1] + (iy) - (f3)->_ib[1]) *		\
+	     (f3)->_im[0] + (ix) - (f3)->_ib[0]])
 
 #endif
 
@@ -105,8 +105,8 @@ void mrc_f2_free(struct mrc_f2 *f2);
 struct mrc_f3 {
   struct mrc_obj obj;
   float *arr;
-  int im[3];
-  int ib[3];
+  int _im[3];
+  int _ib[3];
   int nr_comp;
   int len;
   bool with_array;
@@ -121,6 +121,8 @@ struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
+const int *mrc_f3_gdims(struct mrc_f3 *x);
+const int *mrc_f3_goff(struct mrc_f3 *x);
 void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
 void mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from);
 void mrc_f3_set(struct mrc_f3 *f3, float val);
@@ -132,15 +134,15 @@ static inline bool
 mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 {
   return (f3_1->nr_comp == f3_2->nr_comp &&
-	  f3_1->im[0] == f3_2->im[0] &&
-	  f3_1->im[1] == f3_2->im[1] &&
-	  f3_1->im[2] == f3_2->im[2]);
+	  f3_1->_im[0] == f3_2->_im[0] &&
+	  f3_1->_im[1] == f3_2->_im[1] &&
+	  f3_1->_im[2] == f3_2->_im[2]);
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->ib[2] + (f3)->_sw - (l); iz < (f3)->ib[2] + (f3)->im[2] - (f3)->_sw + (r); iz++) { \
-  for (int iy = (f3)->ib[1] + (f3)->_sw - (l); iy < (f3)->ib[1] + (f3)->im[1] - (f3)->_sw + (r); iy++) { \
-  for (int ix = (f3)->ib[0] + (f3)->_sw - (l); ix < (f3)->ib[0] + (f3)->im[0] - (f3)->_sw + (r); ix++) \
+  for (int iz = (f3)->_ib[2] + (f3)->_sw - (l); iz < (f3)->_ib[2] + (f3)->_im[2] - (f3)->_sw + (r); iz++) { \
+  for (int iy = (f3)->_ib[1] + (f3)->_sw - (l); iy < (f3)->_ib[1] + (f3)->_im[1] - (f3)->_sw + (r); iy++) { \
+  for (int ix = (f3)->_ib[0] + (f3)->_sw - (l); ix < (f3)->_ib[0] + (f3)->_im[0] - (f3)->_sw + (r); ix++) \
 
 #define mrc_f3_foreach_end			\
   }						\

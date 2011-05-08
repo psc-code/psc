@@ -797,8 +797,9 @@ collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int 
     H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
   }
 #endif
-  hsize_t mdims[3] = { f3->im[2], f3->im[1], f3->im[0] };
-  hsize_t foff[3] = { f3->ib[2], f3->ib[1], f3->ib[0] };
+  const int *im = mrc_f3_gdims(f3), *ib = mrc_f3_goff(f3);
+  hsize_t mdims[3] = { im[2], im[1], im[0] };
+  hsize_t foff[3] = { ib[2], ib[1], ib[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
   H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
 
@@ -817,7 +818,8 @@ collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 static bool
-find_intersection(int *ilo, int *ihi, int *ib1, int *im1, int *ib2, int *im2)
+find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
+		  const int *ib2, const int *im2)
 {
   for (int d = 0; d < 3; d++) {
     ilo[d] = MAX(ib1[d], ib2[d]);
@@ -959,7 +961,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     f3->ib, f3->im);
+					     mrc_f3_goff(f3), mrc_f3_gdims(f3));
     if (has_intersection) {
       ctx->total_recvs++;
     }
@@ -980,7 +982,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     }
     int ilo[3], ihi[3];
     int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     f3->ib, f3->im);
+					     mrc_f3_goff(f3), mrc_f3_gdims(f3));
     if (!has_intersection) {
       continue;
     }
@@ -1018,7 +1020,8 @@ collective_recv_f3_end(struct collective_ctx *ctx,
     int *off = info.off;
     // OPT, could be cached 2nd(?) and 3rd time
     int ilo[3], ihi[3];
-    find_intersection(ilo, ihi, info.off, info.ldims, f3->ib, f3->im);
+    find_intersection(ilo, ihi, info.off, info.ldims,
+		      mrc_f3_goff(f3), mrc_f3_gdims(f3));
 
     struct mrc_f3 *recv_f3 = ctx->recv_f3s[rr];
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
@@ -1054,7 +1057,7 @@ collective_recv_f3_local(struct collective_ctx *ctx,
 
     int ilo[3], ihi[3];
     bool has_intersection =
-      find_intersection(ilo, ihi, off, ldims, f3->ib, f3->im);
+      find_intersection(ilo, ihi, off, ldims, mrc_f3_goff(f3), mrc_f3_gdims(f3));
     if (!has_intersection) {
       continue;
     }

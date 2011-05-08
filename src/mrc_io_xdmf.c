@@ -763,11 +763,12 @@ static void
 copy_and_scale(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m,
 	       float scale)
 {
-  for (int iz = 0; iz < vfld->im[2]; iz++) {
-    for (int iy = 0; iy < vfld->im[1]; iy++) {
-      for (int ix = 0; ix < vfld->im[0]; ix++) {
+  const int *im = mrc_f3_gdims(vfld);
+  for (int iz = 0; iz < im[2]; iz++) {
+    for (int iy = 0; iy < im[1]; iy++) {
+      for (int ix = 0; ix < im[0]; ix++) {
 	// cannot use MRC_F3, because the layout is different (for vecs, fast component)!
-	vfld->arr[(((iz * vfld->im[1]) + iy) * vfld->im[0] + ix) * vfld->nr_comp + m] =
+	vfld->arr[(((iz * im[1]) + iy) * im[0] + ix) * vfld->nr_comp + m] =
 	  scale * MRC_F3(fld, fld_m, ix,iy,iz);
       }
     }
@@ -777,12 +778,13 @@ copy_and_scale(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m,
 static void
 copy_back(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m)
 {
-  for (int iz = 0; iz < vfld->im[2]; iz++) {
-    for (int iy = 0; iy < vfld->im[1]; iy++) {
-      for (int ix = 0; ix < vfld->im[0]; ix++) {
+  const int *im = mrc_f3_gdims(vfld);
+  for (int iz = 0; iz < im[2]; iz++) {
+    for (int iy = 0; iy < im[1]; iy++) {
+      for (int ix = 0; ix < im[0]; ix++) {
 	// cannot use MRC_F3, because the layout is different (for vecs, fast component)!
 	MRC_F3(fld, fld_m, ix,iy,iz) = 
-	  vfld->arr[(((iz * vfld->im[1]) + iy) * vfld->im[0] + ix) * vfld->nr_comp + m];
+	  vfld->arr[(((iz * im[1]) + iy) * im[0] + ix) * vfld->nr_comp + m];
       }
     }
   }
@@ -887,7 +889,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
 
   // on diagsrv, ghost points have already been dropped
   int sw = fld->_sw;
-  int im[3] = { fld->im[0] - 2 * sw, fld->im[1] - 2 * sw, fld->im[2] - 2 * sw };
+  const int *gdims = mrc_f3_gdims(fld);
+  int im[3] = { gdims[0] - 2 * sw, gdims[1] - 2 * sw, gdims[2] - 2 * sw };
   struct xdmf_spatial *xs;
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
@@ -913,7 +916,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     vec_name[strlen(fldname) - 1] = 0;
     save_fld_info(xs, vec_name, strdup(path), true);
     struct mrc_f3 *vfld = hdf5->vfld;
-    hsize_t hdims[4] = { vfld->im[2], vfld->im[1], vfld->im[0], vfld->nr_comp };
+    const int *gdims = mrc_f3_gdims(vfld);
+    hsize_t hdims[4] = { gdims[2], gdims[1], gdims[0], vfld->nr_comp };
     hid_t group = H5Gcreate(group0, vec_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     ierr = H5LTmake_dataset_float(group, "3d", 4, hdims, vfld->arr); CE;
     ierr = H5Gclose(group); CE;
@@ -925,7 +929,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     if (io->rank < 0) { // FIXME not happening anymore, still optimize this case
       // on diag srv, ghost points are already gone and scaling is done
       assert(scale == 1.f);
-      hsize_t hdims[3] = { fld->im[2], fld->im[1], fld->im[0] };
+      const int *gdims = mrc_f3_gdims(fld);
+      hsize_t hdims[3] = { gdims[2], gdims[1], gdims[0] };
       hid_t group = H5Gcreate(group0, fldname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, &MRC_F3(fld, m, 0,0,0)); CE;
       ierr = H5Gclose(group); CE;
@@ -935,7 +940,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
       mrc_f3_setup(sfld);
       copy_and_scale(sfld, 0, fld, m, scale);
 
-      hsize_t hdims[3] = { sfld->im[2], sfld->im[1], sfld->im[0] };
+      const int *gdims = mrc_f3_gdims(sfld);
+      hsize_t hdims[3] = { gdims[2], gdims[1], gdims[0] };
       hid_t group = H5Gcreate(group0, fldname, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
       ierr = H5LTmake_dataset_float(group, "3d", 3, hdims, sfld->arr); CE;
       ierr = H5Gclose(group); CE;
@@ -1191,8 +1197,8 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
       struct mrc_f3 *recv_fld;
       if (n == 0) {
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "ib", send_fld->ib);
-	mrc_f3_set_param_int3(recv_fld, "im", send_fld->im);
+	mrc_f3_set_param_int3(recv_fld, "ib", send_fld->_ib);
+	mrc_f3_set_param_int3(recv_fld, "im", send_fld->_im);
 	mrc_f3_set_array(recv_fld, send_fld->arr);
 	mrc_f3_setup(recv_fld);
       } else {
@@ -1261,7 +1267,8 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
   save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  hsize_t hdims[3] = { lfld->im[2], lfld->im[1], lfld->im[0] };
+  const int *im = mrc_f3_gdims(lfld);
+  hsize_t hdims[3] = { im[2], im[1], im[0] };
   hid_t group = H5Gcreate(group0, mrc_f3_comp_name(fld, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTmake_dataset_float(group, "3d", 3, hdims, lfld->arr);
   H5Gclose(group);
