@@ -476,20 +476,12 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 }
 
 // ----------------------------------------------------------------------
-
-
-// ----------------------------------------------------------------------
 // mrc_class_mrc_f3
 
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
-  { "ibx"             , VAR(ib[0])        , PARAM_INT(0)           },
-  { "iby"             , VAR(ib[1])        , PARAM_INT(0)           },
-  { "ibz"             , VAR(ib[2])        , PARAM_INT(0)           },
-  { "imx"             , VAR(im[0])        , PARAM_INT(0)           },
-  { "imy"             , VAR(im[1])        , PARAM_INT(0)           },
-  { "imz"             , VAR(im[2])        , PARAM_INT(0)           },
-
+  { "ib"              , VAR(ib)           , PARAM_INT3(0, 0, 0)    },
+  { "im"              , VAR(im)           , PARAM_INT3(0, 0, 0)    },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   {},
 };
