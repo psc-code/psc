@@ -109,6 +109,7 @@ mrc_crds_alloc(struct mrc_crds *crds, int d, int dim, int sw)
   crds->crd[d] = mrc_f1_create(mrc_crds_comm(crds));
   char s[5]; sprintf(s, "crd%d", d);
   mrc_f1_set_name(crds->crd[d], s);
+  mrc_f1_set_param_int(crds->crd[d], "ibx", -sw);
   mrc_f1_set_param_int(crds->crd[d], "imx", dim + 2 *sw);
   crds->crd[d]->sw = sw;
   mrc_f1_setup(crds->crd[d]);
@@ -166,7 +167,7 @@ mrc_crds_uniform_setup(struct mrc_crds *crds)
   for (int d = 0; d < 3; d++) {
     mrc_crds_alloc(crds, d, patches[0].ldims[d], sw);
     for (int i = -sw; i < patches[0].ldims[d] +  sw; i++) {
-      MRC_CRD(crds, d, i + sw) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
+      MRC_CRD(crds, d, i) = xl[d] + (i + patches[0].off[d] + .5) / gdims[d] * (xh[d] - xl[d]);
     }
   }
 }
@@ -269,7 +270,7 @@ mrc_crds_rectilinear_jr2_setup(struct mrc_crds *crds)
       float sm = pow(s, xm);
       float g = dx0 * xi * sm;
       //    float dg = rmhd->dx0 * (sm + rmhd->xm*xi*2.*rmhd->xn*a*(pow(xi, (2.*rmhd->xn-1.))) * sm / s);
-      MRC_CRD(crds, d, i + sw) = g;
+      MRC_CRD(crds, d, i) = g;
     }
   }
 }

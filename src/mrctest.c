@@ -24,7 +24,7 @@ mrc_f3_init_values(struct mrc_f3 *f3, struct mrc_f3_init_values_info *iv_info)
 
   for (int i = 0; iv_info->ini_flds[i].ini; i++) {
     int m = iv_info->ini_flds[i].m;
-    mrc_f3_foreach(f3, ix,iy,iz, 0,0) {
+    mrc_f3_foreach(f3, ix,iy,iz, 2, 2) {
       float xx = MRC_CRDX(crds, ix), yy = MRC_CRDY(crds, iy), zz = MRC_CRDZ(crds, iz);
       MRC_F3(f3,m, ix,iy,iz) = iv_info->ini_flds[i].ini(xx, yy, zz);
     } mrc_f3_foreach_end;
@@ -118,7 +118,7 @@ mrctest_domain_init_values_0(struct mrc_f3 *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 2, 2) {
+  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float xx = MRC_CRDX(crds, ix);
 
     MRC_F3(f,0, ix,iy,iz) = 2.f + .2f * sin(xx);
@@ -130,7 +130,7 @@ mrctest_domain_init_values_1(struct mrc_f3 *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 2, 2) {
+  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float yy = MRC_CRDY(crds, iy);
 
     MRC_F3(f,1, ix,iy,iz) = 2.f + .2f * sin(yy);
@@ -192,12 +192,10 @@ mrctest_domain(void (*mod_domain)(struct mrc_mod *mod, void *arg))
 void
 mrctest_f3_compare(struct mrc_f3 *f1, struct mrc_f3 *f2, float eps)
 {
-  int sw = f1->sw;
-
   assert(f1->nr_comp == f2->nr_comp);
   for (int m = 0; m < f1->nr_comp; m++) {
     float diff = 0.;
-    mrc_f3_foreach(f1, ix,iy,iz, sw, sw) {
+    mrc_f3_foreach(f1, ix,iy,iz, 0, 0) {
       diff = fmaxf(diff, fabsf(MRC_F3(f1,m, ix,iy,iz) - MRC_F3(f2,m, ix,iy,iz)));
     } mrc_f3_foreach_end;
     if (diff > eps) {
