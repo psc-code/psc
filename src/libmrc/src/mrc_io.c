@@ -155,7 +155,7 @@ mrc_io_write_f3(struct mrc_io *io, const char *path,
     ops->write_f3(io, path, fld, scale);
   } else {
     for (int m = 0; m < fld->nr_comp; m++) {
-      assert(fld->name[m]);
+      assert(mrc_f3_comp_name(fld, m));
       ops->write_field(io, path, scale, fld, m);
     }
   }
@@ -255,14 +255,14 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
     }
 
     f2.domain = fld->domain;
-    f2.name[0] = strdup(fld->name[0]);
+    f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);
     mrc_f2_free(&f2);
   } else {
     struct mrc_f2 f2 = {};
     f2.domain = fld->domain;
     f2.name = calloc(1, sizeof(*f2.name));
-    f2.name[0] = strdup(fld->name[0]);
+    f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);
     mrc_f2_free(&f2);
   }

@@ -205,10 +205,10 @@ main(int argc, char **argv)
 
   struct mrc_f3 *fld = mrc_domain_f3_create(domain, SW_0);
   mrc_f3_set_nr_comps(fld, 4);
-  fld->name[0] = strdup("phi");
-  fld->name[1] = strdup("ex");
-  fld->name[2] = strdup("ey");
-  fld->name[3] = strdup("ez");
+  mrc_f3_set_comp_name(fld, 0, "phi");
+  mrc_f3_set_comp_name(fld, 1, "ex");
+  mrc_f3_set_comp_name(fld, 2, "ey");
+  mrc_f3_set_comp_name(fld, 3, "ez");
   mrc_f3_setup(fld);
   if (strcmp(par.ic, "one") == 0) {
     ini_one(fld, &par);

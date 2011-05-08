@@ -141,7 +141,7 @@ struct mrc_f3 *
 mrctest_create_field_1(struct mrc_domain *domain)
 {
   struct mrc_f3 *f3 = mrc_domain_f3_create(domain, SW_2);
-  f3->name[0] = strdup("test");
+  mrc_f3_set_comp_name(f3, 0, "test");
   mrc_f3_setup(f3);
   mrctest_domain_init_values_0(f3);
   return f3;
@@ -152,8 +152,8 @@ mrctest_create_field_2(struct mrc_domain *domain)
 {
   struct mrc_f3 *f3 = mrc_domain_f3_create(domain, SW_2);
   mrc_f3_set_nr_comps(f3, 2);
-  f3->name[0] = strdup("test0");
-  f3->name[1] = strdup("test1");
+  mrc_f3_set_comp_name(f3, 0, "test0");
+  mrc_f3_set_comp_name(f3, 1, "test1");
   mrc_f3_setup(f3);
   mrctest_domain_init_values_0(f3);
   mrctest_domain_init_values_1(f3);

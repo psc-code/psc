@@ -324,11 +324,12 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   }
 
   for (int m = 0; m < f1->nr_comp; m++) {
-    char *fld_name = f1->name[m];
+    const char *fld_name = mrc_f1_comp_name(f1, m);
     if (!fld_name) {
       char tmp_fld_name[10];
       fld_name = tmp_fld_name;
       // FIXME: warn
+      MHERE;
       sprintf(tmp_fld_name, "m%d", m);
     }
     xdmf_spatial_save_fld_info(xs, strdup(fld_name), strdup(path), false);

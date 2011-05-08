@@ -190,10 +190,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
   float *buf = calloc(sizeof(float), nout);
 
   if (io->rank == 0) {
-    MPI_Send((char *)mrc_f3_name(fld), strlen(mrc_f3_name(fld)) + 1, MPI_CHAR, par->rank_diagsrv,
-	     ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
-    MPI_Send(fld->name[m], strlen(fld->name[m]) + 1, MPI_CHAR, par->rank_diagsrv,
-	     ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
+    MPI_Send((char *)mrc_f3_name(fld), strlen(mrc_f3_name(fld)) + 1,
+	     MPI_CHAR, par->rank_diagsrv, ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
+    MPI_Send((char *)mrc_f3_comp_name(fld, m), strlen(mrc_f3_comp_name(fld, m)) + 1,
+	     MPI_CHAR, par->rank_diagsrv, ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
     int outtype = DIAG_TYPE_3D;
     MPI_Send(&outtype, 1, MPI_INT, par->rank_diagsrv,
 	     ID_DIAGS_CMD_WRITE, MPI_COMM_WORLD);
@@ -581,7 +581,7 @@ ds_srv_cache_put_gfld_3d(struct diagsrv_one *ds, struct mrc_f3 *f3)
   struct diagsrv_srv_cache_ctx *srv = (struct diagsrv_srv_cache_ctx *) ds->srv;
   assert(srv->nr_flds < MAX_FIELDS);
   srv->obj_names[srv->nr_flds] = strdup(mrc_f3_name(f3));
-  srv->fld_names[srv->nr_flds] = strdup(f3->name[0]);
+  srv->fld_names[srv->nr_flds] = strdup(mrc_f3_comp_name(f3, 0));
   srv->outtypes[srv->nr_flds] = DIAG_TYPE_3D;
   srv->nr_flds++;
   mrc_f3_destroy(f3);
@@ -624,7 +624,7 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_f3 *gfld = mrc_domain_f3_create(srv->domain, SW_0);
       mrc_f3_set_array(gfld, srv->gflds[i]);
       mrc_f3_set_name(gfld, srv->obj_names[i]);
-      gfld->name[0] = strdup(srv->fld_names[i]);
+      mrc_f3_set_comp_name(gfld, 0, srv->fld_names[i]);
       mrc_f3_setup(gfld);
       mrc_f3_write(gfld, ds->io);
       mrc_f3_destroy(gfld);
@@ -979,7 +979,7 @@ static struct param diagsrv_params_descr[] = {
 	}
 
 	mrc_f3_set_name(gfld3, obj_name80);
-	gfld3->name[0] = strdup(fld_name80);
+	mrc_f3_set_comp_name(gfld3, 0, fld_name80);
 	srv_ops->put_gfld_3d(&ds, gfld3);
       }
     }  
