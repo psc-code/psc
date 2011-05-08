@@ -53,8 +53,8 @@ struct mrc_f1 {
   float *arr;
   int _im[1];
   int _ib[1];
-  int ilo[1];
-  int ihi[1];
+  int _ilo[1];
+  int _ihi[1];
   int nr_comp;
   int len;
   bool with_array;
@@ -78,7 +78,7 @@ float mrc_f1_norm(struct mrc_f1 *x);
 float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 #define mrc_f1_foreach(f1, ix, l,r)				\
-  for (int ix = (f1)->ilo[0] - l; ix < (f1)->ihi[0] + r; ix++)	\
+  for (int ix = (f1)->_ilo[0] - l; ix < (f1)->_ihi[0] + r; ix++)	\
 
 #define mrc_f1_foreach_end do {} while (0)	\
 
@@ -107,6 +107,8 @@ struct mrc_f3 {
   float *arr;
   int _im[3];
   int _ib[3];
+  int _ilo[3];
+  int _ihi[3];
   int nr_comp;
   int len;
   bool with_array;
@@ -140,9 +142,9 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->_ib[2] + (f3)->_sw - (l); iz < (f3)->_ib[2] + (f3)->_im[2] - (f3)->_sw + (r); iz++) { \
-  for (int iy = (f3)->_ib[1] + (f3)->_sw - (l); iy < (f3)->_ib[1] + (f3)->_im[1] - (f3)->_sw + (r); iy++) { \
-  for (int ix = (f3)->_ib[0] + (f3)->_sw - (l); ix < (f3)->_ib[0] + (f3)->_im[0] - (f3)->_sw + (r); ix++) \
+  for (int iz = (f3)->_ilo[2] - (l); iz < (f3)->_ihi[2] + (r); iz++) {	\
+  for (int iy = (f3)->_ilo[1] - (l); iy < (f3)->_ihi[1] + (r); iy++) {	\
+  for (int ix = (f3)->_ilo[0] - (l); ix < (f3)->_ihi[0] + (r); ix++)	\
 
 #define mrc_f3_foreach_end			\
   }						\
