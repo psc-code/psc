@@ -31,7 +31,11 @@ psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 static void
 _psc_case_create(struct psc_case *_case)
 {
-  _case->psc = psc_create();
+  _case->psc = psc_create(psc_case_comm(_case));
+
+  // make this object globally accessible
+  assert(!ppsc);
+  ppsc = _case->psc;
 }
 
 // ----------------------------------------------------------------------

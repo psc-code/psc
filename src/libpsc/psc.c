@@ -22,43 +22,39 @@
 #include <limits.h>
 #include <assert.h>
 
-struct psc __psc;
-struct psc *ppsc = &__psc;
+struct psc *ppsc;
 
 // ----------------------------------------------------------------------
 // psc_create
 
-struct psc *
-psc_create()
+static void
+_psc_create(struct psc *psc)
 {
-  memset(ppsc, 0, sizeof(*ppsc));
+  MPI_Comm comm = psc_comm(psc);
 
-  MPI_Comm comm = MPI_COMM_WORLD;
-  ppsc->push_particles = psc_push_particles_create(comm);
-  ppsc->push_fields = psc_push_fields_create(comm);
-  ppsc->bnd = psc_bnd_create(comm);
-  ppsc->collision = psc_collision_create(comm);
-  ppsc->randomize = psc_randomize_create(comm);
-  ppsc->sort = psc_sort_create(comm);
-  ppsc->output_fields = psc_output_fields_create(comm);
-  ppsc->output_particles = psc_output_particles_create(comm);
-  ppsc->moments = psc_moments_create(comm);
-  ppsc->event_generator = psc_event_generator_create(comm);
-  ppsc->balance = psc_balance_create(comm);
+  psc->push_particles = psc_push_particles_create(comm);
+  psc->push_fields = psc_push_fields_create(comm);
+  psc->bnd = psc_bnd_create(comm);
+  psc->collision = psc_collision_create(comm);
+  psc->randomize = psc_randomize_create(comm);
+  psc->sort = psc_sort_create(comm);
+  psc->output_fields = psc_output_fields_create(comm);
+  psc->output_particles = psc_output_particles_create(comm);
+  psc->moments = psc_moments_create(comm);
+  psc->event_generator = psc_event_generator_create(comm);
+  psc->balance = psc_balance_create(comm);
 
-  ppsc->time_start = MPI_Wtime();
+  psc->time_start = MPI_Wtime();
 
-  psc_set_default_domain(ppsc);
-  psc_set_default_psc(ppsc);
-
-  return ppsc;
+  psc_set_default_domain(psc);
+  psc_set_default_psc(psc);
 }
 
 // ----------------------------------------------------------------------
 // psc_set_from_options
 
-void
-psc_set_from_options(struct psc *psc)
+static void
+_psc_set_from_options(struct psc *psc)
 {
   psc_push_particles_set_from_options(psc->push_particles);
   psc_push_fields_set_from_options(psc->push_fields);
@@ -79,8 +75,8 @@ psc_set_from_options(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_setup
 
-void
-psc_setup(struct psc *psc)
+static void
+_psc_setup(struct psc *psc)
 {
   psc_setup_coeff(psc);
   psc_setup_domain(psc); // needs to be done before setting up psc_bnd
@@ -101,8 +97,8 @@ psc_setup(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_view
 
-void
-psc_view(struct psc *psc)
+static void
+_psc_view(struct psc *psc)
 {
   psc_view_psc(psc);
   psc_view_domain(psc);
@@ -123,8 +119,8 @@ psc_view(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_destroy
 
-void
-psc_destroy(struct psc *psc)
+static void
+_psc_destroy(struct psc *psc)
 {
   mfields_base_destroy(psc->flds);
   mparticles_base_destroy(&psc->particles);
@@ -144,6 +140,19 @@ psc_destroy(struct psc *psc)
 
   psc_destroy_domain(psc);
 }
+
+// ======================================================================
+// psc class
+
+struct mrc_class_psc mrc_class_psc = {
+  .name             = "psc",
+  .size             = sizeof(struct psc),
+  .create           = _psc_create,
+  .set_from_options = _psc_set_from_options,
+  .setup            = _psc_setup,
+  .destroy          = _psc_destroy,
+  .view             = _psc_view,
+};
 
 // ======================================================================
 

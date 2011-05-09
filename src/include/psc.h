@@ -288,7 +288,10 @@ struct psc_patch {
 #define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]) + psc->domain.corner[1])
 #define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]) + psc->domain.corner[2])
 
+MRC_CLASS_DECLARE(psc, struct psc);
+
 struct psc {
+  struct mrc_obj obj;
   struct psc_push_particles *push_particles;
   struct psc_push_fields *push_fields;
   struct psc_bnd *bnd;
@@ -394,7 +397,7 @@ psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
   *iz = jz + psc->patch[p].off[2];
 }
 
-struct psc *psc_create(void);
+struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
 void psc_view(struct psc *psc);
