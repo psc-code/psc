@@ -61,9 +61,9 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
 {
   struct mrc_f1 *f1 = mrc_f1_create(mrc_f1_comm(f1_in));
 
-  mrc_f1_set_param_int(f1, "off", f1_in->_off[0]);
-  mrc_f1_set_param_int(f1, "dims", f1_in->_dims[0]);
-  mrc_f1_set_param_int(f1, "nr_comp", f1_in->nr_comp);
+  mrc_f1_set_param_int(f1, "offx", f1_in->_off[0]);
+  mrc_f1_set_param_int(f1, "dimsx", f1_in->_dims[0]);
+  mrc_f1_set_param_int(f1, "nr_comps", f1_in->nr_comp);
   mrc_f1_set_param_int(f1, "sw", f1_in->_sw);
   f1->domain = f1_in->domain;
   mrc_f1_setup(f1);

@@ -218,7 +218,7 @@ mrc_domain_f1_create(struct mrc_domain *domain, int bnd)
     im[d] = patches[0].ldims[d] + 2 * bnd;
   }
   struct mrc_f1 *f1 = mrc_f1_create(mrc_domain_comm(domain));
-  mrc_f1_set_param_int(f1, "dims", patches[0].ldims[0]);
+  mrc_f1_set_param_int(f1, "dimsx", patches[0].ldims[0]);
   mrc_f1_set_param_int(f1, "sw", bnd);
   f1->domain = domain;
   return f1;
