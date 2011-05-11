@@ -43,8 +43,7 @@ MRC_CLASS_DECLARE(rmhd, struct rmhd);
 
 // ======================================================================
 
-// FIXME BND
-#define CRDX(ix) (MRC_CRDX(crds, (ix)+BND))
+#define CRDX(ix) (MRC_CRDX(crds, ix))
 
 static void
 _rmhd_create(struct rmhd *rmhd)
