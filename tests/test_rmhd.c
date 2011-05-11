@@ -6,6 +6,10 @@
 #include <mrc_nr.h>
 #include <mrc_bits.h>
 
+#include <mrc_ts_monitor_private.h>
+#include <mrc_ts_private.h>
+#include <mrc_io.h>
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -230,11 +234,62 @@ struct mrc_class_rmhd mrc_class_rmhd = {
 
 // ======================================================================
 
+struct mrc_ts_monitor_output_phi {
+  struct mrc_io *io;
+  int nr;
+};
+
+static void
+mrc_ts_monitor_output_phi_create(struct mrc_ts_monitor *mon)
+{
+  struct mrc_ts_monitor_output_phi *out =
+    mrc_to_subobj(mon, struct mrc_ts_monitor_output_phi);
+
+  out->io = mrc_io_create(mrc_ts_monitor_comm(mon));
+  mrc_io_set_param_string(out->io, "basename", "run_phi");
+  mrc_ts_monitor_add_child(mon, (struct mrc_obj *) out->io);
+}
+
+static void
+mrc_ts_monitor_output_phi_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
+{
+  struct mrc_ts_monitor_output_phi *out =
+    mrc_to_subobj(mon, struct mrc_ts_monitor_output_phi);
+
+  mpi_printf(mrc_ts_monitor_comm(mon), "Writing output_phi %d (time = %g)\n",
+	     out->nr, ts->time);
+  mrc_io_open(out->io, "w", out->nr, ts->time);
+
+  struct rmhd *rmhd = (struct rmhd *) ts->ctx_obj;
+  struct mrc_f1 *x = (struct mrc_f1 *) ts->x;
+
+  struct mrc_f1 *phi = rmhd_get_fld(rmhd, 1, "phi");
+  mrc_f1_set_comp_name(phi, 0, "phi_i");
+  rmhd_solve_poisson(rmhd, phi, PHI_I, x, OM_I);
+  mrc_f1_write(phi, out->io);
+  mrc_f1_destroy(phi);
+
+  mrc_io_close(out->io);
+  out->nr++;
+}
+
+static struct mrc_ts_monitor_ops mrc_ts_monitor_output_phi_ops = {
+  .name             = "output_phi",
+  .size             = sizeof(struct mrc_ts_monitor_output_phi),
+  .create           = mrc_ts_monitor_output_phi_create,
+  .run              = mrc_ts_monitor_output_phi_run,
+};
+
+// ======================================================================
+
 int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
+
+  mrc_class_register_subclass(&mrc_class_mrc_ts_monitor,
+			      &mrc_ts_monitor_output_phi_ops);
 
   struct rmhd *rmhd = rmhd_create(MPI_COMM_WORLD);
   rmhd_set_from_options(rmhd);
@@ -267,6 +322,15 @@ main(int argc, char **argv)
 
   // run time integration
   struct mrc_ts *ts = mrc_ts_create_std(MPI_COMM_WORLD, rmhd_diag, rmhd);
+
+  struct mrc_ts_monitor *mon_output_phi =
+    mrc_ts_monitor_create(mrc_ts_comm(ts));
+  mrc_ts_monitor_set_type(mon_output_phi, "output_phi");
+  mrc_ts_monitor_set_name(mon_output_phi, "mrc_ts_output_phi");
+  mrc_ts_add_monitor(ts, mon_output_phi);
+
+  mrc_ts_set_context(ts, rmhd_to_mrc_obj(rmhd));
+
   mrc_ts_set_solution(ts, mrc_f1_to_mrc_obj(x));
   mrc_ts_set_rhs_function(ts, rmhd_calc_rhs, rmhd);
   mrc_ts_set_from_options(ts);
