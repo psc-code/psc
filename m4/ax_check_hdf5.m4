@@ -5,8 +5,8 @@
 AC_DEFUN([AX_CHECK_HDF5],
   [AC_ARG_WITH(
     [hdf5],
-    [AS_HELP_STRING([--with-hdf5=[ARG]],[use hdf5 in directory ARG])]
-    [AS_IF(["$withwal" != "yes"], [HDF5_DIR="$withval"])]
+    [AS_HELP_STRING([--with-hdf5=[ARG]],[use hdf5 in directory ARG])],
+    [AS_IF([test "$withval" != "yes"], [HDF5_DIR="$withval"])]
    )
 
 dnl echo HDF5_DIR $HDF5_DIR
