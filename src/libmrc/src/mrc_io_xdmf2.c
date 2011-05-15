@@ -500,6 +500,140 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
 }
 
 // ----------------------------------------------------------------------
+// xdmf_spatial_write_crds_multi_parallel
+
+static void
+xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *domain)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  int gdims[3], np[3], nr_global_patches, nr_patches, rank;
+  mrc_domain_get_global_dims(domain, gdims);
+  mrc_domain_get_nr_procs(domain, np);
+  mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
+  mrc_domain_get_patches(domain, &nr_patches);
+  MPI_Comm_rank(mrc_io_comm(io), &rank);
+
+  for (int d = 0; d < 3; d++) {
+    struct mrc_f1 *crd = crds->crd[d];
+
+    MPI_Request *send_reqs = calloc(nr_patches, sizeof(*send_reqs));
+    int nr_send_reqs = 0;
+    assert(nr_patches == 1); // otherwise need to redo tmp_nc
+    float *tmp_nc = NULL;
+    for (int p = 0; p < nr_patches; p++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(domain, p, &info);
+      bool skip_write = false;
+      for (int dd = 0; dd < 3; dd++) {
+	if (d != dd && info.off[dd] != 0) {
+	  skip_write = true;
+	  break;
+	}
+      }
+      if (!skip_write) {
+	tmp_nc = calloc(info.ldims[d] + 1, sizeof(*tmp_nc));
+
+	// get node-centered coordinates
+	if (crd->_sw > 0) {
+	  for (int i = 0; i <= info.ldims[d]; i++) {
+	    tmp_nc[i] = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
+	  }
+	} else {
+	  int ld = info.ldims[d];
+	  for (int i = 1; i < ld; i++) {
+	    tmp_nc[i] = .5 * (MRC_F1(crd,0, i-1) + MRC_F1(crd,0, i));
+	  }
+	  // extrapolate
+	  tmp_nc[0]  = MRC_F1(crd,0, 0) - .5 * (MRC_F1(crd,0, 1) - MRC_F1(crd,0, 0));
+	  tmp_nc[ld] = MRC_F1(crd,0, ld-1) + .5 * (MRC_F1(crd,0, ld-1) - MRC_F1(crd,0, ld-2));
+	}
+
+ 	/* mprintf("Isend off %d %d %d gp %d\n", info.off[0], info.off[1], info.off[2], */
+	/* 	info.global_patch); */
+	MPI_Isend(tmp_nc + (info.off[d] == 0 ? 0 : 1),
+		  info.ldims[d] + (info.off[d] == 0 ? 1 : 0), MPI_FLOAT,
+		  xdmf->writers[0], info.global_patch,
+		  mrc_io_comm(io), &send_reqs[nr_send_reqs++]);
+      }
+    }
+
+    int im = gdims[d];
+    float *crd_nc = NULL;
+
+    if (rank == xdmf->writers[0]) { // only on first writer
+      crd_nc = calloc(im + 1, sizeof(*crd_nc));
+      MPI_Request *recv_reqs = calloc(np[d], sizeof(*recv_reqs));
+      int nr_recv_reqs = 0;
+      for (int gp = 0; gp < nr_global_patches; gp++) {
+	struct mrc_patch_info info;
+	mrc_domain_get_global_patch_info(domain, gp, &info);
+	bool skip_write = false;
+	for (int dd = 0; dd < 3; dd++) {
+	  if (d != dd && info.off[dd] != 0) {
+	    skip_write = true;
+	    break;
+	  }
+	}
+	if (skip_write) {
+	  continue;
+	}
+	/* mprintf("Irecv off %d %d %d gp %d\n", info.off[0], info.off[1], info.off[2], gp); */
+	MPI_Irecv(&crd_nc[info.off[d] + (info.off[d] == 0 ? 0 : 1)],
+		  info.ldims[d] + (info.off[d] == 0 ? 1 : 0), MPI_FLOAT, info.rank,
+		  gp, mrc_io_comm(io), &recv_reqs[nr_recv_reqs++]);
+      }
+      assert(nr_recv_reqs == np[d]);
+
+      MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+      free(recv_reqs);
+    }
+
+    MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+    free(tmp_nc);
+    free(send_reqs);
+
+    if (!xdmf->is_writer) {
+      continue;
+    }
+
+    // on writers only
+    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT);
+
+
+    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    
+    hsize_t fdims[1] = { gdims[d] + 1 };
+    hid_t filespace = H5Screate_simple(1, fdims, NULL);
+    hid_t dset = H5Dcreate(group_crdp, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			   H5P_DEFAULT, H5P_DEFAULT);
+
+    hid_t memspace;
+    if (rank == xdmf->writers[0]) {
+      memspace = H5Screate_simple(1, fdims, NULL);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
+    
+    H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, H5P_DEFAULT, crd_nc);
+    
+    H5Sclose(memspace);
+    
+    H5Dclose(dset);
+    H5Sclose(filespace);
+
+    H5Gclose(group_crdp);
+    H5Gclose(group_crd1);
+
+    free(crd_nc);
+  }
+}
+
+// ----------------------------------------------------------------------
 // xdmf_spatial_write_mcrds_multi_uniform_parallel
 
 static void
@@ -530,9 +664,11 @@ xdmf_spatial_write_mcrds_multi_uniform_parallel(struct xdmf_file *file,
 
 static void
 xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
-				  struct xdmf_file *file,
+				  struct mrc_io *io,
 				  struct mrc_domain *domain)
 {
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
   if (xs->crds_done)
     return;
 
@@ -541,8 +677,18 @@ xdmf_spatial_write_mcrds_parallel(struct xdmf_spatial *xs,
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
     xdmf_spatial_write_mcrds_multi_uniform_parallel(file, domain);
-  } else {
+  } else if (strcmp(mrc_crds_type(crds), "multi") == 0) {
+    // FIXME, broken since not all are writers
+    assert(0);
     xdmf_spatial_write_mcrds_multi_parallel(file, domain);
+  } else if (strcmp(mrc_crds_type(crds), "uniform") == 0) {
+    // FIXME, should do XDMF uniform, or rather just use m1, not f1
+    xdmf_spatial_write_crds_multi_parallel(io, domain);
+  } else if (strcmp(mrc_crds_type(crds), "rectilinear") == 0) {
+    // FIXME, should do XDMF uniform, or rather just use m1, not f1
+    xdmf_spatial_write_crds_multi_parallel(io, domain);
+  } else {
+    assert(0);
   }
 }
 
@@ -570,7 +716,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->domain),
 					 m3->domain);
-    xdmf_spatial_write_mcrds_parallel(xs, file, m3->domain);
+    xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
   }
 
   int gdims[3];
@@ -719,6 +865,7 @@ static void
 xdmf_collective_open(struct mrc_io *io, const char *mode)
 {
   struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
   assert(strcmp(mode, "w") == 0);
 
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
@@ -726,8 +873,6 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
 	  io->step, 0);
 
   if (xdmf->is_writer) {
-    struct xdmf_file *file = &xdmf->file;
-
     hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
     MPI_Info info;
     MPI_Info_create(&info);
@@ -743,9 +888,8 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
     file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     H5Pclose(plist);
     MPI_Info_free(&info);
-
-    xdmf_spatial_open(&file->xdmf_spatial_list);
   }
+  xdmf_spatial_open(&file->xdmf_spatial_list);
 }
 
 // ----------------------------------------------------------------------
@@ -755,12 +899,11 @@ static void
 xdmf_collective_close(struct mrc_io *io)
 {
   struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
 
+  xdmf_spatial_close(&file->xdmf_spatial_list, io, xdmf->xdmf_temporal);
   if (xdmf->is_writer) {
-    struct xdmf_file *file = &xdmf->file;
     H5Fclose(file->h5_file);
-
-    xdmf_spatial_close(&file->xdmf_spatial_list, io, xdmf->xdmf_temporal);
     memset(file, 0, sizeof(*file));
   }
 }
@@ -915,8 +1058,9 @@ collective_send_f3_begin(struct collective_ctx *ctx, struct mrc_io *io,
 
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->domain, p, &info);
-      //      mprintf("MPI_Isend -> %d gp %d\n", xdmf->writers[writer], info.global_patch);
       struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
+      /* mprintf("MPI_Isend -> %d gp %d len %d\n", xdmf->writers[writer], info.global_patch, */
+      /* 	      m3p->im[0] * m3p->im[1] * m3p->im[2]); */
       MPI_Isend(&MRC_M3(m3p, m, m3p->ib[0], m3p->ib[1], m3p->ib[2]),
 		m3p->im[0] * m3p->im[1] * m3p->im[2], MPI_FLOAT,
 		xdmf->writers[writer], info.global_patch,
@@ -989,10 +1133,11 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
     ctx->recv_gps[rr] = gp;
     struct mrc_f3 *recv_f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int3(recv_f3, "dims", info.ldims);
+    mrc_f3_set_param_int(recv_f3, "sw", m3->sw);
     mrc_f3_setup(recv_f3);
     ctx->recv_f3s[rr] = recv_f3;
     
-    //    mprintf("MPI_Irecv <- %d gp %d\n", info.rank, info.global_patch);
+    /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_f3->len); */
     MPI_Irecv(recv_f3->arr, recv_f3->len, MPI_FLOAT, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
   }
@@ -1087,6 +1232,16 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   ctx.slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx.slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 
+  struct xdmf_file *file = &xdmf->file;
+  struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
+					      mrc_domain_name(m3->domain));
+  if (!xs) {
+    xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
+					 mrc_domain_name(m3->domain),
+					 m3->domain);
+    xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
+  }
+
   if (xdmf->is_writer) {
     struct mrc_f3 *f3 = NULL;
     int writer_rank;
@@ -1109,7 +1264,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     mrc_f3_set_param_int3(f3, "dims", writer_dims);
     mrc_f3_setup(f3);
 
-    struct xdmf_file *file = &xdmf->file;
     hid_t group0;
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
       group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
@@ -1119,15 +1273,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
     
-    struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
-						mrc_domain_name(m3->domain));
-    if (!xs) {
-      xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
-					   mrc_domain_name(m3->domain),
-					   m3->domain);
-      xdmf_spatial_write_mcrds_parallel(xs, file, m3->domain);
-    }
-
     for (int m = 0; m < m3->nr_comp; m++) {
       collective_recv_f3_begin(&ctx, io, f3, m3);
       collective_send_f3_begin(&ctx, io, m3, m);

@@ -28,6 +28,7 @@ TESTS = \
 	test_io_1.sh \
 	test_io_2.sh \
 	test_io_3.sh \
+	test_io_4.sh \
 	test_io_read_0.sh \
 	test_io_read_1.sh \
 	test_io_read_2.sh \
