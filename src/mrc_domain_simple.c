@@ -189,9 +189,14 @@ static void
 mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int patch,
 					struct mrc_patch_info *info)
 {
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+
+  int proc[3];
+  mrc_domain_simple_rank2proc(domain, patch, proc);
   for (int d = 0; d < 3; d++) {
-    info->ldims[d] = -1;
-    info->off[d] = -1;
+    assert(simple->gdims[d] % simple->nr_procs[d] == 0);
+    info->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
+    info->off[d] = proc[d] * info->ldims[d];
     info->rank = patch;
     info->patch = 0;
     info->global_patch = patch;
@@ -204,6 +209,14 @@ mrc_domain_simple_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 {
   int rank = mrc_domain_simple_proc2rank(domain, idx);
   mrc_domain_simple_get_global_patch_info(domain, rank, info);
+}
+
+static void
+mrc_domain_simple_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+{
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+
+  *nr_global_patches = simple->nr_procs[0] * simple->nr_procs[1] * simple->nr_procs[2];
 }
 
 static struct mrc_ddc *
@@ -250,6 +263,8 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .get_nr_procs          = mrc_domain_simple_get_nr_procs,
   .get_bc                = mrc_domain_simple_get_bc,
   .get_local_patch_info  = mrc_domain_simple_get_local_patch_info,
+  .get_global_patch_info = mrc_domain_simple_get_global_patch_info,
+  .get_nr_global_patches = mrc_domain_simple_get_nr_global_patches,
   .create_ddc            = mrc_domain_simple_create_ddc,
 };
 
