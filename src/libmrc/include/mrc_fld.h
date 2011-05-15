@@ -228,6 +228,14 @@ struct mrc_m3 {
 MRC_CLASS_DECLARE(mrc_m3, struct mrc_m3);
 
 void mrc_m3_set_nr_comps(struct mrc_m3 *m3, int nr_comps); // FIXME
+void mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name);
+const char *mrc_m3_comp_name(struct mrc_m3 *m3, int m);
+struct mrc_m3 *mrc_m3_duplicate(struct mrc_m3 *m3);
+void mrc_m3_copy(struct mrc_m3 *m3_to, struct mrc_m3 *m3_from);
+void mrc_m3_set(struct mrc_m3 *m3, float val);
+void mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io);
+void mrc_m3_write_scaled(struct mrc_m3 *m3, struct mrc_io *io, float scale);
+void mrc_m3_write_comps(struct mrc_m3 *m3, struct mrc_io *io, int mm[]);
 
 static inline struct mrc_m3_patch *
 mrc_m3_patch_get(struct mrc_m3 *m3, int p)
@@ -239,13 +247,6 @@ static inline void
 mrc_m3_patch_put(struct mrc_m3 *m3)
 {
 }
-
-struct mrc_m3 *mrc_m3_duplicate(struct mrc_m3 *m3);
-void mrc_m3_copy(struct mrc_m3 *m3_to, struct mrc_m3 *m3_from);
-void mrc_m3_set(struct mrc_m3 *m3, float val);
-void mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io);
-void mrc_m3_write_scaled(struct mrc_m3 *m3, struct mrc_io *io, float scale);
-void mrc_m3_write_comps(struct mrc_m3 *m3, struct mrc_io *io, int mm[]);
 
 #ifdef BOUNDS_CHECK
 
