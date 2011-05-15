@@ -15,6 +15,7 @@ noinst_PROGRAMS = \
 	test_kdv \
 	test_kdv_simple \
 	test_kdv_simple3d \
+	test_erfi \
 	tutorial_mrc_obj
 
 tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c
