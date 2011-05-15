@@ -137,6 +137,14 @@ rmhd_diag(void *ctx, float time, struct mrc_obj *_x, FILE *file)
   for (int m = 0; m < NR_FLDS; m++) {
     fprintf(file, " %g", absmax[m]);
   }
+
+  static float absmax_last[NR_FLDS], time_last;
+  for (int m = 0; m < NR_FLDS; m++) {
+    fprintf(file, " %g", (log(absmax[m]) - log(absmax_last[m])) / (time - time_last));
+    absmax_last[m] = absmax[m];
+  }
+  time_last = time;
+
   fprintf(file, "\n");
   fflush(file);
 }
@@ -307,8 +315,23 @@ main(int argc, char **argv)
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 1, 1) {
-    MRC_F1(By0, 0, ix) = tanh(rmhd->lambda * CRDX(ix));
-    MRC_F1(x, PSI_R, ix) = exp(-sqr(CRDX(ix)));
+    float By;
+    float xx = CRDX(ix);
+    float lambda = rmhd->lambda;
+#if 0
+    By = tanh(lambda * xx);
+#else
+    const float x0 = .92 / lambda, alpha = 1.85;
+    if (xx < -x0) {
+      By = -1.;
+    } else if (xx > x0) {
+      By = 1.;
+    } else {
+      By = alpha * exp(-sqr(xx*lambda)) * sqrt(M_PI) / 2. * mrc_erfi(xx*lambda);
+    }
+#endif
+    MRC_F1(By0, 0, ix) = By;
+    MRC_F1(x, PSI_R, ix) = exp(-sqr(xx));
   } mrc_f1_foreach_end;
 
   // write out equilibrium
