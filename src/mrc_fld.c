@@ -643,10 +643,12 @@ _mrc_m3_destroy(struct mrc_m3 *m3)
   }
   free(m3->patches);
 
-  for (int m = 0; m < m3->nr_comp; m++) {
-    free(m3->name[m]);
+  if (m3->name) {
+    for (int m = 0; m < m3->nr_comp; m++) {
+      free(m3->name[m]);
+    }
+    free(m3->name);
   }
-  free(m3->name);
 }
 
 static void
@@ -690,6 +692,21 @@ _mrc_m3_view(struct mrc_m3 *m3)
     MPI_Barrier(obj->comm);
   }
 #endif
+}
+
+void
+mrc_m3_set_comp_name(struct mrc_m3 *m3, int m, const char *name)
+{
+  assert(m < m3->nr_comp);
+  free(m3->name[m]);
+  m3->name[m] = name ? strdup(name) : NULL;
+}
+
+const char *
+mrc_m3_comp_name(struct mrc_m3 *m3, int m)
+{
+  assert(m < m3->nr_comp);
+  return m3->name[m];
 }
 
 static void
