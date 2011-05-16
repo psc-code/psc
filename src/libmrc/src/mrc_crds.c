@@ -125,8 +125,8 @@ mrc_crds_multi_alloc(struct mrc_crds *crds)
     mrc_m1_set_param_int(crds->mcrd[d], "dim", d);
     char s[5]; sprintf(s, "crd%d", d);
     mrc_m1_set_name(crds->mcrd[d], s);
-    crds->mcrd[d]->name[0] = strdup(s);
     mrc_m1_setup(crds->mcrd[d]);
+    mrc_m1_set_comp_name(crds->mcrd[d], 0, s);
   }
 }
 
