@@ -32,9 +32,7 @@ test_write_read_m1(struct mrc_m1 *fld)
 
   mrc_io_destroy(io);
 
-#if 0
   mrctest_m1_compare(fld, fld2, 0.);
-#endif
   mrc_m1_destroy(fld2);
 }
 
@@ -51,7 +49,7 @@ mod_domain(struct mrc_mod *mod, void *arg)
 
   switch (testcase) {
   case 1: ;
-    struct mrc_m1 *m1 = mrctest_create_m1_1(domain);
+    struct mrc_m1 *m1 = mrctest_create_m1_1(domain, 1);
     test_write_read_m1(m1);
     mrc_m1_destroy(m1);
     break;

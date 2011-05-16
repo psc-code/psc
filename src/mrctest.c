@@ -80,7 +80,6 @@ mrctest_create_domain(MPI_Comm comm, struct mrctest_domain_params *par)
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
-  mrc_domain_view(domain);
   mrc_domain_setup(domain);
 
   return domain;
@@ -99,7 +98,6 @@ mrctest_create_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *p
   mrc_crds_set_param_float3(crds, "l", (float[3]) { -30., -20., -20. });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  50.,  20.,  20. });
   mrc_domain_set_from_options(domain);
-  mrc_domain_view(domain);
   mrc_domain_setup(domain);
   int sw;
   mrc_crds_get_param_int(crds, "sw", &sw);
@@ -161,10 +159,11 @@ mrctest_create_field_2(struct mrc_domain *domain)
 }
 
 struct mrc_m1 *
-mrctest_create_m1_1(struct mrc_domain *domain)
+mrctest_create_m1_1(struct mrc_domain *domain, int dim)
 {
   struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
   mrc_m1_set_param_int(m1, "sw", 2);
+  mrc_m1_set_param_int(m1, "dim", dim);
   mrc_m1_setup(m1);
   mrc_m1_set_comp_name(m1, 0, "test");
 #if 0
@@ -215,6 +214,33 @@ mrctest_f3_compare(struct mrc_f3 *f1, struct mrc_f3 *f2, float eps)
     } mrc_f3_foreach_end;
     if (diff > eps) {
       mprintf("mrctest_f3_compare: m = %d diff = %g\n", m, diff);
+      assert(0);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrctest_m1_compare
+
+void
+mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
+{
+  assert(mrc_m1_same_shape(m1_1, m1_2));
+  for (int m = 0; m < m1_2->nr_comp; m++) {
+    float diff = 0.;
+    mrc_m1_foreach_patch(m1_1, p) {
+      struct mrc_m1_patch *m1p_1 = mrc_m1_patch_get(m1_1, p);
+      struct mrc_m1_patch *m1p_2 = mrc_m1_patch_get(m1_2, p);
+      
+      mrc_m1_foreach(m1p_1, ix, 0, 0) {
+	diff = fmaxf(diff, fabsf(MRC_M1(m1p_1, m, ix) - MRC_M1(m1p_2, m, ix)));
+      } mrc_m1_foreach_end;
+
+      mrc_m1_patch_put(m1_1);
+      mrc_m1_patch_put(m1_2);
+    }
+    if (diff > eps) {
+      mprintf("mrctest_m1_compare: m = %d diff = %g\n", m, diff);
       assert(0);
     }
   }
