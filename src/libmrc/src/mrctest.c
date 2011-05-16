@@ -160,6 +160,21 @@ mrctest_create_field_2(struct mrc_domain *domain)
   return f3;
 }
 
+struct mrc_m1 *
+mrctest_create_m1_1(struct mrc_domain *domain)
+{
+  struct mrc_m1 *m1 = mrc_domain_m1_create(domain);
+  mrc_m1_set_param_int(m1, "sw", 2);
+  mrc_m1_setup(m1);
+  mrc_m1_set_comp_name(m1, 0, "test");
+#if 0
+  mrc_m1_foreach(m1, ix, 0, 0) {
+    MRC_M1(m1p, 0, ix) = 1.f + ix * ix;
+  } mrc_m1_foreach_end;
+#endif
+  return m1;
+}
+
 static void
 mod_diagsrv(struct mrc_mod *mod, void *arg)
 {
