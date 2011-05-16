@@ -539,7 +539,7 @@ struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
 static void
 _mrc_m1_create(struct mrc_m1 *m1)
 {
-  m1->name = calloc(m1->nr_comp, sizeof(*m1->name));
+  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
 }
 
 static void
@@ -552,9 +552,9 @@ _mrc_m1_destroy(struct mrc_m1 *m1)
   free(m1->patches);
 
   for (int m = 0; m < m1->nr_comp; m++) {
-    free(m1->name[m]);
+    free(m1->_comp_name[m]);
   }
-  free(m1->name);
+  free(m1->_comp_name);
 }
 
 static void
@@ -601,6 +601,21 @@ _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
   mrc_io_write_obj_ref(io, mrc_m1_name(m1), "domain",
 		       (struct mrc_obj *) m1->domain);
   //  mrc_io_write_m1(io, mrc_obj_name(obj), m1);
+}
+
+void
+mrc_m1_set_comp_name(struct mrc_m1 *m1, int m, const char *name)
+{
+  assert(m < m1->nr_comp);
+  free(m1->_comp_name[m]);
+  m1->_comp_name[m] = name ? strdup(name) : NULL;
+}
+
+const char *
+mrc_m1_comp_name(struct mrc_m1 *m1, int m)
+{
+  assert(m < m1->nr_comp);
+  return m1->_comp_name[m];
 }
 
 // ----------------------------------------------------------------------

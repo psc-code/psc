@@ -171,10 +171,13 @@ struct mrc_m1 {
   struct mrc_m1_patch *patches;
   struct mrc_domain *domain;
   int sw;
-  char **name;
+  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_m1, struct mrc_m1);
+
+void mrc_m1_set_comp_name(struct mrc_m1 *x, int m, const char *name);
+const char *mrc_m1_comp_name(struct mrc_m1 *x, int m);
 
 static inline struct mrc_m1_patch *
 mrc_m1_patch_get(struct mrc_m1 *m1, int p)
