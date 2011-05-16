@@ -628,6 +628,25 @@ mrc_m1_comp_name(struct mrc_m1 *m1, int m)
   return m1->_comp_name[m];
 }
 
+bool
+mrc_m1_same_shape(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2)
+{
+  if (m1_1->nr_comp != m1_2->nr_comp) return false;
+  if (m1_1->nr_patches != m1_2->nr_patches) return false;
+  mrc_m1_foreach_patch(m1_1, p) {
+    struct mrc_m1_patch *m1p_1 = mrc_m1_patch_get(m1_1, p);
+    struct mrc_m1_patch *m1p_2 = mrc_m1_patch_get(m1_2, p);
+
+    if (m1p_1->im[0] != m1p_2->im[0])
+      return false;
+
+    mrc_m1_patch_put(m1_1);
+    mrc_m1_patch_put(m1_2);
+  }
+  return true;
+}
+
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m1
 
