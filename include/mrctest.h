@@ -41,5 +41,6 @@ void mrctest_domain_init_values_0(struct mrc_f3 *f);
 void mrctest_domain(void (*mod_domain)(struct mrc_mod *mod, void *arg));
 struct mrc_f3 *mrctest_create_field_1(struct mrc_domain *domain);
 struct mrc_f3 *mrctest_create_field_2(struct mrc_domain *domain);
+struct mrc_m1 *mrctest_create_m1_1(struct mrc_domain *domain);
 
 #endif

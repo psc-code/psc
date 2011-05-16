@@ -6,5 +6,6 @@ test_rlc
 test_mrc_ddc
 test_mrc_domain_multi
 test_erfi
+test_io_read_multi
 tutorial_mrc_obj
 

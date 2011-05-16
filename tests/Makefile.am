@@ -5,6 +5,7 @@ noinst_PROGRAMS = \
 	test_mrc_obj \
 	test_io \
 	test_io_read \
+	test_io_read_multi \
 	test_dict \
 	test_spherical_harmonics \
 	test_ddc \
