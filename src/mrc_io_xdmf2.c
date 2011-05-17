@@ -1224,6 +1224,10 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  if (xdmf->nr_writers > 1 || io->size > 1) {
+    MHERE; // FIXME
+    return;
+  }
   assert(xdmf->nr_writers == 1); // FIXME
   int nr_comps, dim, gdims[3], nr_global_patches, nr_patches, sw;
   mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);

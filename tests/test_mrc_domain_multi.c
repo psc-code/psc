@@ -62,12 +62,15 @@ main(int argc, char **argv)
     mrc_domain_setup(domain);
     int sw;
     mrc_crds_get_param_int(crds, "sw", &sw);
+    struct mrc_patch *patches = mrc_domain_get_patches(domain, NULL);
     for (int d = 0; d < 3; d++) {
       mrc_m1_foreach_patch(crds->mcrd[d], p) {
 	struct mrc_m1_patch *m1p = mrc_m1_patch_get(crds->mcrd[d], p);
 	mrc_m1_foreach(m1p, ix, sw, sw) {
-	  MRC_M1(m1p, 0, ix) = ix*ix;
+	  int jx = ix + patches[p].off[d];
+	  MRC_M1(m1p, 0, ix) = jx*jx;
 	} mrc_m1_foreach_end;
+	mrc_m1_patch_put(crds->mcrd[d]);
       }
     }
     test_read_write(domain);
