@@ -197,11 +197,11 @@ AC_CONFIG_FILES([Makefile src/Makefile
 		 src/libmrc/tests/test_io_read_4.sh
 		 src/libmrc/tests/test_io_read_multi_1.sh
 		 src/libmrc/tests/test_mrc_domain_multi_0.sh
-		 src/libmrc/tests/test_mrc_domain_multi_1.sh
-		 src/libmrc/tests/test_mrc_domain_multi_2.sh
-		 src/libmrc/tests/test_mrc_domain_multi_3.sh
-		 src/libmrc/tests/test_mrc_domain_multi_4.sh
-		 src/libmrc/tests/test_mrc_domain_multi_5.sh
+		 src/libmrc/tests/test_mrc_m3_0.sh
+		 src/libmrc/tests/test_mrc_m3_1.sh
+		 src/libmrc/tests/test_mrc_m3_2.sh
+		 src/libmrc/tests/test_mrc_m3_3.sh
+		 src/libmrc/tests/test_mrc_m3_4.sh
 ])
 
 AC_OUTPUT

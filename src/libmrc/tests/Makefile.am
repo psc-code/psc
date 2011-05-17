@@ -10,6 +10,7 @@ noinst_PROGRAMS = \
 	test_spherical_harmonics \
 	test_ddc \
 	test_mrc_domain_multi \
+	test_mrc_m3 \
 	test_mrc_ddc \
 	test_rlc \
 	test_rmhd \
@@ -38,9 +39,9 @@ TESTS = \
 	test_io_read_multi_1.sh \
 	test_ddc_0.sh \
 	test_mrc_domain_multi_0.sh \
-	test_mrc_domain_multi_1.sh \
-	test_mrc_domain_multi_2.sh \
-	test_mrc_domain_multi_3.sh \
-	test_mrc_domain_multi_4.sh \
-	test_mrc_domain_multi_5.sh \
+	test_mrc_m3_0.sh \
+	test_mrc_m3_1.sh \
+	test_mrc_m3_2.sh \
+	test_mrc_m3_3.sh \
+	test_mrc_m3_4.sh \
 	test_mrc_ddc_1.sh
