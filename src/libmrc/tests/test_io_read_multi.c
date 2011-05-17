@@ -15,7 +15,6 @@ test_write_read_m1(struct mrc_m1 *fld)
   struct mrc_io *io = mrc_io_create(mrc_m1_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_view(io);
 
   mrc_io_open(io, "w", 0, 0.);
   mrc_m1_write(fld, io);
@@ -23,11 +22,9 @@ test_write_read_m1(struct mrc_m1 *fld)
 
   mrc_io_destroy(io);
 
-#if 0
   io = mrc_io_create(mrc_m1_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
   struct mrc_m1 *fld2 = mrc_m1_read(io, mrc_m1_name(fld));
@@ -35,9 +32,10 @@ test_write_read_m1(struct mrc_m1 *fld)
 
   mrc_io_destroy(io);
 
+#if 0
   mrctest_m1_compare(fld, fld2, 0.);
-  mrc_m1_destroy(fld2);
 #endif
+  mrc_m1_destroy(fld2);
 }
 
 static void

@@ -989,6 +989,8 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   int ierr;
+
+  assert(io->size == xdmf->nr_writers);
   
   hid_t group = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group);
   switch (type) {
@@ -1025,6 +1027,30 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     break;
   }
   ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_write_m1
+
+static void
+xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+
+  MHERE;
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_read_m1
+
+static void
+xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+
+  MHERE;
 }
 
 // ----------------------------------------------------------------------
@@ -1576,6 +1602,8 @@ struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
   .write_attr    = xdmf_collective_write_attr,
   .read_attr     = xdmf_collective_read_attr,
   .read_f1       = xdmf_collective_read_f1,
+  .write_m1      = xdmf_collective_write_m1,
+  .read_m1       = xdmf_collective_read_m1,
   .write_m3      = xdmf_collective_write_m3,
   .read_m3       = xdmf_collective_read_m3,
 };

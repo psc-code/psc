@@ -197,6 +197,31 @@ mrc_io_write_f3(struct mrc_io *io, const char *path,
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_write_m1
+
+void
+mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_m1) {
+    ops->write_m1(io, path, fld);
+  } else {
+    MHERE; // FIXME
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_io_read_m1
+
+void
+mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_m1);
+  ops->read_m1(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_write_m3
 
 void
