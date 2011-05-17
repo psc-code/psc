@@ -66,19 +66,19 @@ _mrc_domain_setup(struct mrc_domain *domain)
 static void
 _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 {
-  // FIXME, the whole ldims business doesn't work if ldims aren't the same everywhere
+  mrc_domain_setup(domain);
   mrc_crds_destroy(domain->crds);
   char *s;
   mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
   domain->crds = mrc_crds_read(io, s);
   free(s);
-  mrc_domain_setup(domain);
 }
 
 static void
 _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "mpi_size", domain->size);
+  // FIXME use mrc_io_obj_ref?
   mrc_io_write_attr_string(io, mrc_domain_name(domain), "crds",
 			   mrc_crds_name(domain->crds));
   mrc_crds_write(mrc_domain_get_crds(domain), io);

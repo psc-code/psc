@@ -1014,7 +1014,6 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     hsize_t dims;
     H5T_class_t class;
     size_t sz;
-    //    mprintf("path %s name %s\n", path, name);
     ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
     pv->u_string = malloc(sz);
     ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
@@ -1310,48 +1309,6 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     free(recv_reqs);
     free(send_reqs);
   }
-}
-
-// ----------------------------------------------------------------------
-// xdmf_collective_read_f1
-
-static void
-xdmf_collective_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
-{
-  struct xdmf *xdmf = to_xdmf(io);
-  struct xdmf_file *file = &xdmf->file;
-
-  MHERE;
-  hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
-#if 0
-  const int *ghost_dims = mrc_f1_ghost_dims(f1);
-  hsize_t hdims[1] = { ghost_dims[0] };
-
-  hid_t filespace = H5Screate_simple(1, hdims, NULL);
-  hid_t memspace = H5Screate_simple(1, hdims, NULL);
-  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
-  if (hdf5->par.use_independent_io) {
-    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
-  } else {
-    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
-  }
-
-  struct read_f1_cb_data cb_data = {
-    .io        = io,
-    .fld       = f1,
-    .filespace = filespace,
-    .memspace  = memspace,
-    .dxpl      = dxpl,
-  };
-  hsize_t idx = 0;
-  H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
-		     read_f1_cb, &cb_data, H5P_DEFAULT);
-
-  H5Pclose(dxpl);
-  H5Sclose(filespace);
-  H5Sclose(memspace);
-#endif
-  H5Gclose(group0);
 }
 
 // ----------------------------------------------------------------------
@@ -1860,7 +1817,6 @@ struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
   .close         = xdmf_collective_close,
   .write_attr    = xdmf_collective_write_attr,
   .read_attr     = xdmf_collective_read_attr,
-  .read_f1       = xdmf_collective_read_f1,
   .write_m1      = xdmf_collective_write_m1,
   .read_m1       = xdmf_collective_read_m1,
   .write_m3      = xdmf_collective_write_m3,

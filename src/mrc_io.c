@@ -116,8 +116,11 @@ void
 mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_f1);
-  ops->read_f1(io, path, fld);
+  if (ops->read_f1) {
+    ops->read_f1(io, path, fld);
+  } else {
+    MHERE;
+  }
 }
 
 // ----------------------------------------------------------------------
