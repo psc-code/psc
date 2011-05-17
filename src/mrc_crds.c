@@ -39,6 +39,7 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
     crds->crd[d] = (struct mrc_f1 *)
       mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_f1);
   }
+  mrc_crds_setup(crds);
 }
 
 static void

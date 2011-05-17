@@ -72,6 +72,7 @@ _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
   mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
   domain->crds = mrc_crds_read(io, s);
   free(s);
+  mrc_domain_setup(domain);
 }
 
 static void
