@@ -59,6 +59,7 @@ struct mrc_f1 {
   int len;
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
+  int dim; //< # along this dim of the domain
   int _sw; //< # of ghost points
   char **_comp_name;
 };

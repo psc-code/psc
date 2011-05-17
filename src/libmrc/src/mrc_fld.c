@@ -31,6 +31,13 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   free(f1->_comp_name);
 
   f1->_comp_name = calloc(f1->nr_comp, sizeof(*f1->_comp_name));
+  if (f1->domain) {
+    int nr_patches;
+    struct mrc_patch *patches = mrc_domain_get_patches(f1->domain, &nr_patches);
+    assert(nr_patches == 1);
+    f1->_off[0] = 0;
+    f1->_dims[0] = patches[0].ldims[f1->dim];
+  }
   f1->_ghost_off[0] = f1->_off[0] - f1->_sw;
   f1->_ghost_dims[0] = f1->_dims[0] + 2 * f1->_sw;
   f1->len = f1->_ghost_dims[0] * f1->nr_comp;
@@ -198,6 +205,7 @@ static struct param mrc_f1_params_descr[] = {
   { "dimsx"           , VAR(_dims[0])     , PARAM_INT(0)           },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
+  { "dim"             , VAR(dim)          , PARAM_INT(0)           },
   {},
 };
 #undef VAR
