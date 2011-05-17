@@ -35,6 +35,7 @@ TESTS = \
 	test_io_read_2.sh \
 	test_io_read_3.sh \
 	test_io_read_4.sh \
+	test_io_read_multi_1.sh \
 	test_ddc_0.sh \
 	test_mrc_domain_multi_0.sh \
 	test_mrc_domain_multi_1.sh \
