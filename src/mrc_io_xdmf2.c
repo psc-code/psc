@@ -1082,7 +1082,7 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  if (xdmf->nr_writers > 1) {
+  if (xdmf->nr_writers > 1 || io->size > 1) {
     MHERE; // FIXME
     return;
   }
