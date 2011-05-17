@@ -1030,6 +1030,49 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
 }
 
 // ----------------------------------------------------------------------
+// collective_write_f1
+// does the actual write of the f1 to the file
+// only called on writer procs
+
+static void
+collective_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1, int m,
+		    hid_t group0)
+{
+  int ierr;
+
+  hid_t group_fld = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
+  ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
+  
+  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
+			  H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
+  int i0 = 0;
+  ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
+
+  hsize_t fdims[1] = { mrc_f1_ghost_dims(f1)[0] };
+  hid_t filespace = H5Screate_simple(1, fdims, NULL); H5_CHK(filespace);
+  hid_t dset = H5Dcreate(group, "1d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl); // FIXME, consolidate
+#ifdef H5_HAVE_PARALLEL
+  struct xdmf *xdmf = to_xdmf(io);
+  if (xdmf->use_independent_io) {
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT); CE;
+  } else {
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
+  }
+#endif
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, dxpl, f1->arr); CE;
+  
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Pclose(dxpl); CE;
+
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group_fld); CE;
+}
+
+// ----------------------------------------------------------------------
 // xdmf_collective_write_m1
 
 static void
@@ -1037,8 +1080,121 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
+  int ierr;
 
-  MHERE;
+  if (xdmf->nr_writers > 1) {
+    MHERE; // FIXME
+    return;
+  }
+  assert(xdmf->nr_writers == 1);
+  int nr_comps, dim, gdims[3], nr_global_patches, np[3], nr_patches;
+  mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
+  mrc_m1_get_param_int(m1, "dim", &dim);
+  mrc_domain_get_global_dims(m1->domain, gdims);
+  mrc_domain_get_nr_global_patches(m1->domain, &nr_global_patches);
+  mrc_domain_get_nr_procs(m1->domain, np);
+  mrc_domain_get_patches(m1->domain, &nr_patches);
+
+  assert(io->size == 1); // FIXME
+  struct mrc_f1 *f1;
+  if (xdmf->is_writer) {
+    f1 = mrc_f1_create(MPI_COMM_SELF);
+    mrc_f1_set_param_int(f1, "dimsx", gdims[dim]);
+    mrc_f1_setup(f1);
+
+    hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
+    for (int m = 0; m < nr_comps; m++) {
+      mrc_f1_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
+
+      MPI_Request *recv_reqs = calloc(np[dim], sizeof(*recv_reqs));
+      int nr_recv_reqs = 0;
+      for (int gp = 0; gp < nr_global_patches; gp++) {
+	struct mrc_patch_info info;
+	mrc_domain_get_global_patch_info(m1->domain, gp, &info);
+	bool skip = false;
+	for (int d = 0; d < 3; d++) {
+	  if (d != dim && info.off[d] != 0) {
+	    skip = true;
+	  }
+	}
+	if (skip) {
+	  continue;
+	}
+	
+	//	mprintf("recv from %d tag %d\n", info.rank, gp);
+	MPI_Irecv(&MRC_F1(f1, 0, info.off[dim]), info.ldims[dim], MPI_FLOAT,
+		  info.rank, gp, mrc_m1_comm(m1), &recv_reqs[nr_recv_reqs++]);
+      }
+      assert(nr_recv_reqs == np[dim]);
+
+      MPI_Request *send_reqs = calloc(nr_patches, sizeof(*send_reqs));
+      int nr_send_reqs = 0;
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_patch_info info;
+	mrc_domain_get_local_patch_info(m1->domain, p, &info);
+	bool skip = false;
+	for (int d = 0; d < 3; d++) {
+	  if (d != dim && info.off[d] != 0) {
+	    skip = true;
+	  }
+	}
+	if (skip) {
+	  continue;
+	}
+
+	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+	//	mprintf("send to %d tag %d\n", xdmf->writers[0], info.global_patch);
+	MPI_Isend(&MRC_M1(m1p, m, 0), info.ldims[dim], MPI_FLOAT,
+		  xdmf->writers[0], info.global_patch, mrc_m1_comm(m1),
+		  &send_reqs[nr_send_reqs++]);
+	mrc_m1_patch_put(m1);
+      }
+
+      MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+      free(recv_reqs);
+      collective_write_f1(io, path, f1, m, group0);
+
+      MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+      free(send_reqs);
+    }
+    ierr = H5Gclose(group0); CE;
+
+    mrc_f1_destroy(f1);
+  }
+}
+
+// ----------------------------------------------------------------------
+
+struct read_m1_cb_data {
+  struct mrc_io *io;
+  struct mrc_f1 *gfld;
+  hid_t filespace;
+  hid_t memspace;
+  hid_t dxpl;
+};
+
+static herr_t
+read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+{
+  struct read_m1_cb_data *data = op_data;
+  int ierr;
+
+  hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
+  int m;
+  ierr = H5LTget_attribute_int(group_fld, ".", "m", &m); CE;
+  hid_t group = H5Gopen(group_fld, "p0", H5P_DEFAULT); H5_CHK(group);
+
+  hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
+  struct mrc_f1 *gfld = data->gfld;
+  int *ib = gfld->_ghost_off;
+  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace,
+		 data->dxpl, &MRC_F1(gfld, m, ib[0])); CE;
+  ierr = H5Dclose(dset); CE;
+  
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group_fld); CE;
+
+  return 0;
 }
 
 // ----------------------------------------------------------------------
@@ -1049,8 +1205,88 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
+  int ierr;
 
-  MHERE;
+  assert(xdmf->nr_writers == 1); // FIXME
+  int nr_comps, dim, gdims[3], nr_global_patches, nr_patches;
+  mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
+  mrc_m1_get_param_int(m1, "dim", &dim);
+  mrc_domain_get_global_dims(m1->domain, gdims);
+  mrc_domain_get_nr_global_patches(m1->domain, &nr_global_patches);
+  mrc_domain_get_patches(m1->domain, &nr_patches);
+
+  assert(io->size == 1); // FIXME
+  struct mrc_f1 *f1;
+  if (xdmf->is_writer) {
+    f1 = mrc_f1_create(MPI_COMM_SELF);
+    mrc_f1_set_param_int(f1, "nr_comps", nr_comps);
+    mrc_f1_set_param_int(f1, "dimsx", gdims[dim]);
+    mrc_f1_setup(f1);
+
+    hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
+
+    hsize_t hgdims[1] = { gdims[dim] };
+
+    hid_t filespace = H5Screate_simple(1, hgdims, NULL); H5_CHK(filespace);
+    hid_t memspace = H5Screate_simple(1, hgdims, NULL); H5_CHK(memspace);
+    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+    if (xdmf->use_independent_io) {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+    } else {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+    }
+#endif
+
+    struct read_m1_cb_data cb_data = {
+      .io        = io,
+      .gfld      = f1,
+      .memspace  = memspace,
+      .filespace = filespace,
+      .dxpl      = dxpl,
+    };
+    
+    hsize_t idx = 0;
+    H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+		       read_m1_cb, &cb_data, H5P_DEFAULT);
+
+    ierr = H5Pclose(dxpl); CE;
+    ierr = H5Sclose(memspace); CE;
+    ierr = H5Sclose(filespace); CE;
+
+    ierr = H5Gclose(group0); CE;
+
+    MPI_Request *recv_reqs = calloc(nr_patches, sizeof(*recv_reqs));
+    MPI_Request *send_reqs = calloc(nr_global_patches, sizeof(*send_reqs));
+    for (int m = 0; m < nr_comps; m++) {
+      int nr_recv_reqs = 0;
+      for (int p = 0; p < nr_patches; p++) {
+	struct mrc_patch_info info;
+	mrc_domain_get_local_patch_info(m1->domain, p, &info);
+	struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+	//	mprintf("recv to %d tag %d\n", xdmf->writers[0], info.global_patch);
+	MPI_Irecv(&MRC_M1(m1p, m, 0), info.ldims[dim], MPI_FLOAT,
+		  xdmf->writers[0], info.global_patch, mrc_m1_comm(m1),
+		  &recv_reqs[nr_recv_reqs++]);
+	mrc_m1_patch_put(m1);
+      }
+    
+      int nr_send_reqs = 0;
+      for (int gp = 0; gp < nr_global_patches; gp++) {
+	struct mrc_patch_info info;
+	mrc_domain_get_global_patch_info(m1->domain, gp, &info);
+	
+	//	mprintf("send from %d tag %d\n", info.rank, gp);
+	MPI_Isend(&MRC_F1(f1, m, info.off[dim]), info.ldims[dim], MPI_FLOAT,
+		  info.rank, gp, mrc_m1_comm(m1), &send_reqs[nr_send_reqs++]);
+      }
+
+      MPI_Waitall(nr_recv_reqs, recv_reqs, MPI_STATUSES_IGNORE);
+      MPI_Waitall(nr_send_reqs, send_reqs, MPI_STATUSES_IGNORE);
+    }
+    free(recv_reqs);
+    free(send_reqs);
+  }
 }
 
 // ----------------------------------------------------------------------
