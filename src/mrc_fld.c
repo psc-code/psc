@@ -600,7 +600,17 @@ _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
   mrc_io_write_obj_ref(io, mrc_m1_name(m1), "domain",
 		       (struct mrc_obj *) m1->domain);
-  //  mrc_io_write_m1(io, mrc_obj_name(obj), m1);
+  mrc_io_write_m1(io, mrc_m1_name(m1), m1);
+}
+
+static void
+_mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
+{
+  m1->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, mrc_m1_name(m1), "domain", &mrc_class_mrc_domain);
+  
+  mrc_m1_setup(m1);
+  mrc_io_read_m1(io, mrc_m1_name(m1), m1);
 }
 
 void
@@ -638,9 +648,7 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .destroy      = _mrc_m1_destroy,
   .setup        = _mrc_m1_setup,
   .view         = _mrc_m1_view,
-#if 0
   .read         = _mrc_m1_read,
-#endif
   .write        = _mrc_m1_write,
 };
 
