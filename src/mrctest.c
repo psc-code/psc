@@ -169,7 +169,7 @@ mrctest_create_m1_1(struct mrc_domain *domain, int dim)
   
   mrc_m1_foreach_patch(m1, p) {
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
-    mrc_m1_foreach(m1p, ix, 0, 0) {
+    mrc_m1_foreach(m1p, ix, 2, 2) {
       MRC_M1(m1p, 0, ix) = 1.f + ix * ix;
     } mrc_m1_foreach_end;
     mrc_m1_patch_put(m1);
@@ -229,13 +229,15 @@ void
 mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
 {
   assert(mrc_m1_same_shape(m1_1, m1_2));
+  int sw;
+  mrc_m1_get_param_int(m1_1, "sw", &sw);
   for (int m = 0; m < m1_2->nr_comp; m++) {
     float diff = 0.;
     mrc_m1_foreach_patch(m1_1, p) {
       struct mrc_m1_patch *m1p_1 = mrc_m1_patch_get(m1_1, p);
       struct mrc_m1_patch *m1p_2 = mrc_m1_patch_get(m1_2, p);
       
-      mrc_m1_foreach(m1p_1, ix, 0, 0) {
+      mrc_m1_foreach(m1p_1, ix, sw, sw) {
 	diff = fmaxf(diff, fabsf(MRC_M1(m1p_1, m, ix) - MRC_M1(m1p_2, m, ix)));
       } mrc_m1_foreach_end;
 
