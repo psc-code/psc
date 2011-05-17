@@ -563,9 +563,9 @@ mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
   }
   if (class->read) {
     class->read(obj, io);
+  } else {
+    mrc_obj_setup(obj);
   }
-
-  mrc_obj_setup(obj);
 
   return obj;
 }
