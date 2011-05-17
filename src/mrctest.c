@@ -166,11 +166,14 @@ mrctest_create_m1_1(struct mrc_domain *domain, int dim)
   mrc_m1_set_param_int(m1, "dim", dim);
   mrc_m1_setup(m1);
   mrc_m1_set_comp_name(m1, 0, "test");
-#if 0
-  mrc_m1_foreach(m1, ix, 0, 0) {
-    MRC_M1(m1p, 0, ix) = 1.f + ix * ix;
-  } mrc_m1_foreach_end;
-#endif
+  
+  mrc_m1_foreach_patch(m1, p) {
+    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+    mrc_m1_foreach(m1p, ix, 0, 0) {
+      MRC_M1(m1p, 0, ix) = 1.f + ix * ix;
+    } mrc_m1_foreach_end;
+    mrc_m1_patch_put(m1);
+  }
   return m1;
 }
 
