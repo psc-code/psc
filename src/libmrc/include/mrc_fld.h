@@ -241,6 +241,7 @@ void mrc_m3_set(struct mrc_m3 *m3, float val);
 void mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io);
 void mrc_m3_write_scaled(struct mrc_m3 *m3, struct mrc_io *io, float scale);
 void mrc_m3_write_comps(struct mrc_m3 *m3, struct mrc_io *io, int mm[]);
+bool mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2);
 
 static inline struct mrc_m3_patch *
 mrc_m3_patch_get(struct mrc_m3 *m3, int p)

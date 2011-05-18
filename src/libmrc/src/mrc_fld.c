@@ -767,6 +767,41 @@ _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
   mrc_io_write_m3(io, mrc_m3_name(m3), m3);
 }
 
+static void
+_mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
+{
+  m3->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, mrc_m3_name(m3), "domain", &mrc_class_mrc_domain);
+  mrc_m3_setup(m3);
+  mrc_io_read_m3(io, mrc_m3_name(m3), m3);
+}
+
+bool
+mrc_m3_same_shape(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
+{
+  if (m3_1->nr_comp != m3_2->nr_comp)
+    return false;
+
+  if (m3_1->sw != m3_2->sw)
+    return false;
+
+  int nr_patches_1, nr_patches_2;
+  struct mrc_patch *patches_1 = mrc_domain_get_patches(m3_1->domain, &nr_patches_1);
+  struct mrc_patch *patches_2 = mrc_domain_get_patches(m3_2->domain, &nr_patches_2);
+  if (nr_patches_1 != nr_patches_2)
+    return false;
+
+  mrc_m3_foreach_patch(m3_1, p) {
+    for (int d = 0; d < 3; d++) {
+      if (patches_1[p].ldims[d] != patches_2[p].ldims[d])
+	return false;
+      if (patches_1[p].off[d] != patches_2[p].off[d])
+	return false;
+    }
+  }
+  return true;
+}
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_m3
 
@@ -785,9 +820,7 @@ struct mrc_class_mrc_m3 mrc_class_mrc_m3 = {
   .destroy      = _mrc_m3_destroy,
   .setup        = _mrc_m3_setup,
   .view         = _mrc_m3_view,
-#if 0
   .read         = _mrc_m3_read,
-#endif
   .write        = _mrc_m3_write,
 };
 
