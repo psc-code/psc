@@ -990,42 +990,80 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  assert(io->size == xdmf->nr_writers);
-  
-  hid_t group = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+  // read on I/O procs
+  if (xdmf->is_writer) {
+    hid_t group = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+    switch (type) {
+    case PT_SELECT:
+    case PT_INT:
+      ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
+      break;
+    case PT_BOOL: ;
+      int val;
+      ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
+      pv->u_bool = val;
+      break;
+    case PT_FLOAT:
+      ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
+      break;
+    case PT_DOUBLE:
+      ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
+      break;
+    case PT_STRING: ;
+      hsize_t dims;
+      H5T_class_t class;
+      size_t sz;
+      ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
+      pv->u_string = malloc(sz);
+      ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+      break;
+    case PT_INT3:
+      ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
+      break;
+    case PT_FLOAT3:
+      ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
+      break;
+    }
+    ierr = H5Gclose(group); CE;
+  }
+
+  int root = xdmf->writers[0];
+  MPI_Comm comm = mrc_io_comm(io);
   switch (type) {
   case PT_SELECT:
   case PT_INT:
-    ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
+    MPI_Bcast(&pv->u_int, 1, MPI_INT, root, comm);
     break;
-  case PT_BOOL: {
-    int val;
-    ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
-    pv->u_bool = val;
+  case PT_BOOL: ;
+    int val = pv->u_int;
+    MPI_Bcast(&val, 1, MPI_INT, root, comm);
+    pv->u_int = val;
     break;
-  }
   case PT_FLOAT:
-    ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
+    MPI_Bcast(&pv->u_float, 1, MPI_FLOAT, root, comm);
     break;
   case PT_DOUBLE:
-    ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
+    MPI_Bcast(&pv->u_double, 1, MPI_DOUBLE, root, comm);
     break;
   case PT_STRING: ;
-    hsize_t dims;
-    H5T_class_t class;
-    size_t sz;
-    ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
-    pv->u_string = malloc(sz);
-    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+    int len;
+    if (io->rank == root) {
+      len = strlen(pv->u_string);
+    }
+    MPI_Bcast(&len, 1, MPI_INT, root, comm);
+    if (io->rank != root) {
+      pv->u_string = malloc(len + 1);
+    }
+    // FIXME, u_string type should not be const
+    MPI_Bcast((char *) pv->u_string, len + 1, MPI_CHAR, root, comm);
     break;
   case PT_INT3:
-    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
+    MPI_Bcast(pv->u_int3, 3, MPI_INT, root, comm);
     break;
   case PT_FLOAT3:
-    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
+    MPI_Bcast(pv->u_float3, 3, MPI_FLOAT, root, comm);
     break;
   }
-  ierr = H5Gclose(group); CE;
 }
 
 // ----------------------------------------------------------------------
