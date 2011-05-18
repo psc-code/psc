@@ -36,6 +36,7 @@ if HAVE_HDF5
 libmrc_la_SOURCES += \
 	mrc_io_xdmf.c \
 	mrc_io_xdmf2.c \
+	mrc_io_xdmf_collective.c \
 	mrc_io_xdmf_lib.c
 endif HAVE_HDF5
 
