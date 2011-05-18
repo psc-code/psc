@@ -44,4 +44,5 @@ TESTS = \
 	test_mrc_m3_2.sh \
 	test_mrc_m3_3.sh \
 	test_mrc_m3_4.sh \
+	test_mrc_m3_5.sh \
 	test_mrc_ddc_1.sh

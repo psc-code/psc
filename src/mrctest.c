@@ -252,6 +252,32 @@ mrctest_m1_compare(struct mrc_m1 *m1_1, struct mrc_m1 *m1_2, float eps)
 }
 
 // ----------------------------------------------------------------------
+// mrctest_m3_compare
+
+void
+mrctest_m3_compare(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2)
+{
+  assert(mrc_m3_same_shape(m3_1, m3_2));
+  mrc_m3_foreach_patch(m3_1, p) {
+    struct mrc_m3_patch *m3p_1 = mrc_m3_patch_get(m3_1, p);
+    struct mrc_m3_patch *m3p_2 = mrc_m3_patch_get(m3_2, p);
+    float diff = 0.;
+    for (int m = 0; m < m3_1->nr_comp; m++) {
+      mrc_m3_foreach_bnd(m3p_1, ix,iy,iz) {
+	diff = fmaxf(diff, fabsf(MRC_M3(m3p_1, 0, ix,iy,iz) - MRC_M3(m3p_2, 0, ix,iy,iz)));
+	if (diff > 0.) {
+	  mprintf("mrc_m3_compare: ix = %d,%d,%d m = %d diff = %g %g/%g\n", ix, iy,iz, m,
+		  diff, MRC_M3(m3p_1, 0, ix,iy,iz), MRC_M3(m3p_2, 0, ix,iy,iz));
+	  assert(0);
+	}
+      } mrc_m3_foreach_end;
+    }
+    mrc_m3_patch_put(m3_1);
+    mrc_m3_patch_put(m3_2);
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrctest_crds_compare
 
 void

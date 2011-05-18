@@ -23,6 +23,7 @@ void mrctest_finalize();
 
 void mrctest_f3_compare(struct mrc_f3 *f1, struct mrc_f3 *f2, float eps);
 void mrctest_m1_compare(struct mrc_m1 *m1, struct mrc_m1 *m2, float eps);
+void mrctest_m3_compare(struct mrc_m3 *m3_1, struct mrc_m3 *m3_2);
 void mrctest_crds_compare(struct mrc_crds *crds1, struct mrc_crds *crds2);
 
 // ----------------------------------------------------------------------

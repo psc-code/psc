@@ -3,6 +3,7 @@
 #include <mrc_domain.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
+#include <mrctest.h>
 
 #include <assert.h>
 #include <string.h>
@@ -44,13 +45,11 @@ check_m3(struct mrc_m3 *m3)
 }
 
 static void
-write_m3(struct mrc_m3 *m3)
+test_write_m3(struct mrc_m3 *m3)
 {
   struct mrc_io *io = mrc_io_create(mrc_m3_comm(m3));
-
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_view(io);
 
   mrc_io_open(io, "w", 0, 0.);
   mrc_m3_write(m3, io);
@@ -63,11 +62,37 @@ write_m3(struct mrc_m3 *m3)
   mrc_io_destroy(io);
 }
 
+static void
+test_write_read_m3(struct mrc_m3 *m3)
+{
+  struct mrc_io *io = mrc_io_create(mrc_m3_comm(m3));
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", 0, 0.);
+  mrc_m3_write(m3, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+
+  io = mrc_io_create(mrc_m3_comm(m3));
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "r", 0, 0.);
+  struct mrc_m3 *m3_2 = mrc_m3_read(io, mrc_m3_name(m3));
+  mrc_io_close(io);
+  mrc_io_destroy(io);
+
+  mrctest_m3_compare(m3, m3_2);
+  mrc_m3_destroy(m3_2);
+}
+
 int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
+
+  int testcase = 1;
+  mrc_params_get_option_int("case", &testcase);
 
   struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
   mrc_domain_set_type(domain, "multi");
@@ -87,8 +112,15 @@ main(int argc, char **argv)
   
   set_m3(m3);
   check_m3(m3);
-  write_m3(m3);
-    
+
+  switch (testcase) {
+  case 1:
+    test_write_m3(m3);
+    break;
+  case 2:
+    test_write_read_m3(m3);
+    break;
+  }
   mrc_m3_destroy(m3);
   mrc_domain_destroy(domain);
 
