@@ -714,6 +714,8 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 
 struct collective_m3_ctx {
   int gdims[3];
+  int writer_dims[3], writer_off[3];
+  int nr_patches, nr_global_patches;
   int slow_dim;
   int slow_indices_per_writer;
   int slow_indices_rmndr;
@@ -1056,69 +1058,135 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
+collective_m3_read_f3(struct mrc_io *io, struct collective_m3_ctx *ctx,
+		      hid_t group0, struct mrc_f3 *f3)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  int ierr;
+
+  int writer_rank;
+  MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
+  int writer_dims[3], writer_off[3];
+  get_writer_off_dims(ctx, writer_rank, writer_off, writer_dims);
+  /* mprintf("writer_off %d %d %d dims %d %d %d\n", */
+  /* 	    writer_off[0], writer_off[1], writer_off[2], */
+  /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
+
+  mrc_f3_set_param_int3(f3, "off", writer_off);
+  mrc_f3_set_param_int3(f3, "dims", writer_dims);
+  mrc_f3_setup(f3);
+
+  hsize_t fdims[3] = { ctx->gdims[2], ctx->gdims[1], ctx->gdims[0] };
+  hsize_t foff[3] = { writer_off[2], writer_off[1], writer_off[0] };
+  hsize_t mdims[3] = { writer_dims[2], writer_dims[1], writer_dims[0] };
+  hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
+  ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
+			     mdims, NULL); CE;
+  hid_t memspace = H5Screate_simple(3, mdims, NULL); H5_CHK(memspace);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+  if (xdmf->use_independent_io) {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+  } else {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+  }
+#endif
+
+  struct read_m3_cb_data cb_data = {
+    .io        = io,
+    .gfld      = f3,
+    .memspace  = memspace,
+    .filespace = filespace,
+    .dxpl      = dxpl,
+  };
+  
+  hsize_t idx = 0;
+  H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+		     read_m3_cb, &cb_data, H5P_DEFAULT);
+  
+  ierr = H5Pclose(dxpl); CE;
+  ierr = H5Sclose(memspace); CE;
+  ierr = H5Sclose(filespace); CE;
+}
+
+static void
 xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  assert(xdmf->nr_writers == 1);
-
-  int gdims[3];
-  mrc_domain_get_global_dims(m3->domain, gdims);
-  struct mrc_f3 *gfld = NULL;
+  struct collective_m3_ctx ctx;
+  // FIXME dupl
+  mrc_domain_get_global_dims(m3->domain, ctx.gdims);
+  mrc_domain_get_patches(m3->domain, &ctx.nr_patches);
+  mrc_domain_get_nr_global_patches(m3->domain, &ctx.nr_global_patches);
+  ctx.slow_dim = 2;
+  while (ctx.gdims[ctx.slow_dim] == 1) {
+    ctx.slow_dim--;
+  }
+  assert(ctx.slow_dim >= 0);
+  int total_slow_indices = ctx.gdims[ctx.slow_dim];
+  ctx.slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
+  ctx.slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 
   if (xdmf->is_writer) {
-    gfld = mrc_f3_create(mrc_m3_comm(m3));
-    mrc_f3_set_name(gfld, "gfld");
-    mrc_f3_set_param_int3(gfld, "dims", gdims);
+    struct mrc_f3 *gfld = mrc_f3_create(MPI_COMM_SELF);
     mrc_f3_set_param_int(gfld, "nr_comps", m3->nr_comp);
-    mrc_f3_setup(gfld);
-    
+
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
-
-    hsize_t hgdims[3] = { gdims[2], gdims[1], gdims[0] };
-
-    hid_t filespace = H5Screate_simple(3, hgdims, NULL); H5_CHK(filespace);
-    hid_t memspace = H5Screate_simple(3, hgdims, NULL); H5_CHK(memspace);
-    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
-#ifdef H5_HAVE_PARALLEL
-    if (xdmf->use_independent_io) {
-      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
-    } else {
-      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
-    }
-#endif
-
-    struct read_m3_cb_data cb_data = {
-      .io        = io,
-      .gfld      = gfld,
-      .memspace  = memspace,
-      .filespace = filespace,
-      .dxpl      = dxpl,
-    };
-    
-    hsize_t idx = 0;
-    H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
-		       read_m3_cb, &cb_data, H5P_DEFAULT);
-
-    ierr = H5Pclose(dxpl); CE;
-    ierr = H5Sclose(memspace); CE;
-    ierr = H5Sclose(filespace); CE;
+    collective_m3_read_f3(io, &ctx, group0, gfld);
+    int writer_rank;
+    MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
+    get_writer_off_dims(&ctx, writer_rank, ctx.writer_off, ctx.writer_dims);
 
     ierr = H5Gclose(group0); CE;
-  }
 
-  assert(io->size == 1);
-  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
-  for (int m = 0; m < m3->nr_comp; m++) {
-    mrc_m3_foreach(m3p, ix,iy,iz, 0, 0) {
-      MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(gfld, m, ix,iy,iz);
-    } mrc_m3_foreach_end;
-  }
-  mrc_m3_patch_put(m3);
+    for (int gp = 0; gp < ctx.nr_global_patches; gp++) {
+      struct mrc_patch_info info;
+      mrc_domain_get_global_patch_info(m3->domain, gp, &info);
 
-  mrc_f3_destroy(gfld);
+      int ilo[3], ihi[3];
+      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
+					       mrc_f3_ghost_off(gfld), mrc_f3_ghost_dims(gfld));
+      if (!has_intersection) {
+	continue;
+      }
+      mprintf("is %d:%d %d:%d %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
+      struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
+      mrc_f3_set_param_int3(f3, "off", ilo);
+      mrc_f3_set_param_int3(f3, "dims",
+			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
+      mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
+      mrc_f3_setup(f3);
+      assert(info.rank == io->rank);
+
+      for (int m = 0; m < m3->nr_comp; m++) {
+	for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	  for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	    for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	      MRC_F3(f3, m, ix,iy,iz) = MRC_F3(gfld, m, ix,iy,iz);
+	    }
+	  }
+	}
+      }
+
+      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, info.patch);
+      int *off = info.off;
+      for (int m = 0; m < m3->nr_comp; m++) {
+	for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	  for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	    for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	      MRC_M3(m3p, m, ix-off[0],iy-off[1],iz-off[2]) = MRC_F3(f3, m, ix,iy,iz);
+	    }
+	  }
+	}
+      }
+      mrc_m3_patch_put(m3);
+    }
+
+    mrc_f3_destroy(gfld);
+  }
 }
 
 // ======================================================================
