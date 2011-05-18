@@ -712,7 +712,7 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 // ----------------------------------------------------------------------
 // collective helper context
 
-struct collective_ctx {
+struct collective_m3_ctx {
   int gdims[3];
   int slow_dim;
   int slow_indices_per_writer;
@@ -726,7 +726,7 @@ struct collective_ctx {
 };
 
 static void
-get_writer_off_dims(struct collective_ctx *ctx, int writer,
+get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 		    int *writer_off, int *writer_dims)
 {
     for (int d = 0; d < 3; d++) {
@@ -746,7 +746,7 @@ get_writer_off_dims(struct collective_ctx *ctx, int writer,
 // collective_send_f3_begin
 
 static void
-collective_send_f3_begin(struct collective_ctx *ctx, struct mrc_io *io,
+collective_send_f3_begin(struct collective_m3_ctx *ctx, struct mrc_io *io,
 			 struct mrc_m3 *m3, int m)
 {
   struct xdmf *xdmf = to_xdmf(io);
@@ -809,7 +809,7 @@ collective_send_f3_begin(struct collective_ctx *ctx, struct mrc_io *io,
 // collective_send_f3_end
 
 static void
-collective_send_f3_end(struct collective_ctx *ctx, struct mrc_io *io,
+collective_send_f3_end(struct collective_m3_ctx *ctx, struct mrc_io *io,
 		       struct mrc_m3 *m3, int m)
 {
   MPI_Waitall(ctx->total_sends, ctx->send_reqs, MPI_STATUSES_IGNORE);
@@ -820,7 +820,7 @@ collective_send_f3_end(struct collective_ctx *ctx, struct mrc_io *io,
 // collective_recv_f3_begin
 
 static void
-collective_recv_f3_begin(struct collective_ctx *ctx,
+collective_recv_f3_begin(struct collective_m3_ctx *ctx,
 			 struct mrc_io *io, struct mrc_f3 *f3,
 			 struct mrc_m3 *m3)
 {
@@ -882,7 +882,7 @@ collective_recv_f3_begin(struct collective_ctx *ctx,
 // collective_recv_f3
 
 static void
-collective_recv_f3_end(struct collective_ctx *ctx,
+collective_recv_f3_end(struct collective_m3_ctx *ctx,
 		       struct mrc_io *io, struct mrc_f3 *f3,
 		       struct mrc_m3 *m3, int m)
 {
@@ -918,7 +918,7 @@ collective_recv_f3_end(struct collective_ctx *ctx,
 // collective_recv_f3_local
 
 static void
-collective_recv_f3_local(struct collective_ctx *ctx,
+collective_recv_f3_local(struct collective_m3_ctx *ctx,
 			 struct mrc_io *io, struct mrc_f3 *f3,
 			 struct mrc_m3 *m3, int m)
 {
@@ -956,7 +956,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  struct collective_ctx ctx;
+  struct collective_m3_ctx ctx;
   mrc_domain_get_global_dims(m3->domain, ctx.gdims);
   ctx.slow_dim = 2;
   while (ctx.gdims[ctx.slow_dim] == 1) {
