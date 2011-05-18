@@ -729,17 +729,17 @@ static void
 get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 		    int *writer_off, int *writer_dims)
 {
-    for (int d = 0; d < 3; d++) {
-      writer_dims[d] = ctx->gdims[d];
-      writer_off[d] = 0;
-    }
-    writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
-    if (writer < ctx->slow_indices_rmndr) {
-      writer_off[ctx->slow_dim] = (ctx->slow_indices_per_writer + 1) * writer;
-    } else {
-      writer_off[ctx->slow_dim] = ctx->slow_indices_rmndr +
-	ctx->slow_indices_per_writer * writer;
-    }
+  for (int d = 0; d < 3; d++) {
+    writer_dims[d] = ctx->gdims[d];
+    writer_off[d] = 0;
+  }
+  writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
+  if (writer < ctx->slow_indices_rmndr) {
+    writer_off[ctx->slow_dim] = (ctx->slow_indices_per_writer + 1) * writer;
+  } else {
+    writer_off[ctx->slow_dim] = ctx->slow_indices_rmndr +
+      ctx->slow_indices_per_writer * writer;
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -977,23 +977,15 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   }
 
   if (xdmf->is_writer) {
-    struct mrc_f3 *f3 = NULL;
     int writer_rank;
     MPI_Comm_rank(xdmf->comm_writers, &writer_rank);
     int writer_dims[3], writer_off[3];
-    int writer = -1;
-    for (int i = 0; i < xdmf->nr_writers; i++) {
-      if (xdmf->writers[i] == writer_rank) {
-	writer = i;
-	break;
-      }
-    }
-    get_writer_off_dims(&ctx, writer, writer_off, writer_dims);
+    get_writer_off_dims(&ctx, writer_rank, writer_off, writer_dims);
     /* mprintf("writer_off %d %d %d dims %d %d %d\n", */
     /* 	    writer_off[0], writer_off[1], writer_off[2], */
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-    f3 = mrc_f3_create(MPI_COMM_NULL);
+    struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int3(f3, "off", writer_off);
     mrc_f3_set_param_int3(f3, "dims", writer_dims);
     mrc_f3_setup(f3);
