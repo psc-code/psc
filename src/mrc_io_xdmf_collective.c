@@ -292,6 +292,7 @@ static void
 collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
 		       int m, hid_t group0)
 {
+  struct xdmf *xdmf = to_xdmf(io);
   int ierr;
 
   hid_t group_fld = H5Gcreate(group0, mrc_f1_comp_name(f1, m), H5P_DEFAULT,
@@ -309,16 +310,24 @@ collective_m1_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1,
 			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
   hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl); // FIXME, consolidate
 #ifdef H5_HAVE_PARALLEL
-  struct xdmf *xdmf = to_xdmf(io);
   if (xdmf->use_independent_io) {
     ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT); CE;
   } else {
     ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
   }
 #endif
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, dxpl, f1->arr); CE;
+  hid_t memspace;
+  if (io->rank == xdmf->writers[0]) {
+    memspace = H5Screate_simple(1, fdims, NULL);
+  } else {
+    memspace = H5Screate(H5S_NULL);
+    H5Sselect_none(memspace);
+    H5Sselect_none(filespace);
+  }
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f1->arr); CE;
   
   ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(memspace); CE;
   ierr = H5Sclose(filespace); CE;
   ierr = H5Pclose(dxpl); CE;
 
@@ -390,6 +399,11 @@ static void
 collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_f1 *f1, int m)
 {
+  struct xdmf *xdmf = to_xdmf(io);
+
+  if (io->rank != xdmf->writers[0])
+    return;
+
   int dim = ctx->dim;
 
   ctx->recv_reqs = calloc(ctx->np[dim], sizeof(*ctx->recv_reqs));
@@ -426,6 +440,11 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 static void
 collective_m1_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
 {
+  struct xdmf *xdmf = to_xdmf(io);
+
+  if (io->rank != xdmf->writers[0])
+    return;
+
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
 }
@@ -440,11 +459,6 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  if (xdmf->nr_writers > 1) {
-    MHERE; // FIXME
-    return;
-  }
-  assert(xdmf->nr_writers == 1);
   struct collective_m1_ctx ctx;
   int nr_comps;
   mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
@@ -457,7 +471,10 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
   int dim = ctx.dim;
   if (xdmf->is_writer) {
-    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
+    // we're creating the f1 on all writers, but only fill and actually write
+    // it on writers[0]
+    struct mrc_f1 *f1 = NULL;
+    f1 = mrc_f1_create(MPI_COMM_SELF);
     mrc_f1_set_param_int(f1, "dimsx", ctx.gdims[dim]);
     mrc_f1_set_param_int(f1, "sw", ctx.sw);
     mrc_f1_setup(f1);
@@ -465,7 +482,6 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     for (int m = 0; m < nr_comps; m++) {
       mrc_f1_set_comp_name(f1, 0, mrc_m1_comp_name(m1, m));
-
       collective_m1_recv_begin(io, &ctx, m1->domain, f1, m);
       collective_m1_send_begin(io, &ctx, m1, m);
       collective_m1_recv_end(io, &ctx);
@@ -508,9 +524,22 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 }
 
 static void
+collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
+			    struct mrc_m1 *m1, int m)
+{
+  MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
+  free(ctx->recv_reqs);
+}
+
+static void
 collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 			      struct mrc_domain *domain, struct mrc_f1 *f1, int m)
 {
+  struct xdmf *xdmf = to_xdmf(io);
+
+  if (io->rank != xdmf->writers[0])
+    return;
+
   int dim = ctx->dim;
   ctx->send_reqs = calloc(ctx->nr_global_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
@@ -519,10 +548,22 @@ collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     mrc_domain_get_global_patch_info(domain, gp, &info);
     int ib = info.off[dim] - ctx->sw;
     int ie = info.off[dim] + info.ldims[dim] + ctx->sw;
-    //	mprintf("send from %d tag %d\n", info.rank, gp);
+    //  mprintf("send from %d tag %d\n", info.rank, gp);
     MPI_Isend(&MRC_F1(f1, m, ib), ie - ib, MPI_FLOAT,
 	      info.rank, gp, mrc_io_comm(io), &ctx->send_reqs[ctx->nr_send_reqs++]);
   }
+}
+
+static void
+collective_m1_read_send_end(struct mrc_io *io, struct collective_m1_ctx *ctx)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+
+  if (io->rank != xdmf->writers[0])
+    return;
+
+  MPI_Waitall(ctx->nr_send_reqs, ctx->send_reqs, MPI_STATUSES_IGNORE);
+  free(ctx->send_reqs);
 }
 
 struct read_m1_cb_data {
@@ -567,11 +608,6 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
-  if (xdmf->nr_writers > 1) {
-    MHERE; // FIXME
-    return;
-  }
-  assert(xdmf->nr_writers == 1); // FIXME
   struct collective_m1_ctx ctx;
   int nr_comps, gdims[3];
   mrc_m1_get_param_int(m1, "nr_comps", &nr_comps);
@@ -593,7 +629,14 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     hsize_t hgdims[1] = { mrc_f1_ghost_dims(f1)[0] };
 
     hid_t filespace = H5Screate_simple(1, hgdims, NULL); H5_CHK(filespace);
-    hid_t memspace = H5Screate_simple(1, hgdims, NULL); H5_CHK(memspace);
+    hid_t memspace;
+    if (io->rank == xdmf->writers[0]) {
+      memspace = H5Screate_simple(1, hgdims, NULL); H5_CHK(memspace);
+    } else {
+      memspace = H5Screate(H5S_NULL);
+      H5Sselect_none(memspace);
+      H5Sselect_none(filespace);
+    }
     hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
     if (xdmf->use_independent_io) {
@@ -624,13 +667,13 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_read_recv_begin(io, &ctx, m1, m);
       collective_m1_read_send_begin(io, &ctx, m1->domain, f1, m);
-      collective_m1_recv_end(io, &ctx);
-      collective_m1_send_end(io, &ctx);
+      collective_m1_read_recv_end(io, &ctx, m1, m);
+      collective_m1_read_send_end(io, &ctx);
     }
   } else { // not writer
     for (int m = 0; m < nr_comps; m++) {
       collective_m1_read_recv_begin(io, &ctx, m1, m);
-      collective_m1_recv_end(io, &ctx);
+      collective_m1_read_recv_end(io, &ctx, m1, m);
     }
   }
 }
