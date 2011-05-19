@@ -714,6 +714,11 @@ find_intersection(int *ilo, int *ihi, const int *ib1, const int *im1,
 
 struct collective_m3_entry {
   struct mrc_f3 *f3;
+  int ilo[3];
+  int ihi[3];
+  int patch;
+  int global_patch; //< also used as tag
+  int rank; //< of peer
 };
 
 struct collective_m3_ctx {
@@ -1042,7 +1047,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 // ======================================================================
 
 static void
-collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
+collective_m3_send_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
 			 struct mrc_domain *domain, struct mrc_f3 *gfld)
 {
   ctx->nr_sends = 0;
@@ -1060,18 +1065,29 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
   ctx->send_reqs = calloc(ctx->nr_sends, sizeof(*ctx->send_reqs));
   ctx->sends = calloc(ctx->nr_sends, sizeof(*ctx->sends));
 
-  ctx->nr_sends = 0;
-  for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
+  for (int i = 0, gp = 0; i < ctx->nr_sends; i++) {
+    struct collective_m3_entry *send = &ctx->sends[i];
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, gp, &info);
-    
-    int ilo[3], ihi[3];
-    int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					     mrc_f3_ghost_off(gfld), mrc_f3_ghost_dims(gfld));
-    if (!has_intersection) {
-      continue;
-    }
-    //    mprintf("is %d:%d %d:%d %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
+    bool has_intersection;
+    do {
+      mrc_domain_get_global_patch_info(domain, gp++, &info);
+      has_intersection = find_intersection(send->ilo, send->ihi, info.off, info.ldims,
+					   mrc_f3_ghost_off(gfld), mrc_f3_ghost_dims(gfld));
+    } while (!has_intersection);
+    send->patch = info.global_patch;
+    send->rank = info.rank;
+  }
+}
+
+static void
+collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
+			 struct mrc_domain *domain, struct mrc_f3 *gfld)
+{
+  collective_m3_send_setup(io, ctx, domain, gfld);
+
+  for (int i = 0; i < ctx->nr_sends; i++) {
+    struct collective_m3_entry *send = &ctx->sends[i];
+    int *ilo = send->ilo, *ihi = send->ihi;
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int3(f3, "off", ilo);
     mrc_f3_set_param_int3(f3, "dims",
@@ -1089,10 +1105,9 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       }
     }
     
-    MPI_Isend(f3->arr, f3->len, MPI_FLOAT, info.rank, info.global_patch,
-	      mrc_io_comm(io), &ctx->send_reqs[ctx->nr_sends]);
-    ctx->sends[ctx->nr_sends].f3 = f3;
-    ctx->nr_sends++;
+    MPI_Isend(f3->arr, f3->len, MPI_FLOAT, send->rank, send->patch,
+	      mrc_io_comm(io), &ctx->send_reqs[i]);
+    send->f3 = f3;
   }
 }
 
@@ -1107,9 +1122,11 @@ collective_m3_send_end(struct mrc_io *io, struct collective_m3_ctx *ctx)
   free(ctx->send_reqs);
 }
 
+// ----------------------------------------------------------------------
+
 static void
-collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
-			 struct mrc_domain *domain, struct mrc_m3 *m3)
+collective_m3_recv_setup(struct mrc_io *io, struct collective_m3_ctx *ctx,
+			 struct mrc_domain *domain)
 {
   struct xdmf *xdmf = to_xdmf(io);
 
@@ -1122,43 +1139,66 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       int writer_off[3], writer_dims[3];
       get_writer_off_dims(ctx, writer, writer_off, writer_dims);
       int ilo[3], ihi[3];
-      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					       writer_off, writer_dims);
-      if (has_intersection)
+      if (find_intersection(ilo, ihi, info.off, info.ldims,
+			    writer_off, writer_dims)) {
 	ctx->nr_recvs++;
+      }
     }
   }
 
   ctx->recv_reqs = calloc(ctx->nr_recvs, sizeof(*ctx->recv_reqs));
   ctx->recvs = calloc(ctx->nr_recvs, sizeof(*ctx->recvs));
-  ctx->nr_recvs = 0;
+
+  int i = 0;
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(domain, p, &info);
 
     for (int writer = 0; writer < xdmf->nr_writers; writer++) {
+      if (i == ctx->nr_recvs) {
+	break;
+      }
+      struct collective_m3_entry *recv = &ctx->recvs[i];
+
       int writer_off[3], writer_dims[3];
       get_writer_off_dims(ctx, writer, writer_off, writer_dims);
-    
-      int ilo[3], ihi[3];
-      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					       writer_off, writer_dims);
-      if (!has_intersection) {
+      if (!find_intersection(recv->ilo, recv->ihi, info.off, info.ldims,
+			     writer_off, writer_dims)) {
 	continue;
       }
-    
-      struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
-      mrc_f3_set_param_int3(f3, "off", ilo);
-      mrc_f3_set_param_int3(f3, "dims",
-			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
-      mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
-      mrc_f3_setup(f3);
-      
-      MPI_Irecv(f3->arr, f3->len, MPI_FLOAT, xdmf->writers[writer], info.global_patch,
-		mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recvs]);
-      ctx->recvs[ctx->nr_recvs].f3 = f3;
-      ctx->nr_recvs++;
+      recv->rank = xdmf->writers[writer];
+      recv->patch = p;
+      recv->global_patch = info.global_patch;
+      // patch-local indices from here on
+      for (int d = 0; d < 3; d++) {
+	recv->ilo[d] -= info.off[d];
+	recv->ihi[d] -= info.off[d];
+      }
+      i++;
     }
+  }
+}
+
+static void
+collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
+			 struct mrc_domain *domain, struct mrc_m3 *m3)
+{
+  collective_m3_recv_setup(io, ctx, domain);
+
+  for (int i = 0; i < ctx->nr_recvs; i++) {
+    struct collective_m3_entry *recv = &ctx->recvs[i];
+
+    struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
+    int *ilo = recv->ilo, *ihi = recv->ihi; // FIXME, -> off, dims
+    mrc_f3_set_param_int3(f3, "off", ilo);
+    mrc_f3_set_param_int3(f3, "dims",
+			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
+    mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
+    mrc_f3_setup(f3);
+    
+    MPI_Irecv(f3->arr, f3->len, MPI_FLOAT, recv->rank,
+	      recv->global_patch, mrc_io_comm(io), &ctx->recv_reqs[i]);
+    recv->f3 = f3;
   }
 }
 
@@ -1166,41 +1206,24 @@ static void
 collective_m3_recv_end(struct mrc_io *io, struct collective_m3_ctx *ctx,
 		       struct mrc_domain *domain, struct mrc_m3 *m3)
 {
-  struct xdmf *xdmf = to_xdmf(io);
-
   MPI_Waitall(ctx->nr_recvs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   
-  ctx->nr_recvs = 0;
-  for (int p = 0; p < ctx->nr_patches; p++) {
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(m3->domain, p, &info);
+  for (int i = 0; i < ctx->nr_recvs; i++) {
+    struct collective_m3_entry *recv = &ctx->recvs[i];
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, recv->patch);
 
-    for (int writer = 0; writer < xdmf->nr_writers; writer++) {
-      int writer_off[3], writer_dims[3];
-      get_writer_off_dims(ctx, writer, writer_off, writer_dims);
-      
-      int ilo[3], ihi[3];
-      int has_intersection = find_intersection(ilo, ihi, info.off, info.ldims,
-					       writer_off, writer_dims);
-      if (!has_intersection) {
-	continue;
-      }
-      struct mrc_f3 *f3 = ctx->recvs[ctx->nr_recvs].f3;
-      struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, info.patch);
-      int *off = info.off;
-      for (int m = 0; m < m3->nr_comp; m++) {
-	for (int iz = ilo[2]; iz < ihi[2]; iz++) {
-	  for (int iy = ilo[1]; iy < ihi[1]; iy++) {
-	    for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	      MRC_M3(m3p, m, ix-off[0],iy-off[1],iz-off[2]) = MRC_F3(f3, m, ix,iy,iz);
-	    }
+    int *ilo = recv->ilo, *ihi = recv->ihi;
+    for (int m = 0; m < m3->nr_comp; m++) {
+      for (int iz = ilo[2]; iz < ihi[2]; iz++) {
+	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
+	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {
+	    MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(recv->f3, m, ix,iy,iz);
 	  }
 	}
       }
-      mrc_m3_patch_put(m3);
-      mrc_f3_destroy(f3);
-      ctx->nr_recvs++;
     }
+    mrc_m3_patch_put(m3);
+    mrc_f3_destroy(recv->f3);
   }
   free(ctx->recvs);
   free(ctx->recv_reqs);
