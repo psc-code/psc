@@ -119,7 +119,22 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
   if (ops->read_f1) {
     ops->read_f1(io, path, fld);
   } else {
-    MHERE;
+    assert(fld->domain);
+    struct mrc_m1 *m1 = mrc_domain_m1_create(fld->domain);
+    mrc_m1_set_param_int(m1, "sw", fld->_sw);
+    mrc_m1_set_param_int(m1, "dim", fld->dim);
+    mrc_m1_set_param_int(m1, "nr_comps", fld->nr_comp);
+    mrc_m1_setup(m1);
+    mrc_io_read_m1(io, path, m1);
+
+    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, 0);
+    for (int m = 0; m < m1->nr_comp; m++) {
+      mrc_m1_foreach_bnd(m1p, ix) {
+	MRC_F1(fld, m, ix) = MRC_M1(m1p, m, ix);
+      } mrc_m1_foreach_end;
+    }
+    mrc_m1_patch_put(m1);
+    mrc_m1_destroy(m1);
   }
 }
 

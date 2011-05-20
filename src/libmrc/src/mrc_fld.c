@@ -53,6 +53,9 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 static void
 _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
+  f1->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, mrc_f1_name(f1), "domain", &mrc_class_mrc_domain);
+  
   mrc_f1_setup(f1);
   mrc_io_read_f1(io, mrc_f1_name(f1), f1);
 }
@@ -60,6 +63,8 @@ _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 static void
 _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
 {
+  mrc_io_write_obj_ref(io, mrc_f1_name(f1), "domain",
+		       (struct mrc_obj *) f1->domain);
   mrc_io_write_f1(io, mrc_f1_name(f1), f1);
 }
 

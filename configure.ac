@@ -196,6 +196,7 @@ AC_CONFIG_FILES([Makefile src/Makefile
 		 src/libmrc/tests/test_io_read_3.sh
 		 src/libmrc/tests/test_io_read_4.sh
 		 src/libmrc/tests/test_io_read_multi_1.sh
+		 src/libmrc/tests/test_mrc_domain_simple_0.sh
 		 src/libmrc/tests/test_mrc_domain_multi_0.sh
 		 src/libmrc/tests/test_mrc_m3_0.sh
 		 src/libmrc/tests/test_mrc_m3_1.sh
