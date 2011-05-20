@@ -72,13 +72,13 @@ xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
 
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
-  fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/crd0_nc/crd0_nc/p%d/1d\n", filename, p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[1] + 1);
-  fprintf(f, "        %s:/crd1/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/crd1_nc/crd1_nc/p%d/1d\n", filename, p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VZ\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[2] + 1);
-  fprintf(f, "        %s:/crd2/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/crd2_nc/crd2_nc/p%d/1d\n", filename, p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
