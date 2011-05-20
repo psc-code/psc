@@ -249,7 +249,8 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
+      strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
     mrc_crds_get_xl_xh(crds, xs->xl, NULL);
     mrc_crds_get_dx(crds, xs->dx);
