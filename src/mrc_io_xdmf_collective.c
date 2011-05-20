@@ -17,6 +17,8 @@ struct xdmf_file {
 };
 
 struct xdmf {
+  int slab_dims[3];
+  int slab_off[3];
   struct xdmf_file file;
   struct xdmf_temporal *xdmf_temporal;
   bool use_independent_io;
@@ -35,6 +37,8 @@ static struct param xdmf_collective_descr[] = {
   { "nr_writers"             , VAR(nr_writers)              , PARAM_INT(1)           },
   { "romio_cb_write"         , VAR(romio_cb_write)          , PARAM_STRING(NULL)     },
   { "romio_ds_write"         , VAR(romio_ds_write)          , PARAM_STRING(NULL)     },
+  { "slab_dims"              , VAR(slab_dims)               , PARAM_INT3(0, 0, 0)    },
+  { "slab_off"               , VAR(slab_off)                , PARAM_INT3(0, 0, 0)    },
   {},
 };
 #undef VAR
@@ -372,15 +376,16 @@ collective_m1_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     }
     
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+    // FIXME, should use intersection
     int ib = 0;
     if (info.off[dim] == 0) { // FIXME, -> generic code
-      ib -= ctx->sw;
+      ib = xdmf->slab_off[0];
     }
     int ie = info.ldims[dim];
     if (info.off[dim] + info.ldims[dim] == ctx->gdims[dim]) {
-      ie += ctx->sw;
+      ie = xdmf->slab_off[0] + xdmf->slab_dims[0] - info.off[dim];
     }
-    //    mprintf("send to %d tag %d\n", xdmf->writers[0], info.global_patch);
+    //mprintf("send to %d tag %d len %d\n", xdmf->writers[0], info.global_patch, ie - ib);
     MPI_Isend(&MRC_M1(m1p, m, ib), ie - ib, MPI_FLOAT,
 	      xdmf->writers[0], info.global_patch, mrc_io_comm(io),
 	      &ctx->send_reqs[ctx->nr_send_reqs++]);
@@ -424,13 +429,13 @@ collective_m1_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     
     int ib = info.off[dim];
     if (ib == 0) {
-      ib -= ctx->sw;
+      ib = xdmf->slab_off[0];
     }
     int ie = info.off[dim] + info.ldims[dim];
     if (ie == ctx->gdims[dim]) {
-      ie += ctx->sw;
+      ie = xdmf->slab_off[0] + xdmf->slab_dims[0];
     }
-    //    mprintf("recv from %d tag %d\n", info.rank, gp);
+    //mprintf("recv from %d tag %d len %d\n", info.rank, gp, ie - ib);
     MPI_Irecv(&MRC_F1(f1, 0, ib), ie - ib, MPI_FLOAT, info.rank,
 	      gp, mrc_io_comm(io), &ctx->recv_reqs[ctx->nr_recv_reqs++]);
   }
@@ -468,15 +473,18 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   mrc_domain_get_nr_global_patches(m1->domain, &ctx.nr_global_patches);
   mrc_domain_get_nr_procs(m1->domain, ctx.np);
   mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
-
   int dim = ctx.dim;
+  if (!xdmf->slab_dims[0]) {
+    xdmf->slab_dims[0] = ctx.gdims[dim] + 2 * ctx.sw;
+    xdmf->slab_off[0] = -ctx.sw;
+  }
+
   if (xdmf->is_writer) {
     // we're creating the f1 on all writers, but only fill and actually write
     // it on writers[0]
-    struct mrc_f1 *f1 = NULL;
-    f1 = mrc_f1_create(MPI_COMM_SELF);
-    mrc_f1_set_param_int(f1, "dimsx", ctx.gdims[dim]);
-    mrc_f1_set_param_int(f1, "sw", ctx.sw);
+    struct mrc_f1 *f1 = mrc_f1_create(MPI_COMM_SELF);
+    mrc_f1_set_param_int(f1, "dimsx", xdmf->slab_dims[0]);
+    mrc_f1_set_param_int(f1, "offx", xdmf->slab_off[0]);
     mrc_f1_setup(f1);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
@@ -497,6 +505,8 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
       collective_m1_send_end(io, &ctx);
     }
   }
+  xdmf->slab_dims[0] = 0;
+  xdmf->slab_off[0] = 0;
 }
 
 // ----------------------------------------------------------------------
