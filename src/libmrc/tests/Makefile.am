@@ -51,4 +51,5 @@ TESTS = \
 	test_mrc_m3_6.sh \
 	test_mrc_f3_0.sh \
 	test_mrc_f3_1.sh \
+	test_mrc_f3_2.sh \
 	test_mrc_ddc_1.sh

@@ -92,6 +92,82 @@ GROUP "/" {
          }
       }
    }
+   GROUP "crd0_nc" {
+      ATTRIBUTE "dim" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 0
+         }
+      }
+      ATTRIBUTE "domain" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 11;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_domain"
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_m1"
+         }
+      }
+      ATTRIBUTE "nr_comps" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "sw" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      GROUP "crd0_nc" {
+         ATTRIBUTE "m" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 0
+            }
+         }
+         GROUP "p0" {
+            ATTRIBUTE "global_patch" {
+               DATATYPE  H5T_STD_I32LE
+               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATA {
+               (0): 0
+               }
+            }
+            DATASET "1d" {
+               DATATYPE  H5T_IEEE_F32LE
+               DATASPACE  SIMPLE { ( 33 ) / ( 33 ) }
+               DATA {
+               (0): 0, 0.03125, 0.0625, 0.09375, 0.125, 0.15625, 0.1875,
+               (7): 0.21875, 0.25, 0.28125, 0.3125, 0.34375, 0.375, 0.40625,
+               (14): 0.4375, 0.46875, 0.5, 0.53125, 0.5625, 0.59375, 0.625,
+               (21): 0.65625, 0.6875, 0.71875, 0.75, 0.78125, 0.8125,
+               (27): 0.84375, 0.875, 0.90625, 0.9375, 0.96875, 1
+               }
+            }
+         }
+      }
+   }
    GROUP "crd1" {
       ATTRIBUTE "dim" {
          DATATYPE  H5T_STD_I32LE
@@ -184,6 +260,82 @@ GROUP "/" {
          }
       }
    }
+   GROUP "crd1_nc" {
+      ATTRIBUTE "dim" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "domain" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 11;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_domain"
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_m1"
+         }
+      }
+      ATTRIBUTE "nr_comps" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "sw" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      GROUP "crd1_nc" {
+         ATTRIBUTE "m" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 0
+            }
+         }
+         GROUP "p0" {
+            ATTRIBUTE "global_patch" {
+               DATATYPE  H5T_STD_I32LE
+               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATA {
+               (0): 0
+               }
+            }
+            DATASET "1d" {
+               DATATYPE  H5T_IEEE_F32LE
+               DATASPACE  SIMPLE { ( 33 ) / ( 33 ) }
+               DATA {
+               (0): 0, 0.03125, 0.0625, 0.09375, 0.125, 0.15625, 0.1875,
+               (7): 0.21875, 0.25, 0.28125, 0.3125, 0.34375, 0.375, 0.40625,
+               (14): 0.4375, 0.46875, 0.5, 0.53125, 0.5625, 0.59375, 0.625,
+               (21): 0.65625, 0.6875, 0.71875, 0.75, 0.78125, 0.8125,
+               (27): 0.84375, 0.875, 0.90625, 0.9375, 0.96875, 1
+               }
+            }
+         }
+      }
+   }
    GROUP "crd2" {
       ATTRIBUTE "dim" {
          DATATYPE  H5T_STD_I32LE
@@ -271,6 +423,82 @@ GROUP "/" {
                (20): 0.640625, 0.671875, 0.703125, 0.734375, 0.765625,
                (25): 0.796875, 0.828125, 0.859375, 0.890625, 0.921875,
                (30): 0.953125, 0.984375
+               }
+            }
+         }
+      }
+   }
+   GROUP "crd2_nc" {
+      ATTRIBUTE "dim" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 2
+         }
+      }
+      ATTRIBUTE "domain" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 11;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_domain"
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 7;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_m1"
+         }
+      }
+      ATTRIBUTE "nr_comps" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "sw" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      GROUP "crd2_nc" {
+         ATTRIBUTE "m" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 0
+            }
+         }
+         GROUP "p0" {
+            ATTRIBUTE "global_patch" {
+               DATATYPE  H5T_STD_I32LE
+               DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+               DATA {
+               (0): 0
+               }
+            }
+            DATASET "1d" {
+               DATATYPE  H5T_IEEE_F32LE
+               DATASPACE  SIMPLE { ( 33 ) / ( 33 ) }
+               DATA {
+               (0): 0, 0.03125, 0.0625, 0.09375, 0.125, 0.15625, 0.1875,
+               (7): 0.21875, 0.25, 0.28125, 0.3125, 0.34375, 0.375, 0.40625,
+               (14): 0.4375, 0.46875, 0.5, 0.53125, 0.5625, 0.59375, 0.625,
+               (21): 0.65625, 0.6875, 0.71875, 0.75, 0.78125, 0.8125,
+               (27): 0.84375, 0.875, 0.90625, 0.9375, 0.96875, 1
                }
             }
          }

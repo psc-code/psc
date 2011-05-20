@@ -206,6 +206,7 @@ AC_CONFIG_FILES([Makefile src/Makefile
 		 src/libmrc/tests/test_mrc_m3_5.sh
 		 src/libmrc/tests/test_mrc_f3_0.sh
 		 src/libmrc/tests/test_mrc_f3_1.sh
+		 src/libmrc/tests/test_mrc_f3_2.sh
 ])
 
 AC_OUTPUT
