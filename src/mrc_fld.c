@@ -485,6 +485,8 @@ _mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 void
 mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
 {
+  mrc_io_write_obj_ref(io, mrc_f3_name(f3), "domain",
+		       (struct mrc_obj *) f3->domain);
   mrc_io_write_f3(io, mrc_f3_name(f3), f3, scale);
 }
 
