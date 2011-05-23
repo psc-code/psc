@@ -48,6 +48,14 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
 
+  if (domain->size == 1 &&
+      simple->nr_procs[0] * simple->nr_procs[1] * simple->nr_procs[2] > 1) {
+    // FIXME, this is just to make reading on one proc work
+    for (int d = 0; d < 3; d++) {
+      simple->nr_procs[d] = 1;
+      simple->patch.ldims[d] = 0;
+    }
+  }
   int total_procs = 1;
   for (int d = 0; d < 3; d++) {
     if (simple->patch.ldims[d] == 0) {

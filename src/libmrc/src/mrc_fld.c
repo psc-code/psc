@@ -465,9 +465,18 @@ mrc_f3_norm(struct mrc_f3 *x)
 static void
 _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  mrc_io_read_attr_int(io, mrc_f3_name(f3), "sw", &f3->_sw);
   f3->domain = (struct mrc_domain *)
     mrc_io_read_obj_ref(io, mrc_f3_name(f3), "domain", &mrc_class_mrc_domain);
+
+  // rely on domain rather than read params
+  // since the domain may be different (# of procs) when
+  // we're reading things back
+  // basically, we should use mrc_domain_f3_create()
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(f3->domain, &nr_patches);
+  assert(nr_patches == 1);
+  mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
+  mrc_f3_set_param_int3(f3, "off", (int[3]) { 0, 0, 0 });
   
   mrc_f3_setup(f3);
   mrc_io_read_f3(io, mrc_f3_name(f3), f3);
