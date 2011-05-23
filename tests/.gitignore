@@ -10,5 +10,6 @@ test_mrc_f3
 test_mrc_m3
 test_erfi
 test_io_read_multi
+test_wavelet
 tutorial_mrc_obj
 
