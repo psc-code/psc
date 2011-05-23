@@ -129,6 +129,7 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
 
     struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, 0);
     for (int m = 0; m < m1->nr_comp; m++) {
+      mrc_f1_set_comp_name(fld, m, mrc_m1_comp_name(m1, m));
       mrc_m1_foreach_bnd(m1p, ix) {
 	MRC_F1(fld, m, ix) = MRC_M1(m1p, m, ix);
       } mrc_m1_foreach_end;
