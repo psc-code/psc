@@ -350,6 +350,7 @@ struct collective_m1_ctx {
   int nr_send_reqs;
   MPI_Request *recv_reqs;
   int nr_recv_reqs;
+  char comp_name[100];
 };
 
 static void
@@ -517,8 +518,12 @@ collective_m1_read_recv_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
 {
   struct xdmf *xdmf = to_xdmf(io);
 
-  ctx->recv_reqs = calloc(ctx->nr_patches, sizeof(*ctx->recv_reqs));
+  ctx->recv_reqs = calloc(1 + ctx->nr_patches, sizeof(*ctx->recv_reqs));
   ctx->nr_recv_reqs = 0;
+
+  MPI_Irecv(ctx->comp_name, 100, MPI_CHAR, xdmf->writers[0], 0, mrc_io_comm(io),
+	    &ctx->recv_reqs[ctx->nr_recv_reqs++]);
+
   for (int p = 0; p < ctx->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(m1->domain, p, &info);
@@ -539,6 +544,7 @@ collective_m1_read_recv_end(struct mrc_io *io, struct collective_m1_ctx *ctx,
 {
   MPI_Waitall(ctx->nr_recv_reqs, ctx->recv_reqs, MPI_STATUSES_IGNORE);
   free(ctx->recv_reqs);
+  mrc_m1_set_comp_name(m1, m, ctx->comp_name);
 }
 
 static void
@@ -551,8 +557,14 @@ collective_m1_read_send_begin(struct mrc_io *io, struct collective_m1_ctx *ctx,
     return;
 
   int dim = ctx->dim;
-  ctx->send_reqs = calloc(ctx->nr_global_patches, sizeof(*ctx->send_reqs));
+  ctx->send_reqs = calloc(io->size + ctx->nr_global_patches, sizeof(*ctx->send_reqs));
   ctx->nr_send_reqs = 0;
+  const char *comp_name = mrc_f1_comp_name(f1, m);
+  assert(comp_name && strlen(comp_name) < 99);
+  for (int r = 0; r < io->size; r++) {
+    MPI_Isend((char *) comp_name, strlen(comp_name) + 1, MPI_CHAR,
+	      r, 0, mrc_io_comm(io), &ctx->send_reqs[ctx->nr_send_reqs++]);
+  }
   for (int gp = 0; gp < ctx->nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_get_global_patch_info(domain, gp, &info);
@@ -588,16 +600,17 @@ static herr_t
 read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_m1_cb_data *data = op_data;
+  struct mrc_f1 *gfld = data->gfld;
+  int *ib = gfld->_ghost_off;
   int ierr;
 
   hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
   int m;
   ierr = H5LTget_attribute_int(group_fld, ".", "m", &m); CE;
+  mrc_f1_set_comp_name(data->gfld, m, name);
   hid_t group = H5Gopen(group_fld, "p0", H5P_DEFAULT); H5_CHK(group);
 
   hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
-  struct mrc_f1 *gfld = data->gfld;
-  int *ib = gfld->_ghost_off;
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace,
 		 data->dxpl, &MRC_F1(gfld, m, ib[0])); CE;
   ierr = H5Dclose(dset); CE;
