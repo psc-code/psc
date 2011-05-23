@@ -99,19 +99,20 @@ mrc_params_get_option_int(const char *name, int *pval)
   return 0;
 }
 
-static void
-get_option_float(const char *name, float *pval)
+int
+mrc_params_get_option_float(const char *name, float *pval)
 {
   struct option *p = find_option(name);
   
   if (!p)
-    return;
+    return -1;
 
   int rv = sscanf(p->value, "%g", pval);
   if (rv != 1) {
     fprintf(stderr, "error: cannot parse float from '%s'\n", p->value);
     abort();
   }
+  return 0;
 }
 
 static void
@@ -436,7 +437,7 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       break;
     case PT_FLOAT:
       pv->u_float = params[i].u.ini_float;
-      get_option_float(params[i].name, &pv->u_float);
+      mrc_params_get_option_float(params[i].name, &pv->u_float);
       break;
     case PT_DOUBLE:
       pv->u_double = params[i].u.ini_double;
@@ -470,7 +471,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       mrc_params_get_option_bool(params[i].name, &pv->u_bool);
       break;
     case PT_FLOAT:
-      get_option_float(params[i].name, &pv->u_float);
+      mrc_params_get_option_float(params[i].name, &pv->u_float);
       break;
     case PT_DOUBLE:
       get_option_double(params[i].name, &pv->u_double);
@@ -512,7 +513,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_bool(name, &pv->u_bool);
       break;
     case PT_FLOAT:
-      get_option_float(name, &pv->u_float);
+      mrc_params_get_option_float(name, &pv->u_float);
       break;
     case PT_DOUBLE:
       get_option_double(name, &pv->u_double);
