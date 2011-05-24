@@ -1,2 +1,2 @@
 #! /bin/sh
-./test_io_read_multi --mrc_io_type xdmf2_collective --case 1
+./test_io_read_multi --mrc_io_type xdmf_collective --case 1

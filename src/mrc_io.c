@@ -498,7 +498,7 @@ mrc_io_init()
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
 #endif
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_collective_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_combined_ops);

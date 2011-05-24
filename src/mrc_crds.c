@@ -62,7 +62,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       char s[10];
       sprintf(s, "crd%d", d);
       mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->crd[d]);
-      if (strcmp(mrc_io_type(io), "xdmf2_collective") == 0) {
+      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds));
 	mrc_m1_set_name(crd_nc, s);
@@ -105,7 +105,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
       sprintf(s, "mcrd%d", d);
       mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
 
-      if (strcmp(mrc_io_type(io), "xdmf2_collective") == 0) {
+      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds));
 	mrc_m1_set_name(crd_nc, s);
