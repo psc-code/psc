@@ -2,7 +2,7 @@
 
 set -e
 
-@MPIRUN@ -n 4 ./test_mrc_m3 --npx 1 --npy 4 --npz 4 --mrc_io_type xdmf2_collective --mrc_io_nr_writers 4 --mrc_crds_type multi_rectilinear
+@MPIRUN@ -n 4 ./test_mrc_m3 --npx 1 --npy 4 --npz 4 --mrc_io_type xdmf_collective --mrc_io_nr_writers 4 --mrc_crds_type multi_rectilinear
 
 TEST=6
 for a in reference_results/$TEST/*.xdmf; do 

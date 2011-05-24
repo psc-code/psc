@@ -1414,8 +1414,8 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 // ======================================================================
 // mrc_io_ops_xdmf_collective
 
-struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
-  .name          = "xdmf2_collective",
+struct mrc_io_ops mrc_io_xdmf_collective_ops = {
+  .name          = "xdmf_collective",
   .size          = sizeof(struct xdmf),
   .param_descr   = xdmf_collective_descr,
   .parallel      = true,

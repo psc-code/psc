@@ -2,7 +2,7 @@
 
 set -e
 
-@MPIRUN@ -n 1 ./test_mrc_f3 --mrc_io_type xdmf2_collective \
+@MPIRUN@ -n 1 ./test_mrc_f3 --mrc_io_type xdmf_collective \
     --mrc_crds_type rectilinear
 
 TEST=f3_1
