@@ -45,6 +45,7 @@ static void
 _psc_case_destroy(struct psc_case *_case)
 {
   psc_destroy(_case->psc);
+  ppsc = NULL;
 }
 
 // ----------------------------------------------------------------------

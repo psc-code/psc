@@ -149,6 +149,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xz();
   psc_bnd_set_type(ppsc->bnd, "fortran");
   psc_case_setup(_case);
+
   mparticles_base_t *particles = &ppsc->particles;
   setup_particles(particles);
   //  psc_dump_particles("part-0");
@@ -163,6 +164,8 @@ main(int argc, char **argv)
   _case = psc_create_test_xz();
   psc_bnd_set_type(ppsc->bnd, "c");
   psc_case_setup(_case);
+  particles = &ppsc->particles;
+
   setup_particles(particles);
   //  psc_dump_particles("part-0");
   total_num_particles_before = get_total_num_particles(particles);
