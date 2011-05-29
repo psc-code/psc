@@ -32,20 +32,31 @@
 - libmrc/io: write vectors as such
 - libmrc/io: too many comm's on hopper
 - libmrc/io: arbitrary sub-slab
-- libmrc/io: xdmf2_collective: be smarter about finding communication partners
-- libmrc/obj: automatic track child classes
+- libmrc/io: xdmf_collective: be smarter about finding communication partners
+- libmrc/io: xdmf_collective: "writer" is also "reader"
+- libmrc/io: xdmf_collective: write regular fields with ghost points (? xdmf / optional)
+- libmrc/io: xdmf_collective: arbitrary selection on m3
+- libmrc/io: xdmf_collective: generalize arbitrary selection on m1
+- libmrc/io: check HDF5 error return
+- libmrc/io: avoid cast after mrc_io_read_obj_ref()
+- libmrc/io: avoid destroying the mrc_crds on read()
+- libmrc/io: set comp_name on m3_read
+- libmrc/io: l, h on mrc_crds read back is wrong (test_wavelet)
+- libmrc/io: get rid of scale altogether, or do it as optional feature (?)
 - libmrc/obj: consistently override standard methods in subclasses (order)
 - libmrc/ddc: use mpi types instead of copy-to-buffer ?
 - libmrc/ddc: more asynchronous (copy when received)
 - libmrc/ddc: don't use MPI for local exchanges
 - libmrc/ddc: consistent 0-based offsets (OpenGGCM?)
 - libmrc/ddc: is it worthwhile keeping ddc "simple" around?
+- libmrc/ddc: better integrate ddc into domain (shouldn't need to set up ddc for mrc_m3...)
 - libmrc/params: proper naming
 - libmrc/params,obj: proper hierarchy print
-- libmrc/params.obj: allow for read-only vars, too
+- libmrc/params,obj: allow for read-only vars, too
 - libmrc/params: help texts
 - libmrc/fld: set_get_fld_name wrappers
 - libmrc/fld: fld_name from f3/patch -> m3
+- libmrc/crd: setup order recreate etc is crap
 
 - output with FIELDS_FORTRAN
 - fix output_vtk?
@@ -85,3 +96,6 @@ DONE
 - psc/cleanup: rename case_* ?
 - psc/case: do integrate as part of case_integrate, virtual
 - psc/build: make fields/particles C default
+- libmrc/obj: automatic track child classes
+- libmrc/io: xdmf_collective: handle nr_writers > 1
+- libmrc/io: xdmf_collective: write nc crds as part of crd writing
