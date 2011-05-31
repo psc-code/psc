@@ -37,7 +37,12 @@ static void
 _kdv_create(struct kdv *kdv)
 {
   kdv->domain = mrc_domain_create(kdv_comm(kdv));
-  mrc_domain_set_param_int3(kdv->domain, "m", (int [3]) { 100, 1, 1 });
+  // set defaults
+  mrc_domain_set_param_int3(kdv->domain, "m", (int [3]) { 160, 1, 1 });
+  struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
+  mrc_crds_set_param_int(crds, "sw", BND);
+  mrc_crds_set_param_float3(crds, "l", (float[3]) { -8., 0., 0. });
+  mrc_crds_set_param_float3(crds, "h", (float[3]) {  8., 0., 0. });
 }
 
 static void
@@ -59,8 +64,6 @@ kdv_get_fld(struct kdv *kdv, int nr_comps, const char *name)
 static void
 _kdv_setup(struct kdv *kdv)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(kdv->domain);
-  mrc_crds_set_param_int(crds, "sw", BND);
   mrc_domain_setup(kdv->domain);
 }
 
@@ -76,6 +79,7 @@ kdv_fill_ghosts(struct kdv *kdv, struct mrc_f1 *x, int m_x)
 
 #define Dx(x, m_x, ix)							\
   ((MRC_F1(x, m_x, ix+1) - MRC_F1(x, m_x, ix-1)) / (CRDX(ix+1) - CRDX(ix-1)))
+
 // assumes uniform coordinates!
 #define Dxxx(x, m_x, ix)						\
   ((MRC_F1(x, m_x, ix+2) - 2.*MRC_F1(x, m_x, ix+1) + 2.*MRC_F1(x, m_x, ix-1) - MRC_F1(x, m_x, ix-2)) / (2.*powf(CRDX(ix+1) - CRDX(ix), 3.)))
@@ -123,8 +127,7 @@ main(int argc, char **argv)
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 0, 0) {
     //    MRC_F1(x, U, ix) = sin(2.*M_PI * CRDX(ix));
-    // 3 solitons
-    MRC_F1(x, U, ix) = -12. * 1./sqr(cosh(CRDX(ix)));
+    MRC_F1(x, U, ix) = -12. * 1./sqr(cosh(CRDX(ix))); // 3 solitons
   } mrc_f1_foreach_end;
 
   // run time integration
