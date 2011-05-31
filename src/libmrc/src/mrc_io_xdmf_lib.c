@@ -23,10 +23,10 @@ xdmf_write_topology_m1(FILE *f, int im[3], const char *filename, int p)
 {
   // FIXME crd0 hardcoded, should use mrc_m1_name()
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
-	  1, 1, im[0] + 2);
+	  1, 1, im[0]);
 
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
-  fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 2);
+  fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0]);
   fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"XML\">\n", 1);
@@ -36,6 +36,13 @@ xdmf_write_topology_m1(FILE *f, int im[3], const char *filename, int p)
   fprintf(f, "        0\n");
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
+  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"%s\" Center=\"Node\">\n",
+	  "crdx", "Scalar");
+  fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
+	  1, 1, im[0], "");
+  fprintf(f, "        %s:/crd0/p%d/1d\n", filename, p);
+  fprintf(f, "       </DataItem>\n");
+  fprintf(f, "     </Attribute>\n");
   fprintf(f, "\n");
 }
 
@@ -84,7 +91,7 @@ xdmf_write_fld_m1(FILE *f, struct xdmf_fld_info *fld_info, int im[3],
   fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"%s\" Center=\"Node\">\n",
 	  fld_info->name, fld_info->is_vec ? "Vector" : "Scalar");
   fprintf(f, "       <DataItem Dimensions=\"%d %d %d%s\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
-	  1, 1, im[0] + 2, fld_info->is_vec ? " 3" : "");
+	  1, 1, im[0], fld_info->is_vec ? " 3" : "");
   fprintf(f, "        %s:/%s/%s/p%d/1d\n", filename, fld_info->path, fld_info->name, p);
   fprintf(f, "       </DataItem>\n");
   fprintf(f, "     </Attribute>\n");
