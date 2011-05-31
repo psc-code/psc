@@ -118,12 +118,14 @@ mrc_ts_create_std(MPI_Comm comm,
   mrc_ts_monitor_set_name(mon_output, "mrc_ts_output");
   mrc_ts_add_monitor(ts, mon_output);
 
-  struct mrc_ts_monitor *mon_diag =
-    mrc_ts_monitor_create(mrc_ts_comm(ts));
-  mrc_ts_monitor_set_type(mon_diag, "diag");
-  mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
-  mrc_ts_monitor_diag_set_function(mon_diag, diagf);
-  mrc_ts_add_monitor(ts, mon_diag);
+  if (diagf) {
+    struct mrc_ts_monitor *mon_diag =
+      mrc_ts_monitor_create(mrc_ts_comm(ts));
+    mrc_ts_monitor_set_type(mon_diag, "diag");
+    mrc_ts_monitor_set_name(mon_diag, "mrc_ts_diag");
+    mrc_ts_monitor_diag_set_function(mon_diag, diagf);
+    mrc_ts_add_monitor(ts, mon_diag);
+  }
 
   return ts;
 }
