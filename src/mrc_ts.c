@@ -136,6 +136,7 @@ mrc_ts_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk4_ops);
 }
 
 // ======================================================================
@@ -145,6 +146,7 @@ mrc_ts_init()
 static struct param mrc_ts_param_descr[] = {
   { "max_time"      , VAR(max_time)      , PARAM_FLOAT(1.)           },
   { "max_steps"     , VAR(max_steps)     , PARAM_INT(100000)         },
+  { "dt"            , VAR(dt)            , PARAM_FLOAT(1e-2)           },
   {},
 };
 #undef VAR
