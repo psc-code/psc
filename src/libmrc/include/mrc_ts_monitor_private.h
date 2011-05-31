@@ -12,6 +12,7 @@ struct mrc_ts_monitor {
   // parameters
   int every;
 
+  int next_step;
   list_t monitors_entry;
 };
 
