@@ -195,6 +195,8 @@ mrc_ts_ode45_solve(struct mrc_ts *ts)
 
     //    mprintf("t %d:%g dt = %g\n", ts->n, ts->time, ts->dt);
   }
+
+  mrc_ts_monitors_run(ts);
 }
 
 // ----------------------------------------------------------------------=

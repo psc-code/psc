@@ -79,6 +79,8 @@ mrc_ts_solve(struct mrc_ts *ts)
     ts->time += ts->dt;
     ts->n++;
   }
+
+  mrc_ts_monitors_run(ts);
 }
 
 // ======================================================================

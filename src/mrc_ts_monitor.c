@@ -14,12 +14,11 @@ mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 {
   assert(mrc_ts_monitor_ops(mon)->run);
 
-  while (ts->n > mon->next_step) {
-    mon->next_step += mon->every;
-  }
-  if (mon->next_step == ts->n) {
+  if ((mon->every_steps > 0 && ts->n >= mon->next_step) ||
+      (mon->every_time > 0. && ts->time >= mon->next_time)) {
     mrc_ts_monitor_ops(mon)->run(mon, ts);
-    mon->next_step += mon->every;
+    mon->next_step = ts->n + mon->every_steps;
+    mon->next_time = ts->time + mon->every_time;
   }
 }
 
@@ -38,7 +37,8 @@ mrc_ts_monitor_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_monitor, x)
 static struct param mrc_ts_monitor_descr[] = {
-  { "every"         , VAR(every)         , PARAM_INT(1)             },
+  { "every_steps"    , VAR(every_steps)    , PARAM_INT(0)             },
+  { "every_time"     , VAR(every_time)     , PARAM_FLOAT(0.1)         },
   {},
 };
 #undef VAR

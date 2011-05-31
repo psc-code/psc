@@ -10,9 +10,11 @@
 struct mrc_ts_monitor {
   struct mrc_obj obj;
   // parameters
-  int every;
+  int every_steps;
+  float every_time;
 
   int next_step;
+  float next_time;
   list_t monitors_entry;
 };
 
