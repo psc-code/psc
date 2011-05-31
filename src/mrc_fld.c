@@ -62,6 +62,8 @@ mrc_f1_duplicate(struct mrc_f1 *f1_in)
   f1->ib[0] = f1_in->ib[0];
   f1->im[0] = f1_in->im[0];
   f1->nr_comp = f1_in->nr_comp;
+  f1->sw = f1_in->sw;
+  f1->domain = f1_in->domain;
   mrc_f1_setup(f1);
 
   return f1;
