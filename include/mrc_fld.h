@@ -39,6 +39,7 @@ struct mrc_f1 {
 
 MRC_CLASS_DECLARE(mrc_f1, struct mrc_f1);
 struct mrc_f1 *mrc_f1_duplicate(struct mrc_f1 *x);
+void mrc_f1_set_comp_name(struct mrc_f1 *x, int m, const char *name);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
