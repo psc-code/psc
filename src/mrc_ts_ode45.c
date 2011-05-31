@@ -23,8 +23,10 @@ struct mrc_ts_ode45 {
 
 #define VAR(x) (void *)offsetof(struct mrc_ts_ode45, x)
 static struct param mrc_ts_ode45_descr[] = {
-  { "tol"             , VAR(tol)           , PARAM_FLOAT(1e-3)      },
+  { "tol"             , VAR(tol)           , PARAM_FLOAT(1e-6)      },
   { "safety_factor"   , VAR(safety_factor) , PARAM_FLOAT(.8)        },
+  { "dt_min"          , VAR(dt_min)        , PARAM_FLOAT(0.)        },
+  { "dt_max"          , VAR(dt_max)        , PARAM_FLOAT(0.)        },
   {},
 };
 #undef VAR
@@ -78,8 +80,12 @@ mrc_ts_ode45_setup(struct mrc_ts *ts)
 
   ode45->pow = 1./6.; // see p.91 in the Ascher & Petzold reference for more infomation.
 
-  ode45->dt_max = (ts->max_time - ts->time) / 2.5;
-  ode45->dt_min = (ts->max_time - ts->time) / 1e9;
+  if (ode45->dt_max == 0.) {
+    ode45->dt_max = (ts->max_time - ts->time) / 2.5;
+  }
+  if (ode45->dt_min == 0.) {
+    ode45->dt_min = (ts->max_time - ts->time) / 1e9;
+  }
   if (ts->dt == 0.) {
     ts->dt = (ts->max_time - ts->time) / 100.; // initial guess at a step size
   }
