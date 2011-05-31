@@ -13,8 +13,13 @@ void
 mrc_ts_monitor_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 {
   assert(mrc_ts_monitor_ops(mon)->run);
-  if (ts->n % mon->every == 0) { // FIXME, this is really too simple, rejected steps
+
+  while (ts->n > mon->next_step) {
+    mon->next_step += mon->every;
+  }
+  if (mon->next_step == ts->n) {
     mrc_ts_monitor_ops(mon)->run(mon, ts);
+    mon->next_step += mon->every;
   }
 }
 
