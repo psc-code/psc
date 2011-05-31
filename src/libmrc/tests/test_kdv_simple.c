@@ -79,6 +79,7 @@ main(int argc, char **argv)
   mrc_f1_set_name(x, "x");
   mrc_f1_set_param_int(x, "nr_comps", NR_FLDS);
   mrc_f1_setup(x);
+  mrc_f1_set_comp_name(x, U, "u");
 
   // setup initial equilibrium and perturbation
   mrc_f1_foreach(x, ix, 0, 0) {
