@@ -77,8 +77,8 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   abort();
 }
 
-struct mrc_obj *
-mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
+static void
+init_class(struct mrc_class *class)
 {
   if (!class->initialized) {
     class->initialized = true;
@@ -90,7 +90,12 @@ mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
       class->init();
     }
   }
+}
 
+struct mrc_obj *
+mrc_obj_create(MPI_Comm comm, struct mrc_class *class)
+{
+  init_class(class);
   return obj_create(comm, class);
 }
 
@@ -528,13 +533,7 @@ mrc_obj_find_child(struct mrc_obj *obj, const char *name)
 struct mrc_obj *
 mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
 {
-  // FIXME dupl
-  if (!class->initialized) {
-    class->initialized = true;
-    if (class->init) {
-      class->init();
-    }
-  }
+  init_class(class);
 
   struct mrc_obj *obj = mrc_io_find_obj(io, name);
   if (obj)

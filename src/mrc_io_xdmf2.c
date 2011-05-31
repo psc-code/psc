@@ -12,6 +12,7 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
+#define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
 // ----------------------------------------------------------------------
@@ -33,6 +34,7 @@ struct xdmf {
   MPI_Comm comm_writers; //< communicator for only the writers
   int *writers;          //< rank (in mrc_io comm) for each writer
   int is_writer;         //< this rank is a writer
+  char *mode;            //< open mode, "r" or "w"
 };
 
 #define VAR(x) (void *)offsetof(struct xdmf, x)
@@ -117,7 +119,8 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
     group = H5Gopen(file->h5_file, path, H5P_DEFAULT);
   } else {
-    group = H5Gcreate(file->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    group = H5Gcreate(file->h5_file, path, H5P_DEFAULT,
+		      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
   }
 
   switch (type) {
@@ -180,7 +183,8 @@ xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
       hsize_t im1 = im + 1;
       char s_patch[10];
       sprintf(s_patch, "p%d", p);
-      hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT,
+				   H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crdp);
       H5LTmake_dataset_float(group_crdp, "1d", 1, &im1, crd_nc);
       H5Gclose(group_crdp);
 
@@ -219,13 +223,14 @@ xdmf_spatial_write_crds_nonuni(struct xdmf_file *file,
     struct mrc_f1 *crd = crds->crd[d];
 
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
-				 H5P_DEFAULT, H5P_DEFAULT);
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
 
     const int *dims = mrc_f1_dims(crd);
     hsize_t hdims[1] = { dims[0] };
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
-    hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crdp);
     H5LTmake_dataset_float(group_crdp, "1d", 1, hdims, &MRC_F1(crd,0, 0));
     H5Gclose(group_crdp);
 
@@ -271,7 +276,8 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   for (int m = 0; m < m3->nr_comp; m++) {
     xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
 
-    hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
+				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
     mrc_m3_foreach_patch(m3, p) {
       struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
 
@@ -284,7 +290,8 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 			   m3p->im[0] + 2 * m3p->ib[0] };
       hsize_t off[3] = { -m3p->ib[2], -m3p->ib[1], -m3p->ib[0] };
 
-      hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
       struct mrc_patch_info info;
       mrc_domain_get_local_patch_info(m3->domain, p, &info);
       H5LTset_attribute_int(group, ".", "global_patch", &info.global_patch, 1);
@@ -335,7 +342,8 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     }
     xdmf_spatial_save_fld_info(xs, strdup(fld_name), strdup(path), false);
 
-    hid_t group_fld = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_fld = H5Gcreate(group0, fld_name, H5P_DEFAULT,
+				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
     char s_patch[10];
     sprintf(s_patch, "p%d", 0);
 
@@ -344,7 +352,8 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
     hsize_t fdims[1] = { dims[0] };
     hsize_t off[1] = { 0 };
     
-    hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT,
+			    H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
     hid_t filespace = H5Screate_simple(1, fdims, NULL);
     hid_t memspace = H5Screate_simple(1, mdims, NULL);
@@ -438,9 +447,10 @@ xdmf_spatial_write_mcrds_multi_parallel(struct xdmf_file *file,
     struct mrc_m1 *mcrd = crds->mcrd[d];
 
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT,
-				 H5P_DEFAULT, H5P_DEFAULT);
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
 
-    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crdp);
     
     hsize_t fdims[1] = { gdims[d] + 1 };
     hid_t filespace = H5Screate_simple(1, fdims, NULL);
@@ -508,12 +518,11 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
-  int gdims[3], np[3], nr_global_patches, nr_patches, rank;
+  int gdims[3], np[3], nr_global_patches, nr_patches;
   mrc_domain_get_global_dims(domain, gdims);
   mrc_domain_get_nr_procs(domain, np);
   mrc_domain_get_nr_global_patches(domain, &nr_global_patches);
   mrc_domain_get_patches(domain, &nr_patches);
-  MPI_Comm_rank(mrc_io_comm(io), &rank);
 
   for (int d = 0; d < 3; d++) {
     struct mrc_f1 *crd = crds->crd[d];
@@ -562,7 +571,7 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
     int im = gdims[d];
     float *crd_nc = NULL;
 
-    if (rank == xdmf->writers[0]) { // only on first writer
+    if (io->rank == xdmf->writers[0]) { // only on first writer
       crd_nc = calloc(im + 1, sizeof(*crd_nc));
       MPI_Request *recv_reqs = calloc(np[d], sizeof(*recv_reqs));
       int nr_recv_reqs = 0;
@@ -599,11 +608,13 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
     }
 
     // on writers only
-    hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_f1_name(crd), H5P_DEFAULT,
-				 H5P_DEFAULT, H5P_DEFAULT);
 
+    // this group has been generated by generic mrc_obj code
+    hid_t group_crd1 = H5Gopen(file->h5_file, mrc_f1_name(crd),
+			       H5P_DEFAULT); H5_CHK(group_crd1);
 
-    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
     
     hsize_t fdims[1] = { gdims[d] + 1 };
     hid_t filespace = H5Screate_simple(1, fdims, NULL);
@@ -611,7 +622,7 @@ xdmf_spatial_write_crds_multi_parallel(struct mrc_io *io, struct mrc_domain *dom
 			   H5P_DEFAULT, H5P_DEFAULT);
 
     hid_t memspace;
-    if (rank == xdmf->writers[0]) {
+    if (io->rank == xdmf->writers[0]) {
       memspace = H5Screate_simple(1, fdims, NULL);
     } else {
       memspace = H5Screate(H5S_NULL);
@@ -649,9 +660,10 @@ xdmf_spatial_write_mcrds_multi_uniform_parallel(struct xdmf_file *file,
     struct mrc_m1 *mcrd = crds->mcrd[d];
 
     hid_t group_crd1 = H5Gcreate(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT,
-				 H5P_DEFAULT, H5P_DEFAULT);
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
 
-    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_crdp = H5Gcreate(group_crd1, "p0", H5P_DEFAULT,
+				 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_crd1);
     H5LTset_attribute_float(group_crdp, ".", "xl", &xl[d], 1);
     H5LTset_attribute_float(group_crdp, ".", "xh", &xh[d], 1);
     H5Gclose(group_crdp);
@@ -704,8 +716,10 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   hid_t group0;
   if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
     group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
+    MHERE;
   } else {
-    group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT,
+		       H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group0);
   }
   int nr_1 = 1;
   H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
@@ -732,8 +746,10 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   for (int m = 0; m < m3->nr_comp; m++) {
     xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
 
-    hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
+				H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
+    hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
+			    H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
     int i0 = 0;
     H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
 
@@ -843,7 +859,7 @@ xdmf_collective_setup(struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// xdmf_collective_open
+// xdmf_collective_destroy
 
 static void
 xdmf_collective_destroy(struct mrc_io *io)
@@ -866,7 +882,8 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
 {
   struct xdmf *xdmf = to_xdmf(io);
   struct xdmf_file *file = &xdmf->file;
-  assert(strcmp(mode, "w") == 0);
+  xdmf->mode = strdup(mode);
+  //  assert(strcmp(mode, "w") == 0);
 
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
@@ -885,7 +902,13 @@ xdmf_collective_open(struct mrc_io *io, const char *mode)
 #ifdef H5_HAVE_PARALLEL
     H5Pset_fapl_mpio(plist, xdmf->comm_writers, info);
 #endif
-    file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    if (strcmp(mode, "w") == 0) {
+      file->h5_file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
+    } else if (strcmp(mode, "r") == 0) {
+      file->h5_file = H5Fopen(filename, H5F_ACC_RDONLY, plist);
+    } else {
+      assert(0);
+    }
     H5Pclose(plist);
     MPI_Info_free(&info);
   }
@@ -906,6 +929,144 @@ xdmf_collective_close(struct mrc_io *io)
     H5Fclose(file->h5_file);
     memset(file, 0, sizeof(*file));
   }
+  free(xdmf->mode);
+  xdmf->mode = NULL;
+}
+
+static void
+xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
+		const char *name, union param_u *pv)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+  int ierr;
+  
+  if (!xdmf->is_writer) {
+    // FIXME? should check whether the attribute is the same on every proc?
+    return;
+  }
+  hid_t group;
+  if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
+    group = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+  } else {
+    group = H5Gcreate(file->h5_file, path, H5P_DEFAULT, H5P_DEFAULT,
+		      H5P_DEFAULT); H5_CHK(group);
+  }
+
+  switch (type) {
+  case PT_SELECT:
+  case PT_INT:
+    ierr = H5LTset_attribute_int(group, ".", name, &pv->u_int, 1); CE;
+    break;
+  case PT_BOOL: {
+    int val = pv->u_bool;
+    ierr = H5LTset_attribute_int(group, ".", name, &val, 1); CE;
+    break;
+  }
+  case PT_FLOAT:
+    ierr = H5LTset_attribute_float(group, ".", name, &pv->u_float, 1); CE;
+    break;
+  case PT_DOUBLE:
+    ierr = H5LTset_attribute_double(group, ".", name, &pv->u_double, 1); CE;
+    break;
+  case PT_STRING:
+    ierr = H5LTset_attribute_string(group, ".", name, pv->u_string); CE;
+    break;
+  case PT_INT3:
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int3, 3); CE;
+    break;
+  case PT_FLOAT3:
+    ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
+    break;
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+static void
+xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
+			  const char *name, union param_u *pv)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+  int ierr;
+  
+  hid_t group = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group);
+  switch (type) {
+  case PT_SELECT:
+  case PT_INT:
+    ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
+    break;
+  case PT_BOOL: {
+    int val;
+    ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
+    pv->u_bool = val;
+    break;
+  }
+  case PT_FLOAT:
+    ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
+    break;
+  case PT_DOUBLE:
+    ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
+    break;
+  case PT_STRING: ;
+    hsize_t dims;
+    H5T_class_t class;
+    size_t sz;
+    //    mprintf("path %s name %s\n", path, name);
+    ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
+    pv->u_string = malloc(sz);
+    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+    break;
+  case PT_INT3:
+    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
+    break;
+  case PT_FLOAT3:
+    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
+    break;
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
+// xdmf_collective_read_f1
+
+static void
+xdmf_collective_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+
+  MHERE;
+  hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
+#if 0
+  const int *ghost_dims = mrc_f1_ghost_dims(f1);
+  hsize_t hdims[1] = { ghost_dims[0] };
+
+  hid_t filespace = H5Screate_simple(1, hdims, NULL);
+  hid_t memspace = H5Screate_simple(1, hdims, NULL);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+  if (hdf5->par.use_independent_io) {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+  } else {
+    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+  }
+
+  struct read_f1_cb_data cb_data = {
+    .io        = io,
+    .fld       = f1,
+    .filespace = filespace,
+    .memspace  = memspace,
+    .dxpl      = dxpl,
+  };
+  hsize_t idx = 0;
+  H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+		     read_f1_cb, &cb_data, H5P_DEFAULT);
+
+  H5Pclose(dxpl);
+  H5Sclose(filespace);
+  H5Sclose(memspace);
+#endif
+  H5Gclose(group0);
 }
 
 // ----------------------------------------------------------------------
@@ -917,44 +1078,50 @@ static void
 collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int m,
 		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
 {
+  int ierr;
   int gdims[3];
   mrc_domain_get_global_dims(m3->domain, gdims);
 
   xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
 
-  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
+  ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
+  
+  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
+			  H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
   int i0 = 0;
-  H5LTset_attribute_int(group, ".", "global_patch", &i0, 1);
+  ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
 
   hsize_t fdims[3] = { gdims[2], gdims[1], gdims[0] };
-  hid_t filespace = H5Screate_simple(3, fdims, NULL);
+  hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
   hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT);
-  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER);
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
 #ifdef H5_HAVE_PARALLEL
   struct xdmf *xdmf = to_xdmf(io);
   if (xdmf->use_independent_io) {
-    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT); CE;
   } else {
-    H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
   }
 #endif
   const int *im = mrc_f3_ghost_dims(f3), *ib = mrc_f3_ghost_off(f3);
   hsize_t mdims[3] = { im[2], im[1], im[0] };
   hsize_t foff[3] = { ib[2], ib[1], ib[0] };
   hid_t memspace = H5Screate_simple(3, mdims, NULL);
-  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL, mdims, NULL);
+  ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
+			     mdims, NULL); CE;
 
-  H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr);
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr); CE;
   
-  H5Dclose(dset);
-  H5Sclose(memspace);
-  H5Sclose(filespace);
-  H5Pclose(dxpl);
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(memspace); CE;
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Pclose(dxpl); CE;
 
-  H5Gclose(group);
-  H5Gclose(group_fld);
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group_fld); CE;
 }
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -1239,7 +1406,6 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->domain),
 					 m3->domain);
-    xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
   }
 
   if (xdmf->is_writer) {
@@ -1268,7 +1434,9 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     if (H5Lexists(file->h5_file, path, H5P_DEFAULT) > 0) {
       group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
     } else {
-      group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      assert(0); // FIXME, can this happen?
+      group0 = H5Gcreate(file->h5_file, path, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group0);
     }
     int nr_1 = 1;
     H5LTset_attribute_int(group0, ".", "nr_patches", &nr_1, 1);
@@ -1293,6 +1461,107 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 }
 
 // ----------------------------------------------------------------------
+// xdmf_collective_read_m3
+
+struct read_m3_cb_data {
+  struct mrc_io *io;
+  struct mrc_f3 *gfld;
+  hid_t filespace;
+  hid_t memspace;
+  hid_t dxpl;
+};
+
+static herr_t
+read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+{
+  struct read_m3_cb_data *data = op_data;
+  int ierr;
+
+  hid_t group_fld = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group_fld);
+  int m;
+  ierr = H5LTget_attribute_int(group_fld, ".", "m", &m); CE;
+  hid_t group = H5Gopen(group_fld, "p0", H5P_DEFAULT); H5_CHK(group);
+
+  hid_t dset = H5Dopen(group, "3d", H5P_DEFAULT); H5_CHK(dset);
+  struct mrc_f3 *gfld = data->gfld;
+  int *ib = gfld->_ghost_off;
+  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace,
+		 data->dxpl, &MRC_F3(gfld, m, ib[0], ib[1], ib[2])); CE;
+  ierr = H5Dclose(dset); CE;
+  
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group_fld); CE;
+
+  return 0;
+}
+
+static void
+xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+{
+  struct xdmf *xdmf = to_xdmf(io);
+  struct xdmf_file *file = &xdmf->file;
+  int ierr;
+
+  assert(xdmf->nr_writers == 1);
+
+  int gdims[3];
+  mrc_domain_get_global_dims(m3->domain, gdims);
+  struct mrc_f3 *gfld = NULL;
+
+  if (xdmf->is_writer) {
+    gfld = mrc_f3_create(mrc_m3_comm(m3));
+    mrc_f3_set_name(gfld, "gfld");
+    mrc_f3_set_param_int3(gfld, "dims", gdims);
+    mrc_f3_set_param_int(gfld, "nr_comps", m3->nr_comp);
+    mrc_f3_setup(gfld);
+    
+    hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
+
+    hsize_t hgdims[3] = { gdims[2], gdims[1], gdims[0] };
+
+    hid_t filespace = H5Screate_simple(3, hgdims, NULL); H5_CHK(filespace);
+    hid_t memspace = H5Screate_simple(3, hgdims, NULL); H5_CHK(memspace);
+    hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+    if (xdmf->use_independent_io) {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT);
+    } else {
+      H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE);
+    }
+#endif
+
+    struct read_m3_cb_data cb_data = {
+      .io        = io,
+      .gfld      = gfld,
+      .memspace  = memspace,
+      .filespace = filespace,
+      .dxpl      = dxpl,
+    };
+    
+    hsize_t idx = 0;
+    H5Literate_by_name(group0, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+		       read_m3_cb, &cb_data, H5P_DEFAULT);
+
+    ierr = H5Pclose(dxpl); CE;
+    ierr = H5Sclose(memspace); CE;
+    ierr = H5Sclose(filespace); CE;
+
+    ierr = H5Gclose(group0); CE;
+  }
+
+  assert(io->size == 1);
+  struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
+  for (int m = 0; m < m3->nr_comp; m++) {
+    mrc_m3_foreach(m3p, ix,iy,iz, 0, 0) {
+      MRC_M3(m3p, m, ix,iy,iz) = MRC_F3(gfld, m, ix,iy,iz);
+    } mrc_m3_foreach_end;
+  }
+  mrc_m3_patch_put(m3);
+
+  mrc_f3_destroy(gfld);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_ops_xdmf_collective
 
 struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
@@ -1304,10 +1573,11 @@ struct mrc_io_ops mrc_io_xdmf2_collective_ops = {
   .destroy       = xdmf_collective_destroy,
   .open          = xdmf_collective_open,
   .close         = xdmf_collective_close,
-#if 0
-  .write_attr    = xdmf_write_attr,
-#endif
+  .write_attr    = xdmf_collective_write_attr,
+  .read_attr     = xdmf_collective_read_attr,
+  .read_f1       = xdmf_collective_read_f1,
   .write_m3      = xdmf_collective_write_m3,
+  .read_m3       = xdmf_collective_read_m3,
 };
 
 #endif
