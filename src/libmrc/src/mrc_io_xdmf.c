@@ -21,6 +21,7 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
+#define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
 #define MAX_FLD_INFO (30)
@@ -171,12 +172,13 @@ hdf5_write_field2d_serial(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   hsize_t fdims[2] = { fld->im[1], fld->im[0] };
   //  printf("[%d] diagsrv: write '%s'\n", info->rank, fld_name);
 
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
-  hid_t group = H5Gcreate(group0, fld->name[0], H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+  hid_t group = H5Gcreate(group0, fld->name[0], H5P_DEFAULT, H5P_DEFAULT,
+			  H5P_DEFAULT); H5_CHK(group);
   // FIXME H5lt
-  hid_t filespace = H5Screate_simple(2, fdims, NULL);
+  hid_t filespace = H5Screate_simple(2, fdims, NULL); H5_CHK(filespace);
   hid_t dataset = H5Dcreate(group, "2d", H5T_NATIVE_FLOAT, filespace,
-			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dataset);
   
   ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fld->arr); CE;
 
@@ -682,7 +684,7 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   
-  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
   switch (type) {
   case PT_SELECT:
   case PT_INT:
@@ -1307,7 +1309,7 @@ ds_xdmf_parallel_open(struct mrc_io *io, const char *mode)
     hdf5->group_crd = H5Gcreate(hdf5->file, "crd", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   } else if (strcmp(mode, "r") == 0) {
     hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, plist);
-    hdf5->group_crd = H5Gopen(hdf5->file, "crd", H5P_DEFAULT);
+    hdf5->group_crd = H5Gopen(hdf5->file, "crd", H5P_DEFAULT); H5_CHK(hdf5->group_crd);
   } else {
     assert(0);
   }

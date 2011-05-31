@@ -127,8 +127,25 @@ void
 mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_f3);
-  ops->read_f3(io, path, fld);
+  if (ops->read_f3) {
+    ops->read_f3(io, path, fld);
+  } else {
+    assert(fld->domain);
+    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->domain);
+    mrc_m3_set_param_int(m3, "sw", fld->_sw);
+    mrc_m3_set_param_int(m3, "nr_comps", fld->nr_comp);
+    mrc_m3_setup(m3);
+    mrc_io_read_m3(io, path, m3);
+
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, 0);
+    for (int m = 0; m < m3->nr_comp; m++) {
+      mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
+	MRC_F3(fld, m, ix,iy,iz) = MRC_M3(m3p, m, ix,iy,iz);
+      } mrc_m3_foreach_end;
+    }
+    mrc_m3_patch_put(m3);
+    mrc_m3_destroy(m3);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -188,6 +205,17 @@ mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
   struct mrc_io_ops *ops = mrc_io_ops(io);
   assert(ops->write_m3);
   ops->write_m3(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
+// mrc_io_read_m3
+
+void
+mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_m3);
+  ops->read_m3(io, path, fld);
 }
 
 // ----------------------------------------------------------------------
