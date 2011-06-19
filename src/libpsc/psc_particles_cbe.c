@@ -53,8 +53,6 @@ particles_cbe_put(mparticles_cbe_t *particles, void *particles_base)
 
 #else
 
-static particle_cbe_t *__arr;
-static int __arr_size;
 static bool __gotten;
 
 void
