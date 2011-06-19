@@ -136,6 +136,7 @@ _psc_create(struct psc *psc)
   psc->sort = psc_sort_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->sort);
   psc->output_fields = psc_output_fields_create(comm);
+  psc_output_fields_set_psc(psc->output_fields, psc);
   psc_add_child(psc, (struct mrc_obj *) psc->output_fields);
   psc->output_particles = psc_output_particles_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->output_particles);

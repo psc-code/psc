@@ -1,6 +1,12 @@
 
 #include "psc_output_fields_private.h"
 
+void
+psc_output_fields_set_psc(struct psc_output_fields *output_fields, struct psc *psc)
+{
+  output_fields->psc = psc;
+}
+
 // ======================================================================
 // forward to subclass
 
