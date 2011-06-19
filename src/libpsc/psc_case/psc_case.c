@@ -32,10 +32,6 @@ static void
 _psc_case_create(struct psc_case *_case)
 {
   _case->psc = psc_create(psc_case_comm(_case));
-
-  // make this object globally accessible
-  assert(!ppsc);
-  ppsc = _case->psc;
 }
 
 // ----------------------------------------------------------------------
@@ -68,11 +64,18 @@ _psc_case_setup(struct psc_case *_case)
   // FIXME, probably broken, should go into sep subclass?
   if (psc->prm.from_checkpoint) {
     assert(0);
-    psc_read_checkpoint();
   }
+
   // this sets up everything except allocating fields and particles,
   // and intializing them
   psc_setup(psc);
+
+#if 0
+  psc_write_checkpoint(psc);
+  psc_destroy(psc);
+  psc = psc_read_checkpoint(MPI_COMM_WORLD);
+  _case->psc = psc;
+#endif
 
   // alloc / initialize particles
   int particle_label_offset;

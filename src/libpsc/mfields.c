@@ -31,6 +31,9 @@ mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3])
 void
 mfields_base_destroy(mfields_base_t *flds)
 {
+  if (!flds)
+    return;
+
   for (int p = 0; p < flds->nr_patches; p++) {
     fields_base_free(&flds->f[p]);
   }

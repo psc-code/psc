@@ -120,6 +120,9 @@ struct param psc_descr[] = {
 static void
 _psc_create(struct psc *psc)
 {
+  assert(!ppsc);
+  ppsc = psc;
+
   MPI_Comm comm = psc_comm(psc);
 
   psc->push_particles = psc_push_particles_create(comm);
@@ -318,6 +321,7 @@ _psc_setup(struct psc *psc)
 {
   psc_setup_coeff(psc);
   psc_setup_domain(psc); // needs to be done before setting up psc_bnd
+  mprintf("domain %p\n", psc->mrc_domain);
 }
 
 // ----------------------------------------------------------------------
@@ -331,6 +335,8 @@ _psc_destroy(struct psc *psc)
   mphotons_destroy(&psc->mphotons);
 
   mrc_domain_destroy(psc->mrc_domain);
+
+  ppsc = NULL;
 }
 
 // ----------------------------------------------------------------------
