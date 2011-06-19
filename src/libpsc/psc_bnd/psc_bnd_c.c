@@ -117,10 +117,11 @@ static void
 psc_bnd_c_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc *psc = bnd->psc;
 
-  bnd_c->ddc = mrc_domain_create_ddc(ppsc->mrc_domain);
+  bnd_c->ddc = mrc_domain_create_ddc(psc->mrc_domain);
   mrc_ddc_set_funcs(bnd_c->ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(bnd_c->ddc, "ibn", ppsc->ibn);
+  mrc_ddc_set_param_int3(bnd_c->ddc, "ibn", psc->ibn);
   mrc_ddc_set_param_int(bnd_c->ddc, "max_n_fields", 6);
   mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_base_real_t));
   mrc_ddc_setup(bnd_c->ddc);
@@ -171,9 +172,10 @@ static void
 check_domain(struct psc_bnd *bnd)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc *psc = bnd->psc;
 
   struct mrc_domain *domain = mrc_ddc_get_domain(bnd_c->ddc);
-  if (domain != ppsc->mrc_domain) {
+  if (domain != psc->mrc_domain) {
     psc_bnd_c_unsetup(bnd);
     psc_bnd_setup(bnd);
   }
@@ -228,15 +230,15 @@ psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 // calculate bounds of local patch, and global domain
 
 static void
-calc_domain_bounds(int p, double xb[3], double xe[3],
+calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
 		   double xgb[3], double xge[3], double xgl[3])
 {
-  struct psc_patch *psc_patch = &ppsc->patch[p];
+  struct psc_patch *psc_patch = &psc->patch[p];
 
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc_patch->off[d]-.5) * ppsc->dx[d];
-    if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = -.5 * ppsc->dx[d];
+    xb[d] = (psc_patch->off[d]-.5) * psc->dx[d];
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xgb[d] = -.5 * psc->dx[d];
     } else {
       xgb[d] = 0.;
       if (psc_patch->off[d] == 0) {
@@ -244,12 +246,12 @@ calc_domain_bounds(int p, double xb[3], double xe[3],
       }
     }
     
-    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * ppsc->dx[d];
-    if (ppsc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (ppsc->domain.gdims[d]-.5) * ppsc->dx[d];
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc->dx[d];
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
+      xge[d] = (psc->domain.gdims[d]-.5) * psc->dx[d];
     } else {
-      xge[d] = (ppsc->domain.gdims[d]-1) * ppsc->dx[d];
-      if (psc_patch->off[d] + psc_patch->ldims[d] == ppsc->domain.gdims[d]) {
+      xge[d] = (psc->domain.gdims[d]-1) * psc->dx[d];
+      if (psc_patch->off[d] + psc_patch->ldims[d] == psc->domain.gdims[d]) {
 	  xe[d] = xge[d];
       }
     }
@@ -257,10 +259,10 @@ calc_domain_bounds(int p, double xb[3], double xe[3],
     xgl[d] = xge[d] - xgb[d];
   }
   for (int d = 0; d < 3; d++) {
-    xb[d]  += ppsc->domain.corner[d];
-    xe[d]  += ppsc->domain.corner[d];
-    xgb[d] += ppsc->domain.corner[d];
-    xge[d] += ppsc->domain.corner[d];
+    xb[d]  += psc->domain.corner[d];
+    xe[d]  += psc->domain.corner[d];
+    xgb[d] += psc->domain.corner[d];
+    xge[d] += psc->domain.corner[d];
   }
 }
 
@@ -271,6 +273,7 @@ static void
 psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc *psc = bnd->psc;
   check_domain(bnd);
 
   static int pr_A, pr_B;
@@ -288,8 +291,8 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
-  psc_foreach_patch(ppsc, p) {
-    calc_domain_bounds(p, xb, xe, xgb, xge, xgl);
+  psc_foreach_patch(psc, p) {
+    calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
     particles_base_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -313,7 +316,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 	for (int d = 0; d < 3; d++) {
 	  if (xi[d] < xb[d]) {
 	    if (xi[d] < xgb[d]) {
-	      switch (ppsc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xgb[d] - xi[d];
 		pxi[d] = -pxi[d];
@@ -332,7 +335,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 	    }
 	  } else if (xi[d] > xe[d]) {
 	    if (xi[d] > xge[d]) {
-	      switch (ppsc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xge[d] - xi[d];
 		pxi[d] = -pxi[d];
@@ -366,7 +369,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
 
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     pp->n_part = patch->head;
@@ -381,6 +384,7 @@ static void
 psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc *psc = bnd->psc;
   check_domain(bnd);
 
   static int pr;
@@ -397,8 +401,8 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once
 
-  psc_foreach_patch(ppsc, p) {
-    calc_domain_bounds(p, xb, xe, xgb, xge, xgl);
+  psc_foreach_patch(psc, p) {
+    calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
     photons_t *photons = &mphotons->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -422,7 +426,7 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 	for (int d = 0; d < 3; d++) {
 	  if (xi[d] < xb[d]) {
 	    if (xi[d] < xgb[d]) {
-	      switch (ppsc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xgb[d] - xi[d];
 		pxi[d] = -pxi[d];
@@ -441,7 +445,7 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 	    }
 	  } else if (xi[d] > xe[d]) {
 	    if (xi[d] > xge[d]) {
-	      switch (ppsc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xge[d] - xi[d];
 		pxi[d] = -pxi[d];
@@ -472,7 +476,7 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   }
 
   ddc_particles_comm(ddcp, mphotons);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     photons_t *photons = &mphotons->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     photons->nr = patch->head;

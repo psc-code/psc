@@ -1,6 +1,12 @@
 
 #include "psc_bnd_private.h"
 
+void
+psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc)
+{
+  bnd->psc = psc;
+}
+
 // ======================================================================
 // forward to subclass
 
@@ -32,7 +38,7 @@ void
 psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
   int n_total = 0;
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(bnd->psc, p) {
     n_total += mphotons->p[p].nr;
   }
   if (n_total == 0)

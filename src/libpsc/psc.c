@@ -127,6 +127,7 @@ _psc_create(struct psc *psc)
   psc->push_fields = psc_push_fields_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->push_fields);
   psc->bnd = psc_bnd_create(comm);
+  psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
   psc_add_child(psc, (struct mrc_obj *) psc->bnd);
   psc->collision = psc_collision_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->collision);
