@@ -331,6 +331,15 @@ _psc_destroy(struct psc *psc)
   mrc_domain_destroy(psc->mrc_domain);
 }
 
+// ----------------------------------------------------------------------
+// _psc_write
+
+static void
+_psc_write(struct psc *psc, struct mrc_io *io)
+{
+  mrc_domain_write(psc->mrc_domain, io);
+}
+
 // ======================================================================
 // psc class
 
@@ -341,6 +350,7 @@ struct mrc_class_psc mrc_class_psc = {
   .create           = _psc_create,
   .setup            = _psc_setup,
   .destroy          = _psc_destroy,
+  .write            = _psc_write,
 };
 
 // ======================================================================

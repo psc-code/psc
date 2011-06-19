@@ -411,7 +411,7 @@ void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
 void psc_read_checkpoint(void);
-void psc_write_checkpoint(void);
+void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
 

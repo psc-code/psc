@@ -171,5 +171,5 @@ psc_integrate(struct psc *psc)
     }
   }
 
-  //  psc_write_checkpoint();
+  psc_write_checkpoint(psc);
 }
