@@ -124,8 +124,117 @@ _psc_set_from_options(struct psc *psc)
   psc_set_from_options_psc(psc);
 }
 
-// ----------------------------------------------------------------------
+// ======================================================================
 // psc_setup
+
+// ----------------------------------------------------------------------
+// psc_setup_mrc_domain
+
+struct mrc_domain *
+psc_setup_mrc_domain(struct psc *psc, int nr_patches)
+{
+  // FIXME, should be split to create, set_from_options, setup time?
+  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+  // create a very simple domain decomposition
+  int bc[3] = {};
+  for (int d = 0; d < 3; d++) {
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC &&
+	psc->domain.gdims[d] > 1) {
+      bc[d] = BC_PERIODIC;
+    }
+  }
+
+  mrc_domain_set_type(domain, "multi");
+  mrc_domain_set_param_int3(domain, "m", psc->domain.gdims);
+  mrc_domain_set_param_int(domain, "bcx", bc[0]);
+  mrc_domain_set_param_int(domain, "bcy", bc[1]);
+  mrc_domain_set_param_int(domain, "bcz", bc[2]);
+  mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
+
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  mrc_crds_set_type(crds, "multi_uniform");
+  mrc_crds_set_param_int(crds, "sw", 2);
+  mrc_crds_set_param_float3(crds, "l",  (float[3]) { psc->domain.corner[0],
+	psc->domain.corner[1], psc->domain.corner[2] });
+  mrc_crds_set_param_float3(crds, "h",  (float[3]) {
+      psc->domain.corner[0] + psc->domain.length[0],
+      psc->domain.corner[1] + psc->domain.length[1],
+      psc->domain.corner[2] + psc->domain.length[2] });
+
+  mrc_domain_set_from_options(domain);
+  mrc_domain_setup(domain);
+
+  // set up index bounds,
+  // sanity checks for the decomposed domain
+  int gdims[3];
+  mrc_domain_get_global_dims(domain, gdims);
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
+  psc->patch = calloc(psc->nr_patches, sizeof(*psc->patch));
+  psc_foreach_patch(psc, p) {
+    struct psc_patch *patch = &psc->patch[p];
+    for (int d = 0; d < 3; d++) {
+      patch->ldims[d] = patches[p].ldims[d];
+      patch->off[d] = patches[p].off[d];
+      patch->xb[d]  = patches[p].off[d] * psc->dx[d] + psc->domain.corner[d];
+      
+      int min_size = 1;
+      if (patch->off[d] == 0 && // left-most patch in this dir
+	  (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML || 
+	   psc->domain.bnd_fld_lo[d] == BND_FLD_TIME)) {
+	min_size += psc->pml.size;
+      }
+      if (patch->off[d] + patch->ldims[d] == gdims[d] && // right-most patch in this dir
+	  (psc->domain.bnd_fld_hi[d] == BND_FLD_UPML || 
+	   psc->domain.bnd_fld_hi[d] == BND_FLD_TIME)) {
+	min_size += psc->pml.size;
+      }
+      assert(psc->patch[p].ldims[d] >= min_size);
+    }
+  }
+
+  return domain;
+}
+
+// ----------------------------------------------------------------------
+// psc_setup_domain
+
+void
+psc_setup_domain(struct psc *psc)
+{
+  struct psc_domain *domain = &psc->domain;
+
+  bool need_pml = false;
+  for (int d = 0; d < 3; d++) {
+    if (domain->gdims[d] == 1) {
+      // if invariant in this direction:
+      // set bnd to periodic (FIXME?)
+      domain->bnd_fld_lo[d] = BND_FLD_PERIODIC;
+      domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
+      domain->bnd_part[d]   = BND_PART_PERIODIC;
+    } else {
+      if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
+	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
+	need_pml = true;
+      }
+    }
+  }
+  if (need_pml && !psc->domain.use_pml) {
+    fprintf(stderr,
+	    "WARNING: use_pml is disabled but pml boundary conditions requested.\n");
+    fprintf(stderr,
+	    "         I'm enabling use_pml.\n");
+    psc->domain.use_pml = true;
+  }
+  psc->pml.thick = 10;
+  psc->pml.cushion = psc->pml.thick / 3;
+  psc->pml.size = psc->pml.thick + psc->pml.cushion;
+  psc->pml.order = 3;
+
+  psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
+}
+
+// ----------------------------------------------------------------------
+// _psc_setup
 
 static void
 _psc_setup(struct psc *psc)
@@ -153,7 +262,7 @@ _psc_destroy(struct psc *psc)
   mparticles_base_destroy(&psc->particles);
   mphotons_destroy(&psc->mphotons);
 
-  psc_destroy_domain(psc);
+  mrc_domain_destroy(psc->mrc_domain);
 }
 
 // ======================================================================

@@ -405,8 +405,6 @@ void psc_destroy(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
-void psc_setup_domain(struct psc *psc);
-void psc_destroy_domain(struct psc *psc);
 
 void psc_set_default_psc(struct psc *psc);
 void psc_set_from_options_psc(struct psc *psc);
