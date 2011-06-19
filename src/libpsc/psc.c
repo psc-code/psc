@@ -41,6 +41,7 @@ static struct mrc_param_select bnd_part_descr[] = {
 };
 
 struct param psc_descr[] = {
+  // psc_domain
   { "length_x"      , VAR(domain.length[0])       , PARAM_DOUBLE(1e-6)   },
   { "length_y"      , VAR(domain.length[1])       , PARAM_DOUBLE(1e-6)   },
   { "length_z"      , VAR(domain.length[2])       , PARAM_DOUBLE(20e-6)  },
@@ -71,6 +72,43 @@ struct param psc_descr[] = {
   { "bnd_particle_z", VAR(domain.bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
   { "use_pml",        VAR(domain.use_pml)         , PARAM_BOOL(false)    },
+
+  // psc_params
+  { "qq"            , VAR(prm.qq)              , PARAM_DOUBLE(1.6021e-19)   },
+  { "mm"            , VAR(prm.mm)              , PARAM_DOUBLE(9.1091e-31)   },
+  { "tt"            , VAR(prm.tt)              , PARAM_DOUBLE(1.6021e-16)   },
+  { "cc"            , VAR(prm.cc)              , PARAM_DOUBLE(3.0e8)        },
+  { "eps0"          , VAR(prm.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
+  { "nmax"          , VAR(prm.nmax)            , PARAM_INT(0)               },
+  { "cpum"          , VAR(prm.cpum)            , PARAM_DOUBLE(100000.)      },
+  { "lw"            , VAR(prm.lw)              , PARAM_DOUBLE(3.2e-6)       },
+  { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
+  { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
+  { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
+  { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
+  // by default, we put the # of particles per cell according to the
+  // density, using the weights (~ 1) only to fine-tune to the
+  // right density.
+  // if this parameter is set, we always use nicell particles / cell,
+  // and adjust to the right density via the weights.
+  { "const_num_particles_per_cell"
+                    , VAR(prm.const_num_particles_per_cell), PARAM_BOOL(0)  },
+  // a hack which allows to set the particle weight equal the density,
+  // even though the # of particles was already set according to it.
+  // this is for compatibility testing between Fortran and C initial
+  // conditions, but I believe it's incorrect and should go away, eventually.
+  { "fortran_particle_weight_hack"
+                    , VAR(prm.fortran_particle_weight_hack), PARAM_BOOL(0)  },
+  // yet another hackish thing for compatibility
+  // adjust dt so that the laser period is an integer multiple of dt
+  // only useful when actually doing lasers.
+  { "adjust_dt_to_cycles"
+                    , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
+  { "wallclock_limit"
+                    , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
+  { "from_checkpoint"
+                    , VAR(prm.from_checkpoint)    , PARAM_BOOL(false) },
+
   {},
 };
 
@@ -108,24 +146,58 @@ _psc_create(struct psc *psc)
   psc_add_child(psc, (struct mrc_obj *) psc->balance);
 
   psc->time_start = MPI_Wtime();
-
-  for (int d = 0; d < 3; d++) {
-    psc->ibn[d] = 3;
-  }
-  psc_set_default_psc(psc);
-}
-
-// ----------------------------------------------------------------------
-// psc_set_from_options
-
-static void
-_psc_set_from_options(struct psc *psc)
-{
-  psc_set_from_options_psc(psc);
 }
 
 // ======================================================================
 // psc_setup
+
+// ----------------------------------------------------------------------
+// psc_setup_mrc_coeff
+
+static void
+psc_setup_coeff(struct psc *psc)
+{
+  assert(psc->prm.nicell > 0);
+  psc->coeff.cori = 1. / psc->prm.nicell;
+  psc->coeff.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
+  psc->coeff.ld = psc->prm.cc / psc->coeff.wl;
+  if (psc->prm.e0 == 0.) {
+    psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
+      psc->prm.lw / 1.0e6;
+  }
+  psc->prm.b0 = psc->prm.e0 / psc->prm.cc;
+  psc->prm.rho0 = psc->prm.eps0 * psc->coeff.wl * psc->prm.b0;
+  psc->prm.phi0 = psc->coeff.ld * psc->prm.e0;
+  psc->prm.a0 = psc->prm.e0 / psc->coeff.wl;
+  psc->coeff.vos = psc->prm.qq * psc->prm.e0 / (psc->prm.mm * psc->coeff.wl);
+  psc->coeff.vt = sqrt(psc->prm.tt / psc->prm.mm);
+  psc->coeff.wp = sqrt(sqr(psc->prm.qq) * psc->prm.n0 / psc->prm.eps0 / psc->prm.mm);
+  psc->coeff.alpha = psc->coeff.wp / psc->coeff.wl;
+  psc->coeff.beta = psc->coeff.vt / psc->prm.cc;
+  psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
+
+  for (int d = 0; d < 3; d++) {
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
+      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
+    } else {
+      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
+    }
+  }
+  psc->dt = .75 * sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
+  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
+
+  // adjust to match laser cycles FIXME, this isn't a good place,
+  // and hardcoded params (2, 30.)
+  psc->coeff.nnp = ceil(2.*M_PI / psc->dt);
+  if (psc->prm.adjust_dt_to_cycles) {
+    psc->dt = 2.*M_PI / psc->coeff.nnp;
+  }
+  psc->coeff.np = 2 * psc->coeff.nnp;
+  if (psc->prm.nmax == 0) {
+    psc->prm.nmax = 30. * psc->coeff.nnp;
+  }
+}
 
 // ----------------------------------------------------------------------
 // psc_setup_mrc_domain
@@ -198,11 +270,14 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 // ----------------------------------------------------------------------
 // psc_setup_domain
 
-void
+static void
 psc_setup_domain(struct psc *psc)
 {
   struct psc_domain *domain = &psc->domain;
 
+  for (int d = 0; d < 3; d++) {
+    psc->ibn[d] = 3;
+  }
   bool need_pml = false;
   for (int d = 0; d < 3; d++) {
     if (domain->gdims[d] == 1) {
@@ -244,15 +319,6 @@ _psc_setup(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_view
-
-static void
-_psc_view(struct psc *psc)
-{
-  psc_view_psc(psc);
-}
-
-// ----------------------------------------------------------------------
 // psc_destroy
 
 static void
@@ -273,10 +339,8 @@ struct mrc_class_psc mrc_class_psc = {
   .size             = sizeof(struct psc),
   .param_descr      = psc_descr,
   .create           = _psc_create,
-  .set_from_options = _psc_set_from_options,
   .setup            = _psc_setup,
   .destroy          = _psc_destroy,
-  .view             = _psc_view,
 };
 
 // ======================================================================
