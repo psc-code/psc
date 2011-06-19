@@ -596,6 +596,11 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   if (obj->ops && obj->ops->write) {
     obj->ops->write(obj, io);
   }
+
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_write(child, io);
+  }
 }
 
 void
