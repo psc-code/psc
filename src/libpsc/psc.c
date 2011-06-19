@@ -24,6 +24,8 @@
 
 struct psc *ppsc;
 
+extern struct param psc_descr[];
+
 // ----------------------------------------------------------------------
 // psc_create
 
@@ -57,7 +59,9 @@ _psc_create(struct psc *psc)
 
   psc->time_start = MPI_Wtime();
 
-  psc_set_default_domain(psc);
+  for (int d = 0; d < 3; d++) {
+    psc->ibn[d] = 3;
+  }
   psc_set_default_psc(psc);
 }
 
@@ -67,7 +71,6 @@ _psc_create(struct psc *psc)
 static void
 _psc_set_from_options(struct psc *psc)
 {
-  psc_set_from_options_domain(psc);
   psc_set_from_options_psc(psc);
 }
 
@@ -88,7 +91,6 @@ static void
 _psc_view(struct psc *psc)
 {
   psc_view_psc(psc);
-  psc_view_domain(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -110,6 +112,7 @@ _psc_destroy(struct psc *psc)
 struct mrc_class_psc mrc_class_psc = {
   .name             = "psc",
   .size             = sizeof(struct psc),
+  .param_descr      = psc_descr,
   .create           = _psc_create,
   .set_from_options = _psc_set_from_options,
   .setup            = _psc_setup,

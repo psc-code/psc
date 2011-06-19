@@ -10,7 +10,7 @@ struct psc_cmdline {
   const char *mod_particle;
 };
 
-#define VAR(x) (void *)offsetof(struct psc_domain, x)
+#define VAR(x) (void *)offsetof(struct psc, x)
 
 static struct mrc_param_select bnd_fld_descr[] = {
   { .val = BND_FLD_OPEN        , .str = "open"        },
@@ -26,64 +26,41 @@ static struct mrc_param_select bnd_part_descr[] = {
   {},
 };
 
-static struct param psc_domain_descr[] = {
-  { "length_x"      , VAR(length[0])       , PARAM_DOUBLE(1e-6)   },
-  { "length_y"      , VAR(length[1])       , PARAM_DOUBLE(1e-6)   },
-  { "length_z"      , VAR(length[2])       , PARAM_DOUBLE(20e-6)  },
-  { "corner_x"      , VAR(corner[0])       , PARAM_DOUBLE(0.)     },
-  { "corner_y"      , VAR(corner[1])       , PARAM_DOUBLE(0.)     },
-  { "corner_z"      , VAR(corner[2])       , PARAM_DOUBLE(0.)     },
-  { "gdims_x"       , VAR(gdims[0])        , PARAM_INT(1)         },
-  { "gdims_y"       , VAR(gdims[1])        , PARAM_INT(1)         },
-  { "gdims_z"       , VAR(gdims[2])        , PARAM_INT(400)       },
+struct param psc_descr[] = {
+  { "length_x"      , VAR(domain.length[0])       , PARAM_DOUBLE(1e-6)   },
+  { "length_y"      , VAR(domain.length[1])       , PARAM_DOUBLE(1e-6)   },
+  { "length_z"      , VAR(domain.length[2])       , PARAM_DOUBLE(20e-6)  },
+  { "corner_x"      , VAR(domain.corner[0])       , PARAM_DOUBLE(0.)     },
+  { "corner_y"      , VAR(domain.corner[1])       , PARAM_DOUBLE(0.)     },
+  { "corner_z"      , VAR(domain.corner[2])       , PARAM_DOUBLE(0.)     },
+  { "gdims_x"       , VAR(domain.gdims[0])        , PARAM_INT(1)         },
+  { "gdims_y"       , VAR(domain.gdims[1])        , PARAM_INT(1)         },
+  { "gdims_z"       , VAR(domain.gdims[2])        , PARAM_INT(400)       },
 
-  { "bnd_field_lo_x", VAR(bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
-  { "bnd_field_lo_y", VAR(bnd_fld_lo[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
-  { "bnd_field_lo_z", VAR(bnd_fld_lo[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
-  { "bnd_field_hi_x", VAR(bnd_fld_hi[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
-  { "bnd_field_hi_y", VAR(bnd_fld_hi[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
-  { "bnd_field_hi_z", VAR(bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
-							  bnd_fld_descr) },
+  { "bnd_field_lo_x", VAR(domain.bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
+  { "bnd_field_lo_y", VAR(domain.bnd_fld_lo[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
+  { "bnd_field_lo_z", VAR(domain.bnd_fld_lo[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
+  { "bnd_field_hi_x", VAR(domain.bnd_fld_hi[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
+  { "bnd_field_hi_y", VAR(domain.bnd_fld_hi[1])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
+  { "bnd_field_hi_z", VAR(domain.bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
+								 bnd_fld_descr) },
 
-  { "bnd_particle_x", VAR(bnd_part[0])     , PARAM_SELECT(BND_PART_PERIODIC,
-							  bnd_part_descr) },
-  { "bnd_particle_y", VAR(bnd_part[1])     , PARAM_SELECT(BND_PART_PERIODIC,
-							  bnd_part_descr) },
-  { "bnd_particle_z", VAR(bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
-							  bnd_part_descr) },
-  { "use_pml",        VAR(use_pml)         , PARAM_BOOL(false)    },
+  { "bnd_particle_x", VAR(domain.bnd_part[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+  { "bnd_particle_y", VAR(domain.bnd_part[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+  { "bnd_particle_z", VAR(domain.bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+  { "use_pml",        VAR(domain.use_pml)         , PARAM_BOOL(false)    },
   {},
 };
 
 #undef VAR
-
-void
-psc_set_default_domain(struct psc *psc)
-{
-  mrc_params_set_default(&psc->domain, psc_domain_descr);
-  for (int d = 0; d < 3; d++) {
-    psc->ibn[d] = 3;
-  }
-}
-
-void
-psc_set_from_options_domain(struct psc *psc)
-{
-  struct psc_domain *domain = &psc->domain;
-
-  mrc_params_parse_nodefault(domain, psc_domain_descr, "PSC domain",
-			     MPI_COMM_WORLD);
-
-  psc->pml.thick = 10;
-  psc->pml.cushion = psc->pml.thick / 3;
-  psc->pml.size = psc->pml.thick + psc->pml.cushion;
-  psc->pml.order = 3;
-}
 
 struct mrc_domain *
 psc_setup_mrc_domain(struct psc *psc, int nr_patches)
@@ -177,17 +154,12 @@ psc_setup_domain(struct psc *psc)
 	    "         I'm enabling use_pml.\n");
     psc->domain.use_pml = true;
   }
+  psc->pml.thick = 10;
+  psc->pml.cushion = psc->pml.thick / 3;
+  psc->pml.size = psc->pml.thick + psc->pml.cushion;
+  psc->pml.order = 3;
 
   psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
-}
-
-void
-psc_view_domain(struct psc *psc)
-{
-  struct psc_domain *domain = &psc->domain;
-
-  mrc_params_print(domain, psc_domain_descr, "PSC domain", MPI_COMM_WORLD);
-  mrc_domain_view(psc->mrc_domain);
 }
 
 void
