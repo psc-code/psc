@@ -97,7 +97,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    particles_base_t *pp = &psc->particles.p[p];
+    particles_base_t *pp = &psc->particles->p[p];
 
     int i = 0;
     for (int kind = 0; kind < 2; kind++) {

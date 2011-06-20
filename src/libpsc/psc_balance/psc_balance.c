@@ -21,8 +21,10 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
+  mparticles_base_t *mparticles = psc->particles;
+
   psc_foreach_patch(psc, p) {
-    loads[p] = psc->particles.p[p].n_part;
+    loads[p] = mparticles->p[p].n_part;
   }
 }
 
@@ -440,7 +442,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
-    nr_particles_by_patch[p] = psc->particles.p[p].n_part;
+    nr_particles_by_patch[p] = psc->particles->p[p].n_part;
   }
   communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
 
@@ -449,16 +451,16 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // particles
   // alloc new particles
-  mparticles_base_t mparticles_new;
-  mparticles_base_alloc(domain_new, &mparticles_new, nr_particles_by_patch);
+  mparticles_base_t *mparticles_new = 
+    mparticles_base_alloc(domain_new, nr_particles_by_patch);
 
   // communicate particles
   communicate_particles(domain_old, domain_new, 
-			&psc->particles, &mparticles_new, nr_particles_by_patch);
+			psc->particles, mparticles_new, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
   // replace particles by redistributed ones
-  mparticles_base_destroy(&psc->particles);
+  mparticles_base_destroy(psc->particles);
   psc->particles = mparticles_new;
 
   // ----------------------------------------------------------------------

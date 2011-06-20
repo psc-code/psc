@@ -94,8 +94,6 @@ psc_integrate(struct psc *psc)
     pr = prof_register("psc_step", 1., 0, 0);
   }
 
-  mparticles_base_t *particles = &psc->particles;
-
   double stats[NR_STATS];
 
   for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
@@ -103,11 +101,11 @@ psc_integrate(struct psc *psc)
     time_start(STAT_TIME_STEP);
 
     time_start(STAT_TIME_OUT_FIELD);
-    psc_output_fields_run(psc->output_fields, psc->flds, particles);
+    psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
     time_stop(STAT_TIME_OUT_FIELD);
 
     time_start(STAT_TIME_OUT_PARTICLE);
-    psc_output_particles_run(psc->output_particles, particles);
+    psc_output_particles_run(psc->output_particles, psc->particles);
     time_stop(STAT_TIME_OUT_PARTICLE);
 
     time_start(STAT_TIME_BALANCE);
@@ -115,15 +113,15 @@ psc_integrate(struct psc *psc)
     time_stop(STAT_TIME_BALANCE);
 
     time_start(STAT_TIME_RANDOMIZE);
-    psc_randomize_run(psc->randomize, particles);
+    psc_randomize_run(psc->randomize, psc->particles);
     time_stop(STAT_TIME_RANDOMIZE);
 
     time_start(STAT_TIME_SORT);
-    psc_sort_run(psc->sort, particles);
+    psc_sort_run(psc->sort, psc->particles);
     time_stop(STAT_TIME_SORT);
 
     time_start(STAT_TIME_COLLISION);
-    psc_collision_run(psc->collision, particles);
+    psc_collision_run(psc->collision, psc->particles);
     time_stop(STAT_TIME_COLLISION);
 
     // field propagation n*dt -> (n+0.5)*dt
@@ -133,15 +131,15 @@ psc_integrate(struct psc *psc)
 
     // particle propagation n*dt -> (n+1.0)*dt
     time_start(STAT_TIME_PARTICLE);
-    psc_push_particles_run(psc->push_particles, particles, psc->flds);
+    psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
     psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
     psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-    psc_bnd_exchange_particles(psc->bnd, particles);
+    psc_bnd_exchange_particles(psc->bnd, psc->particles);
     time_stop(STAT_TIME_PARTICLE);
 
     psc_push_photons_run(&psc->mphotons);
     psc_bnd_exchange_photons(psc->bnd, &psc->mphotons);
-    psc_event_generator_run(psc->event_generator, particles, psc->flds, &psc->mphotons);
+    psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, &psc->mphotons);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     time_restart(STAT_TIME_FIELD);
@@ -150,7 +148,7 @@ psc_integrate(struct psc *psc)
 
     stats[STAT_NR_PARTICLES] = 0;
     psc_foreach_patch(psc, p) {
-      stats[STAT_NR_PARTICLES] += particles->p[p].n_part;
+      stats[STAT_NR_PARTICLES] += psc->particles->p[p].n_part;
     }
     time_stop(STAT_TIME_STEP);
     psc_log_step(psc, stats);

@@ -331,7 +331,7 @@ static void
 _psc_destroy(struct psc *psc)
 {
   mfields_base_destroy(psc->flds);
-  mparticles_base_destroy(&psc->particles);
+  mparticles_base_destroy(psc->particles);
   mphotons_destroy(&psc->mphotons);
 
   mrc_domain_destroy(psc->mrc_domain);
