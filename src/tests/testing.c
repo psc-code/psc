@@ -27,7 +27,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
   }
 }
 
-static mparticles_base_t particles_ref;
+static mparticles_base_t *particles_ref;
 static mfields_base_t *flds_ref;
 
 // ----------------------------------------------------------------------
@@ -38,16 +38,19 @@ static mfields_base_t *flds_ref;
 void
 psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles)
 {
-  if (!particles_ref.p) {
-    particles_ref.p = calloc(psc->nr_patches, sizeof(*particles_ref.p));
+  if (!particles_ref) {
+    int nr_particles_by_patch[psc->nr_patches];
     psc_foreach_patch(psc, p) {
-      particles_base_t *pp = &particles->p[p];
-      particles_base_alloc(&particles_ref.p[p], pp->n_part);
+      nr_particles_by_patch[p] = particles->p[p].n_part;
     }
+    particles_ref = psc_mparticles_base_create(MPI_COMM_WORLD);
+    psc_mparticles_base_set_domain_nr_particles(particles_ref, psc->mrc_domain,
+					   nr_particles_by_patch);
+    psc_mparticles_base_setup(particles_ref);
   }
   psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
-    particles_base_t *pp_ref = &particles_ref.p[p];
+    particles_base_t *pp_ref = &particles_ref->p[p];
     for (int i = 0; i < pp->n_part; i++) {
       *particles_base_get_one(pp_ref, i) = *particles_base_get_one(pp, i);
     }
@@ -86,11 +89,11 @@ void
 psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles,
 			double thres, const char *test_str)
 {
-  assert(particles_ref.p);
+  assert(particles_ref);
   particle_base_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
     particles_base_t *pp = &particles->p[p];
-    particles_base_t *pp_ref = &particles_ref.p[p];
+    particles_base_t *pp_ref = &particles_ref->p[p];
     
     for (int i = 0; i < pp->n_part; i++) {
       particle_base_t *part = particles_base_get_one(pp, i);
