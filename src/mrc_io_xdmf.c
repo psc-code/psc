@@ -983,6 +983,34 @@ static void
 ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 {
   // FIXME
+  MHERE;
+}
+
+static void
+ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &m1->nr_patches, 1);
+
+  mrc_m1_foreach_patch(m1, p) {
+    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+
+    for (int m = 0; m < m1->nr_comp; m++) {
+      char fld_name[strlen(mrc_m1_comp_name(m1, m)) + 5];
+      sprintf(fld_name, "%s-%d", mrc_m1_comp_name(m1, m), p);
+
+      hid_t group = H5Gcreate(group0, fld_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+      hsize_t hdims[3] = { m1p->im[0] };
+      ierr = H5LTmake_dataset_float(group, "1d", 1, hdims, m1p->arr); CE;
+      ierr = H5Gclose(group); CE;
+    }
+    mrc_m1_patch_put(m1);
+  }
+
+  H5Gclose(group0);
 }
 
 static void
@@ -1050,6 +1078,7 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
   .write_attr    = ds_xdmf_write_attr,
+  .write_m1      = ds_xdmf_write_m1,
 };
 
 // ======================================================================
