@@ -23,14 +23,14 @@ particles_fortran_free(particles_fortran_t *pp)
 }
 
 void
-particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
+mparticles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
+mparticles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles_base = *particles;
@@ -41,7 +41,7 @@ particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 static bool __gotten;
 
 void
-particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
+mparticles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -81,7 +81,7 @@ particles_fortran_get(mparticles_fortran_t *particles, void *_particles_base)
 }
 
 void
-particles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
+mparticles_fortran_put(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {

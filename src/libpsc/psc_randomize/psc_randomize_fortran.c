@@ -14,7 +14,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
   assert(ppsc->nr_patches == 1);
   
   mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
+  mparticles_fortran_get(&particles, particles_base);
 
   static int pr;
   if (!pr) {
@@ -24,7 +24,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
   PIC_randomize(&particles.p[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&particles, particles_base);
+  mparticles_fortran_put(&particles, particles_base);
 }
 
 // ======================================================================

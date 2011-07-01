@@ -448,7 +448,7 @@ void sse2_push_part_xz()
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp);
+  mparticles_sse2_get(&pp);
   fields_sse2_get(&pf, EX, EX+6);
   
   static int pr;
@@ -459,7 +459,7 @@ void sse2_push_part_xz()
   do_push_part_xz(&pp, &pf);
   prof_stop(pr);
   
-  particles_sse2_put(&pp);
+  mparticles_sse2_put(&pp);
   fields_sse2_put(&pf, JXI, JXI+3);
 }
 

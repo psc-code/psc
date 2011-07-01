@@ -90,7 +90,7 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
   prof_start(pr);
 
   mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
+  mparticles_fortran_get(&particles, particles_base);
   assert(ppsc->nr_patches == 1);
   particles_fortran_t *pp = &particles.p[0];
 
@@ -104,7 +104,7 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
     PIC_pez(pp);
   }
 
-  particles_fortran_put(&particles, particles_base);
+  mparticles_fortran_put(&particles, particles_base);
 
   prof_stop(pr);
 }

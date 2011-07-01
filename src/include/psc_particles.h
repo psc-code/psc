@@ -16,7 +16,12 @@ void mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticl
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
 void mparticles_##type##_setup(mparticles_##type##_t *mparticles);	\
-void mparticles_##type##_destroy(mparticles_##type##_t *mparticles); 
+void mparticles_##type##_destroy(mparticles_##type##_t *mparticles);	\
+									\
+void mparticles_##type##_get(mparticles_##type##_t *particles,		\
+			     void *particles_base);			\
+void mparticles_##type##_put(mparticles_##type##_t *particles,		\
+			     void *particles_base);			\
 
 
 #include "psc_particles_fortran.h"

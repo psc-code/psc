@@ -48,8 +48,6 @@ typedef struct {
 void particles_cbe_alloc(particles_cbe_t *pp, int n_part);
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part);
 void particles_cbe_free(particles_cbe_t *pp);
-void particles_cbe_get(mparticles_cbe_t *particles, void *particles_base);
-void particles_cbe_put(mparticles_cbe_t *particles, void *particles_base);
 
 static inline particle_cbe_t *
 particles_cbe_get_one(particles_cbe_t *pp, int n)

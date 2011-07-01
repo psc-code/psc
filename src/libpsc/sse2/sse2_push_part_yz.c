@@ -681,7 +681,7 @@ psc_push_particles_sse2_push_yz_a(struct psc_push_particles *push,
 				  mfields_base_t *flds_base)
 {
   particles_sse2_t pp;
-  particles_sse2_get(&pp, particles_base);
+  mparticles_sse2_get(&pp, particles_base);
 
   static int pr;
   if (!pr) {
@@ -691,7 +691,7 @@ psc_push_particles_sse2_push_yz_a(struct psc_push_particles *push,
   do_push_part_yz_a(&pp);
   prof_stop(pr);
 
-  particles_sse2_put(&pp, particles_base);
+  mparticles_sse2_put(&pp, particles_base);
 }
 
 void
@@ -701,7 +701,7 @@ psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp, particles_base);
+  mparticles_sse2_get(&pp, particles_base);
   fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
@@ -712,7 +712,7 @@ psc_push_particles_sse2_push_yz_b(struct psc_push_particles *push,
   do_push_part_yz_b(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp, particles_base);
+  mparticles_sse2_put(&pp, particles_base);
   fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 
@@ -723,7 +723,7 @@ psc_push_particles_sse2_push_yz(struct psc_push_particles *push,
 {
   particles_sse2_t pp;
   fields_sse2_t pf;
-  particles_sse2_get(&pp, particles_base);
+  mparticles_sse2_get(&pp, particles_base);
   fields_sse2_get(&pf, EX, EX + 6, flds_base);
 
   static int pr;
@@ -734,7 +734,7 @@ psc_push_particles_sse2_push_yz(struct psc_push_particles *push,
   do_push_part_yz(&pp, &pf);
   prof_stop(pr);
 
-  particles_sse2_put(&pp, particles_base);
+  mparticles_sse2_put(&pp, particles_base);
   fields_sse2_put(&pf, JXI, JXI + 3, flds_base);
 }
 

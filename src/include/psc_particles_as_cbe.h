@@ -8,8 +8,8 @@ typedef particle_cbe_t particle_t;
 typedef particles_cbe_t particles_t;
 typedef mparticles_cbe_t mparticles_t;
 
-#define particles_get          particles_cbe_get
-#define particles_put          particles_cbe_put
+#define mparticles_get         mparticles_cbe_get
+#define mparticles_put         mparticles_cbe_put
 #define particles_get_one      particles_cbe_get_one
 
 #endif
