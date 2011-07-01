@@ -135,10 +135,6 @@ struct psc_domain {
 mfields_base_t *mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3]);
 void mfields_base_destroy(mfields_base_t *flds);
 
-mparticles_base_t *mparticles_base_alloc(struct mrc_domain *domain,
-					 int *nr_particles_by_patch);
-void mparticles_base_destroy(mparticles_base_t *particles);
-
 // FIXME, turn into mrc_obj
 void psc_push_photons_run(mphotons_t *mphotons);
 // FIXME, turn into mrc_obj

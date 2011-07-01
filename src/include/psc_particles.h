@@ -67,4 +67,9 @@ typedef particle_cbe_real_t particle_base_real_t;
 #error unknown PARTICLES_BASE
 #endif
 
+mparticles_base_t *mparticles_base_alloc(struct mrc_domain *domain,
+					 int *nr_particles_by_patch);
+void mparticles_base_destroy(mparticles_base_t *particles);
+
+
 #endif
