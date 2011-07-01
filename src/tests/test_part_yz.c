@@ -16,7 +16,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
-  mparticles_base_t *particles = &ppsc->particles;
+  mparticles_base_t *particles = ppsc->particles;
   //  psc_dump_particles("part-0");
   psc_push_particles_push_yz_a(ppsc->push_particles, particles, ppsc->flds);
   //  psc_dump_particles("part-1");
@@ -26,7 +26,7 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "generic_c");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_push_yz_a(ppsc->push_particles, particles, ppsc->flds);
   psc_check_particles_ref(ppsc, particles, 1e-6, "push_part_yz_a -- generic_c");
   psc_case_destroy(_case);
@@ -56,7 +56,7 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   //  psc_dump_particles("part-0");
   psc_push_particles_push_yz_b(ppsc->push_particles, particles, ppsc->flds);
   //  psc_dump_particles("part-1");
@@ -66,7 +66,7 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "generic_c");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_push_yz_b(ppsc->push_particles, particles, ppsc->flds);
   psc_check_particles_ref(ppsc, particles, 1e-6, "push_part_yz_b -- generic_c");
   psc_case_destroy(_case);
@@ -96,7 +96,7 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   //  psc_dump_particles("part-0");
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   //  psc_dump_particles("part-1");
@@ -107,7 +107,7 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "generic_c");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_yz -- generic_c");
   psc_check_currents_ref(ppsc, ppsc->flds, 1e-7);

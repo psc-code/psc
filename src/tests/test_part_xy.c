@@ -16,7 +16,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xy();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
   psc_case_setup(_case);
-  mparticles_base_t *particles = &ppsc->particles;
+  mparticles_base_t *particles = ppsc->particles;
   //  psc_dump_particles("part-0");
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   psc_save_particles_ref(ppsc, particles);
@@ -27,7 +27,7 @@ main(int argc, char **argv)
   _case = psc_create_test_xy();
   psc_push_particles_set_type(ppsc->push_particles, "generic_c");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
   //  psc_dump_particles("part-2");
   psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_xy -- generic_c");

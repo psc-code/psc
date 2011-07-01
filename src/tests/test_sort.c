@@ -17,7 +17,7 @@ main(int argc, char **argv)
   struct psc_case *_case = psc_create_test_xz();
   psc_sort_set_type(ppsc->sort, "fortran");
   psc_case_setup(_case);
-  mparticles_base_t *particles = &ppsc->particles;
+  mparticles_base_t *particles = ppsc->particles;
   psc_randomize_run(ppsc->randomize, particles);
   psc_sort_run(ppsc->sort, particles);
   psc_check_particles_sorted(ppsc, particles);
@@ -26,7 +26,7 @@ main(int argc, char **argv)
   _case = psc_create_test_xz();
   psc_sort_set_type(ppsc->sort, "countsort");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_randomize_run(ppsc->randomize, particles);
   psc_sort_run(ppsc->sort, particles);
   psc_check_particles_sorted(ppsc, particles);
@@ -35,7 +35,7 @@ main(int argc, char **argv)
   _case = psc_create_test_xz();
   psc_sort_set_type(ppsc->sort, "countsort2");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_randomize_run(ppsc->randomize, particles);
   psc_sort_run(ppsc->sort, particles);
   psc_check_particles_sorted(ppsc, particles);
