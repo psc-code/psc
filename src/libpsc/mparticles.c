@@ -6,11 +6,18 @@
 #define MAKE_MPARTICLES_METHODS(type)					\
 									\
 mparticles_##type##_t *							\
-mparticles_##type##_alloc(struct mrc_domain *domain,			\
-		       int *nr_particles_by_patch)			\
+mparticles_##type##_create(MPI_Comm comm)				\
 {									\
   mparticles_##type##_t *mparticles = calloc(1, sizeof(*mparticles));	\
 									\
+  return mparticles;							\
+}									\
+									\
+void									\
+mparticles_##type##_alloc(mparticles_##type##_t *mparticles,		\
+			  struct mrc_domain *domain,			\
+			  int *nr_particles_by_patch)			\
+{									\
   mrc_domain_get_patches(domain, &mparticles->nr_patches);		\
 									\
   mparticles->p = calloc(mparticles->nr_patches,			\

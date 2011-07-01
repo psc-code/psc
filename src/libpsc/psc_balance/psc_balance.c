@@ -450,9 +450,11 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // ----------------------------------------------------------------------
   // particles
+
   // alloc new particles
   mparticles_base_t *mparticles_new = 
-    mparticles_base_alloc(domain_new, nr_particles_by_patch);
+    mparticles_base_create(mrc_domain_comm(domain_new));
+  mparticles_base_alloc(mparticles_new, domain_new, nr_particles_by_patch);
 
   // communicate particles
   communicate_particles(domain_old, domain_new, 
