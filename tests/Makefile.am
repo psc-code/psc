@@ -12,6 +12,7 @@ noinst_PROGRAMS = \
 	test_mrc_domain_simple \
 	test_mrc_domain_multi \
 	test_mrc_f3 \
+	test_mrc_m1 \
 	test_mrc_m3 \
 	test_mrc_ddc \
 	test_rlc \
