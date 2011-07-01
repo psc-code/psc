@@ -40,11 +40,6 @@ typedef struct {
   int n_alloced;
 } particles_cbe_t;
 
-typedef struct {
-  particles_cbe_t *p; ///< Pointers to each 'patch' of particles.
-  int nr_patches;
-} mparticles_cbe_t;
-
 void particles_cbe_alloc(particles_cbe_t *pp, int n_part);
 void particles_cbe_realloc(particles_cbe_t *pp, int new_n_part);
 void particles_cbe_free(particles_cbe_t *pp);

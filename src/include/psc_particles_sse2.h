@@ -22,10 +22,6 @@ typedef struct {
   int n_part;
 } particles_sse2_t;
 
-typedef struct {
-  particles_sse2_t *p;
-} mparticles_sse2_t;
-
 void particles_sse2_alloc(particles_sse2_t *pp, int n_part);
 void particles_sse2_realloc(particles_sse2_t *pp, int new_n_part);
 void particles_sse2_free(particles_sse2_t *pp);

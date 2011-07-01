@@ -22,11 +22,6 @@ typedef struct {
   int n_alloced;
 } particles_c_t;
 
-typedef struct {
-  particles_c_t *p;
-  int nr_patches;
-} mparticles_c_t;
-
 void particles_c_alloc(particles_c_t *pp, int n_part);
 void particles_c_realloc(particles_c_t *pp, int new_n_part);
 void particles_c_free(particles_c_t *pp);

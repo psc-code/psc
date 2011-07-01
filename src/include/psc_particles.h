@@ -11,6 +11,11 @@
 
 #define DECLARE_MPARTICLES_METHODS(type)				\
   									\
+typedef struct {							\
+  particles_##type##_t *p;						\
+  int nr_patches;							\
+} mparticles_##type##_t;						\
+									\
 mparticles_##type##_t *mparticles_##type##_create(MPI_Comm comm);	\
 void mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
