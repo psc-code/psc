@@ -34,14 +34,14 @@ particles_c_free(particles_c_t *pp)
 }
 
 void
-mparticles_c_get(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-mparticles_c_put(mparticles_c_t *particles, void *particles_base)
+psc_mparticles_c_put_to(mparticles_c_t *particles, void *particles_base)
 {
 }
 
@@ -50,7 +50,7 @@ mparticles_c_put(mparticles_c_t *particles, void *particles_base)
 static bool __gotten;
 
 void
-mparticles_c_get(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -89,7 +89,7 @@ mparticles_c_get(mparticles_c_t *particles, void *_particles_base)
 }
 
 void
-mparticles_c_put(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_put_to(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {

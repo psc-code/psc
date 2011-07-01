@@ -23,13 +23,11 @@ mparticles_##type##_t *psc_mparticles_##type##_create(MPI_Comm comm);	\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
-void psc_mparticles_##type##_setup(mparticles_##type##_t *mparticles);	\
-void psc_mparticles_##type##_destroy(mparticles_##type##_t *mparticles); \
  									\
-void mparticles_##type##_get(mparticles_##type##_t *particles,		\
-				 void *particles_base);			\
-void mparticles_##type##_put(mparticles_##type##_t *particles,		\
-				 void *particles_base);			\
+void psc_mparticles_##type##_get_from(mparticles_##type##_t *particles, \
+					  void *particles_base);	\
+void psc_mparticles_##type##_put_to(mparticles_##type##_t *particles,	\
+					void *particles_base);		\
 
 
 #include "psc_particles_fortran.h"

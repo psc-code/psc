@@ -32,7 +32,7 @@ psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
 				       mfields_base_t *flds_base)
 {
   mparticles_t particles;
-  mparticles_get(&particles, particles_base);
+  psc_mparticles_get_from(&particles, particles_base);
 
   static int pr;
   if (!pr) {
@@ -44,5 +44,5 @@ psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  mparticles_put(&particles, particles_base);
+  psc_mparticles_put_to(&particles, particles_base);
 }

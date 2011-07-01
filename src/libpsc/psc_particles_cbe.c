@@ -40,14 +40,14 @@ void particles_cbe_free(particles_cbe_t *pp)
 }
 
 void
-mparticles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-mparticles_cbe_put(mparticles_cbe_t *particles, void *particles_base)
+psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *particles_base)
 {
 }
 
@@ -56,7 +56,7 @@ mparticles_cbe_put(mparticles_cbe_t *particles, void *particles_base)
 static bool __gotten;
 
 void
-mparticles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
 {
 
   static int pr;
@@ -111,7 +111,7 @@ mparticles_cbe_get(mparticles_cbe_t *particles, void *_particles_base)
 
 
 void
-mparticles_cbe_put(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *_particles_base)
 {
   assert(__gotten);
   __gotten = false;
