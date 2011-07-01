@@ -3,6 +3,35 @@
 #define PSC_PARTICLES_H
 
 // ----------------------------------------------------------------------
+// mparticles type
+
+// This type is replicated for each actual particle type, however,
+// the interface and implementation is always identical, hence 
+// created automatically for the variants using macros
+
+#define DECLARE_MPARTICLES_METHODS(type)				\
+  									\
+mparticles_##type##_t *mparticles_##type##_create(MPI_Comm comm);	\
+void mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
+						 struct mrc_domain *domain, \
+						 int *nr_particles_by_patch); \
+void mparticles_##type##_setup(mparticles_##type##_t *mparticles);	\
+void mparticles_##type##_destroy(mparticles_##type##_t *mparticles); 
+
+
+#include "psc_particles_fortran.h"
+DECLARE_MPARTICLES_METHODS(fortran)
+
+#include "psc_particles_c.h"
+DECLARE_MPARTICLES_METHODS(c)
+
+#include "psc_particles_sse2.h"
+DECLARE_MPARTICLES_METHODS(sse2)
+
+#include "psc_particles_cbe.h"
+DECLARE_MPARTICLES_METHODS(cbe)
+
+// ----------------------------------------------------------------------
 // base particles type
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
@@ -24,8 +53,6 @@ typedef particle_fortran_real_t particle_base_real_t;
 
 #elif PARTICLES_BASE == PARTICLES_C
 
-#include "psc_particles_c.h"
-
 typedef particles_c_t particles_base_t;
 typedef mparticles_c_t mparticles_base_t;
 typedef particle_c_t particle_base_t;
@@ -43,8 +70,6 @@ typedef particle_c_real_t particle_base_real_t;
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
-#include "psc_particles_sse2.h"
-
 typedef particles_sse2_t particles_base_t;
 typedef mparticles_sse2_t mparticles_base_t;
 typedef particle_sse2_t particle_base_t;
@@ -61,8 +86,6 @@ typedef particle_sse2_real_t particle_base_real_t;
 #define mparticles_base_destroy mparticles_sse2_destroy
 
 #elif PARTICLES_BASE == PARTICLES_CBE
-
-#include "psc_particles_cbe.h"
 
 typedef particles_cbe_t particles_base_t;
 typedef mparticles_cbe_t mparticles_base_t;
@@ -82,13 +105,5 @@ typedef particle_cbe_real_t particle_base_real_t;
 #else
 #error unknown PARTICLES_BASE
 #endif
-
-mparticles_base_t *mparticles_base_create(MPI_Comm comm);
-void mparticles_base_set_domain_nr_particles(mparticles_base_t *mparticles, 
-					     struct mrc_domain *domain,
-					     int *nr_particles_by_patch);
-void mparticles_base_setup(mparticles_base_t *mparticles);
-void mparticles_base_destroy(mparticles_base_t *mparticles);
-
 
 #endif
