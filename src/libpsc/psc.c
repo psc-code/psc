@@ -321,7 +321,6 @@ _psc_setup(struct psc *psc)
 {
   psc_setup_coeff(psc);
   psc_setup_domain(psc); // needs to be done before setting up psc_bnd
-  mprintf("domain %p\n", psc->mrc_domain);
 }
 
 // ----------------------------------------------------------------------
