@@ -11,22 +11,25 @@
 
 #define DECLARE_MPARTICLES_METHODS(type)				\
   									\
-typedef struct {							\
+typedef struct psc_mparticles_##type {				        \
+  struct mrc_obj obj;							\
   particles_##type##_t *p;						\
   int nr_patches;							\
 } mparticles_##type##_t;						\
 									\
-mparticles_##type##_t *mparticles_##type##_create(MPI_Comm comm);	\
-void mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
+MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
+									\
+mparticles_##type##_t *psc_mparticles_##type##_create(MPI_Comm comm);	\
+void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
-void mparticles_##type##_setup(mparticles_##type##_t *mparticles);	\
-void mparticles_##type##_destroy(mparticles_##type##_t *mparticles);	\
-									\
+void psc_mparticles_##type##_setup(mparticles_##type##_t *mparticles);	\
+void psc_mparticles_##type##_destroy(mparticles_##type##_t *mparticles); \
+ 									\
 void mparticles_##type##_get(mparticles_##type##_t *particles,		\
-			     void *particles_base);			\
+				 void *particles_base);			\
 void mparticles_##type##_put(mparticles_##type##_t *particles,		\
-			     void *particles_base);			\
+				 void *particles_base);			\
 
 
 #include "psc_particles_fortran.h"
@@ -56,10 +59,10 @@ typedef particle_fortran_real_t particle_base_real_t;
 #define particles_base_realloc particles_fortran_realloc
 #define particles_base_free    particles_fortran_free
 #define particles_base_get_one particles_fortran_get_one
-#define mparticles_base_create  mparticles_fortran_create
-#define mparticles_base_set_domain_nr_particles mparticles_fortran_set_domain_nr_particles
-#define mparticles_base_setup   mparticles_fortran_setup
-#define mparticles_base_destroy mparticles_fortran_destroy
+#define psc_mparticles_base_create  psc_mparticles_fortran_create
+#define psc_mparticles_base_set_domain_nr_particles psc_mparticles_fortran_set_domain_nr_particles
+#define psc_mparticles_base_setup   psc_mparticles_fortran_setup
+#define psc_mparticles_base_destroy psc_mparticles_fortran_destroy
 
 #elif PARTICLES_BASE == PARTICLES_C
 
@@ -73,10 +76,10 @@ typedef particle_c_real_t particle_base_real_t;
 #define particles_base_realloc particles_c_realloc
 #define particles_base_free    particles_c_free
 #define particles_base_get_one particles_c_get_one
-#define mparticles_base_create  mparticles_c_create
-#define mparticles_base_set_domain_nr_particles mparticles_c_set_domain_nr_particles
-#define mparticles_base_setup   mparticles_c_setup
-#define mparticles_base_destroy mparticles_c_destroy
+#define psc_mparticles_base_create  psc_mparticles_c_create
+#define psc_mparticles_base_set_domain_nr_particles psc_mparticles_c_set_domain_nr_particles
+#define psc_mparticles_base_setup   psc_mparticles_c_setup
+#define psc_mparticles_base_destroy psc_mparticles_c_destroy
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
@@ -90,10 +93,10 @@ typedef particle_sse2_real_t particle_base_real_t;
 #define particles_base_realloc particles_sse2_realloc
 #define particles_base_free    particles_sse2_free
 #define particles_base_get_one particles_sse2_get_one
-#define mparticles_base_create  mparticles_sse2_create
-#define mparticles_base_set_domain_nr_particles mparticles_sse2_set_domain_nr_particles
-#define mparticles_base_setup   mparticles_sse2_setup
-#define mparticles_base_destroy mparticles_sse2_destroy
+#define psc_mparticles_base_create  psc_mparticles_sse2_create
+#define psc_mparticles_base_set_domain_nr_particles psc_mparticles_sse2_set_domain_nr_particles
+#define psc_mparticles_base_setup   psc_mparticles_sse2_setup
+#define psc_mparticles_base_destroy psc_mparticles_sse2_destroy
 
 #elif PARTICLES_BASE == PARTICLES_CBE
 
@@ -107,10 +110,10 @@ typedef particle_cbe_real_t particle_base_real_t;
 #define particles_base_realloc particles_cbe_realloc
 #define particles_base_free    particles_cbe_free
 #define particles_base_get_one particles_cbe_get_one
-#define mparticles_base_create  mparticles_cbe_create
-#define mparticles_base_set_domain_nr_particles mparticles_cbe_set_domain_nr_particles
-#define mparticles_base_setup   mparticles_cbe_setup
-#define mparticles_base_destroy mparticles_cbe_destroy
+#define psc_mparticles_base_create  psc_mparticles_cbe_create
+#define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cbe_set_domain_nr_particles
+#define psc_mparticles_base_setup   psc_mparticles_cbe_setup
+#define psc_mparticles_base_destroy psc_mparticles_cbe_destroy
 
 #else
 #error unknown PARTICLES_BASE

@@ -5,16 +5,8 @@
 
 #define MAKE_MPARTICLES_METHODS(type)					\
 									\
-mparticles_##type##_t *							\
-mparticles_##type##_create(MPI_Comm comm)				\
-{									\
-  mparticles_##type##_t *mparticles = calloc(1, sizeof(*mparticles));	\
-									\
-  return mparticles;							\
-}									\
-									\
 void									\
-mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles,		\
+psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles,		\
 					    struct mrc_domain *domain,	\
 					    int *nr_particles_by_patch)	\
 {									\
@@ -28,20 +20,21 @@ mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles,		
   }									\
 }									\
 									\
-void									\
-mparticles_##type##_setup(mparticles_##type##_t *mparticles)		\
-{									\
-}									\
-									\
-void									\
-mparticles_##type##_destroy(mparticles_##type##_t *mparticles)		\
+static void								\
+_psc_mparticles_##type##_destroy(mparticles_##type##_t *mparticles)	\
 {									\
   for (int p = 0; p < mparticles->nr_patches; p++) {			\
     particles_##type##_free(&mparticles->p[p]);				\
   }									\
   free(mparticles->p);							\
-  free(mparticles);							\
-}
+}									\
+									\
+struct mrc_class_psc_mparticles_##type mrc_class_psc_mparticles_##type = {	\
+  .name             = "psc_mparticles_" #type,				\
+  .size             = sizeof(struct psc_mparticles_##type),		\
+  .destroy          = _psc_mparticles_##type##_destroy,			\
+};
+
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 MAKE_MPARTICLES_METHODS(fortran)
@@ -52,3 +45,4 @@ MAKE_MPARTICLES_METHODS(sse2)
 #elif PARTICLES_BASE == PARTICLES_CBE
 MAKE_MPARTICLES_METHODS(cbe)
 #endif
+
