@@ -14,9 +14,9 @@ mparticles_##type##_create(MPI_Comm comm)				\
 }									\
 									\
 void									\
-mparticles_##type##_alloc(mparticles_##type##_t *mparticles,		\
-			  struct mrc_domain *domain,			\
-			  int *nr_particles_by_patch)			\
+mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles,		\
+					    struct mrc_domain *domain,	\
+					    int *nr_particles_by_patch)	\
 {									\
   mrc_domain_get_patches(domain, &mparticles->nr_patches);		\
 									\
@@ -26,18 +26,21 @@ mparticles_##type##_alloc(mparticles_##type##_t *mparticles,		\
     particles_##type##_alloc(&mparticles->p[p],				\
 			     nr_particles_by_patch[p]);			\
   }									\
-									\
-  return mparticles;							\
 }									\
 									\
 void									\
-mparticles_##type##_destroy(mparticles_##type##_t *particles)		\
+mparticles_##type##_setup(mparticles_##type##_t *mparticles)		\
 {									\
-  for (int p = 0; p < particles->nr_patches; p++) {			\
-    particles_##type##_free(&particles->p[p]);				\
+}									\
+									\
+void									\
+mparticles_##type##_destroy(mparticles_##type##_t *mparticles)		\
+{									\
+  for (int p = 0; p < mparticles->nr_patches; p++) {			\
+    particles_##type##_free(&mparticles->p[p]);				\
   }									\
-  free(particles->p);							\
-  free(particles);							\
+  free(mparticles->p);							\
+  free(mparticles);							\
 }
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
