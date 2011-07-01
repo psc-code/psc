@@ -17,6 +17,8 @@ typedef particle_fortran_real_t particle_base_real_t;
 #define particles_base_realloc particles_fortran_realloc
 #define particles_base_free    particles_fortran_free
 #define particles_base_get_one particles_fortran_get_one
+#define mparticles_base_alloc   mparticles_fortran_alloc
+#define mparticles_base_destroy mparticles_fortran_destroy
 
 #elif PARTICLES_BASE == PARTICLES_C
 
@@ -32,6 +34,8 @@ typedef particle_c_real_t particle_base_real_t;
 #define particles_base_realloc particles_c_realloc
 #define particles_base_free    particles_c_free
 #define particles_base_get_one particles_c_get_one
+#define mparticles_base_alloc   mparticles_c_alloc
+#define mparticles_base_destroy mparticles_c_destroy
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
@@ -47,6 +51,8 @@ typedef particle_sse2_real_t particle_base_real_t;
 #define particles_base_realloc particles_sse2_realloc
 #define particles_base_free    particles_sse2_free
 #define particles_base_get_one particles_sse2_get_one
+#define mparticles_base_alloc   mparticles_sse2_alloc
+#define mparticles_base_destroy mparticles_sse2_destroy
 
 #elif PARTICLES_BASE == PARTICLES_CBE
 
@@ -62,6 +68,8 @@ typedef particle_cbe_real_t particle_base_real_t;
 #define particles_base_realloc particles_cbe_realloc
 #define particles_base_free    particles_cbe_free
 #define particles_base_get_one particles_cbe_get_one
+#define mparticles_base_alloc   mparticles_cbe_alloc
+#define mparticles_base_destroy mparticles_cbe_destroy
 
 #else
 #error unknown PARTICLES_BASE
