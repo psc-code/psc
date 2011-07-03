@@ -13,7 +13,7 @@ psc_read_checkpoint(MPI_Comm comm)
   mpi_printf(MPI_COMM_WORLD, "INFO: Reading checkpoint.\n");
 
   struct mrc_io *io = mrc_io_create(comm);
-  mrc_io_set_type(io, "xdmf_collective");
+  mrc_io_set_type(io, "xdmf_serial");
   mrc_io_set_name(io, "checkpoint");
   mrc_io_set_param_string(io, "basename", "checkpoint");
   mrc_io_set_from_options(io);
@@ -35,7 +35,7 @@ psc_write_checkpoint(struct psc *psc)
   mpi_printf(psc_comm(psc), "INFO: Writing checkpoint.\n");
 
   struct mrc_io *io = mrc_io_create(psc_comm(psc));
-  mrc_io_set_type(io, "xdmf_collective");
+  mrc_io_set_type(io, "xdmf_serial");
   mrc_io_set_name(io, "checkpoint");
   mrc_io_set_param_string(io, "basename", "checkpoint");
   mrc_io_set_from_options(io);
