@@ -63,10 +63,13 @@ typedef mfields_fortran_t mfields_base_t;
 #define fields_base_size             fields_fortran_size
 #define mfields_base_list            mfields_fortran_list
 #define psc_mfields_base_create         psc_mfields_fortran_create
+#define psc_mfields_base_set_name       psc_mfields_fortran_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_fortran_set_param_int
 #define psc_mfields_base_set_param_int3 psc_mfields_fortran_set_param_int3
 #define psc_mfields_base_setup          psc_mfields_fortran_setup
 #define psc_mfields_base_destroy        psc_mfields_fortran_destroy
+#define psc_mfields_base_write          psc_mfields_fortran_write
+#define psc_mfields_base_read           psc_mfields_fortran_read
 #define psc_mfields_base_set_domain     psc_mfields_fortran_set_domain
 
 
@@ -93,10 +96,13 @@ typedef mfields_c_t mfields_base_t;
 #define fields_base_size             fields_c_size
 #define mfields_base_list            mfields_c_list
 #define psc_mfields_base_create         psc_mfields_c_create
+#define psc_mfields_base_set_name       psc_mfields_c_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_c_set_param_int
 #define psc_mfields_base_set_param_int3 psc_mfields_c_set_param_int3
 #define psc_mfields_base_setup          psc_mfields_c_setup
 #define psc_mfields_base_destroy        psc_mfields_c_destroy
+#define psc_mfields_base_write          psc_mfields_c_write
+#define psc_mfields_base_read           psc_mfields_c_read
 #define psc_mfields_base_set_domain     psc_mfields_c_set_domain
 
 #define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
