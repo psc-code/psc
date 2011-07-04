@@ -83,15 +83,15 @@ _psc_case_setup(struct psc_case *_case)
 					  nr_particles_by_patch);
   psc_mparticles_base_setup(psc->particles);
 
+  psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
+  free(nr_particles_by_patch);
+
 #if 0
   psc_write_checkpoint(psc);
   psc_destroy(psc);
   psc = psc_read_checkpoint(MPI_COMM_WORLD);
   _case->psc = psc;
 #endif
-
-  psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
-  free(nr_particles_by_patch);
 
   // alloc / initialize fields
   psc->flds = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);

@@ -50,6 +50,7 @@ struct mrc_io_ops {
 		    const char *name, union param_u *pv);
   void (*write_attr)(struct mrc_io *io, const char *path, int type,
 		     const char *name, union param_u *pv);
+  void (*get_h5_file)(struct mrc_io *io, long *h5_file);
 };
 
 // ----------------------------------------------------------------------
