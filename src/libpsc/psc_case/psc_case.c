@@ -70,13 +70,6 @@ _psc_case_setup(struct psc_case *_case)
   // and intializing them
   psc_setup(psc);
 
-#if 0
-  psc_write_checkpoint(psc);
-  psc_destroy(psc);
-  psc = psc_read_checkpoint(MPI_COMM_WORLD);
-  _case->psc = psc;
-#endif
-
   // alloc / initialize particles
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
@@ -85,9 +78,17 @@ _psc_case_setup(struct psc_case *_case)
 
   psc->particles = 
     psc_mparticles_base_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_base_set_name(psc->particles, "mparticles");
   psc_mparticles_base_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					  nr_particles_by_patch);
   psc_mparticles_base_setup(psc->particles);
+
+#if 0
+  psc_write_checkpoint(psc);
+  psc_destroy(psc);
+  psc = psc_read_checkpoint(MPI_COMM_WORLD);
+  _case->psc = psc;
+#endif
 
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);

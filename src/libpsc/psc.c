@@ -345,6 +345,18 @@ static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
   mrc_domain_write(psc->mrc_domain, io);
+  psc_mparticles_base_write(psc->particles, io);
+}
+
+// ----------------------------------------------------------------------
+// _psc_read
+
+static void
+_psc_read(struct psc *psc, struct mrc_io *io)
+{
+  psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
+  psc->particles = psc_mparticles_base_read(io, "mparticles");
+  psc_setup(psc);
 }
 
 // ======================================================================
@@ -358,6 +370,7 @@ struct mrc_class_psc mrc_class_psc = {
   .setup            = _psc_setup,
   .destroy          = _psc_destroy,
   .write            = _psc_write,
+  .read             = _psc_read,
 };
 
 // ======================================================================
