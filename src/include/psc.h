@@ -280,9 +280,6 @@ void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
 
-// FIXME, should be per mrc_domain or sth, really
-extern list_t mfields_list;
-
 // FIXME, only used for one thing, could be consolidated?
 
 static inline int

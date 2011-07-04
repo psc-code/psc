@@ -400,7 +400,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_list, entry) {
+  list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
 
@@ -471,7 +471,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_list, entry) {
+  list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
 
