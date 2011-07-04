@@ -17,8 +17,8 @@ typedef struct psc_mfields_##type {				        \
   list_t entry;								\
 } mfields_##type##_t;							\
 									\
-void psc_mfields_##type##_get(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-void psc_mfields_##type##_put(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
+void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
+void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\
 extern list_t mfields_##type##_list;						\

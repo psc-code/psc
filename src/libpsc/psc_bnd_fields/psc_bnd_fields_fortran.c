@@ -13,7 +13,7 @@ psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
 				       mfields_base_t *flds_base)
 {
   mfields_fortran_t flds;
-  psc_mfields_fortran_get(&flds, JXI, HZ + 1, flds_base);
+  psc_mfields_fortran_get_from(&flds, JXI, HZ + 1, flds_base);
   
   static int pr;
   if (!pr) {
@@ -25,7 +25,7 @@ psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
   }
   prof_stop(pr);
   
-  psc_mfields_fortran_put(&flds, HX, HZ + 1, flds_base);
+  psc_mfields_fortran_put_to(&flds, HX, HZ + 1, flds_base);
 }
 
 // ======================================================================
