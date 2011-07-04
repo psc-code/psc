@@ -40,7 +40,7 @@ static struct mrc_param_select bnd_part_descr[] = {
   {},
 };
 
-struct param psc_descr[] = {
+static struct param psc_descr[] = {
   // psc_domain
   { "length_x"      , VAR(domain.length[0])       , PARAM_DOUBLE(1e-6)   },
   { "length_y"      , VAR(domain.length[1])       , PARAM_DOUBLE(1e-6)   },
