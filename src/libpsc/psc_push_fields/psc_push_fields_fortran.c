@@ -13,11 +13,11 @@ psc_push_fields_fortran_push_a_E(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, HZ + 1, flds_base);
   
   PIC_msa_e(&flds.f[0]);
   
-  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, HZ + 1, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -28,11 +28,11 @@ psc_push_fields_fortran_push_a_H(struct psc_push_fields *push,
 				 mfields_base_t *flds_base)
 {
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, HZ + 1, flds_base);
   
   PIC_msa_h(&flds.f[0]);
   
-  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, HZ + 1, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -44,11 +44,11 @@ psc_push_fields_fortran_push_b_H(struct psc_push_fields *push,
 {
   assert(ppsc->nr_patches == 1);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, HZ + 1, flds_base);
   
   PIC_msb_h(&flds.f[0]);
     
-  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, HZ + 1, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -60,11 +60,11 @@ psc_push_fields_fortran_push_b_E(struct psc_push_fields *push,
 {
   assert(ppsc->nr_patches == 1);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, HZ + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, HZ + 1, flds_base);
   
   PIC_msb_e(&flds.f[0]);
     
-  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, HZ + 1, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -76,7 +76,7 @@ psc_push_fields_fortran_pml_a(struct psc_push_fields *push,
 {
   assert(ppsc->nr_patches == 1);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, MU + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, MU + 1, flds_base);
   
   static int pr;
   if (!pr) {
@@ -86,7 +86,7 @@ psc_push_fields_fortran_pml_a(struct psc_push_fields *push,
   PIC_pml_msa(&flds.f[0]);
   prof_stop(pr);
   
-  fields_fortran_put(&flds, EX, BZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, BZ + 1, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -98,7 +98,7 @@ psc_push_fields_fortran_pml_b(struct psc_push_fields *push,
 {
   assert(ppsc->nr_patches == 1);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, MU + 1, flds_base);
+  psc_mfields_fortran_get(&flds, JXI, MU + 1, flds_base);
   
   static int pr;
   if (!pr) {
@@ -108,7 +108,7 @@ psc_push_fields_fortran_pml_b(struct psc_push_fields *push,
   PIC_pml_msb(&flds.f[0]);
   prof_stop(pr);
   
-  fields_fortran_put(&flds, EX, BZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, BZ + 1, flds_base);
 }
 
 // ======================================================================

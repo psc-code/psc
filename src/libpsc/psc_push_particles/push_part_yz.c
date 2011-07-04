@@ -275,7 +275,7 @@ psc_push_particles_generic_c_push_yz(struct psc_push_particles *push,
 {
   mfields_t flds;
   mparticles_t particles;
-  fields_get(&flds, EX, EX + 6, flds_base);
+  psc_mfields_get(&flds, EX, EX + 6, flds_base);
   psc_mparticles_get_from(&particles, particles_base);
 
   static int pr;
@@ -288,7 +288,7 @@ psc_push_particles_generic_c_push_yz(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  fields_put(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_put(&flds, JXI, JXI + 3, flds_base);
   psc_mparticles_put_to(&particles, particles_base);
 }
 

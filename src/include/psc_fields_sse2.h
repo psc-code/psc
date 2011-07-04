@@ -13,10 +13,6 @@ typedef struct {
   fields_sse2_real_t *flds;
 } fields_sse2_t;
 
-typedef struct {
-  fields_sse2_t *f;
-} mfields_sse2_t;
-  
 // FIXME, this needs to be looked into for efficiency
 #define F3_OFF_SSE2(fldnr, jx,jy,jz)					\
   ((((((fldnr)								\

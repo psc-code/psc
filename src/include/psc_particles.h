@@ -19,7 +19,6 @@ typedef struct psc_mparticles_##type {				        \
 									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
 									\
-mparticles_##type##_t *psc_mparticles_##type##_create(MPI_Comm comm);	\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \

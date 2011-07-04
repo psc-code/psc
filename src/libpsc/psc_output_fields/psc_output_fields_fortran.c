@@ -19,12 +19,12 @@ psc_output_fields_fortran_run(struct psc_output_fields *out,
   }
   prof_start(pr);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, NE, HZ + 1, flds_base);
+  psc_mfields_fortran_get(&flds, NE, HZ + 1, flds_base);
 
   fields_fortran_t *pf = &flds.f[0];
   OUT_field(pf);
 
-  fields_fortran_put(&flds, EX, HZ + 1, flds_base);
+  psc_mfields_fortran_put(&flds, EX, HZ + 1, flds_base);
   prof_stop(pr);
 }
 

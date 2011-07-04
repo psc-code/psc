@@ -3,6 +3,34 @@
 #define PSC_FIELDS_H
 
 // ----------------------------------------------------------------------
+// mfields type
+
+// This type is replicated for each actual fields type, however,
+// the interface and implementation is always identical, hence 
+// created automatically for the variants using macros
+
+#define DECLARE_MFIELDS_METHODS(type)					\
+  									\
+typedef struct psc_mfields_##type {				        \
+  fields_##type##_t *f;							\
+  int nr_patches;							\
+  list_t entry;								\
+} mfields_##type##_t;							\
+									\
+void psc_mfields_##type##_get(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
+void psc_mfields_##type##_put(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
+
+
+#include "psc_fields_fortran.h"
+DECLARE_MFIELDS_METHODS(fortran)
+
+#include "psc_fields_c.h"
+DECLARE_MFIELDS_METHODS(c)
+
+#include "psc_fields_sse2.h"
+DECLARE_MFIELDS_METHODS(sse2)
+
+// ----------------------------------------------------------------------
 // base fields type
 
 #if FIELDS_BASE == FIELDS_FORTRAN
@@ -67,6 +95,12 @@ typedef mfields_sse2_t mfields_base_t;
 #else
 #error unknown FIELDS_BASE
 #endif
+
+mfields_base_t *psc_mfields_base_create(MPI_Comm comm);
+void psc_mfields_base_set_domain(mfields_base_t *flds, struct mrc_domain *domain,
+				 int nr_fields, int ibn[3]);
+void psc_mfields_base_setup(mfields_base_t *flds);
+void psc_mfields_base_destroy(mfields_base_t *flds);
 
 #endif
 
