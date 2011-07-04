@@ -12,16 +12,21 @@
 #define DECLARE_MFIELDS_METHODS(type)					\
   									\
 typedef struct psc_mfields_##type {				        \
+  struct mrc_obj obj;							\
   fields_##type##_t *f;							\
   int nr_patches;							\
   list_t entry;								\
 } mfields_##type##_t;							\
 									\
+MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
+									\
+void psc_mfields_##type##_set_domain(mfields_##type##_t *flds, struct mrc_domain *domain, \
+				      int nr_fields, int ibn[3]);	\
 void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\
-extern list_t mfields_##type##_list;						\
+extern list_t mfields_##type##_list;					\
 
 
 #include "psc_fields_fortran.h"
@@ -114,12 +119,6 @@ typedef mfields_sse2_t mfields_base_t;
 #else
 #error unknown FIELDS_BASE
 #endif
-
-mfields_base_t *psc_mfields_base_create(MPI_Comm comm);
-void psc_mfields_base_set_domain(mfields_base_t *flds, struct mrc_domain *domain,
-				 int nr_fields, int ibn[3]);
-void psc_mfields_base_setup(mfields_base_t *flds);
-void psc_mfields_base_destroy(mfields_base_t *flds);
 
 #endif
 

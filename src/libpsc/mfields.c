@@ -7,13 +7,6 @@
 									\
 LIST_HEAD(mfields_##type##_list);					\
 									\
-mfields_##type##_t *							\
-psc_mfields_##type##_create(MPI_Comm comm)					\
-{									\
-  mfields_##type##_t *flds = calloc(1, sizeof(*flds));			\
-  return flds;								\
-}									\
-									\
 void									\
 psc_mfields_##type##_set_domain(mfields_##type##_t *flds, struct mrc_domain *domain, \
 			    int nr_fields, int ibn[3])			\
@@ -30,13 +23,8 @@ psc_mfields_##type##_set_domain(mfields_##type##_t *flds, struct mrc_domain *dom
   list_add_tail(&flds->entry, &mfields_##type##_list);			\
 }									\
 									\
-void									\
-psc_mfields_##type##_setup(mfields_##type##_t *flds)				\
-{									\
-}									\
-									\
-void									\
-psc_mfields_##type##_destroy(mfields_##type##_t *flds)				\
+static void									\
+_psc_mfields_##type##_destroy(mfields_##type##_t *flds)				\
 {									\
   if (!flds)								\
     return;								\
@@ -47,7 +35,13 @@ psc_mfields_##type##_destroy(mfields_##type##_t *flds)				\
   free(flds->f);							\
   list_del(&flds->entry);						\
   free(flds);								\
-}
+}									\
+									\
+struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
+  .name             = "psc_mfields_" #type,				\
+  .size             = sizeof(struct psc_mfields_##type),		\
+  .destroy          = _psc_mfields_##type##_destroy,			\
+};
 
 MAKE_MFIELDS_METHODS(fortran)
 MAKE_MFIELDS_METHODS(c)
