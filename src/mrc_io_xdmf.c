@@ -1140,6 +1140,13 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   ierr = H5Gclose(group0); CE;
 }
 
+static void
+ds_xdmf_get_h5_file(struct mrc_io *io, long *h5_file)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  *h5_file = hdf5->file;
+}
+
 struct mrc_io_ops mrc_io_xdmf_ops = {
   .name          = "xdmf",
   .size          = sizeof(struct diag_hdf5),
@@ -1168,6 +1175,7 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
   .read_attr     = ds_xdmf_read_attr,
+  .get_h5_file   = ds_xdmf_get_h5_file,
 };
 
 // ======================================================================
