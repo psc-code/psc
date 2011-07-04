@@ -86,15 +86,10 @@ _psc_case_setup(struct psc_case *_case)
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);
 
-#if 0
-  psc_write_checkpoint(psc);
-  psc_destroy(psc);
-  psc = psc_read_checkpoint(MPI_COMM_WORLD);
-  _case->psc = psc;
-#endif
-
   // alloc / initialize fields
-  psc->flds = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);
+  psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain, NR_FIELDS, psc->ibn);
+  psc_mfields_base_setup(psc->flds);
   psc_case_init_field(_case, psc->flds);
   if (psc->domain.use_pml) {
     psc_init_field_pml(_case, psc->flds);
@@ -102,6 +97,13 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize photons
   psc_case_init_photons(_case);
+
+#if 0
+  psc_write_checkpoint(psc);
+  psc_destroy(psc);
+  psc = psc_read_checkpoint(MPI_COMM_WORLD);
+  _case->psc = psc;
+#endif
 
   psc_setup_fortran(psc);
 }

@@ -235,11 +235,11 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   struct psc_fields_list *pfd = &out_c->pfd;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_destroy(pfd->flds[i]);
+    psc_mfields_base_destroy(pfd->flds[i]);
   }
   struct psc_fields_list *tfd = &out_c->tfd;
   for (int i = 0; i < tfd->nr_flds; i++) {
-    mfields_base_destroy(tfd->flds[i]);
+    psc_mfields_base_destroy(tfd->flds[i]);
   }
 
   psc_output_format_destroy(out_c->format);
@@ -276,7 +276,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    mfields_base_t *flds = mfields_base_alloc(psc->mrc_domain, of->nr_comp, psc->ibn);
+    mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_base_set_domain(flds, psc->mrc_domain, of->nr_comp, psc->ibn);
+    psc_mfields_base_setup(flds);
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->flds[pfd->nr_flds] = flds;
     pfd->nr_flds++;
@@ -294,7 +296,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->nr_patches > 0);
-    mfields_base_t *flds = mfields_base_alloc(psc->mrc_domain, pfd->flds[i]->f[0].nr_comp, psc->ibn);
+    mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_base_set_domain(flds, psc->mrc_domain, pfd->flds[i]->f[0].nr_comp, psc->ibn);
+    psc_mfields_base_setup(flds);
     tfd->flds[i] = flds;
     psc_foreach_patch(psc, pp) {
       for (int m = 0; m < pfd->flds[i]->f[pp].nr_comp; m++) {

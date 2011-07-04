@@ -132,8 +132,11 @@ struct psc_domain {
   bool use_pml;
 };
 
-mfields_base_t *mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3]);
-void mfields_base_destroy(mfields_base_t *flds);
+mfields_base_t *psc_mfields_base_create(MPI_Comm comm);
+void psc_mfields_base_set_domain(mfields_base_t *flds, struct mrc_domain *domain,
+				 int nr_fields, int ibn[3]);
+void psc_mfields_base_setup(mfields_base_t *flds);
+void psc_mfields_base_destroy(mfields_base_t *flds);
 
 // FIXME, turn into mrc_obj
 void psc_push_photons_run(mphotons_t *mphotons);
