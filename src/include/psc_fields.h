@@ -16,12 +16,15 @@ typedef struct psc_mfields_##type {				        \
   fields_##type##_t *f;							\
   int nr_patches;							\
   list_t entry;								\
+  struct mrc_domain *domain;						\
+  int nr_fields;							\
+  int ibn[3];								\
 } mfields_##type##_t;							\
 									\
 MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
 									\
-void psc_mfields_##type##_set_domain(mfields_##type##_t *flds, struct mrc_domain *domain, \
-				      int nr_fields, int ibn[3]);	\
+void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	        \
+				     struct mrc_domain *domain);	\
 void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 									\
@@ -59,10 +62,12 @@ typedef mfields_fortran_t mfields_base_t;
 #define fields_base_scale_all        fields_fortran_scale_all
 #define fields_base_size             fields_fortran_size
 #define mfields_base_list            mfields_fortran_list
-#define psc_mfields_base_create      psc_mfields_fortran_create
-#define psc_mfields_base_setup       psc_mfields_fortran_setup
-#define psc_mfields_base_destroy     psc_mfields_fortran_destroy
-#define psc_mfields_base_set_domain  psc_mfields_fortran_set_domain
+#define psc_mfields_base_create         psc_mfields_fortran_create
+#define psc_mfields_base_set_param_int  psc_mfields_fortran_set_param_int
+#define psc_mfields_base_set_param_int3 psc_mfields_fortran_set_param_int3
+#define psc_mfields_base_setup          psc_mfields_fortran_setup
+#define psc_mfields_base_destroy        psc_mfields_fortran_destroy
+#define psc_mfields_base_set_domain     psc_mfields_fortran_set_domain
 
 
 #define F3_BASE(pf, m, jx,jy,jz)     F3_FORTRAN(pf, m, jx,jy,jz)
@@ -87,10 +92,12 @@ typedef mfields_c_t mfields_base_t;
 #define fields_base_scale_all        fields_c_scale_all
 #define fields_base_size             fields_c_size
 #define mfields_base_list            mfields_c_list
-#define psc_mfields_base_create      psc_mfields_c_create
-#define psc_mfields_base_setup       psc_mfields_c_setup
-#define psc_mfields_base_destroy     psc_mfields_c_destroy
-#define psc_mfields_base_set_domain  psc_mfields_c_set_domain
+#define psc_mfields_base_create         psc_mfields_c_create
+#define psc_mfields_base_set_param_int  psc_mfields_c_set_param_int
+#define psc_mfields_base_set_param_int3 psc_mfields_c_set_param_int3
+#define psc_mfields_base_setup          psc_mfields_c_setup
+#define psc_mfields_base_destroy        psc_mfields_c_destroy
+#define psc_mfields_base_set_domain     psc_mfields_c_set_domain
 
 #define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
 

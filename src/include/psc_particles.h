@@ -15,6 +15,7 @@ typedef struct psc_mparticles_##type {				        \
   struct mrc_obj obj;							\
   particles_##type##_t *p;						\
   int nr_patches;							\
+  struct mrc_domain *domain;						\
 } mparticles_##type##_t;						\
 									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\

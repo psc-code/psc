@@ -277,7 +277,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
     mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_base_set_domain(flds, psc->mrc_domain, of->nr_comp, psc->ibn);
+    psc_mfields_base_set_domain(flds, psc->mrc_domain);
+    psc_mfields_base_set_param_int(flds, "nr_fields", of->nr_comp);
+    psc_mfields_base_set_param_int3(flds, "ibn", psc->ibn);
     psc_mfields_base_setup(flds);
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->flds[pfd->nr_flds] = flds;
@@ -297,7 +299,9 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->nr_patches > 0);
     mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_base_set_domain(flds, psc->mrc_domain, pfd->flds[i]->f[0].nr_comp, psc->ibn);
+    psc_mfields_base_set_domain(flds, psc->mrc_domain);
+    psc_mfields_base_set_param_int(flds, "nr_fields", pfd->flds[i]->f[0].nr_comp);
+    psc_mfields_base_set_param_int3(flds, "ibn", psc->ibn);
     psc_mfields_base_setup(flds);
     tfd->flds[i] = flds;
     psc_foreach_patch(psc, pp) {

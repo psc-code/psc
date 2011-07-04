@@ -10,6 +10,7 @@ psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticle
 					    struct mrc_domain *domain,	\
 					    int *nr_particles_by_patch)	\
 {									\
+  mparticles->domain = dmain;						\
   mrc_domain_get_patches(domain, &mparticles->nr_patches);		\
 									\
   mparticles->p = calloc(mparticles->nr_patches,			\
@@ -51,9 +52,10 @@ MAKE_MPARTICLES_METHODS(cbe)
 
 void
 psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
-					    struct mrc_domain *domain,
-					    int *nr_particles_by_patch)
+					 struct mrc_domain *domain,
+					 int *nr_particles_by_patch)
 {
+  mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
 
   mparticles->p = calloc(mparticles->nr_patches, sizeof(*mparticles->p));

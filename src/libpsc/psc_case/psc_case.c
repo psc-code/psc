@@ -88,7 +88,9 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize fields
   psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain, NR_FIELDS, psc->ibn);
+  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
+  psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
+  psc_mfields_base_set_param_int3(psc->flds, "ibn", psc->ibn);
   psc_mfields_base_setup(psc->flds);
   psc_case_init_field(_case, psc->flds);
   if (psc->domain.use_pml) {
