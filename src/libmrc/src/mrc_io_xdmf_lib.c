@@ -54,10 +54,10 @@ xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
 
   fprintf(f, "     <Geometry GeometryType=\"Origin_DxDyDz\">\n");
   fprintf(f, "     <DataItem Name=\"Origin\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-  fprintf(f, "        %g %g %g\n", xl[0], xl[1], xl[2]);
+  fprintf(f, "        %g %g %g\n", xl[2], xl[1], xl[0]);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"DxDyDz\" DataType=\"Float\" Dimensions=\"3\" Format=\"XML\">\n");
-  fprintf(f, "        %g %g %g\n", dx[0], dx[1], dx[2]);
+  fprintf(f, "        %g %g %g\n", dx[2], dx[1], dx[0]);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
