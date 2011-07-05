@@ -699,15 +699,16 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   struct xdmf_spatial *xs = xdmf_spatial_find(&file->xdmf_spatial_list,
 					      mrc_domain_name(m3->domain));
-  if (!xs) {
-    xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
-					 mrc_domain_name(m3->domain),
-					 m3->domain);
-    xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
-  }
-
   int gdims[3];
   mrc_domain_get_global_dims(m3->domain, gdims);
+
+  if (!xs) {
+    int off[3] = {};
+    xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
+					 mrc_domain_name(m3->domain),
+					 m3->domain, off, gdims);
+    xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
+  }
 
   int nr_patches;
   mrc_domain_get_patches(m3->domain, &nr_patches);
