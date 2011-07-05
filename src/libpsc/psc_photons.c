@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_c.h"
 
+#include <mrc_io.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -71,6 +72,24 @@ _psc_mphotons_destroy(mphotons_t *mphotons)
   mphotons->nr_patches = -1;
 }
 
+static void
+_psc_mphotons_write(mphotons_t *mphotons, struct mrc_io *io)
+{
+  const char *path = psc_mphotons_name(mphotons);
+  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mphotons->domain);
+}
+
+static void
+_psc_mphotons_read(mphotons_t *mphotons, struct mrc_io *io)
+{
+  const char *path = psc_mphotons_name(mphotons);
+  mphotons->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+
+  // FIXME, need to actually write / read the data, too
+  psc_mphotons_setup(mphotons);
+}
+
 // ======================================================================
 // psc_mphotons
 
@@ -79,9 +98,7 @@ struct mrc_class_psc_mphotons mrc_class_psc_mphotons = {
   .size             = sizeof(struct psc_mphotons),
   .setup            = _psc_mphotons_setup,
   .destroy          = _psc_mphotons_destroy,
-#if 0
   .write            = _psc_mphotons_write,
   .read             = _psc_mphotons_read,
-#endif
 };
 

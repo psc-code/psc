@@ -347,6 +347,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   mrc_domain_write(psc->mrc_domain, io);
   psc_mparticles_base_write(psc->particles, io);
   psc_mfields_base_write(psc->flds, io);
+  psc_mphotons_write(psc->mphotons, io);
 }
 
 // ----------------------------------------------------------------------
@@ -358,6 +359,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
   psc->particles = psc_mparticles_base_read(io, "mparticles");
   psc->flds = psc_mfields_base_read(io, "mfields");
+  psc->mphotons = psc_mphotons_read(io, "mphotons");
   psc_setup(psc);
 }
 

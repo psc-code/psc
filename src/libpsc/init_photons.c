@@ -11,6 +11,7 @@ psc_case_init_photons(struct psc_case *_case)
   struct psc *psc = _case->psc;
 
   psc->mphotons = psc_mphotons_create(psc_comm(psc));
+  psc_mphotons_set_name(psc->mphotons, "mphotons");
   psc_mphotons_set_domain(psc->mphotons, psc->mrc_domain);
   psc_mphotons_setup(psc->mphotons);
 
