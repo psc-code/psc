@@ -234,7 +234,8 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
 
 struct xdmf_spatial *
 xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name, 
-				struct mrc_domain *domain)
+				struct mrc_domain *domain, int slab_off[3], 
+				int slab_dims[3])
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -244,8 +245,8 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
   xs->nr_global_patches = 1;
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
 
-  for (int gp = 0; gp < xs->nr_global_patches; gp++) {
-    mrc_domain_get_global_dims(domain, xs->patch_infos[gp].ldims);
+  for (int d = 0; d < 3; d++) {
+    xs->patch_infos[0].ldims[d] = slab_dims[d];
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
@@ -254,11 +255,10 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     xs->uniform = true;
     mrc_crds_get_xl_xh(crds, xs->xl, NULL);
     mrc_crds_get_dx(crds, xs->dx);
-    int gdims[3];
-    mrc_domain_get_global_dims(domain, gdims);
-    // no extent in invariant directions
     for (int d = 0; d < 3; d++) {
-      if (gdims[d] == 1) {
+      xs->xl[d] += slab_off[d] * xs->dx[d];
+      // no extent in invariant directions
+      if (slab_dims[d] == 1) {
 	xs->xl[d] = 0.;
 	xs->dx[d] = 0.;
       }
