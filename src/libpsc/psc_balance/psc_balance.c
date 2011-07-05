@@ -479,12 +479,14 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // photons
   // alloc new photons
   // FIXME, will break if there are actual photons
-  mphotons_t mphotons_new;
-  mphotons_alloc(domain_new, &mphotons_new);
+  mphotons_t *mphotons_new = psc_mphotons_create(mrc_domain_comm(domain_new));
+  psc_mphotons_set_domain(mphotons_new, domain_new);
+  psc_mphotons_setup(mphotons_new);
 
   // replace photons by redistributed ones
-  mphotons_destroy(&psc->mphotons);
+  psc_mphotons_destroy(psc->mphotons);
   psc->mphotons = mphotons_new;
+
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;

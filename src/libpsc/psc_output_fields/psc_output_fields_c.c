@@ -172,7 +172,7 @@ static void
 calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_base_t *res)
 {
-  return psc_moments_calc_photon_n(psc->moments, &psc->mphotons, res);
+  return psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
 }
 
 static struct output_field output_fields[] = {

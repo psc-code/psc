@@ -26,17 +26,20 @@ typedef struct {
 
 /// photon lists per patch
 
-typedef struct {
+typedef struct psc_mphotons {
+  struct mrc_obj obj;
   photons_t *p;
   int nr_patches;
+  struct mrc_domain *domain;
 } mphotons_t;
+
+MRC_CLASS_DECLARE(psc_mphotons, struct psc_mphotons);
+
+void psc_mphotons_set_domain(mphotons_t *mphotons, struct mrc_domain *domain);
 
 void photons_alloc(photons_t *pp, int n_part);
 void photons_realloc(photons_t *pp, int new_n_part);
 void photons_free(photons_t *pp);
-
-void mphotons_alloc(struct mrc_domain *domain, mphotons_t *mphotons);
-void mphotons_destroy(mphotons_t *mphotons);
 
 static inline photon_t *
 photons_get_one(photons_t *pp, int n)
