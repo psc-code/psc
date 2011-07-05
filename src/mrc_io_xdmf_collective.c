@@ -475,6 +475,10 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   mrc_domain_get_nr_procs(m1->domain, ctx.np);
   mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
   int dim = ctx.dim;
+  int slab_off_save, slab_dims_save;
+  slab_off_save = xdmf->slab_off[0];
+  slab_dims_save = xdmf->slab_dims[0];
+  // FIXME
   if (!xdmf->slab_dims[0]) {
     xdmf->slab_dims[0] = ctx.gdims[dim] + 2 * ctx.sw;
     xdmf->slab_off[0] = -ctx.sw;
@@ -506,8 +510,8 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
       collective_m1_send_end(io, &ctx);
     }
   }
-  xdmf->slab_dims[0] = 0;
-  xdmf->slab_off[0] = 0;
+  xdmf->slab_dims[0] = slab_dims_save;
+  xdmf->slab_off[0] = slab_off_save;
 }
 
 // ----------------------------------------------------------------------
