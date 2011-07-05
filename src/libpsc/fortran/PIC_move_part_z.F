@@ -169,11 +169,13 @@ c     FIELD INTERPOLATION
 
 c x^(n+0.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
-            if (n*dt < 2.0*pi) then
-               ezq=ezq+0.01*n*dt*dsin(1.0*wp*n*dt/wl)/(2.0*pi)
-            else
-               ezq=ezq+0.01*dsin(1.0*wp*n*dt/wl)
-            endif
+c            if (n*dt < 2.0*pi) then
+c               ezq=ezq+0.01*n*dt*dsin(1.0*wp*n*dt/wl)/(2.0*pi)
+c            else
+c               ezq=ezq+0.01*dsin(1.0*wp*n*dt/wl)
+c            endif
+
+
             dq=qni*dqs/mni
             pxm=pxi+dq*exq
             pym=pyi+dq*eyq
