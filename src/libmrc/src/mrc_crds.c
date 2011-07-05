@@ -93,10 +93,15 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	}
 	int gdims[3];
 	mrc_domain_get_global_dims(crds->domain, gdims);
+	// FIXME, this is really too hacky... should per m1 / m3, not per mrc_io
+	int slab_off_save[3], slab_dims_save[3];
+	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
 	mrc_m1_write(crd_nc, io);
-	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
+	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_m1_destroy(crd_nc);
       }
     }
@@ -136,10 +141,14 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	}
 	int gdims[3];
 	mrc_domain_get_global_dims(crds->domain, gdims);
+	int slab_off_save[3], slab_dims_save[3];
+	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { gdims[d] + 1, 0, 0 });
 	mrc_m1_write(crd_nc, io);
-	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
+	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
 	mrc_m1_destroy(crd_nc);
       }
     }
