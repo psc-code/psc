@@ -11,6 +11,7 @@ void PIC_push_part_yz(struct psc *psc, int p, particles_fortran_t *pp, fields_fo
 void PIC_push_part_z(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz_a(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_push_part_yz_b(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
+void PIC_push_part_z_vay(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_sort(particles_fortran_t *pp);
 void PIC_randomize(particles_fortran_t *pp);
 void PIC_bin_coll(particles_fortran_t *pp);
