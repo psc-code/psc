@@ -5,6 +5,7 @@
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
+#include <mrc_io.h>
 #include <string.h>
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
@@ -324,6 +325,35 @@ psc_output_fields_c_view(struct psc_output_fields *out)
 }
 
 // ----------------------------------------------------------------------
+// psc_output_fields_c_write
+
+static void
+psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  const char *path = psc_output_fields_name(out);
+  mrc_io_write_attr_int(io, path, "pfield_next", out_c->pfield_next);
+  mrc_io_write_attr_int(io, path, "tfield_next", out_c->tfield_next);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_read
+
+static void
+psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  const char *path = psc_output_fields_name(out);
+  
+  // FIXME, this is very hacky, instead of restoring state, we'll put
+  // next into first and setup() will do the right thing. This is because
+  // we can't call setup() right now, since other stuff in psc isn't set up
+  // yet :(((
+  mrc_io_read_attr_int(io, path, "pfield_next", &out_c->pfield_first);
+  mrc_io_read_attr_int(io, path, "tfield_next", &out_c->tfield_first);
+}
+
+// ----------------------------------------------------------------------
 // make_fields_list
 
 static void
@@ -465,9 +495,11 @@ struct psc_output_fields_ops psc_output_fields_c_ops = {
   .size                  = sizeof(struct psc_output_fields_c),
   .param_descr           = psc_output_fields_c_descr,
   .create                = psc_output_fields_c_create,
-  .destroy               = psc_output_fields_c_destroy,
   .setup                 = psc_output_fields_c_setup,
   .set_from_options      = psc_output_fields_c_set_from_options,
+  .destroy               = psc_output_fields_c_destroy,
+  .write                 = psc_output_fields_c_write,
+  .read                  = psc_output_fields_c_read,
   .view                  = psc_output_fields_c_view,
   .run                   = psc_output_fields_c_run,
 };

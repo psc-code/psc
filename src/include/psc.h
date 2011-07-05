@@ -270,12 +270,13 @@ void psc_destroy(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
+void psc_setup_patches(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
-struct psc *psc_read_checkpoint(MPI_Comm comm);
+struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);

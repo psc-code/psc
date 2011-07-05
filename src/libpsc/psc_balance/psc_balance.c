@@ -407,6 +407,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
+  psc_setup_patches(psc);
 }
 
 // FIXME, way too much duplication from the above

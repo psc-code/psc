@@ -8,7 +8,7 @@
 // psc_read_checkpoint
 
 struct psc *
-psc_read_checkpoint(MPI_Comm comm)
+psc_read_checkpoint(MPI_Comm comm, int n)
 {
   mpi_printf(MPI_COMM_WORLD, "INFO: Reading checkpoint.\n");
 
@@ -18,7 +18,7 @@ psc_read_checkpoint(MPI_Comm comm)
   mrc_io_set_param_string(io, "basename", "checkpoint");
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_open(io, "r", 0, 0.);
+  mrc_io_open(io, "r", n, 0.);
   struct psc *psc = psc_read(io, "psc");
   mrc_io_close(io);
   mrc_io_destroy(io);
@@ -40,7 +40,7 @@ psc_write_checkpoint(struct psc *psc)
   mrc_io_set_param_string(io, "basename", "checkpoint");
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
-  mrc_io_open(io, "w", 0, 0.);
+  mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
   psc_write(psc, io);
   mrc_io_close(io);
   mrc_io_destroy(io);

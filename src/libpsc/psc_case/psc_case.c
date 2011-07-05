@@ -61,10 +61,6 @@ static void
 _psc_case_setup(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
-  // FIXME, probably broken, should go into sep subclass?
-  if (psc->prm.from_checkpoint) {
-    assert(0);
-  }
 
   // this sets up everything except allocating fields and particles,
   // and intializing them

@@ -14,6 +14,7 @@
 
 #include <mrc_common.h>
 #include <mrc_params.h>
+#include <mrc_io.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -241,6 +242,17 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
+  return domain;
+}
+
+// ----------------------------------------------------------------------
+// psc_setup_patches
+
+void
+psc_setup_patches(struct psc *psc)
+{
+  struct mrc_domain *domain = psc->mrc_domain;
+
   // set up index bounds,
   // sanity checks for the decomposed domain
   int gdims[3];
@@ -268,8 +280,6 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
       assert(psc->patch[p].ldims[d] >= min_size);
     }
   }
-
-  return domain;
 }
 
 // ----------------------------------------------------------------------
@@ -310,7 +320,10 @@ psc_setup_domain(struct psc *psc)
   psc->pml.size = psc->pml.thick + psc->pml.cushion;
   psc->pml.order = 3;
 
-  psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
+  if (!psc->mrc_domain) {
+    psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
+  }
+  psc_setup_patches(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -344,6 +357,9 @@ _psc_destroy(struct psc *psc)
 static void
 _psc_write(struct psc *psc, struct mrc_io *io)
 {
+  const char *path = psc_name(psc);
+  mrc_io_write_attr_int(io, path, "timestep", psc->timestep);
+
   mrc_domain_write(psc->mrc_domain, io);
   psc_mparticles_base_write(psc->particles, io);
   psc_mfields_base_write(psc->flds, io);
@@ -356,10 +372,17 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 static void
 _psc_read(struct psc *psc, struct mrc_io *io)
 {
+  const char *path = psc_name(psc);
+
+  mrc_obj_read_children(psc, io);
+
+  mrc_io_read_attr_int(io, path, "timestep", &psc->timestep);
+
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
   psc->particles = psc_mparticles_base_read(io, "mparticles");
   psc->flds = psc_mfields_base_read(io, "mfields");
   psc->mphotons = psc_mphotons_read(io, "mphotons");
+
   psc_setup(psc);
 }
 

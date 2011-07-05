@@ -14,6 +14,7 @@ okfile
 BACKUP
 SELECT
 src/VLI
+src/psc_restart
 Makefile.in
 Makefile
 m4/libtool.m4
