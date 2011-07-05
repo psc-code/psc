@@ -1436,7 +1436,7 @@ ds_xdmf_parallel_open(struct mrc_io *io, const char *mode)
     hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     hdf5->group_crd = H5Gcreate(hdf5->file, "crd", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   } else if (strcmp(mode, "r") == 0) {
-    hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, plist);
+    hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, plist); H5_CHK(hdf5->file);
     hdf5->group_crd = H5Gopen(hdf5->file, "crd", H5P_DEFAULT); H5_CHK(hdf5->group_crd);
   } else {
     assert(0);
