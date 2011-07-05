@@ -705,33 +705,33 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
-    H5LTget_attribute_int(group, ".", name, &pv->u_int);
+    ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
     break;
   case PT_BOOL: {
     int val;
-    H5LTget_attribute_int(group, ".", name, &val);
+    ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
     pv->u_bool = val;
     break;
   }
   case PT_FLOAT:
-    H5LTget_attribute_float(group, ".", name, &pv->u_float);
+    ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
     break;
   case PT_DOUBLE:
-    H5LTget_attribute_double(group, ".", name, &pv->u_double);
+    ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
     break;
   case PT_STRING: ;
     hsize_t dims;
     H5T_class_t class;
     size_t sz;
-    H5LTget_attribute_info(group, ".", name, &dims, &class, &sz);
+    ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
     pv->u_string = malloc(sz);
-    H5LTget_attribute_string(group, ".", name, (char *)pv->u_string);
+    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
     break;
   case PT_INT3:
-    H5LTget_attribute_int(group, ".", name, pv->u_int3);
+    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
     break;
   case PT_FLOAT3:
-    H5LTget_attribute_float(group, ".", name, pv->u_float3);
+    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
     break;
   }
   ierr = H5Gclose(group); CE;
