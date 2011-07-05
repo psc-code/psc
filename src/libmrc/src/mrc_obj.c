@@ -530,23 +530,11 @@ mrc_obj_find_child(struct mrc_obj *obj, const char *name)
   return NULL;
 }
 
-struct mrc_obj *
-mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
+static void
+mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
 {
-  init_class(class);
+  struct mrc_class *class = obj->class;
 
-  struct mrc_obj *obj = mrc_io_find_obj(io, name);
-  if (obj)
-    return obj;
-
-  obj = mrc_obj_create(mrc_io_comm(io), class);
-  mrc_obj_set_name(obj, name);
-  mrc_io_add_obj(io, obj);
-
-  char *s;
-  mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_class", &s);
-  assert(strcmp(class->name, s) == 0);
-  free(s);
   if (class->param_descr) {
     char *p = (char *) obj + class->param_offset;
     mrc_params_read(p, class->param_descr, mrc_obj_name(obj), io);
@@ -564,8 +552,39 @@ mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
   if (class->read) {
     class->read(obj, io);
   } else {
+    mrc_obj_read_children(obj, io);
     mrc_obj_setup(obj);
   }
+}
+
+void
+mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_obj *child;
+  list_for_each_entry(child, &obj->children_list, child_entry) {
+    mrc_obj_read2(child, io);
+  }
+}
+
+struct mrc_obj *
+mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class)
+{
+  init_class(class);
+
+  struct mrc_obj *obj = mrc_io_find_obj(io, name);
+  if (obj)
+    return obj;
+
+  obj = mrc_obj_create(mrc_io_comm(io), class);
+  mrc_obj_set_name(obj, name);
+  mrc_io_add_obj(io, obj);
+
+  char *s;
+  mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_class", &s);
+  assert(strcmp(class->name, s) == 0);
+  free(s);
+
+  mrc_obj_read2(obj, io);
 
   return obj;
 }

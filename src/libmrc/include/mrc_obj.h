@@ -44,7 +44,8 @@ struct mrc_obj_method {
   void (*set_from_options)(obj_type *);			\
   void (*view)(obj_type *);				\
   void (*setup)(obj_type *);				\
-  void (*write)(obj_type *, struct mrc_io *)
+  void (*write)(obj_type *, struct mrc_io *);		\
+  void (*read)(obj_type *, struct mrc_io *)
 
 struct mrc_obj_ops {
   MRC_SUBCLASS_OPS(struct mrc_obj);
@@ -102,6 +103,7 @@ void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
+void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
 #define MRC_CLASS_DECLARE(pfx, obj_type)				\
