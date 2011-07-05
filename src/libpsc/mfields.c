@@ -42,17 +42,13 @@ _psc_mfields_##type##_setup(mfields_##type##_t *flds)			\
 }									\
 									\
 static void								\
-_psc_mfields_##type##_destroy(mfields_##type##_t *flds)		\
+_psc_mfields_##type##_destroy(mfields_##type##_t *flds)		        \
 {									\
-  if (!flds)								\
-    return;								\
-									\
   for (int p = 0; p < flds->nr_patches; p++) {				\
     fields_##type##_free(&flds->f[p]);					\
   }									\
   free(flds->f);							\
   list_del(&flds->entry);						\
-  free(flds);								\
 }									\
 									\
 struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
