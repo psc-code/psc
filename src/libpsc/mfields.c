@@ -187,9 +187,9 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
       hsize_t dims;
       H5T_class_t class;
       size_t sz;
-      H5LTget_attribute_info(group, ".", namec, &dims, &class, &sz);
+      ierr = H5LTget_attribute_info(groupp, ".", namec, &dims, &class, &sz); CE;
       char *s = malloc(sz);
-      H5LTget_attribute_string(group, ".", namec, s);
+      ierr = H5LTget_attribute_string(groupp, ".", namec, s); CE;
       if (strcmp(s, "(null)") != 0) {
 	fields->name[m] = s;
       }
