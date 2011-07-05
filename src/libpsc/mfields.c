@@ -60,5 +60,52 @@ struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
 };
 
 MAKE_MFIELDS_METHODS(fortran)
-MAKE_MFIELDS_METHODS(c)
 //MAKE_MFIELDS_METHODS(sse2)
+
+// ======================================================================
+// psc_mparticles_c
+
+#include <mrc_io.h>
+
+LIST_HEAD(mfields_c_list);
+
+void
+psc_mfields_c_set_domain(mfields_c_t *flds, struct mrc_domain *domain)
+{
+  flds->domain = domain;
+}
+
+static void
+_psc_mfields_c_setup(mfields_c_t *flds)
+{
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
+						     &flds->nr_patches);
+  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
+  for (int p = 0; p < flds->nr_patches; p++) {
+    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
+    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
+		   patches[p].ldims[1] + flds->ibn[1],
+		   patches[p].ldims[2] + flds->ibn[2] };
+    fields_c_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);
+  }
+  list_add_tail(&flds->entry, &mfields_c_list);
+}
+
+static void
+_psc_mfields_c_destroy(mfields_c_t *flds)
+{
+  for (int p = 0; p < flds->nr_patches; p++) {
+    fields_c_free(&flds->f[p]);
+  }
+  free(flds->f);
+  list_del(&flds->entry);
+}
+
+struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
+  .name             = "psc_mfields_c",
+  .size             = sizeof(struct psc_mfields_c),
+  .param_descr      = psc_mfields_descr,
+  .setup            = _psc_mfields_c_setup,
+  .destroy          = _psc_mfields_c_destroy,
+};
+
