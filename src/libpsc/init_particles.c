@@ -56,7 +56,7 @@ psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
     pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
-    for (int kind = 0; kind < 2; kind++) {
+    for (int kind = 0; kind < _case->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -103,7 +103,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
     particles_base_t *pp = &psc->particles.p[p];
 
     int i = 0;
-    for (int kind = 0; kind < 2; kind++) {
+    for (int kind = 0; kind < _case->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {

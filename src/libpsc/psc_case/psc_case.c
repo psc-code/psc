@@ -193,6 +193,7 @@ psc_case_init()
 #define VAR(x) (void *)offsetof(struct psc_case, x)
 static struct param psc_case_descr[] = {
   { "seed_by_time"          , VAR(seed_by_time)     , PARAM_BOOL(false)   },
+  { "nr_kinds"              , VAR(nr_kinds)         , PARAM_INT(2)        },
   {},
 };
 #undef VAR
