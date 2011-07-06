@@ -10,12 +10,15 @@
 #include <time.h>
 
 static inline int
-get_n_in_cell(struct psc *psc, real n)
+get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
 {
   if (psc->prm.const_num_particles_per_cell) {
     return psc->prm.nicell;
   }
-  return n / psc->coeff.cori + .5;
+  if (npt->particles_per_cell) {
+    return npt->n * npt->particles_per_cell + .5;
+  }
+  return npt->n / psc->coeff.cori + .5;
 }
 
 // particles must not be placed in the pml regions
@@ -53,7 +56,7 @@ psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
     pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
-    for (int kind = 0; kind < 2; kind++) {
+    for (int kind = 0; kind < _case->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -62,7 +65,7 @@ psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(psc, npt.n);
+	    int n_in_cell = get_n_in_cell(psc, &npt);
 	    np += n_in_cell;
 	  }
 	}
@@ -100,7 +103,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
     particles_base_t *pp = &psc->particles.p[p];
 
     int i = 0;
-    for (int kind = 0; kind < 2; kind++) {
+    for (int kind = 0; kind < _case->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -109,7 +112,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
 	    
-	    int n_in_cell = get_n_in_cell(psc, npt.n);
+	    int n_in_cell = get_n_in_cell(psc, &npt);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_base_t *p = particles_base_get_one(pp, i++);
 	      
