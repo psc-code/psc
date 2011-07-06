@@ -490,6 +490,7 @@ static void
 mrc_io_init()
 {
 #ifdef HAVE_HDF5_H
+  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_serial_ops);
@@ -498,7 +499,6 @@ mrc_io_init()
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_parallel_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_parallel_ops);
 #endif
-  mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
 #endif
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_ascii_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_combined_ops);
