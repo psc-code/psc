@@ -146,6 +146,7 @@ psc_case_thinfoil_init_npt(struct psc_case *_case, int kind, double x[3],
     npt->T[0] = Ti;
     npt->T[1] = Ti;
     npt->T[2] = Ti;
+    npt->particles_per_cell = 100;
     break;
   default:
     assert(0);

@@ -10,6 +10,7 @@ struct psc_particle_npt {
   double n; ///< density
   double p[3]; ///< momentum
   double T[3]; ///< temperature
+  int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
 };
 
 struct psc_photon_np {
