@@ -120,13 +120,19 @@ make_sfx(char *sfx, int outtype, float sheet)
 #define diag_hdf5(io) ((struct diag_hdf5 *)io->obj.subctx)
 
 static void
-hdf5_open(struct mrc_io *io) 
+hdf5_open(struct mrc_io *io, const char *mode) 
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", io->par.outdir, io->par.basename,
 	  io->step, io->rank);
-  hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  if (strcmp(mode, "w") == 0) {
+    hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  } else if (strcmp(mode, "r") == 0) {
+    hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+  } else {
+    assert(0);
+  }
 }
 
 static void
@@ -135,30 +141,33 @@ hdf5_close(struct mrc_io *io)
   herr_t ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
-  hid_t group = H5Gcreate(hdf5->file, "mrc_io", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5LTset_attribute_int(group, ".", "step", &io->step, 1);
-  H5LTset_attribute_float(group, ".", "time", &io->time, 1);
-  H5Gclose(group);
+  if (strcmp(hdf5->mode, "w") == 0) {
+    hid_t group = H5Gcreate(hdf5->file, "mrc_io", H5P_DEFAULT, H5P_DEFAULT,
+			    H5P_DEFAULT); H5_CHK(group);
+    ierr = H5LTset_attribute_int(group, ".", "step", &io->step, 1); CE;
+    ierr = H5LTset_attribute_float(group, ".", "time", &io->time, 1); CE;
+    ierr = H5Gclose(group); CE;
   
-  group = H5Gcreate(hdf5->file, "mrc_info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  H5LTset_attribute_int(group, ".", "global_dims", hdf5->gdims, 3);
-  
-  H5LTset_attribute_int(group, ".", "proc_rank", &io->rank, 1);
-  // put in the number of procs and global indices
-  // Note that the nproc variables are the number of procs writing output,
-  // not the number of procs for the simulation.  
-  // Simlarly for the global_?_idx+{min,max}! 
-  
-  int g_high[3];
-  for (int d = 0; d < 3; d++) {
-    g_high[d] = hdf5->off[d] + hdf5->ldims[d];
+    group = H5Gcreate(hdf5->file, "mrc_info", H5P_DEFAULT, H5P_DEFAULT,
+		      H5P_DEFAULT); H5_CHK(group);
+    ierr = H5LTset_attribute_int(group, ".", "global_dims", hdf5->gdims, 3); CE;
+    
+    ierr = H5LTset_attribute_int(group, ".", "proc_rank", &io->rank, 1); CE;
+    // put in the number of procs and global indices
+    // Note that the nproc variables are the number of procs writing output,
+    // not the number of procs for the simulation.  
+    // Simlarly for the global_?_idx+{min,max}! 
+    
+    int g_high[3];
+    for (int d = 0; d < 3; d++) {
+      g_high[d] = hdf5->off[d] + hdf5->ldims[d];
+    }
+    ierr = H5LTset_attribute_int(group, ".", "nproc", hdf5->nr_procs, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "global_idx_low", hdf5->off, 3); CE;
+    ierr = H5LTset_attribute_int(group, ".", "global_idx_high", g_high, 3); CE;
+    
+    ierr = H5Gclose(group); CE;
   }
-  H5LTset_attribute_int(group, ".", "nproc", hdf5->nr_procs, 3);
-  H5LTset_attribute_int(group, ".", "global_idx_low", hdf5->off, 3);
-  H5LTset_attribute_int(group, ".", "global_idx_high", g_high, 3);
-
-  ierr = H5Gclose(group); CE;
-
   ierr = H5Fclose(hdf5->file); CE;
 }
 
@@ -512,12 +521,17 @@ xdmf_temporal_write(struct xdmf_temporal *xt)
 }
 
 static void
-xdmf_open(struct mrc_io *io) 
+xdmf_open(struct mrc_io *io, const char *mode) 
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
-  hdf5_open(io);
 
-  hdf5->group_crd = H5Gcreate(hdf5->file, "crd", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  hdf5->mode = strdup(mode);
+  hdf5_open(io, mode);
+
+  if (strcmp(mode, "w") == 0) {
+    hdf5->group_crd = H5Gcreate(hdf5->file, "crd", H5P_DEFAULT, H5P_DEFAULT,
+				H5P_DEFAULT); H5_CHK(hdf5->group_crd);
+  }
   for (int d = 0; d < 3; d++) {
     hdf5->crd_written[d] = false;
   }
@@ -543,6 +557,7 @@ xdmf_close(struct mrc_io *io)
       xdmf_temporal_write(xt);
     }
   }
+  free(hdf5->mode);
 }
 
 static void
@@ -567,9 +582,7 @@ ds_xdmf_destroy(struct mrc_io *io)
 static void
 ds_xdmf_open(struct mrc_io *io, const char *mode) 
 {
-  assert(strcmp(mode, "w") == 0);
-
-  xdmf_open(io);
+  xdmf_open(io, mode);
 }
 
 static void
@@ -672,8 +685,11 @@ static void
 ds_xdmf_close(struct mrc_io *io)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
-  H5Gclose(hdf5->group_crd);
+  if (strcmp(hdf5->mode, "w") == 0) {
+    ierr = H5Gclose(hdf5->group_crd); CE;
+  }
   hdf5_close(io);
   xdmf_close(io);
 }
@@ -683,41 +699,42 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
 		  const char *name, union param_u *pv)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
-  
+  herr_t ierr;
+
   hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
   switch (type) {
   case PT_SELECT:
   case PT_INT:
-    H5LTget_attribute_int(group, ".", name, &pv->u_int);
+    ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
     break;
   case PT_BOOL: {
     int val;
-    H5LTget_attribute_int(group, ".", name, &val);
+    ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
     pv->u_bool = val;
     break;
   }
   case PT_FLOAT:
-    H5LTget_attribute_float(group, ".", name, &pv->u_float);
+    ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
     break;
   case PT_DOUBLE:
-    H5LTget_attribute_double(group, ".", name, &pv->u_double);
+    ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
     break;
   case PT_STRING: ;
     hsize_t dims;
     H5T_class_t class;
     size_t sz;
-    H5LTget_attribute_info(group, ".", name, &dims, &class, &sz);
+    ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
     pv->u_string = malloc(sz);
-    H5LTget_attribute_string(group, ".", name, (char *)pv->u_string);
+    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
     break;
   case PT_INT3:
-    H5LTget_attribute_int(group, ".", name, pv->u_int3);
+    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
     break;
   case PT_FLOAT3:
-    H5LTget_attribute_float(group, ".", name, pv->u_float3);
+    ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
     break;
   }
-  H5Gclose(group);
+  ierr = H5Gclose(group); CE;
 }
 
 static void
@@ -725,12 +742,14 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 		   const char *name, union param_u *pv)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
-  
+  herr_t ierr;
+
   hid_t group;
   if (H5Lexists(hdf5->file, path, H5P_DEFAULT) > 0) {
-    group = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+    group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
   } else {
-    group = H5Gcreate(hdf5->file, path, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+    group = H5Gcreate(hdf5->file, path, H5P_DEFAULT, H5P_DEFAULT,
+		      H5P_DEFAULT); H5_CHK(group);
   }
   switch (type) {
   case PT_SELECT:
@@ -758,7 +777,7 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
     break;
   }
-  H5Gclose(group);
+  ierr = H5Gclose(group); CE;
 }
 
 static void
@@ -890,7 +909,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     hdf5_write_crds(io, dims, fld->domain, fld->_sw);
   }
 
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
   const char *fldname = mrc_f3_comp_name(fld, m);
   char c = fldname[strlen(fldname) - 1];
   if (c == 'x') {
@@ -983,6 +1002,102 @@ static void
 ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 {
   // FIXME
+  MHERE;
+}
+
+static void
+ds_xdmf_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+  H5LTset_attribute_int(group0, ".", "nr_patches", &m1->nr_patches, 1);
+
+  mrc_m1_foreach_patch(m1, p) {
+    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+    char name[10]; sprintf(name, "p%d", p);
+    hid_t group = H5Gcreate(group0, name, H5P_DEFAULT, H5P_DEFAULT,
+			    H5P_DEFAULT); H5_CHK(group);
+
+    hsize_t hdims[3] = { m1p->im[0] };
+    for (int m = 0; m < m1->nr_comp; m++) {
+      hid_t groupc = H5Gcreate(group, mrc_m1_comp_name(m1, m), H5P_DEFAULT, H5P_DEFAULT,
+			       H5P_DEFAULT); H5_CHK(groupc);
+      ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
+      ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims, &MRC_M1(m1p, m, m1p->ib[0])); CE;
+      H5Gclose(groupc);
+    }
+    mrc_m1_patch_put(m1);
+    H5Gclose(group);
+  }
+
+  H5Gclose(group0);
+}
+
+struct read_m1_cb_data {
+  struct mrc_io *io;
+  struct mrc_m1_patch *m1p;
+  hid_t filespace;
+  hid_t memspace;
+};
+
+static herr_t
+read_m1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+{
+  struct read_m1_cb_data *data = op_data;
+  herr_t ierr;
+
+  hid_t group = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group);
+  int m;
+  ierr = H5LTget_attribute_int(group, ".", "m", &m); CE;
+
+  hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
+		 &MRC_M1(data->m1p, m, data->m1p->ib[0])); CE;
+  ierr = H5Dclose(dset); CE;
+
+  ierr = H5Gclose(group); CE;
+  return 0;
+}
+
+static void
+ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
+
+  assert(io->size == 1);
+#ifndef NDEBUG
+  MPI_Barrier(io->obj.comm);
+#endif
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+  for (int p = 0; p < m1->nr_patches; p++) {
+    struct mrc_m1_patch *m1p = mrc_m1_patch_get(m1, p);
+    char name[10]; sprintf(name, "p%d", p);
+    hid_t group = H5Gopen(group0, name, H5P_DEFAULT); H5_CHK(group);
+    hsize_t hdims[1] = { m1p->im[0] };
+    hid_t filespace = H5Screate_simple(1, hdims, NULL);
+    hid_t memspace = H5Screate_simple(1, hdims, NULL);
+
+    struct read_m1_cb_data cb_data = {
+      .io        = io,
+      .m1p       = m1p,
+      .filespace = filespace,
+      .memspace  = memspace,
+    };
+    hsize_t idx = 0;
+    ierr = H5Literate_by_name(group, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+			      read_m1_cb, &cb_data, H5P_DEFAULT); CE;
+
+    ierr = H5Sclose(filespace); CE;
+    ierr = H5Sclose(memspace); CE;
+    ierr = H5Gclose(group); CE;
+    mrc_m1_patch_put(m1);
+  }
+
+  ierr = H5Gclose(group0); CE;
 }
 
 static void
@@ -991,7 +1106,7 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
   H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
 
   mrc_m3_foreach_patch(m3, p) {
@@ -1022,7 +1137,14 @@ ds_xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     }
   }
 
-  H5Gclose(group0);
+  ierr = H5Gclose(group0); CE;
+}
+
+static void
+ds_xdmf_get_h5_file(struct mrc_io *io, long *h5_file)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  *h5_file = hdf5->file;
 }
 
 struct mrc_io_ops mrc_io_xdmf_ops = {
@@ -1049,7 +1171,11 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .close         = ds_xdmf_close,
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
+  .write_m1      = ds_xdmf_write_m1,
+  .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
+  .read_attr     = ds_xdmf_read_attr,
+  .get_h5_file   = ds_xdmf_get_h5_file,
 };
 
 // ======================================================================
@@ -1075,12 +1201,13 @@ ds_xdmf_to_one_open(struct mrc_io *io, const char *mode)
   if (io->rank != 0)
     return;
 
-  xdmf_open(io);
+  xdmf_open(io, mode);
 }
 
 static void
 ds_xdmf_to_one_close(struct mrc_io *io)
 {
+  herr_t ierr;
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
 #endif
@@ -1090,7 +1217,7 @@ ds_xdmf_to_one_close(struct mrc_io *io)
 
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
-  H5Gclose(hdf5->group_crd);
+  ierr = H5Gclose(hdf5->group_crd); CE;
   hdf5_close(io);
 }
 
@@ -1220,6 +1347,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
 			   float scale, struct mrc_f3 *fld, int m)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -1258,13 +1386,13 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
   }
   save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
 
-  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
   const int *dims = mrc_f3_dims(lfld);
   hsize_t hdims[3] = { dims[2], dims[1], dims[0] };
   hid_t group = H5Gcreate(group0, mrc_f3_comp_name(fld, m), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5LTmake_dataset_float(group, "3d", 3, hdims, lfld->arr);
-  H5Gclose(group);
-  H5Gclose(group0);
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group0); CE;
 
   mrc_f3_destroy(lfld);
 }
@@ -1308,7 +1436,7 @@ ds_xdmf_parallel_open(struct mrc_io *io, const char *mode)
     hdf5->file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, plist);
     hdf5->group_crd = H5Gcreate(hdf5->file, "crd", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   } else if (strcmp(mode, "r") == 0) {
-    hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, plist);
+    hdf5->file = H5Fopen(filename, H5F_ACC_RDONLY, plist); H5_CHK(hdf5->file);
     hdf5->group_crd = H5Gopen(hdf5->file, "crd", H5P_DEFAULT); H5_CHK(hdf5->group_crd);
   } else {
     assert(0);
@@ -1330,8 +1458,9 @@ ds_xdmf_parallel_close(struct mrc_io *io)
 #endif
   
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
-  H5Gclose(hdf5->group_crd);
+  ierr = H5Gclose(hdf5->group_crd); CE;
   if (strcmp(hdf5->mode, "w") == 0) {
     hdf5_close(io);
   } else {
@@ -1424,6 +1553,7 @@ static herr_t
 read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_f1_cb_data *data = op_data;
+  herr_t ierr;
 
   hid_t group = H5Gopen(g_id, name, H5P_DEFAULT);
   int m;
@@ -1433,7 +1563,7 @@ read_f1_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, data->dxpl, data->fld->arr);
   H5Dclose(dset);
 
-  H5Gclose(group);
+  ierr = H5Gclose(group); CE;
 
   return 0;
 }
@@ -1442,6 +1572,7 @@ static void
 ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
   assert(io->size == 1);
 #ifndef NDEBUG
@@ -1476,7 +1607,7 @@ ds_xdmf_parallel_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   H5Sclose(filespace);
   H5Sclose(memspace);
 
-  H5Gclose(group0);
+  ierr = H5Gclose(group0); CE;
 }
 
 struct read_f3_cb_data {
@@ -1492,6 +1623,7 @@ static herr_t
 read_f3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 {
   struct read_f3_cb_data *data = op_data;
+  herr_t ierr;
 
   hid_t group = H5Gopen(g_id, name, H5P_DEFAULT);
   int m;
@@ -1504,7 +1636,7 @@ read_f3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
   // FIXME, could be done w/hyperslab, vectors...
   copy_back(data->lfld, 0, data->fld, m);
 
-  H5Gclose(group);
+  ierr = H5Gclose(group); CE;
 
   return 0;
 }
@@ -1513,6 +1645,7 @@ static void
 ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -1560,7 +1693,7 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
   H5Sclose(filespace);
   H5Sclose(memspace);
 
-  H5Gclose(group0);
+  ierr = H5Gclose(group0); CE;
 
   mrc_f3_destroy(lfld);
 }
@@ -1569,6 +1702,7 @@ static void
 ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -1601,9 +1735,9 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
     H5Sclose(memspace);
     H5Pclose(dxpl);
 
-    H5Gclose(group);
+    ierr = H5Gclose(group); CE;
   }
-  H5Gclose(group0);
+  ierr = H5Gclose(group0); CE;
 }
 
 static void
@@ -1611,6 +1745,7 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
 			     float scale, struct mrc_f3 *fld, int m)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
 
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
@@ -1667,8 +1802,8 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   H5Sclose(memspace);
   H5Pclose(dxpl);
 
-  H5Gclose(group);
-  H5Gclose(group0);
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group0); CE;
 
   mrc_f3_destroy(lfld);
 }

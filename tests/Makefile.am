@@ -12,6 +12,7 @@ noinst_PROGRAMS = \
 	test_mrc_domain_simple \
 	test_mrc_domain_multi \
 	test_mrc_f3 \
+	test_mrc_m1 \
 	test_mrc_m3 \
 	test_mrc_ddc \
 	test_rlc \
@@ -43,6 +44,8 @@ TESTS = \
 	test_ddc_0.sh \
 	test_mrc_domain_simple_0.sh \
 	test_mrc_domain_multi_0.sh \
+	test_mrc_m1_0.sh \
+	test_mrc_m1_1.sh \
 	test_mrc_m3_0.sh \
 	test_mrc_m3_1.sh \
 	test_mrc_m3_2.sh \
