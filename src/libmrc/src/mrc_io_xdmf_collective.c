@@ -475,6 +475,10 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   mrc_domain_get_nr_procs(m1->domain, ctx.np);
   mrc_domain_get_patches(m1->domain, &ctx.nr_patches);
   int dim = ctx.dim;
+  int slab_off_save, slab_dims_save;
+  slab_off_save = xdmf->slab_off[0];
+  slab_dims_save = xdmf->slab_dims[0];
+  // FIXME
   if (!xdmf->slab_dims[0]) {
     xdmf->slab_dims[0] = ctx.gdims[dim] + 2 * ctx.sw;
     xdmf->slab_off[0] = -ctx.sw;
@@ -506,8 +510,8 @@ xdmf_collective_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
       collective_m1_send_end(io, &ctx);
     }
   }
-  xdmf->slab_dims[0] = 0;
-  xdmf->slab_off[0] = 0;
+  xdmf->slab_dims[0] = slab_dims_save;
+  xdmf->slab_off[0] = slab_off_save;
 }
 
 // ----------------------------------------------------------------------
@@ -703,61 +707,6 @@ xdmf_collective_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
 
 // ======================================================================
 
-// ----------------------------------------------------------------------
-// collective_write_f3
-// does the actual write of the partial f3 to the file
-// only called on writer procs
-
-static void
-collective_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, int m,
-		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
-{
-  int ierr;
-  int gdims[3];
-  mrc_domain_get_global_dims(m3->domain, gdims);
-
-  xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
-
-  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
-			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
-  ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
-  
-  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
-			  H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
-  int i0 = 0;
-  ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
-
-  hsize_t fdims[3] = { gdims[2], gdims[1], gdims[0] };
-  hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
-  hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
-			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
-  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
-#ifdef H5_HAVE_PARALLEL
-  struct xdmf *xdmf = to_xdmf(io);
-  if (xdmf->use_independent_io) {
-    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT); CE;
-  } else {
-    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
-  }
-#endif
-  const int *im = mrc_f3_ghost_dims(f3), *ib = mrc_f3_ghost_off(f3);
-  hsize_t mdims[3] = { im[2], im[1], im[0] };
-  hsize_t foff[3] = { ib[2], ib[1], ib[0] };
-  hid_t memspace = H5Screate_simple(3, mdims, NULL);
-  ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
-			     mdims, NULL); CE;
-
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr); CE;
-  
-  ierr = H5Dclose(dset); CE;
-  ierr = H5Sclose(memspace); CE;
-  ierr = H5Sclose(filespace); CE;
-  ierr = H5Pclose(dxpl); CE;
-
-  ierr = H5Gclose(group); CE;
-  ierr = H5Gclose(group_fld); CE;
-}
-
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -789,6 +738,7 @@ struct collective_m3_entry {
 
 struct collective_m3_ctx {
   int gdims[3];
+  int slab_dims[3], slab_off[3];
   int writer_dims[3], writer_off[3];
   int nr_patches, nr_global_patches;
   int slow_dim;
@@ -813,12 +763,20 @@ collective_m3_init(struct mrc_io *io, struct collective_m3_ctx *ctx,
   mrc_domain_get_global_dims(domain, ctx->gdims);
   mrc_domain_get_patches(domain, &ctx->nr_patches);
   mrc_domain_get_nr_global_patches(domain, &ctx->nr_global_patches);
+  for (int d = 0; d < 3; d++) {
+    if (xdmf->slab_dims[d]) {
+      ctx->slab_dims[d] = xdmf->slab_dims[d];
+    } else {
+      ctx->slab_dims[d] = ctx->gdims[d];
+    }
+    ctx->slab_off[d] = xdmf->slab_off[d];
+  }
   ctx->slow_dim = 2;
   while (ctx->gdims[ctx->slow_dim] == 1) {
     ctx->slow_dim--;
   }
   assert(ctx->slow_dim >= 0);
-  int total_slow_indices = ctx->gdims[ctx->slow_dim];
+  int total_slow_indices = ctx->slab_dims[ctx->slow_dim];
   ctx->slow_indices_per_writer = total_slow_indices / xdmf->nr_writers;
   ctx->slow_indices_rmndr = total_slow_indices % xdmf->nr_writers;
 }
@@ -828,14 +786,14 @@ get_writer_off_dims(struct collective_m3_ctx *ctx, int writer,
 		    int *writer_off, int *writer_dims)
 {
   for (int d = 0; d < 3; d++) {
-    writer_dims[d] = ctx->gdims[d];
-    writer_off[d] = 0;
+    writer_dims[d] = ctx->slab_dims[d];
+    writer_off[d] = ctx->slab_off[d];
   }
   writer_dims[ctx->slow_dim] = ctx->slow_indices_per_writer + (writer < ctx->slow_indices_rmndr);
   if (writer < ctx->slow_indices_rmndr) {
-    writer_off[ctx->slow_dim] = (ctx->slow_indices_per_writer + 1) * writer;
+    writer_off[ctx->slow_dim] += (ctx->slow_indices_per_writer + 1) * writer;
   } else {
-    writer_off[ctx->slow_dim] = ctx->slow_indices_rmndr +
+    writer_off[ctx->slow_dim] += ctx->slow_indices_rmndr +
       ctx->slow_indices_per_writer * writer;
   }
 }
@@ -1047,6 +1005,62 @@ collective_recv_f3_local(struct collective_m3_ctx *ctx,
 }
 
 // ----------------------------------------------------------------------
+// collective_write_f3
+// does the actual write of the partial f3 to the file
+// only called on writer procs
+
+static void
+collective_write_f3(struct collective_m3_ctx *ctx, struct mrc_io *io,
+		    const char *path, struct mrc_f3 *f3, int m,
+		    struct mrc_m3 *m3, struct xdmf_spatial *xs, hid_t group0)
+{
+  int ierr;
+
+  xdmf_spatial_save_fld_info(xs, strdup(m3->name[m]), strdup(path), false);
+
+  hid_t group_fld = H5Gcreate(group0, m3->name[m], H5P_DEFAULT,
+			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group_fld);
+  ierr = H5LTset_attribute_int(group_fld, ".", "m", &m, 1); CE;
+  
+  hid_t group = H5Gcreate(group_fld, "p0", H5P_DEFAULT,
+			  H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
+  int i0 = 0;
+  ierr = H5LTset_attribute_int(group, ".", "global_patch", &i0, 1); CE;
+
+  hsize_t fdims[3] = { ctx->slab_dims[2], ctx->slab_dims[1], ctx->slab_dims[0] };
+  hid_t filespace = H5Screate_simple(3, fdims, NULL); H5_CHK(filespace);
+  hid_t dset = H5Dcreate(group, "3d", H5T_NATIVE_FLOAT, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  hid_t dxpl = H5Pcreate(H5P_DATASET_XFER); H5_CHK(dxpl);
+#ifdef H5_HAVE_PARALLEL
+  struct xdmf *xdmf = to_xdmf(io);
+  if (xdmf->use_independent_io) {
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT); CE;
+  } else {
+    ierr = H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE); CE;
+  }
+#endif
+  const int *im = mrc_f3_ghost_dims(f3), *ib = mrc_f3_ghost_off(f3);
+  hsize_t mdims[3] = { im[2], im[1], im[0] };
+  hsize_t foff[3] = { ib[2] - ctx->slab_off[2],
+		      ib[1] - ctx->slab_off[1],
+		      ib[0] - ctx->slab_off[0] };
+  hid_t memspace = H5Screate_simple(3, mdims, NULL);
+  ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
+			     mdims, NULL); CE;
+
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr); CE;
+  
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(memspace); CE;
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Pclose(dxpl); CE;
+
+  ierr = H5Gclose(group); CE;
+  ierr = H5Gclose(group_fld); CE;
+}
+
+// ----------------------------------------------------------------------
 // xdmf_collective_write_m3
 
 static void
@@ -1063,7 +1077,8 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   if (!xs) {
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->domain),
-					 m3->domain);
+					 m3->domain,
+					 ctx.slab_off, ctx.slab_dims);
   }
 
   if (xdmf->is_writer) {
@@ -1096,7 +1111,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       collective_send_f3_begin(&ctx, io, m3, m);
       collective_recv_f3_local(&ctx, io, f3, m3, m);
       collective_recv_f3_end(&ctx, io, f3, m3, m);
-      collective_write_f3(io, path, f3, m, m3, xs, group0);
+      collective_write_f3(&ctx, io, path, f3, m, m3, xs, group0);
       collective_send_f3_end(&ctx, io, m3, m);
     }
 

@@ -78,6 +78,17 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
     ios[io_type] = io;
   }
 
+  int gdims[3];
+  mrc_domain_get_global_dims(ppsc->mrc_domain, gdims);
+  int slab_off[3], slab_dims[3];
+  for (int d = 0; d < 3; d++) {
+    if (out->rx[d] > gdims[d])
+      out->rx[d] = gdims[d];
+    
+    slab_off[d] = out->rn[d];
+    slab_dims[d] = out->rx[d] - out->rn[d];
+  }
+
   mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_base_t *flds = list->flds[m];
@@ -94,6 +105,10 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
     mrc_fld->name[0] = strdup(fld->name[0]);
     copy_to_mrc_fld(mrc_fld, flds);
 
+    if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
+      mrc_io_set_param_int3(io, "slab_off", slab_off);
+      mrc_io_set_param_int3(io, "slab_dims", slab_dims);
+    }
     mrc_m3_write(mrc_fld, io);
 
     mrc_m3_destroy(mrc_fld);
