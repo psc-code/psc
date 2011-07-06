@@ -9,8 +9,8 @@ typedef mfields_fortran_t mfields_t;
 
 #define F3(fldnr, jx,jy,jz) F3_FORTRAN(pf, fldnr, jx,jy,jz)
 
-#define fields_get          fields_fortran_get
-#define fields_put  	    fields_fortran_put
+#define psc_mfields_get_from          psc_mfields_fortran_get_from
+#define psc_mfields_put_to            psc_mfields_fortran_put_to
 #define fields_zero         fields_fortran_zero
 
 #endif

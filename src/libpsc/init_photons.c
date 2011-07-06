@@ -10,7 +10,10 @@ psc_case_init_photons(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
 
-  mphotons_alloc(psc->mrc_domain, &psc->mphotons);
+  psc->mphotons = psc_mphotons_create(psc_comm(psc));
+  psc_mphotons_set_name(psc->mphotons, "mphotons");
+  psc_mphotons_set_domain(psc->mphotons, psc->mrc_domain);
+  psc_mphotons_setup(psc->mphotons);
 
   if (!psc_case_ops(_case)->init_photon_np) {
     // if photons aren't initialized, we'll just have zero of them
@@ -18,7 +21,7 @@ psc_case_init_photons(struct psc_case *_case)
   }
 
   psc_foreach_patch(psc, p) {
-    photons_t *photons = &psc->mphotons.p[p];
+    photons_t *photons = &psc->mphotons->p[p];
 
     int np = 0;
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {

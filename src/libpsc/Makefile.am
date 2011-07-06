@@ -72,7 +72,6 @@ libpsc_la_SOURCES = \
 	psc_particles_cbe.c \
 	psc_photons.c \
 	psc.c \
-	init_parameters.c \
 	init_particles.c \
 	init_photons.c \
 	integrate.c \

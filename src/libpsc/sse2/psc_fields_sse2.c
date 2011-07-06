@@ -21,13 +21,13 @@ fields_sse2_free(fields_sse2_t *pf)
 }
 
 void
-fields_sse2_get(fields_sse2_t *pf, int mb, int me)
+psc_mfields_sse2_get_from(fields_sse2_t *pf, int mb, int me)
 {
   *pf = psc.pf;
 }
 
 void
-fields_sse2_put(fields_sse2_t *pf, int mb, int me)
+psc_mfields_sse2_put_to(fields_sse2_t *pf, int mb, int me)
 {
   pf->flds = NULL;
 }
@@ -38,7 +38,7 @@ static bool __gotten; // to check we're pairing get/put correctly
 
 /// Copy fields from base data structure to an SSE2 friendly format.
 void
-fields_sse2_get(fields_sse2_t *pf, int mb, int me, void *_flds_base)
+psc_mfields_sse2_get_from(fields_sse2_t *pf, int mb, int me, void *_flds_base)
 {
   assert(!__gotten);
   __gotten = true;
@@ -64,7 +64,7 @@ fields_sse2_get(fields_sse2_t *pf, int mb, int me, void *_flds_base)
 
 /// Copy fields from SSE2 data structures into base structures.
 void
-fields_sse2_put(fields_sse2_t *pf, int mb, int me, void *_flds_base)
+psc_mfields_sse2_put_to(fields_sse2_t *pf, int mb, int me, void *_flds_base)
 {
   assert(__gotten);
   __gotten = false;

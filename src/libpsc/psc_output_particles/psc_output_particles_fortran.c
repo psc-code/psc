@@ -18,11 +18,11 @@ psc_output_particles_fortran_run(struct psc_output_particles *out,
   }
   prof_start(pr);
   mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
+  psc_mparticles_fortran_get_from(&particles, particles_base);
 
   OUT_part(&particles.p[0]);
   
-  particles_fortran_put(&particles, particles_base);
+  psc_mparticles_fortran_put_to(&particles, particles_base);
   prof_stop(pr);
 }
 

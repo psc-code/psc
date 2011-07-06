@@ -14,7 +14,7 @@ psc_sort_fortran_run(struct psc_sort *sort,
   assert(ppsc->nr_patches == 1);
   
   mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
+  psc_mparticles_fortran_get_from(&particles, particles_base);
 
   static int pr;
   if (!pr) {
@@ -25,7 +25,7 @@ psc_sort_fortran_run(struct psc_sort *sort,
   PIC_sort(&particles.p[0]);
   prof_stop(pr);
 
-  particles_fortran_put(&particles, particles_base);
+  psc_mparticles_fortran_put_to(&particles, particles_base);
 }
 
 // ======================================================================

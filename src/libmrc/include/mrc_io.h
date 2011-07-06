@@ -52,6 +52,7 @@ void mrc_io_write_attr_int(struct mrc_io *io, const char *path, const char *name
 void mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name, int val[3]);
 void mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			      const char *val);
+void mrc_io_get_h5_file(struct mrc_io *io, long *h5_file);
 
 // automate the cast to (struct mrc_class *)
 #define mrc_io_read_obj_ref(io, path, name, class)			\

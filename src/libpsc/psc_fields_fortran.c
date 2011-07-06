@@ -72,21 +72,21 @@ fields_fortran_free(fields_fortran_t *pf)
 #if FIELDS_BASE == FIELDS_FORTRAN
 
 void
-fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
   *flds = *flds_base;
 }
 
 void
-fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
 }
 
 #else
 
 void
-fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {
@@ -117,7 +117,7 @@ fields_fortran_get(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 }
 
 void
-fields_fortran_put(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {

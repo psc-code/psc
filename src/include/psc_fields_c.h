@@ -19,12 +19,6 @@ typedef struct {
   bool with_array; //> indicates whether data array was passed in instead of alloc'd
 } fields_c_t;
 
-typedef struct {
-  fields_c_t *f;
-  int nr_patches;
-  list_t entry;
-} mfields_c_t;
-
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\
   ((((((fldnr)								\
        * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
@@ -53,8 +47,6 @@ void fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp);
 void fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
 			       fields_c_real_t *arr);
 void fields_c_free(fields_c_t *pf);
-void fields_c_get(mfields_c_t *pf, int mb, int me, void *flds_base);
-void fields_c_put(mfields_c_t *pf, int mb, int me, void *flds_base);
 void fields_c_zero(fields_c_t *pf, int m);
 void fields_c_zero_all(fields_c_t *pf);
 void fields_c_set(fields_c_t *pf, int m, fields_c_real_t val);

@@ -130,9 +130,9 @@ psc_push_particles_vay_push_z(struct psc_push_particles *push,
 {
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
-  particles_fortran_get(&particles, particles_base);
+  psc_mparticles_fortran_get_from(&particles, particles_base);
   mfields_fortran_t flds;
-  fields_fortran_get(&flds, EX, EX + 6, flds_base);
+  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -144,8 +144,8 @@ psc_push_particles_vay_push_z(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  particles_fortran_put(&particles, particles_base);
-  fields_fortran_put(&flds, JXI, JXI + 3, flds_base);
+  psc_mparticles_fortran_put_to(&particles, particles_base);
+  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
 }
 
 // ======================================================================

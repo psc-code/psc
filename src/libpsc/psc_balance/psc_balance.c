@@ -21,8 +21,10 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
+  mparticles_base_t *mparticles = psc->particles;
+
   psc_foreach_patch(psc, p) {
-    loads[p] = psc->particles.p[p].n_part;
+    loads[p] = mparticles->p[p].n_part;
   }
 }
 
@@ -398,13 +400,14 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_list, entry) {
+  list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
 
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
+  psc_setup_patches(psc);
 }
 
 // FIXME, way too much duplication from the above
@@ -440,7 +443,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
-    nr_particles_by_patch[p] = psc->particles.p[p].n_part;
+    nr_particles_by_patch[p] = psc->particles->p[p].n_part;
   }
   communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
 
@@ -448,24 +451,28 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   // ----------------------------------------------------------------------
   // particles
+
   // alloc new particles
-  mparticles_base_t mparticles_new;
-  mparticles_base_alloc(domain_new, &mparticles_new, nr_particles_by_patch);
+  mparticles_base_t *mparticles_new = 
+    psc_mparticles_base_create(mrc_domain_comm(domain_new));
+  psc_mparticles_base_set_domain_nr_particles(mparticles_new, domain_new,
+					  nr_particles_by_patch);
+  psc_mparticles_base_setup(mparticles_new);
 
   // communicate particles
   communicate_particles(domain_old, domain_new, 
-			&psc->particles, &mparticles_new, nr_particles_by_patch);
+			psc->particles, mparticles_new, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
   // replace particles by redistributed ones
-  mparticles_base_destroy(&psc->particles);
+  psc_mparticles_base_destroy(psc->particles);
   psc->particles = mparticles_new;
 
   // ----------------------------------------------------------------------
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_list, entry) {
+  list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
 
@@ -473,12 +480,14 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // photons
   // alloc new photons
   // FIXME, will break if there are actual photons
-  mphotons_t mphotons_new;
-  mphotons_alloc(domain_new, &mphotons_new);
+  mphotons_t *mphotons_new = psc_mphotons_create(mrc_domain_comm(domain_new));
+  psc_mphotons_set_domain(mphotons_new, domain_new);
+  psc_mphotons_setup(mphotons_new);
 
   // replace photons by redistributed ones
-  mphotons_destroy(&psc->mphotons);
+  psc_mphotons_destroy(psc->mphotons);
   psc->mphotons = mphotons_new;
+
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;

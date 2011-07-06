@@ -5,6 +5,7 @@
 
 #include <mrc_profile.h>
 #include <mrc_params.h>
+#include <mrc_io.h>
 #include <string.h>
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
@@ -12,22 +13,22 @@
 // ======================================================================
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx __unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;			\
-  int dy __unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;			\
-  int dz __unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
+  int dx __unused = (psc->domain.gdims[0] == 1) ? 0 : 1;			\
+  int dy __unused = (psc->domain.gdims[1] == 1) ? 0 : 1;			\
+  int dz __unused = (psc->domain.gdims[2] == 1) ? 0 : 1
 
 #define JX_CC(ix,iy,iz) (.5f * (F3_BASE(pf, JXI,ix,iy,iz) + F3_BASE(pf, JXI,ix-dx,iy,iz)))
 #define JY_CC(ix,iy,iz) (.5f * (F3_BASE(pf, JYI,ix,iy,iz) + F3_BASE(pf, JYI,ix,iy-dy,iz)))
 #define JZ_CC(ix,iy,iz) (.5f * (F3_BASE(pf, JZI,ix,iy,iz) + F3_BASE(pf, JZI,ix,iy,iz-dz)))
 
 static void
-calc_j(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_j(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
       F3_BASE(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
       F3_BASE(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
@@ -40,13 +41,13 @@ calc_j(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 #define EZ_CC(ix,iy,iz) (.5f * (F3_BASE(pf, EZ,ix,iy,iz) + F3_BASE(pf, EZ,ix,iy,iz-dz)))
 
 static void
-calc_E(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_E(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
       F3_BASE(ff, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
       F3_BASE(ff, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
@@ -62,13 +63,13 @@ calc_E(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 			       F3_BASE(pf, HZ,ix,iy-dy,iz) + F3_BASE(pf, HZ,ix-dx,iy-dy,iz)))
 
 static void
-calc_H(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_H(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
       F3_BASE(ff, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
       F3_BASE(ff, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
@@ -77,13 +78,13 @@ calc_H(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 }
 
 static void
-calc_jdote(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_jdote(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
       F3_BASE(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
       F3_BASE(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
@@ -92,13 +93,13 @@ calc_jdote(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f
 }
 
 static void
-calc_poyn(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_poyn(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
 				  EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
       F3_BASE(ff, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
@@ -110,13 +111,13 @@ calc_poyn(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 }
 
 static void
-calc_E2(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_E2(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
       F3_BASE(ff, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
       F3_BASE(ff, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
@@ -125,13 +126,13 @@ calc_E2(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 }
 
 static void
-calc_H2(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
+calc_H2(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f)
 {
   define_dxdydz(dx, dy, dz);
-  psc_foreach_patch(ppsc, p) {
+  psc_foreach_patch(psc, p) {
     fields_base_t *ff = &f->f[p];
     fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3_BASE(ff, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
       F3_BASE(ff, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
       F3_BASE(ff, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
@@ -143,35 +144,36 @@ struct output_field {
   char *name;
   int nr_comp;
   char *fld_names[6];
-  void (*calc)(mfields_base_t *flds, mparticles_base_t *particles, mfields_base_t *f);
+  void (*calc)(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
+	       mfields_base_t *f);
 };
 
 static void
-calc_densities(mfields_base_t *flds, mparticles_base_t *particles,
+calc_densities(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	       mfields_base_t *res)
 {
-  return psc_moments_calc_densities(ppsc->moments, flds, particles, res);
+  return psc_moments_calc_densities(psc->moments, flds, particles, res);
 }
 
 static void
-calc_v(mfields_base_t *flds, mparticles_base_t *particles,
+calc_v(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	       mfields_base_t *res)
 {
-  return psc_moments_calc_v(ppsc->moments, flds, particles, res);
+  return psc_moments_calc_v(psc->moments, flds, particles, res);
 }
 
 static void
-calc_vv(mfields_base_t *flds, mparticles_base_t *particles,
+calc_vv(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	mfields_base_t *res)
 {
-  return psc_moments_calc_vv(ppsc->moments, flds, particles, res);
+  return psc_moments_calc_vv(psc->moments, flds, particles, res);
 }
 
 static void
-calc_photon_n(mfields_base_t *flds, mparticles_base_t *particles,
+calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_base_t *res)
 {
-  return psc_moments_calc_photon_n(ppsc->moments, &ppsc->mphotons, res);
+  return psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
 }
 
 static struct output_field output_fields[] = {
@@ -234,11 +236,11 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
 
   struct psc_fields_list *pfd = &out_c->pfd;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    mfields_base_destroy(pfd->flds[i]);
+    psc_mfields_base_destroy(pfd->flds[i]);
   }
   struct psc_fields_list *tfd = &out_c->tfd;
   for (int i = 0; i < tfd->nr_flds; i++) {
-    mfields_base_destroy(tfd->flds[i]);
+    psc_mfields_base_destroy(tfd->flds[i]);
   }
 
   psc_output_format_destroy(out_c->format);
@@ -261,6 +263,7 @@ static void
 psc_output_fields_c_setup(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  struct psc *psc = out->psc;
 
   out_c->pfield_next = out_c->pfield_first;
   out_c->tfield_next = out_c->tfield_first;
@@ -274,11 +277,15 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    mfields_base_t *flds = mfields_base_alloc(ppsc->mrc_domain, of->nr_comp, ppsc->ibn);
+    mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_base_set_domain(flds, psc->mrc_domain);
+    psc_mfields_base_set_param_int(flds, "nr_fields", of->nr_comp);
+    psc_mfields_base_set_param_int3(flds, "ibn", psc->ibn);
+    psc_mfields_base_setup(flds);
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->flds[pfd->nr_flds] = flds;
     pfd->nr_flds++;
-    psc_foreach_patch(ppsc, pp) {
+    psc_foreach_patch(psc, pp) {
       for (int m = 0; m < of->nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(of->fld_names[m]);
       }
@@ -291,10 +298,14 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   struct psc_fields_list *tfd = &out_c->tfd;
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
-    assert(ppsc->nr_patches > 0);
-    mfields_base_t *flds = mfields_base_alloc(ppsc->mrc_domain, pfd->flds[i]->f[0].nr_comp, ppsc->ibn);
+    assert(psc->nr_patches > 0);
+    mfields_base_t *flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_base_set_domain(flds, psc->mrc_domain);
+    psc_mfields_base_set_param_int(flds, "nr_fields", pfd->flds[i]->f[0].nr_comp);
+    psc_mfields_base_set_param_int3(flds, "ibn", psc->ibn);
+    psc_mfields_base_setup(flds);
     tfd->flds[i] = flds;
-    psc_foreach_patch(ppsc, pp) {
+    psc_foreach_patch(psc, pp) {
       for (int m = 0; m < pfd->flds[i]->f[pp].nr_comp; m++) {
 	flds->f[pp].name[m] = strdup(pfd->flds[i]->f[pp].name[m]);
       }
@@ -314,10 +325,40 @@ psc_output_fields_c_view(struct psc_output_fields *out)
 }
 
 // ----------------------------------------------------------------------
+// psc_output_fields_c_write
+
+static void
+psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  const char *path = psc_output_fields_name(out);
+  mrc_io_write_attr_int(io, path, "pfield_next", out_c->pfield_next);
+  mrc_io_write_attr_int(io, path, "tfield_next", out_c->tfield_next);
+}
+
+// ----------------------------------------------------------------------
+// psc_output_fields_c_read
+
+static void
+psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
+{
+  struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  const char *path = psc_output_fields_name(out);
+  
+  // FIXME, this is very hacky, instead of restoring state, we'll put
+  // next into first and setup() will do the right thing. This is because
+  // we can't call setup() right now, since other stuff in psc isn't set up
+  // yet :(((
+  mrc_io_read_attr_int(io, path, "pfield_next", &out_c->pfield_first);
+  mrc_io_read_attr_int(io, path, "tfield_next", &out_c->tfield_first);
+}
+
+// ----------------------------------------------------------------------
 // make_fields_list
 
 static void
-make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
+make_fields_list(struct psc *psc, struct psc_fields_list *list,
+		 struct psc_fields_list *list_in)
 {
   // the only thing this still does is to flatten
   // the list so that it only contains 1-component entries
@@ -328,14 +369,14 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
     for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
       mfields_base_t *flds = calloc(1, sizeof(*flds));
       list->flds[list->nr_flds++] = flds;
-      flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
-      psc_foreach_patch(ppsc, p) {
-	int ilg[3] = { -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2] };
-	int ihg[3] = { ppsc->patch[p].ldims[0] + ppsc->ibn[0],
-		       ppsc->patch[p].ldims[1] + ppsc->ibn[1],
-		       ppsc->patch[p].ldims[2] + ppsc->ibn[2] };
+      flds->f = calloc(psc->nr_patches, sizeof(*flds->f));
+      psc_foreach_patch(psc, p) {
+	int ilg[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };
+	int ihg[3] = { psc->patch[p].ldims[0] + psc->ibn[0],
+		       psc->patch[p].ldims[1] + psc->ibn[1],
+		       psc->patch[p].ldims[2] + psc->ibn[2] };
 	fields_base_alloc_with_array(&flds->f[p], ilg, ihg, 1,
-				     &F3_BASE(&flds_in->f[p],m, -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]));
+				     &F3_BASE(&flds_in->f[p],m, -psc->ibn[0], -psc->ibn[1], -psc->ibn[2]));
 	flds->f[p].name[0] = strdup(flds_in->f[p].name[m]);
       }
     }
@@ -346,10 +387,10 @@ make_fields_list(struct psc_fields_list *list, struct psc_fields_list *list_in)
 // free_fields_list
 
 static void
-free_fields_list(struct psc_fields_list *list)
+free_fields_list(struct psc *psc, struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    psc_foreach_patch(ppsc, p) {
+    psc_foreach_patch(psc, p) {
       fields_base_free(&list->flds[m]->f[p]);
     }
     free(list->flds[m]->f);
@@ -365,6 +406,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 			mfields_base_t *flds, mparticles_base_t *particles)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+  struct psc *psc = out->psc;
 
   static int pr;
   if (!pr) {
@@ -372,47 +414,47 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   }
   prof_start(pr);
 
-  if ((out_c->dowrite_pfield && ppsc->timestep >= out_c->pfield_next) ||
+  if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
       out_c->dowrite_tfield) {
     struct psc_fields_list *pfd = &out_c->pfd;
     for (int i = 0; i < pfd->nr_flds; i++) {
-      out_c->out_flds[i]->calc(flds, particles, pfd->flds[i]);
+      out_c->out_flds[i]->calc(psc, flds, particles, pfd->flds[i]);
     }
   }
   
   if (out_c->dowrite_pfield) {
-    if (ppsc->timestep >= out_c->pfield_next) {
+    if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
        struct psc_fields_list flds_list;
-       make_fields_list(&flds_list, &out_c->pfd);
+       make_fields_list(psc, &flds_list, &out_c->pfd);
        psc_output_format_write_fields(out_c->format, out_c, &flds_list, "pfd");
-       free_fields_list(&flds_list);
+       free_fields_list(psc, &flds_list);
     }
   }
 
   if (out_c->dowrite_tfield) {
-    psc_foreach_patch(ppsc, p) {
+    psc_foreach_patch(psc, p) {
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	// tfd += pfd
 	fields_base_axpy_all(&out_c->tfd.flds[m]->f[p], 1., &out_c->pfd.flds[m]->f[p]);
       }
     }
     out_c->naccum++;
-    if (ppsc->timestep >= out_c->tfield_next) {
+    if (psc->timestep >= out_c->tfield_next) {
       out_c->tfield_next += out_c->tfield_step;
 
       // convert accumulated values to correct temporal mean
-      psc_foreach_patch(ppsc, p) {
+      psc_foreach_patch(psc, p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	  fields_base_scale_all(&out_c->tfd.flds[m]->f[p], 1. / out_c->naccum);
 	}
       }
 
       struct psc_fields_list flds_list;
-      make_fields_list(&flds_list, &out_c->tfd);
+      make_fields_list(psc, &flds_list, &out_c->tfd);
       psc_output_format_write_fields(out_c->format, out_c, &flds_list, "tfd");
-      free_fields_list(&flds_list);
-      psc_foreach_patch(ppsc, p) {
+      free_fields_list(psc, &flds_list);
+      psc_foreach_patch(psc, p) {
 	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	  fields_base_zero_all(&out_c->tfd.flds[m]->f[p]);
 	}
@@ -456,9 +498,11 @@ struct psc_output_fields_ops psc_output_fields_c_ops = {
   .size                  = sizeof(struct psc_output_fields_c),
   .param_descr           = psc_output_fields_c_descr,
   .create                = psc_output_fields_c_create,
-  .destroy               = psc_output_fields_c_destroy,
   .setup                 = psc_output_fields_c_setup,
   .set_from_options      = psc_output_fields_c_set_from_options,
+  .destroy               = psc_output_fields_c_destroy,
+  .write                 = psc_output_fields_c_write,
+  .read                  = psc_output_fields_c_read,
   .view                  = psc_output_fields_c_view,
   .run                   = psc_output_fields_c_run,
 };

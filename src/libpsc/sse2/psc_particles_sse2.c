@@ -28,14 +28,14 @@ particles_sse2_realloc(particles_sse2_t *pp, int new_n_part)
 }
 
 void
-particles_sse2_free(particles_sse2_t *pp)
+mparticles_sse2_free(particles_sse2_t *pp)
 {
   free(pp->particles);
   pp->particles = NULL;
 }
 
 void
-particles_sse2_get(particles_sse2_t *pp)
+psc_mparticles_sse2_get_from(particles_sse2_t *pp)
 {
   pp->particles = psc.pp.particles;
 
@@ -43,7 +43,7 @@ particles_sse2_get(particles_sse2_t *pp)
 }
 
 void
-particles_sse2_put(particles_sse2_t *pp)
+psc_mparticles_sse2_put_to(particles_sse2_t *pp)
 {
 }
 
@@ -54,7 +54,7 @@ static particle_sse2_t *__sse2_part_data;
 
 /// Copy particles from base data structures to an SSE2 friendly format.
 void
-particles_sse2_get(particles_sse2_t *particles, void *_particles_base)
+psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   particles_base_t *pp_base = &particles_base->p[0];
@@ -107,7 +107,7 @@ particles_sse2_get(particles_sse2_t *particles, void *_particles_base)
 
 /// Copy particles from SSE2 data structures to base structures.
 void
-particles_sse2_put(particles_sse2_t *particles, void *_particles_base)
+psc_mparticles_sse2_put_to(particles_sse2_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   particles_base_t *pp_base = &particles_base->p[0];

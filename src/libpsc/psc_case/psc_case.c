@@ -32,10 +32,6 @@ static void
 _psc_case_create(struct psc_case *_case)
 {
   _case->psc = psc_create(psc_case_comm(_case));
-
-  // make this object globally accessible
-  assert(!ppsc);
-  ppsc = _case->psc;
 }
 
 // ----------------------------------------------------------------------
@@ -65,11 +61,7 @@ static void
 _psc_case_setup(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
-  // FIXME, probably broken, should go into sep subclass?
-  if (psc->prm.from_checkpoint) {
-    assert(0);
-    psc_read_checkpoint();
-  }
+
   // this sets up everything except allocating fields and particles,
   // and intializing them
   psc_setup(psc);
@@ -80,12 +72,23 @@ _psc_case_setup(struct psc_case *_case)
   psc_case_init_partition(_case, nr_particles_by_patch, &particle_label_offset);
   psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
 
-  mparticles_base_alloc(psc->mrc_domain, &psc->particles, nr_particles_by_patch);
+  psc->particles = 
+    psc_mparticles_base_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_base_set_name(psc->particles, "mparticles");
+  psc_mparticles_base_set_domain_nr_particles(psc->particles, psc->mrc_domain,
+					  nr_particles_by_patch);
+  psc_mparticles_base_setup(psc->particles);
+
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);
 
   // alloc / initialize fields
-  psc->flds = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);
+  psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_base_set_name(psc->flds, "mfields");
+  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
+  psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
+  psc_mfields_base_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc_mfields_base_setup(psc->flds);
   psc_case_init_field(_case, psc->flds);
   if (psc->domain.use_pml) {
     psc_init_field_pml(_case, psc->flds);
@@ -93,6 +96,13 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize photons
   psc_case_init_photons(_case);
+
+#if 0
+  psc_write_checkpoint(psc);
+  psc_destroy(psc);
+  psc = psc_read_checkpoint(MPI_COMM_WORLD);
+  _case->psc = psc;
+#endif
 
   psc_setup_fortran(psc);
 }

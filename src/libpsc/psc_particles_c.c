@@ -34,14 +34,14 @@ particles_c_free(particles_c_t *pp)
 }
 
 void
-particles_c_get(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-particles_c_put(mparticles_c_t *particles, void *particles_base)
+psc_mparticles_c_put_to(mparticles_c_t *particles, void *particles_base)
 {
 }
 
@@ -50,11 +50,11 @@ particles_c_put(mparticles_c_t *particles, void *particles_base)
 static bool __gotten;
 
 void
-particles_c_get(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("particles_c_get", 1., 0, 0);
+    pr = prof_register("mparticles_c_get", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -89,11 +89,11 @@ particles_c_get(mparticles_c_t *particles, void *_particles_base)
 }
 
 void
-particles_c_put(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_put_to(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("particles_c_put", 1., 0, 0);
+    pr = prof_register("mparticles_c_put", 1., 0, 0);
   }
   prof_start(pr);
 

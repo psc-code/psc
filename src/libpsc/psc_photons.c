@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_c.h"
 
+#include <mrc_io.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -40,20 +41,29 @@ photons_free(photons_t *pp)
 }
 
 // ----------------------------------------------------------------------
-// mphotons_alloc
+// psc_mphotons_set_domain
 
 void
-mphotons_alloc(struct mrc_domain *domain, mphotons_t *mphotons)
+psc_mphotons_set_domain(mphotons_t *mphotons, struct mrc_domain *domain)
 {
-  mrc_domain_get_patches(domain, &mphotons->nr_patches);
+  mphotons->domain = domain;
+}
+
+// ----------------------------------------------------------------------
+// psc_mphotons_setup
+
+static void
+_psc_mphotons_setup(mphotons_t *mphotons)
+{
+  mrc_domain_get_patches(mphotons->domain, &mphotons->nr_patches);
   mphotons->p = calloc(mphotons->nr_patches, sizeof(*mphotons->p));
 }
 
 // ----------------------------------------------------------------------
-// mphotons_destroy
+// psc_mphotons_destroy
 
-void
-mphotons_destroy(mphotons_t *mphotons)
+static void
+_psc_mphotons_destroy(mphotons_t *mphotons)
 {
   for (int p = 0; p < mphotons->nr_patches; p++) { 
     photons_free(&mphotons->p[p]);
@@ -61,4 +71,34 @@ mphotons_destroy(mphotons_t *mphotons)
   free(mphotons->p);
   mphotons->nr_patches = -1;
 }
+
+static void
+_psc_mphotons_write(mphotons_t *mphotons, struct mrc_io *io)
+{
+  const char *path = psc_mphotons_name(mphotons);
+  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mphotons->domain);
+}
+
+static void
+_psc_mphotons_read(mphotons_t *mphotons, struct mrc_io *io)
+{
+  const char *path = psc_mphotons_name(mphotons);
+  mphotons->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+
+  // FIXME, need to actually write / read the data, too
+  psc_mphotons_setup(mphotons);
+}
+
+// ======================================================================
+// psc_mphotons
+
+struct mrc_class_psc_mphotons mrc_class_psc_mphotons = {
+  .name             = "psc_mphotons",
+  .size             = sizeof(struct psc_mphotons),
+  .setup            = _psc_mphotons_setup,
+  .destroy          = _psc_mphotons_destroy,
+  .write            = _psc_mphotons_write,
+  .read             = _psc_mphotons_read,
+};
 

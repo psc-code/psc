@@ -2,48 +2,47 @@
 #include "psc.h"
 #include "psc_glue.h"
 
-// FIXME, this all needs to be redone
+#include "mrc_io.h"
 
 // ----------------------------------------------------------------------
-// psc_write_checkpoint
+// psc_read_checkpoint
 
-void
-psc_read_checkpoint(void)
+struct psc *
+psc_read_checkpoint(MPI_Comm comm, int n)
 {
   mpi_printf(MPI_COMM_WORLD, "INFO: Reading checkpoint.\n");
-  
-  int n_part;
-  //  SERV_read_1(&psc.timestep, &n_part);
-  particles_base_realloc(&ppsc->particles.p[0], n_part);
-  ppsc->particles.p[0].n_part = n_part;
-  
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, &ppsc->particles);
-  mfields_fortran_t flds;
-  fields_fortran_get(&flds, 0, 0, &ppsc->flds);
 
-  //  SERV_read_2(&particles.p[0], &flds.f[0]);
+  struct mrc_io *io = mrc_io_create(comm);
+  mrc_io_set_type(io, "xdmf_serial");
+  mrc_io_set_name(io, "checkpoint");
+  mrc_io_set_param_string(io, "basename", "checkpoint");
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "r", n, 0.);
+  struct psc *psc = psc_read(io, "psc");
+  mrc_io_close(io);
+  mrc_io_destroy(io);
 
-  particles_fortran_put(&particles, &ppsc->particles);
-  fields_fortran_put(&flds, JXI, HZ + 1, &ppsc->flds);
+  return psc;
 }
 
 // ----------------------------------------------------------------------
 // psc_write_checkpoint
 
 void
-psc_write_checkpoint(void)
+psc_write_checkpoint(struct psc *psc)
 {
-  mpi_printf(MPI_COMM_WORLD, "INFO: Writing checkpoint.\n");
-  
-  mparticles_fortran_t particles;
-  particles_fortran_get(&particles, &ppsc->particles);
-  mfields_fortran_t flds;
-  fields_fortran_get(&flds, JXI, HZ + 1, &ppsc->flds);
+  mpi_printf(psc_comm(psc), "INFO: Writing checkpoint.\n");
 
-  //  SERV_write(&psc, &particles.p[0], &flds.f[0]);
-
-  particles_fortran_put(&particles, &ppsc->particles);
-  fields_fortran_put(&flds, 0, 0, &ppsc->flds);
+  struct mrc_io *io = mrc_io_create(psc_comm(psc));
+  mrc_io_set_type(io, "xdmf_serial");
+  mrc_io_set_name(io, "checkpoint");
+  mrc_io_set_param_string(io, "basename", "checkpoint");
+  mrc_io_set_from_options(io);
+  mrc_io_setup(io);
+  mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
+  psc_write(psc, io);
+  mrc_io_close(io);
+  mrc_io_destroy(io);
 }
 

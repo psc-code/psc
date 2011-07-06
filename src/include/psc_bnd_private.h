@@ -6,6 +6,7 @@
 
 struct psc_bnd {
   struct mrc_obj obj;
+  struct psc *psc;
 };
 
 struct psc_bnd_ops {

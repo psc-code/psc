@@ -68,14 +68,14 @@ fields_c_free(fields_c_t *pf)
 #if FIELDS_BASE == FIELDS_C
 
 void
-fields_c_get(mfields_c_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
   *flds = *flds_base;
 }
 
 void
-fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
   flds->f = NULL;
 }
@@ -83,7 +83,7 @@ fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
 #else
 
 void
-fields_c_get(mfields_c_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {
@@ -114,7 +114,7 @@ fields_c_get(mfields_c_t *flds, int mb, int me, void *_flds_base)
 }
 
 void
-fields_c_put(mfields_c_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {

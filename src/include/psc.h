@@ -56,136 +56,8 @@ typedef int f_int;
 #include "psc_particles_fortran.h"
 #include "psc_fields_fortran.h"
 
-// ----------------------------------------------------------------------
-// base particles type
-
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-
-typedef particles_fortran_t particles_base_t;
-typedef mparticles_fortran_t mparticles_base_t;
-typedef particle_fortran_t particle_base_t;
-typedef particle_fortran_real_t particle_base_real_t;
-#define MPI_PARTICLES_BASE_REAL MPI_PARTICLES_FORTRAN_REAL
-
-#define particles_base_alloc   particles_fortran_alloc
-#define particles_base_realloc particles_fortran_realloc
-#define particles_base_free    particles_fortran_free
-#define particles_base_get_one particles_fortran_get_one
-
-#elif PARTICLES_BASE == PARTICLES_C
-
-#include "psc_particles_c.h"
-
-typedef particles_c_t particles_base_t;
-typedef mparticles_c_t mparticles_base_t;
-typedef particle_c_t particle_base_t;
-typedef particle_c_real_t particle_base_real_t;
-#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_C_REAL
-
-#define particles_base_alloc   particles_c_alloc
-#define particles_base_realloc particles_c_realloc
-#define particles_base_free    particles_c_free
-#define particles_base_get_one particles_c_get_one
-
-#elif PARTICLES_BASE == PARTICLES_SSE2
-
-#include "psc_particles_sse2.h"
-
-typedef particles_sse2_t particles_base_t;
-typedef mparticles_sse2_t mparticles_base_t;
-typedef particle_sse2_t particle_base_t;
-typedef particle_sse2_real_t particle_base_real_t;
-#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_SSE2_REAL
-
-#define particles_base_alloc   particles_sse2_alloc
-#define particles_base_realloc particles_sse2_realloc
-#define particles_base_free    particles_sse2_free
-#define particles_base_get_one particles_sse2_get_one
-
-#elif PARTICLES_BASE == PARTICLES_CBE
-
-#include "psc_particles_cbe.h"
-
-typedef particles_cbe_t particles_base_t;
-typedef mparticles_cbe_t mparticles_base_t;
-typedef particle_cbe_t particle_base_t;
-typedef particle_cbe_real_t particle_base_real_t;
-#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_CBE_REAL
-
-#define particles_base_alloc   particles_cbe_alloc
-#define particles_base_realloc particles_cbe_realloc
-#define particles_base_free    particles_cbe_free
-#define particles_base_get_one particles_cbe_get_one
-
-#else
-#error unknown PARTICLES_BASE
-#endif
-
-// ----------------------------------------------------------------------
-// base fields type
-
-#if FIELDS_BASE == FIELDS_FORTRAN
-
-typedef fields_fortran_t fields_base_t;
-typedef fields_fortran_real_t fields_base_real_t;
-typedef mfields_fortran_t mfields_base_t;
-#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
-
-#define fields_base_alloc            fields_fortran_alloc
-#define fields_base_alloc_with_array fields_fortran_alloc_with_array
-#define fields_base_free             fields_fortran_free
-#define fields_base_zero             fields_fortran_zero
-#define fields_base_zero_all         fields_fortran_zero_all
-#define fields_base_set              fields_fortran_set
-#define fields_base_copy             fields_fortran_copy
-#define fields_base_axpy_all         fields_fortran_axpy_all
-#define fields_base_scale_all        fields_fortran_scale_all
-#define fields_base_size             fields_fortran_size
-
-#define F3_BASE(pf, m, jx,jy,jz)     F3_FORTRAN(pf, m, jx,jy,jz)
-
-#elif FIELDS_BASE == FIELDS_C
-
-#include "psc_fields_c.h"
-
-typedef fields_c_t fields_base_t;
-typedef fields_c_real_t fields_base_real_t;
-typedef mfields_c_t mfields_base_t;
-#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
-
-#define fields_base_alloc            fields_c_alloc
-#define fields_base_alloc_with_array fields_c_alloc_with_array
-#define fields_base_free             fields_c_free
-#define fields_base_zero             fields_c_zero
-#define fields_base_zero_all         fields_c_zero_all
-#define fields_base_set              fields_c_set
-#define fields_base_copy             fields_c_copy
-#define fields_base_axpy_all         fields_c_axpy_all
-#define fields_base_scale_all        fields_c_scale_all
-#define fields_base_size             fields_c_size
-
-#define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
-
-#elif FIELDS_BASE == FIELDS_SSE2
-
-#include "psc_fields_sse2.h"
-
-typedef fields_sse2_t fields_base_t;
-typedef fields_sse2_real_t fields_base_real_t;
-typedef mfields_sse2_t mfields_base_t;
-#define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
-
-#define fields_base_alloc fields_sse2_alloc
-#define fields_base_free  fields_sse2_free
-#define fields_base_zero  fields_sse2_zero
-#define fields_base_set   fields_sse2_set
-#define fields_base_copy  fields_sse2_copy
-
-#define F3_BASE(pf, m, jx,jy,jz) F3_SSE2(pf, m, jx,jy,jz)
-
-#else
-#error unknown FIELDS_BASE
-#endif
+#include "psc_particles.h"
+#include "psc_fields.h"
 
 // user settable parameters
 struct psc_param {
@@ -260,13 +132,6 @@ struct psc_domain {
   bool use_pml;
 };
 
-mfields_base_t *mfields_base_alloc(struct mrc_domain *domain, int nr_fields, int ibn[3]);
-void mfields_base_destroy(mfields_base_t *flds);
-
-void mparticles_base_alloc(struct mrc_domain *domain, mparticles_base_t *particles,
-			   int *nr_particles_by_patch);
-void mparticles_base_destroy(mparticles_base_t *particles);
-
 // FIXME, turn into mrc_obj
 void psc_push_photons_run(mphotons_t *mphotons);
 // FIXME, turn into mrc_obj
@@ -316,9 +181,9 @@ struct psc {
   double dt;
   double dx[3];
 
-  mparticles_base_t particles;
+  mparticles_base_t *particles;
   mfields_base_t *flds;
-  mphotons_t mphotons;
+  mphotons_t *mphotons;
   struct mrc_domain *mrc_domain;
 
   int nr_patches;
@@ -404,30 +269,17 @@ void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
-void psc_set_default_domain(struct psc *psc);
-void psc_set_from_options_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
-void psc_setup_domain(struct psc *psc);
-void psc_view_domain(struct psc *psc);
-void psc_destroy_domain(struct psc *psc);
-
-void psc_set_default_psc(struct psc *psc);
-void psc_set_from_options_psc(struct psc *psc);
-void psc_view_psc(struct psc *psc);
-
-void psc_setup_coeff(struct psc *psc);
+void psc_setup_patches(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
 
-void psc_read_checkpoint(void);
-void psc_write_checkpoint(void);
+struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
+void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
-
-// FIXME, should be per mrc_domain or sth, really
-extern list_t mfields_list;
 
 // FIXME, only used for one thing, could be consolidated?
 

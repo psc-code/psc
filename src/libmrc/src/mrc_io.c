@@ -463,6 +463,17 @@ mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_get_h5_file
+
+void
+mrc_io_get_h5_file(struct mrc_io *io, long *h5_file)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->get_h5_file);
+  ops->get_h5_file(io, h5_file);
+}
+
+// ----------------------------------------------------------------------
 
 struct mrc_obj *
 __mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
