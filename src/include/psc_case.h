@@ -4,22 +4,6 @@
 
 #include "psc.h"
 
-struct psc_particle_npt {
-  double q; ///< charge
-  double m; ///< mass
-  double n; ///< density
-  double p[3]; ///< momentum
-  double T[3]; ///< temperature
-  int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
-};
-
-struct psc_photon_np {
-  double n; ///< density
-  double k[3]; ///< wave number
-  double sigma_k[3]; ///< width of Gaussian in momentum space
-  int n_in_cell; ///< nr of quasi-particles in this cell
-};
-
 // FIXME, update
 /////////////////////////////////////////////////////////////////////////
 /// Physics cases (initial conditions and other parameters).

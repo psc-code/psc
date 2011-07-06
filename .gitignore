@@ -15,6 +15,7 @@ BACKUP
 SELECT
 src/VLI
 src/psc_restart
+src/psc_bubble
 Makefile.in
 Makefile
 m4/libtool.m4

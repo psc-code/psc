@@ -9,6 +9,9 @@
 #include <mpi.h>
 #include <time.h>
 
+// FIXME, same code exists, essentially, in psc.c, so this should go away
+// (eventually, with the cases)
+
 static inline int
 get_n_in_cell(struct psc *psc, struct psc_particle_npt *npt)
 {
@@ -111,11 +114,11 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 	    struct psc_particle_npt npt = { // init to all zero
 	    };
 	    psc_case_init_npt(_case, kind, xx, &npt);
-	    
+
 	    int n_in_cell = get_n_in_cell(psc, &npt);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_base_t *p = particles_base_get_one(pp, i++);
-	      
+
 	      float ran1, ran2, ran3, ran4, ran5, ran6;
 	      do {
 		ran1 = random() / ((float) RAND_MAX + 1);
@@ -126,7 +129,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 		ran6 = random() / ((float) RAND_MAX + 1);
 	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
 		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
+
 	      float px =
 		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
 		+ npt.p[0];
@@ -136,7 +139,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 	      float pz =
 		sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
 		+ npt.p[2];
-	      
+
 	      p->xi = xx[0];
 	      p->yi = xx[1];
 	      p->zi = xx[2];
@@ -162,3 +165,4 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
     assert(pp->n_part == nr_particles_by_patch[p]);
   }
 }
+

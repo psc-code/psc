@@ -78,6 +78,8 @@ struct psc_param {
   double phi0;
   double a0;
   int nicell;
+  int nr_kinds;
+  bool seed_by_time;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
   bool adjust_dt_to_cycles;
@@ -196,6 +198,31 @@ struct psc {
   double time_start;
 };
 
+struct psc_particle_npt {
+  double q; ///< charge
+  double m; ///< mass
+  double n; ///< density
+  double p[3]; ///< momentum
+  double T[3]; ///< temperature
+  int particles_per_cell; ///< desired number of particles per cell per unit density. If not specified, the global nicell is used.
+};
+
+struct psc_photon_np {
+  double n; ///< density
+  double k[3]; ///< wave number
+  double sigma_k[3]; ///< width of Gaussian in momentum space
+  int n_in_cell; ///< nr of quasi-particles in this cell
+};
+
+struct psc_ops {
+  MRC_SUBCLASS_OPS(struct psc);
+  void (*init_npt)(struct psc *psc, int kind, double x[3],
+		   struct psc_particle_npt *npt);
+  void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
+  void (*init_photon_np)(struct psc *psc, double x[3], struct psc_photon_np *np);
+  void (*integrate)(struct psc *psc);
+};
+
 #define foreach_3d(p, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\
   int __ihi[3] = { psc.patch[p].ldims[0] + r,				\
@@ -267,6 +294,12 @@ void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
+void psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
+			int *particle_label_offset);
+void psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
+			int particle_label_offset);
+void psc_setup_partition_and_particles(struct psc *psc);
+void psc_setup_fields(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
