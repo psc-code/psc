@@ -429,6 +429,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
 #define VAR(x) (void *)offsetof(struct psc_output_fields_c, x)
 
+// FIXME pfield_out_[xyz]_{min,max} aren't for pfield only, better init to 0,
+// use INT3
+
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
