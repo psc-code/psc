@@ -75,6 +75,7 @@ libpsc_la_SOURCES = \
 	init_particles.c \
 	init_photons.c \
 	integrate.c \
+	psc_stats.c \
 	psc_dump.c \
 	checks.c \
 	psc_checkpoint.c

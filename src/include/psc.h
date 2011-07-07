@@ -323,6 +323,27 @@ particle_base_real_nint(particle_base_real_t x)
 }
 
 // ----------------------------------------------------------------------
+// psc_stats: simple statistics
+
+#define MAX_PSC_STATS 20
+
+extern double psc_stats_val[MAX_PSC_STATS];
+extern int nr_psc_stats;
+
+int psc_stats_register(const char *name);
+void psc_stats_log(struct psc *psc);
+
+#define psc_stats_start(n) do {				\
+    psc_stats_val[n-1] -= MPI_Wtime();			\
+  } while (0)
+
+#define psc_stats_stop(n) do {				\
+    psc_stats_val[n-1] += MPI_Wtime();			\
+  } while (0)
+
+#define psc_stats_val(n) psc_stats_val[n-1]
+
+// ----------------------------------------------------------------------
 // other bits and hacks...
 
 #define sqr(a) ((a) * (a))
