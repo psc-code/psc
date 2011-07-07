@@ -36,10 +36,6 @@ psc_stats_register(const char *name)
 }
 
 #define psc_stats_start(n) do {				\
-    psc_stats_val[n-1] = -MPI_Wtime();			\
-  } while (0)
-
-#define psc_stats_restart(n) do {			\
     psc_stats_val[n-1] -= MPI_Wtime();			\
   } while (0)
 
@@ -75,6 +71,11 @@ psc_stats_log(struct psc *psc)
 	     stats_sum[i] / size, stats_min[i], stats_max[i], stats_sum[i]);
     }
     printf("    =========================================================================\n");
+  }
+
+  // reset counters
+  for (int i = 0; i < nr_psc_stats; i++) {
+    psc_stats_val[i] = 0.;
   }
 }
 
@@ -165,7 +166,6 @@ psc_integrate(struct psc *psc)
     psc_stats_stop(st_time_field);
 
     // FIXME, do a mparticles func for this
-    psc_stats_val(st_nr_particles) = 0;
     psc_foreach_patch(psc, p) {
       psc_stats_val(st_nr_particles) += psc->particles->p[p].n_part;
     }
