@@ -16,6 +16,7 @@ SELECT
 src/VLI
 src/psc_restart
 src/psc_bubble
+src/psc_photon_test
 Makefile.in
 Makefile
 m4/libtool.m4
