@@ -14,16 +14,39 @@
 #include <mrc_common.h>
 #include <mrc_profile.h>
 
+#define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
+
+/////////////////////////////////////////////////////////////////////////
+/// psc_output
+///
+
 void
-psc_step(struct psc *psc)
+psc_output(struct psc *psc)
 {
-  if (psc_ops(psc)->step) {
-    return psc_ops(psc)->step(psc);
+  if (psc_ops(psc) && psc_ops(psc)->output) {
+    return psc_ops(psc)->output(psc);
   }
+
+  // default psc_output() implementation
 
   psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
   psc_output_particles_run(psc->output_particles, psc->particles);
-  
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// psc_step
+///
+
+void
+psc_step(struct psc *psc)
+{
+  if (psc_ops(psc) && psc_ops(psc)->step) {
+    return psc_ops(psc)->step(psc);
+  }
+
+  // default psc_step() implementation
+
+  psc_output(psc);
   psc_balance_run(psc->balance, psc);
   
   psc_randomize_run(psc->randomize, psc->particles);

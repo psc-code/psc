@@ -222,6 +222,7 @@ struct psc_ops {
   void (*init_photon_np)(struct psc *psc, double x[3], struct psc_photon_np *np);
   void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
+  void (*output)(struct psc *psc);
 };
 
 #define foreach_3d(p, ix, iy, iz, l, r) {				\
