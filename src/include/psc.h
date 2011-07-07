@@ -316,6 +316,10 @@ void psc_write_checkpoint(struct psc *psc);
 
 void psc_setup_fortran(struct psc *psc);
 
+
+int psc_main(int *argc, char ***argv, struct psc_ops *type);
+
+
 // FIXME, only used for one thing, could be consolidated?
 
 static inline int
