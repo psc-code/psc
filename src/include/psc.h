@@ -343,6 +343,12 @@ void psc_stats_log(struct psc *psc);
 
 #define psc_stats_val(n) psc_stats_val[n-1]
 
+// These are general statistics categories to be used in different parts
+// of the code as appropriate.
+
+int st_time_output; //< time spent in output
+int st_time_comm;   //< time spent in communications
+
 // ----------------------------------------------------------------------
 // other bits and hacks...
 

@@ -33,10 +33,11 @@ psc_integrate(struct psc *psc)
   static int st_time_randomize;
   static int st_time_sort;
   static int st_time_collision;
-  static int st_time_out_field;
-  static int st_time_out_particle;
   static int st_time_balance;
   if (!st_time_step) {
+    st_time_output = psc_stats_register("time output");
+    st_time_comm = psc_stats_register("time communication");
+
     st_nr_particles = psc_stats_register("nr particles");
     st_time_step = psc_stats_register("time entire step");
     st_time_particle = psc_stats_register("time particle update");
@@ -44,8 +45,6 @@ psc_integrate(struct psc *psc)
     st_time_randomize = psc_stats_register("time randomize");
     st_time_sort = psc_stats_register("time sort");
     st_time_collision = psc_stats_register("time collision");
-    st_time_out_field = psc_stats_register("time field output");
-    st_time_out_particle = psc_stats_register("time particle output");
     st_time_balance = psc_stats_register("time balancing");
   }
 
@@ -53,13 +52,13 @@ psc_integrate(struct psc *psc)
     prof_start(pr);
     psc_stats_start(st_time_step);
 
-    psc_stats_start(st_time_out_field);
+    psc_stats_start(st_time_output);
     psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
-    psc_stats_stop(st_time_out_field);
+    psc_stats_stop(st_time_output);
 
-    psc_stats_start(st_time_out_particle);
+    psc_stats_start(st_time_output);
     psc_output_particles_run(psc->output_particles, psc->particles);
-    psc_stats_stop(st_time_out_particle);
+    psc_stats_stop(st_time_output);
 
     psc_stats_start(st_time_balance);
     psc_balance_run(psc->balance, psc);
@@ -85,15 +84,19 @@ psc_integrate(struct psc *psc)
     // particle propagation n*dt -> (n+1.0)*dt
     psc_stats_start(st_time_particle);
     psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-    // FIXME, this isn't part of particle pushing
-    psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-    psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-    psc_bnd_exchange_particles(psc->bnd, psc->particles);
     psc_stats_stop(st_time_particle);
+    psc_stats_start(st_time_comm);
+    psc_bnd_exchange_particles(psc->bnd, psc->particles);
+    psc_stats_stop(st_time_comm);
 
     psc_push_photons_run(psc->mphotons);
     psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
     psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
+
+    psc_stats_start(st_time_comm);
+    psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+    psc_stats_stop(st_time_comm);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
     psc_stats_start(st_time_field);
