@@ -686,6 +686,49 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 }
 
 // ----------------------------------------------------------------------
+// psc_setup_fields_default
+
+static void
+psc_setup_fields_default(struct psc *psc)
+{
+  double (*init_field)(struct psc *psc, double x[3], int m);
+  init_field = psc_ops(psc)->init_field;
+  if (!init_field)
+    return;
+
+  // FIXME, do we need the ghost points?
+  psc_foreach_patch(psc, p) {
+    fields_base_t *pf = &psc->flds->f[p];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
+      double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
+
+      F3_BASE(pf, HX, jx,jy,jz) +=
+	init_field(psc, (double []) { xx        , yy + .5*dy, zz + .5*dz }, HX);
+      F3_BASE(pf, HY, jx,jy,jz) +=
+	init_field(psc, (double []) { xx + .5*dx, yy        , zz + .5*dz }, HY);
+      F3_BASE(pf, HZ, jx,jy,jz) +=
+	init_field(psc, (double []) { xx + .5*dx, yy + .5*dy, zz         }, HZ);
+
+      F3_BASE(pf, EX, jx,jy,jz) +=
+	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, EX);
+      F3_BASE(pf, EY, jx,jy,jz) +=
+	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, EY);
+      F3_BASE(pf, EZ, jx,jy,jz) +=
+	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EY);
+
+      F3_BASE(pf, JXI, jx,jy,jz) +=
+	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, JXI);
+      F3_BASE(pf, JYI, jx,jy,jz) +=
+	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, JYI);
+      F3_BASE(pf, JZI, jx,jy,jz) +=
+	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, JZI);
+
+    } foreach_3d_g_end;
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_setup_fields
 
 void
@@ -707,6 +750,8 @@ psc_setup_fields(struct psc *psc)
   // type-specific other initial condition
   if (psc_ops(psc)->setup_fields) {
     psc_ops(psc)->setup_fields(psc, psc->flds);
+  } else {
+    psc_setup_fields_default(psc);
   }
 
   if (psc->domain.use_pml) {

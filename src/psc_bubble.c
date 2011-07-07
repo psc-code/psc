@@ -97,10 +97,10 @@ psc_bubble_set_from_options(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_bubble_setup_fields
+// psc_bubble_init_field
 
-static void
-psc_bubble_setup_fields(struct psc *psc, mfields_base_t *flds)
+static double
+psc_bubble_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_bubble *bubble = to_psc_bubble(psc);
 
@@ -111,61 +111,55 @@ psc_bubble_setup_fields(struct psc *psc, mfields_base_t *flds)
   double MMach = bubble->MMach;
   double TTe = bubble->TTe;
 
-  // FIXME, do we need the ghost points?
-  psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->dx[0], dz = psc->dx[2];
-      double xx = CRDX(p, jx), zz = CRDZ(p, jz);
+  double x1 = x[0];
+  double z1 = x[2] + LLn;
+  double r1 = sqrt(sqr(x1) + sqr(z1));
+  double x2 = x[0];
+  double z2 = x[2] - LLn;
+  double r2 = sqrt(sqr(x2) + sqr(z2));
 
-      double x1 = xx;
-      double z1 = zz + 0.5*dz + LLn;
-      double r1 = sqrt(sqr(x1) + sqr(z1));
-      double x2 = xx;
-      double z2 = zz + 0.5*dz - LLn;
-      double r2 = sqrt(sqr(x2) + sqr(z2));
+  double rv = 0.;
+  switch (m) {
+  case HX:
+    if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
+      rv += - BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * z1 / r1;
+    }
+    if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
+      rv += - BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * z2 / r2;
+    }
+    return rv;
 
-      if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * z1 / r1;
-      }
-      if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * z2 / r2;
-      }
+  case HZ:
+    if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
+      rv += BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * x1 / r1;
+    }
+    if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
+      rv += BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * x2 / r2;
+    }
+    return rv;
 
-      x1 = xx + 0.5*dx;
-      z1 = zz + LLn;
-      r1 = sqrt(sqr(x1) + sqr(z1));
-      x2 = xx + 0.5*dx;
-      z2 = zz - LLn;
-      r2 = sqrt(sqr(x2) + sqr(z2));
+  case EY:
+    if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
+      rv += MMach * sqrt(TTe/MMi) * BB *
+	sin(M_PI * (LLn - r1)/(2.*LLB)) * sin(M_PI * r1 / LLn);
+    }
+    if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
+      rv += MMach * sqrt(TTe/MMi) * BB *
+	sin(M_PI * (LLn - r2)/(2.*LLB)) * sin(M_PI * r2 / LLn);
+    }
+    return rv;
 
-      if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * x1 / r1;
-      }
-      if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * x2 / r2;
-      }
+  case JYI:
+    if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
+      rv += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r1)/(2.*LLB));
+    }
+    if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
+      rv += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r2)/(2.*LLB));
+    }
+    return rv;
 
-      x1 = xx;
-      z1 = zz + LLn;
-      r1 = sqrt(sqr(x1) + sqr(z1));
-      x2 = xx;
-      z2 = zz - LLn;
-      r2 = sqrt(sqr(x2) + sqr(z2));
-
-      if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
-	  sin(M_PI * (LLn - r1)/(2.*LLB)) *
-	  sin(M_PI * r1 / LLn);
-	F3_BASE(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r1)/(2.*LLB));
-      }
-      if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
-	  sin(M_PI * (LLn - r2)/(2.*LLB)) *
-	  sin(M_PI * r2 / LLn);
-	F3_BASE(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r2)/(2.*LLB));
-      }
-    } foreach_3d_g_end;
+  default:
+    return 0.;
   }
 }
 
@@ -245,7 +239,7 @@ struct psc_ops psc_bubble_ops = {
   .param_descr      = psc_bubble_descr,
   .create           = psc_bubble_create,
   .set_from_options = psc_bubble_set_from_options,
-  .setup_fields     = psc_bubble_setup_fields,
+  .init_field       = psc_bubble_init_field,
   .init_npt         = psc_bubble_init_npt,
 };
 

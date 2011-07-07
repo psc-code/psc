@@ -219,6 +219,7 @@ struct psc_ops {
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
   void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
+  double (*init_field)(struct psc *psc, double x[3], int m);
   void (*init_photon_np)(struct psc *psc, double x[3], struct psc_photon_np *np);
   void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
