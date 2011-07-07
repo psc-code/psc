@@ -44,7 +44,10 @@ psc_output_fields_run(struct psc_output_fields *output_fields,
 {
   struct psc_output_fields_ops *ops = psc_output_fields_ops(output_fields);
   assert(ops->run);
+
+  psc_stats_start(st_time_output);
   ops->run(output_fields, flds, particles);
+  psc_stats_stop(st_time_output);
 }
 
 // ======================================================================

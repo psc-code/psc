@@ -10,7 +10,9 @@ psc_output_particles_run(struct psc_output_particles *output_particles,
 {
   struct psc_output_particles_ops *ops = psc_output_particles_ops(output_particles);
   assert(ops->run);
+  psc_stats_start(st_time_output);
   ops->run(output_particles, particles);
+  psc_stats_stop(st_time_output);
 }
 
 // ======================================================================

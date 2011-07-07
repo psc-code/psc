@@ -8,6 +8,7 @@ void
 psc_push_particles_run(struct psc_push_particles *push,
 		       mparticles_base_t *particles, mfields_base_t *flds)
 {
+  psc_stats_start(st_time_particle);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
   int *im = ppsc->domain.gdims;
   if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
@@ -28,6 +29,7 @@ psc_push_particles_run(struct psc_push_particles *push,
   } else {
     assert(0);
   }
+  psc_stats_stop(st_time_particle);
 }
 
 void

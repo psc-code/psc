@@ -327,27 +327,27 @@ particle_base_real_nint(particle_base_real_t x)
 
 #define MAX_PSC_STATS 20
 
-extern double psc_stats_val[MAX_PSC_STATS];
+extern double psc_stats_val[MAX_PSC_STATS+1]; // [0] is left empty
 extern int nr_psc_stats;
 
 int psc_stats_register(const char *name);
 void psc_stats_log(struct psc *psc);
 
 #define psc_stats_start(n) do {				\
-    psc_stats_val[n-1] -= MPI_Wtime();			\
+    psc_stats_val[n] -= MPI_Wtime();			\
   } while (0)
 
 #define psc_stats_stop(n) do {				\
-    psc_stats_val[n-1] += MPI_Wtime();			\
+    psc_stats_val[n] += MPI_Wtime();			\
   } while (0)
-
-#define psc_stats_val(n) psc_stats_val[n-1]
 
 // These are general statistics categories to be used in different parts
 // of the code as appropriate.
 
-int st_time_output; //< time spent in output
-int st_time_comm;   //< time spent in communications
+int st_time_output;   //< time spent in output
+int st_time_comm;     //< time spent in communications
+int st_time_particle; //< time spent in particle computation
+int st_time_field;    //< time spent in field computation
 
 // ----------------------------------------------------------------------
 // other bits and hacks...

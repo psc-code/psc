@@ -39,30 +39,37 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
 void
 psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->add_ghosts);
   ops->add_ghosts(bnd, flds, mb, me);
+  psc_stats_stop(st_time_comm);
 }
 
 void
 psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->fill_ghosts);
   ops->fill_ghosts(bnd, flds, mb, me);
+  psc_stats_stop(st_time_comm);
 }
 
 void
 psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
+  psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->exchange_particles);
   ops->exchange_particles(bnd, particles);
+  psc_stats_stop(st_time_comm);
 }
 
 void
 psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
+  psc_stats_start(st_time_comm);
   int n_total = 0;
   psc_foreach_patch(bnd->psc, p) {
     n_total += mphotons->p[p].nr;
@@ -73,6 +80,7 @@ psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->exchange_photons);
   ops->exchange_photons(bnd, mphotons);
+  psc_stats_stop(st_time_comm);
 }
 
 // ======================================================================

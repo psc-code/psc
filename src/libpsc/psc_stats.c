@@ -4,21 +4,18 @@
 // ======================================================================
 // psc_stats: simple statistics
 
-double psc_stats_val[MAX_PSC_STATS];
-int nr_psc_stats;
+double psc_stats_val[MAX_PSC_STATS + 1];
+int nr_psc_stats = 1;
 
-static const char *psc_stats_name[MAX_PSC_STATS];
+static const char *psc_stats_name[MAX_PSC_STATS + 1];
 
 int
 psc_stats_register(const char *name)
 {
-  assert(nr_psc_stats < MAX_PSC_STATS);
+  assert(nr_psc_stats <= MAX_PSC_STATS);
   psc_stats_name[nr_psc_stats] = name;
   psc_stats_val[nr_psc_stats] = 0.;
-  nr_psc_stats++;
-
-  // we return the index + 1, so that all valid, registered tokens are > 0
-  return nr_psc_stats;
+  return nr_psc_stats++;
 }
 
 void
@@ -39,7 +36,7 @@ psc_stats_log(struct psc *psc)
 	   psc->timestep);
     printf("    %25s %10s %10s %10s %10s\n", "name",
 	   "avg", "min", "max", "total");
-    for (int i = 0; i < nr_psc_stats; i++) {
+    for (int i = 1; i < nr_psc_stats; i++) {
       if (stats_max[i] < 1e-3)
 	continue;
 
@@ -50,7 +47,7 @@ psc_stats_log(struct psc *psc)
   }
 
   // reset counters
-  for (int i = 0; i < nr_psc_stats; i++) {
+  for (int i = 1; i < nr_psc_stats; i++) {
     psc_stats_val[i] = 0.;
   }
 }

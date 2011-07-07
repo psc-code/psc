@@ -26,86 +26,48 @@ psc_integrate(struct psc *psc)
     pr = prof_register("psc_step", 1., 0, 0);
   }
 
-  static int st_nr_particles;
-  static int st_time_step;
-  static int st_time_particle;
-  static int st_time_field;
-  static int st_time_randomize;
-  static int st_time_sort;
-  static int st_time_collision;
-  static int st_time_balance;
-  if (!st_time_step) {
-    st_time_output = psc_stats_register("time output");
-    st_time_comm = psc_stats_register("time communication");
+  int st_nr_particles = psc_stats_register("nr particles");
+  int st_time_step = psc_stats_register("time entire step");
 
-    st_nr_particles = psc_stats_register("nr particles");
-    st_time_step = psc_stats_register("time entire step");
-    st_time_particle = psc_stats_register("time particle update");
-    st_time_field = psc_stats_register("time field update");
-    st_time_randomize = psc_stats_register("time randomize");
-    st_time_sort = psc_stats_register("time sort");
-    st_time_collision = psc_stats_register("time collision");
-    st_time_balance = psc_stats_register("time balancing");
-  }
+  // generic stats categories
+  st_time_particle = psc_stats_register("time particle update");
+  st_time_field = psc_stats_register("time field update");
+  st_time_comm = psc_stats_register("time communication");
+  st_time_output = psc_stats_register("time output");
 
   for (; psc->timestep < psc->prm.nmax; psc->timestep++) {
     prof_start(pr);
     psc_stats_start(st_time_step);
 
-    psc_stats_start(st_time_output);
     psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
-    psc_stats_stop(st_time_output);
-
-    psc_stats_start(st_time_output);
     psc_output_particles_run(psc->output_particles, psc->particles);
-    psc_stats_stop(st_time_output);
 
-    psc_stats_start(st_time_balance);
     psc_balance_run(psc->balance, psc);
-    psc_stats_stop(st_time_balance);
 
-    psc_stats_start(st_time_randomize);
     psc_randomize_run(psc->randomize, psc->particles);
-    psc_stats_stop(st_time_randomize);
-
-    psc_stats_start(st_time_sort);
     psc_sort_run(psc->sort, psc->particles);
-    psc_stats_stop(st_time_sort);
-
-    psc_stats_start(st_time_collision);
     psc_collision_run(psc->collision, psc->particles);
-    psc_stats_stop(st_time_collision);
 
     // field propagation n*dt -> (n+0.5)*dt
-    psc_stats_start(st_time_field);
     psc_push_fields_step_a(psc->push_fields, psc->flds);
-    psc_stats_stop(st_time_field);
 
     // particle propagation n*dt -> (n+1.0)*dt
-    psc_stats_start(st_time_particle);
     psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-    psc_stats_stop(st_time_particle);
-    psc_stats_start(st_time_comm);
     psc_bnd_exchange_particles(psc->bnd, psc->particles);
-    psc_stats_stop(st_time_comm);
 
     psc_push_photons_run(psc->mphotons);
     psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
     psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
 
-    psc_stats_start(st_time_comm);
     psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
     psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-    psc_stats_stop(st_time_comm);
 
     // field propagation (n+0.5)*dt -> (n+1.0)*dt
-    psc_stats_start(st_time_field);
     psc_push_fields_step_b(psc->push_fields, psc->flds);
-    psc_stats_stop(st_time_field);
 
     // FIXME, do a mparticles func for this
     psc_foreach_patch(psc, p) {
-      psc_stats_val(st_nr_particles) += psc->particles->p[p].n_part;
+      psc_stats_val[st_nr_particles] += psc->particles->p[p].n_part;
     }
     psc_stats_stop(st_time_step);
 

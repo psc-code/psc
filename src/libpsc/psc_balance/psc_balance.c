@@ -421,6 +421,12 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   if (psc->timestep == 0 || psc->timestep % bal->every != 0)
     return;
 
+  static int st_time_balance;
+  if (!st_time_balance) {
+    st_time_balance = psc_stats_register("time balancing");
+  }
+
+  psc_stats_start(st_time_balance);
   struct mrc_domain *domain_old = psc->mrc_domain;
 
   int nr_patches;
@@ -491,6 +497,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
+
+  psc_stats_stop(st_time_balance);
 }
 
 // ======================================================================

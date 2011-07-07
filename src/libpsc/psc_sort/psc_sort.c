@@ -12,9 +12,16 @@ psc_sort_run(struct psc_sort *sort, mparticles_base_t *particles)
   if (ppsc->timestep % sort->every != 0)
     return;
 
+  static int st_time_sort;
+  if (!st_time_sort) {
+    st_time_sort = psc_stats_register("time sort");
+  }
+
+  psc_stats_start(st_time_sort);
   struct psc_sort_ops *ops = psc_sort_ops(sort);
   assert(ops->run);
   ops->run(sort, particles);
+  psc_stats_stop(st_time_sort);
 }
 
 // ======================================================================

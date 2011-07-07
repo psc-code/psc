@@ -7,9 +7,16 @@
 void
 psc_collision_run(struct psc_collision *collision, mparticles_base_t *particles)
 {
+  static int st_time_collision;
+  if (!st_time_collision) {
+    st_time_collision = psc_stats_register("time collision");
+  }
+
+  psc_stats_start(st_time_collision);
   struct psc_collision_ops *ops = psc_collision_ops(collision);
   assert(ops->run);
   ops->run(collision, particles);
+  psc_stats_stop(st_time_collision);
 }
 
 // ======================================================================
