@@ -3,16 +3,13 @@
 <Domain>
    <Grid Name="patch-mrc_domain-0" GridType="Uniform">
 <Time Type="Single" Value="0" />
-     <Topology TopologyType="3DRectMesh" Dimensions="33 33 33"/>
-     <Geometry GeometryType="VXVYVZ">
-     <DataItem Name="VX" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd0_nc/crd0_nc/p0/1d
+     <Topology TopologyType="3DCoRectMesh" Dimensions="33 33 33"/>
+     <Geometry GeometryType="Origin_DxDyDz">
+     <DataItem Name="Origin" DataType="Float" Dimensions="3" Format="XML">
+        0 0 0
      </DataItem>
-     <DataItem Name="VY" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd1_nc/crd1_nc/p0/1d
-     </DataItem>
-     <DataItem Name="VZ" DataType="Float" Dimensions="33" Format="HDF">
-        run.000000_p000000.h5:/crd2_nc/crd2_nc/p0/1d
+     <DataItem Name="DxDyDz" DataType="Float" Dimensions="3" Format="XML">
+        0.03125 0.03125 0.03125
      </DataItem>
      </Geometry>
 

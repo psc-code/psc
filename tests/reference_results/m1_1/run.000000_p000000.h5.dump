@@ -479,6 +479,13 @@ GROUP "/" {
          }
       }
       GROUP "p0" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 0, 0, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -491,6 +498,13 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
             DATA {
             (0): 0, 0, 0
+            }
+         }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 0
             }
          }
       }
