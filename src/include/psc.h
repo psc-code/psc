@@ -221,6 +221,7 @@ struct psc_ops {
   void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
   void (*init_photon_np)(struct psc *psc, double x[3], struct psc_photon_np *np);
   void (*integrate)(struct psc *psc);
+  void (*step)(struct psc *psc);
 };
 
 #define foreach_3d(p, ix, iy, iz, l, r) {				\

@@ -14,6 +14,40 @@
 #include <mrc_common.h>
 #include <mrc_profile.h>
 
+void
+psc_step(struct psc *psc)
+{
+  if (psc_ops(psc)->step) {
+    return psc_ops(psc)->step(psc);
+  }
+
+  psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
+  psc_output_particles_run(psc->output_particles, psc->particles);
+  
+  psc_balance_run(psc->balance, psc);
+  
+  psc_randomize_run(psc->randomize, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+  psc_collision_run(psc->collision, psc->particles);
+  
+  // field propagation n*dt -> (n+0.5)*dt
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
+  
+  // particle propagation n*dt -> (n+1.0)*dt
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  
+  psc_push_photons_run(psc->mphotons);
+  psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
+  psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
+  
+  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+  
+  // field propagation (n+0.5)*dt -> (n+1.0)*dt
+  psc_push_fields_step_b(psc->push_fields, psc->flds);
+}
+
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.
 ///
@@ -39,40 +73,17 @@ psc_integrate(struct psc *psc)
     prof_start(pr);
     psc_stats_start(st_time_step);
 
-    psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
-    psc_output_particles_run(psc->output_particles, psc->particles);
+    psc_step(psc);
 
-    psc_balance_run(psc->balance, psc);
-
-    psc_randomize_run(psc->randomize, psc->particles);
-    psc_sort_run(psc->sort, psc->particles);
-    psc_collision_run(psc->collision, psc->particles);
-
-    // field propagation n*dt -> (n+0.5)*dt
-    psc_push_fields_step_a(psc->push_fields, psc->flds);
-
-    // particle propagation n*dt -> (n+1.0)*dt
-    psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-    psc_bnd_exchange_particles(psc->bnd, psc->particles);
-
-    psc_push_photons_run(psc->mphotons);
-    psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
-    psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
-
-    psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-    psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-
-    // field propagation (n+0.5)*dt -> (n+1.0)*dt
-    psc_push_fields_step_b(psc->push_fields, psc->flds);
+    psc_stats_stop(st_time_step);
+    prof_stop(pr);
 
     // FIXME, do a mparticles func for this
     psc_foreach_patch(psc, p) {
       psc_stats_val[st_nr_particles] += psc->particles->p[p].n_part;
     }
-    psc_stats_stop(st_time_step);
 
     psc_stats_log(psc);
-    prof_stop(pr);
     prof_print_mpi(MPI_COMM_WORLD);
 
     if (psc->prm.wallclock_limit > 0.) {
