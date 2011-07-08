@@ -89,6 +89,7 @@ struct psc_param {
   bool adjust_dt_to_cycles;
   double wallclock_limit;
   bool from_checkpoint;
+  bool write_checkpoint;
 };
 
 /// coefficients needed for computations

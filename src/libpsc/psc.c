@@ -114,6 +114,8 @@ static struct param psc_descr[] = {
                     , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
   { "from_checkpoint"
                     , VAR(prm.from_checkpoint)    , PARAM_BOOL(false) },
+  { "write_checkpoint"
+                    , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
 
   {},
 };
