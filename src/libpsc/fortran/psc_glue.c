@@ -71,7 +71,7 @@
 void PSC_set_globals_F77(f_real *cori, f_real *alpha, f_real *eta);
 
 void PSC_set_patch_F77(f_int *imn, f_int *imx, f_int *rd,
-		       f_real *dt, f_real *dxyz);
+		       f_real *dt, f_real *dxyz, f_real *corner);
 
 void PSC_set_params_F77(f_real *qq, f_real *mm, f_real *tt, f_real *cc, f_real *eps0,
 			f_int *nmax, f_real *lw, f_real *i0, f_real *n0,
@@ -215,7 +215,7 @@ PSC_set_patch(struct psc *psc, int p)
   for (int d = 0; d < 3; d++) {
     imx[d] = patch->off[d] + patch->ldims[d] - 1;
   }
-  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, psc->dx);
+  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, psc->dx, patch->xb);
 }
 
 void

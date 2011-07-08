@@ -11,17 +11,21 @@ c     ======================================================================
       real(kind=8) :: dx        ! grid spacing (dimensionless)
       real(kind=8) :: dy        ! grid spacing (dimensionless)
       real(kind=8) :: dz        ! grid spacing (dimensionless)
+	  
+	  real(kind=8) :: cornerx
+	  real(kind=8) :: cornery
+	  real(kind=8) :: cornerz
       
       end module PSC_patch
 
 c     ======================================================================
-      subroutine PSC_set_patch(imn, imx, rd, dt_, dxyz)
+      subroutine PSC_set_patch(imn, imx, rd, dt_, dxyz, corner)
 c     ======================================================================
       use PSC_patch
       implicit none
 
       integer :: imn(3), imx(3), rd(3)
-      real(kind=8) :: dt_, dxyz(3)
+      real(kind=8) :: dt_, dxyz(3), corner(3)
 
       i1mn = imn(1)
       i2mn = imn(2)
@@ -37,6 +41,10 @@ c     ======================================================================
       dx = dxyz(1)
       dy = dxyz(2)
       dz = dxyz(3)
-
+	  
+	  cornerx = corner(1)
+	  cornery = corner(2)
+	  cornerz = corner(3)
+	  
       end subroutine PSC_set_patch
 
