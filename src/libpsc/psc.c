@@ -270,7 +270,7 @@ psc_setup_patches(struct psc *psc)
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
-      patch->xb[d]  = patches[p].off[d] * psc->dx[d] + psc->domain.corner[d];
+      patch->xb[d]  = patches[p].off[d] * psc->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir

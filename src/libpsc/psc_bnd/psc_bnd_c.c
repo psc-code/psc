@@ -259,10 +259,10 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
     xgl[d] = xge[d] - xgb[d];
   }
   for (int d = 0; d < 3; d++) {
-    xb[d]  += psc->domain.corner[d];
-    xe[d]  += psc->domain.corner[d];
-    xgb[d] += psc->domain.corner[d];
-    xge[d] += psc->domain.corner[d];
+    xb[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xe[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xgb[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xge[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
   }
 }
 

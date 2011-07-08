@@ -151,11 +151,9 @@ struct psc_patch {
   double xb[3];       // lower left corner of the domain in this patch
 };
 
-#define CRDX(p, jx) (psc->dx[0] * ((jx) + psc->patch[p].off[0]) + psc->domain.corner[0])
-#define CRDY(p, jy) (psc->dx[1] * ((jy) + psc->patch[p].off[1]) + psc->domain.corner[1])
-#define CRDZ(p, jz) (psc->dx[2] * ((jz) + psc->patch[p].off[2]) + psc->domain.corner[2])
-
-MRC_CLASS_DECLARE(psc, struct psc);
+#define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
+#define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
+#define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
 
 struct psc {
   struct mrc_obj obj;
@@ -197,6 +195,8 @@ struct psc {
 
   double time_start;
 };
+
+MRC_CLASS_DECLARE(psc, struct psc);
 
 struct psc_particle_npt {
   double q; ///< charge
