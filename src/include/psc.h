@@ -80,6 +80,7 @@ struct psc_param {
   double rho0;
   double phi0;
   double a0;
+  double cfl;   ///<CFL number to be used for determining timestep
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
   int nr_kinds;
   bool seed_by_time;

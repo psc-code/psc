@@ -88,6 +88,7 @@ static struct param psc_descr[] = {
   { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
+  { "cfl"           , VAR(prm.cfl)             , PARAM_DOUBLE(.75)          },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
   { "nr_kinds"      , VAR(prm.nr_kinds)        , PARAM_INT(2)               },
   { "seed_by_time"  , VAR(prm.seed_by_time)    , PARAM_BOOL(false)          },
@@ -195,7 +196,8 @@ psc_setup_coeff(struct psc *psc)
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
     }
   }
-  psc->dt = .75 * sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
+  psc->dt = psc->prm.cfl * 
+    sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
 
