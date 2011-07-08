@@ -223,9 +223,28 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   xs->dim = 3;
   mrc_domain_get_nr_global_patches(domain, &xs->nr_global_patches);
   xs->patch_infos = calloc(xs->nr_global_patches, sizeof(*xs->patch_infos));
+  for (int d = 0; d < 3; d++) {
+    xs->xl[d] = calloc(xs->nr_global_patches, sizeof(*xs->xl[d]));
+    xs->dx[d] = calloc(xs->nr_global_patches, sizeof(*xs->dx[d]));
+  }
+
+  struct mrc_crds *crds = mrc_domain_get_crds(domain);
+  float xl[3], dx[3];
+  if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
+      strcmp(mrc_crds_type(crds), "uniform") == 0) {
+    xs->uniform = true;
+    mrc_crds_get_xl_xh(crds, xl, NULL);
+    mrc_crds_get_dx(crds, dx);
+  }
 
   for (int gp = 0; gp < xs->nr_global_patches; gp++) {
     mrc_domain_get_global_patch_info(domain, gp, &xs->patch_infos[gp]);
+    if (xs->uniform) {
+      for (int d = 0; d < 3; d++) {
+	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d];
+	xs->dx[d][gp] = dx[d];
+      }
+    }
   }
 
   list_add_tail(&xs->entry, xdmf_spatial_list);
@@ -247,20 +266,23 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
 
   for (int d = 0; d < 3; d++) {
     xs->patch_infos[0].ldims[d] = slab_dims[d];
+    xs->xl[d] = calloc(xs->nr_global_patches, sizeof(*xs->xl[d]));
+    xs->dx[d] = calloc(xs->nr_global_patches, sizeof(*xs->dx[d]));
   }
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "uniform") == 0) {
     xs->uniform = true;
-    mrc_crds_get_xl_xh(crds, xs->xl, NULL);
-    mrc_crds_get_dx(crds, xs->dx);
+    float xl[3], dx[3];
+    mrc_crds_get_xl_xh(crds, xl, NULL);
+    mrc_crds_get_dx(crds, dx);
     for (int d = 0; d < 3; d++) {
-      xs->xl[d] += slab_off[d] * xs->dx[d];
+      xs->xl[d][0] += slab_off[d] * dx[d];
       // no extent in invariant directions
       if (slab_dims[d] == 1) {
-	xs->xl[d] = 0.;
-	xs->dx[d] = 0.;
+	xs->xl[d][0] = 0.;
+	xs->dx[d][0] = 0.;
       }
     }
   }
@@ -314,7 +336,9 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
       }
     } else if (xs->dim == 3) {
       if (xs->uniform) {
-	xdmf_write_topology_uniform_m3(f, ldims, xs->xl, xs->dx);
+	float xl[3] = { xs->xl[0][s], xs->xl[1][s], xs->xl[2][s] };
+	float dx[3] = { xs->dx[0][s], xs->dx[1][s], xs->dx[2][s] };
+	xdmf_write_topology_uniform_m3(f, ldims, xl, dx);
       } else {
 	xdmf_write_topology_m3(f, ldims, fname, patch);
       }
@@ -352,6 +376,10 @@ xdmf_spatial_destroy(struct xdmf_spatial *xs)
   list_del(&xs->entry);
   free(xs->name);
   free(xs->patch_infos);
+  for (int d = 0; d < 3; d++) {
+    free(xs->xl[d]);
+    free(xs->dx[d]);
+  }
   free(xs);
 }
 
