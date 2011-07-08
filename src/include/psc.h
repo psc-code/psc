@@ -1,3 +1,4 @@
+/*! @file */
 
 #ifndef PSC_H
 #define PSC_H
@@ -59,25 +60,27 @@ typedef int f_int;
 #include "psc_particles.h"
 #include "psc_fields.h"
 
-// user settable parameters
+///User specified parameters
+///
+///These parameters are set in psc_case->init_param() to define the normalization coefficients of the system
 struct psc_param {
-  double qq;
-  double mm;
-  double tt;
-  double cc;
-  double eps0;
-  int nmax;
-  double cpum;
-  double lw;
-  double i0;
-  double n0;
-  double e0;
+  double qq;	///<elemental charge 
+  double mm;	///<mass
+  double tt;	///<some measurement for energy ? (default is 1keV in fortran) 
+  double cc;	///<speed of light
+  double eps0;	///<vacuum permittivity
+  int nmax;	///<number of timesteps
+  double cpum;	///<time until CPU checks out data and restarts (deprecated?) 
+  double lw;	///<normalization coefficient for laser wavelength (omega)
+  double i0;	///<laser intensity
+  double n0;	///<electron density
+  double e0;	///<field intesity
   double b0;
   double j0;
   double rho0;
   double phi0;
   double a0;
-  int nicell;
+  int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
   int nr_kinds;
   bool seed_by_time;
   bool const_num_particles_per_cell;
@@ -87,33 +90,35 @@ struct psc_param {
   bool from_checkpoint;
 };
 
-// coefficients needed for computations
-// -- derived, not provided by user
+/// coefficients needed for computations
+/// -- derived, not provided by user
 struct psc_coeff {
-  double cori;
+  double cori;	///< 1 / psc_params.nicell 
   double alpha;
   double beta;
   double eta;
 
   // FIXME are these needed in general?
-  double wl;
-  double ld;
-  double vos;
+  double wl;	///<omega
+  double ld;	///Normalization factor for lengths
+  double vos;	///< 1/k
   double vt;
   double wp;
-  int np; // # steps for time-averaging fields
-  int nnp; // # steps per laser cycle
+  int np; ///< # steps for time-averaging fields
+  int nnp; ///< # steps per laser cycle
 };
 
+///Paramters for PML
 struct psc_pml {
-  int thick; // # grid points for PML
-  int cushion; // # grid points for buffer zone
-  int size; // # grid points PML + buffer
-  int order; // PML order
+  int thick; ///< # grid points for PML
+  int cushion; ///< # grid points for buffer zone
+  int size; ///< # grid points PML + buffer
+  int order; ///< PML order
 };
 
 // need to match fortran values
 
+///Possible boundary conditions for fields
 enum {
   BND_FLD_OPEN,
   BND_FLD_PERIODIC,
@@ -121,17 +126,27 @@ enum {
   BND_FLD_TIME,
 };
 
+///Possible boundary conditions for particles
 enum {
   BND_PART_REFLECTING,
   BND_PART_PERIODIC,
 };
 
+///Describes the spatial domain to operate on.
+///
+///This struct describes the spatial dimension of the simulation-box
+///@note Here, you can also set the dimensionality by eliminating a dimension. Example: To simulate in xy only, set
+///\verbatim psc_domain.gdims[2]=1 \endverbatim
+///Also, set the boundary conditions for the eliminated dimensions to BND_FLD_PERIODIC or you'll get invalid \a dt and \a dx
+
 struct psc_domain {
-  double length[3];
+  double length[3];	///<The physical size of the simulation-box 
   double corner[3];
-  int gdims[3];
-  int bnd_fld_lo[3], bnd_fld_hi[3], bnd_part[3];
-  bool use_pml;
+  int gdims[3];		///<Number of grid-points in each dimension
+  int bnd_fld_lo[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  int bnd_fld_hi[3];	///<Boundary conditions of the fields. Can be any value of BND_FLD.
+  int bnd_part[3];	///<Boundary conditions of the fields. Can be any value of BND_PART.
+  bool use_pml;		///<Enables or disables PML
 };
 
 // FIXME, turn into mrc_obj
@@ -146,50 +161,68 @@ void psc_photon_generator_run(mphotons_t *mphotons);
 // In particular, it's better to randomize just per-cell after the sorting
 
 struct psc_patch {
-  int ldims[3];       // size of local domain (w/o ghost points)
-  int off[3];         // local to global offset
-  double xb[3];       // lower left corner of the domain in this patch
+  int ldims[3];       ///< size of local domain (w/o ghost points)
+  int off[3];         ///< local to global offset
+  
+  //! @brief lower left corner of this patch in the domain
+  //! 
+  //! This value is given in the internal coordinates and is consistent with those given to pulses, particles etc.
+  //! \code double xx = psc.patch[i]->xb[0] + x * psc.dx[0]; \endcode
+  //! Use the macros CRDX, CRDY, CRDZ to get the internal positions of any grid-point on this patch
+  double xb[3];
 };
 
 #define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
 #define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
 #define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
 
+///This structure holds all the interfaces for the given configuration.
+///
+///
 struct psc {
+  ///@defgroup interfaces Interfaces @{
   struct mrc_obj obj;
-  struct psc_push_particles *push_particles;
-  struct psc_push_fields *push_fields;
-  struct psc_bnd *bnd;
-  struct psc_collision *collision;
-  struct psc_randomize *randomize;
-  struct psc_sort *sort;
-  struct psc_output_fields *output_fields;
-  struct psc_output_particles *output_particles;
-  struct psc_moments *moments;
-  struct psc_event_generator *event_generator;
-  struct psc_balance *balance;
+  struct psc_push_particles *push_particles;	///< particle pusher
+  struct psc_push_fields *push_fields;		///< field pusher
+  struct psc_bnd *bnd;				///< boundaries
+  struct psc_collision *collision;		///< collision operator
+  struct psc_randomize *randomize;		///< randomizer
+  struct psc_sort *sort;			///< sort operator
+  struct psc_output_fields *output_fields;	///< field output
+  struct psc_output_particles *output_particles;///< particle output
+  struct psc_moments *moments;			///< Moment generator
+  struct psc_event_generator *event_generator;	///< event generator
+  struct psc_balance *balance;                  ///< rebalancer
+  ///@}
 
+  ///@defgroup config-params user-configurable parameters @{
   // user-configurable parameters
-  struct psc_param prm;
-  struct psc_coeff coeff;
-  struct psc_domain domain;
-  struct psc_pml pml;
+  struct psc_param prm;		///< normalization parameters set by the user
+  struct psc_coeff coeff;	///< automatically derived constants
+  struct psc_domain domain;	///< the computational domain
+  struct psc_pml pml;		///< PML settings
+  ///@}
 
+  
   // other parameters / constants
   double p2A, p2B;
-  int timestep;
-  double dt;
-  double dx[3];
+  int timestep;	///< the current timestep
+  double dt;	///< timestep in physical units
+  double dx[3];	///< cell size in physical units
+  ///@}
 
-  mparticles_base_t *particles;
-  mfields_base_t *flds;
+  mparticles_base_t *particles;	///< All the particles, indexed by their containing patch
+  mfields_base_t *flds;	///< The fields. Access them via F3_BASE()
   mphotons_t *mphotons;
+
+  ///The domain partitioner.
+  ///
+  ///Use this to access the global list of patches \sa \ref patches
+
   struct mrc_domain *mrc_domain;
-
-  int nr_patches;
-  struct psc_patch *patch;
-  int ibn[3];         // number of ghost points
-
+  int nr_patches;	///< Number of patches (on this processor)
+  struct psc_patch *patch;	///< List of patches (on this processor)
+  int ibn[3];         ///< number of ghost points
   // did we allocate the fields / particles (otherwise, Fortran did)
   bool allocated;
 
@@ -226,6 +259,21 @@ struct psc_ops {
   void (*output)(struct psc *psc);
 };
 
+/*!
+Enumerates all grid points of patch p
+
+Use this macro like a regular for() expression to process all grid points on any patch p.
+Variables ix, iy, iz will be automatically declared.
+
+\param p the patch to process
+\param l Number of ghost-points to include in negative direction
+\param r Number of ghost-points to include in positive direction
+\param[out] ix x-coordinate of current grid point
+\param[out] iy y-coordinate of current grid point
+\param[out] iz z-coordinate of current grid point
+
+Always close this expression with foreach_3d_end
+*/
 #define foreach_3d(p, ix, iy, iz, l, r) {				\
   int __ilo[3] = { -l, -l, -l };					\
   int __ihi[3] = { psc.patch[p].ldims[0] + r,				\
@@ -235,6 +283,17 @@ struct psc_ops {
     for (int iy = __ilo[1]; iy < __ihi[1]; iy++) {			\
       for (int ix = __ilo[0]; ix < __ihi[0]; ix++)
 
+/*! Closes a loop started by foreach_3d
+ * 
+Usage:
+\code
+psc_foreach_patch(&psc, p){
+psc_foreach_3d(p, jx, jy, jz, 0, 0) {
+  //do stuff
+} psc_foreach_3d_end;
+}
+\endcode
+*/
 #define foreach_3d_end				\
   } } }
 

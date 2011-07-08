@@ -10,12 +10,13 @@ struct psc_pulse {
   bool is_setup;
 };
 
+///Interface for custom pulses
 struct psc_pulse_ops {
   MRC_SUBCLASS_OPS(struct psc_pulse);
   double (*field_s)(struct psc_pulse *,
-		    double x, double y, double z, double t);
+		    double x, double y, double z, double t);	///< The field value in s-polarisation
   double (*field_p)(struct psc_pulse *,
-		    double x, double y, double z, double t);
+		    double x, double y, double z, double t);	///< The field value in p-polarisation
 };  
 
 extern struct psc_pulse_ops psc_pulse_none_ops;
