@@ -256,13 +256,15 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
 
+  assert(gpatch < multi->nr_gpatches);
   info->global_patch = gpatch;
-  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
+  int sfc_idx = multi->gp[gpatch];
+  gpatch_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
   
   assert(info->rank >= 0);
 
   int p3[3];
-  sfc_gpatch_to_idx3(multi, gpatch, p3);
+  sfc_gpatch_to_idx3(multi, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d];
     info->off[d] = p3[d] * multi->ldims[d];
@@ -276,8 +278,9 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
 
-  //Get gpatch
-  mrc_domain_dynamic_get_global_patch_info(domain, multi->gpatch[patch], info);
+  int gpatch, sfc_idx = multi->gpatch[patch]; // FIXME, there must be an easier way
+  bintree_get(&multi->g_patches, sfc_idx, &gpatch);
+  mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
 static
@@ -533,7 +536,8 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     return;
   }
 
-  int gpatch = sfc_idx3_to_gpatch(this, idx);
+  int gpatch, sfc_idx = sfc_idx3_to_gpatch(this, idx);
+  bintree_get(&this->g_patches, sfc_idx, &gpatch);
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
