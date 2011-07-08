@@ -54,6 +54,9 @@ static struct param psc_descr[] = {
   { "gdims_x"       , VAR(domain.gdims[0])        , PARAM_INT(1)         },
   { "gdims_y"       , VAR(domain.gdims[1])        , PARAM_INT(1)         },
   { "gdims_z"       , VAR(domain.gdims[2])        , PARAM_INT(400)       },
+  { "np_x"	    , VAR(domain.np[0])	          , PARAM_INT(1)	 },
+  { "np_y"	    , VAR(domain.np[1])	          , PARAM_INT(1)	 },
+  { "np_z"	    , VAR(domain.np[2])	          , PARAM_INT(1)	 },
 
   { "bnd_field_lo_x", VAR(domain.bnd_fld_lo[0])   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
@@ -238,6 +241,7 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
   mrc_domain_set_param_int(domain, "bcz", bc[2]);
   mrc_domain_set_param_int(domain, "nr_patches", nr_patches);
+  mrc_domain_set_param_int3(domain, "np", psc->domain.np);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_crds_set_type(crds, "multi_uniform");
