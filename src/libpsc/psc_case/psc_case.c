@@ -97,13 +97,6 @@ _psc_case_setup(struct psc_case *_case)
   // alloc / initialize photons
   psc_case_init_photons(_case);
 
-#if 0
-  psc_write_checkpoint(psc);
-  psc_destroy(psc);
-  psc = psc_read_checkpoint(MPI_COMM_WORLD);
-  _case->psc = psc;
-#endif
-
   psc_setup_fortran(psc);
 }
 
