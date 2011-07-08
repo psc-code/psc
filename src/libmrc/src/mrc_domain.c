@@ -264,6 +264,7 @@ mrc_domain_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_dynamic_ops);
 }
 
 int mrc_domain_get_nth_gpatch(struct mrc_domain *domain, int n)
