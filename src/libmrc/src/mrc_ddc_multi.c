@@ -165,7 +165,11 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
   for (int p = 0; p < multi->nr_patches; p++) {
     struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
-    mrc_domain_get_patch_idx3(multi->domain, p, ddc_patch->patch_idx);
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(multi->domain, p, &info);
+    for (int d = 0; d < 3; d++) {
+      ddc_patch->patch_idx[d] = info.idx3[d];
+    }
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {

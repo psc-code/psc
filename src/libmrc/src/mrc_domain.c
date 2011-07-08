@@ -127,14 +127,6 @@ mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx)
 }
 
 void
-mrc_domain_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
-{
-  check_is_setup(domain);
-  assert(mrc_domain_ops(domain)->get_patch_idx3);
-  mrc_domain_ops(domain)->get_patch_idx3(domain, p, idx);
-}
-
-void
 mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
   check_is_setup(domain);

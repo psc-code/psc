@@ -396,16 +396,6 @@ mrc_domain_multi_get_patches(struct mrc_domain *domain, int *nr_patches)
 }
 
 static void
-mrc_domain_multi_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
-{
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-  assert(p >= 0 && p < multi->nr_patches);
-  int gpatch = p + multi->gpatch_off;
-
-  sfc_gpatch_to_idx3(multi, gpatch, idx);
-}
-
-static void
 mrc_domain_multi_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -562,7 +552,6 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .write                 = mrc_domain_multi_write,
   .destroy               = mrc_domain_multi_destroy,
   .get_patches           = mrc_domain_multi_get_patches,
-  .get_patch_idx3        = mrc_domain_multi_get_patch_idx3,
   .get_global_dims       = mrc_domain_multi_get_global_dims,
   .get_nr_procs          = mrc_domain_multi_get_nr_procs,
   .get_bc                = mrc_domain_multi_get_bc,
