@@ -14,7 +14,7 @@ static void
 psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
 {
   psc_foreach_patch(psc, p) {
-    loads[p] = nr_particles_by_patch[p];
+    loads[p] = nr_particles_by_patch[p] + 1;
   }
 }
 
@@ -24,7 +24,7 @@ psc_get_loads(struct psc *psc, double *loads)
   mparticles_base_t *mparticles = psc->particles;
 
   psc_foreach_patch(psc, p) {
-    loads[p] = mparticles->p[p].n_part;
+    loads[p] = mparticles->p[p].n_part + 1;
   }
 }
 
