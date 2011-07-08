@@ -265,6 +265,14 @@ mrc_params_get_option_double3(const char *name, double *pval)
 }
 
 void
+mrc_params_get_option_ptr(const char *name, void** pval)
+{
+  struct option *p = find_option(name);
+  printf("Parse %s into a ptr? Really?\n", p->value);
+  assert(0);
+}
+
+void
 mrc_params_set_default(void *p, struct param *params)
 {
   for (int i = 0; params[i].name; i++) {
@@ -302,6 +310,9 @@ mrc_params_set_default(void *p, struct param *params)
       for (int d = 0; d < 3; d++) {
 	pv->u_double3[d] = params[i].u.ini_double3[d];
       }
+      break;
+    case PT_PTR:
+      pv->u_ptr = params[i].u.ini_ptr;
       break;
     default:
       assert(0);
@@ -356,6 +367,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
 	pv->u_double3[d] = pval->u_double3[d];
       }
       break;
+    case PT_PTR:
+      pv->u_ptr = pval->u_ptr;
+      break;
     default:
       assert(0);
     }
@@ -397,6 +411,9 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
       for (int d = 0; d < 3; d++) {
 	pval->u_int3[d] = pv->u_int3[d];
       }
+      break;
+    case PT_PTR:
+      pval->u_ptr = pv->u_ptr;
       break;
     default:
       assert(0);
@@ -491,6 +508,8 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_DOUBLE3:
       mrc_params_get_option_double3(params[i].name, &pv->u_double3[0]);
       break;
+    case PT_PTR:
+      break;
     default:
       assert(0);
     }
@@ -532,6 +551,8 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       break;
     case PT_DOUBLE3:
       mrc_params_get_option_double3(name, &pv->u_double3[0]);
+      break;
+    case PT_PTR:
       break;
     default:
       assert(0);
@@ -578,6 +599,9 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     case PT_DOUBLE3:
       mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
 		 pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
+      break;
+    case PT_PTR:
+      mpi_printf(comm, "%-20s| %p\n", params[i].name, pv->u_ptr);
       break;
     }
   }
