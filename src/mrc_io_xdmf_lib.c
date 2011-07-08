@@ -240,7 +240,6 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   for (int gp = 0; gp < xs->nr_global_patches; gp++) {
     int gpatch = mrc_domain_get_nth_gpatch(domain,gp);
     mrc_domain_get_global_patch_info(domain, gpatch, &xs->patch_infos[gp]);
-    mrc_domain_get_global_patch_info(domain, gp, &xs->patch_infos[gp]);
     if (xs->uniform) {
       for (int d = 0; d < 3; d++) {
 	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d];
