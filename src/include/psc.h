@@ -60,6 +60,8 @@ typedef int f_int;
 #include "psc_particles.h"
 #include "psc_fields.h"
 
+#include "psc_patchmanager.h"
+
 ///User specified parameters
 ///
 ///These parameters are set in psc_case->init_param() to define the normalization coefficients of the system
@@ -223,6 +225,11 @@ struct psc {
   ///Use this to access the global list of patches \sa \ref patches
 
   struct mrc_domain *mrc_domain;
+  
+  bool use_dynamic_patches;	///< Setting this to true will enable dynamic allocation of patches. Make sure to provide at least one domainwindow in this case.
+
+  struct psc_patchmanager patchmanager;	///< Use this to allocate and deallocate patches dynamically on the domain
+
   int nr_patches;	///< Number of patches (on this processor)
   struct psc_patch *patch;	///< List of patches (on this processor)
   int ibn[3];         ///< number of ghost points
@@ -368,7 +375,7 @@ void psc_setup_fields(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
-void psc_setup_patches(struct psc *psc);
+void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);

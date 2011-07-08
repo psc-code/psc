@@ -1,5 +1,8 @@
 
 #include "psc_balance.h"
+#include "psc_case.h"
+#include "psc_bnd_fields.h"
+#include "psc_push_fields.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
@@ -8,6 +11,7 @@
 struct psc_balance {
   struct mrc_obj obj;
   int every;
+  int force_update;
 };
 
 static void
@@ -92,6 +96,8 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
   return nr_patches_new;
 }
 
+#define MAX(x,y) (x > y ? x : y)
+
 static double *
 gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
 	     int *p_nr_global_patches)
@@ -119,7 +125,24 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
       off += nr_patches_all[i];
     }
     mrc_domain_get_nr_global_patches(domain, p_nr_global_patches);
-    loads_all = calloc(*p_nr_global_patches, sizeof(*loads_all));
+	  
+	  //HACK If we have a dynamic domain, assume all newly created patches have a fixed load
+	  if(ppsc->use_dynamic_patches)
+	  {
+		  int n_old_patches = *p_nr_global_patches;
+		  *p_nr_global_patches = bitfield3d_count_bits_set(ppsc->patchmanager.activepatches);
+		  
+		  loads_all = calloc(MAX(n_old_patches, *p_nr_global_patches), sizeof(*loads_all));
+		  
+		  for(int i=n_old_patches; i<*p_nr_global_patches; ++i)
+		  {
+			  loads_all[i] = 1.;	//TODO Better assumption? Like take the median or sth alike...
+		  }
+	  }
+	  else
+	  {
+		  loads_all = calloc(*p_nr_global_patches, sizeof(*loads_all));
+	  }
   }
   MPI_Gatherv(loads, nr_patches, MPI_DOUBLE, loads_all, nr_patches_all, displs,
 	      MPI_DOUBLE, 0, comm);
@@ -158,6 +181,10 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
     if (info_new.rank == rank) {
       nr_particles_by_patch_new[info_new.patch] = nr_particles_by_patch_old[p];
       send_reqs[p] = MPI_REQUEST_NULL;
+    } else if ( info_new.rank < 0 ) {	//This patch has been deleted
+      //Issue a warning if there will be particles lost
+      if(nr_particles_by_patch_old[p] > 0) printf("Warning: losing %d particles in patch deallocation\n", nr_particles_by_patch_old[p]);
+      send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, info_new.rank,
 		info.global_patch, comm, &send_reqs[p]);
@@ -171,7 +198,12 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
     mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
+    } else if ( info_old.rank < 0 ) {
+      //TODO Get number of particles
+      nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
+      recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
+      printf("a: rank: %d gp: %d\n", info_old.rank, info.global_patch);
       MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, info.global_patch,
 		comm, &recv_reqs[p]);
     }
@@ -210,7 +242,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
     mrc_domain_get_global_patch_info(domain_new, info.global_patch, &info_new);
-    if (info_new.rank == rank) {
+    if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       particles_base_t *pp_old = &particles_old->p[p];
@@ -228,6 +260,9 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
+    } else if (info_old.rank < 0) {
+      recv_reqs[p] = MPI_REQUEST_NULL;
+      //TODO Seed particles
     } else {
       particles_base_t *pp_new = &particles_new->p[p];
       int nn = pp_new->n_part * (sizeof(particle_base_t)  / sizeof(particle_base_real_t));
@@ -274,6 +309,14 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   struct mrc_patch *patches_new =
     mrc_domain_get_patches(domain_new, &nr_patches_new);
 
+	
+	//HACK: Don't communicate output fields if they don't correspond to the domain
+	//This is needed e.g. for the boosted output which handles its MPI communication internally
+	//printf("Field: %s\n", flds->f[0].name);
+	
+	if(nr_patches_old != flds->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
+	
+	
   assert(nr_patches_old == flds->nr_patches);
   assert(nr_patches_old > 0);
   int ibn[3] = { -flds->f[0].ib[0], -flds->f[0].ib[1], -flds->f[0].ib[2] };
@@ -301,7 +344,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
     mrc_domain_get_global_patch_info(domain_new, info.global_patch, &info_new);
-    if (info_new.rank == rank) {
+    if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       fields_base_t *pf_old = &f_old[p];
@@ -321,7 +364,11 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
-    } else {
+    } else if (info_old.rank < 0) {	//this patch did not exist before
+      recv_reqs[p] = MPI_REQUEST_NULL;
+      //Seed new data
+    }
+    else {
       fields_base_t *pf_new = &f_new[p];
       int nn = fields_base_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
@@ -367,12 +414,33 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   flds->nr_patches = nr_patches_new;
 }
 
+static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_domain *domain_new)
+{
+  int nr_patches_new;
+  mrc_domain_get_patches(domain_new, &nr_patches_new);
+    
+  for (int p = 0; p < nr_patches_new; p++) {
+    struct mrc_patch_info info, info_old;
+    mrc_domain_get_local_patch_info(domain_new, p, &info);
+    mrc_domain_get_global_patch_info(domain_old, info.global_patch, &info_old);
+    if (info_old.rank < 0)	//Patch has to be seeded
+    {
+      //Seed field
+      double t = ppsc->timestep * ppsc->dt;
+      psc_bnd_fields_setup_patch(psc_push_fields_get_bnd_fields(ppsc->push_fields), p, ppsc->flds, t);
+
+      //Seed particles
+      psc_case_init_particles_patch(ppsc->patchmanager.currentcase, p, 0);
+    }
+  }
+}
+
 void
 psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 		    int **p_nr_particles_by_patch)
 {
-  if (bal->every <= 0)
-    return;
+  /*if (bal->every <= 0)
+    return;*/
 
   struct mrc_domain *domain_old = psc->mrc_domain;
 
@@ -388,11 +456,14 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 
   int nr_patches_new = find_best_mapping(domain_old, nr_global_patches,
 					 loads_all);
+	
+	
   free(loads_all);
 
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
+  psc_setup_patches(psc, domain_new);
 
   communicate_new_nr_particles(domain_old, domain_new, p_nr_particles_by_patch);
 
@@ -403,11 +474,11 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
+  psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
-  psc_setup_patches(psc);
 }
 
 // FIXME, way too much duplication from the above
@@ -415,11 +486,18 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
 void
 psc_balance_run(struct psc_balance *bal, struct psc *psc)
 {
-  if (bal->every <= 0)
-    return;
+  if (bal->force_update == true)
+  {
+    bal->force_update = false;
+  }
+  else
+  {
+    if (bal->every <= 0)
+      return;
 
-  if (psc->timestep == 0 || psc->timestep % bal->every != 0)
-    return;
+    if (psc->timestep == 0 || psc->timestep % bal->every != 0)
+      return;
+  }
 
   static int st_time_balance;
   if (!st_time_balance) {
@@ -446,6 +524,12 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   free(psc->patch);
   struct mrc_domain *domain_new = psc_setup_mrc_domain(psc, nr_patches_new);
   //  mrc_domain_view(domain_new);
+  psc_setup_patches(psc, domain_new);
+  
+  //If there are no active patches, exit here
+  int n_global_patches;
+  mrc_domain_get_nr_global_patches(domain_new, &n_global_patches);
+  if(n_global_patches < 1) exit(0);
 
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
@@ -481,6 +565,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   list_for_each_entry(mf, &mfields_base_list, entry) {
     communicate_fields(domain_old, domain_new, mf);
   }
+  
+  psc_balance_seed_patches(domain_old, domain_new);
 
   // ----------------------------------------------------------------------
   // photons
@@ -507,6 +593,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 #define VAR(x) (void *)offsetof(struct psc_balance, x)
 static struct param psc_balance_descr[] = {
   { "every"            , VAR(every)               , PARAM_INT(0)        },
+  { "force_update"     , VAR(force_update)	  , PARAM_INT(0)	},
   {},
 };
 #undef VAR

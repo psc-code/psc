@@ -166,6 +166,17 @@ _psc_create(struct psc *psc)
   psc->time_start = MPI_Wtime();
 }
 
+// ----------------------------------------------------------------------
+// psc_set_from_options
+
+static void
+_psc_set_from_options(struct psc *psc)
+{
+  if (psc->use_dynamic_patches) {
+    psc_patchmanager_set_from_options(&psc->patchmanager);
+  }
+}
+
 // ======================================================================
 // psc_setup
 
@@ -235,7 +246,13 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
     }
   }
 
-  mrc_domain_set_type(domain, "multi");
+  if(psc->use_dynamic_patches) {
+    psc_patchmanager_timestep(&psc->patchmanager);
+    mrc_domain_set_type(domain, "dynamic");
+    mrc_domain_set_param_ptr(domain, "activepatches", psc->patchmanager.activepatches);
+  } else {
+    mrc_domain_set_type(domain, "multi");
+  }
   mrc_domain_set_param_int3(domain, "m", psc->domain.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
   mrc_domain_set_param_int(domain, "bcy", bc[1]);
@@ -263,10 +280,8 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 // psc_setup_patches
 
 void
-psc_setup_patches(struct psc *psc)
+psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
-  struct mrc_domain *domain = psc->mrc_domain;
-
   // set up index bounds,
   // sanity checks for the decomposed domain
   int gdims[3];
@@ -334,10 +349,15 @@ psc_setup_domain(struct psc *psc)
   psc->pml.size = psc->pml.thick + psc->pml.cushion;
   psc->pml.order = 3;
 
+  //Needs to be done before setting up the domain
+  if (psc->use_dynamic_patches) {
+    psc_patchmanager_setup(&psc->patchmanager, psc->domain.np);
+  }
+
   if (!psc->mrc_domain) {
     psc->mrc_domain = psc_setup_mrc_domain(psc, -1);
   }
-  psc_setup_patches(psc);
+  psc_setup_patches(psc, psc->mrc_domain);
 }
 
 // ----------------------------------------------------------------------
@@ -480,6 +500,9 @@ _psc_destroy(struct psc *psc)
 
   mrc_domain_destroy(psc->mrc_domain);
 
+  if (psc->use_dynamic_patches) {
+    psc_patchmanager_destroy(&psc->patchmanager);
+  }
   ppsc = NULL;
 }
 
@@ -776,6 +799,7 @@ struct mrc_class_psc mrc_class_psc = {
   .size             = sizeof(struct psc),
   .param_descr      = psc_descr,
   .create           = _psc_create,
+  .set_from_options = _psc_set_from_options,
   .setup            = _psc_setup,
   .destroy          = _psc_destroy,
   .write            = _psc_write,

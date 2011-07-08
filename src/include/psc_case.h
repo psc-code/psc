@@ -53,6 +53,8 @@ void psc_case_init_partition(struct psc_case *_case, int *nr_particles_by_patch,
 			     int *particle_label_offset);
 void psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 			     int particle_label_offset);
+int psc_case_calc_nr_particles_in_patch(struct psc_case *_case, int patch);
+void psc_case_init_particles_patch(struct psc_case *_case, int patch, int particle_label_offset);
 void psc_case_init_fields(struct psc_case *_case, mfields_base_t *flds);
 void psc_case_init_photons(struct psc_case *_case);
 

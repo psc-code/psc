@@ -17,6 +17,8 @@ libsubdir_la_SOURCES = \
 	psc_case_cone.c \
 	psc_case_microsphere.c \
 	psc_case_photon_test.c \
-	psc_case_bubble.c
+	psc_case_bubble.c \
+	psc_case_dynamic.c
+
 
 

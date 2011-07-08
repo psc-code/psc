@@ -289,7 +289,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
-  // FIXME, calculate once
+  // FIXME, calculate once => But then please recalculate whenever the dynamic window changes
 
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);

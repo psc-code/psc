@@ -62,6 +62,10 @@ _psc_case_setup(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
 
+  //TODO: Set this somewhere less hackish
+  psc->patchmanager.currentcase = _case;
+  if (psc_case_ops(_case)->setup != NULL) psc_case_ops(_case)->setup(_case);
+  
   // this sets up everything except allocating fields and particles,
   // and intializing them
   psc_setup(psc);
@@ -188,6 +192,7 @@ psc_case_init()
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_microsphere_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_photon_test_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_bubble_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_dynamic_ops);
 }
 
 // ======================================================================

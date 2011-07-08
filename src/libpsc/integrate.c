@@ -46,6 +46,10 @@ psc_step(struct psc *psc)
 
   // default psc_step() implementation
 
+  if (psc->use_dynamic_patches) {
+    psc_patchmanager_timestep(&psc->patchmanager);
+  }
+
   psc_output(psc);
   psc_balance_run(psc->balance, psc);
   
@@ -70,6 +74,8 @@ psc_step(struct psc *psc)
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b(psc->push_fields, psc->flds);
 }
+
+extern void dynamicwindow_timestep();
 
 /////////////////////////////////////////////////////////////////////////
 /// Main time integration loop.
