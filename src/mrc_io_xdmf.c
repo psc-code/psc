@@ -1481,18 +1481,19 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
 
   const char *xyz[3] = { "x", "y", "z" };
 
-  int gdims[3], nr_procs[3], idx[3];
+  int gdims[3], nr_procs[3];
   mrc_domain_get_global_dims(fld->domain, gdims);
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims, *off = patches[0].off;
-  mrc_domain_get_local_idx(fld->domain, idx);
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(fld->domain, 0, &info);
   mrc_domain_get_nr_procs(fld->domain, nr_procs);
   for (int d = 0; d < 3; d++) {
     bool skip_write = false;
     for (int dd = 0; dd < 3; dd++) {
-      if (dd != d && idx[dd] != 0) {
+      if (dd != d && info.idx3[dd] != 0) {
 	skip_write = true;
 	break;
       }
@@ -1500,7 +1501,7 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
     hsize_t hgdims[1] = { gdims[d] + 1 };
     hsize_t hldims[1] = { ldims[d] };
     hsize_t hoff[1] = { off[d] };
-    if (idx[d] == nr_procs[d] - 1) {
+    if (info.idx3[d] == nr_procs[d] - 1) {
       hldims[0]++;
     }
     hid_t filespace = H5Screate_simple(1, hgdims, NULL);

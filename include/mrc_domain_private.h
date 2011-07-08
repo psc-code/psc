@@ -21,7 +21,6 @@ struct mrc_domain {
 struct mrc_domain_ops {
   MRC_SUBCLASS_OPS(struct mrc_domain);
   struct mrc_patch *(*get_patches)(struct mrc_domain *domain, int *nr_patches);
-  void (*get_local_idx)(struct mrc_domain *domain, int *idx);
   void (*get_global_dims)(struct mrc_domain *domain, int *dims);
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
   void (*get_bc)(struct mrc_domain *domain, int *bc);

@@ -131,12 +131,6 @@ mrc_domain_simple_get_patches(struct mrc_domain *domain, int *nr_patches)
 }
 
 static void
-mrc_domain_simple_get_local_idx(struct mrc_domain *domain, int *idx)
-{
-  mrc_domain_simple_rank2proc(domain, domain->rank, idx);
-}
-
-static void
 mrc_domain_simple_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
@@ -255,7 +249,6 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .setup                 = mrc_domain_simple_setup,
   .get_neighbor_rank     = mrc_domain_simple_get_neighbor_rank,
   .get_patches           = mrc_domain_simple_get_patches,
-  .get_local_idx         = mrc_domain_simple_get_local_idx,
   .get_idx3_patch_info   = mrc_domain_simple_get_idx3_patch_info,
   .get_global_dims       = mrc_domain_simple_get_global_dims,
   .get_nr_procs          = mrc_domain_simple_get_nr_procs,
