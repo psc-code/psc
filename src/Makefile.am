@@ -30,7 +30,9 @@ libmrc_la_SOURCES = \
 	mrc_obj.c \
 	mrc_nr_tridag.c \
 	mrc_erfi.c \
-	hilbert.c
+	hilbert.c \
+	bitfield3d.c \
+	bintree.c
 
 if HAVE_HDF5
 libmrc_la_SOURCES += \
