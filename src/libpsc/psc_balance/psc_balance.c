@@ -155,6 +155,12 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
   return loads_all;
 }
 
+static inline int
+mpi_tag(struct mrc_patch_info *info)
+{
+  return info->global_patch;
+}
+
 static void
 communicate_new_nr_particles(struct mrc_domain *domain_old,
 			     struct mrc_domain *domain_new, int **p_nr_particles_by_patch)
@@ -187,7 +193,7 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       MPI_Isend(&nr_particles_by_patch_old[p], 1, MPI_INT, info_new.rank,
-		info.global_patch, comm, &send_reqs[p]);
+		mpi_tag(&info), comm, &send_reqs[p]);
     }
   }
   // recv info for new local patches
@@ -203,8 +209,8 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      printf("a: rank: %d gp: %d\n", info_old.rank, info.global_patch);
-      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, info.global_patch,
+      printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
+      MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, mpi_tag(&info),
 		comm, &recv_reqs[p]);
     }
   }
@@ -248,7 +254,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       particles_base_t *pp_old = &particles_old->p[p];
       int nn = pp_old->n_part * (sizeof(particle_base_t)  / sizeof(particle_base_real_t));
       MPI_Isend(pp_old->particles, nn, MPI_PARTICLES_BASE_REAL, info_new.rank,
-		info.global_patch, comm, &send_reqs[p]);
+		mpi_tag(&info), comm, &send_reqs[p]);
     }
   }
 
@@ -267,7 +273,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       particles_base_t *pp_new = &particles_new->p[p];
       int nn = pp_new->n_part * (sizeof(particle_base_t)  / sizeof(particle_base_real_t));
       MPI_Irecv(pp_new->particles, nn, MPI_PARTICLES_BASE_REAL, info_old.rank,
-		info.global_patch, comm, &recv_reqs[p]);
+		mpi_tag(&info), comm, &recv_reqs[p]);
     }
   }
 
@@ -352,7 +358,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int *ib = pf_old->ib;
       void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
       MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
-		info.global_patch, comm, &send_reqs[p]);
+		mpi_tag(&info), comm, &send_reqs[p]);
     }
   }
 
@@ -374,7 +380,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int *ib = pf_new->ib;
       void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
       MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
-		info.global_patch, comm, &recv_reqs[p]);
+		mpi_tag(&info), comm, &recv_reqs[p]);
     }
   }
 
