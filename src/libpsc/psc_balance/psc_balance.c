@@ -158,7 +158,8 @@ gather_loads(struct mrc_domain *domain, double *loads, int nr_patches,
 static inline int
 mpi_tag(struct mrc_patch_info *info)
 {
-  return info->global_patch;
+  // This works up to 1000 patches per direction
+  return info->idx3[0] + (info->idx3[1] << 10) + (info->idx3[2] << 20);
 }
 
 static void
