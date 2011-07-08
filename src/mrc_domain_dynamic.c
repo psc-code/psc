@@ -461,17 +461,6 @@ mrc_domain_dynamic_get_patches(struct mrc_domain *domain, int *nr_patches)
 }
 
 static void
-mrc_domain_dynamic_get_patch_idx3(struct mrc_domain *domain, int p, int *idx)
-{
-  //p is the <local> patch index
-  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
-  //Lookup global index
-  int gpatch = this->gpatch[p];
-
-  sfc_gpatch_to_idx3(this, gpatch, idx);
-}
-
-static void
 mrc_domain_dynamic_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
@@ -610,7 +599,6 @@ struct mrc_domain_ops mrc_domain_dynamic_ops = {
   .write                 = mrc_domain_dynamic_write,
   .destroy               = mrc_domain_dynamic_destroy,
   .get_patches           = mrc_domain_dynamic_get_patches,
-  .get_patch_idx3        = mrc_domain_dynamic_get_patch_idx3,
   .get_global_dims       = mrc_domain_dynamic_get_global_dims,
   .get_nr_procs          = mrc_domain_dynamic_get_nr_procs,
   .get_bc                = mrc_domain_dynamic_get_bc,
