@@ -259,21 +259,14 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   info->global_patch = gpatch;
   gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
   
-  if(info->rank == -1)	//TODO neccessary?
-  {
-    for(int d=0; d<3; ++d)
-    {
-      info->ldims[d] = -1;
-      info->off[d] = -1;
-    }
-    return;
-  }
+  assert(info->rank >= 0);
 
   int p3[3];
   sfc_gpatch_to_idx3(multi, gpatch, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d];
     info->off[d] = p3[d] * multi->ldims[d];
+    info->idx3[d] = p3[d];
   }
 }
 
@@ -535,6 +528,7 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     {
       info->ldims[d] = this->ldims[d];
       info->off[d] = idx[d] * this->ldims[d];
+      info->idx3[d] = idx[d];
     }
     return;
   }

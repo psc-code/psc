@@ -23,6 +23,7 @@ struct mrc_patch_info {
   int rank;
   int patch;
   int global_patch;
+  int idx3[3];
   int ldims[3];
   int off[3];
 };
