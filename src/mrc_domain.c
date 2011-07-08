@@ -266,6 +266,16 @@ mrc_domain_init()
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
 }
 
+int mrc_domain_get_nth_gpatch(struct mrc_domain *domain, int n)
+{
+  if(mrc_domain_ops(domain)->get_nth_gpatch != NULL)
+  {
+    int gp = mrc_domain_ops(domain)->get_nth_gpatch(domain, n);
+    return gp;
+  }
+  return n;
+}
+
 // ======================================================================
 // mrc_domain class
 

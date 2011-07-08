@@ -35,6 +35,7 @@ struct mrc_domain_ops {
 			      struct mrc_patch_info *info);
   void (*plot)(struct mrc_domain *domain);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
+  int (*get_nth_gpatch)(struct mrc_domain *domain, int n);
 };
 
 // ======================================================================
