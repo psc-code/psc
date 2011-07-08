@@ -44,6 +44,9 @@ void mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 void mrc_domain_plot(struct mrc_domain *domain);
 int  mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3]);
 bool mrc_domain_is_setup(struct mrc_domain *domain);
+
+int mrc_domain_get_nth_gpatch(struct mrc_domain *domain, int n);
+
 struct mrc_patch *mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches);
 struct mrc_crds *mrc_domain_get_crds(struct mrc_domain *domain);
 struct mrc_ddc *mrc_domain_get_ddc(struct mrc_domain *domain);
