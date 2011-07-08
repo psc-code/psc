@@ -21,10 +21,11 @@ struct xdmf_spatial {
   bool crds_done;
   int dim;
   bool uniform; //< uniform coords
-  float xl[3], dx[3]; //< uniform origin, dx
 
   int nr_global_patches;
   struct mrc_patch_info *patch_infos;
+  float *xl[3];
+  float *dx[3];
 
   int nr_fld_info;
   struct xdmf_fld_info fld_info[MAX_XDMF_FLD_INFO];
