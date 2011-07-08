@@ -120,13 +120,6 @@ mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims)
 }
 
 void
-mrc_domain_get_local_idx(struct mrc_domain *domain, int *idx)
-{
-  check_is_setup(domain);
-  mrc_domain_ops(domain)->get_local_idx(domain, idx);
-}
-
-void
 mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
   check_is_setup(domain);
