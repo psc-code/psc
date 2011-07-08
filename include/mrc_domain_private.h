@@ -4,6 +4,7 @@
 
 #include <mrc_domain.h>
 
+#include <bitfield3d.h>
 #include <assert.h>
 
 // ======================================================================
@@ -35,6 +36,7 @@ struct mrc_domain_ops {
 			      struct mrc_patch_info *info);
   void (*plot)(struct mrc_domain *domain);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
+  int* (*get_offset)(struct mrc_domain* domain);
   int (*get_nth_gpatch)(struct mrc_domain *domain, int n);
 };
 
@@ -82,7 +84,44 @@ struct mrc_domain_multi {
   int hilbert_dim[3];
 };
 
+#include <bintree.h>
+
+struct mrc_domain_dynamic {
+  int gdims[3];
+  int ldims[3];
+  
+  int nr_patches;
+  struct mrc_patch *patches;
+  
+  int np[3]; //< # of patches per direction
+  int bc[3];
+  
+  struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
+  struct bitfield3d activepatches; 	//Index of which patches are active
+  
+  struct bintree g_patches;	//Provides a mapping gpatch -> gpatchinfo / patches
+  
+  int* rank;	//ranks of gpatches	->use g_patches to index into this
+  int* patch;	//lp of gpatches	->use g_patches to index into this
+  int* gp;	//Maps [0..nr_gpatches] -> gpatch
+  
+  //Array 0..#local patches
+  int *gpatch;	//lpatch -> gpatch mapping
+  
+  int nr_gpatches;	//Number of global patches
+  
+  int curve_type; //< type of space filling curve
+
+  // for sfc morton, hilbert
+  int nbits[3];
+  int nbits_max;
+
+  // for sfc hilbert
+  int hilbert_nr_dims;
+  int hilbert_dim[3];
+};
+
 extern struct mrc_domain_ops mrc_domain_multi_ops;
 
+extern struct mrc_domain_ops mrc_domain_dynamic_ops;
 #endif
-
