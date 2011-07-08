@@ -283,13 +283,6 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
-static
-int mrc_domain_dynamic_get_nth_gpatch(struct mrc_domain *domain, int n)
-{
-  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
-  return this->gp[n];
-}
-
 static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firstpatch)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
@@ -627,5 +620,4 @@ struct mrc_domain_ops mrc_domain_dynamic_ops = {
   .get_idx3_patch_info   = mrc_domain_dynamic_get_idx3_patch_info,
   .plot                  = mrc_domain_dynamic_plot,
   .create_ddc            = mrc_domain_dynamic_create_ddc,
-  .get_nth_gpatch	 = mrc_domain_dynamic_get_nth_gpatch,
 };
