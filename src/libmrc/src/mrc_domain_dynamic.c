@@ -28,19 +28,19 @@ sfc_bydim_setup(struct mrc_domain_dynamic *multi)
 }
 
 static int
-sfc_bydim_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
+sfc_bydim_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
 {
   int *np = multi->np;
   return (p[2] * np[1] + p[1]) * np[0] + p[0];
 }
 
 static void
-sfc_bydim_gpatch_to_idx3(struct mrc_domain_dynamic *multi, int gpatch, int p[3])
+sfc_bydim_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 {
   int *np = multi->np;
-  p[0] = gpatch % np[0]; gpatch /= np[0];
-  p[1] = gpatch % np[1]; gpatch /= np[1];
-  p[2] = gpatch;
+  p[0] = idx % np[0]; idx /= np[0];
+  p[1] = idx % np[1]; idx /= np[1];
+  p[2] = idx;
 }
 
 // ----------------------------------------------------------------------
@@ -68,7 +68,7 @@ sfc_morton_setup(struct mrc_domain_dynamic *multi)
 }
 
 static int
-sfc_morton_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
+sfc_morton_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
 {
   int *nbits = multi->nbits;
   int nbits_max = multi->nbits_max;
@@ -91,7 +91,7 @@ sfc_morton_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
 }
 
 static void
-sfc_morton_gpatch_to_idx3(struct mrc_domain_dynamic *multi, int gpatch, int p[3])
+sfc_morton_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 {
   int *nbits = multi->nbits;
   int nbits_max = multi->nbits_max;
@@ -106,7 +106,7 @@ sfc_morton_gpatch_to_idx3(struct mrc_domain_dynamic *multi, int gpatch, int p[3]
       if (b >= nbits[d])
 	continue;
 
-      if (gpatch & (1 << pos)) {
+      if (idx & (1 << pos)) {
 	p[d] |= (1 << b);
       }
       pos++;
@@ -155,7 +155,7 @@ sfc_hilbert_setup(struct mrc_domain_dynamic *multi)
 }
 
 static int
-sfc_hilbert_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
+sfc_hilbert_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
 {
   if (multi->hilbert_nr_dims == 0)
     return 0;
@@ -171,12 +171,12 @@ sfc_hilbert_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
 }
 
 static void
-sfc_hilbert_gpatch_to_idx3(struct mrc_domain_dynamic *multi, int gpatch, int p[3])
+sfc_hilbert_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 {
   int nbits_max = multi->nbits_max;
 
   bitmask_t p_bm[3];
-  hilbert_i2c(multi->hilbert_nr_dims, nbits_max, gpatch, p_bm);
+  hilbert_i2c(multi->hilbert_nr_dims, nbits_max, idx, p_bm);
   for (int d = 0; d < 3; d++) {
     p[d] = 0;
   }
@@ -201,23 +201,23 @@ sfc_setup(struct mrc_domain_dynamic *multi)
 }
 
 static int
-sfc_idx3_to_gpatch(struct mrc_domain_dynamic *multi, const int p[3])
+sfc_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
 {
   switch (multi->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_idx3_to_gpatch(multi, p);
-  case CURVE_MORTON: return sfc_morton_idx3_to_gpatch(multi, p);
-  case CURVE_HILBERT: return sfc_hilbert_idx3_to_gpatch(multi, p);
+  case CURVE_BYDIM: return sfc_bydim_idx3_to_idx(multi, p);
+  case CURVE_MORTON: return sfc_morton_idx3_to_idx(multi, p);
+  case CURVE_HILBERT: return sfc_hilbert_idx3_to_idx(multi, p);
   default: assert(0);
   }
 }
 
 static void
-sfc_gpatch_to_idx3(struct mrc_domain_dynamic *multi, int gpatch, int p[3])
+sfc_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 {
   switch (multi->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_gpatch_to_idx3(multi, gpatch, p);
-  case CURVE_MORTON: return sfc_morton_gpatch_to_idx3(multi, gpatch, p);
-  case CURVE_HILBERT: return sfc_hilbert_gpatch_to_idx3(multi, gpatch, p);
+  case CURVE_BYDIM: return sfc_bydim_idx_to_idx3(multi, idx, p);
+  case CURVE_MORTON: return sfc_morton_idx_to_idx3(multi, idx, p);
+  case CURVE_HILBERT: return sfc_hilbert_idx_to_idx3(multi, idx, p);
   default: assert(0);
   }
 }
@@ -264,7 +264,7 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   assert(info->rank >= 0);
 
   int p3[3];
-  sfc_gpatch_to_idx3(multi, sfc_idx, p3);
+  sfc_idx_to_idx3(multi, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d];
     info->off[d] = p3[d] * multi->ldims[d];
@@ -319,7 +319,7 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
   for(int i=0; i<ngp; ++i)
   {
     int idx[3];
-    sfc_gpatch_to_idx3(this, i, idx);
+    sfc_idx_to_idx3(this, i, idx);
     if(bitfield3d_isset(&this->activepatches, idx))
     {
       //Calculate rank
@@ -518,7 +518,7 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     return;
   }
 
-  int gpatch, sfc_idx = sfc_idx3_to_gpatch(this, idx);
+  int gpatch, sfc_idx = sfc_idx3_to_idx(this, idx);
   bintree_get(&this->g_patches, sfc_idx, &gpatch);
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
@@ -539,7 +539,7 @@ mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
     sprintf(path, "%s/p%d", mrc_domain_name(domain), n->key);
     mrc_io_write_attr_int3(io, path, "ldims", this->ldims);
     int idx[3];
-    sfc_gpatch_to_idx3(this, n->key, idx);
+    sfc_idx_to_idx3(this, n->key, idx);
     for(int d=0; d<3; ++d) idx[d] *= this->ldims[d];
     mrc_io_write_attr_int3(io, path, "off", idx);
   }
