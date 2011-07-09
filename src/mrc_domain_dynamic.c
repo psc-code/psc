@@ -223,6 +223,25 @@ sfc_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 }
 
 // ======================================================================
+// map
+// 
+// maps between global patch index (contiguous) and 1D SFC idx
+// (potentially non-contiguous)
+
+static int
+map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
+{
+  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
+
+  int retval;
+  int rc = bintree_get(&this->g_patches, sfc_idx, &retval);
+  if (rc == 0) {
+    return -1;
+  }
+  return retval;
+}
+
+// ======================================================================
 
 static void
 gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
@@ -230,9 +249,8 @@ gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
   //Get gp->array index
-  int i=0;
-  if(bintree_get(&this->g_patches, gpatch, &i) == 0)
-  {
+  int i = map_sfc_idx_to_gpatch(domain, gpatch);
+  if (i < 0) {
     *rank = -1;
     *patch = -1;
     return;
@@ -278,8 +296,8 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
 
-  int gpatch, sfc_idx = multi->gpatch[patch]; // FIXME, there must be an easier way
-  bintree_get(&multi->g_patches, sfc_idx, &gpatch);
+  int sfc_idx = multi->gpatch[patch]; // FIXME, there must be an easier way
+  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
@@ -518,8 +536,8 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     return;
   }
 
-  int gpatch, sfc_idx = sfc_idx3_to_idx(this, idx);
-  bintree_get(&this->g_patches, sfc_idx, &gpatch);
+  int sfc_idx = sfc_idx3_to_idx(this, idx);
+  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
