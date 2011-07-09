@@ -124,10 +124,9 @@ setup_gpatch_off_all(struct mrc_domain *domain)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
-  int gpatch_off = 0;
   int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
 
-  if (multi->nr_patches > -1) {
+  if (multi->nr_patches >= 0) {
     // prescribed mapping patch <-> proc
     MPI_Comm comm = mrc_domain_comm(domain);
     int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
@@ -135,23 +134,20 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 	       0, comm);
     MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, comm);
 
-    for (int i = 0; i < domain->size; i++) {
-      multi->gpatch_off_all[i] = gpatch_off;
-      int nr_patches = nr_patches_all[i];
-      gpatch_off += nr_patches;
+    for (int i = 1; i <= domain->size; i++) {
+      int nr_patches = nr_patches_all[i-1];
+      multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches;
     }
     free(nr_patches_all);
   } else {
     // map patch <-> proc uniformly (roughly)
     int patches_per_proc = nr_global_patches / domain->size;
     int patches_per_proc_rmndr = nr_global_patches % domain->size;
-    for (int i = 0; i < domain->size; i++) {
-      multi->gpatch_off_all[i] = gpatch_off;
-      int nr_patches = patches_per_proc + (i < patches_per_proc_rmndr);
-      gpatch_off += nr_patches;
+    for (int i = 1; i <= domain->size; i++) {
+      int nr_patches = patches_per_proc + ((i-1) < patches_per_proc_rmndr);
+      multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches;
     }
   }
-  multi->gpatch_off_all[domain->size] = nr_global_patches;
 }
 
 static void
