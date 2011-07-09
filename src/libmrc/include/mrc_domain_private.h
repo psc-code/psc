@@ -93,19 +93,16 @@ struct mrc_domain_multi {
   int np[3]; //< # of patches per direction
   int bc[3];
   int *gpatch_off_all;
-  struct mrc_sfc sfc;
-
-  // multi
   int *ldims[3]; //< patch dims for all patches by direction
   int *off[3]; //< offsets for all patches by direction
+  struct mrc_sfc sfc;
 
-  // dynamic
-  
-  struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
-  struct bitfield3d activepatches; 	//Index of which patches are active
-  
+  // map
   struct bintree g_patches;	//Provides a mapping gpatch -> gpatchinfo / patches
   int* gp;	//Maps [0..nr_gpatches] -> gpatch
+
+  struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
+  struct bitfield3d activepatches; 	//Index of which patches are active
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;

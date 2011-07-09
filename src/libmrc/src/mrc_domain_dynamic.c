@@ -181,20 +181,12 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 }
 
 static void
-mrc_domain_multi_setup_patches(struct mrc_domain *domain)
+mrc_domain_multi_setup_map(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   int sfc_indices[multi->nr_global_patches];
   
-  setup_gpatch_off_all(domain);
-
-  multi->gpatch_off = multi->gpatch_off_all[domain->rank];
-  multi->nr_patches = multi->gpatch_off_all[domain->rank+1] - multi->gpatch_off;
-
-  multi->patches = malloc(sizeof(*multi->patches) * multi->nr_patches);
- 
-  int activerank = 0;
   int npatches = 0;
   
   //TODO Find a smarter way than iterating over all possible patches
@@ -203,22 +195,8 @@ mrc_domain_multi_setup_patches(struct mrc_domain *domain)
     int idx[3];
     sfc_idx_to_idx3(&multi->sfc, i, idx);
     if(bitfield3d_isset(&multi->activepatches, idx)) {
-      //Calculate rank
-      if (npatches >= multi->gpatch_off_all[activerank+1]) {
-	activerank++;
-      }
-      
       //Register the patch
       sfc_indices[npatches] = i;
-
-      if (activerank == domain->rank) { // Create the patch on multi processor
-	//Setup patches[lpatch]
-	int lpatch = npatches - multi->gpatch_off;
-	for(int d = 0; d < 3; d++) {
-	  multi->patches[lpatch].ldims[d] = multi->ldims[d][idx[d]];
-	  multi->patches[lpatch].off[d] = multi->off[d][idx[d]];
-	}
-      }
       npatches++;
     }
   }
@@ -258,10 +236,24 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
       }
     }
   }
-  
-  //Create list of patches
+
   sfc_setup(&multi->sfc, multi->np);
-  mrc_domain_multi_setup_patches(domain);
+  mrc_domain_multi_setup_map(domain);
+
+  setup_gpatch_off_all(domain);
+
+  multi->gpatch_off = multi->gpatch_off_all[domain->rank];
+  multi->nr_patches = multi->gpatch_off_all[domain->rank+1] - multi->gpatch_off;
+
+  multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
+  for (int p = 0; p < multi->nr_patches; p++) {
+    struct mrc_patch_info info;
+    mrc_domain_multi_get_global_patch_info(domain, p + multi->gpatch_off, &info);
+    for (int d = 0; d < 3; d++) {
+      multi->patches[p].ldims[d] = info.ldims[d];
+      multi->patches[p].off[d] = info.off[d];
+    }
+  }
 }
 
 static void
@@ -357,8 +349,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
 			nr_global_patches);
-  
-  //Iterate over all global patches
+
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_multi_get_global_patch_info(domain, gp, &info);
