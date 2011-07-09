@@ -11,8 +11,8 @@
 
 #define TAG_SCAN_OFF (1000)
 
-static inline struct mrc_domain_dynamic *
-mrc_domain_dynamic(struct mrc_domain *domain)
+static inline struct mrc_domain_multi *
+mrc_domain_multi(struct mrc_domain *domain)
 {
   return domain->obj.subctx;
 }
@@ -26,7 +26,7 @@ mrc_domain_dynamic(struct mrc_domain *domain)
 static void
 map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   multi->gp = malloc(sizeof(int) * multi->nr_gpatches);
   for (int i = 0; i < nr_gpatches; i++) {
@@ -44,7 +44,7 @@ map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
 static void
 map_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   free(multi->gp);
   bintree_destroy(&multi->g_patches);
@@ -53,7 +53,7 @@ map_destroy(struct mrc_domain *domain)
 static int
 map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   int retval;
   int rc = bintree_get(&multi->g_patches, sfc_idx, &retval);
@@ -66,7 +66,7 @@ map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
 static int
 map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   return multi->gp[gpatch];
 }
@@ -77,7 +77,7 @@ static void
 sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
 		      int *rank, int *patch)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   //Get gp->array index
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   if (gpatch < 0) {
@@ -108,7 +108,7 @@ static void
 mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				       struct mrc_patch_info *info)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   assert(gpatch < multi->nr_gpatches);
   info->global_patch = gpatch;
@@ -130,7 +130,7 @@ static void
 mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
 				      struct mrc_patch_info *info)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   mrc_domain_dynamic_get_global_patch_info(domain, multi->gpatch_off + patch, info);
 }
@@ -138,7 +138,7 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
 static void
 mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   int sfc_indices[multi->nr_gpatches];
   
@@ -189,7 +189,7 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   assert(!domain->is_setup);
   domain->is_setup = true;
 
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   	
   //Assert some properties we rely on
   for(int d=0; d<3; ++d) assert((multi->gdims[d] % multi->np[d]) == 0);	//The domain-size must be a mutliple of the patch-size
@@ -238,7 +238,7 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
 static void
 mrc_domain_dynamic_destroy(struct mrc_domain *domain)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   
   free(multi->gpatch_off_all);
   free(multi->patches);
@@ -249,7 +249,7 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
 static struct mrc_patch *
 mrc_domain_dynamic_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   if (nr_patches) {
     *nr_patches = multi->nr_patches;
   }
@@ -259,7 +259,7 @@ mrc_domain_dynamic_get_patches(struct mrc_domain *domain, int *nr_patches)
 static void
 mrc_domain_dynamic_get_global_dims(struct mrc_domain *domain, int *dims)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int d = 0; d < 3; d++) {
     dims[d] = multi->gdims[d];
@@ -269,7 +269,7 @@ mrc_domain_dynamic_get_global_dims(struct mrc_domain *domain, int *dims)
 static void
 mrc_domain_dynamic_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int d = 0; d < 3; d++) {
     nr_procs[d] = multi->np[d];
@@ -279,7 +279,7 @@ mrc_domain_dynamic_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 static void
 mrc_domain_dynamic_get_bc(struct mrc_domain *domain, int *bc)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   for (int d = 0; d < 3; d++) {
     bc[d] = multi->bc[d];
@@ -289,7 +289,7 @@ mrc_domain_dynamic_get_bc(struct mrc_domain *domain, int *bc)
 static void
 mrc_domain_dynamic_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   *nr_global_patches = multi->nr_gpatches;
 }
@@ -298,7 +298,7 @@ static void
 mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				     struct mrc_patch_info *info)
 {
-  struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   //Check if the patch is active
   if (!bitfield3d_isset(&multi->activepatches, idx)) {
     info->rank = -1;
@@ -320,7 +320,7 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 static void
 mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  struct mrc_domain_dynamic* multi = mrc_domain_dynamic(domain);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   int nr_global_patches;
   mrc_domain_dynamic_get_nr_global_patches(domain, &nr_global_patches);
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches", multi->nr_gpatches);
@@ -366,7 +366,7 @@ static struct mrc_param_select curve_descr[] = {
   {},
 };
 
-#define VAR(x) (void *)offsetof(struct mrc_domain_dynamic, x)
+#define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
 static struct param mrc_domain_dynamic_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
   { "np"              , VAR(np)              , PARAM_INT3(1, 1, 1)    },
@@ -386,7 +386,7 @@ static struct param mrc_domain_dynamic_params_descr[] = {
 
 struct mrc_domain_ops mrc_domain_dynamic_ops = {
   .name                  = "dynamic",
-  .size                  = sizeof(struct mrc_domain_dynamic),
+  .size                  = sizeof(struct mrc_domain_multi),
   .param_descr           = mrc_domain_dynamic_params_descr,
   .setup                 = mrc_domain_dynamic_setup,
   .view                  = mrc_domain_dynamic_view,
