@@ -228,6 +228,27 @@ sfc_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
 // maps between global patch index (contiguous) and 1D SFC idx
 // (potentially non-contiguous)
 
+static void
+map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
+{
+  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
+
+  //Create the bintree for performant searching
+  int vals[nr_gpatches];
+  for (int i = 0; i < nr_gpatches; i++) {
+    vals[i] = i;
+  }
+  bintree_create_from_ordered_list(&this->g_patches, sfc_indices, vals, nr_gpatches);
+}
+
+static void
+map_destroy(struct mrc_domain *domain)
+{
+  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
+
+  bintree_destroy(&this->g_patches);
+}
+
 static int
 map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
 {
@@ -308,12 +329,10 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
   int ngp = this->np[0] * this->np[1] * this->np[2];
   
   int gpatchkeys[this->nr_gpatches];
-  int gpatchvalues[this->nr_gpatches];
   
   for(int i=0; i<this->nr_gpatches; ++i)
   {
     gpatchkeys[i] = -1;
-    gpatchvalues[i] = -1;
   }
   
   this->rank = malloc(sizeof(int) * this->nr_gpatches);
@@ -346,7 +365,6 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
       //Register the patch
       this->gp[npatches] = i;
       gpatchkeys[npatches] = i;
-      gpatchvalues[npatches] = npatches;
 
       this->rank[npatches] = activerank;
       int lpatch = npatches - firstpatch_all[activerank];
@@ -367,8 +385,7 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
     }
   }
   
-  //Create the bintree for performant searching
-  bintree_create_from_ordered_list(&this->g_patches, gpatchkeys, gpatchvalues, this->nr_gpatches);
+  map_create(domain, gpatchkeys, this->nr_gpatches);
 }
 
 static void
@@ -465,7 +482,7 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
   free(this->gp);
   //
   bitfield3d_destroy(&this->activepatches);
-  bintree_destroy(&this->g_patches);
+  map_destroy(domain);
 }
 
 static struct mrc_patch *
