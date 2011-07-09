@@ -337,9 +337,7 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
 
-  int sfc_idx = multi->gpatch[patch]; // FIXME, there must be an easier way
-  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
-  mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
+  mrc_domain_dynamic_get_global_patch_info(domain, multi->gpatch_off + patch, info);
 }
 
 static void
@@ -349,7 +347,6 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 
   int sfc_indices[this->nr_gpatches];
   
-  this->gpatch = malloc(sizeof(int) * this->nr_patches);
   this->patches = malloc(sizeof(*this->patches) * this->nr_patches);
   
   this->gpatch_off_all = calloc(domain->size + 1, sizeof(*this->gpatch_off_all));
@@ -357,6 +354,8 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
     this->gpatch_off_all[i] = this->gpatch_off_all[i-1] + nr_patches_all[i-1];
   }
  
+  this->gpatch_off = this->gpatch_off_all[domain->rank];
+
   int activerank = 0;
   int npatches = 0;
   
@@ -374,12 +373,9 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
       //Register the patch
       sfc_indices[npatches] = i;
 
-      int lpatch = npatches - this->gpatch_off_all[activerank];
-      
       if (activerank == domain->rank) { // Create the patch on this processor
-	this->gpatch[lpatch] = i;
-	
 	//Setup patches[lpatch]
+	int lpatch = npatches - this->gpatch_off;
 	for(int d = 0; d < 3; d++) {
 	  this->patches[lpatch].off[d] = idx[d] * this->ldims[d];
 	  this->patches[lpatch].ldims[d] = this->ldims[d];
@@ -451,9 +447,6 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
   
   free(this->gpatch_off_all);
   free(this->patches);
-  
-  free(this->gpatch);
-  //
   bitfield3d_destroy(&this->activepatches);
   map_destroy(domain);
 }

@@ -99,12 +99,9 @@ struct mrc_domain_dynamic {
   struct bintree g_patches;	//Provides a mapping gpatch -> gpatchinfo / patches
   int* gp;	//Maps [0..nr_gpatches] -> gpatch
   
-  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
-
-  //Array 0..#local patches
-  int *gpatch;	//lpatch -> gpatch mapping
-  
   int nr_gpatches;	//Number of global patches
+  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
+  int gpatch_off; // the beginning gpatch idx on this proc
   
   int curve_type; //< type of space filling curve
 
