@@ -18,12 +18,42 @@ mrc_domain_multi(struct mrc_domain *domain)
 }
 
 // ======================================================================
+// map
+// 
+// maps between global patch index (contiguous) and 1D SFC idx
+// (potentially non-contiguous)
 
 static void
-gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
-		     int *rank, int *patch)
+map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
+{
+}
+
+static void
+map_destroy(struct mrc_domain *domain)
+{
+}
+
+static int
+map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
+{
+  return sfc_idx;
+}
+
+static int
+map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch)
+{
+  return gpatch;
+}
+
+// ======================================================================
+
+static void
+sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
+		      int *rank, int *patch)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
 
   // FIXME, this can be done much more efficiently using binary search...
   for (int i = 0; i < domain->size; i++) {
@@ -57,7 +87,6 @@ mrc_domain_multi_view(struct mrc_domain *domain)
 #endif
 }
 
-// FIXME, get rid of this one always use idx3 one?
 static void
 mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				       struct mrc_patch_info *info)
@@ -65,8 +94,11 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   info->global_patch = gpatch;
-  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
-
+  int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
+  sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
+  
+  assert(info->rank >= 0);
+  
   int p3[3];
   sfc_idx_to_idx3(&multi->sfc, gpatch, p3);
   for (int d = 0; d < 3; d++) {
@@ -125,12 +157,14 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 static void
 mrc_domain_multi_setup(struct mrc_domain *domain)
 {
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   assert(!domain->is_setup);
   domain->is_setup = true;
 
-  MPI_Comm_rank(domain->obj.comm, &domain->rank);
-  MPI_Comm_size(domain->obj.comm, &domain->size);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  MPI_Comm comm = mrc_domain_comm(domain);
+  MPI_Comm_rank(comm, &domain->rank);
+  MPI_Comm_size(comm, &domain->size);
 
   // FIXME: allow setting of desired decomposition by user?
   int *np = multi->np;
@@ -150,6 +184,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   }
 
   sfc_setup(&multi->sfc, multi->np);
+  map_create(domain, NULL, -1);
 
   setup_gpatch_off_all(domain);
 
@@ -178,6 +213,7 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
   }
   free(multi->gpatch_off_all);
   free(multi->patches);
+  map_destroy(domain);
 }
 
 static struct mrc_patch *
@@ -234,7 +270,8 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int gpatch = sfc_idx3_to_idx(&multi->sfc, idx);
+  int sfc_idx = sfc_idx3_to_idx(&multi->sfc, idx);
+  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
