@@ -191,6 +191,12 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 }
 
 static void
+mrc_domain_multi_setup_map(struct mrc_domain *domain)
+{
+  map_create(domain, NULL, -1);
+}
+
+static void
 mrc_domain_multi_setup(struct mrc_domain *domain)
 {
   assert(!domain->is_setup);
@@ -222,7 +228,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   }
 
   sfc_setup(&multi->sfc, multi->np);
-  map_create(domain, NULL, -1);
+  mrc_domain_multi_setup_map(domain);
 
   setup_gpatch_off_all(domain);
 
@@ -328,6 +334,9 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
     sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
+    mrc_io_write_attr_int3(io, path, "idx3", info.idx3);
+    int sfc_idx = map_gpatch_to_sfc_idx(domain, gp);
+    mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
   }
 }
 
