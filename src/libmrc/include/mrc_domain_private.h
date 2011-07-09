@@ -109,7 +109,7 @@ struct mrc_domain_dynamic {
   struct mrc_sfc sfc;  
 
   int nr_gpatches;	//Number of global patches
-  int ldims[3];
+  int _ldims[3];
   
   struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
   struct bitfield3d activepatches; 	//Index of which patches are active

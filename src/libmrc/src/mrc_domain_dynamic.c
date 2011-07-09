@@ -120,8 +120,8 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   int p3[3];
   sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
-    info->ldims[d] = multi->ldims[d];
-    info->off[d] = p3[d] * multi->ldims[d];
+    info->ldims[d] = multi->_ldims[d];
+    info->off[d] = p3[d] * multi->_ldims[d];
     info->idx3[d] = p3[d];
   }
 }
@@ -172,8 +172,8 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 	//Setup patches[lpatch]
 	int lpatch = npatches - multi->gpatch_off;
 	for(int d = 0; d < 3; d++) {
-	  multi->patches[lpatch].off[d] = idx[d] * multi->ldims[d];
-	  multi->patches[lpatch].ldims[d] = multi->ldims[d];
+	  multi->patches[lpatch].off[d] = idx[d] * multi->_ldims[d];
+	  multi->patches[lpatch].ldims[d] = multi->_ldims[d];
 	}
       }
       npatches++;
@@ -227,7 +227,7 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   }
 
   for(int d = 0; d < 3; d++) {
-    multi->ldims[d] = multi->gdims[d] / multi->np[d];
+    multi->_ldims[d] = multi->gdims[d] / multi->np[d];
   }
   
   //Create list of patches
@@ -300,15 +300,13 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 {
   struct mrc_domain_dynamic *multi = mrc_domain_dynamic(domain);
   //Check if the patch is active
-  if(!bitfield3d_isset(&multi->activepatches, idx))
-  {
+  if (!bitfield3d_isset(&multi->activepatches, idx)) {
     info->rank = -1;
     info->patch = -1;
     info->global_patch = -1;
-    for(int d=0; d<3; ++d)
-    {
-      info->ldims[d] = multi->ldims[d];
-      info->off[d] = idx[d] * multi->ldims[d];
+    for(int d = 0; d < 3; d++) {
+      info->ldims[d] = multi->_ldims[d];
+      info->off[d] = idx[d] * multi->_ldims[d];
       info->idx3[d] = idx[d];
     }
     return;
@@ -331,12 +329,12 @@ mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
   for (int i = 0; i < nr_global_patches; i++) {
     char path[strlen(mrc_domain_name(domain)) + 10];
     sprintf(path, "%s/p%d", mrc_domain_name(domain), i);
-    mrc_io_write_attr_int3(io, path, "ldims", multi->ldims);
+    mrc_io_write_attr_int3(io, path, "ldims", multi->_ldims);
     int sfc_idx = map_gpatch_to_sfc_idx(domain, i);
     mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
     int idx[3];
     sfc_idx_to_idx3(&multi->sfc, sfc_idx, idx);
-    for(int d=0; d<3; ++d) idx[d] *= multi->ldims[d];
+    for(int d=0; d<3; ++d) idx[d] *= multi->_ldims[d];
     mrc_io_write_attr_int3(io, path, "off", idx);
   }
 }
