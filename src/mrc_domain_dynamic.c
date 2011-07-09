@@ -120,7 +120,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d][p3[d]];
-    info->off[d] = p3[d] * multi->ldims[d][0];
+    info->off[d] = multi->off[d][p3[d]];
     info->idx3[d] = p3[d];
   }
 }
@@ -172,8 +172,8 @@ mrc_domain_multi_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 	//Setup patches[lpatch]
 	int lpatch = npatches - multi->gpatch_off;
 	for(int d = 0; d < 3; d++) {
-	  multi->patches[lpatch].off[d] = idx[d] * multi->ldims[d][idx[d]];
 	  multi->patches[lpatch].ldims[d] = multi->ldims[d][idx[d]];
+	  multi->patches[lpatch].off[d] = multi->off[d][idx[d]];
 	}
       }
       npatches++;
@@ -232,8 +232,12 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
     ldims[d] = multi->gdims[d] / np[d];
 
     multi->ldims[d] = calloc(np[d], sizeof(*multi->ldims[d]));
+    multi->off[d] = calloc(np[d], sizeof(*multi->off[d]));
     for (int i = 0; i < np[d]; i++) {
       multi->ldims[d][i] = ldims[d];
+      if (i > 0) {
+	multi->off[d][i] = multi->off[d][i-1] + multi->ldims[d][i-1];
+      }
     }
   }
   
@@ -249,6 +253,7 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
 
   for (int d = 0; d < 3; d++) {
     free(multi->ldims[d]);
+    free(multi->off[d]);
   }
   free(multi->gpatch_off_all);
   free(multi->patches);
@@ -316,7 +321,7 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     info->global_patch = -1;
     for(int d = 0; d < 3; d++) {
       info->ldims[d] = multi->ldims[d][idx[d]];
-      info->off[d] = idx[d] * multi->ldims[d][0];
+      info->off[d] = multi->off[d][idx[d]];
       info->idx3[d] = idx[d];
     }
     return;
