@@ -87,37 +87,35 @@ struct mrc_domain_multi {
   int nr_patches;
   int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
   struct mrc_patch *patches;
-  int *ldims[3]; //< patch dims for all patches by direction
-  int *off[3]; //< offsets for all patches by direction
   int np[3]; //< # of patches per direction
   int bc[3];
   int *gpatch_off_all;
   struct mrc_sfc sfc;
+
+  int *ldims[3]; //< patch dims for all patches by direction
+  int *off[3]; //< offsets for all patches by direction
 };
 
 #include <bintree.h>
 
 struct mrc_domain_dynamic {
   int gdims[3];
-  int ldims[3];
-  
   int nr_patches;
+  int gpatch_off; // the beginning gpatch idx on this proc
   struct mrc_patch *patches;
-  
   int np[3]; //< # of patches per direction
   int bc[3];
+  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
+  struct mrc_sfc sfc;  
+
+  int nr_gpatches;	//Number of global patches
+  int ldims[3];
   
   struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
   struct bitfield3d activepatches; 	//Index of which patches are active
   
   struct bintree g_patches;	//Provides a mapping gpatch -> gpatchinfo / patches
   int* gp;	//Maps [0..nr_gpatches] -> gpatch
-  
-  int nr_gpatches;	//Number of global patches
-  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
-  int gpatch_off; // the beginning gpatch idx on this proc
-
-  struct mrc_sfc sfc;  
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;
