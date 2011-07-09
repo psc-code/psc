@@ -22,12 +22,16 @@ mrc_domain_multi(struct mrc_domain *domain)
 // 
 // maps between global patch index (contiguous) and 1D SFC idx
 // (potentially non-contiguous)
+// if sfc_indices is NULL, the map will be the indentity
 
 static void
 map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  if (!sfc_indices) {
+    return;
+  }
   multi->gp = malloc(sizeof(int) * multi->nr_global_patches);
   for (int i = 0; i < nr_gpatches; i++) {
     multi->gp[i] = sfc_indices[i];
@@ -46,6 +50,9 @@ map_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  if (!multi->gp) {
+    return;
+  }
   free(multi->gp);
   bintree_destroy(&multi->g_patches);
 }
@@ -55,6 +62,9 @@ map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  if (!multi->gp) {
+    return sfc_idx;
+  }
   int retval;
   int rc = bintree_get(&multi->g_patches, sfc_idx, &retval);
   if (rc == 0) {
@@ -68,6 +78,9 @@ map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  if (!multi->gp) {
+    return gpatch;
+  }
   return multi->gp[gpatch];
 }
 
@@ -423,3 +436,4 @@ struct mrc_domain_ops mrc_domain_dynamic_ops = {
   .plot                  = mrc_domain_multi_plot,
   .create_ddc            = mrc_domain_multi_create_ddc,
 };
+
