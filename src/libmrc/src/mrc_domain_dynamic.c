@@ -268,6 +268,14 @@ map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
   return retval;
 }
 
+static int
+map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch)
+{
+  struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
+
+  return this->gp[gpatch];
+}
+
 // ======================================================================
 
 static void
@@ -303,7 +311,7 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 
   assert(gpatch < multi->nr_gpatches);
   info->global_patch = gpatch;
-  int sfc_idx = multi->gp[gpatch];
+  int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
   sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
   
   assert(info->rank >= 0);
@@ -566,13 +574,13 @@ mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
   
   //Iterate over all global patches
   for (int i = 0; i < nr_global_patches; i++) {
-    struct bintree_node* n = &this->g_patches.nodes[i];
-    
     char path[strlen(mrc_domain_name(domain)) + 10];
-    sprintf(path, "%s/p%d", mrc_domain_name(domain), n->key);
+    sprintf(path, "%s/p%d", mrc_domain_name(domain), i);
     mrc_io_write_attr_int3(io, path, "ldims", this->ldims);
+    int sfc_idx = map_gpatch_to_sfc_idx(domain, i);
+    mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
     int idx[3];
-    sfc_idx_to_idx3(this, n->key, idx);
+    sfc_idx_to_idx3(this, sfc_idx, idx);
     for(int d=0; d<3; ++d) idx[d] *= this->ldims[d];
     mrc_io_write_attr_int3(io, path, "off", idx);
   }
