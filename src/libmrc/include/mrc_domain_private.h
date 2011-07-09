@@ -52,13 +52,35 @@ struct mrc_domain_simple {
 extern struct mrc_domain_ops mrc_domain_simple_ops;
 
 // ======================================================================
-// mrc_domain_multi
+// mrc_sfc
 
 enum {
   CURVE_BYDIM,
   CURVE_MORTON,
   CURVE_HILBERT,
 };
+
+struct mrc_sfc {
+  int curve_type; //< type of space filling curve
+
+  // for sfc simple
+  int np[3];
+
+  // for sfc morton, hilbert
+  int nbits[3];
+  int nbits_max;
+
+  // for sfc hilbert
+  int hilbert_nr_dims;
+  int hilbert_dim[3];
+};
+
+void sfc_setup(struct mrc_sfc *sfc, int *np);
+int  sfc_idx3_to_idx(struct mrc_sfc *sfc, const int p[3]);
+void sfc_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3]);
+
+// ======================================================================
+// mrc_domain_multi
 
 struct mrc_domain_multi {
   int gdims[3];
@@ -70,15 +92,7 @@ struct mrc_domain_multi {
   int np[3]; //< # of patches per direction
   int bc[3];
   int *gpatch_off_all;
-  int curve_type; //< type of space filling curve
-
-  // for sfc morton, hilbert
-  int nbits[3];
-  int nbits_max;
-
-  // for sfc hilbert
-  int hilbert_nr_dims;
-  int hilbert_dim[3];
+  struct mrc_sfc sfc;
 };
 
 #include <bintree.h>
@@ -102,16 +116,8 @@ struct mrc_domain_dynamic {
   int nr_gpatches;	//Number of global patches
   int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
   int gpatch_off; // the beginning gpatch idx on this proc
-  
-  int curve_type; //< type of space filling curve
 
-  // for sfc morton, hilbert
-  int nbits[3];
-  int nbits_max;
-
-  // for sfc hilbert
-  int hilbert_nr_dims;
-  int hilbert_dim[3];
+  struct mrc_sfc sfc;  
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;

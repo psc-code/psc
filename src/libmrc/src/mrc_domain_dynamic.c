@@ -18,211 +18,6 @@ mrc_domain_dynamic(struct mrc_domain *domain)
 }
 
 // ======================================================================
-
-// ----------------------------------------------------------------------
-// bydim space filling curve
-
-static void
-sfc_bydim_setup(struct mrc_domain_dynamic *multi)
-{
-}
-
-static int
-sfc_bydim_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
-{
-  int *np = multi->np;
-  return (p[2] * np[1] + p[1]) * np[0] + p[0];
-}
-
-static void
-sfc_bydim_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
-{
-  int *np = multi->np;
-  p[0] = idx % np[0]; idx /= np[0];
-  p[1] = idx % np[1]; idx /= np[1];
-  p[2] = idx;
-}
-
-// ----------------------------------------------------------------------
-// morton space filling curve
-
-static void
-sfc_morton_setup(struct mrc_domain_dynamic *multi)
-{
-  int *np = multi->np;
-  int *nbits = multi->nbits;
-  for (int d = 0; d < 3; d++) {
-    int n = np[d];
-    nbits[d] = 0;
-    while (n > 1) {
-      n >>= 1;
-      nbits[d]++;
-    }
-    // each dim must be power of 2
-    assert(np[d] == 1 << nbits[d]);
-  }
-
-  multi->nbits_max = nbits[0];
-  if (nbits[1] > multi->nbits_max) multi->nbits_max = nbits[1];
-  if (nbits[2] > multi->nbits_max) multi->nbits_max = nbits[2];
-}
-
-static int
-sfc_morton_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
-{
-  int *nbits = multi->nbits;
-  int nbits_max = multi->nbits_max;
-
-  int pos = 0;
-  int idx = 0;
-  for (int b = 0; b < nbits_max; b++) {
-    for (int d = 0; d < 3; d++) {
-      if (b >= nbits[d])
-	continue;
-
-      if (p[d] & (1 << b)) {
-	idx |= (1 << pos);
-      }
-      pos++;
-    }
-  }
-
-  return idx;
-}
-
-static void
-sfc_morton_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
-{
-  int *nbits = multi->nbits;
-  int nbits_max = multi->nbits_max;
-
-  for (int d = 0; d < 3; d++) {
-    p[d] = 0;
-  }
-
-  int pos = 0;
-  for (int b = 0; b < nbits_max; b++) {
-    for (int d = 0; d < 3; d++) {
-      if (b >= nbits[d])
-	continue;
-
-      if (idx & (1 << pos)) {
-	p[d] |= (1 << b);
-      }
-      pos++;
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
-// hilbert space filling curve
-
-#include "hilbert.h"
-
-static void
-sfc_hilbert_setup(struct mrc_domain_dynamic *multi)
-{
-  int *np = multi->np;
-  int *nbits = multi->nbits;
-  for (int d = 0; d < 3; d++) {
-    int n = np[d];
-    nbits[d] = 0;
-    while (n > 1) {
-      n >>= 1;
-      nbits[d]++;
-    }
-    // each dim must be power of 2
-    assert(np[d] == 1 << nbits[d]);
-  }
-
-  multi->nbits_max = nbits[0];
-  if (nbits[1] > multi->nbits_max) multi->nbits_max = nbits[1];
-  if (nbits[2] > multi->nbits_max) multi->nbits_max = nbits[2];
-  multi->hilbert_nr_dims = 0;
-  for (int d = 0; d < 3; d++) {
-    if (nbits[d] == 0)
-      continue;
-
-    multi->hilbert_dim[multi->hilbert_nr_dims] = d;
-    multi->hilbert_nr_dims++;
-  }
-  // all not invariant dimensions must be equal
-  int d0 = multi->hilbert_dim[0];
-  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
-    int d = multi->hilbert_dim[i];
-    assert(nbits[d] == nbits[d0]);
-  }
-}
-
-static int
-sfc_hilbert_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
-{
-  if (multi->hilbert_nr_dims == 0)
-    return 0;
-
-  int nbits_max = multi->nbits_max;
-
-  bitmask_t p_bm[3];
-  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
-    int d = multi->hilbert_dim[i];
-    p_bm[i] = p[d];
-  }
-  return hilbert_c2i(multi->hilbert_nr_dims, nbits_max, p_bm);
-}
-
-static void
-sfc_hilbert_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
-{
-  int nbits_max = multi->nbits_max;
-
-  bitmask_t p_bm[3];
-  hilbert_i2c(multi->hilbert_nr_dims, nbits_max, idx, p_bm);
-  for (int d = 0; d < 3; d++) {
-    p[d] = 0;
-  }
-  for (int i = 0; i < multi->hilbert_nr_dims; i++) {
-    int d = multi->hilbert_dim[i];
-    p[d] = p_bm[i];
-  }
-}
-
-// ----------------------------------------------------------------------
-// space filling curve
-
-static void
-sfc_setup(struct mrc_domain_dynamic *multi)
-{
-  switch (multi->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_setup(multi);
-  case CURVE_MORTON: return sfc_morton_setup(multi);
-  case CURVE_HILBERT: return sfc_hilbert_setup(multi);
-  default: assert(0);
-  }
-}
-
-static int
-sfc_idx3_to_idx(struct mrc_domain_dynamic *multi, const int p[3])
-{
-  switch (multi->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_idx3_to_idx(multi, p);
-  case CURVE_MORTON: return sfc_morton_idx3_to_idx(multi, p);
-  case CURVE_HILBERT: return sfc_hilbert_idx3_to_idx(multi, p);
-  default: assert(0);
-  }
-}
-
-static void
-sfc_idx_to_idx3(struct mrc_domain_dynamic *multi, int idx, int p[3])
-{
-  switch (multi->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_idx_to_idx3(multi, idx, p);
-  case CURVE_MORTON: return sfc_morton_idx_to_idx3(multi, idx, p);
-  case CURVE_HILBERT: return sfc_hilbert_idx_to_idx3(multi, idx, p);
-  default: assert(0);
-  }
-}
-
-// ======================================================================
 // map
 // 
 // maps between global patch index (contiguous) and 1D SFC idx
@@ -323,7 +118,7 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   assert(info->rank >= 0);
 
   int p3[3];
-  sfc_idx_to_idx3(multi, sfc_idx, p3);
+  sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d];
     info->off[d] = p3[d] * multi->ldims[d];
@@ -363,7 +158,7 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
   int npt = this->np[0] * this->np[1] * this->np[2];
   for(int i = 0; i < npt; i++) {
     int idx[3];
-    sfc_idx_to_idx3(this, i, idx);
+    sfc_idx_to_idx3(&this->sfc, i, idx);
     if(bitfield3d_isset(&this->activepatches, idx)) {
       //Calculate rank
       if (npatches >= this->gpatch_off_all[activerank+1]) {
@@ -436,7 +231,7 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   }
   
   //Create list of patches
-  sfc_setup(this);
+  sfc_setup(&this->sfc, this->np);
   mrc_domain_dynamic_setup_patches(domain, nr_patches_all);
 }
 
@@ -519,7 +314,7 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
     return;
   }
 
-  int sfc_idx = sfc_idx3_to_idx(this, idx);
+  int sfc_idx = sfc_idx3_to_idx(&this->sfc, idx);
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
@@ -540,7 +335,7 @@ mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
     int sfc_idx = map_gpatch_to_sfc_idx(domain, i);
     mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
     int idx[3];
-    sfc_idx_to_idx3(this, sfc_idx, idx);
+    sfc_idx_to_idx3(&this->sfc, sfc_idx, idx);
     for(int d=0; d<3; ++d) idx[d] *= this->ldims[d];
     mrc_io_write_attr_int3(io, path, "off", idx);
   }
@@ -583,7 +378,7 @@ static struct param mrc_domain_dynamic_params_descr[] = {
 							    bc_descr) },
   { "bcz"             , VAR(bc[2])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
-  { "curve_type"      , VAR(curve_type)      , PARAM_SELECT(CURVE_BYDIM,
+  { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
   { "activepatches"   , VAR(p_activepatches) , PARAM_PTR(NULL) },
