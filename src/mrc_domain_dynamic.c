@@ -233,6 +233,11 @@ map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
 
+  this->gp = malloc(sizeof(int) * this->nr_gpatches);
+  for (int i = 0; i < nr_gpatches; i++) {
+    this->gp[i] = sfc_indices[i];
+  }
+
   //Create the bintree for performant searching
   int vals[nr_gpatches];
   for (int i = 0; i < nr_gpatches; i++) {
@@ -246,6 +251,7 @@ map_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
 
+  free(this->gp);
   bintree_destroy(&this->g_patches);
 }
 
@@ -330,14 +336,8 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
   
   int gpatchkeys[this->nr_gpatches];
   
-  for(int i=0; i<this->nr_gpatches; ++i)
-  {
-    gpatchkeys[i] = -1;
-  }
-  
   this->rank = malloc(sizeof(int) * this->nr_gpatches);
   this->patch = malloc(sizeof(int) * this->nr_gpatches);
-  this->gp = malloc(sizeof(int) * this->nr_gpatches);
   this->gpatch = malloc(sizeof(int) * this->nr_patches);
   this->patches = malloc(sizeof(*this->patches) * this->nr_patches);
   
@@ -363,7 +363,6 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
       if(activerank < ( domain->size - 1 ) && firstpatch_all[activerank+1] <= npatches) activerank++;
       
       //Register the patch
-      this->gp[npatches] = i;
       gpatchkeys[npatches] = i;
 
       this->rank[npatches] = activerank;
@@ -479,7 +478,6 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
   free(this->rank);
   free(this->patch);
   free(this->gpatch);
-  free(this->gp);
   //
   bitfield3d_destroy(&this->activepatches);
   map_destroy(domain);
