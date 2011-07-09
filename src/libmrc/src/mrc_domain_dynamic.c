@@ -136,20 +136,54 @@ mrc_domain_multi_get_local_patch_info(struct mrc_domain *domain, int patch,
 }
 
 static void
-mrc_domain_multi_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
+setup_gpatch_off_all(struct mrc_domain *domain)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
+
+  //If nr_patches is not set, try to distribute patches evenly
+  if(multi->nr_patches < 0) {
+    multi->nr_patches = multi->nr_gpatches / domain->size +
+      (domain->rank < (multi->nr_gpatches % domain->size) ? 1 : 0);
+  }
+  
+  int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
+  MPI_Gather(&multi->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0,
+	     mrc_domain_comm(domain));
+  MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, mrc_domain_comm(domain));
+  
+  //Adjust for differences between the requested amount of patches and the actual amount
+  //Multi might happen because the load-balancer doesn't know about now-to-be-created patches
+  int nr_gpatches = 0;
+  mprintf("nr_patches(from lb): %d\n", multi->nr_patches);
+  if(domain->rank == 0)	{
+    printf("\npatches on host: \n");
+    for(int i = 0; i < domain->size; ++i) {
+      nr_gpatches += nr_patches_all[i];
+      mprintf("\t%d: %d\n", i, nr_patches_all[i]);
+    }
+    assert(nr_gpatches == multi->nr_gpatches);
+  }
+
+  for (int i = 1; i <= domain->size; i++) {
+    multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches_all[i-1];
+  }
+ }
+
+static void
+mrc_domain_multi_setup_patches(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   int sfc_indices[multi->nr_gpatches];
   
   multi->patches = malloc(sizeof(*multi->patches) * multi->nr_patches);
-  
-  multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
-  for (int i = 1; i <= domain->size; i++) {
-    multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches_all[i-1];
-  }
  
+  setup_gpatch_off_all(domain);
+
   multi->gpatch_off = multi->gpatch_off_all[domain->rank];
+  multi->nr_patches = multi->gpatch_off_all[domain->rank+1] - multi->gpatch_off;
 
   int activerank = 0;
   int npatches = 0;
@@ -191,38 +225,14 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
 
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  MPI_Comm comm = mrc_domain_comm(domain);
-  MPI_Comm_rank(domain->obj.comm, &domain->rank);
-  MPI_Comm_size(domain->obj.comm, &domain->size);
+  MPI_Comm_rank(mrc_domain_comm(domain), &domain->rank);
+  MPI_Comm_size(mrc_domain_comm(domain), &domain->size);
   
   //Copy the activepatch-list
   bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
   
   multi->nr_gpatches = bitfield3d_count_bits_set(&multi->activepatches);
   
-  //If nr_patches is not set, try to distribute patches evenly
-  if(multi->nr_patches < 0) {
-    multi->nr_patches = multi->nr_gpatches / domain->size +
-      (domain->rank < (multi->nr_gpatches % domain->size) ? 1 : 0);
-  }
-  
-  int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
-  MPI_Gather(&multi->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
-  MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, comm);
-  
-  //Adjust for differences between the requested amount of patches and the actual amount
-  //Multi might happen because the load-balancer doesn't know about now-to-be-created patches
-  int nr_gpatches = 0;
-  mprintf("nr_patches(from lb): %d\n", multi->nr_patches);
-  if(domain->rank == 0)	{
-    printf("\npatches on host: \n");
-    for(int i = 0; i < domain->size; ++i) {
-      nr_gpatches += nr_patches_all[i];
-      mprintf("\t%d: %d\n", i, nr_patches_all[i]);
-    }
-    assert(nr_gpatches == multi->nr_gpatches);
-  }
-
   int *np = multi->np;
   for (int d = 0; d < 3; d++) {
     int ldims[3], rmndr[3];
@@ -241,7 +251,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   
   //Create list of patches
   sfc_setup(&multi->sfc, multi->np);
-  mrc_domain_multi_setup_patches(domain, nr_patches_all);
+  mrc_domain_multi_setup_patches(domain);
 }
 
 static void
