@@ -340,9 +340,9 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
   
-  int ngp = this->np[0] * this->np[1] * this->np[2];
+  int npt = this->np[0] * this->np[1] * this->np[2];
   
-  int gpatchkeys[this->nr_gpatches];
+  int sfc_indices[this->nr_gpatches];
   
   this->rank = malloc(sizeof(int) * this->nr_gpatches);
   this->patch = malloc(sizeof(int) * this->nr_gpatches);
@@ -358,41 +358,38 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
   int activerank = 0;
   int npatches = 0;
   
-  //assert(this->nr_gpatches == bitfield3d_count_bits_set(&this->activepatches));
-  
   //TODO Find a smarter way than iterating over all possible patches
-  for(int i=0; i<ngp; ++i)
-  {
+  for(int i = 0; i < npt; i++) {
     int idx[3];
     sfc_idx_to_idx3(this, i, idx);
-    if(bitfield3d_isset(&this->activepatches, idx))
-    {
+    if(bitfield3d_isset(&this->activepatches, idx)) {
       //Calculate rank
-      if(activerank < ( domain->size - 1 ) && firstpatch_all[activerank+1] <= npatches) activerank++;
+      if(activerank < ( domain->size - 1 ) &&
+	 firstpatch_all[activerank+1] <= npatches) {
+	activerank++;
+      }
       
       //Register the patch
-      gpatchkeys[npatches] = i;
+      sfc_indices[npatches] = i;
 
       this->rank[npatches] = activerank;
       int lpatch = npatches - firstpatch_all[activerank];
       this->patch[npatches] = lpatch;
       
-      if(activerank == domain->rank) //Create the patch on this processor
-	  {
-		  this->gpatch[lpatch] = i;
-		  
-		  //Setup patches[lpatch]
-		  for(int d=0; d<3; ++d)
-		  {
-			  this->patches[lpatch].off[d] = idx[d] * this->ldims[d];
-			  this->patches[lpatch].ldims[d] = this->ldims[d];
-		  }
+      if (activerank == domain->rank) { // Create the patch on this processor
+	this->gpatch[lpatch] = i;
+	
+	//Setup patches[lpatch]
+	for(int d = 0; d < 3; d++) {
+	  this->patches[lpatch].off[d] = idx[d] * this->ldims[d];
+	  this->patches[lpatch].ldims[d] = this->ldims[d];
+	}
       }
-      npatches+=1;
+      npatches++;
     }
   }
   
-  map_create(domain, gpatchkeys, this->nr_gpatches);
+  map_create(domain, sfc_indices, this->nr_gpatches);
 }
 
 static void
@@ -416,9 +413,9 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   MPI_Comm_size(domain->obj.comm, &domain->size);
   
   //If nr_patches is not set, try to distribute patches evenly
-  if(this->nr_patches < 0)
-  {
-    this->nr_patches = this->nr_gpatches / domain->size + (domain->rank < (this->nr_gpatches % domain->size) ? 1 : 0);
+  if(this->nr_patches < 0) {
+    this->nr_patches = this->nr_gpatches / domain->size +
+      (domain->rank < (this->nr_gpatches % domain->size) ? 1 : 0);
   }
   
   int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
@@ -427,53 +424,30 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   
   //Adjust for differences between the requested amount of patches and the actual amount
   //This might happen because the load-balancer doesn't know about now-to-be-created patches
-  int nrequestedpatches = 0;
-	printf("Rank %d, nr_patches(from lb): %d\n", domain->rank, this->nr_patches);
-	if(domain->rank == 0)
-	{
-		printf("\npatches on host: \n");
-		for(int i=0; i<domain->size; ++i)
-		{
-			nrequestedpatches += nr_patches_all[i];
-			printf("\t%d: %d\n", i, nr_patches_all[i]);
-		}
-	}
+  int nr_gpatches = 0;
+  mprintf("nr_patches(from lb): %d\n", this->nr_patches);
+  if(domain->rank == 0)	{
+    printf("\npatches on host: \n");
+    for(int i = 0; i < domain->size; ++i) {
+      nr_gpatches += nr_patches_all[i];
+      mprintf("\t%d: %d\n", i, nr_patches_all[i]);
+    }
+    assert(nr_gpatches == this->nr_gpatches);
+  }
+
+  //and calculate first patch to process on this domain
+  int firstpatch = 0;	//The first global patch to be owned by THIS processor
+  for(int i = 0; i < domain->rank; i++) {
+    firstpatch += nr_patches_all[i];
+  }
 	
-	/* This is not neccessary anymore after modifying the balancer
-	 * I Left it here for now as I'm not convinced yet this was the best way
-	
-	int excess = (this->nr_gpatches - nrequestedpatches);
-	
-	if(excess != 0)
-	{
-		assert(0); //This should not happen anymore
-		this->nr_patches += (excess / domain->size) + (excess % domain->size > domain->rank ? 1 : 0);
-	}
-	else if(excess < 0)
-	{
-		this->nr_patches += (excess / domain->size) + (domain->rank < (-excess % domain->size) ? -1 : 0);
-	}
-	
-	//Gather new # of patches
-	MPI_Gather(&this->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0, comm);
-	MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, comm);
-	*/
-	
-	//and calculate first patch to process on this domain
-	int firstpatch = 0;	//The first global patch to be owned by THIS processor
-	for(int i=0; i<domain->rank; ++i)
-	{
-		firstpatch += nr_patches_all[i];
-	}
-	
-	for(int d=0; d<3; ++d)
-	{
-		this->ldims[d] = this->gdims[d] / this->np[d];
-	}
+  for(int d = 0; d < 3; d++) {
+    this->ldims[d] = this->gdims[d] / this->np[d];
+  }
   
-	//Create list of patches
-	sfc_setup(this);
-	mrc_domain_dynamic_setup_patches(domain, firstpatch);
+  //Create list of patches
+  sfc_setup(this);
+  mrc_domain_dynamic_setup_patches(domain, firstpatch);
 }
 
 static void
