@@ -28,7 +28,7 @@ map_create(struct mrc_domain *domain, int *sfc_indices, int nr_gpatches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  multi->gp = malloc(sizeof(int) * multi->nr_gpatches);
+  multi->gp = malloc(sizeof(int) * multi->nr_global_patches);
   for (int i = 0; i < nr_gpatches; i++) {
     multi->gp[i] = sfc_indices[i];
   }
@@ -109,7 +109,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  assert(gpatch < multi->nr_gpatches);
+  assert(gpatch < multi->nr_global_patches);
   info->global_patch = gpatch;
   int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
   sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
@@ -141,7 +141,7 @@ setup_gpatch_off_all(struct mrc_domain *domain)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
-  int nr_global_patches = multi->nr_gpatches;
+  int nr_global_patches = multi->nr_global_patches;
 
   if (multi->nr_patches >= 0) {
     // prescribed mapping patch <-> proc
@@ -172,7 +172,7 @@ mrc_domain_multi_setup_patches(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int sfc_indices[multi->nr_gpatches];
+  int sfc_indices[multi->nr_global_patches];
   
   setup_gpatch_off_all(domain);
 
@@ -210,7 +210,7 @@ mrc_domain_multi_setup_patches(struct mrc_domain *domain)
     }
   }
   
-  map_create(domain, sfc_indices, multi->nr_gpatches);
+  map_create(domain, sfc_indices, multi->nr_global_patches);
 }
 
 static void
@@ -228,7 +228,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   //Copy the activepatch-list
   bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
   
-  multi->nr_gpatches = bitfield3d_count_bits_set(&multi->activepatches);
+  multi->nr_global_patches = bitfield3d_count_bits_set(&multi->activepatches);
   
   int *np = multi->np;
   for (int d = 0; d < 3; d++) {
@@ -311,7 +311,7 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  *nr_global_patches = multi->nr_gpatches;
+  *nr_global_patches = multi->nr_global_patches;
 }
 
 static void
@@ -340,10 +340,10 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 static void
 mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
-  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches", multi->nr_gpatches);
+  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
+			nr_global_patches);
   
   //Iterate over all global patches
   for (int gp = 0; gp < nr_global_patches; gp++) {

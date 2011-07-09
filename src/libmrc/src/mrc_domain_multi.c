@@ -93,6 +93,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  assert(gpatch < multi->nr_global_patches);
   info->global_patch = gpatch;
   int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
   sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
@@ -124,7 +125,7 @@ setup_gpatch_off_all(struct mrc_domain *domain)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
-  int nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  int nr_global_patches = multi->nr_global_patches;
 
   if (multi->nr_patches >= 0) {
     // prescribed mapping patch <-> proc
@@ -162,8 +163,10 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   MPI_Comm_rank(comm, &domain->rank);
   MPI_Comm_size(comm, &domain->size);
 
-  // FIXME: allow setting of desired decomposition by user?
   int *np = multi->np;
+  multi->nr_global_patches = np[0] * np[1] * np[2];
+  
+  // FIXME: allow setting of desired decomposition by user?
   for (int d = 0; d < 3; d++) {
     int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
@@ -257,7 +260,7 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  *nr_global_patches = multi->np[0] * multi->np[1] * multi->np[2];
+  *nr_global_patches = multi->nr_global_patches;
 }
 
 static void
@@ -276,9 +279,9 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
-
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
 			nr_global_patches);
+
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_multi_get_global_patch_info(domain, gp, &info);

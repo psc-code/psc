@@ -85,6 +85,7 @@ void sfc_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3]);
 #include <bintree.h>
 
 struct mrc_domain_multi {
+  int nr_global_patches;	//Number of global patches
   int gdims[3];
   int nr_patches;
   int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
@@ -99,7 +100,6 @@ struct mrc_domain_multi {
   int *off[3]; //< offsets for all patches by direction
 
   // dynamic
-  int nr_gpatches;	//Number of global patches
   
   struct bitfield3d* p_activepatches;	//Only used as a parameter. Will be invalid after setup()
   struct bitfield3d activepatches; 	//Index of which patches are active
