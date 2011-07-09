@@ -244,20 +244,20 @@ map_sfc_idx_to_gpatch(struct mrc_domain *domain, int sfc_idx)
 // ======================================================================
 
 static void
-gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
-		     int *rank, int *patch)
+sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
+		      int *rank, int *patch)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
   //Get gp->array index
-  int i = map_sfc_idx_to_gpatch(domain, gpatch);
-  if (i < 0) {
+  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
+  if (gpatch < 0) {
     *rank = -1;
     *patch = -1;
     return;
   }
   
-  *rank = this->rank[i];
-  *patch = this->patch[i];
+  *rank = this->rank[gpatch];
+  *patch = this->patch[gpatch];
 }
 
 // ======================================================================
@@ -277,7 +277,7 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   assert(gpatch < multi->nr_gpatches);
   info->global_patch = gpatch;
   int sfc_idx = multi->gp[gpatch];
-  gpatch_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
+  sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
   
   assert(info->rank >= 0);
 
