@@ -93,7 +93,12 @@ sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
-
+  if (gpatch < 0) {
+    *rank = -1;
+    *patch = -1;
+    return;
+  }
+  
   // FIXME, this can be done much more efficiently using binary search...
   for (int i = 0; i < domain->size; i++) {
     if (gpatch < multi->gpatch_off_all[i+1]) {
@@ -193,7 +198,28 @@ setup_gpatch_off_all(struct mrc_domain *domain)
 static void
 mrc_domain_multi_setup_map(struct mrc_domain *domain)
 {
-  map_create(domain, NULL, -1);
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  if (!multi->have_activepatches) {
+    map_create(domain, NULL, -1);
+  } else {
+    int sfc_indices[multi->nr_global_patches];
+  
+    int npatches = 0;
+  
+    //TODO Find a smarter way than iterating over all possible patches
+    int npt = multi->np[0] * multi->np[1] * multi->np[2];
+    for(int i = 0; i < npt; i++) {
+      int idx[3];
+      sfc_idx_to_idx3(&multi->sfc, i, idx);
+      if(bitfield3d_isset(&multi->activepatches, idx)) {
+	//Register the patch
+	sfc_indices[npatches] = i;
+	npatches++;
+      }
+    }
+    map_create(domain, sfc_indices, multi->nr_global_patches);
+  }
 }
 
 static void
@@ -209,9 +235,15 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   MPI_Comm_size(comm, &domain->size);
 
   int *np = multi->np;
-  multi->nr_global_patches = np[0] * np[1] * np[2];
+  if (multi->p_activepatches) {
+    //Copy the activepatch-list
+    bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
+    multi->have_activepatches = true;
+    multi->nr_global_patches = bitfield3d_count_bits_set(&multi->activepatches);
+  } else {
+    multi->nr_global_patches = np[0] * np[1] * np[2];
+  }
   
-  // FIXME: allow setting of desired decomposition by user?
   for (int d = 0; d < 3; d++) {
     int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
@@ -258,6 +290,9 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
   free(multi->gpatch_off_all);
   free(multi->patches);
   map_destroy(domain);
+  if (multi->have_activepatches) {
+    bitfield3d_destroy(&multi->activepatches);
+  }
 }
 
 static struct mrc_patch *
@@ -313,6 +348,20 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				     struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  //Check if the patch is active
+  if (multi->have_activepatches &&
+      !bitfield3d_isset(&multi->activepatches, idx)) {
+    info->rank = -1;
+    info->patch = -1;
+    info->global_patch = -1;
+    for(int d = 0; d < 3; d++) {
+      info->ldims[d] = multi->ldims[d][idx[d]];
+      info->off[d] = multi->off[d][idx[d]];
+      info->idx3[d] = idx[d];
+    }
+    return;
+  }
 
   int sfc_idx = sfc_idx3_to_idx(&multi->sfc, idx);
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
@@ -418,6 +467,7 @@ static struct param mrc_domain_multi_params_descr[] = {
   { "curve_type"      , VAR(sfc.curve_type)  , PARAM_SELECT(CURVE_BYDIM,
 							    curve_descr) },
   { "nr_patches"      , VAR(nr_patches)      , PARAM_INT(-1) },
+  { "activepatches"   , VAR(p_activepatches) , PARAM_PTR(NULL) },
   {},
 };
 #undef VAR

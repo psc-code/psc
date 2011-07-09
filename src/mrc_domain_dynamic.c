@@ -185,23 +185,26 @@ mrc_domain_multi_setup_map(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int sfc_indices[multi->nr_global_patches];
+  if (!multi->have_activepatches) {
+    map_create(domain, NULL, -1);
+  } else {
+    int sfc_indices[multi->nr_global_patches];
   
-  int npatches = 0;
+    int npatches = 0;
   
-  //TODO Find a smarter way than iterating over all possible patches
-  int npt = multi->np[0] * multi->np[1] * multi->np[2];
-  for(int i = 0; i < npt; i++) {
-    int idx[3];
-    sfc_idx_to_idx3(&multi->sfc, i, idx);
-    if(bitfield3d_isset(&multi->activepatches, idx)) {
-      //Register the patch
-      sfc_indices[npatches] = i;
-      npatches++;
+    //TODO Find a smarter way than iterating over all possible patches
+    int npt = multi->np[0] * multi->np[1] * multi->np[2];
+    for(int i = 0; i < npt; i++) {
+      int idx[3];
+      sfc_idx_to_idx3(&multi->sfc, i, idx);
+      if(bitfield3d_isset(&multi->activepatches, idx)) {
+	//Register the patch
+	sfc_indices[npatches] = i;
+	npatches++;
+      }
     }
+    map_create(domain, sfc_indices, multi->nr_global_patches);
   }
-  
-  map_create(domain, sfc_indices, multi->nr_global_patches);
 }
 
 static void
@@ -215,13 +218,17 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   MPI_Comm comm = mrc_domain_comm(domain);
   MPI_Comm_rank(comm, &domain->rank);
   MPI_Comm_size(comm, &domain->size);
-  
-  //Copy the activepatch-list
-  bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
-  
-  multi->nr_global_patches = bitfield3d_count_bits_set(&multi->activepatches);
-  
+
   int *np = multi->np;
+  if (multi->p_activepatches) {
+    //Copy the activepatch-list
+    bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
+    multi->have_activepatches = true;
+    multi->nr_global_patches = bitfield3d_count_bits_set(&multi->activepatches);
+  } else {
+    multi->nr_global_patches = np[0] * np[1] * np[2];
+  }
+  
   for (int d = 0; d < 3; d++) {
     int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
@@ -267,8 +274,10 @@ mrc_domain_multi_destroy(struct mrc_domain *domain)
   }
   free(multi->gpatch_off_all);
   free(multi->patches);
-  bitfield3d_destroy(&multi->activepatches);
   map_destroy(domain);
+  if (multi->have_activepatches) {
+    bitfield3d_destroy(&multi->activepatches);
+  }
 }
 
 static struct mrc_patch *
@@ -324,8 +333,10 @@ mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				     struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
   //Check if the patch is active
-  if (!bitfield3d_isset(&multi->activepatches, idx)) {
+  if (multi->have_activepatches &&
+      !bitfield3d_isset(&multi->activepatches, idx)) {
     info->rank = -1;
     info->patch = -1;
     info->global_patch = -1;
