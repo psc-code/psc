@@ -336,12 +336,11 @@ mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
   mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
 }
 
-static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firstpatch)
+static void
+mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
-  
-  int npt = this->np[0] * this->np[1] * this->np[2];
-  
+
   int sfc_indices[this->nr_gpatches];
   
   this->rank = malloc(sizeof(int) * this->nr_gpatches);
@@ -349,16 +348,16 @@ static void mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int firs
   this->gpatch = malloc(sizeof(int) * this->nr_patches);
   this->patches = malloc(sizeof(*this->patches) * this->nr_patches);
   
-  //Gather firstpatch from all ranks
   int *firstpatch_all = calloc(domain->size, sizeof(*firstpatch_all));
-  MPI_Comm comm = mrc_domain_comm(domain);
-  MPI_Gather(&firstpatch, 1, MPI_INT, firstpatch_all, 1, MPI_INT, 0, comm);
-  MPI_Bcast(firstpatch_all, domain->size, MPI_INT, 0, comm);
+  for (int i = 1; i < domain->size; i++) {
+    firstpatch_all[i] = firstpatch_all[i-1] + nr_patches_all[i-1];
+  }
  
   int activerank = 0;
   int npatches = 0;
   
   //TODO Find a smarter way than iterating over all possible patches
+  int npt = this->np[0] * this->np[1] * this->np[2];
   for(int i = 0; i < npt; i++) {
     int idx[3];
     sfc_idx_to_idx3(this, i, idx);
@@ -435,19 +434,13 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
     assert(nr_gpatches == this->nr_gpatches);
   }
 
-  //and calculate first patch to process on this domain
-  int firstpatch = 0;	//The first global patch to be owned by THIS processor
-  for(int i = 0; i < domain->rank; i++) {
-    firstpatch += nr_patches_all[i];
-  }
-	
   for(int d = 0; d < 3; d++) {
     this->ldims[d] = this->gdims[d] / this->np[d];
   }
   
   //Create list of patches
   sfc_setup(this);
-  mrc_domain_dynamic_setup_patches(domain, firstpatch);
+  mrc_domain_dynamic_setup_patches(domain, nr_patches_all);
 }
 
 static void
