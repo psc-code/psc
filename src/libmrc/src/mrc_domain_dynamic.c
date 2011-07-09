@@ -78,7 +78,7 @@ sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
 		      int *rank, int *patch)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-  //Get gp->array index
+
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
   if (gpatch < 0) {
     *rank = -1;
@@ -86,7 +86,7 @@ sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
     return;
   }
   
-  // FIXME, multi can be done much more efficiently using binary search...
+  // FIXME, this can be done much more efficiently using binary search...
   for (int i = 0; i < domain->size; i++) {
     if (gpatch < multi->gpatch_off_all[i+1]) {
       *rank = i;
@@ -99,13 +99,12 @@ sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
 // ======================================================================
 
 static void
-mrc_domain_dynamic_view(struct mrc_domain *domain)
+mrc_domain_multi_view(struct mrc_domain *domain)
 {
 }
 
-// FIXME, get rid of multi one always use idx3 one?
 static void
-mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
+mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				       struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -116,7 +115,7 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
   
   assert(info->rank >= 0);
-
+  
   int p3[3];
   sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
@@ -127,16 +126,17 @@ mrc_domain_dynamic_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 }
 
 static void
-mrc_domain_dynamic_get_local_patch_info(struct mrc_domain *domain, int patch,
+mrc_domain_multi_get_local_patch_info(struct mrc_domain *domain, int patch,
 				      struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  mrc_domain_dynamic_get_global_patch_info(domain, multi->gpatch_off + patch, info);
+  mrc_domain_multi_get_global_patch_info(domain, multi->gpatch_off + patch,
+					 info);
 }
 
 static void
-mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
+mrc_domain_multi_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -184,13 +184,17 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 }
 
 static void
-mrc_domain_dynamic_setup(struct mrc_domain *domain)
+mrc_domain_multi_setup(struct mrc_domain *domain)
 {
   assert(!domain->is_setup);
   domain->is_setup = true;
 
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
-  	
+
+  MPI_Comm comm = mrc_domain_comm(domain);
+  MPI_Comm_rank(domain->obj.comm, &domain->rank);
+  MPI_Comm_size(domain->obj.comm, &domain->size);
+  
   //Assert some properties we rely on
   for(int d=0; d<3; ++d) assert((multi->gdims[d] % multi->np[d]) == 0);	//The domain-size must be a mutliple of the patch-size
   
@@ -198,10 +202,6 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
   
   multi->nr_gpatches = bitfield3d_count_bits_set(&multi->activepatches);
-  
-  MPI_Comm comm = mrc_domain_comm(domain);
-  MPI_Comm_rank(domain->obj.comm, &domain->rank);
-  MPI_Comm_size(domain->obj.comm, &domain->size);
   
   //If nr_patches is not set, try to distribute patches evenly
   if(multi->nr_patches < 0) {
@@ -232,11 +232,11 @@ mrc_domain_dynamic_setup(struct mrc_domain *domain)
   
   //Create list of patches
   sfc_setup(&multi->sfc, multi->np);
-  mrc_domain_dynamic_setup_patches(domain, nr_patches_all);
+  mrc_domain_multi_setup_patches(domain, nr_patches_all);
 }
 
 static void
-mrc_domain_dynamic_destroy(struct mrc_domain *domain)
+mrc_domain_multi_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   
@@ -247,7 +247,7 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
 }
 
 static struct mrc_patch *
-mrc_domain_dynamic_get_patches(struct mrc_domain *domain, int *nr_patches)
+mrc_domain_multi_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   if (nr_patches) {
@@ -257,7 +257,7 @@ mrc_domain_dynamic_get_patches(struct mrc_domain *domain, int *nr_patches)
 }
 
 static void
-mrc_domain_dynamic_get_global_dims(struct mrc_domain *domain, int *dims)
+mrc_domain_multi_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -267,7 +267,7 @@ mrc_domain_dynamic_get_global_dims(struct mrc_domain *domain, int *dims)
 }
 
 static void
-mrc_domain_dynamic_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
+mrc_domain_multi_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -277,7 +277,7 @@ mrc_domain_dynamic_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 }
 
 static void
-mrc_domain_dynamic_get_bc(struct mrc_domain *domain, int *bc)
+mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -287,7 +287,7 @@ mrc_domain_dynamic_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static void
-mrc_domain_dynamic_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
+mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
@@ -295,7 +295,7 @@ mrc_domain_dynamic_get_nr_global_patches(struct mrc_domain *domain, int *nr_glob
 }
 
 static void
-mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
+mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				     struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -314,15 +314,15 @@ mrc_domain_dynamic_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 
   int sfc_idx = sfc_idx3_to_idx(&multi->sfc, idx);
   int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
-  mrc_domain_dynamic_get_global_patch_info(domain, gpatch, info);
+  mrc_domain_multi_get_global_patch_info(domain, gpatch, info);
 }
 
 static void
-mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
+mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
   int nr_global_patches;
-  mrc_domain_dynamic_get_nr_global_patches(domain, &nr_global_patches);
+  mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches", multi->nr_gpatches);
   
   //Iterate over all global patches
@@ -340,12 +340,12 @@ mrc_domain_dynamic_write(struct mrc_domain *domain, struct mrc_io *io)
 }
 
 static void
-mrc_domain_dynamic_plot(struct mrc_domain *domain)
+mrc_domain_multi_plot(struct mrc_domain *domain)
 {
 }
 
 static struct mrc_ddc *
-mrc_domain_dynamic_create_ddc(struct mrc_domain *domain)
+mrc_domain_multi_create_ddc(struct mrc_domain *domain)
 {
   struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
   mrc_ddc_set_type(ddc, "multi");
@@ -367,7 +367,7 @@ static struct mrc_param_select curve_descr[] = {
 };
 
 #define VAR(x) (void *)offsetof(struct mrc_domain_multi, x)
-static struct param mrc_domain_dynamic_params_descr[] = {
+static struct param mrc_domain_multi_params_descr[] = {
   { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
   { "np"              , VAR(np)              , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
@@ -387,19 +387,19 @@ static struct param mrc_domain_dynamic_params_descr[] = {
 struct mrc_domain_ops mrc_domain_dynamic_ops = {
   .name                  = "dynamic",
   .size                  = sizeof(struct mrc_domain_multi),
-  .param_descr           = mrc_domain_dynamic_params_descr,
-  .setup                 = mrc_domain_dynamic_setup,
-  .view                  = mrc_domain_dynamic_view,
-  .write                 = mrc_domain_dynamic_write,
-  .destroy               = mrc_domain_dynamic_destroy,
-  .get_patches           = mrc_domain_dynamic_get_patches,
-  .get_global_dims       = mrc_domain_dynamic_get_global_dims,
-  .get_nr_procs          = mrc_domain_dynamic_get_nr_procs,
-  .get_bc                = mrc_domain_dynamic_get_bc,
-  .get_nr_global_patches = mrc_domain_dynamic_get_nr_global_patches,
-  .get_global_patch_info = mrc_domain_dynamic_get_global_patch_info,
-  .get_local_patch_info  = mrc_domain_dynamic_get_local_patch_info,
-  .get_idx3_patch_info   = mrc_domain_dynamic_get_idx3_patch_info,
-  .plot                  = mrc_domain_dynamic_plot,
-  .create_ddc            = mrc_domain_dynamic_create_ddc,
+  .param_descr           = mrc_domain_multi_params_descr,
+  .setup                 = mrc_domain_multi_setup,
+  .view                  = mrc_domain_multi_view,
+  .write                 = mrc_domain_multi_write,
+  .destroy               = mrc_domain_multi_destroy,
+  .get_patches           = mrc_domain_multi_get_patches,
+  .get_global_dims       = mrc_domain_multi_get_global_dims,
+  .get_nr_procs          = mrc_domain_multi_get_nr_procs,
+  .get_bc                = mrc_domain_multi_get_bc,
+  .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
+  .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
+  .get_local_patch_info  = mrc_domain_multi_get_local_patch_info,
+  .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
+  .plot                  = mrc_domain_multi_plot,
+  .create_ddc            = mrc_domain_multi_create_ddc,
 };
