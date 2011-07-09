@@ -97,11 +97,10 @@ struct mrc_domain_dynamic {
   struct bitfield3d activepatches; 	//Index of which patches are active
   
   struct bintree g_patches;	//Provides a mapping gpatch -> gpatchinfo / patches
-  
-  int* rank;	//ranks of gpatches	->use g_patches to index into this
-  int* patch;	//lp of gpatches	->use g_patches to index into this
   int* gp;	//Maps [0..nr_gpatches] -> gpatch
   
+  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
+
   //Array 0..#local patches
   int *gpatch;	//lpatch -> gpatch mapping
   

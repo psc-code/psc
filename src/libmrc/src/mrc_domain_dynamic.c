@@ -291,8 +291,14 @@ sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
     return;
   }
   
-  *rank = this->rank[gpatch];
-  *patch = this->patch[gpatch];
+  // FIXME, this can be done much more efficiently using binary search...
+  for (int i = 0; i < domain->size; i++) {
+    if (gpatch < this->gpatch_off_all[i+1]) {
+      *rank = i;
+      *patch = gpatch - this->gpatch_off_all[i];
+      break;
+    }
+  }
 }
 
 // ======================================================================
@@ -343,14 +349,12 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
 
   int sfc_indices[this->nr_gpatches];
   
-  this->rank = malloc(sizeof(int) * this->nr_gpatches);
-  this->patch = malloc(sizeof(int) * this->nr_gpatches);
   this->gpatch = malloc(sizeof(int) * this->nr_patches);
   this->patches = malloc(sizeof(*this->patches) * this->nr_patches);
   
-  int *firstpatch_all = calloc(domain->size, sizeof(*firstpatch_all));
-  for (int i = 1; i < domain->size; i++) {
-    firstpatch_all[i] = firstpatch_all[i-1] + nr_patches_all[i-1];
+  this->gpatch_off_all = calloc(domain->size + 1, sizeof(*this->gpatch_off_all));
+  for (int i = 1; i <= domain->size; i++) {
+    this->gpatch_off_all[i] = this->gpatch_off_all[i-1] + nr_patches_all[i-1];
   }
  
   int activerank = 0;
@@ -363,17 +367,14 @@ mrc_domain_dynamic_setup_patches(struct mrc_domain *domain, int *nr_patches_all)
     sfc_idx_to_idx3(this, i, idx);
     if(bitfield3d_isset(&this->activepatches, idx)) {
       //Calculate rank
-      if(activerank < ( domain->size - 1 ) &&
-	 firstpatch_all[activerank+1] <= npatches) {
+      if (npatches >= this->gpatch_off_all[activerank+1]) {
 	activerank++;
       }
       
       //Register the patch
       sfc_indices[npatches] = i;
 
-      this->rank[npatches] = activerank;
-      int lpatch = npatches - firstpatch_all[activerank];
-      this->patch[npatches] = lpatch;
+      int lpatch = npatches - this->gpatch_off_all[activerank];
       
       if (activerank == domain->rank) { // Create the patch on this processor
 	this->gpatch[lpatch] = i;
@@ -448,10 +449,9 @@ mrc_domain_dynamic_destroy(struct mrc_domain *domain)
 {
   struct mrc_domain_dynamic *this = mrc_domain_dynamic(domain);
   
+  free(this->gpatch_off_all);
   free(this->patches);
   
-  free(this->rank);
-  free(this->patch);
   free(this->gpatch);
   //
   bitfield3d_destroy(&this->activepatches);
