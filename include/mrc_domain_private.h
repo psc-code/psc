@@ -82,6 +82,8 @@ void sfc_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3]);
 // ======================================================================
 // mrc_domain_multi
 
+#include <bintree.h>
+
 struct mrc_domain_multi {
   int gdims[3];
   int nr_patches;
@@ -92,22 +94,11 @@ struct mrc_domain_multi {
   int *gpatch_off_all;
   struct mrc_sfc sfc;
 
+  // multi
   int *ldims[3]; //< patch dims for all patches by direction
   int *off[3]; //< offsets for all patches by direction
-};
 
-#include <bintree.h>
-
-struct mrc_domain_dynamic {
-  int gdims[3];
-  int nr_patches;
-  int gpatch_off; // the beginning gpatch idx on this proc
-  struct mrc_patch *patches;
-  int np[3]; //< # of patches per direction
-  int bc[3];
-  int *gpatch_off_all; //for each proc, the beginning gpatch idx on that proc
-  struct mrc_sfc sfc;  
-
+  // dynamic
   int nr_gpatches;	//Number of global patches
   int _ldims[3];
   
@@ -119,6 +110,6 @@ struct mrc_domain_dynamic {
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;
-
 extern struct mrc_domain_ops mrc_domain_dynamic_ops;
+
 #endif
