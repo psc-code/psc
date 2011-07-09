@@ -195,9 +195,6 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
   
-  //Assert some properties we rely on
-  for(int d=0; d<3; ++d) assert((multi->gdims[d] % multi->np[d]) == 0);	//The domain-size must be a mutliple of the patch-size
-  
   //Copy the activepatch-list
   bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
   
@@ -228,13 +225,14 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
 
   int *np = multi->np;
   for (int d = 0; d < 3; d++) {
-    int ldims[3];
+    int ldims[3], rmndr[3];
     ldims[d] = multi->gdims[d] / np[d];
+    rmndr[d] = multi->gdims[d] % np[d];
 
     multi->ldims[d] = calloc(np[d], sizeof(*multi->ldims[d]));
     multi->off[d] = calloc(np[d], sizeof(*multi->off[d]));
     for (int i = 0; i < np[d]; i++) {
-      multi->ldims[d][i] = ldims[d];
+      multi->ldims[d][i] = ldims[d] + (i < rmndr[d]);
       if (i > 0) {
 	multi->off[d][i] = multi->off[d][i-1] + multi->ldims[d][i-1];
       }

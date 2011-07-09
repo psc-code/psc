@@ -100,7 +100,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   assert(info->rank >= 0);
   
   int p3[3];
-  sfc_idx_to_idx3(&multi->sfc, gpatch, p3);
+  sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d][p3[d]];
     info->off[d] = multi->off[d][p3[d]];
