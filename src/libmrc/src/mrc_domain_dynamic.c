@@ -141,35 +141,31 @@ setup_gpatch_off_all(struct mrc_domain *domain)
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   multi->gpatch_off_all = calloc(domain->size + 1, sizeof(*multi->gpatch_off_all));
+  int nr_global_patches = multi->nr_gpatches;
 
-  //If nr_patches is not set, try to distribute patches evenly
-  if(multi->nr_patches < 0) {
-    multi->nr_patches = multi->nr_gpatches / domain->size +
-      (domain->rank < (multi->nr_gpatches % domain->size) ? 1 : 0);
-  }
-  
-  int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
-  MPI_Gather(&multi->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT, 0,
-	     mrc_domain_comm(domain));
-  MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, mrc_domain_comm(domain));
-  
-  //Adjust for differences between the requested amount of patches and the actual amount
-  //Multi might happen because the load-balancer doesn't know about now-to-be-created patches
-  int nr_gpatches = 0;
-  mprintf("nr_patches(from lb): %d\n", multi->nr_patches);
-  if(domain->rank == 0)	{
-    printf("\npatches on host: \n");
-    for(int i = 0; i < domain->size; ++i) {
-      nr_gpatches += nr_patches_all[i];
-      mprintf("\t%d: %d\n", i, nr_patches_all[i]);
+  if (multi->nr_patches >= 0) {
+    // prescribed mapping patch <-> proc
+    MPI_Comm comm = mrc_domain_comm(domain);
+    int *nr_patches_all = calloc(domain->size, sizeof(*nr_patches_all));
+    MPI_Gather(&multi->nr_patches, 1, MPI_INT, nr_patches_all, 1, MPI_INT,
+	       0, comm);
+    MPI_Bcast(nr_patches_all, domain->size, MPI_INT, 0, comm);
+
+    for (int i = 1; i <= domain->size; i++) {
+      int nr_patches = nr_patches_all[i-1];
+      multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches;
     }
-    assert(nr_gpatches == multi->nr_gpatches);
+    free(nr_patches_all);
+  } else {
+    // map patch <-> proc uniformly (roughly)
+    int patches_per_proc = nr_global_patches / domain->size;
+    int patches_per_proc_rmndr = nr_global_patches % domain->size;
+    for (int i = 1; i <= domain->size; i++) {
+      int nr_patches = patches_per_proc + ((i-1) < patches_per_proc_rmndr);
+      multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches;
+    }
   }
-
-  for (int i = 1; i <= domain->size; i++) {
-    multi->gpatch_off_all[i] = multi->gpatch_off_all[i-1] + nr_patches_all[i-1];
-  }
- }
+}
 
 static void
 mrc_domain_multi_setup_patches(struct mrc_domain *domain)
@@ -178,13 +174,13 @@ mrc_domain_multi_setup_patches(struct mrc_domain *domain)
 
   int sfc_indices[multi->nr_gpatches];
   
-  multi->patches = malloc(sizeof(*multi->patches) * multi->nr_patches);
- 
   setup_gpatch_off_all(domain);
 
   multi->gpatch_off = multi->gpatch_off_all[domain->rank];
   multi->nr_patches = multi->gpatch_off_all[domain->rank+1] - multi->gpatch_off;
 
+  multi->patches = malloc(sizeof(*multi->patches) * multi->nr_patches);
+ 
   int activerank = 0;
   int npatches = 0;
   
@@ -225,8 +221,9 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
 
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  MPI_Comm_rank(mrc_domain_comm(domain), &domain->rank);
-  MPI_Comm_size(mrc_domain_comm(domain), &domain->size);
+  MPI_Comm comm = mrc_domain_comm(domain);
+  MPI_Comm_rank(comm, &domain->rank);
+  MPI_Comm_size(comm, &domain->size);
   
   //Copy the activepatch-list
   bitfield3d_copy(&multi->activepatches, multi->p_activepatches);
@@ -349,15 +346,15 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
   mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches", multi->nr_gpatches);
   
   //Iterate over all global patches
-  for (int i = 0; i < nr_global_patches; i++) {
+  for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
-    mrc_domain_get_global_patch_info(domain, i, &info);
+    mrc_domain_multi_get_global_patch_info(domain, gp, &info);
     char path[strlen(mrc_domain_name(domain)) + 10];
-    sprintf(path, "%s/p%d", mrc_domain_name(domain), i);
+    sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
     mrc_io_write_attr_int3(io, path, "idx3", info.idx3);
-    int sfc_idx = map_gpatch_to_sfc_idx(domain, i);
+    int sfc_idx = map_gpatch_to_sfc_idx(domain, gp);
     mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
   }
 }
