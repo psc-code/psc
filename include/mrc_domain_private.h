@@ -107,6 +107,5 @@ struct mrc_domain_multi {
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;
-extern struct mrc_domain_ops mrc_domain_dynamic_ops;
 
 #endif
