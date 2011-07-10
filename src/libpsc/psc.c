@@ -246,12 +246,10 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
     }
   }
 
+  mrc_domain_set_type(domain, "multi");
   if(psc->use_dynamic_patches) {
     psc_patchmanager_timestep(&psc->patchmanager);
-    mrc_domain_set_type(domain, "dynamic");
     mrc_domain_set_param_ptr(domain, "activepatches", psc->patchmanager.activepatches);
-  } else {
-    mrc_domain_set_type(domain, "multi");
   }
   mrc_domain_set_param_int3(domain, "m", psc->domain.gdims);
   mrc_domain_set_param_int(domain, "bcx", bc[0]);
