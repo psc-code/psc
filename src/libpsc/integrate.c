@@ -14,6 +14,11 @@
 #include <mrc_common.h>
 #include <mrc_profile.h>
 
+int st_time_output;
+int st_time_comm;
+int st_time_particle;
+int st_time_field;
+
 #define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
 
 /////////////////////////////////////////////////////////////////////////

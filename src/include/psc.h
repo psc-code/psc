@@ -421,10 +421,10 @@ void psc_stats_log(struct psc *psc);
 // These are general statistics categories to be used in different parts
 // of the code as appropriate.
 
-int st_time_output;   //< time spent in output
-int st_time_comm;     //< time spent in communications
-int st_time_particle; //< time spent in particle computation
-int st_time_field;    //< time spent in field computation
+extern int st_time_output;   //< time spent in output
+extern int st_time_comm;     //< time spent in communications
+extern int st_time_particle; //< time spent in particle computation
+extern int st_time_field;    //< time spent in field computation
 
 // ----------------------------------------------------------------------
 // other bits and hacks...
