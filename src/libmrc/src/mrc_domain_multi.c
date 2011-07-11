@@ -87,26 +87,20 @@ map_gpatch_to_sfc_idx(struct mrc_domain *domain, int gpatch)
 // ======================================================================
 
 static void
-sfc_idx_to_rank_patch(struct mrc_domain *domain, int sfc_idx,
-		      int *rank, int *patch)
+gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
+		     int *rank, int *patch)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  int gpatch = map_sfc_idx_to_gpatch(domain, sfc_idx);
-  if (gpatch < 0) {
-    *rank = -1;
-    *patch = -1;
-    return;
-  }
-  
   // FIXME, this can be done much more efficiently using binary search...
   for (int i = 0; i < domain->size; i++) {
     if (gpatch < multi->gpatch_off_all[i+1]) {
       *rank = i;
       *patch = gpatch - multi->gpatch_off_all[i];
-      break;
+      return;
     }
   }
+  assert(0);
 }
 
 // ======================================================================
@@ -139,11 +133,11 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 
   assert(gpatch < multi->nr_global_patches);
   info->global_patch = gpatch;
-  int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
-  sfc_idx_to_rank_patch(domain, sfc_idx, &info->rank, &info->patch);
+  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
   
   assert(info->rank >= 0);
   
+  int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
   int p3[3];
   sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
   for (int d = 0; d < 3; d++) {
