@@ -372,6 +372,7 @@ void psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 			int particle_label_offset);
 void psc_setup_partition_and_particles(struct psc *psc);
 void psc_setup_fields(struct psc *psc);
+void psc_output(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
