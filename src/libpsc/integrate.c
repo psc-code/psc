@@ -90,6 +90,7 @@ psc_integrate(struct psc *psc)
   }
 
   int st_nr_particles = psc_stats_register("nr particles");
+  int st_nr_photons = psc_stats_register("nr photons");
   int st_time_step = psc_stats_register("time entire step");
 
   // generic stats categories
@@ -110,6 +111,7 @@ psc_integrate(struct psc *psc)
     // FIXME, do a mparticles func for this
     psc_foreach_patch(psc, p) {
       psc_stats_val[st_nr_particles] += psc->particles->p[p].n_part;
+      psc_stats_val[st_nr_photons] += psc->mphotons->p[p].nr;
     }
 
     psc_stats_log(psc);
