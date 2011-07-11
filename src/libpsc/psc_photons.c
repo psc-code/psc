@@ -25,7 +25,7 @@ photons_realloc(photons_t *pp, int new_nr)
   if (new_nr <= pp->nr)
     return;
 
-  pp->nr_alloced = new_nr * 1.2;
+  pp->nr_alloced = new_nr * 1.5;
   pp->photons = realloc(pp->photons, pp->nr_alloced * sizeof(*pp->photons));
 }
 

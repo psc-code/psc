@@ -1,5 +1,8 @@
 
 #include <psc.h>
+#include <psc_push_fields.h>
+#include <psc_push_particles.h>
+#include <psc_bnd.h>
 
 #include <mrc_params.h>
 
@@ -60,7 +63,7 @@ psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1.;
-    npt->p[0] = 2.;
+    npt->p[0] = 10.;
     if (x[0] >= xc[0] && x[0] < xc[0] + dx[0] &&
 	x[1] >= xc[1] && x[1] < xc[1] + dx[1] &&
 	x[2] >= xc[2] && x[2] < xc[2] + dx[2]) {
@@ -68,6 +71,61 @@ psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
     }
     break;
   }
+}
+
+static void
+psc_event_generator_emission(struct psc *psc)
+{
+  psc_foreach_patch(psc, p) {
+    // get array of particles on this patch
+    particles_base_t *pp = &psc->particles->p[p];
+    photons_t *photons = &psc->mphotons->p[p];
+    // and iterative over all particles in the array
+    for (int n = 0; n < pp->n_part; n++) {
+      particle_base_t *part = particles_base_get_one(pp, n);
+
+      if (part->qni >= 0. || part->pxi < 1.5) {
+	continue;
+      }
+      // only electrons with pxi > 1.5
+      long r = random();
+      if (r < .2 * RAND_MAX) {
+	photons_realloc(photons, photons->nr + 1);
+	int new_nr = photons->nr++;
+	photon_t *ph = &photons->photons[new_nr];
+	ph->x[0] = part->xi;
+	ph->x[1] = part->yi;
+	ph->x[2] = part->zi;
+	ph->p[0] = part->pxi / 2.;
+	ph->wni = 1.;
+	part->pxi /= 2.;
+      }
+    }
+  }
+}
+
+static void
+psc_photon_test_step(struct psc *psc)
+{
+  psc_output(psc);
+ 
+  psc_event_generator_emission(psc);
+  
+  // field propagation n*dt -> (n+0.5)*dt
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
+  
+  // particle propagation n*dt -> (n+1.0)*dt
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  
+  psc_push_photons_run(psc->mphotons);
+  psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
+  
+  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+  
+  // field propagation (n+0.5)*dt -> (n+1.0)*dt
+  psc_push_fields_step_b(psc->push_fields, psc->flds);
 }
 
 // ======================================================================
@@ -79,6 +137,7 @@ struct psc_ops psc_photon_test_ops = {
   .param_descr      = psc_photon_test_descr,
   .create           = psc_photon_test_create,
   .init_npt         = psc_photon_test_init_npt,
+  .step             = psc_photon_test_step,
 };
 
 // ======================================================================
