@@ -6,6 +6,7 @@ AC_INIT([psc], [1.90])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Source any special site-specific file
 hname="`hostname`"
@@ -57,7 +58,9 @@ LIBS="$LIBS $FLIBS"
 
 # Check for libtool
 
-LT_INIT([disable-shared])
+dnl LT_INIT([disable-shared])
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
 
 # Checks for header files.
 
