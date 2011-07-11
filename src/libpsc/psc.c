@@ -190,6 +190,7 @@ psc_setup_coeff(struct psc *psc)
   psc->coeff.cori = 1. / psc->prm.nicell;
   psc->coeff.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
   psc->coeff.ld = psc->prm.cc / psc->coeff.wl;
+  mprintf("ld = %g\n", psc->coeff.ld);
   if (psc->prm.e0 == 0.) {
     psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
