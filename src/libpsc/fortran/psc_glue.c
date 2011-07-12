@@ -52,6 +52,7 @@
 #define PIC_pml_msb_F77 F77_FUNC_(pic_pml_msb, PIC_PML_MSB)
 #define INIT_basic_F77 F77_FUNC_(init_basic, INIT_BASIC)
 #define PIC_fill_ghosts_h_b_F77 F77_FUNC_(pic_fill_ghosts_h_b, PIC_FILL_GHOSTS_H_B)
+#define PML_coeff_init_param_F77 F77_FUNC_(pml_coeff_init_param, PML_COEFF_INIT_PARAM)
 
 #define C_p_pulse_x1_F77 F77_FUNC(c_p_pulse_x1,C_P_PULSE_X1)
 #define C_s_pulse_x1_F77 F77_FUNC(c_s_pulse_x1,C_S_PULSE_X1)
@@ -196,6 +197,8 @@ void PIC_fill_ghosts_h_b_F77(f_real *hx, f_real *hy, f_real *hz,
 
 
 void INIT_basic_F77(void);
+
+void PML_coeff_init_param_F77(void);
 
 // ----------------------------------------------------------------------
 // Wrappers to be called from C that call into Fortran
@@ -652,6 +655,11 @@ C_s_pulse_z2_F77(f_real *xx, f_real *yy, f_real *zz, f_real *tt)
   return psc_pulse_field_s(pulse, *xx, *yy, *zz, *tt);
 }
 
+void
+PML_coeff_init_param(struct psc *psc)
+{
+  PML_coeff_init_param_F77();
+}
 
 void
 psc_setup_fortran(struct psc *psc)
@@ -664,6 +672,7 @@ psc_setup_fortran(struct psc *psc)
   SET_param_pml(psc);
   PSC_set_patch(psc, 0);
   OUT_params_set(psc);
+  PML_coeff_init_param(psc);
   SETUP_field();
 }
 

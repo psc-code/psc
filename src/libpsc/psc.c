@@ -207,7 +207,7 @@ psc_setup_coeff(struct psc *psc)
   psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
 
   for (int d = 0; d < 3; d++) {
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC){
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC || psc->domain.gdims[d] == 1) {
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
     } else {
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
