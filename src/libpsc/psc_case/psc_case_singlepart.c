@@ -21,7 +21,7 @@ struct psc_case_singlepart {
 static struct param psc_case_singlepart_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(0.)             },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.)             },
-  { "x0"            , VAR(x0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
+  { "x0"            , VAR(x0)              , PARAM_DOUBLE(20.0 * 1e-6)    },
   { "y0"            , VAR(y0)              , PARAM_DOUBLE(20.0 * 1e-6)    },
   { "z0"            , VAR(z0)              , PARAM_DOUBLE(10.0 * 1e-6)    },
   { "mass_ratio"    , VAR(mass_ratio)      , PARAM_DOUBLE(1836.)          },
@@ -41,7 +41,7 @@ psc_case_singlepart_set_from_options(struct psc_case *_case)
 
   ppsc->prm.nicell = 1;
 
-  ppsc->domain.length[0] = 20. * 1e-6;
+  ppsc->domain.length[0] = 40. * 1e-6;
   ppsc->domain.length[1] = 40. * 1e-6;
   ppsc->domain.length[2] = 60. * 1e-6;
 
