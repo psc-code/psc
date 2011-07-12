@@ -62,7 +62,7 @@ static void
 _mrc_mod_view(struct mrc_mod *mod)
 {
   struct mrc_mod_entry *p;
-  list_for_each_entry(p, &mod->list, entry) {
+  __list_for_each_entry(p, &mod->list, entry, struct mrc_mod_entry) {
     mpi_printf(mrc_mod_comm(mod), "%20s| '%s': %d proc%s\n", "", 
 	       p->name, p->nr_procs, p->nr_procs == 1 ? "" : "s");
   }
@@ -80,7 +80,7 @@ _mrc_mod_setup(struct mrc_mod *mod)
 
   int color = 0, nr_procs = 0, nr_colors = 0;
   struct mrc_mod_entry *p;
-  list_for_each_entry(p, &mod->list, entry) {
+  __list_for_each_entry(p, &mod->list, entry, struct mrc_mod_entry) {
     p->rank = nr_procs;
     nr_procs += p->nr_procs;
     nr_colors++;
@@ -103,7 +103,7 @@ _mrc_mod_setup(struct mrc_mod *mod)
   }
 
   int c = 0;
-  list_for_each_entry(p, &mod->list, entry) {
+  __list_for_each_entry(p, &mod->list, entry, struct mrc_mod_entry) {
     if (c++ == color)
       mod->this_mod_entry = p;
   }
@@ -147,7 +147,7 @@ static struct mrc_mod_entry *
 find_mrc_mod_entry(struct mrc_mod *mod, const char *name)
 {
   struct mrc_mod_entry *p;
-  list_for_each_entry(p, &mod->list, entry) {
+  __list_for_each_entry(p, &mod->list, entry, struct mrc_mod_entry) {
     if (strcmp(p->name, name) == 0) {
       return p;
     }

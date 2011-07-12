@@ -210,7 +210,7 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
+      //printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
       MPI_Irecv(&nr_particles_by_patch_new[p], 1, MPI_INT, info_old.rank, mpi_tag(&info),
 		comm, &recv_reqs[p]);
     }
@@ -478,7 +478,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_base_list, entry) {
+  __list_for_each_entry(mf, &mfields_base_list, entry, mfields_base_t) {
     communicate_fields(domain_old, domain_new, mf);
   }
   psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
@@ -569,7 +569,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // fields
 
   mfields_base_t *mf;
-  list_for_each_entry(mf, &mfields_base_list, entry) {
+  __list_for_each_entry(mf, &mfields_base_list, entry, mfields_base_t) {
     communicate_fields(domain_old, domain_new, mf);
   }
   

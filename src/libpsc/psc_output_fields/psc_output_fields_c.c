@@ -152,28 +152,28 @@ static void
 calc_densities(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	       mfields_base_t *res)
 {
-  return psc_moments_calc_densities(psc->moments, flds, particles, res);
+  psc_moments_calc_densities(psc->moments, flds, particles, res);
 }
 
 static void
 calc_v(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	       mfields_base_t *res)
 {
-  return psc_moments_calc_v(psc->moments, flds, particles, res);
+  psc_moments_calc_v(psc->moments, flds, particles, res);
 }
 
 static void
 calc_vv(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	mfields_base_t *res)
 {
-  return psc_moments_calc_vv(psc->moments, flds, particles, res);
+  psc_moments_calc_vv(psc->moments, flds, particles, res);
 }
 
 static void
 calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_base_t *res)
 {
-  return psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
+  psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
 }
 
 static struct output_field output_fields[] = {

@@ -42,14 +42,14 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
 void
 fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
 {
-  return __fields_fortran_alloc(pf, ib, ie, nr_comp, NULL, false);
+  __fields_fortran_alloc(pf, ib, ie, nr_comp, NULL, false);
 }
 
 void
 fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
 				int nr_comp, fields_fortran_real_t *arr)
 {
-  return __fields_fortran_alloc(pf, ib, ie, nr_comp, arr, true);
+  __fields_fortran_alloc(pf, ib, ie, nr_comp, arr, true);
 }
 
 

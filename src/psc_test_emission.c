@@ -7,6 +7,7 @@
 #include <mrc_params.h>
 
 #include <math.h>
+#include <stdlib.h>
 
 struct psc_photon_test {
   // parameters

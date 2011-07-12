@@ -409,7 +409,7 @@ xdmf_spatial_find(struct mrc_io *io, const char *sfx, float sheet)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   struct xdmf_spatial *xs;
-  list_for_each_entry(xs, &hdf5->xdmf_spatial_list, entry) {
+  __list_for_each_entry(xs, &hdf5->xdmf_spatial_list, entry, struct xdmf_spatial) {
     if (xs->sheet == sheet && strcmp(xs->sfx, sfx) == 0) {
       return xs;
     }
@@ -510,7 +510,7 @@ xdmf_temporal_write(struct xdmf_temporal *xt)
   fprintf(f, "<Domain>\n");
   fprintf(f, "  <Grid GridType='Collection' CollectionType='Temporal'>\n");
   struct xdmf_temporal_step *xt_step;
-  list_for_each_entry(xt_step, &xt->timesteps, entry) {
+  __list_for_each_entry(xt_step, &xt->timesteps, entry, struct xdmf_temporal_step) {
     fprintf(f, "  <xi:include href='%s' xpointer='xpointer(//Xdmf/Domain/Grid)'/>\n",
 	    xt_step->filename);
   }
@@ -544,7 +544,7 @@ xdmf_close(struct mrc_io *io)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   while (!list_empty(&hdf5->xdmf_spatial_list)) {
-    struct xdmf_spatial *xs = list_entry(hdf5->xdmf_spatial_list.next, typeof(*xs), entry);
+    struct xdmf_spatial *xs = list_entry(hdf5->xdmf_spatial_list.next, struct xdmf_spatial, entry);
     
     char fname_spatial[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     sprintf(fname_spatial, "%s/%s.%06d.xdmf", io->par.outdir, io->par.basename, io->step);

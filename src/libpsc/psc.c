@@ -478,9 +478,11 @@ _psc_setup(struct psc *psc)
 {
   if (psc_ops(psc)) {
     if (psc_ops(psc)->setup) {
-      return psc_ops(psc)->setup(psc);
+      psc_ops(psc)->setup(psc);
+      return;
     } else {
-      return psc_setup_default(psc);
+      psc_setup_default(psc);
+      return;
     }
   }
   psc_setup_coeff(psc);

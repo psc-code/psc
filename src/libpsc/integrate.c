@@ -29,7 +29,8 @@ void
 psc_output(struct psc *psc)
 {
   if (psc_ops(psc) && psc_ops(psc)->output) {
-    return psc_ops(psc)->output(psc);
+    psc_ops(psc)->output(psc);
+    return;
   }
 
   // default psc_output() implementation
@@ -46,7 +47,8 @@ void
 psc_step(struct psc *psc)
 {
   if (psc_ops(psc) && psc_ops(psc)->step) {
-    return psc_ops(psc)->step(psc);
+    psc_ops(psc)->step(psc);
+    return;
   }
 
   // default psc_step() implementation

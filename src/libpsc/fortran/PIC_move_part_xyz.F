@@ -1,4 +1,3 @@
-#include "config.h"
 
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_xyz(niloc, p_niloc, p2A, p2B,

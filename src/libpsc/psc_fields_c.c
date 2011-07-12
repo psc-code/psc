@@ -43,14 +43,14 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
 void
 fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
 {
-  return __fields_c_alloc(pf, ib, ie, nr_comp, NULL, false);
+  __fields_c_alloc(pf, ib, ie, nr_comp, NULL, false);
 }
 
 void
 fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
 			  fields_c_real_t *arr)
 {
-  return __fields_c_alloc(pf, ib, ie, nr_comp, arr, true);
+  __fields_c_alloc(pf, ib, ie, nr_comp, arr, true);
 }
 
 void

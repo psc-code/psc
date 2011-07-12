@@ -1,6 +1,4 @@
 
-#include "config.h"
-
 c     ----------------------------------------------------------------------
       subroutine PIC_push_part_z_vay(niloc, p_niloc, p2A, p2B,
      &     jxi, jyi, jzi, ex, ey, ez, hx, hy, hz)

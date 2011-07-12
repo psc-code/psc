@@ -38,8 +38,10 @@ DECLARE_MFIELDS_METHODS(fortran)
 #include "psc_fields_c.h"
 DECLARE_MFIELDS_METHODS(c)
 
+#ifdef USE_SSE2
 #include "psc_fields_sse2.h"
 DECLARE_MFIELDS_METHODS(sse2)
+#endif
 
 // ----------------------------------------------------------------------
 // base fields type

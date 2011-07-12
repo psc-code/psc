@@ -1,6 +1,4 @@
 
-#include "config.h"
-
 c This subroutine exchanges the Maxwell fields between
 c computation domains for the parallel Maxwell solver.
 c Is called in PIC_msa.f and PIC_msb.f.

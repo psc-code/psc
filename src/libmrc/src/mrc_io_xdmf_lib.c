@@ -160,7 +160,7 @@ xdmf_temporal_write(struct xdmf_temporal *xt)
   fprintf(f, "<Domain>\n");
   fprintf(f, "  <Grid GridType='Collection' CollectionType='Temporal'>\n");
   struct xdmf_temporal_step *xt_step;
-  list_for_each_entry(xt_step, &xt->timesteps, entry) {
+  __list_for_each_entry(xt_step, &xt->timesteps, entry, struct xdmf_temporal_step) {
     fprintf(f, "  <xi:include href='%s' xpointer='xpointer(//Xdmf/Domain/Grid)'/>\n",
 	    xt_step->filename);
   }
@@ -183,7 +183,7 @@ struct xdmf_spatial *
 xdmf_spatial_find(list_t *xdmf_spatial_list, const char *name)
 {
   struct xdmf_spatial *xs;
-  list_for_each_entry(xs, xdmf_spatial_list, entry) {
+  __list_for_each_entry(xs, xdmf_spatial_list, entry, struct xdmf_spatial) {
     if (strcmp(xs->name, name) == 0) {
       return xs;
     }
@@ -389,7 +389,7 @@ xdmf_spatial_close(list_t *xdmf_spatial_list, struct mrc_io *io,
 		   struct xdmf_temporal *xt)
 {
   while (!list_empty(xdmf_spatial_list)) {
-    struct xdmf_spatial *xs = list_entry(xdmf_spatial_list->next, typeof(*xs), entry);
+    struct xdmf_spatial *xs = list_entry(xdmf_spatial_list->next, struct xdmf_spatial, entry);
     
     char fname_spatial[strlen(io->par.outdir) + strlen(io->par.basename) + 20];
     sprintf(fname_spatial, "%s/%s.%06d.xdmf", io->par.outdir, io->par.basename, io->step);

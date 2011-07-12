@@ -61,7 +61,7 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   }
 
   struct mrc_obj_ops *ops;
-  list_for_each_entry(ops, &class->subclasses, list) {
+  __list_for_each_entry(ops, &class->subclasses, list, struct mrc_obj_ops) {
     assert(ops->name);
     if (strcmp(subclass, ops->name) == 0) {
       return ops;
@@ -71,7 +71,7 @@ find_subclass_ops(struct mrc_class *class, const char *subclass)
   mpi_printf(MPI_COMM_WORLD, "ERROR: unknown subclass '%s' of class '%s'\n", subclass,
 	  class->name);
   mpi_printf(MPI_COMM_WORLD, "valid choices are:\n");
-  list_for_each_entry(ops, &class->subclasses, list) {
+  __list_for_each_entry(ops, &class->subclasses, list, struct mrc_obj_ops) {
     mpi_printf(MPI_COMM_WORLD, "- %s\n", ops->name);
   }
   abort();
@@ -298,7 +298,7 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
   mrc_obj_set_from_options_this(obj);
 
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_set_from_options(child);
   }
 }
@@ -473,7 +473,7 @@ mrc_obj_view(struct mrc_obj *obj)
   mrc_obj_view_this(obj);
 
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_view(child);
   }
 }
@@ -507,7 +507,7 @@ mrc_obj_setup(struct mrc_obj *obj)
   mrc_obj_setup_this(obj);
 
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_setup(child);
   }
 }
@@ -529,7 +529,7 @@ struct mrc_obj *
 mrc_obj_find_child(struct mrc_obj *obj, const char *name)
 {
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     if (strcmp(child->name, name) == 0)
       return child;
   }
@@ -567,7 +567,7 @@ void
 mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io)
 {
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_read2(child, io);
   }
 }
@@ -623,7 +623,7 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   }
 
   struct mrc_obj *child;
-  list_for_each_entry(child, &obj->children_list, child_entry) {
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_write(child, io);
   }
 }

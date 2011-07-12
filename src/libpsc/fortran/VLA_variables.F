@@ -1,6 +1,4 @@
 
-#include "config.h"
-
       module VLA_variables
       implicit none
 

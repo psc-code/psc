@@ -36,8 +36,10 @@ DECLARE_MPARTICLES_METHODS(fortran)
 #include "psc_particles_c.h"
 DECLARE_MPARTICLES_METHODS(c)
 
+#ifdef USE_SSE2
 #include "psc_particles_sse2.h"
 DECLARE_MPARTICLES_METHODS(sse2)
+#endif
 
 #include "psc_particles_cbe.h"
 DECLARE_MPARTICLES_METHODS(cbe)
