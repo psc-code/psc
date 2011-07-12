@@ -82,6 +82,10 @@ void bitfield3d_destroy(struct bitfield3d* field)
 
 int bitfield3d_count_bits_set(const struct bitfield3d* field)
 {
+// FIXME! This is a hack, builtin_popcount doesn't necessarily
+// have to do with SSE2, but rather should be tested for by configure,
+// and an alternate implementation should be offered when needed.
+#ifdef USE_SSE2
   int bits = 0;
   for(int i=0; i<field->length; ++i)
   {
@@ -92,6 +96,9 @@ int bitfield3d_count_bits_set(const struct bitfield3d* field)
 #endif
   }
   return bits;
+#else
+  assert(0);
+#endif
 }
 
 void bitfield3d_copy(struct bitfield3d* out, struct bitfield3d* src)

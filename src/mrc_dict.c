@@ -54,7 +54,7 @@ _mrc_dict_view(struct mrc_dict *dict)
 	     mrc_dict_name(dict));
 
   struct mrc_dict_entry *p;
-  list_for_each_entry(p, &dict->list, entry) {
+  __list_for_each_entry(p, &dict->list, entry, struct mrc_dict_entry) {
     switch (p->type) {
     case PT_INT:
     case PT_SELECT:
@@ -80,7 +80,7 @@ static void
 _mrc_dict_write(struct mrc_dict *dict, struct mrc_io *io)
 {
   struct mrc_dict_entry *p;
-  list_for_each_entry(p, &dict->list, entry) {
+  __list_for_each_entry(p, &dict->list, entry, struct mrc_dict_entry) {
     mrc_io_write_attr(io, mrc_dict_name(dict), p->type, p->name, &p->val);
   }
 }

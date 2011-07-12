@@ -355,7 +355,7 @@ static struct mrc_io_entry *
 find_diagsrv_io(struct diagsrv_one *ds, const char *basename)
 {
   struct mrc_io_entry *p;
-  list_for_each_entry(p, &ds->mrc_io_list, entry) {
+  __list_for_each_entry(p, &ds->mrc_io_list, entry, struct mrc_io_entry) {
     if (strcmp(p->basename, basename) == 0) {
       return p;
     }
@@ -589,7 +589,7 @@ ds_srv_cache_write_attr(struct diagsrv_one *ds, const char *path, int type,
   struct diagsrv_srv_cache_ctx *srv = (struct diagsrv_srv_cache_ctx *) ds->srv;
 
   struct mrc_attrs_entry *p;
-  list_for_each_entry(p, &srv->attrs_list, entry) {
+  __list_for_each_entry(p, &srv->attrs_list, entry, struct mrc_attrs_entry) {
     if (strcmp(p->path, path) == 0)
       goto found;
   }

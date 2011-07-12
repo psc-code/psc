@@ -33,7 +33,7 @@ struct mrc_obj *
 mrc_io_find_obj(struct mrc_io *io, const char *name)
 {
   struct mrc_obj_entry *p;
-  list_for_each_entry(p, &io->obj_list, entry) {
+  __list_for_each_entry(p, &io->obj_list, entry, struct mrc_obj_entry) {
     if (strcmp(mrc_obj_name(p->obj), name) == 0) {
       return p->obj;
     }

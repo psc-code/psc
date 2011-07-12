@@ -118,7 +118,7 @@ void
 mrc_ts_monitors_run(struct mrc_ts *ts)
 {
   struct mrc_ts_monitor *mon;
-  list_for_each_entry(mon, &ts->monitors, monitors_entry) {
+  __list_for_each_entry(mon, &ts->monitors, monitors_entry, struct mrc_ts_monitor) {
     mrc_ts_monitor_run(mon, ts);
   }
 }

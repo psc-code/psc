@@ -67,7 +67,7 @@ mrc_params_print_all(MPI_Comm comm)
   mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
   mpi_printf(comm, "--------------------+----------------------------------------\n");
   struct option *p;
-  list_for_each_entry(p, &option_list, entry) {
+  __list_for_each_entry(p, &option_list, entry, struct option) {
     mpi_printf(comm, "%-20s| %s\n", p->name, p->value);
   }
   mpi_printf(comm, "\n");
@@ -76,7 +76,7 @@ mrc_params_print_all(MPI_Comm comm)
 static struct option *
 find_option(const char *name) {
   struct option *p;
-  list_for_each_entry(p, &option_list, entry) {
+  __list_for_each_entry(p, &option_list, entry, struct option) {
     if (strcmp(p->name, name) == 0)
       return p;
   }

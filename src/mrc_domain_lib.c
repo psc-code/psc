@@ -180,9 +180,9 @@ void
 sfc_setup(struct mrc_sfc *sfc, int *np)
 {
   switch (sfc->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_setup(sfc, np);
-  case CURVE_MORTON: return sfc_morton_setup(sfc, np);
-  case CURVE_HILBERT: return sfc_hilbert_setup(sfc, np);
+  case CURVE_BYDIM: sfc_bydim_setup(sfc, np); break;
+  case CURVE_MORTON: sfc_morton_setup(sfc, np); break;
+  case CURVE_HILBERT: sfc_hilbert_setup(sfc, np); break;
   default: assert(0);
   }
 }
@@ -202,9 +202,9 @@ void
 sfc_idx_to_idx3(struct mrc_sfc *sfc, int idx, int p[3])
 {
   switch (sfc->curve_type) {
-  case CURVE_BYDIM: return sfc_bydim_idx_to_idx3(sfc, idx, p);
-  case CURVE_MORTON: return sfc_morton_idx_to_idx3(sfc, idx, p);
-  case CURVE_HILBERT: return sfc_hilbert_idx_to_idx3(sfc, idx, p);
+  case CURVE_BYDIM: sfc_bydim_idx_to_idx3(sfc, idx, p); break;
+  case CURVE_MORTON: sfc_morton_idx_to_idx3(sfc, idx, p); break;
+  case CURVE_HILBERT: sfc_hilbert_idx_to_idx3(sfc, idx, p); break;
   default: assert(0);
   }
 }
