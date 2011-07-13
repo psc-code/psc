@@ -761,6 +761,26 @@ psc_setup_fields_default(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// psc_setup_field_pml helper
+
+static void
+psc_setup_field_pml(struct psc *psc)
+{
+  mfields_base_t *flds = psc->flds;
+
+  psc_foreach_patch(psc, p) {
+    fields_base_copy(&flds->f[p], DX, EX);
+    fields_base_copy(&flds->f[p], DY, EY);
+    fields_base_copy(&flds->f[p], DZ, EZ);
+    fields_base_copy(&flds->f[p], BX, HX);
+    fields_base_copy(&flds->f[p], BY, HY);
+    fields_base_copy(&flds->f[p], BZ, HZ);
+    fields_base_set(&flds->f[p], EPS, 1.);
+    fields_base_set(&flds->f[p], MU, 1.);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_setup_fields
 
 void
@@ -787,8 +807,7 @@ psc_setup_fields(struct psc *psc)
   }
 
   if (psc->domain.use_pml) {
-    assert(0);
-    //psc_init_field_pml(psc, psc->flds);
+    psc_setup_field_pml(psc);
   }
 }
 
