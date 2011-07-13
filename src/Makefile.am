@@ -8,6 +8,7 @@ bin_PROGRAMS = \
 	psc_restart \
 	psc_bubble \
 	psc_test_emission \
+	psc_test_singlepart \
 	psc_photon_test
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la

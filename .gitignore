@@ -18,6 +18,7 @@ src/psc_restart
 src/psc_bubble
 src/psc_photon_test
 src/psc_test_emission
+src/psc_test_singlepart
 Makefile.in
 Makefile
 m4/libtool.m4
