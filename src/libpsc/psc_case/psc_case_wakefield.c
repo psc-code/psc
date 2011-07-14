@@ -47,20 +47,12 @@ static struct param psc_case_wakefield_descr[] = {
 static void
 psc_case_wakefield_create(struct psc_case *_case)
 {
-#if 0
-  struct psc_pulse_gauss prm = {
-    .xm  = 20. * 1e-6,
-    .ym  = 20. * 1e-6,
-    .zm  = -2. * 1e-6,
-    .dxm = 5.  * 1e-6,
-    .dym = 5.  * 1e-6,
-    .dzm = 1.  * 1e-6,
-    .amplitude_p = 1.,
-  };
-#endif
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);
   struct psc_pulse *pulse_z1 = psc_bnd_fields_get_pulse_z1(bnd_fields);
   psc_pulse_set_type(pulse_z1, "gauss");
+  psc_pulse_set_param_double3(pulse_z1, "m",  (double[3]) { 10e-6, 20e-6, -2e-6 });
+  psc_pulse_set_param_double3(pulse_z1, "dm", (double[3]) { 5e-6, 5e-6, 1e-6 });
+  psc_pulse_set_param_double(pulse_z1, "amplitude_p", 1.);
 }
 
 static void
