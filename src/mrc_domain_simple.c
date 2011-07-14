@@ -161,39 +161,28 @@ mrc_domain_simple_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static void
-mrc_domain_simple_get_local_patch_info(struct mrc_domain *domain, int patch,
-				       struct mrc_patch_info *info)
-{
-  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-  int rank;
-  MPI_Comm_rank(mrc_domain_comm(domain), &rank);
-
-  assert(patch == 0);
-  for (int d = 0; d < 3; d++) {
-    info->ldims[d] = simple->patch.ldims[d];
-    info->off[d] = simple->patch.off[d];
-    info->rank = rank;
-    info->patch = 0;
-    info->global_patch = rank;
-  }
-}
-
-static void
 mrc_domain_simple_get_global_patch_info(struct mrc_domain *domain, int patch,
 					struct mrc_patch_info *info)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
 
-  int proc[3];
-  mrc_domain_simple_rank2proc(domain, patch, proc);
+  mrc_domain_simple_rank2proc(domain, patch, info->idx3);
   for (int d = 0; d < 3; d++) {
     assert(simple->gdims[d] % simple->nr_procs[d] == 0);
     info->ldims[d] = simple->gdims[d] / simple->nr_procs[d];
-    info->off[d] = proc[d] * info->ldims[d];
+    info->off[d] = info->idx3[d] * info->ldims[d];
     info->rank = patch;
     info->patch = 0;
     info->global_patch = patch;
   }
+}
+
+static void
+mrc_domain_simple_get_local_patch_info(struct mrc_domain *domain, int patch,
+				       struct mrc_patch_info *info)
+{
+  assert(patch == 0);
+  mrc_domain_simple_get_global_patch_info(domain, domain->rank, info);
 }
 
 static void
