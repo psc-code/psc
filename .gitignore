@@ -19,6 +19,7 @@ src/psc_bubble
 src/psc_photon_test
 src/psc_test_emission
 src/psc_test_singlepart
+src/psc_test_microsphere
 Makefile.in
 Makefile
 m4/libtool.m4

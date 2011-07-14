@@ -264,7 +264,7 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
   multi->patches = calloc(multi->nr_patches, sizeof(*multi->patches));
   for (int p = 0; p < multi->nr_patches; p++) {
     struct mrc_patch_info info;
-    mrc_domain_multi_get_global_patch_info(domain, p + multi->gpatch_off, &info);
+    mrc_domain_multi_get_local_patch_info(domain, p, &info);
     for (int d = 0; d < 3; d++) {
       multi->patches[p].ldims[d] = info.ldims[d];
       multi->patches[p].off[d] = info.off[d];
@@ -384,6 +384,16 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 }
 
 static void
+mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  // This isn't a collective value, so we better
+  // don't take what's been read from the file
+  multi->nr_patches = -1; 
+}
+
+static void
 mrc_domain_multi_plot(struct mrc_domain *domain)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -473,6 +483,7 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .setup                 = mrc_domain_multi_setup,
   .view                  = mrc_domain_multi_view,
   .write                 = mrc_domain_multi_write,
+  .read                  = mrc_domain_multi_read,
   .destroy               = mrc_domain_multi_destroy,
   .get_patches           = mrc_domain_multi_get_patches,
   .get_global_dims       = mrc_domain_multi_get_global_dims,

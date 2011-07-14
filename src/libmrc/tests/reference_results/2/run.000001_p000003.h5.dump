@@ -270,6 +270,53 @@ GROUP "/" {
          }
       }
    }
+   GROUP "mrc_ddc" {
+      ATTRIBUTE "ibn" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 0, 0, 0
+         }
+      }
+      ATTRIBUTE "max_n_fields" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 1
+         }
+      }
+      ATTRIBUTE "mrc_obj_class" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 8;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "mrc_ddc"
+         }
+      }
+      ATTRIBUTE "mrc_obj_type" {
+         DATATYPE  H5T_STRING {
+               STRSIZE 6;
+               STRPAD H5T_STR_NULLTERM;
+               CSET H5T_CSET_ASCII;
+               CTYPE H5T_C_S1;
+            }
+         DATASPACE  SCALAR
+         DATA {
+         (0): "multi"
+         }
+      }
+      ATTRIBUTE "size_of_type" {
+         DATATYPE  H5T_STD_I32LE
+         DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+         DATA {
+         (0): 4
+         }
+      }
+   }
    GROUP "mrc_domain" {
       ATTRIBUTE "bcx" {
          DATATYPE  H5T_STD_I32LE
@@ -371,6 +418,13 @@ GROUP "/" {
          }
       }
       GROUP "p0" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 0, 0, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -385,8 +439,22 @@ GROUP "/" {
             (0): 0, 0, 0
             }
          }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 0
+            }
+         }
       }
       GROUP "p1" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 1, 0, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -401,8 +469,22 @@ GROUP "/" {
             (0): 11, 0, 0
             }
          }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 1
+            }
+         }
       }
       GROUP "p2" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 2, 0, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -417,8 +499,22 @@ GROUP "/" {
             (0): 22, 0, 0
             }
          }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 2
+            }
+         }
       }
       GROUP "p3" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 0, 1, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -433,8 +529,22 @@ GROUP "/" {
             (0): 0, 16, 0
             }
          }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 3
+            }
+         }
       }
       GROUP "p4" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 1, 1, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -449,8 +559,22 @@ GROUP "/" {
             (0): 11, 16, 0
             }
          }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 4
+            }
+         }
       }
       GROUP "p5" {
+         ATTRIBUTE "idx3" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 2, 1, 0
+            }
+         }
          ATTRIBUTE "ldims" {
             DATATYPE  H5T_STD_I32LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
@@ -463,6 +587,13 @@ GROUP "/" {
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
             DATA {
             (0): 22, 16, 0
+            }
+         }
+         ATTRIBUTE "sfc_idx" {
+            DATATYPE  H5T_STD_I32LE
+            DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+            DATA {
+            (0): 5
             }
          }
       }

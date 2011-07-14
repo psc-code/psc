@@ -1471,7 +1471,6 @@ ds_xdmf_parallel_close(struct mrc_io *io)
     return;
 
   xdmf_close(io);
-  free(hdf5->mode);
 }
 
 static void

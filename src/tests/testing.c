@@ -66,7 +66,11 @@ void
 psc_save_fields_ref(struct psc *psc, mfields_base_t *flds)
 {
   if (!flds_ref) {
-    flds_ref = mfields_base_alloc(psc->mrc_domain, NR_FIELDS, psc->ibn);
+    flds_ref = psc_mfields_base_create(psc_comm(psc));
+    psc_mfields_base_set_domain(flds_ref, psc->mrc_domain);
+    psc_mfields_base_set_param_int(flds_ref, "nr_fields", NR_FIELDS);
+    psc_mfields_base_set_param_int3(flds_ref, "ibn", psc->ibn);
+    psc_mfields_base_setup(flds_ref);
   }
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
   psc_foreach_patch(psc, p) {
