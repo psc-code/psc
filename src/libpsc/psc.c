@@ -794,11 +794,6 @@ psc_setup_fields(struct psc *psc)
   psc_mfields_base_set_param_int3(psc->flds, "ibn", psc->ibn);
   psc_mfields_base_setup(psc->flds);
 
-  // setup pulses etc
-  struct psc_bnd_fields *bnd_fields =
-    psc_push_fields_get_bnd_fields(psc->push_fields);
-  psc_bnd_fields_setup_fields(bnd_fields, psc->flds);
-
   // type-specific other initial condition
   if (psc_ops(psc)->setup_fields) {
     psc_ops(psc)->setup_fields(psc, psc->flds);
