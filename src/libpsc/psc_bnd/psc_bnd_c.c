@@ -240,7 +240,11 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xgb[d] = -.5 * psc->dx[d];
     } else {
-      xgb[d] = 0.;
+      if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
+	xgb[d] = psc->pml.size * psc->dx[d];
+      } else {
+	xgb[d] = 0.;
+      }
       if (psc_patch->off[d] == 0) {
 	xb[d] = xgb[d];
       }
@@ -250,7 +254,11 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
       xge[d] = (psc->domain.gdims[d]-.5) * psc->dx[d];
     } else {
-      xge[d] = (psc->domain.gdims[d]-1) * psc->dx[d];
+      if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
+	xge[d] = (psc->domain.gdims[d]-1 - psc->pml.size) * psc->dx[d];
+      } else {
+	xge[d] = (psc->domain.gdims[d]-1) * psc->dx[d];
+      }
       if (psc_patch->off[d] + psc_patch->ldims[d] == psc->domain.gdims[d]) {
 	  xe[d] = xge[d];
       }
