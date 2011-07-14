@@ -530,7 +530,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 {
   const char *path = psc_name(psc);
 
-  mrc_obj_read_children(psc, io);
+  psc_read_children(psc, io);
 
   mrc_io_read_attr_int(io, path, "timestep", &psc->timestep);
 

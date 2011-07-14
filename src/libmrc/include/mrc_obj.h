@@ -277,6 +277,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 			      (struct mrc_class *) &mrc_class_ ## pfx); \
   }									\
 									\
+  static inline void							\
+  pfx ## _read_children(obj_type *obj, struct mrc_io *io)		\
+  {									\
+    mrc_obj_read_children((struct mrc_obj *) obj, io);			\
+  }									\
+									\
   static inline void 							\
   pfx ## _write(obj_type *obj, struct mrc_io *io)			\
   {									\
