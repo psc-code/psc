@@ -74,6 +74,8 @@ psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   psc_foreach_patch(bnd->psc, p) {
     n_total += mphotons->p[p].nr;
   }
+  MPI_Allreduce(MPI_IN_PLACE, &n_total, 1, MPI_INT, MPI_SUM, 
+		psc_bnd_comm(bnd));
   if (n_total == 0)
     return;
 
