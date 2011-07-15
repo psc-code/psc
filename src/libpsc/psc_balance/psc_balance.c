@@ -61,7 +61,7 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
 	if (load > next_target) {
 	  double above_target = load - next_target;
 	  double below_target = next_target - (load - loads_all[i-1]);
-	  if (above_target > below_target) {
+	  if (above_target > below_target && nr_new_patches > 1) {
 	    nr_patches_all_new[p] = nr_new_patches - 1;
 	    nr_new_patches = 1;
 	  } else {
