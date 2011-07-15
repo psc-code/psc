@@ -107,8 +107,19 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
     }
     if (crds->mcrd[d]) {
       char s[10];
+      int slab_off_save[3], slab_dims_save[3];
+      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
+	mrc_io_get_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_get_param_int3(io, "slab_dims", slab_dims_save);
+	mrc_io_set_param_int3(io, "slab_off", (int[3]) { 0, 0, 0});
+	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
+      }
       sprintf(s, "mcrd%d", d);
       mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
+      if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
+	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
+	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
+      }
 
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	sprintf(s, "crd%d_nc", d);
