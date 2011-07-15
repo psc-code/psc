@@ -58,6 +58,7 @@ typedef particle_fortran_real_t particle_base_real_t;
 #define particles_base_realloc particles_fortran_realloc
 #define particles_base_get_one particles_fortran_get_one
 #define psc_mparticles_base_create  psc_mparticles_fortran_create
+#define psc_mparticles_base_set_name  psc_mparticles_fortran_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_fortran_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_fortran_setup
 #define psc_mparticles_base_write   psc_mparticles_fortran_write
@@ -110,6 +111,7 @@ typedef particle_cbe_real_t particle_base_real_t;
 #define particles_base_realloc particles_cbe_realloc
 #define particles_base_get_one particles_cbe_get_one
 #define psc_mparticles_base_create  psc_mparticles_cbe_create
+#define psc_mparticles_base_set_name  psc_mparticles_cbe_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cbe_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_cbe_setup
 #define psc_mparticles_base_write   psc_mparticles_cbe_write

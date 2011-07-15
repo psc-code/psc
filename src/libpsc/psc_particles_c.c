@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#if PARTICLES_BASE == PARTICLES_C
-
 void
 particles_c_alloc(particles_c_t *pp, int n_part)
 {
@@ -32,6 +30,8 @@ particles_c_free(particles_c_t *pp)
   pp->n_alloced = 0;
   pp->particles = NULL;
 }
+
+#if PARTICLES_BASE == PARTICLES_C
 
 void
 psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
@@ -63,8 +63,8 @@ psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
     
   mparticles_base_t *particles_base = _particles_base;
 
-  particles->p = calloc(psc.nr_patches, sizeof(*particles->p));
-  foreach_patch(p) {
+  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp_base = &particles_base->p[p];
     particles_c_t *pp = &particles->p[p];
     pp->n_part = pp_base->n_part;
@@ -101,7 +101,7 @@ psc_mparticles_c_put_to(mparticles_c_t *particles, void *_particles_base)
   __gotten = false;
 
   mparticles_base_t *particles_base = _particles_base;
-  foreach_patch(p) {
+  psc_foreach_patch(ppsc, p) {
     particles_base_t *pp_base = &particles_base->p[p];
     particles_c_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);

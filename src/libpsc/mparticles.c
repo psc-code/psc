@@ -10,7 +10,7 @@ psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticle
 					    struct mrc_domain *domain,	\
 					    int *nr_particles_by_patch)	\
 {									\
-  mparticles->domain = dmain;						\
+  mparticles->domain = domain;						\
   mrc_domain_get_patches(domain, &mparticles->nr_patches);		\
 									\
   mparticles->p = calloc(mparticles->nr_patches,			\
