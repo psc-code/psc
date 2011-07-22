@@ -224,7 +224,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 6);
 }
 
 static void
@@ -267,10 +267,10 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
       j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
     }
     if (ppsc->domain.gdims[1] == 1) {
-      j2 = 1; gmy = 0.; g0y = 1.; g1y = 0.;
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
     }
     if (ppsc->domain.gdims[2] == 1) {
-      j3 = 2; gmz = 0.; g0z = 1.; g1z = 0.;
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
     }
     
     creal pxi = part->pxi;
@@ -333,7 +333,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
+  psc_bnd_add_ghosts(ppsc->bnd, res, 0, 6);
 }
 
 static void
