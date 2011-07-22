@@ -182,7 +182,7 @@ static struct output_field output_fields[] = {
   { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
     .calc = calc_v },
   { .name = "vv"   , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
-						  "vixvix", "viyviy", "vizivz" },
+						  "vixvix", "viyviy", "vizviz" },
     .calc = calc_vv },
   { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j },
