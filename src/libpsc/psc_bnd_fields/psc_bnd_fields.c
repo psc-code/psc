@@ -59,6 +59,8 @@ _psc_bnd_fields_setup(struct psc_bnd_fields *bnd)
   psc_pulse_setup(bnd->pulse_y2);
   psc_pulse_setup(bnd->pulse_z1);
   psc_pulse_setup(bnd->pulse_z2);
+
+  psc_bnd_fields_setup_fields(bnd, ppsc->flds);
 }
 
 // ----------------------------------------------------------------------
