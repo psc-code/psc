@@ -313,7 +313,7 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 // ----------------------------------------------------------------------
 // psc_setup_domain
 
-static void
+void
 psc_setup_domain(struct psc *psc)
 {
   struct psc_domain *domain = &psc->domain;
@@ -476,17 +476,14 @@ psc_setup_default(struct psc *psc)
 static void
 _psc_setup(struct psc *psc)
 {
-  if (psc_ops(psc)) {
-    if (psc_ops(psc)->setup) {
-      psc_ops(psc)->setup(psc);
-      return;
-    } else {
-      psc_setup_default(psc);
-      return;
-    }
+  if (!psc_ops(psc)) // old-style: setup is handled by psc_case
+    return;
+
+  if (psc_ops(psc)->setup) {
+    psc_ops(psc)->setup(psc);
+  } else {
+    psc_setup_default(psc);
   }
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc); // needs to be done before setting up psc_bnd
 }
 
 // ----------------------------------------------------------------------

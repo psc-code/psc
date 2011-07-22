@@ -62,14 +62,13 @@ _psc_case_setup(struct psc_case *_case)
 {
   struct psc *psc = _case->psc;
 
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc); // needs to be done before setting up psc_bnd
+
   //TODO: Set this somewhere less hackish
   psc->patchmanager.currentcase = _case;
   if (psc_case_ops(_case)->setup != NULL) psc_case_ops(_case)->setup(_case);
   
-  // this sets up everything except allocating fields and particles,
-  // and intializing them
-  psc_setup(psc);
-
   // alloc / initialize particles
   int particle_label_offset;
   int *nr_particles_by_patch = calloc(psc->nr_patches, sizeof(*nr_particles_by_patch));
@@ -100,6 +99,10 @@ _psc_case_setup(struct psc_case *_case)
 
   // alloc / initialize photons
   psc_case_init_photons(_case);
+
+  // this sets up everything except allocating fields and particles,
+  // and intializing them
+  psc_setup(psc);
 
   psc_setup_fortran(psc);
 }
