@@ -181,9 +181,9 @@ _psc_set_from_options(struct psc *psc)
 // psc_setup
 
 // ----------------------------------------------------------------------
-// psc_setup_mrc_coeff
+// psc_setup_coeff
 
-static void
+void
 psc_setup_coeff(struct psc *psc)
 {
   assert(psc->prm.nicell > 0);
