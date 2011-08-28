@@ -35,9 +35,9 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "cuda");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_push_yz_a(ppsc->push_particles, particles, ppsc->flds);
-  psc_check_particles_ref(1e-6, "push_part_yz_a -- cuda");
+  psc_check_particles_ref(ppsc, particles, 1e-6, "push_part_yz_a -- cuda");
   psc_case_destroy(_case);
 #endif 
 
@@ -75,9 +75,9 @@ main(int argc, char **argv)
   _case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, "cuda");
   psc_case_setup(_case);
-  particles = &ppsc->particles;
+  particles = ppsc->particles;
   psc_push_particles_push_yz_b(ppsc->push_particles, particles, ppsc->flds);
-  psc_check_particles_ref(1e-3, "push_part_yz_b -- cuda");
+  psc_check_particles_ref(ppsc, particles, 1e-3, "push_part_yz_b -- cuda");
   psc_case_destroy(_case);
 #endif
 

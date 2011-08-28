@@ -1,7 +1,10 @@
 
 #include "psc_cuda.h"
-#include "math.h"
-#include "util/profile.h"
+
+#include <mrc_profile.h>
+#include <math.h>
+
+#if 0
 
 __constant__ static real d_dt, d_dxi[3], d_dqs;
 __constant__ int d_mx[3], d_iglo[3];
@@ -10,13 +13,13 @@ __constant__ int d_b_mx[3];
 static void
 set_constants(particles_cuda_t *pp)
 {
-  real __dt = psc.dt, __dqs = .5f * psc.coeff.eta * psc.dt;
+  real __dt = ppsc->dt, __dqs = .5f * ppsc->coeff.eta * ppsc->dt;
   check(cudaMemcpyToSymbol(d_dt, &__dt, sizeof(d_dt)));
   check(cudaMemcpyToSymbol(d_dqs, &__dqs, sizeof(d_dqs)));
-  real __dxi[3] = { 1.f / psc.dx[0], 1.f / psc.dx[1], 1.f / psc.dx[2] };
+  real __dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
   check(cudaMemcpyToSymbol(d_dxi, __dxi, sizeof(d_dxi)));
-  check(cudaMemcpyToSymbol(d_mx, psc.img, sizeof(d_mx)));
-  check(cudaMemcpyToSymbol(d_iglo, psc.ilg, sizeof(d_iglo)));
+  check(cudaMemcpyToSymbol(d_mx, ppsc->img, sizeof(d_mx)));
+  check(cudaMemcpyToSymbol(d_iglo, ppsc->ilg, sizeof(d_iglo)));
   check(cudaMemcpyToSymbol(d_b_mx, pp->b_mx, sizeof(d_mx)));
 }
 
@@ -391,7 +394,7 @@ cuda_push_part_yz_a()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("cuda_part_yz_a", 1., 0, psc.pp.n_part * 12 * sizeof(float));
+    pr = prof_register("cuda_part_yz_a", 1., 0, ppsc->pp.n_part * 12 * sizeof(float));
   }
   prof_start(pr);
 
@@ -400,7 +403,7 @@ cuda_push_part_yz_a()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_a, (psc.pp.n_part, pp.d_part, pf.d_flds,
+	     push_part_yz_a, (ppsc->pp.n_part, pp.d_part, pf.d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -419,7 +422,7 @@ cuda_push_part_yz_b()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("cuda_part_yz_b", 1., 0, psc.pp.n_part * 16 * sizeof(float));
+    pr = prof_register("cuda_part_yz_b", 1., 0, ppsc->pp.n_part * 16 * sizeof(float));
   }
   prof_start(pr);
 
@@ -428,7 +431,7 @@ cuda_push_part_yz_b()
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b, (psc.pp.n_part, pp.d_part, pf.d_flds,
+	     push_part_yz_b, (ppsc->pp.n_part, pp.d_part, pf.d_flds,
 			      gridSize * threadsPerBlock));
 
   prof_stop(pr);
@@ -447,14 +450,14 @@ cuda_push_part_yz_b2()
 
   static int pr;
   if (!pr) {
-    pr = prof_register("cuda_part_yz_b", 1., 0, psc.pp.n_part * 16 * sizeof(float));
+    pr = prof_register("cuda_part_yz_b", 1., 0, ppsc->pp.n_part * 16 * sizeof(float));
   }
   prof_start(pr);
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { pp.nr_blocks, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b2, (psc.pp.n_part, pp.d_part, pf.d_flds));
+	     push_part_yz_b2, (ppsc->pp.n_part, pp.d_part, pf.d_flds));
 
   prof_stop(pr);
 
@@ -465,7 +468,7 @@ cuda_push_part_yz_b2()
 EXTERN_C void
 __particles_cuda_get(particles_cuda_t *pp)
 {
-  int n_part = psc.pp.n_part;
+  int n_part = ppsc->pp.n_part;
   particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
@@ -487,7 +490,7 @@ __particles_cuda_get(particles_cuda_t *pp)
 EXTERN_C void
 __particles_cuda_put(particles_cuda_t *pp)
 {
-  int n_part = psc.pp.n_part;
+  int n_part = ppsc->pp.n_part;
   particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
@@ -503,13 +506,13 @@ __particles_cuda_put(particles_cuda_t *pp)
 EXTERN_C void
 __fields_cuda_get(fields_cuda_t *pf)
 {
-  assert(!psc.domain.use_pml);
+  assert(!ppsc->domain.use_pml);
   int nr_fields = HZ + 1; // FIXME, repeated
 
-  check(cudaMalloc((void **) &pf->d_flds, nr_fields * psc.fld_size * sizeof(float)));
-  check(cudaMemcpy(pf->d_flds + EX * psc.fld_size,
-		   pf->flds + EX * psc.fld_size,
-		   6 * psc.fld_size * sizeof(float),
+  check(cudaMalloc((void **) &pf->d_flds, nr_fields * ppsc->fld_size * sizeof(float)));
+  check(cudaMemcpy(pf->d_flds + EX * ppsc->fld_size,
+		   pf->flds + EX * ppsc->fld_size,
+		   6 * ppsc->fld_size * sizeof(float),
 		   cudaMemcpyHostToDevice));
 }
 
@@ -518,3 +521,5 @@ __fields_cuda_put(fields_cuda_t *pf)
 {
   check(cudaFree(pf->d_flds));
 }
+
+#endif

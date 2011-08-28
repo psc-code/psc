@@ -40,6 +40,7 @@ extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;
 extern struct psc_push_particles_ops psc_push_particles_cbe_ops;
+extern struct psc_push_particles_ops psc_push_particles_cuda_ops;
 
 #define psc_push_particles_ops(push_particles) ((struct psc_push_particles_ops *)((push_particles)->obj.ops))
 

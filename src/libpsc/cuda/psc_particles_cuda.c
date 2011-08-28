@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_particles_cuda.h"
 
+#if 0
 static inline void
 find_cell(real xi, real yi, real zi, int l[3])
 {
@@ -146,3 +147,4 @@ particles_cuda_put(particles_cuda_t *pp)
   free(pxi4);
 }
 
+#endif

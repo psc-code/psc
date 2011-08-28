@@ -11,6 +11,12 @@
 
 // ======================================================================
 
+void psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
+				       mparticles_base_t *particles_base,
+				       mfields_base_t *flds_base);
+
+// ======================================================================
+
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================

@@ -2,13 +2,14 @@
 #include "psc.h"
 #include "psc_fields_cuda.h"
 
+#if 0
 void
 fields_cuda_get(fields_cuda_t *pf, int mb, int me)
 {
-  assert(!psc.domain.use_pml);
+  assert(!ppsc->domain.use_pml);
   int nr_fields = HZ + 1;
 
-  pf->flds = calloc(nr_fields * psc.fld_size, sizeof(*pf->flds));
+  pf->flds = calloc(nr_fields * ppsc->fld_size, sizeof(*pf->flds));
   
   for (int m = mb; m < me; m++) {
     foreach_3d_g(jx, jy, jz) {
@@ -33,3 +34,4 @@ fields_cuda_put(fields_cuda_t *pf, int mb, int me)
   free(pf->flds);
 }
 
+#endif
