@@ -14,4 +14,13 @@ bin_PROGRAMS = \
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
+# HACK to have automake use the CXX linker 
+nodist_EXTRA_VLI_SOURCES = dummy.cxx
+nodist_EXTRA_psc_restart_SOURCES = dummy.cxx
+nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_emission_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_singlepart_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_microsphere_SOURCES = dummy.cxx
+nodist_EXTRA_psc_photon_test_SOURCES = dummy.cxx
+
 

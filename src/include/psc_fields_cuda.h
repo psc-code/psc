@@ -1,6 +1,6 @@
 
-#ifndef PSC_FIELD_CUDA_H
-#define PSC_FIELD_CUDA_H
+#ifndef PSC_FIELDS_CUDA_H
+#define PSC_FIELDS_CUDA_H
 
 #include "psc.h"
 #include "cuda_wrap.h"
@@ -10,31 +10,36 @@ typedef float fields_cuda_real_t;
 #define MPI_FIELDS_CUDA_REAL MPI_FLOAT
 
 typedef struct {
-  fields_cuda_real_t *flds;
+  fields_cuda_real_t *h_flds;
   fields_cuda_real_t *d_flds;
+  int ib[3], im[3]; //> lower bounds and length per direction
+  int nr_comp; //> nr of components
+  char **name; //> name for each component
 } fields_cuda_t;
 
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
-#define F3_OFF_CUDA(fldnr, jx,jy,jz)					\
-  (((((fldnr								\
-       *psc.img[2] + ((jz)-psc.ilg[2]))					\
-      *psc.img[1] + ((jy)-psc.ilg[1]))					\
-     *psc.img[0] + ((jx)-psc.ilg[0]))))
+#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
+  ((((((fldnr)								\
+       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
+      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
+     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
 
-#if 1
+#ifndef BOUNDS_CHECK
 
 #define F3_CUDA(pf, fldnr, jx,jy,jz)		\
-  ((pf)->flds[F3_OFF_CUDA(fldnr, jx,jy,jz)])
+  ((pf)->h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
 
 #else
-//out of range debugging
+
 #define F3_CUDA(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_CUDA(fldnr, jx,jy,jz);				\
-      assert(off >= 0);							\
-      assert(off < NR_FIELDS * psc.fld_size);				\
-      &((pf)->flds[off]);						\
+  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
+      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
+      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
+      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
+      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
+      &((pf)->h_flds[off]);						\
     }))
 
 #endif
@@ -42,21 +47,21 @@ typedef struct {
 // ----------------------------------------------------------------------
 // macros to access fields from CUDA (device-side)
 
-#define F3_OFF(fldnr, jx,jy,jz)						\
+#define F3_DEV_OFF(fldnr, jx,jy,jz)					\
   ((((fldnr)								\
-     *d_mx[2] + ((jz)-d_iglo[2]))					\
-    *d_mx[1] + ((jy)-d_iglo[1]))					\
-   *d_mx[0] + ((jx)-d_iglo[0]))
+     *d_mx[2] + ((jz)-d_ilg[2]))					\
+    *d_mx[1] + ((jy)-d_ilg[1]))						\
+   *d_mx[0] + ((jx)-d_ilg[0]))
 
 #if 1
 
-#define F3(fldnr, jx,jy,jz) \
-  (d_flds)[F3_OFF(fldnr, jx,jy,jz)]
+#define F3_DEV(fldnr, jx,jy,jz) \
+  (d_flds)[F3_DEV_OFF(fldnr, jx,jy,jz)]
 
 #else
 
-#define F3(fldnr, jx,jy,jz)						\
-  (*({int off = F3_OFF(fldnr, jx,jy,jz);				\
+#define F3_DEV(fldnr, jx,jy,jz)						\
+  (*({int off = F3_DEV_OFF(fldnr, jx,jy,jz);				\
       assert(off >= 0);							\
       assert(off < NR_FIELDS * d_mx[0] * d_mx[1] * d_mx[2]);		\
       &(d_flds[off]);							\

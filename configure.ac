@@ -47,6 +47,8 @@ if test -z "$CC" || test "X$CC" = "Xno"; then
 fi
 AM_PROG_CC_C_O
 
+AC_PROG_CXX([openmpicxx mpicxx])
+
 # add -Wall if possible
 AX_CHECK_COMPILER_FLAGS([-Wall], [CFLAGS="$CFLAGS -Wall"])
 
@@ -93,11 +95,24 @@ AS_IF([test "x$have_papi" != "xyes"],
 
 # Checks for options
 
+AC_ARG_VAR([CUDACC], [CUDA compiler])
+AC_ARG_VAR([CUDALIBS], [libraries needed to link CUDA code])
+
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
 AC_ARG_ENABLE(
   [cuda],
   [AS_HELP_STRING([--enable-cuda], [use nvcc to create CUDA code])],
-  [AC_DEFINE([USE_CUDA])]
+  [AC_DEFINE([USE_CUDA])
+   AS_IF([test -z "$CUDACC"],
+         [CUDACC=/usr/local/cuda/bin/nvcc])
+   AS_IF([test -z "$CUDALIBS"],
+         [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
+   AC_SUBST([CUDACC])
+   AC_SUBST([CUDALIBS])
+   AM_CUDACFLAGS="-m64 -I`$CC -showme:incdirs`"
+   AC_SUBST([AM_CUDACFLAGS])
+   LIBS="$LIBS $CUDALIBS"
+  ]
 )
 AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
 
@@ -227,6 +242,10 @@ echo "------------------"
 echo "                     C Compiler: $CC"
 echo "                         CFLAGS: $CFLAGS"
 echo "               Fortran Compiler: $F77"
+echo "                         FFLAGS: $FFLAGS"
+echo "                  CUDA Compiler: $CUDACC"
+echo "                     CUDACFLAGS: $AM_CUDACFLAGS"
+echo "                       CUDALIBS: $CUDALIBS"
 echo "                         FFLAGS: $FFLAGS"
 echo "                        LDFLAGS: $LDFLAGS"
 echo "                           LIBS: $LIBS"

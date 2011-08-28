@@ -44,6 +44,11 @@ DECLARE_MPARTICLES_METHODS(sse2)
 #include "psc_particles_cbe.h"
 DECLARE_MPARTICLES_METHODS(cbe)
 
+#ifdef USE_CUDA
+#include "psc_particles_cuda.h"
+DECLARE_MPARTICLES_METHODS(cuda)
+#endif
+
 // ----------------------------------------------------------------------
 // base particles type
 

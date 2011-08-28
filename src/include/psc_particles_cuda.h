@@ -21,19 +21,12 @@ typedef struct {
   particles_cuda_dev_t d_part; // all particles, on device
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
+  int n_part;
+  int n_alloced;
 } particles_cuda_t;
 
-//void particles_cuda_alloc(particles_cuda_t *pp, int n_part);
-//void particles_cuda_realloc(particles_cuda_t *pp, int new_n_part);
-//void particles_cuda_free(particles_cuda_t *pp);
 EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
 EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
-
-//static inline particle_cuda_t *
-//particles_cuda_get_one(particles_cuda_t *pp, int n)
-//{
-//  return &pp->particles[n];
-//}
 
 #define BLOCKSIZE_X 1
 #define BLOCKSIZE_Y 1

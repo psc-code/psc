@@ -2,12 +2,13 @@
 #ifndef PSC_CUDA_H
 #define PSC_CUDA_H
 
-#include "psc_fields_cuda.h"
-#include "psc_particles_cuda.h"
+#include "psc.h"
 
 #include <assert.h>
 #include <math.h>
 #include <psc.h>
+
+#include <psc_particles.h>
 
 // ======================================================================
 
@@ -20,6 +21,9 @@ void psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
+
+EXTERN_C void yz_a_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
+EXTERN_C void __cuda_push_part_yz_a(particles_cuda_t *pp, fields_cuda_t *pf);
 
 EXTERN_C void cuda_push_part_yz_a();
 EXTERN_C void cuda_push_part_yz_b();

@@ -43,6 +43,11 @@ DECLARE_MFIELDS_METHODS(c)
 DECLARE_MFIELDS_METHODS(sse2)
 #endif
 
+#ifdef USE_CUDA
+#include "psc_fields_cuda.h"
+DECLARE_MFIELDS_METHODS(cuda)
+#endif
+
 // ----------------------------------------------------------------------
 // base fields type
 

@@ -94,7 +94,7 @@ rsqrtf(float x)
 }
 
 static inline int
-nint(real x)
+cuda_nint(real x)
 {
   // FIXME?
   return (int)(x + real(10.5)) - 10;
@@ -112,7 +112,7 @@ nint(real x)
 #define EXTERN_C extern "C"
 
 __device__ static inline int
-nint(real x)
+cuda_nint(real x)
 {
   return __float2int_rn(x);
 }
