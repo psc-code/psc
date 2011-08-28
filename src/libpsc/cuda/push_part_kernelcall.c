@@ -50,8 +50,9 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 EXTERN_C void
 PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 {
-  check(cudaMemset(pf->d_flds + JXI * psc.fld_size, 0,
-		   3 * psc.fld_size * sizeof(*pf->d_flds)));
+  unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
+  check(cudaMemset(pf->d_flds + JXI * size, 0,
+		   3 * size * sizeof(*pf->d_flds)));
 
 #if DIM == DIM_Z
   int dimBlock[2] = { BLOCKSIZE_Z + 2*SW, 1 };

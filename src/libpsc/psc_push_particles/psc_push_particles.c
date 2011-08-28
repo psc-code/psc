@@ -47,7 +47,7 @@ psc_push_particles_push_yz_b(struct psc_push_particles *push,
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
   assert(ops->push_yz_b);
-  ops->push_yz_a(push, particles, flds);
+  ops->push_yz_b(push, particles, flds);
 }
 
 // ======================================================================

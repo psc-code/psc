@@ -119,6 +119,8 @@ cuda_nint(real x)
 
 #endif
 
+#define fabsr fabsf
+
 #define rsqrtr rsqrtf
 
 #endif

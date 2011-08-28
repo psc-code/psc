@@ -16,18 +16,47 @@ void psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
 				       mparticles_base_t *particles_base,
 				       mfields_base_t *flds_base);
 
+void psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
+				       mparticles_base_t *particles_base,
+				       mfields_base_t *flds_base);
+
+void psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
+				     mparticles_base_t *particles_base,
+				     mfields_base_t *flds_base);
+
 // ======================================================================
 
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
 
-EXTERN_C void yz_a_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
-EXTERN_C void __cuda_push_part_yz_a(particles_cuda_t *pp, fields_cuda_t *pf);
+#define DECLARE_CUDA(pfx)                                               \
+  EXTERN_C void pfx##_set_constants(particles_cuda_t *pp,		\
+				    fields_cuda_t *pf);			\
+  EXTERN_C void pfx##_cuda_push_part_p1(particles_cuda_t *pp,           \
+                                        fields_cuda_t *pf,              \
+                                        real **d_scratch);              \
+  EXTERN_C void pfx##_cuda_push_part_p2(particles_cuda_t *pp,           \
+                                        fields_cuda_t *pf);             \
+  EXTERN_C void pfx##_cuda_push_part_p3(particles_cuda_t *pp,           \
+                                        fields_cuda_t *pf,              \
+                                        real *d_scratch);               \
+  EXTERN_C void pfx##_cuda_push_part_p4(particles_cuda_t *pp,           \
+                                        fields_cuda_t *pf,              \
+                                        real *d_scratch);               \
+  EXTERN_C void pfx##_cuda_push_part_p5(particles_cuda_t *pp,           \
+                                        fields_cuda_t *pf,              \
+                                        real *d_scratch);               \
 
-EXTERN_C void cuda_push_part_yz_a();
-EXTERN_C void cuda_push_part_yz_b();
-EXTERN_C void cuda_push_part_yz_b2();
+DECLARE_CUDA(yz);
+DECLARE_CUDA(yz2);
+DECLARE_CUDA(yz3);
+
+EXTERN_C void yz_a_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
+EXTERN_C void yz_b_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
+EXTERN_C void __cuda_push_part_yz_a(particles_cuda_t *pp, fields_cuda_t *pf);
+EXTERN_C void __cuda_push_part_yz_b(particles_cuda_t *pp, fields_cuda_t *pf);
+EXTERN_C void __cuda_push_part_yz_b3(particles_cuda_t *pp, fields_cuda_t *pf);
 
 struct d_particle {
   real xi[3];

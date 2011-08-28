@@ -11,7 +11,13 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_cuda.c \
 	psc_push_particles_cuda_yz.c
 
-libsubdir_la_LIBADD = cuda_transfer.lo cuda_push_part_yz_a.lo
+libsubdir_la_LIBADD = \
+	cuda_transfer.lo \
+	cuda_push_part_yz_a.lo \
+	cuda_push_part_yz_b.lo \
+	cuda_push_part_yz.lo \
+	cuda_push_part_yz2.lo \
+	cuda_push_part_yz3.lo
 
 CUDACFLAGS = --use_fast_math $(filter-out -msse2 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(AM_CUDACFLAGS)
 
