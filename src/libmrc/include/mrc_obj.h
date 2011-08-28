@@ -14,7 +14,7 @@ struct mrc_obj {
   MPI_Comm comm;
   char *name;
   struct mrc_obj_ops *ops;
-  struct mrc_class *class;
+  struct mrc_class *cls;
   void *subctx;
   int refcount;
   list_t instance_entry; //< keep track of all instances of mrc_obj's
@@ -75,7 +75,7 @@ DECLARE_STRUCT_MRC_CLASS(, struct mrc_obj);
 
 struct mrc_io;
 
-struct mrc_obj *mrc_obj_create(MPI_Comm comm, struct mrc_class *class);
+struct mrc_obj *mrc_obj_create(MPI_Comm comm, struct mrc_class *cls);
 struct mrc_obj *mrc_obj_get(struct mrc_obj *obj);
 void mrc_obj_put(struct mrc_obj *obj);
 void mrc_obj_destroy(struct mrc_obj *obj);
@@ -103,7 +103,7 @@ void mrc_obj_setup_sub(struct mrc_obj *obj);
 void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
-struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *class);
+struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *cls);
 void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
@@ -301,10 +301,10 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
 // use a macro here to do the casting to mrc_obj_ops
 
-#define mrc_class_register_subclass(class, ops) \
-  __mrc_class_register_subclass((struct mrc_class *)(class), (struct mrc_obj_ops *)(ops))
+#define mrc_class_register_subclass(cls, ops) \
+  __mrc_class_register_subclass((struct mrc_class *)(cls), (struct mrc_obj_ops *)(ops))
 
-void __mrc_class_register_subclass(struct mrc_class *class,
+void __mrc_class_register_subclass(struct mrc_class *cls,
 				   struct mrc_obj_ops *ops);
 
 #define mrc_to_subobj(o, subobj_type) ((subobj_type *)((o)->obj.subctx))

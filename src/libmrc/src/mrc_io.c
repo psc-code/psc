@@ -46,9 +46,9 @@ mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj)
 {
   struct mrc_obj *obj2 = mrc_io_find_obj(io, mrc_obj_name(obj));
   if (obj2) { // exists
-    if (obj->class == obj2->class && obj != obj2) { // FIXME
-      mprintf("!!! obj  %p '%s' (%s)\n", obj, mrc_obj_name(obj), obj->class->name);
-      mprintf("!!! obj2 %p '%s' (%s)\n", obj2, mrc_obj_name(obj2), obj2->class->name);
+    if (obj->cls == obj2->cls && obj != obj2) { // FIXME
+      mprintf("!!! obj  %p '%s' (%s)\n", obj, mrc_obj_name(obj), obj->cls->name);
+      mprintf("!!! obj2 %p '%s' (%s)\n", obj2, mrc_obj_name(obj2), obj2->cls->name);
       assert(0);
     }
     return 1;
