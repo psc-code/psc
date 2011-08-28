@@ -1,5 +1,5 @@
-#ifndef __LIST_H__
-#define __LIST_H__
+#ifndef __MRC_LIST_H__
+#define __MRC_LIST_H__
 
 #include <stddef.h>
 
@@ -50,38 +50,38 @@ typedef struct list_head list_t;
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static inline void __list_add(list_t *new, list_t *prev, list_t *next)
+static inline void __list_add(list_t *_new, list_t *prev, list_t *next)
 {
-	next->prev = new;
-	new->next = next;
-	new->prev = prev;
-	prev->next = new;
+	next->prev = _new;
+	_new->next = next;
+	_new->prev = prev;
+	prev->next = _new;
 }
 
 /**
  * list_add - add a new entry
- * @new: new entry to be added
+ * @_new: new entry to be added
  * @head: list head to add it after
  *
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
-static inline void list_add(list_t *new, list_t *head)
+static inline void list_add(list_t *_new, list_t *head)
 {
-	__list_add(new, head, head->next);
+	__list_add(_new, head, head->next);
 }
 
 /**
  * list_add_tail - add a new entry
- * @new: new entry to be added
+ * @_new: new entry to be added
  * @head: list head to add it before
  *
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-static inline void list_add_tail(list_t *new, list_t *head)
+static inline void list_add_tail(list_t *_new, list_t *head)
 {
-	__list_add(new, head->prev, head);
+	__list_add(_new, head->prev, head);
 }
 
 /*
@@ -105,8 +105,8 @@ static inline void __list_del(list_t * prev, list_t * next)
 static inline void list_del(list_t *entry)
 {
 	__list_del(entry->prev, entry->next);
-	entry->next = (void *) 0;
-	entry->prev = (void *) 0;
+	entry->next = NULL;
+	entry->prev = NULL;
 }
 
 /**
@@ -242,3 +242,4 @@ static inline void list_splice_init(list_t *list, list_t *head)
        __list_for_each_entry(pos, head, member, typeof(*pos))
 
 #endif
+
