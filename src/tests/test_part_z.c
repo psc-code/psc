@@ -3,69 +3,140 @@
 #include "psc_push_particles.h"
 #include "psc_sort.h"
 #include <mrc_profile.h>
+#include <mrc_params.h>
 
 #include <stdio.h>
 #include <mpi.h>
+
+static bool do_dump = false;
+
+static void
+dump(const char *basename, int cnt)
+{
+  if (!do_dump)
+    return;
+
+  char s[200];
+  sprintf(s, "part_%s_%d", basename, cnt);
+  psc_dump_particles(ppsc->particles, s);
+  sprintf(s, "jz_%s_%d", basename, cnt);
+  psc_dump_field(ppsc->flds, JZI, s);
+}
+
+static void
+add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi,
+	     double qni, double mni)
+{
+  particles_base_t *pp = &ppsc->particles->p[0];
+  int n = pp->n_part++;
+  particle_base_t *part = particles_base_get_one(pp, n);
+  part->xi = xi;
+  part->yi = yi;
+  part->zi = zi;
+  part->pxi = pxi;
+  part->pyi = pyi;
+  part->pzi = pzi;
+  part->qni = qni;
+  part->mni = mni;
+  part->wni = ppsc->prm.nicell; // FIXME, better set nicell to 1 or get rid of it altogether
+}
+
+static struct psc_case *
+create_test_base(const char *s_push_particles)
+{
+  struct psc_case *_case = psc_create_test_z();
+  psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
+  psc_sort_set_type(ppsc->sort, "countsort2");
+  psc_case_setup(_case);
+
+  ppsc->dt = ppsc->dx[2];
+  ppsc->particles->p[0].n_part = 0;
+  return _case;
+}
+
+static struct psc_case *
+create_test_1(const char *s_push_particles)
+{
+  struct psc_case *_case = psc_create_test_z();
+  psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
+  psc_sort_set_type(ppsc->sort, "countsort2");
+  psc_case_setup(_case);
+  psc_sort_run(ppsc->sort, ppsc->particles);
+  return _case;
+}
+
+static struct psc_case *
+create_test_2(const char *s_push_particles)
+{
+  struct psc_case *_case = create_test_base(s_push_particles);
+
+  double *dx = ppsc->dx;
+  add_particle(0.,0.,2.*dx[2], 0.,0.,1000., 1., 1.);
+
+  psc_sort_run(ppsc->sort, ppsc->particles);
+  return _case;
+}
+
+static struct psc_case *
+create_test_3(const char *s_push_particles)
+{
+  struct psc_case *_case = create_test_base(s_push_particles);
+
+  double *dx = ppsc->dx;
+  add_particle(0.,0.,2.*dx[2], 0.,0.,1000., 1., 1.);
+  add_particle(0.,0.,3.*dx[2], 0.,0.,1000., 1., 1.);
+
+  psc_sort_run(ppsc->sort, ppsc->particles);
+  return _case;
+}
+
+static void
+run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
+	 struct psc_case *(*create_test)(const char *s_push_particles))
+{
+  printf("=== testing push_part_z() %s %s\n", s_push_particles, is_ref ? "(ref)" : "");
+
+  struct psc_case *_case = create_test(s_push_particles);
+  dump(s_push_particles, 0);
+  psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
+  dump(s_push_particles, 1);
+  if (is_ref) {
+    psc_save_particles_ref(ppsc, ppsc->particles);
+    psc_save_fields_ref(ppsc, ppsc->flds);
+  } else {
+    psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_z -- generic_c");
+    psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
+  }
+  psc_case_destroy(_case);
+}
 
 int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
+  libmrc_params_init(argc, argv);
 
-  // ----------------------------------------------------------------------
-  printf("=== testing push_part_z() ref: fortran\n");
+  int testcase = 1;
+  mrc_params_get_option_int("case", &testcase);
+  mrc_params_get_option_bool("dump", &do_dump);
 
-  struct psc_case *_case = psc_create_test_z();
-  psc_push_particles_set_type(ppsc->push_particles, "fortran");
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_case_setup(_case);
-  mparticles_base_t *particles = ppsc->particles;
-  psc_sort_run(ppsc->sort, particles);
-  //  psc_dump_particles("part-0");
-  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  //  psc_dump_particles("part-1");
-  psc_save_particles_ref(ppsc, particles);
-  psc_save_fields_ref(ppsc, ppsc->flds);
-  psc_case_destroy(_case);
+  struct psc_case *(*create_test)(const char *);
+  switch (testcase) {
+  case 1: create_test = create_test_1; break;
+  case 2: create_test = create_test_2; break;
+  case 3: create_test = create_test_3; break;
+  default: assert(0);
+  }
 
-  printf("=== testing push_part_z() generic_c\n");
-  _case = psc_create_test_z();
-  psc_push_particles_set_type(ppsc->push_particles, "generic_c");
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_case_setup(_case);
-  particles = ppsc->particles;
-  psc_sort_run(ppsc->sort, particles);
-  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  psc_check_particles_ref(ppsc, particles, 1e-7, "push_part_z -- generic_c");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7);
-  psc_case_destroy(_case);
+  run_test(true, "fortran", 0., 0., create_test);
+  run_test(false, "generic_c", 1e-7, 1e-7, create_test);
 
 #ifdef USE_CUDA
-  printf("=== testing push_part_z() cuda\n");
-  _case = psc_create_test_z();
-  psc_push_particles_set_type(ppsc->push_particles, "cuda");
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_case_setup(_case);
-  particles = ppsc->particles;
-  psc_sort_run(ppsc->sort, particles);
-  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  psc_check_particles_ref(ppsc, particles, 1e-3, "push_part_z -- cuda");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-2); 
-  psc_case_destroy(_case);
+  run_test(false, "cuda", 1e-3, 1e-2, create_test);
 #endif
 
 #ifdef USE_SSE2
-  printf("=== testing push_part_z() sse2\n");
-  _case = psc_create_test_z();
-  psc_push_particles_set_type(ppsc->push_particles, "sse2");
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_case_setup(_case);
-  particles = ppsc->particles;
-  psc_sort_run(ppsc->sort, particles);
-  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
-  psc_check_particles_ref(ppsc, particles, 1e-8, "push_part_z -- sse2");
-  psc_check_currents_ref(ppsc, ppsc->flds, 2e-6); 
-  psc_case_destroy(_case);
+  run_test(false, "sse2", 1e-7, 2e-6, create_test);
 #endif
 
   prof_print();

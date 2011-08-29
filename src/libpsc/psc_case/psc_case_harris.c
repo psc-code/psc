@@ -430,21 +430,17 @@ struct psc_case_ops psc_case_test_xy_ops = {
 static void
 psc_case_test_z_set_from_options(struct psc_case *_case)
 {
-  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
-
   psc_case_harris_set_from_options(_case);
 
   ppsc->prm.nicell = 200;
 
-  real d_i = sqrt(harris->MMi); // in units of d_e
   ppsc->domain.length[0] = 1.0;
   ppsc->domain.length[1] = 1.0;
-  ppsc->domain.length[2] = 2. * harris->lz * d_i; // double tearing
+  ppsc->domain.length[2] = 10.;
 
   ppsc->domain.gdims[0] = 1;
   ppsc->domain.gdims[1] = 1;
   ppsc->domain.gdims[2] = 10;
-  
 }
 
 static void
@@ -456,8 +452,7 @@ psc_case_test_z_init_field(struct psc_case *_case, mfields_base_t *flds)
   psc_foreach_patch(psc, p) {
     fields_base_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      F3_BASE(pf, EX, jx,jy,jz) = 1.;
-      F3_BASE(pf, BY, jx,jy,jz) = 1.;
+      F3_BASE(pf, EZ, jx,jy,jz) = 1.;
     } psc_foreach_3d_g_end;
   }
 }
