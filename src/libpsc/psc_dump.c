@@ -13,7 +13,7 @@ ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   psc_foreach_patch(ppsc, p) {
-    char *filename = malloc(strlen(fname) + 10);
+    char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
@@ -43,7 +43,7 @@ ascii_dump_particles(mparticles_base_t *particles, const char *fname)
 
   psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
-    char *filename = malloc(strlen(fname) + 10);
+    char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
     
