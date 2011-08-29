@@ -296,3 +296,18 @@ psc_create_test_yz(void)
   return _case;
 }
 
+// ----------------------------------------------------------------------
+// psc_create_test_z
+
+struct psc_case *
+psc_create_test_z(void)
+{
+  // make sure if we call it again, we really get the same i.c.
+  srandom(0);
+
+  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
+  psc_case_set_type(_case, "test_z");
+  psc_case_set_from_options(_case);
+  return _case;
+}
+

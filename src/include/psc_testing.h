@@ -21,5 +21,6 @@ void psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles);
 struct psc_case *psc_create_test_xy(void);
 struct psc_case *psc_create_test_xz(void);
 struct psc_case *psc_create_test_yz(void);
+struct psc_case *psc_create_test_z(void);
 
 #endif

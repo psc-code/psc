@@ -65,7 +65,7 @@ cache_fields(real *d_flds, const int l[3])
     //    printf("n %d ti %d m %d, jx %d,%d,%d\n", n, ti, m, jx, jy, jz);
     // currently it seems faster to do the loop rather than do m by threadidx
     for (int m = EX; m <= HZ; m++) {
-      F3C(m, jx,jy,jz) = F3(m, jx+l[0],jy+l[1],jz+l[2]);
+      F3C(m, jx,jy,jz) = F3_DEV(m, jx+l[0],jy+l[1],jz+l[2]);
     }
     ti += blockDim.x;
   }

@@ -177,6 +177,7 @@ psc_case_init()
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_test_xy_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_test_yz_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_test_xz_ops);
+  mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_test_z_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_harris_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_harris_xy_ops);
   mrc_class_register_subclass(&mrc_class_psc_case, &psc_case_langmuir_ops);

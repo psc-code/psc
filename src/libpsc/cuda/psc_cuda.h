@@ -12,20 +12,6 @@
 
 // ======================================================================
 
-void psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
-				       mparticles_base_t *particles_base,
-				       mfields_base_t *flds_base);
-
-void psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
-				       mparticles_base_t *particles_base,
-				       mfields_base_t *flds_base);
-
-void psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
-				     mparticles_base_t *particles_base,
-				     mfields_base_t *flds_base);
-
-// ======================================================================
-
 #define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
 
 // ======================================================================
@@ -48,6 +34,9 @@ void psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
                                         fields_cuda_t *pf,              \
                                         real *d_scratch);               \
 
+DECLARE_CUDA(z);
+DECLARE_CUDA(z2);
+DECLARE_CUDA(z3);
 DECLARE_CUDA(yz);
 DECLARE_CUDA(yz2);
 DECLARE_CUDA(yz3);

@@ -423,3 +423,84 @@ struct psc_case_ops psc_case_test_xy_ops = {
 };
 
 
+// ----------------------------------------------------------------------
+// case test_z:
+//
+
+static void
+psc_case_test_z_set_from_options(struct psc_case *_case)
+{
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
+  psc_case_harris_set_from_options(_case);
+
+  ppsc->prm.nicell = 200;
+
+  real d_i = sqrt(harris->MMi); // in units of d_e
+  ppsc->domain.length[0] = 1.0;
+  ppsc->domain.length[1] = 1.0;
+  ppsc->domain.length[2] = 2. * harris->lz * d_i; // double tearing
+
+  ppsc->domain.gdims[0] = 1;
+  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[2] = 10;
+  
+}
+
+static void
+psc_case_test_z_init_field(struct psc_case *_case, mfields_base_t *flds)
+{
+  struct psc *psc = _case->psc;
+
+  // FIXME, do we need the ghost points?
+  psc_foreach_patch(psc, p) {
+    fields_base_t *pf = &flds->f[p];
+    psc_foreach_3d_g(psc, p, jx, jy, jz) {
+      F3_BASE(pf, EX, jx,jy,jz) = 1.;
+      F3_BASE(pf, BY, jx,jy,jz) = 1.;
+    } psc_foreach_3d_g_end;
+  }
+}
+
+static void
+psc_case_test_z_init_npt(struct psc_case *_case, int kind, double x[3],
+			   struct psc_particle_npt *npt)
+{
+  struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
+
+  double BB = harris->BB;
+  double TTi = harris->Ti * sqr(BB);
+  double TTe = harris->Te * sqr(BB);
+
+  switch (kind) {
+  case 0: // electrons
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->n = 1.;
+    npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
+    break;
+  case 1: // ions
+    npt->q = 1.;
+    npt->m = harris->MMi;
+    npt->n = 1.;
+    npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
+    break;
+  default:
+    assert(0);
+  }
+}
+
+struct psc_case_ops psc_case_test_z_ops = {
+  .name                  = "test_z",
+  .size                  = sizeof(struct psc_case_harris),
+  .param_descr           = psc_case_harris_descr,
+  .set_from_options      = psc_case_test_z_set_from_options,
+  .init_field            = psc_case_test_z_init_field,
+  .init_npt              = psc_case_test_z_init_npt,
+};
+
+
