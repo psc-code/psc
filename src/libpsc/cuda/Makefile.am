@@ -35,6 +35,8 @@ CUDA_DEPS = \
         push_part_kernelcall.c
 #        psc_particles_cuda.h FIXME
 
+cuda_push_part_z3.lo: push_part_p2_noshift.c
+
 #FIXME, this is just really too hacky...
 
 %.lo: %.cu $(CUDA_DEPS)

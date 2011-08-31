@@ -124,14 +124,14 @@ z_calc_jzh(real qni_wni, SHAPE_INFO_ARGS)
       real wz = s1z - s0z;
       last = -fnqz*wz;
     }
-    SDATA(tid,jz) += last;
+    SDATA(tid,jz) = last;
   }
   for (int jz = -1; jz <= 0; jz++) {
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
     real wz = s1z - s0z;
     last -= fnqz*wz;
-    SDATA(tid,jz) += last;
+    SDATA(tid,jz) = last;
   }
   { int jz = 1;
     if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
@@ -142,7 +142,7 @@ z_calc_jzh(real qni_wni, SHAPE_INFO_ARGS)
       real wz = s1z - s0z;
       last -= fnqz*wz;
     }
-    SDATA(tid,jz) += last;
+    SDATA(tid,jz) = last;
   }
 }
 
