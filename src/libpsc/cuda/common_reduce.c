@@ -1,7 +1,7 @@
 
 
 __device__ static void
-reduce_sum_sdata()
+reduce_sum_sdata(volatile float *sdata)
 {
   unsigned int tid = threadIdx.x;
 
@@ -22,7 +22,6 @@ reduce_sum_sdata()
       forall_j(SDATA(tid,j) += SDATA(tid + 64,j););
     __syncthreads();
   }
-  
   if (tid < 32) {
     if (THREADS_PER_BLOCK >=  64) {
       forall_j(SDATA(tid,j) += SDATA(tid + 32,j););
