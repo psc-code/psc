@@ -67,7 +67,8 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
   real *h_scratch = (real *) malloc(sz * sizeof(real));
   check(cudaMemcpy(h_scratch, d_scratch, sz * sizeof(real),
 		   cudaMemcpyDeviceToHost));
-
+#if 0
+  // version which does the calculation on the host (z-only)
 #define h_scratch(m,jy,jz) (p[(m)*BLOCKSTRIDE +		\
 			      ((jz)+3) * (BLOCKSIZE_Y+6) +	\
 			      (jy)+3])
@@ -95,6 +96,7 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
   for (int iz = -3; iz < 10+3; iz++) {
     printf("iz %d: %g\n", iz, F3_CUDA(pf, 2, 0,0,iz));
   }
+#endif
 }
 
 // ----------------------------------------------------------------------

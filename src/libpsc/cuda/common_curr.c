@@ -61,7 +61,7 @@ cache_shape_arrays(struct shape_info *si, real *h0, real *h1, short int *shift)
 
 #define SI_SHIFT0Z __shift0[0]
 #define SI_SHIFT1Z __shift1[0]
-#define SI_SHIFT10Z (__shift1[1] - __shift0[0])
+#define SI_SHIFT10Z (__shift1[0] - __shift0[0])
 
 #elif DIM == DIM_YZ
 
