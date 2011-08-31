@@ -245,7 +245,7 @@ psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .name                  = "cuda",
-  .push_z                = psc_push_particles_cuda_push_z,
+  .push_z                = psc_push_particles_cuda_push_z3,
   .push_yz               = psc_push_particles_cuda_push_yz3,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
