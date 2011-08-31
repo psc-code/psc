@@ -116,9 +116,9 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
     }
 
 #if 0
-    for (int c = 0; c < cuda->nr_blocks; c++) {
+    for (int c = 0; c < pp->nr_blocks; c++) {
       int ci[3];
-      blockIdx_to_blockCrd(cuda, c, ci);
+      blockIdx_to_blockCrd(pp, c, ci);
       printf("cell %d [%d,%d,%d]: %d:%d\n", c, ci[0], ci[1], ci[2],
 	     h_part->offsets[c], h_part->offsets[c+1]);
     }

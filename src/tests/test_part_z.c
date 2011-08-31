@@ -90,6 +90,18 @@ create_test_3(const char *s_push_particles)
   return _case;
 }
 
+static struct psc_case *
+create_test_4(const char *s_push_particles)
+{
+  struct psc_case *_case = create_test_base(s_push_particles);
+
+  double *dx = ppsc->dx;
+  add_particle(0.,0.,.4999*dx[2], 0.,0.,1000., 1., 1.);
+
+  psc_sort_run(ppsc->sort, ppsc->particles);
+  return _case;
+}
+
 static void
 run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
 	 struct psc_case *(*create_test)(const char *s_push_particles))
@@ -125,6 +137,7 @@ main(int argc, char **argv)
   case 1: create_test = create_test_1; break;
   case 2: create_test = create_test_2; break;
   case 3: create_test = create_test_3; break;
+  case 4: create_test = create_test_4; break;
   default: assert(0);
   }
 

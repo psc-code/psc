@@ -62,6 +62,39 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
   int dimGrid[2]  = { 1, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     collect_currents, (pf->d_flds, d_scratch, pp->nr_blocks));
+
+  int sz = pp->nr_blocks * 3 * BLOCKSTRIDE;
+  real *h_scratch = (real *) malloc(sz * sizeof(real));
+  check(cudaMemcpy(h_scratch, d_scratch, sz * sizeof(real),
+		   cudaMemcpyDeviceToHost));
+
+#define h_scratch(m,jy,jz) (p[(m)*BLOCKSTRIDE +		\
+			      ((jz)+3) * (BLOCKSIZE_Y+6) +	\
+			      (jy)+3])
+  for (int m = 0; m < 3; m++) {
+    printf("m %d\n", m);
+    for (int b = 0; b < pp->nr_blocks; b++) {
+      real *p = h_scratch + b * 3 * BLOCKSTRIDE;
+      for (int iz = -3; iz <= 3; iz++) {
+	if (h_scratch(m, 0, iz) != 0.) {
+	  printf("b %d iz %d : %g\n", b, iz, h_scratch(m, 0, iz));
+	}
+      }
+    }
+  }
+  free(h_scratch);
+
+  for (int b = 0; b < pp->nr_blocks; b++) {
+    real *p = h_scratch + b * 3 * BLOCKSTRIDE;
+    for (int m = 0; m < 3; m++) {
+      for (int iz = -3; iz <= 3; iz++) {
+	F3_CUDA(pf, m, 0,0,b+iz) += h_scratch(m, 0,iz);
+      }
+    }
+  }
+  for (int iz = -3; iz < 10+3; iz++) {
+    printf("iz %d: %g\n", iz, F3_CUDA(pf, 2, 0,0,iz));
+  }
 }
 
 // ----------------------------------------------------------------------
