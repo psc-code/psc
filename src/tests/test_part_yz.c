@@ -56,7 +56,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_save_particles_ref(ppsc, ppsc->particles);
     psc_save_fields_ref(ppsc, ppsc->flds);
   } else {
-    psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_z -- generic_c");
+    psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_yz()");
     if (strlen(push) == 0) { // only check currents for full pusher
       psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
     }
@@ -102,7 +102,7 @@ main(int argc, char **argv)
   run_test(true, "fortran", 0., 0., create_test, "");
   run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
 #ifdef USE_CUDA
-  run_test(false, "cuda", 1e-3, 1e-2, create_test, "");
+  run_test(false, "cuda", 1e-3, 1e-3, create_test, "");
 #endif
 #ifdef USE_SSE2
   run_test(false, "sse2", 1e-7, 2e-6, create_test, "");

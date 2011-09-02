@@ -36,6 +36,7 @@ CUDA_DEPS = \
 #        psc_particles_cuda.h FIXME
 
 cuda_push_part_z3.lo: push_part_p2_noshift.c
+cuda_push_part_yz3.lo: push_part_p2_noshift.c
 
 #FIXME, this is just really too hacky...
 

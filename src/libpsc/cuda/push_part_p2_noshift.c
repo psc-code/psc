@@ -303,7 +303,7 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 
   real last;
   { int jz = -2;
-    if (SI_SHIFT0Z >= 0 && SI_SHIFT0Z >= 0) {
+    if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
       last = 0.f;
     } else {
       real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
@@ -321,7 +321,7 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
     SDATA(tid,jz) = last;
   }
   { int jz = 1;
-    if (SI_SHIFT0Z <= 0 && SI_SHIFT0Z <= 0) {
+    if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
       last = 0.f;
     } else {
       real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
