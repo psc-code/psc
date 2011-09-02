@@ -142,6 +142,36 @@ __pick_shape_coeff(const real *__s, int j, int shift)
 // ----------------------------------------------------------------------
 #elif CACHE_SHAPE_ARRAYS == 3
 
+#if DIM == DIM_Z
+
+#define DECLARE_SHAPE_INFO			\
+  real __hz[2];					\
+  real __s0z[2], __s1z[2];			\
+  short int __shift0[1], __shift1[1]		\
+
+#define SHAPE_INFO_PARAMS __hz,			\
+    __s0z, __s1z,				\
+    __shift0, __shift1
+#define SHAPE_INFO_ARGS real *__hz,			\
+    real *__s0z, real *__s1z,				\
+    short int *__shift0, short int *__shift1
+
+#define SI_SHIFT0Z __shift0[0]
+#define SI_SHIFT1Z __shift1[0]
+#define SI_SHIFT10Z (__shift1[0] - __shift0[0])
+
+__device__ static void
+cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
+		   short int shift0z, short int shift1z)
+{
+  __hz[0] = h0[2];
+  __hz[1] = h1[2];
+  SI_SHIFT0Z = shift0z;
+  SI_SHIFT1Z = shift1z - shift0z;
+}
+
+#else
+
 #define DECLARE_SHAPE_INFO			\
   real __hy[2], __hz[2];			\
   real __s0y[2], __s1y[2];			\
@@ -154,24 +184,30 @@ __pick_shape_coeff(const real *__s, int j, int shift)
 #define SHAPE_INFO_ARGS real *__hy, real *__hz,			\
     real *__s0y, real *__s1y, real *__s0z, real *__s1z,		\
     short int *__shift0, short int *__shift1
+
 #define SI_SHIFT0Y __shift0[0]
 #define SI_SHIFT1Y __shift1[0]
+#define SI_SHIFT10Y (__shift1[0] - __shift0[0])
 #define SI_SHIFT0Z __shift0[1]
 #define SI_SHIFT1Z __shift1[1]
+#define SI_SHIFT10Z (__shift1[1] - __shift0[1])
 
 __device__ static void
 cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
-		   short int *shift0, short int *shift1)
+		   short int shift0y, short int shift0z,
+		   short int shift1y, short int shift1z)
 {
   __hy[0] = h0[1];
   __hy[1] = h1[1];
   __hz[0] = h0[2];
   __hz[1] = h1[2];
-  SI_SHIFT0Y = shift0[1];
-  SI_SHIFT1Y = shift1[1] - shift0[1];
-  SI_SHIFT0Z = shift0[2];
-  SI_SHIFT1Z = shift1[2] - shift0[2];
+  SI_SHIFT0Y = shift0y;
+  SI_SHIFT1Y = shift1y - shift0y;
+  SI_SHIFT0Z = shift0z;
+  SI_SHIFT1Z = shift1z - shift0z;
 }
+
+#endif
 
 #define pick_shape_coeff(t, comp, j, shift) ({				\
       const int __y __attribute__((unused)) = 1;			\
