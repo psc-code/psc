@@ -81,7 +81,7 @@ cuda_push_part(mparticles_base_t *particles_base,
 	       void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
 	       void (*push_part_p1)(particles_cuda_t *, fields_cuda_t *, real **),
 	       void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
-	       void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *),
+	       void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
 	       void (*push_part_p4)(particles_cuda_t *, fields_cuda_t *, real *),
 	       void (*push_part_p5)(particles_cuda_t *, fields_cuda_t *, real *))
 {
@@ -132,7 +132,84 @@ cuda_push_part(mparticles_base_t *particles_base,
 
     set_constants(pp, pf);
     prof_start(pr3);
-    push_part_p3(pp, pf, d_scratch);
+    push_part_p3(pp, pf, d_scratch, 1);
+    prof_stop(pr3);
+
+    prof_start(pr4);
+    push_part_p4(pp, pf, d_scratch);
+    prof_stop(pr4);
+    
+    prof_start(pr5);
+    push_part_p5(pp, pf, d_scratch);
+    prof_stop(pr5);
+  }
+  
+  prof_stop(pr);
+
+  psc_mfields_cuda_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mparticles_cuda_put_to(&particles, particles_base);
+}
+
+static void
+cuda_push_partq(mparticles_base_t *particles_base,
+		mfields_base_t *flds_base,
+		void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
+		void (*push_part_p1)(particles_cuda_t *, fields_cuda_t *, real **),
+		void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
+		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
+		void (*push_part_p4)(particles_cuda_t *, fields_cuda_t *, real *),
+		void (*push_part_p5)(particles_cuda_t *, fields_cuda_t *, real *))
+{
+  const int block_stride = 4;
+  
+  mfields_cuda_t flds;
+  mparticles_cuda_t particles;
+  psc_mfields_cuda_get_from(&flds, EX, EX + 6, flds_base);
+  psc_mparticles_cuda_get_from(&particles, particles_base);
+
+  static int pr, pr1, pr2, pr3, pr4, pr5;
+  if (!pr) {
+    pr  = prof_register("cuda_part", 1., 0, 0);
+    pr1 = prof_register("cuda_part_p1", 1., 0, 0);
+    pr2 = prof_register("cuda_part_p2", 1., 0, 0);
+    pr3 = prof_register("cuda_part_p3", 1., 0, 0);
+    pr4 = prof_register("cuda_part_p4", 1., 0, 0);
+    pr5 = prof_register("cuda_part_p5", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  // d_scratch needs to be per patch
+  assert(ppsc->nr_patches == 1);
+  real *d_scratch;
+  
+  psc_foreach_patch(ppsc, p) {
+    particles_cuda_t *pp = &particles.p[p];
+    fields_cuda_t *pf = &flds.f[p];
+
+    set_constants(pp, pf);
+
+    prof_start(pr1);
+    push_part_p1(pp, pf, &d_scratch);
+    prof_stop(pr1);
+    
+    prof_start(pr2);
+    push_part_p2(pp, pf);
+    prof_stop(pr2);
+  }
+
+  // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
+  psc_mparticles_cuda_put_to(&particles, particles_base);
+  psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+  psc_sort_run(ppsc->sort, particles_base);
+  psc_mparticles_cuda_get_from(&particles, particles_base);
+
+  psc_foreach_patch(ppsc, p) {
+    particles_cuda_t *pp = &particles.p[p];
+    fields_cuda_t *pf = &flds.f[p];
+
+    set_constants(pp, pf);
+    prof_start(pr3);
+    push_part_p3(pp, pf, d_scratch, block_stride);
     prof_stop(pr3);
 
     prof_start(pr4);
@@ -240,13 +317,27 @@ psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
 		 yz3_cuda_push_part_p5);
 }
 
+static void __unused
+psc_push_particles_cuda_push_yz4(struct psc_push_particles *push,
+				 mparticles_base_t *particles_base,
+				 mfields_base_t *flds_base)
+{
+  cuda_push_partq(particles_base, flds_base,
+		  yz4_set_constants,
+		  yz4_cuda_push_part_p1,
+		  yz4_cuda_push_part_p2,
+		  yz4_cuda_push_part_p3,
+		  yz4_cuda_push_part_p4,
+		  yz4_cuda_push_part_p5);
+}
+
 // ======================================================================
 // psc_push_particles: subclass "cuda"
 
 struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .name                  = "cuda",
   .push_z                = psc_push_particles_cuda_push_z3,
-  .push_yz               = psc_push_particles_cuda_push_yz3,
+  .push_yz               = psc_push_particles_cuda_push_yz4,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
 };

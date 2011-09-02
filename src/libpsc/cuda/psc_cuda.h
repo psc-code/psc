@@ -26,7 +26,8 @@
                                         fields_cuda_t *pf);             \
   EXTERN_C void pfx##_cuda_push_part_p3(particles_cuda_t *pp,           \
                                         fields_cuda_t *pf,              \
-                                        real *d_scratch);               \
+                                        real *d_scratch,		\
+					int block_stride);		\
   EXTERN_C void pfx##_cuda_push_part_p4(particles_cuda_t *pp,           \
                                         fields_cuda_t *pf,              \
                                         real *d_scratch);               \
@@ -40,6 +41,7 @@ DECLARE_CUDA(z3);
 DECLARE_CUDA(yz);
 DECLARE_CUDA(yz2);
 DECLARE_CUDA(yz3);
+DECLARE_CUDA(yz4);
 
 EXTERN_C void yz_a_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
 EXTERN_C void yz_b_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);

@@ -132,9 +132,9 @@ z_calc_jzh(real qni_wni, SHAPE_INFO_ARGS)
 
 __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
-	     real *d_scratch)
+	     real *d_scratch, int block_stride, int block_start)
 {
-  int tid = threadIdx.x, bid = blockIdx.x;
+  int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
   int cell_begin = d_particles.offsets[bid];
   int cell_end   = d_particles.offsets[bid+1];
   int ci[3];
@@ -284,9 +284,9 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 
 __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
-	     real *d_scratch)
+	     real *d_scratch, int block_stride, int block_start)
 {
-  int tid = threadIdx.x, bid = blockIdx.x;
+  int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
   int cell_begin = d_particles.offsets[bid];
   int cell_end   = d_particles.offsets[bid+1];
   int ci[3];
