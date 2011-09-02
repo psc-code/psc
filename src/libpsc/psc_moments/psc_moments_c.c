@@ -119,7 +119,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
+do_c_calc_v(int p, fields_base_t *pf, particles_base_t *pp_base)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -130,7 +130,7 @@ do_c_calc_v(fields_base_t *pf, particles_base_t *pp_base)
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[0];
+  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
 
@@ -220,7 +220,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_v(&res->f[p], &particles->p[p]);
+    do_c_calc_v(p, &res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
@@ -228,7 +228,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
 }
 
 static void
-do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
+do_c_calc_vv(int p, fields_base_t *pf, particles_base_t *pp_base)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -239,7 +239,7 @@ do_c_calc_vv(fields_base_t *pf, particles_base_t *pp_base)
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[0];
+  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp_base->n_part; n++) {
     particle_base_t *part = particles_base_get_one(pp_base, n);
 
@@ -329,7 +329,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_vv(&res->f[p], &particles->p[p]);
+    do_c_calc_vv(p, &res->f[p], &particles->p[p]);
   }
   prof_stop(pr);
 
