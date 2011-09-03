@@ -254,30 +254,6 @@ zero_scurr()
 }
 
 __device__ static void
-add_scurr_to_scratch(real *d_scratch, int bid)
-{
-  int i = threadIdx.x;
-  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
-  while (i < stride) {
-    int rem = i;
-    int m = rem / ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
-    rem -= m * ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
-    int jz = rem / (BLOCKSIZE_Y + 2*SW);
-    rem -= jz * (BLOCKSIZE_Y + 2*SW);
-    int jy = rem;
-    jz -= SW;
-    jy -= SW;
-    real val = real(0.);
-    for (int wid = 0; wid < WARPS_PER_BLOCK; wid++) {
-      val += scurr(wid, m, jy, jz);
-    }
-    real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
-    scratch(0, jy, jz) += val;
-    i += THREADS_PER_BLOCK;
-  }
-}
-
-__device__ static void
 add_scurr_to_flds(real *d_flds)
 {
   int i = threadIdx.x;
@@ -302,7 +278,7 @@ add_scurr_to_flds(real *d_flds)
 
 __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
-	     real *d_scratch, int block_stride, int block_start)
+	     int block_stride, int block_start)
 {
   int tid = threadIdx.x;
 
@@ -358,44 +334,4 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 }
 
 #endif
-
-// ----------------------------------------------------------------------
-// collect_currents
-
-__global__ static void
-collect_currents(real *d_flds, real *d_scratch, int nr_blocks)
-{
-#if DIM == DIM_Z
-  int jy = 0;
-  int jz = threadIdx.x - SW;
-#elif DIM == DIM_YZ
-  int jy = threadIdx.x - SW;
-  int jz = threadIdx.y - SW;
-#endif
-
-  if (threadIdx.x != 0 || threadIdx.y != 0) {
-    return;
-  }
-
-  for (int b = 0; b < nr_blocks; b++) {
-    real *scratch = d_scratch + b * 3 * BLOCKSTRIDE;
-
-    int ci[3];
-    blockIdx_to_blockCrd(b, ci);
-    ci[0] *= BLOCKSIZE_X;
-    ci[1] *= BLOCKSIZE_Y;
-    ci[2] *= BLOCKSIZE_Z;
-    ci[0] += d_ilo[0];
-    ci[1] += d_ilo[1];
-    ci[2] += d_ilo[2];
-
-    for (jy = -SW; jy < BLOCKSIZE_Y + SW; jy++) {
-      for (jz = -SW; jz < BLOCKSIZE_Z + SW; jz++) {
-	for (int m = 0; m < 3; m++) {
-	  F3_DEV(JXI+m, 0+ci[0],jy+ci[1],jz+ci[2]) += scratch(m,jy,jz);
-	}
-      }
-    }
-  }
-}
 

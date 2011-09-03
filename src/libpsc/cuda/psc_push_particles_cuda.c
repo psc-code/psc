@@ -154,11 +154,8 @@ static void
 cuda_push_partq(mparticles_base_t *particles_base,
 		mfields_base_t *flds_base,
 		void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
-		void (*push_part_p1)(particles_cuda_t *, fields_cuda_t *, real **),
 		void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
-		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
-		void (*push_part_p4)(particles_cuda_t *, fields_cuda_t *, real *),
-		void (*push_part_p5)(particles_cuda_t *, fields_cuda_t *, real *))
+		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int))
 {
   const int block_stride = 4;
   
@@ -167,20 +164,16 @@ cuda_push_partq(mparticles_base_t *particles_base,
   psc_mfields_cuda_get_from(&flds, EX, EX + 6, flds_base);
   psc_mparticles_cuda_get_from(&particles, particles_base);
 
-  static int pr, pr1, pr2, pr3, pr4, pr5;
+  static int pr, pr2, pr3;
   if (!pr) {
     pr  = prof_register("cuda_part", 1., 0, 0);
-    pr1 = prof_register("cuda_part_p1", 1., 0, 0);
     pr2 = prof_register("cuda_part_p2", 1., 0, 0);
     pr3 = prof_register("cuda_part_p3", 1., 0, 0);
-    pr4 = prof_register("cuda_part_p4", 1., 0, 0);
-    pr5 = prof_register("cuda_part_p5", 1., 0, 0);
   }
   prof_start(pr);
 
   // d_scratch needs to be per patch
   assert(ppsc->nr_patches == 1);
-  real *d_scratch;
   
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
@@ -188,10 +181,6 @@ cuda_push_partq(mparticles_base_t *particles_base,
 
     set_constants(pp, pf);
 
-    prof_start(pr1);
-    push_part_p1(pp, pf, &d_scratch);
-    prof_stop(pr1);
-    
     prof_start(pr2);
     push_part_p2(pp, pf);
     prof_stop(pr2);
@@ -209,16 +198,8 @@ cuda_push_partq(mparticles_base_t *particles_base,
 
     set_constants(pp, pf);
     prof_start(pr3);
-    push_part_p3(pp, pf, d_scratch, block_stride);
+    push_part_p3(pp, pf, NULL, block_stride);
     prof_stop(pr3);
-
-    prof_start(pr4);
-    //    push_part_p4(pp, pf, d_scratch);
-    prof_stop(pr4);
-    
-    prof_start(pr5);
-    push_part_p5(pp, pf, d_scratch);
-    prof_stop(pr5);
   }
   
   prof_stop(pr);
@@ -339,11 +320,8 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
   mprintf("n_part = %d\n", particles_base->p[0].n_part);
   cuda_push_partq(particles_base, flds_base,
 		  yz5_set_constants,
-		  yz5_cuda_push_part_p1,
 		  yz5_cuda_push_part_p2,
-		  yz5_cuda_push_part_p3,
-		  yz5_cuda_push_part_p4,
-		  yz5_cuda_push_part_p5);
+		  yz5_cuda_push_part_p3);
 }
 
 // ======================================================================

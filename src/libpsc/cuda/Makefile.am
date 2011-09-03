@@ -40,7 +40,7 @@ CUDA_DEPS = \
 cuda_push_part_z3.lo: push_part_p2_noshift.c
 cuda_push_part_yz3.lo: push_part_p2_noshift.c
 cuda_push_part_yz4.lo: push_part_p2_noshift_2.c
-cuda_push_part_yz5.lo: push_part_p2_noshift_3.c
+cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
 
 #FIXME, this is just really too hacky...
 
