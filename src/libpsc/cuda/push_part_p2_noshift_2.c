@@ -346,6 +346,10 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 // ----------------------------------------------------------------------
 
 __shared__ real sdata1[THREADS_PER_BLOCK];
+__shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
+
+#define scurr(m,jy,jz) (scurr[(m * (BLOCKSIZE_Z + 2*SW) + (jz)+SW)	\
+			      * (BLOCKSIZE_Y + 2*SW) + (jy)+SW])
 
 // ----------------------------------------------------------------------
 // yz_calc_jx
@@ -354,7 +358,6 @@ __device__ static void
 yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
-  real *scratch = d_scratch + bid * 3 * BLOCKSTRIDE;
 
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqx = vxi * qni_wni * d_fnqs;
@@ -375,7 +378,7 @@ yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(0,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -389,7 +392,6 @@ __device__ static void
 yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
-  real *scratch = d_scratch + (bid * 3 + 1) * BLOCKSTRIDE;
   
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqy = qni_wni * d_fnqys;
@@ -412,7 +414,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(1,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -425,7 +427,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(1,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -442,7 +444,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(1,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -456,7 +458,6 @@ __device__ static void
 yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
-  real *scratch = d_scratch + (bid * 3 + 2) * BLOCKSTRIDE;
   
   for (int jy = -SW; jy <= SW; jy++) {
     real fnqz = qni_wni * d_fnqzs;
@@ -479,7 +480,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(2,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -492,7 +493,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(2,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -509,7 +510,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       reduce_sum_sdata1(sdata1);
 #ifdef CALC_CURRENT
       if (tid == 0) {
-	scratch(0,jy,jz) += sdata1[0];
+	scurr(2,jy,jz) += sdata1[0];
       }
 #endif
     }
@@ -521,6 +522,16 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     real *d_scratch, int block_stride, int block_start)
 {
   int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+
+  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW);
+  // stride must be <= THREADS_PER_BLOCK!
+  if (tid < stride) {
+    for (int m = 0; m < 3; m++) {
+      scurr[m * stride + tid] = real(0.);
+    }
+  }
+  __syncthreads();
+
   int cell_begin = d_particles.offsets[bid];
   int cell_end   = d_particles.offsets[bid+1];
   int ci[3];
@@ -543,6 +554,16 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     yz_calc_jx(bid, d_scratch, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jy(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jz(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
+  }
+
+  __syncthreads();
+  if (tid < stride) {
+    for (int m = 0; m < 3; m++) {
+      real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
+      int jz = tid / (BLOCKSIZE_Y + 2*SW) - SW;
+      int jy = tid % (BLOCKSIZE_Y + 2*SW) - SW;
+      scratch(0,jy,jz) += scurr[m*stride + tid];
+    }
   }
 }
 
