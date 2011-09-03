@@ -244,12 +244,12 @@ yz_calc_jxh_z(real qni_wni, real vxi, SHAPE_INFO_ARGS, int jz)
   real fnqx = vxi * qni_wni * d_fnqs;
 
   // FIXME, can be simplified
-  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+  real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+  real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
 
   for (int jy = -SW; jy <= SW; jy++) {
-    real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-    real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+    real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+    real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
     real wx = s0y * s0z
       + real(.5) * s1y * s0z
       + real(.5) * s0y * s1z
@@ -265,8 +265,8 @@ yz_calc_jyh_z(real qni_wni, SHAPE_INFO_ARGS, int jz)
   int tid = threadIdx.x;
   real fnqy = qni_wni * d_fnqys;
 
-  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
+  real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+  real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z);
   real tmp1 = real(.5) * (s0z + s1z);
 
   real last;
@@ -274,16 +274,16 @@ yz_calc_jyh_z(real qni_wni, SHAPE_INFO_ARGS, int jz)
     if (SI_SHIFT0Y >= 0 && SI_SHIFT1Y >= 0) {
       last = 0.f;
     } else {
-      real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-      real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+      real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+      real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
       real wy = s1y * tmp1;
       last = -fnqy*wy;
     }
     SDATA(tid,jy) = last;
   }
   for (int jy = -1; jy <= 0; jy++) {
-    real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-    real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+    real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+    real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
     real wy = s1y * tmp1;
     last -= fnqy*wy;
     SDATA(tid,jy) = last;
@@ -292,8 +292,8 @@ yz_calc_jyh_z(real qni_wni, SHAPE_INFO_ARGS, int jz)
     if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
       last = 0.f;
     } else {
-      real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-      real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+      real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+      real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
       real wy = s1y * tmp1;
       last -= fnqy*wy;
     }
@@ -307,8 +307,8 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
   int tid = threadIdx.x;
   real fnqz = qni_wni * d_fnqzs;
 
-  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);
+  real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+  real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y);
   real tmp1 = real(.5) * (s0y + s1y);
 
   real last;
@@ -316,16 +316,16 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
     if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
       last = 0.f;
     } else {
-      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+      real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+      real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
       real wz = s1z * tmp1;
       last = -fnqz*wz;
     }
     SDATA(tid,jz) = last;
   }
   for (int jz = -1; jz <= 0; jz++) {
-    real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-    real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+    real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+    real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
     real wz = s1z * tmp1;
     last -= fnqz*wz;
     SDATA(tid,jz) = last;
@@ -334,8 +334,8 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
     if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
       last = 0.f;
     } else {
-      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+      real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+      real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
       real wz = s1z * tmp1;
       last -= fnqz*wz;
     }
@@ -346,6 +346,175 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 // ----------------------------------------------------------------------
 
 __shared__ real sdata1[THREADS_PER_BLOCK];
+
+// ----------------------------------------------------------------------
+// yz_calc_jx
+
+__device__ static void
+yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
+{
+  int tid = threadIdx.x;
+  real *scratch = d_scratch + bid * 3 * BLOCKSTRIDE;
+
+  for (int jz = -SW; jz <= SW; jz++) {
+    real fnqx = vxi * qni_wni * d_fnqs;
+    
+    // FIXME, can be simplified
+    real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+    real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
+    
+    for (int jy = -SW; jy <= SW; jy++) {
+      real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+      real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
+      real wx = s0y * s0z
+	+ real(.5) * s1y * s0z
+	+ real(.5) * s0y * s1z
+	+ real(.3333333333) * s1y * s1z;
+      
+      sdata1[tid] = fnqx * wx;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// yz_calc_jy
+
+__device__ static void
+yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+{
+  int tid = threadIdx.x;
+  real *scratch = d_scratch + (bid * 3 + 1) * BLOCKSTRIDE;
+  
+  for (int jz = -SW; jz <= SW; jz++) {
+    real fnqy = qni_wni * d_fnqys;
+    
+    real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+    real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z);
+    real tmp1 = real(.5) * (s0z + s1z);
+    
+    real last;
+    { int jy = -2;
+      if (SI_SHIFT0Y >= 0 && SI_SHIFT1Y >= 0) {
+	last = 0.f;
+      } else {
+	real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+	real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
+	real wy = s1y * tmp1;
+	last = -fnqy*wy;
+      }
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+    for (int jy = -1; jy <= 0; jy++) {
+      real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+      real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
+      real wy = s1y * tmp1;
+      last -= fnqy*wy;
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+    { int jy = 1;
+      if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
+	last = 0.f;
+      } else {
+	real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+	real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
+	real wy = s1y * tmp1;
+	last -= fnqy*wy;
+      }
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+// yz_calc_jz
+
+__device__ static void
+yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+{
+  int tid = threadIdx.x;
+  real *scratch = d_scratch + (bid * 3 + 2) * BLOCKSTRIDE;
+  
+  for (int jy = -SW; jy <= SW; jy++) {
+    real fnqz = qni_wni * d_fnqzs;
+    
+    real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
+    real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y);
+    real tmp1 = real(.5) * (s0y + s1y);
+    
+    real last;
+    { int jz = -2;
+      if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
+	last = 0.f;
+      } else {
+	real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+	real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
+	real wz = s1z * tmp1;
+	last = -fnqz*wz;
+      }
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+    for (int jz = -1; jz <= 0; jz++) {
+      real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+      real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
+      real wz = s1z * tmp1;
+      last -= fnqz*wz;
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+    { int jz = 1;
+      if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
+	last = 0.f;
+      } else {
+	real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
+	real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
+	real wz = s1z * tmp1;
+	last -= fnqz*wz;
+      }
+      sdata1[tid] = last;
+      reduce_sum_sdata1(sdata1);
+#ifdef CALC_CURRENT
+      if (tid == 0) {
+	scratch(0,jy,jz) += sdata1[0];
+      }
+#endif
+    }
+  }
+}
 
 __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
@@ -371,160 +540,9 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
       LOAD_PARTICLE(p, d_particles, i);
     }
     calc_j(ci, &p, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
-    
-    // ----------------------------------------------------------------------
-    // JX
-
-    real *scratch = d_scratch + bid * 3 * BLOCKSTRIDE;
-
-    for (int jz = -SW; jz <= SW; jz++) {
-      real fnqx = vxi[0] * qni_wni * d_fnqs;
-
-      // FIXME, can be simplified
-      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-
-      for (int jy = -SW; jy <= SW; jy++) {
-	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-	real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-	real wx = s0y * s0z
-	  + real(.5) * s1y * s0z
-	  + real(.5) * s0y * s1z
-	  + real(.3333333333) * s1y * s1z;
-
-	sdata1[tid] = fnqx * wx;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-    }
-
-    // ----------------------------------------------------------------------
-    // JY
-
-    scratch = d_scratch + (bid * 3 + 1) * BLOCKSTRIDE;
-
-    for (int jz = -SW; jz <= SW; jz++) {
-      real fnqy = qni_wni * d_fnqys;
-
-      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
-      real tmp1 = real(.5) * (s0z + s1z);
-      
-      real last;
-      { int jy = -2;
-	if (SI_SHIFT0Y >= 0 && SI_SHIFT1Y >= 0) {
-	  last = 0.f;
-	} else {
-	  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-	  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-	  real wy = s1y * tmp1;
-	  last = -fnqy*wy;
-	}
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-      for (int jy = -1; jy <= 0; jy++) {
-	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-	real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-	real wy = s1y * tmp1;
-	last -= fnqy*wy;
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-      { int jy = 1;
-	if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
-	  last = 0.f;
-	} else {
-	  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-	  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-	  real wy = s1y * tmp1;
-	  last -= fnqy*wy;
-	}
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-    }
-
-    // ----------------------------------------------------------------------
-    // JZ
-
-    scratch = d_scratch + (bid * 3 + 2) * BLOCKSTRIDE;
-
-    for (int jy = -SW; jy <= SW; jy++) {
-      real fnqz = qni_wni * d_fnqzs;
-
-      real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-      real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);
-      real tmp1 = real(.5) * (s0y + s1y);
-
-      real last;
-      { int jz = -2;
-	if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
-	  last = 0.f;
-	} else {
-	  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-	  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-	  real wz = s1z * tmp1;
-	  last = -fnqz*wz;
-	}
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-      for (int jz = -1; jz <= 0; jz++) {
-	real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-	real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-	real wz = s1z * tmp1;
-	last -= fnqz*wz;
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-      { int jz = 1;
-	if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
-	  last = 0.f;
-	} else {
-	  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-	  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-	  real wz = s1z * tmp1;
-	  last -= fnqz*wz;
-	}
-	sdata1[tid] = last;
-	reduce_sum_sdata1(sdata1);
-#ifdef CALC_CURRENT
-	if (tid == 0) {
-	  scratch(0,jy,jz) += sdata1[0];
-	}
-#endif
-      }
-    }
+    yz_calc_jx(bid, d_scratch, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jy(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jz(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
   }
 }
 

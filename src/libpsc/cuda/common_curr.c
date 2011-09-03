@@ -1,4 +1,8 @@
 
+#ifndef CACHE_SHAPE_ARRAYS
+#define CACHE_SHAPE_ARRAYS 2
+#endif
+
 // ----------------------------------------------------------------------
 
 __shared__ real sdata[(2*SW + 1) * THREADS_PER_BLOCK];
@@ -19,8 +23,6 @@ find_shape_coeff_d_shift(int j, real h, short int shift)
     return real(0.);
   }
 }
-
-#define CACHE_SHAPE_ARRAYS 2
 
 // ----------------------------------------------------------------------
 #if CACHE_SHAPE_ARRAYS == 1 // broken
@@ -232,6 +234,132 @@ __pick_shape_coeff(int j, int shift, int d, real h)
   }
   return s;
 }
+
+// ----------------------------------------------------------------------
+#elif CACHE_SHAPE_ARRAYS == 4
+
+#if DIM == DIM_Z
+
+#define DECLARE_SHAPE_INFO			\
+  real __s0z[2], __s1z[2];			\
+  short int __shift0[1], __shift1[1]		\
+
+#define SHAPE_INFO_PARAMS __s0z, __s1z, __shift0, __shift1
+#define SHAPE_INFO_ARGS real *__s0z, real *__s1z, short int *__shift0, short int *__shift1
+
+#define SI_SHIFT0Z __shift0[0]
+#define SI_SHIFT1Z __shift1[0]
+#define SI_SHIFT10Z (__shift1[0] - __shift0[0])
+
+#elif DIM == DIM_YZ
+
+__shared__ real ___s0y[2][THREADS_PER_BLOCK];
+__shared__ real ___s1y[2][THREADS_PER_BLOCK];
+__shared__ real ___s0z[2][THREADS_PER_BLOCK];
+__shared__ real ___s1z[2][THREADS_PER_BLOCK];
+
+#define DECLARE_SHAPE_INFO			\
+  short int __shift0[2], __shift1[2]		\
+
+#define SHAPE_INFO_PARAMS __shift0, __shift1
+#define SHAPE_INFO_ARGS short int *__shift0, short int *__shift1
+
+#define SI_SHIFT0Y __shift0[0]
+#define SI_SHIFT1Y __shift1[0]
+#define SI_SHIFT10Y (__shift1[0] - __shift0[0])
+#define SI_SHIFT0Z __shift0[1]
+#define SI_SHIFT1Z __shift1[1]
+#define SI_SHIFT10Z (__shift1[1] - __shift0[1])
+
+#endif
+
+__device__ static inline void
+calc_shape_coeff(real *__s, real h)
+{
+  __s[0] = find_shape_coeff_d_shift(-1, h, 0);
+  __s[1] = find_shape_coeff_d_shift( 0, h, 0);
+}
+
+#if DIM == DIM_Z
+
+__device__ static void
+cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
+		   short int shift0z, short int shift1z)
+{
+  __shift0[0] = shift0z;
+  __shift1[0] = shift1z;
+  calc_shape_coeff(__s0z, h0[2]);
+  calc_shape_coeff(__s1z, h1[2]);
+}
+
+#elif DIM == DIM_YZ
+
+__device__ static void
+cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
+		   short int shift0y, short int shift0z,
+		   short int shift1y, short int shift1z)
+{
+  int tid = threadIdx.x;
+  __shift0[0] = shift0y;
+  __shift1[0] = shift1y;
+  __shift0[1] = shift0z;
+  __shift1[1] = shift1z;
+  ___s0y[0][tid] = find_shape_coeff_d_shift(-1, h0[1], 0);
+  ___s0y[1][tid] = find_shape_coeff_d_shift( 0, h0[1], 0);
+  ___s1y[0][tid] = find_shape_coeff_d_shift(-1, h1[1], 0);
+  ___s1y[1][tid] = find_shape_coeff_d_shift( 0, h1[1], 0);
+  ___s0z[0][tid] = find_shape_coeff_d_shift(-1, h0[2], 0);
+  ___s0z[1][tid] = find_shape_coeff_d_shift( 0, h0[2], 0);
+  ___s1z[0][tid] = find_shape_coeff_d_shift(-1, h1[2], 0);
+  ___s1z[1][tid] = find_shape_coeff_d_shift( 0, h1[2], 0);
+}
+
+#endif
+
+#define pick_shape_coeff(t, comp, j, shift)	  \
+  __pick_shape_coeff(__s ## t ## comp, j, shift)  \
+
+__device__ static real
+__pick_shape_coeff(const real *__s, int j, int shift)
+{
+  real s;
+  if (j == shift - 1) {
+    s = __s[0];
+  } else if (j == shift + 0) {
+    s = __s[1];
+  } else if (j == shift + 1) {
+    s = real(1.) - __s[0] - __s[1];
+  } else {
+    s = real(0.);
+  }
+  return s;
+}
+
+#define pick_shape_coeff_(t, comp, j, shift)	  \
+  pick_shape_coeff_s ## t ## comp(j, shift)
+
+#define MAKE_PICK_SHAPE_COEFF(s0y)				\
+__device__ static real					        \
+pick_shape_coeff_ ## s0y(int j, int shift)			\
+{								\
+  int tid = threadIdx.x;					\
+  real s;							\
+  if (j == shift - 1) {						\
+    s = ___ ## s0y[0][tid];					\
+  } else if (j == shift + 0) {					\
+    s = ___ ## s0y[1][tid];					\
+  } else if (j == shift + 1) {					\
+    s = real(1.) - ___ ## s0y[0][tid] - ___ ## s0y[1][tid];	\
+  } else {							\
+    s = real(0.);						\
+  }								\
+  return s;							\
+}
+
+MAKE_PICK_SHAPE_COEFF(s0y)
+MAKE_PICK_SHAPE_COEFF(s1y)
+MAKE_PICK_SHAPE_COEFF(s0z)
+MAKE_PICK_SHAPE_COEFF(s1z)
 
 #else
 
