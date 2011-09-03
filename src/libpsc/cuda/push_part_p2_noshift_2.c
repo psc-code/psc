@@ -345,7 +345,6 @@ yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 
 // ----------------------------------------------------------------------
 
-__shared__ real sdata1[THREADS_PER_BLOCK];
 __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 
 #define scurr(m,jy,jz) (scurr[(m * (BLOCKSIZE_Z + 2*SW) + (jz)+SW)	\
@@ -374,8 +373,7 @@ yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
 	+ real(.5) * s0y * s1z
 	+ real(.3333333333) * s1y * s1z;
       
-      sdata1[tid] = fnqx * wx;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(fnqx * wx);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(0,jy,jz) += sdata1[0];
@@ -410,8 +408,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last = -fnqy*wy;
       }
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(1,jy,jz) += sdata1[0];
@@ -423,8 +420,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
       real wy = s1y * tmp1;
       last -= fnqy*wy;
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(1,jy,jz) += sdata1[0];
@@ -440,8 +436,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last -= fnqy*wy;
       }
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(1,jy,jz) += sdata1[0];
@@ -476,8 +471,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last = -fnqz*wz;
       }
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(2,jy,jz) += sdata1[0];
@@ -489,8 +483,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
       real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
       real wz = s1z * tmp1;
       last -= fnqz*wz;
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(2,jy,jz) += sdata1[0];
@@ -506,8 +499,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last -= fnqz*wz;
       }
-      sdata1[tid] = last;
-      reduce_sum_sdata1(sdata1);
+      reduce_sum(last);
 #ifdef CALC_CURRENT
       if (tid == 0) {
 	scurr(2,jy,jz) += sdata1[0];

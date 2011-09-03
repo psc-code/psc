@@ -395,13 +395,62 @@ MAKE_PICK_SHAPE_COEFF(s1z)
 #undef forall_j
 #undef reduce_sum_sdata
 
-#define forall_j(x)	do {				\
-    for (int j = -2; j <= -2; j++) {			\
-      x							\
-     }						        \
-} while (0)
+// ======================================================================
 
-#define reduce_sum_sdata reduce_sum_sdata1
-#include "common_reduce.c"
-#undef forall_j
-#undef reduce_sum_sdata
+__shared__ real sdata1[THREADS_PER_BLOCK];
+
+__device__ static float
+reduce_sum(float mySum)
+{
+  unsigned int tid = threadIdx.x;
+
+  sdata1[tid] = mySum;
+  __syncthreads();
+
+  // do reduction in shared mem
+  if (THREADS_PER_BLOCK >= 512) {
+    if (tid < 256) {
+      sdata1[tid] = mySum = mySum + sdata1[tid + 256];
+    }
+    __syncthreads();
+  }
+  if (THREADS_PER_BLOCK >= 256) {
+    if (tid < 128) {
+      sdata1[tid] = mySum = mySum + sdata1[tid + 128];
+    }
+    __syncthreads();
+  }
+  if (THREADS_PER_BLOCK >= 128) {
+    if (tid < 64) {
+      sdata1[tid] = mySum = mySum + sdata1[tid + 64];
+    }
+    __syncthreads();
+  }
+
+  if (tid < 32) {
+    // now that we are using warp-synchronous programming (below)
+    // we need to declare our shared memory volatile so that the compiler
+    // doesn't reorder stores to it and induce incorrect behavior.
+    volatile float* smem = sdata1;
+    if (THREADS_PER_BLOCK >= 64) {
+      smem[tid] = mySum = mySum + smem[tid + 32];
+    }
+    if (THREADS_PER_BLOCK >= 32) {
+      smem[tid] = mySum = mySum + smem[tid + 16];
+    }
+    if (THREADS_PER_BLOCK >= 16) {
+      smem[tid] = mySum = mySum + smem[tid + 8];
+    }
+    if (THREADS_PER_BLOCK >= 8) {
+      smem[tid] = mySum = mySum + smem[tid + 4];
+    }
+    if (THREADS_PER_BLOCK >= 4) {
+      smem[tid] = mySum = mySum + smem[tid + 2];
+    }
+    if (THREADS_PER_BLOCK >= 2) {
+      smem[tid] = mySum = mySum + smem[tid + 1];
+    }
+  }
+
+  return mySum;
+}
