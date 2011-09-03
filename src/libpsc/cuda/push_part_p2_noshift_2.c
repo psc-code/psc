@@ -392,14 +392,12 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 
 	SDATA(tid,jy) = fnqx * wx;
 	reduce_sum_sdata1(&SDATA(0,jy));
-      }
 #ifdef CALC_CURRENT
-      for (int jy = -SW; jy <= SW; jy++) {
 	if (tid == 0) {
 	  scratch(0,jy,jz) += SDATA(0,jy);
 	}
-      }
 #endif
+      }
     }
 
     // ----------------------------------------------------------------------
@@ -426,6 +424,11 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	}
 	SDATA(tid,jy) = last;
 	reduce_sum_sdata1(&SDATA(0,jy));
+#ifdef CALC_CURRENT
+	if (tid == 0) {
+	  scratch(0,jy,jz) += SDATA(0,jy);
+	}
+#endif
       }
       for (int jy = -1; jy <= 0; jy++) {
 	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
@@ -434,6 +437,11 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	last -= fnqy*wy;
 	SDATA(tid,jy) = last;
 	reduce_sum_sdata1(&SDATA(0,jy));
+#ifdef CALC_CURRENT
+	if (tid == 0) {
+	  scratch(0,jy,jz) += SDATA(0,jy);
+	}
+#endif
       }
       { int jy = 1;
 	if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
@@ -446,14 +454,12 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	}
 	SDATA(tid,jy) = last;
 	reduce_sum_sdata1(&SDATA(0,jy));
-      }
 #ifdef CALC_CURRENT
-      for (int jy = -2; jy <= 1; jy++) {
 	if (tid == 0) {
 	  scratch(0,jy,jz) += SDATA(0,jy);
 	}
-      }
 #endif
+      }
     }
 
     // ----------------------------------------------------------------------
@@ -480,6 +486,11 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	}
 	SDATA(tid,jz) = last;
 	reduce_sum_sdata1(&SDATA(0,jz));
+#ifdef CALC_CURRENT
+	if (tid == 0) {
+	  scratch(0,jy,jz) += SDATA(0,jz);
+	}
+#endif
       }
       for (int jz = -1; jz <= 0; jz++) {
 	real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
@@ -488,6 +499,11 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	last -= fnqz*wz;
 	SDATA(tid,jz) = last;
 	reduce_sum_sdata1(&SDATA(0,jz));
+#ifdef CALC_CURRENT
+	if (tid == 0) {
+	  scratch(0,jy,jz) += SDATA(0,jz);
+	}
+#endif
       }
       { int jz = 1;
 	if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
@@ -500,14 +516,12 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	}
 	SDATA(tid,jz) = last;
 	reduce_sum_sdata1(&SDATA(0,jz));
-      }
 #ifdef CALC_CURRENT
-      for (int jz = -2; jz <= 1; jz++) {
 	if (tid == 0) {
 	  scratch(0,jy,jz) += SDATA(0,jz);
 	}
-      }
 #endif
+      }
     }
   }
 }
