@@ -9,6 +9,7 @@
 #include <mpi.h>
 
 static bool do_dump = false;
+static bool check_currents = true;
 
 static void
 dump(const char *basename, int cnt)
@@ -57,7 +58,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_save_fields_ref(ppsc, ppsc->flds);
   } else {
     psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_yz()");
-    if (strlen(push) == 0) { // only check currents for full pusher
+    if (check_currents && strlen(push) == 0) { // only check currents for full pusher
       psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
     }
   }
@@ -71,6 +72,7 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
 
   mrc_params_get_option_bool("dump", &do_dump);
+  mrc_params_get_option_bool("check_currents", &check_currents);
 
   // ----------------------------------------------------------------------
   // push_yz_a
