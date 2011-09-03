@@ -1,7 +1,7 @@
 
 
 __device__ static void
-reduce_sum_sdata(volatile float *sdata)
+reduce_sum_sdata(float *sdata)
 {
   unsigned int tid = threadIdx.x;
 
@@ -23,23 +23,24 @@ reduce_sum_sdata(volatile float *sdata)
     __syncthreads();
   }
   if (tid < 32) {
+    volatile float *smem = sdata;
     if (THREADS_PER_BLOCK >=  64) {
-      forall_j(SDATA(tid,j) += SDATA(tid + 32,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid + 32,j););
     }
     if (THREADS_PER_BLOCK >=  32) {
-      forall_j(SDATA(tid,j) += SDATA(tid + 16,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid + 16,j););
     }
     if (THREADS_PER_BLOCK >=  16) {
-      forall_j(SDATA(tid,j) += SDATA(tid +  8,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid +  8,j););
     }
     if (THREADS_PER_BLOCK >=   8) {
-      forall_j(SDATA(tid,j) += SDATA(tid +  4,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid +  4,j););
     }
     if (THREADS_PER_BLOCK >=   4) {
-      forall_j(SDATA(tid,j) += SDATA(tid +  2,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid +  2,j););
     }
     if (THREADS_PER_BLOCK >=   2) {
-      forall_j(SDATA(tid,j) += SDATA(tid +  1,j););
+      forall_j(SDATA(tid,j) += SDATA_(smem, tid +  1,j););
     }
   }
 }

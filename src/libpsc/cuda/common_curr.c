@@ -3,7 +3,8 @@
 
 __shared__ real sdata[(2*SW + 1) * THREADS_PER_BLOCK];
 
-#define SDATA(tid,j) (sdata[((j)+SW) * THREADS_PER_BLOCK + (tid)])
+#define SDATA_(sdata, tid, j) (sdata[((j)+SW) * THREADS_PER_BLOCK + (tid)])
+#define SDATA(tid,j) SDATA_(sdata, tid, j)
 
 __device__ static real
 find_shape_coeff_d_shift(int j, real h, short int shift)
