@@ -374,9 +374,25 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     // JX
 
     for (int jz = -SW; jz <= SW; jz++) {
-      yz_calc_jxh_z(qni_wni, vxi[0], SHAPE_INFO_PARAMS, jz);
+      real fnqx = vxi[0] * qni_wni * d_fnqs;
+
+      // FIXME, can be simplified
+      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
+      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+
+      for (int jy = -SW; jy <= SW; jy++) {
+	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+	real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+	real wx = s0y * s0z
+	  + real(.5) * s1y * s0z
+	  + real(.5) * s0y * s1z
+	  + real(.3333333333) * s1y * s1z;
+
+	SDATA(tid,jy) = fnqx * wx;
+	reduce_sum_sdata1(&SDATA(0,jy));
+      }
+      //yz_calc_jxh_z(qni_wni, vxi[0], SHAPE_INFO_PARAMS, jz);
 #ifdef CALC_CURRENT
-      reduce_sum_sdata(sdata);
       real *scratch = d_scratch + bid * 3 * BLOCKSTRIDE;
       add_current_to_scratch_y(scratch, jz, 5);
 #endif
@@ -386,9 +402,47 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     // JY
 
     for (int jz = -SW; jz <= SW; jz++) {
-      yz_calc_jyh_z(qni_wni, SHAPE_INFO_PARAMS, jz);
+      real fnqy = qni_wni * d_fnqys;
+
+      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
+      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
+      real tmp1 = real(.5) * (s0z + s1z);
+      
+      real last;
+      { int jy = -2;
+	if (SI_SHIFT0Y >= 0 && SI_SHIFT1Y >= 0) {
+	  last = 0.f;
+	} else {
+	  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+	  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+	  real wy = s1y * tmp1;
+	  last = -fnqy*wy;
+	}
+	SDATA(tid,jy) = last;
+	reduce_sum_sdata1(&SDATA(0,jy));
+      }
+      for (int jy = -1; jy <= 0; jy++) {
+	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+	real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+	real wy = s1y * tmp1;
+	last -= fnqy*wy;
+	SDATA(tid,jy) = last;
+	reduce_sum_sdata1(&SDATA(0,jy));
+      }
+      { int jy = 1;
+	if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
+	  last = 0.f;
+	} else {
+	  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+	  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+	  real wy = s1y * tmp1;
+	  last -= fnqy*wy;
+	}
+	SDATA(tid,jy) = last;
+	reduce_sum_sdata1(&SDATA(0,jy));
+      }
+      //      yz_calc_jyh_z(qni_wni, SHAPE_INFO_PARAMS, jz);
 #ifdef CALC_CURRENT
-      reduce_sum_sdata4(sdata);
       real *scratch = d_scratch + (bid * 3 + 1) * BLOCKSTRIDE;
       add_current_to_scratch_y(scratch, jz, 4);
 #endif
@@ -398,9 +452,48 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     // JZ
 
     for (int jy = -SW; jy <= SW; jy++) {
-      yz_calc_jzh_y(qni_wni, SHAPE_INFO_PARAMS, jy);
+      real fnqz = qni_wni * d_fnqzs;
+
+      real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+      real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);
+      real tmp1 = real(.5) * (s0y + s1y);
+
+      real last;
+      { int jz = -2;
+	if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
+	  last = 0.f;
+	} else {
+	  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
+	  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+	  real wz = s1z * tmp1;
+	  last = -fnqz*wz;
+	}
+	SDATA(tid,jz) = last;
+	reduce_sum_sdata1(&SDATA(0,jz));
+      }
+      for (int jz = -1; jz <= 0; jz++) {
+	real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
+	real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+	real wz = s1z * tmp1;
+	last -= fnqz*wz;
+	SDATA(tid,jz) = last;
+	reduce_sum_sdata1(&SDATA(0,jz));
+      }
+      { int jz = 1;
+	if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
+	  last = 0.f;
+	} else {
+	  real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
+	  real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
+	  real wz = s1z * tmp1;
+	  last -= fnqz*wz;
+	}
+	SDATA(tid,jz) = last;
+	reduce_sum_sdata1(&SDATA(0,jz));
+      }
+      //      yz_calc_jzh_y(qni_wni, SHAPE_INFO_PARAMS, jy);
 #ifdef CALC_CURRENT
-      reduce_sum_sdata4(sdata);
+      //      reduce_sum_sdata4(sdata);
       real *scratch = d_scratch + (bid * 3 + 2) * BLOCKSTRIDE;
       add_current_to_scratch_z(scratch, jy, 4);
 #endif

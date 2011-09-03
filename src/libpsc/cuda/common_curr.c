@@ -264,3 +264,14 @@ __pick_shape_coeff(int j, int shift, int d, real h)
 #include "common_reduce.c"
 #undef forall_j
 #undef reduce_sum_sdata
+
+#define forall_j(x)	do {				\
+    for (int j = -2; j <= -2; j++) {			\
+      x							\
+     }						        \
+} while (0)
+
+#define reduce_sum_sdata reduce_sum_sdata1
+#include "common_reduce.c"
+#undef forall_j
+#undef reduce_sum_sdata
