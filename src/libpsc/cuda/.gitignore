@@ -1,0 +1,15 @@
+*.i
+*.ii
+*.cu.cpp
+*.cudafe1.c
+*.cudafe1.cpp
+*.cudafe1.stub.c
+*.cudafe2.c
+*.cudafe2.gpu
+*.cudafe2.stub.c
+*.gpu
+*.fatbin
+*.fatbin.c
+*.hash
+*.ptx
+*.cubin
