@@ -72,6 +72,28 @@ get_cell_index_2x2x2(int p, const particle_base_t *part)
 	   (j0 >> 1)) << 0);// | ((j2 & 1) << 2) | ((j1 & 1) << 1) | (j0 & 1);
 }
 
+static inline int
+get_cell_index_4x4x4(int p, const particle_base_t *part)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_base_real_t dxi = 1.f / ppsc->dx[0];
+  particle_base_real_t dyi = 1.f / ppsc->dx[1];
+  particle_base_real_t dzi = 1.f / ppsc->dx[2];
+  int *ldims = patch->ldims;
+  int ibn[3] = { 4, 4, 4 }; // must be divisible by 4
+  
+  particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
+  particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
+  particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
+  int j0 = particle_base_real_nint(u) + ibn[0];
+  int j1 = particle_base_real_nint(v) + ibn[1];
+  int j2 = particle_base_real_nint(w) + ibn[2];
+    
+  return ((((j2 >> 2) * (ldims[1] + 2*ibn[1]) +
+	   (j1 >> 2)) * (ldims[0] + 2*ibn[0]) +
+	   (j0 >> 2)) << 0);// | ((j2 & 1) << 2) | ((j1 & 1) << 1) | (j0 & 1);
+}
+
 #endif
 
 static int
@@ -206,7 +228,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     
     unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));
     for (int i = 0; i < pp->n_part; i++) {
-      cnis[i] = get_cell_index(p, &pp->particles[i]);
+      cnis[i] = get_cell_index_4x4x4(p, &pp->particles[i]);
       assert(cnis[i] < N);
     }
     

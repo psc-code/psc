@@ -254,7 +254,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   __shared__ int imax;
   if (tid == 0) {
     block_begin = d_particles.offsets[bid];
-    block_end   = d_particles.offsets[bid+1];
+    block_end   = d_particles.offsets[bid + block_stride];
     int nr_loops = (block_end - block_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     imax = block_begin + nr_loops * THREADS_PER_BLOCK;
 
