@@ -160,7 +160,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
 		void (*push_part_p4)(particles_cuda_t *, fields_cuda_t *, real *),
 		void (*push_part_p5)(particles_cuda_t *, fields_cuda_t *, real *))
 {
-  const int block_stride = 1;
+  const int block_stride = 4;
   
   mfields_cuda_t flds;
   mparticles_cuda_t particles;
@@ -336,6 +336,7 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
 {
+  mprintf("n_part = %d\n", particles_base->p[0].n_part);
   cuda_push_partq(particles_base, flds_base,
 		  yz5_set_constants,
 		  yz5_cuda_push_part_p1,

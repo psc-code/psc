@@ -267,13 +267,35 @@ add_scurr_to_scratch(real *d_scratch, int block_stride, int block_start)
     int jy = rem;
     jz -= SW;
     jy -= SW;
-    real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
     real val = real(0.);
-    // FIXME, can be optimized to go like log(WARPS_PER_BLOCK)
     for (int wid = 0; wid < WARPS_PER_BLOCK; wid++) {
-      val += scurr(wid, m,jy,jz);
+      val += scurr(wid, m, jy, jz);
     }
-    scratch(0,jy,jz) += val;
+    real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
+    scratch(0, jy, jz) += val;
+    i += THREADS_PER_BLOCK;
+  }
+}
+
+__device__ static void
+add_scurr_to_flds(real *d_flds, int block_stride, int block_start)
+{
+  int i = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
+  while (i < stride) {
+    int rem = i;
+    int m = rem / ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
+    rem -= m * ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
+    int jz = rem / (BLOCKSIZE_Y + 2*SW);
+    rem -= jz * (BLOCKSIZE_Y + 2*SW);
+    int jy = rem;
+    jz -= SW;
+    jy -= SW;
+    real val = real(0.);
+    for (int wid = 0; wid < WARPS_PER_BLOCK; wid++) {
+      val += scurr(wid, m, jy, jz);
+    }
+    F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
     i += THREADS_PER_BLOCK;
   }
 }
@@ -289,7 +311,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   __shared__ int imax;
   if (tid == 0) {
     block_begin = d_particles.offsets[bid];
-    block_end   = d_particles.offsets[bid + block_stride];
+    block_end   = d_particles.offsets[bid + 1];
     int nr_loops = (block_end - block_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     imax = block_begin + nr_loops * THREADS_PER_BLOCK;
 
@@ -311,6 +333,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   }
 
   __syncthreads();
+  //  add_scurr_to_flds(d_flds, block_stride, block_start);
   add_scurr_to_scratch(d_scratch, block_stride, block_start);
 }
 
