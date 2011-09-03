@@ -254,9 +254,9 @@ zero_scurr()
 }
 
 __device__ static void
-add_scurr_to_scratch(real *d_scratch, int block_stride, int block_start)
+add_scurr_to_scratch(real *d_scratch, int bid)
 {
-  int i = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+  int i = threadIdx.x;
   int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
   while (i < stride) {
     int rem = i;
@@ -278,7 +278,7 @@ add_scurr_to_scratch(real *d_scratch, int block_stride, int block_start)
 }
 
 __device__ static void
-add_scurr_to_flds(real *d_flds, int block_stride, int block_start)
+add_scurr_to_flds(real *d_flds)
 {
   int i = threadIdx.x;
   int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
@@ -304,12 +304,32 @@ __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     real *d_scratch, int block_stride, int block_start)
 {
-  int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+  int tid = threadIdx.x;
 
   zero_scurr();
 
+  
   __shared__ int imax;
+  __shared__ int bid;
   if (tid == 0) {
+    if (block_stride == 1) {
+      bid = blockIdx.x;
+    } else {
+      // FIXME, really should reorder the blocks in the offsets list
+      int bi[3], bidx;
+      bidx = blockIdx.x;
+      bi[2] = bidx / (d_b_mx[1] / 2 * d_b_mx[0]);
+      bidx -= bi[2] * (d_b_mx[1] / 2 * d_b_mx[0]);
+      bi[1] = bidx / (d_b_mx[0]);
+      bidx -= bi[1] * (d_b_mx[0]);
+      bi[0] = bidx;
+      bi[1] = (bi[1] << 1) | (block_start & 1);
+      bi[2] = (bi[2] << 1) | ((block_start >> 1) & 1);
+      bid = (((bi[2] * d_b_mx[1]) + 
+	      bi[1] * d_b_mx[0]) + 
+	     bi[0]);
+    }
+
     block_begin = d_particles.offsets[bid];
     block_end   = d_particles.offsets[bid + 1];
     int nr_loops = (block_end - block_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
@@ -333,8 +353,8 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   }
 
   __syncthreads();
-  //  add_scurr_to_flds(d_flds, block_stride, block_start);
-  add_scurr_to_scratch(d_scratch, block_stride, block_start);
+  add_scurr_to_flds(d_flds);
+  //  add_scurr_to_scratch(d_scratch, bid);
 }
 
 #endif

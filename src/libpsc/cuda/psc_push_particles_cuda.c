@@ -213,7 +213,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
     prof_stop(pr3);
 
     prof_start(pr4);
-    push_part_p4(pp, pf, d_scratch);
+    //    push_part_p4(pp, pf, d_scratch);
     prof_stop(pr4);
     
     prof_start(pr5);
