@@ -46,7 +46,7 @@ psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base
     int ihg[3] = { patch->ldims[0] + ppsc->ibn[0],
 		   patch->ldims[1] + ppsc->ibn[1],
 		   patch->ldims[2] + ppsc->ibn[2] };
-    fields_cuda_alloc(pf, ilg, ihg, NR_FIELDS);
+    fields_cuda_alloc(pf, ilg, ihg, 12);
 
     fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
