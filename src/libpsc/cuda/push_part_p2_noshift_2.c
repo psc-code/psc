@@ -4,11 +4,11 @@
 
 __device__ static void
 calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
-       int i, real *vxi, SHAPE_INFO_ARGS, real *qni_wni)
+       int i, real *vxi, SHAPE_INFO_ARGS, real *qni_wni, int cell_end)
 {
   int j[3], k[3];
   real h0[3], h1[3];
-  if (p) {
+  if (i < cell_end) {
     calc_vxi(vxi, *p);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
@@ -18,6 +18,8 @@ calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(p, vxi, d_dt);
     find_idx_off(p->xi, k, h1, real(0.));
+
+    push_xi(p, vxi, -.5f * d_dt); // !!! FIXME, back to before
   } else {
 #if DIM == DIM_Z
     j[2] = ci[2];
@@ -27,7 +29,14 @@ calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
     k[1] = ci[1];
     j[2] = ci[2];
     k[2] = ci[2];
+    h0[1] = real(0.);
+    h1[1] = real(0.);
+    h0[2] = real(0.);
+    h1[2] = real(0.);
 #endif
+    vxi[0] = real(0.);
+    vxi[1] = real(0.);
+    vxi[2] = real(0.);
   }
 #if DIM == DIM_Z  
   short int shift0z = j[2] - ci[2];
@@ -41,11 +50,10 @@ calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
   cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, shift0y, shift0z,
 		     shift1y, shift1z);
 #endif
-
-  if (p) {
+  if (i < cell_end) {
     *qni_wni = p->qni_wni;
   } else {
-    *qni_wni = 0.f;
+    *qni_wni = real(0.);
   }
 }
 
@@ -356,15 +364,11 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     int i = cell_begin + tid + l * THREADS_PER_BLOCK;
     DECLARE_SHAPE_INFO;
     real vxi[3], qni_wni;
-    struct d_particle p, *pp;
+    struct d_particle p;
     if (i < cell_end) {
       LOAD_PARTICLE(p, d_particles, i);
-      pp = &p;
-      calc_j(ci, pp, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni);
-    } else {
-      pp = NULL;
-      calc_j(ci, pp, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni);
     }
+    calc_j(ci, &p, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
     
     // ----------------------------------------------------------------------
     // JX
