@@ -356,15 +356,19 @@ __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 __device__ static void
 current_add(int m, int jy, int jz, real val)
 {
+#if 0
   int tid = threadIdx.x;
-
-#if 1
   reduce_sum(val);
   if (tid == 0) {
     scurr(m,jy,jz) += sdata1[0];
   }
 #else
-  scurr(m,jy,jz) += val;
+#if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
+  atomicAdd(&scurr(m,jy,jz), val);
+#else
+  float *addr = &scurr(m,jy,jz);
+  while ((val = atomicExch(addr, atomicExch(addr, 0.0f)+val))!=0.0f);
+#endif
 #endif
 }
 
