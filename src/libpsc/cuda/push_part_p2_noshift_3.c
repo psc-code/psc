@@ -2,11 +2,12 @@
 // ----------------------------------------------------------------------
 // calc_j
 
-__shared__ int block_begin, block_end;
+__shared__ int block_begin, block_end; // first, last+1 particle in block
+__shared__ int ci0[3]; // cell index of lower-left cell in block
 
 __device__ static void
-calc_j(struct d_particle *p, int i, real *vxi, SHAPE_INFO_ARGS,
-       real *qni_wni)
+calc_j(int i, particles_cuda_dev_t d_particles,
+       real *vxi, real *qni_wni, int *ci, SHAPE_INFO_ARGS)
 {
 #if DIM == DIM_Z  
   short int shift0z;
@@ -19,19 +20,21 @@ calc_j(struct d_particle *p, int i, real *vxi, SHAPE_INFO_ARGS,
 #endif
   real h0[3], h1[3];
   if (i < block_end) {
-    *qni_wni = p->qni_wni;
-    int ci[3], j[3], k[3];
-    find_idx(p->xi, ci, real(0.));
+    struct d_particle p;
+    LOAD_PARTICLE(p, d_particles, i);
+    *qni_wni = p.qni_wni;
+    int j[3], k[3];
+    find_idx(p.xi, ci, real(0.));
 
-    calc_vxi(vxi, *p);
+    calc_vxi(vxi, p);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
-    push_xi(p, vxi, -.5f * d_dt);
-    find_idx_off(p->xi, j, h0, real(0.));
+    push_xi(&p, vxi, -.5f * d_dt);
+    find_idx_off(p.xi, j, h0, real(0.));
     
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(p, vxi, d_dt);
-    find_idx_off(p->xi, k, h1, real(0.));
+    push_xi(&p, vxi, d_dt);
+    find_idx_off(p.xi, k, h1, real(0.));
 
 #if DIM == DIM_Z  
     shift0z = j[2] - ci[2];
@@ -42,6 +45,8 @@ calc_j(struct d_particle *p, int i, real *vxi, SHAPE_INFO_ARGS,
     shift1y = k[1] - ci[1];
     shift1z = k[2] - ci[2];
 #endif
+    ci[1] -= ci0[1];
+    ci[2] -= ci0[2];
   } else {
     *qni_wni = real(0.);
     vxi[0] = real(0.);
@@ -370,7 +375,7 @@ __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 __device__ static void
 current_add(int m, int jy, int jz, real val)
 {
-#if 0
+#if 1
   int tid = threadIdx.x;
   reduce_sum(val);
   if (tid == 0) {
@@ -524,7 +529,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     }
   }
 
-  __shared__ int ci0[3];
   __shared__ int imax;
   if (tid == 0) {
     block_begin = d_particles.offsets[bid];
@@ -542,11 +546,8 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   for (int i = block_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
     DECLARE_SHAPE_INFO;
     real vxi[3], qni_wni;
-    struct d_particle p;
-    if (i < block_end) {
-      LOAD_PARTICLE(p, d_particles, i);
-    }
-    calc_j(&p, i, vxi, SHAPE_INFO_PARAMS, &qni_wni);
+    int ci[3]; // index of this particle's cell relative to ci0
+    calc_j(i, d_particles, vxi, &qni_wni, ci, SHAPE_INFO_PARAMS);
     yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
