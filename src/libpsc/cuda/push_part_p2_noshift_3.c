@@ -2,9 +2,11 @@
 // ----------------------------------------------------------------------
 // calc_j
 
+__shared__ int block_begin, block_end;
+
 __device__ static void
-calc_j(struct d_particle *p, particles_cuda_dev_t d_particles,
-       int i, real *vxi, SHAPE_INFO_ARGS, real *qni_wni, int cell_end)
+calc_j(struct d_particle *p, int i, real *vxi, SHAPE_INFO_ARGS,
+       real *qni_wni)
 {
 #if DIM == DIM_Z  
   short int shift0z;
@@ -16,7 +18,8 @@ calc_j(struct d_particle *p, particles_cuda_dev_t d_particles,
   short int shift1z;
 #endif
   real h0[3], h1[3];
-  if (i < cell_end) {
+  if (i < block_end) {
+    *qni_wni = p->qni_wni;
     int ci[3], j[3], k[3];
     find_idx(p->xi, ci, real(0.));
 
@@ -40,6 +43,10 @@ calc_j(struct d_particle *p, particles_cuda_dev_t d_particles,
     shift1z = k[2] - ci[2];
 #endif
   } else {
+    *qni_wni = real(0.);
+    vxi[0] = real(0.);
+    vxi[1] = real(0.);
+    vxi[2] = real(0.);
 #if DIM == DIM_Z  
     shift0z = 0;
     shift1z = 0;
@@ -55,9 +62,6 @@ calc_j(struct d_particle *p, particles_cuda_dev_t d_particles,
     h0[2] = real(0.);
     h1[2] = real(0.);
 #endif
-    vxi[0] = real(0.);
-    vxi[1] = real(0.);
-    vxi[2] = real(0.);
   }
 #if DIM == DIM_Z
   cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, shift0z, shift1z);
@@ -65,11 +69,6 @@ calc_j(struct d_particle *p, particles_cuda_dev_t d_particles,
   cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, shift0y, shift0z,
 		     shift1y, shift1z);
 #endif
-  if (i < cell_end) {
-    *qni_wni = p->qni_wni;
-  } else {
-    *qni_wni = real(0.);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -391,7 +390,7 @@ current_add(int m, int jy, int jz, real val)
 // yz_calc_jx
 
 __device__ static void
-yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
 
@@ -419,7 +418,7 @@ yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jy
 
 __device__ static void
-yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
   
@@ -467,7 +466,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jz
 
 __device__ static void
-yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
   
@@ -525,15 +524,13 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     }
   }
 
-  __shared__ int cell_begin;
-  __shared__ int cell_end;
   __shared__ int ci0[3];
   __shared__ int imax;
   if (tid == 0) {
-    cell_begin = d_particles.offsets[bid];
-    cell_end   = d_particles.offsets[bid+1];
-    int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-    imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
+    block_begin = d_particles.offsets[bid];
+    block_end   = d_particles.offsets[bid+1];
+    int nr_loops = (block_end - block_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
+    imax = block_begin + nr_loops * THREADS_PER_BLOCK;
 
     blockIdx_to_blockCrd(bid, ci0);
     ci0[0] *= BLOCKSIZE_X;
@@ -542,17 +539,17 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   }
   __syncthreads();
 
-  for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
+  for (int i = block_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
     DECLARE_SHAPE_INFO;
     real vxi[3], qni_wni;
     struct d_particle p;
-    if (i < cell_end) {
+    if (i < block_end) {
       LOAD_PARTICLE(p, d_particles, i);
     }
-    calc_j(&p, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
-    yz_calc_jx(bid, d_scratch, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jy(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jz(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
+    calc_j(&p, i, vxi, SHAPE_INFO_PARAMS, &qni_wni);
+    yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
   }
 
   __syncthreads();
