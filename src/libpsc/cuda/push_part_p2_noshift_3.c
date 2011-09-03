@@ -280,7 +280,7 @@ add_scurr_to_scratch(real *d_scratch, int block_stride, int block_start)
 __device__ static void
 add_scurr_to_flds(real *d_flds, int block_stride, int block_start)
 {
-  int i = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+  int i = threadIdx.x;
   int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
   while (i < stride) {
     int rem = i;
@@ -353,6 +353,10 @@ collect_currents(real *d_flds, real *d_scratch, int nr_blocks)
   int jz = threadIdx.y - SW;
 #endif
 
+  if (threadIdx.x != 0 || threadIdx.y != 0) {
+    return;
+  }
+
   for (int b = 0; b < nr_blocks; b++) {
     real *scratch = d_scratch + b * 3 * BLOCKSTRIDE;
 
@@ -365,8 +369,12 @@ collect_currents(real *d_flds, real *d_scratch, int nr_blocks)
     ci[1] += d_ilo[1];
     ci[2] += d_ilo[2];
 
-    for (int m = 0; m < 3; m++) {
-      F3_DEV(JXI+m, 0+ci[0],jy+ci[1],jz+ci[2]) += scratch(m,jy,jz);
+    for (jy = -SW; jy < BLOCKSIZE_Y + SW; jy++) {
+      for (jz = -SW; jz < BLOCKSIZE_Z + SW; jz++) {
+	for (int m = 0; m < 3; m++) {
+	  F3_DEV(JXI+m, 0+ci[0],jy+ci[1],jz+ci[2]) += scratch(m,jy,jz);
+	}
+      }
     }
   }
 }
