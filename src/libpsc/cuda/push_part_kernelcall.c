@@ -8,9 +8,13 @@ EXTERN_C void
 PFX(cuda_push_part_p1)(particles_cuda_t *pp, fields_cuda_t *pf,
 		       real **d_scratch)
 {
-  int size = pp->nr_blocks * 3 * BLOCKSTRIDE;
+  unsigned int size = pp->nr_blocks * 3 * BLOCKSTRIDE;
   check(cudaMalloc((void **)d_scratch, size * sizeof(real)));
   check(cudaMemset(*d_scratch, 0, size * sizeof(real)));
+  size = pf->im[0] * pf->im[1] * pf->im[2];
+  check(cudaMemset(pf->d_flds + JXI * size, 0,
+		   3 * size * sizeof(*pf->d_flds)));
+
   cudaThreadSynchronize(); // FIXME
 }
 
@@ -55,10 +59,6 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch,
 EXTERN_C void
 PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 {
-  unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-  check(cudaMemset(pf->d_flds + JXI * size, 0,
-		   3 * size * sizeof(*pf->d_flds)));
-
 #if DIM == DIM_Z
   int dimBlock[2] = { BLOCKSIZE_Z + 2*SW, 1 };
 #elif DIM == DIM_YZ
