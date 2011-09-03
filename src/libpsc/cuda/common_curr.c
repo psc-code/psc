@@ -257,19 +257,20 @@ __shared__ real ___s0y[2][THREADS_PER_BLOCK];
 __shared__ real ___s1y[2][THREADS_PER_BLOCK];
 __shared__ real ___s0z[2][THREADS_PER_BLOCK];
 __shared__ real ___s1z[2][THREADS_PER_BLOCK];
+__shared__ short int ___shift0[2][THREADS_PER_BLOCK];
+__shared__ short int ___shift1[2][THREADS_PER_BLOCK];
 
-#define DECLARE_SHAPE_INFO			\
-  short int __shift0[2], __shift1[2]		\
+#define DECLARE_SHAPE_INFO	do {} while (0)
 
-#define SHAPE_INFO_PARAMS __shift0, __shift1
-#define SHAPE_INFO_ARGS short int *__shift0, short int *__shift1
+#define SHAPE_INFO_PARAMS 0
+#define SHAPE_INFO_ARGS int *unused
 
-#define SI_SHIFT0Y __shift0[0]
-#define SI_SHIFT1Y __shift1[0]
-#define SI_SHIFT10Y (__shift1[0] - __shift0[0])
-#define SI_SHIFT0Z __shift0[1]
-#define SI_SHIFT1Z __shift1[1]
-#define SI_SHIFT10Z (__shift1[1] - __shift0[1])
+#define SI_SHIFT0Y ___shift0[0][tid]
+#define SI_SHIFT1Y ___shift1[0][tid]
+#define SI_SHIFT10Y (___shift1[0][tid] - ___shift0[0][tid])
+#define SI_SHIFT0Z ___shift0[1][tid]
+#define SI_SHIFT1Z ___shift1[1][tid]
+#define SI_SHIFT10Z (___shift1[1][tid] - ___shift0[1][tid])
 
 #endif
 
@@ -300,10 +301,10 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
 		   short int shift1y, short int shift1z)
 {
   int tid = threadIdx.x;
-  __shift0[0] = shift0y;
-  __shift1[0] = shift1y;
-  __shift0[1] = shift0z;
-  __shift1[1] = shift1z;
+  ___shift0[0][tid] = shift0y;
+  ___shift1[0][tid] = shift1y;
+  ___shift0[1][tid] = shift0z;
+  ___shift1[1][tid] = shift1z;
   ___s0y[0][tid] = find_shape_coeff_d_shift(-1, h0[1], 0);
   ___s0y[1][tid] = find_shape_coeff_d_shift( 0, h0[1], 0);
   ___s1y[0][tid] = find_shape_coeff_d_shift(-1, h1[1], 0);
