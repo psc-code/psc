@@ -20,6 +20,10 @@ dump(const char *basename, int cnt)
   char s[200];
   sprintf(s, "part_%s_%d", basename, cnt);
   psc_dump_particles(ppsc->particles, s);
+  sprintf(s, "jx_%s_%d", basename, cnt);
+  psc_dump_field(ppsc->flds, JXI, s);
+  sprintf(s, "jy_%s_%d", basename, cnt);
+  psc_dump_field(ppsc->flds, JYI, s);
   sprintf(s, "jz_%s_%d", basename, cnt);
   psc_dump_field(ppsc->flds, JZI, s);
 }
