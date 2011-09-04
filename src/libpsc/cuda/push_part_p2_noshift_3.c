@@ -126,8 +126,6 @@ current_add(int m, int jy, int jz, real val)
 __device__ static void
 yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqx = vxi * qni_wni * d_fnqs;
     
@@ -154,8 +152,6 @@ yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 __device__ static void
 yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-  
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqy = qni_wni * d_fnqys;
     
@@ -202,8 +198,6 @@ yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 __device__ static void
 yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-  
   for (int jy = -SW; jy <= SW; jy++) {
     real fnqz = qni_wni * d_fnqzs;
     
@@ -285,6 +279,8 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   int tid = threadIdx.x, wid = threadIdx.x >> 5, lid = threadIdx.x & 31;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
+  zero_scurr();
+
   __shared__ int bid;
   if (tid == 0) {
     if (block_stride == 1) {
@@ -309,7 +305,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     ci0[1] *= BLOCKSIZE_Y;
     ci0[2] *= BLOCKSIZE_Z;
   }
-  zero_scurr();
   __syncthreads();
 
   // cells_per_block must be divisable by warps_per_block!
@@ -321,10 +316,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
       int nr_loops = (cell_end(wid) - cell_begin + THREADS_PER_BLOCK-1)
 	/ THREADS_PER_BLOCK;
       imax(wid) = cell_begin + nr_loops * THREADS_PER_BLOCK;
-      int ci[3];
-      cellIdx_to_cellCrd(cid + wid, ci);
-      ci1(wid, 1) = ci[1] - ci0[1];
-      ci1(wid, 2) = ci[2] - ci0[2];
+      cellIdx_to_cellCrd_rel(cid + wid, &ci1(wid, 0));
     }
 
     for (int i = cell_begin + lid; i < imax(wid); i += 32) {

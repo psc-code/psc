@@ -24,6 +24,17 @@ cellIdx_to_cellCrd(int cidx, int ci[3])
 #endif
 }
 
+__device__ static inline void
+cellIdx_to_cellCrd_rel(int cidx, int ci[3])
+{
+#if BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
+  ci[1] = ((cidx & 4) >> 1) | ((cidx & 1) >> 0);
+  ci[2] = ((cidx & 8) >> 2) | ((cidx & 2) >> 1);
+#else
+#error TBD
+#endif
+}
+
 __device__ static void
 find_idx(const real xi[3], int j[3], real shift)
 {
