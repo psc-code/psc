@@ -13,9 +13,84 @@ find_cell(real xi, real yi, real zi, int l[3])
   //  printf("l %d %d %d\n", l[0], l[1], l[2]);
 }
 
+static unsigned int ldims_bits[3];
+
+static unsigned int
+find_cell_indices_4x4x4(int p)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+
+  unsigned int N = 1;
+  for (int d = 0; d < 3; d++) {
+    ldims_bits[d] = 0; // FIXME, need to handle invariant dirs generically
+    while (patch->ldims[d] > (1 << ldims_bits[d])) {
+      ldims_bits[d]++;
+    }
+    // need to be powers of 2 currently, could (should) be relaxed
+    // to just require divisible by 4
+    //    printf("ld %d %d\n", patch->ldims[d], ldims_bits[d]);
+    assert(patch->ldims[d] == (1 << ldims_bits[d]));
+    N *= (1 << ldims_bits[d]);
+  }
+  //  printf("N %d\n", N);
+  return N;
+}
+
+static inline int
+get_cell_index_4x4x4(int p, real xi, real yi, real zi)
+{
+  struct psc_patch *patch = &ppsc->patch[p];
+  particle_base_real_t dxi = 1.f / ppsc->dx[0];
+  particle_base_real_t dyi = 1.f / ppsc->dx[1];
+  particle_base_real_t dzi = 1.f / ppsc->dx[2];
+  int *ldims = patch->ldims;
+  
+  particle_base_real_t u = (xi - patch->xb[0]) * dxi;
+  particle_base_real_t v = (yi - patch->xb[1]) * dyi;
+  particle_base_real_t w = (zi - patch->xb[2]) * dzi;
+  unsigned int j0 = particle_base_real_nint(u);
+  unsigned int j1 = particle_base_real_nint(v);
+  unsigned int j2 = particle_base_real_nint(w);
+  assert(j0 < ldims[0]);
+  assert(j1 < ldims[1]);
+  assert(j2 < ldims[2]);
+  assert(ldims[0] == 1);
+
+  return (((j2 >> 2) << (ldims_bits[1] - 2 + 4)) |
+	  ((j1 >> 2) << (4)) |
+	  (((j2 >> 1) & 1) << 3) |
+	  (((j1 >> 1) & 1) << 2) |
+	  ((j2 & 1) << 1) |
+	  ((j1 & 1) << 0));
+}
+
+static inline int
+find_cellIdx(particles_cuda_t *pp, real xi, real yi, real zi)
+{
+  int p = 0; // FIXME
+  static bool first_time = true;
+  if (first_time) {
+    first_time = false;
+    int N = find_cell_indices_4x4x4(p); // FIXME, once per patch
+    assert(N == BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z * 
+	   pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2]);
+  }
+  return get_cell_index_4x4x4(p, xi, yi, zi);
+}
+
 static inline int
 find_blockIdx(particles_cuda_t *pp, real xi, real yi, real zi)
 {
+#if 0
+
+  int cell_idx = find_cellIdx(pp, xi, yi, zi);
+#if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
+  return cell_idx / 16;
+#else
+#error TBD
+#endif
+
+#else
   int bi[3];
   find_cell(xi, yi, zi, bi);
   bi[0] /= BLOCKSIZE_X;
@@ -27,6 +102,7 @@ find_blockIdx(particles_cuda_t *pp, real xi, real yi, real zi)
   assert(bi[2] >= 0 && bi[2] < pp->b_mx[2]);
 
   return (bi[2] * pp->b_mx[1] + bi[1]) * pp->b_mx[0] + bi[0];
+#endif
 }
 
 static inline void
