@@ -4,11 +4,11 @@
 
 __shared__ int cell_begin, cell_end; // first, last+1 particle in cell
 __shared__ int ci0[3]; // cell index of lower-left cell in block
-__shared__ int ci1[3]; // cell index of current cell
+__shared__ int ci1[3]; // cell index of current cell relative to ci0
 
 __device__ static void
 calc_j(int i, particles_cuda_dev_t d_particles,
-       real *vxi, real *qni_wni, int *ci, SHAPE_INFO_ARGS)
+       real *vxi, real *qni_wni, SHAPE_INFO_ARGS)
 {
 #if DIM == DIM_Z  
   short int shift0z;
@@ -25,7 +25,6 @@ calc_j(int i, particles_cuda_dev_t d_particles,
     LOAD_PARTICLE(p, d_particles, i);
     *qni_wni = p.qni_wni;
     int j[3], k[3];
-    find_idx(p.xi, ci, real(0.));
 
     calc_vxi(vxi, p);
 
@@ -38,16 +37,14 @@ calc_j(int i, particles_cuda_dev_t d_particles,
     find_idx_off(p.xi, k, h1, real(0.));
 
 #if DIM == DIM_Z  
-    shift0z = j[2] - ci[2];
-    shift1z = k[2] - ci[2];
+    shift0z = j[2] - (ci1[2] + ci0[2]);
+    shift1z = k[2] - (ci1[2] + ci0[2]);
 #elif DIM == DIM_YZ
-    shift0y = j[1] - ci[1];
-    shift0z = j[2] - ci[2];
-    shift1y = k[1] - ci[1];
-    shift1z = k[2] - ci[2];
+    shift0y = j[1] - (ci1[1] + ci0[1]);
+    shift0z = j[2] - (ci1[2] + ci0[2]);
+    shift1y = k[1] - (ci1[1] + ci0[1]);
+    shift1z = k[2] - (ci1[2] + ci0[2]);
 #endif
-    ci[1] -= ci0[1];
-    ci[2] -= ci0[2];
   } else {
     *qni_wni = real(0.);
     vxi[0] = real(0.);
@@ -67,8 +64,6 @@ calc_j(int i, particles_cuda_dev_t d_particles,
     h1[1] = real(0.);
     h0[2] = real(0.);
     h1[2] = real(0.);
-    ci[1] = 0;
-    ci[2] = 0;
 #endif
   }
 #if DIM == DIM_Z
@@ -100,7 +95,7 @@ __shared__ real scurr[WARPS_PER_BLOCK * (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*
 // current_add
 
 __device__ static void
-current_add(int ci[3], int m, int jy, int jz, real val)
+current_add(int m, int jy, int jz, real val)
 {
 #if 0
   int tid = threadIdx.x;
@@ -110,7 +105,7 @@ current_add(int ci[3], int m, int jy, int jz, real val)
   }
 #else
   int wid = threadIdx.x >> 5;
-  float *addr = &scurr(wid, m,jy+ci[1],jz+ci[2]);
+  float *addr = &scurr(wid, m,jy+ci1[1],jz+ci1[2]);
 #if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
   atomicAdd(addr, val);
 #else
@@ -123,7 +118,7 @@ current_add(int ci[3], int m, int jy, int jz, real val)
 // yz_calc_jx
 
 __device__ static void
-yz_calc_jx(int ci[3], real vxi, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
 
@@ -142,7 +137,7 @@ yz_calc_jx(int ci[3], real vxi, real qni_wni, SHAPE_INFO_ARGS)
 	+ real(.5) * s0y * s1z
 	+ real(.3333333333) * s1y * s1z;
       
-      current_add(ci, 0, jy, jz, fnqx * wx);
+      current_add(0, jy, jz, fnqx * wx);
     }
   }
 }
@@ -151,7 +146,7 @@ yz_calc_jx(int ci[3], real vxi, real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jy
 
 __device__ static void
-yz_calc_jy(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
   
@@ -172,14 +167,14 @@ yz_calc_jy(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last = -fnqy*wy;
       }
-      current_add(ci, 1, jy, jz, last);
+      current_add(1, jy, jz, last);
     }
     for (int jy = -1; jy <= 0; jy++) {
       real s0y = pick_shape_coeff_(0, y, jy, SI_SHIFT0Y);
       real s1y = pick_shape_coeff_(1, y, jy, SI_SHIFT1Y) - s0y;
       real wy = s1y * tmp1;
       last -= fnqy*wy;
-      current_add(ci, 1, jy, jz, last);
+      current_add(1, jy, jz, last);
     }
     { int jy = 1;
       if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
@@ -190,7 +185,7 @@ yz_calc_jy(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last -= fnqy*wy;
       }
-      current_add(ci, 1, jy, jz, last);
+      current_add(1, jy, jz, last);
     }
   }
 }
@@ -199,7 +194,7 @@ yz_calc_jy(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jz
 
 __device__ static void
-yz_calc_jz(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
   
@@ -220,14 +215,14 @@ yz_calc_jz(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last = -fnqz*wz;
       }
-      current_add(ci, 2, jy, jz, last);
+      current_add(2, jy, jz, last);
     }
     for (int jz = -1; jz <= 0; jz++) {
       real s0z = pick_shape_coeff_(0, z, jz, SI_SHIFT0Z);
       real s1z = pick_shape_coeff_(1, z, jz, SI_SHIFT1Z) - s0z;
       real wz = s1z * tmp1;
       last -= fnqz*wz;
-      current_add(ci, 2, jy, jz, last);
+      current_add(2, jy, jz, last);
     }
     { int jz = 1;
       if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
@@ -238,7 +233,7 @@ yz_calc_jz(int ci[3], real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last -= fnqz*wz;
       }
-      current_add(ci, 2, jy, jz, last);
+      current_add(2, jy, jz, last);
     }
   }
 }
@@ -314,24 +309,26 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 
   for (int cid = bid * cells_per_block;
        cid < (bid + 1) * cells_per_block; cid++) {
+    __syncthreads();
     if (tid == 0) {
       cell_begin = d_particles.c_offsets[cid];
       cell_end   = d_particles.c_offsets[cid + 1];
       int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
       imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
       cellIdx_to_cellCrd(cid, ci1);
+      ci1[1] -= ci0[1];
+      ci1[2] -= ci0[2];
     }
     __syncthreads();
 
     for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
       real vxi[3], qni_wni;
-      int ci[3]; // index of this particle's cell relative to ci0
-      calc_j(i, d_particles, vxi, &qni_wni, ci, SHAPE_INFO_PARAMS);
+      calc_j(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
       
-      yz_calc_jx(ci, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
-      yz_calc_jy(ci, qni_wni, SHAPE_INFO_PARAMS);
-      yz_calc_jz(ci, qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
     }
   }
   __syncthreads();
