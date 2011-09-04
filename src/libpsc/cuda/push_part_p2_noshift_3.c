@@ -107,7 +107,7 @@ current_add(int m, int jy, int jz, real val)
   int wid = threadIdx.x >> 5;
   val = reduce_sum_warp(val);
   if (lid == 0) {
-    scurr(wid, m, jy + ci1(0*wid, 1), jz + ci1(0*wid, 2)) += val;
+    scurr(wid, m, jy + ci1(wid, 1), jz + ci1(wid, 2)) += val;
   }
 #else
   int wid = threadIdx.x >> 5;
@@ -282,7 +282,7 @@ __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     int block_stride, int block_start)
 {
-  int tid = threadIdx.x, wid = threadIdx.x >> 5;
+  int tid = threadIdx.x, wid = threadIdx.x >> 5, lid = threadIdx.x & 31;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
   __shared__ int bid;
@@ -312,22 +312,22 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   zero_scurr();
   __syncthreads();
 
+  // cells_per_block must be divisable by warps_per_block!
   for (int cid = bid * cells_per_block;
-       cid < (bid + 1) * cells_per_block; cid++) {
-    __syncthreads();
-    int cell_begin = d_particles.c_offsets[cid];
-    if ((threadIdx.x & 31) == 0) {
-      cell_end(wid)   = d_particles.c_offsets[cid + 1];
+       cid < (bid + 1) * cells_per_block; cid += WARPS_PER_BLOCK) {
+    int cell_begin = d_particles.c_offsets[cid + wid];
+    if (1 || lid == 0) {
+      cell_end(wid) = d_particles.c_offsets[cid + wid + 1];
       int nr_loops = (cell_end(wid) - cell_begin + THREADS_PER_BLOCK-1)
 	/ THREADS_PER_BLOCK;
       imax(wid) = cell_begin + nr_loops * THREADS_PER_BLOCK;
-      cellIdx_to_cellCrd(cid, &ci1(wid, 0));
-      ci1(wid, 1) -= ci0[1];
-      ci1(wid, 2) -= ci0[2];
+      int ci[3];
+      cellIdx_to_cellCrd(cid + wid, ci);
+      ci1(wid, 1) = ci[1] - ci0[1];
+      ci1(wid, 2) = ci[2] - ci0[2];
     }
-    __syncthreads();
 
-    for (int i = cell_begin + tid; i < imax(wid); i += THREADS_PER_BLOCK) {
+    for (int i = cell_begin + lid; i < imax(wid); i += 32) {
       DECLARE_SHAPE_INFO;
       real vxi[3], qni_wni;
       calc_j(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
