@@ -282,9 +282,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 {
   int tid = threadIdx.x;
 
-  zero_scurr();
-
-  
   __shared__ int imax;
   __shared__ int bid;
   if (tid == 0) {
@@ -316,6 +313,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     ci0[1] *= BLOCKSIZE_Y;
     ci0[2] *= BLOCKSIZE_Z;
   }
+  zero_scurr();
   __syncthreads();
 
   for (int i = block_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
@@ -330,7 +328,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 
   __syncthreads();
   add_scurr_to_flds(d_flds);
-  //  add_scurr_to_scratch(d_scratch, bid);
 }
 
 #endif
