@@ -46,6 +46,8 @@ __particles_cuda_put(particles_cuda_t *pp)
   check(cudaFree(d_part->xi4));
   check(cudaFree(d_part->pxi4));
   check(cudaFree(d_part->offsets));
+  check(cudaFree(d_part->c_offsets));
+  check(cudaFree(d_part->c_pos));
 }
 
 EXTERN_C void

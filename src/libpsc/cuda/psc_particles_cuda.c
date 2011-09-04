@@ -116,7 +116,7 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
     int last_block = -1;
     struct cell_map map;
     cell_map_init(&map, patch->ldims,
-		  (int[3]) { BLOCKSIZE_X, BLOCKSIZE_Y * 1, BLOCKSIZE_Z * 1 });
+		  (int[3]) { BLOCKSIZE_X, BLOCKSIZE_Y * 2, BLOCKSIZE_Z * 2 });
     for (int n = 0; n <= pp->n_part; n++) {
       int block;
       if (n < pp->n_part) {

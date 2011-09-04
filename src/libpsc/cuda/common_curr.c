@@ -265,12 +265,12 @@ __shared__ short int ___shift1[2][THREADS_PER_BLOCK];
 #define SHAPE_INFO_PARAMS 0
 #define SHAPE_INFO_ARGS int *unused
 
-#define SI_SHIFT0Y ___shift0[0][tid]
-#define SI_SHIFT1Y ___shift1[0][tid]
-#define SI_SHIFT10Y (___shift1[0][tid] - ___shift0[0][tid])
-#define SI_SHIFT0Z ___shift0[1][tid]
-#define SI_SHIFT1Z ___shift1[1][tid]
-#define SI_SHIFT10Z (___shift1[1][tid] - ___shift0[1][tid])
+#define SI_SHIFT0Y ___shift0[0][threadIdx.x]
+#define SI_SHIFT1Y ___shift1[0][threadIdx.x]
+#define SI_SHIFT10Y (___shift1[0][threadIdx.x] - ___shift0[0][threadIdx.x])
+#define SI_SHIFT0Z ___shift0[1][threadIdx.x]
+#define SI_SHIFT1Z ___shift1[1][threadIdx.x]
+#define SI_SHIFT10Z (___shift1[1][threadIdx.x] - ___shift0[1][threadIdx.x])
 
 #endif
 
@@ -442,12 +442,11 @@ reduce_sum_warp(float mySum)
 {
   unsigned int tid = threadIdx.x;
 
-  sdata1[tid] = mySum;
-
   // now that we are using warp-synchronous programming (below)
   // we need to declare our shared memory volatile so that the compiler
   // doesn't reorder stores to it and induce incorrect behavior.
   volatile float* smem = sdata1;
+  smem[tid] = mySum;
   smem[tid] = mySum = mySum + smem[tid + 16];
   smem[tid] = mySum = mySum + smem[tid + 8];
   smem[tid] = mySum = mySum + smem[tid + 4];

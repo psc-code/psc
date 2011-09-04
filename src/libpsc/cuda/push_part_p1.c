@@ -60,10 +60,7 @@ push_part_p1(int n_particles, particles_cuda_dev_t d_part, real *d_flds)
 
   // cache fields
 
-  blockIdx_to_blockCrd(blockIdx.x, ci);
-  ci[0] *= BLOCKSIZE_X;
-  ci[1] *= BLOCKSIZE_Y;
-  ci[2] *= BLOCKSIZE_Z;
+  blockIdx_to_cellPos(&d_part, bid, ci);
 
   cache_fields(d_flds, ci);
   

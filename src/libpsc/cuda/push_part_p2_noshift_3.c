@@ -283,27 +283,10 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 
   __shared__ int bid;
   if (tid == 0) {
-    if (block_stride == 1) {
-      bid = blockIdx.x;
-    } else {
-      // FIXME, really should reorder the blocks in the offsets list
-      int bi[3], bidx;
-      bidx = blockIdx.x;
-      bi[2] = bidx / (d_b_mx[1] / 2 * d_b_mx[0]);
-      bidx -= bi[2] * (d_b_mx[1] / 2 * d_b_mx[0]);
-      bi[1] = bidx / (d_b_mx[0]);
-      bidx -= bi[1] * (d_b_mx[0]);
-      bi[0] = bidx;
-      bi[1] = (bi[1] << 1) | (block_start & 1);
-      bi[2] = (bi[2] << 1) | ((block_start >> 1) & 1);
-      bid = (((bi[2] * d_b_mx[1]) + 
-	      bi[1] * d_b_mx[0]) + 
-	     bi[0]);
-    }
+    bid = blockIdx.x * block_stride + block_start;
     blockIdx_to_cellPos(&d_particles, bid, ci0);
   }
   __syncthreads();
-
   // cells_per_block must be divisable by warps_per_block!
   for (int cid = bid * cells_per_block;
        cid < (bid + 1) * cells_per_block; cid += WARPS_PER_BLOCK) {
