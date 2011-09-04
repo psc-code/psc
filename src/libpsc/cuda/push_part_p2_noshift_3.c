@@ -2,8 +2,9 @@
 // ----------------------------------------------------------------------
 // calc_j
 
-__shared__ int block_begin, block_end; // first, last+1 particle in block
+__shared__ int cell_begin, cell_end; // first, last+1 particle in cell
 __shared__ int ci0[3]; // cell index of lower-left cell in block
+__shared__ int ci1[3]; // cell index of current cell
 
 __device__ static void
 calc_j(int i, particles_cuda_dev_t d_particles,
@@ -19,7 +20,7 @@ calc_j(int i, particles_cuda_dev_t d_particles,
   short int shift1z;
 #endif
   real h0[3], h1[3];
-  if (i < block_end) {
+  if (i < cell_end) {
     struct d_particle p;
     LOAD_PARTICLE(p, d_particles, i);
     *qni_wni = p.qni_wni;
@@ -281,6 +282,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     int block_stride, int block_start)
 {
   int tid = threadIdx.x;
+  const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
   __shared__ int imax;
   __shared__ int bid;
@@ -302,13 +304,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	      bi[1] * d_b_mx[0]) + 
 	     bi[0]);
     }
-
-    const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
-    block_begin = d_particles.c_offsets[bid * cells_per_block];
-    block_end   = d_particles.c_offsets[(bid + 1) * cells_per_block];
-    int nr_loops = (block_end - block_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-    imax = block_begin + nr_loops * THREADS_PER_BLOCK;
-
     blockIdx_to_blockCrd(bid, ci0);
     ci0[0] *= BLOCKSIZE_X;
     ci0[1] *= BLOCKSIZE_Y;
@@ -317,16 +312,28 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   zero_scurr();
   __syncthreads();
 
-  for (int i = block_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
-    DECLARE_SHAPE_INFO;
-    real vxi[3], qni_wni;
-    int ci[3]; // index of this particle's cell relative to ci0
-    calc_j(i, d_particles, vxi, &qni_wni, ci, SHAPE_INFO_PARAMS);
-    yz_calc_jx(ci, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jy(ci, qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jz(ci, qni_wni, SHAPE_INFO_PARAMS);
-  }
+  for (int cid = bid * cells_per_block;
+       cid < (bid + 1) * cells_per_block; cid++) {
+    if (tid == 0) {
+      cell_begin = d_particles.c_offsets[cid];
+      cell_end   = d_particles.c_offsets[cid + 1];
+      int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
+      imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
+      cellIdx_to_cellCrd(cid, ci1);
+    }
+    __syncthreads();
 
+    for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
+      DECLARE_SHAPE_INFO;
+      real vxi[3], qni_wni;
+      int ci[3]; // index of this particle's cell relative to ci0
+      calc_j(i, d_particles, vxi, &qni_wni, ci, SHAPE_INFO_PARAMS);
+      
+      yz_calc_jx(ci, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jy(ci, qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jz(ci, qni_wni, SHAPE_INFO_PARAMS);
+    }
+  }
   __syncthreads();
   add_scurr_to_flds(d_flds);
 }
