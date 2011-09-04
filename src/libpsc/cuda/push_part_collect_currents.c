@@ -25,8 +25,14 @@ collect_currents(real *d_flds, real *d_scratch, int nr_blocks)
     ci[1] += d_ilo[1];
     ci[2] += d_ilo[2];
 
-    for (int m = 0; m < 3; m++) {
-      F3_DEV(JXI+m, 0+ci[0],jy+ci[1],jz+ci[2]) += scratch(m,jy,jz);
+    if (threadIdx.x == 0) {
+      for (int m = 0; m < 3; m++) {
+	for (jz = -SW; jz < BLOCKSIZE_Z + SW; jz++) {
+	  for (jy = -SW; jy < BLOCKSIZE_Y + SW; jy++) {
+	    F3_DEV(JXI+m, 0+ci[0],jy+ci[1],jz+ci[2]) += scratch(m,jy,jz);
+	  }
+	}
+      }
     }
   }
 }

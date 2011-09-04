@@ -24,9 +24,14 @@ blockIdx_to_cellPos(particles_cuda_dev_t *d_particles, int bidx, int ci[3])
 __device__ static inline void
 cellIdx_to_cellCrd_rel(int cidx, int ci[3])
 {
-#if BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
+#if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
+  ci[0] = 0;
   ci[1] = ((cidx & 4) >> 1) | ((cidx & 1) >> 0);
   ci[2] = ((cidx & 8) >> 2) | ((cidx & 2) >> 1);
+#elif BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 1 && BLOCKSIZE_Z == 1
+  ci[0] = 0;
+  ci[1] = 0;
+  ci[2] = 0;
 #else
 #error TBD
 #endif

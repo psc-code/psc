@@ -336,7 +336,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     particles_base_t *pp = &particles->p[p];
     struct psc_patch *patch = &ppsc->patch[p];
     struct cell_map map;
-    int N = cell_map_init(&map, patch->ldims, (int[3]) { 1, 8, 8 });
+    int N = cell_map_init(&map, patch->ldims, (int[3]) { 1, 2, 2 });
     
     unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));
     for (int i = 0; i < pp->n_part; i++) {
