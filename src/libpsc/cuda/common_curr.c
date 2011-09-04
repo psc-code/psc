@@ -454,3 +454,23 @@ reduce_sum(float mySum)
 
   return mySum;
 }
+
+__device__ static float
+reduce_sum_warp(float mySum)
+{
+  unsigned int tid = threadIdx.x;
+
+  sdata1[tid] = mySum;
+
+  // now that we are using warp-synchronous programming (below)
+  // we need to declare our shared memory volatile so that the compiler
+  // doesn't reorder stores to it and induce incorrect behavior.
+  volatile float* smem = sdata1;
+  smem[tid] = mySum = mySum + smem[tid + 16];
+  smem[tid] = mySum = mySum + smem[tid + 8];
+  smem[tid] = mySum = mySum + smem[tid + 4];
+  smem[tid] = mySum = mySum + smem[tid + 2];
+  smem[tid] = mySum = mySum + smem[tid + 1];
+  
+  return mySum;
+}

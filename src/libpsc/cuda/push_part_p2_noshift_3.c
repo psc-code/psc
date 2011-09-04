@@ -1,15 +1,22 @@
 
+#define WARPS_PER_BLOCK (THREADS_PER_BLOCK / 32)
+
 // ----------------------------------------------------------------------
 // calc_j
 
-__shared__ int cell_begin, cell_end; // first, last+1 particle in cell
 __shared__ int ci0[3]; // cell index of lower-left cell in block
-__shared__ int ci1[3]; // cell index of current cell relative to ci0
+__shared__ int cell_end[WARPS_PER_BLOCK]; // first, last+1 particle in cell
+#define cell_end(wid) cell_end[wid]
+__shared__ int ci1[3 * WARPS_PER_BLOCK]; // cell index of current cell relative to ci0
+#define ci1(wid, m) (ci1[(wid) * 3 + (m)])
+__shared__ int imax[WARPS_PER_BLOCK];
+#define imax(wid) imax[wid]
 
 __device__ static void
 calc_j(int i, particles_cuda_dev_t d_particles,
        real *vxi, real *qni_wni, SHAPE_INFO_ARGS)
 {
+  int wid = threadIdx.x >> 5;
 #if DIM == DIM_Z  
   short int shift0z;
   short int shift1z;
@@ -20,7 +27,7 @@ calc_j(int i, particles_cuda_dev_t d_particles,
   short int shift1z;
 #endif
   real h0[3], h1[3];
-  if (i < cell_end) {
+  if (i < cell_end(wid)) {
     struct d_particle p;
     LOAD_PARTICLE(p, d_particles, i);
     *qni_wni = p.qni_wni;
@@ -37,13 +44,13 @@ calc_j(int i, particles_cuda_dev_t d_particles,
     find_idx_off(p.xi, k, h1, real(0.));
 
 #if DIM == DIM_Z  
-    shift0z = j[2] - (ci1[2] + ci0[2]);
-    shift1z = k[2] - (ci1[2] + ci0[2]);
+    shift0z = j[2] - (ci1(wid, 2) + ci0[2]);
+    shift1z = k[2] - (ci1(wid, 2) + ci0[2]);
 #elif DIM == DIM_YZ
-    shift0y = j[1] - (ci1[1] + ci0[1]);
-    shift0z = j[2] - (ci1[2] + ci0[2]);
-    shift1y = k[1] - (ci1[1] + ci0[1]);
-    shift1z = k[2] - (ci1[2] + ci0[2]);
+    shift0y = j[1] - (ci1(wid, 1) + ci0[1]);
+    shift0z = j[2] - (ci1(wid, 2) + ci0[2]);
+    shift1y = k[1] - (ci1(wid, 1) + ci0[1]);
+    shift1z = k[2] - (ci1(wid, 2) + ci0[2]);
 #endif
   } else {
     *qni_wni = real(0.);
@@ -82,8 +89,6 @@ calc_j(int i, particles_cuda_dev_t d_particles,
 
 // ----------------------------------------------------------------------
 
-#define WARPS_PER_BLOCK (THREADS_PER_BLOCK / 32)
-
 __shared__ real scurr[WARPS_PER_BLOCK * (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 
 #define scurr(wid, m,jy,jz) (scurr[(((wid)				\
@@ -97,15 +102,16 @@ __shared__ real scurr[WARPS_PER_BLOCK * (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*
 __device__ static void
 current_add(int m, int jy, int jz, real val)
 {
-#if 0
-  int tid = threadIdx.x;
-  reduce_sum(val);
-  if (tid == 0) {
-    scurr(m,jy,jz) += sdata1[0];
+#if 1
+  int lid = threadIdx.x & 31;
+  int wid = threadIdx.x >> 5;
+  val = reduce_sum_warp(val);
+  if (lid == 0) {
+    scurr(wid, m, jy + ci1(0*wid, 1), jz + ci1(0*wid, 2)) += val;
   }
 #else
   int wid = threadIdx.x >> 5;
-  float *addr = &scurr(wid, m,jy+ci1[1],jz+ci1[2]);
+  float *addr = &scurr(wid, m,jy + ci1(wid, 1),jz + ci1(wid, 2));
 #if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
   atomicAdd(addr, val);
 #else
@@ -276,10 +282,9 @@ __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     int block_stride, int block_start)
 {
-  int tid = threadIdx.x;
+  int tid = threadIdx.x, wid = threadIdx.x >> 5;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
-  __shared__ int imax;
   __shared__ int bid;
   if (tid == 0) {
     if (block_stride == 1) {
@@ -310,18 +315,19 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   for (int cid = bid * cells_per_block;
        cid < (bid + 1) * cells_per_block; cid++) {
     __syncthreads();
-    if (tid == 0) {
-      cell_begin = d_particles.c_offsets[cid];
-      cell_end   = d_particles.c_offsets[cid + 1];
-      int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-      imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
-      cellIdx_to_cellCrd(cid, ci1);
-      ci1[1] -= ci0[1];
-      ci1[2] -= ci0[2];
+    int cell_begin = d_particles.c_offsets[cid];
+    if ((threadIdx.x & 31) == 0) {
+      cell_end(wid)   = d_particles.c_offsets[cid + 1];
+      int nr_loops = (cell_end(wid) - cell_begin + THREADS_PER_BLOCK-1)
+	/ THREADS_PER_BLOCK;
+      imax(wid) = cell_begin + nr_loops * THREADS_PER_BLOCK;
+      cellIdx_to_cellCrd(cid, &ci1(wid, 0));
+      ci1(wid, 1) -= ci0[1];
+      ci1(wid, 2) -= ci0[2];
     }
     __syncthreads();
 
-    for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
+    for (int i = cell_begin + tid; i < imax(wid); i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
       real vxi[3], qni_wni;
       calc_j(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
