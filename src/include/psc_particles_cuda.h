@@ -15,6 +15,7 @@ typedef struct {
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
   int *c_offsets; // particles per cell offsets
+  int *c_pos;     // maps 1d cell -> 3d crd
 } particles_cuda_dev_t;
 
 typedef struct {

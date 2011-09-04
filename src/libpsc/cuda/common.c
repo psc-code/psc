@@ -13,15 +13,12 @@ blockIdx_to_blockCrd(int bidx, int bi[3])
 }
 
 __device__ static inline void
-cellIdx_to_cellCrd(int cidx, int ci[3])
+blockIdx_to_cellPos(particles_cuda_dev_t *d_particles, int bidx, int ci[3])
 {
-#if BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
-  blockIdx_to_blockCrd(cidx >> 4, ci);
-  ci[1] = (ci[1] << 2) | ((cidx & 4) >> 1) | (cidx & 1);
-  ci[2] = (ci[2] << 2) | ((cidx & 8) >> 2) | ((cidx & 2) >> 1);
-#else
-#error TBD
-#endif
+  int cidx = bidx * (BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z);
+  ci[0] = d_particles->c_pos[3*cidx + 0];
+  ci[1] = d_particles->c_pos[3*cidx + 1];
+  ci[2] = d_particles->c_pos[3*cidx + 2];
 }
 
 __device__ static inline void

@@ -300,10 +300,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	      bi[1] * d_b_mx[0]) + 
 	     bi[0]);
     }
-    blockIdx_to_blockCrd(bid, ci0);
-    ci0[0] *= BLOCKSIZE_X;
-    ci0[1] *= BLOCKSIZE_Y;
-    ci0[2] *= BLOCKSIZE_Z;
+    blockIdx_to_cellPos(&d_particles, bid, ci0);
   }
   __syncthreads();
 

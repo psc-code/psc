@@ -15,6 +15,8 @@ __particles_cuda_get(particles_cuda_t *pp)
 		   (pp->nr_blocks + 1) * sizeof(int)));
   check(cudaMalloc((void **) &d_part->c_offsets, 
 		   (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
+  check(cudaMalloc((void **) &d_part->c_pos, 
+		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int)));
 
   check(cudaMemcpy(d_part->xi4, h_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyHostToDevice));
@@ -23,7 +25,11 @@ __particles_cuda_get(particles_cuda_t *pp)
   check(cudaMemcpy(d_part->offsets, h_part->offsets,
 		   (pp->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
   check(cudaMemcpy(d_part->c_offsets, h_part->c_offsets,
-		   (pp->nr_blocks * cells_per_block + 1) * sizeof(int), cudaMemcpyHostToDevice));
+		   (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(d_part->c_pos, h_part->c_pos,
+		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int),
+		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
