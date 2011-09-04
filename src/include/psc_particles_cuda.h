@@ -14,6 +14,7 @@ typedef struct {
   float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
+  int *c_offsets; // particles per cell offsets
 } particles_cuda_dev_t;
 
 typedef struct {

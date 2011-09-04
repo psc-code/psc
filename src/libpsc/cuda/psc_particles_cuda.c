@@ -134,6 +134,7 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
   mparticles_base_t *particles_base = _particles_base;
 
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  assert(ppsc->nr_patches == 1); // many things would break...
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp_base = &particles_base->p[p];
@@ -174,6 +175,7 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
     pp->b_mx[1] = (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
     pp->b_mx[2] = (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
     pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
+    // FIXME, should go away and can be taken over by c_offsets
     h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
     int last_block = -1;
     for (int n = 0; n <= pp->n_part; n++) {
@@ -199,6 +201,26 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
 	     h_part->offsets[c], h_part->offsets[c+1]);
     }
 #endif
+
+    const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+    h_part->c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
+			       sizeof(*h_part->c_offsets));
+    last_block = -1;
+    for (int n = 0; n <= pp->n_part; n++) {
+      int block;
+      if (n < pp->n_part) {
+	particle_base_t *part_base = particles_base_get_one(pp_base, n);
+	block = find_cellIdx(pp, part_base->xi, part_base->yi, part_base->zi);
+      } else {
+	block = pp->nr_blocks * cells_per_block;
+      }
+      assert(block <= pp->nr_blocks * cells_per_block);
+      assert(last_block <= block);
+      while (last_block < block) {
+	h_part->c_offsets[last_block+1] = n;
+	last_block++;
+      }
+    }
     
     __particles_cuda_get(pp);
     
