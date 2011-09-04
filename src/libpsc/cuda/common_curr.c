@@ -318,25 +318,6 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
 #endif
 
 #define pick_shape_coeff(t, comp, j, shift)	  \
-  __pick_shape_coeff(__s ## t ## comp, j, shift)  \
-
-__device__ static real
-__pick_shape_coeff(const real *__s, int j, int shift)
-{
-  real s;
-  if (j == shift - 1) {
-    s = __s[0];
-  } else if (j == shift + 0) {
-    s = __s[1];
-  } else if (j == shift + 1) {
-    s = real(1.) - __s[0] - __s[1];
-  } else {
-    s = real(0.);
-  }
-  return s;
-}
-
-#define pick_shape_coeff_(t, comp, j, shift)	  \
   pick_shape_coeff_s ## t ## comp(j, shift)
 
 #define MAKE_PICK_SHAPE_COEFF(s0y)				\
@@ -368,6 +349,7 @@ MAKE_PICK_SHAPE_COEFF(s1z)
 
 #endif
 
+// FIXME use 2*SW
 #define BLOCKSIZE ((BLOCKSIZE_X) * (BLOCKSIZE_Y + 6) * (BLOCKSIZE_Z + 6))
 #define BLOCKSTRIDE (((BLOCKSIZE + 3) / 4) * 4)
 
