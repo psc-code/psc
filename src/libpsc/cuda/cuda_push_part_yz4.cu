@@ -15,4 +15,5 @@
 
 #include "push_part_p1.c"
 #include "push_part_p2_noshift_2.c"
+#include "push_part_collect_currents.c"
 #include "push_part_kernelcall.c"
