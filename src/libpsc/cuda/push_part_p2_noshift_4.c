@@ -7,7 +7,7 @@
 __shared__ int ci0[3]; // cell index of lower-left cell in block
 
 __device__ static void
-calc_j(const int *ci1, int i, particles_cuda_dev_t d_particles,
+calc_j(int *ci1, int i, particles_cuda_dev_t d_particles,
        real *vxi, real *qni_wni, SHAPE_INFO_ARGS, int cell_end)
 {
 #if DIM == DIM_Z  
@@ -24,8 +24,11 @@ calc_j(const int *ci1, int i, particles_cuda_dev_t d_particles,
     struct d_particle p;
     LOAD_PARTICLE(p, d_particles, i);
     *qni_wni = p.qni_wni;
-    int j[3], k[3];
+    find_idx(p.xi, ci1, real(0.));
+    ci1[1] -= ci0[1];
+    ci1[2] -= ci0[2];
 
+    int j[3], k[3];
     calc_vxi(vxi, p);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
@@ -295,19 +298,16 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     
     int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     int imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
-    int ci1[3];
-    cellIdx_to_cellCrd_rel(cid, ci1);
-    __syncthreads();
     
     for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
+      int ci1[3];
       real vxi[3], qni_wni;
       calc_j(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
       yz_calc_jx(vxi[0], qni_wni, ci1, SHAPE_INFO_PARAMS);
       yz_calc_jy(qni_wni, ci1, SHAPE_INFO_PARAMS);
       yz_calc_jz(qni_wni, ci1, SHAPE_INFO_PARAMS);
     }
-    __syncthreads();
   }
 
   __syncthreads();
