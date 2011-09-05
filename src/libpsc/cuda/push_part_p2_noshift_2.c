@@ -82,13 +82,24 @@ __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 			      * (BLOCKSIZE_Y + 2*SW) + (jy)+SW])
 
 // ----------------------------------------------------------------------
+// current_add
+
+__device__ static void
+current_add(int m, int jy, int jz, real val)
+{
+  int tid = threadIdx.x;
+  reduce_sum(val);
+  if (tid == 0) {
+    scurr(m,jy,jz) += sdata1[0];
+  }
+}
+
+// ----------------------------------------------------------------------
 // yz_calc_jx
 
 __device__ static void
-yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqx = vxi * qni_wni * d_fnqs;
     
@@ -104,12 +115,7 @@ yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
 	+ real(.5) * s0y * s1z
 	+ real(.3333333333) * s1y * s1z;
       
-      reduce_sum(fnqx * wx);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(0,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(0, jy, jz, fnqx * wx);
     }
   }
 }
@@ -118,10 +124,8 @@ yz_calc_jx(int bid, real *d_scratch, real vxi, real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jy
 
 __device__ static void
-yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-  
   for (int jz = -SW; jz <= SW; jz++) {
     real fnqy = qni_wni * d_fnqys;
     
@@ -139,24 +143,14 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last = -fnqy*wy;
       }
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(1,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(1, jy, jz, last);
     }
     for (int jy = -1; jy <= 0; jy++) {
       real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
       real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
       real wy = s1y * tmp1;
       last -= fnqy*wy;
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(1,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(1, jy, jz, last);
     }
     { int jy = 1;
       if (SI_SHIFT0Y <= 0 && SI_SHIFT1Y <= 0) {
@@ -167,12 +161,7 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wy = s1y * tmp1;
 	last -= fnqy*wy;
       }
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(1,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(1, jy, jz, last);
     }
   }
 }
@@ -181,10 +170,8 @@ yz_calc_jy(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 // yz_calc_jz
 
 __device__ static void
-yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
-  int tid = threadIdx.x;
-  
   for (int jy = -SW; jy <= SW; jy++) {
     real fnqz = qni_wni * d_fnqzs;
     
@@ -202,24 +189,14 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last = -fnqz*wz;
       }
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(2,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(2, jy, jz, last);
     }
     for (int jz = -1; jz <= 0; jz++) {
       real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
       real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
       real wz = s1z * tmp1;
       last -= fnqz*wz;
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(2,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(2, jy, jz, last);
     }
     { int jz = 1;
       if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
@@ -230,12 +207,7 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
 	real wz = s1z * tmp1;
 	last -= fnqz*wz;
       }
-      reduce_sum(last);
-#ifdef CALC_CURRENT
-      if (tid == 0) {
-	scurr(2,jy,jz) += sdata1[0];
-      }
-#endif
+      current_add(2, jy, jz, last);
     }
   }
 }
@@ -292,9 +264,9 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     DECLARE_SHAPE_INFO;
     real vxi[3], qni_wni;
     calc_j(ci, i, d_particles, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
-    yz_calc_jx(bid, d_scratch, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jy(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jz(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
+    yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
   }
 
   __syncthreads();
