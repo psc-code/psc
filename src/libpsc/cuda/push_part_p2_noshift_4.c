@@ -291,10 +291,9 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   }
   __syncthreads();
 
-  for (int cid = bid * cells_per_block;
-       cid < (bid + 1) * cells_per_block; cid++) {
-    int cell_begin = d_particles.c_offsets[cid];
-    int cell_end   = d_particles.c_offsets[cid+1];
+  {
+    int cell_begin = d_particles.c_offsets[bid * cells_per_block];
+    int cell_end   = d_particles.c_offsets[(bid+1) * cells_per_block];
     
     int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     int imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
