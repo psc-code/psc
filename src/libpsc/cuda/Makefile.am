@@ -42,7 +42,7 @@ cuda_push_part_z3.lo: push_part_p2_noshift.c
 cuda_push_part_yz3.lo: push_part_p2_noshift.c
 cuda_push_part_yz4.lo: push_part_p2_noshift_2.c
 cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
-cuda_push_part_yz6.lo: push_part_p2_noshift_4.c push_part_kernelcall_3.c
+cuda_push_part_yz6.lo: push_part_p2_noshift_5.c push_part_kernelcall_5.c
 
 #FIXME, this is just really too hacky...
 
@@ -52,7 +52,7 @@ cuda_push_part_yz6.lo: push_part_p2_noshift_4.c push_part_kernelcall_3.c
 	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ dummy.c
 	rm ${@:.lo=.o}
 	rm dummy.c
-	$(CUDACC) -g -arch=sm_20 -keep --ptxas-options=-v -maxrregcount=32 $(CUDACFLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+	$(CUDACC) -g -arch=sm_20 -keep --ptxas-options=-v $(CUDACFLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 endif USE_CUDA
 

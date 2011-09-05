@@ -3,7 +3,7 @@
 
 #define DIM DIM_YZ
 #define PFX(x) yz6_ ## x
-#define CACHE_SHAPE_ARRAYS 4
+#define CACHE_SHAPE_ARRAYS 5
 #define CALC_CURRENT
 #undef USE_SCRATCH
 #define SW (2)
@@ -15,5 +15,5 @@
 #include "common_curr.c"
 
 #include "push_part_p1.c"
-#include "push_part_p2_noshift_4.c"
-#include "push_part_kernelcall_3.c"
+#include "push_part_p2_noshift_5.c"
+#include "push_part_kernelcall_5.c"

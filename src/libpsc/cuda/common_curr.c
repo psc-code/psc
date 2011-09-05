@@ -143,6 +143,7 @@ __pick_shape_coeff(const real *__s, int j, int shift)
 }
 
 // ----------------------------------------------------------------------
+
 #elif CACHE_SHAPE_ARRAYS == 3
 
 #if DIM == DIM_Z
@@ -342,6 +343,11 @@ MAKE_PICK_SHAPE_COEFF(s0y)
 MAKE_PICK_SHAPE_COEFF(s1y)
 MAKE_PICK_SHAPE_COEFF(s0z)
 MAKE_PICK_SHAPE_COEFF(s1z)
+
+// ----------------------------------------------------------------------
+#elif CACHE_SHAPE_ARRAYS == 5
+
+// FIXME, move code here
 
 #else
 
