@@ -227,19 +227,44 @@ yz_calc_jz(int bid, real *d_scratch, real qni_wni, SHAPE_INFO_ARGS)
   }
 }
 
+__device__ static void
+zero_scurr()
+{
+  int i = threadIdx.x;
+  int N = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
+  while (i < N) {
+    scurr[i] = real(0.);
+    i += THREADS_PER_BLOCK;
+  }
+}
+
+__device__ static void
+add_scurr_to_scratch(real *d_scratch, int bid)
+{
+  int i = threadIdx.x;
+  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3;
+  while (i < stride) {
+    int rem = i;
+    int m = rem / ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
+    rem -= m * ((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Y + 2*SW));
+    int jz = rem / (BLOCKSIZE_Y + 2*SW);
+    rem -= jz * (BLOCKSIZE_Y + 2*SW);
+    int jy = rem;
+    jz -= SW;
+    jy -= SW;
+    real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
+    scratch(0,jy,jz) += scurr(m, jy, jz);
+    i += THREADS_PER_BLOCK;
+  }
+}
+
 __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     real *d_scratch, int block_stride, int block_start)
 {
   int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
 
-  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW);
-  // stride must be <= THREADS_PER_BLOCK!
-  if (tid < stride) {
-    for (int m = 0; m < 3; m++) {
-      scurr[m * stride + tid] = real(0.);
-    }
-  }
+  zero_scurr();
   __syncthreads();
 
   int cell_begin = d_particles.offsets[bid];
@@ -264,14 +289,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
   }
 
   __syncthreads();
-  if (tid < stride) {
-    for (int m = 0; m < 3; m++) {
-      real *scratch = d_scratch + (bid * 3 + m) * BLOCKSTRIDE;
-      int jz = tid / (BLOCKSIZE_Y + 2*SW) - SW;
-      int jy = tid % (BLOCKSIZE_Y + 2*SW) - SW;
-      scratch(0,jy,jz) += scurr[m*stride + tid];
-    }
-  }
+  add_scurr_to_scratch(d_scratch, bid);
 }
 
 #endif
