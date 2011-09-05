@@ -2,9 +2,11 @@
 // ----------------------------------------------------------------------
 // calc_j
 
+__shared__ int ci0[3]; // cell index of lower-left cell in block
+
 __device__ static void
 calc_j(const int *ci, int i, particles_cuda_dev_t d_particles,
-       real *vxi, SHAPE_INFO_ARGS, real *qni_wni, int cell_end)
+       real *vxi, real *qni_wni, SHAPE_INFO_ARGS, int cell_end)
 {
 #if DIM == DIM_Z  
   short int shift0z;
@@ -87,11 +89,20 @@ __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) * 3];
 __device__ static void
 current_add(int m, int jy, int jz, real val)
 {
+#if 1 // only if cell index is the same across threads
   int tid = threadIdx.x;
   reduce_sum(val);
   if (tid == 0) {
     scurr(m,jy,jz) += sdata1[0];
   }
+#else
+  float *addr = &scurr(m, jy, jz);
+#if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
+  atomicAdd(addr, val);
+#else
+  while ((val = atomicExch(addr, atomicExch(addr, 0.0f)+val))!=0.0f);
+#endif
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -247,28 +258,38 @@ __global__ static void
 push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	     real *d_scratch, int block_stride, int block_start)
 {
-  int tid = threadIdx.x, bid = blockIdx.x * block_stride + block_start;
+  int tid = threadIdx.x;
+  const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
   zero_scurr();
+
+  __shared__ int bid;
+  if (tid == 0) {
+    bid = blockIdx.x * block_stride + block_start;
+    blockIdx_to_cellPos(&d_particles, bid, ci0);
+  }
   __syncthreads();
 
-  int cell_begin = d_particles.offsets[bid];
-  int cell_end   = d_particles.offsets[bid+1];
-  int ci[3];
-
-  blockIdx_to_cellPos(&d_particles, bid, ci);
-
-  int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-  for (int l = 0; l < nr_loops; l++) {
-    int i = cell_begin + tid + l * THREADS_PER_BLOCK;
-    DECLARE_SHAPE_INFO;
-    real vxi[3], qni_wni;
-    calc_j(ci, i, d_particles, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
-    yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
-    yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
+  for (int cid = bid * cells_per_block;
+       cid < (bid + 1) * cells_per_block; cid++) {
+    int cell_begin = d_particles.c_offsets[cid];
+    int cell_end   = d_particles.c_offsets[cid+1];
+    int ci[3];
+    
+    blockIdx_to_cellPos(&d_particles, bid, ci);
+    
+    int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
+    int imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
+    
+    for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
+      DECLARE_SHAPE_INFO;
+      real vxi[3], qni_wni;
+      calc_j(ci, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
+      yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
+      yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
+    }
   }
-
   __syncthreads();
   add_scurr_to_scratch(d_scratch, bid);
 }
