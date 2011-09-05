@@ -1,7 +1,7 @@
 
 struct shapeinfo {
   real hy[2], hz[2];
-  short int shift0[2], shift1[2];
+  short int shifty[2], shiftz[2];
 };
 
 #define DECLARE_SHAPE_INFO			\
@@ -10,12 +10,12 @@ struct shapeinfo {
 #define SHAPE_INFO_PARAMS si
 #define SHAPE_INFO_ARGS struct shapeinfo *si
 
-#define SI_SHIFT0Y si->shift0[0]
-#define SI_SHIFT1Y si->shift1[0]
-#define SI_SHIFT10Y (si->shift1[0] - si->shift0[0])
-#define SI_SHIFT0Z si->shift0[1]
-#define SI_SHIFT1Z si->shift1[1]
-#define SI_SHIFT10Z (si->shift1[1] - si->shift0[1])
+#define SI_SHIFT0Y si->shifty[0]
+#define SI_SHIFT1Y si->shifty[1]
+#define SI_SHIFT10Y (si->shifty[1] - si->shifty[0])
+#define SI_SHIFT0Z si->shiftz[0]
+#define SI_SHIFT1Z si->shiftz[1]
+#define SI_SHIFT10Z (si->shiftz[1] - si->shiftz[0])
 
 __device__ static void
 cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
@@ -26,10 +26,10 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
   si->hy[1] = h1[1];
   si->hz[0] = h0[2];
   si->hz[1] = h1[2];
-  si->shift0[0] = shift0y;
-  si->shift0[1] = shift0z;
-  si->shift1[0] = shift1y;
-  si->shift1[1] = shift1z;
+  si->shifty[0] = shift0y;
+  si->shifty[1] = shift1y;
+  si->shiftz[0] = shift0z;
+  si->shiftz[1] = shift1z;
 }
 
 #define pick_shape_coeff(t, comp, j, shift) ({				\
@@ -477,10 +477,22 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles,
       real vxi[3];
       real qni_wni;
       calc_j(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
-      *si = d_shapeinfo[i];
-      vxi[0] = d_vxi[i];
-      qni_wni = d_qni[i];
-      decode_ci1(d_ci1[i], ci1);
+      if (i < cell_end) {
+	*si = d_shapeinfo[i];
+	vxi[0] = d_vxi[i];
+	qni_wni = d_qni[i];
+	decode_ci1(d_ci1[i], ci1);
+      } else {
+        qni_wni = 0.;
+	si->hy[0] = real(0.);
+	si->hy[1] = real(0.);
+	si->hz[0] = real(0.);
+	si->hz[1] = real(0.);
+	si->shifty[0] = 0;
+	si->shifty[1] = 0;
+	si->shiftz[0] = 0;
+	si->shiftz[1] = 0;
+      }
       yz_calc_jx(vxi[0], qni_wni, ci1, SHAPE_INFO_PARAMS);
       yz_calc_jy(qni_wni, ci1, SHAPE_INFO_PARAMS);
       yz_calc_jz(qni_wni, ci1, SHAPE_INFO_PARAMS);
