@@ -3,9 +3,10 @@
 // calc_j
 
 __shared__ int ci0[3]; // cell index of lower-left cell in block
+__shared__ int ci1[3]; // cell index of current cell relative to ci0
 
 __device__ static void
-calc_j(const int *ci, int i, particles_cuda_dev_t d_particles,
+calc_j(const int *ci1, int i, particles_cuda_dev_t d_particles,
        real *vxi, real *qni_wni, SHAPE_INFO_ARGS, int cell_end)
 {
 #if DIM == DIM_Z  
@@ -38,10 +39,10 @@ calc_j(const int *ci, int i, particles_cuda_dev_t d_particles,
     shift0z = j[2] - ci[2];
     shift1z = k[2] - ci[2];
 #elif DIM == DIM_YZ
-    shift0y = j[1] - ci[1];
-    shift0z = j[2] - ci[2];
-    shift1y = k[1] - ci[1];
-    shift1z = k[2] - ci[2];
+    shift0y = j[1] - (ci0[1] + ci1[1]);
+    shift0z = j[2] - (ci0[2] + ci1[2]);
+    shift1y = k[1] - (ci0[1] + ci1[1]);
+    shift1z = k[2] - (ci0[2] + ci1[2]);
 #endif
   } else {
     *qni_wni = real(0.);
@@ -93,7 +94,7 @@ current_add(int m, int jy, int jz, real val)
   int tid = threadIdx.x;
   reduce_sum(val);
   if (tid == 0) {
-    scurr(m,jy,jz) += sdata1[0];
+    scurr(m, jy + ci1[1], jz + ci1[2]) += sdata1[0];
   }
 #else
   float *addr = &scurr(m, jy, jz);
@@ -274,22 +275,21 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
        cid < (bid + 1) * cells_per_block; cid++) {
     int cell_begin = d_particles.c_offsets[cid];
     int cell_end   = d_particles.c_offsets[cid+1];
-    int ci[3];
-    
-    blockIdx_to_cellPos(&d_particles, bid, ci);
     
     int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     int imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
+    cellIdx_to_cellCrd_rel(cid, ci1);
     
     for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
       real vxi[3], qni_wni;
-      calc_j(ci, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
+      calc_j(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
       yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
       yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
       yz_calc_jz(qni_wni, SHAPE_INFO_PARAMS);
     }
   }
+
   __syncthreads();
   add_scurr_to_scratch(d_scratch, bid);
 }
