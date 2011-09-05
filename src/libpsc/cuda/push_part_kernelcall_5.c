@@ -47,12 +47,14 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 				block_stride, block_start));
   }
 
+#if 0
   for (int block_start = 0; block_start < block_stride; block_start++) {
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p2, (pp->n_part, pp->d_part,
 			      d_shapeinfo, d_vxi, d_qni, d_ci1,
 			      pf->d_flds, block_stride, block_start));
   }
+#endif
 
   check(cudaFree(d_shapeinfo));
   check(cudaFree(d_vxi));

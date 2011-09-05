@@ -165,10 +165,12 @@ push_part_p1_5(int n_particles, particles_cuda_dev_t d_particles,
     real vxi[3], qni_wni;
     calc_shape_info(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
     if (i < cell_end) {
-      d_shapeinfo[i] = *si;
-      d_vxi[i] = vxi[0];
-      d_qni[i] = qni_wni;
-      d_ci1[i] = encode_ci1(ci1);
+      if (block_start < 0) {
+	d_shapeinfo[i] = *si;
+	d_vxi[i] = vxi[0];
+	d_qni[i] = qni_wni;
+	d_ci1[i] = encode_ci1(ci1);
+      }
     }
   }
 }
@@ -476,7 +478,6 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles,
       int ci1[3];
       real vxi[3];
       real qni_wni;
-      calc_j(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
       if (i < cell_end) {
 	*si = d_shapeinfo[i];
 	vxi[0] = d_vxi[i];
