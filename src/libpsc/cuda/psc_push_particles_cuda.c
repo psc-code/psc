@@ -324,13 +324,25 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 		  yz5_cuda_push_part_p3);
 }
 
+static void __unused
+psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
+				 mparticles_base_t *particles_base,
+				 mfields_base_t *flds_base)
+{
+  mprintf("n_part = %d\n", particles_base->p[0].n_part);
+  cuda_push_partq(particles_base, flds_base,
+		  yz6_set_constants,
+		  yz6_cuda_push_part_p2,
+		  yz6_cuda_push_part_p3);
+}
+
 // ======================================================================
 // psc_push_particles: subclass "cuda"
 
 struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .name                  = "cuda",
   .push_z                = psc_push_particles_cuda_push_z3,
-  .push_yz               = psc_push_particles_cuda_push_yz4,
+  .push_yz               = psc_push_particles_cuda_push_yz6,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
 };
