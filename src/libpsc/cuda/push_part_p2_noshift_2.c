@@ -3,58 +3,71 @@
 // calc_j
 
 __device__ static void
-calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
-       int i, real *vxi, SHAPE_INFO_ARGS, real *qni_wni, int cell_end)
+calc_j(const int *ci, int i, particles_cuda_dev_t d_particles,
+       real *vxi, SHAPE_INFO_ARGS, real *qni_wni, int cell_end)
 {
-  int j[3], k[3];
+#if DIM == DIM_Z  
+  short int shift0z;
+  short int shift1z;
+#elif DIM == DIM_YZ
+  short int shift0y;
+  short int shift0z;
+  short int shift1y;
+  short int shift1z;
+#endif
   real h0[3], h1[3];
   if (i < cell_end) {
-    calc_vxi(vxi, *p);
+    struct d_particle p;
+    LOAD_PARTICLE(p, d_particles, i);
+    *qni_wni = p.qni_wni;
+    int j[3], k[3];
+
+    calc_vxi(vxi, p);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
-    push_xi(p, vxi, -.5f * d_dt);
-    find_idx_off(p->xi, j, h0, real(0.));
+    push_xi(&p, vxi, -.5f * d_dt);
+    find_idx_off(p.xi, j, h0, real(0.));
     
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(p, vxi, d_dt);
-    find_idx_off(p->xi, k, h1, real(0.));
+    push_xi(&p, vxi, d_dt);
+    find_idx_off(p.xi, k, h1, real(0.));
 
-    push_xi(p, vxi, -.5f * d_dt); // !!! FIXME, back to before
-  } else {
-#if DIM == DIM_Z
-    j[2] = ci[2];
-    k[2] = ci[2];
+#if DIM == DIM_Z  
+    shift0z = j[2] - ci[2];
+    shift1z = k[2] - ci[2];
 #elif DIM == DIM_YZ
-    j[1] = ci[1];
-    k[1] = ci[1];
-    j[2] = ci[2];
-    k[2] = ci[2];
+    shift0y = j[1] - ci[1];
+    shift0z = j[2] - ci[2];
+    shift1y = k[1] - ci[1];
+    shift1z = k[2] - ci[2];
+#endif
+  } else {
+    *qni_wni = real(0.);
+    vxi[0] = real(0.);
+    vxi[1] = real(0.);
+    vxi[2] = real(0.);
+#if DIM == DIM_Z  
+    shift0z = 0;
+    shift1z = 0;
+    h0[2] = real(0.);
+    h1[2] = real(0.);
+#elif DIM == DIM_YZ
+    shift0y = 0;
+    shift0z = 0;
+    shift1y = 0;
+    shift1z = 0;
     h0[1] = real(0.);
     h1[1] = real(0.);
     h0[2] = real(0.);
     h1[2] = real(0.);
 #endif
-    vxi[0] = real(0.);
-    vxi[1] = real(0.);
-    vxi[2] = real(0.);
   }
-#if DIM == DIM_Z  
-  short int shift0z = j[2] - ci[2];
-  short int shift1z = k[2] - ci[2];
+#if DIM == DIM_Z
   cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, shift0z, shift1z);
 #elif DIM == DIM_YZ
-  short int shift0y = j[1] - ci[1];
-  short int shift0z = j[2] - ci[2];
-  short int shift1y = k[1] - ci[1];
-  short int shift1z = k[2] - ci[2];
   cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, shift0y, shift0z,
 		     shift1y, shift1z);
 #endif
-  if (i < cell_end) {
-    *qni_wni = p->qni_wni;
-  } else {
-    *qni_wni = real(0.);
-  }
 }
 
 // ======================================================================
@@ -278,11 +291,7 @@ push_part_p2(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
     int i = cell_begin + tid + l * THREADS_PER_BLOCK;
     DECLARE_SHAPE_INFO;
     real vxi[3], qni_wni;
-    struct d_particle p;
-    if (i < cell_end) {
-      LOAD_PARTICLE(p, d_particles, i);
-    }
-    calc_j(ci, &p, d_particles, i, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
+    calc_j(ci, i, d_particles, vxi, SHAPE_INFO_PARAMS, &qni_wni, cell_end);
     yz_calc_jx(bid, d_scratch, vxi[0], qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jy(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
     yz_calc_jz(bid, d_scratch, qni_wni, SHAPE_INFO_PARAMS);
