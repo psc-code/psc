@@ -47,13 +47,21 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 	       push_part_p1_5, (pp->n_part, pp->d_part,
 				d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
 				block_stride, block_start));
-  }
 
-  for (int block_start = 0; block_start < block_stride; block_start++) {
     RUN_KERNEL(dimGrid, dimBlock,
-	       push_part_p2, (pp->n_part, pp->d_part,
-			      d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
-			      pf->d_flds, block_stride, block_start));
+	       push_part_p2x, (pp->n_part, pp->d_part,
+			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       pf->d_flds, block_stride, block_start));
+
+    RUN_KERNEL(dimGrid, dimBlock,
+	       push_part_p2y, (pp->n_part, pp->d_part,
+			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       pf->d_flds, block_stride, block_start));
+
+    RUN_KERNEL(dimGrid, dimBlock,
+	       push_part_p2z, (pp->n_part, pp->d_part,
+			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       pf->d_flds, block_stride, block_start));
   }
 
   check(cudaFree(d_shapeinfo_h));
