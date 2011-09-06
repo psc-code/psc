@@ -106,7 +106,7 @@ main(int argc, char **argv)
   // push_yz
 
   run_test(true, "fortran", 0., 0., create_test, "");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
+  //  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
 #ifdef USE_CUDA
   run_test(false, "cuda", 2e-3, 1e-3, create_test, "");
 #endif

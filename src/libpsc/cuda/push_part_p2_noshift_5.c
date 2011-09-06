@@ -89,10 +89,6 @@ __pick_shape_coeff(int j, int shift, int d, real h)
 // ======================================================================
 #elif CACHE_SHAPE_ARRAYS == 6
 
-struct shapeinfo_h {
-  real hy[2], hz[2];
-};
-
 struct shapeinfo_yz {
   real s0[2], s1[2];
 };
@@ -102,16 +98,15 @@ struct shapeinfo_i {
 };
 
 #define DECLARE_SHAPE_INFO			\
-  struct shapeinfo_h _si_h, *si_h = &_si_h;	\
   struct shapeinfo_yz _si_y, *si_y = &_si_y;	\
   struct shapeinfo_yz _si_z, *si_z = &_si_z;	\
   struct shapeinfo_i _si_i, *si_i = &_si_i
 
-#define SHAPE_INFO_PARAMS si_h, si_y, si_z, si_i
-#define SHAPE_INFO_ARGS struct shapeinfo_h *si_h, struct shapeinfo_yz *si_y, struct shapeinfo_yz *si_z, struct shapeinfo_i *si_i
+#define SHAPE_INFO_PARAMS si_y, si_z, si_i
+#define SHAPE_INFO_ARGS struct shapeinfo_yz *si_y, struct shapeinfo_yz *si_z, struct shapeinfo_i *si_i
 
-#define D_SHAPEINFO_PARAMS d_si_h, d_si_y, d_si_z, d_si_i
-#define D_SHAPEINFO_ARGS struct shapeinfo_h *d_si_h, struct shapeinfo_yz *d_si_y, struct shapeinfo_yz *d_si_z, struct shapeinfo_i *d_si_i
+#define D_SHAPEINFO_PARAMS d_si_y, d_si_z, d_si_i
+#define D_SHAPEINFO_ARGS struct shapeinfo_yz *d_si_y, struct shapeinfo_yz *d_si_z, struct shapeinfo_i *d_si_i
 
 #define SI_SHIFT0Y si_i->shifty[0]
 #define SI_SHIFT1Y si_i->shifty[1]
@@ -124,15 +119,10 @@ __device__ static void
 shapeinfo_load(int i, int cell_end, SHAPE_INFO_ARGS, D_SHAPEINFO_ARGS)
 {
   if (i < cell_end) {
-    *si_h = d_si_h[i];
     *si_i = d_si_i[i];
     *si_y = d_si_y[i];
     *si_z = d_si_z[i];
   } else {
-    si_h->hy[0] = real(0.);
-    si_h->hy[1] = real(0.);
-    si_h->hz[0] = real(0.);
-    si_h->hz[1] = real(0.);
     si_y->s0[0] = real(0.);
     si_y->s0[1] = real(0.);
     si_y->s1[0] = real(0.);
@@ -160,10 +150,6 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
 		   short int shift0y, short int shift0z,
 		   short int shift1y, short int shift1z)
 {
-  si_h->hy[0] = h0[1];
-  si_h->hy[1] = h1[1];
-  si_h->hz[0] = h0[2];
-  si_h->hz[1] = h1[2];
   calc_shape_coeff(si_y->s0, h0[1]);
   calc_shape_coeff(si_y->s1, h1[1]);
   calc_shape_coeff(si_z->s0, h0[2]);
@@ -310,7 +296,6 @@ push_part_p1_5(int n_particles, particles_cuda_dev_t d_particles,
     real vxi[3], qni_wni;
     calc_shape_info(ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
     if (i < cell_end) {
-      d_si_h[i] = *si_h;
       d_si_i[i] = *si_i;
       d_si_y[i] = *si_y;
       d_si_z[i] = *si_z;
@@ -592,10 +577,6 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
       }
 #ifdef NO_WRITE
       if (block_start < 0) {
-	scurr[threadIdx.x] += si_h->hy[0];
-	scurr[threadIdx.x] += si_h->hy[1];
-	scurr[threadIdx.x] += si_h->hz[0];
-	scurr[threadIdx.x] += si_h->hz[1];
 	scurr[threadIdx.x] += si_y->s0[0];
 	scurr[threadIdx.x] += si_y->s0[1];
 	scurr[threadIdx.x] += si_y->s1[0];

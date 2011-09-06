@@ -22,11 +22,12 @@ EXTERN_C void
 PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 		       int block_stride)
 {
-  struct shapeinfo_h *d_si_h;
   struct shapeinfo_i *d_si_i;
-  check(cudaMalloc((void **)&d_si_h, pp->n_part * sizeof(*d_si_h)));
   check(cudaMalloc((void **)&d_si_i, pp->n_part * sizeof(*d_si_i)));
-#if CACHE_SHAPE_ARRAYS == 6
+#if CACHE_SHAPE_ARRAYS == 5
+  struct shapeinfo_h *d_si_h;
+  check(cudaMalloc((void **)&d_si_h, pp->n_part * sizeof(*d_si_h)));
+#elif CACHE_SHAPE_ARRAYS == 6
   struct shapeinfo_yz *d_si_y, *d_si_z;
   check(cudaMalloc((void **)&d_si_y, pp->n_part * sizeof(*d_si_y)));
   check(cudaMalloc((void **)&d_si_z, pp->n_part * sizeof(*d_si_z)));
@@ -69,9 +70,10 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 			       pf->d_flds, block_stride, block_start));
   }
 
-  check(cudaFree(d_si_h));
   check(cudaFree(d_si_i));
-#if CACHE_SHAPE_ARRAYS == 6
+#if CACHE_SHAPE_ARRAYS == 5
+  check(cudaFree(d_si_h));
+#elif CACHE_SHAPE_ARRAYS == 6
   check(cudaFree(d_si_y));
   check(cudaFree(d_si_z));
 #endif
