@@ -22,10 +22,15 @@ EXTERN_C void
 PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 		       int block_stride)
 {
-  struct shapeinfo_h *d_shapeinfo_h;
-  struct shapeinfo_i *d_shapeinfo_i;
-  check(cudaMalloc((void **)&d_shapeinfo_h, pp->n_part * sizeof(*d_shapeinfo_h)));
-  check(cudaMalloc((void **)&d_shapeinfo_i, pp->n_part * sizeof(*d_shapeinfo_i)));
+  struct shapeinfo_h *d_si_h;
+  struct shapeinfo_i *d_si_i;
+  check(cudaMalloc((void **)&d_si_h, pp->n_part * sizeof(*d_si_h)));
+  check(cudaMalloc((void **)&d_si_i, pp->n_part * sizeof(*d_si_i)));
+#if CACHE_SHAPE_ARRAYS == 6
+  struct shapeinfo_yz *d_si_y, *d_si_z;
+  check(cudaMalloc((void **)&d_si_y, pp->n_part * sizeof(*d_si_y)));
+  check(cudaMalloc((void **)&d_si_z, pp->n_part * sizeof(*d_si_z)));
+#endif
   real *d_vxi;
   check(cudaMalloc((void **)&d_vxi, pp->n_part * sizeof(*d_vxi)));
   real *d_qni;
@@ -45,27 +50,31 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
   for (int block_start = 0; block_start < block_stride; block_start++) {
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p1_5, (pp->n_part, pp->d_part,
-				d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+				D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 				block_stride, block_start));
 
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p2x, (pp->n_part, pp->d_part,
-			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 			       pf->d_flds, block_stride, block_start));
 
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p2y, (pp->n_part, pp->d_part,
-			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 			       pf->d_flds, block_stride, block_start));
 
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p2z, (pp->n_part, pp->d_part,
-			       d_shapeinfo_h, d_shapeinfo_i, d_vxi, d_qni, d_ci1,
+			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 			       pf->d_flds, block_stride, block_start));
   }
 
-  check(cudaFree(d_shapeinfo_h));
-  check(cudaFree(d_shapeinfo_i));
+  check(cudaFree(d_si_h));
+  check(cudaFree(d_si_i));
+#if CACHE_SHAPE_ARRAYS == 6
+  check(cudaFree(d_si_y));
+  check(cudaFree(d_si_z));
+#endif
   check(cudaFree(d_vxi));
   check(cudaFree(d_qni));
   check(cudaFree(d_ci1));

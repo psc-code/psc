@@ -3,7 +3,7 @@
 
 #define DIM DIM_YZ
 #define PFX(x) yz6_ ## x
-#define CACHE_SHAPE_ARRAYS 5
+#define CACHE_SHAPE_ARRAYS 6
 #define CALC_CURRENT
 #undef USE_SCRATCH
 #define SW (2)
