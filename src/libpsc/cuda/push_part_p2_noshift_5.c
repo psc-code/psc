@@ -22,6 +22,26 @@ struct shapeinfo_i {
 #define SI_SHIFT10Z (si_i->shiftz[1] - si_i->shiftz[0])
 
 __device__ static void
+shapeinfo_load(int i, int cell_end, SHAPE_INFO_ARGS,
+	       struct shapeinfo_h *d_shapeinfo_h,
+	       struct shapeinfo_i *d_shapeinfo_i)
+{
+  if (i < cell_end) {
+    *si_h = d_shapeinfo_h[i];
+    *si_i = d_shapeinfo_i[i];
+  } else {
+    si_h->hy[0] = real(0.);
+    si_h->hy[1] = real(0.);
+    si_h->hz[0] = real(0.);
+    si_h->hz[1] = real(0.);
+    si_i->shifty[0] = 0;
+    si_i->shifty[1] = 0;
+    si_i->shiftz[0] = 0;
+    si_i->shiftz[1] = 0;
+  }
+}
+
+__device__ static void
 cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
 		   short int shift0y, short int shift0z,
 		   short int shift1y, short int shift1z)
@@ -290,7 +310,7 @@ current_add(int m, int jy, int jz, real val, int ci1[3])
 {
   m = 0;
   float *addr = &scurr(m, jy + ci1[1], jz + ci1[2]);
-#if 1
+#if 0
   *addr += val;
   //  addFloat(addr - scurr, val);
 #else
@@ -509,26 +529,18 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
     for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
       int ci1[3];
-      real vxi[3];
+      real vxi;
       real qni_wni;
+      shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, d_shapeinfo_h, d_shapeinfo_i);
       if (i < cell_end) {
-	*si_h = d_shapeinfo_h[i];
-	*si_i = d_shapeinfo_i[i];
-	vxi[0] = d_vxi[i];
+	vxi = d_vxi[i];
 	qni_wni = d_qni[i];
 	decode_ci1(d_ci1[i], ci1);
       } else {
+	vxi = 0.;
         qni_wni = 0.;
-	si_h->hy[0] = real(0.);
-	si_h->hy[1] = real(0.);
-	si_h->hz[0] = real(0.);
-	si_h->hz[1] = real(0.);
-	si_i->shifty[0] = 0;
-	si_i->shifty[1] = 0;
-	si_i->shiftz[0] = 0;
-	si_i->shiftz[1] = 0;
       }
-      yz_calc_jx(vxi[0], qni_wni, ci1, SHAPE_INFO_PARAMS);
+      yz_calc_jx(vxi, qni_wni, ci1, SHAPE_INFO_PARAMS);
     }
   }
 
@@ -566,21 +578,12 @@ push_part_p2y(int n_particles, particles_cuda_dev_t d_particles,
       DECLARE_SHAPE_INFO;
       int ci1[3];
       real qni_wni;
+      shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, d_shapeinfo_h, d_shapeinfo_i);
       if (i < cell_end) {
-	*si_h = d_shapeinfo_h[i];
-	*si_i = d_shapeinfo_i[i];
 	qni_wni = d_qni[i];
 	decode_ci1(d_ci1[i], ci1);
       } else {
         qni_wni = 0.;
-	si_h->hy[0] = real(0.);
-	si_h->hy[1] = real(0.);
-	si_h->hz[0] = real(0.);
-	si_h->hz[1] = real(0.);
-	si_i->shifty[0] = 0;
-	si_i->shifty[1] = 0;
-	si_i->shiftz[0] = 0;
-	si_i->shiftz[1] = 0;
       }
       yz_calc_jy(qni_wni, ci1, SHAPE_INFO_PARAMS);
     }
@@ -620,21 +623,12 @@ push_part_p2z(int n_particles, particles_cuda_dev_t d_particles,
       DECLARE_SHAPE_INFO;
       int ci1[3];
       real qni_wni;
+      shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, d_shapeinfo_h, d_shapeinfo_i);
       if (i < cell_end) {
-	*si_h = d_shapeinfo_h[i];
-	*si_i = d_shapeinfo_i[i];
 	qni_wni = d_qni[i];
 	decode_ci1(d_ci1[i], ci1);
       } else {
         qni_wni = 0.;
-	si_h->hy[0] = real(0.);
-	si_h->hy[1] = real(0.);
-	si_h->hz[0] = real(0.);
-	si_h->hz[1] = real(0.);
-	si_i->shifty[0] = 0;
-	si_i->shifty[1] = 0;
-	si_i->shiftz[0] = 0;
-	si_i->shiftz[1] = 0;
       }
       yz_calc_jz(qni_wni, ci1, SHAPE_INFO_PARAMS);
     }
