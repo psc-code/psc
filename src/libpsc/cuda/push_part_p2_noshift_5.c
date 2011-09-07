@@ -581,16 +581,21 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
   }
   __syncthreads();
 
-  {
-    int cell_begin = d_particles.c_offsets[bid * cells_per_block];
-    int cell_end   = d_particles.c_offsets[(bid+1) * cells_per_block];
+  for (int cid = bid * cells_per_block; cid < (bid+1) * cells_per_block; cid++) {
+    uchar4 ci1;
+    int _ci1[3];
+    cellIdx_to_cellCrd_rel(cid, _ci1);
+    ci1.y = _ci1[1];
+    ci1.z = _ci1[2];
+    
+    int cell_begin = d_particles.c_offsets[cid];
+    int cell_end   = d_particles.c_offsets[cid+1];
     
     int nr_loops = (cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
     int imax = cell_begin + nr_loops * THREADS_PER_BLOCK;
 
     for (int i = cell_begin + tid; i < imax; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
-      uchar4 ci1;
       real vxi;
       real qni_wni;
 #ifdef NO_READ
@@ -598,7 +603,6 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
 	vxi = d_vxi[i];
 	qni_wni = d_qni[i];
-	ci1 = d_ci1[i];
       } else {
 	si_y->s0[0] = real(0.);
 	si_y->s0[1] = real(0.);
@@ -614,7 +618,6 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	SI_SHIFT1Z = 0;
 	vxi = 0.;
         qni_wni = 0.;
-	ci1.y = ci1.z = 0;
       }
 #else
       shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
