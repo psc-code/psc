@@ -1,9 +1,10 @@
 
 //#define NO_READ
-//#define NO_WRITE
 //#define NO_CALC_JX
+//#define NO_WRITE
 //#define WRITE_NONATOMIC
 
+// OPT: ci1 8 bit loads could be forced -> 32bit (e.g. ushort2)
 // OPT: take i < cell_end condition out of load
 // OPT: Use float4 for shapeinfo_yz etc
 
