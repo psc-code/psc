@@ -36,7 +36,7 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
   check(cudaMalloc((void **)&d_vxi, pp->n_part * sizeof(*d_vxi)));
   real *d_qni;
   check(cudaMalloc((void **)&d_qni, pp->n_part * sizeof(*d_qni)));
-  int *d_ci1;
+  uchar4 *d_ci1;
   check(cudaMalloc((void **)&d_ci1, pp->n_part * sizeof(*d_ci1)));
 
 
