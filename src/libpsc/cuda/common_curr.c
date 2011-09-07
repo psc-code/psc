@@ -396,6 +396,7 @@ reduce_sum(float mySum)
 {
   unsigned int tid = threadIdx.x;
 
+  __syncthreads(); // why? wrong results w/o it
   sdata1[tid] = mySum;
   __syncthreads();
 
