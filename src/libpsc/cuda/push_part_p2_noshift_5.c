@@ -399,7 +399,7 @@ yz_calc_jx(real vxi, real qni_wni, uchar4 ci1, SHAPE_INFO_ARGS)
       calc_jx_one(-2, jz, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
     }
     for (int jy = -1; jy <= 1; jy++) {
-      calc_jx_one(-1, jy, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
+      calc_jx_one(jy, jz, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
     }
     if (SI_SHIFT0Y > 0 || SI_SHIFT1Y > 0) {
       calc_jx_one( 2, jz, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
