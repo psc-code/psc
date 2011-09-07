@@ -590,7 +590,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	vxi = 0.;
         qni_wni = 0.;
       }
-#ifdef xNO_WRITE
+#ifdef NO_WRITE
       if (block_start < 0) {
 	scurr[threadIdx.x] += si_y->s0[0];
 	scurr[threadIdx.x] += si_y->s0[1];
@@ -601,8 +601,8 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	scurr[threadIdx.x] += si_z->s1[0];
 	scurr[threadIdx.x] += si_z->s1[1];
 	scurr[threadIdx.x] += si_i->shifty[0];
-	scurr[threadIdx.x] += si_i->shifty[0];
-	scurr[threadIdx.x] += si_i->shiftz[1];
+	scurr[threadIdx.x] += si_i->shifty[1];
+	scurr[threadIdx.x] += si_i->shiftz[0];
 	scurr[threadIdx.x] += si_i->shiftz[1];
 	scurr[threadIdx.x] += vxi;
 	scurr[threadIdx.x] += qni_wni;
