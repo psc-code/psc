@@ -310,37 +310,6 @@ __shared__ real scurr[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW)];
 			      * (BLOCKSIZE_Y + 2*SW) + (jy)+SW])
 
 // ----------------------------------------------------------------------
-
-__shared__ volatile short int stag[(BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW)];
-
-__device__ static void
-xaddFloat(int idx, float val)
-{
-  bool done = false;
-  do {
-    __syncthreads();
-    stag[idx] = threadIdx.x;
-    __syncthreads();
-    if (stag[idx] == threadIdx.x) {
-      scurr[idx] += val;
-      done = true;
-    }
-  } while (!done);
-}
-
-__device__ static void
-addFloat(int idx, float val)
-{
-  for (int i = 0; i < THREADS_PER_BLOCK; i++) {
-    __syncthreads();
-    if (i == threadIdx.x) {
-      scurr[idx] += val;
-    }
-  }
-  __syncthreads();
-}
-
-// ----------------------------------------------------------------------
 // current_add
 
 __device__ static void
@@ -356,12 +325,11 @@ current_add(int m, int jy, int jz, real val, uchar4 ci1)
 #ifdef WRITE_NONATOMIC
   *addr += val;
 #else
-#if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
-  atomicAdd(addr, val);
-#else
-  addFloat(addr - scurr, val);
-  //while ((val = atomicExch(addr, atomicExch(addr, 0.0f)+val))!=0.0f);
-#endif
+  //  if (ci1.y > 100)
+    val = reduce_sum(val);
+  if (threadIdx.x == 0) {
+    *addr += val;
+  }
 #endif
 
 #endif
