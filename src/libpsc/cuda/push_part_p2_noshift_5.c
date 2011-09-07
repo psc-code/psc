@@ -360,25 +360,40 @@ current_add(int m, int jy, int jz, real val, int ci1[3])
 // ----------------------------------------------------------------------
 // yz_calc_jx
 
+__device__ static inline void
+calc_jx_one(int jy, int jz, real fnqx, int *ci1, SHAPE_INFO_ARGS,
+	    real s0z, real s1z)
+{
+  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
+  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
+  real wx = s0y * s0z
+    + real(.5) * s1y * s0z
+    + real(.5) * s0y * s1z
+    + real(.3333333333) * s1y * s1z;
+  
+  current_add(0, jy, jz, fnqx * wx, ci1);
+}
+
 __device__ static void
 yz_calc_jx(real vxi, real qni_wni, int ci1[3], SHAPE_INFO_ARGS)
 {
-  for (int jz = -SW; jz <= SW; jz++) {
+  int jzl = (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
+  int jzh = (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
+  for (int jz = jzl; jz <= jzh; jz++) {
     real fnqx = vxi * qni_wni * d_fnqs;
     
     // FIXME, can be simplified
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
     
-    for (int jy = -SW; jy <= SW; jy++) {
-      real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-      real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-      real wx = s0y * s0z
-	+ real(.5) * s1y * s0z
-	+ real(.5) * s0y * s1z
-	+ real(.3333333333) * s1y * s1z;
-      
-      current_add(0, jy, jz, fnqx * wx, ci1);
+    if (SI_SHIFT0Y < 0 || SI_SHIFT1Y < 0) {
+      calc_jx_one(-2, jz, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
+    }
+    for (int jy = -1; jy <= 1; jy++) {
+      calc_jx_one(-1, jy, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
+    }
+    if (SI_SHIFT0Y > 0 || SI_SHIFT1Y > 0) {
+      calc_jx_one( 2, jz, fnqx, ci1, SHAPE_INFO_PARAMS, s0z, s1z);
     }
   }
 }
@@ -575,7 +590,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	vxi = 0.;
         qni_wni = 0.;
       }
-#ifdef NO_WRITE
+#ifdef xNO_WRITE
       if (block_start < 0) {
 	scurr[threadIdx.x] += si_y->s0[0];
 	scurr[threadIdx.x] += si_y->s0[1];
@@ -589,6 +604,9 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	scurr[threadIdx.x] += si_i->shifty[0];
 	scurr[threadIdx.x] += si_i->shiftz[1];
 	scurr[threadIdx.x] += si_i->shiftz[1];
+	scurr[threadIdx.x] += vxi;
+	scurr[threadIdx.x] += qni_wni;
+	scurr[threadIdx.x] += ci1[1];
       }
 #else
       yz_calc_jx(vxi, qni_wni, ci1, SHAPE_INFO_PARAMS);
