@@ -94,7 +94,7 @@ struct shapeinfo_yz {
 };
 
 struct shapeinfo_i {
-  short int shifty[2], shiftz[2];
+  char4 shiftyz; // x: y[0] y: y[1] z: z[0] w: z[1]
 };
 
 #define DECLARE_SHAPE_INFO			\
@@ -108,12 +108,12 @@ struct shapeinfo_i {
 #define D_SHAPEINFO_PARAMS d_si_y, d_si_z, d_si_i
 #define D_SHAPEINFO_ARGS struct shapeinfo_yz *d_si_y, struct shapeinfo_yz *d_si_z, struct shapeinfo_i *d_si_i
 
-#define SI_SHIFT0Y si_i->shifty[0]
-#define SI_SHIFT1Y si_i->shifty[1]
-#define SI_SHIFT10Y (si_i->shifty[1] - si_i->shifty[0])
-#define SI_SHIFT0Z si_i->shiftz[0]
-#define SI_SHIFT1Z si_i->shiftz[1]
-#define SI_SHIFT10Z (si_i->shiftz[1] - si_i->shiftz[0])
+#define SI_SHIFT0Y si_i->shiftyz.x
+#define SI_SHIFT1Y si_i->shiftyz.y
+#define SI_SHIFT10Y (si_i->shiftyz.y - si_i->shiftyz.x)
+#define SI_SHIFT0Z si_i->shiftyz.z
+#define SI_SHIFT1Z si_i->shiftyz.w
+#define SI_SHIFT10Z (si_i->shiftyz.w - si_i->shiftyz.z)
 
 __device__ static void
 shapeinfo_load(int i, int cell_end, SHAPE_INFO_ARGS, D_SHAPEINFO_ARGS)
@@ -131,10 +131,10 @@ shapeinfo_load(int i, int cell_end, SHAPE_INFO_ARGS, D_SHAPEINFO_ARGS)
     si_z->s0[1] = real(0.);
     si_z->s1[0] = real(0.);
     si_z->s1[1] = real(0.);
-    si_i->shifty[0] = 0;
-    si_i->shifty[1] = 0;
-    si_i->shiftz[0] = 0;
-    si_i->shiftz[1] = 0;
+    SI_SHIFT0Y = 0;
+    SI_SHIFT1Y = 0;
+    SI_SHIFT0Z = 0;
+    SI_SHIFT1Z = 0;
   }
 }
 
@@ -154,10 +154,10 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
   calc_shape_coeff(si_y->s1, h1[1]);
   calc_shape_coeff(si_z->s0, h0[2]);
   calc_shape_coeff(si_z->s1, h1[2]);
-  si_i->shifty[0] = shift0y;
-  si_i->shifty[1] = shift1y;
-  si_i->shiftz[0] = shift0z;
-  si_i->shiftz[1] = shift1z;
+  SI_SHIFT0Y = shift0y;
+  SI_SHIFT1Y = shift1y;
+  SI_SHIFT0Z = shift0z;
+  SI_SHIFT1Z = shift1z;
 }
 
 #define pick_shape_coeff(t, comp, j, shift) ({				\
@@ -600,10 +600,10 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	scurr[threadIdx.x] += si_z->s0[1];
 	scurr[threadIdx.x] += si_z->s1[0];
 	scurr[threadIdx.x] += si_z->s1[1];
-	scurr[threadIdx.x] += si_i->shifty[0];
-	scurr[threadIdx.x] += si_i->shifty[1];
-	scurr[threadIdx.x] += si_i->shiftz[0];
-	scurr[threadIdx.x] += si_i->shiftz[1];
+	scurr[threadIdx.x] += SI_SHIFT0Y;
+	scurr[threadIdx.x] += SI_SHIFT1Y;
+	scurr[threadIdx.x] += SI_SHIFT0Z;
+	scurr[threadIdx.x] += SI_SHIFT1Z;
 	scurr[threadIdx.x] += vxi;
 	scurr[threadIdx.x] += qni_wni;
 	scurr[threadIdx.x] += ci1[1];
