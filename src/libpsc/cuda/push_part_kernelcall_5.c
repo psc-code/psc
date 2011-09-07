@@ -59,6 +59,7 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 			       pf->d_flds, block_stride, block_start));
 
+#if 0
     RUN_KERNEL(dimGrid, dimBlock,
 	       push_part_p2y, (pp->n_part, pp->d_part,
 			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
@@ -68,6 +69,7 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *dummy,
 	       push_part_p2z, (pp->n_part, pp->d_part,
 			       D_SHAPEINFO_PARAMS, d_vxi, d_qni, d_ci1,
 			       pf->d_flds, block_stride, block_start));
+#endif
   }
 
   check(cudaFree(d_si_i));
