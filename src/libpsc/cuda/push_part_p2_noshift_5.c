@@ -1,5 +1,10 @@
 
-//#define NO_WRITE
+#define NO_READ
+#define NO_WRITE
+
+// OPT: take i < cell_end condition out of load
+// OPT: Use char4 for si1
+// OPT: Use float4 for shapeinfo_yz etc
 
 #if CACHE_SHAPE_ARRAYS == 5
 
@@ -560,7 +565,9 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
   int tid = threadIdx.x;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
+#ifndef NO_WRITE
   zero_scurr1();
+#endif
 
   __shared__ int bid;
   if (tid == 0) {
@@ -581,6 +588,30 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
       int ci1[3];
       real vxi;
       real qni_wni;
+#ifdef NO_READ
+      if (block_start < 0) {
+	shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
+	vxi = d_vxi[i];
+	qni_wni = d_qni[i];
+	decode_ci1(d_ci1[i], ci1);
+      } else {
+	si_y->s0[0] = real(0.);
+	si_y->s0[1] = real(0.);
+	si_y->s1[0] = real(0.);
+	si_y->s1[1] = real(0.);
+	si_z->s0[0] = real(0.);
+	si_z->s0[1] = real(0.);
+	si_z->s1[0] = real(0.);
+	si_z->s1[1] = real(0.);
+	SI_SHIFT0Y = 0;
+	SI_SHIFT1Y = 0;
+	SI_SHIFT0Z = 0;
+	SI_SHIFT1Z = 0;
+	vxi = 0.;
+        qni_wni = 0.;
+	ci1[0] = ci1[1] = ci1[2] = 0;
+      }
+#else
       shapeinfo_load(i, cell_end, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
       if (i < cell_end) {
 	vxi = d_vxi[i];
@@ -589,8 +620,10 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
       } else {
 	vxi = 0.;
         qni_wni = 0.;
+	ci1[0] = ci1[1] = ci1[2] = 0;
       }
-#ifdef NO_WRITE
+#endif
+#ifdef NO_CALC_JX
       if (block_start < 0) {
 	scurr[threadIdx.x] += si_y->s0[0];
 	scurr[threadIdx.x] += si_y->s0[1];
@@ -614,8 +647,10 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
     }
   }
 
+#ifndef NO_WRITE
   __syncthreads();
   add_scurr_to_flds1(d_flds, 0);
+#endif
 }
 
 __global__ static void
