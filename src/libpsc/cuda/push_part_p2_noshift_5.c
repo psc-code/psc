@@ -377,10 +377,10 @@ calc_jx_one(int jy, int jz, real fnqx, int *ci1, SHAPE_INFO_ARGS,
 __device__ static void
 yz_calc_jx(real vxi, real qni_wni, int ci1[3], SHAPE_INFO_ARGS)
 {
+  real fnqx = vxi * qni_wni * d_fnqs;
   int jzl = (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
   int jzh = (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
   for (int jz = jzl; jz <= jzh; jz++) {
-    real fnqx = vxi * qni_wni * d_fnqs;
     
     // FIXME, can be simplified
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
