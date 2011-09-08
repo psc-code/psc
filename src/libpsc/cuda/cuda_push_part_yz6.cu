@@ -15,5 +15,5 @@
 #include "common_curr.c"
 
 #include "push_part_p1.c"
-#include "push_part_p2_noshift_5.c"
-#include "push_part_kernelcall_5.c"
+#include "push_part_p2_noshift_6.c"
+#include "push_part_kernelcall_6.c"
