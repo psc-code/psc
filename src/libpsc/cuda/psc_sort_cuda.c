@@ -43,6 +43,19 @@ sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
 
 #endif
 
+void
+cuda_sort_patch(int p, particles_cuda_t *pp)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_sort_patch", 1., 0, 0);
+  }
+
+  prof_start(pr);
+  sort_patch(p, pp);
+  prof_stop(pr);
+}
+
 static void
 psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
@@ -58,8 +71,8 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   psc_foreach_patch(ppsc, p) {
     sort_patch(p, &particles.p[p]);
   }
-
   prof_stop(pr);
+
   psc_mparticles_cuda_put_to(&particles, particles_base);
 }
 

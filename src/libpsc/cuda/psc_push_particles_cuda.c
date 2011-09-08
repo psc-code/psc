@@ -7,6 +7,9 @@
 #include <mrc_profile.h>
 #include <math.h>
 
+// FIXME -> header
+void cuda_sort_patch(int p, particles_cuda_t *pp);
+
 static void
 psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
 				  mparticles_base_t *particles_base,
@@ -186,11 +189,17 @@ cuda_push_partq(mparticles_base_t *particles_base,
     prof_stop(pr2);
   }
 
+#if 0
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
   psc_mparticles_cuda_put_to(&particles, particles_base);
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
   psc_sort_run(ppsc->sort, particles_base);
   psc_mparticles_cuda_get_from(&particles, particles_base);
+#else
+  psc_foreach_patch(ppsc, p) {
+    cuda_sort_patch(p, &particles.p[p]);
+  }
+#endif
 
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
