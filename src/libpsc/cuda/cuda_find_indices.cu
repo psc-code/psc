@@ -6,18 +6,14 @@ EXTERN_C void sort_pairs_host(unsigned int *keys, unsigned int *vals, int n);
 // FIXME, specific to 1x8x8, should be in ! .cu, so that cell_map works
 
 static void
-create_indices_host(unsigned int *cnis,
-		    particles_cuda_t *pp, struct psc_patch *patch)
-{
-}
-
-static void
 sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
-			    unsigned int *cnis, unsigned int *ids)
+			    unsigned int *d_cnis, unsigned int *d_ids)
 {
   int n_part = pp->n_part;
   particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
+  unsigned int *h_cnis = (unsigned int *) malloc(n_part * sizeof(*h_cnis));
+  unsigned int *h_ids = (unsigned int *) malloc(n_part * sizeof(*h_ids));
 
   check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
@@ -42,29 +38,40 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
       ((pos[1] & 4) << 2) |
       ((pos[1] & 2) << 1) |
       ((pos[1] & 1) << 0);
-    cnis[i] = idx;
-    ids[i] = i;
+    h_cnis[i] = idx;
+    h_ids[i] = i;
   }
+
+  check(cudaMemcpy(d_cnis, h_cnis, n_part * sizeof(*h_cnis),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(d_ids, h_ids, n_part * sizeof(*h_ids),
+		   cudaMemcpyHostToDevice));
+
+  free(h_cnis);
+  free(h_ids);
 }
 
 static void
-sort_reorder_host(particles_cuda_t *pp, unsigned int *ids)
+sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
 {
   int n_part = pp->n_part;
   particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
+  unsigned int *h_ids = (unsigned int *) malloc(n_part);
 
   check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(h_part->pxi4, d_part->pxi4, n_part * sizeof(float4),
+		   cudaMemcpyDeviceToHost));
+  check(cudaMemcpy(h_ids, d_ids, n_part * sizeof(*h_ids),
 		   cudaMemcpyDeviceToHost));
 
   // move into new position
   float4 *xi4 = (float4 *) malloc(n_part * sizeof(*xi4));
   float4 *pxi4 = (float4 *) malloc(n_part * sizeof(*pxi4));
   for (int i = 0; i < n_part; i++) {
-    xi4[i] = pp->h_part.xi4[ids[i]];
-    pxi4[i] = pp->h_part.pxi4[ids[i]];
+    xi4[i] = pp->h_part.xi4[h_ids[i]];
+    pxi4[i] = pp->h_part.pxi4[h_ids[i]];
   }
   // back to in-place
   memcpy(pp->h_part.xi4, xi4, n_part * sizeof(*xi4));
@@ -77,6 +84,7 @@ sort_reorder_host(particles_cuda_t *pp, unsigned int *ids)
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(d_part->pxi4, h_part->pxi4, n_part * sizeof(float4),
 		   cudaMemcpyHostToDevice));
+  free(h_ids);
 }
 
 EXTERN_C void
@@ -84,14 +92,15 @@ sort_patch(int p, particles_cuda_t *pp)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
-  unsigned int *cnis = (unsigned int *) malloc(pp->n_part * sizeof(*cnis));
-  unsigned int *ids = (unsigned int *) malloc(pp->n_part * sizeof(*ids));
+  unsigned int *d_cnis, *d_ids;
+  check(cudaMalloc((void **) &d_cnis, pp->n_part * sizeof(*d_cnis)));
+  check(cudaMalloc((void **) &d_ids, pp->n_part * sizeof(*d_ids)));
 
-  sort_find_cell_indices_host(pp, patch, cnis, ids);
-  sort_pairs_host(cnis, ids, pp->n_part);
-  sort_reorder_host(pp, ids);
+  sort_find_cell_indices_host(pp, patch, d_cnis, d_ids);
+  sort_pairs_host(d_cnis, d_ids, pp->n_part);
+  sort_reorder_host(pp, d_ids);
 
-  free(cnis);
-  free(ids);
+  check(cudaFree(d_cnis));
+  check(cudaFree(d_ids));
 }
 

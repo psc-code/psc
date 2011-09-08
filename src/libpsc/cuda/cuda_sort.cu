@@ -2,6 +2,7 @@
 #include <psc_cuda.h>
 #include <thrust/sort.h>
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 
 EXTERN_C void
 sort_pairs_device(unsigned int *_d_keys, unsigned int *_d_vals, int n)
@@ -12,16 +13,16 @@ sort_pairs_device(unsigned int *_d_keys, unsigned int *_d_vals, int n)
 }
 
 EXTERN_C void
-sort_pairs_host(unsigned int *keys, unsigned int *vals, int n)
+sort_pairs_host(unsigned int *_d_keys, unsigned int *_d_vals, int n)
 {
-#if 0
-  thrust::sort_by_key(keys, keys + n, vals);
-#else
-  thrust::device_vector<unsigned int> d_keys(keys, keys + n);
-  thrust::device_vector<unsigned int> d_vals(vals, vals + n);
-  sort_pairs_device(thrust::raw_pointer_cast(&d_keys[0]),
-		    thrust::raw_pointer_cast(&d_vals[0]), n);
-  //  thrust::copy(d_keys.begin(), d_keys.end(), keys);
-  thrust::copy(d_vals.begin(), d_vals.end(), vals);
-#endif
+  thrust::device_ptr<unsigned int> d_keys(_d_keys);
+  thrust::device_ptr<unsigned int> d_vals(_d_vals);
+
+  thrust::host_vector<unsigned int> h_keys(d_keys, d_keys + n);
+  thrust::host_vector<unsigned int> h_vals(d_vals, d_vals + n);
+
+  thrust::sort_by_key(h_keys.begin(), h_keys.end(), h_vals.begin());
+
+  //  thrust::copy(h_keys.begin(), h_keys.end(), d_keys);
+  thrust::copy(h_vals.begin(), h_vals.end(), d_vals);
 }
