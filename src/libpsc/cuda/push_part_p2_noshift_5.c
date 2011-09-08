@@ -7,7 +7,7 @@ __shared__ volatile bool do_calc_jx;
 // OPT: ci1 8 bit loads could be forced -> 32bit (e.g. ushort2)
 // OPT: take i < cell_end condition out of load
 // OPT: Use float4 for shapeinfo_yz etc
-// OPT: incorp w_scurrci1 wid into wci1_off
+
 #define WARPS_PER_BLOCK (THREADS_PER_BLOCK / 32)
 
 __shared__ int _cell_end[WARPS_PER_BLOCK]; // last particle in current cell valid in p2x
@@ -19,17 +19,16 @@ __shared__ real _scurr[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 
 #define w_scurr_(wid,m,jy,jz) (_scurr[(m * (BLOCKSIZE_Z + 2*SW) + (jz)+SW) \
 				      * (BLOCKSIZE_Y + 2*SW) + (jy)+SW	\
-				      + wid * xBLOCKSTRIDE])
+				      + (wid) * xBLOCKSTRIDE])
 
 #define w_scurr(m,jy,jz) w_scurr_(threadIdx.x >> 5, m,jy,jz)
 
 #define w_scurr_ci1(jy,jz) (_scurr[(m * (BLOCKSIZE_Z + 2*SW) + (jz))	\
-				  * (BLOCKSIZE_Y + 2*SW) + (jy) + w_ci1_off \
-				  + (threadIdx.x >> 5) * xBLOCKSTRIDE])
+				   * (BLOCKSIZE_Y + 2*SW) + (jy) + w_ci1_off])
 
 
 #define w_cell_end (_cell_end[threadIdx.x >> 5])
-#define w_i_end (_cell_end[threadIdx.x >> 5])
+#define w_i_end (_i_end[threadIdx.x >> 5])
 #define w_ci1_off (_ci1_off[threadIdx.x >> 5])
 
 #if CACHE_SHAPE_ARRAYS == 5
@@ -39,7 +38,7 @@ struct shapeinfo_h {
 };
 
 struct shapeinfo_i {
-  short int shifty[2], shiftz[2];
+  char4 shiftyz; // x: y[0] y: y[1] z: z[0] w: z[1]
 };
 
 #define DECLARE_SHAPE_INFO			\
@@ -52,12 +51,12 @@ struct shapeinfo_i {
 #define D_SHAPEINFO_PARAMS d_si_h, d_si_i
 #define D_SHAPEINFO_ARGS struct shapeinfo_h *d_si_h, struct shapeinfo_i *d_si_i
 
-#define SI_SHIFT0Y si_i->shifty[0]
-#define SI_SHIFT1Y si_i->shifty[1]
-#define SI_SHIFT10Y (si_i->shifty[1] - si_i->shifty[0])
-#define SI_SHIFT0Z si_i->shiftz[0]
-#define SI_SHIFT1Z si_i->shiftz[1]
-#define SI_SHIFT10Z (si_i->shiftz[1] - si_i->shiftz[0])
+#define SI_SHIFT0Y si_i->shiftyz.x
+#define SI_SHIFT1Y si_i->shiftyz.y
+#define SI_SHIFT10Y (si_i->shiftyz.y - si_i->shiftyz.x)
+#define SI_SHIFT0Z si_i->shiftyz.z
+#define SI_SHIFT1Z si_i->shiftyz.w
+#define SI_SHIFT10Z (si_i->shiftyz.w - si_i->shiftyz.z)
 
 __device__ static void
 shapeinfo_load(int i, SHAPE_INFO_ARGS,
@@ -72,10 +71,10 @@ shapeinfo_load(int i, SHAPE_INFO_ARGS,
     si_h->hy[1] = real(0.);
     si_h->hz[0] = real(0.);
     si_h->hz[1] = real(0.);
-    si_i->shifty[0] = 0;
-    si_i->shifty[1] = 0;
-    si_i->shiftz[0] = 0;
-    si_i->shiftz[1] = 0;
+    SI_SHIFT0Y = 0;
+    SI_SHIFT1Y = 0;
+    SI_SHIFT0Z = 0;
+    SI_SHIFT1Z = 0;
   }
 }
 
@@ -88,10 +87,10 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
   si_h->hy[1] = h1[1];
   si_h->hz[0] = h0[2];
   si_h->hz[1] = h1[2];
-  si_i->shifty[0] = shift0y;
-  si_i->shifty[1] = shift1y;
-  si_i->shiftz[0] = shift0z;
-  si_i->shiftz[1] = shift1z;
+  SI_SHIFT0Y = shift0y;
+  SI_SHIFT1Y = shift1y;
+  SI_SHIFT0Z = shift0z;
+  SI_SHIFT1Z = shift1z;
 }
 
 #define pick_shape_coeff(t, comp, j, shift) ({				\
@@ -542,7 +541,7 @@ add_scurr_to_flds1(real *d_flds, int m)
     jy -= SW;
     real val = real(0.);
     for (int wid = 0; wid < WARPS_PER_BLOCK; wid++) {
-      val += w_scurr_(0, 0, jy, jz);
+      val += w_scurr_(wid, 0, jy, jz);
     }
     F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
     i += THREADS_PER_BLOCK;
@@ -634,7 +633,8 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
     cellIdx_to_cellCrd_rel(cid, ci1);
     int cell_begin = d_particles.c_offsets[cid];
     if (lid == 0) {
-      w_ci1_off = (ci1[2] + SW) * (BLOCKSIZE_Y + 2*SW) + (ci1[1] + SW);
+      w_ci1_off = (ci1[2] + SW) * (BLOCKSIZE_Y + 2*SW) + (ci1[1] + SW)
+	+ (threadIdx.x >> 5) * xBLOCKSTRIDE;
       w_cell_end = d_particles.c_offsets[cid+1];
       int nr_loops = (w_cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
       w_i_end = cell_begin + nr_loops * THREADS_PER_BLOCK;
