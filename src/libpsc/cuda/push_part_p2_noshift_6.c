@@ -7,11 +7,14 @@ __shared__ volatile bool do_calc_jx;
 // OPT: ci1 8 bit loads could be forced -> 32bit (e.g. ushort2)
 // OPT: take i < cell_end condition out of load
 // OPT: Use float4 for shapeinfo_yz etc
+// OPT: reduce two at a time
+// OPT: try splitting current calc / measuring by itself
 
 #define WARPS_PER_BLOCK (THREADS_PER_BLOCK / 32)
 
 __shared__ int _cell_end[WARPS_PER_BLOCK]; // last particle in current cell valid in p2x
 __shared__ int _i_end[WARPS_PER_BLOCK]; // end for loop counter
+__shared__ int _ci1[WARPS_PER_BLOCK]; // relative offset of current cell in block
 __shared__ int _ci1_off[WARPS_PER_BLOCK]; // offset into scurr, includes ci1 and SW
 
 #define xBLOCKSTRIDE ((((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32)
@@ -29,6 +32,7 @@ __shared__ real _scurr[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 
 #define w_cell_end (_cell_end[threadIdx.x >> 5])
 #define w_i_end (_i_end[threadIdx.x >> 5])
+#define w_ci1 (_ci1[threadIdx.x >> 5])
 #define w_ci1_off (_ci1_off[threadIdx.x >> 5])
 
 #if CACHE_SHAPE_ARRAYS == 5
@@ -230,7 +234,7 @@ __shared__ int ci0[3]; // cell index of lower-left cell in block
 // calc_shape_info
 
 __device__ static void
-calc_shape_info(uchar4 *ci1, int i, particles_cuda_dev_t d_particles,
+calc_shape_info(int i, particles_cuda_dev_t d_particles,
 		real *vxi, real *qni_wni, SHAPE_INFO_ARGS)
 {
 #if DIM == DIM_Z  
@@ -247,10 +251,6 @@ calc_shape_info(uchar4 *ci1, int i, particles_cuda_dev_t d_particles,
     struct d_particle p;
     LOAD_PARTICLE(p, d_particles, i);
     *qni_wni = p.qni_wni;
-    int _ci1[3];
-    find_idx(p.xi, _ci1, real(0.));
-    ci1->y = _ci1[1] - ci0[1];
-    ci1->z = _ci1[2] - ci0[2];
 
     int j[3], k[3];
     calc_vxi(vxi, p);
@@ -263,10 +263,10 @@ calc_shape_info(uchar4 *ci1, int i, particles_cuda_dev_t d_particles,
     push_xi(&p, vxi, d_dt);
     find_idx_off(p.xi, k, h1, real(0.));
 
-    shift0y = j[1] - (ci0[1] + ci1->y);
-    shift0z = j[2] - (ci0[2] + ci1->z);
-    shift1y = k[1] - (ci0[1] + ci1->y);
-    shift1z = k[2] - (ci0[2] + ci1->z);
+    shift0y = j[1] - (ci0[1] + w_ci1.y);
+    shift0z = j[2] - (ci0[2] + w_ci1.z);
+    shift1y = k[1] - (ci0[1] + w_ci1.y);
+    shift1z = k[2] - (ci0[2] + w_ci1.z);
   } else {
     *qni_wni = real(0.);
     vxi[0] = real(0.);
@@ -575,7 +575,7 @@ shapeinfo_zero(SHAPE_INFO_ARGS)
 __device__ static void
 yz_calc_jx_fake(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
-  if (qni_wni == 9999.) {
+  if (qni_wni == real(9999.)) {
 #if CACHE_SHAPE_ARRAYS == 5
     sdata[threadIdx.x] += si_h->hy[0];
     sdata[threadIdx.x] += si_h->hy[1];
@@ -633,6 +633,8 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
     cellIdx_to_cellCrd_rel(cid, ci1);
     int cell_begin = d_particles.c_offsets[cid];
     if (1||(tid & 31) == 0) {
+      w_ci1.y = ci1[1];
+      w_ci1.z = ci1[2];
       w_ci1_off = (ci1[2] + SW) * (BLOCKSIZE_Y + 2*SW) + (ci1[1] + SW)
 	+ (threadIdx.x >> 5) * xBLOCKSTRIDE;
       w_cell_end = d_particles.c_offsets[cid+1];
@@ -646,10 +648,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
       real qni_wni;
       if (do_read && i < w_cell_end) {
 	uchar4 ci1; //OPT
-	calc_shape_info(&ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
-	// shapeinfo_load(i, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
-	//          vxi = d_vxi[i];
-	//qni_wni = d_qni[i];
+	calc_shape_info(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
       } else {
 	shapeinfo_zero(SHAPE_INFO_PARAMS);
 	vxi[0] = 0.;
