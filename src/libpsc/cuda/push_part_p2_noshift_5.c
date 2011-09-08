@@ -533,6 +533,60 @@ add_scurr_to_flds1(real *d_flds, int m)
   }
 }
 
+__device__ static void
+shapeinfo_zero(SHAPE_INFO_ARGS)
+{
+#if CACHE_SHAPE_ARRAYS == 5
+  si_h->hy[0] = real(0.);
+  si_h->hy[1] = real(0.);
+  si_h->hz[0] = real(0.);
+  si_h->hz[1] = real(0.);
+#elif CACHE_SHAPE_ARRAYS == 5
+  si_y->s0[0] = real(0.);
+  si_y->s0[1] = real(0.);
+  si_y->s1[0] = real(0.);
+  si_y->s1[1] = real(0.);
+  si_z->s0[0] = real(0.);
+  si_z->s0[1] = real(0.);
+  si_z->s1[0] = real(0.);
+  si_z->s1[1] = real(0.);
+#endif
+  SI_SHIFT0Y = 0;
+  SI_SHIFT1Y = 0;
+  SI_SHIFT0Z = 0;
+  SI_SHIFT1Z = 0;
+}
+
+__device__ static void
+yz_calc_jx_fake(real vxi, real qni_wni, SHAPE_INFO_ARGS)
+{
+  if (qni_wni == 9999.) {
+#if CACHE_SHAPE_ARRAYS == 5
+    scurr[threadIdx.x] += si_h->hy[0];
+    scurr[threadIdx.x] += si_h->hy[1];
+    scurr[threadIdx.x] += si_h->hz[0];
+    scurr[threadIdx.x] += si_h->hz[1];
+#elif CACHE_SHAPE_ARRAYS == 6
+    scurr[threadIdx.x] += si_y->s0[0];
+    scurr[threadIdx.x] += si_y->s0[1];
+    scurr[threadIdx.x] += si_y->s1[0];
+    scurr[threadIdx.x] += si_y->s1[1];
+    scurr[threadIdx.x] += si_z->s0[0];
+    scurr[threadIdx.x] += si_z->s0[1];
+    scurr[threadIdx.x] += si_z->s1[0];
+    scurr[threadIdx.x] += si_z->s1[1];
+#endif
+    scurr[threadIdx.x] += SI_SHIFT0Y;
+    scurr[threadIdx.x] += SI_SHIFT1Y;
+    scurr[threadIdx.x] += SI_SHIFT0Z;
+    scurr[threadIdx.x] += SI_SHIFT1Z;
+    scurr[threadIdx.x] += vxi;
+    scurr[threadIdx.x] += qni_wni;
+  }
+}
+
+// ======================================================================
+
 __global__ static void
 push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	      D_SHAPEINFO_ARGS,
@@ -583,54 +637,14 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	vxi = d_vxi[i];
 	qni_wni = d_qni[i];
       } else {
-#if CACHE_SHAPE_ARRAYS == 5
-	si_h->hy[0] = real(0.);
-	si_h->hy[1] = real(0.);
-	si_h->hz[0] = real(0.);
-	si_h->hz[1] = real(0.);
-#elif CACHE_SHAPE_ARRAYS == 5
-	si_y->s0[0] = real(0.);
-	si_y->s0[1] = real(0.);
-	si_y->s1[0] = real(0.);
-	si_y->s1[1] = real(0.);
-	si_z->s0[0] = real(0.);
-	si_z->s0[1] = real(0.);
-	si_z->s1[0] = real(0.);
-	si_z->s1[1] = real(0.);
-#endif
-	SI_SHIFT0Y = 0;
-	SI_SHIFT1Y = 0;
-	SI_SHIFT0Z = 0;
-	SI_SHIFT1Z = 0;
+	shapeinfo_zero(SHAPE_INFO_PARAMS);
 	vxi = 0.;
         qni_wni = 0.;
       }
       if (do_calc_jx) {
 	yz_calc_jx(vxi, qni_wni, SHAPE_INFO_PARAMS);
       } else {
-	if (block_start < 0) {
-#if CACHE_SHAPE_ARRAYS == 5
-	  scurr[threadIdx.x] += si_h->hy[0];
-	  scurr[threadIdx.x] += si_h->hy[1];
-	  scurr[threadIdx.x] += si_h->hz[0];
-	  scurr[threadIdx.x] += si_h->hz[1];
-#elif CACHE_SHAPE_ARRAYS == 6
-	  scurr[threadIdx.x] += si_y->s0[0];
-	  scurr[threadIdx.x] += si_y->s0[1];
-	  scurr[threadIdx.x] += si_y->s1[0];
-	  scurr[threadIdx.x] += si_y->s1[1];
-	  scurr[threadIdx.x] += si_z->s0[0];
-	  scurr[threadIdx.x] += si_z->s0[1];
-	  scurr[threadIdx.x] += si_z->s1[0];
-	  scurr[threadIdx.x] += si_z->s1[1];
-#endif
-	  scurr[threadIdx.x] += SI_SHIFT0Y;
-	  scurr[threadIdx.x] += SI_SHIFT1Y;
-	  scurr[threadIdx.x] += SI_SHIFT0Z;
-	  scurr[threadIdx.x] += SI_SHIFT1Z;
-	  scurr[threadIdx.x] += vxi;
-	  scurr[threadIdx.x] += qni_wni;
-	}
+	yz_calc_jx_fake(vxi, qni_wni, SHAPE_INFO_PARAMS);
       }
     }
   }
