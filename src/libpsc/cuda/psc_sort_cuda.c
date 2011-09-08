@@ -31,6 +31,37 @@ create_indices(struct cell_map *map, particles_base_t *pp, struct psc_patch *pat
 }
 
 static void
+sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
+{
+  unsigned int *cnts = calloc(n_max, sizeof(*cnts));
+  
+  // count
+  for (int i = 0; i < n; i++) {
+    unsigned int key = keys[i];
+    cnts[key]++;
+  }
+  
+  // calc offsets
+  int cur = 0;
+  for (int i = 0; i < n_max; i++) {
+    int cnt = cnts[i];
+    cnts[i] = cur;
+    cur += cnt;
+  }
+  assert(cur == n);
+
+  // move
+  unsigned int *vals2 = malloc(n * sizeof(*vals2));
+  for (int i = 0; i < n; i++) {
+    unsigned int key = keys[i];
+    vals2[cnts[key]++] = vals[i];
+  }
+  free(cnts);
+  memcpy(vals, vals2, n * sizeof(*vals));
+  free(vals2);
+}
+
+static void
 sort_patch(int p, particles_base_t *pp)
 {
   struct psc_patch *patch = &ppsc->patch[p];
@@ -44,40 +75,15 @@ sort_patch(int p, particles_base_t *pp)
     ids[i] = i;
   }
   
-  unsigned int *cnts = malloc(N * sizeof(*cnts));
-  memset(cnts, 0, N * sizeof(*cnts));
-  
-  // count
-  for (int i = 0; i < pp->n_part; i++) {
-    unsigned int cni = cnis[i];
-    cnts[cni]++;
-  }
-  
-  // calc offsets
-  int cur = 0;
-  for (int i = 0; i < N; i++) {
-    int n = cnts[i];
-    cnts[i] = cur;
-    cur += n;
-  }
-  assert(cur == pp->n_part);
-
-  // sort
-  unsigned int *ids2 = malloc(pp->n_part * sizeof(*ids2));
-  for (int i = 0; i < pp->n_part; i++) {
-    unsigned int cni = cnis[i];
-    ids2[cnts[cni]++] = ids[i];
-  }
-  free(ids);
-  free(cnts);
+  sort_pairs(cnis, ids, pp->n_part, N);
   free(cnis);
 
   // move into new position
   particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
   for (int i = 0; i < pp->n_part; i++) {
-    particles2[i] = pp->particles[ids2[i]];
+    particles2[i] = pp->particles[ids[i]];
   }
-  free(ids2);
+  free(ids);
 
   // back to in-place
   memcpy(pp->particles, particles2, pp->n_part * sizeof(*particles2));
