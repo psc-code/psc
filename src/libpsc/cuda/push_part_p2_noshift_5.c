@@ -291,8 +291,12 @@ push_part_p1_5(int n_particles, particles_cuda_dev_t d_particles,
     calc_shape_info(&ci1, i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS, cell_end);
     if (i < cell_end) {
       d_si_i[i] = *si_i;
+#if CACHE_SHAPE_ARRAYS == 5
+      d_si_h[i] = *si_h;
+#elif CACHE_SHAPE_ARRAYS == 6
       d_si_y[i] = *si_y;
       d_si_z[i] = *si_z;
+#endif
       d_qni[i] = qni_wni;
       d_ci1[i] = ci1;
       d_vxi[i] = vxi[0];
@@ -536,9 +540,9 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	      real *d_flds,
 	      int block_stride, int block_start)
 {
-  do_read = false;
-  do_reduce = false;
-  do_write = false;
+  do_read = true;
+  do_reduce = true;
+  do_write = true;
   do_calc_jx = true;
   int tid = threadIdx.x;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
@@ -579,6 +583,12 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	vxi = d_vxi[i];
 	qni_wni = d_qni[i];
       } else {
+#if CACHE_SHAPE_ARRAYS == 5
+	si_h->hy[0] = real(0.);
+	si_h->hy[1] = real(0.);
+	si_h->hz[0] = real(0.);
+	si_h->hz[1] = real(0.);
+#elif CACHE_SHAPE_ARRAYS == 5
 	si_y->s0[0] = real(0.);
 	si_y->s0[1] = real(0.);
 	si_y->s1[0] = real(0.);
@@ -587,6 +597,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	si_z->s0[1] = real(0.);
 	si_z->s1[0] = real(0.);
 	si_z->s1[1] = real(0.);
+#endif
 	SI_SHIFT0Y = 0;
 	SI_SHIFT1Y = 0;
 	SI_SHIFT0Z = 0;
@@ -598,6 +609,12 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	yz_calc_jx(vxi, qni_wni, SHAPE_INFO_PARAMS);
       } else {
 	if (block_start < 0) {
+#if CACHE_SHAPE_ARRAYS == 5
+	  scurr[threadIdx.x] += si_h->hy[0];
+	  scurr[threadIdx.x] += si_h->hy[1];
+	  scurr[threadIdx.x] += si_h->hz[0];
+	  scurr[threadIdx.x] += si_h->hz[1];
+#elif CACHE_SHAPE_ARRAYS == 6
 	  scurr[threadIdx.x] += si_y->s0[0];
 	  scurr[threadIdx.x] += si_y->s0[1];
 	  scurr[threadIdx.x] += si_y->s1[0];
@@ -606,6 +623,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	  scurr[threadIdx.x] += si_z->s0[1];
 	  scurr[threadIdx.x] += si_z->s1[0];
 	  scurr[threadIdx.x] += si_z->s1[1];
+#endif
 	  scurr[threadIdx.x] += SI_SHIFT0Y;
 	  scurr[threadIdx.x] += SI_SHIFT1Y;
 	  scurr[threadIdx.x] += SI_SHIFT0Z;
