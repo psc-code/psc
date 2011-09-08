@@ -613,7 +613,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
   do_reduce = true;
   do_write = true;
   do_calc_jx = true;
-  int tid = threadIdx.x, lid = tid & 31;
+  int tid = threadIdx.x;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
   if (do_write) {
@@ -627,20 +627,20 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
   }
   __syncthreads();
 
-  for (int cid = bid * cells_per_block;
-       cid < (bid + 1) * cells_per_block; cid++) {
+  for (int cid = bid * cells_per_block + (tid >> 5);
+       cid < (bid + 1) * cells_per_block; cid += WARPS_PER_BLOCK) {
     int ci1[3];
     cellIdx_to_cellCrd_rel(cid, ci1);
     int cell_begin = d_particles.c_offsets[cid];
-    if (lid == 0) {
+    if (1||(tid & 31) == 0) {
       w_ci1_off = (ci1[2] + SW) * (BLOCKSIZE_Y + 2*SW) + (ci1[1] + SW)
 	+ (threadIdx.x >> 5) * xBLOCKSTRIDE;
       w_cell_end = d_particles.c_offsets[cid+1];
-      int nr_loops = (w_cell_end - cell_begin + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-      w_i_end = cell_begin + nr_loops * THREADS_PER_BLOCK;
+      int nr_loops = (w_cell_end - cell_begin + 32-1) / 32;
+      w_i_end = cell_begin + nr_loops * 32;
     }
 
-    for (int i = cell_begin + tid; i < w_i_end + tid; i += THREADS_PER_BLOCK) {
+    for (int i = cell_begin + (tid&31); i < w_i_end + (tid&31); i += 32) {
       DECLARE_SHAPE_INFO;
       real vxi;
       real qni_wni;
