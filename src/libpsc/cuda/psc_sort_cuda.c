@@ -3,6 +3,8 @@
 
 #include <mrc_profile.h>
 
+EXTERN_C void sort_pairs_host(unsigned int *keys, unsigned int *vals, int n);
+
 // ======================================================================
 // cuda sort
 
@@ -30,6 +32,7 @@ create_indices(struct cell_map *map, particles_base_t *pp, struct psc_patch *pat
   return cnis;
 }
 
+#if 0
 static void
 sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
 {
@@ -60,6 +63,7 @@ sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
   memcpy(vals, vals2, n * sizeof(*vals));
   free(vals2);
 }
+#endif
 
 static void
 sort_patch(int p, particles_base_t *pp)
@@ -75,14 +79,14 @@ sort_patch(int p, particles_base_t *pp)
     ids[i] = i;
   }
   
-  sort_pairs(cnis, ids, pp->n_part, N);
-  free(cnis);
+  sort_pairs_host(cnis, ids, pp->n_part);
 
   // move into new position
   particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
   for (int i = 0; i < pp->n_part; i++) {
     particles2[i] = pp->particles[ids[i]];
   }
+  free(cnis);
   free(ids);
 
   // back to in-place

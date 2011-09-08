@@ -13,6 +13,7 @@ libsubdir_la_SOURCES = \
 
 libsubdir_la_LIBADD = \
 	cuda_transfer.lo \
+	cuda_sort.lo \
 	cuda_push_part_yz_a.lo \
 	cuda_push_part_yz_b.lo \
 	cuda_push_part_yz.lo \
