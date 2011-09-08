@@ -58,7 +58,7 @@ struct d_particle {
   real qni_wni;
 };
 
-#define THREADS_PER_BLOCK 192
+#define THREADS_PER_BLOCK 256
 
 #define LOAD_PARTICLE(pp, d_p, n) do {					\
     (pp).xi[0]       = d_p.xi4[n].x;					\
