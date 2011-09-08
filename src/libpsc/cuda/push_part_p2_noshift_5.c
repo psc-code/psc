@@ -1,8 +1,8 @@
 
-//#define NO_READ
-//#define NO_CALC_JX
-//#define NO_WRITE
-//#define WRITE_NONATOMIC
+__shared__ volatile bool do_read;
+__shared__ volatile bool do_write;
+__shared__ volatile bool do_reduce;
+__shared__ volatile bool do_calc_jx;
 
 // OPT: ci1 8 bit loads could be forced -> 32bit (e.g. ushort2)
 // OPT: take i < cell_end condition out of load
@@ -322,22 +322,18 @@ __shared__ int ci1_off; // offset into scurr, includes ci1 and SW
 __device__ static void
 current_add(int m, int jy, int jz, real val)
 {
-#ifdef NO_WRITE
-  if (ci1_off < 0)
-    scurr_ci1(jy, jz) += val;
-#else
-
-#ifdef WRITE_NONATOMIC
-  scurr_ci1(jy, jz) += val;
-#else
-  //  if (ci1_off < 0)
+  if (!do_write) {
+    if (ci1_off < 0)
+      scurr_ci1(jy, jz) += val;
+  } else if (do_reduce) {
+    //  if (ci1_off < 0)
     val = reduce_sum(val);
-  if (threadIdx.x == 0) {
+    if (threadIdx.x == 0) {
+      scurr_ci1(jy, jz) += val;
+    }
+  } else {
     scurr_ci1(jy, jz) += val;
   }
-#endif
-
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -540,12 +536,16 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	      real *d_flds,
 	      int block_stride, int block_start)
 {
+  do_read = false;
+  do_reduce = false;
+  do_write = false;
+  do_calc_jx = true;
   int tid = threadIdx.x;
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;
 
-#ifndef NO_WRITE
-  zero_scurr1();
-#endif
+  if (do_write) {
+    zero_scurr1();
+  }
 
   int bid = blockIdx.x * block_stride + block_start;
   int cid_begin = bid * cells_per_block;
@@ -569,13 +569,12 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
       i_end = cell_begin + nr_loops * THREADS_PER_BLOCK;
     }
     __syncthreads();
-    
+
     for (int i = cell_begin + tid; i < i_end + tid; i += THREADS_PER_BLOCK) {
       DECLARE_SHAPE_INFO;
       real vxi;
       real qni_wni;
-#ifdef NO_READ
-      if (block_start < 0) {
+      if (do_read && i < cell_end) {
 	shapeinfo_load(i, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
 	vxi = d_vxi[i];
 	qni_wni = d_qni[i];
@@ -595,43 +594,33 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles,
 	vxi = 0.;
         qni_wni = 0.;
       }
-#else
-      shapeinfo_load(i, SHAPE_INFO_PARAMS, D_SHAPEINFO_PARAMS);
-      if (i < cell_end) {
-	vxi = d_vxi[i];
-	qni_wni = d_qni[i];
+      if (do_calc_jx) {
+	yz_calc_jx(vxi, qni_wni, SHAPE_INFO_PARAMS);
       } else {
-	vxi = 0.;
-        qni_wni = 0.;
+	if (block_start < 0) {
+	  scurr[threadIdx.x] += si_y->s0[0];
+	  scurr[threadIdx.x] += si_y->s0[1];
+	  scurr[threadIdx.x] += si_y->s1[0];
+	  scurr[threadIdx.x] += si_y->s1[1];
+	  scurr[threadIdx.x] += si_z->s0[0];
+	  scurr[threadIdx.x] += si_z->s0[1];
+	  scurr[threadIdx.x] += si_z->s1[0];
+	  scurr[threadIdx.x] += si_z->s1[1];
+	  scurr[threadIdx.x] += SI_SHIFT0Y;
+	  scurr[threadIdx.x] += SI_SHIFT1Y;
+	  scurr[threadIdx.x] += SI_SHIFT0Z;
+	  scurr[threadIdx.x] += SI_SHIFT1Z;
+	  scurr[threadIdx.x] += vxi;
+	  scurr[threadIdx.x] += qni_wni;
+	}
       }
-#endif
-#ifdef NO_CALC_JX
-      if (block_start < 0) {
-	scurr[threadIdx.x] += si_y->s0[0];
-	scurr[threadIdx.x] += si_y->s0[1];
-	scurr[threadIdx.x] += si_y->s1[0];
-	scurr[threadIdx.x] += si_y->s1[1];
-	scurr[threadIdx.x] += si_z->s0[0];
-	scurr[threadIdx.x] += si_z->s0[1];
-	scurr[threadIdx.x] += si_z->s1[0];
-	scurr[threadIdx.x] += si_z->s1[1];
-	scurr[threadIdx.x] += SI_SHIFT0Y;
-	scurr[threadIdx.x] += SI_SHIFT1Y;
-	scurr[threadIdx.x] += SI_SHIFT0Z;
-	scurr[threadIdx.x] += SI_SHIFT1Z;
-	scurr[threadIdx.x] += vxi;
-	scurr[threadIdx.x] += qni_wni;
-      }
-#else
-      yz_calc_jx(vxi, qni_wni, SHAPE_INFO_PARAMS);
-#endif
     }
   }
 
-#ifndef NO_WRITE
-  __syncthreads();
-  add_scurr_to_flds1(d_flds, 0);
-#endif
+  if (do_write) {
+    __syncthreads();
+    add_scurr_to_flds1(d_flds, 0);
+  }
 }
 
 __global__ static void
