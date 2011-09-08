@@ -6,7 +6,8 @@
 // FIXME -> header
 EXTERN_C void sort_pairs_host(unsigned int *keys, unsigned int *vals, int n);
 EXTERN_C void create_indices_host(unsigned int *cnis, struct cell_map *map,
-				  particles_base_t *pp, struct psc_patch *patch);
+				  particles_cuda_t *pp, struct psc_patch *patch);
+EXTERN_C void particles_cuda_copy_to_device(particles_cuda_t *pp);
 
 
 // ======================================================================
@@ -45,33 +46,8 @@ sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
 }
 #endif
 
-EXTERN_C void
-create_indices_host(unsigned int *cnis, struct cell_map *map,
-		    particles_base_t *pp, struct psc_patch *patch)
-{
-  for (int i = 0; i < pp->n_part; i++) {
-    particle_base_t *p = &pp->particles[i];
-    particle_base_real_t dxi = 1.f / ppsc->dx[0];
-    particle_base_real_t dyi = 1.f / ppsc->dx[1];
-    particle_base_real_t dzi = 1.f / ppsc->dx[2];
-    particle_base_real_t xi[3] = {
-      (p->xi - patch->xb[0]) * dxi,
-      (p->yi - patch->xb[1]) * dyi,
-      (p->zi - patch->xb[2]) * dzi };
-    int pos[3];
-    for (int d = 0; d < 3; d++) {
-      pos[d] = particle_base_real_nint(xi[d]);
-    }
-    
-    cnis[i] = cell_map_3to1(map, pos);
-    int idx = (((pos[2] / 8) * (patch->ldims[1] / 8) + (pos[1] / 8)) * (patch->ldims[0] / 8) + pos[0]) << 6;
-    //    cnis[i] = idx;
-
-    assert(cnis[i] < map->N);
-  }
-}
 void
-find_cell_indices_host(particles_base_t *pp, struct psc_patch *patch,
+find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
 		       unsigned int *cnis, unsigned int *ids)
 {
   struct cell_map map;
@@ -85,7 +61,7 @@ find_cell_indices_host(particles_base_t *pp, struct psc_patch *patch,
 }
 
 static void
-sort_patch(int p, particles_base_t *pp)
+sort_patch(int p, particles_cuda_t *pp)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
@@ -97,34 +73,43 @@ sort_patch(int p, particles_base_t *pp)
   sort_pairs_host(cnis, ids, pp->n_part);
 
   // move into new position
-  particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
+  float4 *xi4 = malloc(pp->n_part * sizeof(*xi4));
+  float4 *pxi4 = malloc(pp->n_part * sizeof(*pxi4));
   for (int i = 0; i < pp->n_part; i++) {
-    particles2[i] = pp->particles[ids[i]];
+    xi4[i] = pp->h_part.xi4[ids[i]];
+    pxi4[i] = pp->h_part.pxi4[ids[i]];
   }
   free(cnis);
   free(ids);
 
   // back to in-place
-  memcpy(pp->particles, particles2, pp->n_part * sizeof(*particles2));
+  memcpy(pp->h_part.xi4, xi4, pp->n_part * sizeof(*xi4));
+  memcpy(pp->h_part.pxi4, pxi4, pp->n_part * sizeof(*pxi4));
   
-  free(particles2);
+  free(xi4);
+  free(pxi4);
+
+  particles_cuda_copy_to_device(pp); 
 }
 
 static void
-psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles)
+psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
+  mparticles_cuda_t particles;
+  psc_mparticles_cuda_get_from(&particles, particles_base);
+
   static int pr;
   if (!pr) {
     pr = prof_register("cuda_sort", 1., 0, 0);
   }
 
   prof_start(pr);
-    
   psc_foreach_patch(ppsc, p) {
-    sort_patch(p, &particles->p[p]);
+    sort_patch(p, &particles.p[p]);
   }
 
   prof_stop(pr);
+  psc_mparticles_cuda_put_to(&particles, particles_base);
 }
 
 // ======================================================================

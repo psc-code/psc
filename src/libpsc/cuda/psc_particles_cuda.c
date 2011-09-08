@@ -125,6 +125,10 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
       } else {
 	block = pp->nr_blocks;
       }
+      if (last_block > block) {
+	MHERE;
+	break;
+      }
       assert(last_block <= block);
       while (last_block < block) {
 	h_part->offsets[last_block+1] = n;
@@ -163,6 +167,10 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
 	block = map.N;
       }
       assert(block <= pp->nr_blocks * cells_per_block);
+      if (last_block > block) {
+	MHERE;
+	break;
+      }
       assert(last_block <= block);
       while (last_block < block) {
 	h_part->c_offsets[last_block+1] = n;
