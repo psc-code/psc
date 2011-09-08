@@ -8,7 +8,8 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_fields_cuda.c \
 	psc_particles_cuda.c \
-	psc_push_particles_cuda.c
+	psc_push_particles_cuda.c \
+	psc_sort_cuda.c
 
 libsubdir_la_LIBADD = \
 	cuda_transfer.lo \
