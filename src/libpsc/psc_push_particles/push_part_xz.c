@@ -46,10 +46,10 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = nint(u);
-    int j3 = nint(w);
-    creal h1 = j1-u;
-    creal h3 = j3-w;
+    int lg1 = nint(u);
+    int lg3 = nint(w);
+    creal h1 = lg1-u;
+    creal h3 = lg3-w;
 
     creal gmx=.5f*(.5f+h1)*(.5f+h1);
     creal gmz=.5f*(.5f+h3)*(.5f+h3);
@@ -69,10 +69,10 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     u = (part->xi - patch->xb[0]) * dxi - .5f;
     w = (part->zi - patch->xb[2]) * dzi - .5f;
-    int l1 = nint(u);
-    int l3 = nint(w);
-    h1=l1-u;
-    h3=l3-w;
+    int lh1 = nint(u);
+    int lh3 = nint(w);
+    h1=lh1 - u;
+    h3=lh3 - w;
     creal hmx=.5f*(.5f+h1)*(.5f+h1);
     creal hmz=.5f*(.5f+h3)*(.5f+h3);
     creal h0x=.75f-h1*h1;
@@ -82,24 +82,24 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     // FIELD INTERPOLATION
 
-#define INTERPOLATE_FIELD(m, gx, gz, lx, lz)				\
-    (gz##mz*(gx##mx*F3(m, lx##1-1,0,lz##3-1) +				\
-	     gx##0x*F3(m, lx##1  ,0,lz##3-1) +				\
-	     gx##1x*F3(m, lx##1+1,0,lz##3-1)) +				\
-     gz##0z*(gx##mx*F3(m, lx##1-1,0,lz##3  ) +				\
-	     gx##0x*F3(m, lx##1  ,0,lz##3  ) +				\
-	     gx##1x*F3(m, lx##1+1,0,lz##3  )) +				\
-     gz##1z*(gx##mx*F3(m, lx##1-1,0,lz##3+1) +				\
-	     gx##0x*F3(m, lx##1  ,0,lz##3+1) +				\
-	     gx##1x*F3(m, lx##1+1,0,lz##3+1)))				\
+#define INTERPOLATE_FIELD(m, gx, gz)					\
+    (gz##mz*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3-1) +			\
+	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3-1) +			\
+	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3-1)) +			\
+     gz##0z*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3  ) +			\
+	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3  ) +			\
+	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3  )) +			\
+     gz##1z*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3+1) +			\
+	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3+1) +			\
+	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3+1)))			\
+      
+    creal exq = INTERPOLATE_FIELD(EX, h, g);
+    creal eyq = INTERPOLATE_FIELD(EY, g, g);
+    creal ezq = INTERPOLATE_FIELD(EZ, g, h);
 
-    creal exq = INTERPOLATE_FIELD(EX, h, g, l, j);
-    creal eyq = INTERPOLATE_FIELD(EY, g, g, j, j);
-    creal ezq = INTERPOLATE_FIELD(EZ, g, h, j, l);
-
-    creal hxq = INTERPOLATE_FIELD(HX, g, h, j, l);
-    creal hyq = INTERPOLATE_FIELD(HY, h, h, l, l);
-    creal hzq = INTERPOLATE_FIELD(HZ, h, g, l, j);
+    creal hxq = INTERPOLATE_FIELD(HX, g, h);
+    creal hyq = INTERPOLATE_FIELD(HY, h, h);
+    creal hzq = INTERPOLATE_FIELD(HZ, h, g);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -154,12 +154,12 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
       S1Z(i) = 0.f;
     }
 
-    S1X(k1-j1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S1X(k1-j1+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S1X(k1-j1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S1Z(k3-j3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-j3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-j3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
+    S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
+    S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
+    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
+    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
+    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
@@ -170,19 +170,19 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     int l1min, l3min, l1max, l3max;
     
-    if (k1 == j1) {
+    if (k1 == lg1) {
       l1min = -1; l1max = +1;
-    } else if (k1 == j1 - 1) {
+    } else if (k1 == lg1 - 1) {
       l1min = -2; l1max = +1;
-    } else { // (k1 == j1 + 1)
+    } else { // (k1 == lg1 + 1)
       l1min = -1; l1max = +2;
     }
 
-    if (k3 == j3) {
+    if (k3 == lg3) {
       l3min = -1; l3max = +1;
-    } else if (k3 == j3 - 1) {
+    } else if (k3 == lg3 - 1) {
       l3min = -2; l3max = +1;
-    } else { // (k3 == j3 + 1)
+    } else { // (k3 == lg3 + 1)
       l3min = -1; l3max = +2;
     }
 
@@ -212,9 +212,9 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 	jyh = fnqy*wy;
 	JZH(l1) -= fnqz*wz;
 
-	F3(JXI, j1+l1,0,j3+l3) += jxh;
-	F3(JYI, j1+l1,0,j3+l3) += jyh;
-	F3(JZI, j1+l1,0,j3+l3) += JZH(l1);
+	F3(JXI, lg1+l1,0,lg3+l3) += jxh;
+	F3(JYI, lg1+l1,0,lg3+l3) += jyh;
+	F3(JZI, lg1+l1,0,lg3+l3) += JZH(l1);
       }
     }
   }
