@@ -24,7 +24,6 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
   creal fnqxs = ppsc->dx[0] * fnqs / dt;
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
   fields_zero(pf, JXI);
@@ -46,13 +45,10 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
     part->zi += vzi * zl;
 
     creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
     int j1 = nint(u);
-    int j2 = nint(v);
     int j3 = nint(w);
     creal h1 = j1-u;
-    creal h2 = j2-v;
     creal h3 = j3-w;
 
     creal gmx=.5f*(.5f+h1)*(.5f+h1);
@@ -72,13 +68,10 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
     S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
     u = (part->xi - patch->xb[0]) * dxi - .5f;
-    v = (part->yi - patch->xb[1]) * dyi;
     w = (part->zi - patch->xb[2]) * dzi - .5f;
     int l1 = nint(u);
-    int l2 = nint(v);
     int l3 = nint(w);
     h1=l1-u;
-    h2=l2-v;
     h3=l3-w;
     creal hmx=.5f*(.5f+h1)*(.5f+h1);
     creal hmz=.5f*(.5f+h3)*(.5f+h3);
@@ -90,15 +83,15 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz, lx, lz)				\
-    (gz##mz*(gx##mx*F3(m, lx##1-1,j2,lz##3-1) +				\
-	     gx##0x*F3(m, lx##1  ,j2,lz##3-1) +				\
-	     gx##1x*F3(m, lx##1+1,j2,lz##3-1)) +			\
-     gz##0z*(gx##mx*F3(m, lx##1-1,j2,lz##3  ) +				\
-	     gx##0x*F3(m, lx##1  ,j2,lz##3  ) +				\
-	     gx##1x*F3(m, lx##1+1,j2,lz##3  )) +			\
-     gz##1z*(gx##mx*F3(m, lx##1-1,j2,lz##3+1) +				\
-	     gx##0x*F3(m, lx##1  ,j2,lz##3+1) +				\
-	     gx##1x*F3(m, lx##1+1,j2,lz##3+1)))				\
+    (gz##mz*(gx##mx*F3(m, lx##1-1,0,lz##3-1) +				\
+	     gx##0x*F3(m, lx##1  ,0,lz##3-1) +				\
+	     gx##1x*F3(m, lx##1+1,0,lz##3-1)) +				\
+     gz##0z*(gx##mx*F3(m, lx##1-1,0,lz##3  ) +				\
+	     gx##0x*F3(m, lx##1  ,0,lz##3  ) +				\
+	     gx##1x*F3(m, lx##1+1,0,lz##3  )) +				\
+     gz##1z*(gx##mx*F3(m, lx##1-1,0,lz##3+1) +				\
+	     gx##0x*F3(m, lx##1  ,0,lz##3+1) +				\
+	     gx##1x*F3(m, lx##1+1,0,lz##3+1)))				\
 
     creal exq = INTERPOLATE_FIELD(EX, h, g, l, j);
     creal eyq = INTERPOLATE_FIELD(EY, g, g, j, j);
@@ -219,9 +212,9 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 	jyh = fnqy*wy;
 	JZH(l1) -= fnqz*wz;
 
-	F3(JXI, j1+l1,j2,j3+l3) += jxh;
-	F3(JYI, j1+l1,j2,j3+l3) += jyh;
-	F3(JZI, j1+l1,j2,j3+l3) += JZH(l1);
+	F3(JXI, j1+l1,0,j3+l3) += jxh;
+	F3(JYI, j1+l1,0,j3+l3) += jyh;
+	F3(JZI, j1+l1,0,j3+l3) += JZH(l1);
       }
     }
   }
