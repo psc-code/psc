@@ -60,12 +60,12 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    S0X(-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S0X(+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S0X(+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S0X(-1) = gmx;
+    S0X(+0) = g0x;
+    S0X(+1) = g1x;
+    S0Z(-1) = gmz;
+    S0Z(+0) = g0z;
+    S0Z(+1) = g1z;
 
     u = (part->xi - patch->xb[0]) * dxi - .5f;
     w = (part->zi - patch->xb[2]) * dzi - .5f;
@@ -154,12 +154,12 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
       S1Z(i) = 0.f;
     }
 
-    S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1X(k1-lg1-1) = .5f*(.5f+h1)*(.5f+h1);
+    S1X(k1-lg1+0) = .75f-h1*h1;
+    S1X(k1-lg1+1) = .5f*(.5f-h1)*(.5f-h1);
+    S1Z(k3-lg3-1) = .5f*(.5f+h3)*(.5f+h3);
+    S1Z(k3-lg3+0) = .75f-h3*h3;
+    S1Z(k3-lg3+1) = .5f*(.5f-h3)*(.5f-h3);
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
