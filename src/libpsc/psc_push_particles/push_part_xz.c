@@ -188,16 +188,9 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 
     creal jxh;
     creal jyh;
-    creal jzh[5];
-
-#define JZH(i) jzh[i+2]
 
     creal fnqx = part->qni * part->wni * fnqxs;
     creal fnqy = vyi * part->qni * part->wni * fnqs;
-    creal fnqz = part->qni * part->wni * fnqzs;
-    for (int l1 = l1min; l1 <= l1max; l1++) {
-      JZH(l1) = 0.f;
-    }
     for (int l3 = l3min; l3 <= l3max; l3++) {
       jxh = 0.f;
       for (int l1 = l1min; l1 <= l1max; l1++) {
@@ -206,15 +199,23 @@ do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
 	  + .5f * S1X(l1) * S0Z(l3)
 	  + .5f * S0X(l1) * S1Z(l3)
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
-	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 
 	jxh -= fnqx*wx;
 	jyh = fnqy*wy;
-	JZH(l1) -= fnqz*wz;
 
 	F3(JXI, lg1+l1,0,lg3+l3) += jxh;
 	F3(JYI, lg1+l1,0,lg3+l3) += jyh;
-	F3(JZI, lg1+l1,0,lg3+l3) += JZH(l1);
+      }
+    }
+
+    creal fnqz = part->qni * part->wni * fnqzs;
+    for (int l1 = l1min; l1 <= l1max; l1++) {
+      creal jzh = 0.f;
+      for (int l3 = l3min; l3 <= l3max; l3++) {
+	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
+
+	jzh -= fnqz*wz;
+	F3(JZI, lg1+l1,0,lg3+l3) += jzh;
       }
     }
   }
