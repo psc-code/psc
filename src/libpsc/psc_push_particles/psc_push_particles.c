@@ -57,6 +57,7 @@ static void
 psc_push_particles_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_generic_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1st_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_fortran_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_vay_ops);
 #ifdef USE_SSE2
