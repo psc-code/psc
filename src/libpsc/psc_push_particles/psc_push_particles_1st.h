@@ -37,4 +37,12 @@ nint(creal x)
   return (int)(x + 10.5f) - 10;
 }
 
+// like floor(), though returns int
+
+static inline int
+fint(creal x)
+{
+  return (int)(x + 10.f) - 10;
+}
+
 #endif

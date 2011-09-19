@@ -9,12 +9,12 @@
 static void
 do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 {
-#define S0X(off) s0x[off+2]
-#define S0Z(off) s0z[off+2]
-#define S1X(off) s1x[off+2]
-#define S1Z(off) s1z[off+2]
+#define S0X(off) s0x[off+1]
+#define S0Z(off) s0z[off+1]
+#define S1X(off) s1x[off+1]
+#define S1Z(off) s1z[off+1]
 
-  creal s0x[5] = {}, s0z[5] = {}, s1x[5], s1z[5];
+  creal s0x[4] = {}, s0z[4] = {}, s1x[4], s1z[4];
 
   creal dt = ppsc->dt;
   creal xl = .5f * dt;
@@ -46,51 +46,40 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int lg1 = nint(u);
-    int lg3 = nint(w);
-    creal h1 = lg1-u;
-    creal h3 = lg3-w;
+    int lg1 = fint(u);
+    int lg3 = fint(w);
+    creal h1 = u - lg1;
+    creal h3 = w - lg3;
 
-    creal gmx=.5f*(.5f+h1)*(.5f+h1);
-    creal gmz=.5f*(.5f+h3)*(.5f+h3);
-    creal g0x=.75f-h1*h1;
-    creal g0z=.75f-h3*h3;
-    creal g1x=.5f*(.5f-h1)*(.5f-h1);
-    creal g1z=.5f*(.5f-h3)*(.5f-h3);
+    creal g0x = 1.f - h1;
+    creal g0z = 1.f - h3;
+    creal g1x = h1;
+    creal g1z = h3;
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
-    S0X(-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S0X(+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S0X(+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S0X(+0) = g0x;
+    S0X(+1) = g1x;
+    S0Z(+0) = g0z;
+    S0Z(+1) = g1z;
 
     u = (part->xi - patch->xb[0]) * dxi - .5f;
     w = (part->zi - patch->xb[2]) * dzi - .5f;
-    int lh1 = nint(u);
-    int lh3 = nint(w);
-    h1=lh1 - u;
-    h3=lh3 - w;
-    creal hmx=.5f*(.5f+h1)*(.5f+h1);
-    creal hmz=.5f*(.5f+h3)*(.5f+h3);
-    creal h0x=.75f-h1*h1;
-    creal h0z=.75f-h3*h3;
-    creal h1x=.5f*(.5f-h1)*(.5f-h1);
-    creal h1z=.5f*(.5f-h3)*(.5f-h3);
+    int lh1 = fint(u);
+    int lh3 = fint(w);
+    h1 = u - lh1;
+    h3 = w - lh3;
+    creal h0x = 1.f - h1;
+    creal h0z = 1.f - h3;
+    creal h1x = h1;
+    creal h1z = h3;
 
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz)					\
-    (gz##mz*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3-1) +			\
-	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3-1) +			\
-	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3-1)) +			\
-     gz##0z*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3  ) +			\
-	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3  ) +			\
+    (gz##0z*(gx##0x*F3(m, l##gx##1  ,0,l##gz##3  ) +			\
 	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3  )) +			\
-     gz##1z*(gx##mx*F3(m, l##gx##1-1,0,l##gz##3+1) +			\
-	     gx##0x*F3(m, l##gx##1  ,0,l##gz##3+1) +			\
+     gz##1z*(gx##0x*F3(m, l##gx##1  ,0,l##gz##3+1) +			\
 	     gx##1x*F3(m, l##gx##1+1,0,l##gz##3+1)))			\
       
     creal exq = INTERPOLATE_FIELD(EX, h, g);
@@ -144,26 +133,24 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     u = (xi - patch->xb[0]) * dxi;
     w = (zi - patch->xb[2]) * dzi;
-    int k1 = nint(u);
-    int k3 = nint(w);
-    h1 = k1 - u;
-    h3 = k3 - w;
+    int k1 = fint(u);
+    int k3 = fint(w);
+    h1 = u - k1;
+    h3 = w - k3;
 
-    for (int i = -2; i <= 2; i++) {
+    for (int i = -1; i <= 2; i++) {
       S1X(i) = 0.f;
       S1Z(i) = 0.f;
     }
 
-    S1X(k1-lg1-1) = .5f*(1.5f-creal_abs(h1-1.f))*(1.5f-creal_abs(h1-1.f));
-    S1X(k1-lg1+0) = .75f-creal_abs(h1)*creal_abs(h1);
-    S1X(k1-lg1+1) = .5f*(1.5f-creal_abs(h1+1.f))*(1.5f-creal_abs(h1+1.f));
-    S1Z(k3-lg3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
-    S1Z(k3-lg3+0) = .75f-creal_abs(h3)*creal_abs(h3);
-    S1Z(k3-lg3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+    S1X(k1-lg1+0) = 1.f - h1;
+    S1X(k1-lg1+1) = h1;
+    S1Z(k3-lg3+0) = 1.f - h3;
+    S1Z(k3-lg3+1) = h3;
 
     // CURRENT DENSITY AT (n+1.0)*dt
 
-    for (int i = -1; i <= 1; i++) {
+    for (int i = 0; i <= 1; i++) {
       S1X(i) -= S0X(i);
       S1Z(i) -= S0Z(i);
     }
@@ -171,19 +158,19 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
     int l1min, l3min, l1max, l3max;
     
     if (k1 == lg1) {
-      l1min = -1; l1max = +1;
+      l1min = 0; l1max = +1;
     } else if (k1 == lg1 - 1) {
-      l1min = -2; l1max = +1;
+      l1min = -1; l1max = +1;
     } else { // (k1 == lg1 + 1)
-      l1min = -1; l1max = +2;
+      l1min = 0; l1max = +2;
     }
 
     if (k3 == lg3) {
-      l3min = -1; l3max = +1;
+      l3min = 0; l3max = +1;
     } else if (k3 == lg3 - 1) {
-      l3min = -2; l3max = +1;
+      l3min = -1; l3max = +1;
     } else { // (k3 == lg3 + 1)
-      l3min = -1; l3max = +2;
+      l3min = 0; l3max = +2;
     }
 
     creal fnqx = part->qni * part->wni * fnqxs;
