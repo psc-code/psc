@@ -30,6 +30,9 @@ typedef float creal;
 void psc_push_particles_1st_push_xz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base);
+void psc_push_particles_1sff_push_xz(struct psc_push_particles *push,
+				     mparticles_base_t *particles_base,
+				     mfields_base_t *flds_base);
 
 static inline int
 nint(creal x)

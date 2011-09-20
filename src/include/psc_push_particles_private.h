@@ -35,6 +35,7 @@ struct psc_push_particles_ops {
 
 extern struct psc_push_particles_ops psc_push_particles_generic_c_ops;
 extern struct psc_push_particles_ops psc_push_particles_1st_ops;
+extern struct psc_push_particles_ops psc_push_particles_1sff_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
 extern struct psc_push_particles_ops psc_push_particles_sse2_ops;

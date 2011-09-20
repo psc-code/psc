@@ -34,6 +34,26 @@ main(int argc, char **argv)
   psc_check_currents_ref(ppsc, ppsc->flds, 1e-7);
   psc_case_destroy(_case);
 
+  _case = psc_create_test_xz();
+  psc_push_particles_set_type(ppsc->push_particles, "1st");
+  psc_case_setup(_case);
+  particles = ppsc->particles;
+  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
+  //  psc_dump_particles("part-2");
+  psc_check_particles_ref(ppsc, particles, 1e-1, "push_part_xz -- 1st");
+  //  psc_check_currents_ref(ppsc, ppsc->flds, 1e-1);
+  psc_case_destroy(_case);
+
+  _case = psc_create_test_xz();
+  psc_push_particles_set_type(ppsc->push_particles, "1sff");
+  psc_case_setup(_case);
+  particles = ppsc->particles;
+  psc_push_particles_run(ppsc->push_particles, particles, ppsc->flds);
+  //  psc_dump_particles("part-2");
+  psc_check_particles_ref(ppsc, particles, 1e-1, "push_part_xz -- 1sff");
+  //  psc_check_currents_ref(ppsc, ppsc->flds, 1e-1);
+  psc_case_destroy(_case);
+
 #ifdef USE_SSE2
   struct psc_mod_config conf_sse2 = {
     .mod_particle = "sse2",
