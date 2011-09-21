@@ -744,7 +744,7 @@ psc_setup_fields_default(struct psc *psc)
       F3_BASE(pf, EY, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, EY);
       F3_BASE(pf, EZ, jx,jy,jz) +=
-	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EY);
+	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EZ);
 
       F3_BASE(pf, JXI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, JXI);
