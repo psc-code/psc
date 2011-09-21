@@ -331,21 +331,21 @@ __device__ static void
 yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
   real fnqx = vxi * qni_wni * d_fnqs;
-  int jzl = (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
-  int jzh = (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
+  int jzl = (0 && SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
+  int jzh = (0 && SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
   for (int jz = jzl; jz <= jzh; jz++) {
     
     // FIXME, can be simplified
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
     
-    if (SI_SHIFT0Y < 0 || SI_SHIFT1Y < 0) {
+    if (1 || SI_SHIFT0Y < 0 || SI_SHIFT1Y < 0) {
       calc_jx_one(-2, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
     }
     for (int jy = -1; jy <= 1; jy++) {
       calc_jx_one(jy, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
     }
-    if (SI_SHIFT0Y > 0 || SI_SHIFT1Y > 0) {
+    if (1 || SI_SHIFT0Y > 0 || SI_SHIFT1Y > 0) {
       calc_jx_one( 2, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
     }
   }
