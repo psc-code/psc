@@ -1,0 +1,30 @@
+
+The fields live on the classical Yee grid:
+
+F3(HX, jx,jy,jz) = HX( jx       * dx, (jy + .5) * dy, (jz + .5) * dz)
+F3(HY, jx,jy,jz) = HY((jx + .5) * dx,  jy       * dy, (jz + .5) * dz)
+F3(HZ, jx,jy,jz) = HZ((jx + .5) * dx, (jy + .5) * dy,  jz       * dz)
+
+F3(EX, jx,jy,jz) = EX((jx + .5) * dx,  jy       * dy,  jz       * dz)
+F3(EY, jx,jy,jz) = EY( jx       * dx, (jy + .5) * dy,  jz       * dz)
+F3(EZ, jx,jy,jz) = EZ( jx       * dx,  jy       * dy, (jz + .5) * dz)
+
+J lives at the same place as E.
+
+Currently, sorting finds then nearest integer to x / dx, etc, so
+particles within [x - dx/2:x + dx/2[ are associated with the same
+cell.
+
+self-force free: The idea is the same as if we were solving the
+Poisson eqn, only that it is (or at least should be) satisfied at t =
+0 and the charge-conservative current deposition keeps it
+satisfied. rho is considered deposited onto nodes (i,j,k), hence phi
+is known on nodes, and E is computed on nodes using central
+differences. See Boris & Lee, Non-Physical Self Forces in
+Electromagnatic Plasma-Simulation Algorithms, 1972. Averaging E&M
+fields onto nodes eliminates self-forces, and introduces additional
+smoothing.
+
+
+
+
