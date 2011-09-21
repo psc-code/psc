@@ -38,14 +38,15 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
   int ie[3] = { patch->ldims[0] + 2, 1, patch->ldims[2] + 2 };
   fields_c_alloc(&f_avg, ib, ie, 6);
 
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int ix = -2; ix < patch->ldims[0] + 2; ix++) {
-      F3_C(&f_avg, 0, ix,0,iz) = F3_C(pf, EX, ix,0,iz);
+  for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
+    for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
+      F3_C(&f_avg, 0, ix,0,iz) = .5 * (F3_C(pf, EX, ix,0,iz) + F3_C(pf, EX, ix-1,0,iz));
       F3_C(&f_avg, 1, ix,0,iz) = F3_C(pf, EY, ix,0,iz);
-      F3_C(&f_avg, 2, ix,0,iz) = F3_C(pf, EZ, ix,0,iz);
-      F3_C(&f_avg, 3, ix,0,iz) = F3_C(pf, HX, ix,0,iz);
-      F3_C(&f_avg, 4, ix,0,iz) = F3_C(pf, HY, ix,0,iz);
-      F3_C(&f_avg, 5, ix,0,iz) = F3_C(pf, HZ, ix,0,iz);
+      F3_C(&f_avg, 2, ix,0,iz) = .5 * (F3_C(pf, EZ, ix,0,iz) + F3_C(pf, EZ, ix,0,iz-1));
+      F3_C(&f_avg, 3, ix,0,iz) = .5 * (F3_C(pf, HX, ix,0,iz) + F3_C(pf, HX, ix,0,iz-1));
+      F3_C(&f_avg, 4, ix,0,iz) = .25 * (F3_C(pf, HY, ix  ,0,iz) + F3_C(pf, HY, ix  ,0,iz-1) +
+					F3_C(pf, HY, ix-1,0,iz) + F3_C(pf, HY, ix-1,0,iz-1));
+      F3_C(&f_avg, 5, ix,0,iz) = .5 * (F3_C(pf, HZ, ix,0,iz) + F3_C(pf, HZ, ix-1,0,iz));
     }
   }
 
@@ -81,17 +82,6 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
     S0Z(+0) = g0z;
     S0Z(+1) = g1z;
 
-    u = (part->xi - patch->xb[0]) * dxi - .5f;
-    w = (part->zi - patch->xb[2]) * dzi - .5f;
-    int lh1 = fint(u);
-    int lh3 = fint(w);
-    h1 = u - lh1;
-    h3 = w - lh3;
-    creal h0x = 1.f - h1;
-    creal h0z = 1.f - h3;
-    creal h1x = h1;
-    creal h1z = h3;
-
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz)					\
@@ -100,13 +90,13 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
      gz##1z*(gx##0x*F3_C(&f_avg, m-EX, l##gx##1  ,0,l##gz##3+1) +	\
 	     gx##1x*F3_C(&f_avg, m-EX, l##gx##1+1,0,l##gz##3+1)))	\
       
-    creal exq = INTERPOLATE_FIELD(EX, h, g);
+    creal exq = INTERPOLATE_FIELD(EX, g, g);
     creal eyq = INTERPOLATE_FIELD(EY, g, g);
-    creal ezq = INTERPOLATE_FIELD(EZ, g, h);
+    creal ezq = INTERPOLATE_FIELD(EZ, g, g);
 
-    creal hxq = INTERPOLATE_FIELD(HX, g, h);
-    creal hyq = INTERPOLATE_FIELD(HY, h, h);
-    creal hzq = INTERPOLATE_FIELD(HZ, h, g);
+    creal hxq = INTERPOLATE_FIELD(HX, g, g);
+    creal hyq = INTERPOLATE_FIELD(HY, g, g);
+    creal hzq = INTERPOLATE_FIELD(HZ, g, g);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
