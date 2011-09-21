@@ -77,8 +77,10 @@ psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   MPI_Allreduce(MPI_IN_PLACE, &n_total, 1, MPI_INT, MPI_SUM, 
 		psc_bnd_comm(bnd));
   if (n_total == 0)
+  {
+    psc_stats_stop(st_time_comm);
     return;
-
+  }
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->exchange_photons);
   ops->exchange_photons(bnd, mphotons);
