@@ -93,6 +93,21 @@ push_pxi_dt(struct d_particle *p,
 
 #elif DIM == DIM_YZ
 
+#define INTERPOLATE_FIELD_1ST(exq, fldnr, g1, g2)			\
+  do {									\
+    int ddy = l##g1[1]-l0[1], ddz = l##g2[2]-l0[2];			\
+    /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
+    exq =								\
+      ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
+      F3C(fldnr, 0, ddy+0, ddz+0) +					\
+      ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
+      F3C(fldnr, 0, ddy+1, ddz+0) +					\
+      ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
+      F3C(fldnr, 0, ddy+0, ddz+1) +					\
+      ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
+      F3C(fldnr, 0, ddy+1, ddz+1);					\
+  } while(0)
+
 #define INTERPOLATE_FIELD(exq, fldnr, g1, g2)				\
   do {									\
     int ddy = l##g1[1]-l0[1], ddz = l##g2[2]-l0[2];			\

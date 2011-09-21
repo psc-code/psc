@@ -100,6 +100,13 @@ cuda_nint(real x)
   return (int)(x + real(10.5)) - 10;
 }
 
+static inline int
+cuda_fint(real x)
+{
+  // FIXME?
+  return (int)(x + real(10.)) - 10;
+}
+
 #else
 
 #define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
@@ -115,6 +122,12 @@ __device__ static inline int
 cuda_nint(real x)
 {
   return __float2int_rn(x);
+}
+
+__device__ static inline int
+cuda_fint(real x)
+{
+  return (int)(x + real(10.)) - 10;
 }
 
 #endif

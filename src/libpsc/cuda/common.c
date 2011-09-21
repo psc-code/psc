@@ -38,6 +38,27 @@ cellIdx_to_cellCrd_rel(int cidx, int ci[3])
 }
 
 __device__ static void
+find_idx_1st(const real xi[3], int j[3], real shift)
+{
+  int d;
+  for (d = 0; d < 3; d++) {
+    real pos = xi[d] * d_dxi[d] + shift;
+    j[d] = cuda_fint(pos);
+  }
+}
+
+__device__ static void
+find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift)
+{
+  int d;
+  for (d = 0; d < 3; d++) {
+    real pos = xi[d] * d_dxi[d] + shift;
+    j[d] = cuda_fint(pos);
+    h[d] = pos - j[d];
+  }
+}
+
+__device__ static void
 find_idx(const real xi[3], int j[3], real shift)
 {
   int d;
@@ -74,5 +95,17 @@ __device__ static real
 ip_to_grid_p(real h)
 {
   return real(.5) * sqr(real(.5) - h);
+}
+
+__device__ static real
+ip1_to_grid_0(real h)
+{
+  return real(1.) - h;
+}
+
+__device__ static real
+ip1_to_grid_p(real h)
+{
+  return h;
 }
 
