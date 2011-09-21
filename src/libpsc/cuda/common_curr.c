@@ -353,6 +353,10 @@ MAKE_PICK_SHAPE_COEFF(s1z)
 
 // FIXME, move code here
 
+#elif CACHE_SHAPE_ARRAYS == 7
+
+// FIXME, move code here
+
 #else
 
 #error unknown CACHE_SHAPE_ARRAYS
