@@ -3,6 +3,7 @@
 
 #include "psc_glue.h"
 #include <mrc_profile.h>
+#include <mrc_params.h>
 
 #include <string.h>
 
@@ -322,9 +323,23 @@ struct psc_sort_ops psc_sort_countsort_ops = {
 // counting sort 2
 // use a separate array of cell indices 
 
+struct psc_sort_countsort2 {
+  int blocksize[3];
+};
+
+#define VAR(x) (void *)offsetof(struct psc_sort_countsort2, x)
+static struct param psc_sort_countsort2_descr[] = {
+  { "blocksize"     , VAR(blocksize)       , PARAM_INT3(1, 1, 1)   },
+  {},
+};
+#undef VAR
+
+
 static void
 psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 {
+  struct psc_sort_countsort2 *cs2 = mrc_to_subobj(sort, struct psc_sort_countsort2);
+
   static int pr;
   if (!pr) {
     pr = prof_register("countsort2_sort", 1., 0, 0);
@@ -336,7 +351,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     particles_base_t *pp = &particles->p[p];
     struct psc_patch *patch = &ppsc->patch[p];
     struct cell_map map;
-    int N = cell_map_init(&map, patch->ldims, (int[3]) { 1, 8, 8 });
+    int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
     
     unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));
     for (int i = 0; i < pp->n_part; i++) {
@@ -405,6 +420,8 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
 struct psc_sort_ops psc_sort_countsort2_ops = {
   .name                  = "countsort2",
+  .size                  = sizeof(struct psc_sort_countsort2),
+  .param_descr           = psc_sort_countsort2_descr,
   .run                   = psc_sort_countsort2_run,
 };
 
