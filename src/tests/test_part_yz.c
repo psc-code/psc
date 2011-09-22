@@ -6,6 +6,7 @@
 #include <mrc_params.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <mpi.h>
 
 static bool do_dump = false;
