@@ -246,7 +246,7 @@ __device__ static void
 yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
   real fnqx = vxi * qni_wni * d_fnqs;
-  int jzl = (0 && SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
+  int jzl = (0 && SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ?  0 : -1;
   int jzh = (0 && SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
   for (int jz = jzl; jz <= jzh; jz++) {
     
@@ -254,9 +254,6 @@ yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
     
-    if (1 || SI_SHIFT0Y < 0 || SI_SHIFT1Y < 0) {
-      calc_jx_one(-2, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
-    }
     for (int jy = -1; jy <= 1; jy++) {
       calc_jx_one(jy, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
     }
@@ -272,25 +269,14 @@ yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 __device__ static void
 yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
-  for (int jz = -SW; jz <= SW; jz++) {
+  for (int jz = -1; jz <= 2; jz++) {
     real fnqy = qni_wni * d_fnqys;
     
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
     real tmp1 = real(.5) * (s0z + s1z);
     
-    real last;
-    { int jy = -2;
-      if (SI_SHIFT0Y >= 0 && SI_SHIFT1Y >= 0) {
-	last = 0.f;
-      } else {
-	real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-	real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-	real wy = s1y * tmp1;
-	last = -fnqy*wy;
-      }
-      current_add1(jy, jz, last);
-    }
+    real last  = 0.f;
     for (int jy = -1; jy <= 0; jy++) {
       real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
       real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
@@ -318,25 +304,14 @@ yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 __device__ static void
 yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
-  for (int jy = -SW; jy <= SW; jy++) {
+  for (int jy = -1; jy <= 2; jy++) {
     real fnqz = qni_wni * d_fnqzs;
     
     real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
     real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);
     real tmp1 = real(.5) * (s0y + s1y);
     
-    real last;
-    { int jz = -2;
-      if (SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) {
-	last = 0.f;
-      } else {
-	real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-	real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-	real wz = s1z * tmp1;
-	last = -fnqz*wz;
-      }
-      current_add1(jy, jz, last);
-    }
+    real last  = 0.f;
     for (int jz = -1; jz <= 0; jz++) {
       real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
       real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
