@@ -210,3 +210,18 @@ fields_c_scale_all(fields_c_t *pf, fields_c_real_t val)
   }
 }
 
+void
+psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    fields_c_axpy_all(&yf->f[p], alpha, &xf->f[p]);
+  }
+}
+
+void
+psc_mfields_c_scale(mfields_c_t *yf, fields_c_real_t alpha)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    fields_c_scale_all(&yf->f[p], alpha);
+  }
+}

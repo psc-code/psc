@@ -27,7 +27,9 @@ void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	        \
 				     struct mrc_domain *domain);	\
 void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-									\
+void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
+			       mfields_##type##_t *xf);			\
+ void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
 /* FIXME, should be per mrc_domain or sth, really */			\
 extern list_t mfields_##type##_list;					\
 
@@ -78,6 +80,8 @@ typedef mfields_fortran_t mfields_base_t;
 #define psc_mfields_base_write          psc_mfields_fortran_write
 #define psc_mfields_base_read           psc_mfields_fortran_read
 #define psc_mfields_base_set_domain     psc_mfields_fortran_set_domain
+#define psc_mfields_base_axpy           psc_mfields_fortran_axpy
+#define psc_mfields_base_scale          psc_mfields_fortran_scale
 
 
 #define F3_BASE(pf, m, jx,jy,jz)     F3_FORTRAN(pf, m, jx,jy,jz)
@@ -111,6 +115,8 @@ typedef mfields_c_t mfields_base_t;
 #define psc_mfields_base_write          psc_mfields_c_write
 #define psc_mfields_base_read           psc_mfields_c_read
 #define psc_mfields_base_set_domain     psc_mfields_c_set_domain
+#define psc_mfields_base_axpy          psc_mfields_c_axpy
+#define psc_mfields_base_scale          psc_mfields_c_scale
 
 #define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
 
