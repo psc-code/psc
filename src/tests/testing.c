@@ -166,20 +166,31 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres)
     }
   }
 #endif
-  psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref->f[p];
-    for (int m = JXI; m <= JZI; m++){
-      double max_delta = 0.;
+  mfields_base_t *diff = psc_mfields_base_create(psc_comm(psc));
+  psc_mfields_base_set_domain(diff, psc->mrc_domain);
+  psc_mfields_base_set_param_int3(diff, "ibn", psc->ibn);
+  psc_mfields_base_setup(diff);
+  // FIXME, make funcs for this (waxpy, norm)
+
+  for (int m = JXI; m <= JZI; m++){
+    fields_base_real_t max_delta = 0.;
+    psc_foreach_patch(psc, p) {
+      fields_base_t *pf = &flds->f[p];
+      fields_base_t *pf_ref = &flds_ref->f[p];
+      fields_base_t *pf_diff = &diff->f[p];
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
-	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref,m, ix,iy,iz), thres);
-	max_delta = fmax(max_delta, 
-			 fabs(F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz)));
+	F3_BASE(pf_diff, 0, ix,iy,iz) =
+	  F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz);
+	max_delta = fmax(max_delta, fabs(F3_BASE(pf_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
-      printf("max_delta (%s) %g\n", fldname[m], max_delta);
+    }
+    printf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+    if (max_delta > thres) {
+      psc_dump_field(diff, 0, "diff");
+      abort();
     }
   }
+  psc_mfields_base_destroy(diff);
 }
 
 void
