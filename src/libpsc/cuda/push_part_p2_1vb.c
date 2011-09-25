@@ -35,11 +35,15 @@ __shared__ int _ci1_off[WARPS_PER_BLOCK]; // offset into scurr, includes ci1 and
 
 #define xBLOCKSTRIDE ((((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32)
 __shared__ real _scurr[WARPS_PER_BLOCK * xBLOCKSTRIDE];
+__shared__ real _scurr2[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 
 #define w_scurr_(wid, jy, jz) (_scurr[((jz)+SW) * (BLOCKSIZE_Y + 2*SW) + (jy)+SW	\
 				      + (wid) * xBLOCKSTRIDE])
+#define w_scurr2_(wid, jy, jz) (_scurr2[((jz)+SW) * (BLOCKSIZE_Y + 2*SW) + (jy)+SW	\
+				      + (wid) * xBLOCKSTRIDE])
 
 #define w_scurr(jy, jz) w_scurr_(threadIdx.x >> 5, jy, jz)
+#define w_scurr2(jy, jz) w_scurr2_(threadIdx.x >> 5, jy, jz)
 
 #define w_scurr_ci1(jy, jz) (_scurr[(jz) * (BLOCKSIZE_Y + 2*SW) + (jy) + w_ci1_off])
 
@@ -218,22 +222,54 @@ current_add1(int jy, int jz, real val)
   int lid = threadIdx.x & 31;
   if (!do_write) {
     if (w_ci1_off < 0)
-      w_scurr_ci1(jy, jz) += val;
+      w_scurr(jy, jz) += val;
   } else if (do_reduce) {
-#if 0    
-    val = reduce_sum_warp(val);
-    if (lid == 0) {
-      w_scurr_ci1(jy, jz) += val;
-    }
+    float *addr = &w_scurr(jy, jz);
+#if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
+    atomicAdd(addr, val);
+#else
+#if 0
+    while ((val = atomicExch(addr, atomicExch(addr, 0.0f)+val))!=0.0f);
 #else
     for (int i = 0; i < 32; i++) {
       if (lid == i) {
-    	w_scurr(jy, jz) += val;
+	w_scurr(jy, jz) += val;
       }
     }
 #endif
+#endif
   } else {
-    w_scurr_ci1(jy, jz) += val;
+    w_scurr(jy, jz) += val;
+  }
+}
+
+// ----------------------------------------------------------------------
+// current_add2
+
+__device__ static void
+current_add2(int jy, int jz, real val)
+{
+  int lid = threadIdx.x & 31;
+  if (!do_write) {
+    if (w_ci1_off < 0)
+      w_scurr2(jy, jz) += val;
+  } else if (do_reduce) {
+    float *addr = &w_scurr(jy, jz);
+#if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
+    atomicAdd(addr, val);
+#else
+#if 0
+    while ((val = atomicExch(addr, atomicExch(addr, 0.0f)+val))!=0.0f);
+#else
+    for (int i = 0; i < 32; i++) {
+      if (lid == i) {
+	w_scurr2(jy, jz) += val;
+      }
+    }
+#endif
+#endif
+  } else {
+    w_scurr2(jy, jz) += val;
   }
 }
 
@@ -255,24 +291,23 @@ calc_jx_one(int jy, int jz, real fnqx, SHAPE_INFO_ARGS,
 }
 
 __device__ static void
-yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS,
+	   particles_cuda_dev_t d_particles, int i)
 {
+  struct d_particle p;
+  LOAD_PARTICLE(p, d_particles, i);
+
   real fnqx = vxi * qni_wni * d_fnqs;
-  int jzl = (0 && SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ?  0 : -1;
-  int jzh = (0 && SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
-  for (int jz = jzl; jz <= jzh; jz++) {
-    
-    // FIXME, can be simplified
-    real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-    real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-    
-    for (int jy = -1; jy <= 1; jy++) {
-      calc_jx_one(jy, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
-    }
-    if (1 || SI_SHIFT0Y > 0 || SI_SHIFT1Y > 0) {
-      calc_jx_one( 2, jz, fnqx, SHAPE_INFO_PARAMS, s0z, s1z);
-    }
-  }
+
+  int lf[3];
+  real of[3];
+  find_idx_off_1st(p.xi, lf, of, real(0.));
+  lf[1] -= ci0[1];
+  lf[2] -= ci0[2];
+  current_add1(lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+  current_add1(lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+  current_add1(lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+  current_add1(lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
 }
 
 // ----------------------------------------------------------------------
@@ -295,10 +330,11 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
 		real dxt[2], int off[2])
 {
   real fnqy = qni_wni * d_fnqys;
+  real fnqz = qni_wni * d_fnqzs;
   current_add1(i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
   current_add1(i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
-  //  F3(JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]);
-  //  F3(JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]);
+  current_add2(i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
+  current_add2(i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
   if (dxt) {
     dxt[0] -= dx[0];
     dxt[1] -= dx[1];
@@ -310,18 +346,14 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
 }
 
 __device__ static void
-yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
+yz_calc_jyjz(real qni_wni, SHAPE_INFO_ARGS)
 {
   int i[2] = { SI_SHIFT0Y + w_ci1.y + ci0[1], SI_SHIFT0Z + w_ci1.z + ci0[2] };
   int idiff[2] = { SI_SHIFT1Y - SI_SHIFT0Y, SI_SHIFT1Z - SI_SHIFT0Z };
   real *xp = si_h->xp, *xm = si_h->xm;
   real dx[2] = { xp[0] - xm[0], xp[1] - xm[1] };
-  //  xm[0] = 2.5; xm[1] = 3.5;
-  //  i[0] = 2; i[1] = 3;
   real x[2] = { xm[0] - (i[0] + real(.5)), xm[1] - (i[1] + real(.5)) };
 
-  //  dx[0] = -0.01753; dx[1] = 0;
-  //  x[0] = 0; x[1] = 0;
   i[0] -= ci0[1]; i[1] -= ci0[2];
 
   real dx1[2];
@@ -362,41 +394,6 @@ yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
   curr_2d_vb_cell(i, x, dx, qni_wni, NULL, NULL);
 }
 
-// ----------------------------------------------------------------------
-// yz_calc_jz
-
-__device__ static void
-yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
-{
-  for (int jy = -1; jy <= 2; jy++) {
-    real fnqz = qni_wni * d_fnqzs;
-    
-    real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-    real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);
-    real tmp1 = real(.5) * (s0y + s1y);
-    
-    real last  = 0.f;
-    for (int jz = -1; jz <= 0; jz++) {
-      real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-      real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-      real wz = s1z * tmp1;
-      last -= fnqz*wz;
-      current_add1(jy, jz, last);
-    }
-    { int jz = 1;
-      if (SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) {
-	last = 0.f;
-      } else {
-	real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
-	real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z) - s0z;
-	real wz = s1z * tmp1;
-	last -= fnqz*wz;
-      }
-      current_add1(jy, jz, last);
-    }
-  }
-}
-
 __device__ static void
 zero_scurr1()
 {
@@ -404,6 +401,17 @@ zero_scurr1()
   int N = xBLOCKSTRIDE * WARPS_PER_BLOCK;
   while (i < N) {
     _scurr[i] = real(0.);
+    i += THREADS_PER_BLOCK;
+  }
+}
+
+__device__ static void
+zero_scurr2()
+{
+  int i = threadIdx.x;
+  int N = xBLOCKSTRIDE * WARPS_PER_BLOCK;
+  while (i < N) {
+    _scurr2[i] = real(0.);
     i += THREADS_PER_BLOCK;
   }
 }
@@ -450,6 +458,27 @@ add_scurr_to_flds1(real *d_flds, int m)
 }
 
 __device__ static void
+add_scurr2_to_flds1(real *d_flds, int m)
+{
+  int i = threadIdx.x;
+  int stride = (BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW);
+  while (i < stride) {
+    int rem = i;
+    int jz = rem / (BLOCKSIZE_Y + 2*SW);
+    rem -= jz * (BLOCKSIZE_Y + 2*SW);
+    int jy = rem;
+    jz -= SW;
+    jy -= SW;
+    real val = real(0.);
+    for (int wid = 0; wid < WARPS_PER_BLOCK; wid++) {
+      val += w_scurr2_(wid, jy, jz);
+    }
+    F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
+    i += THREADS_PER_BLOCK;
+  }
+}
+
+__device__ static void
 shapeinfo_zero(SHAPE_INFO_ARGS)
 {
   si_h->hy[0] = real(0.);
@@ -466,20 +495,17 @@ shapeinfo_zero(SHAPE_INFO_ARGS)
   SI_SHIFT1Z = 0;
 }
 
-#define push_part_p2_1							\
+#define push_part_p2_0							\
   do_read = true;							\
   do_reduce = true;							\
   do_write = true;							\
   do_calc_jx = true;							\
   do_calc_jy = true;							\
-  do_calc_jz = true;							\
-									\
+  do_calc_jz = true
+
+#define push_part_p2_1							\
   int tid = threadIdx.x;						\
   const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;		\
-									\
-  if (do_write) {							\
-    zero_scurr1();							\
-  }									\
 									\
   __shared__ int bid;							\
   if (tid == 0) {							\
@@ -507,18 +533,18 @@ shapeinfo_zero(SHAPE_INFO_ARGS)
   									\
   for (int i = cell_begin + (tid&31); i < w_i_end + (tid&31); i += 32)
 
-#define push_part_p2_3(m)			\
-  if (do_write) {				\
-    __syncthreads();				\
-    add_scurr_to_flds1(d_flds, m);		\
-  }
-
 // ======================================================================
 
 __global__ static void
 push_part_p2x(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	      int block_stride, int block_start)
 {
+  push_part_p2_0;
+
+  if (do_write) {
+    zero_scurr1();
+  }
+
   push_part_p2_1 {
     push_part_p2_2 {
       DECLARE_SHAPE_INFO;
@@ -526,17 +552,17 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
       real qni_wni;
       if (do_read && i < w_cell_end) {
 	calc_shape_info(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
-      } else {
-	shapeinfo_zero(SHAPE_INFO_PARAMS);
-	vxi[0] = 0.f;
-        qni_wni = 0.;
       }
-      if (do_calc_jx) {
-	yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS);
+      if (do_calc_jx && i < w_cell_end) {
+	yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS, d_particles, i);
       }
     }
   }
-  push_part_p2_3(0);
+
+  if (do_write) {
+    __syncthreads();
+    add_scurr_to_flds1(d_flds, 0);
+  }
 }
 
 // ======================================================================
@@ -545,6 +571,13 @@ __global__ static void
 push_part_p2y(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	      int block_stride, int block_start)
 {
+  push_part_p2_0;
+
+  if (do_write) {
+    zero_scurr1();
+    zero_scurr2();
+  }
+
   push_part_p2_1 {
     push_part_p2_2 {
       DECLARE_SHAPE_INFO;
@@ -552,16 +585,17 @@ push_part_p2y(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
       real qni_wni;
       if (do_read && i < w_cell_end) {
 	calc_shape_info(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
-      } else {
-	shapeinfo_zero(SHAPE_INFO_PARAMS);
-        qni_wni = 0.;
       }
-      if (do_calc_jy) {
-	yz_calc_jy(qni_wni, SHAPE_INFO_PARAMS);
+      if (do_calc_jy && i < w_cell_end) {
+	yz_calc_jyjz(qni_wni, SHAPE_INFO_PARAMS);
       }
     }
   }
-  push_part_p2_3(1);
+  if (do_write) {
+    __syncthreads();
+    add_scurr_to_flds1(d_flds, 1);
+    add_scurr2_to_flds1(d_flds, 2);
+  }
 }
 
 // ======================================================================
