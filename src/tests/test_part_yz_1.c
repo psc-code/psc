@@ -491,17 +491,22 @@ main(int argc, char **argv)
   // push_yz 1st order
 
   run_test(true, "1st", 0., 0., create_test, "");
+  // run again to check continuity
+  run_test(false, "1st", 1e-7, 1e-7, create_test, "");
+
   // since the fields are linear functions of position, 1st order / 2nd order
   // field interpolation should give the same result
   run_test(false, "generic_c", 1e-7, 1e-0, create_test, "");
 
-  // run again to check continuity
-  run_test(false, "1st", 1e-7, 1e-7, create_test, "");
+#ifdef USE_CUDA
+  run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
+#endif
 
+  run_test(true, "1vb", 0., 0., create_test, "");
+  // run again to check continuity
   run_test(false, "1vb", 1e-7, 1e-3, create_test, "");
 
 #ifdef USE_CUDA
-  run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
   run_test(false, "cuda_1vb", 1e-6, 1e-3, create_test, "");
 #endif
 
