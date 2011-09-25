@@ -45,31 +45,15 @@ __shared__ real _scurr2[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 #define w_scurr(jy, jz) w_scurr_(threadIdx.x >> 5, jy, jz)
 #define w_scurr2(jy, jz) w_scurr2_(threadIdx.x >> 5, jy, jz)
 
-#define w_scurr_ci1(jy, jz) (_scurr[(jz) * (BLOCKSIZE_Y + 2*SW) + (jy) + w_ci1_off])
-
-
 #define w_cell_end (_cell_end[threadIdx.x >> 5])
 #define w_i_end (_i_end[threadIdx.x >> 5])
 #define w_ci1 (_ci1[threadIdx.x >> 5])
 #define w_ci1_off (_ci1_off[threadIdx.x >> 5])
 
-__device__ static real
-find_shape_coeff_d_shift_1st(int j, real h, short int shift)
-{
-  if (j ==  0 + shift) {
-    return real(1.) - h;
-  } else if (j == +1 + shift) {
-    return h;
-  } else {
-    return real(0.);
-  }
-}
-
 #if CACHE_SHAPE_ARRAYS == 7
 
 struct shapeinfo_h {
   real xm[2], xp[2];
-  real hy[2], hz[2];
 };
 
 struct shapeinfo_i {
@@ -94,8 +78,7 @@ struct shapeinfo_i {
 #define SI_SHIFT10Z (si_i->shiftyz.w - si_i->shiftyz.z)
 
 __device__ static void
-cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
-		   real *xm, real *xp,
+cache_shape_arrays(SHAPE_INFO_ARGS, real *xm, real *xp,
 		   short int shift0y, short int shift0z,
 		   short int shift1y, short int shift1z)
 {
@@ -103,43 +86,16 @@ cache_shape_arrays(SHAPE_INFO_ARGS, real *h0, real *h1,
   si_h->xm[1] = xm[2];
   si_h->xp[0] = xp[1];
   si_h->xp[1] = xp[2];
-  si_h->hy[0] = h0[1];
-  si_h->hy[1] = h1[1];
-  si_h->hz[0] = h0[2];
-  si_h->hz[1] = h1[2];
   SI_SHIFT0Y = shift0y;
   SI_SHIFT1Y = shift1y;
   SI_SHIFT0Z = shift0z;
   SI_SHIFT1Z = shift1z;
 }
 
-#define pick_shape_coeff(t, comp, j, shift) ({				\
-      const int __y __attribute__((unused)) = 1;			\
-      const int __z __attribute__((unused)) = 2;			\
-      __pick_shape_coeff(j, shift, __ ## comp, si_h->h ## comp[t]);		\
-  })
-
-
-__device__ static real
-__pick_shape_coeff(int j, int shift, int d, real h)
-{
-  real s;
-  if (j == shift + 0) {
-    s = find_shape_coeff_d_shift_1st( 0, h, 0);
-  } else if (j == shift + 1) {
-    s = find_shape_coeff_d_shift_1st(+1, h, 0);
-  } else {
-    s = real(0.);
-  }
-  return s;
-}
-
 // ======================================================================
 #else
 #error
 #endif
-
-// based on p2_noshift_4.c
 
 #if DIM != DIM_YZ
 #error TBD
@@ -196,16 +152,12 @@ calc_shape_info(int i, particles_cuda_dev_t d_particles,
     shift0z = 0;
     shift1y = 0;
     shift1z = 0;
-    h0[1] = real(0.);
-    h1[1] = real(0.);
-    h0[2] = real(0.);
-    h1[2] = real(0.);
     xm[1] = real(0.);
     xm[2] = real(0.);
     xp[1] = real(0.);
     xp[2] = real(0.);
   }
-  cache_shape_arrays(SHAPE_INFO_PARAMS, h0, h1, xm, xp, shift0y, shift0z,
+  cache_shape_arrays(SHAPE_INFO_PARAMS, xm, xp, shift0y, shift0z,
 		     shift1y, shift1z);
 }
 
@@ -233,7 +185,7 @@ current_add1(int jy, int jz, real val)
 #else
     for (int i = 0; i < 32; i++) {
       if (lid == i) {
-	w_scurr(jy, jz) += val;
+	*addr += val;
       }
     }
 #endif
@@ -254,7 +206,7 @@ current_add2(int jy, int jz, real val)
     if (w_ci1_off < 0)
       w_scurr2(jy, jz) += val;
   } else if (do_reduce) {
-    float *addr = &w_scurr(jy, jz);
+    float *addr = &w_scurr2(jy, jz);
 #if __CUDA_ARCH__ >= 200 // for Fermi, atomicAdd supports floats
     atomicAdd(addr, val);
 #else
@@ -263,7 +215,7 @@ current_add2(int jy, int jz, real val)
 #else
     for (int i = 0; i < 32; i++) {
       if (lid == i) {
-	w_scurr2(jy, jz) += val;
+	*addr += val;
       }
     }
 #endif
@@ -275,20 +227,6 @@ current_add2(int jy, int jz, real val)
 
 // ----------------------------------------------------------------------
 // yz_calc_jx
-
-__device__ static inline void
-calc_jx_one(int jy, int jz, real fnqx, SHAPE_INFO_ARGS,
-	    real s0z, real s1z)
-{
-  real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
-  real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y) - s0y;
-  real wx = s0y * s0z
-    + real(.5) * s1y * s0z
-    + real(.5) * s0y * s1z
-    + real(.3333333333) * s1y * s1z;
-  
-  current_add1(jy + w_ci1.y, jz + w_ci1.z, fnqx * wx);
-}
 
 __device__ static void
 yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS,
@@ -476,23 +414,6 @@ add_scurr2_to_flds1(real *d_flds, int m)
     F3_DEV(JXI+m, 0,jy+ci0[1],jz+ci0[2]) += val;
     i += THREADS_PER_BLOCK;
   }
-}
-
-__device__ static void
-shapeinfo_zero(SHAPE_INFO_ARGS)
-{
-  si_h->hy[0] = real(0.);
-  si_h->hy[1] = real(0.);
-  si_h->hz[0] = real(0.);
-  si_h->hz[1] = real(0.);
-  si_h->xm[0] = real(0.);
-  si_h->xm[1] = real(0.);
-  si_h->xp[0] = real(0.);
-  si_h->xp[1] = real(0.);
-  SI_SHIFT0Y = 0;
-  SI_SHIFT1Y = 0;
-  SI_SHIFT0Z = 0;
-  SI_SHIFT1Z = 0;
 }
 
 #define push_part_p2_0							\
