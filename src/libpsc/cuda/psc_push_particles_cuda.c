@@ -356,6 +356,8 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
 };
 
+// ======================================================================
+
 static void __unused
 psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
@@ -374,4 +376,26 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
   .name                  = "cuda_1st",
   .push_yz               = psc_push_particles_cuda_1st_push_yz,
+};
+
+// ======================================================================
+
+static void __unused
+psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
+				    mparticles_base_t *particles_base,
+				    mfields_base_t *flds_base)
+{
+  mprintf("n_part = %d\n", particles_base->p[0].n_part);
+  cuda_push_partq(particles_base, flds_base,
+		  yz_1vb_set_constants,
+		  yz_1vb_cuda_push_part_p2,
+		  yz_1vb_cuda_push_part_p3);
+}
+
+// ======================================================================
+// psc_push_particles: subclass "cuda_1vb"
+
+struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
+  .name                  = "cuda_1vb",
+  .push_yz               = psc_push_particles_cuda_1vb_push_yz,
 };

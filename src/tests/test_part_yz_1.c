@@ -502,6 +502,7 @@ main(int argc, char **argv)
 
 #ifdef USE_CUDA
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
+  run_test(false, "cuda_1vb", 1e-6, 1e-3, create_test, "");
 #endif
 
   prof_print();
