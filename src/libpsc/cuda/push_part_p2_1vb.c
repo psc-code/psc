@@ -165,23 +165,28 @@ current_add(real *scurr, int jy, int jz, real val)
 // yz_calc_jx
 
 __device__ static void
-yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS,
-	   particles_cuda_dev_t d_particles, int i)
+yz_calc_jx(int i, particles_cuda_dev_t d_particles)
 {
   struct d_particle p;
-  LOAD_PARTICLE(p, d_particles, i);
+  if (do_read) {
+    LOAD_PARTICLE(p, d_particles, i);
+  }
 
-  real fnqx = vxi * qni_wni * d_fnqs;
-
-  int lf[3];
-  real of[3];
-  find_idx_off_1st(p.xi, lf, of, real(0.));
-  lf[1] -= ci0[1];
-  lf[2] -= ci0[2];
-  current_add(scurr1, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-  current_add(scurr1, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-  current_add(scurr1, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-  current_add(scurr1, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+  if (do_calc_jx) {
+    real vxi[3];
+    calc_vxi(vxi, p);
+    real fnqx = vxi[0] * p.qni_wni * d_fnqs;
+    
+    int lf[3];
+    real of[3];
+    find_idx_off_1st(p.xi, lf, of, real(0.));
+    lf[1] -= ci0[1];
+    lf[2] -= ci0[2];
+    current_add(scurr1, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr1, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr1, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    current_add(scurr1, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -342,15 +347,7 @@ push_part_p2x(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 
   push_part_p2_1 {
     push_part_p2_2 {
-      DECLARE_SHAPE_INFO;
-      real vxi[3];
-      real qni_wni;
-      if (do_read) {
-	calc_shape_info(i, d_particles, vxi, &qni_wni, SHAPE_INFO_PARAMS);
-      }
-      if (do_calc_jx) {
-	yz_calc_jx(vxi[0], qni_wni, SHAPE_INFO_PARAMS, d_particles, i);
-      }
+      yz_calc_jx(i, d_particles);
     }
   }
 
