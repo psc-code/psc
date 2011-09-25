@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "c_common_push.c"
+
 static inline void
 calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
 {
@@ -40,14 +42,11 @@ static void
 do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
 {
   creal dt = ppsc->dt;
-  creal yl = .5f * dt;
-  creal zl = .5f * dt;
   creal dqs = .5f * ppsc->coeff.eta * dt;
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal fnqys = ppsc->dx[1] * fnqs / dt;
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
 
   fields_zero(pf, JXI);
   fields_zero(pf, JYI);
@@ -56,127 +55,63 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
+    creal vxi[3];
 
     // x^n, p^n -> x^(n+.5), p^n
+    calc_vxi(vxi, part);
+    push_xi(part, vxi, .5f * dt);
 
-    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    creal vxi = part->pxi * root;
-    creal vyi = part->pyi * root;
-    creal vzi = part->pzi * root;
+    // field interpolation
 
-    part->yi += vyi * yl;
-    part->zi += vzi * zl;
-
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
-    creal xm[3] = { 0.f, v, w };
-    int lg2 = fint(v);
-    int lg3 = fint(w);
-    creal h2 = v - lg2;
-    creal h3 = w - lg3;
-
-    creal g0y = 1.f - h2;
-    creal g0z = 1.f - h3;
-    creal g1y = h2;
-    creal g1z = h3;
-
-    // CHARGE DENSITY AT (n+.5)*dt 
-
-    v = (part->yi - patch->xb[1]) * dyi - .5f;
-    w = (part->zi - patch->xb[2]) * dzi - .5f;
-    int lh2 = fint(v);
-    int lh3 = fint(w);
-    h2 = v - lh2;
-    h3 = w - lh3;
-    creal h0y = 1.f - h2;
-    creal h0z = 1.f - h3;
-    creal h1y = h2;
-    creal h1z = h3;
+    int lg[3], lh[3];
+    creal og[3], oh[3], xm[3];
+    find_idx_off_pos_1st(&part->xi, lg, og, xm, 0.f, patch->xb, dxi); // FIXME passing xi hack
+    find_idx_off_1st(&part->xi, lh, oh, -.5f, patch->xb, dxi);
 
     // FIELD INTERPOLATION
 
-#define INTERPOLATE_FIELD(m, gy, gz)					\
-    (gz##0z*(gy##0y*F3(m, 0,l##gy##2  ,l##gz##3  ) +			\
-	     gy##1y*F3(m, 0,l##gy##2+1,l##gz##3  )) +			\
-     gz##1z*(gy##0y*F3(m, 0,l##gy##2  ,l##gz##3+1) +			\
-	     gy##1y*F3(m, 0,l##gy##2+1,l##gz##3+1)))			\
-      
-    creal exq = INTERPOLATE_FIELD(EX, g, g);
-    creal eyq = INTERPOLATE_FIELD(EY, h, g);
-    creal ezq = INTERPOLATE_FIELD(EZ, g, h);
+    INTERPOLATE_SETUP_1ST;
 
-    creal hxq = INTERPOLATE_FIELD(HX, h, h);
-    creal hyq = INTERPOLATE_FIELD(HY, g, h);
-    creal hzq = INTERPOLATE_FIELD(HZ, h, g);
+    creal exq = INTERPOLATE_FIELD_1ST(EX, g, g);
+    creal eyq = INTERPOLATE_FIELD_1ST(EY, h, g);
+    creal ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);
 
-     // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
+    creal hxq = INTERPOLATE_FIELD_1ST(HX, h, h);
+    creal hyq = INTERPOLATE_FIELD_1ST(HY, g, h);
+    creal hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);
 
-    creal dq = dqs * part->qni / part->mni;
-    creal pxm = part->pxi + dq*exq;
-    creal pym = part->pyi + dq*eyq;
-    creal pzm = part->pzi + dq*ezq;
+    // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
+    push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dqs);
 
-    root = dq / creal_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    creal taux = hxq*root;
-    creal tauy = hyq*root;
-    creal tauz = hzq*root;
-
-    creal tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-    creal pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
-		(2.f*taux*tauy+2.f*tauz)*pym + 
-		(2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-    creal pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
-		(1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
-		(2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-    creal pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
-		(2.f*tauy*tauz-2.f*taux)*pym +
-		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
-    
-    part->pxi = pxp + dq * exq;
-    part->pyi = pyp + dq * eyq;
-    part->pzi = pzp + dq * ezq;
-
-    root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    vxi = part->pxi * root;
-    vyi = part->pyi * root;
-    vzi = part->pzi * root;
-
-    part->yi += vyi * yl;
-    part->zi += vzi * zl;
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+    calc_vxi(vxi, part);
+    push_xi(part, vxi, .5 * dt);
 
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
 
-    v = (part->yi - patch->xb[1]) * dyi;
-    w = (part->zi - patch->xb[2]) * dzi;
-    int l2 = fint(v);
-    int l3 = fint(w);
-    h2 = v - l2;
-    h3 = w - l3;
+    int lf[3];
+    creal of[3];
+    find_idx_off_1st(&part->xi, lf, of, 0.f, patch->xb, dxi);
 
-    creal fnqx = vxi * part->qni * part->wni * fnqs;
-    F3(JXI, 0,l2  ,l3  ) += (1.f - h2) * (1.f - h3) * fnqx;
-    F3(JXI, 0,l2+1,l3  ) += (h2      ) * (1.f - h3) * fnqx;
-    F3(JXI, 0,l2  ,l3+1) += (1.f - h2) * (      h3) * fnqx;
-    F3(JXI, 0,l2+1,l3+1) += (h2      ) * (      h3) * fnqx;
+    creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
+    F3(JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
+    F3(JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
+    F3(JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
+    F3(JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
-    // CHARGE DENSITY AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
-    creal yi = part->yi + vyi * yl;
-    creal zi = part->zi + vzi * zl;
+    creal xi[3] = { 0.f,
+		    part->yi + vxi[1] * .5f * dt,
+		    part->zi + vxi[2] * .5f * dt };
 
-    v = (yi - patch->xb[1]) * dyi;
-    w = (zi - patch->xb[2]) * dzi;
-    creal xp[3] = { 0.f, v, w };
-    int k2 = fint(v);
-    int k3 = fint(w);
-    h2 = v - k2;
-    h3 = w - k3;
+    creal xp[3];
+    find_idx_off_pos_1st(xi, lf, of, xp, 0.f, patch->xb, dxi);
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 
-    int i[2] = { lg2, lg3 };
-    int idiff[2] = { k2 - lg2, k3 - lg3 };
+    int i[2] = { lg[1], lg[2] };
+    int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
     creal dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
     creal x[2] = { xm[1] - (i[0] + .5), xm[2] - (i[1] + .5) };
 
