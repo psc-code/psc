@@ -259,8 +259,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 
   psc_calc_div_j(psc, flds, div_j);
 
-  psc_dump_field(div_j, 0, "div_j");
-  psc_dump_field(rho_p, 0, "dt_rho");
+  //  psc_dump_field(div_j, 0, "div_j");
+  //  psc_dump_field(rho_p, 0, "dt_rho");
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
@@ -278,11 +278,10 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   }
   printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
 
-  psc_mfields_base_axpy(rho_p, +1., div_j);
-  psc_dump_field(rho_p, 0, "cont_diff");
+  //  psc_mfields_base_axpy(rho_p, +1., div_j);
+  //  psc_dump_field(rho_p, 0, "cont_diff");
 
   assert(max_err <= eps);
-
 
   psc_mfields_base_destroy(rho_m);
   psc_mfields_base_destroy(rho_p);
@@ -492,12 +491,15 @@ main(int argc, char **argv)
   // push_yz 1st order
 
   run_test(true, "1st", 0., 0., create_test, "");
-  // run again to check continuity
-  run_test(false, "1st", 1e-7, 1e-7, create_test, "");
-
   // since the fields are linear functions of position, 1st order / 2nd order
   // field interpolation should give the same result
   run_test(false, "generic_c", 1e-7, 1e-0, create_test, "");
+
+  // run again to check continuity
+  run_test(false, "1st", 1e-7, 1e-7, create_test, "");
+
+  run_test(false, "1vb", 1e-7, 1e-3, create_test, "");
+
 #ifdef USE_CUDA
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
 #endif

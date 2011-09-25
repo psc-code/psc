@@ -12,6 +12,14 @@ struct psc_push_particles_ops psc_push_particles_1st_ops = {
 };
 
 // ======================================================================
+// psc_push_particles: subclass "1vb"
+
+struct psc_push_particles_ops psc_push_particles_1vb_ops = {
+  .name                  = "1vb",
+  .push_yz               = psc_push_particles_1vb_push_yz,
+};
+
+// ======================================================================
 // psc_push_particles: subclass "1sff"
 //
 // 1st order, self-force free
