@@ -26,6 +26,7 @@ static void
 psc_randomize_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_randomize, &psc_randomize_none_ops);
+  mrc_class_register_subclass(&mrc_class_psc_randomize, &psc_randomize_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_randomize, &psc_randomize_fortran_ops);
 }
 

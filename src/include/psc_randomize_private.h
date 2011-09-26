@@ -16,6 +16,7 @@ struct psc_randomize_ops {
 // ======================================================================
 
 extern struct psc_randomize_ops psc_randomize_none_ops;
+extern struct psc_randomize_ops psc_randomize_c_ops;
 extern struct psc_randomize_ops psc_randomize_fortran_ops;
 
 #define psc_randomize_ops(randomize) ((struct psc_randomize_ops *)((randomize)->obj.ops))
