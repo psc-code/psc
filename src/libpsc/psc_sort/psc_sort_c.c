@@ -272,11 +272,13 @@ struct psc_sort_ops psc_sort_countsort_ops = {
 
 struct psc_sort_countsort2 {
   int blocksize[3];
+  int mask;
 };
 
 #define VAR(x) (void *)offsetof(struct psc_sort_countsort2, x)
 static struct param psc_sort_countsort2_descr[] = {
   { "blocksize"     , VAR(blocksize)       , PARAM_INT3(1, 1, 1)   },
+  { "mask"          , VAR(mask)            , PARAM_INT(0)          },
   {},
 };
 #undef VAR
@@ -294,6 +296,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 
   prof_start(pr);
     
+  unsigned int mask = cs2->mask;
   psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
     struct psc_patch *patch = &ppsc->patch[p];
@@ -315,7 +318,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 	pos[d] = particle_base_real_nint(xi[d]);
       }
     
-      cnis[i] = cell_map_3to1(&map, pos);
+      cnis[i] = cell_map_3to1(&map, pos) & ~mask;
       assert(cnis[i] < N);
     }
     cell_map_free(&map);
