@@ -44,15 +44,15 @@ setup_particles(mparticles_base_t *particles)
 	  particle_base_t *p;
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix + .01) * ppsc->dx[0];
-	  p->yi = (iy + .01) * ppsc->dx[1];
-	  p->zi = (iz + .01) * ppsc->dx[2];
+	  p->xi = (ix + .51) * ppsc->dx[0];
+	  p->yi = (iy + .51) * ppsc->dx[1];
+	  p->zi = (iz + .51) * ppsc->dx[2];
 	  
 	  p = particles_base_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
-	  p->xi = (ix - .01) * ppsc->dx[0];
-	  p->yi = (iy - .01) * ppsc->dx[1];
-	  p->zi = (iz - .01) * ppsc->dx[2];
+	  p->xi = (ix + .49) * ppsc->dx[0];
+	  p->yi = (iy + .49) * ppsc->dx[1];
+	  p->zi = (iz + .49) * ppsc->dx[2];
 	}
       }
     }

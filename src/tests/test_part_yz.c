@@ -2,6 +2,7 @@
 #include "psc_testing.h"
 #include "psc_push_particles.h"
 #include "psc_sort.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -37,6 +38,7 @@ create_test(const char *s_push_particles)
   psc_sort_set_type(ppsc->sort, "countsort2");
   psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 }); // FIXME
   psc_case_setup(_case);
+  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
   psc_sort_run(ppsc->sort, ppsc->particles);
   return _case;
 }
@@ -57,6 +59,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   } else if (strcmp(push, "_b") == 0) {
     psc_push_particles_push_yz_b(ppsc->push_particles, ppsc->particles, ppsc->flds);
   }
+  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
   psc_sort_run(ppsc->sort, ppsc->particles);
   dump(s_push_particles, 1);
   if (is_ref) {
@@ -85,7 +88,7 @@ main(int argc, char **argv)
 
   run_test(true, "fortran", 0., 0., create_test, "_a");
   run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_a");
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
   run_test(false, "cuda", 1e-3, 1e-2, create_test, "_a");
 #endif
 #ifdef USE_SSE2
@@ -97,7 +100,7 @@ main(int argc, char **argv)
 
   run_test(true, "fortran", 0., 0., create_test, "_b");
   run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_b");
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
   run_test(false, "cuda", 2e-3, 1e-2, create_test, "_b");
 #endif
 #ifdef USE_SSE2
@@ -109,7 +112,7 @@ main(int argc, char **argv)
 
   run_test(true, "fortran", 0., 0., create_test, "");
   run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
   run_test(false, "cuda", 2e-3, 1e-3, create_test, "");
 #endif
 #ifdef USE_SSE2

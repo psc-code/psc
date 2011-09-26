@@ -236,9 +236,9 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
   struct psc_patch *psc_patch = &psc->patch[p];
 
   for (int d = 0; d < 3; d++) {
-    xb[d] = (psc_patch->off[d]-.5) * psc->dx[d];
+    xb[d] = psc_patch->off[d] * psc->dx[d];
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = -.5 * psc->dx[d];
+      xgb[d] = 0.;
     } else {
       if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
 	xgb[d] = psc->pml.size * psc->dx[d];
@@ -250,9 +250,9 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
       }
     }
     
-    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d] - .5) * psc->dx[d];
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d]) * psc->dx[d];
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (psc->domain.gdims[d]-.5) * psc->dx[d];
+      xge[d] = (psc->domain.gdims[d]) * psc->dx[d];
     } else {
       if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
 	xge[d] = (psc->domain.gdims[d]-1 - psc->pml.size) * psc->dx[d];
@@ -312,9 +312,9 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
       particle_base_t *part = particles_base_get_one(pp, i);
       particle_base_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
       particle_base_real_t *pxi = &part->pxi;
-      if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
-	  xi[1] >= xb[1] && xi[1] <= xe[1] &&
-	  xi[2] >= xb[2] && xi[2] <= xe[2]) {
+      if (xi[0] >= xb[0] && xi[0] < xe[0] &&
+	  xi[1] >= xb[1] && xi[1] < xe[1] &&
+	  xi[2] >= xb[2] && xi[2] < xe[2]) {
 	// fast path
 	// inside domain: move into right position
 	pp->particles[patch->head++] = *part;
@@ -341,8 +341,8 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 	      // computational bnd
 	      dir[d] = -1;
 	    }
-	  } else if (xi[d] > xe[d]) {
-	    if (xi[d] > xge[d]) {
+	  } else if (xi[d] >= xe[d]) {
+	    if (xi[d] >= xge[d]) {
 	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xge[d] - xi[d];

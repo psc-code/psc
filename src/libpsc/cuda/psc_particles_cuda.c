@@ -26,7 +26,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
     (p->zi - patch->xb[2]) * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {
-    pos[d] = particle_base_real_nint(xi[d]);
+    pos[d] = particle_base_real_fint(xi[d]);
   }
   
   return cell_map_3to1(map, pos);
@@ -136,7 +136,7 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
 	block = pp->nr_blocks;
       }
       if (last_block > block) {
-	MHERE;
+	assert(0);
 	break;
       }
       assert(last_block <= block);
@@ -147,7 +147,6 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
     }
 
 #if 0
-    MHERE;
     for (int b = 0; b < pp->nr_blocks; b++) {
       int bi[3];
       blockIdx_to_blockCrd(patch, &map, b, bi);

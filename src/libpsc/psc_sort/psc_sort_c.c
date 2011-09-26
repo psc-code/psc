@@ -295,7 +295,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
   }
 
   prof_start(pr);
-    
+
   unsigned int mask = cs2->mask;
   psc_foreach_patch(ppsc, p) {
     particles_base_t *pp = &particles->p[p];
@@ -315,9 +315,16 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
 	(p->zi - patch->xb[2]) * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
-	pos[d] = particle_base_real_nint(xi[d]);
+	pos[d] = particle_base_real_fint(xi[d]);
+#if 0
+	if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
+	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",
+		 i, d, pos[d], patch->ldims[d],
+		 (&p->xi)[d], 1. / ppsc->dx[d]);
+	}
+#endif
       }
-    
+
       cnis[i] = cell_map_3to1(&map, pos) & ~mask;
       assert(cnis[i] < N);
     }

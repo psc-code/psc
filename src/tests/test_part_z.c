@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_push_particles.h"
+#include "psc_bnd.h"
 #include "psc_sort.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -137,6 +138,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   struct psc_case *_case = create_test(s_push_particles);
   dump(s_push_particles, 0);
   psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
+  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
   psc_sort_run(ppsc->sort, ppsc->particles);
   dump(s_push_particles, 1);
   if (is_ref) {
