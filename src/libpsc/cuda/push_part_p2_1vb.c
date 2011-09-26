@@ -250,8 +250,6 @@ add_scurr_to_flds1(real *scurr, real *d_flds, int m)
 
 #define push_part_p2_1							\
   int tid = threadIdx.x;						\
-  const int cells_per_block = BLOCKSIZE_Y * BLOCKSIZE_Z;		\
-									\
   __shared__ int bid;							\
   if (tid == 0) {							\
     bid = blockIdx.x * block_stride + block_start;			\
@@ -262,8 +260,8 @@ add_scurr_to_flds1(real *scurr, real *d_flds, int m)
   for (int cid = 0; cid < 1; cid++)
 
 #define push_part_p2_2							\
-  int cell_begin = d_particles.c_offsets[bid * cells_per_block];	\
-  s_cell_end = d_particles.c_offsets[(bid + 1) * cells_per_block];	\
+  int cell_begin = d_particles.offsets[bid];				\
+  s_cell_end = d_particles.offsets[bid + 1];				\
   									\
   for (int i = cell_begin + tid; i < s_cell_end; i += THREADS_PER_BLOCK)
 
