@@ -324,14 +324,13 @@ add_scurr_to_flds1(real *scurr, real *d_flds, int m)
   }									\
   __syncthreads();							\
 									\
-  for (int cid = bid * cells_per_block + (tid >> 5);			\
-       cid < (bid + 1) * cells_per_block; cid += WARPS_PER_BLOCK)
+  for (int cid = 0; cid < 1; cid++)
 
 #define push_part_p2_2							\
-  int cell_begin = d_particles.c_offsets[cid];				\
-  w_cell_end = d_particles.c_offsets[cid+1];				\
+  int cell_begin = d_particles.c_offsets[bid * cells_per_block];	\
+  w_cell_end = d_particles.c_offsets[(bid + 1) * cells_per_block];	\
   									\
-  for (int i = cell_begin + (tid & 31); i < w_cell_end; i += 32)
+  for (int i = cell_begin + tid; i < w_cell_end; i += THREADS_PER_BLOCK)
 
 // ======================================================================
 
