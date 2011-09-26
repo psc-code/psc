@@ -2,6 +2,7 @@
 #include "psc_testing.h"
 #include "psc_push_particles.h"
 #include "psc_sort.h"
+#include "psc_randomize.h"
 #include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -10,6 +11,8 @@
 #include <string.h>
 #include <math.h>
 #include <mpi.h>
+
+static unsigned int mask;
 
 static bool do_dump = false;
 static bool check_currents = true;
@@ -434,6 +437,7 @@ create_test(const char *s_push_particles)
   psc_set_from_options(psc);
   psc_push_particles_set_type(psc->push_particles, s_push_particles);
   psc_sort_set_type(psc->sort, "countsort2");
+  psc_randomize_set_type(psc->randomize, "c");
   psc_setup(psc);
 #if 0
   psc->particles->p[0].particles[0] = psc->particles->p[0].particles[1];
@@ -441,6 +445,8 @@ create_test(const char *s_push_particles)
   psc->particles->p[0].particles[0].zi = 3.5/16;
   psc->particles->p[0].n_part = 1;
 #endif
+  psc_sort_set_param_int(ppsc->sort, "mask", mask);
+  psc_randomize_run(psc->randomize, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
   return psc;
 }
@@ -501,6 +507,11 @@ main(int argc, char **argv)
 #ifdef USE_CUDA
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
 #endif
+
+  // ----------------------------------------------------------------------
+  // push_yz 1st order vb
+
+  mask = 15;
 
   run_test(true, "1vb", 0., 0., create_test, "");
   // run again to check continuity
