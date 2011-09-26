@@ -94,9 +94,9 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
 	qni_wni = wni;
       }
       
-      xi4[n].x  = part_base->xi;
-      xi4[n].y  = part_base->yi;
-      xi4[n].z  = part_base->zi;
+      xi4[n].x  = part_base->xi - patch->xb[0];
+      xi4[n].y  = part_base->yi - patch->xb[1];
+      xi4[n].z  = part_base->zi - patch->xb[2];
       xi4[n].w  = qni_div_mni;
       pxi4[n].x = part_base->pxi;
       pxi4[n].y = part_base->pyi;
@@ -213,6 +213,7 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
 
   mparticles_base_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp_base = &particles_base->p[p];
     particles_cuda_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);
@@ -239,9 +240,9 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
       }
 
       particle_base_t *part_base = particles_base_get_one(pp_base, n);
-      part_base->xi  = xi4[n].x;
-      part_base->yi  = xi4[n].y;
-      part_base->zi  = xi4[n].z;
+      part_base->xi  = xi4[n].x + patch->xb[0];
+      part_base->yi  = xi4[n].y + patch->xb[1];
+      part_base->zi  = xi4[n].z + patch->xb[2];
       part_base->pxi = pxi4[n].x;
       part_base->pyi = pxi4[n].y;
       part_base->pzi = pxi4[n].z;
