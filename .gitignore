@@ -16,6 +16,7 @@ SELECT
 src/VLI
 src/psc_restart
 src/psc_bubble
+src/psc_bubble_yz
 src/psc_photon_test
 src/psc_test_emission
 src/psc_test_singlepart
