@@ -77,6 +77,13 @@ psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
   
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+#if 0
+	if (isnan(F3_CUDA(pf, m, jx,jy,jz))) {
+	  printf("m %d j %d,%d,%d %g\n", m, jx,jy,jz,
+		 F3_CUDA(pf, m, jx,jy,jz));
+	  assert(0);
+	}
+#endif
 	F3_BASE(pf_base, m, jx,jy,jz) = F3_CUDA(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;

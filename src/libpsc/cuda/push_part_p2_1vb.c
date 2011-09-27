@@ -110,10 +110,16 @@ calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
 {
   if (off[1] == 0) {
     dx1[0] = .5 * off[0] - x[0];
-    dx1[1] = dx[1] / dx[0] * dx1[0];
+    if (dx[0] != 0.)
+      dx1[1] = dx[1] / dx[0] * dx1[0];
+    else
+      dx1[1] = 0.;
   } else {
     dx1[1] = .5 * off[1] - x[1];
-    dx1[0] = dx[0] / dx[1] * dx1[1];
+    if (dx[1] != 0.)
+      dx1[0] = dx[0] / dx[1] * dx1[1];
+    else
+      dx1[0] = 0.;
   }
 }
 
