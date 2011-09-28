@@ -123,8 +123,8 @@ cell_map_3to1(struct cell_map *map, int i[3])
   idx |= (((i[2]) * (map->dims[1]) + i[1]) * map->dims[0] + i[0]) << cnt;
 #if 0
   if (idx >= map->N) {
-    printf("idx %d N %d %d %d %d dims %d %d\n", idx, map->N, i[0], i[1], i[2],
-	   map->dims[0], map->dims[1]);
+    printf("idx %d N %d %d %d %d dims %d %d %d\n", idx, map->N, i[0], i[1], i[2],
+	   map->dims[0], map->dims[1], map->dims[2]);
   }
 #endif
   assert(idx < map->N);
