@@ -56,7 +56,8 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 static bool __gotten;
 
 void
-psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
+psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *particles_base,
+			       bool need_block_offsets, bool need_cell_offsets)
 {
   static int pr;
   if (!pr) {
@@ -67,8 +68,6 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
   assert(!__gotten);
   __gotten = true;
     
-  mparticles_base_t *particles_base = _particles_base;
-
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   assert(ppsc->nr_patches == 1); // many things would break...
   psc_foreach_patch(ppsc, p) {
@@ -115,8 +114,6 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
       pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
     }
     pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-    // FIXME, should go away and can be taken over by c_offsets
-    h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
 
     for (int d = 0; d < 3; d++) {
       if (bs[d] != 1) {
@@ -124,36 +121,39 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
 	// bit, so we can do the checkerboard passes
       }
     }
-    int last_block = -1;
     struct cell_map map;
     cell_map_init(&map, patch->ldims, bs);
-    for (int n = 0; n <= pp->n_part; n++) {
-      int block;
-      if (n < pp->n_part) {
-	particle_base_t *part_base = particles_base_get_one(pp_base, n);
-	block = find_blockIdx(patch, &map, part_base);
-      } else {
-	block = pp->nr_blocks;
+
+    if (need_block_offsets) {
+      // FIXME, should go away and can be taken over by c_offsets
+      h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
+      int last_block = -1;
+      for (int n = 0; n <= pp->n_part; n++) {
+	int block;
+	if (n < pp->n_part) {
+	  particle_base_t *part_base = particles_base_get_one(pp_base, n);
+	  block = find_blockIdx(patch, &map, part_base);
+	} else {
+	  block = pp->nr_blocks;
+	}
+	assert(last_block <= block);
+	while (last_block < block) {
+	  h_part->offsets[last_block+1] = n;
+	  last_block++;
+	}
       }
-      if (last_block > block) {
-	assert(0);
-	break;
-      }
-      assert(last_block <= block);
-      while (last_block < block) {
-	h_part->offsets[last_block+1] = n;
-	last_block++;
-      }
-    }
 
 #if 0
-    for (int b = 0; b < pp->nr_blocks; b++) {
-      int bi[3];
-      blockIdx_to_blockCrd(patch, &map, b, bi);
-      printf("block %d [%d,%d,%d]: %d:%d\n", b, bi[0], bi[1], bi[2],
-	     h_part->offsets[b], h_part->offsets[b+1]);
-    }
+      for (int b = 0; b < pp->nr_blocks; b++) {
+	int bi[3];
+	blockIdx_to_blockCrd(patch, &map, b, bi);
+	printf("block %d [%d,%d,%d]: %d:%d\n", b, bi[0], bi[1], bi[2],
+	       h_part->offsets[b], h_part->offsets[b+1]);
+      }
 #endif
+    }
+
+    // FIXME, could be computed on the cuda side
     h_part->c_pos = calloc(map.N * 3, sizeof(int));
     for (int cidx = 0; cidx < map.N; cidx++) {
       int ci[3];
@@ -163,31 +163,29 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
       h_part->c_pos[3*cidx + 2] = ci[2];
     }
 
-    const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-    h_part->c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
-			       sizeof(*h_part->c_offsets));
-    last_block = -1;
-    for (int n = 0; n <= pp->n_part; n++) {
-      int block;
-      if (n < pp->n_part) {
-	particle_base_t *part_base = particles_base_get_one(pp_base, n);
-	block = find_cellIdx(patch, &map, part_base);
-      } else {
-	block = map.N;
-      }
-      assert(block <= pp->nr_blocks * cells_per_block);
-      if (last_block > block) {
-	MHERE;
-	break;
-      }
-      assert(last_block <= block);
-      while (last_block < block) {
-	h_part->c_offsets[last_block+1] = n;
-	last_block++;
+    if (need_cell_offsets) {
+      const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+      h_part->c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
+				 sizeof(*h_part->c_offsets));
+      int last_block = -1;
+      for (int n = 0; n <= pp->n_part; n++) {
+	int block;
+	if (n < pp->n_part) {
+	  particle_base_t *part_base = particles_base_get_one(pp_base, n);
+	  block = find_cellIdx(patch, &map, part_base);
+	} else {
+	  block = map.N;
+	}
+	assert(block <= pp->nr_blocks * cells_per_block);
+	assert(last_block <= block);
+	while (last_block < block) {
+	  h_part->c_offsets[last_block+1] = n;
+	  last_block++;
+	}
       }
     }
     cell_map_free(&map);
-    
+
     __particles_cuda_get(pp);
     
     free(h_part->offsets); // FIXME?!!!
@@ -196,6 +194,12 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
   }
 
   prof_stop(pr);
+}
+
+void
+psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
+{
+  psc_mparticles_cuda_get_from_2(particles, _particles_base, true, true);
 }
 
 void

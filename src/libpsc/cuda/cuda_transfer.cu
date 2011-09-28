@@ -13,8 +13,6 @@ __particles_cuda_get(particles_cuda_t *pp)
   check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
   check(cudaMalloc((void **) &d_part->offsets, 
 		   (pp->nr_blocks + 1) * sizeof(int)));
-  check(cudaMalloc((void **) &d_part->c_offsets, 
-		   (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
   check(cudaMalloc((void **) &d_part->c_pos, 
 		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int)));
 
@@ -24,9 +22,13 @@ __particles_cuda_get(particles_cuda_t *pp)
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(d_part->offsets, h_part->offsets,
 		   (pp->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
-  check(cudaMemcpy(d_part->c_offsets, h_part->c_offsets,
-		   (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
-		   cudaMemcpyHostToDevice));
+  if (h_part->c_offsets) {
+    check(cudaMalloc((void **) &d_part->c_offsets, 
+		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
+    check(cudaMemcpy(d_part->c_offsets, h_part->c_offsets,
+		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
+		     cudaMemcpyHostToDevice));
+  }
   check(cudaMemcpy(d_part->c_pos, h_part->c_pos,
 		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int),
 		   cudaMemcpyHostToDevice));

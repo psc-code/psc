@@ -55,7 +55,7 @@ sort_find_cell_indices_device(particles_cuda_t *pp, struct psc_patch *patch,
 
 // FIXME, specific to 1x8x8, should be in ! .cu, so that cell_map works
 
-static void
+static void __unused
 sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
 			    unsigned int *d_cnis, unsigned int *d_ids)
 {
@@ -101,7 +101,7 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
   free(h_ids);
 }
 
-static void
+static void __unused
 sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
 {
   int n_part = pp->n_part;
