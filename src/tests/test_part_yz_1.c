@@ -447,7 +447,9 @@ create_test(const char *s_push_particles)
 #endif
   psc_sort_set_param_int(ppsc->sort, "mask", mask);
   psc_randomize_run(psc->randomize, psc->particles);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
+
   return psc;
 }
 
@@ -467,6 +469,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   } else if (strcmp(push, "_b") == 0) {
     psc_push_particles_push_yz_b(psc->push_particles, psc->particles, psc->flds);
   }
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
   dump(s_push_particles, 1);
   if (is_ref) {
