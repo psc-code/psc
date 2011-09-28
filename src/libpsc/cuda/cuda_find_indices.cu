@@ -8,27 +8,30 @@ EXTERN_C void sort_pairs_host(unsigned int *d_keys, unsigned int *d_vals, int n)
 
 __global__ static void find_cell_indices(int n_part, particles_cuda_dev_t d_part,
 					 unsigned int *d_cnis, unsigned int *d_ids,
-					 real xb, real yb, real zb, int ldims_y,
-					 real dxi, real dyi, real dzi)
+					 int ldims_y, real dxi, real dyi, real dzi)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i < n_part) {
     particle_cuda_real_t xi[3] = {
-      (d_part.xi4[i].x - xb) * dxi,
-      (d_part.xi4[i].y - yb) * dyi,
-      (d_part.xi4[i].z - zb) * dzi };
+      d_part.xi4[i].x * dxi,
+      d_part.xi4[i].y * dyi,
+      d_part.xi4[i].z * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {
-      pos[d] = cuda_nint(xi[d]);
+      pos[d] = cuda_fint(xi[d]);
     }
     
-    int idx = (((pos[2] / 8) * (ldims_y / 8) + (pos[1] / 8)) << 6) |
+    int idx = (((pos[2] / 8) * (ldims_y / 8) + (pos[1] / 8)) << 6);
+    idx |=
       ((pos[2] & 4) << 3) |
+      ((pos[1] & 4) << 2);
+#if 0
+    idx |=
       ((pos[2] & 2) << 2) |
-      ((pos[2] & 1) << 1) |
-      ((pos[1] & 4) << 2) |
       ((pos[1] & 2) << 1) |
+      ((pos[2] & 1) << 1) |
       ((pos[1] & 1) << 0);
+#endif
     d_cnis[i] = idx;
     d_ids[i] = i;
   }
@@ -46,7 +49,7 @@ sort_find_cell_indices_device(particles_cuda_t *pp, struct psc_patch *patch,
   int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     find_cell_indices, (pp->n_part, pp->d_part, d_cnis, d_ids,
-				 patch->xb[0], patch->xb[1], patch->xb[2], patch->ldims[1],
+				 patch->ldims[1],
 				 dxi, dyi, dzi));
 }
 
@@ -75,7 +78,7 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
       (h_part->xi4[i].z - patch->xb[2]) * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {
-      pos[d] = particle_base_real_nint(xi[d]);
+      pos[d] = particle_base_real_fint(xi[d]);
     }
     
     int idx = (((pos[2] / 8) * (patch->ldims[1] / 8) + (pos[1] / 8)) << 6) |
