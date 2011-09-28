@@ -139,17 +139,28 @@ sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
 
 __global__ static void
 sort_reorder(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float4 *pxi4,
-	     unsigned int *d_ids)
+	     unsigned int *d_cnis, unsigned int *d_ids)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i < n_part) {
     xi4[i] = d_part.xi4[d_ids[i]];
     pxi4[i] = d_part.pxi4[d_ids[i]];
+    
+    // create offsets per block into particle array
+    int blocksize = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+    int block = d_cnis[i] / blocksize;
+    int prev_block = -1;
+    if (i > 0) {
+      prev_block = d_cnis[i-1] / blocksize;
+    }
+    for (int b = prev_block + 1; b <= block; b++) {
+      d_part.offsets[b] = i;
+    }
   }
 }
 
 static void
-sort_reorder_device(particles_cuda_t *pp, unsigned int *d_ids)
+sort_reorder_device(particles_cuda_t *pp, unsigned int *d_cnis, unsigned int *d_ids)
 {
   float4 *xi4, *pxi4;
   check(cudaMalloc((void **) &xi4, pp->n_part * sizeof(*xi4)));
@@ -158,7 +169,7 @@ sort_reorder_device(particles_cuda_t *pp, unsigned int *d_ids)
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     sort_reorder, (pp->n_part, pp->d_part, xi4, pxi4, d_ids));
+	     sort_reorder, (pp->n_part, pp->d_part, xi4, pxi4, d_cnis, d_ids));
 
   check(cudaFree(pp->d_part.xi4));
   check(cudaFree(pp->d_part.pxi4));
@@ -177,7 +188,32 @@ sort_patch(int p, particles_cuda_t *pp)
 
   sort_find_cell_indices_device(pp, patch, d_cnis, d_ids);
   sort_pairs_device(d_cnis, d_ids, pp->n_part);
-  sort_reorder_device(pp, d_ids);
+  sort_reorder_device(pp, d_cnis, d_ids);
+  
+#if 0
+  unsigned int *h_cnis = (unsigned int *) calloc(pp->n_part, sizeof(*h_cnis));
+  check(cudaMemcpy(h_cnis, d_cnis, pp->n_part * sizeof(*h_cnis),
+		   cudaMemcpyDeviceToHost));
+  int *offsets = (int *) calloc(pp->nr_blocks + 1, sizeof(*offsets));
+  check(cudaMemcpy(offsets, pp->d_part.offsets, (pp->nr_blocks + 1) * sizeof(*offsets),
+		   cudaMemcpyDeviceToHost));
+
+  for (int b = 0; b < pp->nr_blocks; b++) {
+    if (pp->h_part.offsets) {
+      printf("block %d: %d:%d\n", b, pp->h_part.offsets[b], pp->h_part.offsets[b+1]);
+    }
+    printf("block %d: %d:%d\n", b, offsets[b], offsets[b+1]);
+  }
+  int last_block = -1;
+  for (int i = 0; i < pp->n_part; i++) {
+    if (h_cnis[i] / 16 != last_block) {
+      last_block = h_cnis[i] / 16;
+      printf("i %d bid %d\n", i, last_block);
+    }
+  }
+  free(offsets);
+  free(h_cnis);
+#endif
 
   check(cudaFree(d_cnis));
   check(cudaFree(d_ids));

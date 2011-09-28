@@ -195,16 +195,21 @@ cuda_push_partq(mparticles_base_t *particles_base,
     prof_stop(pr2);
   }
 
-#if 1
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  psc_mparticles_cuda_put_to(&particles, particles_base);
-  psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-  psc_sort_run(ppsc->sort, particles_base);
-  psc_mparticles_cuda_get_from_2(&particles, particles_base, need_block_offsets,
-				 need_cell_offsets);
-#endif
-  psc_foreach_patch(ppsc, p) {
-    cuda_sort_patch(p, &particles.p[p]);
+  if (need_cell_offsets) {
+    psc_mparticles_cuda_put_to(&particles, particles_base);
+    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+    psc_sort_run(ppsc->sort, particles_base);
+    psc_mparticles_cuda_get_from_2(&particles, particles_base,
+				   need_block_offsets, need_cell_offsets);
+  } else {
+    psc_mparticles_cuda_put_to(&particles, particles_base);
+    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+    psc_mparticles_cuda_get_from_2(&particles, particles_base,
+				   false, false);
+    psc_foreach_patch(ppsc, p) {
+      cuda_sort_patch(p, &particles.p[p]);
+    }
   }
 
   psc_foreach_patch(ppsc, p) {
