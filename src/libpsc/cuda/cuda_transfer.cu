@@ -67,6 +67,13 @@ __particles_cuda_put(particles_cuda_t *pp)
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(h_part->pxi4, d_part->pxi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
+}
+
+EXTERN_C void
+__particles_cuda_free(particles_cuda_t *pp)
+{
+  particles_cuda_dev_t *d_part = &pp->d_part;
+
   check(cudaFree(d_part->xi4));
   check(cudaFree(d_part->pxi4));
   check(cudaFree(d_part->offsets));

@@ -271,6 +271,8 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
 
     free(xi4);
     free(pxi4);
+
+    __particles_cuda_free(pp);
   }
   free(particles->p);
   particles->p = NULL;
