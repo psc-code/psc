@@ -34,7 +34,4 @@ EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
 #define BLOCKSIZE_Y 4
 #define BLOCKSIZE_Z 4
 
-EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
-EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
-
 #endif

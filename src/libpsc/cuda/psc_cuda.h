@@ -87,6 +87,9 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
+EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
+EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
+
 EXTERN_C void cuda_exchange_particles(int p, particles_cuda_t *pp);
 
 #endif
