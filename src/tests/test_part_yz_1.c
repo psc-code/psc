@@ -16,6 +16,7 @@ static unsigned int mask;
 
 static bool do_dump = false;
 static bool check_currents = true;
+static bool check_particles = true;
 
 // ======================================================================
 // psc_calc_rho
@@ -476,7 +477,9 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_save_particles_ref(psc, psc->particles);
     psc_save_fields_ref(psc, psc->flds);
   } else {
-    psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
+    if (check_particles) {
+      psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
+    }
     if (check_currents && strlen(push) == 0) { // only check currents for full pusher
       psc_check_currents_ref(psc, psc->flds, eps_fields);
       psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
@@ -495,6 +498,7 @@ main(int argc, char **argv)
 
   mrc_params_get_option_bool("dump", &do_dump);
   mrc_params_get_option_bool("check_currents", &check_currents);
+  mrc_params_get_option_bool("check_particles", &check_particles);
 
   // ----------------------------------------------------------------------
   // push_yz 1st order
