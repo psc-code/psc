@@ -191,17 +191,11 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     }
     cell_map_free(&map);
 
-    particles_cuda_dev_t *h_part = &pp->h_part;
-    h_part->xi4 = xi4;
-    h_part->pxi4 = pxi4;
-    h_part->offsets = offsets;
-    h_part->c_pos = c_pos;
-    h_part->c_offsets = c_offsets;
     __particles_cuda_alloc(pp, true, need_cell_offsets);
-    __particles_cuda_get(pp);
-    free(h_part->offsets);
-    free(h_part->c_pos);
-    free(h_part->c_offsets);
+    __particles_cuda_to_device(pp, xi4, pxi4, offsets, c_offsets, c_pos);
+    free(offsets);
+    free(c_pos);
+    free(c_offsets);
     free(xi4);
     free(pxi4);
   }
@@ -234,13 +228,10 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
     particles_cuda_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);
 
-    particles_cuda_dev_t *h_part = &pp->h_part;
     float4 *xi4  = calloc(pp->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
-    h_part->xi4 = xi4;
-    h_part->pxi4 = pxi4;
 
-    __particles_cuda_put(pp);
+    __particles_cuda_from_device(pp, xi4, pxi4);
 
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_base_real_t qni_div_mni = xi4[n].w;

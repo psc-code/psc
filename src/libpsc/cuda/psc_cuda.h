@@ -90,8 +90,11 @@ struct d_particle {
 EXTERN_C void __particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
 				     bool need_cell_offsets);
 EXTERN_C void __particles_cuda_free(particles_cuda_t *pp);
-EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
-EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
+EXTERN_C void __particles_cuda_to_device(particles_cuda_t *pp,
+					 float4 *xi, float4 *pxi,
+					 int *offsets, int *c_offsets, int *c_pos);
+EXTERN_C void __particles_cuda_from_device(particles_cuda_t *pp,
+					   float4 *xi4, float4 *pxi4);
 
 EXTERN_C void cuda_exchange_particles(int p, particles_cuda_t *pp);
 

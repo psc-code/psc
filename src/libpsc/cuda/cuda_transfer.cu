@@ -30,42 +30,41 @@ __particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
 }
 
 EXTERN_C void
-__particles_cuda_get(particles_cuda_t *pp)
+__particles_cuda_to_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4,
+			   int *offsets, int *c_offsets, int *c_pos)
 {
   int n_part = pp->n_part;
-  particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
   const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
 
-  check(cudaMemcpy(d_part->xi4, h_part->xi4, n_part * sizeof(float4),
+  check(cudaMemcpy(d_part->xi4, xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(d_part->pxi4, h_part->pxi4, n_part * sizeof(float4),
+  check(cudaMemcpy(d_part->pxi4, pxi4, n_part * sizeof(*pxi4),
 		   cudaMemcpyHostToDevice));
-  if (h_part->offsets) {
-    check(cudaMemcpy(d_part->offsets, h_part->offsets,
+  if (offsets) {
+    check(cudaMemcpy(d_part->offsets, offsets,
 		     pp->nr_blocks * sizeof(int), cudaMemcpyHostToDevice));
   }
-  if (h_part->c_offsets) {
-    check(cudaMemcpy(d_part->c_offsets, h_part->c_offsets,
+  if (c_offsets) {
+    check(cudaMemcpy(d_part->c_offsets,c_offsets,
 		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
 		     cudaMemcpyHostToDevice));
   }
-  check(cudaMemcpy(d_part->c_pos, h_part->c_pos,
+  check(cudaMemcpy(d_part->c_pos, c_pos,
 		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int),
 		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
-__particles_cuda_put(particles_cuda_t *pp)
+__particles_cuda_from_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4)
 {
   int n_part = pp->n_part;
-  particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
-  check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
+  check(cudaMemcpy(xi4, d_part->xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(h_part->pxi4, d_part->pxi4, n_part * sizeof(float4),
+  check(cudaMemcpy(pxi4, d_part->pxi4, n_part * sizeof(*pxi4),
 		   cudaMemcpyDeviceToHost));
 }
 

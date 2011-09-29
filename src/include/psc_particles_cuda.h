@@ -19,7 +19,6 @@ typedef struct {
 } particles_cuda_dev_t;
 
 typedef struct {
-  particles_cuda_dev_t h_part; // all particles, on host
   particles_cuda_dev_t d_part; // all particles, on device
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction

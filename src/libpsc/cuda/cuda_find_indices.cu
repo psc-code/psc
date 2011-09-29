@@ -60,12 +60,12 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
 			    unsigned int *d_cnis, unsigned int *d_ids)
 {
   int n_part = pp->n_part;
-  particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
   unsigned int *h_cnis = (unsigned int *) malloc(n_part * sizeof(*h_cnis));
   unsigned int *h_ids = (unsigned int *) malloc(n_part * sizeof(*h_ids));
 
-  check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
+  float4 *h_xi4 = (float4 *) malloc(n_part * sizeof(*h_xi4));
+  check(cudaMemcpy(h_xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
 
   for (int i = 0; i < n_part; i++) {
@@ -73,9 +73,9 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
     particle_cuda_real_t dyi = 1.f / ppsc->dx[1];
     particle_cuda_real_t dzi = 1.f / ppsc->dx[2];
     particle_cuda_real_t xi[3] = {
-      (h_part->xi4[i].x - patch->xb[0]) * dxi,
-      (h_part->xi4[i].y - patch->xb[1]) * dyi,
-      (h_part->xi4[i].z - patch->xb[2]) * dzi };
+      (h_xi4[i].x - patch->xb[0]) * dxi,
+      (h_xi4[i].y - patch->xb[1]) * dyi,
+      (h_xi4[i].z - patch->xb[2]) * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {
       pos[d] = particle_base_real_fint(xi[d]);
@@ -97,6 +97,7 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
   check(cudaMemcpy(d_ids, h_ids, n_part * sizeof(*h_ids),
 		   cudaMemcpyHostToDevice));
 
+  free(h_xi4);
   free(h_cnis);
   free(h_ids);
 }
@@ -105,13 +106,14 @@ static void __unused
 sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
 {
   int n_part = pp->n_part;
-  particles_cuda_dev_t *h_part = &pp->h_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
   unsigned int *h_ids = (unsigned int *) malloc(n_part);
 
-  check(cudaMemcpy(h_part->xi4, d_part->xi4, n_part * sizeof(float4),
+  float4 *h_xi4 = (float4 *) malloc(n_part * sizeof(*h_xi4));
+  float4 *h_pxi4 = (float4 *) malloc(n_part * sizeof(*h_pxi4));
+  check(cudaMemcpy(h_xi4, d_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(h_part->pxi4, d_part->pxi4, n_part * sizeof(float4),
+  check(cudaMemcpy(h_pxi4, d_part->pxi4, n_part * sizeof(float4),
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(h_ids, d_ids, n_part * sizeof(*h_ids),
 		   cudaMemcpyDeviceToHost));
@@ -120,20 +122,18 @@ sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
   float4 *xi4 = (float4 *) malloc(n_part * sizeof(*xi4));
   float4 *pxi4 = (float4 *) malloc(n_part * sizeof(*pxi4));
   for (int i = 0; i < n_part; i++) {
-    xi4[i] = pp->h_part.xi4[h_ids[i]];
-    pxi4[i] = pp->h_part.pxi4[h_ids[i]];
+    xi4[i] = h_xi4[h_ids[i]];
+    pxi4[i] = h_pxi4[h_ids[i]];
   }
-  // back to in-place
-  memcpy(pp->h_part.xi4, xi4, n_part * sizeof(*xi4));
-  memcpy(pp->h_part.pxi4, pxi4, n_part * sizeof(*pxi4));
   
+  check(cudaMemcpy(d_part->xi4, xi4, n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(d_part->pxi4, pxi4, n_part * sizeof(float4),
+		   cudaMemcpyHostToDevice));
   free(xi4);
   free(pxi4);
-
-  check(cudaMemcpy(d_part->xi4, h_part->xi4, n_part * sizeof(float4),
-		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(d_part->pxi4, h_part->pxi4, n_part * sizeof(float4),
-		   cudaMemcpyHostToDevice));
+  free(h_xi4);
+  free(h_pxi4);
   free(h_ids);
 }
 
