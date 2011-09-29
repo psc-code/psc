@@ -132,7 +132,7 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 
     if (need_block_offsets) {
       // FIXME, should go away and can be taken over by c_offsets
-      h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
+      int *offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
@@ -144,35 +144,37 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 	}
 	assert(last_block <= block);
 	while (last_block < block) {
-	  h_part->offsets[last_block+1] = n;
+	  offsets[last_block+1] = n;
 	  last_block++;
 	}
       }
+      h_part->offsets = offsets;
 
 #if 0
       for (int b = 0; b < pp->nr_blocks; b++) {
 	int bi[3];
 	blockIdx_to_blockCrd(patch, &map, b, bi);
 	printf("block %d [%d,%d,%d]: %d:%d\n", b, bi[0], bi[1], bi[2],
-	       h_part->offsets[b], h_part->offsets[b+1]);
+	       offsets[b], offsets[b+1]);
       }
 #endif
     }
 
     // FIXME, could be computed on the cuda side
-    h_part->c_pos = calloc(map.N * 3, sizeof(int));
+    int *c_pos = calloc(map.N * 3, sizeof(*c_pos));
     for (int cidx = 0; cidx < map.N; cidx++) {
       int ci[3];
       cell_map_1to3(&map, cidx, ci);
-      h_part->c_pos[3*cidx + 0] = ci[0];
-      h_part->c_pos[3*cidx + 1] = ci[1];
-      h_part->c_pos[3*cidx + 2] = ci[2];
+      c_pos[3*cidx + 0] = ci[0];
+      c_pos[3*cidx + 1] = ci[1];
+      c_pos[3*cidx + 2] = ci[2];
     }
+    h_part->c_pos = c_pos;
 
     if (need_cell_offsets) {
       const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-      h_part->c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
-				 sizeof(*h_part->c_offsets));
+      int *c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
+			      sizeof(*c_offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
@@ -185,10 +187,11 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 	assert(block <= pp->nr_blocks * cells_per_block);
 	assert(last_block <= block);
 	while (last_block < block) {
-	  h_part->c_offsets[last_block+1] = n;
+	  c_offsets[last_block+1] = n;
 	  last_block++;
 	}
       }
+      h_part->c_offsets = c_offsets;
     }
     cell_map_free(&map);
 
