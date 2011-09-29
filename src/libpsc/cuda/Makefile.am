@@ -9,12 +9,14 @@ libsubdir_la_SOURCES = \
 	psc_fields_cuda.c \
 	psc_particles_cuda.c \
 	psc_push_particles_cuda.c \
+	psc_bnd_cuda.c \
 	psc_sort_cuda.c
 
 libsubdir_la_LIBADD = \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
 	cuda_sort.lo \
+	cuda_exchange_particles.lo \
 	cuda_push_part_yz_a.lo \
 	cuda_push_part_yz_b.lo \
 	cuda_push_part_yz.lo \

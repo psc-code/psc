@@ -14,6 +14,8 @@ void psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles,
 				    bool need_block_offsets,
 				    bool need_cell_offsets);
 
+void psc_bnd_cuda_exchange_particles(struct psc *psc, mparticles_cuda_t *particles);
+
 static void
 psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
 				  mparticles_base_t *particles_base,
@@ -203,10 +205,14 @@ cuda_push_partq(mparticles_base_t *particles_base,
     psc_mparticles_cuda_get_from_2(&particles, particles_base,
 				   need_block_offsets, need_cell_offsets);
   } else {
+#if 0
     psc_mparticles_cuda_put_to(&particles, particles_base);
     psc_bnd_exchange_particles(ppsc->bnd, particles_base);
     psc_mparticles_cuda_get_from_2(&particles, particles_base,
 				   false, false);
+#else
+    psc_bnd_cuda_exchange_particles(ppsc, &particles);
+#endif
     psc_foreach_patch(ppsc, p) {
       cuda_sort_patch(p, &particles.p[p]);
     }
