@@ -87,6 +87,9 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
+EXTERN_C void __particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
+				     bool need_cell_offsets);
+EXTERN_C void __particles_cuda_free(particles_cuda_t *pp);
 EXTERN_C void __particles_cuda_get(particles_cuda_t *pp);
 EXTERN_C void __particles_cuda_put(particles_cuda_t *pp);
 

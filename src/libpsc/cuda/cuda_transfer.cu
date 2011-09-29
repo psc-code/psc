@@ -2,6 +2,34 @@
 #include "psc_cuda.h"
 
 EXTERN_C void
+__particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
+		       bool need_cell_offsets)
+{
+  int n_part = pp->n_part;
+  particles_cuda_dev_t *d_part = &pp->d_part;
+
+  const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+
+  check(cudaMalloc((void **) &d_part->xi4, n_part * sizeof(float4)));
+  check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
+
+  if (need_block_offsets) {
+    check(cudaMalloc((void **) &d_part->offsets, 
+		     (pp->nr_blocks + 1) * sizeof(int)));
+    check(cudaMemcpy(&d_part->offsets[pp->nr_blocks], &n_part, sizeof(int),
+		     cudaMemcpyHostToDevice));
+  }
+
+  if (need_cell_offsets) {
+    check(cudaMalloc((void **) &d_part->c_offsets, 
+		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
+  }
+
+  check(cudaMalloc((void **) &d_part->c_pos, 
+		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int)));
+}
+
+EXTERN_C void
 __particles_cuda_get(particles_cuda_t *pp)
 {
   int n_part = pp->n_part;
@@ -9,12 +37,6 @@ __particles_cuda_get(particles_cuda_t *pp)
   particles_cuda_dev_t *d_part = &pp->d_part;
 
   const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-  check(cudaMalloc((void **) &d_part->xi4, n_part * sizeof(float4)));
-  check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
-  check(cudaMalloc((void **) &d_part->offsets, 
-		   (pp->nr_blocks + 1) * sizeof(int)));
-  check(cudaMalloc((void **) &d_part->c_pos, 
-		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int)));
 
   check(cudaMemcpy(d_part->xi4, h_part->xi4, n_part * sizeof(float4),
 		   cudaMemcpyHostToDevice));
@@ -24,11 +46,7 @@ __particles_cuda_get(particles_cuda_t *pp)
     check(cudaMemcpy(d_part->offsets, h_part->offsets,
 		     pp->nr_blocks * sizeof(int), cudaMemcpyHostToDevice));
   }
-  check(cudaMemcpy(&d_part->offsets[pp->nr_blocks], &n_part, sizeof(int),
-		   cudaMemcpyHostToDevice));
   if (h_part->c_offsets) {
-    check(cudaMalloc((void **) &d_part->c_offsets, 
-		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
     check(cudaMemcpy(d_part->c_offsets, h_part->c_offsets,
 		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
 		     cudaMemcpyHostToDevice));

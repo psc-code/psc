@@ -1,5 +1,6 @@
 
 #include "psc.h"
+#include "psc_cuda.h"
 #include "psc_particles_cuda.h"
 
 #include <mrc_profile.h>
@@ -80,9 +81,17 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     struct psc_patch *patch = &ppsc->patch[p];
     particles_base_t *pp_base = &particles_base->p[p];
     particles_cuda_t *pp = &particles->p[p];
-    particles_cuda_dev_t *h_part = &pp->h_part;
 
     pp->n_part = pp_base->n_part;
+    int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->domain.gdims[d] == 1) {
+	bs[d] = 1;
+      }
+      pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
+    }
+    pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
+
     float4 *xi4  = calloc(pp->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
 
@@ -109,18 +118,6 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
       pxi4[n].w = qni_wni;
     }
 
-    h_part->xi4 = xi4;
-    h_part->pxi4 = pxi4;
-
-    int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->domain.gdims[d] == 1) {
-	bs[d] = 1;
-      }
-      pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
-    }
-    pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-
     for (int d = 0; d < 3; d++) {
       if (bs[d] != 1) {
 	bs[d] *= 2; // sort not only within blocks, but also on lowest block
@@ -130,9 +127,10 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     struct cell_map map;
     cell_map_init(&map, patch->ldims, bs);
 
+    int *offsets = NULL;
     if (need_block_offsets) {
       // FIXME, should go away and can be taken over by c_offsets
-      int *offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
+      offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
@@ -148,7 +146,6 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 	  last_block++;
 	}
       }
-      h_part->offsets = offsets;
 
 #if 0
       for (int b = 0; b < pp->nr_blocks; b++) {
@@ -169,11 +166,11 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
       c_pos[3*cidx + 1] = ci[1];
       c_pos[3*cidx + 2] = ci[2];
     }
-    h_part->c_pos = c_pos;
 
+    int *c_offsets = NULL;
     if (need_cell_offsets) {
       const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-      int *c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
+      c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
 			      sizeof(*c_offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
@@ -191,10 +188,16 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 	  last_block++;
 	}
       }
-      h_part->c_offsets = c_offsets;
     }
     cell_map_free(&map);
 
+    particles_cuda_dev_t *h_part = &pp->h_part;
+    h_part->xi4 = xi4;
+    h_part->pxi4 = pxi4;
+    h_part->offsets = offsets;
+    h_part->c_pos = c_pos;
+    h_part->c_offsets = c_offsets;
+    __particles_cuda_alloc(pp, true, need_cell_offsets);
     __particles_cuda_get(pp);
   }
 
