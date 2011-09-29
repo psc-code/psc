@@ -199,6 +199,9 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     h_part->c_offsets = c_offsets;
     __particles_cuda_alloc(pp, true, need_cell_offsets);
     __particles_cuda_get(pp);
+    free(h_part->offsets);
+    free(h_part->c_pos);
+    free(h_part->c_offsets);
   }
 
   prof_stop(pr);
@@ -264,10 +267,6 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
 
     free(xi4);
     free(pxi4);
-    
-    free(h_part->offsets);
-    free(h_part->c_pos);
-    free(h_part->c_offsets);
   }
   free(particles->p);
   particles->p = NULL;
