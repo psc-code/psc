@@ -202,6 +202,8 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     free(h_part->offsets);
     free(h_part->c_pos);
     free(h_part->c_offsets);
+    free(xi4);
+    free(pxi4);
   }
 
   prof_stop(pr);
@@ -233,8 +235,10 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
     assert(pp->n_part == pp_base->n_part);
 
     particles_cuda_dev_t *h_part = &pp->h_part;
-    float4 *xi4  = h_part->xi4;
-    float4 *pxi4 = h_part->pxi4;
+    float4 *xi4  = calloc(pp->n_part, sizeof(float4));
+    float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
+    h_part->xi4 = xi4;
+    h_part->pxi4 = pxi4;
 
     __particles_cuda_put(pp);
 
