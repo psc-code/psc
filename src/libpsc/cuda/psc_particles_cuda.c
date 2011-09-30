@@ -231,7 +231,7 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
 	qni = 0.;
 	wni = qni_wni;
 	mni = -1.;
-	assert(0); // can't recover the mass of a neutral particle
+	// FIXME, irrelevant if no-copy assert(0); // can't recover the mass of a neutral particle
       } else {
 	qni = qni_div_mni > 0 ? 1. : -1.;
 	mni = qni / qni_div_mni;
@@ -255,7 +255,93 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-#if PARTICLES_BASE == PARTICLES_C
+#if PARTICLES_BASE == PARTICLES_CUDA
+
+void
+psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, void *_particles_base,
+			       bool need_block_offsets, bool need_cell_offsets)
+{
+  mparticles_base_t *particles_base = _particles_base;
+  *particles = *particles_base;
+}
+
+void
+psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
+{
+  return psc_mparticles_cuda_get_from_2(particles, _particles_base, true, true);
+}
+
+void
+psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *particles_base)
+{
+}
+
+static bool __gotten;
+
+void
+psc_mparticles_c_get_from(mparticles_c_t *particles_c, void *_particles_base)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mparticles_c_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  assert(!__gotten);
+  __gotten = true;
+    
+  mparticles_base_t *particles_base = _particles_base;
+
+  particles_c->p = calloc(ppsc->nr_patches, sizeof(*particles_c->p));
+  psc_foreach_patch(ppsc, p) {
+    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp_c = &particles_c->p[p];
+    pp_c->n_part = pp_base->n_part;
+    pp_c->particles = calloc(pp_c->n_part, sizeof(*pp_c->particles));
+  }
+  psc_mparticles_copy_cf_from_cuda(particles_base, particles_c);
+
+  prof_stop(pr);
+}
+
+void
+psc_mparticles_c_put_to(mparticles_c_t *particles_c, void *_particles_base)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mparticles_c_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  assert(__gotten);
+  __gotten = false;
+
+  mparticles_base_t *particles_base = _particles_base;
+  psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
+				 true, false); // FIXME, need to sort
+  psc_foreach_patch(ppsc, p) {
+    particles_c_t *pp_c = &particles_c->p[p];
+    free(pp_c->particles);
+  }
+  free(particles_c->p);
+  particles_c->p = NULL;
+
+  prof_stop(pr);
+}
+
+void
+psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particles_base)
+{
+  assert(0);
+}
+
+void
+psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_base)
+{
+  assert(0);
+}
+
+#elif PARTICLES_BASE == PARTICLES_C
 
 // ======================================================================
 
