@@ -1,6 +1,9 @@
 
 #include <psc_cuda.h>
 
+#define PFX(x) sort_##x
+#include "constants.c"
+
 EXTERN_C void sort_pairs_device(unsigned int *d_keys, unsigned int *d_vals, int n);
 EXTERN_C void sort_pairs_host(unsigned int *d_keys, unsigned int *d_vals, int n);
 
@@ -8,14 +11,14 @@ EXTERN_C void sort_pairs_host(unsigned int *d_keys, unsigned int *d_vals, int n)
 
 __global__ static void find_cell_indices(int n_part, particles_cuda_dev_t d_part,
 					 unsigned int *d_cnis, unsigned int *d_ids,
-					 int ldims_y, real dxi, real dyi, real dzi)
+					 int ldims_y)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i < n_part) {
     particle_cuda_real_t xi[3] = {
-      d_part.xi4[i].x * dxi,
-      d_part.xi4[i].y * dyi,
-      d_part.xi4[i].z * dzi };
+      d_part.xi4[i].x * d_dxi[0],
+      d_part.xi4[i].y * d_dxi[1],
+      d_part.xi4[i].z * d_dxi[2] };
     int pos[3];
     for (int d = 0; d < 3; d++) {
       pos[d] = cuda_fint(xi[d]);
@@ -41,16 +44,11 @@ static void
 sort_find_cell_indices_device(particles_cuda_t *pp, struct psc_patch *patch,
 			      unsigned int *d_cnis, unsigned int *d_ids)
 {
-  particle_cuda_real_t dxi = 1.f / ppsc->dx[0];
-  particle_cuda_real_t dyi = 1.f / ppsc->dx[1];
-  particle_cuda_real_t dzi = 1.f / ppsc->dx[2];
-
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     find_cell_indices, (pp->n_part, pp->d_part, d_cnis, d_ids,
-				 patch->ldims[1],
-				 dxi, dyi, dzi));
+				 patch->ldims[1]));
 }
 
 // FIXME, specific to 1x8x8, should be in ! .cu, so that cell_map works
@@ -185,6 +183,9 @@ sort_patch(int p, particles_cuda_t *pp)
   unsigned int *d_cnis, *d_ids;
   check(cudaMalloc((void **) &d_cnis, pp->n_part * sizeof(*d_cnis)));
   check(cudaMalloc((void **) &d_ids, pp->n_part * sizeof(*d_ids)));
+
+  fields_cuda_t pf_dummy;
+  sort_set_constants(pp, &pf_dummy);
 
   sort_find_cell_indices_device(pp, patch, d_cnis, d_ids);
   sort_pairs_device(d_cnis, d_ids, pp->n_part);
