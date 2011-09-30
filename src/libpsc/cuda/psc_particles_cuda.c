@@ -5,6 +5,9 @@
 
 #include <mrc_profile.h>
 
+// FIXME -> header
+void cuda_sort_patch(int p, particles_cuda_t *pp);
+
 static void
 particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part,
 		     bool need_block_offsets, bool need_cell_offsets)
@@ -28,8 +31,6 @@ particles_cuda_free(particles_cuda_t *pp)
 {
   __particles_cuda_free(pp);
 }
-
-#if PARTICLES_BASE == PARTICLES_C
 
 #include "psc_particles_as_c.h"
 
@@ -82,41 +83,24 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
   bi[2] /= BLOCKSIZE_Z;
 }
 
-// ======================================================================
-
-static bool __gotten;
-
-void
-psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *particles_base,
+static void
+psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf,
 			       bool need_block_offsets, bool need_cell_offsets)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mparticles_cuda_get", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(!__gotten);
-  __gotten = true;
-    
-  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
-  assert(ppsc->nr_patches == 1); // many things would break...
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_t *pp_base = &particles_base->p[p];
+    particles_t *pp_cf = &particles_cf->p[p];
     particles_cuda_t *pp = &particles->p[p];
 
-    particles_cuda_alloc(p, pp, pp_base->n_part, true, need_cell_offsets);
+    float4 *xi4  = calloc(pp_cf->n_part, sizeof(float4));
+    float4 *pxi4 = calloc(pp_cf->n_part, sizeof(float4));
 
-    float4 *xi4  = calloc(pp->n_part, sizeof(float4));
-    float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
+    for (int n = 0; n < pp_cf->n_part; n++) {
+      particle_t *part_cf = particles_get_one(pp_cf, n);
 
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_t *part_base = particles_c_get_one(pp_base, n);
-
-      real qni = part_base->qni;
-      real wni = part_base->wni;
-      real qni_div_mni = qni / part_base->mni;
+      real qni = part_cf->qni;
+      real wni = part_cf->wni;
+      real qni_div_mni = qni / part_cf->mni;
       real qni_wni;
       if (qni != 0.) {
 	qni_wni = qni * wni;
@@ -124,13 +108,13 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 	qni_wni = wni;
       }
       
-      xi4[n].x  = part_base->xi - patch->xb[0];
-      xi4[n].y  = part_base->yi - patch->xb[1];
-      xi4[n].z  = part_base->zi - patch->xb[2];
+      xi4[n].x  = part_cf->xi - patch->xb[0];
+      xi4[n].y  = part_cf->yi - patch->xb[1];
+      xi4[n].z  = part_cf->zi - patch->xb[2];
       xi4[n].w  = qni_div_mni;
-      pxi4[n].x = part_base->pxi;
-      pxi4[n].y = part_base->pyi;
-      pxi4[n].z = part_base->pzi;
+      pxi4[n].x = part_cf->pxi;
+      pxi4[n].y = part_cf->pyi;
+      pxi4[n].z = part_cf->pzi;
       pxi4[n].w = qni_wni;
     }
 
@@ -148,15 +132,15 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     cell_map_init(&map, patch->ldims, bs);
 
     int *offsets = NULL;
-    if (need_block_offsets) {
+    if (0 && need_block_offsets) {
       // FIXME, should go away and can be taken over by c_offsets
       offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
 	if (n < pp->n_part) {
-	  particle_t *part_base = particles_base_get_one(pp_base, n);
-	  block = find_blockIdx(patch, &map, part_base);
+	  particle_t *part_cf = particles_get_one(pp_cf, n);
+	  block = find_blockIdx(patch, &map, part_cf);
 	} else {
 	  block = pp->nr_blocks;
 	}
@@ -196,8 +180,8 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
 	if (n < pp->n_part) {
-	  particle_t *part_base = particles_base_get_one(pp_base, n);
-	  block = find_cellIdx(patch, &map, part_base);
+	  particle_t *part_cf = particles_get_one(pp_cf, n);
+	  block = find_cellIdx(patch, &map, part_cf);
 	} else {
 	  block = map.N;
 	}
@@ -212,12 +196,94 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
     cell_map_free(&map);
 
     __particles_cuda_to_device(pp, xi4, pxi4, offsets, c_offsets, c_pos);
+
+    if (need_block_offsets) {
+      cuda_sort_patch(p, pp);
+    }
+
     free(offsets);
     free(c_pos);
     free(c_offsets);
     free(xi4);
     free(pxi4);
   }
+}
+
+static void
+psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf)
+{
+  psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = &ppsc->patch[p];
+    particles_t *pp_cf = &particles_cf->p[p];
+    particles_cuda_t *pp = &particles->p[p];
+    assert(pp->n_part == pp_cf->n_part);
+
+    float4 *xi4  = calloc(pp->n_part, sizeof(float4));
+    float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
+
+    __particles_cuda_from_device(pp, xi4, pxi4);
+
+    for (int n = 0; n < pp_cf->n_part; n++) {
+      particle_real_t qni_div_mni = xi4[n].w;
+      particle_real_t qni_wni = pxi4[n].w;
+      particle_real_t qni, mni, wni;
+      if (qni_div_mni == 0.) {
+	qni = 0.;
+	wni = qni_wni;
+	mni = -1.;
+	assert(0); // can't recover the mass of a neutral particle
+      } else {
+	qni = qni_div_mni > 0 ? 1. : -1.;
+	mni = qni / qni_div_mni;
+	wni = qni_wni / qni;
+      }
+
+      particle_t *part_base = particles_get_one(pp_cf, n);
+      part_base->xi  = xi4[n].x + patch->xb[0];
+      part_base->yi  = xi4[n].y + patch->xb[1];
+      part_base->zi  = xi4[n].z + patch->xb[2];
+      part_base->pxi = pxi4[n].x;
+      part_base->pyi = pxi4[n].y;
+      part_base->pzi = pxi4[n].z;
+      part_base->qni = qni;
+      part_base->mni = mni;
+      part_base->wni = wni;
+    }
+
+    free(xi4);
+    free(pxi4);
+  }
+}
+
+#if PARTICLES_BASE == PARTICLES_C
+
+// ======================================================================
+
+static bool __gotten;
+
+void
+psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *particles_base,
+			       bool need_block_offsets, bool need_cell_offsets)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mparticles_cuda_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  assert(!__gotten);
+  __gotten = true;
+    
+  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  assert(ppsc->nr_patches == 1); // many things would break...
+  psc_foreach_patch(ppsc, p) {
+    particles_t *pp_base = &particles_base->p[p];
+    particles_cuda_t *pp = &particles->p[p];
+    particles_cuda_alloc(p, pp, pp_base->n_part, true, need_cell_offsets);
+  }
+
+  psc_mparticles_copy_cf_to_cuda(particles, particles_base,
+				 need_block_offsets, need_cell_offsets);
 
   prof_stop(pr);
 }
@@ -241,47 +307,10 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
   __gotten = false;
 
   mparticles_t *particles_base = _particles_base;
+  psc_mparticles_copy_cf_from_cuda(particles, particles_base);
+
   psc_foreach_patch(ppsc, p) {
-    struct psc_patch *patch = &ppsc->patch[p];
-    particles_t *pp_base = &particles_base->p[p];
     particles_cuda_t *pp = &particles->p[p];
-    assert(pp->n_part == pp_base->n_part);
-
-    float4 *xi4  = calloc(pp->n_part, sizeof(float4));
-    float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
-
-    __particles_cuda_from_device(pp, xi4, pxi4);
-
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_real_t qni_div_mni = xi4[n].w;
-      particle_real_t qni_wni = pxi4[n].w;
-      particle_real_t qni, mni, wni;
-      if (qni_div_mni == 0.) {
-	qni = 0.;
-	wni = qni_wni;
-	mni = -1.;
-	assert(0); // can't recover the mass of a neutral particle
-      } else {
-	qni = qni_div_mni > 0 ? 1. : -1.;
-	mni = qni / qni_div_mni;
-	wni = qni_wni / qni;
-      }
-
-      particle_t *part_base = particles_get_one(pp_base, n);
-      part_base->xi  = xi4[n].x + patch->xb[0];
-      part_base->yi  = xi4[n].y + patch->xb[1];
-      part_base->zi  = xi4[n].z + patch->xb[2];
-      part_base->pxi = pxi4[n].x;
-      part_base->pyi = pxi4[n].y;
-      part_base->pzi = pxi4[n].z;
-      part_base->qni = qni;
-      part_base->mni = mni;
-      part_base->wni = wni;
-    }
-
-    free(xi4);
-    free(pxi4);
-
     particles_cuda_free(pp);
   }
   free(particles->p);

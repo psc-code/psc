@@ -176,12 +176,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
     psc_mparticles_cuda_get_from_2(&particles, particles_base, need_block_offsets,
 				   need_cell_offsets);
   } else {
-    psc_mparticles_cuda_get_from_2(&particles, particles_base, false, false);
-    if (need_block_offsets) {
-      psc_foreach_patch(ppsc, p) {
-	cuda_sort_patch(p, &particles.p[p]);
-      }
-    }
+    psc_mparticles_cuda_get_from_2(&particles, particles_base, true, false);
   }
 
   static int pr, pr2, pr3;
