@@ -47,7 +47,7 @@ void fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val);
 void fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from);
 void fields_fortran_axpy(fields_fortran_t *y, fields_fortran_real_t a,
 			 fields_fortran_t *x);
-void fields_fortran_scale_all(fields_fortran_t *pf, fields_fortran_real_t s);
+void fields_fortran_scale(fields_fortran_t *pf, fields_fortran_real_t s);
 
 static inline unsigned int
 fields_fortran_size(fields_fortran_t *pf)

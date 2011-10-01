@@ -65,7 +65,6 @@ typedef mfields_fortran_t mfields_base_t;
 
 #define fields_base_set              fields_fortran_set
 #define fields_base_copy             fields_fortran_copy
-#define fields_base_scale_all        fields_fortran_scale_all
 #define fields_base_size             fields_fortran_size
 #define mfields_base_list            mfields_fortran_list
 #define psc_mfields_base_create         psc_mfields_fortran_create
@@ -91,7 +90,6 @@ typedef mfields_c_t mfields_base_t;
 
 #define fields_base_set              fields_c_set
 #define fields_base_copy             fields_c_copy
-#define fields_base_scale_all        fields_c_scale_all
 #define fields_base_size             fields_c_size
 #define mfields_base_list            mfields_c_list
 #define psc_mfields_base_create         psc_mfields_c_create
@@ -134,7 +132,6 @@ typedef mfields_cuda_t mfields_base_t;
 
 #define fields_base_set              fields_cuda_set
 #define fields_base_copy             fields_cuda_copy
-#define fields_base_scale_all        fields_cuda_scale_all
 #define fields_base_size             fields_cuda_size
 #define mfields_base_list            mfields_cuda_list
 #define psc_mfields_base_create         psc_mfields_cuda_create

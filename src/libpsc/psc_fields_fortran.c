@@ -194,7 +194,7 @@ fields_fortran_axpy(fields_fortran_t *y, fields_fortran_real_t a,
 }
 
 void
-fields_fortran_scale_all(fields_fortran_t *pf, fields_fortran_real_t val)
+fields_fortran_scale(fields_fortran_t *pf, fields_fortran_real_t val)
 {
   for (int m = 0; m < pf->nr_comp; m++) {
     for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {

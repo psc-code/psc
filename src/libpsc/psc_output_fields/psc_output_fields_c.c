@@ -461,10 +461,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       out_c->tfield_next += out_c->tfield_step;
 
       // convert accumulated values to correct temporal mean
-      psc_foreach_patch(psc, p) {
-	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	  fields_c_scale_all(&out_c->tfd.flds[m]->f[p], 1. / out_c->naccum);
-	}
+      for (int m = 0; m < out_c->tfd.nr_flds; m++) {
+	psc_mfields_c_scale(out_c->tfd.flds[m], 1. / out_c->naccum);
       }
 
       struct psc_fields_list flds_list;

@@ -292,7 +292,7 @@ psc_mfields_cuda_scale(mfields_cuda_t *yf, fields_cuda_real_t alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     assert(0);
-    //    fields_cuda_scale_all(&yf->f[p], alpha);
+    //    fields_cuda_scale(&yf->f[p], alpha);
   }
 }
 struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
