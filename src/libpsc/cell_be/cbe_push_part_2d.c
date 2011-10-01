@@ -28,6 +28,9 @@ psc_push_particles_cbe_push_xy(struct psc_push_particles *push,
 
   int job = SPU_PART;
 
+  psc_mfields_zero(&flds, JXI);
+  psc_mfields_zero(&flds, JYI);
+  psc_mfields_zero(&flds, JZI);
   // I'm not really sure about this. I mean, it's the nicest way to do this 
   // in terms of reusing code, but it also means I'm basically dooming the ppu to not
   // do anything but manage the spes. I think we could do more with it, but that's
@@ -36,9 +39,6 @@ psc_push_particles_cbe_push_xy(struct psc_push_particles *push,
     // So, another thing I'm not too please about. The function that's getting
     // called here will basically stall the ppu until it manages to start the patch
     // on an spe...
-    fields_zero(&flds.f[p], JXI);
-    fields_zero(&flds.f[p], JYI);
-    fields_zero(&flds.f[p], JZI);
     cell_run_patch(p,&flds.f[p], &particles.p[p], job);
   }
 

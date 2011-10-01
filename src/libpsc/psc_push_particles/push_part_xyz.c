@@ -31,10 +31,6 @@ do_genc_push_part_xyz(int p, fields_t *pf, particles_t *pp)
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  fields_zero(pf, JXI);
-  fields_zero(pf, JYI);
-  fields_zero(pf, JZI);
-
   struct psc_patch *patch = &ppsc->patch[p];
   int n_part = pp->n_part;
   for (int n = 0; n < n_part; n++) {
@@ -311,6 +307,10 @@ psc_push_particles_generic_c_push_xyz(struct psc_push_particles *push,
     pr = prof_register("genc_part_xyz", 1., 0, 0);
   }
   prof_start(pr);
+  psc_mfields_zero(&flds, JXI);
+  psc_mfields_zero(&flds, JYI);
+  psc_mfields_zero(&flds, JZI);
+
   psc_foreach_patch(ppsc, p) {
     do_genc_push_part_xyz(p, &flds.f[p], &particles.p[p]);
   }

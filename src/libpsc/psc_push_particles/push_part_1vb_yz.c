@@ -48,10 +48,6 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
 
-  fields_zero(pf, JXI);
-  fields_zero(pf, JYI);
-  fields_zero(pf, JZI);
-  
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -172,6 +168,10 @@ psc_push_particles_1vb_push_yz(struct psc_push_particles *push,
     pr = prof_register("1vb_push_yz", 1., 0, 0);
   }
   prof_start(pr);
+  psc_mfields_zero(&flds, JXI);
+  psc_mfields_zero(&flds, JYI);
+  psc_mfields_zero(&flds, JZI);
+
   psc_foreach_patch(ppsc, p) {
     do_push_part_1vb_yz(p, &flds.f[p], &particles.p[p]);
   }

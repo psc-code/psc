@@ -154,14 +154,6 @@ fields_fortran_zero(fields_fortran_t *pf, int m)
 }
 
 void
-fields_fortran_zero_all(fields_fortran_t *pf)
-{
-  for (int m = 0; m < pf->nr_comp; m++) {
-    fields_fortran_zero(pf, m);
-  }
-}
-
-void
 fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val)
 {
   for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {

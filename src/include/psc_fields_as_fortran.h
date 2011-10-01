@@ -11,6 +11,5 @@ typedef mfields_fortran_t mfields_t;
 
 #define psc_mfields_get_from          psc_mfields_fortran_get_from
 #define psc_mfields_put_to            psc_mfields_fortran_put_to
-#define fields_zero         fields_fortran_zero
 
 #endif

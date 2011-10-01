@@ -473,9 +473,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       make_fields_list(psc, &flds_list, &out_c->tfd);
       psc_output_format_write_fields(out_c->format, out_c, &flds_list, "tfd");
       free_fields_list(psc, &flds_list);
-      psc_foreach_patch(psc, p) {
-	for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	  fields_c_zero_all(&out_c->tfd.flds[m]->f[p]);
+      for (int m = 0; m < out_c->tfd.nr_flds; m++) {
+	for (int mm = 0; mm < out_c->tfd.flds[m]->nr_fields; mm++) {
+	  psc_mfields_c_zero(out_c->tfd.flds[m], mm);
 	}
       }
       out_c->naccum = 0;

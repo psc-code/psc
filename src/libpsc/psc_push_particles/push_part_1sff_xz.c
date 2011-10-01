@@ -26,10 +26,6 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
   creal dxi = 1.f / ppsc->dx[0];
   creal dzi = 1.f / ppsc->dx[2];
 
-  fields_zero(pf, JXI);
-  fields_zero(pf, JYI);
-  fields_zero(pf, JZI);
-
   struct psc_patch *patch = &ppsc->patch[p];
 
   fields_c_t f_avg;
@@ -232,6 +228,10 @@ psc_push_particles_1sff_push_xz(struct psc_push_particles *push,
     pr = prof_register("1sff_part_xz", 1., 0, 0);
   }
   prof_start(pr);
+  psc_mfields_zero(&flds, JXI);
+  psc_mfields_zero(&flds, JYI);
+  psc_mfields_zero(&flds, JZI);
+
   psc_foreach_patch(ppsc, p) {
     do_push_part_1sff_xz(p, &flds.f[p], &particles.p[p]);
   }

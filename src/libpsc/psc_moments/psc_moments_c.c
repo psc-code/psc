@@ -19,10 +19,6 @@ static void
 do_c_calc_densities(int p, fields_t *pf, particles_t *pp,
 		    int m_NE, int m_NI, int m_NN)
 {
-  fields_zero(pf, m_NE);
-  fields_zero(pf, m_NI);
-  fields_zero(pf, m_NN);
-  
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
@@ -117,6 +113,10 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   psc_mparticles_get_from(&particles, particles_base);
 
   prof_start(pr);
+  psc_mfields_zero(res, 0);
+  psc_mfields_zero(res, 1);
+  psc_mfields_zero(res, 2);
+  
   psc_foreach_patch(ppsc, p) {
     do_c_calc_densities(p, &res->f[p], &particles.p[p], 0, 1, 2);
   }
@@ -132,10 +132,6 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
 static void
 do_c_calc_v(int p, fields_t *pf, particles_t *pp)
 {
-  for (int m = 0; m < 6; m++) {
-    fields_zero(pf, m);
-  }
-  
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
@@ -234,6 +230,10 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   psc_mparticles_get_from(&particles, particles_base);
 
   prof_start(pr);
+  for (int m = 0; m < 6; m++) {
+    psc_mfields_zero(res, m);
+  }
+  
   psc_foreach_patch(ppsc, p) {
     do_c_calc_v(p, &res->f[p], &particles.p[p]);
   }
@@ -247,10 +247,6 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
 static void
 do_c_calc_vv(int p, fields_t *pf, particles_t *pp)
 {
-  for (int m = 0; m < 6; m++) {
-    fields_zero(pf, m);
-  }
-  
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
@@ -348,6 +344,10 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   psc_mparticles_get_from(&particles, particles_base);
 
   prof_start(pr);
+  for (int m = 0; m < 6; m++) {
+    psc_mfields_zero(res, m);
+  }
+  
   psc_foreach_patch(ppsc, p) {
     do_c_calc_vv(p, &res->f[p], &particles.p[p]);
   }
@@ -361,8 +361,6 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
 static void
 do_c_calc_photon_n(int p, fields_t *pf, photons_t *photons)
 {
-  fields_zero(pf, 0);
-  
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
@@ -443,6 +441,8 @@ psc_moments_c_calc_photon_n(struct psc_moments *moments,
   }
 
   prof_start(pr);
+  psc_mfields_zero(res, 0);
+  
   psc_foreach_patch(ppsc, p) {
     do_c_calc_photon_n(p, &res->f[p], &mphotons->p[p]);
   }

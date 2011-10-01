@@ -39,8 +39,6 @@ static void
 do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
 		fields_t *rho, double dt)
 {
-  fields_zero(rho, 0);
-
   creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   creal dxi = 1.f / psc->dx[0];
   creal dyi = 1.f / psc->dx[1];
@@ -127,6 +125,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
   mfields_t rho;
   psc_mfields_get_from(&rho, 0, 0, rho_base);
 
+  psc_mfields_zero(&rho, 0);
   psc_foreach_patch(psc, p) {
     do_calc_rho_2nd(psc, p, &particles.p[p], &rho.f[p], dt);
   }
@@ -143,8 +142,6 @@ static void
 do_calc_rho_1st(struct psc *psc, int p, particles_t *pp,
 		fields_t *rho, double dt)
 {
-  fields_zero(rho, 0);
-
   creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   creal dxi = 1.f / psc->dx[0];
   creal dyi = 1.f / psc->dx[1];
@@ -209,6 +206,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
   mfields_t rho;
   psc_mfields_get_from(&rho, 0, 0, rho_base);
 
+  psc_mfields_zero(&rho, 0);
   psc_foreach_patch(psc, p) {
     do_calc_rho_1st(psc, p, &particles.p[p], &rho.f[p], dt);
   }

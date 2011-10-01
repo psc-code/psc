@@ -18,7 +18,7 @@ typedef fields_c_real_t fields_real_t;
 #define psc_mfields_destroy           psc_mfields_c_destroy
 #define psc_mfields_get_from          psc_mfields_c_get_from
 #define psc_mfields_put_to  	      psc_mfields_c_put_to
-#define fields_zero                   fields_c_zero
+#define psc_mfields_zero              psc_mfields_c_zero
 #define fields_size                   fields_c_size
 
 #endif
