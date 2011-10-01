@@ -457,8 +457,10 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_t *flds_base_old;
-  __list_for_each_entry(flds_base_old, &mfields_base_list, entry, mfields_base_t) {
+  mfields_base_list_entry_t *p;
+  __list_for_each_entry(p, &psc_mfields_base_list, entry, mfields_base_list_entry_t) {
+    mfields_base_t *flds_base_old = *p->flds_p;
+    
     if (flds_base_old != psc->flds) {
       fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
       continue; // FIXME!!!
@@ -575,8 +577,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_t *flds_base_old;
-  __list_for_each_entry(flds_base_old, &mfields_base_list, entry, mfields_base_t) {
+  mfields_base_list_entry_t *p;
+  __list_for_each_entry(p, &psc_mfields_base_list, entry, mfields_base_list_entry_t) {
+    mfields_base_t *flds_base_old = *p->flds_p;
     if (flds_base_old != psc->flds) {
       fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
       continue; // FIXME!!!

@@ -497,6 +497,7 @@ _psc_setup(struct psc *psc)
 static void
 _psc_destroy(struct psc *psc)
 {
+  psc_mfields_base_list_del(&psc->flds);
   psc_mfields_base_destroy(psc->flds);
   psc_mparticles_base_destroy(psc->particles);
   psc_mphotons_destroy(psc->mphotons);
@@ -796,6 +797,7 @@ psc_setup_fields(struct psc *psc)
 {
   // create fields
   psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_base_list_add(&psc->flds);
   psc_mfields_base_set_name(psc->flds, "mfields");
   psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
   psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);

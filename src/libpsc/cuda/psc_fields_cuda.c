@@ -229,6 +229,33 @@ psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 #endif
 
 // ======================================================================
+// psc_mfields_cuda_list
+
+LIST_HEAD(psc_mfields_cuda_list);
+
+void
+psc_mfields_cuda_list_add(mfields_cuda_t **flds_p)
+{
+  mfields_cuda_list_entry_t *p = malloc(sizeof(*p));
+  p->flds_p = flds_p;
+  list_add_tail(&p->entry, &psc_mfields_cuda_list);
+}
+
+void
+psc_mfields_cuda_list_del(mfields_cuda_t **flds_p)
+{
+  mfields_cuda_list_entry_t *p;
+  __list_for_each_entry(p, &psc_mfields_cuda_list, entry, mfields_cuda_list_entry_t) {
+    if (p->flds_p == flds_p) {
+      list_del(&p->entry);
+      free(p);
+      return;
+    }
+  }
+  assert(0);
+}
+
+// ======================================================================
 // psc_fields_cuda
 
 LIST_HEAD(mfields_cuda_list);
