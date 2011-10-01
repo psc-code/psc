@@ -34,6 +34,7 @@ void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
 void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
 void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
 				    mfields_##type##_t *from, int mfrom);	\
+void psc_mfields_##type##_alloc(mfields_##type##_t *flds_comp);	\
 void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\

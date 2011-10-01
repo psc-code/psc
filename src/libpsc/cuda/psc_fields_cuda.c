@@ -150,17 +150,12 @@ psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
 
   mfields_cuda_t *flds_base = _flds_base;
 
-  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
-  psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = &flds->f[p];
-    struct psc_patch *patch = &ppsc->patch[p];
-    int ilg[3] = { -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2] };
-    int ihg[3] = { patch->ldims[0] + ppsc->ibn[0],
-		   patch->ldims[1] + ppsc->ibn[1],
-		   patch->ldims[2] + ppsc->ibn[2] };
-    fields_c_alloc(pf, ilg, ihg, NR_FIELDS);
+  flds->domain = flds_base->domain;
+  flds->nr_fields = flds_base->nr_fields;
+  for (int d = 0; d < 3; d++) {
+    flds->ibn[d] = flds_base->ibn[d];
   }
-
+  psc_mfields_c_alloc(flds);
   psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
 
   prof_stop(pr);
