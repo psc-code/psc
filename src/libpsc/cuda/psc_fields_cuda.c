@@ -76,12 +76,6 @@ fields_cuda_copy(fields_cuda_t *pf, int mto, int mfrom)
   assert(0);
 }
 
-void
-fields_cuda_set(fields_cuda_t *pf, int m, fields_cuda_real_t val)
-{
-  assert(0);
-}
-
 #include "psc_fields_as_c.h"
 
 void
@@ -295,6 +289,13 @@ psc_mfields_cuda_scale(mfields_cuda_t *yf, fields_cuda_real_t alpha)
     //    fields_cuda_scale(&yf->f[p], alpha);
   }
 }
+
+void
+psc_mfields_cuda_set_comp(mfields_cuda_t *yf, int m, fields_cuda_real_t alpha)
+{
+  assert(0);
+}
+
 struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
   .name             = "psc_mfields_cuda",
   .size             = sizeof(struct psc_mfields_cuda),

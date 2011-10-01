@@ -20,9 +20,9 @@ psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
     fields_base_copy(&flds->f[p], BX, HX);
     fields_base_copy(&flds->f[p], BY, HY);
     fields_base_copy(&flds->f[p], BZ, HZ);
-    fields_base_set(&flds->f[p], EPS, 1.);
-    fields_base_set(&flds->f[p], MU, 1.);
   }
+  psc_mfields_base_set_comp(flds, EPS, 1.);
+  psc_mfields_base_set_comp(flds, MU, 1.);
 }
 
 // ----------------------------------------------------------------------

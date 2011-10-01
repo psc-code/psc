@@ -233,3 +233,11 @@ psc_mfields_c_scale(mfields_c_t *yf, fields_c_real_t alpha)
     fields_c_scale(&yf->f[p], alpha);
   }
 }
+
+void
+psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    fields_c_set(&yf->f[p], m, alpha);
+  }
+}
