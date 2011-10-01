@@ -283,7 +283,7 @@ psc_mfields_cuda_axpy(mfields_cuda_t *yf, fields_cuda_real_t alpha, mfields_cuda
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     assert(0);
-    //    fields_cuda_axpy_all(&yf->f[p], alpha, &xf->f[p]);
+    //    fields_cuda_axpy(&yf->f[p], alpha, &xf->f[p]);
   }
 }
 

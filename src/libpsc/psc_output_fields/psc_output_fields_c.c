@@ -453,9 +453,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
   if (out_c->dowrite_tfield) {
     psc_foreach_patch(psc, p) {
+      // tfd += pfd
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	// tfd += pfd
-	fields_c_axpy_all(&out_c->tfd.flds[m]->f[p], 1., &out_c->pfd.flds[m]->f[p]);
+	fields_c_axpy(&out_c->tfd.flds[m]->f[p], 1., &out_c->pfd.flds[m]->f[p]);
       }
     }
     out_c->naccum++;

@@ -178,8 +178,8 @@ fields_fortran_copy(fields_fortran_t *pf, int m_to, int m_from)
 }
 
 void
-fields_fortran_axpy_all(fields_fortran_t *y, fields_fortran_real_t a,
-			fields_fortran_t *x)
+fields_fortran_axpy(fields_fortran_t *y, fields_fortran_real_t a,
+		    fields_fortran_t *x)
 {
   assert(y->nr_comp == x->nr_comp);
   for (int m = 0; m < y->nr_comp; m++) {

@@ -172,7 +172,7 @@ fields_c_copy(fields_c_t *pf, int m_to, int m_from)
 }
 
 void
-fields_c_axpy_all(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
+fields_c_axpy(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
 {
   assert(y->nr_comp == x->nr_comp);
   for (int m = 0; m < y->nr_comp; m++) {
@@ -222,7 +222,7 @@ void
 psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_axpy_all(&yf->f[p], alpha, &xf->f[p]);
+    fields_c_axpy(&yf->f[p], alpha, &xf->f[p]);
   }
 }
 
