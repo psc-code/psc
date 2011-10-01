@@ -172,6 +172,9 @@ psc_push_fields_init()
 #ifdef USE_CBE
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_cbe_ops);
 #endif
+#ifdef USE_CUDA
+  mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_cuda_ops);
+#endif
 }
 
 // ======================================================================

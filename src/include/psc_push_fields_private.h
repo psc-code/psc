@@ -23,9 +23,8 @@ struct psc_push_fields_ops {
 
 extern struct psc_push_fields_ops psc_push_fields_c_ops;
 extern struct psc_push_fields_ops psc_push_fields_fortran_ops;
-#ifdef USE_CBE
 extern struct psc_push_fields_ops psc_push_fields_cbe_ops;
-#endif
+extern struct psc_push_fields_ops psc_push_fields_cuda_ops;
 
 #define psc_push_fields_ops(push_fields) ((struct psc_push_fields_ops *)((push_fields)->obj.ops))
 
