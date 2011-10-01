@@ -452,11 +452,9 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   }
 
   if (out_c->dowrite_tfield) {
-    psc_foreach_patch(psc, p) {
-      // tfd += pfd
-      for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	fields_c_axpy(&out_c->tfd.flds[m]->f[p], 1., &out_c->pfd.flds[m]->f[p]);
-      }
+    // tfd += pfd
+    for (int m = 0; m < out_c->tfd.nr_flds; m++) {
+      psc_mfields_c_axpy(out_c->tfd.flds[m], 1., out_c->pfd.flds[m]);
     }
     out_c->naccum++;
     if (psc->timestep >= out_c->tfield_next) {
