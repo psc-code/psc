@@ -191,16 +191,8 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_cuda_t *flds_base = _flds_base;
-
   psc_mfields_copy_cf_to_cuda(flds_base, mb, me, flds);
-
-  psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = &flds->f[p];
-    fields_c_free(pf);
-  }
-  
-  free(flds->f);
-  flds->f = NULL;
+  psc_mfields_c_free(flds);
 
   prof_stop(pr);
 }

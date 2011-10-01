@@ -20,7 +20,5 @@ typedef fields_c_real_t fields_real_t;
 #define psc_mfields_put_to  	      psc_mfields_c_put_to
 #define fields_zero                   fields_c_zero
 #define fields_size                   fields_c_size
-#define fields_alloc                  fields_c_alloc
-#define fields_free                   fields_c_free
 
 #endif

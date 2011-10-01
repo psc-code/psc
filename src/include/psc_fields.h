@@ -29,7 +29,9 @@ void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void 
 void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
 void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
 			       mfields_##type##_t *xf);			\
- void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
+void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
+void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
+									\
 /* FIXME, should be per mrc_domain or sth, really */			\
 extern list_t mfields_##type##_list;					\
 
@@ -60,9 +62,6 @@ typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define fields_base_alloc            fields_fortran_alloc
-#define fields_base_alloc_with_array fields_fortran_alloc_with_array
-#define fields_base_free             fields_fortran_free
 #define fields_base_zero             fields_fortran_zero
 #define fields_base_zero_all         fields_fortran_zero_all
 #define fields_base_set              fields_fortran_set
@@ -92,9 +91,6 @@ typedef fields_c_real_t fields_base_real_t;
 typedef mfields_c_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define fields_base_alloc            fields_c_alloc
-#define fields_base_alloc_with_array fields_c_alloc_with_array
-#define fields_base_free             fields_c_free
 #define fields_base_zero             fields_c_zero
 #define fields_base_zero_all         fields_c_zero_all
 #define fields_base_set              fields_c_set
@@ -124,8 +120,6 @@ typedef fields_sse2_real_t fields_base_real_t;
 typedef mfields_sse2_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
-#define fields_base_alloc fields_sse2_alloc
-#define fields_base_free  fields_sse2_free
 #define fields_base_zero  fields_sse2_zero
 #define fields_base_set   fields_sse2_set
 #define fields_base_copy  fields_sse2_copy
@@ -144,9 +138,6 @@ typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 
-#define fields_base_alloc            fields_cuda_alloc
-#define fields_base_alloc_with_array fields_cuda_alloc_with_array
-#define fields_base_free             fields_cuda_free
 #define fields_base_zero             fields_cuda_zero
 #define fields_base_zero_all         fields_cuda_zero_all
 #define fields_base_set              fields_cuda_set

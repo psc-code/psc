@@ -412,10 +412,7 @@ static void
 free_fields_list(struct psc *psc, struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    psc_foreach_patch(psc, p) {
-      fields_c_free(&list->flds[m]->f[p]);
-    }
-    free(list->flds[m]->f);
+    psc_mfields_c_free(list->flds[m]);
     free(list->flds[m]);
   }
 }

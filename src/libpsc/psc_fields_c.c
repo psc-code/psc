@@ -131,12 +131,9 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
 	F3_FORTRAN(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
-
-    fields_c_free(pf);
   }
-  
-  free(flds->f);
-  flds->f = NULL;
+
+  psc_mfields_c_free(flds);
 
   prof_stop(pr);
 }
@@ -208,6 +205,16 @@ fields_c_scale_all(fields_c_t *pf, fields_c_real_t val)
       }
     }
   }
+}
+
+void
+psc_mfields_c_free(mfields_c_t *flds)
+{
+  for (int p = 0; p < flds->nr_patches; p++) {
+    fields_c_free(&flds->f[p]);
+  }
+  free(flds->f);
+  flds->f = NULL;
 }
 
 void

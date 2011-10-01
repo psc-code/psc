@@ -95,10 +95,7 @@ _psc_mfields_c_setup(mfields_c_t *flds)
 static void
 _psc_mfields_c_destroy(mfields_c_t *flds)
 {
-  for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_free(&flds->f[p]);
-  }
-  free(flds->f);
+  psc_mfields_c_free(flds);
   list_del(&flds->entry);
 }
 
