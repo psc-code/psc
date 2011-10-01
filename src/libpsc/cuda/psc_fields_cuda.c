@@ -33,58 +33,103 @@
 #endif
 
 static void
-fields_cuda_alloc(fields_cuda_t *pf, int ib[3], int ie[3], int nr_comp)
+fields_cuda_alloc(mfields_cuda_t *flds, int nr_comp)
 {
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    pf->ib[d] = ib[d];
-    pf->im[d] = ie[d] - ib[d];
-    size *= pf->im[d];
+  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
+
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf = &flds->f[p];
+    struct psc_patch *patch = &ppsc->patch[p];
+    for (int d = 0; d < 3; d++) {
+      pf->ib[d] = -ppsc->ibn[d];
+      pf->im[d] = patch->ldims[d] + 2 * ppsc->ibn[d];
+    }
+
+    pf->nr_comp = nr_comp;
+    pf->name = calloc(nr_comp, sizeof(*pf->name));
+
+    __fields_cuda_alloc(pf);
   }
-  pf->nr_comp = nr_comp;
-  pf->name = calloc(nr_comp, sizeof(*pf->name));
 }
 
 static void
-fields_cuda_free(fields_cuda_t *pf)
+fields_cuda_free(mfields_cuda_t *flds)
 {
-  for (int m = 0; m < pf->nr_comp; m++) {
-    free(pf->name[m]);
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf = &flds->f[p];
+    __fields_cuda_free(pf);
+    
+    for (int m = 0; m < pf->nr_comp; m++) {
+      free(pf->name[m]);
+    }
+    free(pf->name);
   }
-  free(pf->name);
+  
+  free(flds->f);
+  flds->f = NULL;
+}
+
+#include "psc_fields_as_c.h"
+
+void
+psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
+{
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf_cuda = &flds_cuda->f[p];
+    fields_t *pf = &flds->f[p];
+    float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
+			   sizeof(*h_flds));
+
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+	F3_CUDA(pf_cuda, m, jx,jy,jz) = F3(m, jx,jy,jz);
+      } foreach_3d_g_end;
+    }
+    __fields_cuda_to_device(pf_cuda, h_flds, mb, me);
+    free(h_flds);
+  }
+}
+
+void
+psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
+{
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf_cuda = &flds_cuda->f[p];
+    fields_base_t *pf = &flds->f[p];
+
+    float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
+			   sizeof(*h_flds));
+    __fields_cuda_from_device(pf_cuda, h_flds, mb, me);
+  
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+#if 0
+	if (isnan(F3_CUDA(pf_cuda, m, jx,jy,jz))) {
+	  printf("m %d j %d,%d,%d %g\n", m, jx,jy,jz,
+		 F3_CUDA(pf_cuda, m, jx,jy,jz));
+	  assert(0);
+	}
+#endif
+	F3(m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
+      }
+    } foreach_3d_g_end;
+
+    free(h_flds);
+  }
 }
 
 void
 psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 {
+  mfields_base_t *flds_base = _flds_base;
   static int pr;
   if (!pr) {
     pr = prof_register("fields_cuda_get", 1., 0, 0);
   }
   prof_start(pr);
 
-  mfields_base_t *flds_base = _flds_base;
-  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
-    struct psc_patch *patch = &ppsc->patch[p];
-    int ilg[3] = { -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2] };
-    int ihg[3] = { patch->ldims[0] + ppsc->ibn[0],
-		   patch->ldims[1] + ppsc->ibn[1],
-		   patch->ldims[2] + ppsc->ibn[2] };
-    fields_cuda_alloc(pf, ilg, ihg, 12);
-    float *h_flds = calloc(12 * pf->im[0] * pf->im[1] * pf->im[2],
-			   sizeof(*h_flds));
-
-    fields_base_t *pf_base = &flds_base->f[p];
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_CUDA(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-    __fields_cuda_to_device(pf, h_flds, mb, me);
-    free(h_flds);
-  }
+  fields_cuda_alloc(flds, 12);
+  psc_mfields_copy_cf_to_cuda(flds, mb, me, flds_base);
 
   prof_stop(pr);
 }
@@ -92,40 +137,15 @@ psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base
 void
 psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 {
+  mfields_base_t *flds_base = _flds_base;
   static int pr;
   if (!pr) {
     pr = prof_register("fields_cuda_put", 1., 0, 0);
   }
   prof_start(pr);
 
-  mfields_base_t *flds_base = _flds_base;
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
-
-    float *h_flds = calloc(12 * pf->im[0] * pf->im[1] * pf->im[2],
-			   sizeof(*h_flds));
-    __fields_cuda_from_device(pf, h_flds, mb, me);
-  
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-#if 0
-	if (isnan(F3_CUDA(pf, m, jx,jy,jz))) {
-	  printf("m %d j %d,%d,%d %g\n", m, jx,jy,jz,
-		 F3_CUDA(pf, m, jx,jy,jz));
-	  assert(0);
-	}
-#endif
-	F3_BASE(pf_base, m, jx,jy,jz) = F3_CUDA(pf, m, jx,jy,jz);
-      }
-    } foreach_3d_g_end;
-
-    free(h_flds);
-    fields_cuda_free(pf);
-  }
-  
-  free(flds->f);
-  flds->f = NULL;
+  psc_mfields_copy_cf_from_cuda(flds, mb, me, flds_base);
+  fields_cuda_free(flds);
 
   prof_stop(pr);
 }
