@@ -36,9 +36,12 @@ void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
 				    mfields_##type##_t *from, int mfrom);	\
 void psc_mfields_##type##_alloc(mfields_##type##_t *flds_comp);	\
 void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
+void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
+void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\
 extern list_t mfields_##type##_list;					\
+extern list_t psc_mfields_##type##_list;				\
 
 
 #include "psc_fields_fortran.h"
@@ -68,6 +71,7 @@ typedef mfields_fortran_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
 #define mfields_base_list            mfields_fortran_list
+#define psc_mfields_base_list           psc_mfields_fortran_list
 #define psc_mfields_base_create         psc_mfields_fortran_create
 #define psc_mfields_base_set_name       psc_mfields_fortran_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_fortran_set_param_int
@@ -92,6 +96,7 @@ typedef mfields_c_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
 #define mfields_base_list            mfields_c_list
+#define psc_mfields_base_list           psc_mfields_c_list
 #define psc_mfields_base_create         psc_mfields_c_create
 #define psc_mfields_base_set_name       psc_mfields_c_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_c_set_param_int
@@ -131,6 +136,7 @@ typedef mfields_cuda_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 
 #define mfields_base_list            mfields_cuda_list
+#define psc_mfields_base_list           psc_mfields_cuda_list
 #define psc_mfields_base_create         psc_mfields_cuda_create
 #define psc_mfields_base_set_name       psc_mfields_cuda_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_cuda_set_param_int
