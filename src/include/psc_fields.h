@@ -11,41 +11,41 @@
 
 #define DECLARE_MFIELDS_METHODS(type)					\
   									\
-typedef struct psc_mfields_##type {				        \
-  struct mrc_obj obj;							\
-  fields_##type##_t *f;							\
-  int nr_patches;							\
-  struct mrc_domain *domain;						\
-  int nr_fields;							\
-  int ibn[3];								\
-} mfields_##type##_t;							\
+  typedef struct psc_mfields_##type {				        \
+    struct mrc_obj obj;							\
+    fields_##type##_t *f;						\
+    int nr_patches;							\
+    struct mrc_domain *domain;						\
+    int nr_fields;							\
+    int ibn[3];								\
+  } mfields_##type##_t;							\
+  									\
+  MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
 									\
-MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
-									\
-void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	        \
-				     struct mrc_domain *domain);	\
-void psc_mfields_##type##_get_from(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
-			       mfields_##type##_t *xf);			\
-void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
-void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
-void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
-void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
-				    mfields_##type##_t *from, int mfrom);	\
-void psc_mfields_##type##_alloc(mfields_##type##_t *flds_comp);	\
-void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
-void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
-void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
-									\
-typedef struct {							\
-  mfields_##type##_t **flds_p;						\
-  list_t entry;								\
-} mfields_##type##_list_entry_t;					\
-									\
-/* FIXME, should be per mrc_domain or sth, really */			\
-extern list_t psc_mfields_##type##_list;				\
-
+  void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
+				       struct mrc_domain *domain);	\
+  void psc_mfields_##type##_get_from(mfields_##type##_t *flds, int mb, int me, void *flds_base); \
+  void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
+  void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
+				 mfields_##type##_t *xf);		\
+  void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
+  void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
+  void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
+  void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
+				      mfields_##type##_t *from, int mfrom); \
+  void psc_mfields_##type##_alloc(mfields_##type##_t *flds_comp);	\
+  void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
+  void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
+  void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
+  									\
+  typedef struct {							\
+    mfields_##type##_t **flds_p;					\
+    list_t entry;							\
+  } mfields_##type##_list_entry_t;					\
+  									\
+  /* FIXME, should be per mrc_domain or sth, really */			\
+  extern list_t psc_mfields_##type##_list;				\
+  
 
 #include "psc_fields_fortran.h"
 DECLARE_MFIELDS_METHODS(fortran)
