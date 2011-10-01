@@ -70,12 +70,6 @@ fields_cuda_free(mfields_cuda_t *flds)
   flds->f = NULL;
 }
 
-void
-fields_cuda_copy(fields_cuda_t *pf, int mto, int mfrom)
-{
-  assert(0);
-}
-
 #include "psc_fields_as_c.h"
 
 void
@@ -292,6 +286,12 @@ psc_mfields_cuda_scale(mfields_cuda_t *yf, fields_cuda_real_t alpha)
 
 void
 psc_mfields_cuda_set_comp(mfields_cuda_t *yf, int m, fields_cuda_real_t alpha)
+{
+  assert(0);
+}
+
+void
+psc_mfields_cuda_copy_comp(mfields_cuda_t *to, int mto, mfields_cuda_t *from, int mfrom)
 {
   assert(0);
 }

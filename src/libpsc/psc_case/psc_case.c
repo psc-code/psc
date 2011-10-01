@@ -13,14 +13,12 @@
 static void
 psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 {
-  psc_foreach_patch(ppsc, p) {
-    fields_base_copy(&flds->f[p], DX, EX);
-    fields_base_copy(&flds->f[p], DY, EY);
-    fields_base_copy(&flds->f[p], DZ, EZ);
-    fields_base_copy(&flds->f[p], BX, HX);
-    fields_base_copy(&flds->f[p], BY, HY);
-    fields_base_copy(&flds->f[p], BZ, HZ);
-  }
+  psc_mfields_base_copy_comp(flds, DX, flds, EX);
+  psc_mfields_base_copy_comp(flds, DY, flds, EY);
+  psc_mfields_base_copy_comp(flds, DZ, flds, EZ);
+  psc_mfields_base_copy_comp(flds, BX, flds, HX);
+  psc_mfields_base_copy_comp(flds, BY, flds, HY);
+  psc_mfields_base_copy_comp(flds, BZ, flds, HZ);
   psc_mfields_base_set_comp(flds, EPS, 1.);
   psc_mfields_base_set_comp(flds, MU, 1.);
 }

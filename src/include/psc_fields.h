@@ -32,6 +32,8 @@ void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t al
 void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
 void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
 void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
+void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
+				    mfields_##type##_t *from, int mfrom);	\
 void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\
@@ -64,7 +66,6 @@ typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define fields_base_copy             fields_fortran_copy
 #define fields_base_size             fields_fortran_size
 #define mfields_base_list            mfields_fortran_list
 #define psc_mfields_base_create         psc_mfields_fortran_create
@@ -79,6 +80,7 @@ typedef mfields_fortran_t mfields_base_t;
 #define psc_mfields_base_axpy           psc_mfields_fortran_axpy
 #define psc_mfields_base_scale          psc_mfields_fortran_scale
 #define psc_mfields_base_set_comp       psc_mfields_fortran_set_comp
+#define psc_mfields_base_copy_comp      psc_mfields_fortran_copy_comp
 
 #elif FIELDS_BASE == FIELDS_C
 
@@ -89,7 +91,6 @@ typedef fields_c_real_t fields_base_real_t;
 typedef mfields_c_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define fields_base_copy             fields_c_copy
 #define fields_base_size             fields_c_size
 #define mfields_base_list            mfields_c_list
 #define psc_mfields_base_create         psc_mfields_c_create
@@ -104,6 +105,7 @@ typedef mfields_c_t mfields_base_t;
 #define psc_mfields_base_axpy           psc_mfields_c_axpy
 #define psc_mfields_base_scale          psc_mfields_c_scale
 #define psc_mfields_base_set_comp       psc_mfields_c_set_comp
+#define psc_mfields_base_copy_comp      psc_mfields_c_copy_comp
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
@@ -114,7 +116,6 @@ typedef fields_sse2_real_t fields_base_real_t;
 typedef mfields_sse2_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
-#define fields_base_copy  fields_sse2_copy
 #define mfields_base_list            mfields_sse2_list
 #define psc_mfields_base_create      psc_mfields_sse2_create
 #define psc_mfields_base_setup       psc_mfields_sse2_setup
@@ -130,7 +131,6 @@ typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 
-#define fields_base_copy             fields_cuda_copy
 #define fields_base_size             fields_cuda_size
 #define mfields_base_list            mfields_cuda_list
 #define psc_mfields_base_create         psc_mfields_cuda_create
@@ -145,6 +145,7 @@ typedef mfields_cuda_t mfields_base_t;
 #define psc_mfields_base_axpy           psc_mfields_cuda_axpy
 #define psc_mfields_base_scale          psc_mfields_cuda_scale
 #define psc_mfields_base_set_comp       psc_mfields_cuda_set_comp
+#define psc_mfields_base_copy_comp      psc_mfields_cuda_copy_comp
 
 #else
 #error unknown FIELDS_BASE

@@ -49,7 +49,6 @@ void fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp
 void fields_c_free(fields_c_t *pf);
 void fields_c_zero(fields_c_t *pf, int m);
 void fields_c_set(fields_c_t *pf, int m, fields_c_real_t val);
-void fields_c_copy(fields_c_t *pf, int m_to, int m_from);
 void fields_c_axpy(fields_c_t *y, fields_c_real_t a, fields_c_t *x);
 void fields_c_scale(fields_c_t *pf, fields_c_real_t s);
 

@@ -160,12 +160,12 @@ fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
 }
 
 void
-fields_c_copy(fields_c_t *pf, int m_to, int m_from)
+fields_c_copy_comp(fields_c_t *pto, int m_to, fields_c_t *pfrom, int m_from)
 {
-  for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
-    for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
-      for (int jx = pf->ib[0]; jx < pf->ib[0] + pf->im[0]; jx++) {
-	F3_C(pf, m_to, jx, jy, jz) = F3_C(pf, m_from, jx, jy, jz);
+  for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
+    for (int jy = pto->ib[1]; jy < pto->ib[1] + pto->im[1]; jy++) {
+      for (int jx = pto->ib[0]; jx < pto->ib[0] + pto->im[0]; jx++) {
+	F3_C(pto, m_to, jx, jy, jz) = F3_C(pfrom, m_from, jx, jy, jz);
       }
     }
   }
@@ -241,3 +241,12 @@ psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
     fields_c_set(&yf->f[p], m, alpha);
   }
 }
+
+void
+psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
+{
+  for (int p = 0; p < to->nr_patches; p++) {
+    fields_c_copy_comp(&to->f[p], mto, &from->f[p], mfrom);
+  }
+}
+
