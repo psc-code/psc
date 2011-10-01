@@ -66,7 +66,6 @@ typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define fields_base_size             fields_fortran_size
 #define mfields_base_list            mfields_fortran_list
 #define psc_mfields_base_create         psc_mfields_fortran_create
 #define psc_mfields_base_set_name       psc_mfields_fortran_set_name
@@ -91,7 +90,6 @@ typedef fields_c_real_t fields_base_real_t;
 typedef mfields_c_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define fields_base_size             fields_c_size
 #define mfields_base_list            mfields_c_list
 #define psc_mfields_base_create         psc_mfields_c_create
 #define psc_mfields_base_set_name       psc_mfields_c_set_name
@@ -131,7 +129,6 @@ typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 
-#define fields_base_size             fields_cuda_size
 #define mfields_base_list            mfields_cuda_list
 #define psc_mfields_base_create         psc_mfields_cuda_create
 #define psc_mfields_base_set_name       psc_mfields_cuda_set_name
