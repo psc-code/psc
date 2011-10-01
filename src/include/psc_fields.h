@@ -15,7 +15,6 @@ typedef struct psc_mfields_##type {				        \
   struct mrc_obj obj;							\
   fields_##type##_t *f;							\
   int nr_patches;							\
-  list_t entry;								\
   struct mrc_domain *domain;						\
   int nr_fields;							\
   int ibn[3];								\
@@ -45,7 +44,6 @@ typedef struct {							\
 } mfields_##type##_list_entry_t;					\
 									\
 /* FIXME, should be per mrc_domain or sth, really */			\
-extern list_t mfields_##type##_list;					\
 extern list_t psc_mfields_##type##_list;				\
 
 
@@ -76,7 +74,6 @@ typedef mfields_fortran_t mfields_base_t;
 typedef mfields_fortran_list_entry_t mfields_base_list_entry_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 
-#define mfields_base_list            mfields_fortran_list
 #define psc_mfields_base_list           psc_mfields_fortran_list
 #define psc_mfields_base_list_add       psc_mfields_fortran_list_add
 #define psc_mfields_base_list_del       psc_mfields_fortran_list_del
@@ -104,7 +101,6 @@ typedef mfields_c_t mfields_base_t;
 typedef mfields_c_list_entry_t mfields_base_list_entry_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
 
-#define mfields_base_list            mfields_c_list
 #define psc_mfields_base_list           psc_mfields_c_list
 #define psc_mfields_base_list_add       psc_mfields_c_list_add
 #define psc_mfields_base_list_del       psc_mfields_c_list_del
@@ -131,7 +127,6 @@ typedef fields_sse2_real_t fields_base_real_t;
 typedef mfields_sse2_t mfields_base_t;
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
 
-#define mfields_base_list            mfields_sse2_list
 #define psc_mfields_base_create      psc_mfields_sse2_create
 #define psc_mfields_base_setup       psc_mfields_sse2_setup
 #define psc_mfields_base_destroy     psc_mfields_sse2_destroy
@@ -148,7 +143,6 @@ typedef mfields_cuda_list_entry_t mfields_base_list_entry_t;
 
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 
-#define mfields_base_list            mfields_cuda_list
 #define psc_mfields_base_list           psc_mfields_cuda_list
 #define psc_mfields_base_list_add       psc_mfields_cuda_list_add
 #define psc_mfields_base_list_del       psc_mfields_cuda_list_del

@@ -309,14 +309,12 @@ static void
 _psc_mfields_c_setup(mfields_c_t *flds)
 {
   psc_mfields_c_alloc(flds);
-  list_add_tail(&flds->entry, &mfields_c_list);
 }
 
 static void
 _psc_mfields_c_destroy(mfields_c_t *flds)
 {
   psc_mfields_c_free(flds);
-  list_del(&flds->entry);
 }
 
 #ifdef HAVE_LIBHDF5_HL

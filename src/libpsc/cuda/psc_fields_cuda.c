@@ -278,14 +278,12 @@ static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
   fields_cuda_alloc(flds, flds->nr_fields);
-  list_add_tail(&flds->entry, &mfields_cuda_list);
 }
 
 static void
 _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
 {
   fields_cuda_free(flds);
-  list_del(&flds->entry);
 }
 
 void

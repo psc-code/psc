@@ -39,7 +39,6 @@ _psc_mfields_##type##_setup(mfields_##type##_t *flds)			\
 		   patches[p].ldims[2] + flds->ibn[2] };		\
     fields_##type##_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);	\
   }									\
-  list_add_tail(&flds->entry, &mfields_##type##_list);			\
 }									\
 									\
 static void								\
@@ -49,7 +48,6 @@ _psc_mfields_##type##_destroy(mfields_##type##_t *flds)		        \
     fields_##type##_free(&flds->f[p]);					\
   }									\
   free(flds->f);							\
-  list_del(&flds->entry);						\
 }									\
 									\
 struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
