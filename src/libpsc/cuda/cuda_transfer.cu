@@ -81,25 +81,25 @@ __particles_cuda_free(particles_cuda_t *pp)
 }
 
 EXTERN_C void
-__fields_cuda_get(fields_cuda_t *pf)
+__fields_cuda_to_device(fields_cuda_t *pf, real *h_flds, int mb, int me)
 {
   assert(!ppsc->domain.use_pml);
 
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
   check(cudaMalloc((void **) &pf->d_flds, pf->nr_comp * size * sizeof(float)));
-  check(cudaMemcpy(pf->d_flds + EX * size,
-		   pf->h_flds + EX * size,
-		   6 * size * sizeof(float),
+  check(cudaMemcpy(pf->d_flds + mb * size,
+		   h_flds + mb * size,
+		   (me - mb) * size * sizeof(float),
 		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
-__fields_cuda_put(fields_cuda_t *pf)
+__fields_cuda_from_device(fields_cuda_t *pf, real *h_flds, int mb, int me)
 {
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-  check(cudaMemcpy(pf->h_flds + JXI * size,
-		   pf->d_flds + JXI * size,
-		   3 * size * sizeof(float),
+  check(cudaMemcpy(h_flds + mb * size,
+		   pf->d_flds + mb * size,
+		   (me - mb) * size * sizeof(float),
 		   cudaMemcpyDeviceToHost));
   check(cudaFree(pf->d_flds));
 }

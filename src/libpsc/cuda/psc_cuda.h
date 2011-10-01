@@ -96,6 +96,9 @@ EXTERN_C void __particles_cuda_to_device(particles_cuda_t *pp,
 EXTERN_C void __particles_cuda_from_device(particles_cuda_t *pp,
 					   float4 *xi4, float4 *pxi4);
 
+EXTERN_C void __fields_cuda_to_device(fields_cuda_t *pf, real *h_flds, int mb, int me);
+EXTERN_C void __fields_cuda_from_device(fields_cuda_t *pf, real *h_flds, int mb, int me);
+
 EXTERN_C void cuda_exchange_particles(int p, particles_cuda_t *pp);
 
 #endif

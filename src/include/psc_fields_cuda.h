@@ -10,39 +10,11 @@ typedef float fields_cuda_real_t;
 #define MPI_FIELDS_CUDA_REAL MPI_FLOAT
 
 typedef struct {
-  fields_cuda_real_t *h_flds;
   fields_cuda_real_t *d_flds;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
   char **name; //> name for each component
 } fields_cuda_t;
-
-// ----------------------------------------------------------------------
-// macros to access C (host) versions of the fields
-
-#define F3_OFF_CUDA(pf, fldnr, jx,jy,jz)				\
-  ((((((fldnr)								\
-       * (pf)->im[2] + ((jz)-(pf)->ib[2]))				\
-      * (pf)->im[1] + ((jy)-(pf)->ib[1]))				\
-     * (pf)->im[0] + ((jx)-(pf)->ib[0]))))
-
-#ifndef BOUNDS_CHECK
-
-#define F3_CUDA(pf, fldnr, jx,jy,jz)		\
-  ((pf)->h_flds[F3_OFF_CUDA(pf, fldnr, jx,jy,jz)])
-
-#else
-
-#define F3_CUDA(pf, fldnr, jx,jy,jz)					\
-  (*({int off = F3_OFF_CUDA(pf, fldnr, jx,jy,jz);			\
-      assert(fldnr >= 0 && fldnr < (pf)->nr_comp);			\
-      assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
-      assert(jy >= (pf)->ib[1] && jy < (pf)->ib[1] + (pf)->im[1]);	\
-      assert(jz >= (pf)->ib[2] && jz < (pf)->ib[2] + (pf)->im[2]);	\
-      &((pf)->h_flds[off]);						\
-    }))
-
-#endif
 
 // ----------------------------------------------------------------------
 // macros to access fields from CUDA (device-side)
@@ -74,8 +46,5 @@ typedef struct {
 void fields_cuda_get(fields_cuda_t *pf, int mb, int me);
 void fields_cuda_put(fields_cuda_t *pf, int mb, int me);
 //void fields_cuda_zero(fields_cuda_t *pf, int m);
-
-EXTERN_C void __fields_cuda_get(fields_cuda_t *pf);
-EXTERN_C void __fields_cuda_put(fields_cuda_t *pf);
 
 #endif
