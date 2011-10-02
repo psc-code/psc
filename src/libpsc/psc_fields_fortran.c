@@ -9,8 +9,7 @@
 #include <string.h>
 
 void
-__fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
-		       fields_fortran_real_t *arr, bool with_array)
+fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
 {
   pf->flds = calloc(nr_comp, sizeof(*pf->flds));
   pf->name = calloc(nr_comp, sizeof(*pf->name));
@@ -22,41 +21,18 @@ __fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
     size *= pf->im[d];
   }
   pf->nr_comp = nr_comp;
-  pf->with_array = with_array;
 
-  if (with_array) {
-    assert(nr_comp == 1);
-    for (int i = 0; i < nr_comp; i++) {
-      pf->flds[i] = arr;
-    }
-  } else {
-    pf->flds[0] = calloc(size * nr_comp, sizeof(*pf->flds[0]));
-    for (int i = 1; i < nr_comp; i++) {
-      pf->flds[i] = pf->flds[0] + i * size;
-    }
+  pf->flds[0] = calloc(size * nr_comp, sizeof(*pf->flds[0]));
+  for (int i = 1; i < nr_comp; i++) {
+    pf->flds[i] = pf->flds[0] + i * size;
   }
 }
-
-void
-fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
-{
-  __fields_fortran_alloc(pf, ib, ie, nr_comp, NULL, false);
-}
-
-void
-fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
-				int nr_comp, fields_fortran_real_t *arr)
-{
-  __fields_fortran_alloc(pf, ib, ie, nr_comp, arr, true);
-}
-
 
 void
 fields_fortran_free(fields_fortran_t *pf)
 {
-  if (!pf->with_array) {
-    free(pf->flds[0]);
-  }
+  free(pf->flds[0]);
+
   for (int i = 0; i < pf->nr_comp; i++) {
     pf->flds[i] = NULL;
   }

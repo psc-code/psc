@@ -9,8 +9,7 @@
 #include <assert.h>
 
 void
-__fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
-		 fields_c_real_t *arr, bool with_array)
+fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -19,22 +18,18 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
     size *= pf->im[d];
   }
   pf->nr_comp = nr_comp;
-  if (with_array) {
-    pf->flds = arr;
-  } else {
 #ifdef USE_CBE
-    // The Cell processor translation can use the C fields with one modification:
-    // the data needs to be 128 byte aligned (to speed off-loading to spes). This
-    // change is roughly put in below.
-    void *m;
-    int ierr = posix_memalign(&m, 128, nr_comp * size * sizeof(*pf->flds));
-    pf->flds =  m; 
-    assert(ierr == 0);
+  // The Cell processor translation can use the C fields with one modification:
+  // the data needs to be 128 byte aligned (to speed off-loading to spes). This
+  // change is roughly put in below.
+  void *m;
+  int ierr = posix_memalign(&m, 128, nr_comp * size * sizeof(*pf->flds));
+  pf->flds =  m; 
+  assert(ierr == 0);
 #else
-    pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
+  pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
 #endif
-  }
-  pf->with_array = with_array;
+
   pf->name = calloc(nr_comp, sizeof(*pf->name));
   for (int m = 0; m < nr_comp; m++) {
     pf->name[m] = NULL;
@@ -42,24 +37,10 @@ __fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
 }
 
 void
-fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
-{
-  __fields_c_alloc(pf, ib, ie, nr_comp, NULL, false);
-}
-
-void
-fields_c_alloc_with_array(fields_c_t *pf, int ib[3], int ie[3], int nr_comp,
-			  fields_c_real_t *arr)
-{
-  __fields_c_alloc(pf, ib, ie, nr_comp, arr, true);
-}
-
-void
 fields_c_free(fields_c_t *pf)
 {
-  if (!pf->with_array) {
-    free(pf->flds);
-  }
+  free(pf->flds);
+
   for (int m = 0; m < pf->nr_comp; m++) {
     free(pf->name[m]);
   }
@@ -238,8 +219,6 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
     ierr = H5LTset_attribute_int(groupp, ".", "ib", fields->ib, 3); CE;
     ierr = H5LTset_attribute_int(groupp, ".", "im", fields->im, 3); CE;
     ierr = H5LTset_attribute_int(groupp, ".", "nr_comp", &fields->nr_comp, 1); CE;
-    int with_array = fields->with_array;
-    ierr = H5LTset_attribute_int(groupp, ".", "with_array", &with_array, 1); CE;
     for (int m = 0; m < fields->nr_comp; m++) {
       char namec[10]; sprintf(namec, "m%d", m);
       char *s = fields->name[m];

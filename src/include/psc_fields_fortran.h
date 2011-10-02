@@ -12,7 +12,6 @@ typedef struct {
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
   char **name; //> name for each component
-  bool with_array; // array was passed in, not alloc'ed
 } fields_fortran_t;
 
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
@@ -39,8 +38,6 @@ typedef struct {
 #endif
 
 void fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp);
-void fields_fortran_alloc_with_array(fields_fortran_t *pf, int ib[3], int ie[3],
-				     int nr_comp, fields_fortran_real_t *arr);
 void fields_fortran_free(fields_fortran_t *pf);
 void fields_fortran_zero(fields_fortran_t *pf, int m);
 void fields_fortran_set(fields_fortran_t *pf, int m, fields_fortran_real_t val);
