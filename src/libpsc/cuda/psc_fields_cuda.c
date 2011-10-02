@@ -40,7 +40,7 @@ psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
+    float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
 
     for (int m = mb; m < me; m++) {
