@@ -4,7 +4,6 @@
 #include "psc_cuda.h"
 
 #include <mrc_params.h>
-#include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
@@ -92,12 +91,6 @@ _psc_mfields_cuda_get_c(struct psc_mfields *_flds_base, int mb, int me)
   assert(!__gotten);
   __gotten = true;
 
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_c_get", 1., 0, 0);
-  }
-  prof_start(pr);
-
   mfields_c_t *flds = psc_mfields_create(psc_comm(ppsc));
   psc_mfields_set_type(flds, "c");
   psc_mfields_set_domain(flds, flds_base->domain);
@@ -105,8 +98,6 @@ _psc_mfields_cuda_get_c(struct psc_mfields *_flds_base, int mb, int me)
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
   psc_mfields_setup(flds);
   psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
-
-  prof_stop(pr);
 
   return (struct psc_mfields *) flds;
 }
@@ -117,29 +108,14 @@ _psc_mfields_cuda_put_c(struct psc_mfields *flds, struct psc_mfields *_flds_base
   assert(__gotten);
   __gotten = false;
 
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_c_put", 1., 0, 0);
-  }
-  prof_start(pr);
-
   mfields_cuda_t *flds_base = (mfields_cuda_t *) _flds_base;
   psc_mfields_copy_cf_to_cuda(flds_base, mb, me, (mfields_c_t *) flds);
   psc_mfields_destroy(flds);
-
-  prof_stop(pr);
 }
 
-struct psc_mfields *
-_psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me)
+mfields_cuda_t *
+_psc_mfields_c_get_cuda(mfields_c_t *flds_base, int mb, int me)
 {
-  mfields_c_t *flds_base = (mfields_c_t *) _flds_base;
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_cuda_get", 1., 0, 0);
-  }
-  prof_start(pr);
-
   mfields_cuda_t *flds = psc_mfields_create(psc_comm(ppsc));
   psc_mfields_set_type(flds, "cuda");
   psc_mfields_set_domain(flds, flds_base->domain);
@@ -148,26 +124,14 @@ _psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me)
   psc_mfields_setup(flds);
 
   psc_mfields_copy_cf_to_cuda(flds, mb, me, flds_base);
-
-  prof_stop(pr);
-
-  return (struct psc_mfields *) flds;
+  return flds;
 }
 
 void
-_psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me)
+_psc_mfields_c_put_cuda(mfields_cuda_t *flds, mfields_c_t *flds_base, int mb, int me)
 {
-  mfields_c_t *flds_base = (mfields_c_t *) _flds_base;
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_cuda_put", 1., 0, 0);
-  }
-  prof_start(pr);
-
   psc_mfields_copy_cf_from_cuda((mfields_cuda_t *) flds, mb, me, flds_base);
   psc_mfields_destroy(flds);
-
-  prof_stop(pr);
 }
 
 // ======================================================================

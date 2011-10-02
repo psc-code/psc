@@ -3,7 +3,6 @@
 #include "psc_fields_fortran.h"
 #include "psc_glue.h"
 
-#include <mrc_profile.h>
 #include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
@@ -46,12 +45,6 @@ fields_fortran_free(fields_fortran_t *pf)
 static mfields_c_t *
 _psc_mfields_fortran_get_c(mfields_fortran_t *flds_base, int mb, int me)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_c_get", 1., 0, 0);
-  }
-  prof_start(pr);
-
   mfields_c_t *flds = psc_mfields_create(psc_comm(ppsc));
   psc_mfields_set_type(flds, "c");
   psc_mfields_set_domain(flds, flds_base->domain);
@@ -69,20 +62,12 @@ _psc_mfields_fortran_get_c(mfields_fortran_t *flds_base, int mb, int me)
     }
   }
 
-  prof_stop(pr);
-
   return flds;
 }
 
 static void
 _psc_mfields_fortran_put_c(mfields_c_t *flds, mfields_fortran_t *flds_base, int mb, int me)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fields_c_put", 1., 0, 0);
-  }
-  prof_start(pr);
-
   psc_foreach_patch(ppsc, p) {
     fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
     fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_base, p);
@@ -94,8 +79,6 @@ _psc_mfields_fortran_put_c(mfields_c_t *flds, mfields_fortran_t *flds_base, int 
   }
 
   psc_mfields_destroy(flds);
-
-  prof_stop(pr);
 }
 
 void

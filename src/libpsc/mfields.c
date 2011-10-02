@@ -2,6 +2,7 @@
 #include "psc.h"
 
 #include <mrc_params.h>
+#include <mrc_profile.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -72,7 +73,15 @@ psc_mfields_get_##type(struct psc_mfields *base, int mb, int me)	\
 	    psc_mfields_type(base));					\
     assert(0);								\
   }									\
-  return ops->get_##type(base, mb, me);					\
+  static int pr;							\
+  if (!pr) {								\
+    pr = prof_register("mfields_get_" #type, 1., 0, 0);			\
+  }									\
+  prof_start(pr);							\
+  struct psc_mfields *rv = ops->get_##type(base, mb, me);		\
+  prof_stop(pr);							\
+									\
+  return rv;								\
 }									\
 									\
 void									\
@@ -84,7 +93,13 @@ psc_mfields_put_##type(struct psc_mfields *flds,			\
     return;								\
   }									\
   assert(ops && ops->put_##type);					\
+  static int pr;							\
+  if (!pr) {								\
+    pr = prof_register("mfields_put_" #type, 1., 0, 0);			\
+  }									\
+  prof_start(pr);							\
   ops->put_##type(flds, base, mb, me);					\
+  prof_stop(pr);							\
 }									\
 
 MAKE_MFIELDS_GET_PUT(c)
