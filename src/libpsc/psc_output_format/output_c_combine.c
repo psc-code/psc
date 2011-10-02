@@ -56,7 +56,7 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
 	MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
 	unsigned int sz = fields_c_size(psc_mfields_c_get_patch_c(list->flds[m], p));
-	MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
+	MPI_Send(s_data, sz, MPI_FIELDS_C_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
 	fields_c_t fld;
 	fields_c_alloc(&fld, (int []) { 0, 0, 0}, ppsc->domain.gdims, 1);
@@ -81,7 +81,7 @@ write_fields_combine(struct psc_fields_list *list,
 	    MPI_Recv(img, 3, MPI_INT, n, 103, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	    int ntot = img[0] * img[1] * img[2];
 	    buf = calloc(ntot, sizeof(*buf));
-	    MPI_Recv(buf, ntot, MPI_FIELDS_BASE_REAL, n, 104, MPI_COMM_WORLD,
+	    MPI_Recv(buf, ntot, MPI_FIELDS_C_REAL, n, 104, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
 	  }
 	  /* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */

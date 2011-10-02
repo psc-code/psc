@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+LIST_HEAD(psc_mfields_base_list);
+
 struct psc_balance {
   struct mrc_obj obj;
   int every;
@@ -346,7 +348,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
-      MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
+      MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, info_new.rank,
 		mpi_tag(&info), comm, &send_reqs[p]);
     }
   }
@@ -368,7 +370,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       int nn = fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
-      MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
+      MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, info_old.rank,
 		mpi_tag(&info), comm, &recv_reqs[p]);
     }
   }
@@ -457,8 +459,8 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_list_entry_t *p;
-  __list_for_each_entry(p, &psc_mfields_base_list, entry, mfields_base_list_entry_t) {
+  struct psc_mfields_list_entry *p;
+  __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     mfields_base_t *flds_base_old = *p->flds_p;
     
     if (flds_base_old != psc->flds) {
@@ -466,13 +468,13 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
       continue; // FIXME!!!
     }
     mfields_base_t *flds_base_new;
-    flds_base_new = psc_mfields_base_create(mrc_domain_comm(domain_new));
-    psc_mfields_base_set_type(psc->flds, s_fields_base);
-    psc_mfields_base_set_name(flds_base_new, "mfields");
-    psc_mfields_base_set_domain(flds_base_new, domain_new);
-    psc_mfields_base_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
-    psc_mfields_base_set_param_int3(flds_base_new, "ibn", psc->ibn);
-    psc_mfields_base_setup(flds_base_new);
+    flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
+    psc_mfields_set_type(psc->flds, s_fields_base);
+    psc_mfields_set_name(flds_base_new, "mfields");
+    psc_mfields_set_domain(flds_base_new, domain_new);
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
+    psc_mfields_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_setup(flds_base_new);
 
     mfields_t *flds_old = psc_mfields_get_from(0, 12, flds_base_old); // FIXME NR_FIELDS?
     mfields_t *flds_new = psc_mfields_get_from(0, 0, flds_base_new);
@@ -480,7 +482,7 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     psc_mfields_put_to(flds_old, 0, 0, flds_base_old);
     psc_mfields_put_to(flds_new, 0, 12, flds_base_new);
 
-    psc_mfields_base_destroy(psc->flds);
+    psc_mfields_destroy(psc->flds);
     psc->flds = flds_base_new;
   }
 
@@ -577,21 +579,21 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_list_entry_t *p;
-  __list_for_each_entry(p, &psc_mfields_base_list, entry, mfields_base_list_entry_t) {
+  struct psc_mfields_list_entry *p;
+  __list_for_each_entry(p, &psc_mfields_base_list, entry, struct psc_mfields_list_entry) {
     mfields_base_t *flds_base_old = *p->flds_p;
     if (flds_base_old != psc->flds) {
       fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
       continue; // FIXME!!!
     }
     mfields_base_t *flds_base_new;
-    flds_base_new = psc_mfields_base_create(mrc_domain_comm(domain_new));
-    psc_mfields_base_set_type(psc->flds, s_fields_base);
-    psc_mfields_base_set_name(flds_base_new, "mfields");
-    psc_mfields_base_set_domain(flds_base_new, domain_new);
-    psc_mfields_base_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
-    psc_mfields_base_set_param_int3(flds_base_new, "ibn", psc->ibn);
-    psc_mfields_base_setup(flds_base_new);
+    flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
+    psc_mfields_set_type(psc->flds, s_fields_base);
+    psc_mfields_set_name(flds_base_new, "mfields");
+    psc_mfields_set_domain(flds_base_new, domain_new);
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
+    psc_mfields_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_setup(flds_base_new);
 
     mfields_t *flds_old = psc_mfields_get_from(0, 12, flds_base_old); // FIXME NR_FIELDS?
     mfields_t *flds_new = psc_mfields_get_from(0, 0, flds_base_new);
@@ -599,7 +601,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
     psc_mfields_put_to(flds_old, 0, 0, flds_base_old);
     psc_mfields_put_to(flds_new, 0, 12, flds_base_new);
 
-    psc_mfields_base_destroy(psc->flds);
+    psc_mfields_destroy(psc->flds);
     psc->flds = flds_base_new;
   }
   

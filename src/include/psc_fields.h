@@ -180,6 +180,8 @@ psc_mfields_cuda_get_patch_cuda(struct psc_mfields_cuda *flds, int p)
 }
 #endif
 
+extern list_t psc_mfields_base_list;
+
 // ----------------------------------------------------------------------
 // base fields type
 
@@ -188,27 +190,7 @@ psc_mfields_cuda_get_patch_cuda(struct psc_mfields_cuda *flds, int p)
 typedef fields_fortran_t fields_base_t;
 typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
-typedef mfields_fortran_list_entry_t mfields_base_list_entry_t;
-#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
 #define s_fields_base "fortran"
-
-#define psc_mfields_base_list           psc_mfields_fortran_list
-#define psc_mfields_base_list_add       psc_mfields_fortran_list_add
-#define psc_mfields_base_list_del       psc_mfields_fortran_list_del
-#define psc_mfields_base_create         psc_mfields_fortran_create
-#define psc_mfields_base_set_type       psc_mfields_fortran_set_type
-#define psc_mfields_base_set_name       psc_mfields_fortran_set_name
-#define psc_mfields_base_set_param_int  psc_mfields_fortran_set_param_int
-#define psc_mfields_base_set_param_int3 psc_mfields_fortran_set_param_int3
-#define psc_mfields_base_setup          psc_mfields_fortran_setup
-#define psc_mfields_base_destroy        psc_mfields_fortran_destroy
-#define psc_mfields_base_write          psc_mfields_fortran_write
-#define psc_mfields_base_read           psc_mfields_fortran_read
-#define psc_mfields_base_set_domain     psc_mfields_fortran_set_domain
-#define psc_mfields_base_axpy           psc_mfields_fortran_axpy
-#define psc_mfields_base_scale          psc_mfields_fortran_scale
-#define psc_mfields_base_set_comp       psc_mfields_fortran_set_comp
-#define psc_mfields_base_copy_comp      psc_mfields_fortran_copy_comp
 
 #elif FIELDS_BASE == FIELDS_C
 
@@ -216,28 +198,8 @@ typedef mfields_fortran_list_entry_t mfields_base_list_entry_t;
 
 typedef fields_c_t fields_base_t;
 typedef fields_c_real_t fields_base_real_t;
-typedef mfields_c_t mfields_base_t;
-typedef mfields_c_list_entry_t mfields_base_list_entry_t;
-#define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
+typedef struct psc_mfields mfields_base_t;
 #define s_fields_base "c"
-
-#define psc_mfields_base_list           psc_mfields_c_list
-#define psc_mfields_base_list_add       psc_mfields_c_list_add
-#define psc_mfields_base_list_del       psc_mfields_c_list_del
-#define psc_mfields_base_create         psc_mfields_c_create
-#define psc_mfields_base_set_type       psc_mfields_c_set_type
-#define psc_mfields_base_set_name       psc_mfields_c_set_name
-#define psc_mfields_base_set_param_int  psc_mfields_c_set_param_int
-#define psc_mfields_base_set_param_int3 psc_mfields_c_set_param_int3
-#define psc_mfields_base_setup          psc_mfields_c_setup
-#define psc_mfields_base_destroy        psc_mfields_c_destroy
-#define psc_mfields_base_write          psc_mfields_c_write
-#define psc_mfields_base_read           psc_mfields_c_read
-#define psc_mfields_base_set_domain     psc_mfields_c_set_domain
-#define psc_mfields_base_axpy           psc_mfields_c_axpy
-#define psc_mfields_base_scale          psc_mfields_c_scale
-#define psc_mfields_base_set_comp       psc_mfields_c_set_comp
-#define psc_mfields_base_copy_comp      psc_mfields_c_copy_comp
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
@@ -246,12 +208,6 @@ typedef mfields_c_list_entry_t mfields_base_list_entry_t;
 typedef fields_sse2_t fields_base_t;
 typedef fields_sse2_real_t fields_base_real_t;
 typedef mfields_sse2_t mfields_base_t;
-#define MPI_FIELDS_BASE_REAL MPI_FIELDS_SSE2_REAL
-
-#define psc_mfields_base_create      psc_mfields_sse2_create
-#define psc_mfields_base_setup       psc_mfields_sse2_setup
-#define psc_mfields_base_destroy     psc_mfields_sse2_destroy
-#define psc_mfields_base_set_domain  psc_mfields_sse2_set_domain
 
 #elif FIELDS_BASE == FIELDS_CUDA
 
@@ -260,27 +216,7 @@ typedef mfields_sse2_t mfields_base_t;
 typedef fields_cuda_t fields_base_t;
 typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
-typedef mfields_cuda_list_entry_t mfields_base_list_entry_t;
-#define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
 #define s_fields_base "cuda"
-
-#define psc_mfields_base_list           psc_mfields_cuda_list
-#define psc_mfields_base_list_add       psc_mfields_cuda_list_add
-#define psc_mfields_base_list_del       psc_mfields_cuda_list_del
-#define psc_mfields_base_create         psc_mfields_cuda_create
-#define psc_mfields_base_set_type       psc_mfields_cuda_set_type
-#define psc_mfields_base_set_name       psc_mfields_cuda_set_name
-#define psc_mfields_base_set_param_int  psc_mfields_cuda_set_param_int
-#define psc_mfields_base_set_param_int3 psc_mfields_cuda_set_param_int3
-#define psc_mfields_base_setup          psc_mfields_cuda_setup
-#define psc_mfields_base_destroy        psc_mfields_cuda_destroy
-#define psc_mfields_base_write          psc_mfields_cuda_write
-#define psc_mfields_base_read           psc_mfields_cuda_read
-#define psc_mfields_base_set_domain     psc_mfields_cuda_set_domain
-#define psc_mfields_base_axpy           psc_mfields_cuda_axpy
-#define psc_mfields_base_scale          psc_mfields_cuda_scale
-#define psc_mfields_base_set_comp       psc_mfields_cuda_set_comp
-#define psc_mfields_base_copy_comp      psc_mfields_cuda_copy_comp
 
 #else
 #error unknown FIELDS_BASE

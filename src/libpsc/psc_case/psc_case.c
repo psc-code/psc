@@ -13,14 +13,14 @@
 static void
 psc_init_field_pml(struct psc_case *_case, mfields_base_t *flds)
 {
-  psc_mfields_base_copy_comp(flds, DX, flds, EX);
-  psc_mfields_base_copy_comp(flds, DY, flds, EY);
-  psc_mfields_base_copy_comp(flds, DZ, flds, EZ);
-  psc_mfields_base_copy_comp(flds, BX, flds, HX);
-  psc_mfields_base_copy_comp(flds, BY, flds, HY);
-  psc_mfields_base_copy_comp(flds, BZ, flds, HZ);
-  psc_mfields_base_set_comp(flds, EPS, 1.);
-  psc_mfields_base_set_comp(flds, MU, 1.);
+  psc_mfields_copy_comp(flds, DX, flds, EX);
+  psc_mfields_copy_comp(flds, DY, flds, EY);
+  psc_mfields_copy_comp(flds, DZ, flds, EZ);
+  psc_mfields_copy_comp(flds, BX, flds, HX);
+  psc_mfields_copy_comp(flds, BY, flds, HY);
+  psc_mfields_copy_comp(flds, BZ, flds, HZ);
+  psc_mfields_set_comp(flds, EPS, 1.);
+  psc_mfields_set_comp(flds, MU, 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -84,14 +84,14 @@ _psc_case_setup(struct psc_case *_case)
   free(nr_particles_by_patch);
 
   // alloc / initialize fields
-  psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_base_list_add(&psc->flds);
-  psc_mfields_base_set_type(psc->flds, s_fields_base);
-  psc_mfields_base_set_name(psc->flds, "mfields");
-  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
-  psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
-  psc_mfields_base_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc_mfields_base_setup(psc->flds);
+  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_set_type(psc->flds, s_fields_base);
+  psc_mfields_set_name(psc->flds, "mfields");
+  psc_mfields_set_domain(psc->flds, psc->mrc_domain);
+  psc_mfields_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
+  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc_mfields_setup(psc->flds);
   psc_case_init_field(_case, psc->flds);
   if (psc->domain.use_pml) {
     psc_init_field_pml(_case, psc->flds);

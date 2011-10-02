@@ -260,10 +260,10 @@ psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j
 static mfields_base_t *
 fld_create(struct psc *psc)
 {
-  mfields_base_t *fld = psc_mfields_base_create(psc_comm(psc));
-  psc_mfields_base_set_domain(fld, psc->mrc_domain);
-  psc_mfields_base_set_param_int3(fld, "ibn", psc->ibn);
-  psc_mfields_base_setup(fld);
+  mfields_base_t *fld = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_domain(fld, psc->mrc_domain);
+  psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
+  psc_mfields_setup(fld);
 
   return fld;
 }
@@ -279,8 +279,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   psc_calc_rho_1st(psc, particles, rho_m_base, -.5 * psc->dt);
   psc_calc_rho_1st(psc, particles, rho_p_base,  .5 * psc->dt);
 
-  psc_mfields_base_axpy(rho_p_base, -1., rho_m_base);
-  psc_mfields_base_scale(rho_p_base, 1. / psc->dt);
+  psc_mfields_axpy(rho_p_base, -1., rho_m_base);
+  psc_mfields_scale(rho_p_base, 1. / psc->dt);
 
   psc_calc_div_j(psc, flds, div_j_base);
 
@@ -314,9 +314,9 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 
   assert(max_err <= eps);
 
-  psc_mfields_base_destroy(rho_m_base);
-  psc_mfields_base_destroy(rho_p_base);
-  psc_mfields_base_destroy(div_j_base);
+  psc_mfields_destroy(rho_m_base);
+  psc_mfields_destroy(rho_p_base);
+  psc_mfields_destroy(div_j_base);
 }
 
 

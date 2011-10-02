@@ -497,8 +497,8 @@ _psc_setup(struct psc *psc)
 static void
 _psc_destroy(struct psc *psc)
 {
-  psc_mfields_base_list_del(&psc->flds);
-  psc_mfields_base_destroy(psc->flds);
+  psc_mfields_list_del(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_destroy(psc->flds);
   psc_mparticles_base_destroy(psc->particles);
   psc_mphotons_destroy(psc->mphotons);
 
@@ -521,7 +521,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 
   mrc_domain_write(psc->mrc_domain, io);
   psc_mparticles_base_write(psc->particles, io);
-  psc_mfields_base_write(psc->flds, io);
+  psc_mfields_write(psc->flds, io);
   psc_mphotons_write(psc->mphotons, io);
 }
 
@@ -539,7 +539,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
   psc->particles = psc_mparticles_base_read(io, "mparticles");
-  psc->flds = psc_mfields_base_read(io, "mfields");
+  psc->flds = psc_mfields_read(io, "mfields");
   psc->mphotons = psc_mphotons_read(io, "mphotons");
 
   psc_setup(psc);
@@ -778,14 +778,14 @@ psc_setup_field_pml(struct psc *psc)
 {
   mfields_base_t *flds = psc->flds;
 
-  psc_mfields_base_copy_comp(flds, DX, flds, EX);
-  psc_mfields_base_copy_comp(flds, DY, flds, EY);
-  psc_mfields_base_copy_comp(flds, DZ, flds, EZ);
-  psc_mfields_base_copy_comp(flds, BX, flds, HX);
-  psc_mfields_base_copy_comp(flds, BY, flds, HY);
-  psc_mfields_base_copy_comp(flds, BZ, flds, HZ);
-  psc_mfields_base_set_comp(flds, EPS, 1.);
-  psc_mfields_base_set_comp(flds, MU, 1.);
+  psc_mfields_copy_comp(flds, DX, flds, EX);
+  psc_mfields_copy_comp(flds, DY, flds, EY);
+  psc_mfields_copy_comp(flds, DZ, flds, EZ);
+  psc_mfields_copy_comp(flds, BX, flds, HX);
+  psc_mfields_copy_comp(flds, BY, flds, HY);
+  psc_mfields_copy_comp(flds, BZ, flds, HZ);
+  psc_mfields_set_comp(flds, EPS, 1.);
+  psc_mfields_set_comp(flds, MU, 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -795,14 +795,14 @@ void
 psc_setup_fields(struct psc *psc)
 {
   // create fields
-  psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mfields_base_list_add(&psc->flds);
-  psc_mfields_base_set_type(psc->flds, s_fields_base);
-  psc_mfields_base_set_name(psc->flds, "mfields");
-  psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
-  psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
-  psc_mfields_base_set_param_int3(psc->flds, "ibn", psc->ibn);
-  psc_mfields_base_setup(psc->flds);
+  psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
+  psc_mfields_set_type(psc->flds, s_fields_base);
+  psc_mfields_set_name(psc->flds, "mfields");
+  psc_mfields_set_domain(psc->flds, psc->mrc_domain);
+  psc_mfields_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
+  psc_mfields_set_param_int3(psc->flds, "ibn", psc->ibn);
+  psc_mfields_setup(psc->flds);
 
   // type-specific other initial condition
   if (psc_ops(psc)->setup_fields) {
