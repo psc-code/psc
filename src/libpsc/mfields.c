@@ -8,6 +8,27 @@
 
 // ======================================================================
 
+static void
+_psc_mfields_setup(struct psc_mfields *flds)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
+
+  if (ops->setup) {
+    ops->setup(flds);
+  }
+  flds->name = calloc(flds->nr_fields, sizeof(*flds->name));
+}
+
+static void
+_psc_mfields_destroy(struct psc_mfields *flds)
+{
+  // sub-destroy has already been called
+  for (int m = 0; m < flds->nr_fields; m++) {
+    free(flds->name[m]);
+  }
+  free(flds->name);
+}
+
 void
 psc_mfields_set_domain(struct psc_mfields *flds, struct mrc_domain *domain)
 {
@@ -172,5 +193,7 @@ struct mrc_class_psc_mfields mrc_class_psc_mfields = {
   .size             = sizeof(struct psc_mfields),
   .init             = psc_mfields_init,
   .param_descr      = psc_mfields_descr,
+  .setup            = _psc_mfields_setup,
+  .destroy          = _psc_mfields_destroy,
 };
 

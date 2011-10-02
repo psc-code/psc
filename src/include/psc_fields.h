@@ -10,7 +10,8 @@ struct psc_mfields {
   void *data;
   int nr_patches;
   struct mrc_domain *domain;
-  int nr_fields;
+  int nr_fields; //> number of field components
+  char **name; //> name for each field component
   int ibn[3];
 };
 
