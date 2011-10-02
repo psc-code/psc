@@ -93,13 +93,11 @@ psc_mfields_c_get_from(int mb, int me, void *_flds_base)
   }
   prof_start(pr);
 
-  mfields_c_t *flds = calloc(1, sizeof(*flds));
-  flds->domain = flds_base->domain;
-  flds->nr_fields = flds_base->nr_fields;
-  for (int d = 0; d < 3; d++) {
-    flds->ibn[d] = flds_base->ibn[d];
-  }
-  psc_mfields_c_alloc(flds);
+  mfields_c_t *flds = psc_mfields_c_create(psc_comm(ppsc));
+  psc_mfields_c_set_domain(flds, flds_base->domain);
+  psc_mfields_c_set_param_int(flds, "nr_fields", flds_base->nr_fields);
+  psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
+  psc_mfields_c_setup(flds);
 
   psc_foreach_patch(ppsc, p) {
     fields_c_t *pf = &flds->f[p];
@@ -137,8 +135,7 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
     } foreach_3d_g_end;
   }
 
-  psc_mfields_c_free(flds);
-  free(flds);
+  psc_mfields_c_destroy(flds);
 
   prof_stop(pr);
 }
@@ -202,21 +199,6 @@ fields_c_scale(fields_c_t *pf, fields_c_real_t val)
 	}
       }
     }
-  }
-}
-
-void
-psc_mfields_c_alloc(mfields_c_t *flds)
-{
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
-						     &flds->nr_patches);
-  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
-  for (int p = 0; p < flds->nr_patches; p++) {
-    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
-    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
-		   patches[p].ldims[1] + flds->ibn[1],
-		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_c_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);
   }
 }
 
@@ -311,7 +293,16 @@ psc_mfields_c_set_domain(mfields_c_t *flds, struct mrc_domain *domain)
 static void
 _psc_mfields_c_setup(mfields_c_t *flds)
 {
-  psc_mfields_c_alloc(flds);
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
+						     &flds->nr_patches);
+  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
+  for (int p = 0; p < flds->nr_patches; p++) {
+    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
+    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
+		   patches[p].ldims[1] + flds->ibn[1],
+		   patches[p].ldims[2] + flds->ibn[2] };
+    fields_c_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);
+  }
 }
 
 static void
