@@ -25,7 +25,7 @@ ascii_dump_field_yz(fields_t *pf, int m, FILE *file)
 static void
 ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
 {
-  mfields_t *flds = psc_mfields_get_from(m, m+1, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, m, m+1);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -53,7 +53,7 @@ ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
     }
     fclose(file);
   }
-  psc_mfields_put_to(flds, 0, 0, flds_base);
+  psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
 static void

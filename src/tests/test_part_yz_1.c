@@ -122,7 +122,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 {
   mparticles_t particles;
   psc_mparticles_get_from(&particles, particles_base);
-  mfields_t *rho = psc_mfields_get_from(0, 0, rho_base);
+  mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
@@ -130,7 +130,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
   }
 
   psc_mparticles_put_to(&particles, particles_base);
-  psc_mfields_put_to(rho, 0, 1, rho_base);
+  psc_mfields_put_cf(rho, rho_base, 0, 1);
 
   psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
@@ -202,7 +202,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 {
   mparticles_t particles;
   psc_mparticles_get_from(&particles, particles_base);
-  mfields_t *rho = psc_mfields_get_from(0, 0, rho_base);
+  mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
@@ -210,7 +210,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
   }
 
   psc_mparticles_put_to(&particles, particles_base);
-  psc_mfields_put_to(rho, 0, 1, rho_base);
+  psc_mfields_put_cf(rho, rho_base, 0, 1);
 
   psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
@@ -241,15 +241,15 @@ do_calc_div_j(struct psc *psc, int p, fields_t *flds, fields_t *div_j)
 static void
 psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j_base)
 {
-  mfields_t *flds = psc_mfields_get_from(JXI, JXI + 3, flds_base);
-  mfields_t *div_j = psc_mfields_get_from(0, 0, div_j_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
+  mfields_t *div_j = psc_mfields_get_cf(div_j_base, 0, 0);
 
   psc_foreach_patch(psc, p) {
     do_calc_div_j(psc, p, psc_mfields_get_patch(flds, p), psc_mfields_get_patch(div_j, p));
   }
 
-  psc_mfields_put_to(flds, 0, 0, flds_base);
-  psc_mfields_put_to(div_j, 0, 1, div_j_base);
+  psc_mfields_put_cf(flds, flds_base, 0, 0);
+  psc_mfields_put_cf(div_j, div_j_base, 0, 1);
 
   psc_bnd_add_ghosts(psc->bnd, div_j_base, 0, 1);
 }
@@ -287,8 +287,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   //  psc_dump_field(div_j, 0, "div_j");
   //  psc_dump_field(rho_p, 0, "dt_rho");
 
-  mfields_t *rho_p = psc_mfields_get_from(0, 1, rho_p_base);
-  mfields_t *div_j = psc_mfields_get_from(0, 1, div_j_base);
+  mfields_t *rho_p = psc_mfields_get_cf(rho_p_base, 0, 1);
+  mfields_t *div_j = psc_mfields_get_cf(div_j_base, 0, 1);
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
@@ -306,8 +306,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   }
   printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
 
-  psc_mfields_put_to(rho_p, 0, 0, rho_p_base);
-  psc_mfields_put_to(div_j, 0, 0, div_j_base);
+  psc_mfields_put_cf(rho_p, rho_p_base, 0, 0);
+  psc_mfields_put_cf(div_j, div_j_base, 0, 0);
 
   //  psc_mfields_base_axpy(rho_p, +1., div_j);
   //  psc_dump_field(rho_p, 0, "cont_diff");

@@ -735,7 +735,7 @@ psc_setup_fields_default(struct psc *psc)
   if (!init_field)
     return;
 
-  mfields_t *flds = psc_mfields_get_from(0, 0, psc->flds);
+  mfields_t *flds = psc_mfields_get_cf(psc->flds, 0, 0);
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
@@ -767,7 +767,7 @@ psc_setup_fields_default(struct psc *psc)
 
     } foreach_3d_g_end;
   }
-  psc_mfields_put_to(flds, JXI, HX + 3, psc->flds);
+  psc_mfields_put_cf(flds, psc->flds, JXI, HX + 3);
 }
 
 // ----------------------------------------------------------------------

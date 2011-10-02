@@ -220,7 +220,7 @@ psc_push_particles_1sff_push_xz(struct psc_push_particles *push,
 {
   mparticles_t particles;
   psc_mparticles_get_from(&particles, particles_base);
-  mfields_t *flds = psc_mfields_get_from(EX, EX + 6, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
 
   static int pr;
   if (!pr) {
@@ -236,7 +236,7 @@ psc_push_particles_1sff_push_xz(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mfields_put_to(flds, JXI, JXI + 3, flds_base);
+  psc_mfields_put_cf(flds, flds_base, JXI, JXI + 3);
   psc_mparticles_put_to(&particles, particles_base);
 }
 

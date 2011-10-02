@@ -7,7 +7,7 @@
 static void
 psc_push_fields_c_push_a_E(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_t *flds = psc_mfields_get_from(JXI, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, HX + 3);
   
   f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
   f_real cny = .5 * ppsc->dt / ppsc->dx[1];
@@ -46,13 +46,13 @@ psc_push_fields_c_push_a_E(struct psc_push_fields *push, mfields_base_t *flds_ba
     } foreach_3d_end;
   }
 
-  psc_mfields_put_to(flds, EX, EX + 3, flds_base);
+  psc_mfields_put_cf(flds, flds_base, EX, EX + 3);
 }
 
 static void
 psc_push_fields_c_push_a_H(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_t *flds = psc_mfields_get_from(EX, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, HX + 3);
   
   f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
   f_real cny = .5 * ppsc->dt / ppsc->dx[1];
@@ -88,13 +88,13 @@ psc_push_fields_c_push_a_H(struct psc_push_fields *push, mfields_base_t *flds_ba
     } foreach_3d_end;
   }
 
-  psc_mfields_put_to(flds, HX, HX + 3, flds_base);
+  psc_mfields_put_cf(flds, flds_base, HX, HX + 3);
 }
 
 static void
 psc_push_fields_c_push_b_H(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_t *flds = psc_mfields_get_from(EX, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, HX + 3);
   
   f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
   f_real cny = .5 * ppsc->dt / ppsc->dx[1];
@@ -130,13 +130,13 @@ psc_push_fields_c_push_b_H(struct psc_push_fields *push, mfields_base_t *flds_ba
     } foreach_3d_end;
   }
 
-  psc_mfields_put_to(flds, HX, HX + 3, flds_base);
+  psc_mfields_put_cf(flds, flds_base, HX, HX + 3);
 }
 
 static void
 psc_push_fields_c_push_b_E(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_t *flds = psc_mfields_get_from(JXI, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, HX + 3);
   
   f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
   f_real cny = .5 * ppsc->dt / ppsc->dx[1];
@@ -175,7 +175,7 @@ psc_push_fields_c_push_b_E(struct psc_push_fields *push, mfields_base_t *flds_ba
     } foreach_3d_end;
   }
 
-  psc_mfields_put_to(flds, EX, EX + 3, flds_base);
+  psc_mfields_put_cf(flds, flds_base, EX, EX + 3);
 }
 
 // ======================================================================
