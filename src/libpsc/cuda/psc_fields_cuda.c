@@ -121,23 +121,22 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
 
 #if FIELDS_BASE == FIELDS_CUDA
 
-void
-psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
+mfields_cuda_t *
+psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
-  *flds = *flds_base;
+  return flds_base;
 }
 
 void
 psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 {
-  flds->f = NULL;
 }
 
 static bool __gotten;
 
-void
-psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
+mfields_c_t *
+psc_mfields_c_get_from(int mb, int me, void *_flds_base)
 {
   assert(!__gotten);
   __gotten = true;
@@ -149,7 +148,8 @@ psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_cuda_t *flds_base = _flds_base;
-
+  
+  mfields_c_t *flds = calloc(1, sizeof(*flds));
   flds->domain = flds_base->domain;
   flds->nr_fields = flds_base->nr_fields;
   for (int d = 0; d < 3; d++) {
@@ -159,6 +159,8 @@ psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
   psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
 
   prof_stop(pr);
+
+  return flds;
 }
 
 void
@@ -176,12 +178,13 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
   mfields_cuda_t *flds_base = _flds_base;
   psc_mfields_copy_cf_to_cuda(flds_base, mb, me, flds);
   psc_mfields_c_free(flds);
+  free(flds);
 
   prof_stop(pr);
 }
 
-void
-psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+mfields_fortran_t *
+psc_mfields_fortran_get_from(int mb, int me, void *_flds_base)
 {
   assert(0);
 }
@@ -194,8 +197,8 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
 
 #elif FIELDS_BASE == FIELDS_C
 
-void
-psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
+mfields_cuda_t *
+psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
   static int pr;
@@ -204,10 +207,13 @@ psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base
   }
   prof_start(pr);
 
+  mfields_cuda_t *flds = calloc(1, sizeof(*flds));
   fields_cuda_alloc(flds, 12);
   psc_mfields_copy_cf_to_cuda(flds, mb, me, flds_base);
 
   prof_stop(pr);
+
+  return flds;
 }
 
 void
@@ -222,6 +228,7 @@ psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 
   psc_mfields_copy_cf_from_cuda(flds, mb, me, flds_base);
   fields_cuda_free(flds);
+  free(flds);
 
   prof_stop(pr);
 }

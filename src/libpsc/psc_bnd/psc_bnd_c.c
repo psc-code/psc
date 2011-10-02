@@ -204,10 +204,9 @@ __psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me)
 static void
 psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  mfields_t flds;
-  psc_mfields_get_from(&flds, mb, me, flds_base);
-  __psc_bnd_c_add_ghosts(bnd, &flds, mb, me);
-  psc_mfields_put_to(&flds, mb, me, flds_base);
+  mfields_t *flds = psc_mfields_get_from(mb, me, flds_base);
+  __psc_bnd_c_add_ghosts(bnd, flds, mb, me);
+  psc_mfields_put_to(flds, mb, me, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -219,8 +218,7 @@ psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, in
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
   check_domain(bnd);
 
-  mfields_t flds;
-  psc_mfields_get_from(&flds, mb, me, flds_base);
+  mfields_t *flds = psc_mfields_get_from(mb, me, flds_base);
 
   static int pr;
   if (!pr) {
@@ -230,10 +228,10 @@ psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, in
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(bnd_c->ddc, mb, me, &flds);
+  mrc_ddc_fill_ghosts(bnd_c->ddc, mb, me, flds);
   prof_stop(pr);
 
-  psc_mfields_put_to(&flds, mb, me, flds_base);
+  psc_mfields_put_to(flds, mb, me, flds_base);
 }
 
 // ----------------------------------------------------------------------

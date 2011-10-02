@@ -14,18 +14,17 @@ EXTERN_C void cuda_push_fields_b_E_yz(int p, fields_cuda_t *pf);
 static void
 psc_push_fields_cuda_push_a_E(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_cuda_t flds;
-  psc_mfields_cuda_get_from(&flds, JXI, HX + 3, flds_base);
+  mfields_cuda_t *flds = psc_mfields_cuda_get_from(JXI, HX + 3, flds_base);
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_a_E_yz(p, &flds.f[p]);
+      cuda_push_fields_a_E_yz(p, &flds->f[p]);
     }
   } else {
     assert(0);
   }
 
-  psc_mfields_cuda_put_to(&flds, EX, EX + 3, flds_base);
+  psc_mfields_cuda_put_to(flds, EX, EX + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -35,18 +34,17 @@ psc_push_fields_cuda_push_a_E(struct psc_push_fields *push, mfields_base_t *flds
 static void
 psc_push_fields_cuda_push_a_H(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_cuda_t flds;
-  psc_mfields_cuda_get_from(&flds, EX, HX + 3, flds_base);
+  mfields_cuda_t *flds = psc_mfields_cuda_get_from(EX, HX + 3, flds_base);
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_a_H_yz(p, &flds.f[p]);
+      cuda_push_fields_a_H_yz(p, &flds->f[p]);
     }
   } else {
     assert(0);
   }
 
-  psc_mfields_cuda_put_to(&flds, HX, HX + 3, flds_base);
+  psc_mfields_cuda_put_to(flds, HX, HX + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -56,18 +54,17 @@ psc_push_fields_cuda_push_a_H(struct psc_push_fields *push, mfields_base_t *flds
 static void
 psc_push_fields_cuda_push_b_H(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_cuda_t flds;
-  psc_mfields_cuda_get_from(&flds, EX, HX + 3, flds_base);
+  mfields_cuda_t *flds = psc_mfields_cuda_get_from(EX, HX + 3, flds_base);
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_b_H_yz(p, &flds.f[p]);
+      cuda_push_fields_b_H_yz(p, &flds->f[p]);
     }
   } else {
     assert(0);
   }
 
-  psc_mfields_cuda_put_to(&flds, HX, HX + 3, flds_base);
+  psc_mfields_cuda_put_to(flds, HX, HX + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -77,18 +74,17 @@ psc_push_fields_cuda_push_b_H(struct psc_push_fields *push, mfields_base_t *flds
 static void
 psc_push_fields_cuda_push_b_E(struct psc_push_fields *push, mfields_base_t *flds_base)
 {
-  mfields_cuda_t flds;
-  psc_mfields_cuda_get_from(&flds, JXI, HX + 3, flds_base);
+  mfields_cuda_t *flds = psc_mfields_cuda_get_from(JXI, HX + 3, flds_base);
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_b_E_yz(p, &flds.f[p]);
+      cuda_push_fields_b_E_yz(p, &flds->f[p]);
     }
   } else {
     assert(0);
   }
 
-  psc_mfields_cuda_put_to(&flds, EX, EX + 3, flds_base);
+  psc_mfields_cuda_put_to(flds, EX, EX + 3, flds_base);
 }
 
 // ======================================================================

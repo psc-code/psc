@@ -85,8 +85,8 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
 
 #elif FIELDS_BASE == FIELDS_C
 
-void
-psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+mfields_fortran_t *
+psc_mfields_fortran_get_from(int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {
@@ -95,6 +95,7 @@ psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_fld
   prof_start(pr);
 
   mfields_base_t *flds_base = _flds_base;
+  mfields_fortran_t *flds = calloc(1, sizeof(*flds));
   flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
   psc_foreach_patch(ppsc, p) {
     fields_fortran_t *pf = &flds->f[p];
@@ -114,6 +115,7 @@ psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_fld
   }
 
   prof_stop(pr);
+  return flds;
 }
 
 void
@@ -139,7 +141,7 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
   }
   
   free(flds->f);
-  flds->f = NULL;
+  free(flds);
 
   prof_stop(pr);
 }

@@ -68,23 +68,22 @@ fields_c_free(fields_c_t *pf)
 
 #if FIELDS_BASE == FIELDS_C
 
-void
-psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
+mfields_c_t *
+psc_mfields_c_get_from(int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
-  *flds = *flds_base;
+  return flds_base;
 }
 
 void
 psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
 {
-  flds->f = NULL;
 }
 
 #elif FIELDS_BASE == FIELDS_FORTRAN
 
-void
-psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
+mfields_c_t *
+psc_mfields_c_get_from(int mb, int me, void *_flds_base)
 {
   mfields_base_t *flds_base = _flds_base;
 
@@ -94,6 +93,7 @@ psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
   }
   prof_start(pr);
 
+  mfields_c_t *flds = calloc(1, sizeof(*flds));
   flds->domain = flds_base->domain;
   flds->nr_fields = flds_base->nr_fields;
   for (int d = 0; d < 3; d++) {
@@ -112,6 +112,8 @@ psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
   }
 
   prof_stop(pr);
+
+  return flds;
 }
 
 void
@@ -136,6 +138,7 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
   }
 
   psc_mfields_c_free(flds);
+  free(flds);
 
   prof_stop(pr);
 }

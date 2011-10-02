@@ -195,21 +195,19 @@ void
 psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
 			   mfields_base_t *flds_base, double t)
 {
-  mfields_t flds;
-  psc_mfields_get_from(&flds, EX, HX + 3, flds_base);
-  _psc_bnd_fields_setup_patch(bnd_fields, p, &flds.f[p], t);
-  psc_mfields_put_to(&flds, EX, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_from(EX, HX + 3, flds_base);
+  _psc_bnd_fields_setup_patch(bnd_fields, p, &flds->f[p], t);
+  psc_mfields_put_to(flds, EX, HX + 3, flds_base);
 }
 
 void
 psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *flds_base)
 {
-  mfields_t flds;
-  psc_mfields_get_from(&flds, EX, HX + 3, flds_base);
+  mfields_t *flds = psc_mfields_get_from(EX, HX + 3, flds_base);
   psc_foreach_patch(ppsc, p) {
-    _psc_bnd_fields_setup_patch(bnd_fields, p, &flds.f[p], 0.);
+    _psc_bnd_fields_setup_patch(bnd_fields, p, &flds->f[p], 0.);
   }
-  psc_mfields_put_to(&flds, EX, HX + 3, flds_base);
+  psc_mfields_put_to(flds, EX, HX + 3, flds_base);
 }
 
 // ======================================================================

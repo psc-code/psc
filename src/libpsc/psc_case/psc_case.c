@@ -134,15 +134,14 @@ psc_case_init_npt(struct psc_case *_case, int kind, double x[3],
 void
 psc_case_init_field(struct psc_case *_case, mfields_base_t *flds_base)
 {
-  mfields_c_t flds;
-  psc_mfields_c_get_from(&flds, JXI, HX + 3, flds_base);
+  mfields_c_t *flds = psc_mfields_c_get_from(JXI, HX + 3, flds_base);
 
   // case-specific other initial condition
   if (psc_case_ops(_case)->init_field) {
-    psc_case_ops(_case)->init_field(_case, &flds);
+    psc_case_ops(_case)->init_field(_case, flds);
   }
 
-  psc_mfields_c_put_to(&flds, JXI, HX + 3, flds_base);
+  psc_mfields_c_put_to(flds, JXI, HX + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------

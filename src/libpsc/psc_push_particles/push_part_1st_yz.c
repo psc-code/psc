@@ -152,26 +152,25 @@ psc_push_particles_1st_push_yz(struct psc_push_particles *push,
 			       mparticles_base_t *particles_base,
 			       mfields_base_t *flds_base)
 {
-  mfields_t flds;
   mparticles_t particles;
-  psc_mfields_get_from(&flds, EX, EX + 6, flds_base);
   psc_mparticles_get_from(&particles, particles_base);
+  mfields_t *flds = psc_mfields_get_from(EX, EX + 6, flds_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("1st_part_yz", 1., 0, 0);
   }
   prof_start(pr);
-  psc_mfields_zero(&flds, JXI);
-  psc_mfields_zero(&flds, JYI);
-  psc_mfields_zero(&flds, JZI);
+  psc_mfields_zero(flds, JXI);
+  psc_mfields_zero(flds, JYI);
+  psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    do_push_part_1st_yz(p, &flds.f[p], &particles.p[p]);
+    do_push_part_1st_yz(p, &flds->f[p], &particles.p[p]);
   }
   prof_stop(pr);
 
-  psc_mfields_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_put_to(flds, JXI, JXI + 3, flds_base);
   psc_mparticles_put_to(&particles, particles_base);
 }
 

@@ -18,11 +18,10 @@
 static void
 setup_fields(mfields_base_t *flds_base)
 {
-  mfields_t flds;
-  psc_mfields_get_from(&flds, 0, 0, flds_base);
+  mfields_t *flds = psc_mfields_get_from(0, 0, flds_base);
 
   psc_foreach_patch(ppsc, p) {
-    fields_t *pf = &flds.f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
@@ -34,7 +33,7 @@ setup_fields(mfields_base_t *flds_base)
     } foreach_3d_g_end;
   }
 
-  psc_mfields_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 int

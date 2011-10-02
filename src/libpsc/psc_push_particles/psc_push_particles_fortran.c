@@ -15,8 +15,7 @@ psc_push_particles_fortran_push_xy(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -24,12 +23,12 @@ psc_push_particles_fortran_push_xy(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_xy(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_xy(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -43,8 +42,7 @@ psc_push_particles_fortran_push_xz(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -52,12 +50,12 @@ psc_push_particles_fortran_push_xz(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_xz(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_xz(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -71,8 +69,7 @@ psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -80,12 +77,12 @@ psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_yz(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_yz(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -99,8 +96,7 @@ psc_push_particles_fortran_push_xyz(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -108,12 +104,12 @@ psc_push_particles_fortran_push_xyz(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_xyz(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_xyz(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -127,8 +123,7 @@ psc_push_particles_fortran_push_z(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -136,12 +131,12 @@ psc_push_particles_fortran_push_z(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_z(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_z(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -155,8 +150,7 @@ psc_push_particles_fortran_push_yz_a(struct psc_push_particles *push,
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -164,12 +158,12 @@ psc_push_particles_fortran_push_yz_a(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_yz_a(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_yz_a(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -183,8 +177,7 @@ psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
   assert(ppsc->nr_patches = 1);
   mparticles_fortran_t particles;
   psc_mparticles_fortran_get_from(&particles, particles_base);
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, EX, EX + 6, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(EX, EX + 6, flds_base);
   
   static int pr;
   if (!pr) {
@@ -192,12 +185,12 @@ psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_yz_b(ppsc, p, &particles.p[p], &flds.f[p]);
+    PIC_push_part_yz_b(ppsc, p, &particles.p[p], &flds->f[p]);
   }
   prof_stop(pr);
 
   psc_mparticles_fortran_put_to(&particles, particles_base);
-  psc_mfields_fortran_put_to(&flds, JXI, JXI + 3, flds_base);
+  psc_mfields_fortran_put_to(flds, JXI, JXI + 3, flds_base);
 }
 
 // ======================================================================

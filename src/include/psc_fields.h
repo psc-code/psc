@@ -24,7 +24,8 @@
 									\
   void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
 				       struct mrc_domain *domain);	\
-  void psc_mfields_##type##_get_from(mfields_##type##_t *flds, int mb, int me, void *flds_base); \
+  mfields_##type##_t *							\
+  psc_mfields_##type##_get_from(int mb, int me, void *flds_base);	\
   void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
   void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
 				 mfields_##type##_t *xf);		\

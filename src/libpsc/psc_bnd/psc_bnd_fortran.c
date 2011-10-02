@@ -19,22 +19,21 @@ psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   }
   prof_start(pr);
 
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, mb, me, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
-      PIC_fax(&flds.f[0], m);
+      PIC_fax(&flds->f[0], m);
     }
     if (ppsc->domain.gdims[1] > 1) {
-      PIC_fay(&flds.f[0], m);
+      PIC_fay(&flds->f[0], m);
     }
     if (ppsc->domain.gdims[2] > 1) {
-      PIC_faz(&flds.f[0], m);
+      PIC_faz(&flds->f[0], m);
     }
   }
 
-  psc_mfields_fortran_put_to(&flds, mb, me, flds_base);
+  psc_mfields_fortran_put_to(flds, mb, me, flds_base);
 
   prof_stop(pr);
 }
@@ -54,22 +53,21 @@ psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   }
   prof_start(pr);
 
-  mfields_fortran_t flds;
-  psc_mfields_fortran_get_from(&flds, mb, me, flds_base);
+  mfields_fortran_t *flds = psc_mfields_fortran_get_from(mb, me, flds_base);
 
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
-      PIC_fex(&flds.f[0], m);
+      PIC_fex(&flds->f[0], m);
     }
     if (ppsc->domain.gdims[1] > 1) {
-      PIC_fey(&flds.f[0], m);
+      PIC_fey(&flds->f[0], m);
     }
     if (ppsc->domain.gdims[2] > 1) {
-      PIC_fez(&flds.f[0], m);
+      PIC_fez(&flds->f[0], m);
     }
   }
 
-  psc_mfields_fortran_put_to(&flds, mb, me, flds_base);
+  psc_mfields_fortran_put_to(flds, mb, me, flds_base);
 
   prof_stop(pr);
 }
