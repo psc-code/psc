@@ -34,8 +34,6 @@
   void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
   void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
 				      mfields_##type##_t *from, int mfrom); \
-  void psc_mfields_##type##_alloc(mfields_##type##_t *flds_comp);	\
-  void psc_mfields_##type##_free(mfields_##type##_t *flds);		\
   void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
   void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
   									\
