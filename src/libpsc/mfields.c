@@ -57,6 +57,23 @@ psc_mfields_##type##_axpy(mfields_##type##_t *yf, double alpha,		\
   psc_mfields_axpy((struct psc_mfields *) yf, alpha,			\
 		   (struct psc_mfields *) xf);				\
 }									\
+									\
+LIST_HEAD(psc_mfields_##type##_list);					\
+									\
+void									\
+psc_mfields_##type##_list_add(mfields_##type##_t **flds_p)		\
+{									\
+  psc_mfields_list_add(&psc_mfields_##type##_list,			\
+		       (struct psc_mfields **) flds_p);			\
+}									\
+									\
+void									\
+psc_mfields_##type##_list_del(mfields_##type##_t **flds_p)		\
+{									\
+  psc_mfields_list_del(&psc_mfields_##type##_list,			\
+		       (struct psc_mfields **) flds_p);			\
+}									\
+
 
 #define MAKE_MFIELDS_METHODS(type)					\
 									\
@@ -151,6 +168,30 @@ psc_mfields_axpy(struct psc_mfields *yf, double alpha,
   assert(ops == psc_mfields_ops(xf));
   assert(ops && ops->axpy);
   return ops->axpy(yf, alpha, xf);
+}
+
+// ======================================================================
+
+void
+psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p)
+{
+  struct psc_mfields_list_entry *p = malloc(sizeof(*p));
+  p->flds_p = flds_p;
+  list_add_tail(&p->entry, head);
+}
+
+void
+psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p)
+{
+  struct psc_mfields_list_entry *p;
+  __list_for_each_entry(p, head, entry, struct psc_mfields_list_entry) {
+    if (p->flds_p == flds_p) {
+      list_del(&p->entry);
+      free(p);
+      return;
+    }
+  }
+  assert(0);
 }
 
 // ======================================================================

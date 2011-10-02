@@ -244,33 +244,6 @@ _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 }
 
 // ======================================================================
-// psc_mfields_c_list
-
-LIST_HEAD(psc_mfields_c_list);
-
-void
-psc_mfields_c_list_add(mfields_c_t **flds_p)
-{
-  mfields_c_list_entry_t *p = malloc(sizeof(*p));
-  p->flds_p = flds_p;
-  list_add_tail(&p->entry, &psc_mfields_c_list);
-}
-
-void
-psc_mfields_c_list_del(mfields_c_t **flds_p)
-{
-  mfields_c_list_entry_t *p;
-  __list_for_each_entry(p, &psc_mfields_c_list, entry, mfields_c_list_entry_t) {
-    if (p->flds_p == flds_p) {
-      list_del(&p->entry);
-      free(p);
-      return;
-    }
-  }
-  assert(0);
-}
-
-// ======================================================================
 // psc_mfields_c
 
 static void

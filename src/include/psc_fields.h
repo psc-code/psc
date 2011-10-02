@@ -37,6 +37,14 @@ void psc_mfields_copy_comp(struct psc_mfields *to, int mto,
 void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
 		      struct psc_mfields *xf);
 
+struct psc_mfields_list_entry {
+  struct psc_mfields **flds_p;
+  list_t entry;
+};
+
+void psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p);
+void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
+
 // This type is replicated for each actual fields type, however,
 // the interface and implementation is always identical, hence 
 // created automatically for the variants using macros
