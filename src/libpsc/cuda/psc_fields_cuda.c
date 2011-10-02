@@ -34,26 +34,6 @@
 #endif
 
 static void
-fields_cuda_alloc(mfields_cuda_t *flds, int nr_comp)
-{
-  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
-
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
-    struct psc_patch *patch = &ppsc->patch[p];
-    for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -ppsc->ibn[d];
-      pf->im[d] = patch->ldims[d] + 2 * ppsc->ibn[d];
-    }
-
-    pf->nr_comp = nr_comp;
-    pf->name = calloc(nr_comp, sizeof(*pf->name));
-
-    __fields_cuda_alloc(pf);
-  }
-}
-
-static void
 fields_cuda_free(mfields_cuda_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
@@ -210,8 +190,12 @@ psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
   }
   prof_start(pr);
 
-  mfields_cuda_t *flds = calloc(1, sizeof(*flds));
-  fields_cuda_alloc(flds, 12);
+  mfields_cuda_t *flds = psc_mfields_cuda_create(psc_comm(ppsc));
+  psc_mfields_cuda_set_domain(flds, flds_base->domain);
+  psc_mfields_cuda_set_param_int(flds, "nr_fields", flds_base->nr_fields);
+  psc_mfields_cuda_set_param_int3(flds, "ibn", ppsc->ibn);
+  psc_mfields_cuda_setup(flds);
+
   psc_mfields_copy_cf_to_cuda(flds, mb, me, flds_base);
 
   prof_stop(pr);
@@ -230,8 +214,7 @@ psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   psc_mfields_copy_cf_from_cuda(flds, mb, me, flds_base);
-  fields_cuda_free(flds);
-  free(flds);
+  psc_mfields_cuda_destroy(flds);
 
   prof_stop(pr);
 }
@@ -287,7 +270,21 @@ psc_mfields_cuda_set_domain(mfields_cuda_t *flds, struct mrc_domain *domain)
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
-  fields_cuda_alloc(flds, flds->nr_fields);
+  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
+
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf = &flds->f[p];
+    struct psc_patch *patch = &ppsc->patch[p];
+    for (int d = 0; d < 3; d++) {
+      pf->ib[d] = -ppsc->ibn[d];
+      pf->im[d] = patch->ldims[d] + 2 * ppsc->ibn[d];
+    }
+
+    pf->name = calloc(flds->nr_fields, sizeof(*pf->name));
+    pf->nr_comp = flds->nr_fields;
+
+    __fields_cuda_alloc(pf);
+  }
 }
 
 static void
