@@ -24,6 +24,6 @@ PFX(set_constants)(particles_cuda_t *pp, fields_cuda_t *pf)
   check(cudaMemcpyToSymbol(d_ilg, pf->ib, sizeof(d_ilg)));
   real ilo[3] = { pf->ib[0] + ppsc->ibn[0], pf->ib[1] + ppsc->ibn[1], pf->ib[2] + ppsc->ibn[2] };
   check(cudaMemcpyToSymbol(d_ilo, ilo, sizeof(d_ilo)));
-  check(cudaMemcpyToSymbol(d_b_mx, pp->b_mx, sizeof(d_mx)));
+  check(cudaMemcpyToSymbol(d_b_mx, pp->b_mx, sizeof(d_b_mx)));
 }
 
