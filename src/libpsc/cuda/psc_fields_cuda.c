@@ -173,14 +173,6 @@ _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base
 // ======================================================================
 // psc_fields_cuda
 
-#define VAR(x) (void *)offsetof(struct psc_mfields_cuda, x)
-static struct param psc_mfields_cuda_descr[] = {
-  { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
-  { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
-  {},
-};
-#undef VAR
-
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
@@ -227,19 +219,6 @@ static void
 _psc_mfields_cuda_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
 {
 }
-
-static void
-psc_mfields_cuda_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mfields_cuda, &psc_mfields_cuda_ops);
-}
-
-struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
-  .name             = "psc_mfields_cuda",
-  .size             = sizeof(struct psc_mfields_cuda),
-  .init             = psc_mfields_cuda_init,
-  .param_descr      = psc_mfields_cuda_descr,
-};
 
 // ======================================================================
 // psc_mfields: subclass "cuda"

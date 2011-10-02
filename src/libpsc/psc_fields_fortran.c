@@ -227,27 +227,6 @@ _psc_mfields_fortran_destroy(mfields_fortran_t *flds)
   free(flds->data);
 }									
 									
-#define VAR(x) (void *)offsetof(struct psc_mfields, x)
-static struct param psc_mfields_descr[] = {
-  { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
-  { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
-  {},
-};
-#undef VAR
-
-static void
-psc_mfields_fortran_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mfields_fortran, &psc_mfields_fortran_ops);
-}
-
-struct mrc_class_psc_mfields_fortran mrc_class_psc_mfields_fortran = {
-  .name             = "psc_mfields_fortran",
-  .size             = sizeof(struct psc_mfields_fortran),
-  .init             = psc_mfields_fortran_init,
-  .param_descr      = psc_mfields_descr,
-};
-
 // ======================================================================
 // psc_mfields: subclass "fortran"
   

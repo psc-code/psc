@@ -19,7 +19,7 @@ psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   }
   prof_start(pr);
 
-  mfields_fortran_t *flds = psc_mfields_fortran_get_from(mb, me, flds_base);
+  mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, mb, me);
   fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, 0);
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
@@ -33,7 +33,7 @@ psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
     }
   }
 
-  psc_mfields_fortran_put_to(flds, mb, me, flds_base);
+  psc_mfields_put_fortran(flds, flds_base, mb, me);
 
   prof_stop(pr);
 }
@@ -53,7 +53,7 @@ psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   }
   prof_start(pr);
 
-  mfields_fortran_t *flds = psc_mfields_fortran_get_from(mb, me, flds_base);
+  mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, mb, me);
   fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, 0);
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
@@ -67,7 +67,7 @@ psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
     }
   }
 
-  psc_mfields_fortran_put_to(flds, mb, me, flds_base);
+  psc_mfields_put_fortran(flds, flds_base, mb, me);
 
   prof_stop(pr);
 }
