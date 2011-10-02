@@ -203,16 +203,6 @@ fields_c_scale(fields_c_t *pf, fields_c_real_t val)
 }
 
 void
-psc_mfields_c_free(mfields_c_t *flds)
-{
-  for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_free(&flds->f[p]);
-  }
-  free(flds->f);
-  flds->f = NULL;
-}
-
-void
 psc_mfields_c_zero(mfields_c_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
@@ -308,7 +298,10 @@ _psc_mfields_c_setup(mfields_c_t *flds)
 static void
 _psc_mfields_c_destroy(mfields_c_t *flds)
 {
-  psc_mfields_c_free(flds);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    fields_c_free(&flds->f[p]);
+  }
+  free(flds->f);
 }
 
 #ifdef HAVE_LIBHDF5_HL
