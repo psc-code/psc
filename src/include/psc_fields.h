@@ -105,16 +105,7 @@ void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds
   mfields_##type##_t *							\
   psc_mfields_##type##_get_from(int mb, int me, void *flds_base);	\
   void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-  void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
-  void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
-  									\
-  typedef struct {							\
-    mfields_##type##_t **flds_p;					\
-    list_t entry;							\
-  } mfields_##type##_list_entry_t;					\
-  									\
-  /* FIXME, should be per mrc_domain or sth, really */			\
-  extern list_t psc_mfields_##type##_list;				\
+
   
 
 #include "psc_fields_fortran.h"
