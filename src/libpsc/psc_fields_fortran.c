@@ -4,6 +4,7 @@
 #include "psc_glue.h"
 
 #include <mrc_profile.h>
+#include <mrc_params.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -69,24 +70,19 @@ fields_fortran_free(fields_fortran_t *pf)
   free(pf->flds);
 }
 
-#if FIELDS_BASE == FIELDS_FORTRAN
-
-void
-psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+struct psc_fields *
+psc_mfields_fortran_get_fortran(struct psc_fields *base, int mb, int me)
 {
-  mfields_base_t *flds_base = _flds_base;
-  *flds = *flds_base;
+  return base;
 }
 
 void
-psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_fortran_put_fortran(struct psc_fields *flds, struct psc_fields *base, int mb, int me)
 {
 }
-
-#elif FIELDS_BASE == FIELDS_C
 
 mfields_fortran_t *
-psc_mfields_fortran_get_from(int mb, int me, void *_flds_base)
+psc_mfields_c_get_fortran(int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {
@@ -119,7 +115,7 @@ psc_mfields_fortran_get_from(int mb, int me, void *_flds_base)
 }
 
 void
-psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+psc_mfields_c_put_fortran(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
 {
   static int pr;
   if (!pr) {
@@ -145,8 +141,6 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
 
   prof_stop(pr);
 }
-
-#endif
 
 void
 fields_fortran_zero(fields_fortran_t *pf, int m)
@@ -208,4 +202,60 @@ fields_fortran_scale(fields_fortran_t *pf, fields_fortran_real_t val)
     }
   }
 }
+
+static void
+_psc_mfields_fortran_setup(mfields_fortran_t *flds)
+{
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
+						     &flds->nr_patches);
+  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
+  for (int p = 0; p < flds->nr_patches; p++) {			
+    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
+    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
+		   patches[p].ldims[1] + flds->ibn[1],
+		   patches[p].ldims[2] + flds->ibn[2] };
+    fields_fortran_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);
+  }
+}
+
+static void
+_psc_mfields_fortran_destroy(mfields_fortran_t *flds)
+{
+  for (int p = 0; p < flds->nr_patches; p++) {
+    fields_fortran_free(&flds->f[p]);
+  }
+  free(flds->f);
+}									
+									
+#define VAR(x) (void *)offsetof(struct psc_mfields, x)
+static struct param psc_mfields_descr[] = {
+  { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
+  { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
+  {},
+};
+#undef VAR
+
+extern struct psc_mfields_fortran_ops psc_mfields_fortran_ops;
+
+static void
+psc_mfields_fortran_init()
+{
+  mrc_class_register_subclass(&mrc_class_psc_mfields_fortran, &psc_mfields_fortran_ops);
+}
+
+struct mrc_class_psc_mfields_fortran mrc_class_psc_mfields_fortran = {
+  .name             = "psc_mfields_fortran",
+  .size             = sizeof(struct psc_mfields_fortran),
+  .init             = psc_mfields_fortran_init,
+  .param_descr      = psc_mfields_descr,
+};
+
+// ======================================================================
+// psc_mfields: subclass "fortran"
+  
+struct psc_mfields_fortran_ops psc_mfields_fortran_ops = {
+  .name                  = "fortran",
+  .setup            = _psc_mfields_fortran_setup,
+  .destroy          = _psc_mfields_fortran_destroy,
+};
 

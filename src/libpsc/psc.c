@@ -797,6 +797,7 @@ psc_setup_fields(struct psc *psc)
   // create fields
   psc->flds = psc_mfields_base_create(mrc_domain_comm(psc->mrc_domain));
   psc_mfields_base_list_add(&psc->flds);
+  psc_mfields_base_set_type(psc->flds, s_fields_base);
   psc_mfields_base_set_name(psc->flds, "mfields");
   psc_mfields_base_set_domain(psc->flds, psc->mrc_domain);
   psc_mfields_base_set_param_int(psc->flds, "nr_fields", NR_FIELDS);

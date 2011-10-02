@@ -66,59 +66,44 @@ fields_c_free(fields_c_t *pf)
   free(pf->name);
 }
 
-#if FIELDS_BASE == FIELDS_C
-
-mfields_c_t *
-psc_mfields_c_get_from(int mb, int me, void *_flds_base)
+static struct psc_mfields *
+_psc_mfields_c_get_fortran(struct psc_mfields *flds_base, int mb, int me)
 {
-  mfields_base_t *flds_base = _flds_base;
-  return flds_base;
-}
-
-void
-psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
-{
-}
-
-#elif FIELDS_BASE == FIELDS_FORTRAN
-
-mfields_c_t *
-psc_mfields_c_get_from(int mb, int me, void *_flds_base)
-{
-  mfields_base_t *flds_base = _flds_base;
+  mfields_c_t *flds_c = (mfields_c_t *) flds_base;
 
   static int pr;
   if (!pr) {
-    pr = prof_register("fields_c_get", 1., 0, 0);
+    pr = prof_register("fields_fortran_get", 1., 0, 0);
   }
   prof_start(pr);
 
-  mfields_c_t *flds = psc_mfields_c_create(psc_comm(ppsc));
-  psc_mfields_c_set_type(flds, "c");
-  psc_mfields_c_set_domain(flds, flds_base->domain);
-  psc_mfields_c_set_param_int(flds, "nr_fields", flds_base->nr_fields);
-  psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
-  psc_mfields_c_setup(flds);
+  mfields_fortran_t *flds = psc_mfields_fortran_create(psc_comm(ppsc));
+  psc_mfields_fortran_set_type(flds, "fortran");
+  psc_mfields_fortran_set_domain(flds, flds_c->domain);
+  psc_mfields_fortran_set_param_int(flds, "nr_fields", flds_c->nr_fields);
+  psc_mfields_fortran_set_param_int3(flds, "ibn", ppsc->ibn);
+  psc_mfields_fortran_setup(flds);
 
   psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
+    fields_fortran_t *pf = &flds->f[p];
+    fields_c_t *pf_c = &flds_c->f[p];
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_C(pf, m, jx,jy,jz) = F3_FORTRAN(pf_base, m, jx,jy,jz);
+	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
 
   prof_stop(pr);
 
-  return flds;
+  return (struct psc_mfields *) flds;
 }
 
-void
-psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
+static void
+_psc_mfields_c_put_fortran(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me)
 {
-  mfields_base_t *flds_base = _flds_base;
+  mfields_fortran_t *flds_f = (mfields_fortran_t *) flds;
+  mfields_c_t *flds_c = (mfields_c_t *) flds_base;
 
   static int pr;
   if (!pr) {
@@ -127,21 +112,19 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
   prof_start(pr);
 
   psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = &flds->f[p];
-    fields_base_t *pf_base = &flds_base->f[p];
+    fields_fortran_t *pf = &flds_f->f[p];
+    fields_c_t *pf_c = &flds_c->f[p];
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_FORTRAN(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
+	F3_C(pf_c, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
   }
 
-  psc_mfields_c_destroy(flds);
+  psc_mfields_fortran_destroy(flds_f);
 
   prof_stop(pr);
 }
-
-#endif
 
 void
 fields_c_zero(fields_c_t *pf, int m)
@@ -241,6 +224,17 @@ _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
   for (int p = 0; p < to->nr_patches; p++) {
     fields_c_copy_comp(&to->f[p], mto, &from->f[p], mfrom);
   }
+}
+
+static struct psc_mfields *
+_psc_mfields_c_get_c(struct psc_mfields *base, int mb, int me)
+{
+  return base;
+}
+
+static void
+_psc_mfields_c_put_c(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
+{
 }
 
 // ======================================================================
@@ -395,12 +389,6 @@ struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
   .size             = sizeof(struct psc_mfields_c),
   .init             = psc_mfields_c_init,
   .param_descr      = psc_mfields_c_descr,
-  .setup            = _psc_mfields_c_setup,
-  .destroy          = _psc_mfields_c_destroy,
-#ifdef HAVE_LIBHDF5_HL
-  .write            = _psc_mfields_c_write,
-  .read             = _psc_mfields_c_read,
-#endif
 };
 
 // ======================================================================
@@ -408,10 +396,22 @@ struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
   
 struct psc_mfields_c_ops psc_mfields_c_ops = {
   .name                  = "c",
+  .setup                 = _psc_mfields_c_setup,
+  .destroy               = _psc_mfields_c_destroy,
+#ifdef HAVE_LIBHDF5_HL
+  .write                 = _psc_mfields_c_write,
+  .read                  = _psc_mfields_c_read,
+#endif
   .zero_comp             = _psc_mfields_c_zero_comp,
   .set_comp              = _psc_mfields_c_set_comp,
   .scale                 = _psc_mfields_c_scale,
   .copy_comp             = _psc_mfields_c_copy_comp,
   .axpy                  = _psc_mfields_c_axpy,
+  .get_c                 = _psc_mfields_c_get_c,
+  .put_c                 = _psc_mfields_c_put_c,
+  .get_fortran           = _psc_mfields_c_get_fortran,
+  .put_fortran           = _psc_mfields_c_put_fortran,
+  .get_cuda              = _psc_mfields_c_get_cuda,
+  .put_cuda              = _psc_mfields_c_put_cuda,
 };
 

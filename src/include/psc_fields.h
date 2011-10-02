@@ -25,6 +25,12 @@ struct psc_mfields_ops {
 		    struct psc_mfields *from, int mfrom);
   void (*axpy)(struct psc_mfields *yf, double alpha,
 	       struct psc_mfields *xf);
+  struct psc_mfields *(*get_c)(struct psc_mfields *base, int mb, int me);
+  struct psc_mfields *(*get_fortran)(struct psc_mfields *base, int mb, int me);
+  struct psc_mfields *(*get_cuda)(struct psc_mfields *base, int mb, int me);
+  void (*put_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*put_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*put_cuda)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me);
 };
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
@@ -36,6 +42,12 @@ void psc_mfields_copy_comp(struct psc_mfields *to, int mto,
 			   struct psc_mfields *from, int mfrom);
 void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
 		      struct psc_mfields *xf);
+struct psc_mfields *psc_mfields_get_c(struct psc_mfields *base, int mb, int me);
+struct psc_mfields *psc_mfields_get_fortran(struct psc_mfields *base, int mb, int me);
+struct psc_mfields *psc_mfields_get_cuda(struct psc_mfields *base, int mb, int me);
+void psc_mfields_put_c(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+void psc_mfields_put_fortran(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+void psc_mfields_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;
@@ -44,6 +56,9 @@ struct psc_mfields_list_entry {
 
 void psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p);
 void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
+
+struct psc_mfields *_psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me);
+void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me);
 
 // This type is replicated for each actual fields type, however,
 // the interface and implementation is always identical, hence 
@@ -70,6 +85,12 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 		      struct psc_mfields_##type *from, int mfrom);	\
     void (*axpy)(struct psc_mfields_##type *yf, double alpha,		\
 		 struct psc_mfields_##type *xf);			\
+    struct psc_mfields *(*get_c)(struct psc_mfields *flds_base, int mb, int me); \
+    struct psc_mfields *(*get_fortran)(struct psc_mfields *flds_base, int mb, int me); \
+    struct psc_mfields *(*get_cuda)(struct psc_mfields *flds_base, int mb, int me); \
+    void (*put_c)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me); \
+    void (*put_fortran)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me); \
+    void (*put_cuda)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me); \
   };									\
   									\
   void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
@@ -122,11 +143,13 @@ typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
 typedef mfields_fortran_list_entry_t mfields_base_list_entry_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_FORTRAN_REAL
+#define s_fields_base "fortran"
 
 #define psc_mfields_base_list           psc_mfields_fortran_list
 #define psc_mfields_base_list_add       psc_mfields_fortran_list_add
 #define psc_mfields_base_list_del       psc_mfields_fortran_list_del
 #define psc_mfields_base_create         psc_mfields_fortran_create
+#define psc_mfields_base_set_type       psc_mfields_fortran_set_type
 #define psc_mfields_base_set_name       psc_mfields_fortran_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_fortran_set_param_int
 #define psc_mfields_base_set_param_int3 psc_mfields_fortran_set_param_int3
@@ -149,11 +172,13 @@ typedef fields_c_real_t fields_base_real_t;
 typedef mfields_c_t mfields_base_t;
 typedef mfields_c_list_entry_t mfields_base_list_entry_t;
 #define MPI_FIELDS_BASE_REAL  MPI_FIELDS_C_REAL
+#define s_fields_base "c"
 
 #define psc_mfields_base_list           psc_mfields_c_list
 #define psc_mfields_base_list_add       psc_mfields_c_list_add
 #define psc_mfields_base_list_del       psc_mfields_c_list_del
 #define psc_mfields_base_create         psc_mfields_c_create
+#define psc_mfields_base_set_type       psc_mfields_c_set_type
 #define psc_mfields_base_set_name       psc_mfields_c_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_c_set_param_int
 #define psc_mfields_base_set_param_int3 psc_mfields_c_set_param_int3
@@ -189,13 +214,14 @@ typedef fields_cuda_t fields_base_t;
 typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
 typedef mfields_cuda_list_entry_t mfields_base_list_entry_t;
-
 #define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
+#define s_fields_base "cuda"
 
 #define psc_mfields_base_list           psc_mfields_cuda_list
 #define psc_mfields_base_list_add       psc_mfields_cuda_list_add
 #define psc_mfields_base_list_del       psc_mfields_cuda_list_del
 #define psc_mfields_base_create         psc_mfields_cuda_create
+#define psc_mfields_base_set_type       psc_mfields_cuda_set_type
 #define psc_mfields_base_set_name       psc_mfields_cuda_set_name
 #define psc_mfields_base_set_param_int  psc_mfields_cuda_set_param_int
 #define psc_mfields_base_set_param_int3 psc_mfields_cuda_set_param_int3

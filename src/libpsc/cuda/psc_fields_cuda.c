@@ -82,26 +82,12 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
   }
 }
 
-#if FIELDS_BASE == FIELDS_CUDA
-
-mfields_cuda_t *
-psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
-{
-  mfields_base_t *flds_base = _flds_base;
-  return flds_base;
-}
-
-void
-psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
-{
-}
-
 static bool __gotten;
 
-mfields_c_t *
-psc_mfields_c_get_from(int mb, int me, void *_flds_base)
+static struct psc_mfields *
+_psc_mfields_cuda_get_c(struct psc_mfields *_flds_base, int mb, int me)
 {
-  mfields_cuda_t *flds_base = _flds_base;
+  mfields_cuda_t *flds_base = (mfields_cuda_t *) _flds_base;
 
   assert(!__gotten);
   __gotten = true;
@@ -122,11 +108,11 @@ psc_mfields_c_get_from(int mb, int me, void *_flds_base)
 
   prof_stop(pr);
 
-  return flds;
+  return (struct psc_mfields *) flds;
 }
 
-void
-psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
+static void
+_psc_mfields_cuda_put_c(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me)
 {
   assert(__gotten);
   __gotten = false;
@@ -137,37 +123,17 @@ psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
   }
   prof_start(pr);
 
-  mfields_cuda_t *flds_base = _flds_base;
-<<<<<<< HEAD
-  psc_mfields_copy_cf_to_cuda(flds_base, mb, me, flds);
-  psc_mfields_c_free(flds);
-  free(flds);
-=======
-  psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
-  psc_mfields_c_destroy(flds);
->>>>>>> 630cd2b... psc/mfields: get rid of psc_mfields_alloc, use psc_mfields_create
+  mfields_cuda_t *flds_base = (mfields_cuda_t *) _flds_base;
+  psc_mfields_copy_cf_to_cuda(flds_base, mb, me, (mfields_c_t *) flds);
+  psc_mfields_c_destroy((mfields_c_t *) flds);
 
   prof_stop(pr);
 }
 
-mfields_fortran_t *
-psc_mfields_fortran_get_from(int mb, int me, void *_flds_base)
+struct psc_mfields *
+_psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me)
 {
-  assert(0);
-}
-
-void
-psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
-{
-  assert(0);
-}
-
-#elif FIELDS_BASE == FIELDS_C
-
-mfields_cuda_t *
-psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
-{
-  mfields_base_t *flds_base = _flds_base;
+  mfields_c_t *flds_base = (mfields_c_t *) _flds_base;
   static int pr;
   if (!pr) {
     pr = prof_register("fields_cuda_get", 1., 0, 0);
@@ -184,26 +150,24 @@ psc_mfields_cuda_get_from(int mb, int me, void *_flds_base)
 
   prof_stop(pr);
 
-  return flds;
+  return (struct psc_mfields *) flds;
 }
 
 void
-psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
+_psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me)
 {
-  mfields_base_t *flds_base = _flds_base;
+  mfields_c_t *flds_base = (mfields_c_t *) _flds_base;
   static int pr;
   if (!pr) {
     pr = prof_register("fields_cuda_put", 1., 0, 0);
   }
   prof_start(pr);
 
-  psc_mfields_copy_cf_from_cuda(flds, mb, me, flds_base);
-  psc_mfields_cuda_destroy(flds);
+  psc_mfields_copy_cf_from_cuda((mfields_cuda_t *) flds, mb, me, flds_base);
+  psc_mfields_cuda_destroy((mfields_cuda_t *) flds);
 
   prof_stop(pr);
 }
-
-#endif
 
 // ======================================================================
 // psc_fields_cuda
@@ -252,11 +216,43 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
   free(flds->f);
 }
 
+static struct psc_mfields *
+_psc_mfields_cuda_get_cuda(struct psc_mfields *base, int mb, int me)
+{
+  return base;
+}
+
+static void
+_psc_mfields_cuda_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
+{
+}
+
+extern struct psc_mfields_cuda_ops psc_mfields_cuda_ops;
+
+static void
+psc_mfields_cuda_init()
+{
+  mrc_class_register_subclass(&mrc_class_psc_mfields_cuda, &psc_mfields_cuda_ops);
+}
+
 struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
   .name             = "psc_mfields_cuda",
   .size             = sizeof(struct psc_mfields_cuda),
+  .init             = psc_mfields_cuda_init,
   .param_descr      = psc_mfields_cuda_descr,
-  .setup            = _psc_mfields_cuda_setup,
-  .destroy          = _psc_mfields_cuda_destroy,
 };
+
+// ======================================================================
+// psc_mfields: subclass "cuda"
+  
+struct psc_mfields_cuda_ops psc_mfields_cuda_ops = {
+  .name                  = "cuda",
+  .setup                 = _psc_mfields_cuda_setup,
+  .destroy               = _psc_mfields_cuda_destroy,
+  .get_c                 = _psc_mfields_cuda_get_c,
+  .put_c                 = _psc_mfields_cuda_put_c,
+  .get_cuda              = _psc_mfields_cuda_get_cuda,
+  .put_cuda              = _psc_mfields_cuda_put_cuda,
+};
+
 
