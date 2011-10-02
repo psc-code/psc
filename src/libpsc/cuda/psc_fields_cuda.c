@@ -279,36 +279,6 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
   free(flds->f);
 }
 
-void
-psc_mfields_cuda_axpy(mfields_cuda_t *yf, fields_cuda_real_t alpha, mfields_cuda_t *xf)
-{
-  for (int p = 0; p < yf->nr_patches; p++) {
-    assert(0);
-    //    fields_cuda_axpy(&yf->f[p], alpha, &xf->f[p]);
-  }
-}
-
-void
-psc_mfields_cuda_scale(mfields_cuda_t *yf, fields_cuda_real_t alpha)
-{
-  for (int p = 0; p < yf->nr_patches; p++) {
-    assert(0);
-    //    fields_cuda_scale(&yf->f[p], alpha);
-  }
-}
-
-void
-psc_mfields_cuda_set_comp(mfields_cuda_t *yf, int m, fields_cuda_real_t alpha)
-{
-  assert(0);
-}
-
-void
-psc_mfields_cuda_copy_comp(mfields_cuda_t *to, int mto, mfields_cuda_t *from, int mfrom)
-{
-  assert(0);
-}
-
 struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
   .name             = "psc_mfields_cuda",
   .size             = sizeof(struct psc_mfields_cuda),

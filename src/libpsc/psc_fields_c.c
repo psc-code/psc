@@ -204,39 +204,39 @@ fields_c_scale(fields_c_t *pf, fields_c_real_t val)
 }
 
 static void
-_psc_mfields_c_zero(mfields_c_t *flds, int m)
+_psc_mfields_c_zero_comp(mfields_c_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     fields_c_zero(&flds->f[p], m);
   }
 }
 
-void
-psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
+static void
+_psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     fields_c_axpy(&yf->f[p], alpha, &xf->f[p]);
   }
 }
 
-void
-psc_mfields_c_scale(mfields_c_t *yf, fields_c_real_t alpha)
+static void
+_psc_mfields_c_scale(mfields_c_t *yf, double alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     fields_c_scale(&yf->f[p], alpha);
   }
 }
 
-void
-psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
+static void
+_psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     fields_c_set(&yf->f[p], m, alpha);
   }
 }
 
-void
-psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
+static void
+_psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 {
   for (int p = 0; p < to->nr_patches; p++) {
     fields_c_copy_comp(&to->f[p], mto, &from->f[p], mfrom);
@@ -435,6 +435,10 @@ struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
   
 struct psc_mfields_c_ops psc_mfields_c_ops = {
   .name                  = "c",
-  .zero_comp             = _psc_mfields_c_zero,
+  .zero_comp             = _psc_mfields_c_zero_comp,
+  .set_comp              = _psc_mfields_c_set_comp,
+  .scale                 = _psc_mfields_c_scale,
+  .copy_comp             = _psc_mfields_c_copy_comp,
+  .axpy                  = _psc_mfields_c_axpy,
 };
 

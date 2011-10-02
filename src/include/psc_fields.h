@@ -5,6 +5,38 @@
 // ----------------------------------------------------------------------
 // mfields type
 
+struct psc_mfields {
+  struct mrc_obj obj;
+  void *f;
+  int nr_patches;
+  struct mrc_domain *domain;
+  int nr_fields;
+  int ibn[3];
+};
+
+MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
+
+struct psc_mfields_ops {
+  MRC_SUBCLASS_OPS(struct psc_mfields);
+  void (*zero_comp)(struct psc_mfields *, int m);
+  void (*set_comp)(struct psc_mfields *, int m, double alpha);
+  void (*scale)(struct psc_mfields *, double alpha);
+  void (*copy_comp)(struct psc_mfields *to, int mto,
+		    struct psc_mfields *from, int mfrom);
+  void (*axpy)(struct psc_mfields *yf, double alpha,
+	       struct psc_mfields *xf);
+};
+
+void psc_mfields_set_domain(struct psc_mfields *flds,
+			    struct mrc_domain *domain);
+void psc_mfields_zero(struct psc_mfields *flds, int m);
+void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);
+void psc_mfields_scale(struct psc_mfields *flds, double alpha);
+void psc_mfields_copy_comp(struct psc_mfields *to, int mto,
+			   struct psc_mfields *from, int mfrom);
+void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
+		      struct psc_mfields *xf);
+
 // This type is replicated for each actual fields type, however,
 // the interface and implementation is always identical, hence 
 // created automatically for the variants using macros
@@ -24,20 +56,26 @@
   struct psc_mfields_##type##_ops {					\
     MRC_SUBCLASS_OPS(struct psc_mfields_##type);			\
     void (*zero_comp)(struct psc_mfields_##type *, int m);		\
+    void (*set_comp)(struct psc_mfields_##type *, int m, double alpha);	\
+    void (*scale)(struct psc_mfields_##type *, double alpha);		\
+    void (*copy_comp)(struct psc_mfields_##type *to, int mto,		\
+		      struct psc_mfields_##type *from, int mfrom);	\
+    void (*axpy)(struct psc_mfields_##type *yf, double alpha,		\
+		 struct psc_mfields_##type *xf);			\
   };									\
   									\
   void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
 				       struct mrc_domain *domain);	\
   void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
+  void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, double alpha); \
+  void psc_mfields_##type##_scale(mfields_##type##_t *yf, double alpha); \
+  void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
+				      mfields_##type##_t *from, int mfrom); \
+  void psc_mfields_##type##_axpy(mfields_##type##_t *yf, double alpha, \
+				 mfields_##type##_t *xf);		\
   mfields_##type##_t *							\
   psc_mfields_##type##_get_from(int mb, int me, void *flds_base);	\
   void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
-  void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
-				 mfields_##type##_t *xf);		\
-  void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
-  void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
-  void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
-				      mfields_##type##_t *from, int mfrom); \
   void psc_mfields_##type##_list_add(mfields_##type##_t **flds_p);	\
   void psc_mfields_##type##_list_del(mfields_##type##_t **flds_p);	\
   									\

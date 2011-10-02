@@ -21,21 +21,41 @@ void									\
 psc_mfields_##type##_set_domain(mfields_##type##_t *flds,		\
 				struct mrc_domain *domain)		\
 {									\
-  flds->domain = domain;						\
-}									\
-									\
-static inline struct psc_mfields_##type##_ops *				\
-to_##type##_ops(mfields_##type##_t *flds)				\
-{									\
-  return (struct psc_mfields_##type##_ops *) flds->obj.ops;		\
+  psc_mfields_set_domain((struct psc_mfields *) flds, domain);		\
 }									\
 									\
 void									\
 psc_mfields_##type##_zero(mfields_##type##_t *flds, int m)		\
 {									\
-  struct psc_mfields_##type##_ops *ops = to_##type##_ops(flds);		\
-  assert(ops && ops->zero_comp);					\
-  return ops->zero_comp(flds, m);					\
+  psc_mfields_zero((struct psc_mfields *) flds, m);			\
+}									\
+									\
+void									\
+psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, double alpha) \
+{									\
+  psc_mfields_set_comp((struct psc_mfields *) flds, m, alpha);		\
+}									\
+ 									\
+void									\
+psc_mfields_##type##_scale(mfields_##type##_t *flds, double alpha)	\
+{									\
+  psc_mfields_scale((struct psc_mfields *) flds, alpha);		\
+}									\
+									\
+void									\
+psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,		\
+			       mfields_##type##_t *from, int mfrom)	\
+{									\
+  psc_mfields_copy_comp((struct psc_mfields *) to, mto,			\
+			(struct psc_mfields *) from, mfrom);		\
+}									\
+									\
+void									\
+psc_mfields_##type##_axpy(mfields_##type##_t *yf, double alpha,		\
+			  mfields_##type##_t *xf)			\
+{									\
+  psc_mfields_axpy((struct psc_mfields *) yf, alpha,			\
+		   (struct psc_mfields *) xf);				\
 }									\
 
 #define MAKE_MFIELDS_METHODS(type)					\
@@ -67,22 +87,85 @@ _psc_mfields_##type##_destroy(mfields_##type##_t *flds)		        \
 struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
   .name             = "psc_mfields_" #type,				\
   .size             = sizeof(struct psc_mfields_##type),		\
-  .init             = psc_mfields_##type##_init,			\
   .param_descr      = psc_mfields_descr,				\
   .setup            = _psc_mfields_##type##_setup,			\
   .destroy          = _psc_mfields_##type##_destroy,			\
 };
 
 __MAKE_MFIELDS_METHODS(c)
-
-static void
-psc_mfields_fortran_init()
-{
-}
-
 __MAKE_MFIELDS_METHODS(fortran)
 __MAKE_MFIELDS_METHODS(cuda)
 
 MAKE_MFIELDS_METHODS(fortran)
 //MAKE_MFIELDS_METHODS(sse2)
+
+// ======================================================================
+
+#define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
+
+void
+psc_mfields_set_domain(struct psc_mfields *flds, struct mrc_domain *domain)
+{
+  flds->domain = domain;
+}
+
+void
+psc_mfields_zero(struct psc_mfields *flds, int m)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
+  assert(ops && ops->zero_comp);
+  return ops->zero_comp(flds, m);
+}
+
+void
+psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
+  assert(ops && ops->set_comp);
+  return ops->set_comp(flds, m, alpha);
+}
+
+void
+psc_mfields_scale(struct psc_mfields *flds, double alpha)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
+  assert(ops && ops->scale);
+  return ops->scale(flds, alpha);
+}
+
+void
+psc_mfields_copy_comp(struct psc_mfields *to, int mto,
+		      struct psc_mfields *from, int mfrom)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(to);
+  assert(ops == psc_mfields_ops(from));
+  assert(ops && ops->copy_comp);
+  return ops->copy_comp(to, mto, from, mfrom);
+}
+
+void
+psc_mfields_axpy(struct psc_mfields *yf, double alpha,
+		 struct psc_mfields *xf)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(yf);
+  assert(ops == psc_mfields_ops(xf));
+  assert(ops && ops->axpy);
+  return ops->axpy(yf, alpha, xf);
+}
+
+// ======================================================================
+
+static void
+psc_mfields_init()
+{
+}
+
+struct mrc_class_psc_mfields mrc_class_psc_mfields = {
+  .name             = "psc_mfields",
+  .size             = sizeof(struct psc_mfields),
+  .init             = psc_mfields_init,
+  .param_descr      = psc_mfields_descr,
+  //  .setup            = _psc_mfields_setup,
+  //  .destroy          = _psc_mfields_destroy,
+};
 
