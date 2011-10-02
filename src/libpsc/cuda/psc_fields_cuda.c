@@ -33,23 +33,6 @@
 
 #endif
 
-static void
-fields_cuda_free(mfields_cuda_t *flds)
-{
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
-    __fields_cuda_free(pf);
-    
-    for (int m = 0; m < pf->nr_comp; m++) {
-      free(pf->name[m]);
-    }
-    free(pf->name);
-  }
-  
-  free(flds->f);
-  flds->f = NULL;
-}
-
 #include "psc_fields_as_c.h"
 
 void
@@ -290,7 +273,17 @@ _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 static void
 _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
 {
-  fields_cuda_free(flds);
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf = &flds->f[p];
+    __fields_cuda_free(pf);
+    
+    for (int m = 0; m < pf->nr_comp; m++) {
+      free(pf->name[m]);
+    }
+    free(pf->name);
+  }
+  
+  free(flds->f);
 }
 
 void
