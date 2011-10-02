@@ -13,7 +13,7 @@ void __psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me
 
 // ======================================================================
 
-typedef fields_base_real_t creal;
+typedef fields_c_real_t creal;
 
 static void
 do_c_calc_densities(int p, fields_t *pf, particles_t *pp,

@@ -187,8 +187,6 @@ extern list_t psc_mfields_base_list;
 
 #if FIELDS_BASE == FIELDS_FORTRAN
 
-typedef fields_fortran_t fields_base_t;
-typedef fields_fortran_real_t fields_base_real_t;
 typedef mfields_fortran_t mfields_base_t;
 #define s_fields_base "fortran"
 
@@ -196,8 +194,6 @@ typedef mfields_fortran_t mfields_base_t;
 
 #include "psc_fields_c.h"
 
-typedef fields_c_t fields_base_t;
-typedef fields_c_real_t fields_base_real_t;
 typedef struct psc_mfields mfields_base_t;
 #define s_fields_base "c"
 
@@ -205,16 +201,12 @@ typedef struct psc_mfields mfields_base_t;
 
 #include "psc_fields_sse2.h"
 
-typedef fields_sse2_t fields_base_t;
-typedef fields_sse2_real_t fields_base_real_t;
 typedef mfields_sse2_t mfields_base_t;
 
 #elif FIELDS_BASE == FIELDS_CUDA
 
 #include "psc_fields_cuda.h"
 
-typedef fields_cuda_t fields_base_t;
-typedef fields_cuda_real_t fields_base_real_t;
 typedef mfields_cuda_t mfields_base_t;
 #define s_fields_base "cuda"
 

@@ -394,7 +394,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     int *ib = pf_new->ib;
     void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
     void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
-    memcpy(addr_new, addr_old, size * sizeof(fields_base_real_t));
+    memcpy(addr_new, addr_old, size * sizeof(fields_real_t));
   }
 
   MPI_Waitall(nr_patches_old, send_reqs, MPI_STATUSES_IGNORE);
