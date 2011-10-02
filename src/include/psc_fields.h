@@ -185,29 +185,23 @@ extern list_t psc_mfields_base_list;
 // ----------------------------------------------------------------------
 // base fields type
 
+typedef struct psc_mfields mfields_base_t;
+
 #if FIELDS_BASE == FIELDS_FORTRAN
 
-typedef mfields_fortran_t mfields_base_t;
 #define s_fields_base "fortran"
 
 #elif FIELDS_BASE == FIELDS_C
 
-#include "psc_fields_c.h"
-
-typedef struct psc_mfields mfields_base_t;
 #define s_fields_base "c"
 
 #elif FIELDS_BASE == FIELDS_SSE2
 
 #include "psc_fields_sse2.h"
 
-typedef mfields_sse2_t mfields_base_t;
-
 #elif FIELDS_BASE == FIELDS_CUDA
 
 #include "psc_fields_cuda.h"
-
-typedef mfields_cuda_t mfields_base_t;
 #define s_fields_base "cuda"
 
 #else
