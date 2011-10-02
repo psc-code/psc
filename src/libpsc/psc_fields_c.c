@@ -94,6 +94,7 @@ psc_mfields_c_get_from(int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_c_t *flds = psc_mfields_c_create(psc_comm(ppsc));
+  psc_mfields_c_set_type(flds, "c");
   psc_mfields_c_set_domain(flds, flds_base->domain);
   psc_mfields_c_set_param_int(flds, "nr_fields", flds_base->nr_fields);
   psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
@@ -202,8 +203,8 @@ fields_c_scale(fields_c_t *pf, fields_c_real_t val)
   }
 }
 
-void
-psc_mfields_c_zero(mfields_c_t *flds, int m)
+static void
+_psc_mfields_c_zero(mfields_c_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     fields_c_zero(&flds->f[p], m);
@@ -271,14 +272,6 @@ psc_mfields_c_list_del(mfields_c_t **flds_p)
 
 // ======================================================================
 // psc_mfields_c
-
-LIST_HEAD(mfields_c_list);
-
-void
-psc_mfields_c_set_domain(mfields_c_t *flds, struct mrc_domain *domain)
-{
-  flds->domain = domain;
-}
 
 static void
 _psc_mfields_c_setup(mfields_c_t *flds)
@@ -416,9 +409,18 @@ static struct param psc_mfields_c_descr[] = {
 };
 #undef VAR
 
+extern struct psc_mfields_c_ops psc_mfields_c_ops;
+
+static void
+psc_mfields_c_init()
+{
+  mrc_class_register_subclass(&mrc_class_psc_mfields_c, &psc_mfields_c_ops);
+}
+
 struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
   .name             = "psc_mfields_c",
   .size             = sizeof(struct psc_mfields_c),
+  .init             = psc_mfields_c_init,
   .param_descr      = psc_mfields_c_descr,
   .setup            = _psc_mfields_c_setup,
   .destroy          = _psc_mfields_c_destroy,
@@ -426,5 +428,13 @@ struct mrc_class_psc_mfields_c mrc_class_psc_mfields_c = {
   .write            = _psc_mfields_c_write,
   .read             = _psc_mfields_c_read,
 #endif
+};
+
+// ======================================================================
+// psc_mfields: subclass "c"
+  
+struct psc_mfields_c_ops psc_mfields_c_ops = {
+  .name                  = "c",
+  .zero_comp             = _psc_mfields_c_zero,
 };
 

@@ -15,9 +15,7 @@ static struct param psc_mfields_descr[] = {
 
 #undef VAR
 
-#define MAKE_MFIELDS_METHODS(type)					\
-									\
-LIST_HEAD(mfields_##type##_list);					\
+#define __MAKE_MFIELDS_METHODS(type)					\
 									\
 void									\
 psc_mfields_##type##_set_domain(mfields_##type##_t *flds,		\
@@ -25,6 +23,22 @@ psc_mfields_##type##_set_domain(mfields_##type##_t *flds,		\
 {									\
   flds->domain = domain;						\
 }									\
+									\
+static inline struct psc_mfields_##type##_ops *				\
+to_##type##_ops(mfields_##type##_t *flds)				\
+{									\
+  return (struct psc_mfields_##type##_ops *) flds->obj.ops;		\
+}									\
+									\
+void									\
+psc_mfields_##type##_zero(mfields_##type##_t *flds, int m)		\
+{									\
+  struct psc_mfields_##type##_ops *ops = to_##type##_ops(flds);		\
+  assert(ops && ops->zero_comp);					\
+  return ops->zero_comp(flds, m);					\
+}									\
+
+#define MAKE_MFIELDS_METHODS(type)					\
 									\
 static void								\
 _psc_mfields_##type##_setup(mfields_##type##_t *flds)			\
@@ -53,10 +67,21 @@ _psc_mfields_##type##_destroy(mfields_##type##_t *flds)		        \
 struct mrc_class_psc_mfields_##type mrc_class_psc_mfields_##type = {	\
   .name             = "psc_mfields_" #type,				\
   .size             = sizeof(struct psc_mfields_##type),		\
+  .init             = psc_mfields_##type##_init,			\
   .param_descr      = psc_mfields_descr,				\
   .setup            = _psc_mfields_##type##_setup,			\
   .destroy          = _psc_mfields_##type##_destroy,			\
 };
+
+__MAKE_MFIELDS_METHODS(c)
+
+static void
+psc_mfields_fortran_init()
+{
+}
+
+__MAKE_MFIELDS_METHODS(fortran)
+__MAKE_MFIELDS_METHODS(cuda)
 
 MAKE_MFIELDS_METHODS(fortran)
 //MAKE_MFIELDS_METHODS(sse2)

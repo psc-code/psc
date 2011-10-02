@@ -10,7 +10,6 @@
 // created automatically for the variants using macros
 
 #define DECLARE_MFIELDS_METHODS(type)					\
-  									\
   typedef struct psc_mfields_##type {				        \
     struct mrc_obj obj;							\
     fields_##type##_t *f;						\
@@ -22,15 +21,20 @@
   									\
   MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
 									\
+  struct psc_mfields_##type##_ops {					\
+    MRC_SUBCLASS_OPS(struct psc_mfields_##type);			\
+    void (*zero_comp)(struct psc_mfields_##type *, int m);		\
+  };									\
+  									\
   void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
 				       struct mrc_domain *domain);	\
+  void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
   mfields_##type##_t *							\
   psc_mfields_##type##_get_from(int mb, int me, void *flds_base);	\
   void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
   void psc_mfields_##type##_axpy(mfields_##type##_t *yf, fields_##type##_real_t alpha, \
 				 mfields_##type##_t *xf);		\
   void psc_mfields_##type##_scale(mfields_##type##_t *yf, fields_##type##_real_t alpha); \
-  void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
   void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, fields_##type##_real_t alpha); \
   void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
 				      mfields_##type##_t *from, int mfrom); \

@@ -113,6 +113,7 @@ psc_mfields_c_get_from(int mb, int me, void *_flds_base)
   prof_start(pr);
 
   mfields_c_t *flds = psc_mfields_c_create(psc_comm(ppsc));
+  psc_mfields_c_set_type(flds, "c");
   psc_mfields_c_set_domain(flds, flds_base->domain);
   psc_mfields_c_set_param_int(flds, "nr_fields", flds_base->nr_fields);
   psc_mfields_c_set_param_int3(flds, "ibn", ppsc->ibn);
@@ -234,8 +235,6 @@ psc_mfields_cuda_list_del(mfields_cuda_t **flds_p)
 // ======================================================================
 // psc_fields_cuda
 
-LIST_HEAD(mfields_cuda_list);
-
 #define VAR(x) (void *)offsetof(struct psc_mfields_cuda, x)
 static struct param psc_mfields_cuda_descr[] = {
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
@@ -243,12 +242,6 @@ static struct param psc_mfields_cuda_descr[] = {
   {},
 };
 #undef VAR
-
-void
-psc_mfields_cuda_set_domain(mfields_cuda_t *flds, struct mrc_domain *domain)
-{
-  flds->domain = domain;
-}
 
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
