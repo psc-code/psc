@@ -252,12 +252,12 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
   struct psc_fields_list *pfd = &out_c->pfd;
   for (int i = 0; i < pfd->nr_flds; i++) {
     psc_mfields_list_del(&psc_mfields_base_list, &pfd->flds[i]);
-    psc_mfields_c_destroy(pfd->flds[i]);
+    psc_mfields_destroy(pfd->flds[i]);
   }
   struct psc_fields_list *tfd = &out_c->tfd;
   for (int i = 0; i < tfd->nr_flds; i++) {
     psc_mfields_list_del(&psc_mfields_base_list, &tfd->flds[i]);
-    psc_mfields_c_destroy(tfd->flds[i]);
+    psc_mfields_destroy(tfd->flds[i]);
   }
 
   psc_output_format_destroy(out_c->format);
@@ -294,12 +294,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
     struct output_field *of = find_output_field(p);
-    mfields_c_t *flds = psc_mfields_c_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_c_set_type(flds, "c");
-    psc_mfields_c_set_domain(flds, psc->mrc_domain);
-    psc_mfields_c_set_param_int(flds, "nr_fields", of->nr_comp);
-    psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
-    psc_mfields_c_setup(flds);
+    mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_set_type(flds, "c");
+    psc_mfields_set_domain(flds, psc->mrc_domain);
+    psc_mfields_set_param_int(flds, "nr_fields", of->nr_comp);
+    psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
+    psc_mfields_setup(flds);
     out_c->out_flds[pfd->nr_flds] = of;
     pfd->flds[pfd->nr_flds] = flds;
     // FIXME, should be del'd eventually
@@ -319,12 +319,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->nr_patches > 0);
-    mfields_c_t *flds = psc_mfields_c_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_c_set_type(flds, "c");
-    psc_mfields_c_set_domain(flds, psc->mrc_domain);
-    psc_mfields_c_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
-    psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
-    psc_mfields_c_setup(flds);
+    mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
+    psc_mfields_set_type(flds, "c");
+    psc_mfields_set_domain(flds, psc->mrc_domain);
+    psc_mfields_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
+    psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
+    psc_mfields_setup(flds);
     tfd->flds[i] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &tfd->flds[i]);
@@ -392,12 +392,12 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
   for (int i = 0; i < list_in->nr_flds; i++) {
     mfields_c_t *flds_in = list_in->flds[i];
     for (int m = 0; m < flds_in->nr_fields; m++) {
-      mfields_c_t *flds = psc_mfields_c_create(psc_comm(psc));
-      psc_mfields_c_set_type(flds, "c");
-      psc_mfields_c_set_domain(flds, psc->mrc_domain);
-      psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
-      psc_mfields_c_setup(flds);
-      psc_mfields_c_copy_comp(flds, 0, flds_in, m);
+      mfields_c_t *flds = psc_mfields_create(psc_comm(psc));
+      psc_mfields_set_type(flds, "c");
+      psc_mfields_set_domain(flds, psc->mrc_domain);
+      psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
+      psc_mfields_setup(flds);
+      psc_mfields_copy_comp(flds, 0, flds_in, m);
       list->flds[list->nr_flds++] = flds;
       psc_foreach_patch(psc, p) {
 	psc_mfields_get_patch(flds, p)->name[0] = strdup(psc_mfields_get_patch(flds_in, p)->name[m]);
@@ -413,7 +413,7 @@ static void
 free_fields_list(struct psc *psc, struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    psc_mfields_c_destroy(list->flds[m]);
+    psc_mfields_destroy(list->flds[m]);
   }
 }
 
@@ -454,7 +454,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if (out_c->dowrite_tfield) {
     // tfd += pfd
     for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-      psc_mfields_c_axpy(out_c->tfd.flds[m], 1., out_c->pfd.flds[m]);
+      psc_mfields_axpy(out_c->tfd.flds[m], 1., out_c->pfd.flds[m]);
     }
     out_c->naccum++;
     if (psc->timestep >= out_c->tfield_next) {
@@ -462,7 +462,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
       // convert accumulated values to correct temporal mean
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
-	psc_mfields_c_scale(out_c->tfd.flds[m], 1. / out_c->naccum);
+	psc_mfields_scale(out_c->tfd.flds[m], 1. / out_c->naccum);
       }
 
       struct psc_fields_list flds_list;
@@ -471,7 +471,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       free_fields_list(psc, &flds_list);
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	for (int mm = 0; mm < out_c->tfd.flds[m]->nr_fields; mm++) {
-	  psc_mfields_c_zero(out_c->tfd.flds[m], mm);
+	  psc_mfields_zero(out_c->tfd.flds[m], mm);
 	}
       }
       out_c->naccum = 0;

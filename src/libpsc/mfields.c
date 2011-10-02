@@ -15,63 +15,6 @@ static struct param psc_mfields_descr[] = {
 
 #define __MAKE_MFIELDS_METHODS(type)					\
 									\
-void									\
-psc_mfields_##type##_set_domain(mfields_##type##_t *flds,		\
-				struct mrc_domain *domain)		\
-{									\
-  psc_mfields_set_domain((struct psc_mfields *) flds, domain);		\
-}									\
-									\
-void									\
-psc_mfields_##type##_zero(mfields_##type##_t *flds, int m)		\
-{									\
-  psc_mfields_zero((struct psc_mfields *) flds, m);			\
-}									\
-									\
-void									\
-psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, double alpha) \
-{									\
-  psc_mfields_set_comp((struct psc_mfields *) flds, m, alpha);		\
-}									\
- 									\
-void									\
-psc_mfields_##type##_scale(mfields_##type##_t *flds, double alpha)	\
-{									\
-  psc_mfields_scale((struct psc_mfields *) flds, alpha);		\
-}									\
-									\
-void									\
-psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,		\
-			       mfields_##type##_t *from, int mfrom)	\
-{									\
-  psc_mfields_copy_comp((struct psc_mfields *) to, mto,			\
-			(struct psc_mfields *) from, mfrom);		\
-}									\
-									\
-void									\
-psc_mfields_##type##_axpy(mfields_##type##_t *yf, double alpha,		\
-			  mfields_##type##_t *xf)			\
-{									\
-  psc_mfields_axpy((struct psc_mfields *) yf, alpha,			\
-		   (struct psc_mfields *) xf);				\
-}									\
-									\
-LIST_HEAD(psc_mfields_##type##_list);					\
-									\
-void									\
-psc_mfields_##type##_list_add(mfields_##type##_t **flds_p)		\
-{									\
-  psc_mfields_list_add(&psc_mfields_##type##_list,			\
-		       (struct psc_mfields **) flds_p);			\
-}									\
-									\
-void									\
-psc_mfields_##type##_list_del(mfields_##type##_t **flds_p)		\
-{									\
-  psc_mfields_list_del(&psc_mfields_##type##_list,			\
-		       (struct psc_mfields **) flds_p);			\
-}									\
-									\
 mfields_##type##_t *							\
 psc_mfields_##type##_get_from(int mb, int me, void *_flds_base)		\
 {									\

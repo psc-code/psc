@@ -65,14 +65,15 @@ void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds
 // created automatically for the variants using macros
 
 #define DECLARE_MFIELDS_METHODS(type)					\
-  typedef struct psc_mfields_##type {				        \
+  struct psc_mfields_##type {						\
     struct mrc_obj obj;							\
     fields_##type##_t *xf;						\
     int nr_patches;							\
     struct mrc_domain *domain;						\
     int nr_fields;							\
     int ibn[3];								\
-  } mfields_##type##_t;							\
+  };									\
+  typedef struct psc_mfields mfields_##type##_t;			\
   									\
   MRC_CLASS_DECLARE(psc_mfields_##type, struct psc_mfields_##type);	\
 									\
@@ -93,15 +94,6 @@ void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds
     void (*put_cuda)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me); \
   };									\
   									\
-  void psc_mfields_##type##_set_domain(mfields_##type##_t *flds,	\
-				       struct mrc_domain *domain);	\
-  void psc_mfields_##type##_zero(mfields_##type##_t *flds, int m);	\
-  void psc_mfields_##type##_set_comp(mfields_##type##_t *flds, int m, double alpha); \
-  void psc_mfields_##type##_scale(mfields_##type##_t *yf, double alpha); \
-  void psc_mfields_##type##_copy_comp(mfields_##type##_t *to, int mto,	\
-				      mfields_##type##_t *from, int mfrom); \
-  void psc_mfields_##type##_axpy(mfields_##type##_t *yf, double alpha, \
-				 mfields_##type##_t *xf);		\
   mfields_##type##_t *							\
   psc_mfields_##type##_get_from(int mb, int me, void *flds_base);	\
   void psc_mfields_##type##_put_to(mfields_##type##_t *pf, int mb, int me, void *flds_base); \
@@ -126,9 +118,9 @@ DECLARE_MFIELDS_METHODS(cuda)
 
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
-extern struct psc_mfields_c_ops psc_mfields_c_ops;
-extern struct psc_mfields_fortran_ops psc_mfields_fortran_ops;
-extern struct psc_mfields_cuda_ops psc_mfields_cuda_ops;
+extern struct psc_mfields_ops psc_mfields_c_ops;
+extern struct psc_mfields_ops psc_mfields_fortran_ops;
+extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 static inline fields_c_t *
 psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
@@ -137,23 +129,11 @@ psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
   return ((fields_c_t *)flds->data) + p;
 }
 
-static inline fields_c_t *
-psc_mfields_c_get_patch_c(struct psc_mfields_c *flds, int p)
-{
-  return psc_mfields_get_patch_c((struct psc_mfields *) flds, p);
-}
-
 static inline fields_fortran_t *
 psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
 {
   assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_fortran_ops);
   return ((fields_fortran_t *)flds->data) + p;
-}
-
-static inline fields_fortran_t *
-psc_mfields_fortran_get_patch_fortran(struct psc_mfields_fortran *flds, int p)
-{
-  return psc_mfields_get_patch_fortran((struct psc_mfields *) flds, p);
 }
 
 #ifdef USE_CUDA
@@ -164,11 +144,6 @@ psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
   return ((fields_cuda_t *)flds->data) + p;
 }
 
-static inline fields_cuda_t *
-psc_mfields_cuda_get_patch_cuda(struct psc_mfields_cuda *flds, int p)
-{
-  return psc_mfields_get_patch_cuda((struct psc_mfields *) flds, p);
-}
 #endif
 
 extern list_t psc_mfields_base_list;

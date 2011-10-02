@@ -40,7 +40,7 @@ write_fields_combine(struct psc_fields_list *list,
   psc_foreach_patch(ppsc, p) {
     for (int m = 0; m < list->nr_flds; m++) {
       int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-      fields_c_real_t *s_data = &F3_C(psc_mfields_c_get_patch_c(list->flds[m], p), 0,
+      fields_c_real_t *s_data = &F3_C(psc_mfields_get_patch_c(list->flds[m], p), 0,
 				      -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]);
       
       for (int d = 0; d < 3; d++) {
@@ -55,12 +55,12 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
 	MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
 	MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-	unsigned int sz = fields_c_size(psc_mfields_c_get_patch_c(list->flds[m], p));
+	unsigned int sz = fields_c_size(psc_mfields_get_patch_c(list->flds[m], p));
 	MPI_Send(s_data, sz, MPI_FIELDS_C_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
 	fields_c_t fld;
 	fields_c_alloc(&fld, (int []) { 0, 0, 0}, ppsc->domain.gdims, 1);
-	fld.name[0] = strdup(psc_mfields_c_get_patch_c(list->flds[m], p)->name[0]);
+	fld.name[0] = strdup(psc_mfields_get_patch_c(list->flds[m], p)->name[0]);
 	
 	for (int n = 0; n < size; n++) {
 	  int ilo[3], ihi[3], ilg[3], img[3];

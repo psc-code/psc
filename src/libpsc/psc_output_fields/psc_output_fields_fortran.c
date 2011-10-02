@@ -20,7 +20,7 @@ psc_output_fields_fortran_run(struct psc_output_fields *out,
   prof_start(pr);
   mfields_fortran_t *flds = psc_mfields_fortran_get_from(NE, HZ + 1, flds_base);
 
-  fields_fortran_t *pf = psc_mfields_fortran_get_patch_fortran(flds, 0);
+  fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, 0);
   OUT_field(pf);
 
   psc_mfields_fortran_put_to(flds, EX, HZ + 1, flds_base);

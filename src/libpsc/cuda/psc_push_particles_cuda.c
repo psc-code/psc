@@ -32,7 +32,7 @@ psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
     yz_a_set_constants(pp, pf);
     __cuda_push_part_yz_a(pp, pf);
   }
@@ -61,7 +61,7 @@ psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
 #if PUSH_PART_B == 2
     yz_set_constants(pp, pf);
 #else
@@ -113,7 +113,7 @@ cuda_push_part(mparticles_base_t *particles_base,
   
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
 
     set_constants(pp, pf);
 
@@ -134,7 +134,7 @@ cuda_push_part(mparticles_base_t *particles_base,
 
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
 
     set_constants(pp, pf);
     prof_start(pr3);
@@ -188,7 +188,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
   
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
 
     set_constants(pp, pf);
 
@@ -220,7 +220,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
 
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = &particles.p[p];
-    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
 
     set_constants(pp, pf);
     prof_start(pr3);
