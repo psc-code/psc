@@ -383,21 +383,19 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
 {
   // the only thing this still does is to flatten
   // the list so that it only contains 1-component entries
+  // FIXME, slow and unnec
 
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
     mfields_c_t *flds_in = list_in->flds[i];
     for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
-      mfields_c_t *flds = calloc(1, sizeof(*flds));
+      mfields_c_t *flds = psc_mfields_c_create(psc_comm(psc));
+      psc_mfields_c_set_domain(flds, psc->mrc_domain);
+      psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
+      psc_mfields_c_setup(flds);
+      psc_mfields_c_copy_comp(flds, 0, flds_in, m);
       list->flds[list->nr_flds++] = flds;
-      flds->f = calloc(psc->nr_patches, sizeof(*flds->f));
       psc_foreach_patch(psc, p) {
-	int ilg[3] = { -psc->ibn[0], -psc->ibn[1], -psc->ibn[2] };
-	int ihg[3] = { psc->patch[p].ldims[0] + psc->ibn[0],
-		       psc->patch[p].ldims[1] + psc->ibn[1],
-		       psc->patch[p].ldims[2] + psc->ibn[2] };
-	fields_c_alloc_with_array(&flds->f[p], ilg, ihg, 1,
-				  &F3(&flds_in->f[p],m, -psc->ibn[0], -psc->ibn[1], -psc->ibn[2]));
 	flds->f[p].name[0] = strdup(flds_in->f[p].name[m]);
       }
     }
@@ -411,8 +409,7 @@ static void
 free_fields_list(struct psc *psc, struct psc_fields_list *list)
 {
   for (int m = 0; m < list->nr_flds; m++) {
-    psc_mfields_c_free(list->flds[m]);
-    free(list->flds[m]);
+    psc_mfields_c_destroy(list->flds[m]);
   }
 }
 
