@@ -68,7 +68,7 @@ typedef struct psc_mfields mfields_fortran_t;
 static inline fields_fortran_t *
 psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
 {
-  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_fortran_ops);
+  assert(psc_mfields_ops(flds) == &psc_mfields_fortran_ops);
   return ((fields_fortran_t *)flds->data) + p;
 }
 
@@ -77,7 +77,7 @@ typedef struct psc_mfields mfields_c_t;
 static inline fields_c_t *
 psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
 {
-  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_c_ops);
+  assert(psc_mfields_ops(flds) == &psc_mfields_c_ops);
   return ((fields_c_t *)flds->data) + p;
 }
 
@@ -92,7 +92,7 @@ typedef struct psc_mfields mfields_cuda_t;
 static inline fields_cuda_t *
 psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
 {
-  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_cuda_ops);
+  assert(psc_mfields_ops(flds) == &psc_mfields_cuda_ops);
   return ((fields_cuda_t *)flds->data) + p;
 }
 #endif
