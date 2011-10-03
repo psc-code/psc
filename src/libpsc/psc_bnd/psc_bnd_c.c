@@ -74,7 +74,7 @@ copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *c
   }
 }
 
-struct mrc_ddc_funcs ddc_funcs = {
+static struct mrc_ddc_funcs ddc_funcs = {
   .copy_to_buf   = copy_to_buf,
   .copy_from_buf = copy_from_buf,
   .add_from_buf  = add_from_buf,
