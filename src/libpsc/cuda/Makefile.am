@@ -18,6 +18,7 @@ libsubdir_la_LIBADD = \
 	cuda_find_indices.lo \
 	cuda_sort.lo \
 	cuda_exchange_particles.lo \
+	cuda_bnd.lo \
 	cuda_push_fields_yz.lo \
 	cuda_push_part_yz_a.lo \
 	cuda_push_part_yz_b.lo \

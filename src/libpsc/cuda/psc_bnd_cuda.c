@@ -10,6 +10,9 @@
 #include <mrc_profile.h>
 #include <string.h>
 
+// FIXME header
+EXTERN_C void cuda_fill_ghosts(int p, fields_cuda_t *pf, int mb, int me);
+
 struct psc_bnd_cuda {
   struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
@@ -216,23 +219,21 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
 static void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   check_domain(bnd);
 
-  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
+  assert(ppsc->nr_patches == 1);
+  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("c_fill_ghosts", 1., 0, 0);
+    pr = prof_register("cuda_fill_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-  // FIXME
-  // I don't think we need as many points, and only stencil star
-  // rather then box
-  mrc_ddc_fill_ghosts(bnd_cuda->ddc, mb, me, flds);
+  cuda_fill_ghosts(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+  //  mrc_ddc_fill_ghosts(bnd_cuda->ddc, mb, me, flds);
   prof_stop(pr);
 
-  psc_mfields_put_cf(flds, flds_base, mb, me);
+  psc_mfields_put_cuda(flds, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -240,6 +241,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
 //
 // calculate bounds of local patch, and global domain
 
+#if 0
 static void
 calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
 		   double xgb[3], double xge[3], double xgl[3])
@@ -284,6 +286,7 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
     xge[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
   }
 }
+#endif
 
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_exchange_particles
