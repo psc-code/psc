@@ -12,6 +12,7 @@
 
 // FIXME header
 EXTERN_C void cuda_fill_ghosts(int p, fields_cuda_t *pf, int mb, int me);
+EXTERN_C void cuda_add_ghosts(int p, fields_cuda_t *pf, int mb, int me);
 
 struct psc_bnd_cuda {
   struct mrc_ddc *ddc;
@@ -190,27 +191,23 @@ check_domain(struct psc_bnd *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_add_ghosts
 
-void
-__psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me)
-{
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
-  check_domain(bnd);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_add_ghosts", 1., 0, 0);
-  }
-  prof_start(pr);
-  mrc_ddc_add_ghosts(bnd_cuda->ddc, mb, me, flds);
-  prof_stop(pr);
-}
-
 static void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
-  __psc_bnd_cuda_add_ghosts(bnd, flds, mb, me);
-  psc_mfields_put_cf(flds, flds_base, mb, me);
+  check_domain(bnd);
+
+  assert(ppsc->nr_patches == 1);
+  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_add_ghosts", 1., 0, 0);
+  }
+  prof_start(pr);
+  cuda_add_ghosts(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+  prof_stop(pr);
+
+  psc_mfields_put_cuda(flds, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -230,7 +227,6 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
   }
   prof_start(pr);
   cuda_fill_ghosts(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
-  //  mrc_ddc_fill_ghosts(bnd_cuda->ddc, mb, me, flds);
   prof_stop(pr);
 
   psc_mfields_put_cuda(flds, flds_base, mb, me);
