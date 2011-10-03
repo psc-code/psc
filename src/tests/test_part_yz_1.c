@@ -58,9 +58,9 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
     creal u = (xi - patch->xb[0]) * dxi;
     creal v = (yi - patch->xb[1]) * dyi;
     creal w = (zi - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_nint(u);
-    int j2 = particle_base_real_nint(v);
-    int j3 = particle_base_real_nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -160,9 +160,9 @@ do_calc_rho_1st(struct psc *psc, int p, particles_t *pp,
     creal u = (xi - patch->xb[0]) * dxi;
     creal v = (yi - patch->xb[1]) * dyi;
     creal w = (zi - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_fint(u);
-    int j2 = particle_base_real_fint(v);
-    int j3 = particle_base_real_fint(w);
+    int j1 = particle_real_fint(u);
+    int j2 = particle_real_fint(v);
+    int j3 = particle_real_fint(w);
     creal h1 = u-j1;
     creal h2 = v-j2;
     creal h3 = w-j3;

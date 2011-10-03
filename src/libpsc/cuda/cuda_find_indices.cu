@@ -76,7 +76,7 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
       (h_xi4[i].z - patch->xb[2]) * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {
-      pos[d] = particle_base_real_fint(xi[d]);
+      pos[d] = particle_cuda_real_fint(xi[d]);
     }
     
     int idx = (((pos[2] / 8) * (patch->ldims[1] / 8) + (pos[1] / 8)) << 6) |

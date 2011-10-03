@@ -391,20 +391,6 @@ void psc_setup_fortran(struct psc *psc);
 int psc_main(int *argc, char ***argv, struct psc_ops *type);
 
 
-// FIXME, only used for one thing, could be consolidated?
-
-static inline int
-particle_base_real_nint(particle_base_real_t x)
-{
-  return (int)(x + 10.5f) - 10;
-}
-
-static inline int
-particle_base_real_fint(particle_base_real_t x)
-{
-  return (int)(x + 10.f) - 10;
-}
-
 // ----------------------------------------------------------------------
 // cell_map
 

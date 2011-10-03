@@ -372,9 +372,9 @@ do_c_calc_photon_n(int p, fields_t *pf, photons_t *photons)
     creal u = (p->x[0] - patch->xb[0]) * dxi;
     creal v = (p->x[1] - patch->xb[1]) * dyi;
     creal w = (p->x[2] - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_nint(u);
-    int j2 = particle_base_real_nint(v);
-    int j3 = particle_base_real_nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;

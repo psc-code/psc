@@ -29,6 +29,18 @@ typedef struct {
 EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
 EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
 
+static inline int
+particle_cuda_real_nint(particle_cuda_real_t x)
+{
+  return (int)(x + 10.5f) - 10;
+}
+
+static inline int
+particle_cuda_real_fint(particle_cuda_real_t x)
+{
+  return (int)(x + 10.f) - 10;
+}
+
 #define BLOCKSIZE_X 1
 #define BLOCKSIZE_Y 4
 #define BLOCKSIZE_Z 4
