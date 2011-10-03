@@ -56,8 +56,6 @@ DECLARE_MPARTICLES_METHODS(cuda)
 
 typedef mparticles_fortran_t mparticles_base_t;
 
-#define particles_base_realloc particles_fortran_realloc
-#define particles_base_get_one particles_fortran_get_one
 #define psc_mparticles_base_create  psc_mparticles_fortran_create
 #define psc_mparticles_base_set_name  psc_mparticles_fortran_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_fortran_set_domain_nr_particles
@@ -70,8 +68,6 @@ typedef mparticles_fortran_t mparticles_base_t;
 
 typedef mparticles_c_t mparticles_base_t;
 
-#define particles_base_realloc particles_c_realloc
-#define particles_base_get_one particles_c_get_one
 #define psc_mparticles_base_create  psc_mparticles_c_create
 #define psc_mparticles_base_set_name  psc_mparticles_c_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_c_set_domain_nr_particles
@@ -84,8 +80,6 @@ typedef mparticles_c_t mparticles_base_t;
 
 typedef mparticles_sse2_t mparticles_base_t;
 
-#define particles_base_realloc particles_sse2_realloc
-#define particles_base_get_one particles_sse2_get_one
 #define psc_mparticles_base_create  psc_mparticles_sse2_create
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_sse2_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_sse2_setup
@@ -97,8 +91,6 @@ typedef mparticles_sse2_t mparticles_base_t;
 
 typedef mparticles_cuda_t mparticles_base_t;
 
-#define particles_base_realloc particles_cuda_realloc
-#define particles_base_get_one particles_cuda_get_one
 #define psc_mparticles_base_create  psc_mparticles_cuda_create
 #define psc_mparticles_base_set_name  psc_mparticles_cuda_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cuda_set_domain_nr_particles
@@ -111,8 +103,6 @@ typedef mparticles_cuda_t mparticles_base_t;
 
 typedef mparticles_cbe_t mparticles_base_t;
 
-#define particles_base_realloc particles_cbe_realloc
-#define particles_base_get_one particles_cbe_get_one
 #define psc_mparticles_base_create  psc_mparticles_cbe_create
 #define psc_mparticles_base_set_name  psc_mparticles_cbe_set_name
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cbe_set_domain_nr_particles
