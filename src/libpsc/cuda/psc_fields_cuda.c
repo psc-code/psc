@@ -96,8 +96,6 @@ _psc_mfields_cuda_setup(mfields_cuda_t *flds)
       pf->ib[d] = -ppsc->ibn[d];
       pf->im[d] = patch->ldims[d] + 2 * ppsc->ibn[d];
     }
-
-    pf->name = calloc(flds->nr_fields, sizeof(*pf->name));
     pf->nr_comp = flds->nr_fields;
 
     __fields_cuda_alloc(pf);
@@ -110,11 +108,6 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
     __fields_cuda_free(pf);
-    
-    for (int m = 0; m < pf->nr_comp; m++) {
-      free(pf->name[m]);
-    }
-    free(pf->name);
   }
   
   free(flds->data);

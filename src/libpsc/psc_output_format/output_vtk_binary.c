@@ -99,7 +99,7 @@ vtk_write_field_binary(void *ctx, mfields_c_t *flds, struct psc_output_fields_c 
   fields_c_t *fld = psc_mfields_get_patch_c(flds, 0);
   int *ilo = out->rn, *ihi = out->rx;
 	
-  fprintf(file, "SCALARS %s float\n", fld->name[0]);
+  fprintf(file, "SCALARS %s float\n", flds->name[0]);
   fprintf(file, "LOOKUP_TABLE default\n");
 //	fprintf(file, "rnx=%d rny=%d rnz=%d\n", ilo[0], ilo[1], ilo[2]);
 //	fprintf(file, "rxx=%d ryx=%d rzx=%d\n", ihi[0], ihi[1], ihi[2]);

@@ -13,7 +13,6 @@ typedef struct {
   fields_cuda_real_t *d_flds;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
-  char **name; //> name for each component
 } fields_cuda_t;
 
 // ----------------------------------------------------------------------

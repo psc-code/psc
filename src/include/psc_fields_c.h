@@ -15,7 +15,6 @@ typedef struct {
   fields_c_real_t *flds;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
-  char **name; //> name for each component
 } fields_c_t;
 
 #define F3_OFF_C(pf, fldnr, jx,jy,jz)					\

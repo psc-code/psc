@@ -30,13 +30,19 @@ copy_to_global(fields_c_real_t *fld, fields_c_real_t *buf,
 
 void
 write_fields_combine(struct psc_fields_list *list, 
-		     void (*write_field)(void *ctx, fields_c_t *fld), void *ctx)
+		     void (*write_field)(void *ctx, mfields_c_t *fld), void *ctx)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &size);
 
+  struct mrc_domain *domain = NULL;
+  if (rank == 0) {
+    domain = mrc_domain_create(MPI_COMM_SELF);
+    mrc_domain_setup(domain);
+    mrc_domain_set_param_int3(domain, "m", ppsc->domain.gdims);
+  }
   psc_foreach_patch(ppsc, p) {
     for (int m = 0; m < list->nr_flds; m++) {
       int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
@@ -58,9 +64,14 @@ write_fields_combine(struct psc_fields_list *list,
 	unsigned int sz = fields_c_size(psc_mfields_get_patch_c(list->flds[m], p));
 	MPI_Send(s_data, sz, MPI_FIELDS_C_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
-	fields_c_t fld;
-	fields_c_alloc(&fld, (int []) { 0, 0, 0}, ppsc->domain.gdims, 1);
-	fld.name[0] = strdup(psc_mfields_get_patch_c(list->flds[m], p)->name[0]);
+	mfields_c_t *fld = psc_mfields_create(MPI_COMM_SELF);
+	psc_mfields_set_type(fld, "c");
+	psc_mfields_set_domain(fld, domain);
+	psc_mfields_setup(fld);
+
+	fld->name[0] = strdup(list->flds[m]->name[0]);
+
+	fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
 	
 	for (int n = 0; n < size; n++) {
 	  int ilo[3], ihi[3], ilg[3], img[3];
@@ -86,15 +97,18 @@ write_fields_combine(struct psc_fields_list *list,
 	  }
 	  /* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	  /*        ihi[0], ihi[1], ihi[2]); */
-	  copy_to_global(&F3_C(&fld, 0, 0,0,0), buf, ilo, ihi, ilg, img);
+	  copy_to_global(&F3_C(pf, 0, 0,0,0), buf, ilo, ihi, ilg, img);
 	  if (n != 0) {
 	    free(buf);
 	  }
 	}
-	write_field(ctx, &fld);
-	fields_c_free(&fld);
+	write_field(ctx, fld);
+	psc_mfields_destroy(fld);
       }
     }
+  }
+  if (rank == 0) {
+    mrc_domain_destroy(domain);
   }
 }
 

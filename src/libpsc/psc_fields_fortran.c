@@ -11,7 +11,6 @@ void
 fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
 {
   pf->flds = calloc(nr_comp, sizeof(*pf->flds));
-  pf->name = calloc(nr_comp, sizeof(*pf->name));
 
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -35,10 +34,6 @@ fields_fortran_free(fields_fortran_t *pf)
   for (int i = 0; i < pf->nr_comp; i++) {
     pf->flds[i] = NULL;
   }
-  for (int m = 0; m < pf->nr_comp; m++) {
-    free(pf->name[m]);
-  }
-  free(pf->name);
   free(pf->flds);
 }
 

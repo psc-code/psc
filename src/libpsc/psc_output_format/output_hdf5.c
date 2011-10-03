@@ -46,13 +46,14 @@ hdf5_close(struct hdf5_ctx *hdf5)
 }
 
 static void
-hdf5_write_field(void *ctx, fields_c_t *fld)
+hdf5_write_field(void *ctx, mfields_c_t *fld)
 {
   struct psc_patch *patch = &ppsc->patch[0];
   struct hdf5_ctx *hdf5 = ctx;
 
   hid_t mem_type;
-  if (sizeof(*fld->flds) == 4) { // FIXME
+  fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
+  if (sizeof(*pf->flds) == 4) { // FIXME
     mem_type = H5T_NATIVE_FLOAT;
   } else {
     mem_type = H5T_NATIVE_DOUBLE;
@@ -62,14 +63,14 @@ hdf5_write_field(void *ctx, fields_c_t *fld)
   int ie[3];
   for (int d = 0; d < 3; d++) {
     // reverse dimensions because of Fortran order
-    mem_dims[d] = fld->im[2-d];
-    ie[d] = fld->ib[d] + fld->im[d];
+    mem_dims[d] = pf->im[2-d];
+    ie[d] = pf->ib[d] + pf->im[d];
   }
   hid_t mem_space = H5Screate_simple(3, mem_dims, NULL);
   
-  if (fld->im[0] == patch->ldims[0] + 2 * ppsc->ibn[0] &&
-      fld->im[1] == patch->ldims[1] + 2 * ppsc->ibn[1] &&
-      fld->im[2] == patch->ldims[2] + 2 * ppsc->ibn[2]) {
+  if (pf->im[0] == patch->ldims[0] + 2 * ppsc->ibn[0] &&
+      pf->im[1] == patch->ldims[1] + 2 * ppsc->ibn[1] &&
+      pf->im[2] == patch->ldims[2] + 2 * ppsc->ibn[2]) {
     // we're writing the local field, let's drop the ghost points
     hsize_t start[3], count[3];
     for (int d = 0; d < 3; d++) {
@@ -91,12 +92,12 @@ hdf5_write_field(void *ctx, fields_c_t *fld)
   H5Sclose(file_space);
   
   H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT,
-	   &F3_C(fld, 0, fld->ib[0], fld->ib[1], fld->ib[2]));
+	   &F3_C(pf, 0, pf->ib[0], pf->ib[1], pf->ib[2]));
   H5Sclose(mem_space);
   
   H5Dclose(dataset);
 
-  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "lo", fld->ib, 3);
+  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "lo", pf->ib, 3);
   H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "hi", ie, 3);
 }
 
@@ -178,12 +179,12 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 	for (int m = 0; m < list->nr_flds; m++) {
 	  fld = psc_mfields_get_patch_c(list->flds[m], 0);
 	  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
-		  fld->name[0]);
+		  list->flds[m]->name[0]);
 	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
 		  im[2], im[1], im[0]);
 	  int proc = (kz * np[1] + ky) * np[0] + kx;
 	  fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
-		  pfx, proc, ppsc->timestep, fld->name[0]);
+		  pfx, proc, ppsc->timestep, list->flds[m]->name[0]);
 	  fprintf(f, "       </DataItem>\n");
 	  fprintf(f, "     </Attribute>\n");
 	}
@@ -246,7 +247,7 @@ psc_output_format_xdmf_write_fields(struct psc_output_format *format,
   hdf5_open(out, list, filename, &hdf5);
 
   for (int m = 0; m < list->nr_flds; m++) {
-    hdf5_write_field(&hdf5, psc_mfields_get_patch_c(list->flds[m], 0));
+    hdf5_write_field(&hdf5, list->flds[m]);
   }
   hdf5_close(&hdf5);
 

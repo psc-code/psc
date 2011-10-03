@@ -53,18 +53,19 @@ vtk_write_coordinates(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field(void *ctx, fields_c_t *fld)
+vtk_write_field(void *ctx, mfields_c_t *fld)
 {
   FILE *file = ctx;
 
-  int *ib = fld->ib, *im = fld->im;
   fprintf(file, "SCALARS %s float\n", fld->name[0]);
   fprintf(file, "LOOKUP_TABLE default\n");
 
+  fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
+  int *ib = pf->ib, *im = pf->im;
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
       for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
-	float val = F3_C(fld, 0, ix,iy,iz);
+	float val = F3_C(pf, 0, ix,iy,iz);
 	if (fabsf(val) < 1e-37) {
 	  fprintf(file, "%g ", 0.);
 	} else {

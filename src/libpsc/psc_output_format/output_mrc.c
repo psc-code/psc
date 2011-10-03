@@ -98,11 +98,11 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
     // FIXME, 3 doesn't work -- how about 0?
     struct mrc_m3 *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_m3_set_name(mrc_fld, fld->name[0]);
+    mrc_m3_set_name(mrc_fld, flds->name[0]);
     mrc_m3_set_param_int(mrc_fld, "sw", 2);
     mrc_m3_setup(mrc_fld);
     // FIXME, there should be a little function for this
-    mrc_fld->name[0] = strdup(fld->name[0]);
+    mrc_fld->name[0] = strdup(flds->name[0]);
     copy_to_mrc_fld(mrc_fld, flds);
 
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {

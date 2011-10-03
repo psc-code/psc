@@ -305,10 +305,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &pfd->flds[pfd->nr_flds]);
     pfd->nr_flds++;
-    psc_foreach_patch(psc, pp) {
-      for (int m = 0; m < of->nr_comp; m++) {
-	psc_mfields_get_patch(flds, pp)->name[m] = strdup(of->fld_names[m]);
-      }
+    for (int m = 0; m < of->nr_comp; m++) {
+      flds->name[m] = strdup(of->fld_names[m]);
     }
   }
   free(s_orig);
@@ -328,11 +326,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     tfd->flds[i] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &tfd->flds[i]);
-    psc_foreach_patch(psc, pp) {
-      for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
-	psc_mfields_get_patch(flds, pp)->name[m] = 
-	  strdup(psc_mfields_get_patch(pfd->flds[i], pp)->name[m]);
-      }
+    for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
+      flds->name[m] = strdup(pfd->flds[i]->name[m]);
     }
   }
   out_c->naccum = 0;
@@ -399,9 +394,7 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
       psc_mfields_setup(flds);
       psc_mfields_copy_comp(flds, 0, flds_in, m);
       list->flds[list->nr_flds++] = flds;
-      psc_foreach_patch(psc, p) {
-	psc_mfields_get_patch(flds, p)->name[0] = strdup(psc_mfields_get_patch(flds_in, p)->name[m]);
-      }
+      flds->name[0] = strdup(flds_in->name[m]);
     }
   }
 }

@@ -11,7 +11,6 @@ typedef struct {
   fields_fortran_real_t **flds;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
-  char **name; //> name for each component
 } fields_fortran_t;
 
 #define F3_OFF_FORTRAN(pf, jx,jy,jz)			\
