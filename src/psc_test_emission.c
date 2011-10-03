@@ -3,6 +3,7 @@
 #include <psc_push_fields.h>
 #include <psc_push_particles.h>
 #include <psc_bnd.h>
+#include <psc_particles_as_c.h>
 
 #include <mrc_params.h>
 
@@ -77,13 +78,16 @@ psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
 static void
 psc_event_generator_emission(struct psc *psc)
 {
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, psc->particles);
+
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
-    particles_base_t *pp = &psc->particles->p[p];
+    particles_t *pp = &particles.p[p];
     photons_t *photons = &psc->mphotons->p[p];
     // and iterative over all particles in the array
     for (int n = 0; n < pp->n_part; n++) {
-      particle_base_t *part = particles_base_get_one(pp, n);
+      particle_t *part = particles_get_one(pp, n);
 
       if (part->qni >= 0. || part->pxi < 1.5) {
 	continue;
@@ -103,6 +107,7 @@ psc_event_generator_emission(struct psc *psc)
       }
     }
   }
+  psc_mparticles_put_to(&particles, psc->particles);
 }
 
 static void

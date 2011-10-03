@@ -3,6 +3,8 @@
 #include "psc_push_particles.h"
 #include "psc_bnd.h"
 #include "psc_sort.h"
+#include "psc_particles_as_c.h"
+
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -28,9 +30,12 @@ static void
 add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi,
 	     double qni, double mni)
 {
-  particles_base_t *pp = &ppsc->particles->p[0];
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, ppsc->particles);
+
+  particles_t *pp = &particles.p[0];
   int n = pp->n_part++;
-  particle_base_t *part = particles_base_get_one(pp, n);
+  particle_t *part = particles_get_one(pp, n);
   part->xi = xi;
   part->yi = yi;
   part->zi = zi;
@@ -40,6 +45,8 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
   part->qni = qni;
   part->mni = mni;
   part->wni = ppsc->prm.nicell; // FIXME, better set nicell to 1 or get rid of it altogether
+
+  psc_mparticles_put_to(&particles, ppsc->particles);
 }
 
 static struct psc_case *

@@ -25,14 +25,14 @@ particles_fortran_free(particles_fortran_t *pp)
 void
 psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_fortran_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
 psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_fortran_t *particles_base = _particles_base;
   *particles_base = *particles;
 }
 
@@ -56,14 +56,14 @@ psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particle
 
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp_base = &particles_base->p[p];
     particles_fortran_t *pp = &particles->p[p];
     pp->n_part = pp_base->n_part;
     pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
 
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_fortran_t *f_part = particles_fortran_get_one(pp, n);
-      particle_base_t *part = particles_base_get_one(pp_base, n);
+      particle_c_t *part = particles_c_get_one(pp_base, n);
 
       f_part->xi  = part->xi;
       f_part->yi  = part->yi;
@@ -94,12 +94,12 @@ psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_
 
   mparticles_base_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp_base = &particles_base->p[p];
     particles_fortran_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_fortran_t *f_part = &pp->particles[n];
-      particle_base_t *part = particles_base_get_one(pp_base, n);
+      particle_c_t *part = particles_c_get_one(pp_base, n);
       
       part->xi  = f_part->xi;
       part->yi  = f_part->yi;

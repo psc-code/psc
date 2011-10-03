@@ -54,9 +54,7 @@ DECLARE_MPARTICLES_METHODS(cuda)
 
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
-typedef particles_fortran_t particles_base_t;
 typedef mparticles_fortran_t mparticles_base_t;
-typedef particle_fortran_t particle_base_t;
 
 #define particles_base_realloc particles_fortran_realloc
 #define particles_base_get_one particles_fortran_get_one
@@ -70,9 +68,7 @@ typedef particle_fortran_t particle_base_t;
 
 #elif PARTICLES_BASE == PARTICLES_C
 
-typedef particles_c_t particles_base_t;
 typedef mparticles_c_t mparticles_base_t;
-typedef particle_c_t particle_base_t;
 
 #define particles_base_realloc particles_c_realloc
 #define particles_base_get_one particles_c_get_one
@@ -86,9 +82,7 @@ typedef particle_c_t particle_base_t;
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
-typedef particles_sse2_t particles_base_t;
 typedef mparticles_sse2_t mparticles_base_t;
-typedef particle_sse2_t particle_base_t;
 
 #define particles_base_realloc particles_sse2_realloc
 #define particles_base_get_one particles_sse2_get_one
@@ -101,9 +95,7 @@ typedef particle_sse2_t particle_base_t;
 
 #elif PARTICLES_BASE == PARTICLES_CUDA
 
-typedef particles_cuda_t particles_base_t;
 typedef mparticles_cuda_t mparticles_base_t;
-typedef particle_cuda_t particle_base_t;
 
 #define particles_base_realloc particles_cuda_realloc
 #define particles_base_get_one particles_cuda_get_one
@@ -117,9 +109,7 @@ typedef particle_cuda_t particle_base_t;
 
 #elif PARTICLES_BASE == PARTICLES_CBE
 
-typedef particles_cbe_t particles_base_t;
 typedef mparticles_cbe_t mparticles_base_t;
-typedef particle_cbe_t particle_base_t;
 
 #define particles_base_realloc particles_cbe_realloc
 #define particles_base_get_one particles_cbe_get_one

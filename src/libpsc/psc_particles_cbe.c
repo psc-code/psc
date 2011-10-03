@@ -69,7 +69,7 @@ psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
   assert(!__gotten);
   __gotten = true;
 
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_base = _particles_base;
   // With some recent changes, it appears we are allocating/freeing
   // the particles each time. This should encourage us to stop switching
   // between languages/types for the different modules.
@@ -79,7 +79,7 @@ psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
   // for this one.
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp_base = &particles_base->p[p];
     particles_cbe_t *pp = &particles->p[p];
     pp->n_part = pp_base->n_part;
     // These will be heading to the spes, so we need some memalign lovin'
@@ -89,7 +89,7 @@ psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
     pp->particles = (particle_cbe_t *)m;
     assert(ierr == 0);
     for (int n = 0; n < pp_base->n_part; n++) {
-      particle_base_t *part_base = particles_base_get_one(pp_base,n);
+      particle_c_t *part_base = particles_c_get_one(pp_base,n);
       particle_cbe_t *part = particles_cbe_get_one(pp,n);
 
       part->xi  = part_base->xi;
@@ -116,13 +116,13 @@ psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *_particles_base)
   assert(__gotten);
   __gotten = false;
   
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp_base = &particles_base->p[p];
+    particles_c_t *pp_base = &particles_base->p[p];
     particles_cbe_t *pp = &particles->p[p];
     assert(pp->n_part == pp_base->n_part);
     for (int n = 0; n < pp_base->n_part; n++){
-      particle_base_t *part_base = particles_base_get_one(pp_base,n);
+      particle_c_t *part_base = particles_c_get_one(pp_base,n);
       particle_cbe_t *part = particles_cbe_get_one(pp,n);
 
       part_base->xi  = part->xi;

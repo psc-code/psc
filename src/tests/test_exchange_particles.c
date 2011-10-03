@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_bnd.h"
+#include "psc_particles_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -10,11 +11,13 @@
 #include <string.h>
 
 void
-setup_particles(mparticles_base_t *particles)
+setup_particles(mparticles_base_t *particles_base)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
   // FIXME, realloc
   // only particles on proc 1, but some are out of bounds.
   // particles are right on nodes of the grid, but as far as
@@ -23,7 +26,7 @@ setup_particles(mparticles_base_t *particles)
   // for the old ordering, nodes aren't good because they're indeterminate
   // (could go either way), so let's shift them a bit so we get a unique answer
   // we can check.
-  particles_base_t *pp = &particles->p[0];
+  particles_t *pp = &particles.p[0];
   if (rank == 0) {
     struct psc_patch *patch = &ppsc->patch[0];
     int *ilo = patch->off;
@@ -35,14 +38,13 @@ setup_particles(mparticles_base_t *particles)
     for (int iz = ilo[2]-1; iz < ihi[2]+1; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
 	for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
-	  particle_base_t *p;
-	  p = particles_base_get_one(pp, i++);
+	  particle_t *p = particles_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .51) * ppsc->dx[0];
 	  p->yi = (iy + .51) * ppsc->dx[1];
 	  p->zi = (iz + .51) * ppsc->dx[2];
 
-	  p = particles_base_get_one(pp, i++);
+	  p = particles_get_one(pp, i++);
 	  memset(p, 0, sizeof(*p));
 	  p->xi = (ix + .49) * ppsc->dx[0];
 	  p->yi = (iy + .49) * ppsc->dx[1];
@@ -54,11 +56,15 @@ setup_particles(mparticles_base_t *particles)
   } else {
     pp->n_part = 0;
   }
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 static void
-check_particles_old_xz(mparticles_base_t *particles)
+check_particles_old_xz(mparticles_base_t *particles_base)
 {
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   struct psc_patch *patch = &ppsc->patch[0];
   int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
@@ -79,9 +85,9 @@ check_particles_old_xz(mparticles_base_t *particles)
   }
 
   int fail_cnt = 0;
-  particles_base_t *pp = &particles->p[0];
+  particles_t *pp = &particles.p[0];
   for (int i = 0; i < pp->n_part; i++) {
-    particle_base_t *p = particles_base_get_one(pp, i);
+    particle_t *p = particles_get_one(pp, i);
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -91,13 +97,17 @@ check_particles_old_xz(mparticles_base_t *particles)
     }
   }
   assert(fail_cnt == 0);
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 static void
-check_particles(mparticles_base_t *particles)
+check_particles(mparticles_base_t *particles_base)
 {
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   struct psc_patch *patch = &ppsc->patch[0];
-  particles_base_t *pp = &particles->p[0];
+  particles_t *pp = &particles.p[0];
   int *ilo = patch->off;
   int ihi[3] = { patch->off[0] + patch->ldims[0],
 		 patch->off[1] + patch->ldims[1],
@@ -114,7 +124,7 @@ check_particles(mparticles_base_t *particles)
 
   int fail_cnt = 0;
   for (int i = 0; i < pp->n_part; i++) {
-    particle_base_t *p = particles_base_get_one(pp, i);
+    particle_t *p = particles_get_one(pp, i);
     if (p->xi < xb[0] || p->xi > xe[0] ||
 	p->zi < xb[2] || p->zi > xe[2]) {
       if (fail_cnt++ < 10) {
@@ -124,17 +134,22 @@ check_particles(mparticles_base_t *particles)
     }
   }
   assert(fail_cnt == 0);
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 static int
-get_total_num_particles(mparticles_base_t *particles)
+get_total_num_particles(mparticles_base_t *particles_base)
 {
-  particles_base_t *pp = &particles->p[0];
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
+  particles_t *pp = &particles.p[0];
   int total_num_part;
 
   MPI_Allreduce(&pp->n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
 		MPI_COMM_WORLD);
 
+  psc_mparticles_put_to(&particles, particles_base);
   return total_num_part;
 }
 

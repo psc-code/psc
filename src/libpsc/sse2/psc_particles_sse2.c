@@ -47,7 +47,7 @@ psc_mparticles_sse2_put_to(particles_sse2_t *pp)
 {
 }
 
-#else
+#elif PARTICLES_BASE == PARTICLES_C
 
 static size_t __sse2_part_allocated;
 static particle_sse2_t *__sse2_part_data;
@@ -56,8 +56,8 @@ static particle_sse2_t *__sse2_part_data;
 void
 psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
-  particles_base_t *pp_base = &particles_base->p[0];
+  mparticles_c_t *particles_base = _particles_base;
+  particles_c_t *pp_base = &particles_base->p[0];
   int n_part = pp_base->n_part;
   int pad = 0;
   if((n_part % VEC_SIZE) != 0){
@@ -79,7 +79,7 @@ psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
   particle_sse2_real_t dyi = 1. / psc.dx[1];
 
   for (int n = 0; n < n_part; n++) {
-    particle_base_t *base_part = particles_base_get_one(pp_base, n);
+    particle_c_t *base_part = particles_c_get_one(pp_base, n);
     particle_sse2_t *part = &particles->particles[n];
 
     part->xi  = base_part->xi;
@@ -96,7 +96,7 @@ psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
   }
   // We need to give the padding a non-zero mass to avoid NaNs
   for(int n = n_part; n < (n_part + pad); n++){
-    particle_base_t *base_part = particles_base_get_one(pp_base, n_part - 1);
+    particle_c_t *base_part = particles_c_get_one(pp_base, n_part - 1);
     particle_sse2_t *part = &particles->particles[n];
     part->xi  = base_part->xi; //We need to be sure the padding loads fields inside the local domain
     part->yi  = base_part->yi;
@@ -109,10 +109,10 @@ psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
 void
 psc_mparticles_sse2_put_to(particles_sse2_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
-  particles_base_t *pp_base = &particles_base->p[0];
+  mparticles_c_t *particles_base = _particles_base;
+  particles_c_t *pp_base = &particles_base->p[0];
   for(int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *base_part = particles_base_get_one(pp_base, n);
+    particle_c_t *base_part = particles_c_get_one(pp_base, n);
     particle_sse2_t *part = &particles->particles[n];
     
     base_part->xi  = part->xi;

@@ -294,7 +294,7 @@ psc_mparticles_c_get_from(mparticles_c_t *particles_c, void *_particles_base)
 
   particles_c->p = calloc(ppsc->nr_patches, sizeof(*particles_c->p));
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp_base = &particles_base->p[p];
+    particles_cuda_t *pp_base = &particles_base->p[p];
     particles_c_t *pp_c = &particles_c->p[p];
     pp_c->n_part = pp_base->n_part;
     pp_c->particles = calloc(pp_c->n_part, sizeof(*pp_c->particles));

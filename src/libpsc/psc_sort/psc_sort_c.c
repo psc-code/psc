@@ -14,13 +14,13 @@
 #if PARTICLES_BASE == PARTICLES_FORTRAN
 
 static void
-find_cell_indices(int p, particles_base_t *pp)
+find_cell_indices(int p, particles_fortran_t *pp)
 {
   PIC_find_cell_indices(pp);
 }
 
 static inline int
-get_cell_index(int p, const particle_base_t *pp)
+get_cell_index(int p, const particle_fortran_t *pp)
 {
   return pp->cni;
 }

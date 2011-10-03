@@ -247,7 +247,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
   int last = INT_MIN;
 
   psc_foreach_patch(psc, p) {
-    particles_base_t *pp = &particles->p[p];
+    particles_fortran_t *pp = &particles->p[p];
     for (int i = 0; i < pp->n_part; i++) {
       assert(pp->particles[i].cni >= last);
       last = pp->particles[i].cni;
