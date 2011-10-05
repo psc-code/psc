@@ -5,6 +5,19 @@
 // ----------------------------------------------------------------------
 // mparticles type
 
+struct psc_mparticles {
+  struct mrc_obj obj;
+  void *data;
+  int nr_patches;
+  struct mrc_domain *domain;
+};
+
+MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
+
+struct psc_mparticles_ops {
+  MRC_SUBCLASS_OPS(struct psc_mparticles);
+};
+
 // This type is replicated for each actual particle type, however,
 // the interface and implementation is always identical, hence 
 // created automatically for the variants using macros
@@ -21,6 +34,10 @@ struct psc_mparticles_##type {						\
 };									\
 									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
+									\
+struct psc_mparticles_##type##_ops {					\
+  MRC_SUBCLASS_OPS(struct psc_mparticles_##type);			\
+};									\
 									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
