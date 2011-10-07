@@ -259,7 +259,7 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
 
 void
 psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, void *_particles_base,
-			       bool need_block_offsets, bool need_cell_offsets)
+			       unsigned int flags)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
@@ -268,7 +268,8 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, void *_particles_ba
 void
 psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
 {
-  return psc_mparticles_cuda_get_from_2(particles, _particles_base, true, true);
+  return psc_mparticles_cuda_get_from_2(particles, _particles_base,
+					MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void
@@ -349,7 +350,7 @@ static bool __gotten;
 
 void
 psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *particles_base,
-			       bool need_block_offsets, bool need_cell_offsets)
+			       unsigned int flags)
 {
   static int pr;
   if (!pr) {
@@ -365,11 +366,12 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
   psc_foreach_patch(ppsc, p) {
     particles_t *pp_base = &particles_base->p[p];
     particles_cuda_t *pp = &particles->p[p];
-    particles_cuda_alloc(p, pp, pp_base->n_part, true, need_cell_offsets);
+    particles_cuda_alloc(p, pp, pp_base->n_part, flags & MP_NEED_BLOCK_OFFSETS,
+			 flags & MP_NEED_CELL_OFFSETS);
   }
 
   psc_mparticles_copy_cf_to_cuda(particles, particles_base,
-				 need_block_offsets, need_cell_offsets);
+				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
 
   prof_stop(pr);
 }
@@ -377,7 +379,7 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 void
 psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
 {
-  psc_mparticles_cuda_get_from_2(particles, _particles_base, true, true);
+  psc_mparticles_cuda_get_from_2(particles, _particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void

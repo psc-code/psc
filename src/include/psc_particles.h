@@ -16,6 +16,8 @@ typedef struct psc_mparticles_##type {				        \
   particles_##type##_t *p;						\
   int nr_patches;							\
   struct mrc_domain *domain;						\
+  bool need_block_offsets;						\
+  bool need_cell_offsets;						\
 } mparticles_##type##_t;						\
 									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
@@ -29,6 +31,9 @@ void psc_mparticles_##type##_get_from(mparticles_##type##_t *particles, \
 void psc_mparticles_##type##_put_to(mparticles_##type##_t *particles,	\
 					void *particles_base);		\
 
+
+#define MP_NEED_BLOCK_OFFSETS (0x100)
+#define MP_NEED_CELL_OFFSETS (0x200)
 
 #include "psc_particles_fortran.h"
 DECLARE_MPARTICLES_METHODS(fortran)
