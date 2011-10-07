@@ -11,22 +11,6 @@
 // ======================================================================
 // quicksort
 
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-
-static void
-find_cell_indices(int p, particles_fortran_t *pp)
-{
-  PIC_find_cell_indices(pp);
-}
-
-static inline int
-get_cell_index(int p, const particle_fortran_t *pp)
-{
-  return pp->cni;
-}
-
-#else
-
 static void
 find_cell_indices(int p, particles_t *pp)
 {
@@ -159,7 +143,6 @@ cell_map_1to3(struct cell_map *map, int idx, int i[3])
   }
 }
 
-#endif
 
 static int
 compare(const void *_a, const void *_b)

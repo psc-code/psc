@@ -162,9 +162,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
 	    prt->pzi = pz;
 	    prt->qni = npt.q;
 	    prt->mni = npt.m;
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-	    prt->lni = particle_label_offset + 1;
-#endif
+	    //prt->lni = particle_label_offset + 1;
 	    if (psc->prm.fortran_particle_weight_hack) {
 	      prt->wni = npt.n;
 	    } else {

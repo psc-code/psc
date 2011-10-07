@@ -706,9 +706,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      p->pzi = pz;
 	      p->qni = npt.q;
 	      p->mni = npt.m;
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-	      p->lni = particle_label_offset + 1;
-#endif
+	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;
 	      } else {
