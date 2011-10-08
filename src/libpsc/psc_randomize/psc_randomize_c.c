@@ -13,7 +13,7 @@ static void
 psc_randomize_c_run(struct psc_randomize *randomize,
 		    mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   psc_foreach_patch(ppsc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);

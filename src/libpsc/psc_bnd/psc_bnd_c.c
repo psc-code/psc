@@ -294,7 +294,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   struct psc *psc = bnd->psc;
   check_domain(bnd);
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   static int pr_A, pr_B;
   if (!pr_A) {

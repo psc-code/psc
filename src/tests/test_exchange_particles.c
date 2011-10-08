@@ -16,7 +16,7 @@ setup_particles(mparticles_base_t *particles_base)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, MP_DONT_COPY);
   // FIXME, realloc
   // only particles on proc 1, but some are out of bounds.
   // particles are right on nodes of the grid, but as far as
@@ -61,7 +61,7 @@ setup_particles(mparticles_base_t *particles_base)
 static void
 check_particles_old_xz(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   struct psc_patch *patch = &ppsc->patch[0];
   int *ilo = patch->off;
@@ -101,7 +101,7 @@ check_particles_old_xz(mparticles_base_t *particles_base)
 static void
 check_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   struct psc_patch *patch = &ppsc->patch[0];
   particles_t *pp = psc_mparticles_get_patch(particles, 0);
@@ -137,7 +137,7 @@ check_particles(mparticles_base_t *particles_base)
 static int
 get_total_num_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   particles_t *pp = psc_mparticles_get_patch(particles, 0);
   int total_num_part;

@@ -20,15 +20,18 @@ struct psc_mparticles_ops {
 				  struct mrc_domain *domain,
 				  int *nr_particles_by_patch);
   int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
-  struct psc_mparticles *(*get_c)(struct psc_mparticles *particles_base);
+  struct psc_mparticles *(*get_c)(struct psc_mparticles *particles_base,
+				  unsigned int flags);
   void (*put_c)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
-  struct psc_mparticles *(*get_fortran)(struct psc_mparticles *particles_base);
+  struct psc_mparticles *(*get_fortran)(struct psc_mparticles *particles_base,
+					unsigned int flags);
   void (*put_fortran)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
   struct psc_mparticles *(*get_cuda)(struct psc_mparticles *particles_base,
 				     unsigned int flags);
   void (*put_cuda)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
 };
 
+#define MP_DONT_COPY (0x1)
 #define MP_NEED_BLOCK_OFFSETS (0x100)
 #define MP_NEED_CELL_OFFSETS (0x200)
 
@@ -83,11 +86,14 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
-mparticles_c_t *psc_mparticles_get_c(struct psc_mparticles *mparticles_base);
+mparticles_c_t *psc_mparticles_get_c(struct psc_mparticles *mparticles_base,
+				     unsigned int flags);
 void psc_mparticles_put_c(mparticles_c_t *mparticles, struct psc_mparticles *particles_base);
-mparticles_fortran_t *psc_mparticles_get_fortran(struct psc_mparticles *mparticles_base);
+mparticles_fortran_t *psc_mparticles_get_fortran(struct psc_mparticles *mparticles_base,
+						 unsigned int flags);
 void psc_mparticles_put_fortran(mparticles_fortran_t *mparticles, struct psc_mparticles *particles_base);
-mparticles_cuda_t *psc_mparticles_get_cuda(struct psc_mparticles *mparticles_base, unsigned int flags);
+mparticles_cuda_t *psc_mparticles_get_cuda(struct psc_mparticles *mparticles_base,
+					   unsigned int flags);
 void psc_mparticles_put_cuda(mparticles_cuda_t *mparticles, struct psc_mparticles *particles_base);
 
 mparticles_cuda_t *_psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int flags);

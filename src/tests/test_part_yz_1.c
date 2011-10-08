@@ -120,7 +120,7 @@ void
 psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho_base, double dt)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);
@@ -200,7 +200,7 @@ void
 psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho_base, double dt)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);

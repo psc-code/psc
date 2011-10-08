@@ -21,7 +21,8 @@ particles_fortran_free(particles_fortran_t *pp)
 }
 
 mparticles_fortran_t *
-_psc_mparticles_fortran_get_fortran(struct psc_mparticles *particles_base)
+_psc_mparticles_fortran_get_fortran(struct psc_mparticles *particles_base,
+				    unsigned int flags)
 {
   return particles_base;
 }
@@ -45,7 +46,7 @@ particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
 static bool __gotten;
 
 static mparticles_c_t *
-_psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base)
+_psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base, unsigned int flags)
 {
   static int pr;
   if (!pr) {

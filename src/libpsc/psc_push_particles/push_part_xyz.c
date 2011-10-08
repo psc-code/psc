@@ -297,7 +297,7 @@ psc_push_particles_generic_c_push_xyz(struct psc_push_particles *push,
 				      mparticles_base_t *particles_base,
 				      mfields_base_t *flds_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
 
   static int pr;

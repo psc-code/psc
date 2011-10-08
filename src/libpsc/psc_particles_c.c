@@ -33,7 +33,7 @@ particles_c_free(particles_c_t *pp)
 }
 
 static mparticles_c_t *
-_psc_mparticles_c_get_c(struct psc_mparticles *particles_base)
+_psc_mparticles_c_get_c(struct psc_mparticles *particles_base, unsigned int flags)
 {
   return particles_base;
 }
@@ -153,7 +153,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 static bool __gotten;
 
 static mparticles_fortran_t *
-_psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base)
+_psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base, unsigned int flags)
 {
   static int pr;
   if (!pr) {

@@ -13,7 +13,7 @@
 void
 setup_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, MP_DONT_COPY);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -68,7 +68,7 @@ setup_particles(mparticles_base_t *particles_base)
 static int
 get_total_num_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, MP_DONT_COPY);
 
   int nr_part = 0;
   psc_foreach_patch(ppsc, p) {

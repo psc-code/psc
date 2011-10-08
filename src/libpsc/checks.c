@@ -7,7 +7,7 @@ psc_check_particles(mparticles_base_t *particles_base)
 {
   int fail_cnt = 0;
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];

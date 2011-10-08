@@ -29,7 +29,7 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
-  mparticles_t *mparticles = psc_mparticles_get_cf(psc->particles);
+  mparticles_t *mparticles = psc_mparticles_get_cf(psc->particles, 0);
 
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(mparticles, p);
@@ -563,8 +563,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 					      nr_particles_by_patch);
   psc_mparticles_setup(mparticles_base_new);
 
-  mparticles_t *mparticles_new = psc_mparticles_get_cf(mparticles_base_new); // FIXME, don't need copy
-  mparticles_t *mparticles_old = psc_mparticles_get_cf(psc->particles);
+  mparticles_t *mparticles_new = psc_mparticles_get_cf(mparticles_base_new, MP_DONT_COPY);
+  mparticles_t *mparticles_old = psc_mparticles_get_cf(psc->particles, 0);
     
   // communicate particles
   communicate_particles(domain_old, domain_new, 

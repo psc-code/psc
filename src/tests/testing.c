@@ -40,7 +40,7 @@ static struct psc_mfields *flds_ref;
 void
 psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   if (!particles_ref) {
     int nr_particles_by_patch[psc->nr_patches];
@@ -103,7 +103,7 @@ void
 psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
 			double thres, const char *test_str)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   assert(particles_ref);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
@@ -241,7 +241,7 @@ psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, doubl
 void
 psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   int last = INT_MIN;
 

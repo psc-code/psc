@@ -17,7 +17,7 @@ psc_output_particles_fortran_run(struct psc_output_particles *out,
     pr = prof_register("fort_out_part", 1., 0, 0);
   }
   prof_start(pr);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
 
   particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, 0);
   OUT_part(pp);

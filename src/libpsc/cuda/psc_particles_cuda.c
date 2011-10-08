@@ -211,13 +211,16 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
 }
 
 static void
-psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf)
+psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf,
+				 unsigned int flags)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
     pp_cf->n_part = pp->n_part;
+    if (flags & MP_DONT_COPY)
+      continue;
 
     float4 *xi4  = calloc(pp->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
@@ -270,7 +273,7 @@ _psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, struct psc_mparticle
 static bool __gotten;
 
 static mparticles_c_t *
-_psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base)
+_psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base, unsigned int flags)
 {
   static int pr;
   if (!pr) {
@@ -292,7 +295,7 @@ _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base)
   psc_mparticles_setup(particles_c);
   free(nr_particles_by_patch);
 
-  psc_mparticles_copy_cf_from_cuda(particles_base, particles_c);
+  psc_mparticles_copy_cf_from_cuda(particles_base, particles_c, flags);
 
   prof_stop(pr);
 
@@ -364,7 +367,7 @@ _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *
   assert(__gotten);
   __gotten = false;
 
-  psc_mparticles_copy_cf_from_cuda(particles, particles_base);
+  psc_mparticles_copy_cf_from_cuda(particles, particles_base, 0);
   psc_mparticles_destroy(particles);
 
   prof_stop(pr);

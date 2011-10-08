@@ -109,7 +109,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
     pr = prof_register("c_densities", 1., 0, 0);
   }
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
   psc_mfields_zero(res, 0);
@@ -226,7 +226,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
     pr = prof_register("c_calc_v", 1., 0, 0);
   }
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
   for (int m = 0; m < 6; m++) {
@@ -340,7 +340,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   if (!pr) {
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
   for (int m = 0; m < 6; m++) {

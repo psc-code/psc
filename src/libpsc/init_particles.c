@@ -108,7 +108,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
   int ilo[3], ihi[3];
   pml_find_bounds(psc, p, ilo, ihi);
 
-  mparticles_t *particles = psc_mparticles_get_cf(psc->particles);
+  mparticles_t *particles = psc_mparticles_get_cf(psc->particles, MP_DONT_COPY);
   particles_t *pp = psc_mparticles_get_patch(particles, p);
   
   int i = 0;

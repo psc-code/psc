@@ -30,7 +30,7 @@ static void
 add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi,
 	     double qni, double mni)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(ppsc->particles);
+  mparticles_t *particles = psc_mparticles_get_cf(ppsc->particles, 0);
 
   particles_t *pp = psc_mparticles_get_patch(particles, 0);
   int n = pp->n_part++;
@@ -58,7 +58,7 @@ create_test_base(const char *s_push_particles)
 
   ppsc->dt = ppsc->dx[2];
 
-  mparticles_t *particles = psc_mparticles_get_cf(ppsc->particles);
+  mparticles_t *particles = psc_mparticles_get_cf(ppsc->particles, MP_DONT_COPY);
   particles_t *pp = psc_mparticles_get_patch(particles, 0);
   pp->n_part = 0;
   psc_mparticles_put_cf(particles, ppsc->particles);

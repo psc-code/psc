@@ -13,7 +13,7 @@ psc_push_particles_fortran_push_xy(struct psc_push_particles *push,
 				   mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -40,7 +40,7 @@ psc_push_particles_fortran_push_xz(struct psc_push_particles *push,
 				   mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -67,7 +67,7 @@ psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
 				   mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -94,7 +94,7 @@ psc_push_particles_fortran_push_xyz(struct psc_push_particles *push,
 				   mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -121,7 +121,7 @@ psc_push_particles_fortran_push_z(struct psc_push_particles *push,
 				   mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -148,7 +148,7 @@ psc_push_particles_fortran_push_yz_a(struct psc_push_particles *push,
 				     mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
@@ -175,7 +175,7 @@ psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
 				     mfields_base_t *flds_base)
 {
   assert(ppsc->nr_patches = 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;

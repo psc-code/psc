@@ -62,7 +62,7 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base);
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   psc_foreach_patch(ppsc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
