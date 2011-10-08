@@ -35,7 +35,7 @@ void psc_mparticles_##type##_get_fortran(mparticles_fortran_t *particles,	\
 void psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, \
 					  void *particles_base);	\
 void psc_mparticles_##type##_get_cuda(mparticles_cuda_t *particles,	\
-				      void *particles_base);		\
+				      void *particles_base, unsigned int flags); \
 void psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles,	\
 				      void *particles_base);		\
 
@@ -106,7 +106,6 @@ typedef mparticles_c_t mparticles_base_t;
 #define psc_mparticles_base_put_fortran   psc_mparticles_c_put_fortran
 #define psc_mparticles_base_get_cuda   psc_mparticles_c_get_cuda
 #define psc_mparticles_base_put_cuda   psc_mparticles_c_put_cuda
-#define psc_mparticles_base_get_cuda_2 psc_mparticles_c_get_cuda_2
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
@@ -136,7 +135,6 @@ typedef mparticles_cuda_t mparticles_base_t;
 #define psc_mparticles_base_put_fortran   psc_mparticles_cuda_put_fortran
 #define psc_mparticles_base_get_cuda   psc_mparticles_cuda_get_cuda
 #define psc_mparticles_base_put_cuda   psc_mparticles_cuda_put_cuda
-#define psc_mparticles_base_get_cuda_2 psc_mparticles_cuda_get_cuda_2
 
 #elif PARTICLES_BASE == PARTICLES_CBE
 

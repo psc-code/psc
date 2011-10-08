@@ -256,18 +256,11 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
 }
 
 void
-psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles, void *_particles_base,
-			       unsigned int flags)
+psc_mparticles_cuda_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
+			     unsigned int flags)
 {
   mparticles_base_t *particles_base = _particles_base;
   *particles = *particles_base;
-}
-
-void
-psc_mparticles_cuda_get_cuda(mparticles_cuda_t *particles, void *_particles_base)
-{
-  psc_mparticles_cuda_get_cuda_2(particles, _particles_base,
-				 MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void
@@ -343,8 +336,8 @@ psc_mparticles_cuda_put_fortran(mparticles_fortran_t *particles, void *_particle
 // ======================================================================
 
 void
-psc_mparticles_c_get_cuda_2(mparticles_cuda_t *particles, void *_particles_base,
-			    unsigned int flags)
+psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
+			  unsigned int flags)
 {
   static int pr;
   if (!pr) {
@@ -369,12 +362,6 @@ psc_mparticles_c_get_cuda_2(mparticles_cuda_t *particles, void *_particles_base,
 				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
 
   prof_stop(pr);
-}
-
-void
-psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base)
-{
-  psc_mparticles_c_get_cuda_2(particles, _particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void
