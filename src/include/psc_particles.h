@@ -16,6 +16,9 @@ MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
+  void (*set_domain_nr_particles)(struct psc_mparticles *mparticles,
+				  struct mrc_domain *domain,
+				  int *nr_particles_by_patch);
 };
 
 // This type is replicated for each actual particle type, however,
@@ -37,6 +40,9 @@ MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
 									\
 struct psc_mparticles_##type##_ops {					\
   MRC_SUBCLASS_OPS(struct psc_mparticles_##type);			\
+  void (*set_domain_nr_particles)(mparticles_##type##_t *mparticles,	\
+				  struct mrc_domain *domain,		\
+				  int *nr_particles_by_patch);		\
 };									\
 									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
@@ -82,6 +88,8 @@ DECLARE_MPARTICLES_METHODS(cbe)
 DECLARE_MPARTICLES_METHODS(cuda)
 #endif
 
+#define psc_mparticles_ops(mp) (struct psc_mparticles_ops *) ((mp)->obj.ops)
+
 static inline particles_c_t *
 psc_mparticles_get_patch_c(mparticles_c_t *mp, int p)
 {
@@ -112,6 +120,10 @@ psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
 #define psc_mparticles_fortran_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
 #define psc_mparticles_cuda_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
 
+void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
+					    struct mrc_domain *domain,
+					    int *nr_particles_by_patch);
+
 // ----------------------------------------------------------------------
 // base particles type
 
@@ -119,8 +131,10 @@ psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
 
 typedef mparticles_fortran_t mparticles_base_t;
 
+#define s_particles_base "fortran"
 #define psc_mparticles_base_create  psc_mparticles_fortran_create
 #define psc_mparticles_base_set_name  psc_mparticles_fortran_set_name
+#define psc_mparticles_base_set_type  psc_mparticles_fortran_set_type
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_fortran_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_fortran_setup
 #define psc_mparticles_base_write   psc_mparticles_fortran_write
@@ -138,8 +152,10 @@ typedef mparticles_fortran_t mparticles_base_t;
 
 typedef mparticles_c_t mparticles_base_t;
 
+#define s_particles_base "c"
 #define psc_mparticles_base_create  psc_mparticles_c_create
 #define psc_mparticles_base_set_name  psc_mparticles_c_set_name
+#define psc_mparticles_base_set_type  psc_mparticles_c_set_type
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_c_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_c_setup
 #define psc_mparticles_base_write   psc_mparticles_c_write
@@ -168,8 +184,10 @@ typedef mparticles_sse2_t mparticles_base_t;
 
 typedef mparticles_cuda_t mparticles_base_t;
 
+#define s_particles_base "cuda"
 #define psc_mparticles_base_create  psc_mparticles_cuda_create
 #define psc_mparticles_base_set_name  psc_mparticles_cuda_set_name
+#define psc_mparticles_base_set_type  psc_mparticles_cuda_set_type
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cuda_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_cuda_setup
 #define psc_mparticles_base_write   psc_mparticles_cuda_write
@@ -187,8 +205,10 @@ typedef mparticles_cuda_t mparticles_base_t;
 
 typedef mparticles_cbe_t mparticles_base_t;
 
+#define s_particles_base "cbe"
 #define psc_mparticles_base_create  psc_mparticles_cbe_create
 #define psc_mparticles_base_set_name  psc_mparticles_cbe_set_name
+#define psc_mparticles_base_set_type  psc_mparticles_cbe_set_type
 #define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cbe_set_domain_nr_particles
 #define psc_mparticles_base_setup   psc_mparticles_cbe_setup
 #define psc_mparticles_base_write   psc_mparticles_cbe_write

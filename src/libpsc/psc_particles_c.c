@@ -134,10 +134,10 @@ psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
 // ======================================================================
 // psc_mparticles_c
 
-void
-psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
-					 struct mrc_domain *domain,
-					 int *nr_particles_by_patch)
+static void
+_psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
+					  struct mrc_domain *domain,
+					  int *nr_particles_by_patch)
 {
   mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
@@ -232,10 +232,24 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 
 #endif
 
+// ======================================================================
+// psc_mparticles: subclass "c"
+  
+struct psc_mparticles_c_ops psc_mparticles_c_ops = {
+  .name                    = "c",
+  .set_domain_nr_particles = _psc_mparticles_c_set_domain_nr_particles,
+};
+
+static void
+psc_mparticles_c_init()
+{
+  mrc_class_register_subclass(&mrc_class_psc_mparticles_c, &psc_mparticles_c_ops);
+}
 
 struct mrc_class_psc_mparticles_c mrc_class_psc_mparticles_c = {
   .name             = "psc_mparticles_c",
   .size             = sizeof(struct psc_mparticles_c),
+  .init             = psc_mparticles_c_init,
   .destroy          = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .write            = _psc_mparticles_c_write,
