@@ -173,7 +173,7 @@ main(int argc, char **argv)
   run_test(true, "fortran", 0., 0., create_test);
   run_test(false, "generic_c", 1e-7, 1e-7, create_test);
 
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA // FIXME
   run_test(false, "cuda", 1e-4, 1e-4, create_test);
 #endif
 
