@@ -7,13 +7,25 @@ libpsctest_la_SOURCES = testing.c
 
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
-noinst_PROGRAMS = test_part_xy test_part_yz test_part_xz test_part_z \
-	test_field test_bnd \
-	test_bnd_multi test_exchange_particles test_exchange_particles_multi \
+noinst_PROGRAMS = \
+	test_part_xy \
+	test_part_yz \
+	test_part_xz \
+	test_part_z \
+	test_field \
+	test_bnd \
+	test_bnd_multi \
+	test_exchange_particles \
+	test_exchange_particles_multi \
 	test_sort
 
-TESTS = test_part_xy test_part_yz test_part_xz test_part_z \
-	test_field test_bnd test_exchange_particles \
+TESTS = test_part_xy \
+	test_part_yz \
+	test_part_xz \
+	test_part_z \
+	test_field \
+	test_bnd \
+	test_exchange_particles \
 	test_sort.sh
 
 # HACK to have automake use the CXX linker 
