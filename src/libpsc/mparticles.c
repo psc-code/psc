@@ -84,37 +84,27 @@ psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
   return ops->nr_particles_by_patch(mparticles, p);
 }
 
-mparticles_c_t *
-psc_mparticles_get_c(struct psc_mparticles *particles_base)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
-  assert(ops && ops->get_c);
-  return (mparticles_c_t *) ops->get_c(particles_base);
-}
+#define MAKE_MPARTICLES_GET_PUT(type)					\
+									\
+mparticles_##type##_t *							\
+psc_mparticles_get_##type(struct psc_mparticles *particles_base)		\
+{									\
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
+  assert(ops && ops->get_##type);						\
+  return (mparticles_##type##_t *) ops->get_##type(particles_base);			\
+}									\
+									\
+void									\
+psc_mparticles_put_##type(mparticles_##type##_t *particles,			        \
+		     struct psc_mparticles *particles_base)		\
+{									\
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
+  assert(ops && ops->put_##type);						\
+  ops->put_##type((struct psc_mparticles *) particles, particles_base);	\
+}									\
 
-void
-psc_mparticles_put_c(mparticles_c_t *particles, struct psc_mparticles *particles_base)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
-  assert(ops && ops->put_c);
-  ops->put_c((struct psc_mparticles *) particles, particles_base);
-}
-
-mparticles_fortran_t *
-psc_mparticles_get_fortran(struct psc_mparticles *particles_base)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
-  assert(ops && ops->get_fortran);
-  return (mparticles_fortran_t *) ops->get_fortran(particles_base);
-}
-
-void
-psc_mparticles_put_fortran(mparticles_fortran_t *particles, struct psc_mparticles *particles_base)
-{
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
-  assert(ops && ops->put_fortran);
-  ops->put_fortran((struct psc_mparticles *) particles, particles_base);
-}
+MAKE_MPARTICLES_GET_PUT(c)
+MAKE_MPARTICLES_GET_PUT(fortran)
 
 mparticles_cuda_t *
 psc_mparticles_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
