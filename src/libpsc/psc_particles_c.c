@@ -138,57 +138,41 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 
 #endif
 
+// ======================================================================
+
 static void
-_psc_mparticles_c_copy_to_fortran(struct psc_mparticles *particles_base,
-				  struct psc_mparticles *particles, unsigned int flags)
+_psc_mparticles_c_copy_to_fortran(mparticles_c_t *particles_c,
+				  mparticles_fortran_t *particles_f, unsigned int flags)
 {
-  psc_foreach_patch(ppsc, p) {
-    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
-    particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
-    pp->n_part = pp_base->n_part;
-    pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
-
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_fortran_t *f_part = particles_fortran_get_one(pp, n);
-      particle_c_t *part = particles_c_get_one(pp_base, n);
-
-      f_part->xi  = part->xi;
-      f_part->yi  = part->yi;
-      f_part->zi  = part->zi;
-      f_part->pxi = part->pxi;
-      f_part->pyi = part->pyi;
-      f_part->pzi = part->pzi;
-      f_part->qni = part->qni;
-      f_part->mni = part->mni;
-      f_part->wni = part->wni;
-    }
-  }
+  _psc_mparticles_fortran_copy_from_c(particles_f, particles_c, flags);
 }
 
 static void
-_psc_mparticles_c_copy_from_fortran(struct psc_mparticles *particles_base,
-				    mparticles_fortran_t *particles, unsigned int flags)
+_psc_mparticles_c_copy_from_fortran(mparticles_c_t *particles_c,
+				    mparticles_fortran_t *particles_f, unsigned int flags)
 {
-  psc_foreach_patch(ppsc, p) {
-    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
-    particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
-    assert(pp->n_part == pp_base->n_part);
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_fortran_t *f_part = &pp->particles[n];
-      particle_c_t *part = particles_c_get_one(pp_base, n);
-      
-      part->xi  = f_part->xi;
-      part->yi  = f_part->yi;
-      part->zi  = f_part->zi;
-      part->pxi = f_part->pxi;
-      part->pyi = f_part->pyi;
-      part->pzi = f_part->pzi;
-      part->qni = f_part->qni;
-      part->mni = f_part->mni;
-      part->wni = f_part->wni;
-    }
-  }
+  _psc_mparticles_fortran_copy_to_c(particles_f, particles_c, flags);
 }
+
+// ======================================================================
+
+#ifdef USE_CUDA
+
+static void
+_psc_mparticles_c_copy_to_cuda(mparticles_c_t *particles_c,
+			       mparticles_cuda_t *particles_cuda, unsigned int flags)
+{
+  _psc_mparticles_cuda_copy_from_c(particles_cuda, particles_c, flags);
+}
+
+static void
+_psc_mparticles_c_copy_from_cuda(mparticles_c_t *particles_c,
+				 mparticles_cuda_t *particles_cuda, unsigned int flags)
+{
+  _psc_mparticles_cuda_copy_to_c(particles_cuda, particles_c, flags);
+}
+
+#endif
 
 // ======================================================================
 // psc_mparticles: subclass "c"

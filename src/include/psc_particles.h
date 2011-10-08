@@ -108,9 +108,9 @@ mparticles_cuda_t *psc_mparticles_get_cuda(struct psc_mparticles *mparticles_bas
 					   unsigned int flags);
 void psc_mparticles_put_cuda(mparticles_cuda_t *mparticles, struct psc_mparticles *particles_base);
 
-void _psc_mparticles_c_copy_to_cuda(struct psc_mparticles *particles_base,
-				    mparticles_cuda_t *particles, unsigned int flags);
-void _psc_mparticles_c_copy_from_cuda(struct psc_mparticles *particles_base,
-				      mparticles_cuda_t *particles, unsigned int flags);
+void _psc_mparticles_fortran_copy_to_c(mparticles_fortran_t *, mparticles_c_t *, unsigned int flags);
+void _psc_mparticles_fortran_copy_from_c(mparticles_fortran_t *, mparticles_c_t *, unsigned int flags);
+void _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *, mparticles_c_t *, unsigned int flags);
+void _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *, mparticles_c_t *, unsigned int flags);
 
 #endif

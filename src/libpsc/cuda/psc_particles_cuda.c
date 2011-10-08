@@ -22,6 +22,7 @@ particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part,
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
   __particles_cuda_alloc(pp, need_block_offsets, need_cell_offsets);
+  pp->n_alloced = n_part;
 }
 
 static void
@@ -81,15 +82,18 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
   bi[2] /= BLOCKSIZE_Z;
 }
 
-static void
-psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf,
-			       bool need_block_offsets, bool need_cell_offsets)
+void
+_psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *particles_cf,
+				 unsigned int flags)
 {
+  assert(ppsc->nr_patches == 1); // many things would break...
+
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
     pp->n_part = pp_cf->n_part;
+    assert(pp->n_part <= pp->n_alloced);
 
     float4 *xi4  = calloc(pp_cf->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp_cf->n_part, sizeof(float4));
@@ -131,7 +135,7 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
     cell_map_init(&map, patch->ldims, bs);
 
     int *offsets = NULL;
-    if (0 && need_block_offsets) {
+    if (0 && (flags & MP_NEED_BLOCK_OFFSETS)) {
       // FIXME, should go away and can be taken over by c_offsets
       offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
       int last_block = -1;
@@ -171,7 +175,7 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
     }
 
     int *c_offsets = NULL;
-    if (need_cell_offsets) {
+    if (flags & MP_NEED_CELL_OFFSETS) {
       const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
       c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
 			      sizeof(*c_offsets));
@@ -196,7 +200,7 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
 
     __particles_cuda_to_device(pp, xi4, pxi4, offsets, c_offsets, c_pos);
 
-    if (need_block_offsets) {
+    if (flags & MP_NEED_BLOCK_OFFSETS) {
       cuda_sort_patch(p, pp);
     }
 
@@ -208,15 +212,16 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
   }
 }
 
-static void
-psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *particles_cf,
-				 unsigned int flags)
+void
+_psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
+			       mparticles_c_t *particles_cf, unsigned int flags)
 {
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
     pp_cf->n_part = pp->n_part;
+    assert(pp_cf->n_part <= pp_cf->n_alloced);
     if (flags & MP_DONT_COPY)
       continue;
 
@@ -255,40 +260,6 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
     free(xi4);
     free(pxi4);
   }
-}
-
-static void
-_psc_mparticles_cuda_copy_to_c(struct psc_mparticles *particles_base,
-			       mparticles_c_t *particles_c, unsigned int flags)
-{
-  psc_mparticles_copy_cf_from_cuda(particles_base, particles_c, flags);
-}
-
-static void
-_psc_mparticles_cuda_copy_from_c(struct psc_mparticles *particles_base, mparticles_c_t *particles_c,
-				 unsigned int flags)
-{
-  psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
-				 true, false); // FIXME, need to sort
-}
-
-// ======================================================================
-
-void
-_psc_mparticles_c_copy_to_cuda(struct psc_mparticles *particles_base,
-			       mparticles_cuda_t *particles, unsigned int flags)
-{
-  assert(ppsc->nr_patches == 1); // many things would break...
-
-  psc_mparticles_copy_cf_to_cuda(particles, particles_base,
-				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
-}
-
-void
-_psc_mparticles_c_copy_from_cuda(struct psc_mparticles *particles_base,
-				 mparticles_cuda_t *particles, unsigned int flags)
-{
-  psc_mparticles_copy_cf_from_cuda(particles, particles_base, flags);
 }
 
 // ======================================================================
