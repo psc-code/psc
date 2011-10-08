@@ -37,13 +37,6 @@ struct psc_mparticles_ops {
   									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles);	\
 									\
-void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
-						 struct mrc_domain *domain, \
-						 int *nr_particles_by_patch); \
- 									\
-int psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles, \
-						  int p);		\
- 									\
 mparticles_c_t *psc_mparticles_##type##_get_c(void *particles_base); \
 void psc_mparticles_##type##_put_c(mparticles_c_t *particles,	\
 				   void *particles_base);		\

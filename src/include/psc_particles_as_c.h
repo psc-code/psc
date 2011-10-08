@@ -10,8 +10,6 @@ typedef particles_c_t particles_t;
 typedef mparticles_c_t mparticles_t;
 
 #define psc_mparticles_create       psc_mparticles_c_create
-#define psc_mparticles_set_domain_nr_particles psc_mparticles_c_set_domain_nr_particles
-#define psc_mparticles_setup        psc_mparticles_c_setup
 #define psc_mparticles_base_get_cf  psc_mparticles_base_get_c
 #define psc_mparticles_base_put_cf  psc_mparticles_base_put_c
 #define psc_mparticles_get_patch    psc_mparticles_get_patch_c

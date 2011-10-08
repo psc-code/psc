@@ -191,7 +191,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 
   psc_foreach_patch(_case->psc, p) {
     psc_case_init_particles_patch(_case, p, particle_label_offset);
-    assert(psc_mparticles_base_nr_particles_by_patch(_case->psc->particles, p) == nr_particles_by_patch[p]);
+    assert(psc_mparticles_nr_particles_by_patch(_case->psc->particles, p) == nr_particles_by_patch[p]);
   }
 }
 

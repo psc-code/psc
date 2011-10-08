@@ -283,11 +283,11 @@ _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base)
     
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_base_nr_particles_by_patch(particles_base, p);
+    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
   mparticles_c_t *particles_c = psc_mparticles_c_create(mrc_domain_comm(domain));
-  psc_mparticles_c_set_domain_nr_particles(particles_c, domain, nr_particles_by_patch);
+  psc_mparticles_set_domain_nr_particles(particles_c, domain, nr_particles_by_patch);
   psc_mparticles_c_setup(particles_c);
   free(nr_particles_by_patch);
 
@@ -335,11 +335,11 @@ _psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int f
   
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
+    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
   mparticles_cuda_t *particles = psc_mparticles_cuda_create(mrc_domain_comm(domain));
-  psc_mparticles_cuda_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
+  psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
   psc_mparticles_cuda_setup(particles);
   free(nr_particles_by_patch);
 

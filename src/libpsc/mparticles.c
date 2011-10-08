@@ -58,21 +58,6 @@ struct mrc_class_psc_mparticles_##type mrc_class_psc_mparticles_##type = {	\
 
 
 #define _MAKE_MPARTICLES_METHODS(type)					\
-void									\
-psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles,	\
-						struct mrc_domain *domain, \
-						int *nr_particles_by_patch) \
-{									\
-  psc_mparticles_set_domain_nr_particles((struct psc_mparticles *) mparticles, \
-					 domain, nr_particles_by_patch); \
-}									\
-									\
-int									\
-psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles, \
-					      int p) \
-{									\
-  return psc_mparticles_nr_particles_by_patch((struct psc_mparticles *) mparticles, p); \
-}									\
 									\
 mparticles_c_t *							\
 psc_mparticles_##type##_get_c(void *particles_base)			\

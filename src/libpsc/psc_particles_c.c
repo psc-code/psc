@@ -166,11 +166,11 @@ _psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base)
 
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
+    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
   mparticles_fortran_t *particles = psc_mparticles_fortran_create(mrc_domain_comm(domain));
-  psc_mparticles_fortran_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
+  psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
   psc_mparticles_fortran_setup(particles);
   free(nr_particles_by_patch);
 

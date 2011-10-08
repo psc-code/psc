@@ -546,7 +546,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
     nr_particles_by_patch[p] =
-      psc_mparticles_base_nr_particles_by_patch(psc->particles, p);
+      psc_mparticles_nr_particles_by_patch(psc->particles, p);
   }
   communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
 
@@ -559,7 +559,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   mparticles_base_t *mparticles_base_new = 
     psc_mparticles_base_create(mrc_domain_comm(domain_new));
   psc_mparticles_base_set_type(mparticles_base_new, s_particles_base);
-  psc_mparticles_base_set_domain_nr_particles(mparticles_base_new, domain_new,
+  psc_mparticles_set_domain_nr_particles(mparticles_base_new, domain_new,
 					      nr_particles_by_patch);
   psc_mparticles_base_setup(mparticles_base_new);
 
