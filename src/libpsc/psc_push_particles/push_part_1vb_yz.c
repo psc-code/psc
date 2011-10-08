@@ -24,10 +24,10 @@ static inline void
 curr_2d_vb_cell(fields_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
 		creal dxt[2], int off[2])
 {
-  F3(JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
-  F3(JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
-  F3(JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
-  F3(JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
+  F3(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
+  F3(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
+  F3(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
+  F3(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
   if (dxt) {
     dxt[0] -= dx[0];
     dxt[1] -= dx[1];
@@ -94,10 +94,10 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
     find_idx_off_1st(&part->xi, lf, of, 0.f, patch->xb, dxi);
 
     creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
-    F3(JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-    F3(JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-    F3(JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-    F3(JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
+    F3(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
+    F3(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
+    F3(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
+    F3(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 

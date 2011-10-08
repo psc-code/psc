@@ -13,6 +13,7 @@
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 #include "psc_particles_as_c.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -733,36 +734,40 @@ psc_setup_fields_default(struct psc *psc)
   if (!init_field)
     return;
 
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, 0, psc->flds);
+
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &psc->flds->f[p];
+    fields_t *pf = &flds.f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
-      F3_BASE(pf, HX, jx,jy,jz) +=
+      F3(pf, HX, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz + .5*dz }, HX);
-      F3_BASE(pf, HY, jx,jy,jz) +=
+      F3(pf, HY, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz + .5*dz }, HY);
-      F3_BASE(pf, HZ, jx,jy,jz) +=
+      F3(pf, HZ, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy + .5*dy, zz         }, HZ);
 
-      F3_BASE(pf, EX, jx,jy,jz) +=
+      F3(pf, EX, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, EX);
-      F3_BASE(pf, EY, jx,jy,jz) +=
+      F3(pf, EY, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, EY);
-      F3_BASE(pf, EZ, jx,jy,jz) +=
+      F3(pf, EZ, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, EZ);
 
-      F3_BASE(pf, JXI, jx,jy,jz) +=
+      F3(pf, JXI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx + .5*dx, yy        , zz         }, JXI);
-      F3_BASE(pf, JYI, jx,jy,jz) +=
+      F3(pf, JYI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy + .5*dy, zz         }, JYI);
-      F3_BASE(pf, JZI, jx,jy,jz) +=
+      F3(pf, JZI, jx,jy,jz) +=
 	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, JZI);
 
     } foreach_3d_g_end;
   }
+  psc_mfields_put_to(&flds, JXI, HX + 3, psc->flds);
 }
 
 // ----------------------------------------------------------------------

@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
 #include <math.h>
@@ -208,26 +209,26 @@ Jz(struct psc_case_harris_xy *harris, real x, real y)
 }
 
 static void
-psc_case_harris_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_harris_xy_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc_case_harris_xy *harris = mrc_to_subobj(_case, struct psc_case_harris_xy);
   struct psc *psc = _case->psc;
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dy = psc->dx[1];
       double xx = CRDX(p, jx), yy = CRDY(p, jy);
       
-      F3_BASE(pf, HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
-      F3_BASE(pf, HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
-      F3_BASE(pf, HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
+      F3(pf, HX, jx,jy,jz) = Bx(harris, xx, yy + .5*dy        );
+      F3(pf, HY, jx,jy,jz) = By(harris, xx + .5*dx, yy        );
+      F3(pf, HZ, jx,jy,jz) = Bz(harris, xx + .5*dx, yy + .5*dy);
       
       // FIXME centering
-      F3_BASE(pf, JXI, jx,jy,jz) = Jx(harris, xx, yy);
-      F3_BASE(pf, JYI, jx,jy,jz) = Jy(harris, xx, yy);
-      F3_BASE(pf, JZI, jx,jy,jz) = Jz(harris, xx, yy);
+      F3(pf, JXI, jx,jy,jz) = Jx(harris, xx, yy);
+      F3(pf, JYI, jx,jy,jz) = Jy(harris, xx, yy);
+      F3(pf, JZI, jx,jy,jz) = Jz(harris, xx, yy);
     } foreach_3d_g_end;
   }
 }

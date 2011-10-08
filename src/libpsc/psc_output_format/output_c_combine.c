@@ -8,7 +8,7 @@
 // copy_to_global helper
 
 static void
-copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
+copy_to_global(fields_c_real_t *fld, fields_c_real_t *buf,
 	       int *ilo, int *ihi, int *ilg, int *img)
 {
   int *gdims = ppsc->domain.gdims;
@@ -30,7 +30,7 @@ copy_to_global(fields_base_real_t *fld, fields_base_real_t *buf,
 
 void
 write_fields_combine(struct psc_fields_list *list, 
-		     void (*write_field)(void *ctx, fields_base_t *fld), void *ctx)
+		     void (*write_field)(void *ctx, fields_c_t *fld), void *ctx)
 {
   MPI_Comm comm = MPI_COMM_WORLD;
   int rank, size;
@@ -40,8 +40,8 @@ write_fields_combine(struct psc_fields_list *list,
   psc_foreach_patch(ppsc, p) {
     for (int m = 0; m < list->nr_flds; m++) {
       int s_ilo[3], s_ihi[3], s_ilg[3], s_img[3];
-      fields_base_real_t *s_data = &F3_BASE(&list->flds[m]->f[p], 0,
-					    -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]);
+      fields_c_real_t *s_data = &F3_C(&list->flds[m]->f[p], 0,
+				      -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]);
       
       for (int d = 0; d < 3; d++) {
 	s_ilo[d] = ppsc->patch[p].off[d];
@@ -55,16 +55,16 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
 	MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
 	MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-	unsigned int sz = fields_base_size(&list->flds[m]->f[p]);
+	unsigned int sz = fields_c_size(&list->flds[m]->f[p]);
 	MPI_Send(s_data, sz, MPI_FIELDS_BASE_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
-	fields_base_t fld;
-	fields_base_alloc(&fld, (int []) { 0, 0, 0}, ppsc->domain.gdims, 1);
+	fields_c_t fld;
+	fields_c_alloc(&fld, (int []) { 0, 0, 0}, ppsc->domain.gdims, 1);
 	fld.name[0] = strdup(list->flds[m]->f[p].name[0]);
 	
 	for (int n = 0; n < size; n++) {
 	  int ilo[3], ihi[3], ilg[3], img[3];
-	  fields_base_real_t *buf;
+	  fields_c_real_t *buf;
 	  
 	  if (n == 0) {
 	    for (int d = 0; d < 3; d++) {
@@ -86,13 +86,13 @@ write_fields_combine(struct psc_fields_list *list,
 	  }
 	  /* printf("[%d] ilo %d %d %d ihi %d %d %d\n", rank, ilo[0], ilo[1], ilo[2], */
 	  /*        ihi[0], ihi[1], ihi[2]); */
-	  copy_to_global(&F3_BASE(&fld, 0, 0,0,0), buf, ilo, ihi, ilg, img);
+	  copy_to_global(&F3_C(&fld, 0, 0,0,0), buf, ilo, ihi, ilg, img);
 	  if (n != 0) {
 	    free(buf);
 	  }
 	}
 	write_field(ctx, &fld);
-	fields_base_free(&fld);
+	fields_c_free(&fld);
       }
     }
   }

@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_bnd.h"
+#include "psc_fields_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -9,33 +10,43 @@
 #include <mpi.h>
 
 static void
-setup_jx(mfields_base_t *flds)
+setup_jx(mfields_base_t *flds_base)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, 0, flds_base);
+
   psc_foreach_patch(ppsc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds.f[p];
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / ppsc->domain.gdims[0];
       f_real zz = 2.*M_PI * iz / ppsc->domain.gdims[2];
-      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
+      F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_g_end;
   }
+
+  psc_mfields_put_to(&flds, JXI, JXI + 1, flds_base);
 }
 
 static void
-setup_jx_noghost(mfields_base_t *flds)
+setup_jx_noghost(mfields_base_t *flds_base)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, 0, flds_base);
+
   psc_foreach_patch(ppsc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds.f[p];
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / ppsc->domain.gdims[0];
       f_real zz = 2.*M_PI * iz / ppsc->domain.gdims[2];
-      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
+      F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(zz);
     } foreach_3d_end;
   }
+
+  psc_mfields_put_to(&flds, JXI, JXI + 1, flds_base);
 }
 
 int

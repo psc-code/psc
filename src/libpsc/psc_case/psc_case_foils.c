@@ -209,7 +209,7 @@ psc_case_foils_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_foils_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_foils_init_field(struct psc_case *_case, mfields_c_t *flds)
 {
 #if 0
   // FIXME, do we need the ghost points?
@@ -220,10 +220,10 @@ psc_case_foils_init_field(struct psc_case *_case, mfields_base_t *flds)
       double xx = CRDX(patch, jx), yy = CRDY(patch, jy), zz = CRDZ(patch, jz);
     
       // FIXME, why this time?
-      F3_BASE(pf, EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
-      F3_BASE(pf, BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
-      F3_BASE(pf, EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
-      F3_BASE(pf, BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
+      F3(EY, jx,jy,jz) = psc_p_pulse_z1(xx, yy + .5*dy, zz, 0.*dt);
+      F3(BX, jx,jy,jz) = -psc_p_pulse_z1(xx, yy + .5*dy, zz + .5*dz, 0.*dt);
+      F3(EX, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz, 0.*dt);
+      F3(BY, jx,jy,jz) = psc_s_pulse_z1(xx + .5*dx, yy, zz + .5*dz, 0.*dt);
     } foreach_3d_g_end;
   }
 #endif

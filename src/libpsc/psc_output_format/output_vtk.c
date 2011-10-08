@@ -53,7 +53,7 @@ vtk_write_coordinates(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field(void *ctx, fields_base_t *fld)
+vtk_write_field(void *ctx, fields_c_t *fld)
 {
   FILE *file = ctx;
 
@@ -64,7 +64,7 @@ vtk_write_field(void *ctx, fields_base_t *fld)
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
       for (int ix = ib[0]; ix < ib[0] + im[0]; ix++) {
-	float val = F3_BASE(fld, 0, ix,iy,iz);
+	float val = F3_C(fld, 0, ix,iy,iz);
 	if (fabsf(val) < 1e-37) {
 	  fprintf(file, "%g ", 0.);
 	} else {
@@ -120,7 +120,7 @@ psc_output_format_vtk_points_write_fields(struct psc_output_format *format,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 0, out, &file);
     vtk_write_coordinates(file, 0, 0.);
-    fprintf(file, "\nPOINT_DATA %d\n", fields_base_size(&ppsc->flds->f[0]));
+    fprintf(file, "\nPOINT_DATA %d\n", fields_c_size(&flds->flds[0]->f[0]));
   }
 
   write_fields_combine(flds, vtk_write_field, file);
@@ -146,7 +146,7 @@ psc_output_format_vtk_cells_write_fields(struct psc_output_format *format,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 1, out, &file);
     vtk_write_coordinates(file, 1, .5);
-    fprintf(file, "\nCELL_DATA %d\n", fields_base_size(&ppsc->flds->f[0]));
+    fprintf(file, "\nCELL_DATA %d\n", fields_c_size(&flds->flds[0]->f[0]));
   }
   write_fields_combine(flds, vtk_write_field, file);
 

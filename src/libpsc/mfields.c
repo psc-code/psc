@@ -64,7 +64,7 @@ MAKE_MFIELDS_METHODS(fortran)
 //MAKE_MFIELDS_METHODS(sse2)
 
 // ======================================================================
-// psc_mparticles_c
+// psc_fields_c
 
 #include <mrc_io.h>
 

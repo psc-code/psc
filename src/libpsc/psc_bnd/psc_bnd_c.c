@@ -2,6 +2,7 @@
 #include "psc_bnd_private.h"
 #include "ddc_particles.h"
 #include "psc_particles_as_c.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -22,15 +23,15 @@ struct psc_bnd_c {
 static void
 copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
+  mfields_t *flds = ctx;
+  fields_t *pf = &flds->f[p];
+  fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3(pf, m, ix,iy,iz);
 	}
       }
     }
@@ -40,15 +41,15 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx
 static void
 add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
+  mfields_t *flds = ctx;
+  fields_t *pf = &flds->f[p];
+  fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3_BASE(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -58,15 +59,15 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ct
 static void
 copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
-  mfields_base_t *flds = ctx;
-  fields_base_t *pf = &flds->f[p];
-  fields_base_real_t *buf = _buf;
+  mfields_t *flds = ctx;
+  fields_t *pf = &flds->f[p];
+  fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3_BASE(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -124,7 +125,7 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
   mrc_ddc_set_funcs(bnd_c->ddc, &ddc_funcs);
   mrc_ddc_set_param_int3(bnd_c->ddc, "ibn", psc->ibn);
   mrc_ddc_set_param_int(bnd_c->ddc, "max_n_fields", 6);
-  mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_base_real_t));
+  mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_real_t));
   mrc_ddc_setup(bnd_c->ddc);
 
   bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_t),
@@ -185,8 +186,8 @@ check_domain(struct psc_bnd *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_c_add_ghosts
 
-static void
-psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+void
+__psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
   check_domain(bnd);
@@ -196,33 +197,43 @@ psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
     pr = prof_register("c_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-
   mrc_ddc_add_ghosts(bnd_c->ddc, mb, me, flds);
-
   prof_stop(pr);
+}
+
+static void
+psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+{
+  mfields_t flds;
+  psc_mfields_get_from(&flds, mb, me, flds_base);
+  __psc_bnd_c_add_ghosts(bnd, &flds, mb, me);
+  psc_mfields_put_to(&flds, mb, me, flds_base);
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_c_fill_ghosts
 
 static void
-psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
+psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
   check_domain(bnd);
+
+  mfields_t flds;
+  psc_mfields_get_from(&flds, mb, me, flds_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("c_fill_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(bnd_c->ddc, mb, me, flds);
-
+  mrc_ddc_fill_ghosts(bnd_c->ddc, mb, me, &flds);
   prof_stop(pr);
+
+  psc_mfields_put_to(&flds, mb, me, flds_base);
 }
 
 // ----------------------------------------------------------------------

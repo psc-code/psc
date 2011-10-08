@@ -6,6 +6,7 @@
 #include "psc_randomize.h"
 #include "psc_bnd.h"
 #include "psc_particles_as_c.h"
+#include "psc_fields_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -36,9 +37,9 @@ creal_sqrt(creal x)
 
 static void
 do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
-		fields_base_t *rho, double dt)
+		fields_t *rho, double dt)
 {
-  fields_base_zero(rho, 0);
+  fields_zero(rho, 0);
 
   creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   creal dxi = 1.f / psc->dx[0];
@@ -87,59 +88,62 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
     }
 
     creal fnq = part->qni * part->wni * fnqs;
-    F3_BASE(rho,0, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
-    F3_BASE(rho,0, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
-    F3_BASE(rho,0, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
-    F3_BASE(rho,0, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
-    F3_BASE(rho,0, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
-    F3_BASE(rho,0, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
-    F3_BASE(rho,0, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
-    F3_BASE(rho,0, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
-    F3_BASE(rho,0, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
-    F3_BASE(rho,0, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
-    F3_BASE(rho,0, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
-    F3_BASE(rho,0, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
-    F3_BASE(rho,0, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
-    F3_BASE(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3_BASE(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3_BASE(rho,0, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
-    F3_BASE(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3_BASE(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3_BASE(rho,0, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
-    F3_BASE(rho,0, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
-    F3_BASE(rho,0, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
-    F3_BASE(rho,0, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
-    F3_BASE(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3_BASE(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3_BASE(rho,0, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
-    F3_BASE(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3_BASE(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    F3(rho,0, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    F3(rho,0, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    F3(rho,0, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    F3(rho,0, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    F3(rho,0, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    F3(rho,0, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    F3(rho,0, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    F3(rho,0, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    F3(rho,0, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    F3(rho,0, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    F3(rho,0, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    F3(rho,0, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    F3(rho,0, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    F3(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3(rho,0, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    F3(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3(rho,0, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    F3(rho,0, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    F3(rho,0, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    F3(rho,0, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    F3(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3(rho,0, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    F3(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
   }
 }
 
 void
 psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
-		 mfields_base_t *rho, double dt)
+		 mfields_base_t *rho_base, double dt)
 {
   mparticles_t particles;
   psc_mparticles_get_from(&particles, particles_base);
+  mfields_t rho;
+  psc_mfields_get_from(&rho, 0, 0, rho_base);
 
   psc_foreach_patch(psc, p) {
-    do_calc_rho_2nd(psc, p, &particles.p[p], &rho->f[p], dt);
+    do_calc_rho_2nd(psc, p, &particles.p[p], &rho.f[p], dt);
   }
 
-  psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
-
   psc_mparticles_put_to(&particles, particles_base);
+  psc_mfields_put_to(&rho, 0, 1, rho_base);
+
+  psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
 
 // ======================================================================
 
 static void
 do_calc_rho_1st(struct psc *psc, int p, particles_t *pp,
-		fields_base_t *rho, double dt)
+		fields_t *rho, double dt)
 {
-  fields_base_zero(rho, 0);
+  fields_zero(rho, 0);
 
   creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   creal dxi = 1.f / psc->dx[0];
@@ -185,38 +189,41 @@ do_calc_rho_1st(struct psc *psc, int p, particles_t *pp,
     }
 
     creal fnq = part->qni * part->wni * fnqs;
-    F3_BASE(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3_BASE(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3_BASE(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3_BASE(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3_BASE(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3_BASE(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3_BASE(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3_BASE(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    F3(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
   }
 }
 
 void
 psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
-		 mfields_base_t *rho, double dt)
+		 mfields_base_t *rho_base, double dt)
 {
   mparticles_t particles;
   psc_mparticles_get_from(&particles, particles_base);
+  mfields_t rho;
+  psc_mfields_get_from(&rho, 0, 0, rho_base);
 
   psc_foreach_patch(psc, p) {
-    do_calc_rho_1st(psc, p, &particles.p[p], &rho->f[p], dt);
+    do_calc_rho_1st(psc, p, &particles.p[p], &rho.f[p], dt);
   }
 
-  psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
-
   psc_mparticles_put_to(&particles, particles_base);
+  psc_mfields_put_to(&rho, 0, 1, rho_base);
+
+  psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
 
 // ======================================================================
 // psc_calc_div_j
 
 static void
-do_calc_div_j(struct psc *psc, int p, fields_base_t *flds, fields_base_t *div_j)
+do_calc_div_j(struct psc *psc, int p, fields_t *flds, fields_t *div_j)
 {
   creal h[3];
   for (int d = 0; d < 3; d++) {
@@ -228,21 +235,29 @@ do_calc_div_j(struct psc *psc, int p, fields_base_t *flds, fields_base_t *div_j)
   }
 
   psc_foreach_3d_g(psc, p, jx, jy, jz) {
-    F3_BASE(div_j,0, jx,jy,jz) =
-      (F3_BASE(flds,JXI, jx,jy,jz) - F3_BASE(flds,JXI, jx-1,jy,jz)) * h[0] +
-      (F3_BASE(flds,JYI, jx,jy,jz) - F3_BASE(flds,JYI, jx,jy-1,jz)) * h[1] +
-      (F3_BASE(flds,JZI, jx,jy,jz) - F3_BASE(flds,JZI, jx,jy,jz-1)) * h[2];
+    F3(div_j,0, jx,jy,jz) =
+      (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-1,jy,jz)) * h[0] +
+      (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-1,jz)) * h[1] +
+      (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-1)) * h[2];
   } psc_foreach_3d_g_end;
 }
 
 static void
-psc_calc_div_j(struct psc *psc, mfields_base_t *flds, mfields_base_t *div_j)
+psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j_base)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, JXI, JXI + 3, flds_base);
+  mfields_t div_j;
+  psc_mfields_get_from(&div_j, 0, 0, div_j_base);
+
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, &flds->f[p], &div_j->f[p]);
+    do_calc_div_j(psc, p, &flds.f[p], &div_j.f[p]);
   }
 
-  psc_bnd_add_ghosts(psc->bnd, div_j, 0, 1);
+  psc_mfields_put_to(&flds, 0, 0, flds_base);
+  psc_mfields_put_to(&div_j, 0, 1, div_j_base);
+
+  psc_bnd_add_ghosts(psc->bnd, div_j_base, 0, 1);
 }
 
 // ======================================================================
@@ -263,28 +278,32 @@ static void
 psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 		     mfields_base_t *flds, double eps)
 {
-  mfields_base_t *rho_m = fld_create(psc);
-  mfields_base_t *rho_p = fld_create(psc);
-  mfields_base_t *div_j = fld_create(psc);
+  mfields_base_t *rho_m_base = fld_create(psc);
+  mfields_base_t *rho_p_base = fld_create(psc);
+  mfields_base_t *div_j_base = fld_create(psc);
 
-  psc_calc_rho_1st(psc, particles, rho_m, -.5 * psc->dt);
-  psc_calc_rho_1st(psc, particles, rho_p,  .5 * psc->dt);
+  psc_calc_rho_1st(psc, particles, rho_m_base, -.5 * psc->dt);
+  psc_calc_rho_1st(psc, particles, rho_p_base,  .5 * psc->dt);
 
-  psc_mfields_base_axpy(rho_p, -1., rho_m);
-  psc_mfields_base_scale(rho_p, 1. / psc->dt);
+  psc_mfields_base_axpy(rho_p_base, -1., rho_m_base);
+  psc_mfields_base_scale(rho_p_base, 1. / psc->dt);
 
-  psc_calc_div_j(psc, flds, div_j);
+  psc_calc_div_j(psc, flds, div_j_base);
 
   //  psc_dump_field(div_j, 0, "div_j");
   //  psc_dump_field(rho_p, 0, "dt_rho");
 
+  mfields_t rho_p, div_j;
+  psc_mfields_get_from(&rho_p, 0, 1, rho_p_base);
+  psc_mfields_get_from(&div_j, 0, 1, div_j_base);
+
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    fields_base_t *p_rho_p = &rho_p->f[p];
-    fields_base_t *p_div_j = &div_j->f[p];
+    fields_t *p_rho_p = &rho_p.f[p];
+    fields_t *p_div_j = &div_j.f[p];
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      creal dt_rho = F3_BASE(p_rho_p,0, jx,jy,jz);
-      creal div_j = F3_BASE(p_div_j,0, jx,jy,jz);
+      creal dt_rho = F3(p_rho_p,0, jx,jy,jz);
+      creal div_j = F3(p_div_j,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(dt_rho + div_j));
       if (fabs(dt_rho + div_j) > eps) {
 	printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
@@ -294,14 +313,17 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   }
   printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
 
+  psc_mfields_put_to(&rho_p, 0, 0, rho_p_base);
+  psc_mfields_put_to(&div_j, 0, 0, div_j_base);
+
   //  psc_mfields_base_axpy(rho_p, +1., div_j);
   //  psc_dump_field(rho_p, 0, "cont_diff");
 
   assert(max_err <= eps);
 
-  psc_mfields_base_destroy(rho_m);
-  psc_mfields_base_destroy(rho_p);
-  psc_mfields_base_destroy(div_j);
+  psc_mfields_base_destroy(rho_m_base);
+  psc_mfields_base_destroy(rho_p_base);
+  psc_mfields_base_destroy(div_j_base);
 }
 
 

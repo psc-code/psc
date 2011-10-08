@@ -46,7 +46,7 @@ hdf5_close(struct hdf5_ctx *hdf5)
 }
 
 static void
-hdf5_write_field(void *ctx, fields_base_t *fld)
+hdf5_write_field(void *ctx, fields_c_t *fld)
 {
   struct psc_patch *patch = &ppsc->patch[0];
   struct hdf5_ctx *hdf5 = ctx;
@@ -91,7 +91,7 @@ hdf5_write_field(void *ctx, fields_base_t *fld)
   H5Sclose(file_space);
   
   H5Dwrite(dataset, mem_type, mem_space, H5S_ALL, H5P_DEFAULT,
-	   &F3_BASE(fld, 0, fld->ib[0], fld->ib[1], fld->ib[2]));
+	   &F3_C(fld, 0, fld->ib[0], fld->ib[1], fld->ib[2]));
   H5Sclose(mem_space);
   
   H5Dclose(dataset);
@@ -146,7 +146,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
   mrc_domain_get_param_int(ppsc->mrc_domain, "npy", &np[1]);
   mrc_domain_get_param_int(ppsc->mrc_domain, "npz", &np[2]);
 
-  fields_base_t *fld = &list->flds[0]->f[0];
+  fields_c_t *fld = &list->flds[0]->f[0];
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
   fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
   fprintf(f, "<Domain>\n");
@@ -264,36 +264,3 @@ struct psc_output_format_ops psc_output_format_xdmf_ops = {
   .write_fields          = psc_output_format_xdmf_write_fields,
 };
 
-// ======================================================================
-// hdf5_dump_field
-//
-// dumps the local fields to a file
-
-// FIXME still assuming fortran layout for buf
-
-#if 0
-static void
-hdf5_dump_field(int m, const char *fname)
-{
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  char *filename = malloc(strlen(fname) + 10);
-  sprintf(filename, "%s-p%d.h5", fname, rank);
-  mpi_printf(MPI_COMM_WORLD, "hdf5_dump_field: '%s'\n", filename);
-  
-  hsize_t dims[3] = { ppsc->ihg[2] - ppsc->ilg[2],
-		      ppsc->ihg[1] - ppsc->ilg[1],
-		      ppsc->ihg[0] - ppsc->ilg[0] };
-
-  hid_t file = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t group = H5Gcreate(file, "psc", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  hid_t group_fld = H5Gcreate(group, "fields", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-  assert(sizeof(fields_base_real_t) == sizeof(double));
-  H5LTmake_dataset_double(group_fld, fldname[m], 3, dims,
-			  &F3_BASE(&ppsc->pf, m, -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2]));
-  H5Gclose(group_fld);
-  H5Gclose(group);
-  H5Fclose(file);
-}
-#endif

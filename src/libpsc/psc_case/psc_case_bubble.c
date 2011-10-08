@@ -4,6 +4,7 @@
 #include "psc_push_fields.h"
 #include "psc_bnd_fields.h"
 #include "psc_sort.h"
+#include "psc_fields_as_c.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -96,7 +97,7 @@ psc_case_bubble_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_bubble_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_bubble_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc_case_bubble *bubble = mrc_to_subobj(_case, struct psc_case_bubble);
   struct psc *psc = _case->psc;
@@ -110,7 +111,7 @@ psc_case_bubble_init_field(struct psc_case *_case, mfields_base_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
@@ -123,10 +124,10 @@ psc_case_bubble_init_field(struct psc_case *_case, mfields_base_t *flds)
       double r2 = sqrt(sqr(x2) + sqr(z2));
 
       if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * z1 / r1;
+	F3(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * z1 / r1;
       }
       if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * z2 / r2;
+	F3(pf, HX, jx,jy,jz) += - BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * z2 / r2;
       }
 
       x1 = xx + 0.5*dx;
@@ -137,10 +138,10 @@ psc_case_bubble_init_field(struct psc_case *_case, mfields_base_t *flds)
       r2 = sqrt(sqr(x2) + sqr(z2));
 
       if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * x1 / r1;
+	F3(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r1)/(2.*LLB)) * x1 / r1;
       }
       if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * x2 / r2;
+	F3(pf, HZ, jx,jy,jz) += BB * sin(M_PI * (LLn - r2)/(2.*LLB)) * x2 / r2;
       }
 
       x1 = xx;
@@ -151,16 +152,16 @@ psc_case_bubble_init_field(struct psc_case *_case, mfields_base_t *flds)
       r2 = sqrt(sqr(x2) + sqr(z2));
 
       if ( (r1 < LLn) && (r1 > LLn - 2*LLB) ) {
-	F3_BASE(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
+	F3(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
 	  sin(M_PI * (LLn - r1)/(2.*LLB)) *
 	  sin(M_PI * r1 / LLn);
-	F3_BASE(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r1)/(2.*LLB));
+	F3(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r1)/(2.*LLB));
       }
       if ( (r2 < LLn) && (r2 > LLn - 2*LLB) ) {
-	F3_BASE(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
+	F3(pf, EY, jx,jy,jz) += MMach * sqrt(TTe/MMi) * BB *
 	  sin(M_PI * (LLn - r2)/(2.*LLB)) *
 	  sin(M_PI * r2 / LLn);
-	F3_BASE(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r2)/(2.*LLB));
+	F3(pf, JYI, jx,jy,jz) += BB * M_PI/(2.*LLB) * cos(M_PI * (LLn - r2)/(2.*LLB));
       }
     } foreach_3d_g_end;
   }

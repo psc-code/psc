@@ -3,6 +3,7 @@
 #include "psc_fields_cuda.h"
 #include "psc_cuda.h"
 
+#include <mrc_params.h>
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
@@ -82,7 +83,7 @@ psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t
 
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_CUDA(pf_cuda, m, jx,jy,jz) = F3(m, jx,jy,jz);
+	F3_CUDA(pf_cuda, m, jx,jy,jz) = F3(pf, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
     __fields_cuda_to_device(pf_cuda, h_flds, mb, me);
@@ -95,7 +96,7 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
 {
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf_cuda = &flds_cuda->f[p];
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
 
     float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
@@ -110,7 +111,7 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
 	  assert(0);
 	}
 #endif
-	F3(m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
+	F3(pf, m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
 

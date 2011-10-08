@@ -9,7 +9,7 @@
 #include <string.h>
 
 static void
-binary_write_field(FILE *file, fields_base_t *fld)
+binary_write_field(FILE *file, fields_c_t *fld)
 {
   struct psc_patch *patch = &ppsc->patch[0];
   int *ilo = patch->off, ihi[3] = { patch->off[0] + patch->ldims[0],
@@ -23,7 +23,7 @@ binary_write_field(FILE *file, fields_base_t *fld)
   int i = 0;
   psc_foreach_patch(ppsc, patch) {
     psc_foreach_3d(ppsc, patch, ix, iy, iz, 0, 0) {
-      data[i++] = F3_BASE(fld,0, ix,iy,iz);
+      data[i++] = F3_C(fld,0, ix,iy,iz);
     } foreach_3d_end;
   }
     

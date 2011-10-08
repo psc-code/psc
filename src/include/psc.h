@@ -218,7 +218,7 @@ struct psc {
   ///@}
 
   mparticles_base_t *particles;	///< All the particles, indexed by their containing patch
-  mfields_base_t *flds;	///< The fields. Access them via F3_BASE()
+  mfields_base_t *flds;	///< The fields.
   mphotons_t *mphotons;
 
   ///The domain partitioner.

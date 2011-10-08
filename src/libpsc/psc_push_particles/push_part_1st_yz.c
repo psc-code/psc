@@ -125,7 +125,7 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
 	  + .5f * S0Y(l2) * S1Z(l3)
 	  + (1.f/3.f) * S1Y(l2) * S1Z(l3);
 	creal jxh = fnqx*wx;
-	F3(JXI, 0,lg[1]+l2,lg[2]+l3) += jxh;
+	F3(pf, JXI, 0,lg[1]+l2,lg[2]+l3) += jxh;
       }
     }
 
@@ -135,7 +135,7 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
       for (int l2 = l2min; l2 < l2max; l2++) {
 	creal wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
 	jyh -= fnqy*wy;
-	F3(JYI, 0,lg[1]+l2,lg[2]+l3) += jyh;
+	F3(pf, JYI, 0,lg[1]+l2,lg[2]+l3) += jyh;
       }
     }
 
@@ -145,7 +145,7 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
       for (int l3 = l3min; l3 < l3max; l3++) {
 	creal wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
 	jzh -= fnqz*wz;
-	F3(JZI, 0,lg[1]+l2,lg[2]+l3) += jzh;
+	F3(pf, JZI, 0,lg[1]+l2,lg[2]+l3) += jzh;
       }
     }
   }

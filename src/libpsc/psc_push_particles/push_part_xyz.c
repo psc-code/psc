@@ -105,33 +105,33 @@ do_genc_push_part_xyz(int p, fields_t *pf, particles_t *pp)
     // FIELD INTERPOLATION
 
 #define INTERP_3D(m, gx, gy, gz, lx, ly, lz)				\
-    (gz##mz*(gy##my*(gx##mx*F3(m, lx-1,ly-1,lz-1) +			\
-		     gx##0x*F3(m, lx  ,ly-1,lz-1) +			\
-		     gx##1x*F3(m, lx+1,ly-1,lz-1)) +			\
-	     gy##0y*(gx##mx*F3(m, lx-1,ly  ,lz-1) +			\
-		     gx##0x*F3(m, lx  ,ly  ,lz-1) +			\
-		     gx##1x*F3(m, lx+1,ly  ,lz-1)) +			\
-	     gy##1y*(gx##mx*F3(m, lx-1,ly+1,lz-1) +			\
-		     gx##0x*F3(m, lx  ,ly+1,lz-1) +			\
-		     gx##1x*F3(m, lx+1,ly+1,lz-1))) +			\
-     gz##0z*(gy##my*(gx##mx*F3(m, lx-1,ly-1,lz  ) +			\
-		     gx##0x*F3(m, lx  ,ly-1,lz  ) +			\
-		     gx##1x*F3(m, lx+1,ly-1,lz  )) +			\
-	     gy##0y*(gx##mx*F3(m, lx-1,ly  ,lz  ) +			\
-		     gx##0x*F3(m, lx  ,ly  ,lz  ) +			\
-		     gx##1x*F3(m, lx+1,ly  ,lz  )) +			\
-	     gy##1y*(gx##mx*F3(m, lx-1,ly+1,lz  ) +			\
-		     gx##0x*F3(m, lx  ,ly+1,lz  ) +			\
-		     gx##1x*F3(m, lx+1,ly+1,lz  ))) +			\
-     gz##1z*(gy##my*(gx##mx*F3(m, lx-1,ly-1,lz+1) +			\
-		     gx##0x*F3(m, lx  ,ly-1,lz+1) +			\
-		     gx##1x*F3(m, lx+1,ly-1,lz+1)) +			\
-	     gy##0y*(gx##mx*F3(m, lx-1,ly  ,lz+1) +			\
-		     gx##0x*F3(m, lx  ,ly  ,lz+1) +			\
-		     gx##1x*F3(m, lx+1,ly  ,lz+1)) +			\
-	     gy##1y*(gx##mx*F3(m, lx-1,ly+1,lz+1) +			\
-		     gx##0x*F3(m, lx  ,ly+1,lz+1) +			\
-		     gx##1x*F3(m, lx+1,ly+1,lz+1))))
+    (gz##mz*(gy##my*(gx##mx*F3(pf, m, lx-1,ly-1,lz-1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly-1,lz-1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly-1,lz-1)) +			\
+	     gy##0y*(gx##mx*F3(pf, m, lx-1,ly  ,lz-1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly  ,lz-1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly  ,lz-1)) +			\
+	     gy##1y*(gx##mx*F3(pf, m, lx-1,ly+1,lz-1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly+1,lz-1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly+1,lz-1))) +			\
+     gz##0z*(gy##my*(gx##mx*F3(pf, m, lx-1,ly-1,lz  ) +			\
+		     gx##0x*F3(pf, m, lx  ,ly-1,lz  ) +			\
+		     gx##1x*F3(pf, m, lx+1,ly-1,lz  )) +			\
+	     gy##0y*(gx##mx*F3(pf, m, lx-1,ly  ,lz  ) +			\
+		     gx##0x*F3(pf, m, lx  ,ly  ,lz  ) +			\
+		     gx##1x*F3(pf, m, lx+1,ly  ,lz  )) +			\
+	     gy##1y*(gx##mx*F3(pf, m, lx-1,ly+1,lz  ) +			\
+		     gx##0x*F3(pf, m, lx  ,ly+1,lz  ) +			\
+		     gx##1x*F3(pf, m, lx+1,ly+1,lz  ))) +			\
+     gz##1z*(gy##my*(gx##mx*F3(pf, m, lx-1,ly-1,lz+1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly-1,lz+1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly-1,lz+1)) +			\
+	     gy##0y*(gx##mx*F3(pf, m, lx-1,ly  ,lz+1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly  ,lz+1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly  ,lz+1)) +			\
+	     gy##1y*(gx##mx*F3(pf, m, lx-1,ly+1,lz+1) +			\
+		     gx##0x*F3(pf, m, lx  ,ly+1,lz+1) +			\
+		     gx##1x*F3(pf, m, lx+1,ly+1,lz+1))))
 
     creal exq = INTERP_3D(EX, h,g,g, l1,j2,j3);
     creal eyq = INTERP_3D(EY, g,h,g, j1,l2,j3);
@@ -258,7 +258,7 @@ do_genc_push_part_xyz(int p, fields_t *pf, particles_t *pp)
 			      (1.f/3.f) * S1Y(l2)*S1Z(l3));
 
 	  jxh -= fnqx*wx;
-	  F3(JXI, j1+l1,j2+l2,j3+l3) += jxh;
+	  F3(pf, JXI, j1+l1,j2+l2,j3+l3) += jxh;
 	}
       }
     }
@@ -273,7 +273,7 @@ do_genc_push_part_xyz(int p, fields_t *pf, particles_t *pp)
 			      (1.f/3.f) * S1X(l1)*S1Z(l3));
 
 	  jyh -= fnqy*wy;
-	  F3(JYI, j1+l1,j2+l2,j3+l3) += jyh;
+	  F3(pf, JYI, j1+l1,j2+l2,j3+l3) += jyh;
 	}
       }
     }
@@ -288,7 +288,7 @@ do_genc_push_part_xyz(int p, fields_t *pf, particles_t *pp)
 			      (1.f/3.f) * S1X(l1)*S1Y(l2));
 
 	  jzh -= fnqz*wz;
-	  F3(JZI, j1+l1,j2+l2,j3+l3) += jzh;
+	  F3(pf, JZI, j1+l1,j2+l2,j3+l3) += jzh;
 	}
       }
     }

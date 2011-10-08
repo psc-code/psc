@@ -76,30 +76,30 @@ do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
     // FIELD INTERPOLATION
 
     creal exq = 
-       gmz*F3(EX, l1,j2,j3-1)
-      +g0z*F3(EX, l1,j2,j3)
-      +g1z*F3(EX, l1,j2,j3+1);
+       gmz*F3(pf, EX, l1,j2,j3-1)
+      +g0z*F3(pf, EX, l1,j2,j3)
+      +g1z*F3(pf, EX, l1,j2,j3+1);
     creal eyq =
-       gmz*F3(EY, j1,l2,j3-1)
-      +g0z*F3(EY, j1,l2,j3)
-      +g1z*F3(EY, j1,l2,j3+1);
+       gmz*F3(pf, EY, j1,l2,j3-1)
+      +g0z*F3(pf, EY, j1,l2,j3)
+      +g1z*F3(pf, EY, j1,l2,j3+1);
     creal ezq =
-       hmz*F3(EZ, j1,j2,l3-1)
-      +h0z*F3(EZ, j1,j2,l3)
-      +h1z*F3(EZ, j1,j2,l3+1);
+       hmz*F3(pf, EZ, j1,j2,l3-1)
+      +h0z*F3(pf, EZ, j1,j2,l3)
+      +h1z*F3(pf, EZ, j1,j2,l3+1);
 
     creal hxq =
-       hmz*F3(HX, j1,l2,l3-1)
-      +h0z*F3(HX, j1,l2,l3)
-      +h1z*F3(HX, j1,l2,l3+1);
+       hmz*F3(pf, HX, j1,l2,l3-1)
+      +h0z*F3(pf, HX, j1,l2,l3)
+      +h1z*F3(pf, HX, j1,l2,l3+1);
     creal hyq =
-       hmz*F3(HY, l1,j2,l3-1)
-      +h0z*F3(HY, l1,j2,l3)
-      +h1z*F3(HY, l1,j2,l3+1);
+       hmz*F3(pf, HY, l1,j2,l3-1)
+      +h0z*F3(pf, HY, l1,j2,l3)
+      +h1z*F3(pf, HY, l1,j2,l3+1);
     creal hzq =
-       gmz*F3(HZ, l1,l2,j3-1)
-      +g0z*F3(HZ, l1,l2,j3)
-      +g1z*F3(HZ, l1,l2,j3+1);
+       gmz*F3(pf, HZ, l1,l2,j3-1)
+      +g0z*F3(pf, HZ, l1,l2,j3)
+      +g1z*F3(pf, HZ, l1,l2,j3+1);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
@@ -185,9 +185,9 @@ do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
       jyh = fnqy*wy;
       jzh -= fnqz*wz;
       
-      F3(JXI, j1+l1,j2,j3+l3) += jxh;
-      F3(JYI, j1+l1,j2,j3+l3) += jyh;
-      F3(JZI, j1+l1,j2,j3+l3) += jzh;
+      F3(pf, JXI, j1+l1,j2,j3+l3) += jxh;
+      F3(pf, JYI, j1+l1,j2,j3+l3) += jyh;
+      F3(pf, JZI, j1+l1,j2,j3+l3) += jzh;
     }
   }
 }

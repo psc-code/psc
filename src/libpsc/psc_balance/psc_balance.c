@@ -4,6 +4,7 @@
 #include "psc_bnd_fields.h"
 #include "psc_push_fields.h"
 #include "psc_particles_as_c.h"
+#include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
@@ -308,7 +309,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
 
 static void
 communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
-		   mfields_base_t *flds)
+		   mfields_t *flds_old, mfields_t *flds_new)
 {
   MPI_Comm comm = mrc_domain_comm(domain_new);
   int rank, size;
@@ -317,37 +318,20 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
 
   int nr_patches_old, nr_patches_new;
   mrc_domain_get_patches(domain_old, &nr_patches_old);
-  struct mrc_patch *patches_new =
-    mrc_domain_get_patches(domain_new, &nr_patches_new);
-
+  mrc_domain_get_patches(domain_new, &nr_patches_new);
 	
 	//HACK: Don't communicate output fields if they don't correspond to the domain
 	//This is needed e.g. for the boosted output which handles its MPI communication internally
 	//printf("Field: %s\n", flds->f[0].name);
 	
-	if(nr_patches_old != flds->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
+	if(nr_patches_old != flds_old->nr_patches /* || strncmp(flds->f[0].name, "lab", 3) == 0 */) return;
 	
 	
-  assert(nr_patches_old == flds->nr_patches);
+  assert(nr_patches_old == flds_old->nr_patches);
   assert(nr_patches_old > 0);
-  int ibn[3] = { -flds->f[0].ib[0], -flds->f[0].ib[1], -flds->f[0].ib[2] };
-  int nr_comp = flds->f[0].nr_comp;
-  char **fld_name = flds->f[0].name;
-
-  fields_base_t *f_old = flds->f;
-  fields_base_t *f_new = calloc(nr_patches_new, sizeof(*f_new));
-  for (int p = 0; p < nr_patches_new; p++) {
-    int ilg[3] = { -ibn[0], -ibn[1], -ibn[2] };
-    int ihg[3] = { patches_new[p].ldims[0] + ibn[0],
-		   patches_new[p].ldims[1] + ibn[1],
-		   patches_new[p].ldims[2] + ibn[2] };
-    fields_base_alloc(&f_new[p], ilg, ihg, nr_comp);
-    for (int m = 0; m < nr_comp; m++) {
-      if (fld_name[m]) {
-	f_new[p].name[m] = strdup(fld_name[m]);
-      }
-    }
-  }
+  
+  fields_t *f_old = flds_old->f;
+  fields_t *f_new = flds_new->f;
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send from old local patches
@@ -358,10 +342,10 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      fields_base_t *pf_old = &f_old[p];
-      int nn = fields_base_size(pf_old) * pf_old->nr_comp;
+      fields_t *pf_old = &f_old[p];
+      int nn = fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
-      void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
+      void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
       MPI_Isend(addr_old, nn, MPI_FIELDS_BASE_REAL, info_new.rank,
 		mpi_tag(&info), comm, &send_reqs[p]);
     }
@@ -380,10 +364,10 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       //Seed new data
     }
     else {
-      fields_base_t *pf_new = &f_new[p];
-      int nn = fields_base_size(pf_new) * pf_new->nr_comp;
+      fields_t *pf_new = &f_new[p];
+      int nn = fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
-      void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
+      void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
       MPI_Irecv(addr_new, nn, MPI_FIELDS_BASE_REAL, info_old.rank,
 		mpi_tag(&info), comm, &recv_reqs[p]);
     }
@@ -399,15 +383,15 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       continue;
     }
 
-    fields_base_t *pf_old = &f_old[info_old.patch];
-    fields_base_t *pf_new = &f_new[p];
+    fields_t *pf_old = &f_old[info_old.patch];
+    fields_t *pf_new = &f_new[p];
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
-    assert(fields_base_size(pf_old) == fields_base_size(pf_new));
-    int size = fields_base_size(pf_old) * pf_old->nr_comp;
+    assert(fields_size(pf_old) == fields_size(pf_new));
+    int size = fields_size(pf_old) * pf_old->nr_comp;
     int *ib = pf_new->ib;
-    void *addr_new = &F3_BASE(pf_new, 0, ib[0], ib[1], ib[2]);
-    void *addr_old = &F3_BASE(pf_old, 0, ib[0], ib[1], ib[2]);
+    void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
+    void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
     memcpy(addr_new, addr_old, size * sizeof(fields_base_real_t));
   }
 
@@ -415,14 +399,6 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   MPI_Waitall(nr_patches_new, recv_reqs, MPI_STATUSES_IGNORE);
   free(send_reqs);
   free(recv_reqs);
-
-  for (int p = 0; p < nr_patches_old; p++) {
-    fields_base_free(&f_old[p]);
-  }
-  free(f_old);
-
-  flds->f = f_new;
-  flds->nr_patches = nr_patches_new;
 }
 
 static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_domain *domain_new)
@@ -481,12 +457,32 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_t *mf;
-  __list_for_each_entry(mf, &mfields_base_list, entry, mfields_base_t) {
-    communicate_fields(domain_old, domain_new, mf);
-  }
-  psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
+  mfields_base_t *flds_base_old;
+  __list_for_each_entry(flds_base_old, &mfields_base_list, entry, mfields_base_t) {
+    if (flds_base_old != psc->flds) {
+      fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
+      continue; // FIXME!!!
+    }
+    mfields_base_t *flds_base_new;
+    flds_base_new = psc_mfields_base_create(mrc_domain_comm(domain_new));
+    psc_mfields_base_set_name(flds_base_new, "mfields");
+    psc_mfields_base_set_domain(flds_base_new, domain_new);
+    psc_mfields_base_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
+    psc_mfields_base_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_base_setup(flds_base_new);
 
+    mfields_t flds_old, flds_new;
+    psc_mfields_get_from(&flds_old, 0, 12, flds_base_old); // FIXME NR_FIELDS?
+    psc_mfields_get_from(&flds_new, 0, 0, flds_base_new);
+    communicate_fields(domain_old, domain_new, &flds_old, &flds_new);
+    psc_mfields_put_to(&flds_old, 0, 0, flds_base_old);
+    psc_mfields_put_to(&flds_new, 0, 12, flds_base_new);
+
+    psc_mfields_base_destroy(psc->flds);
+    psc->flds = flds_base_new;
+  }
+
+  psc_balance_seed_patches(domain_old, domain_new);	//TODO required here?
 
   mrc_domain_destroy(domain_old);
   psc->mrc_domain = domain_new;
@@ -579,9 +575,29 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // ----------------------------------------------------------------------
   // fields
 
-  mfields_base_t *mf;
-  __list_for_each_entry(mf, &mfields_base_list, entry, mfields_base_t) {
-    communicate_fields(domain_old, domain_new, mf);
+  mfields_base_t *flds_base_old;
+  __list_for_each_entry(flds_base_old, &mfields_base_list, entry, mfields_base_t) {
+    if (flds_base_old != psc->flds) {
+      fprintf(stderr, "WARNING: not rebalancing some extra field -- expect crash!\n");
+      continue; // FIXME!!!
+    }
+    mfields_base_t *flds_base_new;
+    flds_base_new = psc_mfields_base_create(mrc_domain_comm(domain_new));
+    psc_mfields_base_set_name(flds_base_new, "mfields");
+    psc_mfields_base_set_domain(flds_base_new, domain_new);
+    psc_mfields_base_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
+    psc_mfields_base_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_base_setup(flds_base_new);
+
+    mfields_t flds_old, flds_new;
+    psc_mfields_get_from(&flds_old, 0, 12, flds_base_old); // FIXME NR_FIELDS?
+    psc_mfields_get_from(&flds_new, 0, 0, flds_base_new);
+    communicate_fields(domain_old, domain_new, &flds_old, &flds_new);
+    psc_mfields_put_to(&flds_old, 0, 0, flds_base_old);
+    psc_mfields_put_to(&flds_new, 0, 12, flds_base_new);
+
+    psc_mfields_base_destroy(psc->flds);
+    psc->flds = flds_base_new;
   }
   
   psc_balance_seed_patches(domain_old, domain_new);

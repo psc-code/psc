@@ -32,7 +32,7 @@ psc_mfields_sse2_put_to(fields_sse2_t *pf, int mb, int me)
   pf->flds = NULL;
 }
 
-#else
+#elif FIELDS_BASE == FIELDS_C
 
 static bool __gotten; // to check we're pairing get/put correctly
 
@@ -57,7 +57,7 @@ psc_mfields_sse2_get_from(fields_sse2_t *pf, int mb, int me, void *_flds_base)
     for(int n = 0; n < sz; n++){
       //preserve Fortran ordering for now
       pf->flds[m * sz + n] =
-	(sse2_real) ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
+	(sse2_real) ((&F3_C(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]);
     }
   }
 }
@@ -79,7 +79,7 @@ psc_mfields_sse2_put_to(fields_sse2_t *pf, int mb, int me, void *_flds_base)
   int *ibn = psc.ibn;
   for(int m = mb; m < me; m++){
     for(int n = 0; n < sz; n++){
-      ((&F3_BASE(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
+      ((&F3_C(pf_base, m, -ibn[0],-ibn[1],-ibn[2]))[n]) = 
 	pf->flds[m * sz + n];
     }
   }

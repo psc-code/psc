@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_fields_as_c.h"
 #include <mrc_params.h>
 
 #include <math.h>
@@ -88,7 +89,7 @@ psc_case_harris_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_harris_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_harris_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
   struct psc *psc = _case->psc;
@@ -101,21 +102,21 @@ psc_case_harris_init_field(struct psc_case *_case, mfields_base_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
     
-      F3_BASE(pf, HX, jx,jy,jz) = 
+      F3(pf, HX, jx,jy,jz) = 
 	BB * (-1. 
 	      + tanh((zz + .5*dz - 0.5*LLz)/LLL)
 	      - tanh((zz + .5*dz - 1.5*LLz)/LLL))
 	+ AA*M_PI/LLz * sin(2.*M_PI*xx/LLx) * cos(M_PI*(zz+.5*dz)/LLz);
       
-      F3_BASE(pf, HZ, jx,jy,jz) =
+      F3(pf, HZ, jx,jy,jz) =
 	- AA*2.*M_PI/LLx * cos(2.*M_PI*(xx+.5*dx)/LLx) * sin(M_PI*zz/LLz);
       
-      F3_BASE(pf, JYI, jx,jy,jz) = BB/LLL *
+      F3(pf, JYI, jx,jy,jz) = BB/LLL *
 	(1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
 	- (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
 	   * sin(2.*M_PI*xx/LLx) * sin(M_PI*zz/LLz));
@@ -224,7 +225,7 @@ psc_case_test_yz_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_test_yz_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_test_yz_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
   struct psc *psc = _case->psc;
@@ -237,21 +238,21 @@ psc_case_test_yz_init_field(struct psc_case *_case, mfields_base_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dy = psc->dx[1], dz = psc->dx[2];
       double yy = CRDY(p, jy), zz = CRDZ(p, jz);
       
-      F3_BASE(pf, HY, jx,jy,jz) = 
+      F3(pf, HY, jx,jy,jz) = 
 	BB * (-1. 
 	      + tanh((zz + .5*dz - 0.5*LLz)/LLL)
 	      - tanh((zz + .5*dz - 1.5*LLz)/LLL))
 	+ AA*M_PI/LLz * sin(2.*M_PI*yy/LLy) * cos(M_PI*(zz+.5*dz)/LLz);
       
-      F3_BASE(pf, HZ, jx,jy,jz) =
+      F3(pf, HZ, jx,jy,jz) =
 	- AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*zz/LLz);
       
-      F3_BASE(pf, JXI, jx,jy,jz) = - BB/LLL *
+      F3(pf, JXI, jx,jy,jz) = - BB/LLL *
 	(1./sqr(cosh((zz - 0.5*LLz)/LLL)) -1./sqr(cosh((zz - 1.5*LLz)/LLL)))
 	- (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLy)) 
 	   * sin(2.*M_PI*yy/LLy) * sin(M_PI*zz/LLz));
@@ -337,7 +338,7 @@ psc_case_test_xy_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_test_xy_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc_case_harris *harris = mrc_to_subobj(_case, struct psc_case_harris);
   struct psc *psc = _case->psc;
@@ -350,21 +351,21 @@ psc_case_test_xy_init_field(struct psc_case *_case, mfields_base_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dy = psc->dx[1], dx = psc->dx[0];
       double yy = CRDY(p, jy), xx = CRDX(p, jx);
       
-      F3_BASE(pf, HY, jx,jy,jz) = 
+      F3(pf, HY, jx,jy,jz) = 
 	BB * (-1. 
 	      + tanh((xx + .5*dx - 0.5*LLx)/LLL)
 	      - tanh((xx + .5*dx - 1.5*LLx)/LLL))
 	+ AA*M_PI/LLx * sin(2.*M_PI*yy/LLy) * cos(M_PI*(xx+.5*dx)/LLx);
       
-      F3_BASE(pf, HZ, jx,jy,jz) =
+      F3(pf, HZ, jx,jy,jz) =
 	- AA*2.*M_PI/LLy * cos(2.*M_PI*(yy+.5*dy)/LLy) * sin(M_PI*xx/LLx);
       
-      F3_BASE(pf, JXI, jx,jy,jz) = - BB/LLL *
+      F3(pf, JXI, jx,jy,jz) = - BB/LLL *
 	(1./sqr(cosh((xx - 0.5*LLx)/LLL)) -1./sqr(cosh((xx - 1.5*LLx)/LLL)))
 	- (AA*sqr(M_PI) * (1./sqr(LLx) + 4./sqr(LLy)) 
 	   * sin(2.*M_PI*yy/LLy) * sin(M_PI*xx/LLx));
@@ -444,15 +445,15 @@ psc_case_test_z_set_from_options(struct psc_case *_case)
 }
 
 static void
-psc_case_test_z_init_field(struct psc_case *_case, mfields_base_t *flds)
+psc_case_test_z_init_field(struct psc_case *_case, mfields_t *flds)
 {
   struct psc *psc = _case->psc;
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds->f[p];
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      F3_BASE(pf, EZ, jx,jy,jz) = 1.;
+      F3(pf, EZ, jx,jy,jz) = 1.;
     } psc_foreach_3d_g_end;
   }
 }

@@ -1,6 +1,7 @@
 
 #include "psc_bnd_fields_private.h"
 #include "psc_pulse.h"
+#include "psc_fields_as_c.h"
 
 // ----------------------------------------------------------------------
 // psc_bnd_fields_create
@@ -141,61 +142,74 @@ psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
   ops->fill_ghosts_b_H(bnd, flds);
 }
 
-void psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
-				mfields_base_t *mflds, double t)
+void
+_psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
+			    fields_t *pf, double t)
 {
   struct psc_pulse *pulse;
   struct psc *psc = ppsc;
 
-  fields_base_t *pf = &mflds->f[p];
   psc_foreach_3d_g(psc, p, jx, jy, jz){
     double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
     double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
     
     pulse = psc_bnd_fields_get_pulse_x1(bnd_fields);
-    F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, t);
-    F3_BASE(pf, HY, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
-    F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , t);
-    F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
+    F3(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, t);
+    F3(pf, HY, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
+    F3(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , t);
+    F3(pf, HZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
     
     pulse = psc_bnd_fields_get_pulse_x2(bnd_fields);
-    F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, t);
-    F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
-    F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , t);
-    F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
+    F3(pf, EZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy        , zz + .5*dz, t);
+    F3(pf, HY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
+    F3(pf, EY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz        , t);
+    F3(pf, HZ, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
     
     pulse = psc_bnd_fields_get_pulse_y1(bnd_fields);
-    F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , t);
-    F3_BASE(pf, HZ, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
-    F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, t);
-    F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
+    F3(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , t);
+    F3(pf, HZ, jx,jy,jz) += -psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
+    F3(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, t);
+    F3(pf, HX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
     
     pulse = psc_bnd_fields_get_pulse_y2(bnd_fields);
-    F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , t);
-    F3_BASE(pf, HZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
-    F3_BASE(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, t);
-    F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
+    F3(pf, EX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy        , zz        , t);
+    F3(pf, HZ, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx + .5*dx, yy + .5*dy, zz        , t);
+    F3(pf, EZ, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx        , yy        , zz + .5*dz, t);
+    F3(pf, HX, jx,jy,jz) += -psc_pulse_field_s(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
     
     pulse = psc_bnd_fields_get_pulse_z1(bnd_fields);
-    F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , t);
-    F3_BASE(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
-    F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , t);
-    F3_BASE(pf, HY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
+    F3(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , t);
+    F3(pf, HX, jx,jy,jz) += -psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
+    F3(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , t);
+    F3(pf, HY, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
     
     pulse = psc_bnd_fields_get_pulse_z2(bnd_fields);
-    F3_BASE(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , t);
-    F3_BASE(pf, HX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
-    F3_BASE(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , t);
-    F3_BASE(pf, HY, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
+    F3(pf, EY, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz        , t);
+    F3(pf, HX, jx,jy,jz) +=  psc_pulse_field_p(pulse, xx        , yy + .5*dy, zz + .5*dz, t);
+    F3(pf, EX, jx,jy,jz) +=  psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz        , t);
+    F3(pf, HY, jx,jy,jz) += -psc_pulse_field_s(pulse, xx + .5*dx, yy        , zz + .5*dz, t);
   } psc_foreach_3d_g_end;
 }
 
 void
-psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *mflds)
+psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
+			   mfields_base_t *flds_base, double t)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, EX, HX + 3, flds_base);
+  _psc_bnd_fields_setup_patch(bnd_fields, p, &flds.f[p], t);
+  psc_mfields_put_to(&flds, EX, HX + 3, flds_base);
+}
+
+void
+psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *flds_base)
+{
+  mfields_t flds;
+  psc_mfields_get_from(&flds, EX, HX + 3, flds_base);
   psc_foreach_patch(ppsc, p) {
-    psc_bnd_fields_setup_patch(bnd_fields, p, mflds, 0.);
+    _psc_bnd_fields_setup_patch(bnd_fields, p, &flds.f[p], 0.);
   }
+  psc_mfields_put_to(&flds, EX, HX + 3, flds_base);
 }
 
 // ======================================================================

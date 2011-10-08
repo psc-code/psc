@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_push_fields.h"
+#include "psc_fields_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -15,20 +16,25 @@
 // will **only** handle the xy plane, so I need that to be testable.
 // --steve 
 static void
-setup_fields(mfields_base_t *flds)
+setup_fields(mfields_base_t *flds_base)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, 0, flds_base);
+
   psc_foreach_patch(ppsc, p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_t *pf = &flds.f[p];
     psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
       int ix, iy, iz;
       psc_local_to_global_indices(ppsc, p, jx, jy, jz, &ix, &iy, &iz);
       f_real xx = 2.*M_PI * ix / ppsc->domain.gdims[0];
       f_real yy = 2.*M_PI * iy / ppsc->domain.gdims[1];
-      F3_BASE(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
-      F3_BASE(pf, JYI, jx,jy,jz) = sin(xx) * sin(yy);
-      F3_BASE(pf, JZI, jx,jy,jz) = cos(xx) * cos(yy);
+      F3(pf, JXI, jx,jy,jz) = cos(xx) * sin(yy);
+      F3(pf, JYI, jx,jy,jz) = sin(xx) * sin(yy);
+      F3(pf, JZI, jx,jy,jz) = cos(xx) * cos(yy);
     } foreach_3d_g_end;
   }
+
+  psc_mfields_put_to(&flds, JXI, JXI + 3, flds_base);
 }
 
 int

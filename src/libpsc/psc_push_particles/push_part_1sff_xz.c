@@ -187,7 +187,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
       for (int l1 = l1min; l1 < l1max; l1++) {
 	creal wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
 	jxh -= fnqx*wx;
-	F3(JXI, lg1+l1,0,lg3+l3) += jxh;
+	F3(pf, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
     }
 
@@ -199,7 +199,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
 	  + .5f * S0X(l1) * S1Z(l3)
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
 	creal jyh = fnqy*wy;
-	F3(JYI, lg1+l1,0,lg3+l3) += jyh;
+	F3(pf, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
 
@@ -209,7 +209,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
       for (int l3 = l3min; l3 < l3max; l3++) {
 	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 	jzh -= fnqz*wz;
-	F3(JZI, lg1+l1,0,lg3+l3) += jzh;
+	F3(pf, JZI, lg1+l1,0,lg3+l3) += jzh;
       }
     }
   }

@@ -83,9 +83,6 @@ typedef mfields_fortran_t mfields_base_t;
 #define psc_mfields_base_axpy           psc_mfields_fortran_axpy
 #define psc_mfields_base_scale          psc_mfields_fortran_scale
 
-
-#define F3_BASE(pf, m, jx,jy,jz)     F3_FORTRAN(pf, m, jx,jy,jz)
-
 #elif FIELDS_BASE == FIELDS_C
 
 #include "psc_fields_c.h"
@@ -118,8 +115,6 @@ typedef mfields_c_t mfields_base_t;
 #define psc_mfields_base_axpy          psc_mfields_c_axpy
 #define psc_mfields_base_scale          psc_mfields_c_scale
 
-#define F3_BASE(pf, m, jx,jy,jz)     F3_C(pf, m, jx,jy,jz)
-
 #elif FIELDS_BASE == FIELDS_SSE2
 
 #include "psc_fields_sse2.h"
@@ -140,7 +135,6 @@ typedef mfields_sse2_t mfields_base_t;
 #define psc_mfields_base_destroy     psc_mfields_sse2_destroy
 #define psc_mfields_base_set_domain  psc_mfields_sse2_set_domain
 
-#define F3_BASE(pf, m, jx,jy,jz) F3_SSE2(pf, m, jx,jy,jz)
 
 #else
 #error unknown FIELDS_BASE

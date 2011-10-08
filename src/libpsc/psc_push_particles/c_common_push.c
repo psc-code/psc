@@ -80,7 +80,7 @@ find_idx_off_pos_1st(creal xi[3], int lg[3], creal og[3], creal pos[3], creal sh
 
 
 #define INTERPOLATE_FIELD_1ST(m, gy, gz)				\
-    (gz##0z*(gy##0y*F3(m, 0,l##gy[1]  ,l##gz[2]  ) +			\
-	     gy##1y*F3(m, 0,l##gy[1]+1,l##gz[2]  )) +			\
-     gz##1z*(gy##0y*F3(m, 0,l##gy[1]  ,l##gz[2]+1) +			\
-	     gy##1y*F3(m, 0,l##gy[1]+1,l##gz[2]+1)))
+    (gz##0z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +			\
+	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +			\
+     gz##1z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +			\
+	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))

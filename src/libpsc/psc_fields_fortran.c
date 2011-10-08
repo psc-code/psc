@@ -83,7 +83,7 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
 {
 }
 
-#else
+#elif FIELDS_BASE == FIELDS_C
 
 void
 psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
@@ -108,7 +108,7 @@ psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_fld
     fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx,jy,jz) = F3_BASE(pf_base, m, jx,jy,jz);
+	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_base, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
   }
@@ -131,7 +131,7 @@ psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_
     fields_base_t *pf_base = &flds_base->f[p];
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_BASE(pf_base, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
+	F3_C(pf_base, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
 

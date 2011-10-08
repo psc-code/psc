@@ -64,7 +64,7 @@ vtk_write_coordinates_binary(FILE *file, int extra, double offset)
 /// Helper to write one field to VTK file.
 
 static void
-vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields_c *out)
+vtk_write_field_binary(void *ctx, mfields_c_t *flds, struct psc_output_fields_c *out)
 {
   static bool first_time = true;
   if (first_time) {
@@ -96,7 +96,7 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields
 	  
   FILE *file = ctx;
 
-  fields_base_t *fld = &flds->f[0];
+  fields_c_t *fld = &flds->f[0];
   int *ilo = out->rn, *ihi = out->rx;
 	
   fprintf(file, "SCALARS %s float\n", fld->name[0]);
@@ -107,13 +107,13 @@ vtk_write_field_binary(void *ctx, mfields_base_t *flds, struct psc_output_fields
   for (int iz = ilo[2]; iz < ihi[2]; iz++) {
     for (int iy = ilo[1]; iy < ihi[1]; iy++) {
       for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-		  float val = F3_BASE(fld, 0, ix,iy,iz);
-		  
-		  if (fabsf(val) < 1e-37) {
-			  fprintf(file, "%g ", 0.);
-		  } else {
-			  fprintf(file, "%g ", val);
-		  }
+	float val = F3_C(fld, 0, ix,iy,iz);
+	
+	if (fabsf(val) < 1e-37) {
+	  fprintf(file, "%g ", 0.);
+	} else {
+	  fprintf(file, "%g ", val);
+	}
 		 
       }
       fprintf(file, "\n");
@@ -147,9 +147,8 @@ psc_output_format_vtk_binary_write_fields(struct psc_output_format *format,
 
 
   
-  for (int m = 0; m < flds->nr_flds; m++) 
-  {	
-	  vtk_write_field_binary(file, flds->flds[m], out);
+  for (int m = 0; m < flds->nr_flds; m++) {	
+    vtk_write_field_binary(file, flds->flds[m], out);
   }
   
   fclose(file);

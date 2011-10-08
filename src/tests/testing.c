@@ -3,6 +3,7 @@
 #include "psc_sort.h"
 #include "psc_case.h"
 #include "psc_particles_as_c.h"
+#include "psc_fields_as_c.h"
 
 #include <math.h>
 #include <limits.h>
@@ -29,7 +30,7 @@ __assert_equal(double x, double y, const char *xs, const char *ys, double thres)
 }
 
 static mparticles_t *particles_ref;
-static mfields_base_t *flds_ref;
+static mfields_t *flds_ref;
 
 // ----------------------------------------------------------------------
 // psc_save_particles_ref
@@ -69,25 +70,30 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
 // save current field data as reference solution
 
 void
-psc_save_fields_ref(struct psc *psc, mfields_base_t *flds)
+psc_save_fields_ref(struct psc *psc, mfields_base_t *flds_base)
 {
-  if (!flds_ref) {
-    flds_ref = psc_mfields_base_create(psc_comm(psc));
-    psc_mfields_base_set_domain(flds_ref, psc->mrc_domain);
-    psc_mfields_base_set_param_int(flds_ref, "nr_fields", NR_FIELDS);
-    psc_mfields_base_set_param_int3(flds_ref, "ibn", psc->ibn);
-    psc_mfields_base_setup(flds_ref);
-  }
   int me = psc->domain.use_pml ? NR_FIELDS : HZ + 1;
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, me, flds_base);
+
+  if (!flds_ref) {
+    flds_ref = psc_mfields_create(psc_comm(psc));
+    psc_mfields_set_domain(flds_ref, psc->mrc_domain);
+    psc_mfields_set_param_int(flds_ref, "nr_fields", NR_FIELDS);
+    psc_mfields_set_param_int3(flds_ref, "ibn", psc->ibn);
+    psc_mfields_setup(flds_ref);
+  }
+
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = &flds.f[p];
+    fields_t *pf_ref = &flds_ref->f[p];
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
-	F3_BASE(pf_ref, m, ix,iy,iz) = F3_BASE(pf, m, ix,iy,iz);
+	F3(pf_ref, m, ix,iy,iz) = F3(pf, m, ix,iy,iz);
       } psc_foreach_3d_g_end;
     }
   }
+  psc_mfields_put_to(&flds, 0, me, flds_base);
 } 
 
 // ----------------------------------------------------------------------
@@ -140,19 +146,23 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
 // check field data against previously saved reference solution
 
 void
-psc_check_fields_ref(struct psc *psc, mfields_base_t *flds, int *m_flds, double thres)
+psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, double thres)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, 0, 12, flds_base);
+
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = &flds.f[p];
+    fields_t *pf_ref = &flds_ref->f[p];
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
+	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
       } psc_foreach_3d_end;
     }
   }
+  psc_mfields_put_to(&flds, 0, 0, flds_base);
 }
 
 // ----------------------------------------------------------------------
@@ -161,14 +171,17 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds, int *m_flds, double 
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres)
+psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, JXI, JXI + 3, flds_base);
+
 #if 0
   foreach_patch(p) {
     fields_base_t *pf = &flds->f[p];
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
-	double val = F3_BASE(pf, m, ix,iy,iz);
+	double val = F3(pf, m, ix,iy,iz);
 	if (fabs(val) > 0.) {
 	  printf("cur %s: [%d,%d,%d] = %g\n", fldname[m],
 		 ix, iy, iz, val);
@@ -177,46 +190,53 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres)
     }
   }
 #endif
-  mfields_base_t *diff = psc_mfields_base_create(psc_comm(psc));
-  psc_mfields_base_set_domain(diff, psc->mrc_domain);
-  psc_mfields_base_set_param_int3(diff, "ibn", psc->ibn);
-  psc_mfields_base_setup(diff);
+  mfields_t *diff = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_domain(diff, psc->mrc_domain);
+  psc_mfields_set_param_int3(diff, "ibn", psc->ibn);
+  psc_mfields_setup(diff);
   // FIXME, make funcs for this (waxpy, norm)
 
   for (int m = JXI; m <= JZI; m++){
-    fields_base_real_t max_delta = 0.;
+    fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      fields_base_t *pf = &flds->f[p];
-      fields_base_t *pf_ref = &flds_ref->f[p];
-      fields_base_t *pf_diff = &diff->f[p];
+      fields_t *pf = &flds.f[p];
+      fields_t *pf_ref = &flds_ref->f[p];
+      fields_t *pf_diff = &diff->f[p];
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
-	F3_BASE(pf_diff, 0, ix,iy,iz) =
-	  F3_BASE(pf, m, ix,iy,iz) - F3_BASE(pf_ref, m, ix,iy,iz);
-	max_delta = fmax(max_delta, fabs(F3_BASE(pf_diff, 0, ix,iy,iz)));
+	F3(pf_diff, 0, ix,iy,iz) =
+	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
+	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
     }
     printf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
     if (max_delta > thres) {
-      psc_dump_field(diff, 0, "diff");
+      //      psc_dump_field(diff, 0, "diff");
       abort();
     }
   }
-  psc_mfields_base_destroy(diff);
+  psc_mfields_destroy(diff);
+
+  psc_mfields_put_to(&flds, 0, 0, flds_base);
 }
 
 void
-psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds, double thres)
+psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, double thres)
 {
+  mfields_t flds;
+  psc_mfields_get_from(&flds, JXI, JXI + 3, flds_base);
+
   psc_foreach_patch(psc, p) {
-    fields_base_t *pf = &flds->f[p];
-    fields_base_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = &flds.f[p];
+    fields_t *pf_ref = &flds_ref->f[p];
     for (int m = JXI; m <= JZI; m++){
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3_BASE(pf, m, ix,iy,iz), F3_BASE(pf_ref, m, ix,iy,iz), thres);
+	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
       } psc_foreach_3d_end;
     }
   }
+
+  psc_mfields_put_to(&flds, 0, 0, flds_base);
 }
 
 // ----------------------------------------------------------------------
