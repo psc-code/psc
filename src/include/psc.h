@@ -92,6 +92,7 @@ struct psc_param {
   double wallclock_limit;
   bool from_checkpoint;
   bool write_checkpoint;
+  double initial_particle_shift;
 };
 
 /// coefficients needed for computations

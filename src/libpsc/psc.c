@@ -113,6 +113,8 @@ static struct param psc_descr[] = {
   // only useful when actually doing lasers.
   { "adjust_dt_to_cycles"
                     , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
+  { "initial_particle_shift"
+                    , VAR(prm.initial_particle_shift), PARAM_DOUBLE(0.) },
   { "wallclock_limit"
                     , VAR(prm.wallclock_limit)    , PARAM_DOUBLE(0.) },
   { "from_checkpoint"

@@ -143,7 +143,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
 	    
 	    //Add a (negligible) delta to offset particles towards the center of the patch
 	    //This prevents particles at the boundaries to be discarded as "out of domain"
-	    const double eps = 1e-6;
+	    const double eps = psc->prm.initial_particle_shift;
 	    double offx = -sgn(jx - (psc->patch[p].ldims[0] / 2)) * eps * psc->dx[0];
 	    double offy = -sgn(jy - (psc->patch[p].ldims[1] / 2)) * eps * psc->dx[1];
 	    double offz = -sgn(jz - (psc->patch[p].ldims[2] / 2)) * eps * psc->dx[2];
