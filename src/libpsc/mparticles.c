@@ -100,9 +100,30 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
     pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
   }									\
   prof_start(pr);							\
-  assert(ops && ops->get_##type);					\
-  struct psc_mparticles *mp;						\
-  mp = ops->get_##type(particles_base, flags);				\
+  assert(ops);								\
+  if (!ops->copy_to_##type) {						\
+    fprintf(stderr, "ERROR: missing copy_to_" #type			\
+	    " in psc_mparticles '%s'!\n",				\
+	    psc_mparticles_type(particles_base));			\
+    assert(0);								\
+  }									\
+									\
+  int *nr_particles_by_patch =						\
+    malloc(particles_base->nr_patches * sizeof(int));			\
+  for (int p = 0; p < particles_base->nr_patches; p++) {		\
+  nr_particles_by_patch[p] =						\
+    psc_mparticles_nr_particles_by_patch(particles_base, p);		\
+  }									\
+  struct psc_mparticles *mp =						\
+    psc_mparticles_create(psc_mparticles_comm(particles_base));		\
+  psc_mparticles_set_type(mp, #type);					\
+  psc_mparticles_set_domain_nr_particles(mp,				\
+					 particles_base->domain,	\
+					 nr_particles_by_patch);	\
+  psc_mparticles_setup(mp);						\
+  free(nr_particles_by_patch);						\
+									\
+  ops->copy_to_##type(particles_base, mp, flags);			\
   prof_stop(pr);							\
   return mp;								\
 }									\

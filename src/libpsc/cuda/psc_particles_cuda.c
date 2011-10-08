@@ -257,23 +257,11 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-static mparticles_c_t *
-_psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base, unsigned int flags)
+static void
+_psc_mparticles_cuda_copy_to_c(struct psc_mparticles *particles_base,
+			       mparticles_c_t *particles_c, unsigned int flags)
 {
-  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
-  for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
-  }
-  struct mrc_domain *domain = particles_base->domain;
-  mparticles_c_t *particles_c = psc_mparticles_create(mrc_domain_comm(domain));
-  psc_mparticles_set_type(particles_c, "c");
-  psc_mparticles_set_domain_nr_particles(particles_c, domain, nr_particles_by_patch);
-  psc_mparticles_setup(particles_c);
-  free(nr_particles_by_patch);
-
   psc_mparticles_copy_cf_from_cuda(particles_base, particles_c, flags);
-
-  return particles_c;
 }
 
 static void
@@ -286,26 +274,14 @@ _psc_mparticles_cuda_copy_from_c(struct psc_mparticles *particles_base, mparticl
 
 // ======================================================================
 
-mparticles_cuda_t *
-_psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
+void
+_psc_mparticles_c_copy_to_cuda(struct psc_mparticles *particles_base,
+			       mparticles_cuda_t *particles, unsigned int flags)
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
-  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
-  for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
-  }
-  struct mrc_domain *domain = particles_base->domain;
-  mparticles_cuda_t *particles = psc_mparticles_create(mrc_domain_comm(domain));
-  psc_mparticles_set_type(particles, "cuda");
-  psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
-  psc_mparticles_setup(particles);
-  free(nr_particles_by_patch);
-
   psc_mparticles_copy_cf_to_cuda(particles, particles_base,
 				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
-
-  return particles;
 }
 
 void
@@ -357,7 +333,7 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .destroy                 = _psc_mparticles_cuda_destroy,
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
-  .get_c                   = _psc_mparticles_cuda_get_c,
+  .copy_to_c               = _psc_mparticles_cuda_copy_to_c,
   .copy_from_c             = _psc_mparticles_cuda_copy_from_c,
 };
 

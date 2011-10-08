@@ -29,20 +29,10 @@ particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
   pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 
-static mparticles_c_t *
-_psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base, unsigned int flags)
+static void
+_psc_mparticles_fortran_copy_to_c(struct psc_mparticles *particles_base,
+				  mparticles_c_t *particles, unsigned int flags)
 {
-  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
-  for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
-  }
-  struct mrc_domain *domain = particles_base->domain;
-  mparticles_c_t *particles = psc_mparticles_create(mrc_domain_comm(domain));
-  psc_mparticles_set_type(particles, "c");
-  psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
-  psc_mparticles_setup(particles);
-  free(nr_particles_by_patch);
-
   psc_foreach_patch(ppsc, p) {
     particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
@@ -63,8 +53,6 @@ _psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base, unsigned in
       part->wni = part_base->wni;
     }
   }
-
-  return particles;
 }
 
 static void
@@ -131,7 +119,7 @@ struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .destroy                 = _psc_mparticles_fortran_destroy,
   .set_domain_nr_particles = _psc_mparticles_fortran_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
-  .get_c                   = _psc_mparticles_fortran_get_c,
+  .copy_to_c               = _psc_mparticles_fortran_copy_to_c,
   .copy_from_c             = _psc_mparticles_fortran_copy_from_c,
 };
 
