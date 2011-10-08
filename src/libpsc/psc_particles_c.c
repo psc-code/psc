@@ -244,6 +244,10 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_
   
 struct psc_mparticles_c_ops psc_mparticles_c_ops = {
   .name                    = "c",
+#ifdef HAVE_LIBHDF5_HL
+  .write                   = _psc_mparticles_c_write,
+  .read                    = _psc_mparticles_c_read,
+#endif
   .set_domain_nr_particles = _psc_mparticles_c_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_c_get_c,
@@ -267,9 +271,5 @@ struct mrc_class_psc_mparticles_c mrc_class_psc_mparticles_c = {
   .size             = sizeof(struct psc_mparticles),
   .init             = psc_mparticles_c_init,
   .destroy          = _psc_mparticles_c_destroy,
-#ifdef HAVE_LIBHDF5_HL
-  .write            = _psc_mparticles_c_write,
-  .read             = _psc_mparticles_c_read,
-#endif
 };
 
