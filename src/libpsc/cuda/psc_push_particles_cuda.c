@@ -14,7 +14,7 @@ psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
 				  mfields_base_t *flds_base)
 {
   mparticles_cuda_t *particles
-    = psc_mparticles_base_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+    = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr;
@@ -31,7 +31,7 @@ psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
   prof_stop(pr);
 
   psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
 }
 
 #define PUSH_PART_B 2
@@ -42,7 +42,7 @@ psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
 				  mfields_base_t *flds_base)
 {
   mparticles_cuda_t *particles
-    = psc_mparticles_base_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+    = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr;
@@ -71,7 +71,7 @@ psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
   prof_stop(pr);
 
   psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
 }
 
 static void
@@ -85,7 +85,7 @@ cuda_push_part(mparticles_base_t *particles_base,
 	       void (*push_part_p5)(particles_cuda_t *, fields_cuda_t *, real *))
 {
   mparticles_cuda_t *particles =
-    psc_mparticles_base_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+    psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr, pr1, pr2, pr3, pr4, pr5;
@@ -119,11 +119,11 @@ cuda_push_part(mparticles_base_t *particles_base,
   }
 
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
   psc_sort_run(ppsc->sort, particles_base);
-  particles = psc_mparticles_base_get_cuda(particles_base,
-					   MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  particles = psc_mparticles_get_cuda(particles_base,
+				      MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 
   psc_foreach_patch(ppsc, p) {
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
@@ -146,7 +146,7 @@ cuda_push_part(mparticles_base_t *particles_base,
   prof_stop(pr);
 
   psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
 }
 
 static void
@@ -161,8 +161,8 @@ cuda_push_partq(mparticles_base_t *particles_base,
   
   // FIXME distinguish alloc/calc_block_offsets?
   mparticles_cuda_t *particles = 
-    psc_mparticles_base_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
-				 (need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
+    psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
+			    (need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr, pr2, pr3;
@@ -189,16 +189,16 @@ cuda_push_partq(mparticles_base_t *particles_base,
 
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
   if (need_cell_offsets) {
-    psc_mparticles_base_put_cuda(particles, particles_base);
+    psc_mparticles_put_cuda(particles, particles_base);
     psc_bnd_exchange_particles(ppsc->bnd, particles_base);
     psc_sort_run(ppsc->sort, particles_base);
-    particles = psc_mparticles_base_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
-					     (need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
+    particles = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
+					(need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
   } else {
-    psc_mparticles_base_put_cuda(particles, particles_base);
+    psc_mparticles_put_cuda(particles, particles_base);
     psc_bnd_exchange_particles(ppsc->bnd, particles_base);
     // block offsets will be calculated by sort_patch, anyway
-    particles = psc_mparticles_base_get_cuda(particles_base, 0);
+    particles = psc_mparticles_get_cuda(particles_base, 0);
     psc_foreach_patch(ppsc, p) {
       cuda_sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
     }
@@ -217,7 +217,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
   prof_stop(pr);
 
   psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
 }
 
 // ----------------------------------------------------------------------

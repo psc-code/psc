@@ -59,7 +59,7 @@ cuda_sort_patch(int p, particles_cuda_t *pp)
 static void
 psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
-  mparticles_cuda_t *particles = psc_mparticles_base_get_cuda(particles_base, 0);
+  mparticles_cuda_t *particles = psc_mparticles_get_cuda(particles_base, 0);
 
   static int pr;
   if (!pr) {
@@ -72,7 +72,7 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
   prof_stop(pr);
 
-  psc_mparticles_base_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base);
 }
 
 // ======================================================================

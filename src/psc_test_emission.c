@@ -78,7 +78,7 @@ psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
 static void
 psc_event_generator_emission(struct psc *psc)
 {
-  mparticles_t *particles = psc_mparticles_base_get_cf(psc->particles);
+  mparticles_t *particles = psc_mparticles_get_cf(psc->particles);
 
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
@@ -106,7 +106,7 @@ psc_event_generator_emission(struct psc *psc)
       }
     }
   }
-  psc_mparticles_base_put_cf(particles, psc->particles);
+  psc_mparticles_put_cf(particles, psc->particles);
 }
 
 static void

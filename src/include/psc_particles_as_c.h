@@ -10,8 +10,8 @@ typedef particles_c_t particles_t;
 typedef mparticles_c_t mparticles_t;
 
 #define psc_mparticles_create       psc_mparticles_c_create
-#define psc_mparticles_base_get_cf  psc_mparticles_base_get_c
-#define psc_mparticles_base_put_cf  psc_mparticles_base_put_c
+#define psc_mparticles_get_cf       psc_mparticles_get_c
+#define psc_mparticles_put_cf       psc_mparticles_put_c
 #define psc_mparticles_get_patch    psc_mparticles_get_patch_c
 #define particles_get_one           particles_c_get_one
 #define particles_realloc           particles_c_realloc

@@ -57,57 +57,12 @@ struct mrc_class_psc_mparticles_##type mrc_class_psc_mparticles_##type = {	\
 };									\
 
 
-#define _MAKE_MPARTICLES_METHODS(type)					\
-									\
-mparticles_c_t *							\
-psc_mparticles_##type##_get_c(void *particles_base)			\
-{									\
-  return psc_mparticles_get_c(particles_base);				\
-}									\
-									\
-void									\
-psc_mparticles_##type##_put_c(mparticles_c_t *particles, void *particles_base) \
-{									\
-  psc_mparticles_put_c(particles, particles_base);			\
-}									\
-									\
-mparticles_fortran_t *							\
-psc_mparticles_##type##_get_fortran(void *particles_base)		\
-{									\
-  return psc_mparticles_get_fortran(particles_base);			\
-}									\
-									\
-void									\
-psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, void *particles_base) \
-{									\
-  psc_mparticles_put_fortran(particles, particles_base);		\
-}									\
-									\
-mparticles_cuda_t *							\
-psc_mparticles_##type##_get_cuda(void *particles_base, unsigned int flags)		\
-{									\
-  return psc_mparticles_get_cuda(particles_base, flags);			\
-}									\
-									\
-void									\
-psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles, void *particles_base) \
-{									\
-  psc_mparticles_put_cuda(particles, particles_base);			\
-}									\
-
-
 #ifdef USE_SSE2
 MAKE_MPARTICLES_METHODS(sse2)
-_MAKE_MPARTICLES_METHODS(sse2)
 #endif
 #ifdef USE_CBE
 MAKE_MPARTICLES_METHODS(cbe)
-_MAKE_MPARTICLES_METHODS(cbe)
 #endif
-
-_MAKE_MPARTICLES_METHODS(fortran)
-_MAKE_MPARTICLES_METHODS(c)
-_MAKE_MPARTICLES_METHODS(cuda)
 
 // ======================================================================
 

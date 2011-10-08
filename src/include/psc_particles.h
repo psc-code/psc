@@ -36,17 +36,6 @@ struct psc_mparticles_ops {
 #define DECLARE_MPARTICLES_METHODS(type)				\
   									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles);	\
-									\
-mparticles_c_t *psc_mparticles_##type##_get_c(void *particles_base); \
-void psc_mparticles_##type##_put_c(mparticles_c_t *particles,	\
-				   void *particles_base);		\
-mparticles_fortran_t *psc_mparticles_##type##_get_fortran(void *particles_base); \
-void psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, \
-					  void *particles_base);	\
-mparticles_cuda_t *psc_mparticles_##type##_get_cuda(void *particles_base, unsigned int flags); \
-void psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles,	\
-				      void *particles_base);		\
-
 
 #define MP_NEED_BLOCK_OFFSETS (0x100)
 #define MP_NEED_CELL_OFFSETS (0x200)
