@@ -7,12 +7,26 @@
 // debugging stuff...
 
 static void
+ascii_dump_field_yz(fields_base_t *pf, int m, FILE *file)
+{
+  for (int iz = pf->ib[2]; iz < pf->ib[2] + pf->im[2]; iz++) {
+    for (int iy = pf->ib[1]; iy < pf->ib[1] + pf->im[1]; iy++) {
+      int ix = 0; {
+	fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
+      }
+    }
+    fprintf(file, "\n");
+  }
+  fprintf(file, "\n");
+}
+
+static void
 ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
 {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  psc_foreach_patch(ppsc, p) {
+  for (int p = 0; p < flds->nr_patches; p++) {
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
@@ -20,10 +34,12 @@ ascii_dump_field(mfields_base_t *flds, int m, const char *fname)
     fields_base_t *pf = &flds->f[p];
     FILE *file = fopen(filename, "w");
     free(filename);
-    psc_foreach_patch(ppsc, patch) {
-      for (int iz = -ppsc->ibn[2]; iz < ppsc->patch[patch].ldims[2] + ppsc->ibn[2]; iz++) {
-	for (int iy = -ppsc->ibn[1]; iy < ppsc->patch[patch].ldims[1] + ppsc->ibn[1]; iy++) {
-	  for (int ix = -ppsc->ibn[0]; ix < ppsc->patch[patch].ldims[0] +  ppsc->ibn[0]; ix++) {
+    if (pf->im[0] + 2*pf->ib[0] == 1) {
+      ascii_dump_field_yz(pf, m, file);
+    } else {
+      for (int iz = pf->ib[2]; iz < pf->ib[2] + pf->im[2]; iz++) {
+	for (int iy = pf->ib[1]; iy < pf->ib[1] + pf->im[1]; iy++) {
+	  for (int ix = pf->ib[0]; ix < pf->ib[0] + pf->im[0]; ix++) {
 	    fprintf(file, "%d %d %d %g\n", ix, iy, iz, F3_BASE(pf, m, ix,iy,iz));
 	  }
 	  fprintf(file, "\n");
