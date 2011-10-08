@@ -54,17 +54,24 @@ typedef struct psc_mparticles mparticles_base_t;
 #include "psc_particles_cuda.h"
 #endif
 
+extern struct psc_mparticles_ops psc_mparticles_c_ops;
+extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
+extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
+extern struct psc_mparticles_ops psc_mparticles_cbe_ops;
+
 #define psc_mparticles_ops(mp) (struct psc_mparticles_ops *) ((mp)->obj.ops)
 
 static inline particles_c_t *
 psc_mparticles_get_patch_c(mparticles_c_t *mp, int p)
 {
+  assert(psc_mparticles_ops(mp) == &psc_mparticles_c_ops);
   return ((particles_c_t *)mp->data) + p;
 }
 
 static inline particles_fortran_t *
 psc_mparticles_get_patch_fortran(mparticles_fortran_t *mp, int p)
 {
+  assert(psc_mparticles_ops(mp) == &psc_mparticles_fortran_ops);
   return ((particles_fortran_t *)mp->data) + p;
 }
 
@@ -72,6 +79,7 @@ psc_mparticles_get_patch_fortran(mparticles_fortran_t *mp, int p)
 static inline particles_cuda_t *
 psc_mparticles_get_patch_cuda(mparticles_cuda_t *mp, int p)
 {
+  assert(psc_mparticles_ops(mp) == &psc_mparticles_cuda_ops);
   return ((particles_cuda_t *)mp->data) + p;
 }
 #endif
@@ -79,6 +87,7 @@ psc_mparticles_get_patch_cuda(mparticles_cuda_t *mp, int p)
 static inline particles_cbe_t *
 psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
 {
+  assert(psc_mparticles_ops(mp) == &psc_mparticles_cbe_ops);
   return ((particles_cbe_t *)mp->data) + p;
 }
 
@@ -98,9 +107,5 @@ void psc_mparticles_put_cuda(mparticles_cuda_t *mparticles, struct psc_mparticle
 
 mparticles_cuda_t *_psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int flags);
 void _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base);
-
-extern struct psc_mparticles_ops psc_mparticles_c_ops;
-extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
-extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
 
 #endif
