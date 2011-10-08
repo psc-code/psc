@@ -1,6 +1,7 @@
 
 #include "psc.h"
 
+#include <mrc_profile.h>
 #include <stdlib.h>
 
 #define MAKE_MPARTICLES_METHODS(type)					\
@@ -94,8 +95,16 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
   if (ops == &psc_mparticles_##type##_ops) {				\
     return particles_base;						\
   }									\
+  static int pr;							\
+  if (!pr) {								\
+    pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
+  }									\
+  prof_start(pr);							\
   assert(ops && ops->get_##type);					\
-  return ops->get_##type(particles_base, flags);			\
+  struct psc_mparticles *mp;						\
+  mp = ops->get_##type(particles_base, flags);				\
+  prof_stop(pr);							\
+  return mp;								\
 }									\
 									\
 void									\
@@ -106,8 +115,14 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
   if (ops == &psc_mparticles_##type##_ops) {				\
     return;								\
   }									\
+  static int pr;							\
+  if (!pr) {								\
+    pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
+  }									\
+  prof_start(pr);							\
   assert(ops && ops->put_##type);					\
   ops->put_##type(particles, particles_base);				\
+  prof_stop(pr);							\
 }									\
 
 MAKE_MPARTICLES_GET_PUT(c)

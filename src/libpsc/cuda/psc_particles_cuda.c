@@ -3,8 +3,6 @@
 #include "psc_cuda.h"
 #include "psc_particles_cuda.h"
 
-#include <mrc_profile.h>
-
 // FIXME -> header
 void cuda_sort_patch(int p, particles_cuda_t *pp);
 
@@ -259,20 +257,9 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-static bool __gotten;
-
 static mparticles_c_t *
 _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base, unsigned int flags)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mparticles_get_c", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(!__gotten);
-  __gotten = true;
-    
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
@@ -286,28 +273,15 @@ _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base, unsigned int f
 
   psc_mparticles_copy_cf_from_cuda(particles_base, particles_c, flags);
 
-  prof_stop(pr);
-
   return particles_c;
 }
 
 static void
 _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, struct psc_mparticles *particles_base)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mparticles_put_c", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(__gotten);
-  __gotten = false;
-
   psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
 				 true, false); // FIXME, need to sort
   psc_mparticles_destroy(particles_c);
-
-  prof_stop(pr);
 }
 
 // ======================================================================
@@ -317,15 +291,6 @@ _psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int f
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mparticles_get_cuda", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(!__gotten);
-  __gotten = true;
-  
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
@@ -340,26 +305,14 @@ _psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int f
   psc_mparticles_copy_cf_to_cuda(particles, particles_base,
 				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
 
-  prof_stop(pr);
   return particles;
 }
 
 void
 _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("mparticles_cuda_put", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(__gotten);
-  __gotten = false;
-
   psc_mparticles_copy_cf_from_cuda(particles, particles_base, 0);
   psc_mparticles_destroy(particles);
-
-  prof_stop(pr);
 }
 
 // ======================================================================

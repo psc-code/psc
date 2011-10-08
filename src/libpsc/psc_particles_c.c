@@ -3,7 +3,6 @@
 #include "psc_particles_c.h"
 
 #include <mrc_io.h>
-#include <mrc_profile.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -139,20 +138,9 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 
 #endif
 
-static bool __gotten;
-
 static mparticles_fortran_t *
 _psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base, unsigned int flags)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("part_fortran_get", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(!__gotten);
-  __gotten = true;
-
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
@@ -186,7 +174,6 @@ _psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base, unsigned in
     }
   }
 
-  prof_stop(pr);
   return particles;
 }
 
@@ -194,15 +181,6 @@ static void
 _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles,
 			      struct psc_mparticles *particles_base)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("part_fortran_put", 1., 0, 0);
-  }
-  prof_start(pr);
-
-  assert(__gotten);
-  __gotten = false;
-
   psc_foreach_patch(ppsc, p) {
     particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
     particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
@@ -223,8 +201,6 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles,
     }
   }
   psc_mparticles_destroy(particles);
-
-  prof_stop(pr);
 }
 
 // ======================================================================
