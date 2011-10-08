@@ -91,6 +91,10 @@ psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
   return ((particles_cbe_t *)mp->data) + p;
 }
 
+#define psc_mparticles_c_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
+#define psc_mparticles_fortran_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
+#define psc_mparticles_cuda_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
+
 // ----------------------------------------------------------------------
 // base particles type
 
@@ -111,6 +115,7 @@ typedef mparticles_fortran_t mparticles_base_t;
 #define psc_mparticles_base_put_fortran   psc_mparticles_fortran_put_fortran
 #define psc_mparticles_base_get_cuda   psc_mparticles_fortran_get_cuda
 #define psc_mparticles_base_put_cuda   psc_mparticles_fortran_put_cuda
+#define psc_mparticles_base_nr_particles_by_patch psc_mparticles_fortran_nr_particles_by_patch
 
 #elif PARTICLES_BASE == PARTICLES_C
 
@@ -129,6 +134,7 @@ typedef mparticles_c_t mparticles_base_t;
 #define psc_mparticles_base_put_fortran   psc_mparticles_c_put_fortran
 #define psc_mparticles_base_get_cuda   psc_mparticles_c_get_cuda
 #define psc_mparticles_base_put_cuda   psc_mparticles_c_put_cuda
+#define psc_mparticles_base_nr_particles_by_patch psc_mparticles_c_nr_particles_by_patch
 
 #elif PARTICLES_BASE == PARTICLES_SSE2
 
@@ -158,6 +164,7 @@ typedef mparticles_cuda_t mparticles_base_t;
 #define psc_mparticles_base_put_fortran   psc_mparticles_cuda_put_fortran
 #define psc_mparticles_base_get_cuda   psc_mparticles_cuda_get_cuda
 #define psc_mparticles_base_put_cuda   psc_mparticles_cuda_put_cuda
+#define psc_mparticles_base_nr_particles_by_patch psc_mparticles_cuda_nr_particles_by_patch
 
 #elif PARTICLES_BASE == PARTICLES_CBE
 
