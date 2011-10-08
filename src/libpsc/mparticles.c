@@ -30,9 +30,17 @@ _psc_mparticles_##type##_destroy(mparticles_##type##_t *mparticles)	\
   free(mparticles->data);						\
 }									\
 									\
+static int									\
+_psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles, \
+					      int p)			\
+{									\
+  return psc_mparticles_get_patch_##type(mparticles, p)->n_part;	\
+}									\
+									\
 struct psc_mparticles_##type##_ops psc_mparticles_##type##_ops = {	\
   .name                    = #type,					\
   .set_domain_nr_particles = _psc_mparticles_##type##_set_domain_nr_particles, \
+  .nr_particles_by_patch = _psc_mparticles_##type##_nr_particles_by_patch, \
 };									\
 									\
 static void								\
@@ -57,7 +65,15 @@ psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticle
 {									\
   psc_mparticles_set_domain_nr_particles((struct psc_mparticles *) mparticles, \
 					 domain, nr_particles_by_patch); \
+}									\
+									\
+int									\
+psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles, \
+					      int p) \
+{									\
+  return psc_mparticles_nr_particles_by_patch((struct psc_mparticles *) mparticles, p); \
 }
+
 
 MAKE_MPARTICLES_METHODS(fortran)
 _MAKE_MPARTICLES_METHODS(fortran)
@@ -83,6 +99,14 @@ psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
   assert(ops && ops->set_domain_nr_particles);
   return ops->set_domain_nr_particles(mparticles, domain, nr_particles_by_patch);
+}
+
+int
+psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
+  assert(ops && ops->nr_particles_by_patch);
+  return ops->nr_particles_by_patch(mparticles, p);
 }
 
 

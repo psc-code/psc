@@ -19,6 +19,7 @@ struct psc_mparticles_ops {
   void (*set_domain_nr_particles)(struct psc_mparticles *mparticles,
 				  struct mrc_domain *domain,
 				  int *nr_particles_by_patch);
+  int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
 };
 
 // This type is replicated for each actual particle type, however,
@@ -43,11 +44,15 @@ struct psc_mparticles_##type##_ops {					\
   void (*set_domain_nr_particles)(mparticles_##type##_t *mparticles,	\
 				  struct mrc_domain *domain,		\
 				  int *nr_particles_by_patch);		\
+  int (*nr_particles_by_patch)(mparticles_##type##_t *mparticles, int p);	\
 };									\
 									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
+ 									\
+int psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles, \
+						  int p);		\
  									\
 mparticles_c_t *psc_mparticles_##type##_get_c(void *particles_base); \
 void psc_mparticles_##type##_put_c(mparticles_c_t *particles,	\
@@ -116,13 +121,10 @@ psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
   return ((particles_cbe_t *)mp->data) + p;
 }
 
-#define psc_mparticles_c_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
-#define psc_mparticles_fortran_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
-#define psc_mparticles_cuda_nr_particles_by_patch(mp, p) ((mp)->data[p].n_part)
-
 void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
+int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
 
 // ----------------------------------------------------------------------
 // base particles type

@@ -49,7 +49,7 @@ psc_mparticles_c_get_fortran(void *_particles_base)
 
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
-    nr_particles_by_patch[p] = psc_mparticles_base_nr_particles_by_patch(particles_base, p);
+    nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
   mparticles_fortran_t *particles = psc_mparticles_fortran_create(mrc_domain_comm(domain));

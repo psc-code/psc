@@ -149,6 +149,12 @@ _psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
   }
 }
 
+static int
+_psc_mparticles_c_nr_particles_by_patch(mparticles_c_t *mparticles, int p)
+{
+  return psc_mparticles_get_patch_c(mparticles, p)->n_part;
+}
+
 static void
 _psc_mparticles_c_destroy(mparticles_c_t *mparticles)
 {
@@ -238,6 +244,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 struct psc_mparticles_c_ops psc_mparticles_c_ops = {
   .name                    = "c",
   .set_domain_nr_particles = _psc_mparticles_c_set_domain_nr_particles,
+  .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
 };
 
 static void

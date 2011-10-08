@@ -404,6 +404,12 @@ _psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
   }
 }
 
+static int
+_psc_mparticles_cuda_nr_particles_by_patch(mparticles_cuda_t *mparticles, int p)
+{
+  return psc_mparticles_get_patch_cuda(mparticles, p)->n_part;
+}
+
 static void
 _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
 {
@@ -419,6 +425,7 @@ _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
 struct psc_mparticles_cuda_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
+  .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
 };
 
 static void
