@@ -105,6 +105,24 @@ typedef particle_sse2_real_t particle_base_real_t;
 #define psc_mparticles_base_read    psc_mparticles_sse2_read
 #define psc_mparticles_base_destroy psc_mparticles_sse2_destroy
 
+#elif PARTICLES_BASE == PARTICLES_CUDA
+
+typedef particles_cuda_t particles_base_t;
+typedef mparticles_cuda_t mparticles_base_t;
+typedef particle_cuda_t particle_base_t;
+typedef particle_cuda_real_t particle_base_real_t;
+#define MPI_PARTICLES_BASE_REAL    MPI_PARTICLES_CUDA_REAL
+
+#define particles_base_realloc particles_cuda_realloc
+#define particles_base_get_one particles_cuda_get_one
+#define psc_mparticles_base_create  psc_mparticles_cuda_create
+#define psc_mparticles_base_set_name  psc_mparticles_cuda_set_name
+#define psc_mparticles_base_set_domain_nr_particles psc_mparticles_cuda_set_domain_nr_particles
+#define psc_mparticles_base_setup   psc_mparticles_cuda_setup
+#define psc_mparticles_base_write   psc_mparticles_cuda_write
+#define psc_mparticles_base_read    psc_mparticles_cuda_read
+#define psc_mparticles_base_destroy psc_mparticles_cuda_destroy
+
 #elif PARTICLES_BASE == PARTICLES_CBE
 
 typedef particles_cbe_t particles_base_t;
