@@ -135,6 +135,37 @@ typedef mfields_sse2_t mfields_base_t;
 #define psc_mfields_base_destroy     psc_mfields_sse2_destroy
 #define psc_mfields_base_set_domain  psc_mfields_sse2_set_domain
 
+#elif FIELDS_BASE == FIELDS_CUDA
+
+#include "psc_fields_cuda.h"
+
+typedef fields_cuda_t fields_base_t;
+typedef fields_cuda_real_t fields_base_real_t;
+typedef mfields_cuda_t mfields_base_t;
+#define MPI_FIELDS_BASE_REAL MPI_FIELDS_CUDA_REAL
+
+#define fields_base_alloc            fields_cuda_alloc
+#define fields_base_alloc_with_array fields_cuda_alloc_with_array
+#define fields_base_free             fields_cuda_free
+#define fields_base_zero             fields_cuda_zero
+#define fields_base_zero_all         fields_cuda_zero_all
+#define fields_base_set              fields_cuda_set
+#define fields_base_copy             fields_cuda_copy
+#define fields_base_axpy_all         fields_cuda_axpy_all
+#define fields_base_scale_all        fields_cuda_scale_all
+#define fields_base_size             fields_cuda_size
+#define mfields_base_list            mfields_cuda_list
+#define psc_mfields_base_create         psc_mfields_cuda_create
+#define psc_mfields_base_set_name       psc_mfields_cuda_set_name
+#define psc_mfields_base_set_param_int  psc_mfields_cuda_set_param_int
+#define psc_mfields_base_set_param_int3 psc_mfields_cuda_set_param_int3
+#define psc_mfields_base_setup          psc_mfields_cuda_setup
+#define psc_mfields_base_destroy        psc_mfields_cuda_destroy
+#define psc_mfields_base_write          psc_mfields_cuda_write
+#define psc_mfields_base_read           psc_mfields_cuda_read
+#define psc_mfields_base_set_domain     psc_mfields_cuda_set_domain
+#define psc_mfields_base_axpy           psc_mfields_cuda_axpy
+#define psc_mfields_base_scale          psc_mfields_cuda_scale
 
 #else
 #error unknown FIELDS_BASE

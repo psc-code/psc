@@ -45,6 +45,8 @@ typedef struct {
 //void fields_cuda_free(fields_cuda_t *pf);
 void fields_cuda_get(fields_cuda_t *pf, int mb, int me);
 void fields_cuda_put(fields_cuda_t *pf, int mb, int me);
+void fields_cuda_copy(fields_cuda_t *pf, int mto, int mfrom);
+void fields_cuda_set(fields_cuda_t *pf, int m, fields_cuda_real_t val);
 //void fields_cuda_zero(fields_cuda_t *pf, int m);
 
 #endif

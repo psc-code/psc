@@ -70,6 +70,18 @@ fields_cuda_free(mfields_cuda_t *flds)
   flds->f = NULL;
 }
 
+void
+fields_cuda_copy(fields_cuda_t *pf, int mto, int mfrom)
+{
+  assert(0);
+}
+
+void
+fields_cuda_set(fields_cuda_t *pf, int m, fields_cuda_real_t val)
+{
+  assert(0);
+}
+
 #include "psc_fields_as_c.h"
 
 void
@@ -119,6 +131,94 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
   }
 }
 
+#if FIELDS_BASE == FIELDS_CUDA
+
+void
+psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
+{
+  mfields_base_t *flds_base = _flds_base;
+  *flds = *flds_base;
+}
+
+void
+psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
+{
+  flds->f = NULL;
+}
+
+static bool __gotten;
+
+void
+psc_mfields_c_get_from(mfields_c_t *flds, int mb, int me, void *_flds_base)
+{
+  assert(!__gotten);
+  __gotten = true;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_c_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  mfields_cuda_t *flds_base = _flds_base;
+
+  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf = &flds->f[p];
+    struct psc_patch *patch = &ppsc->patch[p];
+    int ilg[3] = { -ppsc->ibn[0], -ppsc->ibn[1], -ppsc->ibn[2] };
+    int ihg[3] = { patch->ldims[0] + ppsc->ibn[0],
+		   patch->ldims[1] + ppsc->ibn[1],
+		   patch->ldims[2] + ppsc->ibn[2] };
+    fields_c_alloc(pf, ilg, ihg, NR_FIELDS);
+  }
+
+  psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
+
+  prof_stop(pr);
+}
+
+void
+psc_mfields_c_put_to(mfields_c_t *flds, int mb, int me, void *_flds_base)
+{
+  assert(__gotten);
+  __gotten = false;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_c_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  mfields_cuda_t *flds_base = _flds_base;
+
+  psc_mfields_copy_cf_to_cuda(flds_base, mb, me, flds);
+
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf = &flds->f[p];
+    fields_c_free(pf);
+  }
+  
+  free(flds->f);
+  flds->f = NULL;
+
+  prof_stop(pr);
+}
+
+void
+psc_mfields_fortran_get_from(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+{
+  assert(0);
+}
+
+void
+psc_mfields_fortran_put_to(mfields_fortran_t *flds, int mb, int me, void *_flds_base)
+{
+  assert(0);
+}
+
+#elif FIELDS_BASE == FIELDS_C
+
 void
 psc_mfields_cuda_get_from(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 {
@@ -150,4 +250,64 @@ psc_mfields_cuda_put_to(mfields_cuda_t *flds, int mb, int me, void *_flds_base)
 
   prof_stop(pr);
 }
+
+#endif
+
+// ======================================================================
+// psc_fields_cuda
+
+LIST_HEAD(mfields_cuda_list);
+
+#define VAR(x) (void *)offsetof(struct psc_mfields_cuda, x)
+static struct param psc_mfields_cuda_descr[] = {
+  { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
+  { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
+  {},
+};
+#undef VAR
+
+void
+psc_mfields_cuda_set_domain(mfields_cuda_t *flds, struct mrc_domain *domain)
+{
+  flds->domain = domain;
+}
+
+static void
+_psc_mfields_cuda_setup(mfields_cuda_t *flds)
+{
+  fields_cuda_alloc(flds, flds->nr_fields);
+  list_add_tail(&flds->entry, &mfields_cuda_list);
+}
+
+static void
+_psc_mfields_cuda_destroy(mfields_cuda_t *flds)
+{
+  fields_cuda_free(flds);
+  list_del(&flds->entry);
+}
+
+void
+psc_mfields_cuda_axpy(mfields_cuda_t *yf, fields_cuda_real_t alpha, mfields_cuda_t *xf)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    assert(0);
+    //    fields_cuda_axpy_all(&yf->f[p], alpha, &xf->f[p]);
+  }
+}
+
+void
+psc_mfields_cuda_scale(mfields_cuda_t *yf, fields_cuda_real_t alpha)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    assert(0);
+    //    fields_cuda_scale_all(&yf->f[p], alpha);
+  }
+}
+struct mrc_class_psc_mfields_cuda mrc_class_psc_mfields_cuda = {
+  .name             = "psc_mfields_cuda",
+  .size             = sizeof(struct psc_mfields_cuda),
+  .param_descr      = psc_mfields_cuda_descr,
+  .setup            = _psc_mfields_cuda_setup,
+  .destroy          = _psc_mfields_cuda_destroy,
+};
 
