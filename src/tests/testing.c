@@ -40,13 +40,12 @@ static struct psc_mfields *flds_ref;
 void
 psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
 {
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   if (!particles_ref) {
     int nr_particles_by_patch[psc->nr_patches];
     psc_foreach_patch(psc, p) {
-      nr_particles_by_patch[p] = particles.p[p].n_part;
+      nr_particles_by_patch[p] = particles->p[p].n_part;
     }
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
     psc_mparticles_set_domain_nr_particles(particles_ref, psc->mrc_domain,
@@ -54,14 +53,14 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
     psc_mparticles_setup(particles_ref);
   }
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     particles_t *pp_ref = &particles_ref->p[p];
     for (int i = 0; i < pp->n_part; i++) {
       *particles_get_one(pp_ref, i) = *particles_get_one(pp, i);
     }
   }
 
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
 }
 
 // ----------------------------------------------------------------------
@@ -104,13 +103,12 @@ void
 psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
 			double thres, const char *test_str)
 {
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   assert(particles_ref);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     particles_t *pp_ref = &particles_ref->p[p];
     
     for (int i = 0; i < pp->n_part; i++) {
@@ -135,7 +133,7 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
 	 xi, yi, zi, pxi, pyi, pzi);
 
-  psc_mparticles_base_put_cf(&particles, particles_base); // FIXME, no copy-back needed
+  psc_mparticles_base_put_cf(particles, particles_base); // FIXME, no copy-back needed
 }
 
 
@@ -243,8 +241,7 @@ psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, doubl
 void
 psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 {
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   int last = INT_MIN;
 
@@ -254,7 +251,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     struct psc_patch *patch = &psc->patch[p];
     int *ldims = patch->ldims;
     for (int n = 0; n < pp->n_part; n++) {
@@ -277,7 +274,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
       last = cni;
     }
   }
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
 }
 
 // ----------------------------------------------------------------------

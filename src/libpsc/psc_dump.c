@@ -62,11 +62,10 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
@@ -83,7 +82,7 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
     free(filename);
   }
 
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
 }
 
 void

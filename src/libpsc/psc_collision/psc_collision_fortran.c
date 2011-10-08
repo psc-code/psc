@@ -11,18 +11,17 @@ static void
 psc_collision_fortran_run(struct psc_collision *collision,
 			  mparticles_base_t *particles_base)
 {
-  mparticles_fortran_t particles;
-  psc_mparticles_base_get_fortran(&particles, particles_base);
+  mparticles_fortran_t *particles = psc_mparticles_base_get_fortran(particles_base);
 
   static int pr;
   if (!pr) {
     pr = prof_register("fort_collision", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_bin_coll(&particles.p[0]);
+  PIC_bin_coll(&particles->p[0]);
   prof_stop(pr);
 
-  psc_mparticles_base_put_fortran(&particles, particles_base);
+  psc_mparticles_base_put_fortran(particles, particles_base);
 }
 
 // ======================================================================

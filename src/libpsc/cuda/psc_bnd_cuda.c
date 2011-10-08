@@ -296,10 +296,10 @@ psc_bnd_cuda_exchange_particles(struct psc_bnd *psc_bnd, mparticles_base_t *part
   assert(size == 1);
   // all periodic only, too
   
-  mparticles_cuda_t particles;
-  psc_mparticles_base_get_cuda(&particles, particles_base, 0);
-  cuda_exchange_particles(0, &particles.p[0]);
-  psc_mparticles_base_put_cuda(&particles, particles_base);
+  mparticles_cuda_t *particles =
+	  psc_mparticles_base_get_cuda(particles_base, 0);
+  cuda_exchange_particles(0, &particles->p[0]);
+  psc_mparticles_base_put_cuda(particles, particles_base);
 }
 
 // ======================================================================

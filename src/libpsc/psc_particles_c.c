@@ -31,11 +31,10 @@ particles_c_free(particles_c_t *pp)
   pp->particles = NULL;
 }
 
-void
-psc_mparticles_c_get_c(mparticles_c_t *particles, void *_particles_base)
+mparticles_c_t *
+psc_mparticles_c_get_c(void *_particles_base)
 {
-  mparticles_c_t *particles_base = _particles_base;
-  *particles = *particles_base;
+  return _particles_base;
 }
 
 void
@@ -45,8 +44,8 @@ psc_mparticles_c_put_c(mparticles_c_t *particles, void *_particles_base)
 
 static bool __gotten;
 
-void
-psc_mparticles_fortran_get_c(mparticles_c_t *particles, void *_particles_base)
+mparticles_c_t *
+psc_mparticles_fortran_get_c(void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -59,6 +58,7 @@ psc_mparticles_fortran_get_c(mparticles_c_t *particles, void *_particles_base)
     
   mparticles_fortran_t *particles_base = _particles_base;
 
+  mparticles_c_t *particles = calloc(1, sizeof(*particles));
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   psc_foreach_patch(ppsc, p) {
     particles_fortran_t *pp_base = &particles_base->p[p];
@@ -82,6 +82,7 @@ psc_mparticles_fortran_get_c(mparticles_c_t *particles, void *_particles_base)
   }
 
   prof_stop(pr);
+  return particles;
 }
 
 void
@@ -119,7 +120,7 @@ psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
     free(pp->particles);
   }
   free(particles->p);
-  particles->p = NULL;
+  free(particles);
 
   prof_stop(pr);
 }

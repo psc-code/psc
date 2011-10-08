@@ -656,13 +656,12 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     srandom(rank);
   }
 
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, psc->particles); // FIXME, no copy needed
+  mparticles_t *particles = psc_mparticles_base_get_cf(psc->particles); // FIXME, no copy needed
 
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
 
     int i = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
@@ -720,7 +719,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     pp->n_part = i;
     assert(pp->n_part == nr_particles_by_patch[p]);
   }
-  psc_mparticles_base_put_cf(&particles, psc->particles);
+  psc_mparticles_base_put_cf(particles, psc->particles);
 }
 
 // ----------------------------------------------------------------------

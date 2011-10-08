@@ -255,12 +255,10 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-void
-psc_mparticles_cuda_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
-			     unsigned int flags)
+mparticles_cuda_t *
+psc_mparticles_cuda_get_cuda(void *_particles_base, unsigned int flags)
 {
-  mparticles_base_t *particles_base = _particles_base;
-  *particles = *particles_base;
+  return _particles_base;
 }
 
 void
@@ -270,8 +268,8 @@ psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
 
 static bool __gotten;
 
-void
-psc_mparticles_cuda_get_c(mparticles_c_t *particles_c, void *_particles_base)
+mparticles_c_t *
+psc_mparticles_cuda_get_c(void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -283,6 +281,7 @@ psc_mparticles_cuda_get_c(mparticles_c_t *particles_c, void *_particles_base)
   __gotten = true;
     
   mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_c = calloc(1, sizeof(*particles_c));
 
   particles_c->p = calloc(ppsc->nr_patches, sizeof(*particles_c->p));
   psc_foreach_patch(ppsc, p) {
@@ -294,6 +293,8 @@ psc_mparticles_cuda_get_c(mparticles_c_t *particles_c, void *_particles_base)
   psc_mparticles_copy_cf_from_cuda(particles_base, particles_c);
 
   prof_stop(pr);
+
+  return particles_c;
 }
 
 void
@@ -316,13 +317,13 @@ psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
     free(pp_c->particles);
   }
   free(particles_c->p);
-  particles_c->p = NULL;
+  free(particles_c);
 
   prof_stop(pr);
 }
 
-void
-psc_mparticles_cuda_get_fortran(mparticles_fortran_t *particles, void *_particles_base)
+mparticles_fortran_t *
+psc_mparticles_cuda_get_fortran(void *_particles_base)
 {
   assert(0);
 }
@@ -335,9 +336,8 @@ psc_mparticles_cuda_put_fortran(mparticles_fortran_t *particles, void *_particle
 
 // ======================================================================
 
-void
-psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
-			  unsigned int flags)
+mparticles_cuda_t *
+psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
 {
   static int pr;
   if (!pr) {
@@ -347,7 +347,8 @@ psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
 
   assert(!__gotten);
   __gotten = true;
-    
+  
+  mparticles_cuda_t *particles = calloc(1, sizeof(*particles));
   mparticles_c_t *particles_base = _particles_base;
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   assert(ppsc->nr_patches == 1); // many things would break...
@@ -362,6 +363,7 @@ psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base,
 				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
 
   prof_stop(pr);
+  return particles;
 }
 
 void
@@ -384,7 +386,7 @@ psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
     particles_cuda_free(pp);
   }
   free(particles->p);
-  particles->p = NULL;
+  free(particles);
 
   prof_stop(pr);
 }

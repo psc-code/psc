@@ -26,16 +26,13 @@ void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mpar
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
  									\
-void psc_mparticles_##type##_get_c(mparticles_c_t *particles,		\
-				   void *particles_base);		\
+mparticles_c_t *psc_mparticles_##type##_get_c(void *particles_base); \
 void psc_mparticles_##type##_put_c(mparticles_c_t *particles,	\
 				   void *particles_base);		\
-void psc_mparticles_##type##_get_fortran(mparticles_fortran_t *particles,	\
-					 void *particles_base);		\
+mparticles_fortran_t *psc_mparticles_##type##_get_fortran(void *particles_base); \
 void psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, \
 					  void *particles_base);	\
-void psc_mparticles_##type##_get_cuda(mparticles_cuda_t *particles,	\
-				      void *particles_base, unsigned int flags); \
+mparticles_cuda_t *psc_mparticles_##type##_get_cuda(void *particles_base, unsigned int flags); \
 void psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles,	\
 				      void *particles_base);		\
 

@@ -7,12 +7,11 @@ psc_check_particles(mparticles_base_t *particles_base)
 {
   int fail_cnt = 0;
 
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     f_real xb[3], xe[3];
     
     // New-style boundary requirements.
@@ -35,6 +34,6 @@ psc_check_particles(mparticles_base_t *particles_base)
     }
   }
   assert(fail_cnt == 0);
-  psc_mparticles_base_put_cf(&particles, particles_base); // FIXME, no copy-back needed
+  psc_mparticles_base_put_cf(particles, particles_base); // FIXME, no copy-back needed
 }
 

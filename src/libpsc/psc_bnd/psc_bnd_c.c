@@ -294,8 +294,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   struct psc *psc = bnd->psc;
   check_domain(bnd);
 
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   static int pr_A, pr_B;
   if (!pr_A) {
@@ -315,7 +314,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
@@ -388,16 +387,16 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp, &particles);
+  ddc_particles_comm(ddcp, particles);
 
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     pp->n_part = patch->head;
   }
   prof_stop(pr_B);
 
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
 }
 
 // ----------------------------------------------------------------------

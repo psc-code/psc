@@ -13,8 +13,7 @@
 void
 setup_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -29,7 +28,7 @@ setup_particles(mparticles_base_t *particles_base)
   // we can check.
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     if (rank != 0 || p != 0) {
       pp->n_part = 0;
       continue;
@@ -62,19 +61,18 @@ setup_particles(mparticles_base_t *particles_base)
     }
     pp->n_part = i;
   }
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
 }
 
 // FIXME, make generic
 static int
 get_total_num_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t particles;
-  psc_mparticles_base_get_cf(&particles, particles_base);
+  mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   int nr_part = 0;
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles.p[p];
+    particles_t *pp = &particles->p[p];
     nr_part += pp->n_part;
   }
 
@@ -82,7 +80,7 @@ get_total_num_particles(mparticles_base_t *particles_base)
   MPI_Allreduce(&nr_part, &total_nr_part, 1, MPI_INT, MPI_SUM,
 		MPI_COMM_WORLD);
 
-  psc_mparticles_base_put_cf(&particles, particles_base);
+  psc_mparticles_base_put_cf(particles, particles_base);
   return total_nr_part;
 }
 
