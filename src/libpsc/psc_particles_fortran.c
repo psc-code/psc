@@ -47,8 +47,16 @@ psc_mparticles_c_get_fortran(void *_particles_base)
 
   mparticles_c_t *particles_base = _particles_base;
 
-  mparticles_fortran_t *particles = calloc(1, sizeof(*particles));
-  particles->data = calloc(ppsc->nr_patches, sizeof(*particles->data));
+  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
+  for (int p = 0; p < particles_base->nr_patches; p++) {
+    nr_particles_by_patch[p] = psc_mparticles_base_nr_particles_by_patch(particles_base, p);
+  }
+  struct mrc_domain *domain = particles_base->domain;
+  mparticles_fortran_t *particles = psc_mparticles_fortran_create(mrc_domain_comm(domain));
+  psc_mparticles_fortran_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
+  psc_mparticles_fortran_setup(particles);
+  free(nr_particles_by_patch);
+
   psc_foreach_patch(ppsc, p) {
     particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
     particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
@@ -106,11 +114,8 @@ psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_b
       part->mni = f_part->mni;
       part->wni = f_part->wni;
     }
-
-    free(pp->particles);
   }
-  free(particles->data);
-  free(particles);
+  psc_mparticles_fortran_destroy(particles);
 
   prof_stop(pr);
 }

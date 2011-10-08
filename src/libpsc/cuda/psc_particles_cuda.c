@@ -91,6 +91,7 @@ psc_mparticles_copy_cf_to_cuda(mparticles_cuda_t *particles, mparticles_t *parti
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
+    pp->n_part = pp_cf->n_part;
 
     float4 *xi4  = calloc(pp_cf->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp_cf->n_part, sizeof(float4));
@@ -216,7 +217,7 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-    assert(pp->n_part == pp_cf->n_part);
+    pp_cf->n_part = pp->n_part;
 
     float4 *xi4  = calloc(pp->n_part, sizeof(float4));
     float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
@@ -281,15 +282,16 @@ psc_mparticles_cuda_get_c(void *_particles_base)
   __gotten = true;
     
   mparticles_base_t *particles_base = _particles_base;
-  mparticles_c_t *particles_c = calloc(1, sizeof(*particles_c));
-
-  particles_c->data = calloc(ppsc->nr_patches, sizeof(*particles_c->data));
-  psc_foreach_patch(ppsc, p) {
-    particles_cuda_t *pp_base = psc_mparticles_get_patch_cuda(particles_base, p);
-    particles_c_t *pp_c = psc_mparticles_get_patch_c(particles_c, p);
-    pp_c->n_part = pp_base->n_part;
-    pp_c->particles = calloc(pp_c->n_part, sizeof(*pp_c->particles));
+  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
+  for (int p = 0; p < particles_base->nr_patches; p++) {
+    nr_particles_by_patch[p] = psc_mparticles_base_nr_particles_by_patch(particles_base, p);
   }
+  struct mrc_domain *domain = particles_base->domain;
+  mparticles_c_t *particles_c = psc_mparticles_c_create(mrc_domain_comm(domain));
+  psc_mparticles_c_set_domain_nr_particles(particles_c, domain, nr_particles_by_patch);
+  psc_mparticles_c_setup(particles_c);
+  free(nr_particles_by_patch);
+
   psc_mparticles_copy_cf_from_cuda(particles_base, particles_c);
 
   prof_stop(pr);
@@ -312,12 +314,7 @@ psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
   mparticles_base_t *particles_base = _particles_base;
   psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
 				 true, false); // FIXME, need to sort
-  psc_foreach_patch(ppsc, p) {
-    particles_c_t *pp_c = psc_mparticles_get_patch_c(particles_c, p);
-    free(pp_c->particles);
-  }
-  free(particles_c->data);
-  free(particles_c);
+  psc_mparticles_c_destroy(particles_c);
 
   prof_stop(pr);
 }
@@ -339,6 +336,8 @@ psc_mparticles_cuda_put_fortran(mparticles_fortran_t *particles, void *_particle
 mparticles_cuda_t *
 psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
 {
+  assert(ppsc->nr_patches == 1); // many things would break...
+
   static int pr;
   if (!pr) {
     pr = prof_register("mparticles_get_cuda", 1., 0, 0);
@@ -348,16 +347,17 @@ psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
   assert(!__gotten);
   __gotten = true;
   
-  mparticles_cuda_t *particles = calloc(1, sizeof(*particles));
   mparticles_c_t *particles_base = _particles_base;
-  particles->data = calloc(ppsc->nr_patches, sizeof(*particles->data));
-  assert(ppsc->nr_patches == 1); // many things would break...
-  psc_foreach_patch(ppsc, p) {
-    particles_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
-    particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-    particles_cuda_alloc(p, pp, pp_base->n_part, flags & MP_NEED_BLOCK_OFFSETS,
-			 flags & MP_NEED_CELL_OFFSETS);
+
+  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
+  for (int p = 0; p < particles_base->nr_patches; p++) {
+    nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
   }
+  struct mrc_domain *domain = particles_base->domain;
+  mparticles_cuda_t *particles = psc_mparticles_cuda_create(mrc_domain_comm(domain));
+  psc_mparticles_cuda_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
+  psc_mparticles_cuda_setup(particles);
+  free(nr_particles_by_patch);
 
   psc_mparticles_copy_cf_to_cuda(particles, particles_base,
 				 flags & MP_NEED_BLOCK_OFFSETS, flags & MP_NEED_CELL_OFFSETS);
@@ -380,12 +380,7 @@ psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
 
   mparticles_t *particles_base = _particles_base;
   psc_mparticles_copy_cf_from_cuda(particles, particles_base);
-
-  psc_foreach_patch(ppsc, p) {
-    free(psc_mparticles_get_patch_cuda(particles, p));
-  }
-  free(particles->data);
-  free(particles);
+  psc_mparticles_cuda_destroy(particles);
 
   prof_stop(pr);
 }
