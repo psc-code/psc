@@ -35,6 +35,7 @@ create_test(const char *s_push_particles)
   struct psc_case *_case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
   psc_sort_set_type(ppsc->sort, "countsort2");
+  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 }); // FIXME
   psc_case_setup(_case);
   psc_sort_run(ppsc->sort, ppsc->particles);
   return _case;
