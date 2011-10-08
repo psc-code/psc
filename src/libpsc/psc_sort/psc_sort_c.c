@@ -158,59 +158,6 @@ cell_map_1to3(struct cell_map *map, int idx, int i[3])
   }
 }
 
-// ======================================================================
-
-
-static unsigned int ldims_bits[3];
-
-static unsigned int
-find_cell_indices_4x4x4(int p, particles_base_t *pp)
-{
-  struct psc_patch *patch = &ppsc->patch[p];
-
-  unsigned int N = 1;
-  for (int d = 0; d < 3; d++) {
-    ldims_bits[d] = 2; // FIXME, could handle invariant dirs better
-    while (patch->ldims[d] > (1 << ldims_bits[d])) {
-      ldims_bits[d]++;
-    }
-    //    printf("ld %d %d\n", patch->ldims[d], ldims_bits[d]);
-    N *= (1 << ldims_bits[d]);
-  }
-  //  printf("N %d\n", N);
-  return N;
-}
-
-static inline int
-get_cell_index_4x4x4(int p, const particle_base_t *part)
-{
-  struct psc_patch *patch = &ppsc->patch[p];
-  particle_base_real_t dxi = 1.f / ppsc->dx[0];
-  particle_base_real_t dyi = 1.f / ppsc->dx[1];
-  particle_base_real_t dzi = 1.f / ppsc->dx[2];
-  int *ldims = patch->ldims;
-  
-  particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
-  unsigned int j0 = particle_base_real_nint(u);
-  unsigned int j1 = particle_base_real_nint(v);
-  unsigned int j2 = particle_base_real_nint(w);
-  assert(j0 < ldims[0]);
-  assert(j1 < ldims[1]);
-  assert(j2 < ldims[2]);
-
-  return (((j2 >> 2) << (ldims_bits[1] - 2 + ldims_bits[0] - 2 + 6)) |
-	  ((j1 >> 2) << (ldims_bits[0] - 2 + 6)) |
-	  ((j0 >> 2) << 6) |
-	  (((j2 >> 1) & 1) << 5) |
-	  (((j1 >> 1) & 1) << 4) |
-	  (((j0 >> 1) & 1) << 3) |
-	  ((j2 & 1) << 2) |
-	  ((j1 & 1) << 1) |
-	  ((j0 & 1) << 0));
-}
-
 #endif
 
 static int
