@@ -33,13 +33,13 @@ particles_c_free(particles_c_t *pp)
 }
 
 static mparticles_c_t *
-_psc_mparticles_c_get_c(void *_particles_base)
+_psc_mparticles_c_get_c(struct psc_mparticles *particles_base)
 {
-  return _particles_base;
+  return particles_base;
 }
 
 static void
-_psc_mparticles_c_put_c(mparticles_c_t *particles, void *_particles_base)
+_psc_mparticles_c_put_c(mparticles_c_t *particles, struct psc_mparticles *particles_base)
 {
 }
 
@@ -153,7 +153,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 static bool __gotten;
 
 static mparticles_fortran_t *
-_psc_mparticles_c_get_fortran(void *_particles_base)
+_psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -163,8 +163,6 @@ _psc_mparticles_c_get_fortran(void *_particles_base)
 
   assert(!__gotten);
   __gotten = true;
-
-  mparticles_c_t *particles_base = _particles_base;
 
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
@@ -203,7 +201,8 @@ _psc_mparticles_c_get_fortran(void *_particles_base)
 }
 
 static void
-_psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
+_psc_mparticles_c_put_fortran(mparticles_fortran_t *particles,
+			      struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -214,7 +213,6 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_
   assert(__gotten);
   __gotten = false;
 
-  mparticles_c_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
     particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
     particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
@@ -242,7 +240,7 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_
 // ======================================================================
 // psc_mparticles: subclass "c"
   
-struct psc_mparticles_c_ops psc_mparticles_c_ops = {
+struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
 #ifdef HAVE_LIBHDF5_HL
   .write                   = _psc_mparticles_c_write,

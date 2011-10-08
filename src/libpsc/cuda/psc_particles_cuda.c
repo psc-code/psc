@@ -257,20 +257,20 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
 }
 
 static mparticles_cuda_t *
-_psc_mparticles_cuda_get_cuda(void *_particles_base, unsigned int flags)
+_psc_mparticles_cuda_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
 {
-  return _particles_base;
+  return particles_base;
 }
 
 static void
-_psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
+_psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
 {
 }
 
 static bool __gotten;
 
 static mparticles_c_t *
-_psc_mparticles_cuda_get_c(void *_particles_base)
+_psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -281,7 +281,6 @@ _psc_mparticles_cuda_get_c(void *_particles_base)
   assert(!__gotten);
   __gotten = true;
     
-  mparticles_base_t *particles_base = _particles_base;
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_base_nr_particles_by_patch(particles_base, p);
@@ -300,7 +299,7 @@ _psc_mparticles_cuda_get_c(void *_particles_base)
 }
 
 static void
-_psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
+_psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -311,7 +310,6 @@ _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
   assert(__gotten);
   __gotten = false;
 
-  mparticles_base_t *particles_base = _particles_base;
   psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
 				 true, false); // FIXME, need to sort
   psc_mparticles_c_destroy(particles_c);
@@ -322,7 +320,7 @@ _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
 // ======================================================================
 
 mparticles_cuda_t *
-_psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
+_psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
@@ -335,8 +333,6 @@ _psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
   assert(!__gotten);
   __gotten = true;
   
-  mparticles_c_t *particles_base = _particles_base;
-
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
@@ -355,7 +351,7 @@ _psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
 }
 
 void
-_psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
+_psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -366,7 +362,6 @@ _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
   assert(__gotten);
   __gotten = false;
 
-  mparticles_t *particles_base = _particles_base;
   psc_mparticles_copy_cf_from_cuda(particles, particles_base);
   psc_mparticles_cuda_destroy(particles);
 
@@ -410,7 +405,7 @@ _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
 // ======================================================================
 // psc_mparticles: subclass "cuda"
   
-struct psc_mparticles_cuda_ops psc_mparticles_cuda_ops = {
+struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,

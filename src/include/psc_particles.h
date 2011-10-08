@@ -37,21 +37,6 @@ struct psc_mparticles_ops {
   									\
 MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles);	\
 									\
-struct psc_mparticles_##type##_ops {					\
-  MRC_SUBCLASS_OPS(struct psc_mparticles);				\
-  void (*set_domain_nr_particles)(mparticles_##type##_t *mparticles,	\
-				  struct mrc_domain *domain,		\
-				  int *nr_particles_by_patch);		\
-  int (*nr_particles_by_patch)(mparticles_##type##_t *mparticles, int p);	\
-  mparticles_c_t *(*get_c)(void *particles_base);			\
-  void (*put_c)(mparticles_c_t *particles, void *particles_base);	\
-  mparticles_fortran_t *(*get_fortran)(void *particles_base);		\
-  void (*put_fortran)(mparticles_fortran_t *particles, void *particles_base); \
-  mparticles_cuda_t *(*get_cuda)(void *particles_base,			\
-				 unsigned int flags);			\
-  void (*put_cuda)(mparticles_cuda_t *particles, void *particles_base); \
-};									\
-									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
 						 struct mrc_domain *domain, \
 						 int *nr_particles_by_patch); \
@@ -137,8 +122,8 @@ void psc_mparticles_put_fortran(mparticles_fortran_t *mparticles, struct psc_mpa
 mparticles_cuda_t *psc_mparticles_get_cuda(struct psc_mparticles *mparticles_base, unsigned int flags);
 void psc_mparticles_put_cuda(mparticles_cuda_t *mparticles, struct psc_mparticles *particles_base);
 
-mparticles_cuda_t *_psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags);
-void _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base);
+mparticles_cuda_t *_psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int flags);
+void _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base);
 
 
 // ----------------------------------------------------------------------

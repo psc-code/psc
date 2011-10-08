@@ -21,13 +21,14 @@ particles_fortran_free(particles_fortran_t *pp)
 }
 
 mparticles_fortran_t *
-_psc_mparticles_fortran_get_fortran(void *_particles_base)
+_psc_mparticles_fortran_get_fortran(struct psc_mparticles *particles_base)
 {
-  return _particles_base;
+  return particles_base;
 }
 
 void
-_psc_mparticles_fortran_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
+_psc_mparticles_fortran_put_fortran(mparticles_fortran_t *particles,
+				    struct psc_mparticles *particles_base)
 {
 }
 
@@ -44,7 +45,7 @@ particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
 static bool __gotten;
 
 static mparticles_c_t *
-_psc_mparticles_fortran_get_c(void *_particles_base)
+_psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -55,8 +56,6 @@ _psc_mparticles_fortran_get_c(void *_particles_base)
   assert(!__gotten);
   __gotten = true;
     
-  mparticles_fortran_t *particles_base = _particles_base;
-
   int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
   for (int p = 0; p < particles_base->nr_patches; p++) {
     nr_particles_by_patch[p] = psc_mparticles_fortran_nr_particles_by_patch(particles_base, p);
@@ -93,7 +92,8 @@ _psc_mparticles_fortran_get_c(void *_particles_base)
 }
 
 static void
-_psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
+_psc_mparticles_fortran_put_c(mparticles_c_t *particles,
+			      struct psc_mparticles *particles_base)
 {
   static int pr;
   if (!pr) {
@@ -104,7 +104,6 @@ _psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
   assert(__gotten);
   __gotten = false;
 
-  mparticles_fortran_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
     particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
@@ -163,7 +162,7 @@ _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, 
 // ======================================================================
 // psc_mparticles: subclass "fortran"
   
-struct psc_mparticles_fortran_ops psc_mparticles_fortran_ops = {
+struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
   .set_domain_nr_particles = _psc_mparticles_fortran_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
