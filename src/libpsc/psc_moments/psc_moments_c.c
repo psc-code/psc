@@ -1,5 +1,6 @@
 
 #include "psc_moments_private.h"
+#include "psc_particles_as_c.h"
 
 #include "psc_bnd.h"
 #include <mrc_profile.h>
@@ -10,7 +11,7 @@
 typedef fields_base_real_t creal;
 
 static void
-do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
+do_c_calc_densities(int p, fields_base_t *pf, particles_t *pp,
 		    int m_NE, int m_NI, int m_NN)
 {
   fields_base_zero(pf, m_NE);
@@ -23,15 +24,15 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp_base, n);
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
       
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_nint(u);
-    int j2 = particle_base_real_nint(v);
-    int j3 = particle_base_real_nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -100,26 +101,31 @@ do_c_calc_densities(int p, fields_base_t *pf, particles_base_t *pp_base,
 
 static void
 psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
-			     mparticles_base_t *particles, mfields_base_t *res)
+			     mparticles_base_t *particles_base, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_densities", 1., 0, 0);
   }
 
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_densities(p, &res->f[p], &particles->p[p], 0, 1, 2);
+    do_c_calc_densities(p, &res->f[p], &particles.p[p], 0, 1, 2);
   }
   prof_stop(pr);
 
   psc_bnd_add_ghosts(ppsc->bnd, res, 0, 3);
+
+  psc_mparticles_put_to(&particles, particles_base); // FIXME, don't need copy-back
 }
 
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_c_calc_v(int p, fields_base_t *pf, particles_base_t *pp_base)
+do_c_calc_v(int p, fields_base_t *pf, particles_t *pp)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -131,15 +137,15 @@ do_c_calc_v(int p, fields_base_t *pf, particles_base_t *pp_base)
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp_base, n);
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_nint(u);
-    int j2 = particle_base_real_nint(v);
-    int j3 = particle_base_real_nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -212,23 +218,28 @@ do_c_calc_v(int p, fields_base_t *pf, particles_base_t *pp_base)
 
 static void
 psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
-		     mparticles_base_t *particles, mfields_base_t *res)
+		     mparticles_base_t *particles_base, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_v", 1., 0, 0);
   }
+
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_v(p, &res->f[p], &particles->p[p]);
+    do_c_calc_v(p, &res->f[p], &particles.p[p]);
   }
   prof_stop(pr);
 
   psc_bnd_add_ghosts(ppsc->bnd, res, 0, 6);
+  psc_mparticles_put_to(&particles, particles_base); // FIXME, don't need copy-back
 }
 
 static void
-do_c_calc_vv(int p, fields_base_t *pf, particles_base_t *pp_base)
+do_c_calc_vv(int p, fields_base_t *pf, particles_t *pp)
 {
   for (int m = 0; m < 6; m++) {
     fields_base_zero(pf, m);
@@ -240,15 +251,15 @@ do_c_calc_vv(int p, fields_base_t *pf, particles_base_t *pp_base)
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp_base, n);
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
     creal w = (part->zi - patch->xb[2]) * dzi;
-    int j1 = particle_base_real_nint(u);
-    int j2 = particle_base_real_nint(v);
-    int j3 = particle_base_real_nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h1 = j1-u;
     creal h2 = j2-v;
     creal h3 = j3-w;
@@ -321,19 +332,23 @@ do_c_calc_vv(int p, fields_base_t *pf, particles_base_t *pp_base)
 
 static void
 psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
-		      mparticles_base_t *particles, mfields_base_t *res)
+		      mparticles_base_t *particles_base, mfields_base_t *res)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_vv(p, &res->f[p], &particles->p[p]);
+    do_c_calc_vv(p, &res->f[p], &particles.p[p]);
   }
   prof_stop(pr);
 
   psc_bnd_add_ghosts(ppsc->bnd, res, 0, 6);
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 static void

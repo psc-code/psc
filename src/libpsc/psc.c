@@ -12,6 +12,7 @@
 #include "psc_moments.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
+#include "psc_particles_as_c.h"
 
 #include <mrc_common.h>
 #include <mrc_params.h>
@@ -652,10 +653,13 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     srandom(rank);
   }
 
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, psc->particles); // FIXME, no copy needed
+
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    particles_base_t *pp = &psc->particles->p[p];
+    particles_t *pp = &particles.p[p];
 
     int i = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
@@ -668,7 +672,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    
 	    int n_in_cell = get_n_in_cell(psc, &npt);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_base_t *p = particles_base_get_one(pp, i++);
+	      particle_t *p = particles_get_one(pp, i++);
 	      
 	      float ran1, ran2, ran3, ran4, ran5, ran6;
 	      do {
@@ -715,6 +719,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     pp->n_part = i;
     assert(pp->n_part == nr_particles_by_patch[p]);
   }
+  psc_mparticles_put_to(&particles, psc->particles);
 }
 
 // ----------------------------------------------------------------------

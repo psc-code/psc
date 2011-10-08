@@ -45,7 +45,7 @@ psc_mparticles_c_put_to(mparticles_c_t *particles, void *particles_base)
 {
 }
 
-#else
+#elif PARTICLES_BASE == PARTICLES_FORTRAN
 
 static bool __gotten;
 

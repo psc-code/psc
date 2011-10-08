@@ -32,4 +32,16 @@ particles_c_get_one(particles_c_t *pp, int n)
   return &pp->particles[n];
 }
 
+static inline int
+particle_c_real_nint(particle_c_real_t x)
+{
+  return (int)(x + 10.5f) - 10;
+}
+
+static inline int
+particle_c_real_fint(particle_c_real_t x)
+{
+  return (int)(x + 10.f) - 10;
+}
+
 #endif

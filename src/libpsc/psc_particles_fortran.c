@@ -36,7 +36,7 @@ psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_
   *particles_base = *particles;
 }
 
-#else
+#elif PARTICLES_BASE == PARTICLES_C
 
 static bool __gotten;
 

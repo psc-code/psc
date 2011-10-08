@@ -1,6 +1,7 @@
 
 #include "psc_bnd_private.h"
 #include "ddc_particles.h"
+#include "psc_particles_as_c.h"
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
@@ -79,18 +80,18 @@ struct mrc_ddc_funcs ddc_funcs = {
 };
 
 static void
-ddcp_particles_base_realloc(void *_particles, int p, int new_n_particles)
+ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
 {
-  mparticles_base_t *particles = _particles;
-  particles_base_t *pp = &particles->p[p];
-  particles_base_realloc(pp, new_n_particles);
+  mparticles_t *particles = _particles;
+  particles_t *pp = &particles->p[p];
+  particles_realloc(pp, new_n_particles);
 }
 
 static void *
-ddcp_particles_base_get_addr(void *_particles, int p, int n)
+ddcp_particles_get_addr(void *_particles, int p, int n)
 {
-  mparticles_base_t *particles = _particles;
-  particles_base_t *pp = &particles->p[p];
+  mparticles_t *particles = _particles;
+  particles_t *pp = &particles->p[p];
   return &pp->particles[n];
 }
 
@@ -126,11 +127,11 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
   mrc_ddc_set_param_int(bnd_c->ddc, "size_of_type", sizeof(fields_base_real_t));
   mrc_ddc_setup(bnd_c->ddc);
 
-  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_base_t),
-				     sizeof(particle_base_real_t),
-				     MPI_PARTICLES_BASE_REAL,
-				     ddcp_particles_base_realloc,
-				     ddcp_particles_base_get_addr);
+  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_t),
+				     sizeof(particle_real_t),
+				     MPI_PARTICLES_REAL,
+				     ddcp_particles_realloc,
+				     ddcp_particles_get_addr);
 
   bnd_c->ddcp_photons = ddc_particles_create(bnd_c->ddc, sizeof(photon_t),
 					     sizeof(photon_real_t),
@@ -278,11 +279,14 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
 // psc_bnd_c_exchange_particles
 
 static void
-psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
+psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
 {
   struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
   struct psc *psc = bnd->psc;
   check_domain(bnd);
+
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
 
   static int pr_A, pr_B;
   if (!pr_A) {
@@ -302,16 +306,16 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       patch->nei[dir1].n_send = 0;
     }
     for (int i = 0; i < pp->n_part; i++) {
-      particle_base_t *part = particles_base_get_one(pp, i);
-      particle_base_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-      particle_base_real_t *pxi = &part->pxi;
+      particle_t *part = particles_get_one(pp, i);
+      particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+      particle_real_t *pxi = &part->pxi;
       if (xi[0] >= xb[0] && xi[0] < xe[0] &&
 	  xi[1] >= xb[1] && xi[1] < xe[1] &&
 	  xi[2] >= xb[2] && xi[2] < xe[2]) {
@@ -375,14 +379,16 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp, particles);
+  ddc_particles_comm(ddcp, &particles);
 
   psc_foreach_patch(psc, p) {
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     struct ddcp_patch *patch = &ddcp->patches[p];
     pp->n_part = patch->head;
   }
   prof_stop(pr_B);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ----------------------------------------------------------------------

@@ -1,5 +1,6 @@
 
 #include "psc_sort_private.h"
+#include "psc_particles_as_c.h"
 
 #include "psc_glue.h"
 #include <mrc_profile.h>
@@ -27,46 +28,46 @@ get_cell_index(int p, const particle_base_t *pp)
 #else
 
 static void
-find_cell_indices(int p, particles_base_t *pp)
+find_cell_indices(int p, particles_t *pp)
 {
 }
 
 static inline int
-get_cell_index(int p, const particle_base_t *part)
+get_cell_index(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_base_real_t dxi = 1.f / ppsc->dx[0];
-  particle_base_real_t dyi = 1.f / ppsc->dx[1];
-  particle_base_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t dxi = 1.f / ppsc->dx[0];
+  particle_real_t dyi = 1.f / ppsc->dx[1];
+  particle_real_t dzi = 1.f / ppsc->dx[2];
   int *ldims = patch->ldims;
   int *ibn = ppsc->ibn;
   
-  particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
-  int j0 = particle_base_real_nint(u) + ibn[0];
-  int j1 = particle_base_real_nint(v) + ibn[1];
-  int j2 = particle_base_real_nint(w) + ibn[2];
+  particle_real_t u = (part->xi - patch->xb[0]) * dxi;
+  particle_real_t v = (part->yi - patch->xb[1]) * dyi;
+  particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+  int j0 = particle_real_nint(u) + ibn[0];
+  int j1 = particle_real_nint(v) + ibn[1];
+  int j2 = particle_real_nint(w) + ibn[2];
     
   return ((j2) * (ldims[1] + 2*ibn[1]) + j1) * (ldims[0] + 2*ibn[0]) + j0;
 }
 
 static inline int
-get_cell_index_2x2x2(int p, const particle_base_t *part)
+get_cell_index_2x2x2(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_base_real_t dxi = 1.f / ppsc->dx[0];
-  particle_base_real_t dyi = 1.f / ppsc->dx[1];
-  particle_base_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t dxi = 1.f / ppsc->dx[0];
+  particle_real_t dyi = 1.f / ppsc->dx[1];
+  particle_real_t dzi = 1.f / ppsc->dx[2];
   int *ldims = patch->ldims;
   int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
   
-  particle_base_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_base_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_base_real_t w = (part->zi - patch->xb[2]) * dzi;
-  int j0 = particle_base_real_nint(u) + ibn[0];
-  int j1 = particle_base_real_nint(v) + ibn[1];
-  int j2 = particle_base_real_nint(w) + ibn[2];
+  particle_real_t u = (part->xi - patch->xb[0]) * dxi;
+  particle_real_t v = (part->yi - patch->xb[1]) * dyi;
+  particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+  int j0 = particle_real_nint(u) + ibn[0];
+  int j1 = particle_real_nint(v) + ibn[1];
+  int j2 = particle_real_nint(w) + ibn[2];
     
   return ((((j2 >> 1) * (ldims[1] + 2*ibn[1]) +
 	   (j1 >> 1)) * (ldims[0] + 2*ibn[0]) +
@@ -163,7 +164,7 @@ cell_map_1to3(struct cell_map *map, int idx, int i[3])
 static int
 compare(const void *_a, const void *_b)
 {
-  const particle_base_t *a = _a, *b = _b;
+  const particle_t *a = _a, *b = _b;
 
   if (get_cell_index(0, a) < get_cell_index(0, b)) {
     return -1;
@@ -175,21 +176,25 @@ compare(const void *_a, const void *_b)
 }
 
 static void
-psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles)
+psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
-
   static int pr;
   if (!pr) {
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   prof_start(pr);
   assert(ppsc->nr_patches == 1);
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     find_cell_indices(p, pp);
     qsort(pp->particles, pp->n_part, sizeof(*pp->particles), compare);
   }
   prof_stop(pr);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ======================================================================
@@ -204,17 +209,20 @@ struct psc_sort_ops psc_sort_qsort_ops = {
 // counting sort
 
 static void
-psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
+psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("countsort_sort", 1., 0, 0);
   }
-  prof_start(pr);
 
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
+  prof_start(pr);
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     find_cell_indices(p, pp);
     
     int N = 1;
@@ -241,7 +249,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
     assert(cur == pp->n_part);
     
     // move into new position
-    particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
+    particle_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
     for (int i = 0; i < pp->n_part; i++) {
       unsigned int cni = get_cell_index(0, &pp->particles[i]);
       memcpy(&particles2[cnts[cni]], &pp->particles[i], sizeof(*particles2));
@@ -256,6 +264,8 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles)
   }
 
   prof_stop(pr);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ======================================================================
@@ -285,7 +295,7 @@ static struct param psc_sort_countsort2_descr[] = {
 
 
 static void
-psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
+psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
   struct psc_sort_countsort2 *cs2 = mrc_to_subobj(sort, struct psc_sort_countsort2);
 
@@ -294,28 +304,30 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     pr = prof_register("countsort2_sort", 1., 0, 0);
   }
 
-  prof_start(pr);
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
 
+  prof_start(pr);
   unsigned int mask = cs2->mask;
   psc_foreach_patch(ppsc, p) {
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     struct psc_patch *patch = &ppsc->patch[p];
     struct cell_map map;
     int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
     
     unsigned int *cnis = malloc(pp->n_part * sizeof(*cnis));
     for (int i = 0; i < pp->n_part; i++) {
-      particle_base_t *p = &pp->particles[i];
-      particle_base_real_t dxi = 1.f / ppsc->dx[0];
-      particle_base_real_t dyi = 1.f / ppsc->dx[1];
-      particle_base_real_t dzi = 1.f / ppsc->dx[2];
-      particle_base_real_t xi[3] = {
+      particle_t *p = &pp->particles[i];
+      particle_real_t dxi = 1.f / ppsc->dx[0];
+      particle_real_t dyi = 1.f / ppsc->dx[1];
+      particle_real_t dzi = 1.f / ppsc->dx[2];
+      particle_real_t xi[3] = {
 	(p->xi - patch->xb[0]) * dxi,
 	(p->yi - patch->xb[1]) * dyi,
 	(p->zi - patch->xb[2]) * dzi };
       int pos[3];
       for (int d = 0; d < 3; d++) {
-	pos[d] = particle_base_real_fint(xi[d]);
+	pos[d] = particle_real_fint(xi[d]);
 #if 0
 	if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
 	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",
@@ -349,7 +361,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
     assert(cur == pp->n_part);
     
     // move into new position
-    particle_base_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
+    particle_t *particles2 = malloc(pp->n_part * sizeof(*particles2));
     for (int i = 0; i < pp->n_part; i++) {
       unsigned int cni = cnis[i];
       int n = 1;
@@ -370,6 +382,8 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles)
   }
 
   prof_stop(pr);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ======================================================================

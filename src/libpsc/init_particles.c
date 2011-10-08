@@ -1,5 +1,7 @@
 #include "psc.h"
 #include "psc_case_private.h"
+#include "psc_particles_as_c.h"
+
 #include <mrc_params.h>
 
 #include <math.h>
@@ -105,7 +107,11 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
   
   int ilo[3], ihi[3];
   pml_find_bounds(psc, p, ilo, ihi);
-  particles_base_t *pp = &psc->particles->p[p];
+
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, psc->particles);
+
+  particles_t *pp = &particles.p[p];
   
   int i = 0;
   for (int kind = 0; kind < _case->nr_kinds; kind++) {
@@ -118,7 +124,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
 	  
 	  int n_in_cell = get_n_in_cell(psc, &npt);
 	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	    particle_base_t *prt = particles_base_get_one(pp, i++);
+	    particle_t *prt = particles_get_one(pp, i++);
 	    
 	    float ran1, ran2, ran3, ran4, ran5, ran6;
 	    do {
@@ -171,6 +177,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
     }
   } // kind
   pp->n_part = i;
+  psc_mparticles_put_to(&particles, psc->particles);
 }
 
 void

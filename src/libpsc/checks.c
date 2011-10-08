@@ -1,13 +1,18 @@
 
 #include "psc.h"
+#include "psc_particles_as_c.h"
 
 void
-psc_check_particles(mparticles_base_t *particles)
+psc_check_particles(mparticles_base_t *particles_base)
 {
   int fail_cnt = 0;
+
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_base_t *pp = &particles->p[p];
+    particles_t *pp = &particles.p[p];
     f_real xb[3], xe[3];
     
     // New-style boundary requirements.
@@ -19,7 +24,7 @@ psc_check_particles(mparticles_base_t *particles)
     }
     
     for (int i = 0; i < pp->n_part; i++) {
-      particle_base_t *part = particles_base_get_one(pp, i);
+      particle_t *part = particles_get_one(pp, i);
       if (part->xi < xb[0] || part->xi >= xe[0] || // FIXME xz only!
 	  part->zi < xb[2] || part->zi >= xe[2]) {
 	if (fail_cnt++ < 10) {
@@ -30,5 +35,6 @@ psc_check_particles(mparticles_base_t *particles)
     }
   }
   assert(fail_cnt == 0);
+  psc_mparticles_put_to(&particles, particles_base); // FIXME, no copy-back needed
 }
 

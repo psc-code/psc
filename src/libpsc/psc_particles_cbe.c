@@ -51,7 +51,7 @@ psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *particles_base)
 {
 }
 
-#else
+#elif PARTICLES_BASE == PARTICLES_C
 
 static bool __gotten;
 

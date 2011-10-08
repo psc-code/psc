@@ -4,6 +4,7 @@
 #include "psc_sort.h"
 #include "psc_randomize.h"
 #include "psc_bnd.h"
+#include "psc_particles_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -33,7 +34,7 @@ creal_sqrt(creal x)
 // FIXME, check continuity in _yz() (and others), too
 
 static void
-do_calc_rho_2nd(struct psc *psc, int p, particles_base_t *pp_base,
+do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
 		fields_base_t *rho, double dt)
 {
   fields_base_zero(rho, 0);
@@ -44,8 +45,8 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_base_t *pp_base,
   creal dzi = 1.f / psc->dx[2];
 
   struct psc_patch *patch = &psc->patch[p];
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp_base, n);
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
       
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vxi = part->pxi * root;
@@ -116,20 +117,25 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_base_t *pp_base,
 }
 
 void
-psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles,
+psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho, double dt)
 {
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   psc_foreach_patch(psc, p) {
-    do_calc_rho_2nd(psc, p, &particles->p[p], &rho->f[p], dt);
+    do_calc_rho_2nd(psc, p, &particles.p[p], &rho->f[p], dt);
   }
 
   psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ======================================================================
 
 static void
-do_calc_rho_1st(struct psc *psc, int p, particles_base_t *pp_base,
+do_calc_rho_1st(struct psc *psc, int p, particles_t *pp,
 		fields_base_t *rho, double dt)
 {
   fields_base_zero(rho, 0);
@@ -140,8 +146,8 @@ do_calc_rho_1st(struct psc *psc, int p, particles_base_t *pp_base,
   creal dzi = 1.f / psc->dx[2];
 
   struct psc_patch *patch = &psc->patch[p];
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_base_t *part = particles_base_get_one(pp_base, n);
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
       
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vxi = part->pxi * root;
@@ -190,14 +196,19 @@ do_calc_rho_1st(struct psc *psc, int p, particles_base_t *pp_base,
 }
 
 void
-psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles,
+psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho, double dt)
 {
+  mparticles_t particles;
+  psc_mparticles_get_from(&particles, particles_base);
+
   psc_foreach_patch(psc, p) {
-    do_calc_rho_1st(psc, p, &particles->p[p], &rho->f[p], dt);
+    do_calc_rho_1st(psc, p, &particles.p[p], &rho->f[p], dt);
   }
 
   psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
+
+  psc_mparticles_put_to(&particles, particles_base);
 }
 
 // ======================================================================

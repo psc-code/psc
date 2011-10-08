@@ -3,6 +3,7 @@
 #include "psc_case.h"
 #include "psc_bnd_fields.h"
 #include "psc_push_fields.h"
+#include "psc_particles_as_c.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
@@ -25,11 +26,14 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
-  mparticles_base_t *mparticles = psc->particles;
+  mparticles_t mparticles;
+  psc_mparticles_get_from(&mparticles, psc->particles);
 
   psc_foreach_patch(psc, p) {
-    loads[p] = mparticles->p[p].n_part + 1;
+    loads[p] = mparticles.p[p].n_part + 1;
   }
+
+  psc_mparticles_put_to(&mparticles, psc->particles); // OPT, doesn't need copy back
 }
 
 static int
@@ -227,7 +231,7 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
 
 static void
 communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
-		      mparticles_base_t *particles_old, mparticles_base_t *particles_new,
+		      mparticles_t *particles_old, mparticles_t *particles_new,
 		      int *nr_particles_by_patch_new)
 {
   MPI_Comm comm = mrc_domain_comm(domain_new);
@@ -252,9 +256,9 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      particles_base_t *pp_old = &particles_old->p[p];
-      int nn = pp_old->n_part * (sizeof(particle_base_t)  / sizeof(particle_base_real_t));
-      MPI_Isend(pp_old->particles, nn, MPI_PARTICLES_BASE_REAL, info_new.rank,
+      particles_t *pp_old = &particles_old->p[p];
+      int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      MPI_Isend(pp_old->particles, nn, MPI_PARTICLES_REAL, info_new.rank,
 		mpi_tag(&info), comm, &send_reqs[p]);
     }
   }
@@ -271,9 +275,9 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       recv_reqs[p] = MPI_REQUEST_NULL;
       //TODO Seed particles
     } else {
-      particles_base_t *pp_new = &particles_new->p[p];
-      int nn = pp_new->n_part * (sizeof(particle_base_t)  / sizeof(particle_base_real_t));
-      MPI_Irecv(pp_new->particles, nn, MPI_PARTICLES_BASE_REAL, info_old.rank,
+      particles_t *pp_new = &particles_new->p[p];
+      int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
+      MPI_Irecv(pp_new->particles, nn, MPI_PARTICLES_REAL, info_old.rank,
 		mpi_tag(&info), comm, &recv_reqs[p]);
     }
   }
@@ -288,8 +292,8 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       continue;
     }
 
-    particles_base_t *pp_old = &particles_old->p[info_old.patch];
-    particles_base_t *pp_new = &particles_new->p[p];
+    particles_t *pp_old = &particles_old->p[info_old.patch];
+    particles_t *pp_new = &particles_new->p[p];
     assert(pp_old->n_part == pp_new->n_part);
     for (int n = 0; n < pp_new->n_part; n++) {
       pp_new->particles[n] = pp_old->particles[n];
@@ -550,20 +554,27 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   // particles
 
   // alloc new particles
-  mparticles_base_t *mparticles_new = 
+  mparticles_base_t *mparticles_base_new = 
     psc_mparticles_base_create(mrc_domain_comm(domain_new));
-  psc_mparticles_base_set_domain_nr_particles(mparticles_new, domain_new,
-					  nr_particles_by_patch);
-  psc_mparticles_base_setup(mparticles_new);
+  psc_mparticles_base_set_domain_nr_particles(mparticles_base_new, domain_new,
+					      nr_particles_by_patch);
+  psc_mparticles_base_setup(mparticles_base_new);
 
+  mparticles_t mparticles_new, mparticles_old;
+  psc_mparticles_get_from(&mparticles_new, mparticles_base_new); // FIXME, don't need copy
+  psc_mparticles_get_from(&mparticles_old, psc->particles);
+    
   // communicate particles
   communicate_particles(domain_old, domain_new, 
-			psc->particles, mparticles_new, nr_particles_by_patch);
+			&mparticles_old, &mparticles_new, nr_particles_by_patch);
   free(nr_particles_by_patch);
+
+  psc_mparticles_put_to(&mparticles_old, psc->particles); // FIXME, don't need copy-back
+  psc_mparticles_put_to(&mparticles_new, mparticles_base_new);
 
   // replace particles by redistributed ones
   psc_mparticles_base_destroy(psc->particles);
-  psc->particles = mparticles_new;
+  psc->particles = mparticles_base_new;
 
   // ----------------------------------------------------------------------
   // fields

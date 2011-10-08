@@ -4,6 +4,10 @@
 
 #include <mrc_profile.h>
 
+#if PARTICLES_BASE == PARTICLES_C
+
+#include "psc_particles_as_c.h"
+
 static inline void
 find_cell(real xi, real yi, real zi, int l[3])
 {
@@ -13,20 +17,22 @@ find_cell(real xi, real yi, real zi, int l[3])
   //  printf("l %d %d %d\n", l[0], l[1], l[2]);
 }
 
+// FIXME, should go away and always be done within cuda for consistency
+
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
-	     particle_base_t *p)
+	     particle_t *p)
 {
-  particle_base_real_t dxi = 1.f / ppsc->dx[0];
-  particle_base_real_t dyi = 1.f / ppsc->dx[1];
-  particle_base_real_t dzi = 1.f / ppsc->dx[2];
-  particle_base_real_t xi[3] = {
+  particle_real_t dxi = 1.f / ppsc->dx[0];
+  particle_real_t dyi = 1.f / ppsc->dx[1];
+  particle_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t xi[3] = {
     (p->xi - patch->xb[0]) * dxi,
     (p->yi - patch->xb[1]) * dyi,
     (p->zi - patch->xb[2]) * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {
-    pos[d] = particle_base_real_fint(xi[d]);
+    pos[d] = cuda_fint(xi[d]);
   }
   
   return cell_map_3to1(map, pos);
@@ -262,4 +268,6 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
 
   prof_stop(pr);
 }
+
+#endif
 
