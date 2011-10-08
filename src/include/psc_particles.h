@@ -35,19 +35,10 @@ struct psc_mparticles_ops {
 
 #define DECLARE_MPARTICLES_METHODS(type)				\
   									\
-struct psc_mparticles_##type {						\
-  struct mrc_obj obj;							\
-  particles_##type##_t *data;						\
-  int nr_patches;							\
-  struct mrc_domain *domain;						\
-  bool need_block_offsets;						\
-  bool need_cell_offsets;						\
-};									\
-									\
-MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles_##type);	\
+MRC_CLASS_DECLARE(psc_mparticles_##type, struct psc_mparticles);	\
 									\
 struct psc_mparticles_##type##_ops {					\
-  MRC_SUBCLASS_OPS(struct psc_mparticles_##type);			\
+  MRC_SUBCLASS_OPS(struct psc_mparticles);				\
   void (*set_domain_nr_particles)(mparticles_##type##_t *mparticles,	\
 				  struct mrc_domain *domain,		\
 				  int *nr_particles_by_patch);		\
@@ -82,11 +73,11 @@ void psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles,	\
 #define MP_NEED_BLOCK_OFFSETS (0x100)
 #define MP_NEED_CELL_OFFSETS (0x200)
 
-typedef struct psc_mparticles_c mparticles_c_t;
-typedef struct psc_mparticles_fortran mparticles_fortran_t;
-typedef struct psc_mparticles_sse2 mparticles_sse2_t;
-typedef struct psc_mparticles_cbe mparticles_cbe_t;
-typedef struct psc_mparticles_cuda mparticles_cuda_t;
+typedef struct psc_mparticles mparticles_c_t;
+typedef struct psc_mparticles mparticles_fortran_t;
+typedef struct psc_mparticles mparticles_sse2_t;
+typedef struct psc_mparticles mparticles_cbe_t;
+typedef struct psc_mparticles mparticles_cuda_t;
 
 #include "psc_particles_fortran.h"
 DECLARE_MPARTICLES_METHODS(fortran)

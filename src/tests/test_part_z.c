@@ -57,7 +57,11 @@ create_test_base(const char *s_push_particles)
   psc_case_setup(_case);
 
   ppsc->dt = ppsc->dx[2];
-  ppsc->particles->data[0].n_part = 0;
+
+  mparticles_t *particles = psc_mparticles_base_get_cf(ppsc->particles);
+  particles_t *pp = psc_mparticles_get_patch(particles, 0);
+  pp->n_part = 0;
+  psc_mparticles_base_put_cf(particles, ppsc->particles);
   return _case;
 }
 

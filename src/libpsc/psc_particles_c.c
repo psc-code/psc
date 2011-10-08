@@ -54,7 +54,7 @@ _psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
   mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
 
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(*mparticles->data));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_c_alloc(psc_mparticles_get_patch_c(mparticles, p),
 		      nr_particles_by_patch[p]);
@@ -127,7 +127,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(*mparticles->data));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
 
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_c_t *particles = psc_mparticles_get_patch_c(mparticles, p);
@@ -264,7 +264,7 @@ psc_mparticles_c_init()
 
 struct mrc_class_psc_mparticles_c mrc_class_psc_mparticles_c = {
   .name             = "psc_mparticles_c",
-  .size             = sizeof(struct psc_mparticles_c),
+  .size             = sizeof(struct psc_mparticles),
   .init             = psc_mparticles_c_init,
   .destroy          = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL

@@ -72,7 +72,7 @@ psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
   // I cannot currently think of any reason we would offload 
   // the list of patches to the spes, so let's just use calloc 
   // for this one.
-  particles->data = calloc(ppsc->nr_patches, sizeof(*particles->data));
+  particles->data = calloc(ppsc->nr_patches, sizeof(particles_cbe_t));
   psc_foreach_patch(ppsc, p) {
     particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
     particles_cbe_t *pp = psc_mparticles_get_patch_cbe(particles, p);

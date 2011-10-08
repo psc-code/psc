@@ -384,7 +384,7 @@ _psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
   mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
 
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(*mparticles->data));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
 			 nr_particles_by_patch[p],
@@ -428,7 +428,7 @@ psc_mparticles_cuda_init()
 
 struct mrc_class_psc_mparticles_cuda mrc_class_psc_mparticles_cuda = {
   .name             = "psc_mparticles_cuda",
-  .size             = sizeof(struct psc_mparticles_cuda),
+  .size             = sizeof(struct psc_mparticles),
   .init             = psc_mparticles_cuda_init,
   .destroy          = _psc_mparticles_cuda_destroy,
 };
