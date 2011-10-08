@@ -6,7 +6,6 @@
 #include <mrc_params.h>
 
 #include <stdio.h>
-#include <string.h>
 #include <mpi.h>
 
 static bool do_dump = false;
@@ -35,7 +34,6 @@ create_test(const char *s_push_particles)
   struct psc_case *_case = psc_create_test_yz();
   psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
   psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 }); // FIXME
   psc_case_setup(_case);
   psc_sort_run(ppsc->sort, ppsc->particles);
   return _case;
@@ -81,39 +79,11 @@ main(int argc, char **argv)
   mrc_params_get_option_bool("check_currents", &check_currents);
 
   // ----------------------------------------------------------------------
-  // push_yz_a
+  // push_yz 1st order
 
-  run_test(true, "fortran", 0., 0., create_test, "_a");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_a");
+  run_test(true, "1st", 0., 0., create_test, "");
 #ifdef USE_CUDA
-  run_test(false, "cuda", 1e-3, 1e-2, create_test, "_a");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_a");
-#endif
-
-  // ----------------------------------------------------------------------
-  // push_yz_b
-
-  run_test(true, "fortran", 0., 0., create_test, "_b");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_b");
-#ifdef USE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-2, create_test, "_b");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_b");
-#endif
-
-  // ----------------------------------------------------------------------
-  // push_yz
-
-  run_test(true, "fortran", 0., 0., create_test, "");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
-#ifdef USE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-3, create_test, "");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "");
+  run_test(false, "cuda_1st", 1e-0, 1e-0, create_test, "");
 #endif
 
   prof_print();

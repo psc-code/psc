@@ -6,5 +6,6 @@ test_field
 test_part_xy
 test_part_xz
 test_part_yz
+test_part_yz_1
 test_part_z
 test_sort

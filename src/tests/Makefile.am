@@ -10,6 +10,7 @@ LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 noinst_PROGRAMS = \
 	test_part_xy \
 	test_part_yz \
+	test_part_yz_1 \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -31,6 +32,7 @@ TESTS = test_part_xy \
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx
 EXTRA_test_part_yz_SOURCES = dummy.cxx
+EXTRA_test_part_yz_1_SOURCES = dummy.cxx
 EXTRA_test_part_xz_SOURCES = dummy.cxx
 EXTRA_test_part_z_SOURCES = dummy.cxx
 EXTRA_test_field_SOURCES = dummy.cxx

@@ -189,7 +189,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
     prof_stop(pr2);
   }
 
-#if 0
+#if 1
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
   psc_mparticles_cuda_put_to(&particles, particles_base);
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
@@ -354,4 +354,24 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .push_yz               = psc_push_particles_cuda_push_yz6,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
+};
+
+static void __unused
+psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
+				    mparticles_base_t *particles_base,
+				    mfields_base_t *flds_base)
+{
+  mprintf("n_part = %d\n", particles_base->p[0].n_part);
+  cuda_push_partq(particles_base, flds_base,
+		  yz_1st_set_constants,
+		  yz_1st_cuda_push_part_p2,
+		  yz_1st_cuda_push_part_p3);
+}
+
+// ======================================================================
+// psc_push_particles: subclass "cuda_1st"
+
+struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
+  .name                  = "cuda_1st",
+  .push_yz               = psc_push_particles_cuda_1st_push_yz,
 };

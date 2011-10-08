@@ -22,6 +22,7 @@ libsubdir_la_LIBADD = \
 	cuda_push_part_yz3.lo \
 	cuda_push_part_yz4.lo \
 	cuda_push_part_yz6.lo \
+	cuda_push_part_yz_1st.lo \
 	cuda_push_part_z.lo \
 	cuda_push_part_z2.lo \
 	cuda_push_part_z3.lo
@@ -46,6 +47,7 @@ cuda_push_part_yz3.lo: push_part_p2_noshift.c
 cuda_push_part_yz4.lo: push_part_p2_noshift_2.c
 cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
 cuda_push_part_yz6.lo: push_part_p2_noshift_6.c push_part_kernelcall_6.c
+cuda_push_part_yz_1st.lo: push_part_p2_1st.c push_part_kernelcall_6.c
 
 #FIXME, this is just really too hacky...
 
