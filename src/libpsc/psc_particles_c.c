@@ -150,6 +150,95 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 
 #endif
 
+static bool __gotten;
+
+static mparticles_fortran_t *
+_psc_mparticles_c_get_fortran(void *_particles_base)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("part_fortran_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  assert(!__gotten);
+  __gotten = true;
+
+  mparticles_c_t *particles_base = _particles_base;
+
+  int *nr_particles_by_patch = malloc(particles_base->nr_patches * sizeof(int));
+  for (int p = 0; p < particles_base->nr_patches; p++) {
+    nr_particles_by_patch[p] = psc_mparticles_c_nr_particles_by_patch(particles_base, p);
+  }
+  struct mrc_domain *domain = particles_base->domain;
+  mparticles_fortran_t *particles = psc_mparticles_fortran_create(mrc_domain_comm(domain));
+  psc_mparticles_fortran_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
+  psc_mparticles_fortran_setup(particles);
+  free(nr_particles_by_patch);
+
+  psc_foreach_patch(ppsc, p) {
+    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
+    particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
+    pp->n_part = pp_base->n_part;
+    pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
+
+    for (int n = 0; n < pp_base->n_part; n++) {
+      particle_fortran_t *f_part = particles_fortran_get_one(pp, n);
+      particle_c_t *part = particles_c_get_one(pp_base, n);
+
+      f_part->xi  = part->xi;
+      f_part->yi  = part->yi;
+      f_part->zi  = part->zi;
+      f_part->pxi = part->pxi;
+      f_part->pyi = part->pyi;
+      f_part->pzi = part->pzi;
+      f_part->qni = part->qni;
+      f_part->mni = part->mni;
+      f_part->wni = part->wni;
+    }
+  }
+
+  prof_stop(pr);
+  return particles;
+}
+
+static void
+_psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("part_fortran_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  assert(__gotten);
+  __gotten = false;
+
+  mparticles_c_t *particles_base = _particles_base;
+  psc_foreach_patch(ppsc, p) {
+    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
+    particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, p);
+    assert(pp->n_part == pp_base->n_part);
+    for (int n = 0; n < pp_base->n_part; n++) {
+      particle_fortran_t *f_part = &pp->particles[n];
+      particle_c_t *part = particles_c_get_one(pp_base, n);
+      
+      part->xi  = f_part->xi;
+      part->yi  = f_part->yi;
+      part->zi  = f_part->zi;
+      part->pxi = f_part->pxi;
+      part->pyi = f_part->pyi;
+      part->pzi = f_part->pzi;
+      part->qni = f_part->qni;
+      part->mni = f_part->mni;
+      part->wni = f_part->wni;
+    }
+  }
+  psc_mparticles_fortran_destroy(particles);
+
+  prof_stop(pr);
+}
+
 // ======================================================================
 // psc_mparticles: subclass "c"
   
@@ -159,6 +248,8 @@ struct psc_mparticles_c_ops psc_mparticles_c_ops = {
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_c_get_c,
   .put_c                   = _psc_mparticles_c_put_c,
+  .get_fortran             = _psc_mparticles_c_get_fortran,
+  .put_fortran             = _psc_mparticles_c_put_fortran,
 };
 
 static void

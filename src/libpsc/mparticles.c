@@ -85,6 +85,18 @@ psc_mparticles_##type##_put_c(mparticles_c_t *particles, void *particles_base) \
 {									\
   psc_mparticles_put_c(particles, particles_base);			\
 }									\
+									\
+mparticles_fortran_t *							\
+psc_mparticles_##type##_get_fortran(void *particles_base)		\
+{									\
+  return psc_mparticles_get_fortran(particles_base);			\
+}									\
+									\
+void									\
+psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, void *particles_base) \
+{									\
+  psc_mparticles_put_fortran(particles, particles_base);		\
+}									\
 
 
 #ifdef USE_SSE2
@@ -136,5 +148,19 @@ psc_mparticles_put_c(mparticles_c_t *particles, struct psc_mparticles *particles
   ops->put_c((struct psc_mparticles *) particles, particles_base);
 }
 
+mparticles_fortran_t *
+psc_mparticles_get_fortran(struct psc_mparticles *particles_base)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->get_fortran);
+  return (mparticles_fortran_t *) ops->get_fortran(particles_base);
+}
 
+void
+psc_mparticles_put_fortran(mparticles_fortran_t *particles, struct psc_mparticles *particles_base)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->put_fortran);
+  ops->put_fortran((struct psc_mparticles *) particles, particles_base);
+}
 

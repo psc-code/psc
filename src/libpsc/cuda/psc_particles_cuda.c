@@ -319,18 +319,6 @@ _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
   prof_stop(pr);
 }
 
-mparticles_fortran_t *
-psc_mparticles_cuda_get_fortran(void *_particles_base)
-{
-  assert(0);
-}
-
-void
-psc_mparticles_cuda_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
-{
-  assert(0);
-}
-
 // ======================================================================
 
 mparticles_cuda_t *
