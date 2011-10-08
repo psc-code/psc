@@ -440,7 +440,7 @@ psc_case_test_z_set_from_options(struct psc_case *_case)
 
   ppsc->domain.gdims[0] = 1;
   ppsc->domain.gdims[1] = 1;
-  ppsc->domain.gdims[2] = 10;
+  ppsc->domain.gdims[2] = 16;
 }
 
 static void
