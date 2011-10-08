@@ -72,11 +72,21 @@ psc_mparticles_##type##_nr_particles_by_patch(mparticles_##type##_t *mparticles,
 					      int p) \
 {									\
   return psc_mparticles_nr_particles_by_patch((struct psc_mparticles *) mparticles, p); \
-}
+}									\
+									\
+mparticles_c_t *							\
+psc_mparticles_##type##_get_c(void *particles_base)			\
+{									\
+  return psc_mparticles_get_c(particles_base);				\
+}									\
+									\
+void									\
+psc_mparticles_##type##_put_c(mparticles_c_t *particles, void *particles_base) \
+{									\
+  psc_mparticles_put_c(particles, particles_base);			\
+}									\
 
 
-MAKE_MPARTICLES_METHODS(fortran)
-_MAKE_MPARTICLES_METHODS(fortran)
 #ifdef USE_SSE2
 MAKE_MPARTICLES_METHODS(sse2)
 _MAKE_MPARTICLES_METHODS(sse2)
@@ -86,6 +96,7 @@ MAKE_MPARTICLES_METHODS(cbe)
 _MAKE_MPARTICLES_METHODS(cbe)
 #endif
 
+_MAKE_MPARTICLES_METHODS(fortran)
 _MAKE_MPARTICLES_METHODS(c)
 _MAKE_MPARTICLES_METHODS(cuda)
 
@@ -108,5 +119,22 @@ psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
   assert(ops && ops->nr_particles_by_patch);
   return ops->nr_particles_by_patch(mparticles, p);
 }
+
+mparticles_c_t *
+psc_mparticles_get_c(struct psc_mparticles *particles_base)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->get_c);
+  return (mparticles_c_t *) ops->get_c(particles_base);
+}
+
+void
+psc_mparticles_put_c(mparticles_c_t *particles, struct psc_mparticles *particles_base)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->put_c);
+  ops->put_c((struct psc_mparticles *) particles, particles_base);
+}
+
 
 

@@ -269,8 +269,8 @@ psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
 
 static bool __gotten;
 
-mparticles_c_t *
-psc_mparticles_cuda_get_c(void *_particles_base)
+static mparticles_c_t *
+_psc_mparticles_cuda_get_c(void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -299,8 +299,8 @@ psc_mparticles_cuda_get_c(void *_particles_base)
   return particles_c;
 }
 
-void
-psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
+static void
+_psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -426,6 +426,8 @@ struct psc_mparticles_cuda_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
+  .get_c                   = _psc_mparticles_cuda_get_c,
+  .put_c                   = _psc_mparticles_cuda_put_c,
 };
 
 static void

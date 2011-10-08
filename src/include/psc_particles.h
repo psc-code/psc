@@ -20,6 +20,8 @@ struct psc_mparticles_ops {
 				  struct mrc_domain *domain,
 				  int *nr_particles_by_patch);
   int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
+  struct psc_mparticles *(*get_c)(struct psc_mparticles *particles_base);
+  void (*put_c)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
 };
 
 // This type is replicated for each actual particle type, however,
@@ -45,6 +47,8 @@ struct psc_mparticles_##type##_ops {					\
 				  struct mrc_domain *domain,		\
 				  int *nr_particles_by_patch);		\
   int (*nr_particles_by_patch)(mparticles_##type##_t *mparticles, int p);	\
+  mparticles_c_t *(*get_c)(void *particles_base);			\
+  void (*put_c)(mparticles_c_t *particles, void *particles_base);	\
 };									\
 									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
@@ -125,6 +129,8 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
+mparticles_c_t *psc_mparticles_get_c(struct psc_mparticles *mparticles_base);
+void psc_mparticles_put_c(mparticles_c_t *mparticles, struct psc_mparticles *particles_base);
 
 // ----------------------------------------------------------------------
 // base particles type
