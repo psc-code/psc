@@ -107,16 +107,26 @@ psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base
     h_part->xi4 = xi4;
     h_part->pxi4 = pxi4;
 
-    pp->b_mx[0] = (patch->ldims[0] + BLOCKSIZE_X - 1) / BLOCKSIZE_X;
-    pp->b_mx[1] = (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y;
-    pp->b_mx[2] = (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z;
+    int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->domain.gdims[d] == 1) {
+	bs[d] = 1;
+      }
+      pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
+    }
     pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
     // FIXME, should go away and can be taken over by c_offsets
     h_part->offsets = calloc(pp->nr_blocks + 1, sizeof(*h_part->offsets));
+
+    for (int d = 0; d < 3; d++) {
+      if (bs[d] != 1) {
+	bs[d] *= 2; // sort not only within blocks, but also on lowest block
+	// bit, so we can do the checkerboard passes
+      }
+    }
     int last_block = -1;
     struct cell_map map;
-    cell_map_init(&map, patch->ldims,
-		  (int[3]) { BLOCKSIZE_X, BLOCKSIZE_Y * 2, BLOCKSIZE_Z * 2 });
+    cell_map_init(&map, patch->ldims, bs);
     for (int n = 0; n <= pp->n_part; n++) {
       int block;
       if (n < pp->n_part) {
