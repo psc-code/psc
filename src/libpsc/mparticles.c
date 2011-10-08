@@ -120,8 +120,15 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
     pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
   }									\
   prof_start(pr);							\
-  assert(ops && ops->put_##type);					\
-  ops->put_##type(particles, particles_base);				\
+  assert(ops);								\
+  if (!ops->copy_from_##type) {						\
+    fprintf(stderr, "ERROR: missing copy_from_"#type			\
+	    " in psc_mparticles '%s'!\n",				\
+	    psc_mparticles_type(particles_base));			\
+    assert(0);								\
+  }									\
+  ops->copy_from_##type(particles_base, particles, 0);			\
+  psc_mparticles_destroy(particles);					\
   prof_stop(pr);							\
 }									\
 

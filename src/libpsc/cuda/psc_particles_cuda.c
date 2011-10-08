@@ -277,11 +277,11 @@ _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base, unsigned int f
 }
 
 static void
-_psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, struct psc_mparticles *particles_base)
+_psc_mparticles_cuda_copy_from_c(struct psc_mparticles *particles_base, mparticles_c_t *particles_c,
+				 unsigned int flags)
 {
   psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
 				 true, false); // FIXME, need to sort
-  psc_mparticles_destroy(particles_c);
 }
 
 // ======================================================================
@@ -309,10 +309,10 @@ _psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int f
 }
 
 void
-_psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
+_psc_mparticles_c_copy_from_cuda(struct psc_mparticles *particles_base,
+				 mparticles_cuda_t *particles, unsigned int flags)
 {
-  psc_mparticles_copy_cf_from_cuda(particles, particles_base, 0);
-  psc_mparticles_destroy(particles);
+  psc_mparticles_copy_cf_from_cuda(particles, particles_base, flags);
 }
 
 // ======================================================================
@@ -358,6 +358,6 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_cuda_get_c,
-  .put_c                   = _psc_mparticles_cuda_put_c,
+  .copy_from_c             = _psc_mparticles_cuda_copy_from_c,
 };
 
