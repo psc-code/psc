@@ -21,11 +21,11 @@ libsubdir_la_LIBADD = \
 	cuda_push_part_yz2.lo \
 	cuda_push_part_yz3.lo \
 	cuda_push_part_yz4.lo \
-	cuda_push_part_yz5.lo \
 	cuda_push_part_yz6.lo \
 	cuda_push_part_z.lo \
 	cuda_push_part_z2.lo \
 	cuda_push_part_z3.lo
+#	cuda_push_part_yz5.lo
 
 CUDACFLAGS = --use_fast_math $(filter-out -msse2 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(AM_CUDACFLAGS)
 
@@ -55,7 +55,7 @@ cuda_push_part_yz6.lo: push_part_p2_noshift_6.c push_part_kernelcall_6.c
 	$(LTCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ dummy.c
 	rm ${@:.lo=.o}
 	rm dummy.c
-	$(CUDACC) -g -arch=sm_20 --ptxas-options=-v --maxrregcount=32 $(CUDACFLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
+	$(CUDACC) -g --ptxas-options=-v --maxrregcount=32 $(CUDACFLAGS) -c $< -o ${@:.lo=.o} || rm -f $@
 
 CLEANFILES = *.fatbin.c *.cudafe1.c *.cudafe2.c *.stub.c *.cubin *.i *.ii *.ptx *.hash *.fatbin *.cudafe1.cpp *.cudafe1.gpu *.cudafe2.gpu *.cu.cpp
 
