@@ -402,6 +402,12 @@ particle_base_real_nint(particle_base_real_t x)
   return (int)(x + 10.5f) - 10;
 }
 
+static inline int
+particle_base_real_fint(particle_base_real_t x)
+{
+  return (int)(x + 10.f) - 10;
+}
+
 // ----------------------------------------------------------------------
 // cell_map
 

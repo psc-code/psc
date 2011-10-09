@@ -2,6 +2,7 @@
 #include "psc_testing.h"
 #include "psc_push_particles.h"
 #include "psc_sort.h"
+#include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -12,6 +13,285 @@
 
 static bool do_dump = false;
 static bool check_currents = true;
+
+// ======================================================================
+// psc_calc_rho
+
+typedef double creal;
+
+static inline creal
+creal_sqrt(creal x)
+{
+  return sqrt(x);
+}
+
+// FIXME, this is pretty much the same as in calc_moments
+// FIXME, check continuity in _yz() (and others), too
+
+static void
+do_calc_rho_2nd(struct psc *psc, int p, particles_base_t *pp_base,
+		fields_base_t *rho, double dt)
+{
+  fields_base_zero(rho, 0);
+
+  creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  creal dxi = 1.f / psc->dx[0];
+  creal dyi = 1.f / psc->dx[1];
+  creal dzi = 1.f / psc->dx[2];
+
+  struct psc_patch *patch = &psc->patch[p];
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp_base, n);
+      
+    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    creal vxi = part->pxi * root;
+    creal vyi = part->pyi * root;
+    creal vzi = part->pzi * root;
+    creal xi = part->xi + vxi * dt;
+    creal yi = part->yi + vyi * dt;
+    creal zi = part->zi + vzi * dt;
+    creal u = (xi - patch->xb[0]) * dxi;
+    creal v = (yi - patch->xb[1]) * dyi;
+    creal w = (zi - patch->xb[2]) * dzi;
+    int j1 = particle_base_real_nint(u);
+    int j2 = particle_base_real_nint(v);
+    int j3 = particle_base_real_nint(w);
+    creal h1 = j1-u;
+    creal h2 = j2-v;
+    creal h3 = j3-w;
+      
+    creal gmx=.5f*(.5f+h1)*(.5f+h1);
+    creal gmy=.5f*(.5f+h2)*(.5f+h2);
+    creal gmz=.5f*(.5f+h3)*(.5f+h3);
+    creal g0x=.75f-h1*h1;
+    creal g0y=.75f-h2*h2;
+    creal g0z=.75f-h3*h3;
+    creal g1x=.5f*(.5f-h1)*(.5f-h1);
+    creal g1y=.5f*(.5f-h2)*(.5f-h2);
+    creal g1z=.5f*(.5f-h3)*(.5f-h3);
+      
+    if (psc->domain.gdims[0] == 1) {
+      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
+    }
+    if (psc->domain.gdims[1] == 1) {
+      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
+    }
+    if (psc->domain.gdims[2] == 1) {
+      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
+    }
+
+    creal fnq = part->qni * part->wni * fnqs;
+    F3_BASE(rho,0, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
+    F3_BASE(rho,0, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
+    F3_BASE(rho,0, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
+    F3_BASE(rho,0, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
+    F3_BASE(rho,0, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
+    F3_BASE(rho,0, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
+    F3_BASE(rho,0, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
+    F3_BASE(rho,0, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
+    F3_BASE(rho,0, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
+    F3_BASE(rho,0, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
+    F3_BASE(rho,0, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
+    F3_BASE(rho,0, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
+    F3_BASE(rho,0, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
+    F3_BASE(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3_BASE(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3_BASE(rho,0, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
+    F3_BASE(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3_BASE(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3_BASE(rho,0, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
+    F3_BASE(rho,0, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
+    F3_BASE(rho,0, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
+    F3_BASE(rho,0, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
+    F3_BASE(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3_BASE(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3_BASE(rho,0, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
+    F3_BASE(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3_BASE(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+  }
+}
+
+void
+psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles,
+		 mfields_base_t *rho, double dt)
+{
+  psc_foreach_patch(psc, p) {
+    do_calc_rho_2nd(psc, p, &particles->p[p], &rho->f[p], dt);
+  }
+
+  psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
+}
+
+// ======================================================================
+
+static void
+do_calc_rho_1st(struct psc *psc, int p, particles_base_t *pp_base,
+		fields_base_t *rho, double dt)
+{
+  fields_base_zero(rho, 0);
+
+  creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
+  creal dxi = 1.f / psc->dx[0];
+  creal dyi = 1.f / psc->dx[1];
+  creal dzi = 1.f / psc->dx[2];
+
+  struct psc_patch *patch = &psc->patch[p];
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_base_t *part = particles_base_get_one(pp_base, n);
+      
+    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    creal vxi = part->pxi * root;
+    creal vyi = part->pyi * root;
+    creal vzi = part->pzi * root;
+    creal xi = part->xi + vxi * dt;
+    creal yi = part->yi + vyi * dt;
+    creal zi = part->zi + vzi * dt;
+    creal u = (xi - patch->xb[0]) * dxi;
+    creal v = (yi - patch->xb[1]) * dyi;
+    creal w = (zi - patch->xb[2]) * dzi;
+    int j1 = particle_base_real_fint(u);
+    int j2 = particle_base_real_fint(v);
+    int j3 = particle_base_real_fint(w);
+    creal h1 = u-j1;
+    creal h2 = v-j2;
+    creal h3 = w-j3;
+      
+    creal g0x=1.f - h1;
+    creal g0y=1.f - h2;
+    creal g0z=1.f - h3;
+    creal g1x=h1;
+    creal g1y=h2;
+    creal g1z=h3;
+      
+    if (psc->domain.gdims[0] == 1) {
+      j1 = 0; g0x = 1.; g1x = 0.;
+    }
+    if (psc->domain.gdims[1] == 1) {
+      j2 = 0; g0y = 1.; g1y = 0.;
+    }
+    if (psc->domain.gdims[2] == 1) {
+      j3 = 0; g0z = 1.; g1z = 0.;
+    }
+
+    creal fnq = part->qni * part->wni * fnqs;
+    F3_BASE(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3_BASE(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3_BASE(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3_BASE(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3_BASE(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3_BASE(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3_BASE(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3_BASE(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+  }
+}
+
+void
+psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles,
+		 mfields_base_t *rho, double dt)
+{
+  psc_foreach_patch(psc, p) {
+    do_calc_rho_1st(psc, p, &particles->p[p], &rho->f[p], dt);
+  }
+
+  psc_bnd_add_ghosts(psc->bnd, rho, 0, 1);
+}
+
+// ======================================================================
+// psc_calc_div_j
+
+static void
+do_calc_div_j(struct psc *psc, int p, fields_base_t *flds, fields_base_t *div_j)
+{
+  creal h[3];
+  for (int d = 0; d < 3; d++) {
+    if (psc->domain.gdims[d] == 1) {
+      h[d] = 0.;
+    } else {
+      h[d] = 1. / psc->dx[d];
+    }
+  }
+
+  psc_foreach_3d_g(psc, p, jx, jy, jz) {
+    F3_BASE(div_j,0, jx,jy,jz) =
+      (F3_BASE(flds,JXI, jx,jy,jz) - F3_BASE(flds,JXI, jx-1,jy,jz)) * h[0] +
+      (F3_BASE(flds,JYI, jx,jy,jz) - F3_BASE(flds,JYI, jx,jy-1,jz)) * h[1] +
+      (F3_BASE(flds,JZI, jx,jy,jz) - F3_BASE(flds,JZI, jx,jy,jz-1)) * h[2];
+  } psc_foreach_3d_g_end;
+}
+
+static void
+psc_calc_div_j(struct psc *psc, mfields_base_t *flds, mfields_base_t *div_j)
+{
+  psc_foreach_patch(psc, p) {
+    do_calc_div_j(psc, p, &flds->f[p], &div_j->f[p]);
+  }
+
+  psc_bnd_add_ghosts(psc->bnd, div_j, 0, 1);
+}
+
+// ======================================================================
+// psc_check_continuity
+
+static mfields_base_t *
+fld_create(struct psc *psc)
+{
+  mfields_base_t *fld = psc_mfields_base_create(psc_comm(psc));
+  psc_mfields_base_set_domain(fld, psc->mrc_domain);
+  psc_mfields_base_set_param_int3(fld, "ibn", psc->ibn);
+  psc_mfields_base_setup(fld);
+
+  return fld;
+}
+
+static void
+psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
+		     mfields_base_t *flds, double eps)
+{
+  mfields_base_t *rho_m = fld_create(psc);
+  mfields_base_t *rho_p = fld_create(psc);
+  mfields_base_t *div_j = fld_create(psc);
+
+  psc_calc_rho_1st(psc, particles, rho_m, -.5 * psc->dt);
+  psc_calc_rho_1st(psc, particles, rho_p,  .5 * psc->dt);
+
+  psc_mfields_base_axpy(rho_p, -1., rho_m);
+  psc_mfields_base_scale(rho_p, 1. / psc->dt);
+
+  psc_calc_div_j(psc, flds, div_j);
+
+  psc_dump_field(div_j, 0, "div_j");
+  psc_dump_field(rho_p, 0, "dt_rho");
+
+  double max_err = 0.;
+  psc_foreach_patch(psc, p) {
+    fields_base_t *p_rho_p = &rho_p->f[p];
+    fields_base_t *p_div_j = &div_j->f[p];
+    psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
+      creal dt_rho = F3_BASE(p_rho_p,0, jx,jy,jz);
+      creal div_j = F3_BASE(p_div_j,0, jx,jy,jz);
+      max_err = fmax(max_err, fabs(dt_rho + div_j));
+      if (fabs(dt_rho + div_j) > eps) {
+	printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
+	       dt_rho, -div_j, dt_rho + div_j);
+      }
+    } psc_foreach_3d_end;
+  }
+  printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
+
+  psc_mfields_base_axpy(rho_p, +1., div_j);
+  psc_dump_field(rho_p, 0, "cont_diff");
+
+  assert(max_err <= eps);
+
+
+  psc_mfields_base_destroy(rho_m);
+  psc_mfields_base_destroy(rho_p);
+  psc_mfields_base_destroy(div_j);
+}
+
+
+// ======================================================================
+// psc_test
 
 struct psc_test {
 };
@@ -53,6 +333,13 @@ psc_test_create(struct psc *psc)
   psc->domain.bnd_part[2] = BND_PART_PERIODIC;
 
   psc_sort_set_type(psc->sort, "countsort2");
+#ifdef USE_CUDA
+#if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
+  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 });
+#else
+#error TBD
+#endif
+#endif
 }
 
 // ----------------------------------------------------------------------
@@ -72,6 +359,13 @@ psc_test_set_from_options(struct psc *psc)
 static double
 psc_test_init_field(struct psc *psc, double x[3], int m)
 {
+#if 0
+  switch (m) {
+  case EY: return 1.;
+  default: return 0.;
+  }
+#endif
+
   switch (m) {
   case EX: return x[1] + x[2];
   case EY: return x[1] + x[2];
@@ -142,6 +436,12 @@ create_test(const char *s_push_particles)
   psc_push_particles_set_type(psc->push_particles, s_push_particles);
   psc_sort_set_type(psc->sort, "countsort2");
   psc_setup(psc);
+#if 0
+  psc->particles->p[0].particles[0] = psc->particles->p[0].particles[1];
+  psc->particles->p[0].particles[0].yi = 2./16;
+  psc->particles->p[0].particles[0].zi = 3.5/16;
+  psc->particles->p[0].n_part = 1;
+#endif
   psc_sort_run(psc->sort, psc->particles);
   return psc;
 }
@@ -171,6 +471,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
     if (check_currents && strlen(push) == 0) { // only check currents for full pusher
       psc_check_currents_ref(psc, psc->flds, eps_fields);
+      psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
     }
   }
   psc_destroy(psc);
@@ -191,11 +492,14 @@ main(int argc, char **argv)
   // push_yz 1st order
 
   run_test(true, "1st", 0., 0., create_test, "");
+  // run again to check continuity
+  run_test(false, "1st", 1e-7, 1e-7, create_test, "");
+
   // since the fields are linear functions of position, 1st order / 2nd order
   // field interpolation should give the same result
   run_test(false, "generic_c", 1e-7, 1e-0, create_test, "");
 #ifdef USE_CUDA
-  run_test(false, "cuda_1st", 1e-6, 1e-0, create_test, "");
+  run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
 #endif
 
   prof_print();
