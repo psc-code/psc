@@ -1,6 +1,7 @@
 
 #include "psc_testing.h"
 #include "psc_push_particles.h"
+#include "psc_push_fields.h"
 #include "psc_sort.h"
 #include "psc_randomize.h"
 #include "psc_bnd.h"
@@ -413,6 +414,24 @@ psc_test_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
+static void
+psc_test_step(struct psc *psc)
+{
+  psc_output(psc);
+
+  // field propagation n*dt -> (n+0.5)*dt
+  psc_push_fields_step_a(psc->push_fields, psc->flds);
+
+  // particle propagation n*dt -> (n+1.0)*dt
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+
+  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+
+  // field propagation (n+0.5)*dt -> (n+1.0)*dt
+  psc_push_fields_step_b(psc->push_fields, psc->flds);
+}
+
 // ======================================================================
 // psc_test_ops
 
@@ -423,6 +442,7 @@ struct psc_ops psc_test_ops = {
   .set_from_options = psc_test_set_from_options,
   .init_field       = psc_test_init_field,
   .init_npt         = psc_test_init_npt,
+  .step             = psc_test_step,
 };
 
 static void
