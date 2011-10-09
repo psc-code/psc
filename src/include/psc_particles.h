@@ -24,6 +24,9 @@ struct psc_mparticles_ops {
   void (*put_c)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
   struct psc_mparticles *(*get_fortran)(struct psc_mparticles *particles_base);
   void (*put_fortran)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
+  struct psc_mparticles *(*get_cuda)(struct psc_mparticles *particles_base,
+				     unsigned int flags);
+  void (*put_cuda)(struct psc_mparticles *particles, struct psc_mparticles *particles_base);
 };
 
 // This type is replicated for each actual particle type, however,
@@ -53,6 +56,9 @@ struct psc_mparticles_##type##_ops {					\
   void (*put_c)(mparticles_c_t *particles, void *particles_base);	\
   mparticles_fortran_t *(*get_fortran)(void *particles_base);		\
   void (*put_fortran)(mparticles_fortran_t *particles, void *particles_base); \
+  mparticles_cuda_t *(*get_cuda)(void *particles_base,			\
+				 unsigned int flags);			\
+  void (*put_cuda)(mparticles_cuda_t *particles, void *particles_base); \
 };									\
 									\
 void psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticles, \
@@ -137,6 +143,12 @@ mparticles_c_t *psc_mparticles_get_c(struct psc_mparticles *mparticles_base);
 void psc_mparticles_put_c(mparticles_c_t *mparticles, struct psc_mparticles *particles_base);
 mparticles_fortran_t *psc_mparticles_get_fortran(struct psc_mparticles *mparticles_base);
 void psc_mparticles_put_fortran(mparticles_fortran_t *mparticles, struct psc_mparticles *particles_base);
+mparticles_cuda_t *psc_mparticles_get_cuda(struct psc_mparticles *mparticles_base, unsigned int flags);
+void psc_mparticles_put_cuda(mparticles_cuda_t *mparticles, struct psc_mparticles *particles_base);
+
+mparticles_cuda_t *_psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags);
+void _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base);
+
 
 // ----------------------------------------------------------------------
 // base particles type

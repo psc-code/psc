@@ -97,6 +97,18 @@ psc_mparticles_##type##_put_fortran(mparticles_fortran_t *particles, void *parti
 {									\
   psc_mparticles_put_fortran(particles, particles_base);		\
 }									\
+									\
+mparticles_cuda_t *							\
+psc_mparticles_##type##_get_cuda(void *particles_base, unsigned int flags)		\
+{									\
+  return psc_mparticles_get_cuda(particles_base, flags);			\
+}									\
+									\
+void									\
+psc_mparticles_##type##_put_cuda(mparticles_cuda_t *particles, void *particles_base) \
+{									\
+  psc_mparticles_put_cuda(particles, particles_base);			\
+}									\
 
 
 #ifdef USE_SSE2
@@ -162,5 +174,21 @@ psc_mparticles_put_fortran(mparticles_fortran_t *particles, struct psc_mparticle
   struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
   assert(ops && ops->put_fortran);
   ops->put_fortran((struct psc_mparticles *) particles, particles_base);
+}
+
+mparticles_cuda_t *
+psc_mparticles_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->get_cuda);
+  return (mparticles_cuda_t *) ops->get_cuda(particles_base, flags);
+}
+
+void
+psc_mparticles_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);
+  assert(ops && ops->put_cuda);
+  ops->put_cuda((struct psc_mparticles *) particles, particles_base);
 }
 

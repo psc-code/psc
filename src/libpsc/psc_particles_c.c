@@ -250,6 +250,10 @@ struct psc_mparticles_c_ops psc_mparticles_c_ops = {
   .put_c                   = _psc_mparticles_c_put_c,
   .get_fortran             = _psc_mparticles_c_get_fortran,
   .put_fortran             = _psc_mparticles_c_put_fortran,
+#ifdef USE_CUDA
+  .get_cuda                = _psc_mparticles_c_get_cuda,
+  .put_cuda                = _psc_mparticles_c_put_cuda,
+#endif
 };
 
 static void

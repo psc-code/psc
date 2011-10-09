@@ -256,14 +256,14 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-mparticles_cuda_t *
-psc_mparticles_cuda_get_cuda(void *_particles_base, unsigned int flags)
+static mparticles_cuda_t *
+_psc_mparticles_cuda_get_cuda(void *_particles_base, unsigned int flags)
 {
   return _particles_base;
 }
 
-void
-psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
+static void
+_psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
 {
 }
 
@@ -322,7 +322,7 @@ _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
 // ======================================================================
 
 mparticles_cuda_t *
-psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
+_psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
@@ -355,7 +355,7 @@ psc_mparticles_c_get_cuda(void *_particles_base, unsigned int flags)
 }
 
 void
-psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
+_psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -416,6 +416,8 @@ struct psc_mparticles_cuda_ops psc_mparticles_cuda_ops = {
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_cuda_get_c,
   .put_c                   = _psc_mparticles_cuda_put_c,
+  .get_cuda                = _psc_mparticles_cuda_get_cuda,
+  .put_cuda                = _psc_mparticles_cuda_put_cuda,
 };
 
 static void
