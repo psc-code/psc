@@ -59,6 +59,8 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 
 struct psc_mfields *_psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me);
 void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me);
+struct psc_mfields *_psc_mfields_c_get_fortran(struct psc_mfields *_flds_base, int mb, int me);
+void _psc_mfields_c_put_fortran(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me);
 
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
