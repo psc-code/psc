@@ -20,19 +20,6 @@ particles_fortran_free(particles_fortran_t *pp)
   pp->particles = NULL;
 }
 
-mparticles_fortran_t *
-_psc_mparticles_fortran_get_fortran(struct psc_mparticles *particles_base,
-				    unsigned int flags)
-{
-  return particles_base;
-}
-
-void
-_psc_mparticles_fortran_put_fortran(mparticles_fortran_t *particles,
-				    struct psc_mparticles *particles_base)
-{
-}
-
 void
 particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
 {
@@ -171,7 +158,5 @@ struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_fortran_get_c,
   .put_c                   = _psc_mparticles_fortran_put_c,
-  .get_fortran             = _psc_mparticles_fortran_get_fortran,
-  .put_fortran             = _psc_mparticles_fortran_put_fortran,
 };
 

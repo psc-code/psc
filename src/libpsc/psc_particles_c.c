@@ -32,17 +32,6 @@ particles_c_free(particles_c_t *pp)
   pp->particles = NULL;
 }
 
-static mparticles_c_t *
-_psc_mparticles_c_get_c(struct psc_mparticles *particles_base, unsigned int flags)
-{
-  return particles_base;
-}
-
-static void
-_psc_mparticles_c_put_c(mparticles_c_t *particles, struct psc_mparticles *particles_base)
-{
-}
-
 // ======================================================================
 // psc_mparticles_c
 
@@ -250,8 +239,6 @@ struct psc_mparticles_ops psc_mparticles_c_ops = {
 #endif
   .set_domain_nr_particles = _psc_mparticles_c_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
-  .get_c                   = _psc_mparticles_c_get_c,
-  .put_c                   = _psc_mparticles_c_put_c,
   .get_fortran             = _psc_mparticles_c_get_fortran,
   .put_fortran             = _psc_mparticles_c_put_fortran,
 #ifdef USE_CUDA

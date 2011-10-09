@@ -91,6 +91,9 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
 			  unsigned int flags)				\
 {									\
   struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
+  if (ops == &psc_mparticles_##type##_ops) {				\
+    return particles_base;						\
+  }									\
   assert(ops && ops->get_##type);					\
   return ops->get_##type(particles_base, flags);			\
 }									\
@@ -100,13 +103,18 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
 		     struct psc_mparticles *particles_base)		\
 {									\
   struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
+  if (ops == &psc_mparticles_##type##_ops) {				\
+    return;								\
+  }									\
   assert(ops && ops->put_##type);					\
   ops->put_##type(particles, particles_base);				\
 }									\
 
 MAKE_MPARTICLES_GET_PUT(c)
 MAKE_MPARTICLES_GET_PUT(fortran)
+#ifdef USE_CUDA
 MAKE_MPARTICLES_GET_PUT(cuda)
+#endif
 
 // ======================================================================
 

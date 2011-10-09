@@ -259,17 +259,6 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-static mparticles_cuda_t *
-_psc_mparticles_cuda_get_cuda(struct psc_mparticles *particles_base, unsigned int flags)
-{
-  return particles_base;
-}
-
-static void
-_psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *particles_base)
-{
-}
-
 static bool __gotten;
 
 static mparticles_c_t *
@@ -417,7 +406,5 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_cuda_get_c,
   .put_c                   = _psc_mparticles_cuda_put_c,
-  .get_cuda                = _psc_mparticles_cuda_get_cuda,
-  .put_cuda                = _psc_mparticles_cuda_put_cuda,
 };
 
