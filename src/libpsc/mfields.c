@@ -63,6 +63,9 @@ struct psc_mfields *							\
 psc_mfields_get_##type(struct psc_mfields *base, int mb, int me)	\
 {									\
   struct psc_mfields_ops *ops = psc_mfields_ops(base);			\
+  if (ops == &psc_mfields_##type##_ops) {				\
+    return base;							\
+  }									\
   assert(ops && ops->get_##type);					\
   return ops->get_##type(base, mb, me);					\
 }									\
@@ -72,13 +75,18 @@ psc_mfields_put_##type(struct psc_mfields *flds,			\
 		       struct psc_mfields *base, int mb, int me)	\
 {									\
   struct psc_mfields_ops *ops = psc_mfields_ops(base);			\
+  if (ops == psc_mfields_ops(flds)) {					\
+    return;								\
+  }									\
   assert(ops && ops->put_##type);					\
-  return ops->put_##type(flds, base, mb, me);				\
+  ops->put_##type(flds, base, mb, me);					\
 }									\
 
 MAKE_MFIELDS_GET_PUT(c)
 MAKE_MFIELDS_GET_PUT(fortran)
+#ifdef USE_CUDA
 MAKE_MFIELDS_GET_PUT(cuda)
+#endif
 
 // ======================================================================
 

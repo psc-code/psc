@@ -209,17 +209,6 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
   free(flds->data);
 }
 
-static struct psc_mfields *
-_psc_mfields_cuda_get_cuda(struct psc_mfields *base, int mb, int me)
-{
-  return base;
-}
-
-static void
-_psc_mfields_cuda_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
-{
-}
-
 // ======================================================================
 // psc_mfields: subclass "cuda"
   
@@ -229,8 +218,6 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
   .destroy               = _psc_mfields_cuda_destroy,
   .get_c                 = _psc_mfields_cuda_get_c,
   .put_c                 = _psc_mfields_cuda_put_c,
-  .get_cuda              = _psc_mfields_cuda_get_cuda,
-  .put_cuda              = _psc_mfields_cuda_put_cuda,
 };
 
 

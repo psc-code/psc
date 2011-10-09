@@ -43,17 +43,6 @@ fields_fortran_free(fields_fortran_t *pf)
   free(pf->flds);
 }
 
-struct psc_mfields *
-_psc_mfields_fortran_get_fortran(struct psc_mfields *base, int mb, int me)
-{
-  return base;
-}
-
-void
-_psc_mfields_fortran_put_fortran(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
-{
-}
-
 mfields_fortran_t *
 _psc_mfields_c_get_fortran(mfields_c_t *flds_base, int mb, int me)
 {
@@ -200,7 +189,5 @@ struct psc_mfields_ops psc_mfields_fortran_ops = {
   .name                  = "fortran",
   .setup                 = _psc_mfields_fortran_setup,
   .destroy               = _psc_mfields_fortran_destroy,
-  .get_fortran           = _psc_mfields_fortran_get_fortran,
-  .put_fortran           = _psc_mfields_fortran_put_fortran,
 };
 

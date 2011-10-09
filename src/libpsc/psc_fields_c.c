@@ -148,17 +148,6 @@ _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
   }
 }
 
-static struct psc_mfields *
-_psc_mfields_c_get_c(struct psc_mfields *base, int mb, int me)
-{
-  return base;
-}
-
-static void
-_psc_mfields_c_put_c(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me)
-{
-}
-
 // ======================================================================
 // psc_mfields_c
 
@@ -304,8 +293,6 @@ struct psc_mfields_ops psc_mfields_c_ops = {
   .scale                 = _psc_mfields_c_scale,
   .copy_comp             = _psc_mfields_c_copy_comp,
   .axpy                  = _psc_mfields_c_axpy,
-  .get_c                 = _psc_mfields_c_get_c,
-  .put_c                 = _psc_mfields_c_put_c,
   .get_fortran           = _psc_mfields_c_get_fortran,
   .put_fortran           = _psc_mfields_c_put_fortran,
 #ifdef USE_CUDA
