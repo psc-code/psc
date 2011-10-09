@@ -74,12 +74,12 @@ _psc_case_setup(struct psc_case *_case)
   psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
 
   psc->particles = 
-    psc_mparticles_base_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mparticles_base_set_type(psc->particles, s_particles_base);
-  psc_mparticles_base_set_name(psc->particles, "mparticles");
+    psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_set_type(psc->particles, s_particles_base);
+  psc_mparticles_set_name(psc->particles, "mparticles");
   psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					 nr_particles_by_patch);
-  psc_mparticles_base_setup(psc->particles);
+  psc_mparticles_setup(psc->particles);
 
   psc_case_init_particles(_case, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);

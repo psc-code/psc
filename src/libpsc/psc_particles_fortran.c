@@ -61,9 +61,10 @@ _psc_mparticles_fortran_get_c(struct psc_mparticles *particles_base)
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
-  mparticles_c_t *particles = psc_mparticles_c_create(mrc_domain_comm(domain));
+  mparticles_c_t *particles = psc_mparticles_create(mrc_domain_comm(domain));
+  psc_mparticles_set_type(particles, "c");
   psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
-  psc_mparticles_c_setup(particles);
+  psc_mparticles_setup(particles);
   free(nr_particles_by_patch);
 
   psc_foreach_patch(ppsc, p) {
@@ -123,7 +124,7 @@ _psc_mparticles_fortran_put_c(mparticles_c_t *particles,
       part_base->wni = part->wni;
     }
   }
-  psc_mparticles_c_destroy(particles);
+  psc_mparticles_destroy(particles);
 
   prof_stop(pr);
 }
@@ -164,24 +165,12 @@ _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, 
   
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
+  .destroy                 = _psc_mparticles_fortran_destroy,
   .set_domain_nr_particles = _psc_mparticles_fortran_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_fortran_get_c,
   .put_c                   = _psc_mparticles_fortran_put_c,
   .get_fortran             = _psc_mparticles_fortran_get_fortran,
   .put_fortran             = _psc_mparticles_fortran_put_fortran,
-};
-
-static void
-psc_mparticles_fortran_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mparticles_fortran, &psc_mparticles_fortran_ops);
-}
-
-struct mrc_class_psc_mparticles_fortran mrc_class_psc_mparticles_fortran = {
-  .name             = "psc_mparticles_fortran",
-  .size             = sizeof(struct psc_mparticles),
-  .init             = psc_mparticles_fortran_init,
-  .destroy          = _psc_mparticles_fortran_destroy,
 };
 

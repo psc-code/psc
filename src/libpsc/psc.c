@@ -378,12 +378,12 @@ psc_setup_partition_and_particles(struct psc *psc)
   psc_balance_initial(psc->balance, psc, &nr_particles_by_patch);
 
   psc->particles = 
-    psc_mparticles_base_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mparticles_base_set_type(psc->particles, s_particles_base);
-  psc_mparticles_base_set_name(psc->particles, "mparticles");
+    psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
+  psc_mparticles_set_type(psc->particles, s_particles_base);
+  psc_mparticles_set_name(psc->particles, "mparticles");
   psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					  nr_particles_by_patch);
-  psc_mparticles_base_setup(psc->particles);
+  psc_mparticles_setup(psc->particles);
 
   psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
   free(nr_particles_by_patch);
@@ -501,7 +501,7 @@ _psc_destroy(struct psc *psc)
 {
   psc_mfields_list_del(&psc_mfields_base_list, &psc->flds);
   psc_mfields_destroy(psc->flds);
-  psc_mparticles_base_destroy(psc->particles);
+  psc_mparticles_destroy(psc->particles);
   psc_mphotons_destroy(psc->mphotons);
 
   mrc_domain_destroy(psc->mrc_domain);
@@ -522,7 +522,7 @@ _psc_write(struct psc *psc, struct mrc_io *io)
   mrc_io_write_attr_int(io, path, "timestep", psc->timestep);
 
   mrc_domain_write(psc->mrc_domain, io);
-  psc_mparticles_base_write(psc->particles, io);
+  psc_mparticles_write(psc->particles, io);
   psc_mfields_write(psc->flds, io);
   psc_mphotons_write(psc->mphotons, io);
 }
@@ -540,7 +540,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   mrc_io_read_attr_int(io, path, "timestep", &psc->timestep);
 
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
-  psc->particles = psc_mparticles_base_read(io, "mparticles");
+  psc->particles = psc_mparticles_read(io, "mparticles");
   psc->flds = psc_mfields_read(io, "mfields");
   psc->mphotons = psc_mphotons_read(io, "mphotons");
 

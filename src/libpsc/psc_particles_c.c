@@ -91,7 +91,7 @@ static void
 _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
 {
   int ierr;
-  const char *path = psc_mparticles_c_name(mparticles);
+  const char *path = psc_mparticles_name(mparticles);
   mrc_io_write_attr_int(io, path, "nr_patches", mparticles->nr_patches);
   
   long h5_file;
@@ -121,7 +121,7 @@ static void
 _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 {
   int ierr;
-  const char *path = psc_mparticles_c_name(mparticles);
+  const char *path = psc_mparticles_name(mparticles);
   mrc_io_read_attr_int(io, path, "nr_patches", &mparticles->nr_patches);
 
   long h5_file;
@@ -169,9 +169,10 @@ _psc_mparticles_c_get_fortran(struct psc_mparticles *particles_base)
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
-  mparticles_fortran_t *particles = psc_mparticles_fortran_create(mrc_domain_comm(domain));
+  mparticles_fortran_t *particles = psc_mparticles_create(mrc_domain_comm(domain));
+  psc_mparticles_set_type(particles, "fortran");
   psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
-  psc_mparticles_fortran_setup(particles);
+  psc_mparticles_setup(particles);
   free(nr_particles_by_patch);
 
   psc_foreach_patch(ppsc, p) {
@@ -232,7 +233,7 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles,
       part->wni = f_part->wni;
     }
   }
-  psc_mparticles_fortran_destroy(particles);
+  psc_mparticles_destroy(particles);
 
   prof_stop(pr);
 }
@@ -242,6 +243,7 @@ _psc_mparticles_c_put_fortran(mparticles_fortran_t *particles,
   
 struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
+  .destroy                 = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .write                   = _psc_mparticles_c_write,
   .read                    = _psc_mparticles_c_read,
@@ -256,18 +258,5 @@ struct psc_mparticles_ops psc_mparticles_c_ops = {
   .get_cuda                = _psc_mparticles_c_get_cuda,
   .put_cuda                = _psc_mparticles_c_put_cuda,
 #endif
-};
-
-static void
-psc_mparticles_c_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mparticles_c, &psc_mparticles_c_ops);
-}
-
-struct mrc_class_psc_mparticles_c mrc_class_psc_mparticles_c = {
-  .name             = "psc_mparticles_c",
-  .size             = sizeof(struct psc_mparticles),
-  .init             = psc_mparticles_c_init,
-  .destroy          = _psc_mparticles_c_destroy,
 };
 

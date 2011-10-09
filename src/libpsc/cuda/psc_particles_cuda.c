@@ -286,9 +286,10 @@ _psc_mparticles_cuda_get_c(struct psc_mparticles *particles_base)
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
-  mparticles_c_t *particles_c = psc_mparticles_c_create(mrc_domain_comm(domain));
+  mparticles_c_t *particles_c = psc_mparticles_create(mrc_domain_comm(domain));
+  psc_mparticles_set_type(particles_c, "c");
   psc_mparticles_set_domain_nr_particles(particles_c, domain, nr_particles_by_patch);
-  psc_mparticles_c_setup(particles_c);
+  psc_mparticles_setup(particles_c);
   free(nr_particles_by_patch);
 
   psc_mparticles_copy_cf_from_cuda(particles_base, particles_c);
@@ -312,7 +313,7 @@ _psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, struct psc_mparticles *p
 
   psc_mparticles_copy_cf_to_cuda(particles_base, particles_c,
 				 true, false); // FIXME, need to sort
-  psc_mparticles_c_destroy(particles_c);
+  psc_mparticles_destroy(particles_c);
 
   prof_stop(pr);
 }
@@ -338,9 +339,10 @@ _psc_mparticles_c_get_cuda(struct psc_mparticles *particles_base, unsigned int f
     nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(particles_base, p);
   }
   struct mrc_domain *domain = particles_base->domain;
-  mparticles_cuda_t *particles = psc_mparticles_cuda_create(mrc_domain_comm(domain));
+  mparticles_cuda_t *particles = psc_mparticles_create(mrc_domain_comm(domain));
+  psc_mparticles_set_type(particles, "cuda");
   psc_mparticles_set_domain_nr_particles(particles, domain, nr_particles_by_patch);
-  psc_mparticles_cuda_setup(particles);
+  psc_mparticles_setup(particles);
   free(nr_particles_by_patch);
 
   psc_mparticles_copy_cf_to_cuda(particles, particles_base,
@@ -363,7 +365,7 @@ _psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *
   __gotten = false;
 
   psc_mparticles_copy_cf_from_cuda(particles, particles_base);
-  psc_mparticles_cuda_destroy(particles);
+  psc_mparticles_destroy(particles);
 
   prof_stop(pr);
 }
@@ -407,6 +409,7 @@ _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
   
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
+  .destroy                 = _psc_mparticles_cuda_destroy,
   .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .get_c                   = _psc_mparticles_cuda_get_c,
@@ -414,18 +417,4 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .get_cuda                = _psc_mparticles_cuda_get_cuda,
   .put_cuda                = _psc_mparticles_cuda_put_cuda,
 };
-
-static void
-psc_mparticles_cuda_init()
-{
-  mrc_class_register_subclass(&mrc_class_psc_mparticles_cuda, &psc_mparticles_cuda_ops);
-}
-
-struct mrc_class_psc_mparticles_cuda mrc_class_psc_mparticles_cuda = {
-  .name             = "psc_mparticles_cuda",
-  .size             = sizeof(struct psc_mparticles),
-  .init             = psc_mparticles_cuda_init,
-  .destroy          = _psc_mparticles_cuda_destroy,
-};
-
 

@@ -132,3 +132,21 @@ psc_mparticles_put_cuda(mparticles_cuda_t *particles, struct psc_mparticles *par
   ops->put_cuda((struct psc_mparticles *) particles, particles_base);
 }
 
+// ======================================================================
+
+static void
+psc_mparticles_init()
+{
+  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_fortran_ops);
+#ifdef USE_CUDA
+  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_cuda_ops);
+#endif
+}
+
+struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
+  .name             = "psc_mparticles_c",
+  .size             = sizeof(struct psc_mparticles),
+  .init             = psc_mparticles_init,
+};
+
