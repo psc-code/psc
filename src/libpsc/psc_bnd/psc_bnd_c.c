@@ -24,7 +24,7 @@ static void
 copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
-  fields_t *pf = &flds->f[p];
+  fields_t *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -42,7 +42,7 @@ static void
 add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
-  fields_t *pf = &flds->f[p];
+  fields_t *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -60,7 +60,7 @@ static void
 copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
-  fields_t *pf = &flds->f[p];
+  fields_t *pf = psc_mfields_get_patch(flds, p);
   fields_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {

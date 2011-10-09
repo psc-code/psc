@@ -35,7 +35,7 @@ ascii_dump_field(mfields_base_t *flds_base, int m, const char *fname)
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_field: '%s'\n", filename);
 
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     FILE *file = fopen(filename, "w");
     free(filename);
     if (pf->im[0] + 2*pf->ib[0] == 1) {

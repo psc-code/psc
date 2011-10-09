@@ -102,7 +102,7 @@ psc_case_harris_init_field(struct psc_case *_case, mfields_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);
@@ -238,7 +238,7 @@ psc_case_test_yz_init_field(struct psc_case *_case, mfields_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dy = psc->dx[1], dz = psc->dx[2];
       double yy = CRDY(p, jy), zz = CRDZ(p, jz);
@@ -351,7 +351,7 @@ psc_case_test_xy_init_field(struct psc_case *_case, mfields_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dy = psc->dx[1], dx = psc->dx[0];
       double yy = CRDY(p, jy), xx = CRDX(p, jx);
@@ -451,7 +451,7 @@ psc_case_test_z_init_field(struct psc_case *_case, mfields_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       F3(pf, EZ, jx,jy,jz) = 1.;
     } psc_foreach_3d_g_end;

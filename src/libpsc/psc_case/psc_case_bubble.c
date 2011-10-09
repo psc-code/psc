@@ -111,7 +111,7 @@ psc_case_bubble_init_field(struct psc_case *_case, mfields_t *flds)
 
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dz = psc->dx[2];
       double xx = CRDX(p, jx), zz = CRDZ(p, jz);

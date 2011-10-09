@@ -25,7 +25,7 @@ static void
 copy_to_mrc_fld(struct mrc_m3 *m3, mfields_c_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = &flds->f[p];
+    fields_c_t *pf = psc_mfields_c_get_patch_c(flds, p);
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
       MRC_M3(m3p,0, ix,iy,iz) = F3_C(pf,0, ix,iy,iz);
@@ -92,7 +92,7 @@ psc_output_format_mrc_write_fields(struct psc_output_format *format,
   mrc_io_open(io, "w", ppsc->timestep, ppsc->timestep * ppsc->dt);
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_c_t *flds = list->flds[m];
-    fields_c_t *fld = &flds->f[0];
+    fields_c_t *fld = psc_mfields_c_get_patch_c(flds, 0);
     assert(fld->nr_comp == 1);
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])

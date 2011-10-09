@@ -330,8 +330,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   assert(nr_patches_old == flds_old->nr_patches);
   assert(nr_patches_old > 0);
   
-  fields_t *f_old = flds_old->f;
-  fields_t *f_new = flds_new->f;
+  fields_t *f_old = psc_mfields_get_patch(flds_old, 0);
+  fields_t *f_new = psc_mfields_get_patch(flds_new, 0);
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
   // send from old local patches

@@ -126,7 +126,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
-    do_calc_rho_2nd(psc, p, &particles.p[p], &rho->f[p], dt);
+    do_calc_rho_2nd(psc, p, &particles.p[p], psc_mfields_get_patch(rho, p), dt);
   }
 
   psc_mparticles_put_to(&particles, particles_base);
@@ -206,7 +206,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
-    do_calc_rho_1st(psc, p, &particles.p[p], &rho->f[p], dt);
+    do_calc_rho_1st(psc, p, &particles.p[p], psc_mfields_get_patch(rho, p), dt);
   }
 
   psc_mparticles_put_to(&particles, particles_base);
@@ -245,7 +245,7 @@ psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j
   mfields_t *div_j = psc_mfields_get_from(0, 0, div_j_base);
 
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, &flds->f[p], &div_j->f[p]);
+    do_calc_div_j(psc, p, psc_mfields_get_patch(flds, p), psc_mfields_get_patch(div_j, p));
   }
 
   psc_mfields_put_to(flds, 0, 0, flds_base);
@@ -292,8 +292,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    fields_t *p_rho_p = &rho_p->f[p];
-    fields_t *p_div_j = &div_j->f[p];
+    fields_t *p_rho_p = psc_mfields_get_patch(rho_p, p);
+    fields_t *p_div_j = psc_mfields_get_patch(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
       creal dt_rho = F3(p_rho_p,0, jx,jy,jz);
       creal div_j = F3(p_div_j,0, jx,jy,jz);
@@ -363,7 +363,7 @@ psc_test_create(struct psc *psc)
   psc->domain.bnd_part[2] = BND_PART_PERIODIC;
 
   psc_sort_set_type(psc->sort, "countsort2");
-#ifdef USE_CUDA
+#ifdef USE_CUDA // FIXME
 #if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
   psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 });
 #else

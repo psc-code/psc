@@ -85,8 +85,8 @@ _psc_mfields_c_get_fortran(struct psc_mfields *flds_base, int mb, int me)
   psc_mfields_fortran_setup(flds);
 
   psc_foreach_patch(ppsc, p) {
-    fields_fortran_t *pf = &flds->f[p];
-    fields_c_t *pf_c = &flds_c->f[p];
+    fields_fortran_t *pf = psc_mfields_get_patch_fortran((struct psc_mfields *) flds, p);
+    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
 	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);
@@ -103,7 +103,6 @@ static void
 _psc_mfields_c_put_fortran(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me)
 {
   mfields_fortran_t *flds_f = (mfields_fortran_t *) flds;
-  mfields_c_t *flds_c = (mfields_c_t *) flds_base;
 
   static int pr;
   if (!pr) {
@@ -112,8 +111,8 @@ _psc_mfields_c_put_fortran(struct psc_mfields *flds, struct psc_mfields *flds_ba
   prof_start(pr);
 
   psc_foreach_patch(ppsc, p) {
-    fields_fortran_t *pf = &flds_f->f[p];
-    fields_c_t *pf_c = &flds_c->f[p];
+    fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, p);
+    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
 	F3_C(pf_c, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
@@ -190,7 +189,7 @@ static void
 _psc_mfields_c_zero_comp(mfields_c_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_zero(&flds->f[p], m);
+    fields_c_zero(psc_mfields_c_get_patch_c(flds, p), m);
   }
 }
 
@@ -198,7 +197,7 @@ static void
 _psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_axpy(&yf->f[p], alpha, &xf->f[p]);
+    fields_c_axpy(psc_mfields_c_get_patch_c(yf, p), alpha, psc_mfields_c_get_patch_c(xf, p));
   }
 }
 
@@ -206,7 +205,7 @@ static void
 _psc_mfields_c_scale(mfields_c_t *yf, double alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_scale(&yf->f[p], alpha);
+    fields_c_scale(psc_mfields_c_get_patch_c(yf, p), alpha);
   }
 }
 
@@ -214,7 +213,7 @@ static void
 _psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_set(&yf->f[p], m, alpha);
+    fields_c_set(psc_mfields_c_get_patch_c(yf, p), m, alpha);
   }
 }
 
@@ -222,7 +221,8 @@ static void
 _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 {
   for (int p = 0; p < to->nr_patches; p++) {
-    fields_c_copy_comp(&to->f[p], mto, &from->f[p], mfrom);
+    fields_c_copy_comp(psc_mfields_c_get_patch_c(to, p), mto,
+		       psc_mfields_c_get_patch_c(from, p), mfrom);
   }
 }
 
@@ -245,13 +245,13 @@ _psc_mfields_c_setup(mfields_c_t *flds)
 {
   struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
 						     &flds->nr_patches);
-  flds->f = calloc(flds->nr_patches, sizeof(*flds->f));
+  flds->xf = calloc(flds->nr_patches, sizeof(*flds->xf));
   for (int p = 0; p < flds->nr_patches; p++) {
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
 		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_c_alloc(&flds->f[p], ilg, ihg, flds->nr_fields);
+    fields_c_alloc(psc_mfields_c_get_patch_c(flds, p), ilg, ihg, flds->nr_fields);
   }
 }
 
@@ -259,9 +259,9 @@ static void
 _psc_mfields_c_destroy(mfields_c_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_free(&flds->f[p]);
+    fields_c_free(psc_mfields_c_get_patch_c(flds, p));
   }
-  free(flds->f);
+  free(flds->xf);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -289,7 +289,7 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
   for (int p = 0; p < mfields->nr_patches; p++) {
-    fields_c_t *fields = &mfields->f[p];
+    fields_c_t *fields = psc_mfields_c_get_patch_c(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
@@ -330,7 +330,7 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
   for (int p = 0; p < mfields->nr_patches; p++) {
-    fields_c_t *fields = &mfields->f[p];
+    fields_c_t *fields = psc_mfields_c_get_patch_c(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
@@ -376,8 +376,6 @@ static struct param psc_mfields_c_descr[] = {
 };
 #undef VAR
 
-extern struct psc_mfields_c_ops psc_mfields_c_ops;
-
 static void
 psc_mfields_c_init()
 {
@@ -411,7 +409,9 @@ struct psc_mfields_c_ops psc_mfields_c_ops = {
   .put_c                 = _psc_mfields_c_put_c,
   .get_fortran           = _psc_mfields_c_get_fortran,
   .put_fortran           = _psc_mfields_c_put_fortran,
+#ifdef USE_CUDA
   .get_cuda              = _psc_mfields_c_get_cuda,
   .put_cuda              = _psc_mfields_c_put_cuda,
+#endif
 };
 

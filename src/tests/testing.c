@@ -84,8 +84,8 @@ psc_save_fields_ref(struct psc *psc, mfields_base_t *flds_base)
   }
 
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
-    fields_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
     for (int m = 0; m < me; m++) {
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3(pf_ref, m, ix,iy,iz) = F3(pf, m, ix,iy,iz);
@@ -150,8 +150,8 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, do
   mfields_t *flds = psc_mfields_get_from(0, 12, flds_base);
 
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
-    fields_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
     for (int i = 0; m_flds[i] >= 0; i++) {
       int m = m_flds[i];
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
@@ -175,7 +175,7 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
 
 #if 0
   foreach_patch(p) {
-    fields_base_t *pf = &flds->f[p];
+    fields_base_t *pf = psc_mfields_get_patch(flds, p);
     for (int m = JXI; m <= JZI; m++){
       foreach_3d_g(p, ix, iy, iz) {
 	double val = F3(pf, m, ix,iy,iz);
@@ -196,9 +196,9 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
   for (int m = JXI; m <= JZI; m++){
     fields_real_t max_delta = 0.;
     psc_foreach_patch(psc, p) {
-      fields_t *pf = &flds->f[p];
-      fields_t *pf_ref = &flds_ref->f[p];
-      fields_t *pf_diff = &diff->f[p];
+      fields_t *pf = psc_mfields_get_patch(flds, p);
+      fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
+      fields_t *pf_diff = psc_mfields_get_patch(diff, p);
       psc_foreach_3d_g(psc, p, ix, iy, iz) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
@@ -222,8 +222,8 @@ psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, doubl
   mfields_t *flds = psc_mfields_get_from(JXI, JXI + 3, flds_base);
 
   psc_foreach_patch(psc, p) {
-    fields_t *pf = &flds->f[p];
-    fields_t *pf_ref = &flds_ref->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
     for (int m = JXI; m <= JZI; m++){
       psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);

@@ -39,8 +39,8 @@ void
 psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf_cuda = &flds_cuda->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_cuda_t *pf_cuda = psc_mfields_cuda_get_patch_cuda(flds_cuda, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
 
@@ -58,8 +58,8 @@ void
 psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf_cuda = &flds_cuda->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_cuda_t *pf_cuda = psc_mfields_cuda_get_patch_cuda(flds_cuda, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
 
     float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
@@ -183,10 +183,10 @@ static struct param psc_mfields_cuda_descr[] = {
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
-  flds->f = calloc(ppsc->nr_patches, sizeof(*flds->f));
+  flds->xf = calloc(ppsc->nr_patches, sizeof(*flds->xf));
 
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
+    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
     struct psc_patch *patch = &ppsc->patch[p];
     for (int d = 0; d < 3; d++) {
       pf->ib[d] = -ppsc->ibn[d];
@@ -204,7 +204,7 @@ static void
 _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = &flds->f[p];
+    fields_cuda_t *pf = psc_mfields_cuda_get_patch_cuda(flds, p);
     __fields_cuda_free(pf);
     
     for (int m = 0; m < pf->nr_comp; m++) {
@@ -213,7 +213,7 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
     free(pf->name);
   }
   
-  free(flds->f);
+  free(flds->xf);
 }
 
 static struct psc_mfields *

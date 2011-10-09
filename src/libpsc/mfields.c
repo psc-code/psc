@@ -86,11 +86,11 @@ psc_mfields_##type##_put_to(mfields_##type##_t *flds, int mb, int me, void *_fld
 
 __MAKE_MFIELDS_METHODS(c)
 __MAKE_MFIELDS_METHODS(fortran)
+#ifdef USE_CUDA
 __MAKE_MFIELDS_METHODS(cuda)
+#endif
 
 // ======================================================================
-
-#define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
 void
 psc_mfields_set_domain(struct psc_mfields *flds, struct mrc_domain *domain)

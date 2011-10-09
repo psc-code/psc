@@ -7,7 +7,7 @@
 
 struct psc_mfields {
   struct mrc_obj obj;
-  void *f;
+  void *data;
   int nr_patches;
   struct mrc_domain *domain;
   int nr_fields;
@@ -67,7 +67,7 @@ void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds
 #define DECLARE_MFIELDS_METHODS(type)					\
   typedef struct psc_mfields_##type {				        \
     struct mrc_obj obj;							\
-    fields_##type##_t *f;						\
+    fields_##type##_t *xf;						\
     int nr_patches;							\
     struct mrc_domain *domain;						\
     int nr_fields;							\
@@ -131,6 +131,53 @@ DECLARE_MFIELDS_METHODS(sse2)
 #ifdef USE_CUDA
 #include "psc_fields_cuda.h"
 DECLARE_MFIELDS_METHODS(cuda)
+#endif
+
+#define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
+
+extern struct psc_mfields_c_ops psc_mfields_c_ops;
+extern struct psc_mfields_fortran_ops psc_mfields_fortran_ops;
+extern struct psc_mfields_cuda_ops psc_mfields_cuda_ops;
+
+static inline fields_c_t *
+psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
+{
+  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_c_ops);
+  return ((fields_c_t *)flds->data) + p;
+}
+
+static inline fields_c_t *
+psc_mfields_c_get_patch_c(struct psc_mfields_c *flds, int p)
+{
+  return psc_mfields_get_patch_c((struct psc_mfields *) flds, p);
+}
+
+static inline fields_fortran_t *
+psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
+{
+  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_fortran_ops);
+  return ((fields_fortran_t *)flds->data) + p;
+}
+
+static inline fields_fortran_t *
+psc_mfields_fortran_get_patch_fortran(struct psc_mfields_fortran *flds, int p)
+{
+  return psc_mfields_get_patch_fortran((struct psc_mfields *) flds, p);
+}
+
+#ifdef USE_CUDA
+static inline fields_cuda_t *
+psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
+{
+  assert((void *) psc_mfields_ops(flds) == (void *) &psc_mfields_cuda_ops);
+  return ((fields_cuda_t *)flds->data) + p;
+}
+
+static inline fields_cuda_t *
+psc_mfields_cuda_get_patch_cuda(struct psc_mfields_cuda *flds, int p)
+{
+  return psc_mfields_get_patch_cuda((struct psc_mfields *) flds, p);
+}
 #endif
 
 // ----------------------------------------------------------------------

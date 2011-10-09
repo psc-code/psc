@@ -27,7 +27,7 @@ psc_push_fields_c_push_a_E(struct psc_push_fields *push, mfields_base_t *flds_ba
   //                  -> E^(n+0.5), H^(n), j^(n)
 
   psc_foreach_patch(ppsc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
       F3(pf, EX, ix,iy,iz) +=
 	cny * (F3(pf, HZ, ix,iy,iz) - F3(pf, HZ, ix,iy-1,iz)) -
@@ -72,7 +72,7 @@ psc_push_fields_c_push_a_H(struct psc_push_fields *push, mfields_base_t *flds_ba
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
 
   psc_foreach_patch(ppsc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
       F3(pf, HX, ix,iy,iz) -=
 	cny * (F3(pf, EZ, ix,iy+1,iz) - F3(pf, EZ, ix,iy,iz)) -
@@ -114,7 +114,7 @@ psc_push_fields_c_push_b_H(struct psc_push_fields *push, mfields_base_t *flds_ba
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
 
   psc_foreach_patch(ppsc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
       F3(pf, HX, ix,iy,iz) -=
 	cny * (F3(pf, EZ, ix,iy+1,iz) - F3(pf, EZ, ix,iy,iz)) -
@@ -156,7 +156,7 @@ psc_push_fields_c_push_b_E(struct psc_push_fields *push, mfields_base_t *flds_ba
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
 
   psc_foreach_patch(ppsc, p) {
-    fields_t *pf = &flds->f[p];
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(ppsc, p, ix, iy, iz, 1, 1) {
       F3(pf, EX, ix,iy,iz) +=
 	cny * (F3(pf, HZ, ix,iy,iz) - F3(pf, HZ, ix,iy-1,iz)) -

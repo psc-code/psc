@@ -28,8 +28,8 @@ calc_j(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(JXI, JXI + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
@@ -49,8 +49,8 @@ calc_E(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(EX, EX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
@@ -73,8 +73,8 @@ calc_H(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(HX, HX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
@@ -90,8 +90,8 @@ calc_jdote(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *partic
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(JXI, EX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
@@ -107,8 +107,8 @@ calc_poyn(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(EX, HX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
 			      EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
@@ -127,8 +127,8 @@ calc_E2(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(EX, EX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
       F3(ff, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
@@ -144,8 +144,8 @@ calc_H2(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_from(HX, HX + 3, flds_base);
   psc_foreach_patch(psc, p) {
-    fields_t *ff = &f->f[p];
-    fields_t *pf = &flds->f[p];
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
       F3(ff, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
@@ -307,7 +307,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     pfd->nr_flds++;
     psc_foreach_patch(psc, pp) {
       for (int m = 0; m < of->nr_comp; m++) {
-	flds->f[pp].name[m] = strdup(of->fld_names[m]);
+	psc_mfields_get_patch(flds, pp)->name[m] = strdup(of->fld_names[m]);
       }
     }
   }
@@ -322,15 +322,16 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     mfields_c_t *flds = psc_mfields_c_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_c_set_type(flds, "c");
     psc_mfields_c_set_domain(flds, psc->mrc_domain);
-    psc_mfields_c_set_param_int(flds, "nr_fields", pfd->flds[i]->f[0].nr_comp);
+    psc_mfields_c_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
     psc_mfields_c_set_param_int3(flds, "ibn", psc->ibn);
     psc_mfields_c_setup(flds);
     tfd->flds[i] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_c_list_add(&tfd->flds[i]);
     psc_foreach_patch(psc, pp) {
-      for (int m = 0; m < pfd->flds[i]->f[pp].nr_comp; m++) {
-	flds->f[pp].name[m] = strdup(pfd->flds[i]->f[pp].name[m]);
+      for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
+	psc_mfields_get_patch(flds, pp)->name[m] = 
+	  strdup(psc_mfields_get_patch(pfd->flds[i], pp)->name[m]);
       }
     }
   }
@@ -390,7 +391,7 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
   list->nr_flds = 0;
   for (int i = 0; i < list_in->nr_flds; i++) {
     mfields_c_t *flds_in = list_in->flds[i];
-    for (int m = 0; m < flds_in->f[0].nr_comp; m++) {
+    for (int m = 0; m < flds_in->nr_fields; m++) {
       mfields_c_t *flds = psc_mfields_c_create(psc_comm(psc));
       psc_mfields_c_set_type(flds, "c");
       psc_mfields_c_set_domain(flds, psc->mrc_domain);
@@ -399,7 +400,7 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
       psc_mfields_c_copy_comp(flds, 0, flds_in, m);
       list->flds[list->nr_flds++] = flds;
       psc_foreach_patch(psc, p) {
-	flds->f[p].name[0] = strdup(flds_in->f[p].name[m]);
+	psc_mfields_get_patch(flds, p)->name[0] = strdup(psc_mfields_get_patch(flds_in, p)->name[m]);
       }
     }
   }
