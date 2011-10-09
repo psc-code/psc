@@ -24,10 +24,6 @@
 #define PARTICLES_SSE2    3
 #define PARTICLES_CBE     4
 
-// FIELDS_BASE and PARTICLES_BASE macros are defined by configure
-// #define FIELDS_BASE FIELDS_FORTRAN
-// #define PARTICLES_BASE PARTICLES_FORTRAN
-
 enum {
   NE , NI , NN ,
   JXI, JYI, JZI,
@@ -93,6 +89,7 @@ struct psc_param {
   bool from_checkpoint;
   bool write_checkpoint;
   double initial_particle_shift;
+  char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
 };
 
 /// coefficients needed for computations

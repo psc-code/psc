@@ -101,34 +101,9 @@ psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
 }
 #endif
 
-
+typedef struct psc_mfields mfields_base_t;
 extern list_t psc_mfields_base_list;
 
-// ----------------------------------------------------------------------
-// base fields type
-
-typedef struct psc_mfields mfields_base_t;
-
-#if FIELDS_BASE == FIELDS_FORTRAN
-
-#define s_fields_base "fortran"
-
-#elif FIELDS_BASE == FIELDS_C
-
-#define s_fields_base "c"
-
-#elif FIELDS_BASE == FIELDS_SSE2
-
-#include "psc_fields_sse2.h"
-
-#elif FIELDS_BASE == FIELDS_CUDA
-
-#include "psc_fields_cuda.h"
-#define s_fields_base "cuda"
-
-#else
-#error unknown FIELDS_BASE
-#endif
 
 #endif
 

@@ -124,6 +124,7 @@ static struct param psc_descr[] = {
   { "write_checkpoint"
                     , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
 
+  { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
   {},
 };
 
@@ -797,7 +798,7 @@ psc_setup_fields(struct psc *psc)
   // create fields
   psc->flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
   psc_mfields_list_add(&psc_mfields_base_list, &psc->flds);
-  psc_mfields_set_type(psc->flds, s_fields_base);
+  psc_mfields_set_type(psc->flds, psc->prm.fields_base);
   psc_mfields_set_name(psc->flds, "mfields");
   psc_mfields_set_domain(psc->flds, psc->mrc_domain);
   psc_mfields_set_param_int(psc->flds, "nr_fields", NR_FIELDS);
