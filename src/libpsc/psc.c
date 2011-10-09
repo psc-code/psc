@@ -125,6 +125,7 @@ static struct param psc_descr[] = {
                     , VAR(prm.write_checkpoint)   , PARAM_BOOL(false) },
 
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
+  { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("c") },
   {},
 };
 
@@ -379,7 +380,7 @@ psc_setup_partition_and_particles(struct psc *psc)
 
   psc->particles = 
     psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mparticles_set_type(psc->particles, s_particles_base);
+  psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
   psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					  nr_particles_by_patch);

@@ -75,7 +75,7 @@ _psc_case_setup(struct psc_case *_case)
 
   psc->particles = 
     psc_mparticles_create(mrc_domain_comm(psc->mrc_domain));
-  psc_mparticles_set_type(psc->particles, s_particles_base);
+  psc_mparticles_set_type(psc->particles, psc->prm.particles_base);
   psc_mparticles_set_name(psc->particles, "mparticles");
   psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					 nr_particles_by_patch);

@@ -97,31 +97,4 @@ extern struct psc_mparticles_ops psc_mparticles_c_ops;
 extern struct psc_mparticles_ops psc_mparticles_fortran_ops;
 extern struct psc_mparticles_ops psc_mparticles_cuda_ops;
 
-// ----------------------------------------------------------------------
-// base particles type
-
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-
-#define s_particles_base "fortran"
-
-#elif PARTICLES_BASE == PARTICLES_C
-
-#define s_particles_base "c"
-
-#elif PARTICLES_BASE == PARTICLES_SSE2
-
-#define psc_mparticles_base_create  psc_mparticles_sse2_create
-
-#elif PARTICLES_BASE == PARTICLES_CUDA
-
-#define s_particles_base "cuda"
-
-#elif PARTICLES_BASE == PARTICLES_CBE
-
-#define s_particles_base "cbe"
-
-#else
-#error unknown PARTICLES_BASE
-#endif
-
 #endif

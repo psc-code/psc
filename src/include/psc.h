@@ -90,6 +90,7 @@ struct psc_param {
   bool write_checkpoint;
   double initial_particle_shift;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
+  char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
 };
 
 /// coefficients needed for computations
