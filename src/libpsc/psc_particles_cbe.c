@@ -7,9 +7,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#if PARTICLES_BASE == PARTICLES_CBE
-
-
 void
 particles_cbe_alloc(particles_cbe_t *pp, int n_part)
 {
@@ -40,23 +37,21 @@ void particles_cbe_free(particles_cbe_t *pp)
 }
 
 void
-psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_cbe_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_cbe_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *particles_base)
+psc_mparticles_cbe_put_cbe(mparticles_cbe_t *particles, void *particles_base)
 {
 }
-
-#elif PARTICLES_BASE == PARTICLES_C
 
 static bool __gotten;
 
 void
-psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
 {
 
   static int pr;
@@ -101,9 +96,6 @@ psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
       part->qni = part_base->qni;
       part->mni = part_base->mni;
       part->wni = part_base->wni;
-#if PARTICLES_BASE != PARTICLES_C
-      part->cni = part_base->cni;
-#endif
     }
   }
 }
@@ -111,7 +103,7 @@ psc_mparticles_cbe_get_from(mparticles_cbe_t *particles, void *_particles_base)
 
 
 void
-psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *_particles_base)
+psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
 {
   assert(__gotten);
   __gotten = false;
@@ -144,4 +136,3 @@ psc_mparticles_cbe_put_to(mparticles_cbe_t *particles, void *_particles_base)
 }
 
 
-#endif

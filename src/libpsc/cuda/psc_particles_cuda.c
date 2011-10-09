@@ -255,10 +255,8 @@ psc_mparticles_copy_cf_from_cuda(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-#if PARTICLES_BASE == PARTICLES_CUDA
-
 void
-psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, void *_particles_base,
+psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles, void *_particles_base,
 			       unsigned int flags)
 {
   mparticles_base_t *particles_base = _particles_base;
@@ -266,25 +264,25 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, void *_particles_ba
 }
 
 void
-psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
+psc_mparticles_cuda_get_cuda(mparticles_cuda_t *particles, void *_particles_base)
 {
-  return psc_mparticles_cuda_get_from_2(particles, _particles_base,
-					MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  psc_mparticles_cuda_get_cuda_2(particles, _particles_base,
+				 MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void
-psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *particles_base)
+psc_mparticles_cuda_put_cuda(mparticles_cuda_t *particles, void *particles_base)
 {
 }
 
 static bool __gotten;
 
 void
-psc_mparticles_c_get_from(mparticles_c_t *particles_c, void *_particles_base)
+psc_mparticles_cuda_get_c(mparticles_c_t *particles_c, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("mparticles_c_get", 1., 0, 0);
+    pr = prof_register("mparticles_get_c", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -306,11 +304,11 @@ psc_mparticles_c_get_from(mparticles_c_t *particles_c, void *_particles_base)
 }
 
 void
-psc_mparticles_c_put_to(mparticles_c_t *particles_c, void *_particles_base)
+psc_mparticles_cuda_put_c(mparticles_c_t *particles_c, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("mparticles_c_put", 1., 0, 0);
+    pr = prof_register("mparticles_put_c", 1., 0, 0);
   }
   prof_start(pr);
 
@@ -331,36 +329,33 @@ psc_mparticles_c_put_to(mparticles_c_t *particles_c, void *_particles_base)
 }
 
 void
-psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_cuda_get_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   assert(0);
 }
 
 void
-psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_cuda_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   assert(0);
 }
-
-#elif PARTICLES_BASE == PARTICLES_C
 
 // ======================================================================
 
-static bool __gotten;
-
 void
-psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *particles_base,
-			       unsigned int flags)
+psc_mparticles_c_get_cuda_2(mparticles_cuda_t *particles, void *_particles_base,
+			    unsigned int flags)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("mparticles_cuda_get", 1., 0, 0);
+    pr = prof_register("mparticles_get_cuda", 1., 0, 0);
   }
   prof_start(pr);
 
   assert(!__gotten);
   __gotten = true;
     
+  mparticles_c_t *particles_base = _particles_base;
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   assert(ppsc->nr_patches == 1); // many things would break...
   psc_foreach_patch(ppsc, p) {
@@ -377,13 +372,13 @@ psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles, mparticles_base_t *
 }
 
 void
-psc_mparticles_cuda_get_from(mparticles_cuda_t *particles, void *_particles_base)
+psc_mparticles_c_get_cuda(mparticles_cuda_t *particles, void *_particles_base)
 {
-  psc_mparticles_cuda_get_from_2(particles, _particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  psc_mparticles_c_get_cuda_2(particles, _particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 void
-psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
+psc_mparticles_c_put_cuda(mparticles_cuda_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -406,8 +401,6 @@ psc_mparticles_cuda_put_to(mparticles_cuda_t *particles, void *_particles_base)
 
   prof_stop(pr);
 }
-
-#endif
 
 // ======================================================================
 // psc_mparticles_cuda

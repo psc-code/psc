@@ -121,7 +121,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho_base, double dt)
 {
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
   mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);
@@ -129,7 +129,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
     do_calc_rho_2nd(psc, p, &particles.p[p], psc_mfields_get_patch(rho, p), dt);
   }
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
   psc_mfields_put_cf(rho, rho_base, 0, 1);
 
   psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
@@ -201,7 +201,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 		 mfields_base_t *rho_base, double dt)
 {
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
   mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
 
   psc_mfields_zero(rho, 0);
@@ -209,7 +209,7 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
     do_calc_rho_1st(psc, p, &particles.p[p], psc_mfields_get_patch(rho, p), dt);
   }
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
   psc_mfields_put_cf(rho, rho_base, 0, 1);
 
   psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);

@@ -37,11 +37,11 @@ struct mrc_class_psc_mparticles_##type mrc_class_psc_mparticles_##type = {	\
 };
 
 
-#if PARTICLES_BASE == PARTICLES_FORTRAN
 MAKE_MPARTICLES_METHODS(fortran)
-#elif PARTICLES_BASE == PARTICLES_SSE2
+#ifdef USE_SSE2
 MAKE_MPARTICLES_METHODS(sse2)
-#elif PARTICLES_BASE == PARTICLES_CBE
+#endif
+#ifdef USE_CBE
 MAKE_MPARTICLES_METHODS(cbe)
 #endif
 

@@ -105,7 +105,7 @@ EXTERN_C void cuda_exchange_particles(int p, particles_cuda_t *pp);
 
 EXTERN_C void cuda_sort_patch(int p, particles_cuda_t *pp);
 
-EXTERN_C void psc_mparticles_cuda_get_from_2(mparticles_cuda_t *particles,
+EXTERN_C void psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles,
 					     void *particles_base,
 					     unsigned int flags);
 

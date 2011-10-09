@@ -657,7 +657,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   }
 
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, psc->particles); // FIXME, no copy needed
+  psc_mparticles_base_get_cf(&particles, psc->particles); // FIXME, no copy needed
 
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
@@ -722,7 +722,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     pp->n_part = i;
     assert(pp->n_part == nr_particles_by_patch[p]);
   }
-  psc_mparticles_put_to(&particles, psc->particles);
+  psc_mparticles_base_put_cf(&particles, psc->particles);
 }
 
 // ----------------------------------------------------------------------

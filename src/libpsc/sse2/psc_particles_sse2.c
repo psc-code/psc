@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#if PARTICLES_BASE == PARTICLES_SSE2
-
 static size_t __arr_size;
 
 void
@@ -35,7 +33,7 @@ mparticles_sse2_free(particles_sse2_t *pp)
 }
 
 void
-psc_mparticles_sse2_get_from(particles_sse2_t *pp)
+psc_mparticles_sse2_get_sse2(particles_sse2_t *pp)
 {
   pp->particles = psc.pp.particles;
 
@@ -43,18 +41,16 @@ psc_mparticles_sse2_get_from(particles_sse2_t *pp)
 }
 
 void
-psc_mparticles_sse2_put_to(particles_sse2_t *pp)
+psc_mparticles_sse2_put_sse2(particles_sse2_t *pp)
 {
 }
-
-#elif PARTICLES_BASE == PARTICLES_C
 
 static size_t __sse2_part_allocated;
 static particle_sse2_t *__sse2_part_data;
 
 /// Copy particles from base data structures to an SSE2 friendly format.
 void
-psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
+psc_mparticles_c_get_sse2(particles_sse2_t *particles, void *_particles_base)
 {
   mparticles_c_t *particles_base = _particles_base;
   particles_c_t *pp_base = &particles_base->p[0];
@@ -107,7 +103,7 @@ psc_mparticles_sse2_get_from(particles_sse2_t *particles, void *_particles_base)
 
 /// Copy particles from SSE2 data structures to base structures.
 void
-psc_mparticles_sse2_put_to(particles_sse2_t *particles, void *_particles_base)
+psc_mparticles_c_put_sse2(particles_sse2_t *particles, void *_particles_base)
 {
   mparticles_c_t *particles_base = _particles_base;
   particles_c_t *pp_base = &particles_base->p[0];
@@ -127,4 +123,3 @@ psc_mparticles_sse2_put_to(particles_sse2_t *particles, void *_particles_base)
   }
 }
 
-#endif

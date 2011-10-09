@@ -60,7 +60,7 @@ static void
 psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 {
   mparticles_cuda_t particles;
-  psc_mparticles_cuda_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cuda(&particles, particles_base);
 
   static int pr;
   if (!pr) {
@@ -73,7 +73,7 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
   prof_stop(pr);
 
-  psc_mparticles_cuda_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cuda(&particles, particles_base);
 }
 
 // ======================================================================

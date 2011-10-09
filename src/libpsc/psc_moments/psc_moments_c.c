@@ -110,7 +110,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   }
 
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   psc_mfields_zero(res, 0);
@@ -122,7 +122,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base); // FIXME, don't need copy-back
+  psc_mparticles_base_put_cf(&particles, particles_base); // FIXME, don't need copy-back
 
   __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 3);
 }
@@ -227,7 +227,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
 
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   for (int m = 0; m < 6; m++) {
@@ -239,7 +239,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base); // FIXME, don't need copy-back
+  psc_mparticles_base_put_cf(&particles, particles_base); // FIXME, don't need copy-back
 
   __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 6);
 }
@@ -341,7 +341,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
     pr = prof_register("c_calc_vv", 1., 0, 0);
   }
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   for (int m = 0; m < 6; m++) {
@@ -353,7 +353,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
 
   __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 6);
 }

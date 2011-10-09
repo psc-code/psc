@@ -31,37 +31,33 @@ particles_c_free(particles_c_t *pp)
   pp->particles = NULL;
 }
 
-#if PARTICLES_BASE == PARTICLES_C
-
 void
-psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_c_get_c(mparticles_c_t *particles, void *_particles_base)
 {
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-psc_mparticles_c_put_to(mparticles_c_t *particles, void *particles_base)
+psc_mparticles_c_put_c(mparticles_c_t *particles, void *_particles_base)
 {
 }
-
-#elif PARTICLES_BASE == PARTICLES_FORTRAN
 
 static bool __gotten;
 
 void
-psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_fortran_get_c(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("mparticles_c_get", 1., 0, 0);
+    pr = prof_register("mparticles_get_c", 1., 0, 0);
   }
   prof_start(pr);
 
   assert(!__gotten);
   __gotten = true;
     
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_fortran_t *particles_base = _particles_base;
 
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   psc_foreach_patch(ppsc, p) {
@@ -89,18 +85,18 @@ psc_mparticles_c_get_from(mparticles_c_t *particles, void *_particles_base)
 }
 
 void
-psc_mparticles_c_put_to(mparticles_c_t *particles, void *_particles_base)
+psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("mparticles_c_put", 1., 0, 0);
+    pr = prof_register("mparticles_put_c", 1., 0, 0);
   }
   prof_start(pr);
 
   assert(__gotten);
   __gotten = false;
 
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_fortran_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
     particles_fortran_t *pp_base = &particles_base->p[p];
     particles_c_t *pp = &particles->p[p];
@@ -127,6 +123,4 @@ psc_mparticles_c_put_to(mparticles_c_t *particles, void *_particles_base)
 
   prof_stop(pr);
 }
-
-#endif
 

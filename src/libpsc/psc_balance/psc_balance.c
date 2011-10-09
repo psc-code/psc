@@ -30,13 +30,13 @@ static void
 psc_get_loads(struct psc *psc, double *loads)
 {
   mparticles_t mparticles;
-  psc_mparticles_get_from(&mparticles, psc->particles);
+  psc_mparticles_base_get_cf(&mparticles, psc->particles);
 
   psc_foreach_patch(psc, p) {
     loads[p] = mparticles.p[p].n_part + 1;
   }
 
-  psc_mparticles_put_to(&mparticles, psc->particles); // OPT, doesn't need copy back
+  psc_mparticles_base_put_cf(&mparticles, psc->particles); // OPT, doesn't need copy back
 }
 
 static int
@@ -561,16 +561,16 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_mparticles_base_setup(mparticles_base_new);
 
   mparticles_t mparticles_new, mparticles_old;
-  psc_mparticles_get_from(&mparticles_new, mparticles_base_new); // FIXME, don't need copy
-  psc_mparticles_get_from(&mparticles_old, psc->particles);
+  psc_mparticles_base_get_cf(&mparticles_new, mparticles_base_new); // FIXME, don't need copy
+  psc_mparticles_base_get_cf(&mparticles_old, psc->particles);
     
   // communicate particles
   communicate_particles(domain_old, domain_new, 
 			&mparticles_old, &mparticles_new, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
-  psc_mparticles_put_to(&mparticles_old, psc->particles); // FIXME, don't need copy-back
-  psc_mparticles_put_to(&mparticles_new, mparticles_base_new);
+  psc_mparticles_base_put_cf(&mparticles_old, psc->particles); // FIXME, don't need copy-back
+  psc_mparticles_base_put_cf(&mparticles_new, mparticles_base_new);
 
   // replace particles by redistributed ones
   psc_mparticles_base_destroy(psc->particles);

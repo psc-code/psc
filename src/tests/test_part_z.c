@@ -31,7 +31,7 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
 	     double qni, double mni)
 {
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, ppsc->particles);
+  psc_mparticles_base_get_cf(&particles, ppsc->particles);
 
   particles_t *pp = &particles.p[0];
   int n = pp->n_part++;
@@ -46,7 +46,7 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
   part->mni = mni;
   part->wni = ppsc->prm.nicell; // FIXME, better set nicell to 1 or get rid of it altogether
 
-  psc_mparticles_put_to(&particles, ppsc->particles);
+  psc_mparticles_base_put_cf(&particles, ppsc->particles);
 }
 
 static struct psc_case *

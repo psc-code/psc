@@ -5,8 +5,6 @@
 #include <mrc_profile.h>
 #include <stdlib.h>
 
-#if PARTICLES_BASE == PARTICLES_FORTRAN
-
 void
 particles_fortran_alloc(particles_fortran_t *pp, int n_part)
 {
@@ -23,25 +21,23 @@ particles_fortran_free(particles_fortran_t *pp)
 }
 
 void
-psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_fortran_get_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_fortran_t *particles_base = _particles_base;
   *particles = *particles_base;
 }
 
 void
-psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_fortran_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   mparticles_fortran_t *particles_base = _particles_base;
   *particles_base = *particles;
 }
 
-#elif PARTICLES_BASE == PARTICLES_C
-
 static bool __gotten;
 
 void
-psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_c_get_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -52,7 +48,7 @@ psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particle
   assert(!__gotten);
   __gotten = true;
 
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_base = _particles_base;
 
   particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
   psc_foreach_patch(ppsc, p) {
@@ -81,7 +77,7 @@ psc_mparticles_fortran_get_from(mparticles_fortran_t *particles, void *_particle
 }
 
 void
-psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_base)
+psc_mparticles_c_put_fortran(mparticles_fortran_t *particles, void *_particles_base)
 {
   static int pr;
   if (!pr) {
@@ -92,7 +88,7 @@ psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_
   assert(__gotten);
   __gotten = false;
 
-  mparticles_base_t *particles_base = _particles_base;
+  mparticles_c_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
     particles_c_t *pp_base = &particles_base->p[p];
     particles_fortran_t *pp = &particles->p[p];
@@ -119,8 +115,6 @@ psc_mparticles_fortran_put_to(mparticles_fortran_t *particles, void *_particles_
 
   prof_stop(pr);
 }
-
-#endif
 
 void
 particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)

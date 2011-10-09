@@ -183,7 +183,7 @@ psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   assert(ppsc->nr_patches == 1);
@@ -194,7 +194,7 @@ psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
 }
 
 // ======================================================================
@@ -217,7 +217,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
 
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
@@ -265,7 +265,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
 }
 
 // ======================================================================
@@ -305,7 +305,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
   }
 
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   prof_start(pr);
   unsigned int mask = cs2->mask;
@@ -383,7 +383,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
 
   prof_stop(pr);
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
 }
 
 // ======================================================================

@@ -79,7 +79,7 @@ static void
 psc_event_generator_emission(struct psc *psc)
 {
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, psc->particles);
+  psc_mparticles_base_get_cf(&particles, psc->particles);
 
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
@@ -107,7 +107,7 @@ psc_event_generator_emission(struct psc *psc)
       }
     }
   }
-  psc_mparticles_put_to(&particles, psc->particles);
+  psc_mparticles_base_put_cf(&particles, psc->particles);
 }
 
 static void

@@ -14,7 +14,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
 		    mparticles_base_t *particles_base)
 {
   mparticles_t particles;
-  psc_mparticles_get_from(&particles, particles_base);
+  psc_mparticles_base_get_cf(&particles, particles_base);
 
   psc_foreach_patch(ppsc, p) {
     particles_t *pp = &particles.p[p];
@@ -26,7 +26,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
     }
   }
 
-  psc_mparticles_put_to(&particles, particles_base);
+  psc_mparticles_base_put_cf(&particles, particles_base);
 }
 
 // ======================================================================
