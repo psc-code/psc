@@ -48,7 +48,7 @@ static void psc_movingwindow_z_setup(struct psc_domainwindow* this)
   }
 }
 
-inline int sgn(int x)
+static inline int sgn(int x)
 {
   return x < 0 ? -1 : 1;
 }
