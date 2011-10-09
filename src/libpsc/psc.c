@@ -190,7 +190,6 @@ psc_setup_coeff(struct psc *psc)
   psc->coeff.cori = 1. / psc->prm.nicell;
   psc->coeff.wl = 2. * M_PI * psc->prm.cc / psc->prm.lw;
   psc->coeff.ld = psc->prm.cc / psc->coeff.wl;
-  mprintf("ld = %g\n", psc->coeff.ld);
   if (psc->prm.e0 == 0.) {
     psc->prm.e0 = sqrt(2.0 * psc->prm.i0 / psc->prm.eps0 / psc->prm.cc) /
       psc->prm.lw / 1.0e6;
@@ -215,8 +214,10 @@ psc_setup_coeff(struct psc *psc)
   }
   psc->dt = psc->prm.cfl * 
     sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
+#if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
+#endif
 
   // adjust to match laser cycles FIXME, this isn't a good place,
   // and hardcoded params (2, 30.)
