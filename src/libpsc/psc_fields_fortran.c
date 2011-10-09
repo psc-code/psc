@@ -73,6 +73,61 @@ _psc_mfields_c_get_fortran(mfields_c_t *flds_base, int mb, int me)
   return flds;
 }
 
+static mfields_c_t *
+_psc_mfields_fortran_get_c(mfields_fortran_t *flds_base, int mb, int me)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_c_get", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  mfields_c_t *flds = psc_mfields_create(psc_comm(ppsc));
+  psc_mfields_set_type(flds, "c");
+  psc_mfields_set_domain(flds, flds_base->domain);
+  psc_mfields_set_param_int(flds, "nr_fields", flds_base->nr_fields);
+  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
+  psc_mfields_setup(flds);
+
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_base, p);
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+	F3_C(pf, m, jx,jy,jz) = F3_FORTRAN(pf_base, m, jx,jy,jz);
+      } foreach_3d_g_end;
+    }
+  }
+
+  prof_stop(pr);
+
+  return flds;
+}
+
+static void
+_psc_mfields_fortran_put_c(mfields_c_t *flds, mfields_fortran_t *flds_base, int mb, int me)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fields_c_put", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_base, p);
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+	F3_FORTRAN(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
+      }
+    } foreach_3d_g_end;
+  }
+
+  psc_mfields_destroy(flds);
+
+  prof_stop(pr);
+}
+
 void
 _psc_mfields_c_put_fortran(mfields_fortran_t *flds, mfields_c_t *flds_base, int mb, int me)
 {
@@ -189,5 +244,7 @@ struct psc_mfields_ops psc_mfields_fortran_ops = {
   .name                  = "fortran",
   .setup                 = _psc_mfields_fortran_setup,
   .destroy               = _psc_mfields_fortran_destroy,
+  .get_c                 = _psc_mfields_fortran_get_c,
+  .put_c                 = _psc_mfields_fortran_put_c,
 };
 

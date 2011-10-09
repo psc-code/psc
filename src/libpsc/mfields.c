@@ -66,7 +66,12 @@ psc_mfields_get_##type(struct psc_mfields *base, int mb, int me)	\
   if (ops == &psc_mfields_##type##_ops) {				\
     return base;							\
   }									\
-  assert(ops && ops->get_##type);					\
+  assert(ops);								\
+  if (!ops->get_##type) {						\
+    fprintf(stderr, "ERROR: missing get_"#type" in psc_mfields '%s'!\n", \
+	    psc_mfields_type(base));					\
+    assert(0);								\
+  }									\
   return ops->get_##type(base, mb, me);					\
 }									\
 									\
