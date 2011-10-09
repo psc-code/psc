@@ -150,45 +150,6 @@ _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 // ======================================================================
 // psc_mfields_c
 
-static mfields_fortran_t *
-_psc_mfields_c_get_fortran(mfields_c_t *flds_base, int mb, int me)
-{
-  mfields_fortran_t *flds = psc_mfields_create(psc_comm(ppsc));
-  psc_mfields_set_type(flds, "fortran");
-  psc_mfields_set_domain(flds, flds_base->domain);
-  psc_mfields_set_param_int(flds, "nr_fields", flds_base->nr_fields);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  psc_mfields_setup(flds);
-
-  for (int p = 0; p < flds->nr_patches; p++) {
-    fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, p);
-    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
-
-  return flds;
-}
-
-static void
-_psc_mfields_c_put_fortran(mfields_fortran_t *flds, mfields_c_t *flds_base, int mb, int me)
-{
-  for (int p = 0; p < flds->nr_patches; p++) {
-    fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, p);
-    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_C(pf_c, m, jx,jy,jz) = F3_FORTRAN(pf, m, jx,jy,jz);
-      }
-    } foreach_3d_g_end;
-  }
-
-  psc_mfields_destroy(flds);
-}
-
 static void
 _psc_mfields_c_setup(mfields_c_t *flds)
 {
@@ -315,6 +276,32 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
 
 #endif
 
+static void
+psc_mfields_c_copy_to_fortran(mfields_c_t *flds_c, mfields_fortran_t *flds_fortran, int mb, int me)
+{
+  psc_mfields_fortran_copy_from_c(flds_fortran, flds_c, mb, me);
+}
+
+static void
+psc_mfields_c_copy_from_fortran(mfields_c_t *flds_c, mfields_fortran_t *flds_fortran, int mb, int me)
+{
+  psc_mfields_fortran_copy_to_c(flds_fortran, flds_c, mb, me);
+}
+
+#ifdef USE_CUDA
+static void
+psc_mfields_c_copy_to_cuda(mfields_c_t *flds_c, mfields_cuda_t *flds_cuda, int mb, int me)
+{
+  psc_mfields_cuda_copy_from_c(flds_cuda, flds_c, mb, me);
+}
+
+static void
+psc_mfields_c_copy_from_cuda(mfields_c_t *flds_c, mfields_cuda_t *flds_cuda, int mb, int me)
+{
+  psc_mfields_cuda_copy_to_c(flds_cuda, flds_c, mb, me);
+}
+#endif
+
 // ======================================================================
 // psc_mfields: subclass "c"
   
@@ -331,11 +318,11 @@ struct psc_mfields_ops psc_mfields_c_ops = {
   .scale                 = _psc_mfields_c_scale,
   .copy_comp             = _psc_mfields_c_copy_comp,
   .axpy                  = _psc_mfields_c_axpy,
-  .get_fortran           = _psc_mfields_c_get_fortran,
-  .put_fortran           = _psc_mfields_c_put_fortran,
+  .copy_to_fortran       = psc_mfields_c_copy_to_fortran,
+  .copy_from_fortran     = psc_mfields_c_copy_from_fortran,
 #ifdef USE_CUDA
-  .get_cuda              = _psc_mfields_c_get_cuda,
-  .put_cuda              = _psc_mfields_c_put_cuda,
+  .copy_to_cuda          = psc_mfields_c_copy_to_cuda,
+  .copy_from_cuda        = psc_mfields_c_copy_from_cuda,
 #endif
 };
 

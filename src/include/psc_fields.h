@@ -25,12 +25,12 @@ struct psc_mfields_ops {
 		    struct psc_mfields *from, int mfrom);
   void (*axpy)(struct psc_mfields *yf, double alpha,
 	       struct psc_mfields *xf);
-  struct psc_mfields *(*get_c)(struct psc_mfields *base, int mb, int me);
-  struct psc_mfields *(*get_fortran)(struct psc_mfields *base, int mb, int me);
-  struct psc_mfields *(*get_cuda)(struct psc_mfields *base, int mb, int me);
-  void (*put_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*put_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*put_cuda)(struct psc_mfields *flds, struct psc_mfields *flds_base, int mb, int me);
+  void (*copy_to_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*copy_to_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*copy_to_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*copy_from_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*copy_from_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+  void (*copy_from_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 };
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
@@ -56,9 +56,6 @@ struct psc_mfields_list_entry {
 
 void psc_mfields_list_add(list_t *head, struct psc_mfields **flds_p);
 void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
-
-struct psc_mfields *_psc_mfields_c_get_cuda(struct psc_mfields *_flds_base, int mb, int me);
-void _psc_mfields_c_put_cuda(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me);
 
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
@@ -102,6 +99,12 @@ psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
 typedef struct psc_mfields mfields_base_t;
 extern list_t psc_mfields_base_list;
 
+void psc_mfields_fortran_copy_to_c(mfields_fortran_t *, mfields_c_t *, int mb, int me);
+void psc_mfields_fortran_copy_from_c(mfields_fortran_t *, mfields_c_t *, int mb, int me);
+#ifdef USE_CUDA
+void psc_mfields_cuda_copy_to_c(mfields_cuda_t *, mfields_c_t *, int mb, int me);
+void psc_mfields_cuda_copy_from_c(mfields_cuda_t *, mfields_c_t *, int mb, int me);
+#endif
 
 #endif
 

@@ -42,45 +42,6 @@ fields_fortran_free(fields_fortran_t *pf)
   free(pf->flds);
 }
 
-static mfields_c_t *
-_psc_mfields_fortran_get_c(mfields_fortran_t *flds_base, int mb, int me)
-{
-  mfields_c_t *flds = psc_mfields_create(psc_comm(ppsc));
-  psc_mfields_set_type(flds, "c");
-  psc_mfields_set_domain(flds, flds_base->domain);
-  psc_mfields_set_param_int(flds, "nr_fields", flds_base->nr_fields);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  psc_mfields_setup(flds);
-
-  psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
-    fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_base, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_C(pf, m, jx,jy,jz) = F3_FORTRAN(pf_base, m, jx,jy,jz);
-      } foreach_3d_g_end;
-    }
-  }
-
-  return flds;
-}
-
-static void
-_psc_mfields_fortran_put_c(mfields_c_t *flds, mfields_fortran_t *flds_base, int mb, int me)
-{
-  psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
-    fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_base, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_FORTRAN(pf_base, m, jx,jy,jz) = F3_C(pf, m, jx,jy,jz);
-      }
-    } foreach_3d_g_end;
-  }
-
-  psc_mfields_destroy(flds);
-}
-
 void
 fields_fortran_zero(fields_fortran_t *pf, int m)
 {
@@ -166,6 +127,34 @@ _psc_mfields_fortran_destroy(mfields_fortran_t *flds)
   free(flds->data);
 }									
 									
+void
+psc_mfields_fortran_copy_to_c(mfields_fortran_t *flds_fortran, mfields_c_t *flds_c, int mb, int me)
+{
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_c, p);
+    fields_fortran_t *pf_base = psc_mfields_get_patch_fortran(flds_fortran, p);
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+	F3_C(pf_c, m, jx,jy,jz) = F3_FORTRAN(pf_base, m, jx,jy,jz);
+      } foreach_3d_g_end;
+    }
+  }
+}
+
+void
+psc_mfields_fortran_copy_from_c(mfields_fortran_t *flds, mfields_c_t *flds_base, int mb, int me)
+{
+  for (int p = 0; p < flds->nr_patches; p++) {
+    fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, p);
+    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
+    for (int m = mb; m < me; m++) {
+      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
+	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);
+      } foreach_3d_g_end;
+    }
+  }
+}
+
 // ======================================================================
 // psc_mfields: subclass "fortran"
   
@@ -173,7 +162,7 @@ struct psc_mfields_ops psc_mfields_fortran_ops = {
   .name                  = "fortran",
   .setup                 = _psc_mfields_fortran_setup,
   .destroy               = _psc_mfields_fortran_destroy,
-  .get_c                 = _psc_mfields_fortran_get_c,
-  .put_c                 = _psc_mfields_fortran_put_c,
+  .copy_to_c             = psc_mfields_fortran_copy_to_c,
+  .copy_from_c           = psc_mfields_fortran_copy_from_c,
 };
 

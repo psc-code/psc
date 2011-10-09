@@ -35,17 +35,17 @@
 #include "psc_fields_as_c.h"
 
 void
-psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
+psc_mfields_cuda_copy_from_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
 {
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
-    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_t *pf_c = psc_mfields_get_patch_c(flds_c, p);
     float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
 
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_CUDA(pf_cuda, m, jx,jy,jz) = F3(pf, m, jx,jy,jz);
+	F3_CUDA(pf_cuda, m, jx,jy,jz) = F3(pf_c, m, jx,jy,jz);
       } foreach_3d_g_end;
     }
     __fields_cuda_to_device(pf_cuda, h_flds, mb, me);
@@ -54,13 +54,13 @@ psc_mfields_copy_cf_to_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t
 }
 
 void
-psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields_t *flds)
+psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
 {
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
-    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_c_t *pf_c = psc_mfields_get_patch(flds_c, p);
 
-    float *h_flds = calloc(12 * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
+    float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
     __fields_cuda_from_device(pf_cuda, h_flds, mb, me);
   
@@ -73,65 +73,12 @@ psc_mfields_copy_cf_from_cuda(mfields_cuda_t *flds_cuda, int mb, int me, mfields
 	  assert(0);
 	}
 #endif
-	F3(pf, m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
+	F3_C(pf_c, m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
       }
     } foreach_3d_g_end;
 
     free(h_flds);
   }
-}
-
-static bool __gotten;
-
-static struct psc_mfields *
-_psc_mfields_cuda_get_c(struct psc_mfields *_flds_base, int mb, int me)
-{
-  mfields_cuda_t *flds_base = (mfields_cuda_t *) _flds_base;
-
-  assert(!__gotten);
-  __gotten = true;
-
-  mfields_c_t *flds = psc_mfields_create(psc_comm(ppsc));
-  psc_mfields_set_type(flds, "c");
-  psc_mfields_set_domain(flds, flds_base->domain);
-  psc_mfields_set_param_int(flds, "nr_fields", flds_base->nr_fields);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  psc_mfields_setup(flds);
-  psc_mfields_copy_cf_from_cuda(flds_base, mb, me, flds);
-
-  return (struct psc_mfields *) flds;
-}
-
-static void
-_psc_mfields_cuda_put_c(struct psc_mfields *flds, struct psc_mfields *_flds_base, int mb, int me)
-{
-  assert(__gotten);
-  __gotten = false;
-
-  mfields_cuda_t *flds_base = (mfields_cuda_t *) _flds_base;
-  psc_mfields_copy_cf_to_cuda(flds_base, mb, me, (mfields_c_t *) flds);
-  psc_mfields_destroy(flds);
-}
-
-mfields_cuda_t *
-_psc_mfields_c_get_cuda(mfields_c_t *flds_base, int mb, int me)
-{
-  mfields_cuda_t *flds = psc_mfields_create(psc_comm(ppsc));
-  psc_mfields_set_type(flds, "cuda");
-  psc_mfields_set_domain(flds, flds_base->domain);
-  psc_mfields_set_param_int(flds, "nr_fields", flds_base->nr_fields);
-  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
-  psc_mfields_setup(flds);
-
-  psc_mfields_copy_cf_to_cuda(flds, mb, me, flds_base);
-  return flds;
-}
-
-void
-_psc_mfields_c_put_cuda(mfields_cuda_t *flds, mfields_c_t *flds_base, int mb, int me)
-{
-  psc_mfields_copy_cf_from_cuda((mfields_cuda_t *) flds, mb, me, flds_base);
-  psc_mfields_destroy(flds);
 }
 
 // ======================================================================
@@ -180,8 +127,9 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
   .name                  = "cuda",
   .setup                 = _psc_mfields_cuda_setup,
   .destroy               = _psc_mfields_cuda_destroy,
-  .get_c                 = _psc_mfields_cuda_get_c,
-  .put_c                 = _psc_mfields_cuda_put_c,
+  .copy_to_c             = psc_mfields_cuda_copy_to_c,
+  .copy_from_c           = psc_mfields_cuda_copy_from_c,
 };
+
 
 

@@ -68,20 +68,27 @@ psc_mfields_get_##type(struct psc_mfields *base, int mb, int me)	\
     return base;							\
   }									\
   assert(ops);								\
-  if (!ops->get_##type) {						\
-    fprintf(stderr, "ERROR: missing get_"#type" in psc_mfields '%s'!\n", \
-	    psc_mfields_type(base));					\
-    assert(0);								\
-  }									\
   static int pr;							\
   if (!pr) {								\
     pr = prof_register("mfields_get_" #type, 1., 0, 0);			\
   }									\
   prof_start(pr);							\
-  struct psc_mfields *rv = ops->get_##type(base, mb, me);		\
+  struct psc_mfields *flds = psc_mfields_create(psc_mfields_comm(base)); \
+  psc_mfields_set_type(flds, #type);					\
+  psc_mfields_set_domain(flds, base->domain);				\
+  psc_mfields_set_param_int(flds, "nr_fields", base->nr_fields);	\
+  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);			\
+  psc_mfields_setup(flds);						\
+									\
+  if (!ops->copy_to_##type) {						\
+    fprintf(stderr, "ERROR: missing copy_to_"#type" in psc_mfields '%s'\n", \
+	    psc_mfields_type(base));					\
+    assert(0);								\
+  }									\
+  ops->copy_to_##type(base, flds, mb, me);				\
   prof_stop(pr);							\
 									\
-  return rv;								\
+  return flds;								\
 }									\
 									\
 void									\
@@ -89,16 +96,24 @@ psc_mfields_put_##type(struct psc_mfields *flds,			\
 		       struct psc_mfields *base, int mb, int me)	\
 {									\
   struct psc_mfields_ops *ops = psc_mfields_ops(base);			\
-  if (ops == psc_mfields_ops(flds)) {					\
+  struct psc_mfields_ops *ops2 = psc_mfields_ops(flds);			\
+  if (ops == ops2) {							\
     return;								\
   }									\
-  assert(ops && ops->put_##type);					\
+  assert(ops && ops2);							\
   static int pr;							\
   if (!pr) {								\
     pr = prof_register("mfields_put_" #type, 1., 0, 0);			\
   }									\
   prof_start(pr);							\
-  ops->put_##type(flds, base, mb, me);					\
+									\
+  if (!ops->copy_from_##type) {						\
+    fprintf(stderr, "ERROR: missing copy_from_"#type" in psc_mfields '%s'!\n", \
+	    psc_mfields_type(base));					\
+    assert(0);								\
+  }									\
+  ops->copy_from_##type(base, flds, mb, me);				\
+  psc_mfields_destroy(flds);						\
   prof_stop(pr);							\
 }									\
 
