@@ -661,7 +661,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
 
     int i = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {

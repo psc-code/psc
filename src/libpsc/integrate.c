@@ -117,7 +117,7 @@ psc_integrate(struct psc *psc)
 
     // FIXME, do a mparticles func for this
     psc_foreach_patch(psc, p) {
-      psc_stats_val[st_nr_particles] += psc->particles->p[p].n_part;
+      psc_stats_val[st_nr_particles] += psc->particles->data[p].n_part;
       psc_stats_val[st_nr_photons] += psc->mphotons->p[p].nr;
     }
 

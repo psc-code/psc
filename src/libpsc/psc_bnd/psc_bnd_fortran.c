@@ -89,7 +89,7 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
 
   mparticles_fortran_t *particles = psc_mparticles_base_get_fortran(particles_base);
   assert(ppsc->nr_patches == 1);
-  particles_fortran_t *pp = &particles->p[0];
+  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, 0);
 
   if (ppsc->domain.gdims[0] > 1) {
     PIC_pex(pp);

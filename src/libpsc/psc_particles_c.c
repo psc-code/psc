@@ -59,10 +59,10 @@ psc_mparticles_fortran_get_c(void *_particles_base)
   mparticles_fortran_t *particles_base = _particles_base;
 
   mparticles_c_t *particles = calloc(1, sizeof(*particles));
-  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  particles->data = calloc(ppsc->nr_patches, sizeof(*particles->data));
   psc_foreach_patch(ppsc, p) {
-    particles_fortran_t *pp_base = &particles_base->p[p];
-    particles_c_t *pp = &particles->p[p];
+    particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
     pp->n_part = pp_base->n_part;
     pp->particles = calloc(pp->n_part, sizeof(*pp->particles));
     for (int n = 0; n < pp_base->n_part; n++) {
@@ -99,8 +99,8 @@ psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
 
   mparticles_fortran_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
-    particles_fortran_t *pp_base = &particles_base->p[p];
-    particles_c_t *pp = &particles->p[p];
+    particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
     assert(pp->n_part == pp_base->n_part);
     for (int n = 0; n < pp_base->n_part; n++) {
       particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
@@ -119,7 +119,7 @@ psc_mparticles_fortran_put_c(mparticles_c_t *particles, void *_particles_base)
 
     free(pp->particles);
   }
-  free(particles->p);
+  free(particles->data);
   free(particles);
 
   prof_stop(pr);

@@ -65,7 +65,7 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
   mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);

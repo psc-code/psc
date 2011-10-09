@@ -170,7 +170,7 @@ psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   prof_start(pr);
   assert(ppsc->nr_patches == 1);
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, 0);
     find_cell_indices(p, pp);
     qsort(pp->particles, pp->n_part, sizeof(*pp->particles), compare);
   }
@@ -203,7 +203,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, 0);
     find_cell_indices(p, pp);
     
     int N = 1;
@@ -290,7 +290,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
   prof_start(pr);
   unsigned int mask = cs2->mask;
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, 0);
     struct psc_patch *patch = &ppsc->patch[p];
     struct cell_map map;
     int N = cell_map_init(&map, patch->ldims, cs2->blocksize);

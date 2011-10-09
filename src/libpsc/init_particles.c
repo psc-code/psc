@@ -109,7 +109,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
   pml_find_bounds(psc, p, ilo, ihi);
 
   mparticles_t *particles = psc_mparticles_base_get_cf(psc->particles);
-  particles_t *pp = &particles->p[p];
+  particles_t *pp = psc_mparticles_get_patch(particles, p);
   
   int i = 0;
   for (int kind = 0; kind < _case->nr_kinds; kind++) {
@@ -191,7 +191,7 @@ psc_case_init_particles(struct psc_case *_case, int *nr_particles_by_patch,
 
   psc_foreach_patch(_case->psc, p) {
     psc_case_init_particles_patch(_case, p, particle_label_offset);
-    assert(_case->psc->particles->p[p].n_part == nr_particles_by_patch[p]);
+    assert(_case->psc->particles->data[p].n_part == nr_particles_by_patch[p]);
   }
 }
 

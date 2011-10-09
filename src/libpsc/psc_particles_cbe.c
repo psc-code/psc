@@ -72,10 +72,10 @@ psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
   // I cannot currently think of any reason we would offload 
   // the list of patches to the spes, so let's just use calloc 
   // for this one.
-  particles->p = calloc(ppsc->nr_patches, sizeof(*particles->p));
+  particles->data = calloc(ppsc->nr_patches, sizeof(*particles->data));
   psc_foreach_patch(ppsc, p) {
-    particles_c_t *pp_base = &particles_base->p[p];
-    particles_cbe_t *pp = &particles->p[p];
+    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
+    particles_cbe_t *pp = psc_mparticles_get_patch_cbe(particles, p);
     pp->n_part = pp_base->n_part;
     // These will be heading to the spes, so we need some memalign lovin'
     void *m;
@@ -110,8 +110,8 @@ psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
   
   mparticles_c_t *particles_base = _particles_base;
   psc_foreach_patch(ppsc, p) {
-    particles_c_t *pp_base = &particles_base->p[p];
-    particles_cbe_t *pp = &particles->p[p];
+    particles_c_t *pp_base = psc_mparticles_get_patch_c(particles_base, p);
+    particles_cbe_t *pp = psc_mparticles_get_patch_cbe(particles, p);
     assert(pp->n_part == pp_base->n_part);
     for (int n = 0; n < pp_base->n_part; n++){
       particle_c_t *part_base = particles_c_get_one(pp_base,n);
@@ -130,9 +130,7 @@ psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
     free(pp->particles);
     pp->particles = NULL;
   }
-  free(particles->p);
-  particles->p = NULL;
-    
+  free(particles->data);
 }
 
 

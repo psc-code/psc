@@ -14,6 +14,7 @@ typedef mparticles_c_t mparticles_t;
 #define psc_mparticles_setup        psc_mparticles_c_setup
 #define psc_mparticles_base_get_cf  psc_mparticles_base_get_c
 #define psc_mparticles_base_put_cf  psc_mparticles_base_put_c
+#define psc_mparticles_get_patch    psc_mparticles_get_patch_c
 #define particles_get_one           particles_c_get_one
 #define particles_realloc           particles_c_realloc
 #define particle_real_nint          particle_c_real_nint

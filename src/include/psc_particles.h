@@ -13,7 +13,7 @@
   									\
 struct psc_mparticles_##type {						\
   struct mrc_obj obj;							\
-  particles_##type##_t *p;						\
+  particles_##type##_t *data;						\
   int nr_patches;							\
   struct mrc_domain *domain;						\
   bool need_block_offsets;						\
@@ -64,6 +64,32 @@ DECLARE_MPARTICLES_METHODS(cbe)
 #include "psc_particles_cuda.h"
 DECLARE_MPARTICLES_METHODS(cuda)
 #endif
+
+static inline particles_c_t *
+psc_mparticles_get_patch_c(mparticles_c_t *mp, int p)
+{
+  return ((particles_c_t *)mp->data) + p;
+}
+
+static inline particles_fortran_t *
+psc_mparticles_get_patch_fortran(mparticles_fortran_t *mp, int p)
+{
+  return ((particles_fortran_t *)mp->data) + p;
+}
+
+#ifdef USE_CUDA
+static inline particles_cuda_t *
+psc_mparticles_get_patch_cuda(mparticles_cuda_t *mp, int p)
+{
+  return ((particles_cuda_t *)mp->data) + p;
+}
+#endif
+
+static inline particles_cbe_t *
+psc_mparticles_get_patch_cbe(mparticles_cbe_t *mp, int p)
+{
+  return ((particles_cbe_t *)mp->data) + p;
+}
 
 // ----------------------------------------------------------------------
 // base particles type

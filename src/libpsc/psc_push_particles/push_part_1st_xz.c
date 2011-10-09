@@ -221,7 +221,8 @@ psc_push_particles_1st_push_xz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    do_push_part_1st_xz(p, psc_mfields_get_patch(flds, p), &particles->p[p]);
+    do_push_part_1st_xz(p, psc_mfields_get_patch(flds, p),
+			psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 

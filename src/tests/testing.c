@@ -45,7 +45,7 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
   if (!particles_ref) {
     int nr_particles_by_patch[psc->nr_patches];
     psc_foreach_patch(psc, p) {
-      nr_particles_by_patch[p] = particles->p[p].n_part;
+      nr_particles_by_patch[p] = psc_mparticles_get_patch(particles, p)->n_part;
     }
     particles_ref = psc_mparticles_create(MPI_COMM_WORLD);
     psc_mparticles_set_domain_nr_particles(particles_ref, psc->mrc_domain,
@@ -53,8 +53,8 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
     psc_mparticles_setup(particles_ref);
   }
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles->p[p];
-    particles_t *pp_ref = &particles_ref->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
     for (int i = 0; i < pp->n_part; i++) {
       *particles_get_one(pp_ref, i) = *particles_get_one(pp, i);
     }
@@ -108,8 +108,8 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   assert(particles_ref);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles->p[p];
-    particles_t *pp_ref = &particles_ref->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
     
     for (int i = 0; i < pp->n_part; i++) {
       particle_t *part = particles_get_one(pp, i);
@@ -251,7 +251,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     struct psc_patch *patch = &psc->patch[p];
     int *ldims = patch->ldims;
     for (int n = 0; n < pp->n_part; n++) {

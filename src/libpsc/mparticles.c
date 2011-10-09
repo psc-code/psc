@@ -13,10 +13,10 @@ psc_mparticles_##type##_set_domain_nr_particles(mparticles_##type##_t *mparticle
   mparticles->domain = domain;						\
   mrc_domain_get_patches(domain, &mparticles->nr_patches);		\
 									\
-  mparticles->p = calloc(mparticles->nr_patches,			\
-			 sizeof(*mparticles->p));			\
+  mparticles->data = calloc(mparticles->nr_patches,			\
+			    sizeof(*mparticles->data));			\
   for (int p = 0; p < mparticles->nr_patches; p++) {			\
-    particles_##type##_alloc(&mparticles->p[p],				\
+    particles_##type##_alloc(&mparticles->data[p],			\
 			     nr_particles_by_patch[p]);			\
   }									\
 }									\
@@ -25,9 +25,9 @@ static void								\
 _psc_mparticles_##type##_destroy(mparticles_##type##_t *mparticles)	\
 {									\
   for (int p = 0; p < mparticles->nr_patches; p++) {			\
-    particles_##type##_free(&mparticles->p[p]);				\
+    particles_##type##_free(&mparticles->data[p]);			\
   }									\
-  free(mparticles->p);							\
+  free(mparticles->data);						\
 }									\
 									\
 struct mrc_class_psc_mparticles_##type mrc_class_psc_mparticles_##type = {	\
@@ -58,9 +58,9 @@ psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
   mparticles->domain = domain;
   mrc_domain_get_patches(domain, &mparticles->nr_patches);
 
-  mparticles->p = calloc(mparticles->nr_patches, sizeof(*mparticles->p));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(*mparticles->data));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_alloc(&mparticles->p[p],
+    particles_c_alloc(psc_mparticles_get_patch_c(mparticles, p),
 		      nr_particles_by_patch[p]);
   }
 }
@@ -69,9 +69,9 @@ static void
 _psc_mparticles_c_destroy(mparticles_c_t *mparticles)
 {
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_free(&mparticles->p[p]);
+    particles_c_free(psc_mparticles_get_patch_c(mparticles, p));
   }
-  free(mparticles->p);
+  free(mparticles->data);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -96,7 +96,7 @@ _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_t *particles = &mparticles->p[p];
+    particles_c_t *particles = psc_mparticles_get_patch_c(mparticles, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
@@ -125,10 +125,10 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  mparticles->p = calloc(mparticles->nr_patches, sizeof(*mparticles->p));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(*mparticles->data));
 
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_t *particles = &mparticles->p[p];
+    particles_c_t *particles = psc_mparticles_get_patch_c(mparticles, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
     int n_part;

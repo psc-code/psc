@@ -20,7 +20,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
     pr = prof_register("fort_randomize", 1., 0, 0);
   }
   prof_start(pr);
-  PIC_randomize(&particles->p[0]);
+  PIC_randomize(psc_mparticles_get_patch_fortran(particles, 0));
   prof_stop(pr);
 
   psc_mparticles_base_put_fortran(particles, particles_base);

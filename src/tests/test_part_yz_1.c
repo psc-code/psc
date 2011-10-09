@@ -125,7 +125,8 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
-    do_calc_rho_2nd(psc, p, &particles->p[p], psc_mfields_get_patch(rho, p), dt);
+    do_calc_rho_2nd(psc, p, psc_mparticles_get_patch(particles, p),
+		    psc_mfields_get_patch(rho, p), dt);
   }
 
   psc_mparticles_base_put_cf(particles, particles_base);
@@ -204,7 +205,8 @@ psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
 
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
-    do_calc_rho_1st(psc, p, &particles->p[p], psc_mfields_get_patch(rho, p), dt);
+    do_calc_rho_1st(psc, p, psc_mparticles_get_patch(particles, p),
+		    psc_mfields_get_patch(rho, p), dt);
   }
 
   psc_mparticles_base_put_cf(particles, particles_base);

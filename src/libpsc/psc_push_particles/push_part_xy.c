@@ -273,7 +273,8 @@ psc_push_particles_generic_c_push_xy(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    do_genc_push_part_xy(p, psc_mfields_get_patch(flds, p), &particles->p[p]);
+    do_genc_push_part_xy(p, psc_mfields_get_patch(flds, p),
+			 psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 

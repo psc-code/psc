@@ -28,7 +28,7 @@ setup_particles(mparticles_base_t *particles_base)
   // we can check.
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     if (rank != 0 || p != 0) {
       pp->n_part = 0;
       continue;
@@ -72,7 +72,7 @@ get_total_num_particles(mparticles_base_t *particles_base)
 
   int nr_part = 0;
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     nr_part += pp->n_part;
   }
 

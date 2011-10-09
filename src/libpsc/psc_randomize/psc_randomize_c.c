@@ -16,7 +16,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
   mparticles_t *particles = psc_mparticles_base_get_cf(particles_base);
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     for (int i = 0; i < pp->n_part; i++) {
       int j = random() % pp->n_part;
       particle_t tmp = pp->particles[i];

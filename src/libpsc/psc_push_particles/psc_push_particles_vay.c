@@ -138,7 +138,8 @@ psc_push_particles_vay_push_z(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_push_part_z_vay(ppsc, p, &particles->p[p], psc_mfields_get_patch_fortran(flds, p));
+    PIC_push_part_z_vay(ppsc, p, psc_mparticles_get_patch_fortran(particles, p),
+			psc_mfields_get_patch_fortran(flds, p));
   }
   prof_stop(pr);
 

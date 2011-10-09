@@ -171,7 +171,8 @@ psc_push_particles_1vb_push_yz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    do_push_part_1vb_yz(p, psc_mfields_get_patch(flds, p), &particles->p[p]);
+    do_push_part_1vb_yz(p, psc_mfields_get_patch(flds, p),
+			psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 

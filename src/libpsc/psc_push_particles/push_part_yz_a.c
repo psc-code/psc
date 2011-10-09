@@ -39,7 +39,7 @@ psc_push_particles_generic_c_push_yz_a(struct psc_push_particles *push,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    do_genc_push_part_yz_a(&particles->p[p]);
+    do_genc_push_part_yz_a(psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 

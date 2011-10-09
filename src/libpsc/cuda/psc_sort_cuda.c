@@ -68,7 +68,7 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    sort_patch(p, &particles->p[p]);
+    sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
   }
   prof_stop(pr);
 

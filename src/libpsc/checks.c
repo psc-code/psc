@@ -11,7 +11,7 @@ psc_check_particles(mparticles_base_t *particles_base)
 
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_t *pp = &particles->p[p];
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     f_real xb[3], xe[3];
     
     // New-style boundary requirements.

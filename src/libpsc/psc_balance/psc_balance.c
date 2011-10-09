@@ -32,7 +32,8 @@ psc_get_loads(struct psc *psc, double *loads)
   mparticles_t *mparticles = psc_mparticles_base_get_cf(psc->particles);
 
   psc_foreach_patch(psc, p) {
-    loads[p] = mparticles->p[p].n_part + 1;
+    particles_t *pp = psc_mparticles_get_patch(mparticles, p);
+    loads[p] = pp->n_part + 1;
   }
 
   psc_mparticles_base_put_cf(mparticles, psc->particles); // OPT, doesn't need copy back
@@ -246,7 +247,8 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   mrc_domain_get_patches(domain_new, &nr_patches_new);
   
   for (int p = 0; p < nr_patches_new; p++) {
-    particles_new->p[p].n_part = nr_particles_by_patch_new[p];
+    particles_t *pp = psc_mparticles_get_patch(particles_new, p);
+    pp->n_part = nr_particles_by_patch_new[p];
   }
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
@@ -258,7 +260,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      particles_t *pp_old = &particles_old->p[p];
+      particles_t *pp_old = psc_mparticles_get_patch(particles_old, p);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Isend(pp_old->particles, nn, MPI_PARTICLES_REAL, info_new.rank,
 		mpi_tag(&info), comm, &send_reqs[p]);
@@ -277,7 +279,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       recv_reqs[p] = MPI_REQUEST_NULL;
       //TODO Seed particles
     } else {
-      particles_t *pp_new = &particles_new->p[p];
+      particles_t *pp_new = psc_mparticles_get_patch(particles_new, p);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(pp_new->particles, nn, MPI_PARTICLES_REAL, info_old.rank,
 		mpi_tag(&info), comm, &recv_reqs[p]);
@@ -294,8 +296,8 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       continue;
     }
 
-    particles_t *pp_old = &particles_old->p[info_old.patch];
-    particles_t *pp_new = &particles_new->p[p];
+    particles_t *pp_old = psc_mparticles_get_patch(particles_old, info_old.patch);
+    particles_t *pp_new = psc_mparticles_get_patch(particles_new, p);
     assert(pp_old->n_part == pp_new->n_part);
     for (int n = 0; n < pp_new->n_part; n++) {
       pp_new->particles[n] = pp_old->particles[n];
@@ -543,7 +545,7 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 
   int *nr_particles_by_patch = calloc(nr_patches, sizeof(*nr_particles_by_patch));
   for (int p = 0; p < nr_patches; p++) {
-    nr_particles_by_patch[p] = psc->particles->p[p].n_part;
+    nr_particles_by_patch[p] = psc_mparticles_get_patch(psc->particles, p)->n_part;
   }
   communicate_new_nr_particles(domain_old, domain_new, &nr_particles_by_patch);
 
