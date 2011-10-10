@@ -42,12 +42,6 @@ create_test(const char *s_push_particles)
   psc_moments_set_type(psc->moments, "1st");
   psc_set_from_options(psc);
   psc_setup(psc);
-#if 0
-  psc->particles->p[0].particles[0] = psc->particles->p[0].particles[1];
-  psc->particles->p[0].particles[0].yi = 2./16;
-  psc->particles->p[0].particles[0].zi = 3.5/16;
-  psc->particles->p[0].n_part = 1;
-#endif
   psc_sort_set_param_int(ppsc->sort, "mask", mask);
   psc_randomize_run(psc->randomize, psc->particles);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
@@ -57,39 +51,34 @@ create_test(const char *s_push_particles)
 }
 
 static void
-run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
-	 struct psc *(*create_test)(const char *), const char *push)
+psc_testing_save_ref(struct psc *psc)
 {
-  printf("=== testing push_part_yz%s() %s %s\n", push, s_push_particles,
-	 is_ref ? "(ref)" : "");
+  psc_save_particles_ref(psc, psc->particles);
+  psc_save_fields_ref(psc, psc->flds);
+}
 
-  struct psc *psc = create_test(s_push_particles);
-  psc_testing_dump(psc, s_push_particles);
-  if (strlen(push) == 0) {
-    psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  } else if (strcmp(push, "_a") == 0) {
-    psc_push_particles_push_yz_a(psc->push_particles, psc->particles, psc->flds);
-  } else if (strcmp(push, "_b") == 0) {
-    psc_push_particles_push_yz_b(psc->push_particles, psc->particles, psc->flds);
+static void
+psc_testing_check(struct psc *psc, double eps_particles, double eps_fields)
+{
+  psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
+  if (check_particles) {
+    psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
   }
+  if (check_currents) {
+    psc_check_currents_ref(psc, psc->flds, eps_fields);
+  }
+}
+
+static void
+run_test(struct psc *psc, const char *s_push_particles)
+{
+  printf("=== testing push_part_yz() %s\n", s_push_particles);
+
+  psc_testing_dump(psc, s_push_particles);
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
   psc_testing_dump(psc, s_push_particles);
-  if (strlen(push) == 0) {
-    psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
-  }
-  if (is_ref) {
-    psc_save_particles_ref(psc, psc->particles);
-    psc_save_fields_ref(psc, psc->flds);
-  } else {
-    if (check_particles) {
-      psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
-    }
-    if (check_currents && strlen(push) == 0) { // only check currents for full pusher
-      psc_check_currents_ref(psc, psc->flds, eps_fields);
-    }
-  }
-  psc_destroy(psc);
 }
 
 int
@@ -105,14 +94,23 @@ main(int argc, char **argv)
   // ----------------------------------------------------------------------
   // push_yz 1st order
 
-  run_test(true, "1st", 0., 1e-12, create_test, "");
+  struct psc *psc = create_test("1st");
+  run_test(psc, "1st");
+  psc_testing_save_ref(psc);
+  psc_destroy(psc);
 
   // since the fields are linear functions of position, 1st order / 2nd order
   // field interpolation should give the same result
-  run_test(false, "generic_c", 1e-7, 1e-0, create_test, "");
+  psc = create_test("generic_c");
+  run_test(psc, "generic_c");
+  psc_testing_check(psc, 1e-7, 1e-0);
+  psc_destroy(psc);
 
 #ifdef xUSE_CUDA
-  run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
+  psc = create_test("cuda_1st");
+  run_test(psc, "cuda_1st");
+  psc_testing_check(psc, 1e-6, 1e-3);
+  psc_destroy(psc);
 #endif
 
   psc_testing_finalize();
