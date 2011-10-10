@@ -4,6 +4,10 @@
 #include "psc_case.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
+#include "psc_push_particles.h"
+#include "psc_bnd.h"
+#include "psc_randomize.h"
+#include "psc_moments.h"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -14,6 +18,8 @@
 
 bool opt_testing_verbose = false;
 bool opt_testing_dump = false;
+bool opt_testing_check_currents = true;
+bool opt_testing_check_particles = true;
 
 // ----------------------------------------------------------------------
 // assert_equal
@@ -346,6 +352,21 @@ psc_create_test_z(void)
 
 // ======================================================================
 
+struct psc *
+psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
+			   char *moments_type)
+{
+  struct psc *psc = psc_create(MPI_COMM_WORLD);
+  psc->domain.gdims[0] = 1; // make yz
+  psc_push_particles_set_type(psc->push_particles, s_push_particles);
+  psc_sort_set_type(psc->sort, "countsort2");
+  psc_sort_set_param_int(ppsc->sort, "mask", mask);
+  psc_randomize_set_type(psc->randomize, "c");
+  psc_moments_set_type(psc->moments, moments_type);
+
+  return psc;
+}
+
 void
 psc_testing_dump(struct psc *psc, const char *basename)
 {
@@ -367,6 +388,43 @@ psc_testing_dump(struct psc *psc, const char *basename)
   cnt ++;
 }
 
+void
+psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
+{
+  printf("=== testing push_part() %s\n", s_push_particles);
+
+  psc_randomize_run(psc->randomize, psc->particles);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+
+  psc_testing_dump(psc, s_push_particles);
+
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+
+  psc_testing_dump(psc, s_push_particles);
+}
+
+void
+psc_testing_save_ref(struct psc *psc)
+{
+  psc_save_particles_ref(psc, psc->particles);
+  psc_save_fields_ref(psc, psc->flds);
+}
+
+void
+psc_testing_push_particles_check(struct psc *psc, double eps_particles, double eps_fields)
+{
+  psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
+  if (opt_testing_check_particles) {
+    psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
+  }
+  if (opt_testing_check_currents) {
+    psc_check_currents_ref(psc, psc->flds, eps_fields);
+  }
+}
+
 // ======================================================================
 
 void
@@ -377,6 +435,9 @@ psc_testing_init(int *argc, char ***argv)
 
   mrc_params_get_option_bool("verbose", &opt_testing_verbose);
   mrc_params_get_option_bool("dump", &opt_testing_dump);
+  mrc_params_get_option_bool("check_currents", &opt_testing_check_currents);
+  mrc_params_get_option_bool("check_particles", &opt_testing_check_particles);
+
 }
 
 void

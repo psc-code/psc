@@ -22,6 +22,12 @@ void psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles);
 void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 			  mfields_base_t *flds, double eps);
 
+void psc_testing_push_particles(struct psc *psc, const char *s_push_particles);
+void psc_testing_save_ref(struct psc *psc);
+void psc_testing_push_particles_check(struct psc *psc, double eps_particles, double eps_fields);
+
+struct psc *psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
+				       char *moments_type);
 struct psc_case *psc_create_test_xy(void);
 struct psc_case *psc_create_test_xz(void);
 struct psc_case *psc_create_test_yz(void);
