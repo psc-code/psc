@@ -3,8 +3,6 @@
 #include "psc_push_particles.h"
 #include "psc_sort.h"
 #include "psc_bnd.h"
-#include "psc_particles_as_c.h"
-#include "psc_fields_as_c.h"
 #include "psc_moments.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -19,7 +17,7 @@ static bool check_currents = true;
 // ======================================================================
 // psc_calc_rho
 
-typedef double creal;
+typedef particle_c_real_t creal;
 
 static inline creal
 creal_sqrt(creal x)
@@ -28,10 +26,10 @@ creal_sqrt(creal x)
 }
 
 static void
-do_shift_particle_positions(particles_t *pp, double dt)
+do_shift_particle_positions(particles_c_t *pp, double dt)
 {
   for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+    particle_c_t *part = particles_c_get_one(pp, n);
       
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vxi = part->pxi * root;
@@ -47,13 +45,13 @@ static void
 psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
 			     double dt)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
 
   psc_foreach_patch(psc, p) {
-    do_shift_particle_positions(psc_mparticles_get_patch(particles, p), dt);
+    do_shift_particle_positions(psc_mparticles_get_patch_c(particles, p), dt);
   }
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_c(particles, particles_base);
 }
 
 static void
@@ -90,7 +88,7 @@ create_test(const char *s_push_particles)
 // psc_calc_div_j
 
 static void
-do_calc_div_j(struct psc *psc, int p, fields_t *flds, fields_t *div_j)
+do_calc_div_j(struct psc *psc, int p, fields_c_t *flds, fields_c_t *div_j)
 {
   creal h[3];
   for (int d = 0; d < 3; d++) {
@@ -102,38 +100,39 @@ do_calc_div_j(struct psc *psc, int p, fields_t *flds, fields_t *div_j)
   }
 
   psc_foreach_3d_g(psc, p, jx, jy, jz) {
-    F3(div_j,0, jx,jy,jz) =
-      (F3(flds,JXI, jx,jy,jz) - F3(flds,JXI, jx-1,jy,jz)) * h[0] +
-      (F3(flds,JYI, jx,jy,jz) - F3(flds,JYI, jx,jy-1,jz)) * h[1] +
-      (F3(flds,JZI, jx,jy,jz) - F3(flds,JZI, jx,jy,jz-1)) * h[2];
+    F3_C(div_j,0, jx,jy,jz) =
+      (F3_C(flds,JXI, jx,jy,jz) - F3_C(flds,JXI, jx-1,jy,jz)) * h[0] +
+      (F3_C(flds,JYI, jx,jy,jz) - F3_C(flds,JYI, jx,jy-1,jz)) * h[1] +
+      (F3_C(flds,JZI, jx,jy,jz) - F3_C(flds,JZI, jx,jy,jz-1)) * h[2];
   } psc_foreach_3d_g_end;
 }
 
 static void
-psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j_base)
+psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_c_t *div_j)
 {
-  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
-  mfields_t *div_j = psc_mfields_get_cf(div_j_base, 0, 0);
+  mfields_c_t *flds = psc_mfields_get_c(flds_base, JXI, JXI + 3);
 
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, psc_mfields_get_patch(flds, p), psc_mfields_get_patch(div_j, p));
+    do_calc_div_j(psc, p, psc_mfields_get_patch_c(flds, p),
+		  psc_mfields_get_patch_c(div_j, p));
   }
 
-  psc_mfields_put_cf(flds, flds_base, 0, 0);
-  psc_mfields_put_cf(div_j, div_j_base, 0, 1);
+  psc_mfields_put_c(flds, flds_base, 0, 0);
 
-  psc_bnd_add_ghosts(psc->bnd, div_j_base, 0, 1);
+  psc_bnd_add_ghosts(psc->bnd, div_j, 0, 1);
 }
 
 // ======================================================================
 // psc_check_continuity
 
-static mfields_base_t *
-fld_create(struct psc *psc)
+static mfields_c_t *
+fld_create(struct psc *psc, int nr_fields)
 {
-  mfields_base_t *fld = psc_mfields_create(psc_comm(psc));
+  mfields_c_t *fld = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_type(fld, "c");
   psc_mfields_set_domain(fld, psc->mrc_domain);
   psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
+  psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
   psc_mfields_setup(fld);
 
   return fld;
@@ -142,12 +141,7 @@ fld_create(struct psc *psc)
 static void
 psc_calc_rho(struct psc *psc, mparticles_base_t *particles, mfields_c_t *rho)
 {
-  mfields_c_t *dens = psc_mfields_create(psc_comm(psc));
-  psc_mfields_set_type(dens, "c");
-  psc_mfields_set_domain(dens, psc->mrc_domain);
-  psc_mfields_set_param_int3(dens, "ibn", psc->ibn);
-  psc_mfields_set_param_int(dens, "nr_fields", 3);
-  psc_mfields_setup(dens);
+  mfields_c_t *dens = fld_create(psc, 3);
 
   psc_moments_calc_densities(psc->moments, NULL, particles, dens);
   // rho = NE + NI
@@ -161,35 +155,32 @@ static void
 psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 		     mfields_base_t *flds, double eps)
 {
-  mfields_base_t *rho_m_base = fld_create(psc);
-  mfields_base_t *rho_p_base = fld_create(psc);
-  mfields_base_t *div_j_base = fld_create(psc);
+  mfields_c_t *rho_m = fld_create(psc, 1);
+  mfields_c_t *rho_p = fld_create(psc, 1);
+  mfields_c_t *div_j = fld_create(psc, 1);
 
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
-  psc_calc_rho(psc, particles, rho_m_base);
+  psc_calc_rho(psc, particles, rho_m);
   psc_shift_particle_positions(psc, particles,  1. * psc->dt);
-  psc_calc_rho(psc, particles, rho_p_base);
+  psc_calc_rho(psc, particles, rho_p);
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
 
   // rho_p = (rho_p - rho_m) / dt
-  psc_mfields_axpy(rho_p_base, -1., rho_m_base);
-  psc_mfields_scale(rho_p_base, 1. / psc->dt);
+  psc_mfields_axpy(rho_p, -1., rho_m);
+  psc_mfields_scale(rho_p, 1. / psc->dt);
 
-  psc_calc_div_j(psc, flds, div_j_base);
-
-  mfields_t *rho_p = psc_mfields_get_cf(rho_p_base, 0, 1);
-  mfields_t *div_j = psc_mfields_get_cf(div_j_base, 0, 1);
+  psc_calc_div_j(psc, flds, div_j);
 
   //  psc_dump_field(div_j, 0, "div_j");
   //  psc_dump_field(rho_p, 0, "dt_rho");
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    fields_t *p_rho_p = psc_mfields_get_patch(rho_p, p);
-    fields_t *p_div_j = psc_mfields_get_patch(div_j, p);
+    fields_c_t *p_rho_p = psc_mfields_get_patch_c(rho_p, p);
+    fields_c_t *p_div_j = psc_mfields_get_patch_c(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
-      creal dt_rho = F3(p_rho_p,0, jx,jy,jz);
-      creal div_j = F3(p_div_j,0, jx,jy,jz);
+      creal dt_rho = F3_C(p_rho_p,0, jx,jy,jz);
+      creal div_j = F3_C(p_div_j,0, jx,jy,jz);
       max_err = fmax(max_err, fabs(dt_rho + div_j));
       if (fabs(dt_rho + div_j) > eps) {
 	printf("(%d,%d,%d): %g -- %g diff %g\n", jx, jy, jz,
@@ -199,17 +190,14 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   }
   printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
 
-  psc_mfields_put_cf(rho_p, rho_p_base, 0, 0);
-  psc_mfields_put_cf(div_j, div_j_base, 0, 0);
-
   //  psc_mfields_axpy(rho_p, +1., div_j);
   //  psc_dump_field(rho_p, 0, "cont_diff");
 
   assert(max_err <= eps);
 
-  psc_mfields_destroy(rho_m_base);
-  psc_mfields_destroy(rho_p_base);
-  psc_mfields_destroy(div_j_base);
+  psc_mfields_destroy(rho_m);
+  psc_mfields_destroy(rho_p);
+  psc_mfields_destroy(div_j);
 }
 
 static void
