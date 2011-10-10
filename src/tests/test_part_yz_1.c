@@ -557,7 +557,7 @@ main(int argc, char **argv)
   // field interpolation should give the same result
   run_test(false, "generic_c", 1e-7, 1e-0, create_test, "");
 
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
 #endif
 
@@ -570,7 +570,7 @@ main(int argc, char **argv)
   // run again to check continuity
   run_test(false, "1vb", 1e-7, 1e-3, create_test, "");
 
-#ifdef USE_CUDA
+#ifdef xUSE_CUDA
   run_test(false, "cuda_1vb", 1e-6, 1e-3, create_test, "");
 #endif
 
