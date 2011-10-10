@@ -29,6 +29,7 @@ main(int argc, char **argv)
   struct psc *psc = psc_testing_create_test_yz("1st", 0, "1st");
   psc_setup(psc);
   psc_testing_push_particles(psc, "1st");
+  psc_check_continuity(psc, psc->particles, psc->flds, 1e-12);
   psc_testing_save_ref(psc);
   psc_destroy(psc);
 
