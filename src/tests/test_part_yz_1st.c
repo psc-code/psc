@@ -20,9 +20,6 @@ static bool do_dump = false;
 static bool check_currents = true;
 static bool check_particles = true;
 
-// ======================================================================
-// psc_test
-
 // ----------------------------------------------------------------------
 // psc_test_init_field
 
@@ -182,17 +179,6 @@ main(int argc, char **argv)
 
 #ifdef xUSE_CUDA
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
-#endif
-
-  // ----------------------------------------------------------------------
-  // push_yz 1st order vb
-
-  mask = 15;
-
-  run_test(true, "1vb", 0., 1e-12, create_test, "");
-
-#ifdef xUSE_CUDA
-  run_test(false, "cuda_1vb", 1e-6, 1e-3, create_test, "");
 #endif
 
   prof_print();

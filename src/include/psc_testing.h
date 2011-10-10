@@ -26,4 +26,14 @@ struct psc_case *psc_create_test_xz(void);
 struct psc_case *psc_create_test_yz(void);
 struct psc_case *psc_create_test_z(void);
 
+// ======================================================================
+// psc_test
+
+struct psc_test {
+};
+
+void psc_test_create(struct psc *psc);
+void psc_test_step(struct psc *psc);
+
+
 #endif

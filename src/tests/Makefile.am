@@ -3,12 +3,16 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libpsctest.la
 
-libpsctest_la_SOURCES = testing.c testing_continuity.c
+libpsctest_la_SOURCES = \
+	testing.c \
+	testing_continuity.c \
+	testing_psc_test.c
 
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
 	test_part_xy \
+	test_part_yz_1st \
 	test_part_yz \
 	test_part_yz_1 \
 	test_part_xz \
@@ -31,6 +35,7 @@ TESTS = test_part_xy \
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx
+EXTRA_test_part_yz_1st_SOURCES = dummy.cxx
 EXTRA_test_part_yz_SOURCES = dummy.cxx
 EXTRA_test_part_yz_1_SOURCES = dummy.cxx
 EXTRA_test_part_xz_SOURCES = dummy.cxx
