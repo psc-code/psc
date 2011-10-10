@@ -14,10 +14,7 @@ struct psc_ops psc_test_ops = {
 };
 
 // ----------------------------------------------------------------------
-// check push_particles C "1st" against "generic_c" (C 2nd order) ref
-// 
-// since the fields are linear, 1st vs 2nd order should not make a
-// difference and we expect the same answer
+// check push_particles "cuda_1st" against C "1st" ref
 
 int
 main(int argc, char **argv)
@@ -32,10 +29,10 @@ main(int argc, char **argv)
   psc_testing_save_ref(psc);
   psc_destroy(psc);
 
-  psc = psc_testing_create_test_yz("generic_c", 0, "c");
+  psc = psc_testing_create_test_yz("cuda_1st", 0, "1st");
   psc_setup(psc);
-  psc_testing_push_particles(psc, "generic_c");
-  psc_testing_push_particles_check(psc, 1e-7, 1e-0);
+  psc_testing_push_particles(psc, "cuda_1st");
+  psc_testing_push_particles_check(psc, 1e-6, 1e-3);
   psc_destroy(psc);
 
   psc_testing_finalize();
