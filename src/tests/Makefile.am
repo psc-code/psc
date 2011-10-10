@@ -5,7 +5,6 @@ noinst_LTLIBRARIES = libpsctest.la
 
 libpsctest_la_SOURCES = \
 	testing.c \
-	testing_continuity.c \
 	testing_psc_test.c
 
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la

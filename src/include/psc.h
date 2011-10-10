@@ -382,6 +382,8 @@ void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
 void psc_check_particles(mparticles_base_t *particles);
+void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
+			  mfields_base_t *flds, double eps);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);
