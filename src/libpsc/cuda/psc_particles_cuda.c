@@ -277,7 +277,7 @@ _psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
 			 nr_particles_by_patch[p],
-			 true, false); // FIXME, don't hardcode
+			 true, true); // FIXME, don't hardcode
   }
 }
 
