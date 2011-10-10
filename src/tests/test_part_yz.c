@@ -26,12 +26,39 @@ creal_sqrt(creal x)
   return sqrt(x);
 }
 
-// FIXME, this is pretty much the same as in calc_moments
-// FIXME, check continuity in _yz() (and others), too
+static void
+do_shift_particle_positions(particles_t *pp, double dt)
+{
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
+      
+    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    creal vxi = part->pxi * root;
+    creal vyi = part->pyi * root;
+    creal vzi = part->pzi * root;
+    part->xi += vxi * dt;
+    part->yi += vyi * dt;
+    part->zi += vzi * dt;
+  }
+}
 
 static void
-do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
-		fields_t *rho, double dt)
+psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
+			     double dt)
+{
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+
+  psc_foreach_patch(psc, p) {
+    do_shift_particle_positions(psc_mparticles_get_patch(particles, p), dt);
+  }
+
+  psc_mparticles_put_cf(particles, particles_base);
+}
+
+// FIXME, this is pretty much the same as in calc_moments
+
+static void
+do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp, fields_t *rho)
 {
   creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   creal dxi = 1.f / psc->dx[0];
@@ -42,13 +69,9 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
       
-    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    creal vxi = part->pxi * root;
-    creal vyi = part->pyi * root;
-    creal vzi = part->pzi * root;
-    creal xi = part->xi + vxi * dt;
-    creal yi = part->yi + vyi * dt;
-    creal zi = part->zi + vzi * dt;
+    creal xi = part->xi;
+    creal yi = part->yi;
+    creal zi = part->zi;
     creal u = (xi - patch->xb[0]) * dxi;
     creal v = (yi - patch->xb[1]) * dyi;
     creal w = (zi - patch->xb[2]) * dzi;
@@ -112,7 +135,7 @@ do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp,
 
 void
 psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
-		 mfields_base_t *rho_base, double dt)
+		 mfields_base_t *rho_base)
 {
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
@@ -120,7 +143,7 @@ psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
   psc_mfields_zero(rho, 0);
   psc_foreach_patch(psc, p) {
     do_calc_rho_2nd(psc, p, psc_mparticles_get_patch(particles, p),
-		    psc_mfields_get_patch(rho, p), dt);
+		    psc_mfields_get_patch(rho, p));
   }
 
   psc_mparticles_put_cf(particles, particles_base);
@@ -220,9 +243,13 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   mfields_base_t *rho_p_base = fld_create(psc);
   mfields_base_t *div_j_base = fld_create(psc);
 
-  psc_calc_rho_2nd(psc, particles, rho_m_base, -.5 * psc->dt);
-  psc_calc_rho_2nd(psc, particles, rho_p_base,  .5 * psc->dt);
+  psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
+  psc_calc_rho_2nd(psc, particles, rho_m_base);
+  psc_shift_particle_positions(psc, particles,  1. * psc->dt);
+  psc_calc_rho_2nd(psc, particles, rho_p_base);
+  psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
 
+  // rho_p = (rho_p - rho_m) / dt
   psc_mfields_axpy(rho_p_base, -1., rho_m_base);
   psc_mfields_scale(rho_p_base, 1. / psc->dt);
 
