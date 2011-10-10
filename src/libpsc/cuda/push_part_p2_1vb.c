@@ -109,17 +109,17 @@ __device__ static void
 calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
 {
   if (off[1] == 0) {
-    dx1[0] = .5 * off[0] - x[0];
-    if (dx[0] != 0.)
+    dx1[0] = .5f * off[0] - x[0];
+    if (dx[0] != 0.f)
       dx1[1] = dx[1] / dx[0] * dx1[0];
     else
-      dx1[1] = 0.;
+      dx1[1] = 0.f;
   } else {
-    dx1[1] = .5 * off[1] - x[1];
-    if (dx[1] != 0.)
+    dx1[1] = .5f * off[1] - x[1];
+    if (dx[1] != 0.f)
       dx1[0] = dx[0] / dx[1] * dx1[1];
     else
-      dx1[0] = 0.;
+      dx1[0] = 0.f;
   }
 }
 
@@ -184,7 +184,7 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles)
       first_dir = 0;
     } else {
       real dx1[2];
-      dx1[0] = .5 * idiff[0] - x[0];
+      dx1[0] = .5f * idiff[0] - x[0];
       dx1[1] = dx[1] / dx[0] * dx1[0];
       if (fabsf(x[1] + dx1[1]) > .5f) {
 	first_dir = 1;
