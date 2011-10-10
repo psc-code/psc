@@ -14,8 +14,8 @@ noinst_PROGRAMS = \
 	test_part_xy \
 	test_part_yz_1st \
 	test_part_yz_cuda_1st \
+	test_part_yz_cuda_1vb \
 	test_part_yz \
-	test_part_yz_1 \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -29,6 +29,7 @@ TESTS = test_part_xy \
 	test_part_yz \
 	test_part_yz_1st \
 	test_part_yz_cuda_1st \
+	test_part_yz_cuda_1vb \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -36,14 +37,16 @@ TESTS = test_part_xy \
 	test_exchange_particles \
 	test_sort.sh
 
-XFAIL_TESTS = test_part_yz_cuda_1st
+XFAIL_TESTS = \
+	test_part_yz_cuda_1st \
+	test_part_yz_cuda_1vb
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx
 EXTRA_test_part_yz_1st_SOURCES = dummy.cxx
 EXTRA_test_part_yz_cuda_1st_SOURCES = dummy.cxx
+EXTRA_test_part_yz_cuda_1vb_SOURCES = dummy.cxx
 EXTRA_test_part_yz_SOURCES = dummy.cxx
-EXTRA_test_part_yz_1_SOURCES = dummy.cxx
 EXTRA_test_part_xz_SOURCES = dummy.cxx
 EXTRA_test_part_z_SOURCES = dummy.cxx
 EXTRA_test_field_SOURCES = dummy.cxx
