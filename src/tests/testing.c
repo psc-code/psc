@@ -6,6 +6,7 @@
 #include "psc_fields_as_c.h"
 
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <math.h>
 #include <limits.h>

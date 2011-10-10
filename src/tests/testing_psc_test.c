@@ -78,3 +78,42 @@ psc_test_step(struct psc *psc)
   psc_push_fields_step_b(psc->push_fields, psc->flds);
 }
 
+// ----------------------------------------------------------------------
+// psc_test_init_field_linear
+
+double
+psc_test_init_field_linear(struct psc *psc, double x[3], int m)
+{
+  switch (m) {
+  case EX: return x[0] + x[1] + x[2];
+  case EY: return x[0] + x[1] + x[2];
+  case EZ: return x[0] + x[1] + x[2];
+  case HX: return x[0] + x[1] + x[2];
+  case HY: return x[0] + x[1] + x[2];
+  case HZ: return x[0] + x[1] + x[2];
+  default: return 0.;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_test_init_npt
+
+void
+psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
+		       struct psc_particle_npt *npt)
+{
+  npt->n = 1.;
+  switch (kind) {
+  case 0: // electrons
+    npt->q = -1.;
+    npt->m = 1.;
+    break;
+  case 1: // ions
+    npt->q = 1.;
+    npt->m = 100;
+    break;
+  default:
+    assert(0);
+  }
+}
+

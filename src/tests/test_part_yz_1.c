@@ -21,63 +21,14 @@ static bool check_currents = true;
 static bool check_particles = true;
 
 // ======================================================================
-// psc_test
-
-// ----------------------------------------------------------------------
-// psc_test_init_field
-
-static double
-psc_test_init_field(struct psc *psc, double x[3], int m)
-{
-#if 0
-  switch (m) {
-  case EY: return 1.;
-  default: return 0.;
-  }
-#endif
-
-  switch (m) {
-  case EX: return x[1] + x[2];
-  case EY: return x[1] + x[2];
-  case EZ: return x[1] + x[2];
-  case HX: return x[1] + x[2];
-  case HY: return x[1] + x[2];
-  case HZ: return x[1] + x[2];
-  default: return 0.;
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_test_init_npt
-
-static void
-psc_test_init_npt(struct psc *psc, int kind, double x[3],
-		    struct psc_particle_npt *npt)
-{
-  npt->n = 1.;
-  switch (kind) {
-  case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1.;
-    break;
-  case 1: // ions
-    npt->q = 1.;
-    npt->m = 100;
-    break;
-  default:
-    assert(0);
-  }
-}
-
-// ======================================================================
 // psc_test_ops
 
 struct psc_ops psc_test_ops = {
   .name             = "test",
   .size             = sizeof(struct psc_test),
   .create           = psc_test_create,
-  .init_field       = psc_test_init_field,
-  .init_npt         = psc_test_init_npt,
+  .init_field       = psc_test_init_field_linear,
+  .init_npt         = psc_test_init_npt_rest,
   .step             = psc_test_step,
 };
 

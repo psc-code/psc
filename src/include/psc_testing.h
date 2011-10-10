@@ -35,6 +35,10 @@ struct psc_test {
 void psc_test_create(struct psc *psc);
 void psc_test_step(struct psc *psc);
 
+double psc_test_init_field_linear(struct psc *psc, double x[3], int m);
+void psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
+			    struct psc_particle_npt *npt);
+
 // ======================================================================
 // psc_testing_{init,finalize}
 
