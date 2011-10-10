@@ -5,9 +5,13 @@
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
 
+#include <mrc_params.h>
+
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
+
+bool opt_testing_verbose = false;
 
 // ----------------------------------------------------------------------
 // assert_equal
@@ -345,12 +349,16 @@ psc_testing_init(int *argc, char ***argv)
 {
   MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
+
+  mrc_params_get_option_bool("verbose", &opt_testing_verbose);
 }
 
 void
 psc_testing_finalize()
 {
-  prof_print();
+  if (opt_testing_verbose) {
+    prof_print();
+  }
 
   MPI_Finalize();
 }
