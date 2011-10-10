@@ -3,7 +3,7 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 
 noinst_LTLIBRARIES = libpsctest.la
 
-libpsctest_la_SOURCES = testing.c
+libpsctest_la_SOURCES = testing.c testing_continuity.c
 
 LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 

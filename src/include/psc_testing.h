@@ -18,6 +18,9 @@ void psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles,
 			     double thres, const char *test_str);
 void psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles);
 
+void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
+			  mfields_base_t *flds, double eps);
+
 struct psc_case *psc_create_test_xy(void);
 struct psc_case *psc_create_test_xz(void);
 struct psc_case *psc_create_test_yz(void);
