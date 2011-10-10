@@ -159,8 +159,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops);
 
@@ -181,7 +180,5 @@ main(int argc, char **argv)
   run_test(false, "cuda_1st", 1e-6, 1e-3, create_test, "");
 #endif
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

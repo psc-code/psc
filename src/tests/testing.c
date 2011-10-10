@@ -338,3 +338,20 @@ psc_create_test_z(void)
   return _case;
 }
 
+// ======================================================================
+
+void
+psc_testing_init(int *argc, char ***argv)
+{
+  MPI_Init(argc, argv);
+  libmrc_params_init(*argc, *argv);
+}
+
+void
+psc_testing_finalize()
+{
+  prof_print();
+
+  MPI_Finalize();
+}
+

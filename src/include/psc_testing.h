@@ -35,5 +35,10 @@ struct psc_test {
 void psc_test_create(struct psc *psc);
 void psc_test_step(struct psc *psc);
 
+// ======================================================================
+// psc_testing_{init,finalize}
+
+void psc_testing_init(int *argc, char ***argv);
+void psc_testing_finalize();
 
 #endif
