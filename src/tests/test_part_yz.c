@@ -5,6 +5,7 @@
 #include "psc_bnd.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
+#include "psc_moments.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
@@ -53,103 +54,6 @@ psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
   }
 
   psc_mparticles_put_cf(particles, particles_base);
-}
-
-// FIXME, this is pretty much the same as in calc_moments
-
-static void
-do_calc_rho_2nd(struct psc *psc, int p, particles_t *pp, fields_t *rho)
-{
-  creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  creal dxi = 1.f / psc->dx[0];
-  creal dyi = 1.f / psc->dx[1];
-  creal dzi = 1.f / psc->dx[2];
-
-  struct psc_patch *patch = &psc->patch[p];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
-      
-    creal xi = part->xi;
-    creal yi = part->yi;
-    creal zi = part->zi;
-    creal u = (xi - patch->xb[0]) * dxi;
-    creal v = (yi - patch->xb[1]) * dyi;
-    creal w = (zi - patch->xb[2]) * dzi;
-    int j1 = particle_real_nint(u);
-    int j2 = particle_real_nint(v);
-    int j3 = particle_real_nint(w);
-    creal h1 = j1-u;
-    creal h2 = j2-v;
-    creal h3 = j3-w;
-      
-    creal gmx=.5f*(.5f+h1)*(.5f+h1);
-    creal gmy=.5f*(.5f+h2)*(.5f+h2);
-    creal gmz=.5f*(.5f+h3)*(.5f+h3);
-    creal g0x=.75f-h1*h1;
-    creal g0y=.75f-h2*h2;
-    creal g0z=.75f-h3*h3;
-    creal g1x=.5f*(.5f-h1)*(.5f-h1);
-    creal g1y=.5f*(.5f-h2)*(.5f-h2);
-    creal g1z=.5f*(.5f-h3)*(.5f-h3);
-      
-    if (psc->domain.gdims[0] == 1) {
-      j1 = 0; gmx = 0.; g0x = 1.; g1x = 0.;
-    }
-    if (psc->domain.gdims[1] == 1) {
-      j2 = 0; gmy = 0.; g0y = 1.; g1y = 0.;
-    }
-    if (psc->domain.gdims[2] == 1) {
-      j3 = 0; gmz = 0.; g0z = 1.; g1z = 0.;
-    }
-
-    creal fnq = part->qni * part->wni * fnqs;
-    F3(rho,0, j1-1,j2-1,j3-1) += fnq*gmx*gmy*gmz;
-    F3(rho,0, j1  ,j2-1,j3-1) += fnq*g0x*gmy*gmz;
-    F3(rho,0, j1+1,j2-1,j3-1) += fnq*g1x*gmy*gmz;
-    F3(rho,0, j1-1,j2  ,j3-1) += fnq*gmx*g0y*gmz;
-    F3(rho,0, j1  ,j2  ,j3-1) += fnq*g0x*g0y*gmz;
-    F3(rho,0, j1+1,j2  ,j3-1) += fnq*g1x*g0y*gmz;
-    F3(rho,0, j1-1,j2+1,j3-1) += fnq*gmx*g1y*gmz;
-    F3(rho,0, j1  ,j2+1,j3-1) += fnq*g0x*g1y*gmz;
-    F3(rho,0, j1+1,j2+1,j3-1) += fnq*g1x*g1y*gmz;
-    F3(rho,0, j1-1,j2-1,j3  ) += fnq*gmx*gmy*g0z;
-    F3(rho,0, j1  ,j2-1,j3  ) += fnq*g0x*gmy*g0z;
-    F3(rho,0, j1+1,j2-1,j3  ) += fnq*g1x*gmy*g0z;
-    F3(rho,0, j1-1,j2  ,j3  ) += fnq*gmx*g0y*g0z;
-    F3(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3(rho,0, j1-1,j2+1,j3  ) += fnq*gmx*g1y*g0z;
-    F3(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3(rho,0, j1-1,j2-1,j3+1) += fnq*gmx*gmy*g1z;
-    F3(rho,0, j1  ,j2-1,j3+1) += fnq*g0x*gmy*g1z;
-    F3(rho,0, j1+1,j2-1,j3+1) += fnq*g1x*gmy*g1z;
-    F3(rho,0, j1-1,j2  ,j3+1) += fnq*gmx*g0y*g1z;
-    F3(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3(rho,0, j1-1,j2+1,j3+1) += fnq*gmx*g1y*g1z;
-    F3(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
-  }
-}
-
-void
-psc_calc_rho_2nd(struct psc *psc, mparticles_base_t *particles_base,
-		 mfields_base_t *rho_base)
-{
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-  mfields_t *rho = psc_mfields_get_cf(rho_base, 0, 0);
-
-  psc_mfields_zero(rho, 0);
-  psc_foreach_patch(psc, p) {
-    do_calc_rho_2nd(psc, p, psc_mparticles_get_patch(particles, p),
-		    psc_mfields_get_patch(rho, p));
-  }
-
-  psc_mparticles_put_cf(particles, particles_base);
-  psc_mfields_put_cf(rho, rho_base, 0, 1);
-
-  psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
 
 static void
@@ -236,6 +140,24 @@ fld_create(struct psc *psc)
 }
 
 static void
+psc_calc_rho(struct psc *psc, mparticles_base_t *particles, mfields_c_t *rho)
+{
+  mfields_c_t *dens = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_type(dens, "c");
+  psc_mfields_set_domain(dens, psc->mrc_domain);
+  psc_mfields_set_param_int3(dens, "ibn", psc->ibn);
+  psc_mfields_set_param_int(dens, "nr_fields", 3);
+  psc_mfields_setup(dens);
+
+  psc_moments_calc_densities(psc->moments, NULL, particles, dens);
+  // rho = NE + NI
+  psc_mfields_copy_comp(rho, 0, dens, 0); // FIXME, waxpy would be nicer
+  psc_mfields_axpy_comp(rho, 0, 1., dens, 1);
+
+  psc_mfields_destroy(dens);
+}
+
+static void
 psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 		     mfields_base_t *flds, double eps)
 {
@@ -244,9 +166,9 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   mfields_base_t *div_j_base = fld_create(psc);
 
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
-  psc_calc_rho_2nd(psc, particles, rho_m_base);
+  psc_calc_rho(psc, particles, rho_m_base);
   psc_shift_particle_positions(psc, particles,  1. * psc->dt);
-  psc_calc_rho_2nd(psc, particles, rho_p_base);
+  psc_calc_rho(psc, particles, rho_p_base);
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
 
   // rho_p = (rho_p - rho_m) / dt
