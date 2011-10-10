@@ -9,6 +9,7 @@
 
 void __assert_equal(double x, double y, const char *xs, const char *ys, double thres);
 
+void psc_testing_dump(struct psc *psc, const char *basename);
 void psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles);
 void psc_save_fields_ref(struct psc *psc, mfields_base_t *flds);
 void psc_check_currents_ref(struct psc *psc, mfields_base_t *flds, double thres);

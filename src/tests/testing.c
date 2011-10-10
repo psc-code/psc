@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 bool opt_testing_verbose = false;
+bool opt_testing_dump = false;
 
 // ----------------------------------------------------------------------
 // assert_equal
@@ -346,12 +347,36 @@ psc_create_test_z(void)
 // ======================================================================
 
 void
+psc_testing_dump(struct psc *psc, const char *basename)
+{
+  if (!opt_testing_dump)
+    return;
+
+  static int cnt = 0;
+
+  char s[200];
+  sprintf(s, "part_%s_%d", basename, cnt);
+  psc_dump_particles(psc->particles, s);
+  sprintf(s, "jx_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JXI, s);
+  sprintf(s, "jy_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JYI, s);
+  sprintf(s, "jz_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JZI, s);
+
+  cnt ++;
+}
+
+// ======================================================================
+
+void
 psc_testing_init(int *argc, char ***argv)
 {
   MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
 
   mrc_params_get_option_bool("verbose", &opt_testing_verbose);
+  mrc_params_get_option_bool("dump", &opt_testing_dump);
 }
 
 void

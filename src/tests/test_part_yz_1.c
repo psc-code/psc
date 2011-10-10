@@ -16,7 +16,6 @@
 
 static unsigned int mask;
 
-static bool do_dump = false;
 static bool check_currents = true;
 static bool check_particles = true;
 
@@ -31,23 +30,6 @@ struct psc_ops psc_test_ops = {
   .init_npt         = psc_test_init_npt_rest,
   .step             = psc_test_step,
 };
-
-static void
-dump(const char *basename, int cnt)
-{
-  if (!do_dump)
-    return;
-
-  char s[200];
-  sprintf(s, "part_%s_%d", basename, cnt);
-  psc_dump_particles(ppsc->particles, s);
-  sprintf(s, "jx_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JXI, s);
-  sprintf(s, "jy_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JYI, s);
-  sprintf(s, "jz_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JZI, s);
-}
 
 static struct psc *
 create_test(const char *s_push_particles)
@@ -82,7 +64,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
 	 is_ref ? "(ref)" : "");
 
   struct psc *psc = create_test(s_push_particles);
-  dump(s_push_particles, 0);
+  psc_testing_dump(psc, s_push_particles);
   if (strlen(push) == 0) {
     psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   } else if (strcmp(push, "_a") == 0) {
@@ -92,7 +74,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   }
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
-  dump(s_push_particles, 1);
+  psc_testing_dump(psc, s_push_particles);
   if (strlen(push) == 0) {
     psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
   }
@@ -117,7 +99,6 @@ main(int argc, char **argv)
 
   mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops);
 
-  mrc_params_get_option_bool("dump", &do_dump);
   mrc_params_get_option_bool("check_currents", &check_currents);
   mrc_params_get_option_bool("check_particles", &check_particles);
 
