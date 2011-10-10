@@ -26,6 +26,8 @@ struct psc_mfields_ops {
 		    struct psc_mfields *from, int mfrom);
   void (*axpy)(struct psc_mfields *yf, double alpha,
 	       struct psc_mfields *xf);
+  void (*axpy_comp)(struct psc_mfields *yf, int ym, double alpha,
+		    struct psc_mfields *xf, int xm);
   void (*copy_to_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
   void (*copy_to_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
   void (*copy_to_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
@@ -43,6 +45,8 @@ void psc_mfields_copy_comp(struct psc_mfields *to, int mto,
 			   struct psc_mfields *from, int mfrom);
 void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
 		      struct psc_mfields *xf);
+void psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
+			   struct psc_mfields *xf, int xm);
 struct psc_mfields *psc_mfields_get_c(struct psc_mfields *base, int mb, int me);
 struct psc_mfields *psc_mfields_get_fortran(struct psc_mfields *base, int mb, int me);
 struct psc_mfields *psc_mfields_get_cuda(struct psc_mfields *base, int mb, int me);

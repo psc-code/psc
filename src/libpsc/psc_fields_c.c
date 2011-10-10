@@ -83,6 +83,18 @@ fields_c_axpy(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
 }
 
 void
+fields_c_axpy_comp(fields_c_t *y, int ym, fields_c_real_t a, fields_c_t *x, int xm)
+{
+  for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
+    for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
+      for (int jx = y->ib[0]; jx < y->ib[0] + y->im[0]; jx++) {
+	F3_C(y, ym, jx, jy, jz) += a * F3_C(x, xm, jx, jy, jz);
+      }
+    }
+  }
+}
+
+void
 fields_c_scale(fields_c_t *pf, fields_c_real_t val)
 {
   for (int m = 0; m < pf->nr_comp; m++) {
@@ -109,6 +121,16 @@ _psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
     fields_c_axpy(psc_mfields_get_patch_c(yf, p), alpha, psc_mfields_get_patch_c(xf, p));
+  }
+}
+
+static void
+_psc_mfields_c_axpy_comp(mfields_c_t *yf, int ym, fields_c_real_t alpha,
+			 mfields_c_t *xf, int xm)
+{
+  for (int p = 0; p < yf->nr_patches; p++) {
+    fields_c_axpy_comp(psc_mfields_get_patch_c(yf, p), ym, alpha,
+		       psc_mfields_get_patch_c(xf, p), xm);
   }
 }
 
@@ -308,6 +330,7 @@ struct psc_mfields_ops psc_mfields_c_ops = {
   .scale                 = _psc_mfields_c_scale,
   .copy_comp             = _psc_mfields_c_copy_comp,
   .axpy                  = _psc_mfields_c_axpy,
+  .axpy_comp             = _psc_mfields_c_axpy_comp,
   .copy_to_fortran       = psc_mfields_c_copy_to_fortran,
   .copy_from_fortran     = psc_mfields_c_copy_from_fortran,
 #ifdef USE_CUDA

@@ -79,6 +79,16 @@ psc_mfields_axpy(struct psc_mfields *yf, double alpha,
   return ops->axpy(yf, alpha, xf);
 }
 
+void
+psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
+		      struct psc_mfields *xf, int xm)
+{
+  struct psc_mfields_ops *ops = psc_mfields_ops(yf);
+  assert(ops == psc_mfields_ops(xf));
+  assert(ops && ops->axpy_comp);
+  return ops->axpy_comp(yf, ym, alpha, xf, xm);
+}
+
 #define MAKE_MFIELDS_GET_PUT(type)					\
 									\
 struct psc_mfields *							\
