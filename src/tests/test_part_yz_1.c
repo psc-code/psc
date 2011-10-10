@@ -4,6 +4,7 @@
 #include "psc_push_fields.h"
 #include "psc_sort.h"
 #include "psc_randomize.h"
+#include "psc_moments.h"
 #include "psc_bnd.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -57,83 +58,6 @@ psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
   }
 
   psc_mparticles_put_c(particles, particles_base);
-}
-
-// FIXME, this is pretty much the same as in calc_moments
-
-// ======================================================================
-
-static void
-do_calc_rho_1st(struct psc *psc, int p, particles_c_t *pp, fields_c_t *rho)
-{
-  creal fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  creal dxi = 1.f / psc->dx[0];
-  creal dyi = 1.f / psc->dx[1];
-  creal dzi = 1.f / psc->dx[2];
-
-  struct psc_patch *patch = &psc->patch[p];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_c_t *part = particles_c_get_one(pp, n);
-      
-    creal xi = part->xi;
-    creal yi = part->yi;
-    creal zi = part->zi;
-    creal u = (xi - patch->xb[0]) * dxi;
-    creal v = (yi - patch->xb[1]) * dyi;
-    creal w = (zi - patch->xb[2]) * dzi;
-    int j1 = particle_c_real_fint(u);
-    int j2 = particle_c_real_fint(v);
-    int j3 = particle_c_real_fint(w);
-    creal h1 = u-j1;
-    creal h2 = v-j2;
-    creal h3 = w-j3;
-      
-    creal g0x=1.f - h1;
-    creal g0y=1.f - h2;
-    creal g0z=1.f - h3;
-    creal g1x=h1;
-    creal g1y=h2;
-    creal g1z=h3;
-      
-    if (psc->domain.gdims[0] == 1) {
-      j1 = 0; g0x = 1.; g1x = 0.;
-    }
-    if (psc->domain.gdims[1] == 1) {
-      j2 = 0; g0y = 1.; g1y = 0.;
-    }
-    if (psc->domain.gdims[2] == 1) {
-      j3 = 0; g0z = 1.; g1z = 0.;
-    }
-
-    creal fnq = part->qni * part->wni * fnqs;
-    F3_C(rho,0, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3_C(rho,0, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3_C(rho,0, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3_C(rho,0, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3_C(rho,0, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3_C(rho,0, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3_C(rho,0, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3_C(rho,0, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
-  }
-}
-
-void
-psc_calc_rho_1st(struct psc *psc, mparticles_base_t *particles_base,
-		 mfields_base_t *rho_base)
-{
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
-  mfields_c_t *rho = psc_mfields_get_c(rho_base, 0, 0);
-
-  psc_mfields_zero(rho, 0);
-  psc_foreach_patch(psc, p) {
-    do_calc_rho_1st(psc, p, psc_mparticles_get_patch_c(particles, p),
-		    psc_mfields_get_patch_c(rho, p));
-  }
-
-  psc_mparticles_put_c(particles, particles_base);
-  psc_mfields_put_c(rho, rho_base, 0, 1);
-
-  psc_bnd_add_ghosts(psc->bnd, rho_base, 0, 1);
 }
 
 // ======================================================================
@@ -193,6 +117,19 @@ fld_create(struct psc *psc, int nr_fields)
 }
 
 static void
+psc_calc_rho(struct psc *psc, mparticles_base_t *particles, mfields_c_t *rho)
+{
+  mfields_c_t *dens = fld_create(psc, 3);
+
+  psc_moments_calc_densities(psc->moments, NULL, particles, dens);
+  // rho = NE + NI
+  psc_mfields_copy_comp(rho, 0, dens, 0); // FIXME, waxpy would be nicer
+  psc_mfields_axpy_comp(rho, 0, 1., dens, 1);
+
+  psc_mfields_destroy(dens);
+}
+
+static void
 psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 		     mfields_base_t *flds, double eps)
 {
@@ -201,9 +138,9 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   mfields_c_t *div_j = fld_create(psc, 1);
 
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
-  psc_calc_rho_1st(psc, particles, rho_m);
+  psc_calc_rho(psc, particles, rho_m);
   psc_shift_particle_positions(psc, particles,  1. * psc->dt);
-  psc_calc_rho_1st(psc, particles, rho_p);
+  psc_calc_rho(psc, particles, rho_p);
   psc_shift_particle_positions(psc, particles, -.5 * psc->dt);
 
   psc_mfields_axpy(rho_p, -1., rho_m);
@@ -407,6 +344,7 @@ create_test(const char *s_push_particles)
   psc_push_particles_set_type(psc->push_particles, s_push_particles);
   psc_sort_set_type(psc->sort, "countsort2");
   psc_randomize_set_type(psc->randomize, "c");
+  psc_moments_set_type(psc->moments, "1st");
   psc_setup(psc);
 #if 0
   psc->particles->p[0].particles[0] = psc->particles->p[0].particles[1];
