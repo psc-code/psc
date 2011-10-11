@@ -87,14 +87,6 @@ main(int argc, char **argv)
   mrc_params_get_option_bool("check_currents", &check_currents);
 
   // ----------------------------------------------------------------------
-  // push_yz_a
-
-  run_test(true, "fortran", 0., 0., create_test, "_a");
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_a");
-#endif
-
-  // ----------------------------------------------------------------------
   // push_yz_b
 
   run_test(true, "fortran", 0., 0., create_test, "_b");

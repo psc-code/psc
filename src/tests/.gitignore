@@ -10,7 +10,6 @@ test_part_yz_1
 test_part_yz_1st
 test_part_yz_cuda_1st
 test_part_yz_cuda_1vb
-test_part_yz_a_generic_c
-test_part_yz_a_cuda
+test_part_yz_a
 test_part_z
 test_sort
