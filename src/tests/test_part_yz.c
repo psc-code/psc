@@ -71,6 +71,16 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   psc_case_destroy(_case);
 }
 
+// ----------------------------------------------------------------------
+// check push_particles_push_yz against "fortran" ref
+
+// psc_push_particles_type to be tested
+static const char *s_type = "fortran";
+// threshold for particles
+static double eps_particles = 1e-7;
+// threshold for fields
+static double eps_fields = 1e-7;
+
 int
 main(int argc, char **argv)
 {
@@ -79,17 +89,12 @@ main(int argc, char **argv)
   mrc_params_get_option_bool("dump", &do_dump);
   mrc_params_get_option_bool("check_currents", &check_currents);
 
-  // ----------------------------------------------------------------------
-  // push_yz
+  mrc_params_get_option_string("type", &s_type);
+  mrc_params_get_option_double("eps_particles", &eps_particles);
+  mrc_params_get_option_double("eps_particles", &eps_fields);
 
   run_test(true, "fortran", 0., 0., create_test);
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test);
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-3, create_test);
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test);
-#endif
+  run_test(false, s_type, eps_particles, eps_fields, create_test);
 
   psc_testing_finalize();
 }

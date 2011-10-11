@@ -27,7 +27,6 @@ noinst_PROGRAMS = \
 	test_sort
 
 TESTS = test_part_xy \
-	test_part_yz \
 	test_part_yz_1st \
 	test_part_yz_cuda_1st \
 	test_part_yz_cuda_1vb \
@@ -37,6 +36,9 @@ TESTS = test_part_xy \
 	test_part_yz_b_fortran.sh \
 	test_part_yz_b_generic_c.sh \
 	test_part_yz_b_cuda.sh \
+	test_part_yz_fortran.sh \
+	test_part_yz_generic_c.sh \
+	test_part_yz_cuda.sh \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -48,13 +50,15 @@ if USE_SSE2
 TESTS += \
 	test_part_yz_a_sse2.sh \
 	test_part_yz_b_sse2.sh
+	test_part_yz_sse2.sh
 endif
 
 XFAIL_TESTS = \
 	test_part_yz_cuda_1st \
 	test_part_yz_cuda_1vb \
 	test_part_yz_a_cuda.sh \
-	test_part_yz_b_cuda.sh
+	test_part_yz_b_cuda.sh \
+	test_part_yz_cuda.sh
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx
