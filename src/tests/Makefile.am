@@ -14,6 +14,7 @@ noinst_PROGRAMS = \
 	test_part_yz_1st \
 	test_part_yz_cuda_1st \
 	test_part_yz_cuda_1vb \
+	test_part_yz_a_generic_c \
 	test_part_yz \
 	test_part_xz \
 	test_part_z \
@@ -29,6 +30,7 @@ TESTS = test_part_xy \
 	test_part_yz_1st \
 	test_part_yz_cuda_1st \
 	test_part_yz_cuda_1vb \
+	test_part_yz_a_generic_c \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -45,6 +47,7 @@ EXTRA_test_part_xy_SOURCES = dummy.cxx
 EXTRA_test_part_yz_1st_SOURCES = dummy.cxx
 EXTRA_test_part_yz_cuda_1st_SOURCES = dummy.cxx
 EXTRA_test_part_yz_cuda_1vb_SOURCES = dummy.cxx
+EXTRA_test_part_yz_a_generic_c_SOURCES = dummy.cxx
 EXTRA_test_part_yz_SOURCES = dummy.cxx
 EXTRA_test_part_xz_SOURCES = dummy.cxx
 EXTRA_test_part_z_SOURCES = dummy.cxx
