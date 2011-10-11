@@ -100,8 +100,6 @@ psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j
 
   psc_mfields_put_c(flds, flds_base, 0, 0);
   psc_mfields_put_c(div_j, div_j_base, 0, 1);
-
-  psc_bnd_add_ghosts(psc->bnd, div_j_base, 0, 1);
 }
 
 // ======================================================================
@@ -140,6 +138,7 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
   psc_mfields_axpy(rho_p, -1., rho_m);
   psc_mfields_scale(rho_p, 1. / psc->dt);
 
+  psc_bnd_fill_ghosts(psc->bnd, flds, JXI, JXI + 3);
   psc_calc_div_j(psc, flds, div_j);
 
   //  psc_dump_field(div_j, 0, "div_j");
@@ -165,7 +164,7 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
     mprintf("continuity: max_err = %g (thres %g)\n", max_err, eps);
   }
 
-  //  psc_mfields_base_axpy(rho_p, +1., div_j);
+  //  psc_mfields_axpy(rho_p, +1., div_j);
   //  psc_dump_field(rho_p, 0, "cont_diff");
 
   assert(max_err <= eps);
