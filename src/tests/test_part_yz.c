@@ -90,9 +90,6 @@ main(int argc, char **argv)
   // push_yz_a
 
   run_test(true, "fortran", 0., 0., create_test, "_a");
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 1e-3, 1e-2, create_test, "_a");
-#endif
 #ifdef USE_SSE2
   run_test(false, "sse2", 1e-7, 2e-6, create_test, "_a");
 #endif
