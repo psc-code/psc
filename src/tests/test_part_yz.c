@@ -11,25 +11,7 @@
 #include <string.h>
 #include <mpi.h>
 
-static bool do_dump = false;
 static bool check_currents = true;
-
-static void
-dump(const char *basename, int cnt)
-{
-  if (!do_dump)
-    return;
-
-  char s[200];
-  sprintf(s, "part_%s_%d", basename, cnt);
-  psc_dump_particles(ppsc->particles, s);
-  sprintf(s, "jx_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JXI, s);
-  sprintf(s, "jy_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JYI, s);
-  sprintf(s, "jz_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JZI, s);
-}
 
 static struct psc_case *
 create_test(const char *s_push_particles)
@@ -45,19 +27,19 @@ create_test(const char *s_push_particles)
 }
 
 static void
-run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
-	 struct psc_case *(*create_test)(const char *))
+run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields)
 {
   printf("=== testing push_part_yz() %s %s\n", s_push_particles,
 	 is_ref ? "(ref)" : "");
 
   struct psc_case *_case = create_test(s_push_particles);
-  dump(s_push_particles, 0);
+  psc_testing_dump(ppsc, s_push_particles);
   psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
 
   psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
   psc_sort_run(ppsc->sort, ppsc->particles);
-  dump(s_push_particles, 1);
+  psc_testing_dump(ppsc, s_push_particles);
+
   psc_check_continuity(ppsc, ppsc->particles, ppsc->flds, 1e-14);
   if (is_ref) {
     psc_save_particles_ref(ppsc, ppsc->particles);
@@ -86,15 +68,14 @@ main(int argc, char **argv)
 {
   psc_testing_init(&argc, &argv);
 
-  mrc_params_get_option_bool("dump", &do_dump);
   mrc_params_get_option_bool("check_currents", &check_currents);
 
   mrc_params_get_option_string("type", &s_type);
   mrc_params_get_option_double("eps_particles", &eps_particles);
   mrc_params_get_option_double("eps_particles", &eps_fields);
 
-  run_test(true, "fortran", 0., 0., create_test);
-  run_test(false, s_type, eps_particles, eps_fields, create_test);
+  run_test(true, "fortran", 0., 0.);
+  run_test(false, s_type, eps_particles, eps_fields);
 
   psc_testing_finalize();
 }
