@@ -117,3 +117,15 @@ psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
   }
 }
 
+// ======================================================================
+// psc_test_ops_1
+
+struct psc_ops psc_test_ops_1 = {
+  .name             = "test",
+  .size             = sizeof(struct psc_test),
+  .create           = psc_test_create,
+  .init_field       = psc_test_init_field_linear,
+  .init_npt         = psc_test_init_npt_rest,
+  .step             = psc_test_step,
+};
+

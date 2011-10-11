@@ -23,6 +23,9 @@ void psc_testing_push_particles(struct psc *psc, const char *s_push_particles);
 void psc_testing_save_ref(struct psc *psc);
 void psc_testing_push_particles_check(struct psc *psc, double eps_particles, double eps_fields);
 
+// test with linear E, B, particles at rest
+extern struct psc_ops psc_test_ops_1;
+
 struct psc *psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
 				       char *moments_type);
 struct psc_case *psc_create_test_xy(void);

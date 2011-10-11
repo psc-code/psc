@@ -2,18 +2,6 @@
 #include "psc_testing.h"
 #include "psc_push_particles.h"
 
-// ======================================================================
-// psc_test_ops
-
-struct psc_ops psc_test_ops = {
-  .name             = "test",
-  .size             = sizeof(struct psc_test),
-  .create           = psc_test_create,
-  .init_field       = psc_test_init_field_linear,
-  .init_npt         = psc_test_init_npt_rest,
-  .step             = psc_test_step,
-};
-
 void
 psc_testing_push_yz_a(struct psc *psc, const char *s_push_particles)
 {
@@ -34,7 +22,7 @@ main(int argc, char **argv)
 {
   psc_testing_init(&argc, &argv);
 
-  mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops);
+  mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops_1);
 
   struct psc *psc = psc_testing_create_test_yz("fortran", 0, "c");
   psc_setup(psc);
