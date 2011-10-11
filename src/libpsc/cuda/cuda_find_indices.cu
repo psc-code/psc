@@ -140,20 +140,28 @@ sort_reorder(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float4 *pxi4,
 	     unsigned int *d_cnis, unsigned int *d_ids)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int blocksize = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+
+  if (i > n_part)
+    return;
+
+  int block, prev_block;
   if (i < n_part) {
     xi4[i] = d_part.xi4[d_ids[i]];
     pxi4[i] = d_part.pxi4[d_ids[i]];
     
-    // create offsets per block into particle array
-    int blocksize = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-    int block = d_cnis[i] / blocksize;
-    int prev_block = -1;
-    if (i > 0) {
-      prev_block = d_cnis[i-1] / blocksize;
-    }
-    for (int b = prev_block + 1; b <= block; b++) {
-      d_part.offsets[b] = i;
-    }
+    block = d_cnis[i] / blocksize;
+  } else if (i == n_part) { // needed if there is no particle in the last block
+    block = d_b_mx[0] * d_b_mx[1] * d_b_mx[2];
+  }
+
+  // create offsets per block into particle array
+  prev_block = -1;
+  if (i > 0) {
+    prev_block = d_cnis[i-1] / blocksize;
+  }
+  for (int b = prev_block + 1; b <= block; b++) {
+    d_part.offsets[b] = i;
   }
 }
 
@@ -165,7 +173,7 @@ sort_reorder_device(particles_cuda_t *pp, unsigned int *d_cnis, unsigned int *d_
   check(cudaMalloc((void **) &pxi4, pp->n_part * sizeof(*pxi4)));
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (pp->n_part + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
 	     sort_reorder, (pp->n_part, pp->d_part, xi4, pxi4, d_cnis, d_ids));
 
