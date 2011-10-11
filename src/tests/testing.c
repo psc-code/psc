@@ -66,6 +66,7 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
     particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
+    pp_ref->n_part = pp->n_part;
     for (int i = 0; i < pp->n_part; i++) {
       *particles_get_one(pp_ref, i) = *particles_get_one(pp, i);
     }
@@ -121,7 +122,8 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
     particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
-    
+
+    assert(pp->n_part == pp_ref->n_part);
     for (int i = 0; i < pp->n_part; i++) {
       particle_t *part = particles_get_one(pp, i);
       particle_t *part_ref = particles_get_one(pp_ref, i);
