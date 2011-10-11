@@ -600,6 +600,10 @@ void
 psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 		    int *particle_label_offset)
 {
+  if (psc_ops(psc)->setup_particles) {
+    psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, true);
+    return;
+  }
   if (!psc_ops(psc)->init_npt) {
     psc_foreach_patch(psc, p) {
       nr_particles_by_patch[p] = 0;
@@ -644,6 +648,10 @@ void
 psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 		    int particle_label_offset)
 {
+  if (psc_ops(psc)->setup_particles) {
+    psc_ops(psc)->setup_particles(psc, nr_particles_by_patch, false);
+    return;
+  }
   if (!psc_ops(psc)->init_npt)
     return;
 

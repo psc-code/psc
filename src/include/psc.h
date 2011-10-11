@@ -258,6 +258,7 @@ struct psc_photon_np {
 
 struct psc_ops {
   MRC_SUBCLASS_OPS(struct psc);
+  void (*setup_particles)(struct psc *psc, int *nr_particles_by_patch, bool count_only);
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
   void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
