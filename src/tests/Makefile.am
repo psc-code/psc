@@ -40,6 +40,11 @@ TESTS = test_part_xy \
 	test_exchange_particles \
 	test_sort.sh
 
+if USE_SSE2
+TESTS += \
+	test_part_yz_a_sse2.sh
+endif
+
 XFAIL_TESTS = \
 	test_part_yz_cuda_1st \
 	test_part_yz_cuda_1vb \
