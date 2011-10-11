@@ -77,6 +77,7 @@ void mrc_params_insert_option(const char *name, const char *val);
 int  mrc_params_get_option_string(const char *name, const char **pval);
 int  mrc_params_get_option_int(const char *name, int *pval);
 int  mrc_params_get_option_float(const char *name, float *pval);
+int  mrc_params_get_option_double(const char *name, double *pval);
 int  mrc_params_get_option_bool(const char *name, bool *pval);
 
 // sets defaults from the descriptions
