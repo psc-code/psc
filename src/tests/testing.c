@@ -228,7 +228,7 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
       fields_t *pf = psc_mfields_get_patch(flds, p);
       fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
       fields_t *pf_diff = psc_mfields_get_patch(diff, p);
-      psc_foreach_3d_g(psc, p, ix, iy, iz) {
+      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
 	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
@@ -462,6 +462,7 @@ psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
+  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
 
   psc_testing_dump(psc, s_push_particles);
 }
