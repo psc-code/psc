@@ -115,6 +115,22 @@ mrc_params_get_option_float(const char *name, float *pval)
   return 0;
 }
 
+int
+mrc_params_get_option_double(const char *name, double *pval)
+{
+  struct option *p = find_option(name);
+  
+  if (!p)
+    return -1;
+
+  int rv = sscanf(p->value, "%lg", pval);
+  if (rv != 1) {
+    fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
+    abort();
+  }
+  return 0;
+}
+
 static void
 get_option_double(const char *name, double *pval)
 {
