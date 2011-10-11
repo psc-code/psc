@@ -3,6 +3,8 @@
 #include "psc_moments.h"
 #include "psc_bnd.h"
 
+bool opt_checks_verbose = false;
+
 typedef double creal;
 
 static inline creal
@@ -159,7 +161,9 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
       }
     } psc_foreach_3d_end;
   }
-  printf("continuity: max_err = %g (thres %g)\n", max_err, eps);
+  if (opt_checks_verbose) {
+    mprintf("continuity: max_err = %g (thres %g)\n", max_err, eps);
+  }
 
   //  psc_mfields_base_axpy(rho_p, +1., div_j);
   //  psc_dump_field(rho_p, 0, "cont_diff");

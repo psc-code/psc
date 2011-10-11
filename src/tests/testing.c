@@ -16,7 +16,6 @@
 #include <limits.h>
 #include <stdlib.h>
 
-bool opt_testing_verbose = false;
 bool opt_testing_dump = false;
 bool opt_testing_check_currents = true;
 bool opt_testing_check_particles = true;
@@ -141,11 +140,12 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
       assert_equal(part->pzi, part_ref->pzi, thres);
     }
   }
-  printf("max delta: (%s)\n", test_str);
-  printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
-	 xi, yi, zi, pxi, pyi, pzi);
-
   psc_mparticles_put_cf(particles, particles_base); // FIXME, no copy-back needed
+  if (opt_checks_verbose) {
+    mprintf("max delta: (%s)\n", test_str);
+    mprintf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
+	    xi, yi, zi, pxi, pyi, pzi);
+  }
 }
 
 
@@ -215,10 +215,12 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
 	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
     }
-    printf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+    if (opt_checks_verbose || max_delta > thres) {
+      mprintf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+    }
     if (max_delta > thres) {
       //      psc_dump_field(diff, 0, "diff");
-      abort();
+      assert(0);
     }
   }
   psc_mfields_destroy(diff);
@@ -391,7 +393,9 @@ psc_testing_dump(struct psc *psc, const char *basename)
 void
 psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
 {
-  printf("=== testing push_part() %s\n", s_push_particles);
+  if (opt_checks_verbose) {
+    mprintf("=== testing push_part() %s\n", s_push_particles);
+  }
 
   psc_randomize_run(psc->randomize, psc->particles);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
@@ -433,7 +437,7 @@ psc_testing_init(int *argc, char ***argv)
   MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
 
-  mrc_params_get_option_bool("verbose", &opt_testing_verbose);
+  mrc_params_get_option_bool("verbose", &opt_checks_verbose);
   mrc_params_get_option_bool("dump", &opt_testing_dump);
   mrc_params_get_option_bool("check_currents", &opt_testing_check_currents);
   mrc_params_get_option_bool("check_particles", &opt_testing_check_particles);
@@ -443,7 +447,7 @@ psc_testing_init(int *argc, char ***argv)
 void
 psc_testing_finalize()
 {
-  if (opt_testing_verbose) {
+  if (opt_checks_verbose) {
     prof_print();
   }
 

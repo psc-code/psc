@@ -381,6 +381,9 @@ void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
+
+extern bool opt_checks_verbose;
+
 void psc_check_particles(mparticles_base_t *particles);
 void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 			  mfields_base_t *flds, double eps);
