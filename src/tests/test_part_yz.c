@@ -46,32 +46,25 @@ create_test(const char *s_push_particles)
 
 static void
 run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
-	 struct psc_case *(*create_test)(const char *), const char *push)
+	 struct psc_case *(*create_test)(const char *))
 {
-  printf("=== testing push_part_yz%s() %s %s\n", push, s_push_particles,
+  printf("=== testing push_part_yz() %s %s\n", s_push_particles,
 	 is_ref ? "(ref)" : "");
 
   struct psc_case *_case = create_test(s_push_particles);
   dump(s_push_particles, 0);
-  if (strlen(push) == 0) {
-    psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
-  } else if (strcmp(push, "_a") == 0) {
-    psc_push_particles_push_yz_a(ppsc->push_particles, ppsc->particles, ppsc->flds);
-  } else if (strcmp(push, "_b") == 0) {
-    psc_push_particles_push_yz_b(ppsc->push_particles, ppsc->particles, ppsc->flds);
-  }
+  psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
+
   psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
   psc_sort_run(ppsc->sort, ppsc->particles);
   dump(s_push_particles, 1);
-  if (strlen(push) == 0) { // only check continuity for full pusher
-    psc_check_continuity(ppsc, ppsc->particles, ppsc->flds, 1e-14);
-  }
+  psc_check_continuity(ppsc, ppsc->particles, ppsc->flds, 1e-14);
   if (is_ref) {
     psc_save_particles_ref(ppsc, ppsc->particles);
     psc_save_fields_ref(ppsc, ppsc->flds);
   } else {
     psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_yz()");
-    if (check_currents && strlen(push) == 0) { // only check currents for full pusher
+    if (check_currents) { // only check currents for full pusher
       psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
     }
   }
@@ -87,27 +80,15 @@ main(int argc, char **argv)
   mrc_params_get_option_bool("check_currents", &check_currents);
 
   // ----------------------------------------------------------------------
-  // push_yz_b
-
-  run_test(true, "fortran", 0., 0., create_test, "_b");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_b");
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-2, create_test, "_b");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_b");
-#endif
-
-  // ----------------------------------------------------------------------
   // push_yz
 
-  run_test(true, "fortran", 0., 0., create_test, "");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
+  run_test(true, "fortran", 0., 0., create_test);
+  run_test(false, "generic_c", 1e-7, 1e-7, create_test);
 #ifdef xUSE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-3, create_test, "");
+  run_test(false, "cuda", 2e-3, 1e-3, create_test);
 #endif
 #ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "");
+  run_test(false, "sse2", 1e-7, 2e-6, create_test);
 #endif
 
   psc_testing_finalize();
