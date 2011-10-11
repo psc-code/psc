@@ -11,9 +11,6 @@ LDADD = libpsctest.la ../libpsc/libpsc.la ../libmrc/src/libmrc.la
 
 noinst_PROGRAMS = \
 	test_part_xy \
-	test_part_yz_1st \
-	test_part_yz_cuda_1st \
-	test_part_yz_cuda_1vb \
 	test_part_yz_a \
 	test_part_yz_b \
 	test_part_yz \
@@ -27,13 +24,13 @@ noinst_PROGRAMS = \
 	test_sort
 
 TESTS = test_part_xy \
-	test_part_yz_1st \
 	test_part_yz_a_fortran.sh \
 	test_part_yz_a_generic_c.sh \
 	test_part_yz_b_fortran.sh \
 	test_part_yz_b_generic_c.sh \
 	test_part_yz_fortran.sh \
 	test_part_yz_generic_c.sh \
+	test_part_yz_1st.sh \
 	test_part_xz \
 	test_part_z \
 	test_field \
@@ -43,11 +40,11 @@ TESTS = test_part_xy \
 
 if USE_CUDA
 TESTS += \
-	test_part_yz_cuda_1st \
-	test_part_yz_cuda_1vb \
 	test_part_yz_a_cuda.sh \
 	test_part_yz_b_cuda.sh \
-	test_part_yz_cuda.sh
+	test_part_yz_cuda.sh \
+	test_part_yz_cuda_1st.sh \
+	test_part_yz_cuda_1vb.sh
 endif
 
 if USE_SSE2
@@ -58,17 +55,14 @@ TESTS += \
 endif
 
 XFAIL_TESTS = \
-	test_part_yz_cuda_1st \
-	test_part_yz_cuda_1vb \
 	test_part_yz_a_cuda.sh \
 	test_part_yz_b_cuda.sh \
-	test_part_yz_cuda.sh
+	test_part_yz_cuda.sh \
+	test_part_yz_cuda_1st.sh \
+	test_part_yz_cuda_1vb.sh
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx
-EXTRA_test_part_yz_1st_SOURCES = dummy.cxx
-EXTRA_test_part_yz_cuda_1st_SOURCES = dummy.cxx
-EXTRA_test_part_yz_cuda_1vb_SOURCES = dummy.cxx
 EXTRA_test_part_yz_a_SOURCES = dummy.cxx
 EXTRA_test_part_yz_b_SOURCES = dummy.cxx
 EXTRA_test_part_yz_SOURCES = dummy.cxx

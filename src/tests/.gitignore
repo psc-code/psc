@@ -6,10 +6,6 @@ test_field
 test_part_xy
 test_part_xz
 test_part_yz
-test_part_yz_1
-test_part_yz_1st
-test_part_yz_cuda_1st
-test_part_yz_cuda_1vb
 test_part_yz_a
 test_part_yz_b
 test_part_z
