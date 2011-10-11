@@ -1,28 +1,6 @@
 
 #include "psc_testing.h"
-#include "psc_push_particles.h"
-#include "psc_sort.h"
-#include "psc_bnd.h"
-#include "psc_moments.h"
-#include <mrc_profile.h>
 #include <mrc_params.h>
-
-#include <stdio.h>
-#include <string.h>
-#include <mpi.h>
-
-static struct psc_case *
-create_test(const char *s_push_particles)
-{
-  struct psc_case *_case = psc_create_test_yz();
-  psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 }); // FIXME
-  psc_case_setup(_case);
-  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
-  psc_sort_run(ppsc->sort, ppsc->particles);
-  return _case;
-}
 
 // ----------------------------------------------------------------------
 // check push_particles_push_yz against "fortran" ref
@@ -41,17 +19,21 @@ main(int argc, char **argv)
 
   mrc_params_get_option_string("type", &s_type);
   mrc_params_get_option_double("eps_particles", &eps_particles);
-  mrc_params_get_option_double("eps_particles", &eps_fields);
+  mrc_params_get_option_double("eps_fields", &eps_fields);
 
-  struct psc_case *_case = create_test("fortran");
-  psc_testing_push_particles(ppsc, "fortran");
-  psc_testing_save_ref(ppsc);
-  psc_case_destroy(_case);
+  mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops_1);
 
-  _case = create_test(s_type);
-  psc_testing_push_particles(ppsc, s_type);
-  psc_testing_push_particles_check(ppsc, eps_particles, eps_fields);
-  psc_case_destroy(_case);
+  struct psc *psc = psc_testing_create_test_yz("fortran", 0, "c");
+  psc_setup(psc);
+  psc_testing_push_particles(psc, "fortran");
+  psc_testing_save_ref(psc);
+  psc_destroy(psc);
+
+  psc = psc_testing_create_test_yz(s_type, 0, "c");
+  psc_setup(psc);
+  psc_testing_push_particles(psc, s_type);
+  psc_testing_push_particles_check(psc, eps_particles, eps_fields);
+  psc_destroy(psc);
 
   psc_testing_finalize();
 }
