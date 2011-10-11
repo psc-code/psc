@@ -28,23 +28,27 @@ noinst_PROGRAMS = \
 
 TESTS = test_part_xy \
 	test_part_yz_1st \
-	test_part_yz_cuda_1st \
-	test_part_yz_cuda_1vb \
 	test_part_yz_a_fortran.sh \
 	test_part_yz_a_generic_c.sh \
-	test_part_yz_a_cuda.sh \
 	test_part_yz_b_fortran.sh \
 	test_part_yz_b_generic_c.sh \
-	test_part_yz_b_cuda.sh \
 	test_part_yz_fortran.sh \
 	test_part_yz_generic_c.sh \
-	test_part_yz_cuda.sh \
 	test_part_xz \
 	test_part_z \
 	test_field \
 	test_bnd \
 	test_exchange_particles \
 	test_sort.sh
+
+if USE_CUDA
+TESTS += \
+	test_part_yz_cuda_1st \
+	test_part_yz_cuda_1vb \
+	test_part_yz_a_cuda.sh \
+	test_part_yz_b_cuda.sh \
+	test_part_yz_cuda.sh
+endif
 
 if USE_SSE2
 TESTS += \
