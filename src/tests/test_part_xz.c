@@ -10,8 +10,7 @@
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   struct psc_case *_case = psc_create_test_xz();
   psc_push_particles_set_type(ppsc->push_particles, "fortran");
@@ -66,7 +65,5 @@ main(int argc, char **argv)
   psc_destroy();
 #endif
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

@@ -95,8 +95,7 @@ check_jx(mfields_base_t *flds_base)
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   // test psc_fill_ghosts()
 
@@ -109,7 +108,5 @@ main(int argc, char **argv)
   check_jx(flds);
   psc_case_destroy(_case);
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

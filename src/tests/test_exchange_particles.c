@@ -152,8 +152,7 @@ get_total_num_particles(mparticles_base_t *particles_base)
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   // test psc_exchange_particles()
 
@@ -187,7 +186,5 @@ main(int argc, char **argv)
   assert(total_num_particles_before == total_num_particles_after);
   psc_case_destroy(_case);
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

@@ -50,8 +50,7 @@ setup_jx_noghost(mfields_base_t *flds_base)
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   // test psc_add_ghosts()
 
@@ -117,7 +116,5 @@ main(int argc, char **argv)
   psc_case_destroy(_case);
 #endif
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }
