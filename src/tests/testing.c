@@ -298,6 +298,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
     if (opt_checks_verbose) {
       mprintf("densities: m = %d max_err = %g (thres %g)\n", m, max_err, eps);
     }
+    assert(max_err <= eps);
   }
 }
 
