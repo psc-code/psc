@@ -27,7 +27,7 @@ void psc_testing_push_particles_check(struct psc *psc, double eps_particles, dou
 extern struct psc_ops psc_test_ops_1;
 
 struct psc *psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
-				       char *moments_type);
+				       const char *moments_type);
 struct psc_case *psc_create_test_xy(void);
 struct psc_case *psc_create_test_xz(void);
 struct psc_case *psc_create_test_yz(void);
@@ -50,6 +50,6 @@ void psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
 // psc_testing_{init,finalize}
 
 void psc_testing_init(int *argc, char ***argv);
-void psc_testing_finalize();
+void psc_testing_finalize(void);
 
 #endif

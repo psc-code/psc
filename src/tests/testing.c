@@ -356,7 +356,7 @@ psc_create_test_z(void)
 
 struct psc *
 psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
-			   char *moments_type)
+			   const char *moments_type)
 {
   struct psc *psc = psc_create(MPI_COMM_WORLD);
   psc->domain.gdims[0] = 1; // make yz
