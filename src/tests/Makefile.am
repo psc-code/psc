@@ -58,8 +58,7 @@ XFAIL_TESTS = \
 	test_part_yz_a_cuda.sh \
 	test_part_yz_b_cuda.sh \
 	test_part_yz_cuda.sh \
-	test_part_yz_cuda_1st.sh \
-	test_part_yz_cuda_1vb.sh
+	test_part_yz_cuda_1st.sh
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_part_xy_SOURCES = dummy.cxx

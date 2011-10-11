@@ -466,7 +466,7 @@ psc_testing_push_particles_check(struct psc *psc, double eps_particles, double e
     psc_testing_check_densities_ref(psc, psc->particles, eps_particles);
   }
   if (opt_testing_check_currents) {
-    psc_check_currents_ref(psc, psc->flds, eps_fields, 3);
+    psc_check_currents_ref(psc, psc->flds, eps_fields, 0);
   }
 }
 
