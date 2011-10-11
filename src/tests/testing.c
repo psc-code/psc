@@ -198,7 +198,7 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, do
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
+psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres, int sw)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
 
@@ -228,7 +228,7 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
       fields_t *pf = psc_mfields_get_patch(flds, p);
       fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
       fields_t *pf_diff = psc_mfields_get_patch(diff, p);
-      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+      psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
 	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
@@ -243,25 +243,6 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
     }
   }
   psc_mfields_destroy(diff);
-
-  psc_mfields_put_cf(flds, flds_base, 0, 0);
-}
-
-void
-psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, double thres)
-{
-  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
-
-  psc_foreach_patch(psc, p) {
-    fields_t *pf = psc_mfields_get_patch(flds, p);
-    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
-    for (int m = JXI; m <= JZI; m++){
-      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
-	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
-      } psc_foreach_3d_end;
-    }
-  }
 
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
@@ -485,7 +466,7 @@ psc_testing_push_particles_check(struct psc *psc, double eps_particles, double e
     psc_testing_check_densities_ref(psc, psc->particles, eps_particles);
   }
   if (opt_testing_check_currents) {
-    psc_check_currents_ref(psc, psc->flds, eps_fields);
+    psc_check_currents_ref(psc, psc->flds, eps_fields, 3);
   }
 }
 

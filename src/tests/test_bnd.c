@@ -70,7 +70,7 @@ main(int argc, char **argv)
   setup_jx(ppsc->flds);
   psc_bnd_add_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref_noghost(ppsc, ppsc->flds, 1e-10);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10, 0);
   psc_case_destroy(_case);
 
 #ifdef USE_CUDA
@@ -80,7 +80,7 @@ main(int argc, char **argv)
   setup_jx(ppsc->flds);
   psc_bnd_add_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref_noghost(ppsc, ppsc->flds, 1e-7);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7, 0);
   psc_case_destroy(_case);
 #endif
 
@@ -102,7 +102,7 @@ main(int argc, char **argv)
   setup_jx_noghost(ppsc->flds);
   psc_bnd_fill_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(ppsc->flds, JXI, "jx2");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10, 3);
   psc_case_destroy(_case);
 
 #ifdef USE_CUDA
@@ -112,7 +112,7 @@ main(int argc, char **argv)
   setup_jx_noghost(ppsc->flds);
   psc_bnd_fill_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(ppsc->flds, JXI, "jx2");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7, 3);
   psc_case_destroy(_case);
 #endif
 

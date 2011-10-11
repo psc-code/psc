@@ -156,7 +156,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_save_fields_ref(ppsc, ppsc->flds);
   } else {
     psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_z()");
-    psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
+    psc_check_currents_ref(ppsc, ppsc->flds, eps_fields, 3);
   }
   psc_case_destroy(_case);
 }
