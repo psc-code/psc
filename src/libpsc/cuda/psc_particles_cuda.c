@@ -3,9 +3,6 @@
 #include "psc_cuda.h"
 #include "psc_particles_cuda.h"
 
-// FIXME -> header
-void cuda_sort_patch(int p, particles_cuda_t *pp);
-
 static void
 particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part,
 		     bool need_block_offsets, bool need_cell_offsets)
@@ -175,7 +172,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
     }
 
     int *c_offsets = NULL;
-    if (flags & MP_NEED_CELL_OFFSETS) {
+    if (0 && (flags & MP_NEED_CELL_OFFSETS)) {
       const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
       c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
 			      sizeof(*c_offsets));
@@ -202,6 +199,13 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 
     if (flags & MP_NEED_BLOCK_OFFSETS) {
       cuda_sort_patch(p, pp);
+    }
+    if (flags & MP_NEED_CELL_OFFSETS) {
+      cuda_sort_patch_by_cell(p, pp);
+    }
+    // FIXME, sorting twice because we need both would be suboptimal
+    if ((flags & MP_NEED_CELL_OFFSETS) && (flags & MP_NEED_BLOCK_OFFSETS)) {
+      MHERE;
     }
 
     free(offsets);
