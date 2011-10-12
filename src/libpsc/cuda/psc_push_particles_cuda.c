@@ -188,18 +188,15 @@ cuda_push_partq(mparticles_base_t *particles_base,
   }
 
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  if (need_cell_offsets) {
-    psc_mparticles_put_cuda(particles, particles_base);
-    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-    psc_sort_run(ppsc->sort, particles_base);
-    particles = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
-					(need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
-  } else {
-    psc_mparticles_put_cuda(particles, particles_base);
-    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-    // block offsets will be calculated by sort_patch, anyway
-    particles = psc_mparticles_get_cuda(particles_base, 0);
-    psc_foreach_patch(ppsc, p) {
+  psc_mparticles_put_cuda(particles, particles_base);
+  psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+  // block/cell offsets will be calculated by sort_patch, anyway
+  particles = psc_mparticles_get_cuda(particles_base, 0);
+  // FIXME, fully integrate into get_patch_cuda
+  psc_foreach_patch(ppsc, p) {
+    if (need_cell_offsets) {
+      cuda_sort_patch_by_cell(p, psc_mparticles_get_patch_cuda(particles, p));
+    } else {
       cuda_sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
     }
   }
