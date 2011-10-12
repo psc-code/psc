@@ -46,15 +46,6 @@ psc_test_create(struct psc *psc)
   psc->domain.bnd_part[0] = BND_PART_PERIODIC;
   psc->domain.bnd_part[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part[2] = BND_PART_PERIODIC;
-
-  psc_sort_set_type(psc->sort, "countsort2");
-#ifdef USE_CUDA // FIXME
-#if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
-  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 });
-#else
-#error TBD
-#endif
-#endif
 }
 
 // ----------------------------------------------------------------------

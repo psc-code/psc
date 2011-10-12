@@ -75,15 +75,6 @@ psc_bubble_create(struct psc *psc)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
-
-  psc_sort_set_type(psc->sort, "countsort2");
-#ifdef USE_CUDA // FIXME
-#if BLOCKSIZE_X == 1 && BLOCKSIZE_Y == 4 && BLOCKSIZE_Z == 4
-  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 });
-#else
-#error TBD
-#endif
-#endif
 }
 
 // ----------------------------------------------------------------------
