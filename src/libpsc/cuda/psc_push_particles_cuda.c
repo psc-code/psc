@@ -150,14 +150,15 @@ cuda_push_part(mparticles_base_t *particles_base,
 }
 
 static void
-cuda_push_partq(mparticles_base_t *particles_base,
+cuda_push_partq(struct psc_push_particles *push,
+		mparticles_base_t *particles_base,
 		mfields_base_t *flds_base,
 		void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
 		void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
-		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
-		unsigned int mp_flags)
+		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int))
 {
   const int block_stride = 4;
+  unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
   
   // FIXME distinguish alloc/calc_block_offsets?
   mparticles_cuda_t *particles = 
@@ -325,11 +326,10 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz5_set_constants,
 		  yz5_cuda_push_part_p2,
-		  yz5_cuda_push_part_p3,
-		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+		  yz5_cuda_push_part_p3);
 }
 
 static void __unused
@@ -337,11 +337,10 @@ psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz6_set_constants,
 		  yz6_cuda_push_part_p2,
-		  yz6_cuda_push_part_p3,
-		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+		  yz6_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -353,6 +352,7 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .push_yz               = psc_push_particles_cuda_push_yz6,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
 };
 
 // ======================================================================
@@ -362,11 +362,10 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz_1st_set_constants,
 		  yz_1st_cuda_push_part_p2,
-		  yz_1st_cuda_push_part_p3,
-		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+		  yz_1st_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -375,6 +374,7 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
   .name                  = "cuda_1st",
   .push_yz               = psc_push_particles_cuda_1st_push_yz,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
 };
 
 // ======================================================================
@@ -384,11 +384,10 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz_1vb_set_constants,
 		  yz_1vb_cuda_push_part_p2,
-		  yz_1vb_cuda_push_part_p3,
-		  MP_NEED_BLOCK_OFFSETS);
+		  yz_1vb_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -397,4 +396,5 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
   .name                  = "cuda_1vb",
   .push_yz               = psc_push_particles_cuda_1vb_push_yz,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS,
 };
