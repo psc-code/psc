@@ -155,15 +155,13 @@ cuda_push_partq(mparticles_base_t *particles_base,
 		void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
 		void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
 		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
-		bool need_block_offsets, bool need_cell_offsets)
+		unsigned int mp_flags)
 {
   const int block_stride = 4;
   
   // FIXME distinguish alloc/calc_block_offsets?
   mparticles_cuda_t *particles = 
-    psc_mparticles_get_cuda(particles_base,
-			    (need_block_offsets ? MP_NEED_BLOCK_OFFSETS : 0) |
-			    (need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
+    psc_mparticles_get_cuda(particles_base, mp_flags);
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr, pr2, pr3;
@@ -195,7 +193,7 @@ cuda_push_partq(mparticles_base_t *particles_base,
   // block/cell offsets will be calculated by sort_patch, anyway
   particles = psc_mparticles_get_cuda(particles_base, 0);
   psc_foreach_patch(ppsc, p) {
-    if (need_cell_offsets) {
+    if (mp_flags & MP_NEED_CELL_OFFSETS) {
       cuda_sort_patch_by_cell(p, psc_mparticles_get_patch_cuda(particles, p));
     } else {
       cuda_sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
@@ -331,7 +329,7 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 		  yz5_set_constants,
 		  yz5_cuda_push_part_p2,
 		  yz5_cuda_push_part_p3,
-		  true, true);
+		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 static void __unused
@@ -343,7 +341,7 @@ psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
 		  yz6_set_constants,
 		  yz6_cuda_push_part_p2,
 		  yz6_cuda_push_part_p3,
-		  true, true);
+		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 // ======================================================================
@@ -368,7 +366,7 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 		  yz_1st_set_constants,
 		  yz_1st_cuda_push_part_p2,
 		  yz_1st_cuda_push_part_p3,
-		  true, true);
+		  MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
 }
 
 // ======================================================================
@@ -381,7 +379,7 @@ struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
 
 // ======================================================================
 
-static void __unused
+static void
 psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
@@ -390,7 +388,7 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 		  yz_1vb_set_constants,
 		  yz_1vb_cuda_push_part_p2,
 		  yz_1vb_cuda_push_part_p3,
-		  true, false);
+		  MP_NEED_BLOCK_OFFSETS);
 }
 
 // ======================================================================
