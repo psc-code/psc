@@ -57,6 +57,15 @@ psc_push_particles_get_mp_flags(struct psc_push_particles *push)
   return ops->mp_flags;
 }
 
+void
+psc_push_particles_get_blocksize(struct psc_push_particles *push, int blocksize[3])
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+  for (int d = 0; d < 3; d++) {
+    blocksize[d] = ops->blocksize[d];
+  }
+}
+
 // ======================================================================
 // psc_push_particles_init
 

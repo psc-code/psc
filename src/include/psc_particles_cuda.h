@@ -24,6 +24,7 @@ typedef struct {
   int b_mx[3];                 // number of blocks by direction
   int n_part;
   int n_alloced;
+  unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
 } particles_cuda_t;
 
 EXTERN_C void particles_cuda_get(particles_cuda_t *pp);

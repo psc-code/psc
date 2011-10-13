@@ -2,23 +2,27 @@
 #include "psc.h"
 #include "psc_cuda.h"
 #include "psc_particles_cuda.h"
+#include "psc_push_particles.h"
 
 static void
-particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part,
-		     bool need_block_offsets, bool need_cell_offsets)
+particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
   pp->n_part = n_part;
-  int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int bs[3];
+  psc_push_particles_get_blocksize(ppsc->push_particles, bs); 
+  pp->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   for (int d = 0; d < 3; d++) {
+    assert(bs[d] != 0);
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
     pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-  __particles_cuda_alloc(pp, need_block_offsets, need_cell_offsets);
+  __particles_cuda_alloc(pp, pp->flags & MP_NEED_BLOCK_OFFSETS,
+			 pp->flags & MP_NEED_CELL_OFFSETS);
   pp->n_alloced = n_part;
 }
 
@@ -89,6 +93,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
+    flags = pp->flags; // FIXME
     pp->n_part = pp_cf->n_part;
     assert(pp->n_part <= pp->n_alloced);
 
@@ -280,8 +285,7 @@ _psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
-			 nr_particles_by_patch[p],
-			 true, true); // FIXME, don't hardcode
+			 nr_particles_by_patch[p]);
   }
 }
 

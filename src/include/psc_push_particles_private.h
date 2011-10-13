@@ -31,6 +31,7 @@ struct psc_push_particles_ops {
 		    mparticles_base_t *particles, mfields_base_t *flds);
 
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
+  int blocksize[3];
 };
 
 // ======================================================================
