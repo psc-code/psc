@@ -12,4 +12,3 @@ void psc_push_particles_push_yz_a(struct psc_push_particles *push,
 void psc_push_particles_push_yz_b(struct psc_push_particles *push,
 				  mparticles_base_t *particles, mfields_base_t *flds);
 unsigned int psc_push_particles_get_mp_flags(struct psc_push_particles *push);
-void psc_push_particles_get_blocksize(struct psc_push_particles *push, int blocksize[3]);

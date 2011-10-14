@@ -10,11 +10,15 @@ particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part)
   struct psc_patch *patch = &ppsc->patch[p];
 
   pp->n_part = n_part;
-  int bs[3];
-  psc_push_particles_get_blocksize(ppsc->push_particles, bs); 
   pp->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
+  int bs[3];
   for (int d = 0; d < 3; d++) {
-    assert(bs[d] != 0);
+    switch (pp->flags & MP_BLOCKSIZE_MASK) {
+    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
+    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
+    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
+    default: assert(0);
+    }
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }

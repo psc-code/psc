@@ -33,8 +33,12 @@ struct psc_mparticles_ops {
 };
 
 #define MP_DONT_COPY (0x1)
-#define MP_NEED_BLOCK_OFFSETS (0x100)
-#define MP_NEED_CELL_OFFSETS (0x200)
+#define MP_NEED_BLOCK_OFFSETS (0x0100)
+#define MP_NEED_CELL_OFFSETS  (0x0200)
+#define MP_BLOCKSIZE_MASK     (0x3000)
+#define MP_BLOCKSIZE_1X1X1    (0x1000)
+#define MP_BLOCKSIZE_2X2X2    (0x2000)
+#define MP_BLOCKSIZE_4X4X4    (0x3000)
 
 typedef struct psc_mparticles mparticles_c_t;
 typedef struct psc_mparticles mparticles_fortran_t;

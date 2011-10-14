@@ -374,8 +374,8 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
   .name                  = "cuda_1st",
   .push_yz               = psc_push_particles_cuda_1st_push_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
-  .blocksize             = { 4, 4, 4 },
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS |
+                           MP_BLOCKSIZE_4X4X4,
 };
 
 // ======================================================================
@@ -397,6 +397,5 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
   .name                  = "cuda_1vb",
   .push_yz               = psc_push_particles_cuda_1vb_push_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS,
-  .blocksize             = { 4, 4, 4 },
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4,
 };
