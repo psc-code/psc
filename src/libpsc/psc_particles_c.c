@@ -35,20 +35,20 @@ particles_c_free(particles_c_t *pp)
 // psc_mparticles_c
 
 static void
-_psc_mparticles_c_set_domain_nr_particles(mparticles_c_t *mparticles,
-					  struct mrc_domain *domain,
-					  int *nr_particles_by_patch)
+_psc_mparticles_c_setup(mparticles_c_t *mparticles)
 {
-  mparticles->domain = domain;
-  mrc_domain_get_patches(domain, &mparticles->nr_patches);
+  assert(mparticles->nr_particles_by_patch);
 
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_c_alloc(psc_mparticles_get_patch_c(mparticles, p),
-		      nr_particles_by_patch[p]);
+		      mparticles->nr_particles_by_patch[p]);
   }
-}
 
+  free(mparticles->nr_particles_by_patch);
+  mparticles->nr_particles_by_patch = NULL;
+}
+									
 static int
 _psc_mparticles_c_nr_particles_by_patch(mparticles_c_t *mparticles, int p)
 {
@@ -179,12 +179,12 @@ _psc_mparticles_c_copy_from_cuda(mparticles_c_t *particles_c,
   
 struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
+  .setup                   = _psc_mparticles_c_setup,
   .destroy                 = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .write                   = _psc_mparticles_c_write,
   .read                    = _psc_mparticles_c_read,
 #endif
-  .set_domain_nr_particles = _psc_mparticles_c_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
   .copy_to_fortran         = _psc_mparticles_c_copy_to_fortran,
   .copy_from_fortran       = _psc_mparticles_c_copy_from_fortran,

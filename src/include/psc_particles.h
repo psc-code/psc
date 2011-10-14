@@ -10,15 +10,13 @@ struct psc_mparticles {
   void *data;
   int nr_patches;
   struct mrc_domain *domain;
+  int *nr_particles_by_patch;
 };
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
-  void (*set_domain_nr_particles)(struct psc_mparticles *mparticles,
-				  struct mrc_domain *domain,
-				  int *nr_particles_by_patch);
   int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
   void (*copy_to_c)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
 		    unsigned int flags);

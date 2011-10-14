@@ -72,9 +72,13 @@ psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 				       struct mrc_domain *domain,
 				       int *nr_particles_by_patch)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
-  assert(ops && ops->set_domain_nr_particles);
-  return ops->set_domain_nr_particles(mparticles, domain, nr_particles_by_patch);
+  mparticles->domain = domain;
+  mrc_domain_get_patches(domain, &mparticles->nr_patches);
+  int *np = malloc(mparticles->nr_patches * sizeof(*np));
+  for (int p = 0; p < mparticles->nr_patches; p++) {
+    np[p] = nr_particles_by_patch[p];
+  }
+  mparticles->nr_particles_by_patch = np;
 }
 
 int

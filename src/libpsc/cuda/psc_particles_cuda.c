@@ -265,18 +265,18 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
 // psc_mparticles_cuda
 
 static void
-_psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
-					     struct mrc_domain *domain,
-					     int *nr_particles_by_patch)
+_psc_mparticles_cuda_setup(mparticles_cuda_t *mparticles)
 {
-  mparticles->domain = domain;
-  mrc_domain_get_patches(domain, &mparticles->nr_patches);
+  assert(mparticles->nr_particles_by_patch);
 
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
-			 nr_particles_by_patch[p]);
+			 mparticles->nr_particles_by_patch[p]);
   }
+
+  free(mparticles->nr_particles_by_patch);
+  mparticles->nr_particles_by_patch = NULL;
 }
 
 static int
@@ -299,8 +299,8 @@ _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
   
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
+  .setup                   = _psc_mparticles_cuda_setup,
   .destroy                 = _psc_mparticles_cuda_destroy,
-  .set_domain_nr_particles = _psc_mparticles_cuda_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .copy_to_c               = _psc_mparticles_cuda_copy_to_c,
   .copy_from_c             = _psc_mparticles_cuda_copy_from_c,

@@ -82,19 +82,18 @@ _psc_mparticles_fortran_copy_from_c(struct psc_mparticles *particles_base,
 }
 
 static void
-_psc_mparticles_fortran_set_domain_nr_particles(mparticles_fortran_t *mparticles,
-						struct mrc_domain *domain,
-						int *nr_particles_by_patch)
+_psc_mparticles_fortran_setup(mparticles_fortran_t *mparticles)
 {
-  mparticles->domain = domain;
-  mrc_domain_get_patches(domain, &mparticles->nr_patches);
+  assert(mparticles->nr_particles_by_patch);
 
-  mparticles->data = calloc(mparticles->nr_patches,
-			    sizeof(*mparticles->data));
+  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_fortran_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_fortran_alloc(psc_mparticles_get_patch_fortran(mparticles, p),
-			    nr_particles_by_patch[p]);
+			    mparticles->nr_particles_by_patch[p]);
   }
+
+  free(mparticles->nr_particles_by_patch);
+  mparticles->nr_particles_by_patch = NULL;
 }
 									
 static void
@@ -117,8 +116,8 @@ _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, 
   
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
+  .setup                   = _psc_mparticles_fortran_setup,
   .destroy                 = _psc_mparticles_fortran_destroy,
-  .set_domain_nr_particles = _psc_mparticles_fortran_set_domain_nr_particles,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
   .copy_to_c               = _psc_mparticles_fortran_copy_to_c,
   .copy_from_c             = _psc_mparticles_fortran_copy_from_c,
