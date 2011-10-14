@@ -5,15 +5,15 @@
 #include "psc_push_particles.h"
 
 static void
-particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part)
+particles_cuda_alloc(mparticles_cuda_t *particles, int p, int n_part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
+  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
 
   pp->n_part = n_part;
-  pp->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (pp->flags & MP_BLOCKSIZE_MASK) {
+    switch (particles->flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -27,8 +27,8 @@ particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part)
     pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-  __particles_cuda_alloc(pp, pp->flags & MP_NEED_BLOCK_OFFSETS,
-			 pp->flags & MP_NEED_CELL_OFFSETS);
+  __particles_cuda_alloc(pp, particles->flags & MP_NEED_BLOCK_OFFSETS,
+			 particles->flags & MP_NEED_CELL_OFFSETS);
   pp->n_alloced = n_part;
 }
 
@@ -87,11 +87,11 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
+  flags = particles->flags; // FIXME
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-    flags = pp->flags; // FIXME
     pp->n_part = pp_cf->n_part;
     assert(pp->n_part <= pp->n_alloced);
 
@@ -273,10 +273,10 @@ _psc_mparticles_cuda_setup(mparticles_cuda_t *mparticles)
 {
   assert(mparticles->nr_particles_by_patch);
 
+  mparticles->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
-			 mparticles->nr_particles_by_patch[p]);
+    particles_cuda_alloc(mparticles, p, mparticles->nr_particles_by_patch[p]);
   }
 
   free(mparticles->nr_particles_by_patch);

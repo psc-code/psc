@@ -11,6 +11,7 @@ struct psc_mparticles {
   int nr_patches;
   struct mrc_domain *domain;
   int *nr_particles_by_patch;
+  unsigned int flags;          // flags, like MP_NEED_CELL_OFFSETS, ...
 };
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
