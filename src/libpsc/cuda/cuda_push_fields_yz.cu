@@ -1,6 +1,10 @@
 
 #include "psc_cuda.h"
 
+#define BLOCKSIZE_X 1
+#define BLOCKSIZE_Y 4
+#define BLOCKSIZE_Z 4
+
 #define PFX(x) push_fields_yz_##x
 #include "constants.c"
 

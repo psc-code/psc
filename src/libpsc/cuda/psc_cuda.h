@@ -44,8 +44,6 @@ DECLARE_CUDA(yz3);
 DECLARE_CUDA(yz4);
 DECLARE_CUDA(yz5);
 DECLARE_CUDA(yz6);
-DECLARE_CUDA(yz_1st);
-DECLARE_CUDA(yz_1vb);
 
 EXTERN_C void yz_a_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);
 EXTERN_C void yz_b_set_constants(particles_cuda_t *pp, fields_cuda_t *pf);

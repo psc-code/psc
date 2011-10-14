@@ -358,15 +358,17 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
 
 // ======================================================================
 
-static void __unused
+DECLARE_CUDA(yz4x4_1st);
+
+static void
 psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
 {
   cuda_push_partq(push, particles_base, flds_base,
-		  yz_1st_set_constants,
-		  yz_1st_cuda_push_part_p2,
-		  yz_1st_cuda_push_part_p3);
+		  yz4x4_1st_set_constants,
+		  yz4x4_1st_cuda_push_part_p2,
+		  yz4x4_1st_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -381,15 +383,17 @@ struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
 
 // ======================================================================
 
+DECLARE_CUDA(yz4x4_1vb);
+
 static void
-psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
-				    mparticles_base_t *particles_base,
-				    mfields_base_t *flds_base)
+psc_push_particles_cuda_1vb_push_yz4x4(struct psc_push_particles *push,
+				       mparticles_base_t *particles_base,
+				       mfields_base_t *flds_base)
 {
   cuda_push_partq(push, particles_base, flds_base,
-		  yz_1vb_set_constants,
-		  yz_1vb_cuda_push_part_p2,
-		  yz_1vb_cuda_push_part_p3);
+		  yz4x4_1vb_set_constants,
+		  yz4x4_1vb_cuda_push_part_p2,
+		  yz4x4_1vb_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -397,6 +401,6 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
   .name                  = "cuda_1vb",
-  .push_yz               = psc_push_particles_cuda_1vb_push_yz,
+  .push_yz               = psc_push_particles_cuda_1vb_push_yz4x4,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4,
 };

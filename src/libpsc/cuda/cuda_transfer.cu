@@ -8,7 +8,7 @@ __particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
   int n_part = pp->n_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
-  const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+  const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
 
   check(cudaMalloc((void **) &d_part->xi4, n_part * sizeof(float4)));
   check(cudaMalloc((void **) &d_part->pxi4, n_part * sizeof(float4)));
@@ -36,7 +36,7 @@ __particles_cuda_to_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4,
   int n_part = pp->n_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
 
-  const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+  const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
 
   check(cudaMemcpy(d_part->xi4, xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));

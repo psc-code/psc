@@ -1,6 +1,10 @@
 
 #include "psc_cuda.h"
 
+#define BLOCKSIZE_X 1
+#define BLOCKSIZE_Y 4
+#define BLOCKSIZE_Z 4
+
 #define DIM DIM_YZ
 #define PFX(x) yz_ ## x
 #define CALC_CURRENT
