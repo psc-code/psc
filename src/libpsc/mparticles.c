@@ -2,6 +2,7 @@
 #include "psc.h"
 
 #include <mrc_profile.h>
+#include <mrc_params.h>
 #include <stdlib.h>
 
 #define MAKE_MPARTICLES_METHODS(type)					\
@@ -124,6 +125,7 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
   psc_mparticles_set_domain_nr_particles(mp,				\
 					 particles_base->domain,	\
 					 nr_particles_by_patch);	\
+  psc_mparticles_set_param_int(mp, "flags", flags);			\
   psc_mparticles_setup(mp);						\
   free(nr_particles_by_patch);						\
 									\
@@ -176,9 +178,17 @@ psc_mparticles_init()
 #endif
 }
 
+#define VAR(x) (void *)offsetof(struct psc_mparticles, x)
+static struct param psc_mparticles_descr[] = {
+  { "flags"             , VAR(flags)           , PARAM_INT(0)       },
+  {},
+};
+#undef VAR
+
 struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
   .name             = "psc_mparticles_c",
   .size             = sizeof(struct psc_mparticles),
+  .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
 };
 

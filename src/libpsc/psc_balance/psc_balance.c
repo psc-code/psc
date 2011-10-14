@@ -2,6 +2,7 @@
 #include "psc_balance.h"
 #include "psc_case.h"
 #include "psc_bnd_fields.h"
+#include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
@@ -561,6 +562,9 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
   psc_mparticles_set_type(mparticles_base_new, psc->prm.particles_base);
   psc_mparticles_set_domain_nr_particles(mparticles_base_new, domain_new,
 					      nr_particles_by_patch);
+  unsigned int mp_flags;
+  psc_mparticles_get_param_int(psc->particles, "flags", (int *) &mp_flags);
+  psc_mparticles_set_param_int(mparticles_base_new, "flags", mp_flags);
   psc_mparticles_setup(mparticles_base_new);
 
   mparticles_t *mparticles_new = psc_mparticles_get_cf(mparticles_base_new, MP_DONT_COPY);

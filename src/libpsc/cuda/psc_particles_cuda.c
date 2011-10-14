@@ -27,8 +27,7 @@ particles_cuda_alloc(mparticles_cuda_t *particles, int p, int n_part)
     pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-  __particles_cuda_alloc(pp, particles->flags & MP_NEED_BLOCK_OFFSETS,
-			 particles->flags & MP_NEED_CELL_OFFSETS);
+  __particles_cuda_alloc(pp, true, true); // FIXME, need separate flags
   pp->n_alloced = n_part;
 }
 
@@ -87,7 +86,6 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 {
   assert(ppsc->nr_patches == 1); // many things would break...
 
-  flags = particles->flags; // FIXME
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
@@ -196,14 +194,15 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 
     __particles_cuda_to_device(pp, xi4, pxi4, offsets, c_offsets, c_pos);
 
-    if (flags & MP_NEED_BLOCK_OFFSETS) {
+    if (particles->flags & MP_NEED_BLOCK_OFFSETS) {
       cuda_sort_patch(p, pp);
     }
-    if (flags & MP_NEED_CELL_OFFSETS) {
+    if (particles->flags & MP_NEED_CELL_OFFSETS) {
       cuda_sort_patch_by_cell(p, pp);
     }
     // FIXME, sorting twice because we need both would be suboptimal
-    if ((flags & MP_NEED_CELL_OFFSETS) && (flags & MP_NEED_BLOCK_OFFSETS)) {
+    if ((particles->flags & MP_NEED_CELL_OFFSETS) && 
+	(particles->flags & MP_NEED_BLOCK_OFFSETS)) {
       MHERE;
     }
 
@@ -273,7 +272,6 @@ _psc_mparticles_cuda_setup(mparticles_cuda_t *mparticles)
 {
   assert(mparticles->nr_particles_by_patch);
 
-  mparticles->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(mparticles, p, mparticles->nr_particles_by_patch[p]);

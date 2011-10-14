@@ -192,7 +192,8 @@ cuda_push_partq(struct psc_push_particles *push,
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
 
   // block/cell offsets will be calculated by sort_patch, anyway
-  particles = psc_mparticles_get_cuda(particles_base, 0);
+  particles = psc_mparticles_get_cuda(particles_base,
+				      mp_flags &~(MP_NEED_CELL_OFFSETS | MP_NEED_BLOCK_OFFSETS));
   psc_foreach_patch(ppsc, p) {
     if (mp_flags & MP_NEED_CELL_OFFSETS) {
       cuda_sort_patch_by_cell(p, psc_mparticles_get_patch_cuda(particles, p));
