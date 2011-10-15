@@ -91,6 +91,7 @@ struct psc_param {
   double initial_particle_shift;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
+  unsigned int particles_base_flags; ///< additional flags for the particles base type
 };
 
 /// coefficients needed for computations

@@ -127,6 +127,8 @@ static struct param psc_descr[] = {
 
   { "fields_base"   , VAR(prm.fields_base)        , PARAM_STRING("c") },
   { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("c") },
+  { "particles_base_flags"
+                    , VAR(prm.particles_base_flags)  , PARAM_INT(0) },
   {},
 };
 
@@ -392,8 +394,10 @@ psc_setup_partition_and_particles(struct psc *psc)
   psc_mparticles_set_name(psc->particles, "mparticles");
   psc_mparticles_set_domain_nr_particles(psc->particles, psc->mrc_domain,
 					 nr_particles_by_patch);
-  unsigned int mp_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
-  psc_mparticles_set_param_int(psc->particles, "flags", mp_flags);
+  if (psc->prm.particles_base_flags == 0) {
+    psc->prm.particles_base_flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
+  }
+  psc_mparticles_set_param_int(psc->particles, "flags", psc->prm.particles_base_flags);
   psc_mparticles_setup(psc->particles);
 
   psc_setup_particles(psc, nr_particles_by_patch, particle_label_offset);
