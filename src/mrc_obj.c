@@ -643,16 +643,24 @@ __mrc_class_register_subclass(struct mrc_class *cls, struct mrc_obj_ops *ops)
 mrc_void_func_t
 mrc_obj_get_method(struct mrc_obj *obj, const char *name)
 {
-  struct mrc_obj_method *methods = obj->cls->methods;
-
-  if (!methods)
-    return NULL;
-
-  for (int i = 0; methods[i].name; i++) {
-    if (strcmp(name, methods[i].name) == 0) {
-      return methods[i].func;
+  if (obj->ops && obj->ops->methods) {
+    struct mrc_obj_method *methods = obj->ops->methods;
+    for (int i = 0; methods[i].name; i++) {
+      if (strcmp(name, methods[i].name) == 0) {
+	return methods[i].func;
+      }
     }
   }
+
+  if (obj->cls->methods) {
+    struct mrc_obj_method *methods = obj->cls->methods;
+    for (int i = 0; methods[i].name; i++) {
+      if (strcmp(name, methods[i].name) == 0) {
+	return methods[i].func;
+      }
+    }
+  }
+
   return NULL;
 }
 

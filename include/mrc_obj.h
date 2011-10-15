@@ -39,6 +39,7 @@ struct mrc_obj_method {
   size_t size;						\
   struct param *param_descr;				\
   size_t param_offset;					\
+  struct mrc_obj_method *methods;			\
   void (*create)(obj_type *);				\
   void (*destroy)(obj_type *);				\
   void (*set_from_options)(obj_type *);			\
