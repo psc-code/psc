@@ -9,6 +9,7 @@
 void
 particles_c_alloc(particles_c_t *pp, int n_part)
 {
+  pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
 }
@@ -156,6 +157,22 @@ _psc_mparticles_c_copy_from_fortran(mparticles_c_t *particles_c,
 
 // ======================================================================
 
+static void
+_psc_mparticles_c_copy_to_c2(mparticles_c_t *particles_c,
+			     mparticles_c2_t *particles_c2, unsigned int flags)
+{
+  _psc_mparticles_c2_copy_from_c(particles_c2, particles_c, flags);
+}
+
+static void
+_psc_mparticles_c_copy_from_c2(mparticles_c_t *particles_c,
+			       mparticles_c2_t *particles_c2, unsigned int flags)
+{
+  _psc_mparticles_c2_copy_to_c(particles_c2, particles_c, flags);
+}
+
+// ======================================================================
+
 #ifdef USE_CUDA
 
 static void
@@ -188,6 +205,8 @@ struct psc_mparticles_ops psc_mparticles_c_ops = {
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
   .copy_to_fortran         = _psc_mparticles_c_copy_to_fortran,
   .copy_from_fortran       = _psc_mparticles_c_copy_from_fortran,
+  .copy_to_c2              = _psc_mparticles_c_copy_to_c2,
+  .copy_from_c2            = _psc_mparticles_c_copy_from_c2,
 #ifdef USE_CUDA
   .copy_to_cuda            = _psc_mparticles_c_copy_to_cuda,
   .copy_from_cuda          = _psc_mparticles_c_copy_from_cuda,

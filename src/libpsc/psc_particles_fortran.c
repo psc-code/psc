@@ -7,6 +7,7 @@
 void
 particles_fortran_alloc(particles_fortran_t *pp, int n_part)
 {
+  pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
 }
