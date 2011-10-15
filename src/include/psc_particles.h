@@ -96,6 +96,13 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
+struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
+					     const char *type,
+					     unsigned int flags);
+void psc_mparticles_put_as(struct psc_mparticles *mparticles,
+			   struct psc_mparticles *mparticles_base,
+			   unsigned int flags);
+
 mparticles_c_t *psc_mparticles_get_c(struct psc_mparticles *mparticles_base,
 				     unsigned int flags);
 void psc_mparticles_put_c(mparticles_c_t *mparticles, struct psc_mparticles *particles_base);

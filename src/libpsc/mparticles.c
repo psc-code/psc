@@ -90,78 +90,92 @@ psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
   return ops->nr_particles_by_patch(mparticles, p);
 }
 
+struct psc_mparticles *
+psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
+		      unsigned int flags)
+{
+  // If we're already the subtype, nothing to be done
+  if (strcmp(psc_mparticles_type(mp_base), type) == 0)
+    return mp_base;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mparticles_get_as", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  char s[strlen(type) + 10]; sprintf(s, "copy_to_%s", type);
+  psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t)
+    psc_mparticles_get_method(mp_base, s);
+  if (!copy_to) {
+    fprintf(stderr, "ERROR: missing '%s' in psc_mparticles '%s'!\n",
+	    s, psc_mparticles_type(mp_base));
+    assert(0);
+  }
+
+  int *nr_particles_by_patch = malloc(mp_base->nr_patches * sizeof(int));
+  for (int p = 0; p < mp_base->nr_patches; p++) {
+    nr_particles_by_patch[p] = psc_mparticles_nr_particles_by_patch(mp_base, p);
+  }
+  struct psc_mparticles *mp =
+    psc_mparticles_create(psc_mparticles_comm(mp_base));
+  psc_mparticles_set_type(mp, type);
+  psc_mparticles_set_domain_nr_particles(mp, mp_base->domain, nr_particles_by_patch);
+  psc_mparticles_set_param_int(mp, "flags", flags);
+  psc_mparticles_setup(mp);
+  free(nr_particles_by_patch);
+
+  copy_to(mp_base, mp, flags);
+
+  prof_stop(pr);
+  return mp;
+}
+
+void
+psc_mparticles_put_as(struct psc_mparticles *mp, struct psc_mparticles *mp_base,
+		      unsigned int flags)
+{
+  // If we're already the subtype, nothing to be done
+  const char *type = psc_mparticles_type(mp);
+  const char *type_base = psc_mparticles_type(mp_base);
+  if (strcmp(type_base, type) == 0)
+    return;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("mparticles_put_as", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  char s[strlen(type) + 12]; sprintf(s, "copy_from_%s", type);
+  psc_mparticles_copy_from_func_t copy_from = (psc_mparticles_copy_from_func_t)
+    psc_mparticles_get_method(mp_base, s);
+  if (!copy_from) {
+    fprintf(stderr, "ERROR: missing '%s' in psc_mparticles '%s'!\n",
+	    s, psc_mparticles_type(mp_base));
+    assert(0);
+  }
+
+  copy_from(mp_base, mp, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  psc_mparticles_destroy(mp);
+
+  prof_stop(pr);
+}
+
 #define MAKE_MPARTICLES_GET_PUT(type)					\
 									\
 mparticles_##type##_t *							\
 psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
 			  unsigned int flags)				\
 {									\
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
-  if (ops == &psc_mparticles_##type##_ops) {				\
-    return particles_base;						\
-  }									\
-  static int pr;							\
-  if (!pr) {								\
-    pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
-  }									\
-  prof_start(pr);							\
-  assert(ops);								\
-  psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t) \
-    psc_mparticles_get_method(particles_base, "copy_to_" #type);	\
-  if (!copy_to) {							\
-    fprintf(stderr, "ERROR: missing copy_to_" #type			\
-	    " in psc_mparticles '%s'!\n",				\
-	    psc_mparticles_type(particles_base));			\
-    assert(0);								\
-  }									\
-									\
-  int *nr_particles_by_patch =						\
-    malloc(particles_base->nr_patches * sizeof(int));			\
-  for (int p = 0; p < particles_base->nr_patches; p++) {		\
-  nr_particles_by_patch[p] =						\
-    psc_mparticles_nr_particles_by_patch(particles_base, p);		\
-  }									\
-  struct psc_mparticles *mp =						\
-    psc_mparticles_create(psc_mparticles_comm(particles_base));		\
-  psc_mparticles_set_type(mp, #type);					\
-  psc_mparticles_set_domain_nr_particles(mp,				\
-					 particles_base->domain,	\
-					 nr_particles_by_patch);	\
-  psc_mparticles_set_param_int(mp, "flags", flags);			\
-  psc_mparticles_setup(mp);						\
-  free(nr_particles_by_patch);						\
-									\
-  copy_to(particles_base, mp, flags);					\
-  prof_stop(pr);							\
-  return mp;								\
+  return psc_mparticles_get_as(particles_base, #type, flags);		\
 }									\
 									\
 void									\
 psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
 		     struct psc_mparticles *particles_base)		\
 {									\
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(particles_base);	\
-  if (ops == &psc_mparticles_##type##_ops) {				\
-    return;								\
-  }									\
-  static int pr;							\
-  if (!pr) {								\
-    pr = prof_register("mparticles_get_" #type, 1., 0, 0);		\
-  }									\
-  prof_start(pr);							\
-  assert(ops);								\
-  psc_mparticles_copy_from_func_t copy_from = (psc_mparticles_copy_from_func_t)	\
-    psc_mparticles_get_method(particles_base, "copy_from_" #type);	\
-  if (!copy_from) {						\
-    fprintf(stderr, "ERROR: missing copy_from_"#type			\
-	    " in psc_mparticles '%s'!\n",				\
-	    psc_mparticles_type(particles_base));			\
-    assert(0);								\
-  }									\
-  copy_from(particles_base, particles,					\
-	    MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);		\
-  psc_mparticles_destroy(particles);					\
-  prof_stop(pr);							\
+  psc_mparticles_put_as(particles, particles_base, 0);			\
 }									\
 
 MAKE_MPARTICLES_GET_PUT(c)
