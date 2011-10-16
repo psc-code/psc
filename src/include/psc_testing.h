@@ -51,4 +51,6 @@ void psc_test_init_npt_rest(struct psc *psc, int kind, double x[3],
 void psc_testing_init(int *argc, char ***argv);
 void psc_testing_finalize(void);
 
+extern bool opt_testing_dump;
+
 #endif
