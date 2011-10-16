@@ -410,6 +410,16 @@ psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
   return psc;
 }
 
+struct psc *
+psc_testing_create_test_xz()
+{
+  struct psc *psc = psc_create(MPI_COMM_WORLD);
+  psc->domain.gdims[1] = 1; // make xz
+  psc_set_from_options(psc);
+
+  return psc;
+}
+
 void
 psc_testing_dump(struct psc *psc, const char *basename)
 {
