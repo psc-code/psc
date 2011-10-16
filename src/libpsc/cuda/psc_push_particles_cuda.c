@@ -353,7 +353,8 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .push_yz               = psc_push_particles_cuda_push_yz6,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
+  .mp_flags              = MP_BLOCKSIZE_4X4X4 |
+                           MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
 };
 
 // ======================================================================
