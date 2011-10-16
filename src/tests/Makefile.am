@@ -34,6 +34,8 @@ TESTS = test_part_xy \
 	test_part_yz_1st.sh \
 	test_part_xz \
 	test_part_z \
+	test_exchange_particles_multi_0.sh \
+	test_exchange_particles_multi_1.sh \
 	test_field \
 	test_bnd \
 	test_exchange_particles \
