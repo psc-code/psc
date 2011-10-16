@@ -132,6 +132,10 @@ void
 psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
 			double thres, const char *test_str)
 {
+  if (!opt_testing_check_particles) {
+    return;
+  }
+
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   assert(particles_ref);
@@ -459,9 +463,7 @@ void
 psc_testing_push_particles_check(struct psc *psc, double eps_particles, double eps_fields)
 {
   psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
-  if (opt_testing_check_particles) {
-    psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
-  }
+  psc_check_particles_ref(psc, psc->particles, eps_particles, "push_particles");
   if (opt_testing_check_densities) {
     psc_testing_check_densities_ref(psc, psc->particles, eps_particles);
   }
