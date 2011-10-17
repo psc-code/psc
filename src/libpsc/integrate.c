@@ -133,9 +133,9 @@ psc_integrate(struct psc *psc)
     psc_stats_stop(st_time_step);
     prof_stop(pr);
 
-    // FIXME, do a mparticles func for this
+    psc_stats_val[st_nr_particles] = psc_mparticles_nr_particles(psc->particles);
+    // FIXME, do a mphotons func for this
     psc_foreach_patch(psc, p) {
-      psc_stats_val[st_nr_particles] += psc_mparticles_nr_particles_by_patch(psc->particles, p);
       psc_stats_val[st_nr_photons] += psc->mphotons->p[p].nr;
     }
 

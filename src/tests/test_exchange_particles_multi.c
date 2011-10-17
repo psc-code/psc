@@ -61,19 +61,11 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 static int
 get_total_num_particles(mparticles_base_t *particles_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, MP_DONT_COPY);
-
-  int nr_part = 0;
-  psc_foreach_patch(ppsc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
-    nr_part += pp->n_part;
-  }
-
+  int nr_part = psc_mparticles_nr_particles(particles_base);
   int total_nr_part;
   MPI_Allreduce(&nr_part, &total_nr_part, 1, MPI_INT, MPI_SUM,
 		MPI_COMM_WORLD);
 
-  psc_mparticles_put_cf(particles, particles_base);
   return total_nr_part;
 }
 

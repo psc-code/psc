@@ -118,6 +118,16 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 }
 
 int
+psc_mparticles_nr_particles(struct psc_mparticles *mparticles)
+{
+  int nr_part = 0;
+  for (int p = 0; p < mparticles->nr_patches; p++) {
+    nr_part += psc_mparticles_nr_particles_by_patch(mparticles, p);
+  }
+  return nr_part;
+}
+
+int
 psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
 {
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);

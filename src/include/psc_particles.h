@@ -83,6 +83,7 @@ MAKE_MPARTICLES_TYPE(cuda)
 void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    struct mrc_domain *domain,
 					    int *nr_particles_by_patch);
+int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
 					     const char *type,
