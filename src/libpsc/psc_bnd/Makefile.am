@@ -5,5 +5,6 @@ noinst_LTLIBRARIES = libsubdir.la
 
 libsubdir_la_SOURCES = \
 	psc_bnd.c \
+	psc_bnd_c_fields.c \
 	psc_bnd_c.c ddc_particles.c \
 	psc_bnd_fortran.c
