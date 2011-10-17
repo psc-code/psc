@@ -97,7 +97,7 @@ main(int argc, char **argv)
     psc_dump_particles(psc->particles, "part-1");
   }
   int total_num_particles_after = get_total_num_particles(psc->particles);
-  psc_check_particles(psc->particles);
+  psc_mparticles_check(psc->particles);
   assert(total_num_particles_before == total_num_particles_after);
   psc_destroy(psc);
 

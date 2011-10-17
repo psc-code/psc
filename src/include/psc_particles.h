@@ -91,5 +91,6 @@ struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_b
 void psc_mparticles_put_as(struct psc_mparticles *mparticles,
 			   struct psc_mparticles *mparticles_base,
 			   unsigned int flags);
+void psc_mparticles_check(struct psc_mparticles *mparticles);
 
 #endif
