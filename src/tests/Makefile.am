@@ -61,8 +61,7 @@ endif
 
 XFAIL_TESTS = \
 	test_part_yz_a_cuda.sh \
-	test_part_yz_b_cuda.sh \
-	test_part_yz_cuda.sh
+	test_part_yz_b_cuda.sh
 
 # HACK to have automake use the CXX linker 
 EXTRA_test_psc_mparticles_SOURCES = dummy.cxx

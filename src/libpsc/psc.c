@@ -635,7 +635,15 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
+	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
+			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
+			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    // FIXME, the issue really is that (2nd order) particle pushers
+	    // don't handle the invariant dim right
+	    if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+
 	    struct psc_particle_npt npt = {}; // init to all zero
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 
@@ -692,7 +700,15 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    double xx[3] = { CRDX(p, jx), CRDY(p, jy), CRDZ(p, jz) };
+	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
+			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
+			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
+	    // FIXME, the issue really is that (2nd order) particle pushers
+	    // don't handle the invariant dim right
+	    if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
+	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
+	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
+
 	    struct psc_particle_npt npt = {}; // init to all zero
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 	    
