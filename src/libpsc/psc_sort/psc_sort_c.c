@@ -290,7 +290,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
   prof_start(pr);
   unsigned int mask = cs2->mask;
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, 0);
+    particles_t *pp = psc_mparticles_get_patch(particles, p);
     struct psc_patch *patch = &ppsc->patch[p];
     struct cell_map map;
     int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
