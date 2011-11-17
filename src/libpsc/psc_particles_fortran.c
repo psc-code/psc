@@ -115,12 +115,17 @@ _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, 
 // ======================================================================
 // psc_mparticles: subclass "fortran"
   
+static struct mrc_obj_method _psc_mparticles_fortran_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",         _psc_mparticles_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",       _psc_mparticles_fortran_copy_from_c),
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
+  .methods                 = _psc_mparticles_fortran_methods,
   .setup                   = _psc_mparticles_fortran_setup,
   .destroy                 = _psc_mparticles_fortran_destroy,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
-  .copy_to_c               = _psc_mparticles_fortran_copy_to_c,
-  .copy_from_c             = _psc_mparticles_fortran_copy_from_c,
 };
 

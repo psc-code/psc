@@ -299,12 +299,17 @@ _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
 // ======================================================================
 // psc_mparticles: subclass "cuda"
   
+static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",         _psc_mparticles_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",       _psc_mparticles_cuda_copy_from_c),
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
+  .methods                 = _psc_mparticles_cuda_methods,
   .setup                   = _psc_mparticles_cuda_setup,
   .destroy                 = _psc_mparticles_cuda_destroy,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
-  .copy_to_c               = _psc_mparticles_cuda_copy_to_c,
-  .copy_from_c             = _psc_mparticles_cuda_copy_from_c,
 };
 

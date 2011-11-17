@@ -16,21 +16,16 @@ struct psc_mparticles {
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 
+typedef void (*psc_mparticles_copy_to_func_t)(struct psc_mparticles *,
+					      struct psc_mparticles *,
+					      unsigned int);
+typedef void (*psc_mparticles_copy_from_func_t)(struct psc_mparticles *,
+						struct psc_mparticles *,
+						unsigned int);
+
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
-  void (*copy_to_c)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-		    unsigned int flags);
-  void (*copy_to_fortran)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-			  unsigned int flags);
-  void (*copy_to_cuda)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-		       unsigned int flags);
-  void (*copy_from_c)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-		      unsigned int flags);
-  void (*copy_from_fortran)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-			    unsigned int flags);
-  void (*copy_from_cuda)(struct psc_mparticles *particles_base, struct psc_mparticles *particles,
-			 unsigned int flags);
 };
 
 #define MP_DONT_COPY (0x1)

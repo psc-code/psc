@@ -106,7 +106,9 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
   }									\
   prof_start(pr);							\
   assert(ops);								\
-  if (!ops->copy_to_##type) {						\
+  psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t) \
+    psc_mparticles_get_method(particles_base, "copy_to_" #type);	\
+  if (!copy_to) {							\
     fprintf(stderr, "ERROR: missing copy_to_" #type			\
 	    " in psc_mparticles '%s'!\n",				\
 	    psc_mparticles_type(particles_base));			\
@@ -129,7 +131,7 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
   psc_mparticles_setup(mp);						\
   free(nr_particles_by_patch);						\
 									\
-  ops->copy_to_##type(particles_base, mp, flags);			\
+  copy_to(particles_base, mp, flags);					\
   prof_stop(pr);							\
   return mp;								\
 }									\
@@ -148,14 +150,16 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
   }									\
   prof_start(pr);							\
   assert(ops);								\
-  if (!ops->copy_from_##type) {						\
+  psc_mparticles_copy_from_func_t copy_from = (psc_mparticles_copy_from_func_t)	\
+    psc_mparticles_get_method(particles_base, "copy_from_" #type);	\
+  if (!copy_from) {						\
     fprintf(stderr, "ERROR: missing copy_from_"#type			\
 	    " in psc_mparticles '%s'!\n",				\
 	    psc_mparticles_type(particles_base));			\
     assert(0);								\
   }									\
-  ops->copy_from_##type(particles_base, particles,			\
-			MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);	\
+  copy_from(particles_base, particles,					\
+	    MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);		\
   psc_mparticles_destroy(particles);					\
   prof_stop(pr);							\
 }									\

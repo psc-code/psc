@@ -194,8 +194,21 @@ _psc_mparticles_c_copy_from_cuda(mparticles_c_t *particles_c,
 // ======================================================================
 // psc_mparticles: subclass "c"
   
+static struct mrc_obj_method _psc_mparticles_c_methods[] = {
+  MRC_OBJ_METHOD("copy_to_fortran",   _psc_mparticles_c_copy_to_fortran),
+  MRC_OBJ_METHOD("copy_from_fortran", _psc_mparticles_c_copy_from_fortran),
+  MRC_OBJ_METHOD("copy_to_c2",        _psc_mparticles_c_copy_to_c2),
+  MRC_OBJ_METHOD("copy_from_c2",      _psc_mparticles_c_copy_from_c2),
+#ifdef USE_CUDA
+  MRC_OBJ_METHOD("copy_to_cuda",      _psc_mparticles_c_copy_to_cuda),
+  MRC_OBJ_METHOD("copy_from_cuda",    _psc_mparticles_c_copy_from_cuda),
+#endif
+  {}
+};
+
 struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
+  .methods                 = _psc_mparticles_c_methods,
   .setup                   = _psc_mparticles_c_setup,
   .destroy                 = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL
@@ -203,13 +216,5 @@ struct psc_mparticles_ops psc_mparticles_c_ops = {
   .read                    = _psc_mparticles_c_read,
 #endif
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
-  .copy_to_fortran         = _psc_mparticles_c_copy_to_fortran,
-  .copy_from_fortran       = _psc_mparticles_c_copy_from_fortran,
-  .copy_to_c2              = _psc_mparticles_c_copy_to_c2,
-  .copy_from_c2            = _psc_mparticles_c_copy_from_c2,
-#ifdef USE_CUDA
-  .copy_to_cuda            = _psc_mparticles_c_copy_to_cuda,
-  .copy_from_cuda          = _psc_mparticles_c_copy_from_cuda,
-#endif
 };
 
