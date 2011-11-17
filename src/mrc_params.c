@@ -43,6 +43,16 @@ error(const char *fmt, ...)
   exit(-1);
 }
 
+static void __attribute__ ((format (printf, 1, 2)))
+warn(const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt); 
+  fprintf(stderr, "[%d] WARNING: ", mpi_rank);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+}
+
 void
 libmrc_params_init(int argc, char **argv)
 {
@@ -103,21 +113,24 @@ mrc_params_print_all(MPI_Comm comm)
 }
 
 static struct option *
-find_option(const char *name)
+find_option(const char *name, bool deprecated)
 {
   struct option *p;
   __list_for_each_entry(p, &option_list, entry, struct option) {
     if (strcmp(p->name, name) == 0) {
+      if (deprecated) {
+	warn("option --%s is deprecated! You probably need to add a proper prefix.\n", name);
+      }
       return p;
     }
   }
   return NULL;
 }
 
-int
-mrc_params_get_option_int(const char *name, int *pval)
+static int
+_mrc_params_get_option_int(const char *name, int *pval, bool deprecated)
 {
-  struct option *p = find_option(name);
+  struct option *p = find_option(name, deprecated);
   
   if (p) {
     int rv = sscanf(p->value, "%d", pval);
@@ -127,15 +140,23 @@ mrc_params_get_option_int(const char *name, int *pval)
     print_help("--%s: <%d>\n", name, *pval);
     return 0;
   } else {
-    print_help("--%s: <%d> (default)\n", name, *pval);
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%d> (default)\n", name, *pval);
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_float(const char *name, float *pval)
+mrc_params_get_option_int(const char *name, int *pval)
 {
-  struct option *p = find_option(name);
+  return _mrc_params_get_option_int(name, pval, false);
+}
+
+int
+_mrc_params_get_option_float(const char *name, float *pval, bool deprecated)
+{
+  struct option *p = find_option(name, deprecated);
   
   if (p) {
     int rv = sscanf(p->value, "%g", pval);
@@ -145,15 +166,23 @@ mrc_params_get_option_float(const char *name, float *pval)
     print_help("--%s: <%g>\n", name, *pval);
     return 0;
   } else {
-    print_help("--%s: <%g> (default)\n", name, *pval);
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%g> (default)\n", name, *pval);
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_double(const char *name, double *pval)
+mrc_params_get_option_float(const char *name, float *pval)
 {
-  struct option *p = find_option(name);
+  return _mrc_params_get_option_float(name, pval, false);
+}
+
+int
+_mrc_params_get_option_double(const char *name, double *pval, bool deprecated)
+{
+  struct option *p = find_option(name, deprecated);
   
   if (p) {
     int rv = sscanf(p->value, "%lg", pval);
@@ -163,15 +192,23 @@ mrc_params_get_option_double(const char *name, double *pval)
     print_help("--%s: <%g>\n", name, *pval);
     return 0;
   } else {
-    print_help("--%s: <%g> (default)\n", name, *pval);
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%g> (default)\n", name, *pval);
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_string(const char *name, const char **pval)
+mrc_params_get_option_double(const char *name, double *pval)
 {
-  struct option *p = find_option(name);
+  return _mrc_params_get_option_double(name, pval, false);
+}
+
+int
+_mrc_params_get_option_string(const char *name, const char **pval, bool deprecated)
+{
+  struct option *p = find_option(name, deprecated);
   
   if (p) {
     *pval = p->value;
@@ -180,15 +217,23 @@ mrc_params_get_option_string(const char *name, const char **pval)
   } else {
     // FIXME, *pval may not be initialized, in which case we'd crash trying to print it
     // we should disallow this use in the future.
-    print_help("--%s: (default)\n", name);
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: (default)\n", name);
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_bool(const char *name, bool *pval)
+mrc_params_get_option_string(const char *name, const char **pval)
 {
-  struct option *p = find_option(name);
+  return _mrc_params_get_option_string(name, pval, false);
+}
+
+int
+_mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated)
+{
+  struct option *p = find_option(name, deprecated);
 
   if (p) {
     if (!p->value) { // just "--something"
@@ -207,16 +252,24 @@ mrc_params_get_option_bool(const char *name, bool *pval)
     print_help("--%s: <%s>\n", name, *pval ? "true" : "false");
     return 0;
   } else {
-    print_help("--%s: <%s> (default)\n", name, *pval ? "true" : "false");
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%s> (default)\n", name, *pval ? "true" : "false");
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
-			     int *pval)
+mrc_params_get_option_bool(const char *name, bool *pval)
 {
-  struct option *p = find_option(name);
+  return _mrc_params_get_option_bool(name, pval, false);
+}
+
+int
+_mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
+			     int *pval, bool deprecated)
+{
+  struct option *p = find_option(name, deprecated);
   if (p)  {
     if (!p->value) {
       error("need to specify value for '%s'\n", name);
@@ -245,22 +298,33 @@ mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
       }
     }
     // FIXME, can happen if no default was set, but we should disallow this.
-    print_help("--%s: (default)\n", name);
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: (default)\n", name);
+    }
     return -1;
   }
 }
 
 int
-mrc_params_get_option_int3(const char *name, int *pval)
+mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
+			     int *pval)
+{
+  return _mrc_params_get_option_select(name, descr, pval, false);
+}
+
+int
+_mrc_params_get_option_int3(const char *name, int *pval, bool deprecated)
 {
   int retval = -1;
   char namex[strlen(name) + 2];
   for (int d = 0; d < 3; d++) {
     sprintf(namex, "%s%c", name, 'x' + d);
-    struct option *p = find_option(namex);
+    struct option *p = find_option(namex, deprecated);
   
     if (!p) {
-      print_help("--%s: <%d> (default)\n", namex, pval[d]);
+      if (!deprecated) { // don't advertise deprecated un-prefixed options
+	print_help("--%s: <%d> (default)\n", namex, pval[d]);
+      }
       continue;
     }
     
@@ -275,16 +339,24 @@ mrc_params_get_option_int3(const char *name, int *pval)
 }
 
 int
-mrc_params_get_option_float3(const char *name, float *pval)
+mrc_params_get_option_int3(const char *name, int *pval)
+{
+  return _mrc_params_get_option_int3(name, pval, false);
+}
+
+int
+_mrc_params_get_option_float3(const char *name, float *pval, bool deprecated)
 {
   int retval = -1;
   char namex[strlen(name) + 2];
   for (int d = 0; d < 3; d++) {
     sprintf(namex, "%s%c", name, 'x' + d);
-    struct option *p = find_option(namex);
+    struct option *p = find_option(namex, deprecated);
   
     if (!p) {
-      print_help("--%s: <%g> (default)\n", namex, pval[d]);
+      if (!deprecated) { // don't advertise deprecated un-prefixed options
+	print_help("--%s: <%g> (default)\n", namex, pval[d]);
+      }
       continue;
     }
 
@@ -299,16 +371,24 @@ mrc_params_get_option_float3(const char *name, float *pval)
 }
 
 int
-mrc_params_get_option_double3(const char *name, double *pval)
+mrc_params_get_option_float3(const char *name, float *pval)
+{
+  return _mrc_params_get_option_float3(name, pval, false);
+}
+
+int
+_mrc_params_get_option_double3(const char *name, double *pval, bool deprecated)
 {
   int retval = -1;
   char namex[strlen(name) + 2];
   for (int d = 0; d < 3; d++) {
     sprintf(namex, "%s%c", name, 'x' + d);
-    struct option *p = find_option(namex);
+    struct option *p = find_option(namex, deprecated);
   
     if (!p) {
-      print_help("--%s: <%g> (default)\n", namex, pval[d]);
+      if (!deprecated) { // don't advertise deprecated un-prefixed options
+	print_help("--%s: <%g> (default)\n", namex, pval[d]);
+      }
       continue;
     }
 
@@ -322,11 +402,15 @@ mrc_params_get_option_double3(const char *name, double *pval)
   return retval;
 }
 
+int
+mrc_params_get_option_double3(const char *name, double *pval)
+{
+  return _mrc_params_get_option_double3(name, pval, false);
+}
+
 void
 mrc_params_get_option_ptr(const char *name, void** pval)
 {
-  struct option *p = find_option(name);
-  printf("Parse %s into a ptr? Really?\n", p->value);
   assert(0);
 }
 
@@ -536,31 +620,31 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     union param_u *pv = p + (unsigned long) params[i].var;
     switch (params[i].type) {
     case PT_INT:
-      mrc_params_get_option_int(params[i].name, &pv->u_int);
+      _mrc_params_get_option_int(params[i].name, &pv->u_int, true);
       break;
     case PT_BOOL:
-      mrc_params_get_option_bool(params[i].name, &pv->u_bool);
+      _mrc_params_get_option_bool(params[i].name, &pv->u_bool, true);
       break;
     case PT_FLOAT:
-      mrc_params_get_option_float(params[i].name, &pv->u_float);
+      _mrc_params_get_option_float(params[i].name, &pv->u_float, true);
       break;
     case PT_DOUBLE:
-      mrc_params_get_option_double(params[i].name, &pv->u_double);
+      _mrc_params_get_option_double(params[i].name, &pv->u_double, true);
       break;
     case PT_STRING:
-      mrc_params_get_option_string(params[i].name, &pv->u_string);
+      _mrc_params_get_option_string(params[i].name, &pv->u_string, true);
       break;
     case PT_SELECT:
-      mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select);
+      _mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select, true);
       break;
     case PT_INT3:
-      mrc_params_get_option_int3(params[i].name, &pv->u_int3[0]);
+      _mrc_params_get_option_int3(params[i].name, &pv->u_int3[0], true);
       break;
     case PT_FLOAT3:
-      mrc_params_get_option_float3(params[i].name, &pv->u_float3[0]);
+      _mrc_params_get_option_float3(params[i].name, &pv->u_float3[0], true);
       break;
     case PT_DOUBLE3:
-      mrc_params_get_option_double3(params[i].name, &pv->u_double3[0]);
+      _mrc_params_get_option_double3(params[i].name, &pv->u_double3[0], true);
       break;
     case PT_PTR:
       break;
