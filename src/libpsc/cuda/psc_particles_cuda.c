@@ -80,7 +80,7 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
   }
 }
 
-void
+static void
 _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *particles_cf,
 				 unsigned int flags)
 {
@@ -214,7 +214,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
   }
 }
 
-void
+static void
 _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
 			       mparticles_c_t *particles_cf, unsigned int flags)
 {

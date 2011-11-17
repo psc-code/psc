@@ -140,75 +140,10 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 #endif
 
 // ======================================================================
-
-static void
-_psc_mparticles_c_copy_to_fortran(mparticles_c_t *particles_c,
-				  mparticles_fortran_t *particles_f, unsigned int flags)
-{
-  _psc_mparticles_fortran_copy_from_c(particles_f, particles_c, flags);
-}
-
-static void
-_psc_mparticles_c_copy_from_fortran(mparticles_c_t *particles_c,
-				    mparticles_fortran_t *particles_f, unsigned int flags)
-{
-  _psc_mparticles_fortran_copy_to_c(particles_f, particles_c, flags);
-}
-
-// ======================================================================
-
-static void
-_psc_mparticles_c_copy_to_c2(mparticles_c_t *particles_c,
-			     mparticles_c2_t *particles_c2, unsigned int flags)
-{
-  _psc_mparticles_c2_copy_from_c(particles_c2, particles_c, flags);
-}
-
-static void
-_psc_mparticles_c_copy_from_c2(mparticles_c_t *particles_c,
-			       mparticles_c2_t *particles_c2, unsigned int flags)
-{
-  _psc_mparticles_c2_copy_to_c(particles_c2, particles_c, flags);
-}
-
-// ======================================================================
-
-#ifdef USE_CUDA
-
-static void
-_psc_mparticles_c_copy_to_cuda(mparticles_c_t *particles_c,
-			       mparticles_cuda_t *particles_cuda, unsigned int flags)
-{
-  _psc_mparticles_cuda_copy_from_c(particles_cuda, particles_c, flags);
-}
-
-static void
-_psc_mparticles_c_copy_from_cuda(mparticles_c_t *particles_c,
-				 mparticles_cuda_t *particles_cuda, unsigned int flags)
-{
-  _psc_mparticles_cuda_copy_to_c(particles_cuda, particles_c, flags);
-}
-
-#endif
-
-// ======================================================================
 // psc_mparticles: subclass "c"
   
-static struct mrc_obj_method _psc_mparticles_c_methods[] = {
-  MRC_OBJ_METHOD("copy_to_fortran",   _psc_mparticles_c_copy_to_fortran),
-  MRC_OBJ_METHOD("copy_from_fortran", _psc_mparticles_c_copy_from_fortran),
-  MRC_OBJ_METHOD("copy_to_c2",        _psc_mparticles_c_copy_to_c2),
-  MRC_OBJ_METHOD("copy_from_c2",      _psc_mparticles_c_copy_from_c2),
-#ifdef USE_CUDA
-  MRC_OBJ_METHOD("copy_to_cuda",      _psc_mparticles_c_copy_to_cuda),
-  MRC_OBJ_METHOD("copy_from_cuda",    _psc_mparticles_c_copy_from_cuda),
-#endif
-  {}
-};
-
 struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
-  .methods                 = _psc_mparticles_c_methods,
   .setup                   = _psc_mparticles_c_setup,
   .destroy                 = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL

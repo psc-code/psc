@@ -30,7 +30,7 @@ particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
   pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 
-void
+static void
 _psc_mparticles_fortran_copy_to_c(struct psc_mparticles *particles_base,
 				  mparticles_c_t *particles, unsigned int flags)
 {
@@ -56,7 +56,7 @@ _psc_mparticles_fortran_copy_to_c(struct psc_mparticles *particles_base,
   }
 }
 
-void
+static void
 _psc_mparticles_fortran_copy_from_c(struct psc_mparticles *particles_base,
 				    mparticles_c_t *particles, unsigned int flags)
 {
