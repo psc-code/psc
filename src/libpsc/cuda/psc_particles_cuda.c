@@ -268,33 +268,10 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
 // ======================================================================
 // psc_mparticles_cuda
 
-static void
-_psc_mparticles_cuda_setup(mparticles_cuda_t *mparticles)
-{
-  assert(mparticles->nr_particles_by_patch);
-
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_cuda_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
-  }
-
-  free(mparticles->nr_particles_by_patch);
-  mparticles->nr_particles_by_patch = NULL;
-}
-
 static int
 _psc_mparticles_cuda_nr_particles_by_patch(mparticles_cuda_t *mparticles, int p)
 {
   return psc_mparticles_get_patch_cuda(mparticles, p)->n_part;
-}
-
-static void
-_psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
-{
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_cuda_free_patch(mparticles, p);
-  }
-  free(mparticles->data);
 }
 
 // ======================================================================
@@ -309,8 +286,9 @@ static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .methods                 = _psc_mparticles_cuda_methods,
-  .setup                   = _psc_mparticles_cuda_setup,
-  .destroy                 = _psc_mparticles_cuda_destroy,
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
+  .alloc_patch             = _psc_mparticles_cuda_alloc_patch,
+  .free_patch              = _psc_mparticles_cuda_free_patch,
+  .size_of_particles_t     = sizeof(particles_cuda_t),
 };
 

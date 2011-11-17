@@ -37,33 +37,10 @@ particles_c_realloc(particles_c_t *pp, int new_n_part)
 // ======================================================================
 // psc_mparticles_c
 
-static void
-_psc_mparticles_c_setup(mparticles_c_t *mparticles)
-{
-  assert(mparticles->nr_particles_by_patch);
-
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_c_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
-  }
-
-  free(mparticles->nr_particles_by_patch);
-  mparticles->nr_particles_by_patch = NULL;
-}
-									
 static int
 _psc_mparticles_c_nr_particles_by_patch(mparticles_c_t *mparticles, int p)
 {
   return psc_mparticles_get_patch_c(mparticles, p)->n_part;
-}
-
-static void
-_psc_mparticles_c_destroy(mparticles_c_t *mparticles)
-{
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_c_free_patch(mparticles, p);
-  }
-  free(mparticles->data);
 }
 
 #ifdef HAVE_LIBHDF5_HL
@@ -144,12 +121,13 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
   
 struct psc_mparticles_ops psc_mparticles_c_ops = {
   .name                    = "c",
-  .setup                   = _psc_mparticles_c_setup,
-  .destroy                 = _psc_mparticles_c_destroy,
 #ifdef HAVE_LIBHDF5_HL
   .write                   = _psc_mparticles_c_write,
   .read                    = _psc_mparticles_c_read,
 #endif
   .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
+  .alloc_patch             = _psc_mparticles_c_alloc_patch,
+  .free_patch              = _psc_mparticles_c_free_patch,
+  .size_of_particles_t     = sizeof(particles_c_t),
 };
 

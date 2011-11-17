@@ -82,6 +82,41 @@ psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
   mparticles->nr_particles_by_patch = np;
 }
 
+static void
+_psc_mparticles_setup(struct psc_mparticles *mparticles)
+{
+  assert(mparticles->nr_particles_by_patch);
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
+
+  if (ops->alloc_patch) {
+    mparticles->data = calloc(mparticles->nr_patches, ops->size_of_particles_t);
+    for (int p = 0; p < mparticles->nr_patches; p++) {
+      ops->alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
+    }
+
+    free(mparticles->nr_particles_by_patch);
+    mparticles->nr_particles_by_patch = NULL;
+  }
+
+  if (ops->setup) {
+    ops->setup(mparticles);
+    return;
+  }
+}
+
+static void
+_psc_mparticles_destroy(struct psc_mparticles *mparticles)
+{
+  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
+
+  if (ops->free_patch) {
+    for (int p = 0; p < mparticles->nr_patches; p++) {
+      ops->free_patch(mparticles, p);
+    }
+    free(mparticles->data);
+  }
+}
+
 int
 psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
 {
@@ -225,5 +260,7 @@ struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
   .size             = sizeof(struct psc_mparticles),
   .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
+  .setup            = _psc_mparticles_setup,
+  .destroy          = _psc_mparticles_destroy,
 };
 

@@ -84,29 +84,6 @@ _psc_mparticles_fortran_copy_from_c(struct psc_mparticles *particles_base,
   }
 }
 
-static void
-_psc_mparticles_fortran_setup(mparticles_fortran_t *mparticles)
-{
-  assert(mparticles->nr_particles_by_patch);
-
-  mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_fortran_t));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_fortran_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
-  }
-
-  free(mparticles->nr_particles_by_patch);
-  mparticles->nr_particles_by_patch = NULL;
-}
-									
-static void
-_psc_mparticles_fortran_destroy(mparticles_fortran_t *mparticles)
-{
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    _psc_mparticles_fortran_free_patch(mparticles, p);
-  }
-  free(mparticles->data);
-}
-
 static int
 _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, int p)
 {
@@ -125,8 +102,9 @@ static struct mrc_obj_method _psc_mparticles_fortran_methods[] = {
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
   .methods                 = _psc_mparticles_fortran_methods,
-  .setup                   = _psc_mparticles_fortran_setup,
-  .destroy                 = _psc_mparticles_fortran_destroy,
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
+  .alloc_patch             = _psc_mparticles_fortran_alloc_patch,
+  .free_patch              = _psc_mparticles_fortran_free_patch,
+  .size_of_particles_t     = sizeof(particles_fortran_t),
 };
 

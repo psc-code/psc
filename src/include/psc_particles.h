@@ -26,6 +26,9 @@ typedef void (*psc_mparticles_copy_from_func_t)(struct psc_mparticles *,
 struct psc_mparticles_ops {
   MRC_SUBCLASS_OPS(struct psc_mparticles);
   int  (*nr_particles_by_patch)(struct psc_mparticles *mparticles, int p);
+  void (*alloc_patch)(struct psc_mparticles *mparticles, int p, int n_part);
+  void (*free_patch)(struct psc_mparticles *mparticles, int p);
+  int size_of_particles_t;
 };
 
 #define psc_mparticles_ops(mp) (struct psc_mparticles_ops *) ((mp)->obj.ops)
