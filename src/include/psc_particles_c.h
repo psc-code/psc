@@ -22,9 +22,7 @@ typedef struct {
   int n_alloced;
 } particles_c_t;
 
-void particles_c_alloc(particles_c_t *pp, int n_part);
 void particles_c_realloc(particles_c_t *pp, int new_n_part);
-void particles_c_free(particles_c_t *pp);
 
 static inline particle_c_t *
 particles_c_get_one(particles_c_t *pp, int n)

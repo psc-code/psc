@@ -6,12 +6,22 @@
 #include <stdlib.h>
 #include <assert.h>
 
-void
-particles_c_alloc(particles_c_t *pp, int n_part)
+static void
+_psc_mparticles_c_alloc_patch(mparticles_c_t *mp, int p, int n_part)
 {
+  particles_c_t *pp = psc_mparticles_get_patch_c(mp, p);
   pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
+}
+
+static void
+_psc_mparticles_c_free_patch(mparticles_c_t *mp, int p)
+{
+  particles_c_t *pp = psc_mparticles_get_patch_c(mp, p);
+  free(pp->particles);
+  pp->n_alloced = 0;
+  pp->particles = NULL;
 }
 
 void
@@ -24,14 +34,6 @@ particles_c_realloc(particles_c_t *pp, int new_n_part)
   pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 
-void
-particles_c_free(particles_c_t *pp)
-{
-  free(pp->particles);
-  pp->n_alloced = 0;
-  pp->particles = NULL;
-}
-
 // ======================================================================
 // psc_mparticles_c
 
@@ -42,8 +44,7 @@ _psc_mparticles_c_setup(mparticles_c_t *mparticles)
 
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_alloc(psc_mparticles_get_patch_c(mparticles, p),
-		      mparticles->nr_particles_by_patch[p]);
+    _psc_mparticles_c_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
   }
 
   free(mparticles->nr_particles_by_patch);
@@ -60,7 +61,7 @@ static void
 _psc_mparticles_c_destroy(mparticles_c_t *mparticles)
 {
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_c_free(psc_mparticles_get_patch_c(mparticles, p));
+    _psc_mparticles_c_free_patch(mparticles, p);
   }
   free(mparticles->data);
 }
@@ -124,8 +125,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
     int n_part;
     ierr = H5LTget_attribute_int(groupp, ".", "n_part", &n_part); CE;
-    particles_c_alloc(particles, n_part);
-    particles->n_part = n_part;
+    _psc_mparticles_c_alloc_patch(mparticles, p, n_part);
     if (n_part > 0) {
       ierr = H5LTread_dataset_double(groupp, "particles_c",
 				     (double *) particles->particles); CE;

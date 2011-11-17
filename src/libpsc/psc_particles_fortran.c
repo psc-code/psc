@@ -4,17 +4,19 @@
 
 #include <stdlib.h>
 
-void
-particles_fortran_alloc(particles_fortran_t *pp, int n_part)
+static void
+_psc_mparticles_fortran_alloc_patch(mparticles_fortran_t *mp, int p, int n_part)
 {
+  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(mp, p);
   pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
 }
 
-void
-particles_fortran_free(particles_fortran_t *pp)
+static void
+_psc_mparticles_fortran_free_patch(mparticles_fortran_t *mp, int p)
 {
+  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(mp, p);
   free(pp->particles);
   pp->n_alloced = 0;
   pp->particles = NULL;
@@ -89,8 +91,7 @@ _psc_mparticles_fortran_setup(mparticles_fortran_t *mparticles)
 
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_fortran_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_fortran_alloc(psc_mparticles_get_patch_fortran(mparticles, p),
-			    mparticles->nr_particles_by_patch[p]);
+    _psc_mparticles_fortran_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
   }
 
   free(mparticles->nr_particles_by_patch);
@@ -101,7 +102,7 @@ static void
 _psc_mparticles_fortran_destroy(mparticles_fortran_t *mparticles)
 {
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_fortran_free(psc_mparticles_get_patch_fortran(mparticles, p));
+    _psc_mparticles_fortran_free_patch(mparticles, p);
   }
   free(mparticles->data);
 }

@@ -5,15 +5,15 @@
 #include "psc_push_particles.h"
 
 static void
-particles_cuda_alloc(mparticles_cuda_t *particles, int p, int n_part)
+_psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
+  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
 
   pp->n_part = n_part;
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (particles->flags & MP_BLOCKSIZE_MASK) {
+    switch (mparticles->flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -32,8 +32,9 @@ particles_cuda_alloc(mparticles_cuda_t *particles, int p, int n_part)
 }
 
 static void
-particles_cuda_free(particles_cuda_t *pp)
+_psc_mparticles_cuda_free_patch(mparticles_cuda_t *mparticles, int p)
 {
+  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
   __particles_cuda_free(pp);
 }
 
@@ -274,7 +275,7 @@ _psc_mparticles_cuda_setup(mparticles_cuda_t *mparticles)
 
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_cuda_alloc(mparticles, p, mparticles->nr_particles_by_patch[p]);
+    _psc_mparticles_cuda_alloc_patch(mparticles, p, mparticles->nr_particles_by_patch[p]);
   }
 
   free(mparticles->nr_particles_by_patch);
@@ -291,7 +292,7 @@ static void
 _psc_mparticles_cuda_destroy(mparticles_cuda_t *mparticles)
 {
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    particles_cuda_free(psc_mparticles_get_patch_cuda(mparticles, p));
+    _psc_mparticles_cuda_free_patch(mparticles, p);
   }
   free(mparticles->data);
 }
