@@ -134,7 +134,7 @@ find_option(const char *name, bool deprecated)
 }
 
 static int
-_mrc_params_get_option_int(const char *name, int *pval, bool deprecated)
+_mrc_params_get_option_int(const char *name, int *pval, bool deprecated, const char *help)
 {
   struct option *p = find_option(name, deprecated);
   
@@ -143,11 +143,11 @@ _mrc_params_get_option_int(const char *name, int *pval, bool deprecated)
     if (rv != 1) {
       error("cannot parse int from '%s'\n", p->value);
     }
-    print_help("--%s: <%d>\n", name, *pval);
+    print_help("--%s: <%d> %s\n", name, *pval, help ? help : "");
     return 0;
   } else {
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: <%d> (default)\n", name, *pval);
+      print_help("--%s: <%d> (default) %s\n", name, *pval, help ? help : "");
     }
     return -1;
   }
@@ -156,11 +156,18 @@ _mrc_params_get_option_int(const char *name, int *pval, bool deprecated)
 int
 mrc_params_get_option_int(const char *name, int *pval)
 {
-  return _mrc_params_get_option_int(name, pval, false);
+  return _mrc_params_get_option_int(name, pval, false, NULL);
 }
 
 int
-_mrc_params_get_option_float(const char *name, float *pval, bool deprecated)
+mrc_params_get_option_int_help(const char *name, int *pval, const char *help)
+{
+  return _mrc_params_get_option_int(name, pval, false, help);
+}
+
+int
+_mrc_params_get_option_float(const char *name, float *pval, bool deprecated,
+			     const char *help)
 {
   struct option *p = find_option(name, deprecated);
   
@@ -169,11 +176,12 @@ _mrc_params_get_option_float(const char *name, float *pval, bool deprecated)
     if (rv != 1) {
       error("cannot parse float from '%s'\n", p->value);
     }
-    print_help("--%s: <%g>\n", name, *pval);
+    print_help("--%s: <%g> %s\n", name, *pval, help ? help : "");
     return 0;
   } else {
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: <%g> (default)\n", name, *pval);
+      print_help("--%s: <%g> (default) %s\n", name, *pval,
+		 help ? help : "");
     }
     return -1;
   }
@@ -182,11 +190,19 @@ _mrc_params_get_option_float(const char *name, float *pval, bool deprecated)
 int
 mrc_params_get_option_float(const char *name, float *pval)
 {
-  return _mrc_params_get_option_float(name, pval, false);
+  return _mrc_params_get_option_float(name, pval, false, NULL);
 }
 
 int
-_mrc_params_get_option_double(const char *name, double *pval, bool deprecated)
+mrc_params_get_option_float_help(const char *name, float *pval,
+				 const char *help)
+{
+  return _mrc_params_get_option_float(name, pval, false, help);
+}
+
+int
+_mrc_params_get_option_double(const char *name, double *pval, bool deprecated,
+			      const char *help)
 {
   struct option *p = find_option(name, deprecated);
   
@@ -195,11 +211,12 @@ _mrc_params_get_option_double(const char *name, double *pval, bool deprecated)
     if (rv != 1) {
       error("cannot parse double from '%s'\n", p->value);
     }
-    print_help("--%s: <%g>\n", name, *pval);
+    print_help("--%s: <%g> %s\n", name, *pval, help ? help : "");
     return 0;
   } else {
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: <%g> (default)\n", name, *pval);
+      print_help("--%s: <%g> (default) %s\n", name, *pval,
+		 help ? help : "");
     }
     return -1;
   }
@@ -208,23 +225,32 @@ _mrc_params_get_option_double(const char *name, double *pval, bool deprecated)
 int
 mrc_params_get_option_double(const char *name, double *pval)
 {
-  return _mrc_params_get_option_double(name, pval, false);
+  return _mrc_params_get_option_double(name, pval, false, NULL);
 }
 
 int
-_mrc_params_get_option_string(const char *name, const char **pval, bool deprecated)
+mrc_params_get_option_double_help(const char *name, double *pval,
+				  const char *help)
+{
+  return _mrc_params_get_option_double(name, pval, false, help);
+}
+
+int
+_mrc_params_get_option_string(const char *name, const char **pval, bool deprecated,
+			      const char *help)
 {
   struct option *p = find_option(name, deprecated);
   
   if (p) {
     *pval = p->value;
-    print_help("--%s: <%s>\n", name, *pval ? *pval : "NULL");
+    print_help("--%s: <%s> %s\n", name, *pval ? *pval : "NULL",
+	       help ? help : "");
     return 0;
   } else {
     // FIXME, *pval may not be initialized, in which case we'd crash trying to print it
     // we should disallow this use in the future.
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: (default)\n", name);
+      print_help("--%s: (default) %s\n", name, help ? help : "");
     }
     return -1;
   }
@@ -233,11 +259,19 @@ _mrc_params_get_option_string(const char *name, const char **pval, bool deprecat
 int
 mrc_params_get_option_string(const char *name, const char **pval)
 {
-  return _mrc_params_get_option_string(name, pval, false);
+  return _mrc_params_get_option_string(name, pval, false, NULL);
 }
 
 int
-_mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated)
+mrc_params_get_option_string_help(const char *name, const char **pval,
+				  const char *help)
+{
+  return _mrc_params_get_option_string(name, pval, false, help);
+}
+
+int
+_mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated,
+			    const char *help)
 {
   struct option *p = find_option(name, deprecated);
 
@@ -255,11 +289,13 @@ _mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated)
 	error("cannot parse bool from '%s'\n", p->value);
       }
     }
-    print_help("--%s: <%s>\n", name, *pval ? "true" : "false");
+    print_help("--%s: <%s> %s\n", name, *pval ? "true" : "false",
+	       help ? help : "");
     return 0;
   } else {
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: <%s> (default)\n", name, *pval ? "true" : "false");
+      print_help("--%s: <%s> (default) %s\n", name, *pval ? "true" : "false",
+		 help ? help : "");
     }
     return -1;
   }
@@ -268,7 +304,13 @@ _mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated)
 int
 mrc_params_get_option_bool(const char *name, bool *pval)
 {
-  return _mrc_params_get_option_bool(name, pval, false);
+  return _mrc_params_get_option_bool(name, pval, false, NULL);
+}
+
+int
+mrc_params_get_option_bool_help(const char *name, bool *pval, const char *help)
+{
+  return _mrc_params_get_option_bool(name, pval, false, help);
 }
 
 int
@@ -626,19 +668,19 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     union param_u *pv = p + (unsigned long) params[i].var;
     switch (params[i].type) {
     case PT_INT:
-      _mrc_params_get_option_int(params[i].name, &pv->u_int, true);
+      _mrc_params_get_option_int(params[i].name, &pv->u_int, true, NULL);
       break;
     case PT_BOOL:
-      _mrc_params_get_option_bool(params[i].name, &pv->u_bool, true);
+      _mrc_params_get_option_bool(params[i].name, &pv->u_bool, true, NULL);
       break;
     case PT_FLOAT:
-      _mrc_params_get_option_float(params[i].name, &pv->u_float, true);
+      _mrc_params_get_option_float(params[i].name, &pv->u_float, true, NULL);
       break;
     case PT_DOUBLE:
-      _mrc_params_get_option_double(params[i].name, &pv->u_double, true);
+      _mrc_params_get_option_double(params[i].name, &pv->u_double, true, NULL);
       break;
     case PT_STRING:
-      _mrc_params_get_option_string(params[i].name, &pv->u_string, true);
+      _mrc_params_get_option_string(params[i].name, &pv->u_string, true, NULL);
       break;
     case PT_SELECT:
       _mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select, true);

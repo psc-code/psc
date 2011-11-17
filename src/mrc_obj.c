@@ -260,14 +260,17 @@ mrc_obj_set_from_options_this(struct mrc_obj *obj)
 {
   struct mrc_class *cls = obj->cls;
 
+  const char help_type[] = "Choose the type (subclass) for the given class.";
   const char *type;
   char option[strlen(mrc_obj_name(obj)) + 6];
   sprintf(option, "%s_type", mrc_obj_name(obj));
-  if (mrc_params_get_option_string(option, &type) == 0) {
+  if (mrc_params_get_option_string_help(option, &type, help_type) == 0) {
     mrc_obj_set_type(obj, type);
   }
+
+  const char help_view[] = "Print out info about the object.";
   sprintf(option, "%s_view", mrc_obj_name(obj));
-  mrc_params_get_option_bool(option, &obj->view_flag);
+  mrc_params_get_option_bool_help(option, &obj->view_flag, help_view);
 
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;

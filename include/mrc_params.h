@@ -80,6 +80,11 @@ int  mrc_params_get_option_int(const char *name, int *pval);
 int  mrc_params_get_option_float(const char *name, float *pval);
 int  mrc_params_get_option_double(const char *name, double *pval);
 int  mrc_params_get_option_bool(const char *name, bool *pval);
+int  mrc_params_get_option_string_help(const char *name, const char **pval, const char *help);
+int  mrc_params_get_option_int_help(const char *name, int *pval, const char *help);
+int  mrc_params_get_option_float_help(const char *name, float *pval, const char *help);
+int  mrc_params_get_option_double_help(const char *name, double *pval, const char *help);
+int  mrc_params_get_option_bool_help(const char *name, bool *pval, const char *help);
 
 // sets defaults from the descriptions
 void mrc_params_set_default(void *p, struct param *params);

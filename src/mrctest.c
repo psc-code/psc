@@ -42,6 +42,7 @@ void
 mrctest_finalize()
 {
   prof_print();
+  libmrc_params_finalize();
   MPI_Finalize();
 }
 
