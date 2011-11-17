@@ -67,6 +67,7 @@ struct param {
     void*  ini_ptr;
   } u;
   struct mrc_param_select *descr;
+  const char *help;
 };
 
 void libmrc_params_init(int argc, char **argv);

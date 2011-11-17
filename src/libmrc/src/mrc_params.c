@@ -13,6 +13,7 @@
 struct option {
   char *name;
   char *value;
+  bool used;
   list_t entry;
 };
 
@@ -66,6 +67,7 @@ libmrc_params_init(int argc, char **argv)
     struct option *opt = malloc(sizeof(*opt));
     opt->name = strdup(argv[i] + 2);
     opt->value = NULL;
+    opt->used = false;
 
     // another arg left, which doesn't start with --
     if (i < argc - 1 && strncmp(argv[i+1], "--", 2) != 0) {
@@ -84,6 +86,8 @@ libmrc_params_finalize()
 {
   while (!list_empty(&option_list)) {
     struct option *opt = list_entry(option_list.next, struct option, entry);
+    if(!opt->used)
+      mpi_printf(MPI_COMM_WORLD,"Did not use given parameter: %s\n",opt->name);
     list_del(&opt->entry);
     free(opt->name);
     free(opt->value);
@@ -97,6 +101,7 @@ mrc_params_insert_option(const char *name, const char *val)
   struct option *opt = malloc(sizeof(*opt));
   opt->name = strdup(name);
   opt->value = val ? strdup(val) : NULL;
+  opt->used = false;
   list_add_tail(&opt->entry, &option_list);
 }
 
@@ -118,6 +123,7 @@ find_option(const char *name, bool deprecated)
   struct option *p;
   __list_for_each_entry(p, &option_list, entry, struct option) {
     if (strcmp(p->name, name) == 0) {
+      p->used = true;
       if (deprecated) {
 	warn("option --%s is deprecated! You probably need to add a proper prefix.\n", name);
       }
