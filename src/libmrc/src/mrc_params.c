@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <assert.h>
 
 struct option {
@@ -16,16 +17,41 @@ struct option {
 };
 
 static LIST_HEAD(option_list);
+static bool do_print_help;
+static int mpi_rank = -1;
+
+static void __attribute__ ((format (printf, 1, 2)))
+print_help(const char *fmt, ...)
+{
+  if (do_print_help && mpi_rank == 0) {
+    va_list ap;
+    va_start(ap, fmt); 
+    printf("[0] ");
+    vprintf(fmt, ap);
+    va_end(ap);
+  }
+}
+
+static void __attribute__ ((format (printf, 1, 2)))
+error(const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt); 
+  fprintf(stderr, "[%d] ERROR: ", mpi_rank);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+  exit(-1);
+}
 
 void
 libmrc_params_init(int argc, char **argv)
 {
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  
   for (int i = 1; i < argc; i++) {
     if (strncmp(argv[i], "--", 2) != 0) {
-      fprintf(stderr,
-	      "error: expected argument '%s' to specify an option like '--something'\n",
-	      argv[i]);
-      abort();
+      error("expected argument '%s' to specify an option like '--something'\n",
+	    argv[i]);
     }
     struct option *opt = malloc(sizeof(*opt));
     opt->name = strdup(argv[i] + 2);
@@ -38,6 +64,9 @@ libmrc_params_init(int argc, char **argv)
     }
     list_add_tail(&opt->entry, &option_list);
   }
+
+  // check whether "--help" is given
+  mrc_params_get_option_bool("help", &do_print_help);
 }
 
 void
@@ -74,11 +103,13 @@ mrc_params_print_all(MPI_Comm comm)
 }
 
 static struct option *
-find_option(const char *name) {
+find_option(const char *name)
+{
   struct option *p;
   __list_for_each_entry(p, &option_list, entry, struct option) {
-    if (strcmp(p->name, name) == 0)
+    if (strcmp(p->name, name) == 0) {
       return p;
+    }
   }
   return NULL;
 }
@@ -88,15 +119,17 @@ mrc_params_get_option_int(const char *name, int *pval)
 {
   struct option *p = find_option(name);
   
-  if (!p)
+  if (p) {
+    int rv = sscanf(p->value, "%d", pval);
+    if (rv != 1) {
+      error("cannot parse int from '%s'\n", p->value);
+    }
+    print_help("--%s: <%d>\n", name, *pval);
+    return 0;
+  } else {
+    print_help("--%s: <%d> (default)\n", name, *pval);
     return -1;
-
-  int rv = sscanf(p->value, "%d", pval);
-  if (rv != 1) {
-    fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
-    abort();
   }
-  return 0;
 }
 
 int
@@ -104,15 +137,17 @@ mrc_params_get_option_float(const char *name, float *pval)
 {
   struct option *p = find_option(name);
   
-  if (!p)
+  if (p) {
+    int rv = sscanf(p->value, "%g", pval);
+    if (rv != 1) {
+      error("cannot parse float from '%s'\n", p->value);
+    }
+    print_help("--%s: <%g>\n", name, *pval);
+    return 0;
+  } else {
+    print_help("--%s: <%g> (default)\n", name, *pval);
     return -1;
-
-  int rv = sscanf(p->value, "%g", pval);
-  if (rv != 1) {
-    fprintf(stderr, "error: cannot parse float from '%s'\n", p->value);
-    abort();
   }
-  return 0;
 }
 
 int
@@ -120,29 +155,16 @@ mrc_params_get_option_double(const char *name, double *pval)
 {
   struct option *p = find_option(name);
   
-  if (!p)
+  if (p) {
+    int rv = sscanf(p->value, "%lg", pval);
+    if (rv != 1) {
+      error("cannot parse double from '%s'\n", p->value);
+    }
+    print_help("--%s: <%g>\n", name, *pval);
+    return 0;
+  } else {
+    print_help("--%s: <%g> (default)\n", name, *pval);
     return -1;
-
-  int rv = sscanf(p->value, "%lg", pval);
-  if (rv != 1) {
-    fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
-    abort();
-  }
-  return 0;
-}
-
-static void
-get_option_double(const char *name, double *pval)
-{
-  struct option *p = find_option(name);
-  
-  if (!p)
-    return;
-
-  int rv = sscanf(p->value, "%lg", pval);
-  if (rv != 1) {
-    fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
-    abort();
   }
 }
 
@@ -151,11 +173,16 @@ mrc_params_get_option_string(const char *name, const char **pval)
 {
   struct option *p = find_option(name);
   
-  if (!p)
+  if (p) {
+    *pval = p->value;
+    print_help("--%s: <%s>\n", name, *pval ? *pval : "NULL");
+    return 0;
+  } else {
+    // FIXME, *pval may not be initialized, in which case we'd crash trying to print it
+    // we should disallow this use in the future.
+    print_help("--%s: (default)\n", name);
     return -1;
-
-  *pval = p->value;
-  return 0;
+  }
 }
 
 int
@@ -163,55 +190,64 @@ mrc_params_get_option_bool(const char *name, bool *pval)
 {
   struct option *p = find_option(name);
 
-  if (!p)
-    return -1;
-
-  if (!p->value) { // just "--something"
-    *pval = true;
+  if (p) {
+    if (!p->value) { // just "--something"
+      *pval = true;
+    } else {
+      if (strcasecmp(p->value, "yes") == 0 ||
+	  strcasecmp(p->value, "true") == 0) {
+	*pval = true;
+      } else if (strcasecmp(p->value, "no") == 0 ||
+		 strcasecmp(p->value, "false") == 0) {
+	*pval = false;
+      } else {
+	error("cannot parse bool from '%s'\n", p->value);
+      }
+    }
+    print_help("--%s: <%s>\n", name, *pval ? "true" : "false");
     return 0;
-  }
-
-  if (strcasecmp(p->value, "yes") == 0 ||
-      strcasecmp(p->value, "true") == 0) {
-    *pval = true;
-  } else if (strcasecmp(p->value, "no") == 0 ||
-	     strcasecmp(p->value, "false") == 0) {
-    *pval = false;
   } else {
-    fprintf(stderr, "error: cannot parse bool from '%s'\n", p->value);
-    abort();
+    print_help("--%s: <%s> (default)\n", name, *pval ? "true" : "false");
+    return -1;
   }
-  return 0;
 }
 
-void
+int
 mrc_params_get_option_select(const char *name, struct mrc_param_select *descr,
 			     int *pval)
 {
   struct option *p = find_option(name);
-  if (!p) 
-    return;
-
-  if (!p->value) {
-    fprintf(stderr, "ERROR: need to specify value for '%s'\n",
-            name);
-    abort();
-  }
-
-  for (int i = 0; descr[i].str; i++) {
-    if (strcasecmp(descr[i].str, p->value) == 0) {
-      *pval = descr[i].val;
-      return;
+  if (p)  {
+    if (!p->value) {
+      error("need to specify value for '%s'\n", name);
     }
+    
+    for (int i = 0; descr[i].str; i++) {
+      if (strcasecmp(descr[i].str, p->value) == 0) {
+	*pval = descr[i].val;
+	print_help("--%s: <%s>\n", name, descr[i].str);
+	return 0;
+      }
+    }
+    
+    fprintf(stderr, "ERROR: Select value '%s' not found. Valid options are:",
+	    p->value);
+    for (int i = 0; descr[i].str; i++) {
+      fprintf(stderr, " '%s'", descr[i].str);
+    }
+    fprintf(stderr, "\n");
+    exit(-1);
+  } else {
+    for (int i = 0; descr[i].str; i++) {
+      if (*pval == descr[i].val) {
+	print_help("--%s: <%s> (default)\n", name, descr[i].str);
+	return -1;
+      }
+    }
+    // FIXME, can happen if no default was set, but we should disallow this.
+    print_help("--%s: (default)\n", name);
+    return -1;
   }
-
-  fprintf(stderr, "ERROR: Select value '%s' not found. Valid options are:",
-          p->value);
-  for (int i = 0; descr[i].str; i++) {
-    fprintf(stderr, " '%s'", descr[i].str);
-  }
-  fprintf(stderr, "\n");
-  abort();
 }
 
 int
@@ -223,15 +259,17 @@ mrc_params_get_option_int3(const char *name, int *pval)
     sprintf(namex, "%s%c", name, 'x' + d);
     struct option *p = find_option(namex);
   
-    if (!p)
+    if (!p) {
+      print_help("--%s: <%d> (default)\n", namex, pval[d]);
       continue;
+    }
     
     retval = 0;
     int rv = sscanf(p->value, "%d", pval + d);
     if (rv != 1) {
-      fprintf(stderr, "error: cannot parse integer from '%s'\n", p->value);
-      abort();
+      error("cannot parse integer from '%s'\n", p->value);
     }
+    print_help("--%s: <%d>\n", namex, pval[d]);
   }
   return retval;
 }
@@ -245,15 +283,17 @@ mrc_params_get_option_float3(const char *name, float *pval)
     sprintf(namex, "%s%c", name, 'x' + d);
     struct option *p = find_option(namex);
   
-    if (!p)
+    if (!p) {
+      print_help("--%s: <%g> (default)\n", namex, pval[d]);
       continue;
-    
+    }
+
     retval = 0;
     int rv = sscanf(p->value, "%g", pval + d);
     if (rv != 1) {
       fprintf(stderr, "error: cannot parse float from '%s'\n", p->value);
-      abort();
     }
+    print_help("--%s: <%g>\n", namex, pval[d]);
   }
   return retval;
 }
@@ -267,15 +307,17 @@ mrc_params_get_option_double3(const char *name, double *pval)
     sprintf(namex, "%s%c", name, 'x' + d);
     struct option *p = find_option(namex);
   
-    if (!p)
+    if (!p) {
+      print_help("--%s: <%g> (default)\n", namex, pval[d]);
       continue;
-    
+    }
+
     retval = 0;
     int rv = sscanf(p->value, "%lg", pval + d);
     if (rv != 1) {
       fprintf(stderr, "error: cannot parse double from '%s'\n", p->value);
-      abort();
     }
+    print_help("--%s: <%g>\n", namex, pval[d]);
   }
   return retval;
 }
@@ -348,9 +390,7 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     // types have to match, except a PT_SELECT can be set by a PT_INT
     if (params[i].type != type &&
 	!(params[i].type == PT_SELECT && type == PT_INT)) {
-      fprintf(stderr, "ERROR: option '%s' is not of type %d!\n",
-	      name, type);
-      abort();
+      error("option '%s' is not of type %d!\n", name, type);
     }
     switch (type) {
     case PT_INT:
@@ -406,9 +446,7 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     // types have to match, except a PT_SELECT can be set by a PT_INT
     if (params[i].type != type &&
 	!(params[i].type == PT_SELECT && type == PT_INT)) {
-      fprintf(stderr, "ERROR: option '%s' is not of type %d!\n",
-	      name, type);
-      abort();
+      error("option '%s' is not of type %d!\n", name, type);
     }
     switch (type) {
     case PT_INT:
@@ -474,7 +512,7 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       break;
     case PT_DOUBLE:
       pv->u_double = params[i].u.ini_double;
-      get_option_double(params[i].name, &pv->u_double);
+      mrc_params_get_option_double(params[i].name, &pv->u_double);
       break;
     case PT_STRING:
       pv->u_string = params[i].u.ini_string;
@@ -507,7 +545,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       mrc_params_get_option_float(params[i].name, &pv->u_float);
       break;
     case PT_DOUBLE:
-      get_option_double(params[i].name, &pv->u_double);
+      mrc_params_get_option_double(params[i].name, &pv->u_double);
       break;
     case PT_STRING:
       mrc_params_get_option_string(params[i].name, &pv->u_string);
@@ -551,7 +589,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_float(name, &pv->u_float);
       break;
     case PT_DOUBLE:
-      get_option_double(name, &pv->u_double);
+      mrc_params_get_option_double(name, &pv->u_double);
       break;
     case PT_STRING:
       mrc_params_get_option_string(name, &pv->u_string);

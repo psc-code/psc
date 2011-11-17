@@ -32,6 +32,7 @@ main(int argc, char **argv)
   mrctest_init(&argc, &argv);
 
   struct mrc_test *test = mrc_test_create(MPI_COMM_SELF);
+  mrc_test_set_from_options(test);
   struct mrc_test *test2 = mrc_test_get(test);
   mrc_test_destroy(test);
   mprintf("before destroy\n");
