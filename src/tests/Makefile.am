@@ -43,6 +43,8 @@ TESTS = test_part_xy \
 
 if USE_CUDA
 TESTS += \
+	test_psc_mparticles_c_cuda.sh \
+	test_psc_mparticles_cuda_c.sh \
 	test_part_yz_a_cuda.sh \
 	test_part_yz_b_cuda.sh \
 	test_part_yz_cuda.sh \

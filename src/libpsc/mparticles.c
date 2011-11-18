@@ -4,6 +4,7 @@
 #include <mrc_profile.h>
 #include <mrc_params.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAKE_MPARTICLES_METHODS(type)					\
 									\

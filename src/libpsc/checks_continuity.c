@@ -3,6 +3,8 @@
 #include "psc_moments.h"
 #include "psc_bnd.h"
 
+#include <math.h>
+
 bool opt_checks_verbose = false;
 
 typedef double creal;

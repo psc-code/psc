@@ -3,7 +3,6 @@
 #include "psc_push_fields.h"
 #include "psc_push_particles.h"
 #include "psc_bnd.h"
-
 #include "psc_sort.h"
 
 #include <math.h>
