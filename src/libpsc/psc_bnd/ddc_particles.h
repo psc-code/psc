@@ -18,6 +18,7 @@ struct ddcp_nei {
 struct ddcp_patch {
   int head;
   struct ddcp_nei nei[N_DIR];
+  int n_recv;
 };
 
 struct ddc_particles {

@@ -41,15 +41,16 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
 	  ddcp->sendp_reqs[dir1 + p * N_DIR] = MPI_REQUEST_NULL;
 	  ddcp->recv_reqs[dir1 + p * N_DIR] = MPI_REQUEST_NULL;
 	  
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    nei->rank = -1;
-	    continue;
-	  }
-	  
 	  nei->send_buf_size = 8;
 	  nei->send_buf = malloc(nei->send_buf_size * size_of_particle);
 	  nei->n_send = 0;
-	  mrc_ddc_get_nei_rank_patch(ddc, p, dir, &nei->rank, &nei->patch);
+
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    // use this one as buffer for particles that stay in the same patch
+	    nei->rank = -1;
+	  } else {
+	    mrc_ddc_get_nei_rank_patch(ddc, p, dir, &nei->rank, &nei->patch);
+	  }
 	}
       }
     }
@@ -108,15 +109,28 @@ ddc_particles_queue(struct ddc_particles *ddcp, struct ddcp_patch *patch,
   nei->n_send++;
 }
 
+// ----------------------------------------------------------------------
+// ddc_particles_comm
+//
+// OPT: could use MPI_Waitany?
+// OPT: overall more async
+// OPT: 1d instead of 3d loops
+// OPT: make the status buffers only as large as needed?
+
 void
 ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 {
+  MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+  int rank;
+  MPI_Comm_rank(comm, &rank);
+
   // FIXME, this is assuming our struct is equiv to an array of real_type
   assert(ddcp->size_of_particle % ddcp->size_of_real == 0);
   int sz = ddcp->size_of_particle / ddcp->size_of_real;
   int dir[3];
 
   // post receives for # particles we'll receive in the next step
+  // to remote procs only
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -126,7 +140,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0) {
+	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
 #if 0
@@ -134,13 +148,14 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 		  dir1neg + p * N_DIR);
 #endif
 	  MPI_Irecv(&nei->n_recv, 1, MPI_INT, nei->rank, dir1neg + p * N_DIR,
-		    MPI_COMM_WORLD, &ddcp->recv_reqs[dir1 + p * N_DIR]);
+		    comm, &ddcp->recv_reqs[dir1 + p * N_DIR]);
 	}
       }
     }
   }
 
   // post sends for # particles and then the actual particles
+  // to remote procs only
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -149,7 +164,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0) {
+	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
 #if 0
@@ -159,50 +174,68 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 		  dir1 + nei->patch * N_DIR);
 #endif
 	  MPI_Isend(&nei->n_send, 1, MPI_INT,
-		    nei->rank, dir1 + nei->patch * N_DIR, MPI_COMM_WORLD,
+		    nei->rank, dir1 + nei->patch * N_DIR, comm,
 		    &ddcp->send_reqs[dir1 + p * N_DIR]);
 	  MPI_Isend(nei->send_buf, sz * nei->n_send, ddcp->mpi_type_real,
-		    nei->rank, dir1 + nei->patch * N_DIR, MPI_COMM_WORLD,
+		    nei->rank, dir1 + nei->patch * N_DIR, comm,
 		    &ddcp->sendp_reqs[dir1 + p * N_DIR]);
 	}
       }
     }
   }
 
-  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-
-  // calc total # of particles
+  // count local # particles
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    int new_n_particles = patch->head; // particles which stayed on this proc
-
+    patch->n_recv = 0;
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0) {
+	  if (nei->rank != rank) {
 	    continue;
 	  }
-	  // add the ones we're about to receive
-	  new_n_particles += nei->n_recv;
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
+	  nei->n_recv = nei_send->n_send; // nec?
+	  patch->n_recv += nei_send->n_send;
 	}
       }
     }
-    ddcp->realloc(particles, p, new_n_particles);
+  }
+
+  // add remote # of particles
+  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  if (nei->rank != rank) {
+	    patch->n_recv += nei->n_recv;
+	  }
+	}
+      }
+    }
+    ddcp->realloc(particles, p, patch->head + patch->n_recv);
   }
 
   // post particle receives
+  // from remote procs only
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-
+    patch->n_recv = 0;
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0) {
+	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
 #if 0
@@ -211,7 +244,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 #endif
 	  void *addr = ddcp->get_addr(particles, p, patch->head);
 	  MPI_Irecv(addr, sz * nei->n_recv, ddcp->mpi_type_real,
-		    nei->rank, dir1neg + p * N_DIR, MPI_COMM_WORLD,
+		    nei->rank, dir1neg + p * N_DIR, comm,
 		    &ddcp->recv_reqs[dir1 + p * N_DIR]);
 	  patch->head += nei->n_recv;
 	}
@@ -219,6 +252,28 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }
 
+  // copy particles from local proc
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  if (nei->rank != rank) {
+	    continue;
+	  }
+	  void *addr = ddcp->get_addr(particles, p, patch->head);
+	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
+	  memcpy(addr, nei_send->send_buf, nei_send->n_send * ddcp->size_of_particle);
+	  patch->head += nei->n_recv;
+	}
+      }
+    }
+  }
+
+  // wait for receive of remote particles and clean up
   MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->send_reqs, MPI_STATUSES_IGNORE);
   MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
