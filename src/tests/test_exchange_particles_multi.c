@@ -13,11 +13,14 @@
 static void
 psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
+  int rank;
+  MPI_Comm_rank(psc_comm(psc), &rank);
+
   for (int p = 0; p < psc->nr_patches; p++) {
     struct psc_patch *patch = &ppsc->patch[p];
  
     int i = 0;
-    if (p == 0) { // initially, only particles on first patch
+    if (p == 0 && rank == 0) { // initially, only particles on first patch
       int *ilo = patch->off;
       int ihi[3] = { patch->off[0] + patch->ldims[0],
 		     patch->off[1] + patch->ldims[1],
