@@ -221,8 +221,13 @@ psc_setup_coeff(struct psc *psc)
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
     }
   }
-  psc->dt = psc->prm.cfl * 
-    sqrt(1./(1./sqr(psc->dx[0]) + 1./sqr(psc->dx[1]) + 1./sqr(psc->dx[2])));
+
+  int *im = psc->domain.gdims;
+  double inv_sum=0;
+  for (int d=0;d<3;d++) inv_sum += im[d]>1 ? (1./sqr(psc->dx[d])) : 0.;
+  assert(inv_sum);  //Simulation has 0 dimensions
+  psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
+
 #if 0
   mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
   mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
