@@ -15,6 +15,7 @@ BACKUP
 SELECT
 src/VLI
 src/psc_restart
+src/psc_harris
 src/psc_bubble
 src/psc_bubble_yz
 src/psc_photon_test
