@@ -28,7 +28,7 @@ struct psc_harris {
   double Te, Ti;
   double MMi;
   double lambda;
-  double lx, lz;
+  double lz, ly;
   double pert;
 };
 
@@ -42,8 +42,8 @@ static struct param psc_harris_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(1./12.) },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(5./12.) },
   { "lambda"        , VAR(lambda)          , PARAM_DOUBLE(.5)     },
-  { "lx"            , VAR(lx)              , PARAM_DOUBLE(25.6)   },
-  { "lz"            , VAR(lz)              , PARAM_DOUBLE(12.8)   },
+  { "lz"            , VAR(lz)              , PARAM_DOUBLE(25.6)   },
+  { "ly"            , VAR(ly)              , PARAM_DOUBLE(12.8)   },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.1)     },
   {},
 };
@@ -75,12 +75,12 @@ psc_harris_create(struct psc *psc)
 
   // FIXME, won't know if MMi is changed
   real d_i = sqrt(harris->MMi); // in units of d_e
-  ppsc->domain.length[0] = harris->lx * d_i;
-  ppsc->domain.length[1] = 1.; // no y dependence 
-  ppsc->domain.length[2] = 2. * harris->lz * d_i; // double tearing
+  ppsc->domain.length[0] = 1.; // no x dependence 
+  ppsc->domain.length[1] = 2. * harris->ly * d_i; // double tearing
+  ppsc->domain.length[2] = harris->lz * d_i;
 
-  ppsc->domain.gdims[0] = 640;
-  ppsc->domain.gdims[1] = 1;
+  ppsc->domain.gdims[0] = 1;
+  ppsc->domain.gdims[1] = 640;
   ppsc->domain.gdims[2] = 640;
 
   ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
@@ -104,24 +104,24 @@ psc_harris_init_field(struct psc *psc, double x[3], int m)
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
-  double LLx = harris->lx * d_i, LLz = harris->lz * d_i;
+  double LLz = harris->lz * d_i, LLy = harris->ly * d_i;
   double LLL = harris->lambda * d_i;
   double AA = harris->pert * BB * d_i;
 
   switch (m) {
-  case HX:
-    return
-      BB * (-1. + tanh((x[2] - 0.5*LLz) / LLL)- tanh((x[2] - 1.5*LLz) / LLL))
-      + AA * M_PI/LLz * sin(2.*M_PI * x[0] / LLx) * cos(M_PI * x[2] / LLz);
-
   case HZ:
-    return - AA * 2.*M_PI / LLx * cos(2.*M_PI * x[0] / LLx) * sin(M_PI * x[2] / LLz);
+    return
+      BB * (-1. + tanh((x[1] - 0.5*LLy) / LLL)- tanh((x[1] - 1.5*LLy) / LLL))
+      + AA * M_PI/LLy * sin(2.*M_PI * x[2] / LLz) * cos(M_PI * x[1] / LLy);
 
-  case JYI:
+  case HY:
+    return - AA * 2.*M_PI / LLz * cos(2.*M_PI * x[2] / LLz) * sin(M_PI * x[1] / LLy);
+
+  case JXI:
     return BB / LLL *
-      (1./sqr(cosh((x[2] - 0.5*LLz) / LLL)) - 1./sqr(cosh((x[2] - 1.5*LLz) / LLL)))
-      - (AA*sqr(M_PI) * (1./sqr(LLz) + 4./sqr(LLx)) 
-	 * sin(2.*M_PI * x[0] / LLx) * sin(M_PI * x[2] / LLz));
+      (1./sqr(cosh((x[1] - 0.5*LLy) / LLL)) - 1./sqr(cosh((x[1] - 1.5*LLy) / LLL)))
+      - (AA*sqr(M_PI) * (1./sqr(LLy) + 4./sqr(LLz)) 
+	 * sin(2.*M_PI * x[2] / LLz) * sin(M_PI * x[1] / LLy));
 
   default: return 0.;
   }
@@ -138,20 +138,20 @@ psc_harris_init_npt(struct psc *psc, int kind, double x[3],
 
   real d_i = sqrt(harris->MMi); // in units of d_e
   double BB = harris->BB;
-  double LLz = harris->lz * d_i;
+  double LLy = harris->ly * d_i;
   double LLL = harris->lambda * d_i;
   double nnb = harris->nnb;
   double TTi = harris->Ti * sqr(BB);
   double TTe = harris->Te * sqr(BB);
 
-  double jy0 = 1./sqr(cosh((x[2] - 0.5*LLz) / LLL)) - 1./sqr(cosh((x[2] - 1.5*LLz) / LLL));
+  double jx0 = 1./sqr(cosh((x[1] - 0.5*LLy) / LLL)) - 1./sqr(cosh((x[1] - 1.5*LLy) / LLL));
 
-  npt->n = nnb + 1./sqr(cosh((x[2] - 0.5*LLz) / LLL)) + 1./sqr(cosh((x[2] - 1.5*LLz) / LLL));
+  npt->n = nnb + 1./sqr(cosh((x[1] - 0.5*LLy) / LLL)) + 1./sqr(cosh((x[1] - 1.5*LLy) / LLL));
   switch (kind) {
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1.;
-    npt->p[1] = - 2. * TTe / BB / LLL * jy0 / npt->n;
+    npt->p[0] = - 2. * TTe / BB / LLL * jx0 / npt->n;
     npt->T[0] = TTe;
     npt->T[1] = TTe;
     npt->T[2] = TTe;
@@ -159,7 +159,7 @@ psc_harris_init_npt(struct psc *psc, int kind, double x[3],
   case 1: // ions
     npt->q = 1.;
     npt->m = harris->MMi;
-    npt->p[1] = 2. * TTi / BB / LLL * jy0 / npt->n;
+    npt->p[0] = 2. * TTi / BB / LLL * jx0 / npt->n;
     npt->T[0] = TTi;
     npt->T[1] = TTi;
     npt->T[2] = TTi;
