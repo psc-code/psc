@@ -17,7 +17,6 @@
 // Te, Ti:  bulk temperature of electrons and ions (units m_e c^2)
 // mi_over_me: ion mass / electron mass
 // lambda = shear length scale (units of d_i)
-// ly, lz = simulation box size (units of d_i)
 // pert = perturbation (units of B * d_i)
 
 // FIXME (description), below parameters don't include scaling factors
@@ -28,7 +27,6 @@ struct psc_harris {
   double Te, Ti;
   double mi_over_me;
   double lambda;
-  double lz, ly;
   double pert;
 };
 
@@ -42,8 +40,6 @@ static struct param psc_harris_descr[] = {
   { "Te"            , VAR(Te)              , PARAM_DOUBLE(1./12.) },
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(5./12.) },
   { "lambda"        , VAR(lambda)          , PARAM_DOUBLE(.5)     },
-  { "lz"            , VAR(lz)              , PARAM_DOUBLE(25.6)   },
-  { "ly"            , VAR(ly)              , PARAM_DOUBLE(12.8)   },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.1)     },
   {},
 };
@@ -55,8 +51,6 @@ static struct param psc_harris_descr[] = {
 static void
 psc_harris_create(struct psc *psc)
 {
-  struct psc_harris *harris = to_psc_harris(psc);
-
   // new defaults (dimensionless) for this case
   ppsc->prm.qq = 1.;
   ppsc->prm.mm = 1.;
@@ -74,8 +68,8 @@ psc_harris_create(struct psc *psc)
   ppsc->prm.nicell = 50;
 
   ppsc->domain.length[0] = 1.; // no x dependence 
-  ppsc->domain.length[1] = 2. * harris->ly; // double tearing
-  ppsc->domain.length[2] = harris->lz;
+  ppsc->domain.length[1] = 2 * 12.8; // double tearing
+  ppsc->domain.length[2] = 25.6;
 
   ppsc->domain.gdims[0] = 1;
   ppsc->domain.gdims[1] = 640;
@@ -101,7 +95,7 @@ psc_harris_init_field(struct psc *psc, double x[3], int m)
   struct psc_harris *harris = to_psc_harris(psc);
 
   double B0 = harris->B0;
-  double lz = harris->lz, ly = harris->ly;
+  double lz = psc->domain.length[2], ly = .5 * psc->domain.length[1];
   double lambda = harris->lambda;
   double AA = harris->pert * B0;
 
@@ -134,7 +128,7 @@ psc_harris_init_npt(struct psc *psc, int kind, double x[3],
   struct psc_harris *harris = to_psc_harris(psc);
 
   double B0 = harris->B0;
-  double ly = harris->ly;
+  double ly = .5 * psc->domain.length[1];
   double lambda = harris->lambda;
   double nb = harris->nb;
   double TTi = harris->Ti * sqr(B0) * harris->mi_over_me; // FIXME, why???
