@@ -105,8 +105,8 @@ calc_E_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
 				 F3(pf,  EX,ix,iy,iz+dz) + F3(pf,  EX,ix,iy+dy,iz+dz)))
 #define EY_CC(ix,iy,iz) (.25f * (F3(pf,  EY,ix,iy,iz   ) + F3(pf,  EY,ix+dx,iy,iz   ) + \
 				 F3(pf,  EY,ix,iy,iz+dz) + F3(pf,  EY,ix+dx,iy,iz+dz)))
-#define EZ_CC(ix,iy,iz) (.25f * (F3(pf,  EZ,ix,iy,iz   ) + F3(pf,  EZ,ix+dx,iy   ,iz) + \
-				 F3(pf,  EZ,ix,iy+dy,iz) + F3(pf,  EZ,ix+dz,iy+dy,iz)))
+#define EZ_CC(ix,iy,iz) (.25f * (F3(pf,  EZ,ix,iy   ,iz) + F3(pf,  EZ,ix+dx,iy   ,iz) + \
+				 F3(pf,  EZ,ix,iy+dy,iz) + F3(pf,  EZ,ix+dx,iy+dy,iz)))
 
 static void
 calc_E_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
