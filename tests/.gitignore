@@ -14,4 +14,13 @@ test_erfi
 test_io_read_multi
 test_wavelet
 tutorial_mrc_obj
+test_ddc
+test_dict
+test_io
+test_io_read
+test_mrc_obj
+test_spherical_harmonics
+*.asc
+run*.xdmf
+run*.h5
 
