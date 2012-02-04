@@ -12,6 +12,7 @@ SUBDIRS = \
 	psc_output_fields \
 	psc_output_format \
 	psc_output_particles \
+	psc_output_photons \
 	psc_patchmanager \
 	psc_pulse \
 	psc_push_fields \
@@ -36,6 +37,7 @@ libpsc_la_LIBADD = \
 	psc_output_fields/libsubdir.la \
 	psc_output_format/libsubdir.la \
 	psc_output_particles/libsubdir.la \
+	psc_output_photons/libsubdir.la \
 	psc_patchmanager/libsubdir.la \
 	psc_pulse/libsubdir.la \
 	psc_push_fields/libsubdir.la \

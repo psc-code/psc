@@ -8,6 +8,7 @@
 #include "psc_sort.h"
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
+#include "psc_output_photons.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
 
@@ -37,6 +38,7 @@ psc_output(struct psc *psc)
 
   psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
   psc_output_particles_run(psc->output_particles, psc->particles);
+  psc_output_photons_run(psc->output_photons, psc->mphotons);
 }
 
 /////////////////////////////////////////////////////////////////////////

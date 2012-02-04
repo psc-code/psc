@@ -18,6 +18,9 @@ struct psc_output_particles_ops {
 
 extern struct psc_output_particles_ops psc_output_particles_none_ops;
 extern struct psc_output_particles_ops psc_output_particles_fortran_ops;
+extern struct psc_output_particles_ops psc_output_particles_custom_binary_ops;
+extern struct psc_output_particles_ops psc_output_particles_xdmf_compact_ops;
+extern struct psc_output_particles_ops psc_output_particles_xdmf_spread_ops;
 
 #define psc_output_particles_ops(output_particles) ((struct psc_output_particles_ops *)((output_particles)->obj.ops))
 
