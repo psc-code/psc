@@ -194,6 +194,7 @@ struct psc {
   struct psc_sort *sort;			///< sort operator
   struct psc_output_fields *output_fields;	///< field output
   struct psc_output_particles *output_particles;///< particle output
+  struct psc_output_photons *output_photons;    ///< particle output
   struct psc_moments *moments;			///< Moment generator
   struct psc_event_generator *event_generator;	///< event generator
   struct psc_balance *balance;                  ///< rebalancer

@@ -9,6 +9,7 @@
 #include "psc_sort.h"
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
+#include "psc_output_photons.h"
 #include "psc_moments.h"
 #include "psc_event_generator.h"
 #include "psc_balance.h"
@@ -162,6 +163,8 @@ _psc_create(struct psc *psc)
   psc_add_child(psc, (struct mrc_obj *) psc->output_fields);
   psc->output_particles = psc_output_particles_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->output_particles);
+  psc->output_photons = psc_output_photons_create(comm);
+  psc_add_child(psc, (struct mrc_obj *) psc->output_photons);
   psc->moments = psc_moments_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->moments);
   psc->event_generator = psc_event_generator_create(comm);
