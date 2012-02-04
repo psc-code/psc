@@ -2,6 +2,8 @@
 #include "psc_testing.h"
 #include <mrc_params.h>
 
+#include <string.h>
+
 static void
 psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
