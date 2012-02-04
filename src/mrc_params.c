@@ -571,6 +571,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_STRING:
       pv->u_string = pval->u_string;
       break;
+    case PT_BOOL:
+      pv->u_bool = pval->u_bool;
+      break;
     case PT_SELECT:
       pv->u_select = pval->u_select;
       break;
@@ -648,6 +651,13 @@ mrc_params_set_int(void *p, struct param *params, const char *name, int val)
 {
   union param_u uval = { .u_int = val };
   return mrc_params_set_type(p, params, name, PT_INT, &uval);
+}
+
+int
+mrc_params_set_bool(void *p, struct param *params, const char *name, bool val)
+{
+  union param_u uval = { .u_bool = val };
+  return mrc_params_set_type(p, params, name, PT_BOOL, &uval);
 }
 
 int
