@@ -377,6 +377,13 @@ mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val)
 }
 
 void
+mrc_obj_set_param_bool(struct mrc_obj *obj, const char *name, bool val)
+{
+  union param_u uval = { .u_bool = val };
+  mrc_obj_set_param_type(obj, name, PT_BOOL, &uval);
+}
+
+void
 mrc_obj_set_param_select(struct mrc_obj *obj, const char *name, int val)
 {
   union param_u uval = { .u_select = val };
