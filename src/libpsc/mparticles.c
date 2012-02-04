@@ -148,7 +148,8 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
 	    psc_mparticles_type(particles_base));			\
     assert(0);								\
   }									\
-  ops->copy_from_##type(particles_base, particles, 0);			\
+  ops->copy_from_##type(particles_base, particles,			\
+			MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);	\
   psc_mparticles_destroy(particles);					\
   prof_stop(pr);							\
 }									\

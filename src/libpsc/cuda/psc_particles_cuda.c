@@ -2,26 +2,29 @@
 #include "psc.h"
 #include "psc_cuda.h"
 #include "psc_particles_cuda.h"
-
-// FIXME -> header
-void cuda_sort_patch(int p, particles_cuda_t *pp);
+#include "psc_push_particles.h"
 
 static void
-particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part,
-		     bool need_block_offsets, bool need_cell_offsets)
+particles_cuda_alloc(int p, particles_cuda_t *pp, int n_part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
   pp->n_part = n_part;
-  int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
+  int bs[3];
+  psc_push_particles_get_blocksize(ppsc->push_particles, bs); 
+  pp->flags = psc_push_particles_get_mp_flags(ppsc->push_particles);
   for (int d = 0; d < 3; d++) {
+    assert(bs[d] != 0);
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
+    pp->blocksize[d] = bs[d];
+    assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
     pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
-  __particles_cuda_alloc(pp, need_block_offsets, need_cell_offsets);
+  __particles_cuda_alloc(pp, pp->flags & MP_NEED_BLOCK_OFFSETS,
+			 pp->flags & MP_NEED_CELL_OFFSETS);
   pp->n_alloced = n_part;
 }
 
@@ -33,21 +36,13 @@ particles_cuda_free(particles_cuda_t *pp)
 
 #include "psc_particles_as_c.h"
 
-static inline void
-find_cell(real xi, real yi, real zi, int l[3])
-{
-  l[0] = cuda_nint(xi / ppsc->dx[0]);
-  l[1] = cuda_nint(yi / ppsc->dx[1]);
-  l[2] = cuda_nint(zi / ppsc->dx[2]);
-  //  printf("l %d %d %d\n", l[0], l[1], l[2]);
-}
-
 // FIXME, should go away and always be done within cuda for consistency
 
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
-	     particle_t *p)
+	     particles_t *pp, int n)
 {
+  particle_t *p = particles_get_one(pp, n);
   particle_real_t dxi = 1.f / ppsc->dx[0];
   particle_real_t dyi = 1.f / ppsc->dx[1];
   particle_real_t dzi = 1.f / ppsc->dx[2];
@@ -65,21 +60,21 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 
 static inline int
 find_blockIdx(struct psc_patch *patch, struct cell_map *map,
-	      particle_t *p)
+	      particles_t *pp, int n, int blocksize[3])
 {
-  int cell_idx = find_cellIdx(patch, map, p);
-  return cell_idx / (BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z);
+  int cell_idx = find_cellIdx(patch, map, pp, n);
+  return cell_idx / (blocksize[0] * blocksize[1] * blocksize[2]);
 }
 
 static inline void
 blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
-		     int bidx, int bi[3])
+		     int bidx, int bi[3], int blocksize[3])
 {
-  int cidx = bidx * (BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z);
+  int cidx = bidx * (blocksize[0] * blocksize[1] * blocksize[2]);
   cell_map_1to3(map, cidx, bi);
-  bi[0] /= BLOCKSIZE_X;
-  bi[1] /= BLOCKSIZE_Y;
-  bi[2] /= BLOCKSIZE_Z;
+  for (int d = 0; d < 3; d++) {
+    bi[d] /= blocksize[d];
+  }
 }
 
 void
@@ -92,6 +87,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
     particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
+    flags = pp->flags; // FIXME
     pp->n_part = pp_cf->n_part;
     assert(pp->n_part <= pp->n_alloced);
 
@@ -121,11 +117,9 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
       pxi4[n].w = qni_wni;
     }
 
-    int bs[3] = { BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z };
+    int bs[3];
     for (int d = 0; d < 3; d++) {
-      if (ppsc->domain.gdims[d] == 1) {
-	bs[d] = 1;
-      }
+      bs[d] = pp->blocksize[d];
       if (bs[d] != 1) {
 	bs[d] *= 2; // sort not only within blocks, but also on lowest block
 	// bit, so we can do the checkerboard passes
@@ -142,8 +136,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
 	if (n < pp->n_part) {
-	  particle_t *part_cf = particles_get_one(pp_cf, n);
-	  block = find_blockIdx(patch, &map, part_cf);
+	  block = find_blockIdx(patch, &map, pp_cf, n, pp->blocksize);
 	} else {
 	  block = pp->nr_blocks;
 	}
@@ -157,7 +150,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 #if 0
       for (int b = 0; b < pp->nr_blocks; b++) {
 	int bi[3];
-	blockIdx_to_blockCrd(patch, &map, b, bi);
+	blockIdx_to_blockCrd(patch, &map, b, bi, pp->blocksize);
 	printf("block %d [%d,%d,%d]: %d:%d\n", b, bi[0], bi[1], bi[2],
 	       offsets[b], offsets[b+1]);
       }
@@ -175,16 +168,15 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
     }
 
     int *c_offsets = NULL;
-    if (flags & MP_NEED_CELL_OFFSETS) {
-      const int cells_per_block = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
+    if (0 && (flags & MP_NEED_CELL_OFFSETS)) {
+      const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
       c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
 			      sizeof(*c_offsets));
       int last_block = -1;
       for (int n = 0; n <= pp->n_part; n++) {
 	int block;
 	if (n < pp->n_part) {
-	  particle_t *part_cf = particles_get_one(pp_cf, n);
-	  block = find_cellIdx(patch, &map, part_cf);
+	  block = find_cellIdx(patch, &map, pp_cf, n);
 	} else {
 	  block = map.N;
 	}
@@ -202,6 +194,13 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 
     if (flags & MP_NEED_BLOCK_OFFSETS) {
       cuda_sort_patch(p, pp);
+    }
+    if (flags & MP_NEED_CELL_OFFSETS) {
+      cuda_sort_patch_by_cell(p, pp);
+    }
+    // FIXME, sorting twice because we need both would be suboptimal
+    if ((flags & MP_NEED_CELL_OFFSETS) && (flags & MP_NEED_BLOCK_OFFSETS)) {
+      MHERE;
     }
 
     free(offsets);
@@ -276,8 +275,7 @@ _psc_mparticles_cuda_set_domain_nr_particles(mparticles_cuda_t *mparticles,
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_cuda_t));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_cuda_alloc(p, psc_mparticles_get_patch_cuda(mparticles, p),
-			 nr_particles_by_patch[p],
-			 true, false); // FIXME, don't hardcode
+			 nr_particles_by_patch[p]);
   }
 }
 

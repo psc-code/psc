@@ -150,19 +150,19 @@ cuda_push_part(mparticles_base_t *particles_base,
 }
 
 static void
-cuda_push_partq(mparticles_base_t *particles_base,
+cuda_push_partq(struct psc_push_particles *push,
+		mparticles_base_t *particles_base,
 		mfields_base_t *flds_base,
 		void (*set_constants)(particles_cuda_t *, fields_cuda_t *),
 		void (*push_part_p2)(particles_cuda_t *, fields_cuda_t *),
-		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int),
-		bool need_block_offsets, bool need_cell_offsets)
+		void (*push_part_p3)(particles_cuda_t *, fields_cuda_t *, real *, int))
 {
   const int block_stride = 4;
+  unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
   
   // FIXME distinguish alloc/calc_block_offsets?
   mparticles_cuda_t *particles = 
-    psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
-			    (need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
+    psc_mparticles_get_cuda(particles_base, mp_flags);
   mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
 
   static int pr, pr2, pr3;
@@ -188,18 +188,15 @@ cuda_push_partq(mparticles_base_t *particles_base,
   }
 
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  if (need_cell_offsets) {
-    psc_mparticles_put_cuda(particles, particles_base);
-    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-    psc_sort_run(ppsc->sort, particles_base);
-    particles = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS |
-					(need_cell_offsets ? MP_NEED_CELL_OFFSETS : 0));
-  } else {
-    psc_mparticles_put_cuda(particles, particles_base);
-    psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-    // block offsets will be calculated by sort_patch, anyway
-    particles = psc_mparticles_get_cuda(particles_base, 0);
-    psc_foreach_patch(ppsc, p) {
+  psc_mparticles_put_cuda(particles, particles_base);
+  psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+
+  // block/cell offsets will be calculated by sort_patch, anyway
+  particles = psc_mparticles_get_cuda(particles_base, 0);
+  psc_foreach_patch(ppsc, p) {
+    if (mp_flags & MP_NEED_CELL_OFFSETS) {
+      cuda_sort_patch_by_cell(p, psc_mparticles_get_patch_cuda(particles, p));
+    } else {
       cuda_sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
     }
   }
@@ -329,11 +326,10 @@ psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz5_set_constants,
 		  yz5_cuda_push_part_p2,
-		  yz5_cuda_push_part_p3,
-		  true, true);
+		  yz5_cuda_push_part_p3);
 }
 
 static void __unused
@@ -341,11 +337,10 @@ psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
 				 mparticles_base_t *particles_base,
 				 mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz6_set_constants,
 		  yz6_cuda_push_part_p2,
-		  yz6_cuda_push_part_p3,
-		  true, true);
+		  yz6_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -357,6 +352,7 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .push_yz               = psc_push_particles_cuda_push_yz6,
   .push_yz_a             = psc_push_particles_cuda_push_yz_a,
   .push_yz_b             = psc_push_particles_cuda_push_yz_b,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
 };
 
 // ======================================================================
@@ -366,11 +362,10 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz_1st_set_constants,
 		  yz_1st_cuda_push_part_p2,
-		  yz_1st_cuda_push_part_p3,
-		  true, true);
+		  yz_1st_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -379,20 +374,21 @@ psc_push_particles_cuda_1st_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
   .name                  = "cuda_1st",
   .push_yz               = psc_push_particles_cuda_1st_push_yz,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
+  .blocksize             = { 4, 4, 4 },
 };
 
 // ======================================================================
 
-static void __unused
+static void
 psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 				    mparticles_base_t *particles_base,
 				    mfields_base_t *flds_base)
 {
-  cuda_push_partq(particles_base, flds_base,
+  cuda_push_partq(push, particles_base, flds_base,
 		  yz_1vb_set_constants,
 		  yz_1vb_cuda_push_part_p2,
-		  yz_1vb_cuda_push_part_p3,
-		  true, false);
+		  yz_1vb_cuda_push_part_p3);
 }
 
 // ======================================================================
@@ -401,4 +397,6 @@ psc_push_particles_cuda_1vb_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
   .name                  = "cuda_1vb",
   .push_yz               = psc_push_particles_cuda_1vb_push_yz,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS,
+  .blocksize             = { 4, 4, 4 },
 };

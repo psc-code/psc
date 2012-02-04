@@ -259,6 +259,7 @@ struct psc_photon_np {
 
 struct psc_ops {
   MRC_SUBCLASS_OPS(struct psc);
+  void (*setup_particles)(struct psc *psc, int *nr_particles_by_patch, bool count_only);
   void (*init_npt)(struct psc *psc, int kind, double x[3],
 		   struct psc_particle_npt *npt);
   void (*setup_fields)(struct psc *psc, mfields_base_t *flds);
@@ -382,7 +383,12 @@ void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);
+
+extern bool opt_checks_verbose;
+
 void psc_check_particles(mparticles_base_t *particles);
+void psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
+			  mfields_base_t *flds, double eps);
 
 struct psc *psc_read_checkpoint(MPI_Comm comm, int n);
 void psc_write_checkpoint(struct psc *psc);

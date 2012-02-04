@@ -104,6 +104,7 @@ EXTERN_C void __fields_cuda_from_device(fields_cuda_t *pf, real *h_flds, int mb,
 EXTERN_C void cuda_exchange_particles(int p, particles_cuda_t *pp);
 
 EXTERN_C void cuda_sort_patch(int p, particles_cuda_t *pp);
+EXTERN_C void cuda_sort_patch_by_cell(int p, particles_cuda_t *pp);
 
 EXTERN_C void psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles,
 					     void *particles_base,

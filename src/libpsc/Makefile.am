@@ -82,6 +82,7 @@ libpsc_la_SOURCES = \
 	psc_stats.c \
 	psc_dump.c \
 	checks.c \
+	checks_continuity.c \
 	psc_checkpoint.c \
 	psc_main.c
 

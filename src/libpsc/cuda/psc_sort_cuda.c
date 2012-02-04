@@ -5,6 +5,7 @@
 
 // FIXME -> header
 EXTERN_C void sort_patch(int p, particles_cuda_t *pp);
+EXTERN_C void sort_patch_by_cell(int p, particles_cuda_t *pp);
 
 // ======================================================================
 // cuda sort
@@ -53,6 +54,19 @@ cuda_sort_patch(int p, particles_cuda_t *pp)
 
   prof_start(pr);
   sort_patch(p, pp);
+  prof_stop(pr);
+}
+
+void
+cuda_sort_patch_by_cell(int p, particles_cuda_t *pp)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_sort_patch", 1., 0, 0);
+  }
+
+  prof_start(pr);
+  sort_patch_by_cell(p, pp);
   prof_stop(pr);
 }
 

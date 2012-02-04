@@ -156,7 +156,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
     psc_save_fields_ref(ppsc, ppsc->flds);
   } else {
     psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_z()");
-    psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
+    psc_check_currents_ref(ppsc, ppsc->flds, eps_fields, 3);
   }
   psc_case_destroy(_case);
 }
@@ -164,8 +164,7 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   int testcase = 1;
   mrc_params_get_option_int("case", &testcase);
@@ -193,7 +192,5 @@ main(int argc, char **argv)
   run_test(false, "sse2", 1e-7, 2e-6, create_test);
 #endif
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

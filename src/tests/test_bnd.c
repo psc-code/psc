@@ -50,8 +50,7 @@ setup_jx_noghost(mfields_base_t *flds_base)
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
   // test psc_add_ghosts()
 
@@ -71,7 +70,7 @@ main(int argc, char **argv)
   setup_jx(ppsc->flds);
   psc_bnd_add_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref_noghost(ppsc, ppsc->flds, 1e-10);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10, 0);
   psc_case_destroy(_case);
 
 #ifdef USE_CUDA
@@ -81,7 +80,7 @@ main(int argc, char **argv)
   setup_jx(ppsc->flds);
   psc_bnd_add_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
   //  psc_dump_field(JXI, "jx2");
-  psc_check_currents_ref_noghost(ppsc, ppsc->flds, 1e-7);
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7, 0);
   psc_case_destroy(_case);
 #endif
 
@@ -91,9 +90,9 @@ main(int argc, char **argv)
   psc_bnd_set_type(ppsc->bnd, "fortran");
   psc_case_setup(_case);
   setup_jx_noghost(ppsc->flds);
-  psc_dump_field(ppsc->flds, JXI, "jx0");
+  //  psc_dump_field(ppsc->flds, JXI, "jx0");
   psc_bnd_fill_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
-  psc_dump_field(ppsc->flds, JXI, "jx1");
+  //  psc_dump_field(ppsc->flds, JXI, "jx1");
   psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
@@ -102,8 +101,8 @@ main(int argc, char **argv)
   psc_case_setup(_case);
   setup_jx_noghost(ppsc->flds);
   psc_bnd_fill_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
-  psc_dump_field(ppsc->flds, JXI, "jx2");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10);
+  //  psc_dump_field(ppsc->flds, JXI, "jx2");
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-10, 3);
   psc_case_destroy(_case);
 
 #ifdef USE_CUDA
@@ -112,12 +111,10 @@ main(int argc, char **argv)
   psc_case_setup(_case);
   setup_jx_noghost(ppsc->flds);
   psc_bnd_fill_ghosts(ppsc->bnd, ppsc->flds, JXI, JXI + 1);
-  psc_dump_field(ppsc->flds, JXI, "jx2");
-  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7);
+  //  psc_dump_field(ppsc->flds, JXI, "jx2");
+  psc_check_currents_ref(ppsc, ppsc->flds, 1e-7, 3);
   psc_case_destroy(_case);
 #endif
 
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

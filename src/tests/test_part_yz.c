@@ -1,125 +1,85 @@
 
 #include "psc_testing.h"
-#include "psc_push_particles.h"
-#include "psc_sort.h"
-#include "psc_bnd.h"
-#include <mrc_profile.h>
 #include <mrc_params.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <mpi.h>
-
-static bool do_dump = false;
-static bool check_currents = true;
-
 static void
-dump(const char *basename, int cnt)
+psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count_only)
 {
-  if (!do_dump)
+  assert(psc->nr_patches == 1);
+
+  if (count_only) {
+    nr_particles_by_patch[0] = 1;
     return;
-
-  char s[200];
-  sprintf(s, "part_%s_%d", basename, cnt);
-  psc_dump_particles(ppsc->particles, s);
-  sprintf(s, "jx_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JXI, s);
-  sprintf(s, "jy_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JYI, s);
-  sprintf(s, "jz_%s_%d", basename, cnt);
-  psc_dump_field(ppsc->flds, JZI, s);
-}
-
-static struct psc_case *
-create_test(const char *s_push_particles)
-{
-  struct psc_case *_case = psc_create_test_yz();
-  psc_push_particles_set_type(ppsc->push_particles, s_push_particles);
-  psc_sort_set_type(ppsc->sort, "countsort2");
-  psc_sort_set_param_int3(ppsc->sort, "blocksize", (int [3]) { 1, 8, 8 }); // FIXME
-  psc_case_setup(_case);
-  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
-  psc_sort_run(ppsc->sort, ppsc->particles);
-  return _case;
-}
-
-static void
-run_test(bool is_ref, const char *s_push_particles, double eps_particles, double eps_fields,
-	 struct psc_case *(*create_test)(const char *), const char *push)
-{
-  printf("=== testing push_part_yz%s() %s %s\n", push, s_push_particles,
-	 is_ref ? "(ref)" : "");
-
-  struct psc_case *_case = create_test(s_push_particles);
-  dump(s_push_particles, 0);
-  if (strlen(push) == 0) {
-    psc_push_particles_run(ppsc->push_particles, ppsc->particles, ppsc->flds);
-  } else if (strcmp(push, "_a") == 0) {
-    psc_push_particles_push_yz_a(ppsc->push_particles, ppsc->particles, ppsc->flds);
-  } else if (strcmp(push, "_b") == 0) {
-    psc_push_particles_push_yz_b(ppsc->push_particles, ppsc->particles, ppsc->flds);
   }
-  psc_bnd_exchange_particles(ppsc->bnd, ppsc->particles);
-  psc_sort_run(ppsc->sort, ppsc->particles);
-  dump(s_push_particles, 1);
-  if (is_ref) {
-    psc_save_particles_ref(ppsc, ppsc->particles);
-    psc_save_fields_ref(ppsc, ppsc->flds);
-  } else {
-    psc_check_particles_ref(ppsc, ppsc->particles, eps_particles, "push_part_yz()");
-    if (check_currents && strlen(push) == 0) { // only check currents for full pusher
-      psc_check_currents_ref(ppsc, ppsc->flds, eps_fields);
-    }
+
+  particles_c_t *pp = psc_mparticles_get_patch_c(psc->particles, 0);
+  pp->n_part = nr_particles_by_patch[0];
+  for (int i = 0; i < pp->n_part; i++) {
+    particle_c_t *prt = particles_c_get_one(pp, 0);
+    prt->qni = 1.; prt->mni = 1.; prt->wni = 1.;
+    prt->yi = prt->zi = .5;
   }
-  psc_case_destroy(_case);
 }
+
+// ======================================================================
+// psc_test_ops_1a
+
+static struct psc_ops psc_test_ops_1a = {
+  .name             = "test",
+  .size             = sizeof(struct psc_test),
+  .create           = psc_test_create,
+  .init_field       = psc_test_init_field_linear,
+  .setup_particles  = psc_test_setup_particles,
+  .step             = psc_test_step,
+};
+
+// ----------------------------------------------------------------------
+// check push_particles_push_yz against "fortran" ref
+
+// psc_push_particles_type used as reference
+static const char *s_ref_type = "fortran";
+// psc_push_particles_type to be tested
+static const char *s_type = "fortran";
+// threshold for particles
+static double eps_particles = 1e-7;
+// threshold for fields
+static double eps_fields = 1e-7;
+// which moment calculation to use for charge continuity
+static const char *s_moments = "c";
+// which test case to set up particles / fields
+static const char *s_case = "1";
 
 int
 main(int argc, char **argv)
 {
-  MPI_Init(&argc, &argv);
-  libmrc_params_init(argc, argv);
+  psc_testing_init(&argc, &argv);
 
-  mrc_params_get_option_bool("dump", &do_dump);
-  mrc_params_get_option_bool("check_currents", &check_currents);
+  mrc_params_get_option_string("ref_type", &s_ref_type);
+  mrc_params_get_option_string("type", &s_type);
+  mrc_params_get_option_double("eps_particles", &eps_particles);
+  mrc_params_get_option_double("eps_fields", &eps_fields);
+  mrc_params_get_option_string("moments", &s_moments);
+  mrc_params_get_option_string("case", &s_case);
 
-  // ----------------------------------------------------------------------
-  // push_yz_a
+  if (strcmp(s_case, "1") == 0) {
+    mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops_1);
+  } else if (strcmp(s_case, "1a") == 0) {
+    mrc_class_register_subclass(&mrc_class_psc, &psc_test_ops_1a);
+  } else {
+    assert(0);
+  }
 
-  run_test(true, "fortran", 0., 0., create_test, "_a");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_a");
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 1e-3, 1e-2, create_test, "_a");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_a");
-#endif
+  struct psc *psc = psc_testing_create_test_yz(s_ref_type, 0, s_moments);
+  psc_setup(psc);
+  psc_testing_push_particles(psc, s_ref_type);
+  psc_testing_save_ref(psc);
+  psc_destroy(psc);
 
-  // ----------------------------------------------------------------------
-  // push_yz_b
+  psc = psc_testing_create_test_yz(s_type, 0, s_moments);
+  psc_setup(psc);
+  psc_testing_push_particles(psc, s_type);
+  psc_testing_push_particles_check(psc, eps_particles, eps_fields);
+  psc_destroy(psc);
 
-  run_test(true, "fortran", 0., 0., create_test, "_b");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "_b");
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-2, create_test, "_b");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "_b");
-#endif
-
-  // ----------------------------------------------------------------------
-  // push_yz
-
-  run_test(true, "fortran", 0., 0., create_test, "");
-  run_test(false, "generic_c", 1e-7, 1e-7, create_test, "");
-#ifdef xUSE_CUDA
-  run_test(false, "cuda", 2e-3, 1e-3, create_test, "");
-#endif
-#ifdef USE_SSE2
-  run_test(false, "sse2", 1e-7, 2e-6, create_test, "");
-#endif
-
-  prof_print();
-
-  MPI_Finalize();
+  psc_testing_finalize();
 }

@@ -4,10 +4,38 @@
 #include "psc_case.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
+#include "psc_push_particles.h"
+#include "psc_bnd.h"
+#include "psc_randomize.h"
+#include "psc_moments.h"
+
+#include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <math.h>
 #include <limits.h>
 #include <stdlib.h>
+
+bool opt_testing_dump = false;
+bool opt_testing_check_currents = true;
+bool opt_testing_check_particles = true;
+bool opt_testing_check_densities = true;
+
+// ----------------------------------------------------------------------
+// FIXME, should be consolidated?
+
+static mfields_c_t *
+fld_create(struct psc *psc, int nr_fields)
+{
+  mfields_c_t *fld = psc_mfields_create(psc_comm(psc));
+  psc_mfields_set_type(fld, "c");
+  psc_mfields_set_domain(fld, psc->mrc_domain);
+  psc_mfields_set_param_int3(fld, "ibn", psc->ibn);
+  psc_mfields_set_param_int(fld, "nr_fields", nr_fields);
+  psc_mfields_setup(fld);
+
+  return fld;
+}
 
 // ----------------------------------------------------------------------
 // assert_equal
@@ -55,6 +83,7 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
     particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
+    pp_ref->n_part = pp->n_part;
     for (int i = 0; i < pp->n_part; i++) {
       *particles_get_one(pp_ref, i) = *particles_get_one(pp, i);
     }
@@ -110,7 +139,8 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
     particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
-    
+
+    assert(pp->n_part == pp_ref->n_part);
     for (int i = 0; i < pp->n_part; i++) {
       particle_t *part = particles_get_one(pp, i);
       particle_t *part_ref = particles_get_one(pp_ref, i);
@@ -129,11 +159,12 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
       assert_equal(part->pzi, part_ref->pzi, thres);
     }
   }
-  printf("max delta: (%s)\n", test_str);
-  printf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
-	 xi, yi, zi, pxi, pyi, pzi);
-
   psc_mparticles_put_cf(particles, particles_base); // FIXME, no copy-back needed
+  if (opt_checks_verbose) {
+    mprintf("max delta: (%s)\n", test_str);
+    mprintf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
+	    xi, yi, zi, pxi, pyi, pzi);
+  }
 }
 
 
@@ -167,7 +198,7 @@ psc_check_fields_ref(struct psc *psc, mfields_base_t *flds_base, int *m_flds, do
 // check current current density data agains previously saved reference solution
 
 void
-psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
+psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres, int sw)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
 
@@ -197,16 +228,18 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
       fields_t *pf = psc_mfields_get_patch(flds, p);
       fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
       fields_t *pf_diff = psc_mfields_get_patch(diff, p);
-      psc_foreach_3d_g(psc, p, ix, iy, iz) {
+      psc_foreach_3d(psc, p, ix, iy, iz, sw, sw) {
 	F3(pf_diff, 0, ix,iy,iz) =
 	  F3(pf, m, ix,iy,iz) - F3(pf_ref, m, ix,iy,iz);
 	max_delta = fmax(max_delta, fabs(F3(pf_diff, 0, ix,iy,iz)));
       } psc_foreach_3d_g_end;
     }
-    printf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+    if (opt_checks_verbose || max_delta > thres) {
+      mprintf("max_delta (%s) %g / thres %g\n", fldname[m], max_delta, thres);
+    }
     if (max_delta > thres) {
       //      psc_dump_field(diff, 0, "diff");
-      abort();
+      assert(0);
     }
   }
   psc_mfields_destroy(diff);
@@ -214,23 +247,40 @@ psc_check_currents_ref(struct psc *psc, mfields_base_t *flds_base, double thres)
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
-void
-psc_check_currents_ref_noghost(struct psc *psc, mfields_base_t *flds_base, double thres)
-{
-  mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
+// ----------------------------------------------------------------------
+// psc_testing_check_densities_ref
 
-  psc_foreach_patch(psc, p) {
-    fields_t *pf = psc_mfields_get_patch(flds, p);
-    fields_t *pf_ref = psc_mfields_get_patch(flds_ref, p);
-    for (int m = JXI; m <= JZI; m++){
-      psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
-	//	  printf("m %d %d,%d,%d\n", m, ix,iy,iz);
-	assert_equal(F3(pf, m, ix,iy,iz), F3(pf_ref, m, ix,iy,iz), thres);
+void
+psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particles,
+				double eps)
+{
+  mfields_c_t *dens_ref = fld_create(psc, 3);
+  mfields_c_t *dens = fld_create(psc, 3);
+
+  psc_moments_calc_densities(psc->moments, NULL, particles_ref, dens_ref);
+  psc_moments_calc_densities(psc->moments, NULL, particles, dens);
+  
+  // dens -= dens_ref
+  psc_mfields_axpy(dens, -1., dens_ref);
+
+  // FIXME, do this generically
+  for (int m = 0; m < 2; m++) {
+    double max_err = 0.;
+    psc_foreach_patch(psc, p) {
+      fields_c_t *p_dens = psc_mfields_get_patch_c(dens, p);
+      psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
+	fields_c_real_t val = F3_C(p_dens,m, jx,jy,jz);
+	max_err = fmax(max_err, fabs(val));
+	if (fabs(val) > eps) {
+	  printf("(%d,%d,%d): diff %g\n", jx, jy, jz, val);
+	}
       } psc_foreach_3d_end;
     }
+    if (opt_checks_verbose) {
+      mprintf("densities: m = %d max_err = %g (thres %g)\n", m, max_err, eps);
+    }
+    assert(max_err <= eps);
   }
-
-  psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -336,5 +386,112 @@ psc_create_test_z(void)
   psc_case_set_type(_case, "test_z");
   psc_case_set_from_options(_case);
   return _case;
+}
+
+// ======================================================================
+
+struct psc *
+psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
+			   const char *moments_type)
+{
+  struct psc *psc = psc_create(MPI_COMM_WORLD);
+  psc->domain.gdims[0] = 1; // make yz
+  psc_push_particles_set_type(psc->push_particles, s_push_particles);
+  psc_sort_set_type(psc->sort, "countsort2");
+  psc_sort_set_param_int(ppsc->sort, "mask", mask);
+  psc_randomize_set_type(psc->randomize, "c");
+  psc_moments_set_type(psc->moments, moments_type);
+  psc_set_from_options(psc);
+
+  return psc;
+}
+
+void
+psc_testing_dump(struct psc *psc, const char *basename)
+{
+  if (!opt_testing_dump)
+    return;
+
+  static int cnt = 0;
+
+  char s[200];
+  sprintf(s, "part_%s_%d", basename, cnt);
+  psc_dump_particles(psc->particles, s);
+  sprintf(s, "jx_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JXI, s);
+  sprintf(s, "jy_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JYI, s);
+  sprintf(s, "jz_%s_%d", basename, cnt);
+  psc_dump_field(psc->flds, JZI, s);
+
+  cnt ++;
+}
+
+void
+psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
+{
+  if (opt_checks_verbose) {
+    mprintf("=== testing push_part() %s\n", s_push_particles);
+  }
+
+  psc_randomize_run(psc->randomize, psc->particles);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+
+  psc_testing_dump(psc, s_push_particles);
+
+  psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_sort_run(psc->sort, psc->particles);
+  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
+
+  psc_testing_dump(psc, s_push_particles);
+}
+
+void
+psc_testing_save_ref(struct psc *psc)
+{
+  psc_save_particles_ref(psc, psc->particles);
+  psc_save_fields_ref(psc, psc->flds);
+}
+
+void
+psc_testing_push_particles_check(struct psc *psc, double eps_particles, double eps_fields)
+{
+  psc_check_continuity(psc, psc->particles, psc->flds, eps_fields);
+  if (opt_testing_check_particles) {
+    psc_check_particles_ref(psc, psc->particles, eps_particles, "push_part_yz()");
+  }
+  if (opt_testing_check_densities) {
+    psc_testing_check_densities_ref(psc, psc->particles, eps_particles);
+  }
+  if (opt_testing_check_currents) {
+    psc_check_currents_ref(psc, psc->flds, eps_fields, 0);
+  }
+}
+
+// ======================================================================
+
+void
+psc_testing_init(int *argc, char ***argv)
+{
+  MPI_Init(argc, argv);
+  libmrc_params_init(*argc, *argv);
+
+  mrc_params_get_option_bool("verbose", &opt_checks_verbose);
+  mrc_params_get_option_bool("dump", &opt_testing_dump);
+  mrc_params_get_option_bool("check_currents", &opt_testing_check_currents);
+  mrc_params_get_option_bool("check_particles", &opt_testing_check_particles);
+  mrc_params_get_option_bool("check_densities", &opt_testing_check_densities);
+}
+
+void
+psc_testing_finalize()
+{
+  if (opt_checks_verbose) {
+    prof_print();
+  }
+
+  MPI_Finalize();
 }
 
