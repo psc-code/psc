@@ -9,6 +9,10 @@ if test -z "$F77"; then
    F77="ftn"
 fi
 
+if test -z "$CXX"; then
+   CXX="CC"
+fi
+
 if test -z "$FLIBS"; then
    FLIBS=" "
 fi

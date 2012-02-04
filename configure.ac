@@ -109,7 +109,10 @@ AC_ARG_ENABLE(
          [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
    AC_SUBST([CUDACC])
    AC_SUBST([CUDALIBS])
-   AM_CUDACFLAGS="-m64 -I`$CC -showme:incdirs`"
+   AM_CUDACFLAGS="-m64 "
+   for dir in `$CC -showme:incdirs`; do
+     AM_CUDACFLAGS="$AM_CUDACFLAGS -I$dir"
+   done
    AC_SUBST([AM_CUDACFLAGS])
    LIBS="$LIBS $CUDALIBS"
   ]
