@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  XDMF/HDF5 photon output by Simon Jagoda
  *	This struct is used by both xdmf output ops
  */

@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  XDMF/HDF5 photon output by Simon Jagoda
  *  Spread version, 1 pair of files per node and output step
  */
