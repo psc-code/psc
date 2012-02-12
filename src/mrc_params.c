@@ -77,8 +77,10 @@ libmrc_params_init(int argc, char **argv)
     list_add_tail(&opt->entry, &option_list);
   }
 
-  // check whether "--help" is given
-  mrc_params_get_option_bool("help", &do_print_help);
+  if (!(mrc_flags & MRC_FLAG_IGNORE_OPTION_HELP)) {
+    // check whether "--help" is given
+    mrc_params_get_option_bool("help", &do_print_help);
+  }
 }
 
 void
