@@ -1,0 +1,38 @@
+
+# NERSC's hopper
+
+if test -z "$CC"; then
+   CC="cc"
+fi
+
+if test -z "$F77"; then
+   F77="ftn"
+fi
+
+if test -z "$CXX"; then
+   CXX="CC"
+fi
+
+if test -z "$FLIBS"; then
+   FLIBS=" "
+fi
+
+if test -z "$CFLAGS"; then
+   CFLAGS="-g -O3 -ffast-math"
+fi
+
+if test -z "$FFLAGS"; then
+   FFLAGS="-g -O3 -ffast-math"
+fi
+
+if test -z "$HDF5_DIR"; then
+   HDF5_DIR=/opt/cray/hdf5-parallel/1.8.5.0/hdf5-parallel-gnu
+fi
+
+if test -z "$LIBS"; then
+   LIBS=-lz
+fi
+
+
+
+
