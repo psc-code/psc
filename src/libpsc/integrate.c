@@ -23,6 +23,22 @@ int st_time_field;
 #define psc_ops(psc) ((struct psc_ops *)((psc)->obj.ops))
 
 /////////////////////////////////////////////////////////////////////////
+/// print_profiling
+///
+
+void
+print_profiling(void)
+{
+  int size;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  if (size > 1) {
+    prof_print_mpi(MPI_COMM_WORLD);
+  } else {
+    prof_print();
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////
 /// psc_output
 ///
 
@@ -124,7 +140,7 @@ psc_integrate(struct psc *psc)
     }
 
     psc_stats_log(psc);
-    prof_print_mpi(MPI_COMM_WORLD);
+    print_profiling();
 
     if (psc->prm.wallclock_limit > 0.) {
       double wallclock_elapsed = MPI_Wtime() - psc->time_start;
