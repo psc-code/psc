@@ -8,6 +8,7 @@ psc_main(int *argc, char ***argv, struct psc_ops *type)
 {
   MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
+  mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
   mrc_class_register_subclass(&mrc_class_psc, type);
 

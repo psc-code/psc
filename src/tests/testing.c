@@ -489,6 +489,7 @@ psc_testing_init(int *argc, char ***argv)
 {
   MPI_Init(argc, argv);
   libmrc_params_init(*argc, *argv);
+  mrc_set_flags(MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING);
 
   mrc_params_get_option_bool("verbose", &opt_checks_verbose);
   mrc_params_get_option_bool("dump", &opt_testing_dump);
