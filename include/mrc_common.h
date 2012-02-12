@@ -3,6 +3,7 @@
 #define MRC_COMMON_H
 
 #include <config.h>
+#include <mrc.h>
 
 enum {
   BC_NONE,

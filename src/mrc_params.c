@@ -124,7 +124,8 @@ find_option(const char *name, bool deprecated)
   __list_for_each_entry(p, &option_list, entry, struct option) {
     if (strcmp(p->name, name) == 0) {
       p->used = true;
-      if (deprecated) {
+      if (deprecated &&
+	  !(mrc_flags & MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING)) {
 	warn("option --%s is deprecated! You probably need to add a proper prefix.\n", name);
       }
       return p;
