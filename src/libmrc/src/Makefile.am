@@ -31,6 +31,7 @@ libmrc_la_SOURCES = \
 	mrc_obj.c \
 	mrc_nr_tridag.c \
 	mrc_erfi.c \
+	init.c \
 	hilbert.c \
 	bitfield3d.c \
 	bintree.c

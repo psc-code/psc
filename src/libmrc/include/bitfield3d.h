@@ -56,3 +56,4 @@ int bitfield3d_compare(const struct bitfield3d* field1, const struct bitfield3d*
 int bitfield3d_count_bits_set(const struct bitfield3d* field);
 
 #endif
+

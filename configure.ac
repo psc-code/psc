@@ -203,37 +203,8 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/libpsc/sse2/Makefile
                  src/libpsc/cuda/Makefile
                  src/libpsc/cell_be/Makefile
-		 src/libmrc/Makefile
-		 src/libmrc/src/Makefile
-		 src/libmrc/tests/Makefile
-		 src/libmrc/tests/test_ddc_0.sh
-		 src/libmrc/tests/test_mrc_ddc_1.sh
-		 src/libmrc/tests/test_io_0.sh
-		 src/libmrc/tests/test_io_1.sh
-		 src/libmrc/tests/test_io_2.sh
-		 src/libmrc/tests/test_io_3.sh
-		 src/libmrc/tests/test_io_4.sh
-		 src/libmrc/tests/test_io_read_0.sh
-		 src/libmrc/tests/test_io_read_1.sh
-		 src/libmrc/tests/test_io_read_2.sh
-		 src/libmrc/tests/test_io_read_3.sh
-		 src/libmrc/tests/test_io_read_4.sh
-		 src/libmrc/tests/test_io_read_multi_1.sh
-		 src/libmrc/tests/test_mrc_domain_simple_0.sh
-		 src/libmrc/tests/test_mrc_domain_multi_0.sh
-		 src/libmrc/tests/test_mrc_m1_0.sh
-		 src/libmrc/tests/test_mrc_m1_1.sh
-		 src/libmrc/tests/test_mrc_m3_0.sh
-		 src/libmrc/tests/test_mrc_m3_1.sh
-		 src/libmrc/tests/test_mrc_m3_2.sh
-		 src/libmrc/tests/test_mrc_m3_3.sh
-		 src/libmrc/tests/test_mrc_m3_4.sh
-		 src/libmrc/tests/test_mrc_m3_5.sh
-		 src/libmrc/tests/test_mrc_m3_6.sh
-		 src/libmrc/tests/test_mrc_f3_0.sh
-		 src/libmrc/tests/test_mrc_f3_1.sh
-		 src/libmrc/tests/test_mrc_f3_2.sh
 ])
+AC_CONFIG_SUBDIRS([src/libmrc])
 
 AC_OUTPUT
 

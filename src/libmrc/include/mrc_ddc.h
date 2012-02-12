@@ -42,5 +42,13 @@ mrc_ddc_dir2idx(int dir[3])
   return ((dir[2] + 1) * 3 + dir[1] + 1) * 3 + dir[0] + 1;
 }
 
+extern int _mrc_ddc_idx2dir[27][3];
+
+static inline int *
+mrc_ddc_idx2dir(int idx)
+{
+  return _mrc_ddc_idx2dir[idx];
+}
+
 #endif
 

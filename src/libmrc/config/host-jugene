@@ -1,0 +1,31 @@
+
+# RZG bluegene/p "genius"
+# after configure, need to set "wl="-Wl," in generated libtool
+
+if test -z "$CC"; then
+   CC="mpixlc"
+fi
+
+if test -z "$F77"; then
+   F77="mpixlf90 -qfixed=72"
+fi
+
+if test -z "$CFLAGS"; then
+   CFLAGS="-O3 -qhot -qarch=450 -qtune=450"
+fi
+
+if test -z "$FFLAGS"; then
+   FFLAGS="-O3 -qhot -qarch=450 -qtune=450"
+fi
+
+if test -z "$HDF5_DIR"; then
+   HDF5_DIR="/bgsys/local/hdf5/v1.8.4"
+fi
+
+if test -z "$LIBS"; then
+   LIBS="-L/bgsys/local/zlib/lib -lz -L/bgsys/local/szip/lib -lsz"
+fi
+
+
+
+

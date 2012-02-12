@@ -77,8 +77,10 @@ libmrc_params_init(int argc, char **argv)
     list_add_tail(&opt->entry, &option_list);
   }
 
-  // check whether "--help" is given
-  mrc_params_get_option_bool("help", &do_print_help);
+  if (!(mrc_flags & MRC_FLAG_IGNORE_OPTION_HELP)) {
+    // check whether "--help" is given
+    mrc_params_get_option_bool("help", &do_print_help);
+  }
 }
 
 void
@@ -124,7 +126,8 @@ find_option(const char *name, bool deprecated)
   __list_for_each_entry(p, &option_list, entry, struct option) {
     if (strcmp(p->name, name) == 0) {
       p->used = true;
-      if (deprecated) {
+      if (deprecated &&
+	  !(mrc_flags & MRC_FLAG_SUPPRESS_UNPREFIXED_OPTION_WARNING)) {
 	warn("option --%s is deprecated! You probably need to add a proper prefix.\n", name);
       }
       return p;
