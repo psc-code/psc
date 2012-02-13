@@ -23,7 +23,7 @@
 #define JZ_NC(ix,iy,iz) (.5f * (F3(pf, JZI,ix,iy,iz) + F3(pf, JZI,ix,iy,iz-dz)))
 
 static void
-calc_j(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_j_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
@@ -44,7 +44,7 @@ calc_j(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
 #define EZ_NC(ix,iy,iz) (.5f * (F3(pf,  EZ,ix,iy,iz) + F3(pf,  EZ,ix,iy,iz-dz)))
 
 static void
-calc_E(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
@@ -68,7 +68,7 @@ calc_E(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
 			       F3(pf, HZ,ix,iy-dy,iz) + F3(pf, HZ,ix-dx,iy-dy,iz)))
 
 static void
-calc_H(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, HX, HX + 3);
@@ -85,7 +85,7 @@ calc_H(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles,
 }
 
 static void
-calc_jdote(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_jdote_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, EX + 3);
@@ -102,7 +102,7 @@ calc_jdote(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *partic
 }
 
 static void
-calc_poyn(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_poyn_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, HX + 3);
@@ -122,7 +122,7 @@ calc_poyn(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
 }
 
 static void
-calc_E2(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E2_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
@@ -139,7 +139,7 @@ calc_E2(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles
 }
 
 static void
-calc_H2(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H2_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, HX, HX + 3);
@@ -199,20 +199,20 @@ static struct output_field output_fields[] = {
   { .name = "vv"   , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
 						  "vixvix", "viyviy", "vizviz" },
     .calc = calc_vv },
-  { .name = "j"    , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
-    .calc = calc_j },
-  { .name = "e"    , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
-    .calc = calc_E },
-  { .name = "h"    , .nr_comp = 3, .fld_names = { "hx", "hy", "hz" },
-    .calc = calc_H },
-  { .name = "jdote", .nr_comp = 3, .fld_names = { "jxex", "jyey", "jzez" },
-    .calc = calc_jdote },
-  { .name = "poyn" , .nr_comp = 3, .fld_names = { "poynx", "poyny", "poynz" },
-    .calc = calc_poyn },
-  { .name = "e2"   , .nr_comp = 3, .fld_names = { "ex2", "ey2", "ez2" },
-    .calc = calc_E2 },
-  { .name = "h2"   , .nr_comp = 3, .fld_names = { "hx2", "hy2", "hz2" },
-    .calc = calc_H2 },
+  { .name = "j_nc"    , .nr_comp = 3, .fld_names = { "jx_nc", "jy_nc", "jz_nc" },
+    .calc = calc_j_nc },
+  { .name = "e_nc"    , .nr_comp = 3, .fld_names = { "ex_nc", "ey_nc", "ez_nc" },
+    .calc = calc_E_nc },
+  { .name = "h_nc"    , .nr_comp = 3, .fld_names = { "hx_nc", "hy_nc", "hz_nc" },
+    .calc = calc_H_nc },
+  { .name = "jdote_nc", .nr_comp = 3, .fld_names = { "jxex_nc", "jyey_nc", "jzez_nc" },
+    .calc = calc_jdote_nc },
+  { .name = "poyn_nc" , .nr_comp = 3, .fld_names = { "poynx_nc", "poyny_nc", "poynz_nc" },
+    .calc = calc_poyn_nc },
+  { .name = "e2_nc"   , .nr_comp = 3, .fld_names = { "ex2_nc", "ey2_nc", "ez2_nc" },
+    .calc = calc_E2_nc },
+  { .name = "h2_nc"   , .nr_comp = 3, .fld_names = { "hx2_nc", "hy2_nc", "hz2_nc" },
+    .calc = calc_H2_nc },
   { .name = "photon_n", .nr_comp = 1, .fld_names = { "photon_n" },
     .calc = calc_photon_n },
   {},
@@ -484,7 +484,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
-  { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
+  { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j_nc,e_nc,h_nc") },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)           },
