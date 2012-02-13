@@ -1,0 +1,11 @@
+
+# quick sample harris run
+
+~/src/psc/src/psc_harris \
+    --gdims_y 128 --gdims_z 128 \
+    --npy 2 --npz 2 \
+    --nmax 1001 \
+    --output_fields e,h,j,n,v \
+    --write_tfield no \
+    --write_pfield yes --pfield_step 100 \
+    --psc_push_particles_type 1vb \
