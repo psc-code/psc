@@ -63,6 +63,23 @@ calc_j_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+static void
+calc_j_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+{
+  define_dxdydz(dx, dy, dz);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
+  psc_foreach_patch(psc, p) {
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+      F3(ff, 0, ix,iy,iz) = F3(pf, JXI, ix,iy,iz);
+      F3(ff, 1, ix,iy,iz) = F3(pf, JYI, ix,iy,iz);
+      F3(ff, 2, ix,iy,iz) = F3(pf, JZI, ix,iy,iz);
+    } foreach_3d_end;
+  }
+  psc_mfields_put_cf(flds, flds_base, 0, 0);
+}
+
 #define EX_NC(ix,iy,iz) (.5f * (F3(pf,  EX,ix,iy,iz) + F3(pf,  EX,ix-dx,iy,iz)))
 #define EY_NC(ix,iy,iz) (.5f * (F3(pf,  EY,ix,iy,iz) + F3(pf,  EY,ix,iy-dy,iz)))
 #define EZ_NC(ix,iy,iz) (.5f * (F3(pf,  EZ,ix,iy,iz) + F3(pf,  EZ,ix,iy,iz-dz)))
@@ -108,6 +125,23 @@ calc_E_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+static void
+calc_E_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+{
+  define_dxdydz(dx, dy, dz);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
+  psc_foreach_patch(psc, p) {
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+      F3(ff, 0, ix,iy,iz) = F3(pf, EX, ix,iy,iz);
+      F3(ff, 1, ix,iy,iz) = F3(pf, EY, ix,iy,iz);
+      F3(ff, 2, ix,iy,iz) = F3(pf, EZ, ix,iy,iz);
+    } foreach_3d_end;
+  }
+  psc_mfields_put_cf(flds, flds_base, 0, 0);
+}
+
 #define HX_NC(ix,iy,iz) (.25f*(F3(pf, HX,ix,iy,iz   ) + F3(pf, HX,ix,iy-dy,iz   ) + \
 			       F3(pf, HX,ix,iy,iz-dz) + F3(pf, HX,ix,iy-dy,iz-dz)))
 #define HY_NC(ix,iy,iz) (.25f*(F3(pf, HY,ix,iy,iz   ) + F3(pf, HY,ix-dx,iy,iz   ) + \
@@ -148,6 +182,23 @@ calc_H_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
       F3(ff, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
+    } foreach_3d_end;
+  }
+  psc_mfields_put_cf(flds, flds_base, 0, 0);
+}
+
+static void
+calc_H_fc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+{
+  define_dxdydz(dx, dy, dz);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
+  psc_foreach_patch(psc, p) {
+    fields_t *ff = psc_mfields_get_patch(f, p);
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+      F3(ff, 0, ix,iy,iz) = F3(pf, HX, ix,iy,iz);
+      F3(ff, 1, ix,iy,iz) = F3(pf, HY, ix,iy,iz);
+      F3(ff, 2, ix,iy,iz) = F3(pf, HZ, ix,iy,iz);
     } foreach_3d_end;
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
@@ -270,14 +321,20 @@ static struct output_field output_fields[] = {
     .calc = calc_vv },
   { .name = "j_nc"    , .nr_comp = 3, .fld_names = { "jx_nc", "jy_nc", "jz_nc" },
     .calc = calc_j_nc },
+  { .name = "j_ec"    , .nr_comp = 3, .fld_names = { "jx_ec", "jy_ec", "jz_ec" },
+    .calc = calc_j_ec },
   { .name = "j"       , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
     .calc = calc_j_cc },
   { .name = "e_nc"    , .nr_comp = 3, .fld_names = { "ex_nc", "ey_nc", "ez_nc" },
     .calc = calc_E_nc },
+  { .name = "e_ec"    , .nr_comp = 3, .fld_names = { "ex_ec", "ey_ec", "ez_ec" },
+    .calc = calc_E_ec },
   { .name = "e"       , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
     .calc = calc_E_cc },
   { .name = "h_nc"    , .nr_comp = 3, .fld_names = { "hx_nc", "hy_nc", "hz_nc" },
     .calc = calc_H_nc },
+  { .name = "h_fc"    , .nr_comp = 3, .fld_names = { "hx_fc", "hy_fc", "hz_fc" },
+    .calc = calc_H_fc },
   { .name = "h"       , .nr_comp = 3, .fld_names = { "hx", "hy", "hz" },
     .calc = calc_H_cc },
   { .name = "jdote_nc", .nr_comp = 3, .fld_names = { "jxex_nc", "jyey_nc", "jzez_nc" },
