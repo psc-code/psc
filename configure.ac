@@ -102,19 +102,21 @@ AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
 AC_ARG_ENABLE(
   [cuda],
   [AS_HELP_STRING([--enable-cuda], [use nvcc to create CUDA code])],
-  [AC_DEFINE([USE_CUDA])
-   AS_IF([test -z "$CUDACC"],
-         [CUDACC=/usr/local/cuda/bin/nvcc])
-   AS_IF([test -z "$CUDALIBS"],
-         [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
-   AC_SUBST([CUDACC])
-   AC_SUBST([CUDALIBS])
-   AM_CUDACFLAGS="-m64 "
-   for dir in `$CC -showme:incdirs`; do
-     AM_CUDACFLAGS="$AM_CUDACFLAGS -I$dir"
-   done
-   AC_SUBST([AM_CUDACFLAGS])
-   LIBS="$LIBS $CUDALIBS"
+  [AS_IF([test "$enable_cuda" = "yes"],
+    [AC_DEFINE([USE_CUDA])
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    AS_IF([test -z "$CUDACC"],
+          [CUDACC=/usr/local/cuda/bin/nvcc])
+    AS_IF([test -z "$CUDALIBS"],
+          [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
+    AC_SUBST([CUDACC])
+    AC_SUBST([CUDALIBS])
+    AM_CUDACFLAGS="-m64 "
+    for dir in `$CC -showme:incdirs`; do
+      AM_CUDACFLAGS="$AM_CUDACFLAGS -I$dir"
+    done
+    AC_SUBST([AM_CUDACFLAGS])
+    LIBS="$LIBS $CUDALIBS"])
   ]
 )
 AM_CONDITIONAL([USE_CUDA], [test "$enable_cuda" = "yes"])
