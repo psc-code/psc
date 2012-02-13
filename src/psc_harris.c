@@ -1,5 +1,7 @@
 
 #include <psc.h>
+#include <psc_push_particles.h>
+#include <psc_moments.h>
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
@@ -68,22 +70,26 @@ psc_harris_create(struct psc *psc)
   ppsc->prm.nicell = 50;
 
   ppsc->domain.length[0] = 1.; // no x dependence 
-  ppsc->domain.length[1] = 2 * 12.8; // double tearing
+  ppsc->domain.length[1] = 12.8;
   ppsc->domain.length[2] = 25.6;
 
   ppsc->domain.gdims[0] = 1;
-  ppsc->domain.gdims[1] = 640;
+  ppsc->domain.gdims[1] = 320;
   ppsc->domain.gdims[2] = 640;
 
   ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
   ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_fld_lo[1] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
+  ppsc->domain.bnd_fld_lo[1] = BND_FLD_CONDUCTING_WALL;
+  ppsc->domain.bnd_fld_hi[1] = BND_FLD_CONDUCTING_WALL;
   ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
   ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
   ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
-  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part[1] = BND_PART_REFLECTING;
   ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
+
+  // FIXME: can only use 1st order pushers with current conducting wall b.c.
+  psc_push_particles_set_type(psc->push_particles, "1vb");
+  psc_moments_set_type(psc->moments, "1st_cc");
 }
 
 // ----------------------------------------------------------------------
@@ -95,22 +101,22 @@ psc_harris_init_field(struct psc *psc, double x[3], int m)
   struct psc_harris *harris = to_psc_harris(psc);
 
   double B0 = harris->B0;
-  double lz = psc->domain.length[2], ly = .5 * psc->domain.length[1];
+  double lz = psc->domain.length[2], ly = psc->domain.length[1];
   double lambda = harris->lambda;
   double AA = harris->pert * B0;
 
   switch (m) {
   case HZ:
     return
-      B0 * (-1. + tanh((x[1] - 0.5*ly) / lambda)- tanh((x[1] - 1.5*ly) / lambda))
+      B0 * tanh((x[1] - 0.5*ly) / lambda)
       + AA * M_PI/ly * sin(2.*M_PI * x[2] / lz) * cos(M_PI * x[1] / ly);
 
   case HY:
     return - AA * 2.*M_PI / lz * cos(2.*M_PI * x[2] / lz) * sin(M_PI * x[1] / ly);
 
   case JXI:
-    return B0 / lambda *
-      (1./sqr(cosh((x[1] - 0.5*ly) / lambda)) - 1./sqr(cosh((x[1] - 1.5*ly) / lambda)))
+    return
+      B0 / lambda * (1./sqr(cosh((x[1] - 0.5*ly) / lambda)))
       - (AA*sqr(M_PI) * (1./sqr(ly) + 4./sqr(lz)) 
 	 * sin(2.*M_PI * x[2] / lz) * sin(M_PI * x[1] / ly));
 
@@ -128,16 +134,15 @@ psc_harris_init_npt(struct psc *psc, int kind, double x[3],
   struct psc_harris *harris = to_psc_harris(psc);
 
   double B0 = harris->B0;
-  double ly = .5 * psc->domain.length[1];
+  double ly = psc->domain.length[1];
   double lambda = harris->lambda;
   double nb = harris->nb;
   double TTi = harris->Ti * sqr(B0) * harris->mi_over_me; // FIXME, why???
   double TTe = harris->Te * sqr(B0) * harris->mi_over_me;
 
-  double jx0 = B0 / lambda *
-    (1./sqr(cosh((x[1] - 0.5*ly) / lambda)) - 1./sqr(cosh((x[1] - 1.5*ly) / lambda)));
+  double jx0 = B0 / lambda * 1./sqr(cosh((x[1] - 0.5*ly) / lambda));
 
-  npt->n = nb + 1./sqr(cosh((x[1] - 0.5*ly) / lambda)) + 1./sqr(cosh((x[1] - 1.5*ly) / lambda));
+  npt->n = nb + 1./sqr(cosh((x[1] - 0.5*ly) / lambda));
   switch (kind) {
   case 0: // electrons
     npt->q = -1.;
