@@ -27,6 +27,7 @@ struct psc_moments_ops {
 
 extern struct psc_moments_ops psc_moments_c_ops;
 extern struct psc_moments_ops psc_moments_1st_ops;
+extern struct psc_moments_ops psc_moments_1st_cc_ops;
 extern struct psc_moments_ops psc_moments_fortran_ops;
 
 #define psc_moments_ops(moments) ((struct psc_moments_ops *)((moments)->obj.ops))
