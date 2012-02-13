@@ -9,3 +9,4 @@
     --write_tfield no \
     --write_pfield yes --pfield_step 100 \
     --psc_push_particles_type 1vb \
+    --psc_moments_type 1st_cc \
