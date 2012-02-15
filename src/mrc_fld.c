@@ -312,15 +312,12 @@ _mrc_f3_destroy(struct mrc_f3 *f3)
   f3->arr = NULL;
 }
 
-static void
-_mrc_f3_create(struct mrc_f3 *f3)
-{
-  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
-}
 
 static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
+  free(f3->_comp_name);
+  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
   for (int d = 0; d < 3; d++) {
     f3->_ghost_off[d] = f3->_off[d] - f3->_sw;
     f3->_ghost_dims[d] = f3->_dims[d] + 2 * f3->_sw;
@@ -333,19 +330,6 @@ _mrc_f3_setup(struct mrc_f3 *f3)
   } else {
     f3->with_array = true;
   }
-}
-
-void
-mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
-{
-  if (nr_comps == f3->nr_comp)
-    return;
-
-  for (int m = 0; m < f3->nr_comp; m++) {
-    free(f3->_comp_name[m]);
-  }
-  f3->nr_comp = nr_comps;
-  f3->_comp_name = calloc(nr_comps, sizeof(*f3->_comp_name));
 }
 
 void
@@ -400,7 +384,7 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
   mrc_f3_set_param_int3(f3_new, "off", f3->_off);
   mrc_f3_set_param_int3(f3_new, "dims", f3->_dims);
-  mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
+  mrc_f3_set_param_int(f3_new, "nr_comps",f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
   f3_new->domain = f3->domain;
   mrc_f3_setup(f3_new);
@@ -548,7 +532,6 @@ struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
   .size         = sizeof(struct mrc_f3),
   .param_descr  = mrc_f3_params_descr,
   .methods      = mrc_f3_methods,
-  .create       = _mrc_f3_create,
   .destroy      = _mrc_f3_destroy,
   .setup        = _mrc_f3_setup,
   .read         = _mrc_f3_read,
@@ -559,12 +542,6 @@ struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
 // mrc_m1
 
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)
-
-static void
-_mrc_m1_create(struct mrc_m1 *m1)
-{
-  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
-}
 
 static void
 _mrc_m1_destroy(struct mrc_m1 *m1)
@@ -584,6 +561,8 @@ _mrc_m1_destroy(struct mrc_m1 *m1)
 static void
 _mrc_m1_setup(struct mrc_m1 *m1)
 {
+  free(m1->_comp_name);
+  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(m1->domain, &nr_patches);
 
@@ -687,7 +666,6 @@ struct mrc_class_mrc_m1 mrc_class_mrc_m1 = {
   .name         = "mrc_m1",
   .size         = sizeof(struct mrc_m1),
   .param_descr  = mrc_m1_params_descr,
-  .create       = _mrc_m1_create,
   .destroy      = _mrc_m1_destroy,
   .setup        = _mrc_m1_setup,
   .view         = _mrc_m1_view,

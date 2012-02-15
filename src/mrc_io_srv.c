@@ -619,8 +619,8 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       struct mrc_f3 *gfld = mrc_domain_f3_create(srv->domain, SW_0);
       mrc_f3_set_array(gfld, srv->gflds[i]);
       mrc_f3_set_name(gfld, srv->obj_names[i]);
-      mrc_f3_set_comp_name(gfld, 0, srv->fld_names[i]);
       mrc_f3_setup(gfld);
+      mrc_f3_set_comp_name(gfld, 0, srv->fld_names[i]);
       mrc_f3_write(gfld, ds->io);
       mrc_f3_destroy(gfld);
       break;
