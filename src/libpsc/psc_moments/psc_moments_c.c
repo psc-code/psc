@@ -7,10 +7,6 @@
 #include <mrc_profile.h>
 #include <math.h>
 
-// FIXME, this is a rather horrible hack
-
-void __psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me);
-
 // ======================================================================
 
 typedef fields_c_real_t creal;
@@ -124,7 +120,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
 
   psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
 
-  __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 3);
+  psc_bnd_add_ghosts(moments->bnd, res, 0, 3);
 }
 
 // FIXME too much duplication, specialize 2d/1d
@@ -241,7 +237,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
 
   psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
 
-  __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 6);
+  psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
 }
 
 static void
@@ -355,7 +351,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
 
   psc_mparticles_put_cf(particles, particles_base);
 
-  __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 6);
+  psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
 }
 
 static void
@@ -448,7 +444,7 @@ psc_moments_c_calc_photon_n(struct psc_moments *moments,
   }
   prof_stop(pr);
 
-  __psc_bnd_c_add_ghosts(ppsc->bnd, res, 0, 1);
+  psc_bnd_add_ghosts(moments->bnd, res, 0, 1);
 }
 
 // ======================================================================

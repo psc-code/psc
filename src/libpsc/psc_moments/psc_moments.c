@@ -1,6 +1,8 @@
 
 #include "psc_moments_private.h"
 
+#include "psc_bnd.h"
+
 // ======================================================================
 // forward to subclass
 
@@ -44,6 +46,19 @@ psc_moments_calc_photon_n(struct psc_moments *moments,
 }
 
 // ======================================================================
+// psc_moments_create
+
+static void
+_psc_moments_create(struct psc_moments *moments)
+{
+  moments->bnd = psc_bnd_create(psc_moments_comm(moments));
+  psc_bnd_set_name(moments->bnd, "psc_moments_bnd");
+  psc_bnd_set_type(moments->bnd, "c");
+  psc_bnd_set_psc(moments->bnd, ppsc);
+  psc_moments_add_child(moments, (struct mrc_obj *) moments->bnd);
+}
+
+// ======================================================================
 // psc_moments_init
 
 static void
@@ -62,5 +77,6 @@ struct mrc_class_psc_moments mrc_class_psc_moments = {
   .name             = "psc_moments",
   .size             = sizeof(struct psc_moments),
   .init             = psc_moments_init,
+  .create           = _psc_moments_create,
 };
 

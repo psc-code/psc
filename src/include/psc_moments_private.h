@@ -6,6 +6,7 @@
 
 struct psc_moments {
   struct mrc_obj obj;
+  struct psc_bnd *bnd; // used for add_ghosts, etc.
 };
 
 struct psc_moments_ops {

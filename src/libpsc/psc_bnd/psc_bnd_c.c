@@ -118,15 +118,6 @@ check_domain(struct psc_bnd *bnd)
 // ----------------------------------------------------------------------
 // psc_bnd_c_add_ghosts
 
-void
-__psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_t *flds, int mb, int me)
-{
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
-  check_domain(bnd);
-
-  __psc_bnd_lib_add_ghosts(bnd_c->ddc, flds, mb, me);
-}
-
 static void
 psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
