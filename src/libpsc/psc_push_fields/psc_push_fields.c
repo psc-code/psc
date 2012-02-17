@@ -141,6 +141,9 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 void
 psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
 {
+  psc_bnd_add_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
+  psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
+  
   if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_b);

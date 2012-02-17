@@ -93,9 +93,6 @@ psc_step(struct psc *psc)
   psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
   
-  psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-  psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
-  
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
   psc_push_fields_step_b(psc->push_fields, psc->flds);
 }
