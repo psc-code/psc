@@ -489,7 +489,7 @@ psc_setup_photons(struct psc *psc)
 // ----------------------------------------------------------------------
 // psc_setup_default
 
-static void
+void
 psc_setup_default(struct psc *psc)
 {
   psc_setup_coeff(psc);

@@ -379,6 +379,7 @@ void psc_setup_fields(struct psc *psc);
 void psc_output(struct psc *psc);
 void psc_integrate(struct psc *psc);
 
+void psc_setup_default(struct psc *psc);
 void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
