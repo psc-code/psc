@@ -170,9 +170,9 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
       xge[d] = (psc->domain.gdims[d]) * psc->dx[d];
     } else {
       if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
-	xge[d] = (psc->domain.gdims[d]-1 - psc->pml.size) * psc->dx[d];
+	xge[d] = (psc->domain.gdims[d] - psc->pml.size) * psc->dx[d];
       } else {
-	xge[d] = (psc->domain.gdims[d]-1) * psc->dx[d];
+	xge[d] = psc->domain.gdims[d] * psc->dx[d];
       }
       if (psc_patch->off[d] + psc_patch->ldims[d] == psc->domain.gdims[d]) {
 	  xe[d] = xge[d];

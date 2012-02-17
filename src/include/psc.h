@@ -85,6 +85,7 @@ struct psc_param {
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
   bool adjust_dt_to_cycles;
+  bool gdims_in_terms_of_cells; 
   double wallclock_limit;
   bool from_checkpoint;
   bool write_checkpoint;

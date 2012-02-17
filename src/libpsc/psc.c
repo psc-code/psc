@@ -116,6 +116,10 @@ static struct param psc_descr[] = {
   // only useful when actually doing lasers.
   { "adjust_dt_to_cycles"
                     , VAR(prm.adjust_dt_to_cycles), PARAM_BOOL(0)  },
+  { "gdims_in_terms_of_cells"
+                    , VAR(prm.gdims_in_terms_of_cells), PARAM_BOOL(false),
+    .help = "if set, the given global dimensions (gdims) will be used for "
+    "setting the number of cells, rather than the number of nodes in the grid." }, 
   { "initial_particle_shift"
                     , VAR(prm.initial_particle_shift), PARAM_DOUBLE(0.) },
   { "wallclock_limit"
@@ -217,7 +221,12 @@ psc_setup_coeff(struct psc *psc)
   psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
 
   for (int d = 0; d < 3; d++) {
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC || psc->domain.gdims[d] == 1) {
+    // FIXME, we should eventually settle on one or the other way of handling
+    // non-periodic boundaries -- use gdims to count the number of cells in the
+    // grid, or count the number of nodes (corners)
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC ||
+	psc->domain.gdims[d] == 1 ||
+	psc->prm.gdims_in_terms_of_cells) {
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
     } else {
       psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
@@ -347,8 +356,8 @@ psc_setup_domain(struct psc *psc)
       domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
       domain->bnd_part[d]   = BND_PART_PERIODIC;
     } else {
-      if (domain->bnd_fld_lo[d] >= BND_FLD_UPML ||
-	  domain->bnd_fld_hi[d] >= BND_FLD_UPML) {
+      if ((domain->bnd_fld_lo[d] >= BND_FLD_UPML && domain->bnd_fld_lo[d] <= BND_FLD_TIME) ||
+	  (domain->bnd_fld_hi[d] >= BND_FLD_UPML && domain->bnd_fld_hi[d] <= BND_FLD_TIME)) {
 	need_pml = true;
       }
     }
