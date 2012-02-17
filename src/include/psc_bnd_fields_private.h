@@ -20,6 +20,7 @@ struct psc_bnd_fields_ops {
   void (*fill_ghosts_a_H)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
   void (*fill_ghosts_b_H)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
   void (*fill_ghosts_b_E)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
+  void (*add_ghosts_J)(struct psc_bnd_fields *bnd, mfields_base_t *flds);
 };
 
 // ======================================================================

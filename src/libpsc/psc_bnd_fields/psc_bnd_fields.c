@@ -171,6 +171,15 @@ psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 }
 
 void
+psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+{
+  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
+  if (ops->add_ghosts_J) {
+    ops->add_ghosts_J(bnd, flds);
+  }
+}
+
+void
 _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
 			    fields_t *pf, double t)
 {

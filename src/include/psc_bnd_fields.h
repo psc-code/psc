@@ -21,5 +21,6 @@ void psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, mfields_base_t *
 void psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
 void psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
 void psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
+void psc_bnd_fields_add_ghosts_J(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
 
 #endif
