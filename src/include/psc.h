@@ -129,6 +129,7 @@ enum {
   BND_FLD_PERIODIC,
   BND_FLD_UPML,
   BND_FLD_TIME,
+  BND_FLD_CONDUCTING_WALL,
 };
 
 ///Possible boundary conditions for particles
