@@ -117,6 +117,10 @@ do_1st_calc_densities(int p, fields_t *pf, particles_t *pp,
       j3 = 0; g0z = 1.; g1z = 0.;
     }
 
+    assert(j1 >= -1 && j1 < patch->ldims[0]);
+    assert(j2 >= -1 && j2 < patch->ldims[1]);
+    assert(j3 >= -1 && j3 < patch->ldims[2]);
+      
     creal fnq;
     int m;
     if (part->qni < 0.) {
@@ -137,6 +141,71 @@ do_1st_calc_densities(int p, fields_t *pf, particles_t *pp,
     F3(pf, m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
     F3(pf, m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
     F3(pf, m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+  }
+}
+
+static void
+add_ghosts_reflecting_lo(mfields_c_t *res, int p, int d, int mb, int me)
+{
+  fields_t *pf = psc_mfields_get_patch(res, p);
+  struct psc_patch *patch = ppsc->patch + p;
+
+  if (d == 1) {
+    for (int iz = 0; iz < patch->ldims[2]; iz++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iy = 0; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy-1,iz);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
+static void
+add_ghosts_reflecting_hi(mfields_c_t *res, int p, int d, int mb, int me)
+{
+  fields_t *pf = psc_mfields_get_patch(res, p);
+  struct psc_patch *patch = ppsc->patch + p;
+
+  if (d == 1) {
+    for (int iz = 0; iz < patch->ldims[2]; iz++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iy = patch->ldims[1] - 1; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
+static void
+add_ghosts_boundary(mfields_c_t *res, int mb, int me)
+{
+  psc_foreach_patch(ppsc, p) {
+    // lo
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->patch[p].off[d] == 0) {
+	if (ppsc->domain.bnd_part[d] == BND_PART_REFLECTING) {
+	  add_ghosts_reflecting_lo(res, p, d, mb, me);
+	}
+      }
+    }
+    // hi
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	if (ppsc->domain.bnd_fld_hi[d] == BND_PART_REFLECTING) {
+	  add_ghosts_reflecting_hi(res, p, d, mb, me);
+	}
+      }
+    }
   }
 }
 
@@ -165,6 +234,7 @@ psc_moments_1st_cc_calc_densities(struct psc_moments *moments, mfields_base_t *f
   psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
 
   psc_bnd_add_ghosts(moments->bnd, res, 0, 3);
+  add_ghosts_boundary(res, 0, 3);
 }
 
 static void
@@ -192,6 +262,9 @@ psc_moments_1st_cc_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
 
   psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
+  // FIXME, this is probably only right for densities, but needs sign
+  // adjustments for velocities
+  add_ghosts_boundary(res, 0, 6);
 }
 
 // ======================================================================
