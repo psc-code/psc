@@ -17,6 +17,9 @@ struct psc_pulse *psc_bnd_fields_get_pulse_z2(struct psc_bnd_fields *bnd);
 
 void psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd, int p, mfields_base_t *mflds, double t);
 void psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
+void psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
+void psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
 void psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
+void psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *mflds);
 
 #endif

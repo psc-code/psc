@@ -135,11 +135,39 @@ psc_bnd_fields_get_pulse_z2(struct psc_bnd_fields *bnd)
 // forward to subclass
 
 void
+psc_bnd_fields_fill_ghosts_a_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+{
+  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
+  if (ops->fill_ghosts_a_E) {
+    ops->fill_ghosts_a_E(bnd, flds);
+  }
+}
+
+void
+psc_bnd_fields_fill_ghosts_a_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+{
+  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
+  if (ops->fill_ghosts_a_H) {
+    ops->fill_ghosts_a_H(bnd, flds);
+  }
+}
+
+void
 psc_bnd_fields_fill_ghosts_b_H(struct psc_bnd_fields *bnd, mfields_base_t *flds)
 {
   struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
-  assert(ops->fill_ghosts_b_H);
-  ops->fill_ghosts_b_H(bnd, flds);
+  if (ops->fill_ghosts_b_H) {
+    ops->fill_ghosts_b_H(bnd, flds);
+  }
+}
+
+void
+psc_bnd_fields_fill_ghosts_b_E(struct psc_bnd_fields *bnd, mfields_base_t *flds)
+{
+  struct psc_bnd_fields_ops *ops = psc_bnd_fields_ops(bnd);
+  if (ops->fill_ghosts_b_E) {
+    ops->fill_ghosts_b_E(bnd, flds);
+  }
 }
 
 void

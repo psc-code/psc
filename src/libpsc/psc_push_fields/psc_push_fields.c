@@ -128,12 +128,14 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     psc_push_fields_push_a_E(push, flds);
     psc_stats_stop(st_time_field);
 
+    psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
 
     psc_stats_start(st_time_field);
     psc_push_fields_push_a_H(push, flds);
     psc_stats_stop(st_time_field);
 
+    psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
   }
 }
@@ -151,15 +153,16 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
   } else {
     psc_stats_start(st_time_field);
     psc_push_fields_push_b_H(push, flds);
-    psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
     psc_stats_stop(st_time_field);
 
+    psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
 
     psc_stats_start(st_time_field);
     psc_push_fields_push_b_E(push, flds);
     psc_stats_stop(st_time_field);
 
+    psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, flds);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   }
 }
