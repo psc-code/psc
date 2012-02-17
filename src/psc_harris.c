@@ -54,38 +54,38 @@ static void
 psc_harris_create(struct psc *psc)
 {
   // new defaults (dimensionless) for this case
-  ppsc->prm.qq = 1.;
-  ppsc->prm.mm = 1.;
-  ppsc->prm.tt = 1.;
-  ppsc->prm.cc = 1.;
-  ppsc->prm.eps0 = 1.;
+  psc->prm.qq = 1.;
+  psc->prm.mm = 1.;
+  psc->prm.tt = 1.;
+  psc->prm.cc = 1.;
+  psc->prm.eps0 = 1.;
 
-  ppsc->prm.nmax = 16000;
-  ppsc->prm.cpum = 5*24.0*60*60;
-  ppsc->prm.lw = 2.*M_PI;
-  ppsc->prm.i0 = 0.;
-  ppsc->prm.n0 = 1.;
-  ppsc->prm.e0 = 1.;
+  psc->prm.nmax = 16000;
+  psc->prm.cpum = 5*24.0*60*60;
+  psc->prm.lw = 2.*M_PI;
+  psc->prm.i0 = 0.;
+  psc->prm.n0 = 1.;
+  psc->prm.e0 = 1.;
 
-  ppsc->prm.nicell = 50;
+  psc->prm.nicell = 50;
 
-  ppsc->domain.length[0] = 1.; // no x dependence 
-  ppsc->domain.length[1] = 12.8;
-  ppsc->domain.length[2] = 25.6;
+  psc->domain.length[0] = 1.; // no x dependence 
+  psc->domain.length[1] = 12.8;
+  psc->domain.length[2] = 25.6;
 
-  ppsc->domain.gdims[0] = 1;
-  ppsc->domain.gdims[1] = 320;
-  ppsc->domain.gdims[2] = 640;
+  psc->domain.gdims[0] = 1;
+  psc->domain.gdims[1] = 320;
+  psc->domain.gdims[2] = 640;
 
-  ppsc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_fld_lo[1] = BND_FLD_CONDUCTING_WALL;
-  ppsc->domain.bnd_fld_hi[1] = BND_FLD_CONDUCTING_WALL;
-  ppsc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
-  ppsc->domain.bnd_part[1] = BND_PART_REFLECTING;
-  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
+  psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
+  psc->domain.bnd_fld_hi[0] = BND_FLD_PERIODIC;
+  psc->domain.bnd_fld_lo[1] = BND_FLD_CONDUCTING_WALL;
+  psc->domain.bnd_fld_hi[1] = BND_FLD_CONDUCTING_WALL;
+  psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
+  psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
+  psc->domain.bnd_part[0] = BND_PART_PERIODIC;
+  psc->domain.bnd_part[1] = BND_PART_REFLECTING;
+  psc->domain.bnd_part[2] = BND_PART_PERIODIC;
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");
