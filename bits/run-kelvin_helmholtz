@@ -1,0 +1,10 @@
+
+# sample kelvin-helmholtz run
+
+~/src/psc/src/psc_kelvin_helmholtz \
+    --gdims_y 80 --gdims_z 80 \
+    --npy 2 --npz 2 \
+    --nmax 1001 \
+    --output_fields e,h,j,n,v \
+    --write_tfield no \
+    --write_pfield yes --pfield_step 100
