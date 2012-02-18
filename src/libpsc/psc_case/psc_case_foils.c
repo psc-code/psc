@@ -177,7 +177,6 @@ static void
 psc_case_foils_set_from_options(struct psc_case *_case)
 {
   ppsc->prm.nmax = 15000;
-  ppsc->prm.cpum = 15000;
   ppsc->prm.lw = 1. * 1e-6;
   ppsc->prm.i0 = 2e24;
    

@@ -100,7 +100,6 @@ static struct param psc_descr[] = {
   { "cc"            , VAR(prm.cc)              , PARAM_DOUBLE(3.0e8)        },
   { "eps0"          , VAR(prm.eps0)            , PARAM_DOUBLE(8.8542e-12)   },
   { "nmax"          , VAR(prm.nmax)            , PARAM_INT(0)               },
-  { "cpum"          , VAR(prm.cpum)            , PARAM_DOUBLE(100000.)      },
   { "lw"            , VAR(prm.lw)              , PARAM_DOUBLE(3.2e-6)       },
   { "i0"            , VAR(prm.i0)              , PARAM_DOUBLE(1e21)         },
   { "n0"            , VAR(prm.n0)              , PARAM_DOUBLE(1e26)         },

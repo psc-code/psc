@@ -80,7 +80,6 @@ psc_case_harris_xy_set_from_options(struct psc_case *_case)
   ppsc->prm.eps0 = eps0;
 
   ppsc->prm.nmax = 16000;
-  ppsc->prm.cpum = 5*24.0*60*60;
   ppsc->prm.lw = 2.*M_PI;
   ppsc->prm.i0 = 0.;
   ppsc->prm.n0 = 1.;

@@ -67,7 +67,6 @@ struct psc_param {
   double cc;	///<speed of light
   double eps0;	///<vacuum permittivity
   int nmax;	///<number of timesteps
-  double cpum;	///<time until CPU checks out data and restarts (deprecated?) 
   double lw;	///<normalization coefficient for laser wavelength (omega)
   double i0;	///<laser intensity
   double n0;	///<electron density

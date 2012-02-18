@@ -39,7 +39,6 @@ static void
 psc_test_singlepart_create(struct psc *psc)
 {
   psc->prm.nmax = 1000;
-  psc->prm.cpum = 20000;
   psc->prm.lw = 1. * 1e-6;
   psc->prm.i0 = 2.0e22;
   psc->prm.n0 = 1.0e25;

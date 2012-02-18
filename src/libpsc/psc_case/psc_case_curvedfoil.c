@@ -82,7 +82,6 @@ static void
 psc_case_curvedfoil_set_from_options(struct psc_case *_case)
 {
   ppsc->prm.nmax = 500;
-  ppsc->prm.cpum = 25000;
   ppsc->prm.lw = 1. * 1e-6;
   ppsc->prm.i0 = 1.0e20;
   ppsc->prm.n0 = 2.0e29;

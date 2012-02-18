@@ -59,7 +59,6 @@ psc_case_bubble_set_from_options(struct psc_case *_case)
   ppsc->prm.eps0 = 1.;
 
   ppsc->prm.nmax = 32000;
-  ppsc->prm.cpum = 5*24.0*60*60;
   ppsc->prm.lw = 2.*M_PI;
   ppsc->prm.i0 = 0.;
   ppsc->prm.n0 = 1.;

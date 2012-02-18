@@ -34,7 +34,6 @@ static void
 psc_case_singlepart_set_from_options(struct psc_case *_case)
 {
   ppsc->prm.nmax = 1000;
-  ppsc->prm.cpum = 20000;
   ppsc->prm.lw = 1. * 1e-6;
   ppsc->prm.i0 = 2.0e22;
   ppsc->prm.n0 = 1.0e25;

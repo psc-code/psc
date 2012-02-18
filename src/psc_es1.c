@@ -85,7 +85,6 @@ psc_es1_create(struct psc *psc)
   psc->prm.eps0 = 1.;
 
   psc->prm.nmax = 16000;
-  psc->prm.cpum = 5*24.0*60*60;
   psc->prm.lw = 2.*M_PI;
   psc->prm.i0 = 0.;
   psc->prm.n0 = 1.;
