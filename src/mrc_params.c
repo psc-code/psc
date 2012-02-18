@@ -168,6 +168,39 @@ mrc_params_get_option_int_help(const char *name, int *pval, const char *help)
   return _mrc_params_get_option_int(name, pval, false, help);
 }
 
+static int
+_mrc_params_get_option_uint(const char *name, unsigned int *pval, bool deprecated, const char *help)
+{
+  struct option *p = find_option(name, deprecated);
+  
+  if (p) {
+    int rv = sscanf(p->value, "%u", pval);
+    if (rv != 1) {
+      error("cannot parse uint from '%s'\n", p->value);
+    }
+    print_help("--%s: <%d> %s\n", name, *pval, help ? help : "");
+    return 0;
+  } else {
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%d> (default) %s\n", name, *pval, help ? help : "");
+    }
+    return -1;
+  }
+}
+
+int
+mrc_params_get_option_uint(const char *name, unsigned int *pval)
+{
+  return _mrc_params_get_option_uint(name, pval, false, NULL);
+}
+
+int
+mrc_params_get_option_uint_help(const char *name, unsigned int *pval,
+				const char *help)
+{
+  return _mrc_params_get_option_uint(name, pval, false, help);
+}
+
 int
 _mrc_params_get_option_float(const char *name, float *pval, bool deprecated,
 			     const char *help)
@@ -508,6 +541,9 @@ mrc_params_set_default(void *p, struct param *params)
     case PT_INT:
       pv->u_int = params[i].u.ini_int;
       break;
+    case PT_UINT:
+      pv->u_uint = params[i].u.ini_uint;
+      break;
     case PT_BOOL:
       pv->u_bool = params[i].u.ini_bool;
       break;
@@ -564,6 +600,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     switch (type) {
     case PT_INT:
       pv->u_int = pval->u_int;
+      break;
+    case PT_UINT:
+      pv->u_uint = pval->u_uint;
       break;
     case PT_FLOAT:
       pv->u_float = pval->u_float;
@@ -624,6 +663,9 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
     case PT_INT:
       pval->u_int = pv->u_int;
       break;
+    case PT_UINT:
+      pval->u_uint = pv->u_uint;
+      break;
     case PT_FLOAT:
       pval->u_float = pv->u_float;
       break;
@@ -681,6 +723,10 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       pv->u_int = params[i].u.ini_int;
       mrc_params_get_option_int(params[i].name, &pv->u_int);
       break;
+    case PT_UINT:
+      pv->u_uint = params[i].u.ini_uint;
+      mrc_params_get_option_uint(params[i].name, &pv->u_uint);
+      break;
     case PT_BOOL:
       pv->u_bool = params[i].u.ini_bool;
       mrc_params_get_option_bool(params[i].name, &pv->u_bool);
@@ -716,6 +762,9 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     switch (params[i].type) {
     case PT_INT:
       _mrc_params_get_option_int(params[i].name, &pv->u_int, true, NULL);
+      break;
+    case PT_UINT:
+      _mrc_params_get_option_uint(params[i].name, &pv->u_uint, true, NULL);
       break;
     case PT_BOOL:
       _mrc_params_get_option_bool(params[i].name, &pv->u_bool, true, NULL);
@@ -762,6 +811,9 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case PT_INT:
       mrc_params_get_option_int_help(name, &pv->u_int, params[i].help);
       break;
+    case PT_UINT:
+      mrc_params_get_option_uint_help(name, &pv->u_uint, params[i].help);
+      break;
     case PT_BOOL:
       mrc_params_get_option_bool_help(name, &pv->u_bool, params[i].help);
       break;
@@ -806,6 +858,9 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
     switch (params[i].type) {
     case PT_INT:
       mpi_printf(comm, "%-20s| %d\n", params[i].name, pv->u_int);
+      break;
+    case PT_UINT:
+      mpi_printf(comm, "%-20s| %u\n", params[i].name, pv->u_uint);
       break;
     case PT_BOOL:
       mpi_printf(comm, "%-20s| %s\n", params[i].name, pv->u_bool ? "yes" : "no");
