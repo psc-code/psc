@@ -160,6 +160,49 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_kh_output
+//
+// keep track of energy conservation
+
+static void
+psc_kh_output(struct psc *psc)
+{
+  static FILE *file;
+  int rank;
+
+  MPI_Comm_rank(psc_comm(psc), &rank);
+
+  if (!file && rank == 0) {
+    file = fopen("diag.asc", "w");
+    fprintf(file, "# time E2\n");
+  }
+
+  double E2 = 0.;
+  
+  mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, EX + 3);
+  
+  psc_foreach_patch(ppsc, p) {
+    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
+      E2 +=
+	(sqr(F3_C(pf, EX, ix,iy,iz)) +
+	 sqr(F3_C(pf, EY, ix,iy,iz)) +
+	 sqr(F3_C(pf, EZ, ix,iy,iz))) * psc->dx[0] * psc->dx[1] * psc->dx[2];
+    } foreach_3d_end;
+  }
+
+  MPI_Reduce(MPI_IN_PLACE, &E2, 1, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+  if (rank == 0) {
+    fprintf(file, "%g %g\n", psc->timestep * psc->dt, E2);
+    fflush(file);
+  }
+
+  psc_mfields_put_c(flds, psc->flds, 0, 0);
+
+  psc_output_default(psc);
+}
+
 // ======================================================================
 // psc_kh_ops
 
@@ -171,6 +214,7 @@ struct psc_ops psc_kh_ops = {
   .setup            = psc_kh_setup,
   .init_field       = psc_kh_init_field,
   .init_npt         = psc_kh_init_npt,
+  .output           = psc_kh_output,
 };
 
 // ======================================================================
