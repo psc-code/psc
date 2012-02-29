@@ -82,6 +82,13 @@ psc_kh_create(struct psc *psc)
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");
   psc_moments_set_type(psc->moments, "1st_cc");
+
+  static struct psc_diag_item *diag_items[] = {
+    &psc_diag_item_em_energy,
+    &psc_diag_item_particle_energy,
+    NULL,
+  };
+  psc_diag_set_items(psc->diag, diag_items);
 }
 
 // ----------------------------------------------------------------------
@@ -169,13 +176,7 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 static void
 psc_kh_output(struct psc *psc)
 {
-  static struct psc_diag_item *diag_items[] = {
-    &psc_diag_item_em_energy,
-    &psc_diag_item_particle_energy,
-    NULL,
-  };
-
-  psc_diag_run(NULL, psc, diag_items);
+  psc_diag_run(psc->diag, psc);
   psc_output_default(psc);
 }
 

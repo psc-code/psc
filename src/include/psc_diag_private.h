@@ -6,6 +6,7 @@
 
 struct psc_diag {
   struct mrc_obj obj;
+  struct psc_diag_item **items;
 };
 
 #endif

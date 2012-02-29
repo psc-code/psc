@@ -2,10 +2,19 @@
 #include "psc_diag_private.h"
 
 // ----------------------------------------------------------------------
+// psc_diag_set_items
+
+void
+psc_diag_set_items(struct psc_diag *diag, struct psc_diag_item **items)
+{
+  diag->items = items;
+}
+
+// ----------------------------------------------------------------------
 // psc_diag_run
 
 void
-psc_diag_run(struct psc_diag *diag, struct psc *psc, struct psc_diag_item **diag_items)
+psc_diag_run(struct psc_diag *diag, struct psc *psc)
 {
   static FILE *file;
   int rank;
@@ -15,8 +24,8 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc, struct psc_diag_item **diag
   if (!file && rank == 0) {
     file = fopen("diag.asc", "w");
     fprintf(file, "# time");
-    for (int m = 0; diag_items[m]; m++) {
-      struct psc_diag_item *item = diag_items[m];
+    for (int m = 0; diag->items[m]; m++) {
+      struct psc_diag_item *item = diag->items[m];
       for (int i = 0; i < item->n_values; i++) {
 	fprintf(file, " %s", item->names[i]);
       }
@@ -24,8 +33,8 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc, struct psc_diag_item **diag
     fprintf(file, "\n");
   }
 
-  for (int m = 0; diag_items[m]; m++) {
-    struct psc_diag_item *item = diag_items[m];
+  for (int m = 0; diag->items[m]; m++) {
+    struct psc_diag_item *item = diag->items[m];
 
     double *result = calloc(item->n_values, sizeof(*result));
     item->run(psc, result);

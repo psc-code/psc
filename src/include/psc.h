@@ -195,6 +195,7 @@ struct psc {
   struct psc_collision *collision;		///< collision operator
   struct psc_randomize *randomize;		///< randomizer
   struct psc_sort *sort;			///< sort operator
+  struct psc_diag *diag;                	///< timeseries diagnostics
   struct psc_output_fields *output_fields;	///< field output
   struct psc_output_particles *output_particles;///< particle output
   struct psc_output_photons *output_photons;    ///< particle output
