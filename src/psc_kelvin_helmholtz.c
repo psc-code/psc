@@ -160,8 +160,58 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
+struct psc_diag_item {
+  void (*run)(struct psc *psc, double *result);
+  int n_values;
+  const char *names[];
+};
+
+// ----------------------------------------------------------------------
+// psc_diag_run
+
+void
+psc_diag_run(struct psc *psc, struct psc_diag_item **diag_items)
+{
+  static FILE *file;
+  int rank;
+
+  MPI_Comm_rank(psc_comm(psc), &rank);
+
+  if (!file && rank == 0) {
+    file = fopen("diag.asc", "w");
+    fprintf(file, "# time");
+    for (int m = 0; diag_items[m]; m++) {
+      struct psc_diag_item *item = diag_items[m];
+      for (int i = 0; i < item->n_values; i++) {
+	fprintf(file, " %s", item->names[i]);
+      }
+      fprintf(file, "\n");
+    }
+  }
+
+  for (int m = 0; diag_items[m]; m++) {
+    struct psc_diag_item *item = diag_items[m];
+
+    double *result = calloc(item->n_values, sizeof(*result));
+    item->run(psc, result);
+    MPI_Reduce(MPI_IN_PLACE, result, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+    if (rank == 0) {
+      fprintf(file, "%g", psc->timestep * psc->dt);
+      for (int i = 0; i < item->n_values; i++) {
+	fprintf(file, " %g", result[i]);
+      }
+      fprintf(file, "\n");
+      fflush(file);
+    }
+    free(result);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_diag_item_em_energy
+
 static void
-psc_diag_em_energy(struct psc *psc, double *EH2)
+psc_diag_item_em_energy_run(struct psc *psc, double *EH2)
 {
   mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, HX + 3);
 
@@ -186,6 +236,12 @@ psc_diag_em_energy(struct psc *psc, double *EH2)
   }
 }
 
+struct psc_diag_item psc_diag_item_em_energy = {
+  .run = psc_diag_item_em_energy_run,
+  .n_values = 6,
+  .names = { "EX2", "EY2", "EZ2", "HX2", "HY2", "HZ2" },
+};
+
 // ----------------------------------------------------------------------
 // psc_kh_output
 //
@@ -194,30 +250,12 @@ psc_diag_em_energy(struct psc *psc, double *EH2)
 static void
 psc_kh_output(struct psc *psc)
 {
-  static FILE *file;
-  int rank;
+  static struct psc_diag_item *diag_items[] = {
+    &psc_diag_item_em_energy,
+    NULL,
+  };
 
-  MPI_Comm_rank(psc_comm(psc), &rank);
-
-  if (!file && rank == 0) {
-    file = fopen("diag.asc", "w");
-    fprintf(file, "# time EX2 EY2 EZ2 HX2 HY2 HZ2\n");
-  }
-
-  int n_vals = 6;
-  double *result = calloc(n_vals, sizeof(*result));
-  psc_diag_em_energy(psc, result);
-  MPI_Reduce(MPI_IN_PLACE, result, n_vals, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
-  if (rank == 0) {
-    fprintf(file, "%g", psc->timestep * psc->dt);
-    for (int i = 0; i < n_vals; i++) {
-      fprintf(file, " %g", result[i]);
-    }
-    fprintf(file, "\n");
-    fflush(file);
-  }
-  free(result);
-
+  psc_diag_run(psc, diag_items);
   psc_output_default(psc);
 }
 
