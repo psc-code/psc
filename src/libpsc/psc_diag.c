@@ -1,11 +1,11 @@
 
-#include "psc.h"
+#include "psc_diag_private.h"
 
 // ----------------------------------------------------------------------
 // psc_diag_run
 
 void
-psc_diag_run(struct psc *psc, struct psc_diag_item **diag_items)
+psc_diag_run(struct psc_diag *diag, struct psc *psc, struct psc_diag_item **diag_items)
 {
   static FILE *file;
   int rank;
@@ -41,4 +41,12 @@ psc_diag_run(struct psc *psc, struct psc_diag_item **diag_items)
   fprintf(file, "\n");
   fflush(file);
 }
+
+// ======================================================================
+// psc_diag class
+
+struct mrc_class_psc_diag mrc_class_psc_diag = {
+  .name             = "psc_diag",
+  .size             = sizeof(struct psc_diag),
+};
 

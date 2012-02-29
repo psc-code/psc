@@ -5,6 +5,7 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
+#include <psc_diag.h>
 
 #include <mrc_params.h>
 
@@ -174,7 +175,7 @@ psc_kh_output(struct psc *psc)
     NULL,
   };
 
-  psc_diag_run(psc, diag_items);
+  psc_diag_run(NULL, psc, diag_items);
   psc_output_default(psc);
 }
 

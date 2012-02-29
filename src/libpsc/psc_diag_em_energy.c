@@ -1,5 +1,5 @@
 
-#include "psc.h"
+#include "psc_diag.h"
 
 // ----------------------------------------------------------------------
 // psc_diag_item_em_energy
