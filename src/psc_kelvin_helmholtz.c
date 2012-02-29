@@ -160,6 +160,32 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
+static void
+psc_diag_em_energy(struct psc *psc, double *EH2)
+{
+  mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, HX + 3);
+
+  psc_foreach_patch(psc, p) {
+    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    // FIXME, this doesn't handle non-periodic b.c. right
+    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+      EH2[0] +=	sqr(F3_C(pf, EX, ix,iy,iz));
+      EH2[1] +=	sqr(F3_C(pf, EY, ix,iy,iz));
+      EH2[2] +=	sqr(F3_C(pf, EZ, ix,iy,iz));
+      EH2[3] +=	sqr(F3_C(pf, HX, ix,iy,iz));
+      EH2[4] +=	sqr(F3_C(pf, HY, ix,iy,iz));
+      EH2[5] +=	sqr(F3_C(pf, HZ, ix,iy,iz));
+    } foreach_3d_end;
+  }
+
+  psc_mfields_put_c(flds, psc->flds, 0, 0);
+
+  for (int i = 0; i < 6; i++) {
+    EH2[i] *=  (psc->dx[0] * psc->dx[1] * psc->dx[2]) /
+      (psc->domain.length[0] * psc->domain.length[1] * psc->domain.length[2]);
+  }
+}
+
 // ----------------------------------------------------------------------
 // psc_kh_output
 //
@@ -175,39 +201,22 @@ psc_kh_output(struct psc *psc)
 
   if (!file && rank == 0) {
     file = fopen("diag.asc", "w");
-    fprintf(file, "# time E2 H2\n");
+    fprintf(file, "# time EX2 EY2 EZ2 HX2 HY2 HZ2\n");
   }
 
-  
-  mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, HX + 3);
-  
-  double EH2[2] = {};
-  psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
-    // FIXME, this doesn't handle non-periodic b.c. right
-    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      EH2[0] +=
-	(sqr(F3_C(pf, EX, ix,iy,iz)) +
-	 sqr(F3_C(pf, EY, ix,iy,iz)) +
-	 sqr(F3_C(pf, EZ, ix,iy,iz))) * psc->dx[0] * psc->dx[1] * psc->dx[2];
-
-      EH2[1] +=
-	(sqr(F3_C(pf, HX, ix,iy,iz)) +
-	 sqr(F3_C(pf, HY, ix,iy,iz)) +
-	 sqr(F3_C(pf, HZ, ix,iy,iz))) * psc->dx[0] * psc->dx[1] * psc->dx[2];
-    } foreach_3d_end;
-  }
-
-  MPI_Reduce(MPI_IN_PLACE, &EH2, 2, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
-  for (int i = 0; i < 2; i++) {
-    EH2[i] /= psc->domain.length[0] * psc->domain.length[1] * psc->domain.length[2];
-  }
+  int n_vals = 6;
+  double *result = calloc(n_vals, sizeof(*result));
+  psc_diag_em_energy(psc, result);
+  MPI_Reduce(MPI_IN_PLACE, result, n_vals, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
   if (rank == 0) {
-    fprintf(file, "%g %g %g\n", psc->timestep * psc->dt, EH2[0], EH2[1]);
+    fprintf(file, "%g", psc->timestep * psc->dt);
+    for (int i = 0; i < n_vals; i++) {
+      fprintf(file, " %g", result[i]);
+    }
+    fprintf(file, "\n");
     fflush(file);
   }
-
-  psc_mfields_put_c(flds, psc->flds, 0, 0);
+  free(result);
 
   psc_output_default(psc);
 }
