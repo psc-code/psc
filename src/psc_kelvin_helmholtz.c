@@ -59,6 +59,7 @@ psc_kh_create(struct psc *psc)
   psc->prm.e0 = 1.;
 
   psc->prm.nicell = 50;
+  psc->prm.gdims_in_terms_of_cells = true;
 
   psc->domain.length[0] = 1.; // no x-dependence
   psc->domain.length[1] = 30.;
