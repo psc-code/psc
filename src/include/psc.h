@@ -384,6 +384,7 @@ void psc_setup_coeff(struct psc *psc);
 void psc_setup_domain(struct psc *psc);
 struct mrc_domain *psc_setup_mrc_domain(struct psc *psc, int nr_patches);
 void psc_setup_patches(struct psc *psc, struct mrc_domain *domain);
+void psc_output_default(struct psc *psc);
 
 void psc_dump_particles(mparticles_base_t *particles, const char *fname);
 void psc_dump_field(mfields_base_t *flds, int m, const char *fname);

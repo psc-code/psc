@@ -43,6 +43,14 @@ print_profiling(void)
 ///
 
 void
+psc_output_default(struct psc *psc)
+{
+  psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
+  psc_output_particles_run(psc->output_particles, psc->particles);
+  psc_output_photons_run(psc->output_photons, psc->mphotons);
+}
+
+void
 psc_output(struct psc *psc)
 {
   if (psc_ops(psc) && psc_ops(psc)->output) {
@@ -50,11 +58,7 @@ psc_output(struct psc *psc)
     return;
   }
 
-  // default psc_output() implementation
-
-  psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
-  psc_output_particles_run(psc->output_particles, psc->particles);
-  psc_output_photons_run(psc->output_photons, psc->mphotons);
+  psc_output_default(psc);
 }
 
 /////////////////////////////////////////////////////////////////////////
