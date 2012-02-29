@@ -85,5 +85,6 @@ libpsc_la_SOURCES = \
 	psc_checkpoint.c \
 	psc_main.c \
 	psc_diag.c \
-	psc_diag_em_energy.c
+	psc_diag_em_energy.c \
+	psc_diag_particle_energy.c
 

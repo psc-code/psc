@@ -170,6 +170,7 @@ psc_kh_output(struct psc *psc)
 {
   static struct psc_diag_item *diag_items[] = {
     &psc_diag_item_em_energy,
+    &psc_diag_item_particle_energy,
     NULL,
   };
 

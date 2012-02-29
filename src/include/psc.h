@@ -414,6 +414,7 @@ struct psc_diag_item {
 void psc_diag_run(struct psc *psc, struct psc_diag_item **diag_items);
 
 extern struct psc_diag_item psc_diag_item_em_energy;
+extern struct psc_diag_item psc_diag_item_particle_energy;
 
 // ----------------------------------------------------------------------
 // cell_map
