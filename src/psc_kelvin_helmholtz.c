@@ -175,26 +175,35 @@ psc_kh_output(struct psc *psc)
 
   if (!file && rank == 0) {
     file = fopen("diag.asc", "w");
-    fprintf(file, "# time E2\n");
+    fprintf(file, "# time E2 H2\n");
   }
 
-  double E2 = 0.;
   
-  mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, EX + 3);
+  mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, HX + 3);
   
+  double EH2[2] = {};
   psc_foreach_patch(ppsc, p) {
     fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    // FIXME, this doesn't handle non-periodic b.c. right
     psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
-      E2 +=
+      EH2[0] +=
 	(sqr(F3_C(pf, EX, ix,iy,iz)) +
 	 sqr(F3_C(pf, EY, ix,iy,iz)) +
 	 sqr(F3_C(pf, EZ, ix,iy,iz))) * psc->dx[0] * psc->dx[1] * psc->dx[2];
+
+      EH2[1] +=
+	(sqr(F3_C(pf, HX, ix,iy,iz)) +
+	 sqr(F3_C(pf, HY, ix,iy,iz)) +
+	 sqr(F3_C(pf, HZ, ix,iy,iz))) * psc->dx[0] * psc->dx[1] * psc->dx[2];
     } foreach_3d_end;
   }
 
-  MPI_Reduce(MPI_IN_PLACE, &E2, 1, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+  MPI_Reduce(MPI_IN_PLACE, &EH2, 2, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+  for (int i = 0; i < 2; i++) {
+    EH2[i] /= psc->domain.length[0] * psc->domain.length[1] * psc->domain.length[2];
+  }
   if (rank == 0) {
-    fprintf(file, "%g %g\n", psc->timestep * psc->dt, E2);
+    fprintf(file, "%g %g %g\n", psc->timestep * psc->dt, EH2[0], EH2[1]);
     fflush(file);
   }
 
