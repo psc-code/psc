@@ -83,5 +83,7 @@ libpsc_la_SOURCES = \
 	psc_dump.c \
 	checks_continuity.c \
 	psc_checkpoint.c \
-	psc_main.c
+	psc_main.c \
+	psc_diag.c \
+	psc_diag_em_energy.c
 
