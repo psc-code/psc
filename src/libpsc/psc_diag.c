@@ -11,6 +11,23 @@ psc_diag_set_items(struct psc_diag *diag, struct psc_diag_item **items)
 }
 
 // ----------------------------------------------------------------------
+// psc_diag_create
+
+static void
+_psc_diag_create(struct psc_diag *diag)
+{
+  // set default: energy
+
+  static struct psc_diag_item *items[] = {
+    &psc_diag_item_em_energy,
+    &psc_diag_item_particle_energy,
+    NULL,
+  };
+  
+  diag->items = items;
+}
+
+// ----------------------------------------------------------------------
 // psc_diag_run
 
 void
@@ -57,5 +74,6 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
 struct mrc_class_psc_diag mrc_class_psc_diag = {
   .name             = "psc_diag",
   .size             = sizeof(struct psc_diag),
+  .create           = _psc_diag_create,
 };
 
