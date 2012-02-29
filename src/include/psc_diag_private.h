@@ -4,9 +4,13 @@
 
 #include <psc_diag.h>
 
+#include <stdio.h>
+
 struct psc_diag {
   struct mrc_obj obj;
   struct psc_diag_item **items;
+
+  FILE *file;
 };
 
 #endif

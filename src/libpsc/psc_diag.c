@@ -33,21 +33,19 @@ _psc_diag_create(struct psc_diag *diag)
 void
 psc_diag_run(struct psc_diag *diag, struct psc *psc)
 {
-  static FILE *file;
   int rank;
-
   MPI_Comm_rank(psc_comm(psc), &rank);
 
-  if (!file && rank == 0) {
-    file = fopen("diag.asc", "w");
-    fprintf(file, "# time");
+  if (!diag->file && rank == 0) {
+    diag->file = fopen("diag.asc", "w");
+    fprintf(diag->file, "# time");
     for (int m = 0; diag->items[m]; m++) {
       struct psc_diag_item *item = diag->items[m];
       for (int i = 0; i < item->n_values; i++) {
-	fprintf(file, " %s", item->names[i]);
+	fprintf(diag->file, " %s", item->names[i]);
       }
     }
-    fprintf(file, "\n");
+    fprintf(diag->file, "\n");
   }
 
   for (int m = 0; diag->items[m]; m++) {
@@ -57,15 +55,17 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
     item->run(psc, result);
     MPI_Reduce(MPI_IN_PLACE, result, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
     if (rank == 0) {
-      fprintf(file, "%g", psc->timestep * psc->dt);
+      fprintf(diag->file, "%g", psc->timestep * psc->dt);
       for (int i = 0; i < item->n_values; i++) {
-	fprintf(file, " %g", result[i]);
+	fprintf(diag->file, " %g", result[i]);
       }
     }
     free(result);
   }
-  fprintf(file, "\n");
-  fflush(file);
+  if (rank == 0) {
+    fprintf(diag->file, "\n");
+    fflush(diag->file);
+  }
 }
 
 // ======================================================================
