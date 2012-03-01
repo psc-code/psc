@@ -28,25 +28,51 @@ _psc_diag_create(struct psc_diag *diag)
 }
 
 // ----------------------------------------------------------------------
+// psc_diag_setup
+
+static void
+_psc_diag_setup(struct psc_diag *diag)
+{
+  int rank;
+  MPI_Comm_rank(psc_diag_comm(diag), &rank);
+
+  if (rank != 0)
+    return;
+  
+  diag->file = fopen("diag.asc", "w");
+  fprintf(diag->file, "# time");
+  for (int m = 0; diag->items[m]; m++) {
+    struct psc_diag_item *item = diag->items[m];
+    for (int i = 0; i < item->n_values; i++) {
+      fprintf(diag->file, " %s", item->names[i]);
+    }
+  }
+  fprintf(diag->file, "\n");
+}
+
+// ----------------------------------------------------------------------
+// psc_diag_destroy
+
+static void
+_psc_diag_destroy(struct psc_diag *diag)
+{
+  int rank;
+  MPI_Comm_rank(psc_diag_comm(diag), &rank);
+
+  if (rank != 0)
+    return;
+  
+  fclose(diag->file);
+}
+
+// ----------------------------------------------------------------------
 // psc_diag_run
 
 void
 psc_diag_run(struct psc_diag *diag, struct psc *psc)
 {
   int rank;
-  MPI_Comm_rank(psc_comm(psc), &rank);
-
-  if (!diag->file && rank == 0) {
-    diag->file = fopen("diag.asc", "w");
-    fprintf(diag->file, "# time");
-    for (int m = 0; diag->items[m]; m++) {
-      struct psc_diag_item *item = diag->items[m];
-      for (int i = 0; i < item->n_values; i++) {
-	fprintf(diag->file, " %s", item->names[i]);
-      }
-    }
-    fprintf(diag->file, "\n");
-  }
+  MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
   for (int m = 0; diag->items[m]; m++) {
     struct psc_diag_item *item = diag->items[m];
@@ -75,5 +101,7 @@ struct mrc_class_psc_diag mrc_class_psc_diag = {
   .name             = "psc_diag",
   .size             = sizeof(struct psc_diag),
   .create           = _psc_diag_create,
+  .setup            = _psc_diag_setup,
+  .destroy          = _psc_diag_destroy,
 };
 
