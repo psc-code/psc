@@ -9,6 +9,14 @@
 #include <mrc_io.h>
 #include <string.h>
 
+struct psc_output_fields_item {
+  char *name;
+  int nr_comp;
+  char *fld_names[6];
+  void (*calc)(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
+	       mfields_c_t *f);
+};
+
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
 // ======================================================================
@@ -39,6 +47,15 @@ calc_j_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_j_nc = {
+  .name      = "j_nc",
+  .nr_comp   = 3,
+  .fld_names = { "jx_nc", "jy_nc", "jz_nc" },
+  .calc      = calc_j_nc,
+};
+
+// ======================================================================
+
 #define JX_CC(ix,iy,iz) (.25f * (F3(pf,  JXI,ix,iy,iz   ) + F3(pf,  JXI,ix,iy+dy,iz   ) + \
 				 F3(pf,  JXI,ix,iy,iz+dz) + F3(pf,  JXI,ix,iy+dy,iz+dz)))
 #define JY_CC(ix,iy,iz) (.25f * (F3(pf,  JYI,ix,iy,iz   ) + F3(pf,  JYI,ix+dx,iy,iz   ) + \
@@ -47,7 +64,7 @@ calc_j_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
 				 F3(pf,  JZI,ix,iy+dy,iz) + F3(pf,  JZI,ix+dz,iy+dy,iz)))
 
 static void
-calc_j_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_j(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
@@ -62,6 +79,15 @@ calc_j_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_j = {
+  .name      = "j",
+  .nr_comp   = 3,
+  .fld_names = { "jx", "jy", "jz" },
+  .calc      = calc_j,
+};
+
+// ======================================================================
 
 static void
 calc_j_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
@@ -79,6 +105,15 @@ calc_j_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_j_ec = {
+  .name      = "j_ec",
+  .nr_comp   = 3,
+  .fld_names = { "jx_ec", "jy_ec", "jz_ec" },
+  .calc      = calc_j_ec,
+};
+
+// ======================================================================
 
 #define EX_NC(ix,iy,iz) (.5f * (F3(pf,  EX,ix,iy,iz) + F3(pf,  EX,ix-dx,iy,iz)))
 #define EY_NC(ix,iy,iz) (.5f * (F3(pf,  EY,ix,iy,iz) + F3(pf,  EY,ix,iy-dy,iz)))
@@ -100,6 +135,15 @@ calc_E_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_e_nc = {
+  .name      = "e_nc",
+  .nr_comp   = 3,
+  .fld_names = { "ex_nc", "ey_nc", "ez_nc" },
+  .calc      = calc_E_nc,
+};
+
+// ======================================================================
 
 #define EX_CC(ix,iy,iz) (.25f * (F3(pf,  EX,ix,iy,iz   ) + F3(pf,  EX,ix,iy+dy,iz   ) + \
 				 F3(pf,  EX,ix,iy,iz+dz) + F3(pf,  EX,ix,iy+dy,iz+dz)))
@@ -125,6 +169,15 @@ calc_E_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_e = {
+  .name      = "e",
+  .nr_comp   = 3,
+  .fld_names = { "ex", "ey", "ez" },
+  .calc      = calc_E_cc,
+};
+
+// ======================================================================
+
 static void
 calc_E_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
@@ -141,6 +194,15 @@ calc_E_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_e_ec = {
+  .name      = "e_ec",
+  .nr_comp   = 3,
+  .fld_names = { "ex_ec", "ey_ec", "ez_ec" },
+  .calc      = calc_E_ec,
+};
+
+// ======================================================================
 
 #define HX_NC(ix,iy,iz) (.25f*(F3(pf, HX,ix,iy,iz   ) + F3(pf, HX,ix,iy-dy,iz   ) + \
 			       F3(pf, HX,ix,iy,iz-dz) + F3(pf, HX,ix,iy-dy,iz-dz)))
@@ -166,6 +228,15 @@ calc_H_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_h_nc = {
+  .name      = "h_nc",
+  .nr_comp   = 3,
+  .fld_names = { "hx_nc", "hy_nc", "hz_nc" },
+  .calc      = calc_H_nc,
+};
+
+// ======================================================================
+
 #define HX_CC(ix,iy,iz) (.5f*(F3(pf, HX,ix,iy,iz) + F3(pf, HX,ix+dx,iy,iz)))
 #define HY_CC(ix,iy,iz) (.5f*(F3(pf, HY,ix,iy,iz) + F3(pf, HY,ix,iy+dy,iz)))
 #define HZ_CC(ix,iy,iz) (.5f*(F3(pf, HZ,ix,iy,iz) + F3(pf, HZ,ix,iy,iz+dz)))
@@ -187,6 +258,15 @@ calc_H_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_h = {
+  .name      = "h",
+  .nr_comp   = 3,
+  .fld_names = { "hx", "hy", "hz" },
+  .calc      = calc_H_cc,
+};
+
+// ======================================================================
+
 static void
 calc_H_fc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
@@ -204,6 +284,15 @@ calc_H_fc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particl
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_h_fc = {
+  .name      = "h_fc",
+  .nr_comp   = 3,
+  .fld_names = { "hx_fc", "hy_fc", "hz_fc" },
+  .calc      = calc_H_fc,
+};
+
+// ======================================================================
+
 static void
 calc_jdote_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
@@ -220,6 +309,15 @@ calc_jdote_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *par
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_jdote = {
+  .name      = "jdote",
+  .nr_comp   = 3,
+  .fld_names = { "jxex", "jyey", "jzez" },
+  .calc      = calc_jdote_cc,
+};
+
+// ======================================================================
 
 static void
 calc_poyn_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
@@ -241,6 +339,15 @@ calc_poyn_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *part
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
+struct psc_output_fields_item psc_output_fields_item_poyn = {
+  .name      = "poyn",
+  .nr_comp   = 3,
+  .fld_names = { "poynx", "poyny", "poynz" },
+  .calc      = calc_poyn_cc,
+};
+
+// ======================================================================
+
 static void
 calc_E2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
@@ -257,6 +364,15 @@ calc_E2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *partic
   }
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
+
+struct psc_output_fields_item psc_output_fields_item_e2 = {
+  .name      = "e2",
+  .nr_comp   = 3,
+  .fld_names = { "ex2", "ey2", "ez2" },
+  .calc      = calc_E2_cc,
+};
+
+// ======================================================================
 
 static void
 calc_H2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
@@ -275,13 +391,14 @@ calc_H2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *partic
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
-struct psc_output_fields_item {
-  char *name;
-  int nr_comp;
-  char *fld_names[6];
-  void (*calc)(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	       mfields_c_t *f);
+struct psc_output_fields_item psc_output_fields_item_h2 = {
+  .name      = "h2",
+  .nr_comp   = 3,
+  .fld_names = { "hx2", "hy2", "hz2" },
+  .calc      = calc_H2_cc,
 };
+
+// ======================================================================
 
 static void
 calc_densities(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
@@ -290,12 +407,30 @@ calc_densities(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particl
   psc_moments_calc_densities(psc->moments, flds, particles, res);
 }
 
+struct psc_output_fields_item psc_output_fields_item_densities = {
+  .name      = "n",
+  .nr_comp   = 3,
+  .fld_names = { "ne", "ni", "nn" },
+  .calc      = calc_densities,
+};
+
+// ======================================================================
+
 static void
 calc_v(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	       mfields_c_t *res)
 {
   psc_moments_calc_v(psc->moments, flds, particles, res);
 }
+
+struct psc_output_fields_item psc_output_fields_item_v = {
+  .name      = "v",
+  .nr_comp   = 6,
+  .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
+  .calc      = calc_v,
+};
+
+// ======================================================================
 
 static void
 calc_vv(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
@@ -304,6 +439,15 @@ calc_vv(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
   psc_moments_calc_vv(psc->moments, flds, particles, res);
 }
 
+struct psc_output_fields_item psc_output_fields_item_vv = {
+  .name      = "vv",
+  .nr_comp   = 6,
+  .fld_names = { "vexvex", "veyvey", "vezvez", "vixvix", "viyviy", "vizviz" },
+  .calc      = calc_vv,
+};
+
+// ======================================================================
+
 static void
 calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_c_t *res)
@@ -311,50 +455,41 @@ calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particle
   psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
 }
 
-static struct psc_output_fields_item output_fields[] = {
-  { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
-    .calc = calc_densities },
-  { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
-    .calc = calc_v },
-  { .name = "vv"   , .nr_comp = 6, .fld_names = { "vexvex", "veyvey", "vezvez",
-						  "vixvix", "viyviy", "vizviz" },
-    .calc = calc_vv },
-  { .name = "j_nc"    , .nr_comp = 3, .fld_names = { "jx_nc", "jy_nc", "jz_nc" },
-    .calc = calc_j_nc },
-  { .name = "j_ec"    , .nr_comp = 3, .fld_names = { "jx_ec", "jy_ec", "jz_ec" },
-    .calc = calc_j_ec },
-  { .name = "j"       , .nr_comp = 3, .fld_names = { "jx", "jy", "jz" },
-    .calc = calc_j_cc },
-  { .name = "e_nc"    , .nr_comp = 3, .fld_names = { "ex_nc", "ey_nc", "ez_nc" },
-    .calc = calc_E_nc },
-  { .name = "e_ec"    , .nr_comp = 3, .fld_names = { "ex_ec", "ey_ec", "ez_ec" },
-    .calc = calc_E_ec },
-  { .name = "e"       , .nr_comp = 3, .fld_names = { "ex", "ey", "ez" },
-    .calc = calc_E_cc },
-  { .name = "h_nc"    , .nr_comp = 3, .fld_names = { "hx_nc", "hy_nc", "hz_nc" },
-    .calc = calc_H_nc },
-  { .name = "h_fc"    , .nr_comp = 3, .fld_names = { "hx_fc", "hy_fc", "hz_fc" },
-    .calc = calc_H_fc },
-  { .name = "h"       , .nr_comp = 3, .fld_names = { "hx", "hy", "hz" },
-    .calc = calc_H_cc },
-  { .name = "jdote"   , .nr_comp = 3, .fld_names = { "jxex", "jyey", "jzez" },
-    .calc = calc_jdote_cc },
-  { .name = "poyn"    , .nr_comp = 3, .fld_names = { "poynx", "poyny", "poynz" },
-    .calc = calc_poyn_cc },
-  { .name = "e2"      , .nr_comp = 3, .fld_names = { "ex2", "ey2", "ez2" },
-    .calc = calc_E2_cc },
-  { .name = "h2"      , .nr_comp = 3, .fld_names = { "hx2", "hy2", "hz2" },
-    .calc = calc_H2_cc },
-  { .name = "photon_n", .nr_comp = 1, .fld_names = { "photon_n" },
-    .calc = calc_photon_n },
-  {},
+struct psc_output_fields_item psc_output_fields_item_photon_n = {
+  .name      = "photon_n",
+  .nr_comp   = 1,
+  .fld_names = { "photon_n" },
+  .calc      = calc_photon_n,
+};
+
+// ======================================================================
+
+static struct psc_output_fields_item *output_fields_item[] = {
+  &psc_output_fields_item_j,
+  &psc_output_fields_item_j_nc,
+  &psc_output_fields_item_j_ec,
+  &psc_output_fields_item_e,
+  &psc_output_fields_item_e_nc,
+  &psc_output_fields_item_e_ec,
+  &psc_output_fields_item_h,
+  &psc_output_fields_item_h_nc,
+  &psc_output_fields_item_h_fc,
+  &psc_output_fields_item_jdote,
+  &psc_output_fields_item_poyn,
+  &psc_output_fields_item_e2,
+  &psc_output_fields_item_h2,
+  &psc_output_fields_item_densities,
+  &psc_output_fields_item_v,
+  &psc_output_fields_item_vv,
+  &psc_output_fields_item_photon_n,
+  NULL,
 };
 
 static struct psc_output_fields_item *
 find_output_field(const char *name)
 {
-  for (int i = 0; output_fields[i].name; i++) {
-    struct psc_output_fields_item *item = &output_fields[i];
+  for (int i = 0; output_fields_item[i]; i++) {
+    struct psc_output_fields_item *item = output_fields_item[i];
     if (strcasecmp(item->name, name) == 0) {
       return item;
     }
