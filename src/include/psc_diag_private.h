@@ -8,6 +8,7 @@
 
 struct psc_diag {
   struct mrc_obj obj;
+  int every_step;
   struct psc_diag_item **items;
 
   FILE *file;

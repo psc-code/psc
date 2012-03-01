@@ -1,6 +1,8 @@
 
 #include "psc_diag_private.h"
 
+#include <mrc_params.h>
+
 // ----------------------------------------------------------------------
 // psc_diag_set_items
 
@@ -71,6 +73,10 @@ _psc_diag_destroy(struct psc_diag *diag)
 void
 psc_diag_run(struct psc_diag *diag, struct psc *psc)
 {
+  if (diag->every_step < 0 || 
+      psc->timestep % diag->every_step != 0)
+    return;
+
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
@@ -95,11 +101,22 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
 }
 
 // ======================================================================
+
+#define VAR(x) (void *)offsetof(struct psc_diag, x)
+
+static struct param psc_diag_descr[] = {
+  { "every_step"       , VAR(every_step)         , PARAM_INT(-1)            },
+  {},
+};
+#undef VAR
+
+// ======================================================================
 // psc_diag class
 
 struct mrc_class_psc_diag mrc_class_psc_diag = {
   .name             = "psc_diag",
   .size             = sizeof(struct psc_diag),
+  .param_descr      = psc_diag_descr,
   .create           = _psc_diag_create,
   .setup            = _psc_diag_setup,
   .destroy          = _psc_diag_destroy,
