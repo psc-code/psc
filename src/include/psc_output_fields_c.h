@@ -24,7 +24,7 @@ struct psc_output_fields_c {
   // storage for output
   unsigned int naccum;
   struct psc_fields_list pfd, tfd;
-  struct output_field *out_flds[MAX_FIELDS_LIST];
+  struct psc_output_fields_item *item[MAX_FIELDS_LIST];
 
   struct psc_output_format *format;
 };

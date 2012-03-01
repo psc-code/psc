@@ -275,7 +275,7 @@ calc_H2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *partic
   psc_mfields_put_cf(flds, flds_base, 0, 0);
 }
 
-struct output_field {
+struct psc_output_fields_item {
   char *name;
   int nr_comp;
   char *fld_names[6];
@@ -311,7 +311,7 @@ calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particle
   psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
 }
 
-static struct output_field output_fields[] = {
+static struct psc_output_fields_item output_fields[] = {
   { .name = "n"    , .nr_comp = 3, .fld_names = { "ne", "ni", "nn" },
     .calc = calc_densities },
   { .name = "v"    , .nr_comp = 6, .fld_names = { "vex", "vey", "vez", "vix", "viy", "viz" },
@@ -350,16 +350,16 @@ static struct output_field output_fields[] = {
   {},
 };
 
-static struct output_field *
+static struct psc_output_fields_item *
 find_output_field(const char *name)
 {
   for (int i = 0; output_fields[i].name; i++) {
-    struct output_field *of = &output_fields[i];
-    if (strcasecmp(of->name, name) == 0) {
-      return of;
+    struct psc_output_fields_item *item = &output_fields[i];
+    if (strcasecmp(item->name, name) == 0) {
+      return item;
     }
   }
-  fprintf(stderr, "ERROR: output_field '%s' unknown!\n", name);
+  fprintf(stderr, "ERROR: psc_output_fields_item '%s' unknown!\n", name);
   abort();
 }
 
@@ -425,20 +425,20 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   // parse comma separated list of fields
   char *s_orig = strdup(out_c->output_fields), *p, *s = s_orig;
   while ((p = strsep(&s, ", "))) {
-    struct output_field *of = find_output_field(p);
+    struct psc_output_fields_item *item = find_output_field(p);
     mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");
     psc_mfields_set_domain(flds, psc->mrc_domain);
-    psc_mfields_set_param_int(flds, "nr_fields", of->nr_comp);
+    psc_mfields_set_param_int(flds, "nr_fields", item->nr_comp);
     psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
     psc_mfields_setup(flds);
-    out_c->out_flds[pfd->nr_flds] = of;
+    out_c->item[pfd->nr_flds] = item;
     pfd->flds[pfd->nr_flds] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &pfd->flds[pfd->nr_flds]);
     pfd->nr_flds++;
-    for (int m = 0; m < of->nr_comp; m++) {
-      flds->name[m] = strdup(of->fld_names[m]);
+    for (int m = 0; m < item->nr_comp; m++) {
+      flds->name[m] = strdup(item->fld_names[m]);
     }
   }
   free(s_orig);
@@ -562,7 +562,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       out_c->dowrite_tfield) {
     struct psc_fields_list *pfd = &out_c->pfd;
     for (int i = 0; i < pfd->nr_flds; i++) {
-      out_c->out_flds[i]->calc(psc, flds, particles, pfd->flds[i]);
+      out_c->item[i]->calc(psc, flds, particles, pfd->flds[i]);
     }
   }
   
