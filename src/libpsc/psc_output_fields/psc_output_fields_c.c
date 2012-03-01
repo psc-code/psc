@@ -1,5 +1,6 @@
 
 #include "psc_output_fields_c.h"
+#include "psc_output_fields_item_private.h"
 #include "psc_output_format.h"
 #include "psc_moments.h"
 #include "psc_fields_as_c.h"
@@ -8,14 +9,6 @@
 #include <mrc_params.h>
 #include <mrc_io.h>
 #include <string.h>
-
-struct psc_output_fields_item {
-  char *name;
-  int nr_comp;
-  char *fld_names[6];
-  void (*calc)(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	       mfields_c_t *f);
-};
 
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 

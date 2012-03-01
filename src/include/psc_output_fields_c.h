@@ -3,6 +3,7 @@
 #define PSC_OUTPUT_FIELDS_C_H
 
 #include "psc_output_fields_private.h"
+#include "psc_output_fields_item.h"
 
 #define MAX_FIELDS_LIST 30
 
