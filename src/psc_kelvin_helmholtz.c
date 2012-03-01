@@ -136,18 +136,24 @@ psc_kh_init_field(struct psc *psc, double x[3], int m)
 
 static void
 psc_kh_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt)
+		struct psc_particle_npt *npt, double *wni)
 {
   struct psc_kh *kh = to_psc_kh(psc);
 
   double yl = psc->domain.length[1];
   double vz = kh->v0z * tanh((x[1] - .5 * yl) / kh->delta);
 
-  npt->n = 1;
+  npt->n = 1.;
   npt->p[2] = vz;
   npt->T[0] = kh->T;
   npt->T[1] = kh->T;
   npt->T[2] = kh->T;
+
+  if (vz < 0) {
+    *wni = 1.;
+  } else {
+    *wni = 1. + 1e-6;
+  }
 
   switch (kind) {
   case 0: // electrons
@@ -208,7 +214,8 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
 	    struct psc_particle_npt npt = {}; // init to all zero
-	    psc_kh_init_npt(psc, kind, xx, &npt);
+	    double wni;
+	    psc_kh_init_npt(psc, kind, xx, &npt, &wni);
 	    
 	    int n_in_cell = npt.n * psc->prm.nicell + .5;
 	    if (count_only) {
@@ -247,7 +254,7 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 		p->pzi = pz;
 		p->qni = npt.q;
 		p->mni = npt.m;
-		p->wni = npt.n / (n_in_cell * psc->coeff.cori);
+		p->wni = wni;
 	      }
 	    }
 	  }
