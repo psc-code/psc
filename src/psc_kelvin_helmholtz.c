@@ -5,7 +5,6 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
-#include <psc_diag.h>
 
 #include <mrc_params.h>
 
@@ -161,18 +160,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   }
 }
 
-// ----------------------------------------------------------------------
-// psc_kh_output
-//
-// keep track of energy conservation
-
-static void
-psc_kh_output(struct psc *psc)
-{
-  psc_diag_run(psc->diag, psc);
-  psc_output_default(psc);
-}
-
 // ======================================================================
 // psc_kh_ops
 
@@ -184,7 +171,6 @@ struct psc_ops psc_kh_ops = {
   .setup            = psc_kh_setup,
   .init_field       = psc_kh_init_field,
   .init_npt         = psc_kh_init_npt,
-  .output           = psc_kh_output,
 };
 
 // ======================================================================

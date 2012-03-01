@@ -6,6 +6,7 @@
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
+#include "psc_diag.h"
 #include "psc_output_fields.h"
 #include "psc_output_particles.h"
 #include "psc_output_photons.h"
@@ -45,6 +46,7 @@ print_profiling(void)
 void
 psc_output_default(struct psc *psc)
 {
+  psc_diag_run(psc->diag, psc);
   psc_output_fields_run(psc->output_fields, psc->flds, psc->particles);
   psc_output_particles_run(psc->output_particles, psc->particles);
   psc_output_photons_run(psc->output_photons, psc->mphotons);
