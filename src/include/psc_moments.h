@@ -1,4 +1,7 @@
 
+#ifndef PSC_MOMENTS_H
+#define PSC_MOMENTS_H
+
 #include <mrc_obj.h>
 
 #include "psc.h"
@@ -17,3 +20,5 @@ void psc_moments_calc_vv(struct psc_moments *moments,
 
 void psc_moments_calc_photon_n(struct psc_moments *moments,
 			       mphotons_t *photons, mfields_c_t *res);
+
+#endif
