@@ -8,9 +8,127 @@
 #include <psc_particles_as_c.h>
 
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <math.h>
 #include <time.h>
+
+// ======================================================================
+
+#include "psc_output_fields_item_private.h"
+
+#include "psc_bnd.h"
+#include "psc_fields_as_c.h"
+
+static void
+do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
+{
+  fields_c_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  fields_c_real_t dxi = 1.f / ppsc->dx[0];
+  fields_c_real_t dyi = 1.f / ppsc->dx[1];
+  fields_c_real_t dzi = 1.f / ppsc->dx[2];
+
+  struct psc_patch *patch = &ppsc->patch[p];
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
+      
+    fields_c_real_t u = (part->xi - patch->xb[0]) * dxi - .5;
+    fields_c_real_t v = (part->yi - patch->xb[1]) * dyi - .5;
+    fields_c_real_t w = (part->zi - patch->xb[2]) * dzi - .5;
+    int j1 = particle_real_fint(u);
+    int j2 = particle_real_fint(v);
+    int j3 = particle_real_fint(w);
+    fields_c_real_t h1 = u-j1;
+    fields_c_real_t h2 = v-j2;
+    fields_c_real_t h3 = w-j3;
+      
+    fields_c_real_t g0x=1.f - h1;
+    fields_c_real_t g0y=1.f - h2;
+    fields_c_real_t g0z=1.f - h3;
+    fields_c_real_t g1x=h1;
+    fields_c_real_t g1y=h2;
+    fields_c_real_t g1z=h3;
+      
+    if (ppsc->domain.gdims[0] == 1) {
+      j1 = 0; g0x = 1.; g1x = 0.;
+    }
+    if (ppsc->domain.gdims[1] == 1) {
+      j2 = 0; g0y = 1.; g1y = 0.;
+    }
+    if (ppsc->domain.gdims[2] == 1) {
+      j3 = 0; g0z = 1.; g1z = 0.;
+    }
+
+    assert(j1 >= -1 && j1 < patch->ldims[0]);
+    assert(j2 >= -1 && j2 < patch->ldims[1]);
+    assert(j3 >= -1 && j3 < patch->ldims[2]);
+      
+    fields_c_real_t fnq;
+    int m;
+    if (part->qni < 0.) {
+      fnq = part->qni * part->wni * fnqs;
+      if (part->wni > 1.) {
+	m = 1;
+      } else {
+	m = 0;
+      }
+    } else if (part->qni > 0.) {
+      fnq = part->qni * part->wni * fnqs;
+      if (part->wni > 1.) {
+	m = 3;
+      } else {
+	m = 2;
+      }
+    } else {
+      assert(0);
+    }
+    F3(pf, m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
+    F3(pf, m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
+    F3(pf, m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
+    F3(pf, m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
+    F3(pf, m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
+    F3(pf, m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
+    F3(pf, m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
+    F3(pf, m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+  }
+}
+
+static void
+calc_kh(struct psc_output_fields_item *item, mfields_base_t *flds,
+	mparticles_base_t *particles_base, mfields_c_t *res)
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("c_moments_kh", 1., 0, 0);
+  }
+
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+
+  prof_start(pr);
+  for (int m = 0; m < 4; m++) {
+    psc_mfields_zero(res, m);
+  }
+  
+  psc_foreach_patch(ppsc, p) {
+    do_1st_calc_kh(p, psc_mfields_get_patch_c(res, p),
+		   psc_mparticles_get_patch(particles, p));
+  }
+  prof_stop(pr);
+
+  psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
+
+  psc_bnd_add_ghosts(item->bnd, res, 0, 4);
+  // FIXME add_ghosts_boundary(res, 0, 4);
+}
+
+static struct psc_output_fields_item_ops psc_output_fields_item_kh_ops = {
+  .name      = "kh",
+  .nr_comp   = 4,
+  .fld_names = { "ne1", "ne2", "ni1", "ni2" },
+  .run       = calc_kh,
+};
+
+// ======================================================================
 
 struct psc_kh {
   // parameters
@@ -292,5 +410,7 @@ struct psc_ops psc_kh_ops = {
 int
 main(int argc, char **argv)
 {
+  mrc_class_register_subclass(&mrc_class_psc_output_fields_item, &psc_output_fields_item_kh_ops);
+
   return psc_main(&argc, &argv, &psc_kh_ops);
 }
