@@ -15,23 +15,24 @@
 // ======================================================================
 
 #define define_dxdydz(dx, dy, dz)					\
-  int dx __unused = (psc->domain.gdims[0] == 1) ? 0 : 1;			\
-  int dy __unused = (psc->domain.gdims[1] == 1) ? 0 : 1;			\
-  int dz __unused = (psc->domain.gdims[2] == 1) ? 0 : 1
+  int dx __unused = (ppsc->domain.gdims[0] == 1) ? 0 : 1;		\
+  int dy __unused = (ppsc->domain.gdims[1] == 1) ? 0 : 1;		\
+  int dz __unused = (ppsc->domain.gdims[2] == 1) ? 0 : 1
 
 #define JX_NC(ix,iy,iz) (.5f * (F3(pf, JXI,ix,iy,iz) + F3(pf, JXI,ix-dx,iy,iz)))
 #define JY_NC(ix,iy,iz) (.5f * (F3(pf, JYI,ix,iy,iz) + F3(pf, JYI,ix,iy-dy,iz)))
 #define JZ_NC(ix,iy,iz) (.5f * (F3(pf, JZI,ix,iy,iz) + F3(pf, JZI,ix,iy,iz-dz)))
 
 static void
-calc_j_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_j_nc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	  mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = JX_NC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = JY_NC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = JZ_NC(ix,iy,iz);
@@ -57,14 +58,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops = {
 				 F3(pf,  JZI,ix,iy+dy,iz) + F3(pf,  JZI,ix+dz,iy+dy,iz)))
 
 static void
-calc_j(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_j(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+       mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz);
@@ -83,14 +85,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_j_ops = {
 // ======================================================================
 
 static void
-calc_j_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_j_ec(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	  mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = F3(pf, JXI, ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = F3(pf, JYI, ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = F3(pf, JZI, ix,iy,iz);
@@ -113,14 +116,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_j_ec_ops = {
 #define EZ_NC(ix,iy,iz) (.5f * (F3(pf,  EZ,ix,iy,iz) + F3(pf,  EZ,ix,iy,iz-dz)))
 
 static void
-calc_E_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E_nc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	  mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = EX_NC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = EY_NC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = EZ_NC(ix,iy,iz);
@@ -146,14 +150,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_e_nc_ops = {
 				 F3(pf,  EZ,ix,iy+dy,iz) + F3(pf,  EZ,ix+dx,iy+dy,iz)))
 
 static void
-calc_E_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = EX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = EY_CC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = EZ_CC(ix,iy,iz);
@@ -172,14 +176,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_e_ops = {
 // ======================================================================
 
 static void
-calc_E_ec(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E_ec(struct psc_output_fields_item *item, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = F3(pf, EX, ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = F3(pf, EY, ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = F3(pf, EZ, ix,iy,iz);
@@ -205,14 +209,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_e_ec_ops = {
 			       F3(pf, HZ,ix,iy-dy,iz) + F3(pf, HZ,ix-dx,iy-dy,iz)))
 
 static void
-calc_H_nc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H_nc(struct psc_output_fields_item *item, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, HX, HX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = HX_NC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = HY_NC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = HZ_NC(ix,iy,iz);
@@ -235,14 +239,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_h_nc_ops = {
 #define HZ_CC(ix,iy,iz) (.5f*(F3(pf, HZ,ix,iy,iz) + F3(pf, HZ,ix,iy,iz+dz)))
 
 static void
-calc_H_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	  mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, HX, HX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = HX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = HY_CC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = HZ_CC(ix,iy,iz);
@@ -261,14 +266,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_h_ops = {
 // ======================================================================
 
 static void
-calc_H_fc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H_fc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	  mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = F3(pf, HX, ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = F3(pf, HY, ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = F3(pf, HZ, ix,iy,iz);
@@ -287,14 +293,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_h_fc_ops = {
 // ======================================================================
 
 static void
-calc_jdote_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_jdote_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	      mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = JX_CC(ix,iy,iz) * EX_CC(ix,iy,iz);
       F3(ff, 1, ix,iy,iz) = JY_CC(ix,iy,iz) * EY_CC(ix,iy,iz);
       F3(ff, 2, ix,iy,iz) = JZ_CC(ix,iy,iz) * EZ_CC(ix,iy,iz);
@@ -313,14 +320,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_jdote_ops = {
 // ======================================================================
 
 static void
-calc_poyn_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_poyn_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	     mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, HX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = (EY_CC(ix,iy,iz) * HZ_CC(ix,iy,iz) - 
 			     EZ_CC(ix,iy,iz) * HY_CC(ix,iy,iz));
       F3(ff, 1, ix,iy,iz) = (EZ_CC(ix,iy,iz) * HX_CC(ix,iy,iz) -
@@ -342,14 +350,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_poyn_ops = {
 // ======================================================================
 
 static void
-calc_E2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_E2_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	   mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = sqr(EX_CC(ix,iy,iz));
       F3(ff, 1, ix,iy,iz) = sqr(EY_CC(ix,iy,iz));
       F3(ff, 2, ix,iy,iz) = sqr(EZ_CC(ix,iy,iz));
@@ -368,14 +377,15 @@ struct psc_output_fields_item_ops psc_output_fields_item_e2_ops = {
 // ======================================================================
 
 static void
-calc_H2_cc(struct psc *psc, mfields_base_t *flds_base, mparticles_base_t *particles, mfields_t *f)
+calc_H2_cc(struct psc_output_fields_item *item, mfields_base_t *flds_base,
+	   mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
   mfields_t *flds = psc_mfields_get_cf(flds_base, HX, HX + 3);
-  psc_foreach_patch(psc, p) {
+  psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
     fields_t *pf = psc_mfields_get_patch(flds, p);
-    psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
+    psc_foreach_3d(ppsc, p, ix, iy, iz, 0, 0) {
       F3(ff, 0, ix,iy,iz) = sqr(HX_CC(ix,iy,iz));
       F3(ff, 1, ix,iy,iz) = sqr(HY_CC(ix,iy,iz));
       F3(ff, 2, ix,iy,iz) = sqr(HZ_CC(ix,iy,iz));
@@ -394,10 +404,10 @@ struct psc_output_fields_item_ops psc_output_fields_item_h2_ops = {
 // ======================================================================
 
 static void
-calc_densities(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	       mfields_c_t *res)
+calc_densities(struct psc_output_fields_item *item, mfields_base_t *flds,
+	       mparticles_base_t *particles, mfields_c_t *res)
 {
-  psc_moments_calc_densities(psc->moments, flds, particles, res);
+  psc_moments_calc_densities(ppsc->moments, flds, particles, res);
 }
 
 struct psc_output_fields_item_ops psc_output_fields_item_densities_ops = {
@@ -410,10 +420,10 @@ struct psc_output_fields_item_ops psc_output_fields_item_densities_ops = {
 // ======================================================================
 
 static void
-calc_v(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	       mfields_c_t *res)
+calc_v(struct psc_output_fields_item *item, mfields_base_t *flds,
+       mparticles_base_t *particles, mfields_c_t *res)
 {
-  psc_moments_calc_v(psc->moments, flds, particles, res);
+  psc_moments_calc_v(ppsc->moments, flds, particles, res);
 }
 
 struct psc_output_fields_item_ops psc_output_fields_item_v_ops = {
@@ -426,10 +436,10 @@ struct psc_output_fields_item_ops psc_output_fields_item_v_ops = {
 // ======================================================================
 
 static void
-calc_vv(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	mfields_c_t *res)
+calc_vv(struct psc_output_fields_item *item, mfields_base_t *flds,
+	mparticles_base_t *particles, mfields_c_t *res)
 {
-  psc_moments_calc_vv(psc->moments, flds, particles, res);
+  psc_moments_calc_vv(ppsc->moments, flds, particles, res);
 }
 
 struct psc_output_fields_item_ops psc_output_fields_item_vv_ops = {
@@ -442,10 +452,10 @@ struct psc_output_fields_item_ops psc_output_fields_item_vv_ops = {
 // ======================================================================
 
 static void
-calc_photon_n(struct psc *psc, mfields_base_t *flds, mparticles_base_t *particles,
-	      mfields_c_t *res)
+calc_photon_n(struct psc_output_fields_item *item, mfields_base_t *flds,
+	      mparticles_base_t *particles, mfields_c_t *res)
 {
-  psc_moments_calc_photon_n(psc->moments, psc->mphotons, res);
+  psc_moments_calc_photon_n(ppsc->moments, ppsc->mphotons, res);
 }
 
 struct psc_output_fields_item_ops psc_output_fields_item_photon_n_ops = {

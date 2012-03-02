@@ -10,7 +10,7 @@ struct psc_output_fields_item {
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
-  void (*run)(struct psc *psc,
+  void (*run)(struct psc_output_fields_item *item,
 	      mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_c_t *res);
   int nr_comp;
