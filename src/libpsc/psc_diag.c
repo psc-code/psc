@@ -2,6 +2,7 @@
 #include "psc_diag_private.h"
 
 #include <mrc_params.h>
+#include <stdlib.h>
 
 // ----------------------------------------------------------------------
 // psc_diag_set_items

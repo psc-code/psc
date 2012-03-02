@@ -1,6 +1,8 @@
 
 #include "psc_diag.h"
 
+#include <math.h>
+
 static void
 do_particle_energy(struct psc *psc, particles_c_t *pp, double *result)
 {
