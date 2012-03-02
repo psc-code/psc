@@ -2,6 +2,7 @@
 #include "psc_output_fields_c.h"
 #include "psc_output_fields_item.h"
 #include "psc_output_format.h"
+#include "psc_bnd.h"
 #include "psc_fields_as_c.h"
 
 #include <mrc_profile.h>
@@ -19,6 +20,12 @@ psc_output_fields_c_create(struct psc_output_fields *out)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
   out_c->format = psc_output_format_create(psc_output_fields_comm(out));
+
+  out_c->bnd = psc_bnd_create(psc_output_fields_comm(out));
+  psc_bnd_set_name(out_c->bnd, "psc_moments_bnd");
+  psc_bnd_set_type(out_c->bnd, "c");
+  psc_bnd_set_psc(out_c->bnd, ppsc);
+  psc_output_fields_add_child(out, (struct mrc_obj *) out_c->bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -77,6 +84,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     struct psc_output_fields_item *item =
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
+    psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
     out_c->item[pfd->nr_flds] = item;
     mfields_c_t *flds = psc_output_fields_item_create_mfields(item);
     pfd->flds[pfd->nr_flds] = flds;

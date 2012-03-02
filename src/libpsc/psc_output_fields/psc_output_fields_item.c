@@ -2,6 +2,16 @@
 #include "psc_output_fields_item_private.h"
 
 // ----------------------------------------------------------------------
+// psc_output_fields_item_set_psc_bnd
+
+void
+psc_output_fields_item_set_psc_bnd(struct psc_output_fields_item *item,
+				   struct psc_bnd *bnd)
+{
+  item->bnd = bnd; // FIXME, ref counting?
+}
+
+// ----------------------------------------------------------------------
 // psc_output_fields_item_create_mfields
 
 mfields_c_t *
