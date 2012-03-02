@@ -1,6 +1,17 @@
 
 #include "psc_output_fields_item_private.h"
 
+// ----------------------------------------------------------------------
+// psc_output_fields_item_run
+
+void
+psc_output_fields_item_run(struct psc_output_fields_item *item,
+			   mfields_base_t *flds, mparticles_base_t *particles,
+			   mfields_c_t *res)
+{
+  psc_output_fields_item_ops(item)->run(ppsc, flds, particles, res);
+}
+
 // ======================================================================
 // psc_output_fields_item_init
 

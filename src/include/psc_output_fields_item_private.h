@@ -17,6 +17,9 @@ struct psc_output_fields_item_ops {
   char *fld_names[6];
 };
 
+#define psc_output_fields_item_ops(item)			\
+  ((struct psc_output_fields_item_ops *)((item)->obj.ops))
+
 // ======================================================================
 
 extern struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops;
