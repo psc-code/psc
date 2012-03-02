@@ -2,6 +2,26 @@
 #include "psc_output_fields_item_private.h"
 
 // ----------------------------------------------------------------------
+// psc_output_fields_item_create_mfields
+
+mfields_c_t *
+psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
+{
+  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
+  mfields_c_t *flds = psc_mfields_create(psc_output_fields_item_comm(item));
+  psc_mfields_set_type(flds, "c");
+  psc_mfields_set_domain(flds, ppsc->mrc_domain);
+  psc_mfields_set_param_int(flds, "nr_fields", ops->nr_comp);
+  psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
+  psc_mfields_setup(flds);
+  for (int m = 0; m < ops->nr_comp; m++) {
+    flds->name[m] = strdup(ops->fld_names[m]);
+  }
+
+  return flds;
+}
+
+// ----------------------------------------------------------------------
 // psc_output_fields_item_run
 
 void

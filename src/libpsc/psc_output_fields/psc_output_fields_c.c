@@ -144,21 +144,12 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     struct psc_output_fields_item *item =
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
-    struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
-    mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
-    psc_mfields_set_type(flds, "c");
-    psc_mfields_set_domain(flds, psc->mrc_domain);
-    psc_mfields_set_param_int(flds, "nr_fields", ops->nr_comp);
-    psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
-    psc_mfields_setup(flds);
     out_c->item[pfd->nr_flds] = item;
+    mfields_c_t *flds = psc_output_fields_item_create_mfields(item);
     pfd->flds[pfd->nr_flds] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &pfd->flds[pfd->nr_flds]);
     pfd->nr_flds++;
-    for (int m = 0; m < ops->nr_comp; m++) {
-      flds->name[m] = strdup(ops->fld_names[m]);
-    }
   }
   free(s_orig);
 
