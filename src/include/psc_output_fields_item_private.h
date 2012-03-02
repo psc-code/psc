@@ -19,4 +19,22 @@ struct psc_output_fields_item_ops {
 
 // ======================================================================
 
+extern struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_j_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_j_ec_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_e_nc_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_e_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_e_ec_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_h_nc_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_h_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_h_fc_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_jdote_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_poyn_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_e2_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_h2_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_densities_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_v_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_vv_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_photon_n_ops;
+
 #endif
