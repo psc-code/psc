@@ -137,11 +137,12 @@ struct psc_kh {
   double delta;
   double mi_over_me;
   double wpe_over_wce;
+  double Ti_over_Te;
 
   // calculated from the above
   double B0;
   double v0z;
-  double T;
+  double Te, Ti;
 };
 
 #define to_psc_kh(psc) mrc_to_subobj(psc, struct psc_kh)
@@ -154,6 +155,7 @@ static struct param psc_kh_descr[] = {
   { "beta"          , VAR(beta)            , PARAM_DOUBLE(.5)            },
   { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(5.)            },
   { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
+  { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)            },
   {},
 };
 #undef VAR
@@ -221,11 +223,13 @@ psc_kh_setup(struct psc *psc)
   double vAe_plane = vAe * cos(kh->theta_V);
   double v0 = 2 * vAe_plane;
   double v0z = v0 * cos(kh->theta_V - kh->theta_B);
-  double T = kh->beta * sqr(B0) / 2.;
+  double Te = kh->beta * (1. / (1. + kh->Ti_over_Te)) * sqr(B0) / 2.;
+  double Ti = kh->beta * (1. / (1. + 1./kh->Ti_over_Te)) * sqr(B0) / 2.;
 
   kh->B0 = B0;
   kh->v0z = v0z;
-  kh->T = T;
+  kh->Te = Te;
+  kh->Ti = Ti;
 
   psc_setup_default(psc);
 }
@@ -263,9 +267,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 
   npt->n = 1.;
   npt->p[2] = vz;
-  npt->T[0] = kh->T;
-  npt->T[1] = kh->T;
-  npt->T[2] = kh->T;
 
   if (vz < 0) {
     *wni = 1.;
@@ -277,10 +278,16 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1. / kh->mi_over_me;
+    npt->T[0] = kh->Te;
+    npt->T[1] = kh->Te;
+    npt->T[2] = kh->Te;
     break;
   case 1: // ions
     npt->q = 1.;
     npt->m = 1.;
+    npt->T[0] = kh->Ti;
+    npt->T[1] = kh->Ti;
+    npt->T[2] = kh->Ti;
     break;
   default:
     assert(0);
