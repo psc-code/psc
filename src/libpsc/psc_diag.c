@@ -86,7 +86,11 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
 
     double *result = calloc(item->n_values, sizeof(*result));
     item->run(psc, result);
-    MPI_Reduce(MPI_IN_PLACE, result, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+    if (rank == 0) {
+      MPI_Reduce(MPI_IN_PLACE, result, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+    } else {
+      MPI_Reduce(result, NULL, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+    }
     if (rank == 0) {
       fprintf(diag->file, "%g", psc->timestep * psc->dt);
       for (int i = 0; i < item->n_values; i++) {
