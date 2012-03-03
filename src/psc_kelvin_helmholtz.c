@@ -151,7 +151,7 @@ struct psc_kh {
 static struct param psc_kh_descr[] = {
   { "theta_B"       , VAR(theta_B)         , PARAM_DOUBLE(M_PI/2. - .05) },
   { "theta_V"       , VAR(theta_V)         , PARAM_DOUBLE(M_PI/2. - .05) },
-  { "delta"         , VAR(delta)           , PARAM_DOUBLE(0.8944)        }, // 2/sqrt(5)
+  { "delta"         , VAR(delta)           , PARAM_DOUBLE(2.)            },
   { "beta"          , VAR(beta)            , PARAM_DOUBLE(.5)            },
   { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(5.)            },
   { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
@@ -182,6 +182,7 @@ psc_kh_create(struct psc *psc)
 
   psc->prm.nicell = 50;
   psc->prm.gdims_in_terms_of_cells = true;
+  psc->prm.cfl = 0.98;
 
   psc->domain.length[0] = 1.; // no x-dependence
   psc->domain.length[1] = 30.;
@@ -217,7 +218,8 @@ psc_kh_setup(struct psc *psc)
 {
   struct psc_kh *kh = to_psc_kh(psc);
 
-  double me = 1. / kh->mi_over_me;
+  double mi = kh->mi_over_me;
+  double me = 1.;
   double B0 = sqrt(me) / (kh->wpe_over_wce);
   double vAe = B0 / sqrt(me);
   double vAe_plane = vAe * cos(kh->theta_V);
@@ -277,14 +279,14 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   switch (kind) {
   case 0: // electrons
     npt->q = -1.;
-    npt->m = 1. / kh->mi_over_me;
+    npt->m = 1.;
     npt->T[0] = kh->Te;
     npt->T[1] = kh->Te;
     npt->T[2] = kh->Te;
     break;
   case 1: // ions
     npt->q = 1.;
-    npt->m = 1.;
+    npt->m = kh->mi_over_me;
     npt->T[0] = kh->Ti;
     npt->T[1] = kh->Ti;
     npt->T[2] = kh->Ti;
