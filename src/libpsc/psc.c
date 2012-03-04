@@ -531,10 +531,12 @@ _psc_destroy(struct psc *psc)
   psc_mphotons_destroy(psc->mphotons);
 
   mrc_domain_destroy(psc->mrc_domain);
+  free(psc->patch);
 
   if (psc->use_dynamic_patches) {
     psc_patchmanager_destroy(&psc->patchmanager);
   }
+
   ppsc = NULL;
 }
 
