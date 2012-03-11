@@ -56,6 +56,38 @@ ds_ascii_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
+ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
+{
+  struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
+  
+  struct mrc_io_params *par = &io->par;
+
+  for (int p = 0; p < m3->nr_patches; p++) {
+    char filename[strlen(par->outdir) + strlen(par->basename) + 30];
+    fprintf(ascii->file, "# see %s\n", filename);
+    sprintf(filename, "%s/%s.%06d_p%06d_%s.asc", par->outdir, par->basename,
+	    io->step, p, mrc_m3_name(m3));
+    FILE *file = fopen(filename, "w");
+    fprintf(file, "# ix iy iz");
+    for (int m = 0; m < m3->nr_comp; m++) {
+      fprintf(file, " %s", mrc_m3_comp_name(m3, m));
+    }
+    fprintf(file, "\n");
+
+    struct mrc_m3_patch *m3p = &m3->patches[p];
+    mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
+      fprintf(file, "%d %d %d", ix, iy, iz);
+      for (int m = 0; m < m3->nr_comp; m++) {
+	fprintf(file, " %g", MRC_M3(m3p, m, ix,iy,iz));
+      }
+      fprintf(file, "\n");
+    } mrc_m3_foreach_end;
+
+    fclose(file);
+  }
+}
+
+static void
 ds_ascii_write_attr(struct mrc_io *io, const char *path, int type,
 		    const char *name, union param_u *pv)
 {
@@ -88,5 +120,6 @@ struct mrc_io_ops mrc_io_ascii_ops = {
   .open        = ds_ascii_open,
   .close       = ds_ascii_close,
   .write_field = ds_ascii_write_field,
+  .write_m3    = ds_ascii_write_m3,
   .write_attr  = ds_ascii_write_attr,
 };
