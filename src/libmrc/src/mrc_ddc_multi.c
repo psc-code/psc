@@ -241,8 +241,10 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
-  int dir[3];
+  int rank;
+  MPI_Comm_rank(mrc_ddc_comm(ddc), &rank);
 
+  int dir[3];
   for (int p = 0; p < multi->nr_patches; p++) {
     // post all receives
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -251,7 +253,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
-	  if (r->len > 0) {
+	  if (r->nei_rank != rank && r->len > 0) {
 #if 0
 	    mprintf(":%d recv from %d:%d [%d,%d] x [%d,%d] x [%d,%d] len %d tag %d\n",
 		    p, r->nei_rank, r->nei_patch,
@@ -276,7 +278,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->len > 0) {
+	  if (s->nei_rank != rank && s->len > 0) {
 	    to_buf(mb, me, p, s->ilo, s->ihi, s->buf, ctx);
 #if 0
 	    mprintf(":%d send to %d:%d [%d,%d] x [%d,%d] x [%d,%d] len %d tag %d\n",
@@ -295,6 +297,26 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
+  // do all local exchange while communication is in flight
+  for (int p = 0; p < multi->nr_patches; p++) {
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+ 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
+	  if (s->nei_rank == rank && s->len > 0) {
+	    struct mrc_ddc_sendrecv *r = &patt[s->nei_patch].recv[dir1neg];
+	    // OPT, we could just do the copy without going through
+	    // a buffer
+	    to_buf(mb, me, p, s->ilo, s->ihi, s->buf, ctx);
+	    from_buf(mb, me, s->nei_patch, r->ilo, r->ihi, s->buf, ctx);
+	  }
+	}
+      }
+    }
+  }
+
   // finish receives
   MPI_Waitall(N_DIR * multi->nr_patches, multi->recv_reqs, MPI_STATUSES_IGNORE);
   for (int p = 0; p < multi->nr_patches; p++) {
@@ -303,7 +325,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
-	  if (r->len > 0) {
+	  if (r->nei_rank != rank && r->len > 0) {
 	    from_buf(mb, me, p, r->ilo, r->ihi, r->buf, ctx);
 	  }
 	}
