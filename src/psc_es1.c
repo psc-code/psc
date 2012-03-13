@@ -19,58 +19,54 @@
 // two-stream
 // src/psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 10 --mrc_io_type ascii --write_tfield no --pfield_step 10 --psc_diag_every_step 10 --nr_kinds 2 --v0_1 1. --v0_2 -1. --cc 5. --nicell 32
 
+struct psc_es1_species {
+  int nlg; // number of loading groups
+  double q;
+  double m;
+  double mode;
+  double v0;
+  double x1;
+  double v1;
+  double thetax;
+  double thetav;
+};
+
+#define MAX_KINDS (2)
+
 struct psc_es1 {
   // parameters
   double om_pe;
   double om_ce;
-  // species 1
-  int nlg_1; // number of loading groups
-  double q_1;
-  double m_1;
-  double mode_1;
-  double v0_1;
-  double x1_1;
-  double v1_1;
-  double thetax_1;
-  double thetav_1;
-  // species 2
-  int nlg_2; // number of loading groups
-  double q_2;
-  double m_2;
-  double mode_2;
-  double v0_2;
-  double x1_2;
-  double v1_2;
-  double thetax_2;
-  double thetav_2;
+  struct psc_es1_species species[MAX_KINDS];
 };
 
 #define to_psc_es1(psc) mrc_to_subobj(psc, struct psc_es1)
 
 #define VAR(x) (void *)offsetof(struct psc_es1, x)
 static struct param psc_es1_descr[] = {
-  { "om_pe"         , VAR(om_pe)           , PARAM_DOUBLE(1.)            },
-  { "om_ce"         , VAR(om_ce)           , PARAM_DOUBLE(2.)            },
+  { "om_pe"         , VAR(om_pe)            , PARAM_DOUBLE(1.)            },
+  { "om_ce"         , VAR(om_ce)            , PARAM_DOUBLE(2.)            },
 
-  { "nlg_1"         , VAR(nlg_1)           , PARAM_INT(1)                },
-  { "q_1"           , VAR(q_1)             , PARAM_DOUBLE(-1.)           },
-  { "m_1"           , VAR(m_1)             , PARAM_DOUBLE(1.)            },
-  { "mode_1"        , VAR(mode_1)          , PARAM_DOUBLE(1.)            },
-  { "v0_1"          , VAR(v0_1)            , PARAM_DOUBLE(0.)            },
-  { "x1_1"          , VAR(x1_1)            , PARAM_DOUBLE(.001)          },
-  { "v1_1"          , VAR(v1_1)            , PARAM_DOUBLE(0.)            },
-  { "thetax_1"      , VAR(thetax_1)        , PARAM_DOUBLE(0.)            },
-  { "thetav_1"      , VAR(thetav_1)        , PARAM_DOUBLE(0.)            },
+  { "nlg_1"         , VAR(species[0].nlg)   , PARAM_INT(1)                },
+  { "q_1"           , VAR(species[0].q)     , PARAM_DOUBLE(-1.)           },
+  { "m_1"           , VAR(species[0].m)     , PARAM_DOUBLE(1.)            },
+  { "mode_1"        , VAR(species[0].mode)  , PARAM_DOUBLE(1.)            },
+  { "v0_1"          , VAR(species[0].v0)    , PARAM_DOUBLE(0.)            },
+  { "x1_1"          , VAR(species[0].x1)    , PARAM_DOUBLE(.001)          },
+  { "v1_1"          , VAR(species[0].v1)    , PARAM_DOUBLE(0.)            },
+  { "thetax_1"      , VAR(species[0].thetax), PARAM_DOUBLE(0.)            },
+  { "thetav_1"      , VAR(species[0].thetav), PARAM_DOUBLE(0.)            },
 
-  { "nlg_2"         , VAR(nlg_2)           , PARAM_INT(1)                },
-  { "q_2"           , VAR(q_2)             , PARAM_DOUBLE(-1.)           },
-  { "m_2"           , VAR(m_2)             , PARAM_DOUBLE(1.)            },
-  { "mode_2"        , VAR(mode_2)          , PARAM_DOUBLE(1.)            },
-  { "v0_2"          , VAR(v0_2)            , PARAM_DOUBLE(0.)            },
-  { "x1_2"          , VAR(x1_2)            , PARAM_DOUBLE(.001)          },
-  { "v1_2"          , VAR(v1_2)            , PARAM_DOUBLE(0.)            },
-  { "thetax_2"      , VAR(thetax_2)        , PARAM_DOUBLE(0.)            },
-  { "thetav_2"      , VAR(thetav_2)        , PARAM_DOUBLE(0.)            },
+  { "nlg_2"         , VAR(species[1].nlg)   , PARAM_INT(1)                },
+  { "q_2"           , VAR(species[1].q)     , PARAM_DOUBLE(-1.)           },
+  { "m_2"           , VAR(species[1].m)     , PARAM_DOUBLE(1.)            },
+  { "mode_2"        , VAR(species[1].mode)  , PARAM_DOUBLE(1.)            },
+  { "v0_2"          , VAR(species[1].v0)    , PARAM_DOUBLE(0.)            },
+  { "x1_2"          , VAR(species[1].x1)    , PARAM_DOUBLE(.001)          },
+  { "v1_2"          , VAR(species[1].v1)    , PARAM_DOUBLE(0.)            },
+  { "thetax_2"      , VAR(species[1].thetax), PARAM_DOUBLE(0.)            },
+  { "thetav_2"      , VAR(species[1].thetav), PARAM_DOUBLE(0.)            },
+
   {},
 };
 #undef VAR
@@ -133,22 +129,9 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
   case EZ: ;
     double ez = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
-      double q, mode, x1, thetax;
-      switch (kind) {
-      case 0:
-	q = es1->q_1;
-	mode = es1->mode_1; x1 = es1->x1_1; thetax = es1->thetax_1;
-	break;
-      case 1:
-	q = es1->q_2;
-	mode = es1->mode_2; x1 = es1->x1_2; thetax = es1->thetax_2;
-	break;
-      default:
-	assert(0);
-      }
-      // FIXME, charge needs to go in here
-      double theta = 2. * M_PI * es1->mode_1 / psc->domain.length[2] * x[2];
-      ez += q * x1 * cos(theta + thetax);
+      struct psc_es1_species *s = &es1->species[kind];
+      double theta = 2. * M_PI * s->mode / psc->domain.length[2] * x[2];
+      ez += s->q * s->x1 * cos(theta + s->thetax);
     }
     return ez;
 
@@ -195,24 +178,10 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
     int il1 = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
-      int nlg;
-      double q, m, mode, v0, x1, v1, thetax, thetav;
-      switch (kind) { // FIXME, the horror...
-      case 0:
-      nlg = es1->nlg_1; q = es1->q_1; m = es1->m_1; mode = es1->mode_1;
-      v0 = es1->v0_1; x1 = es1->x1_1; v1 = es1->v1_1;
-      thetax = es1->thetax_1; thetav = es1->thetav_1;
-      break;
-      case 1:
-	nlg = es1->nlg_2; q = es1->q_2; m = es1->m_2; mode = es1->mode_2;
-	v0 = es1->v0_2; x1 = es1->x1_2; v1 = es1->v1_2;
-	thetax = es1->thetax_2; thetav = es1->thetav_2;
-	break;
-      default: assert(0);
-      }
+      struct psc_es1_species *s = &es1->species[kind];
       int *ldims = psc->patch[p].ldims;
       int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
-      int ngr = n / nlg;
+      int ngr = n / s->nlg;
       //double lg = l / nlg;
       double ddx = l / n;
       for (int i = 0; i < ngr; i++) {
@@ -220,16 +189,16 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	double x0 = (i + .5) * ddx;
 	
 	p->zi = x0;
-	p->pzi = v0 / psc->prm.cc;
-	p->qni = q;
-	p->mni = m;
+	p->pzi = s->v0 / psc->prm.cc;
+	p->qni = s->q;
+	p->mni = s->m;
 	p->wni = 1.;
       }
       for (int i = 0; i < n; i++) {
 	particle_t *p = particles_get_one(pp, il1++);
-	double theta = 2. * M_PI * mode * p->zi / l;
-	p->zi  += x1 * cos(theta + thetax);
-	p->pzi += v1 * sin(theta + thetav);
+	double theta = 2. * M_PI * s->mode * p->zi / l;
+	p->zi  += s->x1 * cos(theta + s->thetax);
+	p->pzi += s->v1 * sin(theta + s->thetav);
       }
     }
     pp->n_part = il1;
