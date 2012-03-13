@@ -13,13 +13,21 @@
 #include <math.h>
 #include <time.h>
 
+// src/psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 1 --mrc_io_type ascii --pfield_step 1 --psc_diag_every_step 1
 
 struct psc_es1 {
   // parameters
   double om_pe;
   double om_ce;
-
-  // calculated from the above
+  int nlg; // number of loading groups
+  double q_1;
+  double m_1;
+  double mode_1;
+  double v0_1;
+  double x1_1;
+  double v1_1;
+  double thetax_1;
+  double thetav_1;
 };
 
 #define to_psc_es1(psc) mrc_to_subobj(psc, struct psc_es1)
@@ -28,6 +36,15 @@ struct psc_es1 {
 static struct param psc_es1_descr[] = {
   { "om_pe"         , VAR(om_pe)           , PARAM_DOUBLE(1.)            },
   { "om_ce"         , VAR(om_ce)           , PARAM_DOUBLE(2.)            },
+  { "nlg"           , VAR(nlg)             , PARAM_INT(1)                },
+  { "q_1"           , VAR(q_1)             , PARAM_DOUBLE(-1.)           },
+  { "m_1"           , VAR(m_1)             , PARAM_DOUBLE(1.)            },
+  { "mode_1"        , VAR(mode_1)          , PARAM_DOUBLE(1.)            },
+  { "v0_1"          , VAR(v0_1)            , PARAM_DOUBLE(0.)            },
+  { "x1_1"          , VAR(x1_1)            , PARAM_DOUBLE(.001)          },
+  { "v1_1"          , VAR(v1_1)            , PARAM_DOUBLE(0.)            },
+  { "thetax_1"      , VAR(thetax_1)        , PARAM_DOUBLE(0.)            },
+  { "thetav_1"      , VAR(thetav_1)        , PARAM_DOUBLE(0.)            },
   {},
 };
 #undef VAR
@@ -97,13 +114,12 @@ psc_es1_setup(struct psc *psc)
 static double
 psc_es1_init_field(struct psc *psc, double x[3], int m)
 {
-  //  struct psc_es1 *es1 = to_psc_es1(psc);
-  const double mode = 1;
-  const double x1 = .001;
-  double theta = 2. * M_PI * mode / psc->domain.length[2] * x[2];
+  struct psc_es1 *es1 = to_psc_es1(psc);
+
+  double theta = 2. * M_PI * es1->mode_1 / psc->domain.length[2] * x[2];
 
   switch (m) {
-  case EZ: return - x1 * cos(theta);
+  case EZ: return - es1->x1_1 * cos(theta);
   default: return 0.;
   }
 }
@@ -115,6 +131,8 @@ void
 psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 		       bool count_only)
 {
+  struct psc_es1 *es1 = to_psc_es1(psc);
+
   if (count_only) {
     psc_foreach_patch(psc, p) {
       int *ldims = psc->patch[p].ldims;
@@ -138,16 +156,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   mparticles_t *particles = psc_mparticles_get_cf(psc->particles, MP_DONT_COPY);
 
-  const double l = psc->domain.length[2];
-  const int nlg = 1; // number of loading groups
-  const double v0 = 0;
-  const double q = -1.;
-  const double m = 1.;
-  const double x1 = 0.001;
-  const double v1 = 0.;
-  const double thetax = 0.;
-  const double thetav = 0.;
-  const int mode = 1;
+  double l = psc->domain.length[2];
 
   psc_foreach_patch(psc, p) {
     particles_t *pp = psc_mparticles_get_patch(particles, p);
@@ -155,7 +164,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
     int *ldims = psc->patch[p].ldims;
     int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
-    int ngr = n / nlg;
+    int ngr = n / es1->nlg;
     //double lg = l / nlg;
     double ddx = l / n;
     for (int i = 0; i < ngr; i++) {
@@ -163,16 +172,16 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       double x0 = (i + .5) * ddx;
 
       p->zi = x0;
-      p->pzi = v0;
-      p->qni = q;
-      p->mni = m;
+      p->pzi = es1->v0_1;
+      p->qni = es1->q_1;
+      p->mni = es1->m_1;
       p->wni = 1.;
     }
     for (int i = 0; i < n; i++) {
       particle_t *p = particles_get_one(pp, il1 + i);
-      double theta = 2. * M_PI * mode * p->zi / l;
-      p->zi  += x1 * cos(theta + thetax);
-      p->pzi += v1 * sin(theta + thetav);
+      double theta = 2. * M_PI * es1->mode_1 * p->zi / l;
+      p->zi  += es1->x1_1 * cos(theta + es1->thetax_1);
+      p->pzi += es1->v1_1 * sin(theta + es1->thetav_1);
     }
     pp->n_part = ngr;
     assert(pp->n_part == nr_particles_by_patch[p]);
