@@ -412,7 +412,7 @@ void
 CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
 {
   CALC_densities_F77(&pp->n_part, &pp->particles[-1],
-		     pf->flds[NE], pf->flds[NI], pf->flds[NN]);
+		     pf->flds[0], pf->flds[1], pf->flds[2]);
 }
 
 void

@@ -13,8 +13,6 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
 				   mparticles_base_t *particles_base,
 				   mfields_c_t *res)
 {
-  assert(0);
-#if 0
   assert(ppsc->nr_patches == 1);
   static int pr;
   if (!pr) {
@@ -22,18 +20,16 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
   }
   prof_start(pr);
 
-  mparticles_fortran_t particles;
-  psc_mparticles_fortran_get_from(&particles, &particles_base);
-  mfields_fortran_t flds_fortran;
-  psc_mfields_fortran_get_from(&flds_fortran, 0, 0, res);
+  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
+  mfields_fortran_t *flds_fortran = psc_mfields_get_fortran(res, 0, 0);
 
-  CALC_densities(&particles.p[0], &flds_fortran.f[0]);
+  CALC_densities(psc_mparticles_get_patch_fortran(particles, 0),
+		 psc_mfields_get_patch_fortran(flds_fortran, 0));
 
-  psc_mparticles_fortran_put_to(&particles, &ppsc->particles);
-  psc_mfields_fortran_put_to(&flds_fortran, NE, NE + 3, res);
+  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mfields_put_fortran(flds_fortran, res, 0, 3);
 
   prof_stop(pr);
-#endif
 }
 
 // ======================================================================
