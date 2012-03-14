@@ -25,7 +25,6 @@
 #define PARTICLES_CBE     4
 
 enum {
-  NE , NI , NN ,
   JXI, JYI, JZI,
   EX , EY , EZ ,
   HX , HY , HZ ,

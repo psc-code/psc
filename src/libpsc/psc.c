@@ -884,9 +884,6 @@ struct mrc_class_psc mrc_class_psc = {
 // ======================================================================
 
 const char *fldname[NR_FIELDS] = {
-  [NE]  = "ne",
-  [NI]  = "ni",
-  [NN]  = "nn",
   [JXI] = "jx",
   [JYI] = "jy",
   [JZI] = "jz",
