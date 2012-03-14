@@ -1,5 +1,5 @@
 
-#include "psc_diag.h"
+#include "psc_diag_item_private.h"
 
 #include <math.h>
 

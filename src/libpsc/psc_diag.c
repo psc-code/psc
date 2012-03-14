@@ -1,5 +1,6 @@
 
 #include "psc_diag_private.h"
+#include "psc_diag_item_private.h"
 
 #include <mrc_params.h>
 #include <stdlib.h>
