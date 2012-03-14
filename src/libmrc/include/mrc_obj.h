@@ -317,4 +317,7 @@ void __mrc_class_register_subclass(struct mrc_class *cls,
 
 #define mrc_to_subobj(o, subobj_type) ((subobj_type *)((o)->obj.subctx))
 
+#define mrc_obj_for_each_child(item, parent, type) \
+  __list_for_each_entry(item, &parent->obj.children_list, obj.child_entry, type)
+
 #endif
