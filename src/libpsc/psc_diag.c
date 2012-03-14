@@ -6,37 +6,22 @@
 #include <stdlib.h>
 
 // ----------------------------------------------------------------------
-// psc_diag_set_items
-
-void
-psc_diag_set_items(struct psc_diag *diag, struct psc_diag_item **items)
-{
-  diag->items = items;
-}
-
-// ----------------------------------------------------------------------
-// psc_diag_create
-
-static void
-_psc_diag_create(struct psc_diag *diag)
-{
-  // set default: energy
-
-  static struct psc_diag_item *items[] = {
-    &psc_diag_item_em_energy,
-    &psc_diag_item_particle_energy,
-    NULL,
-  };
-  
-  diag->items = items;
-}
-
-// ----------------------------------------------------------------------
 // psc_diag_setup
 
 static void
 _psc_diag_setup(struct psc_diag *diag)
 {
+  // parse "items" parameter
+  char *s_orig = strdup(diag->items), *p, *s = s_orig;
+  while ((p = strsep(&s, ", "))) {
+    struct psc_diag_item *item =
+      psc_diag_item_create(psc_diag_comm(diag));
+    psc_diag_item_set_type(item, p);
+    assert(diag->nr_items < MAX_ITEMS);
+    diag->item_list[diag->nr_items] = item;
+    diag->nr_items++;
+  }
+
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
@@ -45,10 +30,10 @@ _psc_diag_setup(struct psc_diag *diag)
   
   diag->file = fopen("diag.asc", "w");
   fprintf(diag->file, "# time");
-  for (int m = 0; diag->items[m]; m++) {
-    struct psc_diag_item *item = diag->items[m];
+  for (int m = 0; m < diag->nr_items; m++) {
+    struct psc_diag_item *item = diag->item_list[m];
     int nr_values = psc_diag_item_nr_values(item);
-    for (int i = 0; i < item->n_values; i++) {
+    for (int i = 0; i < nr_values; i++) {
       fprintf(diag->file, " %s", psc_diag_item_title(item, i));
     }
   }
@@ -83,8 +68,8 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
-  for (int m = 0; diag->items[m]; m++) {
-    struct psc_diag_item *item = diag->items[m];
+  for (int m = 0; m < diag->nr_items; m++) {
+    struct psc_diag_item *item = diag->item_list[m];
 
     int nr_values = psc_diag_item_nr_values(item);
     double *result = calloc(nr_values, sizeof(*result));
@@ -96,7 +81,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
     }
     if (rank == 0) {
       fprintf(diag->file, "%g", psc->timestep * psc->dt);
-      for (int i = 0; i < item->n_values; i++) {
+      for (int i = 0; i < nr_values; i++) {
 	fprintf(diag->file, " %g", result[i]);
       }
     }
@@ -113,7 +98,9 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
 #define VAR(x) (void *)offsetof(struct psc_diag, x)
 
 static struct param psc_diag_descr[] = {
-  { "every_step"       , VAR(every_step)         , PARAM_INT(-1)            },
+  { "items"            , VAR(items)              ,
+    PARAM_STRING("energy_field,energy_particle")                             },
+  { "every_step"       , VAR(every_step)         , PARAM_INT(-1)              },
   {},
 };
 #undef VAR
@@ -125,7 +112,6 @@ struct mrc_class_psc_diag mrc_class_psc_diag = {
   .name             = "psc_diag",
   .size             = sizeof(struct psc_diag),
   .param_descr      = psc_diag_descr,
-  .create           = _psc_diag_create,
   .setup            = _psc_diag_setup,
   .destroy          = _psc_diag_destroy,
 };

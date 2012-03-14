@@ -25,7 +25,8 @@ do_particle_energy(struct psc *psc, particles_c_t *pp, double *result)
 }
 
 static void
-psc_diag_item_particle_energy_run(struct psc *psc, double *result)
+psc_diag_item_particle_energy_run(struct psc_diag_item *item,
+				  struct psc *psc, double *result)
 {
   mparticles_c_t *particles = psc_mparticles_get_c(psc->particles, 0);
 
@@ -36,9 +37,13 @@ psc_diag_item_particle_energy_run(struct psc *psc, double *result)
   psc_mparticles_put_c(particles, psc->particles); // FIXME, don't need copy-back
 }
 
-struct psc_diag_item psc_diag_item_particle_energy = {
-  .run = psc_diag_item_particle_energy_run,
-  .n_values = 2,
-  .names = { "E_electron", "E_ion" },
+// ======================================================================
+// psc_diag_item_particle_energy
+
+struct psc_diag_item_ops psc_diag_item_particle_energy_ops = {
+  .name      = "energy_particle",
+  .run       = psc_diag_item_particle_energy_run,
+  .nr_values = 2,
+  .title     = { "E_electron", "E_ion" },
 };
 

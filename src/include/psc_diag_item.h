@@ -4,6 +4,8 @@
 
 #include <mrc_obj.h>
 
+#include "psc.h"
+
 MRC_CLASS_DECLARE(psc_diag_item, struct psc_diag_item);
 
 int  psc_diag_item_nr_values(struct psc_diag_item *item);
