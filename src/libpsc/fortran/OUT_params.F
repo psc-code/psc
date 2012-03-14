@@ -84,6 +84,4 @@ c time averaging
       nnp = nnp_
       np = np_
 
-      call OUT_fields_set
-
       end subroutine OUT_params_set

@@ -57,7 +57,6 @@ static void
 psc_output_fields_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_output_fields, &psc_output_fields_c_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_fields, &psc_output_fields_fortran_ops);
 }
 
 // ======================================================================

@@ -24,8 +24,6 @@ psc_output_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
 			      &psc_output_particles_none_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
-			      &psc_output_particles_fortran_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_custom_binary_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_xdmf_compact_ops);

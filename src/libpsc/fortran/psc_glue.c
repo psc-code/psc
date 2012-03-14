@@ -1,4 +1,5 @@
 
+
 #include "psc.h"
 #include "psc_glue.h"
 
@@ -28,8 +29,6 @@
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
-#define OUT_field_F77 F77_FUNC(out_field,OUT_FIELD)
-#define OUT_part_F77 F77_FUNC(out_part,OUT_PART)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
 #define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
@@ -144,13 +143,6 @@ void PIC_sort_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void OUT_field_F77(f_real *ne, f_real *ni, f_real *nn,
-		   f_real *jxi, f_real *jyi, f_real *jzi,
-		   f_real *ex, f_real *ey, f_real *ez,
-		   f_real *hx, f_real *hy, f_real *hz,
-		   f_real *dvx, f_real *dvy, f_real *dvz,
-		   f_real *bx, f_real *by, f_real *bz);
-void OUT_part_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			f_real *ne, f_real *ni, f_real *nn);
@@ -383,23 +375,6 @@ void
 PIC_find_cell_indices(particles_fortran_t *pp)
 {
   PIC_find_cell_indices_F77(&pp->n_part, &pp->particles[-1]);
-}
-
-void
-OUT_field(fields_fortran_t *pf)
-{
-  OUT_field_F77(pf->flds[NE], pf->flds[NI], pf->flds[NN],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[DX], pf->flds[DY], pf->flds[DZ],
-		pf->flds[BX], pf->flds[BY], pf->flds[BZ]);
-}
-
-void
-OUT_part(particles_fortran_t *pp)
-{
-  OUT_part_F77(&pp->n_part, &pp->particles[-1]);
 }
 
 void

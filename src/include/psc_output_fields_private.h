@@ -18,7 +18,6 @@ struct psc_output_fields_ops {
 // ======================================================================
 
 extern struct psc_output_fields_ops psc_output_fields_c_ops;
-extern struct psc_output_fields_ops psc_output_fields_fortran_ops;
 
 #define psc_output_fields_ops(output_fields) ((struct psc_output_fields_ops *)((output_fields)->obj.ops))
 
