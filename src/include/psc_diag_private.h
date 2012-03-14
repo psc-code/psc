@@ -11,13 +11,12 @@
 
 struct psc_diag {
   struct mrc_obj obj;
+
   // parameters
   const char *items;
   int every_step;
 
   // internal
-  int nr_items;
-  struct psc_diag_item *item_list[MAX_ITEMS];
   FILE *file;
 };
 

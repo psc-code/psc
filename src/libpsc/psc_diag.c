@@ -17,9 +17,7 @@ _psc_diag_setup(struct psc_diag *diag)
     struct psc_diag_item *item =
       psc_diag_item_create(psc_diag_comm(diag));
     psc_diag_item_set_type(item, p);
-    assert(diag->nr_items < MAX_ITEMS);
-    diag->item_list[diag->nr_items] = item;
-    diag->nr_items++;
+    psc_diag_add_child(diag, (struct mrc_obj *) item);
   }
 
   int rank;
@@ -30,8 +28,9 @@ _psc_diag_setup(struct psc_diag *diag)
   
   diag->file = fopen("diag.asc", "w");
   fprintf(diag->file, "# time");
-  for (int m = 0; m < diag->nr_items; m++) {
-    struct psc_diag_item *item = diag->item_list[m];
+
+  struct psc_diag_item *item;
+  mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
     for (int i = 0; i < nr_values; i++) {
       fprintf(diag->file, " %s", psc_diag_item_title(item, i));
@@ -68,9 +67,8 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   int rank;
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
-  for (int m = 0; m < diag->nr_items; m++) {
-    struct psc_diag_item *item = diag->item_list[m];
-
+  struct psc_diag_item *item;
+  mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
     double *result = calloc(nr_values, sizeof(*result));
     psc_diag_item_run(item, psc, result);
