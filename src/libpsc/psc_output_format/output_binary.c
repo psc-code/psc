@@ -88,7 +88,7 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
   fwrite(&list->nr_flds, sizeof(list->nr_flds), 1, file);
   for (int i = 0; i < list->nr_flds; i++) {
     char fldname[8] = {};
-    snprintf(fldname, 8, "%s", list->flds[i]->name[0]);
+    snprintf(fldname, 8, "%s", psc_mfields_comp_name(list->flds[i], 0));
     fwrite(fldname, 8, 1, file); 
   }
 

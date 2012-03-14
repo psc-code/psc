@@ -16,7 +16,7 @@ _psc_mfields_setup(struct psc_mfields *flds)
   if (ops->setup) {
     ops->setup(flds);
   }
-  flds->name = calloc(flds->nr_fields, sizeof(*flds->name));
+  flds->comp_name = calloc(flds->nr_fields, sizeof(*flds->comp_name));
 }
 
 static void
@@ -24,15 +24,29 @@ _psc_mfields_destroy(struct psc_mfields *flds)
 {
   // sub-destroy has already been called
   for (int m = 0; m < flds->nr_fields; m++) {
-    free(flds->name[m]);
+    free(flds->comp_name[m]);
   }
-  free(flds->name);
+  free(flds->comp_name);
 }
 
 void
 psc_mfields_set_domain(struct psc_mfields *flds, struct mrc_domain *domain)
 {
   flds->domain = domain;
+}
+
+void
+psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s)
+{
+  assert(m >= flds->first_comp && m < flds->first_comp + flds->nr_fields);
+  flds->comp_name[m - flds->first_comp] = strdup(s);
+}
+
+const char *
+psc_mfields_comp_name(struct psc_mfields *flds, int m)
+{
+  assert(m >= flds->first_comp && m < flds->first_comp + flds->nr_fields);
+  return flds->comp_name[m - flds->first_comp];
 }
 
 void

@@ -87,7 +87,8 @@ hdf5_write_field(void *ctx, mfields_c_t *fld)
   }
 
   hid_t file_space = H5Screate_simple(3, file_dims, NULL); 
-  hid_t dataset = H5Dcreate(hdf5->group_fld, fld->name[0], H5T_NATIVE_FLOAT,
+  hid_t dataset = H5Dcreate(hdf5->group_fld, psc_mfields_comp_name(fld, 0),
+			    H5T_NATIVE_FLOAT,
 			    file_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   H5Sclose(file_space);
   
@@ -97,8 +98,9 @@ hdf5_write_field(void *ctx, mfields_c_t *fld)
   
   H5Dclose(dataset);
 
-  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "lo", pf->ib, 3);
-  H5LTset_attribute_int(hdf5->group_fld, fld->name[0], "hi", ie, 3);
+  H5LTset_attribute_int(hdf5->group_fld, psc_mfields_comp_name(fld, 0),
+			"lo", pf->ib, 3);
+  H5LTset_attribute_int(hdf5->group_fld, psc_mfields_comp_name(fld, 0), "hi", ie, 3);
 }
 
 // ======================================================================
@@ -179,12 +181,12 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 	for (int m = 0; m < list->nr_flds; m++) {
 	  fld = psc_mfields_get_patch_c(list->flds[m], 0);
 	  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
-		  list->flds[m]->name[0]);
+		  psc_mfields_comp_name(list->flds[m], 0));
 	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",
 		  im[2], im[1], im[0]);
 	  int proc = (kz * np[1] + ky) * np[0] + kx;
 	  fprintf(f, "        %s_%06d_%07d.h5:/psc/fields/%s\n",
-		  pfx, proc, ppsc->timestep, list->flds[m]->name[0]);
+		  pfx, proc, ppsc->timestep, psc_mfields_comp_name(list->flds[m], 0));
 	  fprintf(f, "       </DataItem>\n");
 	  fprintf(f, "     </Attribute>\n");
 	}

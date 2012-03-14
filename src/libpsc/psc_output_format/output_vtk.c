@@ -57,7 +57,7 @@ vtk_write_field(void *ctx, mfields_c_t *fld)
 {
   FILE *file = ctx;
 
-  fprintf(file, "SCALARS %s float\n", fld->name[0]);
+  fprintf(file, "SCALARS %s float\n", psc_mfields_comp_name(fld, 0));
   fprintf(file, "LOOKUP_TABLE default\n");
 
   fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);

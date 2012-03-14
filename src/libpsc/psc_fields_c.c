@@ -214,7 +214,7 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
   for (int m = 0; m < mfields->nr_fields; m++) {
     char namec[10]; sprintf(namec, "m%d", m);
-    char *s = mfields->name[m];
+    const char *s = psc_mfields_comp_name(mfields, m);
     if (!s) {
       s = "(null)";
     }
@@ -261,7 +261,7 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
     char *s = malloc(sz);
     ierr = H5LTget_attribute_string(group, ".", namec, s); CE;
     if (strcmp(s, "(null)") != 0) {
-      mfields->name[m] = s;
+      psc_mfields_set_comp_name(mfields, m, s);
     }
   }
 

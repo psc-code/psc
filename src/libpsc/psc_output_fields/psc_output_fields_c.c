@@ -110,7 +110,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &tfd->flds[i]);
     for (int m = 0; m < pfd->flds[i]->nr_fields; m++) {
-      flds->name[m] = strdup(pfd->flds[i]->name[m]);
+      psc_mfields_set_comp_name(flds, m, psc_mfields_comp_name(pfd->flds[i], m));
     }
   }
   out_c->naccum = 0;
@@ -177,7 +177,7 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
       psc_mfields_setup(flds);
       psc_mfields_copy_comp(flds, 0, flds_in, m);
       list->flds[list->nr_flds++] = flds;
-      flds->name[0] = strdup(flds_in->name[m]);
+      psc_mfields_set_comp_name(flds, 0, psc_mfields_comp_name(flds_in, m));
     }
   }
 }

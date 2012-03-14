@@ -25,7 +25,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
   psc_mfields_setup(flds);
   for (int m = 0; m < ops->nr_comp; m++) {
-    flds->name[m] = strdup(ops->fld_names[m]);
+    psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
   }
 
   return flds;

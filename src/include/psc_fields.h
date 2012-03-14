@@ -11,7 +11,7 @@ struct psc_mfields {
   int nr_patches;
   struct mrc_domain *domain;
   int nr_fields; //> number of field components
-  char **name; //> name for each field component
+  char **comp_name; //> name for each field component
   int ibn[3];
   int first_comp; //> The first component in this field (normally 0)
 };
@@ -54,6 +54,8 @@ struct psc_mfields *psc_mfields_get_cuda(struct psc_mfields *base, int mb, int m
 void psc_mfields_put_c(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 void psc_mfields_put_fortran(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 void psc_mfields_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
+void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
+const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;
