@@ -47,8 +47,9 @@ _psc_diag_setup(struct psc_diag *diag)
   fprintf(diag->file, "# time");
   for (int m = 0; diag->items[m]; m++) {
     struct psc_diag_item *item = diag->items[m];
+    int nr_values = psc_diag_item_nr_values(item);
     for (int i = 0; i < item->n_values; i++) {
-      fprintf(diag->file, " %s", item->names[i]);
+      fprintf(diag->file, " %s", psc_diag_item_title(item, i));
     }
   }
   fprintf(diag->file, "\n");
@@ -85,12 +86,13 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   for (int m = 0; diag->items[m]; m++) {
     struct psc_diag_item *item = diag->items[m];
 
-    double *result = calloc(item->n_values, sizeof(*result));
-    item->run(psc, result);
+    int nr_values = psc_diag_item_nr_values(item);
+    double *result = calloc(nr_values, sizeof(*result));
+    psc_diag_item_run(item, psc, result);
     if (rank == 0) {
-      MPI_Reduce(MPI_IN_PLACE, result, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+      MPI_Reduce(MPI_IN_PLACE, result, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
     } else {
-      MPI_Reduce(result, NULL, item->n_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
+      MPI_Reduce(result, NULL, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
     }
     if (rank == 0) {
       fprintf(diag->file, "%g", psc->timestep * psc->dt);

@@ -218,7 +218,6 @@ psc_kh_setup(struct psc *psc)
 {
   struct psc_kh *kh = to_psc_kh(psc);
 
-  double mi = kh->mi_over_me;
   double me = 1.;
   double B0 = sqrt(me) / (kh->wpe_over_wce);
   double vAe = B0 / sqrt(me);
