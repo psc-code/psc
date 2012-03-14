@@ -97,7 +97,7 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
 
 static struct param psc_diag_descr[] = {
   { "items"            , VAR(items)              ,
-    PARAM_STRING("energy_field,energy_particle")                             },
+    PARAM_STRING("field_energy,particle_energy")                              },
   { "every_step"       , VAR(every_step)         , PARAM_INT(-1)              },
   {},
 };

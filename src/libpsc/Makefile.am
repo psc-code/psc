@@ -13,6 +13,7 @@ SUBDIRS = \
 	psc_output_format \
 	psc_output_particles \
 	psc_output_photons \
+	psc_diag \
 	psc_patchmanager \
 	psc_pulse \
 	psc_push_fields \
@@ -38,6 +39,7 @@ libpsc_la_LIBADD = \
 	psc_output_format/libsubdir.la \
 	psc_output_particles/libsubdir.la \
 	psc_output_photons/libsubdir.la \
+	psc_diag/libsubdir.la \
 	psc_patchmanager/libsubdir.la \
 	psc_pulse/libsubdir.la \
 	psc_push_fields/libsubdir.la \
@@ -83,9 +85,4 @@ libpsc_la_SOURCES = \
 	psc_dump.c \
 	checks_continuity.c \
 	psc_checkpoint.c \
-	psc_main.c \
-	psc_diag.c \
-	psc_diag_item.c \
-	psc_diag_em_energy.c \
-	psc_diag_particle_energy.c
-
+	psc_main.c

@@ -33,7 +33,7 @@ static void
 psc_diag_item_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_diag_item,
-			      &psc_diag_item_em_energy_ops);
+			      &psc_diag_item_field_energy_ops);
   mrc_class_register_subclass(&mrc_class_psc_diag_item,
 			      &psc_diag_item_particle_energy_ops);
 }

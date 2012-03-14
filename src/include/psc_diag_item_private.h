@@ -18,7 +18,7 @@ struct psc_diag_item_ops {
 
 #define psc_diag_item_ops(item) ((struct psc_diag_item_ops *)((item)->obj.ops))
 
-extern struct psc_diag_item_ops psc_diag_item_em_energy_ops;
+extern struct psc_diag_item_ops psc_diag_item_field_energy_ops;
 extern struct psc_diag_item_ops psc_diag_item_particle_energy_ops;
 
 #endif

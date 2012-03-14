@@ -2,11 +2,11 @@
 #include "psc_diag_item_private.h"
 
 // ----------------------------------------------------------------------
-// psc_diag_item_em_energy
+// psc_diag_item_field_energy_run
 
 static void
-psc_diag_item_em_energy_run(struct psc_diag_item *item,
-			    struct psc *psc, double *EH2)
+psc_diag_item_field_energy_run(struct psc_diag_item *item,
+			       struct psc *psc, double *EH2)
 {
   mfields_c_t *flds = psc_mfields_get_c(psc->flds, EX, HX + 3);
 
@@ -28,11 +28,11 @@ psc_diag_item_em_energy_run(struct psc_diag_item *item,
 }
 
 // ======================================================================
-// psc_diag_item_em_energy
+// psc_diag_item_field_energy
 
-struct psc_diag_item_ops psc_diag_item_em_energy_ops = {
-  .name      = "energy_field",
-  .run       = psc_diag_item_em_energy_run,
+struct psc_diag_item_ops psc_diag_item_field_energy_ops = {
+  .name      = "field_energy",
+  .run       = psc_diag_item_field_energy_run,
   .nr_values = 6,
   .title     = { "EX2", "EY2", "EZ2", "HX2", "HY2", "HZ2" },
 };
