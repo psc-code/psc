@@ -13,6 +13,7 @@ struct psc_mfields {
   int nr_fields; //> number of field components
   char **name; //> name for each field component
   int ibn[3];
+  int first_comp; //> The first component in this field (normally 0)
 };
 
 MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);

@@ -8,7 +8,7 @@
 #include <assert.h>
 
 void
-fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
+fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -17,6 +17,7 @@ fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp)
     size *= pf->im[d];
   }
   pf->nr_comp = nr_comp;
+  pf->first_comp = first_comp;
 #ifdef USE_CBE
   // The Cell processor translation can use the C fields with one modification:
   // the data needs to be 128 byte aligned (to speed off-loading to spes). This
@@ -173,7 +174,8 @@ _psc_mfields_c_setup(mfields_c_t *flds)
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
 		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_c_alloc(psc_mfields_get_patch_c(flds, p), ilg, ihg, flds->nr_fields);
+    fields_c_alloc(psc_mfields_get_patch_c(flds, p), ilg, ihg,
+		   flds->nr_fields, flds->first_comp);
   }
 }
 

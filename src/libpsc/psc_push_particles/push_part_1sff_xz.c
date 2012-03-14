@@ -32,7 +32,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, particles_t *pp)
   // FIXME, is -1 .. 1 always enough?
   int ib[3] = { -2, 0, -2 };
   int ie[3] = { patch->ldims[0] + 2, 1, patch->ldims[2] + 2 };
-  fields_c_alloc(&f_avg, ib, ie, 6);
+  fields_c_alloc(&f_avg, ib, ie, 6, 0);
 
   for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
     for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {

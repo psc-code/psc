@@ -8,7 +8,8 @@
 #include <string.h>
 
 void
-fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
+fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp,
+		     int first_comp)
 {
   pf->flds = calloc(nr_comp, sizeof(*pf->flds));
 
@@ -19,6 +20,7 @@ fields_fortran_alloc(fields_fortran_t *pf, int ib[3], int ie[3], int nr_comp)
     size *= pf->im[d];
   }
   pf->nr_comp = nr_comp;
+  pf->first_comp = first_comp;
 
   pf->flds[0] = calloc(size * nr_comp, sizeof(*pf->flds[0]));
   for (int i = 1; i < nr_comp; i++) {
@@ -109,7 +111,8 @@ _psc_mfields_fortran_setup(mfields_fortran_t *flds)
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
 		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_fortran_alloc(psc_mfields_get_patch_fortran(flds, p), ilg, ihg, flds->nr_fields);
+    fields_fortran_alloc(psc_mfields_get_patch_fortran(flds, p), ilg, ihg,
+			 flds->nr_fields, flds->first_comp);
   }
 }
 

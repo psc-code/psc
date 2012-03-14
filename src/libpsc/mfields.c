@@ -109,6 +109,7 @@ psc_mfields_get_##type(struct psc_mfields *base, int mb, int me)	\
   psc_mfields_set_domain(flds, base->domain);				\
   psc_mfields_set_param_int(flds, "nr_fields", base->nr_fields);	\
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);			\
+  psc_mfields_set_param_int(flds, "first_comp", base->first_comp);	\
   psc_mfields_setup(flds);						\
 									\
   if (!ops->copy_to_##type) {						\
@@ -194,6 +195,7 @@ psc_mfields_init()
 static struct param psc_mfields_descr[] = {
   { "nr_fields"      , VAR(nr_fields)       , PARAM_INT(1)        },
   { "ibn"            , VAR(ibn)             , PARAM_INT3(0, 0, 0) },
+  { "first_comp"     , VAR(first_comp)      , PARAM_INT(0)        },
   {},
 };
 #undef VAR
