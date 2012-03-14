@@ -471,12 +471,12 @@ psc_balance_initial(struct psc_balance *bal, struct psc *psc,
     }
     mfields_base_t *flds_base_new;
     flds_base_new = psc_mfields_create(mrc_domain_comm(domain_new));
-    psc_mfields_set_type(flds_base_new, psc->prm.fields_base);
+    psc_mfields_set_type(flds_base_new, psc_mfields_type(flds_base_old));
     psc_mfields_set_name(flds_base_new, "mfields");
     psc_mfields_set_domain(flds_base_new, domain_new);
-    psc_mfields_set_param_int(flds_base_new, "nr_fields", NR_FIELDS);
-    psc_mfields_set_param_int3(flds_base_new, "ibn", psc->ibn);
+    psc_mfields_set_param_int(flds_base_new, "nr_fields", flds_base_old->nr_fields);
     psc_mfields_set_param_int(flds_base_new, "first_comp", flds_base_old->first_comp);
+    psc_mfields_set_param_int3(flds_base_new, "ibn", flds_base_old->ibn);
     psc_mfields_setup(flds_base_new);
 
     mfields_t *flds_old =
