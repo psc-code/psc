@@ -157,6 +157,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // OPT, could be prepared once
   struct info_by_rank *info = calloc(size, sizeof(*info));
 
+  // count how many recv_entrie per rank
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -173,16 +174,19 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       }
     }
   }
+
+  // alloc recv_entries
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       info[r].recv_entry =
 	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
+#if 0
       info[r].n_recv_entries = 0;
+#endif
     }
   }
 
-#if 1
-  // post receives for # particles we'll receive in the next step
+  // set up recv_entries
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -190,23 +194,25 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
 #if 0
-	  mprintf(":%d irecv # from %d:%d tag %d\n", p, nei->rank, nei->patch,
-		  dir1neg + p * N_DIR);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct recv_entry *re =
+	    &info[nei->rank].recv_entry[info[nei->rank].n_recv_entries++];
+	  re->patch = p;
+	  re->nei_patch = nei->patch;
+	  re->dir1 = dir1;
+	  re->dir1neg = dir1neg;
 #endif
-	  MPI_Irecv(&nei->n_recv, 1, MPI_INT, nei->rank, dir1neg + p * N_DIR,
-		    comm, &ddcp->recv_reqs[dir1 + p * N_DIR]);
 	}
       }
     }
   }
-#endif
 
+  // count send_entries
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -223,6 +229,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       }
     }
   }
+
+  // alloc send_entries
   for (int r = 0; r < size; r++) {
     if (info[r].n_send_entries) {
       info[r].send_entry =
@@ -230,6 +238,8 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       info[r].n_send_entries = 0;
     }
   }
+
+  // set up send_entries
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
@@ -250,53 +260,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  se->dir1neg = dir1neg;
 	  se->n_send = nei->n_send;
 	  info[nei->rank].n_send += nei->n_send;
-	}
-      }
-    }
-  }
-
-#if 1
-  // post sends for # particles
-  // to remote procs only
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_send_entries; i++) {
-      struct send_entry *se = &info[r].send_entry[i];
-#if 0
-      mprintf("S %d %d:%d -> %d:%d dir1 %02d n_send %d\n", i, rank,
-	      se->patch, r, se->nei_patch, se->dir1, se->n_send);
-#endif
-      MPI_Isend(&se->n_send, 1, MPI_INT,
-		r, se->dir1 + se->nei_patch * N_DIR, comm,
-		&ddcp->send_reqs[se->dir1 + se->patch * N_DIR]);
-    }
-  }
-#endif
-  
-#if 1
-  // finish receiving remote # of particles
-  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-#endif
-
-  // fill recv_entry
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0 || nei->rank == rank) {
-	    continue;
-	  }
-	  struct recv_entry *re =
-	    &info[nei->rank].recv_entry[info[nei->rank].n_recv_entries++];
-	  re->patch = p;
-	  re->nei_patch = nei->patch;
-	  re->dir1 = dir1;
-	  re->dir1neg = dir1neg;
-	  re->n_recv = nei->n_recv;
 	}
       }
     }
@@ -335,63 +298,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }  
 
-  MPI_Waitall(n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
-  MPI_Waitall(n_send_ranks, send_req, MPI_STATUSES_IGNORE);
-
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      struct recv_entry *re = &info[r].recv_entry[i];
-      /* mprintf("R %d %d:%d -> %d:%d dir1 %02d n_recv %d\n", i, r, */
-      /* 	      re->nei_patch, rank, re->patch, re->dir1, re->n_recv); */
-    }
-  }
-
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      struct recv_entry *re = &info[r].recv_entry_[i];
-      /* mprintf("r %d %d:%d -> %d:%d dir1 %02d n_recv %d\n", i, r, */
-      /* 	      re->nei_patch, rank, re->patch, re->dir1, re->n_recv); */
-    }
-  }
-
-  // set n_recv
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      info[r].recv_entry[i] = info[r].recv_entry_[i];
-      struct recv_entry *re = &info[r].recv_entry[i];
-      struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      struct ddcp_nei *nei = &patch->nei[re->dir1];
-      nei->n_recv = re->n_recv;
-      info[r].n_recv += re->n_recv;
-    }
-  }
-
-  // post sends for the actual particles
-  // to remote procs only
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank < 0 || nei->rank == rank) {
-	    continue;
-	  }
-#if 0
-	  mprintf(":%d isend P to   %d:%d tag %d\n", p, nei->rank, nei->patch,
-		  dir1 + nei->patch * N_DIR);
-#endif
-	  MPI_Isend(nei->send_buf, sz * nei->n_send, ddcp->mpi_type_real,
-		    nei->rank, dir1 + nei->patch * N_DIR, comm,
-		    &ddcp->sendp_reqs[dir1 + p * N_DIR]);
-	}
-      }
-    }
-  }
-
-  // count local # particles
+  // overlap: count local # particles
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->n_recv = 0;
@@ -409,7 +316,37 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	}
       }
     }
-    mprintf("lp %d %d\n", p, patch->n_recv);
+  }
+
+  MPI_Waitall(n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
+  MPI_Waitall(n_send_ranks, send_req, MPI_STATUSES_IGNORE);
+
+#if 0
+  // still want to figure out how to avoid sending info i can calc
+  // just need to fix order
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_recv_entries; i++) {
+      struct recv_entry *re = &info[r].recv_entry[i];
+      mprintf("R %d %d:%d -> %d:%d dir1 %02d n_recv %d\n", i, r,
+      	      re->nei_patch, rank, re->patch, re->dir1, re->n_recv);
+    }
+  }
+
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_recv_entries; i++) {
+      struct recv_entry *re = &info[r].recv_entry_[i];
+      mprintf("r %d %d:%d -> %d:%d dir1 %02d n_recv %d\n", i, r,
+      	      re->nei_patch, rank, re->patch, re->dir1, re->n_recv);
+    }
+  }
+#endif
+
+
+  // FIXME, copy received -> actual
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_recv_entries; i++) {
+      info[r].recv_entry[i] = info[r].recv_entry_[i];
+    }
   }
 
   // add remote # particles
@@ -418,72 +355,32 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       struct recv_entry *re = &info[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
       patch->n_recv += re->n_recv;
+      info[r].n_recv += re->n_recv;
     }
   }
 
+  // realloc
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     ddcp->realloc(particles, p, patch->head + patch->n_recv);
   }
 
-  // post particle receives
-  // from remote procs only
+  // leave room for receives (FIXME? just change order)
   for (int r = 0; r < size; r++) {
     for (int i = 0; i < info[r].n_recv_entries; i++) {
       struct recv_entry *re = &info[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-#if 0
-      mprintf(":%d irecv P from %d:%d tag %d len %d\n", re->patch, r, re->nei_patch,
-	      re->dir1neg + re->patch * N_DIR, re->n_recv);
-#endif
-      void *addr = ddcp->get_addr(particles, re->patch, patch->head);
-      if (re->n_recv)
-	mprintf("A addr %d:%d %d\n", r, re->patch, patch->head);
-      MPI_Irecv(addr, sz * re->n_recv, ddcp->mpi_type_real,
-		r, re->dir1neg + re->patch * N_DIR, comm,
-		&ddcp->recv_reqs[re->dir1 + re->patch * N_DIR]);
       patch->head += re->n_recv;
     }
   }
 
-  // copy particles from local proc
-  for (int p = 0; p < ddcp->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct ddcp_nei *nei = &patch->nei[dir1];
-	  if (nei->rank != rank) {
-	    continue;
-	  }
-	  void *addr = ddcp->get_addr(particles, p, patch->head);
-	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
-	  memcpy(addr, nei_send->send_buf, nei_send->n_send * ddcp->size_of_particle);
-	  patch->head += nei_send->n_send;
-	}
-      }
-    }
-  }
-
-  // wait for receive of remote particles and clean up
-  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->send_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(ddcp->nr_patches * N_DIR, ddcp->sendp_reqs, MPI_STATUSES_IGNORE);
-
   int n_send = 0, n_recv = 0;
   for (int r = 0; r < size; r++) {
     n_send += info[r].n_send;
-    /* if (info[r].n_send) { */
-    /*   mprintf("n_send[%d] = %d\n", r, info[r].n_send); */
-    /* } */
     n_recv += info[r].n_recv;
-    /* if (info[r].n_recv) { */
-    /*   mprintf("n_recv[%d] = %d\n", r, info[r].n_recv); */
-    /* } */
   }
   
+  // post sends
   void *send_buf = malloc(n_send * ddcp->size_of_particle);
   void *p = send_buf;
   n_send_ranks = 0;
@@ -504,6 +401,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
   assert(p == send_buf + n_send * ddcp->size_of_particle);
 
+  // post receives
   void *recv_buf = malloc(n_recv * ddcp->size_of_particle);
   p = recv_buf;
   n_recv_ranks = 0;
@@ -517,13 +415,35 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
   assert(p == recv_buf + n_recv * ddcp->size_of_particle);
 
+  // overlap: copy particles from local proc
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  if (nei->rank != rank) {
+	    continue;
+	  }
+	  void *addr = ddcp->get_addr(particles, p, patch->head);
+	  struct ddcp_nei *nei_send = &ddcp->patches[nei->patch].nei[dir1neg];
+	  memcpy(addr, nei_send->send_buf, nei_send->n_send * ddcp->size_of_particle);
+	  patch->head += nei_send->n_send;
+	}
+      }
+    }
+  }
+
   MPI_Waitall(n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
   MPI_Waitall(n_send_ranks, send_req, MPI_STATUSES_IGNORE);
+
+  // copy received particles into right place
 
   int *old_head = malloc(ddcp->nr_patches * sizeof(*old_head));
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    //    mprintf("A head %d: %d\n", p, patch->head);
     old_head[p] = patch->head;
     patch->head -= patch->n_recv;
   }
@@ -534,9 +454,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       struct recv_entry *re = &info[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
       void *addr = ddcp->get_addr(particles, re->patch, patch->head);
-      if (re->n_recv)
-	mprintf("B addr %d:%d %d\n", r, re->patch, patch->head);
-      assert(memcmp(addr, p, re->n_recv * ddcp->size_of_particle) == 0);
+      memcpy(addr, p, re->n_recv * ddcp->size_of_particle);
       patch->head += re->n_recv;
       p += re->n_recv * ddcp->size_of_particle;
     }
