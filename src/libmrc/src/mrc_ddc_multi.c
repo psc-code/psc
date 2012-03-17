@@ -303,7 +303,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
-  // set up recv_entries per rank
+  // set up recv_entries by rank
   for (int p = 0; p < multi->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -320,6 +320,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	    re->dir1 = dir1;
 	    re->dir1neg = dir1neg;
 	    re->buf = r->buf;
+	    memcpy(re->ilo, r->ilo, 3 * sizeof(int));
+	    memcpy(re->ihi, r->ihi, 3 * sizeof(int));
 	  }
 	}
       }
@@ -375,14 +377,36 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
-  memset(multi->recv_reqs, 0, N_DIR * multi->nr_patches * sizeof(*multi->recv_reqs));
-  memset(multi->send_reqs, 0, N_DIR * multi->nr_patches * sizeof(*multi->send_reqs));
+  for (int rr = 0; rr < size; rr++) {
+    if (rr == rank) {
+      for (int r = 0; r < size; r++) {
+	for (int i = 0; i < info[r].n_recv_entries; i++) {
+	  struct recv_entry *re = &info[r].recv_entry[i];
+	  mprintf("R %d:%d -> %d:%d dir %02d len %2d\n",
+		  r, re->nei_patch, rank, re->patch, re->dir1, re->n_recv);
+	}
+      }
+      for (int r = 0; r < size; r++) {
+	for (int i = 0; i < info[r].n_send_entries; i++) {
+	  struct send_entry *se = &info[r].send_entry[i];
+	  mprintf("S %d:%d -> %d:%d dir %02d len %2d\n",
+		  rank, se->patch, r, se->nei_patch, se->dir1neg, se->n_send);
+	}
+      }
+    }
+    MPI_Barrier(ddc->obj.comm);
+  }
+
+  for (int i = 0; i < N_DIR * multi->nr_patches; i++) {
+    multi->send_reqs[i] = MPI_REQUEST_NULL;
+    multi->recv_reqs[i] = MPI_REQUEST_NULL;
+  }
 
   for (int r = 0; r < size; r++) {
     for (int i = 0; i < info[r].n_recv_entries; i++) {
       struct recv_entry *re = &info[r].recv_entry[i];
       MPI_Irecv(re->buf, re->n_recv * (me - mb), ddc->mpi_type, r,
-		re->dir1neg + N_DIR * re->patch, ddc->obj.comm,
+		re->dir1neg + N_DIR * re->nei_patch, ddc->obj.comm,
 		&multi->recv_reqs[re->dir1 + N_DIR * re->patch]);
     }
   }
@@ -396,32 +420,6 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 		&multi->send_reqs[se->dir1 + N_DIR * se->patch]);
     }
   }
-
-#if 0
-  for (int p = 0; p < multi->nr_patches; p++) {
-    // post all sends
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->nei_rank != rank && s->len > 0) {
-	    to_buf(mb, me, p, s->ilo, s->ihi, s->buf, ctx);
-#if 0
-	    mprintf(":%d send to %d:%d [%d,%d] x [%d,%d] x [%d,%d] len %d tag %d\n",
-		    p, s->nei_rank, s->nei_patch,
-		    s->ilo[0], s->ihi[0], s->ilo[1], s->ihi[1], s->ilo[2], s->ihi[2],
-		    s->len, dir1 + N_DIR * s->nei_patch);
-#endif
-	    MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->nei_rank,
-		      dir1 + N_DIR * s->nei_patch, ddc->obj.comm,
-		      &multi->send_reqs[dir1 + N_DIR * p]);
-	  }
-	}
-      }
-    }
-  }
-#endif
 
   // do all local exchange while communication is in flight
   for (int p = 0; p < multi->nr_patches; p++) {
@@ -445,20 +443,14 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 
   // finish receives
   MPI_Waitall(N_DIR * multi->nr_patches, multi->recv_reqs, MPI_STATUSES_IGNORE);
-  for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
-	  if (r->nei_rank != rank && r->len > 0) {
-	    from_buf(mb, me, p, r->ilo, r->ihi, r->buf, ctx);
-	  }
-	}
-      }
+
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_recv_entries; i++) {
+      struct recv_entry *re = &info[r].recv_entry[i];
+      from_buf(mb, me, re->patch, re->ilo, re->ihi, re->buf, ctx);
     }
   }
-    
+
   // finish sends
   MPI_Waitall(N_DIR * multi->nr_patches, multi->send_reqs, MPI_STATUSES_IGNORE);
 
