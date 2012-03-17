@@ -242,6 +242,8 @@ struct info_by_rank {
     int dir1;  // direction
     int dir1neg;
     int n_send;
+    int ilo[3];
+    int ihi[3];
     void *buf;
   } *send_entry;
   int n_send_entries;
@@ -253,6 +255,8 @@ struct info_by_rank {
     int dir1neg;
     int dir1;
     int n_recv;
+    int ilo[3];
+    int ihi[3];
     void *buf;
   } *recv_entry;
   int n_recv_entries;
@@ -322,7 +326,57 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
+  // count how many send_entries per rank
+  for (int p = 0; p < multi->nr_patches; p++) {
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
+	  if (s->nei_rank != rank && s->len > 0) {
+	    info[s->nei_rank].n_send_entries++;
+	  }
+	}
+      }
+    }
+  }
+
+  // alloc send_entries
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_send_entries) {
+      info[r].send_entry =
+	malloc(info[r].n_send_entries * sizeof(*info[r].send_entry));
+      info[r].n_send_entries = 0;
+    }
+  }
+
+  // set up send_entries per rank
+  for (int p = 0; p < multi->nr_patches; p++) {
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
+	  if (s->nei_rank != rank && s->len > 0) {
+	    struct send_entry *se =
+	      &info[s->nei_rank].send_entry[info[s->nei_rank].n_send_entries++];
+	    se->patch = p;
+	    se->nei_patch = s->nei_patch;
+	    se->n_send = s->len;
+	    se->dir1 = dir1;
+	    se->dir1neg = dir1neg;
+	    se->buf = s->buf;
+	    memcpy(se->ilo, s->ilo, 3 * sizeof(int));
+	    memcpy(se->ihi, s->ihi, 3 * sizeof(int));
+	  }
+	}
+      }
+    }
+  }
+
   memset(multi->recv_reqs, 0, N_DIR * multi->nr_patches * sizeof(*multi->recv_reqs));
+  memset(multi->send_reqs, 0, N_DIR * multi->nr_patches * sizeof(*multi->send_reqs));
 
   for (int r = 0; r < size; r++) {
     for (int i = 0; i < info[r].n_recv_entries; i++) {
@@ -333,32 +387,17 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
-#if 0
-  // post all receives
-  for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
-	  if (r->nei_rank != rank && r->len > 0) {
-#if 0
-	    mprintf(":%d recv from %d:%d [%d,%d] x [%d,%d] x [%d,%d] len %d tag %d\n",
-		    p, r->nei_rank, r->nei_patch,
-		    r->ilo[0], r->ihi[0], r->ilo[1], r->ihi[1], r->ilo[2], r->ihi[2],
-		    r->len, dir1neg + N_DIR *p);
-#endif
-	    MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->nei_rank,
-		      dir1neg + N_DIR * p, ddc->obj.comm,
-		      &multi->recv_reqs[dir1 + N_DIR * p]);
-	  }
-	}
-      }
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_send_entries; i++) {
+      struct send_entry *se = &info[r].send_entry[i];
+      to_buf(mb, me, se->patch, se->ilo, se->ihi, se->buf, ctx);
+      MPI_Isend(se->buf, se->n_send * (me - mb), ddc->mpi_type, r,
+		se->dir1 + N_DIR * se->patch, ddc->obj.comm,
+		&multi->send_reqs[se->dir1 + N_DIR * se->patch]);
     }
   }
-#endif
-    
+
+#if 0
   for (int p = 0; p < multi->nr_patches; p++) {
     // post all sends
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -377,13 +416,12 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	    MPI_Isend(s->buf, s->len * (me - mb), ddc->mpi_type, s->nei_rank,
 		      dir1 + N_DIR * s->nei_patch, ddc->obj.comm,
 		      &multi->send_reqs[dir1 + N_DIR * p]);
-	  } else {
-	    multi->send_reqs[dir1 + N_DIR * p] = MPI_REQUEST_NULL;
 	  }
 	}
       }
     }
   }
+#endif
 
   // do all local exchange while communication is in flight
   for (int p = 0; p < multi->nr_patches; p++) {
