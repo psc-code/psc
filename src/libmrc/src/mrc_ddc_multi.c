@@ -434,42 +434,48 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
-  for (int i = 0; i < N_DIR * multi->nr_patches; i++) {
-    multi->send_reqs[i] = MPI_REQUEST_NULL;
-    multi->recv_reqs[i] = MPI_REQUEST_NULL;
-  }
-
   void *recv_buf = malloc(n_recv * (me - mb) * ddc->size_of_type);
-  void *p = recv_buf;
-
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      struct recv_entry *re = &info[r].recv_entry[i];
-      /* MPI_Irecv(p, re->n_recv * (me - mb), ddc->mpi_type, r, */
-      /* 		re->dir1neg + N_DIR * re->nei_patch, ddc->obj.comm, */
-      /* 		&multi->recv_reqs[re->dir1 + N_DIR * re->patch]); */
-      p += re->n_recv * (me - mb) * ddc->size_of_type;
-    }
-  }
-  assert(p == recv_buf + n_recv * (me - mb) * ddc->size_of_type);
-
   void *send_buf = malloc(n_send * (me - mb) * ddc->size_of_type);
-  p = send_buf;
 
+  // communicate aggregated buffers
+  n_recv_ranks = 0;
+  void *p = recv_buf;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_recv_entries) {
+      MPI_Irecv(p, info[r].n_recv * (me - mb), ddc->mpi_type,
+		r, 0, ddc->obj.comm, &recv_req[n_recv_ranks++]);
+      p += info[r].n_recv * (me - mb) * ddc->size_of_type;
+    }
+  }  
+  
+  p = send_buf;
   for (int r = 0; r < size; r++) {
     for (int i = 0; i < info[r].n_send_entries; i++) {
       struct send_entry *se = &info[r].send_entry[i];
       struct mrc_ddc_sendrecv *s = &patt[se->patch].send[se->dir1];
       to_buf(mb, me, se->patch, s->ilo, s->ihi, p, ctx);
-      /* MPI_Isend(p, se->n_send * (me - mb), ddc->mpi_type, r, */
-      /* 		se->dir1 + N_DIR * se->patch, ddc->obj.comm, */
-      /* 		&multi->send_reqs[se->dir1 + N_DIR * se->patch]); */
       p += se->n_send * (me - mb) * ddc->size_of_type;
     }
   }
   assert(p == send_buf + n_send * (me - mb) * ddc->size_of_type);
 
-  // do all local exchange while communication is in flight
+  p = send_buf;
+  n_send_ranks = 0;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_send_entries) {
+      void *p0 = p;
+      for (int i = 0; i < info[r].n_send_entries; i++) {
+	struct send_entry *se = &info[r].send_entry[i];
+	struct mrc_ddc_sendrecv *s = &patt[se->patch].send[se->dir1];
+	to_buf(mb, me, se->patch, s->ilo, s->ihi, p, ctx);
+	p += se->n_send * (me - mb) * ddc->size_of_type;
+      }
+      MPI_Isend(p0, info[r].n_send * (me - mb), ddc->mpi_type,
+		r, 0, ddc->obj.comm, &send_req[n_send_ranks++]);
+    }
+  }  
+
+  // overlap: local exchange
   for (int p = 0; p < multi->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -488,46 +494,6 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
       }
     }
   }
-
-  // finish receives
-  MPI_Waitall(N_DIR * multi->nr_patches, multi->recv_reqs, MPI_STATUSES_IGNORE);
-
-#if 0
-  p = recv_buf;
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      struct recv_entry *re = &info[r].recv_entry[i];
-      struct mrc_ddc_sendrecv *rcv = &patt[re->patch].recv[re->dir1];
-      from_buf(mb, me, re->patch, rcv->ilo, rcv->ihi, p, ctx);
-      p += re->n_recv * (me - mb) * ddc->size_of_type;
-    }
-  }
-  assert(p == recv_buf + n_recv * (me - mb) * ddc->size_of_type);
-#endif
-
-  // finish sends
-  MPI_Waitall(N_DIR * multi->nr_patches, multi->send_reqs, MPI_STATUSES_IGNORE);
-
-  // communicate aggregated buffers
-  n_recv_ranks = 0;
-  p = recv_buf;
-  for (int r = 0; r < size; r++) {
-    if (info[r].n_recv_entries) {
-      MPI_Irecv(p, info[r].n_recv * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &recv_req[n_recv_ranks++]);
-      p += info[r].n_recv * (me - mb) * ddc->size_of_type;
-    }
-  }  
-  
-  p = send_buf;
-  n_send_ranks = 0;
-  for (int r = 0; r < size; r++) {
-    if (info[r].n_send_entries) {
-      MPI_Isend(p, info[r].n_send * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &send_req[n_send_ranks++]);
-      p += info[r].n_send * (me - mb) * ddc->size_of_type;
-    }
-  }  
 
   MPI_Waitall(n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
   MPI_Waitall(n_send_ranks, send_req, MPI_STATUSES_IGNORE);
