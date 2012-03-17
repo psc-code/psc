@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #define to_mrc_ddc_multi(ddc) ((struct mrc_ddc_multi *) (ddc)->obj.subctx)
 
@@ -234,6 +235,30 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 // ----------------------------------------------------------------------
 // ddc_run
 
+struct info_by_rank {
+  struct send_entry {
+    int patch; // source patch (source rank is this rank)
+    int nei_patch; // target patch (target rank is index in send_entry)
+    int dir1;  // direction
+    int dir1neg;
+    int n_send;
+    void *buf;
+  } *send_entry;
+  int n_send_entries;
+  int n_send;
+
+  struct recv_entry { // needs to be same as send_entry with different order!
+    int nei_patch;
+    int patch;
+    int dir1neg;
+    int dir1;
+    int n_recv;
+    void *buf;
+  } *recv_entry;
+  int n_recv_entries;
+  int n_recv;
+};
+
 static void
 ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void *ctx,
@@ -241,12 +266,76 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
-  int rank;
+  int rank, size;
   MPI_Comm_rank(mrc_ddc_comm(ddc), &rank);
+  MPI_Comm_size(mrc_ddc_comm(ddc), &size);
 
   int dir[3];
+
+  // OPT, could be prepared once
+  struct info_by_rank *info = calloc(size, sizeof(*info));
+
+  // count how many recv_entries per rank
   for (int p = 0; p < multi->nr_patches; p++) {
-    // post all receives
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
+	  if (r->nei_rank != rank && r->len > 0) {
+	    info[r->nei_rank].n_recv_entries++;
+	  }
+	}
+      }
+    }
+  }
+
+  // alloc recv_entries
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_recv_entries) {
+      info[r].recv_entry =
+	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
+      info[r].n_recv_entries = 0;
+    }
+  }
+
+  // set up recv_entries per rank
+  for (int p = 0; p < multi->nr_patches; p++) {
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
+	  if (r->nei_rank != rank && r->len > 0) {
+	    struct recv_entry *re =
+	      &info[r->nei_rank].recv_entry[info[r->nei_rank].n_recv_entries++];
+	    re->patch = p;
+	    re->nei_patch = r->nei_patch;
+	    re->n_recv = r->len;
+	    re->dir1 = dir1;
+	    re->dir1neg = dir1neg;
+	    re->buf = r->buf;
+	  }
+	}
+      }
+    }
+  }
+
+  memset(multi->recv_reqs, 0, N_DIR * multi->nr_patches * sizeof(*multi->recv_reqs));
+
+  for (int r = 0; r < size; r++) {
+    for (int i = 0; i < info[r].n_recv_entries; i++) {
+      struct recv_entry *re = &info[r].recv_entry[i];
+      MPI_Irecv(re->buf, re->n_recv * (me - mb), ddc->mpi_type, r,
+		re->dir1neg + N_DIR * re->patch, ddc->obj.comm,
+		&multi->recv_reqs[re->dir1 + N_DIR * re->patch]);
+    }
+  }
+
+#if 0
+  // post all receives
+  for (int p = 0; p < multi->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -263,13 +352,12 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	    MPI_Irecv(r->buf, r->len * (me - mb), ddc->mpi_type, r->nei_rank,
 		      dir1neg + N_DIR * p, ddc->obj.comm,
 		      &multi->recv_reqs[dir1 + N_DIR * p]);
-	  } else {
-	    multi->recv_reqs[dir1 + N_DIR * p] = MPI_REQUEST_NULL;
 	  }
 	}
       }
     }
   }
+#endif
     
   for (int p = 0; p < multi->nr_patches; p++) {
     // post all sends
@@ -335,6 +423,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     
   // finish sends
   MPI_Waitall(N_DIR * multi->nr_patches, multi->send_reqs, MPI_STATUSES_IGNORE);
+
+  free(info);
 }
 
 // ----------------------------------------------------------------------
