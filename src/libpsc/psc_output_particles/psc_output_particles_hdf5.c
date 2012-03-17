@@ -3,6 +3,9 @@
 
 #include <mrc_params.h>
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 #define to_psc_output_particles_hdf5(out) \
   mrc_to_subobj(out, struct psc_output_particles_hdf5)
 
@@ -10,6 +13,8 @@ struct psc_output_particles_hdf5 {
   const char *data_dir;
   const char *basename;
   int every_step;
+  int lo[3];
+  int hi[3];
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_particles_hdf5, x)
@@ -17,6 +22,8 @@ static struct param psc_output_particles_hdf5_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "basename"           , VAR(basename)             , PARAM_STRING("prt")     },
   { "every_step"         , VAR(every_step)           , PARAM_INT(-1)           },
+  { "lo"                 , VAR(lo)                   , PARAM_INT3(0, 0, 0)     },
+  { "hi"                 , VAR(hi)                   , PARAM_INT3(0, 0, 0)     },
   {},
 };
 #undef VAR
@@ -106,27 +113,47 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   int rank;
   MPI_Comm_rank(psc_output_particles_comm(out), &rank);
   char filename[strlen(hdf5->data_dir) + strlen(hdf5->basename) + 20];
-  sprintf(filename, "%s/%s.%06d.h5", hdf5->data_dir,
-	  hdf5->basename, ppsc->timestep);
+  sprintf(filename, "%s/%s.%06d_p%06d.h5", hdf5->data_dir,
+	  hdf5->basename, ppsc->timestep, rank);
+
+  for (int d = 0; d < 3; d++) {
+    assert(hdf5->lo[d] >= 0);
+    if (hdf5->hi[d] == 0) {
+      hdf5->hi[d] = ppsc->domain.gdims[d];
+    }
+    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
+  }
 
   FILE *file = fopen(filename, "w");
+  int nn = 0;
   for (int p = 0; p < particles->nr_patches; p++) {
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-    int *ldims = ppsc->patch[p].ldims;
-    int nr_cells = ldims[0] * ldims[1] * ldims[2];
-    int last = -1;
-    for (int ci = 0; ci < nr_cells; ci++) {
-      for (int n = off[p][ci]; n < off[p][ci+1]; n++) {
-	particle_c_t *part = particles_c_get_one(pp, map[p][n]);
-	fprintf(file, "%d %g %g %g %g %g %g %g %g %g %d\n",
-		n, part->xi, part->yi, part->zi,
-		part->pxi, part->pyi, part->pzi,
-		part->qni, part->mni, part->wni, ci);
+    int *ldims = ppsc->patch[p].ldims, *loff = ppsc->patch[p].off;
+
+    int ilo[3], ihi[3];
+    for (int d = 0; d < 3; d++) {
+      ilo[d] = MAX(0, hdf5->lo[d] - loff[d]);
+      ihi[d] = MIN(ldims[d], hdf5->hi[d] - loff[d]);
+    }
+
+    for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+      for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	  int ci = cell_index_3_to_1(ldims, jx, jy, jz);
+	  for (int n = off[p][ci]; n < off[p][ci+1]; n++) {
+	    particle_c_t *part = particles_c_get_one(pp, map[p][n]);
+	    fprintf(file, "%d %g %g %g %g %g %g %g %g %g %d\n",
+		    nn, part->xi, part->yi, part->zi,
+		    part->pxi, part->pyi, part->pzi,
+		    part->qni, part->mni, part->wni, ci);
+	    nn++;
+	  }
+	}
       }
     }
   }
   fclose(file);
-
+  
   for (int p = 0; p < particles->nr_patches; p++) {
     free(off[p]);
     free(map[p]);
