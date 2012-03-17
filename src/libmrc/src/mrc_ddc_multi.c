@@ -192,8 +192,6 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
       }
     }
   }
-  multi->send_reqs = calloc(N_DIR * multi->nr_patches, sizeof(*multi->send_reqs));
-  multi->recv_reqs = calloc(N_DIR * multi->nr_patches, sizeof(*multi->recv_reqs));
 }
 
 // ----------------------------------------------------------------------
@@ -228,8 +226,6 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->add_ghosts);
   free(multi->fill_ghosts);
   free(multi->ddc_patches);
-  free(multi->send_reqs);
-  free(multi->recv_reqs);
 }
 
 // ----------------------------------------------------------------------
