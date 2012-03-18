@@ -6,30 +6,28 @@
 
 #define N_DIR (27)
 
+struct mrc_ddc_sendrecv_entry {
+  int patch; // patch on this rank
+  int nei_patch; // partner patch (partner rank is index in send/recv_entry)
+  int dir1;  // direction
+  int len;
+  int ilo[3];
+  int ihi[3];
+};
+
 struct mrc_ddc_rank_info {
-  struct mrc_ddc_send_entry {
-    int patch; // source patch (source rank is this rank)
-    int nei_patch; // target patch (target rank is index in send_entry)
-    int dir1;  // direction
-    int n_send;
-    int ilo[3];
-    int ihi[3];
-  } *send_entry;
+  // what to send, by rank
+  struct mrc_ddc_sendrecv_entry *send_entry;
   int n_send_entries;
   int n_send;
 
-  struct mrc_ddc_recv_entry {
-    int nei_patch;
-    int patch;
-    int dir1;
-    int n_recv;
-    int ilo[3];
-    int ihi[3];
-  } *recv_entry;
+  // what to receive, by rank
+  struct mrc_ddc_sendrecv_entry *recv_entry;
   int n_recv_entries;
   int n_recv;
 
-  struct mrc_ddc_recv_entry *recv_entry_;
+  // for setting up the recv_entry's in the wrong order first
+  struct mrc_ddc_sendrecv_entry *recv_entry_;
 };
 
 struct mrc_ddc_pattern2 {
