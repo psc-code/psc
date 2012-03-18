@@ -78,7 +78,6 @@ ddc_init_outside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int di
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +113,6 @@ ddc_init_inside(struct mrc_ddc *ddc, int p, struct mrc_ddc_sendrecv *sr, int dir
     }
     sr->len *= (sr->ihi[d] - sr->ilo[d]);
   }
-  sr->buf = malloc(sr->len * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -423,25 +421,6 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   mrc_ddc_multi_setup_pattern2(ddc, &multi->fill_ghosts2, fill_ghosts);
   mrc_ddc_multi_setup_pattern2(ddc, &multi->add_ghosts2, add_ghosts);
 
-  for (int p = 0; p < multi->nr_patches; p++) {
-    int dir[3];
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
-	    continue;
-	  
-	  int dir1 = mrc_ddc_dir2idx(dir);
-
-	  free(add_ghosts[p].send[dir1].buf);
-	  free(add_ghosts[p].recv[dir1].buf);
-	  
-	  free(fill_ghosts[p].send[dir1].buf);
-	  free(fill_ghosts[p].recv[dir1].buf);
-	}
-      }
-    }
-  }
   free(add_ghosts);
   free(fill_ghosts);
 }
