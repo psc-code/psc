@@ -400,7 +400,8 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
   MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
 
-  mrc_ddc_multi_setup_pattern2(ddc, &multi->patt2, multi->fill_ghosts);
+  mrc_ddc_multi_setup_pattern2(ddc, &multi->fill_ghosts2, multi->fill_ghosts);
+  mrc_ddc_multi_setup_pattern2(ddc, &multi->add_ghosts2, multi->add_ghosts);
 }
 
 // ----------------------------------------------------------------------
@@ -436,20 +437,21 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->fill_ghosts);
   free(multi->ddc_patches);
 
-  mrc_ddc_multi_destroy_pattern2(ddc, &multi->patt2);
+  mrc_ddc_multi_destroy_pattern2(ddc, &multi->fill_ghosts2);
+  mrc_ddc_multi_destroy_pattern2(ddc, &multi->add_ghosts2);
 }
 
 // ----------------------------------------------------------------------
 // ddc_run
 
 static void
-ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
+ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+	struct mrc_ddc_pattern *patt, int mb, int me,
 	void *ctx,
 	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
-  struct mrc_ddc_pattern2 *patt2 = &multi->patt2;
   struct mrc_ddc_rank_info *ri = patt2->ri;
 
   // communicate aggregated buffers
@@ -515,7 +517,7 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, multi->add_ghosts, mb, me, ctx,
+  ddc_run(ddc, &multi->add_ghosts2, multi->add_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
@@ -527,7 +529,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, multi->fill_ghosts, mb, me, ctx,
+  ddc_run(ddc, &multi->fill_ghosts2, multi->fill_ghosts, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 
