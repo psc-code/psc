@@ -151,12 +151,16 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 
   int dir[3];
 
-  // count how many recv_entries per rank
+  // count how many {send,recv}_entries per rank
   for (int p = 0; p < multi->nr_patches; p++) {
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
+	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
+	  if (s->len > 0) {
+	    ri[s->nei_rank].n_send_entries++;
+	  }
 	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
 	  if (r->len > 0) {
 	    ri[r->nei_rank].n_recv_entries++;
@@ -166,8 +170,15 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
     }
   }
 
-  // alloc recv_entries
+  // alloc {send,recv}_entries
   for (int r = 0; r < multi->mpi_size; r++) {
+    if (ri[r].n_send_entries) {
+      ri[r].send_entry = malloc(ri[r].n_send_entries * sizeof(*ri[r].send_entry));
+      ri[r].n_send_entries = 0;
+      if (r != multi->mpi_rank) {
+	patt2->n_send_ranks++;
+      }
+    }
     if (ri[r].n_recv_entries) {
       ri[r].recv_entry = malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry));
       ri[r].recv_entry_ = malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry_));
@@ -178,15 +189,30 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
     }
   }
 
-  // set up recv_entries by rank
+  // set up {send,recv}_entries per rank
   for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = 1; dir[2] >= -1; dir[2]--) {
-      for (dir[1] = 1; dir[1] >= -1; dir[1]--) {
-	for (dir[0] = 1; dir[0] >= -1; dir[0]--) {
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
 
+	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
+	  if (s->len > 0) {
+	    struct mrc_ddc_send_entry *se =
+	      &ri[s->nei_rank].send_entry[ri[s->nei_rank].n_send_entries++];
+	    se->patch = p;
+	    se->nei_patch = s->nei_patch;
+	    se->n_send = s->len;
+	    se->dir1 = dir1;
+	    memcpy(se->ilo, s->ilo, 3 * sizeof(*se->ilo));
+	    memcpy(se->ihi, s->ihi, 3 * sizeof(*se->ihi));
+	    ri[s->nei_rank].n_send += s->len;
+	    if (s->nei_rank != multi->mpi_rank) {
+	      patt2->n_send += s->len;
+	    }
+	  }
+
+	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
 	  if (r->len > 0) {
 	    struct mrc_ddc_recv_entry *re =
 	      &ri[r->nei_rank].recv_entry_[ri[r->nei_rank].n_recv_entries++];
@@ -194,7 +220,6 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	    re->nei_patch = r->nei_patch;
 	    re->n_recv = r->len;
 	    re->dir1 = dir1;
-	    re->dir1neg = dir1neg;
 	    memcpy(re->ilo, r->ilo, 3 * sizeof(*re->ilo));
 	    memcpy(re->ihi, r->ihi, 3 * sizeof(*re->ihi));
 	    ri[r->nei_rank].n_recv += r->len;
@@ -213,11 +238,11 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
       for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
 	for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	  for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	    int dir1 = mrc_ddc_dir2idx(dir);
+	    int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 
 	    for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	      struct mrc_ddc_recv_entry *re = &ri[r].recv_entry_[i];
-	      if (re->nei_patch == p && re->dir1neg == dir1) {
+	      if (re->nei_patch == p && re->dir1 == dir1neg) {
 		ri[r].recv_entry[cnt++] = *re;
 		break;
 	      }
@@ -229,60 +254,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
     free(ri[r].recv_entry_);
   }
 
-  // count how many send_entries per rank
-  for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->len > 0) {
-	    ri[s->nei_rank].n_send_entries++;
-	  }
-	}
-      }
-    }
-  }
-
-  // alloc send_entries
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (ri[r].n_send_entries) {
-      ri[r].send_entry = malloc(ri[r].n_send_entries * sizeof(*ri[r].send_entry));
-      ri[r].n_send_entries = 0;
-      if (r != multi->mpi_rank) {
-	patt2->n_send_ranks++;
-      }
-    }
-  }
-
-  // set up send_entries per rank
-  for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->len > 0) {
-	    struct mrc_ddc_send_entry *se =
-	      &ri[s->nei_rank].send_entry[ri[s->nei_rank].n_send_entries++];
-	    se->patch = p;
-	    se->nei_patch = s->nei_patch;
-	    se->n_send = s->len;
-	    se->dir1 = dir1;
-	    se->dir1neg = dir1neg;
-	    memcpy(se->ilo, s->ilo, 3 * sizeof(*se->ilo));
-	    memcpy(se->ihi, s->ihi, 3 * sizeof(*se->ihi));
-	    ri[s->nei_rank].n_send += s->len;
-	    if (s->nei_rank != multi->mpi_rank) {
-	      patt2->n_send += s->len;
-	    }
-	  }
-	}
-      }
-    }
-  }
-
+  // find buffer size for local exchange
   int local_buf_size = 0;
   for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
     struct mrc_ddc_recv_entry *re = &ri[multi->mpi_rank].recv_entry[i];

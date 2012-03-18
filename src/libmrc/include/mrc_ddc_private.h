@@ -11,7 +11,6 @@ struct mrc_ddc_rank_info {
     int patch; // source patch (source rank is this rank)
     int nei_patch; // target patch (target rank is index in send_entry)
     int dir1;  // direction
-    int dir1neg;
     int n_send;
     int ilo[3];
     int ihi[3];
@@ -19,10 +18,9 @@ struct mrc_ddc_rank_info {
   int n_send_entries;
   int n_send;
 
-  struct mrc_ddc_recv_entry { // needs to be same as send_entry with different order!
+  struct mrc_ddc_recv_entry {
     int nei_patch;
     int patch;
-    int dir1neg;
     int dir1;
     int n_recv;
     int ilo[3];
