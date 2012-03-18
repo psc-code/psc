@@ -467,8 +467,7 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 
 static void
 ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
-	struct mrc_ddc_pattern *patt, int mb, int me,
-	void *ctx,
+	int mb, int me, void *ctx,
 	void (*to_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx),
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
@@ -535,7 +534,7 @@ mrc_ddc_multi_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, &multi->add_ghosts2, multi->add_ghosts, mb, me, ctx,
+  ddc_run(ddc, &multi->add_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->add_from_buf);
 }
 
@@ -547,7 +546,7 @@ mrc_ddc_multi_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  ddc_run(ddc, &multi->fill_ghosts2, multi->fill_ghosts, mb, me, ctx,
+  ddc_run(ddc, &multi->fill_ghosts2, mb, me, ctx,
 	  ddc->funcs->copy_to_buf, ddc->funcs->copy_from_buf);
 }
 
