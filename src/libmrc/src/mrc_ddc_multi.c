@@ -20,10 +20,11 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(multi->domain, p, &info);
   int patch_idx_nei[3];
   for (int d = 0; d < 3; d++) {
-    patch_idx_nei[d] = ddc_patch->patch_idx[d] + dir[d];
+    patch_idx_nei[d] = info.idx3[d] + dir[d];
     if (multi->bc[d] == BC_PERIODIC) {
       if (patch_idx_nei[d] < 0) {
 	patch_idx_nei[d] += multi->np[d];
@@ -38,7 +39,6 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
       return;
     }
   }
-  struct mrc_patch_info info;
   mrc_domain_get_idx3_patch_info(multi->domain, patch_idx_nei, &info);
   *nei_rank = info.rank;
   *nei_patch = info.patch;
@@ -367,14 +367,9 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 					  &multi->nr_patches);
   multi->add_ghosts = calloc(multi->nr_patches, sizeof(*multi->add_ghosts));
   multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
-  multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
   for (int p = 0; p < multi->nr_patches; p++) {
-    struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(multi->domain, p, &info);
-    for (int d = 0; d < 3; d++) {
-      ddc_patch->patch_idx[d] = info.idx3[d];
-    }
 
     int dir[3];
     for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
@@ -435,7 +430,6 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   }
   free(multi->add_ghosts);
   free(multi->fill_ghosts);
-  free(multi->ddc_patches);
 
   mrc_ddc_multi_destroy_pattern2(ddc, &multi->fill_ghosts2);
   mrc_ddc_multi_destroy_pattern2(ddc, &multi->add_ghosts2);

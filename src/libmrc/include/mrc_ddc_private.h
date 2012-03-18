@@ -99,10 +99,6 @@ extern struct mrc_ddc_ops mrc_ddc_simple_ops;
 // ======================================================================
 // mrc_ddc_multi
 
-struct mrc_ddc_patch {
-  int patch_idx[3];
-};
-
 struct mrc_ddc_multi {
   struct mrc_domain *domain;
   int np[3]; // # patches per direction
@@ -110,7 +106,6 @@ struct mrc_ddc_multi {
   int nr_patches;
   struct mrc_patch *patches;
   int mpi_rank, mpi_size;
-  struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
   struct mrc_ddc_pattern2 add_ghosts2;
