@@ -31,7 +31,16 @@ struct mrc_ddc_rank_info {
 };
 
 struct mrc_ddc_pattern2 {
+  // communication info for each rank (NULL for those we don't communicate with)
   struct mrc_ddc_rank_info *ri;
+  // number of ranks we're communicating with (excluding self)
+  int n_recv_ranks, n_send_ranks;
+  // one request each per rank we're communicating with
+  MPI_Request *send_req, *recv_req;
+  // total number of (ddc->mpi_type) we're sending / receivng to all ranks
+  int n_send, n_recv;
+  // buffers with the above sizes
+  void *send_buf, *recv_buf;
 };
 
 struct mrc_ddc_sendrecv {
@@ -101,10 +110,6 @@ struct mrc_ddc_multi {
   int nr_patches;
   struct mrc_patch *patches;
   int mpi_rank, mpi_size;
-  int n_recv_ranks, n_send_ranks;
-  int n_send, n_recv;
-  MPI_Request *send_req, *recv_req;
-  void *send_buf, *recv_buf;
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
