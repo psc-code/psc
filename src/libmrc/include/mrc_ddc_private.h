@@ -111,8 +111,6 @@ struct mrc_ddc_multi {
   int nr_patches;
   struct mrc_patch *patches;
   int mpi_rank, mpi_size;
-  struct mrc_ddc_pattern *add_ghosts;
-  struct mrc_ddc_pattern *fill_ghosts;
   struct mrc_ddc_pattern2 add_ghosts2;
   struct mrc_ddc_pattern2 fill_ghosts2;
 };

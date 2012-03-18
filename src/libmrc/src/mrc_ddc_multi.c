@@ -392,8 +392,8 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 
   multi->patches = mrc_domain_get_patches(multi->domain,
 					  &multi->nr_patches);
-  multi->add_ghosts = calloc(multi->nr_patches, sizeof(*multi->add_ghosts));
-  multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
+  struct mrc_ddc_pattern *add_ghosts = calloc(multi->nr_patches, sizeof(*add_ghosts));
+  struct mrc_ddc_pattern *fill_ghosts = calloc(multi->nr_patches, sizeof(*fill_ghosts));
   for (int p = 0; p < multi->nr_patches; p++) {
     struct mrc_patch_info info;
     mrc_domain_get_local_patch_info(multi->domain, p, &info);
@@ -407,13 +407,11 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 	  
 	  int dir1 = mrc_ddc_dir2idx(dir);
 
-	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
-	  ddc_init_outside(ddc, p, &add_ghosts->send[dir1], dir);
-	  ddc_init_inside(ddc, p, &add_ghosts->recv[dir1], dir);
+	  ddc_init_outside(ddc, p, &add_ghosts[p].send[dir1], dir);
+	  ddc_init_inside(ddc, p, &add_ghosts[p].recv[dir1], dir);
 	  
-	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
-	  ddc_init_inside(ddc, p, &fill_ghosts->send[dir1], dir);
-	  ddc_init_outside(ddc, p, &fill_ghosts->recv[dir1], dir);
+	  ddc_init_inside(ddc, p, &fill_ghosts[p].send[dir1], dir);
+	  ddc_init_outside(ddc, p, &fill_ghosts[p].recv[dir1], dir);
 	}
       }
     }
@@ -422,17 +420,8 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
   MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
 
-  mrc_ddc_multi_setup_pattern2(ddc, &multi->fill_ghosts2, multi->fill_ghosts);
-  mrc_ddc_multi_setup_pattern2(ddc, &multi->add_ghosts2, multi->add_ghosts);
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_multi_destroy
-
-static void
-mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
-{
-  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+  mrc_ddc_multi_setup_pattern2(ddc, &multi->fill_ghosts2, fill_ghosts);
+  mrc_ddc_multi_setup_pattern2(ddc, &multi->add_ghosts2, add_ghosts);
 
   for (int p = 0; p < multi->nr_patches; p++) {
     int dir[3];
@@ -444,19 +433,26 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
 	  
 	  int dir1 = mrc_ddc_dir2idx(dir);
 
-	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
-	  free(add_ghosts->send[dir1].buf);
-	  free(add_ghosts->recv[dir1].buf);
+	  free(add_ghosts[p].send[dir1].buf);
+	  free(add_ghosts[p].recv[dir1].buf);
 	  
-	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
-	  free(fill_ghosts->send[dir1].buf);
-	  free(fill_ghosts->recv[dir1].buf);
+	  free(fill_ghosts[p].send[dir1].buf);
+	  free(fill_ghosts[p].recv[dir1].buf);
 	}
       }
     }
   }
-  free(multi->add_ghosts);
-  free(multi->fill_ghosts);
+  free(add_ghosts);
+  free(fill_ghosts);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_destroy
+
+static void
+mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   mrc_ddc_multi_destroy_pattern2(ddc, &multi->fill_ghosts2);
   mrc_ddc_multi_destroy_pattern2(ddc, &multi->add_ghosts2);
