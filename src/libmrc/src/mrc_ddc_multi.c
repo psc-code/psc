@@ -139,66 +139,15 @@ mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_setup
+// mrc_ddc_multi_setup_rank_info
 
-static void
-mrc_ddc_multi_setup(struct mrc_ddc *ddc)
+static struct mrc_ddc_rank_info *
+mrc_ddc_multi_setup_rank_info(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  if (ddc->size_of_type == sizeof(float)) {
-    ddc->mpi_type = MPI_FLOAT;
-  } else if (ddc->size_of_type == sizeof(double)) {
-    ddc->mpi_type = MPI_DOUBLE;
-  } else {
-    assert(0);
-  }
-
-  assert(ddc->max_n_fields > 0);
-  assert(multi->domain);
-  mrc_domain_get_nr_procs(multi->domain, multi->np);
-  mrc_domain_get_bc(multi->domain, multi->bc);
-
-  multi->patches = mrc_domain_get_patches(multi->domain,
-					  &multi->nr_patches);
-  multi->add_ghosts = calloc(multi->nr_patches, sizeof(*multi->add_ghosts));
-  multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
-  multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
-  for (int p = 0; p < multi->nr_patches; p++) {
-    struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(multi->domain, p, &info);
-    for (int d = 0; d < 3; d++) {
-      ddc_patch->patch_idx[d] = info.idx3[d];
-    }
-
-    int dir[3];
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
-	    continue;
-	  
-	  int dir1 = mrc_ddc_dir2idx(dir);
-
-	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
-	  ddc_init_outside(ddc, p, &add_ghosts->send[dir1], dir);
-	  ddc_init_inside(ddc, p, &add_ghosts->recv[dir1], dir);
-	  
-	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
-	  ddc_init_inside(ddc, p, &fill_ghosts->send[dir1], dir);
-	  ddc_init_outside(ddc, p, &fill_ghosts->recv[dir1], dir);
-	}
-      }
-    }
-  }
-
-  MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
-  MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
-  multi->rank_info = calloc(multi->mpi_size, sizeof(*multi->rank_info));
-
-  struct mrc_ddc_rank_info *ri = multi->rank_info;
-  struct mrc_ddc_pattern *patt = multi->fill_ghosts;
+  struct mrc_ddc_rank_info *ri =
+    calloc(multi->mpi_size, sizeof(*multi->rank_info));
 
   multi->n_recv_ranks = 0;
   multi->n_send_ranks = 0;
@@ -370,6 +319,85 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     }
   }
 
+  return ri;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_destroy_rank_info
+
+static void
+mrc_ddc_multi_destroy_rank_info(struct mrc_ddc *ddc, struct mrc_ddc_rank_info *ri)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  for (int r = 0; r < multi->mpi_size; r++) {
+    free(ri[r].send_entry);
+    free(ri[r].recv_entry);
+    free(ri[r].recv_entry_);
+  }
+  free(ri);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_multi_setup
+
+static void
+mrc_ddc_multi_setup(struct mrc_ddc *ddc)
+{
+  struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
+
+  if (ddc->size_of_type == sizeof(float)) {
+    ddc->mpi_type = MPI_FLOAT;
+  } else if (ddc->size_of_type == sizeof(double)) {
+    ddc->mpi_type = MPI_DOUBLE;
+  } else {
+    assert(0);
+  }
+
+  assert(ddc->max_n_fields > 0);
+  assert(multi->domain);
+  mrc_domain_get_nr_procs(multi->domain, multi->np);
+  mrc_domain_get_bc(multi->domain, multi->bc);
+
+  multi->patches = mrc_domain_get_patches(multi->domain,
+					  &multi->nr_patches);
+  multi->add_ghosts = calloc(multi->nr_patches, sizeof(*multi->add_ghosts));
+  multi->fill_ghosts = calloc(multi->nr_patches, sizeof(*multi->fill_ghosts));
+  multi->ddc_patches = calloc(multi->nr_patches, sizeof(*multi->ddc_patches));
+  for (int p = 0; p < multi->nr_patches; p++) {
+    struct mrc_ddc_patch *ddc_patch = &multi->ddc_patches[p];
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(multi->domain, p, &info);
+    for (int d = 0; d < 3; d++) {
+      ddc_patch->patch_idx[d] = info.idx3[d];
+    }
+
+    int dir[3];
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0)
+	    continue;
+	  
+	  int dir1 = mrc_ddc_dir2idx(dir);
+
+	  struct mrc_ddc_pattern *add_ghosts = &multi->add_ghosts[p];
+	  ddc_init_outside(ddc, p, &add_ghosts->send[dir1], dir);
+	  ddc_init_inside(ddc, p, &add_ghosts->recv[dir1], dir);
+	  
+	  struct mrc_ddc_pattern *fill_ghosts = &multi->fill_ghosts[p];
+	  ddc_init_inside(ddc, p, &fill_ghosts->send[dir1], dir);
+	  ddc_init_outside(ddc, p, &fill_ghosts->recv[dir1], dir);
+	}
+      }
+    }
+  }
+
+  MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
+  MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
+
+  multi->rank_info = mrc_ddc_multi_setup_rank_info(ddc, multi->fill_ghosts);
+
   multi->recv_buf = malloc(multi->n_recv * ddc->max_n_fields * ddc->size_of_type);
   multi->send_buf = malloc(multi->n_send * ddc->max_n_fields * ddc->size_of_type);
 }
@@ -413,12 +441,7 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->send_buf);
   free(multi->recv_buf);
 
-  for (int r = 0; r < multi->mpi_size; r++) {
-    free(multi->rank_info[r].send_entry);
-    free(multi->rank_info[r].recv_entry);
-    free(multi->rank_info[r].recv_entry_);
-  }
-  free(multi->rank_info);
+  mrc_ddc_multi_destroy_rank_info(ddc, multi->rank_info);
 }
 
 // ----------------------------------------------------------------------
