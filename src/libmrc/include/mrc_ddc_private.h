@@ -100,6 +100,7 @@ struct mrc_ddc_multi {
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
+  struct mrc_ddc_rank_info *rank_info;
 };
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;

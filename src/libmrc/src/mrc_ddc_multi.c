@@ -193,6 +193,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     }
   }
   MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
+  multi->rank_info = calloc(multi->mpi_size, sizeof(*multi->rank_info));
 }
 
 // ----------------------------------------------------------------------
@@ -227,6 +228,8 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->add_ghosts);
   free(multi->fill_ghosts);
   free(multi->ddc_patches);
+
+  free(multi->rank_info);
 }
 
 // ----------------------------------------------------------------------
@@ -243,13 +246,14 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
   MPI_Comm_rank(mrc_ddc_comm(ddc), &rank);
   int size = multi->mpi_size;
 
-  int dir[3];
-
   // OPT, could be prepared once
-  struct mrc_ddc_rank_info *ri = calloc(size, sizeof(*ri));
+  struct mrc_ddc_rank_info *ri = multi->rank_info;
+  memset(ri, 0, size * sizeof(*ri));
 
   int n_recv_ranks = 0, n_send_ranks = 0;
   int n_send = 0, n_recv = 0;
+
+  int dir[3];
 
   // count how many recv_entries per rank
   for (int p = 0; p < multi->nr_patches; p++) {
@@ -491,7 +495,6 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     free(ri[r].recv_entry);
     free(ri[r].recv_entry_);
   }
-  free(ri);
 }
 
 // ----------------------------------------------------------------------
