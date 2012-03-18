@@ -13,6 +13,8 @@ struct mrc_ddc_rank_info {
     int dir1;  // direction
     int dir1neg;
     int n_send;
+    int ilo[3];
+    int ihi[3];
   } *send_entry;
   int n_send_entries;
   int n_send;
@@ -23,6 +25,8 @@ struct mrc_ddc_rank_info {
     int dir1neg;
     int dir1;
     int n_recv;
+    int ilo[3];
+    int ihi[3];
   } *recv_entry;
   int n_recv_entries;
   int n_recv;
