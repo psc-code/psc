@@ -3,6 +3,7 @@
 
 #include <mrc_params.h>
 #include <mrc_domain.h>
+#include <mrc_bits.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -326,17 +327,23 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
     memcpy(re, se, sizeof(*re));
   }
 
+  int local_buf_size = 0;
   for (int r = 0; r < multi->mpi_size; r++) {
     for (int i = 0; i < ri[r].n_send_entries; i++) {
       struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
       struct mrc_ddc_sendrecv *rcv = &patt[re->patch].recv[re->dir1];
       memcpy(re->ilo, rcv->ilo, 3 * sizeof(*re->ilo));
       memcpy(re->ihi, rcv->ihi, 3 * sizeof(*re->ihi));
+      local_buf_size = MAX(local_buf_size,
+			   (re->ihi[0] - re->ilo[0]) * 
+			   (re->ihi[1] - re->ilo[1]) * 
+			   (re->ihi[2] - re->ilo[2]));
     }
   }
 
   patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * ddc->size_of_type);
   patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * ddc->size_of_type);
+  patt2->local_buf = malloc(local_buf_size * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -352,6 +359,7 @@ mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *pat
 
   free(patt2->send_buf);
   free(patt2->recv_buf);
+  free(patt2->local_buf);
 
   for (int r = 0; r < multi->mpi_size; r++) {
     free(patt2->ri[r].send_entry);
@@ -499,9 +507,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
   for (int i = 0; i < ri[multi->mpi_rank].n_send_entries; i++) {
     struct mrc_ddc_send_entry *se = &ri[multi->mpi_rank].send_entry[i];
     struct mrc_ddc_recv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    struct mrc_ddc_sendrecv *r = &patt[se->nei_patch].recv[se->dir1neg];
-    to_buf(mb, me, se->patch, se->ilo, se->ihi, r->buf, ctx);
-    from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, r->buf, ctx);
+    to_buf(mb, me, se->patch, se->ilo, se->ihi, patt2->local_buf, ctx);
+    from_buf(mb, me, se->nei_patch, re->ilo, re->ihi, patt2->local_buf, ctx);
   }
 
   MPI_Waitall(recv_cnt, patt2->recv_req, MPI_STATUSES_IGNORE);

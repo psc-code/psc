@@ -45,6 +45,7 @@ struct mrc_ddc_pattern2 {
   int n_send, n_recv;
   // buffers with the above sizes
   void *send_buf, *recv_buf;
+  void *local_buf;
 };
 
 struct mrc_ddc_sendrecv {
