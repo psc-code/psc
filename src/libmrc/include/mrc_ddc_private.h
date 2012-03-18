@@ -95,12 +95,12 @@ struct mrc_ddc_multi {
   int np[3]; // # patches per direction
   int bc[3]; // boundary condition
   int nr_patches;
-  int mpi_size;
+  struct mrc_patch *patches;
+  int mpi_rank, mpi_size;
   int n_recv_ranks, n_send_ranks;
   int n_send, n_recv;
   MPI_Request *send_req, *recv_req;
   void *send_buf, *recv_buf;
-  struct mrc_patch *patches;
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
