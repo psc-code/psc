@@ -304,8 +304,8 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     }
   }
 
-  MPI_Request *send_req = malloc(multi->n_send_ranks * sizeof(*send_req));
-  MPI_Request *recv_req = malloc(multi->n_recv_ranks * sizeof(*recv_req));
+  multi->send_req = malloc(multi->n_send_ranks * sizeof(*multi->send_req));
+  multi->recv_req = malloc(multi->n_recv_ranks * sizeof(*multi->recv_req));
 
   multi->n_recv_ranks = 0;
   for (int r = 0; r < multi->mpi_size; r++) {
@@ -314,7 +314,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 	malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry));
       MPI_Irecv(ri[r].recv_entry_,
 		sizeof(struct mrc_ddc_recv_entry) / sizeof(int) * ri[r].n_recv_entries,
-		MPI_INT, r, 0, ddc->obj.comm, &recv_req[multi->n_recv_ranks++]);
+		MPI_INT, r, 0, ddc->obj.comm, &multi->recv_req[multi->n_recv_ranks++]);
     }
   }  
 
@@ -323,12 +323,12 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     if (ri[r].n_send_entries) {
       MPI_Isend(ri[r].send_entry,
 		sizeof(struct mrc_ddc_send_entry) / sizeof(int) * ri[r].n_send_entries,
-		MPI_INT, r, 0, ddc->obj.comm, &send_req[multi->n_send_ranks++]);
+		MPI_INT, r, 0, ddc->obj.comm, &multi->send_req[multi->n_send_ranks++]);
     }
   }  
 
-  MPI_Waitall(multi->n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
-  MPI_Waitall(multi->n_send_ranks, send_req, MPI_STATUSES_IGNORE);
+  MPI_Waitall(multi->n_recv_ranks, multi->recv_req, MPI_STATUSES_IGNORE);
+  MPI_Waitall(multi->n_send_ranks, multi->send_req, MPI_STATUSES_IGNORE);
 
 #if 0
   for (int rr = 0; rr < size; rr++) {
@@ -361,8 +361,8 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
     }
   }
 
-  free(send_req);
-  free(recv_req);
+  multi->recv_buf = malloc(multi->n_recv * ddc->max_n_fields * ddc->size_of_type);
+  multi->send_buf = malloc(multi->n_send * ddc->max_n_fields * ddc->size_of_type);
 }
 
 // ----------------------------------------------------------------------
@@ -398,6 +398,12 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->fill_ghosts);
   free(multi->ddc_patches);
 
+  free(multi->send_req);
+  free(multi->recv_req);
+
+  free(multi->send_buf);
+  free(multi->recv_buf);
+
   for (int r = 0; r < multi->mpi_size; r++) {
     free(multi->rank_info[r].send_entry);
     free(multi->rank_info[r].recv_entry);
@@ -418,40 +424,23 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
   int rank;
   MPI_Comm_rank(mrc_ddc_comm(ddc), &rank);
-  int size = multi->mpi_size;
   struct mrc_ddc_rank_info *ri = multi->rank_info;
-
-  MPI_Request *send_req = malloc(multi->n_send_ranks * sizeof(*send_req));
-  MPI_Request *recv_req = malloc(multi->n_recv_ranks * sizeof(*recv_req));
-
-  void *recv_buf = malloc(multi->n_recv * (me - mb) * ddc->size_of_type);
-  void *send_buf = malloc(multi->n_send * (me - mb) * ddc->size_of_type);
 
   // communicate aggregated buffers
   multi->n_recv_ranks = 0;
-  void *p = recv_buf;
-  for (int r = 0; r < size; r++) {
+  void *p = multi->recv_buf;
+  for (int r = 0; r < multi->mpi_size; r++) {
     if (ri[r].n_recv_entries) {
       MPI_Irecv(p, ri[r].n_recv * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &recv_req[multi->n_recv_ranks++]);
+		r, 0, ddc->obj.comm, &multi->recv_req[multi->n_recv_ranks++]);
       p += ri[r].n_recv * (me - mb) * ddc->size_of_type;
     }
   }  
+  assert(p == multi->recv_buf + multi->n_recv * (me - mb) * ddc->size_of_type);
   
-  p = send_buf;
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < ri[r].n_send_entries; i++) {
-      struct mrc_ddc_send_entry *se = &ri[r].send_entry[i];
-      struct mrc_ddc_sendrecv *s = &patt[se->patch].send[se->dir1];
-      to_buf(mb, me, se->patch, s->ilo, s->ihi, p, ctx);
-      p += se->n_send * (me - mb) * ddc->size_of_type;
-    }
-  }
-  assert(p == send_buf + multi->n_send * (me - mb) * ddc->size_of_type);
-
-  p = send_buf;
+  p = multi->send_buf;
   multi->n_send_ranks = 0;
-  for (int r = 0; r < size; r++) {
+  for (int r = 0; r < multi->mpi_size; r++) {
     if (ri[r].n_send_entries) {
       void *p0 = p;
       for (int i = 0; i < ri[r].n_send_entries; i++) {
@@ -461,9 +450,10 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	p += se->n_send * (me - mb) * ddc->size_of_type;
       }
       MPI_Isend(p0, ri[r].n_send * (me - mb), ddc->mpi_type,
-		r, 0, ddc->obj.comm, &send_req[multi->n_send_ranks++]);
+		r, 0, ddc->obj.comm, &multi->send_req[multi->n_send_ranks++]);
     }
   }  
+  assert(p == multi->send_buf + multi->n_send * (me - mb) * ddc->size_of_type);
 
   // overlap: local exchange
   int dir[3];
@@ -486,11 +476,10 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
     }
   }
 
-  MPI_Waitall(multi->n_recv_ranks, recv_req, MPI_STATUSES_IGNORE);
-  MPI_Waitall(multi->n_send_ranks, send_req, MPI_STATUSES_IGNORE);
+  MPI_Waitall(multi->n_recv_ranks, multi->recv_req, MPI_STATUSES_IGNORE);
 
-  p = recv_buf;
-  for (int r = 0; r < size; r++) {
+  p = multi->recv_buf;
+  for (int r = 0; r < multi->mpi_size; r++) {
     for (int i = 0; i < ri[r].n_recv_entries; i++) {
       struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
       struct mrc_ddc_sendrecv *rcv = &patt[re->patch].recv[re->dir1];
@@ -498,13 +487,8 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
       p += re->n_recv * (me - mb) * ddc->size_of_type;
     }
   }
-  assert(p == recv_buf + multi->n_recv * (me - mb) * ddc->size_of_type);
 
-  free(send_req);
-  free(recv_req);
-
-  free(send_buf);
-  free(recv_buf);
+  MPI_Waitall(multi->n_send_ranks, multi->send_req, MPI_STATUSES_IGNORE);
 }
 
 // ----------------------------------------------------------------------

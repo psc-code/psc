@@ -98,6 +98,8 @@ struct mrc_ddc_multi {
   int mpi_size;
   int n_recv_ranks, n_send_ranks;
   int n_send, n_recv;
+  MPI_Request *send_req, *recv_req;
+  void *send_buf, *recv_buf;
   struct mrc_patch *patches;
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
