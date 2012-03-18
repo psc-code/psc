@@ -242,7 +242,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct mrc_ddc_sendrecv *r = &patt[p].recv[dir1];
 
-	  if (r->nei_rank != rank && r->len > 0) {
+	  if (r->len > 0) {
 	    struct mrc_ddc_recv_entry *re =
 	      &ri[r->nei_rank].recv_entry[ri[r->nei_rank].n_recv_entries++];
 	    re->patch = p;
@@ -294,7 +294,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
 	  int dir1 = mrc_ddc_dir2idx(dir);
 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->nei_rank != rank && s->len > 0) {
+	  if (s->len > 0) {
 	    struct mrc_ddc_send_entry *se =
 	      &ri[s->nei_rank].send_entry[ri[s->nei_rank].n_send_entries++];
 	    se->patch = p;
@@ -466,24 +466,12 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
   assert(p == multi->send_buf + multi->n_send * (me - mb) * ddc->size_of_type);
 
   // overlap: local exchange
-  int dir[3];
-  for (int p = 0; p < multi->nr_patches; p++) {
-    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  int dir1 = mrc_ddc_dir2idx(dir);
- 	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
-	  struct mrc_ddc_sendrecv *s = &patt[p].send[dir1];
-	  if (s->nei_rank == rank && s->len > 0) {
-	    struct mrc_ddc_sendrecv *r = &patt[s->nei_patch].recv[dir1neg];
-	    // OPT, we could just do the copy without going through
-	    // a buffer
-	    to_buf(mb, me, p, s->ilo, s->ihi, s->buf, ctx);
-	    from_buf(mb, me, s->nei_patch, r->ilo, r->ihi, s->buf, ctx);
-	  }
-	}
-      }
-    }
+  for (int i = 0; i < ri[rank].n_send_entries; i++) {
+    struct mrc_ddc_send_entry *se = &ri[rank].send_entry[i];
+    struct mrc_ddc_sendrecv *s = &patt[se->patch].send[se->dir1];
+    struct mrc_ddc_sendrecv *r = &patt[se->nei_patch].recv[se->dir1neg];
+    to_buf(mb, me, se->patch, s->ilo, s->ihi, s->buf, ctx);
+    from_buf(mb, me, s->nei_patch, r->ilo, r->ihi, s->buf, ctx);
   }
 
   MPI_Waitall(multi->n_recv_ranks, multi->recv_req, MPI_STATUSES_IGNORE);
