@@ -261,6 +261,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   patt2->send_req = malloc(patt2->n_send_ranks * sizeof(*patt2->send_req));
   patt2->recv_req = malloc(patt2->n_recv_ranks * sizeof(*patt2->recv_req));
 
+#if 0
   patt2->n_recv_ranks = 0;
   for (int r = 0; r < multi->mpi_size; r++) {
     if (r != multi->mpi_rank && ri[r].n_recv_entries) {
@@ -283,6 +284,7 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 
   MPI_Waitall(patt2->n_recv_ranks, patt2->recv_req, MPI_STATUSES_IGNORE);
   MPI_Waitall(patt2->n_send_ranks, patt2->send_req, MPI_STATUSES_IGNORE);
+#endif
 
 #if 0
   for (int rr = 0; rr < size; rr++) {
@@ -308,21 +310,63 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   }
 #endif
 
-  // use received recv_entries rather than calculated ones
   for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank) {
+    MPI_Barrier(ddc->obj.comm);
+    if (multi->mpi_rank == r) {
       for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	ri[r].recv_entry[i] = ri[r].recv_entry_[i];
+	struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
+	mprintf("R0 %d:%d -> %d:%d dir %02d len %2d tag %d\n",
+		r, re->nei_patch, multi->mpi_rank, re->patch, re->dir1, re->n_recv,
+		re->nei_patch * N_DIR + re->dir1);
       }
     }
   }
 
-  // fix up local recv_entry order
-  assert(ri[multi->mpi_rank].n_send_entries == ri[multi->mpi_rank].n_recv_entries);
-  for (int i = 0; i < ri[multi->mpi_rank].n_recv_entries; i++) {
-    struct mrc_ddc_recv_entry *re = &ri[multi->mpi_rank].recv_entry[i];
-    struct mrc_ddc_send_entry *se = &ri[multi->mpi_rank].send_entry[i];
-    memcpy(re, se, sizeof(*re));
+  for (int r = 0; r < multi->mpi_size; r++) {
+    ri[r].recv_entry_ = calloc(ri[r].n_recv_entries, sizeof(*ri[r].recv_entry_));
+    int cnt = 0;
+    int p = 0;
+    while (cnt < ri[r].n_recv_entries) {
+      for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+	for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	  for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	    int dir1 = mrc_ddc_dir2idx(dir);
+
+	    for (int i = 0; i < ri[r].n_recv_entries; i++) {
+	      struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
+	      if (re->nei_patch == p && re->dir1neg == dir1) {
+		mprintf("R1 %d:%d -> %d:%d dir %02d len %2d tag %d\n",
+			r, re->nei_patch, multi->mpi_rank, re->patch,
+			re->dir1, re->n_recv, re->nei_patch * N_DIR + re->dir1);
+		struct mrc_ddc_recv_entry *re_ = &ri[r].recv_entry_[cnt++];
+		*re_ = *re;
+		break;
+	      }
+	    }
+	  }
+	}
+      }
+      p++;
+    }
+  }
+
+  // use received recv_entries rather than calculated ones
+  for (int r = 0; r < multi->mpi_size; r++) {
+    for (int i = 0; i < ri[r].n_recv_entries; i++) {
+      ri[r].recv_entry[i] = ri[r].recv_entry_[i];
+    }
+  }
+
+  for (int r = 0; r < multi->mpi_size; r++) {
+    MPI_Barrier(ddc->obj.comm);
+    if (multi->mpi_rank == r) {
+      for (int i = 0; i < ri[r].n_recv_entries; i++) {
+	struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
+	mprintf("Rb %d:%d -> %d:%d dir %02d len %2d tag %d\n",
+		r, re->nei_patch, multi->mpi_rank, re->patch, re->dir1, re->n_recv,
+		re->nei_patch * N_DIR + re->dir1);
+      }
+    }
   }
 
   int local_buf_size = 0;
