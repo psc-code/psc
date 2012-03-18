@@ -96,6 +96,8 @@ struct mrc_ddc_multi {
   int bc[3]; // boundary condition
   int nr_patches;
   int mpi_size;
+  int n_recv_ranks, n_send_ranks;
+  int n_send, n_recv;
   struct mrc_patch *patches;
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
