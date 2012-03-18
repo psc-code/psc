@@ -258,75 +258,10 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
     }
   }
 
-  patt2->send_req = malloc(patt2->n_send_ranks * sizeof(*patt2->send_req));
-  patt2->recv_req = malloc(patt2->n_recv_ranks * sizeof(*patt2->recv_req));
-
-#if 0
-  patt2->n_recv_ranks = 0;
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank && ri[r].n_recv_entries) {
-      ri[r].recv_entry_ =
-	malloc(ri[r].n_recv_entries * sizeof(*ri[r].recv_entry));
-      MPI_Irecv(ri[r].recv_entry_,
-		sizeof(struct mrc_ddc_recv_entry) / sizeof(int) * ri[r].n_recv_entries,
-		MPI_INT, r, 0, ddc->obj.comm, &patt2->recv_req[patt2->n_recv_ranks++]);
-    }
-  }  
-
-  patt2->n_send_ranks = 0;
-  for (int r = 0; r < multi->mpi_size; r++) {
-    if (r != multi->mpi_rank && ri[r].n_send_entries) {
-      MPI_Isend(ri[r].send_entry,
-		sizeof(struct mrc_ddc_send_entry) / sizeof(int) * ri[r].n_send_entries,
-		MPI_INT, r, 0, ddc->obj.comm, &patt2->send_req[patt2->n_send_ranks++]);
-    }
-  }  
-
-  MPI_Waitall(patt2->n_recv_ranks, patt2->recv_req, MPI_STATUSES_IGNORE);
-  MPI_Waitall(patt2->n_send_ranks, patt2->send_req, MPI_STATUSES_IGNORE);
-#endif
-
-#if 0
-  for (int rr = 0; rr < size; rr++) {
-    MPI_Barrier(ddc->obj.comm);
-    if (rank == rr) {
-      for (int r = 0; r < size; r++) {
-	for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	  struct recv_entry *re = &ri[r].recv_entry[i];
-	  mprintf("R %d:%d -> %d:%d dir %02d len %2d tag %d\n",
-		  r, re->nei_patch, rank, re->patch, re->dir1, re->n_recv,
-		  re->nei_patch * N_DIR + re->dir1);
-	}
-	for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	  struct recv_entry *re = &ri[r].recv_entry_[i];
-	  mprintf("r %d:%d -> %d:%d dir %02d len %2d tag %d\n",
-		  r, re->nei_patch, rank, re->patch, re->dir1, re->n_recv,
-		  re->nei_patch * N_DIR + re->dir1);
-	}
-	mprintf("=====\n");
-      }
-      MPI_Barrier(ddc->obj.comm);
-    }
-  }
-#endif
-
-  for (int r = 0; r < multi->mpi_size; r++) {
-    MPI_Barrier(ddc->obj.comm);
-    if (multi->mpi_rank == r) {
-      for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
-	mprintf("R0 %d:%d -> %d:%d dir %02d len %2d tag %d\n",
-		r, re->nei_patch, multi->mpi_rank, re->patch, re->dir1, re->n_recv,
-		re->nei_patch * N_DIR + re->dir1);
-      }
-    }
-  }
-
+  // reorganize recv_entries into right order (same as send on the sending rank)
   for (int r = 0; r < multi->mpi_size; r++) {
     ri[r].recv_entry_ = calloc(ri[r].n_recv_entries, sizeof(*ri[r].recv_entry_));
-    int cnt = 0;
-    int p = 0;
-    while (cnt < ri[r].n_recv_entries) {
+    for (int p = 0, cnt = 0; cnt < ri[r].n_recv_entries; p++) {
       for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
 	for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	  for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
@@ -335,18 +270,13 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 	    for (int i = 0; i < ri[r].n_recv_entries; i++) {
 	      struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
 	      if (re->nei_patch == p && re->dir1neg == dir1) {
-		mprintf("R1 %d:%d -> %d:%d dir %02d len %2d tag %d\n",
-			r, re->nei_patch, multi->mpi_rank, re->patch,
-			re->dir1, re->n_recv, re->nei_patch * N_DIR + re->dir1);
-		struct mrc_ddc_recv_entry *re_ = &ri[r].recv_entry_[cnt++];
-		*re_ = *re;
+		ri[r].recv_entry_[cnt++] = *re;
 		break;
 	      }
 	    }
 	  }
 	}
       }
-      p++;
     }
   }
 
@@ -354,18 +284,6 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
   for (int r = 0; r < multi->mpi_size; r++) {
     for (int i = 0; i < ri[r].n_recv_entries; i++) {
       ri[r].recv_entry[i] = ri[r].recv_entry_[i];
-    }
-  }
-
-  for (int r = 0; r < multi->mpi_size; r++) {
-    MPI_Barrier(ddc->obj.comm);
-    if (multi->mpi_rank == r) {
-      for (int i = 0; i < ri[r].n_recv_entries; i++) {
-	struct mrc_ddc_recv_entry *re = &ri[r].recv_entry[i];
-	mprintf("Rb %d:%d -> %d:%d dir %02d len %2d tag %d\n",
-		r, re->nei_patch, multi->mpi_rank, re->patch, re->dir1, re->n_recv,
-		re->nei_patch * N_DIR + re->dir1);
-      }
     }
   }
 
@@ -382,6 +300,9 @@ mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2
 			   (re->ihi[2] - re->ilo[2]));
     }
   }
+
+  patt2->send_req = malloc(patt2->n_send_ranks * sizeof(*patt2->send_req));
+  patt2->recv_req = malloc(patt2->n_recv_ranks * sizeof(*patt2->recv_req));
 
   patt2->recv_buf = malloc(patt2->n_recv * ddc->max_n_fields * ddc->size_of_type);
   patt2->send_buf = malloc(patt2->n_send * ddc->max_n_fields * ddc->size_of_type);
