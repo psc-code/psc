@@ -6,6 +6,30 @@
 
 #define N_DIR (27)
 
+struct mrc_ddc_rank_info {
+  struct mrc_ddc_send_entry {
+    int patch; // source patch (source rank is this rank)
+    int nei_patch; // target patch (target rank is index in send_entry)
+    int dir1;  // direction
+    int dir1neg;
+    int n_send;
+  } *send_entry;
+  int n_send_entries;
+  int n_send;
+
+  struct mrc_ddc_recv_entry { // needs to be same as send_entry with different order!
+    int nei_patch;
+    int patch;
+    int dir1neg;
+    int dir1;
+    int n_recv;
+  } *recv_entry;
+  int n_recv_entries;
+  int n_recv;
+
+  struct mrc_ddc_recv_entry *recv_entry_;
+};
+
 struct mrc_ddc_sendrecv {
   int ilo[3], ihi[3];
   int nei_rank;
@@ -71,6 +95,7 @@ struct mrc_ddc_multi {
   int np[3]; // # patches per direction
   int bc[3]; // boundary condition
   int nr_patches;
+  int mpi_size;
   struct mrc_patch *patches;
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
