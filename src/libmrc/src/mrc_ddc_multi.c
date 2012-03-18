@@ -139,15 +139,16 @@ mrc_ddc_multi_get_domain(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_multi_setup_rank_info
+// mrc_ddc_multi_setup_pattern2
 
-static struct mrc_ddc_rank_info *
-mrc_ddc_multi_setup_rank_info(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt)
+static void
+mrc_ddc_multi_setup_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2,
+			     struct mrc_ddc_pattern *patt)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
-  struct mrc_ddc_rank_info *ri =
-    calloc(multi->mpi_size, sizeof(*multi->rank_info));
+  struct mrc_ddc_rank_info *ri = calloc(multi->mpi_size, sizeof(*ri));
+  patt2->ri = ri;
 
   multi->n_recv_ranks = 0;
   multi->n_send_ranks = 0;
@@ -318,24 +319,22 @@ mrc_ddc_multi_setup_rank_info(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt)
       }
     }
   }
-
-  return ri;
 }
 
 // ----------------------------------------------------------------------
 // mrc_ddc_multi_destroy_rank_info
 
 static void
-mrc_ddc_multi_destroy_rank_info(struct mrc_ddc *ddc, struct mrc_ddc_rank_info *ri)
+mrc_ddc_multi_destroy_pattern2(struct mrc_ddc *ddc, struct mrc_ddc_pattern2 *patt2)
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
 
   for (int r = 0; r < multi->mpi_size; r++) {
-    free(ri[r].send_entry);
-    free(ri[r].recv_entry);
-    free(ri[r].recv_entry_);
+    free(patt2->ri[r].send_entry);
+    free(patt2->ri[r].recv_entry);
+    free(patt2->ri[r].recv_entry_);
   }
-  free(ri);
+  free(patt2->ri);
 }
 
 // ----------------------------------------------------------------------
@@ -396,7 +395,7 @@ mrc_ddc_multi_setup(struct mrc_ddc *ddc)
   MPI_Comm_rank(mrc_ddc_comm(ddc), &multi->mpi_rank);
   MPI_Comm_size(mrc_ddc_comm(ddc), &multi->mpi_size);
 
-  multi->rank_info = mrc_ddc_multi_setup_rank_info(ddc, multi->fill_ghosts);
+  mrc_ddc_multi_setup_pattern2(ddc, &multi->patt2, multi->fill_ghosts);
 
   multi->recv_buf = malloc(multi->n_recv * ddc->max_n_fields * ddc->size_of_type);
   multi->send_buf = malloc(multi->n_send * ddc->max_n_fields * ddc->size_of_type);
@@ -441,7 +440,7 @@ mrc_ddc_multi_destroy(struct mrc_ddc *ddc)
   free(multi->send_buf);
   free(multi->recv_buf);
 
-  mrc_ddc_multi_destroy_rank_info(ddc, multi->rank_info);
+  mrc_ddc_multi_destroy_pattern2(ddc, &multi->patt2);
 }
 
 // ----------------------------------------------------------------------
@@ -454,7 +453,7 @@ ddc_run(struct mrc_ddc *ddc, struct mrc_ddc_pattern *patt, int mb, int me,
 	void (*from_buf)(int mb, int me, int p, int ilo[3], int ihi[3], void *buf, void *ctx))
 {
   struct mrc_ddc_multi *multi = to_mrc_ddc_multi(ddc);
-  struct mrc_ddc_rank_info *ri = multi->rank_info;
+  struct mrc_ddc_rank_info *ri = multi->patt2.ri;
 
   // communicate aggregated buffers
   multi->n_recv_ranks = 0;

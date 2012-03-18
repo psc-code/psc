@@ -30,6 +30,10 @@ struct mrc_ddc_rank_info {
   struct mrc_ddc_recv_entry *recv_entry_;
 };
 
+struct mrc_ddc_pattern2 {
+  struct mrc_ddc_rank_info *ri;
+};
+
 struct mrc_ddc_sendrecv {
   int ilo[3], ihi[3];
   int nei_rank;
@@ -104,7 +108,7 @@ struct mrc_ddc_multi {
   struct mrc_ddc_patch *ddc_patches;
   struct mrc_ddc_pattern *add_ghosts;
   struct mrc_ddc_pattern *fill_ghosts;
-  struct mrc_ddc_rank_info *rank_info;
+  struct mrc_ddc_pattern2 patt2;
 };
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
