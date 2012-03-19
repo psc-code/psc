@@ -6,6 +6,44 @@
 
 #define N_DIR (27)
 
+struct mrc_ddc_sendrecv_entry {
+  int patch; // patch on this rank
+  int nei_patch; // partner patch (partner rank is index in send/recv_entry)
+  int dir1;  // direction
+  int len;
+  int ilo[3];
+  int ihi[3];
+};
+
+struct mrc_ddc_rank_info {
+  // what to send, by rank
+  struct mrc_ddc_sendrecv_entry *send_entry;
+  int n_send_entries;
+  int n_send;
+
+  // what to receive, by rank
+  struct mrc_ddc_sendrecv_entry *recv_entry;
+  int n_recv_entries;
+  int n_recv;
+
+  // for setting up the recv_entry's in the wrong order first
+  struct mrc_ddc_sendrecv_entry *recv_entry_;
+};
+
+struct mrc_ddc_pattern2 {
+  // communication info for each rank (NULL for those we don't communicate with)
+  struct mrc_ddc_rank_info *ri;
+  // number of ranks we're communicating with (excluding self)
+  int n_recv_ranks, n_send_ranks;
+  // one request each per rank we're communicating with
+  MPI_Request *send_req, *recv_req;
+  // total number of (ddc->mpi_type) we're sending / receivng to all ranks
+  int n_send, n_recv;
+  // buffers with the above sizes
+  void *send_buf, *recv_buf;
+  void *local_buf;
+};
+
 struct mrc_ddc_sendrecv {
   int ilo[3], ihi[3];
   int nei_rank;
@@ -62,21 +100,15 @@ extern struct mrc_ddc_ops mrc_ddc_simple_ops;
 // ======================================================================
 // mrc_ddc_multi
 
-struct mrc_ddc_patch {
-  int patch_idx[3];
-};
-
 struct mrc_ddc_multi {
   struct mrc_domain *domain;
   int np[3]; // # patches per direction
   int bc[3]; // boundary condition
   int nr_patches;
   struct mrc_patch *patches;
-  struct mrc_ddc_patch *ddc_patches;
-  struct mrc_ddc_pattern *add_ghosts;
-  struct mrc_ddc_pattern *fill_ghosts;
-  MPI_Request *send_reqs;
-  MPI_Request *recv_reqs;
+  int mpi_rank, mpi_size;
+  struct mrc_ddc_pattern2 add_ghosts2;
+  struct mrc_ddc_pattern2 fill_ghosts2;
 };
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
