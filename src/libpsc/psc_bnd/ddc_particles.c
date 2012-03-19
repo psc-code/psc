@@ -157,7 +157,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   // OPT, could be prepared once
   struct info_by_rank *info = calloc(size, sizeof(*info));
 
-  // count how many recv_entrie per rank
+  // count how many recv_entries per rank
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
 
