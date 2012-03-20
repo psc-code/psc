@@ -7,6 +7,7 @@ bin_PROGRAMS = \
 	VLI \
 	psc_restart \
 	psc_es1 \
+	psc_bohm \
 	psc_kelvin_helmholtz \
 	psc_harris \
 	psc_bubble \
@@ -22,6 +23,7 @@ LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 nodist_EXTRA_VLI_SOURCES = dummy.cxx
 nodist_EXTRA_psc_restart_SOURCES = dummy.cxx
 nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
+nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_harris_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx

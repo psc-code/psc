@@ -17,6 +17,7 @@ src/VLI
 src/psc_restart
 src/psc_kelvin_helmholtz
 src/psc_es1
+src/psc_bohm
 src/psc_harris
 src/psc_bubble
 src/psc_bubble_yz
