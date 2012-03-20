@@ -83,9 +83,13 @@ psc_harris_create(struct psc *psc)
   psc->domain.bnd_fld_hi[1] = BND_FLD_CONDUCTING_WALL;
   psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part[1] = BND_PART_REFLECTING;
-  psc->domain.bnd_part[2] = BND_PART_PERIODIC;
+ 
+  psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[1] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_hi[1] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");

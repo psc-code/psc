@@ -62,9 +62,13 @@ psc_case_dynamic_set_from_options(struct psc_case *_case)
   ppsc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
   ppsc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
   //Set boundary consitions for the particles
-  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC;
-  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
-  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
+
+  ppsc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   //Insert a laser pulse
   struct psc_bnd_fields *bnd_fields = psc_push_fields_get_bnd_fields(ppsc->push_fields);

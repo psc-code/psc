@@ -72,9 +72,13 @@ psc_case_microsphere_set_from_options(struct psc_case *_case)
   ppsc->domain.bnd_fld_hi[1] = BND_FLD_OPEN;
   ppsc->domain.bnd_fld_lo[2] = BND_FLD_OPEN;
   ppsc->domain.bnd_fld_hi[2] = BND_FLD_OPEN;
-  ppsc->domain.bnd_part[0] = BND_PART_PERIODIC; // FIXME
-  ppsc->domain.bnd_part[1] = BND_PART_PERIODIC;
-  ppsc->domain.bnd_part[2] = BND_PART_PERIODIC;
+
+  ppsc->domain.bnd_part_lo[0] = BND_PART_PERIODIC; // FIXME
+  ppsc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  ppsc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   double *length = ppsc->domain.length;
   double w_normal = msphere->width_normal;

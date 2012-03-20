@@ -76,12 +76,20 @@ static struct param psc_descr[] = {
   { "bnd_field_hi_z", VAR(domain.bnd_fld_hi[2])   , PARAM_SELECT(BND_FLD_PERIODIC,
 								 bnd_fld_descr) },
 
-  { "bnd_particle_x", VAR(domain.bnd_part[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_x", VAR(domain.bnd_part_lo[0])     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_y", VAR(domain.bnd_part[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_y", VAR(domain.bnd_part_lo[1])     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
-  { "bnd_particle_z", VAR(domain.bnd_part[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+  { "bnd_particle_lo_z", VAR(domain.bnd_part_lo[2])     , PARAM_SELECT(BND_PART_PERIODIC,
 								 bnd_part_descr) },
+
+  { "bnd_particle_hi_x", VAR(domain.bnd_part_hi[0])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+  { "bnd_particle_hi_y", VAR(domain.bnd_part_hi[1])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+  { "bnd_particle_hi_z", VAR(domain.bnd_part_hi[2])     , PARAM_SELECT(BND_PART_PERIODIC,
+								 bnd_part_descr) },
+
   { "use_pml",        VAR(domain.use_pml)         , PARAM_BOOL(false)    },
 
   // psc_params
@@ -356,7 +364,8 @@ psc_setup_domain(struct psc *psc)
       // set bnd to periodic (FIXME?)
       domain->bnd_fld_lo[d] = BND_FLD_PERIODIC;
       domain->bnd_fld_hi[d] = BND_FLD_PERIODIC;
-      domain->bnd_part[d]   = BND_PART_PERIODIC;
+      domain->bnd_part_lo[d]   = BND_PART_PERIODIC;
+      domain->bnd_part_hi[d]   = BND_PART_PERIODIC;
     } else {
       if ((domain->bnd_fld_lo[d] >= BND_FLD_UPML && domain->bnd_fld_lo[d] <= BND_FLD_TIME) ||
 	  (domain->bnd_fld_hi[d] >= BND_FLD_UPML && domain->bnd_fld_hi[d] <= BND_FLD_TIME)) {

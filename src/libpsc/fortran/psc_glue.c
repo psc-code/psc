@@ -225,8 +225,10 @@ PSC_set_domain(struct psc *psc)
   }
   int use_pml_ = p->use_pml;
   int ilo[3] = {};
+
+  // assert(p->bnd_part_lo==p->bnd_part_hi); FIX ME
   PSC_set_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		       p->bnd_part, np, psc->ibn, &use_pml_);
+		     p->bnd_part_lo, np, psc->ibn, &use_pml_);
 }
 
 void

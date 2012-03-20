@@ -109,9 +109,13 @@ psc_es1_create(struct psc *psc)
   psc->domain.bnd_fld_hi[1] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_lo[2] = BND_FLD_PERIODIC;
   psc->domain.bnd_fld_hi[2] = BND_FLD_PERIODIC;
-  psc->domain.bnd_part[0] = BND_PART_PERIODIC;
-  psc->domain.bnd_part[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part[2] = BND_PART_PERIODIC;
+
+  psc->domain.bnd_part_lo[0] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   psc_moments_set_type(psc->moments, "1st_cc");
 }

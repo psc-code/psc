@@ -60,9 +60,12 @@ psc_test_singlepart_create(struct psc *psc)
   psc->domain.bnd_fld_hi[1] = BND_FLD_UPML;
   psc->domain.bnd_fld_lo[2] = BND_FLD_UPML;
   psc->domain.bnd_fld_hi[2] = BND_FLD_UPML;
-  psc->domain.bnd_part[0] = BND_PART_REFLECTING;
-  psc->domain.bnd_part[1] = BND_PART_REFLECTING;
-  psc->domain.bnd_part[2] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_lo[0] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_hi[0] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_lo[1] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_hi[1] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_hi[2] = BND_PART_REFLECTING;
 }
 
 // ----------------------------------------------------------------------

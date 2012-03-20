@@ -91,9 +91,12 @@ psc_case_thinfoil_set_from_options(struct psc_case *_case)
   ppsc->domain.bnd_fld_hi[1] = 1;
   ppsc->domain.bnd_fld_lo[2] = 3; // time
   ppsc->domain.bnd_fld_hi[2] = 2; // upml
-  ppsc->domain.bnd_part[0] = 0;
-  ppsc->domain.bnd_part[1] = 0;
-  ppsc->domain.bnd_part[2] = 0;
+  ppsc->domain.bnd_part_lo[0] = 0;
+  ppsc->domain.bnd_part_hi[0] = 0;
+  ppsc->domain.bnd_part_lo[1] = 0;
+  ppsc->domain.bnd_part_hi[1] = 0;
+  ppsc->domain.bnd_part_lo[2] = 0;
+  ppsc->domain.bnd_part_hi[2] = 0;
 }
 
 static void

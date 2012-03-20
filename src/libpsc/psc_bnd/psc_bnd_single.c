@@ -225,7 +225,7 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	for (int d = 0; d < 3; d++) {
 	  if (xi[d] < 0) {
 	    if (xi[d] < xgb[d] - xb[d]) {
-	      switch (psc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part_lo[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * (xgb[d] - xb[d]) - xi[d];
 		pxi[d] = -pxi[d];
@@ -245,7 +245,7 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	    }
 	  } else if (xi[d] >= xe[d] - xb[d]) {
 	    if (xi[d] >= xge[d] - xb[d]) {
-	      switch (psc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part_hi[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * (xge[d] - xb[d]) - xi[d];
 		pxi[d] = -pxi[d];
@@ -341,7 +341,7 @@ psc_bnd_single_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 	for (int d = 0; d < 3; d++) {
 	  if (xi[d] < xb[d]) {
 	    if (xi[d] < xgb[d]) {
-	      switch (psc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part_lo[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xgb[d] - xi[d];
 		pxi[d] = -pxi[d];
@@ -360,7 +360,7 @@ psc_bnd_single_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 	    }
 	  } else if (xi[d] > xe[d]) {
 	    if (xi[d] > xge[d]) {
-	      switch (psc->domain.bnd_part[d]) {
+	      switch (psc->domain.bnd_part_hi[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xge[d] - xi[d];
 		pxi[d] = -pxi[d];
