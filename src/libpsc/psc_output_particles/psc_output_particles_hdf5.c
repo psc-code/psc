@@ -39,7 +39,7 @@ cell_index_3_to_1(int *ldims, int j0, int j1, int j2)
 }
 
 static inline int
-get_cell_index(int p, const particle_c_t *part)
+get_sort_index(int p, const particle_c_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particle_c_real_t dxi = 1.f / ppsc->dx[0];
@@ -56,8 +56,18 @@ get_cell_index(int p, const particle_c_t *part)
   assert(j0 >= 0 && j0 < ldims[0]);
   assert(j1 >= 0 && j1 < ldims[1]);
   assert(j2 >= 0 && j2 < ldims[2]);
+
+  int kind;
+  if (part->qni < 0.) {
+    kind = 0; // electron
+  } else if (part->qni > 0.) {
+    kind = 1; // ion
+  } else {
+    kind = 2; // neutral
+  }
+  assert(kind < ppsc->prm.nr_kinds);
  
-  return cell_index_3_to_1(ldims, j0, j1, j2);
+  return cell_index_3_to_1(ldims, j0, j1, j2) * ppsc->prm.nr_kinds + kind;
 }
 
 // ----------------------------------------------------------------------
@@ -80,20 +90,20 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   int **map = malloc(particles->nr_patches * sizeof(*off));
   for (int p = 0; p < particles->nr_patches; p++) {
     int *ldims = ppsc->patch[p].ldims;
-    int nr_cells = ldims[0] * ldims[1] * ldims[2];
-    off[p] = calloc(nr_cells + 1, sizeof(*off[p]));
+    int nr_indices = ldims[0] * ldims[1] * ldims[2] * ppsc->prm.nr_kinds;
+    off[p] = calloc(nr_indices + 1, sizeof(*off[p]));
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
 
     // counting sort to get map 
     for (int n = 0; n < pp->n_part; n++) {
       particle_c_t *part = particles_c_get_one(pp, n);
-      int ci = get_cell_index(p, part);
+      int ci = get_sort_index(p, part);
       off[p][ci]++;
     }
     // prefix sum to get offsets
     int o = 0;
-    int *off2 = malloc((nr_cells + 1) * sizeof(*off2));
-    for (int ci = 0; ci <= nr_cells; ci++) {
+    int *off2 = malloc((nr_indices + 1) * sizeof(*off2));
+    for (int ci = 0; ci <= nr_indices; ci++) {
       int cnt = off[p][ci];
       off[p][ci] = o; // this will be saved for later
       off2[ci] = o; // this one will overwritten when making the map
@@ -104,8 +114,8 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     map[p] = malloc(pp->n_part * sizeof(*map[p]));
     for (int n = 0; n < pp->n_part; n++) {
       particle_c_t *part = particles_c_get_one(pp, n);
-      int ci = get_cell_index(p, part);
-      map[p][off2[ci]++] = n;
+      int si = get_sort_index(p, part);
+      map[p][off2[si]++] = n;
     }
     free(off2);
   }  
@@ -139,14 +149,17 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     for (int jz = ilo[2]; jz < ihi[2]; jz++) {
       for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	  int ci = cell_index_3_to_1(ldims, jx, jy, jz);
-	  for (int n = off[p][ci]; n < off[p][ci+1]; n++) {
-	    particle_c_t *part = particles_c_get_one(pp, map[p][n]);
-	    fprintf(file, "%d %g %g %g %g %g %g %g %g %g %d\n",
-		    nn, part->xi, part->yi, part->zi,
-		    part->pxi, part->pyi, part->pzi,
-		    part->qni, part->mni, part->wni, ci);
-	    nn++;
+	  for (int kind = 0; kind < ppsc->prm.nr_kinds; kind++) {
+	    int ci = cell_index_3_to_1(ldims, jx, jy, jz);
+	    int si = ci * ppsc->prm.nr_kinds + kind;
+	    for (int n = off[p][si]; n < off[p][si+1]; n++) {
+	      particle_c_t *part = particles_c_get_one(pp, map[p][n]);
+	      fprintf(file, "%d %g %g %g %g %g %g %g %g %g %d %d\n",
+		      nn, part->xi, part->yi, part->zi,
+		      part->pxi, part->pyi, part->pzi,
+		      part->qni, part->mni, part->wni, ci, kind);
+	      nn++;
+	    }
 	  }
 	}
       }
