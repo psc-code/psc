@@ -129,26 +129,13 @@ get_sort_index(int p, const particle_c_t *part)
 }
 
 // ----------------------------------------------------------------------
-// psc_output_particles_hdf5_run
+// count_sort
 
 static void
-psc_output_particles_hdf5_run(struct psc_output_particles *out,
-			       mparticles_base_t *particles_base)
+count_sort(mparticles_c_t *particles, int **off, int **map)
 {
-  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
-  int ierr;
-
-  if (hdf5->every_step < 0 ||
-      ppsc->timestep % hdf5->every_step != 0) {
-    return;
-  }
-
   int nr_kinds = ppsc->prm.nr_kinds;
 
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
-
-  int **off = malloc(particles->nr_patches * sizeof(*off));
-  int **map = malloc(particles->nr_patches * sizeof(*off));
   for (int p = 0; p < particles->nr_patches; p++) {
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
@@ -180,18 +167,18 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
     free(off2);
   }  
+}
 
-  // set hi to gdims by default (if not set differently before)
-  // and calculate rdims (global dims of region we're writing)
-  int rdims[3];
-  for (int d = 0; d < 3; d++) {
-    assert(hdf5->lo[d] >= 0);
-    if (hdf5->hi[d] == 0) {
-      hdf5->hi[d] = ppsc->domain.gdims[d];
-    }
-    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
-    rdims[d] = hdf5->hi[d] - hdf5->lo[d];
-  }
+// ----------------------------------------------------------------------
+// make_local_particle_array
+
+static struct hdf5_prt *
+make_local_particle_array(struct psc_output_particles *out,
+			  mparticles_c_t *particles, int **off, int **map,
+			  int *idx_begin, int *idx_end, int *rdims, int *p_n_write)
+{
+  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
+  int nr_kinds = ppsc->prm.nr_kinds;
 
   // count all particles to be written locally
   int n_write = 0;
@@ -216,10 +203,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
   }
 
-  // alloc
   struct hdf5_prt *arr = malloc(n_write * sizeof(*arr));
-  int *idx_begin = malloc(nr_kinds * rdims[0] * rdims[1] * rdims[2] * sizeof(*idx_begin));
-  int *idx_end   = malloc(nr_kinds * rdims[0] * rdims[1] * rdims[2] * sizeof(*idx_end));
 
   // copy particles to be written into temp array
   int nn = 0;
@@ -259,6 +243,54 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
       }
     }
   }
+
+  *p_n_write = n_write;
+  return arr;
+}
+
+// ----------------------------------------------------------------------
+// psc_output_particles_hdf5_run
+
+static void
+psc_output_particles_hdf5_run(struct psc_output_particles *out,
+			       mparticles_base_t *particles_base)
+{
+  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
+  int ierr;
+
+  if (hdf5->every_step < 0 ||
+      ppsc->timestep % hdf5->every_step != 0) {
+    return;
+  }
+
+  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
+  int nr_kinds = ppsc->prm.nr_kinds;
+
+  // set hi to gdims by default (if not set differently before)
+  // and calculate rdims (global dims of region we're writing)
+  int rdims[3];
+  for (int d = 0; d < 3; d++) {
+    assert(hdf5->lo[d] >= 0);
+    if (hdf5->hi[d] == 0) {
+      hdf5->hi[d] = ppsc->domain.gdims[d];
+    }
+    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
+    rdims[d] = hdf5->hi[d] - hdf5->lo[d];
+  }
+
+  int **off = malloc(particles->nr_patches * sizeof(*off));
+  int **map = malloc(particles->nr_patches * sizeof(*off));
+
+  count_sort(particles, map, off);
+
+  // alloc
+  int *idx_begin = malloc(nr_kinds * rdims[0] * rdims[1] * rdims[2] * sizeof(*idx_begin));
+  int *idx_end   = malloc(nr_kinds * rdims[0] * rdims[1] * rdims[2] * sizeof(*idx_end));
+
+  int n_write;
+  struct hdf5_prt *arr =
+    make_local_particle_array(out, particles, map, off, idx_begin, idx_end, rdims,
+			      &n_write);
 
   int rank;
   MPI_Comm_rank(psc_output_particles_comm(out), &rank);
