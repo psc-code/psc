@@ -2,6 +2,7 @@
 #include "psc_output_particles_private.h"
 
 #include <mrc_params.h>
+#include <mrc_profile.h>
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -37,6 +38,7 @@ struct psc_output_particles_hdf5 {
 
   // internal
   hid_t prt_type;
+  int wdims[3]; // dimensions of the subdomain we're actually writing
 };
 
 #define VAR(x) (void *)offsetof(struct psc_output_particles_hdf5, x)
@@ -73,6 +75,17 @@ psc_output_particles_hdf5_setup(struct psc_output_particles *out)
   H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
   
   hdf5->prt_type = id;
+
+  // set hi to gdims by default (if not set differently before)
+  // and calculate wdims (global dims of region we're writing)
+  for (int d = 0; d < 3; d++) {
+    assert(hdf5->lo[d] >= 0);
+    if (hdf5->hi[d] == 0) {
+      hdf5->hi[d] = ppsc->domain.gdims[d];
+    }
+    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
+    hdf5->wdims[d] = hdf5->hi[d] - hdf5->lo[d];
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -266,6 +279,66 @@ make_local_particle_array(struct psc_output_particles *out,
   return arr;
 }
 
+static void
+write_particles(struct psc_output_particles *out, int n_write, int n_off,
+		int n_total, struct hdf5_prt *arr, hid_t group, hid_t dxpl)
+{
+  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
+  int ierr;
+
+  hsize_t mdims[1] = { n_write };
+  hsize_t fdims[1] = { n_total };
+  hsize_t foff[1] = { n_off };
+  hid_t memspace = H5Screate_simple(1, mdims, NULL); H5_CHK(memspace);
+  hid_t filespace = H5Screate_simple(1, fdims, NULL); H5_CHK(filespace);
+  ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
+			       mdims, NULL); CE;
+  
+  hid_t dset = H5Dcreate(group, "1d", hdf5->prt_type, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dwrite(dset, hdf5->prt_type, memspace, filespace, dxpl, arr); CE;
+  
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Sclose(memspace); CE;
+}
+
+static void
+write_idx(struct psc_output_particles *out, int *gidx_begin, int *gidx_end,
+	  hid_t group, hid_t dxpl)
+{
+  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
+  int ierr;
+
+  hsize_t fdims[4] = { ppsc->prm.nr_kinds,
+		       hdf5->wdims[2], hdf5->wdims[1], hdf5->wdims[0] };
+  hid_t filespace = H5Screate_simple(4, fdims, NULL); H5_CHK(filespace);
+  hid_t memspace;
+
+  int rank;
+  MPI_Comm_rank(psc_output_particles_comm(out), &rank);
+  if (rank == 0) {
+    memspace = H5Screate_simple(4, fdims, NULL); H5_CHK(memspace);
+  } else {
+    memspace = H5Screate(H5S_NULL);
+    H5Sselect_none(memspace);
+    H5Sselect_none(filespace);
+  }
+
+  hid_t dset = H5Dcreate(group, "idx_begin", H5T_NATIVE_INT, filespace,
+			 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dwrite(dset, H5T_NATIVE_INT, memspace, filespace, dxpl, gidx_begin); CE;
+  ierr = H5Dclose(dset); CE;
+
+  dset = H5Dcreate(group, "idx_end", H5T_NATIVE_INT, filespace,
+			 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dwrite(dset, H5T_NATIVE_INT, memspace, filespace, dxpl, gidx_end); CE;
+  ierr = H5Dclose(dset); CE;
+
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Sclose(memspace); CE;
+}
+
 // ----------------------------------------------------------------------
 // psc_output_particles_hdf5_run
 
@@ -277,29 +350,27 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   MPI_Comm comm = psc_output_particles_comm(out);
   int ierr;
 
+  static int pr_A, pr_B, pr_C;
+  if (!pr_A) {
+    pr_A = prof_register("outp: local", 1., 0, 0);
+    pr_B = prof_register("outp: comm", 1., 0, 0);
+    pr_C = prof_register("outp: write", 1., 0, 0);
+  }
+
   if (hdf5->every_step < 0 ||
       ppsc->timestep % hdf5->every_step != 0) {
     return;
   }
 
+  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
+
+  prof_start(pr_A);
   int rank;
   MPI_Comm_rank(comm, &rank);
 
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
   struct mrc_patch_info info;
   int nr_kinds = ppsc->prm.nr_kinds;
-
-  // set hi to gdims by default (if not set differently before)
-  // and calculate rdims (global dims of region we're writing)
-  int rdims[3];
-  for (int d = 0; d < 3; d++) {
-    assert(hdf5->lo[d] >= 0);
-    if (hdf5->hi[d] == 0) {
-      hdf5->hi[d] = ppsc->domain.gdims[d];
-    }
-    assert(hdf5->hi[d] <= ppsc->domain.gdims[d]);
-    rdims[d] = hdf5->hi[d] - hdf5->lo[d];
-  }
+  int *wdims = hdf5->wdims;
 
   int **off = malloc(particles->nr_patches * sizeof(*off));
   int **map = malloc(particles->nr_patches * sizeof(*off));
@@ -308,53 +379,33 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 
   int **idx = malloc(particles->nr_patches * sizeof(*idx));
 
-  // find local particle and idx arrays
-  int n_write, n_off, n_total;
-  struct hdf5_prt *arr =
-    make_local_particle_array(out, particles, map, off, idx,
-			      &n_write, &n_off, &n_total);
-
   int *gidx_begin = NULL, *gidx_end = NULL;
   if (rank == 0) {
     // alloc global idx array
-    gidx_begin = malloc(nr_kinds * rdims[0]*rdims[1]*rdims[2] * sizeof(*gidx_begin));
-    gidx_end = malloc(nr_kinds * rdims[0]*rdims[1]*rdims[2] * sizeof(*gidx_end));
-    for (int jz = 0; jz < rdims[2]; jz++) {
-      for (int jy = 0; jy < rdims[1]; jy++) {
-	for (int jx = 0; jx < rdims[0]; jx++) {
+    gidx_begin = malloc(nr_kinds * wdims[0]*wdims[1]*wdims[2] * sizeof(*gidx_begin));
+    gidx_end = malloc(nr_kinds * wdims[0]*wdims[1]*wdims[2] * sizeof(*gidx_end));
+    for (int jz = 0; jz < wdims[2]; jz++) {
+      for (int jy = 0; jy < wdims[1]; jy++) {
+	for (int jx = 0; jx < wdims[0]; jx++) {
 	  for (int kind = 0; kind < nr_kinds; kind++) {
-	    int ii = ((kind * rdims[2] + jz) * rdims[1] + jy) * rdims[0] + jx;
+	    int ii = ((kind * wdims[2] + jz) * wdims[1] + jy) * wdims[0] + jx;
 	    gidx_begin[ii] = -1;
 	    gidx_end[ii] = -1;
 	  }
 	}
       }
     }
+  }
 
-    // build global idx array
-    for (int p = 0; p < particles->nr_patches; p++) {
-      mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
-      int ilo[3], ihi[3], ld[3], sz;
-      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
-      
-      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
-	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
-	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
-	    for (int kind = 0; kind < nr_kinds; kind++) {
-	      int ix = jx + info.off[0];
-	      int iy = jy + info.off[1];
-	      int iz = jz + info.off[2];
-	      int jj = ((kind * ld[2] + jz - ilo[2])
-			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
-	      int ii = ((kind * rdims[2] + iz) * rdims[1] + iy) * rdims[0] + ix;
-	      gidx_begin[ii] = idx[p][jj];
-	      gidx_end[ii]   = idx[p][jj + sz];
-	    }
-	  }
-	}
-      }
-    }
+  // find local particle and idx arrays
+  int n_write, n_off, n_total;
+  struct hdf5_prt *arr =
+    make_local_particle_array(out, particles, map, off, idx,
+			      &n_write, &n_off, &n_total);
+  prof_stop(pr_A);
 
+  prof_start(pr_B);
+  if (rank == 0) {
     int nr_global_patches;
     mrc_domain_get_nr_global_patches(ppsc->mrc_domain, &nr_global_patches);
 
@@ -373,8 +424,33 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 		&recv_reqs[p]);
     }
 
+    // build global idx array, local part
+    for (int p = 0; p < particles->nr_patches; p++) {
+      mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
+      int ilo[3], ihi[3], ld[3], sz;
+      find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
+      
+      for (int jz = ilo[2]; jz < ihi[2]; jz++) {
+	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
+	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
+	    for (int kind = 0; kind < nr_kinds; kind++) {
+	      int ix = jx + info.off[0];
+	      int iy = jy + info.off[1];
+	      int iz = jz + info.off[2];
+	      int jj = ((kind * ld[2] + jz - ilo[2])
+			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
+	      int ii = ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
+	      gidx_begin[ii] = idx[p][jj];
+	      gidx_end[ii]   = idx[p][jj + sz];
+	    }
+	  }
+	}
+      }
+    }
+
     MPI_Waitall(nr_global_patches, recv_reqs, MPI_STATUSES_IGNORE);
 
+    // build global idx array, remote part
     for (int p = 0; p < nr_global_patches; p++) {
       mrc_domain_get_global_patch_info(ppsc->mrc_domain, p, &info);
       if (info.rank == rank) { // skip local patches
@@ -391,7 +467,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
 	      int iz = jz + info.off[2];
 	      int jj = ((kind * ld[2] + jz - ilo[2])
 			* ld[1] + jy - ilo[1]) * ld[0] + jx - ilo[0];
-	      int ii = ((kind * rdims[2] + iz) * rdims[1] + iy) * rdims[0] + ix;
+	      int ii = ((kind * wdims[2] + iz) * wdims[1] + iy) * wdims[0] + ix;
 	      gidx_begin[ii] = recv_bufs[p][jj];
 	      gidx_end[ii]   = recv_bufs[p][jj + sz];
 	    }
@@ -402,7 +478,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     }
     free(recv_bufs);
     free(recv_reqs);
-  } else { // rank != 0, send -> rank 0
+  } else { // rank != 0: send to rank 0
     MPI_Request *send_reqs = malloc(particles->nr_patches * sizeof(*send_reqs));
     for (int p = 0; p < particles->nr_patches; p++) {
       mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
@@ -414,7 +490,9 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
     MPI_Waitall(particles->nr_patches, send_reqs, MPI_STATUSES_IGNORE);
     free(send_reqs);
   }
+  prof_stop(pr_B);
 
+  prof_start(pr_C);
   char filename[strlen(hdf5->data_dir) + strlen(hdf5->basename) + 20];
   sprintf(filename, "%s/%s.%06d_p%06d.h5", hdf5->data_dir,
 	  hdf5->basename, ppsc->timestep, 0);
@@ -454,52 +532,15 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   }
 #endif
 
-  hsize_t fdims[4] = { nr_kinds, rdims[2], rdims[1], rdims[0] };
-  hid_t filespace = H5Screate_simple(4, fdims, NULL); H5_CHK(filespace);
-  hid_t memspace;
-  if (rank == 0) {
-    memspace = H5Screate_simple(4, fdims, NULL); H5_CHK(memspace);
-  } else {
-    memspace = H5Screate(H5S_NULL);
-    H5Sselect_none(memspace);
-    H5Sselect_none(filespace);
-  }
+  write_idx(out, gidx_begin, gidx_end, groupp, dxpl);
+  write_particles(out, n_write, n_off, n_total, arr, groupp, dxpl);
 
-  hid_t dset = H5Dcreate(groupp, "idx_begin", H5T_NATIVE_INT, filespace,
-			 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
-  ierr = H5Dwrite(dset, H5T_NATIVE_INT, memspace, filespace, dxpl, gidx_begin); CE;
-  ierr = H5Dclose(dset); CE;
-
-  dset = H5Dcreate(groupp, "idx_end", H5T_NATIVE_INT, filespace,
-			 H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
-  ierr = H5Dwrite(dset, H5T_NATIVE_INT, memspace, filespace, dxpl, gidx_end); CE;
-  ierr = H5Dclose(dset); CE;
-
-  ierr = H5Sclose(filespace); CE;
-  ierr = H5Sclose(memspace); CE;
-
-  {
-    hsize_t mdims[1] = { n_write };
-    hsize_t fdims[1] = { n_total };
-    hsize_t foff[1] = { n_off };
-    hid_t memspace = H5Screate_simple(1, mdims, NULL); H5_CHK(memspace);
-    hid_t filespace = H5Screate_simple(1, fdims, NULL); H5_CHK(filespace);
-    ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
-			       mdims, NULL); CE;
-    
-    hid_t dset = H5Dcreate(groupp, "1d", hdf5->prt_type, filespace, H5P_DEFAULT,
-			   H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dset);
-    ierr = H5Dwrite(dset, hdf5->prt_type, memspace, filespace, dxpl, arr); CE;
-    
-    ierr = H5Dclose(dset); CE;
-    ierr = H5Sclose(filespace); CE;
-    ierr = H5Sclose(memspace); CE;
-  }
   ierr = H5Pclose(dxpl); CE;
 
   H5Gclose(groupp);
   H5Gclose(group);
   H5Fclose(file);
+  prof_stop(pr_C);
 
   free(arr);
   free(gidx_begin);
