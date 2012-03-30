@@ -270,17 +270,15 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
-    int ib[3], im[3], nr_comp, with_array;
+    int ib[3], im[3], nr_comp;
     ierr = H5LTget_attribute_int(groupp, ".", "ib", ib); CE;
     ierr = H5LTget_attribute_int(groupp, ".", "im", im); CE;
     ierr = H5LTget_attribute_int(groupp, ".", "nr_comp", &nr_comp); CE;
-    ierr = H5LTget_attribute_int(groupp, ".", "with_array", &with_array); CE;
     for (int d = 0; d < 3; d++) {
       assert(ib[d] == fields->ib[d]);
       assert(im[d] == fields->im[d]);
     }
     assert(nr_comp == fields->nr_comp);
-    assert(!with_array);
     ierr = H5LTread_dataset_double(groupp, "fields_c", fields->flds); CE;
     ierr = H5Gclose(groupp); CE;
   }
