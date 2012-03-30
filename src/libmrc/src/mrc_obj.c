@@ -565,7 +565,9 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
     char *p = (char *) obj->subctx + obj->ops->param_offset;
     mrc_params_read(p, obj->ops->param_descr, mrc_obj_name(obj), io);
   }
-  if (cls->read) {
+  if (obj->ops && obj->ops->read) {
+    obj->ops->read(obj, io);
+  } else if (cls->read) {
     cls->read(obj, io);
   } else {
     mrc_obj_read_children(obj, io);

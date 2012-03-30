@@ -561,17 +561,21 @@ static void
 _psc_read(struct psc *psc, struct mrc_io *io)
 {
   const char *path = psc_name(psc);
-
-  psc_read_children(psc, io);
-
   mrc_io_read_attr_int(io, path, "timestep", &psc->timestep);
 
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
+  mrc_domain_setup(psc->mrc_domain);
+
   psc->particles = psc_mparticles_read(io, "mparticles");
   psc->flds = psc_mfields_read(io, "mfields");
   psc->mphotons = psc_mphotons_read(io, "mphotons");
 
-  psc_setup(psc);
+  psc_setup_coeff(psc);
+  psc_setup_patches(psc, psc->mrc_domain);
+  psc_setup_fortran(psc);
+
+  psc_read_children(psc, io);
+  psc_setup_children(psc, io);
 }
 
 // ----------------------------------------------------------------------
