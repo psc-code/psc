@@ -42,8 +42,6 @@ static void
 mrc_domain_simple_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-  assert(!domain->is_setup);
-  domain->is_setup = true;
 
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);

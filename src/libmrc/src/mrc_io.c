@@ -14,8 +14,6 @@
 // ======================================================================
 // mrc_io
 
-#define check_is_setup(io) do { assert(io->is_setup); } while (0)
-
 static inline struct mrc_io_ops *
 mrc_io_ops(struct mrc_io *io)
 {
@@ -68,7 +66,6 @@ _mrc_io_setup(struct mrc_io *io)
 {
   MPI_Comm_rank(io->obj.comm, &io->rank);
   MPI_Comm_size(io->obj.comm, &io->size);
-  io->is_setup = true;
 }
 
 // ----------------------------------------------------------------------
@@ -77,7 +74,8 @@ _mrc_io_setup(struct mrc_io *io)
 void
 mrc_io_open(struct mrc_io *io, const char *mode, int step, float time)
 {
-  check_is_setup(io);
+  assert(mrc_io_is_setup(io));
+
   struct mrc_io_ops *ops = mrc_io_ops(io);
   io->step = step;
   io->time = time;

@@ -21,6 +21,7 @@ struct mrc_obj {
   list_t child_entry; //< an mrc_obj can be child of exactly one parent mrc_obj
   list_t children_list; //< this is the list where a parent keeps track of children
   bool view_flag; //< if true, call ::view() at the end of ::setup()
+  bool is_setup; //< keep track of whether ::setup() was already called
 };
 
 typedef void (*mrc_void_func_t)(void);
@@ -109,6 +110,7 @@ void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *cls);
 void mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
+bool mrc_obj_is_setup(struct mrc_obj *obj);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
 #define MRC_CLASS_DECLARE(pfx, obj_type)				\
@@ -315,6 +317,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _write(obj_type *obj, struct mrc_io *io)			\
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
+  }									\
+									\
+  static inline bool 							\
+  pfx ## _is_setup(obj_type *obj)					\
+  {									\
+    return mrc_obj_is_setup((struct mrc_obj *)obj);			\
   }									\
 									\
   static inline mrc_void_func_t						\

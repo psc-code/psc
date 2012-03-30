@@ -521,9 +521,21 @@ mrc_obj_setup_super(struct mrc_obj *obj)
   }
 }
 
+bool
+mrc_obj_is_setup(struct mrc_obj *obj)
+{
+  return obj->is_setup;
+}
+
 void
 mrc_obj_setup(struct mrc_obj *obj)
 {
+  if (obj->is_setup) {
+    mprintf("WARNING: %s/%p is set up twice!\n\n", obj->cls->name, obj);
+    assert(0);
+  }
+  obj->is_setup = true;
+
   if (obj->ops && obj->ops->setup) {
     obj->ops->setup(obj);
   } else {
@@ -564,7 +576,17 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
     cls->read(obj, io);
   } else {
     mrc_obj_read_children(obj, io);
-    mrc_obj_setup(obj);
+    // FIXME, ugly: basically the same as mrc_obj_setup(), but skipping the children
+    // setup
+    obj->is_setup = true;
+
+    if (obj->ops && obj->ops->setup) {
+      obj->ops->setup(obj);
+    } else {
+      if (cls->setup) {
+	cls->setup(obj);
+      }
+    }
   }
 }
 

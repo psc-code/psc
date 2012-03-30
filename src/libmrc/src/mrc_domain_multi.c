@@ -219,9 +219,6 @@ mrc_domain_multi_setup_map(struct mrc_domain *domain)
 static void
 mrc_domain_multi_setup(struct mrc_domain *domain)
 {
-  assert(!domain->is_setup);
-  domain->is_setup = true;
-
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
   MPI_Comm comm = mrc_domain_comm(domain);

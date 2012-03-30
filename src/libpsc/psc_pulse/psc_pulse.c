@@ -3,22 +3,12 @@
 #include "psc_push_fields.h"
 
 // ----------------------------------------------------------------------
-// psc_pulse_setup
-
-static inline void
-_psc_pulse_setup(struct psc_pulse *pulse)
-{
-  assert(!pulse->is_setup);
-  pulse->is_setup = true;
-}
-
-// ----------------------------------------------------------------------
 // forward to subclass
 
 double
 psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double t)
 {
-  if (!pulse->is_setup) {
+  if (!psc_pulse_is_setup(pulse)) {
     psc_pulse_setup(pulse);
   }
   return psc_pulse_ops(pulse)->field_s(pulse, x, y, z, t);
@@ -27,7 +17,7 @@ psc_pulse_field_s(struct psc_pulse *pulse, double x, double y, double z, double 
 double
 psc_pulse_field_p(struct psc_pulse *pulse, double x, double y, double z, double t)
 {
-  if (!pulse->is_setup) {
+  if (!psc_pulse_is_setup(pulse)) {
     psc_pulse_setup(pulse);
   }
   return psc_pulse_ops(pulse)->field_p(pulse, x, y, z, t);
@@ -59,6 +49,5 @@ struct mrc_class_psc_pulse mrc_class_psc_pulse = {
   .size             = sizeof(struct psc_pulse),
   .param_descr      = psc_pulse_descr,
   .init             = psc_pulse_init,
-  .setup            = _psc_pulse_setup,
 };
 

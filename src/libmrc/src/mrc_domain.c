@@ -16,8 +16,6 @@ mrc_domain_ops(struct mrc_domain *domain)
   return (struct mrc_domain_ops *) domain->obj.ops;
 }
 
-#define check_is_setup(domain) do { assert(domain->is_setup); } while (0)
-
 // ======================================================================
 // mrc_domain
 
@@ -87,7 +85,7 @@ _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 struct mrc_patch *
 mrc_domain_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->get_patches);
   return mrc_domain_ops(domain)->get_patches(domain, nr_patches);
 }
@@ -107,41 +105,35 @@ mrc_domain_get_ddc(struct mrc_domain *domain)
 int
 mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   return mrc_domain_ops(domain)->get_neighbor_rank(domain, shift);
 }
 
 void
 mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   mrc_domain_ops(domain)->get_global_dims(domain, dims);
 }
 
 void
 mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   mrc_domain_ops(domain)->get_nr_procs(domain, nr_procs);
 }
 
 void
 mrc_domain_get_bc(struct mrc_domain *domain, int *bc)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   mrc_domain_ops(domain)->get_bc(domain, bc);
-}
-
-bool
-mrc_domain_is_setup(struct mrc_domain *domain)
-{
-  return domain->is_setup;
 }
 
 void
 mrc_domain_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->get_nr_global_patches);
   mrc_domain_ops(domain)->get_nr_global_patches(domain, nr_global_patches);
 }
@@ -150,7 +142,7 @@ void
 mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gp,
 				 struct mrc_patch_info *info)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->get_global_patch_info);
   mrc_domain_ops(domain)->get_global_patch_info(domain, gp, info);
 }
@@ -159,7 +151,7 @@ void
 mrc_domain_get_local_patch_info(struct mrc_domain *domain, int p,
 				struct mrc_patch_info *info)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->get_local_patch_info);
   mrc_domain_ops(domain)->get_local_patch_info(domain, p, info);
 }
@@ -168,7 +160,7 @@ void
 mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 			       struct mrc_patch_info *info)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->get_idx3_patch_info);
   mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
 }
@@ -176,7 +168,7 @@ mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 void
 mrc_domain_plot(struct mrc_domain *domain)
 {
-  check_is_setup(domain);
+  assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->plot);
   mrc_domain_ops(domain)->plot(domain);
 }
