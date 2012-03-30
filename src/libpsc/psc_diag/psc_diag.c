@@ -17,6 +17,7 @@ _psc_diag_setup(struct psc_diag *diag)
     struct psc_diag_item *item =
       psc_diag_item_create(psc_diag_comm(diag));
     psc_diag_item_set_type(item, p);
+    psc_diag_item_set_name(item, p);
     psc_diag_add_child(diag, (struct mrc_obj *) item);
   }
 

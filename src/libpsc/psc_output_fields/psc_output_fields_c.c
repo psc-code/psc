@@ -22,7 +22,7 @@ psc_output_fields_c_create(struct psc_output_fields *out)
   out_c->format = psc_output_format_create(psc_output_fields_comm(out));
 
   out_c->bnd = psc_bnd_create(psc_output_fields_comm(out));
-  psc_bnd_set_name(out_c->bnd, "psc_moments_bnd");
+  psc_bnd_set_name(out_c->bnd, "psc_output_fields_bnd");
   psc_bnd_set_type(out_c->bnd, "c");
   psc_bnd_set_psc(out_c->bnd, ppsc);
   psc_output_fields_add_child(out, (struct mrc_obj *) out_c->bnd);
