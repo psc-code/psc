@@ -95,6 +95,8 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
   mparticles->data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
+  mparticles->nr_particles_by_patch =
+    calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
 
   for (int p = 0; p < mparticles->nr_patches; p++) {
     particles_c_t *particles = psc_mparticles_get_patch_c(mparticles, p);
@@ -102,6 +104,7 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
     int n_part;
     ierr = H5LTget_attribute_int(groupp, ".", "n_part", &n_part); CE;
+    mparticles->nr_particles_by_patch[p] = n_part;
     _psc_mparticles_c_alloc_patch(mparticles, p, n_part);
     if (n_part > 0) {
       ierr = H5LTread_dataset_double(groupp, "particles_c",
