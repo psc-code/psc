@@ -512,14 +512,19 @@ mrc_obj_setup_this(struct mrc_obj *obj)
 }
 
 void
-mrc_obj_setup(struct mrc_obj *obj)
+mrc_obj_setup_children(struct mrc_obj *obj)
 {
-  mrc_obj_setup_this(obj);
-
   struct mrc_obj *child;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_setup(child);
   }
+}
+
+void
+mrc_obj_setup(struct mrc_obj *obj)
+{
+  mrc_obj_setup_this(obj);
+  mrc_obj_setup_children(obj);
 }
 
 void
