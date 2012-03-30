@@ -16,6 +16,8 @@ struct psc_pulse_flattop {
 static void
 psc_pulse_flattop_setup(struct psc_pulse *pulse)
 {
+  psc_pulse_setup_super(pulse);
+
   struct psc_pulse_flattop *flattop = mrc_to_subobj(pulse, struct psc_pulse_flattop);
 
   // normalization

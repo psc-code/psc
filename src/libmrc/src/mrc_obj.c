@@ -488,14 +488,6 @@ mrc_obj_view(struct mrc_obj *obj)
   }
 }
 
-void
-mrc_obj_setup_sub(struct mrc_obj *obj)
-{
-  if (obj->ops && obj->ops->setup) {
-    obj->ops->setup(obj);
-  }
-}
-
 // to be called internally from subclass's setup() to do its superclass setup
 
 void

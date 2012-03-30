@@ -9,7 +9,6 @@ static inline void
 _psc_pulse_setup(struct psc_pulse *pulse)
 {
   assert(!pulse->is_setup);
-  mrc_obj_setup_sub(&pulse->obj);
   pulse->is_setup = true;
 }
 
