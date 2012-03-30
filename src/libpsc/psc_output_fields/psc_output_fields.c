@@ -29,10 +29,7 @@ _psc_output_fields_read(struct psc_output_fields *out, struct mrc_io *io)
   out->psc = (struct psc *)
     mrc_io_read_obj_ref(io, path, "psc", &mrc_class_psc);
 
-  struct psc_output_fields_ops *ops = psc_output_fields_ops(out);
-  if (ops->read) {
-    ops->read(out, io);
-  }
+  psc_output_fields_setup(out);
 }
 
 // ======================================================================

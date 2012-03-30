@@ -393,6 +393,8 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
   // This isn't a collective value, so we better
   // don't take what's been read from the file
   multi->nr_patches = -1; 
+
+  mrc_domain_read_super(domain, io);
 }
 
 static void

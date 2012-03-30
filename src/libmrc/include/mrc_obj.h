@@ -107,6 +107,7 @@ void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *cls);
+void mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
@@ -296,6 +297,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   {									\
     return (obj_type *) mrc_obj_read(io, name,				\
 			      (struct mrc_class *) &mrc_class_ ## pfx); \
+  }									\
+									\
+  static inline void 							\
+  pfx ## _read_super(obj_type *obj, struct mrc_io *io)			\
+  {									\
+    mrc_obj_read_super((struct mrc_obj *)obj, io);			\
   }									\
 									\
   static inline void							\

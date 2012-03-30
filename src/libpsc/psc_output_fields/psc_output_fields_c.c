@@ -145,14 +145,12 @@ static void
 psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
+
+  psc_output_fields_read_super(out, io);
+
   const char *path = psc_output_fields_name(out);
-  
-  // FIXME, this is very hacky, instead of restoring state, we'll put
-  // next into first and setup() will do the right thing. This is because
-  // we can't call setup() right now, since other stuff in psc isn't set up
-  // yet :(((
-  mrc_io_read_attr_int(io, path, "pfield_next", &out_c->pfield_first);
-  mrc_io_read_attr_int(io, path, "tfield_next", &out_c->tfield_first);
+  mrc_io_read_attr_int(io, path, "pfield_next", &out_c->pfield_next);
+  mrc_io_read_attr_int(io, path, "tfield_next", &out_c->tfield_next);
 }
 
 // ----------------------------------------------------------------------

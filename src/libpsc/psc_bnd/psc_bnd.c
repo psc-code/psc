@@ -31,6 +31,8 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
   const char *path = psc_bnd_name(bnd);
   bnd->psc = (struct psc *)
     mrc_io_read_obj_ref(io, path, "psc", &mrc_class_psc);
+
+  psc_bnd_setup(bnd);
 }
 
 // ======================================================================

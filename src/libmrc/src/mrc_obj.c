@@ -555,6 +555,19 @@ mrc_obj_find_child(struct mrc_obj *obj, const char *name)
   return NULL;
 }
 
+void
+mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_class *cls = obj->cls;
+
+  if (cls->read) {
+    cls->read(obj, io);
+  } else {
+    mrc_obj_read_children(obj, io);
+    mrc_obj_setup(obj);
+  }
+}
+
 static void
 mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
 {
@@ -576,11 +589,8 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
   }
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
-  } else if (cls->read) {
-    cls->read(obj, io);
   } else {
-    mrc_obj_read_children(obj, io);
-    mrc_obj_setup(obj);
+    mrc_obj_read_super(obj, io);
   }
 }
 
