@@ -232,7 +232,7 @@ psc_kh_setup(struct psc *psc)
   kh->Te = Te;
   kh->Ti = Ti;
 
-  psc_setup_default(psc);
+  psc_setup_super(psc);
 }
 
 // ----------------------------------------------------------------------

@@ -490,23 +490,6 @@ psc_setup_photons(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_setup_default
-
-void
-psc_setup_default(struct psc *psc)
-{
-  psc_setup_coeff(psc);
-  psc_setup_domain(psc);
-
-  psc_setup_partition_and_particles(psc);
-  psc_setup_fields(psc);
-  psc_setup_photons(psc);
-  psc_setup_fortran(psc);
-
-  psc_setup_children(psc);
-}
-
-// ----------------------------------------------------------------------
 // _psc_setup
 
 static void
@@ -517,7 +500,15 @@ _psc_setup(struct psc *psc)
     return;
   }
 
-  psc_setup_default(psc); // FIXME, subclass should call _super()
+  psc_setup_coeff(psc);
+  psc_setup_domain(psc);
+
+  psc_setup_partition_and_particles(psc);
+  psc_setup_fields(psc);
+  psc_setup_photons(psc);
+  psc_setup_fortran(psc);
+
+  psc_setup_children(psc);
 }
 
 // ----------------------------------------------------------------------
