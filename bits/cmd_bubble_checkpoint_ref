@@ -2,7 +2,7 @@ src/VLI \
 	--psc_case_type bubble \
 	--npx 1 --npz 1 \
 	--mrc_io_type xdmf_collective --mrc_io_outdir ref \
-	--pfield_step 10 --write_pfield no \
+	--pfield_step 1 --write_pfield yes \
 	--tfield_step 20 --write_tfield yes \
 	--output_fields n,e,h,j \
 	--gdims_x 120 --gdims_z 80 \
