@@ -31,7 +31,7 @@ do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
 
     creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     creal vxi = part->pxi * root;
-    creal vyi = part->pxi * root;
+    creal vyi = part->pyi * root;
     creal vzi = part->pzi * root;
 
     part->zi += vzi * zl;
