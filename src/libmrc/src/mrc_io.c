@@ -68,9 +68,6 @@ _mrc_io_setup(struct mrc_io *io)
 {
   MPI_Comm_rank(io->obj.comm, &io->rank);
   MPI_Comm_size(io->obj.comm, &io->size);
-  if (mrc_io_ops(io)->setup) {
-    mrc_io_ops(io)->setup(io);
-  }
   io->is_setup = true;
 }
 

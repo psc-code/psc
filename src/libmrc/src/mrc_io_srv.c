@@ -86,6 +86,8 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
   }
 
   io->diagc_domain_info_sent = true;
+
+  mrc_io_setup_super(io);
 }
 
 static void

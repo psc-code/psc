@@ -105,6 +105,8 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
 
   //  mprintf("off   %d %d %d\n", simple->off[0], simple->off[1], simple->off[2]);
   //  mprintf("gdims %d %d %d\n", simple->gdims[0], simple->gdims[1], simple->gdims[2]);
+
+  mrc_domain_setup_super(domain);
 }
 
 static int

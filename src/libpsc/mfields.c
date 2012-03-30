@@ -11,11 +11,6 @@
 static void
 _psc_mfields_setup(struct psc_mfields *flds)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
-
-  if (ops->setup) {
-    ops->setup(flds);
-  }
   flds->comp_name = calloc(flds->nr_fields, sizeof(*flds->comp_name));
 }
 

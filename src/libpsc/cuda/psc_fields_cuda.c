@@ -87,6 +87,8 @@ psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int m
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
+  psc_mfields_setup_super(flds);
+
   flds->data = calloc(ppsc->nr_patches, sizeof(fields_cuda_t));
 
   psc_foreach_patch(ppsc, p) {

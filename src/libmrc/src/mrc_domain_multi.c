@@ -270,6 +270,8 @@ mrc_domain_multi_setup(struct mrc_domain *domain)
       multi->patches[p].off[d] = info.off[d];
     }
   }
+
+  mrc_domain_setup_super(domain);
 }
 
 static void

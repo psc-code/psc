@@ -101,7 +101,8 @@ void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char 
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
-void mrc_obj_setup_sub(struct mrc_obj *obj);
+void mrc_obj_setup_super(struct mrc_obj *obj);
+void mrc_obj_setup_children(struct mrc_obj *obj);
 void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
@@ -264,6 +265,18 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _setup(obj_type *obj)						\
   {									\
     mrc_obj_setup((struct mrc_obj *)obj);				\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _setup_super(obj_type *obj)					\
+  {									\
+    mrc_obj_setup_super((struct mrc_obj *)obj);				\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _setup_children(obj_type *obj)					\
+  {									\
+    mrc_obj_setup_children((struct mrc_obj *)obj);			\
   }									\
 									\
   static inline void 							\

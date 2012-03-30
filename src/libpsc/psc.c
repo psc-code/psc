@@ -502,6 +502,8 @@ psc_setup_default(struct psc *psc)
   psc_setup_fields(psc);
   psc_setup_photons(psc);
   psc_setup_fortran(psc);
+
+  psc_setup_children(psc);
 }
 
 // ----------------------------------------------------------------------
@@ -510,14 +512,12 @@ psc_setup_default(struct psc *psc)
 static void
 _psc_setup(struct psc *psc)
 {
-  if (!psc_ops(psc)) // old-style: setup is handled by psc_case
+  if (!psc_ops(psc)) { // old-style: setup is handled by psc_case
+    psc_setup_children(psc);
     return;
-
-  if (psc_ops(psc)->setup) {
-    psc_ops(psc)->setup(psc);
-  } else {
-    psc_setup_default(psc);
   }
+
+  psc_setup_default(psc); // FIXME, subclass should call _super()
 }
 
 // ----------------------------------------------------------------------
@@ -575,7 +575,7 @@ _psc_read(struct psc *psc, struct mrc_io *io)
   psc_setup_fortran(psc);
 
   psc_read_children(psc, io);
-  psc_setup_children(psc, io);
+  psc_setup_children(psc);
 }
 
 // ----------------------------------------------------------------------

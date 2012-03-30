@@ -103,6 +103,8 @@ fields_fortran_scale(fields_fortran_t *pf, fields_fortran_real_t val)
 static void
 _psc_mfields_fortran_setup(mfields_fortran_t *flds)
 {
+  psc_mfields_setup_super(flds);
+
   struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
 						     &flds->nr_patches);
   flds->data = calloc(flds->nr_patches, sizeof(fields_fortran_t));

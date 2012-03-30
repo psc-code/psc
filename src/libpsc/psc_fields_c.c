@@ -166,6 +166,8 @@ _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 static void
 _psc_mfields_c_setup(mfields_c_t *flds)
 {
+  psc_mfields_setup_super(flds);
+
   struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
 						     &flds->nr_patches);
   flds->data = calloc(flds->nr_patches, sizeof(fields_c_t));

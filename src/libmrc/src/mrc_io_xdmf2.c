@@ -46,6 +46,8 @@ xdmf_setup(struct mrc_io *io)
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
   sprintf(filename, "%s/%s.xdmf", io->par.outdir, io->par.basename);
   xdmf->xdmf_temporal = xdmf_temporal_create(filename);
+
+  mrc_io_setup_super(io);
 }
 
 static void

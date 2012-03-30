@@ -496,20 +496,7 @@ mrc_obj_setup_sub(struct mrc_obj *obj)
   }
 }
 
-static void
-mrc_obj_setup_this(struct mrc_obj *obj)
-{
-  struct mrc_class *cls = obj->cls;
-  if (cls->setup) {
-    cls->setup(obj);
-  } else {
-    mrc_obj_setup_sub(obj);
-  }
-  if (obj->view_flag) {
-    obj->view_flag = false;
-    mrc_obj_view(obj);
-  }
-}
+// to be called internally from subclass's setup() to do its superclass setup
 
 void
 mrc_obj_setup_children(struct mrc_obj *obj)
@@ -520,11 +507,36 @@ mrc_obj_setup_children(struct mrc_obj *obj)
   }
 }
 
+static void
+mrc_obj_setup_default(struct mrc_obj *obj)
+{
+  mrc_obj_setup_children(obj);
+}
+
+void
+mrc_obj_setup_super(struct mrc_obj *obj)
+{
+  struct mrc_class *cls = obj->cls;
+
+  if (cls->setup) {
+    cls->setup(obj);
+  } else {
+    mrc_obj_setup_default(obj);
+  }
+  if (obj->view_flag) {
+    obj->view_flag = false;
+    mrc_obj_view(obj);
+  }
+}
+
 void
 mrc_obj_setup(struct mrc_obj *obj)
 {
-  mrc_obj_setup_this(obj);
-  mrc_obj_setup_children(obj);
+  if (obj->ops && obj->ops->setup) {
+    obj->ops->setup(obj);
+  } else {
+    mrc_obj_setup_super(obj);
+  }
 }
 
 void
