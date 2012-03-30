@@ -48,13 +48,14 @@ struct psc_output_fields_item_ops psc_output_fields_item_j_nc_ops = {
 #define JY_CC(ix,iy,iz) (.25f * (F3(pf,  JYI,ix,iy,iz   ) + F3(pf,  JYI,ix+dx,iy,iz   ) + \
 				 F3(pf,  JYI,ix,iy,iz+dz) + F3(pf,  JYI,ix+dx,iy,iz+dz)))
 #define JZ_CC(ix,iy,iz) (.25f * (F3(pf,  JZI,ix,iy,iz   ) + F3(pf,  JZI,ix+dx,iy   ,iz) + \
-				 F3(pf,  JZI,ix,iy+dy,iz) + F3(pf,  JZI,ix+dz,iy+dy,iz)))
+				 F3(pf,  JZI,ix,iy+dy,iz) + F3(pf,  JZI,ix+dx,iy+dy,iz)))
 
 static void
 calc_j(struct psc_output_fields_item *item, mfields_base_t *flds_base,
        mparticles_base_t *particles, mfields_t *f)
 {
   define_dxdydz(dx, dy, dz);
+
   mfields_t *flds = psc_mfields_get_cf(flds_base, JXI, JXI + 3);
   psc_foreach_patch(ppsc, p) {
     fields_t *ff = psc_mfields_get_patch(f, p);
