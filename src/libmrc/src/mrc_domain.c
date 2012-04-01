@@ -57,15 +57,18 @@ _mrc_domain_view(struct mrc_domain *domain)
 static void
 _mrc_domain_setup(struct mrc_domain *domain)
 {
-  mrc_crds_setup(domain->crds);
+  if (domain->crds) {
+    mrc_crds_setup(domain->crds);
+  }
 }
 
 static void
 _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
 {
-  // only set up domain, not the crds part (FIXME, too hacky)
-  mrc_domain_setup(domain);
   mrc_crds_destroy(domain->crds);
+  domain->crds = NULL;
+
+  mrc_domain_setup(domain);
   char *s;
   mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
   domain->crds = mrc_crds_read(io, s);
