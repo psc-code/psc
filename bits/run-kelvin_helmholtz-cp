@@ -1,0 +1,16 @@
+
+# sample kelvin-helmholtz run, with checkpointing
+
+~/src/psc/src/psc_kelvin_helmholtz \
+    --gdims_y 80 --gdims_z 80 \
+    --npy 2 --npz 2 \
+    --nmax 50 \
+    --output_fields e,h,j,n,v \
+    --write_tfield no \
+    --write_pfield yes --pfield_step 100 \
+    --write_checkpoint
+
+~/src/psc/src/psc_kelvin_helmholtz \
+    --from_checkpoint 50 --checkpoint_nmax 101 \
+
+
