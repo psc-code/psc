@@ -86,7 +86,6 @@ struct psc_param {
   bool adjust_dt_to_cycles;
   bool gdims_in_terms_of_cells; 
   double wallclock_limit;
-  bool from_checkpoint;
   bool write_checkpoint;
   double initial_particle_shift;
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")

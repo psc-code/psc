@@ -23,6 +23,7 @@ psc_read_checkpoint(MPI_Comm comm, int n)
   mrc_io_close(io);
   mrc_io_destroy(io);
 
+  ppsc = psc;
   return psc;
 }
 
