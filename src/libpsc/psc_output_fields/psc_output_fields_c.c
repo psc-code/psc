@@ -114,6 +114,8 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     }
   }
   out_c->naccum = 0;
+
+  psc_output_fields_setup_children(out);
 }
 
 // ----------------------------------------------------------------------
