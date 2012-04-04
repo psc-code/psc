@@ -34,10 +34,11 @@ struct psc *ppsc;
 #define VAR(x) (void *)offsetof(struct psc, x)
 
 static struct mrc_param_select bnd_fld_descr[] = {
-  { .val = BND_FLD_OPEN        , .str = "open"        },
-  { .val = BND_FLD_PERIODIC    , .str = "periodic"    },
-  { .val = BND_FLD_UPML        , .str = "upml"        },
-  { .val = BND_FLD_TIME        , .str = "time"        },
+  { .val = BND_FLD_OPEN           , .str = "open"            },
+  { .val = BND_FLD_PERIODIC       , .str = "periodic"        },
+  { .val = BND_FLD_UPML           , .str = "upml"            },
+  { .val = BND_FLD_TIME           , .str = "time"            },
+  { .val = BND_FLD_CONDUCTING_WALL, .str = "conducting_wall" },
   {},
 };
 
