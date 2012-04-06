@@ -495,7 +495,7 @@ mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
 static void
 mrc_io_init()
 {
-#ifdef HAVE_HDF5_H
+#ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_ops);

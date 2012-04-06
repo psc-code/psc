@@ -23,10 +23,12 @@ psc_output_photons_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_output_photons,
 			      &psc_output_photons_none_ops);
+#ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_psc_output_photons,
 			      &psc_output_photons_xdmf_compact_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_photons,
 			      &psc_output_photons_xdmf_spread_ops);
+#endif
 }
 
 // ======================================================================

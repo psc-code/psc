@@ -21,16 +21,18 @@ psc_output_particles_run(struct psc_output_particles *output_particles,
 static void
 psc_output_particles_init()
 {
+#ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_hdf5_ops);
-  mrc_class_register_subclass(&mrc_class_psc_output_particles,
-			      &psc_output_particles_none_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_custom_binary_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_xdmf_compact_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_xdmf_spread_ops);
+#endif
+  mrc_class_register_subclass(&mrc_class_psc_output_particles,
+			      &psc_output_particles_none_ops);
   mrc_class_register_subclass(&mrc_class_psc_output_particles,
                               &psc_output_particles_ascii_ops);
 }
