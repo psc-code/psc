@@ -104,7 +104,6 @@ AC_ARG_ENABLE(
   [AS_HELP_STRING([--enable-cuda], [use nvcc to create CUDA code])],
   [AS_IF([test "$enable_cuda" = "yes"],
     [AC_DEFINE([USE_CUDA])
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     AS_IF([test -z "$CUDACC"],
           [CUDACC=/usr/local/cuda/bin/nvcc])
     AS_IF([test -z "$CUDALIBS"],
