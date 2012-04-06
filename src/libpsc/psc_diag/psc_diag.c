@@ -4,6 +4,7 @@
 
 #include <mrc_params.h>
 #include <stdlib.h>
+#include <string.h>
 
 // ----------------------------------------------------------------------
 // psc_diag_setup

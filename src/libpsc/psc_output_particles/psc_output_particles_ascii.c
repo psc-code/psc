@@ -2,6 +2,7 @@
 #include "psc_output_particles_private.h"
 
 #include <mrc_params.h>
+#include <string.h>
 
 #define to_psc_output_particles_ascii(out) \
   mrc_to_subobj(out, struct psc_output_particles_ascii)
