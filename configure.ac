@@ -11,7 +11,7 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Source any special site-specific file
 hname="`hostname`"
 while test -n "$hname"; do
-  file=$srcdir/config/host-$hname
+  file=$srcdir/src/libmrc/config/host-$hname
   AC_MSG_CHECKING([for config $file])
   if test -f "$file"; then
     . $file
@@ -21,7 +21,7 @@ while test -n "$hname"; do
   AC_MSG_RESULT([no])
 
   hname2="`echo $hname | tr -d '0-9'`"
-  file=$srcdir/config/host-$hname2
+  file=$srcdir/src/libmrc/config/host-$hname2
   AC_MSG_CHECKING([for config $file])
   if test -f "$file"; then
     . $file
