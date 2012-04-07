@@ -277,6 +277,7 @@ psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
 }									\
 
 MAKE_MPARTICLES_GET_PUT(c)
+MAKE_MPARTICLES_GET_PUT(single)
 MAKE_MPARTICLES_GET_PUT(fortran)
 #ifdef USE_CUDA
 MAKE_MPARTICLES_GET_PUT(cuda)
@@ -288,6 +289,7 @@ static void
 psc_mparticles_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_fortran_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_mparticles, &psc_mparticles_cuda_ops);

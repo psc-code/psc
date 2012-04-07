@@ -75,6 +75,7 @@ libpsc_la_SOURCES = \
 	psc_fields_c.c \
 	psc_particles_fortran.c \
 	psc_particles_c.c \
+	psc_particles_single.c \
 	psc_particles_cbe.c \
 	psc_photons.c \
 	psc.c \

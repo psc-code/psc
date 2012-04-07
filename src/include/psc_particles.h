@@ -67,6 +67,9 @@ MAKE_MPARTICLES_TYPE(fortran)
 #include "psc_particles_c.h"
 MAKE_MPARTICLES_TYPE(c)
 
+#include "psc_particles_single.h"
+MAKE_MPARTICLES_TYPE(single)
+
 #ifdef USE_SSE2
 #include "psc_particles_sse2.h"
 MAKE_MPARTICLES_TYPE(sse2)
