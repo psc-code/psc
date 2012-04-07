@@ -73,6 +73,7 @@ libpsc_la_SOURCES = \
 	mparticles.c \
 	psc_fields_fortran.c \
 	psc_fields_c.c \
+	psc_fields_single.c \
 	psc_particles_fortran.c \
 	psc_particles_c.c \
 	psc_particles_single.c \

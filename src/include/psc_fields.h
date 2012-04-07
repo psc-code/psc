@@ -68,6 +68,7 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
 extern struct psc_mfields_ops psc_mfields_c_ops;
+extern struct psc_mfields_ops psc_mfields_single_ops;
 extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
@@ -86,6 +87,15 @@ psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_c_ops);
   return ((fields_c_t *)flds->data) + p;
+}
+
+#include "psc_fields_single.h"
+typedef struct psc_mfields mfields_single_t;
+static inline fields_single_t *
+psc_mfields_get_patch_single(struct psc_mfields *flds, int p)
+{
+  assert(psc_mfields_ops(flds) == &psc_mfields_single_ops);
+  return ((fields_single_t *)flds->data) + p;
 }
 
 #ifdef USE_SSE2

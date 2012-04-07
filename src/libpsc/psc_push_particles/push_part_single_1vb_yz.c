@@ -49,20 +49,20 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
 
   struct psc_patch *patch = ppsc->patch + p;
-  fields_c_t fld;
+  fields_single_t fld;
   // FIXME, can do -1 .. 1?
   int ib[3] = { 0, -2, -2 };
   int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-  fields_c_alloc(&fld, ib, ie, 6, EX);
+  fields_single_alloc(&fld, ib, ie, 6, EX);
 
   for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3_C(&fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
-      F3_C(&fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
-      F3_C(&fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
-      F3_C(&fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
-      F3_C(&fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
-      F3_C(&fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
+      F3_S(&fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
+      F3_S(&fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
+      F3_S(&fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
+      F3_S(&fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
+      F3_S(&fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
+      F3_S(&fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
     }
   }
 
@@ -175,7 +175,7 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
     curr_2d_vb_cell(pf, i, x, dx, fnq, NULL, NULL);
   }
 
-  fields_c_free(&fld);
+  fields_single_free(&fld);
 }
 
 void
