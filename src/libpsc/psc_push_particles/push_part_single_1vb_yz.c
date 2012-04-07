@@ -149,34 +149,10 @@ psc_push_particles_single_1vb_push_yz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    struct psc_patch *patch = ppsc->patch + p;
-    fields_t *pf = psc_mfields_get_patch(flds, p);
     fields_single_t fld;
-    // FIXME, can do -1 .. 1?
-    int ib[3] = { 0, -2, -2 };
-    int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-    fields_single_alloc(&fld, ib, ie, 9, 0); // JXI .. HZ
-    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-	F3_S(&fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
-	F3_S(&fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
-	F3_S(&fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
-	F3_S(&fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
-	F3_S(&fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
-	F3_S(&fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
-      }
-    }
-
+    cache_fields_from_em(p, &fld, psc_mfields_get_patch(flds, p));
     do_push_part_1vb_yz(p, &fld, psc_mparticles_get_patch(particles, p));
-
-    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-      for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-	F3(pf, JXI, 0,iy,iz) += F3_S(&fld, JXI, 0,iy,iz);
-	F3(pf, JYI, 0,iy,iz) += F3_S(&fld, JYI, 0,iy,iz);
-	F3(pf, JZI, 0,iy,iz) += F3_S(&fld, JZI, 0,iy,iz);
-      }
-    }
-    fields_single_free(&fld);
+    cache_fields_to_j(p, &fld, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
 
