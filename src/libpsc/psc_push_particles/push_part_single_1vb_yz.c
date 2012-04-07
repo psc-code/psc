@@ -48,7 +48,6 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
     creal vxi[3];
@@ -61,8 +60,8 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
 
     int lg[3], lh[3];
     creal og[3], oh[3], xm[3];
-    find_idx_off_pos_1st(&part->xi, lg, og, xm, 0.f, patch->xb, dxi); // FIXME passing xi hack
-    find_idx_off_1st(&part->xi, lh, oh, -.5f, patch->xb, dxi);
+    find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, dxi); // FIXME passing xi hack
+    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
 
     // FIELD INTERPOLATION
 
@@ -87,7 +86,7 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
 
     int lf[3];
     creal of[3];
-    find_idx_off_1st(&part->xi, lf, of, 0.f, patch->xb, dxi);
+    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
     creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
     F3(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
@@ -102,7 +101,7 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
 		    part->zi + vxi[2] * .5f * dt };
 
     creal xp[3];
-    find_idx_off_pos_1st(xi, lf, of, xp, 0.f, patch->xb, dxi);
+    find_idx_off_pos_1st_rel(xi, lf, of, xp, 0.f, dxi);
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 

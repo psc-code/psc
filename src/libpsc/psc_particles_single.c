@@ -45,6 +45,7 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
 			     mparticles_c_t *particles, unsigned int flags)
 {
   psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = ppsc->patch + p;
     particles_single_t *pp_base = psc_mparticles_get_patch_single(particles_base, p);
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
     pp->n_part = pp_base->n_part;
@@ -53,9 +54,9 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
-      part->xi  = part_base->xi;
-      part->yi  = part_base->yi;
-      part->zi  = part_base->zi;
+      part->xi  = part_base->xi + patch->xb[0];
+      part->yi  = part_base->yi + patch->xb[1];
+      part->zi  = part_base->zi + patch->xb[2];
       part->pxi = part_base->pxi;
       part->pyi = part_base->pyi;
       part->pzi = part_base->pzi;
@@ -71,6 +72,7 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
 			       mparticles_c_t *particles, unsigned int flags)
 {
   psc_foreach_patch(ppsc, p) {
+    struct psc_patch *patch = ppsc->patch + p;
     particles_single_t *pp_base = psc_mparticles_get_patch_single(particles_base, p);
     particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
     pp_base->n_part = pp->n_part;
@@ -79,9 +81,9 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
-      part_base->xi  = part->xi;
-      part_base->yi  = part->yi;
-      part_base->zi  = part->zi;
+      part_base->xi  = part->xi - patch->xb[0];
+      part_base->yi  = part->yi - patch->xb[1];
+      part_base->zi  = part->zi - patch->xb[2];
       part_base->pxi = part->pxi;
       part_base->pyi = part->pyi;
       part_base->pzi = part->pzi;

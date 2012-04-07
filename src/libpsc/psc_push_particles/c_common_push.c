@@ -57,11 +57,33 @@ find_idx_off_1st(creal xi[3], int lg[3], creal og[3], creal shift,
 }
 
 static inline void
+find_idx_off_1st_rel(creal xi[3], int lg[3], creal og[3], creal shift,
+		     creal dxi[3])
+{
+  for (int d = 0; d < 3; d++) {
+    creal pos = xi[d] * dxi[d] + shift;
+    lg[d] = fint(pos);
+    og[d] = pos - lg[d];
+  }
+}
+
+static inline void
 find_idx_off_pos_1st(creal xi[3], int lg[3], creal og[3], creal pos[3], creal shift,
 		     double xb[3], creal dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = (xi[d] - xb[d]) * dxi[d] + shift;
+    lg[d] = fint(pos[d]);
+    og[d] = pos[d] - lg[d];
+  }
+}
+
+static inline void
+find_idx_off_pos_1st_rel(creal xi[3], int lg[3], creal og[3], creal pos[3], creal shift,
+			 creal dxi[3])
+{
+  for (int d = 0; d < 3; d++) {
+    pos[d] = xi[d] * dxi[d] + shift;
     lg[d] = fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }

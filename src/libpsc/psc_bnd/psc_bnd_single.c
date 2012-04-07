@@ -213,9 +213,9 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
       particle_single_t *part = particles_single_get_one(pp, i);
       particle_single_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
       particle_single_real_t *pxi = &part->pxi;
-      if (xi[0] >= xb[0] && xi[0] < xe[0] &&
-	  xi[1] >= xb[1] && xi[1] < xe[1] &&
-	  xi[2] >= xb[2] && xi[2] < xe[2]) {
+      if (xi[0] >= 0 && xi[0] < xe[0] - xb[0] &&
+	  xi[1] >= 0 && xi[1] < xe[1] - xb[1] &&
+	  xi[2] >= 0 && xi[2] < xe[2] - xb[2]) {
 	// fast path
 	// inside domain: move into right position
 	pp->particles[patch->head++] = *part;
@@ -223,16 +223,16 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	// slow path
 	int dir[3];
 	for (int d = 0; d < 3; d++) {
-	  if (xi[d] < xb[d]) {
-	    if (xi[d] < xgb[d]) {
+	  if (xi[d] < 0) {
+	    if (xi[d] < xgb[d] - xb[d]) {
 	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
-		xi[d] = 2.f * xgb[d] - xi[d];
+		xi[d] = 2.f * (xgb[d] - xb[d]) - xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
 	      case BND_PART_PERIODIC:
-		xi[d] += xgl[d];
+		xi[d] += xe[d] - xb[d];
 		dir[d] = -1;
 		break;
 	      default:
@@ -240,30 +240,34 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	      }
 	    } else {
 	      // computational bnd
+	      xi[d] += xe[d] - xb[d];
 	      dir[d] = -1;
 	    }
-	  } else if (xi[d] >= xe[d]) {
-	    if (xi[d] >= xge[d]) {
+	  } else if (xi[d] >= xe[d] - xb[d]) {
+	    if (xi[d] >= xge[d] - xb[d]) {
 	      switch (psc->domain.bnd_part[d]) {
 	      case BND_PART_REFLECTING:
-		xi[d] = 2.f * xge[d] - xi[d];
+		xi[d] = 2.f * (xge[d] - xb[d]) - xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
 	      case BND_PART_PERIODIC:
-		xi[d] -= xgl[d];
+		xi[d] -= xe[d] - xb[d];
 		dir[d] = +1;
 		break;
 	      default:
 		assert(0);
 	      }
 	    } else {
+	      // computational bnd
+	      xi[d] -= xe[d] - xb[d];
 	      dir[d] = +1;
 	    }
 	  } else {
-	    // computational bnd
 	    dir[d] = 0;
 	  }
+	  assert(xi[d] >= 0);
+	  assert(xi[d] <= xe[d] - xb[d]);
 	}
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	  pp->particles[patch->head++] = *part;
