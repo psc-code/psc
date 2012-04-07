@@ -8,13 +8,13 @@
 #include <mrc_profile.h>
 #include <string.h>
 
-struct psc_bnd_c {
+struct psc_bnd_single {
   struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
   struct ddc_particles *ddcp_photons;
 };
 
-#define to_psc_bnd_c(bnd) ((struct psc_bnd_c *)((bnd)->obj.subctx))
+#define to_psc_bnd_single(bnd) ((struct psc_bnd_single *)((bnd)->obj.subctx))
 
 static void
 ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
@@ -49,23 +49,23 @@ ddcp_photons_get_addr(void *_particles, int p, int n)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_setup
+// psc_bnd_single_setup
 
 static void
-psc_bnd_c_setup(struct psc_bnd *bnd)
+psc_bnd_single_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   struct psc *psc = bnd->psc;
 
-  bnd_c->ddc = psc_bnd_lib_create_ddc(psc);
+  bnd_single->ddc = psc_bnd_lib_create_ddc(psc);
 
-  bnd_c->ddcp = ddc_particles_create(bnd_c->ddc, sizeof(particle_c_t),
+  bnd_single->ddcp = ddc_particles_create(bnd_single->ddc, sizeof(particle_c_t),
 				     sizeof(particle_c_real_t),
 				     MPI_PARTICLES_C_REAL,
 				     ddcp_particles_realloc,
 				     ddcp_particles_get_addr);
 
-  bnd_c->ddcp_photons = ddc_particles_create(bnd_c->ddc, sizeof(photon_t),
+  bnd_single->ddcp_photons = ddc_particles_create(bnd_single->ddc, sizeof(photon_t),
 					     sizeof(photon_real_t),
 					     MPI_PHOTONS_REAL,
 					     ddcp_photons_realloc,
@@ -73,25 +73,25 @@ psc_bnd_c_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_unsetup
+// psc_bnd_single_unsetup
 
 static void
-psc_bnd_c_unsetup(struct psc_bnd *bnd)
+psc_bnd_single_unsetup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
 
-  mrc_ddc_destroy(bnd_c->ddc);
-  ddc_particles_destroy(bnd_c->ddcp);
-  ddc_particles_destroy(bnd_c->ddcp_photons);
+  mrc_ddc_destroy(bnd_single->ddc);
+  ddc_particles_destroy(bnd_single->ddcp);
+  ddc_particles_destroy(bnd_single->ddcp_photons);
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_destroy
+// psc_bnd_single_destroy
 
 static void
-psc_bnd_c_destroy(struct psc_bnd *bnd)
+psc_bnd_single_destroy(struct psc_bnd *bnd)
 {
-  psc_bnd_c_unsetup(bnd);
+  psc_bnd_single_unsetup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -104,38 +104,38 @@ psc_bnd_c_destroy(struct psc_bnd *bnd)
 static void
 check_domain(struct psc_bnd *bnd)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   struct psc *psc = bnd->psc;
 
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd_c->ddc);
+  struct mrc_domain *domain = mrc_ddc_get_domain(bnd_single->ddc);
   if (domain != psc->mrc_domain) {
-    psc_bnd_c_unsetup(bnd);
+    psc_bnd_single_unsetup(bnd);
     psc_bnd_setup(bnd);
   }
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_add_ghosts
+// psc_bnd_single_add_ghosts
 
 static void
-psc_bnd_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_single_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   check_domain(bnd);
 
-  psc_bnd_lib_add_ghosts(bnd_c->ddc, flds_base, mb, me);
+  psc_bnd_lib_add_ghosts(bnd_single->ddc, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_fill_ghosts
+// psc_bnd_single_fill_ghosts
 
 static void
-psc_bnd_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_single_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   check_domain(bnd);
 
-  psc_bnd_lib_fill_ghosts(bnd_c->ddc, flds_base, mb, me);
+  psc_bnd_lib_fill_ghosts(bnd_single->ddc, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -175,25 +175,25 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_exchange_particles
+// psc_bnd_single_exchange_particles
 
 static void
-psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
+psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   struct psc *psc = bnd->psc;
   check_domain(bnd);
 
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
+  mparticles_single_t *particles = psc_mparticles_get_c(particles_base, 0);
 
   static int pr_A, pr_B;
   if (!pr_A) {
-    pr_A = prof_register("c_xchg_part_prep", 1., 0, 0);
-    pr_B = prof_register("c_xchg_part_comm", 1., 0, 0);
+    pr_A = prof_register("single_xchg_prep", 1., 0, 0);
+    pr_B = prof_register("single_xchg_comm", 1., 0, 0);
   }
   prof_start(pr_A);
 
-  struct ddc_particles *ddcp = bnd_c->ddcp;
+  struct ddc_particles *ddcp = bnd_single->ddcp;
 
   double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
@@ -290,12 +290,12 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_c_exchange_photons
+// psc_bnd_single_exchange_photons
 
 static void
-psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
+psc_bnd_single_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
-  struct psc_bnd_c *bnd_c = to_psc_bnd_c(bnd);
+  struct psc_bnd_single *bnd_single = to_psc_bnd_single(bnd);
   struct psc *psc = bnd->psc;
   check_domain(bnd);
 
@@ -305,7 +305,7 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   }
   prof_start(pr);
 
-  struct ddc_particles *ddcp = bnd_c->ddcp_photons;
+  struct ddc_particles *ddcp = bnd_single->ddcp_photons;
 
   double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
@@ -403,11 +403,11 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 
 struct psc_bnd_ops psc_bnd_single_ops = {
   .name                  = "single",
-  .size                  = sizeof(struct psc_bnd_c),
-  .setup                 = psc_bnd_c_setup,
-  .destroy               = psc_bnd_c_destroy,
-  .add_ghosts            = psc_bnd_c_add_ghosts,
-  .fill_ghosts           = psc_bnd_c_fill_ghosts,
-  .exchange_particles    = psc_bnd_c_exchange_particles,
-  .exchange_photons      = psc_bnd_c_exchange_photons,
+  .size                  = sizeof(struct psc_bnd_single),
+  .setup                 = psc_bnd_single_setup,
+  .destroy               = psc_bnd_single_destroy,
+  .add_ghosts            = psc_bnd_single_add_ghosts,
+  .fill_ghosts           = psc_bnd_single_fill_ghosts,
+  .exchange_particles    = psc_bnd_single_exchange_particles,
+  .exchange_photons      = psc_bnd_single_exchange_photons,
 };
