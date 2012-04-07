@@ -39,7 +39,7 @@ curr_2d_vb_cell(fields_single_t *pf, int i[2], creal x[2], creal dx[2], creal fn
 }
 
 static void
-do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
+do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
 {
   creal dt = ppsc->dt;
   creal dqs = .5f * ppsc->coeff.eta * dt;
@@ -47,24 +47,6 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   creal fnqys = ppsc->dx[1] * fnqs / dt;
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
-
-  struct psc_patch *patch = ppsc->patch + p;
-  fields_single_t fld;
-  // FIXME, can do -1 .. 1?
-  int ib[3] = { 0, -2, -2 };
-  int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-  fields_single_alloc(&fld, ib, ie, 9, 0); // JXI .. HZ
-
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3_S(&fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
-      F3_S(&fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
-      F3_S(&fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
-      F3_S(&fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
-      F3_S(&fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
-      F3_S(&fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
-    }
-  }
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -86,10 +68,10 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
     INTERPOLATE_SETUP_1ST;
 
 #define INTERPOLATE_FIELD_1ST_C(m, gy, gz)				\
-    (gz##0z*(gy##0y*F3_C(&fld, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	     gy##1y*F3_C(&fld, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-     gz##1z*(gy##0y*F3_C(&fld, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	     gy##1y*F3_C(&fld, m, 0,l##gy[1]+1,l##gz[2]+1)))
+    (gz##0z*(gy##0y*F3_C(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
+	     gy##1y*F3_C(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
+     gz##1z*(gy##0y*F3_C(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
+	     gy##1y*F3_C(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 
     creal exq = INTERPOLATE_FIELD_1ST_C(EX, g, g);
     creal eyq = INTERPOLATE_FIELD_1ST_C(EY, h, g);
@@ -113,10 +95,10 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
     creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
-    F3_S(&fld, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-    F3_S(&fld, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-    F3_S(&fld, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-    F3_S(&fld, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
+    F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
+    F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
+    F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
+    F3_S(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
@@ -162,28 +144,18 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
       off[1-first_dir] = 0;
       off[first_dir] = idiff[first_dir];
       calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(&fld, i, x, dx1, fnq, dx, off);
+      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
     }
 
     if (second_dir >= 0) {
       off[first_dir] = 0;
       off[second_dir] = idiff[second_dir];
       calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(&fld, i, x, dx1, fnq, dx, off);
+      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
     }
     
-    curr_2d_vb_cell(&fld, i, x, dx, fnq, NULL, NULL);
+    curr_2d_vb_cell(pf, i, x, dx, fnq, NULL, NULL);
   }
-
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3(pf, JXI, 0,iy,iz) += F3_S(&fld, JXI, 0,iy,iz);
-      F3(pf, JYI, 0,iy,iz) += F3_S(&fld, JYI, 0,iy,iz);
-      F3(pf, JZI, 0,iy,iz) += F3_S(&fld, JZI, 0,iy,iz);
-    }
-  }
-
-  fields_single_free(&fld);
 }
 
 void
@@ -204,8 +176,34 @@ psc_push_particles_single_1vb_push_yz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    do_push_part_1vb_yz(p, psc_mfields_get_patch(flds, p),
-			psc_mparticles_get_patch(particles, p));
+    struct psc_patch *patch = ppsc->patch + p;
+    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_single_t fld;
+    // FIXME, can do -1 .. 1?
+    int ib[3] = { 0, -2, -2 };
+    int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
+    fields_single_alloc(&fld, ib, ie, 9, 0); // JXI .. HZ
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+	F3_S(&fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
+	F3_S(&fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
+	F3_S(&fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
+	F3_S(&fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
+	F3_S(&fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
+	F3_S(&fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
+      }
+    }
+
+    do_push_part_1vb_yz(p, &fld, psc_mparticles_get_patch(particles, p));
+
+    for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+      for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+	F3(pf, JXI, 0,iy,iz) += F3_S(&fld, JXI, 0,iy,iz);
+	F3(pf, JYI, 0,iy,iz) += F3_S(&fld, JYI, 0,iy,iz);
+	F3(pf, JZI, 0,iy,iz) += F3_S(&fld, JZI, 0,iy,iz);
+      }
+    }
+    fields_single_free(&fld);
   }
   prof_stop(pr);
 
