@@ -7,6 +7,7 @@
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
+#include <string.h>
 
 // when changing the following struct, the HDF5 compound data type prt_type
 // needs to be changed accordingly
