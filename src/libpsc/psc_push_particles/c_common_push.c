@@ -116,10 +116,10 @@ static inline void
 calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
 {
   if (off[1] == 0) {
-    dx1[0] = .5 * off[0] - x[0];
+    dx1[0] = .5f * off[0] - x[0];
     dx1[1] = dx[1] / dx[0] * dx1[0];
   } else {
-    dx1[1] = .5 * off[1] - x[1];
+    dx1[1] = .5f * off[1] - x[1];
     dx1[0] = dx[0] / dx[1] * dx1[1];
   }
 }
@@ -128,10 +128,10 @@ static inline void
 curr_2d_vb_cell(fields_curr_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
 		creal dxt[2], int off[2])
 {
-  F3_CURR(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
-  F3_CURR(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
-  F3_CURR(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
-  F3_CURR(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
+  F3_CURR(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]);
+  F3_CURR(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]);
+  F3_CURR(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5f - x[0] - .5f * dx[0]);
+  F3_CURR(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5f + x[0] + .5f * dx[0]);
   if (dxt) {
     dxt[0] -= dx[0];
     dxt[1] -= dx[1];

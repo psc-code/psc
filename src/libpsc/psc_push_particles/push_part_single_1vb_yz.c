@@ -87,7 +87,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     int i[2] = { lg[1], lg[2] };
     int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
     creal dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-    creal x[2] = { xm[1] - (i[0] + .5), xm[2] - (i[1] + .5) };
+    creal x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) };
 
     creal dx1[2];
     int off[2];
@@ -100,7 +100,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     } else if (idiff[1] == 0) {
       first_dir = 0;
     } else {
-      dx1[0] = .5 * idiff[0] - x[0];
+      dx1[0] = .5f * idiff[0] - x[0];
       dx1[1] = dx[1] / dx[0] * dx1[0];
       if (creal_abs(x[1] + dx1[1]) > .5f) {
 	first_dir = 1;
