@@ -6,37 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef fields_t fields_curr_t;
+#define F3_CURR F3
+
 #include "c_common_push.c"
-
-static inline void
-calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
-{
-  if (off[1] == 0) {
-    dx1[0] = .5 * off[0] - x[0];
-    dx1[1] = dx[1] / dx[0] * dx1[0];
-  } else {
-    dx1[1] = .5 * off[1] - x[1];
-    dx1[0] = dx[0] / dx[1] * dx1[1];
-  }
-}
-
-static inline void
-curr_2d_vb_cell(fields_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
-		creal dxt[2], int off[2])
-{
-  F3(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
-  F3(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
-  F3(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
-  F3(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
-  if (dxt) {
-    dxt[0] -= dx[0];
-    dxt[1] -= dx[1];
-    x[0] += dx[0] - off[0];
-    x[1] += dx[1] - off[1];
-    i[0] += off[0];
-    i[1] += off[1];
-  }
-}
 
 static void
 do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)

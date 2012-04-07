@@ -106,3 +106,40 @@ find_idx_off_pos_1st_rel(creal xi[3], int lg[3], creal og[3], creal pos[3], crea
 	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +			\
      gz##1z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +			\
 	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
+
+#ifdef F3_CURR
+
+// ======================================================================
+// current 1vb (yz)
+
+static inline void
+calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
+{
+  if (off[1] == 0) {
+    dx1[0] = .5 * off[0] - x[0];
+    dx1[1] = dx[1] / dx[0] * dx1[0];
+  } else {
+    dx1[1] = .5 * off[1] - x[1];
+    dx1[0] = dx[0] / dx[1] * dx1[1];
+  }
+}
+
+static inline void
+curr_2d_vb_cell(fields_curr_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
+		creal dxt[2], int off[2])
+{
+  F3_CURR(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
+  F3_CURR(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
+  F3_CURR(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
+  F3_CURR(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
+  if (dxt) {
+    dxt[0] -= dx[0];
+    dxt[1] -= dx[1];
+    x[0] += dx[0] - off[0];
+    x[1] += dx[1] - off[1];
+    i[0] += off[0];
+    i[1] += off[1];
+  }
+}
+
+#endif
