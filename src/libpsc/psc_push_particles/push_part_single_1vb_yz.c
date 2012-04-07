@@ -21,13 +21,13 @@ calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
 }
 
 static inline void
-curr_2d_vb_cell(fields_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
+curr_2d_vb_cell(fields_single_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
 		creal dxt[2], int off[2])
 {
-  F3(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
-  F3(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
-  F3(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
-  F3(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
+  F3_S(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5 - x[1] - .5 * dx[1]);
+  F3_S(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5 + x[1] + .5 * dx[1]);
+  F3_S(pf, JZI, 0,i[0],i[1]  ) += fnq[1] * dx[1] * (.5 - x[0] - .5 * dx[0]);
+  F3_S(pf, JZI, 0,i[0]+1,i[1]) += fnq[1] * dx[1] * (.5 + x[0] + .5 * dx[0]);
   if (dxt) {
     dxt[0] -= dx[0];
     dxt[1] -= dx[1];
@@ -53,7 +53,7 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
   // FIXME, can do -1 .. 1?
   int ib[3] = { 0, -2, -2 };
   int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-  fields_single_alloc(&fld, ib, ie, 6, EX);
+  fields_single_alloc(&fld, ib, ie, 9, 0); // JXI .. HZ
 
   for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
@@ -113,10 +113,10 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
     creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
-    F3(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-    F3(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-    F3(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-    F3(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
+    F3_S(&fld, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
+    F3_S(&fld, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
+    F3_S(&fld, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
+    F3_S(&fld, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
@@ -162,17 +162,25 @@ do_push_part_1vb_yz(int p, fields_t *pf, particles_t *pp)
       off[1-first_dir] = 0;
       off[first_dir] = idiff[first_dir];
       calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
+      curr_2d_vb_cell(&fld, i, x, dx1, fnq, dx, off);
     }
 
     if (second_dir >= 0) {
       off[first_dir] = 0;
       off[second_dir] = idiff[second_dir];
       calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(pf, i, x, dx1, fnq, dx, off);
+      curr_2d_vb_cell(&fld, i, x, dx1, fnq, dx, off);
     }
     
-    curr_2d_vb_cell(pf, i, x, dx, fnq, NULL, NULL);
+    curr_2d_vb_cell(&fld, i, x, dx, fnq, NULL, NULL);
+  }
+
+  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
+    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
+      F3(pf, JXI, 0,iy,iz) += F3_S(&fld, JXI, 0,iy,iz);
+      F3(pf, JYI, 0,iy,iz) += F3_S(&fld, JYI, 0,iy,iz);
+      F3(pf, JZI, 0,iy,iz) += F3_S(&fld, JZI, 0,iy,iz);
+    }
   }
 
   fields_single_free(&fld);
