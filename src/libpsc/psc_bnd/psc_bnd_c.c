@@ -111,7 +111,7 @@ check_domain(struct psc_bnd *bnd)
   struct mrc_domain *domain = mrc_ddc_get_domain(bnd_c->ddc);
   if (domain != psc->mrc_domain) {
     psc_bnd_c_unsetup(bnd);
-    psc_bnd_setup(bnd);
+    psc_bnd_c_setup(bnd);
   }
 }
 
