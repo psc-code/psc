@@ -3,6 +3,7 @@
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
+#include <string.h>
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -56,10 +57,10 @@ static struct param psc_output_particles_hdf5_descr[] = {
 #undef VAR
 
 // ----------------------------------------------------------------------
-// psc_output_particles_hdf5_setup
+// psc_output_particles_hdf5_create
 
 static void
-psc_output_particles_hdf5_setup(struct psc_output_particles *out)
+psc_output_particles_hdf5_create(struct psc_output_particles *out)
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
 
@@ -75,6 +76,15 @@ psc_output_particles_hdf5_setup(struct psc_output_particles *out)
   H5Tinsert(id, "w" , HOFFSET(struct hdf5_prt, w) , H5T_NATIVE_FLOAT);
   
   hdf5->prt_type = id;
+}
+
+// ----------------------------------------------------------------------
+// psc_output_particles_hdf5_setup
+
+static void
+psc_output_particles_hdf5_setup(struct psc_output_particles *out)
+{
+  struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
 
   // set hi to gdims by default (if not set differently before)
   // and calculate wdims (global dims of region we're writing)
@@ -565,6 +575,7 @@ struct psc_output_particles_ops psc_output_particles_hdf5_ops = {
   .name                  = "hdf5",
   .size                  = sizeof(struct psc_output_particles_hdf5),
   .param_descr           = psc_output_particles_hdf5_descr,
+  .create                = psc_output_particles_hdf5_create,
   .setup                 = psc_output_particles_hdf5_setup,
   .destroy               = psc_output_particles_hdf5_destroy,
   .run                   = psc_output_particles_hdf5_run,
