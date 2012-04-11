@@ -209,8 +209,12 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   }
   prof_start(pr);
 
+  bool doaccum_tfield = out_c->dowrite_tfield && 
+        ((psc->timestep >= (out_c->tfield_next - out_c->tfield_length + 1)) || 
+          psc->timestep == 0);
+
   if ((out_c->dowrite_pfield && psc->timestep >= out_c->pfield_next) ||
-      out_c->dowrite_tfield) {
+      (out_c->dowrite_tfield && doaccum_tfield)) {
     struct psc_fields_list *pfd = &out_c->pfd;
     for (int i = 0; i < pfd->nr_flds; i++) {
       psc_output_fields_item_run(out_c->item[i], flds, particles, pfd->flds[i]);
@@ -228,11 +232,13 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   }
 
   if (out_c->dowrite_tfield) {
+   if (doaccum_tfield) {
     // tfd += pfd
     for (int m = 0; m < out_c->tfd.nr_flds; m++) {
       psc_mfields_axpy(out_c->tfd.flds[m], 1., out_c->pfd.flds[m]);
     }
     out_c->naccum++;
+   }
     if (psc->timestep >= out_c->tfield_next) {
       out_c->tfield_next += out_c->tfield_step;
 
@@ -274,6 +280,7 @@ static struct param psc_output_fields_c_descr[] = {
   { "write_tfield"       , VAR(dowrite_tfield)       , PARAM_BOOL(1)           },
   { "tfield_first"       , VAR(tfield_first)         , PARAM_INT(0)            },
   { "tfield_step"        , VAR(tfield_step)          , PARAM_INT(10)           },
+  { "tfield_length"      , VAR(tfield_length)        , PARAM_INT(10)           },
   { "pfield_out_x_min"   , VAR(rn[0])                , PARAM_INT(0)            },  
   { "pfield_out_x_max"   , VAR(rx[0])                , PARAM_INT(1000000000)  },     // a big number to change it later to domain.ihi or command line number
   { "pfield_out_y_min"   , VAR(rn[1])                , PARAM_INT(0)           }, 
