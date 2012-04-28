@@ -95,6 +95,7 @@ struct psc_kh {
   double mi_over_me;
   double wpe_over_wce;
   double Ti_over_Te;
+  double pert;
 
   // calculated from the above
   double B0;
@@ -113,6 +114,7 @@ static struct param psc_kh_descr[] = {
   { "mi_over_me"    , VAR(mi_over_me)      , PARAM_DOUBLE(5.)            },
   { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
   { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)            },
+  { "pert"          , VAR(pert)            , PARAM_DOUBLE(.0)            },
   {},
 };
 #undef VAR
@@ -224,8 +226,8 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 {
   struct psc_kh *kh = to_psc_kh(psc);
 
-  double yl = psc->domain.length[1];
-  double vz = kh->v0z * tanh((x[1] - .5 * yl) / kh->delta);
+  double yl = psc->domain.length[1], zl = psc->domain.length[2];
+  double vz = kh->v0z * tanh((x[1] - .5 * yl * (1. + kh->pert * sin(2*M_PI * x[2] / zl))) / kh->delta);
 
   npt->n = 1.;
   npt->p[2] = vz;
