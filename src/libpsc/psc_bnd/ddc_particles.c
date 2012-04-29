@@ -139,6 +139,30 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
     }
   }
 
+  // set up send_entries
+  for (int p = 0; p < ddcp->nr_patches; p++) {
+    struct ddcp_patch *patch = &ddcp->patches[p];
+
+    for (dir[2] = -1; dir[2] <= 1; dir[2]++) {
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  int dir1 = mrc_ddc_dir2idx(dir);
+	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
+	  struct ddcp_nei *nei = &patch->nei[dir1];
+	  if (nei->rank < 0 || nei->rank == rank) {
+	    continue;
+	  }
+	  struct ddcp_send_entry *se =
+	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
+	  se->patch = p;
+	  se->nei_patch = nei->patch;
+	  se->dir1 = dir1;
+	  se->dir1neg = dir1neg;
+	}
+      }
+    }
+  }
+
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
       ddcp->n_recv_ranks++;
@@ -150,6 +174,26 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
 
   ddcp->send_reqs = malloc(ddcp->n_send_ranks * sizeof(*ddcp->send_reqs));
   ddcp->recv_reqs = malloc(ddcp->n_recv_ranks * sizeof(*ddcp->recv_reqs));
+
+  int n_recv_ranks = 0;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_recv_entries) {
+      info[r].recv_entry_ =
+	malloc(info[r].n_recv_entries * sizeof(struct ddcp_recv_entry));
+      MPI_Irecv(info[r].recv_entry_,
+		sizeof(struct ddcp_recv_entry) / sizeof(int) * info[r].n_recv_entries,
+		MPI_INT, r, 0, comm, &ddcp->recv_reqs[n_recv_ranks++]);
+    }
+  }  
+
+  int n_send_ranks = 0;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_send_entries) {
+      MPI_Isend(info[r].send_entry,
+		sizeof(struct ddcp_send_entry) / sizeof(int) * info[r].n_send_entries,
+		MPI_INT, r, 0, comm, &ddcp->send_reqs[n_send_ranks++]);
+    }
+  }  
 
   return ddcp;
 }
@@ -247,10 +291,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  }
 	  struct ddcp_send_entry *se =
 	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
-	  se->patch = p;
-	  se->nei_patch = nei->patch;
-	  se->dir1 = dir1;
-	  se->dir1neg = dir1neg;
 	  se->n_send = nei->n_send;
 	  info[nei->rank].n_send += nei->n_send;
 	}
