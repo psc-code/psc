@@ -303,10 +303,16 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   int sz = ddcp->size_of_particle / ddcp->size_of_real;
   int dir[3];
 
-  struct ddcp_info_by_rank *info = ddcp->by_rank;
   struct ddcp_info_by_rank **cinfo = ddcp->cinfo;
 
+  for (int r = 0; r < ddcp->n_ranks; r++) {
+    MPI_Irecv(cinfo[r]->recv_cnts, cinfo[r]->n_recv_entries,
+	      MPI_INT, cinfo[r]->rank, 0, comm, &ddcp->recv_reqs[r]);
+  }  
+
+#if 0
   // set up send_entries
+  struct ddcp_info_by_rank *info = ddcp->by_rank;
   for (int r = 0; r < ddcp->n_ranks; r++) {
     cinfo[r]->n_send_entries = 0;
     cinfo[r]->n_send = 0;
@@ -330,11 +336,24 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   }
 
   for (int r = 0; r < ddcp->n_ranks; r++) {
-    MPI_Irecv(cinfo[r]->recv_cnts, cinfo[r]->n_recv_entries,
-	      MPI_INT, cinfo[r]->rank, 0, comm, &ddcp->recv_reqs[r]);
-  }  
+    for (int i = 0; i < cinfo[r]->n_send_entries; i++) {
+      struct ddcp_send_entry *se = &cinfo[r]->send_entry[i];
+      struct ddcp_patch *patch = &ddcp->patches[se->patch];
+      struct ddcp_nei *nei = &patch->nei[se->dir1];
+      assert(cinfo[r]->send_cnts[i] == nei->n_send);
+    }    
+  }
+#endif
 
   for (int r = 0; r < ddcp->n_ranks; r++) {
+    cinfo[r]->n_send = 0;
+    for (int i = 0; i < cinfo[r]->n_send_entries; i++) {
+      struct ddcp_send_entry *se = &cinfo[r]->send_entry[i];
+      struct ddcp_patch *patch = &ddcp->patches[se->patch];
+      struct ddcp_nei *nei = &patch->nei[se->dir1];
+      cinfo[r]->send_cnts[i] = nei->n_send;
+      cinfo[r]->n_send += nei->n_send;
+    }
     MPI_Isend(cinfo[r]->send_cnts, cinfo[r]->n_send_entries,
 	      MPI_INT, cinfo[r]->rank, 0, comm, &ddcp->send_reqs[r]);
   }  
