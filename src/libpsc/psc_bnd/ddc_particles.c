@@ -178,9 +178,7 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
   int n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
-      info[r].recv_entry_ =
-	malloc(info[r].n_recv_entries * sizeof(struct ddcp_recv_entry));
-      MPI_Irecv(info[r].recv_entry_,
+      MPI_Irecv(info[r].recv_entry,
 		sizeof(struct ddcp_recv_entry) / sizeof(int) * info[r].n_recv_entries,
 		MPI_INT, r, 0, comm, &ddcp->recv_reqs[n_recv_ranks++]);
     }
@@ -224,6 +222,16 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
     }
   }
   free(ddcp->patches);
+
+  MPI_Comm comm = MPI_COMM_WORLD; // FIXME
+  int size;
+  MPI_Comm_size(comm, &size);
+
+  struct ddcp_info_by_rank *info = ddcp->by_rank;
+  for (int r = 0; r < size; r++) {
+    free(info[r].send_entry);
+    free(info[r].recv_entry);
+  }
   free(ddcp->by_rank);
   free(ddcp->recv_reqs);
   free(ddcp->send_reqs);
@@ -284,7 +292,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
 	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
 	  int dir1 = mrc_ddc_dir2idx(dir);
-	  int dir1neg = mrc_ddc_dir2idx((int[3]) { -dir[0], -dir[1], -dir[2] });
 	  struct ddcp_nei *nei = &patch->nei[dir1];
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
@@ -301,9 +308,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
   int n_recv_ranks = 0;
   for (int r = 0; r < size; r++) {
     if (info[r].n_recv_entries) {
-      info[r].recv_entry_ =
-	malloc(info[r].n_recv_entries * sizeof(struct ddcp_recv_entry));
-      MPI_Irecv(info[r].recv_entry_,
+      MPI_Irecv(info[r].recv_entry,
 		sizeof(struct ddcp_recv_entry) / sizeof(int) * info[r].n_recv_entries,
 		MPI_INT, r, 0, comm, &ddcp->recv_reqs[n_recv_ranks++]);
     }
@@ -360,14 +365,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }
 #endif
-
-
-  // FIXME, copy received -> actual
-  for (int r = 0; r < size; r++) {
-    for (int i = 0; i < info[r].n_recv_entries; i++) {
-      info[r].recv_entry[i] = info[r].recv_entry_[i];
-    }
-  }
 
   for (int r = 0; r < size; r++) {
     info[r].n_recv = 0;
@@ -493,9 +490,5 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 
   free(send_buf);
   free(recv_buf);
-  
-  for (int r = 0; r < size; r++) {
-    free(info[r].recv_entry_);
-  }
 }
 

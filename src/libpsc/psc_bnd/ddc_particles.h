@@ -26,8 +26,6 @@ struct ddcp_info_by_rank {
   } *recv_entry;
   int n_recv_entries;
   int n_recv;
-
-  struct ddcp_recv_entry *recv_entry_;
 };
 
 struct ddcp_nei {
