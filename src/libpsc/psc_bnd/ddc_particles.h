@@ -6,6 +6,30 @@
 
 #define N_DIR (27)
 
+struct ddcp_info_by_rank {
+  struct ddcp_send_entry {
+    int patch; // source patch (source rank is this rank)
+    int nei_patch; // target patch (target rank is index in send_entry)
+    int dir1;  // direction
+    int dir1neg;
+    int n_send;
+  } *send_entry;
+  int n_send_entries;
+  int n_send;
+
+  struct ddcp_recv_entry { // needs to be same as send_entry with different order!
+    int nei_patch;
+    int patch;
+    int dir1neg;
+    int dir1;
+    int n_recv;
+  } *recv_entry;
+  int n_recv_entries;
+  int n_recv;
+
+  struct ddcp_recv_entry *recv_entry_;
+};
+
 struct ddcp_nei {
   void *send_buf;
   int n_send;
@@ -24,14 +48,12 @@ struct ddcp_patch {
 struct ddc_particles {
   int nr_patches;
   struct ddcp_patch *patches;
-  MPI_Request *send_reqs;
-  MPI_Request *sendp_reqs;
-  MPI_Request *recv_reqs;
   int size_of_particle;
   int size_of_real;
   MPI_Datatype mpi_type_real;
   void  (*realloc)(void *mparticles, int p, int new_nr_particles);
   void *(*get_addr)(void *mparticles, int p, int n);
+  struct ddcp_info_by_rank *by_rank;
 };
 
 struct ddc_particles *ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
