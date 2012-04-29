@@ -83,6 +83,8 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
     if (info[r].n_recv_entries) {
       info[r].recv_entry =
 	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_entry));
+      info[r].recv_cnts =
+	malloc(info[r].n_recv_entries * sizeof(*info[r].recv_cnts));
     }
   }
 
@@ -135,6 +137,8 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
     if (info[r].n_send_entries) {
       info[r].send_entry =
 	malloc(info[r].n_send_entries * sizeof(*info[r].send_entry));
+      info[r].send_cnts = 
+	malloc(info[r].n_send_entries * sizeof(*info[r].send_cnts));
       info[r].n_send_entries = 0;
     }
   }
@@ -231,6 +235,8 @@ ddc_particles_destroy(struct ddc_particles *ddcp)
   for (int r = 0; r < size; r++) {
     free(info[r].send_entry);
     free(info[r].recv_entry);
+    free(info[r].send_cnts);
+    free(info[r].recv_cnts);
   }
   free(ddcp->by_rank);
   free(ddcp->recv_reqs);
@@ -296,10 +302,10 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 	  if (nei->rank < 0 || nei->rank == rank) {
 	    continue;
 	  }
-	  struct ddcp_send_entry *se =
-	    &info[nei->rank].send_entry[info[nei->rank].n_send_entries++];
-	  se->n_send = nei->n_send;
+	  info[nei->rank].send_entry[info[nei->rank].n_send_entries].n_send = nei->n_send;
+	  info[nei->rank].send_cnts[info[nei->rank].n_send_entries] = nei->n_send;
 	  info[nei->rank].n_send += nei->n_send;
+	  info[nei->rank].n_send_entries++;
 	}
       }
     }
@@ -323,6 +329,25 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     }
   }  
 
+  MPI_Waitall(ddcp->n_recv_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->n_send_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
+
+  n_recv_ranks = 0;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_recv_entries) {
+      MPI_Irecv(info[r].recv_cnts, info[r].n_recv_entries,
+		MPI_INT, r, 0, comm, &ddcp->recv_reqs[n_recv_ranks++]);
+    }
+  }  
+
+  n_send_ranks = 0;
+  for (int r = 0; r < size; r++) {
+    if (info[r].n_send_entries) {
+      MPI_Isend(info[r].send_cnts, info[r].n_send_entries,
+		MPI_INT, r, 0, comm, &ddcp->send_reqs[n_send_ranks++]);
+    }
+  }  
+
   // overlap: count local # particles
   for (int p = 0; p < ddcp->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -342,9 +367,6 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       }
     }
   }
-
-  MPI_Waitall(ddcp->n_recv_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
-  MPI_Waitall(ddcp->n_send_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
 
 #if 0
   // still want to figure out how to avoid sending info i can calc
@@ -370,13 +392,16 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
     info[r].n_recv = 0;
   }
 
+  MPI_Waitall(ddcp->n_recv_ranks, ddcp->recv_reqs, MPI_STATUSES_IGNORE);
+  MPI_Waitall(ddcp->n_send_ranks, ddcp->send_reqs, MPI_STATUSES_IGNORE);
+
   // add remote # particles
   for (int r = 0; r < size; r++) {
     for (int i = 0; i < info[r].n_recv_entries; i++) {
       struct ddcp_recv_entry *re = &info[r].recv_entry[i];
       struct ddcp_patch *patch = &ddcp->patches[re->patch];
-      patch->n_recv += re->n_recv;
-      info[r].n_recv += re->n_recv;
+      patch->n_recv += info[r].recv_cnts[i];
+      info[r].n_recv += info[r].recv_cnts[i];
     }
   }
 

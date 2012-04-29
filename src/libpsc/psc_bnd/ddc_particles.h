@@ -14,6 +14,7 @@ struct ddcp_info_by_rank {
     int dir1neg;
     int n_send;
   } *send_entry;
+  int *send_cnts;
   int n_send_entries;
   int n_send;
 
@@ -24,6 +25,7 @@ struct ddcp_info_by_rank {
     int dir1;
     int n_recv;
   } *recv_entry;
+  int *recv_cnts;
   int n_recv_entries;
   int n_recv;
 };
