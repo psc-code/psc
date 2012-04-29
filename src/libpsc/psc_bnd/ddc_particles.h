@@ -12,7 +12,6 @@ struct ddcp_info_by_rank {
     int nei_patch; // target patch (target rank is index in send_entry)
     int dir1;  // direction
     int dir1neg;
-    int n_send;
   } *send_entry;
   int *send_cnts;
   int n_send_entries;
@@ -23,7 +22,6 @@ struct ddcp_info_by_rank {
     int patch;
     int dir1neg;
     int dir1;
-    int n_recv;
   } *recv_entry;
   int *recv_cnts;
   int n_recv_entries;
