@@ -54,7 +54,7 @@ struct ddc_particles {
   void  (*realloc)(void *mparticles, int p, int new_nr_particles);
   void *(*get_addr)(void *mparticles, int p, int n);
   struct ddcp_info_by_rank *by_rank;
-  struct ddcp_info_by_rank **cinfo; // compressed info
+  struct ddcp_info_by_rank *cinfo; // compressed info
   int n_ranks;
   MPI_Request *send_reqs;
   MPI_Request *recv_reqs;
