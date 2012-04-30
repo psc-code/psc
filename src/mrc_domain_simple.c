@@ -42,8 +42,6 @@ static void
 mrc_domain_simple_setup(struct mrc_domain *domain)
 {
   struct mrc_domain_simple *simple = mrc_domain_simple(domain);
-  assert(!domain->is_setup);
-  domain->is_setup = true;
 
   MPI_Comm_rank(domain->obj.comm, &domain->rank);
   MPI_Comm_size(domain->obj.comm, &domain->size);
@@ -105,6 +103,8 @@ mrc_domain_simple_setup(struct mrc_domain *domain)
 
   //  mprintf("off   %d %d %d\n", simple->off[0], simple->off[1], simple->off[2]);
   //  mprintf("gdims %d %d %d\n", simple->gdims[0], simple->gdims[1], simple->gdims[2]);
+
+  mrc_domain_setup_super(domain);
 }
 
 static int

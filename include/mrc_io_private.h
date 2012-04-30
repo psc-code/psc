@@ -18,7 +18,6 @@ struct mrc_io_params {
 struct mrc_io {
   struct mrc_obj obj;
   struct mrc_io_params par;
-  bool is_setup;
   int step; //> current output's timestep (for use in creating filename)
   float time; //> current output's time
 

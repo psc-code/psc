@@ -13,7 +13,6 @@
 struct mrc_domain {
   struct mrc_obj obj;
   int rank, size;
-  int is_setup;
   struct mrc_crds *crds;
   struct mrc_ddc *ddc;
 };

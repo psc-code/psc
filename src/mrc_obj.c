@@ -488,22 +488,32 @@ mrc_obj_view(struct mrc_obj *obj)
   }
 }
 
+// to be called internally from subclass's setup() to do its superclass setup
+
 void
-mrc_obj_setup_sub(struct mrc_obj *obj)
+mrc_obj_setup_children(struct mrc_obj *obj)
 {
-  if (obj->ops && obj->ops->setup) {
-    obj->ops->setup(obj);
+  struct mrc_obj *child;
+  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
+    mrc_obj_setup(child);
   }
 }
 
 static void
-mrc_obj_setup_this(struct mrc_obj *obj)
+mrc_obj_setup_default(struct mrc_obj *obj)
+{
+  mrc_obj_setup_children(obj);
+}
+
+void
+mrc_obj_setup_super(struct mrc_obj *obj)
 {
   struct mrc_class *cls = obj->cls;
+
   if (cls->setup) {
     cls->setup(obj);
   } else {
-    mrc_obj_setup_sub(obj);
+    mrc_obj_setup_default(obj);
   }
   if (obj->view_flag) {
     obj->view_flag = false;
@@ -511,14 +521,25 @@ mrc_obj_setup_this(struct mrc_obj *obj)
   }
 }
 
+bool
+mrc_obj_is_setup(struct mrc_obj *obj)
+{
+  return obj->is_setup;
+}
+
 void
 mrc_obj_setup(struct mrc_obj *obj)
 {
-  mrc_obj_setup_this(obj);
+  if (obj->is_setup) {
+    mprintf("WARNING: %s/%p is set up twice!\n\n", obj->cls->name, obj);
+    assert(0);
+  }
+  obj->is_setup = true;
 
-  struct mrc_obj *child;
-  __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
-    mrc_obj_setup(child);
+  if (obj->ops && obj->ops->setup) {
+    obj->ops->setup(obj);
+  } else {
+    mrc_obj_setup_super(obj);
   }
 }
 
@@ -546,6 +567,29 @@ mrc_obj_find_child(struct mrc_obj *obj, const char *name)
   return NULL;
 }
 
+void
+mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
+{
+  struct mrc_class *cls = obj->cls;
+
+  if (cls->read) {
+    cls->read(obj, io);
+  } else {
+    mrc_obj_read_children(obj, io);
+    // FIXME, ugly: basically the same as mrc_obj_setup(), but skipping the children
+    // setup
+    obj->is_setup = true;
+
+    if (obj->ops && obj->ops->setup) {
+      obj->ops->setup(obj);
+    } else {
+      if (cls->setup) {
+	cls->setup(obj);
+      }
+    }
+  }
+}
+
 static void
 mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
 {
@@ -565,11 +609,10 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
     char *p = (char *) obj->subctx + obj->ops->param_offset;
     mrc_params_read(p, obj->ops->param_descr, mrc_obj_name(obj), io);
   }
-  if (cls->read) {
-    cls->read(obj, io);
+  if (obj->ops && obj->ops->read) {
+    obj->ops->read(obj, io);
   } else {
-    mrc_obj_read_children(obj, io);
-    mrc_obj_setup(obj);
+    mrc_obj_read_super(obj, io);
   }
 }
 

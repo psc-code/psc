@@ -16,6 +16,8 @@ mrc_ts_rk2_setup(struct mrc_ts *ts)
   assert(ts->x);
   rk2->xm = mrc_ts_vec_duplicate(ts, ts->x);
   rk2->rhs = mrc_ts_vec_duplicate(ts, ts->x);
+
+  mrc_ts_setup_super(ts);
 }
 
 static void

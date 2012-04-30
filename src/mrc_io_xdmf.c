@@ -563,6 +563,8 @@ xdmf_close(struct mrc_io *io)
 static void
 ds_xdmf_setup(struct mrc_io *io)
 {
+  mrc_io_setup_super(io);
+
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];
   sprintf(filename, "%s/%s.xdmf", io->par.outdir, io->par.basename);
@@ -724,8 +726,13 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
     H5T_class_t class;
     size_t sz;
     ierr = H5LTget_attribute_info(group, ".", name, &dims, &class, &sz); CE;
-    pv->u_string = malloc(sz);
-    ierr = H5LTget_attribute_string(group, ".", name, (char *)pv->u_string); CE;
+    char *s = malloc(sz);
+    ierr = H5LTget_attribute_string(group, ".", name, s); CE;
+    if (strcmp(s, "(NULL)") == 0) {
+      free(s);
+      s = NULL;
+    }
+    pv->u_string = s;
     break;
   case PT_INT3:
     ierr = H5LTget_attribute_int(group, ".", name, pv->u_int3); CE;
@@ -768,7 +775,11 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     H5LTset_attribute_double(group, ".", name, &pv->u_double, 1);
     break;
   case PT_STRING:
-    H5LTset_attribute_string(group, ".", name, pv->u_string);
+    if (pv->u_string) {
+      H5LTset_attribute_string(group, ".", name, pv->u_string);
+    } else {
+      H5LTset_attribute_string(group, ".", name, "(NULL)");
+    }
     break;
   case PT_INT3:
     H5LTset_attribute_int(group, ".", name, pv->u_int3, 3);
@@ -916,7 +927,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     assert(!hdf5->vfld);
     hdf5->vfld = mrc_f3_create(mrc_f3_comm(fld));
     mrc_f3_set_param_int3(hdf5->vfld, "dims", dims);
-    mrc_f3_set_param_int(hdf5->vfld, "nr_comps", 3);
+    mrc_f3_set_nr_comps(hdf5->vfld, 3);
     mrc_f3_setup(hdf5->vfld);
     copy_and_scale(hdf5->vfld, 0, fld, m, scale);
   } else if (c == 'y') {

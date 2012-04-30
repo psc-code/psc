@@ -51,6 +51,8 @@ static struct param xdmf_collective_descr[] = {
 static void
 xdmf_collective_setup(struct mrc_io *io)
 {
+  mrc_io_setup_super(io);
+
   struct xdmf *xdmf = to_xdmf(io);
 
   char filename[strlen(io->par.outdir) + strlen(io->par.basename) + 7];

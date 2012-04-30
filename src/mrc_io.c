@@ -14,8 +14,6 @@
 // ======================================================================
 // mrc_io
 
-#define check_is_setup(io) do { assert(io->is_setup); } while (0)
-
 static inline struct mrc_io_ops *
 mrc_io_ops(struct mrc_io *io)
 {
@@ -68,10 +66,6 @@ _mrc_io_setup(struct mrc_io *io)
 {
   MPI_Comm_rank(io->obj.comm, &io->rank);
   MPI_Comm_size(io->obj.comm, &io->size);
-  if (mrc_io_ops(io)->setup) {
-    mrc_io_ops(io)->setup(io);
-  }
-  io->is_setup = true;
 }
 
 // ----------------------------------------------------------------------
@@ -80,7 +74,8 @@ _mrc_io_setup(struct mrc_io *io)
 void
 mrc_io_open(struct mrc_io *io, const char *mode, int step, float time)
 {
-  check_is_setup(io);
+  assert(mrc_io_is_setup(io));
+
   struct mrc_io_ops *ops = mrc_io_ops(io);
   io->step = step;
   io->time = time;
@@ -500,7 +495,7 @@ mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
 static void
 mrc_io_init()
 {
-#ifdef HAVE_HDF5_H
+#ifdef HAVE_HDF5
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_collective_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_io, &mrc_io_xdmf_ops);

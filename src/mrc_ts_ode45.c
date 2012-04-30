@@ -91,6 +91,8 @@ mrc_ts_ode45_setup(struct mrc_ts *ts)
   if (ts->dt == 0.) {
     ts->dt = (ts->max_time - ts->time) / 100.; // initial guess at a step size
   }
+
+  mrc_ts_setup_super(ts);
 }
 
 static void

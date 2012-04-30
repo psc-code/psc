@@ -123,6 +123,7 @@ struct mrc_f3 {
 MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
+void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
 const int *mrc_f3_off(struct mrc_f3 *x);

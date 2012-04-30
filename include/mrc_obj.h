@@ -21,6 +21,7 @@ struct mrc_obj {
   list_t child_entry; //< an mrc_obj can be child of exactly one parent mrc_obj
   list_t children_list; //< this is the list where a parent keeps track of children
   bool view_flag; //< if true, call ::view() at the end of ::setup()
+  bool is_setup; //< keep track of whether ::setup() was already called
 };
 
 typedef void (*mrc_void_func_t)(void);
@@ -101,12 +102,15 @@ void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char 
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
-void mrc_obj_setup_sub(struct mrc_obj *obj);
+void mrc_obj_setup_super(struct mrc_obj *obj);
+void mrc_obj_setup_children(struct mrc_obj *obj);
 void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
 void mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io);
 struct mrc_obj *mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *cls);
+void mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io);
 void mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io);
+bool mrc_obj_is_setup(struct mrc_obj *obj);
 mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 
 #define MRC_CLASS_DECLARE(pfx, obj_type)				\
@@ -267,6 +271,18 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   }									\
 									\
   static inline void 							\
+  pfx ## _setup_super(obj_type *obj)					\
+  {									\
+    mrc_obj_setup_super((struct mrc_obj *)obj);				\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _setup_children(obj_type *obj)					\
+  {									\
+    mrc_obj_setup_children((struct mrc_obj *)obj);			\
+  }									\
+									\
+  static inline void 							\
   pfx ## _add_child(obj_type *obj, struct mrc_obj *child)		\
   {									\
     mrc_obj_add_child((struct mrc_obj *)obj, child);			\
@@ -285,6 +301,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
 			      (struct mrc_class *) &mrc_class_ ## pfx); \
   }									\
 									\
+  static inline void 							\
+  pfx ## _read_super(obj_type *obj, struct mrc_io *io)			\
+  {									\
+    mrc_obj_read_super((struct mrc_obj *)obj, io);			\
+  }									\
+									\
   static inline void							\
   pfx ## _read_children(obj_type *obj, struct mrc_io *io)		\
   {									\
@@ -295,6 +317,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _write(obj_type *obj, struct mrc_io *io)			\
   {									\
     mrc_obj_write((struct mrc_obj *)obj, io);				\
+  }									\
+									\
+  static inline bool 							\
+  pfx ## _is_setup(obj_type *obj)					\
+  {									\
+    return mrc_obj_is_setup((struct mrc_obj *)obj);			\
   }									\
 									\
   static inline mrc_void_func_t						\
@@ -316,5 +344,8 @@ void __mrc_class_register_subclass(struct mrc_class *cls,
 				   struct mrc_obj_ops *ops);
 
 #define mrc_to_subobj(o, subobj_type) ((subobj_type *)((o)->obj.subctx))
+
+#define mrc_obj_for_each_child(item, parent, type) \
+  __list_for_each_entry(item, &parent->obj.children_list, obj.child_entry, type)
 
 #endif
