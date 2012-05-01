@@ -10,6 +10,7 @@
 
 enum param_type {
   PT_INT,
+  PT_UINT,
   PT_BOOL,
   PT_FLOAT,
   PT_DOUBLE,
@@ -22,6 +23,7 @@ enum param_type {
 };
 
 #define PARAM_INT(x)      PT_INT,    .u = { .ini_int = (x), }
+#define PARAM_UINT(x)     PT_UINT,   .u = { .ini_uint = (x), }
 #define PARAM_BOOL(x)     PT_BOOL,   .u = { .ini_bool = (x), }
 #define PARAM_FLOAT(x)    PT_FLOAT,  .u = { .ini_float = (x), }
 #define PARAM_DOUBLE(x)   PT_DOUBLE, .u = { .ini_double = (x), }
@@ -34,6 +36,7 @@ enum param_type {
 
 union param_u {
   int u_int;
+  unsigned int u_uint;
   bool u_bool;
   float u_float;
   double u_double;
@@ -56,6 +59,7 @@ struct param {
   enum param_type type;
   union {
     int    ini_int;
+    int    ini_uint;
     int    ini_bool;
     float  ini_float;
     double ini_double;
@@ -77,11 +81,13 @@ void mrc_params_print_all(MPI_Comm comm);
 void mrc_params_insert_option(const char *name, const char *val);
 int  mrc_params_get_option_string(const char *name, const char **pval);
 int  mrc_params_get_option_int(const char *name, int *pval);
+int  mrc_params_get_option_uint(const char *name, unsigned int *pval);
 int  mrc_params_get_option_float(const char *name, float *pval);
 int  mrc_params_get_option_double(const char *name, double *pval);
 int  mrc_params_get_option_bool(const char *name, bool *pval);
 int  mrc_params_get_option_string_help(const char *name, const char **pval, const char *help);
 int  mrc_params_get_option_int_help(const char *name, int *pval, const char *help);
+int  mrc_params_get_option_uint_help(const char *name, unsigned int *pval, const char *help);
 int  mrc_params_get_option_float_help(const char *name, float *pval, const char *help);
 int  mrc_params_get_option_double_help(const char *name, double *pval, const char *help);
 int  mrc_params_get_option_bool_help(const char *name, bool *pval, const char *help);

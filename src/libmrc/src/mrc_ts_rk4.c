@@ -18,6 +18,8 @@ mrc_ts_rk4_setup(struct mrc_ts *ts)
   for (int k = 0; k < 4; k++) {
     rk4->xk[k] = mrc_ts_vec_duplicate(ts, ts->x);
   }
+
+  mrc_ts_setup_super(ts);
 }
 
 static void

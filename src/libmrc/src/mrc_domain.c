@@ -60,6 +60,7 @@ _mrc_domain_setup(struct mrc_domain *domain)
   if (domain->crds) {
     mrc_crds_setup(domain->crds);
   }
+  mrc_domain_setup_children(domain);
 }
 
 static void
