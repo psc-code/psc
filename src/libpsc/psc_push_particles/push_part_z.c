@@ -42,8 +42,6 @@ do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
-    creal h1 = j1-u;
-    creal h2 = j2-v;
     creal h3 = j3-w;
 
     creal gmz=.5f*(.5f+h3)*(.5f+h3);
@@ -62,8 +60,6 @@ do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
     int l1=nint(u);
     int l2=nint(v);
     int l3=nint(w);
-    h1=l1-u;
-    h2=l2-v;
     h3=l3-w;
     creal hmz=.5f*(.5f+h3)*(.5f+h3);
     creal h0z=.75f-h3*h3;
