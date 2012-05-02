@@ -53,17 +53,5 @@ main(int argc, char **argv)
   //  psc_check_currents_ref(ppsc, ppsc->flds, 1e-1, 3);
   psc_case_destroy(_case);
 
-#ifdef USE_SSE2
-  struct psc_mod_config conf_sse2 = {
-    .mod_particle = "sse2",
-  };
-  psc_create_test_xz(&conf_sse2);
-  psc_push_particles();
-  //  psc_dump_particles("part-2");
-  psc_check_particles_ref(1e-7, "push_part_xz -- sse2");
-  psc_check_currents_ref(1e-6);
-  psc_destroy();
-#endif
-
   psc_testing_finalize();
 }
