@@ -19,7 +19,7 @@ static inline void
 push_pxi(particle_t *part, creal exq, creal eyq, creal ezq,
 	 creal hxq, creal hyq, creal hzq, creal dqs)
 {
-  creal dq = dqs * part->qni / part->mni;
+  creal dq = dqs * particle_qni_div_mni(part);
   creal pxm = part->pxi + dq*exq;
   creal pym = part->pyi + dq*eyq;
   creal pzm = part->pzi + dq*ezq;

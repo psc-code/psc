@@ -30,6 +30,18 @@ particles_single_get_one(particles_single_t *pp, int n)
   return &pp->particles[n];
 }
 
+static inline particle_single_real_t
+particle_single_qni_div_mni(particle_single_t *p)
+{
+  return p->qni / p->mni;
+}
+
+static inline particle_single_real_t
+particle_single_qni_wni(particle_single_t *p)
+{
+  return p->qni * p->wni;
+}
+
 static inline int
 particle_single_real_nint(particle_single_real_t x)
 {

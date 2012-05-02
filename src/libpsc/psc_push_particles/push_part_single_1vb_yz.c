@@ -67,7 +67,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     creal of[3];
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
-    creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
+    creal fnqx = vxi[0] * particle_qni_wni(part) * fnqs;
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
@@ -110,8 +110,8 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
       second_dir = 1 - first_dir;
     }
 
-    creal fnq[2] = { part->qni * part->wni * fnqys,
-		     part->qni * part->wni * fnqzs };
+    creal fnq[2] = { particle_qni_wni(part) * fnqys,
+		     particle_qni_wni(part) * fnqzs };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;

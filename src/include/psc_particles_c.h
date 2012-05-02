@@ -30,6 +30,18 @@ particles_c_get_one(particles_c_t *pp, int n)
   return &pp->particles[n];
 }
 
+static inline particle_c_real_t
+particle_c_qni_div_mni(particle_c_t *p)
+{
+  return p->qni / p->mni;
+}
+
+static inline particle_c_real_t
+particle_c_qni_wni(particle_c_t *p)
+{
+  return p->qni * p->wni;
+}
+
 static inline int
 particle_c_real_nint(particle_c_real_t x)
 {
