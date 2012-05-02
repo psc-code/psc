@@ -113,8 +113,8 @@ psc_es1_create(struct psc *psc)
   psc->domain.bnd_part_hi[0] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
-  psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
+  psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
+  psc->domain.bnd_part_hi[2] = BND_PART_ABSORBING;
 
   psc_moments_set_type(psc->moments, "1st_cc");
 }
@@ -125,19 +125,11 @@ psc_es1_create(struct psc *psc)
 static double
 psc_es1_init_field(struct psc *psc, double x[3], int m)
 {
-  struct psc_es1 *es1 = to_psc_es1(psc);
+  //struct psc_es1 *es1 = to_psc_es1(psc);
 
 
   switch (m) {
-  case EZ: ;
-    double ez = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
-      struct psc_es1_species *s = &es1->species[kind];
-      double theta = 2. * M_PI * s->mode / psc->domain.length[2] * x[2];
-      ez += s->q * s->x1 * cos(theta + s->thetax);
-    }
-    return ez;
-
+ 
   default: return 0.;
   }
 }
@@ -153,10 +145,9 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 
   if (count_only) {
     psc_foreach_patch(psc, p) {
-      int *ldims = psc->patch[p].ldims;
       int n = 0;
       for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
-	n += ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
+	n += 1;
       }
       nr_particles_by_patch[p] = n;
     }
@@ -182,27 +173,17 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     int il1 = 0;
     for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
-      int *ldims = psc->patch[p].ldims;
-      int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
-      int ngr = n / s->nlg;
-      //double lg = l / nlg;
-      double ddx = l / n;
-      for (int i = 0; i < ngr; i++) {
-	particle_t *p = particles_get_one(pp, il1 + i);
-	double x0 = (i + .5) * ddx;
+      int n = 1;
+      for (int i = 0; i < n; i++) {
+	particle_t *p = particles_get_one(pp, il1++);
+	double z0 = l/2.;
 	
-	p->zi = x0;
+	p->zi = z0;
 	p->pzi = s->v0 / psc->prm.cc;
 	p->qni = s->q;
 	p->mni = s->m;
 	p->wni = 1.;
-      }
-      for (int i = 0; i < n; i++) {
-	particle_t *p = particles_get_one(pp, il1++);
-	double theta = 2. * M_PI * s->mode * p->zi / l;
-	p->zi  += s->x1 * cos(theta + s->thetax);
-	p->pzi += s->v1 * sin(theta + s->thetav);
-      }
+      } 
     }
     pp->n_part = il1;
     assert(pp->n_part == nr_particles_by_patch[p]);

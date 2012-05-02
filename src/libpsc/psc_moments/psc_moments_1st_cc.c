@@ -226,6 +226,16 @@ add_ghosts_reflecting_lo(mfields_c_t *res, int p, int d, int mb, int me)
 	}
       }
     }
+  } else if (d == 2) {
+    for (int iy = 0; iy < patch->ldims[1]; iy++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iz = 0; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz-1);
+	  }
+	}
+      }
+    }
   } else {
     assert(0);
   }
@@ -243,6 +253,16 @@ add_ghosts_reflecting_hi(mfields_c_t *res, int p, int d, int mb, int me)
 	int iy = patch->ldims[1] - 1; {
 	  for (int m = mb; m < me; m++) {
 	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
+	  }
+	}
+      }
+    }
+  } else if (d == 2) {
+    for (int iy = 0; iy < patch->ldims[1]; iy++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iz = patch->ldims[2] - 1; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz+1);
 	  }
 	}
       }

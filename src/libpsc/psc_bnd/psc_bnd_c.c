@@ -223,6 +223,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 	pp->particles[patch->head++] = *part;
       } else {
 	// slow path
+	bool drop=false;
 	int dir[3];
 	for (int d = 0; d < 3; d++) {
 	  if (xi[d] < xb[d]) {
@@ -236,6 +237,9 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 	      case BND_PART_PERIODIC:
 		xi[d] += xgl[d];
 		dir[d] = -1;
+		break;
+	      case BND_PART_ABSORBING:
+		drop=true;
 		break;
 	      default:
 		assert(0);
@@ -256,6 +260,9 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 		xi[d] -= xgl[d];
 		dir[d] = +1;
 		break;
+	      case BND_PART_ABSORBING:
+		drop=true;
+		break;
 	      default:
 		assert(0);
 	      }
@@ -267,10 +274,12 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 	    dir[d] = 0;
 	  }
 	}
-	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  pp->particles[patch->head++] = *part;
-	} else {
-	  ddc_particles_queue(ddcp, patch, dir, part);
+	if (!drop){
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    pp->particles[patch->head++] = *part;
+	  } else {
+	    ddc_particles_queue(ddcp, patch, dir, part);
+	  }
 	}
       }
     }

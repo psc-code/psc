@@ -134,6 +134,7 @@ enum {
 enum {
   BND_PART_REFLECTING,
   BND_PART_PERIODIC,
+  BND_PART_ABSORBING,
 };
 
 ///Describes the spatial domain to operate on.

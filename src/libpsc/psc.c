@@ -45,6 +45,7 @@ static struct mrc_param_select bnd_fld_descr[] = {
 static struct mrc_param_select bnd_part_descr[] = {
   { .val = BND_PART_REFLECTING , .str = "reflecting"  },
   { .val = BND_PART_PERIODIC   , .str = "periodic"    },
+  { .val = BND_PART_ABSORBING  , .str = "absorbing"    },
   {},
 };
 
