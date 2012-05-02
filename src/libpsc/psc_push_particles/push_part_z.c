@@ -211,3 +211,123 @@ psc_push_particles_generic_c_push_z(struct psc_push_particles *push,
   psc_mparticles_put_cf(particles, particles_base);
 }
 
+
+
+static void
+do_genc_calc_j_z(int p, fields_t *pf, particles_t *pp)
+{
+#define S0Z(off) s0z[off+2]
+#define S1Z(off) s1z[off+2]
+
+  creal s0z[5] = {}, s1z[5];
+
+  creal dt = ppsc->dt;
+  creal zl = .5f * dt;
+  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  creal fnqzs = ppsc->dx[2] * fnqs / dt;
+  creal dzi = 1.f / ppsc->dx[2];
+
+  struct psc_patch *patch = &ppsc->patch[p];
+  for (int n = 0; n < pp->n_part; n++) {
+    particle_t *part = particles_get_one(pp, n);
+
+    // x^n, p^n -> x^(n-.5), p^n
+
+    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    
+
+    creal vxi = part->pxi * root;
+    creal vyi = part->pyi * root;
+    creal vzi = part->pzi * root;
+
+    creal zi = part->zi - vzi * zl;
+    creal w = (zi - patch->xb[2]) * dzi;
+
+    int j1 = 0;
+    int j2 = 0;
+    int j3 = nint(w);
+    creal h3 = j3-w;
+
+    // CHARGE DENSITY FORM FACTOR AT (n-.5)*dt 
+
+    S0Z(-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
+    S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
+    S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+
+    // CHARGE DENSITY FORM FACTOR AT (n+0.5)*dt 
+
+    zi = part->zi + vzi * zl;
+
+    w = (zi - patch->xb[2]) * dzi;
+    int k3 = nint(w);
+    h3 = k3 - w;
+
+    for (int i = -2; i <= 2; i++) {
+      S1Z(i) = 0.f;
+    }
+
+    S1Z(k3-j3-1) = .5f*(1.5f-creal_abs(h3-1.f))*(1.5f-creal_abs(h3-1.f));
+    S1Z(k3-j3+0) = .75f-creal_abs(h3)*creal_abs(h3);
+    S1Z(k3-j3+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
+
+    // CURRENT DENSITY AT (n+1.0)*dt
+
+    for (int i = -1; i <= 1; i++) {
+      S1Z(i) -= S0Z(i);
+    }
+
+    int l3min, l3max;
+    
+    if (k3 == j3) {
+      l3min = -1; l3max = +1;
+    } else if (k3 == j3 - 1) {
+      l3min = -2; l3max = +1;
+    } else { // (k3 == j3 + 1)
+      l3min = -1; l3max = +2;
+    }
+
+    creal jxh;
+    creal jyh;
+    creal jzh;
+
+    creal fnqx = vxi * part->qni * part->wni * fnqs;
+    creal fnqy = vyi * part->qni * part->wni * fnqs;
+    creal fnqz = part->qni * part->wni * fnqzs;
+    jzh = 0.f;
+    for (int l3 = l3min; l3 <= l3max; l3++) {
+      creal wx = S0Z(l3) + .5f * S1Z(l3);
+      creal wy = S0Z(l3) + .5f * S1Z(l3);
+      creal wz = S1Z(l3);
+      
+      jxh = fnqx*wx;
+      jyh = fnqy*wy;
+      jzh -= fnqz*wz;
+      
+      F3(pf, JXI, j1,j2,j3+l3) += jxh;
+      F3(pf, JYI, j1,j2,j3+l3) += jyh;
+      F3(pf, JZI, j1,j2,j3+l3) += jzh;
+    }
+  }
+}
+
+
+void
+psc_push_particles_generic_c_calc_j_z(struct psc_push_particles *push,
+				    mparticles_base_t *particles_base,
+				    mfields_base_t *flds_base)
+{
+  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
+
+  psc_mfields_zero(flds, JXI);
+  psc_mfields_zero(flds, JYI);
+  psc_mfields_zero(flds, JZI);
+  
+  psc_foreach_patch(ppsc, p) {
+    do_genc_calc_j_z(p, psc_mfields_get_patch(flds, p),
+			psc_mparticles_get_patch(particles, p));
+  }
+
+  psc_mfields_put_cf(flds, flds_base, JXI, JXI + 3);
+  psc_mparticles_put_cf(particles, particles_base);
+}

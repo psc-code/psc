@@ -12,6 +12,7 @@ struct psc_push_particles_ops psc_push_particles_generic_c_ops = {
   .push_xz               = psc_push_particles_generic_c_push_xz,
   .push_yz               = psc_push_particles_generic_c_push_yz,
   .push_xyz              = psc_push_particles_generic_c_push_xyz,
+  .calc_j_z              = psc_push_particles_generic_c_calc_j_z,
 
   .push_yz_a             = psc_push_particles_generic_c_push_yz_a,
   .push_yz_b             = psc_push_particles_generic_c_push_yz_b,

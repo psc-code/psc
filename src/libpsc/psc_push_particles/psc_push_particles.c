@@ -33,6 +33,37 @@ psc_push_particles_run(struct psc_push_particles *push,
 }
 
 void
+psc_push_particles_calc_j(struct psc_push_particles *push,
+			  mparticles_base_t *particles, mfields_base_t *flds)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+  int *im = ppsc->domain.gdims;
+  if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
+    if (ops->calc_j_xyz) {
+      ops->calc_j_xyz(push, particles, flds);
+    }
+  } else if (im[0] > 1 && im[2] > 1) { // xz
+    if (ops->calc_j_xz) {
+      ops->calc_j_xz(push, particles, flds);
+    }
+  } else if (im[0] > 1 && im[1] > 1) { // xy
+    if (ops->calc_j_xy) {
+      ops->calc_j_xy(push, particles, flds);
+    }
+  } else if (im[1] > 1 && im[2] > 1) { // yz
+    if (ops->calc_j_yz) {
+      ops->calc_j_yz(push, particles, flds);
+    }
+  } else if (im[2] > 1) { // z
+    if (ops->calc_j_z) {
+      ops->calc_j_z(push, particles, flds);
+    }
+  } else {
+    assert(0);
+  }
+}
+
+void
 psc_push_particles_push_yz_a(struct psc_push_particles *push,
 			     mparticles_base_t *particles, mfields_base_t *flds)
 {

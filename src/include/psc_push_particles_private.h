@@ -25,6 +25,21 @@ struct psc_push_particles_ops {
   void (*push_xyz)(struct psc_push_particles *push_particles,
 		   mparticles_base_t *particles, mfields_base_t *flds);
 
+  void (*calc_j_x)(struct psc_push_particles *push_particles,
+		   mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_y)(struct psc_push_particles *push_particles,
+		   mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_z)(struct psc_push_particles *push_particles,
+		   mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_xy)(struct psc_push_particles *push_particles,
+		    mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_xz)(struct psc_push_particles *push_particles,
+		    mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_yz)(struct psc_push_particles *push_particles,
+		    mparticles_base_t *particles, mfields_base_t *flds);
+  void (*calc_j_xyz)(struct psc_push_particles *push_particles,
+		     mparticles_base_t *particles, mfields_base_t *flds);
+  
   void (*push_yz_a)(struct psc_push_particles *push_particles,
 		    mparticles_base_t *particles, mfields_base_t *flds);
   void (*push_yz_b)(struct psc_push_particles *push_particles,

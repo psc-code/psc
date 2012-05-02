@@ -811,7 +811,9 @@ psc_setup_fields_default(struct psc *psc)
     } foreach_3d_g_end;
   }
   psc_mfields_put_cf(flds, psc->flds, JXI, HX + 3);
+  psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
+
 
 // ----------------------------------------------------------------------
 // psc_setup_field_pml helper
