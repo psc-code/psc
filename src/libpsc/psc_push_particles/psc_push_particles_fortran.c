@@ -174,7 +174,7 @@ psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
 				     mparticles_base_t *particles_base,
 				     mfields_base_t *flds_base)
 {
-  assert(ppsc->nr_patches = 1);
+  assert(ppsc->nr_patches == 1);
   mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
