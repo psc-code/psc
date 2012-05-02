@@ -11,9 +11,8 @@ typedef float particle_single_real_t;
 typedef struct {
   particle_single_real_t xi, yi, zi;
   particle_single_real_t pxi, pyi, pzi;
-  particle_single_real_t qni;
-  particle_single_real_t mni;
-  particle_single_real_t wni;
+  particle_single_real_t qni_div_mni;
+  particle_single_real_t qni_wni;
 } particle_single_t;
 
 typedef struct {
@@ -33,13 +32,13 @@ particles_single_get_one(particles_single_t *pp, int n)
 static inline particle_single_real_t
 particle_single_qni_div_mni(particle_single_t *p)
 {
-  return p->qni / p->mni;
+  return p->qni_div_mni;
 }
 
 static inline particle_single_real_t
 particle_single_qni_wni(particle_single_t *p)
 {
-  return p->qni * p->wni;
+  return p->qni_wni;
 }
 
 static inline int

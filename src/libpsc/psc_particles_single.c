@@ -54,15 +54,27 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
+      particle_c_real_t qni, mni, wni;
+      if (part_base->qni_div_mni == 0.) {
+	qni = 0.;
+	wni = part_base->qni_wni;
+	mni = -1.;
+	// FIXME, irrelevant if no-copy assert(0); // can't recover the mass of a neutral particle
+      } else {
+	qni = part_base->qni_div_mni > 0 ? 1. : -1.;
+	mni = qni / part_base->qni_div_mni;
+	wni = part_base->qni_wni / qni;
+      }
+
       part->xi  = part_base->xi + patch->xb[0];
       part->yi  = part_base->yi + patch->xb[1];
       part->zi  = part_base->zi + patch->xb[2];
       part->pxi = part_base->pxi;
       part->pyi = part_base->pyi;
       part->pzi = part_base->pzi;
-      part->qni = part_base->qni;
-      part->mni = part_base->mni;
-      part->wni = part_base->wni;
+      part->qni = qni;
+      part->mni = mni;
+      part->wni = wni;
     }
   }
 }
@@ -81,15 +93,22 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
-      part_base->xi  = part->xi - patch->xb[0];
-      part_base->yi  = part->yi - patch->xb[1];
-      part_base->zi  = part->zi - patch->xb[2];
-      part_base->pxi = part->pxi;
-      part_base->pyi = part->pyi;
-      part_base->pzi = part->pzi;
-      part_base->qni = part->qni;
-      part_base->mni = part->mni;
-      part_base->wni = part->wni;
+      particle_single_real_t qni_div_mni = part->qni / part->mni;
+      particle_single_real_t qni_wni;
+      if (part->qni != 0.) {
+	qni_wni = part->qni * part->wni;
+      } else {
+	qni_wni = part->wni;
+      }
+
+      part_base->xi          = part->xi - patch->xb[0];
+      part_base->yi          = part->yi - patch->xb[1];
+      part_base->zi          = part->zi - patch->xb[2];
+      part_base->pxi         = part->pxi;
+      part_base->pyi         = part->pyi;
+      part_base->pzi         = part->pzi;
+      part_base->qni_div_mni = qni_div_mni;
+      part_base->qni_wni     = qni_wni;
     }
   }
 }
