@@ -1,0 +1,44 @@
+>>> from v2dpsc import *
+>>> 
+>>> # a minimal command to view Ey given the timestep ts and data type dtype
+>>> view2d('ey',ts=139380,dtype='tfd',dims='xz')
+>>> 
+>>> 
+>>> # get Jy data and show it
+>>> fname='tfd.139380_p000000.h5'#filename of the PSC data
+>>> fjy=getfld('jy',filename=fname,dims='xz')
+>>> fjy.max()
+0.038585179
+>>> fjy.min()
+-0.10521867
+>>> v2d(fjy,clim=[-0.11,0.11])i# visualize data (also rescale the colormap so that 0 is in the middle by setting clim)
+>>> 
+>>> # calculate magnetic flux, and show contours of it over Jy data. The flux contours are magnetic field lines
+>>> psi=calcfld('psi',filename=fname,dims='xz')
+>>> v2d(fjy,clim=[-0.11,0.11],show=False) 
+>>> plt.contour(psi,20,colors='k')
+>>> plt.show()
+>>> 
+>>> # calculate electron current Jye and show it with magnetic field lines; Now also specify the two coordinates -25~+25.
+>>> fjye=calcfld('jye',filename=fname,dims='xz')
+>>> v2d(fjye,extent=[-25,25,-25,25],show=False) 
+>>> psi.shape
+(1024, 1024)
+>>> x=z=np.linspace(-25,25,1024,endpoint=False)
+>>> xx,zz=np.meshgrid(x,z)
+>>> plt.contour(xx,zz,psi,20,colors='k')
+>>> plt.show()
+>>> 
+>>> # retrieve By. Data filename is formatted by ts (timestep) and dtype.
+>>> fby=getfld('hy',ts=139380, dtype='tfd',dims='xz')
+>>> v2d(fby,extent=[-25,25,-25,25])
+>>> 
+>>> # Visualize Ey for data at ts=139380 and of tfd type. Also take stride of the data (every 2 grid)
+>>> fey=getfld('ey',ts=139380, dtype='tfd',stride=2)
+>>> v2d(fey,extent=[-25,25,-25,25])
+>>> 
+>>> # Visualize Ey for data at ts=139380 and of tfd type. Only takes the central box with indices from 412 to 612 for both dimension
+>>> v2d(getfld('ey',ts=139380, dtype='tfd',i1b=412,i1e=612,i2b=412,i2e=612),extent=[-25,25,-25,25])
+>>>
+>>> # view a slice view Jy along the second dimension axis at the center(r=0.5); this data is xz, so the command shows the slice along z axis at the center
+>>> v1d(getfld('jy',filename='tfd.139380_p000000.h5',dims='xz'),dim=2,r=0.5)
