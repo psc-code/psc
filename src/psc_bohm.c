@@ -6,6 +6,7 @@
 #include <psc_sort.h>
 #include <psc_balance.h>
 #include <psc_particles_as_c.h>
+#include <psc_event_generator_private.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -204,10 +205,65 @@ struct psc_ops psc_es1_ops = {
 };
 
 // ======================================================================
+// particle seeding
+
+static void
+seed_patch(struct psc *psc, int p, particles_t *pp)
+{
+  float r = random() / (float) RAND_MAX;
+
+  particles_realloc(pp, pp->n_part + 2);
+  particle_t *prt;
+
+  prt = particles_get_one(pp, pp->n_part++);
+  prt->xi = CRDX(p, 0);
+  prt->yi = CRDY(p, 0);
+  prt->zi = r * psc->domain.length[2];
+  prt->pxi = 0.;
+  prt->pyi = 0.;
+  prt->pzi = 0.;
+  prt->qni = 1.;
+  prt->mni = 1.;
+  prt->wni = 1.;
+
+  prt = particles_get_one(pp, pp->n_part++);
+  prt->xi = CRDX(p, 0);
+  prt->yi = CRDY(p, 0);
+  prt->zi = r * psc->domain.length[2];
+  prt->pxi = 0.;
+  prt->pyi = 0.;
+  prt->pzi = 0.;
+  prt->qni = -1.;
+  prt->mni = 1.;
+  prt->wni = 1.;
+}
+
+void
+psc_event_generator_bohm_run(struct psc_event_generator *gen,
+			     mparticles_base_t *mparticles, mfields_base_t *mflds,
+			     mphotons_t *mphotons)
+{
+  psc_foreach_patch(ppsc, p) {
+    seed_patch(ppsc, p, psc_mparticles_get_patch(mparticles, p));
+  }
+}
+
+// ======================================================================
+// psc_event_generator: subclass "bohm"
+
+struct psc_event_generator_ops psc_event_generator_bohm_ops = {
+  .name                  = "bohm",
+  .run                   = psc_event_generator_bohm_run,
+};
+
+// ======================================================================
 // main
 
 int
 main(int argc, char **argv)
 {
+  mrc_class_register_subclass(&mrc_class_psc_event_generator,
+			      &psc_event_generator_bohm_ops);
+
   return psc_main(&argc, &argv, &psc_es1_ops);
 }
