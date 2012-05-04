@@ -20,9 +20,12 @@ struct psc_es1 {
   double Ti;
   double mi_over_me;
   double L;
+  double L_source;
 
   double Te_;
   double Ti_;
+  double cs_;
+  double L_source_;
 };
 
 #define to_psc_es1(psc) mrc_to_subobj(psc, struct psc_es1)
@@ -33,6 +36,7 @@ static struct param psc_es1_descr[] = {
   { "Ti"            , VAR(Ti)            , PARAM_DOUBLE(0.023)       },
   { "mi_over_me"    , VAR(mi_over_me)    , PARAM_DOUBLE(100)         },
   { "L"             , VAR(L)             , PARAM_DOUBLE(0.01)        },
+  { "L_source"      , VAR(L_source)      , PARAM_DOUBLE(0.01)        },
 
   {},
 };
@@ -95,7 +99,7 @@ psc_es1_setup(struct psc *psc)
 {
   struct psc_es1 *es1 = to_psc_es1(psc);
   double M=9.11e-31;
-  double C=6.0e6;
+  double C=6.0e7;
   double e=1.6e-19;
   double eps_o=8.85e-12;
   double no=1e15;
@@ -104,11 +108,14 @@ psc_es1_setup(struct psc *psc)
   es1->Ti_=e*es1->Ti/(M*C*C);
   double vte=sqrt(2*e*es1->Te/M);
   double lde=sqrt(eps_o*e*es1->Te/(no*e*e));
-  double De=C*sqrt(eps_o*M/(e*e*no));
+  double de=C*sqrt(eps_o*M/(e*e*no));
   double vti=sqrt(2*e*es1->Ti/(M*es1->mi_over_me));
   double cs=sqrt(e*es1->Te/(M*es1->mi_over_me));
+ 
+  es1->L_source_=es1->L_source/de;
+  es1->cs_=cs/C;
   
-  psc->domain.length[2] = es1->L/De;
+  psc->domain.length[2] = es1->L/de;
 
   psc_setup_super(psc);
 
@@ -116,6 +123,8 @@ psc_es1_setup(struct psc *psc)
   printf("v_te=%g(%g)\n", vte/C, vte);
   printf("v_ti=%g(%g)\n", vti/C, vti);
   printf("cs=%g(%g)\n", cs/C, cs);
+  printf("de=%g\n", de);
+  printf("L=%g(%g)\n", es1->L/de, es1->L);
 
 }
 
@@ -185,44 +194,73 @@ struct psc_ops psc_es1_ops = {
 static void
 seed_patch(struct psc *psc, int p, particles_t *pp)
 {
-  //  struct psc_es1 *es1 = to_psc_es1(psc);
+  struct psc_es1 *es1 = to_psc_es1(psc);
+  
+  psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 
-  float r = random() / (float) RAND_MAX;
+    double Iono_rate;
+    double x = CRDX(p, ix);
+    double y = CRDY(p, iy);
+    double z = CRDZ(p, iz);
 
-  particles_realloc(pp, pp->n_part + 2);
+    if (z < es1->L_source_) {
+    // Number of new particles created per unit time and cell
+      Iono_rate = psc->prm.nicell * 0.6 * es1->cs_ / es1->L_source_;
+    } else {
+      Iono_rate = 0;
+    }
 
-  double xi = CRDX(p, 0);
-  double yi = CRDY(p, 0);
-  double zi = r * psc->domain.length[2];
+    double Iono_count = Iono_rate*psc->dt;
 
-  struct psc_particle_npt npt = {};
-  particle_t *prt;
 
-  // electrons
-  prt = particles_get_one(pp, pp->n_part++);
-  prt->xi = xi;
-  prt->yi = yi;
-  prt->zi = zi;
-  prt->wni = 1.;
-  npt.q = -1.;
-  npt.m = 1.;
-  npt.T[0] = 0.01;
-  npt.T[1] = 0.01;
-  npt.T[2] = 0.01;
-  psc_setup_particle(psc, prt, &npt);
+    // inverse Poisson, hope Sdt is not huge!
 
-  // ions
-  prt = particles_get_one(pp, pp->n_part++);
-  prt->xi = xi;
-  prt->yi = yi;
-  prt->zi = zi;
-  prt->wni = 1.;
-  npt.q = 1.;
-  npt.m = 100.;
-  npt.T[0] = 0.01;
-  npt.T[1] = 0.01;
-  npt.T[2] = 0.01;
-  psc_setup_particle(psc, prt, &npt);
+    float r = random() / (float) RAND_MAX;
+    int N_new = 0;
+    float f = 1;
+    float q = r * exp(Iono_count) - 1;
+    while (q > 0) {
+      N_new++;
+      f*= Iono_count/N_new;
+      q-= f;
+    }
+
+    particles_realloc(pp, pp->n_part + 2*N_new);
+
+    struct psc_particle_npt npt = {};
+    particle_t *prt;
+
+    for (int n=0; n < N_new; n++) {
+
+      // electrons
+      prt = particles_get_one(pp, pp->n_part++);
+      prt->xi = x;
+      prt->yi = y;
+      prt->zi = z;
+      prt->wni = 1.;
+      npt.q = -1.;
+      npt.m = 1.;
+      npt.T[0] = es1->Te_;
+      npt.T[1] = es1->Te_;
+      npt.T[2] = es1->Te_;
+      psc_setup_particle(psc, prt, &npt);
+      
+      // ions
+      prt = particles_get_one(pp, pp->n_part++);
+      prt->xi = x;
+      prt->yi = y;
+      prt->zi = z;
+      prt->wni = 1.;
+      npt.q = 1.;
+      npt.m = es1->mi_over_me;
+      npt.T[0] = es1->Ti_;
+      npt.T[1] = es1->Ti_;
+      npt.T[2] = es1->Ti_;
+      psc_setup_particle(psc, prt, &npt);
+      
+    }
+  } foreach_3d_end;
+
 }
 
 void
