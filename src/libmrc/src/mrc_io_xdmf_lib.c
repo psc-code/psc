@@ -280,11 +280,6 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     for (int d = 0; d < 3; d++) {
       xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
       xs->dx[d][0] = dx[d];
-      // no extent in invariant directions
-      if (slab_dims[d] == 1) {
-	xs->xl[d][0] = 0.;
-	xs->dx[d][0] = 0.;
-      }
     }
   }
 
