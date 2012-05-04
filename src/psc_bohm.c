@@ -210,32 +210,44 @@ struct psc_ops psc_es1_ops = {
 static void
 seed_patch(struct psc *psc, int p, particles_t *pp)
 {
+  //  struct psc_es1 *es1 = to_psc_es1(psc);
+
   float r = random() / (float) RAND_MAX;
 
   particles_realloc(pp, pp->n_part + 2);
+
+  double xi = CRDX(p, 0);
+  double yi = CRDY(p, 0);
+  double zi = r * psc->domain.length[2];
+
+  struct psc_particle_npt npt = {};
   particle_t *prt;
 
+  // electrons
   prt = particles_get_one(pp, pp->n_part++);
-  prt->xi = CRDX(p, 0);
-  prt->yi = CRDY(p, 0);
-  prt->zi = r * psc->domain.length[2];
-  prt->pxi = 0.;
-  prt->pyi = 0.;
-  prt->pzi = 0.;
-  prt->qni = 1.;
-  prt->mni = 1.;
+  prt->xi = xi;
+  prt->yi = yi;
+  prt->zi = zi;
   prt->wni = 1.;
+  npt.q = -1.;
+  npt.m = 1.;
+  npt.T[0] = 0.01;
+  npt.T[1] = 0.01;
+  npt.T[2] = 0.01;
+  psc_setup_particle(psc, prt, &npt);
 
+  // ions
   prt = particles_get_one(pp, pp->n_part++);
-  prt->xi = CRDX(p, 0);
-  prt->yi = CRDY(p, 0);
-  prt->zi = r * psc->domain.length[2];
-  prt->pxi = 0.;
-  prt->pyi = 0.;
-  prt->pzi = 0.;
-  prt->qni = -1.;
-  prt->mni = 1.;
+  prt->xi = xi;
+  prt->yi = yi;
+  prt->zi = zi;
   prt->wni = 1.;
+  npt.q = 1.;
+  npt.m = 100.;
+  npt.T[0] = 0.01;
+  npt.T[1] = 0.01;
+  npt.T[2] = 0.01;
+  psc_setup_particle(psc, prt, &npt);
 }
 
 void

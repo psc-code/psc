@@ -678,6 +678,32 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	     MPI_COMM_WORLD);
 }
 
+void
+psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt)
+{
+  double beta = psc->coeff.beta;
+
+  float ran1, ran2, ran3, ran4, ran5, ran6;
+  do {
+    ran1 = random() / ((float) RAND_MAX + 1);
+    ran2 = random() / ((float) RAND_MAX + 1);
+    ran3 = random() / ((float) RAND_MAX + 1);
+    ran4 = random() / ((float) RAND_MAX + 1);
+    ran5 = random() / ((float) RAND_MAX + 1);
+    ran6 = random() / ((float) RAND_MAX + 1);
+  } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
+	   ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
+	      
+  prt->pxi = npt->p[0] +
+    sqrtf(-2.f*npt->T[0]/npt->m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2);
+  prt->pyi = npt->p[1] +
+    sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
+  prt->pzi = npt->p[2] +
+    sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
+  prt->qni = npt->q;
+  prt->mni = npt->m;
+}	      
+
 // ----------------------------------------------------------------------
 // psc_setup_particles
 
@@ -691,8 +717,6 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   }
   if (!psc_ops(psc)->init_npt)
     return;
-
-  double beta = psc->coeff.beta;
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -731,35 +755,10 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_t *p = particles_get_one(pp, i++);
 	      
-	      float ran1, ran2, ran3, ran4, ran5, ran6;
-	      do {
-		ran1 = random() / ((float) RAND_MAX + 1);
-		ran2 = random() / ((float) RAND_MAX + 1);
-		ran3 = random() / ((float) RAND_MAX + 1);
-		ran4 = random() / ((float) RAND_MAX + 1);
-		ran5 = random() / ((float) RAND_MAX + 1);
-		ran6 = random() / ((float) RAND_MAX + 1);
-	      } while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-		       ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-	      
-	      float px =
-		sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-		+ npt.p[0];
-	      float py =
-		sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-		+ npt.p[1];
-	      float pz =
-		sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-		+ npt.p[2];
-	      
+	      psc_setup_particle(psc, p, &npt);
 	      p->xi = xx[0];
 	      p->yi = xx[1];
 	      p->zi = xx[2];
-	      p->pxi = px;
-	      p->pyi = py;
-	      p->pzi = pz;
-	      p->qni = npt.q;
-	      p->mni = npt.m;
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;
