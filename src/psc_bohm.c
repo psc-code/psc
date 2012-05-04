@@ -16,22 +16,28 @@
 
 struct psc_es1 {
   // parameters
-  double vth_e;
-  double vth_i;
+  double Te;
+  double Ti;
   double mi_over_me;
+  double L;
+
+  double Te_;
+  double Ti_;
 };
 
 #define to_psc_es1(psc) mrc_to_subobj(psc, struct psc_es1)
 
 #define VAR(x) (void *)offsetof(struct psc_es1, x)
 static struct param psc_es1_descr[] = {
-  { "vth_e"         , VAR(vth_e)            , PARAM_DOUBLE(0.2)           },
-  { "vth_i"         , VAR(vth_i)            , PARAM_DOUBLE(0.01)          },
-  { "mi_over_me"    , VAR(mi_over_me)       , PARAM_DOUBLE(100)           },
+  { "Te"            , VAR(Te)            , PARAM_DOUBLE(1)           },
+  { "Ti"            , VAR(Ti)            , PARAM_DOUBLE(0.023)       },
+  { "mi_over_me"    , VAR(mi_over_me)    , PARAM_DOUBLE(100)         },
+  { "L"             , VAR(L)             , PARAM_DOUBLE(0.01)        },
 
   {},
 };
 #undef VAR
+
 
 // ----------------------------------------------------------------------
 // psc_es1_create
@@ -78,7 +84,39 @@ psc_es1_create(struct psc *psc)
   psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
   psc->domain.bnd_part_hi[2] = BND_PART_ABSORBING;
 
-  psc_moments_set_type(psc->moments, "1st_cc");
+  // psc_moments_set_type(psc->moments, "1st_cc");
+}
+
+// ----------------------------------------------------------------------
+// psc_es1_setup
+
+static void
+psc_es1_setup(struct psc *psc)
+{
+  struct psc_es1 *es1 = to_psc_es1(psc);
+  double M=9.11e-31;
+  double C=6.0e6;
+  double e=1.6e-19;
+  double eps_o=8.85e-12;
+  double no=1e15;
+  
+  es1->Te_=e*es1->Te/(M*C*C);
+  es1->Ti_=e*es1->Ti/(M*C*C);
+  double vte=sqrt(2*e*es1->Te/M);
+  double lde=sqrt(eps_o*e*es1->Te/(no*e*e));
+  double De=C*sqrt(eps_o*M/(e*e*no));
+  double vti=sqrt(2*e*es1->Ti/(M*es1->mi_over_me));
+  double cs=sqrt(e*es1->Te/(M*es1->mi_over_me));
+  
+  psc->domain.length[2] = es1->L/De;
+
+  psc_setup_super(psc);
+
+  printf("lambda_de=%g(%g) dz=%g\n", sqrt(es1->Te_), lde, psc->dx[2]);
+  printf("v_te=%g(%g)\n", vte/C, vte);
+  printf("v_ti=%g(%g)\n", vti/C, vti);
+  printf("cs=%g(%g)\n", cs/C, cs);
+
 }
 
 // ----------------------------------------------------------------------
@@ -97,11 +135,11 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_es1_setup_particles
+// psc_es1_init_npt
 
 static void
 psc_es1_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt, double *wni)
+		struct psc_particle_npt *npt)
 {
   struct psc_es1 *es1 = to_psc_es1(psc);
 
@@ -111,16 +149,16 @@ psc_es1_init_npt(struct psc *psc, int kind, double x[3],
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1.;
-    npt->T[0] = sqr(es1->vth_e);
-    npt->T[1] = sqr(es1->vth_e);
-    npt->T[2] = sqr(es1->vth_e);
+    npt->T[0] = es1->Te_;
+    npt->T[1] = es1->Te_;
+    npt->T[2] = es1->Te_;
     break;
   case 1: // ions
     npt->q = 1.;
     npt->m = es1->mi_over_me;
-    npt->T[0] = sqr(es1->vth_i)*npt->m;
-    npt->T[1] = sqr(es1->vth_i)*npt->m;
-    npt->T[2] = sqr(es1->vth_i)*npt->m;
+    npt->T[0] = es1->Ti_;
+    npt->T[1] = es1->Ti_;
+    npt->T[2] = es1->Ti_;
     break;
   default:
     assert(0);
@@ -136,6 +174,7 @@ struct psc_ops psc_es1_ops = {
   .size             = sizeof(struct psc_es1),
   .param_descr      = psc_es1_descr,
   .create           = psc_es1_create,
+  .setup            = psc_es1_setup,
   .init_field       = psc_es1_init_field,
   .init_npt         = psc_es1_init_npt,
 };
