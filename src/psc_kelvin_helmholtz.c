@@ -115,7 +115,7 @@ calc_kh(struct psc_output_fields_item *item, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
   psc_bnd_add_ghosts(item->bnd, res, 0, 4);
   // FIXME add_ghosts_boundary(res, 0, 4);
@@ -399,7 +399,7 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     }
   }
   if (!count_only) {
-    psc_mparticles_put_cf(particles, psc->particles);
+    psc_mparticles_put_cf(particles, psc->particles, 0);
   }
 }
 

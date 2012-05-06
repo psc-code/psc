@@ -118,7 +118,7 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
   psc_bnd_add_ghosts(moments->bnd, res, 0, 3);
 }
@@ -235,7 +235,7 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base); // FIXME, don't need copy-back
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
   psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
 }
@@ -349,7 +349,7 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
   psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
 }

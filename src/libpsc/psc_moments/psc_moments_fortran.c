@@ -26,7 +26,7 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
   CALC_densities(psc_mparticles_get_patch_fortran(particles, 0),
 		 psc_mfields_get_patch_fortran(flds_fortran, 0));
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, MP_DONT_COPY);
   psc_mfields_put_fortran(flds_fortran, res, 0, 3);
 
   prof_stop(pr);

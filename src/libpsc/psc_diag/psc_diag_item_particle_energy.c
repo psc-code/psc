@@ -34,7 +34,7 @@ psc_diag_item_particle_energy_run(struct psc_diag_item *item,
     do_particle_energy(psc, psc_mparticles_get_patch_c(particles, p), result);
   }
 
-  psc_mparticles_put_c(particles, psc->particles); // FIXME, don't need copy-back
+  psc_mparticles_put_c(particles, psc->particles, MP_DONT_COPY);
 }
 
 // ======================================================================

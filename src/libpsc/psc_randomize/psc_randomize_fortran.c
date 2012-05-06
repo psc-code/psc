@@ -23,7 +23,7 @@ psc_randomize_fortran_run(struct psc_randomize *randomize,
   PIC_randomize(psc_mparticles_get_patch_fortran(particles, 0));
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
 }
 
 // ======================================================================

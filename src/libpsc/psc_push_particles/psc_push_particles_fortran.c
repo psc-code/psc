@@ -27,7 +27,7 @@ psc_push_particles_fortran_push_xy(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -54,7 +54,7 @@ psc_push_particles_fortran_push_xz(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -81,7 +81,7 @@ psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -108,7 +108,7 @@ psc_push_particles_fortran_push_xyz(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -135,7 +135,7 @@ psc_push_particles_fortran_push_z(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -162,7 +162,7 @@ psc_push_particles_fortran_push_yz_a(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
@@ -189,7 +189,7 @@ psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 

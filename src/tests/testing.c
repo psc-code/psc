@@ -89,7 +89,7 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
     }
   }
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 }
 
 // ----------------------------------------------------------------------
@@ -163,7 +163,7 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
       assert_equal(part->pzi, part_ref->pzi, thres);
     }
   }
-  psc_mparticles_put_cf(particles, particles_base); // FIXME, no copy-back needed
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
   if (opt_checks_verbose) {
     mprintf("max delta: (%s)\n", test_str);
     mprintf("    xi ,yi ,zi  %g\t%g\t%g\n    pxi,pyi,pzi %g\t%g\t%g\n",
@@ -328,7 +328,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
       last = cni;
     }
   }
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------

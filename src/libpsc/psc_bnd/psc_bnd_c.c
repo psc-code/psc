@@ -296,7 +296,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   }
   prof_stop(pr_B);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------

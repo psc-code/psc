@@ -101,7 +101,7 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
     PIC_pez(pp);
   }
 
-  psc_mparticles_put_fortran(particles, particles_base);
+  psc_mparticles_put_fortran(particles, particles_base, 0);
 
   prof_stop(pr);
 }

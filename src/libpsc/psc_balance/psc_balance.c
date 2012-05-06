@@ -37,7 +37,7 @@ psc_get_loads(struct psc *psc, double *loads)
     loads[p] = pp->n_part + 1;
   }
 
-  psc_mparticles_put_cf(mparticles, psc->particles); // OPT, doesn't need copy back
+  psc_mparticles_put_cf(mparticles, psc->particles, MP_DONT_COPY);
 }
 
 static int
@@ -579,8 +579,8 @@ psc_balance_run(struct psc_balance *bal, struct psc *psc)
 			mparticles_old, mparticles_new, nr_particles_by_patch);
   free(nr_particles_by_patch);
 
-  psc_mparticles_put_cf(mparticles_old, psc->particles); // FIXME, don't need copy-back
-  psc_mparticles_put_cf(mparticles_new, mparticles_base_new);
+  psc_mparticles_put_cf(mparticles_old, psc->particles, MP_DONT_COPY);
+  psc_mparticles_put_cf(mparticles_new, mparticles_base_new, 0);
 
   // replace particles by redistributed ones
   psc_mparticles_destroy(psc->particles);

@@ -174,7 +174,7 @@ psc_push_particles_generic_c_push_yz_b(struct psc_push_particles *push,
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
   psc_mfields_put_cf(flds, flds_base, JXI, JXI + 3);
 }
 

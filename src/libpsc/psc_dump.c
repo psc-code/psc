@@ -82,7 +82,7 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
     free(filename);
   }
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 }
 
 void

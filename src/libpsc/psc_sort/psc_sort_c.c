@@ -176,7 +176,7 @@ psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ======================================================================
@@ -246,7 +246,7 @@ psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ======================================================================
@@ -363,7 +363,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
 
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ======================================================================

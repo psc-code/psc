@@ -59,7 +59,8 @@ struct psc_mparticles *						        \
 psc_mparticles_get_##type(struct psc_mparticles *mp_base,		\
 			  unsigned int flags);				\
 void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
-			       struct psc_mparticles *mp_base);		\
+			       struct psc_mparticles *mp_base,		\
+			       unsigned int flags);			\
 
 #include "psc_particles_fortran.h"
 MAKE_MPARTICLES_TYPE(fortran)

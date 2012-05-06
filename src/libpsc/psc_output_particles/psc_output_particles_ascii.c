@@ -59,7 +59,7 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
   }
   fclose(file);
   
-  psc_mparticles_put_c(particles, particles_base);
+  psc_mparticles_put_c(particles, particles_base, MP_DONT_COPY);
 }
 
 // ======================================================================

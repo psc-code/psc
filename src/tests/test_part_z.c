@@ -45,7 +45,7 @@ add_particle(double xi, double yi, double zi, double pxi, double pyi, double pzi
   part->mni = mni;
   part->wni = ppsc->prm.nicell; // FIXME, better set nicell to 1 or get rid of it altogether
 
-  psc_mparticles_put_cf(particles, ppsc->particles);
+  psc_mparticles_put_cf(particles, ppsc->particles, 0);
 }
 
 static struct psc_case *
@@ -61,7 +61,7 @@ create_test_base(const char *s_push_particles)
   mparticles_t *particles = psc_mparticles_get_cf(ppsc->particles, MP_DONT_COPY);
   particles_t *pp = psc_mparticles_get_patch(particles, 0);
   pp->n_part = 0;
-  psc_mparticles_put_cf(particles, ppsc->particles);
+  psc_mparticles_put_cf(particles, ppsc->particles, 0);
   return _case;
 }
 

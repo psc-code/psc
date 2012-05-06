@@ -208,7 +208,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     pp->n_part = il1;
     assert(pp->n_part == nr_particles_by_patch[p]);
   }
-  psc_mparticles_put_cf(particles, psc->particles);
+  psc_mparticles_put_cf(particles, psc->particles, 0);
 }
 
 // ======================================================================

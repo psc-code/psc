@@ -173,7 +173,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
     }
   } // kind
   pp->n_part = i;
-  psc_mparticles_put_cf(particles, psc->particles);
+  psc_mparticles_put_cf(particles, psc->particles, 0);
 }
 
 void

@@ -196,7 +196,7 @@ psc_mparticles_check(mparticles_base_t *particles_base)
     }
   }
   assert(fail_cnt == 0);
-  psc_mparticles_put_c(particles, particles_base); // FIXME, no copy-back needed
+  psc_mparticles_put_c(particles, particles_base, MP_DONT_COPY);
 }
 
 #define MAKE_MPARTICLES_GET_PUT(type)					\
@@ -210,9 +210,10 @@ psc_mparticles_get_##type(struct psc_mparticles *particles_base,	\
 									\
 void									\
 psc_mparticles_put_##type(mparticles_##type##_t *particles,		\
-		     struct psc_mparticles *particles_base)		\
+			  struct psc_mparticles *particles_base,	\
+			  unsigned int flags)				\
 {									\
-  psc_mparticles_put_as(particles, particles_base, 0);			\
+  psc_mparticles_put_as(particles, particles_base, flags);		\
 }									\
 
 MAKE_MPARTICLES_GET_PUT(c)

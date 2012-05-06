@@ -32,14 +32,14 @@ main(int argc, char **argv)
   struct psc_mparticles *mprts;
   if (strcmp(s_type, "c") == 0) {
     mprts = psc_mparticles_get_c(psc->particles, flags);
-    psc_mparticles_put_c(mprts, psc->particles);
+    psc_mparticles_put_c(mprts, psc->particles, 0);
   } else if (strcmp(s_type, "fortran") == 0) {
     mprts = psc_mparticles_get_fortran(psc->particles, flags);
-    psc_mparticles_put_fortran(mprts, psc->particles);
+    psc_mparticles_put_fortran(mprts, psc->particles, 0);
 #ifdef USE_CUDA
   } else if (strcmp(s_type, "cuda") == 0) {
     mprts = psc_mparticles_get_cuda(psc->particles, flags);
-    psc_mparticles_put_cuda(mprts, psc->particles);
+    psc_mparticles_put_cuda(mprts, psc->particles, 0);
 #endif
   } else {
     assert(0);

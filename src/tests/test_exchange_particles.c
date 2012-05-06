@@ -55,7 +55,7 @@ setup_particles(mparticles_base_t *particles_base)
   } else {
     pp->n_part = 0;
   }
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 static void
@@ -95,7 +95,7 @@ check_particles_old_xz(mparticles_base_t *particles_base)
     }
   }
   assert(fail_cnt == 0);
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 }
 
 static void
@@ -131,7 +131,7 @@ check_particles(mparticles_base_t *particles_base)
     }
   }
   assert(fail_cnt == 0);
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 }
 
 static int
@@ -145,7 +145,7 @@ get_total_num_particles(mparticles_base_t *particles_base)
   MPI_Allreduce(&pp->n_part, &total_num_part, 1, MPI_INT, MPI_SUM,
 		MPI_COMM_WORLD);
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
   return total_num_part;
 }
 

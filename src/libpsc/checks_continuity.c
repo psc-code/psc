@@ -63,7 +63,7 @@ psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
     do_shift_particle_positions(psc_mparticles_get_patch_c(particles, p), dt);
   }
 
-  psc_mparticles_put_c(particles, particles_base);
+  psc_mparticles_put_c(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------

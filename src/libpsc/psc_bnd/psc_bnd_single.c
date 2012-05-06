@@ -289,7 +289,7 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
   }
   prof_stop(pr_B);
 
-  psc_mparticles_put_single(particles, particles_base);
+  psc_mparticles_put_single(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------

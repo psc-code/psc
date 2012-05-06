@@ -566,7 +566,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   free(map);
   free(idx);
   
-  psc_mparticles_put_c(particles, particles_base);
+  psc_mparticles_put_c(particles, particles_base, MP_DONT_COPY);
 }
 
 // ======================================================================

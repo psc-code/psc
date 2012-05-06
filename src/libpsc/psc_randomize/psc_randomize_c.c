@@ -25,7 +25,7 @@ psc_randomize_c_run(struct psc_randomize *randomize,
     }
   }
 
-  psc_mparticles_put_cf(particles, particles_base);
+  psc_mparticles_put_cf(particles, particles_base, 0);
 }
 
 // ======================================================================

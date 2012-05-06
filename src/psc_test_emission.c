@@ -106,7 +106,7 @@ psc_event_generator_emission(struct psc *psc)
       }
     }
   }
-  psc_mparticles_put_cf(particles, psc->particles);
+  psc_mparticles_put_cf(particles, psc->particles, 0);
 }
 
 static void
