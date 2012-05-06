@@ -21,7 +21,7 @@ main(int argc, char **argv)
 
   mrc_params_get_option_string("type", &s_type);
   mrc_params_get_option_double("eps_particles", &eps_particles);
-  mrc_params_get_option_int("flags", &flags);
+  mrc_params_get_option_uint("flags", &flags);
 
   mrc_class_register_subclass(&mrc_class_psc, (int *) &psc_test_ops_1);
 
