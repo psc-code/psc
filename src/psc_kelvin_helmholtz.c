@@ -20,60 +20,25 @@
 #include "psc_bnd.h"
 #include "psc_fields_as_c.h"
 
+#include "libpsc/psc_moments/common_moments.c"
+
 static void
 do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
 {
-  fields_c_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  fields_c_real_t dxi = 1.f / ppsc->dx[0];
-  fields_c_real_t dyi = 1.f / ppsc->dx[1];
-  fields_c_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-      
-    fields_c_real_t u = (part->xi - patch->xb[0]) * dxi - .5;
-    fields_c_real_t v = (part->yi - patch->xb[1]) * dyi - .5;
-    fields_c_real_t w = (part->zi - patch->xb[2]) * dzi - .5;
-    int j1 = particle_real_fint(u);
-    int j2 = particle_real_fint(v);
-    int j3 = particle_real_fint(w);
-    fields_c_real_t h1 = u-j1;
-    fields_c_real_t h2 = v-j2;
-    fields_c_real_t h3 = w-j3;
-      
-    fields_c_real_t g0x=1.f - h1;
-    fields_c_real_t g0y=1.f - h2;
-    fields_c_real_t g0z=1.f - h3;
-    fields_c_real_t g1x=h1;
-    fields_c_real_t g1y=h2;
-    fields_c_real_t g1z=h3;
-      
-    if (ppsc->domain.gdims[0] == 1) {
-      j1 = 0; g0x = 1.; g1x = 0.;
-    }
-    if (ppsc->domain.gdims[1] == 1) {
-      j2 = 0; g0y = 1.; g1y = 0.;
-    }
-    if (ppsc->domain.gdims[2] == 1) {
-      j3 = 0; g0z = 1.; g1z = 0.;
-    }
-
-    assert(j1 >= -1 && j1 < patch->ldims[0]);
-    assert(j2 >= -1 && j2 < patch->ldims[1]);
-    assert(j3 >= -1 && j3 < patch->ldims[2]);
-      
-    fields_c_real_t fnq;
     int m;
     if (part->qni < 0.) {
-      fnq = part->qni * part->wni * fnqs;
       if (part->wni > 1.) {
 	m = 1;
       } else {
 	m = 0;
       }
     } else if (part->qni > 0.) {
-      fnq = part->qni * part->wni * fnqs;
       if (part->wni > 1.) {
 	m = 3;
       } else {
@@ -82,14 +47,8 @@ do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
     } else {
       assert(0);
     }
-    F3(pf, m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3(pf, m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3(pf, m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3(pf, m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3(pf, m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3(pf, m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3(pf, m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3(pf, m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, part->qni);
   }
 }
 

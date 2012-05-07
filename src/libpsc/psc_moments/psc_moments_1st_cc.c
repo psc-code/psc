@@ -7,86 +7,16 @@
 #include <mrc_profile.h>
 #include <math.h>
 
-// ======================================================================
 
-typedef fields_c_real_t creal;
-
-#define DEPOSIT_TO_GRID_1ST_CC(part, pf, m, val) do {			\
-    creal u = (part->xi - patch->xb[0]) * dxi - .5;			\
-    creal v = (part->yi - patch->xb[1]) * dyi - .5;			\
-    creal w = (part->zi - patch->xb[2]) * dzi - .5;			\
-    int jx = particle_real_fint(u);					\
-    int jy = particle_real_fint(v);					\
-    int jz = particle_real_fint(w);					\
-    creal h1 = u - jx;							\
-    creal h2 = v - jy;							\
-    creal h3 = w - jz;							\
-    									\
-    creal g0x = 1.f - h1;						\
-    creal g0y = 1.f - h2;						\
-    creal g0z = 1.f - h3;						\
-    creal g1x = h1;							\
-    creal g1y = h2;							\
-    creal g1z = h3;							\
-    									\
-    if (ppsc->domain.gdims[0] == 1) {					\
-      jx = 0; g0x = 1.; g1x = 0.;					\
-    }									\
-    if (ppsc->domain.gdims[1] == 1) {					\
-      jy = 0; g0y = 1.; g1y = 0.;					\
-    }									\
-    if (ppsc->domain.gdims[2] == 1) {					\
-      jz = 0; g0z = 1.; g1z = 0.;					\
-    }									\
-    									\
-    assert(jx >= -1 && jx < patch->ldims[0]);				\
-    assert(jy >= -1 && jy < patch->ldims[1]);				\
-    assert(jz >= -1 && jz < patch->ldims[2]);				\
-    									\
-    creal fnq = part->wni * fnqs;					\
-									\
-    F3(pf, m, jx  ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
-    F3(pf, m, jx+1,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
-    F3(pf, m, jx  ,jy+1,jz  ) += fnq*g0x*g1y*g0z * (val);		\
-    F3(pf, m, jx+1,jy+1,jz  ) += fnq*g1x*g1y*g0z * (val);		\
-    F3(pf, m, jx  ,jy  ,jz+1) += fnq*g0x*g0y*g1z * (val);		\
-    F3(pf, m, jx+1,jy  ,jz+1) += fnq*g1x*g0y*g1z * (val);		\
-    F3(pf, m, jx  ,jy+1,jz+1) += fnq*g0x*g1y*g1z * (val);		\
-    F3(pf, m, jx+1,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
-  } while (0)
-
-// FIXME, this function exists about 100x all over the place, should
-// be consolidated
-
-static inline void
-psc_particle_c_calc_vxi(particle_c_t *part, particle_c_real_t vxi[3])
-{
-  particle_c_real_t root =
-    1.f / sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-  vxi[0] = part->pxi * root;
-  vxi[1] = part->pyi * root;
-  vxi[2] = part->pzi * root;
-}
-
-int
-psc_particle_c_kind(particle_c_t *part)
-{
-  if (part->qni < 0.) {
-    return 0;
-  } else if (part->qni > 0.) {
-    return 1;
-  } else {
-    assert(0);
-  }
-}
+#include "common_moments.c"
 
 // ======================================================================
 
 static void
 do_1st_calc_densities(int p, fields_t *pf, particles_t *pp)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
@@ -100,15 +30,15 @@ do_1st_calc_densities(int p, fields_t *pf, particles_t *pp)
 static void
 do_1st_calc_v(int p, fields_t *pf, particles_t *pp)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
     int mm = psc_particle_c_kind(part) * 3;
 
-    creal vxi[3];
+    particle_real_t vxi[3];
     psc_particle_c_calc_vxi(part, vxi);
 
     for (int m = 0; m < 3; m++) {
@@ -120,15 +50,15 @@ do_1st_calc_v(int p, fields_t *pf, particles_t *pp)
 static void
 do_1st_calc_vv(int p, fields_t *pf, particles_t *pp)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
     int mm = psc_particle_c_kind(part) * 3;
       
-    creal vxi[3];
+    particle_real_t vxi[3];
     psc_particle_c_calc_vxi(part, vxi);
 
     for (int m = 0; m < 3; m++) {
