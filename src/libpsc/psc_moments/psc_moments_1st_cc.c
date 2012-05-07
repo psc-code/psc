@@ -4,7 +4,6 @@
 #include "psc_fields_as_c.h"
 
 #include "psc_bnd.h"
-#include <mrc_profile.h>
 #include <math.h>
 
 
@@ -156,21 +155,14 @@ static void
 psc_moments_1st_cc_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
 				  mparticles_base_t *particles_base, mfields_c_t *res)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_densities", 1., 0, 0);
-  }
-
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
-  prof_start(pr);
   psc_mfields_zero_range(res, 0, 3);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_densities(p, psc_mfields_get_patch_c(res, p),
 			psc_mparticles_get_patch(particles, p));
   }
-  prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
@@ -182,21 +174,14 @@ static void
 psc_moments_1st_cc_calc_v(struct psc_moments *moments, mfields_base_t *flds,
 			  mparticles_base_t *particles_base, mfields_c_t *res)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_moments_v", 1., 0, 0);
-  }
-
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
-  prof_start(pr);
   psc_mfields_zero_range(res, 0, 6);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_v(p, psc_mfields_get_patch_c(res, p),
 		  psc_mparticles_get_patch(particles, p));
   }
-  prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
@@ -210,21 +195,14 @@ static void
 psc_moments_1st_cc_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
 			  mparticles_base_t *particles_base, mfields_c_t *res)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_moments_vv", 1., 0, 0);
-  }
-
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
-  prof_start(pr);
   psc_mfields_zero_range(res, 0, 6);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_vv(p, psc_mfields_get_patch_c(res, p),
 		   psc_mparticles_get_patch(particles, p));
   }
-  prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 

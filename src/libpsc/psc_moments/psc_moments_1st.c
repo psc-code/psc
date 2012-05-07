@@ -4,7 +4,6 @@
 #include "psc_fields_as_c.h"
 
 #include "psc_bnd.h"
-#include <mrc_profile.h>
 #include <math.h>
 
 // ======================================================================
@@ -78,14 +77,8 @@ static void
 psc_moments_1st_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
 			     mparticles_base_t *particles_base, mfields_c_t *res)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_densities", 1., 0, 0);
-  }
-
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
-  prof_start(pr);
   psc_mfields_zero(res, 0);
   psc_mfields_zero(res, 1);
   psc_mfields_zero(res, 2);
@@ -94,7 +87,6 @@ psc_moments_1st_calc_densities(struct psc_moments *moments, mfields_base_t *flds
     do_1st_calc_densities(p, psc_mfields_get_patch_c(res, p),
 			psc_mparticles_get_patch(particles, p), 0, 1, 2);
   }
-  prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 

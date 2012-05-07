@@ -3,6 +3,8 @@
 
 #include "psc_bnd.h"
 
+#include <mrc_profile.h>
+
 // ======================================================================
 // forward to subclass
 
@@ -11,9 +13,17 @@ psc_moments_calc_densities(struct psc_moments *moments,
 			   mfields_base_t *flds, mparticles_base_t *particles,
 			   mfields_c_t *res)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("moments_n", 1., 0, 0);
+  }
+  prof_start(pr);
+
   struct psc_moments_ops *ops = psc_moments_ops(moments);
   assert(ops && ops->calc_densities);
   ops->calc_densities(moments, flds, particles, res);
+
+  prof_stop(pr);
 }
 
 void
@@ -21,9 +31,17 @@ psc_moments_calc_v(struct psc_moments *moments,
 		   mfields_base_t *flds, mparticles_base_t *particles,
 		   mfields_c_t *res)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("moments_v", 1., 0, 0);
+  }
+  prof_start(pr);
+
   struct psc_moments_ops *ops = psc_moments_ops(moments);
   assert(ops && ops->calc_v);
   ops->calc_v(moments, flds, particles, res);
+
+  prof_stop(pr);
 }
 
 void
@@ -31,18 +49,34 @@ psc_moments_calc_vv(struct psc_moments *moments,
 		    mfields_base_t *flds, mparticles_base_t *particles,
 		    mfields_c_t *res)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("moments_vv", 1., 0, 0);
+  }
+  prof_start(pr);
+
   struct psc_moments_ops *ops = psc_moments_ops(moments);
   assert(ops && ops->calc_vv);
   ops->calc_vv(moments, flds, particles, res);
+
+  prof_stop(pr);
 }
 
 void
 psc_moments_calc_photon_n(struct psc_moments *moments,
 			  mphotons_t *photons, mfields_c_t *res)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("moments_photon_n", 1., 0, 0);
+  }
+  prof_start(pr);
+
   struct psc_moments_ops *ops = psc_moments_ops(moments);
   assert(ops && ops->calc_photon_n);
   ops->calc_photon_n(moments, photons, res);
+
+  prof_stop(pr);
 }
 
 // ======================================================================

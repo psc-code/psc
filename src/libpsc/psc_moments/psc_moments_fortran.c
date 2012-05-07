@@ -2,7 +2,6 @@
 #include "psc_moments_private.h"
 
 #include "psc_glue.h"
-#include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
 // psc_moments_fortran_calc_densities
@@ -14,11 +13,6 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
 				   mfields_c_t *res)
 {
   assert(ppsc->nr_patches == 1);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_densities", 1., 0, 0);
-  }
-  prof_start(pr);
 
   mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
   mfields_fortran_t *flds_fortran = psc_mfields_get_fortran(res, 0, 0);
@@ -28,8 +22,6 @@ psc_moments_fortran_calc_densities(struct psc_moments *out,
 
   psc_mparticles_put_fortran(particles, particles_base, MP_DONT_COPY);
   psc_mfields_put_fortran(flds_fortran, res, 0, 3);
-
-  prof_stop(pr);
 }
 
 // ======================================================================
