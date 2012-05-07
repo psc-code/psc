@@ -11,70 +11,89 @@
 
 typedef fields_c_real_t creal;
 
+#define DEPOSIT_TO_GRID_1ST_CC(part, pf, m, val) do {			\
+    creal u = (part->xi - patch->xb[0]) * dxi - .5;			\
+    creal v = (part->yi - patch->xb[1]) * dyi - .5;			\
+    creal w = (part->zi - patch->xb[2]) * dzi - .5;			\
+    int jx = particle_real_fint(u);					\
+    int jy = particle_real_fint(v);					\
+    int jz = particle_real_fint(w);					\
+    creal h1 = u - jx;							\
+    creal h2 = v - jy;							\
+    creal h3 = w - jz;							\
+    									\
+    creal g0x = 1.f - h1;						\
+    creal g0y = 1.f - h2;						\
+    creal g0z = 1.f - h3;						\
+    creal g1x = h1;							\
+    creal g1y = h2;							\
+    creal g1z = h3;							\
+    									\
+    if (ppsc->domain.gdims[0] == 1) {					\
+      jx = 0; g0x = 1.; g1x = 0.;					\
+    }									\
+    if (ppsc->domain.gdims[1] == 1) {					\
+      jy = 0; g0y = 1.; g1y = 0.;					\
+    }									\
+    if (ppsc->domain.gdims[2] == 1) {					\
+      jz = 0; g0z = 1.; g1z = 0.;					\
+    }									\
+    									\
+    assert(jx >= -1 && jx < patch->ldims[0]);				\
+    assert(jy >= -1 && jy < patch->ldims[1]);				\
+    assert(jz >= -1 && jz < patch->ldims[2]);				\
+    									\
+    creal fnq = part->wni * fnqs;					\
+									\
+    F3(pf, m, jx  ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
+    F3(pf, m, jx+1,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
+    F3(pf, m, jx  ,jy+1,jz  ) += fnq*g0x*g1y*g0z * (val);		\
+    F3(pf, m, jx+1,jy+1,jz  ) += fnq*g1x*g1y*g0z * (val);		\
+    F3(pf, m, jx  ,jy  ,jz+1) += fnq*g0x*g0y*g1z * (val);		\
+    F3(pf, m, jx+1,jy  ,jz+1) += fnq*g1x*g0y*g1z * (val);		\
+    F3(pf, m, jx  ,jy+1,jz+1) += fnq*g0x*g1y*g1z * (val);		\
+    F3(pf, m, jx+1,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
+  } while (0)
+
+// FIXME, this function exists about 100x all over the place, should
+// be consolidated
+
+static inline void
+psc_particle_c_calc_vxi(particle_c_t *part, particle_c_real_t vxi[3])
+{
+  particle_c_real_t root =
+    1.f / sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  vxi[0] = part->pxi * root;
+  vxi[1] = part->pyi * root;
+  vxi[2] = part->pzi * root;
+}
+
+int
+psc_particle_c_kind(particle_c_t *part)
+{
+  if (part->qni < 0.) {
+    return 0;
+  } else if (part->qni > 0.) {
+    return 1;
+  } else {
+    assert(0);
+  }
+}
+
+// ======================================================================
+
 static void
-do_1st_calc_densities(int p, fields_t *pf, particles_t *pp,
-		    int m_NE, int m_NI, int m_NN)
+do_1st_calc_densities(int p, fields_t *pf, particles_t *pp)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-      
-    creal u = (part->xi - patch->xb[0]) * dxi - .5;
-    creal v = (part->yi - patch->xb[1]) * dyi - .5;
-    creal w = (part->zi - patch->xb[2]) * dzi - .5;
-    int j1 = particle_real_fint(u);
-    int j2 = particle_real_fint(v);
-    int j3 = particle_real_fint(w);
-    creal h1 = u-j1;
-    creal h2 = v-j2;
-    creal h3 = w-j3;
-      
-    creal g0x=1.f - h1;
-    creal g0y=1.f - h2;
-    creal g0z=1.f - h3;
-    creal g1x=h1;
-    creal g1y=h2;
-    creal g1z=h3;
-      
-    if (ppsc->domain.gdims[0] == 1) {
-      j1 = 0; g0x = 1.; g1x = 0.;
-    }
-    if (ppsc->domain.gdims[1] == 1) {
-      j2 = 0; g0y = 1.; g1y = 0.;
-    }
-    if (ppsc->domain.gdims[2] == 1) {
-      j3 = 0; g0z = 1.; g1z = 0.;
-    }
+    int m = psc_particle_c_kind(part);
 
-    assert(j1 >= -1 && j1 < patch->ldims[0]);
-    assert(j2 >= -1 && j2 < patch->ldims[1]);
-    assert(j3 >= -1 && j3 < patch->ldims[2]);
-      
-    creal fnq;
-    int m;
-    if (part->qni < 0.) {
-      fnq = part->qni * part->wni * fnqs;
-      m = m_NE;
-    } else if (part->qni > 0.) {
-      fnq = part->qni * part->wni * fnqs;
-      m = m_NI;
-    } else {
-      fnq = part->wni * fnqs;
-      m = m_NN;
-    }
-    F3(pf, m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z;
-    F3(pf, m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z;
-    F3(pf, m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z;
-    F3(pf, m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z;
-    F3(pf, m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z;
-    F3(pf, m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z;
-    F3(pf, m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z;
-    F3(pf, m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z;
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, part->qni);
   }
 }
 
@@ -82,64 +101,18 @@ static void
 do_1st_calc_v(int p, fields_t *pf, particles_t *pp)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-      
-    creal u = (part->xi - patch->xb[0]) * dxi - .5;
-    creal v = (part->yi - patch->xb[1]) * dyi - .5;
-    creal w = (part->zi - patch->xb[2]) * dzi - .5;
-    int j1 = particle_real_fint(u);
-    int j2 = particle_real_fint(v);
-    int j3 = particle_real_fint(w);
-    creal h1 = u-j1;
-    creal h2 = v-j2;
-    creal h3 = w-j3;
-      
-    creal g0x=1.f - h1;
-    creal g0y=1.f - h2;
-    creal g0z=1.f - h3;
-    creal g1x=h1;
-    creal g1y=h2;
-    creal g1z=h3;
-      
-    if (ppsc->domain.gdims[0] == 1) {
-      j1 = 0; g0x = 1.; g1x = 0.;
-    }
-    if (ppsc->domain.gdims[1] == 1) {
-      j2 = 0; g0y = 1.; g1y = 0.;
-    }
-    if (ppsc->domain.gdims[2] == 1) {
-      j3 = 0; g0z = 1.; g1z = 0.;
-    }
+    int mm = psc_particle_c_kind(part) * 3;
 
-    creal pxi = part->pxi;
-    creal pyi = part->pyi;
-    creal pzi = part->pzi;
-    creal root = 1.0/sqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi);
-    creal vv[3] = { pxi*root, pyi*root, pzi*root };
-    creal fnq = part->wni * fnqs;
-    int mm;
-    if (part->qni < 0.) {
-      mm = 0;
-    } else if (part->qni > 0.) {
-      mm = 3;
-    } else {
-      assert(0);
-    }
+    creal vxi[3];
+    psc_particle_c_calc_vxi(part, vxi);
+
     for (int m = 0; m < 3; m++) {
-      F3(pf, mm+m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z * vv[m];
-      F3(pf, mm+m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z * vv[m];
-      F3(pf, mm+m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z * vv[m];
-      F3(pf, mm+m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z * vv[m];
-      F3(pf, mm+m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z * vv[m];
-      F3(pf, mm+m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z * vv[m];
-      F3(pf, mm+m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z * vv[m];
-      F3(pf, mm+m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z * vv[m];
+      DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m, vxi[m]);
     }
   }
 }
@@ -148,64 +121,18 @@ static void
 do_1st_calc_vv(int p, fields_t *pf, particles_t *pp)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  creal dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
+    int mm = psc_particle_c_kind(part) * 3;
       
-    creal u = (part->xi - patch->xb[0]) * dxi - .5;
-    creal v = (part->yi - patch->xb[1]) * dyi - .5;
-    creal w = (part->zi - patch->xb[2]) * dzi - .5;
-    int j1 = particle_real_fint(u);
-    int j2 = particle_real_fint(v);
-    int j3 = particle_real_fint(w);
-    creal h1 = u-j1;
-    creal h2 = v-j2;
-    creal h3 = w-j3;
-      
-    creal g0x=1.f - h1;
-    creal g0y=1.f - h2;
-    creal g0z=1.f - h3;
-    creal g1x=h1;
-    creal g1y=h2;
-    creal g1z=h3;
-      
-    if (ppsc->domain.gdims[0] == 1) {
-      j1 = 0; g0x = 1.; g1x = 0.;
-    }
-    if (ppsc->domain.gdims[1] == 1) {
-      j2 = 0; g0y = 1.; g1y = 0.;
-    }
-    if (ppsc->domain.gdims[2] == 1) {
-      j3 = 0; g0z = 1.; g1z = 0.;
-    }
+    creal vxi[3];
+    psc_particle_c_calc_vxi(part, vxi);
 
-    creal pxi = part->pxi;
-    creal pyi = part->pyi;
-    creal pzi = part->pzi;
-    creal root = 1.0/sqrt(1.0+pxi*pxi+pyi*pyi+pzi*pzi);
-    creal vv[3] = { pxi*root, pyi*root, pzi*root };
-    creal fnq = part->wni * fnqs;
-    int mm;
-    if (part->qni < 0.) {
-      mm = 0;
-    } else if (part->qni > 0.) {
-      mm = 3;
-    } else {
-      assert(0);
-    }
     for (int m = 0; m < 3; m++) {
-      F3(pf, mm+m, j1  ,j2  ,j3  ) += fnq*g0x*g0y*g0z * vv[m]*vv[m];
-      F3(pf, mm+m, j1+1,j2  ,j3  ) += fnq*g1x*g0y*g0z * vv[m]*vv[m];
-      F3(pf, mm+m, j1  ,j2+1,j3  ) += fnq*g0x*g1y*g0z * vv[m]*vv[m];
-      F3(pf, mm+m, j1+1,j2+1,j3  ) += fnq*g1x*g1y*g0z * vv[m]*vv[m];
-      F3(pf, mm+m, j1  ,j2  ,j3+1) += fnq*g0x*g0y*g1z * vv[m]*vv[m];
-      F3(pf, mm+m, j1+1,j2  ,j3+1) += fnq*g1x*g0y*g1z * vv[m]*vv[m];
-      F3(pf, mm+m, j1  ,j2+1,j3+1) += fnq*g0x*g1y*g1z * vv[m]*vv[m];
-      F3(pf, mm+m, j1+1,j2+1,j3+1) += fnq*g1x*g1y*g1z * vv[m]*vv[m];
+      DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m, vxi[m] * vxi[m]);
     }
   }
 }
@@ -313,7 +240,7 @@ psc_moments_1st_cc_calc_densities(struct psc_moments *moments, mfields_base_t *f
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_densities(p, psc_mfields_get_patch_c(res, p),
-			psc_mparticles_get_patch(particles, p), 0, 1, 2);
+			psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 
