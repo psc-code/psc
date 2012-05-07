@@ -198,6 +198,9 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 
   double xb[3], xe[3], xgb[3], xge[3], xgl[3];
 
+  // FIXME we should make sure (assert) we don't quietly drop particle which left
+  // in the invariant direction
+
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once => But then please recalculate whenever the dynamic window changes
