@@ -5,7 +5,7 @@
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
-#include <psc_particles_as_c.h>
+#include <psc_particles_as_single.h>
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -32,14 +32,14 @@ do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
     int m;
-    if (part->qni < 0.) {
-      if (part->wni > 1.) {
+    if (particle_qni(part) < 0.) {
+      if (particle_wni(part) > 1.) {
 	m = 1;
       } else {
 	m = 0;
       }
-    } else if (part->qni > 0.) {
-      if (part->wni > 1.) {
+    } else if (particle_qni(part) > 0.) {
+      if (particle_wni(part) > 1.) {
 	m = 3;
       } else {
 	m = 2;
@@ -48,7 +48,7 @@ do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
       assert(0);
     }
 
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, part->qni);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, particle_qni(part));
   }
 }
 
