@@ -164,9 +164,7 @@ psc_moments_1st_cc_calc_densities(struct psc_moments *moments, mfields_base_t *f
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
-  psc_mfields_zero(res, 0);
-  psc_mfields_zero(res, 1);
-  psc_mfields_zero(res, 2);
+  psc_mfields_zero_range(res, 0, 3);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_densities(p, psc_mfields_get_patch_c(res, p),
@@ -192,9 +190,7 @@ psc_moments_1st_cc_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
-  for (int m = 0; m < 6; m++) {
-    psc_mfields_zero(res, m); // FIXME, pass range
-  }
+  psc_mfields_zero_range(res, 0, 6);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_v(p, psc_mfields_get_patch_c(res, p),
@@ -222,9 +218,7 @@ psc_moments_1st_cc_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
-  for (int m = 0; m < 6; m++) {
-    psc_mfields_zero(res, m); // FIXME, pass range
-  }
+  psc_mfields_zero_range(res, 0, 6);
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_vv(p, psc_mfields_get_patch_c(res, p),

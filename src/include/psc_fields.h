@@ -40,6 +40,7 @@ struct psc_mfields_ops {
 void psc_mfields_set_domain(struct psc_mfields *flds,
 			    struct mrc_domain *domain);
 void psc_mfields_zero(struct psc_mfields *flds, int m);
+void psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me);
 void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);
 void psc_mfields_scale(struct psc_mfields *flds, double alpha);
 void psc_mfields_copy_comp(struct psc_mfields *to, int mto,

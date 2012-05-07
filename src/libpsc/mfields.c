@@ -53,6 +53,14 @@ psc_mfields_zero(struct psc_mfields *flds, int m)
 }
 
 void
+psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me)
+{
+  for (int m = mb; m < me; m++) {
+    psc_mfields_zero(flds, m);
+  }
+}
+
+void
 psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha)
 {
   struct psc_mfields_ops *ops = psc_mfields_ops(flds);
