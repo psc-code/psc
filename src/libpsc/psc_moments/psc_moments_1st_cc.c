@@ -6,7 +6,6 @@
 #include "psc_bnd.h"
 #include <math.h>
 
-
 #include "common_moments.c"
 
 // ======================================================================
@@ -20,9 +19,9 @@ do_1st_calc_densities(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int m = psc_particle_c_kind(part);
+    int m = particle_kind(part);
 
-    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, part->qni);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, m, particle_qni(part));
   }
 }
 
@@ -35,10 +34,10 @@ do_1st_calc_v(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int mm = psc_particle_c_kind(part) * 3;
+    int mm = particle_kind(part) * 3;
 
     particle_real_t vxi[3];
-    psc_particle_c_calc_vxi(part, vxi);
+    particle_calc_vxi(part, vxi);
 
     for (int m = 0; m < 3; m++) {
       DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m, vxi[m]);
@@ -55,10 +54,10 @@ do_1st_calc_vv(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int mm = psc_particle_c_kind(part) * 3;
+    int mm = particle_kind(part) * 3;
       
     particle_real_t vxi[3];
-    psc_particle_c_calc_vxi(part, vxi);
+    particle_calc_vxi(part, vxi);
 
     for (int m = 0; m < 3; m++) {
       DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m, vxi[m] * vxi[m]);
@@ -161,7 +160,7 @@ psc_moments_1st_cc_calc_densities(struct psc_moments *moments, mfields_base_t *f
   
   psc_foreach_patch(ppsc, p) {
     do_1st_calc_densities(p, psc_mfields_get_patch_c(res, p),
-			psc_mparticles_get_patch(particles, p));
+			  psc_mparticles_get_patch(particles, p));
   }
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);

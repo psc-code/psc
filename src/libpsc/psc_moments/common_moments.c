@@ -31,7 +31,7 @@
     assert(jy >= -1 && jy < patch->ldims[1]);				\
     assert(jz >= -1 && jz < patch->ldims[2]);				\
     									\
-    particle_real_t fnq = part->wni * fnqs;				\
+    particle_real_t fnq = particle_wni(part) * fnqs;			\
 									\
     F3(pf, m, jx  ,jy  ,jz  ) += fnq*g0x*g0y*g0z * (val);		\
     F3(pf, m, jx+1,jy  ,jz  ) += fnq*g1x*g0y*g0z * (val);		\
@@ -43,25 +43,35 @@
     F3(pf, m, jx+1,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
+static inline particle_real_t
+particle_real_sqrt(particle_real_t x)
+{
+  if (sizeof(x) == 4) {
+    return sqrtf(x);
+  } else {
+    return sqrt(x);
+  }
+}
+
 // FIXME, this function exists about 100x all over the place, should
 // be consolidated
 
 static inline void
-psc_particle_c_calc_vxi(particle_c_t *part, particle_c_real_t vxi[3])
+particle_calc_vxi(particle_t *part, particle_real_t vxi[3])
 {
-  particle_c_real_t root =
-    1.f / sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  particle_real_t root =
+    1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
   vxi[2] = part->pzi * root;
 }
 
 static inline int
-psc_particle_c_kind(particle_c_t *part)
+particle_kind(particle_t *part)
 {
-  if (part->qni < 0.) {
+  if (particle_qni_div_mni(part) < 0.) {
     return 0;
-  } else if (part->qni > 0.) {
+  } else if (particle_qni_div_mni(part) > 0.) {
     return 1;
   } else {
     assert(0);

@@ -42,6 +42,18 @@ particle_c_qni_wni(particle_c_t *p)
   return p->qni * p->wni;
 }
 
+static inline particle_c_real_t
+particle_c_qni(particle_c_t *p)
+{
+  return p->qni;
+}
+
+static inline particle_c_real_t
+particle_c_wni(particle_c_t *p)
+{
+  return p->wni;
+}
+
 static inline int
 particle_c_real_nint(particle_c_real_t x)
 {

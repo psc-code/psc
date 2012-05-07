@@ -41,6 +41,24 @@ particle_single_qni_wni(particle_single_t *p)
   return p->qni_wni;
 }
 
+static inline particle_single_real_t
+particle_single_qni(particle_single_t *p)
+{
+  if (p->qni_wni > 0.f) {
+    return 1.f;
+  } else if (p->qni_wni < 0.f) {
+    return -1.f;
+  } else {
+    assert(0);
+  }
+}
+
+static inline particle_single_real_t
+particle_single_wni(particle_single_t *p)
+{
+  return p->qni_wni / particle_single_qni(p);
+}
+
 static inline int
 particle_single_real_nint(particle_single_real_t x)
 {

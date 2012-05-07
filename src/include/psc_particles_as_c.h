@@ -16,6 +16,8 @@ typedef mparticles_c_t mparticles_t;
 #define particles_realloc           particles_c_realloc
 #define particle_qni_div_mni        particle_c_qni_div_mni
 #define particle_qni_wni            particle_c_qni_wni
+#define particle_qni                particle_c_qni
+#define particle_wni                particle_c_wni
 #define particle_real_nint          particle_c_real_nint
 #define particle_real_fint          particle_c_real_fint
 
