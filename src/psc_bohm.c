@@ -88,7 +88,7 @@ psc_es1_create(struct psc *psc)
   psc->domain.bnd_part_lo[2] = BND_PART_REFLECTING;
   psc->domain.bnd_part_hi[2] = BND_PART_ABSORBING;
 
-  // psc_moments_set_type(psc->moments, "1st_cc");
+  // psc_moments_set_type(psc->moments, "c_1st_cc");
 }
 
 // ----------------------------------------------------------------------

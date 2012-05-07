@@ -165,7 +165,7 @@ psc_kh_create(struct psc *psc)
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
   psc_push_particles_set_type(psc->push_particles, "1vb");
-  psc_moments_set_type(psc->moments, "1st_cc");
+  psc_moments_set_type(psc->moments, "c_1st_cc");
 }
 
 // ----------------------------------------------------------------------

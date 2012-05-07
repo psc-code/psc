@@ -1,8 +1,4 @@
 
-#include "psc_moments_private.h"
-#include "psc_particles_as_c.h"
-#include "psc_fields_as_c.h"
-
 #include "psc_bnd.h"
 #include <math.h>
 
@@ -211,12 +207,3 @@ psc_moments_1st_cc_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   add_ghosts_boundary(res, 0, 6);
 }
 
-// ======================================================================
-// psc_moments: subclass "1st_cc"
-
-struct psc_moments_ops psc_moments_1st_cc_ops = {
-  .name                  = "1st_cc",
-  .calc_densities        = psc_moments_1st_cc_calc_densities,
-  .calc_v                = psc_moments_1st_cc_calc_v,
-  .calc_vv               = psc_moments_1st_cc_calc_vv,
-};
