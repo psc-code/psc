@@ -23,11 +23,6 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    creal vxi[3];
-
-    // x^n, p^n -> x^(n+.5), p^n
-    calc_vxi(vxi, part);
-    push_xi(part, vxi, .5f * dt);
 
     // field interpolation
 
@@ -57,6 +52,8 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dqs);
 
+    creal vxi[3];
+
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_vxi(vxi, part);
     push_xi(part, vxi, .5 * dt);
@@ -74,13 +71,11 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     F3_S(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
-
-    creal xi[3] = { 0.f,
-		    part->yi + vxi[1] * .5f * dt,
-		    part->zi + vxi[2] * .5f * dt };
+    calc_vxi(vxi, part);
+    push_xi(part, vxi, .5f * dt);
 
     creal xp[3];
-    find_idx_off_pos_1st_rel(xi, lf, of, xp, 0.f, dxi);
+    find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 

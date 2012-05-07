@@ -5,6 +5,7 @@
 #include <mrc_io.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 
 static void
 _psc_mparticles_single_alloc_patch(mparticles_single_t *mp, int p, int n_part)
@@ -40,10 +41,28 @@ _psc_mparticles_single_nr_particles_by_patch(mparticles_single_t *mparticles, in
   return psc_mparticles_get_patch_single(mparticles, p)->n_part;
 }
 
+static inline void
+calc_vxi(particle_single_real_t vxi[3], particle_single_t *part)
+{
+  particle_single_real_t root =
+    1.f / sqrtf(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  vxi[0] = part->pxi * root;
+  vxi[1] = part->pyi * root;
+  vxi[2] = part->pzi * root;
+}
+
 static void
 _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
 			     mparticles_c_t *particles, unsigned int flags)
 {
+  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
+
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = ppsc->patch + p;
     particles_single_t *pp_base = psc_mparticles_get_patch_single(particles_base, p);
@@ -66,9 +85,11 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
 	wni = part_base->qni_wni / qni;
       }
 
-      part->xi  = part_base->xi + patch->xb[0];
-      part->yi  = part_base->yi + patch->xb[1];
-      part->zi  = part_base->zi + patch->xb[2];
+      particle_single_real_t vxi[3];
+      calc_vxi(vxi, part_base);
+      part->xi  = part_base->xi - dth[0] * vxi[0] + patch->xb[0];
+      part->yi  = part_base->yi - dth[1] * vxi[1] + patch->xb[1];
+      part->zi  = part_base->zi - dth[2] * vxi[2] + patch->xb[2];
       part->pxi = part_base->pxi;
       part->pyi = part_base->pyi;
       part->pzi = part_base->pzi;
@@ -83,6 +104,14 @@ static void
 _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
 			       mparticles_c_t *particles, unsigned int flags)
 {
+  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
+
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = ppsc->patch + p;
     particles_single_t *pp_base = psc_mparticles_get_patch_single(particles_base, p);
@@ -109,6 +138,12 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
       part_base->pzi         = part->pzi;
       part_base->qni_div_mni = qni_div_mni;
       part_base->qni_wni     = qni_wni;
+
+      particle_single_real_t vxi[3];
+      calc_vxi(vxi, part_base);
+      part_base->xi += dth[0] * vxi[0];
+      part_base->yi += dth[1] * vxi[1];
+      part_base->zi += dth[2] * vxi[2];
     }
   }
 }
