@@ -274,15 +274,15 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     srandom(rank);
   }
 
-  mparticles_t *particles = NULL;
+  mparticles_c_t *particles = NULL;
   if (!count_only) {
-    particles = psc_mparticles_get_cf(psc->particles, MP_DONT_COPY);
+    particles = psc_mparticles_get_c(psc->particles, MP_DONT_COPY);
   }
 
   psc_foreach_patch(psc, p) {
-    particles_t *pp = NULL;
+    particles_c_t *pp = NULL;
     if (!count_only) {
-      pp = psc_mparticles_get_patch(particles, p);
+      pp = psc_mparticles_get_patch_c(particles, p);
     }
 
     int *ldims = psc->patch[p].ldims;
@@ -310,7 +310,7 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    }
 	    if (!count_only) {
 	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		particle_t *p = particles_get_one(pp, i++);
+		particle_c_t *p = particles_c_get_one(pp, i++);
 		
 		float ran1, ran2, ran3, ran4, ran5, ran6;
 		do {
@@ -356,7 +356,7 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     }
   }
   if (!count_only) {
-    psc_mparticles_put_cf(particles, psc->particles, 0);
+    psc_mparticles_put_c(particles, psc->particles, 0);
   }
 }
 
