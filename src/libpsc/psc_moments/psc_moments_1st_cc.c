@@ -15,7 +15,7 @@ do_1st_calc_densities(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int m = particle_kind(part);
+    int m = particle_kind_ei(part);
 
     DEPOSIT_TO_GRID_1ST_CC(part, pf, m, particle_qni(part));
   }
@@ -30,7 +30,7 @@ do_1st_calc_v(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int mm = particle_kind(part) * 3;
+    int mm = particle_kind_ei(part) * 3;
 
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);
@@ -50,7 +50,7 @@ do_1st_calc_vv(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int mm = particle_kind(part) * 3;
+    int mm = particle_kind_ei(part) * 3;
       
     particle_real_t vxi[3];
     particle_calc_vxi(part, vxi);

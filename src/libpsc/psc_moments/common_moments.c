@@ -69,7 +69,7 @@ particle_calc_vxi(particle_t *part, particle_real_t vxi[3])
 }
 
 static inline int
-particle_kind(particle_t *part)
+particle_kind_ei(particle_t *part)
 {
   if (particle_qni_div_mni(part) < 0.) {
     return 0;
