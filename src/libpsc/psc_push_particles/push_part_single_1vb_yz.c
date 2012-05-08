@@ -15,11 +15,14 @@ static void
 do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
 {
   creal dt = ppsc->dt;
-  creal dqs = .5f * ppsc->coeff.eta * dt;
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal fnqys = ppsc->dx[1] * fnqs / dt;
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  creal dq_kind[ppsc->prm.nr_kinds];
+  for (int k = 0; k < ppsc->prm.nr_kinds; k++) {
+    dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
+  }
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
@@ -50,7 +53,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     creal hzq = INTERPOLATE_FIELD_1ST_C(HZ, h, g);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    creal dq = dqs * particle_qni_div_mni(part);
+    creal dq = dq_kind[part->kind];
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
     creal vxi[3];
