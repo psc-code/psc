@@ -61,7 +61,8 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
     creal hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dqs);
+    creal dq = dqs * particle_qni_div_mni(part);
+    push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_vxi(vxi, part);
