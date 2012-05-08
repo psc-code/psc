@@ -59,6 +59,15 @@ particle_single_wni(particle_single_t *p)
   return p->qni_wni / particle_single_qni(p);
 }
 
+static inline void
+particle_single_get_relative_pos(particle_single_t *p, double xb[3],
+				 particle_single_real_t xi[3])
+{
+  xi[0] = p->xi;
+  xi[1] = p->yi;
+  xi[2] = p->zi;
+}
+
 static inline int
 particle_single_real_nint(particle_single_real_t x)
 {
