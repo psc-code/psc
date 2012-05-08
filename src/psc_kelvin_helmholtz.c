@@ -96,6 +96,7 @@ struct psc_kh {
   double wpe_over_wce;
   double Ti_over_Te;
   double pert;
+  double pert_vpic;
 
   // calculated from the above
   double B0;
@@ -115,6 +116,7 @@ static struct param psc_kh_descr[] = {
   { "wpe_over_wce"  , VAR(wpe_over_wce)    , PARAM_DOUBLE(2.)            },
   { "Ti_over_Te"    , VAR(Ti_over_Te)      , PARAM_DOUBLE(1.)            },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.0)            },
+  { "pert_vpic"     , VAR(pert_vpic)       , PARAM_DOUBLE(.0)            },
   {},
 };
 #undef VAR
@@ -182,13 +184,20 @@ psc_kh_setup(struct psc *psc)
   struct psc_kh *kh = to_psc_kh(psc);
 
   double me = 1.;
+  //  double mi = me * kh->mi_over_me;
   double B0 = sqrt(me) / (kh->wpe_over_wce);
   double vAe = B0 / sqrt(me);
+  //  double vAi = B0 / sqrt(mi);
   double vAe_plane = vAe * cos(kh->theta_V);
+  //  double v0 = .5 * vAi;
   double v0 = 2 * vAe_plane;
   double v0z = v0 * cos(kh->theta_V - kh->theta_B);
   double Te = kh->beta * (1. / (1. + kh->Ti_over_Te)) * sqr(B0) / 2.;
   double Ti = kh->beta * (1. / (1. + 1./kh->Ti_over_Te)) * sqr(B0) / 2.;
+  mpi_printf(MPI_COMM_WORLD, "psc/kh: v0=%g v0z=%g\nvAe=%g vAe_plane=%g\n",
+	     v0, v0z, vAe, vAe_plane);
+  mpi_printf(MPI_COMM_WORLD, "psc/kh: Te %g Ti %g\n", Te, Ti);
+  mpi_printf(MPI_COMM_WORLD, "psc/kh: lambda_De %g\n", sqrt(Te));
 
   kh->B0 = B0;
   kh->v0z = v0z;
@@ -228,6 +237,7 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
 
   double yl = psc->domain.length[1], zl = psc->domain.length[2];
   double vz = kh->v0z * tanh((x[1] - .5 * yl * (1. + kh->pert * sin(2*M_PI * x[2] / zl))) / kh->delta);
+  vz += kh->pert_vpic * kh->v0z * sin(.5 * x[2] / kh->delta) * exp(-sqr(x[1] - .5 * yl)/sqr(kh->delta));
 
   npt->n = 1.;
   npt->p[2] = vz;
