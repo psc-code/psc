@@ -239,7 +239,7 @@ psc_kh_init_field(struct psc *psc, double x[3], int m)
 
 static void
 psc_kh_init_npt(struct psc *psc, int kind, double x[3],
-		struct psc_particle_npt *npt, double *wni)
+		struct psc_particle_npt *npt)
 {
   struct psc_kh *kh = to_psc_kh(psc);
 
@@ -251,7 +251,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   switch (kind) {
   case KH_ELECTRON1:
   case KH_ION1:
-    *wni = 1.;
     if (vz < 0.) {
       npt->n = 0.;
     } else {
@@ -260,7 +259,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
     break;
   case KH_ELECTRON2:
   case KH_ION2:
-    *wni = 1. + 1e-6;
     if (vz < 0.) {
       npt->n = 1.;
     } else {
@@ -269,119 +267,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
     break;
   default:
     assert(0);
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_kh_setup_particles
-
-void
-psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
-		       bool count_only)
-{
-  double beta = psc->coeff.beta;
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (psc->prm.seed_by_time) {
-    srandom(10*rank + time(NULL));
-  } else {
-    srandom(rank);
-  }
-
-  mparticles_c_t *particles = NULL;
-  if (!count_only) {
-    particles = psc_mparticles_get_c(psc->particles, MP_DONT_COPY);
-  }
-
-  psc_foreach_patch(psc, p) {
-    particles_c_t *pp = NULL;
-    if (!count_only) {
-      pp = psc_mparticles_get_patch_c(particles, p);
-    }
-
-    int *ldims = psc->patch[p].ldims;
-    int i = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
-      for (int jz = 0; jz < ldims[2]; jz++) {
-	for (int jy = 0; jy < ldims[1]; jy++) {
-	  for (int jx = 0; jx < ldims[0]; jx++) {
-	    double xx[3] = { .5 * (CRDX(p, jx) + CRDX(p, jx+1)),
-			     .5 * (CRDY(p, jy) + CRDY(p, jy+1)),
-			     .5 * (CRDZ(p, jz) + CRDZ(p, jz+1)) };
-	    // FIXME, the issue really is that (2nd order) particle pushers
-	    // don't handle the invariant dim right
-	    if (psc->domain.gdims[0] == 1) xx[0] = CRDX(p, jx);
-	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
-	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
-
-	    struct psc_particle_npt npt = {
-	      .q    = psc->kinds[kind].q,
-	      .m    = psc->kinds[kind].m,
-	      .n    = psc->kinds[kind].n,
-	      .T[0] = psc->kinds[kind].T,
-	      .T[1] = psc->kinds[kind].T,
-	      .T[2] = psc->kinds[kind].T,
-	      // rest is initialized to zero
-	    };
-	    double wni;
-	    psc_kh_init_npt(psc, kind, xx, &npt, &wni);
-	    
-	    int n_in_cell = npt.n * psc->prm.nicell + .5;
-	    if (count_only) {
-	      i += n_in_cell;
-	    }
-	    if (!count_only) {
-	      for (int cnt = 0; cnt < n_in_cell; cnt++) {
-		particle_c_t *p = particles_c_get_one(pp, i++);
-		
-		float ran1, ran2, ran3, ran4, ran5, ran6;
-		do {
-		  ran1 = random() / ((float) RAND_MAX + 1);
-		  ran2 = random() / ((float) RAND_MAX + 1);
-		  ran3 = random() / ((float) RAND_MAX + 1);
-		  ran4 = random() / ((float) RAND_MAX + 1);
-		  ran5 = random() / ((float) RAND_MAX + 1);
-		  ran6 = random() / ((float) RAND_MAX + 1);
-		} while (ran1 >= 1.f || ran2 >= 1.f || ran3 >= 1.f ||
-			 ran4 >= 1.f || ran5 >= 1.f || ran6 >= 1.f);
-		
-		float px =
-		  sqrtf(-2.f*npt.T[0]/npt.m*sqr(beta)*logf(1.0-ran1)) * cosf(2.f*M_PI*ran2)
-		  + npt.p[0];
-		float py =
-		  sqrtf(-2.f*npt.T[1]/npt.m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4)
-		  + npt.p[1];
-		float pz =
-		  sqrtf(-2.f*npt.T[2]/npt.m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6)
-		  + npt.p[2];
-		
-		p->xi = xx[0];
-		p->yi = xx[1];
-		p->zi = xx[2];
-		p->pxi = px;
-		p->pyi = py;
-		p->pzi = pz;
-		p->qni = npt.q;
-		p->mni = npt.m;
-		p->wni = wni;
-		p->kind = kind;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-    if (count_only) {
-      nr_particles_by_patch[p] = i;
-    } else {
-      pp->n_part = i;
-      assert(pp->n_part == nr_particles_by_patch[p]);
-    }
-  }
-  if (!count_only) {
-    psc_mparticles_put_c(particles, psc->particles, 0);
   }
 }
 
@@ -395,7 +280,7 @@ struct psc_ops psc_kh_ops = {
   .create           = psc_kh_create,
   .setup            = psc_kh_setup,
   .init_field       = psc_kh_init_field,
-  .setup_particles  = psc_kh_setup_particles,
+  .init_npt         = psc_kh_init_npt,
 };
 
 // ======================================================================

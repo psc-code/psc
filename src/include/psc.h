@@ -382,7 +382,8 @@ void psc_setup(struct psc *psc);
 void psc_set_kinds(struct psc *psc, int nr_kinds, struct psc_kind *kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
-void psc_setup_particle(struct psc *psc, particle_c_t *prt, struct psc_particle_npt *npt);
+void psc_setup_particle(struct psc *psc, particle_c_t *prt, int kind,
+			struct psc_particle_npt *npt);
 void psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 			int *particle_label_offset);
 void psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,

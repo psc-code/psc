@@ -243,7 +243,7 @@ seed_patch(struct psc *psc, int p, particles_t *pp)
       npt.T[0] = es1->Te_;
       npt.T[1] = es1->Te_;
       npt.T[2] = es1->Te_;
-      psc_setup_particle(psc, prt, &npt);
+      psc_setup_particle(psc, prt, 0, &npt);
       
       // ions
       prt = particles_get_one(pp, pp->n_part++);
@@ -256,7 +256,7 @@ seed_patch(struct psc *psc, int p, particles_t *pp)
       npt.T[0] = es1->Ti_;
       npt.T[1] = es1->Ti_;
       npt.T[2] = es1->Ti_;
-      psc_setup_particle(psc, prt, &npt);
+      psc_setup_particle(psc, prt, 1, &npt);
       
     }
   } foreach_3d_end;

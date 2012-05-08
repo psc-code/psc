@@ -687,7 +687,8 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 }
 
 void
-psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt)
+psc_setup_particle(struct psc *psc, particle_t *prt, int kind,
+		   struct psc_particle_npt *npt)
 {
   double beta = psc->coeff.beta;
 
@@ -710,6 +711,7 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
     sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
   prt->qni = npt->q;
   prt->mni = npt->m;
+  prt->kind = kind;
 }	      
 
 // ----------------------------------------------------------------------
@@ -771,7 +773,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_t *p = particles_get_one(pp, i++);
 	      
-	      psc_setup_particle(psc, p, &npt);
+	      psc_setup_particle(psc, p, kind, &npt);
 	      p->xi = xx[0];
 	      p->yi = xx[1];
 	      p->zi = xx[2];
