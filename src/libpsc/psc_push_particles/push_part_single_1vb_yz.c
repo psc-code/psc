@@ -20,8 +20,14 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
   creal dq_kind[ppsc->prm.nr_kinds];
+  creal fnqx_kind[ppsc->prm.nr_kinds];
+  creal fnqy_kind[ppsc->prm.nr_kinds];
+  creal fnqz_kind[ppsc->prm.nr_kinds];
   for (int k = 0; k < ppsc->prm.nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
+    fnqx_kind[k] = fnqs * ppsc->kinds[k].q;
+    fnqy_kind[k] = fnqys * ppsc->kinds[k].q;
+    fnqz_kind[k] = fnqzs * ppsc->kinds[k].q;
   }
 
   for (int n = 0; n < pp->n_part; n++) {
@@ -68,7 +74,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     creal of[3];
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
-    creal fnqx = vxi[0] * particle_qni_wni(part) * fnqs;
+    creal fnqx = vxi[0] * particle_single_wni(part) * fnqx_kind[part->kind];
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
@@ -109,8 +115,8 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
       second_dir = 1 - first_dir;
     }
 
-    creal fnq[2] = { particle_qni_wni(part) * fnqys,
-		     particle_qni_wni(part) * fnqzs };
+    creal fnq[2] = { particle_single_wni(part) * fnqy_kind[part->kind],
+		     particle_single_wni(part) * fnqz_kind[part->kind] };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;
