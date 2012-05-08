@@ -23,26 +23,6 @@ enum {
   NR_KH_KINDS,
 };
 
-int
-particle_single_kind(particle_single_t *prt)
-{
-  if (particle_qni(prt) < 0.) {
-    if (particle_wni(prt) == 1.) {
-      return KH_ELECTRON1;
-    } else {
-      return KH_ELECTRON2;
-    }
-  } else if (particle_qni(prt) > 0.) {
-    if (particle_wni(prt) == 1.) {
-      return KH_ION1;
-    } else {
-      return KH_ION2;
-    }
-  } else {
-    assert(0);
-  }
-}
-
 // ======================================================================
 
 #include "psc_output_fields_item_private.h"
@@ -386,6 +366,7 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 		p->qni = npt.q;
 		p->mni = npt.m;
 		p->wni = wni;
+		p->kind = kind;
 	      }
 	    }
 	  }

@@ -10,9 +10,9 @@ typedef float particle_single_real_t;
 
 typedef struct {
   particle_single_real_t xi, yi, zi;
-  particle_single_real_t pxi, pyi, pzi;
-  particle_single_real_t qni_div_mni;
   particle_single_real_t qni_wni;
+  particle_single_real_t pxi, pyi, pzi;
+  int kind;
 } particle_single_t;
 
 typedef struct {
@@ -29,11 +29,24 @@ particles_single_get_one(particles_single_t *pp, int n)
   return &pp->particles[n];
 }
 
-static inline particle_single_real_t
-particle_single_qni_div_mni(particle_single_t *p)
-{
-  return p->qni_div_mni;
-}
+// can't do this as inline function since struct psc isn't known yet
+#define particle_single_qni_div_mni(p) ({			\
+      particle_single_real_t rv;				\
+      rv = ppsc->kinds[p->kind].q / ppsc->kinds[p->kind].m;	\
+      rv;							\
+    })
+
+#define particle_single_qni(p) ({				\
+      particle_single_real_t rv;				\
+      rv = ppsc->kinds[p->kind].q;				\
+      rv;							\
+    })
+
+#define particle_single_wni(p) ({				\
+      particle_single_real_t rv;				\
+      rv = p->qni_wni / ppsc->kinds[p->kind].q;			\
+      rv;							\
+    })
 
 static inline particle_single_real_t
 particle_single_qni_wni(particle_single_t *p)
@@ -41,22 +54,10 @@ particle_single_qni_wni(particle_single_t *p)
   return p->qni_wni;
 }
 
-static inline particle_single_real_t
-particle_single_qni(particle_single_t *p)
+static inline int
+particle_single_kind(particle_single_t *prt)
 {
-  if (p->qni_wni > 0.f) {
-    return 1.f;
-  } else if (p->qni_wni < 0.f) {
-    return -1.f;
-  } else {
-    assert(0);
-  }
-}
-
-static inline particle_single_real_t
-particle_single_wni(particle_single_t *p)
-{
-  return p->qni_wni / particle_single_qni(p);
+  return prt->kind;
 }
 
 static inline void

@@ -14,6 +14,7 @@ typedef struct {
   particle_c_real_t qni;
   particle_c_real_t mni;
   particle_c_real_t wni;
+  long              kind; // 64 bits to match the other members, for bnd exchange
 } particle_c_t;
 
 typedef struct {

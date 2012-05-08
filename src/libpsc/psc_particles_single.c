@@ -73,17 +73,9 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
-      particle_c_real_t qni, mni, wni;
-      if (part_base->qni_div_mni == 0.) {
-	qni = 0.;
-	wni = part_base->qni_wni;
-	mni = -1.;
-	// FIXME, irrelevant if no-copy assert(0); // can't recover the mass of a neutral particle
-      } else {
-	qni = part_base->qni_div_mni > 0 ? 1. : -1.;
-	mni = qni / part_base->qni_div_mni;
-	wni = part_base->qni_wni / qni;
-      }
+      particle_c_real_t qni = ppsc->kinds[part_base->kind].q;
+      particle_c_real_t mni = ppsc->kinds[part_base->kind].m;
+      particle_c_real_t wni = part_base->qni_wni / qni;
 
       particle_single_real_t vxi[3];
       calc_vxi(vxi, part_base);
@@ -96,6 +88,7 @@ _psc_mparticles_single_copy_to_c(struct psc_mparticles *particles_base,
       part->qni = qni;
       part->mni = mni;
       part->wni = wni;
+      part->kind = part->kind;
     }
   }
 }
@@ -122,7 +115,6 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
       particle_single_t *part_base = particles_single_get_one(pp_base, n);
       particle_c_t *part = particles_c_get_one(pp, n);
       
-      particle_single_real_t qni_div_mni = part->qni / part->mni;
       particle_single_real_t qni_wni;
       if (part->qni != 0.) {
 	qni_wni = part->qni * part->wni;
@@ -136,8 +128,8 @@ _psc_mparticles_single_copy_from_c(struct psc_mparticles *particles_base,
       part_base->pxi         = part->pxi;
       part_base->pyi         = part->pyi;
       part_base->pzi         = part->pzi;
-      part_base->qni_div_mni = qni_div_mni;
       part_base->qni_wni     = qni_wni;
+      part_base->kind        = part->kind;
 
       particle_single_real_t vxi[3];
       calc_vxi(vxi, part_base);
