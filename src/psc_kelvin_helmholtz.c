@@ -124,8 +124,10 @@ static struct param psc_kh_descr[] = {
 // psc_kh_create
 
 enum {
-  KH_ELECTRON,
-  KH_ION,
+  KH_ELECTRON1,
+  KH_ELECTRON2,
+  KH_ION1,
+  KH_ION2,
   NR_KH_KINDS,
 };
 
@@ -151,8 +153,10 @@ psc_kh_create(struct psc *psc)
   psc->prm.cfl = 0.98;
 
   struct psc_kind kinds[NR_KH_KINDS] = {
-    [KH_ELECTRON] = { .q = -1., .m = 1, .n = 1, },
-    [KH_ION]      = { .q =  1.,         .n = 1, },
+    [KH_ELECTRON1] = { .q = -1., .m = 1, },
+    [KH_ELECTRON2] = { .q = -1., .m = 1, },
+    [KH_ION1]      = { .q =  1.,         },
+    [KH_ION2]      = { .q =  1.,         },
   };
   psc_set_kinds(psc, NR_KH_KINDS, kinds);
 
@@ -215,9 +219,12 @@ psc_kh_setup(struct psc *psc)
 
   // set particle kind parameters
   assert(psc->prm.nr_kinds == NR_KH_KINDS);
-  psc->kinds[KH_ELECTRON].T = Te;
-  psc->kinds[KH_ION].m = mi;
-  psc->kinds[KH_ION].T = Ti;
+  psc->kinds[KH_ELECTRON1].T = Te;
+  psc->kinds[KH_ELECTRON2].T = Te;
+  psc->kinds[KH_ION1].m = mi;
+  psc->kinds[KH_ION2].m = mi;
+  psc->kinds[KH_ION1].T = Ti;
+  psc->kinds[KH_ION2].T = Ti;
 
   psc_setup_super(psc);
 }
@@ -255,13 +262,28 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   vz += kh->pert_vpic * kh->v0z * sin(.5 * x[2] / kh->delta) * exp(-sqr(x[1] - .5 * yl)/sqr(kh->delta));
 
   npt->p[2] = vz;
-
-  if (vz < 0) {
+  switch (kind) {
+  case KH_ELECTRON1:
+  case KH_ION1:
     *wni = 1.;
-  } else {
+    if (vz < 0.) {
+      npt->n = 0.;
+    } else {
+      npt->n = 1.;
+    }
+    break;
+  case KH_ELECTRON2:
+  case KH_ION2:
     *wni = 1. + 1e-6;
+    if (vz < 0.) {
+      npt->n = 1.;
+    } else {
+      npt->n = 0.;
+    }
+    break;
+  default:
+    assert(0);
   }
-
 }
 
 // ----------------------------------------------------------------------
