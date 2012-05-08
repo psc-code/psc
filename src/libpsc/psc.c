@@ -659,7 +659,15 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {}; // init to all zero
+	    struct psc_particle_npt npt = {};
+	    if (psc->kinds) {
+	      npt.q    = psc->kinds[kind].q;
+	      npt.m    = psc->kinds[kind].m;
+	      npt.n    = psc->kinds[kind].n;
+	      npt.T[0] = psc->kinds[kind].T;
+	      npt.T[1] = psc->kinds[kind].T;
+	      npt.T[2] = psc->kinds[kind].T;
+	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 
 	    int n_in_cell = get_n_in_cell(psc, &npt);
@@ -748,7 +756,15 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {}; // init to all zero
+	    struct psc_particle_npt npt = {};
+	    if (psc->kinds) {
+	      npt.q    = psc->kinds[kind].q;
+	      npt.m    = psc->kinds[kind].m;
+	      npt.n    = psc->kinds[kind].n;
+	      npt.T[0] = psc->kinds[kind].T;
+	      npt.T[1] = psc->kinds[kind].T;
+	      npt.T[2] = psc->kinds[kind].T;
+	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 	    
 	    int n_in_cell = get_n_in_cell(psc, &npt);
@@ -867,6 +883,19 @@ psc_setup_fields(struct psc *psc)
 
   if (psc->domain.use_pml) {
     psc_setup_field_pml(psc);
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_set_kinds
+
+void
+psc_set_kinds(struct psc *psc, int nr_kinds, struct psc_kind *kinds)
+{
+  psc->prm.nr_kinds = nr_kinds;
+  psc->kinds = calloc(nr_kinds, sizeof(*psc->kinds));
+  if (kinds) {
+    memcpy(psc->kinds, kinds, nr_kinds * sizeof(*psc->kinds));
   }
 }
 

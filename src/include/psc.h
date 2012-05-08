@@ -179,6 +179,15 @@ struct psc_patch {
   double xb[3];
 };
 
+///Describes the different particle kinds
+///
+struct psc_kind {
+  double q;  // charge
+  double m;  // mass
+  double n;  // default density
+  double T;  // default temperature
+};
+
 #define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
 #define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
 #define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
@@ -210,6 +219,7 @@ struct psc {
   struct psc_coeff coeff;	///< automatically derived constants
   struct psc_domain domain;	///< the computational domain
   struct psc_pml pml;		///< PML settings
+  struct psc_kind *kinds;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}
 
   
@@ -369,6 +379,7 @@ psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
 struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
+void psc_set_kinds(struct psc *psc, int nr_kinds, struct psc_kind *kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 void psc_setup_particle(struct psc *psc, particle_c_t *prt, struct psc_particle_npt *npt);

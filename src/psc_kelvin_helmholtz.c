@@ -101,7 +101,6 @@ struct psc_kh {
   // calculated from the above
   double B0;
   double v0z;
-  double Te, Ti;
 };
 
 #define to_psc_kh(psc) mrc_to_subobj(psc, struct psc_kh)
@@ -124,6 +123,12 @@ static struct param psc_kh_descr[] = {
 // ----------------------------------------------------------------------
 // psc_kh_create
 
+enum {
+  KH_ELECTRON,
+  KH_ION,
+  NR_KH_KINDS,
+};
+
 static void
 psc_kh_create(struct psc *psc)
 {
@@ -144,6 +149,12 @@ psc_kh_create(struct psc *psc)
   psc->prm.nicell = 50;
   psc->prm.gdims_in_terms_of_cells = true;
   psc->prm.cfl = 0.98;
+
+  struct psc_kind kinds[NR_KH_KINDS] = {
+    [KH_ELECTRON] = { .q = -1., .m = 1, .n = 1, },
+    [KH_ION]      = { .q =  1.,         .n = 1, },
+  };
+  psc_set_kinds(psc, NR_KH_KINDS, kinds);
 
   psc->domain.length[0] = 1.; // no x-dependence
   psc->domain.length[1] = 30.;
@@ -184,7 +195,7 @@ psc_kh_setup(struct psc *psc)
   struct psc_kh *kh = to_psc_kh(psc);
 
   double me = 1.;
-  //  double mi = me * kh->mi_over_me;
+  double mi = me * kh->mi_over_me;
   double B0 = sqrt(me) / (kh->wpe_over_wce);
   double vAe = B0 / sqrt(me);
   //  double vAi = B0 / sqrt(mi);
@@ -201,8 +212,12 @@ psc_kh_setup(struct psc *psc)
 
   kh->B0 = B0;
   kh->v0z = v0z;
-  kh->Te = Te;
-  kh->Ti = Ti;
+
+  // set particle kind parameters
+  assert(psc->prm.nr_kinds == NR_KH_KINDS);
+  psc->kinds[KH_ELECTRON].T = Te;
+  psc->kinds[KH_ION].m = mi;
+  psc->kinds[KH_ION].T = Ti;
 
   psc_setup_super(psc);
 }
@@ -239,7 +254,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
   double vz = kh->v0z * tanh((x[1] - .5 * yl * (1. + kh->pert * sin(2*M_PI * x[2] / zl))) / kh->delta);
   vz += kh->pert_vpic * kh->v0z * sin(.5 * x[2] / kh->delta) * exp(-sqr(x[1] - .5 * yl)/sqr(kh->delta));
 
-  npt->n = 1.;
   npt->p[2] = vz;
 
   if (vz < 0) {
@@ -248,24 +262,6 @@ psc_kh_init_npt(struct psc *psc, int kind, double x[3],
     *wni = 1. + 1e-6;
   }
 
-  switch (kind) {
-  case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1.;
-    npt->T[0] = kh->Te;
-    npt->T[1] = kh->Te;
-    npt->T[2] = kh->Te;
-    break;
-  case 1: // ions
-    npt->q = 1.;
-    npt->m = kh->mi_over_me;
-    npt->T[0] = kh->Ti;
-    npt->T[1] = kh->Ti;
-    npt->T[2] = kh->Ti;
-    break;
-  default:
-    assert(0);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -312,7 +308,15 @@ psc_kh_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {}; // init to all zero
+	    struct psc_particle_npt npt = {
+	      .q    = psc->kinds[kind].q,
+	      .m    = psc->kinds[kind].m,
+	      .n    = psc->kinds[kind].n,
+	      .T[0] = psc->kinds[kind].T,
+	      .T[1] = psc->kinds[kind].T,
+	      .T[2] = psc->kinds[kind].T,
+	      // rest is initialized to zero
+	    };
 	    double wni;
 	    psc_kh_init_npt(psc, kind, xx, &npt, &wni);
 	    
