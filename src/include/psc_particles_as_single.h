@@ -18,6 +18,7 @@ typedef mparticles_single_t mparticles_t;
 #define particle_qni_wni            particle_single_qni_wni
 #define particle_qni                particle_single_qni
 #define particle_wni                particle_single_wni
+#define particle_kind               particle_single_kind
 #define particle_get_relative_pos   particle_single_get_relative_pos
 #define particle_real_nint          particle_single_real_nint
 #define particle_real_fint          particle_single_real_fint

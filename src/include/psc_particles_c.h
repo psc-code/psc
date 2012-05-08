@@ -55,6 +55,12 @@ particle_c_wni(particle_c_t *p)
   return p->wni;
 }
 
+static inline int
+particle_c_kind(particle_c_t *p)
+{
+  return p->kind;
+}
+
 static inline void
 particle_c_get_relative_pos(particle_c_t *p, double xb[3],
 			    particle_c_real_t xi[3])
