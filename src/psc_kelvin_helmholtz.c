@@ -15,6 +15,36 @@
 
 // ======================================================================
 
+enum {
+  KH_ELECTRON1,
+  KH_ELECTRON2,
+  KH_ION1,
+  KH_ION2,
+  NR_KH_KINDS,
+};
+
+int
+particle_single_kind(particle_single_t *prt)
+{
+  if (particle_qni(prt) < 0.) {
+    if (particle_wni(prt) == 1.) {
+      return KH_ELECTRON1;
+    } else {
+      return KH_ELECTRON2;
+    }
+  } else if (particle_qni(prt) > 0.) {
+    if (particle_wni(prt) == 1.) {
+      return KH_ION1;
+    } else {
+      return KH_ION2;
+    }
+  } else {
+    assert(0);
+  }
+}
+
+// ======================================================================
+
 #include "psc_output_fields_item_private.h"
 
 #include "psc_bnd.h"
@@ -31,23 +61,7 @@ do_1st_calc_kh(int p, fields_t *pf, particles_t *pp)
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    int m;
-    if (particle_qni(part) < 0.) {
-      if (particle_wni(part) > 1.) {
-	m = 1;
-      } else {
-	m = 0;
-      }
-    } else if (particle_qni(part) > 0.) {
-      if (particle_wni(part) > 1.) {
-	m = 3;
-      } else {
-	m = 2;
-      }
-    } else {
-      assert(0);
-    }
-
+    int m = particle_single_kind(part);
     DEPOSIT_TO_GRID_1ST_CC(part, pf, m, particle_qni(part));
   }
 }
@@ -122,14 +136,6 @@ static struct param psc_kh_descr[] = {
 
 // ----------------------------------------------------------------------
 // psc_kh_create
-
-enum {
-  KH_ELECTRON1,
-  KH_ELECTRON2,
-  KH_ION1,
-  KH_ION2,
-  NR_KH_KINDS,
-};
 
 static void
 psc_kh_create(struct psc *psc)
