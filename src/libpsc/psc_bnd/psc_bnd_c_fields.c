@@ -77,7 +77,7 @@ psc_bnd_lib_create_ddc(struct psc *psc)
   struct mrc_ddc *ddc = mrc_domain_create_ddc(psc->mrc_domain);
   mrc_ddc_set_funcs(ddc, &ddc_funcs);
   mrc_ddc_set_param_int3(ddc, "ibn", psc->ibn);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 6);
+  mrc_ddc_set_param_int(ddc, "max_n_fields", 12);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
   mrc_ddc_setup(ddc);
   return ddc;
