@@ -1,5 +1,98 @@
 
 #include "psc_output_fields_item_private.h"
+#include "psc_bnd.h"
+
+#include <math.h>
+
+#include "common_moments.c"
+
+// ======================================================================
+// boundary stuff FIXME, should go elsewhere...
+
+static void
+add_ghosts_reflecting_lo(mfields_c_t *res, int p, int d, int mb, int me)
+{
+  fields_t *pf = psc_mfields_get_patch(res, p);
+  struct psc_patch *patch = ppsc->patch + p;
+
+  if (d == 1) {
+    for (int iz = 0; iz < patch->ldims[2]; iz++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iy = 0; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy-1,iz);
+	  }
+	}
+      }
+    }
+  } else if (d == 2) {
+    for (int iy = 0; iy < patch->ldims[1]; iy++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iz = 0; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz-1);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
+static void
+add_ghosts_reflecting_hi(mfields_c_t *res, int p, int d, int mb, int me)
+{
+  fields_t *pf = psc_mfields_get_patch(res, p);
+  struct psc_patch *patch = ppsc->patch + p;
+
+  if (d == 1) {
+    for (int iz = 0; iz < patch->ldims[2]; iz++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iy = patch->ldims[1] - 1; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy+1,iz);
+	  }
+	}
+      }
+    }
+  } else if (d == 2) {
+    for (int iy = 0; iy < patch->ldims[1]; iy++) {
+      for (int ix = 0; ix < patch->ldims[0]; ix++) {
+	int iz = patch->ldims[2] - 1; {
+	  for (int m = mb; m < me; m++) {
+	    F3(pf, m, ix,iy,iz) += F3(pf, m, ix,iy,iz+1);
+	  }
+	}
+      }
+    }
+  } else {
+    assert(0);
+  }
+}
+
+static void
+add_ghosts_boundary(mfields_c_t *res, int mb, int me)
+{
+  psc_foreach_patch(ppsc, p) {
+    // lo
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->patch[p].off[d] == 0) {
+	if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING) {
+	  add_ghosts_reflecting_lo(res, p, d, mb, me);
+	}
+      }
+    }
+    // hi
+    for (int d = 0; d < 3; d++) {
+      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
+	if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING) {
+	  add_ghosts_reflecting_hi(res, p, d, mb, me);
+	}
+      }
+    }
+  }
+}
 
 // ======================================================================
 // n_1st
