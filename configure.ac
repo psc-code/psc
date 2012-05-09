@@ -131,7 +131,7 @@ AC_ARG_ENABLE(
 AS_IF(
  [test "$enable_sse2" = "yes"],
  [AC_DEFINE([USE_SSE2])
-  CFLAGS="$CFLAGS -msse2"])
+  CFLAGS="$CFLAGS -msse4.1"])
 AM_CONDITIONAL([USE_SSE2], [test "$enable_sse2" = "yes"])
 
 AH_TEMPLATE([CELLEMU], [emulate Cell BE for testing])
