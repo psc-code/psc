@@ -186,6 +186,7 @@ struct psc_kind {
   double m;  // mass
   double n;  // default density
   double T;  // default temperature
+  char *name; // short string for the kind name
 };
 
 #define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])

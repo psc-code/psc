@@ -81,8 +81,9 @@ get_nr_components(struct psc_output_fields_item *item)
 static const char *
 get_component_name(struct psc_output_fields_item *item, int m)
 {
-  const char *comp_names[] = { "ne1", "ne2", "ni1", "ni2" };
-  return comp_names[m];
+  static char s[100];
+  sprintf(s, "n_%s", ppsc->kinds[m].name);
+  return s;
 }
 
 static struct psc_output_fields_item_ops psc_output_fields_item_kh_ops = {
@@ -152,10 +153,10 @@ psc_kh_create(struct psc *psc)
   psc->prm.cfl = 0.98;
 
   struct psc_kind kinds[NR_KH_KINDS] = {
-    [KH_ELECTRON1] = { .q = -1., .m = 1, },
-    [KH_ELECTRON2] = { .q = -1., .m = 1, },
-    [KH_ION1]      = { .q =  1.,         },
-    [KH_ION2]      = { .q =  1.,         },
+    [KH_ELECTRON1] = { .name = "e1", .q = -1., .m = 1, },
+    [KH_ELECTRON2] = { .name = "e2", .q = -1., .m = 1, },
+    [KH_ION1]      = { .name = "i1", .q =  1.,         },
+    [KH_ION2]      = { .name = "i2", .q =  1.,         },
   };
   psc_set_kinds(psc, NR_KH_KINDS, kinds);
 
