@@ -21,11 +21,23 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   mfields_c_t *flds = psc_mfields_create(psc_output_fields_item_comm(item));
   psc_mfields_set_type(flds, "c");
   psc_mfields_set_domain(flds, ppsc->mrc_domain);
-  psc_mfields_set_param_int(flds, "nr_fields", ops->nr_comp);
+  int nr_comp;
+  if (ops->get_nr_components) {
+    nr_comp = ops->get_nr_components(item);
+  } else {
+    nr_comp = ops->nr_comp;
+  }
+  psc_mfields_set_param_int(flds, "nr_fields", nr_comp);
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
   psc_mfields_setup(flds);
-  for (int m = 0; m < ops->nr_comp; m++) {
-    psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
+  for (int m = 0; m < nr_comp; m++) {
+    const char *comp_name;
+    if (ops->get_component_name) {
+      comp_name = ops->get_component_name(item, m);
+    } else {
+      comp_name = ops->fld_names[m];
+    }
+    psc_mfields_set_comp_name(flds, m, comp_name);
   }
 
   return flds;

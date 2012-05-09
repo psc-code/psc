@@ -72,11 +72,24 @@ calc_kh(struct psc_output_fields_item *item, mfields_base_t *flds,
   // FIXME add_ghosts_boundary(res, 0, 4);
 }
 
+static int
+get_nr_components(struct psc_output_fields_item *item)
+{
+  return ppsc->prm.nr_kinds;
+}
+
+static const char *
+get_component_name(struct psc_output_fields_item *item, int m)
+{
+  const char *comp_names[] = { "ne1", "ne2", "ni1", "ni2" };
+  return comp_names[m];
+}
+
 static struct psc_output_fields_item_ops psc_output_fields_item_kh_ops = {
-  .name      = "kh",
-  .nr_comp   = 4,
-  .fld_names = { "ne1", "ne2", "ni1", "ni2" },
-  .run       = calc_kh,
+  .name               = "kh",
+  .get_component_name = get_component_name,
+  .get_nr_components  = get_nr_components,
+  .run                = calc_kh,
 };
 
 // ======================================================================

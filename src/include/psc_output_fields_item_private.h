@@ -11,9 +11,15 @@ struct psc_output_fields_item {
 
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
+  int  (*get_nr_components)(struct psc_output_fields_item *item);
+  const char *(*get_component_name)(struct psc_output_fields_item *item, int m);
   void (*run)(struct psc_output_fields_item *item,
 	      mfields_base_t *flds, mparticles_base_t *particles,
 	      mfields_c_t *res);
+  // when the following are known at compile time, they can just be part
+  // of the subclass definition.
+  // otherwise, one should overload ::get_nr_components() and 
+  // ::get_component_name()
   int nr_comp;
   char *fld_names[6];
 };
