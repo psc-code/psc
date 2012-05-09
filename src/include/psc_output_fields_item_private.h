@@ -46,5 +46,6 @@ extern struct psc_output_fields_item_ops psc_output_fields_item_densities_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_v_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_vv_ops;
 extern struct psc_output_fields_item_ops psc_output_fields_item_photon_n_ops;
+extern struct psc_output_fields_item_ops psc_output_fields_item_n_1st_single_ops;
 
 #endif
