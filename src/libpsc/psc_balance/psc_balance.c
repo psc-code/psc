@@ -57,7 +57,7 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       loads_sum += loads_all[i];
     }
     double load_target = loads_sum / size;
-    //    mprintf("target %g size %d sum %g\n", load_target, size, loads_sum);
+    mprintf("target %g size %d sum %g\n", load_target, size, loads_sum);
     
     int p = 0, nr_new_patches = 0;
     double load = 0.;
@@ -66,7 +66,8 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       nr_new_patches++;
       double next_target = (p + 1) * load_target;
       if (p < size - 1) {
-	if (load > next_target) {
+	// if load limit is reached, or we have only as many patches as processors left
+	if (load > next_target || size - p >= nr_global_patches - i) {
 	  double above_target = load - next_target;
 	  double below_target = next_target - (load - loads_all[i]);
 	  if (above_target > below_target && nr_new_patches > 1) {
@@ -90,10 +91,10 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       double load = 0.;
       for (int i = 0; i < nr_patches_all_new[p]; i++) {
 	load += loads_all[pp++];
-	//	mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
       }
-      //      mprintf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
-      //	      load, load_target, load - load_target);
+      mprintf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
+      	      load, load_target, load - load_target);
     }
   }
   // then scatter
