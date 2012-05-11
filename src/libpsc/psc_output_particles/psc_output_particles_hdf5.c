@@ -147,9 +147,9 @@ get_sort_index(int p, const particle_c_t *part)
   } else {
     kind = 2; // neutral
   }
-  assert(kind < ppsc->prm.nr_kinds);
+  assert(kind < ppsc->nr_kinds);
  
-  return cell_index_3_to_1(ldims, j0, j1, j2) * ppsc->prm.nr_kinds + kind;
+  return cell_index_3_to_1(ldims, j0, j1, j2) * ppsc->nr_kinds + kind;
 }
 
 // ----------------------------------------------------------------------
@@ -158,7 +158,7 @@ get_sort_index(int p, const particle_c_t *part)
 static void
 count_sort(mparticles_c_t *particles, int **off, int **map)
 {
-  int nr_kinds = ppsc->prm.nr_kinds;
+  int nr_kinds = ppsc->nr_kinds;
 
   for (int p = 0; p < particles->nr_patches; p++) {
     int *ldims = ppsc->patch[p].ldims;
@@ -208,7 +208,7 @@ find_patch_bounds(struct psc_output_particles_hdf5 *hdf5,
     ihi[d] = MIN(ldims[d], hdf5->hi[d] - off[d]);
     ld[d] = ihi[d] - ilo[d];
   }
-  *p_sz = ppsc->prm.nr_kinds * ld[0] * ld[1] * ld[2];
+  *p_sz = ppsc->nr_kinds * ld[0] * ld[1] * ld[2];
 }
 
 // ----------------------------------------------------------------------
@@ -221,7 +221,7 @@ make_local_particle_array(struct psc_output_particles *out,
 {
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
   MPI_Comm comm = psc_output_particles_comm(out);
-  int nr_kinds = ppsc->prm.nr_kinds;
+  int nr_kinds = ppsc->nr_kinds;
   struct mrc_patch_info info;
 
   // count all particles to be written locally
@@ -321,7 +321,7 @@ write_idx(struct psc_output_particles *out, int *gidx_begin, int *gidx_end,
   struct psc_output_particles_hdf5 *hdf5 = to_psc_output_particles_hdf5(out);
   int ierr;
 
-  hsize_t fdims[4] = { ppsc->prm.nr_kinds,
+  hsize_t fdims[4] = { ppsc->nr_kinds,
 		       hdf5->wdims[2], hdf5->wdims[1], hdf5->wdims[0] };
   hid_t filespace = H5Screate_simple(4, fdims, NULL); H5_CHK(filespace);
   hid_t memspace;
@@ -380,7 +380,7 @@ psc_output_particles_hdf5_run(struct psc_output_particles *out,
   MPI_Comm_rank(comm, &rank);
 
   struct mrc_patch_info info;
-  int nr_kinds = ppsc->prm.nr_kinds;
+  int nr_kinds = ppsc->nr_kinds;
   int *wdims = hdf5->wdims;
 
   int **off = malloc(particles->nr_patches * sizeof(*off));

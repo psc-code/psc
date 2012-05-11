@@ -90,7 +90,7 @@ psc_es1_create(struct psc *psc)
   psc->prm.n0 = 1.;
   psc->prm.e0 = 1.;
 
-  psc->prm.nr_kinds = 1;
+  psc_set_kinds(psc, 1, NULL);
   psc->prm.nicell = 4;
   psc->prm.cfl = 0.98;
 
@@ -145,7 +145,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   if (count_only) {
     psc_foreach_patch(psc, p) {
       int n = 0;
-      for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+      for (int kind = 0; kind < psc->nr_kinds; kind++) {
 	n += 1;
       }
       nr_particles_by_patch[p] = n;
@@ -170,7 +170,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     particles_t *pp = psc_mparticles_get_patch(particles, p);
 
     int il1 = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+    for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
       int n = 1;
       for (int i = 0; i < n; i++) {

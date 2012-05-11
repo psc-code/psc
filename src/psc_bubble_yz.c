@@ -51,7 +51,6 @@ psc_bubble_create(struct psc *psc)
 
   psc->prm.nicell = 50;
 
-  psc_set_kinds(psc, NR_KINDS, psc_kinds_default);
   psc->kinds[KIND_ELECTRON].T = .02;
   psc->kinds[KIND_ION].m = 100.;
   psc->kinds[KIND_ION].T = .02;

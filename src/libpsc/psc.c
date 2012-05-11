@@ -106,7 +106,6 @@ static struct param psc_descr[] = {
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
   { "cfl"           , VAR(prm.cfl)             , PARAM_DOUBLE(.75)          },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
-  { "nr_kinds"      , VAR(prm.nr_kinds)        , PARAM_INT(2)               },
   { "seed_by_time"  , VAR(prm.seed_by_time)    , PARAM_BOOL(false)          },
   // by default, we put the # of particles per cell according to the
   // density, using the weights (~ 1) only to fine-tune to the
@@ -159,6 +158,9 @@ _psc_create(struct psc *psc)
 
   MPI_Comm comm = psc_comm(psc);
 
+  // default: 2 species (e-, i+)
+  psc_set_kinds(psc, 2, NULL);
+
   psc->push_particles = psc_push_particles_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->push_particles);
   psc->push_fields = psc_push_fields_create(comm);
@@ -200,41 +202,45 @@ _psc_set_from_options(struct psc *psc)
   if (psc->use_dynamic_patches) {
     psc_patchmanager_set_from_options(&psc->patchmanager);
   }
-  
-  if (psc->kinds) {
-    char s[100] = "";
+
+  // make comma separated list of current kinds
+  char s[100] = "";
+  if (psc->nr_kinds > 0) {
     strcpy(s, psc->kinds[0].name);
-    for (int k = 1; k < psc->prm.nr_kinds; k++) {
+    for (int k = 1; k < psc->nr_kinds; k++) {
       strcat(s, ",");
       strcat(s, psc->kinds[k].name);
     }
-    mrc_params_get_option_string_help("particle_kinds", (const char **) &s,
-				      "names of particle kinds, separated by commas");
-    char *p, *ss = s;
-    int k = 0;
-    while ((p = strsep(&ss, ", "))) {
-      free(psc->kinds[k].name);
-      psc->kinds[k].name = strdup(p);
-      k++;
-    }
-    psc->prm.nr_kinds = k;
+  }
+  // allow user to change names, or even change number
+  mrc_params_get_option_string_help("particle_kinds", (const char **) &s,
+				    "names of particle kinds, separated by commas");
+  // parse comma separated list back into names
+  char *p, *ss = s;
+  int k = 0;
+  while ((p = strsep(&ss, ", "))) {
+    free(psc->kinds[k].name);
+    psc->kinds[k].name = strdup(p);
+    k++;
+  }
+  psc->nr_kinds = k;
     
-    for (int k = 0; k < psc->prm.nr_kinds; k++) {
-      struct psc_kind *kind = psc->kinds + k;
-      assert(kind->name);
-      sprintf(s, "particle_%s_q", kind->name);
-      mrc_params_get_option_double_help(s, &kind->q, 
-					"charge of this particle kind");
-      sprintf(s, "particle_%s_m", kind->name);
-      mrc_params_get_option_double_help(s, &kind->m, 
-					"mass of this particle kind");
-      sprintf(s, "particle_%s_n", kind->name);
-      mrc_params_get_option_double_help(s, &kind->n, 
-					"default density of this particle kind");
-      sprintf(s, "particle_%s_T", kind->name);
-      mrc_params_get_option_double_help(s, &kind->T, 
-					"default temperature of this particle kind");
-    }
+  // allow setting of parameters for each kind
+  for (int k = 0; k < psc->nr_kinds; k++) {
+    struct psc_kind *kind = psc->kinds + k;
+    assert(kind->name);
+    sprintf(s, "particle_%s_q", kind->name);
+    mrc_params_get_option_double_help(s, &kind->q, 
+				      "charge of this particle kind");
+    sprintf(s, "particle_%s_m", kind->name);
+    mrc_params_get_option_double_help(s, &kind->m, 
+				      "mass of this particle kind");
+    sprintf(s, "particle_%s_n", kind->name);
+    mrc_params_get_option_double_help(s, &kind->n, 
+				      "default density of this particle kind");
+    sprintf(s, "particle_%s_T", kind->name);
+    mrc_params_get_option_double_help(s, &kind->T, 
+				      "default temperature of this particle kind");
   }
 }
 
@@ -683,7 +689,7 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
     pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+    for (int kind = 0; kind < psc->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -696,14 +702,13 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {};
-	    if (psc->kinds) {
-	      npt.q    = psc->kinds[kind].q;
-	      npt.m    = psc->kinds[kind].m;
-	      npt.n    = psc->kinds[kind].n;
-	      npt.T[0] = psc->kinds[kind].T;
-	      npt.T[1] = psc->kinds[kind].T;
-	      npt.T[2] = psc->kinds[kind].T;
+	    struct psc_particle_npt npt = {
+	      .q    = psc->kinds[kind].q,
+	      .m    = psc->kinds[kind].m,
+	      .n    = psc->kinds[kind].n,
+	      .T[0] = psc->kinds[kind].T,
+	      .T[1] = psc->kinds[kind].T,
+	      .T[2] = psc->kinds[kind].T,
 	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 
@@ -782,7 +787,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     particles_t *pp = psc_mparticles_get_patch(particles, p);
 
     int i = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+    for (int kind = 0; kind < psc->nr_kinds; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -795,14 +800,13 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {};
-	    if (psc->kinds) {
-	      npt.q    = psc->kinds[kind].q;
-	      npt.m    = psc->kinds[kind].m;
-	      npt.n    = psc->kinds[kind].n;
-	      npt.T[0] = psc->kinds[kind].T;
-	      npt.T[1] = psc->kinds[kind].T;
-	      npt.T[2] = psc->kinds[kind].T;
+	    struct psc_particle_npt npt = {
+	      .q    = psc->kinds[kind].q,
+	      .m    = psc->kinds[kind].m,
+	      .n    = psc->kinds[kind].n,
+	      .T[0] = psc->kinds[kind].T,
+	      .T[1] = psc->kinds[kind].T,
+	      .T[2] = psc->kinds[kind].T,
 	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 	    
@@ -931,12 +935,9 @@ psc_setup_fields(struct psc *psc)
 static void
 _psc_view(struct psc *psc)
 {
-  if (!psc->kinds)
-    return;
-
   MPI_Comm comm = psc_comm(psc);
   mpi_printf(comm, "%20s|\n", "particle kinds");
-  for (int k = 0; k < psc->prm.nr_kinds; k++) {
+  for (int k = 0; k < psc->nr_kinds; k++) {
     mpi_printf(comm, "%19s | q = %g m = %g n = %g T = %g\n", 
 	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m,
 	       psc->kinds[k].n, psc->kinds[k].T);
@@ -949,12 +950,37 @@ _psc_view(struct psc *psc)
 void
 psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 {
-  psc->prm.nr_kinds = nr_kinds;
+  if (psc->kinds) {
+    for (int k = 0; k < nr_kinds; k++) {
+      free(psc->kinds[k].name);
+    }
+    free(psc->kinds);
+  }
+    
+  psc->nr_kinds = nr_kinds;
   psc->kinds = calloc(nr_kinds, sizeof(*psc->kinds));
   if (kinds) {
     for (int k = 0; k < nr_kinds; k++) {
       psc->kinds[k] = kinds[k];
       psc->kinds[k].name = strdup(kinds[k].name);
+    }
+  } else {
+    // set defaults, one electron species, the rest ions
+    if (nr_kinds > KIND_ELECTRON) {
+      psc->kinds[KIND_ELECTRON].name = strdup("e");
+      psc->kinds[KIND_ELECTRON].q = -1.;
+      psc->kinds[KIND_ELECTRON].m = 1.;
+    }
+    for (int k = 1; k < nr_kinds; k++) {
+      char s[10];
+      if (k == KIND_ION) {
+	sprintf(s, "i");
+      } else {
+	sprintf(s, "i%d", k);
+      }
+      psc->kinds[k].name = strdup(s);
+      psc->kinds[k].q = 1.;
+      psc->kinds[k].m = 100.;
     }
   }
 }
@@ -995,10 +1021,5 @@ const char *fldname[NR_FIELDS] = {
   [BZ]  = "bz",
   [EPS] = "eps",
   [MU]  = "mu",
-};
-
-const struct psc_kind psc_kinds_default[NR_KINDS] = {
-  [KIND_ELECTRON] = { .name = "e", .q = -1., .m = 1,    },
-  [KIND_ION]      = { .name = "i", .q =  1., .m = 100., },
 };
 

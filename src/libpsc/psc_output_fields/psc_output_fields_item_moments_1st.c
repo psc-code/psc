@@ -133,7 +133,7 @@ n_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 static int
 n_1st_get_nr_components(struct psc_output_fields_item *item)
 {
-  return ppsc->prm.nr_kinds;
+  return ppsc->nr_kinds;
 }
 
 static const char *
@@ -189,7 +189,7 @@ v_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 static int
 v_1st_get_nr_components(struct psc_output_fields_item *item)
 {
-  return 3 * ppsc->prm.nr_kinds;
+  return 3 * ppsc->nr_kinds;
 }
 
 static const char *
@@ -245,7 +245,7 @@ vv_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 static int
 vv_1st_get_nr_components(struct psc_output_fields_item *item)
 {
-  return 3 * ppsc->prm.nr_kinds;
+  return 3 * ppsc->nr_kinds;
 }
 
 static const char *

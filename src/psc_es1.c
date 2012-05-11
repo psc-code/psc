@@ -90,7 +90,7 @@ psc_es1_create(struct psc *psc)
   psc->prm.n0 = 1.;
   psc->prm.e0 = 1.;
 
-  psc->prm.nr_kinds = 1;
+  psc_set_kinds(psc, 1, NULL);
   psc->prm.nicell = 4;
   psc->prm.cfl = 0.98;
 
@@ -131,7 +131,7 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
   switch (m) {
   case EZ: ;
     double ez = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+    for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
       double theta = 2. * M_PI * s->mode / psc->domain.length[2] * x[2];
       ez += s->q * s->x1 * cos(theta + s->thetax);
@@ -155,7 +155,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     psc_foreach_patch(psc, p) {
       int *ldims = psc->patch[p].ldims;
       int n = 0;
-      for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+      for (int kind = 0; kind < psc->nr_kinds; kind++) {
 	n += ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;
       }
       nr_particles_by_patch[p] = n;
@@ -180,7 +180,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     particles_t *pp = psc_mparticles_get_patch(particles, p);
 
     int il1 = 0;
-    for (int kind = 0; kind < psc->prm.nr_kinds; kind++) {
+    for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
       int *ldims = psc->patch[p].ldims;
       int n = ldims[0] * ldims[1] * ldims[2] * psc->prm.nicell;

@@ -19,11 +19,11 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
   creal fnqys = ppsc->dx[1] * fnqs / dt;
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
-  creal dq_kind[ppsc->prm.nr_kinds];
-  creal fnqx_kind[ppsc->prm.nr_kinds];
-  creal fnqy_kind[ppsc->prm.nr_kinds];
-  creal fnqz_kind[ppsc->prm.nr_kinds];
-  for (int k = 0; k < ppsc->prm.nr_kinds; k++) {
+  creal dq_kind[ppsc->nr_kinds];
+  creal fnqx_kind[ppsc->nr_kinds];
+  creal fnqy_kind[ppsc->nr_kinds];
+  creal fnqz_kind[ppsc->nr_kinds];
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
     fnqx_kind[k] = fnqs * ppsc->kinds[k].q;
     fnqy_kind[k] = fnqys * ppsc->kinds[k].q;

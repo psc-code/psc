@@ -62,7 +62,6 @@ psc_es1_create(struct psc *psc)
   psc->prm.n0 = 1.;
   psc->prm.e0 = 1.;
 
-  psc->prm.nr_kinds = 2;
   psc->prm.nicell = 50;
   psc->prm.cfl = 0.98;
 

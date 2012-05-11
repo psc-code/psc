@@ -146,7 +146,7 @@ psc_kh_setup(struct psc *psc)
   kh->v0z = v0z;
 
   // set particle kind parameters
-  assert(psc->prm.nr_kinds == NR_KH_KINDS);
+  assert(psc->nr_kinds == NR_KH_KINDS);
   psc->kinds[KH_ELECTRON1].T = Te;
   psc->kinds[KH_ELECTRON2].T = Te;
   psc->kinds[KH_ION1].m = mi;

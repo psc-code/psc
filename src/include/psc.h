@@ -78,7 +78,6 @@ struct psc_param {
   double a0;
   double cfl;   ///<CFL number to be used for determining timestep
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
-  int nr_kinds;
   bool seed_by_time;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
@@ -195,8 +194,6 @@ enum {
   NR_KINDS,
 };
 
-extern const struct psc_kind psc_kinds_default[NR_KINDS];
-
 #define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
 #define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
 #define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
@@ -228,6 +225,7 @@ struct psc {
   struct psc_coeff coeff;	///< automatically derived constants
   struct psc_domain domain;	///< the computational domain
   struct psc_pml pml;		///< PML settings
+  int nr_kinds;                 ///< nr of different particle kinds
   struct psc_kind *kinds;       ///< particle kinds (e.g., e-, ion, ...)
   ///@}
 

@@ -13,8 +13,8 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, particles_single_t *pps, int n_s
   float fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   float fnqys = ppsc->dx[1] * fnqs / dt;
   float fnqzs = ppsc->dx[2] * fnqs / dt;
-  float dq_kind[ppsc->prm.nr_kinds];
-  for (int k = 0; k < ppsc->prm.nr_kinds; k++) {
+  float dq_kind[ppsc->nr_kinds];
+  for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
   }
 
