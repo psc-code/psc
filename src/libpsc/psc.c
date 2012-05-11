@@ -890,6 +890,24 @@ psc_setup_fields(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
+// _psc_view
+
+static void
+_psc_view(struct psc *psc)
+{
+  if (!psc->kinds)
+    return;
+
+  MPI_Comm comm = psc_comm(psc);
+  mpi_printf(comm, "%20s|\n", "particle kinds");
+  for (int k = 0; k < psc->prm.nr_kinds; k++) {
+    mpi_printf(comm, "%19s | q = %g m = %g n = %g T = %g\n", 
+	       psc->kinds[k].name, psc->kinds[k].q, psc->kinds[k].m,
+	       psc->kinds[k].n, psc->kinds[k].T);
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_set_kinds
 
 void
@@ -912,6 +930,7 @@ struct mrc_class_psc mrc_class_psc = {
   .create           = _psc_create,
   .set_from_options = _psc_set_from_options,
   .setup            = _psc_setup,
+  .view             = _psc_view,
   .destroy          = _psc_destroy,
   .write            = _psc_write,
   .read             = _psc_read,
