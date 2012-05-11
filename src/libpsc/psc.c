@@ -200,6 +200,42 @@ _psc_set_from_options(struct psc *psc)
   if (psc->use_dynamic_patches) {
     psc_patchmanager_set_from_options(&psc->patchmanager);
   }
+  
+  if (psc->kinds) {
+    char s[100] = "";
+    strcpy(s, psc->kinds[0].name);
+    for (int k = 1; k < psc->prm.nr_kinds; k++) {
+      strcat(s, ",");
+      strcat(s, psc->kinds[k].name);
+    }
+    mrc_params_get_option_string_help("particle_kinds", (const char **) &s,
+				      "names of particle kinds, separated by commas");
+    char *p, *ss = s;
+    int k = 0;
+    while ((p = strsep(&ss, ", "))) {
+      free(psc->kinds[k].name);
+      psc->kinds[k].name = strdup(p);
+      k++;
+    }
+    psc->prm.nr_kinds = k;
+    
+    for (int k = 0; k < psc->prm.nr_kinds; k++) {
+      struct psc_kind *kind = psc->kinds + k;
+      assert(kind->name);
+      sprintf(s, "particle_%s_q", kind->name);
+      mrc_params_get_option_double_help(s, &kind->q, 
+					"charge of this particle kind");
+      sprintf(s, "particle_%s_m", kind->name);
+      mrc_params_get_option_double_help(s, &kind->m, 
+					"mass of this particle kind");
+      sprintf(s, "particle_%s_n", kind->name);
+      mrc_params_get_option_double_help(s, &kind->n, 
+					"default density of this particle kind");
+      sprintf(s, "particle_%s_T", kind->name);
+      mrc_params_get_option_double_help(s, &kind->T, 
+					"default temperature of this particle kind");
+    }
+  }
 }
 
 // ======================================================================
@@ -916,7 +952,10 @@ psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
   psc->prm.nr_kinds = nr_kinds;
   psc->kinds = calloc(nr_kinds, sizeof(*psc->kinds));
   if (kinds) {
-    memcpy(psc->kinds, kinds, nr_kinds * sizeof(*psc->kinds));
+    for (int k = 0; k < nr_kinds; k++) {
+      psc->kinds[k] = kinds[k];
+      psc->kinds[k].name = strdup(kinds[k].name);
+    }
   }
 }
 

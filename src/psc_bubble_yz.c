@@ -12,9 +12,6 @@
 struct psc_bubble {
   double BB;
   double nnb;
-  double TTe;
-  double TTi;
-  double MMi;
   double MMach;
   double LLn;
   double LLB;
@@ -26,12 +23,9 @@ struct psc_bubble {
 static struct param psc_bubble_descr[] = {
   { "BB"            , VAR(BB)              , PARAM_DOUBLE(.07)    },
   { "nnb"           , VAR(nnb)             , PARAM_DOUBLE(.1)     },
-  { "MMi"           , VAR(MMi)             , PARAM_DOUBLE(100.)   },
   { "MMach"         , VAR(MMach)           , PARAM_DOUBLE(3.)     },
   { "LLn"           , VAR(LLn)             , PARAM_DOUBLE(200.)   },
   { "LLB"           , VAR(LLB)             , PARAM_DOUBLE(200./6.)},
-  { "TTe"           , VAR(TTe)             , PARAM_DOUBLE(.02)    },
-  { "TTi"           , VAR(TTi)             , PARAM_DOUBLE(.02)    },
   {},
 };
 #undef VAR
@@ -58,6 +52,9 @@ psc_bubble_create(struct psc *psc)
   psc->prm.nicell = 50;
 
   psc_set_kinds(psc, NR_KINDS, psc_kinds_default);
+  psc->kinds[KIND_ELECTRON].T = .02;
+  psc->kinds[KIND_ION].m = 100.;
+  psc->kinds[KIND_ION].T = .02;
 
   psc->domain.gdims[0] = 1;
   psc->domain.gdims[1] = 160;
@@ -109,9 +106,9 @@ psc_bubble_init_field(struct psc *psc, double x[3], int m)
   double BB = bubble->BB;
   double LLn = bubble->LLn;
   double LLB = bubble->LLB;
-  double MMi = bubble->MMi;
+  double MMi = psc->kinds[KIND_ION].m;
   double MMach = bubble->MMach;
-  double TTe = bubble->TTe;
+  double TTe = psc->kinds[KIND_ELECTRON].T;
 
   double z1 = x[2];
   double y1 = x[1] + LLn;
@@ -177,11 +174,9 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
   double BB = bubble->BB;
   double LLn = bubble->LLn;
   double LLB = bubble->LLB;
-  double V0 = bubble->MMach * sqrt(bubble->TTe / bubble->MMi);
+  double V0 = bubble->MMach * sqrt(psc->kinds[KIND_ELECTRON].T / psc->kinds[KIND_ION].m);
 
   double nnb = bubble->nnb;
-  double TTi = bubble->TTi;
-  double TTe = bubble->TTe;
 
   double r1 = sqrt(sqr(x[2]) + sqr(x[1] + LLn));
   double r2 = sqrt(sqr(x[2]) + sqr(x[1] - LLn));
@@ -204,9 +199,6 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
 
   switch (kind) {
   case 0: // electrons
-    npt->q = -1.;
-    npt->m = 1.;
-
     // electron drift consistent with initial current
     if ((r1 <= LLn) && (r1 >= LLn - 2.*LLB)) {
       npt->p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r1)/(2.*LLB)) / npt->n;
@@ -215,17 +207,8 @@ psc_bubble_init_npt(struct psc *psc, int kind, double x[3],
       npt->p[0] = - BB * M_PI/(2.*LLB) * cos(M_PI * (LLn-r2)/(2.*LLB)) / npt->n;
     }
 
-    npt->T[0] = TTe;
-    npt->T[1] = TTe;
-    npt->T[2] = TTe;
     break;
   case 1: // ions
-    npt->q = 1.;
-    npt->m = bubble->MMi;
-
-    npt->T[0] = TTi;
-    npt->T[1] = TTi;
-    npt->T[2] = TTi;
     break;
   default:
     assert(0);
