@@ -893,7 +893,7 @@ psc_setup_fields(struct psc *psc)
 // psc_set_kinds
 
 void
-psc_set_kinds(struct psc *psc, int nr_kinds, struct psc_kind *kinds)
+psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 {
   psc->prm.nr_kinds = nr_kinds;
   psc->kinds = calloc(nr_kinds, sizeof(*psc->kinds));
@@ -938,3 +938,9 @@ const char *fldname[NR_FIELDS] = {
   [EPS] = "eps",
   [MU]  = "mu",
 };
+
+const struct psc_kind psc_kinds_default[NR_KINDS] = {
+  [KIND_ELECTRON] = { .name = "e", .q = -1., .m = 1,    },
+  [KIND_ION]      = { .name = "i", .q =  1., .m = 100., },
+};
+

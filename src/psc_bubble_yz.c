@@ -57,6 +57,8 @@ psc_bubble_create(struct psc *psc)
 
   psc->prm.nicell = 50;
 
+  psc_set_kinds(psc, NR_KINDS, psc_kinds_default);
+
   psc->domain.gdims[0] = 1;
   psc->domain.gdims[1] = 160;
   psc->domain.gdims[2] = 240;

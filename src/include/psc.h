@@ -188,6 +188,15 @@ struct psc_kind {
   char *name; // short string for the kind name
 };
 
+///Default kinds (electrons + ions)
+enum {
+  KIND_ELECTRON,
+  KIND_ION,
+  NR_KINDS,
+};
+
+extern const struct psc_kind psc_kinds_default[NR_KINDS];
+
 #define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
 #define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
 #define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
@@ -379,7 +388,7 @@ psc_local_to_global_indices(struct psc *psc, int p, int jx, int jy, int jz,
 struct psc *psc_create(MPI_Comm comm);
 void psc_set_from_options(struct psc *psc);
 void psc_setup(struct psc *psc);
-void psc_set_kinds(struct psc *psc, int nr_kinds, struct psc_kind *kinds);
+void psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
 void psc_setup_particle(struct psc *psc, particle_c_t *prt, int kind,
