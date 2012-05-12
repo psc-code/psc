@@ -951,7 +951,7 @@ void
 psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 {
   if (psc->kinds) {
-    for (int k = 0; k < nr_kinds; k++) {
+    for (int k = 0; k < psc->nr_kinds; k++) {
       free(psc->kinds[k].name);
     }
     free(psc->kinds);
