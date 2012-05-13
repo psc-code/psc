@@ -70,6 +70,9 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
   MPI_Comm_rank(psc_diag_comm(diag), &rank);
 
   struct psc_diag_item *item;
+  if (rank == 0) {
+    fprintf(diag->file, "%g", psc->timestep * psc->dt);
+  }
   mrc_obj_for_each_child(item, diag, struct psc_diag_item) {
     int nr_values = psc_diag_item_nr_values(item);
     double *result = calloc(nr_values, sizeof(*result));
@@ -80,7 +83,6 @@ psc_diag_run(struct psc_diag *diag, struct psc *psc)
       MPI_Reduce(result, NULL, nr_values, MPI_DOUBLE, MPI_SUM, 0, psc_comm(psc));
     }
     if (rank == 0) {
-      fprintf(diag->file, "%g", psc->timestep * psc->dt);
       for (int i = 0; i < nr_values; i++) {
 	fprintf(diag->file, " %g", result[i]);
       }
