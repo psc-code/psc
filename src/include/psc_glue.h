@@ -22,7 +22,6 @@ void PIC_msb_h(fields_fortran_t *pf);
 void PIC_msb_e(fields_fortran_t *pf);
 void PIC_pml_msa(fields_fortran_t *pf);
 void PIC_pml_msb(fields_fortran_t *pf);
-void CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf);
 void PIC_fill_ghosts_h_b(struct psc *psc, int p, fields_fortran_t *pf);
 void SET_param_pml(struct psc *psc);
 void GET_param_domain(void);

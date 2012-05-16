@@ -30,7 +30,6 @@
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
-#define CALC_densities_F77 F77_FUNC(calc_densities,CALC_DENSITIES)
 #define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
 #define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
 #define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
@@ -144,8 +143,6 @@ void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
-void CALC_densities_F77(f_int *niloc, particle_fortran_t *p_niloc,
-			f_real *ne, f_real *ni, f_real *nn);
 
 void PIC_fax_F77(f_real *f);
 void PIC_fay_F77(f_real *f);
@@ -383,13 +380,6 @@ void
 SET_param_pml(struct psc *psc)
 {
   SET_param_pml_F77(&psc->pml.thick, &psc->pml.cushion, &psc->pml.size, &psc->pml.order);
-}
-
-void
-CALC_densities(particles_fortran_t *pp, fields_fortran_t *pf)
-{
-  CALC_densities_F77(&pp->n_part, &pp->particles[-1],
-		     pf->flds[0], pf->flds[1], pf->flds[2]);
 }
 
 void
