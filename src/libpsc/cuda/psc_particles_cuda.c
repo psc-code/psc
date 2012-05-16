@@ -241,7 +241,7 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
 	qni = 0.;
 	wni = qni_wni;
 	mni = -1.;
-	// FIXME, irrelevant if no-copy assert(0); // can't recover the mass of a neutral particle
+	assert(0); // can't recover the mass of a neutral particle
       } else {
 	qni = qni_div_mni > 0 ? 1. : -1.;
 	mni = qni / qni_div_mni;
