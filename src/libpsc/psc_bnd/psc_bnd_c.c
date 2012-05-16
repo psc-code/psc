@@ -360,6 +360,10 @@ psc_bnd_c_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 	      case BND_PART_PERIODIC:
 		xi[d] += xgl[d];
 		dir[d] = -1;
+		if (xi[d] >= xge[d]) { // can happen because of rounding, FIXME hack
+		  xi[d] -= xge[d];
+		  dir[d] = 0;
+		}
 		break;
 	      default:
 		assert(0);
