@@ -8,7 +8,7 @@
 #include <math.h>
 #include <psc.h>
 
-#include <psc_particles.h>
+#include "psc_particles_cuda.h"
 
 // ======================================================================
 

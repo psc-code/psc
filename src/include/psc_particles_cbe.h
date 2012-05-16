@@ -9,7 +9,7 @@ typedef cbe_real particle_cbe_real_t;
 
 #if CBE_DOUBLE
 
-typedef struct {
+typedef struct psc_particle_cbe {
   particle_cbe_real_t xi, yi, zi;
   particle_cbe_real_t pxi, pyi, pzi;
   particle_cbe_real_t qni, mni, wni;
@@ -21,7 +21,7 @@ typedef struct {
 
 #else
 
-typedef struct {
+typedef struct psc_particle_cbe {
   particle_cbe_real_t xi, yi, zi;
   particle_cbe_real_t pxi, pyi, pzi;
   particle_cbe_real_t qni, mni, wni;
@@ -34,7 +34,7 @@ typedef struct {
 
 #endif
 
-typedef struct {
+typedef struct psc_particles_cbe {
   particle_cbe_t *particles;
   int n_part;
   int n_alloced;

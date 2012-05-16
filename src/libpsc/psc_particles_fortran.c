@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_particles_fortran.h"
+#include "psc_particles_c.h"
 
 #include <stdlib.h>
 

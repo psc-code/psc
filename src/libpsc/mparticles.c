@@ -1,6 +1,8 @@
 
 #include "psc.h"
 
+#include "psc_particles_c.h"
+
 #include <mrc_profile.h>
 #include <mrc_params.h>
 #include <stdlib.h>

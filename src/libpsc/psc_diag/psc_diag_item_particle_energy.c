@@ -1,5 +1,6 @@
 
 #include "psc_diag_item_private.h"
+#include "psc_particles_c.h"
 
 #include <math.h>
 

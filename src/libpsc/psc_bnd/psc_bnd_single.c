@@ -1,6 +1,7 @@
 
 #include "psc_bnd_c.h"
 #include "psc_bnd_private.h"
+#include "psc_particles_single.h"
 #include "ddc_particles.h"
 
 #include <mrc_domain.h>

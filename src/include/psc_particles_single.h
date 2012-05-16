@@ -8,14 +8,14 @@ typedef float particle_single_real_t;
 
 #define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
 
-typedef struct {
+typedef struct psc_particle_single {
   particle_single_real_t xi, yi, zi;
   particle_single_real_t qni_wni;
   particle_single_real_t pxi, pyi, pzi;
   int kind;
 } particle_single_t;
 
-typedef struct {
+typedef struct psc_particles_single {
   particle_single_t *particles;
   int n_part;
   int n_alloced;

@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_particles_single.h"
+#include "psc_particles_c.h"
 
 #include <mrc_io.h>
 #include <stdlib.h>

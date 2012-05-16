@@ -2,6 +2,7 @@
 #include "psc_testing.h"
 #include "psc_moments.h"
 #include "psc_bnd.h"
+#include "psc_particles_c.h"
 
 #include <math.h>
 

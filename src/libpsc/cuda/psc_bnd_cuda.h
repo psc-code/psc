@@ -3,6 +3,7 @@
 #define PSC_BND_CUDA_H
 
 #include "psc_bnd_private.h"
+#include "psc_particles_cuda.h"
 
 struct psc_bnd_cuda {
   struct mrc_ddc *ddc;

@@ -3,6 +3,7 @@
 #define PSC_PUSH_PARTICLES_PS_H
 
 #include "psc.h"
+#include "psc_particles_single.h"
 
 #include "psc_fields_as_c.h"
 

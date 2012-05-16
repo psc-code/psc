@@ -1,5 +1,6 @@
 
 #include "psc_output_particles_private.h"
+#include "psc_particles_c.h"
 
 #include <mrc_params.h>
 #include <string.h>

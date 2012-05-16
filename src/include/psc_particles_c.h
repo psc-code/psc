@@ -8,7 +8,7 @@ typedef double particle_c_real_t;
 
 #define MPI_PARTICLES_C_REAL MPI_DOUBLE
 
-typedef struct {
+typedef struct psc_particle_c {
   particle_c_real_t xi, yi, zi;
   particle_c_real_t pxi, pyi, pzi;
   particle_c_real_t qni;
@@ -17,7 +17,7 @@ typedef struct {
   long              kind; // 64 bits to match the other members, for bnd exchange
 } particle_c_t;
 
-typedef struct {
+typedef struct psc_particles_c {
   particle_c_t *particles;
   int n_part;
   int n_alloced;

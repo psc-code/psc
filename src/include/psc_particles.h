@@ -51,11 +51,11 @@ typedef struct psc_mparticles mparticles_##type##_t;			\
 									\
 extern struct psc_mparticles_ops psc_mparticles_##type##_ops;		\
 									\
-static inline particles_##type##_t *					\
+static inline struct psc_particles_##type *				\
 psc_mparticles_get_patch_##type(struct psc_mparticles *mp, int p)	\
 {									\
   assert(psc_mparticles_ops(mp) == &psc_mparticles_##type##_ops);	\
-  return (particles_##type##_t *) mp->patches[p];			\
+  return (struct psc_particles_##type *) mp->patches[p];		\
 }									\
 									\
 struct psc_mparticles *						        \
@@ -65,25 +65,14 @@ void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
 			       struct psc_mparticles *mp_base,		\
 			       unsigned int flags);			\
 
-#include "psc_particles_fortran.h"
 MAKE_MPARTICLES_TYPE(fortran)
-
-#include "psc_particles_c.h"
 MAKE_MPARTICLES_TYPE(c)
-
-#include "psc_particles_single.h"
 MAKE_MPARTICLES_TYPE(single)
-
 #ifdef xUSE_SSE2
-#include "psc_particles_sse2.h"
 MAKE_MPARTICLES_TYPE(sse2)
 #endif
-
-#include "psc_particles_cbe.h"
 MAKE_MPARTICLES_TYPE(cbe)
-
 #ifdef USE_CUDA
-#include "psc_particles_cuda.h"
 MAKE_MPARTICLES_TYPE(cuda)
 #endif
 

@@ -26,7 +26,7 @@ typedef struct {
   unsigned int *sums;      // for particle xchg
 } particles_cuda_dev_t;
 
-typedef struct {
+typedef struct psc_particles_cuda {
   particles_cuda_dev_t d_part; // all particles, on device
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
