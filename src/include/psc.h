@@ -420,6 +420,8 @@ void psc_write_checkpoint(struct psc *psc);
 void psc_setup_fortran(struct psc *psc);
 
 
+void psc_default_dimensionless(struct psc *psc);
+
 int psc_main(int *argc, char ***argv, struct psc_ops *type);
 
 // ----------------------------------------------------------------------

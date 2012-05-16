@@ -36,19 +36,9 @@ static struct param psc_bubble_descr[] = {
 static void
 psc_bubble_create(struct psc *psc)
 {
-  // new defaults (dimensionless) for this case
-  psc->prm.qq = 1.;
-  psc->prm.mm = 1.;
-  psc->prm.tt = 1.;
-  psc->prm.cc = 1.;
-  psc->prm.eps0 = 1.;
+  psc_default_dimensionless(psc);
 
   psc->prm.nmax = 32000;
-  psc->prm.lw = 2.*M_PI;
-  psc->prm.i0 = 0.;
-  psc->prm.n0 = 1.;
-  psc->prm.e0 = 1.;
-
   psc->prm.nicell = 50;
 
   psc->kinds[KIND_ELECTRON].T = .02;

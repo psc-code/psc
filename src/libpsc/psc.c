@@ -1023,3 +1023,26 @@ const char *fldname[NR_FIELDS] = {
   [MU]  = "mu",
 };
 
+// ======================================================================
+// helpers
+
+// ----------------------------------------------------------------------
+// psc_default_dimensionless
+//
+// sets up parameter defaults for dimensionless units
+
+void
+psc_default_dimensionless(struct psc *psc)
+{
+  psc->prm.qq = 1.;
+  psc->prm.mm = 1.;
+  psc->prm.tt = 1.;
+  psc->prm.cc = 1.;
+  psc->prm.eps0 = 1.;
+
+  psc->prm.lw = 2.*M_PI;
+  psc->prm.i0 = 0.;
+  psc->prm.n0 = 1.;
+  psc->prm.e0 = 1.;
+}
+

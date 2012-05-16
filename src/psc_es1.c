@@ -77,22 +77,12 @@ static struct param psc_es1_descr[] = {
 static void
 psc_es1_create(struct psc *psc)
 {
-  // new defaults (dimensionless) for this case
-  psc->prm.qq = 1.;
-  psc->prm.mm = 1.;
-  psc->prm.tt = 1.;
-  psc->prm.cc = 1.;
-  psc->prm.eps0 = 1.;
-
-  psc->prm.nmax = 16000;
-  psc->prm.lw = 2.*M_PI;
-  psc->prm.i0 = 0.;
-  psc->prm.n0 = 1.;
-  psc->prm.e0 = 1.;
+  psc_default_dimensionless(psc);
 
   psc_set_kinds(psc, 1, NULL);
   psc->prm.nicell = 4;
   psc->prm.cfl = 0.98;
+  psc->prm.nmax = 16000;
 
   psc->domain.length[0] = 1.; // no x-dependence
   psc->domain.length[1] = 1.; // no y-dependence
