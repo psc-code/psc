@@ -48,12 +48,14 @@ psc_mparticles_cbe_put_cbe(mparticles_cbe_t *particles, void *particles_base)
 {
 }
 
+#if 0
 static bool __gotten;
+#endif
 
 void
 psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
 {
-
+#if 0
   static int pr;
   if (!pr) {
     pr = prof_register("mparticles_cbe_get", 1., 0, 0);
@@ -98,6 +100,7 @@ psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
       part->wni = part_base->wni;
     }
   }
+#endif
 }
       
 
@@ -105,6 +108,7 @@ psc_mparticles_c_get_cbe(mparticles_cbe_t *particles, void *_particles_base)
 void
 psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
 {
+#if 0
   assert(__gotten);
   __gotten = false;
   
@@ -131,6 +135,7 @@ psc_mparticles_c_cbe_put_cbe(mparticles_cbe_t *particles, void *_particles_base)
     pp->particles = NULL;
   }
   free(particles->data);
+#endif
 }
 
 

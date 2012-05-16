@@ -7,7 +7,7 @@
 
 struct psc_mparticles {
   struct mrc_obj obj;
-  void *data;
+  void **patches;
   int nr_patches;
   struct mrc_domain *domain;
   int *nr_particles_by_patch;
@@ -55,7 +55,7 @@ static inline particles_##type##_t *					\
 psc_mparticles_get_patch_##type(struct psc_mparticles *mp, int p)	\
 {									\
   assert(psc_mparticles_ops(mp) == &psc_mparticles_##type##_ops);	\
-  return ((particles_##type##_t *)mp->data) + p;			\
+  return (particles_##type##_t *) mp->patches[p];			\
 }									\
 									\
 struct psc_mparticles *						        \
