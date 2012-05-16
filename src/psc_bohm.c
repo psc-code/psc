@@ -14,7 +14,7 @@
 #include <math.h>
 #include <time.h>
 
-struct psc_es1 {
+struct psc_bohm {
   // parameters
   double Te;
   double Ti;
@@ -28,10 +28,10 @@ struct psc_es1 {
   double L_source_;
 };
 
-#define to_psc_es1(psc) mrc_to_subobj(psc, struct psc_es1)
+#define to_psc_bohm(psc) mrc_to_subobj(psc, struct psc_bohm)
 
-#define VAR(x) (void *)offsetof(struct psc_es1, x)
-static struct param psc_es1_descr[] = {
+#define VAR(x) (void *)offsetof(struct psc_bohm, x)
+static struct param psc_bohm_descr[] = {
   { "Te"            , VAR(Te)            , PARAM_DOUBLE(1)           },
   { "Ti"            , VAR(Ti)            , PARAM_DOUBLE(0.023)       },
   { "mi_over_me"    , VAR(mi_over_me)    , PARAM_DOUBLE(100)         },
@@ -44,10 +44,10 @@ static struct param psc_es1_descr[] = {
 
 
 // ----------------------------------------------------------------------
-// psc_es1_create
+// psc_bohm_create
 
 static void
-psc_es1_create(struct psc *psc)
+psc_bohm_create(struct psc *psc)
 {
   psc_default_dimensionless(psc);
 
@@ -80,49 +80,49 @@ psc_es1_create(struct psc *psc)
 }
 
 // ----------------------------------------------------------------------
-// psc_es1_setup
+// psc_bohm_setup
 
 static void
-psc_es1_setup(struct psc *psc)
+psc_bohm_setup(struct psc *psc)
 {
-  struct psc_es1 *es1 = to_psc_es1(psc);
+  struct psc_bohm *bohm = to_psc_bohm(psc);
   double M=9.11e-31;
   double C=6.0e7;
   double e=1.6e-19;
   double eps_o=8.85e-12;
   double no=1e15;
   
-  es1->Te_=e*es1->Te/(M*C*C);
-  es1->Ti_=e*es1->Ti/(M*C*C);
-  double vte=sqrt(2*e*es1->Te/M);
-  double lde=sqrt(eps_o*e*es1->Te/(no*e*e));
+  bohm->Te_=e*bohm->Te/(M*C*C);
+  bohm->Ti_=e*bohm->Ti/(M*C*C);
+  double vte=sqrt(2*e*bohm->Te/M);
+  double lde=sqrt(eps_o*e*bohm->Te/(no*e*e));
   double de=C*sqrt(eps_o*M/(e*e*no));
-  double vti=sqrt(2*e*es1->Ti/(M*es1->mi_over_me));
-  double cs=sqrt(e*es1->Te/(M*es1->mi_over_me));
+  double vti=sqrt(2*e*bohm->Ti/(M*bohm->mi_over_me));
+  double cs=sqrt(e*bohm->Te/(M*bohm->mi_over_me));
  
-  es1->L_source_=es1->L_source/de;
-  es1->cs_=cs/C;
+  bohm->L_source_=bohm->L_source/de;
+  bohm->cs_=cs/C;
   
-  psc->domain.length[2] = es1->L/de;
+  psc->domain.length[2] = bohm->L/de;
 
   psc_setup_super(psc);
 
-  printf("lambda_de=%g(%g) dz=%g\n", sqrt(es1->Te_), lde, psc->dx[2]);
+  printf("lambda_de=%g(%g) dz=%g\n", sqrt(bohm->Te_), lde, psc->dx[2]);
   printf("v_te=%g(%g)\n", vte/C, vte);
   printf("v_ti=%g(%g)\n", vti/C, vti);
   printf("cs=%g(%g)\n", cs/C, cs);
   printf("de=%g\n", de);
-  printf("L=%g(%g)\n", es1->L/de, es1->L);
+  printf("L=%g(%g)\n", bohm->L/de, bohm->L);
 
 }
 
 // ----------------------------------------------------------------------
-// psc_es1_init_field
+// psc_bohm_init_field
 
 static double
-psc_es1_init_field(struct psc *psc, double x[3], int m)
+psc_bohm_init_field(struct psc *psc, double x[3], int m)
 {
-  //struct psc_es1 *es1 = to_psc_es1(psc);
+  //struct psc_bohm *bohm = to_psc_bohm(psc);
 
 
   switch (m) {
@@ -132,13 +132,13 @@ psc_es1_init_field(struct psc *psc, double x[3], int m)
 }
 
 // ----------------------------------------------------------------------
-// psc_es1_init_npt
+// psc_bohm_init_npt
 
 static void
-psc_es1_init_npt(struct psc *psc, int kind, double x[3],
+psc_bohm_init_npt(struct psc *psc, int kind, double x[3],
 		struct psc_particle_npt *npt)
 {
-  struct psc_es1 *es1 = to_psc_es1(psc);
+  struct psc_bohm *bohm = to_psc_bohm(psc);
 
   npt->n = 1.;
 
@@ -146,16 +146,16 @@ psc_es1_init_npt(struct psc *psc, int kind, double x[3],
   case 0: // electrons
     npt->q = -1.;
     npt->m = 1.;
-    npt->T[0] = es1->Te_;
-    npt->T[1] = es1->Te_;
-    npt->T[2] = es1->Te_;
+    npt->T[0] = bohm->Te_;
+    npt->T[1] = bohm->Te_;
+    npt->T[2] = bohm->Te_;
     break;
   case 1: // ions
     npt->q = 1.;
-    npt->m = es1->mi_over_me;
-    npt->T[0] = es1->Ti_;
-    npt->T[1] = es1->Ti_;
-    npt->T[2] = es1->Ti_;
+    npt->m = bohm->mi_over_me;
+    npt->T[0] = bohm->Ti_;
+    npt->T[1] = bohm->Ti_;
+    npt->T[2] = bohm->Ti_;
     break;
   default:
     assert(0);
@@ -164,16 +164,16 @@ psc_es1_init_npt(struct psc *psc, int kind, double x[3],
 
 
 // ======================================================================
-// psc_es1_ops
+// psc_bohm_ops
 
-struct psc_ops psc_es1_ops = {
-  .name             = "es1",
-  .size             = sizeof(struct psc_es1),
-  .param_descr      = psc_es1_descr,
-  .create           = psc_es1_create,
-  .setup            = psc_es1_setup,
-  .init_field       = psc_es1_init_field,
-  .init_npt         = psc_es1_init_npt,
+struct psc_ops psc_bohm_ops = {
+  .name             = "bohm",
+  .size             = sizeof(struct psc_bohm),
+  .param_descr      = psc_bohm_descr,
+  .create           = psc_bohm_create,
+  .setup            = psc_bohm_setup,
+  .init_field       = psc_bohm_init_field,
+  .init_npt         = psc_bohm_init_npt,
 };
 
 // ======================================================================
@@ -182,7 +182,7 @@ struct psc_ops psc_es1_ops = {
 static void
 seed_patch(struct psc *psc, int p, particles_t *pp)
 {
-  struct psc_es1 *es1 = to_psc_es1(psc);
+  struct psc_bohm *bohm = to_psc_bohm(psc);
   
   psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 
@@ -191,9 +191,9 @@ seed_patch(struct psc *psc, int p, particles_t *pp)
     double y = CRDY(p, iy);
     double z = CRDZ(p, iz);
 
-    if (z < es1->L_source_) {
+    if (z < bohm->L_source_) {
     // Number of new particles created per unit time and cell
-      Iono_rate = psc->prm.nicell * 0.6 * es1->cs_ / es1->L_source_;
+      Iono_rate = psc->prm.nicell * 0.6 * bohm->cs_ / bohm->L_source_;
     } else {
       Iono_rate = 0;
     }
@@ -228,9 +228,9 @@ seed_patch(struct psc *psc, int p, particles_t *pp)
       prt->wni = 1.;
       npt.q = -1.;
       npt.m = 1.;
-      npt.T[0] = es1->Te_;
-      npt.T[1] = es1->Te_;
-      npt.T[2] = es1->Te_;
+      npt.T[0] = bohm->Te_;
+      npt.T[1] = bohm->Te_;
+      npt.T[2] = bohm->Te_;
       psc_setup_particle(psc, prt, 0, &npt);
       
       // ions
@@ -240,10 +240,10 @@ seed_patch(struct psc *psc, int p, particles_t *pp)
       prt->zi = z;
       prt->wni = 1.;
       npt.q = 1.;
-      npt.m = es1->mi_over_me;
-      npt.T[0] = es1->Ti_;
-      npt.T[1] = es1->Ti_;
-      npt.T[2] = es1->Ti_;
+      npt.m = bohm->mi_over_me;
+      npt.T[0] = bohm->Ti_;
+      npt.T[1] = bohm->Ti_;
+      npt.T[2] = bohm->Ti_;
       psc_setup_particle(psc, prt, 1, &npt);
       
     }
@@ -278,5 +278,5 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc_event_generator,
 			      &psc_event_generator_bohm_ops);
 
-  return psc_main(&argc, &argv, &psc_es1_ops);
+  return psc_main(&argc, &argv, &psc_bohm_ops);
 }
