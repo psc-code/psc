@@ -16,10 +16,10 @@ struct psc_mparticles {
 
 MRC_CLASS_DECLARE(psc_mparticles, struct psc_mparticles);
 
-typedef void (*psc_mparticles_copy_to_func_t)(struct psc_mparticles *,
+typedef void (*psc_mparticles_copy_to_func_t)(int p, struct psc_mparticles *,
 					      struct psc_mparticles *,
 					      unsigned int);
-typedef void (*psc_mparticles_copy_from_func_t)(struct psc_mparticles *,
+typedef void (*psc_mparticles_copy_from_func_t)(int p, struct psc_mparticles *,
 						struct psc_mparticles *,
 						unsigned int);
 

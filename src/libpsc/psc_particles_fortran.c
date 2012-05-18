@@ -34,54 +34,50 @@ particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
 }
 
 static void
-_psc_mparticles_fortran_copy_to_c(struct psc_mparticles *particles_base,
+_psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *particles_base,
 				  mparticles_c_t *particles, unsigned int flags)
 {
-  psc_foreach_patch(ppsc, p) {
-    particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-    pp->n_part = pp_base->n_part;
-    assert(pp->n_part <= pp->n_alloced);
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
-      particle_c_t *part = particles_c_get_one(pp, n);
-      
-      part->xi  = part_base->xi;
-      part->yi  = part_base->yi;
-      part->zi  = part_base->zi;
-      part->pxi = part_base->pxi;
-      part->pyi = part_base->pyi;
-      part->pzi = part_base->pzi;
-      part->qni = part_base->qni;
-      part->mni = part_base->mni;
-      part->wni = part_base->wni;
-    }
+  particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+  particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
+  pp->n_part = pp_base->n_part;
+  assert(pp->n_part <= pp->n_alloced);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
+    particle_c_t *part = particles_c_get_one(pp, n);
+    
+    part->xi  = part_base->xi;
+    part->yi  = part_base->yi;
+    part->zi  = part_base->zi;
+    part->pxi = part_base->pxi;
+    part->pyi = part_base->pyi;
+    part->pzi = part_base->pzi;
+    part->qni = part_base->qni;
+    part->mni = part_base->mni;
+    part->wni = part_base->wni;
   }
 }
 
 static void
-_psc_mparticles_fortran_copy_from_c(struct psc_mparticles *particles_base,
+_psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *particles_base,
 				    mparticles_c_t *particles, unsigned int flags)
 {
-  psc_foreach_patch(ppsc, p) {
-    particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-    pp_base->n_part = pp->n_part;
-    assert(pp_base->n_part <= pp_base->n_alloced);
-    for (int n = 0; n < pp_base->n_part; n++) {
-      particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
-      particle_c_t *part = particles_c_get_one(pp, n);
-      
-      part_base->xi  = part->xi;
-      part_base->yi  = part->yi;
-      part_base->zi  = part->zi;
-      part_base->pxi = part->pxi;
-      part_base->pyi = part->pyi;
-      part_base->pzi = part->pzi;
-      part_base->qni = part->qni;
-      part_base->mni = part->mni;
-      part_base->wni = part->wni;
-    }
+  particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+  particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
+  pp_base->n_part = pp->n_part;
+  assert(pp_base->n_part <= pp_base->n_alloced);
+  for (int n = 0; n < pp_base->n_part; n++) {
+    particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
+    particle_c_t *part = particles_c_get_one(pp, n);
+    
+    part_base->xi  = part->xi;
+    part_base->yi  = part->yi;
+    part_base->zi  = part->zi;
+    part_base->pxi = part->pxi;
+    part_base->pyi = part->pyi;
+    part_base->pzi = part->pzi;
+    part_base->qni = part->qni;
+    part_base->mni = part->mni;
+    part_base->wni = part->wni;
   }
 }
 
