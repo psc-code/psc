@@ -99,7 +99,6 @@ static void
 psc_moments_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_moments, &psc_moments_c_ops);
-  mrc_class_register_subclass(&mrc_class_psc_moments, &psc_moments_1st_ops);
 }
 
 // ======================================================================
