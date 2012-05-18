@@ -40,11 +40,6 @@ struct psc_push_particles_ops {
   void (*calc_j_xyz)(struct psc_push_particles *push_particles,
 		     mparticles_base_t *particles, mfields_base_t *flds);
   
-  void (*push_yz_a)(struct psc_push_particles *push_particles,
-		    mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_yz_b)(struct psc_push_particles *push_particles,
-		    mparticles_base_t *particles, mfields_base_t *flds);
-
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
 };
 

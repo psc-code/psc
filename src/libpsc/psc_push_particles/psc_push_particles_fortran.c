@@ -139,60 +139,6 @@ psc_push_particles_fortran_push_z(struct psc_push_particles *push,
   psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
 }
 
-// ----------------------------------------------------------------------
-// psc_push_particles_push_yz_a
-
-static void
-psc_push_particles_fortran_push_yz_a(struct psc_push_particles *push,
-				     mparticles_base_t *particles_base,
-				     mfields_base_t *flds_base)
-{
-  assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
-  mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
-  
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_part_yz_a", 1., 0, 0);
-  }
-  prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    PIC_push_part_yz_a(ppsc, p, psc_mparticles_get_patch_fortran(particles, p),
-		       psc_mfields_get_patch_fortran(flds, p));
-  }
-  prof_stop(pr);
-
-  psc_mparticles_put_fortran(particles, particles_base, 0);
-  psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
-}
-
-// ----------------------------------------------------------------------
-// psc_push_particles_push_yz_b
-
-static void
-psc_push_particles_fortran_push_yz_b(struct psc_push_particles *push,
-				     mparticles_base_t *particles_base,
-				     mfields_base_t *flds_base)
-{
-  assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
-  mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
-  
-  static int pr;
-  if (!pr) {
-    pr = prof_register("fort_part_yz_b", 1., 0, 0);
-  }
-  prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    PIC_push_part_yz_b(ppsc, p, psc_mparticles_get_patch_fortran(particles, p),
-		       psc_mfields_get_patch_fortran(flds, p));
-  }
-  prof_stop(pr);
-
-  psc_mparticles_put_fortran(particles, particles_base, 0);
-  psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
-}
-
 // ======================================================================
 // psc_push_particles: subclass "fortran"
 
@@ -203,7 +149,4 @@ struct psc_push_particles_ops psc_push_particles_fortran_ops = {
   .push_xz               = psc_push_particles_fortran_push_xz,
   .push_yz               = psc_push_particles_fortran_push_yz,
   .push_xyz              = psc_push_particles_fortran_push_xyz,
-
-  .push_yz_a             = psc_push_particles_fortran_push_yz_a,
-  .push_yz_b             = psc_push_particles_fortran_push_yz_b,
 };

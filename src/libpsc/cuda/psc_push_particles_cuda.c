@@ -7,73 +7,6 @@
 #include <mrc_profile.h>
 #include <math.h>
 
-
-static void
-psc_push_particles_cuda_push_yz_a(struct psc_push_particles *push,
-				  mparticles_base_t *particles_base,
-				  mfields_base_t *flds_base)
-{
-  mparticles_cuda_t *particles
-    = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cuda_part_yz_a", 1., 0, 0);
-  }
-  prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
-    yz_a_set_constants(pp, pf);
-    __cuda_push_part_yz_a(pp, pf);
-  }
-  prof_stop(pr);
-
-  psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_put_cuda(particles, particles_base, 0);
-}
-
-#define PUSH_PART_B 2
-
-static void
-psc_push_particles_cuda_push_yz_b(struct psc_push_particles *push,
-				  mparticles_base_t *particles_base,
-				  mfields_base_t *flds_base)
-{
-  mparticles_cuda_t *particles
-    = psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cuda_part_yz_b", 1., 0, 0);
-  }
-
-  prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
-#if PUSH_PART_B == 2
-    yz_set_constants(pp, pf);
-#else
-    yz_b_set_constants(pp, pf);
-#endif
-
-#if PUSH_PART_B == 1
-    __cuda_push_part_yz_b(pp, pf);
-#elif PUSH_PART_B == 2
-    yz_cuda_push_part_p2(pp, pf);
-#elif PUSH_PART_B == 3
-    __cuda_push_part_yz_b3(pp, pf);
-#endif
-  }
-  prof_stop(pr);
-
-  psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_put_cuda(particles, particles_base, 0);
-}
-
 static void
 cuda_push_part(mparticles_base_t *particles_base,
 	       mfields_base_t *flds_base,
@@ -353,8 +286,6 @@ struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .name                  = "cuda",
   .push_z                = psc_push_particles_cuda_push_z3,
   .push_yz               = psc_push_particles_cuda_push_yz6,
-  .push_yz_a             = psc_push_particles_cuda_push_yz_a,
-  .push_yz_b             = psc_push_particles_cuda_push_yz_b,
   .mp_flags              = MP_BLOCKSIZE_4X4X4 |
                            MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,
 };

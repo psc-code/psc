@@ -63,24 +63,6 @@ psc_push_particles_calc_j(struct psc_push_particles *push,
   }
 }
 
-void
-psc_push_particles_push_yz_a(struct psc_push_particles *push,
-			     mparticles_base_t *particles, mfields_base_t *flds)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  assert(ops->push_yz_a);
-  ops->push_yz_a(push, particles, flds);
-}
-
-void
-psc_push_particles_push_yz_b(struct psc_push_particles *push,
-			     mparticles_base_t *particles, mfields_base_t *flds)
-{
-  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
-  assert(ops->push_yz_b);
-  ops->push_yz_b(push, particles, flds);
-}
-
 unsigned int
 psc_push_particles_get_mp_flags(struct psc_push_particles *push)
 {
