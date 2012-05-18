@@ -1,5 +1,5 @@
 
-#include "psc_moments_private.h"
+#include "psc_output_fields_item_private.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
 
@@ -11,8 +11,7 @@
 typedef fields_c_real_t creal;
 
 static void
-do_c_calc_densities(int p, fields_t *pf, particles_t *pp,
-		    int m_NE, int m_NI, int m_NN)
+do_n_2nd_nc_run(int p, fields_t *pf, particles_t *pp, int m_NE, int m_NI, int m_NN)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -96,8 +95,8 @@ do_c_calc_densities(int p, fields_t *pf, particles_t *pp,
 }
 
 static void
-psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
-			     mparticles_base_t *particles_base, mfields_c_t *res)
+n_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
+	     mparticles_base_t *particles_base, mfields_c_t *res)
 {
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
@@ -106,19 +105,19 @@ psc_moments_c_calc_densities(struct psc_moments *moments, mfields_base_t *flds,
   psc_mfields_zero(res, 2);
   
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_densities(p, psc_mfields_get_patch_c(res, p),
-			psc_mparticles_get_patch(particles, p), 0, 1, 2);
+    do_n_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+		    psc_mparticles_get_patch(particles, p), 0, 1, 2);
   }
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
-  psc_bnd_add_ghosts(moments->bnd, res, 0, 3);
+  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
 }
 
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_c_calc_v(int p, fields_t *pf, particles_t *pp)
+do_v_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -206,8 +205,8 @@ do_c_calc_v(int p, fields_t *pf, particles_t *pp)
 }
 
 static void
-psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
-		     mparticles_base_t *particles_base, mfields_c_t *res)
+v_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
+	     mparticles_base_t *particles_base, mfields_c_t *res)
 {
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
@@ -216,17 +215,17 @@ psc_moments_c_calc_v(struct psc_moments *moments, mfields_base_t *flds,
   }
   
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_v(p, psc_mfields_get_patch_c(res, p),
-		psc_mparticles_get_patch(particles, p));
+    do_v_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+		    psc_mparticles_get_patch(particles, p));
   }
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
-  psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
+  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
 }
 
 static void
-do_c_calc_vv(int p, fields_t *pf, particles_t *pp)
+do_vv_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -314,8 +313,8 @@ do_c_calc_vv(int p, fields_t *pf, particles_t *pp)
 }
 
 static void
-psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
-		      mparticles_base_t *particles_base, mfields_c_t *res)
+vv_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
+	      mparticles_base_t *particles_base, mfields_c_t *res)
 {
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
@@ -324,21 +323,44 @@ psc_moments_c_calc_vv(struct psc_moments *moments, mfields_base_t *flds,
   }
   
   psc_foreach_patch(ppsc, p) {
-    do_c_calc_vv(p, psc_mfields_get_patch_c(res, p),
-		 psc_mparticles_get_patch(particles, p));
+    do_vv_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+		     psc_mparticles_get_patch(particles, p));
   }
 
   psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 
-  psc_bnd_add_ghosts(moments->bnd, res, 0, 6);
+  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
 }
 
 // ======================================================================
-// psc_moments: subclass "c"
+// psc_output_fields_item: subclass "n_2nd_nc"
 
-struct psc_moments_ops psc_moments_c_ops = {
-  .name                  = "c",
-  .calc_densities        = psc_moments_c_calc_densities,
-  .calc_v                = psc_moments_c_calc_v,
-  .calc_vv               = psc_moments_c_calc_vv,
+struct psc_output_fields_item_ops psc_output_fields_item_n_2nd_nc_ops = {
+  .name               = "n",
+  .nr_comp            = 3,
+  .fld_names          = { "ne", "ni", "nn" },
+  .run                = n_2nd_nc_run,
 };
+
+// ======================================================================
+// psc_output_fields_item: subclass "v_2nd_nc"
+
+struct psc_output_fields_item_ops psc_output_fields_item_v_2nd_nc_ops = {
+  .name               = "v",
+  .nr_comp            = 6,
+  .fld_names          = { "vex", "vey", "vez",
+			  "vix", "viy", "viz" },
+  .run                = v_2nd_nc_run,
+};
+
+// ======================================================================
+// psc_output_fields_item: subclass "vv_2nd_nc"
+
+struct psc_output_fields_item_ops psc_output_fields_item_vv_2nd_nc_ops = {
+  .name               = "vv",
+  .nr_comp            = 6,
+  .fld_names          = { "vexvex", "veyvey", "vezvez",
+			  "vixvix", "viyviy", "vizviz" },
+  .run                = vv_2nd_nc_run,
+};
+

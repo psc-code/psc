@@ -1,5 +1,5 @@
 
-#include "psc_moments_private.h"
+#include "psc.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
 

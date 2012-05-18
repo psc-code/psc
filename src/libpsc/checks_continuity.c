@@ -1,8 +1,8 @@
 
 #include "psc_testing.h"
-#include "psc_moments.h"
 #include "psc_bnd.h"
 #include "psc_particles_c.h"
+#include "psc_output_fields_item.h"
 
 #include <math.h>
 
@@ -116,12 +116,18 @@ psc_calc_rho(struct psc *psc, mparticles_base_t *particles, mfields_c_t *rho)
 {
   mfields_c_t *dens = fld_create(psc, 3);
 
-  psc_moments_calc_densities(psc->moments, NULL, particles, dens);
-  // rho = NE + NI
-  psc_mfields_copy_comp(rho, 0, dens, 0); // FIXME, waxpy would be nicer
-  psc_mfields_axpy_comp(rho, 0, 1., dens, 1);
+  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
+  psc_output_fields_item_set_type(item, "n");
+  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
+  psc_output_fields_item_setup(item);
+  psc_output_fields_item_run(item, NULL, particles, dens);
+  // rho = ni - ne
+  psc_mfields_copy_comp(rho, 0, dens, 1); // FIXME, waxpy would be nicer
+  psc_mfields_axpy_comp(rho, 0, -1., dens, 0);
 
   psc_mfields_destroy(dens);
+
+  psc_output_fields_item_destroy(item);
 }
 
 void

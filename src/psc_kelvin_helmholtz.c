@@ -1,7 +1,6 @@
 
 #include <psc.h>
 #include <psc_push_particles.h>
-#include <psc_moments.h>
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
