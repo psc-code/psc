@@ -13,4 +13,4 @@ libsubdir_la_SOURCES = \
 	psc_output_fields_item_moments_1st_single.c \
 	psc_output_fields_item_moments_1st_nc_c.c \
 	psc_output_fields_item_moments_1st_nc_single.c \
-	psc_output_fields_item_photon.c
+	psc_output_fields_item_moments_photon.c
