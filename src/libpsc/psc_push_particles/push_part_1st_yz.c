@@ -16,19 +16,19 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
 #define S1Y(off) s1y[off+1]
 #define S1Z(off) s1z[off+1]
 
-  creal s0y[4] = {}, s0z[4] = {}, s1y[4], s1z[4];
+  particle_real_t s0y[4] = {}, s0z[4] = {}, s1y[4], s1z[4];
 
-  creal dt = ppsc->dt;
-  creal dqs = .5f * ppsc->coeff.eta * dt;
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal fnqys = ppsc->dx[1] * fnqs / dt;
-  creal fnqzs = ppsc->dx[2] * fnqs / dt;
-  creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t dt = ppsc->dt;
+  particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t fnqys = ppsc->dx[1] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
+  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
-    creal vxi[3];
+    particle_real_t vxi[3];
 
     // x^n, p^n -> x^(n+.5), p^n
     calc_vxi(vxi, part);
@@ -37,7 +37,7 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
     // field interpolation
 
     int lg[3], lh[3];
-    creal og[3], oh[3];
+    particle_real_t og[3], oh[3];
     find_idx_off_1st(&part->xi, lg, og, 0.f, patch->xb, dxi); // FIXME passing xi hack
     find_idx_off_1st(&part->xi, lh, oh, -.5f, patch->xb, dxi);
 
@@ -52,16 +52,16 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
 
     INTERPOLATE_SETUP_1ST;
 
-    creal exq = INTERPOLATE_FIELD_1ST(EX, g, g);
-    creal eyq = INTERPOLATE_FIELD_1ST(EY, h, g);
-    creal ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);
+    particle_real_t exq = INTERPOLATE_FIELD_1ST(EX, g, g);
+    particle_real_t eyq = INTERPOLATE_FIELD_1ST(EY, h, g);
+    particle_real_t ezq = INTERPOLATE_FIELD_1ST(EZ, g, h);
 
-    creal hxq = INTERPOLATE_FIELD_1ST(HX, h, h);
-    creal hyq = INTERPOLATE_FIELD_1ST(HY, g, h);
-    creal hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);
+    particle_real_t hxq = INTERPOLATE_FIELD_1ST(HX, h, h);
+    particle_real_t hyq = INTERPOLATE_FIELD_1ST(HY, g, h);
+    particle_real_t hzq = INTERPOLATE_FIELD_1ST(HZ, h, g);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    creal dq = dqs * particle_qni_div_mni(part);
+    particle_real_t dq = dqs * particle_qni_div_mni(part);
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
@@ -71,12 +71,12 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
-    creal xi[3] = { 0.f,
+    particle_real_t xi[3] = { 0.f,
 		    part->yi + vxi[1] * .5f * dt, 
 		    part->zi + vxi[2] * .5f * dt };
 
     int lf[3];
-    creal of[3];
+    particle_real_t of[3];
     find_idx_off_1st(xi, lf, of, 0.f, patch->xb, dxi);
 
     for (int i = -1; i <= 2; i++) {
@@ -114,33 +114,33 @@ do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
       l3min = 0; l3max = +2;
     }
 
-    creal fnqx = vxi[0] * part->qni * part->wni * fnqs;
+    particle_real_t fnqx = vxi[0] * part->qni * part->wni * fnqs;
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l2 = l2min; l2 <= l2max; l2++) {
-	creal wx = S0Y(l2) * S0Z(l3)
+	particle_real_t wx = S0Y(l2) * S0Z(l3)
 	  + .5f * S1Y(l2) * S0Z(l3)
 	  + .5f * S0Y(l2) * S1Z(l3)
 	  + (1.f/3.f) * S1Y(l2) * S1Z(l3);
-	creal jxh = fnqx*wx;
+	particle_real_t jxh = fnqx*wx;
 	F3(pf, JXI, 0,lg[1]+l2,lg[2]+l3) += jxh;
       }
     }
 
-    creal fnqy = part->qni * part->wni * fnqys;
+    particle_real_t fnqy = part->qni * part->wni * fnqys;
     for (int l3 = l3min; l3 <= l3max; l3++) {
-      creal jyh = 0.f;
+      particle_real_t jyh = 0.f;
       for (int l2 = l2min; l2 < l2max; l2++) {
-	creal wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wy = S1Y(l2) * (S0Z(l3) + .5f*S1Z(l3));
 	jyh -= fnqy*wy;
 	F3(pf, JYI, 0,lg[1]+l2,lg[2]+l3) += jyh;
       }
     }
 
-    creal fnqz = part->qni * part->wni * fnqzs;
+    particle_real_t fnqz = part->qni * part->wni * fnqzs;
     for (int l2 = l2min; l2 <= l2max; l2++) {
-      creal jzh = 0.f;
+      particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
-	creal wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
+	particle_real_t wz = S1Z(l3) * (S0Y(l2) + .5f*S1Y(l2));
 	jzh -= fnqz*wz;
 	F3(pf, JZI, 0,lg[1]+l2,lg[2]+l3) += jzh;
       }

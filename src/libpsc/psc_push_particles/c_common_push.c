@@ -1,41 +1,42 @@
 
 static inline void
-calc_vxi(creal vxi[3], particle_t *part)
+calc_vxi(particle_real_t vxi[3], particle_t *part)
 {
-  creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  particle_real_t root = 1.f 
+    / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
   vxi[0] = part->pxi * root;
   vxi[1] = part->pyi * root;
   vxi[2] = part->pzi * root;
 }
 
 static inline void
-push_xi(particle_t *part, creal vxi[3], creal dt)
+push_xi(particle_t *part, particle_real_t vxi[3], particle_real_t dt)
 {
   part->yi += vxi[1] * dt;
   part->zi += vxi[2] * dt;
 }
 
 static inline void
-push_pxi(particle_t *part, creal exq, creal eyq, creal ezq,
-	 creal hxq, creal hyq, creal hzq, creal dq)
+push_pxi(particle_t *part, particle_real_t exq, particle_real_t eyq, particle_real_t ezq,
+	 particle_real_t hxq, particle_real_t hyq, particle_real_t hzq, particle_real_t dq)
 {
-  creal pxm = part->pxi + dq*exq;
-  creal pym = part->pyi + dq*eyq;
-  creal pzm = part->pzi + dq*ezq;
+  particle_real_t pxm = part->pxi + dq*exq;
+  particle_real_t pym = part->pyi + dq*eyq;
+  particle_real_t pzm = part->pzi + dq*ezq;
   
-  creal root = dq / creal_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-  creal taux = hxq*root;
-  creal tauy = hyq*root;
-  creal tauz = hzq*root;
+  particle_real_t root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+  particle_real_t taux = hxq*root;
+  particle_real_t tauy = hyq*root;
+  particle_real_t tauz = hzq*root;
   
-  creal tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-  creal pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
+  particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
+  particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
 	       (2.f*taux*tauy+2.f*tauz)*pym + 
 	       (2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-  creal pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
+  particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
 	       (1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
 	       (2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-  creal pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
+  particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
 	       (2.f*tauy*tauz-2.f*taux)*pym +
 	       (1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
   
@@ -45,30 +46,31 @@ push_pxi(particle_t *part, creal exq, creal eyq, creal ezq,
 }
 
 static inline void
-find_idx_off_1st(creal xi[3], int lg[3], creal og[3], creal shift,
-		 double xb[3], creal dxi[3])
+find_idx_off_1st(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift,
+		 double xb[3], particle_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
-    creal pos = (xi[d] - xb[d]) * dxi[d] + shift;
+    particle_real_t pos = (xi[d] - xb[d]) * dxi[d] + shift;
     lg[d] = fint(pos);
     og[d] = pos - lg[d];
   }
 }
 
 static inline void
-find_idx_off_1st_rel(creal xi[3], int lg[3], creal og[3], creal shift,
-		     creal dxi[3])
+find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], particle_real_t shift,
+		     particle_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
-    creal pos = xi[d] * dxi[d] + shift;
+    particle_real_t pos = xi[d] * dxi[d] + shift;
     lg[d] = fint(pos);
     og[d] = pos - lg[d];
   }
 }
 
 static inline void
-find_idx_off_pos_1st(creal xi[3], int lg[3], creal og[3], creal pos[3], creal shift,
-		     double xb[3], creal dxi[3])
+find_idx_off_pos_1st(particle_real_t xi[3], int lg[3], particle_real_t og[3],
+		     particle_real_t pos[3], particle_real_t shift,
+		     double xb[3], particle_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = (xi[d] - xb[d]) * dxi[d] + shift;
@@ -78,8 +80,9 @@ find_idx_off_pos_1st(creal xi[3], int lg[3], creal og[3], creal pos[3], creal sh
 }
 
 static inline void
-find_idx_off_pos_1st_rel(creal xi[3], int lg[3], creal og[3], creal pos[3], creal shift,
-			 creal dxi[3])
+find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3],
+			 particle_real_t pos[3], particle_real_t shift,
+			 particle_real_t dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * dxi[d] + shift;
@@ -88,23 +91,23 @@ find_idx_off_pos_1st_rel(creal xi[3], int lg[3], creal og[3], creal pos[3], crea
   }
 }
 
-#define INTERPOLATE_SETUP_1ST			\
-  creal g0y = 1.f - og[1];			\
-  creal g0z = 1.f - og[2];			\
-  creal g1y = og[1];				\
-  creal g1z = og[2];				\
-						\
-  creal h0y = 1.f - oh[1];			\
-  creal h0z = 1.f - oh[2];			\
-  creal h1y = oh[1];				\
-  creal h1z = oh[2]
+#define INTERPOLATE_SETUP_1ST				\
+  particle_real_t g0y = 1.f - og[1];			\
+  particle_real_t g0z = 1.f - og[2];			\
+  particle_real_t g1y = og[1];				\
+  particle_real_t g1z = og[2];				\
+  							\
+  particle_real_t h0y = 1.f - oh[1];			\
+  particle_real_t h0z = 1.f - oh[2];			\
+  particle_real_t h1y = oh[1];				\
+  particle_real_t h1z = oh[2]
 
 
 #define INTERPOLATE_FIELD_1ST(m, gy, gz)				\
-    (gz##0z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +			\
-	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +			\
-     gz##1z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +			\
-	     gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
+  (gz##0z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +			\
+	   gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +			\
+   gz##1z*(gy##0y*F3(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +			\
+	   gy##1y*F3(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 
 #ifdef F3_CURR
 
@@ -112,7 +115,7 @@ find_idx_off_pos_1st_rel(creal xi[3], int lg[3], creal og[3], creal pos[3], crea
 // current 1vb (yz)
 
 static inline void
-calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
+calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], int off[2])
 {
   if (off[1] == 0) {
     dx1[0] = .5f * off[0] - x[0];
@@ -124,8 +127,8 @@ calc_dx1(creal dx1[2], creal x[2], creal dx[2], int off[2])
 }
 
 static inline void
-curr_2d_vb_cell(fields_curr_t *pf, int i[2], creal x[2], creal dx[2], creal fnq[2],
-		creal dxt[2], int off[2])
+curr_2d_vb_cell(fields_curr_t *pf, int i[2], particle_real_t x[2], particle_real_t dx[2],
+		particle_real_t fnq[2], particle_real_t dxt[2], int off[2])
 {
   F3_CURR(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]);
   F3_CURR(pf, JYI, 0,i[0],i[1]+1) += fnq[0] * dx[0] * (.5f + x[1] + .5f * dx[1]);

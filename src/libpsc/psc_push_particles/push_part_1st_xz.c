@@ -14,17 +14,17 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 #define S1X(off) s1x[off+1]
 #define S1Z(off) s1z[off+1]
 
-  creal s0x[4] = {}, s0z[4] = {}, s1x[4], s1z[4];
+  particle_real_t s0x[4] = {}, s0z[4] = {}, s1x[4], s1z[4];
 
-  creal dt = ppsc->dt;
-  creal xl = .5f * dt;
-  creal zl = .5f * dt;
-  creal dqs = .5f * ppsc->coeff.eta * dt;
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal fnqxs = ppsc->dx[0] * fnqs / dt;
-  creal fnqzs = ppsc->dx[2] * fnqs / dt;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dzi = 1.f / ppsc->dx[2];
+  particle_real_t dt = ppsc->dt;
+  particle_real_t xl = .5f * dt;
+  particle_real_t zl = .5f * dt;
+  particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t fnqxs = ppsc->dx[0] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
+  particle_real_t dxi = 1.f / ppsc->dx[0];
+  particle_real_t dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
@@ -32,25 +32,25 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     // x^n, p^n -> x^(n+.5), p^n
 
-    creal root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
-    creal vxi = part->pxi * root;
-    creal vyi = part->pyi * root;
-    creal vzi = part->pzi * root;
+    particle_real_t root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    particle_real_t vxi = part->pxi * root;
+    particle_real_t vyi = part->pyi * root;
+    particle_real_t vzi = part->pzi * root;
 
     part->xi += vxi * xl;
     part->zi += vzi * zl;
 
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    particle_real_t u = (part->xi - patch->xb[0]) * dxi;
+    particle_real_t w = (part->zi - patch->xb[2]) * dzi;
     int lg1 = fint(u);
     int lg3 = fint(w);
-    creal h1 = u - lg1;
-    creal h3 = w - lg3;
+    particle_real_t h1 = u - lg1;
+    particle_real_t h3 = w - lg3;
 
-    creal g0x = 1.f - h1;
-    creal g0z = 1.f - h3;
-    creal g1x = h1;
-    creal g1z = h3;
+    particle_real_t g0x = 1.f - h1;
+    particle_real_t g0z = 1.f - h3;
+    particle_real_t g1x = h1;
+    particle_real_t g1z = h3;
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
@@ -65,10 +65,10 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
     int lh3 = fint(w);
     h1 = u - lh1;
     h3 = w - lh3;
-    creal h0x = 1.f - h1;
-    creal h0z = 1.f - h3;
-    creal h1x = h1;
-    creal h1z = h3;
+    particle_real_t h0x = 1.f - h1;
+    particle_real_t h0z = 1.f - h3;
+    particle_real_t h1x = h1;
+    particle_real_t h1z = h3;
 
     // FIELD INTERPOLATION
 
@@ -78,34 +78,34 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
      gz##1z*(gx##0x*F3(pf, m, l##gx##1  ,0,l##gz##3+1) +			\
 	     gx##1x*F3(pf, m, l##gx##1+1,0,l##gz##3+1)))			\
       
-    creal exq = INTERPOLATE_FIELD(EX, h, g);
-    creal eyq = INTERPOLATE_FIELD(EY, g, g);
-    creal ezq = INTERPOLATE_FIELD(EZ, g, h);
+    particle_real_t exq = INTERPOLATE_FIELD(EX, h, g);
+    particle_real_t eyq = INTERPOLATE_FIELD(EY, g, g);
+    particle_real_t ezq = INTERPOLATE_FIELD(EZ, g, h);
 
-    creal hxq = INTERPOLATE_FIELD(HX, g, h);
-    creal hyq = INTERPOLATE_FIELD(HY, h, h);
-    creal hzq = INTERPOLATE_FIELD(HZ, h, g);
+    particle_real_t hxq = INTERPOLATE_FIELD(HX, g, h);
+    particle_real_t hyq = INTERPOLATE_FIELD(HY, h, h);
+    particle_real_t hzq = INTERPOLATE_FIELD(HZ, h, g);
 
      // c x^(n+.5), p^n -> x^(n+1.0), p^(n+1.0) 
 
-    creal dq = dqs * part->qni / part->mni;
-    creal pxm = part->pxi + dq*exq;
-    creal pym = part->pyi + dq*eyq;
-    creal pzm = part->pzi + dq*ezq;
+    particle_real_t dq = dqs * part->qni / part->mni;
+    particle_real_t pxm = part->pxi + dq*exq;
+    particle_real_t pym = part->pyi + dq*eyq;
+    particle_real_t pzm = part->pzi + dq*ezq;
 
-    root = dq / creal_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
-    creal taux = hxq*root;
-    creal tauy = hyq*root;
-    creal tauz = hzq*root;
+    root = dq / particle_real_sqrt(1.f + pxm*pxm + pym*pym + pzm*pzm);
+    particle_real_t taux = hxq*root;
+    particle_real_t tauy = hyq*root;
+    particle_real_t tauz = hzq*root;
 
-    creal tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
-    creal pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
+    particle_real_t tau = 1.f / (1.f + taux*taux + tauy*tauy + tauz*tauz);
+    particle_real_t pxp = ((1.f+taux*taux-tauy*tauy-tauz*tauz)*pxm + 
 		(2.f*taux*tauy+2.f*tauz)*pym + 
 		(2.f*taux*tauz-2.f*tauy)*pzm)*tau;
-    creal pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
+    particle_real_t pyp = ((2.f*taux*tauy-2.f*tauz)*pxm +
 		(1.f-taux*taux+tauy*tauy-tauz*tauz)*pym +
 		(2.f*tauy*tauz+2.f*taux)*pzm)*tau;
-    creal pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
+    particle_real_t pzp = ((2.f*taux*tauz+2.f*tauy)*pxm +
 		(2.f*tauy*tauz-2.f*taux)*pym +
 		(1.f-taux*taux-tauy*tauy+tauz*tauz)*pzm)*tau;
     
@@ -113,7 +113,7 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
     part->pyi = pyp + dq * eyq;
     part->pzi = pzp + dq * ezq;
 
-    root = 1.f / creal_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+    root = 1.f / particle_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
     vxi = part->pxi * root;
     vyi = part->pyi * root;
     vzi = part->pzi * root;
@@ -124,8 +124,8 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
     // CHARGE DENSITY FORM FACTOR AT (n+1.5)*dt 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
 
-    creal xi = part->xi + vxi * xl;
-    creal zi = part->zi + vzi * zl;
+    particle_real_t xi = part->xi + vxi * xl;
+    particle_real_t zi = part->zi + vzi * zl;
 
     u = (xi - patch->xb[0]) * dxi;
     w = (zi - patch->xb[2]) * dzi;
@@ -169,33 +169,33 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
       l3min = 0; l3max = +2;
     }
 
-    creal fnqx = part->qni * part->wni * fnqxs;
+    particle_real_t fnqx = part->qni * part->wni * fnqxs;
     for (int l3 = l3min; l3 <= l3max; l3++) {
-      creal jxh = 0.f;
+      particle_real_t jxh = 0.f;
       for (int l1 = l1min; l1 < l1max; l1++) {
-	creal wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
+	particle_real_t wx = S1X(l1) * (S0Z(l3) + .5f*S1Z(l3));
 	jxh -= fnqx*wx;
 	F3(pf, JXI, lg1+l1,0,lg3+l3) += jxh;
       }
     }
 
-    creal fnqy = vyi * part->qni * part->wni * fnqs;
+    particle_real_t fnqy = vyi * part->qni * part->wni * fnqs;
     for (int l3 = l3min; l3 <= l3max; l3++) {
       for (int l1 = l1min; l1 <= l1max; l1++) {
-	creal wy = S0X(l1) * S0Z(l3)
+	particle_real_t wy = S0X(l1) * S0Z(l3)
 	  + .5f * S1X(l1) * S0Z(l3)
 	  + .5f * S0X(l1) * S1Z(l3)
 	  + (1.f/3.f) * S1X(l1) * S1Z(l3);
-	creal jyh = fnqy*wy;
+	particle_real_t jyh = fnqy*wy;
 	F3(pf, JYI, lg1+l1,0,lg3+l3) += jyh;
       }
     }
 
-    creal fnqz = part->qni * part->wni * fnqzs;
+    particle_real_t fnqz = part->qni * part->wni * fnqzs;
     for (int l1 = l1min; l1 <= l1max; l1++) {
-      creal jzh = 0.f;
+      particle_real_t jzh = 0.f;
       for (int l3 = l3min; l3 < l3max; l3++) {
-	creal wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
+	particle_real_t wz = S1Z(l3) * (S0X(l1) + .5f*S1X(l1));
 	jzh -= fnqz*wz;
 	F3(pf, JZI, lg1+l1,0,lg3+l3) += jzh;
       }

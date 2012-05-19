@@ -14,15 +14,15 @@ typedef fields_c_t fields_curr_t;
 static void
 do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
 {
-  creal dt = ppsc->dt;
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal fnqys = ppsc->dx[1] * fnqs / dt;
-  creal fnqzs = ppsc->dx[2] * fnqs / dt;
-  creal dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
-  creal dq_kind[ppsc->nr_kinds];
-  creal fnqx_kind[ppsc->nr_kinds];
-  creal fnqy_kind[ppsc->nr_kinds];
-  creal fnqz_kind[ppsc->nr_kinds];
+  particle_real_t dt = ppsc->dt;
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t fnqys = ppsc->dx[1] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
+  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t dq_kind[ppsc->nr_kinds];
+  particle_real_t fnqx_kind[ppsc->nr_kinds];
+  particle_real_t fnqy_kind[ppsc->nr_kinds];
+  particle_real_t fnqz_kind[ppsc->nr_kinds];
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
     fnqx_kind[k] = fnqs * ppsc->kinds[k].q;
@@ -36,7 +36,7 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
     // field interpolation
 
     int lg[3], lh[3];
-    creal og[3], oh[3], xm[3];
+    particle_real_t og[3], oh[3], xm[3];
     find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, dxi); // FIXME passing xi hack
     find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
 
@@ -50,19 +50,19 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
      gz##1z*(gy##0y*F3_C(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
 	     gy##1y*F3_C(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
 
-    creal exq = INTERPOLATE_FIELD_1ST_C(EX, g, g);
-    creal eyq = INTERPOLATE_FIELD_1ST_C(EY, h, g);
-    creal ezq = INTERPOLATE_FIELD_1ST_C(EZ, g, h);
+    particle_real_t exq = INTERPOLATE_FIELD_1ST_C(EX, g, g);
+    particle_real_t eyq = INTERPOLATE_FIELD_1ST_C(EY, h, g);
+    particle_real_t ezq = INTERPOLATE_FIELD_1ST_C(EZ, g, h);
 
-    creal hxq = INTERPOLATE_FIELD_1ST_C(HX, h, h);
-    creal hyq = INTERPOLATE_FIELD_1ST_C(HY, g, h);
-    creal hzq = INTERPOLATE_FIELD_1ST_C(HZ, h, g);
+    particle_real_t hxq = INTERPOLATE_FIELD_1ST_C(HX, h, h);
+    particle_real_t hyq = INTERPOLATE_FIELD_1ST_C(HY, g, h);
+    particle_real_t hzq = INTERPOLATE_FIELD_1ST_C(HZ, h, g);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-    creal dq = dq_kind[part->kind];
+    particle_real_t dq = dq_kind[part->kind];
     push_pxi(part, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
-    creal vxi[3];
+    particle_real_t vxi[3];
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_vxi(vxi, part);
@@ -71,10 +71,10 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
 
     int lf[3];
-    creal of[3];
+    particle_real_t of[3];
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
-    creal fnqx = vxi[0] * particle_double_wni(part) * fnqx_kind[part->kind];
+    particle_real_t fnqx = vxi[0] * particle_double_wni(part) * fnqx_kind[part->kind];
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
@@ -84,17 +84,17 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
     calc_vxi(vxi, part);
     push_xi(part, vxi, .5f * dt);
 
-    creal xp[3];
+    particle_real_t xp[3];
     find_idx_off_pos_1st_rel(&part->xi, lf, of, xp, 0.f, dxi);
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 
     int i[2] = { lg[1], lg[2] };
     int idiff[2] = { lf[1] - lg[1], lf[2] - lg[2] };
-    creal dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-    creal x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) };
+    particle_real_t dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
+    particle_real_t x[2] = { xm[1] - (i[0] + .5f), xm[2] - (i[1] + .5f) };
 
-    creal dx1[2];
+    particle_real_t dx1[2];
     int off[2];
     int first_dir, second_dir = -1;
     // FIXME, make sure we never div-by-zero?
@@ -107,7 +107,7 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
     } else {
       dx1[0] = .5f * idiff[0] - x[0];
       dx1[1] = dx[1] / dx[0] * dx1[0];
-      if (creal_abs(x[1] + dx1[1]) > .5f) {
+      if (particle_real_abs(x[1] + dx1[1]) > .5f) {
 	first_dir = 1;
       } else {
 	first_dir = 0;
@@ -115,8 +115,8 @@ do_push_part_1vb_yz(int p, fields_c_t *pf, particles_t *pp)
       second_dir = 1 - first_dir;
     }
 
-    creal fnq[2] = { particle_double_wni(part) * fnqy_kind[part->kind],
-		     particle_double_wni(part) * fnqz_kind[part->kind] };
+    particle_real_t fnq[2] = { particle_double_wni(part) * fnqy_kind[part->kind],
+			       particle_double_wni(part) * fnqz_kind[part->kind] };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;

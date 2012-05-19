@@ -10,9 +10,9 @@
 typedef mparticles_single_t mparticles_t;
 typedef particles_single_t particles_t;
 typedef particle_single_t particle_t;
-typedef particle_single_real_t creal;
-#define creal_abs(x) fabsf(x)
-#define creal_sqrt(x) sqrtf(x)
+typedef particle_single_real_t particle_real_t;
+#define particle_real_abs(x) fabsf(x)
+#define particle_real_sqrt(x) sqrtf(x)
 
 #define psc_mparticles_get_cf    psc_mparticles_get_single
 #define psc_mparticles_put_cf    psc_mparticles_put_single

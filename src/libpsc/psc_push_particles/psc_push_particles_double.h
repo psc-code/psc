@@ -10,9 +10,9 @@
 typedef mparticles_double_t mparticles_t;
 typedef struct psc_particles particles_t;
 typedef particle_double_t particle_t;
-typedef particle_double_real_t creal;
-#define creal_abs(x) fabs(x)
-#define creal_sqrt(x) sqrt(x)
+typedef particle_double_real_t particle_real_t;
+#define particle_real_abs(x) fabs(x)
+#define particle_real_sqrt(x) sqrt(x)
 
 #define psc_mparticles_get_cf    psc_mparticles_get_double
 #define psc_mparticles_put_cf    psc_mparticles_put_double

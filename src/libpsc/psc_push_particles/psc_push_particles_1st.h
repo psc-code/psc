@@ -15,15 +15,13 @@
 
 #if CREAL == 8
 
-typedef double creal;
-#define creal_abs(x) fabs(x)
-#define creal_sqrt(x) sqrt(x)
+#define particle_real_abs(x) fabs(x)
+#define particle_real_sqrt(x) sqrt(x)
 
 #elif CREAL == 4
 
-typedef float creal;
-#define creal_abs(x) fabsf(x)
-#define creal_sqrt(x) sqrtf(x)
+#define particle_real_abs(x) fabsf(x)
+#define particle_real_sqrt(x) sqrtf(x)
 
 #endif
 
@@ -43,7 +41,7 @@ void psc_push_particles_1sff_push_xz(struct psc_push_particles *push,
 				     mfields_base_t *flds_base);
 
 static inline int
-nint(creal x)
+nint(particle_real_t x)
 {
   return (int)(x + 10.5f) - 10;
 }
@@ -51,7 +49,7 @@ nint(creal x)
 // like floor(), though returns int
 
 static inline int
-fint(creal x)
+fint(particle_real_t x)
 {
   return (int)(x + 10.f) - 10;
 }
