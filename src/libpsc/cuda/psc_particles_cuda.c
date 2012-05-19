@@ -7,8 +7,8 @@
 
 EXTERN_C void cuda_init(int rank);
 
-static void
-_psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_part)
+static void *
+_psc_mparticles_cuda_alloc_patch(int p, int n_part, unsigned int flags)
 {
   if (p == 0) {
     int rank;
@@ -17,12 +17,12 @@ _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_par
   }
 
   struct psc_patch *patch = &ppsc->patch[p];
-  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
+  particles_cuda_t *pp = calloc(1, sizeof(*pp));
 
   pp->n_part = n_part;
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (mparticles->flags & MP_BLOCKSIZE_MASK) {
+    switch (flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -40,7 +40,7 @@ _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_par
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
 
   for (int d = 0; d < 3; d++) {
-    if (mparticles->flags & MP_NO_CHECKERBOARD) {
+    if (flags & MP_NO_CHECKERBOARD) {
       bs[d] = 1;
     } else {
       bs[d] = (patch->ldims[d] == 1) ? 1 : 2;
@@ -57,6 +57,8 @@ _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_par
   cuda_alloc_block_indices(pp, &pp->d_part.sums);
 
   pp->d_part.sort_ctx = sort_pairs_create(pp->b_mx);
+
+  return pp;
 }
 
 static void

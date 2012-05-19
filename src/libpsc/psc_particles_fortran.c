@@ -5,13 +5,14 @@
 
 #include <stdlib.h>
 
-static void
-_psc_mparticles_fortran_alloc_patch(mparticles_fortran_t *mp, int p, int n_part)
+static void *
+_psc_mparticles_fortran_alloc_patch(int p, int n_part, unsigned int flags)
 {
-  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(mp, p);
+  particles_fortran_t *pp = calloc(1, sizeof(*pp));
   pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
+  return pp;
 }
 
 static void

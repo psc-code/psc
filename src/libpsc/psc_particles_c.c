@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void
-_psc_mparticles_c_alloc_patch(mparticles_c_t *mp, int p, int n_part)
+static void *
+_psc_mparticles_c_alloc_patch(int p, int n_part, unsigned int flags)
 {
-  particles_c_t *pp = psc_mparticles_get_patch_c(mp, p);
+  particles_c_t *pp = calloc(1, sizeof(*pp));
   pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
+  return pp;
 }
 
 static void
@@ -94,19 +95,16 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  char *data = calloc(mparticles->nr_patches, sizeof(particles_c_t));
   mparticles->patches = calloc(mparticles->nr_patches, sizeof(*mparticles->patches));
   mparticles->nr_particles_by_patch =
     calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    mparticles->patches[p] = data + p * sizeof(particles_c_t);
-    particles_c_t *particles = psc_mparticles_get_patch_c(mparticles, p);
     char name[10]; sprintf(name, "p%d", p);
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
     int n_part;
     ierr = H5LTget_attribute_int(groupp, ".", "n_part", &n_part); CE;
-    mparticles->nr_particles_by_patch[p] = n_part;
-    _psc_mparticles_c_alloc_patch(mparticles, p, n_part);
+    particles_c_t *particles = _psc_mparticles_c_alloc_patch(p, n_part, 0);
+    mparticles->patches[p] = particles;
     if (n_part > 0) {
       ierr = H5LTread_dataset_double(groupp, "particles_c",
 				     (double *) particles->particles); CE;

@@ -8,13 +8,14 @@
 #include <assert.h>
 #include <math.h>
 
-static void
-_psc_mparticles_single_alloc_patch(mparticles_single_t *mp, int p, int n_part)
+static void *
+_psc_mparticles_single_alloc_patch(int p, int n_part, unsigned int flags)
 {
-  particles_single_t *pp = psc_mparticles_get_patch_single(mp, p);
+  particles_single_t *pp = calloc(1, sizeof(*pp));
   pp->n_part = n_part;
   pp->n_alloced = n_part * 1.2;
   pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
+  return pp;
 }
 
 static void
