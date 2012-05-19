@@ -8,23 +8,7 @@
 // ----------------------------------------------------------------------
 // particles type
 
-#include "psc_particles_double.h"
-
-struct psc_particles {
-  struct mrc_obj obj;
-  int n_part;
-  int n_alloced;
-  unsigned int flags;
-  struct psc_particle_double *particles;
-};
-
 MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
-
-static inline particle_double_t *
-particles_double_get_one(struct psc_particles *prts, int n)
-{
-  return &prts->particles[n];
-}
 
 // ----------------------------------------------------------------------
 // mparticles type

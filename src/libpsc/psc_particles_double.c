@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_particles_double.h"
+#include "psc_particles_private.h"
 #include "psc_particles_c.h"
 
 #include <mrc_io.h>
@@ -13,10 +13,9 @@ _psc_mparticles_double_alloc_patch(int p, int n_part, unsigned int flags)
 {
   MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
   struct psc_particles *prts = psc_particles_create(comm);
+  psc_particles_set_type(prts, "double");
   prts->n_part = n_part;
-  prts->n_alloced = n_part * 1.2;
   psc_particles_setup(prts);
-  prts->particles = calloc(prts->n_alloced, sizeof(*prts->particles));
   return prts;
 }
 
@@ -24,8 +23,23 @@ static void
 _psc_mparticles_double_free_patch(int p, void *_pp)
 {
   struct psc_particles *prts = _pp;
-  free(prts->particles);
   psc_particles_destroy(prts);
+}
+
+// ======================================================================
+// psc_particles "double"
+
+static void
+psc_particles_double_setup(struct psc_particles *prts)
+{
+  prts->n_alloced = prts->n_part * 1.2;
+  prts->particles = calloc(prts->n_alloced, sizeof(*prts->particles));
+}
+
+static void
+psc_particles_double_destroy(struct psc_particles *prts)
+{
+  free(prts->particles);
 }
 
 #if 0
@@ -159,3 +173,11 @@ struct psc_mparticles_ops psc_mparticles_double_ops = {
   .free_patch              = _psc_mparticles_double_free_patch,
 };
 
+// ======================================================================
+// psc_particles: subclass "double"
+
+struct psc_particles_ops psc_particles_double_ops = {
+  .name                    = "double",
+  .setup                   = psc_particles_double_setup,
+  .destroy                 = psc_particles_double_destroy,
+};

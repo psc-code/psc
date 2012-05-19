@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_particles.h"
+#include "psc_particles_private.h"
 
 // ======================================================================
 // psc_particles_init
@@ -8,7 +8,7 @@
 static void
 psc_particles_init()
 {
-  //  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_generic_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_double_ops);
 }
 
 // ======================================================================
