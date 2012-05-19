@@ -1,0 +1,31 @@
+
+#ifndef PSC_PARTICLES_AS_DOUBLE_H
+#define PSC_PARTICLES_AS_DOUBLE_H
+
+#include "psc_particles_double.h"
+
+typedef particle_double_real_t particle_real_t;
+typedef particle_double_t particle_t;
+typedef struct psc_particles particles_t;
+typedef mparticles_double_t mparticles_t;
+
+#define psc_mparticles_get_cf       psc_mparticles_get_double
+#define psc_mparticles_put_cf       psc_mparticles_put_double
+#define psc_mparticles_get_patch    psc_mparticles_get_patch_double
+#define particles_get_one           particles_double_get_one
+#define particles_realloc           particles_double_realloc
+#define particle_qni_div_mni        particle_double_qni_div_mni
+#define particle_qni_wni            particle_double_qni_wni
+#define particle_qni                particle_double_qni
+#define particle_wni                particle_double_wni
+#define particle_kind               particle_double_kind
+#define particle_get_relative_pos   particle_double_get_relative_pos
+#define particle_real_nint          particle_double_real_nint
+#define particle_real_fint          particle_double_real_fint
+#define particle_real_abs           particle_double_real_abs
+#define particle_real_sqrt          particle_double_real_sqrt
+
+#define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
+
+#endif
+

@@ -51,7 +51,7 @@ find_idx_off_1st(particle_real_t xi[3], int lg[3], particle_real_t og[3], partic
 {
   for (int d = 0; d < 3; d++) {
     particle_real_t pos = (xi[d] - xb[d]) * dxi[d] + shift;
-    lg[d] = fint(pos);
+    lg[d] = particle_real_fint(pos);
     og[d] = pos - lg[d];
   }
 }
@@ -62,7 +62,7 @@ find_idx_off_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3], pa
 {
   for (int d = 0; d < 3; d++) {
     particle_real_t pos = xi[d] * dxi[d] + shift;
-    lg[d] = fint(pos);
+    lg[d] = particle_real_fint(pos);
     og[d] = pos - lg[d];
   }
 }
@@ -74,7 +74,7 @@ find_idx_off_pos_1st(particle_real_t xi[3], int lg[3], particle_real_t og[3],
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = (xi[d] - xb[d]) * dxi[d] + shift;
-    lg[d] = fint(pos[d]);
+    lg[d] = particle_real_fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }
 }
@@ -86,7 +86,7 @@ find_idx_off_pos_1st_rel(particle_real_t xi[3], int lg[3], particle_real_t og[3]
 {
   for (int d = 0; d < 3; d++) {
     pos[d] = xi[d] * dxi[d] + shift;
-    lg[d] = fint(pos[d]);
+    lg[d] = particle_real_fint(pos[d]);
     og[d] = pos[d] - lg[d];
   }
 }

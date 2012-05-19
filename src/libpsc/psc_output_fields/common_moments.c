@@ -91,16 +91,6 @@
     F3(pf, m, jx+1,jy+1,jz+1) += fnq*g1x*g1y*g1z * (val);		\
   } while (0)
 
-static inline particle_real_t
-particle_real_sqrt(particle_real_t x)
-{
-  if (sizeof(x) == 4) {
-    return sqrtf(x);
-  } else {
-    return sqrt(x);
-  }
-}
-
 // FIXME, this function exists about 100x all over the place, should
 // be consolidated
 

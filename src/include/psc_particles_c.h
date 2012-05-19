@@ -4,6 +4,8 @@
 
 #include "psc.h"
 
+#include <math.h>
+
 typedef double particle_c_real_t;
 
 #define MPI_PARTICLES_C_REAL MPI_DOUBLE
@@ -80,6 +82,18 @@ static inline int
 particle_c_real_fint(particle_c_real_t x)
 {
   return (int)(x + 10.f) - 10;
+}
+
+static inline particle_c_real_t
+particle_c_real_sqrt(particle_c_real_t x)
+{
+  return sqrt(x);
+}
+
+static inline particle_c_real_t
+particle_c_real_abs(particle_c_real_t x)
+{
+  return fabs(x);
 }
 
 #endif

@@ -22,6 +22,8 @@ typedef mparticles_c_t mparticles_t;
 #define particle_get_relative_pos   particle_c_get_relative_pos
 #define particle_real_nint          particle_c_real_nint
 #define particle_real_fint          particle_c_real_fint
+#define particle_real_sqrt          particle_c_real_sqrt
+#define particle_real_abs           particle_c_real_abs
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_C_REAL
 

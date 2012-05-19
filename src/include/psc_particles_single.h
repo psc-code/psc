@@ -81,4 +81,16 @@ particle_single_real_fint(particle_single_real_t x)
   return (int)(x + 10.f) - 10;
 }
 
+static inline particle_single_real_t
+particle_single_real_sqrt(particle_single_real_t x)
+{
+  return sqrtf(x);
+}
+
+static inline particle_single_real_t
+particle_single_real_abs(particle_single_real_t x)
+{
+  return fabsf(x);
+}
+
 #endif

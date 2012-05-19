@@ -42,8 +42,8 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     particle_real_t u = (part->xi - patch->xb[0]) * dxi;
     particle_real_t w = (part->zi - patch->xb[2]) * dzi;
-    int lg1 = fint(u);
-    int lg3 = fint(w);
+    int lg1 = particle_real_fint(u);
+    int lg3 = particle_real_fint(w);
     particle_real_t h1 = u - lg1;
     particle_real_t h3 = w - lg3;
 
@@ -61,8 +61,8 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     u = (part->xi - patch->xb[0]) * dxi - .5f;
     w = (part->zi - patch->xb[2]) * dzi - .5f;
-    int lh1 = fint(u);
-    int lh3 = fint(w);
+    int lh1 = particle_real_fint(u);
+    int lh3 = particle_real_fint(w);
     h1 = u - lh1;
     h3 = w - lh3;
     particle_real_t h0x = 1.f - h1;
@@ -129,8 +129,8 @@ do_push_part_1st_xz(int p, fields_t *pf, particles_t *pp)
 
     u = (xi - patch->xb[0]) * dxi;
     w = (zi - patch->xb[2]) * dzi;
-    int k1 = fint(u);
-    int k3 = fint(w);
+    int k1 = particle_real_fint(u);
+    int k3 = particle_real_fint(w);
     h1 = u - k1;
     h3 = w - k3;
 
