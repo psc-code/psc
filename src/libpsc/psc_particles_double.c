@@ -1,6 +1,6 @@
 
 #include "psc.h"
-#include "psc_particles_private.h"
+#include "psc_particles_double.h"
 #include "psc_particles_c.h"
 
 #include <mrc_io.h>
@@ -32,14 +32,18 @@ _psc_mparticles_double_free_patch(int p, void *_pp)
 static void
 psc_particles_double_setup(struct psc_particles *prts)
 {
-  prts->n_alloced = prts->n_part * 1.2;
-  prts->particles = calloc(prts->n_alloced, sizeof(*prts->particles));
+  struct psc_particles_double *dbl = psc_particles_double(prts);
+
+  dbl->n_alloced = prts->n_part * 1.2;
+  dbl->particles = calloc(dbl->n_alloced, sizeof(*dbl->particles));
 }
 
 static void
 psc_particles_double_destroy(struct psc_particles *prts)
 {
-  free(prts->particles);
+  struct psc_particles_double *dbl = psc_particles_double(prts);
+
+  free(dbl->particles);
 }
 
 #if 0
@@ -125,9 +129,10 @@ _psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *particles_base,
 
   struct psc_patch *patch = ppsc->patch + p;
   struct psc_particles *prts_base = particles_base->patches[p];
+  struct psc_particles_double *dbl = psc_particles_double(prts_base);
   particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
   prts_base->n_part = pp->n_part;
-  assert(prts_base->n_part <= prts_base->n_alloced);
+  assert(prts_base->n_part <= dbl->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(pp, n);
@@ -178,6 +183,7 @@ struct psc_mparticles_ops psc_mparticles_double_ops = {
 
 struct psc_particles_ops psc_particles_double_ops = {
   .name                    = "double",
+  .size                    = sizeof(struct psc_particles_double),
   .setup                   = psc_particles_double_setup,
   .destroy                 = psc_particles_double_destroy,
 };

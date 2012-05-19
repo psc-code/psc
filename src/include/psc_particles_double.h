@@ -2,7 +2,7 @@
 #ifndef PSC_PARTICLE_DOUBLE_H
 #define PSC_PARTICLE_DOUBLE_H
 
-#include "psc.h"
+#include "psc_particles_private.h"
 
 typedef float particle_double_real_t;
 
@@ -14,6 +14,19 @@ typedef struct psc_particle_double {
   particle_double_real_t pxi, pyi, pzi;
   int kind;
 } particle_double_t;
+
+struct psc_particles_double {
+  particle_double_t *particles;
+  int n_alloced;
+};
+
+#define psc_particles_double(prts) mrc_to_subobj(prts, struct psc_particles_double)
+
+static inline particle_double_t *
+particles_double_get_one(struct psc_particles *prts, int n)
+{
+  return &psc_particles_double(prts)->particles[n];
+}
 
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
