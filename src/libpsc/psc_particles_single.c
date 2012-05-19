@@ -19,12 +19,13 @@ _psc_mparticles_single_alloc_patch(int p, int n_part, unsigned int flags)
 }
 
 static void
-_psc_mparticles_single_free_patch(mparticles_single_t *mp, int p)
+_psc_mparticles_single_free_patch(int p, void *_pp)
 {
-  particles_single_t *pp = psc_mparticles_get_patch_single(mp, p);
+  particles_single_t *pp = _pp;
   free(pp->particles);
   pp->n_alloced = 0;
   pp->particles = NULL;
+  free(pp);
 }
 
 void

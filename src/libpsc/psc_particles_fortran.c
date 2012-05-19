@@ -16,12 +16,13 @@ _psc_mparticles_fortran_alloc_patch(int p, int n_part, unsigned int flags)
 }
 
 static void
-_psc_mparticles_fortran_free_patch(mparticles_fortran_t *mp, int p)
+_psc_mparticles_fortran_free_patch(int p, void *_pp)
 {
-  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(mp, p);
+  particles_fortran_t *pp = _pp;
   free(pp->particles);
   pp->n_alloced = 0;
   pp->particles = NULL;
+  free(pp);
 }
 
 void

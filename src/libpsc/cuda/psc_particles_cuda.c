@@ -62,9 +62,9 @@ _psc_mparticles_cuda_alloc_patch(int p, int n_part, unsigned int flags)
 }
 
 static void
-_psc_mparticles_cuda_free_patch(mparticles_cuda_t *mparticles, int p)
+_psc_mparticles_cuda_free_patch(int p, void *_pp)
 {
-  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
+  particles_cuda_t *pp = _pp;
 
   cuda_free_block_indices(pp->d_part.bidx);
   cuda_free_block_indices(pp->d_part.ids);
@@ -74,6 +74,8 @@ _psc_mparticles_cuda_free_patch(mparticles_cuda_t *mparticles, int p)
   sort_pairs_destroy(pp->d_part.sort_ctx);
   __particles_cuda_free(pp);
   cell_map_free(&pp->map);
+
+  free(pp);
 }
 
 #include "psc_particles_as_c.h"

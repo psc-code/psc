@@ -54,9 +54,8 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 
   if (ops->free_patch) {
     for (int p = 0; p < mparticles->nr_patches; p++) {
-      ops->free_patch(mparticles, p);
+      ops->free_patch(p, mparticles->patches[p]);
     }
-    free(mparticles->patches[0]);
     free(mparticles->patches);
   }
 }

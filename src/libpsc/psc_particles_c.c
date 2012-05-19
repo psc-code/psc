@@ -17,12 +17,13 @@ _psc_mparticles_c_alloc_patch(int p, int n_part, unsigned int flags)
 }
 
 static void
-_psc_mparticles_c_free_patch(mparticles_c_t *mp, int p)
+_psc_mparticles_c_free_patch(int p, void *_pp)
 {
-  particles_c_t *pp = psc_mparticles_get_patch_c(mp, p);
+  particles_c_t *pp = _pp;
   free(pp->particles);
   pp->n_alloced = 0;
   pp->particles = NULL;
+  free(pp);
 }
 
 void
