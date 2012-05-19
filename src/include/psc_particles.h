@@ -68,6 +68,7 @@ void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
 MAKE_MPARTICLES_TYPE(fortran)
 MAKE_MPARTICLES_TYPE(c)
 MAKE_MPARTICLES_TYPE(single)
+MAKE_MPARTICLES_TYPE(double)
 #ifdef xUSE_SSE2
 MAKE_MPARTICLES_TYPE(sse2)
 #endif
