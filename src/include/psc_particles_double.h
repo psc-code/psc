@@ -15,20 +15,6 @@ typedef struct psc_particle_double {
   int kind;
 } particle_double_t;
 
-typedef struct psc_particles_double {
-  particle_double_t *particles;
-  int n_part;
-  int n_alloced;
-} particles_double_t;
-
-void particles_double_realloc(particles_double_t *pp, int new_n_part);
-
-static inline particle_double_t *
-particles_double_get_one(particles_double_t *pp, int n)
-{
-  return &pp->particles[n];
-}
-
 // can't do this as inline function since struct psc isn't known yet
 #define particle_double_qni_div_mni(p) ({			\
       particle_double_real_t rv;				\
