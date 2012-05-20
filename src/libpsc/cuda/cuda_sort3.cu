@@ -26,7 +26,7 @@ static const int RADIX_BITS = 4;
 
 
 // FIXME -> header
-EXTERN_C void cuda_copy_bidx_to_dev(particles_cuda_t *pp, unsigned int *d_bidx, unsigned int *h_bidx);
+EXTERN_C void cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx);
 
 // blockIdx to rel offset
 template<int NBLOCKS_X, int NBLOCKS_Y, int NBLOCKS_Z>
@@ -180,18 +180,18 @@ private:
   // reduction_host
 
   template<int NBLOCKS_X, int NBLOCKS_Y, int NBLOCKS_Z>
-  void reduction_host(particles_cuda_t *pp, unsigned int *d_bidx,
+  void reduction_host(struct psc_particles *prts, unsigned int *d_bidx,
 		      int n_part, int n_part_prev)
   {
     int *d_bb_cnts = thrust::raw_pointer_cast(&_bb_cnts[0]);
 
     unsigned int *offsets = (unsigned int *) malloc((_nr_blocks + 1) * sizeof(*offsets));
-    unsigned int *bidx = (unsigned int *) malloc(pp->n_part * sizeof(*bidx));
+    unsigned int *bidx = (unsigned int *) malloc(prts->n_part * sizeof(*bidx));
     int *bb_cnts = (int *) malloc(_nr_blocks * (STRIDE+1) * sizeof(*bb_cnts));
     memset(bb_cnts, 0, _nr_blocks * (STRIDE+1) * sizeof(*bb_cnts));
     cudaMemset(d_bb_cnts, 0, _nr_blocks * (STRIDE+1) * sizeof(*bb_cnts));
-    cuda_copy_offsets_from_dev(pp, offsets);
-    cuda_copy_bidx_from_dev(pp, bidx, d_bidx);
+    cuda_copy_offsets_from_dev(prts, offsets);
+    cuda_copy_bidx_from_dev(prts, bidx, d_bidx);
     
     // go by block for the old particles
     for (unsigned int bb = 0; bb < _nr_blocks; bb++) {
@@ -212,7 +212,7 @@ private:
     assert(offsets[_nr_blocks] == n_part_prev);
     
     // then do the new ones
-    for (int i = n_part_prev; i < pp->n_part; i++) {
+    for (int i = n_part_prev; i < prts->n_part; i++) {
       assert(bidx[i] < _nr_blocks);
       bb_cnts[bidx[i] * STRIDE + S_NEW]++;
     }

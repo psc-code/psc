@@ -119,8 +119,7 @@ cuda_push_fields_a_E_yz(int p, fields_cuda_t *pf)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
-  particles_cuda_t pp;
-  push_fields_yz_set_constants(&pp, pf);
+  push_fields_yz_set_constants(NULL, pf);
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,

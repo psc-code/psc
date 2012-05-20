@@ -42,15 +42,16 @@ sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
 #endif
 
 static void
-sort_patch(int p, particles_cuda_t *pp)
+sort_patch(int p, struct psc_particles *prts)
 {
-  cuda_find_block_indices_ids(pp, pp->d_part.bidx, pp->d_part.ids);
-  sort_pairs_device(pp->d_part.bidx, pp->d_part.ids, pp->n_part);
-  cuda_reorder_and_offsets(pp, pp->d_part.bidx, pp->d_part.ids);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  cuda_find_block_indices_ids(prts, cuda->d_part.bidx, cuda->d_part.ids);
+  sort_pairs_device(cuda->d_part.bidx, cuda->d_part.ids, prts->n_part);
+  cuda_reorder_and_offsets(prts, cuda->d_part.bidx, cuda->d_part.ids);
 }
 
 void
-cuda_sort_patch(int p, particles_cuda_t *pp)
+cuda_sort_patch(int p, struct psc_particles *prts)
 {
   static int pr;
   if (!pr) {
@@ -58,12 +59,12 @@ cuda_sort_patch(int p, particles_cuda_t *pp)
   }
 
   prof_start(pr);
-  sort_patch(p, pp);
+  sort_patch(p, prts);
   prof_stop(pr);
 }
 
 void
-cuda_sort_patch_by_cell(int p, particles_cuda_t *pp)
+cuda_sort_patch_by_cell(int p, struct psc_particles *prts)
 {
   static int pr;
   if (!pr) {
@@ -71,7 +72,7 @@ cuda_sort_patch_by_cell(int p, particles_cuda_t *pp)
   }
 
   prof_start(pr);
-  sort_patch_by_cell(p, pp);
+  sort_patch_by_cell(p, prts);
   prof_stop(pr);
 }
 
@@ -87,7 +88,7 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
 
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    sort_patch(p, psc_mparticles_get_patch_cuda(particles, p));
+    sort_patch(p, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr);
 

@@ -76,7 +76,7 @@ void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
 static inline struct psc_particles *
 psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
 {
-  return mp->patches[p];
+  return (struct psc_particles *) mp->patches[p];
 }
 
 MAKE_MPARTICLES_TYPE(fortran)

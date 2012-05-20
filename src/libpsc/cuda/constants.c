@@ -14,7 +14,7 @@ struct d_consts {
 __constant__ static struct d_consts d_consts;
 
 EXTERN_C void
-PFX(set_constants)(particles_cuda_t *pp, fields_cuda_t *pf)
+PFX(set_constants)(struct psc_particles *prts, fields_cuda_t *pf)
 {
   struct d_consts consts = {
     .dt     = ppsc->dt,
@@ -28,7 +28,13 @@ PFX(set_constants)(particles_cuda_t *pp, fields_cuda_t *pf)
     consts.mx[d] = pf->im[d];
     consts.ilg[d] = pf->ib[d];
     consts.ilo[d] = pf->ib[d] + ppsc->ibn[d];
-    consts.b_mx[d] = pp->b_mx[d];
+  }
+
+  if (prts) {
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    for (int d = 0; d < 3; d++) {
+      consts.b_mx[d] = cuda->b_mx[d];
+    }
   }
 
   check(cudaMemcpyToSymbol(d_consts, &consts, sizeof(consts)));

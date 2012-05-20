@@ -2,7 +2,7 @@
 #ifndef PSC_PARTICLE_CUDA_H
 #define PSC_PARTICLE_CUDA_H
 
-#include "psc.h"
+#include "psc_particles_private.h"
 #include "cuda_wrap.h"
 
 typedef float particle_cuda_real_t;
@@ -26,19 +26,20 @@ typedef struct {
   unsigned int *sums;      // for particle xchg
 } particles_cuda_dev_t;
 
-typedef struct psc_particles_cuda {
+struct psc_particles_cuda {
   particles_cuda_dev_t d_part; // all particles, on device
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
-  int n_part;
   int n_alloced;
   int blocksize[3];            // dimensions of sub blocks in a patch
   particle_cuda_real_t b_dxi[3];
   struct cell_map map;         // maps 3d block pos to 1d block index
-} particles_cuda_t;
+};
 
-EXTERN_C void particles_cuda_get(particles_cuda_t *pp);
-EXTERN_C void particles_cuda_put(particles_cuda_t *pp);
+#define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
+
+EXTERN_C void particles_cuda_get(struct psc_particles *pp);
+EXTERN_C void particles_cuda_put(struct psc_particles *pp);
 
 static inline int
 particle_cuda_real_nint(particle_cuda_real_t x)

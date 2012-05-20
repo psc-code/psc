@@ -18,14 +18,15 @@ cuda_init(int rank)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
+__particles_cuda_alloc(struct psc_particles *prts, bool need_block_offsets,
 		       bool need_cell_offsets)
 {
-  int n_alloced = pp->n_part * 1.2; // FIXME, need to handle realloc eventualy
-  pp->n_alloced = n_alloced;
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  int n_alloced = prts->n_part * 1.2; // FIXME, need to handle realloc eventualy
+  cuda->n_alloced = n_alloced;
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
-  const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
+  const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
 
   check(cudaMalloc((void **) &d_part->xi4, n_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &d_part->pxi4, n_alloced * sizeof(float4)));
@@ -35,55 +36,57 @@ __particles_cuda_alloc(particles_cuda_t *pp, bool need_block_offsets,
 
   if (need_block_offsets) {
     check(cudaMalloc((void **) &d_part->offsets, 
-		     (pp->nr_blocks + 1) * sizeof(int)));
-    check(cudaMemcpy(&d_part->offsets[pp->nr_blocks], &pp->n_part, sizeof(int),
+		     (cuda->nr_blocks + 1) * sizeof(int)));
+    check(cudaMemcpy(&d_part->offsets[cuda->nr_blocks], &prts->n_part, sizeof(int),
 		     cudaMemcpyHostToDevice));
   }
 
   if (need_cell_offsets) {
     check(cudaMalloc((void **) &d_part->c_offsets, 
-		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int)));
+		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int)));
   }
 
   check(cudaMalloc((void **) &d_part->c_pos, 
-		   (pp->nr_blocks * cells_per_block * 3) * sizeof(int)));
+		   (cuda->nr_blocks * cells_per_block * 3) * sizeof(int)));
 }
 
 EXTERN_C void
-__particles_cuda_to_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4,
+__particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
 			   int *offsets, int *c_offsets, int *c_pos)
 {
-  int n_part = pp->n_part;
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  int n_part = prts->n_part;
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
-  const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
+  const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
 
-  assert(n_part <= pp->n_alloced);
+  assert(n_part <= cuda->n_alloced);
   check(cudaMemcpy(d_part->xi4, xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(d_part->pxi4, pxi4, n_part * sizeof(*pxi4),
 		   cudaMemcpyHostToDevice));
   if (offsets) {
     check(cudaMemcpy(d_part->offsets, offsets,
-		     (pp->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
+		     (cuda->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
   }
   if (c_offsets) {
     check(cudaMemcpy(d_part->c_offsets,c_offsets,
-		     (pp->nr_blocks * cells_per_block + 1) * sizeof(int),
+		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int),
 		     cudaMemcpyHostToDevice));
   }
   if (c_pos) {
     check(cudaMemcpy(d_part->c_pos, c_pos,
-		     (pp->nr_blocks * cells_per_block * 3) * sizeof(int),
+		     (cuda->nr_blocks * cells_per_block * 3) * sizeof(int),
 		     cudaMemcpyHostToDevice));
   }
 }
 
 EXTERN_C void
-__particles_cuda_to_device_range(particles_cuda_t *pp, float4 *xi4, float4 *pxi4,
+__particles_cuda_to_device_range(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
 				 int start, int end)
 {
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
   check(cudaMemcpy(d_part->xi4 + start, xi4, (end - start) * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));
@@ -92,12 +95,13 @@ __particles_cuda_to_device_range(particles_cuda_t *pp, float4 *xi4, float4 *pxi4
 }
 
 EXTERN_C void
-__particles_cuda_from_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4)
+__particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 {
-  int n_part = pp->n_part;
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  int n_part = prts->n_part;
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
-  assert(n_part <= pp->n_alloced);
+  assert(n_part <= cuda->n_alloced);
   check(cudaMemcpy(xi4, d_part->xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(pxi4, d_part->pxi4, n_part * sizeof(*pxi4),
@@ -105,10 +109,11 @@ __particles_cuda_from_device(particles_cuda_t *pp, float4 *xi4, float4 *pxi4)
 }
 
 EXTERN_C void
-__particles_cuda_from_device_range(particles_cuda_t *pp, float4 *xi4, float4 *pxi4,
+__particles_cuda_from_device_range(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
 				   int start, int end)
 {
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
   check(cudaMemcpy(xi4, d_part->xi4 + start, (end - start) * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
@@ -117,9 +122,10 @@ __particles_cuda_from_device_range(particles_cuda_t *pp, float4 *xi4, float4 *px
 }
 
 EXTERN_C void
-__particles_cuda_free(particles_cuda_t *pp)
+__particles_cuda_free(struct psc_particles *prts)
 {
-  particles_cuda_dev_t *d_part = &pp->d_part;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  particles_cuda_dev_t *d_part = &cuda->d_part;
 
   check(cudaFree(d_part->xi4));
   check(cudaFree(d_part->pxi4));
@@ -131,16 +137,18 @@ __particles_cuda_free(particles_cuda_t *pp)
 }
 
 EXTERN_C void
-cuda_copy_offsets_from_dev(particles_cuda_t *pp, unsigned int *h_offsets)
+cuda_copy_offsets_from_dev(struct psc_particles *prts, unsigned int *h_offsets)
 {
-  check(cudaMemcpy(h_offsets, pp->d_part.offsets, (pp->nr_blocks + 1) * sizeof(*h_offsets),
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  check(cudaMemcpy(h_offsets, cuda->d_part.offsets, (cuda->nr_blocks + 1) * sizeof(*h_offsets),
 		   cudaMemcpyDeviceToHost));
 }
 
 EXTERN_C void
-cuda_copy_offsets_to_dev(particles_cuda_t *pp, unsigned int *h_offsets)
+cuda_copy_offsets_to_dev(struct psc_particles *prts, unsigned int *h_offsets)
 {
-  check(cudaMemcpy(pp->d_part.offsets, h_offsets, (pp->nr_blocks + 1) * sizeof(*h_offsets),
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  check(cudaMemcpy(cuda->d_part.offsets, h_offsets, (cuda->nr_blocks + 1) * sizeof(*h_offsets),
 		   cudaMemcpyHostToDevice));
 }
 

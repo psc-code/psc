@@ -11,6 +11,9 @@ psc_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_double_ops);
   mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_fortran_ops);
+#ifdef USE_CUDA
+  mrc_class_register_subclass(&mrc_class_psc_particles, &psc_particles_cuda_ops);
+#endif
 }
 
 // ======================================================================

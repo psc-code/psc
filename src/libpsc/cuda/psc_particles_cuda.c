@@ -10,19 +10,42 @@ EXTERN_C void cuda_init(int rank);
 static void *
 _psc_mparticles_cuda_alloc_patch(int p, int n_part, unsigned int flags)
 {
-  if (p == 0) {
+  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
+  struct psc_particles *prts = psc_particles_create(comm);
+  psc_particles_set_type(prts, "cuda");
+  prts->n_part = n_part;
+  prts->p = p;
+  prts->flags = flags;
+  psc_particles_setup(prts);
+  return prts;
+}
+
+static void
+_psc_mparticles_cuda_free_patch(int p, void *_pp)
+{
+  struct psc_particles *prts = _pp;
+  psc_particles_destroy(prts);
+}
+
+// ======================================================================
+// psc_particles "cuda"
+
+static void
+psc_particles_cuda_setup(struct psc_particles *prts)
+{
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+  if (prts->p == 0) {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     cuda_init(rank);
   }
 
-  struct psc_patch *patch = &ppsc->patch[p];
-  particles_cuda_t *pp = calloc(1, sizeof(*pp));
+  struct psc_patch *patch = &ppsc->patch[prts->p];
 
-  pp->n_part = n_part;
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    switch (flags & MP_BLOCKSIZE_MASK) {
+    switch (prts->flags & MP_BLOCKSIZE_MASK) {
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
@@ -32,50 +55,46 @@ _psc_mparticles_cuda_alloc_patch(int p, int n_part, unsigned int flags)
     if (ppsc->domain.gdims[d] == 1) {
       bs[d] = 1;
     }
-    pp->blocksize[d] = bs[d];
+    cuda->blocksize[d] = bs[d];
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
-    pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
-    pp->b_dxi[d] = 1.f / (pp->blocksize[d] * ppsc->dx[d]);
+    cuda->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
+    cuda->b_dxi[d] = 1.f / (cuda->blocksize[d] * ppsc->dx[d]);
   }
-  pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
+  cuda->nr_blocks = cuda->b_mx[0] * cuda->b_mx[1] * cuda->b_mx[2];
 
   for (int d = 0; d < 3; d++) {
-    if (flags & MP_NO_CHECKERBOARD) {
+    if (prts->flags & MP_NO_CHECKERBOARD) {
       bs[d] = 1;
     } else {
       bs[d] = (patch->ldims[d] == 1) ? 1 : 2;
     }
   }
-  cell_map_init(&pp->map, pp->b_mx, bs);
+  cell_map_init(&cuda->map, cuda->b_mx, bs);
 
-  __particles_cuda_alloc(pp, true, true); // FIXME, need separate flags
+  __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags
 
-  cuda_alloc_block_indices(pp, &pp->d_part.bidx); // FIXME, merge into ^^^
-  cuda_alloc_block_indices(pp, &pp->d_part.ids);
-  cuda_alloc_block_indices(pp, &pp->d_part.alt_bidx);
-  cuda_alloc_block_indices(pp, &pp->d_part.alt_ids);
-  cuda_alloc_block_indices(pp, &pp->d_part.sums);
+  cuda_alloc_block_indices(prts, &cuda->d_part.bidx); // FIXME, merge into ^^^
+  cuda_alloc_block_indices(prts, &cuda->d_part.ids);
+  cuda_alloc_block_indices(prts, &cuda->d_part.alt_bidx);
+  cuda_alloc_block_indices(prts, &cuda->d_part.alt_ids);
+  cuda_alloc_block_indices(prts, &cuda->d_part.sums);
 
-  pp->d_part.sort_ctx = sort_pairs_create(pp->b_mx);
-
-  return pp;
+  cuda->d_part.sort_ctx = sort_pairs_create(cuda->b_mx);
 }
 
 static void
-_psc_mparticles_cuda_free_patch(int p, void *_pp)
+psc_particles_cuda_destroy(struct psc_particles *prts)
 {
-  particles_cuda_t *pp = _pp;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  cuda_free_block_indices(pp->d_part.bidx);
-  cuda_free_block_indices(pp->d_part.ids);
-  cuda_free_block_indices(pp->d_part.alt_bidx);
-  cuda_free_block_indices(pp->d_part.alt_ids);
-  cuda_free_block_indices(pp->d_part.sums);
-  sort_pairs_destroy(pp->d_part.sort_ctx);
-  __particles_cuda_free(pp);
-  cell_map_free(&pp->map);
-
-  free(pp);
+  cuda_free_block_indices(cuda->d_part.bidx);
+  cuda_free_block_indices(cuda->d_part.ids);
+  cuda_free_block_indices(cuda->d_part.alt_bidx);
+  cuda_free_block_indices(cuda->d_part.alt_ids);
+  cuda_free_block_indices(cuda->d_part.sums);
+  sort_pairs_destroy(cuda->d_part.sort_ctx);
+  __particles_cuda_free(prts);
+  cell_map_free(&cuda->map);
 }
 
 #include "psc_particles_as_c.h"
@@ -127,9 +146,10 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
-  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-  pp->n_part = pp_cf->n_part;
-  assert(pp->n_part <= pp->n_alloced);
+  struct psc_particles *prts = psc_mparticles_get_patch_cuda(particles, p);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  prts->n_part = pp_cf->n_part;
+  assert(prts->n_part <= cuda->n_alloced);
   
   float4 *xi4  = calloc(pp_cf->n_part, sizeof(float4));
   float4 *pxi4 = calloc(pp_cf->n_part, sizeof(float4));
@@ -162,19 +182,19 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
     
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
     for (int d = 0; d < 3; d++) {
-      int bi = cuda_fint(xi[d] * pp->b_dxi[d]);
-      if (bi < 0 || bi >= pp->b_mx[d]) {
+      int bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      if (bi < 0 || bi >= cuda->b_mx[d]) {
 	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
 	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
-	       p, n, d, xi[d], bi, pp->b_mx[d]);
+	       p, n, d, xi[d], bi, cuda->b_mx[d]);
 	if (bi < 0) {
 	  xi[d] = 0.f;
 	} else {
 	  xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = cuda_fint(xi[d] * pp->b_dxi[d]);
-      assert(bi >= 0 && bi < pp->b_mx[d]);
+      bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      assert(bi >= 0 && bi < cuda->b_mx[d]);
     }
     xi4[n].x = xi[0];
     xi4[n].y = xi[1];
@@ -183,7 +203,7 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
   
   int bs[3];
   for (int d = 0; d < 3; d++) {
-    bs[d] = pp->blocksize[d];
+    bs[d] = cuda->blocksize[d];
     if (bs[d] != 1) {
       bs[d] *= 2; // sort not only within blocks, but also on lowest block
       // bit, so we can do the checkerboard passes
@@ -195,14 +215,14 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
   int *offsets = NULL;
   if (0 && (flags & MP_NEED_BLOCK_OFFSETS)) {
     // FIXME, should go away and can be taken over by c_offsets
-    offsets = calloc(pp->nr_blocks + 1, sizeof(*offsets));
+    offsets = calloc(cuda->nr_blocks + 1, sizeof(*offsets));
     int last_block = -1;
-    for (int n = 0; n <= pp->n_part; n++) {
+    for (int n = 0; n <= prts->n_part; n++) {
       int block;
-      if (n < pp->n_part) {
-	block = find_blockIdx(patch, &map, pp_cf, n, pp->blocksize);
+      if (n < prts->n_part) {
+	block = find_blockIdx(patch, &map, pp_cf, n, cuda->blocksize);
       } else {
-	block = pp->nr_blocks;
+	block = cuda->nr_blocks;
       }
       assert(last_block <= block);
       while (last_block < block) {
@@ -233,18 +253,17 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
   
   int *c_offsets = NULL;
   if (0 && (flags & MP_NEED_CELL_OFFSETS)) {
-    const int cells_per_block = pp->blocksize[0] * pp->blocksize[1] * pp->blocksize[2];
-    c_offsets = calloc(pp->nr_blocks * cells_per_block + 1,
-		       sizeof(*c_offsets));
+    const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
+    c_offsets = calloc(cuda->nr_blocks * cells_per_block + 1, sizeof(*c_offsets));
     int last_block = -1;
-    for (int n = 0; n <= pp->n_part; n++) {
+    for (int n = 0; n <= prts->n_part; n++) {
       int block;
-      if (n < pp->n_part) {
+      if (n < prts->n_part) {
 	block = find_cellIdx(patch, &map, pp_cf, n);
       } else {
 	block = map.N;
       }
-      assert(block <= pp->nr_blocks * cells_per_block);
+      assert(block <= cuda->nr_blocks * cells_per_block);
       assert(last_block <= block);
       while (last_block < block) {
 	c_offsets[last_block+1] = n;
@@ -254,13 +273,13 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
   }
   cell_map_free(&map);
   
-  __particles_cuda_to_device(pp, xi4, pxi4, offsets, c_offsets, c_pos);
+  __particles_cuda_to_device(prts, xi4, pxi4, offsets, c_offsets, c_pos);
   
   if (particles->flags & MP_NEED_BLOCK_OFFSETS) {
-    cuda_sort_patch(p, pp);
+    cuda_sort_patch(p, prts);
   }
   if (particles->flags & MP_NEED_CELL_OFFSETS) {
-    cuda_sort_patch_by_cell(p, pp);
+    cuda_sort_patch_by_cell(p, prts);
   }
   // FIXME, sorting twice because we need both would be suboptimal
   if ((particles->flags & MP_NEED_CELL_OFFSETS) && 
@@ -281,14 +300,14 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
-  particles_cuda_t *pp = psc_mparticles_get_patch_cuda(particles, p);
-  pp_cf->n_part = pp->n_part;
+  struct psc_particles *prts = psc_mparticles_get_patch_cuda(particles, p);
+  pp_cf->n_part = prts->n_part;
   assert(pp_cf->n_part <= pp_cf->n_alloced);
   
-  float4 *xi4  = calloc(pp->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(pp->n_part, sizeof(float4));
+  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
   
-  __particles_cuda_from_device(pp, xi4, pxi4);
+  __particles_cuda_from_device(prts, xi4, pxi4);
   
   for (int n = 0; n < pp_cf->n_part; n++) {
     particle_real_t qni_div_mni = xi4[n].w;
@@ -333,7 +352,7 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 static int
 _psc_mparticles_cuda_nr_particles_by_patch(mparticles_cuda_t *mparticles, int p)
 {
-  return psc_mparticles_get_patch_cuda(mparticles, p)->n_part;
+  return ((struct psc_particles *)psc_mparticles_get_patch_cuda(mparticles, p))->n_part;
 }
 
 // ======================================================================
@@ -351,6 +370,14 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
   .alloc_patch             = _psc_mparticles_cuda_alloc_patch,
   .free_patch              = _psc_mparticles_cuda_free_patch,
-  .size_of_particles_t     = sizeof(particles_cuda_t),
 };
 
+// ======================================================================
+// psc_particles: subclass "cuda"
+
+struct psc_particles_ops psc_particles_cuda_ops = {
+  .name                    = "cuda",
+  .size                    = sizeof(struct psc_particles_cuda),
+  .setup                   = psc_particles_cuda_setup,
+  .destroy                 = psc_particles_cuda_destroy,
+};

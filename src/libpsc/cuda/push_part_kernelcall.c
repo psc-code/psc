@@ -5,10 +5,11 @@
 // alloc scratch
 
 EXTERN_C void
-PFX(cuda_push_part_p1)(particles_cuda_t *pp, fields_cuda_t *pf,
+PFX(cuda_push_part_p1)(struct psc_particles *prts, fields_cuda_t *pf,
 		       real **d_scratch)
 {
-  unsigned int size = pp->nr_blocks * 3 * BLOCKSTRIDE;
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  unsigned int size = cuda->nr_blocks * 3 * BLOCKSTRIDE;
   check(cudaMalloc((void **)d_scratch, size * sizeof(real)));
   check(cudaMemset(*d_scratch, 0, size * sizeof(real)));
   size = pf->im[0] * pf->im[1] * pf->im[2];
@@ -24,12 +25,13 @@ PFX(cuda_push_part_p1)(particles_cuda_t *pp, fields_cuda_t *pf,
 // particle push
 
 EXTERN_C void
-PFX(cuda_push_part_p2)(particles_cuda_t *pp, fields_cuda_t *pf)
+PFX(cuda_push_part_p2)(struct psc_particles *prts, fields_cuda_t *pf)
 {
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { pp->nr_blocks, 1 };
+  int dimGrid[2]  = { cuda->nr_blocks, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_p1, (pp->n_part, pp->d_part, pf->d_flds));
+	     push_part_p1, (prts->n_part, cuda->d_part, pf->d_flds));
 }
 
 // ----------------------------------------------------------------------
@@ -38,15 +40,16 @@ PFX(cuda_push_part_p2)(particles_cuda_t *pp, fields_cuda_t *pf)
 // calculate currents locally
 
 EXTERN_C void
-PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch,
+PFX(cuda_push_part_p3)(struct psc_particles *prts, fields_cuda_t *pf, real *d_scratch,
 		       int block_stride)
 {
-  assert(pp->nr_blocks % block_stride == 0);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  assert(cuda->nr_blocks % block_stride == 0);
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { pp->nr_blocks / block_stride, 1 };
+  int dimGrid[2]  = { cuda->nr_blocks / block_stride, 1 };
   for (int block_start = 0; block_start < block_stride; block_start++) {
     RUN_KERNEL(dimGrid, dimBlock,
-	       push_part_p2, (pp->n_part, pp->d_part, pf->d_flds, d_scratch,
+	       push_part_p2, (prts->n_part, cuda->d_part, pf->d_flds, d_scratch,
 			      block_stride, block_start));
   }
 }
@@ -57,8 +60,9 @@ PFX(cuda_push_part_p3)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch,
 // collect calculation
 
 EXTERN_C void
-PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
+PFX(cuda_push_part_p4)(struct psc_particles *prts, fields_cuda_t *pf, real *d_scratch)
 {
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 #if DIM == DIM_Z
   int dimBlock[2] = { BLOCKSIZE_Z + 2*SW, 1 };
 #elif DIM == DIM_YZ
@@ -66,9 +70,9 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 #endif
   int dimGrid[2]  = { 1, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     collect_currents, (pf->d_flds, d_scratch, pp->nr_blocks));
+	     collect_currents, (pf->d_flds, d_scratch, cuda->nr_blocks));
 
-  int sz = pp->nr_blocks * 3 * BLOCKSTRIDE;
+  int sz = cuda->nr_blocks * 3 * BLOCKSTRIDE;
   real *h_scratch = (real *) malloc(sz * sizeof(real));
   check(cudaMemcpy(h_scratch, d_scratch, sz * sizeof(real),
 		   cudaMemcpyDeviceToHost));
@@ -79,7 +83,7 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 			      (jy)+3])
   for (int m = 0; m < 3; m++) {
     printf("m %d\n", m);
-    for (int b = 0; b < pp->nr_blocks; b++) {
+    for (int b = 0; b < cuda->nr_blocks; b++) {
       real *p = h_scratch + b * 3 * BLOCKSTRIDE;
       for (int iz = -3; iz <= 3; iz++) {
 	if (h_scratch(m, 0, iz) != 0.) {
@@ -90,7 +94,7 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
   }
   free(h_scratch);
 
-  for (int b = 0; b < pp->nr_blocks; b++) {
+  for (int b = 0; b < cuda->nr_blocks; b++) {
     real *p = h_scratch + b * 3 * BLOCKSTRIDE;
     for (int m = 0; m < 3; m++) {
       for (int iz = -3; iz <= 3; iz++) {
@@ -110,7 +114,7 @@ PFX(cuda_push_part_p4)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
 // free
 
 EXTERN_C void
-PFX(cuda_push_part_p5)(particles_cuda_t *pp, fields_cuda_t *pf, real *d_scratch)
+PFX(cuda_push_part_p5)(struct psc_particles *prts, fields_cuda_t *pf, real *d_scratch)
 {
   check(cudaFree(d_scratch));
 }
