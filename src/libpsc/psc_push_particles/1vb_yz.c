@@ -40,12 +40,6 @@ do_push_part_1vb_yz(int p, fields_cache_t *pf, particles_t *pp)
 
     INTERPOLATE_SETUP_1ST;
 
-#define INTERPOLATE_FIELD_1ST_C(m, gy, gz)				\
-    (gz##0z*(gy##0y*F3_C(pf, m, 0,l##gy[1]  ,l##gz[2]  ) +		\
-	     gy##1y*F3_C(pf, m, 0,l##gy[1]+1,l##gz[2]  )) +		\
-     gz##1z*(gy##0y*F3_C(pf, m, 0,l##gy[1]  ,l##gz[2]+1) +		\
-	     gy##1y*F3_C(pf, m, 0,l##gy[1]+1,l##gz[2]+1)))
-
     particle_real_t exq = INTERPOLATE_FIELD_1ST_C(EX, g, g);
     particle_real_t eyq = INTERPOLATE_FIELD_1ST_C(EY, h, g);
     particle_real_t ezq = INTERPOLATE_FIELD_1ST_C(EZ, g, h);
@@ -62,7 +56,7 @@ do_push_part_1vb_yz(int p, fields_cache_t *pf, particles_t *pp)
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
     calc_vxi(vxi, part);
-    push_xi(part, vxi, .5 * dt);
+    push_xi(part, vxi, .5f * dt);
 
     // OUT OF PLANE CURRENT DENSITY AT (n+1.0)*dt
 
