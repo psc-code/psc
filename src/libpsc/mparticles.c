@@ -105,26 +105,28 @@ psc_mparticles_get_as(struct psc_mparticles *mp_base, const char *type,
   psc_mparticles_setup(mp);
   free(nr_particles_by_patch);
 
-  char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
-  psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t)
-    psc_mparticles_get_method(mp_base, s);
-  if (copy_to) {
-    for (int p = 0; p < mp_base->nr_patches; p++) {
-      copy_to(p, mp_base, mp, flags);
-    }
-  } else {
-    sprintf(s, "copy_from_%s", type_base);
-    psc_mparticles_copy_to_func_t copy_from = (psc_mparticles_copy_from_func_t)
-      psc_mparticles_get_method(mp, s);
-    if (copy_from) {
+  if (!(flags & MP_DONT_COPY)) {
+    char s[strlen(type) + 12]; sprintf(s, "copy_to_%s", type);
+    psc_mparticles_copy_to_func_t copy_to = (psc_mparticles_copy_to_func_t)
+      psc_mparticles_get_method(mp_base, s);
+    if (copy_to) {
+      for (int p = 0; p < mp_base->nr_patches; p++) {
+	copy_to(p, mp_base, mp, flags);
+      }
+    } else {
+      sprintf(s, "copy_from_%s", type_base);
+      psc_mparticles_copy_to_func_t copy_from = (psc_mparticles_copy_from_func_t)
+	psc_mparticles_get_method(mp, s);
+      if (copy_from) {
       for (int p = 0; p < mp_base->nr_patches; p++) {
 	copy_from(p, mp, mp_base, flags);
       }
-    } else {
-      fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
-	      "no 'copy_from_%s' in '%s'!\n",
-	      type, psc_mparticles_type(mp_base), type_base, psc_mparticles_type(mp));
-      assert(0);
+      } else {
+	fprintf(stderr, "ERROR: no 'copy_to_%s' in psc_mparticles '%s' and "
+		"no 'copy_from_%s' in '%s'!\n",
+		type, psc_mparticles_type(mp_base), type_base, psc_mparticles_type(mp));
+	assert(0);
+      }
     }
   }
 
