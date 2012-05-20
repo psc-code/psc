@@ -51,8 +51,8 @@ calc_vxi(particle_single_real_t vxi[3], particle_single_t *part)
 }
 
 static void
-_psc_particles_single_copy_to_c(struct psc_particles *prts_base,
-				struct psc_particles *prts_c, unsigned int flags)
+psc_particles_single_copy_to_c(struct psc_particles *prts_base,
+			       struct psc_particles *prts_c, unsigned int flags)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -89,8 +89,8 @@ _psc_particles_single_copy_to_c(struct psc_particles *prts_base,
 }
 
 static void
-_psc_particles_single_copy_from_c(struct psc_particles *prts_base,
-				  struct psc_particles *prts_c, unsigned int flags)
+psc_particles_single_copy_from_c(struct psc_particles *prts_base,
+				 struct psc_particles *prts_c, unsigned int flags)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -135,23 +135,23 @@ _psc_particles_single_copy_from_c(struct psc_particles *prts_base,
 // ======================================================================
 // psc_mparticles: subclass "single"
   
-static struct mrc_obj_method _psc_mparticles_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_single_copy_from_c),
-  {}
-};
-
 struct psc_mparticles_ops psc_mparticles_single_ops = {
   .name                    = "single",
-  .methods                 = _psc_mparticles_single_methods,
 };
 
 // ======================================================================
 // psc_particles: subclass "single"
 
+static struct mrc_obj_method psc_particles_single_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_particles_single_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_particles_single_copy_from_c),
+  {}
+};
+
 struct psc_particles_ops psc_particles_single_ops = {
   .name                    = "single",
   .size                    = sizeof(struct psc_particles_single),
+  .methods                 = psc_particles_single_methods,
   .setup                   = psc_particles_single_setup,
   .destroy                 = psc_particles_single_destroy,
 };

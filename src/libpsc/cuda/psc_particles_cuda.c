@@ -119,8 +119,8 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 }
 
 static void
-_psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
-				struct psc_particles *prts_c, unsigned int flags)
+psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
+			       struct psc_particles *prts_c, unsigned int flags)
 {
   int p = prts_cuda->p;
   struct psc_patch *patch = &ppsc->patch[p];
@@ -272,8 +272,8 @@ _psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 }
 
 static void
-_psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
-			      struct psc_particles *prts_c, unsigned int flags)
+psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
+			     struct psc_particles *prts_c, unsigned int flags)
 {
   int p = prts_cuda->p;
   struct psc_patch *patch = &ppsc->patch[p];
@@ -326,23 +326,23 @@ _psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
 // ======================================================================
 // psc_mparticles: subclass "cuda"
   
-static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_cuda_copy_from_c),
-  {}
-};
-
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
-  .methods                 = _psc_mparticles_cuda_methods,
 };
 
 // ======================================================================
 // psc_particles: subclass "cuda"
 
+static struct mrc_obj_method psc_particles_cuda_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",  psc_particles_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",psc_particles_cuda_copy_from_c),
+  {}
+};
+
 struct psc_particles_ops psc_particles_cuda_ops = {
   .name                    = "cuda",
   .size                    = sizeof(struct psc_particles_cuda),
+  .methods                 = psc_particles_cuda_methods,
   .setup                   = psc_particles_cuda_setup,
   .destroy                 = psc_particles_cuda_destroy,
 };

@@ -38,8 +38,8 @@ particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
 }
 
 static void
-_psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
-				 struct psc_particles *prts_c, unsigned int flags)
+psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
+				struct psc_particles *prts_c, unsigned int flags)
 {
   struct psc_particles_c *c = psc_particles_c(prts_c);
   prts_c->n_part = prts_base->n_part;
@@ -61,8 +61,8 @@ _psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
 }
 
 static void
-_psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
-				   struct psc_particles *prts_c, unsigned int flags)
+psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
+				  struct psc_particles *prts_c, unsigned int flags)
 {
   struct psc_particles_fortran *fort = psc_particles_fortran(prts_base);
   prts_base->n_part = prts_c->n_part;
@@ -86,23 +86,23 @@ _psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
 // ======================================================================
 // psc_mparticles: subclass "fortran"
   
-static struct mrc_obj_method _psc_mparticles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_fortran_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_fortran_copy_from_c),
-  {}
-};
-
 struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .name                    = "fortran",
-  .methods                 = _psc_mparticles_fortran_methods,
 };
 
 // ======================================================================
 // psc_particles: subclass "fortran"
 
+static struct mrc_obj_method psc_particles_fortran_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_particles_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_particles_fortran_copy_from_c),
+  {}
+};
+
 struct psc_particles_ops psc_particles_fortran_ops = {
   .name                    = "fortran",
   .size                    = sizeof(struct psc_particles_fortran),
+  .methods                 = psc_particles_fortran_methods,
   .setup                   = psc_particles_fortran_setup,
   .destroy                 = psc_particles_fortran_destroy,
 };
