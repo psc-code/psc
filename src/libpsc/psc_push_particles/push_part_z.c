@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_z(int p, fields_t *pf, particles_t *pp)
+do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
 {
 #define S0Z(off) s0z[off+2]
 #define S1Z(off) s1z[off+2]
@@ -214,7 +214,7 @@ psc_push_particles_generic_c_push_z(struct psc_push_particles *push,
 
 
 static void
-do_genc_calc_j_z(int p, fields_t *pf, particles_t *pp)
+do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
 {
 #define S0Z(off) s0z[off+2]
 #define S1Z(off) s1z[off+2]

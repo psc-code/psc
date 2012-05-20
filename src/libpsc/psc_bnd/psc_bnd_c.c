@@ -21,15 +21,15 @@ static void
 ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
 {
   mparticles_t *particles = _particles;
-  particles_t *pp = psc_mparticles_get_patch(particles, p);
-  particles_realloc(pp, new_n_particles);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  particles_realloc(prts, new_n_particles);
 }
 
 static void *
 ddcp_particles_get_addr(void *_particles, int p, int n)
 {
   mparticles_t *particles = _particles;
-  particles_t *prts = psc_mparticles_get_patch(particles, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   struct psc_particles_c *c = psc_particles_c(prts);
   return &c->particles[n];
 }
@@ -209,7 +209,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
-    particles_t *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_particles_c *c = psc_particles_c(prts);
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
@@ -295,9 +295,9 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   ddc_particles_comm(ddcp, particles);
 
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct ddcp_patch *patch = &ddcp->patches[p];
-    pp->n_part = patch->head;
+    prts->n_part = patch->head;
   }
   prof_stop(pr_B);
 

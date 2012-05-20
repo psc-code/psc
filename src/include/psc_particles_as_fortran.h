@@ -5,7 +5,6 @@
 #include "psc_particles_fortran.h"
 
 typedef particle_fortran_t particle_t;
-typedef particles_fortran_t particles_t;
 typedef mparticles_fortran_t mparticles_t;
 
 #define psc_mparticles_get_from       psc_mparticles_fortran_get_from

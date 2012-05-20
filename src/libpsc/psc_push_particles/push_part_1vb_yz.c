@@ -18,7 +18,7 @@ typedef fields_cache_t fields_curr_t;
 #include "c_common_push.c"
 
 static void
-do_push_part_1vb_yz(int p, fields_cache_t *pf, particles_t *pp)
+do_push_part_1vb_yz(int p, fields_cache_t *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t dqs = .5f * ppsc->coeff.eta * dt;

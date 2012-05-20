@@ -6,7 +6,6 @@
 
 typedef particle_double_real_t particle_real_t;
 typedef particle_double_t particle_t;
-typedef struct psc_particles particles_t;
 typedef mparticles_double_t mparticles_t;
 
 #define psc_mparticles_get_cf       psc_mparticles_get_double

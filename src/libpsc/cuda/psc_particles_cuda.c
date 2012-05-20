@@ -103,7 +103,7 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
 
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
-	     particles_t *pp, int n)
+	     struct psc_particles *pp, int n)
 {
   particle_t *p = particles_get_one(pp, n);
   particle_real_t dxi = 1.f / ppsc->dx[0];
@@ -123,7 +123,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 
 static inline int
 find_blockIdx(struct psc_patch *patch, struct cell_map *map,
-	      particles_t *pp, int n, int blocksize[3])
+	      struct psc_particles *pp, int n, int blocksize[3])
 {
   int cell_idx = find_cellIdx(patch, map, pp, n);
   return cell_idx / (blocksize[0] * blocksize[1] * blocksize[2]);
@@ -145,17 +145,17 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
 				 mparticles_t *particles_cf, unsigned int flags)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(particles_cf, p);
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  prts->n_part = pp_cf->n_part;
+  prts->n_part = prts_c->n_part;
   assert(prts->n_part <= cuda->n_alloced);
   
-  float4 *xi4  = calloc(pp_cf->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(pp_cf->n_part, sizeof(float4));
+  float4 *xi4  = calloc(prts_c->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts_c->n_part, sizeof(float4));
   
-  for (int n = 0; n < pp_cf->n_part; n++) {
-    particle_t *part_cf = particles_get_one(pp_cf, n);
+  for (int n = 0; n < prts_c->n_part; n++) {
+    particle_t *part_cf = particles_get_one(prts_c, n);
     
     real qni = part_cf->qni;
     real wni = part_cf->wni;
@@ -220,7 +220,7 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
     for (int n = 0; n <= prts->n_part; n++) {
       int block;
       if (n < prts->n_part) {
-	block = find_blockIdx(patch, &map, pp_cf, n, cuda->blocksize);
+	block = find_blockIdx(patch, &map, prts_c, n, cuda->blocksize);
       } else {
 	block = cuda->nr_blocks;
       }
@@ -259,7 +259,7 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
     for (int n = 0; n <= prts->n_part; n++) {
       int block;
       if (n < prts->n_part) {
-	block = find_cellIdx(patch, &map, pp_cf, n);
+	block = find_cellIdx(patch, &map, prts_c, n);
       } else {
 	block = map.N;
       }
@@ -353,7 +353,7 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 static int
 _psc_mparticles_cuda_nr_particles_by_patch(mparticles_cuda_t *mparticles, int p)
 {
-  return ((struct psc_particles *)psc_mparticles_get_patch_cuda(mparticles, p))->n_part;
+  return psc_mparticles_get_patch(mparticles, p)->n_part;
 }
 
 // ======================================================================

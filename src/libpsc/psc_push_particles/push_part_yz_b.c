@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 static void
-do_genc_push_part_yz_b(fields_t *pf, particles_t *pp)
+do_genc_push_part_yz_b(fields_t *pf, struct psc_particles *pp)
 {
   creal dt = ppsc->dt;
   creal yl = .5f * dt;

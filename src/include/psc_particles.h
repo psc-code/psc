@@ -15,7 +15,7 @@ MRC_CLASS_DECLARE(psc_particles, struct psc_particles);
 
 struct psc_mparticles {
   struct mrc_obj obj;
-  void **patches;
+  struct psc_particles **prts;
   int nr_patches;
   struct mrc_domain *domain;
   int *nr_particles_by_patch;
@@ -59,13 +59,6 @@ typedef struct psc_mparticles mparticles_##type##_t;			\
 									\
 extern struct psc_mparticles_ops psc_mparticles_##type##_ops;		\
 									\
-static inline struct psc_particles_##type *				\
-psc_mparticles_get_patch_##type(struct psc_mparticles *mp, int p)	\
-{									\
-  assert(psc_mparticles_ops(mp) == &psc_mparticles_##type##_ops);	\
-  return (struct psc_particles_##type *) mp->patches[p];		\
-}									\
-									\
 struct psc_mparticles *						        \
 psc_mparticles_get_##type(struct psc_mparticles *mp_base,		\
 			  unsigned int flags);				\
@@ -76,7 +69,7 @@ void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
 static inline struct psc_particles *
 psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
 {
-  return (struct psc_particles *) mp->patches[p];
+  return mp->prts[p];
 }
 
 MAKE_MPARTICLES_TYPE(fortran)

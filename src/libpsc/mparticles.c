@@ -31,10 +31,10 @@ _psc_mparticles_setup(struct psc_mparticles *mparticles)
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
 
   if (ops->alloc_patch) {
-    mparticles->patches = calloc(mparticles->nr_patches, sizeof(*mparticles->patches));
+    mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
     for (int p = 0; p < mparticles->nr_patches; p++) {
-      mparticles->patches[p] = ops->alloc_patch(p, mparticles->nr_particles_by_patch[p],
-						mparticles->flags);
+      mparticles->prts[p] = ops->alloc_patch(p, mparticles->nr_particles_by_patch[p],
+					     mparticles->flags);
     }
 
     free(mparticles->nr_particles_by_patch);
@@ -54,9 +54,9 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 
   if (ops->free_patch) {
     for (int p = 0; p < mparticles->nr_patches; p++) {
-      ops->free_patch(p, mparticles->patches[p]);
+      ops->free_patch(p, mparticles->prts[p]);
     }
-    free(mparticles->patches);
+    free(mparticles->prts);
   }
 }
 

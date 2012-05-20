@@ -61,7 +61,7 @@ particles_double_realloc(particles_double_t *pp, int new_n_part)
 static int
 _psc_mparticles_double_nr_particles_by_patch(mparticles_double_t *mparticles, int p)
 {
-  struct psc_particles *prts = mparticles->patches[p];
+  struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
   return prts->n_part;
 }
 
@@ -88,7 +88,7 @@ _psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *particles_base,
   }
 
   struct psc_patch *patch = ppsc->patch + p;
-  struct psc_particles *prts_base = particles_base->patches[p];
+  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
   struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
   prts_c->n_part = prts_base->n_part;
   assert(prts_c->n_part <= psc_particles_c(prts_c)->n_alloced);
@@ -128,7 +128,7 @@ _psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *particles_base,
   }
 
   struct psc_patch *patch = ppsc->patch + p;
-  struct psc_particles *prts_base = particles_base->patches[p];
+  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
   struct psc_particles_double *dbl = psc_particles_double(prts_base);
   struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
   prts_base->n_part = prts_c->n_part;

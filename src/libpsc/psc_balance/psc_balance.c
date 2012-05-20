@@ -33,8 +33,8 @@ psc_get_loads(struct psc *psc, double *loads)
   mparticles_t *mparticles = psc_mparticles_get_cf(psc->particles, 0);
 
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(mparticles, p);
-    loads[p] = pp->n_part + 1;
+    struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
+    loads[p] = prts->n_part + 1;
   }
 
   psc_mparticles_put_cf(mparticles, psc->particles, MP_DONT_COPY);
@@ -249,8 +249,8 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   mrc_domain_get_patches(domain_new, &nr_patches_new);
   
   for (int p = 0; p < nr_patches_new; p++) {
-    particles_t *pp = psc_mparticles_get_patch(particles_new, p);
-    pp->n_part = nr_particles_by_patch_new[p];
+    struct psc_particles *prts = psc_mparticles_get_patch(particles_new, p);
+    prts->n_part = nr_particles_by_patch_new[p];
   }
 
   MPI_Request *send_reqs = calloc(nr_patches_old, sizeof(*send_reqs));
@@ -262,7 +262,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
-      particles_t *pp_old = psc_mparticles_get_patch(particles_old, p);
+      struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, p);
       struct psc_particles_c *c_old = psc_particles_c(pp_old);
       int nn = pp_old->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Isend(c_old->particles, nn, MPI_PARTICLES_REAL, info_new.rank,
@@ -282,7 +282,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       recv_reqs[p] = MPI_REQUEST_NULL;
       //TODO Seed particles
     } else {
-      particles_t *pp_new = psc_mparticles_get_patch(particles_new, p);
+      struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
       struct psc_particles_c *c_new = psc_particles_c(pp_new);
       int nn = pp_new->n_part * (sizeof(particle_t)  / sizeof(particle_real_t));
       MPI_Irecv(c_new->particles, nn, MPI_PARTICLES_REAL, info_old.rank,
@@ -300,9 +300,9 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
       continue;
     }
 
-    particles_t *pp_old = psc_mparticles_get_patch(particles_old, info_old.patch);
+    struct psc_particles *pp_old = psc_mparticles_get_patch(particles_old, info_old.patch);
     struct psc_particles_c *c_old = psc_particles_c(pp_old);
-    particles_t *pp_new = psc_mparticles_get_patch(particles_new, p);
+    struct psc_particles *pp_new = psc_mparticles_get_patch(particles_new, p);
     struct psc_particles_c *c_new = psc_particles_c(pp_new);
     assert(pp_old->n_part == pp_new->n_part);
     for (int n = 0; n < pp_new->n_part; n++) {

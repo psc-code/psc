@@ -7,7 +7,7 @@
 #include <string.h>
 
 static void
-do_genc_push_part_xz(int p, fields_t *pf, particles_t *pp)
+do_genc_push_part_xz(int p, fields_t *pf, struct psc_particles *pp)
 {
 #define S0X(off) s0x[off+2]
 #define S0Z(off) s0z[off+2]

@@ -12,7 +12,7 @@
 // quicksort
 
 static void
-find_cell_indices(int p, particles_t *pp)
+find_cell_indices(int p, struct psc_particles *pp)
 {
 }
 

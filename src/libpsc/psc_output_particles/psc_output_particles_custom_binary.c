@@ -132,7 +132,7 @@ static void write_particles_to_file(struct psc_output_particles_custom_binary *o
   fwrite(&psc->timestep,sizeof(int),1,file);	//current timestep
   
   for (int p = 0; p < particles->nr_patches; p++) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
     
     //number of particles on this patch
     if(out_c->filter_func) {		//if filtering is active

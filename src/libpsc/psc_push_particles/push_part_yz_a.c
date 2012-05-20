@@ -8,7 +8,7 @@
 // test w/ C data structure, single precision 
 
 static void
-do_genc_push_part_yz_a(particles_t *pp)
+do_genc_push_part_yz_a(struct psc_particles *pp)
 {
   creal dt = ppsc->dt;
   creal yl = .5f * dt;

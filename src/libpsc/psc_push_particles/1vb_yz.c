@@ -8,7 +8,7 @@
 #include "c_common_push.c"
 
 static void
-do_push_part_1vb_yz(int p, fields_cache_t *pf, particles_t *pp)
+do_push_part_1vb_yz(int p, fields_cache_t *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;

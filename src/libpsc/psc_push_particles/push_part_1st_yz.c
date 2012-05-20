@@ -9,7 +9,7 @@
 #include "c_common_push.c"
 
 static void
-do_push_part_1st_yz(int p, fields_t *pf, particles_t *pp)
+do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 {
 #define S0Y(off) s0y[off+1]
 #define S0Z(off) s0z[off+1]

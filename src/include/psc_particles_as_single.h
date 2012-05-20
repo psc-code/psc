@@ -6,7 +6,6 @@
 
 typedef particle_single_real_t particle_real_t;
 typedef particle_single_t particle_t;
-typedef struct psc_particles particles_t;
 typedef mparticles_single_t mparticles_t;
 
 #define psc_mparticles_get_cf       psc_mparticles_get_single

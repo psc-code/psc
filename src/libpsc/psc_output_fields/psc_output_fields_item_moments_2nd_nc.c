@@ -11,7 +11,7 @@
 typedef fields_c_real_t creal;
 
 static void
-do_n_2nd_nc_run(int p, fields_t *pf, particles_t *pp, int m_NE, int m_NI, int m_NN)
+do_n_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts, int m_NE, int m_NI, int m_NN)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -19,8 +19,8 @@ do_n_2nd_nc_run(int p, fields_t *pf, particles_t *pp, int m_NE, int m_NI, int m_
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
       
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -117,7 +117,7 @@ n_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_v_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
+do_v_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -125,8 +125,8 @@ do_v_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;
@@ -225,7 +225,7 @@ v_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 }
 
 static void
-do_vv_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
+do_vv_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
@@ -233,8 +233,8 @@ do_vv_2nd_nc_run(int p, fields_t *pf, particles_t *pp)
   creal dzi = 1.f / ppsc->dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
-  for (int n = 0; n < pp->n_part; n++) {
-    particle_t *part = particles_get_one(pp, n);
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
 
     creal u = (part->xi - patch->xb[0]) * dxi;
     creal v = (part->yi - patch->xb[1]) * dyi;

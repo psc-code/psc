@@ -112,7 +112,7 @@ static void write_node_xdmf(struct psc_output_particles_xdmf *out_c, mparticles_
 	mparticles_t *particles = psc_mparticles_get_cf(particles_in, 0);
 	fprintf(out_c->xdmf,"<Grid GridType=\"Collection\" CollectionType=\"Spatial\"> \n");
 	for(int i=0; i<particles->nr_patches; i++) {
-		particles_t *pp = psc_mparticles_get_patch(particles, i);
+		struct psc_particles *pp = psc_mparticles_get_patch(particles, i);
 		if(pp->n_part>0) {write_patch_xdmf(out_c, &(pp->n_part), &i);}
 	}
 	fprintf(out_c->xdmf,"</Grid>"); 
@@ -121,7 +121,7 @@ static void write_node_hdf5(struct psc_output_particles_xdmf *out_c, mparticles_
 {  
   mparticles_t *particles = psc_mparticles_get_cf(particles_in, 0);  
   for (int p = 0; p < particles->nr_patches; p++) {	
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
     if(pp->n_part>0) {write_patch_hdf5(out_c, pp, &p);}    
   } 
 }
