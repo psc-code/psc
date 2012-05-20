@@ -210,7 +210,7 @@ psc_push_particles_ps_1vb_push_yz(struct psc_push_particles *push,
 
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = ppsc->patch + p;
-    particles_single_t *pp = psc_mparticles_get_patch_single(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
 
     fields_ip_t fld_ip;
     // FIXME, can do -1 .. 1?
@@ -220,8 +220,8 @@ psc_push_particles_ps_1vb_push_yz(struct psc_push_particles *push,
     fields_ip_alloc(&fld_ip, ib, ie, 9, 0); // JXI .. HZ
     ip_fields_from_em(p, &fld_ip, psc_mfields_get_patch(flds, p));
 
-    sb2_ps_1vb_yz_pxx_jxyz(p, &fld_ip, pp, 0);
-    sb0_ps_1vb_yz_pxx_jxyz(p, &fld_ip, pp, pp->n_part & ~3);
+    sb2_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, 0);
+    sb0_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, prts->n_part & ~3);
 
     ip_fields_to_j(p, &fld_ip, psc_mfields_get_patch(flds, p));
     fields_ip_free(&fld_ip);

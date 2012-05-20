@@ -1,6 +1,6 @@
 
 void
-PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, particles_single_t *pps, int n_start)
+PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int n_start)
 {
   static int pr;
   if (!pr) {
@@ -8,6 +8,7 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, particles_single_t *pps, int n_s
   }
   prof_start(pr);
 
+  struct psc_particles_single *sngl = psc_particles_single(prts);
   float dt = ppsc->dt, dth = .5f * ppsc->dt;
   float dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
   float fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -23,9 +24,9 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, particles_single_t *pps, int n_s
   v4s *_p_jx = (v4s *) &F3_IP(pf, JXI, 0,0,0);
   v4s *_p_jyz = (v4s *) &F3_IP(pf, JYI, 0,0,0);
 
-  int n_simd = pps->n_part & ~(SIMD_SIZE - 1);
+  int n_simd = prts->n_part & ~(SIMD_SIZE - 1);
   for (int n = n_start; n < n_simd; n += SIMD_SIZE) {
-    float * restrict prt = (float *) &pps->particles[n];
+    float * restrict prt = (float *) &sngl->particles[n];
 
     v4s xi, yi, zi, qw;
     PRT_LOAD_X(prt, xi, yi, zi, qw);
@@ -85,8 +86,6 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, particles_single_t *pps, int n_s
     v4s dx[2], x[2];
     CURR_JYZ_A(lgy, lgz, lfy, lfz, ogy, ogz, ym, zm, yp, zp, off0);
     CURR_JYZ_(_p_jy, _p_jz, off0);
-  }
-  for (int n = n_simd; n < pps->n_part; n++) {
   }
 
   prof_stop(pr);

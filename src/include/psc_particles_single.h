@@ -2,7 +2,7 @@
 #ifndef PSC_PARTICLE_SINGLE_H
 #define PSC_PARTICLE_SINGLE_H
 
-#include "psc.h"
+#include "psc_particles_private.h"
 
 typedef float particle_single_real_t;
 
@@ -15,18 +15,20 @@ typedef struct psc_particle_single {
   int kind;
 } particle_single_t;
 
-typedef struct psc_particles_single {
+struct psc_particles_single {
   particle_single_t *particles;
-  int n_part;
   int n_alloced;
-} particles_single_t;
+};
 
-void particles_single_realloc(particles_single_t *pp, int new_n_part);
+#define psc_particles_single(prts) mrc_to_subobj(prts, struct psc_particles_single)
+
+void particles_single_realloc(struct psc_particles *prts, int new_n_part);
 
 static inline particle_single_t *
-particles_single_get_one(particles_single_t *pp, int n)
+particles_single_get_one(struct psc_particles *prts, int n)
 {
-  return &pp->particles[n];
+  assert(psc_particles_ops(prts) == &psc_particles_single_ops);
+  return &psc_particles_single(prts)->particles[n];
 }
 
 // can't do this as inline function since struct psc isn't known yet

@@ -25,6 +25,7 @@ struct psc_particles_double {
 static inline particle_double_t *
 particles_double_get_one(struct psc_particles *prts, int n)
 {
+  assert(psc_particles_ops(prts) == &psc_particles_double_ops);
   return &psc_particles_double(prts)->particles[n];
 }
 

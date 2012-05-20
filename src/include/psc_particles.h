@@ -39,7 +39,7 @@ struct psc_mparticles_ops {
   int size_of_particles_t;
 };
 
-#define psc_mparticles_ops(mp) (struct psc_mparticles_ops *) ((mp)->obj.ops)
+#define psc_mparticles_ops(mp) ((struct psc_mparticles_ops *) ((mp)->obj.ops))
 
 #define MP_DONT_COPY (0x1)
 #define MP_NEED_BLOCK_OFFSETS (0x0100)
@@ -72,6 +72,12 @@ psc_mparticles_get_##type(struct psc_mparticles *mp_base,		\
 void psc_mparticles_put_##type(struct psc_mparticles *mp,		\
 			       struct psc_mparticles *mp_base,		\
 			       unsigned int flags);			\
+
+static inline struct psc_particles *
+psc_mparticles_get_patch(struct psc_mparticles *mp, int p)
+{
+  return mp->patches[p];
+}
 
 MAKE_MPARTICLES_TYPE(fortran)
 MAKE_MPARTICLES_TYPE(c)

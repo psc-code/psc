@@ -20,16 +20,17 @@ static void
 ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
 {
   mparticles_single_t *particles = _particles;
-  particles_single_t *pp = psc_mparticles_get_patch_single(particles, p);
-  particles_single_realloc(pp, new_n_particles);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  particles_single_realloc(prts, new_n_particles);
 }
 
 static void *
 ddcp_particles_get_addr(void *_particles, int p, int n)
 {
   mparticles_single_t *particles = _particles;
-  particles_single_t *pp = psc_mparticles_get_patch_single(particles, p);
-  return &pp->particles[n];
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  return sngl->particles;
 }
 
 static void
@@ -204,14 +205,15 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
-    particles_single_t *pp = psc_mparticles_get_patch_single(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_single *sngl = psc_particles_single(prts);
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       patch->nei[dir1].n_send = 0;
     }
-    for (int i = 0; i < pp->n_part; i++) {
-      particle_single_t *part = particles_single_get_one(pp, i);
+    for (int i = 0; i < prts->n_part; i++) {
+      particle_single_t *part = &sngl->particles[i];
       particle_single_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
       particle_single_real_t *pxi = &part->pxi;
       if (xi[0] >= 0 && xi[0] < xe[0] - xb[0] &&
@@ -219,7 +221,7 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	  xi[2] >= 0 && xi[2] < xe[2] - xb[2]) {
 	// fast path
 	// inside domain: move into right position
-	pp->particles[patch->head++] = *part;
+	sngl->particles[patch->head++] = *part;
       } else {
 	// slow path
 	int dir[3];
@@ -271,7 +273,7 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
 	  assert(xi[d] <= xe[d] - xb[d]);
 	}
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  pp->particles[patch->head++] = *part;
+	  sngl->particles[patch->head++] = *part;
 	} else {
 	  ddc_particles_queue(ddcp, patch, dir, part);
 	}
@@ -284,9 +286,9 @@ psc_bnd_single_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *partic
   ddc_particles_comm(ddcp, particles);
 
   psc_foreach_patch(psc, p) {
-    particles_single_t *pp = psc_mparticles_get_patch_single(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct ddcp_patch *patch = &ddcp->patches[p];
-    pp->n_part = patch->head;
+    prts->n_part = patch->head;
   }
   prof_stop(pr_B);
 

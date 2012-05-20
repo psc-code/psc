@@ -11,7 +11,6 @@ typedef mparticles_double_t mparticles_t;
 
 #define psc_mparticles_get_cf       psc_mparticles_get_double
 #define psc_mparticles_put_cf       psc_mparticles_put_double
-#define psc_mparticles_get_patch    psc_mparticles_get_patch_double
 #define particles_get_one           particles_double_get_one
 #define particles_realloc           particles_double_realloc
 #define particle_qni_div_mni        particle_double_qni_div_mni
