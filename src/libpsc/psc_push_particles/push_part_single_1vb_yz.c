@@ -6,13 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef fields_single_t fields_curr_t;
 #define F3_CURR F3_S
+#define cache_fields_from_em cache_fields_single_from_em
+#define cache_fields_to_j cache_fields_single_to_j
+#define psc_push_particles_1vb_push_yz psc_push_particles_single_1vb_push_yz
 
 #include "c_common_push.c"
 
 static void
-do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
+do_push_part_1vb_yz(int p, fields_cache_t *pf, particles_t *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -74,7 +76,7 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
     particle_real_t of[3];
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
-    particle_real_t fnqx = vxi[0] * particle_single_wni(part) * fnqx_kind[part->kind];
+    particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind];
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
     F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
@@ -115,8 +117,8 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
       second_dir = 1 - first_dir;
     }
 
-    particle_real_t fnq[2] = { particle_single_wni(part) * fnqy_kind[part->kind],
-			       particle_single_wni(part) * fnqz_kind[part->kind] };
+    particle_real_t fnq[2] = { particle_wni(part) * fnqy_kind[part->kind],
+			       particle_wni(part) * fnqz_kind[part->kind] };
 
     if (first_dir >= 0) {
       off[1-first_dir] = 0;
@@ -137,16 +139,16 @@ do_push_part_1vb_yz(int p, fields_single_t *pf, particles_t *pp)
 }
 
 void
-psc_push_particles_single_1vb_push_yz(struct psc_push_particles *push,
-				      mparticles_base_t *particles_base,
-				      mfields_base_t *flds_base)
+psc_push_particles_1vb_push_yz(struct psc_push_particles *push,
+			       mparticles_base_t *particles_base,
+			       mfields_base_t *flds_base)
 {
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
 
   static int pr;
   if (!pr) {
-    pr = prof_register("single_1vb_push_yz", 1., 0, 0);
+    pr = prof_register(PARTICLE_TYPE "_1vb_push_yz", 1., 0, 0);
   }
   prof_start(pr);
   psc_mfields_zero(flds, JXI);
@@ -154,10 +156,10 @@ psc_push_particles_single_1vb_push_yz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    fields_single_t fld;
-    cache_fields_single_from_em(p, &fld, psc_mfields_get_patch(flds, p));
+    fields_cache_t fld;
+    cache_fields_from_em(p, &fld, psc_mfields_get_patch(flds, p));
     do_push_part_1vb_yz(p, &fld, psc_mparticles_get_patch(particles, p));
-    cache_fields_single_to_j(p, &fld, psc_mfields_get_patch(flds, p));
+    cache_fields_to_j(p, &fld, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
 

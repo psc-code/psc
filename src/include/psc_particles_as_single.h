@@ -26,6 +26,7 @@ typedef mparticles_single_t mparticles_t;
 #define particle_real_sqrt          particle_single_real_sqrt
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_REAL
+#define PARTICLE_TYPE               "single"
 
 #endif
 

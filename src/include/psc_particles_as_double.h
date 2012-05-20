@@ -26,6 +26,7 @@ typedef mparticles_double_t mparticles_t;
 #define particle_real_sqrt          particle_double_real_sqrt
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_DOUBLE_REAL
+#define PARTICLE_TYPE               "double"
 
 #endif
 
