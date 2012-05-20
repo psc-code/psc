@@ -49,9 +49,9 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 
   FILE *file = fopen(filename, "w");
   for (int p = 0; p < particles->nr_patches; p++) {
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-    for (int n = 0; n < pp->n_part; n++) {
-      particle_c_t *part = particles_c_get_one(pp, n);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_c_t *part = particles_c_get_one(prts, n);
       fprintf(file, "%d %g %g %g %g %g %g %g %g %g\n",
 	      n, part->xi, part->yi, part->zi,
 	      part->pxi, part->pyi, part->pzi,

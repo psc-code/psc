@@ -30,7 +30,7 @@ static void create_xdmf (struct psc_output_particles_xdmf *out_c);
 static void write_node_hdf5(struct psc_output_particles_xdmf *out_c, mparticles_base_t *particles_in);
 static void write_node_xdmf(struct psc_output_particles_xdmf *out_c, mparticles_base_t *particles_in);
 static void write_patch_xdmf(struct psc_output_particles_xdmf *out_c, int *partnumber, int *patch);
-static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, particles_c_t *patchdata, int *patch);
+static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, struct psc_particles *patchdata, int *patch);
 static void close_xdmf(struct psc_output_particles_xdmf *out_c);
 static void close_hdf5(struct psc_output_particles_xdmf *out_c); 
 
@@ -150,7 +150,7 @@ static void write_patch_xdmf(struct psc_output_particles_xdmf *out_c, int *partn
 	}
 	fprintf(out_c->xdmf,"</Grid> \n"); 
 }
-static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, particles_c_t *patchdata, int *patch) {    
+static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, struct psc_particles *patchdata, int *patch) {    
     hid_t       memspace, filespace, dataset, dcpl;                                         
     hsize_t     memdims[1] = {9*patchdata->n_part}; 
     hsize_t	filedims[1] = {patchdata->n_part};
@@ -160,7 +160,7 @@ static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, particles_
                 block[1];                     
     char datasetname[80];
   
-
+    struct psc_particles_c *c = psc_particles_c(patchdata);
     //create dataspace for memory and file
     //these wont change for different particle properties
     memspace = H5Screate_simple (1, memdims, NULL);
@@ -191,7 +191,7 @@ static void write_patch_hdf5(struct psc_output_particles_xdmf *out_c, particles_
     	dataset = H5Dcreate2 (out_c->hdf5, datasetname, H5T_IEEE_F64LE, filespace, H5P_DEFAULT, dcpl, H5P_DEFAULT);
     
     	//write data to dataset
-    	H5Dwrite (dataset, H5T_IEEE_F64LE, memspace, filespace, H5P_DEFAULT, patchdata->particles);
+    	H5Dwrite (dataset, H5T_IEEE_F64LE, memspace, filespace, H5P_DEFAULT, c->particles);
 
     	//close dataset, so the next iteration can create it anew with another name
     	H5Dclose (dataset);

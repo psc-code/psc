@@ -29,8 +29,9 @@ static void *
 ddcp_particles_get_addr(void *_particles, int p, int n)
 {
   mparticles_t *particles = _particles;
-  particles_t *pp = psc_mparticles_get_patch(particles, p);
-  return &pp->particles[n];
+  particles_t *prts = psc_mparticles_get_patch(particles, p);
+  struct psc_particles_c *c = psc_particles_c(prts);
+  return &c->particles[n];
 }
 
 static void
@@ -208,14 +209,15 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
   psc_foreach_patch(psc, p) {
     calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
 
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    particles_t *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_c *c = psc_particles_c(prts);
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       patch->nei[dir1].n_send = 0;
     }
-    for (int i = 0; i < pp->n_part; i++) {
-      particle_t *part = particles_get_one(pp, i);
+    for (int i = 0; i < prts->n_part; i++) {
+      particle_t *part = particles_get_one(prts, i);
       particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
       particle_real_t *pxi = &part->pxi;
       if (xi[0] >= xb[0] && xi[0] < xe[0] &&
@@ -223,7 +225,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 	  xi[2] >= xb[2] && xi[2] < xe[2]) {
 	// fast path
 	// inside domain: move into right position
-	pp->particles[patch->head++] = *part;
+	c->particles[patch->head++] = *part;
       } else {
 	// slow path
 	bool drop=false;
@@ -279,7 +281,7 @@ psc_bnd_c_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_b
 	}
 	if (!drop){
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    pp->particles[patch->head++] = *part;
+	    c->particles[patch->head++] = *part;
 	  } else {
 	    ddc_particles_queue(ddcp, patch, dir, part);
 	  }

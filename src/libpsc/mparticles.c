@@ -188,7 +188,7 @@ psc_mparticles_check(mparticles_base_t *particles_base)
 
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     f_real xb[3], xe[3];
     
     // New-style boundary requirements.
@@ -199,8 +199,8 @@ psc_mparticles_check(mparticles_base_t *particles_base)
       xe[d] = patch->xb[d] + patch->ldims[d] * ppsc->dx[d];
     }
     
-    for (int i = 0; i < pp->n_part; i++) {
-      particle_c_t *part = particles_c_get_one(pp, i);
+    for (int i = 0; i < prts->n_part; i++) {
+      particle_c_t *part = particles_c_get_one(prts, i);
       if (part->xi < xb[0] || part->xi >= xe[0] || // FIXME xz only!
 	  part->zi < xb[2] || part->zi >= xe[2]) {
 	if (fail_cnt++ < 10) {

@@ -165,11 +165,11 @@ count_sort(mparticles_c_t *particles, int **off, int **map)
     int *ldims = ppsc->patch[p].ldims;
     int nr_indices = ldims[0] * ldims[1] * ldims[2] * nr_kinds;
     off[p] = calloc(nr_indices + 1, sizeof(*off[p]));
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
 
     // counting sort to get map 
-    for (int n = 0; n < pp->n_part; n++) {
-      particle_c_t *part = particles_c_get_one(pp, n);
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_c_t *part = particles_c_get_one(prts, n);
       int si = get_sort_index(p, part);
       off[p][si]++;
     }
@@ -184,9 +184,9 @@ count_sort(mparticles_c_t *particles, int **off, int **map)
     }
 
     // sort a map only, not the actual particles
-    map[p] = malloc(pp->n_part * sizeof(*map[p]));
-    for (int n = 0; n < pp->n_part; n++) {
-      particle_c_t *part = particles_c_get_one(pp, n);
+    map[p] = malloc(prts->n_part * sizeof(*map[p]));
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_c_t *part = particles_c_get_one(prts, n);
       int si = get_sort_index(p, part);
       map[p][off2[si]++] = n;
     }
@@ -252,7 +252,7 @@ make_local_particle_array(struct psc_output_particles *out,
   // copy particles to be written into temp array
   int nn = 0;
   for (int p = 0; p < particles->nr_patches; p++) {
-    particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     mrc_domain_get_local_patch_info(ppsc->mrc_domain, p, &info);
     int ilo[3], ihi[3], ld[3], sz;
     find_patch_bounds(hdf5, &info, ilo, ihi, ld, &sz);
@@ -268,7 +268,7 @@ make_local_particle_array(struct psc_output_particles *out,
 	    idx[p][jj     ] = nn + n_off;
 	    idx[p][jj + sz] = nn + n_off + off[p][si+1] - off[p][si];
 	    for (int n = off[p][si]; n < off[p][si+1]; n++, nn++) {
-	      particle_c_t *part = particles_c_get_one(pp, map[p][n]);
+	      particle_c_t *part = particles_c_get_one(prts, map[p][n]);
 	      arr[nn].x  = part->xi;
 	      arr[nn].y  = part->yi;
 	      arr[nn].z  = part->zi;

@@ -30,7 +30,7 @@ ddcp_particles_get_addr(void *_particles, int p, int n)
   mparticles_single_t *particles = _particles;
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   struct psc_particles_single *sngl = psc_particles_single(prts);
-  return sngl->particles;
+  return &sngl->particles[n];
 }
 
 static void

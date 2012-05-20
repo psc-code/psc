@@ -2,7 +2,7 @@
 #ifndef PSC_PARTICLE_C_H
 #define PSC_PARTICLE_C_H
 
-#include "psc.h"
+#include "psc_particles_private.h"
 
 #include <math.h>
 
@@ -19,18 +19,20 @@ typedef struct psc_particle_c {
   long              kind; // 64 bits to match the other members, for bnd exchange
 } particle_c_t;
 
-typedef struct psc_particles_c {
+struct psc_particles_c {
   particle_c_t *particles;
-  int n_part;
   int n_alloced;
-} particles_c_t;
+};
 
-void particles_c_realloc(particles_c_t *pp, int new_n_part);
+#define psc_particles_c(prts) mrc_to_subobj(prts, struct psc_particles_c)
+
+void particles_c_realloc(struct psc_particles *prts, int new_n_part);
 
 static inline particle_c_t *
-particles_c_get_one(particles_c_t *pp, int n)
+particles_c_get_one(struct psc_particles *prts, int n)
 {
-  return &pp->particles[n];
+  assert(psc_particles_ops(prts) == &psc_particles_c_ops);
+  return &psc_particles_c(prts)->particles[n];
 }
 
 static inline particle_c_real_t

@@ -89,12 +89,12 @@ _psc_mparticles_double_copy_to_c(int p, struct psc_mparticles *particles_base,
 
   struct psc_patch *patch = ppsc->patch + p;
   struct psc_particles *prts_base = particles_base->patches[p];
-  particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-  pp->n_part = prts_base->n_part;
-  assert(pp->n_part <= pp->n_alloced);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
+  prts_c->n_part = prts_base->n_part;
+  assert(prts_c->n_part <= psc_particles_c(prts_c)->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
-    particle_c_t *part = particles_c_get_one(pp, n);
+    particle_c_t *part = particles_c_get_one(prts_c, n);
     
     particle_c_real_t qni = ppsc->kinds[part_base->kind].q;
     particle_c_real_t mni = ppsc->kinds[part_base->kind].m;
@@ -130,12 +130,12 @@ _psc_mparticles_double_copy_from_c(int p, struct psc_mparticles *particles_base,
   struct psc_patch *patch = ppsc->patch + p;
   struct psc_particles *prts_base = particles_base->patches[p];
   struct psc_particles_double *dbl = psc_particles_double(prts_base);
-  particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-  prts_base->n_part = pp->n_part;
+  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
+  prts_base->n_part = prts_c->n_part;
   assert(prts_base->n_part <= dbl->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
     particle_double_t *part_base = particles_double_get_one(prts_base, n);
-    particle_c_t *part = particles_c_get_one(pp, n);
+    particle_c_t *part = particles_c_get_one(prts_c, n);
     
     particle_double_real_t qni_wni;
     if (part->qni != 0.) {

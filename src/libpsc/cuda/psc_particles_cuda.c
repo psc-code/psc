@@ -146,7 +146,7 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
 {
   struct psc_patch *patch = &ppsc->patch[p];
   particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
-  struct psc_particles *prts = psc_mparticles_get_patch_cuda(particles, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prts->n_part = pp_cf->n_part;
   assert(prts->n_part <= cuda->n_alloced);
@@ -299,17 +299,18 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 			       mparticles_c_t *particles_cf, unsigned int flags)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
-  struct psc_particles *prts = psc_mparticles_get_patch_cuda(particles, p);
-  pp_cf->n_part = prts->n_part;
-  assert(pp_cf->n_part <= pp_cf->n_alloced);
+  struct psc_particles *prts_c = psc_mparticles_get_patch(particles_cf, p);
+  struct psc_particles_c *c = psc_particles_c(prts_c);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  prts_c->n_part = prts->n_part;
+  assert(prts_c->n_part <= c->n_alloced);
   
   float4 *xi4  = calloc(prts->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
   
   __particles_cuda_from_device(prts, xi4, pxi4);
   
-  for (int n = 0; n < pp_cf->n_part; n++) {
+  for (int n = 0; n < prts_c->n_part; n++) {
     particle_real_t qni_div_mni = xi4[n].w;
     particle_real_t qni_wni = pxi4[n].w;
     particle_real_t qni, mni, wni;
@@ -329,7 +330,7 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
       }
     }
     
-    particle_t *part_base = particles_get_one(pp_cf, n);
+    particle_t *part_base = particles_get_one(prts_c, n);
     part_base->xi  = xi4[n].x + patch->xb[0];
     part_base->yi  = xi4[n].y + patch->xb[1];
     part_base->zi  = xi4[n].z + patch->xb[2];

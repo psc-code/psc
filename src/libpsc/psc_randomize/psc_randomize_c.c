@@ -16,12 +16,13 @@ psc_randomize_c_run(struct psc_randomize *randomize,
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   psc_foreach_patch(ppsc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
-    for (int i = 0; i < pp->n_part; i++) {
-      int j = random() % pp->n_part;
-      particle_t tmp = pp->particles[i];
-      pp->particles[i] = pp->particles[j];
-      pp->particles[j] = tmp;
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_c *c = psc_particles_c(prts);
+    for (int i = 0; i < prts->n_part; i++) {
+      int j = random() % prts->n_part;
+      particle_t tmp = c->particles[i];
+      c->particles[i] = c->particles[j];
+      c->particles[j] = tmp;
     }
   }
 
