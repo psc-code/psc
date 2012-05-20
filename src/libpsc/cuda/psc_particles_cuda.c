@@ -77,19 +77,17 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
   cell_map_free(&cuda->map);
 }
 
-#include "psc_particles_as_c.h"
-
 // FIXME, should go away and always be done within cuda for consistency
 
 static inline int
 find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 	     struct psc_particles *pp, int n)
 {
-  particle_t *p = particles_get_one(pp, n);
-  particle_real_t dxi = 1.f / ppsc->dx[0];
-  particle_real_t dyi = 1.f / ppsc->dx[1];
-  particle_real_t dzi = 1.f / ppsc->dx[2];
-  particle_real_t xi[3] = {
+  particle_c_t *p = particles_c_get_one(pp, n);
+  particle_c_real_t dxi = 1.f / ppsc->dx[0];
+  particle_c_real_t dyi = 1.f / ppsc->dx[1];
+  particle_c_real_t dzi = 1.f / ppsc->dx[2];
+  particle_c_real_t xi[3] = {
     (p->xi - patch->xb[0]) * dxi,
     (p->yi - patch->xb[1]) * dyi,
     (p->zi - patch->xb[2]) * dzi };
@@ -121,29 +119,28 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 }
 
 static void
-_psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
-				 mparticles_t *particles_cf, unsigned int flags)
+_psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
+				struct psc_particles *prts_c, unsigned int flags)
 {
+  int p = prts_cuda->p;
   struct psc_patch *patch = &ppsc->patch[p];
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles_cf, p);
-  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  prts->n_part = prts_c->n_part;
-  assert(prts->n_part <= cuda->n_alloced);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
+  prts_cuda->n_part = prts_c->n_part;
+  assert(prts_cuda->n_part <= cuda->n_alloced);
   
   float4 *xi4  = calloc(prts_c->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts_c->n_part, sizeof(float4));
   
   for (int n = 0; n < prts_c->n_part; n++) {
-    particle_t *part_cf = particles_get_one(prts_c, n);
+    particle_c_t *part_c = particles_c_get_one(prts_c, n);
     
-    real qni = part_cf->qni;
-    real wni = part_cf->wni;
+    real qni = part_c->qni;
+    real wni = part_c->wni;
     // FIXME!!! KH hack
-    if (part_cf->kind == 1 || part_cf->kind == 3) {
+    if (part_c->kind == 1 || part_c->kind == 3) {
       wni *= (1 + 1e-6);
     }
-    real qni_div_mni = qni / part_cf->mni;
+    real qni_div_mni = qni / part_c->mni;
     real qni_wni;
     if (qni != 0.) {
       qni_wni = qni * wni;
@@ -151,13 +148,13 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
       qni_wni = wni;
     }
     
-    xi4[n].x  = part_cf->xi - patch->xb[0];
-    xi4[n].y  = part_cf->yi - patch->xb[1];
-    xi4[n].z  = part_cf->zi - patch->xb[2];
+    xi4[n].x  = part_c->xi - patch->xb[0];
+    xi4[n].y  = part_c->yi - patch->xb[1];
+    xi4[n].z  = part_c->zi - patch->xb[2];
     xi4[n].w  = qni_div_mni;
-    pxi4[n].x = part_cf->pxi;
-    pxi4[n].y = part_cf->pyi;
-    pxi4[n].z = part_cf->pzi;
+    pxi4[n].x = part_c->pxi;
+    pxi4[n].y = part_c->pyi;
+    pxi4[n].z = part_c->pzi;
     pxi4[n].w = qni_wni;
     
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
@@ -197,9 +194,9 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
     // FIXME, should go away and can be taken over by c_offsets
     offsets = calloc(cuda->nr_blocks + 1, sizeof(*offsets));
     int last_block = -1;
-    for (int n = 0; n <= prts->n_part; n++) {
+    for (int n = 0; n <= prts_cuda->n_part; n++) {
       int block;
-      if (n < prts->n_part) {
+      if (n < prts_cuda->n_part) {
 	block = find_blockIdx(patch, &map, prts_c, n, cuda->blocksize);
       } else {
 	block = cuda->nr_blocks;
@@ -236,9 +233,9 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
     const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
     c_offsets = calloc(cuda->nr_blocks * cells_per_block + 1, sizeof(*c_offsets));
     int last_block = -1;
-    for (int n = 0; n <= prts->n_part; n++) {
+    for (int n = 0; n <= prts_cuda->n_part; n++) {
       int block;
-      if (n < prts->n_part) {
+      if (n < prts_cuda->n_part) {
 	block = find_cellIdx(patch, &map, prts_c, n);
       } else {
 	block = map.N;
@@ -253,17 +250,17 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
   }
   cell_map_free(&map);
   
-  __particles_cuda_to_device(prts, xi4, pxi4, offsets, c_offsets, c_pos);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4, offsets, c_offsets, c_pos);
   
-  if (particles->flags & MP_NEED_BLOCK_OFFSETS) {
-    cuda_sort_patch(p, prts);
+  if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
+    cuda_sort_patch(p, prts_cuda);
   }
-  if (particles->flags & MP_NEED_CELL_OFFSETS) {
-    cuda_sort_patch_by_cell(p, prts);
+  if (prts_cuda->flags & MP_NEED_CELL_OFFSETS) {
+    cuda_sort_patch_by_cell(p, prts_cuda);
   }
   // FIXME, sorting twice because we need both would be suboptimal
-  if ((particles->flags & MP_NEED_CELL_OFFSETS) && 
-      (particles->flags & MP_NEED_BLOCK_OFFSETS)) {
+  if ((prts_cuda->flags & MP_NEED_CELL_OFFSETS) && 
+      (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS)) {
     MHERE;
   }
   
@@ -275,25 +272,24 @@ _psc_mparticles_cuda_copy_from_c(int p, mparticles_cuda_t *particles,
 }
 
 static void
-_psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
-			       mparticles_c_t *particles_cf, unsigned int flags)
+_psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
+			      struct psc_particles *prts_c, unsigned int flags)
 {
+  int p = prts_cuda->p;
   struct psc_patch *patch = &ppsc->patch[p];
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles_cf, p);
   struct psc_particles_c *c = psc_particles_c(prts_c);
-  struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-  prts_c->n_part = prts->n_part;
+  prts_c->n_part = prts_cuda->n_part;
   assert(prts_c->n_part <= c->n_alloced);
   
-  float4 *xi4  = calloc(prts->n_part, sizeof(float4));
-  float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
+  float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
   
-  __particles_cuda_from_device(prts, xi4, pxi4);
+  __particles_cuda_from_device(prts_cuda, xi4, pxi4);
   
   for (int n = 0; n < prts_c->n_part; n++) {
-    particle_real_t qni_div_mni = xi4[n].w;
-    particle_real_t qni_wni = pxi4[n].w;
-    particle_real_t qni, mni, wni;
+    particle_c_real_t qni_div_mni = xi4[n].w;
+    particle_c_real_t qni_wni = pxi4[n].w;
+    particle_c_real_t qni, mni, wni;
     unsigned int kind;
     if (qni_div_mni == 0.) {
       qni = 0.;
@@ -310,7 +306,7 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
       }
     }
     
-    particle_t *part_base = particles_get_one(prts_c, n);
+    particle_c_t *part_base = particles_c_get_one(prts_c, n);
     part_base->xi  = xi4[n].x + patch->xb[0];
     part_base->yi  = xi4[n].y + patch->xb[1];
     part_base->zi  = xi4[n].z + patch->xb[2];
@@ -331,8 +327,8 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 // psc_mparticles: subclass "cuda"
   
 static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_mparticles_cuda_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_mparticles_cuda_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_cuda_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_cuda_copy_from_c),
   {}
 };
 

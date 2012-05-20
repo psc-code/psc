@@ -51,8 +51,8 @@ calc_vxi(particle_single_real_t vxi[3], particle_single_t *part)
 }
 
 static void
-_psc_mparticles_single_copy_to_c(int p, struct psc_mparticles *particles_base,
-				 mparticles_c_t *particles, unsigned int flags)
+_psc_particles_single_copy_to_c(struct psc_particles *prts_base,
+				struct psc_particles *prts_c, unsigned int flags)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -62,9 +62,7 @@ _psc_mparticles_single_copy_to_c(int p, struct psc_mparticles *particles_base,
     }
   }
 
-  struct psc_patch *patch = ppsc->patch + p;
-  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
+  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   prts_c->n_part = prts_base->n_part;
   assert(prts_c->n_part <= psc_particles_c(prts_c)->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
@@ -91,8 +89,8 @@ _psc_mparticles_single_copy_to_c(int p, struct psc_mparticles *particles_base,
 }
 
 static void
-_psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *particles_base,
-				   mparticles_c_t *particles, unsigned int flags)
+_psc_particles_single_copy_from_c(struct psc_particles *prts_base,
+				  struct psc_particles *prts_c, unsigned int flags)
 {
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -102,10 +100,8 @@ _psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *particles_base,
     }
   }
 
-  struct psc_patch *patch = ppsc->patch + p;
-  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   struct psc_particles_single *sngl = psc_particles_single(prts_base);
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
   prts_base->n_part = prts_c->n_part;
   assert(prts_base->n_part <= sngl->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
@@ -140,8 +136,8 @@ _psc_mparticles_single_copy_from_c(int p, struct psc_mparticles *particles_base,
 // psc_mparticles: subclass "single"
   
 static struct mrc_obj_method _psc_mparticles_single_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_mparticles_single_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_mparticles_single_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_single_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_single_copy_from_c),
   {}
 };
 

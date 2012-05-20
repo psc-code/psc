@@ -38,11 +38,9 @@ particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
 }
 
 static void
-_psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *particles_base,
-				  mparticles_c_t *particles, unsigned int flags)
+_psc_particles_fortran_copy_to_c(struct psc_particles *prts_base,
+				 struct psc_particles *prts_c, unsigned int flags)
 {
-  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
   struct psc_particles_c *c = psc_particles_c(prts_c);
   prts_c->n_part = prts_base->n_part;
   assert(prts_c->n_part <= c->n_alloced);
@@ -63,12 +61,10 @@ _psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *particles_base,
 }
 
 static void
-_psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *particles_base,
-				    mparticles_c_t *particles, unsigned int flags)
+_psc_particles_fortran_copy_from_c(struct psc_particles *prts_base,
+				   struct psc_particles *prts_c, unsigned int flags)
 {
-  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
   struct psc_particles_fortran *fort = psc_particles_fortran(prts_base);
-  struct psc_particles *prts_c = psc_mparticles_get_patch(particles, p);
   prts_base->n_part = prts_c->n_part;
   assert(prts_base->n_part <= fort->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
@@ -91,8 +87,8 @@ _psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *particles_base
 // psc_mparticles: subclass "fortran"
   
 static struct mrc_obj_method _psc_mparticles_fortran_methods[] = {
-  MRC_OBJ_METHOD("copy_to_c",         _psc_mparticles_fortran_copy_to_c),
-  MRC_OBJ_METHOD("copy_from_c",       _psc_mparticles_fortran_copy_from_c),
+  MRC_OBJ_METHOD("copy_to_c",         _psc_particles_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c",       _psc_particles_fortran_copy_from_c),
   {}
 };
 
