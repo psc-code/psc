@@ -18,8 +18,8 @@ psc_collision_fortran_run(struct psc_collision *collision,
     pr = prof_register("fort_collision", 1., 0, 0);
   }
   prof_start(pr);
-  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, 0);
-  PIC_bin_coll(pp);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, 0);
+  PIC_bin_coll(prts);
   prof_stop(pr);
 
   psc_mparticles_put_fortran(particles, particles_base, 0);

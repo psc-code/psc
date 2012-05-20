@@ -8,43 +8,63 @@
 static void *
 _psc_mparticles_fortran_alloc_patch(int p, int n_part, unsigned int flags)
 {
-  particles_fortran_t *pp = calloc(1, sizeof(*pp));
-  pp->n_part = n_part;
-  pp->n_alloced = n_part * 1.2;
-  pp->particles = calloc(pp->n_alloced, sizeof(*pp->particles));
-  return pp;
+  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
+  struct psc_particles *prts = psc_particles_create(comm);
+  psc_particles_set_type(prts, "fortran");
+  prts->n_part = n_part;
+  psc_particles_setup(prts);
+  return prts;
 }
 
 static void
 _psc_mparticles_fortran_free_patch(int p, void *_pp)
 {
-  particles_fortran_t *pp = _pp;
-  free(pp->particles);
-  pp->n_alloced = 0;
-  pp->particles = NULL;
-  free(pp);
+  struct psc_particles *prts = _pp;
+  psc_particles_destroy(prts);
+}
+
+// ======================================================================
+// psc_particles "fortran"
+
+static void
+psc_particles_fortran_setup(struct psc_particles *prts)
+{
+  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
+
+  fort->n_alloced = prts->n_part * 1.2;
+  fort->particles = calloc(fort->n_alloced, sizeof(*fort->particles));
+}
+
+static void
+psc_particles_fortran_destroy(struct psc_particles *prts)
+{
+  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
+
+  free(fort->particles);
 }
 
 void
-particles_fortran_realloc(particles_fortran_t *pp, int new_n_part)
+particles_fortran_realloc(struct psc_particles *prts, int new_n_part)
 {
-  if (new_n_part <= pp->n_alloced)
+  struct psc_particles_fortran *fort = psc_particles_fortran(prts);
+
+  if (new_n_part <= fort->n_alloced)
     return;
 
-  pp->n_alloced = new_n_part * 1.2;
-  pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
+  fort->n_alloced = new_n_part * 1.2;
+  fort->particles = realloc(fort->particles, fort->n_alloced * sizeof(*fort->particles));
 }
 
 static void
 _psc_mparticles_fortran_copy_to_c(int p, struct psc_mparticles *particles_base,
 				  mparticles_c_t *particles, unsigned int flags)
 {
-  particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
   particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-  pp->n_part = pp_base->n_part;
+  pp->n_part = prts_base->n_part;
   assert(pp->n_part <= pp->n_alloced);
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
+  for (int n = 0; n < prts_base->n_part; n++) {
+    particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(pp, n);
     
     part->xi  = part_base->xi;
@@ -63,12 +83,13 @@ static void
 _psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *particles_base,
 				    mparticles_c_t *particles, unsigned int flags)
 {
-  particles_fortran_t *pp_base = psc_mparticles_get_patch_fortran(particles_base, p);
+  struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+  struct psc_particles_fortran *fort = psc_particles_fortran(prts_base);
   particles_c_t *pp = psc_mparticles_get_patch_c(particles, p);
-  pp_base->n_part = pp->n_part;
-  assert(pp_base->n_part <= pp_base->n_alloced);
-  for (int n = 0; n < pp_base->n_part; n++) {
-    particle_fortran_t *part_base = particles_fortran_get_one(pp_base, n);
+  prts_base->n_part = pp->n_part;
+  assert(prts_base->n_part <= fort->n_alloced);
+  for (int n = 0; n < prts_base->n_part; n++) {
+    particle_fortran_t *part_base = particles_fortran_get_one(prts_base, n);
     particle_c_t *part = particles_c_get_one(pp, n);
     
     part_base->xi  = part->xi;
@@ -86,7 +107,7 @@ _psc_mparticles_fortran_copy_from_c(int p, struct psc_mparticles *particles_base
 static int
 _psc_mparticles_fortran_nr_particles_by_patch(mparticles_fortran_t *mparticles, int p)
 {
-  return psc_mparticles_get_patch_fortran(mparticles, p)->n_part;
+  return psc_mparticles_get_patch(mparticles, p)->n_part;
 }
 									
 // ======================================================================
@@ -104,6 +125,14 @@ struct psc_mparticles_ops psc_mparticles_fortran_ops = {
   .nr_particles_by_patch   = _psc_mparticles_fortran_nr_particles_by_patch,
   .alloc_patch             = _psc_mparticles_fortran_alloc_patch,
   .free_patch              = _psc_mparticles_fortran_free_patch,
-  .size_of_particles_t     = sizeof(particles_fortran_t),
 };
 
+// ======================================================================
+// psc_particles: subclass "fortran"
+
+struct psc_particles_ops psc_particles_fortran_ops = {
+  .name                    = "fortran",
+  .size                    = sizeof(struct psc_particles_fortran),
+  .setup                   = psc_particles_fortran_setup,
+  .destroy                 = psc_particles_fortran_destroy,
+};

@@ -2,8 +2,7 @@
 #ifndef PSC_PARTICLE_FORTRAN_H
 #define PSC_PARTICLE_FORTRAN_H
 
-#include "psc.h"
-#include "psc_particles.h"
+#include "psc_particles_private.h"
 
 // this matches the Fortran particle data structure
 
@@ -21,18 +20,20 @@ typedef struct psc_particle_fortran {
   particle_fortran_real_t wni;
 } particle_fortran_t;
 
-typedef struct psc_particles_fortran {
+struct psc_particles_fortran {
   struct psc_particle_fortran *particles;
-  int n_part;
   int n_alloced;
-} particles_fortran_t;
+};
 
-void particles_fortran_realloc(particles_fortran_t *pp, int new_n_part);
+#define psc_particles_fortran(prts) mrc_to_subobj(prts, struct psc_particles_fortran)
+
+void particles_fortran_realloc(struct psc_particles *prts, int new_n_part);
 
 static inline particle_fortran_t *
-particles_fortran_get_one(particles_fortran_t *pp, int n)
+particles_fortran_get_one(struct psc_particles *prts, int n)
 {
-  return &pp->particles[n];
+  assert(psc_particles_ops(prts) == &psc_particles_fortran_ops);
+  return &psc_particles_fortran(prts)->particles[n];
 }
 
 #endif

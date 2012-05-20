@@ -251,93 +251,93 @@ PSC_set_params(struct psc *psc)
 }
 
 void
-PIC_push_part_yz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_yz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xy(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xy(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_xy_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_xy_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_xz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_xz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_xyz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_xyz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_xyz_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_xyz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_z(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_z(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_z_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_z_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 		      pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_push_part_z_vay(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf)
+PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_push_part_z_vay_F77(&pp->n_part, &pp->particles[-1], &psc->p2A, &psc->p2B,
+  PIC_push_part_z_vay_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
 			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
 			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
 			  pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
 }
 
 void
-PIC_sort(particles_fortran_t *pp)
+PIC_sort(struct psc_particles *prts)
 {
-  PIC_sort_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_sort_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
-PIC_randomize(particles_fortran_t *pp)
+PIC_randomize(struct psc_particles *prts)
 {
-  PIC_randomize_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_randomize_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
-PIC_bin_coll(particles_fortran_t *pp)
+PIC_bin_coll(struct psc_particles *prts)
 {
-  PIC_bin_coll_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_bin_coll_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
-PIC_find_cell_indices(particles_fortran_t *pp)
+PIC_find_cell_indices(struct psc_particles *prts)
 {
-  PIC_find_cell_indices_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_find_cell_indices_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
@@ -389,30 +389,30 @@ PIC_fez(fields_fortran_t *pf, int m)
 }
 
 void
-PIC_pex(particles_fortran_t *pp)
+PIC_pex(struct psc_particles *prts)
 {
   f_int niloc_n;
-  PIC_pex_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  particles_fortran_realloc(pp, niloc_n);
-  PIC_pex_b_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_pex_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
+  particles_fortran_realloc(prts, niloc_n);
+  PIC_pex_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
-PIC_pey(particles_fortran_t *pp)
+PIC_pey(struct psc_particles *prts)
 {
   f_int niloc_n;
-  PIC_pey_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  particles_fortran_realloc(pp, niloc_n);
-  PIC_pey_b_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_pey_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
+  particles_fortran_realloc(prts, niloc_n);
+  PIC_pey_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
-PIC_pez(particles_fortran_t *pp)
+PIC_pez(struct psc_particles *prts)
 {
   f_int niloc_n;
-  PIC_pez_a_F77(&pp->n_part, &pp->particles[-1], &niloc_n);
-  particles_fortran_realloc(pp, niloc_n);
-  PIC_pez_b_F77(&pp->n_part, &pp->particles[-1]);
+  PIC_pez_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
+  particles_fortran_realloc(prts, niloc_n);
+  PIC_pez_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void

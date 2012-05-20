@@ -20,9 +20,9 @@ psc_sort_fortran_run(struct psc_sort *sort,
     pr = prof_register("fort_sort", 1., 0, 0);
   }
   prof_start(pr);
-  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, 0);
-  PIC_find_cell_indices(pp);
-  PIC_sort(pp);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, 0);
+  PIC_find_cell_indices(prts);
+  PIC_sort(prts);
   prof_stop(pr);
 
   psc_mparticles_put_fortran(particles, particles_base, 0);

@@ -4,16 +4,16 @@
 
 // Wrappers for Fortran functions
 
-void PIC_push_part_xyz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xy(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_xz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_yz(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_z(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_push_part_z_vay(struct psc *psc, int p, particles_fortran_t *pp, fields_fortran_t *pf);
-void PIC_sort(particles_fortran_t *pp);
-void PIC_randomize(particles_fortran_t *pp);
-void PIC_bin_coll(particles_fortran_t *pp);
-void PIC_find_cell_indices(particles_fortran_t *pp);
+void PIC_push_part_xyz(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_push_part_xy(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_push_part_xz(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_push_part_z(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *pp, fields_fortran_t *pf);
+void PIC_sort(struct psc_particles *pp);
+void PIC_randomize(struct psc_particles *pp);
+void PIC_bin_coll(struct psc_particles *pp);
+void PIC_find_cell_indices(struct psc_particles *pp);
 void PIC_msa_e(fields_fortran_t *pf);
 void PIC_msa_h(fields_fortran_t *pf);
 void PIC_msb_h(fields_fortran_t *pf);
@@ -37,9 +37,9 @@ void PIC_faz(fields_fortran_t *pf, int m);
 void PIC_fex(fields_fortran_t *pf, int m);
 void PIC_fey(fields_fortran_t *pf, int m);
 void PIC_fez(fields_fortran_t *pf, int m);
-void PIC_pex(particles_fortran_t *pp);
-void PIC_pey(particles_fortran_t *pp);
-void PIC_pez(particles_fortran_t *pp);
+void PIC_pex(struct psc_particles *pp);
+void PIC_pey(struct psc_particles *pp);
+void PIC_pez(struct psc_particles *pp);
 
 #endif
 

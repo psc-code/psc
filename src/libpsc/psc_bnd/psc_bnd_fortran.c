@@ -89,16 +89,16 @@ psc_bnd_fortran_exchange_particles(struct psc_bnd *bnd,
 
   assert(ppsc->nr_patches == 1);
   mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
-  particles_fortran_t *pp = psc_mparticles_get_patch_fortran(particles, 0);
+  struct psc_particles *prts = psc_mparticles_get_patch(particles, 0);
 
   if (ppsc->domain.gdims[0] > 1) {
-    PIC_pex(pp);
+    PIC_pex(prts);
   }
   if (ppsc->domain.gdims[1] > 1) {
-    PIC_pey(pp);
+    PIC_pey(prts);
   }
   if (ppsc->domain.gdims[2] > 1) {
-    PIC_pez(pp);
+    PIC_pez(prts);
   }
 
   psc_mparticles_put_fortran(particles, particles_base, 0);

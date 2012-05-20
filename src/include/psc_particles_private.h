@@ -20,5 +20,6 @@ struct psc_particles_ops {
 
 extern struct psc_particles_ops psc_particles_single_ops;
 extern struct psc_particles_ops psc_particles_double_ops;
+extern struct psc_particles_ops psc_particles_fortran_ops;
 
 #endif
