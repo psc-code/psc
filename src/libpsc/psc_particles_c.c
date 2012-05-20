@@ -6,24 +6,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static void *
-_psc_mparticles_c_alloc_patch(int p, int n_part, unsigned int flags)
-{
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
-  struct psc_particles *prts = psc_particles_create(comm);
-  psc_particles_set_type(prts, "c");
-  prts->n_part = n_part;
-  psc_particles_setup(prts);
-  return prts;
-}
-
-static void
-_psc_mparticles_c_free_patch(int p, void *_pp)
-{
-  struct psc_particles *prts = _pp;
-  psc_particles_destroy(prts);
-}
-
 // ======================================================================
 // psc_particles "c"
 
@@ -57,12 +39,6 @@ particles_c_realloc(struct psc_particles *prts, int new_n_part)
 
 // ======================================================================
 // psc_mparticles_c
-
-static int
-_psc_mparticles_c_nr_particles_by_patch(mparticles_c_t *mparticles, int p)
-{
-  return psc_mparticles_get_patch(mparticles, p)->n_part;
-}
 
 #ifdef HAVE_LIBHDF5_HL
 
@@ -125,12 +101,15 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
     int n_part;
     ierr = H5LTget_attribute_int(groupp, ".", "n_part", &n_part); CE;
-    struct psc_particles *prts = _psc_mparticles_c_alloc_patch(p, n_part, 0);
-    struct psc_particles_c *c = psc_particles_c(prts);
+    struct psc_particles *prts = psc_particles_create(psc_mparticles_comm(mparticles));
+    psc_particles_set_type(prts, "c");
+    prts->n_part = n_part;
+    prts->p = p;
+    psc_particles_setup(prts);
     mparticles->prts[p] = prts;
     if (n_part > 0) {
       ierr = H5LTread_dataset_double(groupp, "particles_c",
-				     (double *) c->particles); CE;
+				     (double *) psc_particles_c(prts)->particles); CE;
     }
 
     ierr = H5Gclose(groupp); CE;
@@ -150,9 +129,6 @@ struct psc_mparticles_ops psc_mparticles_c_ops = {
   .write                   = _psc_mparticles_c_write,
   .read                    = _psc_mparticles_c_read,
 #endif
-  .nr_particles_by_patch   = _psc_mparticles_c_nr_particles_by_patch,
-  .alloc_patch             = _psc_mparticles_c_alloc_patch,
-  .free_patch              = _psc_mparticles_c_free_patch,
 };
 
 // ======================================================================

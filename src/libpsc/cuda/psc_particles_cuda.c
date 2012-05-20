@@ -7,26 +7,6 @@
 
 EXTERN_C void cuda_init(int rank);
 
-static void *
-_psc_mparticles_cuda_alloc_patch(int p, int n_part, unsigned int flags)
-{
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
-  struct psc_particles *prts = psc_particles_create(comm);
-  psc_particles_set_type(prts, "cuda");
-  prts->n_part = n_part;
-  prts->p = p;
-  prts->flags = flags;
-  psc_particles_setup(prts);
-  return prts;
-}
-
-static void
-_psc_mparticles_cuda_free_patch(int p, void *_pp)
-{
-  struct psc_particles *prts = _pp;
-  psc_particles_destroy(prts);
-}
-
 // ======================================================================
 // psc_particles "cuda"
 
@@ -348,15 +328,6 @@ _psc_mparticles_cuda_copy_to_c(int p, mparticles_cuda_t *particles,
 }
 
 // ======================================================================
-// psc_mparticles_cuda
-
-static int
-_psc_mparticles_cuda_nr_particles_by_patch(mparticles_cuda_t *mparticles, int p)
-{
-  return psc_mparticles_get_patch(mparticles, p)->n_part;
-}
-
-// ======================================================================
 // psc_mparticles: subclass "cuda"
   
 static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
@@ -368,9 +339,6 @@ static struct mrc_obj_method _psc_mparticles_cuda_methods[] = {
 struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .name                    = "cuda",
   .methods                 = _psc_mparticles_cuda_methods,
-  .nr_particles_by_patch   = _psc_mparticles_cuda_nr_particles_by_patch,
-  .alloc_patch             = _psc_mparticles_cuda_alloc_patch,
-  .free_patch              = _psc_mparticles_cuda_free_patch,
 };
 
 // ======================================================================

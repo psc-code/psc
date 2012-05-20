@@ -30,33 +30,26 @@ _psc_mparticles_setup(struct psc_mparticles *mparticles)
   assert(mparticles->nr_particles_by_patch);
   struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
 
-  if (ops->alloc_patch) {
-    mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
-    for (int p = 0; p < mparticles->nr_patches; p++) {
-      mparticles->prts[p] = ops->alloc_patch(p, mparticles->nr_particles_by_patch[p],
-					     mparticles->flags);
-    }
-
-    free(mparticles->nr_particles_by_patch);
-    mparticles->nr_particles_by_patch = NULL;
+  mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
+  for (int p = 0; p < mparticles->nr_patches; p++) {
+    struct psc_particles *prts = psc_particles_create(psc_mparticles_comm(mparticles));
+    psc_particles_set_type(prts, ops->name);
+    prts->n_part = mparticles->nr_particles_by_patch[p];
+    prts->flags = mparticles->flags;
+    prts->p = p;
+    psc_particles_setup(prts);
+    mparticles->prts[p] = prts;
   }
 
-  if (ops->setup) {
-    ops->setup(mparticles);
-    return;
-  }
+  free(mparticles->nr_particles_by_patch);
+  mparticles->nr_particles_by_patch = NULL;
 }
 
 static void
 _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
-
-  if (ops->free_patch) {
-    for (int p = 0; p < mparticles->nr_patches; p++) {
-      ops->free_patch(p, mparticles->prts[p]);
-    }
-    free(mparticles->prts);
+  for (int p = 0; p < mparticles->nr_patches; p++) {
+    psc_particles_destroy(mparticles->prts[p]);
   }
 }
 
@@ -73,9 +66,8 @@ psc_mparticles_nr_particles(struct psc_mparticles *mparticles)
 int
 psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p)
 {
-  struct psc_mparticles_ops *ops = psc_mparticles_ops(mparticles);
-  assert(ops && ops->nr_particles_by_patch);
-  return ops->nr_particles_by_patch(mparticles, p);
+  struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
+  return prts->n_part;
 }
 
 struct psc_mparticles *

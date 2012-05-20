@@ -8,24 +8,6 @@
 #include <assert.h>
 #include <math.h>
 
-static void *
-_psc_mparticles_double_alloc_patch(int p, int n_part, unsigned int flags)
-{
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
-  struct psc_particles *prts = psc_particles_create(comm);
-  psc_particles_set_type(prts, "double");
-  prts->n_part = n_part;
-  psc_particles_setup(prts);
-  return prts;
-}
-
-static void
-_psc_mparticles_double_free_patch(int p, void *_pp)
-{
-  struct psc_particles *prts = _pp;
-  psc_particles_destroy(prts);
-}
-
 // ======================================================================
 // psc_particles "double"
 
@@ -57,13 +39,6 @@ particles_double_realloc(particles_double_t *pp, int new_n_part)
   pp->particles = realloc(pp->particles, pp->n_alloced * sizeof(*pp->particles));
 }
 #endif
-
-static int
-_psc_mparticles_double_nr_particles_by_patch(mparticles_double_t *mparticles, int p)
-{
-  struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
-  return prts->n_part;
-}
 
 static inline void
 calc_vxi(particle_double_real_t vxi[3], particle_double_t *part)
@@ -173,9 +148,6 @@ static struct mrc_obj_method _psc_mparticles_double_methods[] = {
 struct psc_mparticles_ops psc_mparticles_double_ops = {
   .name                    = "double",
   .methods                 = _psc_mparticles_double_methods,
-  .nr_particles_by_patch   = _psc_mparticles_double_nr_particles_by_patch,
-  .alloc_patch             = _psc_mparticles_double_alloc_patch,
-  .free_patch              = _psc_mparticles_double_free_patch,
 };
 
 // ======================================================================

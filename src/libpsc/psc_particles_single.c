@@ -8,24 +8,6 @@
 #include <assert.h>
 #include <math.h>
 
-static void *
-_psc_mparticles_single_alloc_patch(int p, int n_part, unsigned int flags)
-{
-  MPI_Comm comm = MPI_COMM_WORLD; // FIXME!
-  struct psc_particles *prts = psc_particles_create(comm);
-  psc_particles_set_type(prts, "single");
-  prts->n_part = n_part;
-  psc_particles_setup(prts);
-  return prts;
-}
-
-static void
-_psc_mparticles_single_free_patch(int p, void *_pp)
-{
-  struct psc_particles *prts = _pp;
-  psc_particles_destroy(prts);
-}
-
 // ======================================================================
 // psc_particles "single"
 
@@ -56,12 +38,6 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
 
   sngl->n_alloced = new_n_part * 1.2;
   sngl->particles = realloc(sngl->particles, sngl->n_alloced * sizeof(*sngl->particles));
-}
-
-static int
-_psc_mparticles_single_nr_particles_by_patch(mparticles_single_t *mparticles, int p)
-{
-  return psc_mparticles_get_patch(mparticles, p)->n_part;
 }
 
 static inline void
@@ -172,9 +148,6 @@ static struct mrc_obj_method _psc_mparticles_single_methods[] = {
 struct psc_mparticles_ops psc_mparticles_single_ops = {
   .name                    = "single",
   .methods                 = _psc_mparticles_single_methods,
-  .nr_particles_by_patch   = _psc_mparticles_single_nr_particles_by_patch,
-  .alloc_patch             = _psc_mparticles_single_alloc_patch,
-  .free_patch              = _psc_mparticles_single_free_patch,
 };
 
 // ======================================================================
