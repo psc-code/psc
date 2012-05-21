@@ -95,10 +95,11 @@ _psc_mfields_cuda_setup(mfields_cuda_t *flds)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   cuda_init(rank);
 
-  flds->data = calloc(ppsc->nr_patches, sizeof(fields_cuda_t));
+  flds->flds = calloc(ppsc->nr_patches, sizeof(*flds->flds));
 
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
+    fields_cuda_t *pf = calloc(1, sizeof(*pf));
+    flds->flds[p] = (struct psc_fields *) pf;
     struct psc_patch *patch = &ppsc->patch[p];
     for (int d = 0; d < 3; d++) {
       pf->ib[d] = -ppsc->ibn[d];
@@ -116,9 +117,10 @@ _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
     __fields_cuda_free(pf);
+    free(pf);
   }
   
-  free(flds->data);
+  free(flds->flds);
 }
 
 // ======================================================================

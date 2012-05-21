@@ -3,11 +3,16 @@
 #define PSC_FIELDS_H
 
 // ----------------------------------------------------------------------
-// mfields type
+// psc_fields class
+
+MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
+
+// ----------------------------------------------------------------------
+// psc_mfields class
 
 struct psc_mfields {
   struct mrc_obj obj;
-  void *data;
+  struct psc_fields **flds;
   int nr_patches;
   struct mrc_domain *domain;
   int nr_fields; //> number of field components
@@ -78,7 +83,7 @@ static inline fields_fortran_t *
 psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_fortran_ops);
-  return ((fields_fortran_t *)flds->data) + p;
+  return (fields_fortran_t *) flds->flds[p];
 }
 
 #include "psc_fields_c.h"
@@ -87,7 +92,7 @@ static inline fields_c_t *
 psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_c_ops);
-  return ((fields_c_t *)flds->data) + p;
+  return (fields_c_t *) flds->flds[p];
 }
 
 #include "psc_fields_single.h"
@@ -96,7 +101,7 @@ static inline fields_single_t *
 psc_mfields_get_patch_single(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_single_ops);
-  return ((fields_single_t *)flds->data) + p;
+  return (fields_single_t *) flds->flds[p];
 }
 
 #ifdef xUSE_SSE2
@@ -111,7 +116,7 @@ static inline fields_cuda_t *
 psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_cuda_ops);
-  return ((fields_cuda_t *)flds->data) + p;
+  return (fields_cuda_t *) flds->flds[p];
 }
 #endif
 
