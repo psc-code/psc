@@ -133,7 +133,7 @@ calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], in
 }
 
 static inline void
-curr_2d_vb_cell(fields_curr_t *pf, int i[2], particle_real_t x[2], particle_real_t dx[2],
+curr_2d_vb_cell(struct psc_fields *pf, int i[2], particle_real_t x[2], particle_real_t dx[2],
 		particle_real_t fnq[2], particle_real_t dxt[2], int off[2])
 {
   F3_CURR(pf, JYI, 0,i[0],i[1]  ) += fnq[0] * dx[0] * (.5f - x[1] - .5f * dx[1]);
@@ -152,79 +152,46 @@ curr_2d_vb_cell(fields_curr_t *pf, int i[2], particle_real_t x[2], particle_real
 
 #endif
 
+#ifdef F3_CACHE
+
 #include "psc_fields_single.h"
 
-static void __unused
-cache_fields_single_from_em(int p, struct psc_fields *fld, fields_t *pf)
+static struct psc_fields *
+cache_fields_from_em(int p, fields_t *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 
+  struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
   // FIXME, can do -1 .. 1?
   int ib[3] = { 0, -2, -2 };
   int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
   fields_single_alloc(fld, ib, ie, 9, 0); // JXI .. HZ
   for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3_S(fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
-      F3_S(fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
-      F3_S(fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
-      F3_S(fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
-      F3_S(fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
-      F3_S(fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
+      F3_CACHE(fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
+      F3_CACHE(fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
+      F3_CACHE(fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
+      F3_CACHE(fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
+      F3_CACHE(fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
+      F3_CACHE(fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
     }
   }
+  return fld;
 }
 
 static void __unused
-cache_fields_single_to_j(int p, struct psc_fields *fld, fields_t *pf)
+cache_fields_to_j(int p, struct psc_fields *fld, fields_t *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 
   for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3(pf, JXI, 0,iy,iz) += F3_S(fld, JXI, 0,iy,iz);
-      F3(pf, JYI, 0,iy,iz) += F3_S(fld, JYI, 0,iy,iz);
-      F3(pf, JZI, 0,iy,iz) += F3_S(fld, JZI, 0,iy,iz);
-    }
-  }
-  fields_single_free(fld);
-}
-
-#include "psc_fields_c.h"
-
-static void __unused
-cache_fields_c_from_em(int p, struct psc_fields *fld, fields_t *pf)
-{
-  struct psc_patch *patch = ppsc->patch + p;
-
-  // FIXME, can do -1 .. 1?
-  int ib[3] = { 0, -2, -2 };
-  int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-  fields_c_alloc(fld, ib, ie, 9, 0); // JXI .. HZ
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3_C(fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);
-      F3_C(fld, EY, 0,iy,iz) = F3(pf, EY, 0,iy,iz);
-      F3_C(fld, EZ, 0,iy,iz) = F3(pf, EZ, 0,iy,iz);
-      F3_C(fld, HX, 0,iy,iz) = F3(pf, HX, 0,iy,iz);
-      F3_C(fld, HY, 0,iy,iz) = F3(pf, HY, 0,iy,iz);
-      F3_C(fld, HZ, 0,iy,iz) = F3(pf, HZ, 0,iy,iz);
+      F3(pf, JXI, 0,iy,iz) += F3_CACHE(fld, JXI, 0,iy,iz);
+      F3(pf, JYI, 0,iy,iz) += F3_CACHE(fld, JYI, 0,iy,iz);
+      F3(pf, JZI, 0,iy,iz) += F3_CACHE(fld, JZI, 0,iy,iz);
     }
   }
 }
 
-static void __unused
-cache_fields_c_to_j(int p, struct psc_fields *fld, fields_t *pf)
-{
-  struct psc_patch *patch = ppsc->patch + p;
-
-  for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
-    for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
-      F3(pf, JXI, 0,iy,iz) += F3_C(fld, JXI, 0,iy,iz);
-      F3(pf, JYI, 0,iy,iz) += F3_C(fld, JYI, 0,iy,iz);
-      F3(pf, JZI, 0,iy,iz) += F3_C(fld, JZI, 0,iy,iz);
-    }
-  }
-  fields_c_free(fld);
-}
+#endif
 

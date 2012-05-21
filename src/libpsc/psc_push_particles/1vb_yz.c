@@ -8,7 +8,7 @@
 #include "c_common_push.c"
 
 static void
-do_push_part_1vb_yz(int p, fields_cache_t *pf, struct psc_particles *pp)
+do_push_part_1vb_yz(int p, struct psc_fields *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
@@ -143,13 +143,13 @@ psc_push_particles_1vb_push_yz(struct psc_push_particles *push,
   psc_mfields_zero(flds, JZI);
 
   psc_foreach_patch(ppsc, p) {
-    fields_cache_t fld;
-    cache_fields_from_em(p, &fld, psc_mfields_get_patch(flds, p));
+    struct psc_fields *fld = cache_fields_from_em(p, psc_mfields_get_patch(flds, p));
     struct psc_particles *prts =
       psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), PARTICLE_TYPE, 0);
-    do_push_part_1vb_yz(p, &fld, prts);
+    do_push_part_1vb_yz(p, fld, prts);
     psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
-    cache_fields_to_j(p, &fld, psc_mfields_get_patch(flds, p));
+    cache_fields_to_j(p, fld, psc_mfields_get_patch(flds, p));
+    psc_fields_destroy(fld);
   }
   prof_stop(pr);
 
