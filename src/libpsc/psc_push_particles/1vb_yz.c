@@ -40,13 +40,13 @@ do_push_part_1vb_yz(int p, fields_cache_t *pf, struct psc_particles *pp)
 
     INTERPOLATE_SETUP_1ST;
 
-    particle_real_t exq = INTERPOLATE_FIELD_1ST_C(EX, g, g);
-    particle_real_t eyq = INTERPOLATE_FIELD_1ST_C(EY, h, g);
-    particle_real_t ezq = INTERPOLATE_FIELD_1ST_C(EZ, g, h);
+    particle_real_t exq = INTERPOLATE_FIELD_1ST_CACHE(EX, g, g);
+    particle_real_t eyq = INTERPOLATE_FIELD_1ST_CACHE(EY, h, g);
+    particle_real_t ezq = INTERPOLATE_FIELD_1ST_CACHE(EZ, g, h);
 
-    particle_real_t hxq = INTERPOLATE_FIELD_1ST_C(HX, h, h);
-    particle_real_t hyq = INTERPOLATE_FIELD_1ST_C(HY, g, h);
-    particle_real_t hzq = INTERPOLATE_FIELD_1ST_C(HZ, h, g);
+    particle_real_t hxq = INTERPOLATE_FIELD_1ST_CACHE(HX, h, h);
+    particle_real_t hyq = INTERPOLATE_FIELD_1ST_CACHE(HY, g, h);
+    particle_real_t hzq = INTERPOLATE_FIELD_1ST_CACHE(HZ, h, g);
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dq_kind[part->kind];
@@ -65,10 +65,10 @@ do_push_part_1vb_yz(int p, fields_cache_t *pf, struct psc_particles *pp)
     find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
     particle_real_t fnqx = vxi[0] * particle_wni(part) * fnqx_kind[part->kind];
-    F3_S(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
-    F3_S(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
-    F3_S(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
-    F3_S(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
+    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
+    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]  ) += (      of[1]) * (1.f - of[2]) * fnqx;
+    F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]+1) += (1.f - of[1]) * (      of[2]) * fnqx;
+    F3_CURR(pf, JXI, 0,lf[1]+1,lf[2]+1) += (      of[1]) * (      of[2]) * fnqx;
 
     // x^(n+1), p^(n+1) -> x^(n+1.5f), p^(n+1)
     calc_vxi(vxi, part);

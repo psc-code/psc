@@ -97,11 +97,11 @@ psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
 
 #include "psc_fields_single.h"
 typedef struct psc_mfields mfields_single_t;
-static inline fields_single_t *
+static inline struct psc_fields *
 psc_mfields_get_patch_single(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_single_ops);
-  return (fields_single_t *) flds->flds[p];
+  return flds->flds[p];
 }
 
 #ifdef xUSE_SSE2

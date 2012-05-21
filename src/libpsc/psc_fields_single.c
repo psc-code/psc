@@ -10,7 +10,7 @@
 // FIXME, very duplicated from psc_fields_c.c
 
 void
-fields_single_alloc(fields_single_t *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
+fields_single_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -20,24 +20,24 @@ fields_single_alloc(fields_single_t *pf, int ib[3], int ie[3], int nr_comp, int 
   }
   pf->nr_comp = nr_comp;
   pf->first_comp = first_comp;
-  pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
+  pf->data = calloc(nr_comp * size, sizeof(fields_single_real_t));
 }
 
 void
-fields_single_free(fields_single_t *pf)
+fields_single_free(struct psc_fields *pf)
 {
-  free(pf->flds);
+  free(pf->data);
 }
 
 void
-fields_single_zero(fields_single_t *pf, int m)
+fields_single_zero(struct psc_fields *pf, int m)
 {
   memset(&F3_S(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
 	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_single_real_t));
 }
 
 void
-fields_single_set(fields_single_t *pf, int m, fields_single_real_t val)
+fields_single_set(struct psc_fields *pf, int m, fields_single_real_t val)
 {
   for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
     for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
@@ -49,7 +49,7 @@ fields_single_set(fields_single_t *pf, int m, fields_single_real_t val)
 }
 
 void
-fields_single_copy_comp(fields_single_t *pto, int m_to, fields_single_t *pfrom, int m_from)
+fields_single_copy_comp(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
 {
   for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
     for (int jy = pto->ib[1]; jy < pto->ib[1] + pto->im[1]; jy++) {
@@ -61,7 +61,7 @@ fields_single_copy_comp(fields_single_t *pto, int m_to, fields_single_t *pfrom, 
 }
 
 void
-fields_single_axpy(fields_single_t *y, fields_single_real_t a, fields_single_t *x)
+fields_single_axpy(struct psc_fields *y, fields_single_real_t a, struct psc_fields *x)
 {
   assert(y->nr_comp == x->nr_comp);
   for (int m = 0; m < y->nr_comp; m++) {
@@ -76,7 +76,7 @@ fields_single_axpy(fields_single_t *y, fields_single_real_t a, fields_single_t *
 }
 
 void
-fields_single_axpy_comp(fields_single_t *y, int ym, fields_single_real_t a, fields_single_t *x, int xm)
+fields_single_axpy_comp(struct psc_fields *y, int ym, fields_single_real_t a, struct psc_fields *x, int xm)
 {
   for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
     for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
@@ -88,7 +88,7 @@ fields_single_axpy_comp(fields_single_t *y, int ym, fields_single_real_t a, fiel
 }
 
 void
-fields_single_scale(fields_single_t *pf, fields_single_real_t val)
+fields_single_scale(struct psc_fields *pf, fields_single_real_t val)
 {
   for (int m = 0; m < pf->nr_comp; m++) {
     for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
@@ -164,7 +164,7 @@ _psc_mfields_single_setup(mfields_single_t *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_single_t *pf = calloc(1, sizeof(*pf));
+    struct psc_fields *pf = calloc(1, sizeof(*pf));
     flds->flds[p] = (struct psc_fields *) pf;
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
@@ -178,7 +178,7 @@ static void
 _psc_mfields_single_destroy(mfields_single_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_single_t *pf = psc_mfields_get_patch_single(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch_single(flds, p);
     fields_single_free(pf);
     free(pf);
   }
