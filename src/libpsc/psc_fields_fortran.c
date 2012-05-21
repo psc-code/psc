@@ -30,8 +30,13 @@ fields_fortran_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp,
   }
 }
 
-void
-fields_fortran_free(struct psc_fields *pf)
+static void
+psc_fields_fortran_setup(struct psc_fields *pf)
+{
+}
+
+static void
+psc_fields_fortran_destroy(struct psc_fields *pf)
 {
   fields_fortran_real_t **flds = pf->data;
   free(flds[0]);
@@ -113,8 +118,10 @@ _psc_mfields_fortran_setup(mfields_fortran_t *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = calloc(1, sizeof(*pf));
-    flds->flds[p] = (struct psc_fields *) pf;
+    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
+    psc_fields_set_type(pf, "fortran");
+    psc_fields_setup(pf);
+    flds->flds[p] = pf;
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
@@ -128,8 +135,7 @@ _psc_mfields_fortran_destroy(mfields_fortran_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch_fortran(flds, p);
-    fields_fortran_free(pf);
-    free(pf);
+    psc_fields_destroy(pf);
   }
   free(flds->flds);
 }									
@@ -171,5 +177,14 @@ struct psc_mfields_ops psc_mfields_fortran_ops = {
   .destroy               = _psc_mfields_fortran_destroy,
   .copy_to_c             = psc_mfields_fortran_copy_to_c,
   .copy_from_c           = psc_mfields_fortran_copy_from_c,
+};
+
+// ======================================================================
+// psc_fields: subclass "fortran"
+  
+struct psc_fields_ops psc_fields_fortran_ops = {
+  .name                  = "fortran",
+  .setup                 = psc_fields_fortran_setup,
+  .destroy               = psc_fields_fortran_destroy,
 };
 

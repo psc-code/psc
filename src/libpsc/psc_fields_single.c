@@ -23,8 +23,13 @@ fields_single_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, in
   pf->data = calloc(nr_comp * size, sizeof(fields_single_real_t));
 }
 
-void
-fields_single_free(struct psc_fields *pf)
+static void
+psc_fields_single_setup(struct psc_fields *pf)
+{
+}
+
+static void
+psc_fields_single_destroy(struct psc_fields *pf)
 {
   free(pf->data);
 }
@@ -164,8 +169,10 @@ _psc_mfields_single_setup(mfields_single_t *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = calloc(1, sizeof(*pf));
-    flds->flds[p] = (struct psc_fields *) pf;
+    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
+    psc_fields_set_type(pf, "single");
+    psc_fields_setup(pf);
+    flds->flds[p] = pf;
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
@@ -179,8 +186,7 @@ _psc_mfields_single_destroy(mfields_single_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch_single(flds, p);
-    fields_single_free(pf);
-    free(pf);
+    psc_fields_destroy(pf);
   }
   free(flds->flds);
 }
@@ -198,5 +204,14 @@ struct psc_mfields_ops psc_mfields_single_ops = {
   .copy_comp             = _psc_mfields_single_copy_comp,
   .axpy                  = _psc_mfields_single_axpy,
   .axpy_comp             = _psc_mfields_single_axpy_comp,
+};
+
+// ======================================================================
+// psc_fields: subclass "single"
+  
+struct psc_fields_ops psc_fields_single_ops = {
+  .name                  = "single",
+  .setup                 = psc_fields_single_setup,
+  .destroy               = psc_fields_single_destroy,
 };
 

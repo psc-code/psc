@@ -20,6 +20,8 @@ struct psc_fields_ops {
 
 // ======================================================================
 
+extern struct psc_fields_ops psc_fields_c_ops;
 extern struct psc_fields_ops psc_fields_single_ops;
+extern struct psc_fields_ops psc_fields_fortran_ops;
 
 #endif

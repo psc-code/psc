@@ -28,21 +28,23 @@ do_push_part_1sff_xz(int p, fields_t *pf, struct psc_particles *pp)
 
   struct psc_patch *patch = &ppsc->patch[p];
 
-  struct psc_fields f_avg;
+  struct psc_fields *f_avg = psc_fields_create(psc_fields_comm(pf));
+  psc_fields_set_type(f_avg, "c");
+  psc_fields_setup(f_avg);
   // FIXME, is -1 .. 1 always enough?
   int ib[3] = { -2, 0, -2 };
   int ie[3] = { patch->ldims[0] + 2, 1, patch->ldims[2] + 2 };
-  fields_c_alloc(&f_avg, ib, ie, 6, 0);
+  fields_c_alloc(f_avg, ib, ie, 6, 0);
 
   for (int iz = -1; iz < patch->ldims[2] + 1; iz++) {
     for (int ix = -1; ix < patch->ldims[0] + 1; ix++) {
-      F3_C(&f_avg, 0, ix,0,iz) = .5 * (F3_C(pf, EX, ix,0,iz) + F3_C(pf, EX, ix-1,0,iz));
-      F3_C(&f_avg, 1, ix,0,iz) = F3_C(pf, EY, ix,0,iz);
-      F3_C(&f_avg, 2, ix,0,iz) = .5 * (F3_C(pf, EZ, ix,0,iz) + F3_C(pf, EZ, ix,0,iz-1));
-      F3_C(&f_avg, 3, ix,0,iz) = .5 * (F3_C(pf, HX, ix,0,iz) + F3_C(pf, HX, ix,0,iz-1));
-      F3_C(&f_avg, 4, ix,0,iz) = .25 * (F3_C(pf, HY, ix  ,0,iz) + F3_C(pf, HY, ix  ,0,iz-1) +
+      F3_C(f_avg, 0, ix,0,iz) = .5 * (F3_C(pf, EX, ix,0,iz) + F3_C(pf, EX, ix-1,0,iz));
+      F3_C(f_avg, 1, ix,0,iz) = F3_C(pf, EY, ix,0,iz);
+      F3_C(f_avg, 2, ix,0,iz) = .5 * (F3_C(pf, EZ, ix,0,iz) + F3_C(pf, EZ, ix,0,iz-1));
+      F3_C(f_avg, 3, ix,0,iz) = .5 * (F3_C(pf, HX, ix,0,iz) + F3_C(pf, HX, ix,0,iz-1));
+      F3_C(f_avg, 4, ix,0,iz) = .25 * (F3_C(pf, HY, ix  ,0,iz) + F3_C(pf, HY, ix  ,0,iz-1) +
 					F3_C(pf, HY, ix-1,0,iz) + F3_C(pf, HY, ix-1,0,iz-1));
-      F3_C(&f_avg, 5, ix,0,iz) = .5 * (F3_C(pf, HZ, ix,0,iz) + F3_C(pf, HZ, ix-1,0,iz));
+      F3_C(f_avg, 5, ix,0,iz) = .5 * (F3_C(pf, HZ, ix,0,iz) + F3_C(pf, HZ, ix-1,0,iz));
     }
   }
 
@@ -81,10 +83,10 @@ do_push_part_1sff_xz(int p, fields_t *pf, struct psc_particles *pp)
     // FIELD INTERPOLATION
 
 #define INTERPOLATE_FIELD(m, gx, gz)					\
-    (gz##0z*(gx##0x*F3_C(&f_avg, m-EX, l##gx##1  ,0,l##gz##3  ) +	\
-	     gx##1x*F3_C(&f_avg, m-EX, l##gx##1+1,0,l##gz##3  )) +	\
-     gz##1z*(gx##0x*F3_C(&f_avg, m-EX, l##gx##1  ,0,l##gz##3+1) +	\
-	     gx##1x*F3_C(&f_avg, m-EX, l##gx##1+1,0,l##gz##3+1)))	\
+    (gz##0z*(gx##0x*F3_C(f_avg, m-EX, l##gx##1  ,0,l##gz##3  ) +	\
+	     gx##1x*F3_C(f_avg, m-EX, l##gx##1+1,0,l##gz##3  )) +	\
+     gz##1z*(gx##0x*F3_C(f_avg, m-EX, l##gx##1  ,0,l##gz##3+1) +	\
+	     gx##1x*F3_C(f_avg, m-EX, l##gx##1+1,0,l##gz##3+1)))	\
       
     particle_real_t exq = INTERPOLATE_FIELD(EX, g, g);
     particle_real_t eyq = INTERPOLATE_FIELD(EY, g, g);
@@ -210,7 +212,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, struct psc_particles *pp)
     }
   }
 
-  fields_c_free(&f_avg);
+  psc_fields_destroy(f_avg);
 }
 
 void

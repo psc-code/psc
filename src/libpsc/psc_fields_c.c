@@ -31,8 +31,13 @@ fields_c_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int fir
 #endif
 }
 
-void
-fields_c_free(struct psc_fields *pf)
+static void
+psc_fields_c_setup(struct psc_fields *pf)
+{
+}
+
+static void
+psc_fields_c_destroy(struct psc_fields *pf)
 {
   free(pf->data);
 }
@@ -172,8 +177,9 @@ _psc_mfields_c_setup(mfields_c_t *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = calloc(1, sizeof(*pf));
-    flds->flds[p] = (struct psc_fields *) pf;
+    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
+    psc_fields_set_type(pf, "c");
+    flds->flds[p] = pf;
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
 		   patches[p].ldims[1] + flds->ibn[1],
@@ -187,7 +193,7 @@ _psc_mfields_c_destroy(mfields_c_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch_c(flds, p);
-    fields_c_free(pf);
+    psc_fields_destroy(pf);
   }
   free(flds->flds);
 }
@@ -341,5 +347,14 @@ struct psc_mfields_ops psc_mfields_c_ops = {
   .copy_to_cuda          = psc_mfields_c_copy_to_cuda,
   .copy_from_cuda        = psc_mfields_c_copy_from_cuda,
 #endif
+};
+
+// ======================================================================
+// psc_fields: subclass "c"
+  
+struct psc_fields_ops psc_fields_c_ops = {
+  .name                  = "c",
+  .setup                 = psc_fields_c_setup,
+  .destroy               = psc_fields_c_destroy,
 };
 
