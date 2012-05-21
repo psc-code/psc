@@ -197,9 +197,7 @@ psc_push_particles_generic_c_push_z(struct psc_push_particles *push,
     pr = prof_register("genc_part_z", 1., 0, 0);
   }
   prof_start(pr);
-  psc_mfields_zero(flds, JXI);
-  psc_mfields_zero(flds, JYI);
-  psc_mfields_zero(flds, JZI);
+  psc_mfields_zero_range(flds, JXI, JXI + 3);
   
   psc_foreach_patch(ppsc, p) {
     do_genc_push_part_z(p, psc_mfields_get_patch(flds, p),
@@ -319,9 +317,7 @@ psc_push_particles_generic_c_calc_j_z(struct psc_push_particles *push,
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
   mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
 
-  psc_mfields_zero(flds, JXI);
-  psc_mfields_zero(flds, JYI);
-  psc_mfields_zero(flds, JZI);
+  psc_mfields_zero_range(flds, JXI, JXI + 3);
   
   psc_foreach_patch(ppsc, p) {
     do_genc_calc_j_z(p, psc_mfields_get_patch(flds, p),

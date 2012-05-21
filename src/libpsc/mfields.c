@@ -73,65 +73,72 @@ psc_mfields_comp_name(struct psc_mfields *flds, int m)
 }
 
 void
-psc_mfields_zero(struct psc_mfields *flds, int m)
+psc_mfields_zero_comp(struct psc_mfields *flds, int m)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
-  assert(ops && ops->zero_comp);
-  return ops->zero_comp(flds, m);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    psc_fields_zero_comp(psc_mfields_get_patch(flds, p), m);
+  }
 }
 
 void
 psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me)
 {
   for (int m = mb; m < me; m++) {
-    psc_mfields_zero(flds, m);
+    psc_mfields_zero_comp(flds, m);
   }
 }
 
 void
 psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
-  assert(ops && ops->set_comp);
-  return ops->set_comp(flds, m, alpha);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    psc_fields_set_comp(psc_mfields_get_patch(flds, p), m, alpha);
+  }
+}
+
+void
+psc_mfields_scale_comp(struct psc_mfields *flds, int m, double alpha)
+{
+  for (int p = 0; p < flds->nr_patches; p++) {
+    psc_fields_scale_comp(psc_mfields_get_patch(flds, p), m, alpha);
+  }
 }
 
 void
 psc_mfields_scale(struct psc_mfields *flds, double alpha)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(flds);
-  assert(ops && ops->scale);
-  return ops->scale(flds, alpha);
+  for (int m = flds->first_comp; m < flds->first_comp + flds->nr_fields; m++) {
+    psc_mfields_scale_comp(flds, m, alpha);
+  }
 }
 
 void
 psc_mfields_copy_comp(struct psc_mfields *to, int mto,
 		      struct psc_mfields *from, int mfrom)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(to);
-  assert(ops == psc_mfields_ops(from));
-  assert(ops && ops->copy_comp);
-  return ops->copy_comp(to, mto, from, mfrom);
-}
-
-void
-psc_mfields_axpy(struct psc_mfields *yf, double alpha,
-		 struct psc_mfields *xf)
-{
-  struct psc_mfields_ops *ops = psc_mfields_ops(yf);
-  assert(ops == psc_mfields_ops(xf));
-  assert(ops && ops->axpy);
-  return ops->axpy(yf, alpha, xf);
+  for (int p = 0; p < to->nr_patches; p++) {
+    psc_fields_copy_comp(psc_mfields_get_patch(to, p), mto,
+			 psc_mfields_get_patch(from, p), mfrom);
+  }
 }
 
 void
 psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
 		      struct psc_mfields *xf, int xm)
 {
-  struct psc_mfields_ops *ops = psc_mfields_ops(yf);
-  assert(ops == psc_mfields_ops(xf));
-  assert(ops && ops->axpy_comp);
-  return ops->axpy_comp(yf, ym, alpha, xf, xm);
+  for (int p = 0; p < yf->nr_patches; p++) {
+    psc_fields_axpy_comp(psc_mfields_get_patch(yf, p), ym, alpha,
+			 psc_mfields_get_patch(xf, p), xm);
+  }
+}
+
+void
+psc_mfields_axpy(struct psc_mfields *yf, double alpha,
+		 struct psc_mfields *xf)
+{
+  for (int m = yf->first_comp; m < yf->first_comp + yf->nr_fields; m++) {
+    psc_mfields_axpy_comp(yf, m, alpha, xf, m);
+  }
 }
 
 #define MAKE_MFIELDS_GET_PUT(type)					\

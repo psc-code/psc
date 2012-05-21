@@ -8,6 +8,13 @@
 MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
 
 unsigned int psc_fields_size(struct psc_fields *pf);
+void psc_fields_zero_comp(struct psc_fields *pf, int m);
+void psc_fields_set_comp(struct psc_fields *pf, int m, double alpha);
+void psc_fields_scale_comp(struct psc_fields *pf, int m, double alpha);
+void psc_fields_copy_comp(struct psc_fields *to, int mto,
+			  struct psc_fields *from, int mfrom);
+void psc_fields_axpy_comp(struct psc_fields *yf, int ym, double alpha,
+			  struct psc_fields *xf, int xm);
 
 // ----------------------------------------------------------------------
 // psc_mfields class
@@ -27,15 +34,6 @@ MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
-  void (*zero_comp)(struct psc_mfields *, int m);
-  void (*set_comp)(struct psc_mfields *, int m, double alpha);
-  void (*scale)(struct psc_mfields *, double alpha);
-  void (*copy_comp)(struct psc_mfields *to, int mto,
-		    struct psc_mfields *from, int mfrom);
-  void (*axpy)(struct psc_mfields *yf, double alpha,
-	       struct psc_mfields *xf);
-  void (*axpy_comp)(struct psc_mfields *yf, int ym, double alpha,
-		    struct psc_mfields *xf, int xm);
   void (*copy_to_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
   void (*copy_to_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
   void (*copy_to_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
@@ -46,7 +44,7 @@ struct psc_mfields_ops {
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
 			    struct mrc_domain *domain);
-void psc_mfields_zero(struct psc_mfields *flds, int m);
+void psc_mfields_zero_comp(struct psc_mfields *flds, int m);
 void psc_mfields_zero_range(struct psc_mfields *flds, int mb, int me);
 void psc_mfields_set_comp(struct psc_mfields *flds, int m, double alpha);
 void psc_mfields_scale(struct psc_mfields *flds, double alpha);

@@ -229,9 +229,7 @@ psc_push_particles_generic_c_push_xz(struct psc_push_particles *push,
     pr = prof_register("genc_part_xz", 1., 0, 0);
   }
   prof_start(pr);
-  psc_mfields_zero(flds, JXI);
-  psc_mfields_zero(flds, JYI);
-  psc_mfields_zero(flds, JZI);
+  psc_mfields_zero_range(flds, JXI, JXI + 3);
 
   psc_foreach_patch(ppsc, p) {
     do_genc_push_part_xz(p, psc_mfields_get_patch(flds, p),

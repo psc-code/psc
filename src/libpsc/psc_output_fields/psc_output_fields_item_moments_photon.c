@@ -87,7 +87,7 @@ n_photon_run(struct psc_output_fields_item *item, mfields_base_t *flds,
 {
   mphotons_t *mphotons = ppsc->mphotons;
 
-  psc_mfields_zero(res, 0);
+  psc_mfields_zero_comp(res, 0);
   
   psc_foreach_patch(ppsc, p) {
     do_n_photon_run(p, psc_mfields_get_patch(res, p), &mphotons->p[p]);

@@ -253,7 +253,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
       free_fields_list(psc, &flds_list);
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	for (int mm = 0; mm < out_c->tfd.flds[m]->nr_fields; mm++) {
-	  psc_mfields_zero(out_c->tfd.flds[m], mm);
+	  psc_mfields_zero_comp(out_c->tfd.flds[m], mm);
 	}
       }
       out_c->naccum = 0;

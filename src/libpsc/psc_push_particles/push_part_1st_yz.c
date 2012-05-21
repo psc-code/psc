@@ -161,9 +161,7 @@ psc_push_particles_1st_push_yz(struct psc_push_particles *push,
     pr = prof_register("1st_part_yz", 1., 0, 0);
   }
   prof_start(pr);
-  psc_mfields_zero(flds, JXI);
-  psc_mfields_zero(flds, JYI);
-  psc_mfields_zero(flds, JZI);
+  psc_mfields_zero_range(flds, JXI, JXI + 3);
 
   psc_foreach_patch(ppsc, p) {
     do_push_part_1st_yz(p, psc_mfields_get_patch(flds, p),
