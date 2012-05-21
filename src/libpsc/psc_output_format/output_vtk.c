@@ -61,7 +61,7 @@ vtk_write_field(void *ctx, mfields_c_t *fld)
   fprintf(file, "SCALARS %s float\n", psc_mfields_comp_name(fld, 0));
   fprintf(file, "LOOKUP_TABLE default\n");
 
-  struct psc_fields *pf = psc_mfields_get_patch_c(fld, 0);
+  struct psc_fields *pf = psc_mfields_get_patch(fld, 0);
   int *ib = pf->ib, *im = pf->im;
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {
@@ -122,7 +122,7 @@ psc_output_format_vtk_points_write_fields(struct psc_output_format *format,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 0, out, &file);
     vtk_write_coordinates(file, 0, 0.);
-    fprintf(file, "\nPOINT_DATA %d\n", fields_c_size(psc_mfields_get_patch_c(flds->flds[0], 0)));
+    fprintf(file, "\nPOINT_DATA %d\n", fields_c_size(psc_mfields_get_patch(flds->flds[0], 0)));
   }
 
   write_fields_combine(flds, vtk_write_field, file);
@@ -148,7 +148,7 @@ psc_output_format_vtk_cells_write_fields(struct psc_output_format *format,
   if (rank == 0) {
     vtk_open_file(pfx, "RECTILINEAR_GRID", 1, out, &file);
     vtk_write_coordinates(file, 1, .5);
-     fprintf(file, "\nCELL_DATA %d\n", fields_c_size(psc_mfields_get_patch_c(flds->flds[0], 0)));
+     fprintf(file, "\nCELL_DATA %d\n", fields_c_size(psc_mfields_get_patch(flds->flds[0], 0)));
   }
   write_fields_combine(flds, vtk_write_field, file);
 

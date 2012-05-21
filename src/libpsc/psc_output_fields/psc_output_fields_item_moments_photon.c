@@ -90,7 +90,7 @@ n_photon_run(struct psc_output_fields_item *item, mfields_base_t *flds,
   psc_mfields_zero(res, 0);
   
   psc_foreach_patch(ppsc, p) {
-    do_n_photon_run(p, psc_mfields_get_patch_c(res, p), &mphotons->p[p]);
+    do_n_photon_run(p, psc_mfields_get_patch(res, p), &mphotons->p[p]);
   }
 
   psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);

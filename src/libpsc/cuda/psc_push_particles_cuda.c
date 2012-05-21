@@ -38,7 +38,7 @@ cuda_push_part(mparticles_base_t *particles_base,
   
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
 
     set_constants(prts, pf);
 
@@ -60,7 +60,7 @@ cuda_push_part(mparticles_base_t *particles_base,
 
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
 
     set_constants(prts, pf);
     prof_start(pr3);
@@ -109,7 +109,7 @@ cuda_push_partq(struct psc_push_particles *push,
   prof_start(pr2);
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
 
     if (set_constants) {
       set_constants(prts, pf);
@@ -135,7 +135,7 @@ cuda_push_partq(struct psc_push_particles *push,
   prof_start(pr3);
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
 
     if (set_constants) {
       set_constants(prts, pf);

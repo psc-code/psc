@@ -97,7 +97,7 @@ vtk_write_field_binary(void *ctx, mfields_c_t *flds, struct psc_output_fields_c 
 	  
   FILE *file = ctx;
 
-  struct psc_fields *fld = psc_mfields_get_patch_c(flds, 0);
+  struct psc_fields *fld = psc_mfields_get_patch(flds, 0);
   int *ilo = out->rn, *ihi = out->rx;
 	
   fprintf(file, "SCALARS %s float\n", psc_mfields_comp_name(flds, 0));

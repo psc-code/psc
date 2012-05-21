@@ -53,7 +53,7 @@ hdf5_write_field(void *ctx, mfields_c_t *fld)
   struct hdf5_ctx *hdf5 = ctx;
 
   hid_t mem_type;
-  struct psc_fields *pf = psc_mfields_get_patch_c(fld, 0);
+  struct psc_fields *pf = psc_mfields_get_patch(fld, 0);
   if (sizeof(fields_c_real_t) == 4) {
     mem_type = H5T_NATIVE_FLOAT;
   } else {
@@ -150,7 +150,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
   mrc_domain_get_param_int(ppsc->mrc_domain, "npy", &np[1]);
   mrc_domain_get_param_int(ppsc->mrc_domain, "npz", &np[2]);
 
-  struct psc_fields *fld = psc_mfields_get_patch_c(list->flds[0], 0);
+  struct psc_fields *fld = psc_mfields_get_patch(list->flds[0], 0);
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
   fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
   fprintf(f, "<Domain>\n");
@@ -180,7 +180,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
 	fprintf(f, "     </Geometry>\n");
 	fprintf(f, "\n");
 	for (int m = 0; m < list->nr_flds; m++) {
-	  fld = psc_mfields_get_patch_c(list->flds[m], 0);
+	  fld = psc_mfields_get_patch(list->flds[m], 0);
 	  fprintf(f, "     <Attribute Name=\"%s\" AttributeType=\"Scalar\" Center=\"Cell\">\n",
 		  psc_mfields_comp_name(list->flds[m], 0));
 	  fprintf(f, "       <DataItem Dimensions=\"%d %d %d\" NumberType=\"Float\" Precision=\"4\" Format=\"HDF\">\n",

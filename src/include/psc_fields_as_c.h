@@ -13,7 +13,6 @@ typedef fields_c_real_t fields_real_t;
 
 #define psc_mfields_get_cf            psc_mfields_get_c
 #define psc_mfields_put_cf  	      psc_mfields_put_c
-#define psc_mfields_get_patch         psc_mfields_get_patch_c
 #define fields_size                   fields_c_size
 
 #endif

@@ -36,10 +36,10 @@ psc_bnd_fields_cuda_fill_ghosts_E(struct psc_bnd_fields *bnd, mfields_base_t *fl
     psc_foreach_patch(ppsc, p) {
       int d = 1;
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_E_lo_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_E_lo_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_E_hi_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_E_hi_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
     }
     psc_mfields_put_cuda(flds_cuda, flds_base, EX, EX + 3);
@@ -68,10 +68,10 @@ psc_bnd_fields_cuda_fill_ghosts_H(struct psc_bnd_fields *bnd, mfields_base_t *fl
     psc_foreach_patch(ppsc, p) {
       int d = 1;
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_H_lo_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_H_lo_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_H_hi_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_H_hi_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
     }
     psc_mfields_put_cuda(flds_cuda, flds_base, HX, HX + 3);
@@ -100,10 +100,10 @@ psc_bnd_fields_cuda_add_ghosts_J(struct psc_bnd_fields *bnd, mfields_base_t *fld
     psc_foreach_patch(ppsc, p) {
       int d = 1;
       if (ppsc->patch[p].off[d] == 0) {
-	cuda_conducting_wall_J_lo_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_J_lo_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
       if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	cuda_conducting_wall_J_hi_y(p, psc_mfields_get_patch_cuda(flds_cuda, p));
+	cuda_conducting_wall_J_hi_y(p, psc_mfields_get_patch(flds_cuda, p));
       }
     }
     psc_mfields_put_cuda(flds_cuda, flds_base, JXI, JXI + 3);

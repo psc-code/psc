@@ -79,45 +79,17 @@ extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 typedef struct psc_mfields mfields_fortran_t;
-static inline struct psc_fields *
-psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
-{
-  assert(psc_mfields_ops(flds) == &psc_mfields_fortran_ops);
-  return flds->flds[p];
-}
-
 typedef struct psc_mfields mfields_c_t;
-static inline struct psc_fields *
-psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
-{
-  assert(psc_mfields_ops(flds) == &psc_mfields_c_ops);
-  return flds->flds[p];
-}
-
 typedef struct psc_mfields mfields_single_t;
-static inline struct psc_fields *
-psc_mfields_get_patch_single(struct psc_mfields *flds, int p)
-{
-  assert(psc_mfields_ops(flds) == &psc_mfields_single_ops);
-  return flds->flds[p];
-}
-
-#ifdef xUSE_SSE2
-#include "psc_fields_sse2.h"
-typedef struct psc_mfields mfields_sse2_t;
-#endif
-
-#ifdef USE_CUDA
 typedef struct psc_mfields mfields_cuda_t;
+typedef struct psc_mfields mfields_base_t;
+
 static inline struct psc_fields *
-psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
+psc_mfields_get_patch(struct psc_mfields *flds, int p)
 {
-  assert(psc_mfields_ops(flds) == &psc_mfields_cuda_ops);
   return flds->flds[p];
 }
-#endif
 
-typedef struct psc_mfields mfields_base_t;
 extern list_t psc_mfields_base_list;
 
 void psc_mfields_fortran_copy_to_c(mfields_fortran_t *, mfields_c_t *, int mb, int me);

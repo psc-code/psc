@@ -98,8 +98,8 @@ psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j
   mfields_c_t *div_j = psc_mfields_get_c(div_j_base, 0, 0);
 
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, psc_mfields_get_patch_c(flds, p),
-		  psc_mfields_get_patch_c(div_j, p));
+    do_calc_div_j(psc, p, psc_mfields_get_patch(flds, p),
+		  psc_mfields_get_patch(div_j, p));
   }
 
   psc_mfields_put_c(flds, flds_base, 0, 0);
@@ -158,8 +158,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    struct psc_fields *p_rho_p = psc_mfields_get_patch_c(rho_p, p);
-    struct psc_fields *p_div_j = psc_mfields_get_patch_c(div_j, p);
+    struct psc_fields *p_rho_p = psc_mfields_get_patch(rho_p, p);
+    struct psc_fields *p_div_j = psc_mfields_get_patch(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
       creal dt_rho = F3_C(p_rho_p,0, jx,jy,jz);
       creal div_j = F3_C(p_div_j,0, jx,jy,jz);

@@ -101,7 +101,7 @@ static void
 _psc_mfields_single_zero_comp(mfields_single_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_single_zero(psc_mfields_get_patch_single(flds, p), m);
+    fields_single_zero(psc_mfields_get_patch(flds, p), m);
   }
 }
 
@@ -109,7 +109,7 @@ static void
 _psc_mfields_single_axpy(mfields_single_t *yf, double alpha, mfields_single_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_single_axpy(psc_mfields_get_patch_single(yf, p), alpha, psc_mfields_get_patch_single(xf, p));
+    fields_single_axpy(psc_mfields_get_patch(yf, p), alpha, psc_mfields_get_patch(xf, p));
   }
 }
 
@@ -118,8 +118,8 @@ _psc_mfields_single_axpy_comp(mfields_single_t *yf, int ym, double alpha,
 			      mfields_single_t *xf, int xm)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_single_axpy_comp(psc_mfields_get_patch_single(yf, p), ym, alpha,
-		       psc_mfields_get_patch_single(xf, p), xm);
+    fields_single_axpy_comp(psc_mfields_get_patch(yf, p), ym, alpha,
+			    psc_mfields_get_patch(xf, p), xm);
   }
 }
 
@@ -127,7 +127,7 @@ static void
 _psc_mfields_single_scale(mfields_single_t *yf, double alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_single_scale(psc_mfields_get_patch_single(yf, p), alpha);
+    fields_single_scale(psc_mfields_get_patch(yf, p), alpha);
   }
 }
 
@@ -135,7 +135,7 @@ static void
 _psc_mfields_single_set_comp(mfields_single_t *yf, int m, double alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_single_set(psc_mfields_get_patch_single(yf, p), m, alpha);
+    fields_single_set(psc_mfields_get_patch(yf, p), m, alpha);
   }
 }
 
@@ -143,8 +143,8 @@ static void
 _psc_mfields_single_copy_comp(mfields_single_t *to, int mto, mfields_single_t *from, int mfrom)
 {
   for (int p = 0; p < to->nr_patches; p++) {
-    fields_single_copy_comp(psc_mfields_get_patch_single(to, p), mto,
-		       psc_mfields_get_patch_single(from, p), mfrom);
+    fields_single_copy_comp(psc_mfields_get_patch(to, p), mto,
+			    psc_mfields_get_patch(from, p), mfrom);
   }
 }
 

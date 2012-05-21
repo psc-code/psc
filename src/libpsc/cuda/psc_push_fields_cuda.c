@@ -19,7 +19,7 @@ psc_push_fields_cuda_push_a_E(struct psc_push_fields *push, mfields_base_t *flds
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_a_E_yz(p, psc_mfields_get_patch_cuda(flds, p));
+      cuda_push_fields_a_E_yz(p, psc_mfields_get_patch(flds, p));
     }
   } else {
     assert(0);
@@ -39,7 +39,7 @@ psc_push_fields_cuda_push_a_H(struct psc_push_fields *push, mfields_base_t *flds
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_a_H_yz(p, psc_mfields_get_patch_cuda(flds, p));
+      cuda_push_fields_a_H_yz(p, psc_mfields_get_patch(flds, p));
     }
   } else {
     assert(0);
@@ -59,7 +59,7 @@ psc_push_fields_cuda_push_b_H(struct psc_push_fields *push, mfields_base_t *flds
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_b_H_yz(p, psc_mfields_get_patch_cuda(flds, p));
+      cuda_push_fields_b_H_yz(p, psc_mfields_get_patch(flds, p));
     }
   } else {
     assert(0);
@@ -79,7 +79,7 @@ psc_push_fields_cuda_push_b_E(struct psc_push_fields *push, mfields_base_t *flds
 
   if (ppsc->domain.gdims[0] == 1) {
     psc_foreach_patch(ppsc, p) {
-      cuda_push_fields_b_E_yz(p, psc_mfields_get_patch_cuda(flds, p));
+      cuda_push_fields_b_E_yz(p, psc_mfields_get_patch(flds, p));
     }
   } else {
     assert(0);

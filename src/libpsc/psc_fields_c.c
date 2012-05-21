@@ -109,7 +109,7 @@ static void
 _psc_mfields_c_zero_comp(mfields_c_t *flds, int m)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_zero(psc_mfields_get_patch_c(flds, p), m);
+    fields_c_zero(psc_mfields_get_patch(flds, p), m);
   }
 }
 
@@ -117,7 +117,7 @@ static void
 _psc_mfields_c_axpy(mfields_c_t *yf, fields_c_real_t alpha, mfields_c_t *xf)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_axpy(psc_mfields_get_patch_c(yf, p), alpha, psc_mfields_get_patch_c(xf, p));
+    fields_c_axpy(psc_mfields_get_patch(yf, p), alpha, psc_mfields_get_patch(xf, p));
   }
 }
 
@@ -126,8 +126,8 @@ _psc_mfields_c_axpy_comp(mfields_c_t *yf, int ym, fields_c_real_t alpha,
 			 mfields_c_t *xf, int xm)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_axpy_comp(psc_mfields_get_patch_c(yf, p), ym, alpha,
-		       psc_mfields_get_patch_c(xf, p), xm);
+    fields_c_axpy_comp(psc_mfields_get_patch(yf, p), ym, alpha,
+		       psc_mfields_get_patch(xf, p), xm);
   }
 }
 
@@ -135,7 +135,7 @@ static void
 _psc_mfields_c_scale(mfields_c_t *yf, double alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_scale(psc_mfields_get_patch_c(yf, p), alpha);
+    fields_c_scale(psc_mfields_get_patch(yf, p), alpha);
   }
 }
 
@@ -143,7 +143,7 @@ static void
 _psc_mfields_c_set_comp(mfields_c_t *yf, int m, fields_c_real_t alpha)
 {
   for (int p = 0; p < yf->nr_patches; p++) {
-    fields_c_set(psc_mfields_get_patch_c(yf, p), m, alpha);
+    fields_c_set(psc_mfields_get_patch(yf, p), m, alpha);
   }
 }
 
@@ -151,8 +151,8 @@ static void
 _psc_mfields_c_copy_comp(mfields_c_t *to, int mto, mfields_c_t *from, int mfrom)
 {
   for (int p = 0; p < to->nr_patches; p++) {
-    fields_c_copy_comp(psc_mfields_get_patch_c(to, p), mto,
-		       psc_mfields_get_patch_c(from, p), mfrom);
+    fields_c_copy_comp(psc_mfields_get_patch(to, p), mto,
+		       psc_mfields_get_patch(from, p), mfrom);
   }
 }
 
@@ -192,7 +192,7 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
     ierr = H5LTset_attribute_string(group, ".", namec, s); CE;
   }
   for (int p = 0; p < mfields->nr_patches; p++) {
-    struct psc_fields *fields = psc_mfields_get_patch_c(mfields, p);
+    struct psc_fields *fields = psc_mfields_get_patch(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
@@ -237,7 +237,7 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
   }
 
   for (int p = 0; p < mfields->nr_patches; p++) {
-    struct psc_fields *fields = psc_mfields_get_patch_c(mfields, p);
+    struct psc_fields *fields = psc_mfields_get_patch(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);

@@ -105,7 +105,7 @@ n_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
   psc_mfields_zero(res, 2);
   
   psc_foreach_patch(ppsc, p) {
-    do_n_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+    do_n_2nd_nc_run(p, psc_mfields_get_patch(res, p),
 		    psc_mparticles_get_patch(particles, p), 0, 1, 2);
   }
 
@@ -215,7 +215,7 @@ v_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
   }
   
   psc_foreach_patch(ppsc, p) {
-    do_v_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+    do_v_2nd_nc_run(p, psc_mfields_get_patch(res, p),
 		    psc_mparticles_get_patch(particles, p));
   }
 
@@ -323,7 +323,7 @@ vv_2nd_nc_run(struct psc_output_fields_item *item, mfields_base_t *flds,
   }
   
   psc_foreach_patch(ppsc, p) {
-    do_vv_2nd_nc_run(p, psc_mfields_get_patch_c(res, p),
+    do_vv_2nd_nc_run(p, psc_mfields_get_patch(res, p),
 		     psc_mparticles_get_patch(particles, p));
   }
 

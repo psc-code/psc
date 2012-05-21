@@ -97,7 +97,7 @@ psc_output_format_binary_write_fields(struct psc_output_format *format,
   fwrite(datastr, sizeof(char), 4, file);
   
   for (int m = 0; m < list->nr_flds; m++) {
-    binary_write_field(file, psc_mfields_get_patch_c(list->flds[m], 0));
+    binary_write_field(file, psc_mfields_get_patch(list->flds[m], 0));
   }
 
   fclose(file);

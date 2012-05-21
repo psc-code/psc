@@ -32,7 +32,7 @@ n_run(struct psc_output_fields_item *item, mfields_base_t *flds,
   psc_mfields_zero_range(res, 0, res->nr_fields);
   
   psc_foreach_patch(ppsc, p) {
-    do_n_run(p, psc_mfields_get_patch_c(res, p),
+    do_n_run(p, psc_mfields_get_patch(res, p),
 	     psc_mparticles_get_patch(particles, p));
   }
 

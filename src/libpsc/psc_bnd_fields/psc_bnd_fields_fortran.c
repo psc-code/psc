@@ -20,7 +20,7 @@ psc_bnd_fields_fortran_fill_ghosts_b_H(struct psc_bnd_fields *bnd,
   }
   prof_start(pr);
   psc_foreach_patch(ppsc, p) {
-    PIC_fill_ghosts_h_b(ppsc, p, psc_mfields_get_patch_fortran(flds, p));
+    PIC_fill_ghosts_h_b(ppsc, p, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
   
