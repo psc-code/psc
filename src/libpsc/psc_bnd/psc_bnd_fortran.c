@@ -20,7 +20,7 @@ psc_bnd_fortran_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   prof_start(pr);
 
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, mb, me);
-  fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, 0);
+  struct psc_fields *pf = psc_mfields_get_patch_fortran(flds, 0);
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
       PIC_fax(pf, m);
@@ -54,7 +54,7 @@ psc_bnd_fortran_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base,
   prof_start(pr);
 
   mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, mb, me);
-  fields_fortran_t *pf = psc_mfields_get_patch_fortran(flds, 0);
+  struct psc_fields *pf = psc_mfields_get_patch_fortran(flds, 0);
   for (int m = mb; m < me; m++) {
     if (ppsc->domain.gdims[0] > 1) {
       PIC_fex(pf, m);

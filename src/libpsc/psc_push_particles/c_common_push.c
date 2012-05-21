@@ -152,6 +152,8 @@ curr_2d_vb_cell(fields_curr_t *pf, int i[2], particle_real_t x[2], particle_real
 
 #endif
 
+#include "psc_fields_single.h"
+
 static void __unused
 cache_fields_single_from_em(int p, struct psc_fields *fld, fields_t *pf)
 {

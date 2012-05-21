@@ -79,11 +79,11 @@ extern struct psc_mfields_ops psc_mfields_fortran_ops;
 extern struct psc_mfields_ops psc_mfields_cuda_ops;
 
 typedef struct psc_mfields mfields_fortran_t;
-static inline fields_fortran_t *
+static inline struct psc_fields *
 psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_fortran_ops);
-  return (fields_fortran_t *) flds->flds[p];
+  return flds->flds[p];
 }
 
 #include "psc_fields_c.h"
@@ -95,7 +95,6 @@ psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
   return (fields_c_t *) flds->flds[p];
 }
 
-#include "psc_fields_single.h"
 typedef struct psc_mfields mfields_single_t;
 static inline struct psc_fields *
 psc_mfields_get_patch_single(struct psc_mfields *flds, int p)

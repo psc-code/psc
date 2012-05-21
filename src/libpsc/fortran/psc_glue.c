@@ -251,69 +251,75 @@ PSC_set_params(struct psc *psc)
 }
 
 void
-PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_yz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+		       flds[JXI], flds[JYI], flds[JZI],
+		       flds[EX], flds[EY], flds[EZ],
+		       flds[HX], flds[HY], flds[HZ]);
 }
 
 void
-PIC_push_part_xy(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_xy(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_xy_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+		       flds[JXI], flds[JYI], flds[JZI],
+		       flds[EX], flds[EY], flds[EZ],
+		       flds[HX], flds[HY], flds[HZ]);
 }
 
 void
-PIC_push_part_xz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_xz(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_xz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-		       pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		       pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		       pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+		       flds[JXI], flds[JYI], flds[JZI],
+		       flds[EX], flds[EY], flds[EZ],
+		       flds[HX], flds[HY], flds[HZ]);
 }
 
 void
-PIC_push_part_xyz(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_xyz(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_xyz_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-			pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-			pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-			pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+			flds[JXI], flds[JYI], flds[JZI],
+			flds[EX], flds[EY], flds[EZ],
+			flds[HX], flds[HY], flds[HZ]);
 }
 
 void
-PIC_push_part_z(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_z(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_z_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-		      pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		      pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		      pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+		      flds[JXI], flds[JYI], flds[JZI],
+		      flds[EX], flds[EY], flds[EZ],
+		      flds[HX], flds[HY], flds[HZ]);
 }
 
 void
-PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *prts, fields_fortran_t *pf)
+PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *prts, struct psc_fields *pf)
 {
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
+  fields_fortran_real_t **flds = pf->data;
   PIC_push_part_z_vay_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &psc->p2A, &psc->p2B,
-			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-			  pf->flds[HX], pf->flds[HY], pf->flds[HZ]);
+			  flds[JXI], flds[JYI], flds[JZI],
+			  flds[EX], flds[EY], flds[EZ],
+			  flds[HX], flds[HY], flds[HZ]);
 }
 
 void
@@ -353,39 +359,45 @@ INIT_basic()
 }
 
 void
-PIC_fax(fields_fortran_t *pf, int m)
+PIC_fax(struct psc_fields *pf, int m)
 {
-  PIC_fax_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_fax_F77(flds[m]);
 }
 
 void
-PIC_fay(fields_fortran_t *pf, int m)
+PIC_fay(struct psc_fields *pf, int m)
 {
-  PIC_fay_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_fay_F77(flds[m]);
 }
 
 void
-PIC_faz(fields_fortran_t *pf, int m)
+PIC_faz(struct psc_fields *pf, int m)
 {
-  PIC_faz_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_faz_F77(flds[m]);
 }
 
 void
-PIC_fex(fields_fortran_t *pf, int m)
+PIC_fex(struct psc_fields *pf, int m)
 {
-  PIC_fex_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_fex_F77(flds[m]);
 }
 
 void
-PIC_fey(fields_fortran_t *pf, int m)
+PIC_fey(struct psc_fields *pf, int m)
 {
-  PIC_fey_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_fey_F77(flds[m]);
 }
 
 void
-PIC_fez(fields_fortran_t *pf, int m)
+PIC_fez(struct psc_fields *pf, int m)
 {
-  PIC_fez_F77(pf->flds[m]);
+  fields_fortran_real_t **flds = pf->data;
+  PIC_fez_F77(flds[m]);
 }
 
 void
@@ -416,73 +428,80 @@ PIC_pez(struct psc_particles *prts)
 }
 
 void
-PIC_msa_e(fields_fortran_t *pf)
+PIC_msa_e(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_msa_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msa_e_F77(flds[EX], flds[EY], flds[EZ],
+		flds[HX], flds[HY], flds[HZ],
+		flds[JXI], flds[JYI], flds[JZI]);
 }
 
 void
-PIC_msa_h(fields_fortran_t *pf)
+PIC_msa_h(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_msa_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msa_h_F77(flds[EX], flds[EY], flds[EZ],
+		flds[HX], flds[HY], flds[HZ],
+		flds[JXI], flds[JYI], flds[JZI]);
 }
 
 void
-PIC_pml_msa(fields_fortran_t *pf)
+PIC_pml_msa(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_pml_msa_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
-		  pf->flds[BX], pf->flds[BY], pf->flds[BZ],
-		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		  pf->flds[EPS], pf->flds[MU]);
+  PIC_pml_msa_F77(flds[EX], flds[EY], flds[EZ],
+		  flds[HX], flds[HY], flds[HZ],
+		  flds[DX], flds[DY], flds[DZ],
+		  flds[BX], flds[BY], flds[BZ],
+		  flds[JXI], flds[JYI], flds[JZI],
+		  flds[EPS], flds[MU]);
 }
 
 void
-PIC_msb_h(fields_fortran_t *pf)
+PIC_msb_h(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_msb_h_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msb_h_F77(flds[EX], flds[EY], flds[EZ],
+		flds[HX], flds[HY], flds[HZ],
+		flds[JXI], flds[JYI], flds[JZI]);
 }
 
 void
-PIC_msb_e(fields_fortran_t *pf)
+PIC_msb_e(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_msb_e_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_msb_e_F77(flds[EX], flds[EY], flds[EZ],
+		flds[HX], flds[HY], flds[HZ],
+		flds[JXI], flds[JYI], flds[JZI]);
 }
 
 void
-PIC_pml_msb(fields_fortran_t *pf)
+PIC_pml_msb(struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(ppsc);
-  PIC_pml_msb_F77(pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-		  pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-		  pf->flds[DX], pf->flds[DY], pf->flds[DZ],
-		  pf->flds[BX], pf->flds[BY], pf->flds[BZ],
-		  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI],
-		  pf->flds[EPS], pf->flds[MU]);
+  PIC_pml_msb_F77(flds[EX], flds[EY], flds[EZ],
+		  flds[HX], flds[HY], flds[HZ],
+		  flds[DX], flds[DY], flds[DZ],
+		  flds[BX], flds[BY], flds[BZ],
+		  flds[JXI], flds[JYI], flds[JZI],
+		  flds[EPS], flds[MU]);
 }
 
 void
-PIC_fill_ghosts_h_b(struct psc *psc, int p, fields_fortran_t *pf)
+PIC_fill_ghosts_h_b(struct psc *psc, int p, struct psc_fields *pf)
 {
+  fields_fortran_real_t **flds = pf->data;
   PSC_set_timestep(psc);
   PSC_set_patch(psc, p);
-  PIC_fill_ghosts_h_b_F77(pf->flds[HX], pf->flds[HY], pf->flds[HZ],
-			  pf->flds[EX], pf->flds[EY], pf->flds[EZ],
-			  pf->flds[JXI], pf->flds[JYI], pf->flds[JZI]);
+  PIC_fill_ghosts_h_b_F77(flds[HX], flds[HY], flds[HZ],
+			  flds[EX], flds[EY], flds[EZ],
+			  flds[JXI], flds[JYI], flds[JZI]);
 }
 
 // ----------------------------------------------------------------------
