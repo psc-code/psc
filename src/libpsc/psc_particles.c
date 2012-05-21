@@ -3,6 +3,7 @@
 #include "psc_particles_private.h"
 
 #include <mrc_profile.h>
+#include <string.h>
 
 // ======================================================================
 // psc_particles_get_as
