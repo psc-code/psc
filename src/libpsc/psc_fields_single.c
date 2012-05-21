@@ -9,23 +9,14 @@
 
 // FIXME, very duplicated from psc_fields_c.c
 
-void
-fields_single_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
-{
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    pf->ib[d] = ib[d];
-    pf->im[d] = ie[d] - ib[d];
-    size *= pf->im[d];
-  }
-  pf->nr_comp = nr_comp;
-  pf->first_comp = first_comp;
-  pf->data = calloc(nr_comp * size, sizeof(fields_single_real_t));
-}
-
 static void
 psc_fields_single_setup(struct psc_fields *pf)
 {
+  unsigned int size = 1;
+  for (int d = 0; d < 3; d++) {
+    size *= pf->im[d];
+  }
+  pf->data = calloc(pf->nr_comp * size, sizeof(fields_single_real_t));
 }
 
 static void
@@ -171,13 +162,14 @@ _psc_mfields_single_setup(mfields_single_t *flds)
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
     psc_fields_set_type(pf, "single");
+    for (int d = 0; d < 3; d++) {
+      pf->ib[d] = -flds->ibn[d];
+      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
+    }
+    pf->nr_comp = flds->nr_fields;
+    pf->first_comp = flds->first_comp;
     psc_fields_setup(pf);
     flds->flds[p] = pf;
-    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
-    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
-		   patches[p].ldims[1] + flds->ibn[1],
-		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_single_alloc(pf, ilg, ihg, flds->nr_fields, flds->first_comp);
   }
 }
 

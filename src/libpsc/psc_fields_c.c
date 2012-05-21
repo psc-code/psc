@@ -7,17 +7,13 @@
 #include <string.h>
 #include <assert.h>
 
-void
-fields_c_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
+static void
+psc_fields_c_setup(struct psc_fields *pf)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
-    pf->ib[d] = ib[d];
-    pf->im[d] = ie[d] - ib[d];
     size *= pf->im[d];
   }
-  pf->nr_comp = nr_comp;
-  pf->first_comp = first_comp;
 #ifdef USE_CBE
   // The Cell processor translation can use the C fields with one modification:
   // the data needs to be 128 byte aligned (to speed off-loading to spes). This
@@ -27,13 +23,8 @@ fields_c_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int fir
   pf->flds =  m; 
   assert(ierr == 0);
 #else
-  pf->data = calloc(nr_comp * size, sizeof(fields_c_real_t));
+  pf->data = calloc(pf->nr_comp * size, sizeof(fields_c_real_t));
 #endif
-}
-
-static void
-psc_fields_c_setup(struct psc_fields *pf)
-{
 }
 
 static void
@@ -179,12 +170,14 @@ _psc_mfields_c_setup(mfields_c_t *flds)
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
     psc_fields_set_type(pf, "c");
+    for (int d = 0; d < 3; d++) {
+      pf->ib[d] = -flds->ibn[d];
+      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
+    }
+    pf->nr_comp = flds->nr_fields;
+    pf->first_comp = flds->first_comp;
+    psc_fields_setup(pf);
     flds->flds[p] = pf;
-    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
-    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
-		   patches[p].ldims[1] + flds->ibn[1],
-		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_c_alloc(pf, ilg, ihg, flds->nr_fields, flds->first_comp);
   }
 }
 

@@ -163,9 +163,10 @@ cache_fields_from_em(int p, fields_t *pf)
 
   struct psc_fields *fld = psc_fields_create(psc_fields_comm(pf));
   // FIXME, can do -1 .. 1?
-  int ib[3] = { 0, -2, -2 };
-  int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
-  fields_single_alloc(fld, ib, ie, 9, 0); // JXI .. HZ
+  psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
+  psc_fields_set_param_int3(fld, "im", (int[3]) { 1, patch->ldims[1] + 4, patch->ldims[2] + 4 });
+  psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
+  psc_fields_setup(fld);
   for (int iz = -2; iz < patch->ldims[2] + 2; iz++) {
     for (int iy = -2; iy < patch->ldims[1] + 2; iy++) {
       F3_CACHE(fld, EX, 0,iy,iz) = F3(pf, EX, 0,iy,iz);

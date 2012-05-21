@@ -31,9 +31,6 @@ typedef double fields_c_real_t;
 
 #endif
 
-void fields_c_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int first_comp);
-void fields_c_free(struct psc_fields *pf);
-
 static inline unsigned int
 fields_c_size(struct psc_fields *pf)
 {

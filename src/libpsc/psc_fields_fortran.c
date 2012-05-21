@@ -8,31 +8,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-void
-fields_fortran_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp,
-		     int first_comp)
-{
-  pf->data = calloc(nr_comp, sizeof(fields_fortran_real_t *));
-
-  unsigned int size = 1;
-  for (int d = 0; d < 3; d++) {
-    pf->ib[d] = ib[d];
-    pf->im[d] = ie[d] - ib[d];
-    size *= pf->im[d];
-  }
-  pf->nr_comp = nr_comp;
-  pf->first_comp = first_comp;
-
-  fields_fortran_real_t **flds = pf->data;
-  flds[0] = calloc(size * nr_comp, sizeof(flds[0]));
-  for (int i = 1; i < nr_comp; i++) {
-    flds[i] = flds[0] + i * size;
-  }
-}
-
 static void
 psc_fields_fortran_setup(struct psc_fields *pf)
 {
+  unsigned int size = 1;
+  for (int d = 0; d < 3; d++) {
+    size *= pf->im[d];
+  }
+
+  fields_fortran_real_t **flds = calloc(pf->nr_comp, sizeof(*flds));
+  flds[0] = calloc(size * pf->nr_comp, sizeof(flds[0]));
+  for (int i = 1; i < pf->nr_comp; i++) {
+    flds[i] = flds[0] + i * size;
+  }
+  pf->data = flds;
 }
 
 static void
@@ -120,13 +109,14 @@ _psc_mfields_fortran_setup(mfields_fortran_t *flds)
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
     psc_fields_set_type(pf, "fortran");
+    for (int d = 0; d < 3; d++) {
+      pf->ib[d] = -flds->ibn[d];
+      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
+    }
+    pf->nr_comp = flds->nr_fields;
+    pf->first_comp = flds->first_comp;
     psc_fields_setup(pf);
     flds->flds[p] = pf;
-    int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
-    int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
-		   patches[p].ldims[1] + flds->ibn[1],
-		   patches[p].ldims[2] + flds->ibn[2] };
-    fields_fortran_alloc(pf, ilg, ihg, flds->nr_fields, flds->first_comp);
   }
 }
 
