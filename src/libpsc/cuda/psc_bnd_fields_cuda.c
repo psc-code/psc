@@ -6,15 +6,15 @@
 #include <mrc_profile.h>
 
 
-EXTERN_C void cuda_conducting_wall_H_lo_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_E_lo_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_H_lo_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_H_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_E_lo_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_E_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_J_lo_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_J_hi_y(int p, fields_cuda_t *pf);
+EXTERN_C void cuda_conducting_wall_H_lo_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_E_lo_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_H_lo_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_H_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_E_lo_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_E_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_J_lo_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_J_hi_y(int p, struct psc_fields *pf);
 
 // ----------------------------------------------------------------------
 // psc_bnd_fields_cuda_fill_ghosts_E

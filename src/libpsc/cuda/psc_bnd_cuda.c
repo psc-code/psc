@@ -13,9 +13,9 @@
 // reduce packed buffers even more, e.g., add only on cuda side finally
 
 // FIXME
-EXTERN_C void __fields_cuda_from_device_inside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_from_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_outside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
 void psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd);
 void psc_bnd_cuda_xchg_unsetup(struct psc_bnd *bnd);
 void psc_bnd_cuda_xchg_exchange_particles(struct psc_bnd *bnd,
@@ -27,7 +27,7 @@ cuda_mfields_ctx_init(struct cuda_mfields_ctx *ctx, mfields_cuda_t *flds, int nr
   // FIXME, could be done once and cached
   ctx->cf = malloc(ppsc->nr_patches * sizeof(*ctx->cf));
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
     struct cuda_fields_ctx *cf = &ctx->cf[p];
     int sz = 1;
     for (int d = 0; d < 3; d++) {
@@ -216,7 +216,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
     cuda_mfields_ctx_init(&ctx, flds_cuda, me - mb);
 
     psc_foreach_patch(ppsc, p) {
-      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
       struct cuda_fields_ctx *cf = ctx.cf + p;
       __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
     }
@@ -224,7 +224,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
     mrc_ddc_add_ghosts(bnd_cuda->ddc, 0, me - mb, &ctx);
 
     psc_foreach_patch(ppsc, p) {
-      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
       struct cuda_fields_ctx *cf = ctx.cf + p;
       __fields_cuda_to_device_inside(pf_cuda, cf, mb, me);
     }
@@ -280,7 +280,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
 
     prof_start(pr1);
     psc_foreach_patch(ppsc, p) {
-      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
       struct cuda_fields_ctx *cf = ctx.cf + p;
       __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
     }
@@ -292,7 +292,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
 
     prof_start(pr5);
     psc_foreach_patch(ppsc, p) {
-      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
       struct cuda_fields_ctx *cf = ctx.cf + p;
       __fields_cuda_to_device_outside(pf_cuda, cf, mb, me);
     }

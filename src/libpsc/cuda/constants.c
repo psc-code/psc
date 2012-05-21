@@ -14,7 +14,7 @@ struct d_consts {
 __constant__ static struct d_consts d_consts;
 
 EXTERN_C void
-PFX(set_constants)(struct psc_particles *prts, fields_cuda_t *pf)
+PFX(set_constants)(struct psc_particles *prts, struct psc_fields *pf)
 {
   struct d_consts consts = {
     .dt     = ppsc->dt,

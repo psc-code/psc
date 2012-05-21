@@ -108,13 +108,12 @@ typedef struct psc_mfields mfields_sse2_t;
 #endif
 
 #ifdef USE_CUDA
-#include "psc_fields_cuda.h"
 typedef struct psc_mfields mfields_cuda_t;
-static inline fields_cuda_t *
+static inline struct psc_fields *
 psc_mfields_get_patch_cuda(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_cuda_ops);
-  return (fields_cuda_t *) flds->flds[p];
+  return flds->flds[p];
 }
 #endif
 

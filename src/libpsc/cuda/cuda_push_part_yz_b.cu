@@ -170,28 +170,30 @@ push_part_yz_b3(int n_part, particles_cuda_dev_t d_part, float *d_flds, int stri
 }
 
 EXTERN_C void
-__cuda_push_part_yz_b(struct psc_particles *prts, fields_cuda_t *pf)
+__cuda_push_part_yz_b(struct psc_particles *prts, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   const int threadsPerBlock = 128;
   const int gridSize = 256;
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b, (prts->n_part, cuda->d_part, pf->d_flds,
+	     push_part_yz_b, (prts->n_part, cuda->d_part, pfc->d_flds,
 			      gridSize * threadsPerBlock));
 }
 
 EXTERN_C void
-__cuda_push_part_yz_b3(struct psc_particles *prts, fields_cuda_t *pf)
+__cuda_push_part_yz_b3(struct psc_particles *prts, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   const int threadsPerBlock = 128;
   const int gridSize = 256;
   int dimBlock[2]  = { threadsPerBlock, 1 };
   int dimGrid[2] = { gridSize, 1 };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_part_yz_b3, (prts->n_part, cuda->d_part, pf->d_flds,
+	     push_part_yz_b3, (prts->n_part, cuda->d_part, pfc->d_flds,
 			       gridSize * threadsPerBlock));
 }
 

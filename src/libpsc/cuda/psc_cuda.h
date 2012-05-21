@@ -9,26 +9,27 @@
 #include <psc.h>
 
 #include "psc_particles_cuda.h"
+#include "psc_fields_cuda.h"
 
 // ======================================================================
 
 #define DECLARE_CUDA(pfx)                                               \
   EXTERN_C void pfx##_set_constants(struct psc_particles *prts,		\
-				    fields_cuda_t *pf);			\
+				    struct psc_fields *pf);		\
   EXTERN_C void pfx##_cuda_push_part_p1(struct psc_particles *prts,	\
-                                        fields_cuda_t *pf,              \
+                                        struct psc_fields *pf,		\
                                         real **d_scratch);              \
   EXTERN_C void pfx##_cuda_push_part_p2(struct psc_particles *prts,	\
-                                        fields_cuda_t *pf);             \
+                                        struct psc_fields *pf);		\
   EXTERN_C void pfx##_cuda_push_part_p3(struct psc_particles *prts,	\
-                                        fields_cuda_t *pf,              \
+                                        struct psc_fields *pf,		\
                                         real *d_scratch,		\
 					int block_stride);		\
   EXTERN_C void pfx##_cuda_push_part_p4(struct psc_particles *prts,	\
-                                        fields_cuda_t *pf,              \
+                                        struct psc_fields *pf,		\
                                         real *d_scratch);               \
   EXTERN_C void pfx##_cuda_push_part_p5(struct psc_particles *prts,	\
-                                        fields_cuda_t *pf,              \
+                                        struct psc_fields *pf,		\
                                         real *d_scratch);               \
 
 DECLARE_CUDA(z);
@@ -41,11 +42,11 @@ DECLARE_CUDA(yz4);
 DECLARE_CUDA(yz5);
 DECLARE_CUDA(yz6);
 
-EXTERN_C void yz_a_set_constants(struct psc_particles *prts, fields_cuda_t *pf);
-EXTERN_C void yz_b_set_constants(struct psc_particles *prts, fields_cuda_t *pf);
-EXTERN_C void __cuda_push_part_yz_a(struct psc_particles *prts, fields_cuda_t *pf);
-EXTERN_C void __cuda_push_part_yz_b(struct psc_particles *prts, fields_cuda_t *pf);
-EXTERN_C void __cuda_push_part_yz_b3(struct psc_particles *prts, fields_cuda_t *pf);
+EXTERN_C void yz_a_set_constants(struct psc_particles *prts, struct psc_fields *pf);
+EXTERN_C void yz_b_set_constants(struct psc_particles *prts, struct psc_fields *pf);
+EXTERN_C void __cuda_push_part_yz_a(struct psc_particles *prts, struct psc_fields *pf);
+EXTERN_C void __cuda_push_part_yz_b(struct psc_particles *prts, struct psc_fields *pf);
+EXTERN_C void __cuda_push_part_yz_b3(struct psc_particles *prts, struct psc_fields *pf);
 
 struct d_particle {
   real xi[3];
@@ -96,18 +97,18 @@ EXTERN_C void __particles_cuda_from_device_range(struct psc_particles *prts,
 						 float4 *xi, float4 *pxi,
 						 int start, int end);
 
-EXTERN_C void __fields_cuda_alloc(fields_cuda_t *pf);
-EXTERN_C void __fields_cuda_free(fields_cuda_t *pf);
-EXTERN_C void __fields_cuda_to_device(fields_cuda_t *pf, real *h_flds, int mb, int me);
-EXTERN_C void __fields_cuda_from_device(fields_cuda_t *pf, real *h_flds, int mb, int me);
+EXTERN_C void __fields_cuda_alloc(struct psc_fields *pf);
+EXTERN_C void __fields_cuda_free(struct psc_fields *pf);
+EXTERN_C void __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me);
+EXTERN_C void __fields_cuda_from_device(struct psc_fields *pf, real *h_flds, int mb, int me);
 
-EXTERN_C void cuda_fill_ghosts_periodic_yz(int p, fields_cuda_t *pf, int mb, int me);
-EXTERN_C void cuda_fill_ghosts_periodic_z(int p, fields_cuda_t *pf, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_yz(int p, fields_cuda_t *pf, int mb, int me);
-EXTERN_C void cuda_add_ghosts_periodic_z(int p, fields_cuda_t *pf, int mb, int me);
-EXTERN_C void cuda_conducting_wall_E_lo_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_H_lo_hi_y(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, fields_cuda_t *pf);
+EXTERN_C void cuda_fill_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me);
+EXTERN_C void cuda_fill_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me);
+EXTERN_C void cuda_add_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me);
+EXTERN_C void cuda_add_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me);
+EXTERN_C void cuda_conducting_wall_E_lo_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_H_lo_hi_y(int p, struct psc_fields *pf);
+EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, struct psc_fields *pf);
 
 EXTERN_C void cuda_exchange_particles(int p, struct psc_particles *prts);
 EXTERN_C void cuda_alloc_block_indices(struct psc_particles *prts, unsigned int **d_bidx);

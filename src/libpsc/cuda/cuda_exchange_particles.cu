@@ -57,8 +57,7 @@ cuda_exchange_particles(int p, struct psc_particles *prts)
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   struct psc_patch *patch = &ppsc->patch[p];
 
-  fields_cuda_t pf_dummy;
-  xchg_set_constants(prts, &pf_dummy);
+  xchg_set_constants(prts, NULL);
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (prts->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };

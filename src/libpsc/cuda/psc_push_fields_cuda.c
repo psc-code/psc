@@ -1,11 +1,12 @@
 
 #include "psc_push_fields_private.h"
+#include "psc_fields_cuda.h"
 #include "psc.h"
 
-EXTERN_C void cuda_push_fields_a_E_yz(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_push_fields_a_H_yz(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_push_fields_b_H_yz(int p, fields_cuda_t *pf);
-EXTERN_C void cuda_push_fields_b_E_yz(int p, fields_cuda_t *pf);
+EXTERN_C void cuda_push_fields_a_E_yz(int p, struct psc_fields *pf);
+EXTERN_C void cuda_push_fields_a_H_yz(int p, struct psc_fields *pf);
+EXTERN_C void cuda_push_fields_b_H_yz(int p, struct psc_fields *pf);
+EXTERN_C void cuda_push_fields_b_E_yz(int p, struct psc_fields *pf);
 
 // ----------------------------------------------------------------------
 // E-field propagation E^(n)    , H^(n), j^(n) 

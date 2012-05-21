@@ -195,8 +195,7 @@ sort_patch_prep(int p, struct psc_particles *prts, int **d_cnis, int **d_ids)
   check(cudaMalloc((void **) d_cnis, cuda->n_alloced * sizeof(*d_cnis)));
   check(cudaMalloc((void **) d_ids, cuda->n_alloced * sizeof(*d_ids)));
 
-  fields_cuda_t pf_dummy;
-  sort_set_constants(prts, &pf_dummy);
+  sort_set_constants(prts, NULL);
 }
 
 EXTERN_C void
@@ -215,8 +214,7 @@ sort_patch_by_cell(int p, struct psc_particles *prts)
   check(cudaMalloc((void **) &d_cnis, prts->n_part * sizeof(*d_cnis)));
   check(cudaMalloc((void **) &d_ids, prts->n_part * sizeof(*d_ids)));
 
-  fields_cuda_t pf_dummy;
-  sort_set_constants(prts, &pf_dummy);
+  sort_set_constants(prts, NULL);
 
   sort_find_cell_indices_by_cell_device(prts, patch, d_cnis, d_ids);
   sort_pairs_device((unsigned int *) d_cnis, (unsigned int *) d_ids, prts->n_part);

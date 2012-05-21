@@ -115,8 +115,9 @@ push_fields_b_E_yz(real *d_flds)
 }
 
 EXTERN_C void
-cuda_push_fields_a_E_yz(int p, fields_cuda_t *pf)
+cuda_push_fields_a_E_yz(int p, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_patch *patch = &ppsc->patch[p];
 
   push_fields_yz_set_constants(NULL, pf);
@@ -125,39 +126,42 @@ cuda_push_fields_a_E_yz(int p, fields_cuda_t *pf)
   int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_a_E_yz, (pf->d_flds));
+	     push_fields_a_E_yz, (pfc->d_flds));
 }
 
 EXTERN_C void
-cuda_push_fields_a_H_yz(int p, fields_cuda_t *pf)
+cuda_push_fields_a_H_yz(int p, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_a_H_yz, (pf->d_flds));
+	     push_fields_a_H_yz, (pfc->d_flds));
 }
 
 EXTERN_C void
-cuda_push_fields_b_H_yz(int p, fields_cuda_t *pf)
+cuda_push_fields_b_H_yz(int p, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_b_H_yz, (pf->d_flds));
+	     push_fields_b_H_yz, (pfc->d_flds));
 }
 
 EXTERN_C void
-cuda_push_fields_b_E_yz(int p, fields_cuda_t *pf)
+cuda_push_fields_b_E_yz(int p, struct psc_fields *pf)
 {
+  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_patch *patch = &ppsc->patch[p];
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_b_E_yz, (pf->d_flds));
+	     push_fields_b_E_yz, (pfc->d_flds));
 }
 

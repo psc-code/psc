@@ -2,19 +2,19 @@
 #ifndef PSC_FIELDS_CUDA_H
 #define PSC_FIELDS_CUDA_H
 
-#include "psc.h"
+#include "psc_fields_private.h"
 #include "cuda_wrap.h"
 
 typedef float fields_cuda_real_t;
 
 #define MPI_FIELDS_CUDA_REAL MPI_FLOAT
 
-typedef struct {
+struct psc_fields_cuda {
   fields_cuda_real_t *d_flds;
-  int ib[3], im[3]; //> lower bounds and length per direction
-  int nr_comp; //> nr of components
   fields_cuda_real_t *d_bnd_buf, *h_bnd_buf;
-} fields_cuda_t;
+};
+
+#define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)
 
 // ----------------------------------------------------------------------
 // macros to access fields from CUDA (device-side)

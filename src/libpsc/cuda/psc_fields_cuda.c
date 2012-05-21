@@ -32,13 +32,25 @@
 
 #endif
 
+static void
+psc_fields_cuda_setup(struct psc_fields *pf)
+{
+  __fields_cuda_alloc(pf);
+}
+
+static void
+psc_fields_cuda_destroy(struct psc_fields *pf)
+{
+  __fields_cuda_free(pf);
+}
+
 #include "psc_fields_as_c.h"
 
 void
 psc_mfields_cuda_copy_from_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+    struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
     fields_t *pf_c = psc_mfields_get_patch_c(flds_c, p);
     float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));
@@ -57,7 +69,7 @@ void
 psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+    struct psc_fields *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
     struct psc_fields *pf_c = psc_mfields_get_patch(flds_c, p);
 
     float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
@@ -95,31 +107,30 @@ _psc_mfields_cuda_setup(mfields_cuda_t *flds)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   cuda_init(rank);
 
+  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
+						     &flds->nr_patches);
   flds->flds = calloc(ppsc->nr_patches, sizeof(*flds->flds));
-
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = calloc(1, sizeof(*pf));
-    flds->flds[p] = (struct psc_fields *) pf;
-    struct psc_patch *patch = &ppsc->patch[p];
+  for (int p = 0; p < flds->nr_patches; p++) {
+    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
+    psc_fields_set_type(pf, "cuda");
     for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -ppsc->ibn[d];
-      pf->im[d] = patch->ldims[d] + 2 * ppsc->ibn[d];
+      pf->ib[d] = -flds->ibn[d];
+      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
     }
     pf->nr_comp = flds->nr_fields;
-
-    __fields_cuda_alloc(pf);
+    pf->first_comp = flds->first_comp;
+    psc_fields_setup(pf);
+    flds->flds[p] = pf;
   }
 }
 
 static void
 _psc_mfields_cuda_destroy(mfields_cuda_t *flds)
 {
-  psc_foreach_patch(ppsc, p) {
-    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
-    __fields_cuda_free(pf);
-    free(pf);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
+    psc_fields_destroy(pf);
   }
-  
   free(flds->flds);
 }
 
@@ -134,5 +145,13 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
   .copy_from_c           = psc_mfields_cuda_copy_from_c,
 };
 
-
+// ======================================================================
+// psc_fields: subclass "cuda"
+  
+struct psc_fields_ops psc_fields_cuda_ops = {
+  .name                  = "cuda",
+  .size                  = sizeof(struct psc_fields_cuda),
+  .setup                 = psc_fields_cuda_setup,
+  .destroy               = psc_fields_cuda_destroy,
+};
 
