@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_output_fields_c.h"
 #include "psc_output_format_private.h"
+#include "psc_fields_c.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -96,7 +97,7 @@ vtk_write_field_binary(void *ctx, mfields_c_t *flds, struct psc_output_fields_c 
 	  
   FILE *file = ctx;
 
-  fields_c_t *fld = psc_mfields_get_patch_c(flds, 0);
+  struct psc_fields *fld = psc_mfields_get_patch_c(flds, 0);
   int *ilo = out->rn, *ihi = out->rx;
 	
   fprintf(file, "SCALARS %s float\n", psc_mfields_comp_name(flds, 0));

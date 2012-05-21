@@ -190,8 +190,10 @@ cache_fields_single_to_j(int p, struct psc_fields *fld, fields_t *pf)
   fields_single_free(fld);
 }
 
+#include "psc_fields_c.h"
+
 static void __unused
-cache_fields_c_from_em(int p, fields_c_t *fld, fields_t *pf)
+cache_fields_c_from_em(int p, struct psc_fields *fld, fields_t *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 
@@ -212,7 +214,7 @@ cache_fields_c_from_em(int p, fields_c_t *fld, fields_t *pf)
 }
 
 static void __unused
-cache_fields_c_to_j(int p, fields_c_t *fld, fields_t *pf)
+cache_fields_c_to_j(int p, struct psc_fields *fld, fields_t *pf)
 {
   struct psc_patch *patch = ppsc->patch + p;
 

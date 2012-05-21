@@ -3,6 +3,7 @@
 #include "psc_bnd.h"
 #include "psc_particles_c.h"
 #include "psc_output_fields_item.h"
+#include "psc_fields_c.h"
 
 #include <math.h>
 
@@ -71,7 +72,7 @@ psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
 // psc_calc_div_j
 
 static void
-do_calc_div_j(struct psc *psc, int p, fields_c_t *flds, fields_c_t *div_j)
+do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields *div_j)
 {
   creal h[3];
   for (int d = 0; d < 3; d++) {
@@ -157,8 +158,8 @@ psc_check_continuity(struct psc *psc, mparticles_base_t *particles,
 
   double max_err = 0.;
   psc_foreach_patch(psc, p) {
-    fields_c_t *p_rho_p = psc_mfields_get_patch_c(rho_p, p);
-    fields_c_t *p_div_j = psc_mfields_get_patch_c(div_j, p);
+    struct psc_fields *p_rho_p = psc_mfields_get_patch_c(rho_p, p);
+    struct psc_fields *p_div_j = psc_mfields_get_patch_c(div_j, p);
     psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
       creal dt_rho = F3_C(p_rho_p,0, jx,jy,jz);
       creal div_j = F3_C(p_div_j,0, jx,jy,jz);

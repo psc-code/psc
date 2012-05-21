@@ -1,6 +1,7 @@
 
 #include "psc.h"
 #include "psc_fields_fortran.h"
+#include "psc_fields_c.h"
 #include "psc_glue.h"
 
 #include <mrc_params.h>
@@ -137,7 +138,7 @@ void
 psc_mfields_fortran_copy_to_c(mfields_fortran_t *flds_fortran, mfields_c_t *flds_c, int mb, int me)
 {
   psc_foreach_patch(ppsc, p) {
-    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_c, p);
+    struct psc_fields *pf_c = psc_mfields_get_patch_c(flds_c, p);
     struct psc_fields *pf_base = psc_mfields_get_patch_fortran(flds_fortran, p);
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
@@ -152,7 +153,7 @@ psc_mfields_fortran_copy_from_c(mfields_fortran_t *flds, mfields_c_t *flds_base,
 {
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_mfields_get_patch_fortran(flds, p);
-    fields_c_t *pf_c = psc_mfields_get_patch_c(flds_base, p);
+    struct psc_fields *pf_c = psc_mfields_get_patch_c(flds_base, p);
     for (int m = mb; m < me; m++) {
       psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
 	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);

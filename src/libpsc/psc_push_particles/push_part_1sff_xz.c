@@ -28,7 +28,7 @@ do_push_part_1sff_xz(int p, fields_t *pf, struct psc_particles *pp)
 
   struct psc_patch *patch = &ppsc->patch[p];
 
-  fields_c_t f_avg;
+  struct psc_fields f_avg;
   // FIXME, is -1 .. 1 always enough?
   int ib[3] = { -2, 0, -2 };
   int ie[3] = { patch->ldims[0] + 2, 1, patch->ldims[2] + 2 };

@@ -8,9 +8,9 @@
 
 #define PARTICLE_TYPE "c"
 
-typedef fields_c_t fields_cache_t;
+typedef struct psc_fields fields_cache_t;
 #define F3_CACHE F3_C
-typedef fields_c_t fields_curr_t;
+typedef struct psc_fields fields_curr_t;
 #define F3_CURR F3_C
 
 #define cache_fields_from_em cache_fields_c_from_em

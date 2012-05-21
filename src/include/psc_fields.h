@@ -86,13 +86,12 @@ psc_mfields_get_patch_fortran(struct psc_mfields *flds, int p)
   return flds->flds[p];
 }
 
-#include "psc_fields_c.h"
 typedef struct psc_mfields mfields_c_t;
-static inline fields_c_t *
+static inline struct psc_fields *
 psc_mfields_get_patch_c(struct psc_mfields *flds, int p)
 {
   assert(psc_mfields_ops(flds) == &psc_mfields_c_ops);
-  return (fields_c_t *) flds->flds[p];
+  return flds->flds[p];
 }
 
 typedef struct psc_mfields mfields_single_t;

@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_output_fields_c.h"
 #include "psc_output_format_private.h"
+#include "psc_fields_c.h"
 
 #include <mrc_profile.h>
 #include <mrc_common.h>
@@ -52,8 +53,8 @@ hdf5_write_field(void *ctx, mfields_c_t *fld)
   struct hdf5_ctx *hdf5 = ctx;
 
   hid_t mem_type;
-  fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
-  if (sizeof(*pf->flds) == 4) { // FIXME
+  struct psc_fields *pf = psc_mfields_get_patch_c(fld, 0);
+  if (sizeof(fields_c_real_t) == 4) {
     mem_type = H5T_NATIVE_FLOAT;
   } else {
     mem_type = H5T_NATIVE_DOUBLE;
@@ -149,7 +150,7 @@ xdmf_write_spatial_collection(struct psc_output_fields_c *out, struct psc_fields
   mrc_domain_get_param_int(ppsc->mrc_domain, "npy", &np[1]);
   mrc_domain_get_param_int(ppsc->mrc_domain, "npz", &np[2]);
 
-  fields_c_t *fld = psc_mfields_get_patch_c(list->flds[0], 0);
+  struct psc_fields *fld = psc_mfields_get_patch_c(list->flds[0], 0);
   fprintf(f, "<?xml version=\"1.0\" ?>\n");
   fprintf(f, "<Xdmf xmlns:xi=\"http://www.w3.org/2001/XInclude\" Version=\"2.0\">\n");
   fprintf(f, "<Domain>\n");

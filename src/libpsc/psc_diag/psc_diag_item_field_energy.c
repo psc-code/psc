@@ -1,5 +1,6 @@
 
 #include "psc_diag_item_private.h"
+#include "psc_fields_c.h"
 
 // ----------------------------------------------------------------------
 // psc_diag_item_field_energy_run
@@ -12,7 +13,7 @@ psc_diag_item_field_energy_run(struct psc_diag_item *item,
 
   double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
   psc_foreach_patch(psc, p) {
-    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch_c(flds, p);
     // FIXME, this doesn't handle non-periodic b.c. right
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       EH2[0] +=	sqr(F3_C(pf, EX, ix,iy,iz)) * fac;

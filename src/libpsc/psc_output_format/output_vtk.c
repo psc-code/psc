@@ -2,6 +2,7 @@
 #include "psc.h"
 #include "psc_output_fields_c.h"
 #include "psc_output_format_private.h"
+#include "psc_fields_c.h"
 
 #include <mpi.h>
 #include <string.h>
@@ -60,7 +61,7 @@ vtk_write_field(void *ctx, mfields_c_t *fld)
   fprintf(file, "SCALARS %s float\n", psc_mfields_comp_name(fld, 0));
   fprintf(file, "LOOKUP_TABLE default\n");
 
-  fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
+  struct psc_fields *pf = psc_mfields_get_patch_c(fld, 0);
   int *ib = pf->ib, *im = pf->im;
   for (int iz = ib[2]; iz < ib[2] + im[2]; iz++) {
     for (int iy = ib[1]; iy < ib[1] + im[1]; iy++) {

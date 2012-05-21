@@ -1,6 +1,8 @@
 
 #include "psc_output_fields_c.h"
 
+#include "psc_fields_c.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -71,7 +73,7 @@ write_fields_combine(struct psc_fields_list *list,
 
 	psc_mfields_set_comp_name(fld, 0, psc_mfields_comp_name(list->flds[m], 0));
 
-	fields_c_t *pf = psc_mfields_get_patch_c(fld, 0);
+	struct psc_fields *pf = psc_mfields_get_patch_c(fld, 0);
 	
 	for (int n = 0; n < size; n++) {
 	  int ilo[3], ihi[3], ilg[3], img[3];

@@ -58,7 +58,7 @@ psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int m
 {
   psc_foreach_patch(ppsc, p) {
     fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
-    fields_c_t *pf_c = psc_mfields_get_patch(flds_c, p);
+    struct psc_fields *pf_c = psc_mfields_get_patch(flds_c, p);
 
     float *h_flds = calloc(flds_cuda->nr_fields * pf_cuda->im[0] * pf_cuda->im[1] * pf_cuda->im[2],
 			   sizeof(*h_flds));

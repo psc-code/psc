@@ -8,7 +8,7 @@
 #include <assert.h>
 
 void
-fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
+fields_c_alloc(struct psc_fields *pf, int ib[3], int ie[3], int nr_comp, int first_comp)
 {
   unsigned int size = 1;
   for (int d = 0; d < 3; d++) {
@@ -27,25 +27,25 @@ fields_c_alloc(fields_c_t *pf, int ib[3], int ie[3], int nr_comp, int first_comp
   pf->flds =  m; 
   assert(ierr == 0);
 #else
-  pf->flds = calloc(nr_comp * size, sizeof(*pf->flds));
+  pf->data = calloc(nr_comp * size, sizeof(fields_c_real_t));
 #endif
 }
 
 void
-fields_c_free(fields_c_t *pf)
+fields_c_free(struct psc_fields *pf)
 {
-  free(pf->flds);
+  free(pf->data);
 }
 
 void
-fields_c_zero(fields_c_t *pf, int m)
+fields_c_zero(struct psc_fields *pf, int m)
 {
   memset(&F3_C(pf, m, pf->ib[0], pf->ib[1], pf->ib[2]), 0,
 	 pf->im[0] * pf->im[1] * pf->im[2] * sizeof(fields_c_real_t));
 }
 
 void
-fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
+fields_c_set(struct psc_fields *pf, int m, fields_c_real_t val)
 {
   for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
     for (int jy = pf->ib[1]; jy < pf->ib[1] + pf->im[1]; jy++) {
@@ -57,7 +57,7 @@ fields_c_set(fields_c_t *pf, int m, fields_c_real_t val)
 }
 
 void
-fields_c_copy_comp(fields_c_t *pto, int m_to, fields_c_t *pfrom, int m_from)
+fields_c_copy_comp(struct psc_fields *pto, int m_to, struct psc_fields *pfrom, int m_from)
 {
   for (int jz = pto->ib[2]; jz < pto->ib[2] + pto->im[2]; jz++) {
     for (int jy = pto->ib[1]; jy < pto->ib[1] + pto->im[1]; jy++) {
@@ -69,7 +69,7 @@ fields_c_copy_comp(fields_c_t *pto, int m_to, fields_c_t *pfrom, int m_from)
 }
 
 void
-fields_c_axpy(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
+fields_c_axpy(struct psc_fields *y, fields_c_real_t a, struct psc_fields *x)
 {
   assert(y->nr_comp == x->nr_comp);
   for (int m = 0; m < y->nr_comp; m++) {
@@ -84,7 +84,7 @@ fields_c_axpy(fields_c_t *y, fields_c_real_t a, fields_c_t *x)
 }
 
 void
-fields_c_axpy_comp(fields_c_t *y, int ym, fields_c_real_t a, fields_c_t *x, int xm)
+fields_c_axpy_comp(struct psc_fields *y, int ym, fields_c_real_t a, struct psc_fields *x, int xm)
 {
   for (int jz = y->ib[2]; jz < y->ib[2] + y->im[2]; jz++) {
     for (int jy = y->ib[1]; jy < y->ib[1] + y->im[1]; jy++) {
@@ -96,7 +96,7 @@ fields_c_axpy_comp(fields_c_t *y, int ym, fields_c_real_t a, fields_c_t *x, int 
 }
 
 void
-fields_c_scale(fields_c_t *pf, fields_c_real_t val)
+fields_c_scale(struct psc_fields *pf, fields_c_real_t val)
 {
   for (int m = 0; m < pf->nr_comp; m++) {
     for (int jz = pf->ib[2]; jz < pf->ib[2] + pf->im[2]; jz++) {
@@ -172,7 +172,7 @@ _psc_mfields_c_setup(mfields_c_t *flds)
 						     &flds->nr_patches);
   flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_t *pf = calloc(1, sizeof(*pf));
+    struct psc_fields *pf = calloc(1, sizeof(*pf));
     flds->flds[p] = (struct psc_fields *) pf;
     int ilg[3] = { -flds->ibn[0], -flds->ibn[1], -flds->ibn[2] };
     int ihg[3] = { patches[p].ldims[0] + flds->ibn[0],
@@ -186,7 +186,7 @@ static void
 _psc_mfields_c_destroy(mfields_c_t *flds)
 {
   for (int p = 0; p < flds->nr_patches; p++) {
-    fields_c_t *pf = psc_mfields_get_patch_c(flds, p);
+    struct psc_fields *pf = psc_mfields_get_patch_c(flds, p);
     fields_c_free(pf);
   }
   free(flds->flds);
@@ -225,7 +225,7 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
     ierr = H5LTset_attribute_string(group, ".", namec, s); CE;
   }
   for (int p = 0; p < mfields->nr_patches; p++) {
-    fields_c_t *fields = psc_mfields_get_patch_c(mfields, p);
+    struct psc_fields *fields = psc_mfields_get_patch_c(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
@@ -235,7 +235,7 @@ _psc_mfields_c_write(mfields_c_t *mfields, struct mrc_io *io)
     ierr = H5LTset_attribute_int(groupp, ".", "nr_comp", &fields->nr_comp, 1); CE;
     // write components separately instead?
     hsize_t hdims[4] = { fields->nr_comp, fields->im[2], fields->im[1], fields->im[0] };
-    ierr = H5LTmake_dataset_double(groupp, "fields_c", 4, hdims, fields->flds); CE;
+    ierr = H5LTmake_dataset_double(groupp, "fields_c", 4, hdims, fields->data); CE;
     ierr = H5Gclose(groupp); CE;
   }
 
@@ -270,7 +270,7 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
   }
 
   for (int p = 0; p < mfields->nr_patches; p++) {
-    fields_c_t *fields = psc_mfields_get_patch_c(mfields, p);
+    struct psc_fields *fields = psc_mfields_get_patch_c(mfields, p);
     char name[10]; sprintf(name, "p%d", p);
 
     hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
@@ -283,7 +283,7 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
       assert(im[d] == fields->im[d]);
     }
     assert(nr_comp == fields->nr_comp);
-    ierr = H5LTread_dataset_double(groupp, "fields_c", fields->flds); CE;
+    ierr = H5LTread_dataset_double(groupp, "fields_c", fields->data); CE;
     ierr = H5Gclose(groupp); CE;
   }
 
