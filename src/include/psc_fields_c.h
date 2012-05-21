@@ -31,10 +31,4 @@ typedef double fields_c_real_t;
 
 #endif
 
-static inline unsigned int
-fields_c_size(struct psc_fields *pf)
-{
-  return pf->im[0] * pf->im[1] * pf->im[2];
-}
-
 #endif

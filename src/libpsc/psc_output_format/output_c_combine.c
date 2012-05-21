@@ -63,7 +63,7 @@ write_fields_combine(struct psc_fields_list *list,
 	MPI_Send(s_ihi, 3, MPI_INT, 0, 101, MPI_COMM_WORLD);
 	MPI_Send(s_ilg, 3, MPI_INT, 0, 102, MPI_COMM_WORLD);
 	MPI_Send(s_img, 3, MPI_INT, 0, 103, MPI_COMM_WORLD);
-	unsigned int sz = fields_c_size(psc_mfields_get_patch(list->flds[m], p));
+	unsigned int sz = psc_fields_size(psc_mfields_get_patch(list->flds[m], p));
 	MPI_Send(s_data, sz, MPI_FIELDS_C_REAL, 0, 104, MPI_COMM_WORLD);
       } else { // rank == 0
 	mfields_c_t *fld = psc_mfields_create(MPI_COMM_SELF);

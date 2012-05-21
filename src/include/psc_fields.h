@@ -7,6 +7,8 @@
 
 MRC_CLASS_DECLARE(psc_fields, struct psc_fields);
 
+unsigned int psc_fields_size(struct psc_fields *pf);
+
 // ----------------------------------------------------------------------
 // psc_mfields class
 

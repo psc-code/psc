@@ -352,7 +352,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
       fields_t *pf_old = &f_old[p];
-      int nn = fields_size(pf_old) * pf_old->nr_comp;
+      int nn = psc_fields_size(pf_old) * pf_old->nr_comp;
       int *ib = pf_old->ib;
       void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);
       MPI_Isend(addr_old, nn, MPI_FIELDS_REAL, info_new.rank,
@@ -374,7 +374,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     }
     else {
       fields_t *pf_new = &f_new[p];
-      int nn = fields_size(pf_new) * pf_new->nr_comp;
+      int nn = psc_fields_size(pf_new) * pf_new->nr_comp;
       int *ib = pf_new->ib;
       void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
       MPI_Irecv(addr_new, nn, MPI_FIELDS_REAL, info_old.rank,
@@ -396,8 +396,8 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
     fields_t *pf_new = &f_new[p];
 
     assert(pf_old->nr_comp == pf_new->nr_comp);
-    assert(fields_size(pf_old) == fields_size(pf_new));
-    int size = fields_size(pf_old) * pf_old->nr_comp;
+    assert(psc_fields_size(pf_old) == psc_fields_size(pf_new));
+    int size = psc_fields_size(pf_old) * pf_old->nr_comp;
     int *ib = pf_new->ib;
     void *addr_new = &F3(pf_new, 0, ib[0], ib[1], ib[2]);
     void *addr_old = &F3(pf_old, 0, ib[0], ib[1], ib[2]);

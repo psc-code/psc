@@ -6,6 +6,15 @@
 #include <mrc_params.h>
 
 // ======================================================================
+// psc_fields_size
+
+unsigned int
+psc_fields_size(struct psc_fields *pf)
+{
+  return pf->im[0] * pf->im[1] * pf->im[2];
+}
+
+// ======================================================================
 // psc_fields_descr
 
 #define VAR(x) (void *)offsetof(struct psc_fields, x)

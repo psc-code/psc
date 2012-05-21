@@ -35,14 +35,4 @@ typedef float fields_single_real_t;
 
 #endif
 
-void fields_single_alloc(struct psc_fields *pf, int ib[3], int ie[3],
-			 int nr_comp, int first_comp);
-void fields_single_free(struct psc_fields *pf);
-
-static inline unsigned int
-fields_single_size(struct psc_fields *pf)
-{
-  return pf->im[0] * pf->im[1] * pf->im[2];
-}
-
 #endif
