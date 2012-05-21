@@ -248,7 +248,7 @@ psc_mfields_put_##type(struct psc_mfields *mflds,			\
 {									\
   psc_mfields_put_as(mflds, mflds_base, mb, me);			\
 }									\
-									\
+
 MAKE_MFIELDS_GET_PUT(c)
 MAKE_MFIELDS_GET_PUT(single)
 MAKE_MFIELDS_GET_PUT(fortran)
