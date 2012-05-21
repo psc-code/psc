@@ -149,47 +149,10 @@ _psc_mfields_single_copy_comp(mfields_single_t *to, int mto, mfields_single_t *f
 }
 
 // ======================================================================
-// psc_mfields_single
-
-static void
-_psc_mfields_single_setup(mfields_single_t *flds)
-{
-  psc_mfields_setup_super(flds);
-
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
-						     &flds->nr_patches);
-  flds->flds = calloc(flds->nr_patches, sizeof(*flds->flds));
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
-    psc_fields_set_type(pf, "single");
-    for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -flds->ibn[d];
-      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
-    }
-    pf->nr_comp = flds->nr_fields;
-    pf->first_comp = flds->first_comp;
-    psc_fields_setup(pf);
-    flds->flds[p] = pf;
-  }
-}
-
-static void
-_psc_mfields_single_destroy(mfields_single_t *flds)
-{
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_mfields_get_patch_single(flds, p);
-    psc_fields_destroy(pf);
-  }
-  free(flds->flds);
-}
-
-// ======================================================================
 // psc_mfields: subclass "single"
   
 struct psc_mfields_ops psc_mfields_single_ops = {
   .name                  = "single",
-  .setup                 = _psc_mfields_single_setup,
-  .destroy               = _psc_mfields_single_destroy,
   .zero_comp             = _psc_mfields_single_zero_comp,
   .set_comp              = _psc_mfields_single_set_comp,
   .scale                 = _psc_mfields_single_scale,

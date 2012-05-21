@@ -94,53 +94,10 @@ psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int m
 }
 
 // ======================================================================
-// psc_fields_cuda
-
-EXTERN_C void cuda_init(int rank);
-
-static void
-_psc_mfields_cuda_setup(mfields_cuda_t *flds)
-{
-  psc_mfields_setup_super(flds);
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  cuda_init(rank);
-
-  struct mrc_patch *patches = mrc_domain_get_patches(flds->domain,
-						     &flds->nr_patches);
-  flds->flds = calloc(ppsc->nr_patches, sizeof(*flds->flds));
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
-    psc_fields_set_type(pf, "cuda");
-    for (int d = 0; d < 3; d++) {
-      pf->ib[d] = -flds->ibn[d];
-      pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];
-    }
-    pf->nr_comp = flds->nr_fields;
-    pf->first_comp = flds->first_comp;
-    psc_fields_setup(pf);
-    flds->flds[p] = pf;
-  }
-}
-
-static void
-_psc_mfields_cuda_destroy(mfields_cuda_t *flds)
-{
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_mfields_get_patch_cuda(flds, p);
-    psc_fields_destroy(pf);
-  }
-  free(flds->flds);
-}
-
-// ======================================================================
 // psc_mfields: subclass "cuda"
   
 struct psc_mfields_ops psc_mfields_cuda_ops = {
   .name                  = "cuda",
-  .setup                 = _psc_mfields_cuda_setup,
-  .destroy               = _psc_mfields_cuda_destroy,
   .copy_to_c             = psc_mfields_cuda_copy_to_c,
   .copy_from_c           = psc_mfields_cuda_copy_from_c,
 };
