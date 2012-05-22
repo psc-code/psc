@@ -7,7 +7,7 @@
 
 struct psc_push_particles_ops psc_push_particles_1st_ops = {
   .name                  = "1st",
-  .push_xz               = psc_push_particles_1st_push_xz,
+  .push_a_xz             = psc_push_particles_1st_push_a_xz,
   .push_a_yz             = psc_push_particles_1st_push_a_yz,
 };
 
@@ -26,5 +26,5 @@ struct psc_push_particles_ops psc_push_particles_1vb_ops = {
 
 struct psc_push_particles_ops psc_push_particles_1sff_ops = {
   .name                  = "1sff",
-  .push_xz               = psc_push_particles_1sff_push_xz,
+  .push_a_xz             = psc_push_particles_1sff_push_a_xz,
 };

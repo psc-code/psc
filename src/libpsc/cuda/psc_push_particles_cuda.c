@@ -265,7 +265,7 @@ psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_cuda_ops = {
   .name                  = "cuda",
-  .push_z                = psc_push_particles_cuda_push_z3,
+  //  .push_z                = psc_push_particles_cuda_push_z3,
   //  .push_yz               = psc_push_particles_cuda_push_yz6,
   .mp_flags              = MP_BLOCKSIZE_4X4X4 |
                            MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS,

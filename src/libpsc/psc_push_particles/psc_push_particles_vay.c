@@ -121,30 +121,30 @@ psc_push_particles_vay_push_xyz(struct psc_push_particles *push,
 #endif
 
 // ----------------------------------------------------------------------
-// psc_push_particles_push_z
+// psc_push_particles_vay_push_a_z
 
 static void
-psc_push_particles_vay_push_z(struct psc_push_particles *push,
-				   mparticles_base_t *particles_base,
-				   mfields_base_t *flds_base)
+psc_push_particles_vay_push_a_z(struct psc_push_particles *push,
+				struct psc_particles *prts_base,
+				struct psc_fields *flds_base)
 {
   assert(ppsc->nr_patches == 1);
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
-  mfields_fortran_t *flds = psc_mfields_get_fortran(flds_base, EX, EX + 6);
   
   static int pr;
   if (!pr) {
-    pr = prof_register("fort_part_z", 1., 0, 0);
+    pr = prof_register("vay_part_z", 1., 0, 0);
   }
+
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "fortran", 0);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "fortran", EX, EX + 6);
+  
   prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    PIC_push_part_z_vay(ppsc, p, psc_mparticles_get_patch(particles, p),
-			psc_mfields_get_patch(flds, p));
-  }
+  psc_fields_zero_range(flds, JXI, JXI + 3);
+  PIC_push_part_z_vay(ppsc, prts->p, prts, flds);
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base, 0);
-  psc_mfields_put_fortran(flds, flds_base, JXI, JXI + 3);
+  psc_particles_put_as(prts, prts_base, 0);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 
 // ======================================================================
@@ -152,7 +152,7 @@ psc_push_particles_vay_push_z(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_vay_ops = {
   .name                  = "vay",
-  .push_z                = psc_push_particles_vay_push_z,
+  .push_a_z              = psc_push_particles_vay_push_a_z,
 #if 0 // FIXME, convert to vay
   .push_xy               = psc_push_particles_vay_push_xy,
   .push_xz               = psc_push_particles_vay_push_xz,

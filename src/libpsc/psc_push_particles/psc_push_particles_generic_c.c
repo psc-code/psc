@@ -7,10 +7,10 @@
 
 struct psc_push_particles_ops psc_push_particles_generic_c_ops = {
   .name                  = "generic_c",
-  .push_z                = psc_push_particles_generic_c_push_z,
-  .push_xy               = psc_push_particles_generic_c_push_xy,
-  .push_xz               = psc_push_particles_generic_c_push_xz,
+  .push_a_z              = psc_push_particles_generic_c_push_a_z,
+  .push_a_xy             = psc_push_particles_generic_c_push_a_xy,
+  .push_a_xz             = psc_push_particles_generic_c_push_a_xz,
   .push_a_yz             = psc_push_particles_generic_c_push_a_yz,
-  .push_xyz              = psc_push_particles_generic_c_push_xyz,
+  .push_a_xyz            = psc_push_particles_generic_c_push_a_xyz,
   .calc_j_z              = psc_push_particles_generic_c_calc_j_z,
 };

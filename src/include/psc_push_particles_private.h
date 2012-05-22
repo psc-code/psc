@@ -10,22 +10,22 @@ struct psc_push_particles {
 
 struct psc_push_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_push_particles);
-  void (*push_x)(struct psc_push_particles *push_particles,
-		 mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_y)(struct psc_push_particles *push_particles,
-		 mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_z)(struct psc_push_particles *push_particles,
-		 mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_xy)(struct psc_push_particles *push_particles,
-		  mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_xz)(struct psc_push_particles *push_particles,
-		  mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_xyz)(struct psc_push_particles *push_particles,
-		   mparticles_base_t *particles, mfields_base_t *flds);
+  void (*push_a_x)(struct psc_push_particles *push_particles,
+		   struct psc_particles *prts, struct psc_fields *flds);
+  void (*push_a_y)(struct psc_push_particles *push_particles,
+		   struct psc_particles *prts, struct psc_fields *flds);
+  void (*push_a_z)(struct psc_push_particles *push_particles,
+		   struct psc_particles *prts, struct psc_fields *flds);
+  void (*push_a_xy)(struct psc_push_particles *push_particles,
+		    struct psc_particles *prts, struct psc_fields *flds);
+  void (*push_a_xz)(struct psc_push_particles *push_particles,
+		    struct psc_particles *prts, struct psc_fields *flds);
   void (*push_a_yz)(struct psc_push_particles *push_particles,
 		    struct psc_particles *prts, struct psc_fields *flds);
   void (*push_b_yz)(struct psc_push_particles *push_particles,
 		    struct psc_particles *prts, struct psc_fields *flds);
+  void (*push_a_xyz)(struct psc_push_particles *push_particles,
+		     struct psc_particles *prts, struct psc_fields *flds);
 
   void (*calc_j_x)(struct psc_push_particles *push_particles,
 		   mparticles_base_t *particles, mfields_base_t *flds);
