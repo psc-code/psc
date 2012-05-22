@@ -47,7 +47,10 @@ psc_push_particles_run_b(struct psc_push_particles *push,
     assert(0);
   } else if (im[1] > 1 && im[2] > 1) { // yz
     if (ops->push_b_yz) {
-      ops->push_b_yz(push, particles, flds);
+      for (int p = 0; p < particles->nr_patches; p++) {
+	ops->push_b_yz(push, psc_mparticles_get_patch(particles, p),
+		       psc_mfields_get_patch(flds, p));
+      }
     }
   } else if (im[2] > 1) { // z
     assert(0);

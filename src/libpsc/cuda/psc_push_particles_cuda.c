@@ -118,8 +118,8 @@ cuda_push_partq(struct psc_push_particles *push,
 
 static void
 cuda_push_partq_b(struct psc_push_particles *push,
-		  mparticles_base_t *particles_base,
-		  mfields_base_t *flds_base,
+		  struct psc_particles *prts_base,
+		  struct psc_fields *flds_base,
 		  void (*set_constants)(struct psc_particles *, struct psc_fields *),
 		  void (*push_part_p2)(struct psc_particles *, struct psc_fields *),
 		  void (*push_part_p3)(struct psc_particles *, struct psc_fields *, real *, int))
@@ -133,21 +133,18 @@ cuda_push_partq_b(struct psc_push_particles *push,
   unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
 
   prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts =
-      psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "cuda", mp_flags);
-    struct psc_fields *flds =
-      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), "cuda", 0, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "cuda", mp_flags);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", 0, 0);
 
-    if (set_constants) {
-      set_constants(prts, flds);
-    }
-
-    push_part_p3(prts, flds, NULL, block_stride);
-
-    psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), MP_DONT_COPY);
-    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
+  if (set_constants) {
+    set_constants(prts, flds);
   }
+
+  push_part_p3(prts, flds, NULL, block_stride);
+
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
+
   prof_stop(pr);
 }
 
@@ -331,10 +328,10 @@ psc_push_particles_cuda_4x4_1vb_push_yz(struct psc_push_particles *push,
 
 static void
 psc_push_particles_cuda_4x4_1vb_push_b_yz(struct psc_push_particles *push,
-					  mparticles_base_t *particles_base,
-					  mfields_base_t *flds_base)
+					  struct psc_particles *prts_base,
+					  struct psc_fields *flds_base)
 {
-  cuda_push_partq_b(push, particles_base, flds_base, NULL,
+  cuda_push_partq_b(push, prts_base, flds_base, NULL,
 		    yz4x4_1vb_cuda_push_part_p2,
 		    yz4x4_1vb_cuda_push_part_p3);
 }
