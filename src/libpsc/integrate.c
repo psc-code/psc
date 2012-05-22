@@ -93,9 +93,8 @@ psc_step(struct psc *psc)
   
   // particle propagation n*dt -> (n+1.0)*dt
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  if (!(psc->prm.particles_base_flags & MP_INTERNAL_PARTICLE_EXCHANGE)) {
-    psc_bnd_exchange_particles(psc->bnd, psc->particles);
-  }
+  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
   psc_push_photons_run(psc->mphotons);
   psc_bnd_exchange_photons(psc->bnd, psc->mphotons);

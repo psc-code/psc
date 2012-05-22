@@ -53,7 +53,6 @@ struct psc_mparticles_ops {
 #define MP_BLOCKSIZE_4X4X4    (0x3000)
 #define MP_BLOCKSIZE_8X8X8    (0x4000)
 #define MP_NO_CHECKERBOARD    (0x10000)
-#define MP_INTERNAL_PARTICLE_EXCHANGE (0x20000)
 
 typedef struct psc_mparticles mparticles_base_t;
 

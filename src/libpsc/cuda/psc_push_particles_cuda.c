@@ -90,18 +90,14 @@ cuda_push_partq(struct psc_push_particles *push,
 		void (*push_part_p2)(struct psc_particles *, struct psc_fields *),
 		void (*push_part_p3)(struct psc_particles *, struct psc_fields *, real *, int))
 {
-  const int block_stride = 4;
   unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
   
-  static int pr, pr2, pr3;
+  static int pr;
   if (!pr) {
     pr  = prof_register("cuda_part", 1., 0, 0);
-    pr2 = prof_register("cuda_part_p2", 1., 0, 0);
-    pr3 = prof_register("cuda_part_p3", 1., 0, 0);
   }
   prof_start(pr);
 
-  prof_start(pr2);
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts =
       psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "cuda", mp_flags);
@@ -117,11 +113,26 @@ cuda_push_partq(struct psc_push_particles *push,
     psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
     psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), 0, 0);
   }
-  prof_stop(pr2);
+  prof_stop(pr);
+}
 
-  psc_bnd_exchange_particles(ppsc->bnd, particles_base);
+static void
+cuda_push_partq_b(struct psc_push_particles *push,
+		  mparticles_base_t *particles_base,
+		  mfields_base_t *flds_base,
+		  void (*set_constants)(struct psc_particles *, struct psc_fields *),
+		  void (*push_part_p2)(struct psc_particles *, struct psc_fields *),
+		  void (*push_part_p3)(struct psc_particles *, struct psc_fields *, real *, int))
+{
+  static int pr;
+  if (!pr) {
+    pr = prof_register("cuda_part_b", 1., 0, 0);
+  }
 
-  prof_start(pr3);
+  const int block_stride = 4;
+  unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
+
+  prof_start(pr);
   psc_foreach_patch(ppsc, p) {
     struct psc_particles *prts =
       psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "cuda", mp_flags);
@@ -137,8 +148,6 @@ cuda_push_partq(struct psc_push_particles *push,
     psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), MP_DONT_COPY);
     psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
   }
-  prof_stop(pr3);
-  
   prof_stop(pr);
 }
 
@@ -320,14 +329,24 @@ psc_push_particles_cuda_4x4_1vb_push_yz(struct psc_push_particles *push,
 		  yz4x4_1vb_cuda_push_part_p3);
 }
 
+static void
+psc_push_particles_cuda_4x4_1vb_push_b_yz(struct psc_push_particles *push,
+					  mparticles_base_t *particles_base,
+					  mfields_base_t *flds_base)
+{
+  cuda_push_partq_b(push, particles_base, flds_base, NULL,
+		    yz4x4_1vb_cuda_push_part_p2,
+		    yz4x4_1vb_cuda_push_part_p3);
+}
+
 // ======================================================================
 // psc_push_particles: subclass "cuda_1vb"
 
 struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
   .name                  = "cuda_1vb",
   .push_yz               = psc_push_particles_cuda_4x4_1vb_push_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD |
-                           MP_INTERNAL_PARTICLE_EXCHANGE,
+  .push_b_yz             = psc_push_particles_cuda_4x4_1vb_push_b_yz,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
 };
 
 // ======================================================================
@@ -350,8 +369,7 @@ psc_push_particles_cuda_2x2_1vb_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_2x2_1vb_ops = {
   .name                  = "cuda_2x2_1vb",
   .push_yz               = psc_push_particles_cuda_2x2_1vb_push_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_2X2X2 | MP_NO_CHECKERBOARD |
-                           MP_INTERNAL_PARTICLE_EXCHANGE,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_2X2X2 | MP_NO_CHECKERBOARD,
 };
 
 // ======================================================================
@@ -374,6 +392,5 @@ psc_push_particles_cuda_8x8_1vb_push_yz(struct psc_push_particles *push,
 struct psc_push_particles_ops psc_push_particles_cuda_8x8_1vb_ops = {
   .name                  = "cuda_8x8_1vb",
   .push_yz               = psc_push_particles_cuda_8x8_1vb_push_yz,
-  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_8X8X8 | MP_NO_CHECKERBOARD |
-                           MP_INTERNAL_PARTICLE_EXCHANGE,
+  .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_8X8X8 | MP_NO_CHECKERBOARD,
 };
