@@ -94,17 +94,16 @@ cuda_push_partq_a(struct psc_push_particles *push,
   if (!pr) {
     pr  = prof_register("cuda_part_a", 1., 0, 0);
   }
-  prof_start(pr);
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "cuda", mp_flags);
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", EX, EX + 6);
   
+  prof_start(pr);
   push_part_p2(prts, flds);
+  prof_stop(pr);
   
   psc_particles_put_as(prts, prts_base, 0);
   psc_fields_put_as(flds, flds_base, 0, 0);
-
-  prof_stop(pr);
 }
 
 static void
@@ -121,16 +120,15 @@ cuda_push_partq_b(struct psc_push_particles *push,
   const int block_stride = 4;
   unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
 
-  prof_start(pr);
   struct psc_particles *prts = psc_particles_get_as(prts_base, "cuda", mp_flags);
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", 0, 0);
 
+  prof_start(pr);
   push_part_p3(prts, flds, NULL, block_stride);
+  prof_stop(pr);
 
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
-
-  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
