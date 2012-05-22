@@ -21,8 +21,15 @@ psc_push_particles_run(struct psc_push_particles *push,
     assert(ops->push_xy);
     ops->push_xy(push, particles, flds);
   } else if (im[1] > 1 && im[2] > 1) { // yz
-    assert(ops->push_yz);
-    ops->push_yz(push, particles, flds);
+    if (ops->push_yz) {
+      ops->push_yz(push, particles, flds);
+    } else {
+      assert(ops->push_a_yz);
+      for (int p = 0; p < particles->nr_patches; p++) {
+	ops->push_a_yz(push, psc_mparticles_get_patch(particles, p),
+		       psc_mfields_get_patch(flds, p));
+      }
+    }
   } else if (im[2] > 1) { // z
     assert(ops->push_z);
     ops->push_z(push, particles, flds);
