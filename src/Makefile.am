@@ -10,6 +10,7 @@ bin_PROGRAMS = \
 	psc_bohm \
 	psc_kelvin_helmholtz \
 	psc_kelvin_helmholtz_double \
+	psc_mirror \
 	psc_harris \
 	psc_bubble \
 	psc_bubble_yz \
@@ -28,6 +29,7 @@ nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_double_SOURCES = dummy.cxx
+nodist_EXTRA_psc_mirror_SOURCES = dummy.cxx
 nodist_EXTRA_psc_harris_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bubble_yz_SOURCES = dummy.cxx
