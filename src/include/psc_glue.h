@@ -10,7 +10,6 @@ void PIC_push_part_xz(struct psc *psc, int p, struct psc_particles *pp, struct p
 void PIC_push_part_yz(struct psc *psc, int p, struct psc_particles *pp, struct psc_fields *pf);
 void PIC_push_part_z(struct psc *psc, int p, struct psc_particles *pp, struct psc_fields *pf);
 void PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *pp, struct psc_fields *pf);
-void PIC_sort(struct psc_particles *pp);
 void PIC_randomize(struct psc_particles *pp);
 void PIC_bin_coll(struct psc_particles *pp);
 void PIC_find_cell_indices(struct psc_particles *pp);

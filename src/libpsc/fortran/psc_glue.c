@@ -23,7 +23,6 @@
 #define PIC_push_part_xyz_F77 F77_FUNC(pic_push_part_xyz,PIC_PUSH_PART_XYZ)
 #define PIC_push_part_z_F77 F77_FUNC(pic_push_part_z,PIC_PUSH_PART_Z)
 #define PIC_push_part_z_vay_F77 F77_FUNC(pic_push_part_z_vay,PIC_PUSH_PART_Z_VAY)
-#define PIC_sort_F77 F77_FUNC(pic_sort,PIC_SORT)
 #define PIC_randomize_F77 F77_FUNC(pic_randomize,PIC_RANDOMIZE)
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
@@ -124,7 +123,6 @@ void PIC_push_part_z_vay_F77(f_int *niloc, particle_fortran_t *p_niloc,
 			     f_real *ex, f_real *ey, f_real *ez,
 			     f_real *hx, f_real *hy, f_real *hz);
 
-void PIC_sort_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_randomize_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
@@ -320,12 +318,6 @@ PIC_push_part_z_vay(struct psc *psc, int p, struct psc_particles *prts, struct p
 			  flds[JXI], flds[JYI], flds[JZI],
 			  flds[EX], flds[EY], flds[EZ],
 			  flds[HX], flds[HY], flds[HZ]);
-}
-
-void
-PIC_sort(struct psc_particles *prts)
-{
-  PIC_sort_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void

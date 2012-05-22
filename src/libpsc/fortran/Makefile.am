@@ -16,7 +16,7 @@ libsubdir_la_SOURCES = \
 	PIC_pex.F PIC_pey.F PIC_pez.F \
 	PIC_fex.F PIC_fey.F PIC_fez.F \
 	PIC_fax.F PIC_fay.F PIC_faz.F \
-	PIC_sort.F PIC_randomize.F PIC_find_cell_indices.F \
+	PIC_randomize.F PIC_find_cell_indices.F \
 	SERV_labelgen.F \
 	INIT_field.F \
 	PIC_bin_coll.F \
