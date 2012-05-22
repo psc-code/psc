@@ -82,7 +82,7 @@ psc_event_generator_emission(struct psc *psc)
 
   psc_foreach_patch(psc, p) {
     // get array of particles on this patch
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
     photons_t *photons = &psc->mphotons->p[p];
     // and iterative over all particles in the array
     for (int n = 0; n < pp->n_part; n++) {

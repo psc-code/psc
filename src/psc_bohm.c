@@ -1,7 +1,6 @@
 
 #include <psc.h>
 #include <psc_push_particles.h>
-#include <psc_moments.h>
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
@@ -180,7 +179,7 @@ struct psc_ops psc_bohm_ops = {
 // particle seeding
 
 static void
-seed_patch(struct psc *psc, int p, particles_t *pp)
+seed_patch(struct psc *psc, int p, struct psc_particles *pp)
 {
   struct psc_bohm *bohm = to_psc_bohm(psc);
   

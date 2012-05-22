@@ -7,7 +7,7 @@
 #include "psc_push_particles.h"
 #include "psc_bnd.h"
 #include "psc_randomize.h"
-#include "psc_moments.h"
+#include "psc_output_fields_item.h"
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
@@ -81,8 +81,8 @@ psc_save_particles_ref(struct psc *psc, mparticles_base_t *particles_base)
     psc_mparticles_setup(particles_ref);
   }
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
-    particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp_ref = psc_mparticles_get_patch(particles_ref, p);
     pp_ref->n_part = pp->n_part;
     for (int i = 0; i < pp->n_part; i++) {
       *particles_get_one(pp_ref, i) = *particles_get_one(pp, i);
@@ -141,8 +141,8 @@ psc_check_particles_ref(struct psc *psc, mparticles_base_t *particles_base,
   assert(particles_ref);
   particle_real_t xi = 0., yi = 0., zi = 0., pxi = 0., pyi = 0., pzi = 0.;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
-    particles_t *pp_ref = psc_mparticles_get_patch(particles_ref, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp_ref = psc_mparticles_get_patch(particles_ref, p);
 
     assert(pp->n_part == pp_ref->n_part);
     for (int i = 0; i < pp->n_part; i++) {
@@ -261,9 +261,14 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   mfields_c_t *dens_ref = fld_create(psc, 3);
   mfields_c_t *dens = fld_create(psc, 3);
 
-  psc_moments_calc_densities(psc->moments, NULL, particles_ref, dens_ref);
-  psc_moments_calc_densities(psc->moments, NULL, particles, dens);
-  
+  struct psc_output_fields_item *item = psc_output_fields_item_create(psc_comm(psc));
+  psc_output_fields_item_set_type(item, "n");
+  psc_output_fields_item_set_psc_bnd(item, psc->bnd);
+  psc_output_fields_item_setup(item);
+  psc_output_fields_item_run(item, NULL, particles_ref, dens_ref);
+  psc_output_fields_item_run(item, NULL, particles, dens);
+  psc_output_fields_item_destroy(item);
+
   // dens -= dens_ref
   psc_mfields_axpy(dens, -1., dens_ref);
 
@@ -271,7 +276,7 @@ psc_testing_check_densities_ref(struct psc *psc, struct psc_mparticles *particle
   for (int m = 0; m < 2; m++) {
     double max_err = 0.;
     psc_foreach_patch(psc, p) {
-      fields_c_t *p_dens = psc_mfields_get_patch_c(dens, p);
+      struct psc_fields *p_dens = psc_mfields_get_patch(dens, p);
       psc_foreach_3d(psc, p, jx, jy, jz, 0, 0) {
 	fields_c_real_t val = F3_C(p_dens,m, jx,jy,jz);
 	max_err = fmax(max_err, fabs(val));
@@ -305,7 +310,7 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
     struct psc_patch *patch = &psc->patch[p];
     int *ldims = patch->ldims;
     for (int n = 0; n < pp->n_part; n++) {
@@ -395,8 +400,7 @@ psc_create_test_z(void)
 // ======================================================================
 
 struct psc *
-psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
-			   const char *moments_type)
+psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask)
 {
   struct psc *psc = psc_create(MPI_COMM_WORLD);
   psc->domain.gdims[0] = 1; // make yz
@@ -404,7 +408,6 @@ psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask,
   psc_sort_set_type(psc->sort, "countsort2");
   psc_sort_set_param_int(ppsc->sort, "mask", mask);
   psc_randomize_set_type(psc->randomize, "c");
-  psc_moments_set_type(psc->moments, moments_type);
   psc_set_from_options(psc);
 
   return psc;

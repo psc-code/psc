@@ -14,7 +14,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     return;
   }
 
-  particles_c_t *pp = psc_mparticles_get_patch_c(psc->particles, 0);
+  struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, 0);
   pp->n_part = nr_particles_by_patch[0];
   for (int i = 0; i < pp->n_part; i++) {
     particle_c_t *prt = particles_c_get_one(pp, 0);
@@ -46,8 +46,6 @@ static const char *s_type = "fortran";
 static double eps_particles = 1e-7;
 // threshold for fields
 static double eps_fields = 1e-7;
-// which moment calculation to use for charge continuity
-static const char *s_moments = "c";
 // which test case to set up particles / fields
 static const char *s_case = "1";
 
@@ -60,7 +58,6 @@ main(int argc, char **argv)
   mrc_params_get_option_string("type", &s_type);
   mrc_params_get_option_double("eps_particles", &eps_particles);
   mrc_params_get_option_double("eps_fields", &eps_fields);
-  mrc_params_get_option_string("moments", &s_moments);
   mrc_params_get_option_string("case", &s_case);
 
   if (strcmp(s_case, "1") == 0) {
@@ -71,13 +68,13 @@ main(int argc, char **argv)
     assert(0);
   }
 
-  struct psc *psc = psc_testing_create_test_yz(s_ref_type, 0, s_moments);
+  struct psc *psc = psc_testing_create_test_yz(s_ref_type, 0);
   psc_setup(psc);
   psc_testing_push_particles(psc, s_ref_type);
   psc_testing_save_ref(psc);
   psc_destroy(psc);
 
-  psc = psc_testing_create_test_yz(s_type, 0, s_moments);
+  psc = psc_testing_create_test_yz(s_type, 0);
   psc_setup(psc);
   psc_testing_push_particles(psc, s_type);
   psc_testing_push_particles_check(psc, eps_particles, eps_fields);

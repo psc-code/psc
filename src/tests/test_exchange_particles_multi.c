@@ -29,7 +29,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) { // xz only !!!
 	  for (int ix = ilo[0]-1; ix < ihi[0]+1; ix++) {
 	    if (!count_only) {
-	      particles_c_t *pp = psc_mparticles_get_patch_c(psc->particles, p);
+	      struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, p);
 	      particle_t *p;
 	      p = particles_get_one(pp, i);
 	      memset(p, 0, sizeof(*p));
@@ -54,7 +54,7 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
     if (count_only) {
       nr_particles_by_patch[p] = i;
     } else {
-      particles_c_t *pp = psc_mparticles_get_patch_c(psc->particles, p);
+      struct psc_particles *pp = psc_mparticles_get_patch(psc->particles, p);
       pp->n_part = i;
     }
   }

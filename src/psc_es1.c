@@ -1,7 +1,6 @@
 
 #include <psc.h>
 #include <psc_push_particles.h>
-#include <psc_moments.h>
 #include <psc_push_fields.h>
 #include <psc_sort.h>
 #include <psc_balance.h>
@@ -105,8 +104,6 @@ psc_es1_create(struct psc *psc)
   psc->domain.bnd_part_hi[1] = BND_PART_PERIODIC;
   psc->domain.bnd_part_lo[2] = BND_PART_PERIODIC;
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
-
-  psc_moments_set_type(psc->moments, "c_1st_cc");
 }
 
 // ----------------------------------------------------------------------
@@ -167,7 +164,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   double l = psc->domain.length[2];
 
   psc_foreach_patch(psc, p) {
-    particles_t *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
 
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {

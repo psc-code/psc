@@ -26,7 +26,7 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_psc, (int *) &psc_test_ops_1);
 
   // FIXME moments, at least
-  struct psc *psc = psc_testing_create_test_yz("fortran", 0, "1st");
+  struct psc *psc = psc_testing_create_test_yz("fortran", 0);// moments "1st";
   psc_setup(psc);
   psc_testing_save_ref(psc);
   struct psc_mparticles *mprts;
