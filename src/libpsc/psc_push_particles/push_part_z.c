@@ -306,19 +306,15 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
 
 void
 psc_push_particles_generic_c_calc_j_z(struct psc_push_particles *push,
-				    mparticles_base_t *particles_base,
-				    mfields_base_t *flds_base)
+				      struct psc_particles *prts_base,
+				      struct psc_fields *flds_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, 0, 0);
 
-  psc_mfields_zero_range(flds, JXI, JXI + 3);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_genc_calc_j_z(p, psc_mfields_get_patch(flds, p),
-			psc_mparticles_get_patch(particles, p));
-  }
+  psc_fields_zero_range(flds, JXI, JXI + 3);
+  do_genc_calc_j_z(prts->p, flds, prts);
 
-  psc_mfields_put_cf(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }

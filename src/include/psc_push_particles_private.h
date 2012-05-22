@@ -28,19 +28,19 @@ struct psc_push_particles_ops {
 		     struct psc_particles *prts, struct psc_fields *flds);
 
   void (*calc_j_x)(struct psc_push_particles *push_particles,
-		   mparticles_base_t *particles, mfields_base_t *flds);
+		   struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_y)(struct psc_push_particles *push_particles,
-		   mparticles_base_t *particles, mfields_base_t *flds);
+		   struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_z)(struct psc_push_particles *push_particles,
-		   mparticles_base_t *particles, mfields_base_t *flds);
+		   struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_xy)(struct psc_push_particles *push_particles,
-		    mparticles_base_t *particles, mfields_base_t *flds);
+		    struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_xz)(struct psc_push_particles *push_particles,
-		    mparticles_base_t *particles, mfields_base_t *flds);
+		    struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_yz)(struct psc_push_particles *push_particles,
-		    mparticles_base_t *particles, mfields_base_t *flds);
+		    struct psc_particles *prts, struct psc_fields *flds);
   void (*calc_j_xyz)(struct psc_push_particles *push_particles,
-		     mparticles_base_t *particles, mfields_base_t *flds);
+		     struct psc_particles *prts, struct psc_fields *flds);
   
   unsigned int mp_flags; //< flags for _get_cuda(), alloc
 };
