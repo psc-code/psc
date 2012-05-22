@@ -131,26 +131,27 @@ psc_push_particles_1vb_push_yz(struct psc_push_particles *push,
 			       mparticles_base_t *particles_base,
 			       mfields_base_t *flds_base)
 {
-  mfields_t *flds = psc_mfields_get_cf(flds_base, EX, EX + 6);
-
   static int pr;
   if (!pr) {
     pr = prof_register(PARTICLE_TYPE "_1vb_push_yz", 1., 0, 0);
   }
   prof_start(pr);
-  psc_mfields_zero_range(flds, JXI, JXI + 3);
 
   psc_foreach_patch(ppsc, p) {
-    struct psc_fields *fld = cache_fields_from_em(p, psc_mfields_get_patch(flds, p));
     struct psc_particles *prts =
       psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), PARTICLE_TYPE, 0);
-    do_push_part_1vb_yz(p, fld, prts);
+    struct psc_fields *flds =
+      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), FIELDS_TYPE, EX, EX + 6);
+
+    psc_fields_zero_range(flds, JXI, JXI + 3);
+    struct psc_fields *flds_cache = cache_fields_from_em(p, flds);
+    do_push_part_1vb_yz(p, flds_cache, prts);
+    cache_fields_to_j(p, flds_cache, flds);
+    psc_fields_destroy(flds_cache);
+
     psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
-    cache_fields_to_j(p, fld, psc_mfields_get_patch(flds, p));
-    psc_fields_destroy(fld);
+    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
   }
   prof_stop(pr);
-
-  psc_mfields_put_cf(flds, flds_base, JXI, JXI + 3);
 }
 

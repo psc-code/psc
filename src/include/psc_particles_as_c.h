@@ -24,6 +24,7 @@ typedef mparticles_c_t mparticles_t;
 #define particle_real_abs           particle_c_real_abs
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_C_REAL
+#define PARTICLE_TYPE               "c"
 
 #endif
 

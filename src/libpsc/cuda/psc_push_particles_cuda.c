@@ -93,11 +93,6 @@ cuda_push_partq(struct psc_push_particles *push,
   const int block_stride = 4;
   unsigned int mp_flags = psc_push_particles_get_mp_flags(push);
   
-  // FIXME distinguish alloc/calc_block_offsets?
-  mparticles_cuda_t *particles = 
-    psc_mparticles_get_cuda(particles_base, mp_flags);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
-
   static int pr, pr2, pr3;
   if (!pr) {
     pr  = prof_register("cuda_part", 1., 0, 0);
@@ -108,47 +103,43 @@ cuda_push_partq(struct psc_push_particles *push,
 
   prof_start(pr2);
   psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+    struct psc_particles *prts =
+      psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "cuda", mp_flags);
+    struct psc_fields *flds =
+      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), "cuda", EX, EX + 6);
 
     if (set_constants) {
-      set_constants(prts, pf);
+      set_constants(prts, flds);
     }
 
-    push_part_p2(prts, pf);
+    push_part_p2(prts, flds);
+
+    psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
+    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), 0, 0);
   }
   prof_stop(pr2);
 
-  // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  psc_mparticles_put_cuda(particles, particles_base, 0);
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
-
-  // block/cell offsets will be calculated by sort_patch, anyway
-  particles = psc_mparticles_get_cuda(particles_base,
-				      mp_flags & ~MP_NEED_CELL_OFFSETS);
-  psc_foreach_patch(ppsc, p) {
-    if (mp_flags & MP_NEED_CELL_OFFSETS) { // FIXME, still needed?
-      cuda_sort_patch_by_cell(p, psc_mparticles_get_patch(particles, p));
-    }
-  }
 
   prof_start(pr3);
   psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+    struct psc_particles *prts =
+      psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "cuda", mp_flags);
+    struct psc_fields *flds =
+      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), "cuda", 0, 0);
 
     if (set_constants) {
-      set_constants(prts, pf);
+      set_constants(prts, flds);
     }
 
-    push_part_p3(prts, pf, NULL, block_stride);
+    push_part_p3(prts, flds, NULL, block_stride);
+
+    psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), MP_DONT_COPY);
+    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
   }
   prof_stop(pr3);
   
   prof_stop(pr);
-
-  psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_put_cuda(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------
