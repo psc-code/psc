@@ -65,7 +65,9 @@ psc_push_fields_push_a_E(struct psc_push_fields *push, mfields_base_t *flds)
   assert(ops->push_a_E);
   
   prof_start(pr);
-  ops->push_a_E(push, flds);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    ops->push_a_E(push, psc_mfields_get_patch(flds, p));
+  }
   prof_stop(pr);
 }
 
@@ -80,7 +82,9 @@ psc_push_fields_push_a_H(struct psc_push_fields *push, mfields_base_t *flds)
   assert(ops->push_a_H);
   
   prof_start(pr);
-  ops->push_a_H(push, flds);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    ops->push_a_H(push, psc_mfields_get_patch(flds, p));
+  }
   prof_stop(pr);
 }
 
@@ -95,7 +99,9 @@ psc_push_fields_push_b_E(struct psc_push_fields *push, mfields_base_t *flds)
   assert(ops->push_b_E);
   
   prof_start(pr);
-  ops->push_b_E(push, flds);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    ops->push_b_E(push, psc_mfields_get_patch(flds, p));
+  }
   prof_stop(pr);
 }
 
@@ -110,7 +116,9 @@ psc_push_fields_push_b_H(struct psc_push_fields *push, mfields_base_t *flds)
   assert(ops->push_b_H);
   
   prof_start(pr);
-  ops->push_b_H(push, flds);
+  for (int p = 0; p < flds->nr_patches; p++) {
+    ops->push_b_H(push, psc_mfields_get_patch(flds, p));
+  }
   prof_stop(pr);
 }
 
@@ -122,7 +130,9 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
     // pml could become a separate push_fields subclass
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_a);
-    ops->pml_a(push, flds);
+    for (int p = 0; p < flds->nr_patches; p++) {
+      ops->pml_a(push, psc_mfields_get_patch(flds, p));
+    }
   } else {
     psc_stats_start(st_time_field);
     psc_push_fields_push_a_E(push, flds);
@@ -150,7 +160,9 @@ psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
   if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_b);
-    ops->pml_b(push, flds);
+    for (int p = 0; p < flds->nr_patches; p++) {
+      ops->pml_b(push, psc_mfields_get_patch(flds, p));
+    }
   } else {
     psc_stats_start(st_time_field);
     psc_push_fields_push_b_H(push, flds);
