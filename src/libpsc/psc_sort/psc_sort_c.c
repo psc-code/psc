@@ -159,25 +159,21 @@ compare(const void *_a, const void *_b)
 }
 
 static void
-psc_sort_qsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
+psc_sort_qsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("qsort_sort", 1., 0, 0);
   }
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   prof_start(pr);
-  assert(ppsc->nr_patches == 1);
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_c *c = psc_particles_c(prts);
-    find_cell_indices(p, prts);
-    qsort(c->particles, prts->n_part, sizeof(*c->particles), compare);
-  }
+  struct psc_particles_c *c = psc_particles_c(prts);
+  find_cell_indices(prts->p, prts);
+  qsort(c->particles, prts->n_part, sizeof(*c->particles), compare);
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================
@@ -192,63 +188,61 @@ struct psc_sort_ops psc_sort_qsort_ops = {
 // counting sort
 
 static void
-psc_sort_countsort_run(struct psc_sort *sort, mparticles_base_t *particles_base)
+psc_sort_countsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
 {
   static int pr;
   if (!pr) {
     pr = prof_register("countsort_sort", 1., 0, 0);
   }
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_c *c = psc_particles_c(prts);
-    find_cell_indices(p, prts);
+
+  struct psc_patch *patch = &ppsc->patch[prts->p];
+  struct psc_particles_c *c = psc_particles_c(prts);
+  find_cell_indices(prts->p, prts);
     
-    int N = 1;
-    for (int d = 0; d < 3; d++) {
-      N *= patch->ldims[d] + 2 * ppsc->ibn[d];
-    }
-    unsigned int *cnts = malloc(N * sizeof(*cnts));
-    memset(cnts, 0, N * sizeof(*cnts));
-    
-    // count
-    for (int i = 0; i < prts->n_part; i++) {
-      unsigned int cni = get_cell_index(p, &c->particles[i]);
-      assert(cni < N);
-      cnts[cni]++;
-    }
-    
-    // calc offsets
-    int cur = 0;
-    for (int i = 0; i < N; i++) {
-      int n = cnts[i];
-      cnts[i] = cur;
-      cur += n;
-    }
-    assert(cur == prts->n_part);
-    
-    // move into new position
-    particle_t *particles2 = malloc(prts->n_part * sizeof(*particles2));
-    for (int i = 0; i < prts->n_part; i++) {
-      unsigned int cni = get_cell_index(0, &c->particles[i]);
-      memcpy(&particles2[cnts[cni]], &c->particles[i], sizeof(*particles2));
-      cnts[cni]++;
-    }
-    
-    // back to in-place
-    memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
-    
-    free(particles2);
-    free(cnts);
+  int N = 1;
+  for (int d = 0; d < 3; d++) {
+    N *= patch->ldims[d] + 2 * ppsc->ibn[d];
   }
+  unsigned int *cnts = malloc(N * sizeof(*cnts));
+  memset(cnts, 0, N * sizeof(*cnts));
+    
+  // count
+  for (int i = 0; i < prts->n_part; i++) {
+    unsigned int cni = get_cell_index(prts->p, &c->particles[i]);
+    assert(cni < N);
+    cnts[cni]++;
+  }
+    
+  // calc offsets
+  int cur = 0;
+  for (int i = 0; i < N; i++) {
+    int n = cnts[i];
+    cnts[i] = cur;
+    cur += n;
+  }
+  assert(cur == prts->n_part);
+  
+  // move into new position
+  particle_t *particles2 = malloc(prts->n_part * sizeof(*particles2));
+  for (int i = 0; i < prts->n_part; i++) {
+    unsigned int cni = get_cell_index(0, &c->particles[i]);
+    memcpy(&particles2[cnts[cni]], &c->particles[i], sizeof(*particles2));
+    cnts[cni]++;
+  }
+    
+  // back to in-place
+  memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
+  
+  free(particles2);
+  free(cnts);
 
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================
@@ -278,7 +272,7 @@ static struct param psc_sort_countsort2_descr[] = {
 
 
 static void
-psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base)
+psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
 {
   struct psc_sort_countsort2 *cs2 = mrc_to_subobj(sort, struct psc_sort_countsort2);
 
@@ -287,86 +281,83 @@ psc_sort_countsort2_run(struct psc_sort *sort, mparticles_base_t *particles_base
     pr = prof_register("countsort2_sort", 1., 0, 0);
   }
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   prof_start(pr);
   unsigned int mask = cs2->mask;
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_c *c = psc_particles_c(prts);
-    struct psc_patch *patch = &ppsc->patch[p];
-    struct cell_map map;
-    int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
+  struct psc_particles_c *c = psc_particles_c(prts);
+  struct psc_patch *patch = &ppsc->patch[prts->p];
+  struct cell_map map;
+  int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
     
-    unsigned int *cnis = malloc(prts->n_part * sizeof(*cnis));
-    for (int i = 0; i < prts->n_part; i++) {
-      particle_t *p = &c->particles[i];
-      particle_real_t dxi = 1.f / ppsc->dx[0];
-      particle_real_t dyi = 1.f / ppsc->dx[1];
-      particle_real_t dzi = 1.f / ppsc->dx[2];
-      particle_real_t xi[3] = {
-	(p->xi - patch->xb[0]) * dxi,
-	(p->yi - patch->xb[1]) * dyi,
-	(p->zi - patch->xb[2]) * dzi };
-      int pos[3];
-      for (int d = 0; d < 3; d++) {
-	pos[d] = particle_real_fint(xi[d]);
+  unsigned int *cnis = malloc(prts->n_part * sizeof(*cnis));
+  for (int i = 0; i < prts->n_part; i++) {
+    particle_t *p = &c->particles[i];
+    particle_real_t dxi = 1.f / ppsc->dx[0];
+    particle_real_t dyi = 1.f / ppsc->dx[1];
+    particle_real_t dzi = 1.f / ppsc->dx[2];
+    particle_real_t xi[3] = {
+      (p->xi - patch->xb[0]) * dxi,
+      (p->yi - patch->xb[1]) * dyi,
+      (p->zi - patch->xb[2]) * dzi };
+    int pos[3];
+    for (int d = 0; d < 3; d++) {
+      pos[d] = particle_real_fint(xi[d]);
 #if 0
-	if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
-	  printf("i %d d %d pos %d // %d xi %g dxi %g\n",
-		 i, d, pos[d], patch->ldims[d],
-		 (&p->xi)[d], 1. / ppsc->dx[d]);
-	}
+      if (pos[d] < 0 || pos[d] >= patch->ldims[d]) {
+	printf("i %d d %d pos %d // %d xi %g dxi %g\n",
+	       i, d, pos[d], patch->ldims[d],
+	       (&p->xi)[d], 1. / ppsc->dx[d]);
+      }
 #endif
-      }
-
-      cnis[i] = cell_map_3to1(&map, pos) & ~mask;
-      assert(cnis[i] < N);
-    }
-    cell_map_free(&map);
-    
-    unsigned int *cnts = malloc(N * sizeof(*cnts));
-    memset(cnts, 0, N * sizeof(*cnts));
-    
-    // count
-    for (int i = 0; i < prts->n_part; i++) {
-      unsigned int cni = cnis[i];
-      cnts[cni]++;
     }
     
-    // calc offsets
-    int cur = 0;
-    for (int i = 0; i < N; i++) {
-      int n = cnts[i];
-      cnts[i] = cur;
-      cur += n;
-    }
-    assert(cur == prts->n_part);
-    
-    // move into new position
-    particle_t *particles2 = malloc(prts->n_part * sizeof(*particles2));
-    for (int i = 0; i < prts->n_part; i++) {
-      unsigned int cni = cnis[i];
-      int n = 1;
-      while (i+n < prts->n_part && cnis[i+n] == cni) {
-	n++;
-      }
-      memcpy(&particles2[cnts[cni]], &c->particles[i], n * sizeof(*particles2));
-      cnts[cni] += n;
-      i += n - 1;
-    }
-
-    // back to in-place
-    memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
-    
-    free(particles2);
-    free(cnis);
-    free(cnts);
+    cnis[i] = cell_map_3to1(&map, pos) & ~mask;
+    assert(cnis[i] < N);
   }
+  cell_map_free(&map);
+  
+  unsigned int *cnts = malloc(N * sizeof(*cnts));
+  memset(cnts, 0, N * sizeof(*cnts));
+  
+  // count
+  for (int i = 0; i < prts->n_part; i++) {
+    unsigned int cni = cnis[i];
+    cnts[cni]++;
+  }
+  
+  // calc offsets
+  int cur = 0;
+  for (int i = 0; i < N; i++) {
+    int n = cnts[i];
+    cnts[i] = cur;
+    cur += n;
+  }
+  assert(cur == prts->n_part);
+  
+  // move into new position
+  particle_t *particles2 = malloc(prts->n_part * sizeof(*particles2));
+  for (int i = 0; i < prts->n_part; i++) {
+    unsigned int cni = cnis[i];
+    int n = 1;
+    while (i+n < prts->n_part && cnis[i+n] == cni) {
+      n++;
+    }
+    memcpy(&particles2[cnts[cni]], &c->particles[i], n * sizeof(*particles2));
+    cnts[cni] += n;
+    i += n - 1;
+  }
+  
+  // back to in-place
+  memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
+  
+  free(particles2);
+  free(cnis);
+  free(cnts);
 
   prof_stop(pr);
 
-  psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================

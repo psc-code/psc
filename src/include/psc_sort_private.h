@@ -11,7 +11,7 @@ struct psc_sort {
 
 struct psc_sort_ops {
   MRC_SUBCLASS_OPS(struct psc_sort);
-  void (*run)(struct psc_sort *sort, mparticles_base_t *particles);
+  void (*run)(struct psc_sort *sort, struct psc_particles *prts);
 };
 
 // ======================================================================

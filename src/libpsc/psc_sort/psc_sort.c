@@ -20,7 +20,9 @@ psc_sort_run(struct psc_sort *sort, mparticles_base_t *particles)
   psc_stats_start(st_time_sort);
   struct psc_sort_ops *ops = psc_sort_ops(sort);
   assert(ops->run);
-  ops->run(sort, particles);
+  for (int p = 0; p < particles->nr_patches; p++) {
+    ops->run(sort, psc_mparticles_get_patch(particles, p));
+  }
   psc_stats_stop(st_time_sort);
 }
 

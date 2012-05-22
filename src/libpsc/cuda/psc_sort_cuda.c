@@ -77,9 +77,9 @@ cuda_sort_patch_by_cell(int p, struct psc_particles *prts)
 }
 
 static void
-psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
+psc_sort_cuda_run(struct psc_sort *sort, struct psc_particles *prts_base)
 {
-  mparticles_cuda_t *particles = psc_mparticles_get_cuda(particles_base, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "cuda", 0);
 
   static int pr;
   if (!pr) {
@@ -87,12 +87,10 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
 
   prof_start(pr);
-  psc_foreach_patch(ppsc, p) {
-    sort_patch(p, psc_mparticles_get_patch(particles, p));
-  }
+  sort_patch(prts->p, prts);
   prof_stop(pr);
 
-  psc_mparticles_put_cuda(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================
