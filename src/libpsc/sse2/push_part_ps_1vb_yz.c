@@ -192,41 +192,37 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
 // ======================================================================
 
 void
-psc_push_particles_ps_1vb_push_yz(struct psc_push_particles *push,
-				  mparticles_base_t *particles_base,
-				  mfields_base_t *flds_base)
+psc_push_particles_ps_1vb_push_a_yz(struct psc_push_particles *push,
+				    struct psc_particles *prts_base,
+				    struct psc_fields *flds_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register("single_1vb_push_yz", 1., 0, 0);
+    pr = prof_register("ps_1vb_push_yz", 1., 0, 0);
   }
+
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "single", EX, EX + 6);
+
   prof_start(pr);
+  psc_fields_zero_range(flds, JXI, JXI + 3);
+  struct psc_patch *patch = ppsc->patch + prts->p;
+  fields_ip_t fld_ip;
+  // FIXME, can do -1 .. 1?
+  int ib[3] = { 0, -2, -2 };
+  int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
 
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts =
-      psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "single", 0);
-    struct psc_fields *flds =
-      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), "single", EX, EX + 6);
+  fields_ip_alloc(&fld_ip, ib, ie, 9, 0); // JXI .. HZ
+  ip_fields_from_em(prts->p, &fld_ip, flds);
 
-    psc_fields_zero_range(flds, JXI, JXI + 3);
-    struct psc_patch *patch = ppsc->patch + p;
-    fields_ip_t fld_ip;
-    // FIXME, can do -1 .. 1?
-    int ib[3] = { 0, -2, -2 };
-    int ie[3] = { 1, patch->ldims[1] + 2, patch->ldims[2] + 2 };
+  sb2_ps_1vb_yz_pxx_jxyz(prts->p, &fld_ip, prts, 0);
+  sb0_ps_1vb_yz_pxx_jxyz(prts->p, &fld_ip, prts, prts->n_part & ~3);
 
-    fields_ip_alloc(&fld_ip, ib, ie, 9, 0); // JXI .. HZ
-    ip_fields_from_em(p, &fld_ip, flds);
-
-    sb2_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, 0);
-    sb0_ps_1vb_yz_pxx_jxyz(p, &fld_ip, prts, prts->n_part & ~3);
-
-    ip_fields_to_j(p, &fld_ip, flds);
-    fields_ip_free(&fld_ip);
-
-    psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
-    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
-  }
+  ip_fields_to_j(prts->p, &fld_ip, flds);
+  fields_ip_free(&fld_ip);
   prof_stop(pr);
+
+  psc_particles_put_as(prts, prts_base, 0);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
 }
 

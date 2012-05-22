@@ -20,8 +20,6 @@ struct psc_push_particles_ops {
 		  mparticles_base_t *particles, mfields_base_t *flds);
   void (*push_xz)(struct psc_push_particles *push_particles,
 		  mparticles_base_t *particles, mfields_base_t *flds);
-  void (*push_yz)(struct psc_push_particles *push_particles,
-		  mparticles_base_t *particles, mfields_base_t *flds);
   void (*push_xyz)(struct psc_push_particles *push_particles,
 		   mparticles_base_t *particles, mfields_base_t *flds);
   void (*push_a_yz)(struct psc_push_particles *push_particles,

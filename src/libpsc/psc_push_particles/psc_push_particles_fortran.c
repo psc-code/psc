@@ -59,12 +59,12 @@ psc_push_particles_fortran_push_xz(struct psc_push_particles *push,
 }
 
 // ----------------------------------------------------------------------
-// psc_push_particles_push_yz
+// psc_push_particles_push_a_yz
 
 static void
-psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
-				   mparticles_base_t *particles_base,
-				   mfields_base_t *flds_base)
+psc_push_particles_fortran_push_a_yz(struct psc_push_particles *push,
+				     struct psc_particles *prts_base,
+				     struct psc_fields *flds_base)
 {
   assert(ppsc->nr_patches == 1);
   
@@ -72,21 +72,18 @@ psc_push_particles_fortran_push_yz(struct psc_push_particles *push,
   if (!pr) {
     pr = prof_register("fort_part_yz", 1., 0, 0);
   }
+
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "fortran", 0);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "fortran", EX, EX + 6);
+  
   prof_start(pr);
-
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts =
-      psc_particles_get_as(psc_mparticles_get_patch(particles_base, p), "fortran", 0);
-    struct psc_fields *flds =
-      psc_fields_get_as(psc_mfields_get_patch(flds_base, p), "fortran", EX, EX + 6);
-
-    psc_fields_zero_range(flds, JXI, JXI + 3);
-    PIC_push_part_yz(ppsc, p, prts, flds);
-
-    psc_particles_put_as(prts, psc_mparticles_get_patch(particles_base, p), 0);
-    psc_fields_put_as(flds, psc_mfields_get_patch(flds_base, p), JXI, JXI + 3);
-  }
+  psc_fields_zero_range(flds, JXI, JXI + 3);
+  PIC_push_part_yz(ppsc, prts->p, prts, flds);
   prof_stop(pr);
+  
+  psc_particles_put_as(prts, prts_base, 0);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
+
 }
 
 // ----------------------------------------------------------------------
@@ -151,6 +148,6 @@ struct psc_push_particles_ops psc_push_particles_fortran_ops = {
   .push_z                = psc_push_particles_fortran_push_z,
   .push_xy               = psc_push_particles_fortran_push_xy,
   .push_xz               = psc_push_particles_fortran_push_xz,
-  .push_yz               = psc_push_particles_fortran_push_yz,
+  .push_a_yz             = psc_push_particles_fortran_push_a_yz,
   .push_xyz              = psc_push_particles_fortran_push_xyz,
 };
