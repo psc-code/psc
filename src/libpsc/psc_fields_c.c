@@ -197,32 +197,6 @@ _psc_mfields_c_read(mfields_c_t *mfields, struct mrc_io *io)
 
 #endif
 
-static void
-psc_mfields_c_copy_to_fortran(mfields_c_t *flds_c, mfields_fortran_t *flds_fortran, int mb, int me)
-{
-  psc_mfields_fortran_copy_from_c(flds_fortran, flds_c, mb, me);
-}
-
-static void
-psc_mfields_c_copy_from_fortran(mfields_c_t *flds_c, mfields_fortran_t *flds_fortran, int mb, int me)
-{
-  psc_mfields_fortran_copy_to_c(flds_fortran, flds_c, mb, me);
-}
-
-#ifdef USE_CUDA
-static void
-psc_mfields_c_copy_to_cuda(mfields_c_t *flds_c, mfields_cuda_t *flds_cuda, int mb, int me)
-{
-  psc_mfields_cuda_copy_from_c(flds_cuda, flds_c, mb, me);
-}
-
-static void
-psc_mfields_c_copy_from_cuda(mfields_c_t *flds_c, mfields_cuda_t *flds_cuda, int mb, int me)
-{
-  psc_mfields_cuda_copy_to_c(flds_cuda, flds_c, mb, me);
-}
-#endif
-
 // ======================================================================
 // psc_mfields: subclass "c"
   
@@ -231,12 +205,6 @@ struct psc_mfields_ops psc_mfields_c_ops = {
 #ifdef HAVE_LIBHDF5_HL
   .write                 = _psc_mfields_c_write,
   .read                  = _psc_mfields_c_read,
-#endif
-  .copy_to_fortran       = psc_mfields_c_copy_to_fortran,
-  .copy_from_fortran     = psc_mfields_c_copy_from_fortran,
-#ifdef USE_CUDA
-  .copy_to_cuda          = psc_mfields_c_copy_to_cuda,
-  .copy_from_cuda        = psc_mfields_c_copy_from_cuda,
 #endif
 };
 

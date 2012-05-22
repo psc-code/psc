@@ -34,12 +34,6 @@ MRC_CLASS_DECLARE(psc_mfields, struct psc_mfields);
 
 struct psc_mfields_ops {
   MRC_SUBCLASS_OPS(struct psc_mfields);
-  void (*copy_to_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*copy_to_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*copy_to_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*copy_from_c)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*copy_from_fortran)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-  void (*copy_from_cuda)(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 };
 
 void psc_mfields_set_domain(struct psc_mfields *flds,
@@ -54,14 +48,30 @@ void psc_mfields_axpy(struct psc_mfields *yf, double alpha,
 		      struct psc_mfields *xf);
 void psc_mfields_axpy_comp(struct psc_mfields *yf, int ym, double alpha,
 			   struct psc_mfields *xf, int xm);
-struct psc_mfields *psc_mfields_get_c(struct psc_mfields *base, int mb, int me);
-struct psc_mfields *psc_mfields_get_fortran(struct psc_mfields *base, int mb, int me);
-struct psc_mfields *psc_mfields_get_cuda(struct psc_mfields *base, int mb, int me);
-void psc_mfields_put_c(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-void psc_mfields_put_fortran(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
-void psc_mfields_put_cuda(struct psc_mfields *flds, struct psc_mfields *base, int mb, int me);
 void psc_mfields_set_comp_name(struct psc_mfields *flds, int m, const char *s);
 const char *psc_mfields_comp_name(struct psc_mfields *flds, int m);
+
+static inline struct psc_fields *
+psc_mfields_get_patch(struct psc_mfields *flds, int p)
+{
+  return flds->flds[p];
+}
+
+#define MAKE_MFIELDS_TYPE(type)						\
+typedef struct psc_mfields mfields_##type##_t;			        \
+extern struct psc_mfields_ops psc_mfields_##type##_ops;		        \
+									\
+struct psc_mfields *						        \
+psc_mfields_get_##type(struct psc_mfields *mflds_base, int mb, int me); \
+void psc_mfields_put_##type(struct psc_mfields *mflds,			\
+			    struct psc_mfields *mflds_base,		\
+			    int mb, int me);				\
+
+MAKE_MFIELDS_TYPE(c)
+MAKE_MFIELDS_TYPE(fortran)
+MAKE_MFIELDS_TYPE(single)
+MAKE_MFIELDS_TYPE(cuda)
+typedef struct psc_mfields mfields_base_t;
 
 struct psc_mfields_list_entry {
   struct psc_mfields **flds_p;
@@ -73,31 +83,7 @@ void psc_mfields_list_del(list_t *head, struct psc_mfields **flds_p);
 
 #define psc_mfields_ops(flds) (struct psc_mfields_ops *) ((flds)->obj.ops)
 
-extern struct psc_mfields_ops psc_mfields_c_ops;
-extern struct psc_mfields_ops psc_mfields_single_ops;
-extern struct psc_mfields_ops psc_mfields_fortran_ops;
-extern struct psc_mfields_ops psc_mfields_cuda_ops;
-
-typedef struct psc_mfields mfields_fortran_t;
-typedef struct psc_mfields mfields_c_t;
-typedef struct psc_mfields mfields_single_t;
-typedef struct psc_mfields mfields_cuda_t;
-typedef struct psc_mfields mfields_base_t;
-
-static inline struct psc_fields *
-psc_mfields_get_patch(struct psc_mfields *flds, int p)
-{
-  return flds->flds[p];
-}
-
 extern list_t psc_mfields_base_list;
-
-void psc_mfields_fortran_copy_to_c(mfields_fortran_t *, mfields_c_t *, int mb, int me);
-void psc_mfields_fortran_copy_from_c(mfields_fortran_t *, mfields_c_t *, int mb, int me);
-#ifdef USE_CUDA
-void psc_mfields_cuda_copy_to_c(mfields_cuda_t *, mfields_c_t *, int mb, int me);
-void psc_mfields_cuda_copy_from_c(mfields_cuda_t *, mfields_c_t *, int mb, int me);
-#endif
 
 #endif
 

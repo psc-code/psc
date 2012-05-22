@@ -98,30 +98,32 @@ fields_fortran_scale(struct psc_fields *pf, fields_fortran_real_t val)
   }
 }
 
-void
-psc_mfields_fortran_copy_to_c(mfields_fortran_t *flds_fortran, mfields_c_t *flds_c, int mb, int me)
+static void
+psc_fields_fortran_copy_to_c(struct psc_fields *flds_fortran, struct psc_fields *flds_c,
+			     int mb, int me)
 {
-  psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf_c = psc_mfields_get_patch(flds_c, p);
-    struct psc_fields *pf_base = psc_mfields_get_patch(flds_fortran, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_C(pf_c, m, jx,jy,jz) = F3_FORTRAN(pf_base, m, jx,jy,jz);
-      } foreach_3d_g_end;
+  for (int m = mb; m < me; m++) {
+    for (int jz = flds_c->ib[2]; jz < flds_c->ib[2] + flds_c->im[2]; jz++) {
+      for (int jy = flds_c->ib[1]; jy < flds_c->ib[1] + flds_c->im[1]; jy++) {
+	for (int jx = flds_c->ib[0]; jx < flds_c->ib[0] + flds_c->im[0]; jx++) {
+	  F3_C(flds_c, m, jx,jy,jz) = F3_FORTRAN(flds_fortran, m, jx,jy,jz);
+	}
+      }
     }
   }
 }
 
-void
-psc_mfields_fortran_copy_from_c(mfields_fortran_t *flds, mfields_c_t *flds_base, int mb, int me)
+static void
+psc_fields_fortran_copy_from_c(struct psc_fields *flds_fortran, struct psc_fields *flds_c,
+			       int mb, int me)
 {
-  for (int p = 0; p < flds->nr_patches; p++) {
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
-    struct psc_fields *pf_c = psc_mfields_get_patch(flds_base, p);
-    for (int m = mb; m < me; m++) {
-      psc_foreach_3d_g(ppsc, p, jx, jy, jz) {
-	F3_FORTRAN(pf, m, jx,jy,jz) = F3_C(pf_c, m, jx,jy,jz);
-      } foreach_3d_g_end;
+  for (int m = mb; m < me; m++) {
+    for (int jz = flds_c->ib[2]; jz < flds_c->ib[2] + flds_c->im[2]; jz++) {
+      for (int jy = flds_c->ib[1]; jy < flds_c->ib[1] + flds_c->im[1]; jy++) {
+	for (int jx = flds_c->ib[0]; jx < flds_c->ib[0] + flds_c->im[0]; jx++) {
+	  F3_FORTRAN(flds_fortran, m, jx,jy,jz) = F3_C(flds_c, m, jx,jy,jz);
+	}
+      }
     }
   }
 }
@@ -131,15 +133,20 @@ psc_mfields_fortran_copy_from_c(mfields_fortran_t *flds, mfields_c_t *flds_base,
   
 struct psc_mfields_ops psc_mfields_fortran_ops = {
   .name                  = "fortran",
-  .copy_to_c             = psc_mfields_fortran_copy_to_c,
-  .copy_from_c           = psc_mfields_fortran_copy_from_c,
 };
 
 // ======================================================================
 // psc_fields: subclass "fortran"
   
+static struct mrc_obj_method psc_fields_fortran_methods[] = {
+  MRC_OBJ_METHOD("copy_to_c",   psc_fields_fortran_copy_to_c),
+  MRC_OBJ_METHOD("copy_from_c", psc_fields_fortran_copy_from_c),
+  {}
+};
+
 struct psc_fields_ops psc_fields_fortran_ops = {
   .name                  = "fortran",
+  .methods               = psc_fields_fortran_methods,
   .setup                 = psc_fields_fortran_setup,
   .destroy               = psc_fields_fortran_destroy,
 };
