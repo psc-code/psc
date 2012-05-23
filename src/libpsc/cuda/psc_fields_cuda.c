@@ -95,26 +95,6 @@ psc_fields_cuda_copy_to_c(struct psc_fields *flds_cuda, struct psc_fields *flds_
   free(h_flds);
 }
 
-void
-psc_mfields_cuda_copy_from_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
-{
-  psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-    fields_t *pf_c = psc_mfields_get_patch(flds_c, p);
-    psc_fields_cuda_copy_from_c(pf_cuda, pf_c, mb, me);
-  }
-}
-
-void
-psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int mb, int me)
-{
-  psc_foreach_patch(ppsc, p) {
-    struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-    struct psc_fields *pf_c = psc_mfields_get_patch(flds_c, p);
-    psc_fields_cuda_copy_to_c(pf_cuda, pf_c, mb, me);
-  }
-}
-
 // ======================================================================
 // psc_mfields: subclass "cuda"
   
