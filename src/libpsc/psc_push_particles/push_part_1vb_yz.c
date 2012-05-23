@@ -36,8 +36,8 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     int lg[3], lh[3];
     particle_real_t og[3], oh[3], xm[3];
-    find_idx_off_pos_1st(&part->xi, lg, og, xm, 0.f, patch->xb, dxi); // FIXME passing xi hack
-    find_idx_off_1st(&part->xi, lh, oh, -.5f, patch->xb, dxi);
+    find_idx_off_pos_1st_rel(&part->xi, lg, og, xm, 0.f, dxi); // FIXME passing xi hack
+    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
 
     // FIELD INTERPOLATION
 
@@ -63,7 +63,7 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     int lf[3];
     particle_real_t of[3];
-    find_idx_off_1st(&part->xi, lf, of, 0.f, patch->xb, dxi);
+    find_idx_off_1st_rel(&part->xi, lf, of, 0.f, dxi);
 
     particle_real_t fnqx = vxi[0] * part->qni * part->wni * fnqs;
     F3_CURR(pf, JXI, 0,lf[1]  ,lf[2]  ) += (1.f - of[1]) * (1.f - of[2]) * fnqx;
@@ -78,7 +78,7 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 		    part->zi + vxi[2] * .5f * dt };
 
     particle_real_t xp[3];
-    find_idx_off_pos_1st(xi, lf, of, xp, 0.f, patch->xb, dxi);
+    find_idx_off_pos_1st_rel(xi, lf, of, xp, 0.f, dxi);
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 

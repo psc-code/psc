@@ -40,8 +40,8 @@ do_push_part_1st_xz(int p, fields_t *pf, struct psc_particles *pp)
     part->xi += vxi * xl;
     part->zi += vzi * zl;
 
-    particle_real_t u = (part->xi - patch->xb[0]) * dxi;
-    particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+    particle_real_t u = part->xi * dxi;
+    particle_real_t w = part->zi * dzi;
     int lg1 = particle_real_fint(u);
     int lg3 = particle_real_fint(w);
     particle_real_t h1 = u - lg1;
@@ -59,8 +59,8 @@ do_push_part_1st_xz(int p, fields_t *pf, struct psc_particles *pp)
     S0Z(+0) = g0z;
     S0Z(+1) = g1z;
 
-    u = (part->xi - patch->xb[0]) * dxi - .5f;
-    w = (part->zi - patch->xb[2]) * dzi - .5f;
+    u = part->xi * dxi - .5f;
+    w = part->zi * dzi - .5f;
     int lh1 = particle_real_fint(u);
     int lh3 = particle_real_fint(w);
     h1 = u - lh1;
@@ -127,8 +127,8 @@ do_push_part_1st_xz(int p, fields_t *pf, struct psc_particles *pp)
     particle_real_t xi = part->xi + vxi * xl;
     particle_real_t zi = part->zi + vzi * zl;
 
-    u = (xi - patch->xb[0]) * dxi;
-    w = (zi - patch->xb[2]) * dzi;
+    u = xi * dxi;
+    w = zi * dzi;
     int k1 = particle_real_fint(u);
     int k3 = particle_real_fint(w);
     h1 = u - k1;

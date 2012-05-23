@@ -38,8 +38,8 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     int lg[3], lh[3];
     particle_real_t og[3], oh[3];
-    find_idx_off_1st(&part->xi, lg, og, 0.f, patch->xb, dxi); // FIXME passing xi hack
-    find_idx_off_1st(&part->xi, lh, oh, -.5f, patch->xb, dxi);
+    find_idx_off_1st_rel(&part->xi, lg, og, 0.f, dxi); // FIXME passing xi hack
+    find_idx_off_1st_rel(&part->xi, lh, oh, -.5f, dxi);
 
     // CHARGE DENSITY FORM FACTOR AT (n+.5)*dt 
 
@@ -77,7 +77,7 @@ do_push_part_1st_yz(int p, fields_t *pf, struct psc_particles *pp)
 
     int lf[3];
     particle_real_t of[3];
-    find_idx_off_1st(xi, lf, of, 0.f, patch->xb, dxi);
+    find_idx_off_1st_rel(xi, lf, of, 0.f, dxi);
 
     for (int i = -1; i <= 2; i++) {
       S1Y(i) = 0.f;

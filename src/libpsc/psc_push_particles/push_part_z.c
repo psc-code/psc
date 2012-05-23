@@ -23,7 +23,6 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
@@ -36,9 +35,9 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
 
     part->zi += vzi * zl;
 
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    creal u = part->xi * dxi;
+    creal v = part->yi * dyi;
+    creal w = part->zi * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -54,9 +53,9 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
     S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
     S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
-    u = (part->xi - patch->xb[0]) * dxi - .5f;
-    v = (part->yi - patch->xb[1]) * dyi;
-    w = (part->zi - patch->xb[2]) * dzi - .5f;
+    u = part->xi * dxi - .5f;
+    v = part->yi * dyi;
+    w = part->zi * dzi - .5f;
     int l1=nint(u);
     int l2=nint(v);
     int l3=nint(w);
@@ -132,7 +131,7 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
 
     creal zi = part->zi + vzi * zl;
 
-    w = (zi - patch->xb[2]) * dzi;
+    w = zi * dzi;
     int k3 = nint(w);
     h3 = k3 - w;
 
@@ -220,7 +219,6 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
   creal fnqzs = ppsc->dx[2] * fnqs / dt;
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
@@ -234,7 +232,7 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
     creal vzi = part->pzi * root;
 
     creal zi = part->zi - vzi * zl;
-    creal w = (zi - patch->xb[2]) * dzi;
+    creal w = zi * dzi;
 
     int j1 = 0;
     int j2 = 0;
@@ -251,7 +249,7 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
 
     zi = part->zi + vzi * zl;
 
-    w = (zi - patch->xb[2]) * dzi;
+    w = zi * dzi;
     int k3 = nint(w);
     h3 = k3 - w;
 

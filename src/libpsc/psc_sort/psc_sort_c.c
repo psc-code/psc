@@ -26,9 +26,9 @@ get_cell_index(int p, const particle_t *part)
   int *ldims = patch->ldims;
   int *ibn = ppsc->ibn;
   
-  particle_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+  particle_real_t u = part->xi * dxi;
+  particle_real_t v = part->yi * dyi;
+  particle_real_t w = part->zi * dzi;
   int j0 = particle_real_nint(u) + ibn[0];
   int j1 = particle_real_nint(v) + ibn[1];
   int j2 = particle_real_nint(w) + ibn[2];
@@ -46,9 +46,9 @@ get_cell_index_2x2x2(int p, const particle_t *part)
   int *ldims = patch->ldims;
   int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
   
-  particle_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+  particle_real_t u = part->xi * dxi;
+  particle_real_t v = part->yi * dyi;
+  particle_real_t w = part->zi * dzi;
   int j0 = particle_real_nint(u) + ibn[0];
   int j1 = particle_real_nint(v) + ibn[1];
   int j2 = particle_real_nint(w) + ibn[2];
@@ -296,10 +296,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
     particle_real_t dxi = 1.f / ppsc->dx[0];
     particle_real_t dyi = 1.f / ppsc->dx[1];
     particle_real_t dzi = 1.f / ppsc->dx[2];
-    particle_real_t xi[3] = {
-      (p->xi - patch->xb[0]) * dxi,
-      (p->yi - patch->xb[1]) * dyi,
-      (p->zi - patch->xb[2]) * dzi };
+    particle_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {
       pos[d] = particle_real_fint(xi[d]);

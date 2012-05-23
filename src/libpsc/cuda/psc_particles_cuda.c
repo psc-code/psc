@@ -87,10 +87,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
   particle_c_real_t dxi = 1.f / ppsc->dx[0];
   particle_c_real_t dyi = 1.f / ppsc->dx[1];
   particle_c_real_t dzi = 1.f / ppsc->dx[2];
-  particle_c_real_t xi[3] = {
-    (p->xi - patch->xb[0]) * dxi,
-    (p->yi - patch->xb[1]) * dyi,
-    (p->zi - patch->xb[2]) * dzi };
+  particle_c_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {
     pos[d] = cuda_fint(xi[d]);
@@ -148,9 +145,9 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
       qni_wni = wni;
     }
     
-    xi4[n].x  = part_c->xi - patch->xb[0];
-    xi4[n].y  = part_c->yi - patch->xb[1];
-    xi4[n].z  = part_c->zi - patch->xb[2];
+    xi4[n].x  = part_c->xi;
+    xi4[n].y  = part_c->yi;
+    xi4[n].z  = part_c->zi;
     xi4[n].w  = qni_div_mni;
     pxi4[n].x = part_c->pxi;
     pxi4[n].y = part_c->pyi;
@@ -275,8 +272,6 @@ static void
 psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
 			     struct psc_particles *prts_c, unsigned int flags)
 {
-  int p = prts_cuda->p;
-  struct psc_patch *patch = &ppsc->patch[p];
   struct psc_particles_c *c = psc_particles_c(prts_c);
   prts_c->n_part = prts_cuda->n_part;
   assert(prts_c->n_part <= c->n_alloced);
@@ -307,9 +302,9 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
     }
     
     particle_c_t *part_base = particles_c_get_one(prts_c, n);
-    part_base->xi  = xi4[n].x + patch->xb[0];
-    part_base->yi  = xi4[n].y + patch->xb[1];
-    part_base->zi  = xi4[n].z + patch->xb[2];
+    part_base->xi  = xi4[n].x;
+    part_base->yi  = xi4[n].y;
+    part_base->zi  = xi4[n].z;
     part_base->pxi = pxi4[n].x;
     part_base->pyi = pxi4[n].y;
     part_base->pzi = pxi4[n].z;

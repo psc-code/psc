@@ -27,7 +27,6 @@ do_genc_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
@@ -41,9 +40,9 @@ do_genc_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     part->yi += vyi * yl;
     part->zi += vzi * zl;
 
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    creal u = part->xi * dxi;
+    creal v = part->yi * dyi;
+    creal w = part->zi * dzi;
     int j1 = nint(u);
     int j2 = nint(v);
     int j3 = nint(w);
@@ -66,9 +65,9 @@ do_genc_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     S0Z(+0) = .75f-creal_abs(h3)*creal_abs(h3);
     S0Z(+1) = .5f*(1.5f-creal_abs(h3+1.f))*(1.5f-creal_abs(h3+1.f));
 
-    u = (part->xi - patch->xb[0]) * dxi;
-    v = (part->yi - patch->xb[1]) * dyi - .5f;
-    w = (part->zi - patch->xb[2]) * dzi - .5f;
+    u = part->xi * dxi;
+    v = part->yi * dyi - .5f;
+    w = part->zi * dzi - .5f;
     int l1=nint(u);
     int l2=nint(v);
     int l3=nint(w);
@@ -184,8 +183,8 @@ do_genc_push_part_yz(int p, fields_t *pf, struct psc_particles *pp)
     creal yi = part->yi + vyi * yl;
     creal zi = part->zi + vzi * zl;
 
-    v = (yi - patch->xb[1]) * dyi;
-    w = (zi - patch->xb[2]) * dzi;
+    v = yi * dyi;
+    w = zi * dzi;
     int k2 = nint(v);
     int k3 = nint(w);
     h2 = k2 - v;

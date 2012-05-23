@@ -62,7 +62,6 @@ psc_particles_single_copy_to_c(struct psc_particles *prts_base,
     }
   }
 
-  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   prts_c->n_part = prts_base->n_part;
   assert(prts_c->n_part <= psc_particles_c(prts_c)->n_alloced);
   for (int n = 0; n < prts_base->n_part; n++) {
@@ -75,9 +74,9 @@ psc_particles_single_copy_to_c(struct psc_particles *prts_base,
     
     particle_single_real_t vxi[3];
     calc_vxi(vxi, part_base);
-    part->xi  = part_base->xi - dth[0] * vxi[0] + patch->xb[0];
-    part->yi  = part_base->yi - dth[1] * vxi[1] + patch->xb[1];
-    part->zi  = part_base->zi - dth[2] * vxi[2] + patch->xb[2];
+    part->xi  = part_base->xi - dth[0] * vxi[0];
+    part->yi  = part_base->yi - dth[1] * vxi[1];
+    part->zi  = part_base->zi - dth[2] * vxi[2];
     part->pxi = part_base->pxi;
     part->pyi = part_base->pyi;
     part->pzi = part_base->pzi;
@@ -100,7 +99,6 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
     }
   }
 
-  struct psc_patch *patch = &ppsc->patch[prts_base->p];
   struct psc_particles_single *sngl = psc_particles_single(prts_base);
   prts_base->n_part = prts_c->n_part;
   assert(prts_base->n_part <= sngl->n_alloced);
@@ -115,9 +113,9 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
 	qni_wni = part->wni;
     }
     
-    part_base->xi          = part->xi - patch->xb[0];
-    part_base->yi          = part->yi - patch->xb[1];
-    part_base->zi          = part->zi - patch->xb[2];
+    part_base->xi          = part->xi;
+    part_base->yi          = part->yi;
+    part_base->zi          = part->zi;
     part_base->pxi         = part->pxi;
     part_base->pyi         = part->pyi;
     part_base->pzi         = part->pzi;

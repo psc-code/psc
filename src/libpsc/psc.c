@@ -782,6 +782,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
     struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+    double *xb = psc->patch[p].xb;
 
     int i = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
@@ -812,9 +813,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	      particle_t *p = particles_get_one(pp, i++);
 	      
 	      psc_setup_particle(psc, p, kind, &npt);
-	      p->xi = xx[0];
-	      p->yi = xx[1];
-	      p->zi = xx[2];
+	      p->xi = xx[0] - xb[0];
+	      p->yi = xx[1] - xb[1];
+	      p->zi = xx[2] - xb[2];
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fortran_particle_weight_hack) {
 		p->wni = npt.n;

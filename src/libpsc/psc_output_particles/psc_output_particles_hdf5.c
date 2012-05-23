@@ -130,9 +130,9 @@ get_sort_index(int p, const particle_c_t *part)
   particle_c_real_t dzi = 1.f / ppsc->dx[2];
   int *ldims = patch->ldims;
   
-  particle_c_real_t u = (part->xi - patch->xb[0]) * dxi;
-  particle_c_real_t v = (part->yi - patch->xb[1]) * dyi;
-  particle_c_real_t w = (part->zi - patch->xb[2]) * dzi;
+  particle_c_real_t u = part->xi * dxi;
+  particle_c_real_t v = part->yi * dyi;
+  particle_c_real_t w = part->zi * dzi;
   int j0 = particle_c_real_fint(u);
   int j1 = particle_c_real_fint(v);
   int j2 = particle_c_real_fint(w);

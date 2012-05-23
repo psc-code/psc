@@ -69,9 +69,9 @@ static inline void
 particle_c_get_relative_pos(particle_c_t *p, double xb[3],
 			    particle_c_real_t xi[3])
 {
-  xi[0] = p->xi - xb[0];
-  xi[1] = p->yi - xb[1];
-  xi[2] = p->zi - xb[2];
+  xi[0] = p->xi;
+  xi[1] = p->yi;
+  xi[2] = p->zi;
 }
 
 static inline int

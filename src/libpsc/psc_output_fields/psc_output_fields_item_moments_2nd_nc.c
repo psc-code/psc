@@ -10,20 +10,19 @@
 typedef fields_c_real_t creal;
 
 static void
-do_n_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
       
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    creal u = part->xi * dxi;
+    creal v = part->yi * dyi;
+    creal w = part->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -99,27 +98,26 @@ n_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 {
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
   psc_fields_zero_range(res, 0, res->nr_comp);
-  do_n_2nd_nc_run(res->p, res, prts);
+  do_n_2nd_nc_run(res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
 // FIXME too much duplication, specialize 2d/1d
 
 static void
-do_v_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_v_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
 
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    creal u = part->xi * dxi;
+    creal v = part->yi * dyi;
+    creal w = part->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -199,25 +197,24 @@ v_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 {
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
   psc_fields_zero_range(res, 0, res->nr_comp);
-  do_v_2nd_nc_run(res->p, res, prts);
+  do_v_2nd_nc_run(res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
 static void
-do_vv_2nd_nc_run(int p, fields_t *pf, struct psc_particles *prts)
+do_vv_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
   creal dxi = 1.f / ppsc->dx[0];
   creal dyi = 1.f / ppsc->dx[1];
   creal dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
 
-    creal u = (part->xi - patch->xb[0]) * dxi;
-    creal v = (part->yi - patch->xb[1]) * dyi;
-    creal w = (part->zi - patch->xb[2]) * dzi;
+    creal u = part->xi * dxi;
+    creal v = part->yi * dyi;
+    creal w = part->zi * dzi;
     int j1 = particle_real_nint(u);
     int j2 = particle_real_nint(v);
     int j3 = particle_real_nint(w);
@@ -297,7 +294,7 @@ vv_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 {
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
   psc_fields_zero_range(res, 0, res->nr_comp);
-  do_vv_2nd_nc_run(res->p, res, prts);
+  do_vv_2nd_nc_run(res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 

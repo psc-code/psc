@@ -317,9 +317,9 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
       // FIXME, duplicated
       particle_t *part = particles_get_one(pp, n);
 
-      particle_real_t u = (part->xi - patch->xb[0]) * dxi;
-      particle_real_t v = (part->yi - patch->xb[1]) * dyi;
-      particle_real_t w = (part->zi - patch->xb[2]) * dzi;
+      particle_real_t u = part->xi * dxi;
+      particle_real_t v = part->yi * dyi;
+      particle_real_t w = part->zi * dzi;
       int j0 = particle_real_nint(u) + ibn[0];
       int j1 = particle_real_nint(v) + ibn[1];
       int j2 = particle_real_nint(w) + ibn[2];
