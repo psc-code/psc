@@ -30,15 +30,5 @@ real PSC_s_pulse_z1(real x, real y, real z, real t);
 real PSC_p_pulse_z2(real x, real y, real z, real t);
 real PSC_s_pulse_z2(real x, real y, real z, real t);
 
-void PIC_fax(struct psc_fields *pf, int m);
-void PIC_fay(struct psc_fields *pf, int m);
-void PIC_faz(struct psc_fields *pf, int m);
-void PIC_fex(struct psc_fields *pf, int m);
-void PIC_fey(struct psc_fields *pf, int m);
-void PIC_fez(struct psc_fields *pf, int m);
-void PIC_pex(struct psc_particles *pp);
-void PIC_pey(struct psc_particles *pp);
-void PIC_pez(struct psc_particles *pp);
-
 #endif
 

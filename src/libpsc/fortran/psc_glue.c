@@ -27,18 +27,6 @@
 #define PIC_bin_coll_F77 F77_FUNC(pic_bin_coll,PIC_BIN_COLL)
 #define PIC_find_cell_indices_F77 F77_FUNC(pic_find_cell_indices,PIC_FIND_CELL_INDICES)
 #define SET_param_pml_F77 F77_FUNC(set_param_pml,SET_PARAM_PML)
-#define PIC_fax_F77 F77_FUNC(pic_fax, PIC_FAX)
-#define PIC_fay_F77 F77_FUNC(pic_fay, PIC_FAY)
-#define PIC_faz_F77 F77_FUNC(pic_faz, PIC_FAZ)
-#define PIC_fex_F77 F77_FUNC(pic_fex, PIC_FEX)
-#define PIC_fey_F77 F77_FUNC(pic_fey, PIC_FEY)
-#define PIC_fez_F77 F77_FUNC(pic_fez, PIC_FEZ)
-#define PIC_pex_a_F77 F77_FUNC(pic_pex_a, PIC_PEX_A)
-#define PIC_pex_b_F77 F77_FUNC(pic_pex_b, PIC_PEX_B)
-#define PIC_pey_a_F77 F77_FUNC(pic_pey_a, PIC_PEY_A)
-#define PIC_pey_b_F77 F77_FUNC(pic_pey_b, PIC_PEY_B)
-#define PIC_pez_a_F77 F77_FUNC(pic_pez_a, PIC_PEZ_A)
-#define PIC_pez_b_F77 F77_FUNC(pic_pez_b, PIC_PEZ_B)
 #define PIC_msa_e_F77 F77_FUNC_(pic_msa_e, PIC_MSA_E)
 #define PIC_msa_h_F77 F77_FUNC_(pic_msa_h, PIC_MSA_H)
 #define PIC_msb_h_F77 F77_FUNC_(pic_msb_h, PIC_MSB_H)
@@ -128,18 +116,6 @@ void PIC_bin_coll_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_find_cell_indices_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void SET_param_pml_F77(f_int *thick, f_int *cushion, f_int *size, f_int *order);
 
-void PIC_fax_F77(f_real *f);
-void PIC_fay_F77(f_real *f);
-void PIC_faz_F77(f_real *f);
-void PIC_fex_F77(f_real *f);
-void PIC_fey_F77(f_real *f);
-void PIC_fez_F77(f_real *f);
-void PIC_pex_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
-void PIC_pex_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void PIC_pey_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
-void PIC_pey_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
-void PIC_pez_a_F77(f_int *niloc, particle_fortran_t *p_niloc, f_int *niloc_n);
-void PIC_pez_b_F77(f_int *niloc, particle_fortran_t *p_niloc);
 void PIC_msa_e_F77(f_real *ex, f_real *ey, f_real *ez,
 		   f_real *hx, f_real *hy, f_real *hz,
 		   f_real *jxi, f_real *jyi, f_real *jzi);
@@ -348,75 +324,6 @@ void
 INIT_basic()
 {
   INIT_basic_F77();
-}
-
-void
-PIC_fax(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_fax_F77(flds[m]);
-}
-
-void
-PIC_fay(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_fay_F77(flds[m]);
-}
-
-void
-PIC_faz(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_faz_F77(flds[m]);
-}
-
-void
-PIC_fex(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_fex_F77(flds[m]);
-}
-
-void
-PIC_fey(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_fey_F77(flds[m]);
-}
-
-void
-PIC_fez(struct psc_fields *pf, int m)
-{
-  fields_fortran_real_t **flds = pf->data;
-  PIC_fez_F77(flds[m]);
-}
-
-void
-PIC_pex(struct psc_particles *prts)
-{
-  f_int niloc_n;
-  PIC_pex_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
-  particles_fortran_realloc(prts, niloc_n);
-  PIC_pex_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
-}
-
-void
-PIC_pey(struct psc_particles *prts)
-{
-  f_int niloc_n;
-  PIC_pey_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
-  particles_fortran_realloc(prts, niloc_n);
-  PIC_pey_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
-}
-
-void
-PIC_pez(struct psc_particles *prts)
-{
-  f_int niloc_n;
-  PIC_pez_a_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1], &niloc_n);
-  particles_fortran_realloc(prts, niloc_n);
-  PIC_pez_b_F77(&prts->n_part, &psc_particles_fortran(prts)->particles[-1]);
 }
 
 void
