@@ -1,5 +1,6 @@
 
 #include "psc_output_fields_item_private.h"
+#include "psc_bnd.h"
 
 // ----------------------------------------------------------------------
 // psc_output_fields_item_set_psc_bnd
@@ -51,7 +52,15 @@ psc_output_fields_item_run(struct psc_output_fields_item *item,
 			   mfields_base_t *flds, mparticles_base_t *particles,
 			   mfields_c_t *res)
 {
-  psc_output_fields_item_ops(item)->run(item, flds, particles, res);
+  struct psc_output_fields_item_ops *ops = psc_output_fields_item_ops(item);
+  for (int p = 0; p < res->nr_patches; p++) {
+    ops->run(item, psc_mfields_get_patch(flds, p),
+	     psc_mparticles_get_patch(particles, p),
+	     psc_mfields_get_patch(res, p));
+  }
+  if (ops->flags & POFI_ADD_GHOSTS) {
+    psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
+  }
 }
 
 // ======================================================================

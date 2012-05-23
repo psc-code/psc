@@ -1,6 +1,5 @@
 
 #include "psc_output_fields_item_private.h"
-#include "psc_bnd.h"
 
 #include <math.h>
 
@@ -24,21 +23,13 @@ do_n_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-n_run(struct psc_output_fields_item *item, mfields_base_t *flds,
-      mparticles_base_t *particles_base, mfields_c_t *res)
+n_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+      struct psc_particles *prts_base, struct psc_fields *res)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
-  psc_mfields_zero_range(res, 0, res->nr_fields);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_n_run(p, psc_mfields_get_patch(res, p),
-	     psc_mparticles_get_patch(particles, p));
-  }
-
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
-
-  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_n_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
 static int

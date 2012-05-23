@@ -1,6 +1,5 @@
 
 #include "psc_output_fields_item_private.h"
-#include "psc_bnd.h"
 
 #include <math.h>
 
@@ -10,10 +9,9 @@
 // boundary stuff FIXME, should go elsewhere...
 
 static void
-add_ghosts_reflecting_lo(mfields_c_t *res, int p, int d, int mb, int me)
+add_ghosts_reflecting_lo(struct psc_fields *pf, int d, int mb, int me)
 {
-  fields_t *pf = psc_mfields_get_patch(res, p);
-  struct psc_patch *patch = ppsc->patch + p;
+  struct psc_patch *patch = ppsc->patch + pf->p;
 
   if (d == 1) {
     for (int iz = 0; iz < patch->ldims[2]; iz++) {
@@ -41,10 +39,9 @@ add_ghosts_reflecting_lo(mfields_c_t *res, int p, int d, int mb, int me)
 }
 
 static void
-add_ghosts_reflecting_hi(mfields_c_t *res, int p, int d, int mb, int me)
+add_ghosts_reflecting_hi(struct psc_fields *pf, int d, int mb, int me)
 {
-  fields_t *pf = psc_mfields_get_patch(res, p);
-  struct psc_patch *patch = ppsc->patch + p;
+  struct psc_patch *patch = ppsc->patch + pf->p;
 
   if (d == 1) {
     for (int iz = 0; iz < patch->ldims[2]; iz++) {
@@ -72,23 +69,21 @@ add_ghosts_reflecting_hi(mfields_c_t *res, int p, int d, int mb, int me)
 }
 
 static void
-add_ghosts_boundary(mfields_c_t *res, int mb, int me)
+add_ghosts_boundary(struct psc_fields *res, int mb, int me)
 {
-  psc_foreach_patch(ppsc, p) {
-    // lo
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] == 0) {
-	if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING) {
-	  add_ghosts_reflecting_lo(res, p, d, mb, me);
-	}
+  // lo
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->patch[res->p].off[d] == 0) {
+      if (ppsc->domain.bnd_part_lo[d] == BND_PART_REFLECTING) {
+	add_ghosts_reflecting_lo(res, d, mb, me);
       }
     }
-    // hi
-    for (int d = 0; d < 3; d++) {
-      if (ppsc->patch[p].off[d] + ppsc->patch[p].ldims[d] == ppsc->domain.gdims[d]) {
-	if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING) {
-	  add_ghosts_reflecting_hi(res, p, d, mb, me);
-	}
+  }
+  // hi
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->patch[res->p].off[d] + ppsc->patch[res->p].ldims[d] == ppsc->domain.gdims[d]) {
+      if (ppsc->domain.bnd_part_hi[d] == BND_PART_REFLECTING) {
+	add_ghosts_reflecting_hi(res, d, mb, me);
       }
     }
   }
@@ -112,22 +107,14 @@ do_n_1st_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-n_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
-	  mparticles_base_t *particles_base, mfields_c_t *res)
+n_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	  struct psc_particles *prts_base, struct psc_fields *res)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
-  psc_mfields_zero_range(res, 0, res->nr_fields);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_n_1st_run(p, psc_mfields_get_patch(res, p),
-		 psc_mparticles_get_patch(particles, p));
-  }
-
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
-
-  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
-  add_ghosts_boundary(res, 0, res->nr_fields);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_n_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
 static int
@@ -169,22 +156,14 @@ do_v_1st_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-v_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
-	  mparticles_base_t *particles_base, mfields_c_t *res)
+v_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	  struct psc_particles *prts_base, struct psc_fields *res)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
-  psc_mfields_zero_range(res, 0, res->nr_fields);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_v_1st_run(p, psc_mfields_get_patch(res, p),
-		 psc_mparticles_get_patch(particles, p));
-  }
-
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
-
-  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
-  add_ghosts_boundary(res, 0, res->nr_fields);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_v_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
 static int
@@ -225,22 +204,14 @@ do_vv_1st_run(int p, fields_t *pf, struct psc_particles *prts)
 }
 
 static void
-vv_1st_run(struct psc_output_fields_item *item, mfields_base_t *flds,
-	  mparticles_base_t *particles_base, mfields_c_t *res)
+vv_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	   struct psc_particles *prts_base, struct psc_fields *res)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
-  psc_mfields_zero_range(res, 0, res->nr_fields);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_vv_1st_run(p, psc_mfields_get_patch(res, p),
-		  psc_mparticles_get_patch(particles, p));
-  }
-
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
-
-  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
-  add_ghosts_boundary(res, 0, res->nr_fields);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_vv_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
 static int

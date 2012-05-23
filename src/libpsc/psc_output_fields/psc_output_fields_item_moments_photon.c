@@ -1,6 +1,5 @@
 
 #include "psc_output_fields_item_private.h"
-#include "psc_bnd.h"
 
 #include "psc_fields_as_c.h"
 #include "psc_particles_as_c.h"
@@ -82,18 +81,11 @@ do_n_photon_run(int p, fields_t *pf, photons_t *photons)
 }
 
 static void
-n_photon_run(struct psc_output_fields_item *item, mfields_base_t *flds,
-	     mparticles_base_t *particles_base, mfields_c_t *res)
+n_photon_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	     struct psc_particles *prts_base, struct psc_fields *res)
 {
-  mphotons_t *mphotons = ppsc->mphotons;
-
-  psc_mfields_zero_comp(res, 0);
-  
-  psc_foreach_patch(ppsc, p) {
-    do_n_photon_run(p, psc_mfields_get_patch(res, p), &mphotons->p[p]);
-  }
-
-  psc_bnd_add_ghosts(item->bnd, res, 0, res->nr_fields);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_n_photon_run(res->p, res, &ppsc->mphotons->p[res->p]);
 }
 
 // ======================================================================
@@ -104,5 +96,6 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_photon_ops = {
   .nr_comp            = 1,
   .fld_names          = { "n_photon" },
   .run                = n_photon_run,
+  .flags              = POFI_ADD_GHOSTS,
 };
 

@@ -20,5 +20,6 @@ struct psc_output_fields_item_ops psc_output_fields_item_n_1st_nc_single_ops = {
   .get_component_name = n_get_component_name,
   .get_nr_components  = n_get_nr_components,
   .run                = n_run,
+  .flags              = POFI_ADD_GHOSTS,
 };
 

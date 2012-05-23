@@ -9,19 +9,24 @@ struct psc_output_fields_item {
   struct psc_bnd *bnd;
 };
 
+enum {
+  POFI_ADD_GHOSTS = 1, // this item needs to have ghost points added to interior points
+};
+
 struct psc_output_fields_item_ops {
   MRC_SUBCLASS_OPS(struct psc_output_fields_item);
   int  (*get_nr_components)(struct psc_output_fields_item *item);
   const char *(*get_component_name)(struct psc_output_fields_item *item, int m);
   void (*run)(struct psc_output_fields_item *item,
-	      mfields_base_t *flds, mparticles_base_t *particles,
-	      mfields_c_t *res);
+	      struct psc_fields *flds, struct psc_particles *prts,
+	      struct psc_fields *res);
   // when the following are known at compile time, they can just be part
   // of the subclass definition.
   // otherwise, one should overload ::get_nr_components() and 
   // ::get_component_name()
   int nr_comp;
   char *fld_names[6];
+  unsigned int flags;
 };
 
 #define psc_output_fields_item_ops(item)			\
