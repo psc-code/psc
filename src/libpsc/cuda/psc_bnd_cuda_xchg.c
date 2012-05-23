@@ -433,7 +433,7 @@ psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
 
-  bnd_cuda->ddcp = ddc_particles_create(bnd_cuda->ddc, sizeof(particle_host_t),
+  bnd_cuda->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_host_t),
 					sizeof(particle_host_real_t),
 					MPI_PARTICLE_HOST_REAL,
 					ddcp_particles_realloc,

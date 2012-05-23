@@ -124,15 +124,14 @@ static struct mrc_ddc_funcs ddc_funcs = {
 static void
 psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   struct psc *psc = bnd->psc;
 
-  bnd_cuda->ddc = mrc_domain_create_ddc(psc->mrc_domain);
-  mrc_ddc_set_funcs(bnd_cuda->ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(bnd_cuda->ddc, "ibn", psc->ibn);
-  mrc_ddc_set_param_int(bnd_cuda->ddc, "max_n_fields", 6);
-  mrc_ddc_set_param_int(bnd_cuda->ddc, "size_of_type", sizeof(fields_cuda_real_t));
-  mrc_ddc_setup(bnd_cuda->ddc);
+  bnd->ddc = mrc_domain_create_ddc(psc->mrc_domain);
+  mrc_ddc_set_funcs(bnd->ddc, &ddc_funcs);
+  mrc_ddc_set_param_int3(bnd->ddc, "ibn", psc->ibn);
+  mrc_ddc_set_param_int(bnd->ddc, "max_n_fields", 6);
+  mrc_ddc_set_param_int(bnd->ddc, "size_of_type", sizeof(fields_cuda_real_t));
+  mrc_ddc_setup(bnd->ddc);
 
   psc_bnd_cuda_xchg_setup(bnd);
 }
@@ -143,9 +142,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
 static void
 psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
-
-  mrc_ddc_destroy(bnd_cuda->ddc);
+  mrc_ddc_destroy(bnd->ddc);
   psc_bnd_cuda_xchg_unsetup(bnd);
 }
 
@@ -168,10 +165,9 @@ psc_bnd_cuda_destroy(struct psc_bnd *bnd)
 static void
 check_domain(struct psc_bnd *bnd)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   struct psc *psc = bnd->psc;
 
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd_cuda->ddc);
+  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
   if (domain != psc->mrc_domain) {
     psc_bnd_cuda_unsetup(bnd);
     psc_bnd_setup(bnd);
@@ -184,7 +180,6 @@ check_domain(struct psc_bnd *bnd)
 static void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   check_domain(bnd);
 
   static int pr;
@@ -221,7 +216,7 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
       __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
     }
 
-    mrc_ddc_add_ghosts(bnd_cuda->ddc, 0, me - mb, &ctx);
+    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, &ctx);
 
     psc_foreach_patch(ppsc, p) {
       struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
@@ -241,7 +236,6 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
 static void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   check_domain(bnd);
 
   static int pr;
@@ -287,7 +281,7 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
     prof_stop(pr1);
 
     prof_start(pr3);
-    mrc_ddc_fill_ghosts(bnd_cuda->ddc, 0, me - mb, &ctx);
+    mrc_ddc_fill_ghosts(bnd->ddc, 0, me - mb, &ctx);
     prof_stop(pr3);
 
     prof_start(pr5);
@@ -319,6 +313,7 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
   .name                  = "cuda",
   .size                  = sizeof(struct psc_bnd_cuda),
   .setup                 = psc_bnd_cuda_setup,
+  .unsetup               = psc_bnd_cuda_unsetup,
   .destroy               = psc_bnd_cuda_destroy,
   .add_ghosts            = psc_bnd_cuda_add_ghosts,
   .fill_ghosts           = psc_bnd_cuda_fill_ghosts,

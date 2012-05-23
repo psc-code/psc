@@ -2,6 +2,7 @@
 #include "psc_bnd_private.h"
 
 #include <mrc_io.h>
+#include <mrc_ddc.h>
 
 // ----------------------------------------------------------------------
 // psc_set_psc
@@ -35,12 +36,33 @@ _psc_bnd_read(struct psc_bnd *bnd, struct mrc_io *io)
   psc_bnd_setup(bnd);
 }
 
+// ----------------------------------------------------------------------
+// check_domain
+//
+// check if the underlying mrc_domain changed since setup(),
+// which might happen, e.g., through rebalancing.
+// In this case, do setup() over.
+
+static void
+check_domain(struct psc_bnd *bnd)
+{
+  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
+
+  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
+  if (domain != bnd->psc->mrc_domain) {
+    ops->unsetup(bnd);
+    ops->setup(bnd);
+  }
+}
+
 // ======================================================================
 // forward to subclass
 
 void
 psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  check_domain(bnd);
+
   psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->add_ghosts);
@@ -51,6 +73,8 @@ psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 void
 psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  check_domain(bnd);
+
   psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->fill_ghosts);
@@ -61,6 +85,8 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 void
 psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
+  check_domain(bnd);
+
   psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->exchange_particles);
@@ -71,6 +97,8 @@ psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 void
 psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
+  check_domain(bnd);
+
   psc_stats_start(st_time_comm);
   int n_total = 0;
   psc_foreach_patch(bnd->psc, p) {

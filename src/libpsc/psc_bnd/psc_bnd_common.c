@@ -4,7 +4,6 @@
 #include <string.h>
 
 struct psc_bnd_sub {
-  struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
   struct ddc_particles *ddcp_photons;
 };
@@ -52,15 +51,15 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
 
-  bnd_sub->ddc = psc_bnd_lib_create_ddc(psc);
+  bnd->ddc = psc_bnd_lib_create_ddc(psc);
 
-  bnd_sub->ddcp = ddc_particles_create(bnd_sub->ddc, sizeof(particle_t),
+  bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
 				       sizeof(particle_real_t),
 				       MPI_PARTICLES_REAL,
 				       ddcp_particles_realloc,
 				       ddcp_particles_get_addr);
 
-  bnd_sub->ddcp_photons = ddc_particles_create(bnd_sub->ddc, sizeof(photon_t),
+  bnd_sub->ddcp_photons = ddc_particles_create(bnd->ddc, sizeof(photon_t),
 					       sizeof(photon_real_t),
 					       MPI_PHOTONS_REAL,
 					       ddcp_photons_realloc,
@@ -75,7 +74,7 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
 
-  mrc_ddc_destroy(bnd_sub->ddc);
+  mrc_ddc_destroy(bnd->ddc);
   ddc_particles_destroy(bnd_sub->ddcp);
   ddc_particles_destroy(bnd_sub->ddcp_photons);
 }
@@ -90,35 +89,12 @@ psc_bnd_sub_destroy(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// check_domain
-//
-// check if the underlying mrc_domain changed since setup(),
-// which might happen, e.g., through rebalancing.
-// In this case, do setup() over.
-
-static void
-check_domain(struct psc_bnd *bnd)
-{
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-  struct psc *psc = bnd->psc;
-
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd_sub->ddc);
-  if (domain != psc->mrc_domain) {
-    psc_bnd_sub_unsetup(bnd);
-    psc_bnd_sub_setup(bnd);
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_sub_add_ghosts
 
 static void
 psc_bnd_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-  check_domain(bnd);
-
-  psc_bnd_lib_add_ghosts(bnd_sub->ddc, flds_base, mb, me);
+  psc_bnd_lib_add_ghosts(bnd->ddc, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -127,10 +103,7 @@ psc_bnd_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, i
 static void
 psc_bnd_sub_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-  check_domain(bnd);
-
-  psc_bnd_lib_fill_ghosts(bnd_sub->ddc, flds_base, mb, me);
+  psc_bnd_lib_fill_ghosts(bnd->ddc, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -177,7 +150,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
-  check_domain(bnd);
 
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
@@ -309,7 +281,6 @@ psc_bnd_sub_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
-  check_domain(bnd);
 
   static int pr;
   if (!pr) {

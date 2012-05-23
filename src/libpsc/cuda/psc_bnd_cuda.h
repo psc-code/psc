@@ -6,7 +6,6 @@
 #include "psc_particles_cuda.h"
 
 struct psc_bnd_cuda {
-  struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
 };
 

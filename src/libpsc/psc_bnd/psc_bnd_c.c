@@ -13,6 +13,7 @@ struct psc_bnd_ops psc_bnd_c_ops = {
   .name                  = "c",
   .size                  = sizeof(struct psc_bnd_sub),
   .setup                 = psc_bnd_sub_setup,
+  .unsetup               = psc_bnd_sub_unsetup,
   .destroy               = psc_bnd_sub_destroy,
   .add_ghosts            = psc_bnd_sub_add_ghosts,
   .fill_ghosts           = psc_bnd_sub_fill_ghosts,
