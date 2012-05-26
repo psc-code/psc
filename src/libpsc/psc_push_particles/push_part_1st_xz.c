@@ -26,7 +26,6 @@ do_push_part_1st_xz(int p, fields_t *pf, struct psc_particles *pp)
   particle_real_t dxi = 1.f / ppsc->dx[0];
   particle_real_t dzi = 1.f / ppsc->dx[2];
 
-  struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);
 
