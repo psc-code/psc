@@ -62,27 +62,25 @@ ascii_dump_particles(mparticles_base_t *particles_base, const char *fname)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
   psc_foreach_patch(ppsc, p) {
-    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
     char *filename = malloc(strlen(fname) + 20);
     sprintf(filename, "%s-p%d-p%d.asc", fname, rank, p);
     mpi_printf(MPI_COMM_WORLD, "ascii_dump_particles: '%s'\n", filename);
     
     FILE *file = fopen(filename, "w");
     fprintf(file, "i\txi\tyi\tzi\tpxi\tpyi\tpzi\tqni\tmni\twni\n");
-    for (int i = 0; i < pp->n_part; i++) {
-      particle_t *p = particles_get_one(pp, i);
+    for (int i = 0; i < prts->n_part; i++) {
+      particle_t *p = particles_get_one(prts, i);
       fprintf(file, "%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\n",
 	      i, p->xi, p->yi, p->zi,
 	      p->pxi, p->pyi, p->pzi, p->qni, p->mni, p->wni);
     }
     fclose(file);
     free(filename);
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
-
-  psc_mparticles_put_cf(particles, particles_base, MP_DONT_COPY);
 }
 
 void

@@ -159,13 +159,12 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     srandom(rank);
   }
 
-  mparticles_t *particles = psc_mparticles_get_cf(psc->particles, MP_DONT_COPY);
-
   double l = psc->domain.length[2];
 
   psc_foreach_patch(psc, p) {
-    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
-
+    struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
+  
     int il1 = 0;
     for (int kind = 0; kind < psc->nr_kinds; kind++) {
       struct psc_es1_species *s = &es1->species[kind];
@@ -175,7 +174,7 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
       //double lg = l / nlg;
       double ddx = l / n;
       for (int i = 0; i < ngr; i++) {
-	particle_t *p = particles_get_one(pp, il1 + i);
+	particle_t *p = particles_get_one(prts, il1 + i);
 	double x0 = (i + .5) * ddx;
 	
 	p->zi = x0;
@@ -185,16 +184,16 @@ psc_es1_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	p->wni = 1.;
       }
       for (int i = 0; i < n; i++) {
-	particle_t *p = particles_get_one(pp, il1++);
+	particle_t *p = particles_get_one(prts, il1++);
 	double theta = 2. * M_PI * s->mode * p->zi / l;
 	p->zi  += s->x1 * cos(theta + s->thetax);
 	p->pzi += s->v1 * sin(theta + s->thetav);
       }
     }
-    pp->n_part = il1;
-    assert(pp->n_part == nr_particles_by_patch[p]);
+    prts->n_part = il1;
+    assert(prts->n_part == nr_particles_by_patch[p]);
+    psc_particles_put_as(prts, prts_base, 0);
   }
-  psc_mparticles_put_cf(particles, psc->particles, 0);
 }
 
 // ======================================================================

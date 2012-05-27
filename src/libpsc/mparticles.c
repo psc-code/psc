@@ -176,11 +176,11 @@ psc_mparticles_check(mparticles_base_t *particles_base)
 {
   int fail_cnt = 0;
 
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
-
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+
     f_real xb[3], xe[3];
     
     // New-style boundary requirements.
@@ -201,9 +201,9 @@ psc_mparticles_check(mparticles_base_t *particles_base)
 	}
       }
     }
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
   assert(fail_cnt == 0);
-  psc_mparticles_put_c(particles, particles_base, MP_DONT_COPY);
 }
 
 #define MAKE_MPARTICLES_GET_PUT(type)					\

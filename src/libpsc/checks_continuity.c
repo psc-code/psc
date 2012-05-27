@@ -40,8 +40,10 @@ fld_create(struct psc *psc, int nr_fields)
 // velocity
 
 static void
-do_shift_particle_positions(struct psc_particles *prts, double dt)
+do_shift_particle_positions(struct psc_particles *prts_base, double dt)
 {
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+
   for (int n = 0; n < prts->n_part; n++) {
     particle_c_t *part = particles_c_get_one(prts, n);
       
@@ -53,19 +55,17 @@ do_shift_particle_positions(struct psc_particles *prts, double dt)
     part->yi += vyi * dt;
     part->zi += vzi * dt;
   }
+
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 static void
 psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
 			     double dt)
 {
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
-
   psc_foreach_patch(psc, p) {
-    do_shift_particle_positions(psc_mparticles_get_patch(particles, p), dt);
+    do_shift_particle_positions(psc_mparticles_get_patch(particles_base, p), dt);
   }
-
-  psc_mparticles_put_c(particles, particles_base, 0);
 }
 
 // ----------------------------------------------------------------------

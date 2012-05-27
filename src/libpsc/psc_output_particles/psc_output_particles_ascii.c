@@ -39,8 +39,6 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
     return;
   }
 
-  mparticles_c_t *particles = psc_mparticles_get_c(particles_base, 0);
-
   int rank;
   MPI_Comm_rank(psc_output_particles_comm(out), &rank);
   char filename[strlen(asc->data_dir) + strlen(asc->basename) + 19];
@@ -48,8 +46,9 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 	  asc->basename, ppsc->timestep, rank);
 
   FILE *file = fopen(filename, "w");
-  for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+  for (int p = 0; p < particles_base->nr_patches; p++) {
+    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
     for (int n = 0; n < prts->n_part; n++) {
       particle_c_t *part = particles_c_get_one(prts, n);
       fprintf(file, "%d %g %g %g %g %g %g %g %g %g\n",
@@ -57,10 +56,9 @@ psc_output_particles_ascii_run(struct psc_output_particles *out,
 	      part->pxi, part->pyi, part->pzi,
 	      part->qni, part->mni, part->wni);
     }
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
   fclose(file);
-  
-  psc_mparticles_put_c(particles, particles_base, MP_DONT_COPY);
 }
 
 // ======================================================================

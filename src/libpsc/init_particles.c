@@ -108,8 +108,8 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
   int ilo[3], ihi[3];
   pml_find_bounds(psc, p, ilo, ihi);
 
-  mparticles_t *particles = psc_mparticles_get_cf(psc->particles, MP_DONT_COPY);
-  struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+  struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
   
   int i = 0;
   for (int kind = 0; kind < _case->nr_kinds; kind++) {
@@ -122,7 +122,7 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
 	  
 	  int n_in_cell = get_n_in_cell(psc, &npt);
 	  for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	    particle_t *prt = particles_get_one(pp, i++);
+	    particle_t *prt = particles_get_one(prts, i++);
 	    
 	    float ran1, ran2, ran3, ran4, ran5, ran6;
 	    do {
@@ -172,8 +172,8 @@ void psc_case_init_particles_patch(struct psc_case *_case, int p,
       }
     }
   } // kind
-  pp->n_part = i;
-  psc_mparticles_put_cf(particles, psc->particles, 0);
+  prts->n_part = i;
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 void

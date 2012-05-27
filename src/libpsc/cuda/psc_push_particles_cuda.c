@@ -8,8 +8,8 @@
 #include <math.h>
 
 static void
-cuda_push_part(mparticles_base_t *particles_base,
-	       mfields_base_t *flds_base,
+cuda_push_part(struct psc_particles *prts_base,
+	       struct psc_fields *flds_base,
 	       void (*set_constants)(struct psc_particles *, struct psc_fields *),
 	       void (*push_part_p1)(struct psc_particles *, struct psc_fields *, real **),
 	       void (*push_part_p2)(struct psc_particles *, struct psc_fields *),
@@ -17,9 +17,9 @@ cuda_push_part(mparticles_base_t *particles_base,
 	       void (*push_part_p4)(struct psc_particles *, struct psc_fields *, real *),
 	       void (*push_part_p5)(struct psc_particles *, struct psc_fields *, real *))
 {
-  mparticles_cuda_t *particles =
-    psc_mparticles_get_cuda(particles_base, MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, EX, EX + 6);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "cuda",
+						    MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", EX, EX + 6);
 
   static int pr, pr1, pr2, pr3, pr4, pr5;
   if (!pr) {
@@ -33,53 +33,45 @@ cuda_push_part(mparticles_base_t *particles_base,
   prof_start(pr);
 
   // d_scratch needs to be per patch
-  assert(ppsc->nr_patches == 1);
   real *d_scratch;
   
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+  set_constants(prts, flds);
+  
+  prof_start(pr1);
+  push_part_p1(prts, flds, &d_scratch);
+  prof_stop(pr1);
+  
+  prof_start(pr2);
+  push_part_p2(prts, flds);
+  prof_stop(pr2);
 
-    set_constants(prts, pf);
-
-    prof_start(pr1);
-    push_part_p1(prts, pf, &d_scratch);
-    prof_stop(pr1);
-    
-    prof_start(pr2);
-    push_part_p2(prts, pf);
-    prof_stop(pr2);
-  }
-
+  assert(0);
+#if 0
   // FIXME, doing this here doesn't jive well with integrate.c wanting to do it..
-  psc_mparticles_put_cuda(particles, particles_base, 0);
+  psc_particles_put_as(particles, particles_base, 0);
   psc_bnd_exchange_particles(ppsc->bnd, particles_base);
   psc_sort_run(ppsc->sort, particles_base);
-  particles = psc_mparticles_get_cuda(particles_base,
-				      MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+  prts = psc_particles_get_as(prts_base, "cuda",
+			      MP_NEED_BLOCK_OFFSETS | MP_NEED_CELL_OFFSETS);
+#endif
 
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
-
-    set_constants(prts, pf);
-    prof_start(pr3);
-    push_part_p3(prts, pf, d_scratch, 1);
-    prof_stop(pr3);
-
-    prof_start(pr4);
-    push_part_p4(prts, pf, d_scratch);
-    prof_stop(pr4);
-    
-    prof_start(pr5);
-    push_part_p5(prts, pf, d_scratch);
-    prof_stop(pr5);
-  }
+  set_constants(prts, flds);
+  prof_start(pr3);
+  push_part_p3(prts, flds, d_scratch, 1);
+  prof_stop(pr3);
+  
+  prof_start(pr4);
+  push_part_p4(prts, flds, d_scratch);
+  prof_stop(pr4);
+  
+  prof_start(pr5);
+  push_part_p5(prts, flds, d_scratch);
+  prof_stop(pr5);
   
   prof_stop(pr);
 
-  psc_mfields_put_cuda(flds, flds_base, JXI, JXI + 3);
-  psc_mparticles_put_cuda(particles, particles_base, 0);
+  psc_fields_put_as(flds, flds_base, JXI, JXI + 3);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 static void
@@ -136,10 +128,10 @@ cuda_push_partq_b(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_z(struct psc_push_particles *push,
-			       mparticles_base_t *particles_base,
-			       mfields_base_t *flds_base)
+			       struct psc_particles *prts_base,
+			       struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 z_set_constants,
 		 z_cuda_push_part_p1,
 		 z_cuda_push_part_p2,
@@ -150,10 +142,10 @@ psc_push_particles_cuda_push_z(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_z2(struct psc_push_particles *push,
-				mparticles_base_t *particles_base,
-				mfields_base_t *flds_base)
+			       struct psc_particles *prts_base,
+			       struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 z2_set_constants,
 		 z2_cuda_push_part_p1,
 		 z2_cuda_push_part_p2,
@@ -164,10 +156,10 @@ psc_push_particles_cuda_push_z2(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_z3(struct psc_push_particles *push,
-				mparticles_base_t *particles_base,
-				mfields_base_t *flds_base)
+			       struct psc_particles *prts_base,
+			       struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 z3_set_constants,
 		 z3_cuda_push_part_p1,
 		 z3_cuda_push_part_p2,
@@ -181,10 +173,10 @@ psc_push_particles_cuda_push_z3(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
-				mparticles_base_t *particles_base,
-				mfields_base_t *flds_base)
+				struct psc_particles *prts_base,
+				struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 yz_set_constants,
 		 yz_cuda_push_part_p1,
 		 yz_cuda_push_part_p2,
@@ -195,10 +187,10 @@ psc_push_particles_cuda_push_yz(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_yz2(struct psc_push_particles *push,
-				 mparticles_base_t *particles_base,
-				 mfields_base_t *flds_base)
+				 struct psc_particles *prts_base,
+				 struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 yz2_set_constants,
 		 yz2_cuda_push_part_p1,
 		 yz2_cuda_push_part_p2,
@@ -209,10 +201,10 @@ psc_push_particles_cuda_push_yz2(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
-				 mparticles_base_t *particles_base,
-				 mfields_base_t *flds_base)
+				 struct psc_particles *prts_base,
+				 struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 yz3_set_constants,
 		 yz3_cuda_push_part_p1,
 		 yz3_cuda_push_part_p2,
@@ -223,10 +215,10 @@ psc_push_particles_cuda_push_yz3(struct psc_push_particles *push,
 
 static void __unused
 psc_push_particles_cuda_push_yz4(struct psc_push_particles *push,
-				 mparticles_base_t *particles_base,
-				 mfields_base_t *flds_base)
+				 struct psc_particles *prts_base,
+				 struct psc_fields *flds_base)
 {
-  cuda_push_part(particles_base, flds_base,
+  cuda_push_part(prts_base, flds_base,
 		 yz4_set_constants,
 		 yz4_cuda_push_part_p1,
 		 yz4_cuda_push_part_p2,
@@ -235,18 +227,17 @@ psc_push_particles_cuda_push_yz4(struct psc_push_particles *push,
 		 yz4_cuda_push_part_p5);
 }
 
-#if 0
 static void __unused
 psc_push_particles_cuda_push_yz5(struct psc_push_particles *push,
-				 mparticles_base_t *particles_base,
-				 mfields_base_t *flds_base)
+				 struct psc_particles *prts_base,
+				 struct psc_fields *flds_base)
 {
-  cuda_push_partq(push, particles_base, flds_base,
-		  yz5_set_constants,
-		  yz5_cuda_push_part_p2,
-		  yz5_cuda_push_part_p3);
+  assert(0);
+  /* cuda_push_partq(push, prts_base, flds_base, */
+  /* 		  yz5_set_constants, */
+  /* 		  yz5_cuda_push_part_p2, */
+  /* 		  yz5_cuda_push_part_p3); */
 }
-#endif
 
 static void __unused
 psc_push_particles_cuda_push_yz6(struct psc_push_particles *push,

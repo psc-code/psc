@@ -29,20 +29,10 @@ main(int argc, char **argv)
   struct psc *psc = psc_testing_create_test_yz("fortran", 0);// moments "1st";
   psc_setup(psc);
   psc_testing_save_ref(psc);
-  struct psc_mparticles *mprts;
-  if (strcmp(s_type, "c") == 0) {
-    mprts = psc_mparticles_get_c(psc->particles, flags);
-    psc_mparticles_put_c(mprts, psc->particles, 0);
-  } else if (strcmp(s_type, "fortran") == 0) {
-    mprts = psc_mparticles_get_fortran(psc->particles, flags);
-    psc_mparticles_put_fortran(mprts, psc->particles, 0);
-#ifdef USE_CUDA
-  } else if (strcmp(s_type, "cuda") == 0) {
-    mprts = psc_mparticles_get_cuda(psc->particles, flags);
-    psc_mparticles_put_cuda(mprts, psc->particles, 0);
-#endif
-  } else {
-    assert(0);
+  for (int p = 0; p < psc->nr_patches; p++) {
+    struct psc_particles *prts =
+      psc_particles_get_as(psc_mparticles_get_patch(psc->particles, p), s_type, flags);
+    psc_particles_put_as(prts, psc_mparticles_get_patch(psc->particles, p), 0);
   }
   psc_check_particles_ref(psc, psc->particles, eps_particles, "mparticles");
   psc_destroy(psc);

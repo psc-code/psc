@@ -5,8 +5,10 @@
 #include <math.h>
 
 static void
-do_particle_energy(struct psc *psc, struct psc_particles *prts, double *result)
+do_particle_energy(struct psc *psc, struct psc_particles *prts_base, double *result)
 {
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+  
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
   double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
@@ -23,19 +25,17 @@ do_particle_energy(struct psc *psc, struct psc_particles *prts, double *result)
       assert(0);
     }
   }
+
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
 static void
 psc_diag_item_particle_energy_run(struct psc_diag_item *item,
 				  struct psc *psc, double *result)
 {
-  mparticles_c_t *particles = psc_mparticles_get_c(psc->particles, 0);
-
   psc_foreach_patch(psc, p) {
-    do_particle_energy(psc, psc_mparticles_get_patch(particles, p), result);
+    do_particle_energy(psc, psc_mparticles_get_patch(psc->particles, p), result);
   }
-
-  psc_mparticles_put_c(particles, psc->particles, MP_DONT_COPY);
 }
 
 // ======================================================================

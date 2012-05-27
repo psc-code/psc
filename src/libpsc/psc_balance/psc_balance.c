@@ -30,14 +30,10 @@ psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch
 static void
 psc_get_loads(struct psc *psc, double *loads)
 {
-  mparticles_t *mparticles = psc_mparticles_get_cf(psc->particles, 0);
-
   psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mparticles, p);
+    struct psc_particles *prts = psc_mparticles_get_patch(psc->particles, p);
     loads[p] = prts->n_part + 1;
   }
-
-  psc_mparticles_put_cf(mparticles, psc->particles, MP_DONT_COPY);
 }
 
 static int

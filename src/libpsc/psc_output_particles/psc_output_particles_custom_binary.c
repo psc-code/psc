@@ -113,7 +113,6 @@ static void create_output_file(struct psc_output_particles_custom_binary *out_c)
 
 static void write_particles_to_file(struct psc_output_particles_custom_binary *out_c, mparticles_base_t *particles_in)	//actually particles to filesystem now
 {  
-  mparticles_t *particles = psc_mparticles_get_cf(particles_in, 0);
   struct psc *psc = ppsc;
   
   //generate filename
@@ -127,23 +126,22 @@ static void write_particles_to_file(struct psc_output_particles_custom_binary *o
   strcat(filename,buffer);	//node...
   FILE *file = fopen(filename,"a");	//finally open the damn thing
   
- 
-  
   fwrite(&psc->timestep,sizeof(int),1,file);	//current timestep
   
-  for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *pp = psc_mparticles_get_patch(particles, p);
+  for (int p = 0; p < particles_in->nr_patches; p++) {
+    struct psc_particles *prts_base = psc_mparticles_get_patch(particles_in, p);
+    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
     
     //number of particles on this patch
     if(out_c->filter_func) {		//if filtering is active
     	int npart=0;
-    	for(int i=0; i<pp->n_part; i++) {
-    		if(out_c->filter_func(particles_get_one(pp, i))==true) {npart++;}
+    	for(int i=0; i<prts->n_part; i++) {
+    		if(out_c->filter_func(particles_get_one(prts, i))==true) {npart++;}
     	}
     fwrite(&npart,sizeof(int),1,file);
     }
     
-    else{fwrite(&pp->n_part,sizeof(int),1,file);}
+    else{fwrite(&prts->n_part,sizeof(int),1,file);}
     
     //------------------------------------------------------------------
     //testing start
@@ -153,8 +151,8 @@ static void write_particles_to_file(struct psc_output_particles_custom_binary *o
     //testing end
     //------------------------------------------------------------------
     
-    for (int n = 0; n < pp->n_part; n++) {
-      particle_t *part = particles_get_one(pp, n);
+    for (int n = 0; n < prts->n_part; n++) {
+      particle_t *part = particles_get_one(prts, n);
       //write particle data
       if(out_c->filter_func && !(out_c->filter_func(part))) continue;
       if(out_c->write_x==true){fwrite(&part->xi,sizeof(double),1,file);}
@@ -171,6 +169,7 @@ static void write_particles_to_file(struct psc_output_particles_custom_binary *o
  //if(out_c->filter_func==true) printf("true \n");
   //if(out_c->filter_func==false) printf("false \n");
     }
+    psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   }
   fclose(file);
 }
