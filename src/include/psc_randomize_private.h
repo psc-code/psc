@@ -10,7 +10,7 @@ struct psc_randomize {
 
 struct psc_randomize_ops {
   MRC_SUBCLASS_OPS(struct psc_randomize);
-  void (*run)(struct psc_randomize *randomize, mparticles_base_t *particles);
+  void (*run)(struct psc_randomize *randomize, struct psc_particles *prts_base);
 };
 
 // ======================================================================

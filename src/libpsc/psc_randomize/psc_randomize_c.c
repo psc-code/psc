@@ -11,22 +11,18 @@
 
 static void
 psc_randomize_c_run(struct psc_randomize *randomize,
-		    mparticles_base_t *particles_base)
+		    struct psc_particles *prts_base)
 {
-  mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
-  psc_foreach_patch(ppsc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_c *c = psc_particles_c(prts);
-    for (int i = 0; i < prts->n_part; i++) {
-      int j = random() % prts->n_part;
-      particle_t tmp = c->particles[i];
-      c->particles[i] = c->particles[j];
-      c->particles[j] = tmp;
-    }
+  for (int i = 0; i < prts->n_part; i++) {
+    int j = random() % prts->n_part;
+    particle_t tmp = *particles_get_one(prts, i);
+    *particles_get_one(prts, i) = *particles_get_one(prts, j);
+    *particles_get_one(prts, j) = tmp;
   }
 
-  psc_mparticles_put_cf(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================

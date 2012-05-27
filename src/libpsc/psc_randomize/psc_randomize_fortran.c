@@ -9,21 +9,20 @@
 
 static void
 psc_randomize_fortran_run(struct psc_randomize *randomize,
-			  mparticles_base_t *particles_base)
+			  struct psc_particles *prts_base)
 {
-  assert(ppsc->nr_patches == 1);
-  
-  mparticles_fortran_t *particles = psc_mparticles_get_fortran(particles_base, 0);
-
   static int pr;
   if (!pr) {
     pr = prof_register("fort_randomize", 1., 0, 0);
   }
+
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "fortran", 0);
+
   prof_start(pr);
-  PIC_randomize(psc_mparticles_get_patch(particles, 0));
+  PIC_randomize(prts);
   prof_stop(pr);
 
-  psc_mparticles_put_fortran(particles, particles_base, 0);
+  psc_particles_put_as(prts, prts_base, 0);
 }
 
 // ======================================================================
