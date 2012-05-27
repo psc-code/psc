@@ -72,7 +72,7 @@ psc_shift_particle_positions(struct psc *psc, mparticles_base_t *particles_base,
 // psc_calc_div_j
 
 static void
-do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields *div_j)
+do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_fields *div_j)
 {
   creal h[3];
   for (int d = 0; d < 3; d++) {
@@ -83,27 +83,23 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds, struct psc_fields
     }
   }
 
+  struct psc_fields *flds = psc_fields_get_as(flds_base, "c", JXI, JXI + 3);
   psc_foreach_3d_g(psc, p, jx, jy, jz) {
     F3_C(div_j,0, jx,jy,jz) =
       (F3_C(flds,JXI, jx,jy,jz) - F3_C(flds,JXI, jx-1,jy,jz)) * h[0] +
       (F3_C(flds,JYI, jx,jy,jz) - F3_C(flds,JYI, jx,jy-1,jz)) * h[1] +
       (F3_C(flds,JZI, jx,jy,jz) - F3_C(flds,JZI, jx,jy,jz-1)) * h[2];
   } psc_foreach_3d_g_end;
+  psc_fields_put_as(flds, flds_base, 0, 0);
 }
 
 static void
-psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j_base)
+psc_calc_div_j(struct psc *psc, mfields_base_t *flds_base, mfields_base_t *div_j)
 {
-  mfields_c_t *flds = psc_mfields_get_c(flds_base, JXI, JXI + 3);
-  mfields_c_t *div_j = psc_mfields_get_c(div_j_base, 0, 0);
-
   psc_foreach_patch(psc, p) {
-    do_calc_div_j(psc, p, psc_mfields_get_patch(flds, p),
+    do_calc_div_j(psc, p, psc_mfields_get_patch(flds_base, p),
 		  psc_mfields_get_patch(div_j, p));
   }
-
-  psc_mfields_put_c(flds, flds_base, 0, 0);
-  psc_mfields_put_c(div_j, div_j_base, 0, 1);
 }
 
 // ======================================================================

@@ -844,11 +844,11 @@ psc_setup_fields_default(struct psc *psc)
   if (!init_field)
     return;
 
-  mfields_t *flds = psc_mfields_get_cf(psc->flds, 0, 0);
-
   // FIXME, do we need the ghost points?
   psc_foreach_patch(psc, p) {
-    fields_t *pf = psc_mfields_get_patch(flds, p);
+    fields_t *pf_base = psc_mfields_get_patch(psc->flds, p);
+    fields_t *pf = psc_fields_get_as(pf_base, "c", 0, 0);
+
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
       double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
@@ -875,8 +875,8 @@ psc_setup_fields_default(struct psc *psc)
 	init_field(psc, (double []) { xx        , yy        , zz + .5*dz }, JZI);
 
     } foreach_3d_g_end;
+    psc_fields_put_as(pf, pf_base, JXI, HX + 3);
   }
-  psc_mfields_put_cf(flds, psc->flds, JXI, HX + 3);
   psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
 
