@@ -142,6 +142,19 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
   }
 }
 
+// ======================================================================
+//
+// ----------------------------------------------------------------------
+// find_block_index
+
+static inline void
+find_block_index(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
+{
+  for (int d = 0; d < 3; d++) {
+    b_pos[d] = particle_real_fint(xi[d] * b_dxi[d]);
+  }
+}
+
 // ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_particles
 
@@ -162,8 +175,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 
   struct ddc_particles *ddcp = bnd_sub->ddcp;
 
-  double xb[3], xe[3], xgb[3], xge[3], xgl[3];
-
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
 
@@ -171,8 +182,14 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
   // These will need revisiting when it comes to non-periodic domains.
   // FIXME, calculate once => But then please recalculate whenever the dynamic window changes
 
+  particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
   psc_foreach_patch(psc, p) {
-    calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
+    struct psc_patch *ppatch = &psc->patch[p];
+    particle_real_t xm[3];
+    for (int d = 0; d < 3; d++) {
+      xm[d] = ppatch->ldims[d] * psc->dx[d];
+    }
+    int *b_mx = ppatch->ldims;
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct ddcp_patch *patch = &ddcp->patches[p];
@@ -183,10 +200,13 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     for (int i = 0; i < prts->n_part; i++) {
       particle_t *part = particles_get_one(prts, i);
       particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
+
+      int b_pos[3];
+      find_block_index(b_pos, xi, b_dxi);
       particle_real_t *pxi = &part->pxi;
-      if (xi[0] >= 0.f && xi[0] < xe[0] - xb[0] &&
-	  xi[1] >= 0.f && xi[1] < xe[1] - xb[1] &&
-	  xi[2] >= 0.f && xi[2] < xe[2] - xb[2]) {
+      if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
+	  b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+	  b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
 	// fast path
 	// inside domain: move into right position
 	*particles_get_one(prts, patch->head++) = *part;
@@ -195,16 +215,16 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	bool drop = false;
 	int dir[3];
 	for (int d = 0; d < 3; d++) {
-	  if (xi[d] < 0.f) {
-	    if (xi[d] < xgb[d] - xb[d]) {
+	  if (b_pos[d] < 0) {
+	    if (ppatch->off[d] == 0) {
 	      switch (psc->domain.bnd_part_lo[d]) {
 	      case BND_PART_REFLECTING:
-		xi[d] = 2.f * (xgb[d] - xb[d]) - xi[d];
+		xi[d] =  -xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
 	      case BND_PART_PERIODIC:
-		xi[d] += xe[d] - xb[d];
+		xi[d] += xm[d];
 		dir[d] = -1;
 		break;
 	      case BND_PART_ABSORBING:
@@ -215,19 +235,19 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	      }
 	    } else {
 	      // computational bnd
-	      xi[d] += xe[d] - xb[d];
+	      xi[d] += xm[d];
 	      dir[d] = -1;
 	    }
-	  } else if (xi[d] >= xe[d] - xb[d]) {
-	    if (xi[d] >= xge[d] - xb[d]) {
+	  } else if (b_pos[d] >= b_mx[d]) {
+	    if (ppatch->off[d] + ppatch->ldims[d] == psc->domain.gdims[d]) {
 	      switch (psc->domain.bnd_part_hi[d]) {
 	      case BND_PART_REFLECTING:
-		xi[d] = 2.f * (xge[d] - xb[d]) - xi[d];
+		xi[d] = 2.f * xm[d] - xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
 	      case BND_PART_PERIODIC:
-		xi[d] -= xe[d] - xb[d];
+		xi[d] -= xm[d];
 		dir[d] = +1;
 		break;
 	      case BND_PART_ABSORBING:
@@ -238,7 +258,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	      }
 	    } else {
 	      // computational bnd
-	      xi[d] -= xe[d] - xb[d];
+	      xi[d] -= xm[d];
 	      dir[d] = +1;
 	    }
 	  } else {
@@ -246,7 +266,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	    dir[d] = 0;
 	  }
 	  assert(xi[d] >= 0.f);
-	  assert(xi[d] <= xe[d] - xb[d]);
+	  assert(xi[d] <= xm[d]);
 	}
 	if (!drop) {
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
