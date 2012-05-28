@@ -4,7 +4,6 @@
 #include <string.h>
 
 struct psc_bnd_sub {
-  struct ddc_particles *ddcp;
 };
 
 #define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
@@ -31,14 +30,12 @@ ddcp_particles_get_addr(void *_particles, int p, int n)
 static void
 psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-
   psc_bnd_setup_super(bnd);
-  bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
-				       sizeof(particle_real_t),
-				       MPI_PARTICLES_REAL,
-				       ddcp_particles_realloc,
-				       ddcp_particles_get_addr);
+  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
+				   sizeof(particle_real_t),
+				   MPI_PARTICLES_REAL,
+				   ddcp_particles_realloc,
+				   ddcp_particles_get_addr);
 }
 
 // ----------------------------------------------------------------------
@@ -47,9 +44,7 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
 static void
 psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-
-  ddc_particles_destroy(bnd_sub->ddcp);
+  ddc_particles_destroy(bnd->ddcp);
 }
 
 // ======================================================================
@@ -71,7 +66,6 @@ find_block_index(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
 
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
@@ -83,7 +77,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
   }
   prof_start(pr_A);
 
-  struct ddc_particles *ddcp = bnd_sub->ddcp;
+  struct ddc_particles *ddcp = bnd->ddcp;
 
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction

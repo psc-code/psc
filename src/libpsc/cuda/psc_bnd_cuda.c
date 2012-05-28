@@ -129,9 +129,8 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 			unsigned int **bn_cnts, unsigned int **bn_idx,
 			unsigned int **bn_off)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   struct psc *psc = bnd->psc;
-  struct ddc_particles *ddcp = bnd_cuda->ddcp;
+  struct ddc_particles *ddcp = bnd->ddcp;
 
   static int pr_A, pr_C, pr_D;
   if (!pr_A) {
@@ -422,14 +421,12 @@ psc_bnd_cuda_exchange_particles_general(struct psc_bnd *psc_bnd,
 void
 psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
-
   psc_bnd_setup_super(bnd);
-  bnd_cuda->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_single_t),
-					sizeof(particle_single_real_t),
-					MPI_PARTICLES_SINGLE_REAL,
-					ddcp_particles_realloc,
-					ddcp_particles_get_addr);
+  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_single_t),
+				   sizeof(particle_single_real_t),
+				   MPI_PARTICLES_SINGLE_REAL,
+				   ddcp_particles_realloc,
+				   ddcp_particles_get_addr);
 }
 
 // ----------------------------------------------------------------------
@@ -438,9 +435,7 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
 void
 psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
-
-  ddc_particles_destroy(bnd_cuda->ddcp);
+  ddc_particles_destroy(bnd->ddcp);
 }
 
 // ----------------------------------------------------------------------

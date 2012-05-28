@@ -6,7 +6,6 @@
 #include "psc_particles_cuda.h"
 
 struct psc_bnd_cuda {
-  struct ddc_particles *ddcp;
 };
 
 #define to_psc_bnd_cuda(bnd) ((struct psc_bnd_cuda *)((bnd)->obj.subctx))

@@ -4,7 +4,6 @@
 #include <string.h>
 
 struct psc_bnd_sub {
-  struct ddc_particles *ddcp;
 };
 
 #define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
@@ -31,9 +30,7 @@ ddcp_particles_get_addr(void *_particles, int p, int n)
 static void
 psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-
-  bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
+  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
 				       sizeof(particle_real_t),
 				       MPI_PARTICLES_REAL,
 				       ddcp_particles_realloc,
@@ -47,9 +44,7 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
 static void
 psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-
-  ddc_particles_destroy(bnd_sub->ddcp);
+  ddc_particles_destroy(bnd->ddcp);
 }
 
 // ======================================================================
@@ -176,9 +171,8 @@ exclusive_scan(unsigned int *b_cnts, int n)
 static void
 exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
-  struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
-  struct ddc_particles *ddcp = bnd_sub->ddcp;
+  struct ddc_particles *ddcp = bnd->ddcp;
 
   static int pr_A, pr_B;
   if (!pr_A) {
