@@ -12,34 +12,28 @@ struct psc_bnd_sub {
 
 #define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
 
-struct xchg_patch {
-  particle_t *prts;
-  float4 *xi4;
-  float4 *pxi4;
-  int n;
-};
-
-struct xchg_ctx {
-  struct xchg_patch *patch;
-};
-
 // ----------------------------------------------------------------------
 // ddcp_particles helpers
 
 static void
 ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  struct xchg_ctx *xchg = _ctx;
+  struct psc_mparticles *mprts = _ctx;
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  assert(!xchg->patch[p].prts);
-  xchg->patch[p].prts = malloc(new_n_particles * sizeof(*xchg->patch[p].prts));
+  assert(!cuda->bnd_prts);
+  cuda->bnd_prts = malloc(new_n_particles * sizeof(*cuda->bnd_prts));
 }
 
 static void *
 ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  struct xchg_ctx *xchg = _ctx;
-  return &xchg->patch[p].prts[n];
+  struct psc_mparticles *mprts = _ctx;
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+  return &cuda->bnd_prts[n];
 }
 
 // ----------------------------------------------------------------------
@@ -66,27 +60,26 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// xpatch_append helper
+// xchg_append helper
 
 static void
-xpatch_append(struct psc_particles *prts, struct xchg_patch *xpatch,
-	      particle_t *prt,
-	      unsigned int *bn_idx, unsigned int *bn_cnts, unsigned int *bn_off)
+xchg_append(struct psc_particles *prts, particle_t *prt,
+	    unsigned int *bn_idx, unsigned int *bn_cnts, unsigned int *bn_off)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int nn = xpatch->n++;
-  xpatch->xi4[nn].x  = prt->xi;
-  xpatch->xi4[nn].y  = prt->yi;
-  xpatch->xi4[nn].z  = prt->zi;
-  xpatch->xi4[nn].w  = cuda_int_as_float(prt->kind);
-  xpatch->pxi4[nn].x = prt->pxi;
-  xpatch->pxi4[nn].y = prt->pyi;
-  xpatch->pxi4[nn].z = prt->pzi;
-  xpatch->pxi4[nn].w = prt->qni_wni;
+  int nn = cuda->bnd_n_part++;
+  cuda->bnd_xi4[nn].x  = prt->xi;
+  cuda->bnd_xi4[nn].y  = prt->yi;
+  cuda->bnd_xi4[nn].z  = prt->zi;
+  cuda->bnd_xi4[nn].w  = cuda_int_as_float(prt->kind);
+  cuda->bnd_pxi4[nn].x = prt->pxi;
+  cuda->bnd_pxi4[nn].y = prt->pyi;
+  cuda->bnd_pxi4[nn].z = prt->pzi;
+  cuda->bnd_pxi4[nn].w = prt->qni_wni;
 
   int b_pos[3];
   for (int d = 0; d < 3; d++) {
-    float *xi = &xpatch->xi4[nn].x;
+    float *xi = &cuda->bnd_xi4[nn].x;
     b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
     if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
       printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
@@ -111,51 +104,45 @@ xpatch_append(struct psc_particles *prts, struct xchg_patch *xpatch,
 }
 
 static inline particle_t *
-xchg_get_one(struct xchg_patch *xpatch, int n)
+xchg_get_one(struct psc_particles *prts, int n)
 {
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   static particle_t prt_static;
 
   particle_t *prt = &prt_static;
-  prt->xi      = xpatch->xi4[n].x;
-  prt->yi      = xpatch->xi4[n].y;
-  prt->zi      = xpatch->xi4[n].z;
-  prt->kind    = cuda_float_as_int(xpatch->xi4[n].w);
-  prt->pxi     = xpatch->pxi4[n].x;
-  prt->pyi     = xpatch->pxi4[n].y;
-  prt->pzi     = xpatch->pxi4[n].z;
-  prt->qni_wni = xpatch->pxi4[n].w;
+  prt->xi      = cuda->bnd_xi4[n].x;
+  prt->yi      = cuda->bnd_xi4[n].y;
+  prt->zi      = cuda->bnd_xi4[n].z;
+  prt->kind    = cuda_float_as_int(cuda->bnd_xi4[n].w);
+  prt->pxi     = cuda->bnd_pxi4[n].x;
+  prt->pyi     = cuda->bnd_pxi4[n].y;
+  prt->pzi     = cuda->bnd_pxi4[n].z;
+  prt->qni_wni = cuda->bnd_pxi4[n].w;
 
   return prt;
 }
 
-static struct xchg_patch *
-xchg_get_patch(struct xchg_ctx *xchg, int p)
-{
-  return &xchg->patch[p];
-}
-
 static void
-xchg_ctx_setup(struct xchg_ctx *xchg, struct psc_bnd *bnd, struct psc_mparticles *particles,
-	       int *offsets, int *n_sends, unsigned int **bn_idx, unsigned int **bn_off)
+xchg_setup(struct psc_bnd *bnd, struct psc_mparticles *particles,
+	   int *offsets, int *n_sends, unsigned int **bn_idx, unsigned int **bn_off)
 {
-  xchg->patch = calloc(particles->nr_patches, sizeof(*xchg->patch));
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    struct xchg_patch *xpatch = &xchg->patch[p];
-    xpatch->n = 0;
-    xpatch->prts = NULL;
+    cuda->bnd_n_part = 0;
+    cuda->bnd_prts = NULL;
 
     int n_send = n_sends[p];
-    xpatch->xi4  = malloc(n_send * sizeof(*xpatch->xi4));
-    xpatch->pxi4 = malloc(n_send * sizeof(*xpatch->pxi4));
+    cuda->bnd_xi4  = malloc(n_send * sizeof(*cuda->bnd_xi4));
+    cuda->bnd_pxi4 = malloc(n_send * sizeof(*cuda->bnd_pxi4));
     if (bn_idx) {
       bn_idx[p] = malloc(n_send * sizeof(*bn_idx[p]));
       bn_off[p] = malloc(n_send * sizeof(*bn_off[p]));
     }
 
     // OPT, could use streaming
-    __particles_cuda_from_device_range(prts, xpatch->xi4, xpatch->pxi4,
+    __particles_cuda_from_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
 				       offsets[p], offsets[p] + n_send);
   }
 }
@@ -189,8 +176,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
 			unsigned int **bn_cnts, unsigned int **bn_idx,
 			unsigned int **bn_off)
 {
-  struct xchg_ctx xchg;
-  xchg_ctx_setup(&xchg, bnd, particles, offsets, n_sends, bn_idx, bn_off);
+  xchg_setup(bnd, particles, offsets, n_sends, bn_idx, bn_off);
 
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
@@ -209,7 +195,6 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
 
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct xchg_patch *xpatch = xchg_get_patch(&xchg, p);
 
     struct psc_patch *patch = &psc->patch[p];
     particle_real_t xm[3];
@@ -225,7 +210,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
       ddcp_patch->nei[dir1].n_send = 0;
     }
     for (int n = ddcp_patch->head; n < n_sends[p]; n++) {
-      particle_t *prt = xchg_get_one(xpatch, n);
+      particle_t *prt = xchg_get_one(prts, n);
       particle_real_t *xi = &prt->xi;
       particle_real_t *pxi = &prt->pxi;
       
@@ -292,7 +277,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  xpatch_append(prts, xpatch, prt, bn_idx[p], bn_cnts[p], bn_off[p]);
+	  xchg_append(prts, prt, bn_idx[p], bn_cnts[p], bn_off[p]);
 	} else {
 	  ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
 	}
@@ -302,37 +287,34 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  ddc_particles_comm(ddcp, &xchg);
+  ddc_particles_comm(ddcp, particles);
   prof_stop(pr_B);
 
   prof_start(pr_D);
   for (int p = 0; p < particles->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
-    struct xchg_patch *xpatch = &xchg.patch[p];
     struct psc_particles *prts_cuda = psc_mparticles_get_patch(particles, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
-    int n_recv = xpatch->n + patch->head;
+    int n_recv = cuda->bnd_n_part + patch->head;
     prts_cuda->n_part = offsets[p] + n_recv;
     assert(prts_cuda->n_part <= cuda->n_alloced);
 
-    xpatch->xi4  = realloc(xpatch->xi4, n_recv * sizeof(float4));
-    xpatch->pxi4 = realloc(xpatch->pxi4, n_recv * sizeof(float4));
+    cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
+    cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
     bn_idx[p] = realloc(bn_idx[p], n_recv * sizeof(*bn_idx[p]));
     bn_off[p] = realloc(bn_off[p], n_recv * sizeof(*bn_off[p]));
     for (int n = 0; n < patch->head; n++) {
-      xpatch_append(prts_cuda, xpatch, &xpatch->prts[n], bn_idx[p], bn_cnts[p], bn_off[p]);
+      xchg_append(prts_cuda, &cuda->bnd_prts[n], bn_idx[p], bn_cnts[p], bn_off[p]);
     }
 
-    __particles_cuda_to_device_range(prts_cuda, xpatch->xi4, xpatch->pxi4,
+    __particles_cuda_to_device_range(prts_cuda, cuda->bnd_xi4, cuda->bnd_pxi4,
 				     offsets[p], offsets[p] + n_recv);
 
-    free(xpatch->prts);
-    free(xpatch->xi4);
-    free(xpatch->pxi4);
+    free(cuda->bnd_prts);
+    free(cuda->bnd_xi4);
+    free(cuda->bnd_pxi4);
   }
   prof_stop(pr_D);
-
-  free(xchg.patch);
 }
 
 // ----------------------------------------------------------------------

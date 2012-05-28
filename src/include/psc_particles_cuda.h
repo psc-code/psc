@@ -5,6 +5,8 @@
 #include "psc_particles_private.h"
 #include "cuda_wrap.h"
 
+#include "psc_particles_single.h"
+
 typedef float particle_cuda_real_t;
 
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
@@ -34,6 +36,12 @@ struct psc_particles_cuda {
   int blocksize[3];            // dimensions of sub blocks in a patch
   particle_cuda_real_t b_dxi[3];
   struct cell_map map;         // maps 3d block pos to 1d block index
+
+  // for bnd exchange
+  particle_single_t *bnd_prts;
+  float4 *bnd_xi4;
+  float4 *bnd_pxi4;
+  int bnd_n_part;
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
