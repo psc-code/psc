@@ -216,39 +216,48 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	int dir[3];
 	for (int d = 0; d < 3; d++) {
 	  if (b_pos[d] < 0) {
-	    if (ppatch->off[d] == 0) {
+	    if (ppatch->off[d] > 0 ||
+		psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	      xi[d] += xm[d];
+	      dir[d] = -1;
+	      int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	      if (bi >= b_mx[d]) {
+		xi[d] = 0.;
+		dir[d] = 0;
+	      }
+	    } else {
 	      switch (psc->domain.bnd_part_lo[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] =  -xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
-	      case BND_PART_PERIODIC:
-		xi[d] += xm[d];
-		dir[d] = -1;
-		break;
 	      case BND_PART_ABSORBING:
 		drop = true;
 		break;
 	      default:
 		assert(0);
 	      }
-	    } else {
-	      // computational bnd
-	      xi[d] += xm[d];
-	      dir[d] = -1;
 	    }
 	  } else if (b_pos[d] >= b_mx[d]) {
-	    if (ppatch->off[d] + ppatch->ldims[d] == psc->domain.gdims[d]) {
+	    if (ppatch->off[d] + ppatch->ldims[d] < psc->domain.gdims[d] ||
+		psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
+	      xi[d] -= xm[d];
+	      dir[d] = +1;
+	      int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	      if (bi < 0) {
+		xi[d] = 0.;
+	      }
+	    } else {
 	      switch (psc->domain.bnd_part_hi[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xm[d] - xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
-		break;
-	      case BND_PART_PERIODIC:
-		xi[d] -= xm[d];
-		dir[d] = +1;
+		int bi = particle_real_fint(xi[d] * b_dxi[d]);
+		if (bi >= b_mx[d]) {
+		  xi[d] *= (1. - 1e-6);
+		}
 		break;
 	      case BND_PART_ABSORBING:
 		drop = true;
@@ -256,10 +265,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	      default:
 		assert(0);
 	      }
-	    } else {
-	      // computational bnd
-	      xi[d] -= xm[d];
-	      dir[d] = +1;
 	    }
 	  } else {
 	    // computational bnd

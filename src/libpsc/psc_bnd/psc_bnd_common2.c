@@ -319,7 +319,7 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 	  } else {
 	    switch (psc->domain.bnd_part_lo[d]) {
 	    case BND_PART_REFLECTING:
-	      xi[d] =  -xi[d];
+	      xi[d]  = -xi[d];
 	      pxi[d] = -pxi[d];
 	      dir[d] = 0;
 	      break;
