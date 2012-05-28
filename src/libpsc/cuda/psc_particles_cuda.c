@@ -129,22 +129,6 @@ calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
   vxi[2] = part->pzi * root;
 }
 
-static inline float
-int_as_float(int i)
-{
-  union { int i; float f; } u;
-  u.i = i;
-  return u.f;
-};
-
-static inline int
-float_as_int(float f)
-{
-  union { int i; float f; } u;
-  u.f = f;
-  return u.i;
-};
-
 static void
 psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 			       struct psc_particles *prts_c, unsigned int flags)
@@ -175,7 +159,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
     xi4[n].x  = part_c->xi + dth[0] * vxi[0];
     xi4[n].y  = part_c->yi + dth[1] * vxi[1];
     xi4[n].z  = part_c->zi + dth[2] * vxi[2];
-    xi4[n].w  = int_as_float(part_c->kind);
+    xi4[n].w  = cuda_int_as_float(part_c->kind);
     pxi4[n].x = part_c->pxi;
     pxi4[n].y = part_c->pyi;
     pxi4[n].z = part_c->pzi;
@@ -322,7 +306,7 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
   
   for (int n = 0; n < prts_c->n_part; n++) {
     particle_c_real_t qni_wni = pxi4[n].w;
-    unsigned int kind = kind = float_as_int(xi4[n].w);
+    unsigned int kind = cuda_float_as_int(xi4[n].w);
     
     particle_c_t *part_base = particles_c_get_one(prts_c, n);
     part_base->xi  = xi4[n].x;
@@ -369,7 +353,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     xi4[n].x  = part->xi;
     xi4[n].y  = part->yi;
     xi4[n].z  = part->zi;
-    xi4[n].w  = int_as_float(part->kind);
+    xi4[n].w  = cuda_int_as_float(part->kind);
     pxi4[n].x = part->pxi;
     pxi4[n].y = part->pyi;
     pxi4[n].z = part->pzi;
@@ -457,7 +441,7 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
     part_base->xi  = xi4[n].x;
     part_base->yi  = xi4[n].y;
     part_base->zi  = xi4[n].z;
-    part_base->kind = float_as_int(xi4[n].w);
+    part_base->kind = cuda_float_as_int(xi4[n].w);
     part_base->pxi = pxi4[n].x;
     part_base->pyi = pxi4[n].y;
     part_base->pzi = pxi4[n].z;

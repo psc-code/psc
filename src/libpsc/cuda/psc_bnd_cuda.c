@@ -2,23 +2,13 @@
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "psc_bnd_cuda_fields.h"
+#include "psc_particles_single.h"
 #include "../psc_bnd/ddc_particles.h"
 
 #include <mrc_profile.h>
 
-#define MPI_PARTICLE_HOST_REAL MPI_DOUBLE
-
-typedef double particle_host_real_t;
-
-typedef struct {
-  particle_host_real_t xi[3];
-  particle_host_real_t kind_as_float;
-  particle_host_real_t pxi[3];
-  particle_host_real_t qni_wni;
-} particle_host_t;
-
 struct cuda_ctx_patch {
-  particle_host_t *prts;
+  particle_single_t *prts;
   float4 *xi4;
   float4 *pxi4;
   int n;
@@ -84,18 +74,18 @@ check_sorted(particles_cuda_t *pp, unsigned int *d_bidx, unsigned int *d_ids,
 
 static void
 cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
-	      particle_host_t *prt,
+	      particle_single_t *prt,
 	      unsigned int *bn_idx, unsigned int *bn_cnts, unsigned int *bn_off)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int nn = cpatch->n++;
-  cpatch->xi4[nn].x  = prt->xi[0];
-  cpatch->xi4[nn].y  = prt->xi[1];
-  cpatch->xi4[nn].z  = prt->xi[2];
-  cpatch->xi4[nn].w  = prt->kind_as_float;
-  cpatch->pxi4[nn].x = prt->pxi[0];
-  cpatch->pxi4[nn].y = prt->pxi[1];
-  cpatch->pxi4[nn].z = prt->pxi[2];
+  cpatch->xi4[nn].x  = prt->xi;
+  cpatch->xi4[nn].y  = prt->yi;
+  cpatch->xi4[nn].z  = prt->zi;
+  cpatch->xi4[nn].w  = cuda_int_as_float(prt->kind);
+  cpatch->pxi4[nn].x = prt->pxi;
+  cpatch->pxi4[nn].y = prt->pyi;
+  cpatch->pxi4[nn].z = prt->pzi;
   cpatch->pxi4[nn].w = prt->qni_wni;
 
   int b_pos[3];
@@ -155,7 +145,7 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
   ctx.cuda_patch = calloc(mp_cuda->nr_patches, sizeof(*ctx.cuda_patch));
   for (int p = 0; p < mp_cuda->nr_patches; p++) {
     struct psc_patch *patch = psc->patch + p;
-    particle_host_real_t xm[3];
+    particle_single_real_t xm[3];
     for (int d = 0; d < 3; d++) {
       xm[d] = patch->ldims[d] * psc->dx[d];
     }
@@ -184,18 +174,18 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 				       offsets[p], offsets[p] + n_send);
 
     for (int n = 0; n < n_send; n++) {
-      particle_host_t prt;
-      prt.xi[0]         = cpatch->xi4[n].x;
-      prt.xi[1]         = cpatch->xi4[n].y;
-      prt.xi[2]         = cpatch->xi4[n].z;
-      prt.kind_as_float = cpatch->xi4[n].w;
-      prt.pxi[0]        = cpatch->pxi4[n].x;
-      prt.pxi[1]        = cpatch->pxi4[n].y;
-      prt.pxi[2]        = cpatch->pxi4[n].z;
-      prt.qni_wni       = cpatch->pxi4[n].w;
+      particle_single_t prt;
+      prt.xi      = cpatch->xi4[n].x;
+      prt.yi      = cpatch->xi4[n].y;
+      prt.zi      = cpatch->xi4[n].z;
+      prt.kind    = cuda_float_as_int(cpatch->xi4[n].w);
+      prt.pxi     = cpatch->pxi4[n].x;
+      prt.pyi     = cpatch->pxi4[n].y;
+      prt.pzi     = cpatch->pxi4[n].z;
+      prt.qni_wni = cpatch->pxi4[n].w;
 
-      particle_host_real_t *xi = prt.xi;
-      particle_host_real_t *pxi = prt.pxi;
+      particle_single_real_t *xi = &prt.xi;
+      particle_single_real_t *pxi = &prt.pxi;
 
       int dir[3];
       for (int d = 0; d < 3; d++) {
@@ -435,9 +425,9 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
 
   psc_bnd_setup_super(bnd);
-  bnd_cuda->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_host_t),
-					sizeof(particle_host_real_t),
-					MPI_PARTICLE_HOST_REAL,
+  bnd_cuda->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_single_t),
+					sizeof(particle_single_real_t),
+					MPI_PARTICLES_SINGLE_REAL,
 					ddcp_particles_realloc,
 					ddcp_particles_get_addr);
 }
