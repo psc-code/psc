@@ -175,6 +175,24 @@ xchg_append(struct psc_particles *prts, void *patch_ctx, particle_t *prt)
   *particles_get_one(prts, ddcp_patch->head++) = *prt;
 }
 
+static inline int *
+get_b_mx(struct psc_particles *prts)
+{
+  return ppsc->patch[prts->p].ldims;
+}
+
+static inline particle_real_t *
+get_b_dxi(struct psc_particles *prts)
+{
+  static particle_real_t b_dxi[3];
+  if (!b_dxi[0]) {
+    for (int d = 0; d < 3; d++) {
+      b_dxi[d] = 1.f / ppsc->dx[d];
+    }
+  }
+  return b_dxi;
+}
+
 // ----------------------------------------------------------------------
 // exchange particles
 
@@ -190,12 +208,11 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
     pr_B = prof_register("xchg_comm_" PARTICLE_TYPE, 1., 0, 0);
     pr_D = prof_register("xchg_post_" PARTICLE_TYPE, 1., 0, 0);
   }
+
   prof_start(pr_A);
 
   // FIXME we should make sure (assert) we don't quietly drop particle which left
   // in the invariant direction
-
-  particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
 
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
@@ -206,7 +223,8 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
     for (int d = 0; d < 3; d++) {
       xm[d] = patch->ldims[d] * psc->dx[d];
     }
-    int *b_mx = patch->ldims;
+    particle_real_t *b_dxi = get_b_dxi(prts);
+    int *b_mx = get_b_mx(prts);
 
     struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
     ddcp_patch->head = prts->n_part - n_send;
