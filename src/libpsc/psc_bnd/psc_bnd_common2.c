@@ -180,12 +180,13 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts, struct psc_p
 // ----------------------------------------------------------------------
 // find_block_indices_count_reorder
 
-static unsigned int __unused
-find_block_indices_count_reorder(unsigned int *b_idx, unsigned int *b_cnts, struct psc_particles *prts)
+static void __unused
+find_block_indices_count_reorder(struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
   unsigned int cnt = prts->n_part;
   int *b_mx = sngl->b_mx;
+  memset(sngl->b_cnt, 0, (sngl->nr_blocks + 1) * sizeof(*sngl->b_cnt));
   for (int i = 0; i < prts->n_part; i++) {
     particle_t *part = particles_get_one(prts, i);
     int b_pos[3];
@@ -193,20 +194,15 @@ find_block_indices_count_reorder(unsigned int *b_idx, unsigned int *b_cnts, stru
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-      b_idx[i] = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
-      b_cnts[b_idx[i]]++;
+      sngl->b_idx[i] = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
     } else { // out of bounds
-      b_idx[i] = sngl->nr_blocks;
-      b_cnts[b_idx[i]]++;
+      sngl->b_idx[i] = sngl->nr_blocks;
       assert(cnt < sngl->n_alloced);
       *particles_get_one(prts, cnt) = *part;
       cnt++;
     }
+    sngl->b_cnt[sngl->b_idx[i]]++;
   }
-
-  cnt -= prts->n_part;
-  prts->n_part += cnt;
-  return cnt;
 }
 
 static unsigned int __unused
@@ -402,6 +398,9 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_particles_single *sngl = psc_particles_single(prts);
 
+    if (1) {
+      find_block_indices_count_reorder(prts);
+    }
     sngl->n_part_save = prts->n_part;
     sngl->n_send = sngl->b_cnt[sngl->nr_blocks];
     prts->n_part += sngl->n_send;

@@ -1,6 +1,8 @@
 
 #include "psc_push_particles_private.h"
 
+#include <mrc_profile.h>
+
 // ======================================================================
 // forward to subclass
 
@@ -8,6 +10,12 @@ void
 psc_push_particles_run(struct psc_push_particles *push,
 		       mparticles_base_t *particles, mfields_base_t *mflds)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("push_particles_run", 1., 0, 0);
+  }  
+
+  prof_start(pr);
   psc_stats_start(st_time_particle);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
   int *im = ppsc->domain.gdims;
@@ -34,6 +42,7 @@ psc_push_particles_run(struct psc_push_particles *push,
     }
   }
   psc_stats_stop(st_time_particle);
+  prof_stop(pr);
 }
 
 void

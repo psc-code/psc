@@ -86,14 +86,13 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
     if (b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       sngl->b_idx[n] = b_pos[2] * b_mx[1] + b_pos[1];
-      sngl->b_cnt[sngl->b_idx[n]]++;
     } else { // out of bounds
       sngl->b_idx[n] = sngl->nr_blocks;
       assert(sngl->b_cnt[sngl->nr_blocks] < sngl->n_alloced);
       // append to back
       *particles_get_one(pp, pp->n_part + sngl->b_cnt[sngl->nr_blocks]) = *part;
-      sngl->b_cnt[sngl->nr_blocks]++;
     }
+    sngl->b_cnt[sngl->b_idx[n]]++;
 
     // OUT OF PLANE CURRENT DENSITY BETWEEN (n+.5)*dt and (n+1.5)*dt
 
