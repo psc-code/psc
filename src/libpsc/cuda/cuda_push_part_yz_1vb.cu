@@ -20,7 +20,7 @@ struct cuda_params {
   int ilg[3];
   int b_mx[3];
   int *d_error_count;
-  real qni_div_mni[MAX_KINDS];
+  real dq[MAX_KINDS];
 };
 
 __device__ int *__d_error_count;
@@ -44,7 +44,7 @@ set_params(struct cuda_params *prm, struct psc *psc,
   prm->d_error_count = d_error_count;
   assert(psc->nr_kinds <= MAX_KINDS);
   for (int k = 0; k < psc->nr_kinds; k++) {
-    prm->qni_div_mni[k] = psc->kinds[k].q / psc->kinds[k].m;
+    prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 }
 
@@ -139,8 +139,8 @@ push_pxi_dt(struct d_particle *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq,
 	    struct cuda_params prm)
 {
-  int kind = __float_as_int(p->qni_div_mni);
-  real dq = prm.qni_div_mni[kind] * prm.dqs;
+  int kind = __float_as_int(p->kind_as_float);
+  real dq = prm.dq[kind];
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;

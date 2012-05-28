@@ -54,7 +54,7 @@ __device__ static void
 push_pxi_dt(struct d_particle *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
-  real dq = p->qni_div_mni * d_consts.dqs;
+  real dq = 0.;// FIXME p->qni_div_mni * d_consts.dqs;
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;

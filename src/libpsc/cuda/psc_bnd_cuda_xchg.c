@@ -11,7 +11,7 @@ typedef double particle_host_real_t;
 
 typedef struct {
   particle_host_real_t xi[3];
-  particle_host_real_t qni_div_mni;
+  particle_host_real_t kind_as_float;
   particle_host_real_t pxi[3];
   particle_host_real_t qni_wni;
 } particle_host_t;
@@ -91,7 +91,7 @@ cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
   cpatch->xi4[nn].x  = prt->xi[0];
   cpatch->xi4[nn].y  = prt->xi[1];
   cpatch->xi4[nn].z  = prt->xi[2];
-  cpatch->xi4[nn].w  = prt->qni_div_mni;
+  cpatch->xi4[nn].w  = prt->kind_as_float;
   cpatch->pxi4[nn].x = prt->pxi[0];
   cpatch->pxi4[nn].y = prt->pxi[1];
   cpatch->pxi4[nn].z = prt->pxi[2];
@@ -184,14 +184,14 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 
     for (int n = 0; n < n_send; n++) {
       particle_host_t prt;
-      prt.xi[0]       = cpatch->xi4[n].x;
-      prt.xi[1]       = cpatch->xi4[n].y;
-      prt.xi[2]       = cpatch->xi4[n].z;
-      prt.qni_div_mni = cpatch->xi4[n].w;
-      prt.pxi[0]      = cpatch->pxi4[n].x;
-      prt.pxi[1]      = cpatch->pxi4[n].y;
-      prt.pxi[2]      = cpatch->pxi4[n].z;
-      prt.qni_wni     = cpatch->pxi4[n].w;
+      prt.xi[0]         = cpatch->xi4[n].x;
+      prt.xi[1]         = cpatch->xi4[n].y;
+      prt.xi[2]         = cpatch->xi4[n].z;
+      prt.kind_as_float = cpatch->xi4[n].w;
+      prt.pxi[0]        = cpatch->pxi4[n].x;
+      prt.pxi[1]        = cpatch->pxi4[n].y;
+      prt.pxi[2]        = cpatch->pxi4[n].z;
+      prt.qni_wni       = cpatch->pxi4[n].w;
 
       particle_host_real_t *xi = prt.xi;
       particle_host_real_t *pxi = prt.pxi;

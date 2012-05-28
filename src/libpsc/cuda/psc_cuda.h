@@ -50,7 +50,7 @@ EXTERN_C void __cuda_push_part_yz_b3(struct psc_particles *prts, struct psc_fiel
 
 struct d_particle {
   real xi[3];
-  real qni_div_mni;
+  real kind_as_float;
   real pxi[3];
   real qni_wni;
 };
@@ -58,21 +58,21 @@ struct d_particle {
 #define THREADS_PER_BLOCK 256
 
 #define LOAD_PARTICLE(pp, d_p, n) do {					\
-    (pp).xi[0]       = d_p.xi4[n].x;					\
-    (pp).xi[1]       = d_p.xi4[n].y;					\
-    (pp).xi[2]       = d_p.xi4[n].z;					\
-    (pp).qni_div_mni = d_p.xi4[n].w;					\
-    (pp).pxi[0]      = d_p.pxi4[n].x;					\
-    (pp).pxi[1]      = d_p.pxi4[n].y;					\
-    (pp).pxi[2]      = d_p.pxi4[n].z;					\
-    (pp).qni_wni     = d_p.pxi4[n].w;					\
+    (pp).xi[0]         = d_p.xi4[n].x;					\
+    (pp).xi[1]         = d_p.xi4[n].y;					\
+    (pp).xi[2]         = d_p.xi4[n].z;					\
+    (pp).kind_as_float = d_p.xi4[n].w;					\
+    (pp).pxi[0]        = d_p.pxi4[n].x;					\
+    (pp).pxi[1]        = d_p.pxi4[n].y;					\
+    (pp).pxi[2]        = d_p.pxi4[n].z;					\
+    (pp).qni_wni       = d_p.pxi4[n].w;					\
 } while (0)
 
 #define STORE_PARTICLE_POS(pp, d_p, n) do {				\
     d_p.xi4[n].x = (pp).xi[0];						\
     d_p.xi4[n].y = (pp).xi[1];						\
     d_p.xi4[n].z = (pp).xi[2];						\
-    d_p.xi4[n].w = (pp).qni_div_mni;					\
+    d_p.xi4[n].w = (pp).kind_as_float;					\
 } while (0)
 
 #define STORE_PARTICLE_MOM(pp, d_p, n) do {				\
