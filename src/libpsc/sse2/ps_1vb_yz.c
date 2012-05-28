@@ -20,6 +20,7 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int 
   }
 
   int my = pf->im[1], sz = pf->im[1] * pf->im[2];
+  int b_my = sngl->b_mx[1], b_mz = sngl->b_mx[2];
   fields_ip_real_t *_p0 = &F3_IP(pf, 0, 0,0,0);
   v4s *_p_jx = (v4s *) &F3_IP(pf, JXI, 0,0,0);
   v4s *_p_jyz = (v4s *) &F3_IP(pf, JYI, 0,0,0);
@@ -77,6 +78,17 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int 
 
     GET_POS_IDX(yi, dxi[1],  0.f, yp, lfy);
     GET_POS_IDX(zi, dxi[2],  0.f, zp, lfz);
+
+    for (int m = 0; m < SIMD_SIZE; m++) {
+      int posy = v4si_extract(lfy, m);
+      int posz = v4si_extract(lfz, m);
+      if ((unsigned int) posy < b_my &&
+	  (unsigned int) posz < b_mz) {
+	sngl->b_idx[n + m] = posz * b_my + posy;
+      } else {
+	sngl->b_idx[n + m] = b_my * b_mz;
+      }
+    }
 
     v4s fnq[2] = { qw * v4s_splat(fnqys), qw * v4s_splat(fnqzs) };
 
