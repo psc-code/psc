@@ -4,6 +4,7 @@
 #include "psc_particles_c.h"
 
 #include <mrc_io.h>
+#include <mrc_profile.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
@@ -32,15 +33,42 @@ static void
 psc_particles_single_reorder(struct psc_particles *prts,
 			     unsigned int *b_idx, unsigned int *b_sums)
 {
+  static int pr, pr_A;
+  if (!pr) {
+    pr = prof_register("single_reorder", 1., 0, 0);
+    pr_A = prof_register("single_reorder2", 1., 0, 0);
+  }
+
   struct psc_particles_single *sngl = psc_particles_single(prts);
 
   sngl->n_alloced = prts->n_part * 1.2;
   struct psc_particle_single *particles_new = malloc(sngl->n_alloced * sizeof(*particles_new));
-  
+
+#if 1
+  prof_start(pr);
   for (int n = 0; n < prts->n_part; n++) {
     int n_new = b_sums[b_idx[n]]++;
     particles_new[n_new] = sngl->particles[n];
   }
+  prof_stop(pr);
+#else
+  int *b_off = malloc(sngl->n_alloced * sizeof(*b_off));
+  prof_start(pr);
+  for (int n = 0; n < prts->n_part; n++) {
+    int n_new = b_sums[b_idx[n]]++;
+    //    b_off[n_new] = n;
+    b_off[n] = n_new;
+  }
+  prof_stop(pr);
+
+  prof_start(pr_A);
+  for (int n = 0; n < prts->n_part; n++) {
+    //    particles_new[n] = sngl->particles[b_off[n]];
+    particles_new[b_off[n]] = sngl->particles[n];
+  }
+  prof_stop(pr_A);
+  free(b_off);
+#endif
 
   free(sngl->particles);
   sngl->particles = particles_new;
