@@ -205,9 +205,9 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
       ddcp_patch->nei[dir1].n_send = 0;
     }
     for (int i = ddcp_patch->head; i < prts->n_part; i++) {
-      particle_t *part = particles_get_one(prts, i);
-      particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-      particle_real_t *pxi = &part->pxi;
+      particle_t *prt = particles_get_one(prts, i);
+      particle_real_t *xi = &prt->xi;
+      particle_real_t *pxi = &prt->pxi;
       
       bool drop = false;
       int dir[3];
@@ -272,9 +272,9 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  *particles_get_one(prts, ddcp_patch->head++) = *part;
+	  *particles_get_one(prts, ddcp_patch->head++) = *prt;
 	} else {
-	  ddc_particles_queue(ddcp, ddcp_patch, dir, part);
+	  ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
 	}
       }
     }
