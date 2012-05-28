@@ -129,6 +129,22 @@ calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
   vxi[2] = part->pzi * root;
 }
 
+static inline float
+int_as_float(int i)
+{
+  union { int i; float f; } u;
+  u.i = i;
+  return u.f;
+};
+
+static inline int
+float_as_int(float f)
+{
+  union { int i; float f; } u;
+  u.f = f;
+  return u.i;
+};
+
 static void
 psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 			       struct psc_particles *prts_c, unsigned int flags)
@@ -153,31 +169,17 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
   for (int n = 0; n < prts_c->n_part; n++) {
     particle_c_t *part_c = particles_c_get_one(prts_c, n);
     
-    real qni = part_c->qni;
-    real wni = part_c->wni;
-    // FIXME!!! KH hack
-    if (part_c->kind == 1 || part_c->kind == 3) {
-      wni *= (1 + 1e-6);
-    }
-    real qni_div_mni = qni / part_c->mni;
-    real qni_wni;
-    if (qni != 0.) {
-      qni_wni = qni * wni;
-    } else {
-      qni_wni = wni;
-    }
-    
     particle_c_real_t vxi[3];
     calc_vxi(vxi, part_c);
 
     xi4[n].x  = part_c->xi + dth[0] * vxi[0];
     xi4[n].y  = part_c->yi + dth[1] * vxi[1];
     xi4[n].z  = part_c->zi + dth[2] * vxi[2];
-    xi4[n].w  = qni_div_mni;
+    xi4[n].w  = int_as_float(part_c->kind);
     pxi4[n].x = part_c->pxi;
     pxi4[n].y = part_c->pyi;
     pxi4[n].z = part_c->pzi;
-    pxi4[n].w = qni_wni;
+    pxi4[n].w = part_c->qni * part_c->wni;
     
     // FIXME, we should just sort the original particles,
     // and then use bnd_exchange to exchange, update indices, etc.
@@ -319,24 +321,8 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
   __particles_cuda_from_device(prts_cuda, xi4, pxi4);
   
   for (int n = 0; n < prts_c->n_part; n++) {
-    particle_c_real_t qni_div_mni = xi4[n].w;
     particle_c_real_t qni_wni = pxi4[n].w;
-    particle_c_real_t qni, mni, wni;
-    unsigned int kind;
-    if (qni_div_mni == 0.) {
-      qni = 0.;
-      wni = qni_wni;
-      mni = -1.;
-      assert(0); // can't recover the mass of a neutral particle
-    } else {
-      qni = qni_div_mni > 0 ? 1. : -1.;
-      mni = qni / qni_div_mni;
-      wni = qni_wni / qni;
-      kind = (qni > 0.) ? 2 : 0;
-      if (wni > 1. + .5e-7) {
-	kind++;
-      }
-    }
+    unsigned int kind = kind = float_as_int(xi4[n].w);
     
     particle_c_t *part_base = particles_c_get_one(prts_c, n);
     part_base->xi  = xi4[n].x;
@@ -345,9 +331,9 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
     part_base->pxi = pxi4[n].x;
     part_base->pyi = pxi4[n].y;
     part_base->pzi = pxi4[n].z;
-    part_base->qni = qni;
-    part_base->mni = mni;
-    part_base->wni = wni;
+    part_base->qni = ppsc->kinds[kind].q;
+    part_base->mni = ppsc->kinds[kind].m;
+    part_base->wni = qni_wni / part_base->qni;
     part_base->kind = kind;
 
     particle_c_real_t vxi[3];
@@ -380,20 +366,14 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
   for (int n = 0; n < prts->n_part; n++) {
     particle_single_t *part = particles_single_get_one(prts, n);
     
-    real qni_wni = part->qni_wni;
-    // FIXME!!! KH hack
-    if (part->kind == 1 || part->kind == 3) {
-      qni_wni *= (1 + 1e-6);
-    }
-    
     xi4[n].x  = part->xi;
     xi4[n].y  = part->yi;
     xi4[n].z  = part->zi;
-    xi4[n].w  = ppsc->kinds[part->kind].q / ppsc->kinds[part->kind].m;
+    xi4[n].w  = int_as_float(part->kind);
     pxi4[n].x = part->pxi;
     pxi4[n].y = part->pyi;
     pxi4[n].z = part->pzi;
-    pxi4[n].w = qni_wni;
+    pxi4[n].w = part->qni_wni;
     
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
     for (int d = 0; d < 3; d++) {
@@ -472,35 +452,16 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
   __particles_cuda_from_device(prts_cuda, xi4, pxi4);
   
   for (int n = 0; n < prts->n_part; n++) {
-    particle_c_real_t qni_div_mni = xi4[n].w;
-    particle_c_real_t qni_wni = pxi4[n].w;
-    particle_c_real_t qni, mni, wni;
-    unsigned int kind;
-    if (qni_div_mni == 0.) {
-      qni = 0.;
-      wni = qni_wni;
-      mni = -1.;
-      assert(0); // can't recover the mass of a neutral particle
-    } else {
-      qni = qni_div_mni > 0 ? 1. : -1.;
-      mni = qni / qni_div_mni;
-      wni = qni_wni / qni;
-      kind = (qni > 0.) ? 2 : 0;
-      if (wni > 1. + .5e-7) {
-	kind++;
-      }
-      wni = 1.f;
-    }
-    
     particle_single_t *part_base = particles_single_get_one(prts, n);
+
     part_base->xi  = xi4[n].x;
     part_base->yi  = xi4[n].y;
     part_base->zi  = xi4[n].z;
+    part_base->kind = float_as_int(xi4[n].w);
     part_base->pxi = pxi4[n].x;
     part_base->pyi = pxi4[n].y;
     part_base->pzi = pxi4[n].z;
-    part_base->qni_wni = qni * wni;
-    part_base->kind = kind;
+    part_base->qni_wni = pxi4[n].w;
   }
 
   free(xi4);
