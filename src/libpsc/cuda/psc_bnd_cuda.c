@@ -13,39 +13,10 @@
 // general: make fields really 2D in CUDA and in bnd xchg
 // reduce packed buffers even more, e.g., add only on cuda side finally
 
-void psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd);
-void psc_bnd_cuda_xchg_unsetup(struct psc_bnd *bnd);
-void psc_bnd_cuda_xchg_exchange_particles(struct psc_bnd *bnd,
+void psc_bnd_cuda_setup(struct psc_bnd *bnd);
+void psc_bnd_cuda_unsetup(struct psc_bnd *bnd);
+void psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
 					  mparticles_base_t *particles_base);
-
-// ======================================================================
-// psc_bnd (particles)
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_setup
-
-static void
-psc_bnd_cuda_setup(struct psc_bnd *bnd)
-{
-  psc_bnd_setup_super(bnd);
-  psc_bnd_cuda_xchg_setup(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_unsetup
-
-static void
-psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
-{
-  psc_bnd_cuda_xchg_unsetup(bnd);
-}
-
-static void
-psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
-				mparticles_base_t *particles_base)
-{
-  psc_bnd_cuda_xchg_exchange_particles(bnd, particles_base);
-}
 
 // ======================================================================
 // psc_bnd: subclass "cuda"

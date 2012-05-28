@@ -426,13 +426,14 @@ psc_bnd_cuda_exchange_particles_general(struct psc_bnd *psc_bnd,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_xchg_setup
+// psc_bnd_cuda_setup
 
 void
-psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd)
+psc_bnd_cuda_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
 
+  psc_bnd_setup_super(bnd);
   bnd_cuda->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_host_t),
 					sizeof(particle_host_real_t),
 					MPI_PARTICLE_HOST_REAL,
@@ -441,10 +442,10 @@ psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_xchg_unsetup
+// psc_bnd_cuda_unsetup
 
 void
-psc_bnd_cuda_xchg_unsetup(struct psc_bnd *bnd)
+psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
 {
   struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
 
@@ -455,8 +456,8 @@ psc_bnd_cuda_xchg_unsetup(struct psc_bnd *bnd)
 // psc_bnd_cuda_exchange_particles
 
 void
-psc_bnd_cuda_xchg_exchange_particles(struct psc_bnd *bnd,
-					  mparticles_base_t *particles_base)
+psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
+				mparticles_base_t *particles_base)
 {
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
