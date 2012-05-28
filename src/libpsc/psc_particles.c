@@ -6,6 +6,17 @@
 #include <string.h>
 
 // ======================================================================
+// psc_particles_reorder
+
+void
+psc_particles_reorder(struct psc_particles *prts,
+		      unsigned int *b_idx, unsigned int *b_cnts)
+{
+  assert(psc_particles_ops(prts)->reorder);
+  psc_particles_ops(prts)->reorder(prts, b_idx, b_cnts);
+}
+
+// ======================================================================
 // psc_particles_get_as
 
 struct psc_particles *

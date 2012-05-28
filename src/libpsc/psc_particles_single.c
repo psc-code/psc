@@ -28,6 +28,24 @@ psc_particles_single_destroy(struct psc_particles *prts)
   free(sngl->particles);
 }
 
+static void
+psc_particles_single_reorder(struct psc_particles *prts,
+			     unsigned int *b_idx, unsigned int *b_sums)
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+
+  sngl->n_alloced = prts->n_part * 1.2;
+  struct psc_particle_single *particles_new = malloc(sngl->n_alloced * sizeof(*particles_new));
+  
+  for (int n = 0; n < prts->n_part; n++) {
+    int n_new = b_sums[b_idx[n]]++;
+    particles_new[n_new] = sngl->particles[n];
+  }
+
+  free(sngl->particles);
+  sngl->particles = particles_new;
+}
+
 void
 particles_single_realloc(struct psc_particles *prts, int new_n_part)
 {
@@ -110,7 +128,7 @@ psc_particles_single_copy_from_c(struct psc_particles *prts_base,
     if (part->qni != 0.) {
       qni_wni = part->qni * part->wni;
     } else {
-	qni_wni = part->wni;
+      qni_wni = part->wni;
     }
     
     part_base->xi          = part->xi;
@@ -152,4 +170,5 @@ struct psc_particles_ops psc_particles_single_ops = {
   .methods                 = psc_particles_single_methods,
   .setup                   = psc_particles_single_setup,
   .destroy                 = psc_particles_single_destroy,
+  .reorder                 = psc_particles_single_reorder,
 };

@@ -53,6 +53,7 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
 
   bnd->ddc = psc_bnd_lib_create_ddc(psc);
 
+  assert(sizeof(particle_t) % sizeof(particle_real_t) == 0);
   bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
 				       sizeof(particle_real_t),
 				       MPI_PARTICLES_REAL,
@@ -166,6 +167,24 @@ find_block_indices(unsigned int *b_idx, struct psc_particles *prts,
     particle_t *part = particles_get_one(prts, i);
     int b_pos[3];
     find_block_position(b_pos, &part->xi, b_dxi);
+    assert(b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
+	   b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+	   b_pos[2] >= 0 && b_pos[2] < b_mx[2]);
+    b_idx[i] = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
+  }
+}
+
+// ----------------------------------------------------------------------
+// find_block_indices_oob
+
+static inline void
+find_block_indices_oob(unsigned int *b_idx, struct psc_particles *prts,
+		       particle_real_t b_dxi[3], int b_mx[3])
+{
+  for (int i = 0; i < prts->n_part; i++) {
+    particle_t *part = particles_get_one(prts, i);
+    int b_pos[3];
+    find_block_position(b_pos, &part->xi, b_dxi);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
@@ -173,6 +192,31 @@ find_block_indices(unsigned int *b_idx, struct psc_particles *prts,
     } else { // out of bounds
       b_idx[i] = b_mx[0] * b_mx[1] * b_mx[2];
     }
+  }
+}
+
+// ----------------------------------------------------------------------
+// count_block_indices
+
+static inline void
+count_block_indices(unsigned int *b_cnts, unsigned int *b_idx, int n_part)
+{
+  for (int i = 0; i < n_part; i++) {
+    b_cnts[b_idx[i]]++;
+  }
+}
+
+// ----------------------------------------------------------------------
+// exclusive_scan
+
+static inline void
+exclusive_scan(unsigned int *b_cnts, int n)
+{
+  unsigned int sum = 0;
+  for (int i = 0; i < n; i++) {
+    unsigned int cnt = b_cnts[i];
+    b_cnts[i] = sum;
+    sum += cnt;
   }
 }
 
@@ -211,11 +255,11 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
       xm[d] = ppatch->ldims[d] * psc->dx[d];
     }
     int *b_mx = ppatch->ldims;
-    unsigned int b_oob = b_mx[0] * b_mx[1] * b_mx[2];
+    unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     unsigned int *b_idx = malloc(prts->n_part * sizeof(*b_idx));
-    find_block_indices(b_idx, prts, b_dxi, b_mx);
+    find_block_indices_oob(b_idx, prts, b_dxi, b_mx);
 
     struct ddcp_patch *patch = &ddcp->patches[p];
     patch->head = 0;
@@ -224,56 +268,62 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     }
     for (int i = 0; i < prts->n_part; i++) {
       particle_t *part = particles_get_one(prts, i);
-      if (b_idx[i] != b_oob) {
+      if (b_idx[i] != nr_blocks) {
 	// fast path
 	// inside domain: move into right position
 	*particles_get_one(prts, patch->head++) = *part;
       } else {
 	// slow path
 	particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
-	
-	int b_pos[3];
-	//OPT could also unravel b_idx[i] to find b_pos
-	find_block_position(b_pos, xi, b_dxi);
 	particle_real_t *pxi = &part->pxi;
 
 	bool drop = false;
 	int dir[3];
 	for (int d = 0; d < 3; d++) {
-	  if (b_pos[d] < 0) {
-	    if (ppatch->off[d] == 0) {
+	  //OPT could also unravel b_idx[i] to find b_pos
+	  int bi = particle_real_fint(xi[d] * b_dxi[d]);
+	  if (bi < 0) {
+	    if (ppatch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	      xi[d] += xm[d];
+	      dir[d] = -1;
+	      bi = particle_real_fint(xi[d] * b_dxi[d]);
+	      if (bi >= b_mx[d]) {
+		xi[d] = 0.;
+		dir[d] = 0;
+	      }
+	    } else {
 	      switch (psc->domain.bnd_part_lo[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] =  -xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
 		break;
-	      case BND_PART_PERIODIC:
-		xi[d] += xm[d];
-		dir[d] = -1;
-		break;
 	      case BND_PART_ABSORBING:
 		drop = true;
 		break;
 	      default:
 		assert(0);
 	      }
-	    } else {
-	      // computational bnd
-	      xi[d] += xm[d];
-	      dir[d] = -1;
 	    }
-	  } else if (b_pos[d] >= b_mx[d]) {
-	    if (ppatch->off[d] + ppatch->ldims[d] == psc->domain.gdims[d]) {
+	  } else if (bi >= b_mx[d]) {
+	    if (ppatch->off[d] + ppatch->ldims[d] != psc->domain.gdims[d] || 
+		psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	      xi[d] -= xm[d];
+	      dir[d] = +1;
+	      bi = particle_real_fint(xi[d] * b_dxi[d]);
+	      if (bi < 0) {
+		xi[d] = 0.;
+	      }
+	    } else {
 	      switch (psc->domain.bnd_part_hi[d]) {
 	      case BND_PART_REFLECTING:
 		xi[d] = 2.f * xm[d] - xi[d];
 		pxi[d] = -pxi[d];
 		dir[d] = 0;
-		break;
-	      case BND_PART_PERIODIC:
-		xi[d] -= xm[d];
-		dir[d] = +1;
+		bi = particle_real_fint(xi[d] * b_dxi[d]);
+		if (bi >= b_mx[d]) {
+		  xi[d] *= (1. - 1e-6);
+		}
 		break;
 	      case BND_PART_ABSORBING:
 		drop = true;
@@ -281,10 +331,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 	      default:
 		assert(0);
 	      }
-	    } else {
-	      // computational bnd
-	      xi[d] -= xm[d];
-	      dir[d] = +1;
 	    }
 	  } else {
 	    // computational bnd
@@ -315,6 +361,29 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     prts->n_part = patch->head;
   }
   prof_stop(pr_B);
+
+  psc_foreach_patch(psc, p) {
+    struct psc_patch *ppatch = &psc->patch[p];
+    int *b_mx = ppatch->ldims;
+    unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
+
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+
+    unsigned int *b_idx = malloc(prts->n_part * sizeof(*b_idx));
+    find_block_indices(b_idx, prts, b_dxi, b_mx);
+
+    unsigned int *b_cnts = calloc(nr_blocks + 1, sizeof(*b_cnts));
+    count_block_indices(b_cnts, b_idx, prts->n_part);
+    assert(b_cnts[nr_blocks] == 0);
+
+    exclusive_scan(b_cnts, nr_blocks + 1);
+    assert(b_cnts[nr_blocks] == prts->n_part);
+    
+    psc_particles_reorder(prts, b_idx, b_cnts);
+
+    free(b_idx);
+    free(b_cnts);
+  }
 
   psc_mparticles_put_cf(particles, particles_base, 0);
 }
