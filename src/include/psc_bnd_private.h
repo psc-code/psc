@@ -13,10 +13,14 @@ struct psc_bnd {
 
 struct psc_bnd_ops {
   MRC_SUBCLASS_OPS(struct psc_bnd);
+  // for particle exchange
   void (*unsetup)(struct psc_bnd *bnd);
+  void (*exchange_particles)(struct psc_bnd *bnd, mparticles_base_t *particles);
+
+  // for field exchange
+  void (*create_ddc)(struct psc_bnd *bnd);
   void (*add_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
   void (*fill_ghosts)(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
-  void (*exchange_particles)(struct psc_bnd *bnd, mparticles_base_t *particles);
 };
 
 // ======================================================================

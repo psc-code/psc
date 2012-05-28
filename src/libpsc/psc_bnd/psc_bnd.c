@@ -201,6 +201,9 @@ psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc)
 static void
 _psc_bnd_setup(struct psc_bnd *bnd)
 {
+  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
+  assert(ops->create_ddc);
+  ops->create_ddc(bnd);
   psc_bnd_photons_setup(bnd);
 }
 
@@ -210,7 +213,11 @@ _psc_bnd_setup(struct psc_bnd *bnd)
 static void
 _psc_bnd_destroy(struct psc_bnd *bnd)
 {
+  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
+  assert(ops->unsetup);
+  ops->unsetup(bnd);
   psc_bnd_photons_unsetup(bnd);
+  mrc_ddc_destroy(bnd->ddc);
 }
 
 // ----------------------------------------------------------------------
@@ -252,6 +259,9 @@ check_domain(struct psc_bnd *bnd)
   if (domain != bnd->psc->mrc_domain) {
     ops->unsetup(bnd);
     psc_bnd_photons_unsetup(bnd);
+    mrc_ddc_destroy(bnd->ddc);
+
+    ops->create_ddc(bnd);
     ops->setup(bnd);
     psc_bnd_photons_setup(bnd);
   }

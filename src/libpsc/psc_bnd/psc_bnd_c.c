@@ -14,8 +14,9 @@ struct psc_bnd_ops psc_bnd_c_ops = {
   .size                  = sizeof(struct psc_bnd_sub),
   .setup                 = psc_bnd_sub_setup,
   .unsetup               = psc_bnd_sub_unsetup,
-  .destroy               = psc_bnd_sub_destroy,
+  .exchange_particles    = psc_bnd_sub_exchange_particles,
+
+  .create_ddc            = psc_bnd_fields_c_create,
   .add_ghosts            = psc_bnd_fields_c_add_ghosts,
   .fill_ghosts           = psc_bnd_fields_c_fill_ghosts,
-  .exchange_particles    = psc_bnd_sub_exchange_particles,
 };

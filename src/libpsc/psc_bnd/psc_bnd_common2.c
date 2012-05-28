@@ -33,7 +33,6 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
 
-  psc_bnd_fields_c_create(bnd);
   bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
 				       sizeof(particle_real_t),
 				       MPI_PARTICLES_REAL,
@@ -50,17 +49,7 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
 
-  mrc_ddc_destroy(bnd->ddc);
   ddc_particles_destroy(bnd_sub->ddcp);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_destroy
-
-static void
-psc_bnd_sub_destroy(struct psc_bnd *bnd)
-{
-  psc_bnd_sub_unsetup(bnd);
 }
 
 // ======================================================================

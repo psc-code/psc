@@ -119,10 +119,10 @@ static struct mrc_ddc_funcs ddc_funcs = {
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_setup
+// psc_bnd_fields_cuda_create
 
 static void
-psc_bnd_cuda_setup(struct psc_bnd *bnd)
+psc_bnd_fields_cuda_create(struct psc_bnd *bnd)
 {
   struct psc *psc = bnd->psc;
 
@@ -132,56 +132,14 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   mrc_ddc_set_param_int(bnd->ddc, "max_n_fields", 6);
   mrc_ddc_set_param_int(bnd->ddc, "size_of_type", sizeof(fields_cuda_real_t));
   mrc_ddc_setup(bnd->ddc);
-
-  psc_bnd_cuda_xchg_setup(bnd);
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_unsetup
+// psc_bnd_fields_cuda_add_ghosts
 
 static void
-psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
+psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  mrc_ddc_destroy(bnd->ddc);
-  psc_bnd_cuda_xchg_unsetup(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_destroy
-
-static void
-psc_bnd_cuda_destroy(struct psc_bnd *bnd)
-{
-  psc_bnd_cuda_unsetup(bnd);
-}
-
-// ----------------------------------------------------------------------
-// check_domain
-//
-// check if the underlying mrc_domain changed since setup(),
-// which might happen, e.g., through rebalancing.
-// In this case, do setup() over.
-
-static void
-check_domain(struct psc_bnd *bnd)
-{
-  struct psc *psc = bnd->psc;
-
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
-  if (domain != psc->mrc_domain) {
-    psc_bnd_cuda_unsetup(bnd);
-    psc_bnd_setup(bnd);
-  }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_add_ghosts
-
-static void
-psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
-{
-  check_domain(bnd);
-
   static int pr;
   if (!pr) {
     pr = prof_register("cuda_add_ghosts", 1., 0, 0);
@@ -231,13 +189,11 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_fill_ghosts
+// psc_bnd_fields_cuda_fill_ghosts
 
 static void
-psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  check_domain(bnd);
-
   static int pr;
   if (!pr) {
     pr = prof_register("cuda_fill_ghosts", 1., 0, 0);
@@ -298,11 +254,32 @@ psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb,
   prof_stop(pr);
 }
 
+// ======================================================================
+// psc_bnd (particles)
+
+// ----------------------------------------------------------------------
+// psc_bnd_cuda_setup
+
+static void
+psc_bnd_cuda_setup(struct psc_bnd *bnd)
+{
+  psc_bnd_setup_super(bnd);
+  psc_bnd_cuda_xchg_setup(bnd);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_cuda_unsetup
+
+static void
+psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
+{
+  psc_bnd_cuda_xchg_unsetup(bnd);
+}
+
 static void
 psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
 				mparticles_base_t *particles_base)
 {
-  check_domain(bnd);
   psc_bnd_cuda_xchg_exchange_particles(bnd, particles_base);
 }
 
@@ -314,9 +291,10 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
   .size                  = sizeof(struct psc_bnd_cuda),
   .setup                 = psc_bnd_cuda_setup,
   .unsetup               = psc_bnd_cuda_unsetup,
-  .destroy               = psc_bnd_cuda_destroy,
-  .add_ghosts            = psc_bnd_cuda_add_ghosts,
-  .fill_ghosts           = psc_bnd_cuda_fill_ghosts,
   .exchange_particles    = psc_bnd_cuda_exchange_particles,
+
+  .create_ddc            = psc_bnd_fields_cuda_create,
+  .add_ghosts            = psc_bnd_fields_cuda_add_ghosts,
+  .fill_ghosts           = psc_bnd_fields_cuda_fill_ghosts,
 };
 
