@@ -1,8 +1,190 @@
 
 #include "psc_bnd_private.h"
+#include "ddc_particles.h"
 
 #include <mrc_io.h>
 #include <mrc_ddc.h>
+#include <mrc_profile.h>
+
+// ======================================================================
+// psc_bnd photons
+
+static void
+ddcp_photons_realloc(void *_particles, int p, int new_n_particles)
+{
+  mphotons_t *particles = _particles;
+  photons_t *pp = &particles->p[p];
+  photons_realloc(pp, new_n_particles);
+}
+
+static void *
+ddcp_photons_get_addr(void *_particles, int p, int n)
+{
+  mphotons_t *mphotons = _particles;
+  photons_t *photons = &mphotons->p[p];
+  return &photons->photons[n];
+}
+
+static void
+psc_bnd_photons_setup(struct psc_bnd *bnd)
+{
+  bnd->ddcp_photons = ddc_particles_create(bnd->ddc, sizeof(photon_t),
+					   sizeof(photon_real_t),
+					   MPI_PHOTONS_REAL,
+					   ddcp_photons_realloc,
+					   ddcp_photons_get_addr);
+}
+
+static void
+psc_bnd_photons_unsetup(struct psc_bnd *bnd)
+{
+  ddc_particles_destroy(bnd->ddcp_photons);
+}
+
+// ----------------------------------------------------------------------
+// calc_domain_bounds
+//
+// calculate bounds of local patch, and global domain
+
+static void
+calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
+		   double xgb[3], double xge[3], double xgl[3])
+{
+  struct psc_patch *psc_patch = &psc->patch[p];
+
+  for (int d = 0; d < 3; d++) {
+    xb[d] = psc_patch->off[d] * psc->dx[d];
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
+      xgb[d] = psc->pml.size * psc->dx[d];
+    } else {
+      xgb[d] = 0.;
+    }
+    
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d]) * psc->dx[d];
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
+      xge[d] = (psc->domain.gdims[d] - psc->pml.size) * psc->dx[d];
+    } else {
+      xge[d] = psc->domain.gdims[d] * psc->dx[d];
+    }
+    
+    xgl[d] = xge[d] - xgb[d];
+  }
+  for (int d = 0; d < 3; d++) {
+    xb[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xe[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xgb[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
+    xge[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
+  }
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_photons_exchange
+
+static void
+psc_bnd_photons_exchange(struct psc_bnd *bnd, mphotons_t *mphotons)
+{
+  struct psc *psc = bnd->psc;
+
+  static int pr;
+  if (!pr) {
+    pr = prof_register("xchg_photon", 1., 0, 0);
+  }
+  prof_start(pr);
+
+  struct ddc_particles *ddcp = bnd->ddcp_photons;
+
+  double xb[3], xe[3], xgb[3], xge[3], xgl[3];
+
+  // New-style boundary requirements.
+  // These will need revisiting when it comes to non-periodic domains.
+  // FIXME, calculate once
+
+  psc_foreach_patch(psc, p) {
+    calc_domain_bounds(psc, p, xb, xe, xgb, xge, xgl);
+
+    photons_t *photons = &mphotons->p[p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    patch->head = 0;
+    for (int dir1 = 0; dir1 < N_DIR; dir1++) {
+      patch->nei[dir1].n_send = 0;
+    }
+    for (int i = 0; i < photons->nr; i++) {
+      photon_t *ph = photons_get_one(photons, i);
+      photon_real_t *xi = ph->x;
+      photon_real_t *pxi = ph->p;
+      if (xi[0] >= xb[0] && xi[0] <= xe[0] &&
+	  xi[1] >= xb[1] && xi[1] <= xe[1] &&
+	  xi[2] >= xb[2] && xi[2] <= xe[2]) {
+	// fast path
+	// inside domain: move into right position
+	photons->photons[patch->head++] = *ph;
+      } else {
+	// slow path
+	int dir[3];
+	for (int d = 0; d < 3; d++) {
+	  if (xi[d] < xb[d]) {
+	    if (xi[d] < xgb[d]) {
+	      switch (psc->domain.bnd_part_lo[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xgb[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] += xgl[d];
+		dir[d] = -1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      // computational bnd
+	      dir[d] = -1;
+	    }
+	  } else if (xi[d] > xe[d]) {
+	    if (xi[d] > xge[d]) {
+	      switch (psc->domain.bnd_part_hi[d]) {
+	      case BND_PART_REFLECTING:
+		xi[d] = 2.f * xge[d] - xi[d];
+		pxi[d] = -pxi[d];
+		dir[d] = 0;
+		break;
+	      case BND_PART_PERIODIC:
+		xi[d] -= xgl[d];
+		dir[d] = +1;
+		break;
+	      default:
+		assert(0);
+	      }
+	    } else {
+	      dir[d] = +1;
+	    }
+	  } else {
+	    // computational bnd
+	    dir[d] = 0;
+	  }
+	}
+	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	  photons->photons[patch->head++] = *ph;
+	} else {
+	  ddc_particles_queue(ddcp, patch, dir, ph);
+	}
+      }
+    }
+  }
+
+  ddc_particles_comm(ddcp, mphotons);
+  psc_foreach_patch(psc, p) {
+    photons_t *photons = &mphotons->p[p];
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    photons->nr = patch->head;
+  }
+
+  prof_stop(pr);
+}
+
+// ======================================================================
+// psc_bnd
 
 // ----------------------------------------------------------------------
 // psc_set_psc
@@ -11,6 +193,24 @@ void
 psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc)
 {
   bnd->psc = psc;
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_setup
+
+static void
+_psc_bnd_setup(struct psc_bnd *bnd)
+{
+  psc_bnd_photons_setup(bnd);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_destroy
+
+static void
+_psc_bnd_destroy(struct psc_bnd *bnd)
+{
+  psc_bnd_photons_unsetup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -51,7 +251,9 @@ check_domain(struct psc_bnd *bnd)
   struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
   if (domain != bnd->psc->mrc_domain) {
     ops->unsetup(bnd);
+    psc_bnd_photons_unsetup(bnd);
     ops->setup(bnd);
+    psc_bnd_photons_setup(bnd);
   }
 }
 
@@ -106,14 +308,9 @@ psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
   }
   MPI_Allreduce(MPI_IN_PLACE, &n_total, 1, MPI_INT, MPI_SUM, 
 		psc_bnd_comm(bnd));
-  if (n_total == 0)
-  {
-    psc_stats_stop(st_time_comm);
-    return;
+  if (n_total > 0) {
+    psc_bnd_photons_exchange(bnd, mphotons);
   }
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->exchange_photons);
-  ops->exchange_photons(bnd, mphotons);
   psc_stats_stop(st_time_comm);
 }
 
@@ -138,6 +335,8 @@ struct mrc_class_psc_bnd mrc_class_psc_bnd = {
   .name             = "psc_bnd",
   .size             = sizeof(struct psc_bnd),
   .init             = psc_bnd_init,
+  .setup            = _psc_bnd_setup,
+  .destroy          = _psc_bnd_destroy,
   .write            = _psc_bnd_write,
   .read             = _psc_bnd_read,
 };
