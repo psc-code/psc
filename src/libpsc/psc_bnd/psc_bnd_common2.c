@@ -401,7 +401,8 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     struct psc_particles_single *sngl = psc_particles_single(prts);
 
     sngl->n_part_save = prts->n_part;
-    sngl->n_send = reorder_to_back(sngl->b_idx, sngl->b_cnt, prts);
+    sngl->n_send = sngl->b_cnt[sngl->nr_blocks];
+    prts->n_part += sngl->n_send;
   }
   prof_stop(pr_A);
 
