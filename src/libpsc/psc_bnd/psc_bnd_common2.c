@@ -168,6 +168,13 @@ exclusive_scan(unsigned int *b_cnts, int n)
   }
 }
 
+static inline void
+xchg_append(struct psc_particles *prts, void *patch_ctx, particle_t *prt)
+{
+  struct ddcp_patch *ddcp_patch = patch_ctx;
+  *particles_get_one(prts, ddcp_patch->head++) = *prt;
+}
+
 // ----------------------------------------------------------------------
 // exchange particles
 
@@ -177,10 +184,11 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
-  static int pr_A, pr_B;
+  static int pr_A, pr_B, pr_D;
   if (!pr_A) {
     pr_A = prof_register("xchg_prep_" PARTICLE_TYPE, 1., 0, 0);
     pr_B = prof_register("xchg_comm_" PARTICLE_TYPE, 1., 0, 0);
+    pr_D = prof_register("xchg_post_" PARTICLE_TYPE, 1., 0, 0);
   }
   prof_start(pr_A);
 
@@ -189,7 +197,10 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 
   particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
 
-  psc_foreach_patch(psc, p) {
+  for (int p = 0; p < particles->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    int n_send = psc_particles_single(prts)->n_send;
+
     struct psc_patch *patch = &psc->patch[p];
     particle_real_t xm[3];
     for (int d = 0; d < 3; d++) {
@@ -197,15 +208,13 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
     }
     int *b_mx = patch->ldims;
 
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_single *sngl = psc_particles_single(prts);
     struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
-    ddcp_patch->head = prts->n_part - sngl->n_send;
+    ddcp_patch->head = prts->n_part - n_send;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       ddcp_patch->nei[dir1].n_send = 0;
     }
-    for (int i = ddcp_patch->head; i < prts->n_part; i++) {
-      particle_t *prt = particles_get_one(prts, i);
+    for (int n = ddcp_patch->head; n < prts->n_part; n++) {
+      particle_t *prt = particles_get_one(prts, n);
       particle_real_t *xi = &prt->xi;
       particle_real_t *pxi = &prt->pxi;
       
@@ -272,7 +281,7 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  *particles_get_one(prts, ddcp_patch->head++) = *prt;
+	  xchg_append(prts, ddcp_patch, prt);
 	} else {
 	  ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
 	}
@@ -283,13 +292,15 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
+  prof_stop(pr_B);
 
+  prof_start(pr_D);
   psc_foreach_patch(psc, p) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct ddcp_patch *patch = &ddcp->patches[p];
     prts->n_part = patch->head;
   }
-  prof_stop(pr_B);
+  prof_stop(pr_D);
 }
 
 // ----------------------------------------------------------------------
