@@ -202,33 +202,6 @@ unsigned int
 reorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
 		      particle_real_t b_dxi[3], int b_mx[3])
 {
-  unsigned int b_cnts[2] = {};
-  for (int i = 0; i < prts->n_part; i++) {
-    particle_t *part = particles_get_one(prts, i);
-    int b_pos[3];
-    find_block_position(b_pos, &part->xi, b_dxi);
-    if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
-	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
-	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
-      b_idx[i] = 0;
-      b_cnts[0]++;
-    } else { // out of bounds
-      b_idx[i] = 1;
-      b_cnts[1]++;
-    }
-  }
-  b_cnts[1] = b_cnts[0];
-  b_cnts[0] = 0;
-
-  psc_particles_reorder(prts, b_idx, b_cnts);
-
-  return b_cnts[1] - b_cnts[0];
-}
-
-unsigned int
-xreorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
-		      particle_real_t b_dxi[3], int b_mx[3])
-{
   struct psc_particles_single *sngl = psc_particles_single(prts);
   unsigned int cnt = prts->n_part;
   for (int i = 0; i < prts->n_part; i++) {
@@ -245,7 +218,9 @@ xreorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
     }
   }
 
-  return cnt - prts->n_part;
+  cnt -= prts->n_part;
+  prts->n_part += cnt;
+  return cnt;
 }
 
 // ----------------------------------------------------------------------
@@ -388,6 +363,12 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles,
   }
   prof_stop(pr_A);
 
+  psc_foreach_patch(psc, p) {
+    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct ddcp_patch *patch = &ddcp->patches[p];
+    printf("p%d: head %d (+ %d)\n", p, patch->head, patch->head - (prts->n_part - n_sends[p]));
+  }
+
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
 
@@ -433,7 +414,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     n_sends[p] = reorder_particles_oob(prts, b_idx[p], b_dxi, b_mx);
     find_block_indices_oob(b_idx[p], prts, b_dxi, b_mx);
     b_cnts[p] = calloc(nr_blocks + 1, sizeof(*b_cnts[p]));
-    count_block_indices(b_cnts[p], b_idx[p], prts->n_part, 0);
+    count_block_indices(b_cnts[p], b_idx[p], prts->n_part - n_sends[p], 0);
   }
 
   exchange_particles(bnd, particles, n_sends);
@@ -447,14 +428,14 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     /* FIXME need to make sure that b_idx is still large enough, needs
        to be realloced, too */
 
-    find_block_indices(b_idx[p], prts, b_dxi, b_mx, n_parts[p] - n_sends[p]);
-    count_block_indices(b_cnts[p], b_idx[p], prts->n_part, n_parts[p] - n_sends[p]);
+    find_block_indices(b_idx[p], prts, b_dxi, b_mx, n_parts[p]);
+    count_block_indices(b_cnts[p], b_idx[p], prts->n_part, n_parts[p]);
 
     exclusive_scan(b_cnts[p], nr_blocks + 1);
-    assert(b_cnts[p][nr_blocks] == prts->n_part);
 
     prof_start(pr_H);
     psc_particles_reorder(prts, b_idx[p], b_cnts[p]);
+    prts->n_part = b_cnts[p][nr_blocks-1];
     prof_stop(pr_H);
 
     free(b_cnts[p]);
