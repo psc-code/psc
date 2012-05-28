@@ -198,7 +198,7 @@ find_block_indices_oob(unsigned int *b_idx, struct psc_particles *prts,
 // ----------------------------------------------------------------------
 // reorder_particles_oob
 
-static inline unsigned int
+unsigned int
 reorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
 		      particle_real_t b_dxi[3], int b_mx[3])
 {
@@ -225,13 +225,36 @@ reorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
   return b_cnts[1] - b_cnts[0];
 }
 
+unsigned int
+xreorder_particles_oob(struct psc_particles *prts, unsigned int *b_idx,
+		      particle_real_t b_dxi[3], int b_mx[3])
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  unsigned int cnt = prts->n_part;
+  for (int i = 0; i < prts->n_part; i++) {
+    particle_t *part = particles_get_one(prts, i);
+    int b_pos[3];
+    find_block_position(b_pos, &part->xi, b_dxi);
+    if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
+	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
+	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
+    } else { // out of bounds
+      assert(cnt < sngl->n_alloced);
+      *particles_get_one(prts, cnt) = *part;
+      cnt++;
+    }
+  }
+
+  return cnt - prts->n_part;
+}
+
 // ----------------------------------------------------------------------
 // count_block_indices
 
 static inline void
-count_block_indices(unsigned int *b_cnts, unsigned int *b_idx, int n_part)
+count_block_indices(unsigned int *b_cnts, unsigned int *b_idx, int n_part, int off)
 {
-  for (int i = 0; i < n_part; i++) {
+  for (int i = off; i < n_part; i++) {
     b_cnts[b_idx[i]]++;
   }
 }
@@ -410,6 +433,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     n_sends[p] = reorder_particles_oob(prts, b_idx[p], b_dxi, b_mx);
     find_block_indices_oob(b_idx[p], prts, b_dxi, b_mx);
     b_cnts[p] = calloc(nr_blocks + 1, sizeof(*b_cnts[p]));
+    count_block_indices(b_cnts[p], b_idx[p], prts->n_part, 0);
   }
 
   exchange_particles(bnd, particles, n_sends);
@@ -424,9 +448,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
        to be realloced, too */
 
     find_block_indices(b_idx[p], prts, b_dxi, b_mx, n_parts[p] - n_sends[p]);
-
-    count_block_indices(b_cnts[p], b_idx[p], prts->n_part);
-    assert(b_cnts[p][nr_blocks] == 0);
+    count_block_indices(b_cnts[p], b_idx[p], prts->n_part, n_parts[p] - n_sends[p]);
 
     exclusive_scan(b_cnts[p], nr_blocks + 1);
     assert(b_cnts[p][nr_blocks] == prts->n_part);
