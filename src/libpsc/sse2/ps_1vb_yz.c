@@ -79,20 +79,15 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int 
     GET_POS_IDX(yi, dxi[1],  0.f, yp, lfy);
     GET_POS_IDX(zi, dxi[2],  0.f, zp, lfz);
 
-    for (int m = 0; m < SIMD_SIZE; m++) {
-      int posy = v4si_extract(lfy, m);
-      int posz = v4si_extract(lfz, m);
-      if ((unsigned int) posy < b_my &&
-	  (unsigned int) posz < b_mz) {
-	sngl->b_idx[n + m] = posz * b_my + posy;
-      } else {
-	sngl->b_idx[n + m] = b_my * b_mz;
-      }
-    }
-
     v4s fnq[2] = { qw * v4s_splat(fnqys), qw * v4s_splat(fnqzs) };
 
     PRT_STORE_X(prt, xi, yi, zi, qw);
+
+    v4si b_idx = v4si_add(v4si_mul(lfz, v4si_splat(b_my)), lfy);
+    v4si mask = v4si_and(v4si_andnot(v4si_cmplt(lfy, iZero), v4si_cmplt(lfy, v4si_splat(b_my))),
+			 v4si_andnot(v4si_cmplt(lfz, iZero), v4si_cmplt(lfz, v4si_splat(b_mz))));
+    b_idx = v4si_blend(mask, b_idx, v4si_splat(b_my * b_mz));
+    v4si_store(&sngl->b_idx[n], b_idx);
 
     v4si i[2], idiff[2], off0[2];
     v4s dx[2], x[2];

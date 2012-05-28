@@ -36,6 +36,12 @@ v4s_store(float *p, v4s v)
 }
 
 static inline void
+v4si_store(int *p, v4si v)
+{
+  *p = v;
+}
+
+static inline void
 v4s_prefetch(float *p)
 {
   _mm_prefetch((const char *) p, _MM_HINT_T0);
@@ -119,8 +125,26 @@ v4si_cmpeq(v4si a, v4si b)
   return (a == b) ? -1 : 0;
 }
 
+static inline v4si
+v4si_cmplt(v4si a, v4si b)
+{
+  return (a < b) ? -1 : 0;
+}
+
+static inline v4si
+v4si_cmpge(v4si a, v4si b)
+{
+  return (a >= b) ? -1 : 0;
+}
+
 static inline v4s
 v4s_blend(v4si mask, v4s a, v4s b)
+{
+  return mask ? a : b;
+}
+
+static inline v4si
+v4si_blend(v4si mask, v4si a, v4si b)
 {
   return mask ? a : b;
 }

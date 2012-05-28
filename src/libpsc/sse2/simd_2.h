@@ -45,6 +45,12 @@ v4s_store(float *p, v4s v)
 }
 
 static inline void
+v4si_store(float *p, v4si v)
+{
+  _mm_store_si128(p, (__m128i) v);
+}
+
+static inline void
 v4s_stream(float *p, v4s v)
 {
   _mm_stream_ps(p, (__m128) v);
@@ -141,10 +147,22 @@ v4si_cmpeq(v4si a, v4si b)
   return (v4si) _mm_cmpeq_epi32((__m128i) a, (__m128i) b);
 }
 
+static inline v4si
+v4si_cmplt(v4si a, v4si b)
+{
+  return (v4si) _mm_cmplt_epi32((__m128i) a, (__m128i) b);
+}
+
 static inline v4s
 v4s_blend(v4si mask, v4s a, v4s b)
 {
   return (v4s) _mm_blendv_ps((__m128) b, (__m128) a, (__m128) (__m128i) mask);
+}
+
+static inline v4si
+v4si_blend(v4si mask, v4si a, v4si b)
+{
+  return (v4si) _mm_blendv_epi8((__m128i) b, (__m128i) a, (__m128i) mask);
 }
 
 static inline v4si
