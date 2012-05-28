@@ -2,13 +2,18 @@
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "psc_bnd_cuda_fields.h"
-#include "psc_particles_single.h"
+#include "psc_particles_as_single.h"
 #include "../psc_bnd/ddc_particles.h"
 
 #include <mrc_profile.h>
 
+struct psc_bnd_sub {
+};
+
+#define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
+
 struct cuda_ctx_patch {
-  particle_single_t *prts;
+  particle_t *prts;
   float4 *xi4;
   float4 *pxi4;
   int n;
@@ -37,44 +42,35 @@ ddcp_particles_get_addr(void *_ctx, int p, int n)
   return ctx->cuda_patch[p].prts + n;
 }
 
-#if 0
 // ----------------------------------------------------------------------
-// check_sorted
-//
-// for debugging, make sure our sort really worked
+// psc_bnd_sub_setup
 
 static void
-check_sorted(particles_cuda_t *pp, unsigned int *d_bidx, unsigned int *d_ids,
-	     int n_part)
+psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
-  unsigned int *bidx = malloc(pp->n_part * sizeof(*bidx));
-  unsigned int *ids = malloc(pp->n_part * sizeof(*ids));
-  cuda_copy_bidx_from_dev(pp, bidx, d_bidx);
-  cuda_copy_bidx_from_dev(pp, ids, d_ids);
-  
-  int last = bidx[0];
-  for (int i = 0; i < n_part; i++) {
-    int key = bidx[i];
-    assert(key >= 0 && key <= pp->nr_blocks);
-    if (key < last) {
-      printf("i %d last %d key %d n_part %d\n", i, last, key, n_part);
-    }
-    assert(key >= last);
-    last = key;
-    int val = ids[i];
-    assert(val >= 0 && val < pp->n_part);
-  }
-  free(bidx);
-  free(ids);
+  psc_bnd_setup_super(bnd);
+  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
+				   sizeof(particle_real_t),
+				   MPI_PARTICLES_REAL,
+				   ddcp_particles_realloc,
+				   ddcp_particles_get_addr);
 }
-#endif
+
+// ----------------------------------------------------------------------
+// psc_bnd_sub_unsetup
+
+static void
+psc_bnd_sub_unsetup(struct psc_bnd *bnd)
+{
+  ddc_particles_destroy(bnd->ddcp);
+}
 
 // ----------------------------------------------------------------------
 // cpatch_append helper
 
 static void
 cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
-	      particle_single_t *prt,
+	      particle_t *prt,
 	      unsigned int *bn_idx, unsigned int *bn_cnts, unsigned int *bn_off)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -91,7 +87,7 @@ cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
   int b_pos[3];
   for (int d = 0; d < 3; d++) {
     float *xi = &cpatch->xi4[nn].x;
-    b_pos[d] = cuda_fint(xi[d] * cuda->b_dxi[d]);
+    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
     if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
       printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
       printf("!!! d %d xi4[n] %g biy %d // %d\n",
@@ -102,7 +98,7 @@ cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
 	xi[d] *= (1. - 1e-6);
       }
     }
-    b_pos[d] = cuda_fint(xi[d] * cuda->b_dxi[d]);
+    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
     assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
   }
   if (bn_idx) {
@@ -124,7 +120,7 @@ cpatch_append(struct psc_particles *prts, struct cuda_ctx_patch *cpatch,
 // to help the GPU put them into the right final place.
 
 static void
-exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
+exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
 			int *offsets, int *n_sends,
 			unsigned int **bn_cnts, unsigned int **bn_idx,
 			unsigned int **bn_off)
@@ -132,19 +128,19 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
-  static int pr_A, pr_C, pr_D;
+  static int pr_A, pr_B, pr_D;
   if (!pr_A) {
-    pr_A = prof_register("xchg_prep", 1., 0, 0);
-    pr_C = prof_register("xchg_comm", 1., 0, 0);
+    pr_A = prof_register("xchg_prep_" PARTICLE_TYPE, 1., 0, 0);
+    pr_B = prof_register("xchg_comm_" PARTICLE_TYPE, 1., 0, 0);
     pr_D = prof_register("xchg_to_dev", 1., 0, 0);
   }
 
   prof_start(pr_A);
   struct cuda_ctx ctx;
-  ctx.cuda_patch = calloc(mp_cuda->nr_patches, sizeof(*ctx.cuda_patch));
-  for (int p = 0; p < mp_cuda->nr_patches; p++) {
+  ctx.cuda_patch = calloc(particles->nr_patches, sizeof(*ctx.cuda_patch));
+  for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_patch *patch = psc->patch + p;
-    particle_single_real_t xm[3];
+    particle_real_t xm[3];
     for (int d = 0; d < 3; d++) {
       xm[d] = patch->ldims[d] * psc->dx[d];
     }
@@ -155,7 +151,7 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
       ddcp_patch->nei[dir1].n_send = 0;
     }
 
-    struct psc_particles *prts_cuda = psc_mparticles_get_patch(mp_cuda, p);
+    struct psc_particles *prts_cuda = psc_mparticles_get_patch(particles, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
     struct cuda_ctx_patch *cpatch = ctx.cuda_patch + p;
     cpatch->n = 0;
@@ -172,8 +168,11 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
     __particles_cuda_from_device_range(prts_cuda, cpatch->xi4, cpatch->pxi4,
 				       offsets[p], offsets[p] + n_send);
 
+    particle_real_t *b_dxi = cuda->b_dxi;
+    int *b_mx = cuda->b_mx;
+
     for (int n = 0; n < n_send; n++) {
-      particle_single_t prt;
+      particle_t prt;
       prt.xi      = cpatch->xi4[n].x;
       prt.yi      = cpatch->xi4[n].y;
       prt.zi      = cpatch->xi4[n].z;
@@ -183,52 +182,59 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
       prt.pzi     = cpatch->pxi4[n].z;
       prt.qni_wni = cpatch->pxi4[n].w;
 
-      particle_single_real_t *xi = &prt.xi;
-      particle_single_real_t *pxi = &prt.pxi;
+      particle_real_t *xi = &prt.xi;
+      particle_real_t *pxi = &prt.pxi;
 
+      bool drop = false;
       int dir[3];
       for (int d = 0; d < 3; d++) {
-	int bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+	int bi = particle_real_fint(xi[d] * b_dxi[d]);
 	if (bi < 0) {
 	  // FIXME, assumes every patch has same dimensions
 	  if (patch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	    xi[d] += xm[d];
 	    dir[d] = -1;
-	    bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
-	    if (bi >= cuda->b_mx[d]) {
+	    bi = particle_real_fint(xi[d] * b_dxi[d]);
+	    if (bi >= b_mx[d]) {
 	      xi[d] = 0.;
 	      dir[d] = 0;
 	    }
 	  } else {
 	    switch (psc->domain.bnd_part_lo[d]) {
 	    case BND_PART_REFLECTING:
-	      xi[d] = -xi[d];
+	      xi[d]  = -xi[d];
 	      pxi[d] = -pxi[d];
 	      dir[d] = 0;
+	      break;
+	    case BND_PART_ABSORBING:
+	      drop = true;
 	      break;
 	    default:
 	      assert(0);
 	    }
 	  }
-	} else if (bi >= cuda->b_mx[d]) {
+	} else if (bi >= b_mx[d]) {
 	  if (patch->off[d] + patch->ldims[d] != psc->domain.gdims[d] ||
 	      psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	    xi[d] -= xm[d];
 	    dir[d] = +1;
-	    bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+	    bi = particle_real_fint(xi[d] * b_dxi[d]);
 	    if (bi < 0) {
 	      xi[d] = 0.;
 	    }
 	  } else {
 	    switch (psc->domain.bnd_part_hi[d]) {
 	    case BND_PART_REFLECTING:
-	      xi[d] = 2 * xm[d] - xi[d];
+	      xi[d] = 2.f * xm[d] - xi[d];
 	      pxi[d] = -pxi[d];
 	      dir[d] = 0;
-	      bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
-	      if (bi >= cuda->b_mx[d]) {
+	      bi = particle_real_fint(xi[d] * b_dxi[d]);
+	      if (bi >= b_mx[d]) {
 		xi[d] *= (1. - 1e-6);
 	      }
+	      break;
+	    case BND_PART_ABSORBING:
+	      drop = true;
 	      break;
 	    default:
 	      assert(0);
@@ -237,25 +243,29 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 	} else {
 	  dir[d] = 0;
 	}
+	assert(xi[d] >= 0.f);
+	assert(xi[d] <= xm[d]);
       }
-      if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	cpatch_append(prts_cuda, cpatch, &prt, bn_idx[p], bn_cnts[p], bn_off[p]);
-      } else {
-	ddc_particles_queue(ddcp, ddcp_patch, dir, &prt);
+      if (!drop) {
+	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	  cpatch_append(prts_cuda, cpatch, &prt, bn_idx[p], bn_cnts[p], bn_off[p]);
+	} else {
+	  ddc_particles_queue(ddcp, ddcp_patch, dir, &prt);
+	}
       }
     }
   }
   prof_stop(pr_A);
 
-  prof_start(pr_C);
+  prof_start(pr_B);
   ddc_particles_comm(ddcp, &ctx);
-  prof_stop(pr_C);
+  prof_stop(pr_B);
 
   prof_start(pr_D);
-  for (int p = 0; p < mp_cuda->nr_patches; p++) {
+  for (int p = 0; p < particles->nr_patches; p++) {
     struct ddcp_patch *patch = &ddcp->patches[p];
     struct cuda_ctx_patch *cpatch = ctx.cuda_patch + p;
-    struct psc_particles *prts_cuda = psc_mparticles_get_patch(mp_cuda, p);
+    struct psc_particles *prts_cuda = psc_mparticles_get_patch(particles, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
     int n_recv = cpatch->n + patch->head;
     prts_cuda->n_part = offsets[p] + n_recv;
@@ -282,7 +292,7 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles_serial_periodic
+// psc_bnd_sub_exchange_particles_serial_periodic
 //
 // specialized version if there's only one single patch,
 // with all periodic b.c.
@@ -295,7 +305,7 @@ exchange_particles_host(struct psc_bnd *bnd, mparticles_cuda_t *mp_cuda,
 // is that this case here needs to handle the odd periodic spine.
 
 static void
-psc_bnd_cuda_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
+psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
 						mparticles_cuda_t *particles)
 {
   static int pr, pr_F, pr_G, pr_H;
@@ -333,10 +343,10 @@ psc_bnd_cuda_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles_general
+// psc_bnd_sub_exchange_particles_general
 
 static void
-psc_bnd_cuda_exchange_particles_general(struct psc_bnd *psc_bnd,
+psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
 					mparticles_cuda_t *particles)
 {
   static int pr, pr_B, pr_C, pr_D, pr_F, pr_G, pr_H;
@@ -416,33 +426,10 @@ psc_bnd_cuda_exchange_particles_general(struct psc_bnd *psc_bnd,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_setup
+// psc_bnd_sub_exchange_particles
 
 void
-psc_bnd_cuda_setup(struct psc_bnd *bnd)
-{
-  psc_bnd_setup_super(bnd);
-  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_single_t),
-				   sizeof(particle_single_real_t),
-				   MPI_PARTICLES_SINGLE_REAL,
-				   ddcp_particles_realloc,
-				   ddcp_particles_get_addr);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_unsetup
-
-void
-psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
-{
-  ddc_particles_destroy(bnd->ddcp);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles
-
-void
-psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
+psc_bnd_sub_exchange_particles(struct psc_bnd *bnd,
 				mparticles_base_t *particles_base)
 {
   int size;
@@ -459,9 +446,9 @@ psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
       ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
       ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
-    psc_bnd_cuda_exchange_particles_serial_periodic(bnd, particles);
+    psc_bnd_sub_exchange_particles_serial_periodic(bnd, particles);
   } else {
-    psc_bnd_cuda_exchange_particles_general(bnd, particles);
+    psc_bnd_sub_exchange_particles_general(bnd, particles);
   }
 }
 
@@ -470,10 +457,10 @@ psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
 
 struct psc_bnd_ops psc_bnd_cuda_ops = {
   .name                  = "cuda",
-  .size                  = sizeof(struct psc_bnd_cuda),
-  .setup                 = psc_bnd_cuda_setup,
-  .unsetup               = psc_bnd_cuda_unsetup,
-  .exchange_particles    = psc_bnd_cuda_exchange_particles,
+  .size                  = sizeof(struct psc_bnd_sub),
+  .setup                 = psc_bnd_sub_setup,
+  .unsetup               = psc_bnd_sub_unsetup,
+  .exchange_particles    = psc_bnd_sub_exchange_particles,
 
   .create_ddc            = psc_bnd_fields_cuda_create,
   .add_ghosts            = psc_bnd_fields_cuda_add_ghosts,

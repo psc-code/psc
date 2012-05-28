@@ -8,18 +8,21 @@ struct psc_bnd_sub {
 
 #define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
 
+// ----------------------------------------------------------------------
+// ddcp_particles helpers
+
 static void
-ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
+ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  mparticles_t *particles = _particles;
+  mparticles_t *particles = _ctx;
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   particles_realloc(prts, new_n_particles);
 }
 
 static void *
-ddcp_particles_get_addr(void *_particles, int p, int n)
+ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  mparticles_t *particles = _particles;
+  mparticles_t *particles = _ctx;
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   return particles_get_one(prts, n);
 }
@@ -30,12 +33,12 @@ ddcp_particles_get_addr(void *_particles, int p, int n)
 static void
 psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
-  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
-				       sizeof(particle_real_t),
-				       MPI_PARTICLES_REAL,
-				       ddcp_particles_realloc,
-				       ddcp_particles_get_addr);
   psc_bnd_setup_super(bnd);
+  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
+				   sizeof(particle_real_t),
+				   MPI_PARTICLES_REAL,
+				   ddcp_particles_realloc,
+				   ddcp_particles_get_addr);
 }
 
 // ----------------------------------------------------------------------
@@ -187,21 +190,21 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
   particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
 
   psc_foreach_patch(psc, p) {
-    struct psc_patch *ppatch = &psc->patch[p];
+    struct psc_patch *patch = &psc->patch[p];
     particle_real_t xm[3];
     for (int d = 0; d < 3; d++) {
-      xm[d] = ppatch->ldims[d] * psc->dx[d];
+      xm[d] = patch->ldims[d] * psc->dx[d];
     }
-    int *b_mx = ppatch->ldims;
+    int *b_mx = patch->ldims;
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_particles_single *sngl = psc_particles_single(prts);
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    patch->head = prts->n_part - sngl->n_send;
+    struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
+    ddcp_patch->head = prts->n_part - sngl->n_send;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
-      patch->nei[dir1].n_send = 0;
+      ddcp_patch->nei[dir1].n_send = 0;
     }
-    for (int i = patch->head; i < prts->n_part; i++) {
+    for (int i = ddcp_patch->head; i < prts->n_part; i++) {
       particle_t *part = particles_get_one(prts, i);
       particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
       particle_real_t *pxi = &part->pxi;
@@ -211,7 +214,8 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
       for (int d = 0; d < 3; d++) {
 	int bi = particle_real_fint(xi[d] * b_dxi[d]);
 	if (bi < 0) {
-	  if (ppatch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	  // FIXME, assumes every patch has same dimensions
+	  if (patch->off[d] != 0 || psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
 	    xi[d] += xm[d];
 	    dir[d] = -1;
 	    bi = particle_real_fint(xi[d] * b_dxi[d]);
@@ -234,8 +238,8 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 	    }
 	  }
 	} else if (bi >= b_mx[d]) {
-	  if (ppatch->off[d] + ppatch->ldims[d] != psc->domain.gdims[d] || 
-	      psc->domain.bnd_part_lo[d] == BND_PART_PERIODIC) {
+	  if (patch->off[d] + patch->ldims[d] != psc->domain.gdims[d] ||
+	      psc->domain.bnd_part_hi[d] == BND_PART_PERIODIC) {
 	    xi[d] -= xm[d];
 	    dir[d] = +1;
 	    bi = particle_real_fint(xi[d] * b_dxi[d]);
@@ -261,7 +265,6 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 	    }
 	  }
 	} else {
-	  // computational bnd
 	  dir[d] = 0;
 	}
 	assert(xi[d] >= 0.f);
@@ -269,9 +272,9 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  *particles_get_one(prts, patch->head++) = *part;
+	  *particles_get_one(prts, ddcp_patch->head++) = *part;
 	} else {
-	  ddc_particles_queue(ddcp, patch, dir, part);
+	  ddc_particles_queue(ddcp, ddcp_patch, dir, part);
 	}
       }
     }
