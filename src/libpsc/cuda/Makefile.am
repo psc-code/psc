@@ -12,7 +12,6 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_cuda.c \
 	psc_bnd_cuda.c \
 	psc_bnd_cuda_fields.c \
-	psc_bnd_cuda_xchg.c \
 	psc_bnd_fields_cuda.c \
 	psc_sort_cuda.c
 
