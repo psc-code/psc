@@ -23,6 +23,7 @@ struct psc_bnd_ops {
 
 extern struct psc_bnd_ops psc_bnd_c_ops;
 extern struct psc_bnd_ops psc_bnd_single_ops;
+extern struct psc_bnd_ops psc_bnd_single2_ops;
 extern struct psc_bnd_ops psc_bnd_cuda_ops;
 
 #define psc_bnd_ops(bnd) ((struct psc_bnd_ops *)((bnd)->obj.ops))
