@@ -32,17 +32,14 @@ static void
 psc_bnd_sub_setup(struct psc_bnd *bnd)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
-  struct psc *psc = bnd->psc;
 
-  bnd->ddc = psc_bnd_lib_create_ddc(psc);
-
-  psc_bnd_setup_super(bnd);
-
+  psc_bnd_fields_c_create(bnd);
   bnd_sub->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_t),
 				       sizeof(particle_real_t),
 				       MPI_PARTICLES_REAL,
 				       ddcp_particles_realloc,
 				       ddcp_particles_get_addr);
+  psc_bnd_setup_super(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -64,24 +61,6 @@ static void
 psc_bnd_sub_destroy(struct psc_bnd *bnd)
 {
   psc_bnd_sub_unsetup(bnd);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_add_ghosts
-
-static void
-psc_bnd_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
-{
-  psc_bnd_lib_add_ghosts(bnd->ddc, flds_base, mb, me);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_fill_ghosts
-
-static void
-psc_bnd_sub_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
-{
-  psc_bnd_lib_fill_ghosts(bnd->ddc, flds_base, mb, me);
 }
 
 // ======================================================================

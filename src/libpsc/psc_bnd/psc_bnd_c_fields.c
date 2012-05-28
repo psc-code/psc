@@ -1,5 +1,6 @@
 
 #include "psc_bnd_c.h"
+#include "psc_bnd_private.h"
 #include "psc.h"
 #include "psc_fields_as_c.h"
 
@@ -69,48 +70,45 @@ static struct mrc_ddc_funcs ddc_funcs = {
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_lib_create_ddc
+// psc_bnd_fields_c_create
 
-struct mrc_ddc *
-psc_bnd_lib_create_ddc(struct psc *psc)
+void
+psc_bnd_fields_c_create(struct psc_bnd *bnd)
 {
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(psc->mrc_domain);
+  struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_funcs(ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(ddc, "ibn", psc->ibn);
+  mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
   mrc_ddc_set_param_int(ddc, "max_n_fields", 12);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
   mrc_ddc_setup(ddc);
-  return ddc;
+  bnd->ddc = ddc;
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_lib_add_ghosts
+// psc_bnd_fields_c_add_ghosts
 
 void
-__psc_bnd_lib_add_ghosts(struct mrc_ddc *ddc, mfields_t *flds, int mb, int me)
+psc_bnd_fields_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
+  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
+
   static int pr;
   if (!pr) {
     pr = prof_register("c_add_ghosts", 1., 0, 0);
   }
-  prof_start(pr);
-  mrc_ddc_add_ghosts(ddc, mb, me, flds);
-  prof_stop(pr);
-}
 
-void
-psc_bnd_lib_add_ghosts(struct mrc_ddc *ddc, mfields_base_t *flds_base, int mb, int me)
-{
-  mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
-  __psc_bnd_lib_add_ghosts(ddc, flds, mb, me);
+  prof_start(pr);
+  mrc_ddc_add_ghosts(bnd->ddc, mb, me, flds);
+  prof_stop(pr);
+
   psc_mfields_put_cf(flds, flds_base, mb, me);
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_lib_fill_ghosts
+// psc_bnd_fields_c_fill_ghosts
 
 void
-psc_bnd_lib_fill_ghosts(struct mrc_ddc *ddc, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fields_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
 
@@ -122,7 +120,7 @@ psc_bnd_lib_fill_ghosts(struct mrc_ddc *ddc, mfields_base_t *flds_base, int mb, 
   // FIXME
   // I don't think we need as many points, and only stencil star
   // rather then box
-  mrc_ddc_fill_ghosts(ddc, mb, me, flds);
+  mrc_ddc_fill_ghosts(bnd->ddc, mb, me, flds);
   prof_stop(pr);
 
   psc_mfields_put_cf(flds, flds_base, mb, me);
