@@ -161,9 +161,9 @@ find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3
 
 static inline void
 find_block_indices(unsigned int *b_idx, struct psc_particles *prts,
-		   particle_real_t b_dxi[3], int b_mx[3])
+		   particle_real_t b_dxi[3], int b_mx[3], int off)
 {
-  for (int i = 0; i < prts->n_part; i++) {
+  for (int i = off; i < prts->n_part; i++) {
     particle_t *part = particles_get_one(prts, i);
     int b_pos[3];
     find_block_position(b_pos, &part->xi, b_dxi);
@@ -395,15 +395,21 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   unsigned int **b_idx = malloc(particles->nr_patches * sizeof(*b_idx));
+  unsigned int **b_cnts = malloc(particles->nr_patches * sizeof(*b_cnts));
   unsigned int *n_sends = malloc(particles->nr_patches * sizeof(*n_sends));
+  unsigned int *n_parts = malloc(particles->nr_patches * sizeof(*n_parts));
   psc_foreach_patch(psc, p) {
     struct psc_patch *ppatch = &psc->patch[p];
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_single *sngl = psc_particles_single(prts);
     int *b_mx = ppatch->ldims;
-    b_idx[p] = malloc(prts->n_part * sizeof(*b_idx[p]));
+    unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
 
+    b_idx[p] = malloc(sngl->n_alloced * sizeof(*b_idx[p]));
+    n_parts[p] = prts->n_part;
     n_sends[p] = reorder_particles_oob(prts, b_idx[p], b_dxi, b_mx);
-    //    find_block_indices_oob(b_idx[p], prts, b_dxi, b_mx);
+    find_block_indices_oob(b_idx[p], prts, b_dxi, b_mx);
+    b_cnts[p] = calloc(nr_blocks + 1, sizeof(*b_cnts[p]));
   }
 
   exchange_particles(bnd, particles, n_sends);
@@ -414,30 +420,29 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    /* FIXME need to make sure that b_idx is still large enough, needs
+       to be realloced, too */
 
-    unsigned int *b_idx = malloc(prts->n_part * sizeof(*b_idx));
-    find_block_indices(b_idx, prts, b_dxi, b_mx);
+    find_block_indices(b_idx[p], prts, b_dxi, b_mx, n_parts[p] - n_sends[p]);
 
-    unsigned int *b_cnts = calloc(nr_blocks + 1, sizeof(*b_cnts));
-    count_block_indices(b_cnts, b_idx, prts->n_part);
-    assert(b_cnts[nr_blocks] == 0);
+    count_block_indices(b_cnts[p], b_idx[p], prts->n_part);
+    assert(b_cnts[p][nr_blocks] == 0);
 
-    exclusive_scan(b_cnts, nr_blocks + 1);
-    assert(b_cnts[nr_blocks] == prts->n_part);
-    
+    exclusive_scan(b_cnts[p], nr_blocks + 1);
+    assert(b_cnts[p][nr_blocks] == prts->n_part);
+
     prof_start(pr_H);
-    psc_particles_reorder(prts, b_idx, b_cnts);
+    psc_particles_reorder(prts, b_idx[p], b_cnts[p]);
     prof_stop(pr_H);
 
-    free(b_idx);
-    free(b_cnts);
-  }
-
-  psc_foreach_patch(psc, p) {
+    free(b_cnts[p]);
     free(b_idx[p]);
   }
+
   free(b_idx);
+  free(b_cnts);
   free(n_sends);
+  free(n_parts);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
   prof_stop(pr);
