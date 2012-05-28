@@ -119,6 +119,16 @@ blockIdx_to_blockCrd(struct psc_patch *patch, struct cell_map *map,
 // ======================================================================
 // conversion to "c"
 
+static inline void
+calc_vxi(particle_c_real_t vxi[3], particle_c_t *part)
+{
+  particle_c_real_t root =
+    1.f / particle_c_real_sqrt(1.f + sqr(part->pxi) + sqr(part->pyi) + sqr(part->pzi));
+  vxi[0] = part->pxi * root;
+  vxi[1] = part->pyi * root;
+  vxi[2] = part->pzi * root;
+}
+
 static void
 psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 			       struct psc_particles *prts_c, unsigned int flags)
@@ -128,6 +138,14 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
   prts_cuda->n_part = prts_c->n_part;
   assert(prts_cuda->n_part <= cuda->n_alloced);
+  
+  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
   
   float4 *xi4  = calloc(prts_c->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts_c->n_part, sizeof(float4));
@@ -149,15 +167,22 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
       qni_wni = wni;
     }
     
-    xi4[n].x  = part_c->xi;
-    xi4[n].y  = part_c->yi;
-    xi4[n].z  = part_c->zi;
+    particle_c_real_t vxi[3];
+    calc_vxi(vxi, part_c);
+
+    xi4[n].x  = part_c->xi + dth[0] * vxi[0];
+    xi4[n].y  = part_c->yi + dth[1] * vxi[1];
+    xi4[n].z  = part_c->zi + dth[2] * vxi[2];
     xi4[n].w  = qni_div_mni;
     pxi4[n].x = part_c->pxi;
     pxi4[n].y = part_c->pyi;
     pxi4[n].z = part_c->pzi;
     pxi4[n].w = qni_wni;
     
+    // FIXME, we should just sort the original particles,
+    // and then use bnd_exchange to exchange, update indices, etc.
+    // in particular, due to the time shift, particles may really end up
+    // out of bounds, which isn't otherwise fixable.
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
     for (int d = 0; d < 3; d++) {
       int bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
@@ -280,6 +305,14 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
   prts_c->n_part = prts_cuda->n_part;
   assert(prts_c->n_part <= c->n_alloced);
   
+  particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
+  // don't shift in invariant directions
+  for (int d = 0; d < 3; d++) {
+    if (ppsc->domain.gdims[d] == 1) {
+      dth[d] = 0.;
+    }
+  }
+  
   float4 *xi4  = calloc(prts_cuda->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts_cuda->n_part, sizeof(float4));
   
@@ -316,6 +349,12 @@ psc_particles_cuda_copy_to_c(struct psc_particles *prts_cuda,
     part_base->mni = mni;
     part_base->wni = wni;
     part_base->kind = kind;
+
+    particle_c_real_t vxi[3];
+    calc_vxi(vxi, part_base);
+    part_base->xi -= dth[0] * vxi[0];
+    part_base->yi -= dth[1] * vxi[1];
+    part_base->zi -= dth[2] * vxi[2];
   }
 
   free(xi4);

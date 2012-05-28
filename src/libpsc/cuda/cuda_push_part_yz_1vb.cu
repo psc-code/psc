@@ -198,13 +198,9 @@ push_part_one(int n, particles_cuda_dev_t d_particles,
 {
   struct d_particle p;
   LOAD_PARTICLE(p, d_particles, n);
-  real vxi[3];
 
-  // x^n, p^n -> x^(n+0.5), p^n
+  // here we have x^{n+.5}, p^n
   
-  calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * prm.dt);
-
   // field interpolation
 
   int lh[3], lg[3];
@@ -224,7 +220,6 @@ push_part_one(int n, particles_cuda_dev_t d_particles,
   
   push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm);
 
-  STORE_PARTICLE_POS(p, d_particles, n);
   STORE_PARTICLE_MOM(p, d_particles, n);
 }
 
@@ -524,6 +519,7 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
 {
   struct d_particle p;
 
+  // OPT/FIXME, is it really better to reload the particle?
   if (do_read) {
     LOAD_PARTICLE(p, d_particles, i);
   }
@@ -538,12 +534,10 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
     
     find_idx_off_pos_1st(p.xi, j, h0, xm, real(0.), prm);
 
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1), p^(n+1.0) 
-    push_xi(&p, vxi, .5f * prm.dt);
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+    push_xi(&p, vxi, prm.dt);
     STORE_PARTICLE_POS(p, d_particles, i);
-    
-    // x^(n+1), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(&p, vxi, .5f * prm.dt);
+
     find_idx_off_pos_1st(p.xi, k, h1, xp, real(0.), prm);
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
