@@ -19,6 +19,14 @@ psc_particles_single_setup(struct psc_particles *prts)
 
   sngl->n_alloced = prts->n_part * 1.2;
   sngl->particles = calloc(sngl->n_alloced, sizeof(*sngl->particles));
+  sngl->b_idx = calloc(sngl->n_alloced, sizeof(*sngl->b_idx));
+
+  for (int d = 0; d < 3; d++) {
+    sngl->b_mx[d] = ppsc->patch[prts->p].ldims[d];
+    sngl->b_dxi[d] = 1.f / ppsc->dx[d];
+  }
+  sngl->nr_blocks = sngl->b_mx[0] * sngl->b_mx[1] * sngl->b_mx[2];
+  sngl->b_cnt = calloc(sngl->nr_blocks + 1, sizeof(*sngl->b_cnt));
 }
 
 static void
@@ -27,6 +35,8 @@ psc_particles_single_destroy(struct psc_particles *prts)
   struct psc_particles_single *sngl = psc_particles_single(prts);
 
   free(sngl->particles);
+  free(sngl->b_idx);
+  free(sngl->b_cnt);
 }
 
 static void
@@ -84,6 +94,7 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
 
   sngl->n_alloced = new_n_part * 1.2;
   sngl->particles = realloc(sngl->particles, sngl->n_alloced * sizeof(*sngl->particles));
+  sngl->b_idx = realloc(sngl->b_idx, sngl->n_alloced * sizeof(*sngl->b_idx));
 }
 
 static inline void

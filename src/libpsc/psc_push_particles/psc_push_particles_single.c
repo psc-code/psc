@@ -10,3 +10,11 @@ struct psc_push_particles_ops psc_push_particles_single_1vb_ops = {
   .push_a_yz             = psc_push_particles_single_1vb_push_a_yz,
 };
 
+// ======================================================================
+// psc_push_particles: subclass "single2_1vb"
+
+struct psc_push_particles_ops psc_push_particles_single2_1vb_ops = {
+  .name                  = "single2_1vb",
+  .push_a_yz             = psc_push_particles_single2_1vb_push_a_yz,
+};
+

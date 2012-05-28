@@ -161,12 +161,14 @@ find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3
 
 static inline void
 find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts, struct psc_particles *prts,
-			 particle_real_t b_dxi[3], int b_mx[3], int off)
+			 int off)
 {
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  int *b_mx = sngl->b_mx;
   for (int i = off; i < prts->n_part; i++) {
     particle_t *part = particles_get_one(prts, i);
     int b_pos[3];
-    find_block_position(b_pos, &part->xi, b_dxi);
+    find_block_position(b_pos, &part->xi, sngl->b_dxi);
     assert(b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	   b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	   b_pos[2] >= 0 && b_pos[2] < b_mx[2]);
@@ -178,27 +180,44 @@ find_block_indices_count(unsigned int *b_idx, unsigned int *b_cnts, struct psc_p
 // ----------------------------------------------------------------------
 // find_block_indices_count_reorder
 
-unsigned int
-find_block_indices_count_reorder(unsigned int *b_idx, unsigned int *b_cnts, struct psc_particles *prts,
-				 particle_real_t b_dxi[3], int b_mx[3])
+static unsigned int __unused
+find_block_indices_count_reorder(unsigned int *b_idx, unsigned int *b_cnts, struct psc_particles *prts)
 {
-  int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
   struct psc_particles_single *sngl = psc_particles_single(prts);
   unsigned int cnt = prts->n_part;
+  int *b_mx = sngl->b_mx;
   for (int i = 0; i < prts->n_part; i++) {
     particle_t *part = particles_get_one(prts, i);
     int b_pos[3];
-    find_block_position(b_pos, &part->xi, b_dxi);
+    find_block_position(b_pos, &part->xi, sngl->b_dxi);
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
 	b_pos[2] >= 0 && b_pos[2] < b_mx[2]) {
       b_idx[i] = (b_pos[2] * b_mx[1] + b_pos[1]) * b_mx[0] + b_pos[0];
       b_cnts[b_idx[i]]++;
     } else { // out of bounds
-      b_idx[i] = nr_blocks;
+      b_idx[i] = sngl->nr_blocks;
       b_cnts[b_idx[i]]++;
       assert(cnt < sngl->n_alloced);
       *particles_get_one(prts, cnt) = *part;
+      cnt++;
+    }
+  }
+
+  cnt -= prts->n_part;
+  prts->n_part += cnt;
+  return cnt;
+}
+
+static unsigned int __unused
+reorder_to_back(unsigned int *b_idx, unsigned int *b_cnts, struct psc_particles *prts)
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  unsigned int cnt = prts->n_part;
+  for (int i = 0; i < prts->n_part; i++) {
+    if (b_idx[i] == sngl->nr_blocks) {
+      assert(cnt < sngl->n_alloced);
+      *particles_get_one(prts, cnt) = *particles_get_one(prts, i);
       cnt++;
     }
   }
@@ -237,8 +256,7 @@ exclusive_scan(unsigned int *b_cnts, int n)
 // exchange particles
 
 static void
-exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles,
-		   unsigned int *n_sends)
+exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
   struct psc_bnd_sub *bnd_sub = to_psc_bnd_sub(bnd);
   struct psc *psc = bnd->psc;
@@ -265,9 +283,9 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles,
     int *b_mx = ppatch->ldims;
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-
+    struct psc_particles_single *sngl = psc_particles_single(prts);
     struct ddcp_patch *patch = &ddcp->patches[p];
-    patch->head = prts->n_part - n_sends[p];
+    patch->head = prts->n_part - sngl->n_send;
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       patch->nei[dir1].n_send = 0;
     }
@@ -375,30 +393,19 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
   prof_start(pr);
 
   struct psc *psc = bnd->psc;
-  particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
-
-  unsigned int **b_idx = malloc(particles->nr_patches * sizeof(*b_idx));
-  unsigned int **b_cnts = malloc(particles->nr_patches * sizeof(*b_cnts));
-  unsigned int *n_sends = malloc(particles->nr_patches * sizeof(*n_sends));
-  unsigned int *n_parts = malloc(particles->nr_patches * sizeof(*n_parts));
 
   prof_start(pr_A);
   psc_foreach_patch(psc, p) {
-    struct psc_patch *ppatch = &psc->patch[p];
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_particles_single *sngl = psc_particles_single(prts);
-    int *b_mx = ppatch->ldims;
-    unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
 
-    n_parts[p] = prts->n_part;
-    b_idx[p] = malloc(sngl->n_alloced * sizeof(*b_idx[p]));
-    b_cnts[p] = calloc(nr_blocks + 1, sizeof(*b_cnts[p]));
-    n_sends[p] = find_block_indices_count_reorder(b_idx[p], b_cnts[p], prts, b_dxi, b_mx);
+    sngl->n_part_save = prts->n_part;
+    sngl->n_send = reorder_to_back(sngl->b_idx, sngl->b_cnt, prts);
   }
   prof_stop(pr_A);
 
-  exchange_particles(bnd, particles, n_sends);
+  exchange_particles(bnd, particles);
 
   prof_start(pr_C);
   psc_foreach_patch(psc, p) {
@@ -407,24 +414,15 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     unsigned int nr_blocks = b_mx[0] * b_mx[1] * b_mx[2];
 
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    /* FIXME need to make sure that b_idx is still large enough, needs
-       to be realloced, too */
+    struct psc_particles_single *sngl = psc_particles_single(prts);
 
-    find_block_indices_count(b_idx[p], b_cnts[p], prts, b_dxi, b_mx, n_parts[p]);
-    exclusive_scan(b_cnts[p], nr_blocks + 1);
+    find_block_indices_count(sngl->b_idx, sngl->b_cnt, prts, sngl->n_part_save);
+    exclusive_scan(sngl->b_cnt, nr_blocks + 1);
 
-    psc_particles_reorder(prts, b_idx[p], b_cnts[p]);
-    prts->n_part = b_cnts[p][nr_blocks-1];
-
-    free(b_cnts[p]);
-    free(b_idx[p]);
+    psc_particles_reorder(prts, sngl->b_idx, sngl->b_cnt);
+    prts->n_part = sngl->b_cnt[nr_blocks-1];
   }
   prof_stop(pr_C);
-
-  free(b_idx);
-  free(b_cnts);
-  free(n_sends);
-  free(n_parts);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
   prof_stop(pr);

@@ -18,6 +18,13 @@ typedef struct psc_particle_single {
 struct psc_particles_single {
   particle_single_t *particles;
   int n_alloced;
+  int b_mx[3];
+  int nr_blocks;
+  particle_single_real_t b_dxi[3];
+  unsigned int *b_idx;
+  unsigned int *b_cnt;
+  unsigned int n_send;
+  unsigned int n_part_save;
 };
 
 #define psc_particles_single(prts) mrc_to_subobj(prts, struct psc_particles_single)
