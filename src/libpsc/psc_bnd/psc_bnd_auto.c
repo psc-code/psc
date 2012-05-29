@@ -1,7 +1,8 @@
 
 #include "psc_bnd_private.h"
-#include "psc_bnd_c.h"
+#include "psc_bnd_fld.h"
 
+#include <mrc_ddc.h>
 #include <string.h>
 
 struct sub {

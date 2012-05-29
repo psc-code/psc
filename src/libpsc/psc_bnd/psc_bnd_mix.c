@@ -1,6 +1,6 @@
 
 #include "psc_bnd_private.h"
-#include "psc_bnd_c.h"
+#include "psc_bnd_fld.h"
 #include "ddc_particles.h"
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"
@@ -108,7 +108,7 @@ struct psc_bnd_ops psc_bnd_mix_ops = {
   .unsetup                 = psc_bnd_sub_unsetup,
   .exchange_particles      = psc_bnd_sub_exchange_particles,
 
-  .create_ddc              = psc_bnd_fields_c_create,
-  .add_ghosts              = psc_bnd_fields_c_add_ghosts,
-  .fill_ghosts             = psc_bnd_fields_c_fill_ghosts,
+  .create_ddc              = psc_bnd_fld_c_create,
+  .add_ghosts              = psc_bnd_fld_c_add_ghosts,
+  .fill_ghosts             = psc_bnd_fld_c_fill_ghosts,
 };

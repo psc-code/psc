@@ -1,10 +1,7 @@
 
-#include "psc_bnd_c.h"
-#include "psc_bnd_private.h"
 #include "psc.h"
-#include "psc_fields_as_c.h"
-
 #include <mrc_profile.h>
+#include <mrc_ddc.h>
 
 // ======================================================================
 // ddc funcs
@@ -70,10 +67,10 @@ static struct mrc_ddc_funcs ddc_funcs = {
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_c_create
+// psc_bnd_fld_sub_create
 
 void
-psc_bnd_fields_c_create(struct psc_bnd *bnd)
+psc_bnd_fld_sub_create(struct psc_bnd *bnd)
 {
   struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_funcs(ddc, &ddc_funcs);
@@ -85,10 +82,10 @@ psc_bnd_fields_c_create(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_c_add_ghosts
+// psc_bnd_fld_sub_add_ghosts
 
 void
-psc_bnd_fields_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_sub_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
 
@@ -105,10 +102,10 @@ psc_bnd_fields_c_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int 
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_c_fill_ghosts
+// psc_bnd_fld_sub_fill_ghosts
 
 void
-psc_bnd_fields_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_sub_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
 
@@ -125,6 +122,3 @@ psc_bnd_fields_c_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int
 
   psc_mfields_put_cf(flds, flds_base, mb, me);
 }
-
-
-
