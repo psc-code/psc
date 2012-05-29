@@ -17,6 +17,7 @@ libsubdir_la_SOURCES = \
 	push_part_1st_xz.c \
 	push_part_1st_yz.c \
 	push_part_1vb.c \
+	push_part_1vb_mix.c \
 	push_part_1vb_c_yz.c \
 	push_part_1sff_xz.c \
 	psc_push_particles_single.c \

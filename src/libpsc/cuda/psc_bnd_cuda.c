@@ -171,10 +171,10 @@ xchg_copy_from_dev(struct psc_bnd *bnd, struct psc_particles *prts)
 #include "../psc_bnd/psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles_prep
+// psc_bnd_sub_exchange_particles_prep
 
 static void
-psc_bnd_cuda_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
+psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
@@ -192,10 +192,10 @@ psc_bnd_cuda_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles_post
+// psc_bnd_sub_exchange_particles_post
 
 static void
-psc_bnd_cuda_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct ddcp_patch *patch = &ddcp->patches[prts->p];
@@ -304,7 +304,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
   
   prof_start(pr_A);
   for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_cuda_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
   }
 
   prof_start(pr_B);
@@ -313,7 +313,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
 
   prof_start(pr_C);
   for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_cuda_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_sub_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_C);
 }
@@ -349,14 +349,16 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd,
 // psc_bnd: subclass "cuda"
 
 struct psc_bnd_ops psc_bnd_cuda_ops = {
-  .name                  = "cuda",
-  .size                  = sizeof(struct psc_bnd_sub),
-  .setup                 = psc_bnd_sub_setup,
-  .unsetup               = psc_bnd_sub_unsetup,
-  .exchange_particles    = psc_bnd_sub_exchange_particles,
+  .name                    = "cuda",
+  .size                    = sizeof(struct psc_bnd_sub),
+  .setup                   = psc_bnd_sub_setup,
+  .unsetup                 = psc_bnd_sub_unsetup,
+  .exchange_particles      = psc_bnd_sub_exchange_particles,
+  .exchange_particles_prep = psc_bnd_sub_exchange_particles_prep,
+  .exchange_particles_post = psc_bnd_sub_exchange_particles_post,
 
-  .create_ddc            = psc_bnd_fields_cuda_create,
-  .add_ghosts            = psc_bnd_fields_cuda_add_ghosts,
-  .fill_ghosts           = psc_bnd_fields_cuda_fill_ghosts,
+  .create_ddc              = psc_bnd_fields_cuda_create,
+  .add_ghosts              = psc_bnd_fields_cuda_add_ghosts,
+  .fill_ghosts             = psc_bnd_fields_cuda_fill_ghosts,
 };
 
