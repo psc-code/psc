@@ -45,9 +45,9 @@ v4s_store(float *p, v4s v)
 }
 
 static inline void
-v4si_store(float *p, v4si v)
+v4si_store(int *p, v4si v)
 {
-  _mm_store_si128(p, (__m128i) v);
+  _mm_store_si128((__m128i *) p, (__m128i) v);
 }
 
 static inline void

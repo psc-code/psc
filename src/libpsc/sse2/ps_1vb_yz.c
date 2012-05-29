@@ -87,7 +87,7 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int 
     v4si mask = v4si_and(v4si_andnot(v4si_cmplt(lfy, iZero), v4si_cmplt(lfy, v4si_splat(b_my))),
 			 v4si_andnot(v4si_cmplt(lfz, iZero), v4si_cmplt(lfz, v4si_splat(b_mz))));
     b_idx = v4si_blend(mask, b_idx, v4si_splat(b_my * b_mz));
-    v4si_store(&sngl->b_idx[n], b_idx);
+    v4si_store((int *) &sngl->b_idx[n], b_idx);
 
     v4si i[2], idiff[2], off0[2];
     v4s dx[2], x[2];
