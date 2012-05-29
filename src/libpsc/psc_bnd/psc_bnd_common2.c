@@ -216,10 +216,10 @@ get_head(struct psc_particles *prts)
 #include "psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
-// psc_bnd_single2_exchange_particles_prep
+// psc_bnd_sub_exchange_particles_prep
 
 static void
-psc_bnd_single2_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
+psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
   
@@ -235,10 +235,10 @@ psc_bnd_single2_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particle
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_single2_exchange_particles_post
+// psc_bnd_sub_exchange_particles_post
 
 static void
-psc_bnd_single2_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
   struct psc_particles_single *sngl = psc_particles_single(prts);
@@ -271,7 +271,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 
   prof_start(pr_A);
   for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_single2_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_A);
 
@@ -281,7 +281,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
 
   prof_start(pr_C);
   for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_single2_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
+    psc_bnd_sub_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_C);
 
