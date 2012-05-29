@@ -108,7 +108,7 @@ struct psc_bnd_ops psc_bnd_mix_ops = {
   .unsetup                 = psc_bnd_sub_unsetup,
   .exchange_particles      = psc_bnd_sub_exchange_particles,
 
-  .create_ddc              = psc_bnd_fld_single_create,
-  .add_ghosts              = psc_bnd_fld_single_add_ghosts,
-  .fill_ghosts             = psc_bnd_fld_single_fill_ghosts,
+  .create_ddc              = psc_bnd_fld_mix_create,
+  .add_ghosts              = psc_bnd_fld_mix_add_ghosts,
+  .fill_ghosts             = psc_bnd_fld_mix_fill_ghosts,
 };
