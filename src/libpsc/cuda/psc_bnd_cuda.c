@@ -357,8 +357,12 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
   .exchange_particles_prep = psc_bnd_sub_exchange_particles_prep,
   .exchange_particles_post = psc_bnd_sub_exchange_particles_post,
 
-  .create_ddc              = psc_bnd_fields_cuda_create,
-  .add_ghosts              = psc_bnd_fields_cuda_add_ghosts,
-  .fill_ghosts             = psc_bnd_fields_cuda_fill_ghosts,
+  .create_ddc              = psc_bnd_fld_cuda_create,
+  .add_ghosts              = psc_bnd_fld_cuda_add_ghosts,
+  .add_ghosts_prep         = psc_bnd_fld_cuda_add_ghosts_prep,
+  .add_ghosts_post         = psc_bnd_fld_cuda_add_ghosts_post,
+  .fill_ghosts             = psc_bnd_fld_cuda_fill_ghosts,
+  .fill_ghosts_prep        = psc_bnd_fld_cuda_fill_ghosts_prep,
+  .fill_ghosts_post        = psc_bnd_fld_cuda_fill_ghosts_post,
 };
 

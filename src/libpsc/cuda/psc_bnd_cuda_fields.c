@@ -101,10 +101,10 @@ static struct mrc_ddc_funcs ddc_funcs = {
 };
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_cuda_create
+// psc_bnd_fld_cuda_create
 
 void
-psc_bnd_fields_cuda_create(struct psc_bnd *bnd)
+psc_bnd_fld_cuda_create(struct psc_bnd *bnd)
 {
   struct psc *psc = bnd->psc;
 
@@ -118,15 +118,15 @@ psc_bnd_fields_cuda_create(struct psc_bnd *bnd)
 
 // ----------------------------------------------------------------------
 
-static void
-psc_bnd_fld_cuda_add_ghosts_prep(struct psc_fields *pf, int mb, int me)
+void
+psc_bnd_fld_cuda_add_ghosts_prep(struct psc_bnd *bnd, struct psc_fields *pf, int mb, int me)
 {
   psc_fields_cuda_bnd_prep(pf, me - mb);
   __fields_cuda_from_device_inside(pf, mb, me);
 }
 
-static void
-psc_bnd_fld_cuda_add_ghosts_post(struct psc_fields *pf, int mb, int me)
+void
+psc_bnd_fld_cuda_add_ghosts_post(struct psc_bnd *bnd, struct psc_fields *pf, int mb, int me)
 {
   __fields_cuda_to_device_inside(pf, mb, me);
   psc_fields_cuda_bnd_post(pf);
@@ -134,25 +134,25 @@ psc_bnd_fld_cuda_add_ghosts_post(struct psc_fields *pf, int mb, int me)
 
 // ----------------------------------------------------------------------
 
-static void
-psc_bnd_fld_cuda_fill_ghosts_prep(struct psc_fields *pf, int mb, int me)
+void
+psc_bnd_fld_cuda_fill_ghosts_prep(struct psc_bnd *bnd, struct psc_fields *pf, int mb, int me)
 {
   psc_fields_cuda_bnd_prep(pf, me - mb);
   __fields_cuda_from_device_inside(pf, mb, me);
 }
 
-static void
-psc_bnd_fld_cuda_fill_ghosts_post(struct psc_fields *pf, int mb, int me)
+void
+psc_bnd_fld_cuda_fill_ghosts_post(struct psc_bnd *bnd, struct psc_fields *pf, int mb, int me)
 {
   __fields_cuda_to_device_outside(pf, mb, me);
   psc_fields_cuda_bnd_post(pf);
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_cuda_add_ghosts
+// psc_bnd_fld_cuda_add_ghosts
 
 void
-psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
@@ -176,13 +176,13 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
     psc_foreach_patch(ppsc, p) {
-      psc_bnd_fld_cuda_add_ghosts_prep(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_add_ghosts_prep(bnd, psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
 
     psc_foreach_patch(ppsc, p) {
-      psc_bnd_fld_cuda_add_ghosts_post(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_add_ghosts_post(bnd, psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
@@ -190,10 +190,10 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_fields_cuda_fill_ghosts
+// psc_bnd_fld_cuda_fill_ghosts
 
 void
-psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   static int pr1, pr3, pr5;
   if (!pr1) {
@@ -224,7 +224,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr1);
     psc_foreach_patch(ppsc, p) {
-      psc_bnd_fld_cuda_fill_ghosts_prep(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_fill_ghosts_prep(bnd, psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr1);
 
@@ -234,7 +234,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr5);
     psc_foreach_patch(ppsc, p) {
-      psc_bnd_fld_cuda_fill_ghosts_post(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_fill_ghosts_post(bnd, psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr5);
 
