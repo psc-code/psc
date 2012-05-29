@@ -22,6 +22,7 @@ struct psc_push_fields_ops {
 // ======================================================================
 
 extern struct psc_push_fields_ops psc_push_fields_c_ops;
+extern struct psc_push_fields_ops psc_push_fields_single_ops;
 extern struct psc_push_fields_ops psc_push_fields_fortran_ops;
 extern struct psc_push_fields_ops psc_push_fields_cbe_ops;
 extern struct psc_push_fields_ops psc_push_fields_cuda_ops;

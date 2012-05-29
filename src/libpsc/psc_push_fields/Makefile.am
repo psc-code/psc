@@ -6,5 +6,6 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_push_fields.c \
 	psc_push_fields_c.c \
+	psc_push_fields_single.c \
 	psc_push_fields_fortran.c
 

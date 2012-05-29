@@ -2,13 +2,13 @@
 #include "psc.h"
 
 static void
-psc_push_fields_c_push_a_E(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_a_E(struct psc_push_fields *push, struct psc_fields *flds_base)
 {
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
   
-  f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
-  f_real cny = .5 * ppsc->dt / ppsc->dx[1];
-  f_real cnz = .5 * ppsc->dt / ppsc->dx[2];
+  fields_real_t cnx = .5 * ppsc->dt / ppsc->dx[0];
+  fields_real_t cny = .5 * ppsc->dt / ppsc->dx[1];
+  fields_real_t cnz = .5 * ppsc->dt / ppsc->dx[2];
 
   if (ppsc->domain.gdims[0] == 1) {
     cnx = 0.;
@@ -44,13 +44,13 @@ psc_push_fields_c_push_a_E(struct psc_push_fields *push, struct psc_fields *flds
 }
 
 static void
-psc_push_fields_c_push_a_H(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_a_H(struct psc_push_fields *push, struct psc_fields *flds_base)
 {
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, HX + 3);
   
-  f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
-  f_real cny = .5 * ppsc->dt / ppsc->dx[1];
-  f_real cnz = .5 * ppsc->dt / ppsc->dx[2];
+  fields_real_t cnx = .5 * ppsc->dt / ppsc->dx[0];
+  fields_real_t cny = .5 * ppsc->dt / ppsc->dx[1];
+  fields_real_t cnz = .5 * ppsc->dt / ppsc->dx[2];
 
   if (ppsc->domain.gdims[0] == 1) {
     cnx = 0.;
@@ -83,13 +83,13 @@ psc_push_fields_c_push_a_H(struct psc_push_fields *push, struct psc_fields *flds
 }
 
 static void
-psc_push_fields_c_push_b_H(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_b_H(struct psc_push_fields *push, struct psc_fields *flds_base)
 {
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, HX + 3);
   
-  f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
-  f_real cny = .5 * ppsc->dt / ppsc->dx[1];
-  f_real cnz = .5 * ppsc->dt / ppsc->dx[2];
+  fields_real_t cnx = .5 * ppsc->dt / ppsc->dx[0];
+  fields_real_t cny = .5 * ppsc->dt / ppsc->dx[1];
+  fields_real_t cnz = .5 * ppsc->dt / ppsc->dx[2];
 
   if (ppsc->domain.gdims[0] == 1) {
     cnx = 0.;
@@ -122,13 +122,13 @@ psc_push_fields_c_push_b_H(struct psc_push_fields *push, struct psc_fields *flds
 }
 
 static void
-psc_push_fields_c_push_b_E(struct psc_push_fields *push, struct psc_fields *flds_base)
+psc_push_fields_sub_push_b_E(struct psc_push_fields *push, struct psc_fields *flds_base)
 {
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, JXI, HX + 3);
   
-  f_real cnx = .5 * ppsc->dt / ppsc->dx[0];
-  f_real cny = .5 * ppsc->dt / ppsc->dx[1];
-  f_real cnz = .5 * ppsc->dt / ppsc->dx[2];
+  fields_real_t cnx = .5 * ppsc->dt / ppsc->dx[0];
+  fields_real_t cny = .5 * ppsc->dt / ppsc->dx[1];
+  fields_real_t cnz = .5 * ppsc->dt / ppsc->dx[2];
 
   if (ppsc->domain.gdims[0] == 1) {
     cnx = 0.;
