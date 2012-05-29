@@ -18,6 +18,8 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx
   struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   if (psc_fields_ops(pf) == &psc_fields_single_ops) {
     psc_bnd_fld_single_copy_to_buf(mb, me, p, ilo, ihi, _buf, ctx);
+  } else if (psc_fields_ops(pf) == &psc_fields_cuda_ops) {
+    psc_bnd_fld_cuda_copy_to_buf(mb, me, p, ilo, ihi, _buf, ctx);
   } else {
     assert(0);
   }
@@ -30,6 +32,8 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ct
   struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   if (psc_fields_ops(pf) == &psc_fields_single_ops) {
     psc_bnd_fld_single_add_from_buf(mb, me, p, ilo, ihi, _buf, ctx);
+  } else if (psc_fields_ops(pf) == &psc_fields_cuda_ops) {
+    psc_bnd_fld_cuda_add_from_buf(mb, me, p, ilo, ihi, _buf, ctx);
   } else {
     assert(0);
   }
@@ -42,6 +46,8 @@ copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *c
   struct psc_fields *pf = psc_mfields_get_patch(flds, p);
   if (psc_fields_ops(pf) == &psc_fields_single_ops) {
     psc_bnd_fld_single_copy_from_buf(mb, me, p, ilo, ihi, _buf, ctx);
+  } else if (psc_fields_ops(pf) == &psc_fields_cuda_ops) {
+    psc_bnd_fld_cuda_copy_from_buf(mb, me, p, ilo, ihi, _buf, ctx);
   } else {
     assert(0);
   }

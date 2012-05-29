@@ -75,6 +75,7 @@ void psc_mfields_put_##type(struct psc_mfields *mflds,			\
 MAKE_MFIELDS_TYPE(c)
 MAKE_MFIELDS_TYPE(fortran)
 MAKE_MFIELDS_TYPE(single)
+MAKE_MFIELDS_TYPE(mix)
 MAKE_MFIELDS_TYPE(cuda)
 typedef struct psc_mfields mfields_base_t;
 

@@ -3,6 +3,8 @@
 
 #include "psc_cuda.h"
 #include "psc_bnd_private.h"
+#include "../psc_bnd/psc_bnd_fld.h"
+
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
 
@@ -37,14 +39,16 @@ psc_fields_cuda_bnd_post(struct psc_fields *pf)
 // ======================================================================
 // ddc funcs
 
-static void
-copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
+void
+psc_bnd_fld_cuda_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
   struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
   struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
+  me -= mb; // FIXME, the "mix" bnd needs this adjustment
+  mb = 0;
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -56,14 +60,16 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ct
   }
 }
 
-static void
-add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
+void
+psc_bnd_fld_cuda_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
   struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
   struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
+  me -= mb;
+  mb = 0;
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -75,14 +81,16 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_c
   }
 }
 
-static void
-copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
+void
+psc_bnd_fld_cuda_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
   struct psc_mfields *mflds = _ctx;
   struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
   struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
+  me -= mb;
+  mb = 0;
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
@@ -95,9 +103,9 @@ copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_
 }
 
 static struct mrc_ddc_funcs ddc_funcs = {
-  .copy_to_buf   = copy_to_buf,
-  .copy_from_buf = copy_from_buf,
-  .add_from_buf  = add_from_buf,
+  .copy_to_buf   = psc_bnd_fld_cuda_copy_to_buf,
+  .copy_from_buf = psc_bnd_fld_cuda_copy_from_buf,
+  .add_from_buf  = psc_bnd_fld_cuda_add_from_buf,
 };
 
 // ----------------------------------------------------------------------
