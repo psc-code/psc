@@ -194,6 +194,7 @@ psc_push_fields_init()
 #endif
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_fields, &psc_push_fields_mix_ops);
 #endif
 }
 
