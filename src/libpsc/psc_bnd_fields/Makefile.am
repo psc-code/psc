@@ -9,4 +9,5 @@ libsubdir_la_SOURCES = \
 	psc_bnd_fields_c.c \
 	psc_bnd_fields_single.c \
 	psc_bnd_fields_mix.c \
+	psc_bnd_fields_auto.c \
 	psc_bnd_fields_fortran.c

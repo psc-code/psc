@@ -261,6 +261,7 @@ psc_bnd_fields_setup_fields(struct psc_bnd_fields *bnd_fields, mfields_base_t *f
 static void
 psc_bnd_fields_init()
 {
+  mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_fortran_ops);
