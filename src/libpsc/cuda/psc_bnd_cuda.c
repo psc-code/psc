@@ -63,8 +63,7 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 // xchg_append helper
 
 static void
-xchg_append(struct psc_particles *prts, particle_t *prt,
-	    unsigned int *bn_idx, unsigned int *bn_cnts, unsigned int *bn_off)
+xchg_append(struct psc_particles *prts, particle_t *prt)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int nn = cuda->bnd_n_part++;
@@ -94,13 +93,11 @@ xchg_append(struct psc_particles *prts, particle_t *prt,
     b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
     assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
   }
-  if (bn_idx) {
-    unsigned int b =
-      (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
-    assert(b < cuda->nr_blocks);
-    bn_idx[nn] = b;
-    bn_off[nn] = bn_cnts[b]++;
-  }
+  unsigned int b =
+    (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
+  assert(b < cuda->nr_blocks);
+  cuda->bnd_idx[nn] = b;
+  cuda->bnd_off[nn] = cuda->bnd_cnt[b]++;
 }
 
 static inline particle_t *
@@ -123,8 +120,7 @@ xchg_get_one(struct psc_particles *prts, int n)
 }
 
 static void
-xchg_setup(struct psc_bnd *bnd, struct psc_mparticles *particles,
-	   int *offsets, int *n_sends, unsigned int **bn_idx, unsigned int **bn_off)
+xchg_setup(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
@@ -133,17 +129,15 @@ xchg_setup(struct psc_bnd *bnd, struct psc_mparticles *particles,
     cuda->bnd_n_part = 0;
     cuda->bnd_prts = NULL;
 
-    int n_send = n_sends[p];
+    int n_send = cuda->bnd_n_send;
     cuda->bnd_xi4  = malloc(n_send * sizeof(*cuda->bnd_xi4));
     cuda->bnd_pxi4 = malloc(n_send * sizeof(*cuda->bnd_pxi4));
-    if (bn_idx) {
-      bn_idx[p] = malloc(n_send * sizeof(*bn_idx[p]));
-      bn_off[p] = malloc(n_send * sizeof(*bn_off[p]));
-    }
+    cuda->bnd_idx  = malloc(n_send * sizeof(*cuda->bnd_idx));
+    cuda->bnd_off  = malloc(n_send * sizeof(*cuda->bnd_off));
 
     // OPT, could use streaming
     __particles_cuda_from_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
-				       offsets[p], offsets[p] + n_send);
+				       cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_send);
   }
 }
 
@@ -171,12 +165,9 @@ get_b_dxi(struct psc_particles *prts)
 // to help the GPU put them into the right final place.
 
 static void
-exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
-			int *offsets, int *n_sends,
-			unsigned int **bn_cnts, unsigned int **bn_idx,
-			unsigned int **bn_off)
+exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
-  xchg_setup(bnd, particles, offsets, n_sends, bn_idx, bn_off);
+  xchg_setup(bnd, particles);
 
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
@@ -195,6 +186,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
 
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     struct psc_patch *patch = &psc->patch[p];
     particle_real_t xm[3];
@@ -209,7 +201,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       ddcp_patch->nei[dir1].n_send = 0;
     }
-    for (int n = ddcp_patch->head; n < n_sends[p]; n++) {
+    for (int n = ddcp_patch->head; n < cuda->bnd_n_send; n++) {
       particle_t *prt = xchg_get_one(prts, n);
       particle_real_t *xi = &prt->xi;
       particle_real_t *pxi = &prt->pxi;
@@ -277,7 +269,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	  xchg_append(prts, prt, bn_idx[p], bn_cnts[p], bn_off[p]);
+	  xchg_append(prts, prt);
 	} else {
 	  ddc_particles_queue(ddcp, ddcp_patch, dir, prt);
 	}
@@ -296,19 +288,19 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles,
     struct psc_particles *prts_cuda = psc_mparticles_get_patch(particles, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
     int n_recv = cuda->bnd_n_part + patch->head;
-    prts_cuda->n_part = offsets[p] + n_recv;
+    prts_cuda->n_part = cuda->bnd_n_part_save + n_recv;
     assert(prts_cuda->n_part <= cuda->n_alloced);
 
     cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
     cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
-    bn_idx[p] = realloc(bn_idx[p], n_recv * sizeof(*bn_idx[p]));
-    bn_off[p] = realloc(bn_off[p], n_recv * sizeof(*bn_off[p]));
+    cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
+    cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
     for (int n = 0; n < patch->head; n++) {
-      xchg_append(prts_cuda, &cuda->bnd_prts[n], bn_idx[p], bn_cnts[p], bn_off[p]);
+      xchg_append(prts_cuda, &cuda->bnd_prts[n]);
     }
 
     __particles_cuda_to_device_range(prts_cuda, cuda->bnd_xi4, cuda->bnd_pxi4,
-				     offsets[p], offsets[p] + n_recv);
+				     cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_recv);
 
     free(cuda->bnd_prts);
     free(cuda->bnd_xi4);
@@ -387,32 +379,26 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
   }
   
   prof_start(pr);
-  int *n_sends = malloc(ppsc->nr_patches * sizeof(*n_sends));
-  int *n_parts = malloc(ppsc->nr_patches * sizeof(*n_parts));
-  unsigned int **bn_cnts = malloc(ppsc->nr_patches * sizeof(*bn_cnts));
-  unsigned int **bn_idx = malloc(ppsc->nr_patches * sizeof(*bn_idx));
-  unsigned int **bn_off = malloc(ppsc->nr_patches * sizeof(*bn_off));
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    bn_cnts[p] = calloc(cuda->nr_blocks, sizeof(*bn_cnts[p]));
-
+    cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
+    
     prof_start(pr_B);
     cuda_find_block_indices_2(prts, cuda->d_part.bidx, 0);
     prof_stop(pr_B);
 
     prof_start(pr_C);
-    n_sends[p] = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
-    n_parts[p] = prts->n_part;
+    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
+    cuda->bnd_n_part_save = prts->n_part;
     prof_stop(pr_C);
 
     prof_start(pr_D);
-    cuda_reorder_send_buf(p, prts, cuda->d_part.bidx, cuda->d_part.sums, n_sends[p]);
+    cuda_reorder_send_buf(p, prts, cuda->d_part.bidx, cuda->d_part.sums, cuda->bnd_n_send);
     prof_stop(pr_D);
   }
 
-  exchange_particles_host(psc_bnd, particles, n_parts, n_sends,
-			  bn_cnts, bn_idx, bn_off);
+  exchange_particles_host(psc_bnd, particles);
 
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
@@ -420,9 +406,9 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
 
     prof_start(pr_F);
     cuda_find_block_indices_3(prts, cuda->d_part.bidx, cuda->d_part.alt_bidx,
-			      n_parts[p], bn_idx[p], bn_off[p]);
-    free(bn_idx[p]);
-    free(bn_off[p]);
+			      cuda->bnd_n_part_save, cuda->bnd_idx, cuda->bnd_off);
+    free(cuda->bnd_idx);
+    free(cuda->bnd_off);
     prof_stop(pr_F);
 
     // OPT: when calculating bidx, do preprocess then
@@ -430,7 +416,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
     void *sp = sort_pairs_3_create(cuda->b_mx);
     sort_pairs_3_device(sp, cuda->d_part.bidx, cuda->d_part.alt_bidx, cuda->d_part.alt_ids,
 			prts->n_part, cuda->d_part.offsets,
-			n_parts[p], bn_cnts[p]);
+			cuda->bnd_n_part_save, cuda->bnd_cnt);
     sort_pairs_3_destroy(sp);
     prof_stop(pr_G);
 
@@ -438,16 +424,11 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
     cuda_reorder(prts, cuda->d_part.alt_ids);
     prof_stop(pr_H);
 
-    prts->n_part = n_parts[p] - n_sends[p] + prts->n_part - n_parts[p];
+    prts->n_part -= cuda->bnd_n_send;
 
-    free(bn_cnts[p]);
+    free(cuda->bnd_cnt);
   }
 
-  free(n_sends);
-  free(n_parts);
-  free(bn_cnts);
-  free(bn_idx);
-  free(bn_off);
   prof_stop(pr);
 }
 

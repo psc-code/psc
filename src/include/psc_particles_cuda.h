@@ -42,6 +42,11 @@ struct psc_particles_cuda {
   float4 *bnd_xi4;
   float4 *bnd_pxi4;
   int bnd_n_part;
+  int bnd_n_send;
+  int bnd_n_part_save;
+  unsigned int *bnd_cnt;
+  unsigned int *bnd_idx;
+  unsigned int *bnd_off;
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
