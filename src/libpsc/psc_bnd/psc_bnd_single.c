@@ -18,7 +18,7 @@ struct psc_bnd_ops psc_bnd_single_ops = {
   .exchange_particles_prep = psc_bnd_sub_exchange_particles_prep,
   .exchange_particles_post = psc_bnd_sub_exchange_particles_post,
 
-  .create_ddc              = psc_bnd_fld_c_create,
-  .add_ghosts              = psc_bnd_fld_c_add_ghosts,
-  .fill_ghosts             = psc_bnd_fld_c_fill_ghosts,
+  .create_ddc              = psc_bnd_fld_single_create,
+  .add_ghosts              = psc_bnd_fld_single_add_ghosts,
+  .fill_ghosts             = psc_bnd_fld_single_fill_ghosts,
 };
