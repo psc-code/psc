@@ -288,7 +288,7 @@ fields_device_pack_yz(struct psc_fields *pf, int mb, int me)
 
 template<int B, int what>
 static void
-fields_host_pack_yz(struct cuda_fields_ctx *cf, real *h_buf, int mb, int me)
+fields_host_pack_yz(struct psc_fields_cuda_bnd *cf, real *h_buf, int mb, int me)
 {
   int gmy = cf->im[1], gmz = cf->im[2];
   int tid = 0;
@@ -316,7 +316,7 @@ fields_host_pack_yz(struct cuda_fields_ctx *cf, real *h_buf, int mb, int me)
 
 template<int B>
 static void
-__fields_cuda_from_device_yz(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me)
+__fields_cuda_from_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   int gmy = pf->im[1], gmz = pf->im[2];
@@ -348,7 +348,7 @@ __fields_cuda_from_device_yz(struct psc_fields *pf, struct cuda_fields_ctx *cf, 
 
 template<int B>
 static void
-__fields_cuda_to_device_yz(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me)
+__fields_cuda_to_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   int gmy = pf->im[1], gmz = pf->im[2];
@@ -381,7 +381,7 @@ __fields_cuda_to_device_yz(struct psc_fields *pf, struct cuda_fields_ctx *cf, in
 // ======================================================================
 
 EXTERN_C void
-__fields_cuda_from_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me)
+__fields_cuda_from_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {
@@ -396,7 +396,7 @@ __fields_cuda_from_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *
 }
 
 EXTERN_C void
-__fields_cuda_to_device_outside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me)
+__fields_cuda_to_device_outside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {
@@ -411,7 +411,7 @@ __fields_cuda_to_device_outside(struct psc_fields *pf, struct cuda_fields_ctx *c
 }
 
 EXTERN_C void
-__fields_cuda_to_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me)
+__fields_cuda_to_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {

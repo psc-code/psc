@@ -162,17 +162,6 @@ EXTERN_C void psc_mparticles_cuda_get_cuda_2(mparticles_cuda_t *particles,
 // These are for field boundary exchange, so they could, eventually, miss the
 // interior part
 
-struct cuda_fields_ctx {
-  fields_cuda_real_t *arr_off;
-  int im[3];
-  int ib[3];
-  fields_cuda_real_t *arr;
-};
-
-struct cuda_mfields_ctx {
-  struct cuda_fields_ctx *cf;
-};
-
 #undef F3_CF_BOUNDS_CHECK
 
 #if 0

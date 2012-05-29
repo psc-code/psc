@@ -9,9 +9,17 @@ typedef float fields_cuda_real_t;
 
 #define MPI_FIELDS_CUDA_REAL MPI_FLOAT
 
+struct psc_fields_cuda_bnd {
+  fields_cuda_real_t *arr_off;
+  int im[3];
+  int ib[3];
+  fields_cuda_real_t *arr;
+};
+
 struct psc_fields_cuda {
   fields_cuda_real_t *d_flds;
   fields_cuda_real_t *d_bnd_buf, *h_bnd_buf;
+  struct psc_fields_cuda_bnd bnd;
 };
 
 #define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)

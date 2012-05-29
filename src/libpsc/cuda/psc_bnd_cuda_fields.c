@@ -7,18 +7,17 @@
 #include <mrc_profile.h>
 
 // FIXME
-EXTERN_C void __fields_cuda_from_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(struct psc_fields *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_from_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_outside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
 
 static void
-cuda_mfields_ctx_init(struct cuda_mfields_ctx *ctx, mfields_cuda_t *flds, int nr_fields)
+cuda_mfields_ctx_init(mfields_cuda_t *flds, int nr_fields)
 {
   // FIXME, could be done once and cached
-  ctx->cf = malloc(ppsc->nr_patches * sizeof(*ctx->cf));
   psc_foreach_patch(ppsc, p) {
     struct psc_fields *pf = psc_mfields_get_patch(flds, p);
-    struct cuda_fields_ctx *cf = &ctx->cf[p];
+    struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf)->bnd;
     int sz = 1;
     for (int d = 0; d < 3; d++) {
       if (pf->im[d] == 1 - 2 * pf->ib[d]) { // only 1 non-ghost point
@@ -31,18 +30,19 @@ cuda_mfields_ctx_init(struct cuda_mfields_ctx *ctx, mfields_cuda_t *flds, int nr
       sz *= cf->im[d];
     }
     cf->arr = malloc(nr_fields * sz * sizeof(*cf->arr));
-    cf->arr_off = ctx->cf[p].arr 
+    cf->arr_off = cf->arr 
       - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
   }
 }
 
 static void
-cuda_mfields_ctx_free(struct cuda_mfields_ctx *ctx)
+cuda_mfields_ctx_free(mfields_cuda_t *flds)
 {
   psc_foreach_patch(ppsc, p) {
-    free(ctx->cf[p].arr);
+    struct psc_fields *pf = psc_mfields_get_patch(flds, p);
+    struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf)->bnd;
+    free(cf->arr);
   }
-  free(ctx->cf);
 }
 
 // ======================================================================
@@ -51,8 +51,9 @@ cuda_mfields_ctx_free(struct cuda_mfields_ctx *ctx)
 static void
 copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct cuda_mfields_ctx *ctx = _ctx;
-  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  struct psc_mfields *mflds = _ctx;
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -69,8 +70,9 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ct
 static void
 add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct cuda_mfields_ctx *ctx = _ctx;
-  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  struct psc_mfields *mflds = _ctx;
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -87,8 +89,9 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_c
 static void
 copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  struct cuda_mfields_ctx *ctx = _ctx;
-  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  struct psc_mfields *mflds = _ctx;
+  struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(flds)->bnd;
   fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -150,24 +153,23 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else {
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
-    struct cuda_mfields_ctx ctx;
-    cuda_mfields_ctx_init(&ctx, flds_cuda, me - mb);
+    cuda_mfields_ctx_init(flds_cuda, me - mb);
 
     psc_foreach_patch(ppsc, p) {
       struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct cuda_fields_ctx *cf = ctx.cf + p;
+      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
       __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
     }
 
-    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, &ctx);
+    mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
 
     psc_foreach_patch(ppsc, p) {
       struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct cuda_fields_ctx *cf = ctx.cf + p;
+      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
       __fields_cuda_to_device_inside(pf_cuda, cf, mb, me);
     }
 
-    cuda_mfields_ctx_free(&ctx);
+    cuda_mfields_ctx_free(flds_cuda);
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
   }
 }
@@ -204,30 +206,29 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
     psc_mfields_put_cuda(flds, flds_base, mb, me);
   } else {
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
-    struct cuda_mfields_ctx ctx;
-    cuda_mfields_ctx_init(&ctx, flds_cuda, me - mb);
+    cuda_mfields_ctx_init(flds_cuda, me - mb);
 
     prof_start(pr1);
     psc_foreach_patch(ppsc, p) {
       struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct cuda_fields_ctx *cf = ctx.cf + p;
+      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
       __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
     }
     prof_stop(pr1);
 
     prof_start(pr3);
-    mrc_ddc_fill_ghosts(bnd->ddc, 0, me - mb, &ctx);
+    mrc_ddc_fill_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
     prof_stop(pr3);
 
     prof_start(pr5);
     psc_foreach_patch(ppsc, p) {
       struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct cuda_fields_ctx *cf = ctx.cf + p;
+      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
       __fields_cuda_to_device_outside(pf_cuda, cf, mb, me);
     }
     prof_stop(pr5);
 
-    cuda_mfields_ctx_free(&ctx);
+    cuda_mfields_ctx_free(flds_cuda);
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
   }
 }
