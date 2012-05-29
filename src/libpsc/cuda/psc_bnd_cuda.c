@@ -119,28 +119,6 @@ xchg_get_one(struct psc_particles *prts, int n)
   return prt;
 }
 
-static void
-xchg_setup(struct psc_bnd *bnd, struct psc_mparticles *particles)
-{
-  for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    cuda->bnd_n_part = 0;
-    cuda->bnd_prts = NULL;
-
-    int n_send = cuda->bnd_n_send;
-    cuda->bnd_xi4  = malloc(n_send * sizeof(*cuda->bnd_xi4));
-    cuda->bnd_pxi4 = malloc(n_send * sizeof(*cuda->bnd_pxi4));
-    cuda->bnd_idx  = malloc(n_send * sizeof(*cuda->bnd_idx));
-    cuda->bnd_off  = malloc(n_send * sizeof(*cuda->bnd_off));
-
-    // OPT, could use streaming
-    __particles_cuda_from_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
-				       cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_send);
-  }
-}
-
 static inline int *
 get_b_mx(struct psc_particles *prts)
 {
@@ -167,8 +145,6 @@ get_b_dxi(struct psc_particles *prts)
 static void
 exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
-  xchg_setup(bnd, particles);
-
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
@@ -361,18 +337,41 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
 }
 
 // ----------------------------------------------------------------------
+// xchg_copy_from_dev
+
+static void
+xchg_copy_from_dev(struct psc_bnd *bnd, struct psc_particles *prts)
+{
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  
+  cuda->bnd_n_part = 0;
+  cuda->bnd_prts = NULL;
+  
+  int n_send = cuda->bnd_n_send;
+  cuda->bnd_xi4  = malloc(n_send * sizeof(*cuda->bnd_xi4));
+  cuda->bnd_pxi4 = malloc(n_send * sizeof(*cuda->bnd_pxi4));
+  cuda->bnd_idx  = malloc(n_send * sizeof(*cuda->bnd_idx));
+  cuda->bnd_off  = malloc(n_send * sizeof(*cuda->bnd_off));
+  
+  // OPT, could use streaming
+  __particles_cuda_from_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
+				     cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_send);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_particles_general
 
 static void
 psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
 					mparticles_cuda_t *particles)
 {
-  static int pr, pr_B, pr_C, pr_D, pr_F, pr_G, pr_H;
+  static int pr, pr_B, pr_C, pr_D, pr_E, pr_F, pr_G, pr_H;
   if (!pr) {
     pr   = prof_register("xchg_parts", 1., 0, 0);
     pr_B = prof_register("xchg_bidx", 1., 0, 0);
     pr_C = prof_register("xchg_pfxsum", 1., 0, 0);
     pr_D = prof_register("xchg_reorder", 1., 0, 0);
+    pr_E = prof_register("xchg_copy_from_dev", 1., 0, 0);
     pr_F = prof_register("xchg_bidx_ids", 1., 0, 0);
     pr_G = prof_register("xchg_sort_pairs", 1., 0, 0);
     pr_H = prof_register("xchg_reorder_off", 1., 0, 0);
@@ -396,6 +395,10 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *psc_bnd,
     prof_start(pr_D);
     cuda_reorder_send_buf(p, prts, cuda->d_part.bidx, cuda->d_part.sums, cuda->bnd_n_send);
     prof_stop(pr_D);
+
+    prof_start(pr_E);
+    xchg_copy_from_dev(psc_bnd, prts);
+    prof_stop(pr_E);
   }
 
   exchange_particles_host(psc_bnd, particles);
