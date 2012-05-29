@@ -218,7 +218,7 @@ get_head(struct psc_particles *prts)
 // ----------------------------------------------------------------------
 // psc_bnd_single2_exchange_particles_prep
 
-void
+static void
 psc_bnd_single2_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
@@ -237,7 +237,7 @@ psc_bnd_single2_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particle
 // ----------------------------------------------------------------------
 // psc_bnd_single2_exchange_particles_post
 
-void
+static void
 psc_bnd_single2_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;

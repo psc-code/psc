@@ -173,7 +173,7 @@ xchg_copy_from_dev(struct psc_bnd *bnd, struct psc_particles *prts)
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_exchange_particles_prep
 
-void
+static void
 psc_bnd_cuda_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -194,7 +194,7 @@ psc_bnd_cuda_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_exchange_particles_post
 
-void
+static void
 psc_bnd_cuda_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
