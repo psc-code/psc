@@ -168,6 +168,12 @@ exclusive_scan(unsigned int *b_cnts, int n)
   }
 }
 
+static inline particle_t *
+xchg_get_one(struct psc_particles *prts, int n)
+{
+  return particles_get_one(prts, n);
+}
+
 static inline void
 xchg_append(struct psc_particles *prts, void *patch_ctx, particle_t *prt)
 {
@@ -193,6 +199,21 @@ get_b_dxi(struct psc_particles *prts)
   return b_dxi;
 }
 
+static inline int
+get_n_send(struct psc_particles *prts)
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  return sngl->n_send;
+}
+
+static inline int
+get_head(struct psc_particles *prts)
+{
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  return prts->n_part - sngl->n_send;
+}
+
+
 // ----------------------------------------------------------------------
 // exchange particles
 
@@ -216,7 +237,7 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    int n_send = psc_particles_single(prts)->n_send;
+    int n_send = get_n_send(prts);
 
     struct psc_patch *patch = &psc->patch[p];
     particle_real_t xm[3];
@@ -227,12 +248,13 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
     int *b_mx = get_b_mx(prts);
 
     struct ddcp_patch *ddcp_patch = &ddcp->patches[p];
-    ddcp_patch->head = prts->n_part - n_send;
+    ddcp_patch->head = get_head(prts);
     for (int dir1 = 0; dir1 < N_DIR; dir1++) {
       ddcp_patch->nei[dir1].n_send = 0;
     }
-    for (int n = ddcp_patch->head; n < prts->n_part; n++) {
-      particle_t *prt = particles_get_one(prts, n);
+    int n_end = ddcp_patch->head + n_send;
+    for (int n = ddcp_patch->head; n < n_end; n++) {
+      particle_t *prt = xchg_get_one(prts, n);
       particle_real_t *xi = &prt->xi;
       particle_real_t *pxi = &prt->pxi;
       
