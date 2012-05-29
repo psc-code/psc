@@ -6,8 +6,8 @@
 // ======================================================================
 // ddc funcs
 
-static void
-copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+void
+psc_bnd_fld_sub_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
   fields_t *pf = psc_mfields_get_patch(flds, p);
@@ -24,8 +24,8 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx
   }
 }
 
-static void
-add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+void
+psc_bnd_fld_sub_add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
   fields_t *pf = psc_mfields_get_patch(flds, p);
@@ -42,8 +42,8 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ct
   }
 }
 
-static void
-copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+void
+psc_bnd_fld_sub_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   mfields_t *flds = ctx;
   fields_t *pf = psc_mfields_get_patch(flds, p);
@@ -61,9 +61,9 @@ copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *c
 }
 
 static struct mrc_ddc_funcs ddc_funcs = {
-  .copy_to_buf   = copy_to_buf,
-  .copy_from_buf = copy_from_buf,
-  .add_from_buf  = add_from_buf,
+  .copy_to_buf   = psc_bnd_fld_sub_copy_to_buf,
+  .copy_from_buf = psc_bnd_fld_sub_copy_from_buf,
+  .add_from_buf  = psc_bnd_fld_sub_add_from_buf,
 };
 
 // ----------------------------------------------------------------------

@@ -17,10 +17,10 @@ psc_fields_cuda_bnd_prep(struct psc_fields *pf, int nr_fields)
       cf->im[d] = 1;
       cf->ib[d] = 0;
     } else {
-	cf->im[d] = pf->im[d];
-	cf->ib[d] = pf->ib[d];
+      cf->im[d] = pf->im[d];
+      cf->ib[d] = pf->ib[d];
     }
-      sz *= cf->im[d];
+    sz *= cf->im[d];
   }
   cf->arr = malloc(nr_fields * sz * sizeof(*cf->arr));
   cf->arr_off = cf->arr 
