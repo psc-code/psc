@@ -24,6 +24,11 @@ psc_particles_cuda_setup(struct psc_particles *prts)
 
   struct psc_patch *patch = &ppsc->patch[prts->p];
 
+  if (!prts->flags) {
+    // FIXME, they get set to early, so auto-dispatch "1vb" doesn't work
+    prts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
+  }
+
   int bs[3];
   for (int d = 0; d < 3; d++) {
     switch (prts->flags & MP_BLOCKSIZE_MASK) {
