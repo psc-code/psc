@@ -216,13 +216,41 @@ get_head(struct psc_particles *prts)
 #include "psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
-// exchange_particles_post
+// psc_bnd_single2_exchange_particles_prep
 
-static void
-exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+void
+psc_bnd_single2_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
 {
-  //  struct ddc_particles *ddcp = bnd->ddcp;
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  
+  if (1) {
+    //      find_block_indices_count_reorderx(prts);
+    count_and_reorder_to_back(prts);
+  }
+  sngl->n_part_save = prts->n_part;
+  sngl->n_send = sngl->b_cnt[sngl->nr_blocks];
+  prts->n_part += sngl->n_send;
 
+  exchange_particles_pre(bnd, prts);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_single2_exchange_particles_post
+
+void
+psc_bnd_single2_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+{
+  struct ddc_particles *ddcp = bnd->ddcp;
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  struct ddcp_patch *patch = &ddcp->patches[prts->p];
+
+  prts->n_part = patch->head;
+  
+  find_block_indices_count(sngl->b_idx, sngl->b_cnt, prts, sngl->n_part_save);
+  exclusive_scan(sngl->b_cnt, sngl->nr_blocks + 1);
+  
+  psc_particles_reorder(prts, sngl->b_idx, sngl->b_cnt);
+  prts->n_part = sngl->b_cnt[sngl->nr_blocks - 1];
 }
 
 // ----------------------------------------------------------------------
@@ -231,59 +259,33 @@ exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
 {
-  static int pr, pr_A, pr_B1, pr_B2, pr_C, pr_D;
+  static int pr, pr_A, pr_B, pr_C;
   if (!pr) {
     pr   = prof_register("xchg_prts", 1., 0, 0);
-    pr_A = prof_register("xchg_bidx_mv", 1., 0, 0);
-    pr_B1= prof_register("xchg_pre", 1., 0, 0);
-    pr_B2= prof_register("xchg_comm", 1., 0, 0);
-    pr_C = prof_register("xchg_upd_bidx", 1., 0, 0);
-    pr_D = prof_register("xchg_reorder", 1., 0, 0);
+    pr_A = prof_register("xchg_prep", 1., 0, 0);
+    pr_B = prof_register("xchg_comm", 1., 0, 0);
+    pr_C = prof_register("xchg_post", 1., 0, 0);
   }
   
   struct ddc_particles *ddcp = bnd->ddcp;
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
   prof_start(pr);
+  prof_start(pr_A);
   for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_single *sngl = psc_particles_single(prts);
-
-    prof_start(pr_A);
-    if (1) {
-      //      find_block_indices_count_reorderx(prts);
-      count_and_reorder_to_back(prts);
-    }
-    sngl->n_part_save = prts->n_part;
-    sngl->n_send = sngl->b_cnt[sngl->nr_blocks];
-    prts->n_part += sngl->n_send;
-    prof_stop(pr_A);
-
-    prof_start(pr_B1);
-    exchange_particles_pre(bnd, prts);
-    prof_stop(pr_B1);
+    psc_bnd_single2_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
   }
+  prof_stop(pr_A);
 
-  prof_start(pr_B2);
+  prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
-  prof_stop(pr_B2);
+  prof_stop(pr_B);
 
+  prof_start(pr_C);
   for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_single *sngl = psc_particles_single(prts);
-    struct ddcp_patch *patch = &ddcp->patches[prts->p];
-
-    prof_start(pr_C);
-    prts->n_part = patch->head;
-    find_block_indices_count(sngl->b_idx, sngl->b_cnt, prts, sngl->n_part_save);
-    exclusive_scan(sngl->b_cnt, sngl->nr_blocks + 1);
-    prof_stop(pr_C);
-
-    prof_start(pr_D);
-    psc_particles_reorder(prts, sngl->b_idx, sngl->b_cnt);
-    prts->n_part = sngl->b_cnt[sngl->nr_blocks - 1];
-    prof_stop(pr_D);
+    psc_bnd_single2_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
+  prof_stop(pr_C);
   prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
