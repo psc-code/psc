@@ -192,7 +192,7 @@ ip_fields_from_em(int p, fields_ip_t *fld, fields_t *pf)
 // ======================================================================
 
 void
-psc_push_particles_ps_1vb_push_a_yz(struct psc_push_particles *push,
+psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 				    struct psc_particles *prts_base,
 				    struct psc_fields *flds_base)
 {

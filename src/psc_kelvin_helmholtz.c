@@ -101,7 +101,7 @@ psc_kh_create(struct psc *psc)
   psc->domain.bnd_part_hi[2] = BND_PART_PERIODIC;
 
   // FIXME: can only use 1st order pushers with current conducting wall b.c.
-  psc_push_particles_set_type(psc->push_particles, "1vb");
+  psc_push_particles_set_type(psc->push_particles, "1vb_c");
 }
 
 // ----------------------------------------------------------------------

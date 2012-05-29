@@ -3,10 +3,10 @@
 #include "psc_push_particles_ps.h"
 
 // ======================================================================
-// psc_push_particles: subclass "ps_1vb"
+// psc_push_particles: subclass "1vb_ps"
 
-struct psc_push_particles_ops psc_push_particles_ps_1vb_ops = {
-  .name                  = "ps_1vb",
-  .push_a_yz             = psc_push_particles_ps_1vb_push_a_yz,
+struct psc_push_particles_ops psc_push_particles_1vb_ps_ops = {
+  .name                  = "1vb_ps",
+  .push_a_yz             = psc_push_particles_1vb_ps_push_a_yz,
 };
 

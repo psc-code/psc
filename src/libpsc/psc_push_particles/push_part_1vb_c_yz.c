@@ -129,13 +129,13 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 }
 
 void
-psc_push_particles_1vb_push_a_yz(struct psc_push_particles *push,
-				 struct psc_particles *prts_base,
-				 struct psc_fields *flds_base)
+psc_push_particles_1vb_c_push_a_yz(struct psc_push_particles *push,
+				   struct psc_particles *prts_base,
+				   struct psc_fields *flds_base)
 {
   static int pr;
   if (!pr) {
-    pr = prof_register(PARTICLE_TYPE "_1vb_push_yz", 1., 0, 0);
+    pr = prof_register("1vb_" PARTICLE_TYPE "_push_yz", 1., 0, 0);
   }
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);

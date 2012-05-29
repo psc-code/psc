@@ -302,10 +302,10 @@ psc_push_particles_cuda_4x4_1vb_push_a_yz(struct psc_push_particles *push,
 }
 
 // ======================================================================
-// psc_push_particles: subclass "cuda_1vb"
+// psc_push_particles: subclass "1vb_4x4_cuda"
 
-struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops = {
-  .name                  = "cuda_1vb",
+struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
+  .name                  = "1vb_4x4_cuda",
   .push_a_yz             = psc_push_particles_cuda_4x4_1vb_push_a_yz,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
 };
@@ -324,10 +324,10 @@ psc_push_particles_cuda_2x2_1vb_push_a_yz(struct psc_push_particles *push,
 }
 
 // ======================================================================
-// psc_push_particles: subclass "cuda_2x2_1vb"
+// psc_push_particles: subclass "1vb_2x2_cuda"
 
-struct psc_push_particles_ops psc_push_particles_cuda_2x2_1vb_ops = {
-  .name                  = "cuda_2x2_1vb",
+struct psc_push_particles_ops psc_push_particles_1vb_2x2_cuda_ops = {
+  .name                  = "1vb_2x2_cuda",
   .push_a_yz             = psc_push_particles_cuda_2x2_1vb_push_a_yz,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_2X2X2 | MP_NO_CHECKERBOARD,
 };
@@ -346,10 +346,10 @@ psc_push_particles_cuda_8x8_1vb_push_a_yz(struct psc_push_particles *push,
 }
 
 // ======================================================================
-// psc_push_particles: subclass "cuda_8x8_1vb"
+// psc_push_particles: subclass "1vb_8x8_cuda"
 
-struct psc_push_particles_ops psc_push_particles_cuda_8x8_1vb_ops = {
-  .name                  = "cuda_8x8_1vb",
+struct psc_push_particles_ops psc_push_particles_1vb_8x8_cuda_ops = {
+  .name                  = "1vb_8x8_cuda",
   .push_a_yz             = psc_push_particles_cuda_8x8_1vb_push_a_yz,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_8X8X8 | MP_NO_CHECKERBOARD,
 };

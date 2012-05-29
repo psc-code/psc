@@ -119,15 +119,15 @@ psc_push_particles_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_generic_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1st_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1sff_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_single_1vb_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_single2_1vb_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_double_1vb_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_single_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_double_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb2_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_fortran_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_vay_ops);
 #ifdef USE_SSE2
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_ps_1vb_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ps_ops);
 #endif
 #ifdef USE_CBE
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cbe_ops);
@@ -135,9 +135,9 @@ psc_push_particles_init()
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_1st_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_1vb_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_2x2_1vb_ops);
-  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_8x8_1vb_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_2x2_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_4x4_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_8x8_cuda_ops);
 #endif
 }
 

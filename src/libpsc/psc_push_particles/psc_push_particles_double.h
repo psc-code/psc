@@ -7,7 +7,7 @@
 #include "psc_particles_as_double.h"
 #include "psc_fields_as_c.h"
 
-void psc_push_particles_double_1vb_push_a_yz(struct psc_push_particles *push,
+void psc_push_particles_1vb_double_push_a_yz(struct psc_push_particles *push,
 					     struct psc_particles *prts_base,
 					     struct psc_fields *flds_base);
 
