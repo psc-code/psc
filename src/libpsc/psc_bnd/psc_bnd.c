@@ -273,24 +273,42 @@ check_domain(struct psc_bnd *bnd)
 void
 psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("add_ghosts", 1., 0, 0);
+  }
+
   check_domain(bnd);
 
   psc_stats_start(st_time_comm);
+  prof_start(pr);
+
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->add_ghosts);
   ops->add_ghosts(bnd, flds, mb, me);
+
+  prof_stop(pr);
   psc_stats_stop(st_time_comm);
 }
 
 void
 psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("fill_ghosts", 1., 0, 0);
+  }
+
   check_domain(bnd);
 
   psc_stats_start(st_time_comm);
+  prof_start(pr);
+
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->fill_ghosts);
   ops->fill_ghosts(bnd, flds, mb, me);
+
+  prof_stop(pr);
   psc_stats_stop(st_time_comm);
 }
 

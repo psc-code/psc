@@ -130,11 +130,6 @@ psc_bnd_fields_cuda_create(struct psc_bnd *bnd)
 void
 psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cuda_add_ghosts", 1., 0, 0);
-  }
-  prof_start(pr);
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
   if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
@@ -175,7 +170,6 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
     cuda_mfields_ctx_free(&ctx);
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
   }
-  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
@@ -184,17 +178,12 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
 void
 psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
-  static int pr;
-  if (!pr) {
-    pr = prof_register("cuda_fill_ghosts", 1., 0, 0);
-  }
   static int pr1, pr3, pr5;
   if (!pr1) {
     pr1 = prof_register("cuda_fill_ghosts_1", 1., 0, 0);
     pr3 = prof_register("cuda_fill_ghosts_3", 1., 0, 0);
     pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
   }
-  prof_start(pr);
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);
   if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
@@ -241,6 +230,5 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
     cuda_mfields_ctx_free(&ctx);
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
   }
-  prof_stop(pr);
 }
 

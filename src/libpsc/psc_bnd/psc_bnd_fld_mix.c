@@ -92,16 +92,7 @@ void
 psc_bnd_fld_mix_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_add_ghosts", 1., 0, 0);
-  }
-
-  prof_start(pr);
   mrc_ddc_add_ghosts(bnd->ddc, mb, me, flds);
-  prof_stop(pr);
-
   psc_mfields_put_cf(flds, flds_base, mb, me);
 }
 
@@ -112,14 +103,6 @@ void
 psc_bnd_fld_mix_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
   mfields_t *flds = psc_mfields_get_cf(flds_base, mb, me);
-
-  static int pr;
-  if (!pr) {
-    pr = prof_register("c_fill_ghosts", 1., 0, 0);
-  }
-  prof_start(pr);
   mrc_ddc_fill_ghosts(bnd->ddc, mb, me, flds);
-  prof_stop(pr);
-
   psc_mfields_put_cf(flds, flds_base, mb, me);
 }
