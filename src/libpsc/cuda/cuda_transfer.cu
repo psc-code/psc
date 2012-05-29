@@ -381,14 +381,14 @@ __fields_cuda_to_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf
 // ======================================================================
 
 EXTERN_C void
-__fields_cuda_from_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
+__fields_cuda_from_device_inside(struct psc_fields *pf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_from_device_yz<2*BND>(pf, cf, mb, me);
+    __fields_cuda_from_device_yz<2*BND>(pf, &pfc->bnd, mb, me);
   } else {
     unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-    check(cudaMemcpy(cf->arr,
+    check(cudaMemcpy(pfc->bnd.arr,
 		     pfc->d_flds + mb * size,
 		     (me - mb) * size * sizeof(float),
 		     cudaMemcpyDeviceToHost));
@@ -396,30 +396,30 @@ __fields_cuda_from_device_inside(struct psc_fields *pf, struct psc_fields_cuda_b
 }
 
 EXTERN_C void
-__fields_cuda_to_device_outside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
+__fields_cuda_to_device_outside(struct psc_fields *pf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_to_device_yz<BND>(pf, cf, mb, me);
+    __fields_cuda_to_device_yz<BND>(pf, &pfc->bnd, mb, me);
   } else {
     unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
     check(cudaMemcpy(pfc->d_flds + mb * size,
-		     cf->arr,
+		     pfc->bnd.arr,
 		     (me - mb) * size * sizeof(float),
 		     cudaMemcpyHostToDevice));
   }
 }
 
 EXTERN_C void
-__fields_cuda_to_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me)
+__fields_cuda_to_device_inside(struct psc_fields *pf, int mb, int me)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_to_device_yz<2*BND>(pf, cf, mb, me);
+    __fields_cuda_to_device_yz<2*BND>(pf, &pfc->bnd, mb, me);
   } else {
     unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
     check(cudaMemcpy(pfc->d_flds + mb * size,
-		     cf->arr,
+		     pfc->bnd.arr,
 		     (me - mb) * size * sizeof(float),
 		     cudaMemcpyHostToDevice));
   }

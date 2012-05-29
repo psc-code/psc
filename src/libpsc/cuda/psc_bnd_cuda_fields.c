@@ -6,11 +6,6 @@
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
 
-// FIXME
-EXTERN_C void __fields_cuda_from_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf, int mb, int me);
-
 static void
 cuda_mfields_ctx_init(mfields_cuda_t *flds, int nr_fields)
 {
@@ -156,17 +151,13 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
     cuda_mfields_ctx_init(flds_cuda, me - mb);
 
     psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
-      __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
+      __fields_cuda_from_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
 
     psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
-      __fields_cuda_to_device_inside(pf_cuda, cf, mb, me);
+      __fields_cuda_to_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     cuda_mfields_ctx_free(flds_cuda);
@@ -210,9 +201,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr1);
     psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
-      __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
+      __fields_cuda_from_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr1);
 
@@ -222,9 +211,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr5);
     psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf_cuda = psc_mfields_get_patch(flds_cuda, p);
-      struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf_cuda)->bnd;
-      __fields_cuda_to_device_outside(pf_cuda, cf, mb, me);
+      __fields_cuda_to_device_outside(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr5);
 
