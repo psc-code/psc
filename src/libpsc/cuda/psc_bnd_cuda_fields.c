@@ -123,6 +123,34 @@ psc_bnd_fields_cuda_create(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
+
+static void
+psc_bnd_fld_cuda_add_ghosts_prep(struct psc_fields *pf, int mb, int me)
+{
+  __fields_cuda_from_device_inside(pf, mb, me);
+}
+
+static void
+psc_bnd_fld_cuda_add_ghosts_post(struct psc_fields *pf, int mb, int me)
+{
+  __fields_cuda_to_device_inside(pf, mb, me);
+}
+
+// ----------------------------------------------------------------------
+
+static void
+psc_bnd_fld_cuda_fill_ghosts_prep(struct psc_fields *pf, int mb, int me)
+{
+  __fields_cuda_from_device_inside(pf, mb, me);
+}
+
+static void
+psc_bnd_fld_cuda_fill_ghosts_post(struct psc_fields *pf, int mb, int me)
+{
+  __fields_cuda_to_device_outside(pf, mb, me);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_fields_cuda_add_ghosts
 
 void
@@ -151,13 +179,13 @@ psc_bnd_fields_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, i
     cuda_mfields_ctx_init(flds_cuda, me - mb);
 
     psc_foreach_patch(ppsc, p) {
-      __fields_cuda_from_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_add_ghosts_prep(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
 
     psc_foreach_patch(ppsc, p) {
-      __fields_cuda_to_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_add_ghosts_post(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
 
     cuda_mfields_ctx_free(flds_cuda);
@@ -201,7 +229,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr1);
     psc_foreach_patch(ppsc, p) {
-      __fields_cuda_from_device_inside(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_fill_ghosts_prep(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr1);
 
@@ -211,7 +239,7 @@ psc_bnd_fields_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, 
 
     prof_start(pr5);
     psc_foreach_patch(ppsc, p) {
-      __fields_cuda_to_device_outside(psc_mfields_get_patch(flds_cuda, p), mb, me);
+      psc_bnd_fld_cuda_fill_ghosts_post(psc_mfields_get_patch(flds_cuda, p), mb, me);
     }
     prof_stop(pr5);
 
