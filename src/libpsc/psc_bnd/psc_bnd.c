@@ -337,6 +337,7 @@ psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons)
 static void
 psc_bnd_init()
 {
+  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single2_ops);
