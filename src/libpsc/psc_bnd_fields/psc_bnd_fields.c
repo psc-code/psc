@@ -262,6 +262,7 @@ static void
 psc_bnd_fields_init()
 {
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_c_ops);
+  mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_fortran_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd_fields, &psc_bnd_fields_none_ops);
 #ifdef USE_CUDA
