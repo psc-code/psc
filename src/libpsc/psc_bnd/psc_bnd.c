@@ -359,9 +359,9 @@ psc_bnd_init()
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single2_ops);
-  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_mix_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_cuda_ops);
+  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_mix_ops);
 #endif
 }
 
