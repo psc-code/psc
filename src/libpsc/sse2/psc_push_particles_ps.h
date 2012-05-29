@@ -5,13 +5,15 @@
 #include "psc.h"
 #include "psc_particles_single.h"
 
-#include "psc_fields_as_c.h"
+#include "psc_fields_as_single.h"
 
 void psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 					 struct psc_particles *prts_base,
 					 struct psc_fields *flds_base);
 
 // ======================================================================
+
+// FIXME, use regular psc_fields?
 
 typedef struct {
   float f00, f01, f10, f11;
@@ -37,7 +39,7 @@ typedef struct {
 
 #else
 
-#define F3_S(pf, fldnr, jx,jy,jz)					\
+#define F3_IP(pf, fldnr, jx,jy,jz)					\
   (*({int off = F3_OFF_IP(pf, fldnr, jx,jy,jz);				\
       assert(fldnr >= (pf)->first_comp && fldnr < (pf)->first_comp + (pf)->nr_comp); \
       assert(jx >= (pf)->ib[0] && jx < (pf)->ib[0] + (pf)->im[0]);	\
