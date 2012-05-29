@@ -216,12 +216,23 @@ get_head(struct psc_particles *prts)
 #include "psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
+// exchange_particles_post
+
+static void
+exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+{
+  struct ddc_particles *ddcp = bnd->ddcp;
+
+  struct ddcp_patch *patch = &ddcp->patches[prts->p];
+  prts->n_part = patch->head;
+}
+
+// ----------------------------------------------------------------------
 // exchange particles
 
 static void
 exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
 {
-  struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;
 
   static int pr_A, pr_B, pr_D;
@@ -242,10 +253,8 @@ exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *particles)
   prof_stop(pr_B);
 
   prof_start(pr_D);
-  psc_foreach_patch(psc, p) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    prts->n_part = patch->head;
+  for (int p = 0; p < particles->nr_patches; p++) {
+    exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_D);
 }

@@ -149,6 +149,35 @@ get_head(struct psc_particles *prts)
 #include "../psc_bnd/psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
+// exchange_particles_post
+
+static void
+exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
+{
+  struct ddc_particles *ddcp = bnd->ddcp;
+  struct ddcp_patch *patch = &ddcp->patches[prts->p];
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  int n_recv = cuda->bnd_n_part + patch->head;
+  prts->n_part = cuda->bnd_n_part_save + n_recv;
+  assert(prts->n_part <= cuda->n_alloced);
+  
+  cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
+  cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
+  cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
+  cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
+  for (int n = 0; n < patch->head; n++) {
+    xchg_append(prts, NULL, &cuda->bnd_prts[n]);
+  }
+
+  __particles_cuda_to_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
+				   cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_recv);
+  
+  free(cuda->bnd_prts);
+  free(cuda->bnd_xi4);
+  free(cuda->bnd_pxi4);
+}
+
+// ----------------------------------------------------------------------
 // exchange_particles_host
 //
 // Does the CPU part of the particle communication,
@@ -181,27 +210,7 @@ exchange_particles_host(struct psc_bnd *bnd, struct psc_mparticles *particles)
 
   prof_start(pr_D);
   for (int p = 0; p < particles->nr_patches; p++) {
-    struct ddcp_patch *patch = &ddcp->patches[p];
-    struct psc_particles *prts_cuda = psc_mparticles_get_patch(particles, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
-    int n_recv = cuda->bnd_n_part + patch->head;
-    prts_cuda->n_part = cuda->bnd_n_part_save + n_recv;
-    assert(prts_cuda->n_part <= cuda->n_alloced);
-
-    cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
-    cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
-    cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
-    cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
-    for (int n = 0; n < patch->head; n++) {
-      xchg_append(prts_cuda, NULL, &cuda->bnd_prts[n]);
-    }
-
-    __particles_cuda_to_device_range(prts_cuda, cuda->bnd_xi4, cuda->bnd_pxi4,
-				     cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_recv);
-
-    free(cuda->bnd_prts);
-    free(cuda->bnd_xi4);
-    free(cuda->bnd_pxi4);
+    exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_D);
 }
