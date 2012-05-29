@@ -259,9 +259,8 @@ psc_bnd_single2_exchange_particles_post(struct psc_bnd *bnd, struct psc_particle
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
 {
-  static int pr, pr_A, pr_B, pr_C;
-  if (!pr) {
-    pr   = prof_register("xchg_prts", 1., 0, 0);
+  static int pr_A, pr_B, pr_C;
+  if (!pr_A) {
     pr_A = prof_register("xchg_prep", 1., 0, 0);
     pr_B = prof_register("xchg_comm", 1., 0, 0);
     pr_C = prof_register("xchg_post", 1., 0, 0);
@@ -270,7 +269,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
   struct ddc_particles *ddcp = bnd->ddcp;
   mparticles_t *particles = psc_mparticles_get_cf(particles_base, 0);
 
-  prof_start(pr);
   prof_start(pr_A);
   for (int p = 0; p < particles->nr_patches; p++) {
     psc_bnd_single2_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
@@ -286,7 +284,6 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles
     psc_bnd_single2_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
   prof_stop(pr_C);
-  prof_stop(pr);
 
   psc_mparticles_put_cf(particles, particles_base, 0);
 }

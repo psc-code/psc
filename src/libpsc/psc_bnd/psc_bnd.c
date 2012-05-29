@@ -297,13 +297,20 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
 void
 psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
 {
+  static int pr;
+  if (!pr) {
+    pr = prof_register("xchg_prts", 1., 0, 0);
+  }
+
   check_domain(bnd);
 
+  prof_start(pr);
   psc_stats_start(st_time_comm);
   struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
   assert(ops->exchange_particles);
   ops->exchange_particles(bnd, particles);
   psc_stats_stop(st_time_comm);
+  prof_stop(pr);
 }
 
 void
