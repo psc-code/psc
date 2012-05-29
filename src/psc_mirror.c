@@ -56,7 +56,7 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
   psc_foreach_patch(psc, p) {
     struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
-    struct psc_fields *pf = psc_mfields_get_as(pf_base, "c", HX, HX + 3);
+    struct psc_fields *pf = psc_fields_get_as(pf_base, "c", HX, HX + 3);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
       result[0] += 
 	(sqr(F3_C(pf, HX, ix,iy,iz) - HX0) +
@@ -92,6 +92,7 @@ psc_mirror_create(struct psc *psc)
   psc->prm.i0 = 0.;
   psc->prm.n0 = 1.;
   psc->prm.e0 = 1.;
+  psc->prm.cfl = 0.98;
 
   psc->prm.nicell = 800;
 
@@ -169,7 +170,7 @@ psc_mirror_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_mirror *mirror = to_psc_mirror(psc);
   double B0 = mirror->vA_over_c;
-  double B1 = 0.003;
+  double B1 = 0.;//0.003;
   double kz = (32. * M_PI / psc->domain.length[2]) * cos(mirror->theta_0);
   double ky = (8. * M_PI / psc->domain.length[1]) * sin(mirror->theta_0);
   double z = x[2];
@@ -205,10 +206,10 @@ psc_mirror_setup(struct psc *psc)
   mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(me));
   mpi_printf(comm, "om_ci = %g, om_ce = %g\n", B0, B0 / me);
   mpi_printf(comm, "\n");
-  mpi_printf(comm, "v_i,perp = %g [c]\n", sqrt(2*Ti_perp));
-  mpi_printf(comm, "v_i,par  = %g [c]\n", sqrt(Ti_par));
-  mpi_printf(comm, "v_e,perp = %g [c]\n", sqrt(2*Te_perp / me));
-  mpi_printf(comm, "v_e,par  = %g [c]\n", sqrt(Te_par / me));
+  mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2*Ti_perp), Ti_perp);
+  mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(Ti_par), Ti_par);
+  mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n", sqrt(2*Te_perp / me), Te_perp);
+  mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n", sqrt(Te_par / me), Te_par);
   mpi_printf(comm, "\n");
 }
 
