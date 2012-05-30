@@ -1,5 +1,6 @@
 
 #include "psc_collision_private.h"
+#include "psc_output_fields_item_private.h"
 
 #include <psc_fields_c.h>
 #include <mrc_profile.h>
@@ -277,3 +278,32 @@ struct psc_collision_ops psc_collision_c_ops = {
   .destroy               = psc_collision_c_destroy,
   .run                   = psc_collision_c_run,
 };
+
+// ======================================================================
+
+static void
+copy_stats(struct psc_output_fields_item *item, struct psc_fields *flds_base,
+	   struct psc_particles *prts, struct psc_fields *f)
+{
+  struct psc_collision *collision = ppsc->collision;
+  assert(psc_collision_ops(collision) == &psc_collision_c_ops);
+
+  struct psc_collision_c *coll = psc_collision_c(collision);
+
+  // FIXME, copy could be avoided (?)
+  for (int m = 0; m < NR_STATS; m++) {
+    psc_fields_copy_comp(f, m, psc_mfields_get_patch(coll->mflds, f->p), m);
+  }
+}
+
+// ======================================================================
+// psc_output_fields_item: subclass "coll_stats"
+
+struct psc_output_fields_item_ops psc_output_fields_item_coll_stats_ops = {
+  .name      = "coll_stats",
+  .nr_comp   = NR_STATS,
+  .fld_names = { "coll_nudt_min", "coll_nudt_med", "coll_nudt_max",
+		 "coll_nudt_large", "coll_ncoll" },
+  .run       = copy_stats,
+};
+
