@@ -22,6 +22,9 @@ psc_push_fields_sub_push_a_E(struct psc_push_fields *push, struct psc_fields *fl
 
   // E-field propagation E^(n)    , H^(n), j^(n) 
   //                  -> E^(n+0.5), H^(n), j^(n)
+  // Ex^{n}[-.5:+.5][-1:1][-1:1] -> Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
+  // using Hx^{n}[-1:1][-1.5:1.5][-1.5:1.5]
+  //       jx^{n+1}[-.5:.5][-1:1][-1:1]
 
   psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 1) {
     F3(flds, EX, ix,iy,iz) +=
@@ -64,6 +67,8 @@ psc_push_fields_sub_push_a_H(struct psc_push_fields *push, struct psc_fields *fl
 
   // B-field propagation E^(n+0.5), H^(n    ), j^(n), m^(n+0.5)
   //                  -> E^(n+0.5), H^(n+0.5), j^(n), m^(n+0.5)
+  // Hx^{n}[:][-.5:.5][-.5:.5] -> Hx^{n+.5}[:][-.5:.5][-.5:.5]
+  // using Ex^{n+.5}[-.5:+.5][-1:1][-1:1]
 
   psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 1) {
     F3(flds, HX, ix,iy,iz) -=
@@ -103,6 +108,9 @@ psc_push_fields_sub_push_b_H(struct psc_push_fields *push, struct psc_fields *fl
 
   // B-field propagation E^(n+0.5), B^(n+0.5), j^(n+1.0), m^(n+0.5)
   //                  -> E^(n+0.5), B^(n+1.0), j^(n+1.0), m^(n+0.5)
+  // Hx^{n+.5}_[:][-.5:.5][-.5:.5] -> Hx^{n+1}_[:][-.5:.5][-.5:.5]
+  // using Ex^{n+.5}_[-.5:+.5][-1:1][-1:1]
+  // actually, updating interior only would suffice, since we have to do b.c.s, anyway
 
   psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 1) {
     F3(flds, HX, ix,iy,iz) -=
@@ -142,7 +150,9 @@ psc_push_fields_sub_push_b_E(struct psc_push_fields *push, struct psc_fields *fl
 
   // E-field propagation E^(n+0.5), B^(n+1.0), j^(n+1.0) 
   //                  -> E^(n+1.0), B^(n+1.0), j^(n+1.0)
-
+  // Ex^{n+.5}[-.5:+.5][-1:1][-1:1] -> Ex^{n+1}[-.5:+.5][-1:1][-1:1]
+  // using Hx^{n+1}[-1:1][-1.5:1.5][-1.5:1.5] and
+  //       jx^{n+1}[-.5:.5][-1:1][-1:1]
   psc_foreach_3d(ppsc, flds->p, ix, iy, iz, 1, 1) {
     F3(flds, EX, ix,iy,iz) +=
       cny * (F3(flds, HZ, ix,iy,iz) - F3(flds, HZ, ix,iy-1,iz)) -
