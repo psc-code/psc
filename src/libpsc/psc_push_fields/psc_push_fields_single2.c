@@ -30,7 +30,6 @@ psc_push_fields_sub_step_a(struct psc_push_fields *push, struct psc_mfields *mfl
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, HX, HX + 3);
 }
 
 static void
