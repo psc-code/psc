@@ -3,10 +3,8 @@
 #include "psc_fields_cuda.h"
 #include "psc.h"
 
-EXTERN_C void cuda_push_fields_a_E_yz(int p, struct psc_fields *flds);
-EXTERN_C void cuda_push_fields_a_H_yz(int p, struct psc_fields *flds);
-EXTERN_C void cuda_push_fields_b_H_yz(int p, struct psc_fields *flds);
-EXTERN_C void cuda_push_fields_b_E_yz(int p, struct psc_fields *flds);
+EXTERN_C void cuda_push_fields_E_yz(int p, struct psc_fields *flds);
+EXTERN_C void cuda_push_fields_H_yz(int p, struct psc_fields *flds);
 
 // ----------------------------------------------------------------------
 // E-field propagation E^(n)    , H^(n), j^(n) 
@@ -18,7 +16,7 @@ psc_push_fields_cuda_push_a_E(struct psc_push_fields *push, struct psc_fields *f
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", JXI, HX + 3);
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_a_E_yz(flds->p, flds);
+    cuda_push_fields_E_yz(flds->p, flds);
   } else {
     assert(0);
   }
@@ -36,7 +34,7 @@ psc_push_fields_cuda_push_a_H(struct psc_push_fields *push, struct psc_fields *f
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", EX, HX + 3);
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_a_H_yz(flds->p, flds);
+    cuda_push_fields_H_yz(flds->p, flds);
   } else {
     assert(0);
   }
@@ -54,7 +52,7 @@ psc_push_fields_cuda_push_b_H(struct psc_push_fields *push, struct psc_fields *f
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", EX, HX + 3);
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_b_H_yz(flds->p, flds);
+    cuda_push_fields_H_yz(flds->p, flds);
   } else {
     assert(0);
   }
@@ -72,7 +70,7 @@ psc_push_fields_cuda_push_b_E(struct psc_push_fields *push, struct psc_fields *f
   struct psc_fields *flds = psc_fields_get_as(flds_base, "cuda", JXI, HX + 3);
 
   if (ppsc->domain.gdims[0] == 1) {
-    cuda_push_fields_b_E_yz(flds->p, flds);
+    cuda_push_fields_E_yz(flds->p, flds);
   } else {
     assert(0);
   }
