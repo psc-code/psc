@@ -32,14 +32,18 @@ psc_push_fields_sub_step_a(struct psc_push_fields *push, struct psc_mfields *mfl
 }
 
 static void
-psc_push_fields_sub_step_b(struct psc_push_fields *push, struct psc_mfields *mflds)
+psc_push_fields_sub_step_b_H(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
     psc_push_fields_sub_push_b_H(push, psc_mfields_get_patch(mflds, p));
   }
   psc_stats_stop(st_time_field);
+}
 
+static void
+psc_push_fields_sub_step_b_E(struct psc_push_fields *push, struct psc_mfields *mflds)
+{
   // add and fill ghost for J
   psc_bnd_fields_add_ghosts_J(push->bnd_fields, mflds);
   psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
@@ -63,5 +67,6 @@ psc_push_fields_sub_step_b(struct psc_push_fields *push, struct psc_mfields *mfl
 struct psc_push_fields_ops psc_push_fields_single2_ops = {
   .name                  = "single2",
   .step_a                = psc_push_fields_sub_step_a,
-  .step_b                = psc_push_fields_sub_step_b,
+  .step_b_H              = psc_push_fields_sub_step_b_H,
+  .step_b_E              = psc_push_fields_sub_step_b_E,
 };

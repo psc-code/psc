@@ -47,16 +47,19 @@ psc_push_fields_auto_step_a(struct psc_push_fields *push,
 }
 
 static void
-psc_push_fields_auto_step_b(struct psc_push_fields *push,
+psc_push_fields_auto_step_b_H(struct psc_push_fields *push,
 			    struct psc_mfields *mflds)
 {
   struct sub *sub = sub(push);
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(sub->fwd);
-  if (ops->step_b) {
-    ops->step_b(sub->fwd, mflds);
-  } else {
-    psc_push_fields_step_b(sub->fwd, mflds);
-  }
+  psc_push_fields_step_b_H(sub->fwd, mflds);
+}
+
+static void
+psc_push_fields_auto_step_b_E(struct psc_push_fields *push,
+			      struct psc_mfields *mflds)
+{
+  struct sub *sub = sub(push);
+  psc_push_fields_step_b_E(sub->fwd, mflds);
 }
 
 // ======================================================================
@@ -67,6 +70,7 @@ struct psc_push_fields_ops psc_push_fields_auto_ops = {
   .size                  = sizeof(struct sub),
   .setup                 = psc_push_fields_auto_setup,
   .step_a                = psc_push_fields_auto_step_a,
-  .step_b                = psc_push_fields_auto_step_b,
+  .step_b_H              = psc_push_fields_auto_step_b_H,
+  .step_b_E              = psc_push_fields_auto_step_b_E,
 };
 

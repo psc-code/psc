@@ -62,16 +62,30 @@ step_a(struct psc_push_fields *push, mfields_base_t *mflds)
 }
 
 static inline void
-step_b(struct psc_push_fields *push, mfields_base_t *mflds)
+step_b_H(struct psc_push_fields *push, mfields_base_t *mflds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_b", 1., 0, 0);
+    pr = prof_register("push_fields_b_H", 1., 0, 0);
   }
   
   prof_start(pr);
-  ops->step_b(push, mflds);
+  ops->step_b_H(push, mflds);
+  prof_stop(pr);
+}
+
+static inline void
+step_b_E(struct psc_push_fields *push, mfields_base_t *mflds)
+{
+  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
+  static int pr;
+  if (!pr) {
+    pr = prof_register("push_fields_b_E", 1., 0, 0);
+  }
+  
+  prof_start(pr);
+  ops->step_b_E(push, mflds);
   prof_stop(pr);
 }
 
@@ -178,31 +192,43 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 void
-psc_push_fields_step_b(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  if (ops->step_b) {
-    step_b(push, flds);
+  if (ops->step_b_H) {
+    step_b_H(push, flds);
     return;
   }
 
-  psc_bnd_fields_add_ghosts_J(push->bnd_fields, flds);
-  psc_bnd_add_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
-  psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
-  
+  if (!ppsc->domain.use_pml) {
+    psc_stats_start(st_time_field);
+    psc_push_fields_push_b_H(push, flds);
+    psc_stats_stop(st_time_field);
+  }
+}
+
+void
+psc_push_fields_step_b_E(struct psc_push_fields *push, mfields_base_t *flds)
+{
+  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
+  if (ops->step_b_E) {
+    step_b_E(push, flds);
+    return;
+  }
+
   if (ppsc->domain.use_pml) {
     assert(ops->pml_b);
     for (int p = 0; p < flds->nr_patches; p++) {
       ops->pml_b(push, psc_mfields_get_patch(flds, p));
     }
   } else {
-    psc_stats_start(st_time_field);
-    psc_push_fields_push_b_H(push, flds);
-    psc_stats_stop(st_time_field);
-
     psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
     psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
 
+    psc_bnd_fields_add_ghosts_J(push->bnd_fields, flds);
+    psc_bnd_add_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
+  
     psc_stats_start(st_time_field);
     psc_push_fields_push_b_E(push, flds);
     psc_stats_stop(st_time_field);

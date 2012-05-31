@@ -93,6 +93,7 @@ psc_step(struct psc *psc)
   
   // particle propagation n*dt -> (n+1.0)*dt
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
+  psc_push_fields_step_b_H(psc->push_fields, psc->flds);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
@@ -101,7 +102,7 @@ psc_step(struct psc *psc)
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
-  psc_push_fields_step_b(psc->push_fields, psc->flds);
+  psc_push_fields_step_b_E(psc->push_fields, psc->flds);
 }
 
 extern void dynamicwindow_timestep();

@@ -76,7 +76,8 @@ main(int argc, char **argv)
   psc_push_fields_set_type(ppsc->push_fields, "fortran");
   psc_case_setup(_case);
   setup_fields(ppsc->flds);
-  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_H(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_E(ppsc->push_fields, ppsc->flds);
   psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
@@ -84,7 +85,8 @@ main(int argc, char **argv)
   psc_push_fields_set_type(ppsc->push_fields, "c");
   psc_case_setup(_case);
   setup_fields(ppsc->flds);
-  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_H(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_E(ppsc->push_fields, ppsc->flds);
   psc_check_fields_ref(ppsc, ppsc->flds, (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
 
@@ -94,7 +96,8 @@ main(int argc, char **argv)
   psc_push_fields_set_type(ppsc->push_fields, "fortran");
   psc_case_setup(_case);
   setup_fields(ppsc->flds);
-  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_H(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_E(ppsc->push_fields, ppsc->flds);
   psc_save_fields_ref(ppsc, ppsc->flds);
   psc_case_destroy(_case);
 
@@ -102,7 +105,8 @@ main(int argc, char **argv)
   psc_push_fields_set_type(ppsc->push_fields, "c");
   psc_case_setup(_case);
   setup_fields(ppsc->flds);
-  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_H(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_E(ppsc->push_fields, ppsc->flds);
   psc_check_fields_ref(ppsc, ppsc->flds,
 		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
@@ -112,7 +116,8 @@ main(int argc, char **argv)
   psc_push_fields_set_type(ppsc->push_fields, "cbe");
   psc_case_setup(_case);
   setup_fields(ppsc->flds);
-  psc_push_fields_step_b(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_H(ppsc->push_fields, ppsc->flds);
+  psc_push_fields_step_b_E(ppsc->push_fields, ppsc->flds);
   psc_check_fields_ref(ppsc, ppsc->flds,
 		       (int []) { EX, EY, EZ, HX, HY, HZ, -1 }, 1e-7);
   psc_case_destroy(_case);
