@@ -53,8 +53,11 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
+  // FIXME, this skips check_domain() in the forwarded class
   struct sub *sub = sub(bnd);
-  psc_bnd_exchange_particles(sub->fwd, mprts);
+  struct psc_bnd_ops *ops = psc_bnd_ops(sub->fwd);
+  assert(ops->exchange_particles);
+  ops->exchange_particles(sub->fwd, mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -76,7 +79,9 @@ psc_bnd_sub_fields_add_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds,
 			      int mb, int me)
 {
   struct sub *sub = sub(bnd);
-  psc_bnd_add_ghosts(sub->fwd, mflds, mb, me);
+  struct psc_bnd_ops *ops = psc_bnd_ops(sub->fwd);
+  assert(ops->add_ghosts);
+  ops->add_ghosts(sub->fwd, mflds, mb, me);
 }
 
 // ----------------------------------------------------------------------
@@ -87,7 +92,9 @@ psc_bnd_sub_fields_fill_ghosts(struct psc_bnd *bnd, struct psc_mfields *mflds,
 			      int mb, int me)
 {
   struct sub *sub = sub(bnd);
-  psc_bnd_fill_ghosts(sub->fwd, mflds, mb, me);
+  struct psc_bnd_ops *ops = psc_bnd_ops(sub->fwd);
+  assert(ops->fill_ghosts);
+  ops->fill_ghosts(sub->fwd, mflds, mb, me);
 }
 
 // ======================================================================
