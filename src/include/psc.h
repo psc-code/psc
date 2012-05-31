@@ -108,6 +108,7 @@ struct psc_param {
   char *fields_base; ///< base type for psc_mfields ("c", "fortran", "cuda")
   char *particles_base; ///< base type for psc_mparticles ("c", "fortran", "cuda")
   unsigned int particles_base_flags; ///< additional flags for the particles base type
+  int stats_every; ///< output timing and other info every so many steps
 };
 
 /// coefficients needed for computations

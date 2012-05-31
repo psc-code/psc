@@ -139,6 +139,9 @@ static struct param psc_descr[] = {
   { "particles_base", VAR(prm.particles_base)     , PARAM_STRING("c") },
   { "particles_base_flags"
                     , VAR(prm.particles_base_flags)  , PARAM_INT(0) },
+  { "stats_every"
+                    , VAR(prm.stats_every)        , PARAM_INT(1),
+    .help = "sets every how many steps we log timing and other stats." },
   {},
 };
 

@@ -144,8 +144,10 @@ psc_integrate(struct psc *psc)
       psc_stats_val[st_nr_photons] += psc->mphotons->p[p].nr;
     }
 
-    psc_stats_log(psc);
-    print_profiling();
+    if (psc->timestep % psc->prm.stats_every == 0) {
+      psc_stats_log(psc);
+      print_profiling();
+    }
 
     if (psc->prm.wallclock_limit > 0.) {
       double wallclock_elapsed = MPI_Wtime() - psc->time_start;
