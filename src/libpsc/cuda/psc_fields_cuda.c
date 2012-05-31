@@ -7,6 +7,8 @@
 
 #include <mrc_params.h>
 
+// OPT, CUDA fields have too many ghostpoints, and 7 points in the invar direction!
+
 // ----------------------------------------------------------------------
 // macros to access C (host) versions of the fields
 
