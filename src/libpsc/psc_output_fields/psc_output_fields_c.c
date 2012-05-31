@@ -85,6 +85,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
       psc_output_fields_item_create(psc_output_fields_comm(out));
     psc_output_fields_item_set_type(item, p);
     psc_output_fields_item_set_psc_bnd(item, out_c->bnd);
+    psc_output_fields_item_setup(item);
     out_c->item[pfd->nr_flds] = item;
     mfields_c_t *flds = psc_output_fields_item_create_mfields(item);
     pfd->flds[pfd->nr_flds] = flds;
