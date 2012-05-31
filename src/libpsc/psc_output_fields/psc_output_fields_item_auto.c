@@ -56,7 +56,11 @@ what##_setup(struct psc_output_fields_item *item)			\
 									\
   const char *mprts_type = psc_mparticles_type(ppsc->particles);	\
   char s[10 + strlen(mprts_type)];					\
-  sprintf(s, #what "_%s", mprts_type);					\
+  if (strcmp(mprts_type, "cuda") == 0) {				\
+    sprintf(s, #what "_single");					\
+  } else {								\
+    sprintf(s, #what "_%s", mprts_type);				\
+  }									\
   									\
   MPI_Comm comm = psc_output_fields_item_comm(item);			\
   mpi_printf(comm, "INFO: using psc_output_fields_item '%s'\n", s);	\
