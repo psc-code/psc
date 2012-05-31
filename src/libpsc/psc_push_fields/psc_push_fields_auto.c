@@ -25,6 +25,8 @@ psc_push_fields_auto_setup(struct psc_push_fields *push)
   psc_push_fields_set_type(sub->fwd, s);
   psc_push_fields_setup(sub->fwd);
   psc_push_fields_add_child(push, (struct mrc_obj *) sub->fwd);
+
+  psc_push_fields_setup_super(push);
 }
 
 static void

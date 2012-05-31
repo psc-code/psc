@@ -7,24 +7,26 @@ struct sub {
   struct psc_bnd_fields *fwd;
 };
 
-#define sub(push) mrc_to_subobj(push, struct sub)
+#define sub(bnd) mrc_to_subobj(bnd, struct sub)
 
 static void
-psc_bnd_fields_auto_setup(struct psc_bnd_fields *push)
+psc_bnd_fields_auto_setup(struct psc_bnd_fields *bnd)
 {
-  struct sub *sub = sub(push);
+  struct sub *sub = sub(bnd);
 
   const char *mflds_type = psc_mfields_type(ppsc->flds);
   char s[10 + strlen(mflds_type)];
   sprintf(s, "%s", mflds_type);
 
-  MPI_Comm comm = psc_bnd_fields_comm(push);
+  MPI_Comm comm = psc_bnd_fields_comm(bnd);
   mpi_printf(comm, "INFO: using psc_bnd_fields '%s'\n", s);
   
   sub->fwd = psc_bnd_fields_create(comm);
   psc_bnd_fields_set_type(sub->fwd, s);
   psc_bnd_fields_setup(sub->fwd);
-  psc_bnd_fields_add_child(push, (struct mrc_obj *) sub->fwd);
+  psc_bnd_fields_add_child(bnd, (struct mrc_obj *) sub->fwd);
+
+  psc_bnd_fields_setup_super(bnd);
 }
 
 static void
