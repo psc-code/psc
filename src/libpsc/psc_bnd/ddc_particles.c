@@ -189,7 +189,7 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
     if (info[r].n_recv_entries) {
       MPI_Irecv(info[r].recv_entry,
 		sizeof(struct ddcp_recv_entry) / sizeof(int) * info[r].n_recv_entries,
-		MPI_INT, r, 0, comm, &ddcp->recv_reqs[n_recv_ranks++]);
+		MPI_INT, r, 111, comm, &ddcp->recv_reqs[n_recv_ranks++]);
     }
   }  
 
@@ -198,7 +198,7 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
     if (info[r].n_send_entries) {
       MPI_Isend(info[r].send_entry,
 		sizeof(struct ddcp_send_entry) / sizeof(int) * info[r].n_send_entries,
-		MPI_INT, r, 0, comm, &ddcp->send_reqs[n_send_ranks++]);
+		MPI_INT, r, 111, comm, &ddcp->send_reqs[n_send_ranks++]);
     }
   }  
 
@@ -306,7 +306,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
 
   for (int r = 0; r < ddcp->n_ranks; r++) {
     MPI_Irecv(cinfo[r].recv_cnts, cinfo[r].n_recv_entries,
-	      MPI_INT, cinfo[r].rank, 0, comm, &ddcp->recv_reqs[r]);
+	      MPI_INT, cinfo[r].rank, 222, comm, &ddcp->recv_reqs[r]);
   }  
 
   for (int r = 0; r < ddcp->n_ranks; r++) {
@@ -319,7 +319,7 @@ ddc_particles_comm(struct ddc_particles *ddcp, void *particles)
       cinfo[r].n_send += nei->n_send;
     }
     MPI_Isend(cinfo[r].send_cnts, cinfo[r].n_send_entries,
-	      MPI_INT, cinfo[r].rank, 0, comm, &ddcp->send_reqs[r]);
+	      MPI_INT, cinfo[r].rank, 222, comm, &ddcp->send_reqs[r]);
   }  
 
   // overlap: count local # particles
