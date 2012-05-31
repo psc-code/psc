@@ -1,6 +1,12 @@
 
 #include "psc_cuda.h"
 
+// the loops include 2 levels of ghost cells
+// they really only need -1:2 and -1:1, respectively (for 1st order)
+// but always doing 2:2 seems cheap enough
+
+#define BND 2
+
 // FIXME, merge with F3_DEV{,_YZ}, OPT (precalc offset)
 
 #define X3_DEV_OFF_YZ(fldnr, jy,jz)					\
@@ -21,8 +27,10 @@ push_fields_E_yz(real *d_flds, real dt, real cny, real cnz, int my, int mz)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my && iz < mz))
+  if (!(iy < my - 2 * (3-BND) && iz < mz - 2 * (3-BND)))
     return;
+  iy -= BND;
+  iz -= BND;
 
   F3_DEV(EX, 0,iy,iz) +=
     cny * (F3_DEV(HZ, 0,iy,iz) - F3_DEV(HZ, 0,iy-1,iz)) -
@@ -46,8 +54,10 @@ push_fields_H_yz(real *d_flds, real cny, real cnz, int my, int mz)
   int iy = blockIdx.x * blockDim.x + threadIdx.x;
   int iz = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (!(iy < my && iz < mz))
+  if (!(iy < my - 2 * (3-BND) && iz < mz - 2 * (3-BND)))
     return;
+  iy -= BND;
+  iz -= BND;
 
   F3_DEV(HX, 0,iy,iz) -=
     cny * (F3_DEV(EZ, 0,iy+1,iz) - F3_DEV(EZ, 0,iy,iz)) -
@@ -83,8 +93,8 @@ cuda_push_fields_E_yz(int p, struct psc_fields *pf)
   int mz = pf->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		      (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_E_yz, (pfc->d_flds, dt, cny, cnz, my, mz));
 }
@@ -101,8 +111,8 @@ cuda_push_fields_H_yz(int p, struct psc_fields *pf)
   int mz = pf->im[2];
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
-  int dimGrid[2]  = { (patch->ldims[1] + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
-		      (patch->ldims[2] + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
+  int dimGrid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
+		      (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
   RUN_KERNEL(dimGrid, dimBlock,
 	     push_fields_H_yz, (pfc->d_flds, cny, cnz, my, mz));
 }
