@@ -21,7 +21,6 @@ psc_push_fields_sub_step_a(struct psc_push_fields *push, struct psc_mfields *mfl
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
   
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
@@ -56,7 +55,6 @@ psc_push_fields_sub_step_b(struct psc_push_fields *push, struct psc_mfields *mfl
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, mflds);
-  psc_bnd_fill_ghosts(ppsc->bnd, mflds, EX, EX + 3);
 }
 
 // ======================================================================
