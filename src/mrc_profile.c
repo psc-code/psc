@@ -219,6 +219,9 @@ prof_print_mpi(MPI_Comm comm)
   if (rank == 0) {
     printf("%19s %10s %10s %10s\n", "", "avg", "min", "max");
     for (int pr = 0; pr < nr_prof_data; pr++) {
+      if (times_max[pr] <= 0.) {
+	continue;
+      }
       times_avg[pr] /= size;
       
       printf("%-19s %10.2f %10.2f %10.2f\n", prof_data[pr].name, times_avg[pr],
