@@ -17,7 +17,7 @@ psc_mparticles_mix_setup(struct psc_mparticles *mparticles)
 
   mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    struct psc_particles *prts = psc_particles_create(psc_mparticles_comm(mparticles));
+    struct psc_particles *prts = psc_particles_create(MPI_COMM_SELF);
     psc_particles_set_type(prts, psc_topology_get_type(ppsc, p));
     char name[20]; sprintf(name, "prts%d", p);
     psc_particles_set_name(prts, name);

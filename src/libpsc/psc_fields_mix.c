@@ -30,7 +30,7 @@ psc_mfields_mix_setup(struct psc_mfields *mflds)
 						     &mflds->nr_patches);
   mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
   for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_fields_create(psc_mfields_comm(mflds));
+    struct psc_fields *flds = psc_fields_create(MPI_COMM_SELF);
     psc_fields_set_type(flds, psc_topology_get_type(ppsc, p));
     char name[20]; sprintf(name, "flds%d", p);
     psc_fields_set_name(flds, name);
