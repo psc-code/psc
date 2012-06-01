@@ -10,33 +10,7 @@ static void
 _psc_push_fields_create(struct psc_push_fields *push)
 {
   push->bnd_fields = psc_bnd_fields_create(psc_push_fields_comm(push));
-}
-
-static void
-_psc_push_fields_set_from_options(struct psc_push_fields *push)
-{
-  psc_bnd_fields_set_from_options(push->bnd_fields);
-}
-
-static void
-_psc_push_fields_setup(struct psc_push_fields *push)
-{
-  psc_bnd_fields_setup(push->bnd_fields);
-}
-
-static void
-_psc_push_fields_view(struct psc_push_fields *push)
-{
-  psc_bnd_fields_view(push->bnd_fields);
-}
-
-static void
-_psc_push_fields_destroy(struct psc_push_fields *push)
-{
-  psc_bnd_fields_destroy(push->bnd_fields);
-  if(psc_push_fields_ops(push)->destroy) {
-    psc_push_fields_ops(push)->destroy(push);
-  }
+  psc_push_fields_add_child(push, (struct mrc_obj *) push->bnd_fields);
 }
 
 struct psc_bnd_fields *
@@ -256,9 +230,5 @@ struct mrc_class_psc_push_fields mrc_class_psc_push_fields = {
   .param_descr      = psc_push_fields_descr,
   .init             = psc_push_fields_init,
   .create           = _psc_push_fields_create,
-  .set_from_options = _psc_push_fields_set_from_options,
-  .setup            = _psc_push_fields_setup,
-  .view             = _psc_push_fields_view,
-  .destroy          = _psc_push_fields_destroy,
 };
 
