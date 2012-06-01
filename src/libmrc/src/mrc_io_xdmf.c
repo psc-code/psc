@@ -1078,7 +1078,6 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
 
-  assert(io->size == 1);
 #ifndef NDEBUG
   MPI_Barrier(io->obj.comm);
 #endif

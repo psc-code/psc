@@ -23,6 +23,8 @@ psc_mfields_mix_setup(struct psc_mfields *mflds)
     } else {
       psc_fields_set_type(flds, "cuda");
     }
+    char name[20]; sprintf(name, "flds%d", p);
+    psc_fields_set_name(flds, name);
     for (int d = 0; d < 3; d++) {
       flds->ib[d] = -mflds->ibn[d];
       flds->im[d] = patches[p].ldims[d] + 2 * mflds->ibn[d];

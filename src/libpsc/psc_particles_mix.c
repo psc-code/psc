@@ -21,6 +21,8 @@ psc_mparticles_mix_setup(struct psc_mparticles *mparticles)
     } else {
       psc_particles_set_type(prts, "cuda");
     }
+    char name[20]; sprintf(name, "prts%d", p);
+    psc_particles_set_name(prts, name);
     prts->n_part = mparticles->nr_particles_by_patch[p];
     prts->flags = mparticles->flags;
     prts->p = p;
