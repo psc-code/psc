@@ -22,6 +22,8 @@ _psc_mfields_setup(struct psc_mfields *flds)
   for (int p = 0; p < flds->nr_patches; p++) {
     struct psc_fields *pf = psc_fields_create(psc_mfields_comm(flds));
     psc_fields_set_type(pf, ops->name);
+    char name[20]; sprintf(name, "flds%d", p);
+    psc_fields_set_name(pf, name);
     for (int d = 0; d < 3; d++) {
       pf->ib[d] = -flds->ibn[d];
       pf->im[d] = patches[p].ldims[d] + 2 * flds->ibn[d];

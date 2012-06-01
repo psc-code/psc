@@ -120,7 +120,6 @@ psc_fields_single_copy_to_c(struct psc_fields *flds_single, struct psc_fields *f
 }
 
 // ======================================================================
-// psc_mfields_c
 
 #ifdef HAVE_LIBHDF5_HL
 
@@ -135,102 +134,106 @@ psc_fields_single_copy_to_c(struct psc_fields *flds_single, struct psc_fields *f
 #define H5_CHK(ierr) assert(ierr >= 0)
 #define CE assert(ierr == 0)
 
+// ----------------------------------------------------------------------
+// psc_fields_single_write
+
 static void
-_psc_mfields_single_write(mfields_single_t *mfields, struct mrc_io *io)
+psc_fields_single_write(struct psc_fields *flds, struct mrc_io *io)
 {
   int ierr;
-  const char *path = psc_mfields_name(mfields);
-  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mfields->domain);
-  mrc_io_write_attr_int(io, path, "nr_patches", mfields->nr_patches);
-
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  for (int m = 0; m < mfields->nr_fields; m++) {
-    char namec[10]; sprintf(namec, "m%d", m);
-    const char *s = psc_mfields_comp_name(mfields, m);
-    if (!s) {
-      s = "(null)";
-    }
-    ierr = H5LTset_attribute_string(group, ".", namec, s); CE;
-  }
-  for (int p = 0; p < mfields->nr_patches; p++) {
-    struct psc_fields *fields = psc_mfields_get_patch(mfields, p);
-    char name[10]; sprintf(name, "p%d", p);
-
-    hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
-			     H5P_DEFAULT); H5_CHK(groupp);
-    ierr = H5LTset_attribute_int(groupp, ".", "ib", fields->ib, 3); CE;
-    ierr = H5LTset_attribute_int(groupp, ".", "im", fields->im, 3); CE;
-    ierr = H5LTset_attribute_int(groupp, ".", "nr_comp", &fields->nr_comp, 1); CE;
-    // write components separately instead?
-    hsize_t hdims[4] = { fields->nr_comp, fields->im[2], fields->im[1], fields->im[0] };
-    ierr = H5LTmake_dataset_float(groupp, "fields_single", 4, hdims, fields->data); CE;
-    ierr = H5Gclose(groupp); CE;
-  }
-
+  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  ierr = H5LTset_attribute_int(group, ".", "p", &flds->p, 1); CE;
+  ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
+  ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
+  ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds->nr_comp, 1); CE;
+  // write components separately instead?
+  hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
+  ierr = H5LTmake_dataset_float(group, "fields_single", 4, hdims, flds->data); CE;
   ierr = H5Gclose(group); CE;
 }
 
+// ----------------------------------------------------------------------
+// psc_fields_single_read
+
 static void
-_psc_mfields_single_read(mfields_single_t *mfields, struct mrc_io *io)
+psc_fields_single_read(struct psc_fields *flds, struct mrc_io *io)
 {
   int ierr;
-  const char *path = psc_mfields_name(mfields);
-  mfields->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
-  mrc_io_read_attr_int(io, path, "nr_patches", &mfields->nr_patches);
-  psc_mfields_setup(mfields);
-
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
-  for (int m = 0; m < mfields->nr_fields; m++) {
-    char namec[10]; sprintf(namec, "m%d", m);
-    
-    hsize_t dims;
-    H5T_class_t class;
-    size_t sz;
-    ierr = H5LTget_attribute_info(group, ".", namec, &dims, &class, &sz); CE;
-    char *s = malloc(sz);
-    ierr = H5LTget_attribute_string(group, ".", namec, s); CE;
-    if (strcmp(s, "(null)") != 0) {
-      psc_mfields_set_comp_name(mfields, m, s);
-    }
+  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  int ib[3], im[3], nr_comp;
+  ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
+  ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
+  ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
+  ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
+  for (int d = 0; d < 3; d++) {
+    assert(ib[d] == flds->ib[d]);
+    assert(im[d] == flds->im[d]);
   }
-
-  for (int p = 0; p < mfields->nr_patches; p++) {
-    struct psc_fields *fields = psc_mfields_get_patch(mfields, p);
-    char name[10]; sprintf(name, "p%d", p);
-
-    hid_t groupp = H5Gopen(group, name, H5P_DEFAULT); H5_CHK(groupp);
-    int ib[3], im[3], nr_comp;
-    ierr = H5LTget_attribute_int(groupp, ".", "ib", ib); CE;
-    ierr = H5LTget_attribute_int(groupp, ".", "im", im); CE;
-    ierr = H5LTget_attribute_int(groupp, ".", "nr_comp", &nr_comp); CE;
-    for (int d = 0; d < 3; d++) {
-      assert(ib[d] == fields->ib[d]);
-      assert(im[d] == fields->im[d]);
-    }
-    assert(nr_comp == fields->nr_comp);
-    ierr = H5LTread_dataset_float(groupp, "fields_single", fields->data); CE;
-    ierr = H5Gclose(groupp); CE;
-  }
-
+  assert(nr_comp == flds->nr_comp);
+  psc_fields_setup(flds);
+  ierr = H5LTread_dataset_float(group, "fields_single", flds->data); CE;
   ierr = H5Gclose(group); CE;
 }
 
 #endif
 
 // ======================================================================
+// psc_mfields_single
+
+static void
+_psc_mfields_single_write(mfields_single_t *mfields, struct mrc_io *io)
+{
+  const char *path = psc_mfields_name(mfields);
+  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mfields->domain);
+  mrc_io_write_attr_int(io, path, "nr_patches", mfields->nr_patches);
+  for (int m = 0; m < mfields->nr_fields; m++) {
+    char name[20]; sprintf(name, "comp_name_%d", m);
+    mrc_io_write_attr_string(io, path, name, psc_mfields_comp_name(mfields, m));
+  }
+
+  for (int p = 0; p < mfields->nr_patches; p++) {
+    psc_fields_write(mfields->flds[p], io);
+  }
+}
+
+static void
+_psc_mfields_single_read(mfields_single_t *mfields, struct mrc_io *io)
+{
+  const char *path = psc_mfields_name(mfields);
+  mfields->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mrc_io_read_attr_int(io, path, "nr_patches", &mfields->nr_patches);
+
+  mfields->comp_name = calloc(mfields->nr_fields, sizeof(*mfields->comp_name));
+  for (int m = 0; m < mfields->nr_fields; m++) {
+    char name[20]; sprintf(name, "comp_name_%d", m);
+    char *s;
+    mrc_io_read_attr_string(io, path, name, &s);
+    if (s) {
+      psc_mfields_set_comp_name(mfields, m, s);
+    }
+  }
+
+  mfields->flds = calloc(mfields->nr_patches, sizeof(*mfields->flds));
+  for (int p = 0; p < mfields->nr_patches; p++) {
+    char name[20]; sprintf(name, "flds%d", p);
+    mfields->flds[p] = psc_fields_read(io, name);
+  }
+
+  // FIXME mark as set up?
+}
+
+// ======================================================================
 // psc_mfields: subclass "single"
   
 struct psc_mfields_ops psc_mfields_single_ops = {
   .name                  = "single",
-#ifdef HAVE_LIBHDF5_HL
   .write                 = _psc_mfields_single_write,
   .read                  = _psc_mfields_single_read,
-#endif
 };
 
 // ======================================================================
@@ -247,6 +250,10 @@ struct psc_fields_ops psc_fields_single_ops = {
   .methods               = psc_fields_single_methods,
   .setup                 = psc_fields_single_setup,
   .destroy               = psc_fields_single_destroy,
+#ifdef HAVE_LIBHDF5_HL
+  .write                 = psc_fields_single_write,
+  .read                  = psc_fields_single_read,
+#endif
   .zero_comp             = psc_fields_single_zero_comp,
   .set_comp              = psc_fields_single_set_comp,
   .scale_comp            = psc_fields_single_scale_comp,
