@@ -6,6 +6,8 @@
 #include "psc_particles_single.h"
 #include "psc_push_particles.h"
 
+#include <mrc_io.h>
+
 EXTERN_C void cuda_init(int rank);
 
 // ======================================================================
@@ -82,6 +84,90 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
   __particles_cuda_free(prts);
   cell_map_free(&cuda->map);
 }
+
+#ifdef HAVE_LIBHDF5_HL
+
+// FIXME. This is a rather bad break of proper layering, HDF5 should be all
+// mrc_io business. OTOH, it could be called flexibility...
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
+
+#define H5_CHK(ierr) assert(ierr >= 0)
+#define CE assert(ierr == 0)
+
+// ----------------------------------------------------------------------
+// psc_particles_cuda_write
+
+static void
+psc_particles_cuda_write(struct psc_particles *prts, struct mrc_io *io)
+{
+  int ierr;
+  assert(sizeof(particle_cuda_real_t) == sizeof(float));
+
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, psc_particles_name(prts), H5P_DEFAULT); H5_CHK(group);
+  // save/restore n_alloced, too?
+  ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
+  ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
+  ierr = H5LTset_attribute_uint(group, ".", "flags", &prts->flags, 1); CE;
+  if (prts->n_part > 0) {
+    float4 *xi4  = calloc(prts->n_part, sizeof(float4));
+    float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  
+    __particles_cuda_from_device(prts, xi4, pxi4);
+  
+    hsize_t hdims[2] = { prts->n_part, 4 };
+    ierr = H5LTmake_dataset_float(group, "xi4", 2, hdims, (float *) xi4); CE;
+    ierr = H5LTmake_dataset_float(group, "pxi4", 2, hdims, (float *) pxi4); CE;
+
+    free(xi4);
+    free(pxi4);
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
+// psc_particles_cuda_read
+
+static void
+psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
+{
+  int ierr;
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+
+  hid_t group = H5Gopen(h5_file, psc_particles_name(prts), H5P_DEFAULT); H5_CHK(group);
+  ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
+  ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
+  ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
+  psc_particles_setup(prts);
+  if (prts->n_part > 0) {
+    float4 *xi4  = calloc(prts->n_part, sizeof(float4));
+    float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
+  
+    ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
+    ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
+
+    __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL, NULL);
+
+    // to restore offsets etc.
+    if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
+      cuda_sort_patch(prts->p, prts);
+    }
+    if (prts->flags & MP_NEED_CELL_OFFSETS) {
+      cuda_sort_patch_by_cell(prts->p, prts);
+    }
+
+    free(xi4);
+    free(pxi4);
+  }
+  ierr = H5Gclose(group); CE;
+}
+
+#endif
 
 // FIXME, should go away and always be done within cuda for consistency
 
@@ -481,4 +567,8 @@ struct psc_particles_ops psc_particles_cuda_ops = {
   .methods                 = psc_particles_cuda_methods,
   .setup                   = psc_particles_cuda_setup,
   .destroy                 = psc_particles_cuda_destroy,
+#ifdef HAVE_LIBHDF5_HL
+  .read                    = psc_particles_cuda_read,
+  .write                   = psc_particles_cuda_write,
+#endif
 };
