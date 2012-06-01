@@ -130,8 +130,8 @@ psc_photon_test_step(struct psc *psc)
   psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt
-  psc_push_fields_step_b_H(psc->push_fields, psc->flds);
-  psc_push_fields_step_b_E(psc->push_fields, psc->flds);
+  psc_push_fields_step_b1(psc->push_fields, psc->flds);
+  psc_push_fields_step_b2(psc->push_fields, psc->flds);
 }
 
 // ======================================================================
