@@ -16,7 +16,7 @@ psc_push_fields_sub_step_a(struct psc_push_fields *push, struct psc_mfields *mfl
 {
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_push_fields_sub_push_a_E(push, psc_mfields_get_patch(mflds, p));
+    psc_push_fields_sub_push_E(push, psc_mfields_get_patch(mflds, p));
   }
   psc_stats_stop(st_time_field);
   
@@ -24,7 +24,7 @@ psc_push_fields_sub_step_a(struct psc_push_fields *push, struct psc_mfields *mfl
   
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_push_fields_sub_push_a_H(push, psc_mfields_get_patch(mflds, p));
+    psc_push_fields_sub_push_H(push, psc_mfields_get_patch(mflds, p));
   }
   psc_stats_stop(st_time_field);
   
@@ -36,7 +36,7 @@ psc_push_fields_sub_step_b_H(struct psc_push_fields *push, struct psc_mfields *m
 {
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_push_fields_sub_push_b_H(push, psc_mfields_get_patch(mflds, p));
+    psc_push_fields_sub_push_H(push, psc_mfields_get_patch(mflds, p));
   }
   psc_stats_stop(st_time_field);
 }
@@ -54,7 +54,7 @@ psc_push_fields_sub_step_b_E(struct psc_push_fields *push, struct psc_mfields *m
   
   psc_stats_start(st_time_field);
   for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_push_fields_sub_push_b_E(push, psc_mfields_get_patch(mflds, p));
+    psc_push_fields_sub_push_E(push, psc_mfields_get_patch(mflds, p));
   }
   psc_stats_stop(st_time_field);
   
