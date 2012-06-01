@@ -30,32 +30,23 @@ psc_push_fields_auto_setup(struct psc_push_fields *push)
 }
 
 static void
-psc_push_fields_auto_step_a(struct psc_push_fields *push,
-			    struct psc_mfields *mflds)
+psc_push_fields_auto_push_E(struct psc_push_fields *push,
+			    struct psc_fields *flds)
 {
   struct sub *sub = sub(push);
   struct psc_push_fields_ops *ops = psc_push_fields_ops(sub->fwd);
-  if (ops->step_a) {
-    ops->step_a(sub->fwd, mflds);
-  } else {
-    psc_push_fields_step_a(sub->fwd, mflds);
-  }
+  assert(ops->push_E);
+  ops->push_E(sub->fwd, flds);
 }
 
 static void
-psc_push_fields_auto_step_b_H(struct psc_push_fields *push,
-			    struct psc_mfields *mflds)
+psc_push_fields_auto_push_H(struct psc_push_fields *push,
+			    struct psc_fields *flds)
 {
   struct sub *sub = sub(push);
-  psc_push_fields_step_b_H(sub->fwd, mflds);
-}
-
-static void
-psc_push_fields_auto_step_b_E(struct psc_push_fields *push,
-			      struct psc_mfields *mflds)
-{
-  struct sub *sub = sub(push);
-  psc_push_fields_step_b_E(sub->fwd, mflds);
+  struct psc_push_fields_ops *ops = psc_push_fields_ops(sub->fwd);
+  assert(ops->push_H);
+  ops->push_H(sub->fwd, flds);
 }
 
 // ======================================================================
@@ -65,8 +56,7 @@ struct psc_push_fields_ops psc_push_fields_auto_ops = {
   .name                  = "auto",
   .size                  = sizeof(struct sub),
   .setup                 = psc_push_fields_auto_setup,
-  .step_a                = psc_push_fields_auto_step_a,
-  .step_b_H              = psc_push_fields_auto_step_b_H,
-  .step_b_E              = psc_push_fields_auto_step_b_E,
+  .push_E                = psc_push_fields_auto_push_E,
+  .push_H                = psc_push_fields_auto_push_H,
 };
 

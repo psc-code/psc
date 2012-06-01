@@ -49,48 +49,6 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 // forward to subclass
 
 static void
-step_a(struct psc_push_fields *push, mfields_base_t *mflds)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_a", 1., 0, 0);
-  }
-  
-  prof_start(pr);
-  ops->step_a(push, mflds);
-  prof_stop(pr);
-}
-
-static void
-step_b_H(struct psc_push_fields *push, mfields_base_t *mflds)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_b_H", 1., 0, 0);
-  }
-  
-  prof_start(pr);
-  ops->step_b_H(push, mflds);
-  prof_stop(pr);
-}
-
-static void
-step_b_E(struct psc_push_fields *push, mfields_base_t *mflds)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_b_E", 1., 0, 0);
-  }
-  
-  prof_start(pr);
-  ops->step_b_E(push, mflds);
-  prof_stop(pr);
-}
-
-static void
 psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -209,12 +167,6 @@ psc_push_fields_step_b_E_opt(struct psc_push_fields *push, struct psc_mfields *m
 void
 psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  if (ops->step_a) {
-    step_a(push, flds);
-    return;
-  }
-
   if (ppsc->domain.use_pml) {
     // FIXME, pml routines sehould be split into E, H push + ghost points, too
     // pml could become a separate push_fields subclass
@@ -235,12 +187,6 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 void
 psc_push_fields_step_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  if (ops->step_b_H) {
-    step_b_H(push, flds);
-    return;
-  }
-
   if (ppsc->domain.use_pml) {
   } else if (push->variant == 0) {
     psc_push_fields_step_b_H_default(push, flds);
@@ -254,13 +200,8 @@ psc_push_fields_step_b_H(struct psc_push_fields *push, mfields_base_t *flds)
 void
 psc_push_fields_step_b_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  if (ops->step_b_E) {
-    step_b_E(push, flds);
-    return;
-  }
-
   if (ppsc->domain.use_pml) {
+    struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
     assert(ops->pml_b);
     for (int p = 0; p < flds->nr_patches; p++) {
       ops->pml_b(push, psc_mfields_get_patch(flds, p));
