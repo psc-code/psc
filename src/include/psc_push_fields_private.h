@@ -6,6 +6,7 @@
 
 struct psc_push_fields {
   struct mrc_obj obj;
+  int variant; ///< 0: default, 1: optimized version with fewer fill_ghosts()
   struct psc_bnd_fields *bnd_fields;
 };
 

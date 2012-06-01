@@ -1,7 +1,6 @@
 #ifndef PSC_PUSH_FIELDS_H
 #define PSC_PUSH_FIELDS_H
 
-
 #include <mrc_obj.h>
 
 #include "psc.h"
