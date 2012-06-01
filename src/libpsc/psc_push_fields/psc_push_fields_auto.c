@@ -1,5 +1,6 @@
 
 #include "psc_push_fields_private.h"
+#include "psc_bnd_fields_private.h"
 
 #include <string.h>
 
@@ -26,7 +27,9 @@ psc_push_fields_auto_setup(struct psc_push_fields *push)
   psc_push_fields_setup(sub->fwd);
   psc_push_fields_add_child(push, (struct mrc_obj *) sub->fwd);
 
-  psc_push_fields_setup_super(push);
+  list_del(&push->bnd_fields->obj.child_entry);
+  psc_bnd_fields_destroy(push->bnd_fields);
+  push->bnd_fields = sub->fwd->bnd_fields;
 }
 
 static void
