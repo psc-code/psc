@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+const char *psc_topology_get_type(struct psc *psc, int p);
+
 // ----------------------------------------------------------------------
 // psc_mparticles_mix_setup
 
@@ -16,11 +18,7 @@ psc_mparticles_mix_setup(struct psc_mparticles *mparticles)
   mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     struct psc_particles *prts = psc_particles_create(psc_mparticles_comm(mparticles));
-    if ((p & 1) == 0) {
-      psc_particles_set_type(prts, "single");
-    } else {
-      psc_particles_set_type(prts, "cuda");
-    }
+    psc_particles_set_type(prts, psc_topology_get_type(ppsc, p));
     char name[20]; sprintf(name, "prts%d", p);
     psc_particles_set_name(prts, name);
     prts->n_part = mparticles->nr_particles_by_patch[p];

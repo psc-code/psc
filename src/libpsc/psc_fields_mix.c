@@ -5,6 +5,19 @@
 #include <stdlib.h>
 #include <assert.h>
 
+const char *
+psc_topology_get_type(struct psc *psc, int p)
+{
+  int rank;
+  MPI_Comm_rank(psc_comm(psc), &rank);
+  
+  if (rank % 16 == 0) {
+    return "cuda";
+  } else {
+    return "single";
+  }
+}
+
 // ----------------------------------------------------------------------
 // psc_mfields_mix_setup
 
@@ -18,11 +31,7 @@ psc_mfields_mix_setup(struct psc_mfields *mflds)
   mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_fields_create(psc_mfields_comm(mflds));
-    if ((p & 1) == 0) {
-      psc_fields_set_type(flds, "single");
-    } else {
-      psc_fields_set_type(flds, "cuda");
-    }
+    psc_fields_set_type(flds, psc_topology_get_type(ppsc, p));
     char name[20]; sprintf(name, "flds%d", p);
     psc_fields_set_name(flds, name);
     for (int d = 0; d < 3; d++) {
