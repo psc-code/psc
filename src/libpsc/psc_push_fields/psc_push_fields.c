@@ -104,12 +104,12 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
 }
 
 static void
-psc_push_fields_step_b_H_default(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b1_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
 }
 
 static void
-psc_push_fields_step_b_E_default(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b2_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
   psc_push_fields_push_H(push, flds);
   psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, flds);
@@ -141,13 +141,13 @@ psc_push_fields_step_a_opt(struct psc_push_fields *push, struct psc_mfields *mfl
 }
 
 static void
-psc_push_fields_step_b_H_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
+psc_push_fields_step_b1_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   psc_push_fields_push_H(push, mflds);
 }
 
 static void
-psc_push_fields_step_b_E_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
+psc_push_fields_step_b2_opt(struct psc_push_fields *push, struct psc_mfields *mflds)
 {
   // fill ghosts for H
   psc_bnd_fields_fill_ghosts_b_H(push->bnd_fields, mflds);
@@ -185,20 +185,20 @@ psc_push_fields_step_a(struct psc_push_fields *push, mfields_base_t *flds)
 }
 
 void
-psc_push_fields_step_b_H(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b1(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (ppsc->domain.use_pml) {
   } else if (push->variant == 0) {
-    psc_push_fields_step_b_H_default(push, flds);
+    psc_push_fields_step_b1_default(push, flds);
   } else if (push->variant == 1) {
-    psc_push_fields_step_b_H_opt(push, flds);
+    psc_push_fields_step_b1_opt(push, flds);
   } else {
     assert(0);
   }
 }
 
 void
-psc_push_fields_step_b_E(struct psc_push_fields *push, mfields_base_t *flds)
+psc_push_fields_step_b2(struct psc_push_fields *push, mfields_base_t *flds)
 {
   if (ppsc->domain.use_pml) {
     struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -207,9 +207,9 @@ psc_push_fields_step_b_E(struct psc_push_fields *push, mfields_base_t *flds)
       ops->pml_b(push, psc_mfields_get_patch(flds, p));
     }
   } else if (push->variant == 0) {
-    psc_push_fields_step_b_E_default(push, flds);
+    psc_push_fields_step_b2_default(push, flds);
   } else if (push->variant == 1) {
-    psc_push_fields_step_b_E_opt(push, flds);
+    psc_push_fields_step_b2_opt(push, flds);
   } else {
     assert(0);
   }
