@@ -2,6 +2,7 @@
 #include "psc_push_fields_private.h"
 #include "psc_fields_cuda.h"
 #include "psc.h"
+#include "psc_bnd.h"
 #include "psc_bnd_fields.h"
 
 EXTERN_C void cuda_push_fields_E_yz(int p, struct psc_fields *flds);

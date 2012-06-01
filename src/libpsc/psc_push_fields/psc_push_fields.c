@@ -47,7 +47,7 @@ psc_push_fields_get_bnd_fields(struct psc_push_fields *push)
 // ======================================================================
 // forward to subclass
 
-static inline void
+static void
 step_a(struct psc_push_fields *push, mfields_base_t *mflds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -61,7 +61,7 @@ step_a(struct psc_push_fields *push, mfields_base_t *mflds)
   prof_stop(pr);
 }
 
-static inline void
+static void
 step_b_H(struct psc_push_fields *push, mfields_base_t *mflds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -75,7 +75,7 @@ step_b_H(struct psc_push_fields *push, mfields_base_t *mflds)
   prof_stop(pr);
 }
 
-static inline void
+static void
 step_b_E(struct psc_push_fields *push, mfields_base_t *mflds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
@@ -89,70 +89,36 @@ step_b_E(struct psc_push_fields *push, mfields_base_t *mflds)
   prof_stop(pr);
 }
 
-static inline void
-psc_push_fields_push_a_E(struct psc_push_fields *push, mfields_base_t *flds)
+static void
+psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_a_E", 1., 0, 0);
+    pr = prof_register("push_fields_E", 1., 0, 0);
   }
-  assert(ops->push_a_E);
+  assert(ops->push_E);
   
   prof_start(pr);
   for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_a_E(push, psc_mfields_get_patch(flds, p));
+    ops->push_E(push, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
 }
 
-static inline void
-psc_push_fields_push_a_H(struct psc_push_fields *push, mfields_base_t *flds)
+static void
+psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
 {
   struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
   static int pr;
   if (!pr) {
-    pr = prof_register("push_fields_a_H", 1., 0, 0);
+    pr = prof_register("push_fields_H", 1., 0, 0);
   }
-  assert(ops->push_a_H);
+  assert(ops->push_H);
   
   prof_start(pr);
   for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_a_H(push, psc_mfields_get_patch(flds, p));
-  }
-  prof_stop(pr);
-}
-
-static inline void
-psc_push_fields_push_b_E(struct psc_push_fields *push, mfields_base_t *flds)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_b_E", 1., 0, 0);
-  }
-  assert(ops->push_b_E);
-  
-  prof_start(pr);
-  for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_b_E(push, psc_mfields_get_patch(flds, p));
-  }
-  prof_stop(pr);
-}
-
-static inline void
-psc_push_fields_push_b_H(struct psc_push_fields *push, mfields_base_t *flds)
-{
-  struct psc_push_fields_ops *ops = psc_push_fields_ops(push);
-  static int pr;
-  if (!pr) {
-    pr = prof_register("push_fields_b_H", 1., 0, 0);
-  }
-  assert(ops->push_b_H);
-  
-  prof_start(pr);
-  for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_b_H(push, psc_mfields_get_patch(flds, p));
+    ops->push_H(push, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
 }
@@ -163,14 +129,14 @@ static void
 psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
   psc_stats_start(st_time_field);
-  psc_push_fields_push_a_E(push, flds);
+  psc_push_fields_push_E(push, flds);
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   
   psc_stats_start(st_time_field);
-  psc_push_fields_push_a_H(push, flds);
+  psc_push_fields_push_H(push, flds);
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
@@ -181,7 +147,7 @@ static void
 psc_push_fields_step_b_H_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
   psc_stats_start(st_time_field);
-  psc_push_fields_push_b_H(push, flds);
+  psc_push_fields_push_H(push, flds);
   psc_stats_stop(st_time_field);
 }
 
@@ -196,7 +162,7 @@ psc_push_fields_step_b_E_default(struct psc_push_fields *push, mfields_base_t *f
   psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
   
   psc_stats_start(st_time_field);
-  psc_push_fields_push_b_E(push, flds);
+  psc_push_fields_push_E(push, flds);
   psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, flds);

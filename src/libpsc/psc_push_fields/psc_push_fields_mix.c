@@ -19,35 +19,19 @@ get_ops(struct psc_fields *flds)
 // ----------------------------------------------------------------------
 
 static void
-psc_push_fields_mix_push_a_E(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_mix_push_E(struct psc_push_fields *push, struct psc_fields *flds)
 {
   struct psc_push_fields_ops *ops = get_ops(flds);
-  assert(ops->push_a_E);
-  ops->push_a_E(push, flds);
+  assert(ops->push_E);
+  ops->push_E(push, flds);
 }
 
 static void
-psc_push_fields_mix_push_a_H(struct psc_push_fields *push, struct psc_fields *flds)
+psc_push_fields_mix_push_H(struct psc_push_fields *push, struct psc_fields *flds)
 {
   struct psc_push_fields_ops *ops = get_ops(flds);
-  assert(ops->push_a_H);
-  ops->push_a_H(push, flds);
-}
-
-static void
-psc_push_fields_mix_push_b_H(struct psc_push_fields *push, struct psc_fields *flds)
-{
-  struct psc_push_fields_ops *ops = get_ops(flds);
-  assert(ops->push_b_H);
-  ops->push_b_H(push, flds);
-}
-
-static void
-psc_push_fields_mix_push_b_E(struct psc_push_fields *push, struct psc_fields *flds)
-{
-  struct psc_push_fields_ops *ops = get_ops(flds);
-  assert(ops->push_b_E);
-  ops->push_b_E(push, flds);
+  assert(ops->push_H);
+  ops->push_H(push, flds);
 }
 
 // ======================================================================
@@ -55,8 +39,6 @@ psc_push_fields_mix_push_b_E(struct psc_push_fields *push, struct psc_fields *fl
 
 struct psc_push_fields_ops psc_push_fields_mix_ops = {
   .name                  = "mix",
-  .push_a_E              = psc_push_fields_mix_push_a_E,
-  .push_a_H              = psc_push_fields_mix_push_a_H,
-  .push_b_H              = psc_push_fields_mix_push_b_H,
-  .push_b_E              = psc_push_fields_mix_push_b_E,
+  .push_E                = psc_push_fields_mix_push_E,
+  .push_H                = psc_push_fields_mix_push_H,
 };
