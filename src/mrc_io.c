@@ -401,6 +401,17 @@ mrc_io_read_attr_int(struct mrc_io *io, const char *path, const char *name,
 }
 
 void
+mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name,
+			double *val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops->read_attr);
+  union param_u u;
+  ops->read_attr(io, path, PT_DOUBLE, name, &u);
+  *val = u.u_double;
+}
+
+void
 mrc_io_read_attr_string(struct mrc_io *io, const char *path, const char *name,
 			char **val)
 {
@@ -454,6 +465,17 @@ mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
   if (ops->write_attr) {
     union param_u u = { .u_string = val };
     ops->write_attr(io, path, PT_STRING, name, &u);
+  }
+}
+
+void
+mrc_io_write_attr_double(struct mrc_io *io, const char *path, const char *name,
+			 double val)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  if (ops->write_attr) {
+    union param_u u = { .u_double = val };
+    ops->write_attr(io, path, PT_DOUBLE, name, &u);
   }
 }
 
