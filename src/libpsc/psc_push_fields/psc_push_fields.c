@@ -99,11 +99,13 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
   }
   assert(ops->push_E);
   
+  psc_stats_start(st_time_field);
   prof_start(pr);
   for (int p = 0; p < flds->nr_patches; p++) {
     ops->push_E(push, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
+  psc_stats_start(st_time_field);
 }
 
 static void
@@ -116,11 +118,13 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
   }
   assert(ops->push_H);
   
+  psc_stats_start(st_time_field);
   prof_start(pr);
   for (int p = 0; p < flds->nr_patches; p++) {
     ops->push_H(push, psc_mfields_get_patch(flds, p));
   }
   prof_stop(pr);
+  psc_stats_start(st_time_field);
 }
 
 // ----------------------------------------------------------------------
@@ -128,16 +132,12 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
 static void
 psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  psc_stats_start(st_time_field);
   psc_push_fields_push_E(push, flds);
-  psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
   
-  psc_stats_start(st_time_field);
   psc_push_fields_push_H(push, flds);
-  psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_a_H(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, HX, HX + 3);
@@ -146,9 +146,7 @@ psc_push_fields_step_a_default(struct psc_push_fields *push, mfields_base_t *fld
 static void
 psc_push_fields_step_b_H_default(struct psc_push_fields *push, mfields_base_t *flds)
 {
-  psc_stats_start(st_time_field);
   psc_push_fields_push_H(push, flds);
-  psc_stats_stop(st_time_field);
 }
 
 static void
@@ -161,9 +159,7 @@ psc_push_fields_step_b_E_default(struct psc_push_fields *push, mfields_base_t *f
   psc_bnd_add_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, JXI, JXI + 3);
   
-  psc_stats_start(st_time_field);
   psc_push_fields_push_E(push, flds);
-  psc_stats_stop(st_time_field);
   
   psc_bnd_fields_fill_ghosts_b_E(push->bnd_fields, flds);
   psc_bnd_fill_ghosts(ppsc->bnd, flds, EX, EX + 3);
