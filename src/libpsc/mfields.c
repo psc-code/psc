@@ -3,6 +3,7 @@
 
 #include <mrc_params.h>
 #include <mrc_profile.h>
+#include <mrc_io.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -53,6 +54,49 @@ _psc_mfields_destroy(struct psc_mfields *flds)
     free(flds->comp_name[m]);
   }
   free(flds->comp_name);
+}
+
+static void
+_psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  const char *path = psc_mfields_name(mflds);
+  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mflds->domain);
+  mrc_io_write_attr_int(io, path, "nr_patches", mflds->nr_patches);
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    char name[20]; sprintf(name, "comp_name_%d", m);
+    mrc_io_write_attr_string(io, path, name, psc_mfields_comp_name(mflds, m));
+  }
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_write(mflds->flds[p], io);
+  }
+}
+
+static void
+_psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  const char *path = psc_mfields_name(mflds);
+  mflds->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mrc_io_read_attr_int(io, path, "nr_patches", &mflds->nr_patches);
+
+  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    char name[20]; sprintf(name, "comp_name_%d", m);
+    char *s;
+    mrc_io_read_attr_string(io, path, name, &s);
+    if (s) {
+      psc_mfields_set_comp_name(mflds, m, s);
+    }
+  }
+
+  mflds->flds = calloc(mflds->nr_patches, sizeof(*mflds->flds));
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    char name[20]; sprintf(name, "flds%d", p);
+    mflds->flds[p] = psc_fields_read(io, name);
+  }
+
+  // FIXME mark as set up?
 }
 
 void
@@ -313,5 +357,7 @@ struct mrc_class_psc_mfields mrc_class_psc_mfields = {
   .param_descr      = psc_mfields_descr,
   .setup            = _psc_mfields_setup,
   .destroy          = _psc_mfields_destroy,
+  .read             = _psc_mfields_read,
+  .write            = _psc_mfields_write,
 };
 

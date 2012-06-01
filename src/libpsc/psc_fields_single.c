@@ -182,58 +182,10 @@ psc_fields_single_read(struct psc_fields *flds, struct mrc_io *io)
 #endif
 
 // ======================================================================
-// psc_mfields_single
-
-static void
-_psc_mfields_single_write(mfields_single_t *mfields, struct mrc_io *io)
-{
-  const char *path = psc_mfields_name(mfields);
-  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mfields->domain);
-  mrc_io_write_attr_int(io, path, "nr_patches", mfields->nr_patches);
-  for (int m = 0; m < mfields->nr_fields; m++) {
-    char name[20]; sprintf(name, "comp_name_%d", m);
-    mrc_io_write_attr_string(io, path, name, psc_mfields_comp_name(mfields, m));
-  }
-
-  for (int p = 0; p < mfields->nr_patches; p++) {
-    psc_fields_write(mfields->flds[p], io);
-  }
-}
-
-static void
-_psc_mfields_single_read(mfields_single_t *mfields, struct mrc_io *io)
-{
-  const char *path = psc_mfields_name(mfields);
-  mfields->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
-  mrc_io_read_attr_int(io, path, "nr_patches", &mfields->nr_patches);
-
-  mfields->comp_name = calloc(mfields->nr_fields, sizeof(*mfields->comp_name));
-  for (int m = 0; m < mfields->nr_fields; m++) {
-    char name[20]; sprintf(name, "comp_name_%d", m);
-    char *s;
-    mrc_io_read_attr_string(io, path, name, &s);
-    if (s) {
-      psc_mfields_set_comp_name(mfields, m, s);
-    }
-  }
-
-  mfields->flds = calloc(mfields->nr_patches, sizeof(*mfields->flds));
-  for (int p = 0; p < mfields->nr_patches; p++) {
-    char name[20]; sprintf(name, "flds%d", p);
-    mfields->flds[p] = psc_fields_read(io, name);
-  }
-
-  // FIXME mark as set up?
-}
-
-// ======================================================================
 // psc_mfields: subclass "single"
   
 struct psc_mfields_ops psc_mfields_single_ops = {
   .name                  = "single",
-  .write                 = _psc_mfields_single_write,
-  .read                  = _psc_mfields_single_read,
 };
 
 // ======================================================================
