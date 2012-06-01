@@ -590,6 +590,19 @@ _psc_write(struct psc *psc, struct mrc_io *io)
 {
   const char *path = psc_name(psc);
   mrc_io_write_attr_int(io, path, "timestep", psc->timestep);
+  for (int k = 0; k < psc->nr_kinds; k++) {
+    char s[20];
+    sprintf(s, "kind_q%d", k);
+    mrc_io_write_attr_double(io, path, s, psc->kinds[k].q);
+    sprintf(s, "kind_m%d", k);
+    mrc_io_write_attr_double(io, path, s, psc->kinds[k].m);
+    sprintf(s, "kind_n%d", k);
+    mrc_io_write_attr_double(io, path, s, psc->kinds[k].n);
+    sprintf(s, "kind_T%d", k);
+    mrc_io_write_attr_double(io, path, s, psc->kinds[k].T);
+    sprintf(s, "kind_name%d", k);
+    mrc_io_write_attr_string(io, path, s, psc->kinds[k].name);
+  }
 
   mrc_domain_write(psc->mrc_domain, io);
   psc_mparticles_write(psc->particles, io);
@@ -607,6 +620,20 @@ _psc_read(struct psc *psc, struct mrc_io *io)
 
   const char *path = psc_name(psc);
   mrc_io_read_attr_int(io, path, "timestep", &psc->timestep);
+
+  for (int k = 0; k < psc->nr_kinds; k++) {
+    char s[20];
+    sprintf(s, "kind_q%d", k);
+    mrc_io_read_attr_double(io, path, s, &psc->kinds[k].q);
+    sprintf(s, "kind_m%d", k);
+    mrc_io_read_attr_double(io, path, s, &psc->kinds[k].m);
+    sprintf(s, "kind_n%d", k);
+    mrc_io_read_attr_double(io, path, s, &psc->kinds[k].n);
+    sprintf(s, "kind_T%d", k);
+    mrc_io_read_attr_double(io, path, s, &psc->kinds[k].T);
+    sprintf(s, "kind_name%d", k);
+    mrc_io_read_attr_string(io, path, s, &psc->kinds[k].name);
+  }
 
   psc->mrc_domain = mrc_domain_read(io, "mrc_domain");
   psc_setup_domain(psc);

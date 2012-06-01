@@ -56,7 +56,9 @@ _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
 {
   int ierr;
   const char *path = psc_mparticles_name(mparticles);
+  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mparticles->domain);
   mrc_io_write_attr_int(io, path, "nr_patches", mparticles->nr_patches);
+  mrc_io_write_attr_int(io, path, "flags", mparticles->flags);
   
   assert(sizeof(particle_c_t) / sizeof(particle_c_real_t) == 10);
   assert(sizeof(particle_c_real_t) == sizeof(double));
@@ -72,8 +74,9 @@ _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
     hid_t groupp = H5Gcreate(group, name, H5P_DEFAULT, H5P_DEFAULT,
 			     H5P_DEFAULT); H5_CHK(groupp);
     // save/restore n_alloced, too?
-    ierr = H5LTset_attribute_int(groupp, ".", "n_part",
-				 &prts->n_part, 1); CE;
+    ierr = H5LTset_attribute_int(groupp, ".", "n_part", &prts->n_part, 1); CE;
+    int flags = prts->flags;
+    ierr = H5LTset_attribute_int(groupp, ".", "flags", &flags, 1); CE;
     if (prts->n_part > 0) {
       // in a rather ugly way, we write the long "kind" member as a double
       hsize_t hdims[2] = { prts->n_part, 10 };
@@ -91,7 +94,12 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
 {
   int ierr;
   const char *path = psc_mparticles_name(mparticles);
+  mparticles->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
   mrc_io_read_attr_int(io, path, "nr_patches", &mparticles->nr_patches);
+  int flags;
+  mrc_io_read_attr_int(io, path, "flags", &flags);
+  mparticles->flags = flags;
 
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
@@ -108,6 +116,9 @@ _psc_mparticles_c_read(mparticles_c_t *mparticles, struct mrc_io *io)
     psc_particles_set_type(prts, "c");
     prts->n_part = n_part;
     prts->p = p;
+    int flags;
+    ierr = H5LTget_attribute_int(groupp, ".", "flags", &flags); CE;
+    prts->flags = flags;
     psc_particles_setup(prts);
     mparticles->prts[p] = prts;
     if (n_part > 0) {
