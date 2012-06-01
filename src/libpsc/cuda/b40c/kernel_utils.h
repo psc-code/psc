@@ -28,7 +28,6 @@
 #pragma once
 
 #include <cuda.h>
-#include <thrust/detail/device/cuda/synchronize.h>
 
 namespace b40c_thrust   {
 
