@@ -16,11 +16,7 @@ psc_push_fields_auto_setup(struct psc_push_fields *push)
 
   const char *mflds_type = psc_mfields_type(ppsc->flds);
   char s[10 + strlen(mflds_type)];
-  if (strcmp(mflds_type, "single") == 0) {
-    sprintf(s, "single2");
-  } else {
-    sprintf(s, "%s", mflds_type);
-  }
+  sprintf(s, "%s", mflds_type);
 
   MPI_Comm comm = psc_push_fields_comm(push);
   mpi_printf(comm, "INFO: using psc_push_fields '%s'\n", s);
