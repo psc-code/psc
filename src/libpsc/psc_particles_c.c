@@ -58,6 +58,9 @@ _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
   const char *path = psc_mparticles_name(mparticles);
   mrc_io_write_attr_int(io, path, "nr_patches", mparticles->nr_patches);
   
+  assert(sizeof(particle_c_t) / sizeof(particle_c_real_t) == 10);
+  assert(sizeof(particle_c_real_t) == sizeof(double));
+
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
   hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
@@ -72,8 +75,8 @@ _psc_mparticles_c_write(mparticles_c_t *mparticles, struct mrc_io *io)
     ierr = H5LTset_attribute_int(groupp, ".", "n_part",
 				 &prts->n_part, 1); CE;
     if (prts->n_part > 0) {
-      assert(0); // need to fix for "kind"
-      hsize_t hdims[2] = { prts->n_part, 9 };
+      // in a rather ugly way, we write the long "kind" member as a double
+      hsize_t hdims[2] = { prts->n_part, 10 };
       ierr = H5LTmake_dataset_double(groupp, "particles_c", 2, hdims,
 				     (double *) c->particles); CE;
     }
