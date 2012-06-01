@@ -103,7 +103,7 @@ EXTERN_C void __particles_cuda_alloc(struct psc_particles *prts, bool need_block
 EXTERN_C void __particles_cuda_free(struct psc_particles *prts);
 EXTERN_C void __particles_cuda_to_device(struct psc_particles *prts,
 					 float4 *xi, float4 *pxi,
-					 int *offsets, int *c_offsets, int *c_pos);
+					 int *offsets, int *c_offsets);
 EXTERN_C void __particles_cuda_to_device_range(struct psc_particles *prts,
 					       float4 *xi, float4 *pxi,
 					       int start, int end);

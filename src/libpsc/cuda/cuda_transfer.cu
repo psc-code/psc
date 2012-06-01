@@ -45,14 +45,11 @@ __particles_cuda_alloc(struct psc_particles *prts, bool need_block_offsets,
     check(cudaMalloc((void **) &d_part->c_offsets, 
 		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int)));
   }
-
-  check(cudaMalloc((void **) &d_part->c_pos, 
-		   (cuda->nr_blocks * cells_per_block * 3) * sizeof(int)));
 }
 
 EXTERN_C void
 __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
-			   int *offsets, int *c_offsets, int *c_pos)
+			   int *offsets, int *c_offsets)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int n_part = prts->n_part;
@@ -72,11 +69,6 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
   if (c_offsets) {
     check(cudaMemcpy(d_part->c_offsets,c_offsets,
 		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int),
-		     cudaMemcpyHostToDevice));
-  }
-  if (c_pos) {
-    check(cudaMemcpy(d_part->c_pos, c_pos,
-		     (cuda->nr_blocks * cells_per_block * 3) * sizeof(int),
 		     cudaMemcpyHostToDevice));
   }
 }
@@ -133,7 +125,6 @@ __particles_cuda_free(struct psc_particles *prts)
   check(cudaFree(d_part->alt_pxi4));
   check(cudaFree(d_part->offsets));
   check(cudaFree(d_part->c_offsets));
-  check(cudaFree(d_part->c_pos));
 }
 
 EXTERN_C void

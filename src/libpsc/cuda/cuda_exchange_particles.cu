@@ -299,7 +299,7 @@ _cuda_reorder_send_buf(int p, struct psc_particles *prts,
   }
 
   prts->n_part = n_total;
-  __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL, NULL);
+  __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL);
   prts->n_part = n_part;
   delete[] xi4;
   delete[] pxi4;
@@ -399,7 +399,7 @@ _cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx,
   cuda->d_part.xi4 = d_alt_xi4;
   cuda->d_part.pxi4 = d_alt_pxi4;
 
-  __particles_cuda_to_device(prts, alt_xi4, alt_pxi4, offsets, NULL, NULL);
+  __particles_cuda_to_device(prts, alt_xi4, alt_pxi4, offsets, NULL);
   delete[] xi4;
   delete[] pxi4;
   delete[] alt_xi4;

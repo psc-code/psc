@@ -19,7 +19,6 @@ typedef struct {
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
   int *c_offsets; // particles per cell offsets
-  int *c_pos;     // maps 1d cell -> 3d crd
   void *sort_ctx; // for sorting / particle xchg
   unsigned int *bidx;      // for particle xchg
   unsigned int *ids;       // for particle xchg

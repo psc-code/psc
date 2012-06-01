@@ -151,7 +151,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
     ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
     ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
 
-    __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL, NULL);
+    __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL);
 
     // to restore offsets etc.
     if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
@@ -321,16 +321,6 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 #endif
   }
 
-  // FIXME, could be computed on the cuda side
-  int *c_pos = calloc(map.N * 3, sizeof(*c_pos));
-  for (int cidx = 0; cidx < map.N; cidx++) {
-    int ci[3];
-    cell_map_1to3(&map, cidx, ci);
-    c_pos[3*cidx + 0] = ci[0];
-    c_pos[3*cidx + 1] = ci[1];
-    c_pos[3*cidx + 2] = ci[2];
-  }
-  
   int *c_offsets = NULL;
   if (0 && (flags & MP_NEED_CELL_OFFSETS)) {
     const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
@@ -353,7 +343,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
   }
   cell_map_free(&map);
   
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, offsets, c_offsets, c_pos);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4, offsets, c_offsets);
   
   if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
     cuda_sort_patch(p, prts_cuda);
@@ -368,7 +358,6 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
   }
   
   free(offsets);
-  free(c_pos);
   free(c_offsets);
   free(xi4);
   free(pxi4);
@@ -430,7 +419,6 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
 				    struct psc_particles *prts, unsigned int flags)
 {
   int p = prts_cuda->p;
-  struct psc_patch *patch = &ppsc->patch[p];
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
   prts_cuda->n_part = prts->n_part;
   assert(prts_cuda->n_part <= cuda->n_alloced);
@@ -479,22 +467,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
       // bit, so we can do the checkerboard passes
     }
   }
-  struct cell_map map;
-  cell_map_init(&map, patch->ldims, bs); // FIXME, already have it elsewhere
-  
-  // FIXME, could be computed on the cuda side
-  int *c_pos = calloc(map.N * 3, sizeof(*c_pos));
-  for (int cidx = 0; cidx < map.N; cidx++) {
-    int ci[3];
-    cell_map_1to3(&map, cidx, ci);
-    c_pos[3*cidx + 0] = ci[0];
-    c_pos[3*cidx + 1] = ci[1];
-    c_pos[3*cidx + 2] = ci[2];
-  }
-  
-  cell_map_free(&map);
-  
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL, NULL, c_pos);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL, NULL);
   
   if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
     cuda_sort_patch(p, prts_cuda);
@@ -508,7 +481,6 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     MHERE;
   }
   
-  free(c_pos);
   free(xi4);
   free(pxi4);
 }
