@@ -23,6 +23,12 @@ struct cuda_params {
   real dq[MAX_KINDS];
 };
 
+struct cuda_patch {
+  int n_part;
+  particles_cuda_dev_t d_part;
+  real *d_flds;
+};
+
 __device__ int *__d_error_count;
 
 static void
@@ -309,34 +315,59 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
+  struct psc_particles **mprts_cuda = new struct psc_particles *[mprts->nr_patches];
+  struct psc_fields **mflds_cuda = new struct psc_fields *[mflds->nr_patches];
+  int nr_patches = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    if (psc_particles_ops(prts) == &psc_particles_cuda_ops &&
+	psc_fields_ops(flds) == &psc_fields_cuda_ops) {
+      mprts_cuda[nr_patches] = prts;
+      mflds_cuda[nr_patches] = flds;
+      nr_patches++;
+    }
+  }
+
+  if (nr_patches == 0) {
+    delete[] mprts_cuda;
+    delete[] mflds_cuda;
+    return;
+  }
+
   int *d_error_count;
   check(cudaMalloc(&d_error_count, 1 * sizeof(int)));
   check(cudaMemset(d_error_count, 0, 1 * sizeof(int)));
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    if (psc_particles_ops(prts) != &psc_particles_cuda_ops ||
-	psc_fields_ops(flds) != &psc_fields_cuda_ops) {
-      continue;
-    }
+  struct cuda_params prm;
+  set_params(&prm, ppsc, mprts_cuda[0], mflds_cuda[0], d_error_count);
 
-    struct psc_fields_cuda *pfc = psc_fields_cuda(flds);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  struct cuda_patch *cpatch = new struct cuda_patch[nr_patches];
+  for (int p = 0; p < nr_patches; p++) {
+    struct psc_particles *prts = mprts_cuda[p];
+    struct psc_fields *flds = mflds_cuda[p];
+
+    cpatch[p].n_part = prts->n_part;
+    cpatch[p].d_part = psc_particles_cuda(prts)->d_part;
+    cpatch[p].d_flds = psc_fields_cuda(flds)->d_flds;
+  }
+  
+  // FIXME, why is this dynamic?
+  unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
     
-    struct cuda_params prm;
-    set_params(&prm, ppsc, prts, flds, d_error_count);
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2]);
     
-    assert(cuda->nr_blocks == cuda->b_mx[1] * cuda->b_mx[2]);
-    unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
-    
-    dim3 dimGrid(cuda->b_mx[1], cuda->b_mx[2]);
-    
+  for (int p = 0; p < nr_patches; p++) {
     push_part_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-      (prts->n_part, cuda->d_part, pfc->d_flds, prm);
+      (cpatch[p].n_part, cpatch[p].d_part, cpatch[p].d_flds, prm);
     cuda_sync_if_enabled();
   }
+
+  delete[] cpatch;
+
+  delete[] mprts_cuda;
+  delete[] mflds_cuda;
 
   int h_error_count[1];
   check(cudaMemcpy(h_error_count, d_error_count, 1 * sizeof(int),
