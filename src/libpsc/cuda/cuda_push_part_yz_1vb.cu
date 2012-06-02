@@ -278,14 +278,15 @@ push_part_p1(int n_particles, particles_cuda_dev_t d_part, real *d_flds,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
-push_mprts_p1(struct cuda_params prm, struct cuda_patch *d_cpatch, int p)
+push_mprts_p1(struct cuda_params prm, struct cuda_patch *d_cpatch)
 {
   __d_error_count = prm.d_error_count;
   int tid = threadIdx.x;
 
   int block_pos[3];
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y;
+  block_pos[2] = blockIdx.y % prm.b_mx[2];
+  int p = blockIdx.y / prm.b_mx[2];
 
   int ci[3];
   ci[0] = 0;
@@ -392,14 +393,12 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   // FIXME, why is this dynamic?
   unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
     
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2]);
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * nr_patches);
     
-  for (int p = 0; p < nr_patches; p++) {
-    push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-      (prm, d_cpatch, p);
-    cuda_sync_if_enabled();
-  }
+  push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+    (prm, d_cpatch);
+  cuda_sync_if_enabled();
 
   check(cudaFree(d_cpatch));
   delete[] cpatch;
