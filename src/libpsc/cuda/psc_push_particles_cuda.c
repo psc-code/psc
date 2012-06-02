@@ -7,6 +7,8 @@
 #include <mrc_profile.h>
 #include <math.h>
 
+EXTERN_C void yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+
 static void
 cuda_push_part(struct psc_particles *prts_base,
 	       struct psc_fields *flds_base,
@@ -297,16 +299,28 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 					      struct psc_mparticles *mprts,
 					      struct psc_mfields *mflds)
 {
+  static int pr_A, pr_B;
+  if (!pr_A) {
+    pr_A  = prof_register("cuda_part_a", 1., 0, 0);
+    pr_B  = prof_register("cuda_part_b", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
+  yz4x4_1vb_cuda_push_mprts_a(mprts, mflds);
+  prof_stop(pr_A);
+  
+  prof_start(pr_B);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (psc_particles_ops(prts) != &psc_particles_cuda_ops ||
 	psc_fields_ops(flds) != &psc_fields_cuda_ops) {
-      return;
+      continue;
     }
-    cuda_push_partq_a(push, prts, flds, yz4x4_1vb_cuda_push_part_p2);
-    cuda_push_partq_b(push, prts, flds, yz4x4_1vb_cuda_push_part_p3);
+    const int block_stride = 4;
+    yz4x4_1vb_cuda_push_part_p3(prts, flds, NULL, block_stride);
   }
+  prof_stop(pr_B);
 }
 
 static void
