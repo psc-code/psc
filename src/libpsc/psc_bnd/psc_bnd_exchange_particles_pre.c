@@ -86,8 +86,8 @@ exchange_particles_pre(struct psc_bnd *bnd, struct psc_particles *prts)
       } else {
 	dir[d] = 0;
       }
-      assert(xi[d] >= 0.f);
-      assert(xi[d] <= xm[d]);
+      //assert(xi[d] >= 0.f);
+      //assert(xi[d] <= xm[d]);
     }
     if (!drop) {
       if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
