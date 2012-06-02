@@ -773,7 +773,7 @@ push_part_p3(particles_cuda_dev_t d_particles, real *d_flds, int block_start, st
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
-push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch *d_cpatch, int p)
+push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch *d_cpatch)
 {
   __d_error_count = prm.d_error_count;
   do_read = true;
@@ -795,15 +795,18 @@ push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch *d_cpat
     scurr_z.zero();
   }
 
+  int grid_dim_y = (prm.b_mx[2] + 1) / 2;
   int tid = threadIdx.x;
   int block_pos[3];
   block_pos[1] = blockIdx.x * 2;
-  block_pos[2] = blockIdx.y * 2;
+  block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
   block_pos[1] += block_start & 1;
   block_pos[2] += block_start >> 1;
   if (block_pos[1] >= prm.b_mx[1] ||
       block_pos[2] >= prm.b_mx[2])
     return;
+
+  int p = blockIdx.y / grid_dim_y;
 
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
   __shared__ int s_block_end;
@@ -928,16 +931,15 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   }
 	 
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, (prm.b_mx[2] + 1) / 2);
   unsigned int shared_size = 3 * WARPS_PER_BLOCK * block_stride * sizeof(real);
 
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * nr_patches);
+
   for (int block_start = 0; block_start < 4; block_start++) {
-    for (int p = 0; p < nr_patches; p++) {
-      push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	<<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-	(block_start, prm, d_cpatch, p);
-      cuda_sync_if_enabled();
-    }
+    push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+      (block_start, prm, d_cpatch);
+    cuda_sync_if_enabled();
   }
     
   check(cudaFree(d_cpatch));
