@@ -191,6 +191,11 @@ void
 prof_print()
 {
   prof_print_file(stdout);
+  for (int pr = 0; pr < nr_prof_data; pr++) {
+    struct prof_info *pinfo = &prof_globals.info[pr];
+    pinfo->time = 0.;
+    pinfo->cnt = 0;
+  }
 }
 
 void
