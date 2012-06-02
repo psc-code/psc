@@ -32,7 +32,7 @@ __device__ int *__d_error_count;
 
 static void
 set_params(struct cuda_params *prm, struct psc *psc,
-	   struct psc_particles *prts, struct psc_fields *pf, int *d_error_count)
+	   struct psc_particles *prts, struct psc_fields *pf)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prm->dt = psc->dt;
@@ -46,11 +46,26 @@ set_params(struct cuda_params *prm, struct psc *psc,
   prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   prm->fnqys  = psc->dx[1] * prm->fnqs / psc->dt;
   prm->fnqzs  = psc->dx[2] * prm->fnqs / psc->dt;
-  prm->d_error_count = d_error_count;
   assert(psc->nr_kinds <= MAX_KINDS);
   for (int k = 0; k < psc->nr_kinds; k++) {
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
+
+  check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
+  check(cudaMemset(prm->d_error_count, 0, 1 * sizeof(int)));
+}
+
+static void
+free_params(struct cuda_params *prm)
+{
+  int h_error_count[1];
+  check(cudaMemcpy(h_error_count, prm->d_error_count, 1 * sizeof(int),
+		   cudaMemcpyDeviceToHost));
+  check(cudaFree(prm->d_error_count));
+  if (h_error_count[0] != 0) {
+    printf("err cnt %d\n", h_error_count[0]);
+  }
+  assert(h_error_count[0] == 0);
 }
 
 // ======================================================================
@@ -314,12 +329,9 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int *d_error_count;
-  check(cudaMalloc(&d_error_count, 1 * sizeof(int)));
-  check(cudaMemset(d_error_count, 0, 1 * sizeof(int)));
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, prts, pf, d_error_count);
+  set_params(&prm, ppsc, prts, pf);
 
   assert(cuda->nr_blocks == cuda->b_mx[1] * cuda->b_mx[2]);
   unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
@@ -330,15 +342,6 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
     <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
     (cuda->d_part, pfc->d_flds, prm);
   cuda_sync_if_enabled();
-
-  int h_error_count[1];
-  check(cudaMemcpy(h_error_count, d_error_count, 1 * sizeof(int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaFree(d_error_count));
-  if (h_error_count[0] != 0) {
-    printf("err cnt %d\n", h_error_count[0]);
-  }
-  assert(h_error_count[0] == 0);
 }
 
 // ----------------------------------------------------------------------
@@ -368,12 +371,8 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     return;
   }
 
-  int *d_error_count;
-  check(cudaMalloc(&d_error_count, 1 * sizeof(int)));
-  check(cudaMemset(d_error_count, 0, 1 * sizeof(int)));
-
   struct cuda_params prm;
-  set_params(&prm, ppsc, mprts_cuda[0], mflds_cuda[0], d_error_count);
+  set_params(&prm, ppsc, mprts_cuda[0], mflds_cuda[0]);
 
   struct cuda_patch *cpatch = new struct cuda_patch[nr_patches];
   for (int p = 0; p < nr_patches; p++) {
@@ -405,14 +404,7 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   delete[] mprts_cuda;
   delete[] mflds_cuda;
 
-  int h_error_count[1];
-  check(cudaMemcpy(h_error_count, d_error_count, 1 * sizeof(int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaFree(d_error_count));
-  if (h_error_count[0] != 0) {
-    printf("err cnt %d\n", h_error_count[0]);
-  }
-  assert(h_error_count[0] == 0);
+  free_params(&prm);
 }
 
 // ======================================================================
@@ -849,12 +841,9 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
 {
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int *d_error_count;
-  check(cudaMalloc(&d_error_count, 1 * sizeof(int)));
-  check(cudaMemset(d_error_count, 0, 1 * sizeof(int)));
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, prts, pf, d_error_count);
+  set_params(&prm, ppsc, prts, pf);
 
   unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
   check(cudaMemset(pfc->d_flds + JXI * size, 0, 3 * size * sizeof(*pfc->d_flds)));
@@ -871,14 +860,7 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
     cuda_sync_if_enabled();
   }
 
-  int h_error_count[1];
-  check(cudaMemcpy(h_error_count, d_error_count, 1 * sizeof(int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaFree(d_error_count));
-  if (h_error_count[0] != 0) {
-    printf("err cnt %d\n", h_error_count[0]);
-  }
-  assert(h_error_count[0] == 0);
+  free_params(&prm);
 }
 
 // ----------------------------------------------------------------------
@@ -908,12 +890,8 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     return;
   }
 
-  int *d_error_count;
-  check(cudaMalloc(&d_error_count, 1 * sizeof(int)));
-  check(cudaMemset(d_error_count, 0, 1 * sizeof(int)));
-
   struct cuda_params prm;
-  set_params(&prm, ppsc, mprts_cuda[0], mflds_cuda[0], d_error_count);
+  set_params(&prm, ppsc, mprts_cuda[0], mflds_cuda[0]);
 
   struct cuda_patch *cpatch = new struct cuda_patch[nr_patches];
   for (int p = 0; p < nr_patches; p++) {
@@ -950,14 +928,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   delete[] mprts_cuda;
   delete[] mflds_cuda;
 
-  int h_error_count[1];
-  check(cudaMemcpy(h_error_count, d_error_count, 1 * sizeof(int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaFree(d_error_count));
-  if (h_error_count[0] != 0) {
-    printf("err cnt %d\n", h_error_count[0]);
-  }
-  assert(h_error_count[0] == 0);
+  free_params(&prm);
 }
 
 // ======================================================================
