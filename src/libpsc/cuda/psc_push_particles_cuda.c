@@ -8,6 +8,7 @@
 #include <math.h>
 
 EXTERN_C void yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 
 static void
 cuda_push_part(struct psc_particles *prts_base,
@@ -310,16 +311,7 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   prof_stop(pr_A);
   
   prof_start(pr_B);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    if (psc_particles_ops(prts) != &psc_particles_cuda_ops ||
-	psc_fields_ops(flds) != &psc_fields_cuda_ops) {
-      continue;
-    }
-    const int block_stride = 4;
-    yz4x4_1vb_cuda_push_part_p3(prts, flds, NULL, block_stride);
-  }
+  yz4x4_1vb_cuda_push_mprts_b(mprts, mflds);
   prof_stop(pr_B);
 }
 
