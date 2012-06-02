@@ -834,8 +834,7 @@ yz2x2_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, r
 EXTERN_C void
 yz4x4_1vb_cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 {
-  assert(0);
-  //  cuda_push_part_p2<1, 4, 4>(prts, pf);
+  cuda_push_part_p2<1, 4, 4>(prts, pf);
 }
 
 EXTERN_C void
