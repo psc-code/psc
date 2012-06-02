@@ -691,17 +691,22 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
     }
     
     if (first_dir >= 0) {
+      if (first_dir == 0) {
+	off[0] = idiff[0];
+	off[1] = 0;
+      } else {
+	off[0] = 0;
+	off[1] = idiff[1];
+      }
       real dx1[2];
-      off[1-first_dir] = 0;
-      off[first_dir] = idiff[first_dir];
       calc_dx1(dx1, x, dx, off);
       curr_2d_vb_cell(i, x, dx1, p.qni_wni, dx, off, scurr_y, scurr_z, prm);
     }
     
     if (second_dir >= 0) {
+      off[0] = idiff[0] - off[0];
+      off[1] = idiff[1] - off[1];
       real dx1[2];
-      off[first_dir] = 0;
-      off[second_dir] = idiff[second_dir];
       calc_dx1(dx1, x, dx, off);
       curr_2d_vb_cell(i, x, dx1, p.qni_wni, dx, off, scurr_y, scurr_z, prm);
     }
