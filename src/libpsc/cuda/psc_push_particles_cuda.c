@@ -293,7 +293,24 @@ struct psc_push_particles_ops psc_push_particles_cuda_1st_ops = {
 DECLARE_CUDA(yz4x4_1vb);
 
 static void
-psc_push_particles_cuda_4x4_1vb_push_a_yz(struct psc_push_particles *push,
+psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
+					      struct psc_mparticles *mprts,
+					      struct psc_mfields *mflds)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops ||
+	psc_fields_ops(flds) != &psc_fields_cuda_ops) {
+      return;
+    }
+    cuda_push_partq_a(push, prts, flds, yz4x4_1vb_cuda_push_part_p2);
+    cuda_push_partq_b(push, prts, flds, yz4x4_1vb_cuda_push_part_p3);
+  }
+}
+
+static void
+psc_push_particles_1vb_4x4_cuda_push_a_yz(struct psc_push_particles *push,
 					  struct psc_particles *prts_base,
 					  struct psc_fields *flds_base)
 {
@@ -306,7 +323,8 @@ psc_push_particles_cuda_4x4_1vb_push_a_yz(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   .name                  = "1vb_4x4_cuda",
-  .push_a_yz             = psc_push_particles_cuda_4x4_1vb_push_a_yz,
+  .push_a_yz             = psc_push_particles_1vb_4x4_cuda_push_a_yz,
+  .push_mprts_yz         = psc_push_particles_1vb_4x4_cuda_push_mprts_yz,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
 };
 

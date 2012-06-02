@@ -6,9 +6,26 @@
 // ======================================================================
 // forward to subclass
 
+static void
+push_a_yz(struct psc_push_particles *push, struct psc_mparticles *mprts,
+	  struct psc_mfields *mflds)
+{
+  struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  if (ops->push_a_yz) {
+    for (int p = 0; p < mprts->nr_patches; p++) {
+      ops->push_a_yz(push, psc_mparticles_get_patch(mprts, p),
+		     psc_mfields_get_patch(mflds, p));
+    }
+  } else {
+    assert(ops->push_mprts_yz);
+    ops->push_mprts_yz(push, mprts, mflds);
+  }
+}
+
 void
 psc_push_particles_run(struct psc_push_particles *push,
-		       mparticles_base_t *particles, mfields_base_t *mflds)
+		       mparticles_base_t *mprts, mfields_base_t *mflds)
 {
   static int pr;
   if (!pr) {
@@ -19,8 +36,14 @@ psc_push_particles_run(struct psc_push_particles *push,
   psc_stats_start(st_time_particle);
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
   int *im = ppsc->domain.gdims;
-  for (int p = 0; p < particles->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
+
+  if (im[0] == 1 && im[1] > 1 && im[2] > 1) { // yz
+    push_a_yz(push, mprts, mflds);
+    return;
+  }
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
       assert(ops->push_a_xyz);
@@ -31,9 +54,6 @@ psc_push_particles_run(struct psc_push_particles *push,
     } else if (im[0] > 1 && im[1] > 1) { // xy
       assert(ops->push_a_xy);
       ops->push_a_xy(push, prts, flds);
-    } else if (im[1] > 1 && im[2] > 1) { // yz
-      assert(ops->push_a_yz);
-      ops->push_a_yz(push, prts, flds);
     } else if (im[2] > 1) { // z
       assert(ops->push_a_z);
       ops->push_a_z(push, prts, flds);
