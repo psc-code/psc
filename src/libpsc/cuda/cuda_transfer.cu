@@ -9,7 +9,7 @@ cuda_init(int rank)
   static bool inited;
   if (!inited) {
     inited = true;
-    cudaSetDevice(rank % 3);
+//    cudaSetDevice(rank % 3);
   }
 }
 
