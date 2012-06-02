@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG_BALANCE
+
 LIST_HEAD(psc_mfields_base_list);
 
 struct psc_balance {
@@ -18,6 +20,22 @@ struct psc_balance {
   int every;
   int force_update;
 };
+
+static double
+capability_default(int p)
+{
+  return 1.;
+}
+
+static double __unused
+capability_jaguar(int p)
+{
+  if (p % 16 == 0) {
+    return 16.;
+  } else {
+    return 1.;
+  }
+}
 
 static void
 psc_get_loads_initial(struct psc *psc, double *loads, int *nr_particles_by_patch)
@@ -47,20 +65,31 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
   int *nr_patches_all_new = NULL;
 
   if (rank == 0) { // do the mapping on proc 0
+    double *capability = calloc(size, sizeof(*capability));
+    for (int p = 0; p < size; p++) {
+      capability[p] = capability_default(p);
+    }
     nr_patches_all_new = calloc(size, sizeof(*nr_patches_all_new));
     double loads_sum = 0.;
     for (int i = 0; i < nr_global_patches; i++) {
       loads_sum += loads_all[i];
     }
-    double load_target = loads_sum / size;
-    //mprintf("target %g size %d sum %g\n", load_target, size, loads_sum);
-    
+    double capability_sum = 0.;
+    for (int p = 0; p < size; p++) {
+      capability_sum += capability[p];
+    }
+    double load_target = loads_sum / capability_sum;
+#ifdef DEBUG_BALANCE
+    mprintf("loads_sum %g capability_sum %g load_target %g\n",
+	    loads_sum, capability_sum, load_target);
+#endif
+
     int p = 0, nr_new_patches = 0;
     double load = 0.;
+    double next_target = load_target * capability[0];
     for (int i = 0; i < nr_global_patches; i++) {
       load += loads_all[i];
       nr_new_patches++;
-      double next_target = (p + 1) * load_target;
       if (p < size - 1) {
 	// if load limit is reached, or we have only as many patches as processors left
 	if (load > next_target || size - p >= nr_global_patches - i) {
@@ -74,6 +103,7 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
 	    nr_new_patches = 0;
 	  }
 	  p++;
+	  next_target += load_target * capability[p];
 	}
       }
       // last proc takes what's left
@@ -82,16 +112,18 @@ find_best_mapping(struct mrc_domain *domain, int nr_global_patches, double *load
       }
     }
     
+#ifdef DEBUG_BALANCE
     int pp = 0;
     for (int p = 0; p < size; p++) {
       double load = 0.;
       for (int i = 0; i < nr_patches_all_new[p]; i++) {
 	load += loads_all[pp++];
-	//mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
+	mprintf("  pp %d load %g : %g\n", pp-1, loads_all[pp-1], load);
       }
-      //mprintf("p %d # = %d load %g / %g : %g\n", p, nr_patches_all_new[p],
-      //load, load_target, load - load_target);
+      mprintf("p %d # = %d load %g / %g : diff %g\n", p, nr_patches_all_new[p],
+	      load, load_target * capability[p], load - load_target * capability[p]);
     }
+#endif
   }
   // then scatter
   int nr_patches_new;
