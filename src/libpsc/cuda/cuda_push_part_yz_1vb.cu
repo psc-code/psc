@@ -493,7 +493,7 @@ public:
     unsigned int off = (jz + SW) * (BLOCKSIZE_Y + 2*SW) + jy + SW + wid * blockstride;
 #ifdef DEBUG
     if (off >= WARPS_PER_BLOCK * blockstride) {
-      *__d_error_count++;
+      (*__d_error_count)++;
       off = 0;
     }
 #endif
@@ -506,7 +506,7 @@ public:
     unsigned int off = (jz + SW) * (BLOCKSIZE_Y + 2*SW) + jy + SW + wid * blockstride;
 #ifdef DEBUG
     if (off >= WARPS_PER_BLOCK * blockstride) {
-      *__d_error_count++;
+      (*__d_error_count)++;
       off = 0;
     }
 #endif
