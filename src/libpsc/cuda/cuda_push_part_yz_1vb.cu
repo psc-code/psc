@@ -727,13 +727,14 @@ push_part_p3(particles_cuda_dev_t d_particles, real *d_flds, int block_start, st
   do_write = true;
   do_calc_j = true;
 
-  __shared__ extern real _scurr[];
-
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
+  __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurry[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurrz[WARPS_PER_BLOCK * block_stride];
 
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurr + 0 * WARPS_PER_BLOCK * block_stride);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurr + 1 * WARPS_PER_BLOCK * block_stride);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurr + 2 * WARPS_PER_BLOCK * block_stride);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
 
   if (do_write) {
     scurr_x.zero();
@@ -786,13 +787,14 @@ push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch *d_cpat
   do_write = true;
   do_calc_j = true;
 
-  __shared__ extern real _scurr[];
-
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
+  __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurry[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurrz[WARPS_PER_BLOCK * block_stride];
 
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurr + 0 * WARPS_PER_BLOCK * block_stride);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurr + 1 * WARPS_PER_BLOCK * block_stride);
-  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurr + 2 * WARPS_PER_BLOCK * block_stride);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
 
   if (do_write) {
     scurr_x.zero();
@@ -861,12 +863,10 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
   assert(cuda->nr_blocks == cuda->b_mx[1] * cuda->b_mx[2]);
 
   dim3 dimGrid((cuda->b_mx[1] + 1) / 2, (cuda->b_mx[2] + 1) / 2);
-  const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
-  unsigned int shared_size = 3 * WARPS_PER_BLOCK * block_stride * sizeof(real);
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_part_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
       (cuda->d_part, pfc->d_flds, block_start, prm);
     cuda_sync_if_enabled();
   }
@@ -935,14 +935,11 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     check(cudaMemset(cpatch[p].d_flds + JXI * size, 0, 3 * size * sizeof(*cpatch[p].d_flds)));
   }
 	 
-  const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
-  unsigned int shared_size = 3 * WARPS_PER_BLOCK * block_stride * sizeof(real);
-
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, d_cpatch);
     cuda_sync_if_enabled();
   }
