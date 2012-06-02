@@ -28,14 +28,22 @@ int st_time_field;
 ///
 
 void
-print_profiling(void)
+print_profiling(struct psc *psc)
 {
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size > 1) {
+  if (size > 1 && !psc->prm.detailed_profiling) {
     prof_print_mpi(MPI_COMM_WORLD);
   } else {
-    prof_print();
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    for (int i = 0; i < size; i++) {
+      if (i == rank) {
+	mprintf("profile\n");
+	prof_print();
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
   }
 }
 
@@ -75,6 +83,10 @@ psc_step(struct psc *psc)
     return;
   }
 
+  static int pr;
+  if (!pr) {
+    pr = prof_register("barrier", 1., 0, 0);
+  }
   // default psc_step() implementation
 
   if (psc->use_dynamic_patches) {
@@ -94,6 +106,7 @@ psc_step(struct psc *psc)
   // particle propagation n*dt -> (n+1.0)*dt
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   psc_push_fields_step_b1(psc->push_fields, psc->flds);
+	prof_start(pr); MPI_Barrier(MPI_COMM_WORLD); prof_stop(pr);
   psc_bnd_exchange_particles(psc->bnd, psc->particles);
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
@@ -146,7 +159,7 @@ psc_integrate(struct psc *psc)
 
     if (psc->timestep % psc->prm.stats_every == 0) {
       psc_stats_log(psc);
-      print_profiling();
+      print_profiling(psc);
     }
 
     if (psc->prm.wallclock_limit > 0.) {
