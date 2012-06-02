@@ -126,22 +126,22 @@ public:
       pr_C = prof_register("sort_bottom_scan", 1., 0, 0);
     }
     
-    prof_start(pr_A);
+//    prof_start(pr_A);
     reduction<NBLOCKS_X, NBLOCKS_Y, NBLOCKS_Z>
       (d_offsets, d_bidx, n_part, n_part_prev, bn_cnts);
-    prof_stop(pr_A);
+//    prof_stop(pr_A);
     
-    prof_start(pr_B);
+//    prof_start(pr_B);
     thrust::exclusive_scan(_bb_cnts.begin(), _bb_cnts.end(), _bb_sums.begin());
     cuda_sync_if_enabled();
-    prof_stop(pr_B);
+//    prof_stop(pr_B);
     
-    prof_start(pr_C);
+//    prof_start(pr_C);
     scan<NBLOCKS_X, NBLOCKS_Y, NBLOCKS_Z>
       (d_offsets, d_bidx, d_alt_bidx, d_alt_ids, n_part, n_part_prev);
     cuda_set_new_offsets(d_offsets, thrust::raw_pointer_cast(&_bb_sums[0]),
 			 _nr_blocks);
-    prof_stop(pr_C);
+//    prof_stop(pr_C);
   }
 
 private:

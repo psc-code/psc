@@ -5,6 +5,7 @@
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"
 
+#include <mrc_profile.h>
 #include <string.h>
 
 // ----------------------------------------------------------------------
@@ -84,19 +85,32 @@ get_ops(struct psc_particles *prts)
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
+  static int pr_1, pr_2, pr_3;
+  if (!pr_1) {
+    pr_1 = prof_register("xchg_prep", 1., 0, 0);
+    pr_2 = prof_register("xchg_comm", 1., 0, 0);
+    pr_3 = prof_register("xchg_post", 1., 0, 0);
+  }
+
+  prof_start(pr_1);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_bnd_ops *ops = get_ops(prts);
     ops->exchange_particles_prep(bnd, prts);
   }
+  prof_stop(pr_1);
 
+  prof_start(pr_2);
   ddc_particles_comm(bnd->ddcp, mprts);
+  prof_stop(pr_2);
 
+  prof_start(pr_3);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_bnd_ops *ops = get_ops(prts);
     ops->exchange_particles_post(bnd, prts);
   }
+  prof_stop(pr_3);
 }
 
 // ======================================================================

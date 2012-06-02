@@ -324,17 +324,17 @@ __fields_cuda_from_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *
     pr3 = prof_register("field_host_unpack", 1., 0, 0);
   }
 
-  prof_start(pr1);
+//  prof_start(pr1);
   fields_device_pack_yz<B, PACK>(pf, mb, me);
   cuda_sync_if_enabled();
-  prof_stop(pr1);
-  prof_start(pr2);
+//  prof_stop(pr1);
+//  prof_start(pr2);
   check(cudaMemcpy(pfc->h_bnd_buf, pfc->d_bnd_buf,
 		   (me - mb) * buf_size * sizeof(*pfc->h_bnd_buf), cudaMemcpyDeviceToHost));
-  prof_stop(pr2);
-  prof_start(pr3);
+//  prof_stop(pr2);
+//  prof_start(pr3);
   fields_host_pack_yz<B, UNPACK>(cf, pfc->h_bnd_buf, mb, me);
-  prof_stop(pr3);
+//  prof_stop(pr3);
 }
 
 template<int B>
