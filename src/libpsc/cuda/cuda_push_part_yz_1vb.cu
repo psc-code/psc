@@ -403,29 +403,26 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda_push_mprts_a(struct cuda_patch_ctx *cp)
 {
-  struct cuda_patch_ctx cp;
-  cuda_patch_ctx_create(&cp, mprts, mflds);
-
-  if (cp.nr_patches > 0) {
-    struct cuda_params prm;
-    set_params(&prm, ppsc, cp.mprts_cuda[0], cp.mflds_cuda[0]);
-    
-    // FIXME, why is this dynamic?
-    unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
-    
-    dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cp.nr_patches);
-    
-    push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-      (prm, cp.d_patch);
-    cuda_sync_if_enabled();
-
-    free_params(&prm);
+  if (cp->nr_patches == 0) {
+    return;
   }
 
-  cuda_patch_ctx_free(&cp);
+  struct cuda_params prm;
+  set_params(&prm, ppsc, cp->mprts_cuda[0], cp->mflds_cuda[0]);
+  
+  // FIXME, why is this dynamic?
+  unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
+  
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cp->nr_patches);
+  
+  push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+    (prm, cp->d_patch);
+  cuda_sync_if_enabled();
+  
+  free_params(&prm);
 }
 
 // ======================================================================
@@ -889,34 +886,30 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+cuda_push_mprts_b(struct cuda_patch_ctx *cp)
 {
-  struct cuda_patch_ctx cp;
-  cuda_patch_ctx_create(&cp, mprts, mflds);
+  if (cp->nr_patches == 0)
+    return;
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, cp->mprts_cuda[0], cp->mflds_cuda[0]);
   
-  if (cp.nr_patches > 0) {
-    struct cuda_params prm;
-    set_params(&prm, ppsc, cp.mprts_cuda[0], cp.mflds_cuda[0]);
-
-    for (int p = 0; p < cp.nr_patches; p++) {
-      unsigned int size = prm.mx[0] * prm.mx[1] * prm.mx[2];
-      check(cudaMemset(cp.patch[p].d_flds + JXI * size, 0,
-		       3 * size * sizeof(*cp.patch[p].d_flds)));
-    }
-	 
-    dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cp.nr_patches);
-
-    for (int block_start = 0; block_start < 4; block_start++) {
-      push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-	<<<dimGrid, THREADS_PER_BLOCK>>>
-	(block_start, prm, cp.d_patch);
-      cuda_sync_if_enabled();
-    }
-
-    free_params(&prm);
+  for (int p = 0; p < cp->nr_patches; p++) {
+    unsigned int size = prm.mx[0] * prm.mx[1] * prm.mx[2];
+    check(cudaMemset(cp->patch[p].d_flds + JXI * size, 0,
+		     3 * size * sizeof(*cp->patch[p].d_flds)));
   }
-
-  cuda_patch_ctx_free(&cp);
+  
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cp->nr_patches);
+  
+  for (int block_start = 0; block_start < 4; block_start++) {
+    push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, cp->d_patch);
+    cuda_sync_if_enabled();
+    }
+  
+  free_params(&prm);
 }
 
 // ======================================================================
@@ -972,11 +965,21 @@ yz8x8_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, r
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
+  struct cuda_patch_ctx cp;
+  cuda_patch_ctx_create(&cp, mprts, mflds);
+
+  cuda_push_mprts_a<1, 4, 4>(&cp);
+
+  cuda_patch_ctx_free(&cp);
 }
 
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  cuda_push_mprts_b<1, 4, 4>(mprts, mflds);
+  struct cuda_patch_ctx cp;
+  cuda_patch_ctx_create(&cp, mprts, mflds);
+
+  cuda_push_mprts_b<1, 4, 4>(&cp);
+  
+  cuda_patch_ctx_free(&cp);
 }
