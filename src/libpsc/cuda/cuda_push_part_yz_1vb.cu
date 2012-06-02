@@ -24,7 +24,6 @@ struct cuda_params {
 };
 
 struct cuda_patch {
-  int n_part;
   particles_cuda_dev_t d_part;
   real *d_flds;
 };
@@ -273,6 +272,40 @@ push_part_p1(int n_particles, particles_cuda_dev_t d_part, real *d_flds,
 }
 
 // ----------------------------------------------------------------------
+// push_mprts_p1
+//
+// same as push_part_p1, different calling sequence
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__global__ static void
+push_mprts_p1(struct cuda_params prm, struct cuda_patch *d_cpatch, int p)
+{
+  __d_error_count = prm.d_error_count;
+  int tid = threadIdx.x;
+
+  int block_pos[3];
+  block_pos[1] = blockIdx.x;
+  block_pos[2] = blockIdx.y;
+
+  int ci[3];
+  ci[0] = 0;
+  ci[1] = block_pos[1] * BLOCKSIZE_Y;
+  ci[2] = block_pos[2] * BLOCKSIZE_Z;
+  int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
+
+  int block_begin = d_cpatch[p].d_part.offsets[bid];
+  int block_end   = d_cpatch[p].d_part.offsets[bid+1];
+
+  extern __shared__ real fld_cache[];
+
+  F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> cached_flds(fld_cache, d_cpatch[p].d_flds, ci, prm);
+  
+  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    push_part_one(n, d_cpatch[p].d_part, cached_flds, ci, prm);
+  }
+}
+
+// ----------------------------------------------------------------------
 // cuda_push_part_p2
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -347,10 +380,14 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     struct psc_particles *prts = mprts_cuda[p];
     struct psc_fields *flds = mflds_cuda[p];
 
-    cpatch[p].n_part = prts->n_part;
     cpatch[p].d_part = psc_particles_cuda(prts)->d_part;
     cpatch[p].d_flds = psc_fields_cuda(flds)->d_flds;
   }
+
+  struct cuda_patch *d_cpatch;
+  check(cudaMalloc(&d_cpatch, nr_patches * sizeof(*d_cpatch)));
+  check(cudaMemcpy(d_cpatch, cpatch, nr_patches * sizeof(*d_cpatch),
+		   cudaMemcpyHostToDevice));
   
   // FIXME, why is this dynamic?
   unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
@@ -358,12 +395,13 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2]);
     
   for (int p = 0; p < nr_patches; p++) {
-    push_part_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-      (cpatch[p].n_part, cpatch[p].d_part, cpatch[p].d_flds, prm);
+      (prm, d_cpatch, p);
     cuda_sync_if_enabled();
   }
 
+  check(cudaFree(d_cpatch));
   delete[] cpatch;
 
   delete[] mprts_cuda;
