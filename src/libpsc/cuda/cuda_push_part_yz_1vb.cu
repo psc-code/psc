@@ -771,6 +771,65 @@ push_part_p3(particles_cuda_dev_t d_particles, real *d_flds, int block_start, st
   }
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__global__ static void
+push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch *d_cpatch, int p)
+{
+  __d_error_count = prm.d_error_count;
+  do_read = true;
+  do_reduce = true;
+  do_write = true;
+  do_calc_j = true;
+
+  __shared__ extern real _scurr[];
+
+  const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
+
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurr + 0 * WARPS_PER_BLOCK * block_stride);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurr + 1 * WARPS_PER_BLOCK * block_stride);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurr + 2 * WARPS_PER_BLOCK * block_stride);
+
+  if (do_write) {
+    scurr_x.zero();
+    scurr_y.zero();
+    scurr_z.zero();
+  }
+
+  int tid = threadIdx.x;
+  int block_pos[3];
+  block_pos[1] = blockIdx.x * 2;
+  block_pos[2] = blockIdx.y * 2;
+  block_pos[1] += block_start & 1;
+  block_pos[2] += block_start >> 1;
+  if (block_pos[1] >= prm.b_mx[1] ||
+      block_pos[2] >= prm.b_mx[2])
+    return;
+
+  int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
+  __shared__ int s_block_end;
+  if (tid == 0) {
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
+    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+    s_block_end = d_cpatch[p].d_part.offsets[bid + 1];
+  }
+  __syncthreads();
+
+  int block_begin = d_cpatch[p].d_part.offsets[bid];
+
+  for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
+    yz_calc_jx(i, d_cpatch[p].d_part, scurr_x, prm);
+    yz_calc_jyjz(i, d_cpatch[p].d_part, scurr_y, scurr_z, prm);
+  }
+  
+  if (do_write) {
+    __syncthreads();
+    scurr_x.add_to_fld(d_cpatch[p].d_flds, 0, prm);
+    scurr_y.add_to_fld(d_cpatch[p].d_flds, 1, prm);
+    scurr_z.add_to_fld(d_cpatch[p].d_flds, 2, prm);
+  }
+}
+
 // ----------------------------------------------------------------------
 // cuda_push_part_p3
 
@@ -874,9 +933,9 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   for (int block_start = 0; block_start < 4; block_start++) {
     for (int p = 0; p < nr_patches; p++) {
-      push_part_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
 	<<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-	(cpatch[p].d_part, cpatch[p].d_flds, block_start, prm);
+	(block_start, prm, d_cpatch, p);
       cuda_sync_if_enabled();
     }
   }
