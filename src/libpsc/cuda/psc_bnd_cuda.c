@@ -304,32 +304,19 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   cuda_mprts_copy_to_dev(&cuda_mprts);
   prof_stop(pr_B);
 
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prof_start(pr_C);
   cuda_mprts_find_block_indices_3(&cuda_mprts);
   prof_stop(pr_C);
   
   prof_start(pr_C2);
-  // OPT: when calculating bidx, do preprocess then
-  void *sp = sort_pairs_3_create(cuda->b_mx);
-  sort_pairs_3_device(sp, cuda->d_part.bidx, cuda->d_part.alt_bidx, cuda->d_part.alt_ids,
-		      prts->n_part, cuda->d_part.offsets,
-		      cuda->bnd_n_part_save, cuda->bnd_cnt);
-  sort_pairs_3_destroy(sp);
+  cuda_mprts_sort(&cuda_mprts);
   prof_stop(pr_C2);
   
   prof_start(pr_D);
-  cuda_reorder(prts, cuda->d_part.alt_ids);
+  cuda_mprts_reorder(&cuda_mprts);
   prof_stop(pr_D);
   
-  prts->n_part -= cuda->bnd_n_send;
-  
-  free(cuda->bnd_idx);
-  free(cuda->bnd_off);
-  free(cuda->bnd_cnt);
-  free(cuda->bnd_prts);
-  free(cuda->bnd_xi4);
-  free(cuda->bnd_pxi4);
+  cuda_mprts_free(&cuda_mprts);
 
   cuda_mprts_destroy(&cuda_mprts);
 }
@@ -363,32 +350,14 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_stop(pr_C);
     
   prof_start(pr_C2);
-  for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    // OPT: when calculating bidx, do preprocess then
-    void *sp = sort_pairs_3_create(cuda->b_mx);
-    sort_pairs_3_device(sp, cuda->d_part.bidx, cuda->d_part.alt_bidx, cuda->d_part.alt_ids,
-			prts->n_part, cuda->d_part.offsets,
-			cuda->bnd_n_part_save, cuda->bnd_cnt);
-    sort_pairs_3_destroy(sp);
-  }
+  cuda_mprts_sort(&cuda_mprts);
   prof_stop(pr_C2);
     
   prof_start(pr_D);
-  for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda_reorder(prts, cuda->d_part.alt_ids);
-    prts->n_part -= cuda->bnd_n_send;
-    free(cuda->bnd_idx);
-    free(cuda->bnd_off);
-    free(cuda->bnd_cnt);
-    free(cuda->bnd_prts);
-    free(cuda->bnd_xi4);
-    free(cuda->bnd_pxi4);
-  }
+  cuda_mprts_reorder(&cuda_mprts);
   prof_stop(pr_D);
+
+  cuda_mprts_free(&cuda_mprts);
 
   cuda_mprts_destroy(&cuda_mprts);
 }

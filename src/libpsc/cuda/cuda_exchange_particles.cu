@@ -2,6 +2,7 @@
 #include <psc_cuda.h>
 #include "cuda_sort2.h"
 #include "particles_cuda.h"
+#include "psc_bnd_cuda.h"
 
 #include <thrust/scan.h>
 #include <thrust/device_vector.h>
@@ -665,6 +666,53 @@ cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     cudaStreamSynchronize(stream[p]);
     cudaStreamDestroy(stream[p]);
+  }
+}
+
+// ======================================================================
+// cuda_mprts_sort
+
+void
+cuda_mprts_sort(struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    // OPT: when calculating bidx, do preprocess then
+    void *sp = sort_pairs_3_create(cuda->b_mx);
+    sort_pairs_3_device(sp, cuda->d_part.bidx, cuda->d_part.alt_bidx, cuda->d_part.alt_ids,
+			prts->n_part, cuda->d_part.offsets,
+			cuda->bnd_n_part_save, cuda->bnd_cnt);
+    sort_pairs_3_destroy(sp);
+  }
+}
+
+// ======================================================================
+// cuda_mprts_reorder
+
+void
+cuda_mprts_reorder(struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda_reorder(prts, cuda->d_part.alt_ids);
+    prts->n_part -= cuda->bnd_n_send;
+  }
+}
+
+void
+cuda_mprts_free(struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    free(cuda->bnd_idx);
+    free(cuda->bnd_off);
+    free(cuda->bnd_cnt);
+    free(cuda->bnd_prts);
+    free(cuda->bnd_xi4);
+    free(cuda->bnd_pxi4);
   }
 }
 
