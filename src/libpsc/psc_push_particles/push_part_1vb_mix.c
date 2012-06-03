@@ -3,13 +3,13 @@
 
 #include <string.h>
 
-struct psc_push_particles_ops *mix_ops[] = {
+static struct psc_push_particles_ops *mix_ops[] = {
   &psc_push_particles_1vb_4x4_cuda_ops,
   &psc_push_particles_1vb_ps_ops,
   NULL,
 };
 
-struct psc_particles_ops *mix_prts_ops[] = {
+static struct psc_particles_ops *mix_prts_ops[] = {
   &psc_particles_cuda_ops,
   &psc_particles_single_ops,
   NULL,

@@ -19,6 +19,8 @@ struct psc_bnd_ops {
   void (*exchange_particles)(struct psc_bnd *bnd, mparticles_base_t *particles);
   void (*exchange_particles_prep)(struct psc_bnd *bnd, struct psc_particles *prts);
   void (*exchange_particles_post)(struct psc_bnd *bnd, struct psc_particles *prts);
+  void (*exchange_mprts_prep)(struct psc_bnd *bnd, struct psc_mparticles *mprts);
+  void (*exchange_mprts_post)(struct psc_bnd *bnd, struct psc_mparticles *mprts);
 
   // for field exchange
   void (*create_ddc)(struct psc_bnd *bnd);
