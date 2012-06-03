@@ -1,5 +1,6 @@
 
 #include "psc_cuda.h"
+#include "particles_cuda.h"
 
 #define NO_CHECKERBOARD
 //#define DEBUG
@@ -65,22 +66,7 @@ free_params(struct cuda_params *prm)
 
 // ======================================================================
 
-struct cuda_patch {
-  particles_cuda_dev_t d_part;
-  real *d_flds;
-};
-
-__shared__ struct cuda_patch s_cpatch;
-
-struct cuda_patch_ctx {
-  struct cuda_patch *patch;
-  int nr_patches;
-  struct cuda_patch *d_patch;
-  struct psc_particles **mprts_cuda;
-  struct psc_fields **mflds_cuda;
-};
-
-static void
+void
 cuda_patch_ctx_create(struct cuda_patch_ctx *cp, struct psc_mparticles *mprts,
 		      struct psc_mfields *mflds)
 {
@@ -113,7 +99,7 @@ cuda_patch_ctx_create(struct cuda_patch_ctx *cp, struct psc_mparticles *mprts,
 		   cudaMemcpyHostToDevice));
 }
 
-static void
+void
 cuda_patch_ctx_free(struct cuda_patch_ctx *cp)
 {
   check(cudaFree(cp->d_patch));
