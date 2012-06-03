@@ -217,9 +217,13 @@ static void
 psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A;
+  static int pr_A, pr_A2, pr_B, pr_C, pr_D;
   if (!pr_A) {
-    pr_A = prof_register("xchg_prep", 1., 0, 0);
+    pr_A = prof_register("xchg_bidx", 1., 0, 0);
+    pr_A2= prof_register("xchg_scan", 1., 0, 0);
+    pr_B = prof_register("xchg_reorder_send", 1., 0, 0);
+    pr_C = prof_register("xchg_from_dev", 1., 0, 0);
+    pr_D = prof_register("xchg_pre", 1., 0, 0);
   }
 
   prof_start(pr_A);
@@ -228,9 +232,54 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
     if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
       continue;
     }
-    psc_bnd_sub_exchange_particles_prep(bnd, prts);
-  }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
+    cuda_find_block_indices_2(prts, cuda->d_part.bidx, 0);
+  }    
   prof_stop(pr_A);
+
+  prof_start(pr_A2);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
+    cuda->bnd_n_part_save = prts->n_part;
+  }
+  prof_stop(pr_A2);
+    
+  prof_start(pr_B);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda_reorder_send_buf(prts->p, prts, cuda->d_part.bidx, cuda->d_part.sums, cuda->bnd_n_send);
+  }
+  prof_stop(pr_B);
+    
+  prof_start(pr_C);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    xchg_copy_from_dev(bnd, prts);
+  }
+  prof_stop(pr_C);
+    
+  prof_start(pr_D);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    exchange_particles_pre(bnd, prts);
+  }
+  prof_stop(pr_D);
 }
 
 // ----------------------------------------------------------------------
@@ -306,9 +355,13 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A;
+  static int pr_A, pr_B, pr_C, pr_C2, pr_D;
   if (!pr_A) {
-    pr_A = prof_register("xchg_post", 1., 0, 0);
+    pr_A = prof_register("xchg_append", 1., 0, 0);
+    pr_B = prof_register("xchg_to_dev", 1., 0, 0);
+    pr_C = prof_register("xchg_bidx", 1., 0, 0);
+    pr_C2= prof_register("xchg_sort", 1., 0, 0);
+    pr_D = prof_register("xchg_reorder", 1., 0, 0);
   }
 
   prof_start(pr_A);
@@ -317,9 +370,81 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
     if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
       continue;
     }
-    psc_bnd_sub_exchange_particles_post(bnd, prts);
+    struct ddc_particles *ddcp = bnd->ddcp;
+    struct ddcp_patch *patch = &ddcp->patches[prts->p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    int n_recv = cuda->bnd_n_part + patch->head;
+    prts->n_part = cuda->bnd_n_part_save + n_recv;
+    assert(prts->n_part <= cuda->n_alloced);
+    
+    cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
+    cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
+    cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
+    cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
+    for (int n = 0; n < patch->head; n++) {
+      xchg_append(prts, NULL, &cuda->bnd_prts[n]);
+    }
   }
   prof_stop(pr_A);
+
+  prof_start(pr_B);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    __particles_cuda_to_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
+				     cuda->bnd_n_part_save, prts->n_part);
+    
+    free(cuda->bnd_prts);
+    free(cuda->bnd_xi4);
+    free(cuda->bnd_pxi4);
+  }
+  prof_stop(pr_B);
+
+  prof_start(pr_C);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda_find_block_indices_3(prts, cuda->d_part.bidx, cuda->d_part.alt_bidx,
+			      cuda->bnd_n_part_save, cuda->bnd_idx, cuda->bnd_off);
+    free(cuda->bnd_idx);
+    free(cuda->bnd_off);
+  }
+  prof_stop(pr_C);
+    
+  prof_start(pr_C2);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    // OPT: when calculating bidx, do preprocess then
+    void *sp = sort_pairs_3_create(cuda->b_mx);
+    sort_pairs_3_device(sp, cuda->d_part.bidx, cuda->d_part.alt_bidx, cuda->d_part.alt_ids,
+			prts->n_part, cuda->d_part.offsets,
+			cuda->bnd_n_part_save, cuda->bnd_cnt);
+    sort_pairs_3_destroy(sp);
+  }
+  prof_stop(pr_C2);
+    
+  prof_start(pr_D);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda_reorder(prts, cuda->d_part.alt_ids);
+    prts->n_part -= cuda->bnd_n_send;
+    free(cuda->bnd_cnt);
+  }
+  prof_stop(pr_D);
 }
 
 // ----------------------------------------------------------------------
