@@ -373,16 +373,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    __particles_cuda_to_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
-				     cuda->bnd_n_part_save, prts->n_part);
-    
-    free(cuda->bnd_prts);
-    free(cuda->bnd_xi4);
-    free(cuda->bnd_pxi4);
-  }
+  cuda_mprts_copy_to_dev(&cuda_mprts);
   prof_stop(pr_B);
 
   prof_start(pr_C);
