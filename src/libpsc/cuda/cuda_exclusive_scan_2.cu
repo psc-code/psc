@@ -1,5 +1,6 @@
 
 #include "psc_cuda.h"
+#include "particles_cuda.h"
 
 #include <thrust/functional.h>
 #include <thrust/transform_scan.h>
@@ -54,3 +55,13 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
   return sum;
 }
 
+void
+cuda_mprts_scan_send_buf(struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
+    cuda->bnd_n_part_save = prts->n_part;
+  }
+}

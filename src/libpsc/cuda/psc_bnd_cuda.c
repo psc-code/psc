@@ -244,15 +244,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   prof_stop(pr_A);
 
   prof_start(pr_A2);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
-      continue;
-    }
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
-    cuda->bnd_n_part_save = prts->n_part;
-  }
+  cuda_mprts_scan_send_buf(&cuda_mprts);
   prof_stop(pr_A2);
     
   prof_start(pr_B);

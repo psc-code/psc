@@ -55,6 +55,7 @@ EXTERN_C void free_params(struct cuda_params *prm);
 // ======================================================================
 
 EXTERN_C void cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts);
+EXTERN_C void cuda_mprts_scan_send_buf(struct cuda_mprts *cuda_mprts);
 EXTERN_C void cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts);
 EXTERN_C void cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts);
 
