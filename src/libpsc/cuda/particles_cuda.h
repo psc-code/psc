@@ -8,13 +8,9 @@ struct cuda_patch_flds {
   real *d_flds;
 };
 
-struct cuda_patch_prts {
-  particles_cuda_dev_t dev;
-};
-
 struct cuda_mprts {
-  struct cuda_patch_prts *h_cp_prts;
-  struct cuda_patch_prts *d_cp_prts;
+  particles_cuda_dev_t *h_cp_prts;
+  particles_cuda_dev_t *d_cp_prts;
   int nr_patches;
   struct psc_particles **mprts_cuda;
 };
