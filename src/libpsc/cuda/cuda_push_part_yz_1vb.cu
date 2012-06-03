@@ -77,7 +77,6 @@ cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
     psc_particles_cuda(prts)->h_dev->n_part = prts->n_part; // FIXME!
   }
 
-  cuda_mprts->d_cp_prts = mprts_cuda->d_dev;
   check(cudaMemcpy(mprts_cuda->d_dev, mprts_cuda->h_dev,
 		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev),
 		   cudaMemcpyHostToDevice));
@@ -421,7 +420,7 @@ cuda_push_mprts_a(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-    (prm, cuda_mprts->d_cp_prts, cuda_mflds->d_cp_flds);
+    (prm, psc_mparticles_cuda(mprts)->d_dev, cuda_mflds->d_cp_flds);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -920,7 +919,7 @@ cuda_push_mprts_b(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, cuda_mprts->d_cp_prts, cuda_mflds->d_cp_flds);
+      (block_start, prm, psc_mparticles_cuda(mprts)->d_dev, cuda_mflds->d_cp_flds);
     cuda_sync_if_enabled();
     }
   

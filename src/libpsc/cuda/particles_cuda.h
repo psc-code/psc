@@ -9,7 +9,6 @@ struct cuda_patch_flds {
 };
 
 struct cuda_mprts {
-  particles_cuda_dev_t *d_cp_prts;
   struct psc_mparticles *mprts;
 };
 

@@ -550,6 +550,8 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_bidx);
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_ids);
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->sums);
+
+    prts_cuda->d_dev = &mprts_cuda->d_dev[p];
   }
 }
 

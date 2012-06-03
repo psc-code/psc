@@ -242,7 +242,7 @@ cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts)
     int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches };
 
     RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_find_block_indices_2, (prm, cuda_mprts->d_cp_prts));
+	       mprts_find_block_indices_2, (prm, psc_mparticles_cuda(mprts)->d_dev));
     free_params(&prm);
   }
 }
@@ -400,7 +400,7 @@ cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts)
     int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
 
     RUN_KERNEL(dimGrid, dimBlock,
-		 mprts_reorder_send_buf, (prm, cuda_mprts->d_cp_prts, mprts->nr_patches));
+	       mprts_reorder_send_buf, (prm, psc_mparticles_cuda(mprts)->d_dev, mprts->nr_patches));
 
     free_params(&prm);
   }

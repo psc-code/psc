@@ -29,6 +29,7 @@ typedef struct {
 
 struct psc_particles_cuda {
   particles_cuda_dev_t *h_dev; // info that we also keep on the device, but this is on the host
+  particles_cuda_dev_t *d_dev; // this one actually lives in device mem
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
   int n_alloced;
