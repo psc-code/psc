@@ -71,17 +71,15 @@ cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
   cuda_mprts->mprts = mprts;
 
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  cuda_mprts->h_cp_prts = mprts_cuda->h_dev;
   assert(mprts_cuda->h_dev);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    cuda_mprts->h_cp_prts[p] = *psc_particles_cuda(prts)->h_dev;
-    cuda_mprts->h_cp_prts[p].n_part = prts->n_part; // FIXME!
+    psc_particles_cuda(prts)->h_dev->n_part = prts->n_part; // FIXME!
   }
 
   cuda_mprts->d_cp_prts = mprts_cuda->d_dev;
-  check(cudaMemcpy(cuda_mprts->d_cp_prts, cuda_mprts->h_cp_prts,
-		   mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
+  check(cudaMemcpy(mprts_cuda->d_dev, mprts_cuda->h_dev,
+		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev),
 		   cudaMemcpyHostToDevice));
 }
 
