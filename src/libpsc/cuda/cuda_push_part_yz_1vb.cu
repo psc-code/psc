@@ -94,6 +94,29 @@ cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
 }
 
 void
+cuda_mprts_create_single(struct cuda_mprts *cuda_mprts, struct psc_particles *prts)
+{
+  cuda_mprts->mprts_cuda = new struct psc_particles *[1];
+  cuda_mprts->nr_patches = 1;
+  assert(psc_particles_ops(prts) == &psc_particles_cuda_ops);
+  cuda_mprts->mprts_cuda[0] = prts;
+
+  // FIXME duplicated
+  cuda_mprts->h_cp_prts = new struct cuda_patch_prts[cuda_mprts->nr_patches];
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    cuda_mprts->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
+    cuda_mprts->h_cp_prts[p].n_part = prts->n_part;
+  }
+
+  check(cudaMalloc(&cuda_mprts->d_cp_prts,
+		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts)));
+  check(cudaMemcpy(cuda_mprts->d_cp_prts, cuda_mprts->h_cp_prts,
+		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
+		   cudaMemcpyHostToDevice));
+}
+
+void
 cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds)
 {
   cuda_mflds->mflds_cuda = new struct psc_fields *[mflds->nr_patches];

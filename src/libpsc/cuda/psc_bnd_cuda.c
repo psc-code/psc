@@ -147,28 +147,6 @@ get_head(struct psc_particles *prts)
   return 0;
 }
 
-// ----------------------------------------------------------------------
-// xchg_copy_from_dev
-
-static void
-xchg_copy_from_dev(struct psc_bnd *bnd, struct psc_particles *prts)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  
-  cuda->bnd_n_part = 0;
-  cuda->bnd_prts = NULL;
-  
-  int n_send = cuda->bnd_n_send;
-  cuda->bnd_xi4  = malloc(n_send * sizeof(*cuda->bnd_xi4));
-  cuda->bnd_pxi4 = malloc(n_send * sizeof(*cuda->bnd_pxi4));
-  cuda->bnd_idx  = malloc(n_send * sizeof(*cuda->bnd_idx));
-  cuda->bnd_off  = malloc(n_send * sizeof(*cuda->bnd_off));
-  
-  // OPT, could use streaming
-  __particles_cuda_from_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
-				     cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_send);
-}
-
 #include "../psc_bnd/psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
@@ -188,6 +166,9 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
 
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
+  struct cuda_mprts cuda_mprts;
+  cuda_mprts_create_single(&cuda_mprts, prts);
+
   prof_start(pr_A);
   cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
   cuda_find_block_indices_2(prts, cuda->d_part.bidx, 0);
@@ -203,12 +184,14 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
   prof_stop(pr_B);
   
   prof_start(pr_C);
-  xchg_copy_from_dev(bnd, prts);
+  cuda_mprts_copy_from_dev(&cuda_mprts);
   prof_stop(pr_C);
   
   prof_start(pr_D);
   exchange_particles_pre(bnd, prts);
   prof_stop(pr_D);
+
+  cuda_mprts_destroy(&cuda_mprts);
 }
 
 // ----------------------------------------------------------------------

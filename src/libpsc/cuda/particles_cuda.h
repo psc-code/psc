@@ -28,6 +28,7 @@ struct cuda_mflds {
 };
 
 EXTERN_C void cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_create_single(struct cuda_mprts *cuda_mprts, struct psc_particles *prts);
 EXTERN_C void cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds);
 EXTERN_C void cuda_mprts_destroy(struct cuda_mprts *cuda_mprts);
 EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
