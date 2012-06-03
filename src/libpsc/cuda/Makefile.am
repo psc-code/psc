@@ -59,7 +59,7 @@ cuda_push_part_yz4.lo: push_part_p2_noshift_2.c
 cuda_push_part_yz5.lo: push_part_p2_noshift_3.c push_part_kernelcall_3.c
 cuda_push_part_yz6.lo: push_part_p2_noshift_6.c push_part_kernelcall_6.c
 cuda_push_part_yz_1st.lo: push_part_p1_1st.c push_part_p2_1st.c push_part_kernelcall_6.c
-cuda_push_part_yz_1vb.lo: cuda_common.h
+cuda_push_part_yz_1vb.lo: cuda_common.h particles_cuda.h
 
 cuda_sort2.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel.h cuda_sort2_spine.h
 cuda_sort3.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
