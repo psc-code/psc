@@ -52,4 +52,10 @@ EXTERN_C void set_params(struct cuda_params *prm, struct psc *psc,
 			 struct psc_particles *prts, struct psc_fields *pf);
 EXTERN_C void free_params(struct cuda_params *prm);
 
+// ======================================================================
+
+EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts);
+EXTERN_C void cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts);
+
 #endif

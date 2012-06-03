@@ -360,18 +360,15 @@ mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts
 }
 
 EXTERN_C void
-cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
+cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts)
 {
-  struct cuda_mprts cuda_mprts;
-  cuda_mprts_create(&cuda_mprts, mprts);
-  
-  if (cuda_mprts.nr_patches > 0) {
+  if (cuda_mprts->nr_patches > 0) {
     struct cuda_params prm;
-    set_params(&prm, ppsc, cuda_mprts.mprts_cuda[0], NULL);
+    set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], NULL);
 
     int max_n_part = 0;
-    for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-      struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
+    for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+      struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
       struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
       assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
       if (prts->n_part > max_n_part) {
@@ -383,12 +380,10 @@ cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
     int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
 
     RUN_KERNEL(dimGrid, dimBlock,
-		 mprts_reorder_send_buf, (prm, cuda_mprts.d_cp_prts, cuda_mprts.nr_patches));
+		 mprts_reorder_send_buf, (prm, cuda_mprts->d_cp_prts, cuda_mprts->nr_patches));
 
     free_params(&prm);
   }
-
-  cuda_mprts_destroy(&cuda_mprts);
 }
 
 EXTERN_C void
@@ -590,5 +585,35 @@ cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *_d_vals, un
   thrust::exclusive_scan(d_vals, d_vals + prts->n_part, d_sums);
   int sum = d_sums[prts->n_part - 1] + d_vals[prts->n_part - 1];
   return sum;
+}
+
+// ======================================================================
+// cuda_mprts_copy_from_dev
+
+void
+cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
+{
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_n_part = 0;
+    cuda->bnd_prts = NULL;
+    
+    int n_send = cuda->bnd_n_send;
+    cuda->bnd_xi4  = new float4[n_send];
+    cuda->bnd_pxi4 = new float4[n_send];
+    cuda->bnd_idx  = new unsigned int[n_send];
+    cuda->bnd_off  = new unsigned int[n_send];
+    
+    check(cudaMemcpyAsync(cuda->bnd_xi4, cuda->d_part.xi4 + cuda->bnd_n_part_save,
+			  n_send * sizeof(*cuda->bnd_xi4), cudaMemcpyDeviceToHost, stream));
+    check(cudaMemcpyAsync(cuda->bnd_pxi4, cuda->d_part.pxi4 + cuda->bnd_n_part_save,
+			  n_send * sizeof(*cuda->bnd_pxi4), cudaMemcpyDeviceToHost, stream));
+  }
+  cudaStreamSynchronize(stream);
+  cudaStreamDestroy(stream);
 }
 

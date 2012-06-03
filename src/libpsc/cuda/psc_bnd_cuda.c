@@ -2,13 +2,11 @@
 #include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "psc_bnd_cuda_fields.h"
+#include "particles_cuda.h"
 #include "psc_particles_as_single.h"
 #include "../psc_bnd/ddc_particles.h"
 
 #include <mrc_profile.h>
-
-EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
-EXTERN_C void cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts);
 
 struct psc_bnd_sub {
 };
@@ -253,19 +251,18 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   }
   prof_stop(pr_A2);
     
+  struct cuda_mprts cuda_mprts;
+  cuda_mprts_create(&cuda_mprts, mprts);
+  
   prof_start(pr_B);
-  cuda_mprts_reorder_send_buf(mprts);
+  cuda_mprts_reorder_send_buf(&cuda_mprts);
   prof_stop(pr_B);
-    
+
   prof_start(pr_C);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
-      continue;
-    }
-    xchg_copy_from_dev(bnd, prts);
-  }
+  cuda_mprts_copy_from_dev(&cuda_mprts);
   prof_stop(pr_C);
+    
+  cuda_mprts_destroy(&cuda_mprts);
     
   prof_start(pr_D);
   for (int p = 0; p < mprts->nr_patches; p++) {
