@@ -361,11 +361,11 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_sub_exchange_particles_general
+// psc_bnd_sub_exchange_particles_v1
 
-static void
-psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
-					mparticles_cuda_t *particles)
+static void __unused
+psc_bnd_sub_exchange_particles_v1(struct psc_bnd *bnd,
+				  mparticles_cuda_t *particles)
 {
   struct ddc_particles *ddcp = bnd->ddcp;
 
@@ -390,6 +390,35 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
   for (int p = 0; p < particles->nr_patches; p++) {
     psc_bnd_sub_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
   }
+  prof_stop(pr_C);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_sub_exchange_particles_general
+
+static void
+psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
+				       mparticles_cuda_t *particles)
+{
+  struct ddc_particles *ddcp = bnd->ddcp;
+
+  static int pr_A, pr_B, pr_C;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_prep", 1., 0, 0);
+    pr_B = prof_register("xchg_comm", 1., 0, 0);
+    pr_C = prof_register("xchg_post", 1., 0, 0);
+  }
+  
+  prof_start(pr_A);
+  psc_bnd_sub_exchange_mprts_prep(bnd, particles);
+  prof_stop(pr_A);
+
+  prof_start(pr_B);
+  ddc_particles_comm(ddcp, particles);
+  prof_stop(pr_B);
+
+  prof_start(pr_C);
+  psc_bnd_sub_exchange_mprts_post(bnd, particles);
   prof_stop(pr_C);
 }
 
