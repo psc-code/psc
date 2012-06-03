@@ -119,12 +119,12 @@ public:
   void sort(unsigned int *d_bidx, unsigned int *d_alt_bidx, unsigned int *d_alt_ids,
 	    int n_part, int *d_offsets, int n_part_prev, unsigned int *bn_cnts)
   {
-    static int pr_A, pr_B, pr_C;
-    if (!pr_A) {
-      pr_A = prof_register("sort_bottom_sum", 1., 0, 0);
-      pr_B = prof_register("sort_top_scan", 1., 0, 0);
-      pr_C = prof_register("sort_bottom_scan", 1., 0, 0);
-    }
+    // static int pr_A, pr_B, pr_C;
+    // if (!pr_A) {
+    //   pr_A = prof_register("sort_bottom_sum", 1., 0, 0);
+    //   pr_B = prof_register("sort_top_scan", 1., 0, 0);
+    //   pr_C = prof_register("sort_bottom_scan", 1., 0, 0);
+    // }
     
 //    prof_start(pr_A);
     reduction<NBLOCKS_X, NBLOCKS_Y, NBLOCKS_Z>

@@ -317,12 +317,12 @@ __fields_cuda_from_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *
   assert(pf->im[1] >= 2 * B);
   assert(pf->im[2] >= 2 * B);
 
-  static int pr1, pr2, pr3;
-  if (!pr1) {
-    pr1 = prof_register("field_device_pack", 1., 0, 0);
-    pr2 = prof_register("cuda_memcpy", 1., 0, 0);
-    pr3 = prof_register("field_host_unpack", 1., 0, 0);
-  }
+  // static int pr1, pr2, pr3;
+  // if (!pr1) {
+  //   pr1 = prof_register("field_device_pack", 1., 0, 0);
+  //   pr2 = prof_register("cuda_memcpy", 1., 0, 0);
+  //   pr3 = prof_register("field_host_unpack", 1., 0, 0);
+  // }
 
 //  prof_start(pr1);
   fields_device_pack_yz<B, PACK>(pf, mb, me);
