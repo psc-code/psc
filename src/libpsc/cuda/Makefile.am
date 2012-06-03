@@ -25,7 +25,8 @@ libsubdir_la_LIBADD = \
 	cuda_bnd.lo \
 	cuda_exclusive_scan_2.lo \
 	cuda_push_fields_yz.lo \
-	cuda_push_part_yz_a.lo \
+	cuda_push_part_yz_1vb.lo
+#	cuda_push_part_yz_a.lo \
 	cuda_push_part_yz_b.lo \
 	cuda_push_part_yz.lo \
 	cuda_push_part_yz2.lo \
@@ -33,11 +34,10 @@ libsubdir_la_LIBADD = \
 	cuda_push_part_yz4.lo \
 	cuda_push_part_yz6.lo \
 	cuda_push_part_yz_1st.lo \
-	cuda_push_part_yz_1vb.lo \
 	cuda_push_part_z.lo \
 	cuda_push_part_z2.lo \
-	cuda_push_part_z3.lo
-#	cuda_push_part_yz5.lo
+	cuda_push_part_z3.lo \
+	cuda_push_part_yz5.lo
 
 CUDACC_FLAGS = -g --ptxas-options=-v --maxrregcount=32 --use_fast_math $(filter-out -msse2 -msse4.1 -Wall -ffast-math,$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS) $(AM_CFLAGS)) $(CUDAMPIFLAGS) $(CUDACFLAGS)
 
