@@ -150,6 +150,43 @@ get_head(struct psc_particles *prts)
 #include "../psc_bnd/psc_bnd_exchange_particles_pre.c"
 
 // ----------------------------------------------------------------------
+// mprts_exchange_particles_pre
+
+static void
+mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    exchange_particles_pre(bnd, prts);
+  }
+}
+
+// ----------------------------------------------------------------------
+// mprts_append_received
+
+static void
+mprts_append_recvd(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    struct ddc_particles *ddcp = bnd->ddcp;
+    struct ddcp_patch *patch = &ddcp->patches[prts->p];
+    int n_recv = cuda->bnd_n_part + patch->head;
+    prts->n_part = cuda->bnd_n_part_save + n_recv;
+    assert(prts->n_part <= cuda->n_alloced);
+    
+    cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
+    cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
+    cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
+    cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
+    for (int n = 0; n < patch->head; n++) {
+      xchg_append(prts, NULL, &cuda->bnd_prts[n]);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_particles_prep
 
 static void
@@ -169,18 +206,18 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
   struct cuda_mprts cuda_mprts;
   cuda_mprts_create_single(&cuda_mprts, prts);
 
-  prof_start(pr_A);
   cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
-  cuda_find_block_indices_2(prts, cuda->d_part.bidx, 0);
+
+  prof_start(pr_A);
+  //  cuda_mprts_find_block_indices_2(&cuda_mprts);
   prof_stop(pr_A);
   
   prof_start(pr_A2);
-  cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
-  cuda->bnd_n_part_save = prts->n_part;
+  cuda_mprts_scan_send_buf(&cuda_mprts);
   prof_stop(pr_A2);
   
   prof_start(pr_B);
-  cuda_reorder_send_buf(prts->p, prts, cuda->d_part.bidx, cuda->d_part.sums, cuda->bnd_n_send);
+  cuda_mprts_reorder_send_buf(&cuda_mprts);
   prof_stop(pr_B);
   
   prof_start(pr_C);
@@ -188,22 +225,10 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
   prof_stop(pr_C);
   
   prof_start(pr_D);
-  exchange_particles_pre(bnd, prts);
+  mprts_exchange_particles_pre(bnd, &cuda_mprts);
   prof_stop(pr_D);
 
   cuda_mprts_destroy(&cuda_mprts);
-}
-
-// ----------------------------------------------------------------------
-// mprts_exchange_particles_pre
-
-static void
-mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
-{
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
-    exchange_particles_pre(bnd, prts);
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -268,32 +293,18 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
     pr_D = prof_register("xchg_reorder", 1., 0, 0);
   }
 
+  struct cuda_mprts cuda_mprts;
+  cuda_mprts_create_single(&cuda_mprts, prts);
+
   prof_start(pr_A);
-  struct ddc_particles *ddcp = bnd->ddcp;
-  struct ddcp_patch *patch = &ddcp->patches[prts->p];
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int n_recv = cuda->bnd_n_part + patch->head;
-  prts->n_part = cuda->bnd_n_part_save + n_recv;
-  assert(prts->n_part <= cuda->n_alloced);
-  
-  cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
-  cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
-  cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
-  cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
-  for (int n = 0; n < patch->head; n++) {
-    xchg_append(prts, NULL, &cuda->bnd_prts[n]);
-  }
+  mprts_append_recvd(bnd, &cuda_mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  __particles_cuda_to_device_range(prts, cuda->bnd_xi4, cuda->bnd_pxi4,
-				   cuda->bnd_n_part_save, cuda->bnd_n_part_save + n_recv);
-  
-  free(cuda->bnd_prts);
-  free(cuda->bnd_xi4);
-  free(cuda->bnd_pxi4);
+  cuda_mprts_copy_to_dev(&cuda_mprts);
   prof_stop(pr_B);
 
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prof_start(pr_C);
   cuda_find_block_indices_3(prts, cuda->d_part.bidx, cuda->d_part.alt_bidx,
 			    cuda->bnd_n_part_save, cuda->bnd_idx, cuda->bnd_off);
@@ -317,6 +328,11 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   prts->n_part -= cuda->bnd_n_send;
   
   free(cuda->bnd_cnt);
+  free(cuda->bnd_prts);
+  free(cuda->bnd_xi4);
+  free(cuda->bnd_pxi4);
+
+  cuda_mprts_destroy(&cuda_mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -336,23 +352,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   }
 
   prof_start(pr_A);
-  for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    struct ddc_particles *ddcp = bnd->ddcp;
-    struct ddcp_patch *patch = &ddcp->patches[prts->p];
-    int n_recv = cuda->bnd_n_part + patch->head;
-    prts->n_part = cuda->bnd_n_part_save + n_recv;
-    assert(prts->n_part <= cuda->n_alloced);
-    
-    cuda->bnd_xi4  = realloc(cuda->bnd_xi4, n_recv * sizeof(float4));
-    cuda->bnd_pxi4 = realloc(cuda->bnd_pxi4, n_recv * sizeof(float4));
-    cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
-    cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
-    for (int n = 0; n < patch->head; n++) {
-      xchg_append(prts, NULL, &cuda->bnd_prts[n]);
-    }
-  }
+  mprts_append_recvd(bnd, &cuda_mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
@@ -485,7 +485,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
 
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd,
-				mparticles_base_t *particles_base)
+			       mparticles_base_t *particles_base)
 {
   int size;
   MPI_Comm_size(psc_bnd_comm(bnd), &size);

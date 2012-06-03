@@ -210,6 +210,7 @@ mprts_find_block_indices_2(struct cuda_params prm, struct cuda_patch_prts *d_cp_
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
   int p = blockIdx.y / prm.b_mx[2];
 
+  // FIXME/OPT, could be done better like reorder_send_buf
   int block_begin = d_cp_prts[p].d_part.offsets[bid];
   int block_end   = d_cp_prts[p].d_part.offsets[bid+1];
 
