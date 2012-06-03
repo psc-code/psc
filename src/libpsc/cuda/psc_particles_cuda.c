@@ -60,15 +60,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
   }
   cell_map_init(&cuda->map, cuda->b_mx, bs);
 
-  cuda->h_dev = calloc(1, sizeof(*cuda->h_dev));
-  __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags
-
-  cuda_alloc_block_indices(prts, &cuda->h_dev->bidx); // FIXME, merge into ^^^
-  cuda_alloc_block_indices(prts, &cuda->h_dev->ids);
-  cuda_alloc_block_indices(prts, &cuda->h_dev->alt_bidx);
-  cuda_alloc_block_indices(prts, &cuda->h_dev->alt_ids);
-  cuda_alloc_block_indices(prts, &cuda->h_dev->sums);
-
   cuda->sort_ctx = sort_pairs_create(cuda->b_mx);
 }
 
@@ -76,14 +67,6 @@ static void
 psc_particles_cuda_destroy(struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-  cuda_free_block_indices(cuda->h_dev->bidx);
-  cuda_free_block_indices(cuda->h_dev->ids);
-  cuda_free_block_indices(cuda->h_dev->alt_bidx);
-  cuda_free_block_indices(cuda->h_dev->alt_ids);
-  cuda_free_block_indices(cuda->h_dev->sums);
-  __particles_cuda_free(prts);
-  free(cuda->h_dev);
 
   sort_pairs_destroy(cuda->sort_ctx);
   cell_map_free(&cuda->map);
@@ -551,8 +534,23 @@ struct psc_particles_ops psc_particles_cuda_ops = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   psc_mparticles_setup_super(mprts);
   __psc_mparticles_cuda_setup(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    prts_cuda->h_dev = &mprts_cuda->h_dev[p];
+
+    __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags */
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->bidx); // FIXME, merge into ^^^
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->ids);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_bidx);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_ids);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->sums);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -561,6 +559,16 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 {
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    cuda_free_block_indices(prts_cuda->h_dev->bidx);
+    cuda_free_block_indices(prts_cuda->h_dev->ids);
+    cuda_free_block_indices(prts_cuda->h_dev->alt_bidx);
+    cuda_free_block_indices(prts_cuda->h_dev->alt_ids);
+    cuda_free_block_indices(prts_cuda->h_dev->sums);
+    __particles_cuda_free(prts);
+  }
   __psc_mparticles_cuda_free(mprts);
 }
 
