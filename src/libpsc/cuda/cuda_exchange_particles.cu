@@ -296,6 +296,26 @@ cuda_find_block_indices_3(struct psc_particles *prts, unsigned int *d_bidx,
 }
 
 // ======================================================================
+// cuda_find_block_indices_3
+
+EXTERN_C void
+cuda_mprts_find_block_indices_3(struct cuda_mprts *cuda_mprts)
+{
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+    unsigned int start = cuda->bnd_n_part_save;
+    // for consistency, use same block indices that we counted earlier
+    check(cudaMemcpy(cuda->d_part.bidx + start, cuda->bnd_idx, (prts->n_part - start) * sizeof(*cuda->d_part.bidx),
+		     cudaMemcpyHostToDevice));
+    // abuse of alt_bidx!!! FIXME
+    check(cudaMemcpy(cuda->d_part.alt_bidx + start, cuda->bnd_off, (prts->n_part - start) * sizeof(*cuda->d_part.alt_bidx),
+		     cudaMemcpyHostToDevice));
+  }
+}
+
+// ======================================================================
 // reorder_send_buf
 
 __global__ static void

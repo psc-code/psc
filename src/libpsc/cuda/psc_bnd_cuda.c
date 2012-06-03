@@ -306,10 +306,7 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
 
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prof_start(pr_C);
-  cuda_find_block_indices_3(prts, cuda->d_part.bidx, cuda->d_part.alt_bidx,
-			    cuda->bnd_n_part_save, cuda->bnd_idx, cuda->bnd_off);
-  free(cuda->bnd_idx);
-  free(cuda->bnd_off);
+  cuda_mprts_find_block_indices_3(&cuda_mprts);
   prof_stop(pr_C);
   
   prof_start(pr_C2);
@@ -327,6 +324,8 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   
   prts->n_part -= cuda->bnd_n_send;
   
+  free(cuda->bnd_idx);
+  free(cuda->bnd_off);
   free(cuda->bnd_cnt);
   free(cuda->bnd_prts);
   free(cuda->bnd_xi4);
@@ -360,14 +359,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_stop(pr_B);
 
   prof_start(pr_C);
-  for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda_find_block_indices_3(prts, cuda->d_part.bidx, cuda->d_part.alt_bidx,
-			      cuda->bnd_n_part_save, cuda->bnd_idx, cuda->bnd_off);
-    free(cuda->bnd_idx);
-    free(cuda->bnd_off);
-  }
+  cuda_mprts_find_block_indices_3(&cuda_mprts);
   prof_stop(pr_C);
     
   prof_start(pr_C2);
@@ -389,6 +381,8 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cuda_reorder(prts, cuda->d_part.alt_ids);
     prts->n_part -= cuda->bnd_n_send;
+    free(cuda->bnd_idx);
+    free(cuda->bnd_off);
     free(cuda->bnd_cnt);
     free(cuda->bnd_prts);
     free(cuda->bnd_xi4);
