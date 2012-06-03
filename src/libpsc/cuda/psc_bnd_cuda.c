@@ -211,6 +211,29 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
 }
 
 // ----------------------------------------------------------------------
+// psc_bnd_sub_exchange_mprts_prep
+
+static void
+psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
+				struct psc_mparticles *mprts)
+{
+  static int pr_A;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_prep", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    psc_bnd_sub_exchange_particles_prep(bnd, prts);
+  }
+  prof_stop(pr_A);
+}
+
+// ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_particles_post
 
 static void
@@ -274,6 +297,29 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   prts->n_part -= cuda->bnd_n_send;
   
   free(cuda->bnd_cnt);
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_sub_exchange_mprts_post
+
+static void
+psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
+				struct psc_mparticles *mprts)
+{
+  static int pr_A;
+  if (!pr_A) {
+    pr_A = prof_register("xchg_post", 1., 0, 0);
+  }
+
+  prof_start(pr_A);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    psc_bnd_sub_exchange_particles_post(bnd, prts);
+  }
+  prof_stop(pr_A);
 }
 
 // ----------------------------------------------------------------------
@@ -344,6 +390,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
   for (int p = 0; p < particles->nr_patches; p++) {
     psc_bnd_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
   }
+  prof_stop(pr_A);
 
   prof_start(pr_B);
   ddc_particles_comm(ddcp, particles);
@@ -359,7 +406,7 @@ psc_bnd_sub_exchange_particles_general(struct psc_bnd *bnd,
 // ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_particles
 
-void
+static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd,
 				mparticles_base_t *particles_base)
 {
@@ -394,6 +441,8 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
   .exchange_particles      = psc_bnd_sub_exchange_particles,
   .exchange_particles_prep = psc_bnd_sub_exchange_particles_prep,
   .exchange_particles_post = psc_bnd_sub_exchange_particles_post,
+  .exchange_mprts_prep     = psc_bnd_sub_exchange_mprts_prep,
+  .exchange_mprts_post     = psc_bnd_sub_exchange_mprts_post,
 
   .create_ddc              = psc_bnd_fld_cuda_create,
   .add_ghosts              = psc_bnd_fld_cuda_add_ghosts,
