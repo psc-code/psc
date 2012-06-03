@@ -633,22 +633,17 @@ cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    check(cudaMemcpy(cuda->d_part.xi4 + cuda->bnd_n_part_save, cuda->bnd_xi4,
-		     (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_xi4),
-		     cudaMemcpyHostToDevice));
-    check(cudaMemcpy(cuda->d_part.pxi4 + cuda->bnd_n_part_save, cuda->bnd_pxi4,
-		     (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_pxi4),
-		     cudaMemcpyHostToDevice));
+    check(cudaMemcpyAsync(cuda->d_part.xi4 + cuda->bnd_n_part_save, cuda->bnd_xi4,
+			  (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_xi4),
+			  cudaMemcpyHostToDevice, stream[p]));
+    check(cudaMemcpyAsync(cuda->d_part.pxi4 + cuda->bnd_n_part_save, cuda->bnd_pxi4,
+			  (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_pxi4),
+			  cudaMemcpyHostToDevice, stream[p]));
   }
 
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cudaStreamSynchronize(stream[p]);
     cudaStreamDestroy(stream[p]);
-    free(cuda->bnd_prts);
-    free(cuda->bnd_xi4);
-    free(cuda->bnd_pxi4);
   }
 }
 

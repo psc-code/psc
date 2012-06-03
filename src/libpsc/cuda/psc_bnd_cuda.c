@@ -407,6 +407,9 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
     cuda_reorder(prts, cuda->d_part.alt_ids);
     prts->n_part -= cuda->bnd_n_send;
     free(cuda->bnd_cnt);
+    free(cuda->bnd_prts);
+    free(cuda->bnd_xi4);
+    free(cuda->bnd_pxi4);
   }
   prof_stop(pr_D);
 
