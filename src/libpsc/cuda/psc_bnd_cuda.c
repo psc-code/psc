@@ -344,18 +344,18 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prof_start(pr_F);
-    cuda_find_block_indices(prts, cuda->d_part.bidx);
+    cuda_find_block_indices(prts, cuda->h_dev->bidx);
     prof_stop(pr_F);
 
     prof_start(pr_G);
-    sort_pairs_device_2(cuda->sort_ctx, cuda->d_part.bidx,
-			cuda->d_part.alt_ids,
+    sort_pairs_device_2(cuda->sort_ctx, cuda->h_dev->bidx,
+			cuda->h_dev->alt_ids,
 			prts->n_part,
-			cuda->d_part.offsets);
+			cuda->h_dev->offsets);
     prof_stop(pr_G);
 
     prof_start(pr_H);
-    cuda_reorder(prts, cuda->d_part.alt_ids);
+    cuda_reorder(prts, cuda->h_dev->alt_ids);
     prof_stop(pr_H);
   }
 }

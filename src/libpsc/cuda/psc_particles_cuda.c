@@ -59,13 +59,14 @@ psc_particles_cuda_setup(struct psc_particles *prts)
   }
   cell_map_init(&cuda->map, cuda->b_mx, bs);
 
+  cuda->h_dev = calloc(1, sizeof(*cuda->h_dev));
   __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags
 
-  cuda_alloc_block_indices(prts, &cuda->d_part.bidx); // FIXME, merge into ^^^
-  cuda_alloc_block_indices(prts, &cuda->d_part.ids);
-  cuda_alloc_block_indices(prts, &cuda->d_part.alt_bidx);
-  cuda_alloc_block_indices(prts, &cuda->d_part.alt_ids);
-  cuda_alloc_block_indices(prts, &cuda->d_part.sums);
+  cuda_alloc_block_indices(prts, &cuda->h_dev->bidx); // FIXME, merge into ^^^
+  cuda_alloc_block_indices(prts, &cuda->h_dev->ids);
+  cuda_alloc_block_indices(prts, &cuda->h_dev->alt_bidx);
+  cuda_alloc_block_indices(prts, &cuda->h_dev->alt_ids);
+  cuda_alloc_block_indices(prts, &cuda->h_dev->sums);
 
   cuda->sort_ctx = sort_pairs_create(cuda->b_mx);
 }
@@ -75,13 +76,15 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  cuda_free_block_indices(cuda->d_part.bidx);
-  cuda_free_block_indices(cuda->d_part.ids);
-  cuda_free_block_indices(cuda->d_part.alt_bidx);
-  cuda_free_block_indices(cuda->d_part.alt_ids);
-  cuda_free_block_indices(cuda->d_part.sums);
-  sort_pairs_destroy(cuda->sort_ctx);
+  cuda_free_block_indices(cuda->h_dev->bidx);
+  cuda_free_block_indices(cuda->h_dev->ids);
+  cuda_free_block_indices(cuda->h_dev->alt_bidx);
+  cuda_free_block_indices(cuda->h_dev->alt_ids);
+  cuda_free_block_indices(cuda->h_dev->sums);
   __particles_cuda_free(prts);
+  free(cuda->h_dev);
+
+  sort_pairs_destroy(cuda->sort_ctx);
   cell_map_free(&cuda->map);
 }
 

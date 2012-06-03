@@ -45,9 +45,9 @@ static void
 sort_patch(int p, struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  cuda_find_block_indices_ids(prts, cuda->d_part.bidx, cuda->d_part.ids);
-  sort_pairs_device(cuda->d_part.bidx, cuda->d_part.ids, prts->n_part);
-  cuda_reorder_and_offsets(prts, cuda->d_part.bidx, cuda->d_part.ids);
+  cuda_find_block_indices_ids(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
+  sort_pairs_device(cuda->h_dev->bidx, cuda->h_dev->ids, prts->n_part);
+  cuda_reorder_and_offsets(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
 }
 
 void

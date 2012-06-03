@@ -61,7 +61,7 @@ cuda_mprts_scan_send_buf(struct cuda_mprts *cuda_mprts)
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->d_part.bidx, cuda->d_part.sums);
+    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->h_dev->bidx, cuda->h_dev->sums);
     cuda->bnd_n_part_save = prts->n_part;
   }
 }

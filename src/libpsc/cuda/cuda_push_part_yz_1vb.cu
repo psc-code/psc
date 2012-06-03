@@ -82,8 +82,8 @@ cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
   cuda_mprts->h_cp_prts = new struct cuda_patch_prts[cuda_mprts->nr_patches];
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
-    cuda_mprts->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
-    cuda_mprts->h_cp_prts[p].d_part.n_part = prts->n_part; // FIXME!
+    cuda_mprts->h_cp_prts[p].dev = *psc_particles_cuda(prts)->h_dev;
+    cuda_mprts->h_cp_prts[p].dev.n_part = prts->n_part; // FIXME!
   }
 
   check(cudaMalloc(&cuda_mprts->d_cp_prts,
@@ -105,8 +105,8 @@ cuda_mprts_create_single(struct cuda_mprts *cuda_mprts, struct psc_particles *pr
   cuda_mprts->h_cp_prts = new struct cuda_patch_prts[cuda_mprts->nr_patches];
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
-    cuda_mprts->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
-    cuda_mprts->h_cp_prts[p].d_part.n_part = prts->n_part; // FIXME
+    cuda_mprts->h_cp_prts[p].dev = *psc_particles_cuda(prts)->h_dev;
+    cuda_mprts->h_cp_prts[p].dev.n_part = prts->n_part; // FIXME
   }
 
   check(cudaMalloc(&cuda_mprts->d_cp_prts,
@@ -399,15 +399,15 @@ push_mprts_p1(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts,
   ci[2] = block_pos[2] * BLOCKSIZE_Z;
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
 
-  int block_begin = d_cp_prts[p].d_part.offsets[bid];
-  int block_end   = d_cp_prts[p].d_part.offsets[bid+1];
+  int block_begin = d_cp_prts[p].dev.offsets[bid];
+  int block_end   = d_cp_prts[p].dev.offsets[bid+1];
 
   extern __shared__ real fld_cache[];
 
   F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> cached_flds(fld_cache, d_cp_flds[p].d_flds, ci, prm);
   
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    push_part_one(n, d_cp_prts[p].d_part, cached_flds, ci, prm);
+    push_part_one(n, d_cp_prts[p].dev, cached_flds, ci, prm);
   }
 }
 
@@ -431,7 +431,7 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 
   push_part_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-    (cuda->d_part, pfc->d_flds, prm);
+    (*cuda->h_dev, pfc->d_flds, prm);
   cuda_sync_if_enabled();
 }
 
@@ -880,15 +880,15 @@ push_mprts_p3(int block_start, struct cuda_params prm, struct cuda_patch_prts *d
     ci0[0] = 0;
     ci0[1] = block_pos[1] * BLOCKSIZE_Y;
     ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-    s_block_end = d_cp_prts[p].d_part.offsets[bid + 1];
+    s_block_end = d_cp_prts[p].dev.offsets[bid + 1];
   }
   __syncthreads();
 
-  int block_begin = d_cp_prts[p].d_part.offsets[bid];
+  int block_begin = d_cp_prts[p].dev.offsets[bid];
 
   for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
-    yz_calc_jx(i, d_cp_prts[p].d_part, scurr_x, prm);
-    yz_calc_jyjz(i, d_cp_prts[p].d_part, scurr_y, scurr_z, prm);
+    yz_calc_jx(i, d_cp_prts[p].dev, scurr_x, prm);
+    yz_calc_jyjz(i, d_cp_prts[p].dev, scurr_y, scurr_z, prm);
   }
   
   if (do_write) {
@@ -923,7 +923,7 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
   for (int block_start = 0; block_start < 4; block_start++) {
     push_part_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (cuda->d_part, pfc->d_flds, block_start, prm);
+      (*cuda->h_dev, pfc->d_flds, block_start, prm);
     cuda_sync_if_enabled();
   }
 

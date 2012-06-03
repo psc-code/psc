@@ -9,7 +9,7 @@ struct cuda_patch_flds {
 };
 
 struct cuda_patch_prts {
-  particles_cuda_dev_t d_part;
+  particles_cuda_dev_t dev;
 };
 
 struct cuda_mprts {
