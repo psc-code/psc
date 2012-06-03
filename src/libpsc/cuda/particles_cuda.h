@@ -31,4 +31,23 @@ EXTERN_C void cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfield
 EXTERN_C void cuda_mprts_destroy(struct cuda_mprts *cuda_mprts);
 EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
 
+#define MAX_KINDS (4)
+
+struct cuda_params {
+  real dt;
+  real dxi[3];
+  real dqs;
+  real fnqs;
+  real fnqys, fnqzs;
+  int mx[3];
+  int ilg[3];
+  int b_mx[3];
+  int *d_error_count;
+  real dq[MAX_KINDS];
+};
+
+EXTERN_C void set_params(struct cuda_params *prm, struct psc *psc,
+			 struct psc_particles *prts, struct psc_fields *pf);
+EXTERN_C void free_params(struct cuda_params *prm);
+
 #endif

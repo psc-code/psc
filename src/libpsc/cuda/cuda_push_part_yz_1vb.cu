@@ -12,35 +12,17 @@ __shared__ struct cuda_patch_flds s_cp_flds;
 
 #include "cuda_common.h"
 
-#define MAX_KINDS (4)
-
-struct cuda_params {
-  real dt;
-  real dxi[3];
-  real dqs;
-  real fnqs;
-  real fnqys, fnqzs;
-  int mx[3];
-  int ilg[3];
-  int b_mx[3];
-  int *d_error_count;
-  real dq[MAX_KINDS];
-};
-
 __device__ int *__d_error_count;
 
-static void
+void
 set_params(struct cuda_params *prm, struct psc *psc,
 	   struct psc_particles *prts, struct psc_fields *pf)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
     prm->dxi[d] = 1.f / ppsc->dx[d];
-    prm->mx[d] = pf->im[d];
-    prm->ilg[d] = pf->ib[d];
-    prm->b_mx[d] = cuda->b_mx[d];
   }
+
   prm->dqs    = .5f * psc->coeff.eta * psc->dt;
   prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
   prm->fnqys  = psc->dx[1] * prm->fnqs / psc->dt;
@@ -50,11 +32,25 @@ set_params(struct cuda_params *prm, struct psc *psc,
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 
+  if (prts) {
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    for (int d = 0; d < 3; d++) {
+      prm->b_mx[d] = cuda->b_mx[d];
+    }
+  }
+
+  if (pf) {
+    for (int d = 0; d < 3; d++) {
+      prm->mx[d] = pf->im[d];
+      prm->ilg[d] = pf->ib[d];
+    }
+  }
+
   check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
   check(cudaMemset(prm->d_error_count, 0, 1 * sizeof(int)));
 }
 
-static void
+void
 free_params(struct cuda_params *prm)
 {
   int h_error_count[1];
