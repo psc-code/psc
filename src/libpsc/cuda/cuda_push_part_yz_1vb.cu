@@ -684,7 +684,18 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(&p, vxi, prm.dt);
     STORE_PARTICLE_POS(p, d_particles, i);
+    {
+      unsigned int block_pos_y = cuda_fint(p.xi[1] * prm.b_dxi[1]);
+      unsigned int block_pos_z = cuda_fint(p.xi[2] * prm.b_dxi[2]);
 
+      int block_idx;
+      if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+	block_idx = prm.b_mx[1] * prm.b_mx[2];
+      } else {
+	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y;
+      }
+      d_particles.bidx[i] = block_idx;
+    }
     find_idx_off_pos_1st(p.xi, k, h1, xp, real(0.), prm);
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
