@@ -12,18 +12,23 @@ struct cuda_patch_prts {
   particles_cuda_dev_t d_part;
 };
 
-struct cuda_patch_ctx {
-  struct cuda_patch_flds *h_cp_flds;
+struct cuda_mprts {
   struct cuda_patch_prts *h_cp_prts;
-  int nr_patches;
-  struct cuda_patch_flds *d_cp_flds;
   struct cuda_patch_prts *d_cp_prts;
+  int nr_patches;
   struct psc_particles **mprts_cuda;
+};
+
+struct cuda_mflds {
+  struct cuda_patch_flds *h_cp_flds;
+  struct cuda_patch_flds *d_cp_flds;
+  int nr_patches;
   struct psc_fields **mflds_cuda;
 };
 
-EXTERN_C void cuda_patch_ctx_create(struct cuda_patch_ctx *cp, struct psc_mparticles *mprts,
-				    struct psc_mfields *mflds);
-EXTERN_C void cuda_patch_ctx_free(struct cuda_patch_ctx *cp);
+EXTERN_C void cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts);
+EXTERN_C void cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds);
+EXTERN_C void cuda_mprts_destroy(struct cuda_mprts *cuda_mprts);
+EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
 
 #endif

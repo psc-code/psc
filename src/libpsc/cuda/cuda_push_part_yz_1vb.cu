@@ -70,51 +70,71 @@ free_params(struct cuda_params *prm)
 // ======================================================================
 
 void
-cuda_patch_ctx_create(struct cuda_patch_ctx *cp, struct psc_mparticles *mprts,
-		      struct psc_mfields *mflds)
+cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
 {
-  cp->mprts_cuda = new struct psc_particles *[mprts->nr_patches];
-  cp->mflds_cuda = new struct psc_fields *[mflds->nr_patches];
-  cp->nr_patches = 0;
+  cuda_mprts->mprts_cuda = new struct psc_particles *[mprts->nr_patches];
+  cuda_mprts->nr_patches = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    if (psc_particles_ops(prts) == &psc_particles_cuda_ops &&
-	psc_fields_ops(flds) == &psc_fields_cuda_ops) {
-      cp->mprts_cuda[cp->nr_patches] = prts;
-      cp->mflds_cuda[cp->nr_patches] = flds;
-      cp->nr_patches++;
+    if (psc_particles_ops(prts) == &psc_particles_cuda_ops) {
+      cuda_mprts->mprts_cuda[cuda_mprts->nr_patches] = prts;
+      cuda_mprts->nr_patches++;
     }
   }
 
-  cp->h_cp_prts = new struct cuda_patch_prts[cp->nr_patches];
-  cp->h_cp_flds = new struct cuda_patch_flds[cp->nr_patches];
-
-  for (int p = 0; p < cp->nr_patches; p++) {
-    struct psc_particles *prts = cp->mprts_cuda[p];
-    struct psc_fields *flds = cp->mflds_cuda[p];
-
-    cp->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
-    cp->h_cp_flds[p].d_flds = psc_fields_cuda(flds)->d_flds;
+  cuda_mprts->h_cp_prts = new struct cuda_patch_prts[cuda_mprts->nr_patches];
+  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    cuda_mprts->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
   }
 
-  check(cudaMalloc(&cp->d_cp_prts, cp->nr_patches * sizeof(*cp->d_cp_prts)));
-  check(cudaMalloc(&cp->d_cp_flds, cp->nr_patches * sizeof(*cp->d_cp_flds)));
-  check(cudaMemcpy(cp->d_cp_prts, cp->h_cp_prts, cp->nr_patches * sizeof(*cp->d_cp_prts),
-		   cudaMemcpyHostToDevice));
-  check(cudaMemcpy(cp->d_cp_flds, cp->h_cp_flds, cp->nr_patches * sizeof(*cp->d_cp_flds),
+  check(cudaMalloc(&cuda_mprts->d_cp_prts,
+		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts)));
+  check(cudaMemcpy(cuda_mprts->d_cp_prts, cuda_mprts->h_cp_prts,
+		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
 		   cudaMemcpyHostToDevice));
 }
 
 void
-cuda_patch_ctx_free(struct cuda_patch_ctx *cp)
+cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds)
 {
-  check(cudaFree(cp->d_cp_prts));
-  check(cudaFree(cp->d_cp_flds));
-  delete[] cp->h_cp_prts;
-  delete[] cp->h_cp_flds;
-  delete[] cp->mprts_cuda;
-  delete[] cp->mflds_cuda;
+  cuda_mflds->mflds_cuda = new struct psc_fields *[mflds->nr_patches];
+  cuda_mflds->nr_patches = 0;
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    if (psc_fields_ops(flds) == &psc_fields_cuda_ops) {
+      cuda_mflds->mflds_cuda[cuda_mflds->nr_patches] = flds;
+      cuda_mflds->nr_patches++;
+    }
+  }
+
+  cuda_mflds->h_cp_flds = new struct cuda_patch_flds[cuda_mflds->nr_patches];
+  for (int p = 0; p < cuda_mflds->nr_patches; p++) {
+    struct psc_fields *flds = cuda_mflds->mflds_cuda[p];
+    cuda_mflds->h_cp_flds[p].d_flds = psc_fields_cuda(flds)->d_flds;
+  }
+
+  check(cudaMalloc(&cuda_mflds->d_cp_flds,
+		   cuda_mflds->nr_patches * sizeof(*cuda_mflds->d_cp_flds)));
+  check(cudaMemcpy(cuda_mflds->d_cp_flds, cuda_mflds->h_cp_flds,
+		   cuda_mflds->nr_patches * sizeof(*cuda_mflds->d_cp_flds),
+		   cudaMemcpyHostToDevice));
+}
+
+void
+cuda_mprts_destroy(struct cuda_mprts *cuda_mprts)
+{
+  check(cudaFree(cuda_mprts->d_cp_prts));
+  delete[] cuda_mprts->h_cp_prts;
+  delete[] cuda_mprts->mprts_cuda;
+}
+
+void
+cuda_mflds_destroy(struct cuda_mflds *cuda_mflds)
+{
+  check(cudaFree(cuda_mflds->d_cp_flds));
+  delete[] cuda_mflds->h_cp_flds;
+  delete[] cuda_mflds->mflds_cuda;
 }
 
 // ======================================================================
@@ -399,23 +419,23 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_a(struct cuda_patch_ctx *cp)
+cuda_push_mprts_a(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
 {
-  if (cp->nr_patches == 0) {
+  if (cuda_mprts->nr_patches == 0) {
     return;
   }
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, cp->mprts_cuda[0], cp->mflds_cuda[0]);
+  set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], cuda_mflds->mflds_cuda[0]);
   
   // FIXME, why is this dynamic?
   unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
   
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cp->nr_patches);
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cuda_mprts->nr_patches);
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
-    (prm, cp->d_cp_prts, cp->d_cp_flds);
+    (prm, cuda_mprts->d_cp_prts, cuda_mflds->d_cp_flds);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -883,26 +903,26 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_b(struct cuda_patch_ctx *cp)
+cuda_push_mprts_b(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
 {
-  if (cp->nr_patches == 0)
+  if (cuda_mprts->nr_patches == 0)
     return;
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, cp->mprts_cuda[0], cp->mflds_cuda[0]);
+  set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], cuda_mflds->mflds_cuda[0]);
   
-  for (int p = 0; p < cp->nr_patches; p++) {
+  for (int p = 0; p < cuda_mflds->nr_patches; p++) {
     unsigned int size = prm.mx[0] * prm.mx[1] * prm.mx[2];
-    check(cudaMemset(cp->h_cp_flds[p].d_flds + JXI * size, 0,
-		     3 * size * sizeof(*cp->h_cp_flds[p].d_flds)));
+    check(cudaMemset(cuda_mflds->h_cp_flds[p].d_flds + JXI * size, 0,
+		     3 * size * sizeof(*cuda_mflds->h_cp_flds[p].d_flds)));
   }
   
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cp->nr_patches);
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cuda_mprts->nr_patches);
   
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, cp->d_cp_prts, cp->d_cp_flds);
+      (block_start, prm, cuda_mprts->d_cp_prts, cuda_mflds->d_cp_flds);
     cuda_sync_if_enabled();
     }
   
@@ -962,21 +982,28 @@ yz8x8_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, r
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct cuda_patch_ctx cp;
-  cuda_patch_ctx_create(&cp, mprts, mflds);
+  struct cuda_mprts cuda_mprts;
+  struct cuda_mflds cuda_mflds;
+  cuda_mprts_create(&cuda_mprts, mprts);
+  cuda_mflds_create(&cuda_mflds, mflds);
+  // FIXME, should make sure they're compatible
 
-  cuda_push_mprts_a<1, 4, 4>(&cp);
+  cuda_push_mprts_a<1, 4, 4>(&cuda_mprts, &cuda_mflds);
 
-  cuda_patch_ctx_free(&cp);
+  cuda_mprts_destroy(&cuda_mprts);
+  cuda_mflds_destroy(&cuda_mflds);
 }
 
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct cuda_patch_ctx cp;
-  cuda_patch_ctx_create(&cp, mprts, mflds);
+  struct cuda_mprts cuda_mprts;
+  struct cuda_mflds cuda_mflds;
+  cuda_mprts_create(&cuda_mprts, mprts);
+  cuda_mflds_create(&cuda_mflds, mflds);
 
-  cuda_push_mprts_b<1, 4, 4>(&cp);
-  
-  cuda_patch_ctx_free(&cp);
+  cuda_push_mprts_b<1, 4, 4>(&cuda_mprts, &cuda_mflds);
+
+  cuda_mprts_destroy(&cuda_mprts);
+  cuda_mflds_destroy(&cuda_mflds);
 }
