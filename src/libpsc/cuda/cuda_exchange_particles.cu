@@ -200,23 +200,23 @@ cuda_find_block_indices_2(struct psc_particles *prts, unsigned int *d_bidx,
 // cuda_mprts_find_block_indices_2
 
 __global__ static void
-mprts_find_block_indices_2(struct cuda_params prm, int n_part, particles_cuda_dev_t d_part,
-			   unsigned int *d_bidx, float b_dyi, float b_dzi)
+mprts_find_block_indices_2(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts)
 {
   int tid = threadIdx.x;
 
   int block_pos[3];
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y;
+  block_pos[2] = blockIdx.y % prm.b_mx[2];
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
+  int p = blockIdx.y / prm.b_mx[2];
 
-  int block_begin = d_part.offsets[bid];
-  int block_end   = d_part.offsets[bid+1];
+  int block_begin = d_cp_prts[p].d_part.offsets[bid];
+  int block_end   = d_cp_prts[p].d_part.offsets[bid+1];
 
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    float4 xi4 = d_part.xi4[n];
-    unsigned int block_pos_y = cuda_fint(xi4.y * b_dyi);
-    unsigned int block_pos_z = cuda_fint(xi4.z * b_dzi);
+    float4 xi4 = d_cp_prts[p].d_part.xi4[n];
+    unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
+    unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
 
     int block_idx;
     if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
@@ -224,7 +224,7 @@ mprts_find_block_indices_2(struct cuda_params prm, int n_part, particles_cuda_de
     } else {
       block_idx = block_pos_z * prm.b_mx[1] + block_pos_y;
     }
-    d_bidx[n] = block_idx;
+    d_cp_prts[p].d_part.bidx[n] = block_idx;
   }
 }
 
@@ -238,17 +238,11 @@ cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts)
     struct cuda_params prm;
     set_params(&prm, ppsc, cuda_mprts.mprts_cuda[0], NULL);
     
-    for (int p = 0; p < cuda_mprts.nr_patches; p++) {
-      struct cuda_patch_prts *cp = &cuda_mprts.h_cp_prts[p];
-      struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
-      struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-      cuda->bnd_cnt = (unsigned int *) calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
-      int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-      int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] };
-      RUN_KERNEL(dimGrid, dimBlock,
-		 mprts_find_block_indices_2, (prm, prts->n_part, cp->d_part, cp->d_part.bidx,
-					      cuda->b_dxi[1], cuda->b_dxi[2]));
-    }
+    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * cuda_mprts.nr_patches };
+
+    RUN_KERNEL(dimGrid, dimBlock,
+	       mprts_find_block_indices_2, (prm, cuda_mprts.d_cp_prts));
     free_params(&prm);
   }
 

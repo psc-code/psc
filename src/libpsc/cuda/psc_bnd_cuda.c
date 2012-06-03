@@ -229,6 +229,15 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   }
 
   prof_start(pr_A);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_cnt = (unsigned int *) calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
+  }
+
   cuda_mprts_find_block_indices_2(mprts);
   prof_stop(pr_A);
 

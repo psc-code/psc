@@ -36,6 +36,7 @@ EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
 struct cuda_params {
   real dt;
   real dxi[3];
+  real b_dxi[3];
   real dqs;
   real fnqs;
   real fnqys, fnqzs;

@@ -36,6 +36,7 @@ set_params(struct cuda_params *prm, struct psc *psc,
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     for (int d = 0; d < 3; d++) {
       prm->b_mx[d] = cuda->b_mx[d];
+      prm->b_dxi[d] = cuda->b_dxi[d];
     }
   }
 
