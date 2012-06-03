@@ -229,24 +229,19 @@ mprts_find_block_indices_2(struct cuda_params prm, struct cuda_patch_prts *d_cp_
 }
 
 EXTERN_C void
-cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts)
+cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts)
 {
-  struct cuda_mprts cuda_mprts;
-  cuda_mprts_create(&cuda_mprts, mprts);
-
-  if (cuda_mprts.nr_patches > 0) {
+  if (cuda_mprts->nr_patches > 0) {
     struct cuda_params prm;
-    set_params(&prm, ppsc, cuda_mprts.mprts_cuda[0], NULL);
+    set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], NULL);
     
     int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * cuda_mprts.nr_patches };
+    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * cuda_mprts->nr_patches };
 
     RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_find_block_indices_2, (prm, cuda_mprts.d_cp_prts));
+	       mprts_find_block_indices_2, (prm, cuda_mprts->d_cp_prts));
     free_params(&prm);
   }
-
-  cuda_mprts_destroy(&cuda_mprts);
 }
 
 // ----------------------------------------------------------------------
