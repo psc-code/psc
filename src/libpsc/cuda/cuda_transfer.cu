@@ -1,5 +1,6 @@
 
 #include "psc_cuda.h"
+#include "particles_cuda.h"
 
 #include <mrc_profile.h>
 
@@ -142,6 +143,29 @@ cuda_copy_offsets_to_dev(struct psc_particles *prts, unsigned int *h_offsets)
   check(cudaMemcpy(cuda->h_dev->offsets, h_offsets, (cuda->nr_blocks + 1) * sizeof(*h_offsets),
 		   cudaMemcpyHostToDevice));
 }
+
+void
+__psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  mprts_cuda->h_dev = new particles_cuda_dev_t[mprts->nr_patches];
+  check(cudaMalloc(&mprts_cuda->d_dev,
+		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev)));
+}
+
+void
+__psc_mparticles_cuda_free(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  free(mprts_cuda->h_dev);
+  check(cudaFree(mprts_cuda->d_dev));
+}
+
+// ======================================================================
+// ======================================================================
+// fields
 
 EXTERN_C void
 __fields_cuda_alloc(struct psc_fields *pf)

@@ -155,8 +155,9 @@ get_head(struct psc_particles *prts)
 static void
 mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     exchange_particles_pre(bnd, prts);
   }
 }
@@ -167,8 +168,9 @@ mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 static void
 mprts_append_recvd(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     struct ddc_particles *ddcp = bnd->ddcp;
     struct ddcp_patch *patch = &ddcp->patches[prts->p];
@@ -192,6 +194,7 @@ mprts_append_recvd(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 static void
 xchg_prep(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 {
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
@@ -201,8 +204,8 @@ xchg_prep(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
     pr_E = prof_register("xchg_pre", 1., 0, 0);
   }
 
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
   }
@@ -267,28 +270,6 @@ xchg_post(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 }
 
 static struct cuda_mprts cuda_mprts; // FIXME!
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_exchange_particles_prep
-
-static void
-psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *prts)
-{
-  cuda_mprts_create_single(&cuda_mprts, prts);
-  xchg_prep(bnd, &cuda_mprts);
-  cuda_mprts_destroy(&cuda_mprts);
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_exchange_particles_post
-
-static void
-psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *prts)
-{
-  cuda_mprts_create_single(&cuda_mprts, prts);
-  xchg_post(bnd, &cuda_mprts);
-  cuda_mprts_destroy(&cuda_mprts);
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_mprts_prep
@@ -358,39 +339,6 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
     cuda_reorder(prts, cuda->h_dev->alt_ids);
     prof_stop(pr_H);
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_exchange_particles_v1
-
-static void __unused
-psc_bnd_sub_exchange_particles_v1(struct psc_bnd *bnd,
-				  mparticles_cuda_t *particles)
-{
-  struct ddc_particles *ddcp = bnd->ddcp;
-
-  static int pr_A, pr_B, pr_C;
-  if (!pr_A) {
-    pr_A = prof_register("xchg_prep", 1., 0, 0);
-    pr_B = prof_register("xchg_comm", 1., 0, 0);
-    pr_C = prof_register("xchg_post", 1., 0, 0);
-  }
-  
-  prof_start(pr_A);
-  for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_sub_exchange_particles_prep(bnd, psc_mparticles_get_patch(particles, p));
-  }
-  prof_stop(pr_A);
-
-  prof_start(pr_B);
-  ddc_particles_comm(ddcp, particles);
-  prof_stop(pr_B);
-
-  prof_start(pr_C);
-  for (int p = 0; p < particles->nr_patches; p++) {
-    psc_bnd_sub_exchange_particles_post(bnd, psc_mparticles_get_patch(particles, p));
-  }
-  prof_stop(pr_C);
 }
 
 // ----------------------------------------------------------------------

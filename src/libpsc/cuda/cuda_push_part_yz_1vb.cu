@@ -68,50 +68,20 @@ free_params(struct cuda_params *prm)
 void
 cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
 {
-  cuda_mprts->mprts_cuda = new struct psc_particles *[mprts->nr_patches];
-  cuda_mprts->nr_patches = 0;
+  cuda_mprts->mprts = mprts;
+
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  cuda_mprts->h_cp_prts = mprts_cuda->h_dev;
+  assert(mprts_cuda->h_dev);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    if (psc_particles_ops(prts) == &psc_particles_cuda_ops) {
-      cuda_mprts->mprts_cuda[cuda_mprts->nr_patches] = prts;
-      cuda_mprts->nr_patches++;
-    }
-  }
-
-  cuda_mprts->h_cp_prts = new particles_cuda_dev_t[cuda_mprts->nr_patches];
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
     cuda_mprts->h_cp_prts[p] = *psc_particles_cuda(prts)->h_dev;
     cuda_mprts->h_cp_prts[p].n_part = prts->n_part; // FIXME!
   }
 
-  check(cudaMalloc(&cuda_mprts->d_cp_prts,
-		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts)));
+  cuda_mprts->d_cp_prts = mprts_cuda->d_dev;
   check(cudaMemcpy(cuda_mprts->d_cp_prts, cuda_mprts->h_cp_prts,
-		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
-		   cudaMemcpyHostToDevice));
-}
-
-void
-cuda_mprts_create_single(struct cuda_mprts *cuda_mprts, struct psc_particles *prts)
-{
-  cuda_mprts->mprts_cuda = new struct psc_particles *[1];
-  cuda_mprts->nr_patches = 1;
-  assert(psc_particles_ops(prts) == &psc_particles_cuda_ops);
-  cuda_mprts->mprts_cuda[0] = prts;
-
-  // FIXME duplicated
-  cuda_mprts->h_cp_prts = new particles_cuda_dev_t[cuda_mprts->nr_patches];
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
-    cuda_mprts->h_cp_prts[p] = *psc_particles_cuda(prts)->h_dev;
-    cuda_mprts->h_cp_prts[p].n_part = prts->n_part; // FIXME
-  }
-
-  check(cudaMalloc(&cuda_mprts->d_cp_prts,
-		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts)));
-  check(cudaMemcpy(cuda_mprts->d_cp_prts, cuda_mprts->h_cp_prts,
-		   cuda_mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
+		   mprts->nr_patches * sizeof(*cuda_mprts->d_cp_prts),
 		   cudaMemcpyHostToDevice));
 }
 
@@ -144,9 +114,6 @@ cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds)
 void
 cuda_mprts_destroy(struct cuda_mprts *cuda_mprts)
 {
-  check(cudaFree(cuda_mprts->d_cp_prts));
-  delete[] cuda_mprts->h_cp_prts;
-  delete[] cuda_mprts->mprts_cuda;
 }
 
 void
@@ -441,17 +408,18 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_a(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
 {
-  if (cuda_mprts->nr_patches == 0) {
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  if (mprts->nr_patches == 0) {
     return;
   }
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], cuda_mflds->mflds_cuda[0]);
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), cuda_mflds->mflds_cuda[0]);
   
   // FIXME, why is this dynamic?
   unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
   
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * cuda_mprts->nr_patches);
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
@@ -936,11 +904,12 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
 cuda_push_mprts_b(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
 {
-  if (cuda_mprts->nr_patches == 0)
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  if (mprts->nr_patches == 0)
     return;
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], cuda_mflds->mflds_cuda[0]);
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), cuda_mflds->mflds_cuda[0]);
   
   for (int p = 0; p < cuda_mflds->nr_patches; p++) {
     unsigned int size = prm.mx[0] * prm.mx[1] * prm.mx[2];
@@ -948,7 +917,7 @@ cuda_push_mprts_b(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
 		     3 * size * sizeof(*cuda_mflds->h_cp_flds[p].d_flds)));
   }
   
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * cuda_mprts->nr_patches);
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>

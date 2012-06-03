@@ -233,12 +233,13 @@ mprts_find_block_indices_2(struct cuda_params prm, particles_cuda_dev_t *d_cp_pr
 EXTERN_C void
 cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts)
 {
-  if (cuda_mprts->nr_patches > 0) {
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  if (mprts->nr_patches > 0) {
     struct cuda_params prm;
-    set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], NULL);
+    set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
     
     int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * cuda_mprts->nr_patches };
+    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches };
 
     RUN_KERNEL(dimGrid, dimBlock,
 	       mprts_find_block_indices_2, (prm, cuda_mprts->d_cp_prts));
@@ -302,8 +303,9 @@ cuda_find_block_indices_3(struct psc_particles *prts, unsigned int *d_bidx,
 EXTERN_C void
 cuda_mprts_find_block_indices_3(struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     unsigned int start = cuda->bnd_n_part_save;
@@ -379,13 +381,14 @@ mprts_reorder_send_buf(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, 
 EXTERN_C void
 cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts)
 {
-  if (cuda_mprts->nr_patches > 0) {
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  if (mprts->nr_patches > 0) {
     struct cuda_params prm;
-    set_params(&prm, ppsc, cuda_mprts->mprts_cuda[0], NULL);
+    set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
 
     int max_n_part = 0;
-    for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-      struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+    for (int p = 0; p < mprts->nr_patches; p++) {
+      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
       struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
       assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
       if (prts->n_part > max_n_part) {
@@ -397,7 +400,7 @@ cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts)
     int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
 
     RUN_KERNEL(dimGrid, dimBlock,
-		 mprts_reorder_send_buf, (prm, cuda_mprts->d_cp_prts, cuda_mprts->nr_patches));
+		 mprts_reorder_send_buf, (prm, cuda_mprts->d_cp_prts, mprts->nr_patches));
 
     free_params(&prm);
   }
@@ -610,9 +613,10 @@ cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *_d_vals, un
 void
 cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
 {
-  cudaStream_t stream[cuda_mprts->nr_patches];
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  cudaStream_t stream[mprts->nr_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     cuda->bnd_n_part = 0;
@@ -626,8 +630,8 @@ cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
 
     cudaStreamCreate(&stream[p]);
   }    
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     int n_send = cuda->bnd_n_send;
@@ -636,7 +640,7 @@ cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
     check(cudaMemcpyAsync(cuda->bnd_pxi4, cuda->h_dev->pxi4 + cuda->bnd_n_part_save,
 			  n_send * sizeof(*cuda->bnd_pxi4), cudaMemcpyDeviceToHost, stream[p]));
   }
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts->nr_patches; p++) {
     cudaStreamSynchronize(stream[p]);
     cudaStreamDestroy(stream[p]);
   }
@@ -648,12 +652,13 @@ cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
 void
 cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
 {
-  cudaStream_t stream[cuda_mprts->nr_patches];
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  cudaStream_t stream[mprts->nr_patches];
+  for (int p = 0; p < mprts->nr_patches; p++) {
     cudaStreamCreate(&stream[p]);
   }
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     check(cudaMemcpyAsync(cuda->h_dev->xi4 + cuda->bnd_n_part_save, cuda->bnd_xi4,
 			  (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_xi4),
@@ -663,7 +668,7 @@ cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
 			  cudaMemcpyHostToDevice, stream[p]));
   }
 
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
+  for (int p = 0; p < mprts->nr_patches; p++) {
     cudaStreamSynchronize(stream[p]);
     cudaStreamDestroy(stream[p]);
   }
@@ -675,8 +680,9 @@ cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
 void
 cuda_mprts_sort(struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     // OPT: when calculating bidx, do preprocess then
     void *sp = sort_pairs_3_create(cuda->b_mx);
@@ -693,8 +699,9 @@ cuda_mprts_sort(struct cuda_mprts *cuda_mprts)
 void
 cuda_mprts_reorder(struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cuda_reorder(prts, cuda->h_dev->alt_ids);
     prts->n_part -= cuda->bnd_n_send;
@@ -704,8 +711,9 @@ cuda_mprts_reorder(struct cuda_mprts *cuda_mprts)
 void
 cuda_mprts_free(struct cuda_mprts *cuda_mprts)
 {
-  for (int p = 0; p < cuda_mprts->nr_patches; p++) {
-    struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
+  struct psc_mparticles *mprts = cuda_mprts->mprts;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     free(cuda->bnd_idx);
     free(cuda->bnd_off);

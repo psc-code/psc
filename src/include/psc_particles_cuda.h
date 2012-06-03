@@ -51,6 +51,13 @@ struct psc_particles_cuda {
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)
 
+struct psc_mparticles_cuda {
+  particles_cuda_dev_t *h_dev; // particles_cuda_dev_t array for all patches
+  particles_cuda_dev_t *d_dev; // same, living in device memory
+};
+
+#define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
+
 EXTERN_C void particles_cuda_get(struct psc_particles *pp);
 EXTERN_C void particles_cuda_put(struct psc_particles *pp);
 

@@ -5,6 +5,7 @@
 #include "psc_particles_cuda.h"
 #include "psc_particles_single.h"
 #include "psc_push_particles.h"
+#include "particles_cuda.h"
 
 #include <mrc_io.h>
 
@@ -519,13 +520,6 @@ psc_particles_cuda_copy_to_single(struct psc_particles *prts_cuda,
 }
 
 // ======================================================================
-// psc_mparticles: subclass "cuda"
-  
-struct psc_mparticles_ops psc_mparticles_cuda_ops = {
-  .name                    = "cuda",
-};
-
-// ======================================================================
 // psc_particles: subclass "cuda"
 
 static struct mrc_obj_method psc_particles_cuda_methods[] = {
@@ -547,3 +541,36 @@ struct psc_particles_ops psc_particles_cuda_ops = {
   .write                   = psc_particles_cuda_write,
 #endif
 };
+
+// ======================================================================
+// psc_mparticles "cuda"
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_setup
+
+static void
+psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
+{
+  psc_mparticles_setup_super(mprts);
+  __psc_mparticles_cuda_setup(mprts);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_destroy
+
+static void
+psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
+{
+  __psc_mparticles_cuda_free(mprts);
+}
+
+// ======================================================================
+// psc_mparticles: subclass "cuda"
+  
+struct psc_mparticles_ops psc_mparticles_cuda_ops = {
+  .name                    = "cuda",
+  .size                    = sizeof(struct psc_mparticles_cuda),
+  .setup                   = psc_mparticles_cuda_setup,
+  .destroy                 = psc_mparticles_cuda_destroy,
+};
+
