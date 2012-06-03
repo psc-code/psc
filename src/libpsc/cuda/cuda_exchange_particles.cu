@@ -330,6 +330,58 @@ cuda_reorder_send_buf(int p, struct psc_particles *prts,
 	     reorder_send_buf, (prts->n_part, cuda->d_part, d_bidx, d_sums, cuda->nr_blocks));
 }
 
+__global__ static void
+mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts, int nr_patches)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+
+  for (int p = 0; p < nr_patches; p++) {
+    particles_cuda_dev_t d_part = d_cp_prts[p].d_part;
+    int n_part = d_cp_prts[p].n_part;
+    
+    if (i < n_part) {
+      if (d_part.bidx[i] == nr_blocks) {
+	int j = d_part.sums[i] + n_part;
+	d_part.xi4[j] = d_part.xi4[i];
+	d_part.pxi4[j] = d_part.pxi4[i];
+      }
+    }
+  }
+}
+
+EXTERN_C void
+cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
+{
+  struct cuda_mprts cuda_mprts;
+  cuda_mprts_create(&cuda_mprts, mprts);
+  
+  if (cuda_mprts.nr_patches > 0) {
+    struct cuda_params prm;
+    set_params(&prm, ppsc, cuda_mprts.mprts_cuda[0], NULL);
+
+    int max_n_part = 0;
+    for (int p = 0; p < cuda_mprts.nr_patches; p++) {
+      struct psc_particles *prts = cuda_mprts.mprts_cuda[p];
+      struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+      assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
+      if (prts->n_part > max_n_part) {
+	max_n_part = prts->n_part;
+      }
+    }
+
+    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+    int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+
+    RUN_KERNEL(dimGrid, dimBlock,
+		 mprts_reorder_send_buf, (prm, cuda_mprts.d_cp_prts, cuda_mprts.nr_patches));
+
+    free_params(&prm);
+  }
+
+  cuda_mprts_destroy(&cuda_mprts);
+}
+
 EXTERN_C void
 _cuda_reorder_send_buf(int p, struct psc_particles *prts, 
 		       unsigned int *d_bidx, unsigned int *d_sums, int n_send)

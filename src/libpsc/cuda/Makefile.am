@@ -65,7 +65,7 @@ cuda_sort2.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kern
 cuda_sort3.lo: b40c/radixsort_reduction_kernel.h b40c/radixsort_scanscatter_kernel3.h
 cuda_sort2.lo cuda_exchange_particles.lo cuda_sort2_spine.lo: psc_cuda.h cuda_sort2.h
 cuda_sort3.lo: psc_cuda.h cuda_sort2.h
-cuda_exchange_particles.lo: psc_bnd_cuda.h
+cuda_exchange_particles.lo: psc_bnd_cuda.h particles_cuda.h
 
 #FIXME, this is just really too hacky...
 

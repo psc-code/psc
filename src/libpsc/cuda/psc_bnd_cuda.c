@@ -8,6 +8,7 @@
 #include <mrc_profile.h>
 
 EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts);
 
 struct psc_bnd_sub {
 };
@@ -253,14 +254,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   prof_stop(pr_A2);
     
   prof_start(pr_B);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
-      continue;
-    }
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda_reorder_send_buf(prts->p, prts, cuda->d_part.bidx, cuda->d_part.sums, cuda->bnd_n_send);
-  }
+  cuda_mprts_reorder_send_buf(mprts);
   prof_stop(pr_B);
     
   prof_start(pr_C);

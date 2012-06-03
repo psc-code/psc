@@ -83,6 +83,7 @@ cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
   for (int p = 0; p < cuda_mprts->nr_patches; p++) {
     struct psc_particles *prts = cuda_mprts->mprts_cuda[p];
     cuda_mprts->h_cp_prts[p].d_part = psc_particles_cuda(prts)->d_part;
+    cuda_mprts->h_cp_prts[p].n_part = prts->n_part;
   }
 
   check(cudaMalloc(&cuda_mprts->d_cp_prts,
