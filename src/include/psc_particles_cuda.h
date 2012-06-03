@@ -20,12 +20,11 @@ typedef struct {
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
   int *c_offsets; // particles per cell offsets
-  void *sort_ctx; // for sorting / particle xchg
   unsigned int *bidx;      // for particle xchg
   unsigned int *ids;       // for particle xchg
   unsigned int *alt_bidx;  // for particle xchg
   unsigned int *alt_ids;   // for particle xchg
-  unsigned int *sums;      // for particle xchg
+  unsigned int *sums;
 } particles_cuda_dev_t;
 
 struct psc_particles_cuda {
@@ -47,6 +46,7 @@ struct psc_particles_cuda {
   unsigned int *bnd_cnt;
   unsigned int *bnd_idx;
   unsigned int *bnd_off;
+  void *sort_ctx; // for sorting / particle xchg
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)

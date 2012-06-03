@@ -67,7 +67,7 @@ psc_particles_cuda_setup(struct psc_particles *prts)
   cuda_alloc_block_indices(prts, &cuda->d_part.alt_ids);
   cuda_alloc_block_indices(prts, &cuda->d_part.sums);
 
-  cuda->d_part.sort_ctx = sort_pairs_create(cuda->b_mx);
+  cuda->sort_ctx = sort_pairs_create(cuda->b_mx);
 }
 
 static void
@@ -80,7 +80,7 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
   cuda_free_block_indices(cuda->d_part.alt_bidx);
   cuda_free_block_indices(cuda->d_part.alt_ids);
   cuda_free_block_indices(cuda->d_part.sums);
-  sort_pairs_destroy(cuda->d_part.sort_ctx);
+  sort_pairs_destroy(cuda->sort_ctx);
   __particles_cuda_free(prts);
   cell_map_free(&cuda->map);
 }

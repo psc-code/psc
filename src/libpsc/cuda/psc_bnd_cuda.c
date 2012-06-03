@@ -348,7 +348,7 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
     prof_stop(pr_F);
 
     prof_start(pr_G);
-    sort_pairs_device_2(cuda->d_part.sort_ctx, cuda->d_part.bidx,
+    sort_pairs_device_2(cuda->sort_ctx, cuda->d_part.bidx,
 			cuda->d_part.alt_ids,
 			prts->n_part,
 			cuda->d_part.offsets);
