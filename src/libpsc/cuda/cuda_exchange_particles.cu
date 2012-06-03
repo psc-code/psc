@@ -337,14 +337,19 @@ mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
   for (int p = 0; p < nr_patches; p++) {
-    particles_cuda_dev_t d_part = d_cp_prts[p].d_part;
-    int n_part = d_cp_prts[p].n_part;
+    __shared__ struct cuda_patch_prts cp_prts;
+
+    __syncthreads();
+    if (threadIdx.x < sizeof(cp_prts) / sizeof(int)) {
+      ((int *) &cp_prts)[threadIdx.x] = ((int *) &d_cp_prts[p])[threadIdx.x];
+    }
+    __syncthreads();
     
-    if (i < n_part) {
-      if (d_part.bidx[i] == nr_blocks) {
-	int j = d_part.sums[i] + n_part;
-	d_part.xi4[j] = d_part.xi4[i];
-	d_part.pxi4[j] = d_part.pxi4[i];
+    if (i < cp_prts.n_part) {
+      if (cp_prts.d_part.bidx[i] == nr_blocks) {
+	int j = cp_prts.d_part.sums[i] + cp_prts.n_part;
+	cp_prts.d_part.xi4[j]  = cp_prts.d_part.xi4[i];
+	cp_prts.d_part.pxi4[j] = cp_prts.d_part.pxi4[i];
       }
     }
   }
