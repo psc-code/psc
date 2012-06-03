@@ -337,6 +337,7 @@ mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
   for (int p = 0; p < nr_patches; p++) {
+#if 0
     __shared__ struct cuda_patch_prts cp_prts;
 
     __syncthreads();
@@ -344,6 +345,9 @@ mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts
       ((int *) &cp_prts)[threadIdx.x] = ((int *) &d_cp_prts[p])[threadIdx.x];
     }
     __syncthreads();
+#else
+    struct cuda_patch_prts cp_prts = d_cp_prts[p];
+#endif
     
     if (i < cp_prts.n_part) {
       if (cp_prts.d_part.bidx[i] == nr_blocks) {
