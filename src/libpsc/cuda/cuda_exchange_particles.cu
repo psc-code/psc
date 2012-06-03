@@ -366,9 +366,9 @@ mprts_reorder_send_buf(struct cuda_params prm, struct cuda_patch_prts *d_cp_prts
     struct cuda_patch_prts cp_prts = d_cp_prts[p];
 #endif
     
-    if (i < cp_prts.n_part) {
+    if (i < cp_prts.d_part.n_part) {
       if (cp_prts.d_part.bidx[i] == nr_blocks) {
-	int j = cp_prts.d_part.sums[i] + cp_prts.n_part;
+	int j = cp_prts.d_part.sums[i] + cp_prts.d_part.n_part;
 	cp_prts.d_part.xi4[j]  = cp_prts.d_part.xi4[i];
 	cp_prts.d_part.pxi4[j] = cp_prts.d_part.pxi4[i];
       }
