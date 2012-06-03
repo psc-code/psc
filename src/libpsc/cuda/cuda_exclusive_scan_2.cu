@@ -56,9 +56,8 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
 }
 
 void
-cuda_mprts_scan_send_buf(struct cuda_mprts *cuda_mprts)
+cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);

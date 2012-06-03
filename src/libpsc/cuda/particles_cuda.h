@@ -8,10 +8,6 @@ struct cuda_patch_flds {
   real *d_flds;
 };
 
-struct cuda_mprts {
-  struct psc_mparticles *mprts;
-};
-
 struct cuda_mflds {
   struct cuda_patch_flds *h_cp_flds;
   struct cuda_patch_flds *d_cp_flds;
@@ -19,9 +15,8 @@ struct cuda_mflds {
   struct psc_fields **mflds_cuda;
 };
 
-EXTERN_C void cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts);
+EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds);
-EXTERN_C void cuda_mprts_destroy(struct cuda_mprts *cuda_mprts);
 EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
 
 #define MAX_KINDS (4)
@@ -46,15 +41,15 @@ EXTERN_C void free_params(struct cuda_params *prm);
 
 // ======================================================================
 
-EXTERN_C void cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_scan_send_buf(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_find_block_indices_3(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_sort(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_reorder(struct cuda_mprts *cuda_mprts);
-EXTERN_C void cuda_mprts_free(struct cuda_mprts *cuda_mprts);
+EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_scan_send_buf(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_copy_from_dev(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_copy_to_dev(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_sort(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_reorder(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_free(struct psc_mparticles *mprts);
 
 // FIXME, resolve this header mess eventually
 

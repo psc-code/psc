@@ -231,9 +231,8 @@ mprts_find_block_indices_2(struct cuda_params prm, particles_cuda_dev_t *d_cp_pr
 }
 
 EXTERN_C void
-cuda_mprts_find_block_indices_2(struct cuda_mprts *cuda_mprts)
+cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   if (mprts->nr_patches > 0) {
     struct cuda_params prm;
     set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
@@ -301,9 +300,8 @@ cuda_find_block_indices_3(struct psc_particles *prts, unsigned int *d_bidx,
 // cuda_find_block_indices_3
 
 EXTERN_C void
-cuda_mprts_find_block_indices_3(struct cuda_mprts *cuda_mprts)
+cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -379,9 +377,8 @@ mprts_reorder_send_buf(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, 
 }
 
 EXTERN_C void
-cuda_mprts_reorder_send_buf(struct cuda_mprts *cuda_mprts)
+cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   if (mprts->nr_patches > 0) {
     struct cuda_params prm;
     set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
@@ -611,9 +608,8 @@ cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *_d_vals, un
 // cuda_mprts_copy_from_dev
 
 void
-cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
+cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   cudaStream_t stream[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -650,9 +646,8 @@ cuda_mprts_copy_from_dev(struct cuda_mprts *cuda_mprts)
 // cuda_mprts_copy_to_dev
 
 void
-cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
+cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   cudaStream_t stream[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     cudaStreamCreate(&stream[p]);
@@ -678,9 +673,8 @@ cuda_mprts_copy_to_dev(struct cuda_mprts *cuda_mprts)
 // cuda_mprts_sort
 
 void
-cuda_mprts_sort(struct cuda_mprts *cuda_mprts)
+cuda_mprts_sort(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -697,9 +691,8 @@ cuda_mprts_sort(struct cuda_mprts *cuda_mprts)
 // cuda_mprts_reorder
 
 void
-cuda_mprts_reorder(struct cuda_mprts *cuda_mprts)
+cuda_mprts_reorder(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -709,9 +702,8 @@ cuda_mprts_reorder(struct cuda_mprts *cuda_mprts)
 }
 
 void
-cuda_mprts_free(struct cuda_mprts *cuda_mprts)
+cuda_mprts_free(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);

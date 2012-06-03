@@ -66,10 +66,8 @@ free_params(struct cuda_params *prm)
 // ======================================================================
 
 void
-cuda_mprts_create(struct cuda_mprts *cuda_mprts, struct psc_mparticles *mprts)
+psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts)
 {
-  cuda_mprts->mprts = mprts;
-
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   assert(mprts_cuda->h_dev);
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -403,9 +401,8 @@ cuda_push_part_p2(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_a(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
+cuda_push_mprts_a(struct psc_mparticles *mprts, struct cuda_mflds *cuda_mflds)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   if (mprts->nr_patches == 0) {
     return;
   }
@@ -899,9 +896,8 @@ cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 static void
-cuda_push_mprts_b(struct cuda_mprts *cuda_mprts, struct cuda_mflds *cuda_mflds)
+cuda_push_mprts_b(struct psc_mparticles *mprts, struct cuda_mflds *cuda_mflds)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   if (mprts->nr_patches == 0)
     return;
 
@@ -979,28 +975,23 @@ yz8x8_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, r
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct cuda_mprts cuda_mprts;
   struct cuda_mflds cuda_mflds;
-  cuda_mprts_create(&cuda_mprts, mprts);
+  psc_mparticles_cuda_copy_to_dev(mprts);
   cuda_mflds_create(&cuda_mflds, mflds);
   // FIXME, should make sure they're compatible
 
-  cuda_push_mprts_a<1, 4, 4>(&cuda_mprts, &cuda_mflds);
+  cuda_push_mprts_a<1, 4, 4>(mprts, &cuda_mflds);
 
-  cuda_mprts_destroy(&cuda_mprts);
   cuda_mflds_destroy(&cuda_mflds);
 }
 
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  struct cuda_mprts cuda_mprts;
   struct cuda_mflds cuda_mflds;
-  cuda_mprts_create(&cuda_mprts, mprts);
   cuda_mflds_create(&cuda_mflds, mflds);
 
-  cuda_push_mprts_b<1, 4, 4>(&cuda_mprts, &cuda_mflds);
+  cuda_push_mprts_b<1, 4, 4>(mprts, &cuda_mflds);
 
-  cuda_mprts_destroy(&cuda_mprts);
   cuda_mflds_destroy(&cuda_mflds);
 }

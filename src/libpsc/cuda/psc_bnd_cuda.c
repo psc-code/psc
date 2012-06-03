@@ -153,9 +153,8 @@ get_head(struct psc_particles *prts)
 // mprts_exchange_particles_pre
 
 static void
-mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+mprts_exchange_particles_pre(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     exchange_particles_pre(bnd, prts);
@@ -166,9 +165,8 @@ mprts_exchange_particles_pre(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 // mprts_append_received
 
 static void
-mprts_append_recvd(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+mprts_append_recvd(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -192,9 +190,8 @@ mprts_append_recvd(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 // xchg_prep
 
 static void
-xchg_prep(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+xchg_prep(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
-  struct psc_mparticles *mprts = cuda_mprts->mprts;
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
@@ -211,23 +208,23 @@ xchg_prep(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
   }
 
   prof_start(pr_A);
-  //  cuda_mprts_find_block_indices_2(cuda_mprts);
+  //  cuda_mprts_find_block_indices_2(mprts);
   prof_stop(pr_A);
   
   prof_start(pr_B);
-  cuda_mprts_scan_send_buf(cuda_mprts);
+  cuda_mprts_scan_send_buf(mprts);
   prof_stop(pr_B);
   
   prof_start(pr_C);
-  cuda_mprts_reorder_send_buf(cuda_mprts);
+  cuda_mprts_reorder_send_buf(mprts);
   prof_stop(pr_C);
   
   prof_start(pr_D);
-  cuda_mprts_copy_from_dev(cuda_mprts);
+  cuda_mprts_copy_from_dev(mprts);
   prof_stop(pr_D);
   
   prof_start(pr_E);
-  mprts_exchange_particles_pre(bnd, cuda_mprts);
+  mprts_exchange_particles_pre(bnd, mprts);
   prof_stop(pr_E);
 }
 
@@ -235,7 +232,7 @@ xchg_prep(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
 // xchg_post
 
 static void
-xchg_post(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
+xchg_post(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
@@ -247,29 +244,27 @@ xchg_post(struct psc_bnd *bnd, struct cuda_mprts *cuda_mprts)
   }
 
   prof_start(pr_A);
-  mprts_append_recvd(bnd, cuda_mprts);
+  mprts_append_recvd(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
-  cuda_mprts_copy_to_dev(cuda_mprts);
+  cuda_mprts_copy_to_dev(mprts);
   prof_stop(pr_B);
 
   prof_start(pr_C);
-  cuda_mprts_find_block_indices_3(cuda_mprts);
+  cuda_mprts_find_block_indices_3(mprts);
   prof_stop(pr_C);
   
   prof_start(pr_D);
-  cuda_mprts_sort(cuda_mprts);
+  cuda_mprts_sort(mprts);
   prof_stop(pr_D);
   
   prof_start(pr_E);
-  cuda_mprts_reorder(cuda_mprts);
+  cuda_mprts_reorder(mprts);
   prof_stop(pr_E);
   
-  cuda_mprts_free(cuda_mprts);
+  cuda_mprts_free(mprts);
 }
-
-static struct cuda_mprts cuda_mprts; // FIXME!
 
 // ----------------------------------------------------------------------
 // psc_bnd_sub_exchange_mprts_prep
@@ -278,8 +273,8 @@ static void
 psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  cuda_mprts_create(&cuda_mprts, mprts);
-  xchg_prep(bnd, &cuda_mprts);
+  psc_mparticles_cuda_copy_to_dev(mprts);
+  xchg_prep(bnd, mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -289,8 +284,7 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  xchg_post(bnd, &cuda_mprts);
-  cuda_mprts_destroy(&cuda_mprts);
+  xchg_post(bnd, mprts);
 }
 
 // ----------------------------------------------------------------------
