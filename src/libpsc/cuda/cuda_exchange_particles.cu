@@ -195,6 +195,25 @@ cuda_find_block_indices_2(struct psc_particles *prts, unsigned int *d_bidx,
 				    cuda->b_mx[1], cuda->b_mx[2], start));
 }
 
+// ----------------------------------------------------------------------
+// cuda_mprts_find_block_indices_2
+
+EXTERN_C void
+cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (psc_particles_ops(prts) != &psc_particles_cuda_ops) {
+      continue;
+    }
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->bnd_cnt = (unsigned int *) calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
+    cuda_find_block_indices_2(prts, cuda->d_part.bidx, 0);
+  }
+}
+
+// ----------------------------------------------------------------------
+
 EXTERN_C void
 _cuda_find_block_indices_2(struct psc_particles *prts, unsigned int *d_bidx,
 			   int start)
