@@ -716,6 +716,62 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
   }
 }
 
+// ======================================================================
+// cuda_mprts_check_ordered
+
+void
+cuda_mprts_check_ordered(struct psc_mparticles *mprts)
+{
+  //  cuda_mprts_find_block_indices_2(mprts);
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+    cuda_find_block_indices_2(prts, cuda->h_dev->bidx, 0);
+
+    unsigned int *bidx = new unsigned int[prts->n_part];
+    cuda_copy_bidx_from_dev(prts, bidx, cuda->h_dev->bidx);
+    
+    float4 *xi4 = new float4[prts->n_part];
+    float4 *pxi4 = new float4[prts->n_part];
+    __particles_cuda_from_device(prts, xi4, pxi4);
+
+    unsigned int last = 0;
+    for (int n = 0; n < prts->n_part; n++) {
+      unsigned int block_pos_y = cuda_fint(xi4[n].y * cuda->b_dxi[1]);
+      unsigned int block_pos_z = cuda_fint(xi4[n].z * cuda->b_dxi[2]);
+      
+      int block_idx;
+      if (block_pos_y >= cuda->b_mx[1] || block_pos_z >= cuda->b_mx[2]) {
+	block_idx = cuda->nr_blocks;
+      } else {
+	block_idx = block_pos_z * cuda->b_mx[1] + block_pos_y;
+      }
+      if (block_idx != bidx[n]) {
+	mprintf("n = %d bidx = %d block_idx = %d bp [%d:%d] real [%g:%g]\n",
+		n, bidx[n], block_idx, block_pos_y, block_pos_z,
+		xi4[n].y * cuda->b_dxi[1], xi4[n].z * cuda->b_dxi[2]);
+	static int error_cnt;
+	assert(error_cnt++ < 10);
+      }
+      if (!(bidx[n] >= last && bidx[n] < cuda->nr_blocks)) {
+	mprintf("n = %d bidx = %d last = %d\n", n, bidx[n], last);
+	static int error_cnt;
+	assert(error_cnt++ < 10);
+      }
+      last = block_idx;
+    }
+
+    delete[] bidx;
+    delete[] xi4;
+    delete[] pxi4;
+  }
+}
+
+// ======================================================================
+// cuda_mprts_free
+
 void
 cuda_mprts_free(struct psc_mparticles *mprts)
 {
