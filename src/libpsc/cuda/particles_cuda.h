@@ -45,6 +45,7 @@ EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_scan_send_buf(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_copy_from_dev(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_copy_to_dev(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_sort(struct psc_mparticles *mprts);

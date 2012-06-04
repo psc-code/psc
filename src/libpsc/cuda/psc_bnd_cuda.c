@@ -190,13 +190,14 @@ static void
 psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A, pr_B, pr_C, pr_D, pr_E;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
     pr_B = prof_register("xchg_scan", 1., 0, 0);
     pr_C = prof_register("xchg_reorder_send", 1., 0, 0);
     pr_D = prof_register("xchg_from_dev", 1., 0, 0);
-    pr_E = prof_register("xchg_pre", 1., 0, 0);
+    pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
+    pr_F = prof_register("xchg_pre", 1., 0, 0);
   }
 
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -224,8 +225,12 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   prof_stop(pr_D);
   
   prof_start(pr_E);
-  mprts_exchange_particles_pre(bnd, mprts);
+  cuda_mprts_convert_from_cuda(mprts);
   prof_stop(pr_E);
+  
+  prof_start(pr_F);
+  mprts_exchange_particles_pre(bnd, mprts);
+  prof_stop(pr_F);
 }
 
 // ----------------------------------------------------------------------
@@ -237,7 +242,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 {
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
-    pr_A = prof_register("xchg_append", 1., 0, 0);
+    pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
     pr_B = prof_register("xchg_to_dev", 1., 0, 0);
     pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);

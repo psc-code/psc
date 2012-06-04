@@ -63,6 +63,8 @@ struct psc_mparticles_cuda {
 
   float4 *d_xi4, *d_pxi4;
   float4 *d_alt_xi4, *d_alt_pxi4;
+  unsigned int nr_prts_send;
+  float4 *h_bnd_xi4, *h_bnd_pxi4;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
