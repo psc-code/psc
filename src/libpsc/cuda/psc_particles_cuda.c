@@ -534,25 +534,8 @@ struct psc_particles_ops psc_particles_cuda_ops = {
 static void
 psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
   psc_mparticles_setup_super(mprts);
   __psc_mparticles_cuda_setup(mprts);
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    prts_cuda->h_dev = &mprts_cuda->h_dev[p];
-
-    __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags */
-    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->bidx); // FIXME, merge into ^^^
-    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->ids);
-    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_bidx);
-    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_ids);
-    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->sums);
-
-    prts_cuda->d_dev = &mprts_cuda->d_dev[p];
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -561,16 +544,6 @@ psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 {
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    cuda_free_block_indices(prts_cuda->h_dev->bidx);
-    cuda_free_block_indices(prts_cuda->h_dev->ids);
-    cuda_free_block_indices(prts_cuda->h_dev->alt_bidx);
-    cuda_free_block_indices(prts_cuda->h_dev->alt_ids);
-    cuda_free_block_indices(prts_cuda->h_dev->sums);
-    __particles_cuda_free(prts);
-  }
   __psc_mparticles_cuda_free(mprts);
 }
 

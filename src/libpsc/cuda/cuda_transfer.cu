@@ -152,6 +152,21 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   mprts_cuda->h_dev = new particles_cuda_dev_t[mprts->nr_patches];
   check(cudaMalloc(&mprts_cuda->d_dev,
 		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev)));
+
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    prts_cuda->h_dev = &mprts_cuda->h_dev[p];
+
+    __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags */
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->bidx); // FIXME, merge into ^^^
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->ids);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_bidx);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_ids);
+    cuda_alloc_block_indices(prts, &prts_cuda->h_dev->sums);
+
+    prts_cuda->d_dev = &mprts_cuda->d_dev[p];
+  }
 }
 
 void
@@ -159,6 +174,16 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    cuda_free_block_indices(prts_cuda->h_dev->bidx);
+    cuda_free_block_indices(prts_cuda->h_dev->ids);
+    cuda_free_block_indices(prts_cuda->h_dev->alt_bidx);
+    cuda_free_block_indices(prts_cuda->h_dev->alt_ids);
+    cuda_free_block_indices(prts_cuda->h_dev->sums);
+    __particles_cuda_free(prts);
+  }
   free(mprts_cuda->h_dev);
   check(cudaFree(mprts_cuda->d_dev));
 }
