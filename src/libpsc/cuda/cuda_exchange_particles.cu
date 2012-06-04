@@ -628,8 +628,6 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    cuda->bnd_n_part = 0;
-    cuda->bnd_prts = NULL;
     cuda->bnd_xi4  = new float4[cuda->bnd_n_send];
     cuda->bnd_pxi4 = new float4[cuda->bnd_n_send];
     cuda->bnd_idx  = new unsigned int[cuda->bnd_n_send];
@@ -637,6 +635,19 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
     memcpy(cuda->bnd_xi4, bnd_xi4, cuda->bnd_n_send * sizeof(float4));
     memcpy(cuda->bnd_pxi4, bnd_pxi4, cuda->bnd_n_send * sizeof(float4));
 
+    cuda->bnd_n_part = 0;
+    cuda->bnd_prts = new particle_single_t[cuda->bnd_n_send];
+    for (int n = 0; n < cuda->bnd_n_send; n++) {
+      particle_single_t *prt = &cuda->bnd_prts[n];
+      prt->xi      = bnd_xi4[n].x;
+      prt->yi      = bnd_xi4[n].y;
+      prt->zi      = bnd_xi4[n].z;
+      prt->kind    = cuda_float_as_int(bnd_xi4[n].w);
+      prt->pxi     = bnd_pxi4[n].x;
+      prt->pyi     = bnd_pxi4[n].y;
+      prt->pzi     = bnd_pxi4[n].z;
+      prt->qni_wni = bnd_pxi4[n].w;
+    }
     bnd_xi4 += cuda->bnd_n_send;
     bnd_pxi4 += cuda->bnd_n_send;
   }

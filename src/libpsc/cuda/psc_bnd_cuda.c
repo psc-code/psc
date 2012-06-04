@@ -23,8 +23,7 @@ ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
   struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  assert(!cuda->bnd_prts);
-  cuda->bnd_prts = malloc(new_n_particles * sizeof(*cuda->bnd_prts));
+  cuda->bnd_prts = realloc(cuda->bnd_prts, new_n_particles * sizeof(*cuda->bnd_prts));
 }
 
 static void *
@@ -67,57 +66,14 @@ static void
 xchg_append(struct psc_particles *prts, struct ddcp_patch *ddcp_patch, particle_t *prt)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int nn = cuda->bnd_n_part++;
-  cuda->bnd_xi4[nn].x  = prt->xi;
-  cuda->bnd_xi4[nn].y  = prt->yi;
-  cuda->bnd_xi4[nn].z  = prt->zi;
-  cuda->bnd_xi4[nn].w  = cuda_int_as_float(prt->kind);
-  cuda->bnd_pxi4[nn].x = prt->pxi;
-  cuda->bnd_pxi4[nn].y = prt->pyi;
-  cuda->bnd_pxi4[nn].z = prt->pzi;
-  cuda->bnd_pxi4[nn].w = prt->qni_wni;
-
-  int b_pos[3];
-  for (int d = 0; d < 3; d++) {
-    float *xi = &cuda->bnd_xi4[nn].x;
-    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-    if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
-      printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
-      printf("!!! d %d xi4[n] %g biy %d // %d\n",
-	     d, xi[d], b_pos[d], cuda->b_mx[d]);
-      if (b_pos[d] < 0) {
-	xi[d] = 0.f;
-      } else {
-	xi[d] *= (1. - 1e-6);
-      }
-    }
-    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-    assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
-  }
-  unsigned int b =
-    (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
-  assert(b < cuda->nr_blocks);
-  cuda->bnd_idx[nn] = b;
-  cuda->bnd_off[nn] = cuda->bnd_cnt[b]++;
+  cuda->bnd_prts[ddcp_patch->head++] = *prt;
 }
 
 static inline particle_t *
 xchg_get_one(struct psc_particles *prts, int n)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  static particle_t prt_static;
-
-  particle_t *prt = &prt_static;
-  prt->xi      = cuda->bnd_xi4[n].x;
-  prt->yi      = cuda->bnd_xi4[n].y;
-  prt->zi      = cuda->bnd_xi4[n].z;
-  prt->kind    = cuda_float_as_int(cuda->bnd_xi4[n].w);
-  prt->pxi     = cuda->bnd_pxi4[n].x;
-  prt->pyi     = cuda->bnd_pxi4[n].y;
-  prt->pzi     = cuda->bnd_pxi4[n].z;
-  prt->qni_wni = cuda->bnd_pxi4[n].w;
-
-  return prt;
+  return &cuda->bnd_prts[n];
 }
 
 static inline int *
@@ -162,10 +118,51 @@ mprts_exchange_particles_pre(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
-// mprts_append_received
+// append
 
 static void
-mprts_append_recvd(struct psc_bnd *bnd, struct psc_mparticles *mprts)
+append(struct psc_particles *prts, particle_t *prt)
+{
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  int nn = cuda->bnd_n_part++;
+  cuda->bnd_xi4[nn].x  = prt->xi;
+  cuda->bnd_xi4[nn].y  = prt->yi;
+  cuda->bnd_xi4[nn].z  = prt->zi;
+  cuda->bnd_xi4[nn].w  = cuda_int_as_float(prt->kind);
+  cuda->bnd_pxi4[nn].x = prt->pxi;
+  cuda->bnd_pxi4[nn].y = prt->pyi;
+  cuda->bnd_pxi4[nn].z = prt->pzi;
+  cuda->bnd_pxi4[nn].w = prt->qni_wni;
+
+  int b_pos[3];
+  for (int d = 0; d < 3; d++) {
+    float *xi = &cuda->bnd_xi4[nn].x;
+    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+    if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
+      printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
+      printf("!!! d %d xi4[n] %g biy %d // %d\n",
+	     d, xi[d], b_pos[d], cuda->b_mx[d]);
+      if (b_pos[d] < 0) {
+	xi[d] = 0.f;
+      } else {
+	xi[d] *= (1. - 1e-6);
+      }
+    }
+    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+    assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
+  }
+  unsigned int b =
+    (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
+  assert(b < cuda->nr_blocks);
+  cuda->bnd_idx[nn] = b;
+  cuda->bnd_off[nn] = cuda->bnd_cnt[b]++;
+}
+
+// ----------------------------------------------------------------------
+// mprts_convert_to_cuda
+
+static void
+mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -181,7 +178,7 @@ mprts_append_recvd(struct psc_bnd *bnd, struct psc_mparticles *mprts)
     cuda->bnd_idx  = realloc(cuda->bnd_idx, n_recv * sizeof(*cuda->bnd_idx));
     cuda->bnd_off  = realloc(cuda->bnd_off, n_recv * sizeof(*cuda->bnd_off));
     for (int n = 0; n < patch->head; n++) {
-      xchg_append(prts, NULL, &cuda->bnd_prts[n]);
+      append(prts, &cuda->bnd_prts[n]);
     }
   }
 }
@@ -248,7 +245,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   }
 
   prof_start(pr_A);
-  mprts_append_recvd(bnd, mprts);
+  mprts_convert_to_cuda(bnd, mprts);
   prof_stop(pr_A);
 
   prof_start(pr_B);
