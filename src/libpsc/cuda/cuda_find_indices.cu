@@ -155,6 +155,7 @@ static void
 sort_reorder_by_cell_device(struct psc_particles *prts, int *d_cnis, int *d_ids)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  assert(0); // need to use alt_*, can't alloc/free
   float4 *xi4, *pxi4;
   check(cudaMalloc((void **) &xi4, cuda->n_alloced * sizeof(*xi4)));
   check(cudaMalloc((void **) &pxi4, cuda->n_alloced * sizeof(*pxi4)));

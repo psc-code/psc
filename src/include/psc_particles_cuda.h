@@ -54,6 +54,11 @@ struct psc_particles_cuda {
 struct psc_mparticles_cuda {
   particles_cuda_dev_t *h_dev; // particles_cuda_dev_t array for all patches
   particles_cuda_dev_t *d_dev; // same, living in device memory
+  unsigned int nr_prts;     // total # of particles in all patches
+  unsigned int nr_alloced;  // arrays are alloced for this # of particles
+
+  float4 *d_xi4, *d_pxi4;
+  float4 *d_alt_xi4, *d_alt_pxi4;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
