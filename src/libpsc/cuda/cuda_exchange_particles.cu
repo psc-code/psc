@@ -341,9 +341,9 @@ mprts_reorder_send_buf(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, 
     
     if (i < cp_prts.n_part) {
       if (cp_prts.bidx[i] == nr_blocks) {
-	int j = cp_prts.sums[i] + cp_prts.n_part;
-	cp_prts.xi4[j]  = cp_prts.xi4[i];
-	cp_prts.pxi4[j] = cp_prts.pxi4[i];
+	int j = cp_prts.sums[i];
+	cp_prts.xchg_xi4[j]  = cp_prts.xi4[i];
+	cp_prts.xchg_pxi4[j] = cp_prts.pxi4[i];
       }
     }
   }
@@ -352,28 +352,32 @@ mprts_reorder_send_buf(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, 
 EXTERN_C void
 cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
 {
-  if (mprts->nr_patches > 0) {
-    struct cuda_params prm;
-    set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+  if (mprts->nr_patches == 0)
+    return;
 
-    int max_n_part = 0;
-    for (int p = 0; p < mprts->nr_patches; p++) {
-      struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-      struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-      assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
-      if (prts->n_part > max_n_part) {
-	max_n_part = prts->n_part;
-      }
+  struct cuda_params prm;
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+  
+  int max_n_part = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
+    cuda->h_dev->xchg_xi4 = cuda->h_dev->xi4 + prts->n_part;
+    cuda->h_dev->xchg_pxi4 = cuda->h_dev->pxi4 + prts->n_part;
+    if (prts->n_part > max_n_part) {
+      max_n_part = prts->n_part;
     }
-
-    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-
-    RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_reorder_send_buf, (prm, psc_mparticles_cuda(mprts)->d_dev, mprts->nr_patches));
-
-    free_params(&prm);
   }
+  psc_mparticles_cuda_copy_to_dev(mprts);
+  
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_reorder_send_buf, (prm, psc_mparticles_cuda(mprts)->d_dev, mprts->nr_patches));
+  
+  free_params(&prm);
 }
 
 EXTERN_C void
@@ -604,9 +608,9 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     int n_send = cuda->bnd_n_send;
-    check(cudaMemcpyAsync(cuda->bnd_xi4, cuda->h_dev->xi4 + cuda->bnd_n_part_save,
+    check(cudaMemcpyAsync(cuda->bnd_xi4, cuda->h_dev->xchg_xi4,
 			  n_send * sizeof(*cuda->bnd_xi4), cudaMemcpyDeviceToHost, stream[p]));
-    check(cudaMemcpyAsync(cuda->bnd_pxi4, cuda->h_dev->pxi4 + cuda->bnd_n_part_save,
+    check(cudaMemcpyAsync(cuda->bnd_pxi4, cuda->h_dev->xchg_pxi4,
 			  n_send * sizeof(*cuda->bnd_pxi4), cudaMemcpyDeviceToHost, stream[p]));
   }
   for (int p = 0; p < mprts->nr_patches; p++) {

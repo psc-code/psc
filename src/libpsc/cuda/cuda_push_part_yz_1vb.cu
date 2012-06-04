@@ -107,11 +107,6 @@ cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds)
 }
 
 void
-cuda_mprts_destroy(struct cuda_mprts *cuda_mprts)
-{
-}
-
-void
 cuda_mflds_destroy(struct cuda_mflds *cuda_mflds)
 {
   check(cudaFree(cuda_mflds->d_cp_flds));
