@@ -359,15 +359,26 @@ cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
   set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
   
   int max_n_part = 0;
+  int n_send = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    assert(prts->n_part + cuda->bnd_n_send <= cuda->n_alloced);
-    cuda->h_dev->xchg_xi4 = cuda->h_dev->xi4 + prts->n_part;
-    cuda->h_dev->xchg_pxi4 = cuda->h_dev->pxi4 + prts->n_part;
+    n_send += cuda->bnd_n_send;
     if (prts->n_part > max_n_part) {
       max_n_part = prts->n_part;
     }
+  }
+
+  float4 *xchg_xi4, *xchg_pxi4;
+  check(cudaMalloc((void **) &xchg_xi4, n_send * sizeof(float4)));
+  check(cudaMalloc((void **) &xchg_pxi4, n_send * sizeof(float4)));
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->h_dev->xchg_xi4 = xchg_xi4;
+    cuda->h_dev->xchg_pxi4 = xchg_pxi4;
+    xchg_xi4 += cuda->bnd_n_send;
+    xchg_pxi4 += cuda->bnd_n_send;
   }
   psc_mparticles_cuda_copy_to_dev(mprts);
   
@@ -587,6 +598,10 @@ cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned int *_d_vals, un
 void
 cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
 {
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+
   cudaStream_t stream[mprts->nr_patches];
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -617,6 +632,11 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
     cudaStreamSynchronize(stream[p]);
     cudaStreamDestroy(stream[p]);
   }
+
+  struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  check(cudaFree(cuda->h_dev->xchg_xi4));
+  check(cudaFree(cuda->h_dev->xchg_pxi4));
 }
 
 // ======================================================================
