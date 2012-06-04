@@ -19,7 +19,6 @@ typedef struct {
   int n_part;     // # of particles in this patch
   int *offsets;   // particles per block are
                   // are at indices offsets[block] .. offsets[block+1]-1
-  int *c_offsets; // particles per cell offsets
   unsigned int *bidx;      // for particle xchg
   unsigned int *ids;       // for particle xchg
   unsigned int *alt_bidx;  // for particle xchg

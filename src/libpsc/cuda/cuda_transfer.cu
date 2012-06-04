@@ -19,15 +19,12 @@ cuda_init(int rank)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_alloc(struct psc_particles *prts, bool need_block_offsets,
-		       bool need_cell_offsets)
+__particles_cuda_alloc(struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int n_alloced = prts->n_part * 1.2; // FIXME, need to handle realloc eventualy
   cuda->n_alloced = n_alloced;
   particles_cuda_dev_t *h_dev = cuda->h_dev;
-
-  const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
 
   check(cudaMalloc((void **) &h_dev->xi4, n_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &h_dev->pxi4, n_alloced * sizeof(float4)));
@@ -35,28 +32,19 @@ __particles_cuda_alloc(struct psc_particles *prts, bool need_block_offsets,
   check(cudaMalloc((void **) &h_dev->alt_xi4, n_alloced * sizeof(float4)));
   check(cudaMalloc((void **) &h_dev->alt_pxi4, n_alloced * sizeof(float4)));
 
-  if (need_block_offsets) {
-    check(cudaMalloc((void **) &h_dev->offsets, 
-		     (cuda->nr_blocks + 1) * sizeof(int)));
-    check(cudaMemcpy(&h_dev->offsets[cuda->nr_blocks], &prts->n_part, sizeof(int),
-		     cudaMemcpyHostToDevice));
-  }
-
-  if (need_cell_offsets) {
-    check(cudaMalloc((void **) &h_dev->c_offsets, 
-		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int)));
-  }
+  check(cudaMalloc((void **) &h_dev->offsets, 
+		   (cuda->nr_blocks + 1) * sizeof(int)));
+  check(cudaMemcpy(&h_dev->offsets[cuda->nr_blocks], &prts->n_part, sizeof(int),
+		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void
 __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
-			   int *offsets, int *c_offsets)
+			   int *offsets)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int n_part = prts->n_part;
   particles_cuda_dev_t *h_dev = cuda->h_dev;
-
-  const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
 
   assert(n_part <= cuda->n_alloced);
   check(cudaMemcpy(h_dev->xi4, xi4, n_part * sizeof(*xi4),
@@ -65,12 +53,7 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
 		   cudaMemcpyHostToDevice));
   if (offsets) {
     check(cudaMemcpy(h_dev->offsets, offsets,
-		     (cuda->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
-  }
-  if (c_offsets) {
-    check(cudaMemcpy(h_dev->c_offsets,c_offsets,
-		     (cuda->nr_blocks * cells_per_block + 1) * sizeof(int),
-		     cudaMemcpyHostToDevice));
+                    (cuda->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
   }
 }
 
@@ -125,7 +108,6 @@ __particles_cuda_free(struct psc_particles *prts)
   check(cudaFree(h_dev->alt_xi4));
   check(cudaFree(h_dev->alt_pxi4));
   check(cudaFree(h_dev->offsets));
-  check(cudaFree(h_dev->c_offsets));
 }
 
 EXTERN_C void
@@ -158,7 +140,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
     prts_cuda->h_dev = &mprts_cuda->h_dev[p];
 
-    __particles_cuda_alloc(prts, true, true); // FIXME, need separate flags */
+    __particles_cuda_alloc(prts);
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->bidx); // FIXME, merge into ^^^
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->ids);
     cuda_alloc_block_indices(prts, &prts_cuda->h_dev->alt_bidx);

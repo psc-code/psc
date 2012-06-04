@@ -138,7 +138,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
     ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
     ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
 
-    __particles_cuda_to_device(prts, xi4, pxi4, NULL, NULL);
+    __particles_cuda_to_device(prts, xi4, pxi4, NULL);
 
     // to restore offsets etc.
     if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
@@ -212,7 +212,6 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 			       struct psc_particles *prts_c, unsigned int flags)
 {
   int p = prts_cuda->p;
-  struct psc_patch *patch = &ppsc->patch[p];
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
   prts_cuda->n_part = prts_c->n_part;
   assert(prts_cuda->n_part <= cuda->n_alloced);
@@ -276,61 +275,8 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
       // bit, so we can do the checkerboard passes
     }
   }
-  struct cell_map map;
-  cell_map_init(&map, patch->ldims, bs); // FIXME, already have it elsewhere
   
-  int *offsets = NULL;
-  if (0 && (flags & MP_NEED_BLOCK_OFFSETS)) {
-    // FIXME, should go away and can be taken over by c_offsets
-    offsets = calloc(cuda->nr_blocks + 1, sizeof(*offsets));
-    int last_block = -1;
-    for (int n = 0; n <= prts_cuda->n_part; n++) {
-      int block;
-      if (n < prts_cuda->n_part) {
-	block = find_blockIdx(patch, &map, prts_c, n, cuda->blocksize);
-      } else {
-	block = cuda->nr_blocks;
-      }
-      assert(last_block <= block);
-      while (last_block < block) {
-	offsets[last_block+1] = n;
-	last_block++;
-      }
-    }
-    
-#if 0
-    for (int b = 0; b < pp->nr_blocks; b++) {
-      int bi[3];
-      blockIdx_to_blockCrd(patch, &map, b, bi, pp->blocksize);
-      printf("block %d [%d,%d,%d]: %d:%d\n", b, bi[0], bi[1], bi[2],
-	     offsets[b], offsets[b+1]);
-    }
-#endif
-  }
-
-  int *c_offsets = NULL;
-  if (0 && (flags & MP_NEED_CELL_OFFSETS)) {
-    const int cells_per_block = cuda->blocksize[0] * cuda->blocksize[1] * cuda->blocksize[2];
-    c_offsets = calloc(cuda->nr_blocks * cells_per_block + 1, sizeof(*c_offsets));
-    int last_block = -1;
-    for (int n = 0; n <= prts_cuda->n_part; n++) {
-      int block;
-      if (n < prts_cuda->n_part) {
-	block = find_cellIdx(patch, &map, prts_c, n);
-      } else {
-	block = map.N;
-      }
-      assert(block <= cuda->nr_blocks * cells_per_block);
-      assert(last_block <= block);
-      while (last_block < block) {
-	c_offsets[last_block+1] = n;
-	last_block++;
-      }
-    }
-  }
-  cell_map_free(&map);
-  
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, offsets, c_offsets);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
   
   if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
     cuda_sort_patch(p, prts_cuda);
@@ -344,8 +290,6 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
     MHERE;
   }
   
-  free(offsets);
-  free(c_offsets);
   free(xi4);
   free(pxi4);
 }
@@ -454,7 +398,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
       // bit, so we can do the checkerboard passes
     }
   }
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL, NULL);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
   
   if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
     cuda_sort_patch(p, prts_cuda);

@@ -98,12 +98,8 @@ struct d_particle {
     d_p.pxi4[n].w = (pp).qni_wni;					\
 } while (0)
 
-EXTERN_C void __particles_cuda_alloc(struct psc_particles *prts, bool need_block_offsets,
-				     bool need_cell_offsets);
-EXTERN_C void __particles_cuda_free(struct psc_particles *prts);
 EXTERN_C void __particles_cuda_to_device(struct psc_particles *prts,
-					 float4 *xi, float4 *pxi,
-					 int *offsets, int *c_offsets);
+					 float4 *xi, float4 *pxi, int *offsets);
 EXTERN_C void __particles_cuda_to_device_range(struct psc_particles *prts,
 					       float4 *xi, float4 *pxi,
 					       int start, int end);
