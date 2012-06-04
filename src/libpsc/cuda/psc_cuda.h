@@ -127,8 +127,6 @@ EXTERN_C void cuda_conducting_wall_H_lo_hi_y(int p, struct psc_fields *pf);
 EXTERN_C void cuda_conducting_wall_J_lo_hi_y(int p, struct psc_fields *pf);
 
 EXTERN_C void cuda_exchange_particles(int p, struct psc_particles *prts);
-EXTERN_C void cuda_alloc_block_indices(struct psc_particles *prts, unsigned int **d_bidx);
-EXTERN_C void cuda_free_block_indices(unsigned int *d_bidx);
 EXTERN_C void cuda_find_block_indices_ids(struct psc_particles *prts, unsigned int *d_bidx,
 					  unsigned int *d_ids);
 EXTERN_C void cuda_find_block_indices_enc_ids(int p, struct psc_particles *prts, unsigned int *d_bidx,

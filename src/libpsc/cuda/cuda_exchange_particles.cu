@@ -68,33 +68,6 @@ cuda_exchange_particles(int p, struct psc_particles *prts)
 				  patch->ldims[0], patch->ldims[1], patch->ldims[2]));
 }
 
-EXTERN_C void
-cuda_alloc_block_indices(struct psc_particles *prts, unsigned int **d_bidx)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  check(cudaMalloc((void **) d_bidx, cuda->n_alloced * sizeof(**d_bidx)));
-}
-
-EXTERN_C void
-cuda_free_block_indices(unsigned int *d_bidx)
-{
-  check(cudaFree(d_bidx));
-}
-
-EXTERN_C void
-cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx)
-{
-  check(cudaMemcpy(h_bidx, d_bidx, prts->n_part * sizeof(*h_bidx),
-		   cudaMemcpyDeviceToHost));
-}
-
-EXTERN_C void
-cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx)
-{
-  check(cudaMemcpy(d_bidx, h_bidx, prts->n_part * sizeof(*d_bidx),
-		   cudaMemcpyHostToDevice));
-}
-
 // ======================================================================
 // cuda_find_block_indices
 
