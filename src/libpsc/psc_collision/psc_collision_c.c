@@ -427,6 +427,7 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   calc_stats(stats, nudts, cnt);
+  free(nudts);
 }
 
 // ----------------------------------------------------------------------
