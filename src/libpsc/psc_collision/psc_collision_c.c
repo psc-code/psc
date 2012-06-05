@@ -9,7 +9,7 @@
 struct psc_collision_c {
   // parameters
   int every;
-  double nudt0;
+  double nu;
 
   // internal
   struct psc_mfields *mflds;
@@ -20,15 +20,15 @@ struct psc_collision_c {
 #define VAR(x) (void *)offsetof(struct psc_collision_c, x)
 static struct param psc_collision_c_descr[] = {
   { "every"         , VAR(every)       , PARAM_INT(1)     },
-  { "nudt0"         , VAR(nudt0)       , PARAM_DOUBLE(-1.) },
+  { "nu"            , VAR(nu)          , PARAM_DOUBLE(-1.) },
   {},
 };
 #undef VAR
 
 enum {
   STATS_MIN,
-  STATS_MAX,
   STATS_MED,
+  STATS_MAX,
   STATS_NLARGE,
   STATS_NCOLL,
   NR_STATS,
@@ -47,9 +47,9 @@ compare(const void *_a, const void *_b)
 {
   const particle_c_real_t *a = _a, *b = _b;
 
-  if (a < b) {
+  if (*a < *b) {
     return -1;
-  } else if (a > b) {
+  } else if (*a > *b) {
     return 1;
   } else {
     return 0;
@@ -59,6 +59,7 @@ compare(const void *_a, const void *_b)
 static void
 calc_stats(struct psc_collision_stats *stats, particle_c_real_t *nudts, int cnt)
 {
+  qsort(nudts, cnt, sizeof(*nudts), compare);
   stats->s[STATS_NLARGE] = 0;
   for (int n = cnt - 1; n >= 0; n--) {
     if (nudts[n] < 1.) {
@@ -66,11 +67,16 @@ calc_stats(struct psc_collision_stats *stats, particle_c_real_t *nudts, int cnt)
     }
     stats->s[STATS_NLARGE]++;
   }
-  qsort(nudts, cnt, sizeof(*nudts), compare);
   stats->s[STATS_MIN] = nudts[0];
   stats->s[STATS_MAX] = nudts[cnt-1];
   stats->s[STATS_MED] = nudts[cnt/2];
   stats->s[STATS_NCOLL] = cnt;
+  /* mprintf("min %g med %g max %g nlarge %g ncoll %g\n", */
+  /* 	  stats->s[STATS_MIN], */
+  /* 	  stats->s[STATS_MED], */
+  /* 	  stats->s[STATS_MAX], */
+  /* 	  stats->s[STATS_NLARGE], */
+  /* 	  stats->s[STATS_NCOLL]); */
 }
 
 // ----------------------------------------------------------------------
@@ -133,7 +139,7 @@ randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
 // bc
 
 static particle_c_real_t
-bc(struct psc_particles *prts, int nudt1, int n1, int n2)
+bc(struct psc_particles *prts, particle_c_real_t nudt1, int n1, int n2)
 {
   particle_c_real_t nudt;
     
@@ -177,6 +183,10 @@ bc(struct psc_particles *prts, int nudt1, int n1, int n2)
   pz2=prt2->pzi;
   q2 =prt2->qni;
   m2 =prt2->mni;
+
+  if (q1*q2 == 0.) {
+    return 0.; // no Coulomb collisions with neutrals
+  }
  
   px1=m1*px1;
   py1=m1*py1;
@@ -194,7 +204,12 @@ bc(struct psc_particles *prts, int nudt1, int n1, int n2)
   ss=m1*m1+m2*m2+2.0*h1;
   h2=ss-m1*m1-m2*m2;
   h3=(h2*h2-4.0*m1*m1*m2*m2)/(4.0*ss);
-  ppc=sqrt(fabs(h3));
+  if (h3 < 0.) {
+    mprintf("WARNING: ss %g (m1+m1)^2 %g in psc_collision_c.c\n",
+	    ss, (m1+m2)*(m1+m2));
+    return 0.; // nudt = 0 because no collision
+  }
+  ppc=sqrt(h3);
   
   
 // determine cm-velocity
@@ -295,36 +310,35 @@ bc(struct psc_particles *prts, int nudt1, int n1, int n2)
           
 // determine absolute value of post-collision momentum in cm-frame
           
+  h2=ss-m3*m3-m4*m4;
+  h3=(h2*h2-4.0*m3*m3*m4*m4)/(4.0*ss);
+  if (h3 < 0.) {
+    mprintf("WARNING: ss %g (m3+m4)^2 %g in psc_collision_c.c\n",
+	    ss, (m3+m4)*(m3+m4));
+    return 0.; // nudt = 0 because no collision
+  }
           
-  if (ss >= (m3+m4)*(m3+m4)) {
+  qqc=sqrt(h3);
+  m12=m1*m2/(m1+m2);
+  q12=q1*q2;
     
-    h2=ss-m3*m3-m4*m4;
-    h3=(h2*h2-4.0*m3*m3*m4*m4)/(4.0*ss);
-    qqc=sqrt(abs(h3));
-    m12=m1*m2/(m1+m2);
-    q12=q1*q2;
-    
-    if (q12*q12 > 0.0) {
-      
-      nudt=nudt1 * q12*q12/(m12*m12*vcr*vcr*vcr);
-      
-// event generator of angles for post collision vectors
-        
-      ran1 = (1.0 * random()) / RAND_MAX ;
-      ran2 = (1.0 * random()) / RAND_MAX ;
-      if (ran2 < 1e-20) {
-        ran2 = 1e-20;
-      }
-        
-      nu = 6.28318530717958623200 * ran1;
-        
-      if(nudt<1.0) {                   // small angle collision
-        psi=2.0*atan(sqrt(-0.5*nudt*log(1.0-ran2)));
-      } else {
-        psi=acos(1.0-2.0*ran2);          // isotropic angles
-      }
-    }     
-  }         
+  nudt=nudt1 * q12*q12/(m12*m12*vcr*vcr*vcr);
+  
+  // event generator of angles for post collision vectors
+  
+  ran1 = (1.0 * random()) / RAND_MAX ;
+  ran2 = (1.0 * random()) / RAND_MAX ;
+  if (ran2 < 1e-20) {
+    ran2 = 1e-20;
+  }
+  
+  nu = 6.28318530717958623200 * ran1;
+  
+  if(nudt<1.0) {                   // small angle collision
+    psi=2.0*atan(sqrt(-0.5*nudt*log(1.0-ran2)));
+  } else {
+    psi=acos(1.0-2.0*ran2);          // isotropic angles
+  }
             
 // determine post-collision momentum in cm-frame
                     
@@ -397,7 +411,7 @@ collide_in_cell(struct psc_collision *collision,
 
   // all particles need to have same weight!
   particle_c_real_t wni = particles_c_get_one(prts, n_start)->wni;
-  particle_c_real_t nudt1 = wni * nn * coll->every * coll->nudt0;
+  particle_c_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
   particle_c_real_t *nudts = malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
@@ -462,9 +476,7 @@ psc_collision_c_run(struct psc_collision *collision,
     pr = prof_register("collision", 1., 0, 0);
   }
 
-  assert(coll->nudt0 > 0.);
-
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+  assert(coll->nu > 0.);
 
   if (ppsc->timestep % coll->every != 0) {
     return;
@@ -472,6 +484,8 @@ psc_collision_c_run(struct psc_collision *collision,
 
   prof_start(pr);
   
+  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+
   int *ldims = ppsc->patch[prts->p].ldims;
   int nr_cells = ldims[0] * ldims[1] * ldims[2];
   int *offsets = calloc(nr_cells + 1, sizeof(*offsets));
@@ -494,11 +508,11 @@ psc_collision_c_run(struct psc_collision *collision,
   } psc_foreach_3d_end;
 
   mprintf("p%d: min %g med %g max %g nlarge %g ncoll %g\n", prts->p,
-	  stats_total.s[0] / nr_cells,
-	  stats_total.s[1] / nr_cells,
-	  stats_total.s[2] / nr_cells,
-	  stats_total.s[3] / nr_cells,
-	  stats_total.s[4] / nr_cells);
+	  stats_total.s[STATS_MIN] / nr_cells,
+	  stats_total.s[STATS_MED] / nr_cells,
+	  stats_total.s[STATS_MAX] / nr_cells,
+	  stats_total.s[STATS_NLARGE] / nr_cells,
+	  stats_total.s[STATS_NCOLL] / nr_cells);
 
   free(offsets);
 
