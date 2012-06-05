@@ -510,6 +510,40 @@ reorder_and_offsets(int n_part, particles_cuda_dev_t h_dev, float4 *xi4, float4 
   }
 }
 
+static void
+psc_particles_cuda_swap_alt(struct psc_particles *prts)
+{
+  // FIXME (eventually)
+  // this function should not exist, since mprts needs to be swapped, too,
+  // but isn't available here.
+  // but due to sorting in copy_from/to, it's inevitable, so we fix up 
+  // the mprts pointers elsewhere for nwo
+  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+  float4 *alt_xi4 = cuda->h_dev->alt_xi4;
+  float4 *alt_pxi4 = cuda->h_dev->alt_pxi4;
+  cuda->h_dev->alt_xi4 = cuda->h_dev->xi4;
+  cuda->h_dev->alt_pxi4 = cuda->h_dev->pxi4;
+  cuda->h_dev->xi4 = alt_xi4;
+  cuda->h_dev->pxi4 = alt_pxi4;
+}
+
+static void
+psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    psc_particles_cuda_swap_alt(prts);
+  }
+  float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
+  float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
+  mprts_cuda->d_alt_xi4 = mprts_cuda->d_xi4;
+  mprts_cuda->d_alt_pxi4 = mprts_cuda->d_pxi4;
+  mprts_cuda->d_xi4 = tmp_xi4;
+  mprts_cuda->d_pxi4 = tmp_pxi4;
+}
+
 EXTERN_C void
 cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx,
 			 unsigned int *d_ids)
@@ -524,10 +558,7 @@ cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx,
 	     reorder_and_offsets, (prts->n_part, *cuda->h_dev, alt_xi4, alt_pxi4,
 				   d_bidx, d_ids, cuda->nr_blocks));
 
-  cuda->h_dev->alt_xi4 = cuda->h_dev->xi4;
-  cuda->h_dev->alt_pxi4 = cuda->h_dev->pxi4;
-  cuda->h_dev->xi4 = alt_xi4;
-  cuda->h_dev->pxi4 = alt_pxi4;
+  psc_particles_cuda_swap_alt(prts);
 }
 
 void
@@ -563,12 +594,7 @@ _cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx,
     offsets[b] = prts->n_part;
   }
 
-  float4 *d_alt_xi4 = cuda->h_dev->alt_xi4;
-  float4 *d_alt_pxi4 = cuda->h_dev->alt_pxi4;
-  cuda->h_dev->alt_xi4 = cuda->h_dev->xi4;
-  cuda->h_dev->alt_pxi4 = cuda->h_dev->pxi4;
-  cuda->h_dev->xi4 = d_alt_xi4;
-  cuda->h_dev->pxi4 = d_alt_pxi4;
+  psc_particles_cuda_swap_alt(prts);
 
   __particles_cuda_to_device(prts, alt_xi4, alt_pxi4, offsets);
   delete[] xi4;
@@ -690,7 +716,6 @@ cuda_mprts_convert_from_cuda(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    cuda->bnd_n_part = 0;
     cuda->bnd_prts = new particle_single_t[cuda->bnd_n_send];
     for (int n = 0; n < cuda->bnd_n_send; n++) {
       particle_single_t *prt = &cuda->bnd_prts[n];
@@ -764,9 +789,18 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda_reorder(prts, cuda->h_dev->alt_ids);
+
+    float4 *alt_xi4 = cuda->h_dev->alt_xi4;
+    float4 *alt_pxi4 = cuda->h_dev->alt_pxi4;
+
+    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+    int dimGrid[2]  = { (prts->n_part + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+    RUN_KERNEL(dimGrid, dimBlock,
+	       reorder, (prts->n_part, *cuda->h_dev, alt_xi4, alt_pxi4, cuda->h_dev->alt_ids));
+    
     prts->n_part -= cuda->bnd_n_send;
   }
+  psc_mparticles_cuda_swap_alt(mprts);
 }
 
 // ======================================================================
