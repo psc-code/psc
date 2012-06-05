@@ -118,47 +118,6 @@ mprts_exchange_particles_pre(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
-// append
-
-static void
-append(struct psc_particles *prts, particle_t *prt)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  int nn = cuda->bnd_n_part++;
-  cuda->bnd_xi4[nn].x  = prt->xi;
-  cuda->bnd_xi4[nn].y  = prt->yi;
-  cuda->bnd_xi4[nn].z  = prt->zi;
-  cuda->bnd_xi4[nn].w  = cuda_int_as_float(prt->kind);
-  cuda->bnd_pxi4[nn].x = prt->pxi;
-  cuda->bnd_pxi4[nn].y = prt->pyi;
-  cuda->bnd_pxi4[nn].z = prt->pzi;
-  cuda->bnd_pxi4[nn].w = prt->qni_wni;
-
-  int b_pos[3];
-  for (int d = 0; d < 3; d++) {
-    float *xi = &cuda->bnd_xi4[nn].x;
-    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-    if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
-      printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
-      printf("!!! d %d xi4[n] %g biy %d // %d\n",
-	     d, xi[d], b_pos[d], cuda->b_mx[d]);
-      if (b_pos[d] < 0) {
-	xi[d] = 0.f;
-      } else {
-	xi[d] *= (1. - 1e-6);
-      }
-    }
-    b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
-    assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
-  }
-  unsigned int b =
-    (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
-  assert(b < cuda->nr_blocks);
-  cuda->bnd_idx[nn] = b;
-  cuda->bnd_off[nn] = cuda->bnd_cnt[b]++;
-}
-
-// ----------------------------------------------------------------------
 // mprts_convert_to_cuda
 
 static void
@@ -178,8 +137,39 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
     cuda->bnd_idx  = malloc(n_recv * sizeof(*cuda->bnd_idx));
     cuda->bnd_off  = malloc(n_recv * sizeof(*cuda->bnd_off));
     for (int n = 0; n < patch->head; n++) {
-      append(prts, &cuda->bnd_prts[n]);
+      particle_single_t *prt = &cuda->bnd_prts[n];
+      cuda->bnd_xi4[n].x  = prt->xi;
+      cuda->bnd_xi4[n].y  = prt->yi;
+      cuda->bnd_xi4[n].z  = prt->zi;
+      cuda->bnd_xi4[n].w  = cuda_int_as_float(prt->kind);
+      cuda->bnd_pxi4[n].x = prt->pxi;
+      cuda->bnd_pxi4[n].y = prt->pyi;
+      cuda->bnd_pxi4[n].z = prt->pzi;
+      cuda->bnd_pxi4[n].w = prt->qni_wni;
+
+      int b_pos[3];
+      for (int d = 0; d < 3; d++) {
+	float *xi = &cuda->bnd_xi4[n].x;
+	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+	if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
+	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
+	  printf("!!! d %d xi4[n] %g biy %d // %d\n",
+		 d, xi[d], b_pos[d], cuda->b_mx[d]);
+	  if (b_pos[d] < 0) {
+	    xi[d] = 0.f;
+	  } else {
+	    xi[d] *= (1. - 1e-6);
+	  }
+	}
+	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
+	assert(b_pos[d] >= 0 && b_pos[d] < cuda->b_mx[d]);
+      }
+      unsigned int b = (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
+      assert(b < cuda->nr_blocks);
+      cuda->bnd_idx[n] = b;
+      cuda->bnd_off[n] = cuda->bnd_cnt[b]++;
     }
+    cuda->bnd_n_part = patch->head;
   }
 }
 
