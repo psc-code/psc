@@ -9,5 +9,6 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_single.c \
 	psc_push_fields_mix.c \
 	psc_push_fields_auto.c \
+	psc_push_fields_none.c \
 	psc_push_fields_fortran.c
 

@@ -27,6 +27,7 @@ extern struct psc_push_fields_ops psc_push_fields_fortran_ops;
 extern struct psc_push_fields_ops psc_push_fields_cbe_ops;
 extern struct psc_push_fields_ops psc_push_fields_cuda_ops;
 extern struct psc_push_fields_ops psc_push_fields_mix_ops;
+extern struct psc_push_fields_ops psc_push_fields_none_ops;
 
 #define psc_push_fields_ops(push_fields) ((struct psc_push_fields_ops *)((push_fields)->obj.ops))
 
