@@ -20,6 +20,7 @@ src/psc_kelvin_helmholtz_double
 src/psc_mirror
 src/psc_es1
 src/psc_bohm
+src/psc_spitzer
 src/psc_harris
 src/psc_bubble
 src/psc_bubble_yz

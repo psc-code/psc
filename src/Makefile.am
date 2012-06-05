@@ -8,6 +8,7 @@ bin_PROGRAMS = \
 	psc_restart \
 	psc_es1 \
 	psc_bohm \
+	psc_spitzer \
 	psc_kelvin_helmholtz \
 	psc_kelvin_helmholtz_double \
 	psc_mirror \
@@ -27,6 +28,7 @@ nodist_EXTRA_VLI_SOURCES = dummy.cxx
 nodist_EXTRA_psc_restart_SOURCES = dummy.cxx
 nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
+nodist_EXTRA_psc_spitzer_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_SOURCES = dummy.cxx
 nodist_EXTRA_psc_kelvin_helmholtz_double_SOURCES = dummy.cxx
 nodist_EXTRA_psc_mirror_SOURCES = dummy.cxx
