@@ -140,6 +140,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
 
     __particles_cuda_to_device(prts, xi4, pxi4, NULL);
 
+    assert(0); // need to do on mprts basis
     // to restore offsets etc.
     if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
       cuda_sort_patch(prts->p, prts);
@@ -278,18 +279,6 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
   
   __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
   
-  if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
-    cuda_sort_patch(p, prts_cuda);
-  }
-  if (prts_cuda->flags & MP_NEED_CELL_OFFSETS) {
-    cuda_sort_patch_by_cell(p, prts_cuda);
-  }
-  // FIXME, sorting twice because we need both would be suboptimal
-  if ((prts_cuda->flags & MP_NEED_CELL_OFFSETS) && 
-      (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS)) {
-    MHERE;
-  }
-  
   free(xi4);
   free(pxi4);
 }
@@ -400,18 +389,6 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
   }
   __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
   
-  if (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS) {
-    cuda_sort_patch(p, prts_cuda);
-  }
-  if (prts_cuda->flags & MP_NEED_CELL_OFFSETS) {
-    cuda_sort_patch_by_cell(p, prts_cuda);
-  }
-  // FIXME, sorting twice because we need both would be suboptimal
-  if ((prts_cuda->flags & MP_NEED_CELL_OFFSETS) && 
-      (prts_cuda->flags & MP_NEED_BLOCK_OFFSETS)) {
-    MHERE;
-  }
-  
   free(xi4);
   free(pxi4);
 }
@@ -497,7 +474,6 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 {
-#if 0
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
@@ -512,8 +488,6 @@ psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
       MHERE;
     }
   }
-#endif
-  MHERE;
 }
 
 // ======================================================================
