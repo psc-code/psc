@@ -252,10 +252,11 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A, pr_B, pr_C, pr_D, pr_E;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_C0;
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
     pr_B = prof_register("xchg_to_dev", 1., 0, 0);
+    pr_C0= prof_register("xchg_bidx_again", 1., 0, 0);
     pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);
     pr_E = prof_register("xchg_reorder", 1., 0, 0);
@@ -269,7 +270,10 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   cuda_mprts_copy_to_dev(mprts);
   prof_stop(pr_B);
 
+  prof_start(pr_C0);
   cuda_mprts_find_block_indices_2(mprts); // needed also because patch bidx array moved
+  prof_stop(pr_C0);
+
   prof_start(pr_C);
   cuda_mprts_find_block_indices_3(mprts);
   prof_stop(pr_C);
