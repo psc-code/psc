@@ -130,7 +130,6 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
     struct ddcp_patch *patch = &ddcp->patches[prts->p];
     int n_recv = patch->head;
     prts->n_part = cuda->bnd_n_part_save + n_recv;
-    assert(prts->n_part <= cuda->n_alloced);
     
     cuda->bnd_xi4  = malloc(n_recv * sizeof(float4));
     cuda->bnd_pxi4 = malloc(n_recv * sizeof(float4));
