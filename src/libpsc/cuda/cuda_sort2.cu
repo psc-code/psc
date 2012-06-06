@@ -224,6 +224,8 @@ sort_pairs_device_2(void *_sp, unsigned int *d_bidx, unsigned int *d_alt_ids,
 void
 cuda_mprts_sort_initial(struct psc_mparticles *mprts)
 {
+  cuda_mprts_compact(mprts);
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
