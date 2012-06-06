@@ -446,21 +446,18 @@ cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
 }
 
 __global__ static void
-mprts_reorder_send_buf_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, int nr_patches)
+mprts_reorder_send_buf_total(int nr_prts, int nr_oob, unsigned int *d_bidx, unsigned int *d_sums,
+			     float4 *d_xi4, float4 *d_pxi4,
+			     float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+  if (i >= nr_prts)
+    return;
 
-  for (int p = 0; p < nr_patches; p++) {
-    particles_cuda_dev_t cp_prts = d_cp_prts[p];
-    
-    if (i < cp_prts.n_part) {
-      if (cp_prts.bidx[i] == nr_patches * nr_blocks) {
-	int j = cp_prts.sums[i];
-	d_cp_prts[0].xchg_xi4[j]  = cp_prts.xi4[i];
-	d_cp_prts[0].xchg_pxi4[j] = cp_prts.pxi4[i];
-      }
-    }
+  if (d_bidx[i] == nr_oob) {
+    int j = d_sums[i];
+    d_xchg_xi4[j]  = d_xi4[i];
+    d_xchg_pxi4[j] = d_pxi4[i];
   }
 }
 
@@ -488,6 +485,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
   float4 *xchg_xi4, *xchg_pxi4;
   check(cudaMalloc((void **) &xchg_xi4, mprts_cuda->nr_prts_send * sizeof(float4)));
   check(cudaMalloc((void **) &xchg_pxi4, mprts_cuda->nr_prts_send * sizeof(float4)));
+  float4 *xchg_xi4_save = xchg_xi4, *xchg_pxi4_save = xchg_pxi4;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -496,13 +494,16 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
     xchg_xi4 += cuda->bnd_n_send;
     xchg_pxi4 += cuda->bnd_n_send;
   }
-  psc_mparticles_cuda_copy_to_dev(mprts);
+  int nr_oob = prm.b_mx[1] * prm.b_mx[2] * mprts->nr_patches;
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
   
   RUN_KERNEL(dimGrid, dimBlock,
-	     mprts_reorder_send_buf_total, (prm, psc_mparticles_cuda(mprts)->d_dev, mprts->nr_patches));
+	     mprts_reorder_send_buf_total, (mprts_cuda->nr_prts, nr_oob,
+					    mprts_cuda->d_bidx, mprts_cuda->d_sums,
+					    mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+					    xchg_xi4_save, xchg_pxi4_save));
   
   free_params(&prm);
 }
