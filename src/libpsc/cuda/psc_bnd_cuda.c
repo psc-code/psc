@@ -264,7 +264,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   cuda_mprts_copy_to_dev(mprts);
   prof_stop(pr_B);
 
-  cuda_mprts_find_block_indices_2(mprts);
+  cuda_mprts_find_block_indices_2(mprts); // needed also because patch bidx array moved
   prof_start(pr_C);
   cuda_mprts_find_block_indices_3(mprts);
   prof_stop(pr_C);
