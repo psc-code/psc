@@ -468,8 +468,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
   if (mprts->nr_patches == 0)
     return;
 
-  struct cuda_params prm;
-  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+  struct psc_particles_cuda *cuda = psc_particles_cuda(psc_mparticles_get_patch(mprts, 0));
   
   int max_n_part = 0;
   mprts_cuda->nr_prts_send = 0;
@@ -494,7 +493,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
     xchg_xi4 += cuda->bnd_n_send;
     xchg_pxi4 += cuda->bnd_n_send;
   }
-  int nr_oob = prm.b_mx[1] * prm.b_mx[2] * mprts->nr_patches;
+  int nr_oob = cuda->nr_blocks * mprts->nr_patches;
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -504,8 +503,6 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 					    mprts_cuda->d_bidx, mprts_cuda->d_sums,
 					    mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
 					    xchg_xi4_save, xchg_pxi4_save));
-  
-  free_params(&prm);
 }
 
 EXTERN_C void

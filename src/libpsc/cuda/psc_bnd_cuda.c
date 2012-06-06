@@ -221,7 +221,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   prof_stop(pr_A);
   
   prof_start(pr_B0);
-  cuda_mprts_scan_send_buf_total_v0(mprts);
+  cuda_mprts_find_n_send(mprts);
   prof_stop(pr_B0);
 
   prof_start(pr_B);

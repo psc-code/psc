@@ -45,7 +45,7 @@ EXTERN_C void cuda_mprts_compact(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_scan_send_buf(struct psc_mparticles *mprts);
-EXTERN_C void cuda_mprts_scan_send_buf_total_v0(struct psc_mparticles *mprts);
+EXTERN_C void cuda_mprts_find_n_send(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts);
 EXTERN_C void cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts);
