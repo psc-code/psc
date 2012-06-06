@@ -1,6 +1,7 @@
 
 #include "cuda_sort2.h"
 #include "cuda_sort2_spine.h"
+#include "particles_cuda.h"
 
 #include <mrc_profile.h>
 
@@ -218,4 +219,16 @@ sort_pairs_device_2(void *_sp, unsigned int *d_bidx, unsigned int *d_alt_ids,
     assert(0);
   }
 #endif
+}
+
+void
+cuda_mprts_sort_initial(struct psc_mparticles *mprts)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda_find_block_indices_ids(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
+    sort_pairs_device(cuda->h_dev->bidx, cuda->h_dev->ids, prts->n_part);
+    cuda_reorder_and_offsets(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
+  }
 }
