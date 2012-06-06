@@ -181,9 +181,10 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F, pr_B0;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
+    pr_B0 = prof_register("xchg_scan_old", 1., 0, 0);
     pr_B = prof_register("xchg_scan", 1., 0, 0);
     pr_C = prof_register("xchg_reorder_send", 1., 0, 0);
     pr_D = prof_register("xchg_from_dev", 1., 0, 0);
@@ -219,6 +220,10 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   cuda_mprts_find_block_indices_2_total(mprts);
   prof_stop(pr_A);
   
+  prof_start(pr_B0);
+  cuda_mprts_scan_send_buf_total_v0(mprts);
+  prof_stop(pr_B0);
+
   prof_start(pr_B);
   cuda_mprts_scan_send_buf_total(mprts);
   prof_stop(pr_B);

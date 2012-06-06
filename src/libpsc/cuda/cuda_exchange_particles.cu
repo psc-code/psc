@@ -457,8 +457,8 @@ mprts_reorder_send_buf_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_
     if (i < cp_prts.n_part) {
       if (cp_prts.bidx[i] == nr_patches * nr_blocks) {
 	int j = cp_prts.sums[i];
-	cp_prts.xchg_xi4[j]  = cp_prts.xi4[i];
-	cp_prts.xchg_pxi4[j] = cp_prts.pxi4[i];
+	d_cp_prts[0].xchg_xi4[j]  = cp_prts.xi4[i];
+	d_cp_prts[0].xchg_pxi4[j] = cp_prts.pxi4[i];
       }
     }
   }
@@ -1116,7 +1116,8 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
   unsigned int *d_ids = mprts_cuda->d_ids;
   unsigned int *d_alt_ids = mprts_cuda->d_alt_ids;
 
- for (int p = 0; p < mprts->nr_patches; p++) {
+  int nr_prts = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
@@ -1127,6 +1128,7 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
     check(cudaMemcpy(d_alt_pxi4, cuda->h_dev->pxi4,
 		     prts->n_part * sizeof(*cuda->h_dev->alt_pxi4),
 		     cudaMemcpyDeviceToDevice));
+    nr_prts += prts->n_part;
     cuda->n_alloced = prts->n_part;
     cuda->h_dev->alt_xi4 = d_alt_xi4;
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
@@ -1147,6 +1149,7 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
     d_alt_ids += cuda->n_alloced;
     d_sums += cuda->n_alloced;
   }
+  mprts_cuda->nr_prts = nr_prts;
   psc_mparticles_cuda_swap_alt(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);
 }

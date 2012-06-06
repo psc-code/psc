@@ -87,18 +87,29 @@ cuda_mprts_scan_send_buf_total_v0(struct psc_mparticles *mprts)
 void
 cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  int nr_blocks = 0;
+
+  int nr_send = 0, nr_prts = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    thrust::device_ptr<unsigned int> d_vals(cuda->h_dev->bidx);
-    thrust::device_ptr<unsigned int> d_sums(cuda->h_dev->sums);
-
-    count_if_equal unary_op(mprts->nr_patches * cuda->nr_blocks);
-    thrust::transform_exclusive_scan(d_vals, d_vals + prts->n_part, d_sums, unary_op,
-				     0, thrust::plus<unsigned int>());
-
-    // OPT, don't mv to host
-    int sum = d_sums[prts->n_part - 1] + (d_vals[prts->n_part - 1] == mprts->nr_patches * cuda->nr_blocks);
-    cuda->bnd_n_send = sum;
+    nr_send += cuda->bnd_n_send;
+    nr_prts += prts->n_part;
+    nr_blocks = cuda->nr_blocks;
   }
+  assert(nr_prts == mprts_cuda->nr_prts);
+  assert(nr_blocks > 0);
+  
+  thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
+
+  count_if_equal unary_op(mprts->nr_patches * nr_blocks);
+  thrust::transform_exclusive_scan(d_vals, d_vals + mprts_cuda->nr_prts, d_sums, unary_op,
+				   0, thrust::plus<unsigned int>());
+
+  // OPT, don't mv to host
+  int sum = d_sums[mprts_cuda->nr_prts - 1] + 
+    (d_vals[mprts_cuda->nr_prts - 1] == mprts->nr_patches * nr_blocks);
+  assert(sum == nr_send);
 }
