@@ -212,6 +212,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   }
 
   psc_mparticles_cuda_copy_to_dev(mprts);
+  cuda_mprts_compact(mprts);
 
   prof_start(pr_A);
   //  cuda_mprts_find_block_indices_2(mprts);

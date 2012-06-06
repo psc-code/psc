@@ -745,28 +745,34 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
 
   float4 *d_alt_xi4 = mprts_cuda->d_alt_xi4;
   float4 *d_alt_pxi4 = mprts_cuda->d_alt_pxi4;
+  float4 *d_xi4 = mprts_cuda->d_xi4;
+  float4 *d_pxi4 = mprts_cuda->d_pxi4;
 
  for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda->h_dev->alt_xi4 = d_alt_xi4;
-    cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     assert(d_alt_xi4 + prts->n_part <= mprts_cuda->d_alt_xi4 + mprts_cuda->nr_alloced);
-    check(cudaMemcpy(cuda->h_dev->alt_xi4, cuda->h_dev->xi4,
+    check(cudaMemcpy(d_alt_xi4, cuda->h_dev->xi4,
 		     cuda->bnd_n_part_save * sizeof(*cuda->h_dev->alt_xi4),
 		     cudaMemcpyDeviceToDevice));
-    check(cudaMemcpy(cuda->h_dev->alt_xi4 + cuda->bnd_n_part_save, cuda->bnd_xi4,
+    check(cudaMemcpy(d_alt_xi4 + cuda->bnd_n_part_save, cuda->bnd_xi4,
 		     (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_xi4),
 		     cudaMemcpyHostToDevice));
-    check(cudaMemcpy(cuda->h_dev->alt_pxi4, cuda->h_dev->pxi4,
+    check(cudaMemcpy(d_alt_pxi4, cuda->h_dev->pxi4,
 		     cuda->bnd_n_part_save * sizeof(*cuda->h_dev->alt_xi4),
 		     cudaMemcpyDeviceToDevice));
-    check(cudaMemcpy(cuda->h_dev->alt_pxi4 + cuda->bnd_n_part_save, cuda->bnd_pxi4,
+    check(cudaMemcpy(d_alt_pxi4 + cuda->bnd_n_part_save, cuda->bnd_pxi4,
 		     (prts->n_part - cuda->bnd_n_part_save) * sizeof(*cuda->bnd_pxi4),
 		     cudaMemcpyHostToDevice));
     cuda->n_alloced = prts->n_part;
+    cuda->h_dev->alt_xi4 = d_alt_xi4;
+    cuda->h_dev->alt_pxi4 = d_alt_pxi4;
+    cuda->h_dev->xi4 = d_xi4;
+    cuda->h_dev->pxi4 = d_pxi4;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
+    d_xi4 += cuda->n_alloced;
+    d_pxi4 += cuda->n_alloced;
   }
   psc_mparticles_cuda_swap_alt(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);
@@ -999,5 +1005,43 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
 
     delete[] bidx;
   }
+}
+
+// ======================================================================
+// cuda_mprts_compact
+
+void
+cuda_mprts_compact(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  float4 *d_alt_xi4 = mprts_cuda->d_alt_xi4;
+  float4 *d_alt_pxi4 = mprts_cuda->d_alt_pxi4;
+  float4 *d_xi4 = mprts_cuda->d_xi4;
+  float4 *d_pxi4 = mprts_cuda->d_pxi4;
+
+ for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+    assert(d_alt_xi4 + prts->n_part <= mprts_cuda->d_alt_xi4 + mprts_cuda->nr_alloced);
+    check(cudaMemcpy(d_alt_xi4, cuda->h_dev->xi4,
+		     prts->n_part * sizeof(*cuda->h_dev->alt_xi4),
+		     cudaMemcpyDeviceToDevice));
+    check(cudaMemcpy(d_alt_pxi4, cuda->h_dev->pxi4,
+		     prts->n_part * sizeof(*cuda->h_dev->alt_pxi4),
+		     cudaMemcpyDeviceToDevice));
+    cuda->n_alloced = prts->n_part;
+    cuda->h_dev->alt_xi4 = d_alt_xi4;
+    cuda->h_dev->alt_pxi4 = d_alt_pxi4;
+    cuda->h_dev->xi4 = d_xi4;
+    cuda->h_dev->pxi4 = d_pxi4;
+    d_alt_xi4 += cuda->n_alloced;
+    d_alt_pxi4 += cuda->n_alloced;
+    d_xi4 += cuda->n_alloced;
+    d_pxi4 += cuda->n_alloced;
+  }
+  psc_mparticles_cuda_swap_alt(mprts);
+  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
