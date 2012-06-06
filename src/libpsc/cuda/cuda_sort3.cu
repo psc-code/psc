@@ -25,9 +25,6 @@ static const int RADIX_BITS = 4;
 //static const int RADIX_DIGITS = 1 << RADIX_BITS;
 
 
-// FIXME -> header
-EXTERN_C void cuda_copy_bidx_to_dev(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *h_bidx);
-
 // blockIdx to rel offset
 template<int NBLOCKS_X, int NBLOCKS_Y, int NBLOCKS_Z>
 struct xPreShiftFunctor {

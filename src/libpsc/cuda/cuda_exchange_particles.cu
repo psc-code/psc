@@ -809,6 +809,11 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
   float4 *d_alt_pxi4 = mprts_cuda->d_alt_pxi4;
   float4 *d_xi4 = mprts_cuda->d_xi4;
   float4 *d_pxi4 = mprts_cuda->d_pxi4;
+  unsigned int *d_bidx = mprts_cuda->d_bidx;
+  unsigned int *d_alt_bidx = mprts_cuda->d_alt_bidx;
+  unsigned int *d_ids = mprts_cuda->d_ids;
+  unsigned int *d_alt_ids = mprts_cuda->d_alt_ids;
+  unsigned int *d_sums = mprts_cuda->d_sums;
 
  for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -831,10 +836,21 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
+    cuda->h_dev->bidx = d_bidx;
+    cuda->h_dev->alt_bidx = d_alt_bidx;
+    cuda->h_dev->ids = d_ids;
+    cuda->h_dev->alt_ids = d_alt_ids;
+    cuda->h_dev->sums = d_sums;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;
     d_pxi4 += cuda->n_alloced;
+    //    d_bidx += 122880;
+    d_bidx += cuda->n_alloced;
+    d_alt_bidx += cuda->n_alloced;
+    d_ids += cuda->n_alloced;
+    d_alt_ids += cuda->n_alloced;
+    d_sums += cuda->n_alloced;
   }
   psc_mparticles_cuda_swap_alt(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);
@@ -870,16 +886,29 @@ cuda_mprts_copy_to_dev_v1(struct psc_mparticles *mprts)
 void
 cuda_mprts_sort(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  unsigned int *d_bidx = mprts_cuda->d_bidx;
+  unsigned int *h_bidx = new unsigned int[mprts_cuda->nr_alloced];
+  unsigned int *h_bidx_save = h_bidx;
+  check(cudaMemcpy(h_bidx, d_bidx, mprts_cuda->nr_alloced * sizeof(float),
+		   cudaMemcpyDeviceToHost));
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    check(cudaMemcpy(d_bidx, h_bidx, cuda->n_alloced * sizeof(float),
+		     cudaMemcpyHostToDevice));
     // OPT: when calculating bidx, do preprocess then
     void *sp = sort_pairs_3_create(cuda->b_mx);
-    sort_pairs_3_device(sp, cuda->h_dev->bidx, cuda->h_dev->alt_bidx, cuda->h_dev->alt_ids,
+    sort_pairs_3_device(sp, d_bidx, cuda->h_dev->alt_bidx, cuda->h_dev->alt_ids,
 			prts->n_part, cuda->h_dev->offsets,
 			cuda->bnd_n_part_save, cuda->bnd_cnt);
     sort_pairs_3_destroy(sp);
+    //    cuda->h_dev->bidx = d_bidx;
+    d_bidx += 122880;
+    h_bidx += cuda->n_alloced;
   }
+  delete[] h_bidx_save;
+  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
 // ======================================================================
@@ -1081,6 +1110,11 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
   float4 *d_alt_pxi4 = mprts_cuda->d_alt_pxi4;
   float4 *d_xi4 = mprts_cuda->d_xi4;
   float4 *d_pxi4 = mprts_cuda->d_pxi4;
+  unsigned int *d_bidx = mprts_cuda->d_bidx;
+  unsigned int *d_alt_bidx = mprts_cuda->d_alt_bidx;
+  unsigned int *d_sums = mprts_cuda->d_sums;
+  unsigned int *d_ids = mprts_cuda->d_ids;
+  unsigned int *d_alt_ids = mprts_cuda->d_alt_ids;
 
  for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -1098,10 +1132,20 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
+    cuda->h_dev->bidx = d_bidx;
+    cuda->h_dev->alt_bidx = d_alt_bidx;
+    cuda->h_dev->ids = d_ids;
+    cuda->h_dev->alt_ids = d_alt_ids;
+    cuda->h_dev->sums = d_sums;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;
     d_pxi4 += cuda->n_alloced;
+    d_bidx += cuda->n_alloced;
+    d_alt_bidx += cuda->n_alloced;
+    d_ids += cuda->n_alloced;
+    d_alt_ids += cuda->n_alloced;
+    d_sums += cuda->n_alloced;
   }
   psc_mparticles_cuda_swap_alt(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);

@@ -213,7 +213,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   }
 
   psc_mparticles_cuda_copy_to_dev(mprts);
-  cuda_mprts_compact(mprts);
+  cuda_mprts_compact(mprts); // destroys bidx, too
 
   prof_start(pr_A);
   cuda_mprts_find_block_indices_2_total(mprts);
@@ -279,6 +279,8 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   
   cuda_mprts_free(mprts);
 
+  cuda_mprts_check_ordered(mprts);
+  cuda_mprts_check_ordered_offsets(mprts);
   cuda_mprts_check_ordered_total(mprts);
 }
 
