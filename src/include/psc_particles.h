@@ -88,6 +88,7 @@ void psc_mparticles_set_domain_nr_particles(struct psc_mparticles *mparticles,
 					    int *nr_particles_by_patch);
 int  psc_mparticles_nr_particles(struct psc_mparticles *mparticles);
 int  psc_mparticles_nr_particles_by_patch(struct psc_mparticles *mparticles, int p);
+void psc_mparticles_setup_internals(struct psc_mparticles *mparticles);
 struct psc_mparticles *psc_mparticles_get_as(struct psc_mparticles *mparticles_base,
 					     const char *type,
 					     unsigned int flags);

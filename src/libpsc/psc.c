@@ -864,6 +864,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     assert(prts->n_part == nr_particles_by_patch[p]);
     psc_particles_put_as(prts, prts_base, 0);
   }
+  psc_mparticles_setup_internals(psc->particles);
 }
 
 // ----------------------------------------------------------------------
