@@ -474,20 +474,10 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
 {
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
-      cuda_sort_patch(p, prts);
-    }
-    if (prts->flags & MP_NEED_CELL_OFFSETS) {
-      cuda_sort_patch_by_cell(p, prts);
-    }
-    // FIXME, sorting twice because we need both would be suboptimal
-    if ((prts->flags & MP_NEED_CELL_OFFSETS) && 
-	(prts->flags & MP_NEED_BLOCK_OFFSETS)) {
-      MHERE;
-    }
-  }
+  assert((mprts->flags & MP_NEED_BLOCK_OFFSETS) &&
+	 !(mprts->flags & MP_NEED_CELL_OFFSETS));
+
+  cuda_mprts_sort_initial(mprts);
 }
 
 // ======================================================================

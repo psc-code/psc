@@ -207,3 +207,11 @@ sort_patch_by_cell(int p, struct psc_particles *prts)
   check(cudaFree(d_ids));
 }
 
+EXTERN_C void
+cuda_mprts_sort_initial(struct psc_mparticles *mprts)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    cuda_sort_patch(p, prts);
+  }
+}
