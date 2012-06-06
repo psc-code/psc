@@ -491,6 +491,31 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
   __psc_mparticles_cuda_free(mprts);
 }
 
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_setup_internals
+
+static void
+psc_mparticles_cuda_setup_internals(struct psc_mparticles *mprts)
+{
+#if 0
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    if (prts->flags & MP_NEED_BLOCK_OFFSETS) {
+      cuda_sort_patch(p, prts);
+    }
+    if (prts->flags & MP_NEED_CELL_OFFSETS) {
+      cuda_sort_patch_by_cell(p, prts);
+    }
+    // FIXME, sorting twice because we need both would be suboptimal
+    if ((prts->flags & MP_NEED_CELL_OFFSETS) && 
+	(prts->flags & MP_NEED_BLOCK_OFFSETS)) {
+      MHERE;
+    }
+  }
+#endif
+  MHERE;
+}
+
 // ======================================================================
 // psc_mparticles: subclass "cuda"
   
@@ -499,5 +524,6 @@ struct psc_mparticles_ops psc_mparticles_cuda_ops = {
   .size                    = sizeof(struct psc_mparticles_cuda),
   .setup                   = psc_mparticles_cuda_setup,
   .destroy                 = psc_mparticles_cuda_destroy,
+  .setup_internals         = psc_mparticles_cuda_setup_internals,
 };
 
