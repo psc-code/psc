@@ -445,6 +445,68 @@ cuda_mprts_reorder_send_buf(struct psc_mparticles *mprts)
   free_params(&prm);
 }
 
+__global__ static void
+mprts_reorder_send_buf_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts, int nr_patches)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+
+  for (int p = 0; p < nr_patches; p++) {
+    particles_cuda_dev_t cp_prts = d_cp_prts[p];
+    
+    if (i < cp_prts.n_part) {
+      if (cp_prts.bidx[i] == nr_patches * nr_blocks) {
+	int j = cp_prts.sums[i];
+	cp_prts.xchg_xi4[j]  = cp_prts.xi4[i];
+	cp_prts.xchg_pxi4[j] = cp_prts.pxi4[i];
+      }
+    }
+  }
+}
+
+EXTERN_C void
+cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  if (mprts->nr_patches == 0)
+    return;
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+  
+  int max_n_part = 0;
+  mprts_cuda->nr_prts_send = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    mprts_cuda->nr_prts_send += cuda->bnd_n_send;
+    if (prts->n_part > max_n_part) {
+      max_n_part = prts->n_part;
+    }
+  }
+
+  float4 *xchg_xi4, *xchg_pxi4;
+  check(cudaMalloc((void **) &xchg_xi4, mprts_cuda->nr_prts_send * sizeof(float4)));
+  check(cudaMalloc((void **) &xchg_pxi4, mprts_cuda->nr_prts_send * sizeof(float4)));
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    cuda->h_dev->xchg_xi4 = xchg_xi4;
+    cuda->h_dev->xchg_pxi4 = xchg_pxi4;
+    xchg_xi4 += cuda->bnd_n_send;
+    xchg_pxi4 += cuda->bnd_n_send;
+  }
+  psc_mparticles_cuda_copy_to_dev(mprts);
+  
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_reorder_send_buf_total, (prm, psc_mparticles_cuda(mprts)->d_dev, mprts->nr_patches));
+  
+  free_params(&prm);
+}
+
 EXTERN_C void
 _cuda_reorder_send_buf(int p, struct psc_particles *prts, 
 		       unsigned int *d_bidx, unsigned int *d_sums, int n_send)

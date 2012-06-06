@@ -62,6 +62,24 @@ cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->h_dev->bidx, cuda->h_dev->sums);
-    cuda->bnd_n_part_save = prts->n_part;
+  }
+}
+
+void
+cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
+{
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    thrust::device_ptr<unsigned int> d_vals(cuda->h_dev->bidx);
+    thrust::device_ptr<unsigned int> d_sums(cuda->h_dev->sums);
+
+    count_if_equal unary_op(mprts->nr_patches * cuda->nr_blocks);
+    thrust::transform_exclusive_scan(d_vals, d_vals + prts->n_part, d_sums, unary_op,
+				     0, thrust::plus<unsigned int>());
+
+    // OPT, don't mv to host
+    int sum = d_sums[prts->n_part - 1] + (d_vals[prts->n_part - 1] == mprts->nr_patches * cuda->nr_blocks);
+    cuda->bnd_n_send = sum;
   }
 }
