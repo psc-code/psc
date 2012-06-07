@@ -9,6 +9,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/scan.h>
+#include <thrust/sort.h>
 
 #define STRIDE (9)
 #define S_OOB (10)
@@ -224,14 +225,14 @@ sort_pairs_device_2(void *_sp, unsigned int *d_bidx, unsigned int *d_alt_ids,
 void
 cuda_mprts_sort_initial(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   cuda_mprts_compact(mprts);
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda_find_block_indices_ids(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
-    sort_pairs_device(cuda->h_dev->bidx, cuda->h_dev->ids, prts->n_part);
-    cuda_reorder_and_offsets(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
-  }
-  cuda_mprts_find_off(mprts);
+  cuda_mprts_find_block_indices_ids_total(mprts);
+  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
+  thrust::stable_sort_by_key(d_bidx, d_bidx + mprts_cuda->nr_prts, d_ids);
+  cuda_mprts_reorder_and_offsets(mprts);
+  cuda_mprts_find_offsets(mprts);
 }

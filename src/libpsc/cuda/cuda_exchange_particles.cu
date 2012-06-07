@@ -273,6 +273,68 @@ cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// cuda_mprts_find_block_indices_ids_total
+
+__global__ static void
+mprts_find_block_indices_ids_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts,
+				   int nr_patches)
+{
+  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+
+  unsigned int off = 0;
+  for (int p = 0; p < nr_patches; p++) {
+    if (n < d_cp_prts[p].n_part) {
+      float4 xi4 = d_cp_prts[0].xi4[n + off];
+      unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
+      unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
+      
+      int block_idx;
+      if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+	block_idx = -1; // not supposed to happen here!
+      } else {
+	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
+      }
+      d_cp_prts[0].bidx[n + off] = block_idx;
+      d_cp_prts[0].ids[n + off] = n + off;
+    }
+    off += d_cp_prts[p].n_part;
+  }
+}
+
+EXTERN_C void
+cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+
+  int max_n_part = 0;
+  mprts_cuda->nr_prts_send = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    mprts_cuda->nr_prts_send += cuda->bnd_n_send;
+    if (prts->n_part > max_n_part) {
+      max_n_part = prts->n_part;
+    }
+  }
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+    
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_find_block_indices_ids_total, (prm, psc_mparticles_cuda(mprts)->d_dev,
+						  mprts->nr_patches));
+  free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
 
 EXTERN_C void
 _cuda_find_block_indices_2(struct psc_particles *prts, unsigned int *d_bidx,
@@ -539,36 +601,6 @@ _cuda_reorder_send_buf(int p, struct psc_particles *prts,
 }
 
 // ======================================================================
-// reorder_and_offsets
-
-__global__ static void
-reorder_and_offsets(int n_part, particles_cuda_dev_t h_dev, float4 *xi4, float4 *pxi4,
-		    unsigned int *d_bidx, unsigned int *d_ids, int nr_blocks)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i > n_part)
-    return;
-
-  int block, prev_block;
-  if (i < n_part) {
-    xi4[i] = h_dev.xi4[d_ids[i]];
-    pxi4[i] = h_dev.pxi4[d_ids[i]];
-    
-    block = d_bidx[i];
-  } else if (i == n_part) { // needed if there is no particle in the last block
-    block = nr_blocks;
-  }
-
-  // create offsets per block into particle array
-  prev_block = -1;
-  if (i > 0) {
-    prev_block = d_bidx[i-1];
-  }
-  for (int b = prev_block + 1; b <= block; b++) {
-    h_dev.offsets[b] = i;
-  }
-}
 
 static void
 psc_particles_cuda_swap_alt(struct psc_particles *prts)
@@ -602,6 +634,38 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
   mprts_cuda->d_alt_pxi4 = mprts_cuda->d_pxi4;
   mprts_cuda->d_xi4 = tmp_xi4;
   mprts_cuda->d_pxi4 = tmp_pxi4;
+}
+
+// ======================================================================
+// reorder_and_offsets
+
+__global__ static void
+reorder_and_offsets(int n_part, particles_cuda_dev_t h_dev, float4 *xi4, float4 *pxi4,
+		    unsigned int *d_bidx, unsigned int *d_ids, int nr_blocks)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i > n_part)
+    return;
+
+  int block, prev_block;
+  if (i < n_part) {
+    xi4[i] = h_dev.xi4[d_ids[i]];
+    pxi4[i] = h_dev.pxi4[d_ids[i]];
+    
+    block = d_bidx[i];
+  } else if (i == n_part) { // needed if there is no particle in the last block
+    block = nr_blocks;
+  }
+
+  // create offsets per block into particle array
+  prev_block = -1;
+  if (i > 0) {
+    prev_block = d_bidx[i-1];
+  }
+  for (int b = prev_block + 1; b <= block; b++) {
+    h_dev.offsets[b] = i;
+  }
 }
 
 EXTERN_C void
@@ -664,6 +728,58 @@ _cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx,
   delete[] bidx;
   delete[] ids;
   delete[] offsets;
+}
+
+__global__ static void
+mprts_reorder_and_offsets(int nr_prts, float4 *xi4, float4 *pxi4, float4 *alt_xi4, float4 *alt_pxi4,
+			  unsigned int *d_bidx, unsigned int *d_ids, unsigned int *d_off, int last_block)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i > nr_prts)
+    return;
+
+  int block, prev_block;
+  if (i < nr_prts) {
+    alt_xi4[i] = xi4[d_ids[i]];
+    alt_pxi4[i] = pxi4[d_ids[i]];
+    
+    block = d_bidx[i];
+  } else { // needed if there is no particle in the last block
+    block = last_block;
+  }
+
+  // OPT: d_bidx[i-1] could use shmem
+  // create offsets per block into particle array
+  prev_block = -1;
+  if (i > 0) {
+    prev_block = d_bidx[i-1];
+  }
+  for (int b = prev_block + 1; b <= block; b++) {
+    d_off[b] = i;
+  }
+}
+
+void
+cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+  int nr_blocks = psc_particles_cuda(psc_mparticles_get_patch(mprts, 0))->nr_blocks;
+
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (mprts_cuda->nr_prts + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_reorder_and_offsets, (mprts_cuda->nr_prts, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+					 mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4,
+					 mprts_cuda->d_bidx, mprts_cuda->d_ids,
+					 mprts_cuda->d_off, mprts->nr_patches * nr_blocks));
+
+  psc_mparticles_cuda_swap_alt(mprts);
+  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
 // ======================================================================
@@ -1176,6 +1292,31 @@ cuda_mprts_find_off(struct psc_mparticles *mprts)
 		     (cuda->nr_blocks + 1) * sizeof(*offsets),
 		     cudaMemcpyHostToDevice));
     delete[] offsets;
+
+    off += prts->n_part;
+  }
+}
+
+void
+cuda_mprts_find_offsets(struct psc_mparticles *mprts)
+{
+  unsigned int off = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    int *d_off = new int[cuda->nr_blocks + 1];
+    check(cudaMemcpy(d_off, cuda->h_dev->d_off,
+		     (cuda->nr_blocks + 1) * sizeof(*d_off),
+		     cudaMemcpyDeviceToHost));
+    assert(d_off[cuda->nr_blocks] == prts->n_part + off);
+    for (int n = 0; n <= cuda->nr_blocks; n++) {
+      d_off[n] -= off;
+    }
+    assert(d_off[0] == 0);
+    check(cudaMemcpy(cuda->h_dev->offsets, d_off,
+		     (cuda->nr_blocks + 1) * sizeof(*d_off),
+		     cudaMemcpyHostToDevice));
+    delete[] d_off;
 
     off += prts->n_part;
   }
