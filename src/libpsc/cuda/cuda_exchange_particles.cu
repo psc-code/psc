@@ -235,13 +235,13 @@ mprts_find_block_indices_2_total(struct cuda_params prm, particles_cuda_dev_t *d
   int p = blockIdx.y / prm.b_mx[2];
 
   // FIXME/OPT, could be done better like reorder_send_buf
-  int block_begin = d_cp_prts[p].offsets[bid];
-  int block_end   = d_cp_prts[p].offsets[bid+1];
+  int block_begin = d_cp_prts[p].d_off[bid];
+  int block_end   = d_cp_prts[p].d_off[bid+1];
 
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    float4 xi4 = d_cp_prts[p].xi4[n];
+    float4 xi4 = d_cp_prts[0].xi4[n];
     unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
     unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
 
@@ -251,7 +251,7 @@ mprts_find_block_indices_2_total(struct cuda_params prm, particles_cuda_dev_t *d
     } else {
       block_idx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
     }
-    d_cp_prts[p].bidx[n] = block_idx;
+    d_cp_prts[0].bidx[n] = block_idx;
   }
 }
 
