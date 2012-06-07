@@ -233,4 +233,5 @@ cuda_mprts_sort_initial(struct psc_mparticles *mprts)
     sort_pairs_device(cuda->h_dev->bidx, cuda->h_dev->ids, prts->n_part);
     cuda_reorder_and_offsets(prts, cuda->h_dev->bidx, cuda->h_dev->ids);
   }
+  cuda_mprts_find_off(mprts);
 }

@@ -17,8 +17,11 @@ typedef struct {
   float4 *alt_xi4;
   float4 *alt_pxi4;
   int n_part;     // # of particles in this patch
-  int *offsets;   // particles per block are
+  int *offsets;   // particles per block
                   // are at indices offsets[block] .. offsets[block+1]-1
+  unsigned int *d_off; // particles per block
+                       // are at indices offsets[block] .. offsets[block+1]-1
+                       // indices numbered for the total mprts array 
 
   // particle xchg
   float4 *xchg_xi4;

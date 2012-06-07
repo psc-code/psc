@@ -906,6 +906,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     h_bidx += cuda->n_alloced;
   }
   delete[] h_bidx_save;
+  cuda_mprts_find_off(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
@@ -1152,3 +1153,25 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
   psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
+void
+cuda_mprts_find_off(struct psc_mparticles *mprts)
+{
+  unsigned int off = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    int *offsets = new int[cuda->nr_blocks + 1];
+    check(cudaMemcpy(offsets, cuda->h_dev->offsets,
+		     (cuda->nr_blocks + 1) * sizeof(*offsets),
+		     cudaMemcpyDeviceToHost));
+    for (int n = 0; n <= cuda->nr_blocks; n++) {
+      offsets[n] += off;
+    }
+    check(cudaMemcpy(cuda->h_dev->d_off, offsets,
+		     (cuda->nr_blocks + 1) * sizeof(*offsets),
+		     cudaMemcpyHostToDevice));
+    delete[] offsets;
+
+    off += prts->n_part;
+  }
+}

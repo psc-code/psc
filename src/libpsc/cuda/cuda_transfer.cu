@@ -160,6 +160,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 		     (prts_cuda->nr_blocks + 1) * sizeof(int)));
     check(cudaMemcpy(&h_dev->offsets[prts_cuda->nr_blocks], &prts->n_part, sizeof(int),
 		     cudaMemcpyHostToDevice));
+    check(cudaMalloc((void **) &h_dev->d_off, 
+		     (prts_cuda->nr_blocks + 1) * sizeof(*h_dev->d_off)));
 
     prts_cuda->d_dev = &mprts_cuda->d_dev[p];
   }
