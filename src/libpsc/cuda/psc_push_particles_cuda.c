@@ -315,15 +315,6 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   prof_stop(pr_B);
 }
 
-static void
-psc_push_particles_1vb_4x4_cuda_push_a_yz(struct psc_push_particles *push,
-					  struct psc_particles *prts_base,
-					  struct psc_fields *flds_base)
-{
-  cuda_push_partq_a(push, prts_base, flds_base, yz4x4_1vb_cuda_push_part_p2);
-  cuda_push_partq_b(push, prts_base, flds_base, yz4x4_1vb_cuda_push_part_p3);
-}
-
 // ======================================================================
 // psc_push_particles: subclass "1vb_4x4_cuda"
 
