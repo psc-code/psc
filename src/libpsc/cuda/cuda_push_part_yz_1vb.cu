@@ -2,8 +2,6 @@
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
-__shared__ struct cuda_patch_flds s_cp_flds;
-
 #define NO_CHECKERBOARD
 //#define DEBUG
 
@@ -266,12 +264,12 @@ ip1_to_grid_p(real h)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-push_part_one(int n, particles_cuda_dev_t d_particles,
+push_part_one(int n, particles_cuda_dev_t d_dev,
 	      const F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &cached_flds, int l0[3],
 	      struct cuda_params prm)
 {
   struct d_particle p;
-  LOAD_PARTICLE(p, d_particles, n);
+  LOAD_PARTICLE(p, d_dev, n);
 
   // here we have x^{n+.5}, p^n
   
@@ -294,7 +292,7 @@ push_part_one(int n, particles_cuda_dev_t d_particles,
   
   push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm);
 
-  STORE_PARTICLE_MOM(p, d_particles, n);
+  STORE_PARTICLE_MOM(p, d_dev, n);
 }
 
 // ----------------------------------------------------------------------
@@ -321,15 +319,15 @@ push_mprts_p1(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts,
   ci[2] = block_pos[2] * BLOCKSIZE_Z;
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
 
-  int block_begin = d_cp_prts[p].offsets[bid];
-  int block_end   = d_cp_prts[p].offsets[bid+1];
+  int block_begin = d_cp_prts[p].d_off[bid];
+  int block_end   = d_cp_prts[p].d_off[bid+1];
 
   extern __shared__ real fld_cache[];
 
   F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> cached_flds(fld_cache, d_cp_flds[p].d_flds, ci, prm);
   
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    push_part_one(n, d_cp_prts[p], cached_flds, ci, prm);
+    push_part_one(n, d_cp_prts[0], cached_flds, ci, prm);
   }
 }
 
@@ -506,13 +504,13 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_jx(int i, particles_cuda_dev_t d_particles,
+yz_calc_jx(int i, particles_cuda_dev_t d_dev,
 	   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	   struct cuda_params prm)
 {
   struct d_particle p;
   if (do_read) {
-    LOAD_PARTICLE(p, d_particles, i);
+    LOAD_PARTICLE(p, d_dev, i);
   }
 
   real vxi[3];
@@ -581,7 +579,7 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
+yz_calc_jyjz(int i, particles_cuda_dev_t d_dev,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 	     struct cuda_params prm)
@@ -590,7 +588,7 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
 
   // OPT/FIXME, is it really better to reload the particle?
   if (do_read) {
-    LOAD_PARTICLE(p, d_particles, i);
+    LOAD_PARTICLE(p, d_dev, i);
   }
 
   if (do_calc_j) {
@@ -605,7 +603,7 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(&p, vxi, prm.dt);
-    STORE_PARTICLE_POS(p, d_particles, i);
+    STORE_PARTICLE_POS(p, d_dev, i);
     {
       unsigned int block_pos_y = cuda_fint(p.xi[1] * prm.b_dxi[1]);
       unsigned int block_pos_z = cuda_fint(p.xi[2] * prm.b_dxi[2]);
@@ -616,7 +614,7 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles,
       } else {
 	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y;
       }
-      d_particles.bidx[i] = block_idx;
+      d_dev.bidx[i] = block_idx;
     }
     find_idx_off_pos_1st(p.xi, k, h1, xp, real(0.), prm);
     
@@ -718,15 +716,15 @@ push_mprts_p3(int block_start, struct cuda_params prm, particles_cuda_dev_t *d_c
     ci0[0] = 0;
     ci0[1] = block_pos[1] * BLOCKSIZE_Y;
     ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-    s_block_end = d_cp_prts[p].offsets[bid + 1];
+    s_block_end = d_cp_prts[p].d_off[bid + 1];
   }
   __syncthreads();
 
-  int block_begin = d_cp_prts[p].offsets[bid];
+  int block_begin = d_cp_prts[p].d_off[bid];
 
   for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
-    yz_calc_jx(i, d_cp_prts[p], scurr_x, prm);
-    yz_calc_jyjz(i, d_cp_prts[p], scurr_y, scurr_z, prm);
+    yz_calc_jx(i, d_cp_prts[0], scurr_x, prm);
+    yz_calc_jyjz(i, d_cp_prts[0], scurr_y, scurr_z, prm);
   }
   
   if (do_write) {
