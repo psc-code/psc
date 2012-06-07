@@ -112,13 +112,20 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+
   mprts_cuda->h_dev = new particles_cuda_dev_t[mprts->nr_patches];
   check(cudaMalloc(&mprts_cuda->d_dev,
 		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev)));
 
   mprts_cuda->nr_prts = 0;
+  int nr_blocks;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
+    nr_blocks = prts_cuda->nr_blocks; // FIXME...
     mprts_cuda->nr_prts += prts->n_part;
   }
   mprintf("mprts: nr_prts=%d\n", mprts_cuda->nr_prts);
@@ -134,6 +141,9 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc((void **) &mprts_cuda->d_ids, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_alt_ids, nr_alloced * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_sums, nr_alloced * sizeof(unsigned int)));
+
+  check(cudaMalloc((void **) &mprts_cuda->d_off, 
+		   (mprts->nr_patches * nr_blocks + 1) * sizeof(*mprts_cuda->d_off)));
 
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -155,13 +165,13 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     h_dev->alt_ids = mprts_cuda->d_alt_ids + off;
     h_dev->sums = mprts_cuda->d_sums + off;
     off += n_alloced; // FIXME, there may not be quite enough space in the end
+
+    h_dev->d_off = mprts_cuda->d_off + p * nr_blocks;
     
     check(cudaMalloc((void **) &h_dev->offsets, 
 		     (prts_cuda->nr_blocks + 1) * sizeof(int)));
     check(cudaMemcpy(&h_dev->offsets[prts_cuda->nr_blocks], &prts->n_part, sizeof(int),
 		     cudaMemcpyHostToDevice));
-    check(cudaMalloc((void **) &h_dev->d_off, 
-		     (prts_cuda->nr_blocks + 1) * sizeof(*h_dev->d_off)));
 
     prts_cuda->d_dev = &mprts_cuda->d_dev[p];
   }

@@ -72,6 +72,7 @@ struct psc_mparticles_cuda {
   unsigned int *d_alt_ids;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
   unsigned int nr_prts_send;
+  unsigned int *d_off;
   float4 *h_bnd_xi4, *h_bnd_pxi4;
 };
 
