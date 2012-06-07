@@ -329,7 +329,6 @@ psc_push_particles_1vb_4x4_cuda_push_a_yz(struct psc_push_particles *push,
 
 struct psc_push_particles_ops psc_push_particles_1vb_4x4_cuda_ops = {
   .name                  = "1vb_4x4_cuda",
-  .push_a_yz             = psc_push_particles_1vb_4x4_cuda_push_a_yz,
   .push_mprts_yz         = psc_push_particles_1vb_4x4_cuda_push_mprts_yz,
   .mp_flags              = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD,
 };
