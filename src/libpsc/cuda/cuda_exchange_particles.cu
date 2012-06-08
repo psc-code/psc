@@ -1051,15 +1051,16 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
 // cuda_mprts_reorder
 
 __global__ static void
-mprts_reorder(int n_part, particles_cuda_dev_t h_dev,
-	      float4 *xi4_0, float4 *pxi4_0)
+mprts_reorder(int nr_prts, unsigned int *alt_ids,
+	      float4 *xi4, float4 *pxi4,
+	      float4 *alt_xi4, float4 *alt_pxi4)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
 
-  if (i < n_part) {
-    int j = h_dev.alt_ids[i];
-    h_dev.alt_xi4[i] = xi4_0[j];
-    h_dev.alt_pxi4[i] = pxi4_0[j];
+  if (i < nr_prts) {
+    int j = alt_ids[i];
+    alt_xi4[i] = xi4[j];
+    alt_pxi4[i] = pxi4[j];
   }
 }
 
@@ -1068,18 +1069,26 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prts->n_part -= cuda->bnd_n_send;
+    cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
+    cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
 
-    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { (prts->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-    RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_reorder, (prts->n_part, *cuda->h_dev,
-			       mprts_cuda->d_xi4, mprts_cuda->d_pxi4));
+    off += prts->n_part;
   }
+  mprts_cuda->nr_prts = off;
+
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_reorder, (mprts_cuda->nr_prts, mprts_cuda->d_alt_ids,
+			     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+			     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
+  
   psc_mparticles_cuda_swap_alt(mprts);
   cuda_mprts_compact(mprts);
   cuda_mprts_find_off(mprts);
