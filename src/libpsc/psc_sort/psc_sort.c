@@ -36,9 +36,6 @@ psc_sort_init()
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_qsort_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort_ops);
   mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_countsort2_ops);
-#ifdef USE_CUDA
-  mrc_class_register_subclass(&mrc_class_psc_sort, &psc_sort_cuda_ops);
-#endif
 }
 
 // ======================================================================
