@@ -26,7 +26,6 @@ typedef struct {
   // particle xchg
   float4 *xchg_xi4;
   float4 *xchg_pxi4;
-  unsigned int *bidx;      // for particle xchg
 } particles_cuda_dev_t;
 
 struct psc_particles_cuda {
