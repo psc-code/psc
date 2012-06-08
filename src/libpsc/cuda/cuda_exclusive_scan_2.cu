@@ -56,6 +56,7 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
   return sum;
 }
 
+#if 0
 void
 cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
 {
@@ -65,6 +66,7 @@ cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
     cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->h_dev->bidx, cuda->h_dev->sums);
   }
 }
+#endif
 
 void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
@@ -73,7 +75,6 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     thrust::device_ptr<unsigned int> d_vals(cuda->h_dev->bidx);
-    thrust::device_ptr<unsigned int> d_sums(cuda->h_dev->sums);
 
     cuda->bnd_n_send = thrust::count(d_vals, d_vals + prts->n_part, mprts->nr_patches * cuda->nr_blocks);
   }

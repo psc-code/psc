@@ -30,7 +30,6 @@ typedef struct {
   unsigned int *ids;       // for particle xchg
   unsigned int *alt_bidx;  // for particle xchg
   unsigned int *alt_ids;   // for particle xchg
-  unsigned int *sums;
 } particles_cuda_dev_t;
 
 struct psc_particles_cuda {
