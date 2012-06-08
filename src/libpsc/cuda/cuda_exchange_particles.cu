@@ -231,7 +231,7 @@ cuda_mprts_find_block_indices_2(struct psc_mparticles *mprts)
 
 __global__ static void
 mprts_find_block_indices_2_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts,
-				 int nr_patches)
+				 unsigned int *d_bidx, int nr_patches)
 {
   int tid = threadIdx.x;
 
@@ -258,25 +258,29 @@ mprts_find_block_indices_2_total(struct cuda_params prm, particles_cuda_dev_t *d
     } else {
       block_idx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
     }
-    d_cp_prts[0].bidx[n] = block_idx;
+    d_bidx[n] = block_idx;
   }
 }
 
 EXTERN_C void
 cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 {
-  if (mprts->nr_patches > 0) {
-    struct cuda_params prm;
-    set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
-    
-    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches };
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-    RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_find_block_indices_2_total, (prm, psc_mparticles_cuda(mprts)->d_dev,
-						  mprts->nr_patches));
-    free_params(&prm);
+  if (mprts->nr_patches == 0) {
+    return;
   }
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+    
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches };
+  
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_find_block_indices_2_total, (prm, psc_mparticles_cuda(mprts)->d_dev,
+						mprts_cuda->d_bidx, mprts->nr_patches));
+  free_params(&prm);
 }
 
 // ----------------------------------------------------------------------
@@ -407,7 +411,8 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 
     unsigned int start = cuda->bnd_n_part_save;
     // for consistency, use same block indices that we counted earlier
-    check(cudaMemcpy(cuda->h_dev->bidx + start, cuda->bnd_idx, (prts->n_part - start) * sizeof(*cuda->h_dev->bidx),
+    check(cudaMemcpy(mprts_cuda->d_bidx + off + start, cuda->bnd_idx,
+		     (prts->n_part - start) * sizeof(*mprts_cuda->d_bidx),
 		     cudaMemcpyHostToDevice));
     // abuse of alt_bidx!!! FIXME
     check(cudaMemcpy(mprts_cuda->d_alt_bidx + off + start, cuda->bnd_off,
@@ -891,7 +896,6 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
-    cuda->h_dev->bidx = d_bidx;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;
@@ -1017,7 +1021,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
     cuda->h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
     cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
-    cuda->h_dev->bidx = mprts_cuda->d_bidx + off;
     cuda->n_alloced = prts->n_part;
     off += prts->n_part;
   }
@@ -1040,15 +1043,18 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 void
 cuda_mprts_check_ordered(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   psc_mparticles_cuda_copy_to_dev(mprts); // update n_part, particle pointers
   cuda_mprts_find_block_indices_2(mprts);
 
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     unsigned int *bidx = new unsigned int[prts->n_part];
-    cuda_copy_bidx_from_dev(prts, bidx, cuda->h_dev->bidx);
+    cuda_copy_bidx_from_dev(prts, bidx, mprts_cuda->d_bidx + off);
     
     float4 *xi4 = new float4[prts->n_part];
     float4 *pxi4 = new float4[prts->n_part];
@@ -1083,6 +1089,8 @@ cuda_mprts_check_ordered(struct psc_mparticles *mprts)
     delete[] bidx;
     delete[] xi4;
     delete[] pxi4;
+
+    off += prts->n_part;
   }
 }
 
@@ -1092,15 +1100,18 @@ cuda_mprts_check_ordered(struct psc_mparticles *mprts)
 void
 cuda_mprts_check_ordered_offsets(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   psc_mparticles_cuda_copy_to_dev(mprts); // update n_part, particle pointers
   cuda_mprts_find_block_indices_2(mprts);
 
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     unsigned int *bidx = new unsigned int[prts->n_part];
-    cuda_copy_bidx_from_dev(prts, bidx, cuda->h_dev->bidx);
+    cuda_copy_bidx_from_dev(prts, bidx, mprts_cuda->d_bidx + off);
     
     float4 *xi4 = new float4[prts->n_part];
     float4 *pxi4 = new float4[prts->n_part];
@@ -1148,6 +1159,8 @@ cuda_mprts_check_ordered_offsets(struct psc_mparticles *mprts)
     delete[] bidx;
     delete[] xi4;
     delete[] pxi4;
+
+    off += prts->n_part;
   }
 }
 
@@ -1175,16 +1188,19 @@ cuda_mprts_free(struct psc_mparticles *mprts)
 void
 cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   psc_mparticles_cuda_copy_to_dev(mprts); // update n_part, particle pointers
   cuda_mprts_find_block_indices_2_total(mprts);
 
   unsigned int last = 0;
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     unsigned int *bidx = new unsigned int[prts->n_part];
-    cuda_copy_bidx_from_dev(prts, bidx, cuda->h_dev->bidx);
+    cuda_copy_bidx_from_dev(prts, bidx, mprts_cuda->d_bidx + off);
     
     for (int n = 0; n < prts->n_part; n++) {
       if (!(bidx[n] >= last && bidx[n] < mprts->nr_patches * cuda->nr_blocks)) {
@@ -1195,6 +1211,8 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
     }
 
     delete[] bidx;
+
+    off += prts->n_part;
   }
 }
 
@@ -1234,7 +1252,6 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
-    cuda->h_dev->bidx = d_bidx;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;

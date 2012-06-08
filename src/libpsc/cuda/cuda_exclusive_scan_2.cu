@@ -71,12 +71,16 @@ cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
 void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    thrust::device_ptr<unsigned int> d_vals(cuda->h_dev->bidx);
+    thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx + off);
 
     cuda->bnd_n_send = thrust::count(d_vals, d_vals + prts->n_part, mprts->nr_patches * cuda->nr_blocks);
+
+    off += prts->n_part;
   }
 }
 
