@@ -1023,27 +1023,62 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
   }
   delete[] h_bidx_save;
   psc_mparticles_cuda_copy_to_dev(mprts);
+
+  unsigned int *h_alt_ids = new unsigned int[mprts_cuda->nr_alloced];
+  check(cudaMemcpy(h_alt_ids, mprts_cuda->d_alt_ids, mprts_cuda->nr_alloced * sizeof(float),
+		   cudaMemcpyDeviceToHost));
+
+  unsigned int off = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    unsigned int *alt_ids = h_alt_ids + off;
+    assert(off == cuda->h_dev->xi4 - mprts_cuda->d_xi4);
+    for (int n = 0; n < prts->n_part; n++) {
+      alt_ids[n] += off;
+    }
+    off += cuda->n_alloced;
+  }
+
+  check(cudaMemcpy(mprts_cuda->d_alt_ids, h_alt_ids, mprts_cuda->nr_alloced * sizeof(float),
+		   cudaMemcpyHostToDevice));
+  delete[] h_alt_ids;
+
 }
 
 // ======================================================================
 // cuda_mprts_reorder
 
+__global__ static void
+mprts_reorder(int n_part, particles_cuda_dev_t h_dev, unsigned int *d_ids,
+	      float4 *xi4_0, float4 *pxi4_0)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i < n_part) {
+    int j = d_ids[i];
+    h_dev.alt_xi4[i] = xi4_0[j];
+    h_dev.alt_pxi4[i] = pxi4_0[j];
+  }
+}
+
 void
 cuda_mprts_reorder(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    float4 *alt_xi4 = cuda->h_dev->alt_xi4;
-    float4 *alt_pxi4 = cuda->h_dev->alt_pxi4;
+    prts->n_part -= cuda->bnd_n_send;
 
     int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
     int dimGrid[2]  = { (prts->n_part + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
     RUN_KERNEL(dimGrid, dimBlock,
-	       reorder, (prts->n_part, *cuda->h_dev, alt_xi4, alt_pxi4, cuda->h_dev->alt_ids));
+	       mprts_reorder, (prts->n_part, *cuda->h_dev, cuda->h_dev->alt_ids,
+			       mprts_cuda->d_xi4, mprts_cuda->d_pxi4));
     
-    prts->n_part -= cuda->bnd_n_send;
   }
   psc_mparticles_cuda_swap_alt(mprts);
   cuda_mprts_compact(mprts);
