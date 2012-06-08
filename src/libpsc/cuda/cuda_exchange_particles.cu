@@ -478,29 +478,16 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 
   struct psc_particles_cuda *cuda = psc_particles_cuda(psc_mparticles_get_patch(mprts, 0));
   
-  int max_n_part = 0;
   mprts_cuda->nr_prts_send = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     mprts_cuda->nr_prts_send += cuda->bnd_n_send;
-    if (prts->n_part > max_n_part) {
-      max_n_part = prts->n_part;
-    }
   }
 
-  float4 *xchg_xi4, *xchg_pxi4;
-  check(cudaMalloc((void **) &xchg_xi4, mprts_cuda->nr_prts_send * sizeof(float4)));
-  check(cudaMalloc((void **) &xchg_pxi4, mprts_cuda->nr_prts_send * sizeof(float4)));
-  float4 *xchg_xi4_save = xchg_xi4, *xchg_pxi4_save = xchg_pxi4;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda->h_dev->xchg_xi4 = xchg_xi4;
-    cuda->h_dev->xchg_pxi4 = xchg_pxi4;
-    xchg_xi4 += cuda->bnd_n_send;
-    xchg_pxi4 += cuda->bnd_n_send;
-  }
+  float4 *xchg_xi4 = mprts_cuda->d_xi4 + mprts_cuda->nr_prts;
+  float4 *xchg_pxi4 = mprts_cuda->d_pxi4 + mprts_cuda->nr_prts;
+  assert(mprts_cuda->nr_prts + mprts_cuda->nr_prts_send < mprts_cuda->nr_alloced);
   int nr_oob = cuda->nr_blocks * mprts->nr_patches;
   
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
@@ -510,7 +497,7 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 	     mprts_reorder_send_buf_total, (mprts_cuda->nr_prts, nr_oob,
 					    mprts_cuda->d_bidx, mprts_cuda->d_sums,
 					    mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-					    xchg_xi4_save, xchg_pxi4_save));
+					    xchg_xi4, xchg_pxi4));
 }
 
 EXTERN_C void
@@ -809,15 +796,10 @@ cuda_mprts_copy_from_dev(struct psc_mparticles *mprts)
   mprts_cuda->h_bnd_xi4 = new float4[mprts_cuda->nr_prts_send];
   mprts_cuda->h_bnd_pxi4 = new float4[mprts_cuda->nr_prts_send];
 
-  struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-  check(cudaMemcpy(mprts_cuda->h_bnd_xi4, cuda->h_dev->xchg_xi4,
+  check(cudaMemcpy(mprts_cuda->h_bnd_xi4, mprts_cuda->d_xi4 + mprts_cuda->nr_prts,
 		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(mprts_cuda->h_bnd_pxi4, cuda->h_dev->xchg_pxi4,
+  check(cudaMemcpy(mprts_cuda->h_bnd_pxi4, mprts_cuda->d_pxi4 + mprts_cuda->nr_prts,
 		   mprts_cuda->nr_prts_send * sizeof(float4), cudaMemcpyDeviceToHost));
-  check(cudaFree(cuda->h_dev->xchg_xi4));
-  check(cudaFree(cuda->h_dev->xchg_pxi4));
 }
 
 // ----------------------------------------------------------------------

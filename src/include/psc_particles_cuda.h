@@ -22,10 +22,6 @@ typedef struct {
   unsigned int *d_off; // particles per block
                        // are at indices offsets[block] .. offsets[block+1]-1
                        // indices numbered for the total mprts array 
-
-  // particle xchg
-  float4 *xchg_xi4;
-  float4 *xchg_pxi4;
 } particles_cuda_dev_t;
 
 struct psc_particles_cuda {
