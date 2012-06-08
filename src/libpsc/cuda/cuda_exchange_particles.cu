@@ -277,7 +277,7 @@ cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 
 __global__ static void
 mprts_find_block_indices_ids_total(struct cuda_params prm, particles_cuda_dev_t *d_cp_prts,
-				   int nr_patches)
+				   unsigned int *d_bidx, unsigned int *d_ids, int nr_patches)
 {
   int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
@@ -295,8 +295,8 @@ mprts_find_block_indices_ids_total(struct cuda_params prm, particles_cuda_dev_t 
       } else {
 	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
       }
-      d_cp_prts[0].bidx[n + off] = block_idx;
-      d_cp_prts[0].ids[n + off] = n + off;
+      d_bidx[n + off] = block_idx;
+      d_ids[n + off] = n + off;
     }
     off += d_cp_prts[p].n_part;
   }
@@ -330,6 +330,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
 
   RUN_KERNEL(dimGrid, dimBlock,
 	     mprts_find_block_indices_ids_total, (prm, psc_mparticles_cuda(mprts)->d_dev,
+						  mprts_cuda->d_bidx, mprts_cuda->d_ids,
 						  mprts->nr_patches));
   free_params(&prm);
 }
@@ -390,6 +391,9 @@ cuda_find_block_indices_3(struct psc_particles *prts, unsigned int *d_bidx,
 EXTERN_C void
 cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -399,8 +403,10 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
     check(cudaMemcpy(cuda->h_dev->bidx + start, cuda->bnd_idx, (prts->n_part - start) * sizeof(*cuda->h_dev->bidx),
 		     cudaMemcpyHostToDevice));
     // abuse of alt_bidx!!! FIXME
-    check(cudaMemcpy(cuda->h_dev->alt_bidx + start, cuda->bnd_off, (prts->n_part - start) * sizeof(*cuda->h_dev->alt_bidx),
+    check(cudaMemcpy(mprts_cuda->d_alt_bidx + off + start, cuda->bnd_off,
+		     (prts->n_part - start) * sizeof(*mprts_cuda->d_alt_bidx),
 		     cudaMemcpyHostToDevice));
+    off += cuda->n_alloced;
   }
 }
 
@@ -879,9 +885,6 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
     cuda->h_dev->bidx = d_bidx;
-    cuda->h_dev->alt_bidx = d_alt_bidx;
-    cuda->h_dev->ids = d_ids;
-    cuda->h_dev->alt_ids = d_alt_ids;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;
@@ -932,6 +935,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
   unsigned int *h_bidx_save = h_bidx;
   check(cudaMemcpy(h_bidx, d_bidx, mprts_cuda->nr_alloced * sizeof(float),
 		   cudaMemcpyDeviceToHost));
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -939,13 +943,14 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
 		     cudaMemcpyHostToDevice));
     // OPT: when calculating bidx, do preprocess then
     void *sp = sort_pairs_3_create(cuda->b_mx);
-    sort_pairs_3_device(sp, d_bidx, cuda->h_dev->alt_bidx, cuda->h_dev->alt_ids,
+    sort_pairs_3_device(sp, d_bidx, mprts_cuda->d_alt_bidx + off, mprts_cuda->d_alt_ids + off,
 			prts->n_part, cuda->h_dev->offsets,
 			cuda->bnd_n_part_save, cuda->bnd_cnt);
     sort_pairs_3_destroy(sp);
     //    cuda->h_dev->bidx = d_bidx;
     d_bidx += 122880;
     h_bidx += cuda->n_alloced;
+    off += cuda->n_alloced;
   }
   delete[] h_bidx_save;
 
@@ -953,7 +958,8 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
   check(cudaMemcpy(h_alt_ids, mprts_cuda->d_alt_ids, mprts_cuda->nr_alloced * sizeof(unsigned int),
 		   cudaMemcpyDeviceToHost));
 
-  unsigned int off = 0, off2 = 0;
+  off = 0;
+  unsigned int off2 = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -961,7 +967,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     for (int n = 0; n < prts->n_part - cuda->bnd_n_send; n++) {
       h_alt_ids[off2 + n] = h_alt_ids[off + n] + off;
     }
-    cuda->h_dev->alt_ids = mprts_cuda->d_alt_ids + off2;
     off += cuda->n_alloced;
     off2 += prts->n_part - cuda->bnd_n_send;
   }
@@ -1006,9 +1011,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
     cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
     cuda->h_dev->bidx = mprts_cuda->d_bidx + off;
-    cuda->h_dev->alt_bidx = mprts_cuda->d_alt_bidx + off;
-    cuda->h_dev->ids = mprts_cuda->d_ids + off;
-    cuda->h_dev->alt_ids = mprts_cuda->d_alt_ids + off;
     cuda->n_alloced = prts->n_part;
     off += prts->n_part;
   }
@@ -1226,9 +1228,6 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
     cuda->h_dev->bidx = d_bidx;
-    cuda->h_dev->alt_bidx = d_alt_bidx;
-    cuda->h_dev->ids = d_ids;
-    cuda->h_dev->alt_ids = d_alt_ids;
     d_alt_xi4 += cuda->n_alloced;
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;

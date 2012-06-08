@@ -160,9 +160,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
     h_dev->bidx = mprts_cuda->d_bidx + off;
-    h_dev->alt_bidx = mprts_cuda->d_alt_bidx + off;
-    h_dev->ids = mprts_cuda->d_ids + off;
-    h_dev->alt_ids = mprts_cuda->d_alt_ids + off;
     off += n_alloced; // FIXME, there may not be quite enough space in the end
 
     h_dev->d_off = mprts_cuda->d_off + p * nr_blocks;

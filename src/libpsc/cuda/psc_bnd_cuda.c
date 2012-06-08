@@ -309,6 +309,8 @@ static void
 psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
 						mparticles_cuda_t *particles)
 {
+  assert(0);
+#if 0
   static int pr_F, pr_G, pr_H;
   if (!pr_F) {
     pr_F = prof_register("xchg_bidx_ids", 1., 0, 0);
@@ -338,6 +340,7 @@ psc_bnd_sub_exchange_particles_serial_periodic(struct psc_bnd *psc_bnd,
     cuda_reorder(prts, cuda->h_dev->alt_ids);
     prof_stop(pr_H);
   }
+#endif
 }
 
 // ----------------------------------------------------------------------
