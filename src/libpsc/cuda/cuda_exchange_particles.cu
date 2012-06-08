@@ -959,7 +959,6 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
     d_alt_pxi4 += cuda->n_alloced;
     d_xi4 += cuda->n_alloced;
     d_pxi4 += cuda->n_alloced;
-    //    d_bidx += 122880;
     d_bidx += cuda->n_alloced;
     d_alt_bidx += cuda->n_alloced;
     d_ids += cuda->n_alloced;
@@ -1075,9 +1074,16 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prts->n_part -= cuda->bnd_n_send;
+    cuda->h_dev->xi4 = mprts_cuda->d_xi4 + off;
+    cuda->h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
     cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
-
+    cuda->h_dev->bidx = mprts_cuda->d_bidx + off;
+    cuda->h_dev->alt_bidx = mprts_cuda->d_alt_bidx + off;
+    cuda->h_dev->ids = mprts_cuda->d_ids + off;
+    cuda->h_dev->alt_ids = mprts_cuda->d_alt_ids + off;
+    cuda->h_dev->sums = mprts_cuda->d_sums + off;
+    cuda->n_alloced = prts->n_part;
     off += prts->n_part;
   }
   mprts_cuda->nr_prts = off;
@@ -1090,7 +1096,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 			     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
   
   psc_mparticles_cuda_swap_alt(mprts);
-  cuda_mprts_compact(mprts);
   cuda_mprts_find_off(mprts);
 }
 
