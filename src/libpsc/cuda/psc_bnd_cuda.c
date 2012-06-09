@@ -282,7 +282,7 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_stop(pr_D);
   
   prof_start(pr_E);
-  cuda_mprts_reorder(mprts);
+  cuda_mprts_reorder_and_offsets(mprts);
   prof_stop(pr_E);
   
   cuda_mprts_free(mprts);
