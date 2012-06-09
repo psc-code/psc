@@ -123,6 +123,20 @@ mprts_exchange_particles_pre(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 static void
 mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  unsigned int nr_recv = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct ddc_particles *ddcp = bnd->ddcp;
+    struct ddcp_patch *patch = &ddcp->patches[prts->p];
+    nr_recv += patch->head;
+  }
+
+  mprts_cuda->h_bnd_xi4  = malloc(nr_recv * sizeof(float4));
+  mprts_cuda->h_bnd_pxi4 = malloc(nr_recv * sizeof(float4));
+
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
@@ -131,24 +145,24 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
     int n_recv = patch->head;
     cuda->bnd_n_recv = n_recv;
     
-    cuda->bnd_xi4  = malloc(n_recv * sizeof(float4));
-    cuda->bnd_pxi4 = malloc(n_recv * sizeof(float4));
+    float4 *h_bnd_xi4 = mprts_cuda->h_bnd_xi4 + off;
+    float4 *h_bnd_pxi4 = mprts_cuda->h_bnd_pxi4 + off;
     cuda->bnd_idx  = malloc(n_recv * sizeof(*cuda->bnd_idx));
     cuda->bnd_off  = malloc(n_recv * sizeof(*cuda->bnd_off));
     for (int n = 0; n < n_recv; n++) {
       particle_single_t *prt = &cuda->bnd_prts[n];
-      cuda->bnd_xi4[n].x  = prt->xi;
-      cuda->bnd_xi4[n].y  = prt->yi;
-      cuda->bnd_xi4[n].z  = prt->zi;
-      cuda->bnd_xi4[n].w  = cuda_int_as_float(prt->kind);
-      cuda->bnd_pxi4[n].x = prt->pxi;
-      cuda->bnd_pxi4[n].y = prt->pyi;
-      cuda->bnd_pxi4[n].z = prt->pzi;
-      cuda->bnd_pxi4[n].w = prt->qni_wni;
+      h_bnd_xi4[n].x  = prt->xi;
+      h_bnd_xi4[n].y  = prt->yi;
+      h_bnd_xi4[n].z  = prt->zi;
+      h_bnd_xi4[n].w  = cuda_int_as_float(prt->kind);
+      h_bnd_pxi4[n].x = prt->pxi;
+      h_bnd_pxi4[n].y = prt->pyi;
+      h_bnd_pxi4[n].z = prt->pzi;
+      h_bnd_pxi4[n].w = prt->qni_wni;
 
       int b_pos[3];
       for (int d = 0; d < 3; d++) {
-	float *xi = &cuda->bnd_xi4[n].x;
+	float *xi = &h_bnd_xi4[n].x;
 	b_pos[d] = particle_real_fint(xi[d] * cuda->b_dxi[d]);
 	if (b_pos[d] < 0 || b_pos[d] >= cuda->b_mx[d]) {
 	  printf("!!! xi %g %g %g\n", xi[0], xi[1], xi[2]);
@@ -168,6 +182,7 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
       cuda->bnd_idx[n] = b;
       cuda->bnd_off[n] = cuda->bnd_cnt[b]++;
     }
+    off += n_recv;
   }
 }
 

@@ -423,23 +423,25 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
   float4 *d_xi4 = mprts_cuda->d_xi4;
   float4 *d_pxi4 = mprts_cuda->d_pxi4;
 
-  unsigned int off = mprts_cuda->nr_prts;
+  unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    assert(off + cuda->bnd_n_recv <= mprts_cuda->nr_alloced);
-
-    check(cudaMemcpy(d_xi4 + off, cuda->bnd_xi4,
-		     cuda->bnd_n_recv * sizeof(*cuda->bnd_xi4),
-		     cudaMemcpyHostToDevice));
-    check(cudaMemcpy(d_pxi4 + off, cuda->bnd_pxi4,
-		     cuda->bnd_n_recv * sizeof(*cuda->bnd_pxi4),
-		     cudaMemcpyHostToDevice));
-
-    off += cuda->bnd_n_recv;
+    nr_recv += cuda->bnd_n_recv;
   }
-  mprts_cuda->nr_prts = off;
+  assert(mprts_cuda->nr_prts + nr_recv <= mprts_cuda->nr_alloced);
+
+  check(cudaMemcpy(d_xi4 + mprts_cuda->nr_prts, mprts_cuda->h_bnd_xi4,
+		   nr_recv * sizeof(*d_xi4),
+		   cudaMemcpyHostToDevice));
+  check(cudaMemcpy(d_pxi4 + mprts_cuda->nr_prts, mprts_cuda->h_bnd_pxi4,
+		   nr_recv * sizeof(*d_pxi4),
+		   cudaMemcpyHostToDevice));
+
+  free(mprts_cuda->h_bnd_xi4);
+  free(mprts_cuda->h_bnd_pxi4);
+
+  mprts_cuda->nr_prts += nr_recv;
 }
 
 // ======================================================================
@@ -565,8 +567,6 @@ cuda_mprts_free(struct psc_mparticles *mprts)
     free(cuda->bnd_off);
     free(cuda->bnd_cnt);
     free(cuda->bnd_prts);
-    free(cuda->bnd_xi4);
-    free(cuda->bnd_pxi4);
   }
 }
 

@@ -26,8 +26,6 @@ struct psc_particles_cuda {
 
   // for bnd exchange
   particle_single_t *bnd_prts;
-  float4 *bnd_xi4;
-  float4 *bnd_pxi4;
   int bnd_n_recv;
   int bnd_n_send;
   unsigned int *bnd_cnt;
