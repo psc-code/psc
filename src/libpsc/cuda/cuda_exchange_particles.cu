@@ -541,19 +541,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
-// cuda_mprts_free
-
-void
-cuda_mprts_free(struct psc_mparticles *mprts)
-{
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    free(cuda->bnd_prts);
-  }
-}
-
-// ======================================================================
 // cuda_mprts_check_ordered_total
 
 void

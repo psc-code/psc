@@ -92,6 +92,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     mprts_cuda->nr_prts += prts->n_part;
     prts_cuda->mprts = mprts;
   }
+  mprts_cuda->h_bnd_cnt = new unsigned int[mprts->nr_patches * nr_blocks];
   mprintf("mprts: nr_prts=%d\n", mprts_cuda->nr_prts);
   unsigned int nr_alloced = mprts_cuda->nr_prts * 1.2;
   mprts_cuda->nr_alloced = nr_alloced;
@@ -122,7 +123,8 @@ __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  free(mprts_cuda->h_dev);
+  delete[] mprts_cuda->h_dev;
+  delete[] mprts_cuda->h_bnd_cnt;
 
   check(cudaFree(mprts_cuda->d_xi4));
   check(cudaFree(mprts_cuda->d_pxi4));

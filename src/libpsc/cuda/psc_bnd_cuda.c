@@ -185,6 +185,7 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
       h_bnd_idx[n] = b;
       h_bnd_off[n] = mprts_cuda->h_bnd_cnt[b]++;
     }
+    free(cuda->bnd_prts);
     off += n_recv;
   }
 }
@@ -257,8 +258,6 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
   static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
@@ -288,9 +287,6 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   cuda_mprts_reorder_and_offsets(mprts);
   prof_stop(pr_E);
   
-  cuda_mprts_free(mprts);
-  free(mprts_cuda->h_bnd_cnt);
-
   cuda_mprts_check_ordered_total(mprts);
 }
 
