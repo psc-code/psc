@@ -4,6 +4,7 @@
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <thrust/scan.h>
 
 #define NBLOCKS_X 1
 #define NBLOCKS_Y 8
@@ -46,8 +47,10 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
     nr_blocks = prts_cuda->nr_blocks; // FIXME...
   }
   unsigned int nr_total_blocks = nr_blocks * mprts->nr_patches;
+  assert(nr_blocks == NBLOCKS_Y * NBLOCKS_Z);
 
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
   thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
 
@@ -95,5 +98,8 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   }
 
   thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
+  thrust::exclusive_scan(d_spine_cnts + nr_total_blocks * 10,
+			 d_spine_cnts + nr_total_blocks * 10 + nr_total_blocks + 1,
+			 d_spine_sums + nr_total_blocks * 10);
 }
 

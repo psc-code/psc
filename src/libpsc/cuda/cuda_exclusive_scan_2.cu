@@ -79,23 +79,19 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 
   cuda_mprts_spine_reduce(mprts);
 
-  unsigned int off = 0;
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+    int nr_total_blocks = cuda->nr_blocks * mprts->nr_patches;
 
-    unsigned int n_send = 0;
-    for (int b = 0; b < cuda->nr_blocks; b++) {
-      unsigned int bid = b + p * cuda->nr_blocks;
-      n_send += d_spine_cnts[NBLOCKS_Y*NBLOCKS_Z*mprts->nr_patches * 10 + bid];
-    }
-
-    cuda->bnd_n_send = n_send;
-    off += prts->n_part;
+    unsigned int n_send = d_spine_sums[nr_total_blocks * 10 + (p + 1) * cuda->nr_blocks];
+    cuda->bnd_n_send = n_send - off;
+    off = n_send;
   }
-  assert(off == mprts_cuda->nr_prts);
-
+  mprts_cuda->nr_prts_send = off;
 }
 
 void
@@ -104,15 +100,13 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   int nr_blocks = 0;
 
-  int nr_send = 0, nr_prts = 0;
+  int nr_send = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     nr_send += cuda->bnd_n_send;
-    nr_prts += prts->n_part;
     nr_blocks = cuda->nr_blocks;
   }
-  assert(nr_prts == mprts_cuda->nr_prts);
   assert(nr_blocks > 0);
   
   thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx);
