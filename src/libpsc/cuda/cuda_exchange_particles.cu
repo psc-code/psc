@@ -351,7 +351,6 @@ cuda_mprts_reorder_and_offsets(struct psc_mparticles *mprts)
 
   psc_mparticles_cuda_swap_alt(mprts);
   psc_mparticles_cuda_copy_to_dev(mprts);
-  cuda_mprts_find_offsets(mprts);
 }
 
 // ======================================================================
@@ -554,7 +553,6 @@ cuda_mprts_reorder(struct psc_mparticles *mprts)
 			     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
   
   psc_mparticles_cuda_swap_alt(mprts);
-  cuda_mprts_find_off(mprts);
 }
 
 // ======================================================================
@@ -650,54 +648,3 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
   psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
-void
-cuda_mprts_find_off(struct psc_mparticles *mprts)
-{
-  unsigned int off = 0;
-  unsigned int last = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    int *offsets = new int[cuda->nr_blocks + 1];
-    check(cudaMemcpy(offsets, cuda->h_dev->offsets,
-		     (cuda->nr_blocks + 1) * sizeof(*offsets),
-		     cudaMemcpyDeviceToHost));
-    assert(offsets[cuda->nr_blocks] == prts->n_part);
-    for (int n = 0; n <= cuda->nr_blocks; n++) {
-      offsets[n] += off;
-    }
-    assert(offsets[0] == last);
-    last = offsets[cuda->nr_blocks];
-    check(cudaMemcpy(cuda->h_dev->d_off, offsets,
-		     (cuda->nr_blocks + 1) * sizeof(*offsets),
-		     cudaMemcpyHostToDevice));
-    delete[] offsets;
-
-    off += prts->n_part;
-  }
-}
-
-void
-cuda_mprts_find_offsets(struct psc_mparticles *mprts)
-{
-  unsigned int off = 0;
-  int *d_off = new int[65];//!!!
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    check(cudaMemcpy(d_off, cuda->h_dev->d_off,
-		     (cuda->nr_blocks + 1) * sizeof(*d_off),
-		     cudaMemcpyDeviceToHost));
-    for (int n = 0; n <= cuda->nr_blocks; n++) {
-      d_off[n] -= off;
-    }
-    assert(d_off[cuda->nr_blocks] == prts->n_part);
-    assert(d_off[0] == 0);
-    check(cudaMemcpy(cuda->h_dev->offsets, d_off,
-		     (cuda->nr_blocks + 1) * sizeof(*d_off),
-		     cudaMemcpyHostToDevice));
-
-    off += prts->n_part;
-  }
-  delete[] d_off;
-}

@@ -249,7 +249,7 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_C0;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E;
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
     pr_B = prof_register("xchg_to_dev", 1., 0, 0);

@@ -141,11 +141,6 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
 
     h_dev->d_off = mprts_cuda->d_off + p * nr_blocks;
     
-    check(cudaMalloc((void **) &h_dev->offsets, 
-		     (prts_cuda->nr_blocks + 1) * sizeof(int)));
-    check(cudaMemcpy(&h_dev->offsets[prts_cuda->nr_blocks], &prts->n_part, sizeof(int),
-		     cudaMemcpyHostToDevice));
-
     prts_cuda->d_dev = &mprts_cuda->d_dev[p];
   }
 }
@@ -154,12 +149,6 @@ void
 __psc_mparticles_cuda_free(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    check(cudaFree(prts_cuda->h_dev->offsets));
-  }
 
   free(mprts_cuda->h_dev);
 
