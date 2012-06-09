@@ -79,9 +79,11 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
     thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx + off);
 
     cuda->bnd_n_send = thrust::count(d_vals, d_vals + prts->n_part, mprts->nr_patches * cuda->nr_blocks);
-
     off += prts->n_part;
   }
+  assert(off == mprts_cuda->nr_prts);
+
+  cuda_mprts_spine_reduce(mprts);
 }
 
 void

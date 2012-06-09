@@ -50,6 +50,8 @@ struct psc_mparticles_cuda {
   unsigned int *d_off; // particles per block
                        // are at indices offsets[block] .. offsets[block+1]-1
                        // indices numbered for the total mprts array 
+  unsigned int *d_bnd_spine_cnts;
+  unsigned int *d_bnd_spine_sums;
   float4 *h_bnd_xi4, *h_bnd_pxi4;
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;
@@ -57,6 +59,10 @@ struct psc_mparticles_cuda {
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
+
+#define CUDA_BND_S_NEW (9)
+#define CUDA_BND_S_OOB (10)
+#define CUDA_BND_STRIDE (10)
 
 EXTERN_C void particles_cuda_get(struct psc_particles *pp);
 EXTERN_C void particles_cuda_put(struct psc_particles *pp);

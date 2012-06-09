@@ -17,6 +17,7 @@ libsubdir_la_SOURCES = \
 libsubdir_la_LIBADD = \
 	cuda_transfer.lo \
 	cuda_find_indices.lo \
+	cuda_spine.lo \
 	cuda_sort.lo \
 	cuda_sort2.lo \
 	cuda_sort3.lo \
@@ -68,6 +69,7 @@ cuda_sort3.lo: psc_cuda.h cuda_sort2.h
 cuda_exchange_particles.lo: psc_bnd_cuda.h particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_exclusive_scan_2.lo: particles_cuda.h ../../include/psc_particles_cuda.h
 cuda_transfer.lo: particles_cuda.h ../../include/psc_particles_cuda.h
+cuda_spine.lo: particles_cuda.h ../../include/psc_particles_cuda.h
 
 #FIXME, this is just really too hacky...
 
