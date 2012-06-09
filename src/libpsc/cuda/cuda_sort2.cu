@@ -227,8 +227,6 @@ cuda_mprts_sort_initial(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  cuda_mprts_compact(mprts);
-
   cuda_mprts_find_block_indices_ids_total(mprts);
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
   thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);

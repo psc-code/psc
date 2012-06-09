@@ -12,10 +12,6 @@ typedef float particle_cuda_real_t;
 #define MPI_PARTICLES_CUDA_REAL MPI_FLOAT
 
 typedef struct {
-  float4 *xi4;    // xi , yi , zi , kind (int_as_float)
-  float4 *pxi4;   // pxi, pyi, pzi, qni_wni (if qni==0, then qni_wni = wni)
-  float4 *alt_xi4;
-  float4 *alt_pxi4;
   int n_part;     // # of particles in this patch
   unsigned int *d_off; // particles per block
                        // are at indices offsets[block] .. offsets[block+1]-1

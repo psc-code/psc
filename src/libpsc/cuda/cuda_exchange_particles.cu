@@ -11,6 +11,7 @@
 #define PFX(x) xchg_##x
 #include "constants.c"
 
+#if 0
 // FIXME const mem for dims?
 // FIXME probably should do our own loop rather than use blockIdx
 
@@ -68,6 +69,7 @@ cuda_exchange_particles(int p, struct psc_particles *prts)
 	     exchange_particles, (prts->n_part, *cuda->h_dev,
 				  patch->ldims[0], patch->ldims[1], patch->ldims[2]));
 }
+#endif
 
 // ----------------------------------------------------------------------
 // cuda_mprts_find_block_indices_2_total
@@ -171,6 +173,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
   }
 
   int max_n_part = 0;
+  int nr_prts = 0;
   mprts_cuda->nr_prts_send = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -179,7 +182,10 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
     if (prts->n_part > max_n_part) {
       max_n_part = prts->n_part;
     }
+    nr_prts += prts->n_part;
   }
+  mprts_cuda->nr_prts = nr_prts;
+  psc_mparticles_cuda_copy_to_dev(mprts);
 
   struct cuda_params prm;
   set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
@@ -284,16 +290,6 @@ static void
 psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    float4 *alt_xi4 = cuda->h_dev->alt_xi4;
-    float4 *alt_pxi4 = cuda->h_dev->alt_pxi4;
-    cuda->h_dev->alt_xi4 = cuda->h_dev->xi4;
-    cuda->h_dev->alt_pxi4 = cuda->h_dev->pxi4;
-    cuda->h_dev->xi4 = alt_xi4;
-    cuda->h_dev->pxi4 = alt_pxi4;
-  }
   float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
   float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
   mprts_cuda->d_alt_xi4 = mprts_cuda->d_xi4;
@@ -514,10 +510,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
       last = h_bidx[off + i];
     }
 
-    cuda->h_dev->xi4 = mprts_cuda->d_xi4 + off;
-    cuda->h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
-    cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
-    cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
     off += prts->n_part;
   }
   mprts_cuda->nr_prts = off;
@@ -608,45 +600,5 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
 
     off += prts->n_part;
   }
-}
-
-// ======================================================================
-// cuda_mprts_compact
-
-void
-cuda_mprts_compact(struct psc_mparticles *mprts)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  float4 *d_alt_xi4 = mprts_cuda->d_alt_xi4;
-  float4 *d_alt_pxi4 = mprts_cuda->d_alt_pxi4;
-  float4 *d_xi4 = mprts_cuda->d_xi4;
-  float4 *d_pxi4 = mprts_cuda->d_pxi4;
-
-  int nr_prts = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    assert(d_alt_xi4 + prts->n_part <= mprts_cuda->d_alt_xi4 + mprts_cuda->nr_alloced);
-    check(cudaMemcpy(d_alt_xi4, cuda->h_dev->xi4,
-		     prts->n_part * sizeof(*cuda->h_dev->alt_xi4),
-		     cudaMemcpyDeviceToDevice));
-    check(cudaMemcpy(d_alt_pxi4, cuda->h_dev->pxi4,
-		     prts->n_part * sizeof(*cuda->h_dev->alt_pxi4),
-		     cudaMemcpyDeviceToDevice));
-    nr_prts += prts->n_part;
-    cuda->h_dev->alt_xi4 = d_alt_xi4;
-    cuda->h_dev->alt_pxi4 = d_alt_pxi4;
-    cuda->h_dev->xi4 = d_xi4;
-    cuda->h_dev->pxi4 = d_pxi4;
-    d_alt_xi4 += prts->n_part;
-    d_alt_pxi4 += prts->n_part;
-    d_xi4 += prts->n_part;
-    d_pxi4 += prts->n_part;
-  }
-  mprts_cuda->nr_prts = nr_prts;
-  psc_mparticles_cuda_swap_alt(mprts);
-  psc_mparticles_cuda_copy_to_dev(mprts);
 }
 

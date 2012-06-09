@@ -178,8 +178,6 @@ static void
 psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
   static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F, pr_B0;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
@@ -191,20 +189,6 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
     pr_F = prof_register("xchg_pre", 1., 0, 0);
   }
 
-  if (mprts->nr_patches > 0) {
-    // FIXME, if xi4/pxi4 in the first patch have been swapped, they
-    // hopefully have been everywhere and we fix up the mprts pointers
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    if (prts_cuda->h_dev->xi4 != mprts_cuda->d_xi4) {
-      mpi_printf(psc_bnd_comm(bnd), "WARN: swapping mprts_cuda xi4/alt_xi4\n");
-      assert(prts_cuda->h_dev->xi4 == mprts_cuda->d_alt_xi4);
-      mprts_cuda->d_xi4 = prts_cuda->h_dev->xi4;
-      mprts_cuda->d_pxi4 = prts_cuda->h_dev->pxi4;
-      mprts_cuda->d_alt_xi4 = prts_cuda->h_dev->alt_xi4;
-      mprts_cuda->d_alt_pxi4 = prts_cuda->h_dev->alt_pxi4;
-    }
-  }
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
