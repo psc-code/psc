@@ -546,16 +546,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    assert(off == cuda->h_dev->xi4 - mprts_cuda->d_xi4);
-    for (int n = 0; n < prts->n_part; n++) {
-      if (h_bidx[off + n] < cuda->nr_blocks) {
-  	h_bidx[off + n] += p * cuda->nr_blocks;
-      } else {
-  	h_bidx[off + n] = mprts->nr_patches * cuda->nr_blocks;
-      }
-    }
     off += prts->n_part;
   }
   for (int p = 0; p < mprts->nr_patches; p++) {
@@ -595,7 +585,9 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    for (int i = 0; i < prts->n_part + cuda->bnd_n_recv - cuda->bnd_n_send; i++) {
+    prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
+
+    for (int i = 0; i < prts->n_part; i++) {
       if (h_bidx[off + i] < last) {
 	mprintf("i %d last %d bidx %d\n", i, last, h_bidx[off + i]);
       }
@@ -608,15 +600,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
       assert(h_ids[off + i] < mprts_cuda->nr_prts);
       last = h_bidx[off + i];
     }
-    off +=  prts->n_part + cuda->bnd_n_recv - cuda->bnd_n_send;
-  }
 
-  off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
     cuda->h_dev->xi4 = mprts_cuda->d_xi4 + off;
     cuda->h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
     cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
@@ -625,6 +609,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     off += prts->n_part;
   }
   mprts_cuda->nr_prts = off;
+  delete[] h_bidx;
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 }

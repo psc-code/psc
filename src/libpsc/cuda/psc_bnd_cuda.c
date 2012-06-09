@@ -209,7 +209,6 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
     cuda->bnd_cnt = calloc(cuda->nr_blocks, sizeof(*cuda->bnd_cnt));
-    cuda->bnd_n_part_save = prts->n_part;
   }
 
   psc_mparticles_cuda_copy_to_dev(mprts);
@@ -254,7 +253,6 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
     pr_B = prof_register("xchg_to_dev", 1., 0, 0);
-    pr_C0= prof_register("xchg_bidx_again", 1., 0, 0);
     pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);
     pr_E = prof_register("xchg_reorder", 1., 0, 0);
@@ -267,11 +265,6 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_start(pr_B);
   cuda_mprts_copy_to_dev(mprts);
   prof_stop(pr_B);
-
-  prof_start(pr_C0);
-  //cuda_mprts_find_block_indices_2_total(mprts);
-  cuda_mprts_find_block_indices_2(mprts); // needed also because patch bidx array moved
-  prof_stop(pr_C0);
 
   prof_start(pr_C);
   cuda_mprts_find_block_indices_3(mprts);
