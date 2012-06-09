@@ -41,6 +41,7 @@ struct psc_particles_cuda {
   unsigned int *bnd_idx;
   unsigned int *bnd_off;
   void *sort_ctx; // for sorting / particle xchg
+  struct psc_mparticles *mprts; // parent containing this patch of particles
 };
 
 #define psc_particles_cuda(prts) mrc_to_subobj(prts, struct psc_particles_cuda)

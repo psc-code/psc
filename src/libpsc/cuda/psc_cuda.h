@@ -100,14 +100,8 @@ struct d_particle {
 
 EXTERN_C void __particles_cuda_to_device(struct psc_particles *prts,
 					 float4 *xi, float4 *pxi);
-EXTERN_C void __particles_cuda_to_device_range(struct psc_particles *prts,
-					       float4 *xi, float4 *pxi,
-					       int start, int end);
 EXTERN_C void __particles_cuda_from_device(struct psc_particles *prts,
 					   float4 *xi4, float4 *pxi4);
-EXTERN_C void __particles_cuda_from_device_range(struct psc_particles *prts,
-						 float4 *xi, float4 *pxi,
-						 int start, int end);
 
 EXTERN_C void __fields_cuda_alloc(struct psc_fields *pf);
 EXTERN_C void __fields_cuda_free(struct psc_fields *pf);
