@@ -28,9 +28,6 @@ struct psc_particles_cuda {
   particle_single_t *bnd_prts;
   int bnd_n_recv;
   int bnd_n_send;
-  unsigned int *bnd_cnt;
-  unsigned int *h_bnd_idx;
-  unsigned int *h_bnd_off;
   void *sort_ctx; // for sorting / particle xchg
   struct psc_mparticles *mprts; // parent containing this patch of particles
 };
@@ -56,6 +53,7 @@ struct psc_mparticles_cuda {
   float4 *h_bnd_xi4, *h_bnd_pxi4;
   unsigned int *h_bnd_idx;
   unsigned int *h_bnd_off;
+  unsigned int *h_bnd_cnt;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
