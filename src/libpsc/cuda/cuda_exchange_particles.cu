@@ -211,27 +211,28 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-
-    off += prts->n_part;
-  }
+  unsigned int nr_prts = 0;
+  unsigned int nr_recv = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    // for consistency, use same block indices that we counted earlier
-    check(cudaMemcpy(mprts_cuda->d_bidx + off, cuda->bnd_idx,
-		     cuda->bnd_n_recv * sizeof(*mprts_cuda->d_bidx),
-		     cudaMemcpyHostToDevice));
-    // abuse of alt_bidx!!! FIXME
-    check(cudaMemcpy(mprts_cuda->d_alt_bidx + off, cuda->bnd_off,
-		     cuda->bnd_n_recv * sizeof(*mprts_cuda->d_alt_bidx),
-		     cudaMemcpyHostToDevice));
-    off += cuda->bnd_n_recv;
+    nr_prts += prts->n_part;
+    nr_recv += cuda->bnd_n_recv;
   }
-  assert(off == mprts_cuda->nr_prts);
+
+  // for consistency, use same block indices that we counted earlier
+  check(cudaMemcpy(mprts_cuda->d_bidx + nr_prts, mprts_cuda->h_bnd_idx,
+		   nr_recv * sizeof(*mprts_cuda->d_bidx),
+		   cudaMemcpyHostToDevice));
+  // abuse of alt_bidx!!! FIXME
+  check(cudaMemcpy(mprts_cuda->d_alt_bidx + nr_prts, mprts_cuda->h_bnd_off,
+		   nr_recv * sizeof(*mprts_cuda->d_alt_bidx),
+		   cudaMemcpyHostToDevice));
+
+  assert(nr_prts + nr_recv == mprts_cuda->nr_prts);
+
+  free(mprts_cuda->h_bnd_idx);
+  free(mprts_cuda->h_bnd_off);
 }
 
 // ======================================================================
@@ -563,8 +564,6 @@ cuda_mprts_free(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    free(cuda->bnd_idx);
-    free(cuda->bnd_off);
     free(cuda->bnd_cnt);
     free(cuda->bnd_prts);
   }

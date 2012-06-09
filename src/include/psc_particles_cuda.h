@@ -29,8 +29,8 @@ struct psc_particles_cuda {
   int bnd_n_recv;
   int bnd_n_send;
   unsigned int *bnd_cnt;
-  unsigned int *bnd_idx;
-  unsigned int *bnd_off;
+  unsigned int *h_bnd_idx;
+  unsigned int *h_bnd_off;
   void *sort_ctx; // for sorting / particle xchg
   struct psc_mparticles *mprts; // parent containing this patch of particles
 };
@@ -54,6 +54,8 @@ struct psc_mparticles_cuda {
                        // are at indices offsets[block] .. offsets[block+1]-1
                        // indices numbered for the total mprts array 
   float4 *h_bnd_xi4, *h_bnd_pxi4;
+  unsigned int *h_bnd_idx;
+  unsigned int *h_bnd_off;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)
