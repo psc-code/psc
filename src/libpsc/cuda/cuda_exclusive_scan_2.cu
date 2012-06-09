@@ -5,6 +5,8 @@
 #include <thrust/functional.h>
 #include <thrust/transform_scan.h>
 #include <thrust/count.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 #define NBLOCKS_X 1
 #define NBLOCKS_Y 8
@@ -60,18 +62,6 @@ _cuda_exclusive_scan_2(struct psc_particles *prts, unsigned int *d_bidx,
   return sum;
 }
 
-#if 0
-void
-cuda_mprts_scan_send_buf(struct psc_mparticles *mprts)
-{
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    cuda->bnd_n_send = cuda_exclusive_scan_2(prts, cuda->h_dev->bidx, cuda->h_dev->sums);
-  }
-}
-#endif
-
 void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
@@ -99,10 +89,27 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+#if 0
   thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx);
   thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
-
   count_if_equal unary_op(mprts_cuda->nr_total_blocks);
   thrust::transform_exclusive_scan(d_vals, d_vals + mprts_cuda->nr_prts, d_sums, unary_op,
 				   0, thrust::plus<unsigned int>());
+#else
+  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
+  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
+  thrust::host_vector<unsigned int> h_sums(d_sums, d_sums + mprts_cuda->nr_prts);
+  
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  unsigned int sum = 0;
+  for (int n = 0; n < mprts_cuda->nr_prts; n++) {
+    if (h_bidx[n] == nr_total_blocks) {
+      h_sums[n] = sum;
+      sum++;
+    }
+  }
+
+  thrust::copy(h_sums.begin(), h_sums.end(), d_sums);
+#endif
 }
