@@ -39,14 +39,8 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  int nr_blocks;
-  assert(mprts->nr_patches > 0);
-  {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
-    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    nr_blocks = prts_cuda->nr_blocks; // FIXME...
-  }
-  unsigned int nr_total_blocks = nr_blocks * mprts->nr_patches;
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  unsigned int nr_blocks = mprts_cuda->nr_blocks;
   assert(nr_blocks == NBLOCKS_Y * NBLOCKS_Z);
 
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);

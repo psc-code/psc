@@ -78,22 +78,47 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   if (mprts->nr_patches == 0) {
     return;
   }
+  
+  // we assume that every patch will have those same dims
+  int *ldims = ppsc->patch[0].ldims;
+
+  if (!mprts->flags) {
+    // FIXME, they get set too late, so auto-dispatch "1vb" doesn't work
+    mprts->flags = MP_NEED_BLOCK_OFFSETS | MP_BLOCKSIZE_4X4X4 | MP_NO_CHECKERBOARD;
+  }
+
+  int bs[3];
+  for (int d = 0; d < 3; d++) {
+    switch (mprts->flags & MP_BLOCKSIZE_MASK) {
+    case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
+    case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
+    case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
+    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
+    default: assert(0);
+    }
+    if (ppsc->domain.gdims[d] == 1) {
+      bs[d] = 1;
+    }
+    mprts_cuda->blocksize[d] = bs[d];
+    assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
+    mprts_cuda->b_mx[d] = (ldims[d] + bs[d] - 1) / bs[d];
+    mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->dx[d]);
+  }
+  mprts_cuda->nr_blocks = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
+  mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;
 
   mprts_cuda->h_dev = new particles_cuda_dev_t[mprts->nr_patches];
   check(cudaMalloc(&mprts_cuda->d_dev,
 		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev)));
 
   mprts_cuda->nr_prts = 0;
-  int nr_blocks;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
-    nr_blocks = prts_cuda->nr_blocks; // FIXME...
     mprts_cuda->nr_prts += prts->n_part;
     prts_cuda->mprts = mprts;
   }
-  mprts_cuda->h_bnd_cnt = new unsigned int[mprts->nr_patches * nr_blocks];
-  mprintf("mprts: nr_prts=%d\n", mprts_cuda->nr_prts);
+  mprts_cuda->h_bnd_cnt = new unsigned int[mprts_cuda->nr_total_blocks];
   unsigned int nr_alloced = mprts_cuda->nr_prts * 1.2;
   mprts_cuda->nr_alloced = nr_alloced;
 
@@ -107,11 +132,11 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
   check(cudaMalloc((void **) &mprts_cuda->d_sums, nr_alloced * sizeof(unsigned int)));
 
   check(cudaMalloc((void **) &mprts_cuda->d_off, 
-		   (mprts->nr_patches * nr_blocks + 1) * sizeof(*mprts_cuda->d_off)));
+		   (mprts_cuda->nr_total_blocks + 1) * sizeof(*mprts_cuda->d_off)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_cnts,
-		   (1 + mprts->nr_patches * nr_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
+		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
   check(cudaMalloc((void **) &mprts_cuda->d_bnd_spine_sums,
-		   (1 + mprts->nr_patches * nr_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
+		   (1 + mprts_cuda->nr_total_blocks * (CUDA_BND_STRIDE + 1)) * sizeof(unsigned int)));
 
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
