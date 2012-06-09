@@ -92,11 +92,6 @@ void
 psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  assert(mprts_cuda->h_dev);
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    psc_particles_cuda(prts)->h_dev->n_part = prts->n_part; // FIXME!
-  }
 
   check(cudaMemcpy(mprts_cuda->d_dev, mprts_cuda->h_dev,
 		   mprts->nr_patches * sizeof(*mprts_cuda->d_dev),

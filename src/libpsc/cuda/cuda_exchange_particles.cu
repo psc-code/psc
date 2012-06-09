@@ -182,6 +182,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
     if (prts->n_part > max_n_part) {
       max_n_part = prts->n_part;
     }
+    cuda->h_dev->n_part = prts->n_part;
     nr_prts += prts->n_part;
   }
   mprts_cuda->nr_prts = nr_prts;
@@ -495,6 +496,7 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
+    cuda->h_dev->n_part = prts->n_part;
 
     for (int i = 0; i < prts->n_part; i++) {
       if (h_bidx[off + i] < last) {
@@ -576,7 +578,6 @@ cuda_mprts_check_ordered_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  psc_mparticles_cuda_copy_to_dev(mprts); // update n_part, particle pointers
   cuda_mprts_find_block_indices_2_total(mprts);
 
   unsigned int last = 0;
