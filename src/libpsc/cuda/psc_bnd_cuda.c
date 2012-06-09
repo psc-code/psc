@@ -202,7 +202,7 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F, pr_B0;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
-    pr_B0 = prof_register("xchg_scan_old", 1., 0, 0);
+    pr_B0= prof_register("xchg_reduce", 1., 0, 0);
     pr_B = prof_register("xchg_scan", 1., 0, 0);
     pr_C = prof_register("xchg_reorder_send", 1., 0, 0);
     pr_D = prof_register("xchg_from_dev", 1., 0, 0);
