@@ -6,6 +6,10 @@
 #include <thrust/transform_scan.h>
 #include <thrust/count.h>
 
+#define NBLOCKS_X 1
+#define NBLOCKS_Y 8
+#define NBLOCKS_Z 8
+
 struct count_if_equal : public thrust::unary_function<unsigned int, unsigned int> {
   const unsigned int value;
 
@@ -72,18 +76,26 @@ void
 cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  cuda_mprts_spine_reduce(mprts);
+
   unsigned int off = 0;
+  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx + off);
 
-    cuda->bnd_n_send = thrust::count(d_vals, d_vals + prts->n_part, mprts->nr_patches * cuda->nr_blocks);
+    unsigned int n_send = 0;
+    for (int b = 0; b < cuda->nr_blocks; b++) {
+      unsigned int bid = b + p * cuda->nr_blocks;
+      n_send += d_spine_cnts[NBLOCKS_Y*NBLOCKS_Z*mprts->nr_patches * 10 + bid];
+    }
+
+    cuda->bnd_n_send = n_send;
     off += prts->n_part;
   }
   assert(off == mprts_cuda->nr_prts);
 
-  cuda_mprts_spine_reduce(mprts);
 }
 
 void
