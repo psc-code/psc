@@ -38,7 +38,7 @@ struct psc_particles_cuda {
   particle_single_t *bnd_prts;
   float4 *bnd_xi4;
   float4 *bnd_pxi4;
-  int bnd_n_part;
+  int bnd_n_recv;
   int bnd_n_send;
   int bnd_n_part_save;
   unsigned int *bnd_cnt;

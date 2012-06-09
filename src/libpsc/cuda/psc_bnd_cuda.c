@@ -129,13 +129,13 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
     struct ddc_particles *ddcp = bnd->ddcp;
     struct ddcp_patch *patch = &ddcp->patches[prts->p];
     int n_recv = patch->head;
-    prts->n_part = cuda->bnd_n_part_save + n_recv;
+    cuda->bnd_n_recv = n_recv;
     
     cuda->bnd_xi4  = malloc(n_recv * sizeof(float4));
     cuda->bnd_pxi4 = malloc(n_recv * sizeof(float4));
     cuda->bnd_idx  = malloc(n_recv * sizeof(*cuda->bnd_idx));
     cuda->bnd_off  = malloc(n_recv * sizeof(*cuda->bnd_off));
-    for (int n = 0; n < patch->head; n++) {
+    for (int n = 0; n < n_recv; n++) {
       particle_single_t *prt = &cuda->bnd_prts[n];
       cuda->bnd_xi4[n].x  = prt->xi;
       cuda->bnd_xi4[n].y  = prt->yi;
@@ -168,7 +168,6 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
       cuda->bnd_idx[n] = b;
       cuda->bnd_off[n] = cuda->bnd_cnt[b]++;
     }
-    cuda->bnd_n_part = patch->head;
   }
 }
 
