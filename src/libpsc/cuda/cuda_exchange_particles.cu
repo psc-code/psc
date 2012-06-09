@@ -452,29 +452,6 @@ void
 cuda_mprts_sort(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  unsigned int *h_bidx = new unsigned int[mprts_cuda->nr_alloced];
-  check(cudaMemcpy(h_bidx, mprts_cuda->d_bidx, mprts_cuda->nr_prts * sizeof(unsigned int),
-		   cudaMemcpyDeviceToHost));
-
-  unsigned int off = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    off += prts->n_part;
-  }
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    for (int n = 0; n < cuda->bnd_n_recv; n++) {
-      assert(h_bidx[off + n] < cuda->nr_blocks);
-      h_bidx[off + n] += p * cuda->nr_blocks;
-    }
-    off += cuda->bnd_n_recv;
-  }
-  assert(off = mprts_cuda->nr_prts);
-
-  check(cudaMemcpy(mprts_cuda->d_bidx, h_bidx, mprts_cuda->nr_prts * sizeof(unsigned int),
-		   cudaMemcpyHostToDevice));
 
   cuda_mprts_sort_pairs_device(mprts);
 #if 0
@@ -486,6 +463,17 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     sort_pairs_3_destroy(sp);
 #endif
 
+  unsigned int off = 0;
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
+    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+
+    prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
+    cuda->h_dev->n_part = prts->n_part;
+    off += prts->n_part;
+  }
+
+  unsigned int *h_bidx = new unsigned int[mprts_cuda->nr_alloced];
   unsigned int *h_ids = new unsigned int[mprts_cuda->nr_alloced];
   check(cudaMemcpy(h_ids, mprts_cuda->d_ids, mprts_cuda->nr_alloced * sizeof(unsigned int),
 		   cudaMemcpyDeviceToHost));
@@ -497,9 +485,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
-    cuda->h_dev->n_part = prts->n_part;
 
     for (int i = 0; i < prts->n_part; i++) {
       if (h_bidx[off + i] < last) {

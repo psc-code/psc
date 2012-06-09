@@ -181,7 +181,7 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
       }
       unsigned int b = (b_pos[2] * cuda->b_mx[1] + b_pos[1]) * cuda->b_mx[0] + b_pos[0];
       assert(b < cuda->nr_blocks);
-      h_bnd_idx[n] = b;
+      h_bnd_idx[n] = b + p * cuda->nr_blocks;
       h_bnd_off[n] = cuda->bnd_cnt[b]++;
     }
     off += n_recv;
