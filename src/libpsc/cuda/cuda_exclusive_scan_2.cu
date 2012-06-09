@@ -96,17 +96,23 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   thrust::transform_exclusive_scan(d_vals, d_vals + mprts_cuda->nr_prts, d_sums, unary_op,
 				   0, thrust::plus<unsigned int>());
 #else
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
   thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
+  thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+  thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_sums(d_sums, d_sums + mprts_cuda->nr_prts);
   
-  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
-  unsigned int sum = 0;
-  for (int n = 0; n < mprts_cuda->nr_prts; n++) {
-    if (h_bidx[n] == nr_total_blocks) {
-      h_sums[n] = sum;
-      sum++;
+  for (unsigned int bid = 0; bid < nr_total_blocks; bid++) {
+    unsigned int sum = d_spine_sums[nr_total_blocks * 10 + bid];
+    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
+      if (h_bidx[n] == nr_total_blocks) {
+	h_sums[n] = sum;
+	sum++;
+      }
     }
   }
 

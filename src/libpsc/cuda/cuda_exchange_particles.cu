@@ -261,13 +261,6 @@ cuda_mprts_reorder_send_buf_total(struct psc_mparticles *mprts)
 
   struct psc_particles_cuda *cuda = psc_particles_cuda(psc_mparticles_get_patch(mprts, 0));
   
-  mprts_cuda->nr_prts_send = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    mprts_cuda->nr_prts_send += cuda->bnd_n_send;
-  }
-
   float4 *xchg_xi4 = mprts_cuda->d_xi4 + mprts_cuda->nr_prts;
   float4 *xchg_pxi4 = mprts_cuda->d_pxi4 + mprts_cuda->nr_prts;
   assert(mprts_cuda->nr_prts + mprts_cuda->nr_prts_send < mprts_cuda->nr_alloced);
