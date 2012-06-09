@@ -13,6 +13,7 @@
 
 // FIXME, use const mem for some params
 
+#if 0
 __global__ static void find_cell_indices_by_cell(int n_part, particles_cuda_dev_t h_dev,
 						 int *d_cnis, int *d_ids, int ldims_y)
 {
@@ -206,3 +207,4 @@ sort_patch_by_cell(int p, struct psc_particles *prts)
   check(cudaFree(d_ids));
 }
 
+#endif
