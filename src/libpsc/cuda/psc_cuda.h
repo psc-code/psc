@@ -99,7 +99,7 @@ struct d_particle {
 } while (0)
 
 EXTERN_C void __particles_cuda_to_device(struct psc_particles *prts,
-					 float4 *xi, float4 *pxi, int *offsets);
+					 float4 *xi, float4 *pxi);
 EXTERN_C void __particles_cuda_to_device_range(struct psc_particles *prts,
 					       float4 *xi, float4 *pxi,
 					       int start, int end);
@@ -135,7 +135,6 @@ EXTERN_C int  cuda_exclusive_scan(int p, struct psc_particles *prts, unsigned in
 				  unsigned int *d_sums);
 EXTERN_C void cuda_reorder_and_offsets(struct psc_particles *prts, unsigned int *d_bidx, unsigned int *d_ids);
 EXTERN_C void cuda_copy_bidx_from_dev(struct psc_particles *prts, unsigned int *h_bidx, unsigned int *d_bidx);
-EXTERN_C void cuda_copy_offsets_from_dev(struct psc_particles *prts, unsigned int *h_offsets);
 
 EXTERN_C void cuda_sort_patch(int p, struct psc_particles *prts);
 EXTERN_C void cuda_sort_patch_by_cell(int p, struct psc_particles *prts);

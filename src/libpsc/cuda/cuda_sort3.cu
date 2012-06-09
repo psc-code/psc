@@ -2,6 +2,7 @@
 #include "psc_cuda.h"
 #include "cuda_sort2.h"
 
+#if 0
 #include <thrust/scan.h>
 
 __constant__ __device__ int dirs[9][9][2];
@@ -294,3 +295,4 @@ sort_pairs_3_device(void *_sp, unsigned int *d_bidx,
     assert(0);
   }
 }
+#endif

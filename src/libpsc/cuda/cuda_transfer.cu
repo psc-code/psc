@@ -19,8 +19,7 @@ cuda_init(int rank)
 #define MAX_BND_COMPONENTS (3)
 
 EXTERN_C void
-__particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4,
-			   int *offsets)
+__particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   int n_part = prts->n_part;
@@ -31,10 +30,6 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(h_dev->pxi4, pxi4, n_part * sizeof(*pxi4),
 		   cudaMemcpyHostToDevice));
-  if (offsets) {
-    check(cudaMemcpy(h_dev->offsets, offsets,
-                    (cuda->nr_blocks + 1) * sizeof(int), cudaMemcpyHostToDevice));
-  }
 }
 
 EXTERN_C void
@@ -75,22 +70,6 @@ __particles_cuda_from_device_range(struct psc_particles *prts, float4 *xi4, floa
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(pxi4, h_dev->pxi4 + start, (end - start) * sizeof(*pxi4),
 		   cudaMemcpyDeviceToHost));
-}
-
-EXTERN_C void
-cuda_copy_offsets_from_dev(struct psc_particles *prts, unsigned int *h_offsets)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  check(cudaMemcpy(h_offsets, cuda->h_dev->offsets, (cuda->nr_blocks + 1) * sizeof(*h_offsets),
-		   cudaMemcpyDeviceToHost));
-}
-
-EXTERN_C void
-cuda_copy_offsets_to_dev(struct psc_particles *prts, unsigned int *h_offsets)
-{
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  check(cudaMemcpy(cuda->h_dev->offsets, h_offsets, (cuda->nr_blocks + 1) * sizeof(*h_offsets),
-		   cudaMemcpyHostToDevice));
 }
 
 EXTERN_C void

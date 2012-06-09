@@ -138,7 +138,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
     ierr = H5LTread_dataset_float(group, "xi4", (float *) xi4); CE;
     ierr = H5LTread_dataset_float(group, "pxi4", (float *) pxi4); CE;
 
-    __particles_cuda_to_device(prts, xi4, pxi4, NULL);
+    __particles_cuda_to_device(prts, xi4, pxi4);
 
     assert(0); // need to do on mprts basis
     // to restore offsets etc.
@@ -277,7 +277,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
     }
   }
   
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);
@@ -387,7 +387,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
       // bit, so we can do the checkerboard passes
     }
   }
-  __particles_cuda_to_device(prts_cuda, xi4, pxi4, NULL);
+  __particles_cuda_to_device(prts_cuda, xi4, pxi4);
   
   free(xi4);
   free(pxi4);
