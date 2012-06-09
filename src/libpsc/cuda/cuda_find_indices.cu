@@ -157,8 +157,8 @@ sort_reorder_by_cell_device(struct psc_particles *prts, int *d_cnis, int *d_ids)
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
   assert(0); // need to use alt_*, can't alloc/free
   float4 *xi4, *pxi4;
-  check(cudaMalloc((void **) &xi4, cuda->n_alloced * sizeof(*xi4)));
-  check(cudaMalloc((void **) &pxi4, cuda->n_alloced * sizeof(*pxi4)));
+  check(cudaMalloc((void **) &xi4, prts->n_part * sizeof(*xi4)));
+  check(cudaMalloc((void **) &pxi4, prts->n_part * sizeof(*pxi4)));
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (prts->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -174,9 +174,8 @@ sort_reorder_by_cell_device(struct psc_particles *prts, int *d_cnis, int *d_ids)
 EXTERN_C void
 sort_patch_prep(int p, struct psc_particles *prts, int **d_cnis, int **d_ids)
 {
-  struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-  check(cudaMalloc((void **) d_cnis, cuda->n_alloced * sizeof(*d_cnis)));
-  check(cudaMalloc((void **) d_ids, cuda->n_alloced * sizeof(*d_ids)));
+  check(cudaMalloc((void **) d_cnis, prts->n_part * sizeof(*d_cnis)));
+  check(cudaMalloc((void **) d_ids, prts->n_part * sizeof(*d_ids)));
 
   sort_set_constants(prts, NULL);
 }

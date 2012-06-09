@@ -25,7 +25,6 @@ __particles_cuda_to_device(struct psc_particles *prts, float4 *xi4, float4 *pxi4
   int n_part = prts->n_part;
   particles_cuda_dev_t *h_dev = cuda->h_dev;
 
-  assert(n_part <= cuda->n_alloced);
   check(cudaMemcpy(h_dev->xi4, xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyHostToDevice));
   check(cudaMemcpy(h_dev->pxi4, pxi4, n_part * sizeof(*pxi4),
@@ -52,7 +51,6 @@ __particles_cuda_from_device(struct psc_particles *prts, float4 *xi4, float4 *px
   int n_part = prts->n_part;
   particles_cuda_dev_t *h_dev = cuda->h_dev;
 
-  assert(n_part <= cuda->n_alloced);
   check(cudaMemcpy(xi4, h_dev->xi4, n_part * sizeof(*xi4),
 		   cudaMemcpyDeviceToHost));
   check(cudaMemcpy(pxi4, h_dev->pxi4, n_part * sizeof(*pxi4),
@@ -130,14 +128,11 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     particles_cuda_dev_t *h_dev = &mprts_cuda->h_dev[p];
     prts_cuda->h_dev = h_dev;
 
-    int n_alloced = prts->n_part * 1.2; // FIXME, need to handle realloc eventually
-    prts_cuda->n_alloced = n_alloced;
-
     h_dev->xi4 = mprts_cuda->d_xi4 + off;
     h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
     h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
-    off += n_alloced; // FIXME, there may not be quite enough space in the end
+    off += prts->n_part;
 
     h_dev->d_off = mprts_cuda->d_off + p * nr_blocks;
     

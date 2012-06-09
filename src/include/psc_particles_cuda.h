@@ -27,7 +27,6 @@ struct psc_particles_cuda {
   particles_cuda_dev_t *d_dev; // this one actually lives in device mem
   int nr_blocks;               // number of blocks
   int b_mx[3];                 // number of blocks by direction
-  int n_alloced;
   int blocksize[3];            // dimensions of sub blocks in a patch
   particle_cuda_real_t b_dxi[3];
   struct cell_map map;         // maps 3d block pos to 1d block index

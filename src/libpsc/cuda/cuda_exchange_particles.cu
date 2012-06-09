@@ -514,7 +514,6 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
     cuda->h_dev->pxi4 = mprts_cuda->d_pxi4 + off;
     cuda->h_dev->alt_xi4 = mprts_cuda->d_alt_xi4 + off;
     cuda->h_dev->alt_pxi4 = mprts_cuda->d_alt_pxi4 + off;
-    cuda->n_alloced = prts->n_part;
     off += prts->n_part;
   }
   mprts_cuda->nr_prts = off;
@@ -633,15 +632,14 @@ cuda_mprts_compact(struct psc_mparticles *mprts)
 		     prts->n_part * sizeof(*cuda->h_dev->alt_pxi4),
 		     cudaMemcpyDeviceToDevice));
     nr_prts += prts->n_part;
-    cuda->n_alloced = prts->n_part;
     cuda->h_dev->alt_xi4 = d_alt_xi4;
     cuda->h_dev->alt_pxi4 = d_alt_pxi4;
     cuda->h_dev->xi4 = d_xi4;
     cuda->h_dev->pxi4 = d_pxi4;
-    d_alt_xi4 += cuda->n_alloced;
-    d_alt_pxi4 += cuda->n_alloced;
-    d_xi4 += cuda->n_alloced;
-    d_pxi4 += cuda->n_alloced;
+    d_alt_xi4 += prts->n_part;
+    d_alt_pxi4 += prts->n_part;
+    d_xi4 += prts->n_part;
+    d_pxi4 += prts->n_part;
   }
   mprts_cuda->nr_prts = nr_prts;
   psc_mparticles_cuda_swap_alt(mprts);

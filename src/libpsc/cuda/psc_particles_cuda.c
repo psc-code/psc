@@ -214,8 +214,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 {
   int p = prts_cuda->p;
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
-  prts_cuda->n_part = prts_c->n_part;
-  assert(prts_cuda->n_part <= cuda->n_alloced);
+  assert(prts_cuda->n_part == prts_c->n_part);
   
   particle_single_real_t dth[3] = { .5 * ppsc->dt, .5 * ppsc->dt, .5 * ppsc->dt };
   // don't shift in invariant directions
@@ -340,8 +339,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
 {
   int p = prts_cuda->p;
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts_cuda);
-  prts_cuda->n_part = prts->n_part;
-  assert(prts_cuda->n_part <= cuda->n_alloced);
+  assert(prts_cuda->n_part == prts->n_part);
   
   float4 *xi4  = calloc(prts->n_part, sizeof(float4));
   float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
