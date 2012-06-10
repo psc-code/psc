@@ -21,49 +21,34 @@ do_sort(struct psc_mparticles *mprts)
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
 
   thrust::host_vector<unsigned int> h_b_cnts(nr_total_blocks * (nr_total_blocks + 1));
-  thrust::host_vector<unsigned int> h_cnts(nr_total_blocks + 1);
+  thrust::host_vector<unsigned int> h_b_sums(nr_total_blocks * (nr_total_blocks + 1));
+  thrust::host_vector<unsigned int> h_bidx2(mprts_cuda->nr_prts);
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       if (h_bidx[n] < mprts_cuda->nr_total_blocks) {
-	h_cnts[h_bidx[n]]++;
 	h_b_cnts[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
       }
     }
   }
   for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
     assert(h_bidx[n] < mprts_cuda->nr_total_blocks);
-    h_cnts[h_bidx[n]]++;
     h_b_cnts[h_bidx[n] * (nr_total_blocks + 1) + nr_total_blocks]++;
   }
 
-  thrust::host_vector<unsigned int> h_sums(nr_total_blocks + 1);
-  thrust::host_vector<unsigned int> h_b_sums(nr_total_blocks * (nr_total_blocks + 1));
-
-  thrust::exclusive_scan(h_cnts.begin(), h_cnts.end(), h_sums.begin());
   thrust::exclusive_scan(h_b_cnts.begin(), h_b_cnts.end(), h_b_sums.begin());
 
-  thrust::host_vector<unsigned int> h_bidx2(mprts_cuda->nr_prts);
-
-  mprintf("h_sums %d // %d %d\n", h_sums[1], h_b_sums[1], h_b_sums[nr_total_blocks + 1]);
   for (int bid = 0; bid < nr_total_blocks; bid++) {
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       if (h_bidx[n] < nr_total_blocks) {
-	int nn = h_sums[h_bidx[n]]++;
-	int nn2 = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
-	if (nn != nn2) {
-	  mprintf("bid %d nn %d nn2 %d\n", bid, nn, nn2);
-	}
-	assert(nn == nn2);
+	int nn = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
 	h_ids[nn] = n;
 	h_bidx2[nn] = h_bidx[n];
       }
     }
   }
   for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
-      int nn = h_sums[h_bidx[n]]++;
-      int nn2 = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + nr_total_blocks]++;
-      assert(nn == nn2);
+      int nn = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + nr_total_blocks]++;
       h_ids[nn] = n;
       h_bidx2[nn] = h_bidx[n];
   }
