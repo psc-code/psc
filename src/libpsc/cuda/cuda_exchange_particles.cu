@@ -479,48 +479,14 @@ cuda_mprts_sort(struct psc_mparticles *mprts)
 
   cuda_mprts_sort_pairs_device(mprts);
 
-  unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
     prts->n_part += cuda->bnd_n_recv - cuda->bnd_n_send;
     cuda->h_dev->n_part = prts->n_part;
-    off += prts->n_part;
   }
-
-  unsigned int *h_bidx = new unsigned int[mprts_cuda->nr_alloced];
-  unsigned int *h_ids = new unsigned int[mprts_cuda->nr_alloced];
-  check(cudaMemcpy(h_ids, mprts_cuda->d_ids, mprts_cuda->nr_alloced * sizeof(unsigned int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaMemcpy(h_bidx, mprts_cuda->d_bidx, mprts_cuda->nr_alloced * sizeof(unsigned int),
-		   cudaMemcpyDeviceToHost));
-
-  off = 0;
-  int last = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-
-    for (int i = 0; i < prts->n_part; i++) {
-      if (h_bidx[off + i] < last) {
-	mprintf("i %d last %d bidx %d\n", i, last, h_bidx[off + i]);
-      }
-      assert(h_bidx[off + i] >= last);
-      assert(h_bidx[off + i] >= p * cuda->nr_blocks);
-      if (!(h_bidx[off + i] < (p + 1) * cuda->nr_blocks)) {
-	mprintf("i %d h_bidx %d p %d\n", i, h_bidx[off + i], p);
-      }
-      assert(h_bidx[off + i] < (p + 1) * cuda->nr_blocks);
-      assert(h_ids[off + i] < mprts_cuda->nr_prts);
-      last = h_bidx[off + i];
-    }
-
-    off += prts->n_part;
-  }
-  mprts_cuda->nr_prts = off;
-  delete[] h_bidx;
-
+  mprts_cuda->nr_prts -= mprts_cuda->nr_prts_send;
   psc_mparticles_cuda_copy_to_dev(mprts);
 }
 
