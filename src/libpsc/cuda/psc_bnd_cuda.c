@@ -138,6 +138,10 @@ mprts_convert_to_cuda(struct psc_bnd *bnd, struct psc_mparticles *mprts)
   mprts_cuda->h_bnd_idx  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_idx));
   mprts_cuda->h_bnd_off  = malloc(nr_recv * sizeof(*mprts_cuda->h_bnd_off));
 
+  // OPT, not even used currently
+  memset(mprts_cuda->h_bnd_cnt, 0,
+	 mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->h_bnd_cnt));
+
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
@@ -209,16 +213,6 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
     pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
     pr_F = prof_register("xchg_pre", 1., 0, 0);
   }
-
-  int nr_blocks;
-  {
-    assert(mprts->nr_patches > 0);
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    nr_blocks = cuda->nr_blocks;
-  }
-  mprts_cuda->h_bnd_cnt = calloc(mprts->nr_patches * nr_blocks,
-				 sizeof(*mprts_cuda->h_bnd_cnt));
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
