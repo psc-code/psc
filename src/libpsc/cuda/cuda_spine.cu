@@ -108,15 +108,16 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
   thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
   thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
+  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_ids(mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
+  thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (10 + 1));
 
-  thrust::host_vector<unsigned int> h_b_cnts(nr_total_blocks * (nr_total_blocks + 1));
-  thrust::host_vector<unsigned int> h_b_sums(nr_total_blocks * (nr_total_blocks + 1));
   thrust::host_vector<unsigned int> h_bidx2(mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_spine_cnts(nr_total_blocks * (10 + 1));
-  thrust::host_vector<unsigned int> h_spine_sums(nr_total_blocks * (10 + 1));
+  thrust::host_vector<unsigned int> h_spine_sums(1 + nr_total_blocks * (10 + 1));
+
+  thrust::fill(h_spine_cnts.begin(), h_spine_cnts.end(), 0);
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
     int b = bid % nr_blocks;
@@ -124,8 +125,6 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       unsigned int key = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
       if (key < 9) {
-	h_b_cnts[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
-	
 	int dy = key % 3;
 	int dz = key / 3;
 	int by = b % NBLOCKS_Y;
@@ -142,20 +141,9 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
   }
   for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
     assert(h_bidx[n] < mprts_cuda->nr_total_blocks);
-    h_b_cnts[h_bidx[n] * (nr_total_blocks + 1) + nr_total_blocks]++;
     h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
   }
 
-#if 0
-  for (int i = 0; i < 200; i++) {
-    if (h_b_cnts[i] != 0) printf("b %d: %d\n", i, h_b_cnts[i]);
-  }
-  for (int i = 0; i < 200; i++) {
-    if (h_spine_cnts[i] != 0) printf("s %d: %d\n", i, h_spine_cnts[i]);
-  }
-#endif
-
-  thrust::exclusive_scan(h_b_cnts.begin(), h_b_cnts.end(), h_b_sums.begin());
   thrust::exclusive_scan(h_spine_cnts.begin(), h_spine_cnts.end(), h_spine_sums.begin());
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
@@ -164,8 +152,6 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
       unsigned int key = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
       if (key < 9) {
-	h_b_cnts[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
-	
 	int dy = key % 3;
 	int dz = key / 3;
 	int by = b % NBLOCKS_Y;
@@ -174,12 +160,7 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
 	unsigned int bbz = bz + 1 - dz;
 	assert(bby < NBLOCKS_Y && bbz < NBLOCKS_Z);
 	unsigned int bb = bbz * NBLOCKS_Y + bby;
-	int nn = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + bid]++;
-	int nn2 = h_spine_sums[(bb + p * nr_blocks) * 10 + key]++;
-	if (nn != nn2) {
-	  mprintf("n %d nn %d nn2 %d\n", n, nn, nn2);
-	}
-	assert(nn == nn2);
+	int nn = h_spine_sums[(bb + p * nr_blocks) * 10 + key]++;
 	h_ids[nn] = n;
 	h_bidx2[nn] = h_bidx[n];
       } else { // OOB
@@ -187,9 +168,7 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
     }
   }
   for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
-      int nn = h_b_sums[h_bidx[n] * (nr_total_blocks + 1) + nr_total_blocks]++;
-      int nn2 = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
-      assert(nn == nn2);
+      int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
       h_ids[nn] = n;
       h_bidx2[nn] = h_bidx[n];
   }
