@@ -431,6 +431,7 @@ cuda_mprts_copy_to_dev(struct psc_mparticles *mprts)
   free(mprts_cuda->h_bnd_xi4);
   free(mprts_cuda->h_bnd_pxi4);
 
+  mprts_cuda->nr_prts_recv = nr_recv;
   mprts_cuda->nr_prts += nr_recv;
 }
 

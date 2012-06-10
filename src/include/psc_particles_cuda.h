@@ -47,6 +47,7 @@ struct psc_mparticles_cuda {
   unsigned int *d_ids;
   unsigned int *d_sums; // FIXME, too many arrays, consolidation would be good
   unsigned int nr_prts_send;
+  unsigned int nr_prts_recv;
   unsigned int *d_off; // particles per block
                        // are at indices offsets[block] .. offsets[block+1]-1
                        // indices numbered for the total mprts array 
