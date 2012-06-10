@@ -10,7 +10,8 @@
 #define NBLOCKS_Y 8
 #define NBLOCKS_Z 8
 
-// spine
+// layout of the spine
+//     lt             self             rb        # from left-top .. self .. right-bottom 
 //     0   1   2   3   4   5   6   7   8   NEW
 // b0 |   |   |   |   |   |   |   |   |   |   |
 // b1 |   |   |   |   |   |   |   |   |   |   |
@@ -125,6 +126,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
   }
 
   thrust::exclusive_scan(h_spine_cnts.begin(), h_spine_cnts.end(), h_spine_sums.begin());
+  thrust::copy(h_spine_sums.begin(), h_spine_sums.end(), d_spine_sums);
 
   for (int bid = 0; bid < nr_total_blocks; bid++) {
     int b = bid % nr_blocks;
@@ -142,6 +144,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 	unsigned int bb = bbz * NBLOCKS_Y + bby;
 	int nn = h_spine_sums[(bb + p * nr_blocks) * 10 + key]++;
 	h_ids[nn] = n;
+	assert(h_bidx[n] == bb + p * nr_blocks);
 	h_bidx2[nn] = h_bidx[n];
       } else { // OOB
       }
@@ -153,9 +156,16 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
       h_bidx2[nn] = h_bidx[n];
   }
 
-  thrust::copy(h_spine_sums.begin(), h_spine_sums.end(), d_spine_sums);
+  thrust::copy(d_spine_sums, d_spine_sums + 1 + nr_total_blocks * (10 + 1), h_spine_sums.begin());
   thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
   thrust::copy(h_bidx2.begin(), h_bidx2.end(), d_bidx);
   // d_ids contains the indices to read from, d_bidx is sorted (for now)
+
+  for (int bid = 0; bid <= nr_total_blocks; bid++) {
+    h_off[bid] = h_spine_sums[bid * 10];
+  }
+
+  thrust::copy(h_off.begin(), h_off.end(), d_off);
+  // d_off is updated
 }
 
