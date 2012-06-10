@@ -21,7 +21,6 @@ libsubdir_la_LIBADD = \
 	cuda_sort.lo \
 	cuda_sort2.lo \
 	cuda_sort3.lo \
-	cuda_sort4.lo \
 	cuda_exchange_particles.lo \
 	cuda_bnd.lo \
 	cuda_exclusive_scan_2.lo \

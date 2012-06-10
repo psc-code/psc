@@ -98,7 +98,7 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
 }
 
 void
-cuda_mprts_do_sort(struct psc_mparticles *mprts)
+cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
@@ -109,6 +109,8 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
   thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
   thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_ids(mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
@@ -151,7 +153,9 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
       h_bidx2[nn] = h_bidx[n];
   }
 
+  thrust::copy(h_spine_sums.begin(), h_spine_sums.end(), d_spine_sums);
   thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
   thrust::copy(h_bidx2.begin(), h_bidx2.end(), d_bidx);
+  // d_ids contains the indices to read from, d_bidx is sorted (for now)
 }
 
