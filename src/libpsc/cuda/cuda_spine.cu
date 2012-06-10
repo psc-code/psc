@@ -22,17 +22,79 @@
 //    |   |   |   |   |   |   |   |   |   |   |   |   | ... |   | # oob
 //     b0  b1  b2  b3                                        bn
 
-static unsigned int
-bidx_to_key(unsigned int bidx, unsigned int bid, int nr_patches)
+// ======================================================================
+// cuda_mprts_bidx_to_key
+
+__global__ static void
+mprts_bidx_to_key(int nr_total_blocks, unsigned int *d_off, unsigned int *d_bidx)
 {
-  if (bidx == NBLOCKS_X * NBLOCKS_Y * NBLOCKS_Z * nr_patches) {
-    return CUDA_BND_S_OOB;
-  } else {
-    int b_diff = bid - bidx + NBLOCKS_Y + 1;
-    int d1 = b_diff % NBLOCKS_Y;
-    int d2 = b_diff / NBLOCKS_Y;
-    return d2 * 3 + d1;
+  int tid = threadIdx.x;
+  int bid = blockIdx.x;
+
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
+
+  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    unsigned int bidx = d_bidx[n];
+    if (bidx == nr_total_blocks) {
+      bidx = CUDA_BND_S_OOB;
+    } else {
+      int b_diff = bid - bidx + NBLOCKS_Y + 1;
+      int d1 = b_diff % NBLOCKS_Y;
+      int d2 = b_diff / NBLOCKS_Y;
+      bidx = d2 * 3 + d1;
+    }
+    d_bidx[n] = bidx;
   }
+}
+
+void
+cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
+  int dimGrid  = nr_total_blocks;
+  
+  mprts_bidx_to_key<<<dimGrid, THREADS_PER_BLOCK>>>
+    (mprts_cuda->nr_total_blocks, mprts_cuda->d_off, mprts_cuda->d_bidx);
+}
+
+void
+cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  unsigned int nr_blocks = mprts_cuda->nr_blocks;
+
+  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
+
+  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
+  thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
+
+  for (int bid = 0; bid < nr_total_blocks; bid++) {
+    int p = bid / nr_blocks;
+    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
+      assert((h_bidx[n] >= p * nr_blocks && h_bidx[n] < (p+1) * nr_blocks) ||
+	     (h_bidx[n] == nr_total_blocks));
+      int bidx;
+      if (h_bidx[n] == mprts_cuda->nr_total_blocks) {
+	bidx = CUDA_BND_S_OOB;
+      } else {
+	int b_diff = bid - h_bidx[n] + NBLOCKS_Y + 1;
+	int d1 = b_diff % NBLOCKS_Y;
+	int d2 = b_diff / NBLOCKS_Y;
+	bidx = d2 * 3 + d1;
+      }
+      
+      h_bidx[n] = bidx;
+    }
+  }
+
+  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx);
 }
 
 void
@@ -55,17 +117,7 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
   thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1));
 
-  for (int bid = 0; bid < nr_total_blocks; bid++) {
-    int p = bid / nr_blocks;
-    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      assert((h_bidx[n] >= p * nr_blocks && h_bidx[n] < (p+1) * nr_blocks) ||
-	     (h_bidx[n] == nr_total_blocks));
-      h_bidx[n] = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
-    }
-  }
-
-  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx);
-
+  
   for (int p = 0; p < mprts->nr_patches; p++) {
     for (int b = 0; b < nr_blocks; b++) {
       unsigned int bid = b + p * nr_blocks;
