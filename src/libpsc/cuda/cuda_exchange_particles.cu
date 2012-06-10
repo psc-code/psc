@@ -131,6 +131,63 @@ cuda_mprts_find_block_indices_2_total(struct psc_mparticles *mprts)
 }
 
 // ----------------------------------------------------------------------
+// cuda_mprts_find_block_keys
+
+__global__ static void
+mprts_find_block_keys(struct cuda_params prm, float4 *d_xi4,
+		      unsigned int *d_off,
+		      unsigned int *d_bidx, int nr_total_blocks)
+{
+  int tid = threadIdx.x;
+  int bid = blockIdx.x;
+
+  int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+  int p = bid / nr_blocks;
+
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
+
+  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    float4 xi4 = d_xi4[n];
+    unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
+    unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
+
+    int block_idx;
+    if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+      block_idx = CUDA_BND_S_OOB;
+    } else {
+      int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p * nr_blocks;
+      int b_diff = bid - bidx + prm.b_mx[1] + 1;
+      int d1 = b_diff % prm.b_mx[1];
+      int d2 = b_diff / prm.b_mx[1];
+      block_idx = d2 * 3 + d1;
+    }
+    d_bidx[n] = block_idx;
+  }
+}
+
+EXTERN_C void
+cuda_mprts_find_block_keys(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  if (mprts->nr_patches == 0) {
+    return;
+  }
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
+    
+  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+  int dimGrid[2]  = { mprts_cuda->nr_total_blocks, 1 };
+  
+  RUN_KERNEL(dimGrid, dimBlock,
+	     mprts_find_block_keys, (prm, mprts_cuda->d_xi4, mprts_cuda->d_off,
+				     mprts_cuda->d_bidx, mprts_cuda->nr_total_blocks));
+  free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
 // cuda_mprts_find_block_indices_ids_total
 
 __global__ static void
