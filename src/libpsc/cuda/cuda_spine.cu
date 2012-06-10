@@ -117,28 +117,6 @@ cuda_mprts_do_sort(struct psc_mparticles *mprts)
   thrust::host_vector<unsigned int> h_bidx2(mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_spine_sums(1 + nr_total_blocks * (10 + 1));
 
-  thrust::fill(h_spine_cnts.begin(), h_spine_cnts.end(), 0);
-
-  for (int bid = 0; bid < nr_total_blocks; bid++) {
-    int b = bid % nr_blocks;
-    int p = bid / nr_blocks;
-    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      unsigned int key = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
-      if (key < 9) {
-	int dy = key % 3;
-	int dz = key / 3;
-	int by = b % NBLOCKS_Y;
-	int bz = b / NBLOCKS_Y;
-	unsigned int bby = by + 1 - dy;
-	unsigned int bbz = bz + 1 - dz;
-	assert(bby < NBLOCKS_Y && bbz < NBLOCKS_Z);
-	unsigned int bb = bbz * NBLOCKS_Y + bby;
-	h_spine_cnts[(bb + p * nr_blocks) * 10 + key]++;
-      } else { // OOB
-	h_spine_cnts[nr_total_blocks * 10 + bid]++;
-      }
-    }
-  }
   for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
     assert(h_bidx[n] < mprts_cuda->nr_total_blocks);
     h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
