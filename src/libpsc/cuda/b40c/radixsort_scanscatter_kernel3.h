@@ -968,10 +968,11 @@ template <
 __launch_bounds__ (B40C_RADIXSORT_THREADS, B40C_RADIXSORT_SCAN_SCATTER_CTA_OCCUPANCY(__CUDA_ARCH__))
 __global__ 
 void ScanScatterDigits3x(
-	int* d_spine,
+	unsigned int* d_spine,
 	K* d_in_keys,
 	V* d_out_values,
-	int *d_offsets)
+	unsigned int *d_offsets,
+	unsigned int nr_total_blocks)
 {
 
 	const int RADIX_DIGITS 				= 1 << RADIX_BITS;
@@ -1087,7 +1088,7 @@ void ScanScatterDigits3x(
 			// Read carry in parallel 
 
 			int d = threadIdx.x;
-			int b = blockIdx.x;
+			int b = blockIdx.x % (NBLOCKS_Y * NBLOCKS_Z);
 			
 			if (d < 9) {
 			  int dy = d % 3;
@@ -1098,14 +1099,11 @@ void ScanScatterDigits3x(
 			  unsigned int bbz = bz + 1 - dz;
 			  unsigned int bb = bbz * NBLOCKS_Y + bby;
 			  if (bby < NBLOCKS_Y && bbz < NBLOCKS_Z) {
-			    carry[threadIdx.x] = d_spine[bb * 10 + d];
-			  } else {
-			    carry[threadIdx.x] = 0;
+			    carry[threadIdx.x] =
+			      d_spine[(bb + (blockIdx.x / (NBLOCKS_Y * NBLOCKS_Z)) * (NBLOCKS_Y * NBLOCKS_Z)) * 10 + d];
 			  }
 			} else if (d == CUDA_BND_S_OOB) {
-			  carry[threadIdx.x] = d_spine[NBLOCKS_Y*NBLOCKS_Z*10 + b];
-			} else {
-			  carry[threadIdx.x] = 0;
+			  carry[threadIdx.x] = d_spine[nr_total_blocks*10 + blockIdx.x];
 			}
 		}
 
