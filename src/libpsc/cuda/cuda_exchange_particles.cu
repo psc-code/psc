@@ -276,15 +276,14 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
   }
 
   // for consistency, use same block indices that we counted earlier
+  // OPT unneeded?
   check(cudaMemcpy(mprts_cuda->d_bidx + nr_prts, mprts_cuda->h_bnd_idx,
 		   nr_recv * sizeof(*mprts_cuda->d_bidx),
 		   cudaMemcpyHostToDevice));
-#if 0
   // abuse of alt_bidx!!! FIXME
-  check(cudaMemcpy(mprts_cuda->d_alt_bidx + nr_prts, mprts_cuda->h_bnd_off,
-		   nr_recv * sizeof(*mprts_cuda->d_alt_bidx),
+  check(cudaMemcpy(mprts_cuda->d_alt_bidx, mprts_cuda->h_bnd_cnt,
+		   mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->d_alt_bidx),
 		   cudaMemcpyHostToDevice));
-#endif
 
   assert(nr_prts + nr_recv == mprts_cuda->nr_prts);
 

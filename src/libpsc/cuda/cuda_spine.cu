@@ -66,10 +66,8 @@ cuda_mprts_bidx_to_key(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
-
-  int dimGrid  = nr_total_blocks;
   
-  mprts_bidx_to_key<<<dimGrid, THREADS_PER_BLOCK>>>
+  mprts_bidx_to_key<<<nr_total_blocks, THREADS_PER_BLOCK>>>
     (mprts_cuda->nr_total_blocks, mprts_cuda->d_off, mprts_cuda->d_bidx);
 }
 
@@ -110,6 +108,102 @@ cuda_mprts_bidx_to_key_gold(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
+// cuda_mprts_count_received
+
+__global__ static void
+mprts_count_received(int nr_total_blocks, unsigned int *d_alt_bidx, unsigned int *d_spine_cnts)
+{
+  int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (bid < nr_total_blocks) {
+    d_spine_cnts[bid * 10 + CUDA_BND_S_NEW] = d_alt_bidx[bid];
+  }
+}
+
+void
+cuda_mprts_count_received(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  
+  mprts_count_received<<<nr_total_blocks, THREADS_PER_BLOCK>>>
+    (mprts_cuda->nr_total_blocks, mprts_cuda->d_alt_bidx, mprts_cuda->d_bnd_spine_cnts);
+}
+
+void
+cuda_mprts_count_received_gold(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
+  thrust::device_ptr<unsigned int> d_alt_bidx(mprts_cuda->d_alt_bidx);
+  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+
+  thrust::host_vector<unsigned int> h_alt_bidx(nr_total_blocks);
+  thrust::host_vector<unsigned int> h_spine_cnts(1 + nr_total_blocks * (10 + 1));
+
+  thrust::copy(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (10 + 1), h_spine_cnts.begin());
+  thrust::copy(d_alt_bidx, d_alt_bidx + nr_total_blocks, h_alt_bidx.begin());
+
+  for (int bid = 0; bid < nr_total_blocks; bid++) {
+    h_spine_cnts[bid * 10 + CUDA_BND_S_NEW] = h_alt_bidx[bid];
+  }
+
+  thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
+}
+
+void
+cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
+  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+
+  thrust::host_vector<unsigned int> h_bidx(mprts_cuda->nr_prts);
+  thrust::host_vector<unsigned int> h_spine_cnts(1 + nr_total_blocks * (10 + 1));
+
+  thrust::copy(d_bidx, d_bidx + mprts_cuda->nr_prts, h_bidx.begin());
+  thrust::copy(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (10 + 1), h_spine_cnts.begin());
+  for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
+    assert(h_bidx[n] < mprts_cuda->nr_total_blocks);
+    h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
+  }
+  thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
+}
+
+// ======================================================================
+// cuda_mprts_scan_scatter_received
+
+void
+cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
+  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
+  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+
+  thrust::host_vector<unsigned int> h_bidx(mprts_cuda->nr_prts);
+  thrust::host_vector<unsigned int> h_ids(mprts_cuda->nr_prts);
+  thrust::host_vector<unsigned int> h_spine_sums(1 + nr_total_blocks * (10 + 1));
+
+  thrust::copy(d_spine_sums, d_spine_sums + nr_total_blocks * 11, h_spine_sums.begin());
+  thrust::copy(d_bidx, d_bidx + mprts_cuda->nr_prts, h_bidx.begin());
+  for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
+      int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
+      h_ids[nn] = n;
+  }
+  thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
+}
+
+// ======================================================================
 // cuda_mprts_spine_reduce
 
 void
@@ -129,53 +223,11 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   // OPT?
   thrust::fill(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1), 0);
 
-#if 0
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
-  thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1));
-#endif
-
   const int threads = B40C_RADIXSORT_THREADS;
   RakingReduction3x<K, V, 0, RADIX_BITS, 0,
 		    NopFunctor<K>, NBLOCKS_Y, NBLOCKS_Z> <<<nr_total_blocks, threads>>>
     (mprts_cuda->d_bnd_spine_cnts, mprts_cuda->d_bidx, mprts_cuda->d_off, nr_total_blocks);
   cuda_sync_if_enabled();
-
-#if 0
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    for (int b = 0; b < nr_blocks; b++) {
-      unsigned int bid = b + p * nr_blocks;
-      for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-	unsigned int key = h_bidx[n];
-	if (key < 9) {
-	  int dy = key % 3;
-	  int dz = key / 3;
-	  int by = b % NBLOCKS_Y;
-	  int bz = b / NBLOCKS_Y;
-	  unsigned int bby = by + 1 - dy;
-	  unsigned int bbz = bz + 1 - dz;
-	  unsigned int bb = bbz * NBLOCKS_Y + bby;
-	  if (bby < NBLOCKS_Y && bbz < NBLOCKS_Z) {
-	    h_spine_cnts[(bb + p * nr_blocks) * 10 + key]++;
-	  } else {
-	    assert(0);
-	  }
-	} else if (key == CUDA_BND_S_OOB) {
-	  h_spine_cnts[NBLOCKS_Y*NBLOCKS_Z*mprts->nr_patches * 10 + bid]++;
-	}
-      }
-    }
-  }  
-  //thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
-  thrust::host_vector<unsigned int> h_spine_cnts2(nr_total_blocks * 10 + nr_total_blocks + 1);
-  thrust::copy(d_spine_cnts, d_spine_cnts + nr_total_blocks * 11 + 1, h_spine_cnts2.begin());
-  for (int i = 0; i < nr_total_blocks * 11 + 1; i++) {
-    if (h_spine_cnts[i] != h_spine_cnts2[i]) {
-      mprintf("i %d: %d // %d\n", i, h_spine_cnts[i], h_spine_cnts2[i]);
-    }
-  }
-  assert(0);
-#endif
 
   thrust::exclusive_scan(d_spine_cnts + nr_total_blocks * 10,
 			 d_spine_cnts + nr_total_blocks * 10 + nr_total_blocks + 1,
@@ -240,9 +292,11 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 {
-  static int pr_B, pr_D;
+  static int pr_A, pr_B, pr_C, pr_D;
   if (!pr_B) {
+    pr_A = prof_register("xchg_cnt_recvd", 1., 0, 0);
     pr_B = prof_register("xchg_top_scan", 1., 0, 0);
+    pr_C = prof_register("xchg_ss_recvd", 1., 0, 0);
     pr_D = prof_register("xchg_bottom_scan", 1., 0, 0);
   }
 
@@ -250,36 +304,20 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 
   int nr_total_blocks = mprts_cuda->nr_total_blocks;
 
-  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
-  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
-  thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
-  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
-  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
-
-  thrust::host_vector<unsigned int> h_bidx(mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_ids(mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_spine_cnts(1 + nr_total_blocks * (10 + 1));
-  thrust::host_vector<unsigned int> h_spine_sums(1 + nr_total_blocks * (10 + 1));
-
-  thrust::copy(d_bidx, d_bidx + mprts_cuda->nr_prts, h_bidx.begin());
-  thrust::copy(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (10 + 1), h_spine_cnts.begin());
-  for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
-    assert(h_bidx[n] < mprts_cuda->nr_total_blocks);
-    h_spine_cnts[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
-  }
-  thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
+  prof_start(pr_A);
+  cuda_mprts_count_received(mprts);
+  prof_stop(pr_A);
 
   prof_start(pr_B);
   // FIXME why isn't 10 + 0 enough?
+  thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
   thrust::exclusive_scan(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (10 + 1), d_spine_sums);
   prof_stop(pr_B);
 
-  thrust::copy(d_spine_sums, d_spine_sums + nr_total_blocks * 11, h_spine_sums.begin());
-  for (int n = mprts_cuda->nr_prts - mprts_cuda->nr_prts_recv; n < mprts_cuda->nr_prts; n++) {
-      int nn = h_spine_sums[h_bidx[n] * 10 + CUDA_BND_S_NEW]++;
-      h_ids[nn] = n;
-  }
-  thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
+  prof_start(pr_C);
+  cuda_mprts_scan_scatter_received(mprts);
+  prof_stop(pr_C);
 
   prof_start(pr_D);
   ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
