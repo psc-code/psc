@@ -67,8 +67,6 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  cuda_mprts_spine_reduce(mprts);
-
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
   unsigned int off = 0;

@@ -83,15 +83,6 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
     }
   }  
 
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    unsigned int n_oob = 0;
-    for (int b = 0; b < nr_blocks; b++) {
-      unsigned int bid = b + p * nr_blocks;
-      n_oob += h_spine_cnts[NBLOCKS_Y*NBLOCKS_Z*mprts->nr_patches * 10 + bid];
-    }
-    mprintf("p%d: n_oob %d\n", p, n_oob);
-  }
-
   thrust::copy(h_spine_cnts.begin(), h_spine_cnts.end(), d_spine_cnts);
   thrust::exclusive_scan(d_spine_cnts + nr_total_blocks * 10,
 			 d_spine_cnts + nr_total_blocks * 10 + nr_total_blocks + 1,
@@ -152,15 +143,27 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
       h_ids[nn] = n;
   }
 
-  thrust::copy(d_spine_sums, d_spine_sums + 1 + nr_total_blocks * (10 + 1), h_spine_sums.begin());
   thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
-  // d_ids contains the indices to read from
+  // d_ids now contains the indices to reorder by
+}
+
+void
+cuda_mprts_update_offsets(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
+  thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+  thrust::device_ptr<unsigned int> d_off(mprts_cuda->d_off);
+
+  thrust::host_vector<unsigned int> h_spine_sums(d_spine_sums, d_spine_sums + 1 + nr_total_blocks * (10 + 1));
+  thrust::host_vector<unsigned int> h_off(nr_total_blocks + 1);
 
   for (int bid = 0; bid <= nr_total_blocks; bid++) {
     h_off[bid] = h_spine_sums[bid * 10];
   }
 
   thrust::copy(h_off.begin(), h_off.end(), d_off);
-  // d_off is updated
 }
 

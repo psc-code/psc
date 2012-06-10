@@ -201,13 +201,12 @@ static void
 psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F, pr_B0;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_F, pr_B0, pr_B1;
   if (!pr_A) {
     pr_A = prof_register("xchg_bidx", 1., 0, 0);
     pr_B0= prof_register("xchg_reduce", 1., 0, 0);
-    pr_B = prof_register("xchg_scan", 1., 0, 0);
+    pr_B1= prof_register("xchg_n_send", 1., 0, 0);
+    pr_B = prof_register("xchg_scan_send", 1., 0, 0);
     pr_C = prof_register("xchg_reorder_send", 1., 0, 0);
     pr_D = prof_register("xchg_from_dev", 1., 0, 0);
     pr_E = prof_register("xchg_cvt_from", 1., 0, 0);
@@ -221,8 +220,12 @@ psc_bnd_sub_exchange_mprts_prep(struct psc_bnd *bnd,
   prof_stop(pr_A);
   
   prof_start(pr_B0);
-  cuda_mprts_find_n_send(mprts);
+  cuda_mprts_spine_reduce(mprts);
   prof_stop(pr_B0);
+
+  prof_start(pr_B1);
+  cuda_mprts_find_n_send(mprts);
+  prof_stop(pr_B1);
 
   prof_start(pr_B);
   cuda_mprts_scan_send_buf_total(mprts);
@@ -252,12 +255,13 @@ static void
 psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
 				struct psc_mparticles *mprts)
 {
-  static int pr_A, pr_B, pr_C, pr_D, pr_E;
+  static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
     pr_B = prof_register("xchg_to_dev", 1., 0, 0);
     pr_C = prof_register("xchg_bidx", 1., 0, 0);
     pr_D = prof_register("xchg_sort", 1., 0, 0);
+    pr_D1= prof_register("xchg_upd_off", 1., 0, 0);
     pr_E = prof_register("xchg_reorder", 1., 0, 0);
   }
 
@@ -276,6 +280,10 @@ psc_bnd_sub_exchange_mprts_post(struct psc_bnd *bnd,
   prof_start(pr_D);
   cuda_mprts_sort(mprts);
   prof_stop(pr_D);
+
+  prof_start(pr_D1);
+  cuda_mprts_update_offsets(mprts);
+  prof_stop(pr_D1);
   
   prof_start(pr_E);
   cuda_mprts_reorder(mprts);
