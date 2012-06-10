@@ -1,6 +1,7 @@
 
 #include "psc_cuda.h"
 #include "particles_cuda.h"
+#include <mrc_profile.h>
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -239,9 +240,13 @@ cuda_mprts_spine_reduce_gold(struct psc_mparticles *mprts)
 void
 cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
 {
+  static int pr_C;
+  if (!pr_C) {
+    pr_C = prof_register("xchg_bottom_scan", 1., 0, 0);
+  }
+
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  int nr_blocks = mprts_cuda->nr_blocks;
   int nr_total_blocks = mprts_cuda->nr_total_blocks;
 
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
@@ -271,6 +276,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
   }
   thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
 
+  prof_start(pr_C);
   const int threads = B40C_RADIXSORT_THREADS;
   
   ScanScatterDigits3x<K, V, 0, RADIX_BITS, 0,
@@ -281,37 +287,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
     (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
      mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
   cuda_sync_if_enabled();
-
-  for (int bid = 0; bid < nr_total_blocks; bid++) {
-    int b = bid % nr_blocks;
-    int p = bid / nr_blocks;
-    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      unsigned int key = h_bidx[n];
-      if (key < 9) {
-	int dy = key % 3;
-	int dz = key / 3;
-	int by = b % NBLOCKS_Y;
-	int bz = b / NBLOCKS_Y;
-	unsigned int bby = by + 1 - dy;
-	unsigned int bbz = bz + 1 - dz;
-	assert(bby < NBLOCKS_Y && bbz < NBLOCKS_Z);
-	unsigned int bb = bbz * NBLOCKS_Y + bby;
-	int nn = h_spine_sums[(bb + p * nr_blocks) * 10 + key]++;
-	h_ids[nn] = n;
-      } else { // OOB
-      }
-    }
-  }
-
-  thrust::host_vector<unsigned int> h_ids2(mprts_cuda->nr_prts);
-  thrust::copy(d_ids, d_ids + mprts_cuda->nr_prts, h_ids2.begin());
-  for (int n = 0; n < mprts_cuda->nr_prts - mprts_cuda->nr_prts_send; n++) {
-    if (h_ids[n] != h_ids2[n]) {
-      mprintf("n %d: %d // %d\n", n, h_ids[n], h_ids2[n]);
-    }
-    assert(h_ids[n] == h_ids2[n]);
-  }
-  thrust::copy(h_ids.begin(), h_ids.end(), d_ids);
+  prof_stop(pr_C);
 
   // d_ids now contains the indices to reorder by
 }
