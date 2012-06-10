@@ -330,137 +330,11 @@ template <typename K, typename V, int PASS, int RADIX_BITS, int BIT, typename Pr
   int NBLOCKS_Y, int NBLOCKS_Z>
 __launch_bounds__ (B40C_RADIXSORT_THREADS, B40C_RADIXSORT_REDUCE_CTA_OCCUPANCY(__CUDA_ARCH__))
 __global__ 
-void RakingReduction2x(
-	int *d_spine,
-	K *d_in_keys,
-	int *d_offsets)
-{
-	const int RADIX_DIGITS 		= 1 << RADIX_BITS;
-
-	const int LOG_SCAN_LANES 		= (RADIX_BITS >= 2) ? RADIX_BITS - 2 : 0;	// Always at least one fours group /// 2
-	const int SCAN_LANES 			= 1 << LOG_SCAN_LANES; /// 4
-
-	const int LOG_LANES_PER_WARP 	= (SCAN_LANES > B40C_RADIXSORT_WARPS) ? LOG_SCAN_LANES - B40C_RADIXSORT_LOG_WARPS : 0;	// Always at least one fours group per warp /// 0
-	const int LANES_PER_WARP 		= 1 << LOG_LANES_PER_WARP; /// 1
-	
-	
-	// Each thread gets its own column of fours-groups (for conflict-free updates)
-	__shared__ int encoded_carry[SCAN_LANES][B40C_RADIXSORT_THREADS];			
-
-	// Each thread is also responsible for aggregating an unencoded segment of a fours-group
-	int local_counts[LANES_PER_WARP][4];								
-
-	// Calculate our threadblock's range
-	int offset, block_elements;
-	offset = d_offsets[blockIdx.x];
-	block_elements = d_offsets[blockIdx.x + 1] - d_offsets[blockIdx.x];
-	
-	// Initialize local counts
-	#pragma unroll 
-	for (int LANE = 0; LANE < (int) LANES_PER_WARP; LANE++) {
-		local_counts[LANE][0] = 0;
-		local_counts[LANE][1] = 0;
-		local_counts[LANE][2] = 0;
-		local_counts[LANE][3] = 0;
-	}
-	
-	// Reset encoded counters
-	ResetEncodedCarry<SCAN_LANES>(encoded_carry);
-
-	// Process loads
-	int loads = block_elements >> B40C_RADIXSORT_LOG_THREADS;
-	block_elements -= loads << B40C_RADIXSORT_LOG_THREADS;
-
-	int unreduced_loads = ProcessLoads<K, RADIX_DIGITS, SCAN_LANES, LANES_PER_WARP, BIT, PreprocessFunctor>(
-		d_in_keys,
-		loads,
-		offset,
-		encoded_carry,
-		local_counts);
-	
-	const int LOADS_PER_CYCLE = B40C_RADIXSORT_CYCLE_ELEMENTS(__CUDA_ARCH__, K, V) / B40C_RADIXSORT_THREADS;
-	
-	// If extra guarded loads may cause overflow, reduce now and reset counters
-	if (unreduced_loads + LOADS_PER_CYCLE > 255) {
-	  ReduceEncodedCounts<RADIX_DIGITS, SCAN_LANES, LANES_PER_WARP, BIT, false>(
-            local_counts, 
-	    encoded_carry);
-	  
-	  ResetEncodedCarry<SCAN_LANES>(encoded_carry);
-	}
-		
-	// perform up to LOADS_PER_CYCLE extra guarded loads
-#pragma unroll
-	for (int EXTRA_LOAD = 0; EXTRA_LOAD < (int) LOADS_PER_CYCLE; EXTRA_LOAD++) {
-	  if (threadIdx.x + (B40C_RADIXSORT_THREADS * EXTRA_LOAD) < block_elements) {
-	    K key = d_in_keys[offset + (B40C_RADIXSORT_THREADS * EXTRA_LOAD) + threadIdx.x];
-	    Bucket<K, RADIX_DIGITS, SCAN_LANES, BIT, PreprocessFunctor>(key, encoded_carry);
-	  }
-	}
-	
-	// Aggregate 
-	ReduceEncodedCounts<RADIX_DIGITS, SCAN_LANES, LANES_PER_WARP, BIT, true>(
-		local_counts, 
-		encoded_carry);
-
-	// Write carry in parallel
-	if (threadIdx.x < RADIX_DIGITS) {
-	  int d = threadIdx.x;
-	  int b = blockIdx.x;
-	  if ((d & 3) != 3 && (d >> 2) != 3) {
-	    int by = b % NBLOCKS_Y;
-	    int bz = b / NBLOCKS_Y;
-	    if ((d & 3) == 0) {
-	      by--;
-	      if (by < 0) by += NBLOCKS_Y;
-	    } else if ((d & 3) == 2) {
-	      by++;
-	      if (by >= NBLOCKS_Y) by -= NBLOCKS_Y;
-	    }
-	    if ((d >> 2) == 0) {
-	      bz--;
-	      if (bz < 0) bz += NBLOCKS_Z;
-	    } else if ((d >> 2) == 2) {
-	      bz++;
-	      if (bz >= NBLOCKS_Z) bz -= NBLOCKS_Z;
-	    }
-	    int d1y, d1z;
-	    if (by == 0) {
-	      d1y = 0;
-	    } else if (by == NBLOCKS_Y - 1) {
-	      d1y = 2;
-	    } else {
-	      d1y = 1;
-	    }
-	    if (bz == 0) {
-	      d1z = 0;
-	    } else if (bz == NBLOCKS_Z - 1) {
-	      d1z = 2;
-	    } else {
-	      d1z = 1;
-	    }
-
-	    int nn = dirs_inv[d1z * 3 + d1y][d];
-	    int bb = bz * NBLOCKS_Y + by;
-	    int row = threadIdx.x >> 2;             
-	    int col = threadIdx.x & 3;                       
-	    d_spine[bb * 9 + nn] = encoded_carry[row][col];//h_spine[d * NBLOCKS + b];
-	  }
-	}
-} 
-
-/******************************************************************************
- * Reduction/counting Kernel Entry Point
- ******************************************************************************/
-
-template <typename K, typename V, int PASS, int RADIX_BITS, int BIT, typename PreprocessFunctor,
-  int NBLOCKS_Y, int NBLOCKS_Z>
-__launch_bounds__ (B40C_RADIXSORT_THREADS, B40C_RADIXSORT_REDUCE_CTA_OCCUPANCY(__CUDA_ARCH__))
-__global__ 
 void RakingReduction3x(
-	int *d_spine,
+	unsigned int *d_spine,
 	K *d_in_keys,
-	int *d_offsets)
+	unsigned int *d_offsets,
+		       unsigned int nr_total_blocks)
 {
 	const int RADIX_DIGITS 		= 1 << RADIX_BITS;
 
@@ -533,7 +407,7 @@ void RakingReduction3x(
 	// Write carry in parallel
 	if (threadIdx.x < RADIX_DIGITS) {
 	  int d = threadIdx.x;
-	  int b = blockIdx.x;
+	  int b = blockIdx.x % (NBLOCKS_Y * NBLOCKS_Z);
 	  int row = threadIdx.x >> 2;             
 	  int col = threadIdx.x & 3;                       
 	  if (d < 9) {
@@ -545,10 +419,11 @@ void RakingReduction3x(
 	    unsigned int bbz = bz + 1 - dz;
 	    unsigned int bb = bbz * NBLOCKS_Y + bby;
 	    if (bby < NBLOCKS_Y && bbz < NBLOCKS_Z) {
-	      d_spine[bb * 10 + d] = encoded_carry[row][col];
+	      d_spine[(bb + (blockIdx.x / (NBLOCKS_Y * NBLOCKS_Z)) * (NBLOCKS_Y * NBLOCKS_Z)) * 10 + d] =
+		encoded_carry[row][col];
 	    }
-	  } else if (d == S_OOB) {
-	    d_spine[NBLOCKS_Y*NBLOCKS_Z*10 + b] = encoded_carry[row][col];
+	  } else if (d == CUDA_BND_S_OOB) {
+	    d_spine[nr_total_blocks*10 + blockIdx.x] = encoded_carry[row][col];
 	  }
 	}
 } 

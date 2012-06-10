@@ -11,6 +11,8 @@
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 
+#if 0
+
 #define STRIDE (9)
 #define S_OOB (10)
 
@@ -221,6 +223,8 @@ sort_pairs_device_2(void *_sp, unsigned int *d_bidx, unsigned int *d_alt_ids,
   }
 #endif
 }
+
+#endif
 
 void
 cuda_mprts_sort_initial(struct psc_mparticles *mprts)

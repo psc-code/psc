@@ -1102,7 +1102,7 @@ void ScanScatterDigits3x(
 			  } else {
 			    carry[threadIdx.x] = 0;
 			  }
-			} else if (d == S_OOB) {
+			} else if (d == CUDA_BND_S_OOB) {
 			  carry[threadIdx.x] = d_spine[NBLOCKS_Y*NBLOCKS_Z*10 + b];
 			} else {
 			  carry[threadIdx.x] = 0;

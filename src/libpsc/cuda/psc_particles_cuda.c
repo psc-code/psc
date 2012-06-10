@@ -59,8 +59,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
     }
   }
   cell_map_init(&cuda->map, cuda->b_mx, bs);
-
-  cuda->sort_ctx = sort_pairs_create(cuda->b_mx);
 }
 
 static void
@@ -68,7 +66,6 @@ psc_particles_cuda_destroy(struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  sort_pairs_destroy(cuda->sort_ctx);
   cell_map_free(&cuda->map);
 }
 
