@@ -87,13 +87,6 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-#if 0
-  thrust::device_ptr<unsigned int> d_vals(mprts_cuda->d_bidx);
-  thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
-  count_if_equal unary_op(mprts_cuda->nr_total_blocks);
-  thrust::transform_exclusive_scan(d_vals, d_vals + mprts_cuda->nr_prts, d_sums, unary_op,
-				   0, thrust::plus<unsigned int>());
-#else
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
 
   thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
@@ -107,7 +100,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   for (unsigned int bid = 0; bid < nr_total_blocks; bid++) {
     unsigned int sum = d_spine_sums[nr_total_blocks * 10 + bid];
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      if (h_bidx[n] == nr_total_blocks) {
+      if (h_bidx[n] == CUDA_BND_S_OOB) {
 	h_sums[n] = sum;
 	sum++;
       }
@@ -115,5 +108,4 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   }
 
   thrust::copy(h_sums.begin(), h_sums.end(), d_sums);
-#endif
 }

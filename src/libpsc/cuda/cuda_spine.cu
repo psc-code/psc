@@ -55,14 +55,22 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
   thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1));
 
+  for (int bid = 0; bid < nr_total_blocks; bid++) {
+    int p = bid / nr_blocks;
+    for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
+      assert((h_bidx[n] >= p * nr_blocks && h_bidx[n] < (p+1) * nr_blocks) ||
+	     (h_bidx[n] == nr_total_blocks));
+      h_bidx[n] = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
+    }
+  }
+
+  thrust::copy(h_bidx.begin(), h_bidx.end(), d_bidx);
+
   for (int p = 0; p < mprts->nr_patches; p++) {
     for (int b = 0; b < nr_blocks; b++) {
       unsigned int bid = b + p * nr_blocks;
       for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-	assert((h_bidx[n] >= p * nr_blocks && h_bidx[n] < (p+1) * nr_blocks) ||
-	       (h_bidx[n] == nr_total_blocks));
-
-	unsigned int key = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
+	unsigned int key = h_bidx[n];
 	if (key < 9) {
 	  int dy = key % 3;
 	  int dz = key / 3;
@@ -122,7 +130,7 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
     int b = bid % nr_blocks;
     int p = bid / nr_blocks;
     for (int n = h_off[bid]; n < h_off[bid+1]; n++) {
-      unsigned int key = bidx_to_key(h_bidx[n], bid, mprts->nr_patches);
+      unsigned int key = h_bidx[n];
       if (key < 9) {
 	int dy = key % 3;
 	int dz = key / 3;
@@ -147,8 +155,33 @@ cuda_mprts_sort_pairs_device(struct psc_mparticles *mprts)
   // d_ids now contains the indices to reorder by
 }
 
+// ======================================================================
+// cuda_mprts_update_offsets
+
+__global__ static void
+mprts_update_offsets(int nr_total_blocks, unsigned int *d_off, unsigned int *d_spine_sums)
+{
+  int bid = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  
+  if (bid <= nr_total_blocks) {
+    d_off[bid] = d_spine_sums[bid * CUDA_BND_STRIDE + 0];
+  }
+}
+
 void
 cuda_mprts_update_offsets(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  int dimGrid = (nr_total_blocks + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+  mprts_update_offsets<<<dimGrid, THREADS_PER_BLOCK>>>
+    (mprts_cuda->nr_total_blocks, mprts_cuda->d_off, mprts_cuda->d_bnd_spine_sums);
+}
+
+void
+cuda_mprts_update_offsets_gold(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
