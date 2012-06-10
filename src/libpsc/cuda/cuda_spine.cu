@@ -128,9 +128,11 @@ cuda_mprts_spine_reduce(struct psc_mparticles *mprts)
   // OPT?
   thrust::fill(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1), 0);
 
+#if 0
   thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
   thrust::host_vector<unsigned int> h_off(d_off, d_off + nr_total_blocks + 1);
   thrust::host_vector<unsigned int> h_spine_cnts(d_spine_cnts, d_spine_cnts + 1 + nr_total_blocks * (CUDA_BND_STRIDE + 1));
+#endif
 
   const int threads = B40C_RADIXSORT_THREADS;
   RakingReduction3x<K, V, 0, RADIX_BITS, 0,
