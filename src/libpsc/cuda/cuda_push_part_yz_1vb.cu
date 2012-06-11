@@ -603,7 +603,8 @@ __device__ static void
 yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	     struct cuda_params prm)
+	     struct cuda_params prm, int nr_total_blocks, int p_nr,
+	     unsigned int *d_bidx)
 {
   struct d_particle p;
 
@@ -632,11 +633,11 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
 
       int block_idx;
       if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-	block_idx = prm.b_mx[1] * prm.b_mx[2];
+	block_idx = nr_total_blocks;
       } else {
-	block_idx = block_pos_z * prm.b_mx[1] + block_pos_y;
+	block_idx = (p_nr * prm.b_mx[2] + block_pos_z) * prm.b_mx[1] + block_pos_y;
       }
-      d_dev.bidx[i] = block_idx;
+      d_bidx[i] = block_idx;
     }
 #endif
     find_idx_off_pos_1st(p.xi, k, h1, xp, real(0.), prm);
@@ -697,7 +698,8 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off, struct cuda_patch_flds *d_cp_flds)
+	      unsigned int *d_off, struct cuda_patch_flds *d_cp_flds, int nr_total_blocks,
+	      unsigned int *d_bidx)
 {
   __d_error_count = prm.d_error_count;
   do_read = true;
@@ -733,21 +735,21 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 
   int p = blockIdx.y / grid_dim_y;
 
-  int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
+  int bid = block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
   __shared__ int s_block_end;
   if (tid == 0) {
     ci0[0] = 0;
     ci0[1] = block_pos[1] * BLOCKSIZE_Y;
     ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-    s_block_end = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2] + 1];
+    s_block_end = d_off[bid + 1];
   }
   __syncthreads();
 
-  int block_begin = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2]];
+  int block_begin = d_off[bid];
 
   for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
     yz_calc_jx(i, d_xi4, d_pxi4, scurr_x, prm);
-    yz_calc_jyjz(i, d_xi4, d_pxi4, scurr_y, scurr_z, prm);
+    yz_calc_jyjz(i, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx);
   }
   
   if (do_write) {
@@ -785,7 +787,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct cuda_mflds *cuda_mflds)
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       cuda_mflds->d_cp_flds);
+       cuda_mflds->d_cp_flds, mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx);
     cuda_sync_if_enabled();
     }
   
