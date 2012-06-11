@@ -266,27 +266,22 @@ cuda_mprts_find_block_indices_3(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
-  unsigned int nr_prts = 0;
-  unsigned int nr_recv = 0;
-  for (int p = 0; p < mprts->nr_patches; p++) {
-    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    nr_prts += prts->n_part;
-    nr_recv += cuda->bnd_n_recv;
-  }
+  unsigned int nr_recv = mprts_cuda->nr_prts_recv;
+  unsigned int nr_prts_prev = mprts_cuda->nr_prts - nr_recv;
 
   // for consistency, use same block indices that we counted earlier
   // OPT unneeded?
-  check(cudaMemcpy(mprts_cuda->d_bidx + nr_prts, mprts_cuda->h_bnd_idx,
+  check(cudaMemcpy(mprts_cuda->d_bidx + nr_prts_prev, mprts_cuda->h_bnd_idx,
 		   nr_recv * sizeof(*mprts_cuda->d_bidx),
 		   cudaMemcpyHostToDevice));
   // slight abuse of the now unused last part of spine_cnts
   check(cudaMemcpy(mprts_cuda->d_bnd_spine_cnts + 10 * mprts_cuda->nr_total_blocks,
 		   mprts_cuda->h_bnd_cnt,
-		   mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->d_alt_bidx),
+		   mprts_cuda->nr_total_blocks * sizeof(*mprts_cuda->d_bnd_spine_cnts),
 		   cudaMemcpyHostToDevice));
-
-  assert(nr_prts + nr_recv == mprts_cuda->nr_prts);
+  check(cudaMemcpy(mprts_cuda->d_alt_bidx + nr_prts_prev, mprts_cuda->h_bnd_off,
+		   nr_recv * sizeof(*mprts_cuda->d_alt_bidx),
+		   cudaMemcpyHostToDevice));
 
   free(mprts_cuda->h_bnd_idx);
   free(mprts_cuda->h_bnd_off);
