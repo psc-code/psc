@@ -100,8 +100,37 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 // ======================================================================
 // cuda_mprts_reorder_send_by_id
 
+static void __global__
+mprts_reorder_send_by_id(unsigned int nr_prts_send, unsigned int *d_xchg_ids,
+			 float4 *d_xi4, float4 *d_pxi4,
+			 float4 *d_xchg_xi4, float4 *d_xchg_pxi4)
+{
+  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  if (n >= nr_prts_send) {
+    return;
+  }
+
+  unsigned int id = d_xchg_ids[n];
+  d_xchg_xi4[n]  = d_xi4[id];
+  d_xchg_pxi4[n] = d_pxi4[id];
+}
+
+
 void
 cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  
+  int dimGrid = (mprts_cuda->nr_prts_send + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+  mprts_reorder_send_by_id<<<dimGrid, THREADS_PER_BLOCK>>>
+    (mprts_cuda->nr_prts_send, mprts_cuda->d_ids + mprts_cuda->nr_prts - mprts_cuda->nr_prts_send,
+     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+     mprts_cuda->d_xi4 + mprts_cuda->nr_prts, mprts_cuda->d_pxi4 + mprts_cuda->nr_prts);
+}
+
+void
+cuda_mprts_reorder_send_by_id_gold(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   
