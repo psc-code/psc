@@ -76,14 +76,21 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
+  int nr_total_blocks = mprts_cuda->nr_total_blocks;
+
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
+  thrust::host_vector<unsigned int> h_spine_sums(nr_total_blocks + 1);
+
+  thrust::copy(d_spine_sums + nr_total_blocks * 10,
+	       d_spine_sums + nr_total_blocks * 11 + 1,
+	       h_spine_sums.begin());
+
   unsigned int off = 0;
   for (int p = 0; p < mprts->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-    unsigned int n_send = d_spine_sums[mprts_cuda->nr_total_blocks * 10
-				       + (p + 1) * mprts_cuda->nr_blocks];
+    unsigned int n_send = h_spine_sums[(p + 1) * mprts_cuda->nr_blocks];
     cuda->bnd_n_send = n_send - off;
     off = n_send;
   }
