@@ -769,7 +769,8 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 }
 
 void
-psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt)
+psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt,
+		   int p, double xx[3])
 {
   double beta = psc->coeff.beta;
 
@@ -796,6 +797,9 @@ psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *np
   assert(npt->m == psc->kinds[prt->kind].m);
   prt->qni = psc->kinds[prt->kind].q;
   prt->mni = psc->kinds[prt->kind].m;
+  prt->xi = xx[0] - psc->patch[p].xb[0];
+  prt->yi = xx[1] - psc->patch[p].xb[1];
+  prt->zi = xx[2] - psc->patch[p].xb[2];
 }	      
 
 // ----------------------------------------------------------------------
@@ -827,8 +831,6 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
     struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
   
-    double *xb = psc->patch[p].xb;
-
     int i = 0;
     int nr_pop = psc->prm.nr_populations;
     for (int kind = 0; kind < nr_pop; kind++) {
@@ -858,17 +860,14 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    
 	    int n_in_cell = get_n_in_cell(psc, &npt);
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
-	      particle_t *p = particles_get_one(prts, i++);
+	      particle_t *prt = particles_get_one(prts, i++);
 	      
-	      psc_setup_particle(psc, p, &npt);
-	      p->xi = xx[0] - xb[0];
-	      p->yi = xx[1] - xb[1];
-	      p->zi = xx[2] - xb[2];
+	      psc_setup_particle(psc, prt, &npt, p, xx);
 	      //p->lni = particle_label_offset + 1;
 	      if (psc->prm.fortran_particle_weight_hack) {
-		p->wni = npt.n;
+		prt->wni = npt.n;
 	      } else {
-		p->wni = npt.n / (n_in_cell * psc->coeff.cori);
+		prt->wni = npt.n / (n_in_cell * psc->coeff.cori);
 	      }
 	    }
 	  }

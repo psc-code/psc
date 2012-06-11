@@ -186,11 +186,9 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
   psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {
 
     double Iono_rate;
-    double x = CRDX(p, ix);
-    double y = CRDY(p, iy);
-    double z = CRDZ(p, iz);
+    double xx[3] = { CRDX(p, ix), CRDY(p, iy), .5 * (CRDZ(p, iz) + CRDZ(p, iz+1)) };
 
-    if (z < bohm->L_source_) {
+    if (xx[2] < bohm->L_source_) {
     // Number of new particles created per unit time and cell
       Iono_rate = psc->prm.nicell * 0.6 * bohm->cs_ / bohm->L_source_;
     } else {
@@ -221,9 +219,6 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
 
       // electrons
       prt = particles_get_one(pp, pp->n_part++);
-      prt->xi = x;
-      prt->yi = y;
-      prt->zi = z;
       prt->wni = 1.;
       npt.q = -1.;
       npt.m = 1.;
@@ -231,13 +226,10 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
       npt.T[1] = bohm->Te_;
       npt.T[2] = bohm->Te_;
       npt.kind = KIND_ELECTRON;
-      psc_setup_particle(psc, prt, &npt);
+      psc_setup_particle(psc, prt, &npt, p, xx);
       
       // ions
       prt = particles_get_one(pp, pp->n_part++);
-      prt->xi = x;
-      prt->yi = y;
-      prt->zi = z;
       prt->wni = 1.;
       npt.q = 1.;
       npt.m = bohm->mi_over_me;
@@ -245,7 +237,7 @@ seed_patch(struct psc *psc, int p, struct psc_particles *pp)
       npt.T[1] = bohm->Ti_;
       npt.T[2] = bohm->Ti_;
       npt.kind = KIND_ION;
-      psc_setup_particle(psc, prt, &npt);
+      psc_setup_particle(psc, prt, &npt, p, xx);
       
     }
   } foreach_3d_end;
