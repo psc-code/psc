@@ -91,6 +91,31 @@ cuda_mprts_find_n_send(struct psc_mparticles *mprts)
 }
 
 // ======================================================================
+// cuda_mprts_reorder_send_by_id
+
+void
+cuda_mprts_reorder_send_by_id(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  
+  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
+  thrust::device_ptr<float4> d_xi4(mprts_cuda->d_xi4);
+  thrust::device_ptr<float4> d_pxi4(mprts_cuda->d_pxi4);
+  thrust::host_vector<unsigned int> h_ids(d_ids, d_ids + mprts_cuda->nr_prts);
+  thrust::host_vector<float4> h_xi4(d_xi4, d_xi4 + mprts_cuda->nr_prts + mprts_cuda->nr_prts_send);
+  thrust::host_vector<float4> h_pxi4(d_pxi4, d_pxi4 + mprts_cuda->nr_prts + mprts_cuda->nr_prts_send);
+  
+  for (int n = 0; n < mprts_cuda->nr_prts_send; n++) {
+    unsigned int id = h_ids[mprts_cuda->nr_prts - mprts_cuda->nr_prts_send + n];
+    h_xi4[mprts_cuda->nr_prts + n]  = h_xi4[id];
+    h_pxi4[mprts_cuda->nr_prts + n] = h_pxi4[id];
+  }
+
+  thrust::copy(h_xi4.begin(), h_xi4.end(), d_xi4);
+  thrust::copy(h_pxi4.begin(), h_pxi4.end(), d_pxi4);
+}
+
+// ======================================================================
 // cuda_mprts_scan_send_buf_total
 
 void
@@ -119,6 +144,8 @@ cuda_mprts_scan_send_buf_total_gold(struct psc_mparticles *mprts)
   }
 
   thrust::copy(h_sums.begin(), h_sums.end(), d_sums);
+
+  cuda_mprts_reorder_send_buf_total(mprts);
 }
 
 void
@@ -128,15 +155,17 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
 
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
 
-  cuda_mprts_scan_send_buf_total_gold(mprts);
-
+  // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
   thrust::device_ptr<unsigned int> d_spine_sums(mprts_cuda->d_bnd_spine_sums);
-  thrust::exclusive_scan(d_spine_cnts,
+  thrust::exclusive_scan(d_spine_cnts + nr_total_blocks * 10,
 			 d_spine_cnts + nr_total_blocks * 11 + 1,
-			 d_spine_sums);
+			 d_spine_sums + nr_total_blocks * 10,
+			 mprts_cuda->nr_prts - mprts_cuda->nr_prts_send);
+  // OPT, we could somehow not fill in ids for not oob at all
+  // this should make sure at least those within bounds don't screw anything up
+  thrust::fill(d_spine_sums, d_spine_sums + nr_total_blocks * 10, 0);
 
-#if 1
   ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
 		     NopFunctor<K>,
 		     NopFunctor<K>,
@@ -145,23 +174,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
     (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
      mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
   cuda_sync_if_enabled();
-#endif
 
-  thrust::device_ptr<unsigned int> d_bidx(mprts_cuda->d_bidx);
-  thrust::device_ptr<unsigned int> d_ids(mprts_cuda->d_ids);
-  thrust::device_ptr<unsigned int> d_sums(mprts_cuda->d_sums);
-  thrust::host_vector<unsigned int> h_bidx(d_bidx, d_bidx + mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_ids(d_ids, d_ids + mprts_cuda->nr_prts);
-  thrust::host_vector<unsigned int> h_sums(d_sums, d_sums + mprts_cuda->nr_prts);
-  
-  for (int n = 0; n < mprts_cuda->nr_prts; n++) {
-    if (h_bidx[n] == CUDA_BND_S_OOB) {
-      mprintf("n %d: %d\n", n, h_sums[n]);
-    }
-  }
-  for (int n = 0; n < mprts_cuda->nr_prts_send; n++) {
-    mprintf("n %d: id %d\n", n, h_ids[mprts_cuda->nr_prts - mprts_cuda->nr_prts_send + n]);
-  }
-  assert(0);
+  cuda_mprts_reorder_send_by_id(mprts);
 }
 
