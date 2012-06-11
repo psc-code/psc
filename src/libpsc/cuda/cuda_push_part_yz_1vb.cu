@@ -343,7 +343,7 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2]];
   int block_end   = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2] + 1];
 
-  extern __shared__ real fld_cache[];
+  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
   F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> cached_flds(fld_cache, d_cp_flds[p].d_flds, ci, prm);
   
@@ -368,13 +368,10 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct cuda_mflds *cuda_mflds)
   struct cuda_params prm;
   set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), cuda_mflds->mflds_cuda[0]);
   
-  // FIXME, why is this dynamic?
-  unsigned int shared_size = 6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4) * sizeof(real);
-  
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    <<<dimGrid, THREADS_PER_BLOCK, shared_size>>>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
      cuda_mflds->d_cp_flds);
   cuda_sync_if_enabled();
