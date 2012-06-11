@@ -174,7 +174,6 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
   double TTi = harris->Ti;
   double TTe = harris->Te;
 
-  npt->n = nnb + 1./sqr(cosh((x[1]) / LLL));
   switch (pop) {
   case 0: // ion drifting
     npt->n = 1. / sqr(cosh(x[1] / LLL));
@@ -182,6 +181,8 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
     npt->m = harris->mi_over_me;
     npt->p[0] = 2. * TTi / BB / LLL;
     npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
     npt->kind = KIND_ION;
     break;
   case 1: // ion bg
@@ -189,6 +190,8 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
     npt->q = 1.;
     npt->m = harris->mi_over_me;
     npt->T[0] = TTi;
+    npt->T[1] = TTi;
+    npt->T[2] = TTi;
     npt->kind = KIND_ION;
     break;
   case 2: // electron drifting
@@ -197,6 +200,8 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
     npt->m = 1.;
     npt->p[0] = -2. * TTe / BB / LLL;
     npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
     npt->kind = KIND_ELECTRON;
     break;
   case 3: // electron bg
@@ -204,6 +209,8 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
     npt->q = -1.;
     npt->m = 1.;
     npt->T[0] = TTe;
+    npt->T[1] = TTe;
+    npt->T[2] = TTe;
     npt->kind = KIND_ELECTRON;
     break;
   default:

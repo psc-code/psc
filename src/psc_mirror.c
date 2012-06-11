@@ -120,7 +120,6 @@ psc_mirror_create(struct psc *psc)
   struct psc_bnd_fields *bnd_fields = 
     psc_push_fields_get_bnd_fields(psc->push_fields);
   psc_bnd_fields_set_type(bnd_fields, "none");
-
 }
 
 // ----------------------------------------------------------------------
@@ -199,6 +198,9 @@ psc_mirror_setup(struct psc *psc)
   double Ti_par = mirror->beta_i_par * sqr(B0) / 2.;
   double Ti_perp = mirror->Ti_perp_over_Ti_par * Ti_par;
   double me = 1. / mirror->mi_over_me;
+
+  psc->kinds[KIND_ELECTRON].m = me;
+  psc->kinds[KIND_ION     ].m = 1.;
 
   psc_setup_super(psc);
 
