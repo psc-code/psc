@@ -63,6 +63,7 @@ psc_harris_create(struct psc *psc)
 
   psc->prm.nmax = 16000;
   psc->prm.nicell = 50;
+  psc->prm.nr_populations = 4;
   psc->prm.cfl = 0.98;
 
   // will be set to actual values in psc_harris_setup()
@@ -160,7 +161,7 @@ psc_harris_init_field(struct psc *psc, double x[3], int m)
 // psc_harris_init_npt
 
 static void
-psc_harris_init_npt(struct psc *psc, int kind, double x[3],
+psc_harris_init_npt(struct psc *psc, int pop, double x[3],
 		struct psc_particle_npt *npt)
 {
   struct psc_harris *harris = to_psc_harris(psc);
@@ -172,12 +173,36 @@ psc_harris_init_npt(struct psc *psc, int kind, double x[3],
   double TTe = harris->Te;
 
   npt->n = nnb + 1./sqr(cosh((x[1]) / LLL));
-  switch (kind) {
-  case KIND_ELECTRON:
-    npt->p[0] = - 2. * TTe / BB / LLL * (npt->n - nnb) / npt->n;
+  switch (pop) {
+  case 0: // ion drifting
+    npt->n = 1. / sqr(cosh(x[1] / LLL));
+    npt->q = 1.;
+    npt->m = harris->mi_over_me;
+    npt->p[0] = 2. * TTi / BB / LLL;
+    npt->T[0] = TTi;
+    npt->kind = KIND_ION;
     break;
-  case KIND_ION:
-    npt->p[0] = 2. * TTi / BB / LLL * (npt->n - nnb) / npt->n;
+  case 1: // ion bg
+    npt->n = nnb;
+    npt->q = 1.;
+    npt->m = harris->mi_over_me;
+    npt->T[0] = TTi;
+    npt->kind = KIND_ION;
+    break;
+  case 2: // electron drifting
+    npt->n = 1. / sqr(cosh(x[1] / LLL));
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->p[0] = 2. * TTe / BB / LLL;
+    npt->T[0] = TTe;
+    npt->kind = KIND_ELECTRON;
+    break;
+  case 3: // electron bg
+    npt->n = nnb;
+    npt->q = -1.;
+    npt->m = 1.;
+    npt->T[0] = TTe;
+    npt->kind = KIND_ELECTRON;
     break;
   default:
     assert(0);

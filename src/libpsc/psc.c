@@ -105,6 +105,10 @@ static struct param psc_descr[] = {
   { "e0"            , VAR(prm.e0)              , PARAM_DOUBLE(0.)           },
   { "cfl"           , VAR(prm.cfl)             , PARAM_DOUBLE(.75)          },
   { "nicell"        , VAR(prm.nicell)          , PARAM_INT(200)             },
+  { "nr_populations", VAR(prm.nr_populations)  , PARAM_INT(-1),
+    .help = "number of particle populations in the initial condition. "
+    "init_npt() will be called this many times. By default, nr_populations "
+    "will be set the the number of particle kinds." },
   { "seed_by_time"  , VAR(prm.seed_by_time)    , PARAM_BOOL(false)          },
   // by default, we put the # of particles per cell according to the
   // density, using the weights (~ 1) only to fine-tune to the
@@ -719,7 +723,11 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
     pml_find_bounds(psc, p, ilo, ihi);
 
     int np = 0;
-    for (int kind = 0; kind < psc->nr_kinds; kind++) {
+    if (psc->prm.nr_populations < 0) {
+      psc->prm.nr_populations = psc->nr_kinds;
+    }
+    int nr_pop = psc->prm.nr_populations;
+    for (int kind = 0; kind < nr_pop; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -733,6 +741,7 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
 	    struct psc_particle_npt npt = {
+	      .kind = kind < psc->nr_kinds ? kind : -1,
 	      .q    = psc->kinds[kind].q,
 	      .m    = psc->kinds[kind].m,
 	      .n    = psc->kinds[kind].n,
@@ -759,8 +768,7 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 }
 
 void
-psc_setup_particle(struct psc *psc, particle_t *prt, int kind,
-		   struct psc_particle_npt *npt)
+psc_setup_particle(struct psc *psc, particle_t *prt, struct psc_particle_npt *npt)
 {
   double beta = psc->coeff.beta;
 
@@ -781,9 +789,12 @@ psc_setup_particle(struct psc *psc, particle_t *prt, int kind,
     sqrtf(-2.f*npt->T[1]/npt->m*sqr(beta)*logf(1.0-ran3)) * cosf(2.f*M_PI*ran4);
   prt->pzi = npt->p[2] +
     sqrtf(-2.f*npt->T[2]/npt->m*sqr(beta)*logf(1.0-ran5)) * cosf(2.f*M_PI*ran6);
-  prt->qni = npt->q;
-  prt->mni = npt->m;
-  prt->kind = kind;
+  assert(npt->kind >= 0 && npt->kind < psc->nr_kinds);
+  prt->kind = npt->kind;
+  assert(npt->q == psc->kinds[prt->kind].q);
+  assert(npt->m == psc->kinds[prt->kind].m);
+  prt->qni = psc->kinds[prt->kind].q;
+  prt->mni = psc->kinds[prt->kind].m;
 }	      
 
 // ----------------------------------------------------------------------
@@ -818,7 +829,8 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     double *xb = psc->patch[p].xb;
 
     int i = 0;
-    for (int kind = 0; kind < psc->nr_kinds; kind++) {
+    int nr_pop = psc->prm.nr_populations;
+    for (int kind = 0; kind < nr_pop; kind++) {
       for (int jz = ilo[2]; jz < ihi[2]; jz++) {
 	for (int jy = ilo[1]; jy < ihi[1]; jy++) {
 	  for (int jx = ilo[0]; jx < ihi[0]; jx++) {
@@ -832,6 +844,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
 	    struct psc_particle_npt npt = {
+	      .kind = kind < psc->nr_kinds ? kind : -1,
 	      .q    = psc->kinds[kind].q,
 	      .m    = psc->kinds[kind].m,
 	      .n    = psc->kinds[kind].n,
@@ -845,7 +858,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    for (int cnt = 0; cnt < n_in_cell; cnt++) {
 	      particle_t *p = particles_get_one(prts, i++);
 	      
-	      psc_setup_particle(psc, p, kind, &npt);
+	      psc_setup_particle(psc, p, &npt);
 	      p->xi = xx[0] - xb[0];
 	      p->yi = xx[1] - xb[1];
 	      p->zi = xx[2] - xb[2];

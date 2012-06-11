@@ -97,6 +97,7 @@ struct psc_param {
   double a0;
   double cfl;   ///<CFL number to be used for determining timestep
   int nicell;	///<number of particles per gridpoint to represent a normalised density of 1 
+  int nr_populations;  ///< nr of different particle populations (defaults to nr_kinds)
   bool seed_by_time;
   bool const_num_particles_per_cell;
   bool fortran_particle_weight_hack;
@@ -283,6 +284,7 @@ struct psc {
 MRC_CLASS_DECLARE(psc, struct psc);
 
 struct psc_particle_npt {
+  int kind; ///< particle kind
   double q; ///< charge
   double m; ///< mass
   double n; ///< density
@@ -409,8 +411,7 @@ void psc_setup(struct psc *psc);
 void psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds);
 void psc_view(struct psc *psc);
 void psc_destroy(struct psc *psc);
-void psc_setup_particle(struct psc *psc, particle_c_t *prt, int kind,
-			struct psc_particle_npt *npt);
+void psc_setup_particle(struct psc *psc, particle_c_t *prt, struct psc_particle_npt *npt);
 void psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 			int *particle_label_offset);
 void psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
