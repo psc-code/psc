@@ -8,7 +8,6 @@
 #include <thrust/scan.h>
 
 #include <b40c/radixsort_reduction_kernel.h>
-#include <b40c/radixsort_spine_kernel.h>
 #include <b40c/radixsort_scanscatter_kernel3.h>
 
 using namespace b40c_thrust;
