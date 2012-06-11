@@ -177,8 +177,39 @@ cuda_mprts_count_received_v1(struct psc_mparticles *mprts)
 // ======================================================================
 // cuda_mprts_scan_scatter_received
 
+static void __global__
+mprts_scan_scatter_received(unsigned int nr_recv, unsigned int nr_prts_prev,
+			    unsigned int *d_spine_sums, unsigned int *d_alt_bidx,
+			    unsigned int *d_bidx, unsigned int *d_ids)
+{
+  int n = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+  if (n >= nr_recv) {
+    return;
+  }
+
+  n += nr_prts_prev;
+
+  int nn = d_spine_sums[d_bidx[n] * 10 + CUDA_BND_S_NEW] + d_alt_bidx[n];
+  d_ids[nn] = n;
+}
+
 void
 cuda_mprts_scan_scatter_received(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  int nr_recv = mprts_cuda->nr_prts_recv;
+  int nr_prts_prev = mprts_cuda->nr_prts - nr_recv;
+
+  int dimGrid = (nr_recv + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+
+  mprts_scan_scatter_received<<<dimGrid, THREADS_PER_BLOCK>>>
+    (nr_recv, nr_prts_prev, mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_alt_bidx,
+     mprts_cuda->d_bidx, mprts_cuda->d_ids);
+}
+
+void
+cuda_mprts_scan_scatter_received_gold(struct psc_mparticles *mprts)
 {
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
