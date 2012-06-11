@@ -338,10 +338,10 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   ci[0] = 0;
   ci[1] = block_pos[1] * BLOCKSIZE_Y;
   ci[2] = block_pos[2] * BLOCKSIZE_Z;
-  int bid = block_pos_to_block_idx(block_pos, prm.b_mx);
+  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
 
-  int block_begin = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2]];
-  int block_end   = d_off[bid + p * prm.b_mx[1] * prm.b_mx[2] + 1];
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
