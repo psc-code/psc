@@ -48,7 +48,7 @@ find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift, real dxi[3])
   int d;
   for (d = 0; d < 3; d++) {
     real pos = xi[d] * dxi[d] + shift;
-    j[d] = cuda_fint(pos);
+    j[d] = __float2int_rd(pos);
     h[d] = pos - j[d];
   }
 }

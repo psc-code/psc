@@ -25,7 +25,7 @@ __global__ static void find_cell_indices_by_cell(int n_part, particles_cuda_dev_
       h_dev.xi4[i].z * d_consts.dxi[2] };
     int pos[3];
     for (int d = 0; d < 3; d++) {
-      pos[d] = cuda_fint(xi[d]);
+      pos[d] = __float2int_rd(xi[d]);
     }
     
     int idx = (((pos[2] / 8) * (ldims_y / 8) + (pos[1] / 8)) << 6);

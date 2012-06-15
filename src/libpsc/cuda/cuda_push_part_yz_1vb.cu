@@ -2,6 +2,9 @@
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
+// OPT: precalc offsets into fld_cache (including ci[])
+// OPT: use more shmem?
+
 #define LOAD_PARTICLE_(pp, d_xi4, d_pxi4, n) do {			\
     (pp).xi[0]         = d_xi4[n].x;					\
     (pp).xi[1]         = d_xi4[n].y;					\
@@ -420,7 +423,7 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
   int d;
   for (d = 0; d < 3; d++) {
     pos[d] = xi[d] * prm.dxi[d] + shift;
-    j[d] = cuda_fint(pos[d]);
+    j[d] = __float2int_rd(pos[d]);
     h[d] = pos[d] - j[d];
   }
 }
@@ -658,8 +661,8 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
     STORE_PARTICLE_POS_(p, d_xi4, i);
 #if 0
     {
-      unsigned int block_pos_y = cuda_fint(p.xi[1] * prm.b_dxi[1]);
-      unsigned int block_pos_z = cuda_fint(p.xi[2] * prm.b_dxi[2]);
+      unsigned int block_pos_y = __float2int_rd(p.xi[1] * prm.b_dxi[1]);
+      unsigned int block_pos_z = __float2int_rd(p.xi[2] * prm.b_dxi[2]);
 
       int block_idx;
       if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {

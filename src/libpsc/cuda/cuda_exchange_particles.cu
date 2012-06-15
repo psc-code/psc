@@ -32,7 +32,7 @@ exchange_particles(int n_part, particles_cuda_dev_t h_dev,
       h_dev.xi4[i].z * d_consts.dxi[2] };
     int pos[3];
     for (int d = 0; d < 3; d++) {
-      pos[d] = cuda_fint(xi[d]);
+      pos[d] = __float2int_rd(xi[d]);
     }
     if (pos[1] < 0) {
       h_dev.xi4[i].y += xm[1];
@@ -96,8 +96,8 @@ mprts_find_block_indices_2_total(struct cuda_params prm, float4 *d_xi4,
 
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
     float4 xi4 = d_xi4[n];
-    unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
-    unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
+    unsigned int block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
+    unsigned int block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
 
     int block_idx;
     if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
@@ -149,8 +149,8 @@ mprts_find_block_keys(struct cuda_params prm, float4 *d_xi4,
 
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
     float4 xi4 = d_xi4[n];
-    unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
-    unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
+    unsigned int block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
+    unsigned int block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
 
     int block_idx;
     if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
@@ -202,8 +202,8 @@ mprts_find_block_indices_ids_total(struct cuda_params prm, float4 *d_xi4,
   for (int p = 0; p < nr_patches; p++) {
     if (n < d_cp_prts[p].n_part) {
       float4 xi4 = d_xi4[n + off];
-      unsigned int block_pos_y = cuda_fint(xi4.y * prm.b_dxi[1]);
-      unsigned int block_pos_z = cuda_fint(xi4.z * prm.b_dxi[2]);
+      unsigned int block_pos_y = __float2int_rd(xi4.y * prm.b_dxi[1]);
+      unsigned int block_pos_z = __float2int_rd(xi4.z * prm.b_dxi[2]);
       
       int block_idx;
       if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {

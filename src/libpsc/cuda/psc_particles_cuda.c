@@ -167,7 +167,7 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
   particle_c_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {
-    pos[d] = cuda_fint(xi[d]);
+    pos[d] = particle_c_real_fint(xi[d]);
   }
   
   return cell_map_3to1(map, pos);
@@ -245,7 +245,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
     // out of bounds, which isn't otherwise fixable.
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
     for (int d = 0; d < 3; d++) {
-      int bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      int bi = particle_c_real_fint(xi[d] * cuda->b_dxi[d]);
       if (bi < 0 || bi >= cuda->b_mx[d]) {
 	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
 	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
@@ -256,7 +256,7 @@ psc_particles_cuda_copy_from_c(struct psc_particles *prts_cuda,
 	  xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      bi = particle_c_real_fint(xi[d] * cuda->b_dxi[d]);
       assert(bi >= 0 && bi < cuda->b_mx[d]);
     }
     xi4[n].x = xi[0];
@@ -355,7 +355,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
     
     float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
     for (int d = 0; d < 3; d++) {
-      int bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      int bi = particle_single_real_fint(xi[d] * cuda->b_dxi[d]);
       if (bi < 0 || bi >= cuda->b_mx[d]) {
 	printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
 	printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
@@ -366,7 +366,7 @@ psc_particles_cuda_copy_from_single(struct psc_particles *prts_cuda,
 	  xi[d] *= (1. - 1e-6);
 	}
       }
-      bi = cuda_fint(xi[d] * cuda->b_dxi[d]);
+      bi = particle_single_real_fint(xi[d] * cuda->b_dxi[d]);
       assert(bi >= 0 && bi < cuda->b_mx[d]);
     }
     xi4[n].x = xi[0];

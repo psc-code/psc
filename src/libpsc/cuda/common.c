@@ -71,7 +71,7 @@ find_idx_1st(const real xi[3], int j[3], real shift)
   int d;
   for (d = 0; d < 3; d++) {
     real pos = xi[d] * d_consts.dxi[d] + shift;
-    j[d] = cuda_fint(pos);
+    j[d] = __float2int_rd(pos);
   }
 }
 

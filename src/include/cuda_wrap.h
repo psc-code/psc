@@ -102,13 +102,6 @@ cuda_nint(real x)
   return (int)(x + real(10.5)) - 10;
 }
 
-static inline int
-cuda_fint(real x)
-{
-  // FIXME?
-  return (int)(x + real(10.)) - 10;
-}
-
 #else
 
 static bool CUDA_SYNC = true;
@@ -134,12 +127,6 @@ __device__ static inline int
 cuda_nint(real x)
 {
   return __float2int_rn(x);
-}
-
-__device__ __host__ static inline int
-cuda_fint(real x)
-{
-  return (int)(x + real(10.)) - 10;
 }
 
 #endif
