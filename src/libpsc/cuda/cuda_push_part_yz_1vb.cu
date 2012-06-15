@@ -135,6 +135,7 @@ cuda_mflds_destroy(struct cuda_mflds *cuda_mflds)
 // ======================================================================
 // field caching
 
+#if 0
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class F3cache {
   real *fld_cache;
@@ -182,6 +183,12 @@ public:
     return fld_cache[off];
   }
 };
+#endif
+
+#define F3_CACHE(fld_cache, m, jy, jz)					\
+  ((fld_cache)[(((m-EX)							\
+		 *(BLOCKSIZE_Z + 4) + ((jz)-(-2)))			\
+		*(BLOCKSIZE_Y + 4) + ((jy)-(-2)))])
 
 // ----------------------------------------------------------------------
 // push_xi
@@ -221,10 +228,10 @@ calc_vxi(real vxi[3], struct d_particle p)
 __device__ static void
 push_pxi_dt(struct d_particle *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq,
-	    struct cuda_params prm)
+	    struct cuda_params prm, real *dqs)
 {
   int kind = __float_as_int(p->kind_as_float);
-  real dq = prm.dq[kind];
+  real dq = dqs[kind];//prm.dq[kind];
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;
@@ -268,13 +275,13 @@ ip1_to_grid_p(real h)
     /* printf("C %g [%d,%d,%d]\n", F3C(fldnr, 0, ddy, ddz), 0, ddy, ddz); */ \
     exq =								\
       ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
-      cache(fldnr, 0, ddy+0, ddz+0) +					\
+      F3_CACHE(fld_cache, fldnr, ddy+0, ddz+0) +			\
       ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_0(OFF(g2, 2)) *		\
-      cache(fldnr, 0, ddy+1, ddz+0) +					\
+      F3_CACHE(fld_cache, fldnr, ddy+1, ddz+0) +			\
       ip1_to_grid_0(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
-      cache(fldnr, 0, ddy+0, ddz+1) +					\
+      F3_CACHE(fld_cache, fldnr, ddy+0, ddz+1) +			\
       ip1_to_grid_p(OFF(g1, 1)) * ip1_to_grid_p(OFF(g2, 2)) *		\
-      cache(fldnr, 0, ddy+1, ddz+1);					\
+      F3_CACHE(fld_cache, fldnr, ddy+1, ddz+1);				\
   } while(0)
 
 // ----------------------------------------------------------------------
@@ -285,8 +292,8 @@ ip1_to_grid_p(real h)
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
-	      const F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &cached_flds, int l0[3],
-	      struct cuda_params prm)
+	      real *fld_cache, int l0[3],
+	      struct cuda_params prm, real *dq)
 {
   struct d_particle p;
   LOAD_PARTICLE_(p, d_xi4, d_pxi4, n);
@@ -310,7 +317,7 @@ push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm);
+  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm, dq);
 
   STORE_PARTICLE_MOM_(p, d_pxi4, n);
 }
@@ -329,6 +336,12 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   __d_error_count = prm.d_error_count;
   int tid = threadIdx.x;
 
+  __shared__ struct cuda_params s_prm;
+  if (tid == 0) {
+    s_prm = prm;
+  }
+  __syncthreads();
+
   int block_pos[3];
   block_pos[1] = blockIdx.x;
   block_pos[2] = blockIdx.y % prm.b_mx[2];
@@ -345,10 +358,27 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
-  F3cache<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> cached_flds(fld_cache, d_cp_flds[p].d_flds, ci, prm);
+  {
+    real *d_flds = d_cp_flds[p].d_flds;
+
+    int ti = threadIdx.x;
+    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+    while (ti < n) {
+      int tmp = ti;
+      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+      tmp /= BLOCKSIZE_Y + 4;
+      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+      // OPT? currently it seems faster to do the loop rather than do m by threadidx
+      for (int m = EX; m <= HZ; m++) {
+	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci[1],jz+ci[2]);
+      }
+      ti += THREADS_PER_BLOCK;
+    }
+    __syncthreads();
+  }
   
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    push_part_one(n, d_xi4, d_pxi4, cached_flds, ci, prm);
+    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(n, d_xi4, d_pxi4, fld_cache, ci, s_prm, s_prm.dq);
   }
 }
 
