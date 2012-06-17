@@ -20,6 +20,7 @@ psc_particles_single_setup(struct psc_particles *prts)
   sngl->particles = calloc(sngl->n_alloced, sizeof(*sngl->particles));
   sngl->particles_alt = calloc(sngl->n_alloced, sizeof(*sngl->particles_alt));
   sngl->b_idx = calloc(sngl->n_alloced, sizeof(*sngl->b_idx));
+  sngl->b_ids = calloc(sngl->n_alloced, sizeof(*sngl->b_ids));
 
   for (int d = 0; d < 3; d++) {
     sngl->b_mx[d] = ppsc->patch[prts->p].ldims[d];
@@ -37,6 +38,7 @@ psc_particles_single_destroy(struct psc_particles *prts)
   free(sngl->particles);
   free(sngl->particles_alt);
   free(sngl->b_idx);
+  free(sngl->b_ids);
   free(sngl->b_cnt);
 }
 
@@ -46,25 +48,9 @@ psc_particles_single_reorder(struct psc_particles *prts,
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
 
-#if 1
   for (int n = 0; n < prts->n_part; n++) {
-    int n_new = b_sums[b_idx[n]]++;
-    sngl->particles_alt[n_new] = sngl->particles[n];
+    sngl->particles_alt[n] = sngl->particles[b_idx[n]];
   }
-#else
-  int *b_off = malloc(sngl->n_alloced * sizeof(*b_off));
-  for (int n = 0; n < prts->n_part; n++) {
-    int n_new = b_sums[b_idx[n]]++;
-    //    b_off[n_new] = n;
-    b_off[n] = n_new;
-  }
-
-  for (int n = 0; n < prts->n_part; n++) {
-    //    particles_new[n] = sngl->particles[b_off[n]];
-    sngl->particles_alt[b_off[n]] = sngl->particles[n];
-  }
-  free(b_off);
-#endif
   
   // swap in alt array
   particle_single_t *tmp = sngl->particles;
@@ -83,6 +69,7 @@ particles_single_realloc(struct psc_particles *prts, int new_n_part)
   sngl->n_alloced = new_n_part * 1.2;
   sngl->particles = realloc(sngl->particles, sngl->n_alloced * sizeof(*sngl->particles));
   sngl->b_idx = realloc(sngl->b_idx, sngl->n_alloced * sizeof(*sngl->b_idx));
+  sngl->b_ids = realloc(sngl->b_ids, sngl->n_alloced * sizeof(*sngl->b_ids));
   free(sngl->particles_alt);
   sngl->particles_alt = malloc(sngl->n_alloced * sizeof(*sngl->particles_alt));
 }

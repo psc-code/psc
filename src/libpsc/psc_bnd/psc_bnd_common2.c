@@ -168,6 +168,21 @@ exclusive_scan(unsigned int *b_cnts, int n)
   }
 }
 
+// ----------------------------------------------------------------------
+// sort_indices
+
+static void
+sort_indices(unsigned int *b_idx, unsigned int *b_sum, unsigned int *b_ids, int n_part)
+{
+  for (int n = 0; n < n_part; n++) {
+    unsigned int n_new = b_sum[b_idx[n]]++;
+    assert(n_new < n_part);
+    b_ids[n_new] = n;
+  }
+}
+
+// ======================================================================
+
 static inline particle_t *
 xchg_get_one(struct psc_particles *prts, int n)
 {
@@ -248,9 +263,10 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   
   find_block_indices_count(sngl->b_idx, sngl->b_cnt, prts, sngl->n_part_save);
   exclusive_scan(sngl->b_cnt, sngl->nr_blocks + 1);
+  sort_indices(sngl->b_idx, sngl->b_cnt, sngl->b_ids, prts->n_part);
   
-  psc_particles_reorder(prts, sngl->b_idx, sngl->b_cnt);
   prts->n_part = sngl->b_cnt[sngl->nr_blocks - 1];
+  psc_particles_reorder(prts, sngl->b_ids, sngl->b_cnt);
 }
 
 // ----------------------------------------------------------------------

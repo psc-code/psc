@@ -23,6 +23,7 @@ struct psc_particles_single {
   int nr_blocks;
   particle_single_real_t b_dxi[3];
   unsigned int *b_idx;
+  unsigned int *b_ids;
   unsigned int *b_cnt;
   unsigned int n_send;
   unsigned int n_part_save;
