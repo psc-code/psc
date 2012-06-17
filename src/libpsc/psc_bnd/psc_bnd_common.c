@@ -8,18 +8,21 @@ struct psc_bnd_sub {
 
 #define to_psc_bnd_sub(bnd) ((struct psc_bnd_sub *)((bnd)->obj.subctx))
 
+// ----------------------------------------------------------------------
+// ddcp_particles helpers
+
 static void
-ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
+ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
 {
-  mparticles_t *particles = _particles;
+  mparticles_t *particles = _ctx;
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   particles_realloc(prts, new_n_particles);
 }
 
 static void *
-ddcp_particles_get_addr(void *_particles, int p, int n)
+ddcp_particles_get_addr(void *_ctx, int p, int n)
 {
-  mparticles_t *particles = _particles;
+  mparticles_t *particles = _ctx;
   struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
   return particles_get_one(prts, n);
 }
@@ -50,10 +53,10 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 // ======================================================================
 //
 // ----------------------------------------------------------------------
-// find_block_index
+// find_block_position
 
 static inline void
-find_block_index(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
+find_block_position(int b_pos[3], particle_real_t xi[3], particle_real_t b_dxi[3])
 {
   for (int d = 0; d < 3; d++) {
     b_pos[d] = particle_real_fint(xi[d] * b_dxi[d]);
@@ -90,7 +93,7 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
     particle_real_t *xi = &part->xi; // slightly hacky relies on xi, yi, zi to be contiguous in the struct. FIXME
     
     int b_pos[3];
-    find_block_index(b_pos, xi, b_dxi);
+    find_block_position(b_pos, xi, b_dxi);
     particle_real_t *pxi = &part->pxi;
     if (b_pos[0] >= 0 && b_pos[0] < b_mx[0] &&
 	b_pos[1] >= 0 && b_pos[1] < b_mx[1] &&
