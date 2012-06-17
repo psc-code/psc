@@ -205,6 +205,8 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
+  struct psc_particles_single *sngl = psc_particles_single(prts);
+  assert(!sngl->need_reorder);
 
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
@@ -242,6 +244,7 @@ psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
+  psc_particles_reorder(prts);
 
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);

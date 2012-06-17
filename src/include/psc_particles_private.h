@@ -13,8 +13,7 @@ struct psc_particles {
 
 struct psc_particles_ops {
   MRC_SUBCLASS_OPS(struct psc_particles);
-  void (*reorder)(struct psc_particles *prts,
-		  unsigned int *b_idx, unsigned int *b_sums);
+  void (*reorder)(struct psc_particles *prts);
 };
 
 #define psc_particles_ops(prts) ((struct psc_particles_ops *) ((prts)->obj.ops))

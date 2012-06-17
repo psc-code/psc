@@ -43,19 +43,23 @@ psc_particles_single_destroy(struct psc_particles *prts)
 }
 
 static void
-psc_particles_single_reorder(struct psc_particles *prts,
-			     unsigned int *b_idx, unsigned int *b_sums)
+psc_particles_single_reorder(struct psc_particles *prts)
 {
   struct psc_particles_single *sngl = psc_particles_single(prts);
 
+  if (!sngl->need_reorder) {
+    return;
+  }
+
   for (int n = 0; n < prts->n_part; n++) {
-    sngl->particles_alt[n] = sngl->particles[b_idx[n]];
+    sngl->particles_alt[n] = sngl->particles[sngl->b_ids[n]];
   }
   
   // swap in alt array
   particle_single_t *tmp = sngl->particles;
   sngl->particles = sngl->particles_alt;
   sngl->particles_alt = tmp;
+  sngl->need_reorder = false;
 }
 
 void

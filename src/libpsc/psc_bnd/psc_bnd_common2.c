@@ -266,7 +266,7 @@ psc_bnd_sub_exchange_particles_post(struct psc_bnd *bnd, struct psc_particles *p
   sort_indices(sngl->b_idx, sngl->b_cnt, sngl->b_ids, prts->n_part);
   
   prts->n_part = sngl->b_cnt[sngl->nr_blocks - 1];
-  psc_particles_reorder(prts, sngl->b_ids, sngl->b_cnt);
+  sngl->need_reorder = true; // FIXME, need to honor before get()/put()
 }
 
 // ----------------------------------------------------------------------

@@ -27,6 +27,7 @@ struct psc_particles_single {
   unsigned int *b_cnt;
   unsigned int n_send;
   unsigned int n_part_save;
+  bool need_reorder;
 };
 
 #define psc_particles_single(prts) mrc_to_subobj(prts, struct psc_particles_single)

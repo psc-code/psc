@@ -16,8 +16,7 @@ struct psc_particles *psc_particles_get_as(struct psc_particles *prts_base,
 void psc_particles_put_as(struct psc_particles *prts,
 			  struct psc_particles *prts_base,
 			  unsigned int flags);
-void psc_particles_reorder(struct psc_particles *prts,
-			   unsigned int *b_idx, unsigned int *b_sums);
+void psc_particles_reorder(struct psc_particles *prts);
 
 // ----------------------------------------------------------------------
 // psc_mparticles class
