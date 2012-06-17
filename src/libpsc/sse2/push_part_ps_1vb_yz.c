@@ -232,6 +232,9 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 
 // ======================================================================
 
+#define SIMD_BITS 0
+#include "ps_common.c"
+
 void
 psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
 				     struct psc_particles *prts_base,
@@ -243,9 +246,23 @@ psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
   }
 
   struct psc_particles *prts = psc_particles_get_as(prts_base, "single", 0);
+  struct psc_particles_single *sngl = psc_particles_single(prts);
   struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 6);
-  psc_particles_reorder(prts);
 
+  if (!sngl->need_reorder) {
+    MHERE;
+    for (int n = 0; n < prts->n_part; n++) {
+      sngl->b_ids[n] = n;
+    }
+  }
+  sngl->need_reorder = false;
+
+  // swap in alt array
+  particle_single_t *tmp = sngl->particles;
+  sngl->particles = sngl->particles_alt;
+  sngl->particles_alt = tmp;
+  // actual reorder happens while pushing
+  
   prof_start(pr);
   psc_fields_zero_range(flds, JXI, JXI + 3);
   struct psc_patch *patch = ppsc->patch + prts->p;

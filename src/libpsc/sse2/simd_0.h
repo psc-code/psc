@@ -35,6 +35,12 @@ v4s_store(float *p, v4s v)
   *p = v;
 }
 
+static inline v4si
+v4si_load(int *p)
+{
+  return *p;
+}
+
 static inline void
 v4si_store(int *p, v4si v)
 {

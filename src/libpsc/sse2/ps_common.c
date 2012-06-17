@@ -18,6 +18,14 @@
     qw = prt[3];				\
   } while (0)
 
+#define PRT_LOAD2_X(sngl, n, xi, yi, zi, qw) do {			\
+    float * restrict prt = (float *) &sngl->particles_alt[sngl->b_ids[n]]; \
+    xi = prt[0];							\
+    yi = prt[1];							\
+    zi = prt[2];							\
+    qw = prt[3];							\
+  } while (0)
+
 #define PRT_STORE_X(prt, xi, yi, zi, qw) do {		\
     prt[0] = xi;					\
     prt[1] = yi;					\
@@ -30,6 +38,14 @@
     pyi = prt[5];					\
     pzi = prt[6];					\
     qdm = prt[7];					\
+  } while (0)
+
+#define PRT_LOAD2_P(sngl, n, pxi, pyi, pzi, qdm) do {		\
+    float * restrict prt = (float *) &sngl->particles_alt[sngl->b_ids[n]];	\
+    pxi = prt[4];						\
+    pyi = prt[5];						\
+    pzi = prt[6];						\
+    qdm = prt[7];						\
   } while (0)
 
 #define PRT_STORE_P(prt, pxi, pyi, pzi, qdm) do {	\
@@ -49,6 +65,19 @@
     _MM_TRANSPOSE4_PS(xi, yi, zi, qw);		\
   } while (0)
 
+#define PRT_LOAD2_X(sngl, n, xi, yi, zi, qw) do {			\
+    v4si ids = v4si_load((int *) &sngl->b_ids[n]);			\
+    float * restrict prt0 = (float *) &sngl->particles_alt[v4si_extract(ids, 0)]; \
+    float * restrict prt1 = (float *) &sngl->particles_alt[v4si_extract(ids, 1)]; \
+    float * restrict prt2 = (float *) &sngl->particles_alt[v4si_extract(ids, 2)]; \
+    float * restrict prt3 = (float *) &sngl->particles_alt[v4si_extract(ids, 3)]; \
+    xi = v4s_load(prt0);						\
+    yi = v4s_load(prt1);						\
+    zi = v4s_load(prt2);						\
+    qw = v4s_load(prt3);						\
+    _MM_TRANSPOSE4_PS(xi, yi, zi, qw);					\
+  } while (0)
+
 #define PRT_STORE_X(prt, xi, yi, zi, qw) do {	\
     _MM_TRANSPOSE4_PS(xi, yi, zi, qw);		\
     v4s_store(prt     , xi);			\
@@ -63,6 +92,19 @@
     pzi = v4s_load(prt + 20);				\
     qdm = v4s_load(prt + 28);				\
     _MM_TRANSPOSE4_PS(pxi, pyi, pzi, qdm);		\
+  } while (0)
+
+#define PRT_LOAD2_P(sngl, n, pxi, pyi, pzi, qdm) do {		\
+    v4si ids = v4si_load((int *) &sngl->b_ids[n]);			\
+    float * restrict prt0 = (float *) &sngl->particles_alt[v4si_extract(ids, 0)]; \
+    float * restrict prt1 = (float *) &sngl->particles_alt[v4si_extract(ids, 1)]; \
+    float * restrict prt2 = (float *) &sngl->particles_alt[v4si_extract(ids, 2)]; \
+    float * restrict prt3 = (float *) &sngl->particles_alt[v4si_extract(ids, 3)]; \
+    pxi = v4s_load(prt0 + 4);					\
+    pyi = v4s_load(prt1 + 4);					\
+    pzi = v4s_load(prt2 + 4);					\
+    qdm = v4s_load(prt3 + 4);					\
+    _MM_TRANSPOSE4_PS(pxi, pyi, pzi, qdm);			\
   } while (0)
 
 #define PRT_STORE_P(prt, pxi, pyi, pzi, qdm) do {	\

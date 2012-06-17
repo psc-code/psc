@@ -129,7 +129,7 @@ PFX(ps2_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int
     float * restrict prt = (float *) &sngl->particles[n];
 
     v4s xi, yi, zi, qw;
-    PRT_LOAD_X(prt, xi, yi, zi, qw);
+    PRT_LOAD2_X(sngl, n, xi, yi, zi, qw);
     
     // field interpolation
     v4s ym, zm, yp, zp;
@@ -149,7 +149,7 @@ PFX(ps2_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int
     v4s hzq = INTERPOLATE_FIELD_1ST_IP(HZ, h, g);
 
     v4s pxi, pyi, pzi, kind;
-    PRT_LOAD_P(prt, pxi, pyi, pzi, kind);
+    PRT_LOAD2_P(sngl, n, pxi, pyi, pzi, kind);
     v4s dq = v4s_gather(dq_kind, v4si_cast(kind));
     _PUSH_PXI(pxi, pyi, pzi, exq, eyq, ezq, hxq, hyq, hzq, dq);
 
