@@ -11,6 +11,10 @@ void psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
 					 struct psc_particles *prts_base,
 					 struct psc_fields *flds_base);
 
+void psc_push_particles_1vb_ps2_push_a_yz(struct psc_push_particles *push,
+					  struct psc_particles *prts_base,
+					  struct psc_fields *flds_base);
+
 // ======================================================================
 
 // FIXME, use regular psc_fields?
@@ -54,6 +58,10 @@ void sb0_ps_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
 			    int n_start);
 void sb2_ps_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
 			    int n_start);
+void sb0_ps2_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
+			     int n_start);
+void sb2_ps2_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
+			     int n_start);
 
 
 #endif

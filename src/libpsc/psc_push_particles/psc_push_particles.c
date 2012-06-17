@@ -149,6 +149,7 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_vay_ops);
 #ifdef USE_SSE2
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ps_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_1vb_ps2_ops);
 #endif
 #ifdef USE_CBE
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cbe_ops);

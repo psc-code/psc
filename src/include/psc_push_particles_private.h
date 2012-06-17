@@ -58,6 +58,7 @@ extern struct psc_push_particles_ops psc_push_particles_1vb_c_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_double_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb_ps_ops;
+extern struct psc_push_particles_ops psc_push_particles_1vb_ps2_ops;
 extern struct psc_push_particles_ops psc_push_particles_1vb2_single_ops;
 extern struct psc_push_particles_ops psc_push_particles_fortran_ops;
 extern struct psc_push_particles_ops psc_push_particles_vay_ops;
