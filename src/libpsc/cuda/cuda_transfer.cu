@@ -4,16 +4,6 @@
 
 #include <mrc_profile.h>
 
-EXTERN_C void
-cuda_init(int rank)
-{
-  static bool inited;
-  if (!inited) {
-    inited = true;
-//    cudaSetDevice(rank % 3);
-  }
-}
-
 // FIXME, hardcoding is bad, needs to be consistent, etc...
 #define BND  (3)
 #define MAX_BND_COMPONENTS (3)
@@ -79,7 +69,7 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     return;
   }
   
-  // we assume that every patch will have those same dims
+  // FIXME we assume that every patch will have those same dims
   int *ldims = ppsc->patch[0].ldims;
 
   if (!mprts->flags) {

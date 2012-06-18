@@ -19,12 +19,6 @@ psc_particles_cuda_setup(struct psc_particles *prts)
 {
   struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
 
-  if (prts->p == 0) {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    cuda_init(rank);
-  }
-
   struct psc_patch *patch = &ppsc->patch[prts->p];
 
   if (!prts->flags) {
