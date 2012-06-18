@@ -819,6 +819,9 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  // FIXME, why does this do anything to the random seed?
+  struct psc_mparticles *mprts = psc_mparticles_get_as(psc->particles, "c", MP_DONT_COPY);
+
   if (psc->prm.seed_by_time) {
     srandom(10*rank + time(NULL));
   } else {
@@ -828,8 +831,7 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
   psc_foreach_patch(psc, p) {
     int ilo[3], ihi[3];
     pml_find_bounds(psc, p, ilo, ihi);
-    struct psc_particles *prts_base = psc_mparticles_get_patch(psc->particles, p);
-    struct psc_particles *prts = psc_particles_get_as(prts_base, "c", MP_DONT_COPY);
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
   
     int i = 0;
     int nr_pop = psc->prm.nr_populations;
@@ -876,9 +878,8 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
     }
     prts->n_part = i;
     assert(prts->n_part == nr_particles_by_patch[p]);
-    psc_particles_put_as(prts, prts_base, 0);
   }
-  psc_mparticles_setup_internals(psc->particles);
+  psc_mparticles_put_as(mprts, psc->particles, 0);
 }
 
 // ----------------------------------------------------------------------
