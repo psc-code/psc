@@ -1,35 +1,42 @@
 
 #include "psc.h"
-#include "psc_particles_private.h"
+#include "psc_particles_mix.h"
 
 #include <stdlib.h>
 #include <assert.h>
 
-const char *psc_topology_get_type(struct psc *psc, int p);
+const char *psc_topology_get_type(struct psc *psc);
+
+// ----------------------------------------------------------------------
+// psc_mparticles_mix_create
+
+static void
+psc_mparticles_mix_create(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_mix *mix = psc_mparticles_mix(mprts);
+
+  mix->sub = psc_mparticles_create(psc_mparticles_comm(mprts));
+  psc_mparticles_add_child(mprts, (struct mrc_obj *) mix->sub);
+  psc_mparticles_set_type(mix->sub, psc_topology_get_type(ppsc));
+}
 
 // ----------------------------------------------------------------------
 // psc_mparticles_mix_setup
 
 static void
-psc_mparticles_mix_setup(struct psc_mparticles *mparticles)
+psc_mparticles_mix_setup(struct psc_mparticles *mprts)
 {
-  assert(mparticles->nr_particles_by_patch);
+  struct psc_mparticles_mix *mix = psc_mparticles_mix(mprts);
 
-  mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
-  for (int p = 0; p < mparticles->nr_patches; p++) {
-    struct psc_particles *prts = psc_particles_create(MPI_COMM_SELF);
-    psc_particles_set_type(prts, psc_topology_get_type(ppsc, p));
-    char name[20]; sprintf(name, "prts%d", p);
-    psc_particles_set_name(prts, name);
-    prts->n_part = mparticles->nr_particles_by_patch[p];
-    prts->flags = mparticles->flags;
-    prts->p = p;
-    psc_particles_setup(prts);
-    mparticles->prts[p] = prts;
+  // FIXME, this is just all way too hacky
+  psc_mparticles_set_domain_nr_particles(mix->sub, mprts->domain,
+					 mprts->nr_particles_by_patch);
+  mprts->nr_particles_by_patch = NULL;
+  psc_mparticles_setup_children(mprts);
+  mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
+  for (int p = 0; p < mprts->nr_patches; p++) {
+    mprts->prts[p] = psc_particles_get(mix->sub->prts[p]);
   }
-
-  free(mparticles->nr_particles_by_patch);
-  mparticles->nr_particles_by_patch = NULL;
 }
 
 // ======================================================================
@@ -37,6 +44,8 @@ psc_mparticles_mix_setup(struct psc_mparticles *mparticles)
   
 struct psc_mparticles_ops psc_mparticles_mix_ops = {
   .name                    = "mix",
+  .size                    = sizeof(struct psc_mparticles_mix),
+  .create                  = psc_mparticles_mix_create,
   .setup                   = psc_mparticles_mix_setup,
 };
 

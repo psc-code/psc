@@ -2,6 +2,7 @@
 #include "psc_bnd_private.h"
 #include "psc_bnd_fld.h"
 #include "ddc_particles.h"
+#include "psc_particles_mix.h"
 #include "psc_particles_single.h"
 #include "psc_particles_cuda.h"
 
@@ -69,15 +70,15 @@ psc_bnd_sub_unsetup(struct psc_bnd *bnd)
 
 // ----------------------------------------------------------------------
 
-static struct psc_bnd_ops *mix_bnd_ops[] = {
-  &psc_bnd_cuda_ops,
-  &psc_bnd_single2_ops,
+static struct psc_mparticles_ops *mix_mprts_ops[] = {
+  &psc_mparticles_cuda_ops,
+  &psc_mparticles_single_ops,
   NULL,
 };
 
-static struct psc_particles_ops *mix_prts_ops[] = {
-  &psc_particles_cuda_ops,
-  &psc_particles_single_ops,
+static struct psc_bnd_ops *mix_bnd_ops[] = {
+  &psc_bnd_cuda_ops,
+  &psc_bnd_single2_ops,
   NULL,
 };
 
@@ -87,6 +88,9 @@ static struct psc_particles_ops *mix_prts_ops[] = {
 static void
 psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts)
 {
+  assert(psc_mparticles_ops(mprts) == &psc_mparticles_mix_ops);
+  struct psc_mparticles_mix *mix = psc_mparticles_mix(mprts);
+
   static int pr_1, pr_2, pr_3;
   if (!pr_1) {
     pr_1 = prof_register("xchg_prep", 1., 0, 0);
@@ -95,17 +99,18 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts
   }
 
   prof_start(pr_1);
-  for (int i = 0; mix_bnd_ops[i]; i++) {
+  for (int i = 0; mix_mprts_ops[i]; i++) {
+    if (psc_mparticles_ops(mix->sub) != mix_mprts_ops[i])
+      continue;
+
     if (mix_bnd_ops[i]->exchange_mprts_prep) {
       // FIXME, not passing the right bnd object
-      mix_bnd_ops[i]->exchange_mprts_prep(bnd, mprts);
+      mix_bnd_ops[i]->exchange_mprts_prep(NULL, mix->sub);
     } else {
       assert(mix_bnd_ops[i]->exchange_particles_prep);
       for (int p = 0; p < mprts->nr_patches; p++) {
-	struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-	if (psc_particles_ops(prts) == mix_prts_ops[i]) {
-	  mix_bnd_ops[i]->exchange_particles_prep(bnd, prts);
-	}
+	struct psc_particles *prts = psc_mparticles_get_patch(mix->sub, p);
+	mix_bnd_ops[i]->exchange_particles_prep(bnd, prts);
       }
     }
   }
@@ -117,17 +122,18 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts
   prof_stop(pr_2);
 
   prof_start(pr_3);
-  for (int i = 0; mix_bnd_ops[i]; i++) {
+  for (int i = 0; mix_mprts_ops[i]; i++) {
+    if (psc_mparticles_ops(mix->sub) != mix_mprts_ops[i])
+      continue;
+
     if (mix_bnd_ops[i]->exchange_mprts_post) {
       // FIXME, not passing the right bnd object
-      mix_bnd_ops[i]->exchange_mprts_post(bnd, mprts);
+      mix_bnd_ops[i]->exchange_mprts_post(NULL, mix->sub);
     } else {
       assert(mix_bnd_ops[i]->exchange_particles_post);
       for (int p = 0; p < mprts->nr_patches; p++) {
-	struct psc_particles *prts = psc_mparticles_get_patch(mprts, p);
-	if (psc_particles_ops(prts) == mix_prts_ops[i]) {
-	  mix_bnd_ops[i]->exchange_particles_post(bnd, prts);
-	}
+	struct psc_particles *prts = psc_mparticles_get_patch(mix->sub, p);
+	mix_bnd_ops[i]->exchange_particles_post(bnd, prts);
       }
     }
   }
