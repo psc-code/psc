@@ -11,7 +11,7 @@ psc_topology_get_type(struct psc *psc)
   int rank;
   MPI_Comm_rank(psc_comm(psc), &rank);
   
-  if (rank % 16 == 15) {
+  if (rank % 16 != 15) {
     return "cuda";
   } else {
     return "single";

@@ -21,8 +21,7 @@ ddcp_particles_realloc(void *_ctx, int p, int new_n_particles)
     particles_single_realloc(prts, new_n_particles);
   } else if (psc_particles_ops(prts) == &psc_particles_cuda_ops) {
     struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
-    assert(!cuda->bnd_prts);
-    cuda->bnd_prts = malloc(new_n_particles * sizeof(*cuda->bnd_prts));
+    cuda->bnd_prts = realloc(cuda->bnd_prts, new_n_particles * sizeof(*cuda->bnd_prts));
   } else {
     assert(0);
   }
@@ -105,7 +104,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts
 
     if (mix_bnd_ops[i]->exchange_mprts_prep) {
       // FIXME, not passing the right bnd object
-      mix_bnd_ops[i]->exchange_mprts_prep(NULL, mix->sub);
+      mix_bnd_ops[i]->exchange_mprts_prep(bnd, mix->sub);
     } else {
       assert(mix_bnd_ops[i]->exchange_particles_prep);
       for (int p = 0; p < mprts->nr_patches; p++) {
@@ -128,7 +127,7 @@ psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts
 
     if (mix_bnd_ops[i]->exchange_mprts_post) {
       // FIXME, not passing the right bnd object
-      mix_bnd_ops[i]->exchange_mprts_post(NULL, mix->sub);
+      mix_bnd_ops[i]->exchange_mprts_post(bnd, mix->sub);
     } else {
       assert(mix_bnd_ops[i]->exchange_particles_post);
       for (int p = 0; p < mprts->nr_patches; p++) {

@@ -39,6 +39,17 @@ psc_mparticles_mix_setup(struct psc_mparticles *mprts)
   }
 }
 
+// ----------------------------------------------------------------------
+// psc_mparticles_mix_setup_internals
+
+static void
+psc_mparticles_mix_setup_internals(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_mix *mix = psc_mparticles_mix(mprts);
+
+  psc_mparticles_setup_internals(mix->sub);
+}
+
 // ======================================================================
 // psc_mparticles: subclass "mix"
   
@@ -47,5 +58,6 @@ struct psc_mparticles_ops psc_mparticles_mix_ops = {
   .size                    = sizeof(struct psc_mparticles_mix),
   .create                  = psc_mparticles_mix_create,
   .setup                   = psc_mparticles_mix_setup,
+  .setup_internals         = psc_mparticles_mix_setup_internals,
 };
 
