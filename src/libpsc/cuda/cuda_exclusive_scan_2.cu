@@ -17,10 +17,6 @@ typedef unsigned int V;
 
 static const int RADIX_BITS = 4;
 
-#define NBLOCKS_X 1
-#define NBLOCKS_Y 8
-#define NBLOCKS_Z 8
-
 struct count_if_equal : public thrust::unary_function<unsigned int, unsigned int> {
   const unsigned int value;
 
@@ -190,6 +186,7 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
   unsigned int nr_total_blocks = mprts_cuda->nr_total_blocks;
+  int *b_mx = mprts_cuda->b_mx;
 
   // OPT, we could do this from the beginning and adapt find_n_send()
   thrust::device_ptr<unsigned int> d_spine_cnts(mprts_cuda->d_bnd_spine_cnts);
@@ -202,13 +199,34 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
   // this should make sure at least those within bounds don't screw anything up
   thrust::fill(d_spine_sums, d_spine_sums + nr_total_blocks * 10, 0);
 
-  ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
-		     NopFunctor<K>,
-		     NopFunctor<K>,
-		     NBLOCKS_Y, NBLOCKS_Z> 
-  <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
-    (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
-     mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  if (b_mx[0] == 1 && b_mx[1] == 8 && b_mx[2] == 8) {
+    ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
+		       NopFunctor<K>,
+		       NopFunctor<K>,
+		       8, 8> 
+      <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
+      (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
+       mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 16 && b_mx[2] == 16) {
+    ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
+		       NopFunctor<K>,
+		       NopFunctor<K>,
+		       16, 16> 
+      <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
+      (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
+       mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 32 && b_mx[2] == 32) {
+    ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
+		       NopFunctor<K>,
+		       NopFunctor<K>,
+		       32, 32> 
+      <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
+      (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
+       mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  } else {
+    mprintf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
+    assert(0);
+  }
   cuda_sync_if_enabled();
 
   cuda_mprts_reorder_send_by_id(mprts);
