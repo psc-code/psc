@@ -276,6 +276,61 @@ vv_1st_get_component_name(struct psc_output_fields_item *item, int m)
   return s;
 }
 
+// ======================================================================
+// T_1st
+
+static void
+do_T_1st_run(int p, fields_t *pf, struct psc_particles *prts)
+{
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+
+  struct psc_patch *patch = &ppsc->patch[p];
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts, n);
+    int mm = particle_kind(part) * 6;
+
+    particle_real_t vxi[3];
+    particle_calc_vxi(part, vxi);
+    particle_real_t *pxi = &part->pxi;
+
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 0, particle_mni(part) * pxi[0] * vxi[0]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 1, particle_mni(part) * pxi[1] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 2, particle_mni(part) * pxi[2] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 3, particle_mni(part) * pxi[0] * vxi[1]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 4, particle_mni(part) * pxi[0] * vxi[2]);
+    DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + 5, particle_mni(part) * pxi[1] * vxi[2]);
+  }
+}
+
+static void
+T_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	   struct psc_particles *prts_base, struct psc_fields *res)
+{
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_T_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
+}
+
+static int
+T_1st_get_nr_components(struct psc_output_fields_item *item)
+{
+  return 6 * ppsc->nr_kinds;
+}
+
+static const char *
+T_1st_get_component_name(struct psc_output_fields_item *item, int m)
+{
+  static const char *names[6] = { "xx", "yy", "zz", "xy", "xz", "yz" };
+  static char s[100];
+  sprintf(s, "T%s_%s", names[m % 6], ppsc->kinds[m / 6].name);
+  return s;
+}
+
+// ======================================================================
+
 #define MAKE_POFI_OPS(WHAT, TYPE)					\
 struct psc_output_fields_item_ops psc_output_fields_item_##WHAT##_##TYPE##_ops = { \
   .name               = #WHAT "_" #TYPE,				\
