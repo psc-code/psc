@@ -25,9 +25,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   psc_mfields_set_type(flds, "c");
   psc_mfields_set_domain(flds, ppsc->mrc_domain);
   int nr_comp;
-  if (ops->get_nr_components) {
-    nr_comp = ops->get_nr_components(item);
-  } if (ops->flags & POFI_BY_KIND) {
+  if (ops->flags & POFI_BY_KIND) {
     nr_comp = ops->nr_comp * ppsc->nr_kinds;
   } else {
     nr_comp = ops->nr_comp;
@@ -37,9 +35,7 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   psc_mfields_setup(flds);
   for (int m = 0; m < nr_comp; m++) {
     const char *comp_name;
-    if (ops->get_component_name) {
-      comp_name = ops->get_component_name(item, m);
-    } else if (ops->flags & POFI_BY_KIND) {
+    if (ops->flags & POFI_BY_KIND) {
       int mm = m % ops->nr_comp;
       int k = m / ops->nr_comp;
       char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
