@@ -32,17 +32,3 @@ n_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
 }
 
-static int
-n_get_nr_components(struct psc_output_fields_item *item)
-{
-  return ppsc->nr_kinds;
-}
-
-static const char *
-n_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static char s[100];
-  sprintf(s, "n_%s", ppsc->kinds[m].name);
-  return s;
-}
-

@@ -2,6 +2,8 @@
 #include "psc_output_fields_item_private.h"
 #include "psc_bnd.h"
 
+#include <string.h>
+
 // ----------------------------------------------------------------------
 // psc_output_fields_item_set_psc_bnd
 
@@ -25,6 +27,8 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   int nr_comp;
   if (ops->get_nr_components) {
     nr_comp = ops->get_nr_components(item);
+  } if (ops->flags & POFI_BY_KIND) {
+    nr_comp = ops->nr_comp * ppsc->nr_kinds;
   } else {
     nr_comp = ops->nr_comp;
   }
@@ -35,6 +39,12 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
     const char *comp_name;
     if (ops->get_component_name) {
       comp_name = ops->get_component_name(item, m);
+    } else if (ops->flags & POFI_BY_KIND) {
+      int mm = m % ops->nr_comp;
+      int k = m / ops->nr_comp;
+      char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
+      sprintf(s, "%s_%s", ops->fld_names[mm], ppsc->kinds[k].name);
+      comp_name = s;
     } else {
       comp_name = ops->fld_names[m];
     }

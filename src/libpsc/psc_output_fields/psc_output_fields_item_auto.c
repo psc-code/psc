@@ -82,7 +82,7 @@ struct psc_output_fields_item_ops psc_output_fields_item_##what##_ops = { \
   .flags              = flgs,						\
 };
 
-MAKE_FWD(n_1st, POFI_ADD_GHOSTS)
-MAKE_FWD(v_1st, POFI_ADD_GHOSTS)
-MAKE_FWD(vv_1st, POFI_ADD_GHOSTS)
+MAKE_FWD(n_1st, POFI_ADD_GHOSTS | POFI_BY_KIND) // FIXME, flags duplicated
+MAKE_FWD(v_1st, POFI_ADD_GHOSTS | POFI_BY_KIND)
+MAKE_FWD(vv_1st, POFI_ADD_GHOSTS | POFI_BY_KIND)
 

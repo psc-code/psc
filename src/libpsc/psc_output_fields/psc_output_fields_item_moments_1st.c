@@ -118,20 +118,6 @@ n_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
-static int
-n_1st_get_nr_components(struct psc_output_fields_item *item)
-{
-  return ppsc->nr_kinds;
-}
-
-static const char *
-n_1st_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static char s[100];
-  sprintf(s, "n_%s", ppsc->kinds[m].name);
-  return s;
-}
-
 // ======================================================================
 // v_1st
 
@@ -167,20 +153,6 @@ v_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
-static int
-v_1st_get_nr_components(struct psc_output_fields_item *item)
-{
-  return 3 * ppsc->nr_kinds;
-}
-
-static const char *
-v_1st_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static char s[100];
-  sprintf(s, "v%c_%s", 'x' + m % 3, ppsc->kinds[m / 3].name);
-  return s;
-}
-
 // ======================================================================
 // p_1st
 
@@ -212,20 +184,6 @@ p_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   do_p_1st_run(res->p, res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   add_ghosts_boundary(res, 0, res->nr_comp);
-}
-
-static int
-p_1st_get_nr_components(struct psc_output_fields_item *item)
-{
-  return 3 * ppsc->nr_kinds;
-}
-
-static const char *
-p_1st_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static char s[100];
-  sprintf(s, "p%c_%s", 'x' + m % 3, ppsc->kinds[m / 3].name);
-  return s;
 }
 
 // ======================================================================
@@ -260,20 +218,6 @@ vv_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   do_vv_1st_run(res->p, res, prts);
   psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
   add_ghosts_boundary(res, 0, res->nr_comp);
-}
-
-static int
-vv_1st_get_nr_components(struct psc_output_fields_item *item)
-{
-  return 3 * ppsc->nr_kinds;
-}
-
-static const char *
-vv_1st_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static char s[100];
-  sprintf(s, "v%cv%c_%s", 'x' + m % 3, 'x' + m % 3, ppsc->kinds[m / 3].name);
-  return s;
 }
 
 // ======================================================================
@@ -314,29 +258,47 @@ T_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
   add_ghosts_boundary(res, 0, res->nr_comp);
 }
 
-static int
-T_1st_get_nr_components(struct psc_output_fields_item *item)
-{
-  return 6 * ppsc->nr_kinds;
-}
-
-static const char *
-T_1st_get_component_name(struct psc_output_fields_item *item, int m)
-{
-  static const char *names[6] = { "xx", "yy", "zz", "xy", "xz", "yz" };
-  static char s[100];
-  sprintf(s, "T%s_%s", names[m % 6], ppsc->kinds[m / 6].name);
-  return s;
-}
-
 // ======================================================================
 
-#define MAKE_POFI_OPS(WHAT, TYPE)					\
-struct psc_output_fields_item_ops psc_output_fields_item_##WHAT##_##TYPE##_ops = { \
-  .name               = #WHAT "_" #TYPE,				\
-  .get_component_name = WHAT##_get_component_name,			\
-  .get_nr_components  = WHAT##_get_nr_components,			\
-  .run                = WHAT##_run,					\
-  .flags              = POFI_ADD_GHOSTS,				\
-}
+#define MAKE_POFI_OPS(TYPE)						\
+struct psc_output_fields_item_ops psc_output_fields_item_n_1st_##TYPE##_ops = { \
+  .name               = "n_1st_" #TYPE,					\
+  .nr_comp	      = 1,						\
+  .fld_names	      = { "n" },					\
+  .run                = n_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
+struct psc_output_fields_item_ops psc_output_fields_item_v_1st_##TYPE##_ops = { \
+  .name               = "v_1st_" #TYPE,					\
+  .nr_comp	      = 3,						\
+  .fld_names	      = { "vx", "vy", "vz" },				\
+  .run                = v_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
+struct psc_output_fields_item_ops psc_output_fields_item_p_1st_##TYPE##_ops = { \
+  .name               = "p_1st_" #TYPE,					\
+  .nr_comp	      = 3,						\
+  .fld_names	      = { "px", "py", "pz" },				\
+  .run                = p_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
+struct psc_output_fields_item_ops psc_output_fields_item_vv_1st_##TYPE##_ops = { \
+  .name               = "vv_1st_" #TYPE,				\
+  .nr_comp	      = 3,						\
+  .fld_names	      = { "vxvx", "vyvy", "vzvz" },			\
+  .run                = vv_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
+struct psc_output_fields_item_ops psc_output_fields_item_T_1st_##TYPE##_ops = { \
+  .name               = "T_1st_" #TYPE,					\
+  .nr_comp	      = 6,						\
+  .fld_names	      = { "Txx", "Tyy", "Tzz", "Txy", "Txz", "Tyz" },	\
+  .run                = T_1st_run,					\
+  .flags              = POFI_ADD_GHOSTS | POFI_BY_KIND,			\
+};									\
+									\
 
