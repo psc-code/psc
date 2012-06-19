@@ -182,6 +182,53 @@ v_1st_get_component_name(struct psc_output_fields_item *item, int m)
 }
 
 // ======================================================================
+// p_1st
+
+static void
+do_p_1st_run(int p, fields_t *pf, struct psc_particles *prts)
+{
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+
+  struct psc_patch *patch = &ppsc->patch[p];
+  for (int n = 0; n < prts->n_part; n++) {
+    particle_t *part = particles_get_one(prts
+, n);
+    int mm = particle_kind(part) * 3;
+    particle_real_t *pxi = &part->pxi;
+
+    for (int m = 0; m < 3; m++) {
+      DEPOSIT_TO_GRID_1ST_CC(part, pf, mm + m, particle_mni(part) * pxi[m]);
+    }
+  }
+}
+
+static void
+p_1st_run(struct psc_output_fields_item *item, struct psc_fields *flds,
+	  struct psc_particles *prts_base, struct psc_fields *res)
+{
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
+  psc_fields_zero_range(res, 0, res->nr_comp);
+  do_p_1st_run(res->p, res, prts);
+  psc_particles_put_as(prts, prts_base, MP_DONT_COPY);
+  add_ghosts_boundary(res, 0, res->nr_comp);
+}
+
+static int
+p_1st_get_nr_components(struct psc_output_fields_item *item)
+{
+  return 3 * ppsc->nr_kinds;
+}
+
+static const char *
+p_1st_get_component_name(struct psc_output_fields_item *item, int m)
+{
+  static char s[100];
+  sprintf(s, "p%c_%s", 'x' + m % 3, ppsc->kinds[m / 3].name);
+  return s;
+}
+
+// ======================================================================
 // vv_1st
 
 static void

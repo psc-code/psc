@@ -7,5 +7,6 @@
 
 MAKE_POFI_OPS(n_1st, c);
 MAKE_POFI_OPS(v_1st, c);
+MAKE_POFI_OPS(p_1st, c);
 MAKE_POFI_OPS(vv_1st, c);
 

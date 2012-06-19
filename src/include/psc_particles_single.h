@@ -54,11 +54,18 @@ particles_single_get_one(struct psc_particles *prts, int n)
       rv;							\
     })
 
+#define particle_single_mni(p) ({				\
+      particle_single_real_t rv;				\
+      rv = ppsc->kinds[p->kind].m;				\
+      rv;							\
+    })
+
 #define particle_single_wni(p) ({				\
       particle_single_real_t rv;				\
       rv = p->qni_wni / ppsc->kinds[p->kind].q;			\
       rv;							\
     })
+
 
 static inline particle_single_real_t
 particle_single_qni_wni(particle_single_t *p)

@@ -15,6 +15,7 @@ typedef mparticles_c_t mparticles_t;
 #define particle_qni_div_mni        particle_c_qni_div_mni
 #define particle_qni_wni            particle_c_qni_wni
 #define particle_qni                particle_c_qni
+#define particle_mni                particle_c_mni
 #define particle_wni                particle_c_wni
 #define particle_kind               particle_c_kind
 #define particle_get_relative_pos   particle_c_get_relative_pos

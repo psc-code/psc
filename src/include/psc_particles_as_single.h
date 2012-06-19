@@ -15,6 +15,7 @@ typedef mparticles_single_t mparticles_t;
 #define particle_qni_div_mni        particle_single_qni_div_mni
 #define particle_qni_wni            particle_single_qni_wni
 #define particle_qni                particle_single_qni
+#define particle_mni                particle_single_mni
 #define particle_wni                particle_single_wni
 #define particle_kind               particle_single_kind
 #define particle_get_relative_pos   particle_single_get_relative_pos
