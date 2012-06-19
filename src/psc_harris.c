@@ -159,6 +159,8 @@ psc_harris_init_field(struct psc *psc, double x[3], int m)
 
 // ----------------------------------------------------------------------
 // psc_harris_init_npt
+//
+// jx = n e (vi - ve) = 1/cosh^2 (2 (TTi + TTe) / BB / LLL
 
 static void
 psc_harris_init_npt(struct psc *psc, int pop, double x[3],
@@ -193,7 +195,7 @@ psc_harris_init_npt(struct psc *psc, int pop, double x[3],
     npt->n = 1. / sqr(cosh(x[1] / LLL));
     npt->q = -1.;
     npt->m = 1.;
-    npt->p[0] = 2. * TTe / BB / LLL;
+    npt->p[0] = -2. * TTe / BB / LLL;
     npt->T[0] = TTe;
     npt->kind = KIND_ELECTRON;
     break;
