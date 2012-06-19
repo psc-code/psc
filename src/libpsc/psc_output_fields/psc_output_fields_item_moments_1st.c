@@ -229,3 +229,12 @@ vv_1st_get_component_name(struct psc_output_fields_item *item, int m)
   return s;
 }
 
+#define MAKE_POFI_OPS(WHAT, TYPE)					\
+struct psc_output_fields_item_ops psc_output_fields_item_##WHAT##_##TYPE##_ops = { \
+  .name               = #WHAT "_" #TYPE,				\
+  .get_component_name = WHAT##_get_component_name,			\
+  .get_nr_components  = WHAT##_get_nr_components,			\
+  .run                = WHAT##_run,					\
+  .flags              = POFI_ADD_GHOSTS,				\
+}
+
