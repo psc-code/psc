@@ -161,8 +161,14 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
 	  // computational bnd
 	  dir[d] = 0;
 	}
-	assert(xi[d] >= 0.f);
-	assert(xi[d] <= xm[d]);
+	if (!drop) {
+	  if (xi[d] < 0.f && xi[d] > -1e-6f) {
+	    mprintf("d %d xi %g\n", d, xi[d]);
+	    xi[d] = 0.f;
+	  }
+	  assert(xi[d] >= 0.f);
+	  assert(xi[d] <= xm[d]);
+	}
       }
       if (!drop) {
 	if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
