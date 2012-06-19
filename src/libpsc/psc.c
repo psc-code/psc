@@ -566,6 +566,10 @@ _psc_setup(struct psc *psc)
   psc_setup_fortran(psc);
 
   psc_setup_children(psc);
+
+  // this is in some sense part of setup_fields(), but can't be done until the children
+  // are set up, for finding ghosts
+  psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
 
 // ----------------------------------------------------------------------
@@ -926,7 +930,6 @@ psc_setup_fields_default(struct psc *psc)
     } foreach_3d_g_end;
     psc_fields_put_as(pf, pf_base, JXI, HX + 3);
   }
-  psc_push_particles_calc_j(psc->push_particles, psc->particles, psc->flds);
 }
 
 

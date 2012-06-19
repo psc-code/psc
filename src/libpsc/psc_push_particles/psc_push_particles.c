@@ -1,6 +1,10 @@
 
 #include "psc_push_particles_private.h"
 
+#include "psc_push_fields_private.h"
+#include "psc_bnd_fields.h"
+#include "psc_bnd.h"
+
 #include <mrc_profile.h>
 
 // ======================================================================
@@ -94,6 +98,8 @@ psc_push_particles_calc_j(struct psc_push_particles *push,
 			  mparticles_base_t *particles, mfields_base_t *mflds)
 {
   struct psc_push_particles_ops *ops = psc_push_particles_ops(push);
+
+  bool have_calc_j = false;
   int *im = ppsc->domain.gdims;
   for (int p = 0; p < particles->nr_patches; p++) {
     struct psc_particles *prts = psc_mparticles_get_patch(particles, p);
@@ -101,26 +107,38 @@ psc_push_particles_calc_j(struct psc_push_particles *push,
     if (im[0] > 1 && im[1] > 1 && im[2] > 1) { // xyz
       if (ops->calc_j_xyz) {
 	ops->calc_j_xyz(push, prts, flds);
+	have_calc_j = true;
       }
     } else if (im[0] > 1 && im[2] > 1) { // xz
       if (ops->calc_j_xz) {
 	ops->calc_j_xz(push, prts, flds);
+	have_calc_j = true;
       }
     } else if (im[0] > 1 && im[1] > 1) { // xy
       if (ops->calc_j_xy) {
 	ops->calc_j_xy(push, prts, flds);
+	have_calc_j = true;
       }
     } else if (im[1] > 1 && im[2] > 1) { // yz
       if (ops->calc_j_yz) {
 	ops->calc_j_yz(push, prts, flds);
+	have_calc_j = true;
       }
     } else if (im[2] > 1) { // z
       if (ops->calc_j_z) {
 	ops->calc_j_z(push, prts, flds);
+	have_calc_j = true;
       }
     } else {
       assert(0);
     }
+  }
+
+  if (have_calc_j) {
+    // add and fill ghost for J
+    psc_bnd_fields_add_ghosts_J(ppsc->push_fields->bnd_fields, mflds);
+    psc_bnd_add_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
+    psc_bnd_fill_ghosts(ppsc->bnd, mflds, JXI, JXI + 3);
   }
 }
 
