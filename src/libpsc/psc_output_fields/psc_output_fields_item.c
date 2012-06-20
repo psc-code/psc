@@ -34,17 +34,15 @@ psc_output_fields_item_create_mfields(struct psc_output_fields_item *item)
   psc_mfields_set_param_int3(flds, "ibn", ppsc->ibn);
   psc_mfields_setup(flds);
   for (int m = 0; m < nr_comp; m++) {
-    const char *comp_name;
     if (ops->flags & POFI_BY_KIND) {
       int mm = m % ops->nr_comp;
       int k = m / ops->nr_comp;
       char s[strlen(ops->fld_names[mm]) + strlen(ppsc->kinds[k].name) + 2];
       sprintf(s, "%s_%s", ops->fld_names[mm], ppsc->kinds[k].name);
-      comp_name = s;
+      psc_mfields_set_comp_name(flds, m, s);
     } else {
-      comp_name = ops->fld_names[m];
+      psc_mfields_set_comp_name(flds, m, ops->fld_names[m]);
     }
-    psc_mfields_set_comp_name(flds, m, comp_name);
   }
 
   return flds;
