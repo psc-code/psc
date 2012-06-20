@@ -75,7 +75,7 @@ psc_bnd_fld_sub_create(struct psc_bnd *bnd)
   struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_funcs(ddc, &ddc_funcs);
   mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 12);
+  mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
   mrc_ddc_setup(ddc);
   bnd->ddc = ddc;
