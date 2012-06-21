@@ -61,6 +61,9 @@ psc_push_particles_run(struct psc_push_particles *push,
     } else if (im[2] > 1) { // z
       assert(ops->push_a_z);
       ops->push_a_z(push, prts, flds);
+    } else if (im[1] > 1) { // y
+      assert(ops->push_a_y);
+      ops->push_a_y(push, prts, flds);
     } else {
       assert(0);
     }
@@ -127,6 +130,11 @@ psc_push_particles_calc_j(struct psc_push_particles *push,
     } else if (im[2] > 1) { // z
       if (ops->calc_j_z) {
 	ops->calc_j_z(push, prts, flds);
+	have_calc_j = true;
+      }
+    } else if (im[1] > 1) { // y
+      if (ops->calc_j_y) {
+	ops->calc_j_y(push, prts, flds);
 	have_calc_j = true;
       }
     } else {
