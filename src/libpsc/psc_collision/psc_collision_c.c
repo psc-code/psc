@@ -3,10 +3,11 @@
 #include "psc_output_fields_item_private.h"
 
 #include <psc_fields_c.h>
+#include <psc_particles_as_single.h>
 #include <mrc_profile.h>
 #include <mrc_params.h>
 
-struct psc_collision_c {
+struct psc_collision_sub {
   // parameters
   int every;
   double nu;
@@ -15,10 +16,10 @@ struct psc_collision_c {
   struct psc_mfields *mflds;
 };
 
-#define psc_collision_c(o) mrc_to_subobj(o, struct psc_collision_c)
+#define psc_collision_sub(o) mrc_to_subobj(o, struct psc_collision_sub)
 
-#define VAR(x) (void *)offsetof(struct psc_collision_c, x)
-static struct param psc_collision_c_descr[] = {
+#define VAR(x) (void *)offsetof(struct psc_collision_sub, x)
+static struct param psc_collision_sub_descr[] = {
   { "every"         , VAR(every)       , PARAM_INT(1)     },
   { "nu"            , VAR(nu)          , PARAM_DOUBLE(-1.) },
   {},
@@ -35,7 +36,7 @@ enum {
 };
 
 struct psc_collision_stats {
-  particle_c_real_t s[NR_STATS];
+  particle_real_t s[NR_STATS];
 };
 
 
@@ -45,7 +46,7 @@ struct psc_collision_stats {
 static int
 compare(const void *_a, const void *_b)
 {
-  const particle_c_real_t *a = _a, *b = _b;
+  const particle_real_t *a = _a, *b = _b;
 
   if (*a < *b) {
     return -1;
@@ -57,7 +58,7 @@ compare(const void *_a, const void *_b)
 }
 
 static void
-calc_stats(struct psc_collision_stats *stats, particle_c_real_t *nudts, int cnt)
+calc_stats(struct psc_collision_stats *stats, particle_real_t *nudts, int cnt)
 {
   qsort(nudts, cnt, sizeof(*nudts), compare);
   stats->s[STATS_NLARGE] = 0;
@@ -83,10 +84,10 @@ calc_stats(struct psc_collision_stats *stats, particle_c_real_t *nudts, int cnt)
 // find_cell_index
 
 static inline int
-find_cell_index(particle_c_t *prt, particle_c_real_t *dxi, int ldims[3])
+find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 {
   int pos[3];
-  particle_c_real_t *xi = &prt->xi;
+  particle_real_t *xi = &prt->xi;
   for (int d = 0; d < 3; d++) {
     pos[d] = particle_c_real_fint(xi[d] * dxi[d]);
     assert(pos[d] >= 0 && pos[d] < ldims[d]);
@@ -100,12 +101,12 @@ find_cell_index(particle_c_t *prt, particle_c_real_t *dxi, int ldims[3])
 static void
 find_cell_offsets(int offsets[], struct psc_particles *prts)
 {
-  particle_c_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
   int *ldims = ppsc->patch[prts->p].ldims;
   int last = 0;
   offsets[last] = 0;
   for (int n = 0; n < prts->n_part; n++) {
-    particle_c_t *prt = particles_c_get_one(prts, n);
+    particle_t *prt = particles_get_one(prts, n);
     int cell_index = find_cell_index(prt, dxi, ldims);
     assert(cell_index >= last);
     while (last < cell_index) {
@@ -128,9 +129,9 @@ randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
     int n_partner = random() % (nn - n);
     if (n != n_partner) {
       // swap n, n_partner
-      particle_c_t tmp = *particles_c_get_one(prts, n_start + n);
-      *particles_c_get_one(prts, n_start + n) = *particles_c_get_one(prts, n_start + n_partner);    
-      *particles_c_get_one(prts, n_start + n_partner) = tmp;
+      particle_t tmp = *particles_get_one(prts, n_start + n);
+      *particles_get_one(prts, n_start + n) = *particles_get_one(prts, n_start + n_partner);    
+      *particles_get_one(prts, n_start + n_partner) = tmp;
     }
   }
 }
@@ -138,51 +139,51 @@ randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
 // ----------------------------------------------------------------------
 // bc
 
-static particle_c_real_t
-bc(struct psc_particles *prts, particle_c_real_t nudt1, int n1, int n2)
+static particle_real_t
+bc(struct psc_particles *prts, particle_real_t nudt1, int n1, int n2)
 {
-  particle_c_real_t nudt;
+  particle_real_t nudt;
     
-  particle_c_real_t pn1,pn2,pn3,pn4;
-  particle_c_real_t p01,p02,p03,p04,pc01,pc02,pc03,pc04;
-  particle_c_real_t px1,py1,pz1,pcx1,pcy1,pcz1;
-  particle_c_real_t px2,py2,pz2,pcx2,pcy2,pcz2;
-  particle_c_real_t px3,py3,pz3,pcx3,pcy3,pcz3;
-  particle_c_real_t px4,py4,pz4,pcx4,pcy4,pcz4;
-  particle_c_real_t h1,h2,h3,h4,ppc,qqc,ss;
+  particle_real_t pn1,pn2,pn3,pn4;
+  particle_real_t p01,p02,p03,p04,pc01,pc02,pc03,pc04;
+  particle_real_t px1,py1,pz1,pcx1,pcy1,pcz1;
+  particle_real_t px2,py2,pz2,pcx2,pcy2,pcz2;
+  particle_real_t px3,py3,pz3,pcx3,pcy3,pcz3;
+  particle_real_t px4,py4,pz4,pcx4,pcy4,pcz4;
+  particle_real_t h1,h2,h3,h4,ppc,qqc,ss;
   
-  particle_c_real_t m1,m2,m3,m4;
-  particle_c_real_t q1,q2,q3,q4;
-//  particle_c_real_t w1,w2,w3,w4,ww;
-  particle_c_real_t vcx,vcy,vcz;
-  particle_c_real_t bet,gam;
+  particle_real_t m1,m2,m3,m4;
+  particle_real_t q1,q2,q3,q4;
+//  particle_real_t w1,w2,w3,w4,ww;
+  particle_real_t vcx,vcy,vcz;
+  particle_real_t bet,gam;
   
-  particle_c_real_t psi,nu;
-  particle_c_real_t nx,ny,nz,nnorm;
-  particle_c_real_t nn1,nx1,ny1,nz1;
-  particle_c_real_t nn2,nx2,ny2,nz2;
-  particle_c_real_t nn3,nx3,ny3,nz3;
-  particle_c_real_t vcx1,vcy1,vcz1;
-  particle_c_real_t vcx2,vcy2,vcz2;
-  particle_c_real_t vcn,vcxr,vcyr,vczr,vcr;
-  particle_c_real_t m12,q12;
-  particle_c_real_t ran1,ran2;
+  particle_real_t psi,nu;
+  particle_real_t nx,ny,nz,nnorm;
+  particle_real_t nn1,nx1,ny1,nz1;
+  particle_real_t nn2,nx2,ny2,nz2;
+  particle_real_t nn3,nx3,ny3,nz3;
+  particle_real_t vcx1,vcy1,vcz1;
+  particle_real_t vcx2,vcy2,vcz2;
+  particle_real_t vcn,vcxr,vcyr,vczr,vcr;
+  particle_real_t m12,q12;
+  particle_real_t ran1,ran2;
     
-  particle_c_t *prt1 = particles_c_get_one(prts, n1);
-  particle_c_t *prt2 = particles_c_get_one(prts, n2);
+  particle_t *prt1 = particles_get_one(prts, n1);
+  particle_t *prt2 = particles_get_one(prts, n2);
   
   
   px1=prt1->pxi;
   py1=prt1->pyi;
   pz1=prt1->pzi;
-  q1 =prt1->qni;
-  m1 =prt1->mni;
+  q1 =particle_qni(prt1);
+  m1 =particle_mni(prt1);
 
   px2=prt2->pxi;
   py2=prt2->pyi;
   pz2=prt2->pzi;
-  q2 =prt2->qni;
-  m2 =prt2->mni;
+  q2 =particle_qni(prt2);
+  m2 =particle_mni(prt2);
 
   if (q1*q2 == 0.) {
     return 0.; // no Coulomb collisions with neutrals
@@ -400,7 +401,7 @@ collide_in_cell(struct psc_collision *collision,
 		struct psc_particles *prts, int n_start, int n_end,
 		struct psc_collision_stats *stats)
 {
-  struct psc_collision_c *coll = psc_collision_c(collision);
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   int nn = n_end - n_start;
   
@@ -410,10 +411,10 @@ collide_in_cell(struct psc_collision *collision,
   }
 
   // all particles need to have same weight!
-  particle_c_real_t wni = particles_c_get_one(prts, n_start)->wni;
-  particle_c_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
+  particle_real_t wni = particle_wni(particles_get_one(prts, n_start));
+  particle_real_t nudt1 = wni / ppsc->prm.nicell * nn * coll->every * ppsc->dt * coll->nu;
 
-  particle_c_real_t *nudts = malloc((nn / 2 + 2) * sizeof(*nudts));
+  particle_real_t *nudts = malloc((nn / 2 + 2) * sizeof(*nudts));
   int cnt = 0;
 
   if (nn % 2 == 1) { // odd # of particles: do 3-collision
@@ -431,12 +432,12 @@ collide_in_cell(struct psc_collision *collision,
 }
 
 // ----------------------------------------------------------------------
-// psc_collision_c_setup
+// psc_collision_sub_setup
 
 static void
-psc_collision_c_setup(struct psc_collision *collision)
+psc_collision_sub_setup(struct psc_collision *collision)
 {
-  struct psc_collision_c *coll = psc_collision_c(collision);
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   coll->mflds = psc_mfields_create(psc_collision_comm(collision));
   psc_mfields_set_type(coll->mflds, "c");
@@ -453,24 +454,24 @@ psc_collision_c_setup(struct psc_collision *collision)
 }
 
 // ----------------------------------------------------------------------
-// psc_collision_c_destroy
+// psc_collision_sub_destroy
 
 static void
-psc_collision_c_destroy(struct psc_collision *collision)
+psc_collision_sub_destroy(struct psc_collision *collision)
 {
-  struct psc_collision_c *coll = psc_collision_c(collision);
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   psc_mfields_destroy(coll->mflds);
 }
 
 // ----------------------------------------------------------------------
-// psc_collision_c_run
+// psc_collision_sub_run
 
 static void
-psc_collision_c_run(struct psc_collision *collision,
-		    struct psc_particles *prts_base)
+psc_collision_sub_run(struct psc_collision *collision,
+		      struct psc_particles *prts_base)
 {
-  struct psc_collision_c *coll = psc_collision_c(collision);
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   static int pr;
   if (!pr) {
@@ -527,11 +528,11 @@ psc_collision_c_run(struct psc_collision *collision,
 
 struct psc_collision_ops psc_collision_c_ops = {
   .name                  = "c",
-  .size                  = sizeof(struct psc_collision_c),
-  .param_descr           = psc_collision_c_descr,
-  .setup                 = psc_collision_c_setup,
-  .destroy               = psc_collision_c_destroy,
-  .run                   = psc_collision_c_run,
+  .size                  = sizeof(struct psc_collision_sub),
+  .param_descr           = psc_collision_sub_descr,
+  .setup                 = psc_collision_sub_setup,
+  .destroy               = psc_collision_sub_destroy,
+  .run                   = psc_collision_sub_run,
 };
 
 // ======================================================================
@@ -543,7 +544,7 @@ copy_stats(struct psc_output_fields_item *item, struct psc_fields *flds_base,
   struct psc_collision *collision = ppsc->collision;
   assert(psc_collision_ops(collision) == &psc_collision_c_ops);
 
-  struct psc_collision_c *coll = psc_collision_c(collision);
+  struct psc_collision_sub *coll = psc_collision_sub(collision);
 
   // FIXME, copy could be avoided (?)
   for (int m = 0; m < NR_STATS; m++) {

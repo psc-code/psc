@@ -2,7 +2,7 @@
 #include <psc.h>
 #include <psc_push_particles.h>
 #include <psc_push_fields.h>
-#include <psc_sort.h>
+#include <psc_collision.h>
 #include <psc_balance.h>
 
 #include <mrc_params.h>
@@ -30,6 +30,7 @@ struct psc_harris {
   double mi_over_me;
   double lambda; // in d_i
   double pert;
+  double eta0;
 
   // normalized quantities
   double LLL; // lambda in d_e
@@ -49,6 +50,7 @@ static struct param psc_harris_descr[] = {
   { "Ti"            , VAR(Ti)              , PARAM_DOUBLE(0.0625) },
   { "lambda"        , VAR(lambda)          , PARAM_DOUBLE(2.)     },
   { "pert"          , VAR(pert)            , PARAM_DOUBLE(.025)   },
+  { "eta0"          , VAR(eta0)            , PARAM_DOUBLE(.0)     },
   {},
 };
 #undef VAR
@@ -112,6 +114,13 @@ psc_harris_setup(struct psc *psc)
   psc->kinds[KIND_ION     ].m = harris->mi_over_me;
   psc->kinds[KIND_ELECTRON].T = harris->Te;
   psc->kinds[KIND_ELECTRON].T = harris->Ti;
+
+  if (harris->eta0 > 0.) {
+    double nu = harris->eta0 * harris->B0 * 3.76 * pow(harris->Te, 1.5);
+    psc_collision_set_type(psc->collision, "c");
+    psc_collision_set_param_double(psc->collision, "nu", nu);
+  }
+
 
   // initializes fields, particles, etc.
   psc_setup_super(psc);
