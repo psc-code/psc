@@ -11,8 +11,9 @@
 void
 psc_particles_reorder(struct psc_particles *prts)
 {
-  assert(psc_particles_ops(prts)->reorder);
-  psc_particles_ops(prts)->reorder(prts);
+  if (psc_particles_ops(prts)->reorder) {
+    psc_particles_ops(prts)->reorder(prts);
+  }
 }
 
 // ======================================================================
