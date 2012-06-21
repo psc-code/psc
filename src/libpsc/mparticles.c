@@ -60,7 +60,6 @@ _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
   const char *path = psc_mparticles_name(mparticles);
   mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mparticles->domain);
-  mrc_io_write_attr_int(io, path, "nr_patches", mparticles->nr_patches);
   mrc_io_write_attr_int(io, path, "flags", mparticles->flags);
   
   for (int p = 0; p < mparticles->nr_patches; p++) {
@@ -74,7 +73,7 @@ _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
   const char *path = psc_mparticles_name(mparticles);
   mparticles->domain = (struct mrc_domain *)
     mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
-  mrc_io_read_attr_int(io, path, "nr_patches", &mparticles->nr_patches);
+  mrc_domain_get_patches(mparticles->domain, &mparticles->nr_patches);
   mrc_io_read_attr_int(io, path, "flags", (int *) &mparticles->flags);
 
   mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
