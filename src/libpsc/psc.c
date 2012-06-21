@@ -740,14 +740,15 @@ psc_setup_partition(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {
-	      .kind = kind < psc->nr_kinds ? kind : -1,
-	      .q    = psc->kinds[kind].q,
-	      .m    = psc->kinds[kind].m,
-	      .n    = psc->kinds[kind].n,
-	      .T[0] = psc->kinds[kind].T,
-	      .T[1] = psc->kinds[kind].T,
-	      .T[2] = psc->kinds[kind].T,
+	    struct psc_particle_npt npt = {};
+	    if (kind < psc->nr_kinds) {
+	      npt.kind = kind;
+	      npt.q    = psc->kinds[kind].q;
+	      npt.m    = psc->kinds[kind].m;
+	      npt.n    = psc->kinds[kind].n;
+	      npt.T[0] = psc->kinds[kind].T;
+	      npt.T[1] = psc->kinds[kind].T;
+	      npt.T[2] = psc->kinds[kind].T;
 	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 
@@ -843,14 +844,15 @@ psc_setup_particles(struct psc *psc, int *nr_particles_by_patch,
 	    if (psc->domain.gdims[1] == 1) xx[1] = CRDY(p, jy);
 	    if (psc->domain.gdims[2] == 1) xx[2] = CRDZ(p, jz);
 
-	    struct psc_particle_npt npt = {
-	      .kind = kind < psc->nr_kinds ? kind : -1,
-	      .q    = psc->kinds[kind].q,
-	      .m    = psc->kinds[kind].m,
-	      .n    = psc->kinds[kind].n,
-	      .T[0] = psc->kinds[kind].T,
-	      .T[1] = psc->kinds[kind].T,
-	      .T[2] = psc->kinds[kind].T,
+	    struct psc_particle_npt npt = {};
+	    if (kind < psc->nr_kinds) {
+	      npt.kind = kind;
+	      npt.q    = psc->kinds[kind].q;
+	      npt.m    = psc->kinds[kind].m;
+	      npt.n    = psc->kinds[kind].n;
+	      npt.T[0] = psc->kinds[kind].T;
+	      npt.T[1] = psc->kinds[kind].T;
+	      npt.T[2] = psc->kinds[kind].T;
 	    };
 	    psc_ops(psc)->init_npt(psc, kind, xx, &npt);
 	    
