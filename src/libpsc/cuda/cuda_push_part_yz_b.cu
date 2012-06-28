@@ -55,7 +55,7 @@ push_part_yz_b_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
   // x^n, p^n -> x^(n+0.5), p^n
   
   calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * d_dt);
+  push_xi(&p, vxi, .5f * d_consts.dt);
 
   real __hh[2*3];
   int l[3];
@@ -92,7 +92,7 @@ push_part_yz_b_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
 
   calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * d_dt);
+  push_xi(&p, vxi, .5f * d_consts.dt);
 
   STORE_PARTICLE_POS(p, d_particles, n);
   STORE_PARTICLE_MOM(p, d_particles, n);
@@ -108,7 +108,7 @@ push_part_yz_b3_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
   // x^n, p^n -> x^(n+0.5), p^n
   
   calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * d_dt);
+  push_xi(&p, vxi, .5f * d_consts.dt);
 
   int l[3];
   find_idx_off(p.xi, l, h, real(-.5));
@@ -141,7 +141,7 @@ push_part_yz_b3_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
 
   calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * d_dt);
+  push_xi(&p, vxi, .5f * d_consts.dt);
 
   STORE_PARTICLE_POS(p, d_particles, n);
   STORE_PARTICLE_MOM(p, d_particles, n);

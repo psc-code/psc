@@ -111,6 +111,8 @@ psc_push_particles_init()
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_1st_ops);
   mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_1vb_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_2x2_1vb_ops);
+  mrc_class_register_subclass(&mrc_class_psc_push_particles, &psc_push_particles_cuda_8x8_1vb_ops);
 #endif
 }
 

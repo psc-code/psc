@@ -23,7 +23,7 @@ push_part_yz_a_one(int n, particles_cuda_dev_t d_particles, real *d_flds)
   // x^n, p^n -> x^(n+0.5), p^n
   
   calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * d_dt);
+  push_xi(&p, vxi, .5f * d_consts.dt);
 
   STORE_PARTICLE_POS(p, d_particles, n);
   //  STORE_PARTICLE_MOM(p, d_particles, n);

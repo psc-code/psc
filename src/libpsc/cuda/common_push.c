@@ -54,7 +54,7 @@ __device__ static void
 push_pxi_dt(struct d_particle *p,
 	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
-  real dq = p->qni_div_mni * d_dqs;
+  real dq = p->qni_div_mni * d_consts.dqs;
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;
@@ -80,6 +80,36 @@ push_pxi_dt(struct d_particle *p,
 
 #define OFF(g, d) o##g[d]
   
+__device__ static real
+ip_to_grid_m(real h)
+{
+  return real(.5) * sqr(real(.5) + h);
+}
+
+__device__ static real
+ip_to_grid_0(real h)
+{
+  return real(.75) - sqr(h);
+}
+
+__device__ static real
+ip_to_grid_p(real h)
+{
+  return real(.5) * sqr(real(.5) - h);
+}
+
+__device__ static real
+ip1_to_grid_0(real h)
+{
+  return real(1.) - h;
+}
+
+__device__ static real
+ip1_to_grid_p(real h)
+{
+  return h;
+}
+
 #if DIM == DIM_Z
 
 #define INTERPOLATE_FIELD(exq, fldnr, g1, g2)				\

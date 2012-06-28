@@ -6,7 +6,7 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
 {
   int d;
   for (d = 0; d < 3; d++) {
-    pos[d] = xi[d] * d_dxi[d] + shift;
+    pos[d] = xi[d] * d_consts.dxi[d] + shift;
     j[d] = cuda_fint(pos[d]);
     h[d] = pos[d] - j[d];
   }
@@ -27,11 +27,10 @@ __shared__ volatile bool do_calc_jz;
 
 #define WARPS_PER_BLOCK (THREADS_PER_BLOCK / 32)
 
-__shared__ int s_cell_end;
-
 #define xBLOCKSTRIDE ((((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32)
 __shared__ real scurr1[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 __shared__ real scurr2[WARPS_PER_BLOCK * xBLOCKSTRIDE];
+__shared__ real scurr3[WARPS_PER_BLOCK * xBLOCKSTRIDE];
 
 #define w_scurr_(scurr, wid, jy, jz) (scurr[((jz)+SW) * (BLOCKSIZE_Y + 2*SW) + (jy)+SW \
 					     + (wid) * xBLOCKSTRIDE])
@@ -88,11 +87,11 @@ yz_calc_jx(int i, particles_cuda_dev_t d_particles)
   if (do_calc_jx) {
     real vxi[3];
     calc_vxi(vxi, p);
-    real fnqx = vxi[0] * p.qni_wni * d_fnqs;
+    real fnqx = vxi[0] * p.qni_wni * d_consts.fnqs;
     
     int lf[3];
     real of[3];
-    find_idx_off_1st(p.xi, lf, of, real(0.));
+    find_idx_off_1st(p.xi, lf, of, real(0.), d_consts.dxi);
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
     current_add(scurr1, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
@@ -127,12 +126,12 @@ __device__ static void
 curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
 		real dxt[2], int off[2])
 {
-  real fnqy = qni_wni * d_fnqys;
-  real fnqz = qni_wni * d_fnqzs;
-  current_add(scurr1, i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
-  current_add(scurr1, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
-  current_add(scurr2, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
-  current_add(scurr2, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
+  real fnqy = qni_wni * d_consts.fnqys;
+  real fnqz = qni_wni * d_consts.fnqzs;
+  current_add(scurr2, i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
+  current_add(scurr2, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
+  current_add(scurr3, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
+  current_add(scurr3, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
   if (dxt) {
     dxt[0] -= dx[0];
     dxt[1] -= dx[1];
@@ -161,11 +160,11 @@ yz_calc_jyjz(int i, particles_cuda_dev_t d_particles)
     calc_vxi(vxi, p);
     
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
-    push_xi(&p, vxi, -.5f * d_dt);
+    push_xi(&p, vxi, -.5f * d_consts.dt);
     find_idx_off_pos_1st(p.xi, j, h0, xm, real(0.));
     
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(&p, vxi, d_dt);
+    push_xi(&p, vxi, d_consts.dt);
     find_idx_off_pos_1st(p.xi, k, h1, xp, real(0.));
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
@@ -246,30 +245,7 @@ add_scurr_to_flds1(real *scurr, real *d_flds, int m)
   }
 }
 
-#define push_part_p2_0							\
-  do_read = true;							\
-  do_reduce = true;							\
-  do_write = true;							\
-  do_calc_jx = true;							\
-  do_calc_jy = true;							\
-  do_calc_jz = true
-
-#define push_part_p2_1							\
-  int tid = threadIdx.x;						\
-  __shared__ int bid;							\
-  if (tid == 0) {							\
-    bid = blockIdx.x * block_stride + block_start;			\
-    blockIdx_to_cellPos(&d_particles, bid, ci0);			\
-  }									\
-  __syncthreads();							\
-									\
-  for (int cid = 0; cid < 1; cid++)
-
 #define push_part_p2_2							\
-  int cell_begin = d_particles.offsets[bid];				\
-  s_cell_end = d_particles.offsets[bid + 1];				\
-  									\
-  for (int i = cell_begin + tid; i < s_cell_end; i += THREADS_PER_BLOCK)
 
 // ======================================================================
 
@@ -277,56 +253,50 @@ __global__ static void
 push_part_p2x(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
 	      int block_stride, int block_start)
 {
-  push_part_p2_0;
-
-  if (do_write) {
-    zero_scurr(scurr1);
-  }
-
-  push_part_p2_1 {
-    push_part_p2_2 {
-      yz_calc_jx(i, d_particles);
-    }
-  }
-
-  if (do_write) {
-    __syncthreads();
-    add_scurr_to_flds1(scurr1, d_flds, 0);
-  }
-}
-
-// ======================================================================
-
-__global__ static void
-push_part_p2y(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
-	      int block_stride, int block_start)
-{
-  push_part_p2_0;
+  do_read = true;
+  do_reduce = true;
+  do_write = true;
+  do_calc_jx = true;
+  do_calc_jy = true;
+  do_calc_jz = true;
 
   if (do_write) {
     zero_scurr(scurr1);
     zero_scurr(scurr2);
+    zero_scurr(scurr3);
   }
 
-  push_part_p2_1 {
-    push_part_p2_2 {
-      yz_calc_jyjz(i, d_particles);
-    }
+  int tid = threadIdx.x;
+  int block_pos[3];
+  block_pos[1] = blockIdx.x * 2;
+  block_pos[2] = blockIdx.y * 2;
+  block_pos[1] += block_start & 1;
+  block_pos[2] += block_start >> 1;
+  if (block_pos[1] >= d_consts.b_mx[1] ||
+      block_pos[2] >= d_consts.b_mx[2])
+    return;
+
+  int bid = block_pos_to_block_idx(block_pos, d_consts.b_mx);
+  __shared__ int s_block_end;
+  if (tid == 0) {
+    ci0[0] = 0;
+    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
+    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+    s_block_end = d_particles.offsets[bid + 1];
   }
+  __syncthreads();
+
+  int block_begin = d_particles.offsets[bid];
+
+  for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
+    yz_calc_jx(i, d_particles);
+    yz_calc_jyjz(i, d_particles);
+  }
+  
   if (do_write) {
     __syncthreads();
-    add_scurr_to_flds1(scurr1, d_flds, 1);
-    add_scurr_to_flds1(scurr2, d_flds, 2);
+    add_scurr_to_flds1(scurr1, d_flds, 0);
+    add_scurr_to_flds1(scurr2, d_flds, 1);
+    add_scurr_to_flds1(scurr3, d_flds, 2);
   }
 }
-
-// ======================================================================
-
-__global__ static void
-push_part_p2z(int n_particles, particles_cuda_dev_t d_particles, real *d_flds,
-	      int block_stride, int block_start)
-{
-}
-
-
-

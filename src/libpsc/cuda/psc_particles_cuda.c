@@ -1,12 +1,21 @@
 
 #include "psc.h"
 #include "psc_cuda.h"
+#include "psc_bnd_cuda.h"
 #include "psc_particles_cuda.h"
 #include "psc_push_particles.h"
+
+EXTERN_C void cuda_init(int rank);
 
 static void
 _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_part)
 {
+  if (p == 0) {
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    cuda_init(rank);
+  }
+
   struct psc_patch *patch = &ppsc->patch[p];
   particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
 
@@ -17,6 +26,7 @@ _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_par
     case MP_BLOCKSIZE_1X1X1: bs[d] = 1; break;
     case MP_BLOCKSIZE_2X2X2: bs[d] = 2; break;
     case MP_BLOCKSIZE_4X4X4: bs[d] = 4; break;
+    case MP_BLOCKSIZE_8X8X8: bs[d] = 8; break;
     default: assert(0);
     }
     if (ppsc->domain.gdims[d] == 1) {
@@ -25,17 +35,43 @@ _psc_mparticles_cuda_alloc_patch(mparticles_cuda_t *mparticles, int p, int n_par
     pp->blocksize[d] = bs[d];
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
     pp->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
+    pp->b_dxi[d] = 1.f / (pp->blocksize[d] * ppsc->dx[d]);
   }
   pp->nr_blocks = pp->b_mx[0] * pp->b_mx[1] * pp->b_mx[2];
+
+  for (int d = 0; d < 3; d++) {
+    if (mparticles->flags & MP_NO_CHECKERBOARD) {
+      bs[d] = 1;
+    } else {
+      bs[d] = (patch->ldims[d] == 1) ? 1 : 2;
+    }
+  }
+  cell_map_init(&pp->map, pp->b_mx, bs);
+
   __particles_cuda_alloc(pp, true, true); // FIXME, need separate flags
-  pp->n_alloced = n_part;
+
+  cuda_alloc_block_indices(pp, &pp->d_part.bidx); // FIXME, merge into ^^^
+  cuda_alloc_block_indices(pp, &pp->d_part.ids);
+  cuda_alloc_block_indices(pp, &pp->d_part.alt_bidx);
+  cuda_alloc_block_indices(pp, &pp->d_part.alt_ids);
+  cuda_alloc_block_indices(pp, &pp->d_part.sums);
+
+  pp->d_part.sort_ctx = sort_pairs_create(pp->b_mx);
 }
 
 static void
 _psc_mparticles_cuda_free_patch(mparticles_cuda_t *mparticles, int p)
 {
   particles_cuda_t *pp = psc_mparticles_get_patch_cuda(mparticles, p);
+
+  cuda_free_block_indices(pp->d_part.bidx);
+  cuda_free_block_indices(pp->d_part.ids);
+  cuda_free_block_indices(pp->d_part.alt_bidx);
+  cuda_free_block_indices(pp->d_part.alt_ids);
+  cuda_free_block_indices(pp->d_part.sums);
+  sort_pairs_destroy(pp->d_part.sort_ctx);
   __particles_cuda_free(pp);
+  cell_map_free(&pp->map);
 }
 
 #include "psc_particles_as_c.h"
@@ -85,8 +121,6 @@ static void
 _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *particles_cf,
 				 unsigned int flags)
 {
-  assert(ppsc->nr_patches == 1); // many things would break...
-
   psc_foreach_patch(ppsc, p) {
     struct psc_patch *patch = &ppsc->patch[p];
     particles_t *pp_cf = psc_mparticles_get_patch(particles_cf, p);
@@ -102,6 +136,10 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
 
       real qni = part_cf->qni;
       real wni = part_cf->wni;
+      // FIXME!!! KH hack
+      if (part_cf->kind == 1 || part_cf->kind == 3) {
+	wni *= (1 + 1e-6);
+      }
       real qni_div_mni = qni / part_cf->mni;
       real qni_wni;
       if (qni != 0.) {
@@ -118,6 +156,26 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
       pxi4[n].y = part_cf->pyi;
       pxi4[n].z = part_cf->pzi;
       pxi4[n].w = qni_wni;
+
+      float xi[3] = { xi4[n].x, xi4[n].y, xi4[n].z };
+      for (int d = 0; d < 3; d++) {
+	int bi = cuda_fint(xi[d] * pp->b_dxi[d]);
+	if (bi < 0 || bi >= pp->b_mx[d]) {
+	  printf("XXX p %d xi %g %g %g\n", p, xi[0], xi[1], xi[2]);
+	  printf("XXX p %d n %d d %d xi4[n] %g biy %d // %d\n",
+		 p, n, d, xi[d], bi, pp->b_mx[d]);
+	  if (bi < 0) {
+	    xi[d] = 0.f;
+	  } else {
+	    xi[d] *= (1. - 1e-6);
+	  }
+	}
+	bi = cuda_fint(xi[d] * pp->b_dxi[d]);
+	assert(bi >= 0 && bi < pp->b_mx[d]);
+      }
+      xi4[n].x = xi[0];
+      xi4[n].y = xi[1];
+      xi4[n].z = xi[2];
     }
 
     int bs[3];
@@ -129,7 +187,7 @@ _psc_mparticles_cuda_copy_from_c(mparticles_cuda_t *particles, mparticles_t *par
       }
     }
     struct cell_map map;
-    cell_map_init(&map, patch->ldims, bs);
+    cell_map_init(&map, patch->ldims, bs); // FIXME, already have it elsewhere
 
     int *offsets = NULL;
     if (0 && (flags & MP_NEED_BLOCK_OFFSETS)) {
@@ -237,6 +295,7 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
       particle_real_t qni_div_mni = xi4[n].w;
       particle_real_t qni_wni = pxi4[n].w;
       particle_real_t qni, mni, wni;
+      unsigned int kind;
       if (qni_div_mni == 0.) {
 	qni = 0.;
 	wni = qni_wni;
@@ -246,6 +305,10 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
 	qni = qni_div_mni > 0 ? 1. : -1.;
 	mni = qni / qni_div_mni;
 	wni = qni_wni / qni;
+	kind = (qni > 0.) ? 2 : 0;
+	if (wni > 1. + .5e-7) {
+	  kind++;
+	}
       }
 
       particle_t *part_base = particles_get_one(pp_cf, n);
@@ -258,6 +321,7 @@ _psc_mparticles_cuda_copy_to_c(mparticles_cuda_t *particles,
       part_base->qni = qni;
       part_base->mni = mni;
       part_base->wni = wni;
+      part_base->kind = kind;
     }
 
     free(xi4);

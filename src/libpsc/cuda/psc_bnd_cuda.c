@@ -1,42 +1,75 @@
 
+#include "psc_bnd_cuda.h"
 #include "psc_cuda.h"
 #include "psc_bnd_private.h"
-#include "../psc_bnd/ddc_particles.h"
-#include "psc_particles_as_c.h"
-#include "psc_fields_as_c.h"
 
 #include <mrc_domain.h>
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
 #include <string.h>
 
-// FIXME header
-EXTERN_C void cuda_fill_ghosts(int p, fields_cuda_t *pf, int mb, int me);
-EXTERN_C void cuda_add_ghosts(int p, fields_cuda_t *pf, int mb, int me);
+// OPT opportunities:
+// general: make fields really 2D in CUDA and in bnd xchg
+// reduce packed buffers even more, e.g., add only on cuda side finally
 
-struct psc_bnd_cuda {
-  struct mrc_ddc *ddc;
-  struct ddc_particles *ddcp;
-  struct ddc_particles *ddcp_photons;
-};
+// FIXME
+EXTERN_C void __fields_cuda_from_device_inside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_outside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_inside(fields_cuda_t *pf, struct cuda_fields_ctx *cf, int mb, int me);
+void psc_bnd_cuda_xchg_setup(struct psc_bnd *bnd);
+void psc_bnd_cuda_xchg_unsetup(struct psc_bnd *bnd);
+void psc_bnd_cuda_xchg_exchange_particles(struct psc_bnd *bnd,
+					  mparticles_base_t *particles_base);
 
-#define to_psc_bnd_cuda(bnd) ((struct psc_bnd_cuda *)((bnd)->obj.subctx))
+static void
+cuda_mfields_ctx_init(struct cuda_mfields_ctx *ctx, mfields_cuda_t *flds, int nr_fields)
+{
+  // FIXME, could be done once and cached
+  ctx->cf = malloc(ppsc->nr_patches * sizeof(*ctx->cf));
+  psc_foreach_patch(ppsc, p) {
+    fields_cuda_t *pf = psc_mfields_get_patch_cuda(flds, p);
+    struct cuda_fields_ctx *cf = &ctx->cf[p];
+    int sz = 1;
+    for (int d = 0; d < 3; d++) {
+      if (pf->im[d] == 1 - 2 * pf->ib[d]) { // only 1 non-ghost point
+	cf->im[d] = 1;
+	cf->ib[d] = 0;
+      } else {
+	cf->im[d] = pf->im[d];
+	cf->ib[d] = pf->ib[d];
+      }
+      sz *= cf->im[d];
+    }
+    cf->arr = malloc(nr_fields * sz * sizeof(*cf->arr));
+    cf->arr_off = ctx->cf[p].arr 
+      - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
+  }
+}
+
+static void
+cuda_mfields_ctx_free(struct cuda_mfields_ctx *ctx)
+{
+  psc_foreach_patch(ppsc, p) {
+    free(ctx->cf[p].arr);
+  }
+  free(ctx->cf);
+}
 
 // ======================================================================
 // ddc funcs
 
 static void
-copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
-  fields_real_t *buf = _buf;
+  struct cuda_mfields_ctx *ctx = _ctx;
+  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3(pf, m, ix,iy,iz);
+	  MRC_DDC_BUF3(buf, m - mb, ix,iy,iz) = F3_CF(cf, m, ix,iy,iz);
 	}
       }
     }
@@ -44,17 +77,17 @@ copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx
 }
 
 static void
-add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
-  fields_real_t *buf = _buf;
+  struct cuda_mfields_ctx *ctx = _ctx;
+  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3(pf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3_CF(cf, m, ix,iy,iz) += MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -62,17 +95,17 @@ add_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ct
 }
 
 static void
-copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *_ctx)
 {
-  mfields_t *flds = ctx;
-  fields_t *pf = psc_mfields_get_patch(flds, p);
-  fields_real_t *buf = _buf;
+  struct cuda_mfields_ctx *ctx = _ctx;
+  struct cuda_fields_ctx *cf = &ctx->cf[p];
+  fields_cuda_real_t *buf = _buf;
 
   for (int m = mb; m < me; m++) {
     for (int iz = ilo[2]; iz < ihi[2]; iz++) {
       for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	for (int ix = ilo[0]; ix < ihi[0]; ix++) {
-	  F3(pf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
+	  F3_CF(cf, m, ix,iy,iz) = MRC_DDC_BUF3(buf, m - mb, ix,iy,iz);
 	}
       }
     }
@@ -84,38 +117,6 @@ static struct mrc_ddc_funcs ddc_funcs = {
   .copy_from_buf = copy_from_buf,
   .add_from_buf  = add_from_buf,
 };
-
-static void
-ddcp_particles_realloc(void *_particles, int p, int new_n_particles)
-{
-  mparticles_t *particles = _particles;
-  particles_t *pp = psc_mparticles_get_patch(particles, p);
-  particles_realloc(pp, new_n_particles);
-}
-
-static void *
-ddcp_particles_get_addr(void *_particles, int p, int n)
-{
-  mparticles_t *particles = _particles;
-  particles_t *pp = psc_mparticles_get_patch(particles, p);
-  return &pp->particles[n];
-}
-
-static void
-ddcp_photons_realloc(void *_particles, int p, int new_n_particles)
-{
-  mphotons_t *particles = _particles;
-  photons_t *pp = &particles->p[p];
-  photons_realloc(pp, new_n_particles);
-}
-
-static void *
-ddcp_photons_get_addr(void *_particles, int p, int n)
-{
-  mphotons_t *mphotons = _particles;
-  photons_t *photons = &mphotons->p[p];
-  return &photons->photons[n];
-}
 
 // ----------------------------------------------------------------------
 // psc_bnd_cuda_setup
@@ -130,20 +131,10 @@ psc_bnd_cuda_setup(struct psc_bnd *bnd)
   mrc_ddc_set_funcs(bnd_cuda->ddc, &ddc_funcs);
   mrc_ddc_set_param_int3(bnd_cuda->ddc, "ibn", psc->ibn);
   mrc_ddc_set_param_int(bnd_cuda->ddc, "max_n_fields", 6);
-  mrc_ddc_set_param_int(bnd_cuda->ddc, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_set_param_int(bnd_cuda->ddc, "size_of_type", sizeof(fields_cuda_real_t));
   mrc_ddc_setup(bnd_cuda->ddc);
 
-  bnd_cuda->ddcp = ddc_particles_create(bnd_cuda->ddc, sizeof(particle_t),
-				     sizeof(particle_real_t),
-				     MPI_PARTICLES_REAL,
-				     ddcp_particles_realloc,
-				     ddcp_particles_get_addr);
-
-  bnd_cuda->ddcp_photons = ddc_particles_create(bnd_cuda->ddc, sizeof(photon_t),
-					     sizeof(photon_real_t),
-					     MPI_PHOTONS_REAL,
-					     ddcp_photons_realloc,
-					     ddcp_photons_get_addr);
+  psc_bnd_cuda_xchg_setup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -155,8 +146,7 @@ psc_bnd_cuda_unsetup(struct psc_bnd *bnd)
   struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
 
   mrc_ddc_destroy(bnd_cuda->ddc);
-  ddc_particles_destroy(bnd_cuda->ddcp);
-  ddc_particles_destroy(bnd_cuda->ddcp_photons);
+  psc_bnd_cuda_xchg_unsetup(bnd);
 }
 
 // ----------------------------------------------------------------------
@@ -194,20 +184,55 @@ check_domain(struct psc_bnd *bnd)
 static void
 psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
+  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   check_domain(bnd);
-
-  assert(ppsc->nr_patches == 1);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
 
   static int pr;
   if (!pr) {
     pr = prof_register("cuda_add_ghosts", 1., 0, 0);
   }
   prof_start(pr);
-  cuda_add_ghosts(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
-  prof_stop(pr);
+  int size;
+  MPI_Comm_size(psc_bnd_comm(bnd), &size);
+  if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+      ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    // double periodic single patch
+    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    cuda_add_ghosts_periodic_yz(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+    psc_mfields_put_cuda(flds, flds_base, mb, me);
+  } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+      ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    // z-periodic single patch
+    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    cuda_add_ghosts_periodic_z(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+    psc_mfields_put_cuda(flds, flds_base, mb, me);
+  } else {
+    mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
+    struct cuda_mfields_ctx ctx;
+    cuda_mfields_ctx_init(&ctx, flds_cuda, me - mb);
 
-  psc_mfields_put_cuda(flds, flds_base, mb, me);
+    psc_foreach_patch(ppsc, p) {
+      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct cuda_fields_ctx *cf = ctx.cf + p;
+      __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
+    }
+
+    mrc_ddc_add_ghosts(bnd_cuda->ddc, 0, me - mb, &ctx);
+
+    psc_foreach_patch(ppsc, p) {
+      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct cuda_fields_ctx *cf = ctx.cf + p;
+      __fields_cuda_to_device_inside(pf_cuda, cf, mb, me);
+    }
+
+    cuda_mfields_ctx_free(&ctx);
+    psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
+  }
+  prof_stop(pr);
 }
 
 // ----------------------------------------------------------------------
@@ -216,90 +241,75 @@ psc_bnd_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, 
 static void
 psc_bnd_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
 {
+  struct psc_bnd_cuda *bnd_cuda = to_psc_bnd_cuda(bnd);
   check_domain(bnd);
-
-  assert(ppsc->nr_patches == 1);
-  mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
 
   static int pr;
   if (!pr) {
     pr = prof_register("cuda_fill_ghosts", 1., 0, 0);
   }
+  static int pr1, pr3, pr5;
+  if (!pr1) {
+    pr1 = prof_register("cuda_fill_ghosts_1", 1., 0, 0);
+    pr3 = prof_register("cuda_fill_ghosts_3", 1., 0, 0);
+    pr5 = prof_register("cuda_fill_ghosts_5", 1., 0, 0);
+  }
   prof_start(pr);
-  cuda_fill_ghosts(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
-  prof_stop(pr);
-
-  psc_mfields_put_cuda(flds, flds_base, mb, me);
-}
-
-// ----------------------------------------------------------------------
-// calc_domain_bounds
-//
-// calculate bounds of local patch, and global domain
-
-#if 0
-static void
-calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
-		   double xgb[3], double xge[3], double xgl[3])
-{
-  struct psc_patch *psc_patch = &psc->patch[p];
-
-  for (int d = 0; d < 3; d++) {
-    xb[d] = psc_patch->off[d] * psc->dx[d];
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xgb[d] = 0.;
-    } else {
-      if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
-	xgb[d] = psc->pml.size * psc->dx[d];
-      } else {
-	xgb[d] = 0.;
-      }
-      if (psc_patch->off[d] == 0) {
-	xb[d] = xgb[d];
-      }
-    }
-    
-    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d]) * psc->dx[d];
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC) {
-      xge[d] = (psc->domain.gdims[d]) * psc->dx[d];
-    } else {
-      if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
-	xge[d] = (psc->domain.gdims[d]-1 - psc->pml.size) * psc->dx[d];
-      } else {
-	xge[d] = (psc->domain.gdims[d]-1) * psc->dx[d];
-      }
-      if (psc_patch->off[d] + psc_patch->ldims[d] == psc->domain.gdims[d]) {
-	  xe[d] = xge[d];
-      }
-    }
-    
-    xgl[d] = xge[d] - xgb[d];
-  }
-  for (int d = 0; d < 3; d++) {
-    xb[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
-    xe[d]  += ppsc->domain.corner[d] / ppsc->coeff.ld;
-    xgb[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
-    xge[d] += ppsc->domain.corner[d] / ppsc->coeff.ld;
-  }
-}
-#endif
-
-// ----------------------------------------------------------------------
-// psc_bnd_cuda_exchange_particles
-
-static void
-psc_bnd_cuda_exchange_particles(struct psc_bnd *psc_bnd, mparticles_base_t *particles_base)
-{
-  assert(ppsc->nr_patches == 1);
   int size;
-  MPI_Comm_size(psc_bnd_comm(psc_bnd), &size);
-  assert(size == 1);
-  // all periodic only, too
-  
-  mparticles_cuda_t *particles =
-    psc_mparticles_get_cuda(particles_base, 0);
-  cuda_exchange_particles(0, psc_mparticles_get_patch_cuda(particles, 0));
-  psc_mparticles_put_cuda(particles, particles_base);
+  MPI_Comm_size(psc_bnd_comm(bnd), &size);
+  if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+      ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[1] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    // double periodic single patch
+    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    cuda_fill_ghosts_periodic_yz(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+    psc_mfields_put_cuda(flds, flds_base, mb, me);
+  } else if (size == 1 && ppsc->nr_patches == 1 && // FIXME !!!
+      ppsc->domain.bnd_fld_lo[0] == BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[1] != BND_FLD_PERIODIC &&
+      ppsc->domain.bnd_fld_lo[2] == BND_FLD_PERIODIC) {
+    // z-periodic single patch
+    mfields_cuda_t *flds = psc_mfields_get_cuda(flds_base, mb, me);
+    cuda_fill_ghosts_periodic_z(0, psc_mfields_get_patch_cuda(flds, 0), mb, me);
+    psc_mfields_put_cuda(flds, flds_base, mb, me);
+  } else {
+    mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
+    struct cuda_mfields_ctx ctx;
+    cuda_mfields_ctx_init(&ctx, flds_cuda, me - mb);
+
+    prof_start(pr1);
+    psc_foreach_patch(ppsc, p) {
+      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct cuda_fields_ctx *cf = ctx.cf + p;
+      __fields_cuda_from_device_inside(pf_cuda, cf, mb, me);
+    }
+    prof_stop(pr1);
+
+    prof_start(pr3);
+    mrc_ddc_fill_ghosts(bnd_cuda->ddc, 0, me - mb, &ctx);
+    prof_stop(pr3);
+
+    prof_start(pr5);
+    psc_foreach_patch(ppsc, p) {
+      fields_cuda_t *pf_cuda = psc_mfields_get_patch_cuda(flds_cuda, p);
+      struct cuda_fields_ctx *cf = ctx.cf + p;
+      __fields_cuda_to_device_outside(pf_cuda, cf, mb, me);
+    }
+    prof_stop(pr5);
+
+    cuda_mfields_ctx_free(&ctx);
+    psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
+  }
+  prof_stop(pr);
+}
+
+static void
+psc_bnd_cuda_exchange_particles(struct psc_bnd *bnd,
+				mparticles_base_t *particles_base)
+{
+  check_domain(bnd);
+  psc_bnd_cuda_xchg_exchange_particles(bnd, particles_base);
 }
 
 // ======================================================================

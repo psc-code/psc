@@ -15,7 +15,7 @@ PFX(cuda_push_part_p1)(particles_cuda_t *pp, fields_cuda_t *pf,
   check(cudaMemset(pf->d_flds + JXI * size, 0,
 		   3 * size * sizeof(*pf->d_flds)));
 
-  cudaThreadSynchronize(); // FIXME
+  cuda_sync_if_enabled();
 }
 
 // ----------------------------------------------------------------------

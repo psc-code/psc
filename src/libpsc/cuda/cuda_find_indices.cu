@@ -1,6 +1,9 @@
 
 #include <psc_cuda.h>
 
+// FIXME, do this always?
+#define NO_CHECKERBOARD
+
 #define BLOCKSIZE_X 1
 #define BLOCKSIZE_Y 4
 #define BLOCKSIZE_Z 4
@@ -8,21 +11,17 @@
 #define PFX(x) sort_##x
 #include "constants.c"
 
-EXTERN_C void sort_pairs_device(unsigned int *d_keys, unsigned int *d_vals, int n);
-EXTERN_C void sort_pairs_host(unsigned int *d_keys, unsigned int *d_vals, int n);
-
 // FIXME, use const mem for some params
 
 __global__ static void find_cell_indices_by_cell(int n_part, particles_cuda_dev_t d_part,
-						 unsigned int *d_cnis, unsigned int *d_ids,
-						 int ldims_y)
+						 int *d_cnis, int *d_ids, int ldims_y)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   if (i < n_part) {
     particle_cuda_real_t xi[3] = {
-      d_part.xi4[i].x * d_dxi[0],
-      d_part.xi4[i].y * d_dxi[1],
-      d_part.xi4[i].z * d_dxi[2] };
+      d_part.xi4[i].x * d_consts.dxi[0],
+      d_part.xi4[i].y * d_consts.dxi[1],
+      d_part.xi4[i].z * d_consts.dxi[2] };
     int pos[3];
     for (int d = 0; d < 3; d++) {
       pos[d] = cuda_fint(xi[d]);
@@ -44,7 +43,7 @@ __global__ static void find_cell_indices_by_cell(int n_part, particles_cuda_dev_
 
 static void
 sort_find_cell_indices_by_cell_device(particles_cuda_t *pp, struct psc_patch *patch,
-				      unsigned int *d_cnis, unsigned int *d_ids)
+				      int *d_cnis, int *d_ids)
 {
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -53,58 +52,16 @@ sort_find_cell_indices_by_cell_device(particles_cuda_t *pp, struct psc_patch *pa
 					 patch->ldims[1]));
 }
 
-__global__ static void find_cell_indices(int n_part, particles_cuda_dev_t d_part,
-					 unsigned int *d_cnis, unsigned int *d_ids,
-					 int ldims_y)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  if (i < n_part) {
-    particle_cuda_real_t xi[3] = {
-      d_part.xi4[i].x * d_dxi[0],
-      d_part.xi4[i].y * d_dxi[1],
-      d_part.xi4[i].z * d_dxi[2] };
-    int pos[3];
-    for (int d = 0; d < 3; d++) {
-      pos[d] = cuda_fint(xi[d]);
-    }
-    
-    int idx = (((pos[2] / 8) * (ldims_y / 8) + (pos[1] / 8)) << 6);
-    idx |=
-      ((pos[2] & 4) << 3) |
-      ((pos[1] & 4) << 2);
-#if 0
-    idx |=
-      ((pos[2] & 2) << 2) |
-      ((pos[1] & 2) << 1) |
-      ((pos[2] & 1) << 1) |
-      ((pos[1] & 1) << 0);
-#endif
-    d_cnis[i] = idx;
-    d_ids[i] = i;
-  }
-}
-
-static void
-sort_find_cell_indices_device(particles_cuda_t *pp, struct psc_patch *patch,
-			      unsigned int *d_cnis, unsigned int *d_ids)
-{
-  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (pp->n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     find_cell_indices, (pp->n_part, pp->d_part, d_cnis, d_ids,
-				 patch->ldims[1]));
-}
-
 // FIXME, specific to 1x8x8, should be in ! .cu, so that cell_map works
 
 static void __unused
 sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
-			    unsigned int *d_cnis, unsigned int *d_ids)
+			    int *d_cnis, int *d_ids)
 {
   int n_part = pp->n_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
-  unsigned int *h_cnis = (unsigned int *) malloc(n_part * sizeof(*h_cnis));
-  unsigned int *h_ids = (unsigned int *) malloc(n_part * sizeof(*h_ids));
+  int *h_cnis = (int *) malloc(n_part * sizeof(*h_cnis));
+  int *h_ids = (int *) malloc(n_part * sizeof(*h_ids));
 
   float4 *h_xi4 = (float4 *) malloc(n_part * sizeof(*h_xi4));
   check(cudaMemcpy(h_xi4, d_part->xi4, n_part * sizeof(float4),
@@ -145,11 +102,11 @@ sort_find_cell_indices_host(particles_cuda_t *pp, struct psc_patch *patch,
 }
 
 static void __unused
-sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
+sort_reorder_host(particles_cuda_t *pp, int *d_ids)
 {
   int n_part = pp->n_part;
   particles_cuda_dev_t *d_part = &pp->d_part;
-  unsigned int *h_ids = (unsigned int *) malloc(n_part);
+  int *h_ids = (int *) malloc(n_part);
 
   float4 *h_xi4 = (float4 *) malloc(n_part * sizeof(*h_xi4));
   float4 *h_pxi4 = (float4 *) malloc(n_part * sizeof(*h_pxi4));
@@ -180,56 +137,8 @@ sort_reorder_host(particles_cuda_t *pp, unsigned int *d_ids)
 }
 
 __global__ static void
-sort_reorder(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float4 *pxi4,
-	     unsigned int *d_cnis, unsigned int *d_ids)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-  int blocksize = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
-
-  if (i > n_part)
-    return;
-
-  int block, prev_block;
-  if (i < n_part) {
-    xi4[i] = d_part.xi4[d_ids[i]];
-    pxi4[i] = d_part.pxi4[d_ids[i]];
-    
-    block = d_cnis[i] / blocksize;
-  } else if (i == n_part) { // needed if there is no particle in the last block
-    block = d_b_mx[0] * d_b_mx[1] * d_b_mx[2];
-  }
-
-  // create offsets per block into particle array
-  prev_block = -1;
-  if (i > 0) {
-    prev_block = d_cnis[i-1] / blocksize;
-  }
-  for (int b = prev_block + 1; b <= block; b++) {
-    d_part.offsets[b] = i;
-  }
-}
-
-static void
-sort_reorder_device(particles_cuda_t *pp, unsigned int *d_cnis, unsigned int *d_ids)
-{
-  float4 *xi4, *pxi4;
-  check(cudaMalloc((void **) &xi4, pp->n_part * sizeof(*xi4)));
-  check(cudaMalloc((void **) &pxi4, pp->n_part * sizeof(*pxi4)));
-
-  int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-  int dimGrid[2]  = { (pp->n_part + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     sort_reorder, (pp->n_part, pp->d_part, xi4, pxi4, d_cnis, d_ids));
-
-  check(cudaFree(pp->d_part.xi4));
-  check(cudaFree(pp->d_part.pxi4));
-  pp->d_part.xi4 = xi4;
-  pp->d_part.pxi4 = pxi4;
-}
-
-__global__ static void
 sort_reorder_by_cell(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float4 *pxi4,
-		     unsigned int *d_cnis, unsigned int *d_ids)
+		     int *d_cnis, int *d_ids)
 {
   int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
   int blocksize = BLOCKSIZE_X * BLOCKSIZE_Y * BLOCKSIZE_Z;
@@ -244,7 +153,7 @@ sort_reorder_by_cell(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float
     
     block = d_cnis[i];
   } else if (i == n_part) { // needed if there is no particle in the last block
-    block = d_b_mx[0] * d_b_mx[1] * d_b_mx[2] * blocksize;
+    block = d_consts.b_mx[0] * d_consts.b_mx[1] * d_consts.b_mx[2] * blocksize;
   }
 
   // create offsets per block into particle array
@@ -258,11 +167,11 @@ sort_reorder_by_cell(int n_part, particles_cuda_dev_t d_part, float4 *xi4, float
 }
 
 static void
-sort_reorder_by_cell_device(particles_cuda_t *pp, unsigned int *d_cnis, unsigned int *d_ids)
+sort_reorder_by_cell_device(particles_cuda_t *pp, int *d_cnis, int *d_ids)
 {
   float4 *xi4, *pxi4;
-  check(cudaMalloc((void **) &xi4, pp->n_part * sizeof(*xi4)));
-  check(cudaMalloc((void **) &pxi4, pp->n_part * sizeof(*pxi4)));
+  check(cudaMalloc((void **) &xi4, pp->n_alloced * sizeof(*xi4)));
+  check(cudaMalloc((void **) &pxi4, pp->n_alloced * sizeof(*pxi4)));
 
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (pp->n_part + 1 + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
@@ -276,46 +185,18 @@ sort_reorder_by_cell_device(particles_cuda_t *pp, unsigned int *d_cnis, unsigned
 }
 
 EXTERN_C void
-sort_patch(int p, particles_cuda_t *pp)
+sort_patch_prep(int p, particles_cuda_t *pp, int **d_cnis, int **d_ids)
 {
-  struct psc_patch *patch = &ppsc->patch[p];
-
-  unsigned int *d_cnis, *d_ids;
-  check(cudaMalloc((void **) &d_cnis, pp->n_part * sizeof(*d_cnis)));
-  check(cudaMalloc((void **) &d_ids, pp->n_part * sizeof(*d_ids)));
+  check(cudaMalloc((void **) d_cnis, pp->n_alloced * sizeof(*d_cnis)));
+  check(cudaMalloc((void **) d_ids, pp->n_alloced * sizeof(*d_ids)));
 
   fields_cuda_t pf_dummy;
   sort_set_constants(pp, &pf_dummy);
+}
 
-  sort_find_cell_indices_device(pp, patch, d_cnis, d_ids);
-  sort_pairs_device(d_cnis, d_ids, pp->n_part);
-  sort_reorder_device(pp, d_cnis, d_ids);
-  
-#if 0
-  unsigned int *h_cnis = (unsigned int *) calloc(pp->n_part, sizeof(*h_cnis));
-  check(cudaMemcpy(h_cnis, d_cnis, pp->n_part * sizeof(*h_cnis),
-		   cudaMemcpyDeviceToHost));
-  int *offsets = (int *) calloc(pp->nr_blocks + 1, sizeof(*offsets));
-  check(cudaMemcpy(offsets, pp->d_part.offsets, (pp->nr_blocks + 1) * sizeof(*offsets),
-		   cudaMemcpyDeviceToHost));
-
-  for (int b = 0; b < pp->nr_blocks; b++) {
-    if (pp->h_part.offsets) {
-      printf("block %d: %d:%d\n", b, pp->h_part.offsets[b], pp->h_part.offsets[b+1]);
-    }
-    printf("block %d: %d:%d\n", b, offsets[b], offsets[b+1]);
-  }
-  int last_block = -1;
-  for (int i = 0; i < pp->n_part; i++) {
-    if (h_cnis[i] / 16 != last_block) {
-      last_block = h_cnis[i] / 16;
-      printf("i %d bid %d\n", i, last_block);
-    }
-  }
-  free(offsets);
-  free(h_cnis);
-#endif
-
+EXTERN_C void
+sort_patch_done(int p, particles_cuda_t *pp, int *d_cnis, int *d_ids)
+{
   check(cudaFree(d_cnis));
   check(cudaFree(d_ids));
 }
@@ -325,7 +206,7 @@ sort_patch_by_cell(int p, particles_cuda_t *pp)
 {
   struct psc_patch *patch = &ppsc->patch[p];
 
-  unsigned int *d_cnis, *d_ids;
+  int *d_cnis, *d_ids;
   check(cudaMalloc((void **) &d_cnis, pp->n_part * sizeof(*d_cnis)));
   check(cudaMalloc((void **) &d_ids, pp->n_part * sizeof(*d_ids)));
 
@@ -333,7 +214,7 @@ sort_patch_by_cell(int p, particles_cuda_t *pp)
   sort_set_constants(pp, &pf_dummy);
 
   sort_find_cell_indices_by_cell_device(pp, patch, d_cnis, d_ids);
-  sort_pairs_device(d_cnis, d_ids, pp->n_part);
+  sort_pairs_device((unsigned int *) d_cnis, (unsigned int *) d_ids, pp->n_part);
   sort_reorder_by_cell_device(pp, d_cnis, d_ids);
   
   check(cudaFree(d_cnis));

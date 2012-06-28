@@ -2,6 +2,8 @@
 #ifndef CUDA_WRAP_H
 #define CUDA_WRAP_H
 
+#define check(a) do { int ierr = a; if (ierr != cudaSuccess) fprintf(stderr, "IERR = %d (%d)\n", ierr, cudaSuccess); assert(ierr == cudaSuccess); } while(0)
+
 #ifndef __CUDACC__
 
 // ======================================================================
@@ -109,11 +111,21 @@ cuda_fint(real x)
 
 #else
 
+static bool CUDA_SYNC = true;
+
+static inline void
+cuda_sync_if_enabled()
+{
+  if (CUDA_SYNC) {
+    check(cudaThreadSynchronize());
+  }
+}
+
 #define RUN_KERNEL(dimGrid, dimBlock, func, params) do {	\
     dim3 dG(dimGrid[0], dimGrid[1]);				\
     dim3 dB(dimBlock[0], dimBlock[1]);				\
     func<<<dG, dB>>>params;					\
-    check(cudaThreadSynchronize()); /* FIXME */			\
+    cuda_sync_if_enabled();					\
   } while (0)
 
 #define EXTERN_C extern "C"
@@ -124,7 +136,7 @@ cuda_nint(real x)
   return __float2int_rn(x);
 }
 
-__device__ static inline int
+__device__ __host__ static inline int
 cuda_fint(real x)
 {
   return (int)(x + real(10.)) - 10;

@@ -256,11 +256,11 @@ calc_shape_info(int i, particles_cuda_dev_t d_particles,
     calc_vxi(vxi, p);
 
     // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
-    push_xi(&p, vxi, -.5f * d_dt);
+    push_xi(&p, vxi, -.5f * d_consts.dt);
     find_idx_off(p.xi, j, h0, real(0.));
     
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(&p, vxi, d_dt);
+    push_xi(&p, vxi, d_consts.dt);
     find_idx_off(p.xi, k, h1, real(0.));
 
     shift0y = j[1] - (ci0[1] + w_ci1.y);
@@ -330,7 +330,7 @@ calc_jx_one(int jy, int jz, real fnqx, SHAPE_INFO_ARGS,
 __device__ static void
 yz_calc_jx(real vxi, real qni_wni, SHAPE_INFO_ARGS)
 {
-  real fnqx = vxi * qni_wni * d_fnqs;
+  real fnqx = vxi * qni_wni * d_consts.fnqs;
   int jzl = (0 && SI_SHIFT0Z >= 0 && SI_SHIFT1Z >= 0) ? -1 : -2;
   int jzh = (0 && SI_SHIFT0Z <= 0 && SI_SHIFT1Z <= 0) ?  1 :  2;
   for (int jz = jzl; jz <= jzh; jz++) {
@@ -358,7 +358,7 @@ __device__ static void
 yz_calc_jy(real qni_wni, SHAPE_INFO_ARGS)
 {
   for (int jz = -SW; jz <= SW; jz++) {
-    real fnqy = qni_wni * d_fnqys;
+    real fnqy = qni_wni * d_consts.fnqys;
     
     real s0z = pick_shape_coeff(0, z, jz, SI_SHIFT0Z);
     real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT1Z);
@@ -404,7 +404,7 @@ __device__ static void
 yz_calc_jz(real qni_wni, SHAPE_INFO_ARGS)
 {
   for (int jy = -SW; jy <= SW; jy++) {
-    real fnqz = qni_wni * d_fnqzs;
+    real fnqz = qni_wni * d_consts.fnqzs;
     
     real s0y = pick_shape_coeff(0, y, jy, SI_SHIFT0Y);
     real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT1Y);

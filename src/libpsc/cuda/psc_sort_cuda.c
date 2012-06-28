@@ -1,11 +1,8 @@
 
 #include "psc_sort_private.h"
+#include "psc_cuda.h"
 
 #include <mrc_profile.h>
-
-// FIXME -> header
-EXTERN_C void sort_patch(int p, particles_cuda_t *pp);
-EXTERN_C void sort_patch_by_cell(int p, particles_cuda_t *pp);
 
 // ======================================================================
 // cuda sort
@@ -43,6 +40,14 @@ sort_pairs(unsigned int *keys, unsigned int *vals, int n, int n_max)
 }
 
 #endif
+
+static void
+sort_patch(int p, particles_cuda_t *pp)
+{
+  cuda_find_block_indices_ids(pp, pp->d_part.bidx, pp->d_part.ids);
+  sort_pairs_device(pp->d_part.bidx, pp->d_part.ids, pp->n_part);
+  cuda_reorder_and_offsets(pp, pp->d_part.bidx, pp->d_part.ids);
+}
 
 void
 cuda_sort_patch(int p, particles_cuda_t *pp)
@@ -86,7 +91,7 @@ psc_sort_cuda_run(struct psc_sort *sort, mparticles_base_t *particles_base)
   }
   prof_stop(pr);
 
-  psc_mparticles_put_cuda(particles, particles_base);
+  psc_mparticles_put_cuda(particles, particles_base, 0);
 }
 
 // ======================================================================

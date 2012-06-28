@@ -9,14 +9,14 @@ calc_j(const int *ci, struct d_particle *p, particles_cuda_dev_t d_particles,
   calc_vxi(vxi, *p);
 
   // x^(n+1.0), p^(n+1.0) -> x^(n+0.5), p^(n+1.0) 
-  push_xi(p, vxi, -.5f * d_dt);
+  push_xi(p, vxi, -.5f * d_consts.dt);
 
   int j[3];
   real h0[3];
   find_idx_off(p->xi, j, h0, real(0.));
   
   // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-  push_xi(p, vxi, d_dt);
+  push_xi(p, vxi, d_consts.dt);
 
   int k[3];
   real h1[3];
@@ -86,7 +86,7 @@ __device__ static void
 z_calc_jxh(real qni_wni, real vxi, SHAPE_INFO_ARGS, int jz, int jz_noshift)
 {
   int tid = threadIdx.x;
-  real fnqx = vxi * qni_wni * d_fnqs;
+  real fnqx = vxi * qni_wni * d_consts.fnqs;
 
   real s0z = pick_shape_coeff(0, z, jz, 0);
   real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT10Z);
@@ -99,7 +99,7 @@ __device__ static void
 z_calc_jyh(real qni_wni, real vyi, SHAPE_INFO_ARGS, int jz, int jz_noshift)
 {
   int tid = threadIdx.x;
-  real fnqy = vyi * qni_wni * d_fnqs;
+  real fnqy = vyi * qni_wni * d_consts.fnqs;
 
   real s0z = pick_shape_coeff(0, z, jz, 0);
   real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT10Z);
@@ -112,7 +112,7 @@ __device__ static void
 z_calc_jzh(real qni_wni, SHAPE_INFO_ARGS)
 {
   int tid = threadIdx.x;
-  real fnqz = qni_wni * d_fnqzs;
+  real fnqz = qni_wni * d_consts.fnqzs;
 
   for (int jz = -SW; jz <= SW; jz++) {
     SDATA(tid,jz) = real(0.);
@@ -213,7 +213,7 @@ __device__ static void
 yz_calc_jxh_z(real qni_wni, real vxi, SHAPE_INFO_ARGS, int jz)
 {
   int tid = threadIdx.x;
-  real fnqx = vxi * qni_wni * d_fnqs;
+  real fnqx = vxi * qni_wni * d_consts.fnqs;
 
   real s0z = pick_shape_coeff(0, z, jz, 0);
   real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT10Z) - s0z;
@@ -237,7 +237,7 @@ __device__ static void
 yz_calc_jyh_z(real qni_wni, SHAPE_INFO_ARGS, int jz)
 {
   int tid = threadIdx.x;
-  real fnqy = qni_wni * d_fnqys;
+  real fnqy = qni_wni * d_consts.fnqys;
 
   real s0z = pick_shape_coeff(0, z, jz, 0);
   real s1z = pick_shape_coeff(1, z, jz, SI_SHIFT10Z);
@@ -260,7 +260,7 @@ __device__ static void
 yz_calc_jzh_y(real qni_wni, SHAPE_INFO_ARGS, int jy)
 {
   int tid = threadIdx.x;
-  real fnqz = qni_wni * d_fnqzs;
+  real fnqz = qni_wni * d_consts.fnqzs;
 
   real s0y = pick_shape_coeff(0, y, jy, 0);
   real s1y = pick_shape_coeff(1, y, jy, SI_SHIFT10Y);

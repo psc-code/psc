@@ -74,8 +74,8 @@ psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int m
 	}
 #endif
 	F3_C(pf_c, m, jx,jy,jz) = F3_CUDA(pf_cuda, m, jx,jy,jz);
-      }
-    } foreach_3d_g_end;
+      } foreach_3d_g_end;
+    }
 
     free(h_flds);
   }
@@ -84,10 +84,16 @@ psc_mfields_cuda_copy_to_c(mfields_cuda_t *flds_cuda, mfields_c_t *flds_c, int m
 // ======================================================================
 // psc_fields_cuda
 
+EXTERN_C void cuda_init(int rank);
+
 static void
 _psc_mfields_cuda_setup(mfields_cuda_t *flds)
 {
   psc_mfields_setup_super(flds);
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  cuda_init(rank);
 
   flds->data = calloc(ppsc->nr_patches, sizeof(fields_cuda_t));
 

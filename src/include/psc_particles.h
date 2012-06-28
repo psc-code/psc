@@ -36,10 +36,13 @@ struct psc_mparticles_ops {
 #define MP_DONT_COPY (0x1)
 #define MP_NEED_BLOCK_OFFSETS (0x0100)
 #define MP_NEED_CELL_OFFSETS  (0x0200)
-#define MP_BLOCKSIZE_MASK     (0x3000)
+#define MP_BLOCKSIZE_MASK     (0x7000)
 #define MP_BLOCKSIZE_1X1X1    (0x1000)
 #define MP_BLOCKSIZE_2X2X2    (0x2000)
 #define MP_BLOCKSIZE_4X4X4    (0x3000)
+#define MP_BLOCKSIZE_8X8X8    (0x4000)
+#define MP_NO_CHECKERBOARD    (0x10000)
+#define MP_INTERNAL_PARTICLE_EXCHANGE (0x20000)
 
 typedef struct psc_mparticles mparticles_base_t;
 
@@ -71,7 +74,7 @@ MAKE_MPARTICLES_TYPE(c)
 #include "psc_particles_single.h"
 MAKE_MPARTICLES_TYPE(single)
 
-#ifdef USE_SSE2
+#ifdef xUSE_SSE2
 #include "psc_particles_sse2.h"
 MAKE_MPARTICLES_TYPE(sse2)
 #endif

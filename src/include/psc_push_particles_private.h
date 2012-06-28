@@ -63,6 +63,8 @@ extern struct psc_push_particles_ops psc_push_particles_cbe_ops;
 extern struct psc_push_particles_ops psc_push_particles_cuda_ops;
 extern struct psc_push_particles_ops psc_push_particles_cuda_1st_ops;
 extern struct psc_push_particles_ops psc_push_particles_cuda_1vb_ops;
+extern struct psc_push_particles_ops psc_push_particles_cuda_2x2_1vb_ops;
+extern struct psc_push_particles_ops psc_push_particles_cuda_8x8_1vb_ops;
 
 #define psc_push_particles_ops(push_particles) ((struct psc_push_particles_ops *)((push_particles)->obj.ops))
 

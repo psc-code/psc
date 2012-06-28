@@ -13,6 +13,7 @@ typedef struct {
   fields_cuda_real_t *d_flds;
   int ib[3], im[3]; //> lower bounds and length per direction
   int nr_comp; //> nr of components
+  fields_cuda_real_t *d_bnd_buf, *h_bnd_buf;
 } fields_cuda_t;
 
 // ----------------------------------------------------------------------
@@ -20,9 +21,9 @@ typedef struct {
 
 #define F3_DEV_OFF(fldnr, jx,jy,jz)					\
   ((((fldnr)								\
-     *d_mx[2] + ((jz)-d_ilg[2]))					\
-    *d_mx[1] + ((jy)-d_ilg[1]))						\
-   *d_mx[0] + ((jx)-d_ilg[0]))
+     *d_consts.mx[2] + ((jz)-d_consts.ilg[2]))				\
+    *d_consts.mx[1] + ((jy)-d_consts.ilg[1]))				\
+   *d_consts.mx[0] + ((jx)-d_consts.ilg[0]))
 
 #if 1
 
@@ -39,5 +40,16 @@ typedef struct {
     }))
 
 #endif
+
+//OPT: precalc offset, don't do ghost points in invar dir
+
+#define F3_DEV_OFF_YZ(fldnr, jy,jz)					\
+  ((((fldnr)								\
+     *prm.mx[2] + ((jz)-prm.ilg[2]))					\
+    *prm.mx[1] + ((jy)-prm.ilg[1]))					\
+   *prm.mx[0] + (0-prm.ilg[0]))
+
+#define F3_DEV_YZ(fldnr,jy,jz) \
+  (d_flds)[F3_DEV_OFF_YZ(fldnr, jy,jz)]
 
 #endif

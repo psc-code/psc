@@ -12,6 +12,7 @@
 #undef USE_SCRATCH
 #define SW (2)
 
+#include "cuda_common.h"
 #include "constants.c"
 #include "common.c"
 #include "common_push.c"

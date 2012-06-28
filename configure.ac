@@ -98,6 +98,7 @@ AS_IF([test "x$have_papi" != "xyes"],
 # Checks for options
 
 AC_ARG_VAR([CUDACC], [CUDA compiler])
+AC_ARG_VAR([CUDACFLAGS], [flags to pass to the CUDA compiler])
 AC_ARG_VAR([CUDALIBS], [libraries needed to link CUDA code])
 
 AH_TEMPLATE([USE_CUDA], [use nvcc to create CUDA code])
@@ -111,12 +112,13 @@ AC_ARG_ENABLE(
     AS_IF([test -z "$CUDALIBS"],
           [CUDALIBS="-L/usr/local/cuda/lib -lcudart"])
     AC_SUBST([CUDACC])
-    AC_SUBST([CUDALIBS])
-    AM_CUDACFLAGS="-m64 "
+    CUDACFLAGS="$CUDACFLAGS -m64"
+    AC_SUBST([CUDACFLAGS])
+    CUDAMPIFLAGS=""
     for dir in `$CC -showme:incdirs`; do
-      AM_CUDACFLAGS="$AM_CUDACFLAGS -I$dir"
+      CUDAMPIFLAGS="$CUDAMPIFLAGS -I$dir"
     done
-    AC_SUBST([AM_CUDACFLAGS])
+    AC_SUBST([CUDAMPIFLAGS])
     LIBS="$LIBS $CUDALIBS"])
   ]
 )
@@ -223,9 +225,8 @@ echo "                         CFLAGS: $CFLAGS"
 echo "               Fortran Compiler: $F77"
 echo "                         FFLAGS: $FFLAGS"
 echo "                  CUDA Compiler: $CUDACC"
-echo "                     CUDACFLAGS: $AM_CUDACFLAGS"
+echo "                     CUDACFLAGS: $CUDACFLAGS"
 echo "                       CUDALIBS: $CUDALIBS"
-echo "                         FFLAGS: $FFLAGS"
 echo "                        LDFLAGS: $LDFLAGS"
 echo "                           LIBS: $LIBS"
 echo "               Shared Libraries: $enable_shared"

@@ -21,9 +21,9 @@ collect_currents(real *d_flds, real *d_scratch, int nr_blocks)
     ci[0] *= BLOCKSIZE_X;
     ci[1] *= BLOCKSIZE_Y;
     ci[2] *= BLOCKSIZE_Z;
-    ci[0] += d_ilo[0];
-    ci[1] += d_ilo[1];
-    ci[2] += d_ilo[2];
+    ci[0] += d_consts.ilo[0];
+    ci[1] += d_consts.ilo[1];
+    ci[2] += d_consts.ilo[2];
 
     if (threadIdx.x == 0) {
       for (int m = 0; m < 3; m++) {
