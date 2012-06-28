@@ -1,6 +1,8 @@
 
 #include <math.h>
 
+#include <smmintrin.h>
+
 typedef float v4s;
 typedef int v4si;
 

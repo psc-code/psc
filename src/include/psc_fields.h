@@ -99,7 +99,7 @@ psc_mfields_get_patch_single(struct psc_mfields *flds, int p)
   return ((fields_single_t *)flds->data) + p;
 }
 
-#ifdef USE_SSE2
+#ifdef xUSE_SSE2
 #include "psc_fields_sse2.h"
 typedef struct psc_mfields mfields_sse2_t;
 #endif
