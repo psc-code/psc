@@ -164,8 +164,8 @@ def plot_rho(x, v):
     v = array(v)
     plot_cloud(x - .5 * v)
     plot_cloud(x + .5 * v)
-    xlim(0, 5)
-    ylim(0, 5)
+    xlim(0, 4)
+    ylim(0, 4)
     grid(True)
     gca().set_aspect(True)
 
@@ -223,6 +223,7 @@ def test_2d(curr_2d, x, v):
                 print '(%d,%g) jy %g' % (i, j+.5, jy[i,j])
     plot_rho(x, v)
     plot_j(jx, jy)
+    savefig("vb1.pdf")
     show()
 
 def test_2d_all(curr_2d):
@@ -243,5 +244,5 @@ def test_2d_all(curr_2d):
                         raise
 
 # test_1d()
-#test_2d(curr_2d_bv, (2., 2.), (.2,-1.))
-test_2d_all(curr_2d_bv)
+test_2d(curr_2d_bv, (2.1, 2.3), (.3,-.9))
+#test_2d_all(curr_2d_bv)

@@ -83,3 +83,5 @@ src/libmrc/tests/test_mrc_domain_multi
 src/libmrc/tests/test_mrc_ddc
 src/libmrc/tests/tutorial_mrc_obj
 src/libmrc/tests/run.*
+*.aux
+*.synctex.gz

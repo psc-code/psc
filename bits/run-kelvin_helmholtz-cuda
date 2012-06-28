@@ -1,0 +1,18 @@
+
+# sample kelvin-helmholtz run on CUDA
+
+~/src/psc/src/psc_kelvin_helmholtz \
+    --gdims_y 256 --gdims_z 256 \
+    --npy 1 --npz 1 \
+    --nmax 1001 \
+    --nicell 77 \
+    --output_fields e,h,j,n,v \
+    --write_tfield no \
+    --write_pfield yes --pfield_step 1000 \
+    --particles_base cuda \
+    --fields_base cuda \
+    --psc_push_particles_type cuda_1vb \
+    --psc_push_fields_type cuda \
+    --psc_bnd_type cuda \
+    --psc_bnd_fields_type cuda \
+
