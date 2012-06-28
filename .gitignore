@@ -16,6 +16,7 @@ SELECT
 src/VLI
 src/psc_restart
 src/psc_kelvin_helmholtz
+src/psc_kelvin_helmholtz_double
 src/psc_es1
 src/psc_bohm
 src/psc_harris
