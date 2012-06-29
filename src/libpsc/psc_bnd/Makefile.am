@@ -6,10 +6,23 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_bnd.c \
 	psc_bnd_auto.c \
-	psc_bnd_mix.c \
 	psc_bnd_fld_c.c \
 	psc_bnd_fld_single.c \
 	psc_bnd_fld_mix.c \
 	psc_bnd_c.c ddc_particles.c \
 	psc_bnd_single.c \
-	psc_bnd_single2.c
+	psc_bnd_single2.c \
+	ddc_particles.h \
+	psc_bnd_fld.h
+
+if USE_CUDA
+libsubdir_la_SOURCES += \
+	psc_bnd_mix.c
+endif USE_CUDA
+
+EXTRA_libsubdir_la_SOURCES = \
+	psc_bnd_fld.c \
+	psc_bnd_common.c \
+	psc_bnd_common2.c \
+	psc_bnd_exchange_particles_pre.c
+

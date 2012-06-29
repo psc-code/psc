@@ -1,7 +1,7 @@
 
 AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 
-SUBDIRS = libmrc libpsc tests
+SUBDIRS = include libmrc libpsc tests
 
 bin_PROGRAMS = \
 	VLI \

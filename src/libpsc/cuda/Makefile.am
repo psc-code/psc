@@ -12,7 +12,23 @@ libsubdir_la_SOURCES = \
 	psc_push_fields_cuda.c \
 	psc_bnd_cuda.c \
 	psc_bnd_cuda_fields.c \
-	psc_bnd_fields_cuda.c
+	psc_bnd_fields_cuda.c \
+	b40c/kernel_utils.h \
+	b40c/radixsort_kernel_common.h \
+	b40c/radixsort_key_conversion.h \
+	b40c/radixsort_reduction_kernel.h \
+	b40c/radixsort_scanscatter_kernel.h \
+	b40c/radixsort_scanscatter_kernel3.h \
+	b40c/radixsort_scanscatter_kernel4.h \
+	b40c/radixsort_spine_kernel.h \
+	b40c/vector_types.h \
+	cuda_common.h \
+	cuda_sort2.h \
+	cuda_sort2_spine.h \
+	particles_cuda.h \
+	psc_bnd_cuda.h \
+	psc_bnd_cuda_fields.h
+	psc_cuda.h
 
 libsubdir_la_LIBADD = \
 	cuda_transfer.lo \

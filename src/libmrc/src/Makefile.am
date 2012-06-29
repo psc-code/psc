@@ -34,7 +34,9 @@ libmrc_la_SOURCES = \
 	init.c \
 	hilbert.c \
 	bitfield3d.c \
-	bintree.c
+	bintree.c \
+	hilbert.h \
+	mrc_io_xdmf_lib.h
 
 if HAVE_HDF5
 libmrc_la_SOURCES += \

@@ -18,12 +18,24 @@ libsubdir_la_SOURCES = \
 	push_part_1st_xz.c \
 	push_part_1st_yz.c \
 	push_part_1vb.c \
-	push_part_1vb_mix.c \
 	push_part_1vb_c_yz.c \
 	push_part_1sff_xz.c \
 	psc_push_particles_single.c \
 	push_part_single_1vb_yz.c \
 	push_part_single2_1vb_yz.c \
 	psc_push_particles_double.c \
-	push_part_double_1vb_yz.c
+	push_part_double_1vb_yz.c \
+	psc_generic_c.h \
+	psc_push_particles_1st.h \
+	psc_push_particles_double.h \
+	psc_push_particles_single.h
 
+if USE_CUDA
+libsubdir_la_SOURCES += \
+	push_part_1vb_mix.c
+endif USE_CUDA
+
+EXTRA_libsubdir_la_SOURCES = \
+	c_common_push.c \
+	1vb_yz.c \
+	1vb_yz_2.c

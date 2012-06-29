@@ -6,4 +6,5 @@ noinst_LTLIBRARIES = libsubdir.la
 libsubdir_la_SOURCES = \
 	psc_patchmanager.c \
 	psc_domainwindow.c \
-	psc_domainwindow_movingwindow.c
+	psc_domainwindow_movingwindow.c \
+	debug.h

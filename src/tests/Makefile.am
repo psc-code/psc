@@ -52,14 +52,14 @@ TESTS += \
 endif
 
 # HACK to have automake use the CXX linker 
-EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
-EXTRA_test_part_xy_SOURCES = dummy.cxx
-EXTRA_test_part_yz_SOURCES = dummy.cxx
-EXTRA_test_part_xz_SOURCES = dummy.cxx
-EXTRA_test_part_z_SOURCES = dummy.cxx
-EXTRA_test_field_SOURCES = dummy.cxx
-EXTRA_test_bnd_SOURCES = dummy.cxx
-EXTRA_test_bnd_multi_SOURCES = dummy.cxx
-EXTRA_test_exchange_particles_SOURCES = dummy.cxx
-EXTRA_test_exchange_particles_multi_SOURCES = dummy.cxx
-EXTRA_test_sort_SOURCES = dummy.cxx
+nodist_EXTRA_test_psc_mparticles_SOURCES = dummy.cxx
+nodist_EXTRA_test_part_xy_SOURCES = dummy.cxx
+nodist_EXTRA_test_part_yz_SOURCES = dummy.cxx
+nodist_EXTRA_test_part_xz_SOURCES = dummy.cxx
+nodist_EXTRA_test_part_z_SOURCES = dummy.cxx
+nodist_EXTRA_test_field_SOURCES = dummy.cxx
+nodist_EXTRA_test_bnd_SOURCES = dummy.cxx
+nodist_EXTRA_test_bnd_multi_SOURCES = dummy.cxx
+nodist_EXTRA_test_exchange_particles_SOURCES = dummy.cxx
+nodist_EXTRA_test_exchange_particles_multi_SOURCES = dummy.cxx
+nodist_EXTRA_test_sort_SOURCES = dummy.cxx

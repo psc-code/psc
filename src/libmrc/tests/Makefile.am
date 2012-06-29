@@ -24,7 +24,9 @@ noinst_PROGRAMS = \
 	test_wavelet \
 	tutorial_mrc_obj
 
-tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c
+tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c \
+	vector.h \
+	vector_private.h
 
 LDADD = ../src/libmrctest.la ../src/libmrc.la
 

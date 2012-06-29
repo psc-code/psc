@@ -22,8 +22,8 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_cbe.c
 
 if CELLEMU
-libsubdir_la_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
-	cell_be/spu/spu_mfcio_c.c 
+# libsubdir_la_SOURCES += cell_be/spu/spu_main.c cell_be/spu/spu_dma.c \
+# 	cell_be/spu/spu_mfcio_c.c 
 else !CELLEMU
 
 libsubdir_la_LIBADD = spu_psc_csf.lo
