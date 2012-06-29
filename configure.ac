@@ -107,6 +107,7 @@ AS_IF(
 AC_SUBST([MPIRUN])
 
 AC_CONFIG_FILES([Makefile
+		 include/Makefile
 		 src/Makefile
 		 tests/Makefile
 		 tests/test_ddc_0.sh
