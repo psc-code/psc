@@ -2,6 +2,8 @@
 #ifndef PSC_FIELDS_H
 #define PSC_FIELDS_H
 
+#include <mrc_obj.h>
+
 // ----------------------------------------------------------------------
 // psc_fields class
 

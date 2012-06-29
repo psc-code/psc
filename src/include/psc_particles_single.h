@@ -4,6 +4,8 @@
 
 #include "psc_particles_private.h"
 
+#include "psc.h"
+
 typedef float particle_single_real_t;
 
 #define MPI_PARTICLES_SINGLE_REAL MPI_FLOAT
