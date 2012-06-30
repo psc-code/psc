@@ -93,7 +93,7 @@ _mrc_a3_write(struct mrc_a3 *a3, struct mrc_io *io)
 {
   mrc_io_write_obj_ref(io, mrc_a3_name(a3), "domain",
 		       (struct mrc_obj *) a3->domain);
-  //  mrc_io_write_a3(io, mrc_a3_name(a3), a3);
+  mrc_io_write_a3(io, mrc_a3_name(a3), a3);
 }
 
 static void
@@ -102,7 +102,7 @@ _mrc_a3_read(struct mrc_a3 *a3, struct mrc_io *io)
   a3->domain = (struct mrc_domain *)
     mrc_io_read_obj_ref(io, mrc_a3_name(a3), "domain", &mrc_class_mrc_domain);
   mrc_a3_setup(a3);
-  //  mrc_io_read_a3(io, mrc_a3_name(a3), a3);
+  mrc_io_read_a3(io, mrc_a3_name(a3), a3);
 }
 
 bool
