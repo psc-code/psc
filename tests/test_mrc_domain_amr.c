@@ -23,8 +23,8 @@ main(int argc, char **argv)
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   mrc_domain_set_type(domain, "amr");
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 16, 16, 1});
-  mrc_crds_set_type(crds, "multi_uniform");
-
+  mrc_crds_set_type(crds, "amr_uniform");
+  
   mrc_domain_set_from_options(domain);
   switch (testcase) {
   case 0:
@@ -93,21 +93,17 @@ main(int argc, char **argv)
   mrc_a3_setup(fld);
   mrc_a3_set_comp_name(fld, 0, "m0");
 
-  float kx = 2. * M_PI / 16, ky = 2. * M_PI / 16;
+  float kx = 2. * M_PI, ky = 2. * M_PI;
+
   mrc_a3_foreach_patch(fld, p) {
     struct mrc_a3_patch *a3p = mrc_a3_patch_get(fld, p);
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(domain, p, &info);
-    float xb[3], xe[3], dx[3];
-    for (int d = 0; d < 3; d++) {
-      xb[d] = (float) info.off[d] / (1 << info.level);
-      xe[d] = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
-      dx[d] = (xe[d] - xb[d]) / info.ldims[d];
-    }
+    mrc_crds_patch_get(crds, p);
     mrc_a3_foreach(a3p, ix,iy,iz, 0, 0) {
-      float xx = xb[0] + ix * dx[0], yy = xb[1] + iy * dx[1];
+      float xx = MRC_MCRDX(crds, ix), yy = MRC_MCRDY(crds, iy);
       MRC_A3(a3p, 0, ix,iy,iz) = sin(kx * xx) * cos(ky * yy);
     } mrc_a3_foreach_end;
+    mrc_a3_patch_put(fld);
+    mrc_crds_patch_put(crds);
   }
 
   // write field to disk

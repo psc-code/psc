@@ -283,6 +283,8 @@ mrc_domain_amr_setup(struct mrc_domain *domain)
       amr->patches[p].off[d] = info.off[d];
     }
   }
+
+  mrc_domain_setup_super(domain);
 }
 
 // ----------------------------------------------------------------------
