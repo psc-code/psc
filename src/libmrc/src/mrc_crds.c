@@ -419,6 +419,46 @@ static struct mrc_crds_ops mrc_crds_multi_uniform_ops = {
 };
 
 // ======================================================================
+// mrc_crds_amr_uniform
+
+// FIXME, this should use mrc_a1 not mrc_m1
+
+static void
+mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
+{
+  assert(crds->domain);
+  if (!mrc_domain_is_setup(crds->domain))
+    return;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  float *xl = crds->par.xl, *xh = crds->par.xh;
+
+  for (int d = 0; d < 3; d++) {
+    mrc_crds_multi_alloc(crds, d);
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(crds->domain, p, &info);
+      float xb = (float) info.off[d] / (1 << info.level);
+      float xe = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
+      float dx = (xe - xb) / info.ldims[d];
+
+      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      mrc_m1_foreach_bnd(mcrd_p, i) {
+	MRC_M1(mcrd_p,0, i) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
+      } mrc_m1_foreach_end;
+      mrc_m1_patch_put(mcrd);
+    }
+  }
+}
+
+static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
+  .name  = "amr_uniform",
+  .setup = mrc_crds_amr_uniform_setup,
+};
+
+// ======================================================================
 // mrc_crds_multi_rectilinear
 
 static void
@@ -451,6 +491,7 @@ mrc_crds_init()
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_jr2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_rectilinear_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
 }
 
 // ======================================================================

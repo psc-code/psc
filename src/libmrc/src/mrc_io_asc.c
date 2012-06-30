@@ -92,6 +92,7 @@ static void
 ds_ascii_write_a3(struct mrc_io *io, const char *path, struct mrc_a3 *a3)
 {
   struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
+  struct mrc_crds *crds = mrc_domain_get_crds(a3->domain);
   
   struct mrc_io_params *par = &io->par;
 
@@ -107,26 +108,20 @@ ds_ascii_write_a3(struct mrc_io *io, const char *path, struct mrc_a3 *a3)
     }
     fprintf(file, "\n");
 
-    struct mrc_patch_info info;
-    mrc_domain_get_local_patch_info(a3->domain, p, &info);
-    float xb[3], xe[3], dx[3];
-    for (int d = 0; d < 3; d++) {
-      xb[d] = (float) info.off[d] / (1 << info.level);
-      xe[d] = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
-      dx[d] = (xe[d] - xb[d]) / info.ldims[d];
-    }
-    struct mrc_a3_patch *a3p = &a3->patches[p];
+    struct mrc_a3_patch *a3p = mrc_a3_patch_get(a3, p);
+    mrc_crds_patch_get(crds, p);
     mrc_a3_foreach(a3p, ix,iy,iz, 0,0) {
       if (ix == 0) {
 	fprintf(file, "\n");
       }
-      float xx[3] = { xb[0] + ix * dx[0], xb[1] + iy * dx[1], xb[2] + iz * dx[2] };
-      fprintf(file, "%g %g %g", xx[0], xx[1], xx[2]);
+      fprintf(file, "%g %g %g", MRC_MCRDX(crds, ix), MRC_MCRDY(crds, iy), MRC_MCRDZ(crds, iz));
       for (int m = 0; m < a3->nr_comp; m++) {
 	fprintf(file, " %g", MRC_A3(a3p, m, ix,iy,iz));
       }
       fprintf(file, "\n");
     } mrc_a3_foreach_end;
+    mrc_a3_patch_put(a3);
+    mrc_crds_patch_put(crds);
 
     fclose(file);
   }
