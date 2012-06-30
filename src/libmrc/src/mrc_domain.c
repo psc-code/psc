@@ -1,6 +1,7 @@
 
 #include <mrc_domain_private.h>
 #include <mrc_fld.h>
+#include <mrc_a3.h>
 #include <mrc_params.h>
 #include <mrc_io.h>
 #include <mrc_ddc.h>
@@ -243,6 +244,17 @@ mrc_domain_m1_create(struct mrc_domain *domain)
   struct mrc_m1 *m1 = mrc_m1_create(domain->obj.comm);
   m1->domain = domain;
   return m1;
+}
+
+// ======================================================================
+// mrc_domain_a3_create
+
+struct mrc_a3 *
+mrc_domain_a3_create(struct mrc_domain *domain)
+{
+  struct mrc_a3 *a3 = mrc_a3_create(domain->obj.comm);
+  a3->domain = domain;
+  return a3;
 }
 
 // ======================================================================

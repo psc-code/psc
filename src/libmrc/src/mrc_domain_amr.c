@@ -137,6 +137,46 @@ gpatch_to_rank_patch(struct mrc_domain *domain, int gpatch,
 }
 
 // ======================================================================
+// mrc_domain_amr
+
+// ----------------------------------------------------------------------
+// mrc_domain_amr_get_global_patch_info
+
+static void
+mrc_domain_amr_get_global_patch_info(struct mrc_domain *domain, int gpatch,
+				     struct mrc_patch_info *info)
+{
+  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+
+  assert(gpatch < amr->nr_global_patches);
+  info->global_patch = gpatch;
+  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
+  int sfc_idx;
+  map_gpatch_to_sfc_idx(domain, gpatch, &info->level, &sfc_idx);
+  
+  assert(info->rank >= 0);
+  
+  int p3[3];
+  sfc_level_idx_to_idx3(amr, info->level, sfc_idx, p3);
+  for (int d = 0; d < 3; d++) {
+    info->ldims[d] = amr->gdims[d];
+    info->off[d] = p3[d] * amr->gdims[d];
+    info->idx3[d] = p3[d];
+  }
+}
+
+// ----------------------------------------------------------------------
+// mrc_domain_amr_get_local_patch_info
+
+static void
+mrc_domain_amr_get_local_patch_info(struct mrc_domain *domain, int patch,
+				      struct mrc_patch_info *info)
+{
+  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+
+  mrc_domain_amr_get_global_patch_info(domain, amr->gpatch_off + patch,
+				       info);
+}
 
 // ----------------------------------------------------------------------
 // mrc_domain_amr_create
@@ -234,7 +274,6 @@ mrc_domain_amr_setup(struct mrc_domain *domain)
   amr->gpatch_off = amr->gpatch_off_all[domain->rank];
   amr->nr_patches = amr->gpatch_off_all[domain->rank+1] - amr->gpatch_off;
 
-#if 0
   amr->patches = calloc(amr->nr_patches, sizeof(*amr->patches));
   for (int p = 0; p < amr->nr_patches; p++) {
     struct mrc_patch_info info;
@@ -244,7 +283,6 @@ mrc_domain_amr_setup(struct mrc_domain *domain)
       amr->patches[p].off[d] = info.off[d];
     }
   }
-#endif
 }
 
 // ----------------------------------------------------------------------
@@ -306,45 +344,6 @@ mrc_domain_amr_view(struct mrc_domain *domain)
 }
 
 // ----------------------------------------------------------------------
-// mrc_domain_amr_get_global_patch_info
-
-static void
-mrc_domain_amr_get_global_patch_info(struct mrc_domain *domain, int gpatch,
-				     struct mrc_patch_info *info)
-{
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
-
-  assert(gpatch < amr->nr_global_patches);
-  info->global_patch = gpatch;
-  gpatch_to_rank_patch(domain, gpatch, &info->rank, &info->patch);
-  int sfc_idx;
-  map_gpatch_to_sfc_idx(domain, gpatch, &info->level, &sfc_idx);
-  
-  assert(info->rank >= 0);
-  
-  int p3[3];
-  sfc_level_idx_to_idx3(amr, info->level, sfc_idx, p3);
-  for (int d = 0; d < 3; d++) {
-    info->ldims[d] = amr->gdims[d];
-    info->off[d] = p3[d] * amr->gdims[d];
-    info->idx3[d] = p3[d];
-  }
-}
-
-// ----------------------------------------------------------------------
-// mrc_domain_amr_get_local_patch_info
-
-static void
-mrc_domain_amr_get_local_patch_info(struct mrc_domain *domain, int patch,
-				      struct mrc_patch_info *info)
-{
-  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
-
-  mrc_domain_amr_get_global_patch_info(domain, amr->gpatch_off + patch,
-					 info);
-}
-
-// ----------------------------------------------------------------------
 // mrc_domain_amr_get_patches
 
 static struct mrc_patch *
@@ -353,7 +352,6 @@ mrc_domain_amr_get_patches(struct mrc_domain *domain, int *nr_patches)
   struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
   if (nr_patches) {
     *nr_patches = amr->nr_patches;
-    *nr_patches = 0; // FIXME
   }
   return amr->patches;
 }
