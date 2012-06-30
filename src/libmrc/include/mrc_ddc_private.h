@@ -113,5 +113,9 @@ struct mrc_ddc_multi {
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
 
+// ======================================================================
+// mrc_ddc_amr
+
+extern struct mrc_ddc_ops mrc_ddc_amr_ops;
 
 #endif

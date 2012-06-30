@@ -117,6 +117,7 @@ void
 mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_global_dims);
   mrc_domain_ops(domain)->get_global_dims(domain, dims);
 }
 
@@ -124,6 +125,7 @@ void
 mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_nr_procs);
   mrc_domain_ops(domain)->get_nr_procs(domain, nr_procs);
 }
 
@@ -175,6 +177,13 @@ mrc_domain_plot(struct mrc_domain *domain)
   assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->plot);
   mrc_domain_ops(domain)->plot(domain);
+}
+
+void
+mrc_domain_add_patch(struct mrc_domain *domain, int l, int idx3[3])
+{
+  assert(mrc_domain_ops(domain)->add_patch);
+  mrc_domain_ops(domain)->add_patch(domain, l, idx3);
 }
 
 // ======================================================================
@@ -244,6 +253,7 @@ mrc_domain_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_amr_ops);
 }
 
 // ======================================================================
