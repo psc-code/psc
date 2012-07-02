@@ -173,6 +173,15 @@ mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 }
 
 void
+mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+				     int idx[3], struct mrc_patch_info *info)
+{
+  assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_level_idx3_patch_info);
+  mrc_domain_ops(domain)->get_level_idx3_patch_info(domain, level, idx, info);
+}
+
+void
 mrc_domain_plot(struct mrc_domain *domain)
 {
   assert(mrc_domain_is_setup(domain));
