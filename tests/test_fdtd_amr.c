@@ -12,11 +12,12 @@
 
 #define AMR
 
-// ======================================================================
+// ----------------------------------------------------------------------
+// mrc_domain_get_neighbor_patch_same
 
 static void
-mrc_domain_get_neighbor_patch_same_level(struct mrc_domain *domain, int p,
-					 int dx[3], int *p_nei)
+mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
+				   int dx[3], int *p_nei)
 {
   struct mrc_patch_info pi, pi_nei;
   mrc_domain_get_local_patch_info(domain, p, &pi);
@@ -33,6 +34,63 @@ mrc_domain_get_neighbor_patch_same_level(struct mrc_domain *domain, int p,
     }
   }
   mrc_domain_get_level_idx3_patch_info(domain, pi.level, idx3, &pi_nei);
+  *p_nei = pi_nei.patch;
+}
+
+// ----------------------------------------------------------------------
+// mrc_domain_get_neighbor_patch_coarse
+
+static void
+mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int p,
+				   int dx[3], int *p_nei)
+{
+  struct mrc_patch_info pi, pi_nei;
+  mrc_domain_get_local_patch_info(domain, p, &pi);
+  // FIXME: how about if we only refine in selected directions?
+  int mx[3] = { 1 << (pi.level - 1), 1 << (pi.level - 1), 1 << (pi.level - 1) };
+  int idx3[3];
+  for (int d = 0; d < 3; d++) {
+    if ((dx[d] == -1 && (pi.idx3[d] & 1) == 1) ||
+	(dx[d] ==  1 && (pi.idx3[d] & 1) == 0)) {
+      *p_nei = -1;
+      return;
+    }
+
+    idx3[d] = pi.idx3[d] / 2 + dx[d];
+    if (idx3[d] < 0) {
+      idx3[d] += mx[d];
+    }
+    if (idx3[d] >= mx[d]) {
+      idx3[d] -= mx[d];
+    }
+  }
+  mrc_domain_get_level_idx3_patch_info(domain, pi.level - 1, idx3, &pi_nei);
+  *p_nei = pi_nei.patch;
+}
+
+// ----------------------------------------------------------------------
+// mrc_domain_get_neighbor_patch_fine
+
+static void
+mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
+				   int dx[3], int off[3], int *p_nei)
+{
+  struct mrc_patch_info pi, pi_nei;
+  mrc_domain_get_local_patch_info(domain, p, &pi);
+  // FIXME: how about if we only refine in selected directions?
+  int mx[3] = { 1 << pi.level, 1 << pi.level, 1 << pi.level };
+  int idx3[3];
+  for (int d = 0; d < 3; d++) {
+    idx3[d] = pi.idx3[d] + dx[d];
+    if (idx3[d] < 0) {
+      idx3[d] += mx[d];
+    }
+    if (idx3[d] >= mx[d]) {
+      idx3[d] -= mx[d];
+    }
+    idx3[d] = 2 * idx3[d] + off[d];
+  }
+  mrc_domain_get_level_idx3_patch_info(domain, pi.level + 1, idx3, &pi_nei);
   *p_nei = pi_nei.patch;
 }
 
@@ -59,7 +117,7 @@ fill_ghosts_H_same(struct mrc_a3 *fld)
   for (int p = 0; p < fld->nr_patches; p++) {
     int p_nei;
     int dx[3] = { -1, 0, 0 };
-    mrc_domain_get_neighbor_patch_same_level(fld->domain, p, dx, &p_nei);
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, dx, &p_nei);
     if (p_nei < 0) {
       continue;
     }
@@ -83,7 +141,7 @@ fill_ghosts_E_same(struct mrc_a3 *fld)
   for (int p = 0; p < fld->nr_patches; p++) {
     int p_nei;
     int dx[3] = { 1, 0, 0 };
-    mrc_domain_get_neighbor_patch_same_level(fld->domain, p, dx, &p_nei);
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, dx, &p_nei);
     if (p_nei < 0) {
       continue;
     }
@@ -98,75 +156,139 @@ fill_ghosts_E_same(struct mrc_a3 *fld)
   }
 }
 
+static void
+fill_ghosts_H_coarse(struct mrc_a3 *fld)
+{
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    int p_nei;
+    int dx[3] = { -1, 0, 0 };
+    mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dx, &p_nei);
+    if (p_nei < 0) {
+      continue;
+    }
+    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+    for (int iz = 0; iz < ldims[2]; iz++) {
+      for (int iy = 0; iy < ldims[1]; iy++) {
+	MRC_A3(fldp, HZ, -1,iy,iz) = (2.f/3.f * MRC_A3(fldp_nei, HZ, ldims[0]-1,iy,iz) +
+				      1.f/3.f * MRC_A3(fldp, HZ, 0,iy,iz));
+      }
+    }
+  }
+}
+
+static void
+fill_ghosts_E_coarse(struct mrc_a3 *fld)
+{
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    int p_nei;
+    int dx[3] = { 1, 0, 0 };
+    mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dx, &p_nei);
+    if (p_nei < 0) {
+      continue;
+    }
+    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+    for (int iz = 0; iz < ldims[2]; iz++) {
+      for (int iy = 0; iy < ldims[1]; iy++) {
+	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei, EY, 0,iy,iz);
+      }
+    }
+  }
+}
+
+static void
+fill_ghosts_H_fine(struct mrc_a3 *fld)
+{
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    int p_nei1, p_nei2;
+    int dx[3] = { -1, 0, 0 };
+    int off[3] = { 1, 0, 0 };
+    mrc_domain_get_neighbor_patch_fine(fld->domain, p, dx, off, &p_nei1);
+    if (p_nei1 < 0) {
+      continue;
+    }
+    off[1] = 1;
+    mrc_domain_get_neighbor_patch_fine(fld->domain, p, dx, off, &p_nei2);
+    assert(p_nei2 >= 0);
+    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_a3_patch *fldp_nei1 = mrc_a3_patch_get(fld, p_nei1);
+    struct mrc_a3_patch *fldp_nei2 = mrc_a3_patch_get(fld, p_nei2);
+    for (int iz = 0; iz < ldims[2]; iz++) {
+      for (int iy = 0; iy < ldims[1] / 2; iy++) {
+	MRC_A3(fldp, HZ, -1,iy,iz) = .5f*(MRC_A3(fldp_nei1, HZ, ldims[0]-1,iy,iz) +
+					  MRC_A3(fldp_nei1, HZ, ldims[0]-2,iy,iz));
+      }
+      for (int iy = ldims[1] / 2; iy < ldims[1]; iy++) {
+	MRC_A3(fldp, HZ, -1,iy,iz) = .5f*(MRC_A3(fldp_nei2, HZ, ldims[0]-1,iy,iz) +
+					  MRC_A3(fldp_nei2, HZ, ldims[0]-2,iy,iz));
+      }
+    }
+  }
+}
+
+static void
+fill_ghosts_E_fine(struct mrc_a3 *fld)
+{
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    int p_nei1, p_nei2;
+    int dx[3] = { 1, 0, 0 };
+    int off[3] = { 0, 0, 0 };
+    mrc_domain_get_neighbor_patch_fine(fld->domain, p, dx, off, &p_nei1);
+    if (p_nei1 < 0) {
+      continue;
+    }
+    off[1] = 1;
+    mrc_domain_get_neighbor_patch_fine(fld->domain, p, dx, off, &p_nei2);
+    assert(p_nei2 >= 0);
+    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_a3_patch *fldp_nei1 = mrc_a3_patch_get(fld, p_nei1);
+    struct mrc_a3_patch *fldp_nei2 = mrc_a3_patch_get(fld, p_nei2);
+    for (int iz = 0; iz < ldims[2]; iz++) {
+      for (int iy = 0; iy < ldims[1] / 2; iy++) {
+	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei1, EY, 0,iy,iz);
+      }
+      for (int iy = ldims[1] / 2; iy < ldims[1]; iy++) {
+	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei2, EY, 0,iy,iz);
+      }
+    }
+  }
+}
+
 #define F3 MRC_A3
 
 // ======================================================================
 
-#ifdef AMR
-
 static void
 fill_ghosts_H(struct mrc_a3 *fld)
 {
   fill_ghosts_H_same(fld);
-
-  int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
-
-  struct mrc_a3_patch *fldp[10];
-  for (int p = 0; p < 10; p++) {
-    fldp[p] = mrc_a3_patch_get(fld, p);
-  }
-  for (int iz = 0; iz < ldims[2]; iz++) {
-    for (int iy = 0; iy < ldims[1]; iy++) {
-      F3(fldp[0], HZ, -1,iy,iz) = .5f*(F3(fldp[2], HZ, ldims[0]-1,iy,iz) +
-				       F3(fldp[2], HZ, ldims[0]-2,iy,iz));
-
-      F3(fldp[1], HZ, -1,iy,iz) = (2.f/3.f * F3(fldp[0], HZ, ldims[0]-1,iy,iz) +
-				   1.f/3.f * F3(fldp[1], HZ, 0,iy,iz));
-
-      F3(fldp[3], HZ, -1,iy,iz) = (2.f/3.f * F3(fldp[0], HZ, ldims[0]-1,iy,iz) +
-				   1.f/3.f * F3(fldp[3], HZ, 0,iy,iz));
-    }
-  }
+  fill_ghosts_H_coarse(fld);
+  fill_ghosts_H_fine(fld);
 }
 
 static void
 fill_ghosts_E(struct mrc_a3 *fld)
 {
   fill_ghosts_E_same(fld);
-
-  int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
-
-  struct mrc_a3_patch *fldp[10];
-  for (int p = 0; p < 10; p++) {
-    fldp[p] = mrc_a3_patch_get(fld, p);
-  }
-  for (int iz = 0; iz < ldims[2]; iz++) {
-    for (int iy = 0; iy < ldims[1]; iy++) {
-      F3(fldp[0], EY, ldims[0],iy,iz) = F3(fldp[1], EY, 0,iy,iz);
-
-      F3(fldp[2], EY, ldims[0],iy,iz) = F3(fldp[0], EY, 0,iy,iz);
-      F3(fldp[4], EY, ldims[0],iy,iz) = F3(fldp[0], EY, 0,iy,iz);
-    }
-  }
+  fill_ghosts_E_coarse(fld);
+  fill_ghosts_E_fine(fld);
 }
 
-#else
-
-static void
-fill_ghosts_H(struct mrc_a3 *fld)
-{
-  fill_ghosts_H_same(fld);
-}
-
-static void
-fill_ghosts_E(struct mrc_a3 *fld)
-{
-  fill_ghosts_E_same(fld);
-}
-
-#endif
+// ----------------------------------------------------------------------
+// step_fdtd
 
 static void
 step_fdtd(struct mrc_a3 *fld)
