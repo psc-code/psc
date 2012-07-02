@@ -13,6 +13,21 @@
 #define AMR
 
 // ----------------------------------------------------------------------
+// Bz
+// +-------+---+---+
+// |     o | x | x |
+// |   X   +---O---+
+// |     o | x | x |
+// +-------+---+---+
+
+// Ey
+// +-------+---+---+
+// o   o   x   x   x
+// X       X---+---O
+// o   o   x   x   x
+// +-------+---+---+
+
+// ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_same
 
 static void
@@ -193,6 +208,8 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
   for (int p = 0; p < fld->nr_patches; p++) {
+    struct mrc_patch_info pi;
+    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
     int p_nei;
     int dx[3] = { -1, 0, 0 };
     mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dx, &p_nei);
@@ -203,8 +220,8 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
     struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
     for (int iz = 0; iz < ldims[2]; iz++) {
       for (int iy = 0; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, HZ, -1,iy,iz) = (2.f/3.f * MRC_A3(fldp_nei, HZ, ldims[0]-1,iy,iz) +
-				      1.f/3.f * MRC_A3(fldp, HZ, 0,iy,iz));
+	int iy_nei = (iy + ((pi.idx3[1] & 1) == 1 ? ldims[1] : 0)) / 2;
+	MRC_A3(fldp, HZ, -1,iy,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,iy_nei,iz);
       }
     }
   }
@@ -217,6 +234,8 @@ fill_ghosts_E_coarse(struct mrc_a3 *fld)
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
   for (int p = 0; p < fld->nr_patches; p++) {
+    struct mrc_patch_info pi;
+    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
     int p_nei;
     int dx[3] = { 1, 0, 0 };
     mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dx, &p_nei);
@@ -227,7 +246,11 @@ fill_ghosts_E_coarse(struct mrc_a3 *fld)
     struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
     for (int iz = 0; iz < ldims[2]; iz++) {
       for (int iy = 0; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei, EY, 0,iy,iz);
+	int iy_nei = (iy + ((pi.idx3[1] & 1) == 1 ? ldims[1] : 0)) / 2;
+	int j = iy & 1;
+	MRC_A3(fldp, EY, ldims[0],iy,iz) =
+	  .5f * (MRC_A3(fldp_nei, EY, 0,iy_nei  ,iz) +
+		 MRC_A3(fldp_nei, EY, 0,iy_nei+j,iz));
       }
     }
   }
@@ -255,12 +278,18 @@ fill_ghosts_H_fine(struct mrc_a3 *fld)
     struct mrc_a3_patch *fldp_nei2 = mrc_a3_patch_get(fld, p_nei2);
     for (int iz = 0; iz < ldims[2]; iz++) {
       for (int iy = 0; iy < ldims[1] / 2; iy++) {
-	MRC_A3(fldp, HZ, -1,iy,iz) = .5f*(MRC_A3(fldp_nei1, HZ, ldims[0]-1,iy,iz) +
-					  MRC_A3(fldp_nei1, HZ, ldims[0]-2,iy,iz));
+	MRC_A3(fldp, HZ, -1,iy,iz) =
+	  (1./8.f) * (2.f * MRC_A3(fldp_nei1, HZ, ldims[0]-2,2*iy  ,iz) +
+		      2.f * MRC_A3(fldp_nei1, HZ, ldims[0]-1,2*iy  ,iz) +
+		      2.f * MRC_A3(fldp_nei1, HZ, ldims[0]-2,2*iy+1,iz) +
+		      2.f * MRC_A3(fldp_nei1, HZ, ldims[0]-1,2*iy+1,iz));
       }
-      for (int iy = ldims[1] / 2; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, HZ, -1,iy,iz) = .5f*(MRC_A3(fldp_nei2, HZ, ldims[0]-1,iy,iz) +
-					  MRC_A3(fldp_nei2, HZ, ldims[0]-2,iy,iz));
+      for (int iy = 0; iy < ldims[1] / 2; iy++) {
+	MRC_A3(fldp, HZ, -1,iy + ldims[1] / 2,iz) =
+	  (1./8.f) * (2.f * MRC_A3(fldp_nei2, HZ, ldims[0]-2,2*iy  ,iz) +
+		      2.f * MRC_A3(fldp_nei2, HZ, ldims[0]-1,2*iy  ,iz) +
+		      2.f * MRC_A3(fldp_nei2, HZ, ldims[0]-2,2*iy+1,iz) +
+		      2.f * MRC_A3(fldp_nei2, HZ, ldims[0]-1,2*iy+1,iz));
       }
     }
   }
@@ -286,14 +315,28 @@ fill_ghosts_E_fine(struct mrc_a3 *fld)
     struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
     struct mrc_a3_patch *fldp_nei1 = mrc_a3_patch_get(fld, p_nei1);
     struct mrc_a3_patch *fldp_nei2 = mrc_a3_patch_get(fld, p_nei2);
+#if 0
     for (int iz = 0; iz < ldims[2]; iz++) {
       for (int iy = 0; iy < ldims[1] / 2; iy++) {
-	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei1, EY, 0,iy,iz);
+	MRC_A3(fldp, EY, ldims[0],iy,iz) = 
+	  (1.f/4.f) * (1.f  * MRC_A3(fldp_nei1, EY, 0,2*iy  ,iz) +
+		       .5f  * MRC_A3(fldp_nei1, EY, 1,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei1, EY,-1,2*iy+1,iz) + // FIXME is -1 valid?!
+		       1.f  * MRC_A3(fldp_nei1, EY, 0,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei1, EY, 1,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei1, EY,-1,2*iy+1,iz));
       }
-      for (int iy = ldims[1] / 2; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei2, EY, 0,iy,iz);
+      for (int iy = 0; iy < ldims[1] / 2; iy++) {
+	MRC_A3(fldp, EY, ldims[0],iy + ldims[1] / 2,iz) =
+	  (1.f/4.f) * (1.f  * MRC_A3(fldp_nei2, EY, 0,2*iy  ,iz) +
+		       .5f  * MRC_A3(fldp_nei2, EY, 1,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei2, EY,-1,2*iy+1,iz) + // FIXME is -1 valid?!
+		       1.f  * MRC_A3(fldp_nei2, EY, 0,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei2, EY, 1,2*iy+1,iz) +
+		       .5f  * MRC_A3(fldp_nei2, EY,-1,2*iy+1,iz));
       }
     }
+#endif
   }
 }
 
@@ -493,16 +536,18 @@ main(int argc, char **argv)
   mrc_a3_set_comp_name(fld, HY, "HY");
   mrc_a3_set_comp_name(fld, HZ, "HZ");
 
-  float kx = 2. * M_PI;
+  float kx = 2. * M_PI, ky = 2. * M_PI;
 
   mrc_a3_foreach_patch(fld, p) {
     struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 0) {
+    mrc_a3_foreach(fldp, ix,iy,iz, 0, 1) {
       float x_cc = MRC_MCRDX(crds, ix);
+      float y_cc = MRC_MCRDY(crds, iy);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
-      MRC_A3(fldp, EY, ix,iy,iz) = sin(kx * x_nc);
-      MRC_A3(fldp, HZ, ix,iy,iz) = sin(kx * x_cc);
+      //float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
+      MRC_A3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_cc);
+      MRC_A3(fldp, HZ, ix,iy,iz) = sin(.5+kx * x_cc) * cos(.5+ky * y_cc);
     } mrc_a3_foreach_end;
     mrc_a3_patch_put(fld);
     mrc_crds_patch_put(crds);
