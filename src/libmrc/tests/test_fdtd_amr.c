@@ -116,17 +116,32 @@ fill_ghosts_H_same(struct mrc_a3 *fld)
 
   for (int p = 0; p < fld->nr_patches; p++) {
     int p_nei;
-    int dx[3] = { -1, 0, 0 };
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, dx, &p_nei);
-    if (p_nei < 0) {
-      continue;
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { -1, 0, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	for (int iy = 0; iy < ldims[1]; iy++) {
+	  MRC_A3(fldp, HZ, -1,iy,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,iy,iz);
+	}
+      }
     }
-    
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-    for (int iz = 0; iz < ldims[2]; iz++) {
-      for (int iy = 0; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, HZ, -1,iy,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,iy,iz);
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 0, -1, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	for (int ix = 0; ix < ldims[0]; ix++) {
+	  MRC_A3(fldp, HZ, ix,-1,iz) = MRC_A3(fldp_nei, HZ, ix,ldims[1]-1,iz);
+	}
+      }
+    }
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { -1, -1, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	MRC_A3(fldp, HZ, -1,-1,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,ldims[1]-1,iz);
       }
     }
   }
@@ -140,17 +155,32 @@ fill_ghosts_E_same(struct mrc_a3 *fld)
 
   for (int p = 0; p < fld->nr_patches; p++) {
     int p_nei;
-    int dx[3] = { 1, 0, 0 };
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, dx, &p_nei);
-    if (p_nei < 0) {
-      continue;
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 1, 0, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	for (int iy = 0; iy < ldims[1]; iy++) {
+	  MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei, EY, 0,iy,iz);
+	}
+      }
     }
-
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-    for (int iz = 0; iz < ldims[2]; iz++) {
-      for (int iy = 0; iy < ldims[1]; iy++) {
-	MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei, EY, 0,iy,iz);
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 0, 1, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	for (int ix = 0; ix < ldims[0]; ix++) {
+	  MRC_A3(fldp, EY, ix,ldims[1],iz) = MRC_A3(fldp_nei, EY, ix,0,iz);
+	}
+      }
+    }
+    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 1, 1, 0 }, &p_nei);
+    if (p_nei >= 0) {
+      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+      for (int iz = 0; iz < ldims[2]; iz++) {
+	MRC_A3(fldp, EY, ldims[0],ldims[1],iz) = MRC_A3(fldp_nei, EY, 0,0,iz);
       }
     }
   }
@@ -285,6 +315,13 @@ fill_ghosts_E(struct mrc_a3 *fld)
   fill_ghosts_E_same(fld);
   fill_ghosts_E_coarse(fld);
   fill_ghosts_E_fine(fld);
+}
+
+static void
+fill_ghosts(struct mrc_a3 *fld)
+{
+  fill_ghosts_H(fld);
+  fill_ghosts_E(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -479,6 +516,8 @@ main(int argc, char **argv)
   mrc_io_setup(io);
 
   for (int n = 0; n < 10; n++) {
+    fill_ghosts(fld); // FIXME, only for output/debug
+
     mrc_io_open(io, "w", n, n);
     mrc_a3_write(fld, io);
     mrc_io_close(io);

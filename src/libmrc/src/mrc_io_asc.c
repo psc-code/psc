@@ -110,7 +110,7 @@ ds_ascii_write_a3(struct mrc_io *io, const char *path, struct mrc_a3 *a3)
 
     struct mrc_a3_patch *a3p = mrc_a3_patch_get(a3, p);
     mrc_crds_patch_get(crds, p);
-    mrc_a3_foreach(a3p, ix,iy,iz, 0,0) {
+    mrc_a3_foreach(a3p, ix,iy,iz, 1,1) {
       if (ix == 0) {
 	fprintf(file, "\n");
       }
