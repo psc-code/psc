@@ -43,6 +43,7 @@ def plot_component(basename, fldname, time, m, **kwargs):
 
         ax = plt.gca(projection='3d')
         ax.plot_wireframe(X, Y, fld[:,:,m], **kwargs)
+        #ax.plot_wireframe(X, Y, np.sin(.5+2*np.pi*X)*np.cos(.5+2*np.pi*Y))
 
 for time in xrange(1):
     plt.figure()
