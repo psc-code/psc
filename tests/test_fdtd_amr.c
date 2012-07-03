@@ -57,7 +57,7 @@ mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
 
 static void
 mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int p,
-				   int dx[3], int *p_nei)
+				     int dx[3], int *p_nei)
 {
   struct mrc_patch_info pi, pi_nei;
   mrc_domain_get_local_patch_info(domain, p, &pi);
@@ -67,11 +67,10 @@ mrc_domain_get_neighbor_patch_coarse(struct mrc_domain *domain, int p,
   for (int d = 0; d < 3; d++) {
     if ((dx[d] == -1 && (pi.idx3[d] & 1) == 1) ||
 	(dx[d] ==  1 && (pi.idx3[d] & 1) == 0)) {
-      *p_nei = -1;
-      return;
+      idx3[d] = (pi.idx3[d] + dx[d]) / 2;
+    } else {
+      idx3[d] = (pi.idx3[d] + dx[d]) / 2;
     }
-
-    idx3[d] = pi.idx3[d] / 2 + dx[d];
     if (idx3[d] < 0) {
       idx3[d] += mx[d];
     }
@@ -124,81 +123,73 @@ enum {
 // ======================================================================
 
 static void
-fill_ghosts_H_same(struct mrc_a3 *fld)
+copy_block(struct mrc_a3_patch *fldp_to, struct mrc_a3_patch *fldp_from,
+	   int off_to[3], int off_from[3], int len[3], int m)
+{
+  for (int iz = 0; iz < len[2]; iz++) {
+    for (int iy = 0; iy < len[1]; iy++) {
+      for (int ix = 0; ix < len[0]; ix++) {
+	MRC_A3(fldp_to, m, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+	  MRC_A3(fldp_from, m, ix + off_from[0], iy + off_from[1], iz + off_from[2]);
+      }
+    }
+  }
+}
+
+
+static void
+fill_ghosts_same(struct mrc_a3 *fld, int m, int bl[3], int bh[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
   for (int p = 0; p < fld->nr_patches; p++) {
     int p_nei;
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { -1, 0, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	for (int iy = 0; iy < ldims[1]; iy++) {
-	  MRC_A3(fldp, HZ, -1,iy,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,iy,iz);
+    int dir[3];
+    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    continue;
+	  }
+	  mrc_domain_get_neighbor_patch_same(fld->domain, p, dir, &p_nei);
+	  if (p_nei >= 0) {
+	    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+	    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+	    int off_to[3], off_from[3], len[3];
+	    for (int d = 0; d < 3; d++) {
+	      if (dir[d] < 0) {
+		off_to[d]   = -bl[d];
+		off_from[d] = ldims[d] - bl[d];
+		len[d]      = bl[d];
+	      } else if (dir[d] == 0) {
+		off_to[d]   = 0;
+		off_from[d] = 0;
+		len[d]      = ldims[d];
+	      } else {
+		off_to[d]   = ldims[d];
+		off_from[d] = 0;
+		len[d]      = bh[d];
+	      }
+	    }
+	    copy_block(fldp, fldp_nei, off_to, off_from, len, m);
+	  }
 	}
-      }
-    }
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 0, -1, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	for (int ix = 0; ix < ldims[0]; ix++) {
-	  MRC_A3(fldp, HZ, ix,-1,iz) = MRC_A3(fldp_nei, HZ, ix,ldims[1]-1,iz);
-	}
-      }
-    }
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { -1, -1, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	MRC_A3(fldp, HZ, -1,-1,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,ldims[1]-1,iz);
       }
     }
   }
 }
 
 static void
+fill_ghosts_H_same(struct mrc_a3 *fld)
+{
+  fill_ghosts_same(fld, HZ, (int[]) { 2, 2, 2 }, (int[]) { 2, 2, 3 });
+}
+
+static void
 fill_ghosts_E_same(struct mrc_a3 *fld)
 {
-  int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
-
-  for (int p = 0; p < fld->nr_patches; p++) {
-    int p_nei;
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 1, 0, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	for (int iy = 0; iy < ldims[1]; iy++) {
-	  MRC_A3(fldp, EY, ldims[0],iy,iz) = MRC_A3(fldp_nei, EY, 0,iy,iz);
-	}
-      }
-    }
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 0, 1, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	for (int ix = 0; ix < ldims[0]; ix++) {
-	  MRC_A3(fldp, EY, ix,ldims[1],iz) = MRC_A3(fldp_nei, EY, ix,0,iz);
-	}
-      }
-    }
-    mrc_domain_get_neighbor_patch_same(fld->domain, p, (int [3]) { 1, 1, 0 }, &p_nei);
-    if (p_nei >= 0) {
-      struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-      struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-      for (int iz = 0; iz < ldims[2]; iz++) {
-	MRC_A3(fldp, EY, ldims[0],ldims[1],iz) = MRC_A3(fldp_nei, EY, 0,0,iz);
-      }
-    }
-  }
+  fill_ghosts_same(fld, EY, (int[]) { 2, 2, 2 }, (int[]) { 3, 2, 3 });
 }
 
 static void
@@ -210,18 +201,56 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
   for (int p = 0; p < fld->nr_patches; p++) {
     struct mrc_patch_info pi;
     mrc_domain_get_local_patch_info(fld->domain, p, &pi);
-    int p_nei;
-    int dx[3] = { -1, 0, 0 };
-    mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dx, &p_nei);
-    if (p_nei < 0) {
-      continue;
-    }
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
-    for (int iz = 0; iz < ldims[2]; iz++) {
-      for (int iy = 0; iy < ldims[1]; iy++) {
-	int iy_nei = (iy + ((pi.idx3[1] & 1) == 1 ? ldims[1] : 0)) / 2;
-	MRC_A3(fldp, HZ, -1,iy,iz) = MRC_A3(fldp_nei, HZ, ldims[0]-1,iy_nei,iz);
+    int dir[3];
+    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    continue;
+	  }
+	  int p_nei;
+	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  if (p_nei >= 0) {
+	    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+	    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+	    int off_from[3], off_to[3], len[3];
+	    for (int d = 0; d < 3; d++) {
+	      if (dir[d] == -1) {
+		len[d] = 1;
+		off_to[d] = -1;
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = -1 + 2*ldims[d];
+		} else {
+		  off_from[d] = -1 + ldims[d];
+		}
+	      } else if (dir[d] == 0) {
+		len[d] = ldims[d];
+		off_to[d] = 0;
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = 0;
+		} else {
+		  off_from[d] = ldims[d];
+		}
+	      } else {
+		len[d] = 1;
+		off_to[d] = ldims[d];
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = ldims[d];
+		} else {
+		  off_from[d] = 0;
+		}
+	      }
+	    }
+	    for (int iz = 0; iz < len[2]; iz++) {
+	      for (int iy = 0; iy < len[1]; iy++) {
+		for (int ix = 0; ix < len[0]; ix++) {
+		  MRC_A3(fldp, HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+		    MRC_A3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2);
+		}
+	      }
+	    }
+	  }
+	}
       }
     }
   }
@@ -499,9 +528,33 @@ main(int argc, char **argv)
   mrc_domain_set_type(domain, "amr");
   mrc_domain_set_param_int3(domain, "m", (int [3]) { 8, 8, 1});
   mrc_crds_set_type(crds, "amr_uniform");
-  mrc_crds_set_param_int(crds, "sw", 1);
+  mrc_crds_set_param_int(crds, "sw", 3);
   
   mrc_domain_set_from_options(domain);
+#if 1
+  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 0, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 0, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 0, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 0, 0 });
+
+  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 1, 0 });
+  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 2, 0 });
+  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 2, 0 });
+  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 3, 0 });
+  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 3, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 1, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 1, 0 });
+
+  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 2, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 2, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 2, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 2, 0 });
+
+  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 3, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 3, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 3, 0 });
+  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 3, 0 });
+#else
   mrc_domain_add_patch(domain, 1, (int [3]) { 0, 0, 0 });
   mrc_domain_add_patch(domain, 1, (int [3]) { 0, 1, 0 });
 #ifdef AMR
@@ -517,6 +570,7 @@ main(int argc, char **argv)
   mrc_domain_add_patch(domain, 1, (int [3]) { 1, 0, 0 });
   mrc_domain_add_patch(domain, 1, (int [3]) { 1, 1, 0 });
 #endif
+#endif
 
   mrc_domain_setup(domain);
   mrc_domain_plot(domain);
@@ -526,7 +580,7 @@ main(int argc, char **argv)
   struct mrc_a3 *fld = mrc_domain_a3_create(domain);
   mrc_a3_set_name(fld, "fld");
   mrc_a3_set_param_int(fld, "nr_comps", NR_COMPS);
-  mrc_a3_set_param_int(fld, "sw", 1);
+  mrc_a3_set_param_int(fld, "sw", 3);
   mrc_a3_set_from_options(fld);
   mrc_a3_setup(fld);
   mrc_a3_set_comp_name(fld, EX, "EX");
@@ -541,6 +595,12 @@ main(int argc, char **argv)
   mrc_a3_foreach_patch(fld, p) {
     struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
+#if 0
+    mrc_a3_foreach(fldp, ix,iy,iz, 1, 1) {
+      MRC_A3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
+      MRC_A3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
+    } mrc_a3_foreach_end;
+#endif
     mrc_a3_foreach(fldp, ix,iy,iz, 0, 1) {
       float x_cc = MRC_MCRDX(crds, ix);
       float y_cc = MRC_MCRDY(crds, iy);
