@@ -8,8 +8,9 @@ mx = 8
 my = 8
 mz = 1
 sw = 3
-buf = 1
-patches = [5, 6, 9, 10]
+buf = 2
+patches = [0,1,2,4,7,11,12,13]
+patches = [5,6,9,10]
 patches = xrange(19)
 
 def read_patch(basename, fldname, time, p):
