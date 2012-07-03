@@ -7,8 +7,10 @@ import numpy as np
 mx = 8
 my = 8
 mz = 1
-sw = 1
-nr_patches = 5
+sw = 3
+buf = 1
+patches = [5, 6, 9, 10]
+patches = xrange(19)
 
 def read_patch(basename, fldname, time, p):
     filename = "%s.%06d_p%06d_%s.asc" % (basename, time, p, fldname)
@@ -28,27 +30,33 @@ def read_patch(basename, fldname, time, p):
     return fld, crdcc, crdnc
 
 def plot_component(basename, fldname, time, m, **kwargs):
-    for p in xrange(nr_patches):
+    for p in patches:
         fld, crdcc, crdnc = read_patch(basename, fldname, time, p)
         if m == 1: # EY
-            fld = fld[1:,1:,:]
-            crdcc = [c[1:] for c in crdcc]
-            crdnc = [c[1:] for c in crdnc]
+            slx = slice(sw-buf, -(sw-buf))
+            if sw-buf-1 == 0:
+                sly = slice(sw-buf, None)
+            else:
+                sly = slice(sw-buf, -(sw-buf-1))
+            crdcc = [c[slx] for c in crdcc]
+            crdnc = [c[sly] for c in crdnc]
             X, Y = np.meshgrid(crdnc[0], crdcc[1])
         elif m == 5: # BZ
-            fld = fld[:-1,:-1,:]
-            crdcc = [c[:-1] for c in crdcc]
-            crdnc = [c[:-1] for c in crdnc]
+            slx = slice(sw-buf, -(sw-buf))
+            sly = slice(sw-buf, -(sw-buf))
+            crdcc = [c[slx] for c in crdcc]
             X, Y = np.meshgrid(crdcc[0], crdcc[1])
+
+        fld = fld[slx,sly,:]
 
         ax = plt.gca(projection='3d')
         ax.plot_wireframe(X, Y, fld[:,:,m], **kwargs)
-        #ax.plot_wireframe(X, Y, np.sin(.5+2*np.pi*X)*np.cos(.5+2*np.pi*Y))
+        #ax.plot_wireframe(X, Y, np.sin(.5+2*np.pi*X)*np.cos(.5+2*np.pi*Y), color='g')
 
 for time in xrange(1):
     plt.figure()
-    plot_component("run", "fld", time, 1, color='r')
-    #plot_component("run", "fld", time, 5, color='b')
+    #plot_component("run", "fld", time, 1, color='r')
+    plot_component("run", "fld", time, 5, color='b')
 
 plt.show()
 
