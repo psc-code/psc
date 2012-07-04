@@ -1,6 +1,5 @@
 
 #include "mrc_io_private.h"
-#include <mrc_a3.h>
 #include <mrc_params.h>
 
 #include <stdio.h>
@@ -89,45 +88,6 @@ ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 }
 
 static void
-ds_ascii_write_a3(struct mrc_io *io, const char *path, struct mrc_a3 *a3)
-{
-  struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
-  struct mrc_crds *crds = mrc_domain_get_crds(a3->domain);
-  
-  struct mrc_io_params *par = &io->par;
-
-  for (int p = 0; p < a3->nr_patches; p++) {
-    char filename[strlen(par->outdir) + strlen(par->basename) + 30];
-    fprintf(ascii->file, "# see %s\n", filename);
-    sprintf(filename, "%s/%s.%06d_p%06d_%s.asc", par->outdir, par->basename,
-	    io->step, p, mrc_a3_name(a3));
-    FILE *file = fopen(filename, "w");
-    fprintf(file, "# ix iy iz");
-    for (int m = 0; m < a3->nr_comp; m++) {
-      fprintf(file, " %s", mrc_a3_comp_name(a3, m));
-    }
-    fprintf(file, "\n");
-
-    struct mrc_a3_patch *a3p = mrc_a3_patch_get(a3, p);
-    mrc_crds_patch_get(crds, p);
-    mrc_a3_foreach(a3p, ix,iy,iz, 3,3) {
-      if (ix == 0) {
-	fprintf(file, "\n");
-      }
-      fprintf(file, "%g %g %g", MRC_MCRDX(crds, ix), MRC_MCRDY(crds, iy), MRC_MCRDZ(crds, iz));
-      for (int m = 0; m < a3->nr_comp; m++) {
-	fprintf(file, " %g", MRC_A3(a3p, m, ix,iy,iz));
-      }
-      fprintf(file, "\n");
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(a3);
-    mrc_crds_patch_put(crds);
-
-    fclose(file);
-  }
-}
-
-static void
 ds_ascii_write_attr(struct mrc_io *io, const char *path, int type,
 		    const char *name, union param_u *pv)
 {
@@ -161,6 +121,5 @@ struct mrc_io_ops mrc_io_ascii_ops = {
   .close       = ds_ascii_close,
   .write_field = ds_ascii_write_field,
   .write_m3    = ds_ascii_write_m3,
-  .write_a3    = ds_ascii_write_a3,
   .write_attr  = ds_ascii_write_attr,
 };
