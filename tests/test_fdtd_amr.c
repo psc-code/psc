@@ -1,7 +1,7 @@
 
 #include <mrc_params.h>
 #include <mrc_domain.h>
-#include <mrc_a3.h>
+#include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrctest.h>
 
@@ -125,14 +125,14 @@ enum {
 // ======================================================================
 
 static void
-copy_block(struct mrc_a3_patch *fldp_to, struct mrc_a3_patch *fldp_from,
+copy_block(struct mrc_m3_patch *fldp_to, struct mrc_m3_patch *fldp_from,
 	   int off_to[3], int off_from[3], int len[3], int m)
 {
   for (int iz = 0; iz < len[2]; iz++) {
     for (int iy = 0; iy < len[1]; iy++) {
       for (int ix = 0; ix < len[0]; ix++) {
-	MRC_A3(fldp_to, m, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-	  MRC_A3(fldp_from, m, ix + off_from[0], iy + off_from[1], iz + off_from[2]);
+	MRC_M3(fldp_to, m, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+	  MRC_M3(fldp_from, m, ix + off_from[0], iy + off_from[1], iz + off_from[2]);
       }
     }
   }
@@ -140,7 +140,7 @@ copy_block(struct mrc_a3_patch *fldp_to, struct mrc_a3_patch *fldp_from,
 
 
 static void
-fill_ghosts_same(struct mrc_a3 *fld, int m, int bnd, int ext[3])
+fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
@@ -156,8 +156,8 @@ fill_ghosts_same(struct mrc_a3 *fld, int m, int bnd, int ext[3])
 	  }
 	  mrc_domain_get_neighbor_patch_same(fld->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-	    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_to[3], off_from[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] < 0) {
@@ -184,20 +184,20 @@ fill_ghosts_same(struct mrc_a3 *fld, int m, int bnd, int ext[3])
 }
 
 static void
-fill_ghosts_H_same(struct mrc_a3 *fld)
+fill_ghosts_H_same(struct mrc_m3 *fld)
 {
   fill_ghosts_same(fld, HZ, 2, (int[]) { 0, 0, 1 });
 }
 
 static void
-fill_ghosts_E_same(struct mrc_a3 *fld)
+fill_ghosts_E_same(struct mrc_m3 *fld)
 {
   fill_ghosts_same(fld, EY, 2, (int[]) { 1, 0, 1 });
   fill_ghosts_same(fld, EZ, 2, (int[]) { 1, 1, 0 });
 }
 
 static void
-fill_ghosts_H_coarse(struct mrc_a3 *fld)
+fill_ghosts_H_coarse(struct mrc_m3 *fld)
 {
   int bnd = 2, ext[3] = { 0, 0, 1 };
   int ldims[3];
@@ -216,8 +216,8 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
 	  int p_nei;
 	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-	    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -249,8 +249,8 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
 	    for (int iz = 0; iz < len[2]; iz++) {
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
-		  MRC_A3(fldp, HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    MRC_A3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2);
+		  MRC_M3(fldp, HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+		    MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2);
 		}
 	      }
 	    }
@@ -262,7 +262,7 @@ fill_ghosts_H_coarse(struct mrc_a3 *fld)
 }
 
 static void
-fill_ghosts_E_coarse(struct mrc_a3 *fld)
+fill_ghosts_E_coarse(struct mrc_m3 *fld)
 {
   int bnd = 2, ext[3] = { 1, 0, 1 };
   int ldims[3];
@@ -281,8 +281,8 @@ fill_ghosts_E_coarse(struct mrc_a3 *fld)
 	  int p_nei;
 	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
-	    struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -316,9 +316,9 @@ fill_ghosts_E_coarse(struct mrc_a3 *fld)
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
 		  int k = (ix + off_to[0]) & 1;
-		  MRC_A3(fldp, EY, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    .5f * (MRC_A3(fldp_nei, EY, (ix + off_from[0])/2    , (iy + off_from[1])/2, iz) + 
-			   MRC_A3(fldp_nei, EY, (ix + off_from[0])/2 + k, (iy + off_from[1])/2, iz));
+		  MRC_M3(fldp, EY, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+		    .5f * (MRC_M3(fldp_nei, EY, (ix + off_from[0])/2    , (iy + off_from[1])/2, iz) + 
+			   MRC_M3(fldp_nei, EY, (ix + off_from[0])/2 + k, (iy + off_from[1])/2, iz));
 		}
 	      }
 	    }
@@ -330,14 +330,14 @@ fill_ghosts_E_coarse(struct mrc_a3 *fld)
 }
 
 static void
-fill_ghosts_H_fine(struct mrc_a3 *fld)
+fill_ghosts_H_fine(struct mrc_m3 *fld)
 {
   int bnd = 2;
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
   for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
 
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
@@ -384,16 +384,16 @@ fill_ghosts_H_fine(struct mrc_a3 *fld)
 		if (p_nei < 0) {
 		  continue;
 		}
-		struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_A3(fldp, HZ, ix + off_to[0],iy + off_to[1],iz) =
-			(1./8.f) * (2.f * MRC_A3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_A3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_A3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    2.f * MRC_A3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
+		      MRC_M3(fldp, HZ, ix + off_to[0],iy + off_to[1],iz) =
+			(1./8.f) * (2.f * MRC_M3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
+				    2.f * MRC_M3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
+				    2.f * MRC_M3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
+				    2.f * MRC_M3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
 		    }
 		  }
 		}
@@ -407,14 +407,14 @@ fill_ghosts_H_fine(struct mrc_a3 *fld)
 }
 
 static void
-fill_ghosts_E_fine(struct mrc_a3 *fld)
+fill_ghosts_E_fine(struct mrc_m3 *fld)
 {
   int bnd = 2, ext[3] = { 1, 0, 1 };
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
   for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
 
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
@@ -461,18 +461,18 @@ fill_ghosts_E_fine(struct mrc_a3 *fld)
 		  continue;
 		}
 
-		struct mrc_a3_patch *fldp_nei = mrc_a3_patch_get(fld, p_nei);
+		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_A3(fldp, EY, ix + off_to[0],iy + off_to[1],iz) =
+		      MRC_M3(fldp, EY, ix + off_to[0],iy + off_to[1],iz) =
 			(p == 11 ? 0. : 0.) +
-			(1./8.f) * (2.f * MRC_A3(fldp_nei, EY, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_A3(fldp_nei, EY, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    1.f * MRC_A3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    1.f * MRC_A3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz) +
-				    1.f * MRC_A3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy   + off_from[1],iz) +
-				    1.f * MRC_A3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy+1 + off_from[1],iz));
+			(1./8.f) * (2.f * MRC_M3(fldp_nei, EY, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
+				    2.f * MRC_M3(fldp_nei, EY, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy   + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy+1 + off_from[1],iz));
 		    }
 		  }
 		}
@@ -485,12 +485,12 @@ fill_ghosts_E_fine(struct mrc_a3 *fld)
   }
 }
 
-#define F3 MRC_A3
+#define F3 MRC_M3
 
 // ======================================================================
 
 static void
-fill_ghosts_H(struct mrc_a3 *fld)
+fill_ghosts_H(struct mrc_m3 *fld)
 {
   fill_ghosts_H_same(fld);
   fill_ghosts_H_coarse(fld); // not needed for fdtd
@@ -498,7 +498,7 @@ fill_ghosts_H(struct mrc_a3 *fld)
 }
 
 static void
-fill_ghosts_E(struct mrc_a3 *fld)
+fill_ghosts_E(struct mrc_m3 *fld)
 {
   fill_ghosts_E_same(fld);
   fill_ghosts_E_coarse(fld);
@@ -506,7 +506,7 @@ fill_ghosts_E(struct mrc_a3 *fld)
 }
 
 static void
-fill_ghosts(struct mrc_a3 *fld)
+fill_ghosts(struct mrc_m3 *fld)
 {
   fill_ghosts_H(fld);
   fill_ghosts_E(fld);
@@ -516,7 +516,7 @@ fill_ghosts(struct mrc_a3 *fld)
 // step_fdtd
 
 static void
-step_fdtd(struct mrc_a3 *fld)
+step_fdtd(struct mrc_m3 *fld)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
 #ifdef AMR
@@ -527,15 +527,15 @@ step_fdtd(struct mrc_a3 *fld)
 
   fill_ghosts_H(fld);
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 1) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
       	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
       	cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
@@ -547,22 +547,22 @@ step_fdtd(struct mrc_a3 *fld)
       F3(fldp, EZ, ix,iy,iz) +=
       	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
       	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
   fill_ghosts_E(fld);
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 0) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 0) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
 	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
@@ -574,20 +574,20 @@ step_fdtd(struct mrc_a3 *fld)
       F3(fldp, HZ, ix,iy,iz) -=
 	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
 	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 0) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 0) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
 	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
@@ -599,22 +599,22 @@ step_fdtd(struct mrc_a3 *fld)
       F3(fldp, HZ, ix,iy,iz) -=
 	cnx * (F3(fldp, EY, ix+1,iy,iz) - F3(fldp, EY, ix,iy,iz)) -
 	cny * (F3(fldp, EX, ix,iy+1,iz) - F3(fldp, EX, ix,iy,iz));
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
   fill_ghosts_H(fld);
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
     //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 1) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
 	cny * (F3(fldp, HZ, ix,iy,iz) - F3(fldp, HZ, ix,iy-1,iz)) -
 	cnz * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix,iy,iz-1));
@@ -626,8 +626,8 @@ step_fdtd(struct mrc_a3 *fld)
       F3(fldp, EZ, ix,iy,iz) +=
 	cnx * (F3(fldp, HY, ix,iy,iz) - F3(fldp, HY, ix-1,iy,iz)) -
 	cny * (F3(fldp, HX, ix,iy,iz) - F3(fldp, HX, ix,iy-1,iz));
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
@@ -693,55 +693,56 @@ main(int argc, char **argv)
 
   // create and fill a field
 
-  struct mrc_a3 *fld = mrc_domain_a3_create(domain);
-  mrc_a3_set_name(fld, "fld");
-  mrc_a3_set_param_int(fld, "nr_comps", NR_COMPS);
-  mrc_a3_set_param_int(fld, "sw", 3);
-  mrc_a3_set_from_options(fld);
-  mrc_a3_setup(fld);
-  mrc_a3_set_comp_name(fld, EX, "EX");
-  mrc_a3_set_comp_name(fld, EY, "EY");
-  mrc_a3_set_comp_name(fld, EZ, "EZ");
-  mrc_a3_set_comp_name(fld, HX, "HX");
-  mrc_a3_set_comp_name(fld, HY, "HY");
-  mrc_a3_set_comp_name(fld, HZ, "HZ");
+  struct mrc_m3 *fld = mrc_domain_m3_create(domain);
+  mrc_m3_set_name(fld, "fld");
+  mrc_m3_set_param_int(fld, "nr_comps", NR_COMPS);
+  mrc_m3_set_param_int(fld, "sw", 3);
+  mrc_m3_set_from_options(fld);
+  mrc_m3_setup(fld);
+  mrc_m3_set_comp_name(fld, EX, "EX");
+  mrc_m3_set_comp_name(fld, EY, "EY");
+  mrc_m3_set_comp_name(fld, EZ, "EZ");
+  mrc_m3_set_comp_name(fld, HX, "HX");
+  mrc_m3_set_comp_name(fld, HY, "HY");
+  mrc_m3_set_comp_name(fld, HZ, "HZ");
 
   float kx = 2. * M_PI, ky = 2. * M_PI;
 
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *fldp = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
 
 #if 1
-    mrc_a3_foreach(fldp, ix,iy,iz, 3, 3) {
-      MRC_A3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
-      MRC_A3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
-    } mrc_a3_foreach_end;
+    mrc_m3_foreach(fldp, ix,iy,iz, 3, 3) {
+      MRC_M3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
+      MRC_M3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
+    } mrc_m3_foreach_end;
 #endif
-    mrc_a3_foreach(fldp, ix,iy,iz, 0, 1) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       float x_cc = MRC_MCRDX(crds, ix);
       float y_cc = MRC_MCRDY(crds, iy);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
-      //      MRC_A3(fldp, EZ, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_nc);
+      //      MRC_M3(fldp, EZ, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_nc);
       if (iy < ldims[1]) {
-	MRC_A3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc);// * cos(.5+ky * y_cc);
+	MRC_M3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc);// * cos(.5+ky * y_cc);
 	if (ix < ldims[0]) {
-	  MRC_A3(fldp, HZ, ix,iy,iz) = sin(.5+kx * x_cc);// * cos(.5+ky * y_cc);
+	  MRC_M3(fldp, HZ, ix,iy,iz) = sin(.5+kx * x_cc);// * cos(.5+ky * y_cc);
 	}
       }
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
   // write field to disk
 
   struct mrc_io *io = mrc_io_create(mrc_domain_comm(domain));
-  mrc_io_set_type(io, "ascii");
+  mrc_io_set_type(io, "xdmf2");
+  mrc_io_set_param_int(io, "sw", 3);
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
 
@@ -749,7 +750,7 @@ main(int argc, char **argv)
     fill_ghosts(fld); // FIXME, only for output/debug
 
     mrc_io_open(io, "w", n, n);
-    mrc_a3_write(fld, io);
+    mrc_m3_write(fld, io);
     mrc_io_close(io);
 
     step_fdtd(fld);
@@ -757,7 +758,7 @@ main(int argc, char **argv)
 
   mrc_io_destroy(io);
 
-  mrc_a3_destroy(fld);
+  mrc_m3_destroy(fld);
 
   mrc_domain_destroy(domain);
 
