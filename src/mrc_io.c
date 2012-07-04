@@ -282,28 +282,6 @@ mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
 }
 
 // ----------------------------------------------------------------------
-// mrc_io_write_a3
-
-void
-mrc_io_write_a3(struct mrc_io *io, const char *path, struct mrc_a3 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->write_a3);
-  ops->write_a3(io, path, fld);
-}
-
-// ----------------------------------------------------------------------
-// mrc_io_read_a3
-
-void
-mrc_io_read_a3(struct mrc_io *io, const char *path, struct mrc_a3 *fld)
-{
-  struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops->read_a3);
-  ops->read_a3(io, path, fld);
-}
-
-// ----------------------------------------------------------------------
 // mrc_io_write_field2d
 
 void
