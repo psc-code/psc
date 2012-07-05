@@ -15,6 +15,7 @@ patches = [0,1,2,4,7,11,12,13]
 #patches = [5,6,9,10]
 #patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
 #patches = xrange(10)
+#patches = [5]
 times = xrange(0,32,32)
 
 EX = 0
@@ -55,10 +56,14 @@ def plot_component(basename, fldname, compname, time, **kwargs):
             slx = slicex(sw-buf, -(sw-buf)+1)
             sly = slicex(sw-buf, -(sw-buf)+1)
             X, Y = np.meshgrid(crdnc[0][slx], crdnc[1][sly])
+        elif compname == "HY":
+            slx = slicex(sw-buf, -(sw-buf))
+            sly = slicex(sw-buf, -(sw-buf)+1)
+            X, Y = np.meshgrid(crdcc[0][slx], crdnc[1][sly])
         elif compname == "HZ":
             slx = slicex(sw-buf, -(sw-buf))
             sly = slicex(sw-buf, -(sw-buf))
-            X, Y = np.meshgrid(crdcc[0][slx], crdcc[1][slx])
+            X, Y = np.meshgrid(crdcc[0][slx], crdcc[1][sly])
 
         fld = fld[sw,sly,slx]
 
@@ -74,7 +79,8 @@ for time in times:
     #plt.figure()
     plt.clf()
     #plot_component(basename, "fld", "EY", time, color='r')
-    plot_component("run", "fld", "EZ", time, color='r')
+    #plot_component("run", "fld", "EZ", time, color='r')
+    plot_component("run", "fld", "HY", time, color='r')
     #plot_component(basename, "fld", "HZ", time, color='b')
     plt.draw()
     #plt.show()

@@ -186,6 +186,7 @@ fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
 static void
 fill_ghosts_H_same(struct mrc_m3 *fld)
 {
+  fill_ghosts_same(fld, HY, 2, (int[]) { 0, 1, 0 });
   fill_ghosts_same(fld, HZ, 2, (int[]) { 0, 0, 1 });
 }
 
@@ -197,7 +198,74 @@ fill_ghosts_E_same(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_H_coarse(struct mrc_m3 *fld)
+fill_ghosts_HY_coarse(struct mrc_m3 *fld)
+{
+  int bnd = 2, ext[3] = { 0, 1, 0 };
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    struct mrc_patch_info pi;
+    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
+    int dir[3];
+    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    continue;
+	  }
+	  int p_nei;
+	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  if (p_nei >= 0) {
+	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
+	    int off_from[3], off_to[3], len[3];
+	    for (int d = 0; d < 3; d++) {
+	      if (dir[d] == -1) {
+		len[d] = bnd;
+		off_to[d] = -bnd;
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = -bnd + 2*ldims[d];
+		} else {
+		  off_from[d] = -bnd + ldims[d];
+		}
+	      } else if (dir[d] == 0) {
+		len[d] = ldims[d] + ext[d];
+		off_to[d] = 0;
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = 0;
+		} else {
+		  off_from[d] = ldims[d];
+		}
+	      } else {
+		len[d] = bnd;
+		off_to[d] = ext[d] + ldims[d];
+		if ((pi.idx3[d] & 1) == 0) {
+		  off_from[d] = ext[d] + ldims[d];
+		} else {
+		  off_from[d] = ext[d];
+		}
+	      }
+	    }
+	    for (int iz = 0; iz < len[2]; iz++) {
+	      for (int iy = 0; iy < len[1]; iy++) {
+		for (int ix = 0; ix < len[0]; ix++) {
+		  int j = (iy + off_to[1]) & 1;
+		  MRC_M3(fldp, HY, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
+		    .5f * (MRC_M3(fldp_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2    , (iz + off_from[2])/2) +
+			   MRC_M3(fldp_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2 + j, (iz + off_from[2])/2));
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+static void
+fill_ghosts_HZ_coarse(struct mrc_m3 *fld)
 {
   int bnd = 2, ext[3] = { 0, 0, 1 };
   int ldims[3];
@@ -229,7 +297,7 @@ fill_ghosts_H_coarse(struct mrc_m3 *fld)
 		  off_from[d] = -bnd + ldims[d];
 		}
 	      } else if (dir[d] == 0) {
-		len[d] = ldims[d];
+		len[d] = ldims[d] + ext[d];
 		off_to[d] = 0;
 		if ((pi.idx3[d] & 1) == 0) {
 		  off_from[d] = 0;
@@ -249,8 +317,10 @@ fill_ghosts_H_coarse(struct mrc_m3 *fld)
 	    for (int iz = 0; iz < len[2]; iz++) {
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
+		  int k = 0;
 		  MRC_M3(fldp, HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2);
+		    .5f * (MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2    ) +
+			   MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2 + k));
 		}
 	      }
 	    }
@@ -401,7 +471,85 @@ fill_ghosts_EZ_coarse(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_H_fine(struct mrc_m3 *fld)
+fill_ghosts_HY_fine(struct mrc_m3 *fld)
+{
+  int bnd = 2, ext[3] = { 0, 1, 0 };
+  int ldims[3];
+  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+
+  for (int p = 0; p < fld->nr_patches; p++) {
+    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
+
+    int dir[3];
+    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
+      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
+	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
+	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
+	    continue;
+	  }
+	  int sub[3];
+	  int len[3];
+	  for (int d = 0; d < 3; d++) {
+	    if (dir[d] == 0) {
+	      sub[d] = 2;
+	    } else {
+	      sub[d] = 1;
+	    }
+	  }
+	  int is[3];
+	  for (is[2] = 0; is[2] < sub[2]; is[2]++) {
+	    for (is[1] = 0; is[1] < sub[1]; is[1]++) {
+	      for (is[0] = 0; is[0] < sub[0]; is[0]++) {
+		int off[3], off_to[3], off_from[3];
+		for (int d = 0; d < 3; d++) {
+		  if (dir[d] == -1) {
+		    off[d] = 1;
+		    len[d] = bnd;
+		    off_to[d] = -bnd;
+		    off_from[d] = 2 * -bnd + ldims[d];
+		  } else if (dir[d] == 0) {
+		    off[d] = is[d];
+		    len[d] = ldims[d] / 2 - (is[d] == 0 ? ext[d] : 0);
+		    off_to[d] = is[d] * len[d] + (is[d] == 0 ? ext[d] : 0);
+		    off_from[d] = 2 * (is[d] == 0 ? ext[d] : 0);
+		  } else {
+		    off[d] = 0;
+		    len[d] = bnd;
+		    off_to[d] = ext[d] + ldims[d];
+		    off_from[d] = 2 * ext[d];
+		  }
+		}
+		int p_nei;
+		mrc_domain_get_neighbor_patch_fine(fld->domain, p, dir, off, &p_nei);
+		if (p_nei < 0) {
+		  continue;
+		}
+
+		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
+		for (int iz = 0; iz < 1; iz++) {
+		  for (int iy = 0; iy < len[1]; iy++) {
+		    for (int ix = 0; ix < len[0]; ix++) {
+		      MRC_M3(fldp, HY, ix + off_to[0],iy + off_to[1],iz) =
+			(2./8.f) * (.5f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy-1 + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
+				    .5f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
+				    .5f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy-1 + off_from[1],iz) +
+				    1.f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
+				    .5f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+static void
+fill_ghosts_HZ_fine(struct mrc_m3 *fld)
 {
   int bnd = 2;
   int ldims[3];
@@ -644,8 +792,10 @@ static void
 fill_ghosts_H(struct mrc_m3 *fld)
 {
   fill_ghosts_H_same(fld);
-  fill_ghosts_H_coarse(fld); // not needed for fdtd
-  fill_ghosts_H_fine(fld);
+  fill_ghosts_HY_coarse(fld); // not needed for fdtd
+  fill_ghosts_HZ_coarse(fld); // not needed for fdtd
+  fill_ghosts_HY_fine(fld);
+  fill_ghosts_HZ_fine(fld);
 }
 
 static void
@@ -880,6 +1030,9 @@ main(int argc, char **argv)
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
       MRC_M3(fldp, EZ, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_nc);
+      if (ix < ldims[0]) {
+	MRC_M3(fldp, HY, ix,iy,iz) = sin(.5+kx * x_cc) * cos(.5+ky * y_nc);
+      }
       if (iy < ldims[1]) {
 	MRC_M3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_cc);
 	if (ix < ldims[0]) {
