@@ -6,6 +6,7 @@
 #include <mrctest.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <math.h>
@@ -33,6 +34,132 @@
 // o   o   x---x---x
 // |       |   |   |
 // X---o---X---x---O
+
+// FIXME
+const int max_rows = 200;
+const int max_entries = 400;
+
+struct mrc_ddc_amr_row {
+  int patch;
+  int idx;
+  int first_entry;
+};
+
+struct mrc_ddc_amr_entry {
+  int patch;
+  int idx;
+  float val;
+};
+
+struct mrc_ddc_amr {
+  struct mrc_ddc_amr_row *rows;
+  struct mrc_ddc_amr_entry *entries;
+
+  int nr_rows;
+  int nr_entries;
+
+  struct mrc_domain *domain;
+  int sw;
+  int ib[3], im[3];
+};
+
+// ----------------------------------------------------------------------
+// mrc_ddc_add_setup
+
+static void
+mrc_ddc_amr_setup(struct mrc_ddc_amr *amr)
+{
+  assert(amr->domain);
+  assert(amr->sw);
+
+  int ldims[3];
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  // needs to be compatible with how mrc_m3 indexes
+  for (int d = 0; d < 3; d++) {
+    amr->ib[d] = -amr->sw;
+    amr->im[d] = ldims[d] + 2 * amr->sw;
+  }
+
+  amr->rows = calloc(max_rows + 1, sizeof(*amr->rows));
+  amr->entries = calloc(max_entries, sizeof(*amr->entries));
+
+  amr->nr_entries = 0;
+  amr->nr_rows = 0;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_add_destroy
+
+static void
+mrc_ddc_amr_destroy(struct mrc_ddc_amr *amr)
+{
+  free(amr->rows);
+  free(amr->entries);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_add_value
+
+static void
+mrc_ddc_amr_add_value(struct mrc_ddc_amr *amr,
+		      int row_patch, int rowm, int rowx, int rowy, int rowz,
+		      int col_patch, int colm, int colx, int coly, int colz,
+		      float val)
+{
+  // FIXME, a * F3(i,j,k) + b * F3(i,j,k) should be combined as (a + b) * F3(i,j,k)
+  // WARNING, all elements for any given row must be added contiguously!
+
+  int row_idx = (((rowm * amr->im[2] + rowz - amr->ib[2]) *
+		   amr->im[1] + rowy - amr->ib[1]) *
+		 amr->im[0] + rowx - amr->ib[0]);
+  int col_idx = (((colm * amr->im[2] + colz - amr->ib[2]) *
+		   amr->im[1] + coly - amr->ib[1]) *
+		 amr->im[0] + colx - amr->ib[0]);
+  
+  if (amr->nr_rows == 0 || amr->rows[amr->nr_rows - 1].idx != row_idx) {
+    // start new row
+    assert(amr->nr_rows < max_rows);
+    amr->rows[amr->nr_rows].patch = row_patch;
+    amr->rows[amr->nr_rows].idx = row_idx;
+    amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
+    amr->nr_rows++;
+  }
+
+  assert(amr->nr_entries < max_entries);
+  amr->entries[amr->nr_entries].patch = col_patch;
+  amr->entries[amr->nr_entries].idx = col_idx;
+  amr->entries[amr->nr_entries].val = val;
+  amr->nr_entries++;
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_amr_assemble
+
+static void
+mrc_ddc_amr_assemble(struct mrc_ddc_amr *amr)
+{
+  amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
+  mprintf("nr_rows %d nr_entries %d\n", amr->nr_rows, amr->nr_entries);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_amr_apply
+
+static void
+mrc_ddc_amr_apply(struct mrc_ddc_amr *amr, struct mrc_m3 *fld)
+{
+  for (int row = 0; row < amr->nr_rows; row++) {
+    struct mrc_m3_patch *fldp_row = mrc_m3_patch_get(fld, amr->rows[row].patch);
+    int row_idx = amr->rows[row].idx;
+    fldp_row->arr[row_idx] = 0.;
+    for (int entry = amr->rows[row].first_entry; entry < amr->rows[row + 1].first_entry; entry++) {
+      struct mrc_m3_patch *fldp_col = mrc_m3_patch_get(fld, amr->entries[entry].patch);
+      int col_idx = amr->entries[entry].idx;
+      float val = amr->entries[entry].val;
+      fldp_row->arr[row_idx] += val * fldp_col->arr[col_idx];
+    }
+  }
+}
 
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_same
@@ -204,6 +331,11 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
 
+  struct mrc_ddc_amr _amr = {}, *amr = &_amr;
+  amr->domain = fld->domain;
+  amr->sw = fld->sw;
+  mrc_ddc_amr_setup(amr);
+    
   for (int p = 0; p < fld->nr_patches; p++) {
     struct mrc_patch_info pi;
     mrc_domain_get_local_patch_info(fld->domain, p, &pi);
@@ -217,8 +349,6 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
 	  int p_nei;
 	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -251,9 +381,15 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
 		  int j = (iy + off_to[1]) & 1;
-		  MRC_M3(fldp, HY, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    .5f * (MRC_M3(fldp_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2    , (iz + off_from[2])/2) +
-			   MRC_M3(fldp_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2 + j, (iz + off_from[2])/2));
+		  mrc_ddc_amr_add_value(amr,
+					p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2    , (iz + off_from[2])/2,
+					.5f);
+		  mrc_ddc_amr_add_value(amr, 
+					p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2 + j, (iz + off_from[2])/2, 
+					.5f);
+
 		}
 	      }
 	    }
@@ -262,6 +398,10 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
       }
     }
   }
+
+  mrc_ddc_amr_assemble(amr);
+  mrc_ddc_amr_apply(amr, fld);
+  mrc_ddc_amr_destroy(amr);
 }
 
 static void
@@ -823,7 +963,7 @@ step_fdtd(struct mrc_m3 *fld)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
 #ifdef AMR
-  float dt = 1. / 32;
+  float dt = 1. / 64;
 #else
   float dt = 1. / 16;
 #endif
@@ -865,7 +1005,7 @@ step_fdtd(struct mrc_m3 *fld)
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 0) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
 	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
@@ -890,7 +1030,7 @@ step_fdtd(struct mrc_m3 *fld)
     float cnx = .5 * dt / dx;
     float cny = 0.;//.5 * dt / dy;
     float cnz = 0.;
-    mrc_m3_foreach(fldp, ix,iy,iz, 0, 0) {
+    mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
 	cny * (F3(fldp, EZ, ix,iy+1,iz) - F3(fldp, EZ, ix,iy,iz)) -
 	cnz * (F3(fldp, EY, ix,iy,iz+1) - F3(fldp, EY, ix,iy,iz));
@@ -1009,7 +1149,7 @@ main(int argc, char **argv)
   mrc_m3_set_comp_name(fld, HY, "HY");
   mrc_m3_set_comp_name(fld, HZ, "HZ");
 
-  float kx = 2. * M_PI, ky = 2. * M_PI;
+  float kx = 2. * M_PI;//, ky = 2. * M_PI;
 
   int ldims[3];
   mrc_domain_get_param_int3(fld->domain, "m", ldims);
@@ -1026,17 +1166,17 @@ main(int argc, char **argv)
 #endif
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       float x_cc = MRC_MCRDX(crds, ix);
-      float y_cc = MRC_MCRDY(crds, iy);
+      //      float y_cc = MRC_MCRDY(crds, iy);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
-      float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
-      MRC_M3(fldp, EZ, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_nc);
+      //      float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
+      MRC_M3(fldp, EZ, ix,iy,iz) = sin(.5+kx * x_nc);// * cos(.5+ky * y_nc);
       if (ix < ldims[0]) {
-	MRC_M3(fldp, HY, ix,iy,iz) = sin(.5+kx * x_cc) * cos(.5+ky * y_nc);
+	MRC_M3(fldp, HY, ix,iy,iz) = sin(.5+kx * x_cc);// * cos(.5+ky * y_nc);
       }
       if (iy < ldims[1]) {
-	MRC_M3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc) * cos(.5+ky * y_cc);
+	MRC_M3(fldp, EY, ix,iy,iz) = sin(.5+kx * x_nc);// * cos(.5+ky * y_cc);
 	if (ix < ldims[0]) {
-	  MRC_M3(fldp, HZ, ix,iy,iz) = sin(.5+kx * x_cc) * cos(.5+ky * y_cc);
+	  MRC_M3(fldp, HZ, ix,iy,iz) = sin(.5+kx * x_cc);// * cos(.5+ky * y_cc);
 	}
       }
     } mrc_m3_foreach_end;
