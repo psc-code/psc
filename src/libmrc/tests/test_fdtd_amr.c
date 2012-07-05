@@ -36,8 +36,8 @@
 // X---o---X---x---O
 
 // FIXME
-const int max_rows = 200;
-const int max_entries = 400;
+const int max_rows = 8000;
+const int max_entries = 16000;
 
 struct mrc_ddc_amr_row {
   int patch;
@@ -252,27 +252,14 @@ enum {
 // ======================================================================
 
 static void
-copy_block(struct mrc_m3_patch *fldp_to, struct mrc_m3_patch *fldp_from,
-	   int off_to[3], int off_from[3], int len[3], int m)
-{
-  for (int iz = 0; iz < len[2]; iz++) {
-    for (int iy = 0; iy < len[1]; iy++) {
-      for (int ix = 0; ix < len[0]; ix++) {
-	MRC_M3(fldp_to, m, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-	  MRC_M3(fldp_from, m, ix + off_from[0], iy + off_from[1], iz + off_from[2]);
-      }
-    }
-  }
-}
-
-
-static void
-fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
+set_ddc_same(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
 {
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
+  for (int p = 0; p < nr_patches; p++) {
     int p_nei;
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
@@ -281,10 +268,8 @@ fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
 	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
 	    continue;
 	  }
-	  mrc_domain_get_neighbor_patch_same(fld->domain, p, dir, &p_nei);
+	  mrc_domain_get_neighbor_patch_same(amr->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_to[3], off_from[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] < 0) {
@@ -302,7 +287,16 @@ fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
 	      }
 	      off_from[d] = off_to[d] - dir[d] * ldims[d];
 	    }
-	    copy_block(fldp, fldp_nei, off_to, off_from, len, m);
+	    for (int iz = 0; iz < len[2]; iz++) {
+	      for (int iy = 0; iy < len[1]; iy++) {
+		for (int ix = 0; ix < len[0]; ix++) {
+		  mrc_ddc_amr_add_value(amr,
+					p,     m, ix + off_to[0]  , iy + off_to[1]  , iz + off_to[2],
+					p_nei, m, ix + off_from[0], iy + off_from[1], iz + off_from[2],
+					1.f);
+		}
+	      }
+	    }
 	  }
 	}
       }
@@ -311,34 +305,17 @@ fill_ghosts_same(struct mrc_m3 *fld, int m, int bnd, int ext[3])
 }
 
 static void
-fill_ghosts_H_same(struct mrc_m3 *fld)
-{
-  fill_ghosts_same(fld, HY, 2, (int[]) { 0, 1, 0 });
-  fill_ghosts_same(fld, HZ, 2, (int[]) { 0, 0, 1 });
-}
-
-static void
-fill_ghosts_E_same(struct mrc_m3 *fld)
-{
-  fill_ghosts_same(fld, EY, 2, (int[]) { 1, 0, 1 });
-  fill_ghosts_same(fld, EZ, 2, (int[]) { 1, 1, 0 });
-}
-
-static void
-fill_ghosts_HY_coarse(struct mrc_m3 *fld)
+set_ddc_HY_coarse(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 0, 1, 0 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  struct mrc_ddc_amr _amr = {}, *amr = &_amr;
-  amr->domain = fld->domain;
-  amr->sw = fld->sw;
-  mrc_ddc_amr_setup(amr);
-    
-  for (int p = 0; p < fld->nr_patches; p++) {
+  for (int p = 0; p < nr_patches; p++) {
     struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
+    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -347,7 +324,7 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
 	    continue;
 	  }
 	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
@@ -398,22 +375,20 @@ fill_ghosts_HY_coarse(struct mrc_m3 *fld)
       }
     }
   }
-
-  mrc_ddc_amr_assemble(amr);
-  mrc_ddc_amr_apply(amr, fld);
-  mrc_ddc_amr_destroy(amr);
 }
 
 static void
-fill_ghosts_HZ_coarse(struct mrc_m3 *fld)
+set_ddc_HZ_coarse(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 0, 0, 1 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
+  for (int p = 0; p < nr_patches; p++) {
     struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
+    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -422,10 +397,8 @@ fill_ghosts_HZ_coarse(struct mrc_m3 *fld)
 	    continue;
 	  }
 	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -458,9 +431,14 @@ fill_ghosts_HZ_coarse(struct mrc_m3 *fld)
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
 		  int k = 0;
-		  MRC_M3(fldp, HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    .5f * (MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2    ) +
-			   MRC_M3(fldp_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2 + k));
+		  mrc_ddc_amr_add_value(amr,
+					p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2    ,
+					.5f);
+		  mrc_ddc_amr_add_value(amr,
+					p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, HZ, (ix + off_from[0])/2, (iy + off_from[1])/2, (iz + off_from[2])/2 + k,
+					.5f);
 		}
 	      }
 	    }
@@ -472,15 +450,17 @@ fill_ghosts_HZ_coarse(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_EY_coarse(struct mrc_m3 *fld)
+set_ddc_EY_coarse(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 1, 0, 1 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
+  for (int p = 0; p < nr_patches; p++) {
     struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
+    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -489,10 +469,8 @@ fill_ghosts_EY_coarse(struct mrc_m3 *fld)
 	    continue;
 	  }
 	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -526,9 +504,14 @@ fill_ghosts_EY_coarse(struct mrc_m3 *fld)
 	      for (int iy = 0; iy < len[1]; iy++) {
 		for (int ix = 0; ix < len[0]; ix++) {
 		  int k = (ix + off_to[0]) & 1;
-		  MRC_M3(fldp, EY, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    .5f * (MRC_M3(fldp_nei, EY, (ix + off_from[0])/2    , (iy + off_from[1])/2, iz) + 
-			   MRC_M3(fldp_nei, EY, (ix + off_from[0])/2 + k, (iy + off_from[1])/2, iz));
+		  mrc_ddc_amr_add_value(amr,
+					p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EY, (ix + off_from[0])/2    , (iy + off_from[1])/2,iz,
+					.5f);
+		  mrc_ddc_amr_add_value(amr,
+					p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EY, (ix + off_from[0])/2 + k, (iy + off_from[1])/2,iz,
+					.5f);
 		}
 	      }
 	    }
@@ -540,15 +523,17 @@ fill_ghosts_EY_coarse(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_EZ_coarse(struct mrc_m3 *fld)
+set_ddc_EZ_coarse(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 1, 1, 0 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
+  for (int p = 0; p < nr_patches; p++) {
     struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(fld->domain, p, &pi);
+    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -557,10 +542,8 @@ fill_ghosts_EZ_coarse(struct mrc_m3 *fld)
 	    continue;
 	  }
 	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(fld->domain, p, dir, &p_nei);
+	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
 	  if (p_nei >= 0) {
-	    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-	    struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 	    int off_from[3], off_to[3], len[3];
 	    for (int d = 0; d < 3; d++) {
 	      if (dir[d] == -1) {
@@ -595,11 +578,22 @@ fill_ghosts_EZ_coarse(struct mrc_m3 *fld)
 		for (int ix = 0; ix < len[0]; ix++) {
 		  int i = (ix + off_to[0]) & 1;
 		  int j = (iy + off_to[1]) & 1;
-		  MRC_M3(fldp, EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2]) =
-		    .25f * (MRC_M3(fldp_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2    , iz) + 
-			    MRC_M3(fldp_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2    , iz) +
-			    MRC_M3(fldp_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2 + j, iz) + 
-			    MRC_M3(fldp_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2 + j, iz));
+		  mrc_ddc_amr_add_value(amr,
+					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2    ,iz,
+					.25f);
+		  mrc_ddc_amr_add_value(amr,
+					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2    ,iz,
+					.25f);
+		  mrc_ddc_amr_add_value(amr,
+					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2 + j,iz,
+					.25f);
+		  mrc_ddc_amr_add_value(amr,
+					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					p_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2 + j,iz,
+					.25f);
 		}
 	      }
 	    }
@@ -611,15 +605,15 @@ fill_ghosts_EZ_coarse(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_HY_fine(struct mrc_m3 *fld)
+set_ddc_HY_fine(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 0, 1, 0 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-
+  for (int p = 0; p < nr_patches; p++) {
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -660,22 +654,38 @@ fill_ghosts_HY_fine(struct mrc_m3 *fld)
 		  }
 		}
 		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(fld->domain, p, dir, off, &p_nei);
+		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
 		if (p_nei < 0) {
 		  continue;
 		}
 
-		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_M3(fldp, HY, ix + off_to[0],iy + off_to[1],iz) =
-			(2./8.f) * (.5f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy-1 + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    .5f * MRC_M3(fldp_nei, HY, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    .5f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy-1 + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    .5f * MRC_M3(fldp_nei, HY, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix   + off_from[0], 2*iy-1 + off_from[1],iz,
+					    (2.f/8.f) * .5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix   + off_from[0], 2*iy   + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz,
+					    (2.f/8.f) * .5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy-1 + off_from[1],iz,
+					    (2.f/8.f) * .5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy   + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy+1 + off_from[1],iz,
+					    (2.f/8.f) * .5f);
 		    }
 		  }
 		}
@@ -689,15 +699,15 @@ fill_ghosts_HY_fine(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_HZ_fine(struct mrc_m3 *fld)
+set_ddc_HZ_fine(struct mrc_ddc_amr *amr)
 {
   int bnd = 2;
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-
+  for (int p = 0; p < nr_patches; p++) {
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -739,20 +749,30 @@ fill_ghosts_HZ_fine(struct mrc_m3 *fld)
 		}
 
 		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(fld->domain, p, dir, off, &p_nei);
+		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
 		if (p_nei < 0) {
 		  continue;
 		}
-		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_M3(fldp, HZ, ix + off_to[0],iy + off_to[1],iz) =
-			(1./8.f) * (2.f * MRC_M3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_M3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_M3(fldp_nei, HZ, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    2.f * MRC_M3(fldp_nei, HZ, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HZ, 2*ix   + off_from[0], 2*iy   + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HZ, 2*ix+1 + off_from[0], 2*iy   + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HZ, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     HZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, HZ, 2*ix+1 + off_from[0], 2*iy+1 + off_from[1],iz,
+					    (2.f/8.f) * 1.f);
 		    }
 		  }
 		}
@@ -766,15 +786,15 @@ fill_ghosts_HZ_fine(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_EY_fine(struct mrc_m3 *fld)
+set_ddc_EY_fine(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 1, 0, 1 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-
+  for (int p = 0; p < nr_patches; p++) {
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -815,22 +835,32 @@ fill_ghosts_EY_fine(struct mrc_m3 *fld)
 		  }
 		}
 		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(fld->domain, p, dir, off, &p_nei);
+		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
 		if (p_nei < 0) {
 		  continue;
 		}
 
-		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_M3(fldp, EY, ix + off_to[0],iy + off_to[1],iz) =
-			(1./8.f) * (2.f * MRC_M3(fldp_nei, EY, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    2.f * MRC_M3(fldp_nei, EY, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, EY, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy   + off_from[1],iz) +
-				    1.f * MRC_M3(fldp_nei, EY, 2*ix-1 + off_from[0],2*iy+1 + off_from[1],iz));
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix-1 + off_from[0], 2*iy   + off_from[1],iz, (1.f/8.f)*1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix-1 + off_from[0], 2*iy+1 + off_from[1],iz, (1.f/8.f)*1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix   + off_from[0], 2*iy   + off_from[1],iz, (1.f/8.f)*2.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz, (1.f/8.f)*2.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix-1 + off_from[0], 2*iy   + off_from[1],iz, (1.f/8.f)*1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EY, 2*ix-1 + off_from[0], 2*iy+1 + off_from[1],iz, (1.f/8.f)*1.f);
 		    }
 		  }
 		}
@@ -844,15 +874,15 @@ fill_ghosts_EY_fine(struct mrc_m3 *fld)
 }
 
 static void
-fill_ghosts_EZ_fine(struct mrc_m3 *fld)
+set_ddc_EZ_fine(struct mrc_ddc_amr *amr)
 {
   int bnd = 2, ext[3] = { 1, 1, 0 };
   int ldims[3];
-  mrc_domain_get_param_int3(fld->domain, "m", ldims);
+  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  int nr_patches;
+  mrc_domain_get_patches(amr->domain, &nr_patches);
 
-  for (int p = 0; p < fld->nr_patches; p++) {
-    struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
-
+  for (int p = 0; p < nr_patches; p++) {
     int dir[3];
     for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
       for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
@@ -893,25 +923,41 @@ fill_ghosts_EZ_fine(struct mrc_m3 *fld)
 		  }
 		}
 		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(fld->domain, p, dir, off, &p_nei);
+		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
 		if (p_nei < 0) {
 		  continue;
 		}
 
-		struct mrc_m3_patch *fldp_nei = mrc_m3_patch_get(fld, p_nei);
 		for (int iz = 0; iz < 1; iz++) {
 		  for (int iy = 0; iy < len[1]; iy++) {
 		    for (int ix = 0; ix < len[0]; ix++) {
-		      MRC_M3(fldp, EZ, ix + off_to[0],iy + off_to[1],iz) =
-			(2./8.f) * (.25f * MRC_M3(fldp_nei, EZ, 2*ix-1 + off_from[0],2*iy-1 + off_from[1],iz) +
-				    .5f  * MRC_M3(fldp_nei, EZ, 2*ix-1 + off_from[0],2*iy   + off_from[1],iz) +
-				    .25f * MRC_M3(fldp_nei, EZ, 2*ix-1 + off_from[0],2*iy+1 + off_from[1],iz) +
-				    .5f  * MRC_M3(fldp_nei, EZ, 2*ix   + off_from[0],2*iy-1 + off_from[1],iz) +
-				    1.f  * MRC_M3(fldp_nei, EZ, 2*ix   + off_from[0],2*iy   + off_from[1],iz) +
-				    .5f  * MRC_M3(fldp_nei, EZ, 2*ix   + off_from[0],2*iy+1 + off_from[1],iz) +
-				    .25f * MRC_M3(fldp_nei, EZ, 2*ix+1 + off_from[0],2*iy-1 + off_from[1],iz) +
-				    .5f  * MRC_M3(fldp_nei, EZ, 2*ix+1 + off_from[0],2*iy   + off_from[1],iz) +
-				    .25f * MRC_M3(fldp_nei, EZ, 2*ix+1 + off_from[0],2*iy+1 + off_from[1],iz));
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.25f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*.5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.25f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix   + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix   + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*1.f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.25f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*.5f);
+		      mrc_ddc_amr_add_value(amr,
+					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
+					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.25f);
 		    }
 		  }
 		}
@@ -931,21 +977,39 @@ fill_ghosts_EZ_fine(struct mrc_m3 *fld)
 static void
 fill_ghosts_H(struct mrc_m3 *fld)
 {
-  fill_ghosts_H_same(fld);
-  fill_ghosts_HY_coarse(fld); // not needed for fdtd
-  fill_ghosts_HZ_coarse(fld); // not needed for fdtd
-  fill_ghosts_HY_fine(fld);
-  fill_ghosts_HZ_fine(fld);
+  struct mrc_ddc_amr _ddc = {}, *ddc = &_ddc;
+  ddc->domain = fld->domain;
+  ddc->sw = fld->sw;
+  mrc_ddc_amr_setup(ddc);
+  set_ddc_same(ddc, HY, 2, (int[]) { 0, 1, 0 });
+  set_ddc_same(ddc, HZ, 2, (int[]) { 0, 0, 1 });
+  set_ddc_HY_coarse(ddc); // not needed for fdtd
+  set_ddc_HZ_coarse(ddc); // not needed for fdtd
+  set_ddc_HY_fine(ddc);
+  set_ddc_HZ_fine(ddc);
+  mrc_ddc_amr_assemble(ddc);
+
+  mrc_ddc_amr_apply(ddc, fld);
+  mrc_ddc_amr_destroy(ddc);
 }
 
 static void
 fill_ghosts_E(struct mrc_m3 *fld)
 {
-  fill_ghosts_E_same(fld);
-  fill_ghosts_EY_coarse(fld);
-  fill_ghosts_EZ_coarse(fld);
-  fill_ghosts_EY_fine(fld); // not needed for fdtd
-  fill_ghosts_EZ_fine(fld); // not needed for fdtd
+  struct mrc_ddc_amr _ddc = {}, *ddc = &_ddc;
+  ddc->domain = fld->domain;
+  ddc->sw = fld->sw;
+  mrc_ddc_amr_setup(ddc);
+  set_ddc_same(ddc, EY, 2, (int[]) { 1, 0, 1 });
+  set_ddc_same(ddc, EZ, 2, (int[]) { 1, 1, 0 });
+  set_ddc_EY_coarse(ddc);
+  set_ddc_EZ_coarse(ddc);
+  set_ddc_EY_fine(ddc); // not needed for fdtd
+  set_ddc_EZ_fine(ddc); // not needed for fdtd
+  mrc_ddc_amr_assemble(ddc);
+
+  mrc_ddc_amr_apply(ddc, fld);
+  mrc_ddc_amr_destroy(ddc);
 }
 
 static void
