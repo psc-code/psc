@@ -974,12 +974,13 @@ set_ddc_EZ_fine(struct mrc_ddc_amr *amr)
 
 // ======================================================================
 
-static void
-fill_ghosts_H(struct mrc_m3 *fld)
+static struct mrc_ddc_amr *
+make_ddc_H(struct mrc_domain *domain, int sw)
 {
-  struct mrc_ddc_amr _ddc = {}, *ddc = &_ddc;
-  ddc->domain = fld->domain;
-  ddc->sw = fld->sw;
+  static struct mrc_ddc_amr _ddc;
+  struct mrc_ddc_amr *ddc = &_ddc;
+  ddc->domain = domain;
+  ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
   set_ddc_same(ddc, HY, 2, (int[]) { 0, 1, 0 });
   set_ddc_same(ddc, HZ, 2, (int[]) { 0, 0, 1 });
@@ -989,16 +990,16 @@ fill_ghosts_H(struct mrc_m3 *fld)
   set_ddc_HZ_fine(ddc);
   mrc_ddc_amr_assemble(ddc);
 
-  mrc_ddc_amr_apply(ddc, fld);
-  mrc_ddc_amr_destroy(ddc);
+  return ddc;
 }
 
-static void
-fill_ghosts_E(struct mrc_m3 *fld)
+static struct mrc_ddc_amr *
+make_ddc_E(struct mrc_domain *domain, int sw)
 {
-  struct mrc_ddc_amr _ddc = {}, *ddc = &_ddc;
-  ddc->domain = fld->domain;
-  ddc->sw = fld->sw;
+  static struct mrc_ddc_amr _ddc;
+  struct mrc_ddc_amr *ddc = &_ddc;
+  ddc->domain = domain;
+  ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
   set_ddc_same(ddc, EY, 2, (int[]) { 1, 0, 1 });
   set_ddc_same(ddc, EZ, 2, (int[]) { 1, 1, 0 });
@@ -1008,22 +1009,14 @@ fill_ghosts_E(struct mrc_m3 *fld)
   set_ddc_EZ_fine(ddc); // not needed for fdtd
   mrc_ddc_amr_assemble(ddc);
 
-  mrc_ddc_amr_apply(ddc, fld);
-  mrc_ddc_amr_destroy(ddc);
-}
-
-static void
-fill_ghosts(struct mrc_m3 *fld)
-{
-  fill_ghosts_H(fld);
-  fill_ghosts_E(fld);
+  return ddc;
 }
 
 // ----------------------------------------------------------------------
 // step_fdtd
 
 static void
-step_fdtd(struct mrc_m3 *fld)
+step_fdtd(struct mrc_m3 *fld, struct mrc_ddc_amr *ddc_E, struct mrc_ddc_amr *ddc_H)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
 #ifdef AMR
@@ -1032,7 +1025,7 @@ step_fdtd(struct mrc_m3 *fld)
   float dt = 1. / 16;
 #endif
 
-  fill_ghosts_H(fld);
+  mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_m3_foreach_patch(fld, p) {
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
@@ -1059,7 +1052,7 @@ step_fdtd(struct mrc_m3 *fld)
     mrc_crds_patch_put(crds);
   }
 
-  fill_ghosts_E(fld);
+  mrc_ddc_amr_apply(ddc_E, fld);
 
   mrc_m3_foreach_patch(fld, p) {
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
@@ -1111,7 +1104,7 @@ step_fdtd(struct mrc_m3 *fld)
     mrc_crds_patch_put(crds);
   }
 
-  fill_ghosts_H(fld);
+  mrc_ddc_amr_apply(ddc_H, fld);
 
   mrc_m3_foreach_patch(fld, p) {
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
@@ -1248,6 +1241,9 @@ main(int argc, char **argv)
     mrc_crds_patch_put(crds);
   }
 
+  struct mrc_ddc_amr *ddc_E = make_ddc_E(domain, fld->sw);
+  struct mrc_ddc_amr *ddc_H = make_ddc_H(domain, fld->sw);
+
   // write field to disk
 
   struct mrc_io *io = mrc_io_create(mrc_domain_comm(domain));
@@ -1257,16 +1253,20 @@ main(int argc, char **argv)
   mrc_io_setup(io);
 
   for (int n = 0; n <= 32; n++) {
-    fill_ghosts(fld); // FIXME, only for output/debug
+    mrc_ddc_amr_apply(ddc_E, fld); // for debugging only!
+    mrc_ddc_amr_apply(ddc_H, fld); // for debugging only!
 
     mrc_io_open(io, "w", n, n);
     mrc_m3_write(fld, io);
     mrc_io_close(io);
 
-    step_fdtd(fld);
+    step_fdtd(fld, ddc_E, ddc_H);
   }
 
   mrc_io_destroy(io);
+
+  mrc_ddc_amr_destroy(ddc_E);
+  mrc_ddc_amr_destroy(ddc_H);
 
   mrc_m3_destroy(fld);
 
