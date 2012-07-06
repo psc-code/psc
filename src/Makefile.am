@@ -24,6 +24,7 @@ libmrc_la_SOURCES = \
 	mrc_ddc_simple.c \
 	mrc_ddc_multi.c \
 	mrc_ddc_amr.c \
+	mrc_ddc_amr_stencil.c \
 	mrc_profile.c \
 	mrc_io.c \
 	mrc_io_util.c \
