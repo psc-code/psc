@@ -73,6 +73,12 @@ enum {
   NR_COMPS,
 };
 
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EX[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 1, 0 }, .val = .5f },
+};
+
 static struct mrc_ddc_amr_stencil_entry stencil_coarse_EY[2] = {
   // FIXME, 3D
   { .dx = { 0, 0, 0 }, .val = .5f },
@@ -86,32 +92,47 @@ static struct mrc_ddc_amr_stencil_entry stencil_coarse_EZ[4] = {
   { .dx = { 1, 1, 0 }, .val = .25f },
 };
 
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HX[2] = {
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 1, 0, 0 }, .val = .5f },
+};
+
 static struct mrc_ddc_amr_stencil_entry stencil_coarse_HY[2] = {
-  // FIXME, 3D
   { .dx = { 0, 0, 0 }, .val = .5f },
   { .dx = { 0, 1, 0 }, .val = .5f },
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_coarse_HZ[2] = {
-  // FIXME, 3D
   { .dx = { 0, 0, 0 }, .val = .5f },
   { .dx = { 0, 0, 1 }, .val = .5f },
 };
 
 static struct mrc_ddc_amr_stencil stencils_coarse[NR_COMPS] = {
+  [EX] = { stencil_coarse_EX, ARRAY_SIZE(stencil_coarse_EX) },
   [EY] = { stencil_coarse_EY, ARRAY_SIZE(stencil_coarse_EY) },
   [EZ] = { stencil_coarse_EZ, ARRAY_SIZE(stencil_coarse_EZ) },
+  [HX] = { stencil_coarse_HX, ARRAY_SIZE(stencil_coarse_HX) },
   [HY] = { stencil_coarse_HY, ARRAY_SIZE(stencil_coarse_HY) },
   [HZ] = { stencil_coarse_HZ, ARRAY_SIZE(stencil_coarse_HZ) },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EX[6] = {
+  // FIXME, 3D
+  { .dx = {  0, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
 };
 
 static struct mrc_ddc_amr_stencil_entry stencil_fine_EY[6] = {
   // FIXME, 3D
   { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
-  { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
   { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
-  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
   { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
   { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
 };
 
@@ -128,6 +149,16 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_EZ[9] = {
   { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .25f },
 };
 
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HX[6] = {
+  // FIXME, 3D
+  { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
+};
+	  
 static struct mrc_ddc_amr_stencil_entry stencil_fine_HY[6] = {
   // FIXME, 3D
   { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f },
@@ -147,8 +178,10 @@ static struct mrc_ddc_amr_stencil_entry stencil_fine_HZ[4] = {
 };
 
 static struct mrc_ddc_amr_stencil stencils_fine[NR_COMPS] = {
+  [EX] = { stencil_fine_EX, ARRAY_SIZE(stencil_fine_EX) },
   [EY] = { stencil_fine_EY, ARRAY_SIZE(stencil_fine_EY) },
   [EZ] = { stencil_fine_EZ, ARRAY_SIZE(stencil_fine_EZ) },
+  [HX] = { stencil_fine_HX, ARRAY_SIZE(stencil_fine_HX) },
   [HY] = { stencil_fine_HY, ARRAY_SIZE(stencil_fine_HY) },
   [HZ] = { stencil_fine_HZ, ARRAY_SIZE(stencil_fine_HZ) },
 };
@@ -200,9 +233,9 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
-    //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
+    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
-    float cny = 0.;//.5 * dt / dy;
+    float cny = .5 * dt / dy;
     float cnz = 0.;
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
@@ -227,9 +260,9 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
-    //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
+    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
-    float cny = 0.;//.5 * dt / dy;
+    float cny = .5 * dt / dy;
     float cnz = 0.;
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
@@ -252,9 +285,9 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
-    //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
+    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
-    float cny = 0.;//.5 * dt / dy;
+    float cny = .5 * dt / dy;
     float cnz = 0.;
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, HX, ix,iy,iz) -=
@@ -279,9 +312,9 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
     struct mrc_m3_patch *fldp = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
     float dx = MRC_MCRDX(crds, 1) - MRC_MCRDX(crds, 0); // FIXME
-    //    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
+    float dy = MRC_MCRDY(crds, 1) - MRC_MCRDY(crds, 0);
     float cnx = .5 * dt / dx;
-    float cny = 0.;//.5 * dt / dy;
+    float cny = .5 * dt / dy;
     float cnz = 0.;
     mrc_m3_foreach(fldp, ix,iy,iz, 0, 1) {
       F3(fldp, EX, ix,iy,iz) +=
@@ -303,20 +336,32 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 }
 
 float
-func1(float x, float y)
+func1(float x, float y, int m)
 {
   float kx = 2. * M_PI;
   return sin(.5 + kx * x);
 }
 
 float
-func2(float x, float y)
+func2(float x, float y, int m)
 {
   float kx = 2. * M_PI, ky = 2. * M_PI;
   return sin(.5 + kx * x) * cos(.5 + ky * y);
 }
 
-float (*func)(float, float) = func1;
+float
+func3(float x, float y, int m)
+{
+  float kx = 2. * M_PI, ky = 2. * M_PI;
+  switch (m) {
+  case EX: return   1./sqrtf(2.) * sin(kx * x + ky * y);
+  case EY: return - 1./sqrtf(2.) * sin(kx * x + ky * y);
+  case HZ: return sin(kx * x + ky * y);
+  default: return 0.;
+  }
+}
+
+float (*func)(float, float, int) = func3;
 
 int
 main(int argc, char **argv)
@@ -361,8 +406,10 @@ main(int argc, char **argv)
 
 #if 1
     mrc_m3_foreach(fldp, ix,iy,iz, 3, 3) {
+      MRC_M3(fldp, EX, ix,iy,iz) = 1.f / 0.f;
       MRC_M3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
       MRC_M3(fldp, EZ, ix,iy,iz) = 1.f / 0.f;
+      MRC_M3(fldp, HX, ix,iy,iz) = 1.f / 0.f;
       MRC_M3(fldp, HY, ix,iy,iz) = 1.f / 0.f;
       MRC_M3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
     } mrc_m3_foreach_end;
@@ -372,17 +419,23 @@ main(int argc, char **argv)
       float y_cc = MRC_MCRDY(crds, iy);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
+      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 1 }, p, (int[]) { ix, iy, iz })) {
+	MRC_M3(fldp, EX, ix,iy,iz) = func(x_cc, y_nc, EX);
+      }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 1 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, EY, ix,iy,iz) = func(x_nc, y_cc);
+	MRC_M3(fldp, EY, ix,iy,iz) = func(x_nc, y_cc, EY);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 1, 0 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, EZ, ix,iy,iz) = func(x_nc, y_nc);
+	MRC_M3(fldp, EZ, ix,iy,iz) = func(x_nc, y_nc, EZ);
+      }
+      if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 0 }, p, (int[]) { ix, iy, iz })) {
+	MRC_M3(fldp, HX, ix,iy,iz) = func(x_nc, y_cc, HX);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 0 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, HY, ix,iy,iz) = func(x_cc, y_nc);
+	MRC_M3(fldp, HY, ix,iy,iz) = func(x_cc, y_nc, HY);
       }
       if (!mrc_domain_is_ghost(domain, (int[]) { 0, 0, 1 }, p, (int[]) { ix, iy, iz })) {
-	MRC_M3(fldp, HZ, ix,iy,iz) = func(x_cc, y_cc);
+	MRC_M3(fldp, HZ, ix,iy,iz) = func(x_cc, y_cc, HZ);
       }
     } mrc_m3_foreach_end;
     mrc_m3_patch_put(fld);
@@ -394,6 +447,7 @@ main(int argc, char **argv)
   mrc_ddc_set_domain(ddc_E, domain);
   mrc_ddc_set_param_int(ddc_E, "sw", fld->sw);
   mrc_ddc_setup(ddc_E);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EX, 2, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
   mrc_ddc_amr_set_by_stencil(ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
   mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
   mrc_ddc_amr_assemble(ddc_E);
@@ -403,6 +457,7 @@ main(int argc, char **argv)
   mrc_ddc_set_domain(ddc_H, domain);
   mrc_ddc_set_param_int(ddc_H, "sw", fld->sw);
   mrc_ddc_setup(ddc_H);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HX, 2, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
   mrc_ddc_amr_assemble(ddc_H);
@@ -430,7 +485,7 @@ main(int argc, char **argv)
   mrc_m3_write(fld, io);
   mrc_io_close(io);
 
-  for (int n = 0; n <= 32; n++) {
+  for (int n = 0; n <= 100; n++) {
     mrc_io_open(io, "w", n+2, n+2);
     mrc_m3_write(fld, io);
     mrc_io_close(io);
