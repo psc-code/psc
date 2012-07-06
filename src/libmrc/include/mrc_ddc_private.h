@@ -116,6 +116,30 @@ extern struct mrc_ddc_ops mrc_ddc_multi_ops;
 // ======================================================================
 // mrc_ddc_amr
 
+struct mrc_ddc_amr_row {
+  int patch;
+  int idx;
+  int first_entry;
+};
+
+struct mrc_ddc_amr_entry {
+  int patch;
+  int idx;
+  float val;
+};
+
+struct mrc_ddc_amr {
+  struct mrc_ddc_amr_row *rows;
+  struct mrc_ddc_amr_entry *entries;
+
+  int nr_rows;
+  int nr_entries;
+
+  struct mrc_domain *domain;
+  int sw;
+  int ib[3], im[3];
+};
+
 extern struct mrc_ddc_ops mrc_ddc_amr_ops;
 
 #endif
