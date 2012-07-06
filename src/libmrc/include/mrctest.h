@@ -47,4 +47,13 @@ struct mrc_f3 *mrctest_create_field_1(struct mrc_domain *domain);
 struct mrc_f3 *mrctest_create_field_2(struct mrc_domain *domain);
 struct mrc_m1 *mrctest_create_m1_1(struct mrc_domain *domain, int dim);
 
+// ----------------------------------------------------------------------
+// mrctest_set_amr_domain
+
+void mrctest_set_amr_domain_0(struct mrc_domain *domain);
+void mrctest_set_amr_domain_1(struct mrc_domain *domain);
+void mrctest_set_amr_domain_2(struct mrc_domain *domain);
+void mrctest_set_amr_domain_3(struct mrc_domain *domain);
+void mrctest_set_amr_domain_4(struct mrc_domain *domain);
+
 #endif

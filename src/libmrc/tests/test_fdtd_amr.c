@@ -869,117 +869,6 @@ step_fdtd(struct mrc_m3 *fld, struct mrc_ddc_amr *ddc_E, struct mrc_ddc_amr *ddc
 
 }
 
-static void __unused
-set_domain_0(struct mrc_domain *domain)
-{
-  mrc_domain_add_patch(domain, 1, (int [3]) { 0, 0, 0 });
-  mrc_domain_add_patch(domain, 1, (int [3]) { 0, 1, 0 });
-  mrc_domain_add_patch(domain, 1, (int [3]) { 1, 0, 0 });
-  mrc_domain_add_patch(domain, 1, (int [3]) { 1, 1, 0 });
-}
-
-static void __unused
-set_domain_1(struct mrc_domain *domain)
-{
-  mrc_domain_add_patch(domain, 1, (int [3]) { 0, 0, 0 });
-  mrc_domain_add_patch(domain, 1, (int [3]) { 0, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 3, 0 });
-}
-
-static void __unused
-set_domain_2(struct mrc_domain *domain)
-{
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 0, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 1, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 1, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 2, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 3, 0 });
-}
-
-static void __unused
-set_domain_3(struct mrc_domain *domain)
-{
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 0, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 1, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 1, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 4, 4, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 5, 4, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 4, 5, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 5, 5, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 2, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 3, 0 });
-}
-
-static void __unused
-set_domain_4(struct mrc_domain *domain)
-{
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 0, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 0, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 1, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 1, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 4, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 5, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 4, 3, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 5, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 1, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 2, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 4, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 4, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 2, 5, 0 });
-  mrc_domain_add_patch(domain, 3, (int [3]) { 3, 5, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 2, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 2, 0 });
-
-  mrc_domain_add_patch(domain, 2, (int [3]) { 0, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 1, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 2, 3, 0 });
-  mrc_domain_add_patch(domain, 2, (int [3]) { 3, 3, 0 });
-}
-
 float
 func1(float x, float y)
 {
@@ -1010,7 +899,7 @@ main(int argc, char **argv)
   mrc_crds_set_param_int(crds, "sw", 3);
   
   mrc_domain_set_from_options(domain);
-  set_domain_3(domain);
+  mrctest_set_amr_domain_3(domain);
 
   mrc_domain_setup(domain);
   mrc_domain_plot(domain);
