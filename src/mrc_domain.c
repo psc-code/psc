@@ -181,6 +181,17 @@ mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 }
 
 void
+mrc_domain_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
+{
+  assert(mrc_domain_is_setup(domain));
+  if (!mrc_domain_ops(domain)->get_nr_levels) {
+    *p_nr_levels = 1;
+    return;
+  }
+  mrc_domain_ops(domain)->get_nr_levels(domain, p_nr_levels);
+}
+
+void
 mrc_domain_plot(struct mrc_domain *domain)
 {
   assert(mrc_domain_is_setup(domain));

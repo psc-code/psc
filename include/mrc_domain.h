@@ -43,6 +43,7 @@ void mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 				    struct mrc_patch_info *info);
 void mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level, int idx[3],
 					  struct mrc_patch_info *info);
+void mrc_domain_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels);
 void mrc_domain_plot(struct mrc_domain *domain);
 int  mrc_domain_get_neighbor_rank(struct mrc_domain *domain, int shift[3]);
 bool mrc_domain_is_setup(struct mrc_domain *domain);
