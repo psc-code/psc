@@ -17,7 +17,7 @@ patches = [0,1,2,4,7,11,12] #,13]
 patches = [5,6,9,10,13,14,16,17]
 patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
 #patches = xrange(22)
-#patches = [0]
+#patches = [5]
 times = xrange(0,1,1)
 
 EX = 0

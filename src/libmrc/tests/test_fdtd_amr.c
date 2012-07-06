@@ -11,9 +11,12 @@
 #include <assert.h>
 #include <math.h>
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
 #define AMR
 
 // ----------------------------------------------------------------------
+// x-y plane, Xx: interior point, Oo: ghost point
 
 // Bx
 // +-------+---+---+
@@ -35,6 +38,13 @@
 // |   X   +---O---+
 // | o   o | x | x |
 // +-------+---+---+
+
+// Ex
+// +-o-X-o-+-x-O-x-+
+// |       |   |   |
+// |       +-x-+-x-+
+// |       |   |   |
+// +-o-X-o-+-x-O-x-+
 
 // Ey
 // +-------+---+---+
@@ -117,8 +127,8 @@ mrc_ddc_amr_destroy(struct mrc_ddc_amr *amr)
 
 static void
 mrc_ddc_amr_add_value(struct mrc_ddc_amr *amr,
-		      int row_patch, int rowm, int rowx, int rowy, int rowz,
-		      int col_patch, int colm, int colx, int coly, int colz,
+		      int row_patch, int rowm, int row[3],
+		      int col_patch, int colm, int col[3],
 		      float val)
 {
   // FIXME, a * F3(i,j,k) + b * F3(i,j,k) should be combined as (a + b) * F3(i,j,k)
@@ -127,12 +137,12 @@ mrc_ddc_amr_add_value(struct mrc_ddc_amr *amr,
   assert(row_patch >= 0);
   assert(col_patch >= 0);
 
-  int row_idx = (((rowm * amr->im[2] + rowz - amr->ib[2]) *
-		   amr->im[1] + rowy - amr->ib[1]) *
-		 amr->im[0] + rowx - amr->ib[0]);
-  int col_idx = (((colm * amr->im[2] + colz - amr->ib[2]) *
-		   amr->im[1] + coly - amr->ib[1]) *
-		 amr->im[0] + colx - amr->ib[0]);
+  int row_idx = (((rowm * amr->im[2] + row[2] - amr->ib[2]) *
+		  amr->im[1] + row[1] - amr->ib[1]) *
+		 amr->im[0] + row[0] - amr->ib[0]);
+  int col_idx = (((colm * amr->im[2] + col[2] - amr->ib[2]) *
+		  amr->im[1] + col[1] - amr->ib[1]) *
+		 amr->im[0] + col[0] - amr->ib[0]);
   
   if (amr->nr_rows == 0 || amr->rows[amr->nr_rows - 1].idx != row_idx) {
     // start new row
@@ -256,9 +266,14 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
   *p_nei = pi_nei.patch;
 }
 
-struct mrc_ddc_amr_stencil {
+struct mrc_ddc_amr_stencil_entry {
   int dx[3];
   float val;
+};
+
+struct mrc_ddc_amr_stencil {
+  struct mrc_ddc_amr_stencil_entry *s;
+  int nr_entries;
 };
   
 // ======================================================================
@@ -274,59 +289,6 @@ enum {
 };
 
 // ======================================================================
-
-static void
-set_ddc_same(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
-{
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    int p_nei;
-    int dir[3];
-    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    continue;
-	  }
-	  mrc_domain_get_neighbor_patch_same(amr->domain, p, dir, &p_nei);
-	  if (p_nei >= 0) {
-	    int off_to[3], off_from[3], len[3];
-	    for (int d = 0; d < 3; d++) {
-	      if (dir[d] < 0) {
-		off_to[d]   = -bnd;
-		// FIXME we shouldn't extend the bnd region in general, definitely not into our own
-		// points, really only if there's a fine grid which means there's no other way to
-		// set the point(s)
-		len[d]      = bnd + (dir[1-d] != 0 ? ext[d] : 0);
-	      } else if (dir[d] == 0) {
-		off_to[d]   = 0;
-		len[d]      = ext[d] + ldims[d];
-	      } else {
-		off_to[d]   = ldims[d];
-		len[d]      = ext[d] + bnd;
-	      }
-	      off_from[d] = off_to[d] - dir[d] * ldims[d];
-	    }
-	    for (int iz = 0; iz < len[2]; iz++) {
-	      for (int iy = 0; iy < len[1]; iy++) {
-		for (int ix = 0; ix < len[0]; ix++) {
-		  mrc_ddc_amr_add_value(amr,
-					p,     m, ix + off_to[0]  , iy + off_to[1]  , iz + off_to[2],
-					p_nei, m, ix + off_from[0], iy + off_from[1], iz + off_from[2],
-					1.f);
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
 
 static bool
 mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
@@ -543,7 +505,7 @@ div_2(int i)
 
 static bool
 mrc_ddc_amr_stencil_coarse(struct mrc_ddc_amr *amr, int ext[3],
-			   struct mrc_ddc_amr_stencil *stencil, int stencil_len,
+			   struct mrc_ddc_amr_stencil *stencil,
 			   int m, int p, int i[3])
 {
   int p_nei, j[3];
@@ -554,21 +516,21 @@ mrc_ddc_amr_stencil_coarse(struct mrc_ddc_amr *amr, int ext[3],
     return false;
   }
 
-  for (struct mrc_ddc_amr_stencil *s = stencil; s < stencil + stencil_len; s++) {
+  for (struct mrc_ddc_amr_stencil_entry *s = stencil->s; s < stencil->s + stencil->nr_entries; s++) {
     int jd[3], p_dnei, j_dnei[3];
     for (int d = 0; d < 3; d++) {
-      jd[d] = j[d] + s->dx[d];
+      jd[d] = j[d] + s->dx[d] * (i[d] & 1 && d < 2); // FIXME 3D
     }
     mrc_domain_to_valid_point_same(amr->domain, ext, p_nei, jd, &p_dnei, j_dnei);
-    mrc_ddc_amr_add_value(amr, p, m, i[0], i[1], i[2],
-			  p_dnei, m, j_dnei[0], j_dnei[1], j_dnei[2], s->val);
+    assert(!mrc_domain_is_ghost(amr->domain, ext, p_dnei, j_dnei));
+    mrc_ddc_amr_add_value(amr, p, m, i, p_dnei, m, j_dnei, s->val);
   }
   return true;
 }
 
 static bool
 mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
-			 struct mrc_ddc_amr_stencil *stencil, int stencil_len,
+			 struct mrc_ddc_amr_stencil *stencil,
 			 int m, int p, int i[3])
 {
   int p_nei, j[3];
@@ -577,13 +539,14 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
     return false;
   }
 
-  for (struct mrc_ddc_amr_stencil *s = stencil; s < stencil + stencil_len; s++) {
+  for (struct mrc_ddc_amr_stencil_entry *s = stencil->s; s < stencil->s + stencil->nr_entries; s++) {
     int id[3];
     for (int d = 0; d < 3; d++) {
       id[d] = 2*i[d] + s->dx[d];
     }
     mrc_domain_find_valid_point_fine(amr->domain, p, id, &p_nei, j);
-    mrc_ddc_amr_add_value(amr, p, m, i[0], i[1], i[2], p_nei, m, j[0], j[1], j[2], s->val);
+    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
+    mrc_ddc_amr_add_value(amr, p, m, i, p_nei, m, j, s->val);
   }
   return true;
 }
@@ -591,7 +554,9 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
 // ================================================================================
 
 static void
-set_ddc_fdtd(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
+set_ddc_stencil(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3],
+		struct mrc_ddc_amr_stencil *stencil_coarse,
+		struct mrc_ddc_amr_stencil *stencil_fine)
 {
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
@@ -599,16 +564,17 @@ set_ddc_fdtd(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
   mrc_domain_get_patches(amr->domain, &nr_patches);
 
   for (int p = 0; p < nr_patches; p++) {
-    for (int iz = 0; iz < ldims[2] + 0; iz++) {
-      for (int iy = -bnd; iy < ldims[1] + ext[1] + bnd; iy++) {
-	for (int ix = -bnd; ix < ldims[0] + ext[0] + bnd; ix++) {
-	  if (ix >= ext[0] && ix < ldims[0] &&
-	      iy >= ext[1] && iy < ldims[1] &&
-	      iz >= ext[2] && iz < ldims[2]) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p, (int[]) { ix, iy, iz }));
+    int i[3];
+    for (i[2] = 0; i[2] < ldims[2] + 0; i[2]++) { // FIXME 3D
+      for (i[1] = -bnd; i[1] < ldims[1] + ext[1] + bnd; i[1]++) {
+	for (i[0] = -bnd; i[0] < ldims[0] + ext[0] + bnd; i[0]++) {
+	  if (i[0] >= ext[0] && i[0] < ldims[0] &&
+	      i[1] >= ext[1] && i[1] < ldims[1] &&
+	      i[2] >= ext[2] && i[2] < ldims[2]) {
+	    assert(!mrc_domain_is_ghost(amr->domain, ext, p, i));
 	    continue;
 	  }
-	  if (!mrc_domain_is_ghost(amr->domain, ext, p, (int[]) { ix, iy, iz })) {
+	  if (!mrc_domain_is_ghost(amr->domain, ext, p, i)) {
 	    continue;
 	  }
 
@@ -616,125 +582,25 @@ set_ddc_fdtd(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
 
 	  // try to find an interior point corresponding to the current ghostpoint
 	  int j[3], p_nei;
-	  mrc_domain_find_valid_point_same(amr->domain, ext,
-					   p, (int[]) { ix, iy, iz }, &p_nei, j);
+	  mrc_domain_find_valid_point_same(amr->domain, ext, p, i, &p_nei, j);
 	  if (p_nei >= 0) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j)); // FIXME, -> add_value()
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], 1.f);
+	    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
+	    mrc_ddc_amr_add_value(amr, p, m, i, p_nei, m, j, 1.f);
 	    continue;
 	  }
 
 	  // try to interpolate from coarse
-	  if (m == EY) {
-	    int i = ix & 1;
-	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
-	      // FIXME, 3D
-	      { .dx = { 0, 0, 0 }, .val = .5f },
-	      { .dx = { i, 0, 0 }, .val = .5f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == EZ) {
-	    int i = ix & 1;
-	    int j = iy & 1;
-	    struct mrc_ddc_amr_stencil stencil_coarse[4] = {
-	      // FIXME, 3D
-	      { .dx = { 0, 0, 0 }, .val = .25f },
-	      { .dx = { i, 0, 0 }, .val = .25f },
-	      { .dx = { 0, j, 0 }, .val = .25f },
-	      { .dx = { i, j, 0 }, .val = .25f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 4, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == HY) {
-	    int j = iy & 1;
-	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
-	      // FIXME, 3D
-	      { .dx = { 0, 0, 0 }, .val = .5f },
-	      { .dx = { 0, j, 0 }, .val = .5f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == HZ) {
-	    int k = 0; // FIXME 3D
-	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
-	      // FIXME, 3D
-	      { .dx = { 0, 0, 0 }, .val = .5f },
-	      { .dx = { 0, 0, k }, .val = .5f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
+	  if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, m, p, i)) {
+	    continue;
 	  }
 	      
 	  // try to restrict from fine
-	  if (m == EY) {
-	    struct mrc_ddc_amr_stencil stencil_fine[6] = {
-	      // FIXME, 3D
-	      { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
-	      { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
-	      { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
-	      { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
-	      { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
-	      { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 6, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == EZ) {
-	    struct mrc_ddc_amr_stencil stencil_fine[9] = {
-	      // FIXME, 3D
-	      { .dx = { -1, -1,  0 }, .val = (2.f/8.f) * .25f },
-	      { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f  },
-	      { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .25f },
-	      { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f  },
-	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f  },
-	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f  },
-	      { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .25f },
-	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f  },
-	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .25f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 9, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == HY) {
-	    struct mrc_ddc_amr_stencil stencil_fine[6] = {
-	      // FIXME, 3D
-	      { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f },
-	      { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .5f },
-	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
-	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
-	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f },
-	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 6, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
-	  } else if (m == HZ) {
-	    struct mrc_ddc_amr_stencil stencil_fine[4] = {
-	      // FIXME, 3D
-	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
-	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
-	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
-	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * 1.f },
-	    };
-
-	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 4, m, p, (int[]) { ix, iy, iz })) {
-	      continue;
-	    }
+	  if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, m, p, i)) {
+	    continue;
 	  }
 
 	  // oops, no way to fill this point?
+	  // (This may be okay if the domain has holes or other physical boundaries)
 	  MHERE;
 	}
       }
@@ -746,6 +612,86 @@ set_ddc_fdtd(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
 
 // ======================================================================
 
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EY[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 1, 0, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EZ[4] = {
+  { .dx = { 0, 0, 0 }, .val = .25f },
+  { .dx = { 1, 0, 0 }, .val = .25f },
+  { .dx = { 0, 1, 0 }, .val = .25f },
+  { .dx = { 1, 1, 0 }, .val = .25f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HY[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 1, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HZ[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 0, 1 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_coarse[NR_COMPS] = {
+  [EY] = { stencil_coarse_EY, ARRAY_SIZE(stencil_coarse_EY) },
+  [EZ] = { stencil_coarse_EZ, ARRAY_SIZE(stencil_coarse_EZ) },
+  [HY] = { stencil_coarse_HY, ARRAY_SIZE(stencil_coarse_HY) },
+  [HZ] = { stencil_coarse_HZ, ARRAY_SIZE(stencil_coarse_HZ) },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EY[6] = {
+  // FIXME, 3D
+  { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EZ[9] = {
+  // FIXME, 3D
+  { .dx = { -1, -1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f  },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .25f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HY[6] = {
+  // FIXME, 3D
+  { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
+};
+	  
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HZ[4] = {
+  // FIXME, 3D
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_fine[NR_COMPS] = {
+  [EY] = { stencil_fine_EY, ARRAY_SIZE(stencil_fine_EY) },
+  [EZ] = { stencil_fine_EZ, ARRAY_SIZE(stencil_fine_EZ) },
+  [HY] = { stencil_fine_HY, ARRAY_SIZE(stencil_fine_HY) },
+  [HZ] = { stencil_fine_HZ, ARRAY_SIZE(stencil_fine_HZ) },
+};
+
 static struct mrc_ddc_amr *
 make_ddc_H(struct mrc_domain *domain, int sw)
 {
@@ -754,8 +700,8 @@ make_ddc_H(struct mrc_domain *domain, int sw)
   ddc->domain = domain;
   ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
-  set_ddc_fdtd(ddc, HY, 2, (int[]) { 0, 1, 0 });
-  set_ddc_fdtd(ddc, HZ, 2, (int[]) { 0, 0, 1 });
+  set_ddc_stencil(ddc, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  set_ddc_stencil(ddc, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
   mrc_ddc_amr_assemble(ddc);
 
   return ddc;
@@ -769,8 +715,8 @@ make_ddc_E(struct mrc_domain *domain, int sw)
   ddc->domain = domain;
   ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
-  set_ddc_fdtd(ddc, EY, 2, (int[]) { 1, 0, 1 });
-  set_ddc_fdtd(ddc, EZ, 2, (int[]) { 1, 1, 0 });
+  set_ddc_stencil(ddc, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
+  set_ddc_stencil(ddc, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
   mrc_ddc_amr_assemble(ddc);
 
   return ddc;
