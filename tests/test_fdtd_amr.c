@@ -61,181 +61,16 @@
 // |       |   |   |
 // X---o---X---x---O
 
-#include <mrc_ddc_private.h>
-
-// FIXME
-static const int max_rows = 10000;
-static const int max_entries = 20000;
-
-struct mrc_ddc_amr_row {
-  int patch;
-  int idx;
-  int first_entry;
-};
-
-struct mrc_ddc_amr_entry {
-  int patch;
-  int idx;
+struct mrc_ddc_amr_stencil_entry {
+  int dx[3];
   float val;
 };
 
-struct mrc_ddc_amr {
-  struct mrc_ddc_amr_row *rows;
-  struct mrc_ddc_amr_entry *entries;
-
-  int nr_rows;
+struct mrc_ddc_amr_stencil {
+  struct mrc_ddc_amr_stencil_entry *s;
   int nr_entries;
-
-  struct mrc_domain *domain;
-  int sw;
-  int ib[3], im[3];
 };
-
-#define mrc_ddc_amr(ddc) mrc_to_subobj(ddc, struct mrc_ddc_amr)
-
-void mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
-			   int row_patch, int rowm, int row[3],
-			   int col_patch, int colm, int col[3],
-			   float val);
-void mrc_ddc_amr_assemble(struct mrc_ddc *ddc);
-void mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld);
-
-// ----------------------------------------------------------------------
-// mrc_ddc_amr_set_domain
-
-static void
-mrc_ddc_amr_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-  amr->domain = domain;
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_amr_setup
-
-static void
-mrc_ddc_amr_setup(struct mrc_ddc *ddc)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-  assert(amr->domain);
-
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  // needs to be compatible with how mrc_m3 indexes
-  for (int d = 0; d < 3; d++) {
-    amr->ib[d] = -amr->sw;
-    amr->im[d] = ldims[d] + 2 * amr->sw;
-  }
-
-  amr->rows = calloc(max_rows + 1, sizeof(*amr->rows));
-  amr->entries = calloc(max_entries, sizeof(*amr->entries));
-
-  amr->nr_entries = 0;
-  amr->nr_rows = 0;
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_add_destroy
-
-static void
-mrc_ddc_amr_destroy(struct mrc_ddc *ddc)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  free(amr->rows);
-  free(amr->entries);
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_add_value
-
-void
-mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
-		      int row_patch, int rowm, int row[3],
-		      int col_patch, int colm, int col[3],
-		      float val)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  // FIXME, a * F3(i,j,k) + b * F3(i,j,k) should be combined as (a + b) * F3(i,j,k)
-  // WARNING, all elements for any given row must be added contiguously!
-
-  assert(row_patch >= 0);
-  assert(col_patch >= 0);
-
-  int row_idx = (((rowm * amr->im[2] + row[2] - amr->ib[2]) *
-		  amr->im[1] + row[1] - amr->ib[1]) *
-		 amr->im[0] + row[0] - amr->ib[0]);
-  int col_idx = (((colm * amr->im[2] + col[2] - amr->ib[2]) *
-		  amr->im[1] + col[1] - amr->ib[1]) *
-		 amr->im[0] + col[0] - amr->ib[0]);
   
-  if (amr->nr_rows == 0 || amr->rows[amr->nr_rows - 1].idx != row_idx) {
-    // start new row
-    assert(amr->nr_rows < max_rows);
-    amr->rows[amr->nr_rows].patch = row_patch;
-    amr->rows[amr->nr_rows].idx = row_idx;
-    amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
-    amr->nr_rows++;
-  }
-
-  assert(amr->nr_entries < max_entries);
-  amr->entries[amr->nr_entries].patch = col_patch;
-  amr->entries[amr->nr_entries].idx = col_idx;
-  amr->entries[amr->nr_entries].val = val;
-  amr->nr_entries++;
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_amr_assemble
-
-void
-mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
-  mprintf("nr_rows %d nr_entries %d\n", amr->nr_rows, amr->nr_entries);
-}
-
-// ----------------------------------------------------------------------
-// mrc_ddc_amr_apply
-
-void
-mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  for (int row = 0; row < amr->nr_rows; row++) {
-    struct mrc_m3_patch *fldp_row = mrc_m3_patch_get(fld, amr->rows[row].patch);
-    int row_idx = amr->rows[row].idx;
-    float sum = 0.;
-    for (int entry = amr->rows[row].first_entry; entry < amr->rows[row + 1].first_entry; entry++) {
-      struct mrc_m3_patch *fldp_col = mrc_m3_patch_get(fld, amr->entries[entry].patch);
-      int col_idx = amr->entries[entry].idx;
-      float val = amr->entries[entry].val;
-      sum += val * fldp_col->arr[col_idx];
-    }
-    fldp_row->arr[row_idx] = sum;
-  }
-}
-
-#define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
-static struct param mrc_ddc_amr_descr[] = {
-  { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
-  {},
-};
-#undef VAR
-
-struct mrc_ddc_ops mrc_ddc_amr_ops = {
-  .name                  = "amr",
-  .size                  = sizeof(struct mrc_ddc_amr),
-  .param_descr           = mrc_ddc_amr_descr,
-  .setup                 = mrc_ddc_amr_setup,
-  .destroy               = mrc_ddc_amr_destroy,
-  .set_domain            = mrc_ddc_amr_set_domain,
-};
-
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_same
 
@@ -312,17 +147,12 @@ mrc_domain_get_neighbor_patch_fine(struct mrc_domain *domain, int p,
   *p_nei = pi_nei.patch;
 }
 
-struct mrc_ddc_amr_stencil_entry {
-  int dx[3];
-  float val;
-};
-
-struct mrc_ddc_amr_stencil {
-  struct mrc_ddc_amr_stencil_entry *s;
-  int nr_entries;
-};
-  
 // ======================================================================
+
+// this function incorporates Fujimoto (2011)-specific FDTD policy to
+// some extent, ie., points on the boundary between coarse and fine levels
+// are considered interior points on the coarse level, ghost points on the
+// fine level.
 
 static bool
 mrc_domain_is_ghost(struct mrc_domain *domain, int ext[3], int p, int i[3])
@@ -542,10 +372,10 @@ mrc_ddc_amr_stencil_coarse(struct mrc_ddc *ddc, int ext[3],
 			   struct mrc_ddc_amr_stencil *stencil,
 			   int m, int p, int i[3])
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
   int p_nei, j[3];
-  mrc_domain_find_valid_point_coarse(amr->domain, ext, p,
+  mrc_domain_find_valid_point_coarse(domain, ext, p,
 				     (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
 				     &p_nei, j);
   if (p_nei < 0) {
@@ -557,8 +387,8 @@ mrc_ddc_amr_stencil_coarse(struct mrc_ddc *ddc, int ext[3],
     for (int d = 0; d < 3; d++) {
       jd[d] = j[d] + s->dx[d] * (i[d] & 1 && d < 2); // FIXME 3D
     }
-    mrc_domain_to_valid_point_same(amr->domain, ext, p_nei, jd, &p_dnei, j_dnei);
-    assert(!mrc_domain_is_ghost(amr->domain, ext, p_dnei, j_dnei));
+    mrc_domain_to_valid_point_same(domain, ext, p_nei, jd, &p_dnei, j_dnei);
+    assert(!mrc_domain_is_ghost(domain, ext, p_dnei, j_dnei));
     mrc_ddc_amr_add_value(ddc, p, m, i, p_dnei, m, j_dnei, s->val);
   }
   return true;
@@ -569,10 +399,10 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 			 struct mrc_ddc_amr_stencil *stencil,
 			 int m, int p, int i[3])
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
   int p_nei, j[3];
-  mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
+  mrc_domain_find_valid_point_fine(domain, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
   if (p_nei < 0) {
     return false;
   }
@@ -582,8 +412,8 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
     for (int d = 0; d < 3; d++) {
       id[d] = 2*i[d] + s->dx[d];
     }
-    mrc_domain_find_valid_point_fine(amr->domain, p, id, &p_nei, j);
-    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
+    mrc_domain_find_valid_point_fine(domain, p, id, &p_nei, j);
+    assert(!mrc_domain_is_ghost(domain, ext, p_nei, j));
     mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, s->val);
   }
   return true;
@@ -596,12 +426,12 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 			   struct mrc_ddc_amr_stencil *stencil_coarse,
 			   struct mrc_ddc_amr_stencil *stencil_fine)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
   int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
+  mrc_domain_get_param_int3(domain, "m", ldims);
   int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
+  mrc_domain_get_patches(domain, &nr_patches);
 
   for (int p = 0; p < nr_patches; p++) {
     int i[3];
@@ -611,10 +441,10 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	  if (i[0] >= ext[0] && i[0] < ldims[0] &&
 	      i[1] >= ext[1] && i[1] < ldims[1] &&
 	      i[2] >= ext[2] && i[2] < ldims[2]) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p, i));
+	    assert(!mrc_domain_is_ghost(domain, ext, p, i));
 	    continue;
 	  }
-	  if (!mrc_domain_is_ghost(amr->domain, ext, p, i)) {
+	  if (!mrc_domain_is_ghost(domain, ext, p, i)) {
 	    continue;
 	  }
 
@@ -622,9 +452,9 @@ mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 
 	  // try to find an interior point corresponding to the current ghostpoint
 	  int j[3], p_nei;
-	  mrc_domain_find_valid_point_same(amr->domain, ext, p, i, &p_nei, j);
+	  mrc_domain_find_valid_point_same(domain, ext, p, i, &p_nei, j);
 	  if (p_nei >= 0) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
+	    assert(!mrc_domain_is_ghost(domain, ext, p_nei, j));
 	    mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, 1.f);
 	    continue;
 	  }
