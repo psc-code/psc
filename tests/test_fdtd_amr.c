@@ -482,10 +482,6 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
     }
   }
 
-  if (p==9 && i[0] == -1 && ii[1] == 9) {
-    printf("dir %d %d dirx %d %d\n", dir[0], dir[1], dirx[0], dirx[1]);
-  }
-
   int dd[3];
   for (dd[2] = dir[2]; dd[2] >= dir[2] - dirx[2]; dd[2]--) {
     for (dd[1] = dir[1]; dd[1] >= dir[1] - dirx[1]; dd[1]--) {
@@ -503,6 +499,7 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
       }
     }
   }
+  *p_nei = -1;
 }
 
 static void
@@ -594,72 +591,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
 // ================================================================================
 
 static void
-set_ddc_HZ(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
-{
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    for (int iz = 0; iz < ldims[2] + 0; iz++) {
-      for (int iy = -bnd; iy < ldims[1] + ext[1] + bnd; iy++) {
-	for (int ix = -bnd; ix < ldims[0] + ext[0] + bnd; ix++) {
-	  if (ix >= 0 && ix < ldims[0] + ext[0] &&
-	      iy >= 0 && iy < ldims[1] + ext[1] &&
-	      iz >= 0 && iz < ldims[2] + ext[2]) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p, (int[]) { ix, iy, iz }));
-	    continue;
-	  }
-	  if (!mrc_domain_is_ghost(amr->domain, ext, p, (int[]) { ix, iy, iz })) {
-	    continue;
-	  }
-
-	  int j[3], p_nei;
-	  mrc_domain_find_valid_point_same(amr->domain, ext,
-					   p, (int[]) { ix, iy, iz }, &p_nei, j);
-	  if (p_nei >= 0) {
-	    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], 1.f);
-	    continue;
-	  }
-	  
-	  mrc_domain_find_valid_point_coarse(amr->domain, ext,
-					     p, (int[]) { div_2(ix), div_2(iy), div_2(iz) }, &p_nei, j);
-	  if (p_nei >= 0) {
-	    assert(m == HZ);
-	    int k = 0; // FIXME, 3D
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2]    , .5f);
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2] + k, .5f);
-	    continue;
-	  }
-
-	  mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*ix  , 2*iy  , 2*iz }, &p_nei, j);
-	  if (p_nei >= 0) {
-	    assert(m == HZ);
-	    // FIXME, 3D
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], (2.f/8.f) * 1.f);
-
-	    mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*ix+1, 2*iy  , 2*iz }, &p_nei, j);
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], (2.f/8.f) * 1.f);
-
-	    mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*ix  , 2*iy+1, 2*iz }, &p_nei, j);
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], (2.f/8.f) * 1.f);
-
-	    mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*ix+1, 2*iy+1, 2*iz }, &p_nei, j);
-	    mrc_ddc_amr_add_value(amr, p, m, ix, iy, iz, p_nei, m, j[0], j[1], j[2], (2.f/8.f) * 1.f);
-	    continue;
-	  }
-	  // oops, no way to fill this point?
-	  MHERE;
-	}
-      }
-    }
-  }
-}
-
-static void
-set_ddc_EY(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
+set_ddc_fdtd(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
 {
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
@@ -693,381 +625,117 @@ set_ddc_EY(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3])
 	  }
 
 	  // try to interpolate from coarse
-	  assert(m == EY);
-	  int i = ix & 1;
-	  struct mrc_ddc_amr_stencil stencil_coarse[2] = {
-	    // FIXME, 3D
-	    { .dx = { 0, 0, 0 }, .val = .5f },
-	    { .dx = { i, 0, 0 }, .val = .5f },
-	  };
+	  if (m == EY) {
+	    int i = ix & 1;
+	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
+	      // FIXME, 3D
+	      { .dx = { 0, 0, 0 }, .val = .5f },
+	      { .dx = { i, 0, 0 }, .val = .5f },
+	    };
 
-	  if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
-	    continue;
+	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == EZ) {
+	    int i = ix & 1;
+	    int j = iy & 1;
+	    struct mrc_ddc_amr_stencil stencil_coarse[4] = {
+	      // FIXME, 3D
+	      { .dx = { 0, 0, 0 }, .val = .25f },
+	      { .dx = { i, 0, 0 }, .val = .25f },
+	      { .dx = { 0, j, 0 }, .val = .25f },
+	      { .dx = { i, j, 0 }, .val = .25f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 4, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == HY) {
+	    int j = iy & 1;
+	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
+	      // FIXME, 3D
+	      { .dx = { 0, 0, 0 }, .val = .5f },
+	      { .dx = { 0, j, 0 }, .val = .5f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == HZ) {
+	    int k = 0; // FIXME 3D
+	    struct mrc_ddc_amr_stencil stencil_coarse[2] = {
+	      // FIXME, 3D
+	      { .dx = { 0, 0, 0 }, .val = .5f },
+	      { .dx = { 0, 0, k }, .val = .5f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, 2, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
 	  }
 	      
 	  // try to restrict from fine
-	  assert(m == EY);
-	  struct mrc_ddc_amr_stencil stencil_fine[6] = {
-	    // FIXME, 3D
-	    { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
-	    { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
-	    { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
-	    { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
-	    { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
-	    { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
-	  };
+	  if (m == EY) {
+	    struct mrc_ddc_amr_stencil stencil_fine[6] = {
+	      // FIXME, 3D
+	      { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+	      { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+	      { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+	      { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
+	      { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+	      { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+	    };
 
-	  if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 6, m, p, (int[]) { ix, iy, iz })) {
-	    continue;
+	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 6, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == EZ) {
+	    struct mrc_ddc_amr_stencil stencil_fine[9] = {
+	      // FIXME, 3D
+	      { .dx = { -1, -1,  0 }, .val = (2.f/8.f) * .25f },
+	      { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f  },
+	      { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .25f },
+	      { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f  },
+	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+	      { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .25f },
+	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f  },
+	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .25f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 9, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == HY) {
+	    struct mrc_ddc_amr_stencil stencil_fine[6] = {
+	      // FIXME, 3D
+	      { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f },
+	      { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .5f },
+	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f },
+	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 6, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
+	  } else if (m == HZ) {
+	    struct mrc_ddc_amr_stencil stencil_fine[4] = {
+	      // FIXME, 3D
+	      { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+	      { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+	      { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
+	      { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * 1.f },
+	    };
+
+	    if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, 4, m, p, (int[]) { ix, iy, iz })) {
+	      continue;
+	    }
 	  }
+
 	  // oops, no way to fill this point?
 	  MHERE;
-	}
-      }
-    }
-  }
-}
-
-static void
-set_ddc_HY_coarse(struct mrc_ddc_amr *amr)
-{
-  int bnd = 2, ext[3] = { 0, 1, 0 };
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
-    int dir[3];
-    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    continue;
-	  }
-	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
-	  if (p_nei >= 0) {
-	    int off_from[3], off_to[3], len[3];
-	    for (int d = 0; d < 3; d++) {
-	      if (dir[d] == -1) {
-		len[d] = bnd;
-		off_to[d] = -bnd;
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = -bnd + 2*ldims[d];
-		} else {
-		  off_from[d] = -bnd + ldims[d];
-		}
-	      } else if (dir[d] == 0) {
-		len[d] = ldims[d] + ext[d];
-		off_to[d] = 0;
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = 0;
-		} else {
-		  off_from[d] = ldims[d];
-		}
-	      } else {
-		len[d] = bnd;
-		off_to[d] = ext[d] + ldims[d];
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = ext[d] + ldims[d];
-		} else {
-		  off_from[d] = ext[d];
-		}
-	      }
-	    }
-	    for (int iz = 0; iz < len[2]; iz++) {
-	      for (int iy = 0; iy < len[1]; iy++) {
-		for (int ix = 0; ix < len[0]; ix++) {
-		  int j = (iy + off_to[1]) & 1;
-		  mrc_ddc_amr_add_value(amr,
-					p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2    , (iz + off_from[2])/2,
-					.5f);
-		  mrc_ddc_amr_add_value(amr, 
-					p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, HY, (ix + off_from[0])/2, (iy + off_from[1])/2 + j, (iz + off_from[2])/2, 
-					.5f);
-
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-static void
-set_ddc_EZ_coarse(struct mrc_ddc_amr *amr)
-{
-  int bnd = 2, ext[3] = { 1, 1, 0 };
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    struct mrc_patch_info pi;
-    mrc_domain_get_local_patch_info(amr->domain, p, &pi);
-    int dir[3];
-    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    continue;
-	  }
-	  int p_nei;
-	  mrc_domain_get_neighbor_patch_coarse(amr->domain, p, dir, &p_nei);
-	  if (p_nei >= 0) {
-	    int off_from[3], off_to[3], len[3];
-	    for (int d = 0; d < 3; d++) {
-	      if (dir[d] == -1) {
-		len[d] = bnd + ext[d];
-		off_to[d] = -bnd;
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = -bnd + 2*ldims[d];
-		} else {
-		  off_from[d] = -bnd + ldims[d];
-		}
-	      } else if (dir[d] == 0) {
-		len[d] = ldims[d];
-		off_to[d] = 0;
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = 0;
-		} else {
-		  off_from[d] = ldims[d];
-		}
-		len[d] += ext[d];
-	      } else {
-		len[d] = bnd + ext[d];
-		off_to[d] = ldims[d];
-		if ((pi.idx3[d] & 1) == 0) {
-		  off_from[d] = ldims[d];
-		} else {
-		  off_from[d] = 0;
-		}
-	      }
-	    }
-	    for (int iz = 0; iz < len[2]; iz++) {
-	      for (int iy = 0; iy < len[1]; iy++) {
-		for (int ix = 0; ix < len[0]; ix++) {
-		  int i = (ix + off_to[0]) & 1;
-		  int j = (iy + off_to[1]) & 1;
-		  mrc_ddc_amr_add_value(amr,
-					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2    ,iz,
-					.25f);
-		  mrc_ddc_amr_add_value(amr,
-					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2    ,iz,
-					.25f);
-		  mrc_ddc_amr_add_value(amr,
-					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, EZ, (ix + off_from[0])/2    , (iy + off_from[1])/2 + j,iz,
-					.25f);
-		  mrc_ddc_amr_add_value(amr,
-					p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					p_nei, EZ, (ix + off_from[0])/2 + i, (iy + off_from[1])/2 + j,iz,
-					.25f);
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-static void
-set_ddc_HY_fine(struct mrc_ddc_amr *amr)
-{
-  int bnd = 2, ext[3] = { 0, 1, 0 };
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    int dir[3];
-    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    continue;
-	  }
-	  int sub[3];
-	  int len[3];
-	  for (int d = 0; d < 3; d++) {
-	    if (dir[d] == 0) {
-	      sub[d] = 2;
-	    } else {
-	      sub[d] = 1;
-	    }
-	  }
-	  int is[3];
-	  for (is[2] = 0; is[2] < sub[2]; is[2]++) {
-	    for (is[1] = 0; is[1] < sub[1]; is[1]++) {
-	      for (is[0] = 0; is[0] < sub[0]; is[0]++) {
-		int off[3], off_to[3], off_from[3];
-		for (int d = 0; d < 3; d++) {
-		  if (dir[d] == -1) {
-		    off[d] = 1;
-		    len[d] = bnd;
-		    off_to[d] = -bnd;
-		    off_from[d] = 2 * -bnd + ldims[d];
-		  } else if (dir[d] == 0) {
-		    off[d] = is[d];
-		    len[d] = ldims[d] / 2 - (is[d] == 0 ? ext[d] : 0);
-		    off_to[d] = is[d] * len[d] + (is[d] == 0 ? ext[d] : 0);
-		    off_from[d] = 2 * (is[d] == 0 ? ext[d] : 0);
-		  } else {
-		    off[d] = 0;
-		    len[d] = bnd;
-		    off_to[d] = ext[d] + ldims[d];
-		    off_from[d] = 2 * ext[d];
-		  }
-		}
-		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
-		if (p_nei < 0) {
-		  continue;
-		}
-
-		for (int iz = 0; iz < 1; iz++) {
-		  for (int iy = 0; iy < len[1]; iy++) {
-		    for (int ix = 0; ix < len[0]; ix++) {
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix   + off_from[0], 2*iy-1 + off_from[1],iz,
-					    (2.f/8.f) * .5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix   + off_from[0], 2*iy   + off_from[1],iz,
-					    (2.f/8.f) * 1.f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz,
-					    (2.f/8.f) * .5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy-1 + off_from[1],iz,
-					    (2.f/8.f) * .5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy   + off_from[1],iz,
-					    (2.f/8.f) * 1.f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     HY, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, HY, 2*ix+1 + off_from[0], 2*iy+1 + off_from[1],iz,
-					    (2.f/8.f) * .5f);
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-static void
-set_ddc_EZ_fine(struct mrc_ddc_amr *amr)
-{
-  int bnd = 2, ext[3] = { 1, 1, 0 };
-  int ldims[3];
-  mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  int nr_patches;
-  mrc_domain_get_patches(amr->domain, &nr_patches);
-
-  for (int p = 0; p < nr_patches; p++) {
-    int dir[3];
-    for (dir[2] = 0; dir[2] <= 0; dir[2]++) { // FIXME
-      for (dir[1] = -1; dir[1] <= 1; dir[1]++) {
-	for (dir[0] = -1; dir[0] <= 1; dir[0]++) {
-	  if (dir[0] == 0 && dir[1] == 0 && dir[2] == 0) {
-	    continue;
-	  }
-	  int sub[3];
-	  int len[3];
-	  for (int d = 0; d < 3; d++) {
-	    if (dir[d] == 0) {
-	      sub[d] = 2;
-	    } else {
-	      sub[d] = 1;
-	    }
-	  }
-	  int is[3];
-	  for (is[2] = 0; is[2] < sub[2]; is[2]++) {
-	    for (is[1] = 0; is[1] < sub[1]; is[1]++) {
-	      for (is[0] = 0; is[0] < sub[0]; is[0]++) {
-		int off[3], off_to[3], off_from[3];
-		for (int d = 0; d < 3; d++) {
-		  if (dir[d] == -1) {
-		    off[d] = 1;
-		    len[d] = bnd;
-		    off_to[d] = -bnd;
-		    off_from[d] = 2 * -bnd + ldims[d];
-		  } else if (dir[d] == 0) {
-		    off[d] = is[d];
-		    len[d] = ldims[d] / 2 - (is[d] == 0 ? ext[d] : 0);
-		    off_to[d] = is[d] * len[d] + (is[d] == 0 ? ext[d] : 0);
-		    off_from[d] = 2 * (is[d] == 0 ? ext[d] : 0);
-		  } else {
-		    off[d] = 0;
-		    len[d] = bnd;
-		    off_to[d] = ext[d] + ldims[d];
-		    off_from[d] = 2 * ext[d];
-		  }
-		}
-		int p_nei;
-		mrc_domain_get_neighbor_patch_fine(amr->domain, p, dir, off, &p_nei);
-		if (p_nei < 0) {
-		  continue;
-		}
-
-		for (int iz = 0; iz < 1; iz++) {
-		  for (int iy = 0; iy < len[1]; iy++) {
-		    for (int ix = 0; ix < len[0]; ix++) {
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.25f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*.5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix-1 + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.25f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix   + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix   + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*1.f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix   + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy-1 + off_from[1],iz, (2.f/8.f)*.25f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy   + off_from[1],iz, (2.f/8.f)*.5f);
-		      mrc_ddc_amr_add_value(amr,
-					    p,     EZ, ix + off_to[0], iy + off_to[1], iz + off_to[2],
-					    p_nei, EZ, 2*ix+1 + off_from[0], 2*iy+1 + off_from[1],iz, (2.f/8.f)*.25f);
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
 	}
       }
     }
@@ -1086,10 +754,8 @@ make_ddc_H(struct mrc_domain *domain, int sw)
   ddc->domain = domain;
   ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
-  set_ddc_same(ddc, HY, 2, (int[]) { 0, 1, 0 });
-  set_ddc_HY_coarse(ddc); // not needed for fdtd
-  set_ddc_HY_fine(ddc);
-  set_ddc_HZ(ddc, HZ, 2, (int[]) { 0, 0, 1 });
+  set_ddc_fdtd(ddc, HY, 2, (int[]) { 0, 1, 0 });
+  set_ddc_fdtd(ddc, HZ, 2, (int[]) { 0, 0, 1 });
   mrc_ddc_amr_assemble(ddc);
 
   return ddc;
@@ -1103,10 +769,8 @@ make_ddc_E(struct mrc_domain *domain, int sw)
   ddc->domain = domain;
   ddc->sw = sw;
   mrc_ddc_amr_setup(ddc);
-  set_ddc_EY(ddc, EY, 2, (int[]) { 1, 0, 1 });
-  set_ddc_same(ddc, EZ, 2, (int[]) { 1, 1, 0 });
-  set_ddc_EZ_coarse(ddc);
-  set_ddc_EZ_fine(ddc); // not needed for fdtd
+  set_ddc_fdtd(ddc, EY, 2, (int[]) { 1, 0, 1 });
+  set_ddc_fdtd(ddc, EZ, 2, (int[]) { 1, 1, 0 });
   mrc_ddc_amr_assemble(ddc);
 
   return ddc;
@@ -1430,6 +1094,8 @@ main(int argc, char **argv)
 #if 1
     mrc_m3_foreach(fldp, ix,iy,iz, 3, 3) {
       MRC_M3(fldp, EY, ix,iy,iz) = 1.f / 0.f;
+      MRC_M3(fldp, EZ, ix,iy,iz) = 1.f / 0.f;
+      MRC_M3(fldp, HY, ix,iy,iz) = 1.f / 0.f;
       MRC_M3(fldp, HZ, ix,iy,iz) = 1.f / 0.f;
     } mrc_m3_foreach_end;
 #endif
@@ -1438,15 +1104,16 @@ main(int argc, char **argv)
       float y_cc = MRC_MCRDY(crds, iy);
       float x_nc = .5f * (MRC_MCRDX(crds, ix-1) + MRC_MCRDX(crds, ix));
       float y_nc = .5f * (MRC_MCRDY(crds, iy-1) + MRC_MCRDY(crds, iy));
-      MRC_M3(fldp, EZ, ix,iy,iz) = func(x_nc, y_nc);
-      if (ix < ldims[0]) {
-	MRC_M3(fldp, HY, ix,iy,iz) = func(x_cc, y_nc);
-      }
       if (!mrc_domain_is_ghost(domain, (int[]) { 1, 0, 1 }, p, (int[]) { ix, iy, iz })) {
 	MRC_M3(fldp, EY, ix,iy,iz) = func(x_nc, y_cc);
       }
-
-      if (ix < ldims[0] && iy < ldims[1]) {
+      if (!mrc_domain_is_ghost(domain, (int[]) { 1, 1, 0 }, p, (int[]) { ix, iy, iz })) {
+	MRC_M3(fldp, EZ, ix,iy,iz) = func(x_nc, y_nc);
+      }
+      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 1, 0 }, p, (int[]) { ix, iy, iz })) {
+	MRC_M3(fldp, HY, ix,iy,iz) = func(x_cc, y_nc);
+      }
+      if (!mrc_domain_is_ghost(domain, (int[]) { 0, 0, 1 }, p, (int[]) { ix, iy, iz })) {
 	MRC_M3(fldp, HZ, ix,iy,iz) = func(x_cc, y_cc);
       }
     } mrc_m3_foreach_end;
