@@ -11,11 +11,13 @@ my = 8
 mz = 1
 sw = 3
 buf = 2
-patches = [0,1,2,4,7,11,12,13]
-#patches = [5,6,9,10]
+patches = [0,1,2,4,7,11,12] #,13]
+patches = [5,6,9,10]
+#patches = [13,14,16,17]
+patches = [5,6,9,10,13,14,16,17]
 patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
-#patches = xrange(10)
-#patches = [0]
+#patches = xrange(22)
+#patches = [9]
 times = xrange(0,1,1)
 
 EX = 0
@@ -45,7 +47,7 @@ def slicex(l, h):
     else:
         return slice(l, h)
 
-def plot_component(basename, fldname, compname, time, **kwargs):
+def plot_component(basename, fldname, compname, time, symbol, **kwargs):
     for p in patches:
         fld, crdcc, crdnc = read_patch(basename, fldname, compname, time, p)
         if compname == "EY":
@@ -68,23 +70,33 @@ def plot_component(basename, fldname, compname, time, **kwargs):
         fld = fld[sw,sly,slx]
 
         ax = plt.gca(projection='3d')
-        ax.plot_wireframe(X, Y, fld, **kwargs)
-        #ax.plot(X[2,:], fld[2,:,m], 'o-', **kwargs)
+        if '-' in symbol:
+            ax.plot_wireframe(X, Y, fld, **kwargs)
+        if '.' in symbol:
+            ax.plot(X.flatten(), Y.flatten(), fld.flatten(), '.', **kwargs)
+        #ax.plot(X[2,:], fld[2,:,m], 'o-', **kwargs) # 2d
         # if buf > 0:
         #     ax.plot_wireframe(X[buf:-buf,buf:-buf], Y[buf:-buf,buf:-buf], fld[buf:-buf,buf:-buf,m], color='g')
         #ax.plot_wireframe(X, Y, np.sin(.5+2*np.pi*X)*np.cos(.5+2*np.pi*Y), color='g')
 
-#plt.ion()
-for time in times:
-    #plt.figure()
-    plt.clf()
-    plot_component(basename, "fld", "EY", time, color='r')
-    #plot_component(basename, "fld", "HZ", time, color='b')
-    #plot_component("run", "fld", "EZ", time, color='r')
-    #plot_component("run", "fld", "HY", time, color='b')
-    plt.draw()
-    #plt.show()
+def movie():
+    #plt.ion()
+    for time in times:
+        #plt.figure()
+        plt.clf()
+        plot_component(basename, "fld", "EY", time, color='r')
+        #plot_component(basename, "fld", "HZ", time, color='b')
+        #plot_component("run", "fld", "EZ", time, color='r')
+        #plot_component("run", "fld", "HY", time, color='b')
+        plt.draw()
+        #plt.show()
+        
+    plt.show()
 
-plt.show()
+def boundary():
+    plot_component(basename, "fld", "EY", 0, '.', color='r')
+    plot_component(basename, "fld", "EY", 1, '-', color='r')
+    plt.show()
 
+boundary()
 

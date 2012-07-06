@@ -244,7 +244,7 @@ mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *fld)
   if (ops->write_m1) {
     ops->write_m1(io, path, fld);
   } else {
-    MHERE; // FIXME
+    //    MHERE; // FIXME
   }
 }
 
