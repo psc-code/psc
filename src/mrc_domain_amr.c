@@ -188,7 +188,10 @@ mrc_domain_amr_create(struct mrc_domain *domain)
 
   INIT_LIST_HEAD(&amr->global_patch_list);
   amr->nr_levels = -1;
+  // FIXME, this doesn't make too much sense, since a proper ddc is
+  // problem / field specific
   mrc_ddc_set_type(domain->ddc, "amr");
+  mrc_ddc_set_domain(domain->ddc, domain);
 }
 
 // ----------------------------------------------------------------------

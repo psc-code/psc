@@ -2,6 +2,7 @@
 #include <mrc_params.h>
 #include <mrc_domain.h>
 #include <mrc_fld.h>
+#include <mrc_ddc.h>
 #include <mrc_io.h>
 #include <mrctest.h>
 
@@ -60,9 +61,11 @@
 // |       |   |   |
 // X---o---X---x---O
 
+#include <mrc_ddc_private.h>
+
 // FIXME
-const int max_rows = 10000;
-const int max_entries = 20000;
+static const int max_rows = 10000;
+static const int max_entries = 20000;
 
 struct mrc_ddc_amr_row {
   int patch;
@@ -88,14 +91,33 @@ struct mrc_ddc_amr {
   int ib[3], im[3];
 };
 
+#define mrc_ddc_amr(ddc) mrc_to_subobj(ddc, struct mrc_ddc_amr)
+
+void mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
+			   int row_patch, int rowm, int row[3],
+			   int col_patch, int colm, int col[3],
+			   float val);
+void mrc_ddc_amr_assemble(struct mrc_ddc *ddc);
+void mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld);
+
+// ----------------------------------------------------------------------
+// mrc_ddc_amr_set_domain
+
+static void
+mrc_ddc_amr_set_domain(struct mrc_ddc *ddc, struct mrc_domain *domain)
+{
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+  amr->domain = domain;
+}
+
 // ----------------------------------------------------------------------
 // mrc_ddc_amr_setup
 
 static void
-mrc_ddc_amr_setup(struct mrc_ddc_amr *amr)
+mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
   assert(amr->domain);
-  assert(amr->sw);
 
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
@@ -116,8 +138,10 @@ mrc_ddc_amr_setup(struct mrc_ddc_amr *amr)
 // mrc_ddc_add_destroy
 
 static void
-mrc_ddc_amr_destroy(struct mrc_ddc_amr *amr)
+mrc_ddc_amr_destroy(struct mrc_ddc *ddc)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   free(amr->rows);
   free(amr->entries);
 }
@@ -125,12 +149,14 @@ mrc_ddc_amr_destroy(struct mrc_ddc_amr *amr)
 // ----------------------------------------------------------------------
 // mrc_ddc_add_value
 
-static void
-mrc_ddc_amr_add_value(struct mrc_ddc_amr *amr,
+void
+mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		      int row_patch, int rowm, int row[3],
 		      int col_patch, int colm, int col[3],
 		      float val)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   // FIXME, a * F3(i,j,k) + b * F3(i,j,k) should be combined as (a + b) * F3(i,j,k)
   // WARNING, all elements for any given row must be added contiguously!
 
@@ -163,9 +189,11 @@ mrc_ddc_amr_add_value(struct mrc_ddc_amr *amr,
 // ----------------------------------------------------------------------
 // mrc_ddc_amr_assemble
 
-static void
-mrc_ddc_amr_assemble(struct mrc_ddc_amr *amr)
+void
+mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
   mprintf("nr_rows %d nr_entries %d\n", amr->nr_rows, amr->nr_entries);
 }
@@ -173,9 +201,11 @@ mrc_ddc_amr_assemble(struct mrc_ddc_amr *amr)
 // ----------------------------------------------------------------------
 // mrc_ddc_amr_apply
 
-static void
-mrc_ddc_amr_apply(struct mrc_ddc_amr *amr, struct mrc_m3 *fld)
+void
+mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   for (int row = 0; row < amr->nr_rows; row++) {
     struct mrc_m3_patch *fldp_row = mrc_m3_patch_get(fld, amr->rows[row].patch);
     int row_idx = amr->rows[row].idx;
@@ -189,6 +219,22 @@ mrc_ddc_amr_apply(struct mrc_ddc_amr *amr, struct mrc_m3 *fld)
     fldp_row->arr[row_idx] = sum;
   }
 }
+
+#define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
+static struct param mrc_ddc_amr_descr[] = {
+  { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
+  {},
+};
+#undef VAR
+
+struct mrc_ddc_ops mrc_ddc_amr_ops = {
+  .name                  = "amr",
+  .size                  = sizeof(struct mrc_ddc_amr),
+  .param_descr           = mrc_ddc_amr_descr,
+  .setup                 = mrc_ddc_amr_setup,
+  .destroy               = mrc_ddc_amr_destroy,
+  .set_domain            = mrc_ddc_amr_set_domain,
+};
 
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_same
@@ -276,18 +322,6 @@ struct mrc_ddc_amr_stencil {
   int nr_entries;
 };
   
-// ======================================================================
-
-enum {
-  EX,
-  EY,
-  EZ,
-  HX,
-  HY,
-  HZ,
-  NR_COMPS,
-};
-
 // ======================================================================
 
 static bool
@@ -504,10 +538,12 @@ div_2(int i)
 }
 
 static bool
-mrc_ddc_amr_stencil_coarse(struct mrc_ddc_amr *amr, int ext[3],
+mrc_ddc_amr_stencil_coarse(struct mrc_ddc *ddc, int ext[3],
 			   struct mrc_ddc_amr_stencil *stencil,
 			   int m, int p, int i[3])
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   int p_nei, j[3];
   mrc_domain_find_valid_point_coarse(amr->domain, ext, p,
 				     (int[]) { div_2(i[0]), div_2(i[1]), div_2(i[2]) },
@@ -523,16 +559,18 @@ mrc_ddc_amr_stencil_coarse(struct mrc_ddc_amr *amr, int ext[3],
     }
     mrc_domain_to_valid_point_same(amr->domain, ext, p_nei, jd, &p_dnei, j_dnei);
     assert(!mrc_domain_is_ghost(amr->domain, ext, p_dnei, j_dnei));
-    mrc_ddc_amr_add_value(amr, p, m, i, p_dnei, m, j_dnei, s->val);
+    mrc_ddc_amr_add_value(ddc, p, m, i, p_dnei, m, j_dnei, s->val);
   }
   return true;
 }
 
 static bool
-mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
+mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
 			 struct mrc_ddc_amr_stencil *stencil,
 			 int m, int p, int i[3])
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   int p_nei, j[3];
   mrc_domain_find_valid_point_fine(amr->domain, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
   if (p_nei < 0) {
@@ -546,7 +584,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
     }
     mrc_domain_find_valid_point_fine(amr->domain, p, id, &p_nei, j);
     assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
-    mrc_ddc_amr_add_value(amr, p, m, i, p_nei, m, j, s->val);
+    mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, s->val);
   }
   return true;
 }
@@ -554,10 +592,12 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc_amr *amr, int ext[3],
 // ================================================================================
 
 static void
-set_ddc_stencil(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3],
-		struct mrc_ddc_amr_stencil *stencil_coarse,
-		struct mrc_ddc_amr_stencil *stencil_fine)
+mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
+			   struct mrc_ddc_amr_stencil *stencil_coarse,
+			   struct mrc_ddc_amr_stencil *stencil_fine)
 {
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
   int nr_patches;
@@ -585,17 +625,17 @@ set_ddc_stencil(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3],
 	  mrc_domain_find_valid_point_same(amr->domain, ext, p, i, &p_nei, j);
 	  if (p_nei >= 0) {
 	    assert(!mrc_domain_is_ghost(amr->domain, ext, p_nei, j));
-	    mrc_ddc_amr_add_value(amr, p, m, i, p_nei, m, j, 1.f);
+	    mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, 1.f);
 	    continue;
 	  }
 
 	  // try to interpolate from coarse
-	  if (mrc_ddc_amr_stencil_coarse(amr, ext, stencil_coarse, m, p, i)) {
+	  if (mrc_ddc_amr_stencil_coarse(ddc, ext, stencil_coarse, m, p, i)) {
 	    continue;
 	  }
 	      
 	  // try to restrict from fine
-	  if (mrc_ddc_amr_stencil_fine(amr, ext, stencil_fine, m, p, i)) {
+	  if (mrc_ddc_amr_stencil_fine(ddc, ext, stencil_fine, m, p, i)) {
 	    continue;
 	  }
 
@@ -611,6 +651,16 @@ set_ddc_stencil(struct mrc_ddc_amr *amr, int m, int bnd, int ext[3],
 #define F3 MRC_M3
 
 // ======================================================================
+
+enum {
+  EX,
+  EY,
+  EZ,
+  HX,
+  HY,
+  HZ,
+  NR_COMPS,
+};
 
 static struct mrc_ddc_amr_stencil_entry stencil_coarse_EY[2] = {
   // FIXME, 3D
@@ -692,36 +742,6 @@ static struct mrc_ddc_amr_stencil stencils_fine[NR_COMPS] = {
   [HZ] = { stencil_fine_HZ, ARRAY_SIZE(stencil_fine_HZ) },
 };
 
-static struct mrc_ddc_amr *
-make_ddc_H(struct mrc_domain *domain, int sw)
-{
-  static struct mrc_ddc_amr _ddc;
-  struct mrc_ddc_amr *ddc = &_ddc;
-  ddc->domain = domain;
-  ddc->sw = sw;
-  mrc_ddc_amr_setup(ddc);
-  set_ddc_stencil(ddc, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
-  set_ddc_stencil(ddc, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
-  mrc_ddc_amr_assemble(ddc);
-
-  return ddc;
-}
-
-static struct mrc_ddc_amr *
-make_ddc_E(struct mrc_domain *domain, int sw)
-{
-  static struct mrc_ddc_amr _ddc;
-  struct mrc_ddc_amr *ddc = &_ddc;
-  ddc->domain = domain;
-  ddc->sw = sw;
-  mrc_ddc_amr_setup(ddc);
-  set_ddc_stencil(ddc, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
-  set_ddc_stencil(ddc, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
-  mrc_ddc_amr_assemble(ddc);
-
-  return ddc;
-}
-
 static void __unused
 find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
 	    int ext[3], int bnd)
@@ -752,7 +772,7 @@ find_ghosts(struct mrc_domain *domain, struct mrc_m3 *fld, int m,
 // step_fdtd
 
 static void
-step_fdtd(struct mrc_m3 *fld, struct mrc_ddc_amr *ddc_E, struct mrc_ddc_amr *ddc_H)
+step_fdtd(struct mrc_m3 *fld, struct mrc_ddc *ddc_E, struct mrc_ddc *ddc_H)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
 #ifdef AMR
@@ -956,8 +976,23 @@ main(int argc, char **argv)
     mrc_crds_patch_put(crds);
   }
 
-  struct mrc_ddc_amr *ddc_E = make_ddc_E(domain, fld->sw);
-  struct mrc_ddc_amr *ddc_H = make_ddc_H(domain, fld->sw);
+  struct mrc_ddc *ddc_E = mrc_ddc_create(mrc_domain_comm(domain));
+  mrc_ddc_set_type(ddc_E, "amr");
+  mrc_ddc_set_domain(ddc_E, domain);
+  mrc_ddc_set_param_int(ddc_E, "sw", fld->sw);
+  mrc_ddc_setup(ddc_E);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
+  mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
+  mrc_ddc_amr_assemble(ddc_E);
+
+  struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
+  mrc_ddc_set_type(ddc_H, "amr");
+  mrc_ddc_set_domain(ddc_H, domain);
+  mrc_ddc_set_param_int(ddc_H, "sw", fld->sw);
+  mrc_ddc_setup(ddc_H);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
+  mrc_ddc_amr_assemble(ddc_H);
 
   // write field to disk
 
@@ -992,8 +1027,8 @@ main(int argc, char **argv)
 
   mrc_io_destroy(io);
 
-  mrc_ddc_amr_destroy(ddc_E);
-  mrc_ddc_amr_destroy(ddc_H);
+  mrc_ddc_destroy(ddc_E);
+  mrc_ddc_destroy(ddc_H);
 
   mrc_m3_destroy(fld);
 
