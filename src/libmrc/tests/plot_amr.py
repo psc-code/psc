@@ -12,12 +12,12 @@ mz = 1
 sw = 3
 buf = 2
 patches = [0,1,2,4,7,11,12] #,13]
-patches = [5,6,9,10]
+#patches = [5,6,9,10]
 #patches = [13,14,16,17]
 patches = [5,6,9,10,13,14,16,17]
 patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
 #patches = xrange(22)
-#patches = [9]
+#patches = [0]
 times = xrange(0,1,1)
 
 EX = 0
@@ -94,8 +94,8 @@ def movie():
     plt.show()
 
 def boundary():
-    plot_component(basename, "fld", "EY", 0, '.', color='r')
-    plot_component(basename, "fld", "EY", 1, '-', color='r')
+    #plot_component(basename, "fld", "EY", 0, '.', color='r')
+    plot_component(basename, "fld", "HY", 1, '-', color='r')
     plt.show()
 
 boundary()
