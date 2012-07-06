@@ -316,7 +316,7 @@ func2(float x, float y)
   return sin(.5 + kx * x) * cos(.5 + ky * y);
 }
 
-float (*func)(float, float) = func2;
+float (*func)(float, float) = func1;
 
 int
 main(int argc, char **argv)
@@ -332,7 +332,7 @@ main(int argc, char **argv)
   mrc_crds_set_param_int(crds, "sw", 3);
   
   mrc_domain_set_from_options(domain);
-  mrctest_set_amr_domain_3(domain);
+  mrctest_set_amr_domain_1(domain);
 
   mrc_domain_setup(domain);
   mrc_domain_plot(domain);
@@ -395,7 +395,7 @@ main(int argc, char **argv)
   mrc_ddc_set_param_int(ddc_E, "sw", fld->sw);
   mrc_ddc_setup(ddc_E);
   mrc_ddc_amr_set_by_stencil(ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
-  mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
+  //  mrc_ddc_amr_set_by_stencil(ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
   mrc_ddc_amr_assemble(ddc_E);
 
   struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
@@ -403,7 +403,7 @@ main(int argc, char **argv)
   mrc_ddc_set_domain(ddc_H, domain);
   mrc_ddc_set_param_int(ddc_H, "sw", fld->sw);
   mrc_ddc_setup(ddc_H);
-  mrc_ddc_amr_set_by_stencil(ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  //  mrc_ddc_amr_set_by_stencil(ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
   mrc_ddc_amr_set_by_stencil(ddc_H, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
   mrc_ddc_amr_assemble(ddc_H);
 

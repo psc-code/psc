@@ -263,7 +263,7 @@ mrc_domain_find_valid_point_coarse(struct mrc_domain *domain, int ext[3],
 }
 
 static void
-mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int p, int i[3],
+mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int ext[3], int p, int i[3],
 				 int *p_nei, int j[3])
 {
   int ldims[3];
@@ -271,15 +271,19 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int p, int i[3],
   struct mrc_patch_info pi;
   mrc_domain_get_local_patch_info(domain, p, &pi);
     
-  int ii[3], off[3], dir[3];
+  int off[3], dir[3];
   for (int d = 0; d < 3; d++) {
-    off[d] = (i[d] + ldims[d]) / ldims[d] - 1;
-    ii[d] = (i[d] + ldims[d]) % ldims[d];
-    if (ii[d] < 0) {
+    if (i[d] < 0) {
+      off[d] = 1;
+      j[d] = i[d] + ldims[d];
       dir[d] = -1;
-    } else if (ii[d] < ldims[d]) {
+    } else if (i[d] < 2 * ldims[d]) {
+      off[d] = i[d] / ldims[d];
+      j[d] = i[d] - off[d] * ldims[d];
       dir[d] = 0;
-    } else {
+    } else { // >= 2 * ldims[d]
+      off[d] = 0;
+      j[d] = i[d] - 2 * ldims[d];
       dir[d] = 1;
     }
   }
@@ -287,10 +291,6 @@ mrc_domain_find_valid_point_fine(struct mrc_domain *domain, int p, int i[3],
   mrc_domain_get_neighbor_patch_fine(domain, p, dir, off, p_nei);
   if (*p_nei < 0) {
     return;
-  }
-
-  for (int d = 0; d < 3; d++) {
-    j[d] = ii[d] - dir[d] * ldims[d];
   }
 }
 
@@ -336,7 +336,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
   struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
 
   int p_nei, j[3];
-  mrc_domain_find_valid_point_fine(domain, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
+  mrc_domain_find_valid_point_fine(domain, ext, p, (int[]) { 2*i[0], 2*i[1], 2*i[2] }, &p_nei, j);
   if (p_nei < 0) {
     return false;
   }
@@ -346,7 +346,7 @@ mrc_ddc_amr_stencil_fine(struct mrc_ddc *ddc, int ext[3],
     for (int d = 0; d < 3; d++) {
       id[d] = 2*i[d] + s->dx[d];
     }
-    mrc_domain_find_valid_point_fine(domain, p, id, &p_nei, j);
+    mrc_domain_find_valid_point_fine(domain, ext, p, id, &p_nei, j);
     assert(!mrc_domain_is_ghost(domain, ext, p_nei, j));
     mrc_ddc_amr_add_value(ddc, p, m, i, p_nei, m, j, s->val);
   }
