@@ -10,13 +10,13 @@ mx = 8
 my = 8
 mz = 1
 sw = 3
-buf = 0
-patches = [0,1,2,4,7,11,12] #,13]
+buf = 2
+#patches = [0,1,2,4,7,11,12] #,13]
 #patches = [5,6,9,10]
 #patches = [13,14,16,17]
-patches = [5,6,9,10,13,14,16,17]
+#patches = [5,6,9,10,13,14,16,17]
 patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
-patches = xrange(10)
+patches = xrange(22)
 #patches = [0]
 times = xrange(1,32,1)
 
@@ -80,13 +80,15 @@ def plot_component(basename, fldname, compname, time, symbol, **kwargs):
         #ax.plot_wireframe(X, Y, np.sin(.5+2*np.pi*X)*np.cos(.5+2*np.pi*Y), color='g')
 
 def movie():
+    global buf
+    buf = 0
     plt.ion()
     for time in times:
         #plt.figure()
         plt.clf()
-        plot_component(basename, "fld", "EY", time, '-', color='r')
+        #plot_component(basename, "fld", "EY", time, '-', color='r')
         #plot_component(basename, "fld", "HZ", time, '-', color='b')
-        #plot_component("run", "fld", "EZ", time, '-', color='r')
+        plot_component("run", "fld", "EZ", time, '-', color='r')
         #plot_component("run", "fld", "HY", time, '-', color='b')
         plt.draw()
         #plt.show()
@@ -94,8 +96,8 @@ def movie():
     plt.show()
 
 def boundary():
-    #plot_component(basename, "fld", "EY", 0, '.', color='r')
-    plot_component(basename, "fld", "EY", 1, '-', color='r')
+    #plot_component(basename, "fld", "EZ", 0, '.', color='r')
+    plot_component(basename, "fld", "EZ", 1, '-', color='r')
     plt.show()
 
 #boundary()

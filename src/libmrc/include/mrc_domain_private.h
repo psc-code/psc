@@ -33,6 +33,7 @@ struct mrc_domain_ops {
 			      struct mrc_patch_info *info);
   void (*get_level_idx3_patch_info)(struct mrc_domain *domain, int level, int idx[3],
 				    struct mrc_patch_info *info);
+  void (*get_nr_levels)(struct mrc_domain *domain, int *p_nr_levels);
   void (*plot)(struct mrc_domain *domain);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
   int* (*get_offset)(struct mrc_domain* domain);

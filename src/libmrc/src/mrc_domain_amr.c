@@ -420,6 +420,17 @@ mrc_domain_amr_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 }
 
 // ----------------------------------------------------------------------
+// mrc_domain_amr_get_nr_levels
+
+static void
+mrc_domain_amr_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
+{
+  struct mrc_domain_amr *amr = to_mrc_domain_amr(domain);
+
+  *p_nr_levels = amr->nr_levels + 1;
+}
+
+// ----------------------------------------------------------------------
 // mrc_domain_amr_write
 
 static void
@@ -541,6 +552,7 @@ struct mrc_domain_ops mrc_domain_amr_ops = {
   .get_global_patch_info     = mrc_domain_amr_get_global_patch_info,
   .get_local_patch_info      = mrc_domain_amr_get_local_patch_info,
   .get_level_idx3_patch_info = mrc_domain_amr_get_level_idx3_patch_info,
+  .get_nr_levels             = mrc_domain_amr_get_nr_levels,
   .plot                      = mrc_domain_amr_plot,
 };
 
