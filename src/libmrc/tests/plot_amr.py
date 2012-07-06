@@ -18,7 +18,7 @@ buf = 2
 patches = [0,1,2,4,7,11,12,13, 5,6,9,10]
 patches = xrange(22)
 #patches = [0]
-times = xrange(1,32,1)
+times = xrange(1,100,5)
 
 EX = 0
 EY = 1
@@ -50,7 +50,11 @@ def slicex(l, h):
 def plot_component(basename, fldname, compname, time, symbol, **kwargs):
     for p in patches:
         fld, crdcc, crdnc = read_patch(basename, fldname, compname, time, p)
-        if compname == "EY":
+        if compname == "EX":
+            slx = slicex(sw-buf, -(sw-buf))
+            sly = slicex(sw-buf, -(sw-buf)+1)
+            X, Y = np.meshgrid(crdcc[0][slx], crdnc[1][sly])
+        elif compname == "EY":
             slx = slicex(sw-buf, -(sw-buf)+1)
             sly = slicex(sw-buf, -(sw-buf))
             X, Y = np.meshgrid(crdnc[0][slx], crdcc[1][sly])
@@ -86,10 +90,7 @@ def movie():
     for time in times:
         #plt.figure()
         plt.clf()
-        #plot_component(basename, "fld", "EY", time, '-', color='r')
-        #plot_component(basename, "fld", "HZ", time, '-', color='b')
-        plot_component("run", "fld", "EZ", time, '-', color='r')
-        #plot_component("run", "fld", "HY", time, '-', color='b')
+        plot_component(basename, "fld", "EX", time, '-', color='r')
         plt.draw()
         #plt.show()
         
