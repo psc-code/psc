@@ -9,10 +9,6 @@
 
 #define mrc_ddc_amr(ddc) mrc_to_subobj(ddc, struct mrc_ddc_amr)
 
-// FIXME
-static const int max_rows = 10000;
-static const int max_entries = 20000;
-
 // ----------------------------------------------------------------------
 // mrc_ddc_amr_set_domain
 
@@ -50,8 +46,11 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
     amr->im[d] = ldims[d] + 2 * amr->sw;
   }
 
-  amr->rows = calloc(max_rows + 1, sizeof(*amr->rows));
-  amr->entries = calloc(max_entries, sizeof(*amr->entries));
+  amr->nr_rows_alloced = 1000;
+  amr->nr_entries_alloced = 2000;
+
+  amr->rows = calloc(amr->nr_rows_alloced, sizeof(*amr->rows));
+  amr->entries = calloc(amr->nr_entries_alloced, sizeof(*amr->entries));
 
   amr->nr_entries = 0;
   amr->nr_rows = 0;
@@ -93,16 +92,33 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 		  amr->im[1] + col[1] - amr->ib[1]) *
 		 amr->im[0] + col[0] - amr->ib[0]);
   
-  if (amr->nr_rows == 0 || amr->rows[amr->nr_rows - 1].idx != row_idx) {
+  if (amr->nr_rows == 0 ||
+      amr->rows[amr->nr_rows - 1].idx != row_idx ||
+      amr->rows[amr->nr_rows - 1].patch != row_patch) {
     // start new row
-    assert(amr->nr_rows < max_rows);
+    if (amr->nr_rows >= amr->nr_rows_alloced - 1) {
+      amr->nr_rows_alloced *= 2;
+      amr->rows = realloc(amr->rows, amr->nr_rows_alloced * sizeof(*amr->rows));
+    }
     amr->rows[amr->nr_rows].patch = row_patch;
     amr->rows[amr->nr_rows].idx = row_idx;
     amr->rows[amr->nr_rows].first_entry = amr->nr_entries;
     amr->nr_rows++;
   }
 
-  assert(amr->nr_entries < max_entries);
+  // if we already have an entry for this column in the current row, just add to it
+  for (int i = amr->rows[amr->nr_rows - 1].first_entry; i < amr->nr_entries; i++) {
+    if (amr->entries[i].patch == col_patch && amr->entries[i].idx == col_idx) {
+      amr->entries[i].val += val;
+      return;
+    }
+  }
+
+  // otherwise, need to append a new entry
+  if (amr->nr_entries >= amr->nr_entries_alloced) {
+    amr->nr_entries_alloced *= 2;
+    amr->entries = realloc(amr->entries, amr->nr_entries_alloced * sizeof(*amr->entries));
+  }
   amr->entries[amr->nr_entries].patch = col_patch;
   amr->entries[amr->nr_entries].idx = col_idx;
   amr->entries[amr->nr_entries].val = val;

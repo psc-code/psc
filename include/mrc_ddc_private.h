@@ -134,6 +134,8 @@ struct mrc_ddc_amr {
 
   int nr_rows;
   int nr_entries;
+  int nr_rows_alloced;
+  int nr_entries_alloced;
 
   struct mrc_domain *domain;
   int sw;
