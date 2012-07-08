@@ -5,7 +5,7 @@
 #include "psc_output_fields_private.h"
 #include "psc_output_fields_item.h"
 
-#define MAX_FIELDS_LIST 30
+#define MAX_FIELDS_LIST 50
 
 struct psc_fields_list {
   int nr_flds;

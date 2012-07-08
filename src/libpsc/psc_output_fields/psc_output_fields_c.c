@@ -171,6 +171,7 @@ make_fields_list(struct psc *psc, struct psc_fields_list *list,
   for (int i = 0; i < list_in->nr_flds; i++) {
     mfields_c_t *flds_in = list_in->flds[i];
     for (int m = 0; m < flds_in->nr_fields; m++) {
+      assert(list->nr_flds < MAX_FIELDS_LIST);
       mfields_c_t *flds = psc_mfields_create(psc_comm(psc));
       psc_mfields_set_type(flds, "c");
       psc_mfields_set_domain(flds, psc->mrc_domain);
