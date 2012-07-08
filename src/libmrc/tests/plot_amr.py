@@ -87,8 +87,8 @@ def movie():
     global buf
     buf = 0
     plt.ion()
+    plt.figure(figsize=(16,10))
     for time in times:
-        #plt.figure()
         plt.clf()
         plot_component(basename, "fld", "EX", time, '-', color='r')
         plt.draw()
