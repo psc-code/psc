@@ -408,10 +408,6 @@ struct psc_bnd_ops psc_bnd_cuda_ops = {
 
   .create_ddc              = psc_bnd_fld_cuda_create,
   .add_ghosts              = psc_bnd_fld_cuda_add_ghosts,
-  .add_ghosts_prep         = psc_bnd_fld_cuda_add_ghosts_prep,
-  .add_ghosts_post         = psc_bnd_fld_cuda_add_ghosts_post,
   .fill_ghosts             = psc_bnd_fld_cuda_fill_ghosts,
-  .fill_ghosts_prep        = psc_bnd_fld_cuda_fill_ghosts_prep,
-  .fill_ghosts_post        = psc_bnd_fld_cuda_fill_ghosts_post,
 };
 
