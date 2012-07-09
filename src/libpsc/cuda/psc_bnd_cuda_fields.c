@@ -11,29 +11,11 @@
 static void
 psc_fields_cuda_bnd_prep(struct psc_fields *pf, int nr_fields)
 {
-  // FIXME, could be done once and cached
-  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf)->bnd;
-  int sz = 1;
-  for (int d = 0; d < 3; d++) {
-    if (pf->im[d] == 1 - 2 * pf->ib[d]) { // only 1 non-ghost point
-      cf->im[d] = 1;
-      cf->ib[d] = 0;
-    } else {
-      cf->im[d] = pf->im[d];
-      cf->ib[d] = pf->ib[d];
-    }
-    sz *= cf->im[d];
-  }
-  cf->arr = malloc(nr_fields * sz * sizeof(*cf->arr));
-  cf->arr_off = cf->arr 
-    - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
 }
 
 static void
 psc_fields_cuda_bnd_post(struct psc_fields *pf)
 {
-  struct psc_fields_cuda_bnd *cf = &psc_fields_cuda(pf)->bnd;
-  free(cf->arr);
 }
 
 // ======================================================================

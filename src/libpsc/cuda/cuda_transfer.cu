@@ -206,6 +206,22 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
       h_bnd_buf += MAX_BND_COMPONENTS * buf_size;
       d_bnd_buf += MAX_BND_COMPONENTS * buf_size;
     }
+
+    struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
+    int sz = 1;
+    for (int d = 0; d < 3; d++) {
+      if (flds->im[d] == 1 - 2 * flds->ib[d]) { // only 1 non-ghost point
+	cf->im[d] = 1;
+	cf->ib[d] = 0;
+      } else {
+	cf->im[d] = flds->im[d];
+	cf->ib[d] = flds->ib[d];
+      }
+      sz *= cf->im[d];
+    }
+    cf->arr = new float [MAX_BND_COMPONENTS * sz * sizeof(*cf->arr)];
+    cf->arr_off = cf->arr 
+      - ((cf->ib[2] * cf->im[1] + cf->ib[1]) * cf->im[0] + cf->ib[0]);
   }
 }
 
@@ -217,6 +233,13 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   check(cudaFree(mflds_cuda->d_flds));
   check(cudaFree(mflds_cuda->d_bnd_buf));
   delete[] mflds_cuda->h_bnd_buf;
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+    struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
+    free(cf->arr);
+  }
 }
 
 EXTERN_C void
