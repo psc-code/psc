@@ -49,7 +49,6 @@ _psc_mfields_destroy(struct psc_mfields *flds)
   }
   free(flds->flds);
 
-  // sub-destroy has already been called
   for (int m = 0; m < flds->nr_fields; m++) {
     free(flds->comp_name[m]);
   }

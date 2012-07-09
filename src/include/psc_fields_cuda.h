@@ -24,6 +24,12 @@ struct psc_fields_cuda {
 
 #define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)
 
+struct psc_mfields_cuda {
+  fields_cuda_real_t *d_flds;
+};
+
+#define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)
+
 // ----------------------------------------------------------------------
 // macros to access fields from CUDA (device-side)
 
