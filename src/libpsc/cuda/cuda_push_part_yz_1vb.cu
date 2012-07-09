@@ -782,9 +782,11 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   unsigned int size;
   for (int p = 0; p < mflds->nr_patches; p++) {
-    size = prm.mx[0] * prm.mx[1] * prm.mx[2];
-    check(cudaMemset(mflds_cuda->h_cp_flds[p].d_flds + JXI * size, 0,
-		     3 * size * sizeof(*mflds_cuda->h_cp_flds[p].d_flds)));
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+    size = flds->im[0] * flds->im[1] * flds->im[2];
+    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
+		     3 * size * sizeof(*flds_cuda->d_flds)));
   }
   
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
