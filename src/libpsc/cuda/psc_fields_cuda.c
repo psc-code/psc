@@ -223,13 +223,8 @@ struct psc_fields_ops psc_fields_cuda_ops = {
 static void
 psc_mfields_cuda_setup(struct psc_mfields *mflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
   psc_mfields_setup_super(mflds);
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-    __fields_cuda_alloc(pf);
-  }
+  __psc_mfields_cuda_setup(mflds);
 }
 
 // ----------------------------------------------------------------------
@@ -238,12 +233,7 @@ psc_mfields_cuda_setup(struct psc_mfields *mflds)
 static void
 psc_mfields_cuda_destroy(struct psc_mfields *mflds)
 {
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *pf = psc_mfields_get_patch(mflds, p);
-    __fields_cuda_free(pf);
-  }
+  __psc_mfields_cuda_destroy(mflds);
 }
 
 // ======================================================================
