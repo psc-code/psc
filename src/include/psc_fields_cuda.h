@@ -28,6 +28,8 @@ struct psc_fields_cuda {
 
 struct psc_mfields_cuda {
   fields_cuda_real_t *d_flds;
+  fields_cuda_real_t *d_bnd_buf;
+  fields_cuda_real_t *h_bnd_buf;
 };
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)

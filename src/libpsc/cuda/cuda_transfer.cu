@@ -170,15 +170,25 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
   unsigned int total_size = 0;
+  unsigned int buf_size = 0;
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
     total_size += size;
+    if (flds->im[0] == 1 + 2*BND) {
+      int B = 2*BND;
+      buf_size = 2*B * (flds->im[1] + flds->im[2] - 2*B);
+    }
   }
 
   check(cudaMalloc((void **) &mflds_cuda->d_flds,
 		   mflds->nr_fields * total_size * sizeof(float)));
+  check(cudaMalloc((void **) &mflds_cuda->d_bnd_buf,
+		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches * sizeof(float)));
+  mflds_cuda->h_bnd_buf = new float[MAX_BND_COMPONENTS * mflds->nr_patches * buf_size];
   float *d_flds = mflds_cuda->d_flds;
+  float *d_bnd_buf = mflds_cuda->d_bnd_buf;
+  float *h_bnd_buf = mflds_cuda->h_bnd_buf;
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -190,12 +200,11 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
     assert(d_flds == mflds_cuda->d_flds + p * flds->nr_comp * size);
     d_flds += flds->nr_comp * size;
     
-    if (flds->im[0] == 1 + 2*BND) {
-      int B = 2*BND;
-      unsigned int buf_size = 2*B * (flds->im[1] + flds->im[2] - 2*B);
-      flds_cuda->h_bnd_buf = new real[MAX_BND_COMPONENTS * buf_size];
-      check(cudaMalloc((void **) &flds_cuda->d_bnd_buf,
-		       MAX_BND_COMPONENTS * buf_size * sizeof(*flds_cuda->d_bnd_buf)));
+    if (buf_size) {
+      flds_cuda->h_bnd_buf = h_bnd_buf;
+      flds_cuda->d_bnd_buf = d_bnd_buf;
+      h_bnd_buf += MAX_BND_COMPONENTS * buf_size;
+      d_bnd_buf += MAX_BND_COMPONENTS * buf_size;
     }
   }
 }
@@ -206,16 +215,8 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
   check(cudaFree(mflds_cuda->d_flds));
-
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    
-    if (flds->im[0] == 1 + 2*BND) {
-      delete[] flds_cuda->h_bnd_buf;
-      check(cudaFree(flds_cuda->d_bnd_buf));
-    }
-  }
+  check(cudaFree(mflds_cuda->d_bnd_buf));
+  delete[] mflds_cuda->h_bnd_buf;
 }
 
 EXTERN_C void
