@@ -40,7 +40,7 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 
   int ldims[3];
   mrc_domain_get_param_int3(amr->domain, "m", ldims);
-  // needs to be compatible with how mrc_m3 indexes
+  // needs to be compatible with how mrc_m3 indexes its fields
   for (int d = 0; d < 3; d++) {
     amr->ib[d] = -amr->sw;
     amr->im[d] = ldims[d] + 2 * amr->sw;
@@ -57,7 +57,7 @@ mrc_ddc_amr_setup(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_add_destroy
+// mrc_ddc_amr_destroy
 
 static void
 mrc_ddc_amr_destroy(struct mrc_ddc *ddc)
@@ -79,7 +79,6 @@ mrc_ddc_amr_add_value(struct mrc_ddc *ddc,
 {
   struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
 
-  // FIXME, a * F3(i,j,k) + b * F3(i,j,k) should be combined as (a + b) * F3(i,j,k)
   // WARNING, all elements for any given row must be added contiguously!
 
   assert(row_patch >= 0);
