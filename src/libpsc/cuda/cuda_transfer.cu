@@ -179,13 +179,17 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
   check(cudaMalloc((void **) &mflds_cuda->d_flds,
 		   mflds->nr_fields * total_size * sizeof(float)));
   float *d_flds = mflds_cuda->d_flds;
+  mflds_cuda->h_cp_flds = new struct cuda_patch_flds[mflds->nr_patches];
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    assert(psc_fields_ops(flds) == &psc_fields_cuda_ops);
     struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
 
     unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
     flds_cuda->d_flds = d_flds;
+    mflds_cuda->h_cp_flds[p].d_flds = d_flds;
+    assert(d_flds == mflds_cuda->d_flds + p * flds->nr_comp * size);
     d_flds += flds->nr_comp * size;
     
     if (flds->im[0] == 1 + 2*BND) {
@@ -196,6 +200,12 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
 		       MAX_BND_COMPONENTS * buf_size * sizeof(*flds_cuda->d_bnd_buf)));
     }
   }
+
+  check(cudaMalloc(&mflds_cuda->d_cp_flds,
+		   mflds->nr_patches * sizeof(*mflds_cuda->d_cp_flds)));
+  check(cudaMemcpy(mflds_cuda->d_cp_flds, mflds_cuda->h_cp_flds,
+		   mflds->nr_patches * sizeof(*mflds_cuda->d_cp_flds),
+		   cudaMemcpyHostToDevice));
 }
 
 void
@@ -204,6 +214,9 @@ __psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
   check(cudaFree(mflds_cuda->d_flds));
+
+  check(cudaFree(mflds_cuda->d_cp_flds));
+  delete[] mflds_cuda->h_cp_flds;
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);

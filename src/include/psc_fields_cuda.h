@@ -24,8 +24,16 @@ struct psc_fields_cuda {
 
 #define psc_fields_cuda(pf) mrc_to_subobj(pf, struct psc_fields_cuda)
 
+// ----------------------------------------------------------------------
+
+struct cuda_patch_flds {
+  real *d_flds;
+};
+
 struct psc_mfields_cuda {
   fields_cuda_real_t *d_flds;
+  struct cuda_patch_flds *h_cp_flds;
+  struct cuda_patch_flds *d_cp_flds;
 };
 
 #define psc_mfields_cuda(pf) mrc_to_subobj(pf, struct psc_mfields_cuda)

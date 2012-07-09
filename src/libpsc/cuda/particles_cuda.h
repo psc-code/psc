@@ -4,20 +4,7 @@
 
 // FIXME, eventually this should probably be part of psc_particles_cuda_private.h
 
-struct cuda_patch_flds {
-  real *d_flds;
-};
-
-struct cuda_mflds {
-  struct cuda_patch_flds *h_cp_flds;
-  struct cuda_patch_flds *d_cp_flds;
-  int nr_patches;
-  struct psc_fields **mflds_cuda;
-};
-
 EXTERN_C void psc_mparticles_cuda_copy_to_dev(struct psc_mparticles *mprts);
-EXTERN_C void cuda_mflds_create(struct cuda_mflds *cuda_mflds, struct psc_mfields *mflds);
-EXTERN_C void cuda_mflds_destroy(struct cuda_mflds *cuda_mflds);
 
 #define MAX_KINDS (4)
 
