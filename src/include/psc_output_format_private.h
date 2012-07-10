@@ -18,13 +18,6 @@ struct psc_output_format_ops {
 // ======================================================================
 
 extern struct psc_output_format_ops psc_output_format_mrc_ops;
-extern struct psc_output_format_ops psc_output_format_binary_ops;
-extern struct psc_output_format_ops psc_output_format_vtk_ops;
-extern struct psc_output_format_ops psc_output_format_vtk_points_ops;
-extern struct psc_output_format_ops psc_output_format_vtk_cells_ops;
-extern struct psc_output_format_ops psc_output_format_vtk_binary_ops;
-extern struct psc_output_format_ops psc_output_format_hdf5_ops;
-extern struct psc_output_format_ops psc_output_format_xdmf_ops;
 
 #define psc_output_format_ops(format) ((struct psc_output_format_ops *)((format)->obj.ops))
 
