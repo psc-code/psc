@@ -29,8 +29,6 @@ struct mrc_domain_ops {
 				struct mrc_patch_info *info);
   void (*get_local_patch_info)(struct mrc_domain *domain, int p,
 			       struct mrc_patch_info *info);
-  void (*get_idx3_patch_info)(struct mrc_domain *domain, int idx[3],
-			      struct mrc_patch_info *info);
   void (*get_level_idx3_patch_info)(struct mrc_domain *domain, int level, int idx[3],
 				    struct mrc_patch_info *info);
   void (*get_nr_levels)(struct mrc_domain *domain, int *p_nr_levels);

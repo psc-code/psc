@@ -166,9 +166,9 @@ void
 mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
 			       struct mrc_patch_info *info)
 {
-  assert(mrc_domain_is_setup(domain));
-  assert(mrc_domain_ops(domain)->get_idx3_patch_info);
-  mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
+  MHERE; // should use get_level_idx3_patch_info directly, this function is
+  // obsolete and should go away
+  mrc_domain_get_level_idx3_patch_info(domain, 0, idx, info);
 }
 
 void
