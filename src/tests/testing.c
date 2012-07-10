@@ -1,7 +1,6 @@
 
 #include "psc_testing.h"
 #include "psc_sort.h"
-#include "psc_case.h"
 #include "psc_particles_as_c.h"
 #include "psc_fields_as_c.h"
 #include "psc_push_particles.h"
@@ -331,67 +330,6 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
     }
     psc_particles_put_as(prts, prts_base, 0);
   }
-}
-
-// ----------------------------------------------------------------------
-// psc_create_test_xy
-
-struct psc_case *
-psc_create_test_xy()
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_case, "test_xy");
-  psc_case_set_from_options(_case);
-  return _case;
-}
-
-
-// ----------------------------------------------------------------------
-// psc_create_test_xz
-
-struct psc_case *
-psc_create_test_xz()
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_case, "test_xz");
-  psc_case_set_from_options(_case);
-  return _case;
-}
-
-// ----------------------------------------------------------------------
-// psc_create_test_yz
-
-struct psc_case *
-psc_create_test_yz(void)
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_case, "test_yz");
-  psc_case_set_from_options(_case);
-  return _case;
-}
-
-// ----------------------------------------------------------------------
-// psc_create_test_z
-
-struct psc_case *
-psc_create_test_z(void)
-{
-  // make sure if we call it again, we really get the same i.c.
-  srandom(0);
-
-  struct psc_case *_case = psc_case_create(MPI_COMM_WORLD);
-  psc_case_set_type(_case, "test_z");
-  psc_case_set_from_options(_case);
-  return _case;
 }
 
 // ======================================================================

@@ -10,6 +10,7 @@
 #include <mpi.h>
 #include <string.h>
 
+#if 0
 void
 setup_particles(mparticles_base_t *particles_base)
 {
@@ -146,10 +147,12 @@ get_total_num_particles(mparticles_base_t *particles_base)
 
   return total_num_part;
 }
+#endif
 
 int
 main(int argc, char **argv)
 {
+#if 0
   psc_testing_init(&argc, &argv);
 
   // test psc_exchange_particles()
@@ -185,4 +188,5 @@ main(int argc, char **argv)
   psc_case_destroy(_case);
 
   psc_testing_finalize();
+#endif
 }

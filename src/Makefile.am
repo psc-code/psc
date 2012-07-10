@@ -4,8 +4,6 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(srcdir)/libmrc/include
 SUBDIRS = include libmrc libpsc tests
 
 bin_PROGRAMS = \
-	VLI \
-	psc_restart \
 	psc_es1 \
 	psc_bohm \
 	psc_spitzer \
@@ -24,8 +22,6 @@ bin_PROGRAMS = \
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
 # HACK to have automake use the CXX linker 
-nodist_EXTRA_VLI_SOURCES = dummy.cxx
-nodist_EXTRA_psc_restart_SOURCES = dummy.cxx
 nodist_EXTRA_psc_es1_SOURCES = dummy.cxx
 nodist_EXTRA_psc_bohm_SOURCES = dummy.cxx
 nodist_EXTRA_psc_spitzer_SOURCES = dummy.cxx

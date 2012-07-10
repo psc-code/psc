@@ -78,7 +78,6 @@ typedef int f_int;
 
 ///User specified parameters
 ///
-///These parameters are set in psc_case->init_param() to define the normalization coefficients of the system
 struct psc_param {
   double qq;	///<elemental charge 
   double mm;	///<mass

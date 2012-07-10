@@ -9,7 +9,7 @@
 #include <math.h>
 #include <mpi.h>
 
-
+#if 0
 // Note: I have changed the test fields to lie in the 
 // xy plane instead of xz. For most field implementations
 // this shouldn't make any difference. The CBE 2D implementation
@@ -33,10 +33,12 @@ setup_fields(mfields_base_t *flds_base)
     psc_fields_put_as(pf, pf_base, JXI, JXI + 3);
   }
 }
+#endif
 
 int
 main(int argc, char **argv)
 {
+#if 0
   psc_testing_init(&argc, &argv);
 
   // test push_field_a
@@ -124,4 +126,5 @@ main(int argc, char **argv)
 #endif
 
   psc_testing_finalize();
+#endif
 }

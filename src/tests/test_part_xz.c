@@ -10,6 +10,7 @@
 int
 main(int argc, char **argv)
 {
+#if 0
   psc_testing_init(&argc, &argv);
 
   struct psc_case *_case = psc_create_test_xz();
@@ -54,4 +55,5 @@ main(int argc, char **argv)
   psc_case_destroy(_case);
 
   psc_testing_finalize();
+#endif
 }

@@ -3,7 +3,6 @@
 #define PSC_TESTING_H
 
 #include "psc.h"
-#include "psc_case.h"
 
 #define assert_equal(x, y, thres) __assert_equal(x, y, #x, #y, thres)
 
@@ -29,10 +28,6 @@ extern struct psc_ops psc_test_ops_1;
 
 struct psc *psc_testing_create_test_yz(const char *s_push_particles, unsigned int mask);
 struct psc *psc_testing_create_test_xz();
-struct psc_case *psc_create_test_xy(void);
-struct psc_case *psc_create_test_xz(void);
-struct psc_case *psc_create_test_yz(void);
-struct psc_case *psc_create_test_z(void);
 
 // ======================================================================
 // psc_test

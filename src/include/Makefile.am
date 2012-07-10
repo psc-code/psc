@@ -7,8 +7,6 @@ include_HEADERS = \
 	psc_bnd_fields.h \
 	psc_bnd_fields_private.h \
 	psc_bnd_private.h \
-	psc_case.h \
-	psc_case_private.h \
 	psc_collision.h \
 	psc_collision_private.h \
 	psc_diag.h \

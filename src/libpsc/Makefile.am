@@ -5,7 +5,6 @@ SUBDIRS = \
 	psc_balance \
 	psc_bnd \
 	psc_bnd_fields \
-	psc_case \
 	psc_collision \
 	psc_event_generator \
 	psc_output_fields \
@@ -30,7 +29,6 @@ libpsc_la_LIBADD = \
 	psc_balance/libsubdir.la \
 	psc_bnd/libsubdir.la \
 	psc_bnd_fields/libsubdir.la \
-	psc_case/libsubdir.la \
 	psc_collision/libsubdir.la \
 	psc_event_generator/libsubdir.la \
 	psc_output_fields/libsubdir.la \

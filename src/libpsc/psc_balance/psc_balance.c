@@ -1,6 +1,5 @@
 
 #include "psc_balance.h"
-#include "psc_case.h"
 #include "psc_bnd_fields.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
@@ -244,7 +243,8 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else if ( info_old.rank < 0 ) {
       //TODO Get number of particles
-      nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
+      assert(0);
+      //nr_particles_by_patch_new[p] = psc_case_calc_nr_particles_in_patch(ppsc->patchmanager.currentcase, p);
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else {
       //printf("a: rank: %d tag: %d\n", info_old.rank, mpi_tag(&info));
@@ -454,7 +454,8 @@ static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_d
       psc_bnd_fields_setup_patch(psc_push_fields_get_bnd_fields(ppsc->push_fields), p, ppsc->flds, t);
 
       //Seed particles
-      psc_case_init_particles_patch(ppsc->patchmanager.currentcase, p, 0);
+      assert(0);
+      //psc_case_init_particles_patch(ppsc->patchmanager.currentcase, p, 0);
     }
   }
 }

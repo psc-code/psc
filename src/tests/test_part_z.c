@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
+#if 0
 static bool do_dump = false;
 
 static void
@@ -160,10 +161,12 @@ run_test(bool is_ref, const char *s_push_particles, double eps_particles, double
   }
   psc_case_destroy(_case);
 }
+#endif
 
 int
 main(int argc, char **argv)
 {
+#if 0
   psc_testing_init(&argc, &argv);
 
   int testcase = 1;
@@ -193,4 +196,5 @@ main(int argc, char **argv)
 #endif
 
   psc_testing_finalize();
+#endif
 }
