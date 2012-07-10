@@ -22,6 +22,127 @@
 #include <mrc_ddc.h>
 
 struct psc_bnd_amr {
+  struct mrc_ddc *ddc_E;
+  struct mrc_ddc *ddc_H;
+};
+
+#define psc_bnd_amr(bnd) mrc_to_subobj(bnd, struct psc_bnd_amr)
+
+// ----------------------------------------------------------------------
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EX[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 1, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EY[2] = {
+  // FIXME, 3D
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 1, 0, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_EZ[4] = {
+  { .dx = { 0, 0, 0 }, .val = .25f },
+  { .dx = { 1, 0, 0 }, .val = .25f },
+  { .dx = { 0, 1, 0 }, .val = .25f },
+  { .dx = { 1, 1, 0 }, .val = .25f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HX[2] = {
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 1, 0, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HY[2] = {
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 1, 0 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_coarse_HZ[2] = {
+  { .dx = { 0, 0, 0 }, .val = .5f },
+  { .dx = { 0, 0, 1 }, .val = .5f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_coarse[] = {
+  [EX] = { stencil_coarse_EX, ARRAY_SIZE(stencil_coarse_EX) },
+  [EY] = { stencil_coarse_EY, ARRAY_SIZE(stencil_coarse_EY) },
+  [EZ] = { stencil_coarse_EZ, ARRAY_SIZE(stencil_coarse_EZ) },
+  [HX] = { stencil_coarse_HX, ARRAY_SIZE(stencil_coarse_HX) },
+  [HY] = { stencil_coarse_HY, ARRAY_SIZE(stencil_coarse_HY) },
+  [HZ] = { stencil_coarse_HZ, ARRAY_SIZE(stencil_coarse_HZ) },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EX[6] = {
+  // FIXME, 3D
+  { .dx = {  0, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, -1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EY[6] = {
+  // FIXME, 3D
+  { .dx = { -1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0,  0,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1,  0,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = { -1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (1.f/8.f) * 2.f },
+  { .dx = { +1, +1,  0 }, .val = (1.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_EZ[9] = {
+  // FIXME, 3D
+  { .dx = { -1, -1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f  },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .25f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f  },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .25f },
+};
+
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HX[6] = {
+  // FIXME, 3D
+  { .dx = { -1,  0,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { -1, +1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
+};
+	  
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HY[6] = {
+  // FIXME, 3D
+  { .dx = {  0, -1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { +1, -1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * .5f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * .5f },
+};
+	  
+static struct mrc_ddc_amr_stencil_entry stencil_fine_HZ[4] = {
+  // FIXME, 3D
+  { .dx = {  0,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1,  0,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = {  0, +1,  0 }, .val = (2.f/8.f) * 1.f },
+  { .dx = { +1, +1,  0 }, .val = (2.f/8.f) * 1.f },
+};
+
+static struct mrc_ddc_amr_stencil stencils_fine[] = {
+  [EX] = { stencil_fine_EX, ARRAY_SIZE(stencil_fine_EX) },
+  [EY] = { stencil_fine_EY, ARRAY_SIZE(stencil_fine_EY) },
+  [EZ] = { stencil_fine_EZ, ARRAY_SIZE(stencil_fine_EZ) },
+  [HX] = { stencil_fine_HX, ARRAY_SIZE(stencil_fine_HX) },
+  [HY] = { stencil_fine_HY, ARRAY_SIZE(stencil_fine_HY) },
+  [HZ] = { stencil_fine_HZ, ARRAY_SIZE(stencil_fine_HZ) },
 };
 
 // ----------------------------------------------------------------------
@@ -30,7 +151,27 @@ struct psc_bnd_amr {
 static void
 psc_bnd_amr_create_ddc(struct psc_bnd *bnd)
 {
-  // FIXME, this ddc is fake, not really usable (need E, H separately)
+  struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd);
+
+  bnd_amr->ddc_E = mrc_domain_create_ddc(bnd->psc->mrc_domain);
+  mrc_ddc_set_param_int(bnd_amr->ddc_E, "sw", 3);
+  mrc_ddc_set_param_int(bnd_amr->ddc_E, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_setup(bnd_amr->ddc_E);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_E, EX, 2, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_E, EY, 2, (int[]) { 1, 0, 1 }, &stencils_coarse[EY], &stencils_fine[EY]);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_E, EZ, 2, (int[]) { 1, 1, 0 }, &stencils_coarse[EZ], &stencils_fine[EZ]);
+  mrc_ddc_amr_assemble(bnd_amr->ddc_E);
+
+  bnd_amr->ddc_H = mrc_domain_create_ddc(bnd->psc->mrc_domain);
+  mrc_ddc_set_param_int(bnd_amr->ddc_H, "sw", 3);
+  mrc_ddc_set_param_int(bnd_amr->ddc_H, "size_of_type", sizeof(fields_real_t));
+  mrc_ddc_setup(bnd_amr->ddc_H);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_H, HX, 2, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_H, HY, 2, (int[]) { 0, 1, 0 }, &stencils_coarse[HY], &stencils_fine[HY]);
+  mrc_ddc_amr_set_by_stencil(bnd_amr->ddc_H, HZ, 2, (int[]) { 0, 0, 1 }, &stencils_coarse[HZ], &stencils_fine[HZ]);
+  mrc_ddc_amr_assemble(bnd_amr->ddc_H);
+
+  // FIXME, this psc_bnd::ddc is fake, not really usable (need E, H separately)
   struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
   mrc_ddc_set_param_int(ddc, "sw", 3);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(fields_real_t));
@@ -55,15 +196,43 @@ psc_bnd_amr_setup(struct psc_bnd *bnd)
 static void
 psc_bnd_amr_unsetup(struct psc_bnd *bnd)
 {
+  // FIXME!!! this gets called after bnd_amr is already freed!
+  /* struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd); */
+
+  /* mrc_ddc_destroy(bnd_amr->ddc_E); */
+  /* mrc_ddc_destroy(bnd_amr->ddc_H); */
+}
+
+// ----------------------------------------------------------------------
+// psc_bnd_amr_destroy
+
+static void
+psc_bnd_amr_destroy(struct psc_bnd *bnd)
+{
 }
 
 // ----------------------------------------------------------------------
 // psc_bnd_amr_fill_ghosts
 
 static void
-psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, int me)
+psc_bnd_amr_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *mflds, int mb, int me)
 {
-  mprintf("fill mb %d me %d\n", mb, me);
+  struct psc_bnd_amr *bnd_amr = psc_bnd_amr(bnd);
+
+  fields_real_t **fldp = malloc(mflds->nr_patches * sizeof(*fldp));
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    fldp[p] = flds->data;
+  }
+
+  if (mb == EX && me == EX + 3) {
+    mrc_ddc_fill_ghosts(bnd_amr->ddc_E, -1, -1, fldp);
+  } else if (mb == HX && me == HX + 3) {
+    mrc_ddc_fill_ghosts(bnd_amr->ddc_H, -1, -1, fldp);
+  } else {
+    mprintf("fill mb %d me %d\n", mb, me);
+  }
+  free(fldp);
 }
 
 // ----------------------------------------------------------------------
@@ -92,6 +261,7 @@ struct psc_bnd_ops psc_bnd_amr_ops = {
   .size                    = sizeof(struct psc_bnd_amr),
   .setup                   = psc_bnd_amr_setup,
   .unsetup                 = psc_bnd_amr_unsetup,
+  .destroy                 = psc_bnd_amr_destroy,
   .create_ddc              = psc_bnd_amr_create_ddc,
   .fill_ghosts             = psc_bnd_amr_fill_ghosts,
   .add_ghosts              = psc_bnd_amr_add_ghosts,
