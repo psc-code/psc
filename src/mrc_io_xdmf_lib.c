@@ -241,9 +241,10 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
   for (int gp = 0; gp < xs->nr_global_patches; gp++) {
     mrc_domain_get_global_patch_info(domain, gp, &xs->patch_infos[gp]);
     if (xs->uniform) {
+      int level = xs->patch_infos[gp].level;
       for (int d = 0; d < 3; d++) {
-	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d];
-	xs->dx[d][gp] = dx[d];
+	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d] / (1 << level);
+	xs->dx[d][gp] = dx[d] / (1 << level);
       }
     }
   }
