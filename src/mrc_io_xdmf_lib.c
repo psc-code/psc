@@ -243,8 +243,12 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
     if (xs->uniform) {
       int level = xs->patch_infos[gp].level;
       for (int d = 0; d < 3; d++) {
-	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d] / (1 << level);
-	xs->dx[d][gp] = dx[d] / (1 << level);
+	float refine = 1.f;
+	if (xs->patch_infos[gp].ldims[d] > 1) {
+	  refine = 1.f / (1 << level);
+	}
+	xs->xl[d][gp] = xl[d] + xs->patch_infos[gp].off[d] * dx[d] * refine;
+	xs->dx[d][gp] = dx[d] * refine;
       }
     }
   }
