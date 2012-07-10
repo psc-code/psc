@@ -10,14 +10,9 @@ struct psc_output_format {
 
 struct psc_output_format_ops {
   MRC_SUBCLASS_OPS(struct psc_output_format);
-  void (*write_fields)(struct psc_output_format *format,
-		       struct psc_output_fields_c *out,
-		       struct psc_fields_list *list, const char *pfx);
 };
 
 // ======================================================================
-
-extern struct psc_output_format_ops psc_output_format_mrc_ops;
 
 #define psc_output_format_ops(format) ((struct psc_output_format_ops *)((format)->obj.ops))
 
