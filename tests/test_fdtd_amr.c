@@ -445,6 +445,7 @@ main(int argc, char **argv)
   struct mrc_ddc *ddc_E = mrc_ddc_create(mrc_domain_comm(domain));
   mrc_ddc_set_type(ddc_E, "amr");
   mrc_ddc_set_domain(ddc_E, domain);
+  mrc_ddc_set_param_int(ddc_E, "size_of_type", sizeof(float));
   mrc_ddc_set_param_int(ddc_E, "sw", fld->sw);
   mrc_ddc_setup(ddc_E);
   mrc_ddc_amr_set_by_stencil(ddc_E, EX, 2, (int[]) { 0, 1, 1 }, &stencils_coarse[EX], &stencils_fine[EX]);
@@ -455,6 +456,7 @@ main(int argc, char **argv)
   struct mrc_ddc *ddc_H = mrc_ddc_create(mrc_domain_comm(domain));
   mrc_ddc_set_type(ddc_H, "amr");
   mrc_ddc_set_domain(ddc_H, domain);
+  mrc_ddc_set_param_int(ddc_H, "size_of_type", sizeof(float));
   mrc_ddc_set_param_int(ddc_H, "sw", fld->sw);
   mrc_ddc_setup(ddc_H);
   mrc_ddc_amr_set_by_stencil(ddc_H, HX, 2, (int[]) { 1, 0, 0 }, &stencils_coarse[HX], &stencils_fine[HX]);
