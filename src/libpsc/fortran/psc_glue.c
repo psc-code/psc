@@ -174,9 +174,8 @@ void
 PSC_set_domain(struct psc *psc)
 {
   struct psc_domain *p = &psc->domain;
-  int imax[3], np[3];
+  int imax[3];
 
-  mrc_domain_get_param_int3(psc->mrc_domain, "np", np);
   for (int d = 0; d < 3; d++) {
     imax[d] = p->gdims[d] - 1;
   }
@@ -185,7 +184,7 @@ PSC_set_domain(struct psc *psc)
 
   // assert(p->bnd_part_lo==p->bnd_part_hi); FIX ME
   PSC_set_domain_F77(p->length, p->gdims, ilo, imax, p->bnd_fld_lo, p->bnd_fld_hi,
-		     p->bnd_part_lo, np, psc->ibn, &use_pml_);
+		     p->bnd_part_lo, psc->domain.np, psc->ibn, &use_pml_);
 }
 
 void
