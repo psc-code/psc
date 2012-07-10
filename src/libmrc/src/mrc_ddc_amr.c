@@ -137,26 +137,45 @@ mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_amr_fill_ghosts
+
+static void
+mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  float **fldp = ctx;
+  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
+
+  for (int row = 0; row < amr->nr_rows; row++) {
+    int row_patch = amr->rows[row].patch;
+    int row_idx = amr->rows[row].idx;
+    float sum = 0.;
+    for (int entry = amr->rows[row].first_entry;
+	 entry < amr->rows[row + 1].first_entry; entry++) {
+      int col_patch =  amr->entries[entry].patch;
+      int col_idx = amr->entries[entry].idx;
+      float val = amr->entries[entry].val;
+      sum += val * fldp[col_patch][col_idx];
+    }
+    fldp[row_patch][row_idx] = sum;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_amr_apply
 
 void
 mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
 {
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  for (int row = 0; row < amr->nr_rows; row++) {
-    struct mrc_m3_patch *fldp_row = mrc_m3_patch_get(fld, amr->rows[row].patch);
-    int row_idx = amr->rows[row].idx;
-    float sum = 0.;
-    for (int entry = amr->rows[row].first_entry; entry < amr->rows[row + 1].first_entry; entry++) {
-      struct mrc_m3_patch *fldp_col = mrc_m3_patch_get(fld, amr->entries[entry].patch);
-      int col_idx = amr->entries[entry].idx;
-      float val = amr->entries[entry].val;
-      sum += val * fldp_col->arr[col_idx];
-    }
-    fldp_row->arr[row_idx] = sum;
+  float **fldp = malloc(fld->nr_patches * sizeof(*fldp));
+  for (int p = 0; p < fld->nr_patches; p++) {
+    fldp[p] = mrc_m3_patch_get(fld, p)->arr;
   }
+  mrc_ddc_amr_fill_ghosts(ddc, -1, -1, fldp);
+
+  free(fldp);
 }
+
+// ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
 static struct param mrc_ddc_amr_descr[] = {
@@ -176,5 +195,6 @@ struct mrc_ddc_ops mrc_ddc_amr_ops = {
   .destroy               = mrc_ddc_amr_destroy,
   .set_domain            = mrc_ddc_amr_set_domain,
   .get_domain            = mrc_ddc_amr_get_domain,
+  .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
 };
 
