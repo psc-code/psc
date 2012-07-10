@@ -142,6 +142,9 @@ mrc_ddc_amr_assemble(struct mrc_ddc *ddc)
 static void
 mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 {
+  // mb, me is meaningless here, make sure the caller knows
+  assert(mb < 0 && me < 0);
+
   struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
 
   if (ddc->size_of_type == sizeof(float)) {
@@ -184,6 +187,16 @@ mrc_ddc_amr_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
 }
 
 // ----------------------------------------------------------------------
+// mrc_ddc_amr_add_ghosts
+
+static void
+mrc_ddc_amr_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
+{
+  // mb, me is meaningless here, make sure the caller knows
+  assert(mb < 0 && me < 0);
+}
+
+// ----------------------------------------------------------------------
 // mrc_ddc_amr_apply
 
 void
@@ -198,6 +211,18 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
   mrc_ddc_amr_fill_ghosts(ddc, -1, -1, fldp);
 
   free(fldp);
+}
+
+// ----------------------------------------------------------------------
+// mrc_ddc_amr_get_nei_rank_patch
+
+static void
+mrc_ddc_amr_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
+				 int *nei_rank, int *nei_patch)
+{
+  // FIXME, should at least find neighbors on the same grid
+  *nei_rank = -1;
+  *nei_patch = -1;
 }
 
 // ----------------------------------------------------------------------
@@ -221,5 +246,7 @@ struct mrc_ddc_ops mrc_ddc_amr_ops = {
   .set_domain            = mrc_ddc_amr_set_domain,
   .get_domain            = mrc_ddc_amr_get_domain,
   .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
+  .add_ghosts            = mrc_ddc_amr_add_ghosts,
+  .get_nei_rank_patch    = mrc_ddc_amr_get_nei_rank_patch,
 };
 
