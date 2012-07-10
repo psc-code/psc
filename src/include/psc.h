@@ -310,6 +310,7 @@ struct psc_ops {
   void (*integrate)(struct psc *psc);
   void (*step)(struct psc *psc);
   void (*output)(struct psc *psc);
+  struct mrc_domain *(*setup_mrc_domain)(struct psc *psc, int nr_patches);
 };
 
 /*!
