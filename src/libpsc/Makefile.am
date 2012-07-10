@@ -8,7 +8,6 @@ SUBDIRS = \
 	psc_collision \
 	psc_event_generator \
 	psc_output_fields \
-	psc_output_format \
 	psc_output_particles \
 	psc_output_photons \
 	psc_diag \
@@ -32,7 +31,6 @@ libpsc_la_LIBADD = \
 	psc_collision/libsubdir.la \
 	psc_event_generator/libsubdir.la \
 	psc_output_fields/libsubdir.la \
-	psc_output_format/libsubdir.la \
 	psc_output_particles/libsubdir.la \
 	psc_output_photons/libsubdir.la \
 	psc_diag/libsubdir.la \

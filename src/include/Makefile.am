@@ -33,8 +33,6 @@ include_HEADERS = \
 	psc_output_fields_item.h \
 	psc_output_fields_item_private.h \
 	psc_output_fields_private.h \
-	psc_output_format.h \
-	psc_output_format_private.h \
 	psc_output_particles.h \
 	psc_output_particles_custom_binary.h \
 	psc_output_particles_private.h \

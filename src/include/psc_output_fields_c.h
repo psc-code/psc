@@ -28,7 +28,6 @@ struct psc_output_fields_c {
   struct psc_fields_list pfd, tfd;
   struct psc_output_fields_item *item[MAX_FIELDS_LIST];
 
-  struct psc_output_format *format;
   struct psc_bnd *bnd;
 };
 
