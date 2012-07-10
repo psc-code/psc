@@ -10,7 +10,7 @@ mx = 8
 my = 8
 mz = 1
 sw = 3
-buf = 2
+buf = 1
 #patches = [0,1,2,4,7,11,12] #,13]
 #patches = [5,6,9,10]
 #patches = [13,14,16,17]
@@ -98,8 +98,8 @@ def movie():
 
 def boundary():
     #plot_component(basename, "fld", "EZ", 0, '.', color='r')
-    plot_component(basename, "fld", "EZ", 1, '-', color='r')
+    plot_component(basename, "fld", "EX", 1, '-', color='r')
     plt.show()
 
-#boundary()
-movie()
+boundary()
+#movie()
