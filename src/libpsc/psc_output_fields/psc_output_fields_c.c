@@ -75,16 +75,18 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   for (int m = 0; m < list->nr_flds; m++) {
     mfields_c_t *flds = list->flds[m];
     struct psc_fields *fld = psc_mfields_get_patch(flds, 0);
-    assert(fld->nr_comp == 1);
+    //    assert(fld->nr_comp == 1);
 
     // FIXME, what if !(ibn[0] == ibn[1] == ibn[2])
     // FIXME, 3 doesn't work -- how about 0?
     struct mrc_m3 *mrc_fld = mrc_domain_m3_create(ppsc->mrc_domain);
-    mrc_m3_set_name(mrc_fld, psc_mfields_comp_name(flds, 0));
+    mrc_m3_set_name(mrc_fld, psc_mfields_name(flds));
     mrc_m3_set_param_int(mrc_fld, "sw", 2);
+    mrc_m3_set_param_int(mrc_fld, "nr_comps", fld->nr_comp);
     mrc_m3_setup(mrc_fld);
-    // FIXME, there should be a little function for this
-    mrc_fld->name[0] = strdup(psc_mfields_comp_name(flds, 0));
+    for (int m = 0; m < fld->nr_comp; m++) {
+      mrc_m3_set_comp_name(mrc_fld, m, psc_mfields_comp_name(flds, m));
+    }
     copy_to_mrc_fld(mrc_fld, flds);
 
     if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
@@ -171,6 +173,7 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
     psc_output_fields_item_setup(item);
     out_c->item[pfd->nr_flds] = item;
     mfields_c_t *flds = psc_output_fields_item_create_mfields(item);
+    psc_mfields_set_name(flds, p);
     pfd->flds[pfd->nr_flds] = flds;
     // FIXME, should be del'd eventually
     psc_mfields_list_add(&psc_mfields_base_list, &pfd->flds[pfd->nr_flds]);
@@ -184,8 +187,10 @@ psc_output_fields_c_setup(struct psc_output_fields *out)
   tfd->nr_flds = pfd->nr_flds;
   for (int i = 0; i < pfd->nr_flds; i++) {
     assert(psc->nr_patches > 0);
+    // FIXME, shouldn't we use item_create_mfields(), too?
     mfields_c_t *flds = psc_mfields_create(mrc_domain_comm(psc->mrc_domain));
     psc_mfields_set_type(flds, "c");
+    psc_mfields_set_name(flds, psc_mfields_name(pfd->flds[i]));
     psc_mfields_set_domain(flds, psc->mrc_domain);
     psc_mfields_set_param_int(flds, "nr_fields", pfd->flds[i]->nr_fields);
     psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
@@ -230,45 +235,6 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// make_fields_list
-
-static void
-make_fields_list(struct psc *psc, struct psc_fields_list *list,
-		 struct psc_fields_list *list_in)
-{
-  // the only thing this still does is to flatten
-  // the list so that it only contains 1-component entries
-  // FIXME, slow and unnec
-
-  list->nr_flds = 0;
-  for (int i = 0; i < list_in->nr_flds; i++) {
-    mfields_c_t *flds_in = list_in->flds[i];
-    for (int m = 0; m < flds_in->nr_fields; m++) {
-      assert(list->nr_flds < MAX_FIELDS_LIST);
-      mfields_c_t *flds = psc_mfields_create(psc_comm(psc));
-      psc_mfields_set_type(flds, "c");
-      psc_mfields_set_domain(flds, psc->mrc_domain);
-      psc_mfields_set_param_int3(flds, "ibn", psc->ibn);
-      psc_mfields_setup(flds);
-      psc_mfields_copy_comp(flds, 0, flds_in, m);
-      list->flds[list->nr_flds++] = flds;
-      psc_mfields_set_comp_name(flds, 0, psc_mfields_comp_name(flds_in, m));
-    }
-  }
-}
-
-// ----------------------------------------------------------------------
-// free_fields_list
-
-static void
-free_fields_list(struct psc *psc, struct psc_fields_list *list)
-{
-  for (int m = 0; m < list->nr_flds; m++) {
-    psc_mfields_destroy(list->flds[m]);
-  }
-}
-
-// ----------------------------------------------------------------------
 // psc_output_fields_c_run
 
 static void
@@ -299,10 +265,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if (out_c->dowrite_pfield) {
     if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
-       struct psc_fields_list flds_list;
-       make_fields_list(psc, &flds_list, &out_c->pfd);
-       write_fields(out_c, &flds_list, "pfd");
-       free_fields_list(psc, &flds_list);
+       write_fields(out_c, &out_c->pfd, "pfd");
     }
   }
 
@@ -322,10 +285,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 	psc_mfields_scale(out_c->tfd.flds[m], 1. / out_c->naccum);
       }
 
-      struct psc_fields_list flds_list;
-      make_fields_list(psc, &flds_list, &out_c->tfd);
-      write_fields(out_c, &flds_list, "tfd");
-      free_fields_list(psc, &flds_list);
+      write_fields(out_c, &out_c->tfd, "tfd");
+
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	for (int mm = 0; mm < out_c->tfd.flds[m]->nr_fields; mm++) {
 	  psc_mfields_zero_comp(out_c->tfd.flds[m], mm);
