@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------------
 // mrc_domain_get_neighbor_patch_same
 
-static void
+void
 mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
 				   int dx[3], int *p_nei)
 {
