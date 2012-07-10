@@ -337,11 +337,12 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
 }
 
 static void
-mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-				     struct mrc_patch_info *info)
+mrc_domain_multi_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+					   int idx[3], struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  assert(level == 0);
   //Check if the patch is active
   if (multi->have_activepatches &&
       !bitfield3d_isset(&multi->activepatches, idx)) {
@@ -514,17 +515,17 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .setup                 = mrc_domain_multi_setup,
   .view                  = mrc_domain_multi_view,
   .write                 = mrc_domain_multi_write,
-  .read                  = mrc_domain_multi_read,
-  .destroy               = mrc_domain_multi_destroy,
-  .get_patches           = mrc_domain_multi_get_patches,
-  .get_global_dims       = mrc_domain_multi_get_global_dims,
-  .get_nr_procs          = mrc_domain_multi_get_nr_procs,
-  .get_bc                = mrc_domain_multi_get_bc,
-  .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
-  .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
-  .get_local_patch_info  = mrc_domain_multi_get_local_patch_info,
-  .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
-  .plot                  = mrc_domain_multi_plot,
-  .create_ddc            = mrc_domain_multi_create_ddc,
+  .read                      = mrc_domain_multi_read,
+  .destroy                   = mrc_domain_multi_destroy,
+  .get_patches               = mrc_domain_multi_get_patches,
+  .get_global_dims           = mrc_domain_multi_get_global_dims,
+  .get_nr_procs              = mrc_domain_multi_get_nr_procs,
+  .get_bc                    = mrc_domain_multi_get_bc,
+  .get_nr_global_patches     = mrc_domain_multi_get_nr_global_patches,
+  .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,
+  .get_local_patch_info      = mrc_domain_multi_get_local_patch_info,
+  .get_level_idx3_patch_info = mrc_domain_multi_get_level_idx3_patch_info,
+  .plot                      = mrc_domain_multi_plot,
+  .create_ddc                = mrc_domain_multi_create_ddc,
 };
 

@@ -186,9 +186,10 @@ mrc_domain_simple_get_local_patch_info(struct mrc_domain *domain, int patch,
 }
 
 static void
-mrc_domain_simple_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-				      struct mrc_patch_info *info)
+mrc_domain_simple_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+					    int idx[3], struct mrc_patch_info *info)
 {
+  assert(level == 0);
   int rank = mrc_domain_simple_proc2rank(domain, idx);
   mrc_domain_simple_get_global_patch_info(domain, rank, info);
 }
@@ -233,19 +234,19 @@ static struct param mrc_domain_simple_params_descr[] = {
 #undef VAR
 
 struct mrc_domain_ops mrc_domain_simple_ops = {
-  .name                  = "simple",
-  .size                  = sizeof(struct mrc_domain_simple),
-  .param_descr           = mrc_domain_simple_params_descr,
-  .setup                 = mrc_domain_simple_setup,
-  .get_neighbor_rank     = mrc_domain_simple_get_neighbor_rank,
-  .get_patches           = mrc_domain_simple_get_patches,
-  .get_idx3_patch_info   = mrc_domain_simple_get_idx3_patch_info,
-  .get_global_dims       = mrc_domain_simple_get_global_dims,
-  .get_nr_procs          = mrc_domain_simple_get_nr_procs,
-  .get_bc                = mrc_domain_simple_get_bc,
-  .get_local_patch_info  = mrc_domain_simple_get_local_patch_info,
-  .get_global_patch_info = mrc_domain_simple_get_global_patch_info,
-  .get_nr_global_patches = mrc_domain_simple_get_nr_global_patches,
-  .create_ddc            = mrc_domain_simple_create_ddc,
+  .name                      = "simple",
+  .size                      = sizeof(struct mrc_domain_simple),
+  .param_descr               = mrc_domain_simple_params_descr,
+  .setup                     = mrc_domain_simple_setup,
+  .get_neighbor_rank         = mrc_domain_simple_get_neighbor_rank,
+  .get_patches               = mrc_domain_simple_get_patches,
+  .get_level_idx3_patch_info = mrc_domain_simple_get_level_idx3_patch_info,
+  .get_global_dims           = mrc_domain_simple_get_global_dims,
+  .get_nr_procs              = mrc_domain_simple_get_nr_procs,
+  .get_bc                    = mrc_domain_simple_get_bc,
+  .get_local_patch_info      = mrc_domain_simple_get_local_patch_info,
+  .get_global_patch_info     = mrc_domain_simple_get_global_patch_info,
+  .get_nr_global_patches     = mrc_domain_simple_get_nr_global_patches,
+  .create_ddc                = mrc_domain_simple_create_ddc,
 };
 

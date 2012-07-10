@@ -506,6 +506,15 @@ mrc_domain_amr_plot(struct mrc_domain *domain)
   fclose(file_curve);
 }
 
+static struct mrc_ddc *
+mrc_domain_amr_create_ddc(struct mrc_domain *domain)
+{
+  struct mrc_ddc *ddc = mrc_ddc_create(domain->obj.comm);
+  mrc_ddc_set_type(ddc, "amr");
+  mrc_ddc_set_domain(ddc, domain);
+  return ddc;
+}
+
 static struct mrc_param_select bc_descr[] = {
   { .val = BC_NONE       , .str = "none"     },
   { .val = BC_PERIODIC   , .str = "periodic" },
@@ -554,5 +563,6 @@ struct mrc_domain_ops mrc_domain_amr_ops = {
   .get_level_idx3_patch_info = mrc_domain_amr_get_level_idx3_patch_info,
   .get_nr_levels             = mrc_domain_amr_get_nr_levels,
   .plot                      = mrc_domain_amr_plot,
+  .create_ddc                = mrc_domain_amr_create_ddc,
 };
 
