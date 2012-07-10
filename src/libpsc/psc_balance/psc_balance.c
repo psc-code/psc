@@ -220,7 +220,7 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_new, info.idx3, &info_new);
+    mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
     if (info_new.rank == rank) {
       nr_particles_by_patch_new[info_new.patch] = nr_particles_by_patch_old[p];
       send_reqs[p] = MPI_REQUEST_NULL;
@@ -238,7 +238,7 @@ communicate_new_nr_particles(struct mrc_domain *domain_old,
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else if ( info_old.rank < 0 ) {
@@ -286,7 +286,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_new, info.idx3, &info_new);
+    mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
@@ -303,7 +303,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else if (info_old.rank < 0) {
@@ -323,7 +323,7 @@ communicate_particles(struct mrc_domain *domain_old, struct mrc_domain *domain_n
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank != rank) {
       continue;
     }
@@ -375,7 +375,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   for (int p = 0; p < nr_patches_old; p++) {
     struct mrc_patch_info info, info_new;
     mrc_domain_get_local_patch_info(domain_old, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_new, info.idx3, &info_new);
+    mrc_domain_get_level_idx3_patch_info(domain_new, info.level, info.idx3, &info_new);
     if (info_new.rank == rank || info_new.rank < 0) {
       send_reqs[p] = MPI_REQUEST_NULL;
     } else {
@@ -393,7 +393,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank == rank) {
       recv_reqs[p] = MPI_REQUEST_NULL;
     } else if (info_old.rank < 0) {	//this patch did not exist before
@@ -415,7 +415,7 @@ communicate_fields(struct mrc_domain *domain_old, struct mrc_domain *domain_new,
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank != rank) {
       continue;
     }
@@ -446,7 +446,7 @@ static void psc_balance_seed_patches(struct mrc_domain *domain_old, struct mrc_d
   for (int p = 0; p < nr_patches_new; p++) {
     struct mrc_patch_info info, info_old;
     mrc_domain_get_local_patch_info(domain_new, p, &info);
-    mrc_domain_get_idx3_patch_info(domain_old, info.idx3, &info_old);
+    mrc_domain_get_level_idx3_patch_info(domain_old, info.level, info.idx3, &info_old);
     if (info_old.rank < 0)	//Patch has to be seeded
     {
       //Seed field
