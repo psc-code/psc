@@ -17,7 +17,8 @@ bin_PROGRAMS = \
 	psc_test_singlepart \
 	psc_test_microsphere \
 	psc_photon_test \
-	psc_test_twoparticles 
+	psc_test_twoparticles \
+	psc_test_fdtd
 
 LDADD = libpsc/libpsc.la libmrc/src/libmrc.la
 
@@ -36,5 +37,6 @@ nodist_EXTRA_psc_test_singlepart_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_microsphere_SOURCES = dummy.cxx
 nodist_EXTRA_psc_photon_test_SOURCES = dummy.cxx
 nodist_EXTRA_psc_test_twoparticles_SOURCES = dummy.cxx
+nodist_EXTRA_psc_test_fdtd_SOURCES = dummy.cxx
 
 
