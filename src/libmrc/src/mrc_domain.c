@@ -163,15 +163,6 @@ mrc_domain_get_local_patch_info(struct mrc_domain *domain, int p,
 }
 
 void
-mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-			       struct mrc_patch_info *info)
-{
-  MHERE; // should use get_level_idx3_patch_info directly, this function is
-  // obsolete and should go away
-  mrc_domain_get_level_idx3_patch_info(domain, 0, idx, info);
-}
-
-void
 mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 				     int idx[3], struct mrc_patch_info *info)
 {
