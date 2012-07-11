@@ -12,7 +12,7 @@
 static void
 do_n_photon_run(int p, fields_t *pf, photons_t *photons)
 {
-  photon_real_t dxi = 1.f / ppsc->dx[0], dyi = 1.f / ppsc->dx[1], dzi = 1.f / ppsc->dx[2];
+  photon_real_t dxi = 1.f / ppsc->patch[p].dx[0], dyi = 1.f / ppsc->patch[p].dx[1], dzi = 1.f / ppsc->patch[p].dx[2];
 
   struct psc_patch *patch = &ppsc->patch[p];
   for (int n = 0; n < photons->nr; n++) {

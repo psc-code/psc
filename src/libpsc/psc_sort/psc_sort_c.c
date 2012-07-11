@@ -20,9 +20,9 @@ static inline int
 get_cell_index(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t dxi = 1.f / ppsc->dx[0];
-  particle_real_t dyi = 1.f / ppsc->dx[1];
-  particle_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t dxi = 1.f / patch->dx[0];
+  particle_real_t dyi = 1.f / patch->dx[1];
+  particle_real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   int *ibn = ppsc->ibn;
   
@@ -40,9 +40,9 @@ static inline int
 get_cell_index_2x2x2(int p, const particle_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_real_t dxi = 1.f / ppsc->dx[0];
-  particle_real_t dyi = 1.f / ppsc->dx[1];
-  particle_real_t dzi = 1.f / ppsc->dx[2];
+  particle_real_t dxi = 1.f / patch->dx[0];
+  particle_real_t dyi = 1.f / patch->dx[1];
+  particle_real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   int ibn[3] = { 2, 2, 2 }; // must be divisible by 2
   
@@ -293,9 +293,9 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
   unsigned int *cnis = malloc(prts->n_part * sizeof(*cnis));
   for (int i = 0; i < prts->n_part; i++) {
     particle_t *p = &c->particles[i];
-    particle_real_t dxi = 1.f / ppsc->dx[0];
-    particle_real_t dyi = 1.f / ppsc->dx[1];
-    particle_real_t dzi = 1.f / ppsc->dx[2];
+    particle_real_t dxi = 1.f / patch->dx[0];
+    particle_real_t dyi = 1.f / patch->dx[1];
+    particle_real_t dzi = 1.f / patch->dx[2];
     particle_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
     int pos[3];
     for (int d = 0; d < 3; d++) {

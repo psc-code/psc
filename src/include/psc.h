@@ -196,6 +196,7 @@ struct psc_patch {
   //! \code double xx = psc.patch[i]->xb[0] + x * psc.dx[0]; \endcode
   //! Use the macros CRDX, CRDY, CRDZ to get the internal positions of any grid-point on this patch
   double xb[3];
+  double dx[3];
 };
 
 ///Describes the different particle kinds
@@ -215,9 +216,9 @@ enum {
   NR_KINDS,
 };
 
-#define CRDX(p, jx) (psc->dx[0] * (jx) + psc->patch[p].xb[0])
-#define CRDY(p, jy) (psc->dx[1] * (jy) + psc->patch[p].xb[1])
-#define CRDZ(p, jz) (psc->dx[2] * (jz) + psc->patch[p].xb[2])
+#define CRDX(p, jx) (psc->patch[p].dx[0] * (jx) + psc->patch[p].xb[0])
+#define CRDY(p, jy) (psc->patch[p].dx[1] * (jy) + psc->patch[p].xb[1])
+#define CRDZ(p, jz) (psc->patch[p].dx[2] * (jz) + psc->patch[p].xb[2])
 
 ///This structure holds all the interfaces for the given configuration.
 ///
@@ -254,7 +255,6 @@ struct psc {
   double p2A, p2B;
   int timestep;	///< the current timestep
   double dt;	///< timestep in physical units
-  double dx[3];	///< cell size in physical units
   ///@}
 
   mparticles_base_t *particles;	///< All the particles, indexed by their containing patch

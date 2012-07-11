@@ -83,8 +83,8 @@ cuda_push_fields_E_yz(int p, struct psc_fields *pf)
   struct psc_patch *patch = &ppsc->patch[p];
 
   real dt = ppsc->dt;
-  real cny = .5f * ppsc->dt / ppsc->dx[1];
-  real cnz = .5f * ppsc->dt / ppsc->dx[2];
+  real cny = .5f * ppsc->dt / patch->dx[1];
+  real cnz = .5f * ppsc->dt / patch->dx[2];
   assert(pf->ib[0] == -3);
   assert(pf->ib[1] == -3);
   assert(pf->ib[2] == -3);
@@ -105,8 +105,8 @@ cuda_push_fields_H_yz(int p, struct psc_fields *pf)
   struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
   struct psc_patch *patch = &ppsc->patch[p];
 
-  real cny = .5f * ppsc->dt / ppsc->dx[1];
-  real cnz = .5f * ppsc->dt / ppsc->dx[2];
+  real cny = .5f * ppsc->dt / patch->dx[1];
+  real cnz = .5f * ppsc->dt / patch->dx[2];
   int my = pf->im[1];
   int mz = pf->im[2];
 

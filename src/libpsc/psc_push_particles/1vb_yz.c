@@ -12,9 +12,9 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t fnqys = ppsc->dx[1] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
-  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t fnqys = ppsc->patch[pf->p].dx[1] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->patch[pf->p].dx[2] * fnqs / dt;
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[pf->p].dx[0], 1.f / ppsc->patch[pf->p].dx[1], 1.f / ppsc->patch[pf->p].dx[2] };
   particle_real_t dq_kind[ppsc->nr_kinds];
   particle_real_t fnqx_kind[ppsc->nr_kinds];
   particle_real_t fnqy_kind[ppsc->nr_kinds];
@@ -130,9 +130,9 @@ do_calc_j_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
   particle_real_t dt = ppsc->dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t fnqys = ppsc->dx[1] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
-  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t fnqys = ppsc->patch[pf->p].dx[1] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->patch[pf->p].dx[2] * fnqs / dt;
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[pf->p].dx[0], 1.f / ppsc->patch[pf->p].dx[1], 1.f / ppsc->patch[pf->p].dx[2] };
   particle_real_t fnqx_kind[ppsc->nr_kinds];
   particle_real_t fnqy_kind[ppsc->nr_kinds];
   particle_real_t fnqz_kind[ppsc->nr_kinds];

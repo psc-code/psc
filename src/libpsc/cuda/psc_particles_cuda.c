@@ -41,7 +41,7 @@ psc_particles_cuda_setup(struct psc_particles *prts)
     cuda->blocksize[d] = bs[d];
     assert(patch->ldims[d] % bs[d] == 0); // not sure what breaks if not
     cuda->b_mx[d] = (patch->ldims[d] + bs[d] - 1) / bs[d];
-    cuda->b_dxi[d] = 1.f / (cuda->blocksize[d] * ppsc->dx[d]);
+    cuda->b_dxi[d] = 1.f / (cuda->blocksize[d] * ppsc->patch[prts->p].dx[d]);
   }
   cuda->nr_blocks = cuda->b_mx[0] * cuda->b_mx[1] * cuda->b_mx[2];
 
@@ -134,9 +134,9 @@ find_cellIdx(struct psc_patch *patch, struct cell_map *map,
 	     struct psc_particles *pp, int n)
 {
   particle_c_t *p = particles_c_get_one(pp, n);
-  particle_c_real_t dxi = 1.f / ppsc->dx[0];
-  particle_c_real_t dyi = 1.f / ppsc->dx[1];
-  particle_c_real_t dzi = 1.f / ppsc->dx[2];
+  particle_c_real_t dxi = 1.f / patch->dx[0];
+  particle_c_real_t dyi = 1.f / patch->dx[1];
+  particle_c_real_t dzi = 1.f / patch->dx[2];
   particle_c_real_t xi[3] = { p->xi * dxi, p->yi * dyi, p->zi * dzi };
   int pos[3];
   for (int d = 0; d < 3; d++) {

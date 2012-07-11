@@ -12,10 +12,9 @@ typedef fields_c_real_t creal;
 static void
 do_n_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  struct psc_patch *patch = &ppsc->patch[prts->p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
@@ -107,10 +106,9 @@ n_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 static void
 do_v_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  struct psc_patch *patch = &ppsc->patch[prts->p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);
@@ -204,10 +202,9 @@ v_2nd_nc_run(struct psc_output_fields_item *item, struct psc_fields *flds,
 static void
 do_vv_2nd_nc_run(fields_t *pf, struct psc_particles *prts)
 {
-  creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  struct psc_patch *patch = &ppsc->patch[prts->p];
+  particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
+  particle_real_t dxi = 1.f / patch->dx[0], dyi = 1.f / patch->dx[1], dzi = 1.f / patch->dx[2];
 
   for (int n = 0; n < prts->n_part; n++) {
     particle_t *part = particles_get_one(prts, n);

@@ -278,41 +278,6 @@ psc_setup_coeff(struct psc *psc)
   psc->coeff.alpha = psc->coeff.wp / psc->coeff.wl;
   psc->coeff.beta = psc->coeff.vt / psc->prm.cc;
   psc->coeff.eta = psc->coeff.vos / psc->prm.cc;
-
-  for (int d = 0; d < 3; d++) {
-    // FIXME, we should eventually settle on one or the other way of handling
-    // non-periodic boundaries -- use gdims to count the number of cells in the
-    // grid, or count the number of nodes (corners)
-    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC ||
-	psc->domain.gdims[d] == 1 ||
-	psc->prm.gdims_in_terms_of_cells) {
-      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
-    } else {
-      psc->dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
-    }
-  }
-
-  int *im = psc->domain.gdims;
-  double inv_sum=0;
-  for (int d=0;d<3;d++) inv_sum += im[d]>1 ? (1./sqr(psc->dx[d])) : 0.;
-  assert(inv_sum);  //Simulation has 0 dimensions
-  psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
-
-#if 0
-  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
-  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", psc->dx[0], psc->dx[1], psc->dx[2]);
-#endif
-
-  // adjust to match laser cycles FIXME, this isn't a good place,
-  // and hardcoded params (2, 30.)
-  psc->coeff.nnp = ceil(2.*M_PI / psc->dt);
-  if (psc->prm.adjust_dt_to_cycles) {
-    psc->dt = 2.*M_PI / psc->coeff.nnp;
-  }
-  psc->coeff.np = 2 * psc->coeff.nnp;
-  if (psc->prm.nmax == 0) {
-    psc->prm.nmax = 30. * psc->coeff.nnp;
-  }
 }
 
 // ----------------------------------------------------------------------
@@ -370,6 +335,45 @@ psc_setup_mrc_domain(struct psc *psc, int nr_patches)
 void
 psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
 {
+  double dx[3];
+  for (int d = 0; d < 3; d++) {
+    // FIXME, we should eventually settle on one or the other way of handling
+    // non-periodic boundaries -- use gdims to count the number of cells in the
+    // grid, or count the number of nodes (corners)
+    if (psc->domain.bnd_fld_lo[d] == BND_FLD_PERIODIC ||
+	psc->domain.gdims[d] == 1 ||
+	psc->prm.gdims_in_terms_of_cells) {
+      dx[d] = psc->domain.length[d] / psc->coeff.ld / psc->domain.gdims[d];
+    } else {
+      dx[d] = psc->domain.length[d] / psc->coeff.ld / (psc->domain.gdims[d] - 1);
+    }
+  }
+
+  double inv_sum = 0.;
+  int nr_levels;
+  mrc_domain_get_nr_levels(psc->mrc_domain, &nr_levels);
+  for (int d=0;d<3;d++) {
+    if (psc->domain.gdims[d] > 1) {
+      inv_sum += 1. / sqr(dx[d] / (1 << (nr_levels - 1)));
+    }
+  }
+  assert(inv_sum);  //Simulation has 0 dimensions
+  psc->dt = psc->prm.cfl * sqrt(1./inv_sum);
+
+  mpi_printf(MPI_COMM_WORLD, "::: dt      = %g\n", psc->dt);
+  mpi_printf(MPI_COMM_WORLD, "::: dx      = %g %g %g\n", dx[0], dx[1], dx[2]);
+
+  // adjust to match laser cycles FIXME, this isn't a good place,
+  // and hardcoded params (2, 30.)
+  psc->coeff.nnp = ceil(2.*M_PI / psc->dt);
+  if (psc->prm.adjust_dt_to_cycles) {
+    psc->dt = 2.*M_PI / psc->coeff.nnp;
+  }
+  psc->coeff.np = 2 * psc->coeff.nnp;
+  if (psc->prm.nmax == 0) {
+    psc->prm.nmax = 30. * psc->coeff.nnp;
+  }
+
   // set up index bounds,
   // sanity checks for the decomposed domain
   int gdims[3];
@@ -377,11 +381,14 @@ psc_setup_patches(struct psc *psc, struct mrc_domain *domain)
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &psc->nr_patches);
   psc->patch = calloc(psc->nr_patches, sizeof(*psc->patch));
   psc_foreach_patch(psc, p) {
+    struct mrc_patch_info info;
+    mrc_domain_get_local_patch_info(domain, p, &info);
     struct psc_patch *patch = &psc->patch[p];
     for (int d = 0; d < 3; d++) {
       patch->ldims[d] = patches[p].ldims[d];
       patch->off[d] = patches[p].off[d];
-      patch->xb[d]  = patches[p].off[d] * psc->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
+      patch->dx[d]  = dx[d] / (1 << info.level);
+      patch->xb[d]  = patches[p].off[d] * patch->dx[d] + psc->domain.corner[d] / psc->coeff.ld;
       
       int min_size = 1;
       if (patch->off[d] == 0 && // left-most patch in this dir
@@ -907,7 +914,7 @@ psc_setup_fields_default(struct psc *psc)
     fields_t *pf = psc_fields_get_as(pf_base, "c", 0, 0);
 
     psc_foreach_3d_g(psc, p, jx, jy, jz) {
-      double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
+      double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
       double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
 
       F3(pf, HX, jx,jy,jz) +=

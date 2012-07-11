@@ -167,7 +167,7 @@ PSC_set_patch(struct psc *psc, int p)
   for (int d = 0; d < 3; d++) {
     imx[d] = patch->off[d] + patch->ldims[d] - 1;
   }
-  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, psc->dx, patch->xb);
+  PSC_set_patch_F77(patch->off, imx, psc->ibn, &psc->dt, patch->dx, patch->xb);
 }
 
 void

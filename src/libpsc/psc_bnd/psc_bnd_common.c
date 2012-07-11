@@ -75,11 +75,11 @@ psc_bnd_sub_exchange_particles_prep(struct psc_bnd *bnd, struct psc_particles *p
   // New-style boundary requirements.
   // These will need revisiting when it comes to non-periodic domains.
 
-  particle_real_t b_dxi[3] = { 1.f / psc->dx[0], 1.f / psc->dx[1], 1.f / psc->dx[2] };
   struct psc_patch *ppatch = &psc->patch[prts->p];
+  particle_real_t b_dxi[3] = { 1.f / ppatch->dx[0], 1.f / ppatch->dx[1], 1.f / ppatch->dx[2] };
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {
-    xm[d] = ppatch->ldims[d] * psc->dx[d];
+    xm[d] = ppatch->ldims[d] * ppatch->dx[d];
   }
   int *b_mx = ppatch->ldims;
   

@@ -18,8 +18,8 @@ do_genc_push_part_y(int p, fields_t *pf, struct psc_particles *pp)
   creal yl = .5f * dt;
   creal dqs = .5f * ppsc->coeff.eta * dt;
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal fnqys = ppsc->dx[1] * fnqs / dt;
-  creal dyi = 1.f / ppsc->dx[1];
+  creal fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
+  creal dyi = 1.f / ppsc->patch[p].dx[1];
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);

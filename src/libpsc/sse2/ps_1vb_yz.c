@@ -10,10 +10,10 @@ PFX(ps_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int 
 
   struct psc_particles_single *sngl = psc_particles_single(prts);
   float dt = ppsc->dt, dth = .5f * ppsc->dt;
-  float dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  float dxi[3] = { 1.f / ppsc->patch[p].dx[0], 1.f / ppsc->patch[p].dx[1], 1.f / ppsc->patch[p].dx[2] };
   float fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  float fnqys = ppsc->dx[1] * fnqs / dt;
-  float fnqzs = ppsc->dx[2] * fnqs / dt;
+  float fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
+  float fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
   float dq_kind[ppsc->nr_kinds];
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;
@@ -109,10 +109,10 @@ PFX(ps2_1vb_yz_pxx_jxyz)(int p, fields_ip_t *pf, struct psc_particles *prts, int
 
   struct psc_particles_single *sngl = psc_particles_single(prts);
   float dt = ppsc->dt, dth = .5f * ppsc->dt;
-  float dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  float dxi[3] = { 1.f / ppsc->patch[p].dx[0], 1.f / ppsc->patch[p].dx[1], 1.f / ppsc->patch[p].dx[2] };
   float fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  float fnqys = ppsc->dx[1] * fnqs / dt;
-  float fnqzs = ppsc->dx[2] * fnqs / dt;
+  float fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
+  float fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
   float dq_kind[ppsc->nr_kinds];
   for (int k = 0; k < ppsc->nr_kinds; k++) {
     dq_kind[k] = .5f * ppsc->coeff.eta * dt * ppsc->kinds[k].q / ppsc->kinds[k].m;

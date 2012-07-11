@@ -231,7 +231,7 @@ psc_mparticles_check(mparticles_base_t *particles_base)
     
     for (int d = 0; d < 3; d++) {
       xb[d] = patch->xb[d];
-      xe[d] = patch->xb[d] + patch->ldims[d] * ppsc->dx[d];
+      xe[d] = patch->xb[d] + patch->ldims[d] * patch->dx[d];
     }
     
     for (int i = 0; i < prts->n_part; i++) {

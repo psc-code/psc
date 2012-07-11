@@ -227,6 +227,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
     return;
   }
 
+  MHERE;
   int max_n_part = 0;
   int nr_prts = 0;
   mprts_cuda->nr_prts_send = 0;
@@ -243,9 +244,11 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
   mprts_cuda->nr_prts = nr_prts;
   psc_mparticles_cuda_copy_to_dev(mprts);
 
+  MHERE;
   struct cuda_params prm;
   set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), NULL);
     
+  MHERE;
   int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
   int dimGrid[2]  = { (max_n_part + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
 
@@ -255,6 +258,7 @@ cuda_mprts_find_block_indices_ids_total(struct psc_mparticles *mprts)
 						  mprts_cuda->d_bidx,
 						  mprts_cuda->d_ids,
 						  mprts->nr_patches));
+  MHERE;
   free_params(&prm);
 }
 

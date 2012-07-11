@@ -125,9 +125,9 @@ static inline int
 get_sort_index(int p, const particle_c_t *part)
 {
   struct psc_patch *patch = &ppsc->patch[p];
-  particle_c_real_t dxi = 1.f / ppsc->dx[0];
-  particle_c_real_t dyi = 1.f / ppsc->dx[1];
-  particle_c_real_t dzi = 1.f / ppsc->dx[2];
+  particle_c_real_t dxi = 1.f / patch->dx[0];
+  particle_c_real_t dyi = 1.f / patch->dx[1];
+  particle_c_real_t dzi = 1.f / patch->dx[2];
   int *ldims = patch->ldims;
   
   particle_c_real_t u = part->xi * dxi;

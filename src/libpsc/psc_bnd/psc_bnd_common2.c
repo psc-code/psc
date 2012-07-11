@@ -208,7 +208,7 @@ get_b_dxi(struct psc_particles *prts)
   static particle_real_t b_dxi[3];
   if (!b_dxi[0]) {
     for (int d = 0; d < 3; d++) {
-      b_dxi[d] = 1.f / ppsc->dx[d];
+      b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
     }
   }
   return b_dxi;

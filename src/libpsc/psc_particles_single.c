@@ -24,7 +24,7 @@ psc_particles_single_setup(struct psc_particles *prts)
 
   for (int d = 0; d < 3; d++) {
     sngl->b_mx[d] = ppsc->patch[prts->p].ldims[d];
-    sngl->b_dxi[d] = 1.f / ppsc->dx[d];
+    sngl->b_dxi[d] = 1.f / ppsc->patch[prts->p].dx[d];
   }
   sngl->nr_blocks = sngl->b_mx[0] * sngl->b_mx[1] * sngl->b_mx[2];
   sngl->b_cnt = calloc(sngl->nr_blocks + 1, sizeof(*sngl->b_cnt));

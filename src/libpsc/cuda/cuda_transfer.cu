@@ -92,7 +92,8 @@ __psc_mparticles_cuda_setup(struct psc_mparticles *mprts)
     mprts_cuda->blocksize[d] = bs[d];
     assert(ldims[d] % bs[d] == 0); // FIXME not sure what breaks if not
     mprts_cuda->b_mx[d] = (ldims[d] + bs[d] - 1) / bs[d];
-    mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->dx[d]);
+    // assumes no AMR
+    mprts_cuda->b_dxi[d] = 1.f / (mprts_cuda->blocksize[d] * ppsc->patch[0].dx[d]);
   }
   mprts_cuda->nr_blocks = mprts_cuda->b_mx[0] * mprts_cuda->b_mx[1] * mprts_cuda->b_mx[2];
   mprts_cuda->nr_total_blocks = mprts->nr_patches * mprts_cuda->nr_blocks;

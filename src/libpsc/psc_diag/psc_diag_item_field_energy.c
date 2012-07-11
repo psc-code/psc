@@ -9,8 +9,8 @@ static void
 psc_diag_item_field_energy_run(struct psc_diag_item *item,
 			       struct psc *psc, double *EH2)
 {
-  double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
   psc_foreach_patch(psc, p) {
+    double fac = psc->patch[p].dx[0] * psc->patch[p].dx[1] * psc->patch[p].dx[2];
     struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
     struct psc_fields *pf = psc_fields_get_as(pf_base, "c", EX, HX + 3);
     // FIXME, this doesn't handle non-periodic b.c. right

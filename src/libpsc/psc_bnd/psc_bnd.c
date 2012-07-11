@@ -53,18 +53,18 @@ calc_domain_bounds(struct psc *psc, int p, double xb[3], double xe[3],
   struct psc_patch *psc_patch = &psc->patch[p];
 
   for (int d = 0; d < 3; d++) {
-    xb[d] = psc_patch->off[d] * psc->dx[d];
+    xb[d] = psc_patch->off[d] * psc_patch->dx[d];
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
-      xgb[d] = psc->pml.size * psc->dx[d];
+      xgb[d] = psc->pml.size * psc_patch->dx[d];
     } else {
       xgb[d] = 0.;
     }
     
-    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d]) * psc->dx[d];
+    xe[d] = (psc_patch->off[d] + psc_patch->ldims[d]) * psc_patch->dx[d];
     if (psc->domain.bnd_fld_lo[d] == BND_FLD_UPML) {
-      xge[d] = (psc->domain.gdims[d] - psc->pml.size) * psc->dx[d];
+      xge[d] = (psc->domain.gdims[d] - psc->pml.size) * psc_patch->dx[d];
     } else {
-      xge[d] = psc->domain.gdims[d] * psc->dx[d];
+      xge[d] = psc->domain.gdims[d] * psc_patch->dx[d];
     }
     
     xgl[d] = xge[d] - xgb[d];

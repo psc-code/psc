@@ -99,7 +99,9 @@ find_cell_index(particle_t *prt, particle_real_t *dxi, int ldims[3])
 static void
 find_cell_offsets(int offsets[], struct psc_particles *prts)
 {
-  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[prts->p].dx[0],
+			     1.f / ppsc->patch[prts->p].dx[1],
+			     1.f / ppsc->patch[prts->p].dx[2] };
   int *ldims = ppsc->patch[prts->p].ldims;
   int last = 0;
   offsets[last] = 0;

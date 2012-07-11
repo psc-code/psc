@@ -16,12 +16,13 @@
 static void
 do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
 {
+  int p = pf->p;
   particle_real_t dt = ppsc->dt;
   particle_real_t dqs = .5f * ppsc->coeff.eta * dt;
   particle_real_t fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  particle_real_t fnqys = ppsc->dx[1] * fnqs / dt;
-  particle_real_t fnqzs = ppsc->dx[2] * fnqs / dt;
-  particle_real_t dxi[3] = { 1.f / ppsc->dx[0], 1.f / ppsc->dx[1], 1.f / ppsc->dx[2] };
+  particle_real_t fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
+  particle_real_t fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
+  particle_real_t dxi[3] = { 1.f / ppsc->patch[p].dx[0], 1.f / ppsc->patch[p].dx[1], 1.f / ppsc->patch[p].dx[2] };
 
   for (int n = 0; n < pp->n_part; n++) {
     particle_t *part = particles_get_one(pp, n);

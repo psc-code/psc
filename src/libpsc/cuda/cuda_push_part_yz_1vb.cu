@@ -45,13 +45,13 @@ set_params(struct cuda_params *prm, struct psc *psc,
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
-    prm->dxi[d] = 1.f / ppsc->dx[d];
+    prm->dxi[d] = 1.f / ppsc->patch[0].dx[d];
   }
 
   prm->dqs    = .5f * psc->coeff.eta * psc->dt;
   prm->fnqs   = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
-  prm->fnqys  = psc->dx[1] * prm->fnqs / psc->dt;
-  prm->fnqzs  = psc->dx[2] * prm->fnqs / psc->dt;
+  prm->fnqys  = psc->patch[0].dx[1] * prm->fnqs / psc->dt;
+  prm->fnqzs  = psc->patch[0].dx[2] * prm->fnqs / psc->dt;
   assert(psc->nr_kinds <= MAX_KINDS);
   for (int k = 0; k < psc->nr_kinds; k++) {
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;

@@ -24,12 +24,12 @@ do_genc_push_part_xyz(int p, fields_t *pf, struct psc_particles *pp)
   creal zl = .5f * dt;
   creal dqs = .5f * ppsc->coeff.eta * dt;
   creal fnqs = sqr(ppsc->coeff.alpha) * ppsc->coeff.cori / ppsc->coeff.eta;
-  creal fnqxs = ppsc->dx[0] * fnqs / dt;
-  creal fnqys = ppsc->dx[1] * fnqs / dt;
-  creal fnqzs = ppsc->dx[2] * fnqs / dt;
-  creal dxi = 1.f / ppsc->dx[0];
-  creal dyi = 1.f / ppsc->dx[1];
-  creal dzi = 1.f / ppsc->dx[2];
+  creal fnqxs = ppsc->patch[p].dx[0] * fnqs / dt;
+  creal fnqys = ppsc->patch[p].dx[1] * fnqs / dt;
+  creal fnqzs = ppsc->patch[p].dx[2] * fnqs / dt;
+  creal dxi = 1.f / ppsc->patch[p].dx[0];
+  creal dyi = 1.f / ppsc->patch[p].dx[1];
+  creal dzi = 1.f / ppsc->patch[p].dx[2];
 
   int n_part = pp->n_part;
   for (int n = 0; n < n_part; n++) {

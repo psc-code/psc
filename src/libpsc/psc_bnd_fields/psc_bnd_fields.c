@@ -198,7 +198,7 @@ _psc_bnd_fields_setup_patch(struct psc_bnd_fields *bnd_fields, int p,
 
   struct psc_fields *pf = psc_fields_get_as(pf_base, FIELDS_TYPE, EX, HX + 3);
   psc_foreach_3d_g(psc, p, jx, jy, jz){
-    double dx = psc->dx[0], dy = psc->dx[1], dz = psc->dx[2];
+    double dx = psc->patch[p].dx[0], dy = psc->patch[p].dx[1], dz = psc->patch[p].dx[2];
     double xx = CRDX(p, jx), yy = CRDY(p, jy), zz = CRDZ(p, jz);
     
     pulse = psc_bnd_fields_get_pulse_x1(bnd_fields);

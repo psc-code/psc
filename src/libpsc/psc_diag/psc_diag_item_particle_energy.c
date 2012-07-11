@@ -11,7 +11,8 @@ do_particle_energy(struct psc *psc, struct psc_particles *prts_base, double *res
   
   double fnqs = sqr(psc->coeff.alpha) * psc->coeff.cori / psc->coeff.eta;
 
-  double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
+  struct psc_patch *patch = &psc->patch[prts_base->p];
+  double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
   for (int n = 0; n < prts->n_part; n++) {
     particle_c_t *part = particles_c_get_one(prts, n);
       

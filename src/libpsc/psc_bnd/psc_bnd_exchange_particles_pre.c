@@ -9,7 +9,7 @@ exchange_particles_pre(struct psc_bnd *bnd, struct psc_particles *prts)
   struct psc_patch *patch = &psc->patch[prts->p];
   particle_real_t xm[3];
   for (int d = 0; d < 3; d++) {
-    xm[d] = patch->ldims[d] * psc->dx[d];
+    xm[d] = patch->ldims[d] * patch->dx[d];
   }
   particle_real_t *b_dxi = get_b_dxi(prts);
   int *b_mx = get_b_mx(prts);

@@ -79,7 +79,7 @@ do_calc_div_j(struct psc *psc, int p, struct psc_fields *flds_base, struct psc_f
     if (psc->domain.gdims[d] == 1) {
       h[d] = 0.;
     } else {
-      h[d] = 1. / psc->dx[d];
+      h[d] = 1. / psc->patch[p].dx[d];
     }
   }
 
