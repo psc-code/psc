@@ -329,6 +329,12 @@ mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static void
+mrc_domain_multi_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
+{
+  *p_nr_levels = 1;
+}
+
+static void
 mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -509,18 +515,19 @@ static struct param mrc_domain_multi_params_descr[] = {
 #undef VAR
 
 struct mrc_domain_ops mrc_domain_multi_ops = {
-  .name                  = "multi",
-  .size                  = sizeof(struct mrc_domain_multi),
-  .param_descr           = mrc_domain_multi_params_descr,
-  .setup                 = mrc_domain_multi_setup,
-  .view                  = mrc_domain_multi_view,
-  .write                 = mrc_domain_multi_write,
+  .name                      = "multi",
+  .size                      = sizeof(struct mrc_domain_multi),
+  .param_descr               = mrc_domain_multi_params_descr,
+  .setup                     = mrc_domain_multi_setup,
+  .view                      = mrc_domain_multi_view,
+  .write                     = mrc_domain_multi_write,
   .read                      = mrc_domain_multi_read,
   .destroy                   = mrc_domain_multi_destroy,
   .get_patches               = mrc_domain_multi_get_patches,
   .get_global_dims           = mrc_domain_multi_get_global_dims,
   .get_nr_procs              = mrc_domain_multi_get_nr_procs,
   .get_bc                    = mrc_domain_multi_get_bc,
+  .get_nr_levels             = mrc_domain_multi_get_nr_levels,
   .get_nr_global_patches     = mrc_domain_multi_get_nr_global_patches,
   .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,
   .get_local_patch_info      = mrc_domain_multi_get_local_patch_info,
