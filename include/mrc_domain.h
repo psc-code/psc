@@ -39,8 +39,6 @@ void mrc_domain_get_global_patch_info(struct mrc_domain *domain, int gpatch,
 				      struct mrc_patch_info *info);
 void mrc_domain_get_local_patch_info(struct mrc_domain *domain, int patch,
 				     struct mrc_patch_info *info);
-void mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-				    struct mrc_patch_info *info);
 void mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level, int idx[3],
 					  struct mrc_patch_info *info);
 void mrc_domain_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels);
