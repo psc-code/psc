@@ -229,6 +229,7 @@ struct psc {
   struct psc_push_particles *push_particles;	///< particle pusher
   struct psc_push_fields *push_fields;		///< field pusher
   struct psc_bnd *bnd;				///< boundaries
+  struct psc_bnd_particles *bnd_particles;	///< boundary particlesxs
   struct psc_bnd_photons *bnd_photons;		///< boundary photons
   struct psc_collision *collision;		///< collision operator
   struct psc_randomize *randomize;		///< randomizer

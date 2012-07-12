@@ -39,28 +39,6 @@ psc_bnd_sub_setup(struct psc_bnd *bnd)
 }
 
 // ----------------------------------------------------------------------
-// psc_bnd_sub_unsetup
-
-static void
-psc_bnd_sub_unsetup(struct psc_bnd *bnd)
-{
-  // may not need to do anything, since the sub does check_domain() itself
-}
-
-// ----------------------------------------------------------------------
-// psc_bnd_sub_exchange_particles
-
-static void
-psc_bnd_sub_exchange_particles(struct psc_bnd *bnd, struct psc_mparticles *mprts)
-{
-  // FIXME, this skips check_domain() in the forwarded class
-  struct sub *sub = sub(bnd);
-  struct psc_bnd_ops *ops = psc_bnd_ops(sub->fwd);
-  assert(ops->exchange_particles);
-  ops->exchange_particles(sub->fwd, mprts);
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_sub_fields_create
 
 static void
@@ -104,13 +82,6 @@ struct psc_bnd_ops psc_bnd_auto_ops = {
   .name                    = "auto",
   .size                    = sizeof(struct sub),
   .setup                   = psc_bnd_sub_setup,
-  .unsetup                 = psc_bnd_sub_unsetup,
-  .exchange_particles      = psc_bnd_sub_exchange_particles,
-#if 0
-  .exchange_particles_prep = psc_bnd_sub_exchange_particles_prep,
-  .exchange_particles_post = psc_bnd_sub_exchange_particles_post,
-#endif
-
   .create_ddc              = psc_bnd_sub_fields_create,
   .add_ghosts              = psc_bnd_sub_fields_add_ghosts,
   .fill_ghosts             = psc_bnd_sub_fields_fill_ghosts,

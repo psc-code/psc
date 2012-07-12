@@ -1,6 +1,6 @@
 
 static void
-exchange_particles_pre(struct psc_bnd *bnd, struct psc_particles *prts)
+exchange_particles_pre(struct psc_bnd_particles *bnd, struct psc_particles *prts)
 {
   struct psc *psc = bnd->psc;
   struct ddc_particles *ddcp = bnd->ddcp;

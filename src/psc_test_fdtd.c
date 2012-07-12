@@ -244,15 +244,6 @@ psc_bnd_amr_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int mb, i
   mprintf("add mb %d me %d\n", mb, me);
 }
 
-// ----------------------------------------------------------------------
-// psc_bnd_amr_exchange_particles
-
-static void
-psc_bnd_amr_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles_base)
-{
-  MHERE;
-}
-
 // ======================================================================
 // psc_bnd: subclass "amr"
 
@@ -260,12 +251,10 @@ struct psc_bnd_ops psc_bnd_amr_ops = {
   .name                    = "amr",
   .size                    = sizeof(struct psc_bnd_amr),
   .setup                   = psc_bnd_amr_setup,
-  .unsetup                 = psc_bnd_amr_unsetup,
   .destroy                 = psc_bnd_amr_destroy,
   .create_ddc              = psc_bnd_amr_create_ddc,
   .fill_ghosts             = psc_bnd_amr_fill_ghosts,
   .add_ghosts              = psc_bnd_amr_add_ghosts,
-  .exchange_particles      = psc_bnd_amr_exchange_particles,
 };
 
 // ======================================================================

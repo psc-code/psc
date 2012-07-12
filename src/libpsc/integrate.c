@@ -2,7 +2,7 @@
 #include "psc.h"
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
-#include "psc_bnd.h"
+#include "psc_bnd_particles.h"
 #include "psc_bnd_photons.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
@@ -108,7 +108,7 @@ psc_step(struct psc *psc)
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
   psc_push_fields_step_b1(psc->push_fields, psc->flds);
 	prof_start(pr); MPI_Barrier(MPI_COMM_WORLD); prof_stop(pr);
-  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
   psc_push_photons_run(psc->mphotons);

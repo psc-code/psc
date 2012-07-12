@@ -82,7 +82,7 @@ static inline struct psc_bnd_ops *
 get_ops(struct psc_fields *pf)
 {
   if (psc_fields_ops(pf) == &psc_fields_single_ops) {
-    return &psc_bnd_single2_ops;
+    return &psc_bnd_single_ops;
   } else if (psc_fields_ops(pf) == &psc_fields_cuda_ops) {
     return &psc_bnd_cuda_ops;
   } else {

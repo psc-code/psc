@@ -35,9 +35,6 @@ _psc_bnd_setup(struct psc_bnd *bnd)
 static void
 _psc_bnd_destroy(struct psc_bnd *bnd)
 {
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->unsetup);
-  ops->unsetup(bnd);
   mrc_ddc_destroy(bnd->ddc);
 }
 
@@ -78,7 +75,6 @@ check_domain(struct psc_bnd *bnd)
 
   struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
   if (domain != bnd->psc->mrc_domain) {
-    ops->unsetup(bnd);
     mrc_ddc_destroy(bnd->ddc);
 
     ops->create_ddc(bnd);
@@ -131,25 +127,6 @@ psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me)
   psc_stats_stop(st_time_comm);
 }
 
-void
-psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles)
-{
-  static int pr;
-  if (!pr) {
-    pr = prof_register("xchg_prts", 1., 0, 0);
-  }
-
-  check_domain(bnd);
-
-  prof_start(pr);
-  psc_stats_start(st_time_comm);
-  struct psc_bnd_ops *ops = psc_bnd_ops(bnd);
-  assert(ops->exchange_particles);
-  ops->exchange_particles(bnd, particles);
-  psc_stats_stop(st_time_comm);
-  prof_stop(pr);
-}
-
 // ======================================================================
 // psc_bnd_init
 
@@ -159,7 +136,6 @@ psc_bnd_init()
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_auto_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_c_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single_ops);
-  mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_single2_ops);
 #ifdef USE_CUDA
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_cuda_ops);
   mrc_class_register_subclass(&mrc_class_psc_bnd, &psc_bnd_mix_ops);
