@@ -9,7 +9,6 @@ struct psc_bnd {
   struct psc *psc;
   struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
-  struct ddc_particles *ddcp_photons;
 };
 
 struct psc_bnd_ops {

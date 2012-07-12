@@ -3,6 +3,7 @@
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
+#include "psc_bnd_photons.h"
 #include "psc_bnd_fields.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
@@ -177,6 +178,9 @@ _psc_create(struct psc *psc)
   psc->bnd = psc_bnd_create(comm);
   psc_bnd_set_psc(psc->bnd, psc); // FIXME, do general parent interface?
   psc_add_child(psc, (struct mrc_obj *) psc->bnd);
+  psc->bnd_photons = psc_bnd_photons_create(comm);
+  psc_bnd_photons_set_psc(psc->bnd_photons, psc);
+  psc_add_child(psc, (struct mrc_obj *) psc->bnd_photons);
   psc->collision = psc_collision_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->collision);
   psc->randomize = psc_randomize_create(comm);

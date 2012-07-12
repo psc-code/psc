@@ -3,6 +3,7 @@
 #include "psc_push_particles.h"
 #include "psc_push_fields.h"
 #include "psc_bnd.h"
+#include "psc_bnd_photons.h"
 #include "psc_collision.h"
 #include "psc_randomize.h"
 #include "psc_sort.h"
@@ -111,7 +112,7 @@ psc_step(struct psc *psc)
   psc_push_particles_run_b(psc->push_particles, psc->particles, psc->flds);
   
   psc_push_photons_run(psc->mphotons);
-  psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
+  psc_bnd_photons_exchange(psc->bnd_photons, psc->mphotons);
   psc_event_generator_run(psc->event_generator, psc->particles, psc->flds, psc->mphotons);
   
   // field propagation (n+0.5)*dt -> (n+1.0)*dt

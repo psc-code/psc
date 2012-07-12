@@ -4,6 +4,7 @@ AM_CFLAGS = -I$(top_srcdir)/src/include -I$(top_srcdir)/src/libmrc/include
 SUBDIRS = \
 	psc_balance \
 	psc_bnd \
+	psc_bnd_photons \
 	psc_bnd_fields \
 	psc_collision \
 	psc_event_generator \
@@ -27,6 +28,7 @@ noinst_LTLIBRARIES = libpsc.la
 libpsc_la_LIBADD = \
 	psc_balance/libsubdir.la \
 	psc_bnd/libsubdir.la \
+	psc_bnd_photons/libsubdir.la \
 	psc_bnd_fields/libsubdir.la \
 	psc_collision/libsubdir.la \
 	psc_event_generator/libsubdir.la \

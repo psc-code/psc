@@ -12,6 +12,5 @@ void psc_bnd_set_psc(struct psc_bnd *bnd, struct psc *psc);
 void psc_bnd_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
 void psc_bnd_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds, int mb, int me);
 void psc_bnd_exchange_particles(struct psc_bnd *bnd, mparticles_base_t *particles);
-void psc_bnd_exchange_photons(struct psc_bnd *bnd, mphotons_t *mphotons);
 
 #endif
