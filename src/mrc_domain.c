@@ -183,6 +183,15 @@ mrc_domain_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
 }
 
 void
+mrc_domain_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+				   int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_ops *ops = mrc_domain_ops(domain);
+  assert(ops->get_neighbor_rank_patch);
+  ops->get_neighbor_rank_patch(domain, p, dir, nei_rank, nei_patch);
+}
+
+void
 mrc_domain_plot(struct mrc_domain *domain)
 {
   assert(mrc_domain_is_setup(domain));

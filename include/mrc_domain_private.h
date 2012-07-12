@@ -24,6 +24,8 @@ struct mrc_domain_ops {
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
   void (*get_bc)(struct mrc_domain *domain, int *bc);
   int  (*get_neighbor_rank)(struct mrc_domain *, int shift[3]);
+  void (*get_neighbor_rank_patch)(struct mrc_domain *domain, int p, int dir[3],
+				  int *nei_rank, int *nei_patch);
   void (*get_nr_global_patches)(struct mrc_domain *domain, int *nr_global_patches);
   void (*get_global_patch_info)(struct mrc_domain *domain, int gp,
 				struct mrc_patch_info *info);

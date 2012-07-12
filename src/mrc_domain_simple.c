@@ -120,6 +120,34 @@ mrc_domain_simple_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
   return mrc_domain_simple_proc2rank(domain, nei);
 }
 
+static void
+mrc_domain_simple_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+					  int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+  assert(p == 0);
+
+  int proc_nei[3];
+  for (int d = 0; d < 3; d++) {
+    proc_nei[d] = simple->proc[d] + dir[d];
+    if (simple->bc[d] == BC_PERIODIC) {
+      if (proc_nei[d] < 0) {
+	proc_nei[d] += simple->nr_procs[d];
+      }
+      if (proc_nei[d] >= simple->nr_procs[d]) {
+	proc_nei[d] -= simple->nr_procs[d];
+      }
+    }
+    if (proc_nei[d] < 0 || proc_nei[d] >= simple->nr_procs[d]) {
+      *nei_rank = -1;
+      *nei_patch = -1;
+      return;
+    }
+  }
+  *nei_rank = mrc_domain_simple_proc2rank(domain, proc_nei);
+  *nei_patch = 0;
+}
+
 static struct mrc_patch *
 mrc_domain_simple_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
@@ -239,6 +267,7 @@ struct mrc_domain_ops mrc_domain_simple_ops = {
   .param_descr               = mrc_domain_simple_params_descr,
   .setup                     = mrc_domain_simple_setup,
   .get_neighbor_rank         = mrc_domain_simple_get_neighbor_rank,
+  .get_neighbor_rank_patch   = mrc_domain_simple_get_neighbor_rank_patch,
   .get_patches               = mrc_domain_simple_get_patches,
   .get_level_idx3_patch_info = mrc_domain_simple_get_level_idx3_patch_info,
   .get_global_dims           = mrc_domain_simple_get_global_dims,

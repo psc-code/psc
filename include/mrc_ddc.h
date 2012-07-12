@@ -25,8 +25,6 @@ void mrc_ddc_setup(struct mrc_ddc *ddc);
 void mrc_ddc_destroy(struct mrc_ddc *ddc);
 void mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
 void mrc_ddc_fill_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx);
-void mrc_ddc_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
-				int *nei_rank, int *nei_patch);
 
 // AMR-specific functionality
 // should probably be given a more generic interface,

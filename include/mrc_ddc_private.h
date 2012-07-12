@@ -75,8 +75,6 @@ struct mrc_ddc_ops {
   struct mrc_domain *(*get_domain)(struct mrc_ddc *ddc);
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
-  void (*get_nei_rank_patch)(struct mrc_ddc *ddc, int p, int dir[3],
-			     int *nei_rank, int *nei_patch);
 };
 
 // ======================================================================
