@@ -35,15 +35,7 @@ ddcp_photons_get_addr(void *_particles, int p, int n)
 static void
 _psc_bnd_photons_setup(struct psc_bnd_photons *bnd)
 {
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
-  //  mrc_ddc_set_funcs(ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
-  mrc_ddc_setup(ddc);
-  bnd->ddc = ddc;
-
-  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(photon_t),
+  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain, sizeof(photon_t),
 				   sizeof(photon_real_t),
 				   MPI_PHOTONS_REAL,
 				   ddcp_photons_realloc,
@@ -57,7 +49,6 @@ static void
 psc_bnd_photons_unsetup(struct psc_bnd_photons *bnd)
 {
   ddc_particles_destroy(bnd->ddcp);
-  mrc_ddc_destroy(bnd->ddc);
 }
 
 // ----------------------------------------------------------------------
@@ -111,10 +102,8 @@ psc_bnd_photons_set_psc(struct psc_bnd_photons *bnd, struct psc *psc)
 static void
 check_domain(struct psc_bnd_photons *bnd)
 {
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
-  if (domain != bnd->psc->mrc_domain) {
+  if (bnd->ddcp->domain != bnd->psc->mrc_domain) {
     psc_bnd_photons_unsetup(bnd);
-
     psc_bnd_photons_setup(bnd);
   }
 }

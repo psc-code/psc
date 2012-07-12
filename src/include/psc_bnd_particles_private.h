@@ -7,7 +7,6 @@
 struct psc_bnd_particles {
   struct mrc_obj obj;
   struct psc *psc;
-  struct mrc_ddc *ddc;
   struct ddc_particles *ddcp;
 };
 

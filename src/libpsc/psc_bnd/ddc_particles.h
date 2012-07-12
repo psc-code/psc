@@ -58,9 +58,11 @@ struct ddc_particles {
   int n_ranks;
   MPI_Request *send_reqs;
   MPI_Request *recv_reqs;
+
+  struct mrc_domain *domain;
 };
 
-struct ddc_particles *ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
+struct ddc_particles *ddc_particles_create(struct mrc_domain *domain, int size_of_particle,
 					   int size_of_real, MPI_Datatype mpi_type_real,
 					   void (*realloc)(void *, int, int),
 					   void *(*get_addr)(void *, int, int));

@@ -33,8 +33,6 @@ psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
   psc_bnd_particles_set_psc(sub->fwd, bnd->psc);
   psc_bnd_particles_setup(sub->fwd);
   psc_bnd_particles_add_child(bnd, (struct mrc_obj *) sub->fwd);
-
-  psc_bnd_particles_setup_super(bnd);
 }
 
 // ----------------------------------------------------------------------

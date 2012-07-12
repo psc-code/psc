@@ -48,7 +48,7 @@ static void
 psc_bnd_particles_sub_setup(struct psc_bnd_particles *bnd)
 {
   psc_bnd_particles_setup_super(bnd);
-  bnd->ddcp = ddc_particles_create(bnd->ddc, sizeof(particle_single_t),
+  bnd->ddcp = ddc_particles_create(bnd->psc->mrc_domain, sizeof(particle_single_t),
 				   sizeof(particle_single_real_t),
 				   MPI_PARTICLES_SINGLE_REAL,
 				   ddcp_particles_realloc,

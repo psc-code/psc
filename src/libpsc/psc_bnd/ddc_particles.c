@@ -9,7 +9,7 @@
 // ddc_particles
 
 struct ddc_particles *
-ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
+ddc_particles_create(struct mrc_domain *domain, int size_of_particle,
 		     int size_of_real, MPI_Datatype mpi_type_real,
 		     void  (*realloc)(void *, int, int),
 		     void *(*get_addr)(void *, int, int))
@@ -17,7 +17,7 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
   struct ddc_particles *ddcp = malloc(sizeof(*ddcp));
   memset(ddcp, 0, sizeof(*ddcp));
 
-  struct mrc_domain *domain = mrc_ddc_get_domain(ddc);
+  ddcp->domain = domain;
   mrc_domain_get_patches(domain, &ddcp->nr_patches);
   ddcp->size_of_particle = size_of_particle;
   ddcp->size_of_real = size_of_real;

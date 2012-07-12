@@ -8,21 +8,6 @@
 #include <mrc_profile.h>
 
 // ----------------------------------------------------------------------
-// psc_bnd_particles_setup
-
-static void
-_psc_bnd_particles_setup(struct psc_bnd_particles *bnd)
-{
-  struct mrc_ddc *ddc = mrc_domain_create_ddc(bnd->psc->mrc_domain);
-  //  mrc_ddc_set_funcs(ddc, &ddc_funcs);
-  mrc_ddc_set_param_int3(ddc, "ibn", bnd->psc->ibn);
-  mrc_ddc_set_param_int(ddc, "max_n_fields", 24);
-  mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
-  mrc_ddc_setup(ddc);
-  bnd->ddc = ddc;
-}
-
-// ----------------------------------------------------------------------
 // psc_bnd_particles_destroy
 
 static void
@@ -75,13 +60,14 @@ psc_bnd_particles_set_psc(struct psc_bnd_particles *bnd, struct psc *psc)
 static void
 check_domain(struct psc_bnd_particles *bnd)
 {
+  if (!bnd->ddcp) {
+    return;
+  }
+
   struct psc_bnd_particles_ops *ops = psc_bnd_particles_ops(bnd);
 
-  struct mrc_domain *domain = mrc_ddc_get_domain(bnd->ddc);
-  if (domain != bnd->psc->mrc_domain) {
+  if (bnd->ddcp->domain != bnd->psc->mrc_domain) {
     ops->unsetup(bnd);
-    mrc_ddc_destroy(bnd->ddc);
-
     ops->setup(bnd);
   }
 }
@@ -131,7 +117,6 @@ struct mrc_class_psc_bnd_particles mrc_class_psc_bnd_particles = {
   .name             = "psc_bnd_particles",
   .size             = sizeof(struct psc_bnd_particles),
   .init             = psc_bnd_particles_init,
-  .setup            = _psc_bnd_particles_setup,
   .destroy          = _psc_bnd_particles_destroy,
   .write            = _psc_bnd_particles_write,
   .read             = _psc_bnd_particles_read,
