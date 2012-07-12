@@ -43,7 +43,7 @@ ddc_particles_create(struct mrc_ddc *ddc, int size_of_particle,
 	    // use this one as buffer for particles that stay in the same patch
 	    nei->rank = -1;
 	  } else {
-	    mrc_ddc_get_nei_rank_patch(ddc, p, dir, &nei->rank, &nei->patch);
+	    mrc_domain_get_neighbor_rank_patch(domain, p, dir, &nei->rank, &nei->patch);
 	  }
 	}
       }

@@ -214,27 +214,6 @@ mrc_ddc_amr_apply(struct mrc_ddc *ddc, struct mrc_m3 *fld)
 }
 
 // ----------------------------------------------------------------------
-// mrc_ddc_amr_get_nei_rank_patch
-
-// FIXME
-extern void mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
-					       int dx[3], int *p_nei);
-
-static void
-mrc_ddc_amr_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
-				 int *nei_rank, int *nei_patch)
-{
-  struct mrc_ddc_amr *amr = mrc_ddc_amr(ddc);
-
-  mrc_domain_get_neighbor_patch_same(amr->domain, p, dir, nei_patch);
-  if (*nei_patch < 0) {
-    *nei_rank = -1;
-  } else {
-    *nei_rank = 0;
-  }
-}
-
-// ----------------------------------------------------------------------
 
 #define VAR(x) (void *)offsetof(struct mrc_ddc_amr, x)
 static struct param mrc_ddc_amr_descr[] = {
@@ -256,6 +235,5 @@ struct mrc_ddc_ops mrc_ddc_amr_ops = {
   .get_domain            = mrc_ddc_amr_get_domain,
   .fill_ghosts           = mrc_ddc_amr_fill_ghosts,
   .add_ghosts            = mrc_ddc_amr_add_ghosts,
-  .get_nei_rank_patch    = mrc_ddc_amr_get_nei_rank_patch,
 };
 

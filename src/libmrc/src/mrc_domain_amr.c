@@ -420,6 +420,25 @@ mrc_domain_amr_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
 }
 
 // ----------------------------------------------------------------------
+// mrc_domain_amr_get_neighbor_rank_patch
+
+extern void
+mrc_domain_get_neighbor_patch_same(struct mrc_domain *domain, int p,
+				   int dx[3], int *p_nei);
+
+static void
+mrc_domain_amr_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+				       int *nei_rank, int *nei_patch)
+{
+  mrc_domain_get_neighbor_patch_same(domain, p, dir, nei_patch);
+  if (*nei_patch < 0) {
+    *nei_rank = -1;
+  } else {
+    *nei_rank = 0;
+  }
+}
+
+// ----------------------------------------------------------------------
 // mrc_domain_amr_get_nr_levels
 
 static void
@@ -562,6 +581,7 @@ struct mrc_domain_ops mrc_domain_amr_ops = {
   .get_local_patch_info      = mrc_domain_amr_get_local_patch_info,
   .get_level_idx3_patch_info = mrc_domain_amr_get_level_idx3_patch_info,
   .get_nr_levels             = mrc_domain_amr_get_nr_levels,
+  .get_neighbor_rank_patch   = mrc_domain_amr_get_neighbor_rank_patch,
   .plot                      = mrc_domain_amr_plot,
   .create_ddc                = mrc_domain_amr_create_ddc,
 };

@@ -278,7 +278,6 @@ struct mrc_ddc_ops mrc_ddc_simple_ops = {
   .setup                 = mrc_ddc_simple_setup,
   .fill_ghosts           = mrc_ddc_simple_fill_ghosts,
   .add_ghosts            = mrc_ddc_simple_add_ghosts,
-  .get_nei_rank_patch    = mrc_ddc_simple_get_nei_rank_patch,
 };
 
 // ======================================================================

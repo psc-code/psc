@@ -469,6 +469,39 @@ mrc_domain_multi_plot(struct mrc_domain *domain)
   fclose(file_curve);
 }
 
+// ----------------------------------------------------------------------
+// mrc_domain_multi_get_neighbor_rank_patch
+
+static void
+mrc_domain_multi_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+					 int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(domain, p, &info);
+  int patch_idx_nei[3];
+  for (int d = 0; d < 3; d++) {
+    patch_idx_nei[d] = info.idx3[d] + dir[d];
+    if (multi->bc[d] == BC_PERIODIC) {
+      if (patch_idx_nei[d] < 0) {
+	patch_idx_nei[d] += multi->np[d];
+      }
+      if (patch_idx_nei[d] >= multi->np[d]) {
+	patch_idx_nei[d] -= multi->np[d];
+      }
+    }
+    if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
+      *nei_rank = -1;
+      *nei_patch = -1;
+      return;
+    }
+  }
+  mrc_domain_get_level_idx3_patch_info(domain, 0, patch_idx_nei, &info);
+  *nei_rank = info.rank;
+  *nei_patch = info.patch;
+}
+
 static struct mrc_ddc *
 mrc_domain_multi_create_ddc(struct mrc_domain *domain)
 {
@@ -533,6 +566,7 @@ struct mrc_domain_ops mrc_domain_multi_ops = {
   .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,
   .get_local_patch_info      = mrc_domain_multi_get_local_patch_info,
   .get_level_idx3_patch_info = mrc_domain_multi_get_level_idx3_patch_info,
+  .get_neighbor_rank_patch   = mrc_domain_multi_get_neighbor_rank_patch,
   .plot                      = mrc_domain_multi_plot,
   .create_ddc                = mrc_domain_multi_create_ddc,
 };
