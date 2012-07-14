@@ -77,43 +77,58 @@ push_fields_H_yz(real *d_flds, real cny, real cnz, int my, int mz)
 #define BLOCKSIZE_Z 16
 
 EXTERN_C void
-cuda_push_fields_E_yz(int p, struct psc_fields *pf)
+cuda_push_fields_E_yz(struct psc_mfields *mflds)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  struct psc_patch *patch = &ppsc->patch[p];
+  if (mflds->nr_patches == 0) {
+    return;
+  }
+
+  struct psc_patch *patch = &ppsc->patch[0];
 
   real dt = ppsc->dt;
   real cny = .5f * ppsc->dt / patch->dx[1];
   real cnz = .5f * ppsc->dt / patch->dx[2];
-  assert(pf->ib[0] == -3);
-  assert(pf->ib[1] == -3);
-  assert(pf->ib[2] == -3);
-  assert(pf->im[0] == 7);
-  int my = pf->im[1];
-  int mz = pf->im[2];
+  int my = patch->ldims[1] + 2*3;
+  int mz = patch->ldims[2] + 2*3;
+  assert(patch->ldims[0] == 1);
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_E_yz, (pfc->d_flds, dt, cny, cnz, my, mz));
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+
+    RUN_KERNEL(dimGrid, dimBlock,
+	       push_fields_E_yz, (flds_cuda->d_flds, dt, cny, cnz, my, mz));
+  }
 }
 
 EXTERN_C void
-cuda_push_fields_H_yz(int p, struct psc_fields *pf)
+cuda_push_fields_H_yz(struct psc_mfields *mflds)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  struct psc_patch *patch = &ppsc->patch[p];
+  if (mflds->nr_patches == 0) {
+    return;
+  }
+
+  struct psc_patch *patch = &ppsc->patch[0];
 
   real cny = .5f * ppsc->dt / patch->dx[1];
   real cnz = .5f * ppsc->dt / patch->dx[2];
-  int my = pf->im[1];
-  int mz = pf->im[2];
+  int my = patch->ldims[1] + 2*3;
+  int mz = patch->ldims[2] + 2*3;
 
   int dimBlock[2] = { BLOCKSIZE_Y, BLOCKSIZE_Z };
   int dimGrid[2]  = { (patch->ldims[1] + 2*BND + BLOCKSIZE_Y - 1) / BLOCKSIZE_Y,
 		      (patch->ldims[2] + 2*BND + BLOCKSIZE_Z - 1) / BLOCKSIZE_Z };
-  RUN_KERNEL(dimGrid, dimBlock,
-	     push_fields_H_yz, (pfc->d_flds, cny, cnz, my, mz));
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+
+    RUN_KERNEL(dimGrid, dimBlock,
+	       push_fields_H_yz, (flds_cuda->d_flds, cny, cnz, my, mz));
+  }
 }
 
