@@ -30,12 +30,16 @@ psc_push_fields_push_E(struct psc_push_fields *push, mfields_base_t *flds)
   if (!pr) {
     pr = prof_register("push_fields_E", 1., 0, 0);
   }
-  assert(ops->push_E);
   
   psc_stats_start(st_time_field);
   prof_start(pr);
-  for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_E(push, psc_mfields_get_patch(flds, p));
+  if (ops->push_mflds_E) {
+    ops->push_mflds_E(push, flds);
+  } else {
+    assert(ops->push_E);
+    for (int p = 0; p < flds->nr_patches; p++) {
+      ops->push_E(push, psc_mfields_get_patch(flds, p));
+    }
   }
   prof_stop(pr);
   psc_stats_start(st_time_field);
@@ -49,12 +53,16 @@ psc_push_fields_push_H(struct psc_push_fields *push, mfields_base_t *flds)
   if (!pr) {
     pr = prof_register("push_fields_H", 1., 0, 0);
   }
-  assert(ops->push_H);
   
   psc_stats_start(st_time_field);
   prof_start(pr);
-  for (int p = 0; p < flds->nr_patches; p++) {
-    ops->push_H(push, psc_mfields_get_patch(flds, p));
+  if (ops->push_mflds_H) {
+    ops->push_mflds_H(push, flds);
+  } else {
+    assert(ops->push_H);
+    for (int p = 0; p < flds->nr_patches; p++) {
+      ops->push_H(push, psc_mfields_get_patch(flds, p));
+    }
   }
   prof_stop(pr);
   psc_stats_start(st_time_field);
