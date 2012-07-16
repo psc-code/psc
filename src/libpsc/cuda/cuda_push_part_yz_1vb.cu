@@ -41,7 +41,7 @@ __device__ int *__d_error_count;
 
 void
 set_params(struct cuda_params *prm, struct psc *psc,
-	   struct psc_particles *prts, struct psc_mfields *mflds)
+	   struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -57,11 +57,12 @@ set_params(struct cuda_params *prm, struct psc *psc,
     prm->dq[k] = prm->dqs * psc->kinds[k].q / psc->kinds[k].m;
   }
 
-  if (prts) {
-    struct psc_particles_cuda *cuda = psc_particles_cuda(prts);
+  if (mprts && mprts->nr_patches > 0) {
+    struct psc_particles *prts = psc_mparticles_get_patch(mprts, 0);
+    struct psc_particles_cuda *prts_cuda = psc_particles_cuda(prts);
     for (int d = 0; d < 3; d++) {
-      prm->b_mx[d] = cuda->b_mx[d];
-      prm->b_dxi[d] = cuda->b_dxi[d];
+      prm->b_mx[d] = prts_cuda->b_mx[d];
+      prm->b_dxi[d] = prts_cuda->b_dxi[d];
     }
   }
 
@@ -366,7 +367,7 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   }
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), mflds);
+  set_params(&prm, ppsc, mprts, mflds);
 
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
@@ -778,7 +779,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     return;
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), mflds);
+  set_params(&prm, ppsc, mprts, mflds);
 
   unsigned int size;
   for (int p = 0; p < mflds->nr_patches; p++) {
