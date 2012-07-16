@@ -321,20 +321,23 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz, int mm)
 
 template<int B, bool pack>
 static void
-fields_device_pack_yz(struct psc_fields *pf, int mb, int me)
+fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-  int gmy = pf->im[1], gmz = pf->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
-  int n_threads = buf_size * (me - mb);
-
-  dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
-  dim3 dimBlock(THREADS_PER_BLOCK);
-
-  k_fields_device_pack_yz<B, pack> <<<dimGrid, dimBlock>>>
-    (pfc->d_bnd_buf, pfc->d_flds + mb * size, gmy, gmz, me - mb);
-  cuda_sync_if_enabled();
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+    int gmy = flds->im[1], gmz = flds->im[2];
+    unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+    int n_threads = buf_size * (me - mb);
+    
+    dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
+    dim3 dimBlock(THREADS_PER_BLOCK);
+    
+    k_fields_device_pack_yz<B, pack> <<<dimGrid, dimBlock>>>
+      (flds_cuda->d_bnd_buf, flds_cuda->d_flds + mb * size, gmy, gmz, me - mb);
+    cuda_sync_if_enabled();
+  }
 }
 
 // ======================================================================
@@ -350,27 +353,34 @@ fields_device_pack_yz(struct psc_fields *pf, int mb, int me)
 
 template<int B, int what>
 static void
-fields_host_pack_yz(struct psc_fields_cuda_bnd *cf, real *h_buf, int mb, int me)
+fields_host_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
-  int gmy = cf->im[1], gmz = cf->im[2];
-  int tid = 0;
-  for (int m = 0; m < me - mb; m++) {
-    for (int jz = 0; jz < B; jz++) {
-      for (int jy = 0; jy < gmy; jy++) {
-	WHAT;
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+    struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
+    real *h_buf = flds_cuda->h_bnd_buf;
+    
+    int gmy = cf->im[1], gmz = cf->im[2];
+    int tid = 0;
+    for (int m = 0; m < me - mb; m++) {
+      for (int jz = 0; jz < B; jz++) {
+	for (int jy = 0; jy < gmy; jy++) {
+	  WHAT;
+	}
       }
-    }
-    for (int jz = B; jz < gmz - B; jz++) {
-      for (int jy = 0; jy < B; jy++) {
-	WHAT;
+      for (int jz = B; jz < gmz - B; jz++) {
+	for (int jy = 0; jy < B; jy++) {
+	  WHAT;
+	}
+	for (int jy = gmy - B; jy < gmy; jy++) {
+	  WHAT;
+	}
       }
-      for (int jy = gmy - B; jy < gmy; jy++) {
-	WHAT;
-      }
-    }
-    for (int jz = gmz - B; jz < gmz; jz++) {
-      for (int jy = 0; jy < gmy; jy++) {
-	WHAT;
+      for (int jz = gmz - B; jz < gmz; jz++) {
+	for (int jy = 0; jy < gmy; jy++) {
+	  WHAT;
+	}
       }
     }
   }
@@ -380,46 +390,36 @@ template<int B>
 static void
 __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
 {
-  // static int pr1, pr2, pr3;
-  // if (!pr1) {
-  //   pr1 = prof_register("field_device_pack", 1., 0, 0);
-  //   pr2 = prof_register("cuda_memcpy", 1., 0, 0);
-  //   pr3 = prof_register("field_host_unpack", 1., 0, 0);
-  // }
+  static int pr1, pr2, pr3;
+  if (!pr1) {
+    pr1 = prof_register("field_device_pack", 1., 0, 0);
+    pr2 = prof_register("cuda_memcpy", 1., 0, 0);
+    pr3 = prof_register("field_host_unpack", 1., 0, 0);
+  }
     
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
   int gmy = flds0->im[1], gmz = flds0->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  unsigned int buf_size = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(flds0->ib[1] == -BND);
   assert(flds0->im[1] >= 2 * B);
   assert(flds0->im[2] >= 2 * B);
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    //  prof_start(pr1);
-    fields_device_pack_yz<B, PACK>(flds, mb, me);
-    //  prof_stop(pr1);
-  }
+  prof_start(pr1);
+  fields_device_pack_yz<B, PACK>(mflds, mb, me);
+  prof_stop(pr1);
+  
+  prof_start(pr2);
+  check(cudaMemcpy(mflds_cuda->h_bnd_buf, mflds_cuda->d_bnd_buf,
+		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		   sizeof(*mflds_cuda->h_bnd_buf),
+		   cudaMemcpyDeviceToHost));
+  prof_stop(pr2);
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    //  prof_start(pr2);
-    check(cudaMemcpy(flds_cuda->h_bnd_buf, flds_cuda->d_bnd_buf,
-		     (me - mb) * buf_size * sizeof(*flds_cuda->h_bnd_buf),
-		     cudaMemcpyDeviceToHost));
-    //  prof_stop(pr2);
-  }
-
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
-    //  prof_start(pr3);
-    fields_host_pack_yz<B, UNPACK>(cf, flds_cuda->h_bnd_buf, mb, me);
-    //  prof_stop(pr3);
-  }
+  prof_start(pr3);
+  fields_host_pack_yz<B, UNPACK>(mflds, mb, me);
+  prof_stop(pr3);
 }
 
 template<int B>
@@ -433,37 +433,29 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
     pr3 = prof_register("field_device_unpack", 1., 0, 0);
   }
   
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
   int gmy = flds0->im[1], gmz = flds0->im[2];
-  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  unsigned int buf_size = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(flds0->ib[1] == -BND);
   assert(flds0->im[1] >= 2 * B);
   assert(flds0->im[2] >= 2 * B);
 
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
-    prof_start(pr1);
-    fields_host_pack_yz<B, PACK>(cf, flds_cuda->h_bnd_buf, mb, me);
-    prof_stop(pr1);
-  }
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    prof_start(pr2);
-    check(cudaMemcpy(flds_cuda->d_bnd_buf, flds_cuda->h_bnd_buf,
-		     (me - mb) * buf_size * sizeof(*flds_cuda->d_bnd_buf),
-		     cudaMemcpyHostToDevice));
-    prof_stop(pr2);
-  }
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    prof_start(pr3);
-    fields_device_pack_yz<B, UNPACK>(flds, mb, me);
-    prof_stop(pr3);
-  }
+  prof_start(pr1);
+  fields_host_pack_yz<B, PACK>(mflds, mb, me);
+  prof_stop(pr1);
+
+  prof_start(pr2);
+  check(cudaMemcpy(mflds_cuda->d_bnd_buf, mflds_cuda->h_bnd_buf,
+		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		   sizeof(*mflds_cuda->d_bnd_buf),
+		   cudaMemcpyHostToDevice));
+  prof_stop(pr2);
+
+  prof_start(pr3);
+  fields_device_pack_yz<B, UNPACK>(mflds, mb, me);
+  prof_stop(pr3);
 }
 
 // ======================================================================
