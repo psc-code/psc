@@ -7,16 +7,6 @@
 #include <mrc_ddc.h>
 #include <mrc_profile.h>
 
-static void
-psc_fields_cuda_bnd_prep(struct psc_fields *pf, int nr_fields)
-{
-}
-
-static void
-psc_fields_cuda_bnd_post(struct psc_fields *pf)
-{
-}
-
 // ======================================================================
 // ddc funcs
 
@@ -132,19 +122,9 @@ psc_bnd_fld_cuda_add_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int 
   } else {
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
-    psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf = psc_mfields_get_patch(flds_cuda, p);
-      psc_fields_cuda_bnd_prep(pf, me - mb);
-      __fields_cuda_from_device_inside(pf, mb, me);
-    }
-
+    __fields_cuda_from_device_inside(flds_cuda, mb, me);
     mrc_ddc_add_ghosts(bnd->ddc, 0, me - mb, flds_cuda);
-
-    psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf = psc_mfields_get_patch(flds_cuda, p);
-      __fields_cuda_to_device_inside(pf, mb, me);
-      psc_fields_cuda_bnd_post(pf);
-    }
+    __fields_cuda_to_device_inside(flds_cuda, mb, me);
 
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);
   }
@@ -184,11 +164,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int
     mfields_cuda_t *flds_cuda = psc_mfields_get_cuda(flds_base, mb, me);
 
     prof_start(pr1);
-    psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf = psc_mfields_get_patch(flds_cuda, p);
-      psc_fields_cuda_bnd_prep(pf, me - mb);
-      __fields_cuda_from_device_inside(pf, mb, me);
-    }
+    __fields_cuda_from_device_inside(flds_cuda, mb, me);
     prof_stop(pr1);
 
     prof_start(pr3);
@@ -196,11 +172,7 @@ psc_bnd_fld_cuda_fill_ghosts(struct psc_bnd *bnd, mfields_base_t *flds_base, int
     prof_stop(pr3);
 
     prof_start(pr5);
-    psc_foreach_patch(ppsc, p) {
-      struct psc_fields *pf = psc_mfields_get_patch(flds_cuda, p);
-      __fields_cuda_to_device_outside(pf, mb, me);
-      psc_fields_cuda_bnd_post(pf);
-    }
+    __fields_cuda_to_device_outside(flds_cuda, mb, me);
     prof_stop(pr5);
 
     psc_mfields_put_cuda(flds_cuda, flds_base, mb, me);

@@ -108,9 +108,9 @@ EXTERN_C void __psc_mfields_cuda_destroy(struct psc_mfields *mflds);
 EXTERN_C void __fields_cuda_to_device(struct psc_fields *pf, real *h_flds, int mb, int me);
 EXTERN_C void __fields_cuda_from_device(struct psc_fields *pf, real *h_flds, int mb, int me);
 
-EXTERN_C void __fields_cuda_from_device_inside(struct psc_fields *pf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_outside(struct psc_fields *pf, int mb, int me);
-EXTERN_C void __fields_cuda_to_device_inside(struct psc_fields *pf, int mb, int me);
+EXTERN_C void __fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me);
+EXTERN_C void __fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me);
 
 EXTERN_C void cuda_fill_ghosts_periodic_yz(int p, struct psc_fields *pf, int mb, int me);
 EXTERN_C void cuda_fill_ghosts_periodic_z(int p, struct psc_fields *pf, int mb, int me);

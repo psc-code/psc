@@ -442,46 +442,73 @@ __fields_cuda_to_device_yz(struct psc_fields *pf, struct psc_fields_cuda_bnd *cf
 // ======================================================================
 
 EXTERN_C void
-__fields_cuda_from_device_inside(struct psc_fields *pf, int mb, int me)
+__fields_cuda_from_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_from_device_yz<2*BND>(pf, &pfc->bnd, mb, me);
+  if (mflds->nr_patches == 0) {
+    return;
+  }
+  struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
+  if (flds0->im[0] == 2 * -flds0->ib[0] + 1) {
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      __fields_cuda_from_device_yz<2*BND>(flds, &flds_cuda->bnd, mb, me);
+    }
   } else {
-    unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-    check(cudaMemcpy(pfc->bnd.arr,
-		     pfc->d_flds + mb * size,
-		     (me - mb) * size * sizeof(float),
-		     cudaMemcpyDeviceToHost));
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+      check(cudaMemcpy(flds_cuda->bnd.arr,
+		       flds_cuda->d_flds + mb * size,
+		       (me - mb) * size * sizeof(float),
+		       cudaMemcpyDeviceToHost));
+    }
   }
 }
 
 EXTERN_C void
-__fields_cuda_to_device_outside(struct psc_fields *pf, int mb, int me)
+__fields_cuda_to_device_outside(struct psc_mfields *mflds, int mb, int me)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_to_device_yz<BND>(pf, &pfc->bnd, mb, me);
+  struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
+  if (flds0->im[0] == 2 * -flds0->ib[0] + 1) {
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      __fields_cuda_to_device_yz<BND>(flds, &flds_cuda->bnd, mb, me);
+    }
   } else {
-    unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-    check(cudaMemcpy(pfc->d_flds + mb * size,
-		     pfc->bnd.arr,
-		     (me - mb) * size * sizeof(float),
-		     cudaMemcpyHostToDevice));
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+      check(cudaMemcpy(flds_cuda->d_flds + mb * size,
+		       flds_cuda->bnd.arr,
+		       (me - mb) * size * sizeof(float),
+		       cudaMemcpyHostToDevice));
+    }
   }
 }
 
 EXTERN_C void
-__fields_cuda_to_device_inside(struct psc_fields *pf, int mb, int me)
+__fields_cuda_to_device_inside(struct psc_mfields *mflds, int mb, int me)
 {
-  struct psc_fields_cuda *pfc = psc_fields_cuda(pf);
-  if (pf->im[0] == 2 * -pf->ib[0] + 1) {
-    __fields_cuda_to_device_yz<2*BND>(pf, &pfc->bnd, mb, me);
+  struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
+  if (flds0->im[0] == 2 * -flds0->ib[0] + 1) {
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      __fields_cuda_to_device_yz<2*BND>(flds, &flds_cuda->bnd, mb, me);
+    }
   } else {
-    unsigned int size = pf->im[0] * pf->im[1] * pf->im[2];
-    check(cudaMemcpy(pfc->d_flds + mb * size,
-		     pfc->bnd.arr,
-		     (me - mb) * size * sizeof(float),
-		     cudaMemcpyHostToDevice));
+    for (int p = 0; p < mflds->nr_patches; p++) {
+      struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+      struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+      unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+      check(cudaMemcpy(flds_cuda->d_flds + mb * size,
+		       flds_cuda->bnd.arr,
+		       (me - mb) * size * sizeof(float),
+		       cudaMemcpyHostToDevice));
+    }
   }
 }
