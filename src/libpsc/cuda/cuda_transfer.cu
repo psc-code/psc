@@ -268,16 +268,16 @@ enum {
 
 // FIXME/OPT: can probably be accelerated by making component the fast index
 
-template<int B, int what>
+template<int B, int WHAT, int NR_COMPONENTS>
 __global__ static void
-k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz, int mm,
-			int nr_patches, int nr_fields, unsigned int flds_stride)
+k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz,
+			int nr_patches, int nr_fields)
 {
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
   int gmx = 2*BND + 1;
   int jx = BND;
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
-  int n_threads = mm * buf_size;
+  int n_threads = NR_COMPONENTS * buf_size;
   int p = tid / n_threads;
   if (p >= nr_patches)
     return;
@@ -305,9 +305,9 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz, int mm,
   }
   
   // FIXME, should use F3_DEV_YZ
-  if (what == PACK) {
+  if (WHAT == PACK) {
     d_buf[tid] = d_flds[(((p * nr_fields + m) * gmz + jz) * gmy + jy) * gmx + jx];
-  } else if (what == UNPACK) {
+  } else if (WHAT == UNPACK) {
     d_flds[(((p * nr_fields + m) * gmz + jz) * gmy + jy) * gmx + jx] = d_buf[tid]; 
   }
 }
@@ -326,12 +326,13 @@ fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
   dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
   dim3 dimBlock(THREADS_PER_BLOCK);
     
+  const int NR_COMPONENTS = 3;
+  assert(me - mb == NR_COMPONENTS);
   float *d_bnd_buf = mflds_cuda->d_bnd_buf;
   float *d_flds = mflds_cuda->d_flds + mb * size;
-  k_fields_device_pack_yz<B, pack> <<<dimGrid, dimBlock>>>
-    (d_bnd_buf, d_flds, gmy, gmz, me - mb, mflds->nr_patches,
-     mflds->nr_fields,
-     mflds->nr_fields * size);
+  k_fields_device_pack_yz<B, pack, NR_COMPONENTS> <<<dimGrid, dimBlock>>>
+    (d_bnd_buf, d_flds, gmy, gmz, mflds->nr_patches,
+     mflds->nr_fields);
   cuda_sync_if_enabled();
 }
 
