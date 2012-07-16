@@ -23,7 +23,7 @@ struct cuda_params {
 };
 
 EXTERN_C void set_params(struct cuda_params *prm, struct psc *psc,
-			 struct psc_particles *prts, struct psc_fields *pf);
+			 struct psc_particles *prts, struct psc_mfields *mflds);
 EXTERN_C void free_params(struct cuda_params *prm);
 
 // ======================================================================

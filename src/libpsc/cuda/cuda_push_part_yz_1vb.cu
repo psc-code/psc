@@ -41,7 +41,7 @@ __device__ int *__d_error_count;
 
 void
 set_params(struct cuda_params *prm, struct psc *psc,
-	   struct psc_particles *prts, struct psc_fields *pf)
+	   struct psc_particles *prts, struct psc_mfields *mflds)
 {
   prm->dt = psc->dt;
   for (int d = 0; d < 3; d++) {
@@ -65,10 +65,11 @@ set_params(struct cuda_params *prm, struct psc *psc,
     }
   }
 
-  if (pf) {
+  if (mflds) {
+    struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
     for (int d = 0; d < 3; d++) {
-      prm->mx[d] = pf->im[d];
-      prm->ilg[d] = pf->ib[d];
+      prm->mx[d] = mflds_cuda->im[d];
+      prm->ilg[d] = mflds_cuda->ib[d];
     }
   }
 
@@ -364,11 +365,11 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     return;
   }
 
-  struct psc_fields *flds = psc_mfields_get_patch(mflds, 0);
   struct cuda_params prm;
-  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), flds);
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), mflds);
 
-  unsigned int size = flds->nr_comp * flds->im[0] * flds->im[1] * flds->im[2];
+  unsigned int size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
   
@@ -777,8 +778,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
     return;
 
   struct cuda_params prm;
-  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0),
-	     psc_mfields_get_patch(mflds, 0));
+  set_params(&prm, ppsc, psc_mparticles_get_patch(mprts, 0), mflds);
 
   unsigned int size;
   for (int p = 0; p < mflds->nr_patches; p++) {
