@@ -83,8 +83,6 @@ libpsc_la_SOURCES = \
 	psc_particles_mix.c \
 	psc_photons.c \
 	psc.c \
-	init_particles.c \
-	init_photons.c \
 	integrate.c \
 	psc_stats.c \
 	psc_dump.c \
