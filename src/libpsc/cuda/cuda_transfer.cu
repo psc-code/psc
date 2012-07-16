@@ -279,15 +279,18 @@ enum {
 
 template<int B, int what>
 __global__ static void
-k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz, int mm)
+k_fields_device_pack_yz(real *d_buf0, real *d_flds0, int gmy, int gmz, int mm,
+			int nr_patches, unsigned int bnd_stride, unsigned int flds_stride)
 {
   unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
   int gmx = 2*BND + 1;
   int jx = BND;
   int tid = threadIdx.x + blockIdx.x * THREADS_PER_BLOCK;
   int n_threads = mm * buf_size;
-  if (tid >= n_threads)
+  int p = tid / n_threads;
+  if (p >= nr_patches)
     return;
+  tid -= p * n_threads;
 
   int n = tid;
   int m = n / buf_size; n -= m * buf_size;
@@ -311,11 +314,12 @@ k_fields_device_pack_yz(real *d_buf, real *d_flds, int gmy, int gmz, int mm)
     jz += gmz - B;
   }
   
+  real *d_flds = d_flds0 + p * flds_stride;
   // FIXME, should use F3_DEV_YZ
   if (what == PACK) {
-    d_buf[tid] = d_flds[((m * gmz + jz) * gmy + jy) * gmx + jx];
+    d_buf0[tid + p * bnd_stride] = d_flds[((m * gmz + jz) * gmy + jy) * gmx + jx];
   } else if (what == UNPACK) {
-    d_flds[((m * gmz + jz) * gmy + jy) * gmx + jx] = d_buf[tid]; 
+    d_flds[((m * gmz + jz) * gmy + jy) * gmx + jx] = d_buf0[tid + p * bnd_stride]; 
   }
 }
 
@@ -323,21 +327,23 @@ template<int B, bool pack>
 static void
 fields_device_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
-    int gmy = flds->im[1], gmz = flds->im[2];
-    unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
-    int n_threads = buf_size * (me - mb);
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
+  unsigned int size = flds0->im[0] * flds0->im[1] * flds0->im[2];
+  int gmy = flds0->im[1], gmz = flds0->im[2];
+  unsigned int buf_size = 2*B * (gmy + gmz - 2*B);
+  unsigned int buf_size_2 = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
+  int n_threads = buf_size * (me - mb) * mflds->nr_patches;
+
+  dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
+  dim3 dimBlock(THREADS_PER_BLOCK);
     
-    dim3 dimGrid((n_threads + (THREADS_PER_BLOCK - 1)) / THREADS_PER_BLOCK);
-    dim3 dimBlock(THREADS_PER_BLOCK);
-    
-    k_fields_device_pack_yz<B, pack> <<<dimGrid, dimBlock>>>
-      (flds_cuda->d_bnd_buf, flds_cuda->d_flds + mb * size, gmy, gmz, me - mb);
-    cuda_sync_if_enabled();
-  }
+  float *d_bnd_buf = mflds_cuda->d_bnd_buf;
+  float *d_flds = mflds_cuda->d_flds + mb * size;
+  k_fields_device_pack_yz<B, pack> <<<dimGrid, dimBlock>>>
+    (d_bnd_buf, d_flds, gmy, gmz, me - mb, mflds->nr_patches,
+     MAX_BND_COMPONENTS * buf_size_2, mflds->nr_fields * size);
+  cuda_sync_if_enabled();
 }
 
 // ======================================================================
@@ -400,7 +406,7 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
   int gmy = flds0->im[1], gmz = flds0->im[2];
-  unsigned int buf_size = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
+  unsigned int buf_size_2 = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(flds0->ib[1] == -BND);
   assert(flds0->im[1] >= 2 * B);
@@ -412,7 +418,7 @@ __fields_cuda_from_device_yz(struct psc_mfields *mflds, int mb, int me)
   
   prof_start(pr2);
   check(cudaMemcpy(mflds_cuda->h_bnd_buf, mflds_cuda->d_bnd_buf,
-		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		   MAX_BND_COMPONENTS * buf_size_2 * mflds->nr_patches *
 		   sizeof(*mflds_cuda->h_bnd_buf),
 		   cudaMemcpyDeviceToHost));
   prof_stop(pr2);
@@ -436,7 +442,7 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
   struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
   int gmy = flds0->im[1], gmz = flds0->im[2];
-  unsigned int buf_size = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
+  unsigned int buf_size_2 = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
   assert(me - mb <= MAX_BND_COMPONENTS);
   assert(flds0->ib[1] == -BND);
   assert(flds0->im[1] >= 2 * B);
@@ -448,7 +454,7 @@ __fields_cuda_to_device_yz(struct psc_mfields *mflds, int mb, int me)
 
   prof_start(pr2);
   check(cudaMemcpy(mflds_cuda->d_bnd_buf, mflds_cuda->h_bnd_buf,
-		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches *
+		   MAX_BND_COMPONENTS * buf_size_2 * mflds->nr_patches *
 		   sizeof(*mflds_cuda->d_bnd_buf),
 		   cudaMemcpyHostToDevice));
   prof_stop(pr2);
