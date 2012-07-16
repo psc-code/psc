@@ -188,8 +188,6 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
 		   MAX_BND_COMPONENTS * buf_size * mflds->nr_patches * sizeof(float)));
   mflds_cuda->h_bnd_buf = new float[MAX_BND_COMPONENTS * mflds->nr_patches * buf_size];
   float *d_flds = mflds_cuda->d_flds;
-  float *d_bnd_buf = mflds_cuda->d_bnd_buf;
-  float *h_bnd_buf = mflds_cuda->h_bnd_buf;
 
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -201,13 +199,6 @@ __psc_mfields_cuda_setup(struct psc_mfields *mflds)
     assert(d_flds == mflds_cuda->d_flds + p * flds->nr_comp * size);
     d_flds += flds->nr_comp * size;
     
-    if (buf_size) {
-      flds_cuda->h_bnd_buf = h_bnd_buf;
-      flds_cuda->d_bnd_buf = d_bnd_buf;
-      h_bnd_buf += MAX_BND_COMPONENTS * buf_size;
-      d_bnd_buf += MAX_BND_COMPONENTS * buf_size;
-    }
-
     struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
     int sz = 1;
     for (int d = 0; d < 3; d++) {
@@ -361,11 +352,16 @@ template<int B, int what>
 static void
 fields_host_pack_yz(struct psc_mfields *mflds, int mb, int me)
 {
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+  struct psc_fields *flds0 = psc_mfields_get_patch(mflds, 0);
+  int gmy = flds0->im[1], gmz = flds0->im[2];
+  unsigned int buf_size_2 = 2*(2*BND) * (gmy + gmz - 2*(2*BND));
+
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
     struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
     struct psc_fields_cuda_bnd *cf = &flds_cuda->bnd;
-    real *h_buf = flds_cuda->h_bnd_buf;
+    real *h_buf = mflds_cuda->h_bnd_buf + p * buf_size_2 * MAX_BND_COMPONENTS;
     
     int gmy = cf->im[1], gmz = cf->im[2];
     int tid = 0;

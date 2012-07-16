@@ -18,7 +18,6 @@ struct psc_fields_cuda_bnd {
 
 struct psc_fields_cuda {
   fields_cuda_real_t *d_flds;
-  fields_cuda_real_t *d_bnd_buf, *h_bnd_buf;
   struct psc_fields_cuda_bnd bnd;
 };
 
