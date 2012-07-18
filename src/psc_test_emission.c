@@ -3,6 +3,8 @@
 #include <psc_push_fields.h>
 #include <psc_push_particles.h>
 #include <psc_bnd.h>
+#include <psc_bnd_particles.h>
+#include <psc_bnd_photons.h>
 #include <psc_particles_as_c.h>
 
 #include <mrc_params.h>
@@ -55,7 +57,7 @@ static void
 psc_photon_test_init_npt(struct psc *psc, int kind, double x[3],
 			 struct psc_particle_npt *npt)
 {
-  double *dx = psc->dx;
+  double *dx = psc->patch[0].dx;
   double xc[3];
   for (int d = 0; d < 3; d++) {
     xc[d] = psc->domain.length[d] / 2. / psc->coeff.ld;
@@ -121,10 +123,10 @@ psc_photon_test_step(struct psc *psc)
   
   // particle propagation n*dt -> (n+1.0)*dt
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   
   psc_push_photons_run(psc->mphotons);
-  psc_bnd_exchange_photons(psc->bnd, psc->mphotons);
+  psc_bnd_photons_exchange(psc->bnd_photons, psc->mphotons);
   
   psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
   psc_bnd_fill_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);

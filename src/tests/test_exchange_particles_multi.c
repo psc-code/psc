@@ -1,6 +1,6 @@
 
 #include "psc_testing.h"
-#include "psc_bnd.h"
+#include "psc_bnd_particles.h"
 #include "psc_particles_as_c.h"
 #include <mrc_profile.h>
 #include <mrc_params.h>
@@ -34,16 +34,16 @@ psc_test_setup_particles(struct psc *psc, int *nr_particles_by_patch, bool count
 	      p = particles_get_one(pp, i);
 	      memset(p, 0, sizeof(*p));
 	      p->qni = -1.; p->mni = 1.; p->wni = 1.;
-	      p->xi = (ix + .5) * ppsc->dx[0];
-	      p->yi = (iy + .5) * ppsc->dx[1];
-	      p->zi = (iz + .5) * ppsc->dx[2];
+	      p->xi = (ix + .5) * patch->dx[0];
+	      p->yi = (iy + .5) * patch->dx[1];
+	      p->zi = (iz + .5) * patch->dx[2];
 	      
 	      p = particles_get_one(pp, i + 1);
 	      memset(p, 0, sizeof(*p));
 	      p->qni = 1.; p->mni = 100.; p->wni = 1.;
-	      p->xi = (ix + .5) * ppsc->dx[0];
-	      p->yi = (iy + .5) * ppsc->dx[1];
-	      p->zi = (iz + .5) * ppsc->dx[2];
+	      p->xi = (ix + .5) * patch->dx[0];
+	      p->yi = (iy + .5) * patch->dx[1];
+	      p->zi = (iz + .5) * patch->dx[2];
 	    }
 	    i += 2;
 	  }
@@ -95,7 +95,7 @@ main(int argc, char **argv)
     psc_dump_particles(psc->particles, "part-0");
   }
   int total_num_particles_before = get_total_num_particles(psc->particles);
-  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   if (opt_testing_dump) {
     psc_dump_particles(psc->particles, "part-1");
   }

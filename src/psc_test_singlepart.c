@@ -83,12 +83,13 @@ psc_test_singlepart_init_npt(struct psc *psc, int kind, double x[3],
     loc[d] = singlepart->loc[d] / psc->coeff.ld;
   }
   real dens = 0.;
+  double *dx = psc->patch[0].dx;
   if ((psc->domain.gdims[0] == 1 ||
-       (int) (x[0] / psc->dx[0] + .5) == (int) (loc[0] / psc->dx[0] + .5)) && 
+       (int) (x[0] / dx[0] + .5) == (int) (loc[0] / dx[0] + .5)) && 
       (psc->domain.gdims[1] == 1 ||
-       (int) (x[1] / psc->dx[1] + .5) == (int) (loc[1] / psc->dx[1] + .5)) && 
+       (int) (x[1] / dx[1] + .5) == (int) (loc[1] / dx[1] + .5)) && 
       (psc->domain.gdims[2] == 1 ||
-       (int) (x[2] / psc->dx[2] + .5) == (int) (loc[2] / psc->dx[2] + .5))) {
+       (int) (x[2] / dx[2] + .5) == (int) (loc[2] / dx[2] + .5))) {
     dens = 1.;
   }
 

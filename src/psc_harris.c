@@ -126,7 +126,8 @@ psc_harris_setup(struct psc *psc)
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "dt = %g, dy = %g dz = %g\n", psc->dt, psc->dx[1], psc->dx[2]);
+  mpi_printf(comm, "dt = %g, dy = %g dz = %g\n", psc->dt,
+	     psc->patch[0].dx[1], psc->patch[0].dx[2]);
   mpi_printf(comm, "d_e = %g, d_i = %g\n", 1., d_i);
   mpi_printf(comm, "v_A = %g\n", harris->B0 / sqrt(harris->mi_over_me));
   mpi_printf(comm, "om_ci = %g om_ce = %g\n", harris->B0 / harris->mi_over_me,

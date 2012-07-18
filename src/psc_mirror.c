@@ -53,8 +53,9 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   double HZ0 = B0;
   //  double HZ0 = B0 * cos(mirror->theta_0);
 
-  double fac = psc->dx[0] * psc->dx[1] * psc->dx[2];
   psc_foreach_patch(psc, p) {
+    struct psc_patch *patch = &psc->patch[p];
+    double fac = patch->dx[0] * patch->dx[1] * patch->dx[2];
     struct psc_fields *pf_base = psc_mfields_get_patch(psc->flds, p);
     struct psc_fields *pf = psc_fields_get_as(pf_base, "c", HX, HX + 3);
     psc_foreach_3d(psc, p, ix, iy, iz, 0, 0) {

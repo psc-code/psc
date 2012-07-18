@@ -5,6 +5,7 @@
 #include "psc_fields_as_c.h"
 #include "psc_push_particles.h"
 #include "psc_bnd.h"
+#include "psc_bnd_particles.h"
 #include "psc_randomize.h"
 #include "psc_output_fields_item.h"
 
@@ -298,15 +299,15 @@ psc_check_particles_sorted(struct psc *psc, mparticles_base_t *particles_base)
 {
   int last = INT_MIN;
 
-  particle_real_t dxi = 1.f / psc->dx[0];
-  particle_real_t dyi = 1.f / psc->dx[1];
-  particle_real_t dzi = 1.f / psc->dx[2];
-
   int *ibn = psc->ibn;
   psc_foreach_patch(psc, p) {
     struct psc_patch *patch = &psc->patch[p];
     struct psc_particles *prts_base = psc_mparticles_get_patch(particles_base, p);
     struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+
+    particle_real_t dxi = 1.f / patch->dx[0];
+    particle_real_t dyi = 1.f / patch->dx[1];
+    particle_real_t dzi = 1.f / patch->dx[2];
 
     int *ldims = patch->ldims;
     for (int n = 0; n < prts->n_part; n++) {
@@ -387,13 +388,13 @@ psc_testing_push_particles(struct psc *psc, const char *s_push_particles)
   }
 
   psc_randomize_run(psc->randomize, psc->particles);
-  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
 
   psc_testing_dump(psc, s_push_particles);
 
   psc_push_particles_run(psc->push_particles, psc->particles, psc->flds);
-  psc_bnd_exchange_particles(psc->bnd, psc->particles);
+  psc_bnd_particles_exchange(psc->bnd_particles, psc->particles);
   psc_sort_run(psc->sort, psc->particles);
   psc_bnd_add_ghosts(psc->bnd, psc->flds, JXI, JXI + 3);
 

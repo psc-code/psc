@@ -106,7 +106,7 @@ psc_bohm_setup(struct psc *psc)
 
   psc_setup_super(psc);
 
-  printf("lambda_de=%g(%g) dz=%g\n", sqrt(bohm->Te_), lde, psc->dx[2]);
+  printf("lambda_de=%g(%g) dz=%g\n", sqrt(bohm->Te_), lde, psc->patch[0].dx[2]);
   printf("v_te=%g(%g)\n", vte/C, vte);
   printf("v_ti=%g(%g)\n", vti/C, vti);
   printf("cs=%g(%g)\n", cs/C, cs);
