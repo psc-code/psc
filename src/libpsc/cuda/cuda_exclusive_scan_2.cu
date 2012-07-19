@@ -223,6 +223,14 @@ cuda_mprts_scan_send_buf_total(struct psc_mparticles *mprts)
       <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
       (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
        mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
+  } else if (b_mx[0] == 1 && b_mx[1] == 64 && b_mx[2] == 64) {
+    ScanScatterDigits4<K, V, 0, RADIX_BITS, 0,
+		       NopFunctor<K>,
+		       NopFunctor<K>,
+		       64, 64> 
+      <<<nr_total_blocks, B40C_RADIXSORT_THREADS>>>
+      (mprts_cuda->d_bnd_spine_sums, mprts_cuda->d_bidx,
+       mprts_cuda->d_ids, mprts_cuda->d_off, nr_total_blocks);
   } else {
     mprintf("no support for b_mx %d x %d x %d!\n", b_mx[0], b_mx[1], b_mx[2]);
     assert(0);
