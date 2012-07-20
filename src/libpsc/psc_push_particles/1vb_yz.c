@@ -95,7 +95,11 @@ do_push_part_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
       first_dir = 0;
     } else {
       dx1[0] = .5f * idiff[0] - x[0];
+     if (dx[0] == 0.f) {
+      dx1[1] = 0.f;
+     } else {
       dx1[1] = dx[1] / dx[0] * dx1[0];
+     }
       if (particle_real_abs(x[1] + dx1[1]) > .5f) {
 	first_dir = 1;
       } else {
@@ -196,7 +200,11 @@ do_calc_j_1vb_yz(struct psc_fields *pf, struct psc_particles *pp)
       first_dir = 0;
     } else {
       dx1[0] = .5f * idiff[0] - x[0];
+     if (dx[0] == 0.f) {
+      dx1[1] = 0.f;
+     } else {
       dx1[1] = dx[1] / dx[0] * dx1[0];
+     }
       if (particle_real_abs(x[1] + dx1[1]) > .5f) {
 	first_dir = 1;
       } else {

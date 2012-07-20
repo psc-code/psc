@@ -102,10 +102,18 @@ calc_dx1(particle_real_t dx1[2], particle_real_t x[2], particle_real_t dx[2], in
 {
   if (off[1] == 0) {
     dx1[0] = .5f * off[0] - x[0];
+   if (dx[0] == 0.f) {
+    dx1[1] = 0.f;
+   } else {
     dx1[1] = dx[1] / dx[0] * dx1[0];
+   }
   } else {
     dx1[1] = .5f * off[1] - x[1];
+   if (dx[1] == 0.f) {
+    dx1[0] = 0.f;
+   } else {
     dx1[0] = dx[0] / dx[1] * dx1[1];
+   }
   }
 }
 
