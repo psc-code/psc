@@ -32,7 +32,9 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_c_t *flds)
     struct psc_fields *pf = psc_mfields_get_patch(flds, p);
     struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
     mrc_m3_foreach(m3p, ix,iy,iz, 0,0) {
-      MRC_M3(m3p,0, ix,iy,iz) = F3_C(pf,0, ix,iy,iz);
+      for (int m = 0; m < flds->nr_fields; m++) {
+	MRC_M3(m3p,m, ix,iy,iz) = F3_C(pf,m, ix,iy,iz);
+      }
     } mrc_m3_foreach_end;
     mrc_m3_patch_put(m3);
   }
