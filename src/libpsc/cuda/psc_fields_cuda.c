@@ -74,34 +74,6 @@ psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
   ierr = H5Gclose(group); CE;
 }
 
-// ----------------------------------------------------------------------
-// psc_fields_cuda_read
-
-static void
-psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io)
-{
-  int ierr;
-  long h5_file;
-  mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
-  int ib[3], im[3], nr_comp;
-  ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
-  ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
-  ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
-  ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
-  for (int d = 0; d < 3; d++) {
-    assert(ib[d] == flds->ib[d]);
-    assert(im[d] == flds->im[d]);
-  }
-  assert(nr_comp == flds->nr_comp);
-  psc_fields_setup(flds);
-  float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
-  ierr = H5LTread_dataset_float(group, "fields_cuda", h_flds); CE;
-  __fields_cuda_to_device(flds, h_flds, 0, flds->nr_comp);
-  free(h_flds);
-  ierr = H5Gclose(group); CE;
-}
-
 #endif
 
 // ======================================================================
@@ -210,7 +182,6 @@ struct psc_fields_ops psc_fields_cuda_ops = {
   .size                  = sizeof(struct psc_fields_cuda),
   .methods               = psc_fields_cuda_methods,
 #ifdef HAVE_LIBHDF5_HL
-  .read                  = psc_fields_cuda_read,
   .write                 = psc_fields_cuda_write,
 #endif
 };
@@ -236,6 +207,70 @@ psc_mfields_cuda_destroy(struct psc_mfields *mflds)
   __psc_mfields_cuda_destroy(mflds);
 }
 
+#ifdef HAVE_LIBHDF5_HL
+
+// FIXME, it'd be nicer to have this a psc_fields::cuda::read() method,
+// but it would need to know the parent to ask for the allocated memory,
+// or something...
+
+// ----------------------------------------------------------------------
+// psc_fields_cuda_read
+
+static void
+psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io)
+{
+  int ierr;
+  long h5_file;
+  mrc_io_get_h5_file(io, &h5_file);
+  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  int ib[3], im[3], nr_comp;
+  ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
+  ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
+  ierr = H5LTget_attribute_int(group, ".", "im", im); CE;
+  ierr = H5LTget_attribute_int(group, ".", "nr_comp", &nr_comp); CE;
+  for (int d = 0; d < 3; d++) {
+    assert(ib[d] == flds->ib[d]);
+    assert(im[d] == flds->im[d]);
+  }
+  assert(nr_comp == flds->nr_comp);
+  //  psc_fields_setup(flds);
+  float *h_flds = malloc(flds->nr_comp * psc_fields_size(flds) * sizeof(*h_flds));
+  ierr = H5LTread_dataset_float(group, "fields_cuda", h_flds); CE;
+  __fields_cuda_to_device(flds, h_flds, 0, flds->nr_comp);
+  free(h_flds);
+  ierr = H5Gclose(group); CE;
+}
+
+// ----------------------------------------------------------------------
+// psc_mfields_cuda_read
+
+static void
+psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
+{
+  const char *path = psc_mfields_name(mflds);
+  mflds->domain = (struct mrc_domain *)
+    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
+
+  mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
+  for (int m = 0; m < mflds->nr_fields; m++) {
+    char name[20]; sprintf(name, "comp_name_%d", m);
+    char *s;
+    mrc_io_read_attr_string(io, path, name, &s);
+    if (s) {
+      psc_mfields_set_comp_name(mflds, m, s);
+    }
+  }
+
+  psc_mfields_cuda_setup(mflds);
+
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    psc_fields_cuda_read(mflds->flds[p], io);
+  }
+}
+
+#endif
+
 // ======================================================================
 // psc_mfields: subclass "cuda"
   
@@ -244,5 +279,8 @@ struct psc_mfields_ops psc_mfields_cuda_ops = {
   .size                  = sizeof(struct psc_mfields_cuda),
   .setup                 = psc_mfields_cuda_setup,
   .destroy               = psc_mfields_cuda_destroy,
+#ifdef HAVE_LIBHDF5_HL
+  .read                  = psc_mfields_cuda_read,
+#endif
 };
 
