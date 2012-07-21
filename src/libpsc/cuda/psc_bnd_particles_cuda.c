@@ -210,7 +210,7 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
   psc_mparticles_cuda_copy_to_dev(mprts);
 
   prof_start(pr_A);
-  cuda_mprts_find_block_keys(mprts);
+  //cuda_mprts_find_block_keys(mprts);
   prof_stop(pr_A);
   
   prof_start(pr_B0);

@@ -608,7 +608,7 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
 	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 	     struct cuda_params prm, int nr_total_blocks, int p_nr,
-	     unsigned int *d_bidx)
+	     unsigned int *d_bidx, int bid)
 {
   struct d_particle p;
 
@@ -630,16 +630,21 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(&p, vxi, prm.dt);
     STORE_PARTICLE_POS_(p, d_xi4, i);
-#if 0
+#if 1
     {
       unsigned int block_pos_y = __float2int_rd(p.xi[1] * prm.b_dxi[1]);
       unsigned int block_pos_z = __float2int_rd(p.xi[2] * prm.b_dxi[2]);
+      int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
       int block_idx;
       if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-	block_idx = nr_total_blocks;
+	block_idx = CUDA_BND_S_OOB;
       } else {
-	block_idx = (p_nr * prm.b_mx[2] + block_pos_z) * prm.b_mx[1] + block_pos_y;
+	int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+	int b_diff = bid - bidx + prm.b_mx[1] + 1;
+	int d1 = b_diff % prm.b_mx[1];
+	int d2 = b_diff / prm.b_mx[1];
+	block_idx = d2 * 3 + d1;
       }
       d_bidx[i] = block_idx;
     }
@@ -753,7 +758,7 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 
   for (int i = block_begin + tid; i < s_block_end; i += THREADS_PER_BLOCK) {
     yz_calc_jx(i, d_xi4, d_pxi4, scurr_x, prm);
-    yz_calc_jyjz(i, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx);
+    yz_calc_jyjz(i, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
   }
   
   if (do_write) {
