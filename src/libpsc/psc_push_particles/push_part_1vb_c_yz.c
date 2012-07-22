@@ -10,6 +10,7 @@
 
 #define F3_CURR F3_C
 #define F3_CACHE F3_C
+#define F3_CACHE_TYPE "c"
 
 #include "c_common_push.c"
 

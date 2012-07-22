@@ -150,7 +150,7 @@ cache_fields_from_em(fields_t *pf)
   psc_fields_set_param_int3(fld, "im", (int[3]) { 1,
 	pf->im[1] + 2 * pf->ib[1] + 4, pf->im[2] + 2 * pf->ib[2] + 4});
   psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
-  psc_fields_set_type(fld, "single");
+  psc_fields_set_type(fld, F3_CACHE_TYPE);
   psc_fields_setup(fld);
   for (int iz = fld->ib[2]; iz < fld->ib[2] + fld->im[2]; iz++) {
     for (int iy = fld->ib[1]; iy < fld->ib[1] + fld->im[1]; iy++) {
