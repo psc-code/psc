@@ -563,25 +563,37 @@ yz_calc_jx(int i, float4 *d_xi4, float4 *d_pxi4,
 __device__ static void
 calc_dx1(real dx1[2], real x[2], real dx[2], int off[2])
 {
-  if (off[1] == 0) {
-    dx1[0] = .5f * off[0] - x[0];
-    if (dx[0] != 0.f)
-      dx1[1] = dx[1] / dx[0] * dx1[0];
-    else
-      dx1[1] = 0.f;
+  real o0, x0, dx_0, dx_1, v0, v1;
+  if (off[0] == 0) {
+    o0 = off[1];
+    x0 = x[1];
+    dx_0 = dx[1];
+    dx_1 = dx[0];
   } else {
-    dx1[1] = .5f * off[1] - x[1];
-    if (dx[1] != 0.f)
-      dx1[0] = dx[0] / dx[1] * dx1[1];
-    else
-      dx1[0] = 0.f;
+    o0 = off[0];
+    x0 = x[0];
+    dx_0 = dx[0];
+    dx_1 = dx[1];
+  }
+  if ((off[0] == 0 && off[1] == 0) || dx_0 == 0.f) {
+    v0 = 0.f;
+    v1 = 0.f;
+  } else {
+    v0 = .5f * o0 - x0;
+    v1 = dx_1 / dx_0 * v0;
+  }
+  if (off[0] == 0) {
+    dx1[0] = v1;
+    dx1[1] = v0;
+  } else {
+    dx1[0] = v0;
+    dx1[1] = v1;
   }
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
-		real dxt[2], int off[2],
 		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
 		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 		struct cuda_params prm)
@@ -592,14 +604,17 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
   current_add(scurr_y, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
   current_add(scurr_z, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
   current_add(scurr_z, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
-  if (dxt) {
-    dxt[0] -= dx[0];
-    dxt[1] -= dx[1];
-    x[0] += dx[0] - off[0];
-    x[1] += dx[1] - off[1];
-    i[0] += off[0];
-    i[1] += off[1];
-  }
+}
+
+__device__ static void
+curr_2d_vb_cell_upd(int i[2], real x[2], real dx1[2], real dx[2], int off[2])
+{
+  dx[0] -= dx1[0];
+  dx[1] -= dx1[1];
+  x[0] += dx1[0] - off[0];
+  x[1] += dx1[1] - off[1];
+  i[0] += off[0];
+  i[1] += off[1];
 }
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
@@ -656,8 +671,7 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
     real x[2] = { xm[1] - (j[1] + real(.5)), xm[2] - (j[2] + real(.5)) };
     int i[2] = { j[1] - ci0[1], j[2] - ci0[2] };
   
-    int off[2];
-    int first_dir, second_dir = -1;
+    int first_dir;
     // FIXME, make sure we never div-by-zero?
     if (idiff[0] == 0 && idiff[1] == 0) {
       first_dir = -1;
@@ -674,31 +688,28 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
       } else {
 	first_dir = 0;
       }
-      second_dir = 1 - first_dir;
     }
     
-    if (first_dir >= 0) {
-      if (first_dir == 0) {
-	off[0] = idiff[0];
-	off[1] = 0;
-      } else {
-	off[0] = 0;
-	off[1] = idiff[1];
-      }
-      real dx1[2];
-      calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(i, x, dx1, p.qni_wni, dx, off, scurr_y, scurr_z, prm);
+    int off[2];
+    if (first_dir == 0) {
+      off[0] = idiff[0];
+      off[1] = 0;
+    } else {
+      off[0] = 0;
+      off[1] = idiff[1];
     }
+    real dx1[2];
+    calc_dx1(dx1, x, dx, off);
+    curr_2d_vb_cell(i, x, dx1, p.qni_wni, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell_upd(i, x, dx1, dx, off);
     
-    if (second_dir >= 0) {
-      off[0] = idiff[0] - off[0];
-      off[1] = idiff[1] - off[1];
-      real dx1[2];
-      calc_dx1(dx1, x, dx, off);
-      curr_2d_vb_cell(i, x, dx1, p.qni_wni, dx, off, scurr_y, scurr_z, prm);
-    }
+    off[0] = idiff[0] - off[0];
+    off[1] = idiff[1] - off[1];
+    calc_dx1(dx1, x, dx, off);
+    curr_2d_vb_cell(i, x, dx1, p.qni_wni, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell_upd(i, x, dx1, dx, off);
     
-    curr_2d_vb_cell(i, x, dx, p.qni_wni, NULL, NULL, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell(i, x, dx, p.qni_wni, scurr_y, scurr_z, prm);
   }
 }
 
