@@ -598,12 +598,16 @@ curr_2d_vb_cell(int i[2], real x[2], real dx[2], real qni_wni,
 		SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 		struct cuda_params prm)
 {
-  real fnqy = qni_wni * prm.fnqys;
-  real fnqz = qni_wni * prm.fnqzs;
-  current_add(scurr_y, i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
-  current_add(scurr_y, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
-  current_add(scurr_z, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
-  current_add(scurr_z, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
+  if (dx[0] != 0.f) {
+    real fnqy = qni_wni * prm.fnqys;
+    current_add(scurr_y, i[0],i[1]  , fnqy * dx[0] * (.5f - x[1] - .5f * dx[1]));
+    current_add(scurr_y, i[0],i[1]+1, fnqy * dx[0] * (.5f + x[1] + .5f * dx[1]));
+  }
+  if (dx[1] != 0.f) {
+    real fnqz = qni_wni * prm.fnqzs;
+    current_add(scurr_z, i[0],i[1]  , fnqz * dx[1] * (.5f - x[0] - .5f * dx[0]));
+    current_add(scurr_z, i[0]+1,i[1], fnqz * dx[1] * (.5f + x[0] + .5f * dx[0]));
+  }
 }
 
 __device__ static void
