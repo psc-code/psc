@@ -668,30 +668,15 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
     real dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
-    real x[2] = { xm[1] - (j[1] + real(.5)), xm[2] - (j[2] + real(.5)) };
+    real x[2] = { xm[1] - j[1] - real(.5), xm[2] - j[2] - real(.5) };
     int i[2] = { j[1] - ci0[1], j[2] - ci0[2] };
-  
-    int first_dir;
-    // FIXME, make sure we never div-by-zero?
-    if (idiff[0] == 0 && idiff[1] == 0) {
-      first_dir = -1;
-    } else if (idiff[0] == 0) {
-      first_dir = 1;
-    } else if (idiff[1] == 0) {
-      first_dir = 0;
-    } else {
-      real dx1[2];
-      dx1[0] = .5f * idiff[0] - x[0];
-      dx1[1] = dx[1] / dx[0] * dx1[0];
-      if (fabsf(x[1] + dx1[1]) > .5f) {
-	first_dir = 1;
-      } else {
-	first_dir = 0;
-      }
-    }
-    
+
+    real x0 = x[0] * idiff[0];
+    real x1 = x[1] * idiff[1];
+    int d_first = (abs(dx[1]) * (.5f - x0) >= abs(dx[0]) * (.5f - x1));
+
     int off[2];
-    if (first_dir == 0) {
+    if (d_first == 0) {
       off[0] = idiff[0];
       off[1] = 0;
     } else {
