@@ -27,6 +27,7 @@ libsubdir_la_SOURCES = \
 	psc_push_particles_single.c \
 	push_part_single_1vb_yz.c \
 	push_part_single2_1vb_yz.c \
+	push_part_single_1vbec_yz.c \
 	psc_push_particles_double.c \
 	push_part_double_1vb_yz.c \
 	psc_push_particles_1st.h \
@@ -41,4 +42,5 @@ endif USE_CUDA
 EXTRA_libsubdir_la_SOURCES = \
 	c_common_push.c \
 	1vb_yz.c \
-	1vb_yz_2.c
+	1vb_yz_2.c \
+	1vbec_yz.c
