@@ -38,9 +38,9 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
     creal u = part->xi * dxi;
     creal v = part->yi * dyi;
     creal w = part->zi * dzi;
-    int j1 = nint(u);
-    int j2 = nint(v);
-    int j3 = nint(w);
+    int j1 = particle_real_nint(u);
+    int j2 = particle_real_nint(v);
+    int j3 = particle_real_nint(w);
     creal h3 = j3-w;
 
     creal gmz=.5f*(.5f+h3)*(.5f+h3);
@@ -56,9 +56,9 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
     u = part->xi * dxi - .5f;
     v = part->yi * dyi;
     w = part->zi * dzi - .5f;
-    int l1=nint(u);
-    int l2=nint(v);
-    int l3=nint(w);
+    int l1=particle_real_nint(u);
+    int l2=particle_real_nint(v);
+    int l3=particle_real_nint(w);
     h3=l3-w;
     creal hmz=.5f*(.5f+h3)*(.5f+h3);
     creal h0z=.75f-h3*h3;
@@ -132,7 +132,7 @@ do_genc_push_part_z(int p, fields_t *pf, struct psc_particles *pp)
     creal zi = part->zi + vzi * zl;
 
     w = zi * dzi;
-    int k3 = nint(w);
+    int k3 = particle_real_nint(w);
     h3 = k3 - w;
 
     for (int i = -2; i <= 2; i++) {
@@ -236,7 +236,7 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
 
     int j1 = 0;
     int j2 = 0;
-    int j3 = nint(w);
+    int j3 = particle_real_nint(w);
     creal h3 = j3-w;
 
     // CHARGE DENSITY FORM FACTOR AT (n-.5)*dt 
@@ -250,7 +250,7 @@ do_genc_calc_j_z(int p, fields_t *pf, struct psc_particles *pp)
     zi = part->zi + vzi * zl;
 
     w = zi * dzi;
-    int k3 = nint(w);
+    int k3 = particle_real_nint(w);
     h3 = k3 - w;
 
     for (int i = -2; i <= 2; i++) {

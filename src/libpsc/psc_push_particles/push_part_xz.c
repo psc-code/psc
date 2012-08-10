@@ -41,8 +41,8 @@ do_genc_push_part_xz(int p, fields_t *pf, struct psc_particles *pp)
 
     creal u = part->xi * dxi;
     creal w = part->zi * dzi;
-    int lg1 = nint(u);
-    int lg3 = nint(w);
+    int lg1 = particle_real_nint(u);
+    int lg3 = particle_real_nint(w);
     creal h1 = lg1-u;
     creal h3 = lg3-w;
 
@@ -64,8 +64,8 @@ do_genc_push_part_xz(int p, fields_t *pf, struct psc_particles *pp)
 
     u = part->xi * dxi - .5f;
     w = part->zi * dzi - .5f;
-    int lh1 = nint(u);
-    int lh3 = nint(w);
+    int lh1 = particle_real_nint(u);
+    int lh3 = particle_real_nint(w);
     h1=lh1 - u;
     h3=lh3 - w;
     creal hmx=.5f*(.5f+h1)*(.5f+h1);
@@ -139,8 +139,8 @@ do_genc_push_part_xz(int p, fields_t *pf, struct psc_particles *pp)
 
     u = xi * dxi;
     w = zi * dzi;
-    int k1 = nint(u);
-    int k3 = nint(w);
+    int k1 = particle_real_nint(u);
+    int k3 = particle_real_nint(w);
     h1 = k1 - u;
     h3 = k3 - w;
 

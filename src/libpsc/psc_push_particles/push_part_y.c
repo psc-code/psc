@@ -34,7 +34,7 @@ do_genc_push_part_y(int p, fields_t *pf, struct psc_particles *pp)
     part->yi += vyi * yl;
 
     creal v = part->yi * dyi;
-    int j2 = nint(v);
+    int j2 = particle_real_nint(v);
     creal h2 = j2-v;
 
     creal gmy=.5f*(.5f+h2)*(.5f+h2);
@@ -48,7 +48,7 @@ do_genc_push_part_y(int p, fields_t *pf, struct psc_particles *pp)
     S0Y(+1) = .5f*(1.5f-creal_abs(h2+1.f))*(1.5f-creal_abs(h2+1.f));
 
     v = part->yi * dyi;
-    int l2=nint(v);
+    int l2=particle_real_nint(v);
     h2=l2-v;
     creal hmy=.5f*(.5f+h2)*(.5f+h2);
     creal h0y=.75f-h2*h2;
@@ -122,7 +122,7 @@ do_genc_push_part_y(int p, fields_t *pf, struct psc_particles *pp)
     creal yi = part->yi + vyi * yl;
 
     v = yi * dyi;
-    int k2 = nint(v);
+    int k2 = particle_real_nint(v);
     h2 = k2 - v;
 
     for (int i = -2; i <= 2; i++) {
