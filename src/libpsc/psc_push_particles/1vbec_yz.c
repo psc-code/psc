@@ -38,15 +38,28 @@ do_push_part_1vbec_yz(struct psc_fields *pf, struct psc_particles *pp)
 
     // FIELD INTERPOLATION
 
-    INTERPOLATE_SETUP_1ST;
+    INTERPOLATE_SETUP_1ST_EC;
 
-    particle_real_t exq = INTERPOLATE_FIELD_1ST_CACHE(EX, g, g);
-    particle_real_t eyq = INTERPOLATE_FIELD_1ST_CACHE(EY, h, g);
-    particle_real_t ezq = INTERPOLATE_FIELD_1ST_CACHE(EZ, g, h);
+    particle_real_t exq = 
+      (g0z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]  ) +
+	    g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]  )) +
+       g1z*(g0y*F3_CACHE(pf, EX, 0,lg[1]  ,lg[2]+1) +
+	    g1y*F3_CACHE(pf, EX, 0,lg[1]+1,lg[2]+1)));
+    particle_real_t eyq =
+      (g0z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]  ) +
+       g1z*F3_CACHE(pf, EY, 0,lg[1]  ,lg[2]+1));
+    particle_real_t ezq =
+      (g0y*F3_CACHE(pf, EZ, 0,lg[1]  ,lg[2]  ) +
+       g1y*F3_CACHE(pf, EZ, 0,lg[1]+1,lg[2]  ));
 
-    particle_real_t hxq = INTERPOLATE_FIELD_1ST_CACHE(HX, h, h);
-    particle_real_t hyq = INTERPOLATE_FIELD_1ST_CACHE(HY, g, h);
-    particle_real_t hzq = INTERPOLATE_FIELD_1ST_CACHE(HZ, h, g);
+    particle_real_t hxq =
+      F3_CACHE(pf, HX, 0,lg[1]  ,lg[2]  );
+    particle_real_t hyq =
+      (g0y*F3_CACHE(pf, HY, 0,lg[1]  ,lg[2]  ) +
+       g1y*F3_CACHE(pf, HY, 0,lg[1]+1,lg[2]  ));
+    particle_real_t hzq =
+      (g0z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]  ) +
+       g1z*F3_CACHE(pf, HZ, 0,lg[1]  ,lg[2]+1));
 
     // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
     particle_real_t dq = dq_kind[part->kind];
