@@ -23,7 +23,7 @@ struct psc_spitzer {
 
 #define VAR(x) (void *)offsetof(struct psc_spitzer, x)
 static struct param psc_spitzer_descr[] = {
-  { "nu_ei"           , VAR(nu_ei)           , PARAM_DOUBLE(.01)          },
+  { "nu_ei"           , VAR(nu_ei)           , PARAM_DOUBLE(1.)          },
 
   {},
 };
@@ -39,7 +39,7 @@ psc_spitzer_create(struct psc *psc)
   psc_default_dimensionless(psc);
 
   psc->prm.nmax = 16000;
-  psc->prm.nicell = 50;
+  psc->prm.nicell = 10000;
   psc->prm.cfl = 0.98;
 
   psc->domain.length[0] = 4.; // no x-dependence
@@ -65,9 +65,15 @@ psc_spitzer_create(struct psc *psc)
 
   // psc_moments_set_type(psc->moments, "c_1st_cc");
 
-  psc->kinds[KIND_ELECTRON].T = .1;
-  psc->kinds[KIND_ION].T = .1;
-  psc->kinds[KIND_ION].m = 25;
+  psc->kinds[KIND_ELECTRON].T = .0001;
+  psc->kinds[KIND_ION].T = .0001;
+  psc->kinds[KIND_ION].m = 1836;
+
+  psc_push_fields_set_type(psc->push_fields, "none");
+  psc_sort_set_type(psc->sort, "countsort2");
+  psc_collision_set_type(psc->collision, "c");
+  psc_sort_set_param_int(psc->sort, "every", 1);
+  psc_collision_set_param_int(psc->collision, "every", 1);
 }
 
 // ----------------------------------------------------------------------
@@ -84,6 +90,8 @@ psc_spitzer_setup(struct psc *psc)
   psc_collision_set_param_double(psc->collision, "nu", nu);
 
   psc_setup_super(psc);
+
+  psc->dt = .01;
 }
 
 // ----------------------------------------------------------------------
