@@ -231,7 +231,7 @@ calc_H_fc(struct psc_output_fields_item *item, struct psc_fields *flds_base,
 	  struct psc_particles *prts, struct psc_fields *f)
 {
   define_dxdydz(dx, dy, dz);
-  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, EX, EX + 3);
+  struct psc_fields *flds = psc_fields_get_as(flds_base, FIELDS_TYPE, HX, HX + 3);
   psc_foreach_3d(ppsc, f->p, ix, iy, iz, 0, 0) {
     F3(f, 0, ix,iy,iz) = F3(flds, HX, ix,iy,iz);
     F3(f, 1, ix,iy,iz) = F3(flds, HY, ix,iy,iz);
