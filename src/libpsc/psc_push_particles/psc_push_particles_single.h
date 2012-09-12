@@ -5,7 +5,7 @@
 #include "psc.h"
 
 #include "psc_particles_as_single.h"
-#include "psc_fields_as_c.h"
+#include "psc_fields_as_single.h"
 
 void psc_push_particles_1vb_single_push_a_yz(struct psc_push_particles *push,
 					     struct psc_particles *particles_base,
