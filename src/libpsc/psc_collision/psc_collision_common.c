@@ -486,7 +486,7 @@ psc_collision_sub_run(struct psc_collision *collision,
 
   prof_start(pr);
   
-  struct psc_particles *prts = psc_particles_get_as(prts_base, "c", 0);
+  struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   int *ldims = ppsc->patch[prts->p].ldims;
   int nr_cells = ldims[0] * ldims[1] * ldims[2];
