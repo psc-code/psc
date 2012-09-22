@@ -56,6 +56,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
   if (!io) {
     io = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_param_string(io, "basename", pfx);
+    mrc_io_set_param_string(io, "outdir",out->data_dir);
     mrc_io_set_from_options(io);
     mrc_io_setup(io);
     mrc_io_view(io);
