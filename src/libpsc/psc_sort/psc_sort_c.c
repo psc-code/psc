@@ -168,7 +168,7 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   prof_start(pr);
-  struct psc_particles_c *c = psc_particles_c(prts);
+  psc_particles_t *c = psc_particles_t(prts);
   find_cell_indices(prts->p, prts);
   qsort(c->particles, prts->n_part, sizeof(*c->particles), compare);
   prof_stop(pr);
@@ -200,7 +200,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
   prof_start(pr);
 
   struct psc_patch *patch = &ppsc->patch[prts->p];
-  struct psc_particles_c *c = psc_particles_c(prts);
+  psc_particles_t *c = psc_particles_t(prts);
   find_cell_indices(prts->p, prts);
     
   int N = 1;
