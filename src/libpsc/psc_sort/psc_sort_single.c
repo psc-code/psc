@@ -1,6 +1,6 @@
 
 #include "psc_sort_private.h"
-#include "psc_particles_as_c.h"
+#include "psc_particles_as_single.h"
 
 #include "psc_glue.h"
 #include <mrc_profile.h>
@@ -10,26 +10,26 @@
 #include <psc_sort_common.c>
 
 // ======================================================================
-// psc_sort: subclass "qsort"
+// psc_sort: subclass "qsort_single"
 
-struct psc_sort_ops psc_sort_qsort_ops = {
-  .name                  = "qsort",
+struct psc_sort_ops psc_sort_qsort_single_ops = {
+  .name                  = "qsort_single",
   .run                   = psc_sort_qsort_run,
 };
 
 // ======================================================================
-// psc_sort: subclass "countsort"
+// psc_sort: subclass "countsort_single"
 
-struct psc_sort_ops psc_sort_countsort_ops = {
-  .name                  = "countsort",
+struct psc_sort_ops psc_sort_countsort_single_ops = {
+  .name                  = "countsort_single",
   .run                   = psc_sort_countsort_run,
 };
 
 // ======================================================================
-// psc_sort: subclass "countsort2"
+// psc_sort: subclass "countsort2_single"
 
-struct psc_sort_ops psc_sort_countsort2_ops = {
-  .name                  = "countsort2",
+struct psc_sort_ops psc_sort_countsort2_single_ops = {
+  .name                  = "countsort2_single",
   .size                  = sizeof(struct psc_sort_countsort2),
   .param_descr           = psc_sort_countsort2_descr,
   .run                   = psc_sort_countsort2_run,

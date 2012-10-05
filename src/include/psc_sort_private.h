@@ -21,6 +21,9 @@ extern struct psc_sort_ops psc_sort_fortran_ops;
 extern struct psc_sort_ops psc_sort_qsort_ops;
 extern struct psc_sort_ops psc_sort_countsort_ops;
 extern struct psc_sort_ops psc_sort_countsort2_ops;
+extern struct psc_sort_ops psc_sort_qsort_single_ops;
+extern struct psc_sort_ops psc_sort_countsort_single_ops;
+extern struct psc_sort_ops psc_sort_countsort2_single_ops;
 
 #define psc_sort_ops(sort) ((struct psc_sort_ops *)((sort)->obj.ops))
 
