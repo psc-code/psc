@@ -125,7 +125,7 @@ psc_fields_c_write(struct psc_fields *flds, struct mrc_io *io)
   ierr = H5LTset_attribute_int(group, ".", "nr_comp", &flds->nr_comp, 1); CE;
   // write components separately instead?
   hsize_t hdims[4] = { flds->nr_comp, flds->im[2], flds->im[1], flds->im[0] };
-  ierr = H5LTmake_dataset_float(group, "fields_c", 4, hdims, flds->data); CE;
+  ierr = H5LTmake_dataset_double(group, "fields_c", 4, hdims, flds->data); CE;
   ierr = H5Gclose(group); CE;
 }
 
@@ -150,7 +150,7 @@ psc_fields_c_read(struct psc_fields *flds, struct mrc_io *io)
   }
   assert(nr_comp == flds->nr_comp);
   psc_fields_setup(flds);
-  ierr = H5LTread_dataset_float(group, "fields_c", flds->data); CE;
+  ierr = H5LTread_dataset_double(group, "fields_c", flds->data); CE;
   ierr = H5Gclose(group); CE;
 }
 
