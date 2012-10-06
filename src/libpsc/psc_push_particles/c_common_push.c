@@ -148,7 +148,7 @@ cache_fields_from_em(fields_t *pf)
   // FIXME, can do -1 .. 1?
   psc_fields_set_param_int3(fld, "ib", (int[3]) { 0, -2, -2 });
   psc_fields_set_param_int3(fld, "im", (int[3]) { 1,
-	pf->im[1] + 2 * pf->ib[1] + 4, pf->im[2] + 2 * pf->ib[2] + 4});
+	pf->im[1] + 2 * pf->ib[1] + 5, pf->im[2] + 2 * pf->ib[2] + 5});
   psc_fields_set_param_int(fld, "nr_comp", 9); // JX .. HZ
   psc_fields_set_type(fld, F3_CACHE_TYPE);
   psc_fields_setup(fld);
