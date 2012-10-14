@@ -298,7 +298,7 @@ static struct param psc_mparticles_descr[] = {
 #undef VAR
 
 struct mrc_class_psc_mparticles mrc_class_psc_mparticles = {
-  .name             = "psc_mparticles_c",
+  .name             = "psc_mparticles",
   .size             = sizeof(struct psc_mparticles),
   .param_descr      = psc_mparticles_descr,
   .init             = psc_mparticles_init,
