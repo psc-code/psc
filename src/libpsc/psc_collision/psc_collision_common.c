@@ -126,7 +126,7 @@ randomize_in_cell(struct psc_particles *prts, int n_start, int n_end)
 {
   int nn = n_end - n_start;
   for (int n = 0; n < nn - 1; n++) {
-    int n_partner = random() % (nn - n);
+    int n_partner = n + random() % (nn - n);
     if (n != n_partner) {
       // swap n, n_partner
       particle_t tmp = *particles_get_one(prts, n_start + n);
