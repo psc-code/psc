@@ -7,7 +7,6 @@
 typedef particle_single_real_t particle_real_t;
 typedef particle_single_t particle_t;
 typedef mparticles_single_t mparticles_t;
-typedef struct psc_particles_single psc_particles_t;
 
 #define psc_mparticles_get_cf       psc_mparticles_get_single
 #define psc_mparticles_put_cf       psc_mparticles_put_single
@@ -24,7 +23,6 @@ typedef struct psc_particles_single psc_particles_t;
 #define particle_real_fint          particle_single_real_fint
 #define particle_real_abs           particle_single_real_abs
 #define particle_real_sqrt          particle_single_real_sqrt
-#define psc_particles_t(prts)       psc_particles_single(prts)
 
 #define MPI_PARTICLES_REAL          MPI_PARTICLES_SINGLE_REAL
 #define PARTICLE_TYPE               "single"

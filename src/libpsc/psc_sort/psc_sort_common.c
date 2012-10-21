@@ -75,9 +75,9 @@ psc_sort_qsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
   struct psc_particles *prts = psc_particles_get_as(prts_base, PARTICLE_TYPE, 0);
 
   prof_start(pr);
-  psc_particles_t *c = psc_particles_t(prts);
   find_cell_indices(prts->p, prts);
-  qsort(c->particles, prts->n_part, sizeof(*c->particles), compare);
+  qsort(particles_get_one(prts, 0), prts->n_part,
+	sizeof(*particles_get_one(prts, 0)), compare);
   prof_stop(pr);
 
   psc_particles_put_as(prts, prts_base, 0);
@@ -99,7 +99,6 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
   prof_start(pr);
 
   struct psc_patch *patch = &ppsc->patch[prts->p];
-  psc_particles_t *c = psc_particles_t(prts);
   find_cell_indices(prts->p, prts);
     
   int N = 1;
@@ -111,7 +110,7 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
     
   // count
   for (int i = 0; i < prts->n_part; i++) {
-    unsigned int cni = get_cell_index(prts->p, &c->particles[i]);
+    unsigned int cni = get_cell_index(prts->p, particles_get_one(prts, i));
     assert(cni < N);
     cnts[cni]++;
   }
@@ -128,13 +127,13 @@ psc_sort_countsort_run(struct psc_sort *sort, struct psc_particles *prts_base)
   // move into new position
   particle_t *particles2 = malloc(prts->n_part * sizeof(*particles2));
   for (int i = 0; i < prts->n_part; i++) {
-    unsigned int cni = get_cell_index(0, &c->particles[i]);
-    memcpy(&particles2[cnts[cni]], &c->particles[i], sizeof(*particles2));
+    unsigned int cni = get_cell_index(0, particles_get_one(prts, i));
+    memcpy(&particles2[cnts[cni]], particles_get_one(prts, i), sizeof(*particles2));
     cnts[cni]++;
   }
     
   // back to in-place
-  memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
+  memcpy(particles_get_one(prts, 0), particles2, prts->n_part * sizeof(*particles2));
   
   free(particles2);
   free(cnts);
@@ -177,14 +176,13 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
 
   prof_start(pr);
   unsigned int mask = cs2->mask;
-  psc_particles_t *c = psc_particles_t(prts);
   struct psc_patch *patch = &ppsc->patch[prts->p];
   struct cell_map map;
   int N = cell_map_init(&map, patch->ldims, cs2->blocksize);
     
   unsigned int *cnis = malloc(prts->n_part * sizeof(*cnis));
   for (int i = 0; i < prts->n_part; i++) {
-    particle_t *p = &c->particles[i];
+    particle_t *p = particles_get_one(prts, 0);
     particle_real_t dxi = 1.f / patch->dx[0];
     particle_real_t dyi = 1.f / patch->dx[1];
     particle_real_t dzi = 1.f / patch->dx[2];
@@ -232,13 +230,13 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
     while (i+n < prts->n_part && cnis[i+n] == cni) {
       n++;
     }
-    memcpy(&particles2[cnts[cni]], &c->particles[i], n * sizeof(*particles2));
+    memcpy(&particles2[cnts[cni]], particles_get_one(prts, i), n * sizeof(*particles2));
     cnts[cni] += n;
     i += n - 1;
   }
   
   // back to in-place
-  memcpy(c->particles, particles2, prts->n_part * sizeof(*particles2));
+  memcpy(particles_get_one(prts, 0), particles2, prts->n_part * sizeof(*particles2));
   
   free(particles2);
   free(cnis);
