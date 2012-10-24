@@ -75,16 +75,13 @@ _psc_mphotons_destroy(mphotons_t *mphotons)
 static void
 _psc_mphotons_write(mphotons_t *mphotons, struct mrc_io *io)
 {
-  const char *path = psc_mphotons_name(mphotons);
-  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mphotons->domain);
+  mrc_io_write_ref(io, mphotons, "domain", mphotons->domain);
 }
 
 static void
 _psc_mphotons_read(mphotons_t *mphotons, struct mrc_io *io)
 {
-  const char *path = psc_mphotons_name(mphotons);
-  mphotons->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mphotons->domain = mrc_io_read_ref(io, mphotons, "domain", mrc_domain);
 
   // FIXME, need to actually write / read the data, too
   psc_mphotons_setup(mphotons);

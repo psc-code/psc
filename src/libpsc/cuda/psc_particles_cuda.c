@@ -117,7 +117,7 @@ psc_particles_cuda_read(struct psc_particles *prts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  hid_t group = H5Gopen(h5_file, psc_particles_name(prts), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTget_attribute_int(group, ".", "p", &prts->p); CE;
   ierr = H5LTget_attribute_int(group, ".", "n_part", &prts->n_part); CE;
   ierr = H5LTget_attribute_uint(group, ".", "flags", &prts->flags); CE;
@@ -442,11 +442,9 @@ psc_mparticles_cuda_destroy(struct psc_mparticles *mprts)
 static void
 psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
 {
-  const char *path = psc_mparticles_name(mprts);
-  mprts->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mprts->domain = mrc_io_read_ref(io, mprts, "domain", mrc_domain);
   mrc_domain_get_patches(mprts->domain, &mprts->nr_patches);
-  mrc_io_read_attr_int(io, path, "flags", (int *) &mprts->flags);
+  mrc_io_read_int(io, mprts, "flags", (int *) &mprts->flags);
   
   mprts->nr_particles_by_patch =
     calloc(mprts->nr_patches, sizeof(*mprts->nr_particles_by_patch));

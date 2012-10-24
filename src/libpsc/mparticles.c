@@ -58,30 +58,28 @@ _psc_mparticles_destroy(struct psc_mparticles *mparticles)
 static void
 _psc_mparticles_write(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
-  const char *path = psc_mparticles_name(mparticles);
-  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mparticles->domain);
-  mrc_io_write_attr_int(io, path, "flags", mparticles->flags);
+  mrc_io_write_ref(io, mparticles, "domain", mparticles->domain);
+  mrc_io_write_int(io, mparticles, "flags", mparticles->flags);
   
   for (int p = 0; p < mparticles->nr_patches; p++) {
-    psc_particles_write(mparticles->prts[p], io);
+    char name[20]; sprintf(name, "prts%d", p);
+    mrc_io_write_ref(io, mparticles, name, mparticles->prts[p]);
   }
 }
 
 static void
 _psc_mparticles_read(struct psc_mparticles *mparticles, struct mrc_io *io)
 {
-  const char *path = psc_mparticles_name(mparticles);
-  mparticles->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mparticles->domain = mrc_io_read_ref(io, mparticles, "domain", mrc_domain);
   mrc_domain_get_patches(mparticles->domain, &mparticles->nr_patches);
-  mrc_io_read_attr_int(io, path, "flags", (int *) &mparticles->flags);
+  mrc_io_read_int(io, mparticles, "flags", (int *) &mparticles->flags);
 
   mparticles->prts = calloc(mparticles->nr_patches, sizeof(*mparticles->prts));
   mparticles->nr_particles_by_patch =
     calloc(mparticles->nr_patches, sizeof(*mparticles->nr_particles_by_patch));
   for (int p = 0; p < mparticles->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
-    mparticles->prts[p] = psc_particles_read(io, name);
+    mparticles->prts[p] = mrc_io_read_ref(io, mparticles, name, psc_particles);
   }
 }
 

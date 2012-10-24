@@ -31,22 +31,19 @@ _mrc_crds_destroy(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  crds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_crds_name(crds), "domain", &mrc_class_mrc_domain);
+  crds->domain = mrc_io_read_ref(io, crds, "domain", mrc_domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
     for (int d = 0; d < 3; d++) {
       char s[6];
       sprintf(s, "mcrd%d", d);
-      crds->mcrd[d] = (struct mrc_m1 *)
-	mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_m1);
+      crds->mcrd[d] = mrc_io_read_ref(io, crds, s, mrc_m1);
     }
   } else {
     for (int d = 0; d < 3; d++) {
       char s[5];
       sprintf(s, "crd%d", d);
-      crds->crd[d] = (struct mrc_f1 *)
-	mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_f1);
+      crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_f1);
     }
   }
   mrc_crds_setup(crds);
@@ -55,13 +52,12 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  mrc_io_write_obj_ref(io, mrc_crds_name(crds), "domain",
-		       (struct mrc_obj *) crds->domain);
+  mrc_io_write_ref(io, crds, "domain", crds->domain);
   for (int d = 0; d < 3; d++) {
     if (crds->crd[d]) {
       char s[10];
       sprintf(s, "crd%d", d);
-      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->crd[d]);
+      mrc_io_write_ref(io, crds, s, crds->crd[d]);
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds));
@@ -115,7 +111,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
       }
       sprintf(s, "mcrd%d", d);
-      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
+      mrc_io_write_ref(io, crds, s, crds->mcrd[d]);
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
 	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);

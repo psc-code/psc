@@ -4,13 +4,18 @@
 ~/src/psc/src/psc_kelvin_helmholtz \
     --gdims_y 80 --gdims_z 80 \
     --npy 2 --npz 2 \
-    --nmax 50 \
+    --nmax 5 \
     --output_fields e,h,j,n,v \
     --write_tfield no \
-    --write_pfield yes --pfield_step 100 \
-    --write_checkpoint
+    --write_pfield yes --pfield_step 10 \
+    --write_checkpoint \
+    --psc_push_particles_type 1vb_c \
+    --psc_push_fields_type c \
+    --psc_bnd_fields_type c \
+    --psc_bnd_type c \
+    --psc_bnd_particles_type c
 
 ~/src/psc/src/psc_kelvin_helmholtz \
-    --from_checkpoint 50 --checkpoint_nmax 101 \
+    --from_checkpoint 5 --checkpoint_nmax 11 \
 
 

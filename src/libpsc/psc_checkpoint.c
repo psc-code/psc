@@ -19,7 +19,7 @@ psc_read_checkpoint(MPI_Comm comm, int n)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", n, 0.);
-  struct psc *psc = psc_read(io, "psc");
+  struct psc *psc = mrc_io_read_path(io, "checkpoint", "psc", psc);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -42,7 +42,7 @@ psc_write_checkpoint(struct psc *psc)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", psc->timestep, psc->timestep * psc->dt);
-  psc_write(psc, io);
+  mrc_io_write_path(io, "checkpoint", "psc", psc);
   mrc_io_close(io);
   mrc_io_destroy(io);
 }

@@ -24,36 +24,51 @@ mrc_io_ops(struct mrc_io *io)
 
 struct mrc_obj_entry {
   struct mrc_obj *obj;
+  char *path;
   list_t entry;
 };
 
 struct mrc_obj *
-mrc_io_find_obj(struct mrc_io *io, const char *name)
+mrc_io_find_obj(struct mrc_io *io, const char *path)
 {
   struct mrc_obj_entry *p;
   __list_for_each_entry(p, &io->obj_list, entry, struct mrc_obj_entry) {
-    if (strcmp(mrc_obj_name(p->obj), name) == 0) {
+    if (strcmp(p->path, path) == 0) {
       return p->obj;
     }
   }
   return NULL;
 }
 
-int
-mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj)
+const char *
+__mrc_io_obj_path(struct mrc_io *io, struct mrc_obj *obj)
 {
-  struct mrc_obj *obj2 = mrc_io_find_obj(io, mrc_obj_name(obj));
+  struct mrc_obj_entry *p;
+  __list_for_each_entry(p, &io->obj_list, entry, struct mrc_obj_entry) {
+    if (p->obj == obj) {
+      return p->path;
+    }
+  }
+  return NULL;
+}
+
+int
+mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj, const char *_path)
+{
+  char *path = strdup(_path);
+  struct mrc_obj *obj2 = mrc_io_find_obj(io, path);
   if (obj2) { // exists
-    if (obj->cls == obj2->cls && obj != obj2) { // FIXME
-      mprintf("!!! obj  %p '%s' (%s)\n", obj, mrc_obj_name(obj), obj->cls->name);
-      mprintf("!!! obj2 %p '%s' (%s)\n", obj2, mrc_obj_name(obj2), obj2->cls->name);
+    if (obj != obj2) {
+      mprintf("!!! obj  %p '%s' (%s)\n", obj, path, obj->cls->name);
+      mprintf("!!! obj2 %p '%s' (%s)\n", obj2, path, obj2->cls->name);
       assert(0);
     }
+    free(path);
     return 1;
   }
   struct mrc_obj_entry *p = malloc(sizeof(*p));
   p->obj = mrc_obj_get(obj);
-  //  mprintf("add obj %p %s\n", obj, mrc_obj_name(obj));
+  p->path = path;
   list_add_tail(&p->entry, &io->obj_list);
   return 0;
 }
@@ -96,6 +111,7 @@ mrc_io_close(struct mrc_io *io)
 					 entry);
     list_del(&p->entry);
     mrc_obj_put(p->obj);
+    free(p->path);
     free(p);
   }
   assert(ops->close);
@@ -491,10 +507,11 @@ mrc_io_get_h5_file(struct mrc_io *io, long *h5_file)
 }
 
 // ----------------------------------------------------------------------
+// __mrc_io_read_path
 
 struct mrc_obj *
-__mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
-		      struct mrc_class *class)
+__mrc_io_read_path(struct mrc_io *io, const char *path, const char *name,
+		   struct mrc_class *class)
 {
   char *s;
   mrc_io_read_attr_string(io, path, name, &s);
@@ -503,12 +520,41 @@ __mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
   return obj;
 }
 
-void
-mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
-		     struct mrc_obj *obj)
+// ----------------------------------------------------------------------
+// __mrc_io_read_ref
+
+struct mrc_obj *
+__mrc_io_read_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *name,
+		  struct mrc_class *class)
 {
-  mrc_io_write_attr_string(io, path, name, mrc_obj_name(obj));
+  char *s;
+  mrc_io_read_attr_string(io, mrc_io_obj_path(io, obj_parent), name, &s);
+  struct mrc_obj *obj = mrc_obj_read(io, s, class);
+  free(s);
+  return obj;
+}
+
+// ----------------------------------------------------------------------
+// __mrc_io_write_path
+
+void
+__mrc_io_write_path(struct mrc_io *io, const char *path, const char *name,
+		    struct mrc_obj *obj)
+{
   mrc_obj_write(obj, io);
+  mrc_io_write_attr_string(io, path, name, mrc_io_obj_path(io, obj));
+}
+
+// ----------------------------------------------------------------------
+// __mrc_io_write_ref
+
+void
+__mrc_io_write_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *name,
+		   struct mrc_obj *obj)
+{
+  mrc_obj_write(obj, io);
+  mrc_io_write_attr_string(io, mrc_io_obj_path(io, obj_parent), name,
+			   mrc_io_obj_path(io, obj));
 }
 
 // ======================================================================

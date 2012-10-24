@@ -24,8 +24,7 @@ _psc_bnd_particles_destroy(struct psc_bnd_particles *bnd)
 static void
 _psc_bnd_particles_write(struct psc_bnd_particles *bnd, struct mrc_io *io)
 {
-  const char *path = psc_bnd_particles_name(bnd);
-  mrc_io_write_obj_ref(io, path, "psc", (struct mrc_obj *) bnd->psc);
+  mrc_io_write_ref(io, bnd, "psc", bnd->psc);
 }
 
 // ----------------------------------------------------------------------
@@ -34,9 +33,7 @@ _psc_bnd_particles_write(struct psc_bnd_particles *bnd, struct mrc_io *io)
 static void
 _psc_bnd_particles_read(struct psc_bnd_particles *bnd, struct mrc_io *io)
 {
-  const char *path = psc_bnd_particles_name(bnd);
-  bnd->psc = (struct psc *)
-    mrc_io_read_obj_ref(io, path, "psc", &mrc_class_psc);
+  bnd->psc = mrc_io_read_ref(io, bnd, "psc", psc);
 
   psc_bnd_particles_setup(bnd);
 }

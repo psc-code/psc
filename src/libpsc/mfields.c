@@ -58,31 +58,29 @@ _psc_mfields_destroy(struct psc_mfields *flds)
 static void
 _psc_mfields_write(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  const char *path = psc_mfields_name(mflds);
-  mrc_io_write_obj_ref(io, path, "domain", (struct mrc_obj *) mflds->domain);
+  mrc_io_write_ref(io, mflds, "domain", mflds->domain);
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
-    mrc_io_write_attr_string(io, path, name, psc_mfields_comp_name(mflds, m));
+    mrc_io_write_string(io, mflds, name, psc_mfields_comp_name(mflds, m));
   }
 
   for (int p = 0; p < mflds->nr_patches; p++) {
-    psc_fields_write(mflds->flds[p], io);
+    char name[20]; sprintf(name, "flds%d", p);
+    mrc_io_write_ref(io, mflds, name, mflds->flds[p]);
   }
 }
 
 static void
 _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  const char *path = psc_mfields_name(mflds);
-  mflds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
   mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
 
   mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
     char *s;
-    mrc_io_read_attr_string(io, path, name, &s);
+    mrc_io_read_string(io, mflds, name, &s);
     if (s) {
       psc_mfields_set_comp_name(mflds, m, s);
     }
@@ -92,7 +90,7 @@ _psc_mfields_read(struct psc_mfields *mflds, struct mrc_io *io)
   mprintf("nr_p %d\n", mflds->nr_patches);
   for (int p = 0; p < mflds->nr_patches; p++) {
     char name[20]; sprintf(name, "flds%d", p);
-    mflds->flds[p] = psc_fields_read(io, name);
+    mflds->flds[p] = mrc_io_read_ref(io, mflds, name, psc_fields);
   }
   // FIXME mark as set up?
 }

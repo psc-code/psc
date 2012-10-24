@@ -217,9 +217,9 @@ static void
 psc_output_fields_c_write(struct psc_output_fields *out, struct mrc_io *io)
 {
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
-  const char *path = psc_output_fields_name(out);
-  mrc_io_write_attr_int(io, path, "pfield_next", out_c->pfield_next);
-  mrc_io_write_attr_int(io, path, "tfield_next", out_c->tfield_next);
+
+  mrc_io_write_int(io, out, "pfield_next", out_c->pfield_next);
+  mrc_io_write_int(io, out, "tfield_next", out_c->tfield_next);
 }
 
 // ----------------------------------------------------------------------
@@ -231,10 +231,8 @@ psc_output_fields_c_read(struct psc_output_fields *out, struct mrc_io *io)
   struct psc_output_fields_c *out_c = to_psc_output_fields_c(out);
 
   psc_output_fields_read_super(out, io);
-
-  const char *path = psc_output_fields_name(out);
-  mrc_io_read_attr_int(io, path, "pfield_next", &out_c->pfield_next);
-  mrc_io_read_attr_int(io, path, "tfield_next", &out_c->tfield_next);
+  mrc_io_read_int(io, out, "pfield_next", &out_c->pfield_next);
+  mrc_io_read_int(io, out, "tfield_next", &out_c->tfield_next);
 }
 
 // ----------------------------------------------------------------------

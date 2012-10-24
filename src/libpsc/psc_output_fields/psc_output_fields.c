@@ -15,8 +15,7 @@ psc_output_fields_set_psc(struct psc_output_fields *output_fields, struct psc *p
 static void
 _psc_output_fields_write(struct psc_output_fields *out, struct mrc_io *io)
 {
-  const char *path = psc_output_fields_name(out);
-  mrc_io_write_obj_ref(io, path, "psc", (struct mrc_obj *) out->psc);
+  mrc_io_write_ref(io, out, "psc", out->psc);
 }
 
 // ----------------------------------------------------------------------
@@ -25,9 +24,7 @@ _psc_output_fields_write(struct psc_output_fields *out, struct mrc_io *io)
 static void
 _psc_output_fields_read(struct psc_output_fields *out, struct mrc_io *io)
 {
-  const char *path = psc_output_fields_name(out);
-  out->psc = (struct psc *)
-    mrc_io_read_obj_ref(io, path, "psc", &mrc_class_psc);
+  out->psc = mrc_io_read_ref(io, out, "psc", psc);
 
   psc_output_fields_setup(out);
 }
