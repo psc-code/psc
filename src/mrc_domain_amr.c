@@ -457,14 +457,13 @@ mrc_domain_amr_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   int nr_global_patches;
   mrc_domain_amr_get_nr_global_patches(domain, &nr_global_patches);
-  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
-			nr_global_patches);
+  mrc_io_write_int(io, domain, "nr_global_patches", nr_global_patches);
 
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_amr_get_global_patch_info(domain, gp, &info);
-    char path[strlen(mrc_domain_name(domain)) + 10];
-    sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
+    char path[strlen(mrc_io_obj_path(io, domain)) + 10];
+    sprintf(path, "%s/p%d", mrc_io_obj_path(io, domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
     mrc_io_write_attr_int3(io, path, "idx3", info.idx3);

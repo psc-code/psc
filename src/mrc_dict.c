@@ -79,9 +79,10 @@ _mrc_dict_view(struct mrc_dict *dict)
 static void
 _mrc_dict_write(struct mrc_dict *dict, struct mrc_io *io)
 {
+  const char *path = mrc_io_obj_path(io, dict);
   struct mrc_dict_entry *p;
   __list_for_each_entry(p, &dict->list, entry, struct mrc_dict_entry) {
-    mrc_io_write_attr(io, mrc_dict_name(dict), p->type, p->name, &p->val);
+    mrc_io_write_attr(io, path, p->type, p->name, &p->val);
   }
 }
 

@@ -374,8 +374,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
-  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
-			nr_global_patches);
+  mrc_io_write_int(io, domain, "nr_global_patches", nr_global_patches);
 
   int mpi_size;
   MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
@@ -385,7 +384,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_multi_get_global_patch_info(domain, gp, &info);
-    sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
+    sprintf(path, "%s/p%d", mrc_io_obj_path(io, domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
     mrc_io_write_attr_int3(io, path, "idx3", info.idx3);
@@ -393,7 +392,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
     mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
 
     while (last_rank < info.rank) {
-      sprintf(path, "%s/rank_%d", mrc_domain_name(domain), last_rank);
+      sprintf(path, "%s/rank_%d", mrc_io_obj_path(io, domain), last_rank);
       mrc_io_write_attr_int(io, path, "nr_patches", nr_patches_in_rank);
       last_rank++;
       nr_patches_in_rank = 0;
@@ -401,7 +400,7 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
     nr_patches_in_rank++;
   }
   while (last_rank < mpi_size) {
-    sprintf(path, "%s/rank_%d", mrc_domain_name(domain), last_rank);
+    sprintf(path, "%s/rank_%d", mrc_io_obj_path(io, domain), last_rank);
     mrc_io_write_attr_int(io, path, "nr_patches", nr_patches_in_rank);
     last_rank++;
     nr_patches_in_rank = 0;
@@ -413,15 +412,15 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
-  
   // This isn't a collective value, so we better
   // don't take what's been read from the file
   int mpi_rank;
   MPI_Comm_rank(mrc_domain_comm(domain), &mpi_rank);
 
-  char path[strlen(mrc_domain_name(domain)) + 10];
-  sprintf(path, "%s/rank_%d", mrc_domain_name(domain), mpi_rank);
-  mrc_io_read_attr_int(io, path, "nr_patches", &multi->nr_patches);
+  const char *path = mrc_io_obj_path(io, domain);
+  char path2[strlen(path) + 10];
+  sprintf(path2, "%s/rank_%d", path, mpi_rank);
+  mrc_io_read_int(io, domain, "nr_patches", &multi->nr_patches);
 
   mrc_domain_read_super(domain, io);
 }
