@@ -60,7 +60,7 @@ psc_fields_cuda_write(struct psc_fields *flds, struct mrc_io *io)
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, flds), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTset_attribute_int(group, ".", "p", &flds->p, 1); CE;
   ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
   ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
@@ -222,7 +222,7 @@ psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io)
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, flds), H5P_DEFAULT); H5_CHK(group);
   int ib[3], im[3], nr_comp;
   ierr = H5LTget_attribute_int(group, ".", "p", &flds->p); CE;
   ierr = H5LTget_attribute_int(group, ".", "ib", ib); CE;
@@ -247,16 +247,14 @@ psc_fields_cuda_read(struct psc_fields *flds, struct mrc_io *io)
 static void
 psc_mfields_cuda_read(struct psc_mfields *mflds, struct mrc_io *io)
 {
-  const char *path = psc_mfields_name(mflds);
-  mflds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, path, "domain", &mrc_class_mrc_domain);
+  mflds->domain = mrc_io_read_ref(io, mflds, "domain", mrc_domain);
   mrc_domain_get_patches(mflds->domain, &mflds->nr_patches);
 
   mflds->comp_name = calloc(mflds->nr_fields, sizeof(*mflds->comp_name));
   for (int m = 0; m < mflds->nr_fields; m++) {
     char name[20]; sprintf(name, "comp_name_%d", m);
     char *s;
-    mrc_io_read_attr_string(io, path, name, &s);
+    mrc_io_read_string(io, mflds, name, &s);
     if (s) {
       psc_mfields_set_comp_name(mflds, m, s);
     }
