@@ -3,6 +3,7 @@
 #include "psc_cuda.h"
 #include "psc_bnd.h"
 #include "psc_sort.h"
+#include "psc_fields.h"
 
 #include <mrc_profile.h>
 #include <math.h>
@@ -298,13 +299,17 @@ DECLARE_CUDA(yz4x4_1vb);
 static void
 psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 					      struct psc_mparticles *mprts,
-					      struct psc_mfields *mflds)
+					      struct psc_mfields *mflds_base)
 {
   static int pr_A, pr_B;
   if (!pr_A) {
     pr_A  = prof_register("cuda_part_a", 1., 0, 0);
     pr_B  = prof_register("cuda_part_b", 1., 0, 0);
   }
+
+  // it's difficult to convert mprts because of the ordering constraints (?)
+  assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
+  struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);
 
   prof_start(pr_A);
   yz4x4_1vb_cuda_push_mprts_a(mprts, mflds);
@@ -313,6 +318,8 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
   prof_start(pr_B);
   yz4x4_1vb_cuda_push_mprts_b(mprts, mflds);
   prof_stop(pr_B);
+
+  psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
 // ======================================================================

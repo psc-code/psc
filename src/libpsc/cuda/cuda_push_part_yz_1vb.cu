@@ -850,7 +850,6 @@ EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
   psc_mparticles_cuda_copy_to_dev(mprts);
-  // FIXME, should make sure they're compatible
 
   cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
 }
