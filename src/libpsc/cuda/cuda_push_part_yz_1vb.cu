@@ -293,6 +293,23 @@ push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
   STORE_PARTICLE_MOM_(p, d_pxi4, n);
 }
 
+// ======================================================================
+// mprts_reorder
+
+__global__ static void
+mprts_reorder(int nr_prts, unsigned int *d_ids,
+	      float4 *xi4, float4 *pxi4,
+	      float4 *alt_xi4, float4 *alt_pxi4)
+{
+  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
+
+  if (i < nr_prts) {
+    int j = d_ids[i];
+    alt_xi4[i] = xi4[j];
+    alt_pxi4[i] = pxi4[j];
+  }
+}
+
 // ----------------------------------------------------------------------
 // push_mprts_p1
 //
@@ -362,12 +379,66 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
   struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
-  if (mprts->nr_patches == 0) {
-    return;
-  }
+  struct cuda_params prm;
+  set_params(&prm, ppsc, mprts, mflds);
+
+  unsigned int size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+  
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+  
+  push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
+    (prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+     mflds_cuda->d_flds, size);
+  cuda_sync_if_enabled();
+  
+  free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
+// psc_mparticles_cuda_swap_alt
+// FIXME, duplicated
+
+static void
+psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  float4 *tmp_xi4 = mprts_cuda->d_alt_xi4;
+  float4 *tmp_pxi4 = mprts_cuda->d_alt_pxi4;
+  mprts_cuda->d_alt_xi4 = mprts_cuda->d_xi4;
+  mprts_cuda->d_alt_pxi4 = mprts_cuda->d_pxi4;
+  mprts_cuda->d_xi4 = tmp_xi4;
+  mprts_cuda->d_pxi4 = tmp_pxi4;
+}
+
+// ----------------------------------------------------------------------
+// cuda_push_mprts_a_reorder
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
 
   struct cuda_params prm;
   set_params(&prm, ppsc, mprts, mflds);
+
+  psc_mparticles_cuda_copy_to_dev(mprts);
+
+  {
+    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
+    int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
+    RUN_KERNEL(dimGrid, dimBlock,
+	       mprts_reorder, (mprts_cuda->nr_prts, mprts_cuda->d_ids,
+			       mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+			       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
+    
+    psc_mparticles_cuda_swap_alt(mprts);
+    
+    mprts_cuda->need_reorder = false;
+  }
 
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
@@ -849,9 +920,19 @@ yz8x8_1vb_cuda_push_part_p3(struct psc_particles *prts, struct psc_fields *pf, r
 EXTERN_C void
 yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 {
-  psc_mparticles_cuda_copy_to_dev(mprts);
+  if (mprts->nr_patches == 0) {
+    return;
+  }
 
-  cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
+  psc_mparticles_cuda_copy_to_dev(mprts);
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  if (!mprts_cuda->need_reorder) {
+    MHERE;
+    cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
+  } else {
+    cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
+  }
 }
 
 EXTERN_C void

@@ -301,10 +301,11 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 					      struct psc_mparticles *mprts,
 					      struct psc_mfields *mflds_base)
 {
-  static int pr_A, pr_B;
+  static int pr_A, pr_B, pr_D;
   if (!pr_A) {
     pr_A  = prof_register("cuda_part_a", 1., 0, 0);
     pr_B  = prof_register("cuda_part_b", 1., 0, 0);
+    pr_D  = prof_register("xchg_REORDER", 1., 0, 0);
   }
 
   // it's difficult to convert mprts because of the ordering constraints (?)

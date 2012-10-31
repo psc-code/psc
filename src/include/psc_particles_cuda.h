@@ -62,6 +62,7 @@ struct psc_mparticles_cuda {
   int b_mx[3];                   // number of blocks by direction
   int blocksize[3];              // dimensions of sub blocks in a patch
   particle_cuda_real_t b_dxi[3]; // 1. / (blocksize[d] * dx[d])
+  bool need_reorder;
 };
 
 #define psc_mparticles_cuda(prts) mrc_to_subobj(prts, struct psc_mparticles_cuda)

@@ -275,11 +275,11 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cuda_mprts_update_offsets(mprts);
   prof_stop(pr_D1);
   
-  prof_start(pr_E);
-  cuda_mprts_reorder(mprts);
-  prof_stop(pr_E);
+  /* prof_start(pr_E); */
+  /* cuda_mprts_reorder(mprts); */
+  /* prof_stop(pr_E); */
   
-  cuda_mprts_check_ordered_total(mprts);
+  //  cuda_mprts_check_ordered_total(mprts);
 }
 
 // ----------------------------------------------------------------------
@@ -360,6 +360,9 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   prof_start(pr_C);
   psc_bnd_particles_sub_exchange_mprts_post(bnd, particles);
   prof_stop(pr_C);
+
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(particles);
+  mprts_cuda->need_reorder = true;
 }
 
 // ----------------------------------------------------------------------
