@@ -293,23 +293,6 @@ push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
   STORE_PARTICLE_MOM_(p, d_pxi4, n);
 }
 
-// ======================================================================
-// mprts_reorder
-
-__global__ static void
-mprts_reorder(int nr_prts, unsigned int *d_ids,
-	      float4 *xi4, float4 *pxi4,
-	      float4 *alt_xi4, float4 *alt_pxi4)
-{
-  int i = threadIdx.x + THREADS_PER_BLOCK * blockIdx.x;
-
-  if (i < nr_prts) {
-    int j = d_ids[i];
-    alt_xi4[i] = xi4[j];
-    alt_pxi4[i] = pxi4[j];
-  }
-}
-
 // ----------------------------------------------------------------------
 // push_mprts_p1
 //
@@ -412,6 +395,26 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
   mprts_cuda->d_pxi4 = tmp_pxi4;
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__global__ static void
+mprts_reorder(struct cuda_params prm, unsigned int *d_off,
+	      unsigned int *d_ids,
+	      float4 *d_xi4, float4 *d_pxi4,
+	      float4 *d_alt_xi4, float4 *d_alt_pxi4)
+{
+  int tid = threadIdx.x;
+  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
+
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
+
+  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    int j = d_ids[n];
+    d_alt_xi4[n] = d_xi4[j];
+    d_alt_pxi4[n] = d_pxi4[j];
+  }
+}
+
 // ----------------------------------------------------------------------
 // cuda_push_mprts_a_reorder
 
@@ -427,30 +430,26 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
-  {
-    int dimBlock[2] = { THREADS_PER_BLOCK, 1 };
-    int dimGrid[2]  = { (mprts_cuda->nr_prts + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, 1 };
-    RUN_KERNEL(dimGrid, dimBlock,
-	       mprts_reorder, (mprts_cuda->nr_prts, mprts_cuda->d_ids,
-			       mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-			       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4));
-    
-    psc_mparticles_cuda_swap_alt(mprts);
-    
-    mprts_cuda->need_reorder = false;
-  }
-
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+
+  mprts_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
+    (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
+     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
+  cuda_sync_if_enabled();
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+    (prm, mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
      mflds_cuda->d_flds, size);
   cuda_sync_if_enabled();
   
+  psc_mparticles_cuda_swap_alt(mprts);
+    
   free_params(&prm);
 }
 
@@ -932,6 +931,7 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
   } else {
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
+    mprts_cuda->need_reorder = false;
   }
 }
 
