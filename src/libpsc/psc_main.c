@@ -46,6 +46,12 @@ psc_main(int *argc, char ***argv, struct psc_ops *type)
     if (checkpoint_nmax >= 0) {
       psc->prm.nmax = checkpoint_nmax;
     }
+
+    int checkpoint_wallclock_limit = -1;
+    mrc_params_get_option_int("checkpoint_wallclock_limit", &checkpoint_wallclock_limit);
+    if (checkpoint_wallclock_limit >= 0) {
+      psc->prm.wallclock_limit = checkpoint_wallclock_limit;
+    }
   }
 
   // psc_view() will just print a whole lot of info about the psc object and
