@@ -182,7 +182,7 @@ psc_sort_countsort2_run(struct psc_sort *sort, struct psc_particles *prts_base)
     
   unsigned int *cnis = malloc(prts->n_part * sizeof(*cnis));
   for (int i = 0; i < prts->n_part; i++) {
-    particle_t *p = particles_get_one(prts, 0);
+    particle_t *p = particles_get_one(prts, i);
     particle_real_t dxi = 1.f / patch->dx[0];
     particle_real_t dyi = 1.f / patch->dx[1];
     particle_real_t dzi = 1.f / patch->dx[2];
