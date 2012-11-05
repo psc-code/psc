@@ -70,4 +70,13 @@ struct psc_mfields_cuda {
 #define F3_DEV_YZ(fldnr,jy,jz) \
   (d_flds)[F3_DEV_OFF_YZ(fldnr, jy,jz)]
 
+#define F3_DEV_OFF_YZ_(fldnr, jy,jz)					\
+  ((((fldnr)								\
+     *mx[2] + ((jz)-ilg[2]))						\
+    *mx[1] + ((jy)-ilg[1]))						\
+   *7 + (0-(-3)))
+
+#define F3_DEV_YZ_(fldnr,jy,jz) \
+  (d_flds)[F3_DEV_OFF_YZ_(fldnr, jy,jz)]
+
 #endif

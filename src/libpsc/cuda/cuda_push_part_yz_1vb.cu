@@ -10,10 +10,11 @@
     (pp).xi[1]         = d_xi4[n].y;					\
     (pp).xi[2]         = d_xi4[n].z;					\
     (pp).kind_as_float = d_xi4[n].w;					\
-    (pp).pxi[0]        = d_pxi4[n].x;					\
-    (pp).pxi[1]        = d_pxi4[n].y;					\
-    (pp).pxi[2]        = d_pxi4[n].z;					\
-    (pp).qni_wni       = d_pxi4[n].w;					\
+    float4 pxi4 = d_pxi4[n];						\
+    (pp).pxi[0]        = pxi4.x;					\
+    (pp).pxi[1]        = pxi4.y;					\
+    (pp).pxi[2]        = pxi4.z;					\
+    (pp).qni_wni       = pxi4.w;					\
 } while (0)
 
 #define STORE_PARTICLE_POS_(pp, d_xi4, n) do {				\
@@ -23,11 +24,9 @@
     d_xi4[n].w = (pp).kind_as_float;					\
 } while (0)
 
-#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {			\
-    d_pxi4[n].x = (pp).pxi[0];					\
-    d_pxi4[n].y = (pp).pxi[1];					\
-    d_pxi4[n].z = (pp).pxi[2];					\
-    d_pxi4[n].w = (pp).qni_wni;					\
+#define STORE_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
+    float4 pxi4 = { (pp).pxi[0], (pp).pxi[1], (pp).pxi[2], (pp).qni_wni }; \
+    d_pxi4[n] = pxi4;							\
 } while (0)
 
 #define NO_CHECKERBOARD
@@ -38,6 +37,20 @@
 #include "cuda_common.h"
 
 __device__ int *__d_error_count;
+
+static __constant__ __device__ float c_dqs[4];
+static __constant__ __device__ float c_dxi[3];
+static __constant__ __device__ int c_mx[3];
+static __constant__ __device__ int c_ilg[3];
+
+static void
+set_consts(struct cuda_params *prm)
+{
+  check(cudaMemcpyToSymbol(c_dqs, prm->dq, sizeof(c_dqs)));
+  check(cudaMemcpyToSymbol(c_dxi, prm->dxi, sizeof(c_dxi)));
+  check(cudaMemcpyToSymbol(c_mx, prm->mx, sizeof(c_mx)));
+  check(cudaMemcpyToSymbol(c_ilg, prm->ilg, sizeof(c_ilg)));
+}
 
 void
 set_params(struct cuda_params *prm, struct psc *psc,
@@ -71,7 +84,9 @@ set_params(struct cuda_params *prm, struct psc *psc,
     for (int d = 0; d < 3; d++) {
       prm->mx[d] = mflds_cuda->im[d];
       prm->ilg[d] = mflds_cuda->ib[d];
+      assert(mflds_cuda->ib[d] == -3);
     }
+    assert(mflds_cuda->im[0] == 7);
   }
 
   check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
@@ -198,11 +213,10 @@ calc_vxi(real vxi[3], struct d_particle p)
 
 __device__ static void
 push_pxi_dt(struct d_particle *p,
-	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq,
-	    struct cuda_params prm, real *dqs)
+	     real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
   int kind = __float_as_int(p->kind_as_float);
-  real dq = dqs[kind];//prm.dq[kind];
+  real dq = c_dqs[kind];
   real pxm = p->pxi[0] + dq*exq;
   real pym = p->pxi[1] + dq*eyq;
   real pzm = p->pxi[2] + dq*ezq;
@@ -262,12 +276,10 @@ ip1_to_grid_p(real h)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
-	      real *fld_cache, int l0[3],
-	      struct cuda_params prm, real *dq)
+push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3])
 {
   struct d_particle p;
-  LOAD_PARTICLE_(p, d_xi4, d_pxi4, n);
+  LOAD_PARTICLE_(p, d_xi4, d_pxi4, 0);
 
   // here we have x^{n+.5}, p^n
   
@@ -275,8 +287,8 @@ push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
 
   int lh[3], lg[3];
   real oh[3], og[3];
-  find_idx_off_1st(p.xi, lh, oh, real(-.5), prm.dxi);
-  find_idx_off_1st(p.xi, lg, og, real(0.), prm.dxi);
+  find_idx_off_1st(p.xi, lh, oh, real(-.5), c_dxi);
+  find_idx_off_1st(p.xi, lg, og, real(0.), c_dxi);
 
   real exq, eyq, ezq, hxq, hyq, hzq;
   INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
@@ -288,9 +300,9 @@ push_part_one(int n, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm, dq);
+  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
 
-  STORE_PARTICLE_MOM_(p, d_pxi4, n);
+  STORE_PARTICLE_MOM_(p, d_pxi4, 0);
 }
 
 // ----------------------------------------------------------------------
@@ -303,10 +315,11 @@ __device__ static void
 push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 		      real *fld_cache, int l0[3],
-		      struct cuda_params prm, real *dq)
+		      struct cuda_params prm)
 {
   struct d_particle p;
   LOAD_PARTICLE_(p, d_xi4, d_pxi4, d_ids[n]);
+  STORE_PARTICLE_POS_(p, d_alt_xi4, n);
 
   // here we have x^{n+.5}, p^n
   
@@ -314,8 +327,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   int lh[3], lg[3];
   real oh[3], og[3];
-  find_idx_off_1st(p.xi, lh, oh, real(-.5), prm.dxi);
-  find_idx_off_1st(p.xi, lg, og, real(0.), prm.dxi);
+  find_idx_off_1st(p.xi, lh, oh, real(-.5), c_dxi);
+  find_idx_off_1st(p.xi, lg, og, real(0.), c_dxi);
 
   real exq, eyq, ezq, hxq, hyq, hzq;
   INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
@@ -327,9 +340,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq, prm, dq);
+  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
 
-  STORE_PARTICLE_POS_(p, d_alt_xi4, n);
   STORE_PARTICLE_MOM_(p, d_alt_pxi4, n);
 }
 
@@ -340,31 +352,34 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
-push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off, float *d_flds0, unsigned int size)
+push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
+	      unsigned int *d_off, float *d_flds0, unsigned int size, int b_my, int b_mz,
+	      int mx0, int mx1, int mx2,
+	      int ilg0, int ilg1, int ilg2)
 {
+#if 0
   __d_error_count = prm.d_error_count;
+#endif
   int tid = threadIdx.x;
 
-  __shared__ struct cuda_params s_prm;
-  if (tid == 0) {
-    s_prm = prm;
-  }
-  __syncthreads();
+  __shared__ int mx[3];
+  mx[0] = mx0;
+  mx[1] = mx1;
+  mx[2] = mx2;
+  __shared__ int ilg[3];
+  ilg[0] = ilg0;
+  ilg[1] = ilg1;
+  ilg[2] = ilg2;
 
   int block_pos[3];
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % prm.b_mx[2];
-  int p = blockIdx.y / prm.b_mx[2];
+  block_pos[2] = blockIdx.y % b_mz;
+  int p = blockIdx.y / b_mz;
 
   int ci[3];
   ci[0] = 0;
   ci[1] = block_pos[1] * BLOCKSIZE_Y;
   ci[2] = block_pos[2] * BLOCKSIZE_Z;
-  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
-
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
@@ -380,15 +395,24 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci[1],jz+ci[2]);
+	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ_(m, jy+ci[1],jz+ci[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
     __syncthreads();
   }
-  
-  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(n, d_xi4, d_pxi4, fld_cache, ci, s_prm, s_prm.dq);
+
+
+  int bid = blockIdx.y * b_my + blockIdx.x;
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
+
+  float4 *xi4 = d_xi4 + block_begin + tid;
+  float4 *pxi4 = d_pxi4 + block_begin + tid;
+  float4 *xi4_end = d_xi4 + block_end;
+
+  for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
+    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci);
   }
 }
 
@@ -449,7 +473,7 @@ push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4
   
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
     push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci, s_prm, s_prm.dq);
+      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci, s_prm);
   }
 }
 
@@ -465,6 +489,7 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 
   struct cuda_params prm;
   set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
 
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
@@ -473,8 +498,10 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-     mflds_cuda->d_flds, size);
+    (mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2],
+     prm.mx[0], prm.mx[1], prm.mx[2],
+     prm.ilg[0], prm.ilg[1], prm.ilg[2]);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -528,6 +555,7 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
 
   struct cuda_params prm;
   set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
