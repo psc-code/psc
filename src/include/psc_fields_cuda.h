@@ -72,8 +72,8 @@ struct psc_mfields_cuda {
 
 #define F3_DEV_OFF_YZ_(fldnr, jy,jz)					\
   ((((fldnr)								\
-     *mx[2] + ((jz)-ilg[2]))						\
-    *mx[1] + ((jy)-ilg[1]))						\
+     *c_mx[2] + ((jz)-c_ilg[2]))					\
+    *c_mx[1] + ((jy)-c_ilg[1]))						\
    *7 + (0-(-3)))
 
 #define F3_DEV_YZ_(fldnr,jy,jz) \

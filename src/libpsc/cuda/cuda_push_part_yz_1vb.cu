@@ -314,8 +314,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-		      real *fld_cache, int l0[3],
-		      struct cuda_params prm)
+		      real *fld_cache, int l0[3])
 {
   struct d_particle p;
   LOAD_PARTICLE_(p, d_xi4, d_pxi4, d_ids[n]);
@@ -353,23 +352,13 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
-	      unsigned int *d_off, float *d_flds0, unsigned int size, int b_my, int b_mz,
-	      int mx0, int mx1, int mx2,
-	      int ilg0, int ilg1, int ilg2)
+	      unsigned int *d_off, float *d_flds0, unsigned int size,
+	      unsigned int b_my, unsigned int b_mz)
 {
 #if 0
   __d_error_count = prm.d_error_count;
 #endif
   int tid = threadIdx.x;
-
-  __shared__ int mx[3];
-  mx[0] = mx0;
-  mx[1] = mx1;
-  mx[2] = mx2;
-  __shared__ int ilg[3];
-  ilg[0] = ilg0;
-  ilg[1] = ilg1;
-  ilg[2] = ilg2;
 
   int block_pos[3];
   block_pos[1] = blockIdx.x;
@@ -423,32 +412,25 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
-push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
+push_mprts_p1_reorder(unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-		      unsigned int *d_off, float *d_flds0, unsigned int size)
+		      unsigned int *d_off, float *d_flds0, unsigned int size,
+		      unsigned int b_my, unsigned int b_mz)
 {
+#if 0
   __d_error_count = prm.d_error_count;
+#endif
   int tid = threadIdx.x;
-
-  __shared__ struct cuda_params s_prm;
-  if (tid == 0) {
-    s_prm = prm;
-  }
-  __syncthreads();
 
   int block_pos[3];
   block_pos[1] = blockIdx.x;
-  block_pos[2] = blockIdx.y % prm.b_mx[2];
-  int p = blockIdx.y / prm.b_mx[2];
+  block_pos[2] = blockIdx.y % b_mz;
+  int p = blockIdx.y / b_mz;
 
   int ci[3];
   ci[0] = 0;
   ci[1] = block_pos[1] * BLOCKSIZE_Y;
   ci[2] = block_pos[2] * BLOCKSIZE_Z;
-  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
-
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
@@ -464,16 +446,20 @@ push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4
       int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
       // OPT? currently it seems faster to do the loop rather than do m by threadidx
       for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci[1],jz+ci[2]);
+	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ_(m, jy+ci[1],jz+ci[2]);
       }
       ti += THREADS_PER_BLOCK;
     }
     __syncthreads();
   }
   
+  int bid = blockIdx.y * b_my + blockIdx.x;
+  int block_begin = d_off[bid];
+  int block_end   = d_off[bid + 1];
+
   for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
     push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci, s_prm);
+      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci);
   }
 }
 
@@ -499,9 +485,7 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2],
-     prm.mx[0], prm.mx[1], prm.mx[2],
-     prm.ilg[0], prm.ilg[1], prm.ilg[2]);
+     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -573,9 +557,9 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   
   push_mprts_p1_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+    (mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
      mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-     mflds_cuda->d_flds, size);
+     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
   cuda_sync_if_enabled();
   
   psc_mparticles_cuda_swap_alt(mprts);
