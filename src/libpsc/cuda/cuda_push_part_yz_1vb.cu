@@ -6,10 +6,27 @@
 // OPT: use more shmem?
 
 #define LOAD_PARTICLE_(pp, d_xi4, d_pxi4, n) do {			\
-    (pp).xi[0]         = d_xi4[n].x;					\
-    (pp).xi[1]         = d_xi4[n].y;					\
-    (pp).xi[2]         = d_xi4[n].z;					\
-    (pp).kind_as_float = d_xi4[n].w;					\
+    float4 xi4 = d_xi4[n];						\
+    (pp).xi[0]         = xi4.x;						\
+    (pp).xi[1]         = xi4.y;						\
+    (pp).xi[2]         = xi4.z;						\
+    (pp).kind_as_float = xi4.w;						\
+    float4 pxi4 = d_pxi4[n];						\
+    (pp).pxi[0]        = pxi4.x;					\
+    (pp).pxi[1]        = pxi4.y;					\
+    (pp).pxi[2]        = pxi4.z;					\
+    (pp).qni_wni       = pxi4.w;					\
+} while (0)
+
+#define LOAD_PARTICLE_POS_(pp, d_xi4, n) do {				\
+    float4 xi4 = d_xi4[n];						\
+    (pp).xi[0]         = xi4.x;						\
+    (pp).xi[1]         = xi4.y;						\
+    (pp).xi[2]         = xi4.z;						\
+    (pp).kind_as_float = xi4.w;						\
+} while (0)
+
+#define LOAD_PARTICLE_MOM_(pp, d_pxi4, n) do {				\
     float4 pxi4 = d_pxi4[n];						\
     (pp).pxi[0]        = pxi4.x;					\
     (pp).pxi[1]        = pxi4.y;					\
@@ -279,7 +296,7 @@ __device__ static void
 push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3])
 {
   struct d_particle p;
-  LOAD_PARTICLE_(p, d_xi4, d_pxi4, 0);
+  LOAD_PARTICLE_POS_(p, d_xi4, 0);
 
   // here we have x^{n+.5}, p^n
   
@@ -300,8 +317,8 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3])
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
+  LOAD_PARTICLE_MOM_(p, d_pxi4, 0);
   push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
-
   STORE_PARTICLE_MOM_(p, d_pxi4, 0);
 }
 
@@ -317,7 +334,7 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      real *fld_cache, int l0[3])
 {
   struct d_particle p;
-  LOAD_PARTICLE_(p, d_xi4, d_pxi4, d_ids[n]);
+  LOAD_PARTICLE_POS_(p, d_xi4, d_ids[n]);
   STORE_PARTICLE_POS_(p, d_alt_xi4, n);
 
   // here we have x^{n+.5}, p^n
@@ -339,8 +356,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
+  LOAD_PARTICLE_MOM_(p, d_pxi4, d_ids[n]);
   push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
-
   STORE_PARTICLE_MOM_(p, d_alt_pxi4, n);
 }
 
