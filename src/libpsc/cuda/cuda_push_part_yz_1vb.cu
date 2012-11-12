@@ -2,6 +2,8 @@
 #include "psc_cuda.h"
 #include "particles_cuda.h"
 
+#include <mrc_profile.h>
+
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
@@ -1054,15 +1056,25 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     return;
   }
 
+  static int pr_A, pr_B;
+  if (!pr_A) {
+    pr_A  = prof_register("a", 1., 0, 0);
+    pr_B  = prof_register("a_reorder", 1., 0, 0);
+  }
+
   psc_mparticles_cuda_copy_to_dev(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
   if (!mprts_cuda->need_reorder) {
     MHERE;
+    prof_start(pr_A);
     cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
+    prof_stop(pr_A);
   } else {
+    prof_start(pr_B);
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
+    prof_stop(pr_B);
   }
 }
 
