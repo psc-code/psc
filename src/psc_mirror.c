@@ -14,14 +14,27 @@
 
 // ======================================================================
 
+enum {
+  MIRROR_ELECTRON,
+  MIRROR_ION,
+  MIRROR_HELIUM,
+  NR_MIRROR_KINDS,
+};
+
+// ======================================================================
+
 struct psc_mirror {
   double mi_over_me;
+  double mh_over_mi;
   double vA_over_c;
   double beta_e_par;
   double beta_i_par;
+  double beta_h_par;
+  double Th_perp_over_Th_par;
   double Ti_perp_over_Ti_par;
   double Te_perp_over_Te_par;
   double theta_0;
+  double B1;
 };
 
 #define to_psc_mirror(psc) mrc_to_subobj(psc, struct psc_mirror)
@@ -29,12 +42,16 @@ struct psc_mirror {
 #define VAR(x) (void *)offsetof(struct psc_mirror, x)
 static struct param psc_mirror_descr[] = {
   { "mi_over_me"         , VAR(mi_over_me)         , PARAM_DOUBLE(10.) },
+  { "mh_over_mi"         , VAR(mh_over_mi)         , PARAM_DOUBLE(4.)  },
   { "vA_over_c"          , VAR(vA_over_c)          , PARAM_DOUBLE(.01) },
   { "beta_e_par"         , VAR(beta_e_par)         , PARAM_DOUBLE(.2)  },
   { "beta_i_par"         , VAR(beta_i_par)         , PARAM_DOUBLE(2.)  },
+  { "beta_h_par"         , VAR(beta_h_par)         , PARAM_DOUBLE(2.)  },
+  { "Th_perp_over_Th_par", VAR(Th_perp_over_Th_par), PARAM_DOUBLE(1.5) },
   { "Ti_perp_over_Ti_par", VAR(Ti_perp_over_Ti_par), PARAM_DOUBLE(2.5) },
   { "Te_perp_over_Te_par", VAR(Te_perp_over_Te_par), PARAM_DOUBLE(1.)  },
   { "theta_0"            , VAR(theta_0)            , PARAM_DOUBLE(75.*M_PI/180) },
+  { "B1"                 , VAR(B1)                 , PARAM_DOUBLE(0.)  },
   {},
 };
 #undef VAR
@@ -48,7 +65,7 @@ psc_diag_item_mirror_run(struct psc_diag_item *item, struct psc *psc, double *re
   struct psc_mirror *mirror = to_psc_mirror(psc);
   double B0 = mirror->vA_over_c;
   //  double HX0 = B0 * sin(mirror->theta_0);
-  double HX0 = 0.;
+  double HX0 = 0.;    
   double HY0 = 0.;
   double HZ0 = B0;
   //  double HZ0 = B0 * cos(mirror->theta_0);
@@ -97,6 +114,13 @@ psc_mirror_create(struct psc *psc)
 
   psc->prm.nicell = 800;
 
+  struct psc_kind kinds[NR_MIRROR_KINDS] = {
+    [MIRROR_ELECTRON] = { .name = "e", .q = -1.,          },
+    [MIRROR_ION]      = { .name = "i", .q =  1., .m = 1., },
+    [MIRROR_HELIUM]   = { .name = "h", .q =  1.,          },
+  };
+  psc_set_kinds(psc, NR_MIRROR_KINDS, kinds);
+
   psc->domain.gdims[0] = 1;
   psc->domain.gdims[1] = 512;
   psc->domain.gdims[2] = 512;
@@ -137,25 +161,35 @@ psc_mirror_init_npt(struct psc *psc, int kind, double x[3],
   double Te_perp = mirror->Te_perp_over_Te_par * Te_par;
   double Ti_par = mirror->beta_i_par * sqr(B0) / 2.;
   double Ti_perp = mirror->Ti_perp_over_Ti_par * Ti_par;
+  double Th_par = mirror->beta_h_par * sqr(B0) / 2.;
+  double Th_perp = mirror->Th_perp_over_Th_par * Th_par;
 
   switch (kind) {
-  case 0: // electrons
+  case MIRROR_ELECTRON: // electrons
     npt->n = 1.;
     npt->q = -1.;
-    npt->m = 1. / mirror->mi_over_me;
+    // npt->m = 1. / mirror->mi_over_me;
 
     npt->T[0] = Te_perp;
     npt->T[1] = Te_perp;
     npt->T[2] = Te_par;
     break;
-  case 1: // ions
-    npt->n = 1;
+  case MIRROR_ION: // ions
+    npt->n = 1.;
     npt->q = 1.;
-    npt->m = 1.;
+    // npt->m = 1.;
 
     npt->T[0] = Ti_perp;
     npt->T[1] = Ti_perp;
     npt->T[2] = Ti_par;
+  case MIRROR_HELIUM: // helium
+    npt->n = .05;
+    npt->q = 1.;
+    // npt->m = mirror->mh_over_mi;
+
+    npt->T[0] = Th_perp;
+    npt->T[1] = Th_perp;
+    npt->T[2] = Th_par;
     break;
   default:
     assert(0);
@@ -170,7 +204,7 @@ psc_mirror_init_field(struct psc *psc, double x[3], int m)
 {
   struct psc_mirror *mirror = to_psc_mirror(psc);
   double B0 = mirror->vA_over_c;
-  double B1 = 0.;//0.003;
+  double B1 = mirror->B1; 
   double kz = (32. * M_PI / psc->domain.length[2]) * cos(mirror->theta_0);
   double ky = (8. * M_PI / psc->domain.length[1]) * sin(mirror->theta_0);
   double z = x[2];
@@ -199,9 +233,13 @@ psc_mirror_setup(struct psc *psc)
   double Ti_par = mirror->beta_i_par * sqr(B0) / 2.;
   double Ti_perp = mirror->Ti_perp_over_Ti_par * Ti_par;
   double me = 1. / mirror->mi_over_me;
+  double mh = mirror->mh_over_mi;
 
-  psc->kinds[KIND_ELECTRON].m = me;
-  psc->kinds[KIND_ION     ].m = 1.;
+  // set particle kind parameters
+  assert(psc->nr_kinds == NR_MIRROR_KINDS);
+  psc->kinds[MIRROR_ELECTRON].m = me;
+  psc->kinds[MIRROR_ION     ].m = 1.;
+  psc->kinds[MIRROR_HELIUM  ].m = mh;
 
   psc_setup_super(psc);
 
