@@ -567,13 +567,6 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   
   dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
 
-  // mprts_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-  //   <<<dimGrid, THREADS_PER_BLOCK>>>
-  //   (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
-  //    mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-  //    mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
-  // cuda_sync_if_enabled();
-  
   push_mprts_p1_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
@@ -586,6 +579,31 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   free_params(&prm);
 }
 
+// ----------------------------------------------------------------------
+// cuda_push_mprts_a1_reorder
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_a1_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
+
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+
+  mprts_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    <<<dimGrid, THREADS_PER_BLOCK>>>
+    (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
+     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
+  cuda_sync_if_enabled();
+
+  free_params(&prm);
+}
+  
 // ======================================================================
 
 // FIXME -> common.c
@@ -1072,6 +1090,7 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     prof_stop(pr_A);
   } else {
     prof_start(pr_B);
+    cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
     prof_stop(pr_B);
