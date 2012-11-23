@@ -1074,9 +1074,10 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     return;
   }
 
-  static int pr_A, pr_B;
+  static int pr_A, pr_B, pr_B1;
   if (!pr_A) {
     pr_A  = prof_register("a", 1., 0, 0);
+    pr_B1 = prof_register("a1_reorder", 1., 0, 0);
     pr_B  = prof_register("a_reorder", 1., 0, 0);
   }
 
@@ -1089,8 +1090,11 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
     prof_stop(pr_A);
   } else {
-    prof_start(pr_B);
+    prof_start(pr_B1);
     cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
+    psc_mparticles_cuda_swap_alt(mprts);
+    prof_stop(pr_B1);
+    prof_start(pr_B);
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
     prof_stop(pr_B);
