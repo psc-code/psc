@@ -543,6 +543,7 @@ mprts_reorder(struct cuda_params prm, unsigned int *d_off,
     int j = d_ids[n];
     d_alt_xi4[n] = d_xi4[j];
     d_alt_pxi4[n] = d_pxi4[j];
+    d_ids[n] = n;//!!!
   }
 }
 
