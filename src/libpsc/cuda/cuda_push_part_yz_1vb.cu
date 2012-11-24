@@ -555,53 +555,6 @@ mprts_reorder(struct cuda_params prm, unsigned int *d_off,
   }
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__global__ static void
-mprts_reorder_x2(struct cuda_params prm, unsigned int *d_off,
-		 unsigned int *d_ids,
-		 float4 *d_xi4, float4 *d_pxi4,
-		 float4 *d_alt_xi4, float4 *d_alt_pxi4)
-{
-  int tid = threadIdx.x;
-  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
-
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
-
-  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    int j = n;
-    d_alt_xi4[n] = d_xi4[j];
-//    d_alt_pxi4[n] = d_pxi4[j];
-    //    d_ids[n] = n;//!!!
-  }
-}
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__global__ static void
-mprts_reorder_x3(struct cuda_params prm, unsigned int *d_off,
-		 unsigned int *d_ids,
-		 float4 *d_xi4, float4 *d_pxi4,
-		 float4 *d_alt_xi4, float4 *d_alt_pxi4, int n_part)
-{
-  int tid = threadIdx.x;
-  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
-
-#if 0
-  int block_begin = bid * 9760;
-  int block_end = (bid+1) * 9760;
-#else
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid+1];
-#endif
-
-  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n >= block_begin) {
-      d_alt_xi4[n] = d_xi4[n];
-      d_alt_pxi4[n] = d_pxi4[n];
-    }
-  }
-}
-
 // ----------------------------------------------------------------------
 // cuda_push_mprts_a_reorder
 
@@ -656,76 +609,6 @@ cuda_push_mprts_a1_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfl
      mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
      mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
   cuda_sync_if_enabled();
-
-  free_params(&prm);
-}
-  
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_a1_reorder_x2(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
-
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
-
-  mprts_reorder_x2<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
-     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
-  cuda_sync_if_enabled();
-  mprintf("n_p %d\n", psc_mparticles_get_patch(mprts, 0)->n_part);
-  check(cudaMemcpy(mprts_cuda->d_xi4, mprts_cuda->d_alt_xi4, psc_mparticles_get_patch(mprts, 0)->n_part * 16,
-		   cudaMemcpyDeviceToDevice));
-
-  free_params(&prm);
-}
-  
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_a1_reorder_x3(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
-
-  int n_part = psc_mparticles_get_patch(mprts, 0)->n_part;
-  int nr_blocks = prm.b_mx[1] * prm.b_mx[2] * mprts->nr_patches;
-  mprintf("nr_blocks %d\n", nr_blocks);
-  assert(n_part % nr_blocks == 0);
-  mprintf("np/block %d\n", n_part / nr_blocks);
-
-  unsigned  int *d_off;
-  check(cudaMalloc(&d_off, (nr_blocks + 1) * sizeof(int)));
-  int *h_off = new int[nr_blocks+1];
-  for (int b = 0; b <= nr_blocks; b++) {
-    h_off[b] = b * (n_part / nr_blocks);
-  }
-  check(cudaMemcpy(d_off, h_off, (nr_blocks + 1) * sizeof(int),
-		   cudaMemcpyHostToDevice));
-  delete[] h_off;
-
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
-
-  mprts_reorder_x3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
-     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, n_part);
-  cuda_sync_if_enabled();
-
-  check(cudaFree(d_off));
-
-  check(cudaMemcpy(mprts_cuda->d_xi4, mprts_cuda->d_alt_xi4, n_part * 16,
-		   cudaMemcpyDeviceToDevice));
-  check(cudaMemcpy(mprts_cuda->d_pxi4, mprts_cuda->d_alt_pxi4, n_part * 16,
-		   cudaMemcpyDeviceToDevice));
 
   free_params(&prm);
 }
@@ -1200,46 +1083,15 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     return;
   }
 
-  static int pr_A, pr_B, pr_B1, pr_B2, pr_B3;
-  if (!pr_A) {
-    pr_A  = prof_register("a", 1., 0, 0);
-    pr_B1 = prof_register("a1_reorder", 1., 0, 0);
-    pr_B2 = prof_register("a2_reorder", 1., 0, 0);
-    pr_B3 = prof_register("a3_reorder", 1., 0, 0);
-    pr_B  = prof_register("a_reorder", 1., 0, 0);
-  }
-
   psc_mparticles_cuda_copy_to_dev(mprts);
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
 
   if (!mprts_cuda->need_reorder) {
     MHERE;
-    prof_start(pr_A);
     cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
-    prof_stop(pr_A);
   } else {
-    prof_start(pr_B1);
-#if 0
-    cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
-    psc_mparticles_cuda_swap_alt(mprts);
-#endif
-    prof_stop(pr_B1);
-
-#if 0
-    prof_start(pr_B2);
-    cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
-    psc_mparticles_cuda_swap_alt(mprts);
-    prof_stop(pr_B2);
-
-    prof_start(pr_B3);
-    cuda_push_mprts_a1_reorder_x3<1, 4, 4>(mprts, mflds);
-    prof_stop(pr_B3);
-#endif
-
-    prof_start(pr_B);
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
-    prof_stop(pr_B);
   }
 }
 
