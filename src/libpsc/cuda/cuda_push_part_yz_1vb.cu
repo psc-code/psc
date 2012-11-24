@@ -108,21 +108,21 @@ set_params(struct cuda_params *prm, struct psc *psc,
     assert(mflds_cuda->im[0] == 7);
   }
 
-  check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
-  check(cudaMemset(prm->d_error_count, 0, 1 * sizeof(int)));
+  //  check(cudaMalloc(&prm->d_error_count, 1 * sizeof(int)));
+  //  check(cudaMemset(prm->d_error_count, 0, 1 * sizeof(int)));
 }
 
 void
 free_params(struct cuda_params *prm)
 {
-  int h_error_count[1];
-  check(cudaMemcpy(h_error_count, prm->d_error_count, 1 * sizeof(int),
-		   cudaMemcpyDeviceToHost));
-  check(cudaFree(prm->d_error_count));
-  if (h_error_count[0] != 0) {
-    printf("err cnt %d\n", h_error_count[0]);
-  }
-  assert(h_error_count[0] == 0);
+  //  int h_error_count[1];
+  //  check(cudaMemcpy(h_error_count, prm->d_error_count, 1 * sizeof(int),
+  //		   cudaMemcpyDeviceToHost));
+  //  check(cudaFree(prm->d_error_count));
+  //  if (h_error_count[0] != 0) {
+  //    printf("err cnt %d\n", h_error_count[0]);
+  //  }
+  //  assert(h_error_count[0] == 0);
 }
 
 // ======================================================================
