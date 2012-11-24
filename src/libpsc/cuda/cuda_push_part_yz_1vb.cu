@@ -476,7 +476,10 @@ push_mprts_p1_reorder(unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid];
   int block_end   = d_off[bid + 1];
 
-  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
     push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci);
   }
@@ -528,6 +531,7 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 6)
 mprts_reorder(struct cuda_params prm, unsigned int *d_off,
 	      unsigned int *d_ids,
 	      float4 *d_xi4, float4 *d_pxi4,
@@ -539,7 +543,11 @@ mprts_reorder(struct cuda_params prm, unsigned int *d_off,
   int block_begin = d_off[bid];
   int block_end   = d_off[bid + 1];
 
-  for (int n = block_begin + tid; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+
     int j = d_ids[n];
     d_alt_xi4[n] = d_xi4[j];
     d_alt_pxi4[n] = d_pxi4[j];
@@ -589,6 +597,7 @@ mprts_reorder_x3(struct cuda_params prm, unsigned int *d_off,
   for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
     if (n >= block_begin) {
       d_alt_xi4[n] = d_xi4[n];
+      d_alt_pxi4[n] = d_pxi4[n];
     }
   }
 }
@@ -714,6 +723,8 @@ cuda_push_mprts_a1_reorder_x3(struct psc_mparticles *mprts, struct psc_mfields *
   check(cudaFree(d_off));
 
   check(cudaMemcpy(mprts_cuda->d_xi4, mprts_cuda->d_alt_xi4, n_part * 16,
+		   cudaMemcpyDeviceToDevice));
+  check(cudaMemcpy(mprts_cuda->d_pxi4, mprts_cuda->d_alt_pxi4, n_part * 16,
 		   cudaMemcpyDeviceToDevice));
 
   free_params(&prm);
@@ -1208,12 +1219,13 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     prof_stop(pr_A);
   } else {
     prof_start(pr_B1);
-#if 1
+#if 0
     cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
     psc_mparticles_cuda_swap_alt(mprts);
 #endif
     prof_stop(pr_B1);
 
+#if 0
     prof_start(pr_B2);
     cuda_push_mprts_a1_reorder<1, 4, 4>(mprts, mflds);
     psc_mparticles_cuda_swap_alt(mprts);
@@ -1222,6 +1234,7 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
     prof_start(pr_B3);
     cuda_push_mprts_a1_reorder_x3<1, 4, 4>(mprts, mflds);
     prof_stop(pr_B3);
+#endif
 
     prof_start(pr_B);
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
