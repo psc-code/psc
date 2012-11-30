@@ -35,6 +35,7 @@ struct psc_mirror {
   double Te_perp_over_Te_par;
   double theta_0;
   double B1;
+  double heavy_ions_density;
 };
 
 #define to_psc_mirror(psc) mrc_to_subobj(psc, struct psc_mirror)
@@ -43,7 +44,7 @@ struct psc_mirror {
 static struct param psc_mirror_descr[] = {
   { "mi_over_me"         , VAR(mi_over_me)         , PARAM_DOUBLE(10.) },
   { "mh_over_mi"         , VAR(mh_over_mi)         , PARAM_DOUBLE(4.)  },
-  { "vA_over_c"          , VAR(vA_over_c)          , PARAM_DOUBLE(.01) },
+  { "vA_over_c"          , VAR(vA_over_c)          , PARAM_DOUBLE(.1) },
   { "beta_e_par"         , VAR(beta_e_par)         , PARAM_DOUBLE(.2)  },
   { "beta_i_par"         , VAR(beta_i_par)         , PARAM_DOUBLE(2.)  },
   { "beta_h_par"         , VAR(beta_h_par)         , PARAM_DOUBLE(2.)  },
@@ -52,6 +53,7 @@ static struct param psc_mirror_descr[] = {
   { "Te_perp_over_Te_par", VAR(Te_perp_over_Te_par), PARAM_DOUBLE(1.)  },
   { "theta_0"            , VAR(theta_0)            , PARAM_DOUBLE(75.*M_PI/180) },
   { "B1"                 , VAR(B1)                 , PARAM_DOUBLE(0.)  },
+  { "heavy_ions_density" , VAR(heavy_ions_density)  , PARAM_DOUBLE(0.05)},
   {},
 };
 #undef VAR
@@ -163,6 +165,7 @@ psc_mirror_init_npt(struct psc *psc, int kind, double x[3],
   double Ti_perp = mirror->Ti_perp_over_Ti_par * Ti_par;
   double Th_par = mirror->beta_h_par * sqr(B0) / 2.;
   double Th_perp = mirror->Th_perp_over_Th_par * Th_par;
+  double n_h = mirror->heavy_ions_density;
 
   switch (kind) {
   case MIRROR_ELECTRON: // electrons
@@ -175,15 +178,16 @@ psc_mirror_init_npt(struct psc *psc, int kind, double x[3],
     npt->T[2] = Te_par;
     break;
   case MIRROR_ION: // ions
-    npt->n = 1.;
+    npt->n = 1. - n_h;
     npt->q = 1.;
     // npt->m = 1.;
 
     npt->T[0] = Ti_perp;
     npt->T[1] = Ti_perp;
     npt->T[2] = Ti_par;
+    break;
   case MIRROR_HELIUM: // helium
-    npt->n = .05;
+    npt->n = n_h;
     npt->q = 1.;
     // npt->m = mirror->mh_over_mi;
 
@@ -232,6 +236,8 @@ psc_mirror_setup(struct psc *psc)
   double Te_perp = mirror->Te_perp_over_Te_par * Te_par; 
   double Ti_par = mirror->beta_i_par * sqr(B0) / 2.;
   double Ti_perp = mirror->Ti_perp_over_Ti_par * Ti_par;
+  double Th_par = mirror->beta_h_par * sqr(B0) / 2.;
+  double Th_perp = mirror->Th_perp_over_Th_par * Th_par;
   double me = 1. / mirror->mi_over_me;
   double mh = mirror->mh_over_mi;
 
@@ -244,13 +250,15 @@ psc_mirror_setup(struct psc *psc)
   psc_setup_super(psc);
 
   MPI_Comm comm = psc_comm(psc);
-  mpi_printf(comm, "d_i = 1., d_e = %g\n", sqrt(me));
-  mpi_printf(comm, "om_ci = %g, om_ce = %g\n", B0, B0 / me);
+  mpi_printf(comm, "d_i = 1., d_e = %g, d_h = %g\n", sqrt(me), sqrt(mh));
+  mpi_printf(comm, "om_ci = %g, om_ce = %g, om_ch = %g\n", B0, B0 / me, B0 / mh);
   mpi_printf(comm, "\n");
   mpi_printf(comm, "v_i,perp = %g [c] T_i,perp = %g\n", sqrt(2*Ti_perp), Ti_perp);
   mpi_printf(comm, "v_i,par  = %g [c] T_i,par = %g\n", sqrt(Ti_par), Ti_par);
   mpi_printf(comm, "v_e,perp = %g [c] T_e,perp = %g\n", sqrt(2*Te_perp / me), Te_perp);
   mpi_printf(comm, "v_e,par  = %g [c] T_e,par = %g\n", sqrt(Te_par / me), Te_par);
+  mpi_printf(comm, "v_h,perp = %g [c] T_h,perp = %g\n", sqrt(2*Th_perp / mh), Th_perp);
+  mpi_printf(comm, "v_h,par  = %g [c] T_h,par = %g\n", sqrt(Th_par / mh), Th_par);
   mpi_printf(comm, "\n");
 }
 
