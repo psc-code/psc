@@ -336,7 +336,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      real *fld_cache, int l0[3])
 {
   struct d_particle p;
-  LOAD_PARTICLE_POS_(p, d_xi4, d_ids[n]);
+  unsigned int id = d_ids[n];
+  LOAD_PARTICLE_POS_(p, d_xi4, id);
   STORE_PARTICLE_POS_(p, d_alt_xi4, n);
 
   // here we have x^{n+.5}, p^n
@@ -358,7 +359,7 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
   
-  LOAD_PARTICLE_MOM_(p, d_pxi4, d_ids[n]);
+  LOAD_PARTICLE_MOM_(p, d_pxi4, id);
   push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
   STORE_PARTICLE_MOM_(p, d_alt_pxi4, n);
 }
@@ -415,12 +416,15 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
   int block_begin = d_off[bid];
   int block_end   = d_off[bid + 1];
 
-  float4 *xi4 = d_xi4 + block_begin + tid;
-  float4 *pxi4 = d_pxi4 + block_begin + tid;
+  float4 *xi4_begin = d_xi4 + block_begin;
+  float4 *xi4 = d_xi4 + (block_begin & ~31) + tid;
+  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + tid;
   float4 *xi4_end = d_xi4 + block_end;
 
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
-    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci);
+    if (xi4 >= xi4_begin) {
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci);
+    }
   }
 }
 

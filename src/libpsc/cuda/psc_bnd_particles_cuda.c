@@ -209,9 +209,9 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 
   psc_mparticles_cuda_copy_to_dev(mprts);
 
-  prof_start(pr_A);
+  //prof_start(pr_A);
   //cuda_mprts_find_block_keys(mprts);
-  prof_stop(pr_A);
+  //prof_stop(pr_A);
   
   prof_start(pr_B0);
   cuda_mprts_spine_reduce(mprts);
@@ -243,8 +243,10 @@ psc_bnd_particles_sub_exchange_mprts_prep(struct psc_bnd_particles *bnd,
 
 static void
 psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
-				struct psc_mparticles *mprts)
+					  struct psc_mparticles *mprts)
 {
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+
   static int pr_A, pr_B, pr_C, pr_D, pr_E, pr_D1;
   if (!pr_A) {
     pr_A = prof_register("xchg_cvt_to", 1., 0, 0);
@@ -275,9 +277,14 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cuda_mprts_update_offsets(mprts);
   prof_stop(pr_D1);
   
-  /* prof_start(pr_E); */
-  /* cuda_mprts_reorder(mprts); */
-  /* prof_stop(pr_E); */
+#if 0
+  prof_start(pr_E);
+  cuda_mprts_reorder(mprts);
+  mprts_cuda->need_reorder = false;
+  prof_stop(pr_E);
+#else
+  mprts_cuda->need_reorder = true;
+#endif
   
   //  cuda_mprts_check_ordered_total(mprts);
 }
@@ -360,9 +367,6 @@ psc_bnd_particles_sub_exchange_particles_general(struct psc_bnd_particles *bnd,
   prof_start(pr_C);
   psc_bnd_particles_sub_exchange_mprts_post(bnd, particles);
   prof_stop(pr_C);
-
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(particles);
-  mprts_cuda->need_reorder = true;
 }
 
 // ----------------------------------------------------------------------
