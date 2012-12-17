@@ -318,7 +318,7 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3],
 
   real exq, eyq, ezq, hxq, hyq, hzq;
 
-  if (do_push_pxi_dt) {
+  if (do_push_pxi) {
     find_idx_off_1st(p.xi, lh, oh, real(-.5), s_dxi);
     find_idx_off_1st(p.xi, lg, og, real(0.), s_dxi);
 
@@ -389,11 +389,15 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, float *d_flds0, unsigned int size,
 	      unsigned int b_my, unsigned int b_mz,
 	      bool _do_read, bool _do_write, bool _do_push_pxi)
 {
+  do_read = _do_read;
+  do_write = _do_write;
+  do_push_pxi = _do_push_pxi;
 #if 0
   __d_error_count = prm.d_error_count;
 #endif
@@ -465,6 +469,7 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 6)
 push_mprts_p1_reorder(unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
 		      unsigned int *d_off, float *d_flds0, unsigned int size,
@@ -973,6 +978,7 @@ yz_calc_jyjz(int i, float4 *d_xi4, float4 *d_pxi4,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 6)
 push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size)
