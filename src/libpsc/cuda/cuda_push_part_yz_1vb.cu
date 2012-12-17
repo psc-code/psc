@@ -4,6 +4,12 @@
 
 #include <mrc_profile.h>
 
+__shared__ volatile bool do_read;
+__shared__ volatile bool do_write;
+__shared__ volatile bool do_reduce;
+__shared__ volatile bool do_push_pxi;
+__shared__ volatile bool do_calc_j;
+
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
@@ -299,7 +305,9 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3],
 	      real s_dxi[3])
 {
   struct d_particle p;
-  LOAD_PARTICLE_POS_(p, d_xi4, 0);
+  if (do_read) {
+    LOAD_PARTICLE_POS_(p, d_xi4, 0);
+  }
 
   // here we have x^{n+.5}, p^n
   
@@ -307,22 +315,31 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3],
 
   int lh[3], lg[3];
   real oh[3], og[3];
-  find_idx_off_1st(p.xi, lh, oh, real(-.5), s_dxi);
-  find_idx_off_1st(p.xi, lg, og, real(0.), s_dxi);
 
   real exq, eyq, ezq, hxq, hyq, hzq;
-  INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
-  INTERP_FIELD_1ST(cached_flds, eyq, EY, h, g);
-  INTERP_FIELD_1ST(cached_flds, ezq, EZ, g, h);
-  INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
-  INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
-  INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
+
+  if (do_push_pxi_dt) {
+    find_idx_off_1st(p.xi, lh, oh, real(-.5), s_dxi);
+    find_idx_off_1st(p.xi, lg, og, real(0.), s_dxi);
+
+    INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
+    INTERP_FIELD_1ST(cached_flds, eyq, EY, h, g);
+    INTERP_FIELD_1ST(cached_flds, ezq, EZ, g, h);
+    INTERP_FIELD_1ST(cached_flds, hxq, HX, h, h);
+    INTERP_FIELD_1ST(cached_flds, hyq, HY, g, h);
+    INTERP_FIELD_1ST(cached_flds, hzq, HZ, h, g);
+  }
 
   // x^(n+0.5), p^n -> x^(n+0.5), p^(n+1.0) 
-  
-  LOAD_PARTICLE_MOM_(p, d_pxi4, 0);
-  push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
-  STORE_PARTICLE_MOM_(p, d_pxi4, 0);
+  if (do_read) {
+    LOAD_PARTICLE_MOM_(p, d_pxi4, 0);
+  }
+  if (do_push_pxi) {
+    push_pxi_dt(&p, exq, eyq, ezq, hxq, hyq, hzq);
+  }
+  if (do_write) {
+    STORE_PARTICLE_MOM_(p, d_pxi4, 0);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -374,7 +391,8 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __global__ static void
 push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, float *d_flds0, unsigned int size,
-	      unsigned int b_my, unsigned int b_mz)
+	      unsigned int b_my, unsigned int b_mz,
+	      bool _do_read, bool _do_write, bool _do_push_pxi)
 {
 #if 0
   __d_error_count = prm.d_error_count;
@@ -530,7 +548,8 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   push_mprts_p1<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
+     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2],
+     true, true, true);
   cuda_sync_if_enabled();
   
   free_params(&prm);
@@ -651,11 +670,6 @@ find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real sh
     h[d] = pos[d] - j[d];
   }
 }
-
-__shared__ volatile bool do_read;
-__shared__ volatile bool do_write;
-__shared__ volatile bool do_reduce;
-__shared__ volatile bool do_calc_j;
 
 // OPT: take i < cell_end condition out of load
 // OPT: reduce two at a time
