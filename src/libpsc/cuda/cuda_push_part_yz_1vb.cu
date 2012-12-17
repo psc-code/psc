@@ -295,7 +295,8 @@ ip1_to_grid_p(real h)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3])
+push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3],
+	      real s_dxi[3])
 {
   struct d_particle p;
   LOAD_PARTICLE_POS_(p, d_xi4, 0);
@@ -306,8 +307,8 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3])
 
   int lh[3], lg[3];
   real oh[3], og[3];
-  find_idx_off_1st(p.xi, lh, oh, real(-.5), c_dxi);
-  find_idx_off_1st(p.xi, lg, og, real(0.), c_dxi);
+  find_idx_off_1st(p.xi, lh, oh, real(-.5), s_dxi);
+  find_idx_off_1st(p.xi, lg, og, real(0.), s_dxi);
 
   real exq, eyq, ezq, hxq, hyq, hzq;
   INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
@@ -333,7 +334,7 @@ template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
 push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-		      real *fld_cache, int l0[3])
+		      real *fld_cache, int l0[3], float *s_dxi)
 {
   struct d_particle p;
   unsigned int id = d_ids[n];
@@ -346,8 +347,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   int lh[3], lg[3];
   real oh[3], og[3];
-  find_idx_off_1st(p.xi, lh, oh, real(-.5), c_dxi);
-  find_idx_off_1st(p.xi, lg, og, real(0.), c_dxi);
+  find_idx_off_1st(p.xi, lh, oh, real(-.5), s_dxi);
+  find_idx_off_1st(p.xi, lg, og, real(0.), s_dxi);
 
   real exq, eyq, ezq, hxq, hyq, hzq;
   INTERP_FIELD_1ST(cached_flds, exq, EX, g, g);
@@ -392,6 +393,11 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
+  __shared__ int block_begin;
+  __shared__ int block_end;
+
+  __shared__ float s_dxi[3];
+
   {
     real *d_flds = d_flds0 + p * size;
 
@@ -408,13 +414,18 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
       }
       ti += THREADS_PER_BLOCK;
     }
+
+    if (threadIdx.x == 0) {
+      int bid = blockIdx.y * b_my + blockIdx.x;
+      block_begin = d_off[bid];
+      block_end = d_off[bid + 1];
+      s_dxi[1] = c_dxi[1];
+      s_dxi[2] = c_dxi[2];
+    }
+
     __syncthreads();
   }
 
-
-  int bid = blockIdx.y * b_my + blockIdx.x;
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
 
   float4 *xi4_begin = d_xi4 + block_begin;
   float4 *xi4 = d_xi4 + (block_begin & ~31) + tid;
@@ -423,7 +434,8 @@ push_mprts_p1(float4 *d_xi4, float4 *d_pxi4,
 
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
     if (xi4 >= xi4_begin) {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci);
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci,
+							   s_dxi);
     }
   }
 }
@@ -457,6 +469,9 @@ push_mprts_p1_reorder(unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
+  __shared__ float s_dxi[3];
+  __shared__ int block_begin;
+  __shared__ int block_end;
   {
     real *d_flds = d_flds0 + p * size;
 
@@ -473,19 +488,23 @@ push_mprts_p1_reorder(unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
       }
       ti += THREADS_PER_BLOCK;
     }
+
+    if (threadIdx.x == 0) {
+      int bid = blockIdx.y * b_my + blockIdx.x;
+      block_begin = d_off[bid];
+      block_end = d_off[bid + 1];
+      s_dxi[1] = c_dxi[1];
+      s_dxi[2] = c_dxi[2];
+    }
     __syncthreads();
   }
   
-  int bid = blockIdx.y * b_my + blockIdx.x;
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
-
   for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
     }
     push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci);
+      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci, s_dxi);
   }
 }
 
