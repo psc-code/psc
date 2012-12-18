@@ -1146,9 +1146,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
        mflds_cuda->d_flds, fld_size,
        do_read, do_write, true);
     cuda_sync_if_enabled();
-  }
-  
-  for (int block_start = 0; block_start < 4; block_start++) {
+
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
