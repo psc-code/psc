@@ -1095,16 +1095,12 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
 
   __syncthreads();
 
-  float4 *xi4_begin = d_xi4 + block_begin;
-  float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
-  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
-  float4 *xi4_end = d_xi4 + block_end;
-
-  for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
-    if (xi4 >= xi4_begin) {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci0,
-							   prm, 1||do_read, 1||do_write, 1||do_push_pxi);
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
     }
+    push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(d_xi4 + n, d_pxi4 + n, fld_cache, ci0,
+							 prm, 1||do_read, 1||do_write, 1||do_push_pxi);
   }
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
