@@ -917,12 +917,16 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
     int lf[3];
     real of[3];
     find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
-    lf[1] -= ci0[1];
-    lf[2] -= ci0[2];
-
     // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
     push_xi(&prt, vxi, .5f * prm.dt);
     STORE_PARTICLE_POS_(prt, d_xi4, i);
+
+    lf[1] -= ci0[1];
+    lf[2] -= ci0[2];
+    current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
 
     {
       unsigned int block_pos_y = __float2int_rd(prt.xi[1] * prm.b_dxi[1]);
@@ -941,12 +945,6 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
       }
       d_bidx[i] = block_idx;
     }
-
-    current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-    current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
-
     find_idx_off_pos_1st(prt.xi, k, h1, xp, real(0.), prm);
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
