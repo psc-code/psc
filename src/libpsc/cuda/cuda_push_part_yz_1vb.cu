@@ -1065,37 +1065,18 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
 	       bool do_read, bool do_write, bool do_reduce, bool do_push_pxi,
 	       bool do_calc_jx, bool do_calc_jyjz)
 {
-  {
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, block_pos, ci0, block_start);
   if (p < 0)
     return;
+
   int bid = find_bid_q(prm, p, block_pos);
   int block_begin = d_off[bid];
   int block_end = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
-  __syncthreads();
-
-  float4 *xi4_begin = d_xi4 + block_begin;
-  float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
-  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
-  float4 *xi4_end = d_xi4 + block_end;
-
-  for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
-    if (xi4 >= xi4_begin) {
-      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci0,
-							   prm, 1||do_read, 1||do_write, 1||do_push_pxi);
-    }
-  }
-  }
-
-  __syncthreads();
-
-  {
-  __d_error_count = prm.d_error_count;
 
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
   __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
@@ -1112,14 +1093,19 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
     scurr_z.zero();
   }
 
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, block_pos, ci0, block_start);
-  if (p < 0)
-    return;
-  int bid = find_bid_q(prm, p, block_pos);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  __syncthreads();
+
+  float4 *xi4_begin = d_xi4 + block_begin;
+  float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
+  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
+  float4 *xi4_end = d_xi4 + block_end;
+
+  for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
+    if (xi4 >= xi4_begin) {
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci0,
+							   prm, 1||do_read, 1||do_write, 1||do_push_pxi);
+    }
+  }
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
@@ -1135,7 +1121,6 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
     scurr_x.add_to_fld(d_flds, 0, prm, ci0);
     scurr_y.add_to_fld(d_flds, 1, prm, ci0);
     scurr_z.add_to_fld(d_flds, 2, prm, ci0);
-  }
   }
 }
 
