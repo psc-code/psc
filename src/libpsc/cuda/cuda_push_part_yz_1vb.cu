@@ -511,7 +511,6 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, float *d_flds0, unsigned int size,
-	      unsigned int b_my, unsigned int b_mz,
 	      bool do_read, bool do_write, bool do_push_pxi)
 {
   int block_pos[3], ci0[3];
@@ -585,8 +584,7 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
 		      float4 *d_alt_xi4, float4 *d_alt_pxi4,
-		      unsigned int *d_off, float *d_flds0, unsigned int size,
-		      unsigned int b_my, unsigned int b_mz)
+		      unsigned int *d_off, float *d_flds0, unsigned int size)
 {
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
@@ -709,7 +707,7 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
     <<<dimGrid, THREADS_PER_BLOCK>>>
     (prm, mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
      mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-     mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2]);
+     mflds_cuda->d_flds, size);
   cuda_sync_if_enabled();
   
   psc_mparticles_cuda_swap_alt(mprts);
@@ -1058,6 +1056,19 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
   }
 }
 
+static void
+zero_currents(struct psc_mfields *mflds)
+{
+  // FIXME, one memset should do OPT
+  for (int p = 0; p < mflds->nr_patches; p++) {
+    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
+    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
+    unsigned int size = flds->im[0] * flds->im[1] * flds->im[2];
+    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
+		     3 * size * sizeof(*flds_cuda->d_flds)));
+  }
+}
+
 // ----------------------------------------------------------------------
 // cuda_push_mprts_b
 
@@ -1074,14 +1085,10 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   struct cuda_params prm;
   set_params(&prm, ppsc, mprts, mflds);
 
-  unsigned int size;
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    size = flds->im[0] * flds->im[1] * flds->im[2];
-    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
-		     3 * size * sizeof(*flds_cuda->d_flds)));
-  }
+  unsigned int fld_size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+
+  zero_currents(mflds);
   
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
@@ -1096,7 +1103,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, size * mflds->nr_fields,
+       mflds_cuda->d_flds, fld_size,
        do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
   }
@@ -1121,15 +1128,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   unsigned int fld_size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
 
-  // FIXME, one memset should do, consold
-  unsigned int size;
-  for (int p = 0; p < mflds->nr_patches; p++) {
-    struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
-    struct psc_fields_cuda *flds_cuda = psc_fields_cuda(flds);
-    size = flds->im[0] * flds->im[1] * flds->im[2];
-    check(cudaMemset(flds_cuda->d_flds + JXI * size, 0,
-		     3 * size * sizeof(*flds_cuda->d_flds)));
-  }
+  zero_currents(mflds);
   
   bool do_reduce = !(ppsc->timestep == -100);
   bool do_calc_jx = !(ppsc->timestep == -100);
@@ -1151,7 +1150,7 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
-       mflds_cuda->d_flds, size * mflds->nr_fields,
+       mflds_cuda->d_flds, fld_size,
        do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
   }
