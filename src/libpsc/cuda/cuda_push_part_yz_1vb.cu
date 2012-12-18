@@ -467,6 +467,40 @@ find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int *ci0, int blo
   return blockIdx.y / grid_dim_y;
 }
 
+__device__ static int
+find_bid(struct cuda_params prm)
+{
+  return blockIdx.y * prm.b_mx[1] + blockIdx.x;
+}
+
+__device__ static int
+find_bid_q(struct cuda_params prm, int p, int *block_pos)
+{
+  // FIXME won't work if b_mx[1,2] not even (?)
+  return block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
+}
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__device__ static void
+cache_fields(struct cuda_params prm, float *fld_cache, float *d_flds0, int size, int *ci0, int p)
+{
+  real *d_flds = d_flds0 + p * size;
+
+  int ti = threadIdx.x;
+  int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+  while (ti < n) {
+    int tmp = ti;
+    int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+    tmp /= BLOCKSIZE_Y + 4;
+    int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+    // OPT? currently it seems faster to do the loop rather than do m by threadidx
+    for (int m = EX; m <= HZ; m++) {
+      F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
+    }
+    ti += THREADS_PER_BLOCK;
+  }
+}
+
 // ----------------------------------------------------------------------
 // push_mprts_p1
 //
@@ -480,49 +514,19 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int b_my, unsigned int b_mz,
 	      bool do_read, bool do_write, bool do_push_pxi)
 {
-#if 0
-  __d_error_count = prm.d_error_count;
-#endif
-
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, block_pos, ci0);
+  int bid = find_bid(prm);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
+  __syncthreads();
 
-  __shared__ int block_begin;
-  __shared__ int block_end;
-
-  {
-    real *d_flds = d_flds0 + p * size;
-
-    int ti = threadIdx.x;
-    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-    while (ti < n) {
-      int tmp = ti;
-      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-      tmp /= BLOCKSIZE_Y + 4;
-      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-      // OPT? currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
-      }
-      ti += THREADS_PER_BLOCK;
-    }
-
-    if (threadIdx.x == 0) {
-      int bid = blockIdx.y * b_my + blockIdx.x;
-      block_begin = d_off[bid];
-      block_end = d_off[bid + 1];
-    }
-
-    __syncthreads();
-  }
-
-
-  int tid = threadIdx.x;
   float4 *xi4_begin = d_xi4 + block_begin;
-  float4 *xi4 = d_xi4 + (block_begin & ~31) + tid;
-  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + tid;
+  float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
+  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
   float4 *xi4_end = d_xi4 + block_end;
 
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
@@ -545,52 +549,22 @@ push_mprts_p1q(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
 	       unsigned int *d_off, float *d_flds0, unsigned int size,
 	       bool do_read, bool do_write, bool do_push_pxi)
 {
-#if 0
-  __d_error_count = prm.d_error_count;
-#endif
-
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, block_pos, ci0, block_start);
   if (p < 0)
     return;
+  int bid = find_bid_q(prm, p, block_pos);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
+  __syncthreads();
 
-  __shared__ int block_begin;
-  __shared__ int block_end;
-
-  {
-    real *d_flds = d_flds0 + p * size;
-
-    int ti = threadIdx.x;
-    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-    while (ti < n) {
-      int tmp = ti;
-      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-      tmp /= BLOCKSIZE_Y + 4;
-      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-      // OPT? currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
-      }
-      ti += THREADS_PER_BLOCK;
-    }
-
-    if (threadIdx.x == 0) {
-      int bid = block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
-      block_begin = d_off[bid];
-      block_end = d_off[bid + 1];
-    }
-
-    __syncthreads();
-  }
-
-
-  int tid = threadIdx.x;
   float4 *xi4_begin = d_xi4 + block_begin;
-  float4 *xi4 = d_xi4 + (block_begin & ~31) + tid;
-  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + tid;
+  float4 *xi4 = d_xi4 + (block_begin & ~31) + threadIdx.x;
+  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + threadIdx.x;
   float4 *xi4_end = d_xi4 + block_end;
 
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
@@ -614,45 +588,18 @@ push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4
 		      unsigned int *d_off, float *d_flds0, unsigned int size,
 		      unsigned int b_my, unsigned int b_mz)
 {
-#if 0
-  __d_error_count = prm.d_error_count;
-#endif
-
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, block_pos, ci0);
+  int bid = find_bid(prm);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
+  __syncthreads();
 
-  __shared__ int block_begin;
-  __shared__ int block_end;
-  {
-    real *d_flds = d_flds0 + p * size;
-
-    int ti = threadIdx.x;
-    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
-    while (ti < n) {
-      int tmp = ti;
-      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
-      tmp /= BLOCKSIZE_Y + 4;
-      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
-      // OPT? currently it seems faster to do the loop rather than do m by threadidx
-      for (int m = EX; m <= HZ; m++) {
-	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci0[1],jz+ci0[2]);
-      }
-      ti += THREADS_PER_BLOCK;
-    }
-
-    if (threadIdx.x == 0) {
-      int bid = blockIdx.y * b_my + blockIdx.x;
-      block_begin = d_off[bid];
-      block_end = d_off[bid + 1];
-    }
-    __syncthreads();
-  }
-  
-  int tid = threadIdx.x;
-  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
     }
@@ -745,13 +692,11 @@ mprts_reorder(struct cuda_params prm, unsigned int *d_off,
 	      float4 *d_xi4, float4 *d_pxi4,
 	      float4 *d_alt_xi4, float4 *d_alt_pxi4)
 {
-  int tid = threadIdx.x;
-  int bid = blockIdx.y * prm.b_mx[1] + blockIdx.x;
-
+  int bid = find_bid(prm);
   int block_begin = d_off[bid];
   int block_end   = d_off[bid + 1];
 
-  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
       continue;
     }
@@ -1136,17 +1081,14 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     scurr_z.zero();
   }
 
-  int block_pos[3];
-  __shared__ int ci0[3];
+  int block_pos[3], ci0[3];
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, block_pos, ci0, block_start);
   if (p < 0)
     return;
-
-  int bid = block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
-  int block_begin, block_end;
-  block_begin = d_off[bid];
-  block_end = d_off[bid + 1];
+  int bid = find_bid_q(prm, p, block_pos);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
