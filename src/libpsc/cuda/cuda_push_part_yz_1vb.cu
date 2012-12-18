@@ -433,16 +433,23 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
   }
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch(struct cuda_params prm, int *block_pos)
+find_block_pos_patch(struct cuda_params prm, int *block_pos, int *ci0)
 {
   block_pos[1] = blockIdx.x;
   block_pos[2] = blockIdx.y % prm.b_mx[2];
+
+  ci0[0] = 0;
+  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
+  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+
   return blockIdx.y / prm.b_mx[2];
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static int
-find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int block_start)
+find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int *ci0, int block_start)
 {
   int grid_dim_y = (prm.b_mx[2] + 1) / 2;
   block_pos[1] = blockIdx.x * 2;
@@ -452,6 +459,10 @@ find_block_pos_patch_q(struct cuda_params prm, int *block_pos, int block_start)
   if (block_pos[1] >= prm.b_mx[1] ||
       block_pos[2] >= prm.b_mx[2])
     return -1;
+
+  ci0[0] = 0;
+  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
+  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
   return blockIdx.y / grid_dim_y;
 }
@@ -473,13 +484,8 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   __d_error_count = prm.d_error_count;
 #endif
 
-  int block_pos[3];
-  int p = find_block_pos_patch(prm, block_pos);
-
-  int ci0[3];
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+  int block_pos[3], ci0[3];
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, block_pos, ci0);
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
@@ -543,15 +549,11 @@ push_mprts_p1q(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
   __d_error_count = prm.d_error_count;
 #endif
 
-  int block_pos[3];
-  int p = find_block_pos_patch_q(prm, block_pos, block_start);
+  int block_pos[3], ci0[3];
+  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0, block_start);
   if (p < 0)
     return;
-
-  int ci0[3];
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
@@ -616,13 +618,9 @@ push_mprts_p1_reorder(struct cuda_params prm, unsigned int *d_ids, float4 *d_xi4
   __d_error_count = prm.d_error_count;
 #endif
 
-  int block_pos[3];
-  int p = find_block_pos_patch(prm, block_pos);
-
-  int ci0[3];
-  ci0[0] = 0;
-  ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-  ci0[2] = block_pos[2] * BLOCKSIZE_Z;
+  int block_pos[3], ci0[3];
+  int p = find_block_pos_patch<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0);
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
 
@@ -1139,21 +1137,16 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
   }
 
   int block_pos[3];
-  int p = find_block_pos_patch_q(prm, block_pos, block_start);
+  __shared__ int ci0[3];
+  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0, block_start);
   if (p < 0)
     return;
 
   int bid = block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
-  __shared__ int block_begin, block_end;
-  __shared__ int ci0[3];
-  if  (threadIdx.x == 0) {
-    ci0[0] = 0;
-    ci0[1] = block_pos[1] * BLOCKSIZE_Y;
-    ci0[2] = block_pos[2] * BLOCKSIZE_Z;
-    block_begin = d_off[bid];
-    block_end = d_off[bid + 1];
-  }
-  __syncthreads();
+  int block_begin, block_end;
+  block_begin = d_off[bid];
+  block_end = d_off[bid + 1];
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
