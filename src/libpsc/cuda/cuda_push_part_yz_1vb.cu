@@ -826,14 +826,10 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_jx(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_jx(struct d_particle *prt, float4 *d_xi4, float4 *d_pxi4,
 	   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	   struct cuda_params prm)
 {
-  if (do_read) {
-    LOAD_PARTICLE_(*prt, d_xi4, d_pxi4, i);
-  }
-
   real vxi[3];
   calc_vxi(vxi, *prt);
   push_xi(prt, vxi, .5f * prm.dt);
@@ -851,6 +847,7 @@ yz_calc_jx(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
     current_add(scurr, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
     current_add(scurr, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
   }
+  push_xi(prt, vxi, -.5f * prm.dt);
 }
 
 // ----------------------------------------------------------------------
@@ -1055,7 +1052,10 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       continue;
     }
     struct d_particle prt;
-    yz_calc_jx(&prt, n, d_xi4, d_pxi4, scurr_x, prm);
+    if (do_read) {
+      LOAD_PARTICLE_(prt, d_xi4, d_pxi4, n);
+    }
+    yz_calc_jx(&prt, d_xi4, d_pxi4, scurr_x, prm);
     yz_calc_jyjz(&prt, n, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
   }
   
