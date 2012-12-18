@@ -501,7 +501,7 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
     if (xi4 >= xi4_begin) {
       push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci,
-							   prm, do_read, do_write, do_push_pxi);
+							   prm, 1||do_read, 1||do_write, 1||do_push_pxi);
     }
   }
 }
@@ -516,19 +516,18 @@ __global__ static void
 __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_p1q(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	       unsigned int *d_off, float *d_flds0, unsigned int size,
-	       unsigned int b_my, unsigned int b_mz,
 	       bool do_read, bool do_write, bool do_push_pxi)
 {
 #if 0
   __d_error_count = prm.d_error_count;
 #endif
-
-  int grid_dim_y = prm.b_mx[2]; //(prm.b_mx[2] + 1) / 2;
+  
+  int grid_dim_y = (prm.b_mx[2] + 1) / 2;
   int block_pos[3];
-  block_pos[1] = blockIdx.x;// * 2;
-  block_pos[2] = (blockIdx.y % grid_dim_y);// * 2;
-  //block_pos[1] += block_start & 1;
-  //block_pos[2] += block_start >> 1;
+  block_pos[1] = blockIdx.x * 2;
+  block_pos[2] = (blockIdx.y % grid_dim_y) * 2;
+  block_pos[1] += block_start & 1;
+  block_pos[2] += block_start >> 1;
   if (block_pos[1] >= prm.b_mx[1] ||
       block_pos[2] >= prm.b_mx[2])
     return;
@@ -580,7 +579,7 @@ push_mprts_p1q(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
   for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
     if (xi4 >= xi4_begin) {
       push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci,
-							   prm, do_read, do_write, do_push_pxi);
+							   prm, 1||do_read, 1||do_write, 1||do_push_pxi);
     }
   }
 }
@@ -698,13 +697,13 @@ cuda_push_mprts_aq(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   unsigned int size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
   
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p1q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2],
+       mflds_cuda->d_flds, size,
        true, true, true);
     cuda_sync_if_enabled();
   }
