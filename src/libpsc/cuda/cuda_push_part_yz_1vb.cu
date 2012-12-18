@@ -899,35 +899,31 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
     LOAD_PARTICLE_(prt, d_xi4, d_pxi4, i);
   }
 
-  {
-    real vxi[3];
-    calc_vxi(vxi, prt);
-    push_xi(&prt, vxi, .5f * prm.dt);
-    
-    if (do_calc_j) {
-      real fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
-      
-      int lf[3];
-      real of[3];
-      find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
-      lf[1] -= ci0[1];
-      lf[2] -= ci0[2];
-      current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-      current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-      current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-      current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
-    }
-    push_xi(&prt, vxi, -.5f * prm.dt);
-  }
+  real vxi[3];
+  calc_vxi(vxi, prt);
+
+  real h0[3], h1[3];
+  real xm[3], xp[3];
+  int j[3], k[3];
 
   if (do_calc_j) {
-    real vxi[3];
-    real h0[3], h1[3];
-    real xm[3], xp[3];
+    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+    push_xi(&prt, vxi, .5f * prm.dt);
     
-    int j[3], k[3];
-    calc_vxi(vxi, prt);
-    
+    real fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
+      
+    int lf[3];
+    real of[3];
+    find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
+    lf[1] -= ci0[1];
+    lf[2] -= ci0[2];
+    current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+    current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+    current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+
+    push_xi(&prt, vxi, -.5f * prm.dt);
+
     find_idx_off_pos_1st(prt.xi, j, h0, xm, real(0.), prm);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
