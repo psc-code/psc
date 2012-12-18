@@ -4,8 +4,6 @@
 
 #include <mrc_profile.h>
 
-__shared__ volatile bool do_calc_j;
-
 // OPT: precalc offsets into fld_cache (including ci[])
 // OPT: use more shmem?
 
@@ -888,7 +886,8 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
 	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
 	  struct cuda_params prm, int nr_total_blocks, int p_nr,
 	  unsigned int *d_bidx, int bid,
-	  bool do_read, bool do_write, bool do_reduce)
+	  bool do_read, bool do_write, bool do_reduce,
+	  bool do_calc_jx, bool do_calc_jyjz)
 {
   struct d_particle prt;
   if (do_read) {
@@ -902,12 +901,14 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
   real xm[3], xp[3];
   int j[3], k[3];
 
-  if (do_calc_j) {
+  if (do_calc_jyjz) {
     find_idx_off_pos_1st(prt.xi, j, h0, xm, real(0.), prm);
+  }
 
-    // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
-    push_xi(&prt, vxi, .5f * prm.dt);
-    
+  // x^(n+0.5), p^(n+1.0) -> x^(n+1.0), p^(n+1.0) 
+  push_xi(&prt, vxi, .5f * prm.dt);
+  
+  if (do_calc_jx) {
     real fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
       
     int lf[3];
@@ -923,24 +924,27 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
     current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx, do_reduce);
     current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx, do_reduce);
     current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, do_reduce);
+  }
 
-    {
-      unsigned int block_pos_y = __float2int_rd(prt.xi[1] * prm.b_dxi[1]);
-      unsigned int block_pos_z = __float2int_rd(prt.xi[2] * prm.b_dxi[2]);
-      int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
-
-      int block_idx;
-      if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
-	block_idx = CUDA_BND_S_OOB;
-      } else {
-	int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
-	int b_diff = bid - bidx + prm.b_mx[1] + 1;
-	int d1 = b_diff % prm.b_mx[1];
-	int d2 = b_diff / prm.b_mx[1];
-	block_idx = d2 * 3 + d1;
-      }
-      d_bidx[i] = block_idx;
+  if (1) {
+    unsigned int block_pos_y = __float2int_rd(prt.xi[1] * prm.b_dxi[1]);
+    unsigned int block_pos_z = __float2int_rd(prt.xi[2] * prm.b_dxi[2]);
+    int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
+    
+    int block_idx;
+    if (block_pos_y >= prm.b_mx[1] || block_pos_z >= prm.b_mx[2]) {
+      block_idx = CUDA_BND_S_OOB;
+    } else {
+      int bidx = block_pos_z * prm.b_mx[1] + block_pos_y + p_nr * nr_blocks;
+      int b_diff = bid - bidx + prm.b_mx[1] + 1;
+      int d1 = b_diff % prm.b_mx[1];
+      int d2 = b_diff / prm.b_mx[1];
+      block_idx = d2 * 3 + d1;
     }
+    d_bidx[i] = block_idx;
+  }
+
+  if (do_calc_jyjz) {
     find_idx_off_pos_1st(prt.xi, k, h1, xp, real(0.), prm);
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
@@ -983,10 +987,10 @@ __launch_bounds__(THREADS_PER_BLOCK, 3)
 push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 	      unsigned int *d_off, int nr_total_blocks, unsigned int *d_bidx,
 	      float *d_flds0, unsigned int size,
-	      bool do_read, bool do_write, bool do_reduce)
+	      bool do_read, bool do_write, bool do_reduce, bool do_calc_jx,
+	      bool do_calc_jyjz)
 {
   __d_error_count = prm.d_error_count;
-  do_calc_j = true;
 
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
   __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
@@ -1032,7 +1036,7 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       continue;
     }
     yz_calc_j(n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid,
-	      do_read, do_write, do_reduce);
+	      do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
   }
   
   if (do_write) {
@@ -1077,7 +1081,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, size * mflds->nr_fields,
-       true, true, true);
+       true, true, true, true, true);
     cuda_sync_if_enabled();
     }
   
