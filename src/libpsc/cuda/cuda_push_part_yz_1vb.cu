@@ -684,30 +684,6 @@ psc_mparticles_cuda_swap_alt(struct psc_mparticles *mprts)
   mprts_cuda->d_pxi4 = tmp_pxi4;
 }
 
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__global__ static void
-__launch_bounds__(THREADS_PER_BLOCK, 6)
-mprts_reorder(struct cuda_params prm, unsigned int *d_off,
-	      unsigned int *d_ids,
-	      float4 *d_xi4, float4 *d_pxi4,
-	      float4 *d_alt_xi4, float4 *d_alt_pxi4)
-{
-  int bid = find_bid(prm);
-  int block_begin = d_off[bid];
-  int block_end   = d_off[bid + 1];
-
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-
-    int j = d_ids[n];
-    d_alt_xi4[n] = d_xi4[j];
-    d_alt_pxi4[n] = d_pxi4[j];
-    d_ids[n] = n;//!!!
-  }
-}
-
 // ----------------------------------------------------------------------
 // cuda_push_mprts_a_reorder
 
@@ -741,31 +717,6 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
   free_params(&prm);
 }
 
-// ----------------------------------------------------------------------
-// cuda_push_mprts_a1_reorder
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-static void
-cuda_push_mprts_a1_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
-{
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-  set_consts(&prm);
-
-  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
-
-  mprts_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    <<<dimGrid, THREADS_PER_BLOCK>>>
-    (prm, mprts_cuda->d_off, mprts_cuda->d_ids,
-     mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-     mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4);
-  cuda_sync_if_enabled();
-
-  free_params(&prm);
-}
-  
 // OPT: take i < cell_end condition out of load
 // OPT: reduce two at a time
 // OPT: try splitting current calc / measuring by itself
