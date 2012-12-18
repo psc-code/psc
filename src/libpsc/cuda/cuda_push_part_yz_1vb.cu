@@ -507,6 +507,85 @@ push_mprts_p1(struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
 }
 
 // ----------------------------------------------------------------------
+// push_mprts_p1q
+//
+// push particles, quarter at a time
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 3)
+push_mprts_p1q(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+	       unsigned int *d_off, float *d_flds0, unsigned int size,
+	       unsigned int b_my, unsigned int b_mz,
+	       bool do_read, bool do_write, bool do_push_pxi)
+{
+#if 0
+  __d_error_count = prm.d_error_count;
+#endif
+
+  int grid_dim_y = prm.b_mx[2]; //(prm.b_mx[2] + 1) / 2;
+  int block_pos[3];
+  block_pos[1] = blockIdx.x;// * 2;
+  block_pos[2] = (blockIdx.y % grid_dim_y);// * 2;
+  //block_pos[1] += block_start & 1;
+  //block_pos[2] += block_start >> 1;
+  if (block_pos[1] >= prm.b_mx[1] ||
+      block_pos[2] >= prm.b_mx[2])
+    return;
+
+  int p = blockIdx.y / grid_dim_y;
+  int ci[3];
+  ci[0] = 0;
+  ci[1] = block_pos[1] * BLOCKSIZE_Y;
+  ci[2] = block_pos[2] * BLOCKSIZE_Z;
+
+  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+
+  __shared__ int block_begin;
+  __shared__ int block_end;
+
+  {
+    real *d_flds = d_flds0 + p * size;
+
+    int ti = threadIdx.x;
+    int n = BLOCKSIZE_X * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4);
+    while (ti < n) {
+      int tmp = ti;
+      int jy = tmp % (BLOCKSIZE_Y + 4) - 2;
+      tmp /= BLOCKSIZE_Y + 4;
+      int jz = tmp % (BLOCKSIZE_Z + 4) - 2;
+      // OPT? currently it seems faster to do the loop rather than do m by threadidx
+      for (int m = EX; m <= HZ; m++) {
+	F3_CACHE(fld_cache, m, jy, jz) = F3_DEV_YZ(m, jy+ci[1],jz+ci[2]);
+      }
+      ti += THREADS_PER_BLOCK;
+    }
+
+    if (threadIdx.x == 0) {
+      int bid = block_pos_to_block_idx(block_pos, prm.b_mx) + p * prm.b_mx[1] * prm.b_mx[2];
+      block_begin = d_off[bid];
+      block_end = d_off[bid + 1];
+    }
+
+    __syncthreads();
+  }
+
+
+  int tid = threadIdx.x;
+  float4 *xi4_begin = d_xi4 + block_begin;
+  float4 *xi4 = d_xi4 + (block_begin & ~31) + tid;
+  float4 *pxi4 = d_pxi4 + (block_begin & ~31) + tid;
+  float4 *xi4_end = d_xi4 + block_end;
+
+  for (; xi4 < xi4_end; xi4 += THREADS_PER_BLOCK, pxi4 += THREADS_PER_BLOCK) {
+    if (xi4 >= xi4_begin) {
+      push_part_one<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(xi4, pxi4, fld_cache, ci,
+							   prm, do_read, do_write, do_push_pxi);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
 // push_mprts_p1_reorder
 //
 // push particles
@@ -599,6 +678,36 @@ cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds)
      true, true, true);
   cuda_sync_if_enabled();
   
+  free_params(&prm);
+}
+
+// ----------------------------------------------------------------------
+// cuda_push_mprts_aq
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_aq(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
+
+  unsigned int size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+  
+  dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+  
+  for (int block_start = 0; block_start < 4; block_start++) {
+    push_mprts_p1q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+       mflds_cuda->d_flds, size, prm.b_mx[1], prm.b_mx[2],
+       true, true, true);
+    cuda_sync_if_enabled();
+  }
   free_params(&prm);
 }
 
@@ -1155,7 +1264,7 @@ yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mf
 
   if (!mprts_cuda->need_reorder) {
     MHERE;
-    cuda_push_mprts_a<1, 4, 4>(mprts, mflds);
+    cuda_push_mprts_aq<1, 4, 4>(mprts, mflds);
   } else {
     cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
     mprts_cuda->need_reorder = false;
