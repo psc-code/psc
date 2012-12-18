@@ -1042,7 +1042,7 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
       continue;
     }
     yz_calc_j(n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid,
-	      do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
+	      1||do_read, 1||do_write, 1||do_reduce, 1||do_calc_jx, 1||do_calc_jyjz);
   }
   
   if (do_write) {
