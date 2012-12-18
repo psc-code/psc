@@ -1090,7 +1090,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   bool do_calc_jyjz = !(ppsc->timestep == -100);
   bool do_write = !(ppsc->timestep == -100);
   bool do_read = !(ppsc->timestep == -100);
-
+  
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -1099,7 +1099,7 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
        mflds_cuda->d_flds, size * mflds->nr_fields,
        do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
-    }
+  }
   
   free_params(&prm);
 }
@@ -1118,31 +1118,10 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   set_params(&prm, ppsc, mprts, mflds);
   set_consts(&prm);
 
-  unsigned int size = mflds->nr_fields *
+  unsigned int fld_size = mflds->nr_fields *
     mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
-  
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
-  
-  for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_p1q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
-       mflds_cuda->d_flds, size,
-       true, true, true);
-    cuda_sync_if_enabled();
-  }
-  free_params(&prm);
 
-  {
-  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
-
-  if (mprts->nr_patches == 0)
-    return;
-
-  struct cuda_params prm;
-  set_params(&prm, ppsc, mprts, mflds);
-
+  // FIXME, one memset should do, consold
   unsigned int size;
   for (int p = 0; p < mflds->nr_patches; p++) {
     struct psc_fields *flds = psc_mfields_get_patch(mflds, p);
@@ -1152,14 +1131,23 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
 		     3 * size * sizeof(*flds_cuda->d_flds)));
   }
   
-  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
-  
   bool do_reduce = !(ppsc->timestep == -100);
   bool do_calc_jx = !(ppsc->timestep == -100);
   bool do_calc_jyjz = !(ppsc->timestep == -100);
   bool do_write = !(ppsc->timestep == -100);
   bool do_read = !(ppsc->timestep == -100);
 
+  dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
+  
+  for (int block_start = 0; block_start < 4; block_start++) {
+    push_mprts_p1q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+       mflds_cuda->d_flds, fld_size,
+       do_read, do_write, true);
+    cuda_sync_if_enabled();
+  }
+  
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
@@ -1168,10 +1156,9 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
        mflds_cuda->d_flds, size * mflds->nr_fields,
        do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
-    }
-  
-  free_params(&prm);
   }
+
+  free_params(&prm);
 }
 
 // ======================================================================
@@ -1254,23 +1241,23 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
   }
 
   prof_start(pr);
-#if 0
-  yz4x4_1vb_cuda_push_mprts_a(mprts, mflds);
-  yz4x4_1vb_cuda_push_mprts_b(mprts, mflds);
-#else
   struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
-
-  psc_mparticles_cuda_copy_to_dev(mprts);
-
-  if (!mprts_cuda->need_reorder) {
-    MHERE;
-    cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
+    
+  if (0) {
+    yz4x4_1vb_cuda_push_mprts_a(mprts, mflds);
+    yz4x4_1vb_cuda_push_mprts_b(mprts, mflds);
   } else {
-    cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
-    cuda_push_mprts_b<1, 4, 4>(mprts, mflds);
-    mprts_cuda->need_reorder = false;
+    psc_mparticles_cuda_copy_to_dev(mprts);
+    
+    if (!mprts_cuda->need_reorder) {
+      MHERE;
+      cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
+    } else {
+      cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
+      cuda_push_mprts_b<1, 4, 4>(mprts, mflds);
+      mprts_cuda->need_reorder = false;
+    }
   }
 
-#endif
   prof_stop(pr);
 }
