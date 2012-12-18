@@ -8,8 +8,7 @@
 #include <mrc_profile.h>
 #include <math.h>
 
-EXTERN_C void yz4x4_1vb_cuda_push_mprts_a(struct psc_mparticles *mprts, struct psc_mfields *mflds);
-EXTERN_C void yz4x4_1vb_cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds);
+EXTERN_C void yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mflds);
 
 static void
 cuda_push_part(struct psc_particles *prts_base,
@@ -301,25 +300,11 @@ psc_push_particles_1vb_4x4_cuda_push_mprts_yz(struct psc_push_particles *push,
 					      struct psc_mparticles *mprts,
 					      struct psc_mfields *mflds_base)
 {
-  static int pr_A, pr_B, pr_D;
-  if (!pr_A) {
-    pr_A  = prof_register("cuda_part_a", 1., 0, 0);
-    pr_B  = prof_register("cuda_part_b", 1., 0, 0);
-    pr_D  = prof_register("xchg_REORDER", 1., 0, 0);
-  }
-
   // it's difficult to convert mprts because of the ordering constraints (?)
   assert(strcmp(psc_mparticles_type(mprts), "cuda") == 0);
+
   struct psc_mfields *mflds = psc_mfields_get_as(mflds_base, "cuda", EX, EX + 6);
-
-  prof_start(pr_A);
-  yz4x4_1vb_cuda_push_mprts_a(mprts, mflds);
-  prof_stop(pr_A);
-  
-  prof_start(pr_B);
-  yz4x4_1vb_cuda_push_mprts_b(mprts, mflds);
-  prof_stop(pr_B);
-
+  yz4x4_1vb_cuda_push_mprts(mprts, mflds);
   psc_mfields_put_as(mflds, mflds_base, JXI, JXI + 3);
 }
 
