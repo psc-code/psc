@@ -822,35 +822,6 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 }
 
 // ----------------------------------------------------------------------
-// yz_calc_jx
-
-template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
-__device__ static void
-yz_calc_jx(struct d_particle *prt, float4 *d_xi4, float4 *d_pxi4,
-	   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
-	   struct cuda_params prm)
-{
-  real vxi[3];
-  calc_vxi(vxi, *prt);
-  push_xi(prt, vxi, .5f * prm.dt);
-
-  if (do_calc_j) {
-    real fnqx = vxi[0] * prt->qni_wni * prm.fnqs;
-    
-    int lf[3];
-    real of[3];
-    find_idx_off_1st(prt->xi, lf, of, real(0.), prm.dxi);
-    lf[1] -= ci0[1];
-    lf[2] -= ci0[2];
-    current_add(scurr, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
-    current_add(scurr, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
-    current_add(scurr, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
-  }
-  push_xi(prt, vxi, -.5f * prm.dt);
-}
-
-// ----------------------------------------------------------------------
 // yz_calc_jy
 
 __device__ static void
@@ -916,29 +887,56 @@ curr_2d_vb_cell_upd(int i[2], real x[2], real dx1[2], real dx[2], int off[2])
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_jyjz(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
-	     SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
-	     struct cuda_params prm, int nr_total_blocks, int p_nr,
-	     unsigned int *d_bidx, int bid)
+yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_x,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_y,
+	  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr_z,
+	  struct cuda_params prm, int nr_total_blocks, int p_nr,
+	  unsigned int *d_bidx, int bid)
 {
+  struct d_particle prt;
+  if (do_read) {
+    LOAD_PARTICLE_(prt, d_xi4, d_pxi4, i);
+  }
+
+  {
+    real vxi[3];
+    calc_vxi(vxi, prt);
+    push_xi(&prt, vxi, .5f * prm.dt);
+    
+    if (do_calc_j) {
+      real fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
+      
+      int lf[3];
+      real of[3];
+      find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
+      lf[1] -= ci0[1];
+      lf[2] -= ci0[2];
+      current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
+      current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx);
+      current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx);
+      current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx);
+    }
+    push_xi(&prt, vxi, -.5f * prm.dt);
+  }
+
   if (do_calc_j) {
     real vxi[3];
     real h0[3], h1[3];
     real xm[3], xp[3];
     
     int j[3], k[3];
-    calc_vxi(vxi, *prt);
+    calc_vxi(vxi, prt);
     
-    find_idx_off_pos_1st(prt->xi, j, h0, xm, real(0.), prm);
+    find_idx_off_pos_1st(prt.xi, j, h0, xm, real(0.), prm);
 
     // x^(n+0.5), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(prt, vxi, prm.dt);
-    STORE_PARTICLE_POS_(*prt, d_xi4, i);
+    push_xi(&prt, vxi, prm.dt);
+    STORE_PARTICLE_POS_(prt, d_xi4, i);
 #if 1
     {
-      unsigned int block_pos_y = __float2int_rd(prt->xi[1] * prm.b_dxi[1]);
-      unsigned int block_pos_z = __float2int_rd(prt->xi[2] * prm.b_dxi[2]);
+      unsigned int block_pos_y = __float2int_rd(prt.xi[1] * prm.b_dxi[1]);
+      unsigned int block_pos_z = __float2int_rd(prt.xi[2] * prm.b_dxi[2]);
       int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
 
       int block_idx;
@@ -954,7 +952,7 @@ yz_calc_jyjz(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
       d_bidx[i] = block_idx;
     }
 #endif
-    find_idx_off_pos_1st(prt->xi, k, h1, xp, real(0.), prm);
+    find_idx_off_pos_1st(prt.xi, k, h1, xp, real(0.), prm);
     
     int idiff[2] = { k[1] - j[1], k[2] - j[2] };
     real dx[2] = { xp[1] - xm[1], xp[2] - xm[2] };
@@ -975,16 +973,16 @@ yz_calc_jyjz(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
     }
     real dx1[2];
     calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(i, x, dx1, prt->qni_wni, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell(i, x, dx1, prt.qni_wni, scurr_y, scurr_z, prm);
     curr_2d_vb_cell_upd(i, x, dx1, dx, off);
     
     off[0] = idiff[0] - off[0];
     off[1] = idiff[1] - off[1];
     calc_dx1(dx1, x, dx, off);
-    curr_2d_vb_cell(i, x, dx1, prt->qni_wni, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell(i, x, dx1, prt.qni_wni, scurr_y, scurr_z, prm);
     curr_2d_vb_cell_upd(i, x, dx1, dx, off);
     
-    curr_2d_vb_cell(i, x, dx, prt->qni_wni, scurr_y, scurr_z, prm);
+    curr_2d_vb_cell(i, x, dx, prt.qni_wni, scurr_y, scurr_z, prm);
   }
 }
 
@@ -1046,12 +1044,7 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
     if (n < block_begin) {
       continue;
     }
-    struct d_particle prt;
-    if (do_read) {
-      LOAD_PARTICLE_(prt, d_xi4, d_pxi4, n);
-    }
-    yz_calc_jx(&prt, d_xi4, d_pxi4, scurr_x, prm);
-    yz_calc_jyjz(&prt, n, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
+    yz_calc_j(n, d_xi4, d_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
   }
   
   if (do_write) {
