@@ -277,7 +277,7 @@ psc_bnd_particles_sub_exchange_mprts_post(struct psc_bnd_particles *bnd,
   cuda_mprts_update_offsets(mprts);
   prof_stop(pr_D1);
   
-#if 1
+#if 0
   prof_start(pr_E);
   cuda_mprts_reorder(mprts);
   mprts_cuda->need_reorder = false;

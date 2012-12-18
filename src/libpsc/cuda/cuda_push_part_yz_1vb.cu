@@ -1218,6 +1218,63 @@ cuda_push_mprts_ab(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   free_params(&prm);
 }
 
+// ----------------------------------------------------------------------
+// cuda_push_mprts_ab_reorder
+
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+static void
+cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mflds)
+{
+  struct psc_mparticles_cuda *mprts_cuda = psc_mparticles_cuda(mprts);
+  struct psc_mfields_cuda *mflds_cuda = psc_mfields_cuda(mflds);
+
+  struct cuda_params prm;
+  set_params(&prm, ppsc, mprts, mflds);
+  set_consts(&prm);
+
+  psc_mparticles_cuda_copy_to_dev(mprts);
+
+  zero_currents(mflds);
+  
+  unsigned int fld_size = mflds->nr_fields *
+    mflds_cuda->im[0] * mflds_cuda->im[1] * mflds_cuda->im[2];
+  
+  bool do_reduce = !(ppsc->timestep == -100);
+  bool do_calc_jx = !(ppsc->timestep == -100);
+  bool do_calc_jyjz = !(ppsc->timestep == -100);
+  bool do_write = !(ppsc->timestep == -100);
+  bool do_read = !(ppsc->timestep == -100);
+    
+  {
+    dim3 dimGrid(prm.b_mx[1], prm.b_mx[2] * mprts->nr_patches);
+
+    push_mprts_p1_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      <<<dimGrid, THREADS_PER_BLOCK>>>
+      (prm, mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       mflds_cuda->d_flds, fld_size);
+    cuda_sync_if_enabled();
+    
+    psc_mparticles_cuda_swap_alt(mprts);
+  }
+
+  {
+    dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
+  
+    for (int block_start = 0; block_start < 4; block_start++) {
+      push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+	<<<dimGrid, THREADS_PER_BLOCK>>>
+	(block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
+	 mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+	 mflds_cuda->d_flds, fld_size,
+	 do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
+      cuda_sync_if_enabled();
+    }
+    
+  }
+  free_params(&prm);
+}
+
 // ======================================================================
 
 EXTERN_C void
@@ -1310,8 +1367,7 @@ yz4x4_1vb_cuda_push_mprts(struct psc_mparticles *mprts, struct psc_mfields *mfld
       MHERE;
       cuda_push_mprts_ab<1, 4, 4>(mprts, mflds);
     } else {
-      cuda_push_mprts_a_reorder<1, 4, 4>(mprts, mflds);
-      cuda_push_mprts_b<1, 4, 4>(mprts, mflds);
+      cuda_push_mprts_ab_reorder<1, 4, 4>(mprts, mflds);
       mprts_cuda->need_reorder = false;
     }
   }
