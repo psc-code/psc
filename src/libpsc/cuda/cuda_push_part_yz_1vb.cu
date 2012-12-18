@@ -900,6 +900,9 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
   real h0[3], h1[3];
   real xm[3], xp[3];
   int j[3], k[3];
+  int lf[3];
+  real of[3];
+  real fnqx;
 
   if (do_calc_jyjz) {
     find_idx_off_pos_1st(prt.xi, j, h0, xm, real(0.), prm);
@@ -909,24 +912,27 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
   push_xi(&prt, vxi, .5f * prm.dt);
   
   if (do_calc_jx) {
-    real fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
+    fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
       
-    int lf[3];
-    real of[3];
     find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
-    // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
-    push_xi(&prt, vxi, .5f * prm.dt);
-    STORE_PARTICLE_POS_(prt, d_xi4, i);
-
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
+  }
+
+  // x^(n+1.0), p^(n+1.0) -> x^(n+1.5), p^(n+1.0) 
+  push_xi(&prt, vxi, .5f * prm.dt);
+  if (do_write) {
+    STORE_PARTICLE_POS_(prt, d_xi4, i);
+  }
+  
+  if (do_calc_jx) {
     current_add(scurr_x, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx, do_reduce);
     current_add(scurr_x, lf[1]+1, lf[2]  , (      of[1]) * (1.f - of[2]) * fnqx, do_reduce);
     current_add(scurr_x, lf[1]  , lf[2]+1, (1.f - of[1]) * (      of[2]) * fnqx, do_reduce);
     current_add(scurr_x, lf[1]+1, lf[2]+1, (      of[1]) * (      of[2]) * fnqx, do_reduce);
   }
 
-  if (1) {
+  if (do_write) {
     unsigned int block_pos_y = __float2int_rd(prt.xi[1] * prm.b_dxi[1]);
     unsigned int block_pos_z = __float2int_rd(prt.xi[2] * prm.b_dxi[2]);
     int nr_blocks = prm.b_mx[1] * prm.b_mx[2];
@@ -1075,13 +1081,19 @@ cuda_push_mprts_b(struct psc_mparticles *mprts, struct psc_mfields *mflds)
   
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
   
+  bool do_reduce = !(ppsc->timestep == -100);
+  bool do_calc_jx = !(ppsc->timestep == -100);
+  bool do_calc_jyjz = !(ppsc->timestep == -100);
+  bool do_write = !(ppsc->timestep == -100);
+  bool do_read = !(ppsc->timestep == -100);
+
   for (int block_start = 0; block_start < 4; block_start++) {
     push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
       (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4, mprts_cuda->d_off,
        mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, size * mflds->nr_fields,
-       true, true, true, true, true);
+       do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
     }
   
