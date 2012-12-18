@@ -826,25 +826,24 @@ current_add(SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr, int jy, int jz,
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 __device__ static void
-yz_calc_jx(int i, float4 *d_xi4, float4 *d_pxi4,
+yz_calc_jx(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
 	   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> &scurr,
 	   struct cuda_params prm)
 {
-  struct d_particle p;
   if (do_read) {
-    LOAD_PARTICLE_(p, d_xi4, d_pxi4, i);
+    LOAD_PARTICLE_(*prt, d_xi4, d_pxi4, i);
   }
 
   real vxi[3];
-  calc_vxi(vxi, p);
-  push_xi(&p, vxi, .5f * prm.dt);
+  calc_vxi(vxi, *prt);
+  push_xi(prt, vxi, .5f * prm.dt);
 
   if (do_calc_j) {
-    real fnqx = vxi[0] * p.qni_wni * prm.fnqs;
+    real fnqx = vxi[0] * prt->qni_wni * prm.fnqs;
     
     int lf[3];
     real of[3];
-    find_idx_off_1st(p.xi, lf, of, real(0.), prm.dxi);
+    find_idx_off_1st(prt->xi, lf, of, real(0.), prm.dxi);
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
     current_add(scurr, lf[1]  , lf[2]  , (1.f - of[1]) * (1.f - of[2]) * fnqx);
@@ -1053,9 +1052,13 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
   }
   __syncthreads();
 
-  for (int i = block_begin + tid; i < block_end; i += THREADS_PER_BLOCK) {
-    yz_calc_jx(i, d_xi4, d_pxi4, scurr_x, prm);
-    yz_calc_jyjz(i, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
+  for (int n = (block_begin & ~31) + tid; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+    struct d_particle prt;
+    yz_calc_jx(&prt, n, d_xi4, d_pxi4, scurr_x, prm);
+    yz_calc_jyjz(n, d_xi4, d_pxi4, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid);
   }
   
   if (do_write) {
