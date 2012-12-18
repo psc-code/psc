@@ -922,11 +922,6 @@ yz_calc_jyjz(struct d_particle *prt, int i, float4 *d_xi4, float4 *d_pxi4,
 	     struct cuda_params prm, int nr_total_blocks, int p_nr,
 	     unsigned int *d_bidx, int bid)
 {
-  // OPT/FIXME, is it really better to reload the particle?
-  if (do_read) {
-    LOAD_PARTICLE_(*prt, d_xi4, d_pxi4, i);
-  }
-
   if (do_calc_j) {
     real vxi[3];
     real h0[3], h1[3];
