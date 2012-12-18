@@ -64,6 +64,32 @@
 } while (0)
 #endif
 
+// ======================================================================
+
+// FIXME -> common.c
+
+__device__ static void
+find_idx_off_1st(const real xi[3], int j[3], real h[3], real shift,
+		 struct cuda_params prm)
+{
+  for (int d = 0; d < 3; d++) {
+    real pos = xi[d] * prm.dxi[d] + shift;
+    j[d] = __float2int_rd(pos);
+    h[d] = pos - j[d];
+  }
+}
+
+__device__ static void
+find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real shift,
+		     struct cuda_params prm)
+{
+  for (int d = 0; d < 3; d++) {
+    pos[d] = xi[d] * prm.dxi[d] + shift;
+    j[d] = __float2int_rd(pos[d]);
+    h[d] = pos[d] - j[d];
+  }
+}
+
 
 #define NO_CHECKERBOARD
 //#define DEBUG
@@ -243,7 +269,7 @@ calc_vxi(real vxi[3], struct d_particle p)
 
 __device__ static void
 push_pxi_dt(struct d_particle *p,
-	     real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
+	    real exq, real eyq, real ezq, real hxq, real hyq, real hzq)
 {
   int kind = __float_as_int(p->kind_as_float);
   real dq = c_dqs[kind];
@@ -324,8 +350,8 @@ push_part_one(float4 *d_xi4, float4 *d_pxi4, real *fld_cache, int l0[3],
   real exq, eyq, ezq, hxq, hyq, hzq;
 
   if (do_push_pxi) {
-    find_idx_off_1st(p.xi, lh, oh, real(-.5), prm.dxi);
-    find_idx_off_1st(p.xi, lg, og, real(0.), prm.dxi);
+    find_idx_off_1st(p.xi, lh, oh, real(-.5), prm);
+    find_idx_off_1st(p.xi, lg, og, real(0.), prm);
     lg[1] -= l0[1];
     lh[1] -= l0[1];
     lg[2] -= l0[2];
@@ -381,8 +407,8 @@ push_part_one_reorder(int n, unsigned int *d_ids, float4 *d_xi4, float4 *d_pxi4,
   real exq, eyq, ezq, hxq, hyq, hzq;
 
   if (do_push_pxi) {
-    find_idx_off_1st(p.xi, lh, oh, real(-.5), prm.dxi);
-    find_idx_off_1st(p.xi, lg, og, real(0.), prm.dxi);
+    find_idx_off_1st(p.xi, lh, oh, real(-.5), prm);
+    find_idx_off_1st(p.xi, lg, og, real(0.), prm);
     lg[1] -= l0[1];
     lh[1] -= l0[1];
     lg[2] -= l0[2];
@@ -676,22 +702,6 @@ cuda_push_mprts_a1_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfl
   free_params(&prm);
 }
   
-// ======================================================================
-
-// FIXME -> common.c
-
-__device__ static void
-find_idx_off_pos_1st(const real xi[3], int j[3], real h[3], real pos[3], real shift,
-		     struct cuda_params prm)
-{
-  int d;
-  for (d = 0; d < 3; d++) {
-    pos[d] = xi[d] * prm.dxi[d] + shift;
-    j[d] = __float2int_rd(pos[d]);
-    h[d] = pos[d] - j[d];
-  }
-}
-
 // OPT: take i < cell_end condition out of load
 // OPT: reduce two at a time
 // OPT: try splitting current calc / measuring by itself
@@ -910,7 +920,7 @@ yz_calc_j(int i, float4 *d_xi4, float4 *d_pxi4,
   if (do_calc_jx) {
     fnqx = vxi[0] * prt.qni_wni * prm.fnqs;
       
-    find_idx_off_1st(prt.xi, lf, of, real(0.), prm.dxi);
+    find_idx_off_1st(prt.xi, lf, of, real(0.), prm);
     lf[1] -= ci0[1];
     lf[2] -= ci0[2];
   }
