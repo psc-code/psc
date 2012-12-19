@@ -1203,12 +1203,7 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
     push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm,
        true, true, true);
-  }
 
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
     struct d_particle prt;
     if (1||do_read) {
       LOAD_PARTICLE_(prt, d_alt_xi4, d_alt_pxi4, n);
