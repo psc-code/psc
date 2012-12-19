@@ -1168,7 +1168,6 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
 		       bool do_read, bool do_write, bool do_reduce, bool do_calc_jx,
 		       bool do_calc_jyjz)
 {
-  {
   int block_pos[3], ci0[3];
   int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
     (prm, block_pos, ci0, block_start);
@@ -1180,21 +1179,7 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
 
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
-  __syncthreads();
 
-  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
-    if (n < block_begin) {
-      continue;
-    }
-    push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm,
-       true, true, true);
-  }
-  }
-
-  __syncthreads();
-
-  {
   const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
   __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
   __shared__ real _scurry[WARPS_PER_BLOCK * block_stride];
@@ -1209,15 +1194,16 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
     scurr_y.zero();
     scurr_z.zero();
   }
+  __syncthreads();
 
-  int block_pos[3], ci0[3];
-  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-    (prm, block_pos, ci0, block_start);
-  if (p < 0)
-    return;
-  int bid = find_bid_q(prm, p, block_pos);
-  int block_begin = d_off[bid];
-  int block_end = d_off[bid + 1];
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+    push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm,
+       true, true, true);
+  }
 
   for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
     if (n < block_begin) {
@@ -1237,7 +1223,6 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
     scurr_x.add_to_fld(d_flds, 0, prm, ci0);
     scurr_y.add_to_fld(d_flds, 1, prm, ci0);
     scurr_z.add_to_fld(d_flds, 2, prm, ci0);
-  }
   }
 }
 
