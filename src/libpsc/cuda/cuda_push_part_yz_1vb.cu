@@ -1158,6 +1158,89 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
   }
 }
 
+template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
+__global__ static void
+__launch_bounds__(THREADS_PER_BLOCK, 3)
+push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_pxi4,
+		       float4 *d_alt_xi4, float4 *d_alt_pxi4,
+		       unsigned int *d_off, int nr_total_blocks, unsigned int *d_ids, unsigned int *d_bidx,
+		       float *d_flds0, unsigned int size,
+		       bool do_read, bool do_write, bool do_reduce, bool do_calc_jx,
+		       bool do_calc_jyjz)
+{
+  {
+  int block_pos[3], ci0[3];
+  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0, block_start);
+  if (p < 0)
+    return;
+  int bid = find_bid_q(prm, p, block_pos);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
+
+  __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
+  cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
+  __syncthreads();
+
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+    push_part_one_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+      (n, d_ids, d_xi4, d_pxi4, d_alt_xi4, d_alt_pxi4, fld_cache, ci0, prm,
+       true, true, true);
+  }
+  }
+
+  __syncthreads();
+
+  {
+  const int block_stride = (((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32;
+  __shared__ real _scurrx[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurry[WARPS_PER_BLOCK * block_stride];
+  __shared__ real _scurrz[WARPS_PER_BLOCK * block_stride];
+
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
+  SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_z(_scurrz);
+
+  if (do_write) {
+    scurr_x.zero();
+    scurr_y.zero();
+    scurr_z.zero();
+  }
+
+  int block_pos[3], ci0[3];
+  int p = find_block_pos_patch_q<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    (prm, block_pos, ci0, block_start);
+  if (p < 0)
+    return;
+  int bid = find_bid_q(prm, p, block_pos);
+  int block_begin = d_off[bid];
+  int block_end = d_off[bid + 1];
+
+  for (int n = (block_begin & ~31) + threadIdx.x; n < block_end; n += THREADS_PER_BLOCK) {
+    if (n < block_begin) {
+      continue;
+    }
+    struct d_particle prt;
+    if (1||do_read) {
+      LOAD_PARTICLE_(prt, d_alt_xi4, d_alt_pxi4, n);
+    }
+    yz_calc_j(&prt, n, d_alt_xi4, d_alt_pxi4, scurr_x, scurr_y, scurr_z, prm, nr_total_blocks, p, d_bidx, bid, ci0,
+	      1||do_read, 1||do_write, 1||do_reduce, 1||do_calc_jx, 1||do_calc_jyjz);
+  }
+  
+  if (do_write) {
+    __syncthreads();
+    real *d_flds = d_flds0 + p * size;
+    scurr_x.add_to_fld(d_flds, 0, prm, ci0);
+    scurr_y.add_to_fld(d_flds, 1, prm, ci0);
+    scurr_z.add_to_fld(d_flds, 2, prm, ci0);
+  }
+  }
+}
+
 
 static void
 zero_currents(struct psc_mfields *mflds)
@@ -1284,17 +1367,18 @@ cuda_push_mprts_ab_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfl
   dim3 dimGrid((prm.b_mx[1] + 1) / 2, ((prm.b_mx[2] + 1) / 2) * mprts->nr_patches);
 
   for (int block_start = 0; block_start < 4; block_start++) {
-    push_mprts_p1q_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
-      <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
-       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-       mflds_cuda->d_flds, fld_size);
-    cuda_sync_if_enabled();
+    // push_mprts_p1q_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    //   <<<dimGrid, THREADS_PER_BLOCK>>>
+    //   (block_start, prm, mprts_cuda->d_ids, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+    //    mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+    //    mflds_cuda->d_flds, fld_size);
+    // cuda_sync_if_enabled();
     
-    push_mprts_p3<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
+    push_mprts_p13_reorder<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>
       <<<dimGrid, THREADS_PER_BLOCK>>>
-      (block_start, prm, mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
-       mprts_cuda->nr_total_blocks, mprts_cuda->d_bidx,
+      (block_start, prm, mprts_cuda->d_xi4, mprts_cuda->d_pxi4,
+       mprts_cuda->d_alt_xi4, mprts_cuda->d_alt_pxi4, mprts_cuda->d_off,
+       mprts_cuda->nr_total_blocks, mprts_cuda->d_ids, mprts_cuda->d_bidx,
        mflds_cuda->d_flds, fld_size,
        do_read, do_write, do_reduce, do_calc_jx, do_calc_jyjz);
     cuda_sync_if_enabled();
