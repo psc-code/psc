@@ -761,9 +761,13 @@ cuda_push_mprts_a_reorder(struct psc_mparticles *mprts, struct psc_mfields *mfld
 // OPT: reduce two at a time
 // OPT: try splitting current calc / measuring by itself
 
-#define NR_CBLOCKS 8
-#define CBLOCK_ID (threadIdx.x && (NR_CBLOCKS - 1))
-#define CBLOCK_STRIDE ((((BLOCKSIZE_Y + 2*SW) * (BLOCKSIZE_Z + 2*SW) + 31) / 32) * 32)
+#define NR_CBLOCKS 16
+#define CBLOCK_ID (threadIdx.x & (NR_CBLOCKS - 1))
+#define CBLOCK_SIZE_Y (BLOCKSIZE_Y + 2*SW)
+#define CBLOCK_SIZE_Z (BLOCKSIZE_Z + 2*SW)
+#define CBLOCK_SIZE (CBLOCK_SIZE_Y * CBLOCK_SIZE_Z * (NR_CBLOCKS))
+
+#define CBLOCK_OFF(jy, jz, wid) ((((jz) + SW) * CBLOCK_SIZE_Y + ((jy) + SW)) * (NR_CBLOCKS) + wid)
 
 template<int BLOCKSIZE_X, int BLOCKSIZE_Y, int BLOCKSIZE_Z>
 class SCurr {
@@ -778,8 +782,7 @@ public:
   __device__ void zero()
   {
     int i = threadIdx.x;
-    int N = CBLOCK_STRIDE * NR_CBLOCKS;
-    while (i < N) {
+    while (i < CBLOCK_SIZE) {
       scurr[i] = real(0.);
       i += THREADS_PER_BLOCK;
     }
@@ -808,9 +811,9 @@ public:
 
   __device__ real operator()(int wid, int jy, int jz) const
   {
-    unsigned int off = (jz + SW) * (BLOCKSIZE_Y + 2*SW) + jy + SW + wid * CBLOCK_STRIDE;
-#ifdef DEBUG
-    if (off >= NR_CLBOCKS * CBLOCK_STRIDE) {
+    unsigned int off = CBLOCK_OFF(jy, jz, wid);
+ #ifdef DEBUG
+    if (off >= NR_CBLOCKS * BLOCK_STRIDE) {
       (*__d_error_count)++;
       off = 0;
     }
@@ -820,7 +823,7 @@ public:
   }
   __device__ real& operator()(int wid, int jy, int jz)
   {
-    unsigned int off = (jz + SW) * (BLOCKSIZE_Y + 2*SW) + jy + SW + wid * CBLOCK_STRIDE;
+    unsigned int off = CBLOCK_OFF(jy, jz, wid);
 #ifdef DEBUG
     if (off >= NR_CBLOCKS * CBLOCK_STRIDE) {
       (*__d_error_count)++;
@@ -1052,9 +1055,9 @@ push_mprts_p3(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d_
 {
   __d_error_count = prm.d_error_count;
 
-  __shared__ real _scurrx[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurry[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurrz[NR_CBLOCKS * CBLOCK_STRIDE];
+  __shared__ real _scurrx[CBLOCK_SIZE];
+  __shared__ real _scurry[CBLOCK_SIZE];
+  __shared__ real _scurrz[CBLOCK_SIZE];
 
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
@@ -1119,9 +1122,9 @@ push_mprts_p13(int block_start, struct cuda_params prm, float4 *d_xi4, float4 *d
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurry[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurrz[NR_CBLOCKS * CBLOCK_STRIDE];
+  __shared__ real _scurrx[CBLOCK_SIZE];
+  __shared__ real _scurry[CBLOCK_SIZE];
+  __shared__ real _scurrz[CBLOCK_SIZE];
 
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
@@ -1180,9 +1183,9 @@ push_mprts_p13_reorder(int block_start, struct cuda_params prm, float4 *d_xi4, f
   __shared__ real fld_cache[6 * 1 * (BLOCKSIZE_Y + 4) * (BLOCKSIZE_Z + 4)];
   cache_fields<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z>(prm, fld_cache, d_flds0, size, ci0, p);
 
-  __shared__ real _scurrx[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurry[NR_CBLOCKS * CBLOCK_STRIDE];
-  __shared__ real _scurrz[NR_CBLOCKS * CBLOCK_STRIDE];
+  __shared__ real _scurrx[CBLOCK_SIZE];
+  __shared__ real _scurry[CBLOCK_SIZE];
+  __shared__ real _scurrz[CBLOCK_SIZE];
 
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_x(_scurrx);
   SCurr<BLOCKSIZE_X, BLOCKSIZE_Y, BLOCKSIZE_Z> scurr_y(_scurry);
