@@ -16,7 +16,7 @@
 // src/psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 1 --mrc_io_type ascii --pfield_step 1 --psc_diag_every_step 1
 
 // two-stream
-// src/psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 10 --mrc_io_type ascii --write_tfield no --pfield_step 10 --psc_diag_every_step 10 --nr_kinds 2 --v0_1 1. --v0_2 -1. --cc 5. --nicell 32
+// src/ psc_es1 --psc_output_particles_type ascii --psc_output_particles_every_step 10 --mrc_io_type ascii --write_tfield no --pfield_step 10 --psc_diag_every_step 10 --particle_kinds e1,e2 --v0_1 1. --v0_2 -1. --cc 6. --nicell 32
 
 struct psc_es1_species {
   int nlg; // number of loading groups

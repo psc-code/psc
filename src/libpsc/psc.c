@@ -219,7 +219,8 @@ _psc_set_from_options(struct psc *psc)
   }
 
   // make comma separated list of current kinds
-  char s[100] = "";
+  char *s = calloc(100, 1);
+  char *s_save = s;
   if (psc->nr_kinds > 0) {
     strcpy(s, psc->kinds[0].name);
     for (int k = 1; k < psc->nr_kinds; k++) {
@@ -227,18 +228,30 @@ _psc_set_from_options(struct psc *psc)
       strcat(s, psc->kinds[k].name);
     }
   }
+  char **ps = &s;
   // allow user to change names, or even change number
-  mrc_params_get_option_string_help("particle_kinds", (const char **) &s,
+  mrc_params_get_option_string_help("particle_kinds", (const char **) ps,
 				    "names of particle kinds, separated by commas");
   // parse comma separated list back into names
-  char *p, *ss = s;
+  char *p, *ss;
   int k = 0;
+  ss = strdup(*ps);
+  
+  while ((p = strsep(&ss, ", "))) {
+    k++;
+  }
+  free(ss);
+  psc_set_kinds(psc, k, NULL);
+
+  k = 0;
+  ss = strdup(*ps);
   while ((p = strsep(&ss, ", "))) {
     free(psc->kinds[k].name);
     psc->kinds[k].name = strdup(p);
     k++;
   }
-  psc->nr_kinds = k;
+  free(ss);
+  s = s_save;
     
   // allow setting of parameters for each kind
   for (int k = 0; k < psc->nr_kinds; k++) {
@@ -257,6 +270,7 @@ _psc_set_from_options(struct psc *psc)
     mrc_params_get_option_double_help(s, &kind->T, 
 				      "default temperature of this particle kind");
   }
+  free(s);
 }
 
 // ======================================================================
