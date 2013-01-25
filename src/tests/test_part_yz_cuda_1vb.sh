@@ -4,6 +4,6 @@
 # however comparing densities works out.
 
 ./test_part_yz \
-    --ref_type 1vb --type cuda_1vb --moments 1st \
+    --ref_type 1vb --type 1vb_4x4_cuda --moments 1st \
     --eps_particles 2e-6 --check_particles false \
     --eps_fields 2e-4
