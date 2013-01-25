@@ -64,9 +64,9 @@ ds_ascii_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   for (int p = 0; p < m3->nr_patches; p++) {
     char filename[strlen(par->outdir) + strlen(par->basename) + 30];
-    fprintf(ascii->file, "# see %s\n", filename);
     sprintf(filename, "%s/%s.%06d_p%06d_%s.asc", par->outdir, par->basename,
 	    io->step, p, mrc_m3_name(m3));
+    fprintf(ascii->file, "# see %s\n", filename);
     FILE *file = fopen(filename, "w");
     fprintf(file, "# ix iy iz");
     for (int m = 0; m < m3->nr_comp; m++) {
