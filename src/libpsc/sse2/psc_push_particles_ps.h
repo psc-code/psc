@@ -54,6 +54,11 @@ typedef struct {
 
 #endif
 
+void sb0_ps_1vb_yz_p(int p, fields_ip_t *pf, struct psc_particles *pps,
+		     int n_start);
+void sb0_ps_1vb_yz_xx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
+			   int n_start);
+
 void sb0_ps_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
 			    int n_start);
 void sb2_ps_1vb_yz_pxx_jxyz(int p, fields_ip_t *pf, struct psc_particles *pps,
