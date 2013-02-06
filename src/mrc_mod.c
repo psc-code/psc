@@ -61,9 +61,10 @@ _mrc_mod_destroy(struct mrc_mod *mod)
 static void
 _mrc_mod_view(struct mrc_mod *mod)
 {
+  mpi_printf(mrc_mod_comm(mod), "\n");
   struct mrc_mod_entry *p;
   __list_for_each_entry(p, &mod->list, entry, struct mrc_mod_entry) {
-    mpi_printf(mrc_mod_comm(mod), "%20s| '%s': %d proc%s\n", "", 
+    mpi_printf(mrc_mod_comm(mod), "%19d | '%s': %d proc%s\n", p->rank,
 	       p->name, p->nr_procs, p->nr_procs == 1 ? "" : "s");
   }
 }
@@ -173,6 +174,14 @@ mrc_mod_get_nr_procs(struct mrc_mod *mod, const char *name)
     return -1;
 
   return p->nr_procs;
+}
+
+bool
+mrc_mod_belongs_to(struct mrc_mod *mod, const char *name)
+{
+  struct mrc_mod_entry *p = mod->this_mod_entry;
+  
+  return p && (strcmp(p->name, name) == 0);
 }
 
 // ----------------------------------------------------------------------
