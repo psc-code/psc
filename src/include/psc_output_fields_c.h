@@ -5,6 +5,14 @@
 #include "psc_output_fields_private.h"
 #include "psc_output_fields_item.h"
 
+// ----------------------------------------------------------------------
+
+enum {
+  IO_TYPE_PFD,
+  IO_TYPE_TFD,
+  NR_IO_TYPES,
+};
+
 #define MAX_FIELDS_LIST 50
 
 struct psc_fields_list {
@@ -15,6 +23,8 @@ struct psc_fields_list {
 struct psc_output_fields_c {
   char *data_dir;
   char *output_fields;
+  char *pfd_s;
+  char *tfd_s;
   bool dowrite_pfield, dowrite_tfield;
   int pfield_first, tfield_first;
   int pfield_step, tfield_step;
@@ -27,6 +37,7 @@ struct psc_output_fields_c {
   unsigned int naccum;
   struct psc_fields_list pfd, tfd;
   struct psc_output_fields_item *item[MAX_FIELDS_LIST];
+  struct mrc_io *ios[NR_IO_TYPES];
 
   struct psc_bnd *bnd;
 };

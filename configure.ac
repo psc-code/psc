@@ -194,6 +194,7 @@ AC_CONFIG_FILES([Makefile src/Makefile
                  src/libpsc/psc_bnd_fields/Makefile
                  src/libpsc/psc_collision/Makefile
                  src/libpsc/psc_event_generator/Makefile
+                 src/libpsc/psc_output_fields_collection/Makefile
                  src/libpsc/psc_output_fields/Makefile
                  src/libpsc/psc_output_particles/Makefile
                  src/libpsc/psc_output_photons/Makefile

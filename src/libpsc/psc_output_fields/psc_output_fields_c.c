@@ -12,17 +12,6 @@
 #define to_psc_output_fields_c(out) ((struct psc_output_fields_c *)((out)->obj.subctx))
 
 // ----------------------------------------------------------------------
-
-enum {
-  IO_TYPE_PFD,
-  IO_TYPE_TFD,
-  NR_IO_TYPES,
-};
-
-// FIXME, part of subctx
-static struct mrc_io *ios[NR_IO_TYPES];
-
-// ----------------------------------------------------------------------
 // copy_to_mrc_fld
 
 static void
@@ -42,17 +31,9 @@ copy_to_mrc_fld(struct mrc_m3 *m3, mfields_c_t *flds)
 
 void
 write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
-	     const char *pfx)
+	     int io_type, const char *pfx)
 {
-  int io_type;
-  if (strcmp(pfx, "pfd") == 0) {
-    io_type = IO_TYPE_PFD;
-  } else if (strcmp(pfx, "tfd") == 0) {
-    io_type = IO_TYPE_TFD;
-  } else {
-    assert(0);
-  }
-  struct mrc_io *io = ios[io_type];
+  struct mrc_io *io = out->ios[io_type];
   if (!io) {
     io = mrc_io_create(MPI_COMM_WORLD);
     mrc_io_set_param_string(io, "basename", pfx);
@@ -60,7 +41,7 @@ write_fields(struct psc_output_fields_c *out, struct psc_fields_list *list,
     mrc_io_set_from_options(io);
     mrc_io_setup(io);
     mrc_io_view(io);
-    ios[io_type] = io;
+    out->ios[io_type] = io;
   }
 
   int gdims[3];
@@ -138,14 +119,15 @@ psc_output_fields_c_destroy(struct psc_output_fields *out)
     psc_mfields_destroy(tfd->flds[i]);
   }
 
-  // FIXME, this makes mrc_io persistent across new objects from
-  // this class (see that static var above), which is bad, but actually
-  // helps getting a proper temporal XDMF file...
-  return;
+  // FIXME, we used to have mrc_io persistent across new objects from
+  // this class (using a static var for ios), which was bad, but actually
+  // helped getting a proper temporal XDMF file...
+  // now it's part of the object, but will break the temporal XDMF file on
+  // rebalancing (?)
   
   for (int i = 0; i < NR_IO_TYPES; i++) {
-    mrc_io_destroy(ios[i]);
-    ios[i] = NULL;
+    mrc_io_destroy(out_c->ios[i]);
+    out_c->ios[i] = NULL;
   }
 }
 
@@ -266,7 +248,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
   if (out_c->dowrite_pfield) {
     if (psc->timestep >= out_c->pfield_next) {
        out_c->pfield_next += out_c->pfield_step;
-       write_fields(out_c, &out_c->pfd, "pfd");
+       write_fields(out_c, &out_c->pfd, IO_TYPE_PFD, out_c->pfd_s);
     }
   }
 
@@ -286,7 +268,7 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 	psc_mfields_scale(out_c->tfd.flds[m], 1. / out_c->naccum);
       }
 
-      write_fields(out_c, &out_c->tfd, "tfd");
+      write_fields(out_c, &out_c->tfd, IO_TYPE_TFD, out_c->tfd_s);
 
       for (int m = 0; m < out_c->tfd.nr_flds; m++) {
 	for (int mm = 0; mm < out_c->tfd.flds[m]->nr_fields; mm++) {
@@ -311,6 +293,8 @@ psc_output_fields_c_run(struct psc_output_fields *out,
 static struct param psc_output_fields_c_descr[] = {
   { "data_dir"           , VAR(data_dir)             , PARAM_STRING(".")       },
   { "output_fields"      , VAR(output_fields)        , PARAM_STRING("n,j,e,h") },
+  { "pfd"                , VAR(pfd_s)                , PARAM_STRING("pfd")     },
+  { "tfd"                , VAR(tfd_s)                , PARAM_STRING("tfd")     },
   { "write_pfield"       , VAR(dowrite_pfield)       , PARAM_BOOL(1)           },
   { "pfield_first"       , VAR(pfield_first)         , PARAM_INT(0)            },
   { "pfield_step"        , VAR(pfield_step)          , PARAM_INT(10)           },

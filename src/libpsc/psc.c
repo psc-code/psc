@@ -10,7 +10,7 @@
 #include "psc_randomize.h"
 #include "psc_sort.h"
 #include "psc_diag.h"
-#include "psc_output_fields.h"
+#include "psc_output_fields_collection.h"
 #include "psc_output_particles.h"
 #include "psc_output_photons.h"
 #include "psc_event_generator.h"
@@ -193,9 +193,9 @@ _psc_create(struct psc *psc)
   psc_add_child(psc, (struct mrc_obj *) psc->sort);
   psc->diag = psc_diag_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->diag);
-  psc->output_fields = psc_output_fields_create(comm);
-  psc_output_fields_set_psc(psc->output_fields, psc);
-  psc_add_child(psc, (struct mrc_obj *) psc->output_fields);
+  psc->output_fields_collection = psc_output_fields_collection_create(comm);
+  psc_output_fields_collection_set_psc(psc->output_fields_collection, psc);
+  psc_add_child(psc, (struct mrc_obj *) psc->output_fields_collection);
   psc->output_particles = psc_output_particles_create(comm);
   psc_add_child(psc, (struct mrc_obj *) psc->output_particles);
   psc->output_photons = psc_output_photons_create(comm);
