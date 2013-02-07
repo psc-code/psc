@@ -372,7 +372,7 @@ mrc_obj_set_param_double(struct mrc_obj *obj, const char *name, double val)
 void
 mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val)
 {
-  union param_u uval = { .u_string = val };
+  union param_u uval = { .u_string = strdup(val) };
   mrc_obj_set_param_type(obj, name, PT_STRING, &uval);
 }
 
