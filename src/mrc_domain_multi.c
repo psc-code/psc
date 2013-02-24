@@ -140,6 +140,7 @@ mrc_domain_multi_get_global_patch_info(struct mrc_domain *domain, int gpatch,
   int sfc_idx = map_gpatch_to_sfc_idx(domain, gpatch);
   int p3[3];
   sfc_idx_to_idx3(&multi->sfc, sfc_idx, p3);
+  info->level = 0;
   for (int d = 0; d < 3; d++) {
     info->ldims[d] = multi->ldims[d][p3[d]];
     info->off[d] = multi->off[d][p3[d]];
@@ -329,6 +330,12 @@ mrc_domain_multi_get_bc(struct mrc_domain *domain, int *bc)
 }
 
 static void
+mrc_domain_multi_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
+{
+  *p_nr_levels = 1;
+}
+
+static void
 mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global_patches)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
@@ -337,11 +344,12 @@ mrc_domain_multi_get_nr_global_patches(struct mrc_domain *domain, int *nr_global
 }
 
 static void
-mrc_domain_multi_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-				     struct mrc_patch_info *info)
+mrc_domain_multi_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+					   int idx[3], struct mrc_patch_info *info)
 {
   struct mrc_domain_multi *multi = mrc_domain_multi(domain);
 
+  assert(level == 0);
   //Check if the patch is active
   if (multi->have_activepatches &&
       !bitfield3d_isset(&multi->activepatches, idx)) {
@@ -366,19 +374,36 @@ mrc_domain_multi_write(struct mrc_domain *domain, struct mrc_io *io)
 {
   int nr_global_patches;
   mrc_domain_multi_get_nr_global_patches(domain, &nr_global_patches);
-  mrc_io_write_attr_int(io, mrc_domain_name(domain), "nr_global_patches",
-			nr_global_patches);
+  mrc_io_write_int(io, domain, "nr_global_patches", nr_global_patches);
 
+  int mpi_size;
+  MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
+
+  char path[strlen(mrc_domain_name(domain)) + 10];
+  int last_rank = 0, nr_patches_in_rank = 0;
   for (int gp = 0; gp < nr_global_patches; gp++) {
     struct mrc_patch_info info;
     mrc_domain_multi_get_global_patch_info(domain, gp, &info);
-    char path[strlen(mrc_domain_name(domain)) + 10];
-    sprintf(path, "%s/p%d", mrc_domain_name(domain), gp);
+    sprintf(path, "%s/p%d", mrc_io_obj_path(io, domain), gp);
     mrc_io_write_attr_int3(io, path, "ldims", info.ldims);
     mrc_io_write_attr_int3(io, path, "off", info.off);
     mrc_io_write_attr_int3(io, path, "idx3", info.idx3);
     int sfc_idx = map_gpatch_to_sfc_idx(domain, gp);
     mrc_io_write_attr_int(io, path, "sfc_idx", sfc_idx);
+
+    while (last_rank < info.rank) {
+      sprintf(path, "%s/rank_%d", mrc_io_obj_path(io, domain), last_rank);
+      mrc_io_write_attr_int(io, path, "nr_patches", nr_patches_in_rank);
+      last_rank++;
+      nr_patches_in_rank = 0;
+    }
+    nr_patches_in_rank++;
+  }
+  while (last_rank < mpi_size) {
+    sprintf(path, "%s/rank_%d", mrc_io_obj_path(io, domain), last_rank);
+    mrc_io_write_attr_int(io, path, "nr_patches", nr_patches_in_rank);
+    last_rank++;
+    nr_patches_in_rank = 0;
   }
 }
 
@@ -389,7 +414,13 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
 
   // This isn't a collective value, so we better
   // don't take what's been read from the file
-  multi->nr_patches = -1; 
+  int mpi_rank;
+  MPI_Comm_rank(mrc_domain_comm(domain), &mpi_rank);
+
+  const char *path = mrc_io_obj_path(io, domain);
+  char path2[strlen(path) + 10];
+  sprintf(path2, "%s/rank_%d", path, mpi_rank);
+  mrc_io_read_int(io, domain, "nr_patches", &multi->nr_patches);
 
   mrc_domain_read_super(domain, io);
 }
@@ -435,6 +466,39 @@ mrc_domain_multi_plot(struct mrc_domain *domain)
 
   fclose(file);
   fclose(file_curve);
+}
+
+// ----------------------------------------------------------------------
+// mrc_domain_multi_get_neighbor_rank_patch
+
+static void
+mrc_domain_multi_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+					 int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_multi *multi = mrc_domain_multi(domain);
+
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(domain, p, &info);
+  int patch_idx_nei[3];
+  for (int d = 0; d < 3; d++) {
+    patch_idx_nei[d] = info.idx3[d] + dir[d];
+    if (multi->bc[d] == BC_PERIODIC) {
+      if (patch_idx_nei[d] < 0) {
+	patch_idx_nei[d] += multi->np[d];
+      }
+      if (patch_idx_nei[d] >= multi->np[d]) {
+	patch_idx_nei[d] -= multi->np[d];
+      }
+    }
+    if (patch_idx_nei[d] < 0 || patch_idx_nei[d] >= multi->np[d]) {
+      *nei_rank = -1;
+      *nei_patch = -1;
+      return;
+    }
+  }
+  mrc_domain_get_level_idx3_patch_info(domain, 0, patch_idx_nei, &info);
+  *nei_rank = info.rank;
+  *nei_patch = info.patch;
 }
 
 static struct mrc_ddc *
@@ -484,23 +548,25 @@ static struct param mrc_domain_multi_params_descr[] = {
 #undef VAR
 
 struct mrc_domain_ops mrc_domain_multi_ops = {
-  .name                  = "multi",
-  .size                  = sizeof(struct mrc_domain_multi),
-  .param_descr           = mrc_domain_multi_params_descr,
-  .setup                 = mrc_domain_multi_setup,
-  .view                  = mrc_domain_multi_view,
-  .write                 = mrc_domain_multi_write,
-  .read                  = mrc_domain_multi_read,
-  .destroy               = mrc_domain_multi_destroy,
-  .get_patches           = mrc_domain_multi_get_patches,
-  .get_global_dims       = mrc_domain_multi_get_global_dims,
-  .get_nr_procs          = mrc_domain_multi_get_nr_procs,
-  .get_bc                = mrc_domain_multi_get_bc,
-  .get_nr_global_patches = mrc_domain_multi_get_nr_global_patches,
-  .get_global_patch_info = mrc_domain_multi_get_global_patch_info,
-  .get_local_patch_info  = mrc_domain_multi_get_local_patch_info,
-  .get_idx3_patch_info   = mrc_domain_multi_get_idx3_patch_info,
-  .plot                  = mrc_domain_multi_plot,
-  .create_ddc            = mrc_domain_multi_create_ddc,
+  .name                      = "multi",
+  .size                      = sizeof(struct mrc_domain_multi),
+  .param_descr               = mrc_domain_multi_params_descr,
+  .setup                     = mrc_domain_multi_setup,
+  .view                      = mrc_domain_multi_view,
+  .write                     = mrc_domain_multi_write,
+  .read                      = mrc_domain_multi_read,
+  .destroy                   = mrc_domain_multi_destroy,
+  .get_patches               = mrc_domain_multi_get_patches,
+  .get_global_dims           = mrc_domain_multi_get_global_dims,
+  .get_nr_procs              = mrc_domain_multi_get_nr_procs,
+  .get_bc                    = mrc_domain_multi_get_bc,
+  .get_nr_levels             = mrc_domain_multi_get_nr_levels,
+  .get_nr_global_patches     = mrc_domain_multi_get_nr_global_patches,
+  .get_global_patch_info     = mrc_domain_multi_get_global_patch_info,
+  .get_local_patch_info      = mrc_domain_multi_get_local_patch_info,
+  .get_level_idx3_patch_info = mrc_domain_multi_get_level_idx3_patch_info,
+  .get_neighbor_rank_patch   = mrc_domain_multi_get_neighbor_rank_patch,
+  .plot                      = mrc_domain_multi_plot,
+  .create_ddc                = mrc_domain_multi_create_ddc,
 };
 

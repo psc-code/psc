@@ -34,9 +34,10 @@ static struct mrc_f1 *
 rlc_get_fld(struct rlc *rlc, const char *name)
 {
   struct mrc_f1 *x = mrc_f1_create(rlc_comm(rlc));
-  mrc_f1_set_param_int(x, "imx", 2);
+  mrc_f1_set_param_int(x, "dimsx", 2);
   mrc_f1_set_name(x, name);
   mrc_f1_setup(x);
+  mrc_f1_view(x);
   return x;
 }
 

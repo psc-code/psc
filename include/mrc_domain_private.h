@@ -24,16 +24,20 @@ struct mrc_domain_ops {
   void (*get_nr_procs)(struct mrc_domain *domain, int *nr_procs);
   void (*get_bc)(struct mrc_domain *domain, int *bc);
   int  (*get_neighbor_rank)(struct mrc_domain *, int shift[3]);
+  void (*get_neighbor_rank_patch)(struct mrc_domain *domain, int p, int dir[3],
+				  int *nei_rank, int *nei_patch);
   void (*get_nr_global_patches)(struct mrc_domain *domain, int *nr_global_patches);
   void (*get_global_patch_info)(struct mrc_domain *domain, int gp,
 				struct mrc_patch_info *info);
   void (*get_local_patch_info)(struct mrc_domain *domain, int p,
 			       struct mrc_patch_info *info);
-  void (*get_idx3_patch_info)(struct mrc_domain *domain, int idx[3],
-			      struct mrc_patch_info *info);
+  void (*get_level_idx3_patch_info)(struct mrc_domain *domain, int level, int idx[3],
+				    struct mrc_patch_info *info);
+  void (*get_nr_levels)(struct mrc_domain *domain, int *p_nr_levels);
   void (*plot)(struct mrc_domain *domain);
   struct mrc_ddc *(*create_ddc)(struct mrc_domain *);
   int* (*get_offset)(struct mrc_domain* domain);
+  void (*add_patch)(struct mrc_domain *domain, int l, int idx3[3]);
 };
 
 // ======================================================================
@@ -106,5 +110,35 @@ struct mrc_domain_multi {
 };
 
 extern struct mrc_domain_ops mrc_domain_multi_ops;
+
+// ======================================================================
+// mrc_domain_amr
+
+struct mrc_amr_patch {
+  int l;
+  int idx3[3];
+  list_t entry;
+};
+
+struct mrc_domain_amr {
+  int nr_global_patches;	//< Number of global patches
+  int nr_levels;                //< Number of AMR levels
+  int gdims[3];                 //< Patch dimensions == global dims on level 0
+  int nr_patches;
+  int gpatch_off; //< global patch # on this proc is gpatch_off..gpatch_off+nr_patches
+  struct mrc_patch *patches;
+  int bc[3];
+  int *gpatch_off_all;
+  struct mrc_sfc sfc;
+
+  list_t global_patch_list;     //< List of patches added, only before setup()
+
+  // map
+  struct mrc_amr_level_sfc_idx {
+    int l, sfc_idx;
+  } *map_gpatch_to_sfc;	//Maps [0..nr_gpatches] -> l, sfc_idx
+};
+
+extern struct mrc_domain_ops mrc_domain_amr_ops;
 
 #endif

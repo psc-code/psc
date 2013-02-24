@@ -109,18 +109,6 @@ mrc_ddc_add_ghosts(struct mrc_ddc *ddc, int mb, int me, void *ctx)
   ops->add_ghosts(ddc, mb, me, ctx);
 }
 
-// ----------------------------------------------------------------------
-// mrc_ddc_get_nei_rank_patch
-
-void
-mrc_ddc_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
-			   int *nei_rank, int *nei_patch)
-{
-  struct mrc_ddc_ops *ops = mrc_ddc_ops(ddc);
-  assert(ops->get_nei_rank_patch);
-  ops->get_nei_rank_patch(ddc, p, dir, nei_rank, nei_patch);
-}
-
 // ======================================================================
 // mrc_ddc_init
 
@@ -129,6 +117,7 @@ mrc_ddc_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ddc, &mrc_ddc_amr_ops);
 }
 
 // ======================================================================

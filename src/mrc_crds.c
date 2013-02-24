@@ -31,22 +31,19 @@ _mrc_crds_destroy(struct mrc_crds *crds)
 static void
 _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 {
-  crds->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_crds_name(crds), "domain", &mrc_class_mrc_domain);
+  crds->domain = mrc_io_read_ref(io, crds, "domain", mrc_domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0 ||
       strcmp(mrc_crds_type(crds), "multi_rectilinear") == 0) {
     for (int d = 0; d < 3; d++) {
       char s[6];
       sprintf(s, "mcrd%d", d);
-      crds->mcrd[d] = (struct mrc_m1 *)
-	mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_m1);
+      crds->mcrd[d] = mrc_io_read_ref(io, crds, s, mrc_m1);
     }
   } else {
     for (int d = 0; d < 3; d++) {
       char s[5];
       sprintf(s, "crd%d", d);
-      crds->crd[d] = (struct mrc_f1 *)
-	mrc_io_read_obj_ref(io, mrc_crds_name(crds), s, &mrc_class_mrc_f1);
+      crds->crd[d] = mrc_io_read_ref(io, crds, s, mrc_f1);
     }
   }
   mrc_crds_setup(crds);
@@ -55,13 +52,12 @@ _mrc_crds_read(struct mrc_crds *crds, struct mrc_io *io)
 static void
 _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 {
-  mrc_io_write_obj_ref(io, mrc_crds_name(crds), "domain",
-		       (struct mrc_obj *) crds->domain);
+  mrc_io_write_ref(io, crds, "domain", crds->domain);
   for (int d = 0; d < 3; d++) {
     if (crds->crd[d]) {
       char s[10];
       sprintf(s, "crd%d", d);
-      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->crd[d]);
+      mrc_io_write_ref(io, crds, s, crds->crd[d]);
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) { // FIXME
 	sprintf(s, "crd%d_nc", d);
 	struct mrc_m1 *crd_nc = mrc_m1_create(mrc_crds_comm(crds));
@@ -115,7 +111,7 @@ _mrc_crds_write(struct mrc_crds *crds, struct mrc_io *io)
 	mrc_io_set_param_int3(io, "slab_dims", (int[3]) { 0, 0, 0 });
       }
       sprintf(s, "mcrd%d", d);
-      mrc_io_write_obj_ref(io, mrc_crds_name(crds), s, (struct mrc_obj *) crds->mcrd[d]);
+      mrc_io_write_ref(io, crds, s, crds->mcrd[d]);
       if (strcmp(mrc_io_type(io), "xdmf_collective") == 0) {
 	mrc_io_set_param_int3(io, "slab_off", slab_off_save);
 	mrc_io_set_param_int3(io, "slab_dims", slab_dims_save);
@@ -419,6 +415,46 @@ static struct mrc_crds_ops mrc_crds_multi_uniform_ops = {
 };
 
 // ======================================================================
+// mrc_crds_amr_uniform
+
+// FIXME, this should use mrc_a1 not mrc_m1
+
+static void
+mrc_crds_amr_uniform_setup(struct mrc_crds *crds)
+{
+  assert(crds->domain);
+  if (!mrc_domain_is_setup(crds->domain))
+    return;
+
+  int gdims[3];
+  mrc_domain_get_global_dims(crds->domain, gdims);
+  float *xl = crds->par.xl, *xh = crds->par.xh;
+
+  for (int d = 0; d < 3; d++) {
+    mrc_crds_multi_alloc(crds, d);
+    struct mrc_m1 *mcrd = crds->mcrd[d];
+    mrc_m1_foreach_patch(mcrd, p) {
+      struct mrc_patch_info info;
+      mrc_domain_get_local_patch_info(crds->domain, p, &info);
+      float xb = (float) info.off[d] / (1 << info.level);
+      float xe = (float) (info.off[d] + info.ldims[d]) / (1 << info.level);
+      float dx = (xe - xb) / info.ldims[d];
+
+      struct mrc_m1_patch *mcrd_p = mrc_m1_patch_get(mcrd, p);
+      mrc_m1_foreach_bnd(mcrd_p, i) {
+	MRC_M1(mcrd_p,0, i) = xl[d] + (xb + (i + .5) * dx) / gdims[d] * (xh[d] - xl[d]);
+      } mrc_m1_foreach_end;
+      mrc_m1_patch_put(mcrd);
+    }
+  }
+}
+
+static struct mrc_crds_ops mrc_crds_amr_uniform_ops = {
+  .name  = "amr_uniform",
+  .setup = mrc_crds_amr_uniform_setup,
+};
+
+// ======================================================================
 // mrc_crds_multi_rectilinear
 
 static void
@@ -451,6 +487,7 @@ mrc_crds_init()
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_rectilinear_jr2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_uniform_ops);
   mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_multi_rectilinear_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_amr_uniform_ops);
 }
 
 // ======================================================================

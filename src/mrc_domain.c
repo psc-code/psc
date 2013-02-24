@@ -70,20 +70,14 @@ _mrc_domain_read(struct mrc_domain *domain, struct mrc_io *io)
   domain->crds = NULL;
 
   mrc_domain_setup(domain);
-  char *s;
-  mrc_io_read_attr_string(io, mrc_domain_name(domain), "crds", &s);
-  domain->crds = mrc_crds_read(io, s);
-  free(s);
+  domain->crds = mrc_io_read_ref(io, domain, "crds", mrc_crds);
 }
 
 static void
 _mrc_domain_write(struct mrc_domain *domain, struct mrc_io *io)
 {
-  mrc_io_write_attr_int(io, mrc_domain_name(domain), "mpi_size", domain->size);
-  // FIXME use mrc_io_obj_ref?
-  mrc_io_write_attr_string(io, mrc_domain_name(domain), "crds",
-			   mrc_crds_name(domain->crds));
-  mrc_crds_write(mrc_domain_get_crds(domain), io);
+  mrc_io_write_int(io, domain, "mpi_size", domain->size);
+  mrc_io_write_ref(io, domain, "crds", domain->crds);
 }
 
 struct mrc_patch *
@@ -117,6 +111,7 @@ void
 mrc_domain_get_global_dims(struct mrc_domain *domain, int *dims)
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_global_dims);
   mrc_domain_ops(domain)->get_global_dims(domain, dims);
 }
 
@@ -124,6 +119,7 @@ void
 mrc_domain_get_nr_procs(struct mrc_domain *domain, int *nr_procs)
 {
   assert(mrc_domain_is_setup(domain));
+  assert(mrc_domain_ops(domain)->get_nr_procs);
   mrc_domain_ops(domain)->get_nr_procs(domain, nr_procs);
 }
 
@@ -161,12 +157,32 @@ mrc_domain_get_local_patch_info(struct mrc_domain *domain, int p,
 }
 
 void
-mrc_domain_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-			       struct mrc_patch_info *info)
+mrc_domain_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+				     int idx[3], struct mrc_patch_info *info)
 {
   assert(mrc_domain_is_setup(domain));
-  assert(mrc_domain_ops(domain)->get_idx3_patch_info);
-  mrc_domain_ops(domain)->get_idx3_patch_info(domain, idx, info);
+  assert(mrc_domain_ops(domain)->get_level_idx3_patch_info);
+  mrc_domain_ops(domain)->get_level_idx3_patch_info(domain, level, idx, info);
+}
+
+void
+mrc_domain_get_nr_levels(struct mrc_domain *domain, int *p_nr_levels)
+{
+  assert(mrc_domain_is_setup(domain));
+  if (!mrc_domain_ops(domain)->get_nr_levels) {
+    *p_nr_levels = 1;
+    return;
+  }
+  mrc_domain_ops(domain)->get_nr_levels(domain, p_nr_levels);
+}
+
+void
+mrc_domain_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+				   int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_ops *ops = mrc_domain_ops(domain);
+  assert(ops->get_neighbor_rank_patch);
+  ops->get_neighbor_rank_patch(domain, p, dir, nei_rank, nei_patch);
 }
 
 void
@@ -175,6 +191,13 @@ mrc_domain_plot(struct mrc_domain *domain)
   assert(mrc_domain_is_setup(domain));
   assert(mrc_domain_ops(domain)->plot);
   mrc_domain_ops(domain)->plot(domain);
+}
+
+void
+mrc_domain_add_patch(struct mrc_domain *domain, int l, int idx3[3])
+{
+  assert(mrc_domain_ops(domain)->add_patch);
+  mrc_domain_ops(domain)->add_patch(domain, l, idx3);
 }
 
 // ======================================================================
@@ -244,6 +267,7 @@ mrc_domain_init()
 {
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_simple_ops);
   mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_multi_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_domain, &mrc_domain_amr_ops);
 }
 
 // ======================================================================

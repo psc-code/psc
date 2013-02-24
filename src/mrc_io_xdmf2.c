@@ -22,9 +22,17 @@ struct xdmf_file {
 struct xdmf {
   struct xdmf_file file;
   struct xdmf_temporal *xdmf_temporal;
+  int sw;
   // parallel only
   bool use_independent_io;
 };
+
+#define VAR(x) (void *)offsetof(struct xdmf, x)
+static struct param xdmf2_descr[] = {
+  { "sw"                     , VAR(sw)                      , PARAM_INT(0)           },
+  {},
+};
+#undef VAR
 
 #define VAR(x) (void *)offsetof(struct xdmf, x)
 static struct param xdmf_parallel_descr[] = {
@@ -135,7 +143,7 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 
 static void
 xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
-			       struct mrc_domain *domain)
+			       struct mrc_domain *domain, int sw)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
 
@@ -148,20 +156,20 @@ xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
       struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
       int im = mcrdp->im[0] + 2 * mcrdp->ib[0];
       // get node-centered coordinates
-      float *crd_nc = calloc(im + 1, sizeof(*crd_nc));
-      if (mcrdp->ib[0] < 0) {
-	for (int i = 0; i <= im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+      float *crd_nc = calloc(im + 2*sw + 1, sizeof(*crd_nc));
+      if (mcrdp->ib[0] < -sw) {
+	for (int i = -sw; i <= im + sw; i++) {
+	  crd_nc[i + sw] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
 	}
       } else {
-	for (int i = 1; i < im; i++) {
-	  crd_nc[i] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
+	for (int i = 1-sw; i < im+sw; i++) {
+	  crd_nc[i + sw] = .5 * (MRC_M1(mcrdp,0, i-1) + MRC_M1(mcrdp,0, i));
 	}
 	// extrapolate
-	crd_nc[0]  = MRC_M1(mcrdp,0, 0) - .5 * (MRC_M1(mcrdp,0, 1) - MRC_M1(mcrdp,0, 0));
-	crd_nc[im] = MRC_M1(mcrdp,0, im-1) + .5 * (MRC_M1(mcrdp,0, im-1) - MRC_M1(mcrdp,0, im-2));
+	crd_nc[0      ] = MRC_M1(mcrdp,0, -sw)     - .5 * (MRC_M1(mcrdp,0, -sw+1)    - MRC_M1(mcrdp,0, -sw));
+	crd_nc[im+2*sw] = MRC_M1(mcrdp,0, im+sw-1) + .5 * (MRC_M1(mcrdp,0, im+sw-1) - MRC_M1(mcrdp,0, im+sw-2));
       }
-      hsize_t im1 = im + 1;
+      hsize_t im1 = im + 2*sw + 1;
       char s_patch[10];
       sprintf(s_patch, "p%d", p);
       hid_t group_crdp = H5Gcreate(group_crd1, s_patch, H5P_DEFAULT,
@@ -179,7 +187,7 @@ xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
 
 static void
 xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
-			 struct mrc_domain *domain)
+			 struct mrc_domain *domain, int sw)
 {
   if (xs->crds_done)
     return;
@@ -188,9 +196,9 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
-    xdmf_spatial_write_mcrds_multi(file, domain); // FIXME
+    xdmf_spatial_write_mcrds_multi(file, domain, sw); // FIXME
   } else {
-    xdmf_spatial_write_mcrds_multi(file, domain);
+    xdmf_spatial_write_mcrds_multi(file, domain, sw);
   }
 }
 
@@ -243,6 +251,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   struct xdmf_file *file = &xdmf->file;
   int ierr;
 
+  int sw = xdmf->sw;
   hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT);
   H5LTset_attribute_int(group0, ".", "nr_patches", &m3->nr_patches, 1);
 
@@ -251,7 +260,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   if (!xs) {
     xs = xdmf_spatial_create_m3(&file->xdmf_spatial_list,
 				mrc_domain_name(m3->domain), m3->domain);
-    xdmf_spatial_write_mcrds(xs, file, m3->domain);
+    xdmf_spatial_write_mcrds(xs, file, m3->domain, xdmf->sw);
   }
 
   for (int m = 0; m < m3->nr_comp; m++) {
@@ -266,10 +275,10 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
       sprintf(s_patch, "p%d", p);
 
       hsize_t mdims[3] = { m3p->im[2], m3p->im[1], m3p->im[0] };
-      hsize_t fdims[3] = { m3p->im[2] + 2 * m3p->ib[2],
-			   m3p->im[1] + 2 * m3p->ib[1],
-			   m3p->im[0] + 2 * m3p->ib[0] };
-      hsize_t off[3] = { -m3p->ib[2], -m3p->ib[1], -m3p->ib[0] };
+      hsize_t fdims[3] = { m3p->im[2] + 2 * m3p->ib[2] + 2*sw,
+			   m3p->im[1] + 2 * m3p->ib[1] + 2*sw,
+			   m3p->im[0] + 2 * m3p->ib[0] + 2*sw};
+      hsize_t off[3] = { -m3p->ib[2]-sw, -m3p->ib[1]-sw, -m3p->ib[0]-sw };
 
       hid_t group = H5Gcreate(group_fld, s_patch, H5P_DEFAULT,
 			      H5P_DEFAULT, H5P_DEFAULT); H5_CHK(group);
@@ -359,6 +368,7 @@ xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 struct mrc_io_ops mrc_io_xdmf2_ops = {
   .name          = "xdmf2",
   .size          = sizeof(struct xdmf),
+  .param_descr   = xdmf2_descr,
   .parallel      = true,
   .setup         = xdmf_setup,
   .destroy       = xdmf_destroy,

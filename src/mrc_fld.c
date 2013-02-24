@@ -53,19 +53,17 @@ _mrc_f1_setup(struct mrc_f1 *f1)
 static void
 _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  f1->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_f1_name(f1), "domain", &mrc_class_mrc_domain);
+  f1->domain = mrc_io_read_ref(io, f1, "domain", mrc_domain);
   
   mrc_f1_setup(f1);
-  mrc_io_read_f1(io, mrc_f1_name(f1), f1);
+  mrc_io_read_f1(io, mrc_io_obj_path(io, f1), f1);
 }
 
 static void
 _mrc_f1_write(struct mrc_f1 *f1, struct mrc_io *io)
 {
-  mrc_io_write_obj_ref(io, mrc_f1_name(f1), "domain",
-		       (struct mrc_obj *) f1->domain);
-  mrc_io_write_f1(io, mrc_f1_name(f1), f1);
+  mrc_io_write_ref(io, f1, "domain", f1->domain);
+  mrc_io_write_f1(io, mrc_io_obj_path(io, f1), f1);
 }
 
 struct mrc_f1 *
@@ -465,8 +463,7 @@ mrc_f3_norm(struct mrc_f3 *x)
 static void
 _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  f3->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_f3_name(f3), "domain", &mrc_class_mrc_domain);
+  f3->domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
 
   // rely on domain rather than read params
   // since the domain may be different (# of procs) when
@@ -479,24 +476,21 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   mrc_f3_set_param_int3(f3, "off", (int[3]) { 0, 0, 0 });
   
   mrc_f3_setup(f3);
-  mrc_io_read_f3(io, mrc_f3_name(f3), f3);
+  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
 }
 
 static void
 _mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  mrc_io_write_attr_int(io, mrc_f3_name(f3), "sw", f3->_sw); // FIXME, should be unnec
-  mrc_io_write_obj_ref(io, mrc_f3_name(f3), "domain",
-		       (struct mrc_obj *) f3->domain);
-  mrc_io_write_f3(io, mrc_f3_name(f3), f3, 1.);
+  mrc_io_write_ref(io, f3, "domain", f3->domain);
+  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, 1.);
 }
 
 void
 mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
 {
-  mrc_io_write_obj_ref(io, mrc_f3_name(f3), "domain",
-		       (struct mrc_obj *) f3->domain);
-  mrc_io_write_f3(io, mrc_f3_name(f3), f3, scale);
+  mrc_io_write_ref(io, f3, "domain", f3->domain);
+  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, scale);
 }
 
 // ----------------------------------------------------------------------
@@ -622,19 +616,17 @@ _mrc_m1_view(struct mrc_m1 *m1)
 static void
 _mrc_m1_write(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  mrc_io_write_obj_ref(io, mrc_m1_name(m1), "domain",
-		       (struct mrc_obj *) m1->domain);
-  mrc_io_write_m1(io, mrc_m1_name(m1), m1);
+  mrc_io_write_ref(io, m1, "domain", m1->domain);
+  mrc_io_write_m1(io, mrc_io_obj_path(io, m1), m1);
 }
 
 static void
 _mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
 {
-  m1->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_m1_name(m1), "domain", &mrc_class_mrc_domain);
+  m1->domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
   
   mrc_m1_setup(m1);
-  mrc_io_read_m1(io, mrc_m1_name(m1), m1);
+  mrc_io_read_m1(io, mrc_io_obj_path(io, m1), m1);
 }
 
 void
@@ -778,18 +770,16 @@ mrc_m3_comp_name(struct mrc_m3 *m3, int m)
 static void
 _mrc_m3_write(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  mrc_io_write_obj_ref(io, mrc_m3_name(m3), "domain",
-		       (struct mrc_obj *) m3->domain);
-  mrc_io_write_m3(io, mrc_m3_name(m3), m3);
+  mrc_io_write_ref(io, m3, "domain", m3->domain);
+  mrc_io_write_m3(io, mrc_io_obj_path(io, m3), m3);
 }
 
 static void
 _mrc_m3_read(struct mrc_m3 *m3, struct mrc_io *io)
 {
-  m3->domain = (struct mrc_domain *)
-    mrc_io_read_obj_ref(io, mrc_m3_name(m3), "domain", &mrc_class_mrc_domain);
+  m3->domain = mrc_io_read_ref(io, m3, "domain", mrc_domain);
   mrc_m3_setup(m3);
-  mrc_io_read_m3(io, mrc_m3_name(m3), m3);
+  mrc_io_read_m3(io, mrc_io_obj_path(io, m3), m3);
 }
 
 bool

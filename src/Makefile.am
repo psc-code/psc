@@ -15,6 +15,7 @@ libmrc_la_SOURCES = \
 	mrc_domain.c \
 	mrc_domain_simple.c \
 	mrc_domain_multi.c \
+	mrc_domain_amr.c \
 	mrc_domain_lib.c \
 	mrc_crds.c \
 	mrc_fld.c \
@@ -22,6 +23,8 @@ libmrc_la_SOURCES = \
 	mrc_ddc.c \
 	mrc_ddc_simple.c \
 	mrc_ddc_multi.c \
+	mrc_ddc_amr.c \
+	mrc_ddc_amr_stencil.c \
 	mrc_profile.c \
 	mrc_io.c \
 	mrc_io_util.c \
@@ -34,7 +37,9 @@ libmrc_la_SOURCES = \
 	init.c \
 	hilbert.c \
 	bitfield3d.c \
-	bintree.c
+	bintree.c \
+	hilbert.h \
+	mrc_io_xdmf_lib.h
 
 if HAVE_HDF5
 libmrc_la_SOURCES += \

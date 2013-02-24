@@ -75,8 +75,6 @@ struct mrc_ddc_ops {
   struct mrc_domain *(*get_domain)(struct mrc_ddc *ddc);
   void (*fill_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
   void (*add_ghosts)(struct mrc_ddc *ddc, int mb, int me, void *ctx);
-  void (*get_nei_rank_patch)(struct mrc_ddc *ddc, int p, int dir[3],
-			     int *nei_rank, int *nei_patch);
 };
 
 // ======================================================================
@@ -113,5 +111,35 @@ struct mrc_ddc_multi {
 
 extern struct mrc_ddc_ops mrc_ddc_multi_ops;
 
+// ======================================================================
+// mrc_ddc_amr
+
+struct mrc_ddc_amr_row {
+  int patch;
+  int idx;
+  int first_entry;
+};
+
+struct mrc_ddc_amr_entry {
+  int patch;
+  int idx;
+  float val;
+};
+
+struct mrc_ddc_amr {
+  struct mrc_ddc_amr_row *rows;
+  struct mrc_ddc_amr_entry *entries;
+
+  int nr_rows;
+  int nr_entries;
+  int nr_rows_alloced;
+  int nr_entries_alloced;
+
+  struct mrc_domain *domain;
+  int sw;
+  int ib[3], im[3];
+};
+
+extern struct mrc_ddc_ops mrc_ddc_amr_ops;
 
 #endif

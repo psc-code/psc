@@ -120,6 +120,34 @@ mrc_domain_simple_get_neighbor_rank(struct mrc_domain *domain, int shift[3])
   return mrc_domain_simple_proc2rank(domain, nei);
 }
 
+static void
+mrc_domain_simple_get_neighbor_rank_patch(struct mrc_domain *domain, int p, int dir[3],
+					  int *nei_rank, int *nei_patch)
+{
+  struct mrc_domain_simple *simple = mrc_domain_simple(domain);
+  assert(p == 0);
+
+  int proc_nei[3];
+  for (int d = 0; d < 3; d++) {
+    proc_nei[d] = simple->proc[d] + dir[d];
+    if (simple->bc[d] == BC_PERIODIC) {
+      if (proc_nei[d] < 0) {
+	proc_nei[d] += simple->nr_procs[d];
+      }
+      if (proc_nei[d] >= simple->nr_procs[d]) {
+	proc_nei[d] -= simple->nr_procs[d];
+      }
+    }
+    if (proc_nei[d] < 0 || proc_nei[d] >= simple->nr_procs[d]) {
+      *nei_rank = -1;
+      *nei_patch = -1;
+      return;
+    }
+  }
+  *nei_rank = mrc_domain_simple_proc2rank(domain, proc_nei);
+  *nei_patch = 0;
+}
+
 static struct mrc_patch *
 mrc_domain_simple_get_patches(struct mrc_domain *domain, int *nr_patches)
 {
@@ -186,9 +214,10 @@ mrc_domain_simple_get_local_patch_info(struct mrc_domain *domain, int patch,
 }
 
 static void
-mrc_domain_simple_get_idx3_patch_info(struct mrc_domain *domain, int idx[3],
-				      struct mrc_patch_info *info)
+mrc_domain_simple_get_level_idx3_patch_info(struct mrc_domain *domain, int level,
+					    int idx[3], struct mrc_patch_info *info)
 {
+  assert(level == 0);
   int rank = mrc_domain_simple_proc2rank(domain, idx);
   mrc_domain_simple_get_global_patch_info(domain, rank, info);
 }
@@ -219,7 +248,8 @@ static struct mrc_param_select bc_descr[] = {
 #define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
   { "lm"              , VAR(patch.ldims)     , PARAM_INT3(0, 0, 0)    },
-  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
+  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
+  .help = "global number of grid points in x, y, z direction" },
   { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
@@ -232,19 +262,20 @@ static struct param mrc_domain_simple_params_descr[] = {
 #undef VAR
 
 struct mrc_domain_ops mrc_domain_simple_ops = {
-  .name                  = "simple",
-  .size                  = sizeof(struct mrc_domain_simple),
-  .param_descr           = mrc_domain_simple_params_descr,
-  .setup                 = mrc_domain_simple_setup,
-  .get_neighbor_rank     = mrc_domain_simple_get_neighbor_rank,
-  .get_patches           = mrc_domain_simple_get_patches,
-  .get_idx3_patch_info   = mrc_domain_simple_get_idx3_patch_info,
-  .get_global_dims       = mrc_domain_simple_get_global_dims,
-  .get_nr_procs          = mrc_domain_simple_get_nr_procs,
-  .get_bc                = mrc_domain_simple_get_bc,
-  .get_local_patch_info  = mrc_domain_simple_get_local_patch_info,
-  .get_global_patch_info = mrc_domain_simple_get_global_patch_info,
-  .get_nr_global_patches = mrc_domain_simple_get_nr_global_patches,
-  .create_ddc            = mrc_domain_simple_create_ddc,
+  .name                      = "simple",
+  .size                      = sizeof(struct mrc_domain_simple),
+  .param_descr               = mrc_domain_simple_params_descr,
+  .setup                     = mrc_domain_simple_setup,
+  .get_neighbor_rank         = mrc_domain_simple_get_neighbor_rank,
+  .get_neighbor_rank_patch   = mrc_domain_simple_get_neighbor_rank_patch,
+  .get_patches               = mrc_domain_simple_get_patches,
+  .get_level_idx3_patch_info = mrc_domain_simple_get_level_idx3_patch_info,
+  .get_global_dims           = mrc_domain_simple_get_global_dims,
+  .get_nr_procs              = mrc_domain_simple_get_nr_procs,
+  .get_bc                    = mrc_domain_simple_get_bc,
+  .get_local_patch_info      = mrc_domain_simple_get_local_patch_info,
+  .get_global_patch_info     = mrc_domain_simple_get_global_patch_info,
+  .get_nr_global_patches     = mrc_domain_simple_get_nr_global_patches,
+  .create_ddc                = mrc_domain_simple_create_ddc,
 };
 

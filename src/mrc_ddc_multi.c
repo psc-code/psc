@@ -40,7 +40,7 @@ mrc_ddc_multi_get_nei_rank_patch(struct mrc_ddc *ddc, int p, int dir[3],
       return;
     }
   }
-  mrc_domain_get_idx3_patch_info(multi->domain, patch_idx_nei, &info);
+  mrc_domain_get_level_idx3_patch_info(multi->domain, 0, patch_idx_nei, &info);
   *nei_rank = info.rank;
   *nei_patch = info.patch;
 }
@@ -453,7 +453,6 @@ struct mrc_ddc_ops mrc_ddc_multi_ops = {
   .get_domain            = mrc_ddc_multi_get_domain,
   .fill_ghosts           = mrc_ddc_multi_fill_ghosts,
   .add_ghosts            = mrc_ddc_multi_add_ghosts,
-  .get_nei_rank_patch    = mrc_ddc_multi_get_nei_rank_patch,
 };
 
 // ======================================================================

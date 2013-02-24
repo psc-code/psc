@@ -372,7 +372,7 @@ mrc_obj_set_param_double(struct mrc_obj *obj, const char *name, double val)
 void
 mrc_obj_set_param_string(struct mrc_obj *obj, const char *name, const char *val)
 {
-  union param_u uval = { .u_string = val };
+  union param_u uval = { .u_string = strdup(val) };
   mrc_obj_set_param_type(obj, name, PT_STRING, &uval);
 }
 
@@ -591,23 +591,33 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
 }
 
 static void
-mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io)
+mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
 {
   struct mrc_class *cls = obj->cls;
 
+  mrc_io_add_obj(io, obj, path);
+
+  char *s;
+  mrc_io_read_attr_string(io, path, "mrc_obj_name", &s);
+  mrc_obj_set_name(obj, s);
+  free(s);
+  mrc_io_read_attr_string(io, path, "mrc_obj_class", &s);
+  assert(strcmp(cls->name, s) == 0);
+  free(s);
+
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
-    mrc_params_read(p, cls->param_descr, mrc_obj_name(obj), io);
+    mrc_params_read(p, cls->param_descr, path, io);
   }
   if (!list_empty(&cls->subclasses)) {
     char *type;
-    mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_type", &type);
+    mrc_io_read_attr_string(io, path, "mrc_obj_type", &type);
     mrc_obj_set_type(obj, type);
     free(type);
   }
   if (obj->ops && obj->ops->param_descr) {
     char *p = (char *) obj->subctx + obj->ops->param_offset;
-    mrc_params_read(p, obj->ops->param_descr, mrc_obj_name(obj), io);
+    mrc_params_read(p, obj->ops->param_descr, path, io);
   }
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
@@ -620,52 +630,51 @@ void
 mrc_obj_read_children(struct mrc_obj *obj, struct mrc_io *io)
 {
   struct mrc_obj *child;
+  int cnt = 0;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
-    mrc_obj_read2(child, io);
+    char name[20]; sprintf(name, "child%d", cnt++);
+    char *s;
+    mrc_io_read_string(io, obj, name, &s);
+    mrc_obj_read2(child, io, s);
+    free(s);
   }
 }
 
 struct mrc_obj *
-mrc_obj_read(struct mrc_io *io, const char *name, struct mrc_class *cls)
+mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
 {
   init_class(cls);
 
-  struct mrc_obj *obj = mrc_io_find_obj(io, name);
+  struct mrc_obj *obj = mrc_io_find_obj(io, path);
   if (obj)
     return obj;
 
   obj = mrc_obj_create(mrc_io_comm(io), cls);
-  mrc_obj_set_name(obj, name);
-  mrc_io_add_obj(io, obj);
-
-  char *s;
-  mrc_io_read_attr_string(io, mrc_obj_name(obj), "mrc_obj_class", &s);
-  assert(strcmp(cls->name, s) == 0);
-  free(s);
-
-  mrc_obj_read2(obj, io);
-
+  mrc_obj_read2(obj, io, path);
   return obj;
 }
 
 void
 mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
 {
-  if (mrc_io_add_obj(io, obj) == 1) // exists?
+  char path[strlen(obj->name) + 20];
+  sprintf(path, "%s-uid-%p", obj->name, obj);
+  if (mrc_io_add_obj(io, obj, path) == 1) // exists?
     return;
 
   struct mrc_class *cls = obj->cls;
 
-  mrc_io_write_attr_string(io, mrc_obj_name(obj), "mrc_obj_class", cls->name);
+  mrc_io_write_attr_string(io, path, "mrc_obj_name", obj->name);
+  mrc_io_write_attr_string(io, path, "mrc_obj_class", cls->name);
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
-    mrc_params_write(p, cls->param_descr, mrc_obj_name(obj), io);
+    mrc_params_write(p, cls->param_descr, path, io);
   }
   if (obj->ops) {
-    mrc_io_write_attr_string(io, mrc_obj_name(obj), "mrc_obj_type", obj->ops->name);
+    mrc_io_write_attr_string(io, path, "mrc_obj_type", obj->ops->name);
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
-      mrc_params_write(p, obj->ops->param_descr, mrc_obj_name(obj), io);
+      mrc_params_write(p, obj->ops->param_descr, path, io);
     }
   }
   if (cls->write) {
@@ -676,8 +685,10 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   }
 
   struct mrc_obj *child;
+  int cnt = 0;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
-    mrc_obj_write(child, io);
+    char name[20]; sprintf(name, "child%d", cnt++);
+    mrc_io_write_path(io, path, name, child);
   }
 }
 

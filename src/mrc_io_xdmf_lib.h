@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-#define MAX_XDMF_FLD_INFO (30)
+#define MAX_XDMF_FLD_INFO (100)
 
 struct xdmf_fld_info {
   char *name;

@@ -43,6 +43,7 @@ void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *f3,
 void mrc_io_read_attr(struct mrc_io *io, const char *path, int type, const char *name,
 		      union param_u *pv);
 void mrc_io_read_attr_int(struct mrc_io *io, const char *path, const char *name, int *val);
+void mrc_io_read_attr_double(struct mrc_io *io, const char *path, const char *name, double *val);
 void mrc_io_read_attr_string(struct mrc_io *io, const char *path, const char *name,
 			  char **pv);
 
@@ -50,23 +51,63 @@ void mrc_io_write_attr(struct mrc_io *io, const char *path, int type, const char
 		       union param_u *pv);
 void mrc_io_write_attr_int(struct mrc_io *io, const char *path, const char *name, int val);
 void mrc_io_write_attr_int3(struct mrc_io *io, const char *path, const char *name, int val[3]);
+void mrc_io_write_attr_double(struct mrc_io *io, const char *path, const char *name, double val);
 void mrc_io_write_attr_string(struct mrc_io *io, const char *path, const char *name,
 			      const char *val);
+
+#define mrc_io_read_int(io, obj, name, val) \
+  mrc_io_read_attr_int(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_read_int3(io, obj, name, val) \
+  mrc_io_read_attr_int3(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_read_double(io, obj, name, val) \
+  mrc_io_read_attr_double(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_read_string(io, obj, name, val) \
+  mrc_io_read_attr_string(io, mrc_io_obj_path(io, obj), name, val)
+
+#define mrc_io_write_int(io, obj, name, val) \
+  mrc_io_write_attr_int(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_write_int3(io, obj, name, val) \
+  mrc_io_write_attr_int3(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_write_double(io, obj, name, val) \
+  mrc_io_write_attr_double(io, mrc_io_obj_path(io, obj), name, val)
+#define mrc_io_write_string(io, obj, name, val) \
+  mrc_io_write_attr_string(io, mrc_io_obj_path(io, obj), name, val)
+
 void mrc_io_get_h5_file(struct mrc_io *io, long *h5_file);
 
-// automate the cast to (struct mrc_class *)
-#define mrc_io_read_obj_ref(io, path, name, class)			\
-  __mrc_io_read_obj_ref(io, path, name, (struct mrc_class *)(class))
-struct mrc_obj *__mrc_io_read_obj_ref(struct mrc_io *io, const char *path, const char *name,
-				      struct mrc_class *class);
-void mrc_io_write_obj_ref(struct mrc_io *io, const char *path, const char *name,
-			  struct mrc_obj *obj);
+struct mrc_obj *__mrc_io_read_path(struct mrc_io *io, const char *path, const char *name,
+				   struct mrc_class *cls);
+struct mrc_obj *__mrc_io_read_ref(struct mrc_io *io, struct mrc_obj *obj_parent,
+				  const char *name, struct mrc_class *cls);
+void __mrc_io_write_path(struct mrc_io *io, const char *path, const char *name,
+			 struct mrc_obj *obj);
+void __mrc_io_write_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *name,
+			struct mrc_obj *obj);
+
+// hide the casts
+#define mrc_io_read_path(io, path, name, cls)				\
+  (struct cls *)							\
+  __mrc_io_read_path(io, path, name,					\
+		     (struct mrc_class *)(&mrc_class_ ## cls))
+#define mrc_io_read_ref(io, obj, name, cls)				\
+  (struct cls *)							\
+  __mrc_io_read_ref(io, (struct mrc_obj *) obj, name,			\
+		    (struct mrc_class *)(&mrc_class_ ## cls))
+#define mrc_io_write_path(io, path, name, obj)			\
+  __mrc_io_write_path(io, path, name, (struct mrc_obj *) obj)
+#define mrc_io_write_ref(io, obj_parent, name, obj)		\
+  __mrc_io_write_ref(io, (struct mrc_obj *) obj_parent,		\
+		     name, (struct mrc_obj *) obj)
 
 // ----------------------------------------------------------------------
 // for mrc_obj use
 
-int mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj);
-struct mrc_obj *mrc_io_find_obj(struct mrc_io *io, const char *name);
+int mrc_io_add_obj(struct mrc_io *io, struct mrc_obj *obj, const char *path);
+struct mrc_obj *mrc_io_find_obj(struct mrc_io *io, const char *path);
+const char *__mrc_io_obj_path(struct mrc_io *io, struct mrc_obj *obj);
+
+#define mrc_io_obj_path(io, obj) \
+  __mrc_io_obj_path(io, (struct mrc_obj *) obj)
 
 // ----------------------------------------------------------------------
 // mrc_io_server
