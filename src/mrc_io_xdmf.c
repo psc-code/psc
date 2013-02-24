@@ -1019,6 +1019,7 @@ ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   
   hsize_t hdims[1] = { mrc_f1_dims(f1)[0] };
   for (int m = 0; m < f1->nr_comp; m++) {
+    assert(mrc_f1_comp_name(f1, m));
     hid_t groupc = H5Gcreate(group, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
 			     H5P_DEFAULT); H5_CHK(groupc);
     ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
@@ -1028,6 +1029,59 @@ ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
   }
 
   H5Gclose(group);
+}
+
+struct read_f1_cb0_data {
+  struct mrc_io *io;
+  struct mrc_f1 *f1;
+  hid_t filespace;
+  hid_t memspace;
+};
+
+static herr_t
+read_f1_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
+{
+  struct read_f1_cb0_data *data = op_data;
+  herr_t ierr;
+
+  hid_t group = H5Gopen(g_id, name, H5P_DEFAULT); H5_CHK(group);
+  int m;
+  ierr = H5LTget_attribute_int(group, ".", "m", &m); CE;
+  mrc_f1_set_comp_name(data->f1, m, name);
+
+  hid_t dset = H5Dopen(group, "1d", H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
+		 &MRC_F1(data->f1, m, mrc_f1_off(data->f1)[0])); CE;
+  ierr = H5Dclose(dset); CE;
+
+  ierr = H5Gclose(group); CE;
+  return 0;
+}
+
+static void
+ds_xdmf_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
+{
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+  herr_t ierr;
+
+  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
+  hsize_t hdims[1] = { mrc_f1_dims(f1)[0] };
+  hid_t filespace = H5Screate_simple(1, hdims, NULL);
+  hid_t memspace = H5Screate_simple(1, hdims, NULL);
+
+  struct read_f1_cb0_data cb_data = {
+    .io        = io,
+    .f1        = f1,
+    .filespace = filespace,
+    .memspace  = memspace,
+  };
+  hsize_t idx = 0;
+  ierr = H5Literate_by_name(group, ".", H5_INDEX_NAME, H5_ITER_INC, &idx,
+			    read_f1_cb0, &cb_data, H5P_DEFAULT); CE;
+  
+  ierr = H5Sclose(filespace); CE;
+  ierr = H5Sclose(memspace); CE;
+  ierr = H5Gclose(group); CE;
 }
 
 static void
@@ -1195,6 +1249,8 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .close         = ds_xdmf_close,
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
+  .write_f1      = ds_xdmf_write_f1,
+  .read_f1       = ds_xdmf_read_f1,
   .write_m1      = ds_xdmf_write_m1,
   .read_m1       = ds_xdmf_read_m1,
   .write_attr    = ds_xdmf_write_attr,
