@@ -92,6 +92,7 @@ void
 mrc_f1_set_comp_name(struct mrc_f1 *f1, int m, const char *name)
 {
   assert(m < f1->nr_comp);
+  assert(f1->_comp_name);
   free(f1->_comp_name[m]);
   f1->_comp_name[m] = name ? strdup(name) : NULL;
 }
