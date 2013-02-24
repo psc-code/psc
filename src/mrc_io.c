@@ -552,9 +552,14 @@ void
 __mrc_io_write_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *name,
 		   struct mrc_obj *obj)
 {
-  mrc_obj_write(obj, io);
-  mrc_io_write_attr_string(io, mrc_io_obj_path(io, obj_parent), name,
-			   mrc_io_obj_path(io, obj));
+  if (obj) {
+    mrc_obj_write(obj, io);
+    mrc_io_write_attr_string(io, mrc_io_obj_path(io, obj_parent), name,
+			     mrc_io_obj_path(io, obj));
+  } else {
+    mrc_io_write_attr_string(io, mrc_io_obj_path(io, obj_parent), name,
+			     "(NULL)");
+  }
 }
 
 // ======================================================================
