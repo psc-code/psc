@@ -529,6 +529,9 @@ __mrc_io_read_ref(struct mrc_io *io, struct mrc_obj *obj_parent, const char *nam
 {
   char *s;
   mrc_io_read_attr_string(io, mrc_io_obj_path(io, obj_parent), name, &s);
+  if (!s) {
+    return NULL;
+  }
   struct mrc_obj *obj = mrc_obj_read(io, s, class);
   free(s);
   return obj;
