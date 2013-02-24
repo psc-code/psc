@@ -110,6 +110,12 @@ mrc_f1_dims(struct mrc_f1 *f1)
 }
 
 const int *
+mrc_f1_off(struct mrc_f1 *f1)
+{
+  return f1->_off;
+}
+
+const int *
 mrc_f1_ghost_dims(struct mrc_f1 *f1)
 {
   return f1->_ghost_dims;
