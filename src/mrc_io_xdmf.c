@@ -1012,8 +1012,22 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
 static void
 ds_xdmf_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1)
 {
-  // FIXME
-  MHERE;
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group);
+  
+  hsize_t hdims[1] = { mrc_f1_dims(f1)[0] };
+  for (int m = 0; m < f1->nr_comp; m++) {
+    hid_t groupc = H5Gcreate(group, mrc_f1_comp_name(f1, m), H5P_DEFAULT, H5P_DEFAULT,
+			     H5P_DEFAULT); H5_CHK(groupc);
+    ierr = H5LTset_attribute_int(groupc, ".", "m", &m, 1); CE;
+    ierr = H5LTmake_dataset_float(groupc, "1d", 1, hdims,
+				  &MRC_F1(f1, m, mrc_f1_off(f1)[0])); CE;
+    H5Gclose(groupc);
+  }
+
+  H5Gclose(group);
 }
 
 static void
