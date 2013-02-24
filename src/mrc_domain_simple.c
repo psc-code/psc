@@ -219,7 +219,8 @@ static struct mrc_param_select bc_descr[] = {
 #define VAR(x) (void *)offsetof(struct mrc_domain_simple, x)
 static struct param mrc_domain_simple_params_descr[] = {
   { "lm"              , VAR(patch.ldims)     , PARAM_INT3(0, 0, 0)    },
-  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32) },
+  { "m"               , VAR(gdims)           , PARAM_INT3(32, 32, 32),
+  .help = "global number of grid points in x, y, z direction" },
   { "np"              , VAR(nr_procs)        , PARAM_INT3(1, 1, 1)    },
   { "bcx"             , VAR(bc[0])           , PARAM_SELECT(BC_NONE,
 							    bc_descr) },
