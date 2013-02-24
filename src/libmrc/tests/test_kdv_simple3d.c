@@ -26,7 +26,7 @@ enum {
 #define CRDX(ix) (MRC_CRDX(crds, (ix)))
 
 #define Dx(x, m_x, ix,iy,iz)						\
-  ((MRC_F3(x, m_x, ix+1,iy,iz) - MRC_F3(x, m_x, ix-1,iy,iz)) \
+  ((MRC_F3(x, m_x, ix+1,iy,iz) - MRC_F3(x, m_x, ix-1,iy,iz))		\
    / (CRDX(ix+1) - CRDX(ix-1)))
 
 // assumes uniform coordinates!

@@ -22,6 +22,7 @@
   (*({ float *p = &(f3)->arr[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_off[2]) * \
 	  (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_off[1]) *				\
 	(f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_off[0]];				\
+      assert((m) >= 0 && (m) < (f3)->nr_comp);				\
       assert((ix) >= (f3)->_ghost_off[0] && (ix) < (f3)->_ghost_off[0] + (f3)->_ghost_dims[0]);	\
       assert((iy) >= (f3)->_ghost_off[1] && (iy) < (f3)->_ghost_off[1] + (f3)->_ghost_dims[1]);	\
       assert((iz) >= (f3)->_ghost_off[2] && (iz) < (f3)->_ghost_off[2] + (f3)->_ghost_dims[2]);	\
@@ -71,6 +72,7 @@ const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 const int *mrc_f1_off(struct mrc_f1 *x);
 const int *mrc_f1_dims(struct mrc_f1 *x);
 const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
+void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);

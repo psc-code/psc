@@ -50,6 +50,13 @@ _mrc_f1_setup(struct mrc_f1 *f1)
   }
 }
 
+void
+mrc_f1_set_array(struct mrc_f1 *f1, float *arr)
+{
+  assert(!f1->arr);
+  f1->arr = arr;
+}
+
 static void
 _mrc_f1_read(struct mrc_f1 *f1, struct mrc_io *io)
 {
