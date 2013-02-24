@@ -81,7 +81,7 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   for (int d = 0; d < 3; d++) {
-    MPI_Send(&MRC_CRD(crds, d, 2), ldims[d], MPI_FLOAT, par->rank_diagsrv,
+    MPI_Send(&MRC_CRD(crds, d, 0), ldims[d], MPI_FLOAT, par->rank_diagsrv,
 	     ID_DIAGS_CMD_CRDX + d, MPI_COMM_WORLD); // FIXME, hardcoded SW
   }
 

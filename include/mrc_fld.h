@@ -72,6 +72,7 @@ const char *mrc_f1_comp_name(struct mrc_f1 *x, int m);
 const int *mrc_f1_off(struct mrc_f1 *x);
 const int *mrc_f1_dims(struct mrc_f1 *x);
 const int *mrc_f1_ghost_dims(struct mrc_f1 *x);
+void mrc_f1_set_array(struct mrc_f1 *x, float *arr);
 void mrc_f1_dump(struct mrc_f1 *x, const char *basename, int n);
 void mrc_f1_zero(struct mrc_f1 *x);
 void mrc_f1_copy(struct mrc_f1 *x, struct mrc_f1 *y);
