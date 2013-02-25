@@ -488,8 +488,10 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   assert(nr_patches == 1);
   mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
   mrc_f3_set_param_int3(f3, "off", (int[3]) { 0, 0, 0 });
-  
   mrc_f3_setup(f3);
+  // FIXME, the whole _comp_name business is screwy here
+  free(f3->_comp_name); 
+  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
   mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
 }
 
