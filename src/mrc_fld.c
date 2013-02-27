@@ -356,6 +356,7 @@ mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
   for (int m = 0; m < f3->nr_comp; m++) {
     free(f3->_comp_name[m]);
   }
+  free(f3->_comp_name);
   f3->nr_comp = nr_comps;
   f3->_comp_name = calloc(nr_comps, sizeof(*f3->_comp_name));
 }
