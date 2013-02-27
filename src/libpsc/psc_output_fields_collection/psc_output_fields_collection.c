@@ -31,9 +31,7 @@ _psc_output_fields_collection_setup(struct psc_output_fields_collection *coll)
     if (strcmp(p, "psc_output_fields") != 0) {
       char s[100];
       sprintf(s, "pfd_%s", p);
-      MHERE;
       psc_output_fields_set_param_string(out, "pfd", s);
-      MHERE;
       sprintf(s, "tfd_%s", p);
       psc_output_fields_set_param_string(out, "tfd", s);
     }

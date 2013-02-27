@@ -43,17 +43,17 @@ struct psc_mirror {
 #define VAR(x) (void *)offsetof(struct psc_mirror, x)
 static struct param psc_mirror_descr[] = {
   { "mi_over_me"         , VAR(mi_over_me)         , PARAM_DOUBLE(10.) },
-  { "mh_over_mi"         , VAR(mh_over_mi)         , PARAM_DOUBLE(4.)  },
+  { "mh_over_mi"         , VAR(mh_over_mi)         , PARAM_DOUBLE(1.)  },
   { "vA_over_c"          , VAR(vA_over_c)          , PARAM_DOUBLE(.1) },
   { "beta_e_par"         , VAR(beta_e_par)         , PARAM_DOUBLE(.2)  },
   { "beta_i_par"         , VAR(beta_i_par)         , PARAM_DOUBLE(2.)  },
-  { "beta_h_par"         , VAR(beta_h_par)         , PARAM_DOUBLE(2.)  },
-  { "Th_perp_over_Th_par", VAR(Th_perp_over_Th_par), PARAM_DOUBLE(1.5) },
+  { "beta_h_par"         , VAR(beta_h_par)         , PARAM_DOUBLE(0)  },
+  { "Th_perp_over_Th_par", VAR(Th_perp_over_Th_par), PARAM_DOUBLE(0) },
   { "Ti_perp_over_Ti_par", VAR(Ti_perp_over_Ti_par), PARAM_DOUBLE(2.5) },
   { "Te_perp_over_Te_par", VAR(Te_perp_over_Te_par), PARAM_DOUBLE(1.)  },
   { "theta_0"            , VAR(theta_0)            , PARAM_DOUBLE(75.*M_PI/180) },
   { "B1"                 , VAR(B1)                 , PARAM_DOUBLE(0.)  },
-  { "heavy_ions_density" , VAR(heavy_ions_density)  , PARAM_DOUBLE(0.05)},
+  { "heavy_ions_density" , VAR(heavy_ions_density)  , PARAM_DOUBLE(0.0)},
   {},
 };
 #undef VAR
@@ -124,7 +124,7 @@ psc_mirror_create(struct psc *psc)
   psc_set_kinds(psc, NR_MIRROR_KINDS, kinds);
 
   psc->domain.gdims[0] = 1;
-  psc->domain.gdims[1] = 512;
+  psc->domain.gdims[1] = 1;
   psc->domain.gdims[2] = 512;
 
   psc->domain.bnd_fld_lo[0] = BND_FLD_PERIODIC;
