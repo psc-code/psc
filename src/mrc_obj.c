@@ -9,7 +9,7 @@
 #include <assert.h>
 
 static struct mrc_obj *
-obj_create(MPI_Comm comm, struct mrc_class *cls)
+obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 {
   assert_collective(comm);
 
@@ -31,6 +31,14 @@ obj_create(MPI_Comm comm, struct mrc_class *cls)
     mrc_params_set_default(p, cls->param_descr);
   }
 
+  // no ref count for this reference, will be deleted on final destroy()
+  list_add_tail(&obj->instance_entry, &cls->instances);
+
+  // if we're read()'ing this, we don't call the actual create() functions
+  if (basic_only) {
+    return obj;
+  }
+
   if (cls->create) {
     cls->create(obj);
   }
@@ -41,9 +49,6 @@ obj_create(MPI_Comm comm, struct mrc_class *cls)
       list_entry(cls->subclasses.next, struct mrc_obj_ops, list);
     mrc_obj_set_type(obj, ops->name);
   }
-
-  // no ref count for this reference, will be deleted on final destroy()
-  list_add_tail(&obj->instance_entry, &cls->instances);
 
   return obj;
 }
@@ -96,7 +101,7 @@ struct mrc_obj *
 mrc_obj_create(MPI_Comm comm, struct mrc_class *cls)
 {
   init_class(cls);
-  return obj_create(comm, cls);
+  return obj_create(comm, cls, false);
 }
 
 struct mrc_obj *
@@ -224,8 +229,8 @@ mrc_obj_set_name(struct mrc_obj *obj, const char *name)
   }
 }
 
-void
-mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
+static void
+obj_set_type(struct mrc_obj *obj, const char *subclass, bool basic_only)
 {
   //  printf("set_type: %s -> %s\n", obj->ops->name, subclass);
   if (obj->ops && strcmp(obj->ops->name, subclass) == 0)
@@ -250,9 +255,19 @@ mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
     }
   }
 
+  if (basic_only) {
+    return;
+  }
+
   if (ops->create) {
     ops->create(obj);
   }
+}
+
+void
+mrc_obj_set_type(struct mrc_obj *obj, const char *subclass)
+{
+  obj_set_type(obj, subclass, false);
 }
 
 static void
@@ -612,7 +627,7 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   if (!list_empty(&cls->subclasses)) {
     char *type;
     mrc_io_read_attr_string(io, path, "mrc_obj_type", &type);
-    mrc_obj_set_type(obj, type);
+    obj_set_type(obj, type, true);
     free(type);
   }
   if (obj->ops && obj->ops->param_descr) {
@@ -649,7 +664,7 @@ mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
   if (obj)
     return obj;
 
-  obj = mrc_obj_create(mrc_io_comm(io), cls);
+  obj = obj_create(mrc_io_comm(io), cls, true);
   mrc_obj_read2(obj, io, path);
   return obj;
 }
