@@ -1036,6 +1036,10 @@ _psc_view(struct psc *psc)
 void
 psc_set_kinds(struct psc *psc, int nr_kinds, const struct psc_kind *kinds)
 {
+  if (!kinds && nr_kinds == psc->nr_kinds) {
+    return;
+  }
+
   if (psc->kinds) {
     for (int k = 0; k < psc->nr_kinds; k++) {
       free(psc->kinds[k].name);
