@@ -432,6 +432,12 @@ void mrc_obj_set_param_ptr(struct mrc_obj *obj, const char *name, void* val)
   mrc_obj_set_param_type(obj, name, PT_PTR, &uval);
 }
 
+void mrc_obj_set_param_obj(struct mrc_obj *obj, const char *name, void* val)
+{
+  union param_u uval = { .u_obj = val };
+  mrc_obj_set_param_type(obj, name, PT_OBJ, &uval);
+}
+
 void
 mrc_obj_get_param_int(struct mrc_obj *obj, const char *name, int *pval)
 {

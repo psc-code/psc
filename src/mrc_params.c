@@ -577,6 +577,7 @@ mrc_params_set_default(void *p, struct param *params)
     case PT_PTR:
       pv->u_ptr = params[i].u.ini_ptr;
       break;
+    case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
@@ -641,6 +642,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       break;
     case PT_PTR:
       pv->u_ptr = pval->u_ptr;
+      break;
+    case PT_OBJ:
+      pv->u_obj = pval->u_obj;
       break;
     default:
       assert(0);
@@ -798,6 +802,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       break;
     case PT_PTR:
       break;
+    case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
@@ -851,6 +856,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       break;
     case PT_PTR:
       break;
+    case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:

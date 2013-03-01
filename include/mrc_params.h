@@ -20,6 +20,7 @@ enum param_type {
   PT_FLOAT3,
   PT_DOUBLE3,
   PT_PTR,
+  PT_OBJ,
   MRC_VAR_INT,
   MRC_VAR_BOOL,
   MRC_VAR_FLOAT,
@@ -37,6 +38,7 @@ enum param_type {
 #define PARAM_FLOAT3(x,y,z) PT_FLOAT3, .u = { .ini_float3 = { (x), (y), (z) }, }
 #define PARAM_DOUBLE3(x,y,z) PT_DOUBLE3, .u = { .ini_double3 = { (x), (y), (z) }, }
 #define PARAM_PTR(x)      PT_PTR,    .u = { .ini_ptr = (x), }
+#define PARAM_OBJ         PT_OBJ
 
 union param_u {
   int u_int;
@@ -50,6 +52,7 @@ union param_u {
   float u_float3[3];
   double u_double3[3];
   void* u_ptr;
+  struct mrc_obj *u_obj;
 };
 
 struct mrc_param_select {
