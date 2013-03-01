@@ -20,6 +20,10 @@ enum param_type {
   PT_FLOAT3,
   PT_DOUBLE3,
   PT_PTR,
+  MRC_VAR_INT,
+  MRC_VAR_BOOL,
+  MRC_VAR_FLOAT,
+  MRC_VAR_DOUBLE,
 };
 
 #define PARAM_INT(x)      PT_INT,    .u = { .ini_int = (x), }

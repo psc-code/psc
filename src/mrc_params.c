@@ -577,6 +577,11 @@ mrc_params_set_default(void *p, struct param *params)
     case PT_PTR:
       pv->u_ptr = params[i].u.ini_ptr;
       break;
+    case MRC_VAR_INT:
+    case MRC_VAR_BOOL:
+    case MRC_VAR_FLOAT:
+    case MRC_VAR_DOUBLE:
+      break;
     default:
       assert(0);
     }
@@ -793,6 +798,11 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       break;
     case PT_PTR:
       break;
+    case MRC_VAR_INT:
+    case MRC_VAR_BOOL:
+    case MRC_VAR_FLOAT:
+    case MRC_VAR_DOUBLE:
+      break;
     default:
       assert(0);
     }
@@ -840,6 +850,11 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_double3_help(name, &pv->u_double3[0], params[i].help);
       break;
     case PT_PTR:
+      break;
+    case MRC_VAR_INT:
+    case MRC_VAR_BOOL:
+    case MRC_VAR_FLOAT:
+    case MRC_VAR_DOUBLE:
       break;
     default:
       assert(0);
@@ -892,6 +907,8 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
       break;
     case PT_PTR:
       mpi_printf(comm, "%-20s| %p\n", params[i].name, pv->u_ptr);
+      break;
+    default:
       break;
     }
   }

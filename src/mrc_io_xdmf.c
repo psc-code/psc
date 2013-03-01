@@ -707,18 +707,22 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     ierr = H5LTget_attribute_int(group, ".", name, &pv->u_int); CE;
     break;
-  case PT_BOOL: {
+  case PT_BOOL:
+  case MRC_VAR_BOOL: {
     int val;
     ierr = H5LTget_attribute_int(group, ".", name, &val); CE;
     pv->u_bool = val;
     break;
   }
   case PT_FLOAT:
+  case MRC_VAR_FLOAT:
     ierr = H5LTget_attribute_float(group, ".", name, &pv->u_float); CE;
     break;
   case PT_DOUBLE:
+  case MRC_VAR_DOUBLE:
     ierr = H5LTget_attribute_double(group, ".", name, &pv->u_double); CE;
     break;
   case PT_STRING: ;
@@ -761,17 +765,21 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
   switch (type) {
   case PT_SELECT:
   case PT_INT:
+  case MRC_VAR_INT:
     H5LTset_attribute_int(group, ".", name, &pv->u_int, 1);
     break;
-  case PT_BOOL: {
+  case PT_BOOL:
+  case MRC_VAR_BOOL: {
     int val = pv->u_bool;
     H5LTset_attribute_int(group, ".", name, &val, 1);
     break;
   }
   case PT_FLOAT:
+  case MRC_VAR_FLOAT:
     H5LTset_attribute_float(group, ".", name, &pv->u_float, 1);
     break;
   case PT_DOUBLE:
+  case MRC_VAR_DOUBLE:
     H5LTset_attribute_double(group, ".", name, &pv->u_double, 1);
     break;
   case PT_STRING:
