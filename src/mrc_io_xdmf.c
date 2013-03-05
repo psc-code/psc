@@ -1186,6 +1186,62 @@ ds_xdmf_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1)
   ierr = H5Gclose(group0); CE;
 }
 
+static hid_t
+get_h5_datatype(struct mrc_fld *fld)
+{
+  switch (fld->_data_type) {
+  case MRC_NT_FLOAT : return H5T_NATIVE_FLOAT;
+  case MRC_NT_DOUBLE: return H5T_NATIVE_DOUBLE;
+  case MRC_NT_INT   : return H5T_NATIVE_INT;
+  default: assert(0);
+  }
+}
+
+static void
+ds_xdmf_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+
+  hsize_t hdims[fld->_nr_dims];
+  for (int d = 0; d < fld->_nr_dims; d++) {
+    hdims[d] = fld->_dims[fld->_nr_dims - 1 - d];
+  }
+  hid_t filespace = H5Screate_simple(fld->_nr_dims, hdims, NULL);
+  hid_t datatype = get_h5_datatype(fld);
+  hid_t dset = H5Dopen(group0, "fld", H5P_DEFAULT); H5_CHK(dset);
+  ierr = H5Dread(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_arr); CE;
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(filespace); CE;
+
+  ierr = H5Gclose(group0); CE;
+}
+
+static void
+ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  int ierr;
+  struct diag_hdf5 *hdf5 = diag_hdf5(io);
+
+  hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
+
+  hsize_t hdims[fld->_nr_dims];
+  for (int d = 0; d < fld->_nr_dims; d++) {
+    hdims[d] = fld->_dims[fld->_nr_dims - 1 - d];
+  }
+  hid_t filespace = H5Screate_simple(fld->_nr_dims, hdims, NULL);
+  hid_t datatype = get_h5_datatype(fld);
+  hid_t dset = H5Dcreate(group0, "fld", datatype, filespace, H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT);
+  ierr = H5Dwrite(dset, datatype, H5S_ALL, filespace, H5P_DEFAULT, fld->_arr); CE;
+  ierr = H5Dclose(dset); CE;
+  ierr = H5Sclose(filespace); CE;
+
+  ierr = H5Gclose(group0); CE;
+}
+
 static void
 ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float scale)
 {
@@ -1344,6 +1400,8 @@ struct mrc_io_ops mrc_io_xdmf_serial_ops = {
   .close         = ds_xdmf_close,
   .write_field   = ds_xdmf_write_field,
   .write_field2d = ds_xdmf_write_field2d,
+  .write_fld     = ds_xdmf_write_fld,
+  .read_fld      = ds_xdmf_read_fld,
   .write_f3      = ds_xdmf_write_f3,
   .read_f3       = ds_xdmf_read_f3,
   .write_f1      = ds_xdmf_write_f1,

@@ -32,8 +32,10 @@ struct mrc_io_ops {
   bool parallel;
   void (*open)(struct mrc_io *, const char *mode);
   void (*close)(struct mrc_io *);
+  void (*read_fld)(struct mrc_io *, const char *path, struct mrc_fld *fld);
   void (*read_f1)(struct mrc_io *, const char *path, struct mrc_f1 *fld);
   void (*read_f3)(struct mrc_io *, const char *path, struct mrc_f3 *fld);
+  void (*write_fld)(struct mrc_io *, const char *path, struct mrc_fld *fld);
   void (*write_f1)(struct mrc_io *, const char *path, struct mrc_f1 *fld);
   void (*write_f3)(struct mrc_io *, const char *path,
 		   struct mrc_f3 *fld, float scale);

@@ -10,6 +10,103 @@
 #include <assert.h>
 
 // ======================================================================
+// mrc_fld
+
+// ----------------------------------------------------------------------
+// mrc_fld_destroy
+
+static void
+_mrc_fld_destroy(struct mrc_fld *fld)
+{
+  if (!fld->_with_array) {
+    free(fld->_arr);
+  }
+  fld->_arr = NULL;
+}
+
+static void
+_mrc_fld_setup(struct mrc_fld *fld)
+{
+  switch (fld->_data_type) {
+  case MRC_NT_FLOAT : fld->_size_of_type = sizeof(float) ; break;
+  case MRC_NT_DOUBLE: fld->_size_of_type = sizeof(double); break;
+  case MRC_NT_INT   : fld->_size_of_type = sizeof(int)   ; break;
+  default: assert(0);
+  }
+
+  fld->_len = 1;
+  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+    fld->_len *= fld->_dims[d];
+  }
+
+  if (!fld->_with_array) {
+    fld->_arr = calloc(fld->_len, fld->_size_of_type);
+  }
+}
+
+void
+mrc_fld_set_array(struct mrc_fld *fld, void *arr)
+{
+  assert(!fld->_arr);
+  fld->_arr = arr;
+  fld->_with_array = true;
+}
+
+static void
+_mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
+{
+  mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
+}
+
+static void
+_mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
+{
+  // if we're reading back stuff, there's no way that _with_array
+  // would work, so we'll allocate our own array instead.
+  fld->_with_array = false;
+  mrc_fld_setup(fld);
+  mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
+}
+
+// ----------------------------------------------------------------------
+// mrc_class_mrc_fld
+
+static struct mrc_param_select mrc_number_type[] = {
+  { .val = MRC_NT_FLOAT , .str = "float"  },
+  { .val = MRC_NT_DOUBLE, .str = "double" },
+  { .val = MRC_NT_INT   , .str = "int"    },
+  {},
+};
+
+#define VAR(x) (void *)offsetof(struct mrc_fld, x)
+static struct param mrc_fld_descr[] = {
+  { "offs"            , VAR(_offs)        , PARAM_INT3(0, 0, 0)           }, // FIXME, NDIMS
+  { "dims"            , VAR(_dims)        , PARAM_INT3(0, 0, 0)           },
+  { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                  },
+  { "data_type"       , VAR(_data_type)   , PARAM_SELECT(MRC_NT_FLOAT,
+							 mrc_number_type) },
+
+  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT                   },
+  { "len"             , VAR(_len)         , MRC_VAR_INT                   },
+  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL                  },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// mrc_fld class description
+
+struct mrc_class_mrc_fld mrc_class_mrc_fld = {
+  .name         = "mrc_fld",
+  .size         = sizeof(struct mrc_fld),
+  .param_descr  = mrc_fld_descr,
+  .destroy      = _mrc_fld_destroy,
+  .setup        = _mrc_fld_setup,
+  .write        = _mrc_fld_write,
+  .read         = _mrc_fld_read,
+};
+
+// ======================================================================
 // mrc_f1
 
 static void

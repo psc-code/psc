@@ -179,6 +179,28 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
 }
 
 // ----------------------------------------------------------------------
+// mrc_io_read_fld
+
+void
+mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops && ops->read_fld);
+  ops->read_fld(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
+// mrc_io_write_fld
+
+void
+mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
+{
+  struct mrc_io_ops *ops = mrc_io_ops(io);
+  assert(ops && ops->write_fld);
+  ops->write_fld(io, path, fld);
+}
+
+// ----------------------------------------------------------------------
 // mrc_io_write_f1
 
 void

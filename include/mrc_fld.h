@@ -47,6 +47,37 @@
 struct mrc_io;
 
 // ======================================================================
+// mrc_fld
+
+enum {
+  MRC_NT_FLOAT,
+  MRC_NT_DOUBLE,
+  MRC_NT_INT,
+  MRC_NT_NR,
+};
+
+#define MRC_FLD_MAXDIMS (3)
+
+struct mrc_fld {
+  struct mrc_obj obj;
+  // parameters
+  int _offs[MRC_FLD_MAXDIMS];
+  int _dims[MRC_FLD_MAXDIMS];
+  int _nr_dims;
+  int _data_type;
+
+  // state
+  int _size_of_type;
+  void *_arr;
+  int _len;
+  bool _with_array;
+};
+
+MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
+
+void mrc_fld_set_array(struct mrc_fld *x, void *arr);
+
+// ======================================================================
 // mrc_f1
 
 struct mrc_f1 {
