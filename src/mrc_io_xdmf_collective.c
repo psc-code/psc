@@ -1081,7 +1081,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->domain),
 					 m3->domain,
-					 ctx.slab_off, ctx.slab_dims);
+					 ctx.slab_off, ctx.slab_dims, io);
   }
 
   if (xdmf->is_writer) {

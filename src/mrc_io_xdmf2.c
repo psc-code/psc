@@ -259,7 +259,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 					      mrc_domain_name(m3->domain));
   if (!xs) {
     xs = xdmf_spatial_create_m3(&file->xdmf_spatial_list,
-				mrc_domain_name(m3->domain), m3->domain);
+				mrc_domain_name(m3->domain), m3->domain, io);
     xdmf_spatial_write_mcrds(xs, file, m3->domain, xdmf->sw);
   }
 
@@ -718,7 +718,7 @@ xdmf_parallel_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     int off[3] = {};
     xs = xdmf_spatial_create_m3_parallel(&file->xdmf_spatial_list,
 					 mrc_domain_name(m3->domain),
-					 m3->domain, off, gdims);
+					 m3->domain, off, gdims, io);
     xdmf_spatial_write_mcrds_parallel(xs, io, m3->domain);
   }
 

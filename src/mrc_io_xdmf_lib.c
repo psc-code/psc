@@ -64,7 +64,7 @@ xdmf_write_topology_uniform_m3(FILE *f, int im[3], float xl[3], float dx[3])
 }
 
 static void
-xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
+xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, const char *crd_nc_path[3], int p)
 {
   // FIXME crd[012] hardcoded, should use mrc_m1_name()
   fprintf(f, "     <Topology TopologyType=\"3DRectMesh\" Dimensions=\"%d %d %d\"/>\n",
@@ -72,13 +72,13 @@ xdmf_write_topology_m3(FILE *f, int im[3], const char *filename, int p)
 
   fprintf(f, "     <Geometry GeometryType=\"VXVYVZ\">\n");
   fprintf(f, "     <DataItem Name=\"VX\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[0] + 1);
-  fprintf(f, "        %s:/crd0_nc/crd0_nc/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/%s/crd0_nc/p%d/1d\n", filename, crd_nc_path[0], p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VY\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[1] + 1);
-  fprintf(f, "        %s:/crd1_nc/crd1_nc/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/%s/crd1_nc/p%d/1d\n", filename, crd_nc_path[1], p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     <DataItem Name=\"VZ\" DataType=\"Float\" Dimensions=\"%d\" Format=\"HDF\">\n", im[2] + 1);
-  fprintf(f, "        %s:/crd2_nc/crd2_nc/p%d/1d\n", filename, p);
+  fprintf(f, "        %s:/%s/crd2_nc/p%d/1d\n", filename, crd_nc_path[2], p);
   fprintf(f, "     </DataItem>\n");
   fprintf(f, "     </Geometry>\n");
   fprintf(f, "\n");
@@ -214,7 +214,7 @@ xdmf_spatial_create_f1(list_t *xdmf_spatial_list, const char *name,
 
 struct xdmf_spatial *
 xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name, 
-		       struct mrc_domain *domain)
+		       struct mrc_domain *domain, struct mrc_io *io)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -236,6 +236,10 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
     xs->uniform = true;
     mrc_crds_get_xl_xh(crds, xl, NULL);
     mrc_crds_get_dx(crds, dx);
+  } else {
+    for (int d = 0; d < 3; d++) {
+      xs->crd_nc_path[d] = mrc_io_obj_path(io, crds->mcrd_nc[d]);
+    }
   }
 
   for (int gp = 0; gp < xs->nr_global_patches; gp++) {
@@ -260,7 +264,7 @@ xdmf_spatial_create_m3(list_t *xdmf_spatial_list, const char *name,
 struct xdmf_spatial *
 xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name, 
 				struct mrc_domain *domain, int slab_off[3], 
-				int slab_dims[3])
+				int slab_dims[3], struct mrc_io *io)
 {
   // OPT, we could skip this on procs which aren't writing xdmf
 
@@ -287,6 +291,10 @@ xdmf_spatial_create_m3_parallel(list_t *xdmf_spatial_list, const char *name,
     for (int d = 0; d < 3; d++) {
       xs->xl[d][0] = xl[d] + slab_off[d] * dx[d];
       xs->dx[d][0] = dx[d];
+    }
+  } else {
+    for (int d = 0; d < 3; d++) {
+      xs->crd_nc_path[d] = strdup(mrc_io_obj_path(io, crds->mcrd_nc[d]));
     }
   }
 
@@ -343,7 +351,7 @@ xdmf_spatial_write(struct xdmf_spatial *xs, const char *filename,
 	float dx[3] = { xs->dx[0][s], xs->dx[1][s], xs->dx[2][s] };
 	xdmf_write_topology_uniform_m3(f, ldims, xl, dx);
       } else {
-	xdmf_write_topology_m3(f, ldims, fname, patch);
+	xdmf_write_topology_m3(f, ldims, fname, xs->crd_nc_path, patch);
       }
     } else {
       assert(0);

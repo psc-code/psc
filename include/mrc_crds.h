@@ -16,6 +16,7 @@ struct mrc_crds {
   struct mrc_domain *domain;
   struct mrc_f1 *crd[3];
   struct mrc_m1 *mcrd[3];
+  struct mrc_m1 *mcrd_nc[3];
 
   // temporally available between patch_get() and patch_put()
   struct mrc_m1_patch *mcrd_p[3];
