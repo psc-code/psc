@@ -316,10 +316,12 @@ _mrc_params_get_option_bool(const char *name, bool *pval, bool deprecated,
       *pval = true;
     } else {
       if (strcasecmp(p->value, "yes") == 0 ||
-	  strcasecmp(p->value, "true") == 0) {
+	  strcasecmp(p->value, "true") == 0 ||
+	  strcasecmp(p->value, "1") == 0) {
 	*pval = true;
       } else if (strcasecmp(p->value, "no") == 0 ||
-		 strcasecmp(p->value, "false") == 0) {
+		 strcasecmp(p->value, "false") == 0 ||
+		 strcasecmp(p->value, "0") == 0) {
 	*pval = false;
       } else {
 	error("cannot parse bool from '%s'\n", p->value);
