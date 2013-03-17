@@ -86,7 +86,7 @@ psc_particles_cuda_write(struct psc_particles *prts, struct mrc_io *io)
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
 
-  hid_t group = H5Gopen(h5_file, psc_particles_name(prts), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, prts), H5P_DEFAULT); H5_CHK(group);
   // save/restore n_alloced, too?
   ierr = H5LTset_attribute_int(group, ".", "p", &prts->p, 1); CE;
   ierr = H5LTset_attribute_int(group, ".", "n_part", &prts->n_part, 1); CE;
