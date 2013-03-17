@@ -691,6 +691,16 @@ mrc_params_get_type(void *p, struct param *params, const char *name,
 	pval->u_int3[d] = pv->u_int3[d];
       }
       break;
+    case PT_FLOAT3:
+      for (int d = 0; d < 3; d++) {
+	pval->u_float3[d] = pv->u_float3[d];
+      }
+      break;
+    case PT_DOUBLE3:
+      for (int d = 0; d < 3; d++) {
+	pval->u_double3[d] = pv->u_double3[d];
+      }
+      break;
     case PT_PTR:
       pval->u_ptr = pv->u_ptr;
       break;
