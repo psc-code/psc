@@ -50,7 +50,6 @@ static void
 _psc_output_fields_collection_write(struct psc_output_fields_collection *out, struct mrc_io *io)
 {
   mrc_io_write_ref(io, out, "psc", out->psc);
-  assert(0);
 }
 
 // ----------------------------------------------------------------------
@@ -59,7 +58,6 @@ _psc_output_fields_collection_write(struct psc_output_fields_collection *out, st
 static void
 _psc_output_fields_collection_read(struct psc_output_fields_collection *out, struct mrc_io *io)
 {
-  assert(0);
   out->psc = mrc_io_read_ref(io, out, "psc", psc);
 
   psc_output_fields_collection_setup(out);
