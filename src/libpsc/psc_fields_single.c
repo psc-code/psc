@@ -143,7 +143,7 @@ psc_fields_single_write(struct psc_fields *flds, struct mrc_io *io)
   int ierr;
   long h5_file;
   mrc_io_get_h5_file(io, &h5_file);
-  hid_t group = H5Gopen(h5_file, psc_fields_name(flds), H5P_DEFAULT); H5_CHK(group);
+  hid_t group = H5Gopen(h5_file, mrc_io_obj_path(io, flds), H5P_DEFAULT); H5_CHK(group);
   ierr = H5LTset_attribute_int(group, ".", "p", &flds->p, 1); CE;
   ierr = H5LTset_attribute_int(group, ".", "ib", flds->ib, 3); CE;
   ierr = H5LTset_attribute_int(group, ".", "im", flds->im, 3); CE;
