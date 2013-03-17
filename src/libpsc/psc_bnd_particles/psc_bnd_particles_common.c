@@ -164,7 +164,7 @@ psc_bnd_particles_sub_exchange_particles_prep(struct psc_bnd_particles *bnd, str
 	}
 	if (!drop) {
 	  if (xi[d] < 0.f && xi[d] > -1e-6f) {
-	    mprintf("d %d xi %g\n", d, xi[d]);
+	    //	    mprintf("d %d xi %g\n", d, xi[d]);
 	    xi[d] = 0.f;
 	  }
 	  assert(xi[d] >= 0.f);
