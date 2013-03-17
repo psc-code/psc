@@ -451,7 +451,7 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
   mprts->prts = calloc(mprts->nr_patches, sizeof(*mprts->prts));
   for (int p = 0; p < mprts->nr_patches; p++) {
     char name[20]; sprintf(name, "prts%d", p);
-    mprts->prts[p] = psc_particles_read(io, name); // doesn't actually read data
+    mprts->prts[p] = mrc_io_read_ref(io, mprts, name, psc_particles); // doesn't actually read data
     mprts->nr_particles_by_patch[p] = mprts->prts[p]->n_part;
   }
 
@@ -464,7 +464,11 @@ psc_mparticles_cuda_read(struct psc_mparticles *mprts, struct mrc_io *io)
     struct psc_particles *prts = mprts->prts[p];
     if (prts->n_part > 0) {
       int ierr;
-      hid_t group = H5Gopen(h5_file, psc_particles_name(prts), H5P_DEFAULT); H5_CHK(group);
+      char name[20]; sprintf(name, "prts%d", p);
+      char *path;
+      mrc_io_read_attr_string(io, mrc_io_obj_path(io, mprts), name, &path);
+      hid_t group = H5Gopen(h5_file, path, H5P_DEFAULT); H5_CHK(group);
+      free(path);
       float4 *xi4  = calloc(prts->n_part, sizeof(float4));
       float4 *pxi4 = calloc(prts->n_part, sizeof(float4));
       
