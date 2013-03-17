@@ -59,8 +59,7 @@ static void
 _psc_output_fields_collection_read(struct psc_output_fields_collection *out, struct mrc_io *io)
 {
   out->psc = mrc_io_read_ref(io, out, "psc", psc);
-
-  psc_output_fields_collection_setup(out);
+  psc_output_fields_collection_read_children(out, io);
 }
 
 // ======================================================================
