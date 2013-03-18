@@ -19,6 +19,7 @@ enum {
   ID_DIAGS_CREATE_OUTDIR,
   ID_DIAGS_CREATE_BASENAME,
   ID_DIAGS_CMD_CREATE,
+  ID_DIAGS_CMD_DOMAIN_INFO,
   ID_DIAGS_CMD_OPEN,
   ID_DIAGS_CMD_WRITE,
   ID_DIAGS_CMD_WRITE_ATTR,
@@ -77,17 +78,18 @@ diagc_combined_send_domain_info(struct mrc_io *io, struct mrc_domain *domain)
     ldims[d] = patches[0].ldims[d];
   }
   mrc_domain_get_global_dims(domain, gdims);
-  MPI_Send(iw, 9, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD);
+  if (io->rank == 0) {
+    MPI_Send(iw, 0, MPI_CHAR, par->rank_diagsrv, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD);
+  }
+  MPI_Send(iw, 9, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD_DOMAIN_INFO, MPI_COMM_WORLD);
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   for (int d = 0; d < 3; d++) {
     MPI_Send(&MRC_CRD(crds, d, 0), ldims[d], MPI_FLOAT, par->rank_diagsrv,
-	     ID_DIAGS_CMD_CRDX + d, MPI_COMM_WORLD); // FIXME, hardcoded SW
+	     ID_DIAGS_CMD_CRDX + d, MPI_COMM_WORLD);
   }
 
   io->diagc_domain_info_sent = true;
-
-  mrc_io_setup_super(io);
 }
 
 static void
@@ -96,6 +98,7 @@ diagc_combined_setup(struct mrc_io *io)
   struct mrc_io_params *par_io = &io->par;
   struct diagc_combined_params *par = io->obj.subctx;
 
+  mrc_io_setup_super(io);
   if (io->rank == 0) {
     int icmd[1] = { DIAG_CMD_CREATE };
     MPI_Send(icmd, 1, MPI_INT, par->rank_diagsrv, ID_DIAGS_CMD, MPI_COMM_WORLD);
@@ -329,7 +332,8 @@ struct diagsrv_one {
 
 struct diagsrv_srv_ops {
   const char *name;
-  void  (*create)(struct diagsrv_one *ds, struct mrc_domain *domain);
+  void  (*create)(struct diagsrv_one *ds);
+  void  (*set_domain)(struct diagsrv_one *ds, struct mrc_domain *domain);
   void  (*destroy)(struct diagsrv_one *ds);
   void  (*open)(struct diagsrv_one *ds, int step, float time);
   void  (*get_gfld_2d)(struct diagsrv_one *ds, struct mrc_f2 *f2, int dims[2]);
@@ -390,15 +394,21 @@ struct diagsrv_srv {
 };
 
 static void
-ds_srv_create(struct diagsrv_one *ds, struct mrc_domain *domain)
+ds_srv_create(struct diagsrv_one *ds)
 {
   struct diagsrv_srv *srv = malloc(sizeof(*srv));
+  ds->srv = srv;
+}
+
+static void
+ds_srv_set_domain(struct diagsrv_one *ds, struct mrc_domain *domain)
+{
+  struct diagsrv_srv *srv = ds->srv;
   srv->domain = domain;
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
   int nglobal = gdims[0] * gdims[1] * gdims[2];
   srv->gfld = malloc(nglobal * sizeof(float));
-  ds->srv = srv;
 }
 
 static void
@@ -465,6 +475,7 @@ ds_srv_write_attr(struct diagsrv_one *ds, const char *path, int type,
 struct diagsrv_srv_ops ds_srv_ops = {
   .name        = "nocache",
   .create      = ds_srv_create,
+  .set_domain  = ds_srv_set_domain,
   .destroy     = ds_srv_destroy,
   .open        = ds_srv_open,
   .get_gfld_2d = ds_srv_get_gfld_2d,
@@ -500,9 +511,16 @@ struct diagsrv_srv_cache_ctx {
 };
 
 static void
-ds_srv_cache_create(struct diagsrv_one *ds, struct mrc_domain *domain)
+ds_srv_cache_create(struct diagsrv_one *ds)
 {
-  struct diagsrv_srv_cache_ctx *srv = malloc(sizeof(*srv));
+  struct diagsrv_srv_cache_ctx *srv = calloc(1, sizeof(*srv));
+  ds->srv = srv;
+}
+
+static void
+ds_srv_cache_set_domain(struct diagsrv_one *ds, struct mrc_domain *domain)
+{
+  struct diagsrv_srv_cache_ctx *srv = ds->srv;
   srv->domain = domain;
   int gdims[3];
   mrc_domain_get_global_dims(domain, gdims);
@@ -512,7 +530,6 @@ ds_srv_cache_create(struct diagsrv_one *ds, struct mrc_domain *domain)
     srv->fld_names[i] = NULL;
     srv->gflds[i] = malloc(nglobal * sizeof(float));
   }
-  ds->srv = srv;
 }
 
 static void
@@ -597,7 +614,7 @@ ds_srv_cache_write_attr(struct diagsrv_one *ds, const char *path, int type,
   }
   
   p = calloc(1, sizeof(*p));
-  p->attrs = mrc_dict_create(mrc_domain_comm(srv->domain));
+  p->attrs = mrc_dict_create(MPI_COMM_SELF);
   mrc_dict_set_name(p->attrs, path);
   p->path = strdup(path);
   list_add_tail(&p->entry, &srv->attrs_list);
@@ -676,6 +693,7 @@ struct diagsrv_srv_ops ds_srv_cache_ops = {
   .name        = "cache",
   .create      = ds_srv_cache_create,
   .destroy     = ds_srv_cache_destroy,
+  .set_domain  = ds_srv_cache_set_domain,
   .open        = ds_srv_cache_open,
   .get_gfld_2d = ds_srv_cache_get_gfld_2d,
   .get_gfld_3d = ds_srv_cache_get_gfld_3d,
@@ -746,7 +764,7 @@ diagsrv_recv_domain_info(int nr_procs, int ldims[3])
   struct mrc_crds *crds = NULL;
   int iw[9], *off = iw, *_ldims = iw + 3, *gdims = iw + 6;
   for (int rank = 0; rank < nr_procs; rank++) {
-    MPI_Recv(iw, 9, MPI_INT, rank, ID_DIAGS_CMD_CREATE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(iw, 9, MPI_INT, rank, ID_DIAGS_CMD_DOMAIN_INFO, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     if (rank == 0) {
       domain = mrc_domain_create(MPI_COMM_SELF);
       mrc_domain_set_type(domain, "simple");
@@ -806,6 +824,9 @@ static struct param diagsrv_params_descr[] = {
   INIT_LIST_HEAD(&ds.mrc_io_list);
 
   int gdims[3];
+  float *w2 = NULL;
+
+  srv_ops->create(&ds);
 
   // loop waiting for data to write
   for (;;) {
@@ -843,15 +864,6 @@ static struct param diagsrv_params_descr[] = {
     float time;
     MPI_Recv(&time, 1, MPI_FLOAT, 0, ID_DIAGS_TIME, MPI_COMM_WORLD,
 	     MPI_STATUS_IGNORE);
-
-    if (!io_entry->domain) {
-      io_entry->domain = diagsrv_recv_domain_info(nr_procs, io_entry->ldims);
-      srv_ops->create(&ds, io_entry->domain);
-    }
-    int *ldims = io_entry->ldims;
-
-    mrc_domain_get_global_dims(io_entry->domain, gdims);
-    float *w2 = malloc(ldims[0] * ldims[1] * ldims[2] * sizeof(float));
 
     switch (outtag) {
     case ID_DIAGS_CMD_OPEN:
@@ -904,8 +916,17 @@ static struct param diagsrv_params_descr[] = {
 	}
 	srv_ops->write_attr(&ds, path, type, name, &val);
 	continue;
+      } else if (status.MPI_TAG == ID_DIAGS_CMD_CREATE) {
+	assert (!io_entry->domain);
+	io_entry->domain = diagsrv_recv_domain_info(nr_procs, io_entry->ldims);
+	srv_ops->set_domain(&ds, io_entry->domain);
+	mrc_domain_get_global_dims(io_entry->domain, gdims);
+	int *ldims = io_entry->ldims;
+	w2 = malloc(ldims[0] * ldims[1] * ldims[2] * sizeof(float));
+	continue;
       };
       assert(status.MPI_TAG == ID_DIAGS_FLDNAME);
+      assert(io_entry->domain);
 
       if (!fld_name80[0])
 	break;
@@ -978,9 +999,9 @@ static struct param diagsrv_params_descr[] = {
       }
     }  
     srv_ops->close(&ds);
-    free(w2);
     ds.io = NULL;
   }  //for (;;) //loop waiting for data to write...
+  free(w2);
 
   mprintf("diagsrv shutting down\n");
 
