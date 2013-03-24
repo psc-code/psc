@@ -125,7 +125,7 @@ v4s_blend(v4si mask, v4s a, v4s b)
   float *fa = (float *) &a, *fb = (float *) &b;
 
   for (int i = 0; i < 4; i++) {
-    rv[i] = (mask.v[i] & 0x80000000) ? fb[i] : fa[i];
+    rv[i] = (mask.v[i] & 0x80000000) ? fa[i] : fb[i];
   }
   return (v4s) { rv[0], rv[1], rv[2], rv[3] };
 }
@@ -136,7 +136,7 @@ v4si_blend(v4si mask, v4si a, v4si b)
   v4si rv;
 
   for (int i = 0; i < 4; i++) {
-    rv.v[i] = (mask.v[i] & 0x80000000) ? b.v[i] : a.v[i];
+    rv.v[i] = (mask.v[i] & 0x80000000) ? a.v[i] : b.v[i];
   }
   return rv;
 }
@@ -336,13 +336,13 @@ v4si_cmplt(v4si a, v4si b)
 static inline v4s
 v4s_blend(v4si mask, v4s a, v4s b)
 {
-  return (v4s) _mm_blendv_ps((__m128) b, (__m128) a, (__m128) (__m128i) mask);
+  return (v4s) _mm_blendv_ps((__m128) a, (__m128) b, (__m128) (__m128i) mask);
 }
 
 static inline v4si
 v4si_blend(v4si mask, v4si a, v4si b)
 {
-  return (v4si) _mm_blendv_epi8((__m128i) b, (__m128i) a, (__m128i) mask);
+  return (v4si) _mm_blendv_epi8((__m128i) a, (__m128i) b, (__m128i) mask);
 }
 
 static inline v4si

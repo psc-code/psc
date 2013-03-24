@@ -219,7 +219,7 @@ psc_push_particles_1vb_ps_push_a_yz(struct psc_push_particles *push,
   fields_ip_alloc(&fld_ip, ib, ie, 9, 0); // JXI .. HZ
   ip_fields_from_em(prts->p, &fld_ip, flds);
 
-#if 0
+#if 1
   sb2_ps_1vb_yz_pxx_jxyz(prts->p, &fld_ip, prts, 0);
   sb0_ps_1vb_yz_pxx_jxyz(prts->p, &fld_ip, prts, prts->n_part & ~3);
 #else
