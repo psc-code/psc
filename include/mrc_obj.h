@@ -86,7 +86,8 @@ DECLARE_STRUCT_MRC_CLASS(, struct mrc_obj);
 
 struct mrc_io;
 
-struct mrc_obj *mrc_obj_create(MPI_Comm comm, struct mrc_class *cls);
+struct mrc_obj *mrc_obj_create(MPI_Comm comm);
+struct mrc_obj *__mrc_obj_create(MPI_Comm comm, struct mrc_class *cls);
 struct mrc_obj *mrc_obj_get(struct mrc_obj *obj);
 void mrc_obj_put(struct mrc_obj *obj);
 void mrc_obj_destroy(struct mrc_obj *obj);
@@ -145,7 +146,7 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _create(MPI_Comm comm)						\
   {									\
     return (obj_type *)							\
-      mrc_obj_create(comm, (struct mrc_class *) &mrc_class_ ## pfx);	\
+      __mrc_obj_create(comm, (struct mrc_class *) &mrc_class_ ## pfx);	\
   }									\
 									\
   static inline struct mrc_obj *					\

@@ -99,10 +99,21 @@ init_class(struct mrc_class *cls)
 }
 
 struct mrc_obj *
-mrc_obj_create(MPI_Comm comm, struct mrc_class *cls)
+__mrc_obj_create(MPI_Comm comm, struct mrc_class *cls)
 {
   init_class(cls);
   return obj_create(comm, cls, false);
+}
+
+struct mrc_class mrc_class_mrc_obj = {
+  .name          = "mrc_obj",
+  .size          = sizeof(struct mrc_obj),
+};
+
+struct mrc_obj *
+mrc_obj_create(MPI_Comm comm)
+{
+  return __mrc_obj_create(comm, &mrc_class_mrc_obj);
 }
 
 struct mrc_obj *
