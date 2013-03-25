@@ -881,6 +881,52 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
 }
 
 void
+mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm)
+{
+  switch (prm->type) {
+  case PT_INT:
+    mpi_printf(comm, "%-20s| %d\n", prm->name, pv->u_int);
+    break;
+  case PT_UINT:
+    mpi_printf(comm, "%-20s| %u\n", prm->name, pv->u_uint);
+    break;
+  case PT_BOOL:
+    mpi_printf(comm, "%-20s| %s\n", prm->name, pv->u_bool ? "yes" : "no");
+    break;
+  case PT_FLOAT:
+    mpi_printf(comm, "%-20s| %g\n", prm->name, pv->u_float);
+    break;
+  case PT_DOUBLE:
+    mpi_printf(comm, "%-20s| %g\n", prm->name, pv->u_double);
+      break;
+  case PT_STRING:
+    mpi_printf(comm, "%-20s| %s\n", prm->name, pv->u_string);
+    break;
+  case PT_SELECT:
+    mpi_printf(comm, "%-20s| %s\n", prm->name,
+	       prm->descr[pv->u_select].str);
+    break;
+  case PT_INT3:
+    mpi_printf(comm, "%-20s| %d, %d, %d\n", prm->name,
+	       pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);
+    break;
+  case PT_FLOAT3:
+    mpi_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
+	       pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
+    break;
+  case PT_DOUBLE3:
+    mpi_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
+	       pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
+    break;
+  case PT_PTR:
+    mpi_printf(comm, "%-20s| %p\n", prm->name, pv->u_ptr);
+    break;
+  default:
+    break;
+  }
+}
+
+void
 mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm)
 {
   mpi_printf(comm, "\n");
@@ -888,47 +934,7 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
   mpi_printf(comm, "--------------------+---------------------------------------- %s\n", title);
   for (int i = 0; params[i].name; i++) {
     union param_u *pv = p + (unsigned long) params[i].var;
-    switch (params[i].type) {
-    case PT_INT:
-      mpi_printf(comm, "%-20s| %d\n", params[i].name, pv->u_int);
-      break;
-    case PT_UINT:
-      mpi_printf(comm, "%-20s| %u\n", params[i].name, pv->u_uint);
-      break;
-    case PT_BOOL:
-      mpi_printf(comm, "%-20s| %s\n", params[i].name, pv->u_bool ? "yes" : "no");
-      break;
-    case PT_FLOAT:
-      mpi_printf(comm, "%-20s| %g\n", params[i].name, pv->u_float);
-      break;
-    case PT_DOUBLE:
-      mpi_printf(comm, "%-20s| %g\n", params[i].name, pv->u_double);
-      break;
-    case PT_STRING:
-      mpi_printf(comm, "%-20s| %s\n", params[i].name, pv->u_string);
-      break;
-    case PT_SELECT:
-      mpi_printf(comm, "%-20s| %s\n", params[i].name,
-		 params[i].descr[pv->u_select].str);
-      break;
-    case PT_INT3:
-      mpi_printf(comm, "%-20s| %d, %d, %d\n", params[i].name,
-		 pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);
-      break;
-    case PT_FLOAT3:
-      mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
-		 pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
-      break;
-    case PT_DOUBLE3:
-      mpi_printf(comm, "%-20s| %g, %g, %g\n", params[i].name,
-		 pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
-      break;
-    case PT_PTR:
-      mpi_printf(comm, "%-20s| %p\n", params[i].name, pv->u_ptr);
-      break;
-    default:
-      break;
-    }
+    mrc_params_print_one(pv, &params[i], comm);
   }
 }
 

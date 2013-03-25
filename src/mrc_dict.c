@@ -10,38 +10,7 @@
 
 struct mrc_dict {
   struct mrc_obj obj;
-  list_t dict_list;
 };
-
-struct mrc_dict_entry {
-  int type;
-  char *name;
-  union param_u val;
-
-  list_t entry;
-};
-
-#define to_mrc_dict(obj) ((struct mrc_dict *)(obj))
-
-static void
-_mrc_dict_create(struct mrc_dict *dict)
-{
-  INIT_LIST_HEAD(&dict->dict_list);
-}
-
-static void
-_mrc_dict_destroy(struct mrc_dict *dict)
-{
-  while (!list_empty(&dict->dict_list)) {
-    struct mrc_dict_entry *p =
-      list_entry(dict->dict_list.next, struct mrc_dict_entry, entry);
-    if (p->type == PT_STRING) {
-      free((char *)p->val.u_string);
-    }
-    list_del(&p->entry);
-    free(p);
-  }
-}
 
 static void
 _mrc_dict_view(struct mrc_dict *dict)
@@ -54,7 +23,7 @@ _mrc_dict_view(struct mrc_dict *dict)
 	     mrc_dict_name(dict));
 
   struct mrc_dict_entry *p;
-  __list_for_each_entry(p, &dict->dict_list, entry, struct mrc_dict_entry) {
+  __list_for_each_entry(p, &dict->obj.dict_list, entry, struct mrc_dict_entry) {
     switch (p->type) {
     case PT_INT:
     case PT_SELECT:
@@ -81,7 +50,7 @@ _mrc_dict_write(struct mrc_dict *dict, struct mrc_io *io)
 {
   const char *path = mrc_io_obj_path(io, dict);
   struct mrc_dict_entry *p;
-  __list_for_each_entry(p, &dict->dict_list, entry, struct mrc_dict_entry) {
+  __list_for_each_entry(p, &dict->obj.dict_list, entry, struct mrc_dict_entry) {
     mrc_io_write_attr(io, path, p->type, p->name, &p->val);
   }
 }
@@ -98,7 +67,7 @@ mrc_dict_add(struct mrc_dict *dict, int type, const char *name,
   } else {
     p->val = *pv;
   }
-  list_add_tail(&p->entry, &dict->dict_list);
+  list_add_tail(&p->entry, &dict->obj.dict_list);
 }
 
 void
@@ -144,8 +113,6 @@ mrc_dict_add_string(struct mrc_dict *dict, const char *name, const char *val)
 struct mrc_class_mrc_dict mrc_class_mrc_dict = {
   .name         = "mrc_dict",
   .size         = sizeof(struct mrc_dict),
-  .create       = _mrc_dict_create,
-  .destroy      = _mrc_dict_destroy,
   .view         = _mrc_dict_view,
   .write        = _mrc_dict_write,
 };

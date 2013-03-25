@@ -4,6 +4,7 @@
 
 #include <mrc_common.h>
 #include <mrc_list.h>
+#include <mrc_params.h>
 
 #include <mpi.h>
 #include <stdbool.h>
@@ -20,8 +21,17 @@ struct mrc_obj {
   list_t instance_entry; //< keep track of all instances of mrc_obj's
   list_t child_entry; //< an mrc_obj can be child of exactly one parent mrc_obj
   list_t children_list; //< this is the list where a parent keeps track of children
+  list_t dict_list; //< keep track of additional, dynamic, properties
   bool view_flag; //< if true, call ::view() at the end of ::setup()
   bool is_setup; //< keep track of whether ::setup() was already called
+};
+
+struct mrc_dict_entry {
+  int type;
+  char *name;
+  union param_u val;
+
+  list_t entry; //< entry in obj::dict_list
 };
 
 typedef void (*mrc_void_func_t)(void);

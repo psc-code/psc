@@ -125,6 +125,7 @@ void mrc_params_parse_pfx(void *p, struct param *params, const char *title,
 			  MPI_Comm comm);
 void mrc_params_print(void *p, struct param *params, const char *title,
 		      MPI_Comm comm);
+void mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm);
 
 struct mrc_io;
 

@@ -24,6 +24,7 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
   obj->cls = cls;
   obj->refcount = 1;
   INIT_LIST_HEAD(&obj->children_list);
+  INIT_LIST_HEAD(&obj->dict_list);
   mrc_obj_set_name(obj, cls->name);
 
   if (cls->param_descr) {
@@ -138,6 +139,16 @@ mrc_obj_put(struct mrc_obj *obj)
 				       child_entry);
     list_del(&child->child_entry);
     mrc_obj_destroy(child);
+  }
+
+  while (!list_empty(&obj->dict_list)) {
+    struct mrc_dict_entry *p =
+      list_entry(obj->dict_list.next, struct mrc_dict_entry, entry);
+    if (p->type == PT_STRING) {
+      free((char *)p->val.u_string);
+    }
+    list_del(&p->entry);
+    free(p);
   }
 
   if (obj->comm != MPI_COMM_NULL) {
@@ -488,33 +499,41 @@ static void
 mrc_obj_view_this(struct mrc_obj *obj)
 {
   struct mrc_class *cls = obj->cls;
+  MPI_Comm comm = obj->comm;
+
+  mpi_printf(comm, "==================================================== class == %s\n",
+	     mrc_obj_name(obj));
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
-    mrc_params_print(p, cls->param_descr, mrc_obj_name(obj), obj->comm);
-  } else {
-    mpi_printf(obj->comm, 
-	       "\n---------------------------------------------------- class -- %s",
-	       mrc_obj_name(obj));
+    mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
+    mpi_printf(comm, "--------------------+----------------------------------------\n");
+    for (int i = 0; cls->param_descr[i].name; i++) {
+      union param_u *pv =
+	(union param_u *) (p + (unsigned long) cls->param_descr[i].var);
+      mrc_params_print_one(pv, &cls->param_descr[i], comm);
+    }
   } 
   if (cls->view) {
     cls->view(obj);
-  } else {
-    mpi_printf(obj->comm, "\n");
   }
 
   if (obj->ops) {
+    mpi_printf(comm, "--------------------+-------------------------------- type -- %s\n",
+	       obj->ops->name);
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
-      mrc_params_print(p, obj->ops->param_descr, obj->ops->name, obj->comm);
-    } else {
-      mpi_printf(obj->comm, 
-		 "----------------------------------------------------- type -- %s\n\n",
-		 obj->ops->name);
+      for (int i = 0; obj->ops->param_descr[i].name; i++) {
+	union param_u *pv = 
+	  (union param_u *) (p + (unsigned long) obj->ops->param_descr[i].var);
+	mrc_params_print_one(pv, &obj->ops->param_descr[i], comm);
+      }
     } 
 
     if (obj->ops->view) {
       obj->ops->view(obj);
     }
+
+    mpi_printf(comm, "\n");
   }
 }
 
