@@ -1,7 +1,6 @@
 
 #include "mrc_io_private.h"
 #include <mrc_params.h>
-#include <mrc_dict.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,6 +37,20 @@ enum {
   DIAG_CMD_CREATE,
   DIAG_CMD_OPENFILE,
   DIAG_CMD_SHUTDOWN,
+};
+
+// ======================================================================
+// mrc_io_attrs
+
+struct mrc_io_attrs {
+  struct mrc_obj obj;
+};
+
+MRC_CLASS_DECLARE(mrc_io_attrs, struct mrc_io_attrs);
+
+struct mrc_class_mrc_io_attrs mrc_class_mrc_io_attrs = {
+  .name         = "mrc_io_attrs",
+  .size         = sizeof(struct mrc_io_attrs),
 };
 
 // ======================================================================
@@ -492,7 +505,7 @@ struct diagsrv_srv_ops ds_srv_ops = {
 #define MAX_FIELDS (21)
 
 struct mrc_attrs_entry {
-  struct mrc_dict *attrs;
+  struct mrc_io_attrs *attrs;
   char *path;
   list_t entry;
 };
@@ -614,13 +627,13 @@ ds_srv_cache_write_attr(struct diagsrv_one *ds, const char *path, int type,
   }
   
   p = calloc(1, sizeof(*p));
-  p->attrs = mrc_dict_create(MPI_COMM_SELF);
-  mrc_dict_set_name(p->attrs, path);
+  p->attrs = mrc_io_attrs_create(MPI_COMM_SELF);
+  mrc_io_attrs_set_name(p->attrs, path);
   p->path = strdup(path);
   list_add_tail(&p->entry, &srv->attrs_list);
 
  found:
-  mrc_dict_add(p->attrs, type, name, pv);
+  mrc_io_attrs_dict_add(p->attrs, type, name, pv);
 }
 
 static void
@@ -679,8 +692,8 @@ ds_srv_cache_close(struct diagsrv_one *ds)
   while (!list_empty(&srv->attrs_list)) {
     struct mrc_attrs_entry *p =
       list_entry(srv->attrs_list.next, struct mrc_attrs_entry, entry);
-    mrc_dict_write(p->attrs, ds->io);
-    mrc_dict_destroy(p->attrs);
+    mrc_io_attrs_write(p->attrs, ds->io);
+    mrc_io_attrs_destroy(p->attrs);
     free(p->path);
     list_del(&p->entry);
     free(p);

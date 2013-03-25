@@ -27,8 +27,7 @@ struct mrc_obj {
 };
 
 struct mrc_dict_entry {
-  int type;
-  char *name;
+  struct param prm;
   union param_u val;
 
   list_t entry; //< entry in obj::dict_list
@@ -113,6 +112,17 @@ void mrc_obj_get_param_string(struct mrc_obj *obj, const char *name, const char 
 void mrc_obj_get_param_int3(struct mrc_obj *obj, const char *name, int *pval);
 void mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval);
 void mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval);
+
+void mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv);
+
+void mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
+		      union param_u *pv);
+void mrc_obj_dict_add_int(struct mrc_obj *obj, const char *name, int val);
+void mrc_obj_dict_add_bool(struct mrc_obj *obj, const char *name, bool val);
+void mrc_obj_dict_add_float(struct mrc_obj *obj, const char *name, float val);
+void mrc_obj_dict_add_double(struct mrc_obj *obj, const char *name, double val);
+void mrc_obj_dict_add_string(struct mrc_obj *obj, const char *name, const char *val);
+
 void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
 void mrc_obj_setup_super(struct mrc_obj *obj);
@@ -281,6 +291,49 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _get_param_double3(obj_type *obj, const char *name, double *pval) \
   {									\
     mrc_obj_get_param_double3((struct mrc_obj *)obj, name, pval);	\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _get_var(obj_type *obj, const char *name, union param_u **pv)	\
+  {									\
+    mrc_obj_get_var((struct mrc_obj *)obj, name, pv);			\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add(obj_type *obj, int type, const char *name,		\
+		   union param_u *pv)					\
+  {									\
+    mrc_obj_dict_add((struct mrc_obj *)obj, type, name, pv);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_int(obj_type *obj, const char *name,	int val)	\
+  {									\
+    mrc_obj_dict_add_int((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_bool(obj_type *obj, const char *name, bool val)	\
+  {									\
+    mrc_obj_dict_add_bool((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_float(obj_type *obj, const char *name, float val)	\
+  {									\
+    mrc_obj_dict_add_float((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_double(obj_type *obj, const char *name, double val)	\
+  {									\
+    mrc_obj_dict_add_double((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void							\
+  pfx ## _dict_add_string(obj_type *obj, const char *name, const char *val) \
+  {									\
+    mrc_obj_dict_add_string((struct mrc_obj *)obj, name, val);		\
   }									\
 									\
   static inline void 							\

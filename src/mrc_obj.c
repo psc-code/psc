@@ -144,7 +144,7 @@ mrc_obj_put(struct mrc_obj *obj)
   while (!list_empty(&obj->dict_list)) {
     struct mrc_dict_entry *p =
       list_entry(obj->dict_list.next, struct mrc_dict_entry, entry);
-    if (p->type == PT_STRING) {
+    if (p->prm.type == PT_STRING) {
       free((char *)p->val.u_string);
     }
     list_del(&p->entry);
@@ -503,16 +503,27 @@ mrc_obj_view_this(struct mrc_obj *obj)
 
   mpi_printf(comm, "==================================================== class == %s\n",
 	     mrc_obj_name(obj));
-  if (cls->param_descr) {
-    char *p = (char *) obj + cls->param_offset;
+
+  if (cls->param_descr || !list_empty(&obj->dict_list) || 
+      (obj->ops && obj->ops->param_descr)) {
     mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
     mpi_printf(comm, "--------------------+----------------------------------------\n");
+  }
+
+  if (cls->param_descr) {
+    char *p = (char *) obj + cls->param_offset;
     for (int i = 0; cls->param_descr[i].name; i++) {
       union param_u *pv =
 	(union param_u *) (p + (unsigned long) cls->param_descr[i].var);
       mrc_params_print_one(pv, &cls->param_descr[i], comm);
     }
-  } 
+  }
+
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    mrc_params_print_one(&e->val, &e->prm, comm);
+  }
+
   if (cls->view) {
     cls->view(obj);
   }
@@ -532,9 +543,8 @@ mrc_obj_view_this(struct mrc_obj *obj)
     if (obj->ops->view) {
       obj->ops->view(obj);
     }
-
-    mpi_printf(comm, "\n");
   }
+  mpi_printf(comm, "\n");
 }
 
 void
@@ -730,6 +740,13 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
     char *p = (char *) obj + cls->param_offset;
     mrc_params_write(p, cls->param_descr, path, io);
   }
+
+  // FIXME, dict isn't restored on read()!
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
+  }
+
   if (obj->ops) {
     mrc_io_write_attr_string(io, path, "mrc_obj_type", obj->ops->name);
     if (obj->ops->param_descr) {
@@ -759,6 +776,76 @@ __mrc_class_register_subclass(struct mrc_class *cls, struct mrc_obj_ops *ops)
     INIT_LIST_HEAD(&cls->subclasses);
   }
   list_add_tail(&ops->list, &cls->subclasses);
+}
+
+void
+mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
+		 union param_u *pv)
+{
+  struct mrc_dict_entry *p = calloc(1, sizeof(*p));
+  p->prm.type = type;
+  p->prm.name = strdup(name);
+  if (type == PT_STRING) {
+    p->val.u_string = strdup(pv->u_string);
+  } else {
+    p->val = *pv;
+  }
+  list_add_tail(&p->entry, &obj->dict_list);
+}
+
+void
+mrc_obj_dict_add_int(struct mrc_obj *obj, const char *name, int val)
+{
+  union param_u uval;
+  uval.u_int = val;
+  mrc_obj_dict_add(obj, PT_INT, name, &uval);
+}
+
+void
+mrc_obj_dict_add_bool(struct mrc_obj *obj, const char *name, bool val)
+{
+  union param_u uval;
+  uval.u_bool = val;
+  mrc_obj_dict_add(obj, PT_BOOL, name, &uval);
+}
+
+void
+mrc_obj_dict_add_float(struct mrc_obj *obj, const char *name, float val)
+{
+  union param_u uval;
+  uval.u_float = val;
+  mrc_obj_dict_add(obj, PT_FLOAT, name, &uval);
+}
+
+void
+mrc_obj_dict_add_double(struct mrc_obj *obj, const char *name, double val)
+{
+  union param_u uval;
+  uval.u_double = val;
+  mrc_obj_dict_add(obj, PT_DOUBLE, name, &uval);
+}
+
+void
+mrc_obj_dict_add_string(struct mrc_obj *obj, const char *name, const char *val)
+{
+  union param_u uval;
+  uval.u_string = val;
+  mrc_obj_dict_add(obj, PT_STRING, name, &uval);
+}
+
+void
+mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv)
+{
+  // FIXME, should look in param_descr, too
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    if (strcmp(e->prm.name, name) == 0) {
+      *pv = &e->val;
+      return;
+    }
+  }
+  mprintf("WARNING: var '%s' not found!\n", name);
+  *pv = NULL;
 }
 
 mrc_void_func_t

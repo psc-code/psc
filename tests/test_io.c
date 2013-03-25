@@ -4,13 +4,26 @@
 #include <mrc_mod.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
-#include <mrc_dict.h>
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+
+// ======================================================================
+// mrc_attrs
+
+struct mrc_attrs {
+  struct mrc_obj obj;
+};
+
+MRC_CLASS_DECLARE(mrc_attrs, struct mrc_attrs);
+
+struct mrc_class_mrc_attrs mrc_class_mrc_attrs = {
+  .name         = "mrc_attrs",
+  .size         = sizeof(struct mrc_attrs),
+};
 
 // ----------------------------------------------------------------------
 
@@ -47,8 +60,8 @@ dump_field(struct mrc_f3 *fld, int rank_diagsrv)
   struct test_io_attrs *attrs = test_io_attrs_create(comm);
   test_io_attrs_set_param_string(attrs, "run", "testrun");
 
-  struct mrc_dict *dict = mrc_dict_create(comm);
-  mrc_dict_add_string(dict, "dict_test", "string");
+  struct mrc_attrs *dict = mrc_attrs_create(comm);
+  mrc_attrs_dict_add_string(dict, "dict_test", "string");
 
   struct mrc_io *io;
   if (rank_diagsrv >= 0) {
@@ -64,19 +77,19 @@ dump_field(struct mrc_f3 *fld, int rank_diagsrv)
 
   mrc_io_open(io, "w", 0, 0.);
   test_io_attrs_write(attrs, io);
-  mrc_dict_write(dict, io);
+  mrc_attrs_write(dict, io);
   mrc_f3_write(fld, io);
   mrc_io_close(io);
 
   mrc_io_open(io, "w", 1, 1.);
-  mrc_dict_write(dict, io);
+  mrc_attrs_write(dict, io);
   mrc_f3_write(fld, io);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
 
   test_io_attrs_destroy(attrs);
-  mrc_dict_destroy(dict);
+  mrc_attrs_destroy(dict);
 }
 
 static void

@@ -8,7 +8,6 @@ include_HEADERS = \
 	mrc_crds.h \
 	mrc_ddc.h \
 	mrc_ddc_private.h \
-	mrc_dict.h \
 	mrc_domain.h \
 	mrc_domain_dynamic.h \
 	mrc_domain_private.h \
