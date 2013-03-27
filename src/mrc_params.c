@@ -938,21 +938,3 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
   }
 }
 
-void
-mrc_params_write(void *p, struct param *params, const char *title, struct mrc_io *io)
-{
-  for (int i = 0; params[i].name; i++) {
-    union param_u *pv = p + (unsigned long) params[i].var;
-    mrc_io_write_attr(io, title, params[i].type, params[i].name, pv);
-  }
-}
-
-void
-mrc_params_read(void *p, struct param *params, const char *title, struct mrc_io *io)
-{
-  for (int i = 0; params[i].name; i++) {
-    union param_u *pv = p + (unsigned long) params[i].var;
-    mrc_io_read_attr(io, title, params[i].type, params[i].name, pv);
-  }
-}
-

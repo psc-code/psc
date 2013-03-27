@@ -672,6 +672,21 @@ mrc_obj_read_super(struct mrc_obj *obj, struct mrc_io *io)
 }
 
 static void
+mrc_obj_read_params(struct mrc_obj *obj, void *p, struct param *params,
+		    const char *path, struct mrc_io *io)
+{
+  for (int i = 0; params[i].name; i++) {
+    struct param *prm = &params[i];
+    union param_u *pv = p + (unsigned long) prm->var;
+    if (prm->type == PT_OBJ) {
+      pv->u_obj = __mrc_io_read_ref(io, obj, prm->name, prm->cls);
+    } else {
+      mrc_io_read_attr(io, path, prm->type, prm->name, pv);
+    }
+  }
+}
+
+static void
 mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
 {
   struct mrc_class *cls = obj->cls;
@@ -688,7 +703,7 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
 
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
-    mrc_params_read(p, cls->param_descr, path, io);
+    mrc_obj_read_params(obj, p, cls->param_descr, path, io);
   }
   if (!list_empty(&cls->subclasses)) {
     char *type;
@@ -698,7 +713,7 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   }
   if (obj->ops && obj->ops->param_descr) {
     char *p = (char *) obj->subctx + obj->ops->param_offset;
-    mrc_params_read(p, obj->ops->param_descr, path, io);
+    mrc_obj_read_params(obj, p, obj->ops->param_descr, path, io);
   }
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
@@ -727,12 +742,29 @@ mrc_obj_read(struct mrc_io *io, const char *path, struct mrc_class *cls)
   init_class(cls);
 
   struct mrc_obj *obj = mrc_io_find_obj(io, path);
-  if (obj)
+  if (obj) {
+    assert(obj->cls == cls);
     return obj;
+  }
 
   obj = obj_create(mrc_io_comm(io), cls, true);
   mrc_obj_read2(obj, io, path);
   return obj;
+}
+
+static void
+mrc_obj_write_params(struct mrc_obj *obj, void *p, struct param *params,
+		     const char *path, struct mrc_io *io)
+{
+  for (int i = 0; params[i].name; i++) {
+    struct param *prm = &params[i];
+    union param_u *pv = (union param_u *) (p + (unsigned long) prm->var);
+    if (prm->type == PT_OBJ) {
+      mrc_io_write_ref(io, obj, prm->name, pv->u_obj);
+    } else {
+      mrc_io_write_attr(io, path, prm->type, prm->name, pv);
+    }
+  }
 }
 
 void
@@ -749,7 +781,7 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
   mrc_io_write_attr_string(io, path, "mrc_obj_class", cls->name);
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
-    mrc_params_write(p, cls->param_descr, path, io);
+    mrc_obj_write_params(obj, p, cls->param_descr, path, io);
   }
 
   // FIXME, dict isn't restored on read()!
@@ -762,7 +794,7 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
     mrc_io_write_attr_string(io, path, "mrc_obj_type", obj->ops->name);
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
-      mrc_params_write(p, obj->ops->param_descr, path, io);
+      mrc_obj_write_params(obj, p, obj->ops->param_descr, path, io);
     }
   }
   if (cls->write) {

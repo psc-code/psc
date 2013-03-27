@@ -38,7 +38,7 @@ enum param_type {
 #define PARAM_FLOAT3(x,y,z) PT_FLOAT3, .u = { .ini_float3 = { (x), (y), (z) }, }
 #define PARAM_DOUBLE3(x,y,z) PT_DOUBLE3, .u = { .ini_double3 = { (x), (y), (z) }, }
 #define PARAM_PTR(x)      PT_PTR,    .u = { .ini_ptr = (x), }
-#define PARAM_OBJ         PT_OBJ
+#define PARAM_OBJ(c)      PT_OBJ,    .cls = (struct mrc_class *) &mrc_class_ ## c,
 
 union param_u {
   int u_int;
@@ -78,6 +78,7 @@ struct param {
     void*  ini_ptr;
   } u;
   struct mrc_param_select *descr;
+  struct mrc_class *cls;
   const char *help;
 };
 
@@ -126,12 +127,5 @@ void mrc_params_parse_pfx(void *p, struct param *params, const char *title,
 void mrc_params_print(void *p, struct param *params, const char *title,
 		      MPI_Comm comm);
 void mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm);
-
-struct mrc_io;
-
-void mrc_params_read(void *p, struct param *params, const char *title,
-		     struct mrc_io *io);
-void mrc_params_write(void *p, struct param *params, const char *title,
-		      struct mrc_io *io);
 
 #endif
