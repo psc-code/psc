@@ -3,6 +3,7 @@
 
 AC_PREREQ(2.59)
 AC_INIT([libmrc], [0.89])
+AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
