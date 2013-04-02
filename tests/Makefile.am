@@ -32,8 +32,7 @@ noinst_PROGRAMS = \
 
 LDADD = ../src/libmrctest.la ../src/libmrc.la
 
-TESTS_ENVIRONMENT = $(SHELL)
-TESTS = \
+xTESTS = \
 	test_io_0.sh \
 	test_io_1.sh \
 	test_io_2.sh \
