@@ -1,7 +1,7 @@
 
 #include <mrc_params.h>
 #include <mrc_domain.h>
-#include <mrc_a3.h>
+#include <mrc_fld.h>
 #include <mrc_io.h>
 #include <mrctest.h>
 
@@ -87,22 +87,22 @@ main(int argc, char **argv)
 
   // create and fill a field
 
-  struct mrc_a3 *fld = mrc_domain_a3_create(domain);
-  mrc_a3_set_name(fld, "fld");
-  mrc_a3_set_from_options(fld);
-  mrc_a3_setup(fld);
-  mrc_a3_set_comp_name(fld, 0, "m0");
+  struct mrc_m3 *fld = mrc_domain_m3_create(domain);
+  mrc_m3_set_name(fld, "fld");
+  mrc_m3_set_from_options(fld);
+  mrc_m3_setup(fld);
+  mrc_m3_set_comp_name(fld, 0, "m0");
 
   float kx = 2. * M_PI, ky = 2. * M_PI;
 
-  mrc_a3_foreach_patch(fld, p) {
-    struct mrc_a3_patch *a3p = mrc_a3_patch_get(fld, p);
+  mrc_m3_foreach_patch(fld, p) {
+    struct mrc_m3_patch *m3p = mrc_m3_patch_get(fld, p);
     mrc_crds_patch_get(crds, p);
-    mrc_a3_foreach(a3p, ix,iy,iz, 0, 0) {
+    mrc_m3_foreach(m3p, ix,iy,iz, 0, 0) {
       float xx = MRC_MCRDX(crds, ix), yy = MRC_MCRDY(crds, iy);
-      MRC_A3(a3p, 0, ix,iy,iz) = sin(kx * xx) * cos(ky * yy);
-    } mrc_a3_foreach_end;
-    mrc_a3_patch_put(fld);
+      MRC_M3(m3p, 0, ix,iy,iz) = sin(kx * xx) * cos(ky * yy);
+    } mrc_m3_foreach_end;
+    mrc_m3_patch_put(fld);
     mrc_crds_patch_put(crds);
   }
 
@@ -113,11 +113,11 @@ main(int argc, char **argv)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_a3_write(fld, io);
+  mrc_m3_write(fld, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  mrc_a3_destroy(fld);
+  mrc_m3_destroy(fld);
 
   mrc_domain_destroy(domain);
 

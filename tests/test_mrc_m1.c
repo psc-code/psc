@@ -50,11 +50,11 @@ test_write_m1(struct mrc_m1 *m1)
   mrc_io_setup(io);
 
   mrc_io_open(io, "w", 0, 0.);
-  mrc_m1_write(m1, io);
+  mrc_io_write_path(io, "/m1", "m1", m1);
   mrc_io_close(io);
 
   mrc_io_open(io, "w", 1, 1.);
-  mrc_m1_write(m1, io);
+  mrc_io_write_path(io, "/m1", "m1", m1);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -67,7 +67,7 @@ test_write_read_m1(struct mrc_m1 *m1)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_m1_write(m1, io);
+  mrc_io_write_path(io, "/m1", "m1", m1);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -75,7 +75,7 @@ test_write_read_m1(struct mrc_m1 *m1)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_m1 *m1_2 = mrc_m1_read(io, mrc_m1_name(m1));
+  struct mrc_m1 *m1_2 = mrc_io_read_path(io, "/m1", "m1", mrc_m1);
   mrc_io_close(io);
   mrc_io_destroy(io);
 

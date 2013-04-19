@@ -21,7 +21,7 @@ test_write_read_domain(struct mrc_domain *domain)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_domain_write(domain, io);
+  mrc_io_write_path(io, "/domain", "domain", domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -29,7 +29,7 @@ test_write_read_domain(struct mrc_domain *domain)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_domain *domain2 = mrc_domain_read(io, mrc_domain_name(domain));
+  struct mrc_domain *domain2 = mrc_io_read_path(io, "/domain", "domain", mrc_domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -49,7 +49,7 @@ test_write_read(struct mrc_f3 *fld)
   mrc_io_view(io);
 
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(fld, io);
+  mrc_io_write_path(io, "/fld", "fld", fld);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -60,7 +60,7 @@ test_write_read(struct mrc_f3 *fld)
   mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_f3 *fld2 = mrc_f3_read(io, mrc_f3_name(fld));
+  struct mrc_f3 *fld2 = mrc_io_read_path(io, "/fld", "fld", mrc_f3);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -86,8 +86,8 @@ test_write_read_two_fields(struct mrc_domain *domain)
   mrc_io_view(io);
 
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(fld1, io);
-  mrc_f3_write(fld2, io);
+  mrc_io_write_path(io, "/fld", "fld1", fld1);
+  mrc_io_write_path(io, "/fld", "fld2", fld2);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -98,8 +98,8 @@ test_write_read_two_fields(struct mrc_domain *domain)
   mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_f3 *fld1r = mrc_f3_read(io, "fld1");
-  struct mrc_f3 *fld2r = mrc_f3_read(io, "fld2");
+  struct mrc_f3 *fld1r = mrc_io_read_path(io, "/fld", "fld1", mrc_f3);
+  struct mrc_f3 *fld2r = mrc_io_read_path(io, "/fld", "fld2", mrc_f3);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -119,7 +119,7 @@ test_write_read_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_domain_write(domain, io);
+  mrc_io_write_path(io, "/domain", "domain", domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -127,7 +127,7 @@ test_write_read_domain_rectilinear(MPI_Comm comm, struct mrctest_domain_params *
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_domain *domain2 = mrc_domain_read(io, mrc_domain_name(domain));
+  struct mrc_domain *domain2 = mrc_io_read_path(io, "/domain", "domain", mrc_domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 

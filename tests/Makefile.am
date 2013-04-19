@@ -1,9 +1,8 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-noinst_PROGRAMS = \
-	test_fdtd_amr
-#	test_mrc_obj \
+check_PROGRAMS = \
+	test_mrc_obj \
 	test_io \
 	test_io_read \
 	test_io_read_multi \
@@ -23,15 +22,19 @@ noinst_PROGRAMS = \
 	test_kdv_simple3d \
 	test_erfi \
 	test_wavelet \
-	tutorial_mrc_obj
+	tutorial_mrc_obj \
+	test_fdtd_amr
 
-# tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c \
-# 	vector.h \
-# 	vector_private.h
+tutorial_mrc_obj_SOURCES = tutorial_mrc_obj.c vector.c vector_double.c vector_float.c \
+	vector.h \
+	vector_private.h
 
 LDADD = ../src/libmrctest.la ../src/libmrc.la
 
-xTESTS = \
+TEST_EXTENSIONS = .sh
+SH_LOG_COMPILER = sh
+
+TESTS = \
 	test_io_0.sh \
 	test_io_1.sh \
 	test_io_2.sh \

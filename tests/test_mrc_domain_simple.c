@@ -17,7 +17,7 @@ test_read_write(struct mrc_domain *domain)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_domain_write(domain, io);
+  mrc_io_write_path(io, "/domain", "domain", domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -25,7 +25,7 @@ test_read_write(struct mrc_domain *domain)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_domain *domain2 = mrc_domain_read(io, mrc_domain_name(domain));
+  struct mrc_domain *domain2 = mrc_io_read_path(io, "/domain", "domain", mrc_domain);
   mrc_io_close(io);
   mrc_io_destroy(io);
 

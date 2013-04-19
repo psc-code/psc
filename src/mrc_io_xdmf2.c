@@ -142,7 +142,7 @@ xdmf_write_attr(struct mrc_io *io, const char *path, int type,
 }
 
 static void
-xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
+xdmf_spatial_write_mcrds_multi(struct mrc_io *io, struct xdmf_file *file,
 			       struct mrc_domain *domain, int sw)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
@@ -150,7 +150,8 @@ xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
   for (int d = 0; d < 3; d++) {
     struct mrc_m1 *mcrd = crds->mcrd[d];
 
-    hid_t group_crd1 = H5Gopen(file->h5_file, mrc_m1_name(mcrd), H5P_DEFAULT);
+    hid_t group_crd1 = H5Gopen(file->h5_file, mrc_io_obj_path(io, mcrd),
+			       H5P_DEFAULT); H5_CHK(group_crd1);
 
     mrc_m1_foreach_patch(mcrd, p) {
       struct mrc_m1_patch *mcrdp = mrc_m1_patch_get(mcrd, p);
@@ -186,7 +187,7 @@ xdmf_spatial_write_mcrds_multi(struct xdmf_file *file,
 }
 
 static void
-xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
+xdmf_spatial_write_mcrds(struct mrc_io *io, struct xdmf_spatial *xs, struct xdmf_file *file,
 			 struct mrc_domain *domain, int sw)
 {
   if (xs->crds_done)
@@ -196,9 +197,9 @@ xdmf_spatial_write_mcrds(struct xdmf_spatial *xs, struct xdmf_file *file,
 
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   if (strcmp(mrc_crds_type(crds), "multi_uniform") == 0) {
-    xdmf_spatial_write_mcrds_multi(file, domain, sw); // FIXME
+    xdmf_spatial_write_mcrds_multi(io, file, domain, sw); // FIXME
   } else {
-    xdmf_spatial_write_mcrds_multi(file, domain, sw);
+    xdmf_spatial_write_mcrds_multi(io, file, domain, sw);
   }
 }
 
@@ -260,7 +261,7 @@ xdmf_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
   if (!xs) {
     xs = xdmf_spatial_create_m3(&file->xdmf_spatial_list,
 				mrc_domain_name(m3->domain), m3->domain, io);
-    xdmf_spatial_write_mcrds(xs, file, m3->domain, xdmf->sw);
+    xdmf_spatial_write_mcrds(io, xs, file, m3->domain, xdmf->sw);
   }
 
   for (int m = 0; m < m3->nr_comp; m++) {

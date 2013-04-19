@@ -739,6 +739,7 @@ _mrc_m1_read(struct mrc_m1 *m1, struct mrc_io *io)
 {
   m1->domain = mrc_io_read_ref(io, m1, "domain", mrc_domain);
   
+  m1->_comp_name = calloc(m1->nr_comp, sizeof(*m1->_comp_name));
   mrc_m1_setup(m1);
   mrc_io_read_m1(io, mrc_io_obj_path(io, m1), m1);
 }

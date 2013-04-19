@@ -43,11 +43,11 @@ test_write_f3(struct mrc_f3 *f3)
   mrc_io_setup(io);
 
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(f3, io);
+  mrc_io_write_path(io, "/f3", "f3", f3);
   mrc_io_close(io);
 
   mrc_io_open(io, "w", 1, 1.);
-  mrc_f3_write(f3, io);
+  mrc_io_write_path(io, "/f3", "f3", f3);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -60,7 +60,7 @@ test_write_read_f3(struct mrc_f3 *f3)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(f3, io);
+  mrc_io_write_path(io, "/f3", "f3", f3);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
@@ -68,7 +68,7 @@ test_write_read_f3(struct mrc_f3 *f3)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_f3 *f3_2 = mrc_f3_read(io, mrc_f3_name(f3));
+  struct mrc_f3 *f3_2 = mrc_io_read_path(io, "/f3", "f3", mrc_f3);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
