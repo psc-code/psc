@@ -38,6 +38,21 @@ destroy_member_objs(void *p, struct param *descr)
   }
 }
 
+static void
+set_from_options_member_objs(void *p, struct param *descr)
+{
+  if (!descr)
+    return;
+
+  for (int i = 0; descr[i].name; i++) {
+    struct param *prm = &descr[i];
+    union param_u *pv = p + (unsigned long) prm->var;
+    if (prm->type == MRC_VAR_OBJ) {
+      mrc_obj_set_from_options(pv->u_obj);
+    }
+  }
+}
+
 static struct mrc_obj *
 obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 {
@@ -370,6 +385,8 @@ void
 mrc_obj_set_from_options(struct mrc_obj *obj)
 {
   mrc_obj_set_from_options_this(obj);
+
+  set_from_options_member_objs(obj, obj->cls->param_descr);
 
   struct mrc_obj *child;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
