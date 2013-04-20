@@ -11,14 +11,10 @@
 static void
 create_member_objs(MPI_Comm comm, void *p, struct param *descr)
 {
-  if (!descr)
-    return;
-
-  for (int i = 0; descr[i].name; i++) {
-    struct param *prm = &descr[i];
-    union param_u *pv = p + (unsigned long) prm->var;
-    if (prm->type == MRC_VAR_OBJ) {
-      pv->u_obj = __mrc_obj_create(comm, prm->cls);
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
+      pv->u_obj = __mrc_obj_create(comm, descr[i].cls);
     }
   }
 }
@@ -26,13 +22,9 @@ create_member_objs(MPI_Comm comm, void *p, struct param *descr)
 static void
 destroy_member_objs(void *p, struct param *descr)
 {
-  if (!descr)
-    return;
-
-  for (int i = 0; descr[i].name; i++) {
-    struct param *prm = &descr[i];
-    union param_u *pv = p + (unsigned long) prm->var;
-    if (prm->type == MRC_VAR_OBJ) {
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
       mrc_obj_destroy(pv->u_obj);
     }
   }
@@ -41,13 +33,9 @@ destroy_member_objs(void *p, struct param *descr)
 static void
 set_from_options_member_objs(void *p, struct param *descr)
 {
-  if (!descr)
-    return;
-
-  for (int i = 0; descr[i].name; i++) {
-    struct param *prm = &descr[i];
-    union param_u *pv = p + (unsigned long) prm->var;
-    if (prm->type == MRC_VAR_OBJ) {
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
       mrc_obj_set_from_options(pv->u_obj);
     }
   }
@@ -56,14 +44,21 @@ set_from_options_member_objs(void *p, struct param *descr)
 static void
 view_member_objs(void *p, struct param *descr)
 {
-  if (!descr)
-    return;
-
-  for (int i = 0; descr[i].name; i++) {
-    struct param *prm = &descr[i];
-    union param_u *pv = p + (unsigned long) prm->var;
-    if (prm->type == MRC_VAR_OBJ) {
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
       mrc_obj_view(pv->u_obj);
+    }
+  }
+}
+
+static void
+setup_member_objs(void *p, struct param *descr)
+{
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
+      mrc_obj_setup(pv->u_obj);
     }
   }
 }
@@ -637,7 +632,11 @@ mrc_obj_view(struct mrc_obj *obj)
   }
 }
 
-// to be called internally from subclass's setup() to do its superclass setup
+void
+mrc_obj_setup_member_objs(struct mrc_obj *obj)
+{
+  setup_member_objs(obj, obj->cls->param_descr);
+}
 
 void
 mrc_obj_setup_children(struct mrc_obj *obj)
@@ -651,8 +650,11 @@ mrc_obj_setup_children(struct mrc_obj *obj)
 static void
 mrc_obj_setup_default(struct mrc_obj *obj)
 {
+  mrc_obj_setup_member_objs(obj);
   mrc_obj_setup_children(obj);
 }
+
+// to be called internally from subclass's setup() to do its superclass setup
 
 void
 mrc_obj_setup_super(struct mrc_obj *obj)
