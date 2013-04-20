@@ -584,6 +584,7 @@ mrc_params_set_default(void *p, struct param *params)
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_OBJ:
       break;
     default:
       assert(0);
@@ -819,6 +820,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_OBJ:
       break;
     default:
       assert(0);
@@ -873,6 +875,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case MRC_VAR_BOOL:
     case MRC_VAR_FLOAT:
     case MRC_VAR_DOUBLE:
+    case MRC_VAR_OBJ:
       break;
     default:
       assert(0);

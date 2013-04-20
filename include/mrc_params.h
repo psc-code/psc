@@ -25,6 +25,7 @@ enum param_type {
   MRC_VAR_BOOL,
   MRC_VAR_FLOAT,
   MRC_VAR_DOUBLE,
+  MRC_VAR_OBJ,
 };
 
 #define PARAM_INT(x)      PT_INT,    .u = { .ini_int = (x), }
@@ -39,6 +40,7 @@ enum param_type {
 #define PARAM_DOUBLE3(x,y,z) PT_DOUBLE3, .u = { .ini_double3 = { (x), (y), (z) }, }
 #define PARAM_PTR(x)      PT_PTR,    .u = { .ini_ptr = (x), }
 #define PARAM_OBJ(c)      PT_OBJ,    .cls = (struct mrc_class *) &mrc_class_ ## c,
+#define MRC_VAR_OBJ(c)    MRC_VAR_OBJ,.cls = (struct mrc_class *) &mrc_class_ ## c,
 
 union param_u {
   int u_int;

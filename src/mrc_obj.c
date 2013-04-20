@@ -8,6 +8,21 @@
 #include <stdio.h>
 #include <assert.h>
 
+static void
+create_member_objs(MPI_Comm comm, void *p, struct param *descr)
+{
+  if (!descr)
+    return;
+
+  for (int i = 0; descr[i].name; i++) {
+    struct param *prm = &descr[i];
+    union param_u *pv = p + (unsigned long) prm->var;
+    if (prm->type == MRC_VAR_OBJ) {
+      pv->u_obj = __mrc_obj_create(comm, prm->cls);
+    }
+  }
+}
+
 static struct mrc_obj *
 obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 {
@@ -39,6 +54,8 @@ obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
   if (basic_only) {
     return obj;
   }
+
+  create_member_objs(comm, obj, cls->param_descr);
 
   if (cls->create) {
     cls->create(obj);
