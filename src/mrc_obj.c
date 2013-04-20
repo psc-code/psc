@@ -829,7 +829,8 @@ mrc_obj_write_params(struct mrc_obj *obj, void *p, struct param *params,
   for (int i = 0; params[i].name; i++) {
     struct param *prm = &params[i];
     union param_u *pv = (union param_u *) (p + (unsigned long) prm->var);
-    if (prm->type == PT_OBJ) {
+    if (prm->type == PT_OBJ ||
+	prm->type == MRC_VAR_OBJ) {
       mrc_io_write_ref(io, obj, prm->name, pv->u_obj);
     } else {
       mrc_io_write_attr(io, path, prm->type, prm->name, pv);
