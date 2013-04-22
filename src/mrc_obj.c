@@ -63,6 +63,17 @@ setup_member_objs(void *p, struct param *descr)
   }
 }
 
+static void
+read_member_objs(struct mrc_io *io, struct mrc_obj *obj, void *p, struct param *descr)
+{
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (descr[i].type == MRC_VAR_OBJ) {
+      union param_u *pv = p + (unsigned long) descr[i].var;
+      pv->u_obj = __mrc_io_read_ref(io, obj, descr[i].name, descr[i].cls);
+    }
+  }
+}
+
 static struct mrc_obj *
 obj_create(MPI_Comm comm, struct mrc_class *cls, bool basic_only)
 {
@@ -636,6 +647,12 @@ void
 mrc_obj_setup_member_objs(struct mrc_obj *obj)
 {
   setup_member_objs(obj, obj->cls->param_descr);
+}
+
+void
+mrc_obj_read_member_objs(struct mrc_obj *obj, struct mrc_io *io)
+{
+  read_member_objs(io, obj, obj, obj->cls->param_descr);
 }
 
 void
