@@ -279,6 +279,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   }									\
 									\
   static inline void 							\
+  pfx ## _get_param_string(obj_type *obj, const char *name, const char **val) \
+  {									\
+    mrc_obj_get_param_string((struct mrc_obj *)obj, name, val);		\
+  }									\
+									\
+  static inline void 							\
   pfx ## _get_param_int3(obj_type *obj, const char *name, int *pval)	\
   {									\
     mrc_obj_get_param_int3((struct mrc_obj *)obj, name, pval);		\
