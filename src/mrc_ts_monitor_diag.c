@@ -62,6 +62,7 @@ mrc_ts_monitor_diag_run(struct mrc_ts_monitor *mon, struct mrc_ts *ts)
 
   mpi_printf(mrc_ts_monitor_comm(mon), "writing diag %d (%g)\n", ts->n, ts->time);
   diag->diagf(diag->diagf_ctx, ts->time, ts->x, diag->file);
+  fflush(diag->file);
 }
 
 struct mrc_ts_monitor_ops mrc_ts_monitor_diag_ops = {
