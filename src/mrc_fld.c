@@ -27,13 +27,6 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
-  switch (fld->_data_type) {
-  case MRC_NT_FLOAT : fld->_size_of_type = sizeof(float) ; break;
-  case MRC_NT_DOUBLE: fld->_size_of_type = sizeof(double); break;
-  case MRC_NT_INT   : fld->_size_of_type = sizeof(int)   ; break;
-  default: assert(0);
-  }
-
   assert(fld->_nr_dims <= MRC_FLD_MAXDIMS);
 
   fld->_len = 1;
@@ -72,15 +65,41 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
 }
 
+// ======================================================================
+// mrc_fld subclasses
+
+#define MAKE_MRC_FLD_TYPE(type, TYPE)			\
+							\
+  static void						\
+  mrc_fld_##type##_setup(struct mrc_fld *fld)		\
+  {							\
+    fld->_data_type = MRC_NT_##TYPE;			\
+    fld->_size_of_type = sizeof(type);			\
+    mrc_fld_setup_super(fld);				\
+  }							\
+  							\
+  static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
+    .name                  = #type,			\
+    .setup                 = mrc_fld_##type##_setup,	\
+  };							\
+
+MAKE_MRC_FLD_TYPE(float, FLOAT)
+MAKE_MRC_FLD_TYPE(double, DOUBLE)
+MAKE_MRC_FLD_TYPE(int, INT)
+
+// ----------------------------------------------------------------------
+// mrc_fld_init
+
+static void
+mrc_fld_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
+}
+
 // ----------------------------------------------------------------------
 // mrc_class_mrc_fld
-
-static struct mrc_param_select mrc_number_type[] = {
-  { .val = MRC_NT_FLOAT , .str = "float"  },
-  { .val = MRC_NT_DOUBLE, .str = "double" },
-  { .val = MRC_NT_INT   , .str = "int"    },
-  {},
-};
 
 #define VAR(x) (void *)offsetof(struct mrc_fld, x)
 static struct param mrc_fld_descr[] = {
@@ -88,8 +107,6 @@ static struct param mrc_fld_descr[] = {
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
   { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                        },
-  { "data_type"       , VAR(_data_type)   , PARAM_SELECT(MRC_NT_FLOAT,
-							 mrc_number_type)       },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT                         },
   { "len"             , VAR(_len)         , MRC_VAR_INT                         },
@@ -105,6 +122,7 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .name         = "mrc_fld",
   .size         = sizeof(struct mrc_fld),
   .param_descr  = mrc_fld_descr,
+  .init         = mrc_fld_init,
   .destroy      = _mrc_fld_destroy,
   .setup        = _mrc_fld_setup,
   .write        = _mrc_fld_write,

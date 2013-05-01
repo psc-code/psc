@@ -65,11 +65,11 @@ struct mrc_fld {
   int _dims[MRC_FLD_MAXDIMS];
   int _sw[MRC_FLD_MAXDIMS];
   int _nr_dims;
-  int _data_type;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
   int _ghost_dims[MRC_FLD_MAXDIMS];
+  int _data_type;
   int _size_of_type;
   void *_arr;
   int _len;
@@ -102,6 +102,10 @@ void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 #define mrc_fld_foreach_end			\
   }						\
     } do {} while (0)				\
+
+struct mrc_fld_ops {
+  MRC_SUBCLASS_OPS(struct mrc_fld);
+};
 
 // ======================================================================
 // mrc_f1
