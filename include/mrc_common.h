@@ -5,6 +5,8 @@
 #include <config.h>
 #include <mrc.h>
 
+#include <mpi.h>
+
 enum {
   BC_NONE,
   BC_PERIODIC,
@@ -23,6 +25,10 @@ enum {
 #define assert_collective(comm) do {} while (0)
 
 #endif
+
+extern int mrc_view_level;
+
+void mrc_view_printf(MPI_Comm comm, const char *fmt, ...);
 
 #define mpi_printf(comm, args...) do { int __rank; MPI_Comm_rank(comm, &__rank); if (__rank == 0) { printf(args); } } while(0)
 

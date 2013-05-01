@@ -974,37 +974,37 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
     (union param_u *) ((char *) p + (unsigned long) prm->var);
   switch (prm->type) {
   case PT_INT:
-    mpi_printf(comm, "%-20s| %d\n", prm->name, pv->u_int);
+    mrc_view_printf(comm, "%-20s| %d\n", prm->name, pv->u_int);
     break;
   case PT_UINT:
-    mpi_printf(comm, "%-20s| %u\n", prm->name, pv->u_uint);
+    mrc_view_printf(comm, "%-20s| %u\n", prm->name, pv->u_uint);
     break;
   case PT_BOOL:
-    mpi_printf(comm, "%-20s| %s\n", prm->name, pv->u_bool ? "yes" : "no");
+    mrc_view_printf(comm, "%-20s| %s\n", prm->name, pv->u_bool ? "yes" : "no");
     break;
   case PT_FLOAT:
-    mpi_printf(comm, "%-20s| %g\n", prm->name, pv->u_float);
+    mrc_view_printf(comm, "%-20s| %g\n", prm->name, pv->u_float);
     break;
   case PT_DOUBLE:
-    mpi_printf(comm, "%-20s| %g\n", prm->name, pv->u_double);
+    mrc_view_printf(comm, "%-20s| %g\n", prm->name, pv->u_double);
       break;
   case PT_STRING:
-    mpi_printf(comm, "%-20s| %s\n", prm->name, pv->u_string);
+    mrc_view_printf(comm, "%-20s| %s\n", prm->name, pv->u_string);
     break;
   case PT_SELECT:
-    mpi_printf(comm, "%-20s| %s\n", prm->name,
-	       prm->u.select.descr[pv->u_select].str);
+    mrc_view_printf(comm, "%-20s| %s\n", prm->name,
+		    prm->u.select.descr[pv->u_select].str);
     break;
   case PT_INT3:
-    mpi_printf(comm, "%-20s| %d, %d, %d\n", prm->name,
+    mrc_view_printf(comm, "%-20s| %d, %d, %d\n", prm->name,
 	       pv->u_int3[0], pv->u_int3[1], pv->u_int3[2]);
     break;
   case PT_FLOAT3:
-    mpi_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
+    mrc_view_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
 	       pv->u_float3[0], pv->u_float3[1], pv->u_float3[2]);
     break;
   case PT_DOUBLE3:
-    mpi_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
+    mrc_view_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
 	       pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
     break;
   case PT_INT_ARRAY:
@@ -1021,7 +1021,7 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
     }
     break;
   case PT_PTR:
-    mpi_printf(comm, "%-20s| %p\n", prm->name, pv->u_ptr);
+    mrc_view_printf(comm, "%-20s| %p\n", prm->name, pv->u_ptr);
     break;
   case PT_OBJ:
   case MRC_VAR_INT:

@@ -6,7 +6,25 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <assert.h>
+
+int mrc_view_level = 0;
+
+void
+mrc_view_printf(MPI_Comm comm, const char *fmt, ...)
+{
+  int rank;
+  MPI_Comm_rank(comm, &rank);
+  if (rank != 0)
+    return;
+
+  printf("%*.*s", 3 * (mrc_view_level - 1), 3 * (mrc_view_level - 1), "");
+  va_list argp;
+  va_start(argp, fmt);
+  vprintf(fmt, argp);
+  va_end(argp);
+}
 
 static void
 create_member_objs(MPI_Comm comm, void *p, struct param *descr)
@@ -607,16 +625,16 @@ mrc_obj_view_this(struct mrc_obj *obj)
   struct mrc_class *cls = obj->cls;
   MPI_Comm comm = obj->comm;
 
-  mpi_printf(comm, "==================================================== class == %s\n",
-	     mrc_obj_name(obj));
+  mrc_view_printf(comm, "==================================================== class == %s\n",
+		  mrc_obj_name(obj));
 
   if (cls->param_descr || !list_empty(&obj->dict_list) || 
       (obj->ops && obj->ops->param_descr)) {
-    mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
-    mpi_printf(comm, "--------------------+----------------------------------------\n");
+    mrc_view_printf(comm, "%-20s| %s\n", "parameter", "value");
   }
 
   if (cls->param_descr) {
+    mrc_view_printf(comm, "--------------------+----------------------------------------\n");
     char *p = (char *) obj + cls->param_offset;
     for (int i = 0; cls->param_descr[i].name; i++) {
       mrc_params_print_one(p, &cls->param_descr[i], comm);
@@ -628,12 +646,8 @@ mrc_obj_view_this(struct mrc_obj *obj)
     mrc_params_print_one(&e->val, &e->prm, comm);
   }
 
-  if (cls->view) {
-    cls->view(obj);
-  }
-
   if (obj->ops) {
-    mpi_printf(comm, "--------------------+-------------------------------- type -- %s\n",
+    mrc_view_printf(comm, "--------------------+-------------------------------- type -- %s\n",
 	       obj->ops->name);
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
@@ -641,17 +655,23 @@ mrc_obj_view_this(struct mrc_obj *obj)
 	mrc_params_print_one(p, &obj->ops->param_descr[i], comm);
       }
     } 
-
-    if (obj->ops->view) {
-      obj->ops->view(obj);
-    }
   }
-  mpi_printf(comm, "\n");
+
+  if (cls->view) {
+    cls->view(obj);
+  }
+
+  if (obj->ops && obj->ops->view) {
+    obj->ops->view(obj);
+  }
+
+  mrc_view_printf(comm, "\n");
 }
 
 void
 mrc_obj_view(struct mrc_obj *obj)
 {
+  mrc_view_level++;
   mrc_obj_view_this(obj);
 
   char *p = (char *) obj + obj->cls->param_offset;
@@ -666,6 +686,7 @@ mrc_obj_view(struct mrc_obj *obj)
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
     mrc_obj_view(child);
   }
+  mrc_view_level--;
 }
 
 void
