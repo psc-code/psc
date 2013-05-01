@@ -434,6 +434,39 @@ _mrc_params_get_option_int3(const char *name, int *pval, bool deprecated,
 }
 
 int
+_mrc_params_get_option_int_array(const char *name, int array_size, int *pval, bool deprecated,
+			    const char *help)
+{
+  int retval = -1;
+  char namex[strlen(name) + 2];
+  // FIXME, add a way to parse an array in one option
+  int nr_dims = array_size;
+  if (nr_dims > 3)
+    nr_dims = 3;
+
+  for (int d = 0; d < nr_dims; d++) {
+    sprintf(namex, "%s%c", name, 'x' + d);
+    struct option *p = find_option(namex, deprecated);
+  
+    if (!p) {
+      if (!deprecated) { // don't advertise deprecated un-prefixed options
+	print_help("--%s: <%d> (default) %s\n", namex, pval[d],
+		   help ? help : "");
+      }
+      continue;
+    }
+    
+    retval = 0;
+    int rv = sscanf(p->value, "%d", pval + d);
+    if (rv != 1) {
+      error("cannot parse integer from '%s'\n", p->value);
+    }
+    print_help("--%s: <%d> %s\n", namex, pval[d], help ? help : "");
+  }
+  return retval;
+}
+
+int
 mrc_params_get_option_int3(const char *name, int *pval)
 {
   return _mrc_params_get_option_int3(name, pval, false, NULL);
@@ -444,6 +477,13 @@ mrc_params_get_option_int3_help(const char *name, int *pval,
 				const char *help)
 {
   return _mrc_params_get_option_int3(name, pval, false, help);
+}
+
+int
+mrc_params_get_option_int_array_help(const char *name, int array_size, int *pval,
+				     const char *help)
+{
+  return _mrc_params_get_option_int_array(name, array_size, pval, false, help);
 }
 
 int
@@ -579,6 +619,12 @@ mrc_params_set_default(void *p, struct param *params)
     case PT_PTR:
       pv->u_ptr = params[i].u.ini_ptr;
       break;
+    case PT_INT_ARRAY:
+      for (int d = 0; d < params[i].u.ini_int_array.array_size; d++) {
+	// FIXME?, abuse of u_int3
+	pv->u_int3[d] = params[i].u.ini_int_array.val;
+      }
+      break;
     case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
@@ -601,10 +647,15 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       continue;
 
     union param_u *pv = p + (unsigned long) params[i].var;
-    // types have to match, except a PT_SELECT can be set by a PT_INT
-    if (params[i].type != type &&
-	!(params[i].type == PT_SELECT && type == PT_INT)) {
-      error("option '%s' is not of type %d!\n", name, type);
+    if (params[i].type != type) {
+      // types have to match
+      if (params[i].type == PT_SELECT && type == PT_INT) {
+	// except a PT_SELECT can be set by a PT_INT
+      } else if (params[i].type == PT_INT_ARRAY && type == PT_INT3) {
+	// or INT3 can be used to set INT_ARRAY
+      } else {
+	error("option '%s' is not of type %d!\n", name, type);
+      }
     }
     switch (type) {
     case PT_INT:
@@ -641,6 +692,12 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
     case PT_DOUBLE3:
       for (int d = 0; d < 3; d++) {
 	pv->u_double3[d] = pval->u_double3[d];
+      }
+      break;
+    case PT_INT_ARRAY:
+      for (int d = 0; d < pval->u_int_array.nr_vals; d++) {
+	// FIXME?, abuse of u_int3
+	pv->u_int3[d] = pval->u_int_array.vals[d];
       }
       break;
     case PT_PTR:
@@ -813,6 +870,8 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
     case PT_DOUBLE3:
       _mrc_params_get_option_double3(params[i].name, &pv->u_double3[0], true, NULL);
       break;
+    case PT_INT_ARRAY:
+      _mrc_params_get_option_int_array(params[i].name, params[i].u.ini_int_array.array_size, &pv->u_int3[0], true, NULL);
     case PT_PTR:
       break;
     case PT_OBJ:
@@ -868,8 +927,10 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
     case PT_DOUBLE3:
       mrc_params_get_option_double3_help(name, &pv->u_double3[0], params[i].help);
       break;
-    case PT_PTR:
+    case PT_INT_ARRAY:
+      mrc_params_get_option_int_array_help(name, params[i].u.ini_int_array.array_size, &pv->u_int3[0], params[i].help);
       break;
+    case PT_PTR:
     case PT_OBJ:
     case MRC_VAR_INT:
     case MRC_VAR_BOOL:
@@ -921,11 +982,30 @@ mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm)
     mpi_printf(comm, "%-20s| %g, %g, %g\n", prm->name,
 	       pv->u_double3[0], pv->u_double3[1], pv->u_double3[2]);
     break;
+  case PT_INT_ARRAY:
+    {
+      char s[100], tmp[100];
+      sprintf(s, "[%d] %d", prm->u.ini_int_array.array_size, pv->u_int3[0]);
+      for (int d = 1; d < prm->u.ini_int_array.array_size; d++) {
+	sprintf(tmp, ",%d", pv->u_int3[d]);
+	strcat(s, tmp);
+      }
+      mpi_printf(comm, "%-20s| %s\n", prm->name, s);
+    }
+    break;
   case PT_PTR:
     mpi_printf(comm, "%-20s| %p\n", prm->name, pv->u_ptr);
     break;
-  default:
+  case PT_OBJ:
+  case MRC_VAR_INT:
+  case MRC_VAR_BOOL:
+  case MRC_VAR_FLOAT:
+  case MRC_VAR_DOUBLE:
+  case MRC_VAR_OBJ:
     break;
+  default:
+    mprintf("%d\n", prm->type);
+    assert(0);
   }
 }
 

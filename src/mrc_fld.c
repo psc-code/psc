@@ -82,16 +82,16 @@ static struct mrc_param_select mrc_number_type[] = {
 
 #define VAR(x) (void *)offsetof(struct mrc_fld, x)
 static struct param mrc_fld_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT3(0, 0, 0)           }, // FIXME, NDIMS
-  { "dims"            , VAR(_dims)        , PARAM_INT3(0, 0, 0)           },
-  { "sw"              , VAR(_sw)          , PARAM_INT(0)                  },
-  { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                  },
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
+  { "sw"              , VAR(_sw)          , PARAM_INT(0)                        },
+  { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                        },
   { "data_type"       , VAR(_data_type)   , PARAM_SELECT(MRC_NT_FLOAT,
-							 mrc_number_type) },
+							 mrc_number_type)       },
 
-  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT                   },
-  { "len"             , VAR(_len)         , MRC_VAR_INT                   },
-  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL                  },
+  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT                         },
+  { "len"             , VAR(_len)         , MRC_VAR_INT                         },
+  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL                        },
   {},
 };
 #undef VAR
