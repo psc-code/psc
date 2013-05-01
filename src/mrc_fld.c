@@ -34,8 +34,10 @@ _mrc_fld_setup(struct mrc_fld *fld)
   default: assert(0);
   }
 
+  assert(fld->_nr_dims <= MRC_FLD_MAXDIMS);
+
   fld->_len = 1;
-  for (int d = 0; d < MRC_FLD_MAXDIMS; d++) {
+  for (int d = 0; d < fld->_nr_dims; d++) {
     fld->_ghost_offs[d] = fld->_offs[d] - fld->_sw;
     fld->_ghost_dims[d] = fld->_dims[d] + 2 * fld->_sw;
     fld->_len *= fld->_ghost_dims[d];

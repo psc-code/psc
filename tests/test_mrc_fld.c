@@ -63,6 +63,34 @@ test_34(int sw)
   mrc_fld_destroy(fld);
 }
 
+// ----------------------------------------------------------------------
+// test_56
+//
+// 4-d field
+
+static void
+test_56(int sw)
+{
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
+  mrc_fld_set_param_int(fld, "nr_dims", 4);
+  mrc_fld_set_param_int_array(fld, "offs", 4, (int []) { 1, 2, 3, 0 });
+  mrc_fld_set_param_int_array(fld, "dims", 4, (int []) { 2, 3, 4, 2 });
+  mrc_fld_set_param_int(fld, "sw", sw);
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    MRC_S4(fld, ix,iy,iz,1) = ix * 10000 + iy * 100 + iz;
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    assert(MRC_S4(fld, ix,iy,iz,1) == ix * 10000 + iy * 100 + iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_destroy(fld);
+}
+
 
 // ----------------------------------------------------------------------
 // main
@@ -81,6 +109,7 @@ main(int argc, char **argv)
   case 2: test_12(1); break;
   case 3: test_34(0); break;
   case 4: test_34(1); break;
+  case 5: test_56(0); break;
   default: assert(0);
   }
 

@@ -56,7 +56,7 @@ enum {
   MRC_NT_NR,
 };
 
-#define MRC_FLD_MAXDIMS (3)
+#define MRC_FLD_MAXDIMS (4)
 
 struct mrc_fld {
   struct mrc_obj obj;
@@ -82,13 +82,17 @@ void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 
 // FIXME, add BOUNDSCHECK/DEBUG versions
 
-#define MRC_FLD(fld, type, ix,iy,iz)					\
-  (((type *) (fld)->_arr)[(((iz) - (fld)->_ghost_offs[2]) *			\
-			   (fld)->_ghost_dims[1] + (iy) - (fld)->_ghost_offs[1]) *	\
+#define MRC_FLD(fld, type, ix,iy,iz,m)					\
+  (((type *) (fld)->_arr)[(((m) *					\
+			    (fld)->_ghost_dims[2] + (iz) - (fld)->_ghost_offs[2]) * \
+			   (fld)->_ghost_dims[1] + (iy) - (fld)->_ghost_offs[1]) * \
 			  (fld)->_ghost_dims[0] + (ix) - (fld)->_ghost_offs[0]])
 
-#define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz)
-#define MRC_D3(fld, ix,iy,iz) MRC_FLD(fld, double, ix,iy,iz)
+#define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz,0)
+#define MRC_D3(fld, ix,iy,iz) MRC_FLD(fld, double, ix,iy,iz,0)
+
+#define MRC_S4(fld, ix,iy,iz,m) MRC_FLD(fld, float, ix,iy,iz,m)
+#define MRC_D4(fld, ix,iy,iz,m) MRC_FLD(fld, double, ix,iy,iz,m)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
   for (int iz = (fld)->_offs[2] - (l); iz < (fld)->_offs[2] + (fld)->_dims[2] + (r); iz++) { \
