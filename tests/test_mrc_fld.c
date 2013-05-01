@@ -8,6 +8,9 @@
 #include <assert.h>
 #include <string.h>
 
+// ----------------------------------------------------------------------
+// test_12
+
 static void
 test_12(int sw)
 {
@@ -31,6 +34,39 @@ test_12(int sw)
   mrc_fld_destroy(fld);
 }
 
+// ----------------------------------------------------------------------
+// test_34
+//
+// same as test_12 as "double"
+
+static void
+test_34(int sw)
+{
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
+  mrc_fld_set_name(fld, "test_fld");
+  mrc_fld_set_param_select(fld, "data_type", MRC_NT_DOUBLE);
+  mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 3 });
+  mrc_fld_set_param_int3(fld, "dims", (int [3]) { 2, 3, 4 });
+  mrc_fld_set_param_int(fld, "sw", sw);
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    MRC_D3(fld, ix,iy,iz) = ix * 10000 + iy * 100 + iz;
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    assert(MRC_D3(fld, ix,iy,iz) == ix * 10000 + iy * 100 + iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_destroy(fld);
+}
+
+
+// ----------------------------------------------------------------------
+// main
+
 int
 main(int argc, char **argv)
 {
@@ -43,6 +79,8 @@ main(int argc, char **argv)
   switch (testcase) {
   case 1: test_12(0); break;
   case 2: test_12(1); break;
+  case 3: test_34(0); break;
+  case 4: test_34(1); break;
   default: assert(0);
   }
 

@@ -88,6 +88,7 @@ void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 			  (fld)->_ghost_dims[0] + (ix) - (fld)->_ghost_offs[0]])
 
 #define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz)
+#define MRC_D3(fld, ix,iy,iz) MRC_FLD(fld, double, ix,iy,iz)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
   for (int iz = (fld)->_offs[2] - (l); iz < (fld)->_offs[2] + (fld)->_dims[2] + (r); iz++) { \
