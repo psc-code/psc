@@ -63,10 +63,13 @@ struct mrc_fld {
   // parameters
   int _offs[MRC_FLD_MAXDIMS];
   int _dims[MRC_FLD_MAXDIMS];
+  int _sw;
   int _nr_dims;
   int _data_type;
 
   // state
+  int _ghost_offs[MRC_FLD_MAXDIMS];
+  int _ghost_dims[MRC_FLD_MAXDIMS];
   int _size_of_type;
   void *_arr;
   int _len;
@@ -80,9 +83,9 @@ void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 // FIXME, add BOUNDSCHECK/DEBUG versions
 
 #define MRC_FLD(fld, type, ix,iy,iz)					\
-  (((type *) (fld)->_arr)[(((iz) - (fld)->_offs[2]) *			\
-			   (fld)->_dims[1] + (iy) - (fld)->_offs[1]) *	\
-			  (fld)->_dims[0] + (ix) - (fld)->_offs[0]])
+  (((type *) (fld)->_arr)[(((iz) - (fld)->_ghost_offs[2]) *			\
+			   (fld)->_ghost_dims[1] + (iy) - (fld)->_ghost_offs[1]) *	\
+			  (fld)->_ghost_dims[0] + (ix) - (fld)->_ghost_offs[0]])
 
 #define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz)
 
