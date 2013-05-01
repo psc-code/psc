@@ -38,8 +38,8 @@ _mrc_fld_setup(struct mrc_fld *fld)
 
   fld->_len = 1;
   for (int d = 0; d < fld->_nr_dims; d++) {
-    fld->_ghost_offs[d] = fld->_offs[d] - fld->_sw;
-    fld->_ghost_dims[d] = fld->_dims[d] + 2 * fld->_sw;
+    fld->_ghost_offs[d] = fld->_offs[d] - fld->_sw[d];
+    fld->_ghost_dims[d] = fld->_dims[d] + 2 * fld->_sw[d];
     fld->_len *= fld->_ghost_dims[d];
   }
 
@@ -86,7 +86,7 @@ static struct mrc_param_select mrc_number_type[] = {
 static struct param mrc_fld_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
-  { "sw"              , VAR(_sw)          , PARAM_INT(0)                        },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
   { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                        },
   { "data_type"       , VAR(_data_type)   , PARAM_SELECT(MRC_NT_FLOAT,
 							 mrc_number_type)       },

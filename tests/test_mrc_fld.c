@@ -18,7 +18,7 @@ test_12(int sw)
   mrc_fld_set_name(fld, "test_fld");
   mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 3 });
   mrc_fld_set_param_int3(fld, "dims", (int [3]) { 2, 3, 4 });
-  mrc_fld_set_param_int(fld, "sw", sw);
+  mrc_fld_set_param_int3(fld, "sw", (int [3]) { sw, sw, sw });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_view(fld);
@@ -47,7 +47,7 @@ test_34(int sw)
   mrc_fld_set_param_select(fld, "data_type", MRC_NT_DOUBLE);
   mrc_fld_set_param_int3(fld, "offs", (int [3]) { 1, 2, 3 });
   mrc_fld_set_param_int3(fld, "dims", (int [3]) { 2, 3, 4 });
-  mrc_fld_set_param_int(fld, "sw", sw);
+  mrc_fld_set_param_int3(fld, "sw", (int [3]) { sw, sw, sw });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_view(fld);
@@ -75,7 +75,7 @@ test_56(int sw)
   mrc_fld_set_param_int(fld, "nr_dims", 4);
   mrc_fld_set_param_int_array(fld, "offs", 4, (int []) { 1, 2, 3, 0 });
   mrc_fld_set_param_int_array(fld, "dims", 4, (int []) { 2, 3, 4, 2 });
-  mrc_fld_set_param_int(fld, "sw", sw);
+  mrc_fld_set_param_int_array(fld, "sw", 4, (int []) { sw, sw, sw, 0 });
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_view(fld);

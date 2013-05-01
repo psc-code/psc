@@ -63,7 +63,7 @@ struct mrc_fld {
   // parameters
   int _offs[MRC_FLD_MAXDIMS];
   int _dims[MRC_FLD_MAXDIMS];
-  int _sw;
+  int _sw[MRC_FLD_MAXDIMS];
   int _nr_dims;
   int _data_type;
 
