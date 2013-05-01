@@ -77,6 +77,24 @@ MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 
+// FIXME, add BOUNDSCHECK/DEBUG versions
+
+#define MRC_FLD(fld, type, ix,iy,iz)					\
+  (((type *) (fld)->_arr)[(((iz) - (fld)->_offs[2]) *			\
+			   (fld)->_dims[1] + (iy) - (fld)->_offs[1]) *	\
+			  (fld)->_dims[0] + (ix) - (fld)->_offs[0]])
+
+#define MRC_S3(fld, ix,iy,iz) MRC_FLD(fld, float, ix,iy,iz)
+
+#define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
+  for (int iz = (fld)->_offs[2] - (l); iz < (fld)->_offs[2] + (fld)->_dims[2] + (r); iz++) { \
+  for (int iy = (fld)->_offs[1] - (l); iy < (fld)->_offs[1] + (fld)->_dims[1] + (r); iy++) { \
+  for (int ix = (fld)->_offs[0] - (l); ix < (fld)->_offs[0] + (fld)->_dims[0] + (r); ix++) \
+
+#define mrc_fld_foreach_end			\
+  }						\
+    } do {} while (0)				\
+
 // ======================================================================
 // mrc_f1
 
