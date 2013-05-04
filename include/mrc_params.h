@@ -38,11 +38,11 @@ enum param_type {
 #define PARAM_SELECT(x,d) PT_SELECT, .u = { .select = { .default_value = (x), .descr = (d), }, }
 #define PARAM_INT3(x,y,z) PT_INT3,   .u = { .ini_int3 = { (x), (y), (z) }, }
 #define PARAM_INT_ARRAY(n, x) PT_INT_ARRAY, .u = { .int_array = { .default_value = (x), .array_size = (n) }, }
-#define PARAM_FLOAT3(x,y,z) PT_FLOAT3, .u = { .ini_float3 = { (x), (y), (z) }, }
-#define PARAM_DOUBLE3(x,y,z) PT_DOUBLE3, .u = { .ini_double3 = { (x), (y), (z) }, }
-#define PARAM_PTR(x)      PT_PTR,    .u = { .ini_ptr = (x), }
-#define PARAM_OBJ(c)      PT_OBJ,    .cls = (struct mrc_class *) &mrc_class_ ## c,
-#define MRC_VAR_OBJ(c)    MRC_VAR_OBJ,.cls = (struct mrc_class *) &mrc_class_ ## c,
+#define PARAM_FLOAT3(x,y,z)   PT_FLOAT3,    .u = { .ini_float3 = { (x), (y), (z) }, }
+#define PARAM_DOUBLE3(x,y,z)  PT_DOUBLE3,   .u = { .ini_double3 = { (x), (y), (z) }, }
+#define PARAM_PTR(x)          PT_PTR,       .u = { .ini_ptr = (x), }
+#define PARAM_OBJ(c)          PT_OBJ,       .u = { .mrc_obj = { .cls = (struct mrc_class *) &mrc_class_ ## c, }, }
+#define MRC_VAR_OBJ(c)        MRC_VAR_OBJ,  .u = { .mrc_obj = { .cls = (struct mrc_class *) &mrc_class_ ## c, }, }
 
 union param_u {
   int u_int;
@@ -82,8 +82,8 @@ struct param {
     float  ini_double3[3];
     void*  ini_ptr;
     struct { int default_value; int array_size; } int_array;
+    struct { struct mrc_class *cls; } mrc_obj;
   } u;
-  struct mrc_class *cls;
   const char *help;
 };
 

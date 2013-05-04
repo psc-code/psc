@@ -14,7 +14,7 @@ create_member_objs(MPI_Comm comm, void *p, struct param *descr)
   for (int i = 0; descr && descr[i].name; i++) {
     if (descr[i].type == MRC_VAR_OBJ) {
       union param_u *pv = p + (unsigned long) descr[i].var;
-      pv->u_obj = __mrc_obj_create(comm, descr[i].cls);
+      pv->u_obj = __mrc_obj_create(comm, descr[i].u.mrc_obj.cls);
     }
   }
 }
@@ -69,7 +69,7 @@ read_member_objs(struct mrc_io *io, struct mrc_obj *obj, void *p, struct param *
   for (int i = 0; descr && descr[i].name; i++) {
     if (descr[i].type == MRC_VAR_OBJ) {
       union param_u *pv = p + (unsigned long) descr[i].var;
-      pv->u_obj = __mrc_io_read_ref(io, obj, descr[i].name, descr[i].cls);
+      pv->u_obj = __mrc_io_read_ref(io, obj, descr[i].name, descr[i].u.mrc_obj.cls);
     }
   }
 }
@@ -807,7 +807,7 @@ mrc_obj_read_params(struct mrc_obj *obj, void *p, struct param *params,
     struct param *prm = &params[i];
     union param_u *pv = p + (unsigned long) prm->var;
     if (prm->type == PT_OBJ) {
-      pv->u_obj = __mrc_io_read_ref(io, obj, prm->name, prm->cls);
+      pv->u_obj = __mrc_io_read_ref(io, obj, prm->name, prm->u.mrc_obj.cls);
     } else {
       mrc_io_read_attr(io, path, prm->type, prm->name, pv);
     }
