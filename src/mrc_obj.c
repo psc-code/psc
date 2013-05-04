@@ -896,6 +896,28 @@ mrc_obj_write_params(struct mrc_obj *obj, void *p, struct param *params,
   }
 }
 
+static void
+mrc_obj_write_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
+{
+  int cnt = 0;
+  struct mrc_dict_entry *e;
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    char s[30];
+    snprintf(s, 30, "mrc_obj_dict_name_%d", cnt);
+    mrc_io_write_attr_string(io, path, s, e->prm.name);
+    // FIXME, this could (possibly) be done more elegantly by getting the kind
+    // from the attribute directly on read
+    snprintf(s, 30, "mrc_obj_dict_type_%d", cnt);
+    mrc_io_write_attr_int(io, path, s, e->prm.type);
+    cnt++;
+  }
+  mrc_io_write_attr_int(io, path, "mrc_obj_dict_count", cnt);
+
+  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
+    mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
+  }
+}
+
 void
 mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
 {
@@ -913,11 +935,7 @@ mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
     mrc_obj_write_params(obj, p, cls->param_descr, path, io);
   }
 
-  // FIXME, dict isn't restored on read()!
-  struct mrc_dict_entry *e;
-  __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
-    mrc_io_write_attr(io, path, e->prm.type, e->prm.name, &e->val);
-  }
+  mrc_obj_write_dict(obj, path, io);
 
   if (obj->ops) {
     mrc_io_write_attr_string(io, path, "mrc_obj_type", obj->ops->name);
