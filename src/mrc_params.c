@@ -824,7 +824,7 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       break;
     case PT_SELECT:
       pv->u_select = params[i].u.select.default_value;
-      mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select);
+      mrc_params_get_option_select(params[i].name, params[i].u.select.descr, &pv->u_select);
       break;
     default:
       assert(0);
@@ -858,7 +858,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       _mrc_params_get_option_string(params[i].name, &pv->u_string, true, NULL);
       break;
     case PT_SELECT:
-      _mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select,
+      _mrc_params_get_option_select(params[i].name, params[i].u.select.descr, &pv->u_select,
 				    true, NULL);
       break;
     case PT_INT3:
@@ -915,7 +915,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_string_help(name, &pv->u_string, params[i].help);
       break;
     case PT_SELECT:
-      mrc_params_get_option_select_help(name, params[i].descr, &pv->u_select,
+      mrc_params_get_option_select_help(name, params[i].u.select.descr, &pv->u_select,
 					params[i].help);
       break;
     case PT_INT3:
@@ -968,7 +968,7 @@ mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm)
     break;
   case PT_SELECT:
     mpi_printf(comm, "%-20s| %s\n", prm->name,
-	       prm->descr[pv->u_select].str);
+	       prm->u.select.descr[pv->u_select].str);
     break;
   case PT_INT3:
     mpi_printf(comm, "%-20s| %d, %d, %d\n", prm->name,
