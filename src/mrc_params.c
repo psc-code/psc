@@ -599,7 +599,7 @@ mrc_params_set_default(void *p, struct param *params)
       pv->u_string = params[i].u.ini_string;
       break;
     case PT_SELECT:
-      pv->u_select = params[i].u.ini_select;
+      pv->u_select = params[i].u.select.default_value;
       break;
     case PT_INT3:
       for (int d = 0; d < 3; d++) {
@@ -823,7 +823,7 @@ mrc_params_parse(void *p, struct param *params, const char *title,
       mrc_params_get_option_string(params[i].name, &pv->u_string);
       break;
     case PT_SELECT:
-      pv->u_select = params[i].u.ini_select;
+      pv->u_select = params[i].u.select.default_value;
       mrc_params_get_option_select(params[i].name, params[i].descr, &pv->u_select);
       break;
     default:

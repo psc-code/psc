@@ -35,7 +35,7 @@ enum param_type {
 #define PARAM_FLOAT(x)    PT_FLOAT,  .u = { .ini_float = (x), }
 #define PARAM_DOUBLE(x)   PT_DOUBLE, .u = { .ini_double = (x), }
 #define PARAM_STRING(x)   PT_STRING, .u = { .ini_string = (x), }
-#define PARAM_SELECT(x,d) PT_SELECT, .u = { .ini_select = (x), }, .descr = d
+#define PARAM_SELECT(x,d) PT_SELECT, .u = { .select.default_value = (x), }, .descr = d
 #define PARAM_INT3(x,y,z) PT_INT3,   .u = { .ini_int3 = { (x), (y), (z) }, }
 #define PARAM_INT_ARRAY(n, x) PT_INT_ARRAY, .u = { .ini_int_array = { (x), (n) }, }
 #define PARAM_FLOAT3(x,y,z) PT_FLOAT3, .u = { .ini_float3 = { (x), (y), (z) }, }
@@ -76,7 +76,7 @@ struct param {
     float  ini_float;
     double ini_double;
     const char *ini_string;
-    int    ini_select;
+    struct { int default_value; } select;
     int    ini_int3[3];
     float  ini_float3[3];
     float  ini_double3[3];
