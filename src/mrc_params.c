@@ -620,9 +620,9 @@ mrc_params_set_default(void *p, struct param *params)
       pv->u_ptr = params[i].u.ini_ptr;
       break;
     case PT_INT_ARRAY:
-      for (int d = 0; d < params[i].u.ini_int_array.array_size; d++) {
+      for (int d = 0; d < params[i].u.int_array.array_size; d++) {
 	// FIXME?, abuse of u_int3
-	pv->u_int3[d] = params[i].u.ini_int_array.val;
+	pv->u_int3[d] = params[i].u.int_array.default_value;
       }
       break;
     case PT_OBJ:
@@ -871,7 +871,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       _mrc_params_get_option_double3(params[i].name, &pv->u_double3[0], true, NULL);
       break;
     case PT_INT_ARRAY:
-      _mrc_params_get_option_int_array(params[i].name, params[i].u.ini_int_array.array_size, &pv->u_int3[0], true, NULL);
+      _mrc_params_get_option_int_array(params[i].name, params[i].u.int_array.array_size, &pv->u_int3[0], true, NULL);
     case PT_PTR:
       break;
     case PT_OBJ:
@@ -928,7 +928,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_double3_help(name, &pv->u_double3[0], params[i].help);
       break;
     case PT_INT_ARRAY:
-      mrc_params_get_option_int_array_help(name, params[i].u.ini_int_array.array_size, &pv->u_int3[0], params[i].help);
+      mrc_params_get_option_int_array_help(name, params[i].u.int_array.array_size, &pv->u_int3[0], params[i].help);
       break;
     case PT_PTR:
     case PT_OBJ:
@@ -985,8 +985,8 @@ mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm)
   case PT_INT_ARRAY:
     {
       char s[100], tmp[100];
-      sprintf(s, "[%d] %d", prm->u.ini_int_array.array_size, pv->u_int3[0]);
-      for (int d = 1; d < prm->u.ini_int_array.array_size; d++) {
+      sprintf(s, "[%d] %d", prm->u.int_array.array_size, pv->u_int3[0]);
+      for (int d = 1; d < prm->u.int_array.array_size; d++) {
 	sprintf(tmp, ",%d", pv->u_int3[d]);
 	strcat(s, tmp);
       }
