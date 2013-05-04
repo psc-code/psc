@@ -26,8 +26,25 @@ struct mrc_class_mrc_test mrc_class_mrc_test = {
   .destroy      = _mrc_test_destroy,
 };
 
+// ----------------------------------------------------------------------
+// test_1
+
 static void
-test_dict()
+test_1()
+{
+  struct mrc_test *test = mrc_test_create(MPI_COMM_SELF);
+  mrc_test_set_from_options(test);
+  struct mrc_test *test2 = mrc_test_get(test);
+  mrc_test_destroy(test);
+  mprintf("before destroy\n");
+  mrc_test_put(test2);
+}
+
+// ----------------------------------------------------------------------
+// test_2
+
+static void
+test_2()
 {
   struct mrc_test *test = mrc_test_create(MPI_COMM_WORLD);
 
@@ -66,20 +83,21 @@ test_dict()
 }
 
 // ----------------------------------------------------------------------
+// main
 
 int
 main(int argc, char **argv)
 {
   mrctest_init(&argc, &argv);
 
-  struct mrc_test *test = mrc_test_create(MPI_COMM_SELF);
-  mrc_test_set_from_options(test);
-  struct mrc_test *test2 = mrc_test_get(test);
-  mrc_test_destroy(test);
-  mprintf("before destroy\n");
-  mrc_test_put(test2);
+  int testcase = 1;
+  mrc_params_get_option_int("case", &testcase);
 
-  test_dict();
+  switch (testcase) {
+  case 1: test_1(); break;
+  case 2: test_2(); break;
+  default: assert(0);
+  }
 
   mrctest_finalize();
   return 0;
