@@ -815,6 +815,29 @@ mrc_obj_read_params(struct mrc_obj *obj, void *p, struct param *params,
 }
 
 static void
+mrc_obj_read_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
+{
+  int cnt;
+  mrc_io_read_attr_int(io, path, "mrc_obj_dict_count", &cnt);
+  mprintf("cnt = %d\n", cnt);
+
+  for (int i = 0; i < cnt; i++) {
+    char s[30], *name;
+    int type;
+    snprintf(s, 30, "mrc_obj_dict_name_%d", i);
+    mrc_io_read_attr_string(io, path, s, &name);
+    snprintf(s, 30, "mrc_obj_dict_type_%d", i);
+    mrc_io_read_attr_int(io, path, s, &type);
+
+    union param_u pv;
+    mrc_io_read_attr(io, path, type, name, &pv);
+    mrc_obj_dict_add(obj, type, name, &pv);
+
+    free(name);
+  }
+}
+
+static void
 mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
 {
   struct mrc_class *cls = obj->cls;
@@ -843,6 +866,9 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
     char *p = (char *) obj->subctx + obj->ops->param_offset;
     mrc_obj_read_params(obj, p, obj->ops->param_descr, path, io);
   }
+
+  mrc_obj_read_dict(obj, path, io);
+
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
   } else {
