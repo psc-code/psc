@@ -9,3 +9,6 @@ libsubdir_la_SOURCES = \
 	psc_sort_none.c \
 	psc_sort_single.c \
 	psc_sort_c.c
+
+EXTRA_libsubdir_la_SOURCES = \
+        psc_sort_common.c

@@ -20,8 +20,4 @@ libsubdir_la_SOURCES += \
 endif USE_CUDA
 
 EXTRA_libsubdir_la_SOURCES = \
-	psc_bnd_fld.c \
-	psc_bnd_common.c \
-	psc_bnd_common2.c \
-	psc_bnd_exchange_particles_pre.c
-
+	psc_bnd_fld.c

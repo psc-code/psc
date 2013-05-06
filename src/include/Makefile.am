@@ -6,7 +6,11 @@ include_HEADERS = \
 	psc_bnd.h \
 	psc_bnd_fields.h \
 	psc_bnd_fields_private.h \
+	psc_bnd_particles.h \
+	psc_bnd_particles_private.h \
 	psc_bnd_private.h \
+	psc_bnd_photons.h \
+	psc_bnd_photons_private.h \
 	psc_collision.h \
 	psc_collision_private.h \
 	psc_diag.h \
@@ -33,6 +37,8 @@ include_HEADERS = \
 	psc_output_fields_item.h \
 	psc_output_fields_item_private.h \
 	psc_output_fields_private.h \
+	psc_output_fields_collection.h \
+	psc_output_fields_collection_private.h \
 	psc_output_particles.h \
 	psc_output_particles_custom_binary.h \
 	psc_output_particles_private.h \
