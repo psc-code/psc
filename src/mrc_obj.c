@@ -205,6 +205,9 @@ mrc_obj_put(struct mrc_obj *obj)
     if (obj->ops->destroy) {
       obj->ops->destroy(obj);
     }
+
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    destroy_member_objs(p, obj->ops->param_descr);
   }
 
   free(obj->subctx);
@@ -213,7 +216,8 @@ mrc_obj_put(struct mrc_obj *obj)
     cls->destroy(obj);
   }
 
-  destroy_member_objs(obj, obj->cls->param_descr);
+  char *p = (char *) obj + obj->cls->param_offset;
+  destroy_member_objs(p, obj->cls->param_descr);
 
   while (!list_empty(&obj->children_list)) {
     struct mrc_obj *child = list_entry(obj->children_list.next, struct mrc_obj,
@@ -410,7 +414,13 @@ mrc_obj_set_from_options(struct mrc_obj *obj)
 {
   mrc_obj_set_from_options_this(obj);
 
-  set_from_options_member_objs(obj, obj->cls->param_descr);
+  char *p = (char *) obj + obj->cls->param_offset;
+  set_from_options_member_objs(p, obj->cls->param_descr);
+
+  if (obj->ops) {
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    set_from_options_member_objs(p, obj->ops->param_descr);
+  }
 
   struct mrc_obj *child;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
@@ -638,7 +648,13 @@ mrc_obj_view(struct mrc_obj *obj)
 {
   mrc_obj_view_this(obj);
 
-  view_member_objs(obj, obj->cls->param_descr);
+  char *p = (char *) obj + obj->cls->param_offset;
+  view_member_objs(p, obj->cls->param_descr);
+
+  if (obj->ops) {
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    view_member_objs(p, obj->ops->param_descr);
+  }
 
   struct mrc_obj *child;
   __list_for_each_entry(child, &obj->children_list, child_entry, struct mrc_obj) {
@@ -649,7 +665,8 @@ mrc_obj_view(struct mrc_obj *obj)
 void
 mrc_obj_setup_member_objs(struct mrc_obj *obj)
 {
-  setup_member_objs(obj, obj->cls->param_descr);
+  char *p = (char *) obj + obj->cls->param_offset;
+  setup_member_objs(p, obj->cls->param_descr);
 }
 
 void
@@ -706,6 +723,13 @@ mrc_obj_setup(struct mrc_obj *obj)
     assert(0);
   }
   obj->is_setup = true;
+
+  if (obj->ops) {
+    // FIXME (?) there's an asymmetry -- the base class has to explicitly set up
+    // its member objects (if it provides ::setup), while the subclass doesn't
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    setup_member_objs(p, obj->ops->param_descr);
+  }
 
   if (obj->ops && obj->ops->setup) {
     obj->ops->setup(obj);
