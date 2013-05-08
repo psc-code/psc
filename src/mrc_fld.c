@@ -27,7 +27,8 @@ _mrc_fld_destroy(struct mrc_fld *fld)
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
-  assert(fld->_nr_dims <= MRC_FLD_MAXDIMS);
+  assert(fld->_nr_dims == fld->_nr_offs &&
+	 fld->_nr_dims == fld->_nr_sw);
 
   fld->_len = 1;
   for (int d = 0; d < fld->_nr_dims; d++) {
@@ -103,10 +104,9 @@ mrc_fld_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_fld, x)
 static struct param mrc_fld_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0) },
-  { "nr_dims"         , VAR(_nr_dims)     , PARAM_INT(3)                        },
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0, VAR(_nr_offs)) },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0, VAR(_nr_dims)) },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(MRC_FLD_MAXDIMS, 0, VAR(_nr_sw))   },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT                         },
   { "len"             , VAR(_len)         , MRC_VAR_INT                         },

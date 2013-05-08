@@ -62,9 +62,11 @@ struct mrc_fld {
   struct mrc_obj obj;
   // parameters
   int _offs[MRC_FLD_MAXDIMS];
+  int _nr_offs;
   int _dims[MRC_FLD_MAXDIMS];
-  int _sw[MRC_FLD_MAXDIMS];
   int _nr_dims;
+  int _sw[MRC_FLD_MAXDIMS];
+  int _nr_sw;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];

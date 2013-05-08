@@ -72,7 +72,6 @@ static void
 test_56(int sw)
 {
   struct mrc_fld *fld = mrc_fld_create(MPI_COMM_WORLD);
-  mrc_fld_set_param_int(fld, "nr_dims", 4);
   mrc_fld_set_param_int_array(fld, "offs", 4, (int []) { 1, 2, 3, 0 });
   mrc_fld_set_param_int_array(fld, "dims", 4, (int []) { 2, 3, 4, 2 });
   mrc_fld_set_param_int_array(fld, "sw", 4, (int []) { sw, sw, sw, 0 });
@@ -110,6 +109,7 @@ main(int argc, char **argv)
   case 3: test_34(0); break;
   case 4: test_34(1); break;
   case 5: test_56(0); break;
+  case 6: test_56(1); break;
   default: assert(0);
   }
 
