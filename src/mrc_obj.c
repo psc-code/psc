@@ -351,6 +351,9 @@ obj_set_type(struct mrc_obj *obj, const char *subclass, bool basic_only)
     return;
   }
 
+  char *p = (char *) obj->subctx + ops->param_offset;
+  create_member_objs(obj->comm, p, ops->param_descr);
+
   if (ops->create) {
     ops->create(obj);
   }
