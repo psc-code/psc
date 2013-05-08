@@ -619,9 +619,7 @@ mrc_obj_view_this(struct mrc_obj *obj)
   if (cls->param_descr) {
     char *p = (char *) obj + cls->param_offset;
     for (int i = 0; cls->param_descr[i].name; i++) {
-      union param_u *pv =
-	(union param_u *) (p + (unsigned long) cls->param_descr[i].var);
-      mrc_params_print_one(pv, &cls->param_descr[i], comm);
+      mrc_params_print_one(p, &cls->param_descr[i], comm);
     }
   }
 
@@ -640,9 +638,7 @@ mrc_obj_view_this(struct mrc_obj *obj)
     if (obj->ops->param_descr) {
       char *p = (char *) obj->subctx + obj->ops->param_offset;
       for (int i = 0; obj->ops->param_descr[i].name; i++) {
-	union param_u *pv = 
-	  (union param_u *) (p + (unsigned long) obj->ops->param_descr[i].var);
-	mrc_params_print_one(pv, &obj->ops->param_descr[i], comm);
+	mrc_params_print_one(p, &obj->ops->param_descr[i], comm);
       }
     } 
 

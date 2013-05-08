@@ -945,8 +945,10 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
 }
 
 void
-mrc_params_print_one(union param_u *pv, struct param *prm, MPI_Comm comm)
+mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
 {
+  union param_u *pv =
+    (union param_u *) ((char *) p + (unsigned long) prm->var);
   switch (prm->type) {
   case PT_INT:
     mpi_printf(comm, "%-20s| %d\n", prm->name, pv->u_int);
@@ -1016,8 +1018,7 @@ mrc_params_print(void *p, struct param *params, const char *title, MPI_Comm comm
   mpi_printf(comm, "%-20s| %s\n", "parameter", "value");
   mpi_printf(comm, "--------------------+---------------------------------------- %s\n", title);
   for (int i = 0; params[i].name; i++) {
-    union param_u *pv = p + (unsigned long) params[i].var;
-    mrc_params_print_one(pv, &params[i], comm);
+    mrc_params_print_one(p, &params[i], comm);
   }
 }
 
