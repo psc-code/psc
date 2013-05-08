@@ -434,36 +434,41 @@ _mrc_params_get_option_int3(const char *name, int *pval, bool deprecated,
 }
 
 int
-_mrc_params_get_option_int_array(const char *name, int array_size, int *pval, bool deprecated,
-				 const char *help)
+_mrc_params_get_option_int_array(const char *name, struct mrc_param_int_array *pval,
+				 bool deprecated, const char *help)
 {
-  int retval = -1;
-  char namex[strlen(name) + 2];
-  // FIXME, add a way to parse an array in one option
-  int nr_dims = array_size;
-  if (nr_dims > 3)
-    nr_dims = 3;
+  struct option *p = find_option(name, deprecated);
+  if (!p) {
+    if (!deprecated) { // don't advertise deprecated un-prefixed options
+      print_help("--%s: <%d> (default) %s...\n", name, pval->vals[0],
+		 help ? help : "");
+    }
+    return -1;
+  }
 
-  for (int d = 0; d < nr_dims; d++) {
-    sprintf(namex, "%s%c", name, 'x' + d);
-    struct option *p = find_option(namex, deprecated);
-  
-    if (!p) {
-      if (!deprecated) { // don't advertise deprecated un-prefixed options
-	print_help("--%s: <%d> (default) %s\n", namex, pval[d],
-		   help ? help : "");
-      }
+  char *s1, *s_save = strdup(p->value), *s = s_save;
+  // count first
+  int n = 0;
+  while (strsep(&s, ",:")) {
+    n++;
+  }
+
+  if (pval->nr_vals != n) {
+    free(pval->vals);
+    pval->nr_vals = n;
+    pval->vals = calloc(n, sizeof(int));
+  }
+  s = s_save;
+  strcpy(s, p->value);
+  for (int i = 0; (s1 = strsep(&s, ",:")); i++) {
+    if (strcmp(s1, "_") == 0) {
       continue;
     }
-    
-    retval = 0;
-    int rv = sscanf(p->value, "%d", pval + d);
-    if (rv != 1) {
-      error("cannot parse integer from '%s'\n", p->value);
-    }
-    print_help("--%s: <%d> %s\n", namex, pval[d], help ? help : "");
+    pval->vals[i] = atoi(s1);
   }
-  return retval;
+  free(s_save);
+
+  return 0;
 }
 
 int
@@ -480,10 +485,10 @@ mrc_params_get_option_int3_help(const char *name, int *pval,
 }
 
 int
-mrc_params_get_option_int_array_help(const char *name, int array_size, int *pval,
+mrc_params_get_option_int_array_help(const char *name, struct mrc_param_int_array *pval,
 				     const char *help)
 {
-  return _mrc_params_get_option_int_array(name, array_size, pval, false, help);
+  return _mrc_params_get_option_int_array(name, pval, false, help);
 }
 
 int
@@ -621,11 +626,11 @@ mrc_params_set_default(void *p, struct param *params)
       break;
     case PT_INT_ARRAY:
       {
-	int *p_nr_vals = (int *)((char *) p + params[i].u.int_array.off_nr_vals);
-	*p_nr_vals = params[i].u.int_array.array_size;
-	for (int d = 0; d < params[i].u.int_array.array_size; d++) {
-	  // FIXME?, abuse of u_int3
-	  pv->u_int3[d] = params[i].u.int_array.default_value;
+	pv->u_int_array.nr_vals = params[i].u.int_array.nr_vals;
+	free(pv->u_int_array.vals);
+	pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+	for (int d = 0; d < pv->u_int_array.nr_vals; d++) {
+	  pv->u_int_array.vals[d] = params[i].u.int_array.default_value;
 	}
       }
       break;
@@ -684,12 +689,17 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       pv->u_select = pval->u_select;
       break;
     case PT_INT3:
-      for (int d = 0; d < 3; d++) {
-	pv->u_int3[d] = pval->u_int3[d];
-      }
-      if (params[i].type == PT_INT_ARRAY) {
-	int *p_nr_vals = (int *)((char *) p + params[i].u.int_array.off_nr_vals);
-	*p_nr_vals = 3;
+      if (params[i].type == PT_INT3) {
+	for (int d = 0; d < 3; d++) {
+	  pv->u_int3[d] = pval->u_int3[d];
+	}
+      } else if (params[i].type == PT_INT_ARRAY) {
+	pv->u_int_array.nr_vals = 3;
+	free(pv->u_int_array.vals);
+	pv->u_int_array.vals = calloc(3, sizeof(int));
+	for (int d = 0; d < 3; d++) {
+	  pv->u_int_array.vals[d] = pval->u_int3[d];
+	}
       }
       break;
     case PT_FLOAT3:
@@ -704,11 +714,12 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
       break;
     case PT_INT_ARRAY:
       {
-	int *p_nr_vals = (int *)((char *) p + params[i].u.int_array.off_nr_vals);
-	*p_nr_vals = pval->u_int_array.nr_vals;
+	pv->u_int_array.nr_vals = pval->u_int_array.nr_vals;
+	free(pv->u_int_array.vals);
+	pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
 	for (int d = 0; d < pval->u_int_array.nr_vals; d++) {
 	  // FIXME?, abuse of u_int3
-	  pv->u_int3[d] = pval->u_int_array.vals[d];
+	  pv->u_int_array.vals[d] = pval->u_int_array.vals[d];
 	}
       }
       break;
@@ -883,7 +894,7 @@ mrc_params_parse_nodefault(void *p, struct param *params, const char *title,
       _mrc_params_get_option_double3(params[i].name, &pv->u_double3[0], true, NULL);
       break;
     case PT_INT_ARRAY:
-      _mrc_params_get_option_int_array(params[i].name, params[i].u.int_array.array_size, &pv->u_int3[0], true, NULL);
+      _mrc_params_get_option_int_array(params[i].name, &pv->u_int_array, true, NULL);
     case PT_PTR:
       break;
     case PT_OBJ:
@@ -940,7 +951,7 @@ mrc_params_parse_pfx(void *p, struct param *params, const char *title,
       mrc_params_get_option_double3_help(name, &pv->u_double3[0], params[i].help);
       break;
     case PT_INT_ARRAY:
-      mrc_params_get_option_int_array_help(name, params[i].u.int_array.array_size, &pv->u_int3[0], params[i].help);
+      mrc_params_get_option_int_array_help(name, &pv->u_int_array, params[i].help);
       break;
     case PT_PTR:
     case PT_OBJ:
@@ -999,15 +1010,11 @@ mrc_params_print_one(void *p, struct param *prm, MPI_Comm comm)
   case PT_INT_ARRAY:
     {
       char s[100], tmp[100];
-      int nr_vals = prm->u.int_array.array_size;
-      int *p_nr_vals = (int *) ((char *) p + prm->u.int_array.off_nr_vals);
-      if (p_nr_vals) {
-	nr_vals = *p_nr_vals;
-      }
-      sprintf(s, "[%d] %d", nr_vals, pv->u_int3[0]);
+      int nr_vals = pv->u_int_array.nr_vals;
+      sprintf(s, "[%d] %d", nr_vals, pv->u_int_array.vals[0]);
 
       for (int d = 1; d < nr_vals; d++) {
-	sprintf(tmp, ",%d", pv->u_int3[d]);
+	sprintf(tmp, ",%d", pv->u_int_array.vals[d]);
 	strcat(s, tmp);
       }
       mpi_printf(comm, "%-20s| %s\n", prm->name, s);

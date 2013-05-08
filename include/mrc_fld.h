@@ -61,12 +61,9 @@ enum {
 struct mrc_fld {
   struct mrc_obj obj;
   // parameters
-  int _offs[MRC_FLD_MAXDIMS];
-  int _nr_offs;
-  int _dims[MRC_FLD_MAXDIMS];
-  int _nr_dims;
-  int _sw[MRC_FLD_MAXDIMS];
-  int _nr_sw;
+  struct mrc_param_int_array _dims;
+  struct mrc_param_int_array _offs;
+  struct mrc_param_int_array _sw;
 
   // state
   int _ghost_offs[MRC_FLD_MAXDIMS];
@@ -97,9 +94,9 @@ void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 #define MRC_D4(fld, ix,iy,iz,m) MRC_FLD(fld, double, ix,iy,iz,m)
 
 #define mrc_fld_foreach(fld, ix,iy,iz, l,r)				\
-  for (int iz = (fld)->_offs[2] - (l); iz < (fld)->_offs[2] + (fld)->_dims[2] + (r); iz++) { \
-  for (int iy = (fld)->_offs[1] - (l); iy < (fld)->_offs[1] + (fld)->_dims[1] + (r); iy++) { \
-  for (int ix = (fld)->_offs[0] - (l); ix < (fld)->_offs[0] + (fld)->_dims[0] + (r); ix++) \
+  for (int iz = (fld)->_offs.vals[2] - (l); iz < (fld)->_offs.vals[2] + (fld)->_dims.vals[2] + (r); iz++) { \
+  for (int iy = (fld)->_offs.vals[1] - (l); iy < (fld)->_offs.vals[1] + (fld)->_dims.vals[1] + (r); iy++) { \
+  for (int ix = (fld)->_offs.vals[0] - (l); ix < (fld)->_offs.vals[0] + (fld)->_dims.vals[0] + (r); ix++) \
 
 #define mrc_fld_foreach_end			\
   }						\
