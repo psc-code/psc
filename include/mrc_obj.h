@@ -129,6 +129,7 @@ void mrc_obj_view(struct mrc_obj *obj);
 void mrc_obj_setup(struct mrc_obj *obj);
 void mrc_obj_setup_super(struct mrc_obj *obj);
 void mrc_obj_setup_member_objs(struct mrc_obj *obj);
+void mrc_obj_setup_member_objs_sub(struct mrc_obj *obj);
 void mrc_obj_setup_children(struct mrc_obj *obj);
 void mrc_obj_add_child(struct mrc_obj *obj, struct mrc_obj *child);
 struct mrc_obj *mrc_obj_find_child(struct mrc_obj *obj, const char *name);
@@ -382,6 +383,12 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _setup_member_objs(obj_type *obj)				\
   {									\
     mrc_obj_setup_member_objs((struct mrc_obj *)obj);			\
+  }									\
+									\
+  static inline void 							\
+  pfx ## _setup_member_objs_sub(obj_type *obj)				\
+  {									\
+    mrc_obj_setup_member_objs_sub((struct mrc_obj *)obj);		\
   }									\
 									\
   static inline void 							\

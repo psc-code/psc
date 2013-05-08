@@ -670,6 +670,14 @@ mrc_obj_setup_member_objs(struct mrc_obj *obj)
 }
 
 void
+mrc_obj_setup_member_objs_sub(struct mrc_obj *obj)
+{
+  assert(obj->ops);
+  char *p = (char *) obj->subctx + obj->ops->param_offset;
+  setup_member_objs(p, obj->ops->param_descr);
+}
+
+void
 mrc_obj_read_member_objs(struct mrc_obj *obj, struct mrc_io *io)
 {
   read_member_objs(io, obj, obj, obj->cls->param_descr);
@@ -724,16 +732,12 @@ mrc_obj_setup(struct mrc_obj *obj)
   }
   obj->is_setup = true;
 
-  if (obj->ops) {
-    // FIXME (?) there's an asymmetry -- the base class has to explicitly set up
-    // its member objects (if it provides ::setup), while the subclass doesn't
-    char *p = (char *) obj->subctx + obj->ops->param_offset;
-    setup_member_objs(p, obj->ops->param_descr);
-  }
-
   if (obj->ops && obj->ops->setup) {
     obj->ops->setup(obj);
   } else {
+    if (obj->ops) {
+      mrc_obj_setup_member_objs_sub(obj);
+    }
     mrc_obj_setup_super(obj);
   }
 }
