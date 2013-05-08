@@ -819,7 +819,6 @@ mrc_obj_read_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
 {
   int cnt;
   mrc_io_read_attr_int(io, path, "mrc_obj_dict_count", &cnt);
-  mprintf("cnt = %d\n", cnt);
 
   for (int i = 0; i < cnt; i++) {
     char s[30], *name;

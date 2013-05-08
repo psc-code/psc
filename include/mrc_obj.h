@@ -464,6 +464,9 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   struct __dummy
 
 
+// for direct instantiation of (non-derived) mrc_obj
+extern struct mrc_class mrc_class_mrc_obj;
+
 // use a macro here to do the casting to mrc_obj_ops
 
 #define mrc_class_register_subclass(cls, ops) \
