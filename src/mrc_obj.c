@@ -967,10 +967,40 @@ mrc_obj_dict_add_string(struct mrc_obj *obj, const char *name, const char *val)
   mrc_obj_dict_add(obj, PT_STRING, name, &uval);
 }
 
-void
-mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv)
+static void
+get_var(void *p, struct param *descr, const char *name, int type, union param_u **pv)
 {
-  // FIXME, should look in param_descr, too
+  for (int i = 0; descr && descr[i].name; i++) {
+    if (strcmp(descr[i].name, name) == 0) {
+      assert(type < 0 || descr[i].type == type);
+      *pv = p + (unsigned long) descr[i].var;
+      return;
+    }
+  }
+  *pv = NULL;
+}
+
+static void
+mrc_obj_get_var_type(struct mrc_obj *obj, const char *name, int type,
+		     union param_u **pv)
+{
+  // try to find variable 'name' in the class
+  if (obj->cls->param_descr) {
+    char *p = (char *) obj + obj->cls->param_offset;
+    get_var(p, obj->cls->param_descr, name, type, pv);
+    if (*pv)
+      return;
+  }
+
+  // try to find variable 'name' in the subclass
+  if (obj->ops && obj->ops->param_descr) {
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    get_var(p, obj->ops->param_descr, name, type, pv);
+    if (*pv)
+      return;
+  }
+  
+  // finally, try the dict
   struct mrc_dict_entry *e;
   __list_for_each_entry(e, &obj->dict_list, entry, struct mrc_dict_entry) {
     if (strcmp(e->prm.name, name) == 0) {
@@ -980,6 +1010,23 @@ mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv)
   }
   mprintf("WARNING: var '%s' not found!\n", name);
   *pv = NULL;
+}
+
+void
+mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv)
+{
+  mrc_obj_get_var_type(obj, name, -1, pv);
+}
+
+struct mrc_obj *
+mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name)
+{
+  union param_u *pv;
+  mrc_obj_get_var(obj, name, &pv);
+  if (!pv)
+    return NULL;
+
+  return pv->u_obj;
 }
 
 mrc_void_func_t

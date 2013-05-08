@@ -115,6 +115,7 @@ void mrc_obj_get_param_float3(struct mrc_obj *obj, const char *name, float *pval
 void mrc_obj_get_param_double3(struct mrc_obj *obj, const char *name, double *pval);
 
 void mrc_obj_get_var(struct mrc_obj *obj, const char *name, union param_u **pv);
+struct mrc_obj *mrc_obj_get_var_obj(struct mrc_obj *obj, const char *name);
 
 void mrc_obj_dict_add(struct mrc_obj *obj, int type, const char *name,
 		      union param_u *pv);
@@ -306,6 +307,14 @@ mrc_void_func_t mrc_obj_get_method(struct mrc_obj *obj, const char *name);
   pfx ## _get_var(obj_type *obj, const char *name, union param_u **pv)	\
   {									\
     mrc_obj_get_var((struct mrc_obj *)obj, name, pv);			\
+  }									\
+									\
+  /* we should return a subtype of mrc_obj, but that's not */		\
+  /* easily possible without having the user do the casting */		\
+  static inline void *							\
+  pfx ## _get_var_obj(obj_type *obj, const char *name)			\
+  {									\
+    return mrc_obj_get_var_obj((struct mrc_obj *)obj, name);		\
   }									\
 									\
   static inline void							\
