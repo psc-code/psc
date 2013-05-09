@@ -3,6 +3,7 @@
 #define MRC_CRDS_H
 
 #include <mrc_obj.h>
+#include <mrc_fld.h>
 
 struct mrc_crds_params {
   float xl[3];
