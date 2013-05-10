@@ -156,8 +156,6 @@ ggcm_mhd_ntot(struct ggcm_mhd *mhd)
 static void
 ggcm_mhd_init()
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_ops_fortran);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_ops_c);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_ops_box);
 }
 

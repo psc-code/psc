@@ -17,10 +17,6 @@ struct ggcm_mhd_diag_ops {
   void (*shutdown)(struct ggcm_mhd_diag *);
 };
 
-extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
-extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_s2_ops;
-extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_f2_ops;
-
 void ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_f3 *f, int m,
 				     const char *name, float scale, int outtype,
 				     float plane);

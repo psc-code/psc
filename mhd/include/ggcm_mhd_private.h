@@ -60,27 +60,6 @@ struct ggcm_mhd_ops {
   void (*set_state)(struct ggcm_mhd *mhd);
 };
 
-extern struct ggcm_mhd_ops ggcm_mhd_ops_fortran;
-extern struct ggcm_mhd_ops ggcm_mhd_ops_c;
 extern struct ggcm_mhd_ops ggcm_mhd_ops_box;
-
-// ======================================================================
-// shared for types "fortran", "c"
-
-struct ggcm_mhd_fortran {
-  struct ggcm_mhd_bndsw *bndsw;
-  struct ggcm_mhd_iono *iono;
-  struct ggcm_mhd_rcm *rcm;
-  struct ggcm_mhd_satout *satout;
-  struct ggcm_dipole *dipole;
-};
-
-#define ggcm_mhd_fortran(mhd) mrc_to_subobj(mhd, struct ggcm_mhd_fortran)
-
-extern struct param ggcm_mhd_fortran_descr[];
-
-void ggcm_mhd_fortran_create(struct ggcm_mhd *mhd);
-void ggcm_mhd_fortran_setup(struct ggcm_mhd *mhd);
-void ggcm_mhd_fortran_newstep(struct ggcm_mhd *mhd, float *dtn);
 
 #endif

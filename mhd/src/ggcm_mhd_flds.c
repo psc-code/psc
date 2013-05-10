@@ -165,10 +165,6 @@ ggcm_mhd_flds_put_as(struct ggcm_mhd_flds *flds, struct ggcm_mhd_flds *flds_base
 static void
 ggcm_mhd_flds_init()
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_flds, &ggcm_mhd_flds_ops_fortran);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_flds, &ggcm_mhd_flds_ops_c);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_flds, &ggcm_mhd_flds_ops_aos);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_flds, &ggcm_mhd_flds_ops_naos);
 }
 
 // ----------------------------------------------------------------------

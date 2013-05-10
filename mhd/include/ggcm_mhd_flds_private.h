@@ -17,11 +17,6 @@ struct ggcm_mhd_flds_ops {
   void (*copy)(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from);
 };
 
-extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_fortran;
-extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c;
-extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_aos;
-extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_naos;
-
 typedef void (*ggcm_mhd_flds_copy_to_func_t)(struct ggcm_mhd_flds *,
 					     struct ggcm_mhd_flds *);
 typedef void (*ggcm_mhd_flds_copy_from_func_t)(struct ggcm_mhd_flds *,

@@ -5,6 +5,7 @@ noinst_LTLIBRARIES = libmhd.la
 
 libmhd_la_SOURCES = \
 	ggcm_mhd.c \
+	ggcm_mhd_box.c \
 	\
 	ggcm_mhd_bnd.c \
 	ggcm_mhd_bnd_none.c \
@@ -14,5 +15,9 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd_diag.c \
 	\
-	ggcm_mhd_flds.c
+	ggcm_mhd_flds.c \
+	\
+	ggcm_mhd_ic.c \
+	\
+	ggcm_mhd_step.c
 
