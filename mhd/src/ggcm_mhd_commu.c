@@ -27,8 +27,6 @@ ggcm_mhd_commu_init()
 {
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_commu,
 			      &ggcm_mhd_commu_c_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_commu,
-			      &ggcm_mhd_commu_fortran_ops);
 }
 
 // ----------------------------------------------------------------------

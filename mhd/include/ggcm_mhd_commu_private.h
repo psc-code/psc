@@ -15,7 +15,6 @@ struct ggcm_mhd_commu_ops {
   void (*run)(struct ggcm_mhd_commu *commu, int mb, int me);
 };
 
-extern struct ggcm_mhd_commu_ops ggcm_mhd_commu_fortran_ops;
 extern struct ggcm_mhd_commu_ops ggcm_mhd_commu_c_ops;
 
 #define ggcm_mhd_commu_ops(commu) ((struct ggcm_mhd_commu_ops *)((commu)->obj.ops))
