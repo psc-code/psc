@@ -8,7 +8,6 @@
 #include "ggcm_mhd_diag.h"
 #include "ggcm_mhd_bnd.h"
 #include "ggcm_mhd_ic.h"
-#include "openggcm_f77.h"
 
 #include <mrc_domain.h>
 #include <mrc_profile.h>
@@ -19,17 +18,6 @@
 #define ggcm_mhd_ops(mhd) ((struct ggcm_mhd_ops *) mhd->obj.ops)
 
 struct ggcm_mhd *_mhd;
-
-// ======================================================================
-// Fortran glue
-
-#define ggcm_mhd_get_state_F77 F77_FUNC_(ggcm_mhd_get_state,GGCM_MHD_GET_STATE)
-#define ggcm_mhd_set_state_F77 F77_FUNC_(ggcm_mhd_set_state,GGCM_MHD_SET_STATE)
-
-void ggcm_mhd_set_state_F77(real *dt, integer *istep, real *tim,
-			    real *timla, double *dacttime);
-void ggcm_mhd_get_state_F77(real *dt, integer *istep, real *tim,
-			    real *timla, double *dacttime);
 
 // ----------------------------------------------------------------------
 // ggcm_mhd methods
@@ -71,8 +59,10 @@ _ggcm_mhd_destroy(struct ggcm_mhd *mhd)
 void
 ggcm_mhd_get_state(struct ggcm_mhd *mhd)
 {
-  ggcm_mhd_get_state_F77(&mhd->dt, &mhd->istep, &mhd->time,
-			 &mhd->timla, &mhd->dacttime);
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->get_state) {
+    ops->get_state(mhd);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -83,8 +73,10 @@ ggcm_mhd_get_state(struct ggcm_mhd *mhd)
 void
 ggcm_mhd_set_state(struct ggcm_mhd *mhd)
 {
-  ggcm_mhd_set_state_F77(&mhd->dt, &mhd->istep, &mhd->time,
-			 &mhd->timla, &mhd->dacttime);
+  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
+  if (ops->set_state) {
+    ops->set_state(mhd);
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -132,14 +124,14 @@ ggcm_mhd_fill_ghosts(struct ggcm_mhd *mhd, int m, float bntim)
 }
 
 void
-ggcm_mhd_newstep(struct ggcm_mhd *mhd, real *dtn)
+ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn)
 {
   struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
   ops->newstep(mhd, dtn);
 }
 
 void
-ggcm_mhd_push(struct ggcm_mhd *mhd, real *dtn,
+ggcm_mhd_push(struct ggcm_mhd *mhd, float *dtn,
 	      bool do_nwst, bool do_iono, bool do_rcm)
 {
   static int PR;
