@@ -10,5 +10,7 @@ libmhd_la_SOURCES = \
 	\
 	ggcm_mhd_commu.c \
 	\
-	ggcm_mhd_diag.c
+	ggcm_mhd_diag.c \
+	\
+	ggcm_mhd_flds.c
 
