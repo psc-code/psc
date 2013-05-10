@@ -23,68 +23,13 @@ struct ggcm_mhd *_mhd;
 // ======================================================================
 // Fortran glue
 
-#define ggcm_set_F77 F77_FUNC_(ggcm_set,GGCM_SET)
 #define ggcm_mhd_get_state_F77 F77_FUNC_(ggcm_mhd_get_state,GGCM_MHD_GET_STATE)
 #define ggcm_mhd_set_state_F77 F77_FUNC_(ggcm_mhd_set_state,GGCM_MHD_SET_STATE)
-#define ggcm_mhd_set_F77 F77_FUNC_(ggcm_mhd_set,GGCM_MHD_SET)
-#define ggcm_mhd_set_norms_F77 F77_FUNC_(ggcm_mhd_set_norms,GGCM_MHD_SET_NORMS)
-#define ggcm_mhd_set_domain_params_F77 F77_FUNC_(ggcm_mhd_set_domain_params,GGCM_MHD_SET_DOMAIN_PARAMS)
-#define ggcm_mhd_setup_subdomain_F77 F77_FUNC_(ggcm_mhd_setup_subdomain,GGCM_MHD_SETUP_SUBDOMAIN)
 
-void ggcm_set_F77(real *diffth, real *diffco, real *diffsphere, real *d_i);
 void ggcm_mhd_set_state_F77(real *dt, integer *istep, real *tim,
 			    real *timla, double *dacttime);
 void ggcm_mhd_get_state_F77(real *dt, integer *istep, real *tim,
 			    real *timla, double *dacttime);
-void ggcm_mhd_set_F77(real *timelo, real *speedlimit, real *thx, real *isphere,
-		      real *gamma, real *dtmin, real *rrmin, integer *modnewstep,
-		      integer *magdiffu);
-void ggcm_mhd_set_norms_F77(real *bbnorm, real *vvnorm, real *rrnorm, real *ppnorm,
-			    real *ccnorm, real *eenorm, real *resnorm);
-void ggcm_mhd_set_domain_params_F77(integer *nx, integer *ny, integer *nz,
-				    integer *npx, integer *npy, integer *npz);
-void ggcm_mhd_setup_subdomain_F77(void);
-
-// FIXME, this one isn't ggcm_mhd...
-void
-ggcm_set_f(struct ggcm_mhd *mhd)
-{
-  ggcm_set_F77(&mhd->par.diffth, &mhd->par.diffco, &mhd->par.diffsphere,
-	       &mhd->par.d_i);
-}
-
-void
-ggcm_mhd_set_f(struct ggcm_mhd *mhd)
-{
-  ggcm_mhd_set_F77(&mhd->par.timelo, &mhd->par.speedlimit, &mhd->par.thx,
-		   &mhd->par.isphere, &mhd->par.gamm, &mhd->par.dtmin,
-		   &mhd->par.rrmin, &mhd->par.modnewstep, &mhd->par.magdiffu);
-}
-
-void
-ggcm_mhd_set_norms_f(struct ggcm_mhd *mhd)
-{
-  ggcm_mhd_set_norms_F77(&mhd->par.bbnorm, &mhd->par.vvnorm, &mhd->par.rrnorm,
-			 &mhd->par.ppnorm, &mhd->par.ccnorm, &mhd->par.eenorm,
-			 &mhd->par.resnorm);
-}
-
-void
-ggcm_mhd_set_domain_params_f(struct ggcm_mhd *mhd)
-{
-  int np[3];
-  mrc_domain_get_nr_procs(mhd->domain, np);
-  struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
-  ggcm_mhd_set_domain_params_F77(&info.ldims[0], &info.ldims[1], &info.ldims[2],
-				 &np[0], &np[1], &np[2]);
-}
-
-void
-ggcm_mhd_setup_subdomain_f(struct ggcm_mhd *mhd)
-{
-  ggcm_mhd_setup_subdomain_F77();
-}
 
 // ----------------------------------------------------------------------
 // ggcm_mhd methods
@@ -148,13 +93,6 @@ ggcm_mhd_set_state(struct ggcm_mhd *mhd)
 static void
 _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 {
-  // set Fortran common block params
-  ggcm_set_f(mhd);
-
-  ggcm_mhd_set_f(mhd);
-  ggcm_mhd_set_norms_f(mhd);
-  ggcm_mhd_set_state(mhd);
-
   ggcm_mhd_read_member_objs(mhd, io);
 
   // domain params
@@ -167,10 +105,6 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
     mhd->img[d] = info.ldims[d] + 2 * BND;
   }
 
-  // setup domain/subdomain params in Fortran
-  ggcm_mhd_set_domain_params_f(mhd);
-  ggcm_mhd_setup_subdomain_f(mhd);
-
   assert(!_mhd);
   _mhd = mhd;
 }
@@ -178,11 +112,6 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
 static void
 _ggcm_mhd_setup(struct ggcm_mhd *mhd)
 {
-  // set Fortran common block params
-  ggcm_set_f(mhd);
-  ggcm_mhd_set_f(mhd);
-  ggcm_mhd_set_norms_f(mhd);
-
   ggcm_mhd_setup_member_objs(mhd);
 
   struct mrc_patch_info info;
@@ -193,10 +122,6 @@ _ggcm_mhd_setup(struct ggcm_mhd *mhd)
     // local domain size incl ghost points
     mhd->img[d] = info.ldims[d] + 2 * BND;
   }
-
-  // setup domain/subdomain params in Fortran
-  ggcm_mhd_set_domain_params_f(mhd);
-  ggcm_mhd_setup_subdomain_f(mhd);
 }
 
 void
@@ -227,10 +152,6 @@ ggcm_mhd_push(struct ggcm_mhd *mhd, real *dtn,
   prof_start(PR);
   ops->push(mhd, dtn, do_nwst, do_iono, do_rcm);
   prof_stop(PR);
-
-#ifndef GNX
-  ggcm_profile_print(mhd);
-#endif
 }
 
 void
