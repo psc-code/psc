@@ -7,6 +7,7 @@ libmhd_la_SOURCES = \
 	ggcm_mhd.c \
 	\
 	ggcm_mhd_bnd.c \
+	ggcm_mhd_bnd_none.c \
 	\
 	ggcm_mhd_commu.c \
 	\

@@ -27,8 +27,6 @@ ggcm_mhd_bnd_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m, float bntim)
 static void
 ggcm_mhd_bnd_init()
 {
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_fortran);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_c);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_ops_none);
 }
 

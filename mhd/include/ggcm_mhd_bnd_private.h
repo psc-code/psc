@@ -15,8 +15,6 @@ struct ggcm_mhd_bnd_ops {
 };
 
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_none;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_fortran;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_ops_c;
 
 #define ggcm_mhd_bnd_ops(bnd) ((struct ggcm_mhd_bnd_ops *)((bnd)->obj.ops))
 
