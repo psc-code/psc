@@ -17,8 +17,6 @@
 
 #define ggcm_mhd_ops(mhd) ((struct ggcm_mhd_ops *) mhd->obj.ops)
 
-struct ggcm_mhd *_mhd;
-
 // ----------------------------------------------------------------------
 // ggcm_mhd methods
 
@@ -39,16 +37,11 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_bnd_set_param_obj(mhd->bnd, "mhd", mhd);
   ggcm_mhd_ic_set_param_obj(mhd->ic, "mhd", mhd);
   ggcm_mhd_flds_set_param_obj(mhd->flds_base, "mhd", mhd);
-
-  assert(!_mhd);
-  _mhd = mhd;
 }
 
 static void
 _ggcm_mhd_destroy(struct ggcm_mhd *mhd)
 {
-  assert(_mhd == mhd);
-  _mhd = NULL;
 }
 
 // ----------------------------------------------------------------------
@@ -96,9 +89,6 @@ _ggcm_mhd_read(struct ggcm_mhd *mhd, struct mrc_io *io)
     // local domain size incl ghost points
     mhd->img[d] = info.ldims[d] + 2 * BND;
   }
-
-  assert(!_mhd);
-  _mhd = mhd;
 }
 
 static void
