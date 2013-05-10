@@ -3,6 +3,7 @@
 
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_crds.h"
+#include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_step.h"
 #include "ggcm_mhd_commu.h"
 #include "ggcm_mhd_diag.h"
@@ -30,7 +31,7 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int3(mhd->domain, "lm", (int[3]) { GNX, GNY, GNZ });
 #endif
 
-  ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
+  ggcm_mhd_crds_set_param_obj(mhd->crds, "mhd", mhd);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_commu_set_param_obj(mhd->commu, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
@@ -196,14 +197,15 @@ static struct param ggcm_mhd_descr[] = {
   { "timla"           , VAR(timla)           , MRC_VAR_FLOAT         },
   { "dacttime"        , VAR(dacttime)        , MRC_VAR_DOUBLE        },
 
-  { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)      },
-  { "flds_base"       , VAR(flds_base)       , MRC_VAR_OBJ(ggcm_mhd_flds)   },
-  { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)   },
-  { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)   },
-  { "commu"           , VAR(commu)           , MRC_VAR_OBJ(ggcm_mhd_commu)  },
-  { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)   },
-  { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)    },
-  { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)     },
+  { "domain"          , VAR(domain)          , MRC_VAR_OBJ(mrc_domain)        },
+  { "flds_base"       , VAR(flds_base)       , MRC_VAR_OBJ(ggcm_mhd_flds)     },
+  { "crds_gen"        , VAR(crds_gen)        , MRC_VAR_OBJ(ggcm_mhd_crds_gen) },
+  { "crds"            , VAR(crds)            , MRC_VAR_OBJ(ggcm_mhd_crds)     },
+  { "step"            , VAR(step)            , MRC_VAR_OBJ(ggcm_mhd_step)     },
+  { "commu"           , VAR(commu)           , MRC_VAR_OBJ(ggcm_mhd_commu)    },
+  { "diag"            , VAR(diag)            , MRC_VAR_OBJ(ggcm_mhd_diag)     },
+  { "bnd"             , VAR(bnd)             , MRC_VAR_OBJ(ggcm_mhd_bnd)      },
+  { "ic"              , VAR(ic)              , MRC_VAR_OBJ(ggcm_mhd_ic)       },
 
   {},
 };
