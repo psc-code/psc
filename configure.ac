@@ -114,6 +114,7 @@ AC_CONFIG_FILES([Makefile
 		 mhd/Makefile
 		 mhd/include/Makefile
 		 mhd/src/Makefile
+		 mhd/tests/Makefile
 		 tests/test_ddc_0.sh
 		 tests/test_mrc_ddc_1.sh
 		 tests/test_io_0.sh
