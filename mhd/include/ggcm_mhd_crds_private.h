@@ -14,4 +14,6 @@ struct ggcm_mhd_crds_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_crds);
 };
 
+extern struct ggcm_mhd_crds_ops ggcm_mhd_crds_c_ops;
+
 #endif

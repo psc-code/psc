@@ -56,6 +56,20 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
       mrc_f1_set_comp_name(crds->f1[d], m, crdname[m]);
     }
   }
+
+  // set up values for Fortran coordinate arrays
+  assert(crds->mhd);
+  ggcm_mhd_crds_gen_run(crds->mhd->crds_gen, crds);
+
+  // set up mrc_crds
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(crds->mhd->domain, 0, &info);
+
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->mhd->domain);
+  mrc_crds_set_values(mrc_crds,
+		      ggcm_mhd_crds_get_crd(crds, 0, FX1), info.ldims[0],
+		      ggcm_mhd_crds_get_crd(crds, 1, FX1), info.ldims[1],
+		      ggcm_mhd_crds_get_crd(crds, 2, FX1), info.ldims[2]);
 }
 
 // ----------------------------------------------------------------------
@@ -106,6 +120,7 @@ ggcm_mhd_crds_get_crd(struct ggcm_mhd_crds *crds, int d, int m)
 static void
 ggcm_mhd_crds_init()
 {
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_crds, &ggcm_mhd_crds_c_ops);
 }
 
 // ----------------------------------------------------------------------
