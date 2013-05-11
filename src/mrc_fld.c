@@ -115,11 +115,14 @@ _mrc_f1_destroy(struct mrc_f1 *f1)
   if (!f1->with_array) {
     free(f1->arr);
   }
-  for (int m = 0; m < f1->nr_comp; m++) {
-    free(f1->_comp_name[m]);
-  }
-  free(f1->_comp_name);
   f1->arr = NULL;
+
+  if (f1->_comp_name) {
+    for (int m = 0; m < f1->nr_comp; m++) {
+      free(f1->_comp_name[m]);
+    }
+    free(f1->_comp_name);
+  }
 }
 
 static void
