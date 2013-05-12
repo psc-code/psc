@@ -128,8 +128,9 @@ ggcm_mhd_crds_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_crds, x)
 static struct param ggcm_mhd_crds_descr[] = {
-  { "domain"          , VAR(domain)         , PARAM_OBJ(mrc_domain)        },
-  { "crds_gen"        , VAR(crds_gen)       , PARAM_OBJ(ggcm_mhd_crds_gen) },
+  { "domain"          , VAR(domain)         , PARAM_OBJ(mrc_domain)          },
+
+  { "crds_gen"        , VAR(crds_gen)       , MRC_VAR_OBJ(ggcm_mhd_crds_gen) },
   {},
 };
 #undef VAR
