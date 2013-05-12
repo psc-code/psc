@@ -58,14 +58,14 @@ _ggcm_mhd_crds_setup(struct ggcm_mhd_crds *crds)
   }
 
   // set up values for Fortran coordinate arrays
-  assert(crds->mhd);
-  ggcm_mhd_crds_gen_run(crds->mhd->crds_gen, crds);
+  assert(crds->crds_gen);
+  ggcm_mhd_crds_gen_run(crds->crds_gen, crds);
 
   // set up mrc_crds
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->mhd->domain, 0, &info);
+  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
 
-  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->mhd->domain);
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
   mrc_crds_set_values(mrc_crds,
 		      ggcm_mhd_crds_get_crd(crds, 0, FX1), info.ldims[0],
 		      ggcm_mhd_crds_get_crd(crds, 1, FX1), info.ldims[1],
@@ -128,7 +128,8 @@ ggcm_mhd_crds_init()
 
 #define VAR(x) (void *)offsetof(struct ggcm_mhd_crds, x)
 static struct param ggcm_mhd_crds_descr[] = {
-  { "mhd"             , VAR(mhd)             , PARAM_OBJ(ggcm_mhd)      },
+  { "domain"          , VAR(domain)         , PARAM_OBJ(mrc_domain)        },
+  { "crds_gen"        , VAR(crds_gen)       , PARAM_OBJ(ggcm_mhd_crds_gen) },
   {},
 };
 #undef VAR

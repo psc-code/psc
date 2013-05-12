@@ -6,7 +6,8 @@
 
 struct ggcm_mhd_crds {
   struct mrc_obj obj;
-  struct ggcm_mhd *mhd;
+  struct ggcm_mhd_crds_gen *crds_gen;
+  struct mrc_domain *domain;
   struct mrc_f1 *f1[3];
 };
 

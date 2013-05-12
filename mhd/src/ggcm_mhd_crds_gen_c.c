@@ -22,14 +22,14 @@ ggcm_mhd_crds_gen_c_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crd
   MPI_Comm comm = ggcm_mhd_crds_gen_comm(gen);
 
   int gdims[3];
-  mrc_domain_get_global_dims(crds->mhd->domain, gdims);
+  mrc_domain_get_global_dims(crds->domain, gdims);
 
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->mhd->domain, 0, &info);
+  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
   int *ldims = info.ldims;
 
   float xl[3], xh[3];
-  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->mhd->domain);
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
   mrc_crds_get_param_float3(mrc_crds, "l", xl);
   mrc_crds_get_param_float3(mrc_crds, "h", xh);
 

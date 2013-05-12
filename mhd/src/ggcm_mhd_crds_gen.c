@@ -22,7 +22,7 @@ ggcm_mhd_crds_gen_run_aux_default(struct ggcm_mhd_crds_gen *gen,
 				  struct ggcm_mhd_crds *crds)
 {
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->mhd->domain, 0, &info);
+  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
   int *im = info.ldims;
 
   float *fxx1 = ggcm_mhd_crds_get_crd(crds, 0, FX1);

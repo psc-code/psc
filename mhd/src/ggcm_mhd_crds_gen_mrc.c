@@ -18,8 +18,8 @@ static void
 ggcm_mhd_crds_gen_mrc_run(struct ggcm_mhd_crds_gen *gen, struct ggcm_mhd_crds *crds)
 {
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(crds->mhd->domain, 0, &info);
-  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->mhd->domain);
+  mrc_domain_get_local_patch_info(crds->domain, 0, &info);
+  struct mrc_crds *mrc_crds = mrc_domain_get_crds(crds->domain);
   int *ldims = info.ldims;
 
   float *fxx1 = ggcm_mhd_crds_get_crd(crds, 0, FX1);

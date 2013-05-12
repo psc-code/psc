@@ -31,7 +31,8 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   mrc_domain_set_param_int3(mhd->domain, "lm", (int[3]) { GNX, GNY, GNZ });
 #endif
 
-  ggcm_mhd_crds_set_param_obj(mhd->crds, "mhd", mhd);
+  ggcm_mhd_crds_set_param_obj(mhd->crds, "domain", mhd->domain);
+  ggcm_mhd_crds_set_param_obj(mhd->crds, "crds_gen", mhd->crds_gen);
   ggcm_mhd_step_set_param_obj(mhd->step, "mhd", mhd);
   ggcm_mhd_commu_set_param_obj(mhd->commu, "mhd", mhd);
   ggcm_mhd_diag_set_param_obj(mhd->diag, "mhd", mhd);
