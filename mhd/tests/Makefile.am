@@ -6,14 +6,14 @@ check_PROGRAMS = \
 	test_ggcm_mhd \
 	mhd2
 
-mhd2_SOURCES = \
-	mhd2.c \
-	ggcm_mhd_bnd_conducting.c \
+noinst_LTLIBRARIES = libmhdtbd.la
+
+libmhdtbd_la_SOURCES = \
 	ggcm_mhd_ic_fadeev.c \
 	ggcm_mhd_diag_c.c \
 	ggcm_diag_lib.c
 
-LDADD = ../src/libmhd.la ../../src/libmrc.la
+LDADD = libmhdtbd.la ../src/libmhd.la ../../src/libmrc.la
 
 TESTS = \
 	test_ggcm_mhd_crds \

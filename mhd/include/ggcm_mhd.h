@@ -27,4 +27,8 @@ void ggcm_mhd_set_state(struct ggcm_mhd *mhd);
 
 int ggcm_mhd_ntot(struct ggcm_mhd *mhd);
 
+// ----------------------------------------------------------------------
+
+void ggcm_mhd_register();
+
 #endif

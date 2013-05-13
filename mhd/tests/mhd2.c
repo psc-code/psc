@@ -1,8 +1,6 @@
 
 //#define BOUNDS_CHECK
 
-#include "mhd2.h"
-
 #include "ggcm_mhd_defs.h"
 #include "ggcm_mhd_private.h"
 #include "ggcm_mhd_ic_private.h"
@@ -21,6 +19,7 @@
 #include <mrc_ddc.h>
 #include <mrctest.h>
 #include <mrc_io.h> 
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -312,48 +311,21 @@ diag_write(void *_mhd, float time, struct mrc_obj *_x, FILE *file)
 
 // ======================================================================
 
-extern struct mrc_crds_ops mrc_crds_two_gaussian_ops;
-extern struct mrc_crds_ops mrc_crds_gaussian_ops;
-extern struct mrc_crds_ops mrc_crds_gaussian_2D_ops;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_ops;
 extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;
+extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
+extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_ops;
 
 int
 main(int argc, char **argv)
 {
   MPI_Init(&argc, &argv);
   libmrc_params_init(argc, argv);
+  ggcm_mhd_register();
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_cweno_ops);  
-
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_two_gaussian_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_gaussian_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_crds, &mrc_crds_gaussian_2D_ops);
-
-  mrc_class_register_subclass(&mrc_class_mrc_ts_monitor, &mrc_ts_monitor_ggcm_ops);
-
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_fadeev_ops);  
-#if 0
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_whistler_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_bw_ops); 
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ot_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_otzi_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_hydroblast_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mhdblast_ops);    
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_harris_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_kh_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ici_ops); 
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_sound_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_alfven_ops);
- 
-  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ggcm_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_harris_ops);
-#endif
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_ops);
-
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);
 
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "cweno");
