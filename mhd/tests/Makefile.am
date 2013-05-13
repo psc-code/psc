@@ -3,7 +3,22 @@ AM_CPPFLAGS = -I$(srcdir)/../../include -I$(srcdir)/../include
 
 check_PROGRAMS = \
 	test_ggcm_mhd_crds \
-	test_ggcm_mhd
+	test_ggcm_mhd \
+	mhd2
+
+mhd2_SOURCES = \
+	mhd2.c \
+	ggcm_mhd_step_cweno.c \
+	ggcm_mhd_bnd_conducting.c \
+	ggcm_mhd_ic_fadeev.c \
+	ggcm_mhd_diag_c.c \
+	ggcm_mhd_diag_item.c \
+	ggcm_mhd_diag_item_state.c \
+	ggcm_mhd_diag_item_divb.c \
+	calc_divb.c \
+	ggcm_diag_lib.c \
+	mrc_ts_monitor_ggcm.c \
+	mrc_crds_gaussian.c
 
 LDADD = ../src/libmhd.la ../../src/libmrc.la
 
