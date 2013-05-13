@@ -20,11 +20,16 @@ libmhd_la_SOURCES = \
 	ggcm_mhd_crds_gen_mrc.c \
 	ggcm_mhd_crds_gen_c.c \
 	\
+	ggcm_mhd_diag.c \
+	\
+	ggcm_mhd_diag_item.c \
+	ggcm_mhd_diag_item_state.c \
+	ggcm_mhd_diag_item_divb.c \
+	calc_divb.c \
+	\
 	mrc_crds_gen.c \
 	mrc_crds_gen_ggcm_x.c \
 	mrc_crds_gen_ggcm_yz.c \
-	\
-	ggcm_mhd_diag.c \
 	\
 	ggcm_mhd_flds.c \
 	ggcm_mhd_flds_c.c \

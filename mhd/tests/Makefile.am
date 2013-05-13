@@ -12,10 +12,6 @@ mhd2_SOURCES = \
 	ggcm_mhd_bnd_conducting.c \
 	ggcm_mhd_ic_fadeev.c \
 	ggcm_mhd_diag_c.c \
-	ggcm_mhd_diag_item.c \
-	ggcm_mhd_diag_item_state.c \
-	ggcm_mhd_diag_item_divb.c \
-	calc_divb.c \
 	ggcm_diag_lib.c \
 	mrc_ts_monitor_ggcm.c \
 	mrc_crds_gaussian.c
