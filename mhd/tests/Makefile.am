@@ -8,13 +8,10 @@ check_PROGRAMS = \
 
 mhd2_SOURCES = \
 	mhd2.c \
-	ggcm_mhd_step_cweno.c \
 	ggcm_mhd_bnd_conducting.c \
 	ggcm_mhd_ic_fadeev.c \
 	ggcm_mhd_diag_c.c \
-	ggcm_diag_lib.c \
-	mrc_ts_monitor_ggcm.c \
-	mrc_crds_gaussian.c
+	ggcm_diag_lib.c
 
 LDADD = ../src/libmhd.la ../../src/libmrc.la
 
