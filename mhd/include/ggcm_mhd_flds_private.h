@@ -24,6 +24,8 @@ typedef void (*ggcm_mhd_flds_copy_from_func_t)(struct ggcm_mhd_flds *,
 
 #define ggcm_mhd_flds_ops(flds) ((struct ggcm_mhd_flds_ops *)(flds)->obj.ops)
 
+extern struct ggcm_mhd_flds_ops ggcm_mhd_flds_ops_c;
+
 // ======================================================================
 // this is the subclass struct for both aos and naos
 
