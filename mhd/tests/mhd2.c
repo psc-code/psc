@@ -8,6 +8,7 @@
 #include "ggcm_mhd_crds_gen.h"
 #include "ggcm_mhd_bnd.h"
 #include "ggcm_mhd_diag.h"
+#include "ggcm_mhd_ic.h"
 
 #include <mrc_ts.h>
 #include <mrc_ts_monitor.h>
@@ -106,6 +107,23 @@ extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;
 extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
 extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_ops;
 
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip2_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip3_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_whistler_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_otzi_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_ot_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_fadeev_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_bw_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_hydroblast_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mhdblast_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_ici_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_harris;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_kh_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_wave_sound_ops;
+extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_wave_alfven_ops;
+
 int
 main(int argc, char **argv)
 {
@@ -118,6 +136,18 @@ main(int argc, char **argv)
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_ops);
 
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_fadeev_ops);  
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_whistler_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_bw_ops); 
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ot_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_otzi_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_hydroblast_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_mhdblast_ops);    
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_kh_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_ici_ops); 
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_sound_ops);
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_wave_alfven_ops);
+ 
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
   ggcm_mhd_set_type(mhd, "cweno");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
