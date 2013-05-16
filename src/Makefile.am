@@ -19,6 +19,7 @@ libmrc_la_SOURCES = \
 	mrc_domain_lib.c \
 	mrc_crds.c \
 	mrc_fld.c \
+	mrc_fld_old.c \
 	mrc_params.c \
 	mrc_ddc.c \
 	mrc_ddc_simple.c \
