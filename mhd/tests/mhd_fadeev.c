@@ -130,13 +130,13 @@ struct ggcm_mhd_ic_ops ggcm_mhd_ic_fadeev_ops = {
 
 
 // ======================================================================
-// ggcm_mhd class "cweno"
+// ggcm_mhd class "fadeev"
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_cweno_create
+// ggcm_mhd_fadeev_create
 
 static void
-ggcm_mhd_cweno_create(struct ggcm_mhd *mhd)
+ggcm_mhd_fadeev_create(struct ggcm_mhd *mhd)
 {
   mhd->par.rrnorm = 1.f;
   mhd->par.ppnorm = 1.f;
@@ -172,9 +172,9 @@ ggcm_mhd_cweno_create(struct ggcm_mhd *mhd)
   ggcm_mhd_set_param_float(mhd, "speedlimit", 1e9);
 }
 
-static struct ggcm_mhd_ops ggcm_mhd_cweno_ops = {
-  .name             = "cweno",
-  .create           = ggcm_mhd_cweno_create,
+static struct ggcm_mhd_ops ggcm_mhd_fadeev_ops = {
+  .name             = "fadeev",
+  .create           = ggcm_mhd_fadeev_create,
 };
 
 // ======================================================================
@@ -188,13 +188,13 @@ main(int argc, char **argv)
   libmrc_params_init(argc, argv);
   ggcm_mhd_register();
 
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_cweno_ops);  
+  mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_fadeev_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_fadeev_ops);  
  
   struct ggcm_mhd *mhd = ggcm_mhd_create(MPI_COMM_WORLD);
-  ggcm_mhd_set_type(mhd, "cweno");
+  ggcm_mhd_set_type(mhd, "fadeev");
   ggcm_mhd_step_set_type(mhd->step, "cweno");
   ggcm_mhd_flds_set_type(mhd->flds_base, "c");
   ggcm_mhd_set_from_options(mhd);
