@@ -223,6 +223,26 @@ mrc_domain_f1_create(struct mrc_domain *domain)
 }
 
 // ======================================================================
+// mrc_domain_fld_create
+
+struct mrc_fld *
+mrc_domain_fld_create(struct mrc_domain *domain, int sw, int nr_comp)
+{
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
+  assert(nr_patches == 1);
+  struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
+  int dims[4] = { patches[0].ldims[0], patches[0].ldims[1], patches[0].ldims[2],
+		  nr_comp };
+  int sw_arr[4] = { sw, sw, sw, 0 };
+  mrc_fld_set_param_int_array(fld, "dims", 4, dims);
+  mrc_fld_set_param_int_array(fld, "sw", 4, sw_arr);
+  fld->_domain = domain;
+  return fld;
+}
+
+// ======================================================================
+// mrc_domain_f3_create
 
 struct mrc_f3 *
 mrc_domain_f3_create(struct mrc_domain *domain, int bnd)

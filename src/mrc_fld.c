@@ -24,6 +24,9 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   fld->_arr = NULL;
 }
 
+// ----------------------------------------------------------------------
+// mrc_fld_setup
+
 static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
@@ -49,6 +52,9 @@ _mrc_fld_setup(struct mrc_fld *fld)
   }
 }
 
+// ----------------------------------------------------------------------
+// mrc_fld_set_array
+
 void
 mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 {
@@ -57,11 +63,17 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
   fld->_with_array = true;
 }
 
+// ----------------------------------------------------------------------
+// mrc_fld_write
+
 static void
 _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 {
   mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
 }
+
+// ----------------------------------------------------------------------
+// mrc_fld_read
 
 static void
 _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)

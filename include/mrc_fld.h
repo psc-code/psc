@@ -73,6 +73,7 @@ struct mrc_fld {
   void *_arr;
   int _len;
   bool _with_array;
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);

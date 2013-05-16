@@ -92,6 +92,37 @@ test_56(int sw)
 
 
 // ----------------------------------------------------------------------
+// test_78
+//
+// field on a mrc_domain
+
+static void
+test_78(int sw)
+{
+  struct mrc_domain *domain = mrc_domain_create(MPI_COMM_WORLD);
+  mrc_domain_set_type(domain, "simple");
+  mrc_domain_set_from_options(domain);
+  mrc_domain_setup(domain);
+  mrc_domain_view(domain);
+  
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, 2);
+  mrc_fld_set_from_options(fld);
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    MRC_S4(fld, ix,iy,iz,1) = ix * 10000 + iy * 100 + iz;
+  } mrc_fld_foreach_end;
+
+  mrc_fld_foreach(fld, ix,iy,iz, sw, sw) {
+    assert(MRC_S4(fld, ix,iy,iz,1) == ix * 10000 + iy * 100 + iz);
+  } mrc_fld_foreach_end;
+
+  mrc_fld_destroy(fld);
+}
+
+
+// ----------------------------------------------------------------------
 // main
 
 int
@@ -110,6 +141,8 @@ main(int argc, char **argv)
   case 4: test_34(1); break;
   case 5: test_56(0); break;
   case 6: test_56(1); break;
+  case 7: test_78(0); break;
+  case 8: test_78(1); break;
   default: assert(0);
   }
 
