@@ -44,29 +44,26 @@ static void
 ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_fadeev *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_fadeev);
-  struct ggcm_mhd *gmhd = ic->mhd;
-  struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(gmhd->flds_base);
-  struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
-  struct mrc_f3 *fld_psi = mrc_domain_f3_create(gmhd->domain, SW_2);
+  struct ggcm_mhd *mhd = ic->mhd;
+  struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(mhd->flds_base);
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  ggcm_mhd_bnd_set_type(gmhd->bnd, "conducting");
-  //mrc_domain_set_param_int(gmhd->domain, "bcx", &bc[0]
-  mrc_domain_set_param_int(gmhd->domain, "bcy", BC_NONE);	   
+  struct mrc_f3 *fld_psi = mrc_domain_f3_create(mhd->domain, SW_2);
   mrc_f3_setup(fld_psi);
 
   float xl[3], xh[3], L[3], r[3];
   mrc_crds_get_xl_xh(crds, xl, xh);
-  for(int i=0; i<3; i++){
+  for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
   
-  float gamma = gmhd->par.gamm;
-  float Bo=sub->Bo;
-  float pert=sub->pert;
-  float Boz=sub->Boz;
-  float eps=sub->eps;
-  float lam=(sub->lambda)*L[0] ;  // defines island size   
-  float kk= (2.*M_PI) / lam ;      
+  float gamma = mhd->par.gamm;
+  float Bo = sub->Bo;
+  float pert = sub->pert;
+  float Boz = sub->Boz;
+  float eps = sub->eps;
+  float lam = (sub->lambda)*L[0] ;  // defines island size   
+  float kk = (2.*M_PI) / lam ;      
 
   mrc_f3_foreach(f3, ix, iy, iz, 2, 2) {
     r[0] = .5*(MRC_CRDX(crds, ix) + MRC_CRDX(crds, ix-1));
@@ -75,8 +72,8 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
     MRC_F3(fld_psi, 0, ix,iy,iz) = -(Bo / kk)*( log(cosh(kk*r[1]) + eps*cos(kk*r[0])));      
   } mrc_f3_foreach_end;
 
-  float *bd2x = ggcm_mhd_crds_get_crd(gmhd->crds, 0, BD2);
-  float *bd2y = ggcm_mhd_crds_get_crd(gmhd->crds, 1, BD2);
+  float *bd2x = ggcm_mhd_crds_get_crd(mhd->crds, 0, BD2);
+  float *bd2y = ggcm_mhd_crds_get_crd(mhd->crds, 1, BD2);
 
   mrc_f3_foreach(f3, ix, iy, iz, 1, 1) {
     // FIXME! the staggering for B is okay, but fld_psi and other stuff below needs to be
@@ -150,10 +147,10 @@ ggcm_mhd_cweno_create(struct ggcm_mhd *mhd)
   mhd->par.resnorm = 1.f;
   mhd->par.diffco = 0.f;
 
-  ggcm_mhd_bnd_set_type(mhd->bnd, "none");
+  ggcm_mhd_bnd_set_type(mhd->bnd, "conducting");
 
   mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
-  mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);
+  mrc_domain_set_param_int(mhd->domain, "bcy", BC_NONE);	   
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   /* set defaults for coord arrays */
