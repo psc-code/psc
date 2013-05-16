@@ -221,3 +221,19 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
   .read             = _ggcm_mhd_read,
 };
 
+// ----------------------------------------------------------------------
+// ts_ggcm_mhd_step_calc_rhs
+//
+// wrapper to be used in a mrc_ts object
+
+void
+ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_fld)
+{
+  struct ggcm_mhd *mhd = ctx;
+  struct mrc_f3 *rhs = (struct mrc_f3 *) _rhs;
+  struct mrc_f3 *fld = (struct mrc_f3 *) _fld;
+  
+  mhd->time = time;
+  ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);
+}
+

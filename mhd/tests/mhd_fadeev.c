@@ -67,20 +67,6 @@ static struct ggcm_mhd_ops ggcm_mhd_cweno_ops = {
   .create           = ggcm_mhd_cweno_create,
 };
 
-
-// ======================================================================
-  
-static void
-calc_mhd_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_fld)
-{
-  struct ggcm_mhd *mhd = ctx;
-  struct mrc_f3 *rhs = (struct mrc_f3 *) _rhs;
-  struct mrc_f3 *fld = (struct mrc_f3 *) _fld;
-  
-  mhd->time = time;
-  ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);
-}
-
 // ======================================================================
 
 extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
@@ -123,7 +109,7 @@ main(int argc, char **argv)
 
   mrc_ts_set_dt(ts, 1e-6);
   mrc_ts_set_solution(ts, mrc_f3_to_mrc_obj(ggcm_mhd_flds_get_mrc_f3(mhd->flds_base)));
-  mrc_ts_set_rhs_function(ts, calc_mhd_rhs, mhd);
+  mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);
   mrc_ts_setup(ts);
