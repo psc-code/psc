@@ -103,9 +103,7 @@ diag_write(void *_mhd, float time, struct mrc_obj *_x, FILE *file)
 
 // ======================================================================
 
-extern struct ggcm_mhd_step_ops ggcm_mhd_step_cweno_ops;
 extern struct ggcm_mhd_diag_ops ggcm_mhd_diag_c_ops;
-extern struct ggcm_mhd_bnd_ops ggcm_mhd_bnd_conducting_ops;
 
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip_ops;
 extern struct ggcm_mhd_ic_ops ggcm_mhd_ic_mirdip2_ops;
@@ -132,9 +130,7 @@ main(int argc, char **argv)
   ggcm_mhd_register();
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd, &ggcm_mhd_cweno_ops);  
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_step, &ggcm_mhd_step_cweno_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_diag, &ggcm_mhd_diag_c_ops);
-  mrc_class_register_subclass(&mrc_class_ggcm_mhd_bnd, &ggcm_mhd_bnd_conducting_ops);
 
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_fadeev_ops);  
   mrc_class_register_subclass(&mrc_class_ggcm_mhd_ic, &ggcm_mhd_ic_whistler_ops);
