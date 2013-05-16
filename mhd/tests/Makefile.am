@@ -1,6 +1,9 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../../include -I$(srcdir)/../include
 
+bin_PROGRAMS = \
+	mhd_fadeev
+
 check_PROGRAMS = \
 	test_ggcm_mhd_crds \
 	test_ggcm_mhd \
