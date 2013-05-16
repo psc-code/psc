@@ -279,25 +279,10 @@ ggcm_mhd_diag_c_run(struct ggcm_mhd_diag *diag)
   struct ggcm_mhd *mhd = diag->mhd;
   int itdia3d, itdia2d;
 
-// FIXME, that's not a pretty way of figuring out whether we're being built
-// as part of openggcm or standalone
-#ifndef GNX
-  float ttdia3d, ttdia2d;
-  bool output3d = isdiag_3d(&ttdia3d);
-  bool output2d = isdiag_2d(&ttdia2d);
-  if (!(output2d || output3d))
-    return;
-
-  itdia3d = ttdia3d;
-  itdia2d = ttdia2d;
-
-  ggcm_mhd_get_state(mhd); // FIXME, to update time etc to latest
-#else
   bool output3d = true;
   bool output2d = false;
   itdia3d = mhd->istep;
   itdia2d = mhd->istep;
-#endif
 
   ggcm_mhd_fill_ghosts(mhd, _RR1, mhd->time);
 
