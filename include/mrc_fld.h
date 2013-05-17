@@ -176,7 +176,7 @@ struct mrc_f3 {
   int _off[3];
   int _dims[3];
   int nr_comp;
-  int len;
+  int _len;
   bool with_array;
   struct mrc_domain *domain; //< optional, if allocated through mrc_domain
   int _sw; //< # of ghost points

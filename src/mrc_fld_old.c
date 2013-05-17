@@ -340,10 +340,10 @@ _mrc_f3_setup(struct mrc_f3 *f3)
     f3->_ghost_offs[d] = f3->_off[d] - f3->_sw;
     f3->_ghost_dims[d] = f3->_dims[d] + 2 * f3->_sw;
   }
-  f3->len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
+  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
 
   if (!f3->_arr) {
-    f3->_arr = calloc(f3->len, sizeof(*f3->_arr));
+    f3->_arr = calloc(f3->_len, sizeof(*f3->_arr));
     f3->with_array = false;
   } else {
     f3->with_array = true;
@@ -428,13 +428,13 @@ mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
 {
   assert(mrc_f3_same_shape(f3_to, f3_from));
 
-  memcpy(f3_to->_arr, f3_from->_arr, f3_to->len * sizeof(float));
+  memcpy(f3_to->_arr, f3_from->_arr, f3_to->_len * sizeof(float));
 }
 
 void
 mrc_f3_set(struct mrc_f3 *f3, float val)
 {
-  for (int i = 0; i < f3->len; i++) {
+  for (int i = 0; i < f3->_len; i++) {
     f3->_arr[i] = val;
   }
 }

@@ -1545,7 +1545,7 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
       dim[d] = patches[0].ldims[d];
     }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
-    MPI_Send(send_fld->_arr, send_fld->len, MPI_FLOAT, 0, TAG_DATA, io->obj.comm);
+    MPI_Send(send_fld->_arr, send_fld->_len, MPI_FLOAT, 0, TAG_DATA, io->obj.comm);
   } else { // io->rank == 0
     for (int n = 0; n < io->size; n++) {
       struct mrc_f3 *recv_fld;
@@ -1562,7 +1562,7 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 	mrc_f3_set_param_int3(recv_fld, "off", off);
 	mrc_f3_set_param_int3(recv_fld, "dims", dim);
 	mrc_f3_setup(recv_fld);
-	MPI_Recv(recv_fld->_arr, recv_fld->len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
+	MPI_Recv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
 		 MPI_STATUS_IGNORE);
       }
       
