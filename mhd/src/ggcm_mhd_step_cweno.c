@@ -19,7 +19,7 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comp)
 { 
   struct mrc_f3 *f3 = mrc_domain_f3_create(mhd->domain, SW_2);
   mrc_f3_set_name(f3, name);
-  mrc_f3_set_nr_comps(f3, nr_comp);
+  mrc_f3_set_param_int(f3, "nr_comps", nr_comp);
   mrc_f3_setup(f3);
   return f3;
 }

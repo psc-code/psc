@@ -353,20 +353,6 @@ _mrc_f3_setup(struct mrc_f3 *f3)
 }
 
 void
-mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
-{
-  if (nr_comps == f3->nr_comp)
-    return;
-
-  for (int m = 0; m < f3->nr_comp; m++) {
-    free(f3->_comp_name[m]);
-  }
-  free(f3->_comp_name);
-  f3->nr_comp = nr_comps;
-  f3->_comp_name = calloc(nr_comps, sizeof(*f3->_comp_name));
-}
-
-void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
   assert(m < f3->nr_comp);
@@ -418,8 +404,8 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
   mrc_f3_set_param_int3(f3_new, "offs", f3->_offs.vals);
   mrc_f3_set_param_int3(f3_new, "dims", f3->_dims.vals);
-  mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int3(f3_new, "sw", f3->_sw.vals);
+  mrc_f3_set_param_int(f3_new, "nr_comps", f3->nr_comp);
   f3_new->_domain = f3->_domain;
   mrc_f3_setup(f3_new);
   return f3_new;
