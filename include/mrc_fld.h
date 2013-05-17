@@ -176,15 +176,15 @@ struct mrc_f3 {
   struct mrc_param_int_array _sw;
 
   // state
-  void *_arr;
   int _ghost_offs[3];
   int _ghost_dims[3];
-  //int _data_type;
-  //int _size_of_type;
-  int nr_comp;
+  int _data_type;
+  int _size_of_type;
+  void *_arr;
   int _len;
   bool _with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  int nr_comp;
   char **_comp_name;
 };
 

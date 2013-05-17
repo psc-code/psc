@@ -330,6 +330,8 @@ _mrc_f3_destroy(struct mrc_f3 *f3)
 static void
 _mrc_f3_create(struct mrc_f3 *f3)
 {
+  f3->_data_type = MRC_NT_FLOAT;
+  f3->_size_of_type = sizeof(float);
   f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
 }
 
