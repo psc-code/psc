@@ -185,6 +185,7 @@ struct mrc_f3 {
   bool _with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int nr_comp;
+  int _nr_allocated_comp_name;
   char **_comp_name;
 };
 

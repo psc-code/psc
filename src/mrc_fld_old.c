@@ -315,24 +315,24 @@ mrc_f2_free(struct mrc_f2 *f2)
 #define to_mrc_f3(o) container_of(o, struct mrc_f3, obj)
 
 static void
+_mrc_f3_create(struct mrc_f3 *f3)
+{
+  f3->_data_type = MRC_NT_FLOAT;
+  f3->_size_of_type = sizeof(float);
+}
+
+static void
 _mrc_f3_destroy(struct mrc_f3 *f3)
 {
   if (!f3->_with_array) {
     free(f3->_arr);
   }
-  for (int m = 0; m < f3->nr_comp; m++) {
+  f3->_arr = NULL;
+
+  for (int m = 0; m < f3->_nr_allocated_comp_name; m++) {
     free(f3->_comp_name[m]);
   }
   free(f3->_comp_name);
-  f3->_arr = NULL;
-}
-
-static void
-_mrc_f3_create(struct mrc_f3 *f3)
-{
-  f3->_data_type = MRC_NT_FLOAT;
-  f3->_size_of_type = sizeof(float);
-  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
 }
 
 static void
@@ -356,6 +356,14 @@ void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
   assert(m < f3->nr_comp);
+  if (f3->nr_comp > f3->_nr_allocated_comp_name) {
+    for (int i = 0; i < f3->_nr_allocated_comp_name; i++) {
+      free(f3->_comp_name[m]);
+    }
+    free(f3->_comp_name);
+    f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
+    f3->_nr_allocated_comp_name = f3->nr_comp;
+  }
   free(f3->_comp_name[m]);
   f3->_comp_name[m] = name ? strdup(name) : NULL;
 }
@@ -363,7 +371,7 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 const char *
 mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 {
-  assert(m < f3->nr_comp);
+  assert(m < f3->nr_comp && m < f3->_nr_allocated_comp_name);
   return f3->_comp_name[m];
 }
 
