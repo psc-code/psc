@@ -317,7 +317,7 @@ mrc_f2_free(struct mrc_f2 *f2)
 static void
 _mrc_f3_destroy(struct mrc_f3 *f3)
 {
-  if (!f3->with_array) {
+  if (!f3->_with_array) {
     free(f3->_arr);
   }
   for (int m = 0; m < f3->nr_comp; m++) {
@@ -344,9 +344,9 @@ _mrc_f3_setup(struct mrc_f3 *f3)
 
   if (!f3->_arr) {
     f3->_arr = calloc(f3->_len, sizeof(*f3->_arr));
-    f3->with_array = false;
+    f3->_with_array = false;
   } else {
-    f3->with_array = true;
+    f3->_with_array = true;
   }
 }
 
