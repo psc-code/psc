@@ -338,7 +338,7 @@ _mrc_f3_setup(struct mrc_f3 *f3)
 {
   for (int d = 0; d < 3; d++) {
     f3->_ghost_offs[d] = f3->_off[d] - f3->_sw;
-    f3->_ghost_dims[d] = f3->_dims[d] + 2 * f3->_sw;
+    f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw;
   }
   f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
 
@@ -395,7 +395,7 @@ mrc_f3_off(struct mrc_f3 *f3)
 const int *
 mrc_f3_dims(struct mrc_f3 *f3)
 {
-  return f3->_dims;
+  return f3->_dims.vals;
 }
 
 const int *
@@ -415,7 +415,7 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
   mrc_f3_set_param_int3(f3_new, "off", f3->_off);
-  mrc_f3_set_param_int3(f3_new, "dims", f3->_dims);
+  mrc_f3_set_param_int3(f3_new, "dims", f3->_dims.vals);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
   f3_new->_domain = f3->_domain;
@@ -522,7 +522,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
   for (int i = 0; mm[i] >= 0; i++) {
     struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
     mrc_f3_set_param_int3(fld1, "off", f3->_off);
-    mrc_f3_set_param_int3(fld1, "dims", f3->_dims);
+    mrc_f3_set_param_int3(fld1, "dims", f3->_dims.vals);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
     int *ib = f3->_ghost_offs;
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
@@ -541,7 +541,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
   { "off"             , VAR(_off)         , PARAM_INT3(0, 0, 0)    },
-  { "dims"            , VAR(_dims)        , PARAM_INT3(0, 0, 0)    },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(3, 0)  },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },
   {},

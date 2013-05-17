@@ -1255,8 +1255,8 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float s
 
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
-    xs = xdmf_spatial_create_3d(io, f3->_dims, -1, io->size);
-    hdf5_write_crds(io, f3->_dims, f3->_domain, f3->_sw);
+    xs = xdmf_spatial_create_3d(io, f3->_dims.vals, -1, io->size);
+    hdf5_write_crds(io, f3->_dims.vals, f3->_domain, f3->_sw);
   }
 
   for (int m = 0; m < f3->nr_comp; m++) {
