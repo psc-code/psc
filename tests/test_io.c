@@ -38,7 +38,7 @@ struct mrc_class_test_io_attrs mrc_class_test_io_attrs = {
 static void
 dump_field(struct mrc_f3 *fld, int rank_diagsrv)
 {
-  struct mrc_domain *domain = fld->domain;
+  struct mrc_domain *domain = fld->_domain;
   assert(domain);
 
   MPI_Comm comm = mrc_domain_comm(domain);

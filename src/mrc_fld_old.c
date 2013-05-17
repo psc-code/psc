@@ -418,7 +418,7 @@ mrc_f3_duplicate(struct mrc_f3 *f3)
   mrc_f3_set_param_int3(f3_new, "dims", f3->_dims);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
-  f3_new->domain = f3->domain;
+  f3_new->_domain = f3->_domain;
   mrc_f3_setup(f3_new);
   return f3_new;
 }
@@ -481,14 +481,14 @@ mrc_f3_norm(struct mrc_f3 *x)
 static void
 _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  f3->domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
+  f3->_domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
 
   // rely on domain rather than read params
   // since the domain may be different (# of procs) when
   // we're reading things back
   // basically, we should use mrc_domain_f3_create()
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(f3->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
   assert(nr_patches == 1);
   mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
   mrc_f3_set_param_int3(f3, "off", (int[3]) { 0, 0, 0 });
@@ -502,14 +502,14 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 static void
 _mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, f3, "domain", f3->domain);
+  mrc_io_write_ref(io, f3, "domain", f3->_domain);
   mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, 1.);
 }
 
 void
 mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
 {
-  mrc_io_write_ref(io, f3, "domain", f3->domain);
+  mrc_io_write_ref(io, f3, "domain", f3->_domain);
   mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, scale);
 }
 
@@ -528,7 +528,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
-    fld1->domain = f3->domain;
+    fld1->_domain = f3->_domain;
     mrc_f3_setup(fld1);
     mrc_f3_write(fld1, io);
     mrc_f3_destroy(fld1);

@@ -66,8 +66,8 @@ test_write_read(struct mrc_f3 *fld)
   mrc_io_destroy(io);
 
   mrctest_f3_compare(fld, fld2, 0.);
-  mrctest_crds_compare(mrc_domain_get_crds(fld->domain),
-		       mrc_domain_get_crds(fld2->domain));
+  mrctest_crds_compare(mrc_domain_get_crds(fld->_domain),
+		       mrc_domain_get_crds(fld2->_domain));
 
   mrc_f3_destroy(fld2);
 }

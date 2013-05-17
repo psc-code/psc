@@ -117,7 +117,7 @@ laguerre(int n, int alpha, float x)
 static void
 ini_one(struct mrc_f3 *f, struct sph_harm_params *par)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
   mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float x = MRC_CRDX(crds, ix), y = MRC_CRDY(crds, iy), z = MRC_CRDZ(crds, iz);
     float r = sqrt(x*x + y*y + z*z), th = acos(z/r), phi = atan2(y/r, x/r);
@@ -128,7 +128,7 @@ ini_one(struct mrc_f3 *f, struct sph_harm_params *par)
 static void
 ini_semi(struct mrc_f3 *f, struct sph_harm_params *par)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
   for (int l = 0; l < (par->l + 1) / 2; l++) {
     float c = pow(-1., l) * factorial(2*l) / pow(pow(2., l) * factorial(l), 2.) * (4*l+3.)/(2*l+2.);
     printf("l = %d c = %g c' = %g\n", 2*l + 1, c, c * sqrt(2. / (4*l + 3)));
@@ -158,7 +158,7 @@ ini_semi(struct mrc_f3 *f, struct sph_harm_params *par)
 static void
 ini_hydrogen(struct mrc_f3 *f, struct sph_harm_params *par)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
   mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float x = MRC_CRDX(crds, ix), y = MRC_CRDY(crds, iy), z = MRC_CRDZ(crds, iz);
     float r = sqrt(x*x + y*y + z*z), th = acos(z/r), phi = atan2(y/r, x/r);
@@ -170,7 +170,7 @@ ini_hydrogen(struct mrc_f3 *f, struct sph_harm_params *par)
 static void
 calc_grad(struct mrc_f3 *f)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
   mrc_f3_foreach(f, ix,iy,iz, -1, -1) {
     MRC_F3(f, 1, ix,iy,iz) = -
       (MRC_F3(f, 0, ix+1,iy,iz) - MRC_F3(f, 0, ix-1,iy,iz)) / 

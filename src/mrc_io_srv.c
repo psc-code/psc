@@ -179,10 +179,10 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 {
   struct diagc_combined_params *par = io->obj.subctx;
 
-  diagc_combined_send_domain_info(io, fld->domain);
+  diagc_combined_send_domain_info(io, fld->_domain);
 
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims;
   int nout = ldims[0] * ldims[1] * ldims[2];

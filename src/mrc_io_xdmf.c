@@ -925,7 +925,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, dims, -1, io->size);
-    hdf5_write_crds(io, dims, fld->domain, fld->_sw);
+    hdf5_write_crds(io, dims, fld->_domain, fld->_sw);
   }
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
@@ -1256,7 +1256,7 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float s
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, f3->_dims, -1, io->size);
-    hdf5_write_crds(io, f3->_dims, f3->domain, f3->_sw);
+    hdf5_write_crds(io, f3->_dims, f3->_domain, f3->_sw);
   }
 
   for (int m = 0; m < f3->nr_comp; m++) {
@@ -1470,7 +1470,7 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
 {
   int sw = gfld->_sw;
 
-  struct mrc_domain *gdomain = gfld->domain;
+  struct mrc_domain *gdomain = gfld->_domain;
   struct mrc_crds *gcrds = mrc_domain_get_crds(gdomain);
   if (io->rank != 0) {
     int iw[6], *ib = iw, *im = iw + 3;
@@ -1487,7 +1487,7 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
 	       TAG_CRDX + d, io->obj.comm);
     }
   } else { // io->rank == 0
-    struct mrc_domain *ldomain = lfld->domain;
+    struct mrc_domain *ldomain = lfld->_domain;
     struct mrc_crds *lcrds = mrc_domain_get_crds(ldomain);
     for (int n = 0; n < io->size; n++) {
       float *recv_crds[3];
@@ -1531,14 +1531,14 @@ static void
 communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 		struct mrc_f3 *lfld)
 {
-  struct mrc_f3 *send_fld = mrc_domain_f3_create(gfld->domain, SW_0);
+  struct mrc_f3 *send_fld = mrc_domain_f3_create(gfld->_domain, SW_0);
   mrc_f3_setup(send_fld);
   copy_and_scale(send_fld, 0, gfld, m, scale);
 
   if (io->rank != 0) {
     int iw[6], *off = iw, *dim = iw + 3;
     int nr_patches;
-    struct mrc_patch *patches = mrc_domain_get_patches(send_fld->domain, &nr_patches);
+    struct mrc_patch *patches = mrc_domain_get_patches(send_fld->_domain, &nr_patches);
     assert(nr_patches == 1);
     for (int d = 0; d < 3; d++) {
       off[d] = patches[0].off[d];
@@ -1592,7 +1592,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
   struct mrc_f3 *lfld = NULL;
 
   if (io->rank == 0) {
-    mrc_domain_get_global_dims(fld->domain, gdims);
+    mrc_domain_get_global_dims(fld->_domain, gdims);
     ldomain = mrc_domain_create(MPI_COMM_SELF);
     mrc_domain_set_type(ldomain, "simple");
     mrc_domain_set_param_int3(ldomain, "m", gdims);
@@ -1716,14 +1716,14 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
   const char *xyz[3] = { "x", "y", "z" };
 
   int gdims[3], nr_procs[3];
-  mrc_domain_get_global_dims(fld->domain, gdims);
+  mrc_domain_get_global_dims(fld->_domain, gdims);
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims, *off = patches[0].off;
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(fld->domain, 0, &info);
-  mrc_domain_get_nr_procs(fld->domain, nr_procs);
+  mrc_domain_get_local_patch_info(fld->_domain, 0, &info);
+  mrc_domain_get_nr_procs(fld->_domain, nr_procs);
   for (int d = 0; d < 3; d++) {
     bool skip_write = false;
     for (int dd = 0; dd < 3; dd++) {
@@ -1745,7 +1745,7 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
     if (!skip_write) {
       // FIXME make sure it is indep I/O
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, hoff, NULL, hldims, NULL);
-      struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
+      struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
       float *crd = &MRC_CRD(crds, d, fld->_sw);
       float *crd_nc = calloc(ldims[d] + 1, sizeof(*crd_nc));
 
@@ -1887,9 +1887,9 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
 #endif
 
   int gdims[3];
-  mrc_domain_get_global_dims(fld->domain, gdims);
+  mrc_domain_get_global_dims(fld->_domain, gdims);
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *off = patches[0].off, *ldims = patches[0].ldims;
 
@@ -1987,9 +1987,9 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
 #endif
 
   int gdims[3];
-  mrc_domain_get_global_dims(fld->domain, gdims);
+  mrc_domain_get_global_dims(fld->_domain, gdims);
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *off = patches[0].off, *ldims = patches[0].ldims;
 

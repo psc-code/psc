@@ -11,10 +11,10 @@
 static void
 set_f3(struct mrc_f3 *f3)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f3->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f3->_domain);
 
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(f3->domain, 0, &info);
+  mrc_domain_get_local_patch_info(f3->_domain, 0, &info);
   int *off = info.off;
   mrc_f3_foreach(f3, ix,iy,iz, 0,0) {
     MRC_F3(f3, 0, ix,iy,iz) =
@@ -27,7 +27,7 @@ static void
 check_f3(struct mrc_f3 *f3)
 {
   struct mrc_patch_info info;
-  mrc_domain_get_local_patch_info(f3->domain, 0, &info);
+  mrc_domain_get_local_patch_info(f3->_domain, 0, &info);
   int *off = info.off;
   mrc_f3_foreach(f3, ix,iy,iz, 0,0) {
     assert(MRC_F3(f3, 0, ix,iy,iz) ==

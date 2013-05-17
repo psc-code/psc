@@ -160,8 +160,8 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
   if (ops->read_f3) {
     ops->read_f3(io, path, fld);
   } else {
-    assert(fld->domain);
-    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->domain);
+    assert(fld->_domain);
+    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_param_int(m3, "sw", fld->_sw);
     mrc_m3_set_param_int(m3, "nr_comps", fld->nr_comp);
     mrc_m3_setup(m3);
@@ -253,7 +253,7 @@ mrc_io_write_f3(struct mrc_io *io, const char *path,
     }
   } else {
     int sw = fld->_sw;
-    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->domain);
+    struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_param_int(m3, "nr_comps", fld->nr_comp);
     mrc_m3_set_param_int(m3, "sw", sw);
     mrc_m3_setup(m3);
@@ -350,13 +350,13 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
   int dim = outtype - DIAG_TYPE_2D_X;
 
   int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+  struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
   assert(nr_patches == 1);
   int *dims = patches[0].ldims;
 
   //check for existence on local proc.
   //0,1, nnx-2, nnx-1 are the ghostpoints
-  struct mrc_crds *crds = mrc_domain_get_crds(fld->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
   if (MRC_CRD(crds, dim, 1) < sheet && sheet <= MRC_CRD(crds, dim, dims[dim]+1)) { 
     int ii;
     for (ii = 1; ii < dims[dim]; ii++) {
@@ -401,13 +401,13 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
       break;
     }
 
-    f2.domain = fld->domain;
+    f2.domain = fld->_domain;
     f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);
     mrc_f2_free(&f2);
   } else {
     struct mrc_f2 f2 = {};
-    f2.domain = fld->domain;
+    f2.domain = fld->_domain;
     f2.name = calloc(1, sizeof(*f2.name));
     f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);

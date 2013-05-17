@@ -15,7 +15,7 @@
 void
 mrc_f3_init_values(struct mrc_f3 *f3, struct mrc_f3_init_values_info *iv_info)
 {
-  struct mrc_domain *domain = f3->domain;
+  struct mrc_domain *domain = f3->_domain;
   assert(domain);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   assert(crds);
@@ -150,7 +150,7 @@ mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
 void
 mrctest_domain_init_values_0(struct mrc_f3 *f)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
 
   mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float xx = MRC_CRDX(crds, ix);
@@ -162,7 +162,7 @@ mrctest_domain_init_values_0(struct mrc_f3 *f)
 static void
 mrctest_domain_init_values_1(struct mrc_f3 *f)
 {
-  struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
 
   mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
     float yy = MRC_CRDY(crds, iy);

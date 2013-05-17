@@ -178,7 +178,7 @@ struct mrc_f3 {
   int nr_comp;
   int _len;
   bool _with_array;
-  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   int _sw; //< # of ghost points
   char **_comp_name;
 };

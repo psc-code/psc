@@ -253,7 +253,7 @@ mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
   struct mrc_f3 *f3 = mrc_f3_create(mrc_domain_comm(domain));
   mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
   mrc_f3_set_param_int(f3, "sw", bnd);
-  f3->domain = domain;
+  f3->_domain = domain;
   return f3;
 }
 

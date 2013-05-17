@@ -420,7 +420,7 @@ static void
 wt97(struct mrc_f3 *f, int nr_levels)
 {
   int dims[3];
-  mrc_domain_get_global_dims(f->domain, dims);
+  mrc_domain_get_global_dims(f->_domain, dims);
 
   for (int l = 0; l < nr_levels; l++) {
     wt97_x(f, dims);
@@ -438,7 +438,7 @@ static void
 iwt97(struct mrc_f3 *f, int nr_levels)
 {
   int dims[3];
-  mrc_domain_get_global_dims(f->domain, dims);
+  mrc_domain_get_global_dims(f->_domain, dims);
 
   for (int l = 0; l < nr_levels - 1; l++) {
     for (int d = 0; d < 3; d++) {
@@ -469,7 +469,7 @@ threshold(struct mrc_f3 *f, float eps)
   } mrc_f3_foreach_end;
   
   int dims[3];
-  mrc_domain_get_global_dims(f->domain, dims);
+  mrc_domain_get_global_dims(f->_domain, dims);
   int len = dims[0] * dims[1] * dims[2];
   mprintf("cnt = %d / %d = %g %%\n", cnt, len, cnt * 100. / len);
 }
