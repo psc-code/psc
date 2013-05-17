@@ -245,15 +245,35 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, int nr_comp)
 // mrc_domain_f3_create
 
 struct mrc_f3 *
-mrc_domain_f3_create(struct mrc_domain *domain, int bnd)
+mrc_domain_f3_create(struct mrc_domain *domain, int sw, const char *comps)
 {
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   struct mrc_f3 *f3 = mrc_f3_create(mrc_domain_comm(domain));
   mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int3(f3, "sw", (int[3]) { bnd, bnd, bnd });
+  mrc_f3_set_param_int3(f3, "sw", (int[3]) { sw, sw, sw });
+  
   f3->_domain = domain;
+
+  if (comps) {
+    char *s1, *s = strdup(comps), *s_save = s;
+    // count first
+    int nr_comps = 0;
+    while (strsep(&s, ",:")) {
+      nr_comps++;
+    }
+    mrc_f3_set_param_int(f3, "nr_comps", nr_comps);
+
+    // parse component names
+    s = s_save;
+    strcpy(s, comps);
+    for (int m = 0; (s1 = strsep(&s, ",:")); m++) {
+      mrc_f3_set_comp_name(f3, m, s1);
+    }
+    free(s_save);
+  }
+  
   return f3;
 }
 

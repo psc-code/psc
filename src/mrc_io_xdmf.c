@@ -1531,7 +1531,7 @@ static void
 communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 		struct mrc_f3 *lfld)
 {
-  struct mrc_f3 *send_fld = mrc_domain_f3_create(gfld->_domain, SW_0);
+  struct mrc_f3 *send_fld = mrc_domain_f3_create(gfld->_domain, SW_0, NULL);
   mrc_f3_setup(send_fld);
   copy_and_scale(send_fld, 0, gfld, m, scale);
 
@@ -1599,7 +1599,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
     struct mrc_crds *crds = mrc_domain_get_crds(ldomain);
     mrc_crds_set_type(crds, "rectilinear");
     mrc_domain_setup(ldomain);
-    lfld = mrc_domain_f3_create(ldomain, SW_0);
+    lfld = mrc_domain_f3_create(ldomain, SW_0, NULL);
     mrc_f3_setup(lfld);
   }
 

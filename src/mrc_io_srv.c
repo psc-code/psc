@@ -434,7 +434,7 @@ static struct mrc_f3 *
 ds_srv_get_gfld_3d(struct diagsrv_one *ds, int gdims[3])
 {
   struct diagsrv_srv *srv = (struct diagsrv_srv *) ds->srv;
-  struct mrc_f3 *f3 = mrc_domain_f3_create(srv->domain, SW_0);
+  struct mrc_f3 *f3 = mrc_domain_f3_create(srv->domain, SW_0, NULL);
   mrc_f3_set_array(f3, srv->gfld);
   mrc_f3_setup(f3);
   return f3;
@@ -576,7 +576,7 @@ ds_srv_cache_get_gfld_3d(struct diagsrv_one *ds, int gdims[3])
   assert(srv->nr_flds < MAX_FIELDS);
   free(srv->obj_names[srv->nr_flds]);
   free(srv->fld_names[srv->nr_flds]);
-  struct mrc_f3 *f3 = mrc_domain_f3_create(srv->domain, SW_0);
+  struct mrc_f3 *f3 = mrc_domain_f3_create(srv->domain, SW_0, NULL);
   mrc_f3_set_array(f3, srv->gflds[srv->nr_flds]);
   mrc_f3_setup(f3);
   return f3;
@@ -640,10 +640,9 @@ ds_srv_cache_close(struct diagsrv_one *ds)
   for (int i = 0; i < srv->nr_flds; i++) {
     switch (srv->outtypes[i]) {
     case DIAG_TYPE_3D: {
-      struct mrc_f3 *gfld = mrc_domain_f3_create(srv->domain, SW_0);
+      struct mrc_f3 *gfld = mrc_domain_f3_create(srv->domain, SW_0, srv->fld_names[i]);
       mrc_f3_set_array(gfld, srv->gflds[i]);
       mrc_f3_set_name(gfld, srv->obj_names[i]);
-      mrc_f3_set_comp_name(gfld, 0, srv->fld_names[i]);
       mrc_f3_setup(gfld);
       mrc_f3_write(gfld, ds->io);
       mrc_f3_destroy(gfld);

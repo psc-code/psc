@@ -203,13 +203,8 @@ main(int argc, char **argv)
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
 
-  struct mrc_f3 *fld = mrc_domain_f3_create(domain, SW_0);
-  mrc_f3_set_param_int(fld, "nr_comps", 4);
+  struct mrc_f3 *fld = mrc_domain_f3_create(domain, SW_0, "phi:ex:ey:ez");
   mrc_f3_setup(fld);
-  mrc_f3_set_comp_name(fld, 0, "phi");
-  mrc_f3_set_comp_name(fld, 1, "ex");
-  mrc_f3_set_comp_name(fld, 2, "ey");
-  mrc_f3_set_comp_name(fld, 3, "ez");
   if (strcmp(par.ic, "one") == 0) {
     ini_one(fld, &par);
   } else if (strcmp(par.ic, "semi") == 0) {

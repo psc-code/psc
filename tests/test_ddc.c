@@ -46,8 +46,7 @@ test(bool periodic)
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
 
-  struct mrc_f3 *fld = mrc_domain_f3_create(domain, bnd);
-  mrc_f3_set_param_int(fld, "nr_comps", 2);
+  struct mrc_f3 *fld = mrc_domain_f3_create(domain, bnd, "test0:test1");
   mrc_f3_setup(fld);
   mrc_f3_view(fld);
 

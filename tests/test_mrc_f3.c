@@ -97,13 +97,10 @@ main(int argc, char **argv)
     mrctest_set_crds_rectilinear_1(domain);
   }
 
-  struct mrc_f3 *f3 = mrc_domain_f3_create(domain, 2);
+  struct mrc_f3 *f3 = mrc_domain_f3_create(domain, 2, "fld0:fld1");
   mrc_f3_set_name(f3, "test_f3");
-  mrc_f3_set_param_int(f3, "nr_comps", 2);
   mrc_f3_set_from_options(f3);
   mrc_f3_setup(f3);
-  mrc_f3_set_comp_name(f3, 0, "fld0");
-  mrc_f3_set_comp_name(f3, 1, "fld1");
   mrc_f3_view(f3);
   
   set_f3(f3);

@@ -75,11 +75,9 @@ main(int argc, char **argv)
   mrc_domain_set_from_options(domain);
   mrc_domain_setup(domain);
 
-  struct mrc_f3 *x = mrc_domain_f3_create(domain, BND);
+  struct mrc_f3 *x = mrc_domain_f3_create(domain, BND, "u");
   mrc_f3_set_name(x, "x");
-  mrc_f3_set_param_int(x, "nr_comps", NR_FLDS);
   mrc_f3_setup(x);
-  mrc_f3_set_comp_name(x, U, "u");
 
   // setup initial equilibrium and perturbation
   mrc_f3_foreach(x, ix, iy, iz, 0, 0) {

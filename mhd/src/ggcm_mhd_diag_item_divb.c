@@ -22,9 +22,8 @@ ggcm_mhd_diag_item_divb_run(struct ggcm_mhd_diag_item *item,
 			    int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
-  struct mrc_f3 *fld_divB = mrc_domain_f3_create(mhd->domain, SW_2);
+  struct mrc_f3 *fld_divB = mrc_domain_f3_create(mhd->domain, SW_2, "divB");
   mrc_f3_setup(fld_divB);
-  mrc_f3_set_comp_name(fld_divB, 0, "divB");
   
   ggcm_mhd_calc_divb(mhd, mhd->flds_base, fld_divB);
   ggcm_mhd_diag_c_write_one_f3(io, fld_divB, diag_type, plane);

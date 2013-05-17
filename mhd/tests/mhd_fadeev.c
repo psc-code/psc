@@ -48,7 +48,7 @@ ggcm_mhd_ic_fadeev_run(struct ggcm_mhd_ic *ic)
   struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(mhd->flds_base);
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);  
 
-  struct mrc_f3 *fld_psi = mrc_domain_f3_create(mhd->domain, SW_2);
+  struct mrc_f3 *fld_psi = mrc_domain_f3_create(mhd->domain, SW_2, "psi");
   mrc_f3_setup(fld_psi);
 
   float xl[3], xh[3], L[3], r[3];

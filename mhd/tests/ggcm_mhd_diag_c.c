@@ -183,12 +183,11 @@ ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_f3 *f, int m,
 				const char *name, float scale, int outtype,
 				float plane)
 {
-  struct mrc_f3 *fld = mrc_domain_f3_create(f->_domain, SW_2);
+  struct mrc_f3 *fld = mrc_domain_f3_create(f->_domain, SW_2, name);
   char s[strlen(name) + 10];
   sprintf(s, "mrc_f3_%s", name);
   mrc_f3_set_name(fld, s);
   mrc_f3_setup(fld);
-  mrc_f3_set_comp_name(fld, 0, name);
   mrc_f3_foreach(fld, ix,iy,iz, 2, 2) {
     MRC_F3(fld,0, ix,iy,iz) = scale * MRC_F3(f,m, ix,iy,iz);
   } mrc_f3_foreach_end;
