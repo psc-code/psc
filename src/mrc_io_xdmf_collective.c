@@ -932,7 +932,7 @@ collective_recv_f3_begin(struct collective_m3_ctx *ctx,
     ctx->recvs[rr].f3 = recv_f3;
     
     /* mprintf("MPI_Irecv <- %d gp %d len %d\n", info.rank, info.global_patch, recv_f3->len); */
-    MPI_Irecv(recv_f3->arr, recv_f3->len, MPI_FLOAT, info.rank,
+    MPI_Irecv(recv_f3->_arr, recv_f3->len, MPI_FLOAT, info.rank,
 	      info.global_patch, mrc_io_comm(io), &ctx->recv_reqs[rr++]);
   }
 }
@@ -1052,7 +1052,7 @@ collective_write_f3(struct collective_m3_ctx *ctx, struct mrc_io *io,
   ierr = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, foff, NULL,
 			     mdims, NULL); CE;
 
-  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->arr); CE;
+  ierr = H5Dwrite(dset, H5T_NATIVE_FLOAT, memspace, filespace, dxpl, f3->_arr); CE;
   
   ierr = H5Dclose(dset); CE;
   ierr = H5Sclose(memspace); CE;
@@ -1189,7 +1189,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
       }
     }
     
-    MPI_Isend(f3->arr, f3->len, MPI_FLOAT, send->rank, send->patch,
+    MPI_Isend(f3->_arr, f3->len, MPI_FLOAT, send->rank, send->patch,
 	      mrc_io_comm(io), &ctx->send_reqs[i]);
     send->f3 = f3;
   }
@@ -1280,7 +1280,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
     mrc_f3_setup(f3);
     
-    MPI_Irecv(f3->arr, f3->len, MPI_FLOAT, recv->rank,
+    MPI_Irecv(f3->_arr, f3->len, MPI_FLOAT, recv->rank,
 	      recv->global_patch, mrc_io_comm(io), &ctx->recv_reqs[i]);
     recv->f3 = f3;
   }

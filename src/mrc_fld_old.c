@@ -318,13 +318,13 @@ static void
 _mrc_f3_destroy(struct mrc_f3 *f3)
 {
   if (!f3->with_array) {
-    free(f3->arr);
+    free(f3->_arr);
   }
   for (int m = 0; m < f3->nr_comp; m++) {
     free(f3->_comp_name[m]);
   }
   free(f3->_comp_name);
-  f3->arr = NULL;
+  f3->_arr = NULL;
 }
 
 static void
@@ -342,8 +342,8 @@ _mrc_f3_setup(struct mrc_f3 *f3)
   }
   f3->len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
 
-  if (!f3->arr) {
-    f3->arr = calloc(f3->len, sizeof(*f3->arr));
+  if (!f3->_arr) {
+    f3->_arr = calloc(f3->len, sizeof(*f3->_arr));
     f3->with_array = false;
   } else {
     f3->with_array = true;
@@ -382,8 +382,8 @@ mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 void
 mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 {
-  assert(!f3->arr);
-  f3->arr = arr;
+  assert(!f3->_arr);
+  f3->_arr = arr;
 }
 
 const int *
@@ -428,14 +428,14 @@ mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
 {
   assert(mrc_f3_same_shape(f3_to, f3_from));
 
-  memcpy(f3_to->arr, f3_from->arr, f3_to->len * sizeof(float));
+  memcpy(f3_to->_arr, f3_from->_arr, f3_to->len * sizeof(float));
 }
 
 void
 mrc_f3_set(struct mrc_f3 *f3, float val)
 {
   for (int i = 0; i < f3->len; i++) {
-    f3->arr[i] = val;
+    f3->_arr[i] = val;
   }
 }
 

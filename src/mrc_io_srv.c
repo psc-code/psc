@@ -985,7 +985,7 @@ static struct param diagsrv_params_descr[] = {
 	    mrc_f3_set_param_int3(lfld3, "dims", dims);
 	    mrc_f3_set_array(lfld3, w2);
 	    mrc_f3_setup(lfld3);
-	    MPI_Recv(lfld3->arr, lfld3->len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
+	    MPI_Recv(lfld3->_arr, lfld3->len, MPI_FLOAT, k, ID_DIAGS_DATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
 	    add_to_field_3d(gfld3, lfld3, off);
 	    mrc_f3_destroy(lfld3);

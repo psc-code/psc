@@ -67,7 +67,7 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
     struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
     ggcm_mhd_flds_set_type(flds, type);
     ggcm_mhd_flds_set_param_obj(flds, "mhd", flds_base->mhd);
-    mrc_f3_set_array(flds->f3, flds_base->f3->arr);
+    mrc_f3_set_array(flds->f3, flds_base->f3->_arr);
     ggcm_mhd_flds_setup(flds);
     return flds;
   }
