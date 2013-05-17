@@ -289,6 +289,12 @@ diagc_combined_write_attr(struct mrc_io *io, const char *path, int type,
       MPI_Send(pv->u_float3, 3, MPI_FLOAT, par->rank_diagsrv,
 	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
       break;
+    case PT_INT_ARRAY:
+      MPI_Send(&pv->u_int_array.nr_vals, 1, MPI_INT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      MPI_Send(pv->u_int_array.vals, pv->u_int_array.nr_vals, MPI_INT, par->rank_diagsrv,
+	       ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD);
+      break;
     default:
       assert(0);
     }
@@ -909,6 +915,13 @@ static struct param diagsrv_params_descr[] = {
 	case PT_FLOAT3:
 	  MPI_Recv(val.u_float3, 3, MPI_FLOAT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
 		   MPI_STATUS_IGNORE);
+	  break;
+	case PT_INT_ARRAY:
+	  MPI_Recv(&val.u_int_array.nr_vals, 1, MPI_INT, 0, ID_DIAGS_CMD_WRITE_ATTR, MPI_COMM_WORLD,
+		   MPI_STATUS_IGNORE);
+	  val.u_int_array.vals = calloc(val.u_int_array.nr_vals, sizeof(int));
+	  MPI_Recv(val.u_int_array.vals, val.u_int_array.nr_vals, MPI_INT, 0, ID_DIAGS_CMD_WRITE_ATTR,
+		   MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	  break;
 	default:
 	  assert(0);

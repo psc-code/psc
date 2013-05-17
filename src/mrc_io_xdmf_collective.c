@@ -927,7 +927,7 @@ collective_recv_f3_begin(struct collective_m3_ctx *ctx,
     ctx->recv_gps[rr] = gp;
     struct mrc_f3 *recv_f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int3(recv_f3, "dims", info.ldims);
-    mrc_f3_set_param_int(recv_f3, "sw", m3->sw);
+    mrc_f3_set_param_int3(recv_f3, "sw", (int[3]) { m3->sw, m3->sw, m3->sw });
     mrc_f3_setup(recv_f3);
     ctx->recvs[rr].f3 = recv_f3;
     

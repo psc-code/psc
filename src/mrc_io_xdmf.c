@@ -925,7 +925,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, dims, -1, io->size);
-    hdf5_write_crds(io, dims, fld->_domain, fld->_sw);
+    hdf5_write_crds(io, dims, fld->_domain, fld->_sw.vals[0]);
   }
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
@@ -1256,7 +1256,7 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float s
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, f3->_dims.vals, -1, io->size);
-    hdf5_write_crds(io, f3->_dims.vals, f3->_domain, f3->_sw);
+    hdf5_write_crds(io, f3->_dims.vals, f3->_domain, f3->_sw.vals[0]);
   }
 
   for (int m = 0; m < f3->nr_comp; m++) {
@@ -1468,8 +1468,6 @@ ds_xdmf_to_one_write_attr(struct mrc_io *io, const char *path, int type,
 static void
 communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
 {
-  int sw = gfld->_sw;
-
   struct mrc_domain *gdomain = gfld->_domain;
   struct mrc_crds *gcrds = mrc_domain_get_crds(gdomain);
   if (io->rank != 0) {
@@ -1483,7 +1481,7 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
     }
     MPI_Send(iw, 6, MPI_INT, 0, TAG_OFF_DIMS, io->obj.comm);
     for (int d = 0; d < 3; d++) {
-      MPI_Send(&MRC_CRD(gcrds, d, sw), im[d], MPI_FLOAT, 0,
+      MPI_Send(&MRC_CRD(gcrds, d, gfld->_sw.vals[d]), im[d], MPI_FLOAT, 0,
 	       TAG_CRDX + d, io->obj.comm);
     }
   } else { // io->rank == 0
@@ -1501,7 +1499,7 @@ communicate_crds(struct mrc_io *io, struct mrc_f3 *gfld, struct mrc_f3 *lfld)
 	  im[d] = patches[0].ldims[d];
 	}
 	for (int d = 0; d < 3; d++) {
-	  recv_crds[d] = &MRC_CRD(gcrds, d, sw);
+	  recv_crds[d] = &MRC_CRD(gcrds, d, gfld->_sw.vals[d]);
 	}
       } else {
 	MPI_Recv(iw, 6, MPI_INT, n, TAG_OFF_DIMS, io->obj.comm, MPI_STATUS_IGNORE);
@@ -1617,7 +1615,7 @@ ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
   struct xdmf_spatial *xs = xdmf_spatial_find(io, "3df", -1);
   if (!xs) {
     xs = xdmf_spatial_create_3d(io, gdims, -1, 1);
-    hdf5_write_crds(io, gdims, ldomain, fld->_sw);
+    hdf5_write_crds(io, gdims, ldomain, fld->_sw.vals[0]);
   }
   save_fld_info(xs, strdup(mrc_f3_comp_name(fld, m)), strdup(path), false);
 
@@ -1746,10 +1744,10 @@ hdf5_write_crds_parallel(struct mrc_io *io, struct mrc_f3 *fld)
       // FIXME make sure it is indep I/O
       H5Sselect_hyperslab(filespace, H5S_SELECT_SET, hoff, NULL, hldims, NULL);
       struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
-      float *crd = &MRC_CRD(crds, d, fld->_sw);
+      float *crd = &MRC_CRD(crds, d, fld->_sw.vals[0]);
       float *crd_nc = calloc(ldims[d] + 1, sizeof(*crd_nc));
 
-      if (fld->_sw > 0) { // FIXME, shouldn't be done here, and should
+      if (fld->_sw.vals[0] > 0) { // FIXME, shouldn't be done here, and should
 	                 // be based on sw for the crds
 	for (int i = 0; i <= ldims[d]; i++) {
 	  crd_nc[i] = .5 * (crd[i-1] + crd[i]);

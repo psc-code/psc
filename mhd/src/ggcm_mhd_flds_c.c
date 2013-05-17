@@ -92,7 +92,7 @@ ggcm_mhd_flds_c_setup(struct ggcm_mhd_flds *flds)
   struct mrc_patch *patches = mrc_domain_get_patches(flds->mhd->domain, &nr_patches);
   assert(nr_patches == 1);
   mrc_f3_set_param_int3(flds->f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int(flds->f3, "sw", BND);
+  mrc_f3_set_param_int3(flds->f3, "sw", (int[3]) { BND, BND, BND });
   flds->f3->_domain = flds->mhd->domain;
   mrc_f3_set_nr_comps(flds->f3, _NR_FLDS);
   for (int m = 0; m < _NR_FLDS; m++) {
