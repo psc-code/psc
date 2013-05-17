@@ -343,7 +343,7 @@ _mrc_f3_setup(struct mrc_f3 *f3)
   f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
 
   if (!f3->_arr) {
-    f3->_arr = calloc(f3->_len, sizeof(*f3->_arr));
+    f3->_arr = calloc(f3->_len, sizeof(float));
     f3->_with_array = false;
   } else {
     f3->_with_array = true;
@@ -434,8 +434,9 @@ mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
 void
 mrc_f3_set(struct mrc_f3 *f3, float val)
 {
+  float *arr = f3->_arr;
   for (int i = 0; i < f3->_len; i++) {
-    f3->_arr[i] = val;
+    arr[i] = val;
   }
 }
 

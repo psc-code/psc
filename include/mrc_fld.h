@@ -19,7 +19,7 @@
       p;}))
 
 #define MRC_F3(f3,m, ix,iy,iz)						\
-  (*({ float *p = &(f3)->_arr[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
+  (*({ float *p = &((float *) (f3)->_arr)[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
 	  (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_offs[1]) *		\
 	(f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_offs[0]];		\
       assert((m) >= 0 && (m) < (f3)->nr_comp);				\
@@ -34,7 +34,7 @@
   ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
 
 #define MRC_F3(f3,m, ix,iy,iz)					\
-  ((f3)->_arr[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) *    \
+  (((float *) (f3)->_arr)[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
 	      (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_offs[1]) *		\
 	     (f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_offs[0]])
 
@@ -176,9 +176,11 @@ struct mrc_f3 {
   struct mrc_param_int_array _sw;
 
   // state
-  float *_arr;
+  void *_arr;
   int _ghost_offs[3];
   int _ghost_dims[3];
+  //int _data_type;
+  //int _size_of_type;
   int nr_comp;
   int _len;
   bool _with_array;

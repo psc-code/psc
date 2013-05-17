@@ -804,9 +804,10 @@ copy_and_scale(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m,
 	       float scale)
 {
   const int *dims = mrc_f3_dims(vfld);
+  float *arr = vfld->_arr;
   mrc_f3_foreach(vfld, ix,iy,iz, 0, 0) {
     // cannot use MRC_F3, because the layout is different (for vecs, fast component)!
-    vfld->_arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m] =
+    arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m] =
       scale * MRC_F3(fld, fld_m, ix,iy,iz);
   } mrc_f3_foreach_end;
 }
@@ -815,10 +816,11 @@ static void
 copy_back(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m)
 {
   const int *dims = mrc_f3_dims(vfld);
+  float *arr = vfld->_arr;
   mrc_f3_foreach(vfld, ix,iy,iz, 0, 0) {
     // cannot use MRC_F3, because the layout is different (for vecs, fast component)!
     MRC_F3(fld, fld_m, ix,iy,iz) = 
-      vfld->_arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m];
+      arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m];
   } mrc_f3_foreach_end;
 }
 
