@@ -1094,7 +1094,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "off", writer_off);
+    mrc_f3_set_param_int3(f3, "offs", writer_off);
     mrc_f3_set_param_int3(f3, "dims", writer_dims);
     mrc_f3_setup(f3);
 
@@ -1173,7 +1173,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct collective_m3_entry *send = &ctx->sends[i];
     int *ilo = send->ilo, *ihi = send->ihi;
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "off", ilo);
+    mrc_f3_set_param_int3(f3, "offs", ilo);
     mrc_f3_set_param_int3(f3, "dims",
 			  (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
     mrc_f3_set_param_int(f3, "nr_comps", gfld->nr_comp);
@@ -1274,7 +1274,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
     int *ilo = recv->ilo, *ihi = recv->ihi; // FIXME, -> off, dims
-    mrc_f3_set_param_int3(f3, "off", ilo);
+    mrc_f3_set_param_int3(f3, "offs", ilo);
     mrc_f3_set_param_int3(f3, "dims",
 			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
     mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
@@ -1363,7 +1363,7 @@ collective_m3_read_f3(struct mrc_io *io, struct collective_m3_ctx *ctx,
   /* 	    writer_off[0], writer_off[1], writer_off[2], */
   /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-  mrc_f3_set_param_int3(f3, "off", writer_off);
+  mrc_f3_set_param_int3(f3, "offs", writer_off);
   mrc_f3_set_param_int3(f3, "dims", writer_dims);
   mrc_f3_setup(f3);
 

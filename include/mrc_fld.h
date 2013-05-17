@@ -172,12 +172,12 @@ struct mrc_f3 {
   struct mrc_obj obj;
   // parameters
   struct mrc_param_int_array _dims;
+  struct mrc_param_int_array _offs;
 
   // state
   float *_arr;
   int _ghost_offs[3];
   int _ghost_dims[3];
-  int _off[3];
   int nr_comp;
   int _len;
   bool _with_array;
@@ -213,9 +213,9 @@ mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->_off[2] - (l); iz < (f3)->_off[2] + (f3)->_dims.vals[2] + (r); iz++) { \
-  for (int iy = (f3)->_off[1] - (l); iy < (f3)->_off[1] + (f3)->_dims.vals[1] + (r); iy++) { \
-  for (int ix = (f3)->_off[0] - (l); ix < (f3)->_off[0] + (f3)->_dims.vals[0] + (r); ix++) \
+  for (int iz = (f3)->_offs.vals[2] - (l); iz < (f3)->_offs.vals[2] + (f3)->_dims.vals[2] + (r); iz++) { \
+  for (int iy = (f3)->_offs.vals[1] - (l); iy < (f3)->_offs.vals[1] + (f3)->_dims.vals[1] + (r); iy++) { \
+  for (int ix = (f3)->_offs.vals[0] - (l); ix < (f3)->_offs.vals[0] + (f3)->_dims.vals[0] + (r); ix++) \
 
 #define mrc_f3_foreach_end			\
   }						\

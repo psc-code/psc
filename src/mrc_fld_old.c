@@ -337,7 +337,7 @@ static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
   for (int d = 0; d < 3; d++) {
-    f3->_ghost_offs[d] = f3->_off[d] - f3->_sw;
+    f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw;
     f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw;
   }
   f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
@@ -389,7 +389,7 @@ mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 const int *
 mrc_f3_off(struct mrc_f3 *f3)
 {
-  return f3->_off;
+  return f3->_offs.vals;
 }
 
 const int *
@@ -414,7 +414,7 @@ struct mrc_f3 *
 mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
-  mrc_f3_set_param_int3(f3_new, "off", f3->_off);
+  mrc_f3_set_param_int3(f3_new, "offs", f3->_offs.vals);
   mrc_f3_set_param_int3(f3_new, "dims", f3->_dims.vals);
   mrc_f3_set_nr_comps(f3_new, f3->nr_comp);
   mrc_f3_set_param_int(f3_new, "sw", f3->_sw);
@@ -491,7 +491,7 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
   assert(nr_patches == 1);
   mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int3(f3, "off", (int[3]) { 0, 0, 0 });
+  mrc_f3_set_param_int3(f3, "offs", (int[3]) { 0, 0, 0 });
   mrc_f3_setup(f3);
   // FIXME, the whole _comp_name business is screwy here
   free(f3->_comp_name); 
@@ -521,7 +521,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 {
   for (int i = 0; mm[i] >= 0; i++) {
     struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
-    mrc_f3_set_param_int3(fld1, "off", f3->_off);
+    mrc_f3_set_param_int3(fld1, "offs", f3->_offs.vals);
     mrc_f3_set_param_int3(fld1, "dims", f3->_dims.vals);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
     int *ib = f3->_ghost_offs;
@@ -540,7 +540,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
-  { "off"             , VAR(_off)         , PARAM_INT3(0, 0, 0)    },
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(3, 0)  },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(3, 0)  },
   { "nr_comps"        , VAR(nr_comp)      , PARAM_INT(1)           },
   { "sw"              , VAR(_sw)          , PARAM_INT(0)           },

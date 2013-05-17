@@ -1551,7 +1551,7 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
       struct mrc_f3 *recv_fld;
       if (n == 0) {
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "off", mrc_f3_off(send_fld));
+	mrc_f3_set_param_int3(recv_fld, "offs", mrc_f3_off(send_fld));
 	mrc_f3_set_param_int3(recv_fld, "dims", mrc_f3_dims(send_fld));
 	mrc_f3_set_array(recv_fld, send_fld->_arr);
 	mrc_f3_setup(recv_fld);
@@ -1559,7 +1559,7 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
 	int iw[6], *off = iw, *dim = iw + 3;
 	MPI_Recv(iw, 6, MPI_INT, n, TAG_OFF_DIMS, io->obj.comm, MPI_STATUS_IGNORE);
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "off", off);
+	mrc_f3_set_param_int3(recv_fld, "offs", off);
 	mrc_f3_set_param_int3(recv_fld, "dims", dim);
 	mrc_f3_setup(recv_fld);
 	MPI_Recv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
