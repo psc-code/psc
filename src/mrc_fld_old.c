@@ -337,7 +337,7 @@ static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
   for (int d = 0; d < 3; d++) {
-    f3->_ghost_off[d] = f3->_off[d] - f3->_sw;
+    f3->_ghost_offs[d] = f3->_off[d] - f3->_sw;
     f3->_ghost_dims[d] = f3->_dims[d] + 2 * f3->_sw;
   }
   f3->len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
@@ -401,7 +401,7 @@ mrc_f3_dims(struct mrc_f3 *f3)
 const int *
 mrc_f3_ghost_off(struct mrc_f3 *f3)
 {
-  return f3->_ghost_off;
+  return f3->_ghost_offs;
 }
 
 const int *
@@ -524,7 +524,7 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
     mrc_f3_set_param_int3(fld1, "off", f3->_off);
     mrc_f3_set_param_int3(fld1, "dims", f3->_dims);
     mrc_f3_set_param_int(fld1, "sw", f3->_sw);
-    int *ib = f3->_ghost_off;
+    int *ib = f3->_ghost_offs;
     mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
     mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
     mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);

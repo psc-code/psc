@@ -1267,8 +1267,8 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float s
 			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     ierr = H5LTset_attribute_int(group, ".", "m", &m, 1); CE;
     ierr = H5LTmake_dataset_float(group, "3d", 3, hdims,
-				  &MRC_F3(f3, m, f3->_ghost_off[0], f3->_ghost_off[1],
-					  f3->_ghost_off[2])); CE;
+				  &MRC_F3(f3, m, f3->_ghost_offs[0], f3->_ghost_offs[1],
+					  f3->_ghost_offs[2])); CE;
     ierr = H5Gclose(group); CE;
   }
 
@@ -1335,8 +1335,8 @@ read_f3_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "3d", H5P_DEFAULT); H5_CHK(dset);
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace, H5P_DEFAULT,
-		 &MRC_F3(f3, m, f3->_ghost_off[0], f3->_ghost_off[1],
-			 f3->_ghost_off[2])); CE;
+		 &MRC_F3(f3, m, f3->_ghost_offs[0], f3->_ghost_offs[1],
+			 f3->_ghost_offs[2])); CE;
   ierr = H5Dclose(dset); CE;
 
   ierr = H5Gclose(group); CE;

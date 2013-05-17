@@ -1334,7 +1334,7 @@ read_m3_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 
   hid_t dset = H5Dopen(group, "3d", H5P_DEFAULT); H5_CHK(dset);
   struct mrc_f3 *gfld = data->gfld;
-  int *ib = gfld->_ghost_off;
+  int *ib = gfld->_ghost_offs;
   ierr = H5Dread(dset, H5T_NATIVE_FLOAT, data->memspace, data->filespace,
 		 data->dxpl, &MRC_F3(gfld, m, ib[0], ib[1], ib[2])); CE;
   ierr = H5Dclose(dset); CE;
