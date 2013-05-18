@@ -33,10 +33,7 @@
 #define MRC_F1(f1,m, ix)					\
   ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
 
-#define MRC_F3(f3,m, ix,iy,iz)					\
-  (((float *) (f3)->_arr)[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
-	      (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_offs[1]) *		\
-	     (f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_offs[0]])
+#define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)			\
 
 #endif
 
