@@ -22,7 +22,7 @@
   (*({ float *p = &((float *) (f3)->_arr)[(((m) * (f3)->_ghost_dims[2] + (iz) - (f3)->_ghost_offs[2]) * \
 	  (f3)->_ghost_dims[1] + (iy) - (f3)->_ghost_offs[1]) *		\
 	(f3)->_ghost_dims[0] + (ix) - (f3)->_ghost_offs[0]];		\
-      assert((m) >= 0 && (m) < (f3)->nr_comp);				\
+      assert((m) >= 0 && (m) < (f3)->_nr_comp);				\
       assert((ix) >= (f3)->_ghost_offs[0] && (ix) < (f3)->_ghost_offs[0] + (f3)->_ghost_dims[0]); \
       assert((iy) >= (f3)->_ghost_offs[1] && (iy) < (f3)->_ghost_offs[1] + (f3)->_ghost_dims[1]); \
       assert((iz) >= (f3)->_ghost_offs[2] && (iz) < (f3)->_ghost_offs[2] + (f3)->_ghost_dims[2]); \
@@ -72,7 +72,7 @@ struct mrc_fld {
   bool _with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   // for mrc_f3 emulation
-  int nr_comp;
+  int _nr_comp;
   int _nr_allocated_comp_name;
   char **_comp_name;
 };
@@ -172,6 +172,7 @@ void mrc_f2_free(struct mrc_f2 *f2);
 MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
+int mrc_f3_nr_comps(struct mrc_f3 *f3);
 void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
 const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
 const int *mrc_f3_off(struct mrc_f3 *x);
@@ -192,7 +193,7 @@ struct mrc_f3_ops {
 static inline bool
 mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 {
-  return (f3_1->nr_comp == f3_2->nr_comp &&
+  return (f3_1->_nr_comp == f3_2->_nr_comp &&
 	  f3_1->_ghost_dims[0] == f3_2->_ghost_dims[0] &&
 	  f3_1->_ghost_dims[1] == f3_2->_ghost_dims[1] &&
 	  f3_1->_ghost_dims[2] == f3_2->_ghost_dims[2]);

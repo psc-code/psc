@@ -805,9 +805,10 @@ copy_and_scale(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m,
 {
   const int *dims = mrc_f3_dims(vfld);
   float *arr = vfld->_arr;
+  int nr_comps = mrc_f3_nr_comps(vfld);
   mrc_f3_foreach(vfld, ix,iy,iz, 0, 0) {
     // cannot use MRC_F3, because the layout is different (for vecs, fast component)!
-    arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m] =
+    arr[(((iz * dims[1]) + iy) * dims[0] + ix) * nr_comps + m] =
       scale * MRC_F3(fld, fld_m, ix,iy,iz);
   } mrc_f3_foreach_end;
 }
@@ -817,10 +818,11 @@ copy_back(struct mrc_f3 *vfld, int m, struct mrc_f3 *fld, int fld_m)
 {
   const int *dims = mrc_f3_dims(vfld);
   float *arr = vfld->_arr;
+  int nr_comps = mrc_f3_nr_comps(vfld);
   mrc_f3_foreach(vfld, ix,iy,iz, 0, 0) {
     // cannot use MRC_F3, because the layout is different (for vecs, fast component)!
     MRC_F3(fld, fld_m, ix,iy,iz) = 
-      arr[(((iz * dims[1]) + iy) * dims[0] + ix) * vfld->nr_comp + m];
+      arr[(((iz * dims[1]) + iy) * dims[0] + ix) * nr_comps + m];
   } mrc_f3_foreach_end;
 }
 
@@ -949,7 +951,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     save_fld_info(xs, vec_name, strdup(path), true);
     struct mrc_f3 *vfld = hdf5->vfld;
     const int *dim = mrc_f3_dims(vfld);
-    hsize_t hdims[4] = { dim[2], dim[1], dim[0], vfld->nr_comp };
+    hsize_t hdims[4] = { dim[2], dim[1], dim[0], mrc_f3_nr_comps(vfld) };
     hid_t group = H5Gcreate(group0, vec_name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     ierr = H5LTmake_dataset_float(group, "3d", 4, hdims, vfld->_arr); CE;
     ierr = H5Gclose(group); CE;
@@ -1261,7 +1263,8 @@ ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float s
     hdf5_write_crds(io, f3->_dims.vals, f3->_domain, f3->_sw.vals[0]);
   }
 
-  for (int m = 0; m < f3->nr_comp; m++) {
+  int nr_comps = mrc_f3_nr_comps(f3);
+  for (int m = 0; m < nr_comps; m++) {
     assert(mrc_f3_comp_name(f3, m));
     save_fld_info(xs, strdup(mrc_f3_comp_name(f3, m)), strdup(path), false);
     hsize_t hdims[3] = { f3->_ghost_dims[2], f3->_ghost_dims[1], f3->_ghost_dims[0] };

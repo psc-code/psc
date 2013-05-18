@@ -1176,10 +1176,10 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int3(f3, "offs", ilo);
     mrc_f3_set_param_int3(f3, "dims",
 			  (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
-    mrc_f3_set_param_int(f3, "nr_comps", gfld->nr_comp);
+    mrc_f3_set_param_int(f3, "nr_comps", mrc_f3_nr_comps(gfld));
     mrc_f3_setup(f3);
     
-    for (int m = 0; m < gfld->nr_comp; m++) {
+    for (int m = 0; m < mrc_f3_nr_comps(gfld); m++) {
       for (int iz = ilo[2]; iz < ihi[2]; iz++) {
 	for (int iy = ilo[1]; iy < ihi[1]; iy++) {
 	  for (int ix = ilo[0]; ix < ihi[0]; ix++) {

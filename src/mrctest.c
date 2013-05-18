@@ -241,8 +241,9 @@ mrctest_domain(void (*mod_domain)(struct mrc_mod *mod, void *arg))
 void
 mrctest_f3_compare(struct mrc_f3 *f1, struct mrc_f3 *f2, float eps)
 {
-  assert(f1->nr_comp == f2->nr_comp);
-  for (int m = 0; m < f1->nr_comp; m++) {
+  assert(mrc_f3_nr_comps(f1) == mrc_f3_nr_comps(f2));
+  int nr_comps = mrc_f3_nr_comps(f1);
+  for (int m = 0; m < nr_comps; m++) {
     float diff = 0.;
     mrc_f3_foreach(f1, ix,iy,iz, 0, 0) {
       diff = fmaxf(diff, fabsf(MRC_F3(f1,m, ix,iy,iz) - MRC_F3(f2,m, ix,iy,iz)));
