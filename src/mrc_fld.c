@@ -57,33 +57,6 @@ _mrc_fld_setup(struct mrc_fld *fld)
   }
 }
 
-static void
-_mrc_f3_setup(struct mrc_f3 *f3)
-{
-  if (f3->_offs.nr_vals == 0) {
-    f3->_offs.nr_vals = f3->_dims.nr_vals;
-  }
-  if (f3->_sw.nr_vals == 0) {
-    f3->_sw.nr_vals = f3->_dims.nr_vals;
-  }
-  assert(f3->_dims.nr_vals == f3->_offs.nr_vals &&
-	 f3->_dims.nr_vals == f3->_sw.nr_vals);
-  assert(f3->_dims.nr_vals == 4);
-
-  for (int d = 0; d < f3->_dims.nr_vals; d++) {
-    f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw.vals[d];
-    f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw.vals[d];
-  }
-  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->_ghost_dims[3];
-
-  if (!f3->_arr) {
-    f3->_arr = calloc(f3->_len, sizeof(float));
-    f3->_with_array = false;
-  } else {
-    f3->_with_array = true;
-  }
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_set_array
 
@@ -98,8 +71,7 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 void
 mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 {
-  assert(!f3->_arr);
-  f3->_arr = arr;
+  mrc_fld_set_array(f3, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -108,6 +80,7 @@ mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 static void
 _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 {
+  mrc_io_write_ref(io, fld, "domain", fld->_domain);
   mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
 }
 
@@ -127,6 +100,7 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   // if we're reading back stuff, there's no way that _with_array
   // would work, so we'll allocate our own array instead.
   fld->_with_array = false;
+  fld->_domain = mrc_io_read_ref(io, fld, "domain", mrc_domain);
   mrc_fld_setup(fld);
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
 }
@@ -178,83 +152,10 @@ mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
 void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
-  assert(m < f3->_dims.vals[3]);
-  if (f3->_dims.vals[3] > f3->_nr_allocated_comp_name) {
-    for (int i = 0; i < f3->_nr_allocated_comp_name; i++) {
-      free(f3->_comp_name[m]);
-    }
-    free(f3->_comp_name);
-    f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
-    f3->_nr_allocated_comp_name = f3->_dims.vals[3];
-  }
-  free(f3->_comp_name[m]);
-  f3->_comp_name[m] = name ? strdup(name) : NULL;
-}
-
-// ======================================================================
-// mrc_fld subclasses
-
-#define MAKE_MRC_FLD_TYPE(type, TYPE)			\
-							\
-  static void						\
-  mrc_fld_##type##_create(struct mrc_fld *fld)		\
-  {							\
-    fld->_data_type = MRC_NT_##TYPE;			\
-    fld->_size_of_type = sizeof(type);			\
-  }							\
-  							\
-  static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
-    .name                  = #type,			\
-    .create                = mrc_fld_##type##_create,	\
-  };							\
-
-MAKE_MRC_FLD_TYPE(float, FLOAT)
-MAKE_MRC_FLD_TYPE(double, DOUBLE)
-MAKE_MRC_FLD_TYPE(int, INT)
-
-// ----------------------------------------------------------------------
-// mrc_fld_init
-
-static void
-mrc_fld_init()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
-  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
+  mrc_fld_set_comp_name(f3, m, name);
 }
 
 // ----------------------------------------------------------------------
-// mrc_class_mrc_fld
-
-#define VAR(x) (void *)offsetof(struct mrc_fld, x)
-static struct param mrc_fld_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
-
-  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
-  { "len"             , VAR(_len)         , MRC_VAR_INT           },
-  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL          },
-  {},
-};
-#undef VAR
-
-// ----------------------------------------------------------------------
-// mrc_fld class description
-
-struct mrc_class_mrc_fld mrc_class_mrc_fld = {
-  .name         = "mrc_fld",
-  .size         = sizeof(struct mrc_fld),
-  .param_descr  = mrc_fld_descr,
-  .init         = mrc_fld_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
-  .write        = _mrc_fld_write,
-  .read         = _mrc_fld_read,
-};
-
-// ======================================================================
-// mrc_f3
 
 int
 mrc_f3_nr_comps(struct mrc_f3 *f3)
@@ -396,8 +297,37 @@ mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
   }
 }
 
+// ======================================================================
+// mrc_fld subclasses
+
+#define MAKE_MRC_FLD_TYPE(type, TYPE)			\
+							\
+  static void						\
+  mrc_fld_##type##_create(struct mrc_fld *fld)		\
+  {							\
+    fld->_data_type = MRC_NT_##TYPE;			\
+    fld->_size_of_type = sizeof(type);			\
+  }							\
+  							\
+  static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
+    .name                  = #type,			\
+    .create                = mrc_fld_##type##_create,	\
+  };							\
+
+MAKE_MRC_FLD_TYPE(float, FLOAT)
+MAKE_MRC_FLD_TYPE(double, DOUBLE)
+MAKE_MRC_FLD_TYPE(int, INT)
+
 // ----------------------------------------------------------------------
-// mrc_f3_init
+// mrc_fld_init
+
+static void
+mrc_fld_init()
+{
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_float_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_double_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
+}
 
 static void
 mrc_f3_init()
@@ -406,16 +336,47 @@ mrc_f3_init()
 }
 
 // ----------------------------------------------------------------------
-// mrc_class_mrc_f3
+// mrc_class_mrc_fld
 
-#define VAR(x) (void *)offsetof(struct mrc_f3, x)
-static struct param mrc_f3_params_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(4, 0)  },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(4, 0)  },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(4, 0)  },
+#define VAR(x) (void *)offsetof(struct mrc_fld, x)
+static struct param mrc_fld_descr[] = {
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
+
+  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
+  { "len"             , VAR(_len)         , MRC_VAR_INT           },
+  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL          },
   {},
 };
 #undef VAR
+
+#define VAR(x) (void *)offsetof(struct mrc_f3, x)
+static struct param mrc_f3_descr[] = {
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(4, 0)  },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(4, 0)  },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(4, 0)  },
+
+  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
+  { "len"             , VAR(_len)         , MRC_VAR_INT           },
+  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL          },
+  {},
+};
+#undef VAR
+
+// ----------------------------------------------------------------------
+// mrc_fld class description
+
+struct mrc_class_mrc_fld mrc_class_mrc_fld = {
+  .name         = "mrc_fld",
+  .size         = sizeof(struct mrc_fld),
+  .param_descr  = mrc_fld_descr,
+  .init         = mrc_fld_init,
+  .destroy      = _mrc_fld_destroy,
+  .setup        = _mrc_fld_setup,
+  .write        = _mrc_fld_write,
+  .read         = _mrc_fld_read,
+};
 
 static struct mrc_obj_method mrc_f3_methods[] = {
   MRC_OBJ_METHOD("duplicate", mrc_f3_duplicate),
@@ -429,12 +390,15 @@ static struct mrc_obj_method mrc_f3_methods[] = {
 struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
   .name         = "mrc_f3",
   .size         = sizeof(struct mrc_f3),
-  .param_descr  = mrc_f3_params_descr,
+  .param_descr  = mrc_f3_descr,
   .methods      = mrc_f3_methods,
   .init         = mrc_f3_init,
   .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_f3_setup,
+  .setup        = _mrc_fld_setup,
   .read         = _mrc_f3_read,
   .write        = _mrc_f3_write,
 };
+
+// ======================================================================
+// mrc_f3
 
