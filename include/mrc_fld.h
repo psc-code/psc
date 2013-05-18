@@ -79,6 +79,7 @@ struct mrc_fld {
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
+void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
 
 // FIXME, add BOUNDSCHECK/DEBUG versions
 

@@ -226,17 +226,34 @@ mrc_domain_f1_create(struct mrc_domain *domain)
 // mrc_domain_fld_create
 
 struct mrc_fld *
-mrc_domain_fld_create(struct mrc_domain *domain, int sw, int nr_comp)
+mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 {
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
-  int dims[4] = { patches[0].ldims[0], patches[0].ldims[1], patches[0].ldims[2],
-		  nr_comp };
-  int sw_arr[4] = { sw, sw, sw, 0 };
-  mrc_fld_set_param_int_array(fld, "dims", 4, dims);
-  mrc_fld_set_param_int_array(fld, "sw", 4, sw_arr);
+
+  char *s1, *s = strdup(comps), *s_save = s;
+  // count nr of components first
+  int nr_comps = 0;
+  while (strsep(&s, ",:")) {
+    nr_comps++;
+  }
+
+  int *dims = patches[0].ldims;
+  mrc_fld_set_param_int_array(fld, "dims", 4,
+			      (int[4]) { dims[0], dims[1], dims[2], nr_comps });
+  mrc_fld_set_param_int_array(fld, "sw", 4,
+			      (int[4]) { sw, sw, sw, 0 });
+
+  // parse component names
+  s = s_save;
+  strcpy(s, comps);
+  for (int m = 0; (s1 = strsep(&s, ",:")); m++) {
+    mrc_fld_set_comp_name(fld, m, s1);
+  }
+  free(s_save);
+
   fld->_domain = domain;
   return fld;
 }

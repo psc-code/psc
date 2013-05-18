@@ -105,7 +105,7 @@ test_78(int sw)
   mrc_domain_setup(domain);
   mrc_domain_view(domain);
   
-  struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, 2);
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, sw, "test0:test1");
   mrc_fld_set_from_options(fld);
   mrc_fld_setup(fld);
   mrc_fld_view(fld);

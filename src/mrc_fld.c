@@ -22,6 +22,11 @@ _mrc_fld_destroy(struct mrc_fld *fld)
     free(fld->_arr);
   }
   fld->_arr = NULL;
+
+  for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
+    free(fld->_comp_name[m]);
+  }
+  free(fld->_comp_name);
 }
 
 static void
@@ -165,6 +170,41 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
 }
 
+// ----------------------------------------------------------------------
+// mrc_fld_set_comp_name
+
+void
+mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
+{
+  assert(m < fld->_dims.vals[3]);
+  if (fld->_dims.vals[3] > fld->_nr_allocated_comp_name) {
+    for (int i = 0; i < fld->_nr_allocated_comp_name; i++) {
+      free(fld->_comp_name[m]);
+    }
+    free(fld->_comp_name);
+    fld->_comp_name = calloc(fld->_dims.vals[3], sizeof(*fld->_comp_name));
+    fld->_nr_allocated_comp_name = fld->_dims.vals[3];
+  }
+  free(fld->_comp_name[m]);
+  fld->_comp_name[m] = name ? strdup(name) : NULL;
+}
+
+void
+mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
+{
+  assert(m < f3->_dims.vals[3]);
+  if (f3->_dims.vals[3] > f3->_nr_allocated_comp_name) {
+    for (int i = 0; i < f3->_nr_allocated_comp_name; i++) {
+      free(f3->_comp_name[m]);
+    }
+    free(f3->_comp_name);
+    f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
+    f3->_nr_allocated_comp_name = f3->_dims.vals[3];
+  }
+  free(f3->_comp_name[m]);
+  f3->_comp_name[m] = name ? strdup(name) : NULL;
+}
+
 // ======================================================================
 // mrc_fld subclasses
 
@@ -240,22 +280,6 @@ void
 mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
 {
   f3->_dims.vals[3] = nr_comps;
-}
-
-void
-mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
-{
-  assert(m < f3->_dims.vals[3]);
-  if (f3->_dims.vals[3] > f3->_nr_allocated_comp_name) {
-    for (int i = 0; i < f3->_nr_allocated_comp_name; i++) {
-      free(f3->_comp_name[m]);
-    }
-    free(f3->_comp_name);
-    f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
-    f3->_nr_allocated_comp_name = f3->_dims.vals[3];
-  }
-  free(f3->_comp_name[m]);
-  f3->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
 const char *
