@@ -74,6 +74,10 @@ struct mrc_fld {
   int _len;
   bool _with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  // for mrc_f3 emulation
+  int nr_comp;
+  int _nr_allocated_comp_name;
+  char **_comp_name;
 };
 
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
@@ -167,27 +171,6 @@ void mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_com
 void mrc_f2_free(struct mrc_f2 *f2);
 
 // ======================================================================
-
-struct mrc_f3 {
-  struct mrc_obj obj;
-  // parameters
-  struct mrc_param_int_array _dims;
-  struct mrc_param_int_array _offs;
-  struct mrc_param_int_array _sw;
-
-  // state
-  int _ghost_offs[3];
-  int _ghost_dims[3];
-  int _data_type;
-  int _size_of_type;
-  void *_arr;
-  int _len;
-  bool _with_array;
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  int nr_comp;
-  int _nr_allocated_comp_name;
-  char **_comp_name;
-};
 
 MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
