@@ -24,6 +24,20 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   fld->_arr = NULL;
 }
 
+static void
+_mrc_f3_destroy(struct mrc_f3 *f3)
+{
+  if (!f3->_with_array) {
+    free(f3->_arr);
+  }
+  f3->_arr = NULL;
+
+  for (int m = 0; m < f3->_nr_allocated_comp_name; m++) {
+    free(f3->_comp_name[m]);
+  }
+  free(f3->_comp_name);
+}
+
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
@@ -52,6 +66,23 @@ _mrc_fld_setup(struct mrc_fld *fld)
   }
 }
 
+static void
+_mrc_f3_setup(struct mrc_f3 *f3)
+{
+  for (int d = 0; d < 3; d++) {
+    f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw.vals[d];
+    f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw.vals[d];
+  }
+  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
+
+  if (!f3->_arr) {
+    f3->_arr = calloc(f3->_len, sizeof(float));
+    f3->_with_array = false;
+  } else {
+    f3->_with_array = true;
+  }
+}
+
 // ----------------------------------------------------------------------
 // mrc_fld_set_array
 
@@ -63,6 +94,13 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
   fld->_with_array = true;
 }
 
+void
+mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
+{
+  assert(!f3->_arr);
+  f3->_arr = arr;
+}
+
 // ----------------------------------------------------------------------
 // mrc_fld_write
 
@@ -70,6 +108,13 @@ static void
 _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 {
   mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
+}
+
+static void
+_mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
+{
+  mrc_io_write_ref(io, f3, "domain", f3->_domain);
+  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -83,6 +128,27 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   fld->_with_array = false;
   mrc_fld_setup(fld);
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
+}
+
+static void
+_mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
+{
+  f3->_domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
+
+  // rely on domain rather than read params
+  // since the domain may be different (# of procs) when
+  // we're reading things back
+  // basically, we should use mrc_domain_f3_create()
+  int nr_patches;
+  struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
+  assert(nr_patches == 1);
+  mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
+  mrc_f3_set_param_int3(f3, "offs", (int[3]) { 0, 0, 0 });
+  mrc_f3_setup(f3);
+  // FIXME, the whole _comp_name business is screwy here
+  free(f3->_comp_name); 
+  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
+  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
 }
 
 // ======================================================================
@@ -150,37 +216,6 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 // ======================================================================
 // mrc_f3
 
-static void
-_mrc_f3_destroy(struct mrc_f3 *f3)
-{
-  if (!f3->_with_array) {
-    free(f3->_arr);
-  }
-  f3->_arr = NULL;
-
-  for (int m = 0; m < f3->_nr_allocated_comp_name; m++) {
-    free(f3->_comp_name[m]);
-  }
-  free(f3->_comp_name);
-}
-
-static void
-_mrc_f3_setup(struct mrc_f3 *f3)
-{
-  for (int d = 0; d < 3; d++) {
-    f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw.vals[d];
-    f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw.vals[d];
-  }
-  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->nr_comp;
-
-  if (!f3->_arr) {
-    f3->_arr = calloc(f3->_len, sizeof(float));
-    f3->_with_array = false;
-  } else {
-    f3->_with_array = true;
-  }
-}
-
 void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
@@ -202,13 +237,6 @@ mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 {
   assert(m < f3->nr_comp && m < f3->_nr_allocated_comp_name);
   return f3->_comp_name[m];
-}
-
-void
-mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
-{
-  assert(!f3->_arr);
-  f3->_arr = arr;
 }
 
 const int *
@@ -302,34 +330,6 @@ mrc_f3_norm(struct mrc_f3 *x)
 
   MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f3_comm(x));
   return res;
-}
-
-static void
-_mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
-{
-  f3->_domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
-
-  // rely on domain rather than read params
-  // since the domain may be different (# of procs) when
-  // we're reading things back
-  // basically, we should use mrc_domain_f3_create()
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
-  assert(nr_patches == 1);
-  mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int3(f3, "offs", (int[3]) { 0, 0, 0 });
-  mrc_f3_setup(f3);
-  // FIXME, the whole _comp_name business is screwy here
-  free(f3->_comp_name); 
-  f3->_comp_name = calloc(f3->nr_comp, sizeof(*f3->_comp_name));
-  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
-}
-
-static void
-_mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
-{
-  mrc_io_write_ref(io, f3, "domain", f3->_domain);
-  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, 1.);
 }
 
 void
