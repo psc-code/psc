@@ -91,16 +91,15 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
 #define MAKE_MRC_FLD_TYPE(type, TYPE)			\
 							\
   static void						\
-  mrc_fld_##type##_setup(struct mrc_fld *fld)		\
+  mrc_fld_##type##_create(struct mrc_fld *fld)		\
   {							\
     fld->_data_type = MRC_NT_##TYPE;			\
     fld->_size_of_type = sizeof(type);			\
-    mrc_fld_setup_super(fld);				\
   }							\
   							\
   static struct mrc_fld_ops mrc_fld_##type##_ops = {	\
     .name                  = #type,			\
-    .setup                 = mrc_fld_##type##_setup,	\
+    .create                = mrc_fld_##type##_create,	\
   };							\
 
 MAKE_MRC_FLD_TYPE(float, FLOAT)
