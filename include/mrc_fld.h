@@ -188,6 +188,10 @@ void mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io);
 void mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale);
 void mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[]);
 
+struct mrc_f3_ops {
+  MRC_SUBCLASS_OPS(struct mrc_f3);
+};
+
 static inline bool
 mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 {
