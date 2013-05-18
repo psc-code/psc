@@ -9,7 +9,7 @@
 #include <stddef.h>
 
 enum param_type {
-  PT_INT,
+  PT_INT,   // 0
   PT_UINT,
   PT_BOOL,
   PT_FLOAT,
@@ -19,7 +19,7 @@ enum param_type {
   PT_INT3,
   PT_FLOAT3,
   PT_DOUBLE3,
-  PT_PTR,
+  PT_PTR,   // 10
   PT_OBJ,
   PT_INT_ARRAY,
   MRC_VAR_INT,
