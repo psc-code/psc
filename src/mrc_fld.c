@@ -69,6 +69,16 @@ _mrc_fld_setup(struct mrc_fld *fld)
 static void
 _mrc_f3_setup(struct mrc_f3 *f3)
 {
+  if (f3->_offs.nr_vals == 0) {
+    f3->_offs.nr_vals = f3->_dims.nr_vals;
+  }
+  if (f3->_sw.nr_vals == 0) {
+    f3->_sw.nr_vals = f3->_dims.nr_vals;
+  }
+  assert(f3->_dims.nr_vals == f3->_offs.nr_vals &&
+	 f3->_dims.nr_vals == f3->_sw.nr_vals);
+  assert(f3->_dims.nr_vals == 4);
+
   for (int d = 0; d < 3; d++) {
     f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw.vals[d];
     f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw.vals[d];
@@ -142,8 +152,12 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
   assert(nr_patches == 1);
-  mrc_f3_set_param_int3(f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int3(f3, "offs", (int[3]) { 0, 0, 0 });
+  int *dims = patches[0].ldims;
+  int nr_comps = mrc_f3_nr_comps(f3);
+  mrc_f3_set_param_int_array(f3, "dims", 4,
+			     (int[4]) { dims[0], dims[1], dims[2], nr_comps });
+  mrc_f3_set_param_int_array(f3, "offs", 4,
+			     (int[4]) { 0, 0, 0, 0 });
   mrc_f3_setup(f3);
   // FIXME, the whole _comp_name business is screwy here
   f3->_comp_name = calloc(f3->_nr_comp, sizeof(*f3->_comp_name));
@@ -399,9 +413,9 @@ mrc_f3_init()
 
 #define VAR(x) (void *)offsetof(struct mrc_f3, x)
 static struct param mrc_f3_params_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(3, 0)  },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(3, 0)  },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(3, 0)  },
+  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(4, 0)  },
+  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(4, 0)  },
+  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(4, 0)  },
   { "nr_comps"        , VAR(_nr_comp)     , PARAM_INT(1)           },
   {},
 };

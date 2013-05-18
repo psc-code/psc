@@ -744,6 +744,16 @@ ds_xdmf_read_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
     break;
+  case PT_INT_ARRAY: {
+    int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
+    H5A_info_t ainfo;
+    ierr = H5Aget_info(attr, &ainfo); CE;
+    ierr = H5Aclose(attr); CE;
+    pv->u_int_array.nr_vals = ainfo.data_size / sizeof(int);
+    pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+    ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
+    break;
+  }
   }
   ierr = H5Gclose(group); CE;
 }
@@ -794,6 +804,9 @@ ds_xdmf_write_attr(struct mrc_io *io, const char *path, int type,
     break;
   case PT_FLOAT3:
     H5LTset_attribute_float(group, ".", name, pv->u_float3, 3);
+    break;
+  case PT_INT_ARRAY:
+    H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals, pv->u_int_array.nr_vals);
     break;
   }
   ierr = H5Gclose(group); CE;
@@ -938,7 +951,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
   if (c == 'x') {
     assert(!hdf5->vfld);
     hdf5->vfld = mrc_f3_create(mrc_f3_comm(fld));
-    mrc_f3_set_param_int3(hdf5->vfld, "dims", dims);
+    mrc_f3_set_param_int_array(hdf5->vfld, "dims", 4,
+			       (int[4]) { dims[0], dims[1], dims[2], 3 });
     mrc_f3_set_nr_comps(hdf5->vfld, 3);
     mrc_f3_setup(hdf5->vfld);
     copy_and_scale(hdf5->vfld, 0, fld, m, scale);
@@ -970,7 +984,8 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
       ierr = H5Gclose(group); CE;
     } else {
       struct mrc_f3 *sfld = mrc_f3_create(mrc_f3_comm(fld));
-      mrc_f3_set_param_int3(sfld, "dims", dims);
+      mrc_f3_set_param_int_array(sfld, "dims", 4,
+				 (int[4]) { dims[0], dims[1], dims[2], 1 });
       mrc_f3_setup(sfld);
       copy_and_scale(sfld, 0, fld, m, scale);
 
@@ -1554,16 +1569,22 @@ communicate_fld(struct mrc_io *io, struct mrc_f3 *gfld, int m, float scale,
       struct mrc_f3 *recv_fld;
       if (n == 0) {
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "offs", mrc_f3_off(send_fld));
-	mrc_f3_set_param_int3(recv_fld, "dims", mrc_f3_dims(send_fld));
+	const int *dims = mrc_f3_dims(send_fld);
+	const int *offs = mrc_f3_off(send_fld);
+	mrc_f3_set_param_int_array(recv_fld, "dims", 4,
+				   (int[4]) { dims[0], dims[1], dims[2], 1 });
+	mrc_f3_set_param_int_array(recv_fld, "offs", 4,
+				   (int[4]) { offs[0], offs[1], offs[2], 0 });
 	mrc_f3_set_array(recv_fld, send_fld->_arr);
 	mrc_f3_setup(recv_fld);
       } else {
 	int iw[6], *off = iw, *dim = iw + 3;
 	MPI_Recv(iw, 6, MPI_INT, n, TAG_OFF_DIMS, io->obj.comm, MPI_STATUS_IGNORE);
 	recv_fld = mrc_f3_create(MPI_COMM_SELF);
-	mrc_f3_set_param_int3(recv_fld, "offs", off);
-	mrc_f3_set_param_int3(recv_fld, "dims", dim);
+	mrc_f3_set_param_int_array(recv_fld, "dims", 4,
+				   (int[4]) { dim[0], dim[1], dim[2], 1 });
+	mrc_f3_set_param_int_array(recv_fld, "offs", 4,
+				   (int[4]) { off[0], off[1], off[2], 1 });
 	mrc_f3_setup(recv_fld);
 	MPI_Recv(recv_fld->_arr, recv_fld->_len, MPI_FLOAT, n, TAG_DATA, io->obj.comm,
 		 MPI_STATUS_IGNORE);
@@ -1897,7 +1918,8 @@ ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld
   int *off = patches[0].off, *ldims = patches[0].ldims;
 
   struct mrc_f3 *lfld = mrc_f3_create(MPI_COMM_SELF);
-  mrc_f3_set_param_int3(lfld, "dims", ldims);
+  mrc_f3_set_param_int_array(lfld, "dims", 4,
+			     (int[4]) { ldims[0], ldims[1], ldims[2], 1 });
   mrc_f3_setup(lfld);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT);
@@ -1999,7 +2021,8 @@ ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
   // strip boundary, could be done through hyperslab, but
   // still have to scale, anyway
   struct mrc_f3 *lfld = mrc_f3_create(MPI_COMM_SELF);
-  mrc_f3_set_param_int3(lfld, "dims", ldims);
+  mrc_f3_set_param_int_array(lfld, "dims", 4,
+			     (int[4]) { ldims[0], ldims[1], ldims[2], 1});
   mrc_f3_setup(lfld);
   copy_and_scale(lfld, 0, fld, m, scale);
 

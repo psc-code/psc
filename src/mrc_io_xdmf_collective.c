@@ -199,6 +199,10 @@ xdmf_collective_write_attr(struct mrc_io *io, const char *path, int type,
   case PT_FLOAT3:
     ierr = H5LTset_attribute_float(group, ".", name, pv->u_float3, 3); CE;
     break;
+  case PT_INT_ARRAY:
+    ierr = H5LTset_attribute_int(group, ".", name, pv->u_int_array.vals,
+				 pv->u_int_array.nr_vals); CE;
+    break;
   }
   ierr = H5Gclose(group); CE;
 }
@@ -244,6 +248,16 @@ xdmf_collective_read_attr(struct mrc_io *io, const char *path, int type,
     case PT_FLOAT3:
       ierr = H5LTget_attribute_float(group, ".", name, pv->u_float3); CE;
       break;
+    case PT_INT_ARRAY: {
+      int attr = H5Aopen(group, name, H5P_DEFAULT); H5_CHK(attr);
+      H5A_info_t ainfo;
+      ierr = H5Aget_info(attr, &ainfo); CE;
+      ierr = H5Aclose(attr); CE;
+      pv->u_int_array.nr_vals = ainfo.data_size / sizeof(int);
+      pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+      ierr = H5LTget_attribute_int(group, ".", name, pv->u_int_array.vals); CE;
+      break;
+    }
     }
     ierr = H5Gclose(group); CE;
   }
@@ -926,8 +940,10 @@ collective_recv_f3_begin(struct collective_m3_ctx *ctx,
     }
     ctx->recv_gps[rr] = gp;
     struct mrc_f3 *recv_f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(recv_f3, "dims", info.ldims);
-    mrc_f3_set_param_int3(recv_f3, "sw", (int[3]) { m3->sw, m3->sw, m3->sw });
+    mrc_f3_set_param_int_array(recv_f3, "dims", 4,
+			       (int[4]) { info.ldims[0], info.ldims[1], info.ldims[2], 1 });
+    mrc_f3_set_param_int_array(recv_f3, "sw", 4,
+			       (int[4]) { m3->sw, m3->sw, m3->sw, 0 });
     mrc_f3_setup(recv_f3);
     ctx->recvs[rr].f3 = recv_f3;
     
@@ -1094,8 +1110,10 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
     /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "offs", writer_off);
-    mrc_f3_set_param_int3(f3, "dims", writer_dims);
+    mrc_f3_set_param_int_array(f3, "dims", 4,
+			       (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 0 });
+    mrc_f3_set_param_int_array(f3, "offs", 4,
+			       (int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
     mrc_f3_setup(f3);
 
     hid_t group0;
@@ -1173,9 +1191,11 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     struct collective_m3_entry *send = &ctx->sends[i];
     int *ilo = send->ilo, *ihi = send->ihi;
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
-    mrc_f3_set_param_int3(f3, "offs", ilo);
-    mrc_f3_set_param_int3(f3, "dims",
-			  (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
+    mrc_f3_set_param_int_array(f3, "offs", 4,
+			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
+    mrc_f3_set_param_int_array(f3, "dims", 4,
+			       (int [4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
+				   mrc_f3_nr_comps(gfld) });
     mrc_f3_set_nr_comps(f3, mrc_f3_nr_comps(gfld));
     mrc_f3_setup(f3);
     
@@ -1274,9 +1294,11 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
 
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
     int *ilo = recv->ilo, *ihi = recv->ihi; // FIXME, -> off, dims
-    mrc_f3_set_param_int3(f3, "offs", ilo);
-    mrc_f3_set_param_int3(f3, "dims",
-			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
+    mrc_f3_set_param_int_array(f3, "offs", 4,
+			       (int[4]) { ilo[0], ilo[1], ilo[2], 0 });
+    mrc_f3_set_param_int_array(f3, "dims", 4,
+			       (int[4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
+				   m3->nr_comp });
     mrc_f3_set_nr_comps(f3, m3->nr_comp);
     mrc_f3_setup(f3);
     
@@ -1363,8 +1385,10 @@ collective_m3_read_f3(struct mrc_io *io, struct collective_m3_ctx *ctx,
   /* 	    writer_off[0], writer_off[1], writer_off[2], */
   /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-  mrc_f3_set_param_int3(f3, "offs", writer_off);
-  mrc_f3_set_param_int3(f3, "dims", writer_dims);
+  mrc_f3_set_param_int_array(f3, "offs", 4,
+			     (int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
+  mrc_f3_set_param_int_array(f3, "dims", 4,
+			     (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
   mrc_f3_setup(f3);
 
   hsize_t fdims[3] = { ctx->gdims[2], ctx->gdims[1], ctx->gdims[0] };
