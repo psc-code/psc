@@ -72,7 +72,6 @@ struct mrc_fld {
   bool _with_array;
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   // for mrc_f3 emulation
-  int _nr_comp;
   int _nr_allocated_comp_name;
   char **_comp_name;
 };
@@ -194,10 +193,10 @@ struct mrc_f3_ops {
 static inline bool
 mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
 {
-  return (f3_1->_nr_comp == f3_2->_nr_comp &&
-	  f3_1->_ghost_dims[0] == f3_2->_ghost_dims[0] &&
+  return (f3_1->_ghost_dims[0] == f3_2->_ghost_dims[0] &&
 	  f3_1->_ghost_dims[1] == f3_2->_ghost_dims[1] &&
-	  f3_1->_ghost_dims[2] == f3_2->_ghost_dims[2]);
+	  f3_1->_ghost_dims[2] == f3_2->_ghost_dims[2] &&
+	  f3_1->_ghost_dims[3] == f3_2->_ghost_dims[3]);
 }
 
 #define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\

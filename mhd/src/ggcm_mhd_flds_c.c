@@ -91,9 +91,11 @@ ggcm_mhd_flds_c_setup(struct ggcm_mhd_flds *flds)
   int nr_patches;
   struct mrc_patch *patches = mrc_domain_get_patches(flds->mhd->domain, &nr_patches);
   assert(nr_patches == 1);
-  mrc_f3_set_param_int3(flds->f3, "dims", patches[0].ldims);
-  mrc_f3_set_param_int3(flds->f3, "sw", (int[3]) { BND, BND, BND });
-  mrc_f3_set_nr_comps(flds->f3, _NR_FLDS);
+  int *ldims = patches[0].ldims;
+  mrc_f3_set_param_int_array(flds->f3, "dims", 4,
+			     (int[4]) { ldims[0], ldims[1], ldims[2], _NR_FLDS });
+  mrc_f3_set_param_int_array(flds->f3, "sw", 4,
+			     (int[4]) { BND, BND, BND, 0 });
   flds->f3->_domain = flds->mhd->domain;
   mrc_f3_setup(flds->f3);
   for (int m = 0; m < _NR_FLDS; m++) {

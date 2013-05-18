@@ -261,7 +261,6 @@ mrc_domain_f3_create(struct mrc_domain *domain, int sw, const char *comps)
   while (strsep(&s, ",:")) {
     nr_comps++;
   }
-  mrc_f3_set_nr_comps(f3, nr_comps);
 
   int *ldims = patches[0].ldims;
   mrc_f3_set_param_int_array(f3, "dims", 4,

@@ -79,11 +79,11 @@ _mrc_f3_setup(struct mrc_f3 *f3)
 	 f3->_dims.nr_vals == f3->_sw.nr_vals);
   assert(f3->_dims.nr_vals == 4);
 
-  for (int d = 0; d < 3; d++) {
+  for (int d = 0; d < f3->_dims.nr_vals; d++) {
     f3->_ghost_offs[d] = f3->_offs.vals[d] - f3->_sw.vals[d];
     f3->_ghost_dims[d] = f3->_dims.vals[d] + 2 * f3->_sw.vals[d];
   }
-  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->_nr_comp;
+  f3->_len = f3->_ghost_dims[0] * f3->_ghost_dims[1] * f3->_ghost_dims[2] * f3->_ghost_dims[3];
 
   if (!f3->_arr) {
     f3->_arr = calloc(f3->_len, sizeof(float));
@@ -160,8 +160,8 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
 			     (int[4]) { 0, 0, 0, 0 });
   mrc_f3_setup(f3);
   // FIXME, the whole _comp_name business is screwy here
-  f3->_comp_name = calloc(f3->_nr_comp, sizeof(*f3->_comp_name));
-  f3->_nr_allocated_comp_name = f3->_nr_comp;
+  f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
+  f3->_nr_allocated_comp_name = f3->_dims.vals[3];
   mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
 }
 
@@ -233,26 +233,26 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
 int
 mrc_f3_nr_comps(struct mrc_f3 *f3)
 {
-  return f3->_nr_comp;
+  return f3->_dims.vals[3];
 }
 
 void
 mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
 {
-  f3->_nr_comp = nr_comps;
+  f3->_dims.vals[3] = nr_comps;
 }
 
 void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
-  assert(m < f3->_nr_comp);
-  if (f3->_nr_comp > f3->_nr_allocated_comp_name) {
+  assert(m < f3->_dims.vals[3]);
+  if (f3->_dims.vals[3] > f3->_nr_allocated_comp_name) {
     for (int i = 0; i < f3->_nr_allocated_comp_name; i++) {
       free(f3->_comp_name[m]);
     }
     free(f3->_comp_name);
-    f3->_comp_name = calloc(f3->_nr_comp, sizeof(*f3->_comp_name));
-    f3->_nr_allocated_comp_name = f3->_nr_comp;
+    f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
+    f3->_nr_allocated_comp_name = f3->_dims.vals[3];
   }
   free(f3->_comp_name[m]);
   f3->_comp_name[m] = name ? strdup(name) : NULL;
@@ -261,7 +261,7 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 const char *
 mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 {
-  assert(m < f3->_nr_comp && m < f3->_nr_allocated_comp_name);
+  assert(m < f3->_dims.vals[3] && m < f3->_nr_allocated_comp_name);
   return f3->_comp_name[m];
 }
 
@@ -293,10 +293,9 @@ struct mrc_f3 *
 mrc_f3_duplicate(struct mrc_f3 *f3)
 {
   struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
-  mrc_f3_set_param_int3(f3_new, "offs", f3->_offs.vals);
-  mrc_f3_set_param_int3(f3_new, "dims", f3->_dims.vals);
-  mrc_f3_set_param_int3(f3_new, "sw", f3->_sw.vals);
-  mrc_f3_set_nr_comps(f3_new, f3->_nr_comp);
+  mrc_f3_set_param_int_array(f3_new, "dims", f3->_dims.nr_vals, f3->_dims.vals);
+  mrc_f3_set_param_int_array(f3_new, "offs", f3->_offs.nr_vals, f3->_offs.vals);
+  mrc_f3_set_param_int_array(f3_new, "sw", f3->_sw.nr_vals, f3->_sw.vals);
   f3_new->_domain = f3->_domain;
   mrc_f3_setup(f3_new);
   return f3_new;
@@ -325,7 +324,7 @@ mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
   assert(mrc_f3_same_shape(x, y));
 
   mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_nr_comp; m++) {
+    for (int m = 0; m < x->_dims.vals[3]; m++) {
       MRC_F3(y,m, ix,iy,iz) += alpha * MRC_F3(x,m, ix,iy,iz);
     }
   } mrc_f3_foreach_end;
@@ -338,7 +337,7 @@ mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
   assert(mrc_f3_same_shape(x, w));
 
   mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_nr_comp; m++) {
+    for (int m = 0; m < x->_dims.vals[3]; m++) {
       MRC_F3(w,m, ix,iy,iz) = alpha * MRC_F3(x,m, ix,iy,iz) + MRC_F3(y,m, ix,iy,iz);
     }
   } mrc_f3_foreach_end;
@@ -349,7 +348,7 @@ mrc_f3_norm(struct mrc_f3 *x)
 {
   float res = 0.;
   mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_nr_comp; m++) {
+    for (int m = 0; m < x->_dims.vals[3]; m++) {
       res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
     }
   } mrc_f3_foreach_end;
@@ -416,7 +415,6 @@ static struct param mrc_f3_params_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(4, 0)  },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(4, 0)  },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(4, 0)  },
-  { "nr_comps"        , VAR(_nr_comp)     , PARAM_INT(1)           },
   {},
 };
 #undef VAR

@@ -1111,7 +1111,7 @@ xdmf_collective_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
     struct mrc_f3 *f3 = mrc_f3_create(MPI_COMM_NULL);
     mrc_f3_set_param_int_array(f3, "dims", 4,
-			       (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 0 });
+			       (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
     mrc_f3_set_param_int_array(f3, "offs", 4,
 			       (int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
     mrc_f3_setup(f3);
@@ -1196,7 +1196,6 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int_array(f3, "dims", 4,
 			       (int [4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
 				   mrc_f3_nr_comps(gfld) });
-    mrc_f3_set_nr_comps(f3, mrc_f3_nr_comps(gfld));
     mrc_f3_setup(f3);
     
     for (int m = 0; m < mrc_f3_nr_comps(gfld); m++) {
@@ -1299,7 +1298,6 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int_array(f3, "dims", 4,
 			       (int[4]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2],
 				   m3->nr_comp });
-    mrc_f3_set_nr_comps(f3, m3->nr_comp);
     mrc_f3_setup(f3);
     
     MPI_Irecv(f3->_arr, f3->_len, MPI_FLOAT, recv->rank,
@@ -1385,10 +1383,11 @@ collective_m3_read_f3(struct mrc_io *io, struct collective_m3_ctx *ctx,
   /* 	    writer_off[0], writer_off[1], writer_off[2], */
   /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
+  int nr_comps = f3->_dims.vals[3];
+  mrc_f3_set_param_int_array(f3, "dims", 4,
+			     (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], nr_comps });
   mrc_f3_set_param_int_array(f3, "offs", 4,
 			     (int[4]) { writer_off[0], writer_off[1], writer_off[2], 0 });
-  mrc_f3_set_param_int_array(f3, "dims", 4,
-			     (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], 1 });
   mrc_f3_setup(f3);
 
   hsize_t fdims[3] = { ctx->gdims[2], ctx->gdims[1], ctx->gdims[0] };
