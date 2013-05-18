@@ -263,7 +263,7 @@ mrc_domain_f3_create(struct mrc_domain *domain, int sw, const char *comps)
     while (strsep(&s, ",:")) {
       nr_comps++;
     }
-    mrc_f3_set_param_int(f3, "nr_comps", nr_comps);
+    mrc_f3_set_nr_comps(f3, nr_comps);
 
     // parse component names
     s = s_save;

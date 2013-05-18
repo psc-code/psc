@@ -939,7 +939,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
     assert(!hdf5->vfld);
     hdf5->vfld = mrc_f3_create(mrc_f3_comm(fld));
     mrc_f3_set_param_int3(hdf5->vfld, "dims", dims);
-    mrc_f3_set_param_int(hdf5->vfld, "nr_comps", 3);
+    mrc_f3_set_nr_comps(hdf5->vfld, 3);
     mrc_f3_setup(hdf5->vfld);
     copy_and_scale(hdf5->vfld, 0, fld, m, scale);
   } else if (c == 'y') {

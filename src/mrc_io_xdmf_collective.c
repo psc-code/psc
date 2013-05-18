@@ -1176,7 +1176,7 @@ collective_m3_send_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int3(f3, "offs", ilo);
     mrc_f3_set_param_int3(f3, "dims",
 			  (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
-    mrc_f3_set_param_int(f3, "nr_comps", mrc_f3_nr_comps(gfld));
+    mrc_f3_set_nr_comps(f3, mrc_f3_nr_comps(gfld));
     mrc_f3_setup(f3);
     
     for (int m = 0; m < mrc_f3_nr_comps(gfld); m++) {
@@ -1277,7 +1277,7 @@ collective_m3_recv_begin(struct mrc_io *io, struct collective_m3_ctx *ctx,
     mrc_f3_set_param_int3(f3, "offs", ilo);
     mrc_f3_set_param_int3(f3, "dims",
 			    (int [3]) { ihi[0] - ilo[0], ihi[1] - ilo[1], ihi[2] - ilo[2] });
-    mrc_f3_set_param_int(f3, "nr_comps", m3->nr_comp);
+    mrc_f3_set_nr_comps(f3, m3->nr_comp);
     mrc_f3_setup(f3);
     
     MPI_Irecv(f3->_arr, f3->_len, MPI_FLOAT, recv->rank,
@@ -1412,7 +1412,7 @@ xdmf_collective_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3)
 
   if (xdmf->is_writer) {
     struct mrc_f3 *gfld = mrc_f3_create(MPI_COMM_SELF);
-    mrc_f3_set_param_int(gfld, "nr_comps", m3->nr_comp);
+    mrc_f3_set_nr_comps(gfld, m3->nr_comp);
 
     hid_t group0 = H5Gopen(file->h5_file, path, H5P_DEFAULT); H5_CHK(group0);
     collective_m3_read_f3(io, &ctx, group0, gfld);
