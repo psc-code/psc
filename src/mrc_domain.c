@@ -232,6 +232,9 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
   struct mrc_patch *patches = mrc_domain_get_patches(domain, &nr_patches);
   assert(nr_patches == 1);
   struct mrc_fld *fld = mrc_fld_create(mrc_domain_comm(domain));
+  if (!comps) {
+    comps = ""; // FIXME?
+  }
 
   char *s1, *s = strdup(comps), *s_save = s;
   // count nr of components first

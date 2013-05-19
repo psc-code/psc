@@ -168,6 +168,23 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_comp_name
+
+const char *
+mrc_fld_comp_name(struct mrc_fld *fld, int m)
+{
+  assert(m < fld->_dims.vals[3] && m < fld->_nr_allocated_comp_name);
+  return fld->_comp_name[m];
+}
+
+const char *
+mrc_f3_comp_name(struct mrc_f3 *f3, int m)
+{
+  assert(m < f3->_dims.vals[3] && m < f3->_nr_allocated_comp_name);
+  return f3->_comp_name[m];
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_nr_comps
 
 int
@@ -196,6 +213,36 @@ void
 mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
 {
   f3->_dims.vals[3] = nr_comps;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_offs
+
+const int *
+mrc_fld_offs(struct mrc_fld *fld)
+{
+  return fld->_offs.vals;
+}
+
+const int *
+mrc_f3_off(struct mrc_f3 *f3)
+{
+  return f3->_offs.vals;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_dims
+
+const int *
+mrc_fld_dims(struct mrc_fld *fld)
+{
+  return fld->_dims.vals;
+}
+
+const int *
+mrc_f3_dims(struct mrc_f3 *f3)
+{
+  return f3->_dims.vals;
 }
 
 // ----------------------------------------------------------------------
@@ -356,25 +403,6 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
 }
 
 // ----------------------------------------------------------------------
-
-const char *
-mrc_f3_comp_name(struct mrc_f3 *f3, int m)
-{
-  assert(m < f3->_dims.vals[3] && m < f3->_nr_allocated_comp_name);
-  return f3->_comp_name[m];
-}
-
-const int *
-mrc_f3_off(struct mrc_f3 *f3)
-{
-  return f3->_offs.vals;
-}
-
-const int *
-mrc_f3_dims(struct mrc_f3 *f3)
-{
-  return f3->_dims.vals;
-}
 
 void
 mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
