@@ -960,11 +960,19 @@ mrc_obj_write_dict(struct mrc_obj *obj, const char *path, struct mrc_io *io)
   }
 }
 
+static unsigned long
+mrc_obj_uid(struct mrc_obj *obj)
+{
+  unsigned long uid = (unsigned long) obj;
+  MPI_Bcast(&uid, 1, MPI_LONG, 0, obj->comm);
+  return uid;
+}
+
 void
 mrc_obj_write(struct mrc_obj *obj, struct mrc_io *io)
 {
   char path[strlen(obj->name) + 20];
-  sprintf(path, "%s-uid-%p", obj->name, obj);
+  sprintf(path, "%s-uid-%#lx", obj->name, mrc_obj_uid(obj));
   if (mrc_io_add_obj(io, obj, path) == 1) // exists?
     return;
 
