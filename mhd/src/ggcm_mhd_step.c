@@ -49,8 +49,8 @@ ggcm_mhd_step_push(struct ggcm_mhd_step *step)
 // ggcm_mhd_step_calc_rhs
 
 void
-ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_f3 *rhs,
-		       struct mrc_f3 *x)
+ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
+		       struct mrc_fld *x)
 {
   struct ggcm_mhd_step_ops *ops = ggcm_mhd_step_ops(step);
   assert(ops && ops->calc_rhs);

@@ -14,8 +14,8 @@ struct ggcm_mhd_step_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_step);
   void (*pred)(struct ggcm_mhd_step *);
   void (*corr)(struct ggcm_mhd_step *);
-  void (*calc_rhs)(struct ggcm_mhd_step *step, struct mrc_f3 *rhs,
-		   struct mrc_f3 *x);
+  void (*calc_rhs)(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
+		   struct mrc_fld *x);
 
   int task_pred_nl1;
   int task_corr_nl1;

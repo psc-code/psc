@@ -230,8 +230,8 @@ void
 ts_ggcm_mhd_step_calc_rhs(void *ctx, struct mrc_obj *_rhs, float time, struct mrc_obj *_fld)
 {
   struct ggcm_mhd *mhd = ctx;
-  struct mrc_f3 *rhs = (struct mrc_f3 *) _rhs;
-  struct mrc_f3 *fld = (struct mrc_f3 *) _fld;
+  struct mrc_fld *rhs = (struct mrc_fld *) _rhs;
+  struct mrc_fld *fld = (struct mrc_fld *) _fld;
   
   mhd->time = time;
   ggcm_mhd_step_calc_rhs(mhd->step, rhs, fld);

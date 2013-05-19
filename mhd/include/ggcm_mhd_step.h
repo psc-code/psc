@@ -26,8 +26,8 @@ void ggcm_mhd_step_corr(struct ggcm_mhd_step *step);
 void ggcm_mhd_step_push(struct ggcm_mhd_step *step);
 
 // calculate the r.h.s. in the given scheme
-// should be more general than taking mrc_f3, eventually
-void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_f3 *rhs,
-			    struct mrc_f3 *x);
+// should be more general than taking mrc_fld, eventually
+void ggcm_mhd_step_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
+			    struct mrc_fld *x);
 
 #endif
