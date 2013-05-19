@@ -412,25 +412,33 @@ mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
 }
 
 // ----------------------------------------------------------------------
-// mrc_f3_write_comps
+// mrc_fld_write_comps
+
+void
+mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
+{
+  for (int i = 0; mm[i] >= 0; i++) {
+    struct mrc_fld *fld1 = mrc_fld_create(mrc_fld_comm(fld));
+    mrc_fld_set_param_int_array(fld1, "offs", fld->_offs.nr_vals, fld->_offs.vals);
+    int *dims = fld->_dims.vals;
+    mrc_fld_set_param_int_array(fld1, "dims", 4,
+				(int[4]) { dims[0], dims[1], dims[2], 1 });
+    mrc_fld_set_param_int_array(fld1, "sw", fld->_sw.nr_vals, fld->_sw.vals);
+    int *ib = fld->_ghost_offs;
+    mrc_fld_set_array(fld1, &MRC_F3(fld,mm[i], ib[0], ib[1], ib[2]));
+    mrc_fld_set_name(fld1, fld->_comp_name[mm[i]]);
+    mrc_fld_set_comp_name(fld1, 0, fld->_comp_name[mm[i]]);
+    fld1->_domain = fld->_domain;
+    mrc_fld_setup(fld1);
+    mrc_fld_write(fld1, io);
+    mrc_fld_destroy(fld1);
+  }
+}
 
 void
 mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
 {
-  for (int i = 0; mm[i] >= 0; i++) {
-    struct mrc_f3 *fld1 = mrc_f3_create(mrc_f3_comm(f3));
-    mrc_f3_set_param_int3(fld1, "offs", f3->_offs.vals);
-    mrc_f3_set_param_int3(fld1, "dims", f3->_dims.vals);
-    mrc_f3_set_param_int3(fld1, "sw", f3->_sw.vals);
-    int *ib = f3->_ghost_offs;
-    mrc_f3_set_array(fld1, &MRC_F3(f3,mm[i], ib[0], ib[1], ib[2]));
-    mrc_f3_set_name(fld1, f3->_comp_name[mm[i]]);
-    mrc_f3_set_comp_name(fld1, 0, f3->_comp_name[mm[i]]);
-    fld1->_domain = f3->_domain;
-    mrc_f3_setup(fld1);
-    mrc_f3_write(fld1, io);
-    mrc_f3_destroy(fld1);
-  }
+  mrc_fld_write_comps((struct mrc_fld *) f3, io, mm);
 }
 
 // ======================================================================
