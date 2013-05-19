@@ -72,7 +72,7 @@ static struct ggcm_mhd_ops ggcm_mhd_cweno_ops = {
 static void
 diag_write(void *_mhd, float time, struct mrc_obj *_x, FILE *file)
 {
-  struct mrc_f3 *x = (struct mrc_f3 *) _x;
+  struct mrc_fld *x = (struct mrc_fld *) _x;
 
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -158,7 +158,7 @@ main(int argc, char **argv)
   mrc_ts_add_monitor(ts, mon_diag);
 
   mrc_ts_set_dt(ts, 1e-6);
-  mrc_ts_set_solution(ts, mrc_f3_to_mrc_obj(ggcm_mhd_flds_get_mrc_f3(mhd->flds_base)));
+  mrc_ts_set_solution(ts, mrc_fld_to_mrc_obj(ggcm_mhd_flds_get_mrc_fld(mhd->flds_base)));
   mrc_ts_set_rhs_function(ts, ts_ggcm_mhd_step_calc_rhs, mhd);
   mrc_ts_set_from_options(ts);
   mrc_ts_view(ts);
