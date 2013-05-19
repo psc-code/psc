@@ -37,13 +37,13 @@ ds_ascii_close(struct mrc_io *io)
 
 static void
 ds_ascii_write_field(struct mrc_io *io, const char *path,
-		     float scale, struct mrc_f3 *fld, int m)
+		     float scale, struct mrc_fld *fld, int m)
 {
   struct mrc_io_ascii *ascii = to_mrc_io_ascii(io);
   FILE *file = ascii->file;
-  fprintf(file, "# %s\n", mrc_f3_comp_name(fld, m));
+  fprintf(file, "# %s\n", mrc_fld_comp_name(fld, m));
 
-  const int *dims = mrc_f3_dims(fld);
+  const int *dims = mrc_fld_dims(fld);
   for (int iz = 0; iz < dims[2]; iz++) {
     for (int iy = 0; iy < dims[1]; iy++) {
       for (int ix = 0; ix < dims[0]; ix++) {

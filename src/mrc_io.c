@@ -154,7 +154,7 @@ mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
 // mrc_io_read_f3
 
 void
-mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
+mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->read_f3) {
@@ -163,7 +163,7 @@ mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *fld)
     assert(fld->_domain);
     struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
-    mrc_m3_set_param_int(m3, "nr_comps", mrc_f3_nr_comps(fld));
+    mrc_m3_set_param_int(m3, "nr_comps", mrc_fld_nr_comps(fld));
     mrc_m3_setup(m3);
     mrc_io_read_m3(io, path, m3);
 
@@ -188,7 +188,7 @@ mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   if (ops->read_fld) {
     ops->read_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_read_f3(io, path, (struct mrc_f3 *) fld);
+    mrc_io_read_f3(io, path, fld);
   } else {
     assert(0);
   }
@@ -204,7 +204,7 @@ mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
   if (ops->write_fld) {
     ops->write_fld(io, path, fld);
   } else if (fld->_dims.nr_vals == 4) {
-    mrc_io_write_f3(io, path, (struct mrc_f3 *) fld, 1.f);
+    mrc_io_write_f3(io, path, fld, 1.f);
   } else {
     assert(0);
   }
@@ -250,26 +250,25 @@ mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *fld)
 // mrc_io_write_f3
 
 void
-mrc_io_write_f3(struct mrc_io *io, const char *path,
-		struct mrc_f3 *fld, float scale)
+mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
   if (ops->write_f3) {
     ops->write_f3(io, path, fld, scale);
   } else if (ops->write_field) {
-    int nr_comps = mrc_f3_nr_comps(fld);
+    int nr_comps = mrc_fld_nr_comps(fld);
     for (int m = 0; m < nr_comps; m++) {
-      assert(mrc_f3_comp_name(fld, m));
+      assert(mrc_fld_comp_name(fld, m));
       ops->write_field(io, path, scale, fld, m);
     }
   } else {
-    int nr_comps = mrc_f3_nr_comps(fld);
+    int nr_comps = mrc_fld_nr_comps(fld);
     struct mrc_m3 *m3 = mrc_domain_m3_create(fld->_domain);
     mrc_m3_set_param_int(m3, "nr_comps", nr_comps);
     mrc_m3_set_param_int(m3, "sw", fld->_sw.vals[0]);
     mrc_m3_setup(m3);
     for (int m = 0; m < nr_comps; m++) {
-      mrc_m3_set_comp_name(m3, m, mrc_f3_comp_name(fld, m));
+      mrc_m3_set_comp_name(m3, m, mrc_fld_comp_name(fld, m));
       mrc_m3_foreach_patch(m3, p) {
 	struct mrc_m3_patch *m3p = mrc_m3_patch_get(m3, p);
 	mrc_m3_foreach_bnd(m3p, ix,iy,iz) {
@@ -350,7 +349,7 @@ mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
 // mrc_io_write_field_slice
 
 void
-mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
+mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			 int outtype, float sheet)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
@@ -413,14 +412,14 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *fld,
     }
 
     f2.domain = fld->_domain;
-    f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
+    f2.name[0] = strdup(mrc_fld_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);
     mrc_f2_free(&f2);
   } else {
     struct mrc_f2 f2 = {};
     f2.domain = fld->_domain;
     f2.name = calloc(1, sizeof(*f2.name));
-    f2.name[0] = strdup(mrc_f3_comp_name(fld, 0));
+    f2.name[0] = strdup(mrc_fld_comp_name(fld, 0));
     ops->write_field2d(io, 1., &f2, outtype, sheet);
     mrc_f2_free(&f2);
   }

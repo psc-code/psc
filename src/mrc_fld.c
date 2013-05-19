@@ -100,7 +100,7 @@ static void
 _mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
 {
   mrc_io_write_ref(io, f3, "domain", f3->_domain);
-  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, 1.);
+  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3, 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -139,7 +139,7 @@ _mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
   // FIXME, the whole _comp_name business is screwy here
   f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
   f3->_nr_allocated_comp_name = f3->_dims.vals[3];
-  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), f3);
+  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3);
 }
 
 // ----------------------------------------------------------------------
@@ -408,7 +408,7 @@ void
 mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
 {
   mrc_io_write_ref(io, f3, "domain", f3->_domain);
-  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), f3, scale);
+  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3, scale);
 }
 
 // ----------------------------------------------------------------------

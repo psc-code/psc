@@ -931,9 +931,8 @@ xdmf_spatial_create_iono(struct mrc_io *io, int im[2])
 
 static void
 ds_xdmf_write_field(struct mrc_io *io, const char *path,
-		    float scale, struct mrc_f3 *f3, int m)
+		    float scale, struct mrc_fld *fld, int m)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   herr_t ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
@@ -1262,9 +1261,8 @@ ds_xdmf_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 }
 
 static void
-ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float scale)
+ds_xdmf_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   int ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
@@ -1365,9 +1363,8 @@ read_fld_cb0(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data
 }
 
 static void
-ds_xdmf_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3)
+ds_xdmf_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
 
@@ -1605,9 +1602,8 @@ communicate_fld(struct mrc_io *io, struct mrc_fld *gfld, int m, float scale,
 
 static void
 ds_xdmf_to_one_write_field(struct mrc_io *io, const char *path,
-			   float scale, struct mrc_f3 *f3, int m)
+			   float scale, struct mrc_fld *fld, int m)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
 
@@ -1904,9 +1900,8 @@ read_fld_cb(hid_t g_id, const char *name, const H5L_info_t *info, void *op_data)
 }
 
 static void
-ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3)
+ds_xdmf_parallel_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
 
@@ -2006,9 +2001,8 @@ ds_xdmf_parallel_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1
 
 static void
 ds_xdmf_parallel_write_field(struct mrc_io *io, const char *path,
-			     float scale, struct mrc_f3 *f3, int m)
+			     float scale, struct mrc_fld *fld, int m)
 {
-  struct mrc_fld *fld = (struct mrc_fld *) f3;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
   herr_t ierr;
 

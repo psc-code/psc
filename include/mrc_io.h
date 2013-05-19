@@ -29,17 +29,17 @@ void mrc_io_open(struct mrc_io *io, const char *mode, int step, float time);
 void mrc_io_close(struct mrc_io *io);
 void mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_read_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1);
-void mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3);
+void mrc_io_read_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld);
 void mrc_io_write_f1(struct mrc_io *io, const char *path, struct mrc_f1 *f1);
-void mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_f3 *f3, float scale);
+void mrc_io_write_f3(struct mrc_io *io, const char *path, struct mrc_fld *fld, float scale);
 void mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
 void mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
 void mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
 void mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
 void mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *f2,
 			  int outtype, float sheet);
-void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_f3 *f3,
+void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			      int outtype, float sheet);
 
 void mrc_io_read_attr(struct mrc_io *io, const char *path, int type, const char *name,
