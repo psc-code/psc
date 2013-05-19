@@ -12,7 +12,7 @@ struct ggcm_mhd_diag_item {
 struct ggcm_mhd_diag_item_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd_diag_item);
   void (*run)(struct ggcm_mhd_diag_item *item,
-	      struct mrc_io *io, struct mrc_f3 *f,
+	      struct mrc_io *io, struct mrc_fld *f,
 	      int diag_type, float plane);
 };
 

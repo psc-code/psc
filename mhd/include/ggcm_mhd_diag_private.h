@@ -17,11 +17,11 @@ struct ggcm_mhd_diag_ops {
   void (*shutdown)(struct ggcm_mhd_diag *);
 };
 
-void ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_f3 *f, int m,
+void ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
 				     const char *name, float scale, int outtype,
 				     float plane);
-void ggcm_mhd_diag_c_write_one_f3(struct mrc_io *io, struct mrc_f3 *f,
-				  int outtype, float plane);
+void ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *f,
+				   int outtype, float plane);
 
 // ----------------------------------------------------------------------
 

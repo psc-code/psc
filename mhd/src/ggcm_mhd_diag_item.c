@@ -13,7 +13,7 @@
 
 void
 ggcm_mhd_diag_item_run(struct ggcm_mhd_diag_item *item, struct mrc_io *io,
-		       struct mrc_f3 *f, int diag_type, float plane)
+		       struct mrc_fld *f, int diag_type, float plane)
 {
   struct ggcm_mhd_diag_item_ops *ops = ggcm_mhd_diag_item_ops(item);
   assert(ops && ops->run);

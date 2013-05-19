@@ -49,6 +49,20 @@ ggcm_mhd_flds_get_mrc_f3(struct ggcm_mhd_flds *flds)
 }
 
 // ----------------------------------------------------------------------
+// ggcm_mhd_flds_get_mrc_fld
+//
+// returns the underlying mrc_f3 that contains the MHD field data
+// only actually works (and should be used) if we know that these flds
+// are of type "fortran" or "c"
+
+struct mrc_fld *
+ggcm_mhd_flds_get_mrc_fld(struct ggcm_mhd_flds *flds)
+{
+  assert(flds->f3);
+  return (struct mrc_fld *) flds->f3;
+}
+
+// ----------------------------------------------------------------------
 // ggcm_mhd_flds_get_as
 //
 // convert flds_base to ggcm_mhd_flds of type "type"

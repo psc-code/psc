@@ -11,7 +11,7 @@
 MRC_CLASS_DECLARE(ggcm_mhd_diag_item, struct ggcm_mhd_diag_item);
 
 void ggcm_mhd_diag_item_run(struct ggcm_mhd_diag_item *item,
-			    struct mrc_io *io, struct mrc_f3 *f,
+			    struct mrc_io *io, struct mrc_fld *f,
 			    int diag_type, float plane);
 
 #endif

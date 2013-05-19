@@ -16,7 +16,7 @@
 
 static void
 ggcm_mhd_diag_item_rr1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_f3 *f,
+			   struct mrc_io *io, struct mrc_fld *f,
 			   int diag_type, float plane)
 {
   struct ggcm_mhd *mhd = item->diag->mhd;
@@ -41,7 +41,7 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rr1 = {
 
 static void
 ggcm_mhd_diag_item_uu1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_f3 *f,
+			   struct mrc_io *io, struct mrc_fld *f,
 			   int diag_type, float plane)
 {
   float scale_uu = 1.;
@@ -64,7 +64,7 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_uu1 = {
 
 static void
 ggcm_mhd_diag_item_rv1_run(struct ggcm_mhd_diag_item *item,
-			   struct mrc_io *io, struct mrc_f3 *f,
+			   struct mrc_io *io, struct mrc_fld *f,
 			   int diag_type, float plane)
 {
   float scale_rv = 1.;
@@ -89,7 +89,7 @@ struct ggcm_mhd_diag_item_ops ggcm_mhd_diag_item_ops_rv1 = {
 
 static void
 ggcm_mhd_diag_item_b1_run(struct ggcm_mhd_diag_item *item,
-			  struct mrc_io *io, struct mrc_f3 *f,
+			  struct mrc_io *io, struct mrc_fld *f,
 			  int diag_type, float plane)
 {
   float scale_rv = 1.;

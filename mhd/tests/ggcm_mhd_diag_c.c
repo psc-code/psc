@@ -153,15 +153,15 @@ ggcm_mhd_diag_c_read(struct ggcm_mhd_diag *diag, struct mrc_io *io)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_diag_c_write_one_f3
+// ggcm_mhd_diag_c_write_one_fld
 
 void
-ggcm_mhd_diag_c_write_one_f3(struct mrc_io *io, struct mrc_f3 *fld,
-			     int outtype, float plane)
+ggcm_mhd_diag_c_write_one_fld(struct mrc_io *io, struct mrc_fld *fld,
+			      int outtype, float plane)
 {
   switch (outtype) {
   case DIAG_TYPE_3D: {
-    mrc_f3_write(fld, io);
+    mrc_fld_write(fld, io);
     break;
   }
   case DIAG_TYPE_2D_X:
@@ -179,22 +179,22 @@ ggcm_mhd_diag_c_write_one_f3(struct mrc_io *io, struct mrc_f3 *fld,
 // ggcm_mhd_diag_c_write_one_field
 
 void
-ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_f3 *f, int m,
+ggcm_mhd_diag_c_write_one_field(struct mrc_io *io, struct mrc_fld *f, int m,
 				const char *name, float scale, int outtype,
 				float plane)
 {
-  struct mrc_f3 *fld = mrc_domain_f3_create(f->_domain, SW_2, name);
+  struct mrc_fld *fld = mrc_domain_fld_create(f->_domain, SW_2, name);
   char s[strlen(name) + 10];
-  sprintf(s, "mrc_f3_%s", name);
-  mrc_f3_set_name(fld, s);
-  mrc_f3_setup(fld);
-  mrc_f3_foreach(fld, ix,iy,iz, 2, 2) {
+  sprintf(s, "mrc_fld_%s", name);
+  mrc_fld_set_name(fld, s);
+  mrc_fld_setup(fld);
+  mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
     MRC_F3(fld,0, ix,iy,iz) = scale * MRC_F3(f,m, ix,iy,iz);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 
-  ggcm_mhd_diag_c_write_one_f3(io, fld, outtype, plane);
+  ggcm_mhd_diag_c_write_one_fld(io, fld, outtype, plane);
 
-  mrc_f3_destroy(fld);
+  mrc_fld_destroy(fld);
 }
 
 // ----------------------------------------------------------------------
@@ -205,7 +205,7 @@ write_fields(struct ggcm_mhd_diag *diag, struct mrc_io *io, int diag_type, float
 {
   struct ggcm_mhd *mhd = diag->mhd;
   struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "c");
-  struct mrc_f3 *f = ggcm_mhd_flds_get_mrc_f3(flds);
+  struct mrc_fld *f = ggcm_mhd_flds_get_mrc_fld(flds);
 
   struct ggcm_mhd_diag_item *item;
   list_for_each_entry(item, &diag->obj.children_list, obj.child_entry) {

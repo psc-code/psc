@@ -18,6 +18,7 @@ struct ggcm_mhd_flds *ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base,
 void ggcm_mhd_flds_put_as(struct ggcm_mhd_flds *flds,
 			  struct ggcm_mhd_flds *flds_base);
 struct mrc_f3 *ggcm_mhd_flds_get_mrc_f3(struct ggcm_mhd_flds *flds);
+struct mrc_fld *ggcm_mhd_flds_get_mrc_fld(struct ggcm_mhd_flds *flds);
 
 #endif
 

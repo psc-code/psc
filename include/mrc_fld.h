@@ -111,6 +111,7 @@ const int *mrc_fld_dims(struct mrc_fld *x);
 const int *mrc_fld_ghost_offs(struct mrc_fld *x);
 const int *mrc_fld_ghost_dims(struct mrc_fld *x);
 struct mrc_fld *mrc_fld_duplicate(struct mrc_fld *fld);
+void mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from);
 
 static inline bool
 mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
