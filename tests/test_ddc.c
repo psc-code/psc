@@ -46,17 +46,17 @@ test(bool periodic)
   mrc_ddc_setup(ddc);
   mrc_ddc_view(ddc);
 
-  struct mrc_f3 *fld = mrc_domain_f3_create(domain, bnd, "test0:test1");
-  mrc_f3_setup(fld);
-  mrc_f3_view(fld);
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, bnd, "test0:test1");
+  mrc_fld_setup(fld);
+  mrc_fld_view(fld);
 
-  mrc_f3_foreach(fld, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
     int jx = ix + off[0];
     int jy = iy + off[1];
     int jz = iz + off[2];
     MRC_F3(fld,0, ix,iy,iz) = jx * 10000 + jy * 100 + jz;
     MRC_F3(fld,1, ix,iy,iz) = - (jx * 10000 + jy * 100 + jz);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 
   for (int i = 0; i < 1; i++) {
     mrc_ddc_fill_ghosts(ddc, 0, 2, fld);
@@ -64,7 +64,7 @@ test(bool periodic)
 
   int N[3];
   mrc_domain_get_global_dims(domain, N);
-  mrc_f3_foreach(fld, ix,iy,iz, bnd, bnd) {
+  mrc_fld_foreach(fld, ix,iy,iz, bnd, bnd) {
     int jx = ix + off[0];
     int jy = iy + off[1];
     int jz = iz + off[2];
@@ -88,9 +88,9 @@ test(bool periodic)
 	      MRC_F3(fld,1, ix,iy,iz), -((float) jx * 10000 + jy * 100 + jz));
       assert(0);
     }
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 
-  mrc_f3_destroy(fld);
+  mrc_fld_destroy(fld);
   mrc_ddc_destroy(ddc);
   mrc_domain_destroy(domain);
 }

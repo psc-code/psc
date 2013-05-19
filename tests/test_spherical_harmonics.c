@@ -115,25 +115,25 @@ laguerre(int n, int alpha, float x)
 }
 
 static void
-ini_one(struct mrc_f3 *f, struct sph_harm_params *par)
+ini_one(struct mrc_fld *f, struct sph_harm_params *par)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float x = MRC_CRDX(crds, ix), y = MRC_CRDY(crds, iy), z = MRC_CRDZ(crds, iz);
     float r = sqrt(x*x + y*y + z*z), th = acos(z/r), phi = atan2(y/r, x/r);
     MRC_F3(f, 0, ix,iy,iz) = Y(par->l, par->m, th, phi);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 static void
-ini_semi(struct mrc_f3 *f, struct sph_harm_params *par)
+ini_semi(struct mrc_fld *f, struct sph_harm_params *par)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
   for (int l = 0; l < (par->l + 1) / 2; l++) {
     float c = pow(-1., l) * factorial(2*l) / pow(pow(2., l) * factorial(l), 2.) * (4*l+3.)/(2*l+2.);
     printf("l = %d c = %g c' = %g\n", 2*l + 1, c, c * sqrt(2. / (4*l + 3)));
   }
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float x = MRC_CRDX(crds, ix), y = MRC_CRDY(crds, iy), z = MRC_CRDZ(crds, iz);
     float r = sqrt(x*x + y*y + z*z), th = acos(z/r);
     float val;
@@ -152,26 +152,26 @@ ini_semi(struct mrc_f3 *f, struct sph_harm_params *par)
       }
     }
     MRC_F3(f, 0, ix,iy,iz) = val;
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 static void
-ini_hydrogen(struct mrc_f3 *f, struct sph_harm_params *par)
+ini_hydrogen(struct mrc_fld *f, struct sph_harm_params *par)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float x = MRC_CRDX(crds, ix), y = MRC_CRDY(crds, iy), z = MRC_CRDZ(crds, iz);
     float r = sqrt(x*x + y*y + z*z), th = acos(z/r), phi = atan2(y/r, x/r);
     MRC_F3(f, 0, ix,iy,iz) = exp(-r) *
       laguerre(par->n - par->l - 1, 2*par->l + 1, r) * Y(par->l, par->m, th, phi);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 static void
-calc_grad(struct mrc_f3 *f)
+calc_grad(struct mrc_fld *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
-  mrc_f3_foreach(f, ix,iy,iz, -1, -1) {
+  mrc_fld_foreach(f, ix,iy,iz, -1, -1) {
     MRC_F3(f, 1, ix,iy,iz) = -
       (MRC_F3(f, 0, ix+1,iy,iz) - MRC_F3(f, 0, ix-1,iy,iz)) / 
       (MRC_CRDX(crds, ix+1) - MRC_CRDX(crds, ix-1));
@@ -181,7 +181,7 @@ calc_grad(struct mrc_f3 *f)
     MRC_F3(f, 3, ix,iy,iz) = -
       (MRC_F3(f, 0, ix,iy,iz+1) - MRC_F3(f, 0, ix,iy,iz-1)) / 
       (MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1));
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 // ----------------------------------------------------------------------
@@ -203,8 +203,8 @@ main(int argc, char **argv)
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
 
-  struct mrc_f3 *fld = mrc_domain_f3_create(domain, SW_0, "phi:ex:ey:ez");
-  mrc_f3_setup(fld);
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, SW_0, "phi:ex:ey:ez");
+  mrc_fld_setup(fld);
   if (strcmp(par.ic, "one") == 0) {
     ini_one(fld, &par);
   } else if (strcmp(par.ic, "semi") == 0) {
@@ -219,11 +219,11 @@ main(int argc, char **argv)
   struct mrc_io *io = mrc_io_create(MPI_COMM_WORLD);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  mrc_f3_destroy(fld);
+  mrc_fld_destroy(fld);
   mrc_domain_destroy(domain);
   MPI_Finalize();
   return 0;

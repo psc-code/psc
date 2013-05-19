@@ -35,7 +35,7 @@ static struct param test_diag_params_descr[] = {
 #undef VAR
 
 static void
-dump_field(struct mrc_f3 *fld, int m, int rank_diagsrv, const char *fmt)
+dump_field(struct mrc_fld *fld, int m, int rank_diagsrv, const char *fmt)
 {
   struct mrc_domain *domain = fld->domain;
   assert(domain);
@@ -55,15 +55,15 @@ dump_field(struct mrc_f3 *fld, int m, int rank_diagsrv, const char *fmt)
 }
 
 static void
-init_values(struct mrc_f3 *f)
+init_values(struct mrc_fld *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float xx = crds->crd[0][ix];
 
-    MRC_F3(f, 0, ix,iy,iz) = 2.f + .2f * sin(xx);
-  } mrc_f3_foreach_end;
+    MRC_FLD(f, 0, ix,iy,iz) = 2.f + .2f * sin(xx);
+  } mrc_fld_foreach_end;
 }
 
 static void
@@ -88,12 +88,12 @@ do_test_diag(MPI_Comm comm, struct test_diag_params *par, int rank_diagsrv,
   mrc_domain_view(domain);
   mrc_domain_setup(domain);
 
-  struct mrc_f3 f3;
-  mrc_domain_f3_alloc(domain, &f3, 1, SW_2);
-  f3.name[0] = strdup("test");
-  init_values(&f3);
-  dump_field(&f3, 0, rank_diagsrv, fmt);
-  mrc_f3_free(&f3);
+  struct mrc_fld fld;
+  mrc_domain_fld_alloc(domain, &fld, 1, SW_2);
+  fld.name[0] = strdup("test");
+  init_values(&fld);
+  dump_field(&fld, 0, rank_diagsrv, fmt);
+  mrc_fld_free(&fld);
 
   mrc_domain_destroy(domain);
 }

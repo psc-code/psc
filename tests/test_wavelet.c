@@ -18,9 +18,9 @@ static const float k1i = 1.230174104914;
 static const float k2i = 1.6257861322319229;
 
 static void
-wt97_x(struct mrc_f3 *f, int *dims)
+wt97_x(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   for (int iz = 0; iz < dims[2]; iz++) {
     for (int iy = 0; iy < dims[1]; iy++) {
@@ -65,13 +65,13 @@ wt97_x(struct mrc_f3 *f, int *dims)
       }
     }
   }
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-wt97_y(struct mrc_f3 *f, int *dims)
+wt97_y(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   for (int iz = 0; iz < dims[2]; iz++) {
     // Core 1D lifting process in this loop.
@@ -132,13 +132,13 @@ wt97_y(struct mrc_f3 *f, int *dims)
       }
     }
   }
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-wt97_z(struct mrc_f3 *f, int *dims)
+wt97_z(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   // Predict 1. y1
   for (int iz = 1; iz < dims[2] - 1; iz += 2) {
@@ -214,13 +214,13 @@ wt97_z(struct mrc_f3 *f, int *dims)
     }
   }
 
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-iwt97_x(struct mrc_f3 *f, int *dims)
+iwt97_x(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   for (int iz = 0; iz < dims[2]; iz++) {
     for (int iy = 0; iy < dims[1]; iy++) {
@@ -265,13 +265,13 @@ iwt97_x(struct mrc_f3 *f, int *dims)
       MRC_F3(f,0, dims[0] - 1,iy,iz) -= 2 * a1 * MRC_F3(f, 0, dims[0] - 2,iy,iz); // Symmetric extension
     }
   }
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-iwt97_y(struct mrc_f3 *f, int *dims)
+iwt97_y(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   for (int iz = 0; iz < dims[2]; iz++) {
     for (int iy = 0; iy < dims[1]; iy++) {
@@ -332,13 +332,13 @@ iwt97_y(struct mrc_f3 *f, int *dims)
     }
       
   }
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-iwt97_z(struct mrc_f3 *f, int *dims)
+iwt97_z(struct mrc_fld *f, int *dims)
 {
-  struct mrc_f3 *tmp = mrc_f3_duplicate(f);
+  struct mrc_fld *tmp = mrc_fld_duplicate(f);
 
   for (int iz = 0; iz < dims[2]; iz++) {
     for (int iy = 0; iy < dims[1]; iy++) {
@@ -413,11 +413,11 @@ iwt97_z(struct mrc_f3 *f, int *dims)
     }
   }
       
-  mrc_f3_destroy(tmp);
+  mrc_fld_destroy(tmp);
 }
 
 static void
-wt97(struct mrc_f3 *f, int nr_levels)
+wt97(struct mrc_fld *f, int nr_levels)
 {
   int dims[3];
   mrc_domain_get_global_dims(f->_domain, dims);
@@ -435,7 +435,7 @@ wt97(struct mrc_f3 *f, int nr_levels)
 
 
 static void
-iwt97(struct mrc_f3 *f, int nr_levels)
+iwt97(struct mrc_fld *f, int nr_levels)
 {
   int dims[3];
   mrc_domain_get_global_dims(f->_domain, dims);
@@ -457,16 +457,16 @@ iwt97(struct mrc_f3 *f, int nr_levels)
 }
 
 static void
-threshold(struct mrc_f3 *f, float eps)
+threshold(struct mrc_fld *f, float eps)
 {
   int cnt = 0;
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     if (fabs(MRC_F3(f, 0, ix,iy,iz)) < eps) {
       MRC_F3(f, 0, ix,iy,iz) = 0.;
     } else {
       cnt++;
     }
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
   
   int dims[3];
   mrc_domain_get_global_dims(f->_domain, dims);
@@ -491,41 +491,41 @@ main(int argc, char **argv)
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "r", 300, 0.);
-  struct mrc_f3 *fld = mrc_f3_read(io, "mrc_f3_pp");
-  mrc_f3_set_comp_name(fld, 0, "pp"); // FIXME
+  struct mrc_fld *fld = mrc_fld_read(io, "mrc_fld_pp");
+  mrc_fld_set_comp_name(fld, 0, "pp"); // FIXME
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  struct mrc_f3 *fw = mrc_f3_duplicate(fld);
-  mrc_f3_set_name(fw, "fw");
-  mrc_f3_set_comp_name(fw, 0, "pp");
-  mrc_f3_copy(fw, fld);
+  struct mrc_fld *fw = mrc_fld_duplicate(fld);
+  mrc_fld_set_name(fw, "fw");
+  mrc_fld_set_comp_name(fw, 0, "pp");
+  mrc_fld_copy(fw, fld);
   wt97(fw, nr_levels);
   threshold(fw, eps);
 
-  struct mrc_f3 *iw = mrc_f3_duplicate(fld);
-  mrc_f3_set_name(iw, "iw");
-  mrc_f3_set_comp_name(iw, 0, "pp");
-  mrc_f3_copy(iw, fw);
+  struct mrc_fld *iw = mrc_fld_duplicate(fld);
+  mrc_fld_set_name(iw, "iw");
+  mrc_fld_set_comp_name(iw, 0, "pp");
+  mrc_fld_copy(iw, fw);
   iwt97(iw, nr_levels);
 
   io = mrc_io_create(MPI_COMM_WORLD);
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_open(io, "w", 0, 0.);
-  mrc_f3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
   mrc_io_open(io, "w", 1, 1.);
-  mrc_f3_write(fw, io);
+  mrc_fld_write(fw, io);
   mrc_io_close(io);
   mrc_io_open(io, "w", 2, 2.);
-  mrc_f3_write(iw, io);
+  mrc_fld_write(iw, io);
   mrc_io_close(io);
   mrc_io_destroy(io);
 
-  mrc_f3_destroy(fw);
+  mrc_fld_destroy(fw);
   
-  mrc_f3_destroy(fld);
+  mrc_fld_destroy(fld);
 
   MPI_Finalize();
   return 0;
