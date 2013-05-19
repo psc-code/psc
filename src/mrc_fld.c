@@ -184,6 +184,51 @@ mrc_f3_nr_comps(struct mrc_f3 *f3)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_set_nr_comps
+
+void
+mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
+{
+  fld->_dims.vals[3] = nr_comps;
+}
+
+void
+mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
+{
+  f3->_dims.vals[3] = nr_comps;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_ghost_offs
+
+const int *
+mrc_fld_ghost_offs(struct mrc_fld *fld)
+{
+  return fld->_ghost_offs;
+}
+
+const int *
+mrc_f3_ghost_off(struct mrc_f3 *f3)
+{
+  return f3->_ghost_offs;
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_ghost_dims
+
+const int *
+mrc_fld_ghost_dims(struct mrc_fld *fld)
+{
+  return fld->_ghost_dims;
+}
+
+const int *
+mrc_f3_ghost_dims(struct mrc_f3 *f3)
+{
+  return f3->_ghost_dims;
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_duplicate
 
 struct mrc_fld *
@@ -312,12 +357,6 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
 
 // ----------------------------------------------------------------------
 
-void
-mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
-{
-  f3->_dims.vals[3] = nr_comps;
-}
-
 const char *
 mrc_f3_comp_name(struct mrc_f3 *f3, int m)
 {
@@ -335,18 +374,6 @@ const int *
 mrc_f3_dims(struct mrc_f3 *f3)
 {
   return f3->_dims.vals;
-}
-
-const int *
-mrc_f3_ghost_off(struct mrc_f3 *f3)
-{
-  return f3->_ghost_offs;
-}
-
-const int *
-mrc_f3_ghost_dims(struct mrc_f3 *f3)
-{
-  return f3->_ghost_dims;
 }
 
 void
