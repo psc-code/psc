@@ -618,17 +618,17 @@ GROUP "/" {
          }
       }
    }
-   GROUP "f3" {
-      ATTRIBUTE "f3" {
+   GROUP "fld" {
+      ATTRIBUTE "fld" {
          DATATYPE  H5T_STRING {
-            STRSIZE 27;
+            STRSIZE 28;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_ASCII;
             CTYPE H5T_C_S1;
          }
          DATASPACE  SCALAR
          DATA {
-         (0): "test_f3-uid"
+         (0): "test_fld-uid"
          }
       }
    }
@@ -983,7 +983,7 @@ GROUP "/" {
          }
       }
    }
-   GROUP "test_f3-uid" {
+   GROUP "test_fld-uid" {
       ATTRIBUTE "dims" {
          DATATYPE  H5T_STD_I32LE
          DATASPACE  SIMPLE { ( 4 ) / ( 4 ) }
@@ -1005,14 +1005,14 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_class" {
          DATATYPE  H5T_STRING {
-            STRSIZE 7;
+            STRSIZE 8;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_ASCII;
             CTYPE H5T_C_S1;
          }
          DATASPACE  SCALAR
          DATA {
-         (0): "mrc_f3"
+         (0): "mrc_fld"
          }
       }
       ATTRIBUTE "mrc_obj_dict_count" {
@@ -1024,14 +1024,14 @@ GROUP "/" {
       }
       ATTRIBUTE "mrc_obj_name" {
          DATATYPE  H5T_STRING {
-            STRSIZE 8;
+            STRSIZE 9;
             STRPAD H5T_STR_NULLTERM;
             CSET H5T_CSET_ASCII;
             CTYPE H5T_C_S1;
          }
          DATASPACE  SCALAR
          DATA {
-         (0): "test_f3"
+         (0): "test_fld"
          }
       }
       ATTRIBUTE "mrc_obj_type" {

@@ -168,6 +168,22 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_nr_comps
+
+int
+mrc_fld_nr_comps(struct mrc_fld *fld)
+{
+  assert(fld->_dims.nr_vals == 4);
+  return fld->_dims.vals[3];
+}
+
+int
+mrc_f3_nr_comps(struct mrc_f3 *f3)
+{
+  return mrc_fld_nr_comps((struct mrc_fld *) f3);
+}
+
+// ----------------------------------------------------------------------
 // mrc_fld_duplicate
 
 struct mrc_fld *
@@ -276,12 +292,25 @@ mrc_f3_norm(struct mrc_f3 *x)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_set
 
-int
-mrc_f3_nr_comps(struct mrc_f3 *f3)
+void
+mrc_fld_set(struct mrc_fld *x, float val)
 {
-  return f3->_dims.vals[3];
+  assert(x->_data_type == MRC_NT_FLOAT);
+  float *arr = x->_arr;
+  for (int i = 0; i < x->_len; i++) {
+    arr[i] = val;
+  }
 }
+
+void
+mrc_f3_set(struct mrc_f3 *f3, float val)
+{
+  mrc_fld_set((struct mrc_fld *) f3, val);
+}
+
+// ----------------------------------------------------------------------
 
 void
 mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
@@ -318,15 +347,6 @@ const int *
 mrc_f3_ghost_dims(struct mrc_f3 *f3)
 {
   return f3->_ghost_dims;
-}
-
-void
-mrc_f3_set(struct mrc_f3 *f3, float val)
-{
-  float *arr = f3->_arr;
-  for (int i = 0; i < f3->_len; i++) {
-    arr[i] = val;
-  }
 }
 
 void

@@ -13,21 +13,21 @@
 #include <string.h>
 
 void
-mrc_f3_init_values(struct mrc_f3 *f3, struct mrc_f3_init_values_info *iv_info)
+mrc_fld_init_values(struct mrc_fld *fld, struct mrc_fld_init_values_info *iv_info)
 {
-  struct mrc_domain *domain = f3->_domain;
+  struct mrc_domain *domain = fld->_domain;
   assert(domain);
   struct mrc_crds *crds = mrc_domain_get_crds(domain);
   assert(crds);
 
-  mrc_f3_set(f3, 0.);
+  mrc_fld_set(fld, 0.);
 
   for (int i = 0; iv_info->ini_flds[i].ini; i++) {
     int m = iv_info->ini_flds[i].m;
-    mrc_f3_foreach(f3, ix,iy,iz, 2, 2) {
+    mrc_fld_foreach(fld, ix,iy,iz, 2, 2) {
       float xx = MRC_CRDX(crds, ix), yy = MRC_CRDY(crds, iy), zz = MRC_CRDZ(crds, iz);
-      MRC_F3(f3,m, ix,iy,iz) = iv_info->ini_flds[i].ini(xx, yy, zz);
-    } mrc_f3_foreach_end;
+      MRC_F3(fld,m, ix,iy,iz) = iv_info->ini_flds[i].ini(xx, yy, zz);
+    } mrc_fld_foreach_end;
   }
 }
 
@@ -148,46 +148,46 @@ mrctest_set_crds_rectilinear_1(struct mrc_domain *domain)
 }
 
 void
-mrctest_domain_init_values_0(struct mrc_f3 *f)
+mrctest_domain_init_values_0(struct mrc_fld *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float xx = MRC_CRDX(crds, ix);
 
     MRC_F3(f,0, ix,iy,iz) = 2.f + .2f * sin(xx);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 static void
-mrctest_domain_init_values_1(struct mrc_f3 *f)
+mrctest_domain_init_values_1(struct mrc_fld *f)
 {
   struct mrc_crds *crds = mrc_domain_get_crds(f->_domain);
 
-  mrc_f3_foreach(f, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(f, ix,iy,iz, 0, 0) {
     float yy = MRC_CRDY(crds, iy);
 
     MRC_F3(f,1, ix,iy,iz) = 2.f + .2f * sin(yy);
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
-struct mrc_f3 *
+struct mrc_fld *
 mrctest_create_field_1(struct mrc_domain *domain)
 {
-  struct mrc_f3 *f3 = mrc_domain_f3_create(domain, SW_2, "test");
-  mrc_f3_setup(f3);
-  mrctest_domain_init_values_0(f3);
-  return f3;
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, SW_2, "test");
+  mrc_fld_setup(fld);
+  mrctest_domain_init_values_0(fld);
+  return fld;
 }
 
-struct mrc_f3 *
+struct mrc_fld *
 mrctest_create_field_2(struct mrc_domain *domain)
 {
-  struct mrc_f3 *f3 = mrc_domain_f3_create(domain, SW_2, "test0:test1");
-  mrc_f3_setup(f3);
-  mrctest_domain_init_values_0(f3);
-  mrctest_domain_init_values_1(f3);
-  return f3;
+  struct mrc_fld *fld = mrc_domain_fld_create(domain, SW_2, "test0:test1");
+  mrc_fld_setup(fld);
+  mrctest_domain_init_values_0(fld);
+  mrctest_domain_init_values_1(fld);
+  return fld;
 }
 
 struct mrc_m1 *
@@ -236,20 +236,20 @@ mrctest_domain(void (*mod_domain)(struct mrc_mod *mod, void *arg))
 }
 
 // ----------------------------------------------------------------------
-// mrctest_f3_compare
+// mrctest_fld_compare
 
 void
-mrctest_f3_compare(struct mrc_f3 *f1, struct mrc_f3 *f2, float eps)
+mrctest_fld_compare(struct mrc_fld *fld1, struct mrc_fld *fld2, float eps)
 {
-  assert(mrc_f3_nr_comps(f1) == mrc_f3_nr_comps(f2));
-  int nr_comps = mrc_f3_nr_comps(f1);
+  assert(mrc_fld_nr_comps(fld1) == mrc_fld_nr_comps(fld2));
+  int nr_comps = mrc_fld_nr_comps(fld1);
   for (int m = 0; m < nr_comps; m++) {
     float diff = 0.;
-    mrc_f3_foreach(f1, ix,iy,iz, 0, 0) {
-      diff = fmaxf(diff, fabsf(MRC_F3(f1,m, ix,iy,iz) - MRC_F3(f2,m, ix,iy,iz)));
-    } mrc_f3_foreach_end;
+    mrc_fld_foreach(fld1, ix,iy,iz, 0, 0) {
+      diff = fmaxf(diff, fabsf(MRC_F3(fld1,m, ix,iy,iz) - MRC_F3(fld2,m, ix,iy,iz)));
+    } mrc_fld_foreach_end;
     if (diff > eps) {
-      mprintf("mrctest_f3_compare: m = %d diff = %g\n", m, diff);
+      mprintf("mrctest_fld_compare: m = %d diff = %g\n", m, diff);
       assert(0);
     }
   }

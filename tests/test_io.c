@@ -36,7 +36,7 @@ struct mrc_class_test_io_attrs mrc_class_test_io_attrs = {
 // ----------------------------------------------------------------------
 
 static void
-dump_field(struct mrc_f3 *fld, int rank_diagsrv)
+dump_field(struct mrc_fld *fld, int rank_diagsrv)
 {
   struct mrc_domain *domain = fld->_domain;
   assert(domain);
@@ -64,12 +64,12 @@ dump_field(struct mrc_f3 *fld, int rank_diagsrv)
   mrc_io_open(io, "w", 0, 0.);
   test_io_attrs_write(attrs, io);
   mrc_obj_write(dict, io);
-  mrc_f3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
 
   mrc_io_open(io, "w", 1, 1.);
   mrc_obj_write(dict, io);
-  mrc_f3_write(fld, io);
+  mrc_fld_write(fld, io);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
@@ -86,10 +86,10 @@ mod_domain(struct mrc_mod *mod, void *arg)
   MPI_Comm comm = mrc_mod_get_comm(mod);
   struct mrc_domain *domain = mrctest_create_domain(comm, par);
 
-  struct mrc_f3 *f3 = mrctest_create_field_1(domain);
+  struct mrc_fld *fld = mrctest_create_field_1(domain);
   int rank_diagsrv = mrc_mod_get_first_node(mod, "diagsrv");
-  dump_field(f3, rank_diagsrv);
-  mrc_f3_destroy(f3);
+  dump_field(fld, rank_diagsrv);
+  mrc_fld_destroy(fld);
 
   mrc_domain_destroy(domain);
 }

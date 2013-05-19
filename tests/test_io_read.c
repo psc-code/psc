@@ -41,9 +41,9 @@ test_write_read_domain(struct mrc_domain *domain)
 }
 
 static void
-test_write_read(struct mrc_f3 *fld)
+test_write_read(struct mrc_fld *fld)
 {
-  struct mrc_io *io = mrc_io_create(mrc_f3_comm(fld));
+  struct mrc_io *io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_view(io);
@@ -54,33 +54,33 @@ test_write_read(struct mrc_f3 *fld)
 
   mrc_io_destroy(io);
 
-  io = mrc_io_create(mrc_f3_comm(fld));
+  io = mrc_io_create(mrc_fld_comm(fld));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_f3 *fld2 = mrc_io_read_path(io, "/fld", "fld", mrc_f3);
+  struct mrc_fld *fld2 = mrc_io_read_path(io, "/fld", "fld", mrc_fld);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
 
-  mrctest_f3_compare(fld, fld2, 0.);
+  mrctest_fld_compare(fld, fld2, 0.);
   mrctest_crds_compare(mrc_domain_get_crds(fld->_domain),
 		       mrc_domain_get_crds(fld2->_domain));
 
-  mrc_f3_destroy(fld2);
+  mrc_fld_destroy(fld2);
 }
 
 static void
 test_write_read_two_fields(struct mrc_domain *domain)
 {
-  struct mrc_f3 *fld1 = mrctest_create_field_1(domain);
-  mrc_f3_set_name(fld1, "fld1");
-  struct mrc_f3 *fld2 = mrctest_create_field_2(domain);
-  mrc_f3_set_name(fld2, "fld2");
+  struct mrc_fld *fld1 = mrctest_create_field_1(domain);
+  mrc_fld_set_name(fld1, "fld1");
+  struct mrc_fld *fld2 = mrctest_create_field_2(domain);
+  mrc_fld_set_name(fld2, "fld2");
 
-  struct mrc_io *io = mrc_io_create(mrc_f3_comm(fld1));
+  struct mrc_io *io = mrc_io_create(mrc_fld_comm(fld1));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_view(io);
@@ -92,23 +92,23 @@ test_write_read_two_fields(struct mrc_domain *domain)
 
   mrc_io_destroy(io);
 
-  io = mrc_io_create(mrc_f3_comm(fld1));
+  io = mrc_io_create(mrc_fld_comm(fld1));
   mrc_io_set_from_options(io);
   mrc_io_setup(io);
   mrc_io_view(io);
 
   mrc_io_open(io, "r", 0, 0.);
-  struct mrc_f3 *fld1r = mrc_io_read_path(io, "/fld", "fld1", mrc_f3);
-  struct mrc_f3 *fld2r = mrc_io_read_path(io, "/fld", "fld2", mrc_f3);
+  struct mrc_fld *fld1r = mrc_io_read_path(io, "/fld", "fld1", mrc_fld);
+  struct mrc_fld *fld2r = mrc_io_read_path(io, "/fld", "fld2", mrc_fld);
   mrc_io_close(io);
 
   mrc_io_destroy(io);
 
-  mrctest_f3_compare(fld1, fld1r, 0.);
-  mrctest_f3_compare(fld2, fld2r, 0.);
+  mrctest_fld_compare(fld1, fld1r, 0.);
+  mrctest_fld_compare(fld2, fld2r, 0.);
 
-  mrc_f3_destroy(fld1);
-  mrc_f3_destroy(fld2);
+  mrc_fld_destroy(fld1);
+  mrc_fld_destroy(fld2);
 }
 
 static void
@@ -149,21 +149,22 @@ mod_domain(struct mrc_mod *mod, void *arg)
   int testcase = 0;
   mrc_params_get_option_int("case", &testcase);
 
-  struct mrc_f3 *fld;
   switch (testcase) {
   case 0:
     test_write_read_domain(domain);
     break;
-  case 1:
-    fld = mrctest_create_field_1(domain);
+  case 1: {
+    struct mrc_fld *fld = mrctest_create_field_1(domain);
     test_write_read(fld);
-    mrc_f3_destroy(fld);
+    mrc_fld_destroy(fld);
     break;
-  case 2:
-    fld = mrctest_create_field_2(domain);
+  }
+  case 2: {
+    struct mrc_fld *fld = mrctest_create_field_2(domain);
     test_write_read(fld);
-    mrc_f3_destroy(fld);
+    mrc_fld_destroy(fld);
     break;
+  }
   case 3:
     test_write_read_two_fields(domain);
     break;

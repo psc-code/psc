@@ -18,12 +18,12 @@
 
      <Attribute Name="fld0" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 32 32" NumberType="Float" Precision="4" Format="HDF">
-        run.000000_p000000.h5:/test_f3-uid/fld0/p0/3d
+        run.000000_p000000.h5:/test_fld-uid/fld0/p0/3d
        </DataItem>
      </Attribute>
      <Attribute Name="fld1" AttributeType="Scalar" Center="Cell">
        <DataItem Dimensions="32 32 32" NumberType="Float" Precision="4" Format="HDF">
-        run.000000_p000000.h5:/test_f3-uid/fld1/p0/3d
+        run.000000_p000000.h5:/test_fld-uid/fld1/p0/3d
        </DataItem>
      </Attribute>
    </Grid>

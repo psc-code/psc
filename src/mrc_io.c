@@ -185,8 +185,13 @@ void
 mrc_io_read_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops && ops->read_fld);
-  ops->read_fld(io, path, fld);
+  if (ops->read_fld) {
+    ops->read_fld(io, path, fld);
+  } else if (fld->_dims.nr_vals == 4) {
+    mrc_io_read_f3(io, path, (struct mrc_f3 *) fld);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------

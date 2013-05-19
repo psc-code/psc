@@ -102,6 +102,8 @@ MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
+void mrc_fld_set(struct mrc_fld *x, float val);
+int mrc_fld_nr_comps(struct mrc_fld *fld);
 
 static inline bool
 mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
