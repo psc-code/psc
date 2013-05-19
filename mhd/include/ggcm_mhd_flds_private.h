@@ -9,7 +9,7 @@
 struct ggcm_mhd_flds {
   struct mrc_obj obj;
   struct ggcm_mhd *mhd;
-  struct mrc_f3 *f3;
+  struct mrc_fld *fld;
 };
 
 struct ggcm_mhd_flds_ops {

@@ -79,7 +79,7 @@ static const char *fldname[_NR_FLDS] = {
 static void
 ggcm_mhd_flds_c_create(struct ggcm_mhd_flds *flds)
 {
-  flds->f3 = mrc_f3_create(ggcm_mhd_flds_comm(flds));
+  flds->fld = mrc_fld_create(ggcm_mhd_flds_comm(flds));
 }
 
 // ----------------------------------------------------------------------
@@ -92,14 +92,14 @@ ggcm_mhd_flds_c_setup(struct ggcm_mhd_flds *flds)
   struct mrc_patch *patches = mrc_domain_get_patches(flds->mhd->domain, &nr_patches);
   assert(nr_patches == 1);
   int *ldims = patches[0].ldims;
-  mrc_f3_set_param_int_array(flds->f3, "dims", 4,
-			     (int[4]) { ldims[0], ldims[1], ldims[2], _NR_FLDS });
-  mrc_f3_set_param_int_array(flds->f3, "sw", 4,
-			     (int[4]) { BND, BND, BND, 0 });
-  flds->f3->_domain = flds->mhd->domain;
-  mrc_f3_setup(flds->f3);
+  mrc_fld_set_param_int_array(flds->fld, "dims", 4,
+			      (int[4]) { ldims[0], ldims[1], ldims[2], _NR_FLDS });
+  mrc_fld_set_param_int_array(flds->fld, "sw", 4,
+			      (int[4]) { BND, BND, BND, 0 });
+  flds->fld->_domain = flds->mhd->domain;
+  mrc_fld_setup(flds->fld);
   for (int m = 0; m < _NR_FLDS; m++) {
-    mrc_f3_set_comp_name(flds->f3, m, fldname[m]);
+    mrc_fld_set_comp_name(flds->fld, m, fldname[m]);
   }
 }
 
@@ -109,7 +109,7 @@ ggcm_mhd_flds_c_setup(struct ggcm_mhd_flds *flds)
 static void
 ggcm_mhd_flds_c_destroy(struct ggcm_mhd_flds *flds)
 {
-  mrc_f3_destroy(flds->f3);
+  mrc_fld_destroy(flds->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -118,7 +118,7 @@ ggcm_mhd_flds_c_destroy(struct ggcm_mhd_flds *flds)
 static void
 ggcm_mhd_flds_c_write(struct ggcm_mhd_flds *flds, struct mrc_io *io)
 {
-  mrc_io_write_ref(io, flds, "f3", flds->f3);
+  mrc_io_write_ref(io, flds, "fld", flds->fld);
 }
 
 // ----------------------------------------------------------------------
@@ -129,7 +129,7 @@ ggcm_mhd_flds_c_read(struct ggcm_mhd_flds *flds, struct mrc_io *io)
 {
   // FIXME, this calls out ::setup(), which we don't really want...
   ggcm_mhd_flds_read_super(flds, io);
-  flds->f3 = mrc_io_read_ref(io, flds, "f3", mrc_f3);
+  flds->fld = mrc_io_read_ref(io, flds, "fld", mrc_fld);
 }
 
 // ----------------------------------------------------------------------
@@ -139,7 +139,7 @@ static void
 ggcm_mhd_flds_c_copy_from_fortran(struct ggcm_mhd_flds *flds_c,
 				  struct ggcm_mhd_flds *flds_fortran)
 {
-  mrc_f3_copy(flds_c->f3, ggcm_mhd_flds_get_mrc_f3(flds_fortran));
+  mrc_fld_copy(flds_c->fld, ggcm_mhd_flds_get_mrc_fld(flds_fortran));
 }
 
 // ----------------------------------------------------------------------
@@ -149,7 +149,7 @@ static void
 ggcm_mhd_flds_c_copy_to_fortran(struct ggcm_mhd_flds *flds_c,
 				struct ggcm_mhd_flds *flds_fortran)
 {
-  mrc_f3_copy(ggcm_mhd_flds_get_mrc_f3(flds_fortran), flds_c->f3);
+  mrc_fld_copy(ggcm_mhd_flds_get_mrc_fld(flds_fortran), flds_c->fld);
 }
 
 // ----------------------------------------------------------------------

@@ -35,20 +35,6 @@ ggcm_mhd_flds_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from)
 }
 
 // ----------------------------------------------------------------------
-// ggcm_mhd_flds_get_mrc_f3
-//
-// returns the underlying mrc_f3 that contains the MHD field data
-// only actually works (and should be used) if we know that these flds
-// are of type "fortran"
-
-struct mrc_f3 *
-ggcm_mhd_flds_get_mrc_f3(struct ggcm_mhd_flds *flds)
-{
-  assert(flds->f3);
-  return flds->f3;
-}
-
-// ----------------------------------------------------------------------
 // ggcm_mhd_flds_get_mrc_fld
 //
 // returns the underlying mrc_f3 that contains the MHD field data
@@ -58,8 +44,8 @@ ggcm_mhd_flds_get_mrc_f3(struct ggcm_mhd_flds *flds)
 struct mrc_fld *
 ggcm_mhd_flds_get_mrc_fld(struct ggcm_mhd_flds *flds)
 {
-  assert(flds->f3);
-  return (struct mrc_fld *) flds->f3;
+  assert(flds->fld);
+  return flds->fld;
 }
 
 // ----------------------------------------------------------------------
@@ -81,7 +67,7 @@ ggcm_mhd_flds_get_as(struct ggcm_mhd_flds *flds_base, const char *type)
     struct ggcm_mhd_flds *flds = ggcm_mhd_flds_create(ggcm_mhd_flds_comm(flds_base));
     ggcm_mhd_flds_set_type(flds, type);
     ggcm_mhd_flds_set_param_obj(flds, "mhd", flds_base->mhd);
-    mrc_f3_set_array(flds->f3, flds_base->f3->_arr);
+    mrc_fld_set_array(flds->fld, flds_base->fld->_arr);
     ggcm_mhd_flds_setup(flds);
     return flds;
   }
