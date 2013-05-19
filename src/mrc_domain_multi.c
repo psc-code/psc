@@ -414,13 +414,22 @@ mrc_domain_multi_read(struct mrc_domain *domain, struct mrc_io *io)
 
   // This isn't a collective value, so we better
   // don't take what's been read from the file
-  int mpi_rank;
+  int mpi_rank, mpi_size;
   MPI_Comm_rank(mrc_domain_comm(domain), &mpi_rank);
+  MPI_Comm_size(mrc_domain_comm(domain), &mpi_size);
 
   const char *path = mrc_io_obj_path(io, domain);
+  // need to read attributes collectively :(
+  // FIXME, maybe we should just write an array?
+  for (int i = 0; i < mpi_size; i++) {
   char path2[strlen(path) + 10];
-  sprintf(path2, "%s/rank_%d", path, mpi_rank);
-  mrc_io_read_int(io, domain, "nr_patches", &multi->nr_patches);
+    sprintf(path2, "%s/rank_%d", path, i);
+    int nr_patches;
+    mrc_io_read_attr_int(io, path2, "nr_patches", &nr_patches);
+    if (i == mpi_rank) {
+      multi->nr_patches = nr_patches;
+    }
+  }
 
   mrc_domain_read_super(domain, io);
 }

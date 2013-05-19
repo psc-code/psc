@@ -888,6 +888,9 @@ mrc_obj_read2(struct mrc_obj *obj, struct mrc_io *io, const char *path)
   if (obj->ops && obj->ops->read) {
     obj->ops->read(obj, io);
   } else {
+    if (obj->ops && obj->ops->create) {
+      obj->ops->create(obj);
+    }
     mrc_obj_read_super(obj, io);
   }
 }
