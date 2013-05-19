@@ -9,8 +9,6 @@
 #include <mpi.h>
 #include <stdbool.h>
 
-#define mrc_f3 mrc_fld
-
 struct mrc_io;
 
 struct mrc_obj {

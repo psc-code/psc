@@ -76,7 +76,29 @@ struct mrc_fld {
   char **_comp_name;
 };
 
+struct mrc_f3 {
+  struct mrc_obj obj;
+  // parameters
+  struct mrc_param_int_array _dims;
+  struct mrc_param_int_array _offs;
+  struct mrc_param_int_array _sw;
+
+  // state
+  int _ghost_offs[MRC_FLD_MAXDIMS];
+  int _ghost_dims[MRC_FLD_MAXDIMS];
+  int _data_type;
+  int _size_of_type;
+  void *_arr;
+  int _len;
+  bool _with_array;
+  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
+  // for mrc_f3 emulation
+  int _nr_allocated_comp_name;
+  char **_comp_name;
+};
+
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
+MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
@@ -168,8 +190,6 @@ void mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_com
 void mrc_f2_free(struct mrc_f2 *f2);
 
 // ======================================================================
-
-MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
 int mrc_f3_nr_comps(struct mrc_f3 *f3);

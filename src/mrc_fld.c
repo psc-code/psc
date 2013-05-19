@@ -29,6 +29,12 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   free(fld->_comp_name);
 }
 
+static void
+_mrc_f3_destroy(struct mrc_f3 *f3)
+{
+  _mrc_fld_destroy((struct mrc_fld *) f3);
+}
+
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
@@ -57,6 +63,12 @@ _mrc_fld_setup(struct mrc_fld *fld)
   }
 }
 
+static void
+_mrc_f3_setup(struct mrc_f3 *f3)
+{
+  _mrc_fld_setup((struct mrc_fld *) f3);
+}
+
 // ----------------------------------------------------------------------
 // mrc_fld_set_array
 
@@ -71,7 +83,7 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 void
 mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
 {
-  mrc_fld_set_array(f3, arr);
+  mrc_fld_set_array((struct mrc_fld *) f3, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -152,7 +164,7 @@ mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
 void
 mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 {
-  mrc_fld_set_comp_name(f3, m, name);
+  mrc_fld_set_comp_name((struct mrc_fld *) f3, m, name);
 }
 
 // ----------------------------------------------------------------------
@@ -393,8 +405,8 @@ struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
   .param_descr  = mrc_f3_descr,
   .methods      = mrc_f3_methods,
   .init         = mrc_f3_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
+  .destroy      = _mrc_f3_destroy,
+  .setup        = _mrc_f3_setup,
   .read         = _mrc_f3_read,
   .write        = _mrc_f3_write,
 };
