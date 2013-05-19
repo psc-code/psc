@@ -26,31 +26,31 @@ ggcm_mhd_ic_ot_run(struct ggcm_mhd_ic *ic)
   struct ggcm_mhd_ic_ot *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_ot);
 
   struct ggcm_mhd *gmhd = ic->mhd;
-  struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(gmhd->flds_base);
+  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(gmhd->flds_base);
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
 
   float gamma = gmhd->par.gamm;
 
-  mrc_f3_foreach(f3, ix,iy,iz, 0, 0) {
+  mrc_fld_foreach(fld, ix,iy,iz, 0, 0) {
     float r[3];
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz);
-    MRC_F3(f3, _RR1 , ix, iy, iz) = 25. / (36.*M_PI );
-    MRC_F3(f3, _RV1X, ix, iy, iz) = - sin(2. * M_PI * r[1] ) * MRC_F3(f3, _RR1 , ix, iy, iz);
-    MRC_F3(f3, _RV1Y, ix, iy, iz) = sin(2. * M_PI * r[0] )* MRC_F3(f3, _RR1 , ix, iy, iz);
-    MRC_F3(f3, _RV1Z, ix, iy, iz) = 0.0;
-    MRC_F3(f3, _B1X , ix, iy, iz) = - sqrt(1./(4.*M_PI)) * sin( 2. * M_PI * r[1] ); 
-    MRC_F3(f3, _B1Y , ix, iy, iz) =   sqrt(1./(4.*M_PI)) * sin( 4. * M_PI * r[0] );
-    MRC_F3(f3, _B1Z , ix, iy, iz) = 0.0;
-    MRC_F3(f3, _UU1 , ix, iy, iz) = ((5./(12. * (M_PI))) / (gamma - 1.f)) +
-      (.5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-	      sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-	      sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz))+
-      (0.5f) *(sub->mpermi) * (sqr(MRC_F3(f3, _B1X, ix,iy,iz)) +
-				 sqr(MRC_F3(f3, _B1Y, ix,iy,iz)) +
-				 sqr(MRC_F3(f3, _B1Z, ix,iy,iz)));
-  } mrc_f3_foreach_end;
+    MRC_F3(fld, _RR1 , ix, iy, iz) = 25. / (36.*M_PI );
+    MRC_F3(fld, _RV1X, ix, iy, iz) = - sin(2. * M_PI * r[1] ) * MRC_F3(fld, _RR1 , ix, iy, iz);
+    MRC_F3(fld, _RV1Y, ix, iy, iz) = sin(2. * M_PI * r[0] )* MRC_F3(fld, _RR1 , ix, iy, iz);
+    MRC_F3(fld, _RV1Z, ix, iy, iz) = 0.0;
+    MRC_F3(fld, _B1X , ix, iy, iz) = - sqrt(1./(4.*M_PI)) * sin( 2. * M_PI * r[1] ); 
+    MRC_F3(fld, _B1Y , ix, iy, iz) =   sqrt(1./(4.*M_PI)) * sin( 4. * M_PI * r[0] );
+    MRC_F3(fld, _B1Z , ix, iy, iz) = 0.0;
+    MRC_F3(fld, _UU1 , ix, iy, iz) = ((5./(12. * (M_PI))) / (gamma - 1.f)) +
+      (.5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+	      sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+	      sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz))+
+      (0.5f) *(sub->mpermi) * (sqr(MRC_F3(fld, _B1X, ix,iy,iz)) +
+				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
+				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)));
+  } mrc_fld_foreach_end;
     
 }
 

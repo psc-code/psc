@@ -19,11 +19,11 @@ static void
 ggcm_mhd_ic_init_masks_default(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd *mhd = ic->mhd;
-  struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(mhd->flds_base);
+  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(mhd->flds_base);
 
-  mrc_f3_foreach(f3, ix, iy, iz, 1, 1) {
-    MRC_F3(f3, _YMASK, ix,iy,iz) = 1.;
-  } mrc_f3_foreach_end;
+  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
+    MRC_F3(fld, _YMASK, ix,iy,iz) = 1.;
+  } mrc_fld_foreach_end;
 }
 
 // ----------------------------------------------------------------------

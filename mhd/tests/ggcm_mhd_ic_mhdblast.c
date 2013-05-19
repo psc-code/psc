@@ -33,7 +33,7 @@ ggcm_mhd_ic_mhdblast_run(struct ggcm_mhd_ic *ic)
 {
   struct ggcm_mhd_ic_mhdblast *sub = mrc_to_subobj(ic, struct ggcm_mhd_ic_mhdblast);
   struct ggcm_mhd *gmhd = ic->mhd;  
-  struct mrc_f3 *f3 = ggcm_mhd_flds_get_mrc_f3(gmhd->flds_base);
+  struct mrc_fld *fld = ggcm_mhd_flds_get_mrc_fld(gmhd->flds_base);
   struct mrc_crds *crds = mrc_domain_get_crds(gmhd->domain);  
   float xl[3], xh[3], L[3], r[3];
   mrc_crds_get_xl_xh(crds, xl, xh);
@@ -41,88 +41,88 @@ ggcm_mhd_ic_mhdblast_run(struct ggcm_mhd_ic *ic)
     L[i] = xh[i] - xl[i];
   }
   float gamma = gmhd->par.gamm;
-  mrc_f3_foreach(f3, ix, iy, iz, 1, 1) {
+  mrc_fld_foreach(fld, ix, iy, iz, 1, 1) {
     r[0] = MRC_CRD(crds, 0, ix);
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz);
   
     if((strcmp(sub->pdim, "xy") || (strcmp(sub->pdim,"yx"))) == 0){
-	MRC_F3(f3, _RR1, ix, iy, iz) = sub->n0;
-	MRC_F3(f3, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
-	MRC_F3(f3, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _RR1, ix, iy, iz) = sub->n0;
+	MRC_F3(fld, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
 	if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	} else{
 	  
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	}
-	MRC_F3(f3, _RV1X, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Y, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Z, ix, iy, iz) = 0.0;      	
+	MRC_F3(fld, _RV1X, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Y, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Z, ix, iy, iz) = 0.0;      	
     } else if((strcmp(sub->pdim, "yz") || (strcmp(sub->pdim,"zy"))) == 0){
-	MRC_F3(f3, _RR1, ix, iy, iz) = sub->n0;
-	MRC_F3(f3, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
-	MRC_F3(f3, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _RR1, ix, iy, iz) = sub->n0;
+	MRC_F3(fld, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
 	if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	} else{	  
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	}
-	MRC_F3(f3, _RV1X, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Y, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Z, ix, iy, iz) = 0.0;      	
+	MRC_F3(fld, _RV1X, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Y, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Z, ix, iy, iz) = 0.0;      	
     } else if((strcmp(sub->pdim, "xz") || (strcmp(sub->pdim,"zx"))) == 0){
-	MRC_F3(f3, _RR1, ix, iy, iz) = sub->n0;
-	MRC_F3(f3, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
-	MRC_F3(f3, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _RR1, ix, iy, iz) = sub->n0;
+	MRC_F3(fld, _B1X , ix, iy, iz) = sub->B0/sqrt(2.0);
+	MRC_F3(fld, _B1Y , ix, iy, iz) = sub->B0/sqrt(2.0);
 	if( sqrt((r[0]*r[0]) + (r[1]*r[1])) <= sub->initrad ){	
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pin / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	} else{	  
-	  MRC_F3(f3, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
-	    .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _RV1Z, ix, iy, iz))) / MRC_F3(f3, _RR1, ix, iy, iz) +
-	    .5f * (sqr(MRC_F3(f3, _B1X, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Y, ix, iy, iz)) +
-		   sqr(MRC_F3(f3, _B1Z, ix, iy, iz)));      
+	  MRC_F3(fld, _UU1 , ix, iy, iz) = sub->pout / (gamma - 1.f) +
+	    .5f * (sqr(MRC_F3(fld, _RV1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _RV1Z, ix, iy, iz))) / MRC_F3(fld, _RR1, ix, iy, iz) +
+	    .5f * (sqr(MRC_F3(fld, _B1X, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Y, ix, iy, iz)) +
+		   sqr(MRC_F3(fld, _B1Z, ix, iy, iz)));      
 	}
-	MRC_F3(f3, _RV1X, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Y, ix, iy, iz) = 0.0;
-	MRC_F3(f3, _RV1Z, ix, iy, iz) = 0.0;      	
+	MRC_F3(fld, _RV1X, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Y, ix, iy, iz) = 0.0;
+	MRC_F3(fld, _RV1Z, ix, iy, iz) = 0.0;      	
     } else {           
 	assert(0); /* unknown initial condition */
     }
-  } mrc_f3_foreach_end;
+  } mrc_fld_foreach_end;
 }
 
 // ----------------------------------------------------------------------
