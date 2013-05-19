@@ -168,6 +168,114 @@ mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
 }
 
 // ----------------------------------------------------------------------
+// mrc_fld_duplicate
+
+struct mrc_fld *
+mrc_fld_duplicate(struct mrc_fld *fld)
+{
+  struct mrc_fld *fld_new = mrc_fld_create(mrc_fld_comm(fld));
+  mrc_fld_set_param_int_array(fld_new, "dims", fld->_dims.nr_vals, fld->_dims.vals);
+  mrc_fld_set_param_int_array(fld_new, "offs", fld->_offs.nr_vals, fld->_offs.vals);
+  mrc_fld_set_param_int_array(fld_new, "sw", fld->_sw.nr_vals, fld->_sw.vals);
+  fld_new->_domain = fld->_domain;
+  mrc_fld_setup(fld_new);
+  return fld_new;
+}
+
+struct mrc_f3 *
+mrc_f3_duplicate(struct mrc_f3 *f3)
+{
+  return (struct mrc_f3 *) mrc_fld_duplicate((struct mrc_fld *) f3);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_copy
+
+void
+mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
+{
+  assert(mrc_fld_same_shape(fld_to, fld_from));
+
+  memcpy(fld_to->_arr, fld_from->_arr, fld_to->_len * sizeof(float));
+}
+
+void
+mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
+{
+  mrc_fld_copy((struct mrc_fld *) f3_to, (struct mrc_fld *) f3_from);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_axpy
+
+void
+mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
+{
+  assert(mrc_fld_same_shape(x, y));
+
+  assert(y->_data_type == MRC_NT_FLOAT);
+  float *y_arr = y->_arr, *x_arr = x->_arr;
+  for (int i = 0; i < y->_len; i++) {
+    y_arr[i] += alpha * x_arr[i];
+  }
+}
+
+void
+mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
+{
+  mrc_fld_axpy((struct mrc_fld *) y, alpha, (struct mrc_fld *) x);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_waxpy
+
+// FIXME, should take double alpha
+void
+mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld *y)
+{
+  assert(mrc_fld_same_shape(x, y));
+  assert(mrc_fld_same_shape(x, w));
+
+  assert(y->_data_type == MRC_NT_FLOAT);
+  float *y_arr = y->_arr, *x_arr = x->_arr, *w_arr = w->_arr;
+  for (int i = 0; i < y->_len; i++) {
+    w_arr[i] = alpha * x_arr[i] + y_arr[i];
+  }
+}
+
+void
+mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
+{
+  mrc_fld_waxpy((struct mrc_fld *) w, alpha, (struct mrc_fld *) x, (struct mrc_fld *) y);
+}
+
+// ----------------------------------------------------------------------
+// mrc_fld_norm
+
+// FIXME, should return double
+float
+mrc_fld_norm(struct mrc_fld *x)
+{
+  assert(x->_data_type == MRC_NT_FLOAT);
+  assert(x->_dims.nr_vals == 4);
+  float res = 0.;
+  for (int m = 0; m < x->_dims.vals[3]; m++) {
+    mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
+      res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
+    } mrc_fld_foreach_end;
+  }
+
+  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_fld_comm(x));
+  return res;
+}
+
+float
+mrc_f3_norm(struct mrc_f3 *x)
+{
+  return mrc_fld_norm((struct mrc_fld *) x);
+}
+
+// ----------------------------------------------------------------------
 
 int
 mrc_f3_nr_comps(struct mrc_f3 *f3)
@@ -212,26 +320,6 @@ mrc_f3_ghost_dims(struct mrc_f3 *f3)
   return f3->_ghost_dims;
 }
 
-struct mrc_f3 *
-mrc_f3_duplicate(struct mrc_f3 *f3)
-{
-  struct mrc_f3 *f3_new = mrc_f3_create(mrc_f3_comm(f3));
-  mrc_f3_set_param_int_array(f3_new, "dims", f3->_dims.nr_vals, f3->_dims.vals);
-  mrc_f3_set_param_int_array(f3_new, "offs", f3->_offs.nr_vals, f3->_offs.vals);
-  mrc_f3_set_param_int_array(f3_new, "sw", f3->_sw.nr_vals, f3->_sw.vals);
-  f3_new->_domain = f3->_domain;
-  mrc_f3_setup(f3_new);
-  return f3_new;
-}
-
-void
-mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
-{
-  assert(mrc_f3_same_shape(f3_to, f3_from));
-
-  memcpy(f3_to->_arr, f3_from->_arr, f3_to->_len * sizeof(float));
-}
-
 void
 mrc_f3_set(struct mrc_f3 *f3, float val)
 {
@@ -239,45 +327,6 @@ mrc_f3_set(struct mrc_f3 *f3, float val)
   for (int i = 0; i < f3->_len; i++) {
     arr[i] = val;
   }
-}
-
-void
-mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
-{
-  assert(mrc_f3_same_shape(x, y));
-
-  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_dims.vals[3]; m++) {
-      MRC_F3(y,m, ix,iy,iz) += alpha * MRC_F3(x,m, ix,iy,iz);
-    }
-  } mrc_f3_foreach_end;
-}
-
-void
-mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
-{
-  assert(mrc_f3_same_shape(x, y));
-  assert(mrc_f3_same_shape(x, w));
-
-  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_dims.vals[3]; m++) {
-      MRC_F3(w,m, ix,iy,iz) = alpha * MRC_F3(x,m, ix,iy,iz) + MRC_F3(y,m, ix,iy,iz);
-    }
-  } mrc_f3_foreach_end;
-}
-
-float
-mrc_f3_norm(struct mrc_f3 *x)
-{
-  float res = 0.;
-  mrc_f3_foreach(x, ix, iy, iz, 0, 0) {
-    for (int m = 0; m < x->_dims.vals[3]; m++) {
-      res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
-    }
-  } mrc_f3_foreach_end;
-
-  MPI_Allreduce(MPI_IN_PLACE, &res, 1, MPI_FLOAT, MPI_MAX, mrc_f3_comm(x));
-  return res;
 }
 
 void
@@ -376,18 +425,13 @@ static struct param mrc_f3_descr[] = {
 };
 #undef VAR
 
-// ----------------------------------------------------------------------
-// mrc_fld class description
-
-struct mrc_class_mrc_fld mrc_class_mrc_fld = {
-  .name         = "mrc_fld",
-  .size         = sizeof(struct mrc_fld),
-  .param_descr  = mrc_fld_descr,
-  .init         = mrc_fld_init,
-  .destroy      = _mrc_fld_destroy,
-  .setup        = _mrc_fld_setup,
-  .write        = _mrc_fld_write,
-  .read         = _mrc_fld_read,
+static struct mrc_obj_method mrc_fld_methods[] = {
+  MRC_OBJ_METHOD("duplicate", mrc_fld_duplicate),
+  MRC_OBJ_METHOD("copy"     , mrc_fld_copy),
+  MRC_OBJ_METHOD("axpy"     , mrc_fld_axpy),
+  MRC_OBJ_METHOD("waxpy"    , mrc_fld_waxpy),
+  MRC_OBJ_METHOD("norm"     , mrc_fld_norm),
+  {}
 };
 
 static struct mrc_obj_method mrc_f3_methods[] = {
@@ -397,6 +441,21 @@ static struct mrc_obj_method mrc_f3_methods[] = {
   MRC_OBJ_METHOD("waxpy"    , mrc_f3_waxpy),
   MRC_OBJ_METHOD("norm"     , mrc_f3_norm),
   {}
+};
+
+// ----------------------------------------------------------------------
+// mrc_fld class description
+
+struct mrc_class_mrc_fld mrc_class_mrc_fld = {
+  .name         = "mrc_fld",
+  .size         = sizeof(struct mrc_fld),
+  .param_descr  = mrc_fld_descr,
+  .methods      = mrc_fld_methods,
+  .init         = mrc_fld_init,
+  .destroy      = _mrc_fld_destroy,
+  .setup        = _mrc_fld_setup,
+  .write        = _mrc_fld_write,
+  .read         = _mrc_fld_read,
 };
 
 struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {

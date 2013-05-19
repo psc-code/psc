@@ -196,8 +196,13 @@ void
 mrc_io_write_fld(struct mrc_io *io, const char *path, struct mrc_fld *fld)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  assert(ops && ops->write_fld);
-  ops->write_fld(io, path, fld);
+  if (ops->write_fld) {
+    ops->write_fld(io, path, fld);
+  } else if (fld->_dims.nr_vals == 4) {
+    mrc_io_write_f3(io, path, (struct mrc_f3 *) fld, 1.f);
+  } else {
+    assert(0);
+  }
 }
 
 // ----------------------------------------------------------------------

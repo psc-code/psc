@@ -103,6 +103,21 @@ MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
 
+static inline bool
+mrc_fld_same_shape(struct mrc_fld *fld_1, struct mrc_fld *fld_2)
+{
+  if (fld_1->_dims.nr_vals != fld_2->_dims.nr_vals) {
+    return false;
+  }
+
+  for (int d = 0; d < fld_1->_dims.nr_vals; d++) {
+    if (fld_1->_ghost_dims[d] != fld_2->_ghost_dims[d]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // FIXME, add BOUNDSCHECK/DEBUG versions
 
 #define MRC_FLD(fld, type, ix,iy,iz,m)					\
