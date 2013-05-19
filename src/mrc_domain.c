@@ -32,7 +32,7 @@ _mrc_domain_create(struct mrc_domain *domain)
   mrc_ddc_set_type(domain->ddc, "multi");
   mrc_ddc_set_domain(domain->ddc, domain);
   mrc_ddc_set_param_int(domain->ddc, "size_of_type", sizeof(float));
-  mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_f3);
+  mrc_ddc_set_funcs(domain->ddc, &mrc_ddc_funcs_fld);
   mrc_domain_add_child(domain, (struct mrc_obj *) domain->ddc);
 }
 

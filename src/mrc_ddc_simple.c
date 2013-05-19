@@ -281,15 +281,15 @@ struct mrc_ddc_ops mrc_ddc_simple_ops = {
 };
 
 // ======================================================================
-// mrc_ddc_funcs_f3 for mrc_f3
+// mrc_ddc_funcs_fld for mrc_fld
 
 #include <mrc_fld.h>
 
 static void
-mrc_f3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_fld_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   //  mprintf("to buf %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
-  struct mrc_f3 *fld = ctx;
+  struct mrc_fld *fld = ctx;
   float *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -304,10 +304,10 @@ mrc_f3_copy_to_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, vo
 }
 
 static void
-mrc_f3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
+mrc_fld_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, void *ctx)
 {
   //  mprintf("from buf %d:%d x %d:%d x %d:%d\n", ilo[0], ihi[0], ilo[1], ihi[1], ilo[2], ihi[2]);
-  struct mrc_f3 *fld = ctx;
+  struct mrc_fld *fld = ctx;
   float *buf = _buf;
 
   for (int m = mb; m < me; m++) {
@@ -321,8 +321,8 @@ mrc_f3_copy_from_buf(int mb, int me, int p, int ilo[3], int ihi[3], void *_buf, 
   }
 }
 
-struct mrc_ddc_funcs mrc_ddc_funcs_f3 = {
-  .copy_to_buf   = mrc_f3_copy_to_buf,
-  .copy_from_buf = mrc_f3_copy_from_buf,
+struct mrc_ddc_funcs mrc_ddc_funcs_fld = {
+  .copy_to_buf   = mrc_fld_copy_to_buf,
+  .copy_from_buf = mrc_fld_copy_from_buf,
 };
 

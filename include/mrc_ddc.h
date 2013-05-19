@@ -59,7 +59,7 @@ void mrc_ddc_amr_set_by_stencil(struct mrc_ddc *ddc, int m, int bnd, int ext[3],
 	iy - ilo[1]) * (ihi[0] - ilo[0]) +	\
        ix - ilo[0]])
 
-extern struct mrc_ddc_funcs mrc_ddc_funcs_f3;
+extern struct mrc_ddc_funcs mrc_ddc_funcs_fld;
 extern struct mrc_ddc_funcs mrc_ddc_funcs_m3;
 
 static inline int

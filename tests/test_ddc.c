@@ -39,7 +39,7 @@ test(bool periodic)
   int *off = patches[0].off;
 
   struct mrc_ddc *ddc = mrc_domain_create_ddc(domain);
-  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_f3);
+  mrc_ddc_set_funcs(ddc, &mrc_ddc_funcs_fld);
   mrc_ddc_set_param_int3(ddc, "ibn", (int [3]) { bnd, bnd, bnd });
   mrc_ddc_set_param_int(ddc, "max_n_fields", 2);
   mrc_ddc_set_param_int(ddc, "size_of_type", sizeof(float));
