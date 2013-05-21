@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <math.h>
 
+
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_fields
 
@@ -23,6 +24,8 @@ ggcm_mhd_get_fields(struct ggcm_mhd *mhd, const char *name, int nr_comps)
   mrc_fld_setup(fld);
   return fld;
 }
+
+
 
 // ======================================================================
 // ggcm_mhd_step subclass "cweno"
@@ -65,68 +68,6 @@ calc_neg_divg(struct mrc_fld *rhs, int m, struct mrc_fld *flux, struct mrc_crds 
   assert(isfinite(  MRC_F3(rhs, 0, 0, 0, 0)));
 }
 
-static void
-calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fld, struct mrc_fld *flux_E[3])
-{  
-  // compute edge centered electric fields by interpolation (iv)  here tmp_fld are edge centered 
-  // so that e.g.  MRC_F3(tmp_fld, 0, 0, 0, 0) is E_x 0,-1/2,-1/2  
-  //         i.e.  MRC_F3(tmp_fld, 0, ix,iy,iz) is E_x ix,iy-1/2,iz-1/2   
-  //           and MRC_F3(tmp_fld, 1, 0, 0, 0) is E_y -1/2,0,-1/2  etc etc 
-                       
-
-  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
-  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
-
-  struct mrc_fld *fex = flux_E[0], *fey = flux_E[1], *fez = flux_E[2];
-
-  //initialize cell edge center Electric field structure      
-  mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) { 
-    MRC_F3(E_ec, 0, ix, iy, iz) = 0.25*(-MRC_F3(fez, 1, ix, iy, iz) -
-					 MRC_F3(fez, 1, ix, iy, iz-1) +
-					 MRC_F3(fey, 2, ix, iy, iz) +
-					 MRC_F3(fey, 2, ix, iy-1, iz));    
-    //MRC_F3(fld,_EX, ix, iy, iz) = MRC_F3(E_ec, 0, ix, iy, iz);    
-    MRC_F3(E_ec, 1, ix, iy, iz) = 0.25*( MRC_F3(fez, 0, ix, iy, iz) +
-					 MRC_F3(fez, 0, ix, iy, iz-1) -
-					 MRC_F3(fex, 2, ix, iy, iz) -
-					 MRC_F3(fex, 2, ix-1, iy, iz));    
-    //MRC_F3(fld,_EY, ix, iy, iz) = MRC_F3(E_ec, 1, ix, iy, iz);        
-    MRC_F3(E_ec, 2, ix, iy, iz) = 0.25*(-MRC_F3(fey, 0, ix, iy, iz) -
-					 MRC_F3(fey, 0, ix, iy-1, iz) +
-					 MRC_F3(fex, 1, ix, iy, iz) +
-					 MRC_F3(fex, 1, ix-1, iy, iz));    
-    //MRC_F3(fld,_EZ, ix, iy, iz) = MRC_F3(E_ec, 2, ix, iy, iz);
-  } mrc_fld_foreach_end;
-  
-
-  mrc_ddc_fill_ghosts(ddc, 0, 3, E_ec);
-  mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) {
-   
-    B1X(rhs, ix, iy, iz) =  
-      (-(( MRC_F3(E_ec, 2, ix, iy+1, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1) ))) 
-       +(( MRC_F3(E_ec, 1, ix, iy, iz+1) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
-	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1) )))); 
-    
-    B1Y(rhs, ix, iy, iz) = 
-      (-(( MRC_F3(E_ec,  0, ix, iy, iz+1) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1) )))
-       +(( MRC_F3(E_ec, 2, ix+1, iy, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
-	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))); 
-    
-    B1Z(rhs, ix, iy, iz) = 
-      (-(( MRC_F3(E_ec, 1, ix+1, iy, iz) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))  
-       +(( MRC_F3(E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
-	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1) )))); 
-   
-  } mrc_fld_foreach_end;
-    
-  mrc_fld_destroy(E_ec); 
-  //  MHERE;
-}
-
 // ----------------------------------------------------------------------
 // calc_fluxes_per_faces
 //
@@ -166,22 +107,16 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
 				 sqr(MRC_F3(fld, _B1Y, ix,iy,iz)) +
 				 sqr(MRC_F3(fld, _B1Z, ix,iy,iz)))));
     
-    //float BB = (0.5f) *mpermi * (sqr(MRC_F3(fld, _B1X+i, ix,iy,iz)));
-    //float pp = (mhd->T)*MRC_F3(fld, _RR1, ix,iy,iz);
     // mass consv. 
     MRC_F3(flux[_RR1], i, ix,iy,iz) = MRC_F3(fld, _RV1X+i, ix,iy,iz);
-      //MRC_F3(fld, _RV1X+i, ix,iy,iz);
     
     // momentum eq. 
     for (int j = 0; j < 3; j++) {
       
-      //BB = (0.5f) *mpermi * (sqr(MRC_F3(fld, _B1X+j, ix,iy,iz)));
       MRC_F3(flux[_RV1X+i], j, ix,iy,iz) = 
 	rhoi * MRC_F3(fld, _RV1X+j, ix,iy,iz) * MRC_F3(fld, _RV1X+i, ix,iy,iz) +
 	((j == i) ? pp : 0.) + 
 	((j == i) ? BB : 0.) - mpermi * (MRC_F3(fld, _B1X+i, ix,iy,iz) * MRC_F3(fld, _B1X+j, ix,iy,iz));
-      //mpermi * MRC_F3(fld, _B1X+j, ix,iy,iz) * MRC_F3(fld, _B1X+i, ix,iy,iz);
-       
     }
     
     // energy eq. 
@@ -189,14 +124,6 @@ calc_fluxes_per_face(struct mrc_fld **flux, struct ggcm_mhd *mhd, struct mrc_fld
       ( ((MRC_F3(fld, _UU1, ix,iy,iz) + pp + BB)*MRC_F3(fld, _RV1X+i, ix,iy,iz))-
 	(mpermi * mB * MRC_F3(fld, _B1X+i, ix,iy,iz)) + 
 	(d_i * ( -0.5*MRC_F3(fld, _JX+i, ix,iy,iz)*BB - MRC_F3(fld, _B1X+i, ix,iy,iz)*JB)) ) * rhoi;
-
-    /*
-    MRC_F3(flux[_UU1], i, ix,iy,iz) =
-      (MRC_F3(fld, _UU1, ix,iy,iz) + pp+BB) * rhoi * MRC_F3(fld, _RV1X+i, ix,iy,iz) +
-      (mpermi * rhoi* MRC_F3(fld, _RV1X+i, ix,iy,iz) * MRC_F3(fld, _B1X+i, ix,iy,iz)) * 
-      (MRC_F3(fld, _B1X+i, ix,iy,iz));
-    */
-
 
   } mrc_fld_foreach_end;
  
@@ -218,7 +145,6 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
   float gamma = mhd->par.gamm;
   float d_i = mhd->par.d_i;
   float eta = mhd->par.diffco;
-
   mrc_ddc_fill_ghosts(ddc, 0, _B1Z + 1, u);
 
   // initialize deltas for reconstruction
@@ -534,7 +460,6 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
   float cm;
   float ppp;
   float ppm; 
-  //  float rhoi;
   float rhoip;
   float rhoim; 
 
@@ -570,20 +495,16 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
     cAm = sqrtf( (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz))+
 		  sqr(MRC_F3(u_m[0], _B1Y, ix,iy,iz))+
 		  sqr(MRC_F3(u_m[0], _B1Z, ix,iy,iz)))/ MRC_F3(u_m[0], _RR1, ix,iy,iz) );
-    //cAp = sqrtf( (sqr(MRC_F3(u_p[0], _B1X, ix-1,iy,iz)))/ MRC_F3( u_p[0], _RR1, ix-1,iy,iz) );
-    //cAm = sqrtf( (sqr(MRC_F3(u_m[0], _B1X, ix,iy,iz)))/ MRC_F3(u_m[0], _RR1, ix,iy,iz) );		
  						      
     tmp = sqr(csp) + sqr(cAp);
     cfp = sqrtf( 0.5 * ( tmp + sqrtf( sqr( sqr(cAp) + sqr(csp) )
 				     - (4. * mpermi * sqr(csp * MRC_F3(u, _B1X, ix-1,iy,iz)) /  
 					MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) )) );      
-    //cfp = sqrt(tmp);//sqrt(2.0)*sqrt(sqr(csp) + sqr(cAp));
     tmp = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5 * ( tmp + sqrtf( sqr( sqr(cAm) + sqr(csm) )
 				     - (4.* mpermi * sqr(csm * MRC_F3(u, _B1X, ix,iy,iz)) /  
 					MRC_F3(u_m[0], _RR1, ix,iy,iz))  )) );
 
-    //cfm = sqrt(tmp);//sqrt(2.0)*sqrt(sqr(csm) + sqr(cAm));
     ap = fmaxf(fmaxf((MRC_F3(u_p[0], _RV1X, ix-1,iy,iz) / MRC_F3(u_p[0], _RR1, ix-1,iy,iz)) + cfp,
 		     (MRC_F3(u_m[0], _RV1X, ix,iy,iz) / MRC_F3(u_m[0], _RR1, ix,iy,iz)) + cfm), 0.f);
 
@@ -634,13 +555,10 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
     cfp = sqrtf( 0.5 * (tmp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
 				     (4.f * mpermi * sqr(csp * MRC_F3(u, _B1Y, ix,iy-1,iz)) /  
 				      MRC_F3(u_p[1], _RR1, ix,iy-1,iz))) ));      
-    //cfp = sqrt(tmp);//sqrt(2.0)*sqrt( sqr(csp) + sqr(cAp));
     tmp = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5 * (tmp + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -  
 				     (4.f * mpermi * sqr(csm * MRC_F3(u, _B1Y, ix,iy,iz)) /  
 				      MRC_F3(u_m[1], _RR1, ix,iy,iz))) ));
-    //cfm = sqrt(tmp);////sqrt(2.0)*sqrt( sqr(csm) + sqr(cAm));
-   
     bp = fmaxf(fmaxf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) + cfp,
 		      (MRC_F3(u_m[1], _RV1Y, ix,iy,iz) / MRC_F3(u_m[1], _RR1, ix,iy,iz)) + cfm), 0.f);
     bm = fminf(fminf( (MRC_F3(u_p[1], _RV1Y, ix,iy-1,iz) / MRC_F3(u_p[1], _RR1, ix,iy-1,iz)) - cfp,
@@ -693,12 +611,11 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
     cfp = sqrtf( 0.5f * (tmp + sqrtf( sqr( sqr(cAp) + sqr(csp) ) - 
 				      (4. * mpermi * sqr(csp * MRC_F3(u_p[2], _B1Z, ix,iy,iz-1)) /  
 				       MRC_F3(u_p[2], _RR1, ix,iy,iz-1))) ));      
-    //cfp = tmp ;//sqrt(2.0)*sqrt(tmp);
+
     tmp = sqr(csm) + sqr(cAm);
     cfm = sqrtf( 0.5f * (tmp + sqrtf( sqr( sqr(cAm) + sqr(csm) ) -
 				      (4.* mpermi * sqr(csm * MRC_F3(u_m[2], _B1Z, ix,iy,iz)) /  
 				       MRC_F3(u_m[2], _RR1, ix,iy,iz))) ));
-    //cfm = tmp ;//sqrt(2.0)*sqrt(tmp);
 
     cp = fmaxf(fmaxf( (MRC_F3(u_p[2], _RV1Z, ix,iy,iz-1) / MRC_F3(u_p[2], _RR1, ix,iy,iz-1)) + cfp,
  		      (MRC_F3(u_m[2], _RV1Z, ix,iy,iz) / MRC_F3(u_m[2], _RR1, ix,iy,iz)) + cfm), 0.f);
@@ -720,10 +637,9 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
 			 (ap*am)*   ( MRC_F3(u_m[0], _B1Y, ix,iy,iz) -  MRC_F3(u_p[0], _B1Y, ix-1,iy,iz) ));
     MRC_F3(flux_E[2], 0, ix,iy,iz) = 
       (1.f/(ap - am)) * (     ap  * MRC_F3(u_p[0], _EY, ix-1,iy,iz) - am *  MRC_F3(u_m[0], _EY, ix,iy,iz) + 
-			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) -     MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
+			 (ap*am) * ( MRC_F3(u_m[0], _B1Z, ix,iy,iz) - MRC_F3(u_p[0], _B1Z, ix-1,iy,iz) ));  
     
     // flux of _EX,_EY,_EZ through the y faces    
-    // CHECK
     MRC_F3(flux_E[0], 1, ix,iy,iz) =
        (1.f/(bp - bm)) * (     bp  *    MRC_F3(u_p[1], _EZ, ix,iy-1,iz) - bm * MRC_F3(u_m[1], _EZ, ix,iy,iz) + 
 		         (bp * bm) *  ( MRC_F3(u_m[1], _B1X, ix,iy,iz) -    MRC_F3(u_p[1], _B1X, ix,iy-1,iz) ));
@@ -767,13 +683,230 @@ calc_cweno_fluxes(struct mrc_fld **flux, struct mrc_fld *flux_E[3], struct ggcm_
   }
 }
 
+
+
+// ----------------------------------------------------------------------
+// fill_ghost_fld 
+// 
+// This fills ghost cells for fld objects that have been duplicated in the 
+// time-stepping routine (c.f. mrc_ts_rk2.c). Without this, zero-values at 
+// boundaries will give inf and nan values for non-periodic boudnaries.
+
+static void
+fill_ghost_fld(struct ggcm_mhd *mhd, struct mrc_fld *fld)
+{
+  struct ggcm_mhd_flds *flds = ggcm_mhd_flds_get_as(mhd->flds_base, "c");
+  struct mrc_fld *f3 = ggcm_mhd_flds_get_mrc_fld(flds);
+  int sw = 2; 
+  int gdims[3];
+  mrc_domain_get_global_dims(mhd->domain, gdims);
+  struct mrc_patch_info info;
+  mrc_domain_get_local_patch_info(mhd->domain, 0, &info);
+
+  int bc[3];
+  mrc_domain_get_param_int(mhd->domain, "bcx", &bc[0]); // FIXME in libmrc
+  mrc_domain_get_param_int(mhd->domain, "bcy", &bc[1]);
+  mrc_domain_get_param_int(mhd->domain, "bcz", &bc[2]);
+  const int *dims = mrc_fld_dims(f3);
+  int nx = dims[0], ny = dims[1], nz = dims[2];
+
+  if ( bc[0] != BC_PERIODIC ) {    
+    if (info.off[0] == 0) { 
+      for (int m =0; m < __NR_FLDS+1; m++) { 
+	for (int ix = -sw; ix < 0; ix++) {  
+	  for (int iy = -sw; iy < ny + sw; iy++) {
+	    for (int iz = -sw; iz < nz + sw; iz++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	    }	     
+	  }
+	}
+      }
+    }    
+    if (info.off[0] + info.ldims[0] == gdims[0]) { 
+      for ( int m = 0; m < __NR_FLDS+1; m++ ) {
+	for (int ix = nx; ix < nx + sw; ix++) {  
+	  for (int iy = -sw; iy < ny + sw; iy++) {
+	    for (int iz = -sw; iz < nz + sw; iz++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+		}		
+	  }
+	}
+      }
+    }    
+  }  
+
+  if ( bc[1] != BC_PERIODIC ) {    
+    if (info.off[1] == 0) { 
+      for (int m =0; m < __NR_FLDS+1; m++) { 
+	for (int iy = -sw; iy < 0; iy++) {  
+	  for (int ix = -sw; ix < nx + sw; ix++) {
+	    for (int iz = -sw; iz < nz + sw; iz++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	    }
+	  }
+	}
+      }
+    }    
+    if (info.off[1] + info.ldims[1] == gdims[1]) { 
+      for ( int m = 0; m < __NR_FLDS+1; m++ ) {
+	for (int iy = ny; iy < ny + sw; iy++) {  
+	  for (int ix = -sw; ix < nx + sw; ix++) {
+	    for (int iz = -sw; iz < nz + sw; iz++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+		}		
+	  }
+	}
+      }
+    }    
+  }  
+
+  if ( bc[2] != BC_PERIODIC ) {    
+    if (info.off[2] == 0) { 
+      for (int m =0; m < __NR_FLDS+1; m++) { 
+	for (int iz = -sw; iz < 0; iz++) {  
+	  for (int iy = -sw; iy < ny + sw; iy++) {
+	    for (int ix = -sw; ix < nx + sw; ix++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz); 
+	    }
+	  }
+	}
+      }
+    }    
+    if (info.off[2] + info.ldims[2] == gdims[2]) { 
+      for ( int m = 0; m < __NR_FLDS+1; m++ ) {
+	for (int iz = nz; iz < nz + sw; iz++) {  
+	  for (int iy = -sw; iy < ny + sw; iy++) {
+	    for (int ix = -sw; ix < nx + sw; ix++) {
+	      MRC_F3(fld,m, ix,iy,iz) = MRC_F3(f3,m, ix,iy,iz);
+		}		
+	  }
+	}
+       }
+    }    
+  }  
+
+
+}
+
+
+static void
+calc_fct_rhs(struct ggcm_mhd *mhd, struct mrc_fld *rhs, struct mrc_fld *fld, struct mrc_fld *flux_E[3])
+{  
+  // compute edge centered electric fields by interpolation (iv)  here tmp_fld are edge centered 
+  // so that e.g.  MRC_F3(tmp_fld, 0, 0, 0, 0) is E_x 0,-1/2,-1/2  
+  //         i.e.  MRC_F3(tmp_fld, 0, ix,iy,iz) is E_x ix,iy-1/2,iz-1/2   
+  //           and MRC_F3(tmp_fld, 1, 0, 0, 0) is E_y -1/2,0,-1/2  etc etc 
+                       
+
+  struct mrc_ddc *ddc = mrc_domain_get_ddc(mhd->domain);
+  struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  struct mrc_fld *E_ec = ggcm_mhd_get_fields(mhd, "E_ec", 3);
+  struct mrc_fld *fex = flux_E[0], *fey = flux_E[1], *fez = flux_E[2];
+  
+
+  //initialize cell edge center Electric field structure      
+  mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) { 
+
+    /*
+    MRC_F3(E_ec, 0, ix, iy, iz) = 0.25*(-MRC_F3(fez, 1, ix, iy, iz) -
+					 MRC_F3(fez, 1, ix, iy, iz-1) +
+					 MRC_F3(fey, 2, ix, iy, iz) +
+					 MRC_F3(fey, 2, ix, iy-1, iz));    
+    //MRC_F3(fld,_EX, ix, iy, iz) = MRC_F3(E_ec, 0, ix, iy, iz);    
+    MRC_F3(E_ec, 1, ix, iy, iz) = 0.25*( MRC_F3(fez, 0, ix, iy, iz) +
+					 MRC_F3(fez, 0, ix, iy, iz-1) -
+					 MRC_F3(fex, 2, ix, iy, iz) -
+					 MRC_F3(fex, 2, ix-1, iy, iz));    
+    //MRC_F3(fld,_EY, ix, iy, iz) = MRC_F3(E_ec, 1, ix, iy, iz);        
+    MRC_F3(E_ec, 2, ix, iy, iz) = 0.25*(-MRC_F3(fey, 0, ix, iy, iz) -
+					 MRC_F3(fey, 0, ix, iy-1, iz) +
+					 MRC_F3(fex, 1, ix, iy, iz) +
+					 MRC_F3(fex, 1, ix-1, iy, iz));    
+    //MRC_F3(fld,_EZ, ix, iy, iz) = MRC_F3(E_ec, 2, ix, iy, iz);
+    */
+
+    MRC_F3(fld, _EX, ix, iy, iz) = 0.25*(-MRC_F3(fez, 1, ix, iy, iz) -
+					 MRC_F3(fez, 1, ix, iy, iz-1) +
+					 MRC_F3(fey, 2, ix, iy, iz) +
+					 MRC_F3(fey, 2, ix, iy-1, iz));    
+    //MRC_F3(fld,_EX, ix, iy, iz) = MRC_F3(E_ec, 0, ix, iy, iz);    
+    MRC_F3(fld, _EY, ix, iy, iz) = 0.25*( MRC_F3(fez, 0, ix, iy, iz) +
+					 MRC_F3(fez, 0, ix, iy, iz-1) -
+					 MRC_F3(fex, 2, ix, iy, iz) -
+					 MRC_F3(fex, 2, ix-1, iy, iz));    
+    //MRC_F3(fld,_EY, ix, iy, iz) = MRC_F3(E_ec, 1, ix, iy, iz);        
+    MRC_F3(fld, _EZ, ix, iy, iz) = 0.25*(-MRC_F3(fey, 0, ix, iy, iz) -
+					 MRC_F3(fey, 0, ix, iy-1, iz) +
+					 MRC_F3(fex, 1, ix, iy, iz) +
+					 MRC_F3(fex, 1, ix-1, iy, iz));    
+    //MRC_F3(fld,_EZ, ix, iy, iz) = MRC_F3(E_ec, 2, ix, iy, iz);
+
+  } mrc_fld_foreach_end;
+  
+  /////////////////////////////////////////////////
+  //  Use field here rather than E_ec hold the electric field so that 
+  //  we can (correctly apply the boundary condition). 
+  /////////////////////////////////////////////////
+
+
+  mrc_ddc_fill_ghosts(ddc, 0, 3, E_ec);
+  fill_ghost_fld(mhd, fld);
+
+
+  mrc_fld_foreach(rhs, ix, iy,  iz, 1, 1) {
+    
+    B1X(rhs, ix, iy, iz) =  
+      (-(( MRC_F3(fld, _EZ, ix, iy+1, iz) - MRC_F3(fld, _EZ, ix, iy, iz) ) /
+	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1) ))) 
+       +(( MRC_F3(fld, _EY, ix, iy, iz+1) - MRC_F3(fld, _EY, ix, iy, iz) ) /
+	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1) )))); 
+    
+    B1Y(rhs, ix, iy, iz) = 
+      (-(( MRC_F3(fld, _EX, ix, iy, iz+1) - MRC_F3(fld, _EX, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1) )))
+       +(( MRC_F3(fld, _EZ, ix+1, iy, iz) - MRC_F3(fld, _EZ, ix, iy, iz) ) /
+	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))); 
+    
+    B1Z(rhs, ix, iy, iz) = 
+      (-(( MRC_F3( fld, _EY, ix+1, iy, iz) - MRC_F3(fld, _EY, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))  
+       +(( MRC_F3( fld, _EX, ix, iy+1, iz) - MRC_F3(fld, _EX, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1) )))); 
+
+    /*
+    B1X(rhs, ix, iy, iz) =  
+      (-(( MRC_F3(E_ec, 2, ix, iy+1, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
+	 (.5f*( MRC_CRDY(crds, iy+1) - MRC_CRDY(crds, iy-1) ))) 
+       +(( MRC_F3(E_ec, 1, ix, iy, iz+1) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
+	 (.5f*( MRC_CRDZ(crds, iz+1) - MRC_CRDZ(crds, iz-1) )))); 
+    
+    B1Y(rhs, ix, iy, iz) = 
+      (-(( MRC_F3(E_ec,  0, ix, iy, iz+1) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 2, iz+1) - MRC_CRD(crds, 2, iz-1) )))
+       +(( MRC_F3(E_ec, 2, ix+1, iy, iz) - MRC_F3(E_ec, 2, ix, iy, iz) ) /
+	 (.5f*(MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))); 
+    
+    B1Z(rhs, ix, iy, iz) = 
+      (-(( MRC_F3(E_ec, 1, ix+1, iy, iz) - MRC_F3(E_ec, 1, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 0, ix+1) - MRC_CRD(crds, 0, ix-1) )))  
+       +(( MRC_F3(E_ec, 0, ix, iy+1, iz) - MRC_F3(E_ec, 0, ix, iy, iz) ) /
+	 (.5f*( MRC_CRD(crds, 1, iy+1) - MRC_CRD(crds, 1, iy-1) )))); 
+    */
+  } mrc_fld_foreach_end;
+    
+  mrc_fld_destroy(E_ec); 
+
+}
+
 static void
 ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
 			     struct mrc_fld *fld)
 {
-  struct ggcm_mhd *mhd = step->mhd;
-  
+  struct ggcm_mhd *mhd = step->mhd;  
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
+  
+  fill_ghost_fld(mhd, fld);
+
   struct mrc_fld *flux[_UU1 + 1];
   for (int m = 0; m < _UU1 + 1; m++) {
     flux[m] = ggcm_mhd_get_fields(mhd, "flux", 3);
@@ -784,11 +917,11 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   }
    
   calc_cweno_fluxes(flux, flux_E, mhd, fld, crds);
-  //zero_flux(flux, mhd, fld); 
 
   for (int m = 0; m < _UU1+1; m++) {
     calc_neg_divg(rhs, m, flux[m], crds);
   }
+  //fill_ghost_fld(mhd, fld);
   calc_fct_rhs(mhd, rhs, fld, flux_E); 
   
   for (int m = 0; m < _UU1 + 1; m++) {
@@ -797,22 +930,6 @@ ggcm_mhd_step_cweno_calc_rhs(struct ggcm_mhd_step *step, struct mrc_fld *rhs,
   for (int m = 0; m < 3; m++) {
     mrc_fld_destroy(flux_E[m]);
   }
-
-  /*
-  struct mrc_io *io=mrc_io_create(MPI_COMM_WORLD); 
-  mrc_io_set_param_string(io,"basename","rhs");
-  mrc_io_setup(io);
-  mrc_io_open(io, "w",0,0);
-  for (int m = 0; m < __NR_FLDS; m++){
-    char s[10]; 
-    sprintf(s,"m%d",m);
-    mrc_fld_set_comp_name(rhs,m,s);
-  }
-  mrc_fld_write(rhs,io);
-  mrc_io_close(io);
-  Abort2();  
-  mrc_io_destroy(io); 
-  */
 }
 
 // ----------------------------------------------------------------------
