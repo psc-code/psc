@@ -174,6 +174,7 @@ mrc_ts_init()
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_ode45_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk2_ops);
   mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rk4_ops);
+  mrc_class_register_subclass(&mrc_class_mrc_ts, &mrc_ts_rkf45_ops);
 }
 
 // ======================================================================
