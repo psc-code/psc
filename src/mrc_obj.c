@@ -346,12 +346,17 @@ mrc_obj_set_name(struct mrc_obj *obj, const char *name)
 static void
 obj_set_type(struct mrc_obj *obj, const char *subclass, bool basic_only)
 {
-  //  printf("set_type: %s -> %s\n", obj->ops->name, subclass);
+  /* if (obj->ops) { */
+  /*   printf("set_type: %s -> %s\n", obj->ops->name, subclass); */
+  /* } */
   if (obj->ops && strcmp(obj->ops->name, subclass) == 0)
     return;
 
   if (obj->ops && obj->ops->destroy) {
     obj->ops->destroy(obj);
+
+    char *p = (char *) obj->subctx + obj->ops->param_offset;
+    destroy_member_objs(p, obj->ops->param_descr);
   }
 
   free(obj->subctx);
