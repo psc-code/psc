@@ -360,6 +360,7 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
   assert(nr_patches == 1);
   int *dims = patches[0].ldims;
 
+  struct mrc_fld *f2 = mrc_fld_create(MPI_COMM_SELF);
   //check for existence on local proc.
   //0,1, nnx-2, nnx-1 are the ghostpoints
   struct mrc_crds *crds = mrc_domain_get_crds(fld->_domain);
@@ -376,10 +377,10 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     s1 *= scale;
     s2 *= scale;
 
-    struct mrc_fld *f2;
     switch (dim) {
     case 0:
-      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[1], dims[2] }, 1);
+      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[1], dims[2], 1 });
+      mrc_fld_setup(f2);
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int iy = 0; iy < dims[1]; iy++) {
 	  MRC_F2(f2,0, iy,iz) = (s1 * MRC_F3(fld,0, ii-2,iy,iz) +
@@ -388,7 +389,8 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
       }
       break;
     case 1:
-      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[0], dims[2] }, 1);
+      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[2], 1 });
+      mrc_fld_setup(f2);
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
 	  MRC_F2(f2,0, ix,iz) = (s1 * MRC_F3(fld,0, ix,ii-2,iz) +
@@ -397,7 +399,8 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
       }
       break;
     case 2:
-      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[0], dims[1] }, 1);
+      mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { dims[0], dims[1], 1 });
+      mrc_fld_setup(f2);
       for(int iy = 0; iy < dims[1]; iy++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
 	  MRC_F2(f2,0, ix,iy) = (s1 * MRC_F3(fld,0, ix,iy,ii-2) +
@@ -407,17 +410,15 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
       break;
     }
 
-    f2->_domain = fld->_domain;
-    mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
-    ops->write_field2d(io, 1., f2, outtype, sheet);
-    mrc_f2_free(f2);
   } else {
-    struct mrc_fld *f2 = mrc_f2_alloc(NULL, (int [2]) { 0, 0 }, 1);
-    f2->_domain = fld->_domain;
-    mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
-    ops->write_field2d(io, 1., f2, outtype, sheet);
-    mrc_f2_free(f2);
+    // not on local proc
+    mrc_fld_set_param_int_array(f2, "dims", 3, (int[3]) { 0, 0, 1 });
+    mrc_fld_setup(f2);
   }
+  f2->_domain = fld->_domain;
+  mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
+  ops->write_field2d(io, 1., f2, outtype, sheet);
+  mrc_fld_destroy(f2);
 }
 
 // ----------------------------------------------------------------------

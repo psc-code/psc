@@ -45,9 +45,11 @@ mod_domain(struct mrc_mod *mod, void *arg)
   struct mrc_domain *domain = mrctest_create_domain(comm, par);
 
   int mx = 8, my = 4;
-  struct mrc_fld *fld = mrc_f2_alloc(NULL, (int [2]) { mx, my }, 1);
+  struct mrc_fld *fld = mrc_fld_create(comm);
+  mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { mx, my, 1 });
   mrc_fld_set_comp_name(fld, 0, "test_2d_0");
   fld->_domain = domain;
+  mrc_fld_setup(fld);
 
   for (int iy = 0; iy < my; iy++) {
     for (int ix = 0; ix < mx; ix++) {
@@ -57,7 +59,7 @@ mod_domain(struct mrc_mod *mod, void *arg)
 
   int rank_diagsrv = mrc_mod_get_first_node(mod, "diagsrv");
   dump_field_2d(comm, fld, rank_diagsrv);
-  mrc_f2_free(fld);
+  mrc_fld_destroy(fld);
 
   mrc_domain_destroy(domain);
 }

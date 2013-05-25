@@ -251,42 +251,6 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
 };
 
 // ======================================================================
-// mrc_f2
-
-struct mrc_fld *
-mrc_f2_alloc(int ib[2], int im[2], int nr_comp)
-{
-  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_SELF);
-  mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { im[0], im[1], nr_comp });
-  if (ib) {
-    mrc_fld_set_param_int_array(fld, "offs", 3, (int[3]) { ib[0], ib[1], 0 });
-  }
-  mrc_fld_setup(fld);
-
-  return fld;
-}
-
-struct mrc_fld *
-mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr)
-{
-  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_SELF);
-  mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { im[0], im[1], nr_comp });
-  if (ib) {
-    mrc_fld_set_param_int_array(fld, "offs", 3, (int[3]) { ib[0], ib[1], 0 });
-  }
-  mrc_fld_set_array(fld, arr);
-  mrc_fld_setup(fld);
-
-  return fld;
-}
-
-void
-mrc_f2_free(struct mrc_fld *fld)
-{
-  mrc_fld_destroy(fld);
-}
-
-// ======================================================================
 // mrc_m1
 
 #define to_mrc_m1(o) container_of(o, struct mrc_m1, obj)

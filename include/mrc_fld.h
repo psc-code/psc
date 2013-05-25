@@ -174,12 +174,6 @@ float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 #define mrc_f1_foreach_end do {} while (0)	\
 
 // ======================================================================
-
-struct mrc_fld *mrc_f2_alloc(int ib[2], int im[2], int nr_comp);
-struct mrc_fld *mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr);
-void mrc_f2_free(struct mrc_fld *f2);
-
-// ======================================================================
 // mrc_m1
 
 struct mrc_m1_patch {
