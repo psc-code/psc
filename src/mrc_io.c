@@ -333,15 +333,11 @@ mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *fld)
 // mrc_io_write_field2d
 
 void
-mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
+mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 		     int outtype, float sheet)
 {
   struct mrc_io_ops *ops = mrc_io_ops(io);
-  if (!fld->name[0]) {
-    char s[10];
-    sprintf(s, "m%d", 0);
-    fld->name[0] = strdup(s);
-  }
+  assert(mrc_fld_comp_name(fld, 0));
   ops->write_field2d(io, scale, fld, outtype, sheet);
 }
 
@@ -380,7 +376,7 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     s1 *= scale;
     s2 *= scale;
 
-    struct mrc_f2 *f2;
+    struct mrc_fld *f2;
     switch (dim) {
     case 0:
       f2 = mrc_f2_alloc(NULL, (int [2]) { dims[1], dims[2] }, 1);
@@ -411,17 +407,16 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
       break;
     }
 
-    f2->domain = fld->_domain;
-    f2->name[0] = strdup(mrc_fld_comp_name(fld, 0));
+    f2->_domain = fld->_domain;
+    mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
     ops->write_field2d(io, 1., f2, outtype, sheet);
     mrc_f2_free(f2);
   } else {
-    struct mrc_f2 f2 = {};
-    f2.domain = fld->_domain;
-    f2.name = calloc(1, sizeof(*f2.name));
-    f2.name[0] = strdup(mrc_fld_comp_name(fld, 0));
-    ops->write_field2d(io, 1., &f2, outtype, sheet);
-    mrc_f2_free(&f2);
+    struct mrc_fld *f2 = mrc_f2_alloc(NULL, (int [2]) { 0, 0 }, 1);
+    f2->_domain = fld->_domain;
+    mrc_fld_set_comp_name(f2, 0, mrc_fld_comp_name(fld, 0));
+    ops->write_field2d(io, 1., f2, outtype, sheet);
+    mrc_f2_free(f2);
   }
 }
 

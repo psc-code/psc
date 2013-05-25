@@ -253,65 +253,37 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
 // ======================================================================
 // mrc_f2
 
-struct mrc_f2 *
+struct mrc_fld *
 mrc_f2_alloc(int ib[2], int im[2], int nr_comp)
 {
-  struct mrc_f2 *f2 = calloc(1, sizeof(*f2));
-  f2->len = im[0] * im[1] * nr_comp;
-  for (int d = 0; d < 2; d++) {
-    f2->im[d] = im[d];
-  }
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_SELF);
+  mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { im[0], im[1], nr_comp });
   if (ib) {
-    for (int d = 0; d < 2; d++) {
-      f2->ib[d] = ib[d];
-    }
+    mrc_fld_set_param_int_array(fld, "offs", 3, (int[3]) { ib[0], ib[1], 0 });
   }
-  f2->nr_comp = nr_comp;
-  f2->arr = calloc(f2->len, sizeof(*f2->arr));
-  f2->with_array = false;
+  mrc_fld_setup(fld);
 
-  f2->name = malloc(nr_comp * sizeof(*f2->name));
-  memset(f2->name, 0, nr_comp * sizeof(*f2->name));
-
-  return f2;
+  return fld;
 }
 
-struct mrc_f2 *
+struct mrc_fld *
 mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr)
 {
-  struct mrc_f2 *f2 = calloc(1, sizeof(*f2));
-  f2->len = im[0] * im[1];
-  for (int d = 0; d < 2; d++) {
-    f2->im[d] = im[d];
-  }
+  struct mrc_fld *fld = mrc_fld_create(MPI_COMM_SELF);
+  mrc_fld_set_param_int_array(fld, "dims", 3, (int[3]) { im[0], im[1], nr_comp });
   if (ib) {
-    for (int d = 0; d < 2; d++) {
-      f2->ib[d] = ib[d];
-    }
+    mrc_fld_set_param_int_array(fld, "offs", 3, (int[3]) { ib[0], ib[1], 0 });
   }
-  f2->nr_comp = nr_comp;
-  f2->arr = arr;
-  f2->with_array = true;
+  mrc_fld_set_array(fld, arr);
+  mrc_fld_setup(fld);
 
-  f2->name = malloc(nr_comp * sizeof(*f2->name));
-  memset(f2->name, 0, nr_comp * sizeof(*f2->name));
-
-  return f2;
+  return fld;
 }
 
 void
-mrc_f2_free(struct mrc_f2 *f2)
+mrc_f2_free(struct mrc_fld *fld)
 {
-  if (!f2->with_array) {
-    free(f2->arr);
-  }
-  for (int m = 0; m < f2->nr_comp; m++) {
-    free(f2->name[m]);
-  }
-  free(f2->name);
-
-  f2->arr = NULL;
-  free(f2);
+  mrc_fld_destroy(fld);
 }
 
 // ======================================================================

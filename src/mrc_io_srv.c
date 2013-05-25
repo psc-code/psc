@@ -213,12 +213,12 @@ diagc_combined_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
-diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
+diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			     int outtype, float sheet)
 {
   struct diagc_combined_params *par = io->obj.subctx;
 
-  diagc_combined_send_domain_info(io, fld->domain);
+  diagc_combined_send_domain_info(io, fld->_domain);
 
   assert(outtype >= DIAG_TYPE_2D_X && outtype <= DIAG_TYPE_2D_Z);
   int dim = outtype - DIAG_TYPE_2D_X;
@@ -226,8 +226,8 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   if (io->rank == 0) {
     MPI_Send("mrc_f2", strlen("mrc_f2") + 1, MPI_CHAR, par->rank_diagsrv,
 	     ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
-    MPI_Send(fld->name[0], strlen(fld->name[0]) + 1, MPI_CHAR, par->rank_diagsrv,
-	     ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
+    MPI_Send((char *) mrc_fld_comp_name(fld, 0), strlen(mrc_fld_comp_name(fld, 0)) + 1,
+	     MPI_CHAR, par->rank_diagsrv, ID_DIAGS_FLDNAME, MPI_COMM_WORLD);
     MPI_Send(&outtype, 1, MPI_INT, par->rank_diagsrv,
 	     ID_DIAGS_CMD_WRITE, MPI_COMM_WORLD);
     MPI_Send(&sheet, 1, MPI_FLOAT, par->rank_diagsrv,
@@ -235,10 +235,10 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   }
 
   int iw[6] = { -1, };
-  if (fld->arr) { // part of the slice?
+  if (fld->_len) { // part of the slice?
     int *off = iw, *dims = iw + 3; // off, then dims
     int nr_patches;
-    struct mrc_patch *patches = mrc_domain_get_patches(fld->domain, &nr_patches);
+    struct mrc_patch *patches = mrc_domain_get_patches(fld->_domain, &nr_patches);
     assert(nr_patches == 1);
     for (int d = 0; d < 3; d++) {
       off[d] = patches[0].off[d];
@@ -248,7 +248,7 @@ diagc_combined_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
     dims[dim] = 1;
 
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
-    MPI_Send(fld->arr, fld->len, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_2DDATA, MPI_COMM_WORLD);
+    MPI_Send(fld->_arr, fld->_len, MPI_FLOAT, par->rank_diagsrv, ID_DIAGS_2DDATA, MPI_COMM_WORLD);
   } else {
     MPI_Send(iw, 6, MPI_INT, par->rank_diagsrv, ID_DIAGS_SUBDOMAIN, MPI_COMM_WORLD);
   }
@@ -344,9 +344,9 @@ struct diagsrv_srv_ops {
   void  (*set_domain)(struct diagsrv_one *ds, struct mrc_domain *domain);
   void  (*destroy)(struct diagsrv_one *ds);
   void  (*open)(struct diagsrv_one *ds, int step, float time);
-  struct mrc_f2 *(*get_gfld_2d)(struct diagsrv_one *ds, int dims[2]);
+  struct mrc_fld *(*get_gfld_2d)(struct diagsrv_one *ds, int dims[2]);
   struct mrc_fld *(*get_gfld_3d)(struct diagsrv_one *ds, int dims[3]);
-  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_f2 *f2, char *fld_name, 
+  void  (*put_gfld_2d)(struct diagsrv_one *ds, struct mrc_fld *fld, char *fld_name, 
 		       int outtype, float sheet);
   void  (*put_gfld_3d)(struct diagsrv_one *ds, struct mrc_fld *fld);
   void  (*write_attr)(struct diagsrv_one *ds, const char *path, int type,
@@ -443,22 +443,22 @@ ds_srv_get_gfld_3d(struct diagsrv_one *ds, int gdims[3])
   return fld;
 }
 
-static struct mrc_f2 *
+static struct mrc_fld *
 ds_srv_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
 {
   struct diagsrv_srv *srv = (struct diagsrv_srv *) ds->srv;
-  struct mrc_f2 *f2 = mrc_f2_alloc_with_array(NULL, gdims, 1, srv->gfld);
-  f2->domain = srv->domain; // FIXME, quite a hack
+  struct mrc_fld *f2 = mrc_f2_alloc_with_array(NULL, gdims, 1, srv->gfld);
+  f2->_domain = srv->domain; // FIXME, quite a hack
   return f2;
 }
 
 static void
-ds_srv_put_gfld_2d(struct diagsrv_one *ds, struct mrc_f2 *gfld, char *fld_name,
+ds_srv_put_gfld_2d(struct diagsrv_one *ds, struct mrc_fld *gfld, char *fld_name,
 		   int outtype, float sheet)
 {
-  free(gfld->name[0]);
-  gfld->name[0] = strdup(fld_name);
+  mrc_fld_set_comp_name(gfld, 0, fld_name);
   mrc_io_write_field2d(ds->io, 1., gfld, outtype, sheet);
+  mrc_f2_free(gfld);
 }
 
 static void
@@ -563,14 +563,14 @@ ds_srv_cache_destroy(struct diagsrv_one *ds)
   free(srv);
 }
 
-static struct mrc_f2 *
+static struct mrc_fld *
 ds_srv_cache_get_gfld_2d(struct diagsrv_one *ds, int gdims[2])
 {
   struct diagsrv_srv_cache_ctx *srv = (struct diagsrv_srv_cache_ctx *) ds->srv;
   assert(srv->nr_flds < MAX_FIELDS);
   free(srv->fld_names[srv->nr_flds]);
-  struct mrc_f2 *f2 = mrc_f2_alloc_with_array(NULL, gdims, 1, srv->gflds[srv->nr_flds]);
-  f2->domain = srv->domain;
+  struct mrc_fld *f2 = mrc_f2_alloc_with_array(NULL, gdims, 1, srv->gflds[srv->nr_flds]);
+  f2->_domain = srv->domain;
 
   return f2;
 }
@@ -589,7 +589,7 @@ ds_srv_cache_get_gfld_3d(struct diagsrv_one *ds, int gdims[3])
 }
 
 static void
-ds_srv_cache_put_gfld_2d(struct diagsrv_one *ds, struct mrc_f2 *gfld, char *fld_name,
+ds_srv_cache_put_gfld_2d(struct diagsrv_one *ds, struct mrc_fld *gfld, char *fld_name,
 			 int outtype, float sheet)
 {
   struct diagsrv_srv_cache_ctx *srv = (struct diagsrv_srv_cache_ctx *) ds->srv;
@@ -655,25 +655,25 @@ ds_srv_cache_close(struct diagsrv_one *ds)
       break;
     }
     case DIAG_TYPE_2D_X: {
-      struct mrc_f2 *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[1], gdims[2] }, 1, srv->gflds[i]);
-      gfld2->domain = srv->domain;
-      gfld2->name[0] = strdup(srv->fld_names[i]);
+      struct mrc_fld *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[1], gdims[2] }, 1, srv->gflds[i]);
+      gfld2->_domain = srv->domain;
+      mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_X, srv->sheets[i]);
       mrc_f2_free(gfld2);
       break;
     }
     case DIAG_TYPE_2D_Y: {
-      struct mrc_f2 *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[0], gdims[2] }, 1, srv->gflds[i]);
-      gfld2->domain = srv->domain;
-      gfld2->name[0] = strdup(srv->fld_names[i]);
+      struct mrc_fld *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[0], gdims[2] }, 1, srv->gflds[i]);
+      gfld2->_domain = srv->domain;
+      mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Y, srv->sheets[i]);
       mrc_f2_free(gfld2);
       break;
     }
     case DIAG_TYPE_2D_Z: {
-      struct mrc_f2 *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[0], gdims[1] }, 1, srv->gflds[i]);
-      gfld2->domain = srv->domain;
-      gfld2->name[0] = strdup(srv->fld_names[i]);
+      struct mrc_fld *gfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { gdims[0], gdims[1] }, 1, srv->gflds[i]);
+      gfld2->_domain = srv->domain;
+      mrc_fld_set_comp_name(gfld2, 0, srv->fld_names[i]);
       mrc_io_write_field2d(ds->io, 1., gfld2, DIAG_TYPE_2D_Z, srv->sheets[i]);
       mrc_f2_free(gfld2);
       break;
@@ -714,10 +714,10 @@ struct diagsrv_srv_ops ds_srv_cache_ops = {
 // diagsrv_one helpers
 
 static void
-add_to_field_2d(struct mrc_f2 *g, struct mrc_f2 *l, int ib[2])
+add_to_field_2d(struct mrc_fld *g, struct mrc_fld *l, int ib[2])
 {
-  for (int iy = 0; iy < l->im[1]; iy++) {
-    for (int ix = 0; ix < l->im[0]; ix++) {
+  for (int iy = 0; iy < l->_dims.vals[1]; iy++) {
+    for (int ix = 0; ix < l->_dims.vals[0]; ix++) {
       MRC_F2(g,0, ix+ib[0],iy+ib[1]) = MRC_F2(l,0, ix,iy);
     }
   }
@@ -971,7 +971,7 @@ static struct param diagsrv_params_descr[] = {
 	  assert(0);
 	}
 
-	struct mrc_f2 *gfld2 = srv_ops->get_gfld_2d(&ds, (int [2]) { gdims[i0], gdims[i1] });
+	struct mrc_fld *gfld2 = srv_ops->get_gfld_2d(&ds, (int [2]) { gdims[i0], gdims[i1] });
 
 	for (int k = 0; k < nr_procs; k++) { 
 	  int iw[6], *off = iw, *dims = iw + 3; // off, then dims
@@ -979,8 +979,8 @@ static struct param diagsrv_params_descr[] = {
 	  
 	  // receive data and add to field
 	  if (iw[0] > -1) {
-	    struct mrc_f2 *lfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { dims[i0], dims[i1] }, 1, w2);
-	    MPI_Recv(lfld2->arr, lfld2->len, MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
+	    struct mrc_fld *lfld2 = mrc_f2_alloc_with_array(NULL, (int [2]) { dims[i0], dims[i1] }, 1, w2);
+	    MPI_Recv(lfld2->_arr, lfld2->_len, MPI_FLOAT, k, ID_DIAGS_2DDATA, MPI_COMM_WORLD,
 		     MPI_STATUS_IGNORE);
 	    add_to_field_2d(gfld2, lfld2, (int [2]) { off[i0], off[i1] });
 	    mrc_f2_free(lfld2);

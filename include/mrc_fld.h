@@ -33,13 +33,11 @@
 #define MRC_F1(f1,m, ix)					\
   ((f1)->arr[(m) * (f1)->_ghost_dims[0] + (ix) - (f1)->_ghost_off[0]])
 
-#define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)			\
+#define MRC_F3(f3,m, ix,iy,iz) MRC_S4(f3, ix,iy,iz,m)
 
 #endif
 
-#define MRC_F2(f2,m, ix,iy)					\
-  ((f2)->arr[((m) * (f2)->im[1] + (iy) - (f2)->ib[1]) *		\
-	      (f2)->im[0] + (ix) - (f2)->ib[0]])
+#define MRC_F2(f3,m, ix,iy) MRC_S3(f3, ix,iy,m)
 
 struct mrc_io;
 
@@ -177,21 +175,9 @@ float mrc_f1_norm_comp(struct mrc_f1 *x, int m);
 
 // ======================================================================
 
-struct mrc_f2 {
-  float *arr;
-  int im[2];
-  int ib[2];
-  int nr_comp;
-  int len;
-  bool with_array;
-  struct mrc_domain *domain; //< optional, if allocated through mrc_domain
-  int sw; //< # of ghost points
-  char **name;
-};
-
-struct mrc_f2 *mrc_f2_alloc(int ib[2], int im[2], int nr_comp);
-struct mrc_f2 *mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr);
-void mrc_f2_free(struct mrc_f2 *f2);
+struct mrc_fld *mrc_f2_alloc(int ib[2], int im[2], int nr_comp);
+struct mrc_fld *mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr);
+void mrc_f2_free(struct mrc_fld *f2);
 
 // ======================================================================
 // mrc_m1

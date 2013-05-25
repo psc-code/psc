@@ -37,7 +37,7 @@ void mrc_io_read_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
 void mrc_io_write_m1(struct mrc_io *io, const char *path, struct mrc_m1 *m1);
 void mrc_io_read_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
 void mrc_io_write_m3(struct mrc_io *io, const char *path, struct mrc_m3 *m3);
-void mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *f2,
+void mrc_io_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			  int outtype, float sheet);
 void mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			      int outtype, float sheet);

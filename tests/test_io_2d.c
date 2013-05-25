@@ -14,7 +14,7 @@
 // ----------------------------------------------------------------------
 
 static void
-dump_field_2d(MPI_Comm comm, struct mrc_f2 *fld, int rank_diagsrv)
+dump_field_2d(MPI_Comm comm, struct mrc_fld *fld, int rank_diagsrv)
 {
   struct mrc_io *io;
   if (rank_diagsrv >= 0) {
@@ -45,9 +45,9 @@ mod_domain(struct mrc_mod *mod, void *arg)
   struct mrc_domain *domain = mrctest_create_domain(comm, par);
 
   int mx = 8, my = 4;
-  struct mrc_f2 *fld = mrc_f2_alloc(NULL, (int [2]) { mx, my }, 1);
-  fld->name[0] = strdup("test_2d_0");
-  fld->domain = domain;
+  struct mrc_fld *fld = mrc_f2_alloc(NULL, (int [2]) { mx, my }, 1);
+  mrc_fld_set_comp_name(fld, 0, "test_2d_0");
+  fld->_domain = domain;
 
   for (int iy = 0; iy < my; iy++) {
     for (int ix = 0; ix < mx; ix++) {

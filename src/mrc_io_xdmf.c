@@ -172,24 +172,24 @@ hdf5_close(struct mrc_io *io)
 }
 
 static void
-hdf5_write_field2d_serial(struct mrc_io *io, float scale, struct mrc_f2 *fld,
+hdf5_write_field2d_serial(struct mrc_io *io, float scale, struct mrc_fld *fld,
 			  const char *path)
 {
   herr_t ierr;
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
 
-  hsize_t fdims[2] = { fld->im[1], fld->im[0] };
+  hsize_t fdims[2] = { fld->_dims.vals[1], fld->_dims.vals[0] };
   //  printf("[%d] diagsrv: write '%s'\n", info->rank, fld_name);
 
   hid_t group0 = H5Gopen(hdf5->file, path, H5P_DEFAULT); H5_CHK(group0);
-  hid_t group = H5Gcreate(group0, fld->name[0], H5P_DEFAULT, H5P_DEFAULT,
+  hid_t group = H5Gcreate(group0, mrc_fld_comp_name(fld, 0), H5P_DEFAULT, H5P_DEFAULT,
 			  H5P_DEFAULT); H5_CHK(group);
   // FIXME H5lt
   hid_t filespace = H5Screate_simple(2, fdims, NULL); H5_CHK(filespace);
   hid_t dataset = H5Dcreate(group, "2d", H5T_NATIVE_FLOAT, filespace,
 			    H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); H5_CHK(dataset);
   
-  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fld->arr); CE;
+  ierr = H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, fld->_arr); CE;
 
   ierr = H5Dclose(dataset); CE;
   ierr = H5Sclose(filespace); CE;
@@ -1000,7 +1000,7 @@ ds_xdmf_write_field(struct mrc_io *io, const char *path,
 }
 
 static void
-ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
+ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_fld *fld,
 		      int outtype, float sheet)
 {
   struct diag_hdf5 *hdf5 = diag_hdf5(io);
@@ -1008,7 +1008,7 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
 
   // diagsrv xdmf_serial / single proc only for now
   int bnd = 0;
-  int im[2] = { fld->im[0] - bnd, fld->im[1] - bnd };
+  int im[2] = { fld->_dims.vals[0] - bnd, fld->_dims.vals[1] - bnd };
 
   struct xdmf_spatial *xs = NULL;
   char sfx[10]; make_sfx(sfx, outtype, sheet);
@@ -1017,13 +1017,13 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
   if (!xs) {
     if (outtype == DIAG_TYPE_2D_X) {
       xs = xdmf_spatial_create_2d_x(io, im, sfx, sheet, io->size);
-      hdf5_write_crds(io, (int[]) { 0, im[0], im[1] }, fld->domain, fld->sw);
+      hdf5_write_crds(io, (int[]) { 0, im[0], im[1] }, fld->_domain, fld->_sw.vals[0]);
     } else if (outtype == DIAG_TYPE_2D_Y) {
       xs = xdmf_spatial_create_2d_y(io, im, sfx, sheet, io->size);
-      hdf5_write_crds(io, (int[]) { im[0], 0, im[1] }, fld->domain, fld->sw);
+      hdf5_write_crds(io, (int[]) { im[0], 0, im[1] }, fld->_domain, fld->_sw.vals[0]);
     } else if (outtype == DIAG_TYPE_2D_Z) {
       xs = xdmf_spatial_create_2d_z(io, im, sfx, sheet, io->size);
-      hdf5_write_crds(io, (int[]) { im[0], im[1], 0 }, fld->domain, fld->sw);
+      hdf5_write_crds(io, (int[]) { im[0], im[1], 0 }, fld->_domain, fld->_sw.vals[0]);
     } else if (outtype == DIAG_TYPE_2D_IONO) {
       xs = xdmf_spatial_create_iono(io, im);
     }
@@ -1031,7 +1031,7 @@ ds_xdmf_write_field2d(struct mrc_io *io, float scale, struct mrc_f2 *fld,
     ierr = H5Gclose(group); CE;
   }
 
-  save_fld_info(xs, strdup(fld->name[0]), strdup(path), false);
+  save_fld_info(xs, strdup(mrc_fld_comp_name(fld, 0)), strdup(path), false);
   hdf5_write_field2d_serial(io, scale, fld, path);
 }
 
