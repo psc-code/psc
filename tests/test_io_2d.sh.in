@@ -1,0 +1,9 @@
+#! /bin/sh
+
+set -e
+
+@MPIRUN@ -n 2 ./test_io --npx 2 --mrc_io_type xdmf
+@MPIRUN@ -n 2 ./test_io --npx 2 --mrc_io_type xdmf_to_one
+@MPIRUN@ -n 2 ./test_io --npx 2 --mrc_io_type xdmf_parallel
+@MPIRUN@ -n 3 ./test_io --npx 2 --use_diagsrv 
+@MPIRUN@ -n 2 ./test_io --npx 2 --mrc_io_type xdmf_collective

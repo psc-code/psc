@@ -4,6 +4,7 @@ AM_CPPFLAGS = -I$(srcdir)/../include
 check_PROGRAMS = \
 	test_mrc_obj \
 	test_io \
+	test_io_2d \
 	test_io_read \
 	test_io_read_multi \
 	test_spherical_harmonics \
@@ -41,6 +42,7 @@ TESTS = \
 	test_io_2.sh \
 	test_io_3.sh \
 	test_io_4.sh \
+	test_io_2d.sh \
 	test_io_read_0.sh \
 	test_io_read_1.sh \
 	test_io_read_2.sh \

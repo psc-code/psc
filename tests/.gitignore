@@ -23,6 +23,7 @@ tutorial_mrc_obj
 test_ddc
 test_dict
 test_io
+test_io_2d
 test_io_read
 test_mrc_obj
 test_spherical_harmonics
