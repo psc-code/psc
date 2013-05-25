@@ -76,29 +76,7 @@ struct mrc_fld {
   char **_comp_name;
 };
 
-struct mrc_f3 {
-  struct mrc_obj obj;
-  // parameters
-  struct mrc_param_int_array _dims;
-  struct mrc_param_int_array _offs;
-  struct mrc_param_int_array _sw;
-
-  // state
-  int _ghost_offs[MRC_FLD_MAXDIMS];
-  int _ghost_dims[MRC_FLD_MAXDIMS];
-  int _data_type;
-  int _size_of_type;
-  void *_arr;
-  int _len;
-  bool _with_array;
-  struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
-  // for mrc_f3 emulation
-  int _nr_allocated_comp_name;
-  char **_comp_name;
-};
-
 MRC_CLASS_DECLARE(mrc_fld, struct mrc_fld);
-MRC_CLASS_DECLARE(mrc_f3, struct mrc_f3);
 
 void mrc_fld_set_array(struct mrc_fld *x, void *arr);
 void mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name);
@@ -214,46 +192,6 @@ struct mrc_f2 {
 void mrc_f2_alloc(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp);
 void mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp, float *arr);
 void mrc_f2_free(struct mrc_f2 *f2);
-
-// ======================================================================
-
-struct mrc_f3 *mrc_f3_duplicate(struct mrc_f3 *f3);
-int mrc_f3_nr_comps(struct mrc_f3 *f3);
-void mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps);
-void mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name);
-const char *mrc_f3_comp_name(struct mrc_f3 *f3, int m);
-const int *mrc_f3_off(struct mrc_f3 *x);
-const int *mrc_f3_dims(struct mrc_f3 *x);
-const int *mrc_f3_ghost_off(struct mrc_f3 *x);
-const int *mrc_f3_ghost_dims(struct mrc_f3 *x);
-void mrc_f3_set_array(struct mrc_f3 *f3, float *arr);
-void mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from);
-void mrc_f3_set(struct mrc_f3 *f3, float val);
-void mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io);
-void mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale);
-void mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[]);
-
-struct mrc_f3_ops {
-  MRC_SUBCLASS_OPS(struct mrc_f3);
-};
-
-static inline bool
-mrc_f3_same_shape(struct mrc_f3 *f3_1, struct mrc_f3 *f3_2)
-{
-  return (f3_1->_ghost_dims[0] == f3_2->_ghost_dims[0] &&
-	  f3_1->_ghost_dims[1] == f3_2->_ghost_dims[1] &&
-	  f3_1->_ghost_dims[2] == f3_2->_ghost_dims[2] &&
-	  f3_1->_ghost_dims[3] == f3_2->_ghost_dims[3]);
-}
-
-#define mrc_f3_foreach(f3, ix,iy,iz, l,r)				\
-  for (int iz = (f3)->_offs.vals[2] - (l); iz < (f3)->_offs.vals[2] + (f3)->_dims.vals[2] + (r); iz++) { \
-  for (int iy = (f3)->_offs.vals[1] - (l); iy < (f3)->_offs.vals[1] + (f3)->_dims.vals[1] + (r); iy++) { \
-  for (int ix = (f3)->_offs.vals[0] - (l); ix < (f3)->_offs.vals[0] + (f3)->_dims.vals[0] + (r); ix++) \
-
-#define mrc_f3_foreach_end			\
-  }						\
-    } do {} while (0)				\
 
 // ======================================================================
 // mrc_m1

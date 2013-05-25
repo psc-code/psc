@@ -262,15 +262,6 @@ mrc_domain_fld_create(struct mrc_domain *domain, int sw, const char *comps)
 }
 
 // ======================================================================
-// mrc_domain_f3_create
-
-struct mrc_f3 *
-mrc_domain_f3_create(struct mrc_domain *domain, int sw, const char *comps)
-{
-  return (struct mrc_f3 *) mrc_domain_fld_create(domain, sw, comps);
-}
-
-// ======================================================================
 // mrc_domain_m3_create
 
 struct mrc_m3 *

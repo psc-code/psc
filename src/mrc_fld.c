@@ -29,12 +29,6 @@ _mrc_fld_destroy(struct mrc_fld *fld)
   free(fld->_comp_name);
 }
 
-static void
-_mrc_f3_destroy(struct mrc_f3 *f3)
-{
-  _mrc_fld_destroy((struct mrc_fld *) f3);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_setup
 
@@ -63,12 +57,6 @@ _mrc_fld_setup(struct mrc_fld *fld)
   }
 }
 
-static void
-_mrc_f3_setup(struct mrc_f3 *f3)
-{
-  _mrc_fld_setup((struct mrc_fld *) f3);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_set_array
 
@@ -80,12 +68,6 @@ mrc_fld_set_array(struct mrc_fld *fld, void *arr)
   fld->_with_array = true;
 }
 
-void
-mrc_f3_set_array(struct mrc_f3 *f3, float *arr)
-{
-  mrc_fld_set_array((struct mrc_fld *) f3, arr);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_write
 
@@ -94,13 +76,6 @@ _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 {
   mrc_io_write_ref(io, fld, "domain", fld->_domain);
   mrc_io_write_fld(io, mrc_io_obj_path(io, fld), fld);
-}
-
-static void
-_mrc_f3_write(struct mrc_f3 *f3, struct mrc_io *io)
-{
-  mrc_io_write_ref(io, f3, "domain", f3->_domain);
-  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3, 1.);
 }
 
 // ----------------------------------------------------------------------
@@ -115,31 +90,6 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
   fld->_domain = mrc_io_read_ref(io, fld, "domain", mrc_domain);
   mrc_fld_setup(fld);
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
-}
-
-static void
-_mrc_f3_read(struct mrc_f3 *f3, struct mrc_io *io)
-{
-  f3->_domain = mrc_io_read_ref(io, f3, "domain", mrc_domain);
-
-  // rely on domain rather than read params
-  // since the domain may be different (# of procs) when
-  // we're reading things back
-  // basically, we should use mrc_domain_f3_create()
-  int nr_patches;
-  struct mrc_patch *patches = mrc_domain_get_patches(f3->_domain, &nr_patches);
-  assert(nr_patches == 1);
-  int *dims = patches[0].ldims;
-  int nr_comps = mrc_f3_nr_comps(f3);
-  mrc_f3_set_param_int_array(f3, "dims", 4,
-			     (int[4]) { dims[0], dims[1], dims[2], nr_comps });
-  mrc_f3_set_param_int_array(f3, "offs", 4,
-			     (int[4]) { 0, 0, 0, 0 });
-  mrc_f3_setup(f3);
-  // FIXME, the whole _comp_name business is screwy here
-  f3->_comp_name = calloc(f3->_dims.vals[3], sizeof(*f3->_comp_name));
-  f3->_nr_allocated_comp_name = f3->_dims.vals[3];
-  mrc_io_read_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3);
 }
 
 // ----------------------------------------------------------------------
@@ -161,12 +111,6 @@ mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
   fld->_comp_name[m] = name ? strdup(name) : NULL;
 }
 
-void
-mrc_f3_set_comp_name(struct mrc_f3 *f3, int m, const char *name)
-{
-  mrc_fld_set_comp_name((struct mrc_fld *) f3, m, name);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_comp_name
 
@@ -175,13 +119,6 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 {
   assert(m < fld->_dims.vals[3] && m < fld->_nr_allocated_comp_name);
   return fld->_comp_name[m];
-}
-
-const char *
-mrc_f3_comp_name(struct mrc_f3 *f3, int m)
-{
-  assert(m < f3->_dims.vals[3] && m < f3->_nr_allocated_comp_name);
-  return f3->_comp_name[m];
 }
 
 // ----------------------------------------------------------------------
@@ -194,12 +131,6 @@ mrc_fld_nr_comps(struct mrc_fld *fld)
   return fld->_dims.vals[3];
 }
 
-int
-mrc_f3_nr_comps(struct mrc_f3 *f3)
-{
-  return mrc_fld_nr_comps((struct mrc_fld *) f3);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_set_nr_comps
 
@@ -207,12 +138,6 @@ void
 mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 {
   fld->_dims.vals[3] = nr_comps;
-}
-
-void
-mrc_f3_set_nr_comps(struct mrc_f3 *f3, int nr_comps)
-{
-  f3->_dims.vals[3] = nr_comps;
 }
 
 // ----------------------------------------------------------------------
@@ -224,12 +149,6 @@ mrc_fld_offs(struct mrc_fld *fld)
   return fld->_offs.vals;
 }
 
-const int *
-mrc_f3_off(struct mrc_f3 *f3)
-{
-  return f3->_offs.vals;
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_dims
 
@@ -237,12 +156,6 @@ const int *
 mrc_fld_dims(struct mrc_fld *fld)
 {
   return fld->_dims.vals;
-}
-
-const int *
-mrc_f3_dims(struct mrc_f3 *f3)
-{
-  return f3->_dims.vals;
 }
 
 // ----------------------------------------------------------------------
@@ -254,12 +167,6 @@ mrc_fld_ghost_offs(struct mrc_fld *fld)
   return fld->_ghost_offs;
 }
 
-const int *
-mrc_f3_ghost_off(struct mrc_f3 *f3)
-{
-  return f3->_ghost_offs;
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_ghost_dims
 
@@ -267,12 +174,6 @@ const int *
 mrc_fld_ghost_dims(struct mrc_fld *fld)
 {
   return fld->_ghost_dims;
-}
-
-const int *
-mrc_f3_ghost_dims(struct mrc_f3 *f3)
-{
-  return f3->_ghost_dims;
 }
 
 // ----------------------------------------------------------------------
@@ -290,12 +191,6 @@ mrc_fld_duplicate(struct mrc_fld *fld)
   return fld_new;
 }
 
-struct mrc_f3 *
-mrc_f3_duplicate(struct mrc_f3 *f3)
-{
-  return (struct mrc_f3 *) mrc_fld_duplicate((struct mrc_fld *) f3);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_copy
 
@@ -305,12 +200,6 @@ mrc_fld_copy(struct mrc_fld *fld_to, struct mrc_fld *fld_from)
   assert(mrc_fld_same_shape(fld_to, fld_from));
 
   memcpy(fld_to->_arr, fld_from->_arr, fld_to->_len * sizeof(float));
-}
-
-void
-mrc_f3_copy(struct mrc_f3 *f3_to, struct mrc_f3 *f3_from)
-{
-  mrc_fld_copy((struct mrc_fld *) f3_to, (struct mrc_fld *) f3_from);
 }
 
 // ----------------------------------------------------------------------
@@ -328,12 +217,6 @@ mrc_fld_axpy(struct mrc_fld *y, float alpha, struct mrc_fld *x)
   }
 }
 
-void
-mrc_f3_axpy(struct mrc_f3 *y, float alpha, struct mrc_f3 *x)
-{
-  mrc_fld_axpy((struct mrc_fld *) y, alpha, (struct mrc_fld *) x);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_waxpy
 
@@ -349,12 +232,6 @@ mrc_fld_waxpy(struct mrc_fld *w, float alpha, struct mrc_fld *x, struct mrc_fld 
   for (int i = 0; i < y->_len; i++) {
     w_arr[i] = alpha * x_arr[i] + y_arr[i];
   }
-}
-
-void
-mrc_f3_waxpy(struct mrc_f3 *w, float alpha, struct mrc_f3 *x, struct mrc_f3 *y)
-{
-  mrc_fld_waxpy((struct mrc_fld *) w, alpha, (struct mrc_fld *) x, (struct mrc_fld *) y);
 }
 
 // ----------------------------------------------------------------------
@@ -377,12 +254,6 @@ mrc_fld_norm(struct mrc_fld *x)
   return res;
 }
 
-float
-mrc_f3_norm(struct mrc_f3 *x)
-{
-  return mrc_fld_norm((struct mrc_fld *) x);
-}
-
 // ----------------------------------------------------------------------
 // mrc_fld_set
 
@@ -394,21 +265,6 @@ mrc_fld_set(struct mrc_fld *x, float val)
   for (int i = 0; i < x->_len; i++) {
     arr[i] = val;
   }
-}
-
-void
-mrc_f3_set(struct mrc_f3 *f3, float val)
-{
-  mrc_fld_set((struct mrc_fld *) f3, val);
-}
-
-// ----------------------------------------------------------------------
-
-void
-mrc_f3_write_scaled(struct mrc_f3 *f3, struct mrc_io *io, float scale)
-{
-  mrc_io_write_ref(io, f3, "domain", f3->_domain);
-  mrc_io_write_f3(io, mrc_io_obj_path(io, f3), (struct mrc_fld *) f3, scale);
 }
 
 // ----------------------------------------------------------------------
@@ -433,12 +289,6 @@ mrc_fld_write_comps(struct mrc_fld *fld, struct mrc_io *io, int mm[])
     mrc_fld_write(fld1, io);
     mrc_fld_destroy(fld1);
   }
-}
-
-void
-mrc_f3_write_comps(struct mrc_f3 *f3, struct mrc_io *io, int mm[])
-{
-  mrc_fld_write_comps((struct mrc_fld *) f3, io, mm);
 }
 
 // ======================================================================
@@ -473,12 +323,6 @@ mrc_fld_init()
   mrc_class_register_subclass(&mrc_class_mrc_fld, &mrc_fld_int_ops);
 }
 
-static void
-mrc_f3_init()
-{
-  mrc_class_register_subclass(&mrc_class_mrc_f3, &mrc_fld_float_ops);
-}
-
 // ----------------------------------------------------------------------
 // mrc_class_mrc_fld
 
@@ -487,19 +331,6 @@ static struct param mrc_fld_descr[] = {
   { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(0, 0) },
   { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(0, 0) },
   { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(0, 0) },
-
-  { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
-  { "len"             , VAR(_len)         , MRC_VAR_INT           },
-  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL          },
-  {},
-};
-#undef VAR
-
-#define VAR(x) (void *)offsetof(struct mrc_f3, x)
-static struct param mrc_f3_descr[] = {
-  { "offs"            , VAR(_offs)        , PARAM_INT_ARRAY(4, 0)  },
-  { "dims"            , VAR(_dims)        , PARAM_INT_ARRAY(4, 0)  },
-  { "sw"              , VAR(_sw)          , PARAM_INT_ARRAY(4, 0)  },
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
   { "len"             , VAR(_len)         , MRC_VAR_INT           },
@@ -517,15 +348,6 @@ static struct mrc_obj_method mrc_fld_methods[] = {
   {}
 };
 
-static struct mrc_obj_method mrc_f3_methods[] = {
-  MRC_OBJ_METHOD("duplicate", mrc_f3_duplicate),
-  MRC_OBJ_METHOD("copy"     , mrc_f3_copy),
-  MRC_OBJ_METHOD("axpy"     , mrc_f3_axpy),
-  MRC_OBJ_METHOD("waxpy"    , mrc_f3_waxpy),
-  MRC_OBJ_METHOD("norm"     , mrc_f3_norm),
-  {}
-};
-
 // ----------------------------------------------------------------------
 // mrc_fld class description
 
@@ -540,19 +362,4 @@ struct mrc_class_mrc_fld mrc_class_mrc_fld = {
   .write        = _mrc_fld_write,
   .read         = _mrc_fld_read,
 };
-
-struct mrc_class_mrc_f3 mrc_class_mrc_f3 = {
-  .name         = "mrc_f3",
-  .size         = sizeof(struct mrc_f3),
-  .param_descr  = mrc_f3_descr,
-  .methods      = mrc_f3_methods,
-  .init         = mrc_f3_init,
-  .destroy      = _mrc_f3_destroy,
-  .setup        = _mrc_f3_setup,
-  .read         = _mrc_f3_read,
-  .write        = _mrc_f3_write,
-};
-
-// ======================================================================
-// mrc_f3
 

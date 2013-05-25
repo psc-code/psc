@@ -37,7 +37,7 @@ ggcm_mhd_flds_copy(struct ggcm_mhd_flds *to, struct ggcm_mhd_flds *from)
 // ----------------------------------------------------------------------
 // ggcm_mhd_flds_get_mrc_fld
 //
-// returns the underlying mrc_f3 that contains the MHD field data
+// returns the underlying mrc_fld that contains the MHD field data
 // only actually works (and should be used) if we know that these flds
 // are of type "fortran" or "c"
 
