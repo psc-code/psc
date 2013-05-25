@@ -1383,7 +1383,7 @@ collective_m3_read_fld(struct mrc_io *io, struct collective_m3_ctx *ctx,
   /* 	    writer_off[0], writer_off[1], writer_off[2], */
   /* 	    writer_dims[0], writer_dims[1], writer_dims[2]); */
 
-  int nr_comps = fld->_dims.vals[3];
+  int nr_comps = mrc_fld_nr_comps(fld);
   mrc_fld_set_param_int_array(fld, "dims", 4,
 			      (int[4]) { writer_dims[0], writer_dims[1], writer_dims[2], nr_comps });
   mrc_fld_set_param_int_array(fld, "offs", 4,

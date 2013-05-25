@@ -98,14 +98,15 @@ _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
 void
 mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
 {
-  assert(m < fld->_dims.vals[3]);
-  if (fld->_dims.vals[3] > fld->_nr_allocated_comp_name) {
+  int nr_comps = mrc_fld_nr_comps(fld);
+  assert(m < nr_comps);
+  if (nr_comps > fld->_nr_allocated_comp_name) {
     for (int i = 0; i < fld->_nr_allocated_comp_name; i++) {
       free(fld->_comp_name[m]);
     }
     free(fld->_comp_name);
-    fld->_comp_name = calloc(fld->_dims.vals[3], sizeof(*fld->_comp_name));
-    fld->_nr_allocated_comp_name = fld->_dims.vals[3];
+    fld->_comp_name = calloc(nr_comps, sizeof(*fld->_comp_name));
+    fld->_nr_allocated_comp_name = nr_comps;
   }
   free(fld->_comp_name[m]);
   fld->_comp_name[m] = name ? strdup(name) : NULL;
@@ -117,7 +118,7 @@ mrc_fld_set_comp_name(struct mrc_fld *fld, int m, const char *name)
 const char *
 mrc_fld_comp_name(struct mrc_fld *fld, int m)
 {
-  assert(m < fld->_dims.vals[3] && m < fld->_nr_allocated_comp_name);
+  assert(m < mrc_fld_nr_comps(fld) && m < fld->_nr_allocated_comp_name);
   return fld->_comp_name[m];
 }
 
@@ -127,8 +128,9 @@ mrc_fld_comp_name(struct mrc_fld *fld, int m)
 int
 mrc_fld_nr_comps(struct mrc_fld *fld)
 {
-  assert(fld->_dims.nr_vals == 4);
-  return fld->_dims.vals[3];
+  int comp_dim = fld->_dims.nr_vals - 1;
+  assert(comp_dim >= 0);
+  return fld->_dims.vals[comp_dim];
 }
 
 // ----------------------------------------------------------------------
@@ -137,7 +139,8 @@ mrc_fld_nr_comps(struct mrc_fld *fld)
 void
 mrc_fld_set_nr_comps(struct mrc_fld *fld, int nr_comps)
 {
-  fld->_dims.vals[3] = nr_comps;
+  int comp_dim = fld->_dims.nr_vals - 1;
+  fld->_dims.vals[comp_dim] = nr_comps;
 }
 
 // ----------------------------------------------------------------------
@@ -243,8 +246,9 @@ mrc_fld_norm(struct mrc_fld *x)
 {
   assert(x->_data_type == MRC_NT_FLOAT);
   assert(x->_dims.nr_vals == 4);
+  int nr_comps = mrc_fld_nr_comps(x);
   float res = 0.;
-  for (int m = 0; m < x->_dims.vals[3]; m++) {
+  for (int m = 0; m < nr_comps; m++) {
     mrc_fld_foreach(x, ix, iy, iz, 0, 0) {
       res = fmaxf(res, fabsf(MRC_F3(x,m, ix,iy,iz)));
     } mrc_fld_foreach_end;
