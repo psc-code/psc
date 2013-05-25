@@ -380,41 +380,41 @@ mrc_io_write_field_slice(struct mrc_io *io, float scale, struct mrc_fld *fld,
     s1 *= scale;
     s2 *= scale;
 
-    struct mrc_f2 f2;
+    struct mrc_f2 *f2;
     switch (dim) {
     case 0:
-      mrc_f2_alloc(&f2, NULL, (int [2]) { dims[1], dims[2] }, 1);
+      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[1], dims[2] }, 1);
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int iy = 0; iy < dims[1]; iy++) {
-	  MRC_F2(&f2,0, iy,iz) = (s1 * MRC_F3(fld,0, ii-2,iy,iz) +
-				  s2 * MRC_F3(fld,0, ii-1,iy,iz));
+	  MRC_F2(f2,0, iy,iz) = (s1 * MRC_F3(fld,0, ii-2,iy,iz) +
+				 s2 * MRC_F3(fld,0, ii-1,iy,iz));
 	}
       }
       break;
     case 1:
-      mrc_f2_alloc(&f2, NULL, (int [2]) { dims[0], dims[2] }, 1);
+      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[0], dims[2] }, 1);
       for(int iz = 0; iz < dims[2]; iz++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(&f2,0, ix,iz) = (s1 * MRC_F3(fld,0, ix,ii-2,iz) +
-				  s2 * MRC_F3(fld,0, ix,ii-1,iz));
+	  MRC_F2(f2,0, ix,iz) = (s1 * MRC_F3(fld,0, ix,ii-2,iz) +
+				 s2 * MRC_F3(fld,0, ix,ii-1,iz));
 	}
       }
       break;
     case 2:
-      mrc_f2_alloc(&f2, NULL, (int [2]) { dims[0], dims[1] }, 1);
+      f2 = mrc_f2_alloc(NULL, (int [2]) { dims[0], dims[1] }, 1);
       for(int iy = 0; iy < dims[1]; iy++) {
 	for(int ix = 0; ix < dims[0]; ix++) {
-	  MRC_F2(&f2,0, ix,iy) = (s1 * MRC_F3(fld,0, ix,iy,ii-2) +
-				  s2 * MRC_F3(fld,0, ix,iy,ii-1));
+	  MRC_F2(f2,0, ix,iy) = (s1 * MRC_F3(fld,0, ix,iy,ii-2) +
+				 s2 * MRC_F3(fld,0, ix,iy,ii-1));
 	}
       }
       break;
     }
 
-    f2.domain = fld->_domain;
-    f2.name[0] = strdup(mrc_fld_comp_name(fld, 0));
-    ops->write_field2d(io, 1., &f2, outtype, sheet);
-    mrc_f2_free(&f2);
+    f2->domain = fld->_domain;
+    f2->name[0] = strdup(mrc_fld_comp_name(fld, 0));
+    ops->write_field2d(io, 1., f2, outtype, sheet);
+    mrc_f2_free(f2);
   } else {
     struct mrc_f2 f2 = {};
     f2.domain = fld->_domain;

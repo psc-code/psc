@@ -189,8 +189,8 @@ struct mrc_f2 {
   char **name;
 };
 
-void mrc_f2_alloc(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp);
-void mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp, float *arr);
+struct mrc_f2 *mrc_f2_alloc(int ib[2], int im[2], int nr_comp);
+struct mrc_f2 *mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr);
 void mrc_f2_free(struct mrc_f2 *f2);
 
 // ======================================================================

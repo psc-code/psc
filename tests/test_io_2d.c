@@ -44,21 +44,20 @@ mod_domain(struct mrc_mod *mod, void *arg)
   MPI_Comm comm = mrc_mod_get_comm(mod);
   struct mrc_domain *domain = mrctest_create_domain(comm, par);
 
-  struct mrc_f2 fld;
   int mx = 8, my = 4;
-  mrc_f2_alloc(&fld, NULL, (int [2]) { mx, my }, 1);
-  fld.name[0] = strdup("test_2d_0");
-  fld.domain = domain;
+  struct mrc_f2 *fld = mrc_f2_alloc(NULL, (int [2]) { mx, my }, 1);
+  fld->name[0] = strdup("test_2d_0");
+  fld->domain = domain;
 
   for (int iy = 0; iy < my; iy++) {
     for (int ix = 0; ix < mx; ix++) {
-      MRC_F2(&fld, 0, ix,iy) = 100 * iy + ix;
+      MRC_F2(fld, 0, ix,iy) = 100 * iy + ix;
     }
   }
 
   int rank_diagsrv = mrc_mod_get_first_node(mod, "diagsrv");
-  dump_field_2d(comm, &fld, rank_diagsrv);
-  mrc_f2_free(&fld);
+  dump_field_2d(comm, fld, rank_diagsrv);
+  mrc_f2_free(fld);
 
   mrc_domain_destroy(domain);
 }

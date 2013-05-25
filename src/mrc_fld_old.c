@@ -253,10 +253,10 @@ struct mrc_class_mrc_f1 mrc_class_mrc_f1 = {
 // ======================================================================
 // mrc_f2
 
-void
-mrc_f2_alloc(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp)
+struct mrc_f2 *
+mrc_f2_alloc(int ib[2], int im[2], int nr_comp)
 {
-  memset(f2, 0, sizeof(*f2));
+  struct mrc_f2 *f2 = calloc(1, sizeof(*f2));
   f2->len = im[0] * im[1] * nr_comp;
   for (int d = 0; d < 2; d++) {
     f2->im[d] = im[d];
@@ -272,12 +272,14 @@ mrc_f2_alloc(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp)
 
   f2->name = malloc(nr_comp * sizeof(*f2->name));
   memset(f2->name, 0, nr_comp * sizeof(*f2->name));
+
+  return f2;
 }
 
-void
-mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp, float *arr)
+struct mrc_f2 *
+mrc_f2_alloc_with_array(int ib[2], int im[2], int nr_comp, float *arr)
 {
-  memset(f2, 0, sizeof(*f2));
+  struct mrc_f2 *f2 = calloc(1, sizeof(*f2));
   f2->len = im[0] * im[1];
   for (int d = 0; d < 2; d++) {
     f2->im[d] = im[d];
@@ -293,6 +295,8 @@ mrc_f2_alloc_with_array(struct mrc_f2 *f2, int ib[2], int im[2], int nr_comp, fl
 
   f2->name = malloc(nr_comp * sizeof(*f2->name));
   memset(f2->name, 0, nr_comp * sizeof(*f2->name));
+
+  return f2;
 }
 
 void
@@ -307,6 +311,7 @@ mrc_f2_free(struct mrc_f2 *f2)
   free(f2->name);
 
   f2->arr = NULL;
+  free(f2);
 }
 
 // ======================================================================
