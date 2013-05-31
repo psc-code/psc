@@ -54,8 +54,6 @@ struct ggcm_mhd {
 struct ggcm_mhd_ops {
   MRC_SUBCLASS_OPS(struct ggcm_mhd);
   void (*newstep)(struct ggcm_mhd *, float *dtn);
-  void (*push)(struct ggcm_mhd *mhd, float *dtn,
-	       bool do_nwst, bool do_iono, bool do_rcm);
   void (*get_state)(struct ggcm_mhd *mhd);
   void (*set_state)(struct ggcm_mhd *mhd);
 };

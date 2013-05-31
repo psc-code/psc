@@ -40,11 +40,6 @@ _ggcm_mhd_create(struct ggcm_mhd *mhd)
   ggcm_mhd_flds_set_param_obj(mhd->flds_base, "mhd", mhd);
 }
 
-static void
-_ggcm_mhd_destroy(struct ggcm_mhd *mhd)
-{
-}
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_get_state
 //
@@ -119,22 +114,6 @@ ggcm_mhd_newstep(struct ggcm_mhd *mhd, float *dtn)
 {
   struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
   ops->newstep(mhd, dtn);
-}
-
-void
-ggcm_mhd_push(struct ggcm_mhd *mhd, float *dtn,
-	      bool do_nwst, bool do_iono, bool do_rcm)
-{
-  static int PR;
-  if (!PR) {
-    PR = prof_register(__FUNCTION__, 1., 0, 0);
-  }
-  struct ggcm_mhd_ops *ops = ggcm_mhd_ops(mhd);
-  assert(ops && ops->push);
-  
-  prof_start(PR);
-  ops->push(mhd, dtn, do_nwst, do_iono, do_rcm);
-  prof_stop(PR);
 }
 
 void
@@ -216,7 +195,6 @@ struct mrc_class_ggcm_mhd mrc_class_ggcm_mhd = {
   .param_descr      = ggcm_mhd_descr,
   .init             = ggcm_mhd_init,
   .create           = _ggcm_mhd_create,
-  .destroy          = _ggcm_mhd_destroy,
   .setup            = _ggcm_mhd_setup,
   .read             = _ggcm_mhd_read,
 };
