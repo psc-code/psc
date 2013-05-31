@@ -82,7 +82,7 @@ mrc_ts_add_monitor(struct mrc_ts *ts, struct mrc_ts_monitor *mon)
   mrc_ts_add_child(ts, (struct mrc_obj *) mon);
 }
 
-static void
+void
 mrc_ts_step(struct mrc_ts *ts)
 {
   assert(mrc_ts_ops(ts)->step);
@@ -127,6 +127,7 @@ void
 mrc_ts_rhsf(struct mrc_ts *ts, struct mrc_obj *rhs, float time,
 	    struct mrc_obj *x)
 {
+  assert(ts->rhsf);
   ts->rhsf(ts->rhsf_ctx, rhs, time, x);
   ts->nr_rhsf_evals++;
 }
