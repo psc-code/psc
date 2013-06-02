@@ -155,7 +155,7 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
   // upper bound 
   //-----------------------------------------------------------------------------------//
   if (bc[1] != BC_PERIODIC && info.off[1] + info.ldims[1] == gdims[1]) { // x hi
-    //  transverse magnetic field copied directly
+    //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1X, ix,ny,iz) = MRC_F3(fld, _B1X, ix,ny-1,iz) + 
@@ -172,7 +172,7 @@ ggcm_mhd_bnd_conducting_fill_ghosts(struct ggcm_mhd_bnd *bnd, int m,
 	   (MRC_F3(fld,_B1Z, ix,ny-1,iz) - MRC_F3(fld,_B1Z, ix,ny-1,iz-1) ) / bd2z[iz]);
       }
     }	
-    //  transverse magnetic field copied directly
+    //  transverse magnetic field extrapolated
     for (int iz = -sw; iz < nz + sw; iz++) {
       for (int ix = -sw; ix < nx + sw; ix++) {
 	MRC_F3(fld,_B1X, ix,ny+1,iz) = MRC_F3(fld, _B1X, ix,ny,iz) + 

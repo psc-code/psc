@@ -99,10 +99,11 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
     r[1] = MRC_CRD(crds, 1, iy);
     r[2] = MRC_CRD(crds, 2, iz); 
     
-    MRC_F3(f3,_B1Y, ix,iy,iz) = (1. + tanh((r[0] - xs) / l_b) - tanh((r[0]+xs) / l_b ))  
+    B1Y(f3, ix,iy,iz) = (1. + tanh((r[0] - xs) / l_b) - tanh((r[0]+xs) / l_b ))  
       -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];;
    
-    MRC_F3(f3,_B1X, ix,iy,iz) = (MRC_F3(fld_psi, 0, ix,iy+1,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
+    B1X(f3, ix,iy,iz) = (MRC_F3(fld_psi, 0, ix,iy+1,iz) - 
+				 MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
 
     B1Z(f3, ix,iy,iz) = bz0; 
     
@@ -170,15 +171,15 @@ ggcm_mhd_double_tearing_create(struct ggcm_mhd *mhd)
   mhd->par.resnorm = 1.f;
   mhd->par.diffco = 0.f;
 
-  ggcm_mhd_bnd_set_type(mhd->bnd, "conducting");
+  ggcm_mhd_bnd_set_type(mhd->bnd, "conducting_x");
 
-  mrc_domain_set_param_int(mhd->domain, "bcx", BC_PERIODIC);
+  mrc_domain_set_param_int(mhd->domain, "bcx", BC_NONE);
   mrc_domain_set_param_int(mhd->domain, "bcy", BC_PERIODIC);	   
   mrc_domain_set_param_int(mhd->domain, "bcz", BC_PERIODIC);
 
   /* set defaults for coord arrays */
   struct mrc_crds *crds = mrc_domain_get_crds(mhd->domain);
-  mrc_crds_set_type(crds, "gaussian_2D");
+  mrc_crds_set_type(crds, "two_gaussian");
   mrc_crds_set_param_int(crds, "sw", SW_2);   // 'stencil width' 
   mrc_crds_set_param_float3(crds, "l", (float[3]) {  0.0, 0.0, -1.0 });
   mrc_crds_set_param_float3(crds, "h", (float[3]) {  2.*M_PI, 2.*M_PI,  1.0 });
