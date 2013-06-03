@@ -39,8 +39,6 @@ struct ggcm_mhd_ic_double_tearing {
   float pert;
 };
 
-
-
 // ----------------------------------------------------------------------
 // ggcm_mhd_ic_double_tearing_run
 
@@ -60,16 +58,6 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
   for(int i = 0; i < 3; i++){
     L[i] = xh[i] - xl[i];
   }
-  
-  /*
-  float gamma = mhd->par.gamm;
-  float Bo = sub->Bo;
-  float pert = sub->pert;
-  float Boz = sub->Boz;
-  float eps = sub->eps;
-  float lam = (sub->lambda)*L[0] ;  // defines island size   
-  float kk = (2.*M_PI) / lam ;      
-  */
 
   float l_b = sub->l_b; // Scale length of the magenetic shear at each surface
   float by0 = sub->by0; // Asymptotic reconnection field
@@ -101,20 +89,11 @@ ggcm_mhd_ic_double_tearing_run(struct ggcm_mhd_ic *ic)
     
     B1Y(f3, ix,iy,iz) = (1. + tanh((r[0] - xs) / l_b) - tanh((r[0]+xs) / l_b ))  
       -(MRC_F3(fld_psi, 0, ix+1,iy,iz) - MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2x[ix];;
-   
     B1X(f3, ix,iy,iz) = (MRC_F3(fld_psi, 0, ix,iy+1,iz) - 
 				 MRC_F3(fld_psi, 0, ix,iy,iz)) / bd2y[iy];
-
     B1Z(f3, ix,iy,iz) = bz0; 
-    
     MRC_F3(f3, _RR1, ix, iy, iz) = rho0 + (sqr(by0)- sqr(B1Y(f3, ix,iy,iz))) /2.0 / (1. + tau) ; 
-    /*
-    MRC_F3(f3, _RV1X, ix,iy,iz) = (pert) * (1.-kk*kk*r[0]*r[0]) *
-      MRC_F3(f3, _RR1, ix, iy, iz) * exp(-kk*kk*r[1]*r[1])*sin(kk*r[0]*0.5);	
 
-    MRC_F3(f3, _RV1Y, ix,iy,iz) = -(pert) * ( 0.5*kk*r[1] ) * MRC_F3(f3, _RR1, ix, iy, iz) *
-      exp(-kk*kk*r[1]*r[1])*cos(kk*r[0]*0.5);            
-    */
     MRC_F3(f3, _UU1 , ix, iy, iz) =  MRC_F3(f3, _RR1, ix, iy, iz) / (mhd->par.gamm -1.f) + 	
       .5f * (sqr(MRC_F3(f3, _RV1X, ix, iy, iz)) +
 	     sqr(MRC_F3(f3, _RV1Y, ix, iy, iz)) +
@@ -137,7 +116,7 @@ static struct param ggcm_mhd_ic_double_tearing_descr[] = {
   {"t0", VAR(t0), PARAM_FLOAT(0.5)},  
   {"tau", VAR(tau), PARAM_FLOAT(1.0)},
   {"xs", VAR(xs), PARAM_FLOAT(1.0)},
-  {"pert",VAR(pert), PARAM_FLOAT(0.001)},
+  {"pert",VAR(pert), PARAM_FLOAT(1.0)},
   {},
 };
 #undef VAR
