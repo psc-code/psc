@@ -440,7 +440,7 @@ _mrc_params_get_option_int_array(const char *name, struct mrc_param_int_array *p
   struct option *p = find_option(name, deprecated);
   if (!p) {
     if (!deprecated) { // don't advertise deprecated un-prefixed options
-      print_help("--%s: <%d> (default) %s...\n", name, pval->vals[0],
+      print_help("--%s: <%d> (default) %s...\n", name, pval->vals ? pval->vals[0] : 0,
 		 help ? help : "");
     }
     return -1;
