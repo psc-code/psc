@@ -67,7 +67,7 @@ struct mrc_fld {
   int _size_of_type;
   void *_arr;
   int _len;
-  bool _with_array;
+  struct mrc_vec *_vec; //< underlying mrc_vec that manages memory alloc/free (could be petsc)
   struct mrc_domain *_domain; //< optional, if allocated through mrc_domain
   // for mrc_f3 emulation
   int _nr_allocated_comp_name;

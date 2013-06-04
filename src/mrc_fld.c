@@ -1,5 +1,7 @@
 
 #include <mrc_fld.h>
+
+#include <mrc_vec.h>
 #include <mrc_io.h>
 #include <mrc_params.h>
 
@@ -18,9 +20,7 @@
 static void
 _mrc_fld_destroy(struct mrc_fld *fld)
 {
-  if (!fld->_with_array) {
-    free(fld->_arr);
-  }
+  mrc_vec_put_array(fld->_vec, fld->_arr);
   fld->_arr = NULL;
 
   for (int m = 0; m < fld->_nr_allocated_comp_name; m++) {
@@ -52,9 +52,10 @@ _mrc_fld_setup(struct mrc_fld *fld)
     fld->_len *= fld->_ghost_dims[d];
   }
 
-  if (!fld->_with_array) {
-    fld->_arr = calloc(fld->_len, fld->_size_of_type);
-  }
+  mrc_vec_set_param_int(fld->_vec, "len", fld->_len);
+  mrc_fld_setup_member_objs(fld); // sets up our .vec member
+
+  fld->_arr = mrc_vec_get_array(fld->_vec);
 }
 
 // ----------------------------------------------------------------------
@@ -63,9 +64,7 @@ _mrc_fld_setup(struct mrc_fld *fld)
 void
 mrc_fld_set_array(struct mrc_fld *fld, void *arr)
 {
-  assert(!fld->_arr);
-  fld->_arr = arr;
-  fld->_with_array = true;
+  mrc_vec_set_array(fld->_vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -84,10 +83,12 @@ _mrc_fld_write(struct mrc_fld *fld, struct mrc_io *io)
 static void
 _mrc_fld_read(struct mrc_fld *fld, struct mrc_io *io)
 {
-  // if we're reading back stuff, there's no way that _with_array
-  // would work, so we'll allocate our own array instead.
-  fld->_with_array = false;
   fld->_domain = mrc_io_read_ref(io, fld, "domain", mrc_domain);
+
+  // instead of reading back fld->_vec (which doesn't contain anything useful,
+  // anyway, since mrc_fld saves/restores the data rather than mrc_vec),
+  // we make a new one, so at least we're sure that with_array won't be honored
+  fld->_vec = mrc_vec_create(mrc_fld_comm(fld));
   mrc_fld_setup(fld);
   mrc_io_read_fld(io, mrc_io_obj_path(io, fld), fld);
 }
@@ -338,7 +339,7 @@ static struct param mrc_fld_descr[] = {
 
   { "size_of_type"    , VAR(_size_of_type), MRC_VAR_INT           },
   { "len"             , VAR(_len)         , MRC_VAR_INT           },
-  { "with_array"      , VAR(_with_array)  , MRC_VAR_BOOL          },
+  { "vec"             , VAR(_vec)         , MRC_VAR_OBJ(mrc_vec)  },
   {},
 };
 #undef VAR
