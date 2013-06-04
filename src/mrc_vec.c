@@ -13,6 +13,8 @@
 // ======================================================================
 // mrc_vec
 
+#define mrc_vec_ops(vec) ((struct mrc_vec_ops *) vec->obj.ops)
+
 // ----------------------------------------------------------------------
 // mrc_vec_setup
 
@@ -44,9 +46,9 @@ _mrc_vec_destroy(struct mrc_vec *vec)
 void
 mrc_vec_set_array(struct mrc_vec *vec, void *arr)
 {
-  assert(!vec->arr);
-  vec->arr = arr;
-  vec->with_array = true;
+  struct mrc_vec_ops *ops = mrc_vec_ops(vec);
+  assert(ops && ops->set_array);
+  ops->set_array(vec, arr);
 }
 
 // ----------------------------------------------------------------------
@@ -59,7 +61,9 @@ mrc_vec_get_array(struct mrc_vec *vec)
 {
   assert(mrc_vec_is_setup(vec));
 
-  return vec->arr;
+  struct mrc_vec_ops *ops = mrc_vec_ops(vec);
+  assert(ops && ops->get_array);
+  return ops->get_array(vec);
 }
 
 // ----------------------------------------------------------------------
@@ -70,6 +74,39 @@ mrc_vec_get_array(struct mrc_vec *vec)
 
 void
 mrc_vec_put_array(struct mrc_vec *vec, void *arr)
+{
+  assert(mrc_vec_is_setup(vec));
+
+  struct mrc_vec_ops *ops = mrc_vec_ops(vec);
+  assert(ops && ops->put_array);
+  return ops->put_array(vec, arr);
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_sub_set_array
+
+static void
+mrc_vec_sub_set_array(struct mrc_vec *vec, void *arr)
+{
+  assert(!vec->arr);
+  vec->arr = arr;
+  vec->with_array = true;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_sub_get_array
+
+static void *
+mrc_vec_sub_get_array(struct mrc_vec *vec)
+{
+  return vec->arr;
+}
+
+// ----------------------------------------------------------------------
+// mrc_vec_sub_put_array
+
+static void
+mrc_vec_sub_put_array(struct mrc_vec *vec, void *arr)
 {
   assert(arr == vec->arr);
 }
@@ -88,6 +125,9 @@ mrc_vec_put_array(struct mrc_vec *vec, void *arr)
   static struct mrc_vec_ops mrc_vec_##type##_ops = {	\
     .name                  = #type,			\
     .create                = mrc_vec_##type##_create,	\
+    .set_array             = mrc_vec_sub_set_array,	\
+    .get_array             = mrc_vec_sub_get_array,	\
+    .put_array             = mrc_vec_sub_put_array,	\
   };							\
 
 MAKE_MRC_VEC_TYPE(float, FLOAT)

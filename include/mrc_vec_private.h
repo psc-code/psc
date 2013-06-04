@@ -17,6 +17,9 @@ struct mrc_vec {
 
 struct mrc_vec_ops {
   MRC_SUBCLASS_OPS(struct mrc_vec);
+  void (*set_array)(struct mrc_vec *vec, void *arr);
+  void *(*get_array)(struct mrc_vec *vec);
+  void (*put_array)(struct mrc_vec *vec, void *arr);
 };
 
 #endif
