@@ -628,7 +628,11 @@ mrc_params_set_default(void *p, struct param *params)
       {
 	pv->u_int_array.nr_vals = params[i].u.int_array.nr_vals;
 	free(pv->u_int_array.vals);
-	pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+	if(pv->u_int_array.nr_vals == 0) {
+	  pv->u_int_array.vals = NULL;
+	} else {
+	  pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+	}
 	for (int d = 0; d < pv->u_int_array.nr_vals; d++) {
 	  pv->u_int_array.vals[d] = params[i].u.int_array.default_value;
 	}
@@ -717,6 +721,9 @@ mrc_params_set_type(void *p, struct param *params, const char *name,
 	pv->u_int_array.nr_vals = pval->u_int_array.nr_vals;
 	free(pv->u_int_array.vals);
 	pv->u_int_array.vals = calloc(pv->u_int_array.nr_vals, sizeof(int));
+	if (!pval->u_int_array.vals) {
+	  break;
+	}
 	for (int d = 0; d < pval->u_int_array.nr_vals; d++) {
 	  // FIXME?, abuse of u_int3
 	  pv->u_int_array.vals[d] = pval->u_int_array.vals[d];

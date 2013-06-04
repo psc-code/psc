@@ -36,10 +36,10 @@ static void
 _mrc_fld_setup(struct mrc_fld *fld)
 {
   if (fld->_offs.nr_vals == 0) {
-    fld->_offs.nr_vals = fld->_dims.nr_vals;
+    mrc_fld_set_param_int_array(fld, "offs", fld->_dims.nr_vals, NULL);
   }
   if (fld->_sw.nr_vals == 0) {
-    fld->_sw.nr_vals = fld->_dims.nr_vals;
+    mrc_fld_set_param_int_array(fld, "sw", fld->_dims.nr_vals, NULL);
   }
   assert(fld->_dims.nr_vals == fld->_offs.nr_vals &&
 	 fld->_dims.nr_vals == fld->_sw.nr_vals);
